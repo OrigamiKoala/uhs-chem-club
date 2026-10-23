@@ -131,10 +131,12 @@ export function layoutIn(zone, fallback, n) {
   const r = rectOf(zone, fallback);
   // A zone for big pieces (a dish) declares its own pitch (`cell`); the default is for the small ones.
   const cell = zone.cell || CELL;
+  // A zone for wide, flat pieces (a card of words) declares a row pitch of its own (`cellH`) as well.
+  const cellH = zone.cellH || cell;
   const cols = Math.max(1, Math.floor(r.w / cell));
   const col = n % cols;
   const row = Math.floor(n / cols);
-  return { x: r.x0 + cell / 2 + col * cell, y: r.y0 + cell / 2 + row * cell };
+  return { x: r.x0 + cell / 2 + col * cell, y: r.y0 + cellH / 2 + row * cellH };
 }
 
 /**

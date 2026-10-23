@@ -191,5 +191,5 @@ export function auditTable(state, kit, opts = {}) {
 export function cellFits(zone, fallback, radius) {
   const cell = zone.cell || CELL;
   const r = rectOf(zone, fallback);
-  return { cell, fits: radius * 2 <= cell + 0.01, cols: Math.max(1, Math.floor(r.w / cell)), rows: Math.max(1, Math.floor(r.h / cell)) };
+  return { cell, fits: radius * 2 <= cell + 0.01, cols: Math.max(1, Math.floor(r.w / cell)), rows: Math.max(1, Math.floor(r.h / (zone.cellH || cell))) };
 }

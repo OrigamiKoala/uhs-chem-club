@@ -1,0 +1,152 @@
+// Removed from tools/verify-learn.mjs (HEAD line numbers). Archived, not live.
+// --- line 61 ---
+const { recordCurve } = await import('../src/learn/engine/gasrig.js');
+// --- lines 1542-1593 (Ligar bond + slate plates) ---
+    // Ligar's three plate benches. The declaration is held to the real tables,
+    // then every plate is drawn at phone and bench size.
+    const bondRigs = (st.rigs || []).filter(r => bondHeads.includes(r.head));
+    if (bondRigs.length) {
+      const { BondBench } = await import('../src/learn/engine/bondbench.js');
+      const BD = await import('../src/learn/engine/bonddata.js');
+      const proto = BondBench.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { settings: st.settings || [], setting: st.start || 1 };
+      const ids = new Set();
+      for (const raw of bondRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head === 'pair') {
+          const p = BD.PAIRS[raw.pair];
+          if (!p) { fail(`${label}: plate "${raw.id}" names a pair with no measured bond "${raw.pair}"`); bad++; }
+          else if (!(st.settings || []).includes(p.r0)) { fail(`${label}: plate "${raw.id}" has no crank setting at its bond length, so its bottom cannot be found`); bad++; }
+        } else if (!BD.LATTICES[raw.lattice]) {
+          fail(`${label}: plate "${raw.id}" names a lattice with no real figures "${raw.lattice}"`); bad++;
+        }
+        const item = proto.prepare.call(bench, raw);
+        item.trail = raw.head === 'pair' ? [st.settings?.[(st.start || 1) - 1], ...(raw.head === 'pair' ? [BD.PAIRS[raw.pair]?.r0] : [])].filter(Boolean) : [];
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+      if (bondRigs.some(r => r.head === 'pair') && !(Array.isArray(st.settings) && st.settings.length > 1)) {
+        fail(`${label}: pair plates need crank settings`); bad++;
+      }
+    }
+    const slateRigs = (st.rigs || []).filter(r => slateHeads.includes(r.head));
+    if (slateRigs.length) {
+      const { PairBoard } = await import('../src/learn/engine/pairboard.js');
+      const LW = await import('../src/learn/engine/lewis.js');
+      const proto = PairBoard.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { hand: 'bond', hands: ['bond', 'lone', 'x'], charges: true };
+      const ids = new Set();
+      for (const raw of slateRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        const mol = LW.MOLECULES[raw.mol];
+        if (!mol) { fail(`${label}: plate "${raw.id}" names an unknown molecule "${raw.mol}"`); bad++; continue; }
+        for (const sym of mol.syms) if (!LW.VALENCE[sym]) { fail(`${label}: plate "${raw.id}" has an atom with no valence "${sym}"`); bad++; }
+        if (raw.prefill) {
+          const r = LW.planLewis(mol, raw.prefill, raw.charge);
+          if (r.left < 0) { fail(`${label}: plate "${raw.id}" prefills more electrons than its tray holds`); bad++; }
+        }
+        const item = proto.prepare.call(bench, raw);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+// --- lines 1641-1735 (gas, thermo, rack plates) ---
+    // Bellows: the gas rig. The declaration is held to the real gas tables, then every
+    // plate is drawn at phone and bench size under the dials as the stage lays them.
+    const gasRigs = (st.rigs || []).filter(r => gasHeads.includes(r.head));
+    if (gasRigs.length) {
+      const { GasRig } = await import('../src/learn/engine/gasrig.js');
+      const proto = GasRig.prototype;
+      const bench = Object.create(proto);
+      bench.clock = 0.8;
+      bench.cfg = { ...GasRig.blankCfg(), ...GAS.benchCfg(st, {}) };
+      const ids = new Set();
+      for (const raw of gasRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head !== 'mixture' && raw.head !== 'record' && !GAS.GASES[raw.gas]) { fail(`${label}: plate "${raw.id}" names a gas with no real figures "${raw.gas}"`); bad++; }
+        if (raw.head === 'mixture') {
+          if (!raw.parts?.every(p => GAS.GASES[p.gas] && p.n > 0)) { fail(`${label}: mixture "${raw.id}" holds a part with no real gas or no amount`); bad++; }
+          if (!(raw.V > 0) || !(raw.T > 0)) { fail(`${label}: mixture "${raw.id}" has no room or no temperature`); bad++; }
+          // Every setting of the dials must read on the gauge the plate has.
+          const mvs = (st.volumes?.length && raw.follow !== false) ? st.volumes.map((_, k) => k + 1) : [1];
+          const mts = (st.temps?.length && raw.follow !== false) ? st.temps.map((_, k) => k + 1) : [1];
+          for (const vi of mvs) for (const ti of mts) {
+            const ms = GAS.mixtureState(raw, { ...bench.cfg, volume: vi, temp: ti });
+            const P = GAS.planMixture(raw.parts, ms.T, ms.V).P;
+            if (!(P > 0) || P > (st.gaugeMax || 400) * 1.05) { fail(`${label}: mixture "${raw.id}" reads ${P.toFixed(0)} kPa at settings ${vi}/${ti}, off a gauge that stops at ${st.gaugeMax || 400}`); bad++; }
+          }
+        }
+        if (raw.head === 'cylinder') {
+          // A dial the plate ignores is a control that does nothing: a rigid tank on a stage with a piston dial.
+          if (st.volumes?.length > 1 && raw.hold === 'V' && raw.follow !== false) { fail(`${label}: cylinder "${raw.id}" is a rigid tank, so the stage's volume dial moves nothing on it`); bad++; }
+          if (st.volumes?.length > 1 && raw.hold === 'P' && raw.follow !== false) { fail(`${label}: cylinder "${raw.id}" is under a free piston, so the stage's volume dial moves nothing on it`); bad++; }
+          if (st.temps?.length > 1 && raw.follow === false && !gasRigs.some(r => r.head === 'cylinder' && r.follow !== false)) { fail(`${label}: no cylinder follows the stage's temperature dial`); bad++; }
+          if (!(raw.n >= 0) || !Number.isFinite(raw.n ?? 1)) { fail(`${label}: cylinder "${raw.id}" holds a bad amount of gas`); bad++; }
+          if (raw.hold === 'P' && !(raw.P0 > 0)) { fail(`${label}: cylinder "${raw.id}" has a free piston with no weight on it`); bad++; }
+          // Every setting a dial can reach must be a real, positive reading (a van der Waals gas
+          // squeezed past its own size has none, and the plate would read a pressure that cannot exist).
+          const volumes = (st.volumes?.length && raw.hold !== 'V' && raw.follow !== false) ? st.volumes.map((_, k) => k + 1) : [1];
+          const temps = (st.temps?.length && raw.follow !== false) ? st.temps.map((_, k) => k + 1) : [1];
+          for (const vi of volumes) for (const ti of temps) {
+            const r = GAS.planGas({ ...raw, n: raw.n }, { ...bench.cfg, volume: vi, temp: ti });
+            if (!(r.P > 0) || !Number.isFinite(r.P)) { fail(`${label}: cylinder "${raw.id}" reads no real pressure at volume setting ${vi}, temperature setting ${ti}`); bad++; }
+            if (r.P > (st.gaugeMax || 400) * 1.05 && !raw.noGaugeLimit) { fail(`${label}: cylinder "${raw.id}" reads ${r.P.toFixed(0)} kPa at settings ${vi}/${ti}, off a gauge that stops at ${st.gaugeMax || 400}`); bad++; }
+          }
+        }
+        if (raw.head === 'record' && !(raw.record && raw.record.x && raw.record.y && raw.record.xmax > raw.record.xmin)) { fail(`${label}: record "${raw.id}" has no axes`); bad++; }
+        if ((raw.head === 'leak' || raw.head === 'tube') && !(st.times?.length > 1)) { fail(`${label}: plate "${raw.id}" needs a time dial`); bad++; }
+        const item = proto.prepare.call(bench, raw);
+        item.trail = [{ n: raw.n || 1, T: raw.T || 300, V: raw.V || 10, P: 100, Z: 1, key: 'a' }];
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    const thermoRigs = (st.rigs || []).filter(r => thermoHeads.includes(r.head));
+    if (thermoRigs.length) {
+      const { Calorimeter } = await import('../src/learn/engine/calorimeter.js');
+      const TD = await import('../src/learn/engine/thermodata.js');
+      const proto = Calorimeter.prototype;
+      const bench = Object.create(proto);
+      bench.clock = 0.6;
+      bench.cfg = { ...Calorimeter.blankCfg(), ...TD.benchCfg(st, {}) };
+      const ids = new Set();
+      for (const raw of thermoRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        const item = proto.prepare.call(bench, raw);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    const rackRigs = (st.rigs || []).filter(r => rackHeads.includes(r.head));
+    if (rackRigs.length) {
+      const { BoxRack } = await import('../src/learn/engine/boxrack.js');
+      const E = await import('../src/learn/engine/electrons.js');
+      const proto = BoxRack.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { hand: 'u', core: false, show: { n: true, l: true, ml: true, ms: true }, clouds: true };
+      const ids = new Set();
+      for (const raw of rackRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head === 'rack') {
+          for (const id of (raw.rows || [])) if (!E.rowOf(id)) { fail(`${label}: plate "${raw.id}" lists an unknown row "${id}"`); bad++; }
+          if (raw.layout && !['atomic', 'address', 'molecular'].includes(raw.layout)) { fail(`${label}: plate "${raw.id}" has an unknown layout`); bad++; }
+          if (raw.sample && E.MEASURED[raw.sample] === undefined) { fail(`${label}: plate "${raw.id}" names a sample with no measured magnet reading`); bad++; }
+          for (const [key, v] of Object.entries(raw.prefill || {})) {
+            const [rowId, idx] = key.split(':');
+            if (!E.rowOf(rowId) || Number(idx) >= E.boxesOf(E.rowOf(rowId).l) || !/^(u|d|ud)$/.test(v)) { fail(`${label}: plate "${raw.id}" prefills a box that does not exist or holds an illegal pair`); bad++; }
+          }
+        } else if (E.zOf(raw.sym) < 1) {
+          fail(`${label}: strip plate "${raw.id}" names an unknown element "${raw.sym}"`); bad++;
+        }
+        const item = proto.prepare.call(bench, raw);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }

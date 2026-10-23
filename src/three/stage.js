@@ -17,6 +17,7 @@ import { LigarWorld } from "./ligar.js";
 import { LanternfallWorld } from "./lanternfall.js";
 import { BellowsWorld } from "./bellows.js";
 import { EmberReachWorld } from "./ember.js";
+import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
 import { TouchControls } from "./touch-controls.js";
@@ -1301,6 +1302,8 @@ class Stage {
       dormant: anchor.dormant || null,
       // The world itself, for what it registered at the bench (its field points).
       object: world,
+      // A boss fight's table stands in the boss's arena (`arena-table.js`): the foe is across the ground, not on the plate.
+      arena: Boolean(anchor.arena),
       fpsControls: this.fpsControls,
       // THE PLAYER KEEPS THEIR FEET AT A DEPLOYED BENCH, so the walk owns how
       // high off the ground their head is and the instrument must not write it.
@@ -1310,6 +1313,31 @@ class Stage {
       // fought over it: the view juddered and W went nowhere.
       walkOwnsHeight: true
     };
+  }
+
+  /**
+   * Stand a boss's table in its arena (`three/arena-table.js`) and register it as `questId`'s bench, so the tabletop that
+   * is about to be built deploys onto it and the world, with the boss in it, stays behind the glass. Null off a Learn world.
+   */
+  setArenaBench(questId, spot) {
+    this.clearArenaBench();
+    const world = this.activeWorld;
+    if (!questId || !spot || !this.isLearnWorld(world)) return null;
+    this._arenaBench = buildArenaTable(world, { questId, spot });
+    this._arenaWorld = world;
+    // The walk was handed its colliders when the world was entered: hand it the table too.
+    this.fpsControls?.setColliders(this.worldColliders(world));
+    return this._arenaBench;
+  }
+
+  /** Take the boss's table away (the fight is over, or the player left). */
+  clearArenaBench() {
+    if (!this._arenaBench) return;
+    const world = this._arenaWorld;
+    try { this._arenaBench.dispose(); } catch (err) { console.error('Arena table dispose failed:', err); }
+    this._arenaBench = null;
+    this._arenaWorld = null;
+    if (world && this.activeWorld === world) this.fpsControls?.setColliders(this.worldColliders(world));
   }
 
   /** Case the worked bench back up once the player steps away from it. */

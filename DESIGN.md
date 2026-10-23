@@ -321,8 +321,10 @@ where a screen explicitly claims the pointer back.
 
 ### Named Rules
 
-**The 375 Rule.** Every screen, instrument and quest must work at 375px wide. This is the
-product's confirmed device floor, not a courtesy tier.
+**The 375 Rule.** Every screen outside a bench or a world must work in portrait at 375px
+wide. Benches and worlds may require landscape on a phone (game mode locks orientation and
+`#orientation-guard` asks for it); there they must work at 667 x 375. This is the product's
+confirmed device floor, not a courtesy tier (PRODUCT.md, Capabilities).
 
 **The 44 Rule.** Every interactive control has `min-height: 44px` (38px for the compact
 HUD nav). A student is playing this on a phone with dusty fingers.
@@ -487,6 +489,13 @@ campaign is about.
 
 ### Signature: The Bench Instruments
 
+> **Status (2026-10-22).** Every built Learn quest is now a tabletop (`engine/table2d.js`,
+> `table3d.js`, kits in `learn/table/kits/`). The per-instrument plate benches described
+> below are the lineage of that work; several are retired (see `archive/retired-2026-10-22/`).
+> The palette, aperture, dial and control rules still apply to anything that draws a plate.
+> Where shape or position is the idea (orbitals, molecular shape, lattices, scattering) the
+> 3D object is the instrument; spectra, graphs and plots are flat and are drawn square-on.
+
 The Learn track's instruments are the most distinctive surfaces in the product. Two of them
 exist twice — the **sampler scope** and the **core bench**, as canvas instruments
 (`scope.js`, `corebench.js`) at T3 and below and as **built objects on a bench the player
@@ -591,29 +600,28 @@ specific thing.
 
 `.chem-card` and Learn track `.lq-reward` — one to three sentences of **real chemistry debrief**, drawn after a stage is solved. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber stencil badge and a mono gold title. It summarizes what the player's experiment demonstrated, prioritizing concrete physical intuition (attraction, bond seats, 3D crowding, making room) over college organic chemistry jargon.
 
-### Signature: The Stage Mission & Science Guide
+### Signature: The Stage Briefing and Controls
 
-`.lq-guide-card` and the interactive `Objective & Guide` modal (`src/learn/engine/quest-guide.js`) — the primary teaching and wayfinding surface present on every stage from stage one.
+The old `Objective & Guide` modal (`quest-guide.js`) was never wired in and is archived
+(`archive/retired-2026-10-22/`); no modal precedes a stage. A stage teaches through four surfaces:
 
-- **Real Chemistry Concepts from Stage One:** Teaches standard scientific terms (atoms, electrons, isotopes, molecules, compounds) directly. Never uses invented replacement ciphers or analogues that later reveal "in the real world this is called X". Analogies to build intuition are encouraged; invented code words are banned.
-- **Elementary-School-Level Clarity:** Provides plain-English explanations that an elementary school student can understand, broken into five explicit sections:
-  1. *Mission Context:* Why the salvage expedition needs this test.
-  2. *Science Concept:* The underlying chemical principle explained clearly.
-  3. *Stage Goal:* A concise, plain-English question the student must answer.
-  4. *How to Test:* Practical scientific method guidance on using bench controls to observe and compare readings.
-  5. *Key Vocabulary:* Unambiguous definitions of scientific terms.
-- **No Spoiled Answers:** Never tells the player what to do, spoon-feeds the solution, or makes the correct choice obvious. The student must use the instruments, observe readings, and deduce the answer themselves.
-- **Interactive UI Actions:** Stage action buttons (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons are always interactive with `pointer-events: auto`.
+- **The prompt strip** (`.lq-tstrip`): the objective as one plain question or imperative, never the route.
+- **The briefing** (stage one only): at most two sentences, naming only the initial tools.
+- **The object itself**: captions, notes and a one-line legend under any key whose label does not say what it does. How a tool works is always printed on the object; which move solves the stage never is.
+- **The reward card** after the solve (`.lq-reward`): one to three sentences naming the idea just worked out, in real terms.
 
-### Signature: Experiment Trials (Encounter Layer)
+Stage controls are `Tour`, `Findings`, `Hint`, `Submit`, `Undo`, `Start Over`, `Hide Panel` and
+`Leave Bench`, shown only on stages that use them. All are always interactive
+(`pointer-events: auto`). Vocabulary is plain until the stage that earns the word, then the real term.
 
-The encounter layer (`src/learn/engine/encounter.js`, `foes.js`) frames specimen testing as rigorous **scientific trials** rather than monster combat:
+### Signature: Trials and Bosses (Encounter Layer)
 
-- **Specimen Trials, Not Combat:** Specimens are mineral or chemical samples (e.g. *salt husk*, *lamp moth*, *basalt warden*). Incorrect attempts are measurement discrepancies ("Missed Trial"), never monster attacks or combat injuries ("takes the hit").
-- **Non-Punitive Safety Reset:** The player has 3 trials before a safety reset. A reset refills trial attempts without losing scouted readings, open hints, or stage progress.
-- **Specimens Carry Evidence:** A specimen's reaction is what the bench measures. The committed submission is the measurement itself.
+An ordinary stage is a **trial**: a wrong answer is a missed trial with a reason on screen, never an
+attack. **Only the six bosses fight** (`src/learn/engine/encounter.js`, `foes.js`, `boss-arena.js`):
 
-
+- **Foes observe, never injure.** A foe is *dispersed, never killed*. Scouting is free; only a committed miss costs one of three Integrity; knock-back keeps everything learned; a correct commit wins at any Integrity. One health bar over the fight is cosmetic and never refuses an answer.
+- **Foes carry evidence.** A foe's behaviour is what the bench measures, drawn from the instrument's own planner (`planFoe()`), mapped one-to-one onto the stage's samples. Delete the foe and the stage must change.
+- **Plain names.** *Salt husk*, *lamp moth*, *basalt warden*; never a coinage the player must memorise.
 
 ### Signature: The Practice Overlay
 
@@ -704,19 +712,19 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
 - **Do** teach real chemistry concepts directly from stage one (atoms, protons, neutrons,
   electrons, isotopes, molecules, compounds). Analogies to familiar concepts (balancing seesaws,
   cooking recipes) are welcome to build intuition, but never invent replacement code words.
-- **Do** write explanations that an elementary school student can understand, with clear definitions,
-  simple questions, and practical guidance on how to test using bench instruments.
-- **Do** frame specimen interactions as scientific trials. Incorrect submissions are measurement
-  discrepancies ("Missed Trial"), never monster combat ("takes the hit").
-- **Do** ensure stage actions (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons
-  are always interactive (`pointer-events: auto`).
+- **Do** write for a 12 to 17 year old with no chemistry course: plain words, the real term once
+  it is earned, and how-to printed on the object. Never print which move solves the stage.
+- **Do** frame ordinary stages as trials: a wrong answer is a missed trial with a reason. Bosses
+  fight, and their foes are dispersed, never killed.
+- **Do** ensure stage actions (`Tour`, `Findings`, `Hint`, `Submit`, `Undo`, `Start Over`,
+  `Hide Panel`, `Leave Bench`) and modal close buttons are always interactive (`pointer-events: auto`).
 - **Do** make an instrument's control a thing you turn, press or slide in the world when
   the bench is built — and keep a keyboard path to the same value. A control that answers
   only to a drag is invisible to a keyboard and unusable on a trackpad.
 - **Do** put the move stick bottom-LEFT and the look stick bottom-RIGHT on a phone. That
   is where every twin-stick scheme a player has already used puts them, and a walk that
   steers backwards from muscle memory reads as broken input rather than as a choice.
-- **Do** build concrete physical mechanism intuition for organic reactions (charges attracting, making room, 3D crowding, helper molecules) rather than terrifying elementary and middle schoolers with college organic chemistry jargon.
+- **Do** build concrete physical mechanism intuition for organic reactions (charges attracting, making room, 3D crowding, helper molecules) rather than terrifying middle and high schoolers with college organic chemistry jargon.
 - **Do** ensure players discover chemistry to solve practical storyline challenges, prioritizing hands-on 3D manipulation and visual instrumentation over dense text walls.
 - **Do** inset a part into the part it is carried by rather than ending it flush. Two faces
   in the same plane cannot be ordered by a depth buffer, and the surface flickers — a shelf
@@ -725,7 +733,7 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
 
 ### Don't:
 
-- **Don't** overwhelm elementary and middle schoolers with college organic chemistry terminology ("alkyl halide", "carbonyl", "carbocation", "nucleophile", "SN1/SN2"). Teach the physical mechanism intuition instead.
+- **Don't** overwhelm middle and high schoolers with college organic chemistry terminology ("alkyl halide", "carbonyl", "carbocation", "nucleophile", "SN1/SN2"). Teach the physical mechanism intuition instead.
 - **Don't** make the game feel like a dense sci-fi textbook with a haphazard 3D layer. Visuals and hands-on instruments must drive the discovery.
 
 - **Don't** add `box-shadow: 0 0 Npx <colour>` as a glow. The exceptions are `.gfx-dot`
@@ -760,9 +768,9 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
   invented replacement words are forbidden.
 - **Don't** spoon-feed answers or make the right answer obvious in prompts, stage guides, or hints.
   The user must investigate on the bench, observe the readings, and deduce the answer themselves.
-- **Don't** frame incorrect submissions as monster attacks or say the player or specimen "takes the
-  hit". Encounters are scientific trials on mineral specimens, and mistakes produce measurement
-  discrepancies ("Missed Trial") with 3 trials before a safety reset.
+- **Don't** frame a wrong answer on an ordinary stage as an attack or say the player "takes the
+  hit": it is a missed trial with a reason, three to a safety reset. Only bosses have foes, and
+  foes are dispersed, never killed.
 - **Don't** read a guild's colour from the backend `accent_hex`. `TEAM_LIVERY` in
   `main.js` is the only source.
 - **Don't** fix a phone bug in `main.css` or `holo.css`. Phone rules live in the

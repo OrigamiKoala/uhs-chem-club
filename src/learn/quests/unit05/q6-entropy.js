@@ -1,31 +1,31 @@
 /**
  * Unit 5 · Bench 6 — Entropy (q6-entropy)
  *
- * The microstate box. A chamber of cells with a gate in it, and particles that
- * could sit in any of them. The player opens the gate, counts the ways the
- * particles can be arranged, and finds that spreading out is simply the most
- * likely thing to happen. Phases, reactions and dissolving are then read the same
- * way: which side has more ways?
+ * The silencer bay, where steam expands, and Ember Reach's sixth TABLETOP (plan `bench-tabletop.md`, phase T6), on the heat kit
+ * (`table/kits/heat.js`). Cells that particles are put in, a chamber that is shaken, pictures of a sample's particles to rank and sort,
+ * and the entropy table that turns a count of arrangements into a number.
  *
- *   1  opening a gate on two particles            -> microstates
- *   2  why a gas never crowds back                -> entropy
- *   3  ice, water and steam                       -> (S rises from solid to gas)
- *   4  reactions that make or use gas             -> ΔS°
- *   5  a salt dissolving                          -> (ions freed from a crystal)
- *   6  a heated sample                            -> (heating raises S)
- *   7  an entropy table at 298 K                  -> standard molar entropy
- *   8  four changes sorted                        -> (the sign of ΔS)
+ *   1  more room, more ways to arrange             -> microstates
+ *   2  a chamber shaken again and again            -> entropy
+ *   3  ice, liquid water and steam                 -> solid, liquid, gas
+ *   4  counting gas across a reaction              -> gas moles and ΔS°
+ *   5  a crystal breaking into mobile ions         -> dissolving a salt
+ *   6  warming a sample without changing phase     -> heating raises entropy
+ *   7  the table of absolute entropies             -> standard molar entropy
+ *   8  four changes sorted by the sign of ΔS       -> the sign of ΔS
  *
- * THE EVIDENCE IS ON THE BENCH. Stage 1's box prints how many particles and how
- * many cells but not the count (`hideWays`) and not the law (`hideLaw`), so the
- * player counts the pairs of cells. The entropy table on stage 7 is headed with
- * its own unit, and no note beside it does the sum.
+ * THE EVIDENCE IS ON THE BENCH. The cells print the arrangements the player has logged and never the count of all of them; the chamber
+ * tallies where the particles stood after each shake, and the sample prints the entropy it gained only once it has been recorded.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { mountThermo, makeStateFor } from '../../engine/thermomount.js';
-import { FORMATION_TABLE, microstateWays, standardReactionChange } from '../../engine/thermodata.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
+import {
+  heatTable, phaseCard, stmt, tag, particle, cellsFixture, chamberFixture, warmFixture, plaqueFixture, markerFixture, selectorFixture,
+  markerRead, dialAt, whereIs, waysOf, loggedArrangements, shakesOf, warmAt, FORMATION_TABLE, standardReactionChange
+} from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 8 };
 
@@ -35,112 +35,101 @@ export const VOCABULARY = [
   { term: /\bstandard molar entropy\b/i, introducedAt: 7 }
 ];
 
-/** Gas particles in a box are Bellows' idea; the sign of a ΔH is this world's. */
-export const BUILDS_ON = ['unit04/q1-knocks'];
+/** Counting arrangements is the idea behind pressure and the gas laws in Bellows, and the mole is Tallow's. */
+export const BUILDS_ON = ['unit04/q1-knocks', 'unit01/q6-weigh'];
 
 const SPEAKER = 'Vess';
 
-/** A key whose label says what it does carries no legend. */
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
-const choice = (id, label) => ({ id, label });
-
-const WAYS_8_2 = microstateWays(8, 2, false); // 28
-const LIME_DS = standardReactionChange(
-  [{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0'
-); // +160.2
+const widget = { type: 'table', label: 'The bench' };
+const WAYS_8_2 = waysOf(8, 2);
+const S0 = id => FORMATION_TABLE[id].S0;
+const DS_LIME = standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0');
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    id: 's1-count-ways',
-    title: 'More Room, More Ways to Arrange',
-    prompt: 'Press "Open Gate" and give the number of different ways the two particles can sit in the open cells.',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Two particles sit in a chamber of cells, and a gate holds them in the left four. Each different choice of cells for them is one arrangement.'
-    },
-    rigs: [
-      {
-        id: 'box1',
-        label: 'Partitioned Lattice Box',
-        head: 'box',
-        cells: 8,
-        leftCells: 4,
-        particles: 2,
-        hideWays: true,
-        hideLaw: true
+  (() => {
+    const cells = cellsFixture('box', { x: 61, y: 23 }, { cells: 8, leftCells: 4, particles: 2, hideWays: true, title: 'Box of cells' });
+    return {
+      id: 's1-count-ways',
+      title: 'More Room, More Ways to Arrange',
+      prompt: 'Open the gate, then set the marker to how many different ways the two particles can sit in the open cells.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Two particles sit in a box of cells, and a gate holds them in the left four; each different choice of cells for them is one arrangement. Press Submit when the table shows your answer.'
+      },
+      widget,
+      table: heatTable({
+        pieces: [particle('p1', { x: 20, y: 52 }, { label: 'A' }), particle('p2', { x: 40, y: 52 }, { label: 'B' })],
+        fixtures: [cells.fixture, markerFixture('ways', 'Arrangements', { x: 114, y: 51 }, { min: 2, max: 60, step: 2, start: 20, unit: 'ways', w: 46 })],
+        zones: { slots: cells.slots }
+      }),
+      hints: [
+        'Drag the two particles into cells and press Log, and turn the Gate dial to open the gate.',
+        'Compare the shut box with the open one by counting the different pairs of cells the two particles could fill.',
+        'Each particle takes a cell of its own, and swapping the two particles gives the same arrangement.'
+      ],
+      check(state) {
+        const v = markerRead(state.table, 'ways');
+        if (v === 20) return { ok: false, notYet: true, msg: 'Set the marker to the number of arrangements.' };
+        if (v === WAYS_8_2) return { ok: true };
+        if (v === waysOf(4, 2)) return { ok: false, msg: 'That is the count with the gate shut; open it and count again.' };
+        return { ok: false, msg: 'Count the pairs of open cells: each particle needs a cell of its own, and the particles are identical.' };
+      },
+      reward: {
+        log: 'Opening the gate multiplied the ways.',
+        title: 'Microstates',
+        body: 'Each distinct arrangement of the particles is a microstate, and W is how many there are. Opening the gate to eight cells raises W from 6 to 28.'
       }
-    ],
-    toggleAction: { group: 'Gate', label: 'Open Gate' },
-    widget: { type: 'number', label: 'Arrangements', min: 2, max: 60, step: 2, start: 20 },
-    hints: [
-      'Press "Open Gate" and count the cells now open to the two particles.',
-      'Compare the closed box with the open one by counting the different pairs of cells the two particles could fill.',
-      'Each particle takes a cell of its own, and swapping the two particles gives the same arrangement.'
-    ],
-    check(state) {
-      if (state.number === WAYS_8_2) return { ok: true };
-      if (state.number === 6) return { ok: false, msg: 'That is the count with the gate shut; open it and count again.' };
-      return { ok: false, msg: 'Count the pairs of open cells: each particle needs a cell of its own, and the particles are identical.' };
-    },
-    reward: {
-      log: 'Opening the gate multiplied the ways.',
-      title: 'Microstates',
-      body: 'Each distinct arrangement of the particles is a microstate, and W is how many there are. Opening the gate to eight cells raises W from 6 to 28.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    id: 's2-why-never-back',
-    title: 'Why an Expanding Gas Never Crowds Back',
-    prompt: 'Why do gas particles let into an empty chamber spread out and not crowd back into one side?',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Nothing pulls the particles to the right; each one just moves at random into whichever cell is open.'
-    },
-    rigs: [
-      {
-        id: 'expansion',
-        label: 'Free Expansion Chamber',
-        head: 'box',
-        cells: 8,
-        leftCells: 4,
-        particles: 4,
-        open: true,
-        sublabel: '70 arrangements across 8 cells; 1 keeps all 4 on the left'
+  (() => {
+    const token = (id, label, x) => ({ id, label, at: { x, y: 56 }, r: 7 });
+    return {
+      id: 's2-why-never-back',
+      title: 'Why an Expanding Gas Never Crowds Back',
+      prompt: 'Predict where four particles will stand after many shakes of the open chamber, then test it.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Nothing pulls the particles to the right; each shake puts them in whichever cells are open.'
+      },
+      widget,
+      table: heatTable({
+        fixtures: [chamberFixture('chamber', { x: 45, y: 27 }, { cells: 8, particles: 4, title: 'Open chamber of 8 cells' })],
+        prediction: {
+          slot: { id: 'predict', label: 'After many shakes', at: { x: 118, y: 28 }, size: { w: 30, h: 12 } },
+          tokens: [token('spread', 'Spread over both halves', 58), token('crowded', 'Crowded in the left half', 98), token('right', 'Pulled to the right', 136)]
+        }
+      }),
+      hints: [
+        'Place a prediction, then press Shake again and again and watch the tally.',
+        'Compare how often every particle stood in the left half with how often they were spread out.',
+        'With particles moving at random, the state with the most arrangements is the one that turns up.'
+      ],
+      check(state) {
+        const t = state.table;
+        const token = t.prediction.token;
+        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+        if (token === 'spread') return { ok: true };
+        if (t.prediction.tested) return token === 'right'
+          ? { ok: false, msg: 'Empty space has nothing in it to pull with; the particles only move at random.' }
+          : { ok: false, msg: 'Read the tally under the chamber: the crowded arrangement turns up far less often than a spread one.' };
+        return { ok: false, msg: 'Press Shake a good many times and compare the tally with your prediction.' };
+      },
+      reward: {
+        log: 'Spread out is simply the likeliest state.',
+        title: 'Entropy',
+        body: 'Entropy, S, measures how many microstates a system has: S = k ln W. A gas spreads out because spread-out states overwhelmingly outnumber crowded ones, with no force needed.'
       }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Reason',
-      options: [
-        choice('ways', 'Spread-out arrangements far outnumber crowded ones'),
-        choice('vacuum-pull', 'The empty space pulls the particles rightward'),
-        choice('heat-pull', 'Opening the gate heats the gas and fixes it in place')
-      ]
-    },
-    hints: [
-      'Read the counts on the plate for all arrangements and for the crowded one.',
-      'Compare how many arrangements put every particle on the left with how many spread them out.',
-      'With particles moving at random, the state with the most arrangements is the one that turns up.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'ways') return { ok: true };
-      if (state.choice === 'vacuum-pull') return { ok: false, msg: 'Empty space has nothing in it to pull with; the particles only move at random.' };
-      return { ok: false, msg: 'Nothing on the plate says the gas is warmed or held, and the counts on the plate are what to compare.' };
-    },
-    reward: {
-      log: 'Spread out is simply the likeliest state.',
-      title: 'Entropy',
-      body: 'Entropy, S, measures how many microstates a system has: S = k ln W. A gas spreads out because spread-out states overwhelmingly outnumber crowded ones, with no force needed.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
   {
@@ -149,32 +138,27 @@ export const STAGES = [
     prompt: 'Order ice, liquid water and steam from the lowest entropy to the highest.',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each plate draws the same number of water molecules in the same box at the same temperature.'
+      body: 'Each card draws the same number of water molecules in the same box at the same temperature.'
     },
-    rigs: [
-      { id: 'ice', label: 'Ice H₂O(s)', head: 'box', submode: 'phases', phaseState: 'solid', sublabel: 'Vibrating at fixed lattice sites' },
-      { id: 'water', label: 'Liquid Water H₂O(l)', head: 'box', submode: 'phases', phaseState: 'liquid', sublabel: 'Sliding past one another in a compact layer' },
-      { id: 'steam', label: 'Water Vapour H₂O(g)', head: 'box', submode: 'phases', phaseState: 'gas', sublabel: 'Moving freely through the whole box' }
-    ],
-    widget: {
-      type: 'order',
-      label: 'Order from lowest to highest entropy',
-      rail: { first: 'Lowest entropy', last: 'Highest entropy' },
-      items: [
-        choice('ice', 'Ice'),
-        choice('water', 'Liquid water'),
-        choice('steam', 'Steam')
-      ]
-    },
+    widget,
+    table: heatTable({
+      pieces: [
+        phaseCard('ice', 'Ice H₂O(s)', { x: 40, y: 38 }, 'solid'),
+        phaseCard('water', 'Liquid water H₂O(l)', { x: 75, y: 38 }, 'liquid'),
+        phaseCard('steam', 'Steam H₂O(g)', { x: 110, y: 38 }, 'gas')
+      ],
+      zones: { rail: { at: { x: 75, y: 38 }, size: { w: 112, h: 14 }, first: 'Lowest entropy', last: 'Highest entropy', items: ['ice', 'water', 'steam'] } }
+    }),
     hints: [
-      'Look at how the molecules are placed on each of the three plates.',
-      'Compare how many different places each molecule could be in on each plate.',
-      'The more places a molecule can be, the more arrangements there are, so put the plates from fewest places to most.'
+      'Look at how the molecules are placed on each of the three cards.',
+      'Compare how many different places each molecule could be in on each card.',
+      'The more places a molecule can be, the more arrangements there are, so put the cards from fewest places to most.'
     ],
     check(state) {
-      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Put all three phases in order.' };
-      if (state.order.join(',') === 'ice,water,steam') return { ok: true };
-      return { ok: false, msg: 'Compare how much freedom the molecules have on each plate: the most confined phase has the fewest arrangements.' };
+      const order = state.table.zones.rail.order;
+      if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three phases in order.' };
+      if (order.join(',') === 'ice,water,steam') return { ok: true };
+      return { ok: false, msg: 'Compare how much freedom the molecules have on each card: the most confined phase has the fewest arrangements.' };
     },
     reward: {
       log: 'More freedom meant more arrangements.',
@@ -190,35 +174,30 @@ export const STAGES = [
     prompt: 'Sort the two reactions by the sign of their ΔS°.',
     briefing: {
       speaker: SPEAKER,
-      body: 'ΔS° is the entropy of a reaction’s products less that of its reactants, and each plate shows the states of the substances involved.'
+      body: 'ΔS° is the entropy of a reaction\'s products less that of its reactants, and each card shows the states of the substances involved.'
     },
-    rigs: [
-      {
-        id: 'lime-decomp', label: 'CaCO₃(s) → CaO(s) + CO₂(g)', head: 'box', submode: 'phases',
-        phaseState: 'gas', sublabel: 'A solid reactant; a solid and a gas as products'
-      },
-      {
-        id: 'haber', label: 'N₂(g) + 3 H₂(g) → 2 NH₃(g)', head: 'box', submode: 'phases',
-        phaseState: 'gas', sublabel: 'Gas reactants; a gas product'
+    widget,
+    table: heatTable({
+      pieces: [
+        stmt('lime', 'CaCO₃(s) → CaO(s) + CO₂(g)', { x: 30, y: 22 }),
+        stmt('haber', 'N₂(g) + 3 H₂(g) → 2 NH₃(g)', { x: 30, y: 42 })
+      ],
+      zones: {
+        trays: [
+          { id: 'pos', label: 'ΔS° above zero', at: { x: 110, y: 20 }, size: { w: 40, h: 14 }, cell: 36, cellH: 13 },
+          { id: 'neg', label: 'ΔS° below zero', at: { x: 110, y: 46 }, size: { w: 40, h: 14 }, cell: 36, cellH: 13 }
+        ]
       }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'Sign of ΔS°',
-      bins: [choice('pos', 'ΔS° above zero'), choice('neg', 'ΔS° below zero')],
-      items: [
-        choice('lime-decomp', 'CaCO₃(s) → CaO(s) + CO₂(g)'),
-        choice('haber', 'N₂(g) + 3 H₂(g) → 2 NH₃(g)')
-      ]
-    },
+    }),
     hints: [
-      'Read the equation of each reaction, state symbols included.',
+      'Read the equation on each card, state symbols included.',
       'Compare the moles of gas on the two sides of each equation.',
       'Gas carries by far the most entropy, so a reaction that makes gas gains entropy and one that uses gas up loses it.'
     ],
     check(state) {
-      if (!state.bins['lime-decomp'] || !state.bins.haber) return { ok: false, notYet: true, msg: 'Place both reactions first.' };
-      if (state.bins['lime-decomp'] === 'pos' && state.bins.haber === 'neg') return { ok: true };
+      const t = state.table;
+      if (!['pos', 'neg'].includes(whereIs(t, 'lime')) || !['pos', 'neg'].includes(whereIs(t, 'haber'))) return { ok: false, notYet: true, msg: 'Place both reactions first.' };
+      if (whereIs(t, 'lime') === 'pos' && whereIs(t, 'haber') === 'neg') return { ok: true };
       return { ok: false, msg: 'Count the moles of gas on each side of each equation: a reaction that ends with more gas than it began with gains entropy.' };
     },
     reward: {
@@ -232,30 +211,33 @@ export const STAGES = [
   {
     id: 's5-dissolving',
     title: 'Breaking a Crystal Into Mobile Ions',
-    prompt: 'What is the sign of ΔS° when solid sodium chloride dissolves in water?',
+    prompt: 'Put the sign of ΔS° for solid sodium chloride dissolving in water in the slot.',
     briefing: {
       speaker: SPEAKER,
       body: 'Sodium chloride is a crystal of fixed ions, and in water its ions drift apart.'
     },
-    rigs: [
-      { id: 'nacl-solid', label: 'Before: NaCl(s) Crystal', head: 'box', submode: 'phases', phaseState: 'solid', sublabel: 'Ions held in a rigid lattice' },
-      { id: 'nacl-aq', label: 'After: Na⁺(aq) + Cl⁻(aq)', head: 'box', submode: 'phases', phaseState: 'liquid', sublabel: 'Ions moving through the solution' }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Sign of ΔS°',
-      options: [choice('pos', 'Positive'), choice('neg', 'Negative'), choice('zero', 'Zero')]
-    },
+    widget,
+    table: heatTable({
+      pieces: [
+        { ...phaseCard('before', 'Before: NaCl(s) crystal', { x: 30, y: 26 }, 'solid'), fixed: true },
+        { ...phaseCard('after', 'After: Na⁺ + Cl⁻ in water', { x: 66, y: 26 }, 'liquid'), fixed: true },
+        tag('pos', 'Positive', { x: 80, y: 52 }),
+        tag('neg', 'Negative', { x: 108, y: 52 }),
+        tag('zero', 'Zero', { x: 136, y: 52 })
+      ],
+      zones: { slots: [{ id: 'answer', label: 'Sign of ΔS°', at: { x: 118, y: 26 }, size: { w: 28, h: 12 } }] }
+    }),
     hints: [
-      'Compare how the ions are placed on the two plates.',
+      'Compare how the ions are placed on the two cards.',
       'Compare how many places each ion could be in before and after dissolving.',
       'More places for the ions means more arrangements, and the sign follows from whether the count rose or fell.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a sign.' };
-      if (state.choice === 'pos') return { ok: true };
-      if (state.choice === 'neg') return { ok: false, msg: 'The ions do not disappear when they dissolve; compare the places each one can be in before and after.' };
-      return { ok: false, msg: 'The two plates show the ions in very different freedom, and no gas is needed for entropy to change.' };
+      const p = Object.values(state.table.pieces).find(q => q.zone === 'slot:answer');
+      if (!p) return { ok: false, notYet: true, msg: 'Put a sign in the slot.' };
+      if (p.id === 'pos') return { ok: true };
+      if (p.id === 'neg') return { ok: false, msg: 'The ions do not disappear when they dissolve; compare the places each one can be in before and after.' };
+      return { ok: false, msg: 'The two cards show the ions in very different freedom, and no gas is needed for entropy to change.' };
     },
     reward: {
       log: 'The freed ions gained arrangements.',
@@ -265,98 +247,80 @@ export const STAGES = [
   },
 
   /* ---------------------------------------------------------------- 6 */
-  {
-    id: 's6-heating',
-    title: 'How Heating Changes Entropy',
-    prompt: 'What happens to a sample’s entropy when it is heated without changing phase?',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Position is not the only freedom: heat also spreads over the speeds, spins and vibrations of the molecules.'
-    },
-    rigs: [
-      {
-        id: 'cold-gas',
-        label: 'Cool and Hot Samples',
-        head: 'contact',
-        left: { label: 'Cool sample', T: -73, m: 100, c: 1.0, massLabel: 'Narrow range of speeds' },
-        right: { label: 'Hot sample', T: 127, m: 100, c: 1.0, massLabel: 'Wide spread of speeds' },
-        joined: false
+  (() => {
+    const token = (id, label, x) => ({ id, label, at: { x, y: 56 }, r: 7 });
+    return {
+      id: 's6-heating',
+      title: 'How Heating Changes Entropy',
+      prompt: 'Predict what warming a sample without changing its phase does to its entropy, then test it.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Position is not the only freedom: heat also spreads over the speeds, spins and vibrations of the molecules.'
+      },
+      widget,
+      table: heatTable({
+        fixtures: [warmFixture('sample', { x: 30, y: 28 }, { Ts: [-73, 27, 127], hideS: true, title: '100 g gas sample' })],
+        prediction: {
+          slot: { id: 'predict', label: 'Warming it', at: { x: 118, y: 28 }, size: { w: 30, h: 12 } },
+          tokens: [token('up', 'Entropy increases', 70), token('down', 'Entropy decreases', 106), token('same', 'Stays the same', 138)]
+        }
+      }),
+      hints: [
+        'Place a prediction, turn the Heater dial to a higher setting and press Record.',
+        'Compare the range of speeds drawn at the cool setting and at the hot one.',
+        'A wider range of possible motions means more arrangements of the energy.'
+      ],
+      check(state) {
+        const t = state.table;
+        const token = t.prediction.token;
+        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+        if (token === 'up') return { ok: true };
+        if (t.prediction.tested) return token === 'down'
+          ? { ok: false, msg: 'Faster molecules do not have fewer states; compare the range of speeds at the two settings.' }
+          : { ok: false, msg: 'The two settings show different spreads of speeds, so the number of arrangements is not the same.' };
+        return { ok: false, msg: 'Turn the Heater dial up, press Record and compare the entropy it prints with your prediction.' };
+      },
+      reward: {
+        log: 'The hot sample had more ways to share its energy.',
+        title: 'Heating Raises Entropy',
+        body: 'Warming a substance spreads its energy over a wider range of speeds, rotations and vibrations. More ways to share the energy means a larger W, so entropy rises with temperature.'
       }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Effect of heating on entropy',
-      options: [choice('up', 'It increases'), choice('down', 'It decreases'), choice('same', 'It stays the same')]
-    },
-    hints: [
-      'Compare the range of speeds drawn for the cool sample and for the hot one.',
-      'Compare how many different ways the energy could be shared out in each.',
-      'A wider range of possible motions means more arrangements of the energy.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an effect.' };
-      if (state.choice === 'up') return { ok: true };
-      if (state.choice === 'down') return { ok: false, msg: 'Faster molecules do not have fewer states; compare the range of speeds on the two plates.' };
-      return { ok: false, msg: 'The two plates show different spreads of speeds, so the number of arrangements is not the same.' };
-    },
-    reward: {
-      log: 'The hot sample had more ways to share its energy.',
-      title: 'Heating Raises Entropy',
-      body: 'Warming a substance spreads its energy over a wider range of speeds, rotations and vibrations. More ways to share the energy means a larger W, so entropy rises with temperature.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 7 */
   {
     id: 's7-table-calc',
     title: 'Absolute Entropies at 298 K',
-    prompt: 'Use the entropy table on the plate to find ΔS° for CaCO₃(s) → CaO(s) + CO₂(g).',
+    prompt: 'Use the entropy table to find ΔS° for CaCO₃(s) → CaO(s) + CO₂(g), and set it on the dial.',
     briefing: {
       speaker: SPEAKER,
       body: 'Entropy has a true zero, a perfect crystal at 0 K, so every substance at 298 K has a value above zero.'
     },
-    rigs: [
-      {
-        id: 's0-table',
-        label: 'Entropy Table at 298 K',
-        head: 'hess',
-        submode: 'formation',
-        hideSeaLevel: true,
-        columnLabel: 'S° (J/(mol·K))',
-        targetEq: 'CaCO₃(s) → CaO(s) + CO₂(g)',
-        reactants: [{ formula: 'CaCO₃(s)', n: 1, dHf: FORMATION_TABLE['CaCO3(s)'].S0 }],
-        products: [
-          { formula: 'CaO(s)', n: 1, dHf: FORMATION_TABLE['CaO(s)'].S0 },
-          { formula: 'CO₂(g)', n: 1, dHf: FORMATION_TABLE['CO2(g)'].S0 }
-        ]
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'ΔS° (J/(mol·K))',
-      options: [
-        choice('right', '+160.2'),
-        choice('flipped', '−160.2'),
-        choice('all', '+343.6'),
-        choice('prod', '+251.9')
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('s0', 'S° at 298 K, J/(mol·K)', { x: 46, y: 28 }, [`CaCO₃(s)    ${S0('CaCO3(s)')}`, `CaO(s)    ${S0('CaO(s)')}`, `CO₂(g)    ${S0('CO2(g)')}`], { w: 70 }),
+        selectorFixture('answer', 'ΔS° (J/(mol·K))', { x: 120, y: 28 }, { options: ['+160.2', '−160.2', '+343.6', '+251.9'], start: 4, w: 46 })
       ]
-    },
+    }),
     hints: [
       'Read the S° of each substance from the table.',
       'Compare the total for the products with the total for the reactants.',
       'Add the entropies of the products, then take off the entropies of the reactants.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a value.' };
-      if (state.choice === 'right') return { ok: true };
-      if (state.choice === 'flipped') return { ok: false, msg: 'The sign is backward: the reaction makes a gas from a solid, so check which total is larger.' };
-      if (state.choice === 'all') return { ok: false, msg: 'The reactant’s entropy is taken off the products’, not added to them.' };
-      return { ok: false, msg: 'That is only the products’ total; the reactant’s entropy still has to be taken off.' };
+      const v = dialAt(state.table, 'answer', 'value');
+      if (v === 1) return { ok: true };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Set the value you worked out.' };
+      if (v === 2) return { ok: false, msg: 'The sign is backward: the reaction makes a gas from a solid, so check which total is larger.' };
+      if (v === 3) return { ok: false, msg: 'The reactant\'s entropy is taken off the products\', not added to them.' };
+      return { ok: false, msg: 'That is only the products\' total; the reactant\'s entropy still has to be taken off.' };
     },
     reward: {
       log: 'The products held more entropy than the reactant.',
       title: 'Standard Molar Entropy',
-      body: 'The standard molar entropy, S°, is the absolute entropy of one mole of a substance at 1 bar and 298 K. Products less reactants gives ΔS°, and here it is +160.2 J/(mol·K) because a solid frees a gas.'
+      body: 'The standard molar entropy, S°, is the absolute entropy of one mole of a substance at 1 bar and 298 K. Products less reactants gives ΔS°, and here it is +160.2 J/(mol·K) because a solid has made a gas.'
     }
   },
 
@@ -365,36 +329,31 @@ export const STAGES = [
     id: 's8-sort-four',
     title: 'Sorting Four Changes by ΔS',
     prompt: 'Sort the four changes by whether their entropy rises or falls.',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Each plate names the change and the states of what takes part in it.'
-    },
-    rigs: [
-      { id: 'p-boil', label: 'Boiling Liquid Ethanol', head: 'box', submode: 'phases', phaseState: 'gas', sublabel: 'C₂H₅OH(l) → C₂H₅OH(g)' },
-      { id: 'p-freeze', label: 'Freezing Liquid Water', head: 'box', submode: 'phases', phaseState: 'solid', sublabel: 'H₂O(l) → H₂O(s)' },
-      { id: 'p-decomp', label: 'Decomposing N₂O₅', head: 'box', submode: 'phases', phaseState: 'gas', sublabel: '2 N₂O₅(s) → 4 NO₂(g) + O₂(g)' },
-      { id: 'p-cond', label: 'Precipitating AgCl', head: 'box', submode: 'phases', phaseState: 'solid', sublabel: 'Ag⁺(aq) + Cl⁻(aq) → AgCl(s)' }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'Sign of ΔS',
-      bins: [choice('pos', 'ΔS above zero'), choice('neg', 'ΔS below zero')],
-      items: [
-        choice('p-boil', 'Boiling liquid ethanol into vapour'),
-        choice('p-freeze', 'Freezing liquid water into ice'),
-        choice('p-decomp', 'Decomposing solid N₂O₅ into gases'),
-        choice('p-cond', 'Precipitating solid AgCl from ions in water')
-      ]
-    },
+    widget,
+    table: heatTable({
+      pieces: [
+        stmt('boil', 'C₂H₅OH(l) → C₂H₅OH(g)', { x: 30, y: 12 }),
+        stmt('freeze', 'H₂O(l) → H₂O(s)', { x: 30, y: 26 }),
+        stmt('decomp', '2 N₂O₅(s) → 4 NO₂(g) + O₂(g)', { x: 30, y: 40 }),
+        stmt('precip', 'Ag⁺(aq) + Cl⁻(aq) → AgCl(s)', { x: 30, y: 54 })
+      ],
+      zones: {
+        trays: [
+          { id: 'pos', label: 'ΔS above zero', at: { x: 108, y: 19 }, size: { w: 40, h: 26 }, cell: 36, cellH: 13 },
+          { id: 'neg', label: 'ΔS below zero', at: { x: 108, y: 50 }, size: { w: 40, h: 26 }, cell: 36, cellH: 13 }
+        ]
+      }
+    }),
     hints: [
-      'Read the equation on each plate, state symbols included.',
+      'Read the equation on each card, state symbols included.',
       'Compare how free the particles are before and after each change.',
       'A change that frees particles into more places gains entropy, and one that locks them into fewer places loses it.'
     ],
     check(state) {
-      const want = { 'p-boil': 'pos', 'p-freeze': 'neg', 'p-decomp': 'pos', 'p-cond': 'neg' };
-      if (Object.keys(want).some(k => !state.bins[k])) return { ok: false, notYet: true, msg: 'Place all four changes first.' };
-      if (Object.entries(want).every(([k, v]) => state.bins[k] === v)) return { ok: true };
+      const t = state.table;
+      const want = { boil: 'pos', freeze: 'neg', decomp: 'pos', precip: 'neg' };
+      if (Object.keys(want).some(k => !['pos', 'neg'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Place all four changes first.' };
+      if (Object.entries(want).every(([k, v]) => whereIs(t, k) === v)) return { ok: true };
       return { ok: false, msg: 'Check each equation: which side has the particles with more freedom to move?' };
     },
     reward: {
@@ -404,6 +363,19 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag the particles into cells; press Log.'],
+  2: ['Place a prediction, then press Shake.'],
+  3: ['Drag the cards into order along the rail.'],
+  4: ['Drag each reaction into a tray.'],
+  5: ['Drag a sign into the slot.'],
+  6: ['Place a prediction; turn the Heater dial;', 'press Record.'],
+  7: ['Turn the dial to the value you worked out.'],
+  8: ['Drag each change into a tray.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -484,36 +456,58 @@ export const PRACTICE = [
   }
 ];
 
+
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    ------------------------------------------------------------------ */
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tray}`));
+const rail = (...ids) => ids.map((id, i) => put(id, `rail:${i}`));
+
 export const SOLUTIONS = [
-  { number: WAYS_8_2 },
-  { choice: 'ways' },
-  { order: ['ice', 'water', 'steam'] },
-  { bins: { 'lime-decomp': 'pos', haber: 'neg' } },
-  { choice: 'pos' },
-  { choice: 'up' },
-  { choice: 'right' },
-  { bins: { 'p-boil': 'pos', 'p-freeze': 'neg', 'p-decomp': 'pos', 'p-cond': 'neg' } }
+  [put('p1', 'slot:box.c1'), put('p2', 'slot:box.c2'), { run: 'box' }, dial('box', 'gate', 2), put('p2', 'slot:box.c6'), { run: 'box' }, dial('ways', 'value', 28)],
+  [{ predict: 'spread' }, { run: 'chamber' }, { run: 'chamber' }, { run: 'chamber' }],
+  [...rail('ice', 'water', 'steam')],
+  [...sort({ lime: 'pos', haber: 'neg' })],
+  [put('pos', 'slot:answer')],
+  [{ predict: 'up' }, dial('sample', 'temp', 3), { run: 'sample' }],
+  [dial('answer', 'value', 1)],
+  [...sort({ boil: 'pos', freeze: 'neg', decomp: 'pos', precip: 'neg' })]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { number: 6 },
-  { choice: 'vacuum-pull' },
-  { order: ['steam', 'water', 'ice'] },
-  { bins: { 'lime-decomp': 'neg', haber: 'neg' } },
-  { choice: 'neg' },
-  { choice: 'down' },
-  { choice: 'flipped' },
-  { bins: { 'p-boil': 'neg', 'p-freeze': 'neg', 'p-decomp': 'pos', 'p-cond': 'neg' } }
+  [dial('ways', 'value', 6)],
+  [{ predict: 'crowded' }, { run: 'chamber' }],
+  [...rail('steam', 'water', 'ice')],
+  [...sort({ lime: 'neg', haber: 'pos' })],
+  [put('neg', 'slot:answer')],
+  [{ predict: 'down' }, dial('sample', 'temp', 3), { run: 'sample' }],
+  [dial('answer', 'value', 2)],
+  [...sort({ boil: 'neg', freeze: 'neg', decomp: 'pos', precip: 'neg' })]
 ];
 
-export const stateFor = makeStateFor(STAGES);
+function blankState() { return {}; }
 
-export function mount(container, ctx) {
-  return mountThermo(container, ctx, { STAGES, DEBRIEF, toolNoteFor });
+/** Build a full bench state for stage `i` from one of the sets above. */
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
 }
 
-/* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { LIME_DS };
+/* ==================================================================
+   THE GAME
+   ================================================================== */
+
+export function mount(container, ctx) {
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
+}
+
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { waysOf, loggedArrangements, shakesOf, warmAt, DS_LIME, WAYS_8_2 };

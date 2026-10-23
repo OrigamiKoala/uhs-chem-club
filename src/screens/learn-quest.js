@@ -47,6 +47,7 @@ export function disposeLearnQuest() {
   } catch (err) {
     console.error('Leaving the quest scene failed:', err);
   }
+  try { stage.clearArenaBench?.(); } catch (err) { console.error('Taking the arena table down failed:', err); }
   document.body.classList.remove('bench-deployed');
   // Whatever stood the walk down, give it back. The router calls this on every
   // navigation away from a quest route, including back out onto the flat.
@@ -128,7 +129,10 @@ export function renderLearnQuest(container, params = {}) {
     const w3d = world3dFor(world.id);
     if (bossSpot) {
       w3d?.enter(stage, null, bossSpot.playerPos, bossSpot.lookAtPos);
-      setBenchSite(null);
+      // The fight is played over a table stood in the arena, between the player and the boss, so the boss is in the glass
+      // while the table is worked (`three/arena-table.js`). It is registered as this quest's bench; the tabletop deploys onto it.
+      stage.setArenaBench(quest.id, bossSpot);
+      setBenchSite(quest.id);
       bossArena = new BossArena(stage, bossSpot);
     } else {
       const site = w3d?.siteForQuest(quest.id);
@@ -152,7 +156,8 @@ export function renderLearnQuest(container, params = {}) {
     // bench is a real object on real ground, and the player keeps their feet —
     // W/A/S/D repositions them at it, which is how they get a different angle
     // on a well instead of waiting for the camera to be adjusted for them.
-    stage.setWalkSuspended?.(!benchIsBuilt(quest.id) || isBoss);
+    // A boss's table is a real bench on real ground like any other (`setArenaBench`), so its player keeps their feet too.
+    stage.setWalkSuspended?.(!benchIsBuilt(quest.id));
 
     /* THE BRIEFING MUST NOT BLACK OUT THE BENCH.
        A modal on this product paints a near-opaque scrim over the whole glass,
@@ -161,7 +166,7 @@ export function renderLearnQuest(container, params = {}) {
        needle on all four" was itself hiding all four. With a bench standing in
        the world, the transmission docks down one side and lets the light
        through, and `fitDeployedAim` slides the bench out from behind it. */
-    if (benchIsBuilt(quest.id) && !isBoss) document.body.classList.add('bench-deployed');
+    if (benchIsBuilt(quest.id)) document.body.classList.add('bench-deployed');
     else document.body.classList.remove('bench-deployed');
   }
 

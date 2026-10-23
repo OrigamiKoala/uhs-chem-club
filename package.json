@@ -21,10 +21,11 @@
     "verify:ship": "node tools/verify-ship.mjs",
     "verify:progression": "node tools/verify-progression.mjs",
     "verify:story": "node tools/verify-story.mjs",
-    "verify": "npm run verify:quest && npm run verify:console && npm run verify:learn && npm run verify:table && npm run verify:story && npm run verify:sync && npm run verify:drills && npm run verify:galaxy && npm run verify:run && npm run verify:geometry && npm run verify:media && npm run verify:flows && npm run verify:progression && npm run verify:ship && npm run verify:voyage && npm run verify:tallow && npm run verify:ligar && npm run verify:lanternfall && npm run verify:bellows && npm run verify:ember && npm run verify:bench && npm run verify:holo && npm run verify:normals && npm run build",
+    "verify": "npm run verify:quest && npm run verify:console && npm run verify:learn && npm run verify:table && npm run verify:story && npm run verify:sync && npm run verify:drills && npm run verify:docs && npm run verify:galaxy && npm run verify:run && npm run verify:geometry && npm run verify:media && npm run verify:flows && npm run verify:progression && npm run verify:ship && npm run verify:voyage && npm run verify:tallow && npm run verify:ligar && npm run verify:lanternfall && npm run verify:bellows && npm run verify:ember && npm run verify:bench && npm run verify:arena && npm run verify:holo && npm run verify:normals && npm run build",
     "verify:tallow": "node tools/verify-tallow.mjs",
     "verify:console": "node tools/verify-console.mjs",
     "verify:bench": "node tools/verify-bench.mjs",
+    "verify:arena": "node tools/verify-arena.mjs",
     "verify:holo": "node tools/verify-holo.mjs",
     "verify:ligar": "node tools/verify-ligar.mjs",
     "verify:run": "node tools/verify-quest-run.mjs",
@@ -35,6 +36,7 @@
     "verify:normals": "node tools/verify-normals.mjs",
     "verify:sync": "node tools/verify-sync.mjs",
     "verify:drills": "node tools/verify-drills.mjs",
+    "verify:docs": "node tools/verify-docs.mjs",
     "verify:galaxy": "node tools/verify-galaxy.mjs"
   },
   "dependencies": {

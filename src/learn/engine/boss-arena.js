@@ -4,19 +4,26 @@
  * Places high-quality 3D bosses (CombatMonster3D) in open world spots,
  * manages first-person attack effects (CombatFpsFx), damage flashes,
  * hit reactions, counters, and dispersal.
+ *
+ * THE FIGHT IS SEEN. The player works a table stood in the arena between them and the boss
+ * (`three/arena-table.js`), and the leaned-in view looks down at the plate, so every beat of the fight
+ * that matters turns the head up at the boss for as long as it lasts (`bench-host.js` `requestGaze`):
+ * the boss rising out of the ground, the volley that lands, the bolt that comes back, the roar between
+ * phases, the collapse. Between beats the view is the table's. Reduced motion keeps the camera still.
  */
 
 import * as THREE from 'three';
 import { CombatMonster3D } from './combat-monster-3d.js';
 import { CombatFpsFx, DamageEmitter, shadowTexture, sfx } from './combat-fps-fx.js';
 import { BossHud } from './boss-hud.js';
+import { requestGaze, setShakeSource, activeBenchViewer } from './bench-host.js';
 
 /** What the boss is called on its health plate, and the colour of what it throws. */
 const BOSS_LOOK = {
   'the hopper':        { name: 'The Hopper',        attack: 0xe59b24, ember: 0xff7a1f },
   'the lantern-eater': { name: 'The Lantern-Eater', attack: 0x7fd36a, ember: 0xb6ff5a },
   'basalt warden':     { name: 'The Basalt Warden', attack: 0xff4818, ember: 0xff5a1a },
-  'the compressor':    { name: 'The Compressor',    attack: 0x38bdf8, ember: 0xffa53a },
+  'the compressor':    { name: 'The Compressor',    attack: 0xdfe6e6, ember: 0xffa53a },
   'the crucible':      { name: 'The Crucible',      attack: 0xff6b2b, ember: 0xff9d3b },
   'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a }
 };
@@ -50,15 +57,15 @@ export const BOSS_ARENA_SPOTS = {
     playerPos: [0, 1.6, 42.0],
     lookAtPos: [0, 1.6, 30.0],
     bossPos: [0, 0, 30.0],
-    scale: 2.2,
+    scale: 1.8,
     species: 'the hopper'
   },
   'boss-eater': {
     worldId: 'unit02',
     playerPos: [0, 1.6, 68.0],
     lookAtPos: [0, 1.6, 54.0],
-    bossPos: [0, 1.4, 54.0],
-    scale: 2.2,
+    bossPos: [0, 2.6, 54.0],
+    scale: 1.1,
     species: 'the lantern-eater',
     flies: true
   },
@@ -67,7 +74,7 @@ export const BOSS_ARENA_SPOTS = {
     playerPos: [0, 1.6, 14.0],
     lookAtPos: [0, 1.6, 2.0],
     bossPos: [0, 0, 2.0],
-    scale: 2.2,
+    scale: 1.0,
     species: 'basalt warden'
   },
   'boss-compressor': {
@@ -75,7 +82,7 @@ export const BOSS_ARENA_SPOTS = {
     playerPos: [0, 1.6, 34.0],
     lookAtPos: [0, 1.6, 20.0],
     bossPos: [0, 0, 20.0],
-    scale: 2.2,
+    scale: 1.5,
     species: 'the compressor'
   },
   // In front of the caldera main's expansion loop, with the rim and the cone behind it
@@ -85,7 +92,7 @@ export const BOSS_ARENA_SPOTS = {
     playerPos: [0, 1.6, -47],
     lookAtPos: [0, 1.6, -63],
     bossPos: [0, 0, -63],
-    scale: 2.2,
+    scale: 1.4,
     species: 'the crucible'
   },
   'boss-golem': {
@@ -135,6 +142,9 @@ export class BossArena {
     this.phase = -1;
     this.defeated = false;
     this._eye = new THREE.Vector3();
+    this._look = new THREE.Vector3();
+    this.idleActT = 9 + Math.random() * 5;   // seconds until it next makes a show of itself
+    this.ambient = 0;                         // >0 while that show is on (its shake is a murmur)
 
     const x = bossPos ? bossPos[0] : 0;
     let y = bossPos ? bossPos[1] : 0;
@@ -151,7 +161,7 @@ export class BossArena {
     this.monster.setGround(ground);
     // A boss that walks stands ON the ground; one that flies hovers where it was put.
     if (!flies) this.monster.heightOffset = 0;
-    this.monster.onEvent = name => this.onMonsterEvent(name);
+    this.monster.onEvent = (name, at) => this.onMonsterEvent(name, at);
     if (this.scene) this.scene.add(this.monster.group);
 
     // A soft dark pool under it: the sun's shadow map is only drawn at a few
@@ -173,6 +183,8 @@ export class BossArena {
 
     if (this.scene && this.camera) {
       this.fx = new CombatFpsFx(this.scene, this.camera, { reduced: this.reduced });
+      // The table's view owns the camera while the player is leaned in, so the shake is handed to it.
+      setShakeSource(() => this.fx?.getShakeOffsets() || null);
     }
 
     if (typeof document !== 'undefined') {
@@ -196,6 +208,8 @@ export class BossArena {
       this.monster.startEntrance(flies ? 'drop' : 'rise', flies ? 1.8 : 2.2);
       this.hud?.showIntro();
       sfx('playEntry');
+      // The view stays on the boss while it arrives, then comes down to the table.
+      this.gaze(3.1, { inS: 0.2, outS: 0.9 });
     }
     this.monster.update(0, false, this.camera?.position || null);
 
@@ -237,8 +251,12 @@ export class BossArena {
     this.fx?.update(dt);
 
     this.updateGround(dt);
+    this.idleShow(dt);
 
-    if (this.camera) {
+    // While the player is leaned in, the table's view applies the shake itself (it rewrites the camera every frame).
+    const viewer = activeBenchViewer();
+    const viewOwns = Boolean(viewer?.leaning && viewer.world?.arena);
+    if (this.camera && !viewOwns) {
       if (this.appliedShake) {
         this.camera.rotation.z -= this.appliedShake.roll;
         this.camera.position.x -= this.appliedShake.posX;
@@ -276,9 +294,42 @@ export class BossArena {
     }
   }
 
+  /* ----------------------------- the view ----------------------------- */
+
+  /** Turn the leaned-in view up at the boss for `hold` seconds. Reduced motion never moves the camera. */
+  gaze(hold, { inS = 0.35, outS = 0.6 } = {}) {
+    if (this.reduced || this.disposed) return;
+    requestGaze({
+      point: out => {
+        if (!this.monster || this.monster.isGone) return null;
+        this.monster.getCenterWorld(out);
+        out.y += this.monster.height * 0.12;
+        return out;
+      },
+      hold, inS, outS
+    });
+  }
+
+  /**
+   * Between the player's moves it is not still: now and then it rears and roars (a murmur of shake, no bolt,
+   * no cost). Nothing that is not a committed miss ever fires at the player.
+   */
+  idleShow(dt) {
+    if (this.ambient > 0) this.ambient = Math.max(0, this.ambient - dt);
+    if (this.reduced || this.defeated || !this.monster) return;
+    const m = this.monster;
+    if (m.entrance && !m.entrance.landed) return;
+    if (m.windup || m.roarT > 0 || m.lungeT > 0 || this.pending > 0 || this.wrongBusy) return;
+    this.idleActT -= dt;
+    if (this.idleActT > 0) return;
+    this.idleActT = 13 + Math.random() * 9;
+    this.ambient = 1.4;
+    m.triggerRoar();
+  }
+
   /* ------------------------- what the boss does ------------------------- */
 
-  onMonsterEvent(name) {
+  onMonsterEvent(name, at) {
     const m = this.monster;
     if (!m || !this.fx) return;
     const ground = () => new THREE.Vector3(m.group.position.x, m.groundAt(m.group.position.x, m.group.position.z), m.group.position.z);
@@ -290,7 +341,7 @@ export class BossArena {
     } else if (name === 'roar') {
       this.fx.dustBurst(ground(), { radius: m.radius * 1.2, count: 10 });
       this.fx.shockwave(ground(), { radius: m.radius * 2.4, life: 0.8 });
-      this.fx.addTrauma(0.4);
+      this.fx.addTrauma(this.ambient > 0 ? 0.18 : 0.4);
       sfx('playEntry');
     } else if (name === 'slam') {
       this.fx.dustBurst(ground(), { radius: m.radius * 1.1, count: 8 });
@@ -299,6 +350,11 @@ export class BossArena {
       this.queuedHit = null;
       const from = this.mouthPoint();
       this.fx.fireFoeBolt(from, this.look.attack, () => this.playerHit(hit));
+    } else if (name === 'plate' && at) {
+      // A piece of its armour struck off by the wound that just landed.
+      this.fx.sparks(at, { count: 18, speed: 6, color: this.look.ember, size: 0.14, life: 0.6 });
+      this.fx.dustBurst(at, { radius: 1.2, count: 5, rise: 1.2 });
+      this.fx.addTrauma(0.12);
     } else if (name === 'shattered') {
       this.fx.dustBurst(ground(), { radius: m.radius * 2.0, count: 22, rise: 2.4 });
     }
@@ -307,6 +363,11 @@ export class BossArena {
   /** Where it charges and fires from: the side of its body that faces the player. */
   mouthPoint(out = new THREE.Vector3()) {
     const m = this.monster;
+    // A body with a muzzle (a maw, a spout, a fist) fires from it.
+    if (m.muzzle) {
+      m.group.updateMatrixWorld(true);
+      return m.muzzle.getWorldPosition(out);
+    }
     if (this.camera) this.camera.getWorldPosition(this._eye);
     m.getSurfacePoint(this._eye, out);
     out.y += m.height * 0.12;
@@ -339,8 +400,9 @@ export class BossArena {
         this.monster.setDamage(1 - expected / MAX_HP);
       }
       if (index > this.phase && !this.reduced) {
-        // The next phase: it rears up and closes in.
+        // The next phase: it rears up and closes in, and the view goes up to watch it.
         this.after(0.3, () => { if (!this.defeated) this.monster?.triggerRoar(); });
+        this.gaze(1.7);
       }
     }
     this.phase = Math.max(this.phase, index);
@@ -381,13 +443,20 @@ export class BossArena {
     };
 
     if (this.fx) {
-      this.fx.fireVolley(
-        () => {
-          if (this.camera) this.camera.getWorldPosition(this._eye);
-          return { point: this.monster.getSurfacePoint(this._eye) };
-        },
-        { count: n, interval: last ? 0.2 : 0.17, scale: last ? 1.15 : 1, onHit: strike }
-      );
+      const interval = last ? 0.2 : 0.17;
+      // The head comes up first, so the bolts leave a view that already has the boss in it; then they fly.
+      const turn = this.reduced ? 0 : 0.34;
+      this.gaze(turn + n * interval + (last ? 3.2 : 1.7), last ? { outS: 1.0 } : {});
+      this.after(turn, () => {
+        if (this.disposed || !this.fx || !this.monster) return;
+        this.fx.fireVolley(
+          () => {
+            if (this.camera) this.camera.getWorldPosition(this._eye);
+            return { point: this.monster.getSurfacePoint(this._eye) };
+          },
+          { count: n, interval, scale: last ? 1.15 : 1, onHit: strike }
+        );
+      });
     } else {
       for (let i = 0; i < n; i++) this.after(i * 0.15, () => strike(i, null));
     }
@@ -399,6 +468,7 @@ export class BossArena {
     this.defeated = true;
     this.queuedHit = null;
     this.hud?.defeat();
+    this.gaze(4.6, { outS: 1.2 });
     this.monster.triggerDeathThroes();
     sfx('playDropout');
 
@@ -444,6 +514,8 @@ export class BossArena {
     }
     this.queuedHit = rig;
     const wind = this.reduced ? 0.2 : 0.55;
+    // The view goes up as it winds up and stays for the bolt's flight and the blow.
+    this.gaze(wind + 1.5);
     this.monster.triggerTelegraph(wind);
     this.fx?.chargeOrb(() => this.mouthPoint(), wind, this.look.attack);
   }
@@ -479,6 +551,8 @@ export class BossArena {
     if (_activeBossArena === this) {
       setActiveBossArena(null);
     }
+    requestGaze(null);
+    setShakeSource(null);
     if (this.camera && this.appliedShake) {
       this.camera.rotation.z -= this.appliedShake.roll;
       this.camera.position.x -= this.appliedShake.posX;

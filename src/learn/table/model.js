@@ -168,7 +168,8 @@ export function createTable(spec, seedKey = '') {
     s.zones.trays[t.id] = {
       id: t.id, label: t.label || t.id, at: { ...t.at }, size: { ...SIZES.tray, ...(t.size || {}) },
       ...(t.cap != null ? { cap: t.cap } : {}),
-      ...(t.cell ? { cell: t.cell } : {})
+      ...(t.cell ? { cell: t.cell } : {}),
+      ...(t.cellH ? { cellH: t.cellH } : {})
     };
   }
   // A slot may name a `row`: the slots that share one are a STRIP (a card dropped on a filled one pushes the row
@@ -185,6 +186,7 @@ export function createTable(spec, seedKey = '') {
       capacity: c.capacity ?? null, contents: { ...(c.contents || {}) },
       // A container for big pieces (a crate in a pan) declares its own pitch, as a tray does.
       ...(c.cell ? { cell: c.cell } : {}),
+      ...(c.cellH ? { cellH: c.cellH } : {}),
       // Plain data the kit may read to draw it (a heap's tint): `kit.paintContainer` and the built table's piles.
       ...(c.props ? { props: { ...c.props } } : {})
     };

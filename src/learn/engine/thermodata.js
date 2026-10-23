@@ -153,6 +153,11 @@ export function crossingTemperature(dH_kJ, dS_J_K) {
   return (dH_kJ * 1000) / dS_J_K;
 }
 
+/** Entropy gained by warming a sample without a change of phase: ΔS = m · c · ln(T2 / T1), in J/K, with both temperatures in °C. */
+export function entropyOfHeating(massG, specificHeat, T1C, T2C) {
+  return massG * specificHeat * Math.log((T2C + 273.15) / (T1C + 273.15));
+}
+
 /** Build the live bench configuration object from a stage definition and current interactive state. */
 export function benchCfg(stage, state = {}) {
   const dialSpec = stage.dial || null;

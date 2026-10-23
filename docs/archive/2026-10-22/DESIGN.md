@@ -1,0 +1,775 @@
+---
+name: Avalon
+description: Advanced technology, poorly maintained — a forty-year-old working starship rendered as an interface.
+colors:
+  plate-000: "#080708"
+  plate-100: "#0f0e11"
+  plate-200: "#161519"
+  plate-300: "#1e1d22"
+  plate-400: "#29282f"
+  plate-500: "#38363f"
+  plate-600: "#4a4854"
+  border-durasteel: "rgba(214, 196, 168, 0.16)"
+  border-bright: "#e59b24"
+  border-hazard: "#b37f19"
+  seam-light: "rgba(255, 245, 230, 0.12)"
+  seam-dark: "rgba(0, 0, 0, 0.65)"
+  accent-amber: "#e59b24"
+  accent-gold: "#cca56e"
+  accent-rust: "#ab5722"
+  accent-green: "#78a142"
+  accent-green-deep: "#3f4a2a"
+  accent-danger: "#b8382c"
+  accent-bronze: "#967c50"
+  accent-cyan: "#628786"
+  lamp-amber: "#f5b742"
+  lamp-green: "#97bd58"
+  lamp-red: "#d44d3d"
+  text-primary: "#dcd6cc"
+  text-secondary: "#a49c90"
+  text-muted: "#8c8376"
+  text-bright: "#fbf9f5"
+  team-earth: "#967c50"
+  team-air: "#7d8b96"
+  team-fire: "#ab5722"
+  team-water: "#42877f"
+  charge-red: "#ff1744"
+  charge-blue: "#00b0ff"
+  charge-red-ink: "#e05a55"
+  charge-blue-ink: "#5aa9cf"
+typography:
+  display:
+    fontFamily: "Quantico, sans-serif"
+    fontSize: "1.55rem"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "0.12em"
+  headline:
+    fontFamily: "Quantico, sans-serif"
+    fontSize: "1.05rem"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "0.1em"
+  title:
+    fontFamily: "Quantico, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "0.1em"
+  body:
+    fontFamily: "Quantico, -apple-system, BlinkMacSystemFont, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.55
+    letterSpacing: "normal"
+  label:
+    fontFamily: "Quantico, JetBrains Mono, monospace"
+    fontSize: "0.68rem"
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: "0.12em"
+rounded:
+  sm: "0px"
+  md: "0px"
+  lg: "0px"
+  full: "9999px"
+  chamfer: "10px"
+  chamfer-sm: "6px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "28px"
+  hud: "64px"
+components:
+  button-primary:
+    backgroundColor: "#c08420"
+    textColor: "#14110b"
+    typography: "{typography.title}"
+    rounded: "{rounded.sm}"
+    padding: "11px 24px"
+    height: "44px"
+  button-primary-hover:
+    backgroundColor: "#d09424"
+    textColor: "#14110b"
+  button-primary-disabled:
+    backgroundColor: "{colors.plate-400}"
+    textColor: "{colors.text-muted}"
+  button-secondary:
+    backgroundColor: "{colors.plate-300}"
+    textColor: "{colors.text-primary}"
+    rounded: "{rounded.sm}"
+    padding: "11px 22px"
+    height: "44px"
+  button-secondary-hover:
+    backgroundColor: "{colors.plate-400}"
+    textColor: "{colors.text-bright}"
+  nav-button:
+    backgroundColor: "{colors.plate-300}"
+    textColor: "{colors.text-secondary}"
+    rounded: "{rounded.sm}"
+    padding: "6px 13px"
+    height: "38px"
+  nav-button-active:
+    backgroundColor: "{colors.plate-100}"
+    textColor: "{colors.accent-amber}"
+  input-field:
+    backgroundColor: "{colors.plate-100}"
+    textColor: "{colors.text-bright}"
+    rounded: "{rounded.sm}"
+    padding: "11px 14px"
+    height: "44px"
+  input-field-focus:
+    backgroundColor: "{colors.plate-100}"
+    textColor: "{colors.lamp-amber}"
+  panel-plate:
+    backgroundColor: "rgba(23, 22, 20, 0.95)"
+    textColor: "{colors.text-primary}"
+    rounded: "{rounded.sm}"
+    padding: "1.6rem 1.75rem"
+  status-tag:
+    backgroundColor: "{colors.plate-100}"
+    textColor: "{colors.text-muted}"
+    rounded: "{rounded.sm}"
+    padding: "3px 8px"
+  toast:
+    backgroundColor: "{colors.plate-200}"
+    textColor: "{colors.text-primary}"
+    rounded: "{rounded.sm}"
+    padding: "10px 16px"
+    width: "340px"
+---
+
+# Design System: Avalon
+
+## Overview
+
+**Creative North Star: "The Scoured Plate"**
+
+Everything on this ship is forty years old and still works. Avalon's interface is not a
+dark-mode website with a space theme laid over it — it is machined hardware that has been
+in the dust for four decades, maintained badly, and never once failed to do its job.
+Advanced technology, poorly maintained. Sand gets into everything, so the neutrals carry a
+brown bias; the light comes from filaments behind dusty glass, not from LEDs; and the
+metal is sandblasted rather than polished.
+
+The system's discipline is restraint with one signal. Amber means *live*. It is the only
+painted thing on a panel of bare durasteel, which is exactly why the eye finds it without
+being shouted at. A screen that is mostly amber has said nothing. The corollary is that
+this interface never advertises itself: there are no feature cards, no hero gradients, no
+badges claiming a connection is active. Every string on screen is 100% critical: a necessary label,
+a rule the player must satisfy, an error, something being taught, or a character speaking.
+Zero decorative fluff, zero pseudo-technical noise (such as `//` delimiters or fake status
+readouts like `status: clear` / `integrity: high`), and zero ceremonial titles (`Vess`, not
+`Vess // Quartermaster`). All copy must make practical sense and help the user directly.
+
+Depth is structural, not atmospheric. A plate is bolted to a bulkhead, so it catches a
+hairline of lamp light on its top edge, drops a shadow along its bottom, and casts a real
+shadow onto the surface behind it. What it never does is emit. `box-shadow: 0 0 20px
+<colour>` is the single loudest tell of vibe-coded design and is banned outright; the only
+exceptions are objects that are literally lamps. The reference points are the used-universe
+of a desert-planet space opera, never named in player-facing copy, only felt.
+
+**Key Characteristics:**
+- Obsidian and titanium neutrals — near-neutral dark with the faintest cool cast, deliberately.
+  Warmth lives in the text ramp and the filament amber, not the plates. Never saturated navy.
+- Radius tokens are zero; machined plate takes a 2–4px precision corner, nothing rounder.
+- Amber as a scarce signal; bare durasteel as the default.
+- Crisp type (`--engrave: none`) — never a glowing one.
+- One typeface, Quantico, across every role (JetBrains Mono as the telemetry fallback).
+- Charge red and blue are reserved for chemistry and appear nowhere else as surfaces.
+
+## Colors
+
+A dust palette: every hue is pulled well below full brightness, as if read through a
+filthy canopy under one sodium task lamp.
+
+### Primary
+
+- **Spice Amber** (`#e59b24`): the primary live signal. A lit nav tab, a focused input's
+  text, a stat value, the left edge of a toast, the rule under a link. If it is amber,
+  something is live or something is yours.
+- **The Filament** (`#f5b742`): the lamp itself, not the light it throws. Reserved for
+  marks small enough to read as a bulb — the active stage lamp, a focused field's text,
+  a hovered link. Never a fill larger than a few pixels across.
+
+### Secondary
+
+- **Sunlit Sand** (`#cca56e`): horizon light. Milestone borders, soft warnings, the
+  second-tier accent when amber would over-signal.
+- **Oxidised Iron** (`#ab5722`): hydraulic stain and rust. The Thermal Smelters livery,
+  and the tint of a marked grain on the core bench.
+- **Guild Bronze** (`#967c50`): insignia metal. The Mineral Mining livery.
+
+### Tertiary
+
+- **Aged Phosphor** (`#78a142`): an oscilloscope screen that has been on too long.
+  Cleared stages, confirmations, live tags. The success colour, and never a bright green.
+  **Phosphor Recess** (`#3f4a2a`, `--accent-green-deep`) is the dark border a lit green lamp
+  or meter cell sits in — a border, never text.
+- **Blast Hazard Red** (`#b8382c`): painted on and chipped off. Faults, miss banners,
+  destructive confirmations.
+- **Dead Instrument Patina** (`#628786`): a desaturated teal that reads as corroded metal.
+  It exists specifically so that nothing in this system is ever tempted toward cyan.
+
+### Neutral
+
+- **Plate 000 — The Void** (`#080708`): outside the canopy; the page ground.
+- **Plate 100 — Instrument Well** (`#0f0e11`): the deepest recess. Input wells, inset
+  tags, an active nav tab pressed into the bulkhead.
+- **Plate 200 — Panel Ground** (`#161519`): the default surface of a panel or toast.
+- **Plate 300 — Raised Plate** (`#1e1d22`): a bare durasteel key cap or nav button at rest.
+- **Plate 400 — Bezel** (`#29282f`): a button face on hover; an unlit stage lamp.
+- **Plate 500 — Scribe Line** (`#38363f`): seams and scribed divisions.
+- **Plate 600 — Worn Edge** (`#4a4854`): the edge that catches the task lamp.
+- **Durasteel Seam** (`rgba(214, 196, 168, 0.16)`): the default border. A machined edge, not a highlight.
+- **Bone White, Dust-Warmed** (`#dcd6cc`): body text. Never pure white — white is a colour
+  this ship has not seen in forty years.
+- **Stencil Grey** (`#a49c90`) and **Worn Label** (`#8c8376`): secondary and muted text,
+  used for kickers, helper lines and part numbers.
+- **Fresh Paint** (`#fbf9f5`): the brightest type in the system, reserved for titles and
+  the text inside a focused field.
+
+### Guild Liveries
+
+Four working houses, four service liveries, always shown as two-letter mono designators
+(MM / AH / TS / ME): **Mineral Mining** bronze (`#967c50`), **Atmospheric Harvesters**
+storm grey (`#7d8b96`), **Thermal Smelters** rust (`#ab5722`), **Moisture Extraction**
+deep teal (`#42877f`). Each has a 16%-opacity background variant for badges and rows.
+
+### Named Rules
+
+**The One Lamp Rule.** Amber is a signal, not a surface. If it is lit, something is live.
+Audit test: on any screen, the total amber area should read as a handful of indicator
+marks, not as a colour scheme. If you can describe the screen as "the amber one", it fails.
+
+**The Reserved Hues Rule.** Charge red (`#ff1744`) and charge blue (`#00b0ff`) belong to
+the chemistry and appear **only inside the 3D chamber**. In UI chrome the same signal
+appears as printed ink on a hairline rule — `#e05a55` and `#5aa9cf` — on the polarity key
+and a concept pill's left border. Never as a glowing block and never as a ramp between the
+two, because the label on a panel must always mean the same thing as the cloud in the
+chamber.
+
+**The No Web Colour Rule.** Tailwind-default palette hexes (`#fbbf24`, `#10b981`,
+`#ff5252`) and electric cyan (`#00e5ff`) are banned on sight. The HUD guild badge derives
+its livery from `TEAM_LIVERY` in `main.js`, never from the backend sheet's `accent_hex` —
+a stale hex in a spreadsheet once leaked a bright web colour straight into the header.
+
+## Typography
+
+**Primary Font Family:** Quantico across all interface roles.
+**Telemetry Fallback:** JetBrains Mono for monospace code/data blocks.
+
+**Character:** Unified architectural geometric typography. Quantico delivers the crisp, high-precision geometry of aerospace instrumentation across all headings, telemetry, switchgear, and body text without visual clutter.
+
+### Hierarchy
+
+- **Display** (Quantico 700, 1.55rem, `0.12em` tracking, uppercase, line-height 1.2): the
+  page title. One per screen, always built through `pageHeader`.
+- **Headline** (Quantico 600, 1.05rem, `0.1em` tracking, uppercase): section and card
+  headings — `.section-title`, `.holo-title`.
+- **Title** (Quantico 600, 1rem, `0.1em` tracking, uppercase): a stage's name, and
+  the legend on switchgear at 0.78rem with `0.08em` tracking.
+- **Body** (Quantico 400, 16px, line-height 1.55): prompts, concept cards, epilogue,
+  story transmissions. Clean, legible, architectural sans.
+- **Label** (Quantico 400/700, 0.68–0.72rem, `0.08em`–`0.14em` tracking, uppercase):
+  kickers (`.eyebrow`, `.lit` when live), form labels, helper text, status tags, banner
+  titles, stat values, part numbers.
+
+### Named Rules
+
+**The Crisp Rendering Rule.** Type is razor-sharp. Muddy dark text-shadows (`--engrave: none`)
+that blur letterforms are eliminated. Surfaces achieve depth through high-contrast typography
+(`--text-bright: #fbf9f5`, `--text-primary: #dcd6cc`) and precision double-bezel framing.
+
+**The Controlled Tracking Rule.** Letter-spacing is architectural and disciplined. Over-tracked
+type (`0.3em`+) is eliminated in favor of clean instrument legibility (`0.08em`–`0.14em` for
+stencils and titles; normal for body).
+
+**The Placeholder Ban.** Forms use explicit labels and helper text. Never use placeholder
+text to carry an example or an instruction — it disappears the moment a student starts
+typing, which is exactly when they need it.
+
+## Layout
+
+One persistent WebGL canvas sits fixed behind everything; the DOM UI floats over it in
+`.app-viewport`, which is `pointer-events: none` so the 3D stage stays draggable except
+where a screen explicitly claims the pointer back.
+
+- **Container:** `.screen-container` at `max-width: 1120px`, centred, `1.5rem` padding.
+- **The HUD anchor:** `--hud-h` (64px) is the height of the fixed header, and it is the
+  one measurement the whole layout derives from. `.app-viewport` pads down by
+  `calc(var(--hud-h) + 12px)` and the fixed quest overlay offsets by the same. Nothing may
+  slide under the bulkhead.
+- **Rhythm:** a 4px base step — 4 / 8 / 16 / 24 / 28px — with panel padding at
+  `1.6rem 1.75rem` and section gaps at `1.25rem`–`1.5rem`.
+- **Vignette:** the canopy is never quite clean. A fixed radial gradient darkens the frame
+  edges to `rgba(6, 5, 4, 0.55)` over the entire viewport, above the 3D stage and below
+  the modals.
+- **Desktop breakpoints:** 900px collapses the HUD, 760px and 620px hide the legend and
+  secondary chrome, shrink the chamfer, and cap the stage card height.
+- **Phone is a separate stylesheet, not a media query bolted on.** `mobile.css`,
+  `mobile-screens.css` and `mobile-quest.css` link after `holo.css` and are scoped
+  entirely to `max-width: 760px`, so desktop can never be damaged by a phone fix. The HUD
+  becomes two rows (`--hud-h` 92px, or 52px when the nav strip is hidden). Inputs are 16px
+  on phones so iOS does not zoom on focus. Safe-area insets are honoured.
+- **Landscape phones get their own sheet.** `mobile-landscape.css` targets
+  `(pointer: coarse) and (max-height: 500px) and (orientation: landscape)` — sideways
+  phones are often wider than 760px and would otherwise get the desktop layout on a 400px
+  tall screen. It collapses the HUD to one 44px row and docks the stage deck right.
+
+### Named Rules
+
+**The 375 Rule.** Every screen, instrument and quest must work at 375px wide. This is the
+product's confirmed device floor, not a courtesy tier.
+
+**The 44 Rule.** Every interactive control has `min-height: 44px` (38px for the compact
+HUD nav). A student is playing this on a phone with dusty fingers.
+
+## Elevation & Depth
+
+This system has no radius and no glow, so **depth is carried entirely by machined relief
+and cast shadow**. Every raised surface states three things at once: a hairline of lamp
+light along the top edge (`inset 0 1px 0` in `seam-light`), a shadow line along the bottom
+(`inset 0 -1px 0` in `seam-dark`), and a real cast shadow beneath it. The seam pair says
+*this is a separate piece of metal*; the cast shadow says *it is bolted a few millimetres
+off the bulkhead*. Both are structural. Neither is atmosphere.
+
+The distinction that matters: **a cast shadow is light being blocked; a glow is light
+being emitted.** This system casts freely and emits almost never.
+
+### Shadow Vocabulary
+
+- **Seam pair** (`inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark)`):
+  the default treatment on every raised surface — panels, secondary buttons, nav buttons,
+  the HUD, dropdowns.
+- **Panel cast** (`0 14px 34px rgba(0, 0, 0, 0.6)`): a major plate standing off the
+  bulkhead.
+- **Overlay cast** (`0 10px 28px rgba(0, 0, 0, 0.8)` / `0 8px 22px rgba(0, 0, 0, 0.8)`):
+  dropdowns and toasts, which float higher and therefore darker.
+- **HUD cast** (`0 6px 20px rgba(0, 0, 0, 0.7)` plus `inset 0 -2px 0 rgba(0,0,0,0.5)`):
+  the overhead bulkhead the whole ship hangs off.
+- **Key cap relief** (`inset 0 1px 0 rgba(255, 226, 168, 0.35), inset 0 -2px 0 rgba(0,0,0,0.3),
+  0 2px 0 #1a1610, 0 4px 10px rgba(0, 0, 0, 0.55)`): the painted primary button. The
+  `0 2px 0` is a physical bottom lip, not a shadow — it is the side of the key.
+- **Recessed well** (`inset 0 2px 6px rgba(0, 0, 0, 0.75)`): inputs and pressed states.
+  Depth going *into* the plate rather than out of it.
+- **Indicator halo** (`0 0 4px` at 30–45% alpha): the only outward glow in the system,
+  and only on things that are literally lamps.
+
+### Named Rules
+
+**The Nothing Blooms Rule.** `box-shadow: 0 0 20px <colour>` is banned. The sole
+exceptions are objects that are physically lamps: `.gfx-dot`, `.stage-dot.active`
+(`0 0 6px` of filament amber), `.stage-dot.completed`. If you cannot justify a glow as a
+bulb behind glass, it is not allowed.
+
+**The Press Rule.** A pressed control moves. Both button variants take
+`transform: translateY(2px)` on `:active` and swap their cast shadow for an inset one — the
+key travels into the panel. Transitions are 0.08s for the press and 0.12–0.15s for colour;
+fast enough to feel mechanical rather than animated.
+
+## Shapes
+
+**Radius tokens are zero; plates carry a 2–4px machined corner.** `--radius-sm`, `--radius-md`
+and `--radius-lg` are all `0px`, so a stray radius variable stays square. Plates, panels and
+keys take a literal 2–4px corner (below); nothing is rounder than 4px except `--radius-full`
+on genuinely circular objects.
+
+Machined plates and panels feature **machined double-bezel framing** with precision corners.
+- **Double-Bezel Framing**: `.plate`, `.glass-panel`, `.holo-card`, and `.stage-prompt-card`
+  feature precision outer durasteel borders (`1px solid var(--border-durasteel)`), crisp inner highlight
+  hairlines (`inset 0 1px 0 rgba(255, 255, 255, 0.08)`), and deep ambient drop shadows (`0 20px 48px rgba(0, 0, 0, 0.75)`).
+- **Subtle Corner Radii**: Clean 2px–4px radius replaces crude polygon cuts, preventing anti-aliasing artifacts on high-DPI viewports.
+- **Pure Optical Clarity**: Grain noise overlays (`--grain`) and muddy scanline filters are eliminated. Surfaces feature smooth titanium/obsidian plate depth and pristine glassmorphism (`backdrop-filter: blur(16px)`).
+
+### Named Rules
+
+**The Double-Bezel Rule.** Every instrument enclosure features a machined dual boundary: an outer durasteel boundary framing an inner illuminated or ground plate face.
+
+**The Optical Clarity Rule.** Optical elements (viewports, banners, telemetry, cards) must never be degraded by artificial raster scanlines or muddy sepia filters. The interface reflects precision aerospace instrumentation in active service.
+
+## Components
+
+### Buttons
+
+Switchgear, not web buttons. Precision machined switchgear with tactile spring physics.
+
+- **Shape:** subtle radius (`2px`), `min-height: 44px`, Quantico 0.78rem uppercase at
+  `0.08em` tracking.
+- **Primary — the machined amber switch:** a rich amber gradient
+  (`linear-gradient(180deg, #e59b24 0%, #bd7b16 100%)`) with a high-contrast dark legend (`#0d0a05`),
+  inner highlight hairline (`inset 0 1px 0 rgba(255, 255, 255, 0.28)`), and ambient shadow. Padding `11px 24px`.
+- **Hover:** subtle upward spring lift (`translateY(-1px)`) with heightened luster.
+- **Active:** tactile mechanical compression (`translateY(1px) scale(0.99)`).
+- **Disabled:** inactive plate with stripped luster (`opacity: 0.35`).
+- **Secondary — bare durasteel:** `plate-300` face, durasteel border, crisp
+  `text-primary` legend, inner highlight seam pair. Hover raises to `plate-400` with spring response; active compresses with tactile feedback.
+- **Compact quest switchgear (`.quest-btn-sm`)** follows the same spring physics at reduced scale for the stage deck.
+- **Labels are 1–2 words and contain no arrow glyphs.** "Next Stage", not "Continue →".
+
+### Inputs
+
+- **Style:** a recessed well. `plate-100` fill, durasteel border with a pure-black top
+  edge (light does not reach the inside of a cut), `inset 0 2px 6px rgba(0,0,0,0.75)`,
+  Share Tech Mono at 0.95rem, padding `11px 14px`, `min-height: 44px`.
+- **Focus:** the border goes amber and **the text itself turns filament amber**
+  (`#f5b742`). There is no ring and no halo — the well lights up from inside, which is
+  what a real instrument does.
+- **Validation:** helper text carries the state, not the field. `.form-help.good` is aged
+  phosphor, `.warn` is sunlit sand, `.bad` is lamp red.
+- **Choice options (`.choice-option`)** are toggles with a lit left edge when selected.
+
+### Navigation
+
+The HUD is the overhead bulkhead the whole ship hangs off: a `plate-300 → plate-100`
+vertical gradient, a pure black bottom border, the seam pair, and a lit strip beneath it —
+the only glowing element in the header.
+
+- **Nav buttons:** `plate-300`, durasteel border, Chakra Petch 0.7rem at `0.18em`,
+  `min-height: 38px`.
+- **Hover:** face raises to `plate-400`, legend brightens.
+- **Active:** the button is pressed *into* the bulkhead — `plate-100` fill, an inset
+  shadow, amber legend, and a 2px amber bar down its left edge.
+- **Nav labels match page titles exactly:** BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY,
+  CREW. A label that does not match its destination's title is a bug.
+- **On phones** the nav becomes a horizontally scrolling strip on the HUD's second row.
+
+### Panels and Cards
+
+- **`.plate` / `.glass-panel`** share one treatment: `rgba(23,22,20,0.95)` fill, durasteel
+  border, the **two-corner** chamfer with hairlines, the seam pair, the panel cast shadow,
+  the grain tile, `1.6rem 1.75rem` padding.
+- **`.holo-card`** is the card grade: `rgba(26,24,22,0.93)` fill, the **one-corner** cut at
+  6px, the seam pair, a lighter `0 10px 26px` cast, `1.35rem 1.4rem` padding.
+- **`.stage-prompt-card`** is the quest's floating card — one-corner cut at 10px, capped at
+  `440px` wide and `62vh` tall with contained overscroll, and the heaviest cast in the
+  system (`0 16px 42px rgba(0,0,0,0.8)`) because it floats over the 3D chamber.
+- **`.panel-banner`** is where environment art goes, and it must read as a **viewport, not
+  a hero image**: 128px tall (160px `.tall`), `filter: saturate(0.5) contrast(1.05)
+  brightness(0.62) sepia(0.18)`, with a 3px scanline and a bottom-weighted fade laid over
+  it. It accepts a looping video as readily as a still.
+
+### Status Tags
+
+Stamped markings. Share Tech Mono 0.62rem at `0.18em` uppercase, `3px 8px` padding,
+`plate-100` fill, durasteel border, muted text. Four states recolour the text and border
+only, never the fill: `.live` phosphor, `.warn` amber, `.danger` blast red, `.locked`
+muted at 70% opacity.
+
+### Banners and Toasts
+
+- **Toasts** dock bottom-right: `plate-200`, a 3px coloured left edge that carries the
+  type (`success` phosphor / `error` blast red / `warning` sand / `info` plate-600), mono
+  0.8rem, max 340px, sliding 14px in over 0.22s.
+- **`.stage-error-banner`** is the quest's fault display: a 12% tint of its state colour, a
+  matching border, a 3px left edge, and four parts — `.banner-mark`, `.banner-title`,
+  `.banner-body`, `.banner-meta`. The leading mark is a **stencilled `!!` or `//`, never an
+  emoji.** The `.soft` variant is amber for a survivable miss; `.stage-success-banner` is
+  phosphor.
+
+### Signature: Stage Lamps
+
+An 8×10px bulb — deliberately taller than wide, like a panel indicator, not a dot.
+`plate-400` when unreached, aged phosphor with a 4px halo when cleared, filament amber with
+a 6px halo when active, 40% opacity when locked. This is one of the three places in the
+entire system permitted to glow. On phones the same lamp becomes a 40px-tall touch strip
+drawn by `::before` while keeping its 8px visual width.
+
+### Signature: The Gardens Map
+
+Twenty pylons in a `repeat(20, minmax(0, 1fr))` grid on a `plate-200` panel with a 2px
+amber left edge. Each node is a 28px well holding a 4px filament that goes from dead
+(`#2a2520`) to lit as its stage clears; milestone pylons take a sunlit-sand border. It is
+a progress bar that reads as a power grid coming back online — which is literally what the
+campaign is about.
+
+### Signature: The Bench Instruments
+
+The Learn track's instruments are the most distinctive surfaces in the product. Two of them
+exist twice — the **sampler scope** and the **core bench**, as canvas instruments
+(`scope.js`, `corebench.js`) at T3 and below and as **built objects on a bench the player
+has walked to** (`scope3d.js`, `corebench3d.js`) at T4. Three more are canvas or plate only:
+the **catalogue board** (`catalogue.js`), the **assay floor** (`assay.js`) and Ligar's
+**join bench** (`joinbench.js`). Canvas cannot inherit a CSS custom property, so each 2D
+file mirrors the dust palette as literal constants; those constants are part of this system
+and must stay in step with the tokens, and `TINT_HEX` in `bench3d.js` mirrors them again for
+the built versions.
+
+- **The aperture:** a `#0d0c0a` field inside a `#2e2a26` rim on a chamfered `.scope-plate`,
+  square at `aspect-ratio: 1/1` (16:10 when a single plate stands alone).
+- **The canvas palette:** `bone #b8afa0`, `sand #c39a63`, `iron #6b625a`, `rust #9c5423`,
+  `pale #8f8678` — each with its own darker rim colour. Phosphor `#6f8f3f` and amber
+  `#d99423` are the instrument's own indicators.
+- **Plate states:** `selectable` borders bronze on hover; `selected` borders bright amber,
+  raises the fill to `plate-300` and turns its label amber.
+- **The power dial** is a **milled cap you turn**, never a slider and never a
+  minus/readout/plus row. On the drawn instrument it is `engine/dial.js` — a knurled cap
+  with an engraved index, detents cut round its collar and a 270° sweep, turned by drag, by
+  arrow keys once focused, or by the wheel. On the built instrument it is
+  `buildPowerDial()` in `bench3d.js` — the same cap as real geometry on a raked plinth
+  bolted to the plate, turned by reaching over and dragging it or by rolling the wheel over
+  it. **Both call `angleFor` / `valueForAngle` from `dial.js`**, which is the single
+  implementation of where a detent is, so the knob on the bench and the knob on the panel
+  can never disagree about which power a given angle means.
+- **A control faces the operator and says its own name.** The built dial's plinth is raked
+  toward the player — a POSITIVE rotation about x, because a bench's local +z is its front
+  — with the engraved `POWER` plate on the NEAR edge of the panel, the edge closest to the
+  eye and the one nothing stands in front of, and a lit `n / max` readout on the raised far
+  edge. The rake used to be negative and the plate sat behind the cap, so the legend and
+  the whole scale faced the back of the bench and the operator saw the underside of a knob
+  with no name on it.
+
+**The Key Legend Rule.** Every control a stage offers carries one plain sentence saying
+what it does, drawn under the keys (`toolNotes()` in `engine/frame.js`, `.lq-tool-notes`)
+for as long as the stage offers it. Not a tooltip — a legend you have to hover for is a
+legend a student on a school trackpad never reads — and not a one-time card. A quest
+exports `toolNoteFor(controlId, stageNumber)`, so a tool's line clearly explains its
+operation in plain English; `verify:learn` fails the build over a control with no line.
+The keys themselves are named in plain terms for the same reason: the core bench's three
+views read **Whole piece / The middle / Outside** under a label reading **View**, not
+cryptic abbreviations.
+
+**The Flat Picture Rule.** A built instrument is real geometry — a plate, a well with the
+bulk matter actually in it, a milled cap you reach over and turn — but **what the
+instrument RESOLVES is drawn in two dimensions**, on a raked screen standing behind each
+well (`buildStation` in `bench3d.js`), by the same `drawScopeField` / `drawCoreField` that
+paint the canvas instrument. Three reasons, and each one was a bug before it was a rule:
+a microscope's output is a flat image, so pieces rising out of a hole as the dial comes up
+read as the sample inflating; a core is a huddle, so staged as spheres half its grains hide
+behind the other half and a player asked to COUNT is refused over a grain they were never
+shown; and at ring scale a piece staged in the world is a speck indistinguishable from the
+dust of the planet behind it. Drawn flat, every piece is in the picture, in the same place,
+at the same size, on every tier — which is also what keeps a hint that names a position
+honest on both benches. The screen is raked rather than laid in the well because the player
+is looking down at a bench: flat, the picture foreshortens to about a third of its height.
+
+**The Aimed, Not Skewed Rule.** Deployed on a walkable world the quest frame is a page over
+the glass, so the instrument has to sit in the part of the view the frame is not covering.
+It gets there by **aiming the camera higher**, never by skewing the projection: a
+`setViewOffset` on the world camera would re-frame the whole planet to make room for a card
+standing in front of it. `fitDeployedAim` / `aimForChrome` in `bench3d.js` measure how far
+down the glass the chrome reaches over the middle of the view and pitch up until the tops
+of the screens clear it; `verify:bench` drives the same function and fails the build if a
+screen still runs under the frame or a well ends up off the bottom.
+
+**The Honest Picture Rule.** What a field DRAWS is what the quest grades against. The core
+bench's `Outside` view used to draw the nucleus as one marked disc with one cross on it,
+which is a picture of a specimen holding a single marked grain — so from the stage the
+rings take over, every specimen on the bench looked identical and looked wrong, and a
+stage reasoning about how many marked grains were in there was arguing with its own
+screen. It is drawn small, because at ring distances it IS small, but it is drawn as the
+same huddle the `The middle` view resolves, in the same proportions and the same packing.
+
+**The Docked Transmission Rule.** `body.bench-deployed` (set by `screens/learn-quest.js`
+whenever the player is at a bench built in the world) docks the modal down the left of the
+glass at `min(430px, 44vw)` and drops the scrim from `rgba(6,5,4,0.88)` to `0.34`, and
+`fitDeployedAim` / `aimForClear` slide the instrument into the clear part of the view. A
+briefing whose job is to say what to look at must not be the thing covering it. Below
+860 px it reverts to the centred card, because a docked panel next to a bench too narrow
+to read helps nobody.
+
+**The Stencil, Not Colour Rule.** On the core bench a marked grain is told apart by a
+**stencilled cross**, never by its colour alone, and on the join bench a charged piece in a
+block is told apart by a stencilled **plus or minus**. It is the only version of either
+instrument that survives a colour-blind player, and it is non-negotiable.
+
+**A Plate Is Shaped Like What It Holds.** The aperture grade follows the picture, not the
+grid: the assay floor is 4:3 because it is a chute at one end and bins along the bottom, and
+a join bench PAIR plate is 2:1 (5:2 alone) because it is two pieces side by side with their
+shells drawn round them. A pair plate also never runs three to a row — `.join-grid` caps it
+at two columns, and one on a phone — because the valence electrons on those shells are the thing
+several stages ask the player to COUNT, and a postage stamp cannot be counted. A square
+aperture would waste half of either plate and shrink the very thing being measured.
+
+**The Reserved Hues Rule applies here too.** Charge red and blue stay in the 3D chamber.
+An instrument that borrowed them would break the promise that those two colours mean one
+specific thing.
+
+### Signature: The Chemistry Card and Reward Debrief
+
+`.chem-card` and Learn track `.lq-reward` — one to three sentences of **real chemistry debrief**, drawn after a stage is solved. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber stencil badge and a mono gold title. It summarizes what the player's experiment demonstrated, prioritizing concrete physical intuition (attraction, bond seats, 3D crowding, making room) over college organic chemistry jargon.
+
+### Signature: The Stage Mission & Science Guide
+
+`.lq-guide-card` and the interactive `Objective & Guide` modal (`src/learn/engine/quest-guide.js`) — the primary teaching and wayfinding surface present on every stage from stage one.
+
+- **Real Chemistry Concepts from Stage One:** Teaches standard scientific terms (atoms, electrons, isotopes, molecules, compounds) directly. Never uses invented replacement ciphers or analogues that later reveal "in the real world this is called X". Analogies to build intuition are encouraged; invented code words are banned.
+- **Elementary-School-Level Clarity:** Provides plain-English explanations that an elementary school student can understand, broken into five explicit sections:
+  1. *Mission Context:* Why the salvage expedition needs this test.
+  2. *Science Concept:* The underlying chemical principle explained clearly.
+  3. *Stage Goal:* A concise, plain-English question the student must answer.
+  4. *How to Test:* Practical scientific method guidance on using bench controls to observe and compare readings.
+  5. *Key Vocabulary:* Unambiguous definitions of scientific terms.
+- **No Spoiled Answers:** Never tells the player what to do, spoon-feeds the solution, or makes the correct choice obvious. The student must use the instruments, observe readings, and deduce the answer themselves.
+- **Interactive UI Actions:** Stage action buttons (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons are always interactive with `pointer-events: auto`.
+
+### Signature: Experiment Trials (Encounter Layer)
+
+The encounter layer (`src/learn/engine/encounter.js`, `foes.js`) frames specimen testing as rigorous **scientific trials** rather than monster combat:
+
+- **Specimen Trials, Not Combat:** Specimens are mineral or chemical samples (e.g. *salt husk*, *lamp moth*, *basalt warden*). Incorrect attempts are measurement discrepancies ("Missed Trial"), never monster attacks or combat injuries ("takes the hit").
+- **Non-Punitive Safety Reset:** The player has 3 trials before a safety reset. A reset refills trial attempts without losing scouted readings, open hints, or stage progress.
+- **Specimens Carry Evidence:** A specimen's reaction is what the bench measures. The committed submission is the measurement itself.
+
+
+
+### Signature: The Practice Overlay
+
+The optional problem set a Learn world ends on (`learn/practice.js`). A **2D card on every
+tier**, including T4: these are the player's own revision, not a transmission from anyone,
+and no instrument in the fiction asks multiple-choice questions.
+
+- Options are `.choice-option` buttons stacked full width. A latched answer is marked by a
+  **left edge in `--accent-green` or `--accent-danger` over a 14%-opacity wash** — ink on a
+  hairline rule, never a coloured fill and never a glow.
+- The verdict block (`.lq-practice-verdict`) leads with a stencilled `//` or `!!`, exactly
+  as a banner does, and always carries the explanation. A question that is only marked
+  wrong teaches nothing.
+- Four keys, and two of them are the same key: **Close** in the top-right corner of the
+  card (`.lq-practice-close`, beside the `n / total` tag) and **Skip All** in the key row
+  both leave the WHOLE set in one press, **Skip This One** advances a single question, and
+  **Next / Finish** commits. The set is optional at every point and nothing is gated behind
+  it, so the way out belongs in the corner every reader already looks in — a player who
+  wants none of it should never have to press Skip five times to escape.
+- The **Problems** key (`practiceKey()` in `screens/learn-world.js`) appears beside a
+  finished world's Enter key on the star map, on the Learn road, in the world brief and in
+  the walk HUD. It is a `btn-secondary`, because reopening revision is not the primary act
+  on any of those screens.
+
+### Signature: Wayfinding — The Doorway Plates
+
+Every architectural opening on the Avalon carries a **stencilled header plate on each
+face**, naming the compartment you walk INTO on that side: the room's designator read from
+the spine, `SPINE` read from inside the room. An iron header bar under the lintel with a
+`placard()` plate on it and one small amber filament outboard of it, on both sides of the
+frame.
+
+The names are not authored at the frame. `buildDoorwayFrames` asks `roomAt()` what is
+actually half a metre through the opening in each direction, so a bulkhead that moves takes
+its legend with it and a plate can never name a compartment that is no longer behind it.
+`placard()` shrinks its face to fit rather than clipping, because `COMMAND BRIDGE` is twice
+the length of `COMMS`.
+
+The rule behind it: a ship of identical grey doorways is a maze, and a player who learns
+the deck plan by opening three doors looking for the star map has been taught the layout by
+trial and error. Signage is the cheapest possible fix and the most diegetic — a working
+ship labels its own hatches.
+
+### Signature: The Chamber Console
+
+At T4 the Charge Gardens' stage deck is not a card over the render — it is a **control desk
+across the bottom of the glass** (`quest3d/console.js`). One surface, not three: a raked
+fascia with the deck on the left and the stage rail and relay strip on the right, cut away
+at both outer corners, with toggle banks, indicator lamps, rotaries and a hand rail built
+in WebGL strictly around the aperture.
+
+Two numbers are the design, and `npm run verify:console` asserts both at fourteen
+viewports:
+
+- **It never covers more than 25% of the height of the view.** Three quarters of the glass
+  is always the chamber, because the molecule is the thing the stage is asking about.
+- **Its top edge stays below −0.33 NDC** — it is low, not central.
+
+The fit is solved by **measuring the projected corners**, not by trigonometry: the fascia is
+raked, so its near edge projects larger, and the flat estimate put a "quarter height" desk
+at 29% of a 16:9 screen with its lip off the bottom of the glass. Below 900 px of glass the
+console is not raised at all and the quest keeps the 2D stage deck, which is the interface
+`mobile-quest.css` was written for. A desk nobody can read is worse than an honest card.
+
+## Do's and Don'ts
+
+### Do:
+
+- **Do** read `src/styles/tokens.css` before styling anything. It is the contract, and it
+  is commented with the reasoning behind every group.
+- **Do** build every screen header from `pageHeader` in `ui/layout.js`. Hand-rolled banner
+  markup is how a system drifts.
+- **Do** give every raised surface the seam pair — `inset 0 1px 0 var(--seam-light),
+  inset 0 -1px 0 var(--seam-dark)`. It is two lines of CSS and it is most of the look.
+- **Do** pick the chamfer grade by what the container is — two corners for a panel,
+  top-left only for a card — and always draw the matching corner hairline.
+- **Do** keep the grain on `::before` and put `position: relative` on direct children.
+- **Do** add a phone hook (`m-grid-1`, `m-head`, `m-cta-stack`, `m-subpanel`…) when you add
+  a grid or table to a screen, and verify it at 375px.
+- **Do** label state with a coloured left edge or a recoloured border, not a coloured fill.
+- **Do** keep every interactive control at `min-height: 44px`.
+- **Do** write copy that is 100% critical: a functional label, an actionable rule, an error,
+  direct teaching, or an unadorned character speaker (`Vess`). Keep necessary text clear and
+  helpful without becoming cryptic, but strip all extra or decorative words. Delete anything else.
+- **Do** cap a teaching card at three sentences. Both the campaign's `.chem-card` and the
+  Learn track's `.lq-reward` land after the work, in bits, and a card that runs to a
+  paragraph is the end-of-quest lecture moved earlier.
+- **Do** teach real chemistry concepts directly from stage one (atoms, protons, neutrons,
+  electrons, isotopes, molecules, compounds). Analogies to familiar concepts (balancing seesaws,
+  cooking recipes) are welcome to build intuition, but never invent replacement code words.
+- **Do** write explanations that an elementary school student can understand, with clear definitions,
+  simple questions, and practical guidance on how to test using bench instruments.
+- **Do** frame specimen interactions as scientific trials. Incorrect submissions are measurement
+  discrepancies ("Missed Trial"), never monster combat ("takes the hit").
+- **Do** ensure stage actions (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons
+  are always interactive (`pointer-events: auto`).
+- **Do** make an instrument's control a thing you turn, press or slide in the world when
+  the bench is built — and keep a keyboard path to the same value. A control that answers
+  only to a drag is invisible to a keyboard and unusable on a trackpad.
+- **Do** put the move stick bottom-LEFT and the look stick bottom-RIGHT on a phone. That
+  is where every twin-stick scheme a player has already used puts them, and a walk that
+  steers backwards from muscle memory reads as broken input rather than as a choice.
+- **Do** build concrete physical mechanism intuition for organic reactions (charges attracting, making room, 3D crowding, helper molecules) rather than terrifying elementary and middle schoolers with college organic chemistry jargon.
+- **Do** ensure players discover chemistry to solve practical storyline challenges, prioritizing hands-on 3D manipulation and visual instrumentation over dense text walls.
+- **Do** inset a part into the part it is carried by rather than ending it flush. Two faces
+  in the same plane cannot be ordered by a depth buffer, and the surface flickers — a shelf
+  as wide as the posts holding it, a box whose underside is exactly the lid below it, an
+  I-beam web the same length as its flanges. A few millimetres of overlap is the fix.
+
+### Don't:
+
+- **Don't** overwhelm elementary and middle schoolers with college organic chemistry terminology ("alkyl halide", "carbonyl", "carbocation", "nucleophile", "SN1/SN2"). Teach the physical mechanism intuition instead.
+- **Don't** make the game feel like a dense sci-fi textbook with a haphazard 3D layer. Visuals and hands-on instruments must drive the discovery.
+
+- **Don't** add `box-shadow: 0 0 Npx <colour>` as a glow. The exceptions are `.gfx-dot`
+  and the active/completed stage lamps, and there are no others.
+- **Don't** introduce a border radius above 4px. The 2–4px machined corner is the ceiling,
+  and `--radius-full` is only for genuinely round objects.
+- **Don't** use charge red (`#ff1744`) or charge blue (`#00b0ff`) outside the 3D chamber.
+  In chrome they appear only as `--charge-red-ink` / `--charge-blue-ink` on a hairline.
+- **Don't** reach for blue-black neutrals, electric cyan (`#00e5ff`), glassmorphism, candy
+  gradients with white specular highlights, or Tailwind-default palette hexes (`#fbbf24`,
+  `#10b981`, `#ff5252`).
+- **Don't** put an emoji in player-facing markup.
+- **Don't** use decorative slash markers (`//`), sci-fi role tags (`// Quartermaster`, `// Helm`),
+  or fabricated status labels (`status: clear`, `integrity: high`, `tactical alert`). All text
+  must be 100% critical and mean something real to the player.
+- **Don't** advertise features or describe the interface. Strip all promotional copy, feature
+  bullet points, and decorative descriptions.
+- **Don't** put an arrow glyph in a button label, or write a label longer than two words.
+- **Don't** use placeholder text to carry an instruction or an example — use an explicit
+  label and helper text.
+- **Don't** build an auto-fit grid of feature cards advertising what the product does. The
+  interface does not describe itself.
+- **Don't** add a "COMMS LIVE" or "LIVE COMMS" badge, or any other claim that a connection
+  is active. Comms channels are labelled diegetically (`COMMS`) and claim nothing.
+- **Don't** let an instrument invent a reading. The comms board shows the real standings or
+  says `NO GUILD TELEMETRY ON THIS CHANNEL`; it never falls back to a plausible season.
+  Avalon is pre-launch and a screen that makes data up is lying to a student.
+  `verify:holo` enforces it.
+- **Don't** invent replacement ciphers or analogues for chemical concepts (e.g. calling electrons
+  "light pieces" or atoms "grains") and later reveal "in the real world this is called X". Teach
+  real chemistry directly from stage one. Analogies to build intuition are encouraged, but
+  invented replacement words are forbidden.
+- **Don't** spoon-feed answers or make the right answer obvious in prompts, stage guides, or hints.
+  The user must investigate on the bench, observe the readings, and deduce the answer themselves.
+- **Don't** frame incorrect submissions as monster attacks or say the player or specimen "takes the
+  hit". Encounters are scientific trials on mineral specimens, and mistakes produce measurement
+  discrepancies ("Missed Trial") with 3 trials before a safety reset.
+- **Don't** read a guild's colour from the backend `accent_hex`. `TEAM_LIVERY` in
+  `main.js` is the only source.
+- **Don't** fix a phone bug in `main.css` or `holo.css`. Phone rules live in the
+  `max-width: 760px` sheets so desktop cannot be collateral damage.
+
+## Bench objects: invariants (added after the 2026-10-09 audit)
+
+- A built bench object has a broken edge (bevel or lathe), a seeded colour jitter and a weathered face; a sharp textured box is a defect. The table's ground is a worn mat, not flat black. Builders live in `src/learn/engine/table-props.js` and `table-surface.js`.
+- Words printed on the table are paint on the mat, big enough to read at 667 px, and own a strip nothing else may stand on. A word is shrunk to its zone, never cut by a rim.
+- Tools are drawn as what they are, hang in one place, and carry a one-line caption.

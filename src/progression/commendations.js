@@ -399,12 +399,12 @@ export const COMMENDATIONS = [
   },
   {
     id: 'drill_streak_7',
-    name: 'Daily Discipline',
-    line: 'Finished a drill on seven days in a row.',
+    name: 'Weekly Discipline',
+    line: 'Finished a drill in four weeks in a row.',
     tier: 'brass',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => practiceFacts(s.practice).streak >= 7
+    earnedBy: (s) => practiceFacts(s.practice).streak >= 4
   },
   {
     id: 'drill_sprint_15',

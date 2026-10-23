@@ -29,7 +29,7 @@
  *   ember/terrain.js           the shelf, the rim, the floor and the walls; the spring, the lake, the roads
  *   ember/field.js             what the ground built: vents, geyser, mud, terraces, lava
  *   ember/plant.js             what people built: wells, the main, the plant, the lines, the siphon
- *   ember/sites.js             the seven benches and their shelters
+ *   ember/stations.js          the seven hosts the benches are built into (host-plan.js is their footprints)
  *   ember/effects.js           steam, fume, mist, the geyser's water, sulphur motes
  *   materials/ember-textures.js  the surfaces
  * laid out by `tools/gen-ember-layout.mjs`.
@@ -75,7 +75,8 @@ import {
   buildSiphonManifold, buildLampPost, buildPipes, buildRimRail, buildPowerLines
 } from './ember/plant.js';
 import { yawPoint } from './ember/kit.js';
-import { buildSite } from './ember/sites.js';
+import { HOST_BUILDERS } from './ember/stations.js';
+import { registerFieldPoint } from './field-points.js';
 import { createEmberEffects } from './ember/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
@@ -119,7 +120,7 @@ export class EmberReachWorld {
     this.initTerrain();
     this.initLandmarks();
     this.initPlant();
-    this.initSites();
+    this.initHosts();
     this.initEffects();
     this.initLampPool();
     this.bakeStatics();
@@ -221,6 +222,10 @@ export class EmberReachWorld {
     M.glass = std({ color: 0xd5dfe2, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false });
     M.glassDark = std({ color: 0x0f1214, roughness: 0.18, metalness: 0.2 });
     M.mesh = std({ color: 0x2f302d, roughness: 0.8, metalness: 0.5, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide });
+
+    // THE ONE CLEAN THING in a weathered field: the cased instrument keeps its own bright paint and bare metal.
+    M.case = std({ color: 0xe9e4d6, roughness: 0.5, metalness: 0.25 });
+    M.caseDark = std({ color: 0x2f333a, roughness: 0.55, metalness: 0.4 });
 
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
@@ -500,28 +505,60 @@ export class EmberReachWorld {
     return Math.atan2(ax, az);
   }
 
-  /** A point in a site's own frame, in world terms. */
-  siteToWorld(site, lx, lz) {
-    const a = this.siteFacing(site);
-    const c = Math.cos(a);
-    const s = Math.sin(a);
-    return [site.pos[0] + lx * c + lz * s, site.pos[2] - lx * s + lz * c];
-  }
-
-  initSites() {
+  /**
+   * Build every host: the piece of the geothermal field a bench belongs to (stations.js), placed at its site and
+   * turned to face its approach. The bench is a part of its host, one object, so a bench is never bolted to
+   * anything but the machine it is for.
+   */
+  initHosts() {
     this.siteColliders = [];
+    this.hostVents = [];
     for (const site of this.data.sites) {
-      const built = buildSite(this.ctx, site);
-      const y = this.getTerrainHeight(site.pos[0], site.pos[2]);
-      built.group.position.set(site.pos[0], y, site.pos[2]);
-      built.group.rotation.y = this.siteFacing(site);
-      this.scene.add(built.group);
+      const build = HOST_BUILDERS[site.id];
+      if (!build || !site.built) continue;
+      const host = build(this);
+      const g = host.group;
+      g.position.set(site.pos[0], this.getTerrainHeight(site.pos[0], site.pos[2]), site.pos[2]);
+      g.rotation.y = this.siteFacing(site);
+      this.scene.add(g);
 
-      this.siteMarkers.set(site.questId, { site, group: built.group, indicator: built.bench.indicator });
-      this.registerBenchAnchor(site, built.group, built.bench, built.benchLocal);
-      for (const c of built.colliders) {
-        const [x, z] = this.siteToWorld(site, c.x, c.z);
-        this.siteColliders.push({ x, z, radius: c.radius });
+      this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
+      this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
+
+      const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
+      const at = (lx, lz) => [g.position.x + lx * cos + lz * sin, g.position.z - lx * sin + lz * cos];
+
+      // The places the player is sent to for this bench (plan section 2.5): real pieces of the host, in the world's frame.
+      for (const fp of host.fieldPoints || []) {
+        const [px, pz] = at(fp.lx, fp.lz);
+        const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
+        registerFieldPoint(this, {
+          id: fp.id, siteId: site.id, label: fp.label, host: site.id,
+          pos: [px, g.position.y + fp.ly, pz], half: fp.half, rotY: g.rotation.y,
+          stand: [sx, g.position.y, sz]
+        });
+      }
+
+      // The steam a host lets go of, in the world's frame.
+      for (const v of host.vents || []) {
+        const [x, z] = at(v.lx, v.lz);
+        const { lx, lz, ly, ...rest } = v;
+        this.hostVents.push({ ...rest, x, y: g.position.y + (ly ?? v.y), z });
+      }
+
+      // The host's colliders are in its own frame; the walk wants them in the world's. A host is turned to face its approach, and
+      // a turned box would collide as the larger box that holds it, so a box is laid as a row of discs along its long side.
+      for (const c of host.colliders) {
+        if (c.r !== undefined) { const [x, z] = at(c.lx, c.lz); this.siteColliders.push({ x, z, radius: c.r }); continue; }
+        const long = Math.max(c.hw, c.hd);
+        const short = Math.min(c.hw, c.hd);
+        const n = Math.max(1, Math.ceil((long * 2) / (short * 1.3)));
+        const step = n > 1 ? (long * 2 - short * 2) / (n - 1) : 0;
+        for (let i = 0; i < n; i++) {
+          const o = n > 1 ? -long + short + i * step : 0;
+          const [x, z] = c.hw >= c.hd ? at(c.lx + o, c.lz) : at(c.lx, c.lz + o);
+          this.siteColliders.push({ x, z, radius: short });
+        }
       }
     }
   }
@@ -594,7 +631,7 @@ export class EmberReachWorld {
     this.effects = createEmberEffects({
       heightAt: (x, z) => this.getTerrainHeight(x, z),
       t4: this.t4,
-      vents: [...this.vents, ...fume],
+      vents: [...this.vents, ...this.hostVents, ...fume],
       geyser: this.geyserVent,
       spring: { ...D.spring, y: -0.24 }
     });

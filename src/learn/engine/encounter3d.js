@@ -143,7 +143,8 @@ export class FoeLayer3D {
       }
       body.group.position.set(body.baseX, body.baseY, body.baseZ);
     });
-    this.group.visible = true;
+    // A boss fought across an arena (`three/arena-table.js`) is the real one, standing in the world: the toy in the table's corner stands down.
+    this.group.visible = !this.viewer.arenaFight;
     this.applyPoses();
     if (reduced) for (const b of this.bodies.values()) b.snap?.();
   }

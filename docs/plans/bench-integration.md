@@ -1,6 +1,6 @@
 # Bench integration — benches become part of each world
 
-**Status:** P0 (shared groundwork), P1 (Tallow), P2/P3 (Ligar) and P4 (Lanternfall) done 2026-10-16; P5–P7 are folded into `bench-tabletop.md` as its T5–T7 (2026-10-16); this file stays the record of P0–P4 and of the §6–§7 host proposals. Drafted 2026-10-16.
+**Status:** Complete. P0 (shared groundwork), P1 (Tallow), P2/P3 (Ligar) and P4 (Lanternfall) done 2026-10-16; P5 (Bellows) and P6 (Ember Reach) were built with T5 and T6 of `bench-tabletop.md` (2026-10-22); P7 (records and retirement) complete with T7 (2026-10-22). This file stays the record of P0–P4 and of the §6–§7 host proposals. Drafted 2026-10-16.
 
 ## The brief
 
@@ -435,6 +435,16 @@ the plant or vent field it is about.
 | 7 | `q7-gibbs` | The **turbine hall control room** |
 
 The Crucible arena in front of the expansion loop stays where it is.
+
+## 8. P7 — Records and retirement (completed 2026-10-22 with T7)
+
+With every quest converted to a tabletop across all five walkable worlds and Kettle:
+- Retired legacy drawn and 3D instruments: `scope3d.js`, `corebench3d.js`, `catalogue3d.js`, `assay3d.js`, `joinbench3d.js`, `lightbench3d.js`, `cloudplate3d.js`, `boxrack3d.js`, `electronbench3d.js`, `bondbench3d.js`, `pairboard3d.js`, `domainrig3d.js`, `gasrig3d.js`, `calorimeter3d.js`, `plates3d.js`.
+- Retired `rackcontrols.js`, `magnetnotes.js`, `gasmount.js`, `thermomount.js`.
+- Retired the station-row layout and per-instrument key banks in `bench3d.js`.
+- Retired side panels (`deck`, `rail`, `controls`) from `PANEL_LAYOUT` in `frame.js`, leaving only `comms`.
+- Re-baked stills (`npm run bake:stills`).
+- Updated per-world records and marked integration complete.
 
 ## Risks and open questions
 

@@ -154,3 +154,45 @@ export function encounterSnapshot() {
     return null;
   }
 }
+
+/* ------------------------------------------------------------ the boss in the glass
+
+   A BOSS FIGHT IS FOUGHT OVER A TABLE STOOD IN ITS ARENA (`three/arena-table.js`), so the foe is across the
+   ground from the player, not on the plate. The table's camera looks down at the pieces; the boss is behind
+   it. `BossArena` therefore asks the leaned-in view to LOOK UP at the boss for a beat (a volley landing, a
+   bolt coming back, a roar), and the view hands the camera back to the table when the beat is over. It is
+   the same inversion as the encounter: the arena posts a request here, the viewer takes it. Still no three.js
+   (a point is anything with `x`, `y` and `z`, written into the object it is given). */
+
+let gazeRequest = null;
+
+/**
+ * Ask the leaned-in view to look at something.
+ * @param {{
+ *   point: (out: {set: Function}) => object | null,   where to look, in world space, now
+ *   hold?: number,                                     seconds to stay on it
+ *   inS?: number, outS?: number                        seconds to turn onto it and back
+ * }|null} req       `null` ends a look at once
+ */
+export function requestGaze(req) {
+  gazeRequest = req || { end: true };
+}
+
+/** The viewer takes the pending request (or null). */
+export function takeGaze() {
+  const g = gazeRequest;
+  gazeRequest = null;
+  return g;
+}
+
+let shakeSource = null;
+
+/** The arena's camera shake, applied by the viewer that owns the camera while it is leaned in. `fn()` -> `{roll, posX, posY}` or null. */
+export function setShakeSource(fn) {
+  shakeSource = typeof fn === 'function' ? fn : null;
+}
+
+export function cameraShake() {
+  if (!shakeSource) return null;
+  try { return shakeSource() || null; } catch (err) { return null; }
+}

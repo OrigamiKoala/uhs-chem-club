@@ -23,10 +23,9 @@
 import * as THREE from 'three';
 import { angleFor } from './dial.js';
 import { boltLine } from '../../three/materials/pbr-kit.js';
-import { registerBenchViewer, unregisterBenchViewer } from './bench-host.js';
+import { registerBenchViewer, unregisterBenchViewer, takeGaze, cameraShake } from './bench-host.js';
 import { soundscape } from '../../audio/soundscape.js';
 import { FoeLayer3D } from './encounter3d.js';
-import { BOARD, paintReadings, hasReadings } from './bench-readings.js';
 import { planLeanIn, chromeReserve, PLATE_ZONE, LEAN } from './lean.js';
 import { getRoom } from './rooms.js';
 
@@ -43,13 +42,6 @@ export const WELL_FLOOR = 0x0d0c0a;
 export const PLATE_RIM = 0x2e2a26;
 export const PHOSPHOR = 0x6f8f3f;
 export const AMBER = 0xd99423;
-
-/** Station pitch along the bench, in metres. */
-const STATION_PITCH = 0.92;
-
-/** The screen over each well: its size in metres, and its raster in pixels. */
-const SCREEN_M = 0.52;
-const SCREEN_PX = 512;
 
 /**
  * Draw a legend the way the plate shop would: engraved, mono, tracked wide.
@@ -329,445 +321,9 @@ export function buildPowerDial(opts) {
   return { group: g, knob, hit, setValue, geos, mats };
 }
 
-/* ------------------------------------------------------------------ keys */
 
-/** Key cap, in metres: wide enough for "Press Together" at a readable size. */
-const KEY_CAP_W = 0.32;
-const KEY_CAP_H = 0.075;
-const KEY_CAP_D = 0.02;
-/** The filament lens beside each cap, and the clearance between the two. */
-const KEY_LAMP = 0.018;
-const KEY_LAMP_GAP = 0.012;
-/** One key cell: lens, gap, cap. */
-const KEY_COL_W = KEY_LAMP + KEY_LAMP_GAP + KEY_CAP_W;
-const KEY_COL_GAP = 0.05;
-const KEY_ROW_PITCH = 0.094;
-const KEY_HEAD_H = 0.042;
-const KEY_HEAD_PITCH = 0.056;
-/** A group's name, in the front-rail layout, is a plate at the head of its keys. */
-const KEY_LABEL_W = 0.13;
-const KEY_MARGIN = 0.022;
-/** How far the base plate stands proud of the face on each side, in total. */
-const KEY_BASE_OVER = 0.02;
-const KEY_FACE_T = 0.022;
-const KEY_BASE_H = 0.035;
-/** The steepest a face stands: leaning back about twenty degrees, like a station screen. */
-const KEY_MAX_RAKE = 1.22;
 
-/**
- * Where everything on a key bank goes, without building any of it. Pure, so
- * the viewer can ask how big a bank would be before deciding where it fits.
- *
- * Three layouts. A PANEL of one column, or of two when a stage offers more
- * than five keys: a raked switch panel standing beside the instrument, each
- * group's name engraved over its keys. A RAIL (`'row'`): every key side by
- * side in one low row, for a bench so full there is no plate left beside it,
- * standing along the front edge; a group's name is a plate at the head of its
- * keys instead of over them, because a rail has no rows to put it over.
- *
- * Cells are in the FACE's own frame: x across it, z from its far (top) edge
- * toward its near edge, each with its top-left corner, width and height.
- *
- * @param {{label: string|null, keys: object[]}[]} groups
- * @param {1|2|'row'} layout
- * @param {{maxRise?: number, lip?: number}} [limits]
- */
-export function planKeyBank(groups, layout = 1, limits = {}) {
-  const live = (groups || []).filter(gr => gr && gr.keys && gr.keys.length);
-  const row = layout === 'row';
-  const maxRise = limits.maxRise ?? (row ? 0.12 : 0.42);
-  const lip = limits.lip ?? (row ? 0.04 : 0.05);
-  const cells = [];
-  let length;
-  let width;
 
-  if (row) {
-    let x = KEY_MARGIN;
-    const z = KEY_MARGIN;
-    live.forEach((gr, gi) => {
-      if (gi > 0) x += KEY_COL_GAP;
-      if (gr.label) {
-        cells.push({ type: 'head', text: gr.label, x, z, w: KEY_LABEL_W, h: KEY_CAP_H });
-        x += KEY_LABEL_W + KEY_LAMP_GAP;
-      }
-      gr.keys.forEach((k, ki) => {
-        if (ki > 0) x += KEY_COL_GAP;
-        cells.push({ type: 'key', key: k, x, z, w: KEY_COL_W, h: KEY_CAP_H });
-        x += KEY_COL_W;
-      });
-    });
-    width = x + KEY_MARGIN;
-    length = KEY_CAP_H + KEY_MARGIN * 2;
-  } else {
-    // Every group as a run of rows: its engraved name, then its keys.
-    const all = [];
-    for (const gr of live) {
-      if (gr.label) all.push({ type: 'head', text: gr.label });
-      for (const k of gr.keys) all.push({ type: 'key', key: k });
-    }
-    const pitch = r => (r.type === 'head' ? KEY_HEAD_PITCH : KEY_ROW_PITCH);
-    const lenOf = rows => rows.reduce((s, r) => s + pitch(r), 0);
-
-    let columns = [all];
-    if (layout === 2 && all.length > 1) {
-      // Split where the two columns come out most even, preferring the end of
-      // a group, and never leaving a name at the foot of one column with its
-      // keys at the head of the other.
-      const ends = new Set();
-      let at = 0;
-      for (const gr of live) { at += (gr.label ? 1 : 0) + gr.keys.length; ends.add(at); }
-      let best = null;
-      for (let i = 1; i < all.length; i++) {
-        if (all[i - 1].type === 'head') continue;
-        const cost = Math.abs(lenOf(all.slice(0, i)) - lenOf(all.slice(i))) - (ends.has(i) ? 0.05 : 0);
-        if (!best || cost < best.cost) best = { i, cost };
-      }
-      if (best) columns = [all.slice(0, best.i), all.slice(best.i)];
-    }
-
-    columns.forEach((rows, ci) => {
-      const x = KEY_MARGIN + ci * (KEY_COL_W + KEY_COL_GAP);
-      let z = KEY_MARGIN;
-      for (const r of rows) {
-        if (r.type === 'head') cells.push({ type: 'head', text: r.text, x, z, w: KEY_COL_W, h: KEY_HEAD_H });
-        else cells.push({ type: 'key', key: r.key, x, z, w: KEY_COL_W, h: KEY_CAP_H });
-        z += pitch(r);
-      }
-    });
-    length = Math.max(...columns.map(r => lenOf(r))) - (KEY_ROW_PITCH - KEY_CAP_H) + KEY_MARGIN * 2;
-    width = columns.length * KEY_COL_W + (columns.length - 1) * KEY_COL_GAP + KEY_MARGIN * 2;
-  }
-
-  const rake = Math.min(KEY_MAX_RAKE, Math.asin(Math.min(1, maxRise / length)));
-  // The footprint is the face's run plus the base plate's lip round it.
-  const depth = length * Math.cos(rake) + KEY_FACE_T * Math.sin(rake) + 0.03;
-  const height = lip + length * Math.sin(rake) + (KEY_FACE_T + KEY_CAP_D) * Math.cos(rake);
-  return { layout, cells, length, width, depth, height, rake, lip };
-}
-
-/** The readings board stands a little less steeply than the keys: it is read, not pressed. */
-const READINGS_RAKE = 1.0;
-
-/**
- * Where the readings board goes, without building it. Pure, like `planKeyBank`.
- * Width and depth are the footprint on the plate; the face is `BOARD.w` by
- * `BOARD.l`, raked toward the operator.
- */
-export function planReadingsBoard() {
-  const rake = READINGS_RAKE;
-  const depth = BOARD.l * Math.cos(rake) + KEY_FACE_T * Math.sin(rake) + 0.03;
-  const lip = 0.05;
-  const height = lip + BOARD.l * Math.sin(rake) + KEY_FACE_T * Math.cos(rake);
-  return { width: BOARD.w + KEY_BASE_OVER, depth, height, rake, lip };
-}
-
-/**
- * THE READINGS BOARD. The bench log, the trend plot and the stage's device,
- * painted by `paintReadings` onto the face of a raked slate that stands on the
- * plate beside the key bank. A mirror of the frame's cards (`bench-readings.js`):
- * it holds no state of its own, and a press on it does nothing.
- */
-export function buildReadingsBoard(opts = {}) {
-  const plan = planReadingsBoard();
-  const g = new THREE.Group();
-  const geos = [];
-  const mats = [];
-  const own = x => { geos.push(x); return x; };
-  const ownMat = m => { mats.push(m); return m; };
-  const steel = opts.materials?.steel || ownMat(new THREE.MeshStandardMaterial({ color: 0x6f6657, roughness: 0.72, metalness: 0.62 }));
-  const dark = opts.materials?.dark || ownMat(new THREE.MeshStandardMaterial({ color: 0x24211c, roughness: 0.9, metalness: 0.4 }));
-
-  const W = BOARD.w;
-  const L = BOARD.l;
-  const T = KEY_FACE_T;
-  const { rake, lip, depth } = plan;
-  const sin = Math.sin(rake);
-  const cos = Math.cos(rake);
-
-  const base = new THREE.Mesh(own(new THREE.BoxGeometry(W + KEY_BASE_OVER, KEY_BASE_H, depth)), dark);
-  base.position.y = KEY_BASE_H / 2;
-  base.castShadow = base.receiveShadow = true;
-  g.add(base);
-
-  const face = new THREE.Group();
-  face.position.set(0, lip + (L / 2) * sin + (T / 2) * cos, 0);
-  face.rotation.x = rake;
-  g.add(face);
-  const panel = new THREE.Mesh(own(new THREE.BoxGeometry(W, T, L)), steel);
-  panel.castShadow = panel.receiveShadow = true;
-  face.add(panel);
-
-  // The housing under the face, as the key bank's: a wedge from the base to the
-  // face's underside, so the slate stands on something.
-  const nearZ = (-T / 2) * sin + (L / 2) * cos;
-  const farZ = (-T / 2) * sin - (L / 2) * cos;
-  const inset = 0.006;
-  const shape = new THREE.Shape();
-  shape.moveTo(-(nearZ - inset), KEY_BASE_H);
-  shape.lineTo(-(nearZ - inset), Math.max(KEY_BASE_H + 0.004, lip));
-  shape.lineTo(-(farZ + inset), lip + L * sin - 0.004);
-  shape.lineTo(-(farZ + inset), KEY_BASE_H);
-  shape.closePath();
-  const housingGeo = own(new THREE.ExtrudeGeometry(shape, { depth: W - 0.02, bevelEnabled: false }));
-  housingGeo.rotateY(Math.PI / 2);
-  housingGeo.translate(-(W - 0.02) / 2, 0, 0);
-  const housing = new THREE.Mesh(housingGeo, dark);
-  housing.castShadow = housing.receiveShadow = true;
-  g.add(housing);
-
-  // The screen: a canvas the mirror repaints.
-  const canvas = document.createElement('canvas');
-  canvas.width = BOARD.px;
-  canvas.height = BOARD.py;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const mat = ownMat(new THREE.MeshBasicMaterial({ map: tex }));
-  mat.userData = { ownTexture: tex };
-  const screen = new THREE.Mesh(own(new THREE.PlaneGeometry(W - 0.03, L - 0.03)), mat);
-  screen.rotation.x = -Math.PI / 2;
-  screen.position.set(0, T / 2 + 0.0008, 0);
-  face.add(screen);
-
-  return {
-    group: g, geos, mats, face, canvas, ctx, tex,
-    width: W + KEY_BASE_OVER, depth, height: plan.height,
-    repaint(snap) {
-      paintReadings(ctx, canvas.width, canvas.height, snap);
-      tex.needsUpdate = true;
-    }
-  };
-}
-
-/**
- * A BANK OF KEYS YOU CAN ACTUALLY PRESS.
- *
- * The tools a stage offers — "Fire Beam", "Press Together", "Tip Sample" —
- * are DOM buttons in the quest frame, and at T4 they used to be the only way
- * to make the instrument do anything: a player standing at a bench in the
- * world reached for a card floating over it. This is the same set of keys as
- * a switch panel on the plate: a dark plinth, a steel face raked toward the
- * operator, one proud durasteel cap per key with its legend engraved on it in
- * the quest's own words, and a filament lens beside each that is lit when the
- * key is. It knows nothing about what a key does; the viewer reports an id.
- *
- * WHICH WAY IS TOWARD is the dial's rule: local +z is the bench front, so the
- * face tilts its FAR edge up with a POSITIVE rotation about x.
- *
- * @param {{label: string|null, keys: {id: string, label: string, badge?: string,
- *          disabled?: boolean, lit?: boolean}[]}[]} groups
- * @param {{layout?: 1|2|'row', columns?: number,
- *          materials?: {steel?: THREE.Material, dark?: THREE.Material}}} opts
- * @returns {{group: THREE.Group, keys: {id: string, cap: THREE.Object3D, hit: THREE.Mesh,
- *            lamp: THREE.Mesh, setState: Function}[], geos: THREE.BufferGeometry[],
- *            mats: THREE.Material[], width: number, height: number, depth: number}}
- */
-export function buildKeyBank(groups, opts = {}) {
-  const plan = planKeyBank(groups, opts.layout ?? opts.columns ?? 1);
-  const g = new THREE.Group();
-  const geos = [];
-  const mats = [];
-  const own = x => { geos.push(x); return x; };
-  const ownMat = m => { mats.push(m); return m; };
-
-  const steel = opts.materials?.steel || ownMat(new THREE.MeshStandardMaterial({
-    color: 0x6f6657, roughness: 0.72, metalness: 0.62
-  }));
-  const dark = opts.materials?.dark || ownMat(new THREE.MeshStandardMaterial({
-    color: 0x24211c, roughness: 0.9, metalness: 0.4
-  }));
-  // Bare durasteel: every tool key is a secondary key (CLAUDE.md §6).
-  const capMat = ownMat(new THREE.MeshStandardMaterial({
-    color: 0x8a8070, roughness: 0.62, metalness: 0.66
-  }));
-  const hitMat = ownMat(new THREE.MeshBasicMaterial({ visible: false }));
-
-  const { length: L, width: W, rake, lip } = plan;
-  const T = KEY_FACE_T;
-  const sin = Math.sin(rake);
-  const cos = Math.cos(rake);
-
-  // The base plate, bolted down front and back.
-  const baseD = plan.depth;
-  const base = new THREE.Mesh(own(new THREE.BoxGeometry(W + KEY_BASE_OVER, KEY_BASE_H, baseD)), dark);
-  base.position.y = KEY_BASE_H / 2;
-  base.castShadow = base.receiveShadow = true;
-  g.add(base);
-  for (const bz of [baseD / 2 - 0.009, -baseD / 2 + 0.009]) {
-    const bolts = boltLine([-W / 2, KEY_BASE_H + 0.001, bz], [W / 2, KEY_BASE_H + 0.001, bz],
-      Math.max(2, Math.round(W / 0.14)), dark, { size: 0.007, normalAxis: 'y' });
-    geos.push(bolts.geometry);
-    g.add(bolts);
-  }
-
-  // The raked face. Its near edge starts at the front lip, and the whole
-  // footprint is centred on the base.
-  const face = new THREE.Group();
-  face.position.set(0, lip + (L / 2) * sin + (T / 2) * cos, 0);
-  face.rotation.x = rake;
-  g.add(face);
-
-  const panel = new THREE.Mesh(own(new THREE.BoxGeometry(W, T, L)), steel);
-  panel.castShadow = panel.receiveShadow = true;
-  face.add(panel);
-
-  // The housing under the face: a solid wedge from the base up to the face's
-  // underside, so the panel stands on something rather than on a pivot.
-  const nearZ = (-T / 2) * sin + (L / 2) * cos;
-  const farZ = (-T / 2) * sin - (L / 2) * cos;
-  const inset = 0.006;
-  const shape = new THREE.Shape();
-  // Shape x is -z (see the rotation below), shape y is y.
-  shape.moveTo(-(nearZ - inset), KEY_BASE_H);
-  shape.lineTo(-(nearZ - inset), Math.max(KEY_BASE_H + 0.004, lip));
-  shape.lineTo(-(farZ + inset), lip + L * sin - 0.004);
-  shape.lineTo(-(farZ + inset), KEY_BASE_H);
-  shape.closePath();
-  const housingGeo = own(new THREE.ExtrudeGeometry(shape, { depth: W - 0.02, bevelEnabled: false }));
-  // Extrusion runs along +z; turn it so it runs along x, and the shape's x
-  // becomes -z: (sx, sy, e) -> (e, sy, -sx).
-  housingGeo.rotateY(Math.PI / 2);
-  housingGeo.translate(-(W - 0.02) / 2, 0, 0);
-  const housing = new THREE.Mesh(housingGeo, dark);
-  housing.castShadow = housing.receiveShadow = true;
-  g.add(housing);
-
-  // Bolt heads at the ends of the face.
-  for (const bx of [-W / 2 + 0.012, W / 2 - 0.012]) {
-    const bolts = boltLine([bx, T / 2 + 0.001, -L / 2 + 0.012], [bx, T / 2 + 0.001, L / 2 - 0.012], 2, dark,
-      { size: 0.006, normalAxis: 'y' });
-    geos.push(bolts.geometry);
-    face.add(bolts);
-  }
-
-  const capGeo = own(new THREE.BoxGeometry(KEY_CAP_W, KEY_CAP_D, KEY_CAP_H));
-  const lampGeo = own(new THREE.BoxGeometry(KEY_LAMP, 0.008, KEY_LAMP));
-  const bezelGeo = own(new THREE.BoxGeometry(KEY_LAMP + 0.008, 0.004, KEY_LAMP + 0.008));
-  const hitGeo = own(new THREE.BoxGeometry(KEY_COL_W + 0.02, 0.07, KEY_ROW_PITCH));
-  const faceTop = T / 2;
-  // Cells are laid out from the face's top-left corner.
-  const fx = x => -W / 2 + x;
-  const fz = z => -L / 2 + z;
-
-  const keys = [];
-  for (const cell of plan.cells) {
-    if (cell.type === 'head') {
-      // The group's name, engraved into the panel itself rather than on a key.
-      const pxW = Math.round(1460 * cell.w);
-      const pxH = Math.round(1460 * cell.h);
-      const tex = engravedPlaque(cell.text, {
-        w: pxW, h: pxH, size: 40, align: plan.layout === 'row' ? 'middle' : 'left',
-        pad: 6, tracking: 4, bg: '#3a352c'
-      });
-      const mat = ownMat(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.3 }));
-      mat.userData = { ownTexture: tex };
-      const plate = new THREE.Mesh(own(new THREE.PlaneGeometry(cell.w, cell.h)), mat);
-      plate.rotation.x = -Math.PI / 2;
-      plate.position.set(fx(cell.x + cell.w / 2), faceTop + 0.0008, fz(cell.z + cell.h / 2));
-      face.add(plate);
-      continue;
-    }
-
-    const spec = cell.key;
-    const lampX = fx(cell.x + KEY_LAMP / 2);
-    const capX = fx(cell.x + KEY_LAMP + KEY_LAMP_GAP + KEY_CAP_W / 2);
-    const cz = fz(cell.z + KEY_CAP_H / 2);
-
-    // The cap and everything engraved on it move together when pressed.
-    const cap = new THREE.Group();
-    cap.position.set(capX, faceTop + KEY_CAP_D / 2, cz);
-    face.add(cap);
-    const body = new THREE.Mesh(capGeo, capMat);
-    body.castShadow = true;
-    cap.add(body);
-
-    // A badge — a count the key carries, such as the tester's charges — is a
-    // small counter window let into the right end of the cap. It is a live
-    // readout, so it is amber; the legend is the rest of the cap.
-    const badge = spec.badge != null && String(spec.badge).trim() !== '' ? String(spec.badge).trim() : null;
-    const badgeW = badge ? Math.min(0.09, 0.03 + badge.length * 0.018) : 0;
-    const legendW = KEY_CAP_W - 0.012 - (badge ? badgeW + 0.008 : 0);
-    const legendH = KEY_CAP_H - 0.01;
-
-    // The raster keeps the plate's own proportions, so the legend is neither
-    // squashed nor stretched, and the face size is as large as the cap allows:
-    // legibility at two and a half metres is the whole point of the key.
-    // The text is the button's own label, verbatim.
-    const legendPx = Math.round(512 * legendW / (KEY_CAP_W - 0.012));
-    const legendPy = Math.round(legendPx * legendH / legendW);
-    const legendTex = engravedPlaque(spec.label, {
-      w: legendPx, h: legendPy, size: 60, align: 'middle', pad: 10, tracking: 3, bg: '#4a4439'
-    });
-    const legendMat = ownMat(new THREE.MeshStandardMaterial({
-      map: legendTex, roughness: 0.8, metalness: 0.35
-    }));
-    legendMat.userData = { ownTexture: legendTex };
-    const legend = new THREE.Mesh(own(new THREE.PlaneGeometry(legendW, legendH)), legendMat);
-    legend.rotation.x = -Math.PI / 2;
-    legend.position.set(-KEY_CAP_W / 2 + 0.006 + legendW / 2, KEY_CAP_D / 2 + 0.0008, 0);
-    cap.add(legend);
-
-    if (badge) {
-      const bc = document.createElement('canvas');
-      bc.width = 128;
-      bc.height = 96;
-      const bctx = bc.getContext('2d', { willReadFrequently: true });
-      bctx.fillStyle = '#0d0c0a';
-      bctx.fillRect(0, 0, 128, 96);
-      bctx.fillStyle = '#d99423';
-      bctx.font = '64px "Share Tech Mono", monospace';
-      bctx.textAlign = 'center';
-      bctx.textBaseline = 'middle';
-      bctx.fillText(badge, 64, 50);
-      const btex = new THREE.CanvasTexture(bc);
-      btex.colorSpace = THREE.SRGBColorSpace;
-      const bmat = ownMat(new THREE.MeshBasicMaterial({ map: btex }));
-      bmat.userData = { ownTexture: btex };
-      const win = new THREE.Mesh(own(new THREE.PlaneGeometry(badgeW, KEY_CAP_H - 0.022)), bmat);
-      win.rotation.x = -Math.PI / 2;
-      win.position.set(KEY_CAP_W / 2 - 0.006 - badgeW / 2, KEY_CAP_D / 2 + 0.0008, 0);
-      cap.add(win);
-    }
-
-    // The filament lens, in a dark bezel beside the cap.
-    const bezel = new THREE.Mesh(bezelGeo, dark);
-    bezel.position.set(lampX, faceTop + 0.002, cz);
-    face.add(bezel);
-    const lampMat = ownMat(new THREE.MeshStandardMaterial({
-      color: 0x3a3128, emissive: AMBER, emissiveIntensity: 0, roughness: 0.45
-    }));
-    const lamp = new THREE.Mesh(lampGeo, lampMat);
-    lamp.position.set(lampX, faceTop + 0.006, cz);
-    face.add(lamp);
-
-    // A generous invisible target over the whole cell, so a key is pressable
-    // at a glancing angle without landing on the cap exactly.
-    const hit = new THREE.Mesh(hitGeo, hitMat);
-    hit.position.set(fx(cell.x + KEY_COL_W / 2), faceTop + 0.02, cz);
-    face.add(hit);
-
-    const key = {
-      id: spec.id, cap, hit, lamp, legendMat, lampMat,
-      disabled: false, lit: false, restY: cap.position.y,
-      setState({ lit = false, disabled = false } = {}) {
-        key.disabled = Boolean(disabled);
-        key.lit = Boolean(lit) && !key.disabled;
-        lampMat.color.setHex(key.lit ? AMBER : 0x3a3128);
-        lampMat.emissiveIntensity = key.lit ? 1.4 : 0;
-        // A dead key's legend is worn dull, not hidden: it is still a key.
-        legendMat.color.setHex(key.disabled ? 0x6a655c : 0xffffff);
-      },
-      // Sunk along the face's own normal, which is the cap's local y.
-      setPressed(on) {
-        cap.position.y = key.restY - (on ? 0.008 : 0);
-      }
-    };
-    key.setState(spec);
-    keys.push(key);
-  }
-
-  return { group: g, keys, geos, mats, width: W + KEY_BASE_OVER, height: plan.height, depth: baseD, plan };
-}
 
 export class BenchViewer3D {
   /**
@@ -801,6 +357,8 @@ export class BenchViewer3D {
 
     const world = opts.world || null;
     this.world = world;
+    // A boss fight's table (`three/arena-table.js`): the look up at the boss, the arena's shake.
+    this.arenaFight = Boolean(world && world.arena);
     this.inWorld = Boolean(world);
     this.fpsControls = world?.fpsControls || null;
 
@@ -900,6 +458,8 @@ export class BenchViewer3D {
     this.leaning = false;
     this.leanZones = null;
     this.onLeanChange = null;
+    // A boss fight asks the leaned-in view to look up at the boss for a beat (`bench-host.js` `requestGaze`): `{ point, hold, inS, outS, w }`.
+    this.gaze = null;
 
     this.buildLighting();
     this.buildBench();
@@ -1070,216 +630,6 @@ export class BenchViewer3D {
   }
 
   /**
-   * One station: a chamfered tray with a recessed well, a label plate above it
-   * and a note plate below. The well's floor is dark phosphor — this is a
-   * cathode instrument, not a window.
-   */
-  buildStation(index, label, note) {
-    const g = new THREE.Group();
-
-    // Chamfered tray. An octagonal prism is a chamfer in the round: cut corners,
-    // never rounded ones (CLAUDE.md §3).
-    const trayGeo = this.own(new THREE.CylinderGeometry(0.34, 0.36, 0.055, 8));
-    const tray = new THREE.Mesh(trayGeo, this.steelMat);
-    tray.rotation.y = Math.PI / 8;
-    tray.position.y = 0.925;
-    tray.castShadow = tray.receiveShadow = true;
-    g.add(tray);
-
-    // The well: a recessed cylinder with a dark floor the pieces sit in.
-    const wellRim = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.28, 0.016, 8, 28)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: PLATE_RIM, roughness: 0.8, metalness: 0.5
-      }))
-    );
-    wellRim.rotation.x = -Math.PI / 2;
-    wellRim.position.y = 0.955;
-    g.add(wellRim);
-
-    const wellFloor = new THREE.Mesh(
-      this.own(new THREE.CircleGeometry(0.28, 32)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: WELL_FLOOR, roughness: 0.55, metalness: 0.05
-      }))
-    );
-    wellFloor.rotation.x = -Math.PI / 2;
-    wellFloor.position.y = 0.947;
-    g.add(wellFloor);
-
-    // The beam sweep plane: a thin phosphor bar that crosses the well once per
-    // read, then fades. Hidden until a probe fires.
-    const sweep = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(0.56, 0.012)),
-      this.own(new THREE.MeshBasicMaterial({
-        color: PHOSPHOR, transparent: true, opacity: 0, depthWrite: false
-      }))
-    );
-    sweep.rotation.x = -Math.PI / 2;
-    sweep.position.y = 0.95;
-    g.add(sweep);
-
-    // ---------------------------------------------------------------
-    // THE HEAD: a raked screen on a stand behind the well.
-    //
-    // THE INSTRUMENT IS BUILT; ITS PICTURE IS FLAT. A scope and a core
-    // bench both produce one thing — an image — and an image staged as
-    // solid bodies sitting in a hole cannot be read: pieces at the back
-    // hide behind pieces at the front, so a player asked to COUNT what
-    // is in front of them counts five of six and is told they are wrong
-    // by an instrument that never showed them the sixth. So the bench,
-    // the crate, the wells and the dial are real geometry the player
-    // leans over, and what the instrument RESOLVES is drawn in two
-    // dimensions on the screen over the well, by the same code that
-    // draws it on a Chromebook. Every piece is in the picture, in the
-    // same place, on every tier.
-    //
-    // It is raked rather than laid flat because the player is standing
-    // at a bench and looking DOWN at it: a picture lying in the well is
-    // foreshortened to about a third of its height and stops being
-    // legible before it stops being present.
-    // ---------------------------------------------------------------
-    const head = new THREE.Group();
-    // Far enough forward to stand clear of the swarf scattered along the bench's
-    // back lip, and far enough back to leave the tray and its well alone. There
-    // is about 0.2 m of free plate between the two and the stand lives in it.
-    head.position.set(0, 1.02, -0.43);
-    head.rotation.x = -0.10;
-    g.add(head);
-
-    const headBack = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.66, 0.62, 0.035)), this.darkMat
-    );
-    headBack.position.set(0, 0.31, -0.022);
-    head.add(headBack);
-
-    for (const sx of [-0.27, 0.27]) {
-      const strut = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.035, 0.14, 0.035)), this.steelMat
-      );
-      strut.position.set(sx, -0.06, -0.02);
-      head.add(strut);
-    }
-
-    // The screen itself: a canvas the instrument draws its field into.
-    const screenCanvas = document.createElement('canvas');
-    screenCanvas.width = SCREEN_PX;
-    screenCanvas.height = SCREEN_PX;
-    const screenCtx = screenCanvas.getContext('2d', { willReadFrequently: true });
-    screenCtx.fillStyle = '#0d0c0a';
-    screenCtx.fillRect(0, 0, SCREEN_PX, SCREEN_PX);
-
-    // NOT `own`ed: a station is rebuilt on every stage load, and a half-megabyte
-    // canvas texture per station held to the end of the quest is the one thing
-    // on this bench large enough to be worth freeing early. `clearStations`
-    // disposes anything the viewer does not own, which is exactly this.
-    const screenTex = new THREE.CanvasTexture(screenCanvas);
-    screenTex.colorSpace = THREE.SRGBColorSpace;
-    // No mipmaps: the picture is redrawn every frame while a crate settles or
-    // a beam crosses, and regenerating a mip chain per upload is the most
-    // expensive thing on this bench. The screen is never seen minified.
-    screenTex.generateMipmaps = false;
-    screenTex.minFilter = THREE.LinearFilter;
-    screenTex.magFilter = THREE.LinearFilter;
-
-    const screenMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(SCREEN_M, SCREEN_M),
-      // Unlit: a phosphor screen makes its own light and must not pick up the
-      // bench lamp, or the picture dims when the player leans away from it.
-      new THREE.MeshBasicMaterial({ map: screenTex })
-    );
-    screenMesh.position.set(0, 0.37, 0.004);
-    head.add(screenMesh);
-
-    // A dim filament behind the glass, spilling onto the plate. It is a lamp,
-    // so it is allowed to be lit (CLAUDE.md §1).
-    const screenGlow = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(SCREEN_M + 0.03, SCREEN_M + 0.03)),
-      this.own(new THREE.MeshBasicMaterial({
-        color: 0x2a2c1f, transparent: true, opacity: 0.55, depthWrite: false
-      }))
-    );
-    screenGlow.position.set(0, 0.37, -0.002);
-    head.add(screenGlow);
-
-    // Where the top of the picture is, so the camera can be aimed to keep it
-    // out from under the frame. A marker, not a mesh: nothing to draw.
-    const topMark = new THREE.Object3D();
-    topMark.position.set(0, 0.37 + SCREEN_M / 2, 0.004);
-    head.add(topMark);
-
-    // Label plate, engraved on the bezel under the screen.
-    const labelTex = this.own(engravedPlaque(label, {
-      w: 512, h: 96, size: 42, align: 'center', lit: false
-    }));
-    const labelPlate = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(0.54, 0.101)),
-      this.own(new THREE.MeshStandardMaterial({
-        map: labelTex, roughness: 0.9, metalness: 0.2
-      }))
-    );
-    labelPlate.position.set(0, 0.115, 0.014);
-    head.add(labelPlate);
-
-    // Status tag under the label — blank until the quest sets one.
-    const tagMesh = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(0.34, 0.07)),
-      this.own(new THREE.MeshStandardMaterial({
-        map: this.own(engravedPlaque('', { w: 384, h: 80, size: 36, align: 'center' })),
-        roughness: 0.9, metalness: 0.2, transparent: true
-      }))
-    );
-    tagMesh.position.set(0, 0.038, 0.014);
-    head.add(tagMesh);
-
-    // Note plate, lying flat on the bench in front of the tray: the provenance
-    // slip that came with the sample.
-    const noteTex = this.own(engravedPlaque(note || '', {
-      w: 640, h: 200, size: 28, align: 'left'
-    }));
-    const notePlate = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(0.62, 0.194)),
-      this.own(new THREE.MeshStandardMaterial({
-        map: noteTex, roughness: 0.95, metalness: 0.1
-      }))
-    );
-    notePlate.rotation.x = -Math.PI / 2 + 0.24;
-    notePlate.position.set(0, 0.906, 0.44);
-    g.add(notePlate);
-
-    // Selection indicator, set into the tray's front edge. Dead until selected.
-    const indicator = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(0.018, 10, 8)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x4a4038, emissive: AMBER, emissiveIntensity: 0, roughness: 0.6
-      }))
-    );
-    indicator.position.set(0, 0.945, 0.335);
-    g.add(indicator);
-
-    // The whole station sits at its place along the bench.
-    g.position.x = 0;
-    this.root.add(g);
-
-    const station = {
-      index, group: g, tray, wellFloor, sweep, indicator,
-      labelPlate, notePlate, tagMesh,
-      head, topMark,
-      screen: {
-        mesh: screenMesh, canvas: screenCanvas, ctx: screenCtx,
-        texture: screenTex, w: SCREEN_PX, h: SCREEN_PX
-      },
-      content: new THREE.Group(),   // whatever the instrument puts in the well
-      sweepT: 0
-    };
-    g.add(station.content);
-    station.content.position.y = 0.95;
-
-    this.stations.push(station);
-    return station;
-  }
-
-  /**
    * Declare a body the camera fit must keep in the glass.
    * `topMark` is whatever must stay clear of the frame's chrome — the top edge
    * of a board, of a screen, of a hopper — or the body itself when it is all
@@ -1303,18 +653,6 @@ export class BenchViewer3D {
     return this.stations.map(st => ({
       group: st.group, topMark: st.topMark, face: st.screen?.mesh || null
     }));
-  }
-
-  /** Re-space the stations so N of them sit centred on the bench. */
-  layoutStations() {
-    const n = this.stations.length;
-    const span = (n - 1) * STATION_PITCH;
-    this.stations.forEach((st, i) => {
-      st.group.position.x = -span / 2 + i * STATION_PITCH;
-    });
-    this.keysDirty = true;
-    this.frameCamera(n);
-    this.foes?.layout();
   }
 
   /** Stand the camera where a person working the bench would have their head. */
@@ -1675,592 +1013,16 @@ export class BenchViewer3D {
   /** Subclasses override. */
   handleClick() {}
 
-  /** Which station, if any, the ray passes through. */
-  stationUnderRay() {
-    // A foe standing in a well is a press on that well's station.
-    const foe = this.foes?.stationUnderRay(this.raycaster);
-    if (foe) return foe;
-    for (const st of this.stations) {
-      const hit = this.raycaster.intersectObject(st.tray, false);
-      if (hit.length) return st;
-      const hit2 = this.raycaster.intersectObject(st.wellFloor, false);
-      if (hit2.length) return st;
-    }
-    return null;
-  }
+  /* ---------------- keys and readings (tools and readings are on table/frame) ---------------- */
 
-  /**
-   * Which station's SCREEN the ray passes through, and where on it.
-   *
-   * Returns the hit in the screen's own pixel coordinates, so an instrument
-   * can run the identical hit test it runs on a Chromebook: the picture is the
-   * same picture, drawn by the same function, at a different size.
-   */
-  screenUnderRay() {
-    let best = null;
-    for (const st of this.stations) {
-      if (!st.screen || !st.screen.mesh.visible) continue;
-      const hit = this.raycaster.intersectObject(st.screen.mesh, false);
-      if (!hit.length || !hit[0].uv) continue;
-      if (best && hit[0].distance >= best.distance) continue;
-      best = {
-        station: st,
-        distance: hit[0].distance,
-        px: hit[0].uv.x * st.screen.w,
-        // Canvas y runs down the picture; a uv runs up it.
-        py: (1 - hit[0].uv.y) * st.screen.h
-      };
-    }
-    return best;
-  }
-
-  /** Push whatever an instrument has drawn into a station's screen onto the glass. */
-  refreshScreen(station) {
-    if (station?.screen) station.screen.texture.needsUpdate = true;
-  }
-
-  /** Fire the read sweep across one station's well. */
-  runSweep(station) {
-    if (!station) return;
-    station.sweepT = 1;
-  }
-
-  /** Set a station's status tag. The text is the quest's, rendered verbatim. */
-  setStationTag(station, text) {
-    if (!station) return;
-    const old = station.tagMesh.material.map;
-    station.tagMesh.material.map = engravedPlaque(text || '', {
-      w: 384, h: 80, size: 36, align: 'center', lit: Boolean(text)
-    });
-    station.tagMesh.material.needsUpdate = true;
-    if (old) old.dispose();
-  }
-
-  setStationSelected(station, on) {
-    if (!station) return;
-    station.indicator.material.emissiveIntensity = on ? 1.6 : 0;
-    station.indicator.material.color.setHex(on ? AMBER : 0x4a4038);
-  }
-
-  /* ---------------- keys ---------------- */
-
-  /**
-   * Put the stage's tool keys on the plate as a switch panel.
-   *
-   * THE DOM STAYS THE SOURCE OF TRUTH. These are a physical mirror of the
-   * frame's buttons (`bench-keys.js` reads them and calls this); pressing one
-   * reports its id and the mirror clicks the real button, so grading is
-   * identical on every tier and nothing here knows what a key does.
-   *
-   * @param {{label: string|null, keys: {id: string, label: string, badge?: string,
-   *          disabled?: boolean, lit?: boolean}[]}[]} groups
-   * @param {(id: string) => void} onPress
-   */
-  setKeys(groups, onPress) {
-    if (this.disposed) return;
-    const clean = (groups || [])
-      .map(gr => ({
-        label: gr?.label ? String(gr.label) : null,
-        keys: (gr?.keys || []).filter(k => k && k.id != null && String(k.label ?? '').trim())
-      }))
-      .filter(gr => gr.keys.length);
-    this.onKeyPress = typeof onPress === 'function' ? onPress : null;
-
-    const sig = JSON.stringify(clean.map(gr => [
-      gr.label, gr.keys.map(k => [String(k.id), String(k.label), k.badge == null ? '' : String(k.badge)])
-    ]));
-    this.keyGroups = clean;
-
-    if (!clean.length) {
-      this.keySig = '';
-      this.disposeKeyBank();
-      this.keyPull = 0;
-      this.placeReadings();
-      return;
-    }
-
-    if (sig === this.keySig && this.keyBank) {
-      // Same keys, same legends: only the lamps and the dull legends change.
-      const byId = new Map(this.keyBank.keys.map(k => [k.id, k]));
-      for (const gr of clean) {
-        for (const k of gr.keys) byId.get(String(k.id))?.setState(k);
-      }
-      return;
-    }
-
-    this.keySig = sig;
-    this.disposeKeyBank();
-    this.keysDirty = true;
-    this.placeKeys();
-  }
-
-  /** Take the key bank off the plate and free what it built. */
-  disposeKeyBank() {
-    for (const release of this.keyRelease) release();
-    this.keyRelease = [];
-    const bank = this.keyBank;
-    if (!bank) return;
-    this.keyBank = null;
-    bank.group.parent?.remove(bank.group);
-    for (const g of bank.geos || []) g.dispose();
-    for (const m of bank.mats || []) {
-      if (m.userData?.ownTexture) m.userData.ownTexture.dispose();
-      m.dispose();
-    }
-  }
-
-  /**
-   * The bench-local x extent of everything the instrument has laid out, and of
-   * any other control bolted to the plate (the scope's power dial), so the key
-   * bank can stand clear of all of it. Hidden bodies are not in the way;
-   * an instanced field is measured one instance at a time, because its
-   * geometry box is the unit body and not the field.
-   */
-  occupiedExtentX(zLo = -Infinity, zHi = Infinity) {
-    this.root.updateMatrixWorld(true);
-    const inv = new THREE.Matrix4().copy(this.root.matrixWorld).invert();
-    const m = new THREE.Matrix4();
-    const im = new THREE.Matrix4();
-    const v = new THREE.Vector3();
-    let lo = Infinity;
-    let hi = -Infinity;
-    const keyObjs = new Set();
-    if (this.keyBank) this.keyBank.group.traverse(o => keyObjs.add(o));
-    if (this.readingsBoard) this.readingsBoard.group.traverse(o => keyObjs.add(o));
-
-    const measure = (node, includeHidden) => {
-      node.traverse(o => {
-        if (!o.isMesh || !o.geometry || keyObjs.has(o)) return;
-        if (!includeHidden && (o.material?.visible === false)) return;
-        for (let a = o; a && a !== this.root; a = a.parent) if (!a.visible) return;
-        if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-        const gb = o.geometry.boundingBox;
-        if (!gb || gb.isEmpty()) return;
-        m.multiplyMatrices(inv, o.matrixWorld);
-        // One body's box; it counts only if it reaches into the band of plate
-        // the bank would stand on.
-        const corners = mat => {
-          let bl = Infinity, bh = -Infinity, zl = Infinity, zh = -Infinity;
-          for (const x of [gb.min.x, gb.max.x]) {
-            for (const y of [gb.min.y, gb.max.y]) {
-              for (const z of [gb.min.z, gb.max.z]) {
-                v.set(x, y, z).applyMatrix4(mat);
-                bl = Math.min(bl, v.x); bh = Math.max(bh, v.x);
-                zl = Math.min(zl, v.z); zh = Math.max(zh, v.z);
-              }
-            }
-          }
-          if (zh < zLo || zl > zHi) return;
-          lo = Math.min(lo, bl);
-          hi = Math.max(hi, bh);
-        };
-        if (o.isInstancedMesh) {
-          for (let i = 0; i < o.count; i++) {
-            o.getMatrixAt(i, im);
-            corners(im.premultiply(m));
-          }
-          return;
-        }
-        // A body turned on the bench — the octagonal trays are set a sixteenth
-        // of a turn round — has a box a quarter wider than the body. Measured
-        // by its own points, a tray is as wide as a tray.
-        const pos = o.geometry.attributes?.position;
-        if (pos && pos.count <= 4096) {
-          let bl = Infinity, bh = -Infinity, zl = Infinity, zh = -Infinity;
-          for (let i = 0; i < pos.count; i++) {
-            v.fromBufferAttribute(pos, i).applyMatrix4(m);
-            bl = Math.min(bl, v.x); bh = Math.max(bh, v.x);
-            zl = Math.min(zl, v.z); zh = Math.max(zh, v.z);
-          }
-          if (zh < zLo || zl > zHi) return;
-          lo = Math.min(lo, bl);
-          hi = Math.max(hi, bh);
-          return;
-        }
-        corners(m);
-      });
-    };
-
-    for (const n of this.framedNodes()) measure(n.group, false);
-    // Controls someone else bolted on — the power dial — including their
-    // invisible grab targets, which is where a hand will be.
-    for (const gr of this.grabbables || []) {
-      if (!gr.object || keyObjs.has(gr.object)) continue;
-      let top = gr.object;
-      while (top.parent && top.parent !== this.root) top = top.parent;
-      measure(top, true);
-    }
-    return lo === Infinity ? null : { lo, hi };
-  }
-
-  /**
-   * Stand the key bank on free plate beside the instrument.
-   *
-   * WHERE THE FREE PLATE IS. A bench is not an empty table: a weld bead runs
-   * the length of it down the middle (local z = 0), swarf chips lie along the
-   * back lip (z < -0.48), a vice and a tool block sit on the front corners,
-   * the note slips lie across the front of every station, and on the lab
-   * bench a rail stands a hand's width in front of it. What is left clear the
-   * whole length of every bench is the band BEHIND THE BEAD and in front of
-   * the chips — so the panel stands there, outboard of the instrument, as far
-   * forward as the bead lets it.
-   *
-   * Right first, mirroring the power dial on the left; then the left, beyond
-   * everything that reaches into that band (the dial does not: it stands in
-   * front of the bead); as one column rather than two if two do not fit.
-   * A bench laid out end to end has no plate beside it at all, and there the
-   * keys stand as a low RAIL along the front edge, in front of the slips.
-   */
-  placeKeys() {
-    this.keysDirty = false;
-    if (this.disposed || !this.keyGroups.length) return;
-
-    const EDGE = 2.25;        // |x| + half width, on a 4.6 m top or a 4.8 m bench
-    const GAP = 0.05;
-    const BAND_FRONT = -0.04; // just behind the weld bead
-    const BAND_BACK = -0.47;  // just in front of the swarf on the back lip
-    const RAIL_FRONT = 0.645; // the front edge of the plate, less a margin
-    const total = this.keyGroups.reduce((n, gr) => n + gr.keys.length, 0);
-
-    let pick = null;
-    for (const layout of (total > 5 ? [2, 1] : [1])) {
-      const plan = planKeyBank(this.keyGroups, layout);
-      const depth = plan.depth;
-      if (depth > BAND_FRONT - BAND_BACK) continue;
-      const z = BAND_FRONT - depth / 2;
-      const ext = this.occupiedExtentX(z - depth / 2, z + depth / 2) || { lo: 0, hi: 0 };
-      const half = (plan.width + KEY_BASE_OVER) / 2;
-      const right = ext.hi + GAP + half;
-      if (right + half <= EDGE) { pick = { layout, x: right, z }; break; }
-      const left = ext.lo - GAP - half;
-      if (left - half >= -EDGE) { pick = { layout, x: left, z }; break; }
-    }
-    if (!pick) {
-      // No plate beside the instrument: a rail along the front edge, centred,
-      // clear of the note slips in front of the stations.
-      const plan = planKeyBank(this.keyGroups, 'row');
-      const z = RAIL_FRONT - plan.depth / 2;
-      pick = { layout: 'row', x: 0, z };
-    }
-
-    if (!this.keyBank || this.keyBank.layout !== pick.layout) {
-      this.disposeKeyBank();
-      const bank = buildKeyBank(this.keyGroups, {
-        layout: pick.layout,
-        materials: { steel: this.steelMat, dark: this.darkMat }
-      });
-      bank.layout = pick.layout;
-      this.keyBank = bank;
-      this.root.add(bank.group);
-      for (const key of bank.keys) {
-        this.keyRelease.push(this.addGrabbable({
-          object: key.hit,
-          onStart: () => { key.setPressed(true); },
-          onEnd: e => {
-            key.setPressed(false);
-            // A cancelled press (no event) is not a press, and neither is one
-            // released somewhere else: like any key, it fires on the way up
-            // only if the finger is still on it.
-            if (!e || key.disabled) return;
-            if (e.clientX != null) {
-              this.setPointer(e);
-              if (!this.raycaster.intersectObject(key.hit, false).length) return;
-            }
-            soundscape.playToggleClack?.();
-            this.onKeyPress?.(key.id);
-          }
-        }));
-      }
-    }
-
-    this.keyBank.group.position.set(pick.x, 0.895, pick.z);
-    this.keyBank.x = pick.x;
-    this.keyBank.z = pick.z;
-    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all', this._activeHaloId);
-    this.placeReadings();
-    this.updateKeyPull();
-    this.applyCamera();
-  }
-
-  /**
-   * Show the readings the frame holds, or take the board away (null, or nothing
-   * to show). `snap` is `{ columns, rows, pictures }` from `LearnFrame.readingsSnapshot`.
-   * The board is a read-only mirror: it repaints on every call and keeps nothing.
-   */
-  setReadings(snap) {
-    if (this.disposed) return;
-    this.readingsSnap = hasReadings(snap) ? snap : null;
-    if (!this.readingsSnap) { this.disposeReadings(); this.updateKeyPull(); return; }
-    this.placeReadings();
-    this.readingsBoard?.repaint(this.readingsSnap);
-    this.updateKeyPull();
-  }
-
-  disposeReadings() {
-    const board = this.readingsBoard;
-    if (!board) return;
-    this.readingsBoard = null;
-    board.group.parent?.remove(board.group);
-    for (const g of board.geos || []) g.dispose();
-    for (const m of board.mats || []) {
-      if (m.userData?.ownTexture) m.userData.ownTexture.dispose();
-      m.dispose();
-    }
-  }
-
-  /**
-   * Stand the readings board on the same free band of plate the keys use
-   * (just behind the weld bead, in front of the swarf), on the side the keys
-   * did not take, or beyond them if there is room. When neither side has room
-   * the board is simply not shown: the frame's cards still hold the readings.
-   */
-  placeReadings() {
-    if (this.disposed) return;
-    if (!this.readingsSnap) { this.disposeReadings(); return; }
-    const EDGE = 2.25;
-    const GAP = 0.05;
-    const BAND_FRONT = -0.04;
-    const BAND_BACK = -0.47;
-    const plan = planReadingsBoard();
-    if (plan.depth > BAND_FRONT - BAND_BACK) { this.disposeReadings(); return; }
-    const z = BAND_FRONT - plan.depth / 2;
-    const half = plan.width / 2;
-
-    const ext = this.occupiedExtentX(z - plan.depth / 2, z + plan.depth / 2) || { lo: 0, hi: 0 };
-    let lo = ext.lo;
-    let hi = ext.hi;
-    const bank = this.keyBank;
-    if (bank && bank.layout !== 'row') {
-      lo = Math.min(lo, bank.x - bank.width / 2 - GAP);
-      hi = Math.max(hi, bank.x + bank.width / 2 + GAP);
-    }
-    let x = null;
-    // The side the keys left free comes first.
-    const keysRight = bank && bank.layout !== 'row' && bank.x > 0;
-    const right = hi + GAP + half;
-    const left = lo - GAP - half;
-    const options = keysRight ? [left, right] : [right, left];
-    for (const cand of options) {
-      if (cand + half <= EDGE && cand - half >= -EDGE) { x = cand; break; }
-    }
-    if (x == null) { this.disposeReadings(); return; }
-
-    if (!this.readingsBoard) {
-      this.readingsBoard = buildReadingsBoard({ materials: { steel: this.steelMat, dark: this.darkMat } });
-      this.root.add(this.readingsBoard.group);
-    }
-    const board = this.readingsBoard;
-    board.group.position.set(x, 0.895, z);
-    board.x = x;
-    board.z = z;
-  }
-
-  /**
-   * Stand the camera back just far enough that the key bank's outer edge is
-   * inside the glass at this camera's aspect. Closed form, ignoring the small
-   * downward pitch, with a margin for it.
-   */
-  updateKeyPull() {
-    // The key bank and the readings board are both on the plate and both have to be in the glass.
-    const stood = [this.keyBank, this.readingsBoard].filter(Boolean);
-    if (!stood.length) { this.keyPull = 0; return; }
-    const cam = this.camera;
-    const fov = (cam.fov || 55) * Math.PI / 180;
-    const tanH = Math.tan(fov / 2) * (cam.aspect || 1.6) / (cam.zoom || 1);
-    const edge = Math.max(...stood.map(b => Math.abs(b.x) + b.width / 2));
-    const nearZ = Math.max(...stood.map(b => b.z + b.depth / 2));
-    const t = this.camTarget || { z: -0.02 };
-    const need = edge / (tanH * 0.86) + nearZ - 0.55 - t.z;
-    const pull = Math.max(0, Math.min(1.4, need - this.camDist));
-    if (Math.abs(pull - this.keyPull) > 0.002) {
-      this.keyPull = pull;
-      this.applyCamera();
-    }
-  }
+  setKeys() {}
+  setReadings() {}
+  getKeyList() { return []; }
 
   /* ---------------- frame ---------------- */
 
-  /**
-   * Centre the bench in the part of the screen the frame is not covering.
-   *
-   * At T4 the quest frame sits as a panel over the 3D view, so without this the
-   * instrument would be half behind it. This is the same `setViewOffset` trick
-   * `quest3d/viewer.js` uses to keep the containment chamber clear of the stage
-   * deck on a phone, applied to the bench and its deck panel.
-   */
-  fitToOpenArea() {
-    // Leaned in, the pose was solved against the chrome it reserves; neither the
-    // standing aim nor a view offset has any business with the camera.
-    if (this.leaning) return;
-
-    // Deployed, the interface is not a panel over the view — it is bolted to the
-    // bench inside it. There is nothing to dodge, and applying a view offset to
-    // the world camera would skew the whole of Tallow to make room for a card
-    // that is not there.
-    if (this.inWorld) { this.fitDeployedAim(); return; }
-
-    const cam = this.camera;
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-    if (W < 1 || H < 1) return;
-
-    let l = 0, t = 0, r = W, b = H;
-    for (const el of document.querySelectorAll('.lq-deck, .lq-stage, .hud, .learn-host-bar')) {
-      const box = el.getBoundingClientRect();
-      if (box.width < 1 || box.height < 1) continue;
-      const midY = (box.top + box.bottom) / 2;
-      if (box.width > W * 0.6) {
-        if (midY < H / 2) t = Math.max(t, box.bottom);
-        else b = Math.min(b, box.top);
-      } else if (box.left > W * 0.4) {
-        r = Math.min(r, box.left);
-      } else if (box.height > H * 0.4) {
-        l = Math.max(l, box.right);
-      }
-    }
-
-    let w = r - l;
-    let h = b - t;
-    if (w < 120 || h < 120) { l = 0; t = 0; w = W; h = H; }
-
-    const key = `${W}|${H}|${Math.round(l)}|${Math.round(t)}|${Math.round(w)}|${Math.round(h)}`;
-    if (key === this._fitKey) return;
-    this._fitKey = key;
-
-    cam.aspect = w / h;
-    cam.zoom = Math.min(1, (w / h) / 1.7);
-    cam.setViewOffset(w, h, -l, -t, W, H);
-    cam.updateProjectionMatrix();
-  }
-
-  /**
-   * Deployed: keep the instrument out from under the frame by AIMING, not by
-   * skewing the projection.
-   *
-   * `fitToOpenArea` cannot be used here. The camera is the world's camera, and
-   * a view offset on it would re-frame the whole of Tallow — the sky, the
-   * lean-to and the salt flat — to make room for a card that is standing in
-   * front of them. So this measures the same thing (how far down the glass the
-   * frame's chrome reaches over the middle of the view) and answers it by
-   * pitching the camera up until the top of the screens clears the chrome.
-   *
-   * It is a correction applied once every fit rather than a closed-form solve
-   * because the deck grows and shrinks as hints open and a reward card appears,
-   * and because the projection is not linear in the angle. The deadband keeps
-   * it from hunting.
-   */
-  fitDeployedAim() {
-    if (!this.inWorld || !this.framedNodes().length) return;
-    if (typeof document === 'undefined') return;
-
-    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
-    const W = (vv && vv.width) || window.innerWidth;
-    const H = (vv && vv.height) || window.innerHeight;
-    if (W < 1 || H < 1) return;
-
-    // How far down the glass the frame reaches, over the middle of the view —
-    // the bench is centred there, so a panel off to one side is not in the way.
-    let chromeBottom = 0;
-    for (const el of document.querySelectorAll(
-      '.hud, .learn-host-bar, .lq-rail, .lq-stage-head, .lq-controls, .lq-deck'
-    )) {
-      const box = el.getBoundingClientRect?.();
-      if (!box || box.width < 1 || box.height < 1) continue;
-      if (box.right < W * 0.32 || box.left > W * 0.68) continue;
-      if (box.top > H * 0.6) continue;          // already low: not overhead chrome
-      chromeBottom = Math.max(chromeBottom, box.bottom);
-    }
-    // Never give away more than the top half: on a narrow window the deck
-    // column reaches the middle of the glass, and an instrument aimed clear of
-    // THAT would be aimed off the bottom of the view.
-    chromeBottom = Math.min(chromeBottom, H * 0.52);
-    this.aimForChrome(1 - (2 * (chromeBottom + 12)) / H);
-
-    // And sideways, out from behind an open transmission. A briefing at a
-    // deployed bench docks down one edge of the glass rather than blacking the
-    // whole of it out, so the clear part of the view is the rest of the width —
-    // and the instrument belongs in the MIDDLE of that, not in the middle of
-    // the window.
-    let clearL = 0;
-    let clearR = W;
-    const modal = document.getElementById('modal-container');
-    const card = modal && !modal.classList.contains('hidden')
-      ? modal.querySelector('.modal-card') : null;
-    const box = card?.getBoundingClientRect?.();
-    if (box && box.width > 40 && box.width < W * 0.7) {
-      if (box.left < W * 0.3) clearL = Math.max(clearL, box.right + 10);
-      else if (box.right > W * 0.7) clearR = Math.min(clearR, box.left - 10);
-    }
-    this.aimForClear(((clearL + clearR) / W) - 1);
-  }
-
-  /**
-   * One correction step toward putting the middle of the bench on `wantNdc`.
-   *
-   * Split out the way `aimForChrome` is, and for the same reason: it is a
-   * correction rather than a closed-form solve, because the projection is not
-   * linear in the angle and the docked card's width changes with the viewport.
-   *
-   * @param {number} wantNdc the NDC x the instrument should be centred on.
-   * @returns {number} how far off that it still is.
-   */
-  aimForClear(wantNdc) {
-    const nodes = this.framedNodes();
-    if (!nodes.length) return 0;
-    this.camera.updateMatrixWorld();
-    const p = this._sideProbe || (this._sideProbe = new THREE.Vector3());
-    let lo = Infinity;
-    let hi = -Infinity;
-    for (const st of nodes) {
-      st.group.getWorldPosition(p);
-      p.project(this.camera);
-      lo = Math.min(lo, p.x);
-      hi = Math.max(hi, p.x);
-    }
-    if (lo === Infinity) return 0;
-
-    const off = ((lo + hi) / 2) - wantNdc;
-    if (Math.abs(off) < 0.015) return off;          // close enough; hold still
-
-    const fov = (this.camera.fov || 55) * Math.PI / 180;
-    const d = this.camDist + (this.keyPull || 0) + 0.6;
-    const halfW = d * Math.tan(fov / 2) * (this.camera.aspect || 1.6);
-    this.setAimShift((this.aimShift || 0) + off * halfW);
-    return off;
-  }
-
-  /**
-   * One correction step toward putting the tops of the screens just under
-   * `chromeNdc`. Split out from the measurement so `verify:bench` can drive it
-   * with a chrome height rather than a browser, and assert on the result.
-   *
-   * @param {number} chromeNdc the NDC y the frame's chrome reaches down to.
-   * @returns {number} how far above that line the screens still are.
-   */
-  aimForChrome(chromeNdc) {
-    const nodes = this.framedNodes();
-    if (!nodes.length) return 0;
-    this.camera.updateMatrixWorld();
-    let topNdc = -Infinity;
-    const p = this._aimProbe || (this._aimProbe = new THREE.Vector3());
-    for (const st of nodes) {
-      if (!st.topMark) continue;
-      st.topMark.getWorldPosition(p);
-      p.project(this.camera);
-      topNdc = Math.max(topNdc, p.y);
-    }
-    if (topNdc === -Infinity) return 0;
-
-    const excess = topNdc - chromeNdc;
-    if (excess < 0.012 && excess > -0.07) return excess;   // close enough; hold still
-
-    // NDC back to metres of aim: one half-height of the frustum at the target's
-    // distance is d * tan(fov/2).
-    const fov = (this.camera.fov || 55) * Math.PI / 180;
-    const d = this.camDist + (this.keyPull || 0) + 0.6;
-    this.setAimLift((this.aimLift || 0) + excess * d * Math.tan(fov / 2));
-    return excess;
-  }
+  fitToOpenArea() {}
+  fitDeployedAim() {}
 
 
   /* ---------------- leaning in ---------------- */
@@ -2401,6 +1163,7 @@ export class BenchViewer3D {
     if (!this.leaning) return;
     this.lean = null;
     this.leaning = false;
+    this.gaze = null;
     if (typeof document !== 'undefined') document.body?.classList?.remove?.('bench-leaning');
     if (walked && this.inWorld) {
       this.playerControlled = true;
@@ -2484,8 +1247,71 @@ export class BenchViewer3D {
       lq.setFromEuler(eul);
       cam.quaternion.multiply(lq);
     }
+    // A look at the boss turns the head off the table for as long as the beat lasts; the position stays where the lean put it.
+    if (this.gaze && this.gaze.w > 0.001) this.applyGaze(cam);
+    // The arena's shake belongs to whoever owns the camera, and while leaned in that is this pose (`BossArena` stands down).
+    if (this.arenaFight) {
+      const sh = cameraShake();
+      if (sh) {
+        cam.position.x += sh.posX;
+        cam.position.y += sh.posY;
+        cam.rotateZ(sh.roll);
+      }
+    }
     cam.updateMatrixWorld(true);
     L.wrote = { x: cam.position.x, z: cam.position.z };
+  }
+
+  /* ---------------- looking at the boss ---------------- */
+
+  /** Take a look request from the arena (`bench-host.js`), if one is waiting. */
+  pollGaze() {
+    const req = takeGaze();
+    if (!req) return;
+    if (req.end || typeof req.point !== 'function') {
+      if (this.gaze) this.gaze.hold = 0;
+      return;
+    }
+    const g = this.gaze;
+    this.gaze = {
+      point: req.point,
+      hold: req.hold ?? 1.5,
+      inS: Math.max(0.05, req.inS ?? 0.35),
+      outS: Math.max(0.05, req.outS ?? 0.6),
+      // A new request while a look is under way carries on from where the head is.
+      w: g ? g.w : 0
+    };
+  }
+
+  /** One frame of the look: onto the target while it is held, back to the table after. */
+  advanceGaze(delta) {
+    const g = this.gaze;
+    if (!g) return;
+    if (g.hold > 0) {
+      g.hold -= delta;
+      g.w = Math.min(1, g.w + delta / g.inS);
+    } else {
+      g.w = Math.max(0, g.w - delta / g.outS);
+      if (g.w <= 0) this.gaze = null;
+    }
+  }
+
+  /** Is the view mostly off the table (so a press on the glass is not aimed at the plate)? */
+  get gazing() {
+    return Boolean(this.gaze && this.gaze.w > 0.12);
+  }
+
+  /** Turn the camera `w` of the way toward its target (smoothstep), keeping its position. */
+  applyGaze(cam) {
+    const g = this.gaze;
+    const target = this._gazeTarget || (this._gazeTarget = new THREE.Vector3());
+    if (!g.point(target)) return;
+    const m = this._gazeMat || (this._gazeMat = new THREE.Matrix4());
+    const q = this._gazeQuat || (this._gazeQuat = new THREE.Quaternion());
+    m.lookAt(cam.position, target, new THREE.Vector3(0, 1, 0));
+    q.setFromRotationMatrix(m);
+    const e = g.w * g.w * (3 - 2 * g.w);
+    cam.quaternion.slerp(q, e);
   }
 
   /**
@@ -2557,36 +1383,16 @@ export class BenchViewer3D {
       }
     }
 
-    if (this.keysDirty) this.placeKeys();
+    if (this.arenaFight) this.pollGaze();
+    this.advanceGaze(delta);
 
     if (this.leaning) {
       this.updateLean(delta);
     } else if (!(this.inWorld && this.playerControlled)) {
-      this.updateKeyPull();
-      // Re-measure a few times a second: the frame's deck changes height as
-      // hints open and a reward card appears, and the bench should stay clear
-      // of it — right up until the player takes the view for themselves.
-      this._sinceFit = (this._sinceFit || 0) + delta;
-      if (this._sinceFit > 0.2) {
-        this._sinceFit = 0;
-        this.fitToOpenArea();
-      }
-
       // Damped look: the view settles, it does not snap.
       this.orbit.yaw += (this.orbit.targetYaw - this.orbit.yaw) * Math.min(1, delta * 9);
       this.orbit.pitch += (this.orbit.targetPitch - this.orbit.pitch) * Math.min(1, delta * 9);
       this.applyCamera();
-    }
-
-    for (const st of this.stations) {
-      if (st.sweepT > 0) {
-        st.sweepT = Math.max(0, st.sweepT - delta * 1.6);
-        const t = 1 - st.sweepT;
-        st.sweep.position.z = -0.28 + t * 0.56;
-        st.sweep.material.opacity = 0.5 * st.sweepT;
-      } else if (st.sweep.material.opacity !== 0) {
-        st.sweep.material.opacity = 0;
-      }
     }
 
     this.foes?.update(delta);
@@ -2633,12 +1439,7 @@ export class BenchViewer3D {
    * dead materials the next time a stage rebuilt its stations, so anything the
    * bench owns is protected and only what the station made is freed.
    */
-  clearStations() {
-    for (const st of this.stations) this.releaseGroup(st.group);
-    this.stations = [];
-    this.foes?.hide();
-    this.keysDirty = true;
-  }
+  clearStations() {}
 
   /**
    * Take a subtree off the bench and free everything it owns.
@@ -2688,405 +1489,21 @@ export class BenchViewer3D {
     if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all', this._activeHaloId);
   }
 
-  /* ---------------- instrument halos ---------------- */
+  /* ---------------- what a bench reports to the frame ---------------- */
 
-  /**
-   * Return descriptions of interactive instruments present on this bench.
-   */
   getAvailableInstruments() {
-    const list = [];
-    if (this.dials && this.dials.length > 0) {
-      list.push({
-        kind: 'dial',
-        name: 'Rotary Dial',
-        shortDesc: 'Drag knob or scroll mouse wheel to adjust',
-        desc: 'Rotary control on the bench plate. Click and drag the knob or scroll the mouse wheel over it to turn and change settings.',
-        tag: 'DRAG OR SCROLL'
-      });
-    }
-    if (this.keyBank && this.keyBank.keys && this.keyBank.keys.length > 0) {
-      list.push({
-        kind: 'keys',
-        name: 'Bench Keys',
-        shortDesc: 'Click engraved plates on bench rail',
-        desc: 'Engraved tool plates mounted on the bench rail. Click any key to trigger its action, fire beams, or cycle views.',
-        tag: 'CLICK KEY'
-      });
-    }
-    const nodes = this.framedNodes();
-    if (nodes && nodes.length > 0) {
-      list.push({
-        kind: 'stations',
-        name: 'Sample Stations',
-        shortDesc: 'Click wells or screens to select',
-        desc: 'Sample wells, trays, and detector screens along the bench. Click any station or screen to inspect pieces and view readouts.',
-        tag: 'CLICK TO INSPECT'
-      });
-    }
-    return list;
+    return [{
+      kind: 'stations',
+      name: 'The table',
+      shortDesc: 'Drag the pieces',
+      desc: 'Drag a piece to move it, or tap a piece and then tap where it goes. Undo takes back your last move and Start Over clears the table.',
+      tag: 'DRAG OR TAP'
+    }];
   }
 
-  /** The keys standing on the bench, in the order they are laid out: [{ id, label }]. */
-  getKeyList() {
-    const out = [];
-    for (const gr of this.keyGroups || []) {
-      for (const k of gr?.keys || []) out.push({ id: String(k.id), label: String(k.label) });
-    }
-    return out;
-  }
-
-  /** A halo round ONE key cap, labelled with the key's own legend. */
-  _buildKeyHalo(id) {
-    const key = this.keyBank?.keys?.find(k => String(k.id) === String(id));
-    if (!key?.hit) return;
-    const label = this.getKeyList().find(k => k.id === String(id))?.label || '';
-    this.root.updateMatrixWorld(true);
-    const p = this.root.worldToLocal(key.hit.getWorldPosition(new THREE.Vector3()));
-
-    const hw = KEY_CAP_W / 2 + 0.05;
-    const hd = KEY_CAP_H / 2 + 0.05;
-    const s = new THREE.Shape();
-    s.moveTo(-hw, -hd); s.lineTo(hw, -hd); s.lineTo(hw, hd); s.lineTo(-hw, hd); s.closePath();
-    const hole = new THREE.Path();
-    const iw = KEY_CAP_W / 2 + 0.006;
-    const id2 = KEY_CAP_H / 2 + 0.006;
-    hole.moveTo(-iw, -id2); hole.lineTo(-iw, id2); hole.lineTo(iw, id2); hole.lineTo(iw, -id2); hole.closePath();
-    s.holes.push(hole);
-    const frameGeo = new THREE.ShapeGeometry(s);
-    this.haloGeos.push(frameGeo);
-    const frame = new THREE.Mesh(frameGeo, this._createHaloMat(0xffc107, 0.9, true));
-    frame.rotation.x = -Math.PI / 2;
-    frame.position.set(p.x, this.keyBank.group.position.y + 0.011, p.z);
-    this.haloGroup.add(frame);
-
-    const ptr = this._createHaloPointer(0xffd700);
-    ptr.position.set(p.x, p.y + 0.2, p.z);
-    this.haloGroup.add(ptr);
-    this.haloPointers = this.haloPointers || [];
-    this.haloPointers.push({ mesh: ptr, baseY: p.y + 0.2 });
-
-    const badge = this._createHaloBadge(label.toUpperCase(), 'PRESS THIS KEY');
-    badge.position.set(p.x, p.y + 0.36, p.z);
-    this.haloGroup.add(badge);
-  }
-
-  _createHaloBadge(text, subtext) {
-    if (typeof document === 'undefined') return new THREE.Group();
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 140;
-    const ctx = canvas.getContext('2d');
-
-    // High-contrast dark backdrop with neon gold border glow
-    ctx.fillStyle = 'rgba(10, 8, 14, 0.96)';
-    if (ctx.roundRect) ctx.roundRect(4, 4, 504, 132, 14);
-    else ctx.rect(4, 4, 504, 132);
-    ctx.fill();
-
-    // Outer neon glow border
-    ctx.strokeStyle = '#ffb300';
-    ctx.lineWidth = 6;
-    ctx.shadowColor = '#ffaa00';
-    ctx.shadowBlur = 18;
-    ctx.stroke();
-
-    // Inner sharp accent line
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#ffe57f';
-    ctx.lineWidth = 2;
-    if (ctx.roundRect) ctx.roundRect(10, 10, 492, 120, 8);
-    else ctx.rect(10, 10, 492, 120);
-    ctx.stroke();
-
-    // Primary label text
-    ctx.fillStyle = '#ffc107';
-    ctx.font = '900 36px "Share Tech Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(text, 256, 20);
-
-    // Subtext instruction
-    if (subtext) {
-      ctx.fillStyle = '#fff8e1';
-      ctx.font = 'bold 22px "Share Tech Mono", monospace';
-      ctx.fillText(subtext, 256, 76);
-    }
-
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    const mat = new THREE.MeshBasicMaterial({
-      map: tex,
-      transparent: true,
-      opacity: 0.98,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      depthTest: false,
-    });
-    mat.renderOrder = 1000;
-    mat.userData = { texture: tex, baseOpacity: 0.98, noPulse: true };
-    this.haloMaterials.push(mat);
-
-    const geo = new THREE.PlaneGeometry(0.46, 0.126);
-    this.haloGeos.push(geo);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.renderOrder = 1000;
-    this.haloBadges = this.haloBadges || [];
-    this.haloBadges.push(mesh);
-    return mesh;
-  }
-
-  _createHaloMat(color = 0xffc107, baseOpacity = 0.85, additive = true) {
-    const mat = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: baseOpacity,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
-    });
-    mat.renderOrder = 400;
-    mat.userData = { baseOpacity, additive };
-    this.haloMaterials.push(mat);
-    return mat;
-  }
-
-  _createHaloBeam(radiusTop, radiusBottom, height, color = 0xffa000, opacity = 0.45) {
-    const geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 32, 1, true);
-    this.haloGeos.push(geo);
-    const mat = this._createHaloMat(color, opacity, true);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.renderOrder = 350;
-    return mesh;
-  }
-
-  _createHaloPointer(color = 0xffd700) {
-    const group = new THREE.Group();
-    // Inverted cone pointing down at instrument
-    const coneGeo = new THREE.ConeGeometry(0.045, 0.12, 16);
-    this.haloGeos.push(coneGeo);
-    const coneMat = this._createHaloMat(color, 0.95, false);
-    const cone = new THREE.Mesh(coneGeo, coneMat);
-    cone.rotation.x = Math.PI;
-    group.add(cone);
-
-    // Glowing halo ring around base of cone
-    const ringGeo = new THREE.TorusGeometry(0.065, 0.008, 8, 24);
-    this.haloGeos.push(ringGeo);
-    const ringMat = this._createHaloMat(0xffb700, 0.90, true);
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.06;
-    group.add(ring);
-
-    return group;
-  }
-
-  _buildDialHalo(dialRec) {
-    if (!dialRec?.group) return;
-    const p = dialRec.group.position;
-    // 1. Concentric luminous floor rings around plinth (outer radius clear of plinth)
-    const baseGeo = new THREE.RingGeometry(0.20, 0.28, 48);
-    this.haloGeos.push(baseGeo);
-    const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xffc107, 0.85, true));
-    baseMesh.rotation.x = -Math.PI / 2;
-    baseMesh.position.set(p.x, 0.906, p.z);
-    this.haloGroup.add(baseMesh);
-
-    // Laser accent outer ring
-    const laserGeo = new THREE.RingGeometry(0.28, 0.296, 48);
-    this.haloGeos.push(laserGeo);
-    const laserMesh = new THREE.Mesh(laserGeo, this._createHaloMat(0xff9100, 0.95, true));
-    laserMesh.rotation.x = -Math.PI / 2;
-    laserMesh.position.set(p.x, 0.907, p.z);
-    this.haloGroup.add(laserMesh);
-
-    // 2. Volumetric vertical light pillar cylinder around dial
-    const beam = this._createHaloBeam(0.22, 0.25, 0.38, 0xffa000, 0.45);
-    beam.position.set(p.x, 1.09, p.z);
-    this.haloGroup.add(beam);
-
-    // 3. Bright glowing collar ring directly surrounding the knob
-    const collarGeo = new THREE.RingGeometry(0.065, 0.095, 36);
-    this.haloGeos.push(collarGeo);
-    const collarMesh = new THREE.Mesh(collarGeo, this._createHaloMat(0xffea00, 0.95, true));
-    collarMesh.rotation.x = -Math.PI / 2 + 0.62;
-    collarMesh.position.set(p.x, 0.985, p.z + 0.012);
-    this.haloGroup.add(collarMesh);
-
-    // 4. Animated bobbing pointer cone pointing right at knob
-    const ptr = this._createHaloPointer(0xffd700);
-    ptr.position.set(p.x, 1.18, p.z + 0.012);
-    this.haloGroup.add(ptr);
-    this.haloPointers = this.haloPointers || [];
-    this.haloPointers.push({ mesh: ptr, baseY: 1.18 });
-
-    // 5. Billboarded high-contrast badge
-    const badge = this._createHaloBadge('TURN DIAL', 'DRAG KNOB OR SCROLL WHEEL');
-    badge.position.set(p.x, 1.34, p.z + 0.02);
-    this.haloGroup.add(badge);
-  }
-
-  _buildKeysHalo() {
-    const bank = this.keyBank;
-    if (!bank) return;
-    const w = bank.width || 0.42;
-    const d = bank.depth || 0.22;
-
-    // Floor frame surrounding key bank
-    const s = new THREE.Shape();
-    const hw = w / 2 + 0.06;
-    const hd = d / 2 + 0.06;
-    const iw = w / 2 + 0.01;
-    const id = d / 2 + 0.01;
-    s.moveTo(-hw, -hd);
-    s.lineTo(hw, -hd);
-    s.lineTo(hw, hd);
-    s.lineTo(-hw, hd);
-    s.closePath();
-    const hole = new THREE.Path();
-    hole.moveTo(-iw, -id);
-    hole.lineTo(-iw, id);
-    hole.lineTo(iw, id);
-    hole.lineTo(iw, -id);
-    hole.closePath();
-    s.holes.push(hole);
-
-    const frameGeo = new THREE.ShapeGeometry(s);
-    this.haloGeos.push(frameGeo);
-    const frameMesh = new THREE.Mesh(frameGeo, this._createHaloMat(0xffc107, 0.85, true));
-    frameMesh.rotation.x = -Math.PI / 2;
-    frameMesh.position.set(bank.x, 0.906, bank.z);
-    this.haloGroup.add(frameMesh);
-
-    // Volumetric light beam enclosing keys
-    const beam = this._createHaloBeam(hw, hw * 1.05, 0.35, 0xffa000, 0.40);
-    beam.position.set(bank.x, 1.07, bank.z);
-    this.haloGroup.add(beam);
-
-    // Animated bobbing pointer cone pointing down at keys
-    const ptr = this._createHaloPointer(0xffd700);
-    ptr.position.set(bank.x, 1.18, bank.z);
-    this.haloGroup.add(ptr);
-    this.haloPointers = this.haloPointers || [];
-    this.haloPointers.push({ mesh: ptr, baseY: 1.18 });
-
-    // Billboarded high-contrast badge
-    const badge = this._createHaloBadge('BENCH KEYS', 'CLICK ENGRAVED PLATES');
-    badge.position.set(bank.x, 1.34, bank.z);
-    this.haloGroup.add(badge);
-  }
-
-  _buildStationsHalo() {
-    if (this.stations && this.stations.length > 0) {
-      for (const st of this.stations) {
-        const sx = st.group ? st.group.position.x : 0;
-
-        // 1. Glowing rim ring right on top of the sample well rim (y = 0.965)
-        const rimGeo = new THREE.RingGeometry(0.26, 0.33, 40);
-        this.haloGeos.push(rimGeo);
-        const rimMesh = new THREE.Mesh(rimGeo, this._createHaloMat(0xffc107, 0.90, true));
-        rimMesh.rotation.x = -Math.PI / 2;
-        rimMesh.position.set(sx, 0.965, 0);
-        this.haloGroup.add(rimMesh);
-
-        // Outer base ring on the bench plate
-        const baseGeo = new THREE.RingGeometry(0.36, 0.42, 40);
-        this.haloGeos.push(baseGeo);
-        const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xff9100, 0.75, true));
-        baseMesh.rotation.x = -Math.PI / 2;
-        baseMesh.position.set(sx, 0.906, 0);
-        this.haloGroup.add(baseMesh);
-
-        // 2. Volumetric vertical light pillar cylinder rising out of well
-        const beam = this._createHaloBeam(0.26, 0.29, 0.42, 0xffaa00, 0.42);
-        beam.position.set(sx, 1.17, 0);
-        this.haloGroup.add(beam);
-
-        // 3. Animated bobbing pointer cone pointing into well
-        const ptr = this._createHaloPointer(0xffd700);
-        ptr.position.set(sx, 1.28, 0);
-        this.haloGroup.add(ptr);
-        this.haloPointers = this.haloPointers || [];
-        this.haloPointers.push({ mesh: ptr, baseY: 1.28 });
-
-        // 4. Billboarded high-contrast badge
-        const badge = this._createHaloBadge('SAMPLE WELL', 'CLICK TO SELECT');
-        badge.position.set(sx, 1.44, 0);
-        this.haloGroup.add(badge);
-      }
-    } else {
-      const nodes = this.framedNodes();
-      for (const fn of nodes) {
-        if (!fn.group) continue;
-        const fx = fn.group.position.x;
-        const fz = fn.group.position.z;
-
-        const baseGeo = new THREE.RingGeometry(0.28, 0.36, 40);
-        this.haloGeos.push(baseGeo);
-        const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xffc107, 0.90, true));
-        baseMesh.rotation.x = -Math.PI / 2;
-        baseMesh.position.set(fx, 0.965, fz);
-        this.haloGroup.add(baseMesh);
-
-        const beam = this._createHaloBeam(0.28, 0.32, 0.42, 0xffaa00, 0.42);
-        beam.position.set(fx, 1.17, fz);
-        this.haloGroup.add(beam);
-
-        const ptr = this._createHaloPointer(0xffd700);
-        ptr.position.set(fx, 1.28, fz);
-        this.haloGroup.add(ptr);
-        this.haloPointers = this.haloPointers || [];
-        this.haloPointers.push({ mesh: ptr, baseY: 1.28 });
-
-        const badge = this._createHaloBadge('SAMPLE RIG', 'CLICK TO INTERACT');
-        badge.position.set(fx, 1.44, fz);
-        this.haloGroup.add(badge);
-      }
-    }
-  }
-
-  showInstrumentHalos(kind = 'all', id = null) {
-    this.hideInstrumentHalos();
-    this._activeHaloKind = kind;
-    this._activeHaloId = id;
-
-    this.haloGroup = new THREE.Group();
-    this.haloGroup.name = 'bench-instrument-halos';
-    this.root.add(this.haloGroup);
-
-    if (kind === 'all' || kind === 'dial') {
-      for (const d of this.dials || []) {
-        this._buildDialHalo(d);
-      }
-    }
-    if ((kind === 'all' || kind === 'keys') && this.keyBank) {
-      this._buildKeysHalo();
-    }
-    // One key on its own: the tour lights a single cap at a time.
-    if (kind === 'key' && this.keyBank) {
-      this._buildKeyHalo(id);
-    }
-    if (kind === 'all' || kind === 'stations') {
-      this._buildStationsHalo();
-    }
-  }
-
-  hideInstrumentHalos() {
-    this._activeHaloKind = null;
-    this._activeHaloId = null;
-    if (!this.haloGroup) return;
-    this.root.remove(this.haloGroup);
-    for (const g of this.haloGeos || []) g.dispose();
-    for (const m of this.haloMaterials || []) {
-      if (m.userData?.texture) m.userData.texture.dispose();
-      m.dispose();
-    }
-    this.haloGeos = [];
-    this.haloMaterials = [];
-    this.haloBadges = [];
-    this.haloPointers = [];
-    this.haloGroup = null;
-  }
+  getKeyList() { return []; }
+  showInstrumentHalos() {}
+  hideInstrumentHalos() {}
 
   dispose() {
     this.disposed = true;
@@ -3096,8 +1513,6 @@ export class BenchViewer3D {
     window.removeEventListener('keydown', this._onLeanKey);
     this.hideInstrumentHalos();
     unregisterBenchViewer(this);
-    this.disposeKeyBank();
-    this.disposeReadings();
     this.readingsSnap = null;
     this.keyGroups = [];
     this.onKeyPress = null;

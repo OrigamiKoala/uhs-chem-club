@@ -1,13 +1,4 @@
 {
   "note": "Quests not yet converted to a tabletop (plan docs/plans/bench-tabletop.md). Converting a quest deletes its line; a new quest gets none. A quest not listed here is held to the converted rules by verify:table: at most a quarter of its stages may stay choice, each an unbuildable reading (widget.keep: reading).",
-  "quests": [
-    "unit05/boss-crucible",
-    "unit05/q1-flow",
-    "unit05/q2-calorimetry",
-    "unit05/q3-enthalpy",
-    "unit05/q4-bonds",
-    "unit05/q5-hess",
-    "unit05/q6-entropy",
-    "unit05/q7-gibbs"
-  ]
+  "quests": []
 }

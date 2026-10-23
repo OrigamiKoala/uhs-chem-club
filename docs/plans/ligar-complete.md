@@ -94,3 +94,8 @@ bench is also in `BUILT_BENCHES`, so at T4 it is a built instrument on its own s
 - Unit 3's tail: a drag-to-turn on the domain rig's drawn view (a Turn View key instead), the
   mixer's d clouds (stage eight is argued from domain counts), and spectra for q9.
 - A hero model for the Warden at T4: it fights as the jointed basalt body the kit already had.
+
+## Tabletop and retirement update (2026-10-22)
+
+- Every Ligar quest and boss is played on the Tabletop (`Table3D` with the atom, bonds, domain and orbital kits).
+- `joinbench3d.js`, `bondbench3d.js`, `pairboard3d.js`, `domainrig3d.js`, `boxrack3d.js`, and `plates3d.js` are retired (T7).

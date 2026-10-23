@@ -205,7 +205,8 @@ export class Table3D extends BenchViewer3D {
 
   /** Where the current ray meets the plate, as table units (null above the horizon). */
   unitsAtRay(ray = this.raycaster.ray) {
-    if (!this.map) return null;
+    // While the view is turned up at the boss, the glass is not looking at the plate: a press is aimed at nothing.
+    if (!this.map || this.gazing) return null;
     this.root.updateMatrixWorld(true);
     const inv = (this._invRoot || (this._invRoot = new THREE.Matrix4())).copy(this.root.matrixWorld).invert();
     const o = ray.origin.clone().applyMatrix4(inv);
@@ -279,7 +280,8 @@ export class Table3D extends BenchViewer3D {
     }
     this.leanZones = zones;
     if (first || rebuilt || stageChanged) {
-      this.leanIn({ instant: true, zones });
+      // A table stood in a boss's arena flies in from the player's standing view, where the boss is in the glass, rather than cutting to the plate.
+      this.leanIn({ instant: !(first && this.arenaFight), zones });
     }
   }
 

@@ -168,8 +168,9 @@ function dayNumber(str) {
 }
 
 /**
- * Consecutive days with a finished round, ending today or yesterday (a streak
- * is not lost until a whole day has been missed).
+ * Consecutive days with a finished round, ending today or yesterday. Kept for
+ * reference: the Drill Deck shows the weekly streak (`weekStreakOf`), because a
+ * daily streak turns study into grinding (engagement pass §7.1, §13).
  */
 export function streakOf(days, today = localDay()) {
   const set = new Set((days || []).map(dayNumber).filter(n => isFinite(n)));
@@ -177,6 +178,25 @@ export function streakOf(days, today = localDay()) {
   if (!set.has(cursor)) cursor -= 1;
   let n = 0;
   while (set.has(cursor)) { n++; cursor--; }
+  return n;
+}
+
+/** The Monday that starts the week a day falls in, as a day number. */
+function weekStart(n) {
+  // Day 0 (1970-01-01) was a Thursday, so (n + 3) % 7 is 0 on Mondays.
+  return n - (((n + 3) % 7) + 7) % 7;
+}
+
+/**
+ * Consecutive weeks (Monday to Sunday) with at least one finished round, ending
+ * this week or last week (a streak is not lost until a whole week has been missed).
+ */
+export function weekStreakOf(days, today = localDay()) {
+  const weeks = new Set((days || []).map(dayNumber).filter(n => isFinite(n)).map(weekStart));
+  let cursor = weekStart(dayNumber(today));
+  if (!weeks.has(cursor)) cursor -= 7;
+  let n = 0;
+  while (weeks.has(cursor)) { n++; cursor -= 7; }
   return n;
 }
 
@@ -313,7 +333,7 @@ export function practiceFacts(practice) {
   const worlds = drillWorlds();
   return {
     runs: p.runs || 0,
-    streak: streakOf(p.days),
+    streak: weekStreakOf(p.days),
     bestSprint: p.best.sprint || 0,
     perfectRun: Object.values(p.stars).some(n => n >= 3),
     goldWorld: worlds.some(w => worldMastery(w, p).tier?.id === 'gold'),

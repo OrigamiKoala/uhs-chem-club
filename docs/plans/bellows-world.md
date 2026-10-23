@@ -221,3 +221,9 @@ inside the rail, and the Compressor has moving parts.
   boss in the well is a small cylinder block and flywheel. The two share a design but not a mesh.
 - **Wind, rain or a storm.** The only weather is cloud.
 - **Bellows in the Field Manual beyond twenty-two terms, and any commendation art.**
+
+## Tabletop and retirement update (2026-10-22)
+
+- Bellows benches were integrated into the plant machinery (T5 of `bench-tabletop.md`).
+- Every Bellows quest is played on the Tabletop (`Table3D` with the gas kit).
+- `gasrig3d.js` and `gasmount.js` are retired (T7); pure gas planners stay in `gasdata.js`.

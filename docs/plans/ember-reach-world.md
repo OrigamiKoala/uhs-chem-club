@@ -1,5 +1,27 @@
 # Ember Reach — the world, its instrument and its fight, as built
 
+**Update (2026-10-22, phase T6 of `bench-tabletop.md`): the benches are tables, and they are built into the field.** Every Ember Reach
+quest and the Crucible are tabletops on the heat kit (`src/learn/table/kits/heat.js`), and the seven heat-shield shelters on the 54 m
+ring are gone: each bench is a working point of the geothermal field (`three/ember/stations.js`, footprints in `ember/host-plan.js`,
+laid out by `tools/gen-ember-layout.mjs`, which refuses a layout in which anything stands in a host or its lane). The calorimeter
+(`engine/calorimeter.js`, `calorimeter3d.js`, `thermomount.js`) is **orphaned**: no quest plays it (T7 retires it). The sections below
+that describe the calorimeter, the plate flags and the shelters are the record of what stood before.
+
+| Bench | Quest | Host | Field point |
+| --- | --- | --- | --- |
+| 1 | `q1-flow` | a wellhead on its slab with its flowline run across to a plate heat exchanger, a hot-water tank between | `flowline`, the exchanger's thermowell tap |
+| 2 | `q2-calorimetry` | a railed sampling shelf at the spring's edge (the plate faces away from the spring, which stands behind it), a davit with a basket, a lagged bath, a platform scale | `edge`, the sampling basket |
+| 3 | `q3-enthalpy` | the habitat's boiler room: a brick-set boiler drum, its flue, a cage of fuel canisters, a burner | none |
+| 4 | `q4-bonds` | a sampling coil over a fumarole cone, under a hood and flue | `coil`, the coil's gauge board |
+| 5 | `q5-hess` | the separator, a header, and two routes for steam to the same drain: a sealed straight shaft and a stepped pipe | none |
+| 6 | `q6-entropy` | the silencer pair, with two glass bulbs and a stopcock on a stand, and a vacuum pump | none |
+| 7 | `q7-gibbs` | the turbine hall's control room: a booth with a window on the hall, a console of dials, a furnace and a beam balance | none |
+
+A field point is evidence and never a lock: each is a reading card (`stmt`, `fetchFrom`) that a stage can be answered without, on
+`q1-flow` stage 7 (the tank's mass), `q2-calorimetry` stage 4 (where the block was held) and `q4-bonds` stage 5 (what the coil's
+water does). The spring shelf stands at 24.5 m from the spring's middle (the other six stay on the ring), the sinter terrace and the
+third wellhead that stood in the way moved. The Crucible's ground is unchanged.
+
 **Status (2026-10-15): built, and walkable.** All seven benches of Learn world 05 are live, the one
 instrument they share exists (drawn and built), The Crucible is a five-phase boss on the same
 instrument, and Ember Reach is walkable ground at T4: seven sites round a hot spring, each bench a
@@ -137,3 +159,9 @@ at dusk) and Lanternfall (night).
   plates and the built calorimeter on its seven benches.
 - If the cone's plume reads badly (its puffs are large enough that some GPUs clamp the point size),
   move it into the sky function as Ligar's volcano is.
+
+## Tabletop and retirement update (2026-10-22)
+
+- Ember Reach was re-laid into real plant and vent field hosts (`stations.js`, `gen-ember-layout.mjs`), with the seven old ring shelters retired (T6).
+- Every Ember Reach quest is played on the Tabletop (`Table3D` with the heat kit).
+- `calorimeter3d.js` and `thermomount.js` are retired (T7); pure thermodynamic planners stay in `thermodata.js`.

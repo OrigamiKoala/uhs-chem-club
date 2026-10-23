@@ -196,21 +196,6 @@ function nameSteppers(root) {
  * moving, which no instrument does.
  */
 export const PANEL_LAYOUT = {
-  deck: {
-    widthPx: 560, heightPx: 660,
-    position: [-0.94, 1.34, -0.68], rotation: [0, 0.40, 0], tilt: -0.07,
-    designator: 'RDT-01'
-  },
-  rail: {
-    widthPx: 460, heightPx: 250,
-    position: [0.94, 1.62, -0.68], rotation: [0, -0.40, 0], tilt: -0.05,
-    designator: 'STG-02'
-  },
-  controls: {
-    widthPx: 460, heightPx: 330,
-    position: [0.94, 1.16, -0.63], rotation: [0, -0.40, 0], tilt: -0.20,
-    designator: 'TOOL-03'
-  },
   comms: {
     widthPx: 700, heightPx: 460,
     position: [0, 1.46, -0.44], rotation: [0, 0, 0], tilt: -0.06,
@@ -569,10 +554,6 @@ export class LearnFrame {
       this.panelWrappers.push(wrap);
       return this.rig.add(id, wrap, PANEL_LAYOUT[id]);
     };
-
-    mount('deck', [q('.lq-deck')]);
-    mount('rail', [q('.lq-stage-head'), q('.lq-rail')]);
-    mount('controls', [q('.lq-controls')]);
 
     // The comms head: a transmission and a findings card are messages arriving
     // at the bench, so they land on their own screen above it rather than in a

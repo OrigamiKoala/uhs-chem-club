@@ -81,7 +81,8 @@ export function makeEmberField(data) {
   const cone = data.cone;
 
   // Places that must be level: every bench, the pad, the spawn, the boss's ground, and the plant.
-  const flat = data.sites.map(s => ({ x: s.pos[0], z: s.pos[2], r: 7.5, blend: 6 }));
+  // (the layout generator writes each site's `flat`: a disc that holds the host's whole footprint and its lane)
+  const flat = data.sites.map(s => (s.flat ? { x: s.flat.x, z: s.flat.z, r: s.flat.r, blend: 6 } : { x: s.pos[0], z: s.pos[2], r: 7.5, blend: 6 }));
   const pad = data.landmarks.find(l => l.asset === 'landing-pad');
   if (pad) flat.push({ x: pad.pos[0], z: pad.pos[2], r: 12, blend: 8 });
   flat.push({ x: data.spawn.pos[0], z: data.spawn.pos[2], r: 6, blend: 10 });

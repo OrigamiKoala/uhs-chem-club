@@ -1,31 +1,33 @@
 /**
  * Unit 5 · Bench 7 — Free Energy (q7-gibbs)
  *
- * The favourability plotter. ΔG is plotted against temperature as a straight
- * line, with a tug-of-war bar for the two terms that set it and a shaded region
- * where ΔG is below zero. The player reads which side of the line a change is
- * on, finds the temperature where the line crosses, and couples an uphill
- * reaction to a steeper downhill one.
+ * The turbine hall's control room, and Ember Reach's last bench TABLETOP (plan `bench-tabletop.md`, phase T6), on the heat kit
+ * (`table/kits/heat.js`). A plot of ΔG against temperature with a dial that walks along it, cards that each carry such a line, and the
+ * stack of the fifth bench again, now adding free energies. Whether a change runs depends on both the heat and the entropy, and the
+ * temperature is the lever that tips the balance.
  *
- *   1  changes that run and changes that need driving    -> spontaneous
- *   2  ΔG from ΔH and ΔS at one temperature              -> Gibbs free energy
- *   3  the four sign combinations                        -> (temperature decides when signs differ)
- *   4  the temperature where ice melts                   -> (ΔG is zero at equilibrium)
- *   5  ΔG from formation values                          -> (free energies of formation)
- *   6  diamond to graphite                               -> kinetic control
- *   7  an uphill step driven by a steeper one            -> coupled reactions
- *   8  the temperature that tips a decomposition         -> (T tips the balance)
+ *   1  changes that run on their own                 -> spontaneous change
+ *   2  ΔH and ΔS combined at one temperature         -> Gibbs free energy
+ *   3  the four sign combinations                    -> temperature as a lever
+ *   4  the temperature where ΔG is zero              -> equilibrium at ΔG = 0
+ *   5  free energies of formation                    -> free energy of reaction
+ *   6  a diamond that does not change                -> kinetic control
+ *   7  two reactions on the stack                    -> coupled reactions
+ *   8  a decomposition dialled until it runs         -> (temperature tips the balance)
  *
- * THE EVIDENCE IS ON THE BENCH. A plotter that asks for ΔG hides the tug-of-war
- * numbers (`hideTug`), and one that asks for a temperature hides the crossing
- * marker (`hideCrossing`), so the player reads ΔG off the dial or works it out.
- * The formation tables never carry a note that does the sum.
+ * THE EVIDENCE IS ON THE BENCH. A plot that asks for ΔG hides its own figure (`hideDG`) and its tug-of-war numbers, and one that asks
+ * for the crossing temperature hides the crossing mark, so each is found from the line and the dial. The formula is on a plaque, because
+ * a formula a stage needs is never withheld.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { mountThermo, makeStateFor } from '../../engine/thermomount.js';
-import { FORMATION_TABLE, gibbsFreeEnergy, standardReactionChange } from '../../engine/thermodata.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
+import {
+  heatTable, eqn, note, markCard, gCard, stackFixture, selectorFixture, plotFixture, plaqueFixture, markerFixture, markerRead, dialAt, whereIs,
+  plotRead, plotAt, stackRead, FORMATION_TABLE, gibbsFreeEnergy, standardReactionChange
+} from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 8 };
 
@@ -41,14 +43,18 @@ export const BUILDS_ON = ['unit04/q1-knocks'];
 
 const SPEAKER = 'Vess';
 
-/** A key whose label says what it does carries no legend. */
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
-const choice = (id, label) => ({ id, label });
+const widget = { type: 'table', label: 'The bench' };
+const FORMULA = 'ΔG = ΔH − T × ΔS';
 
 const CO_DG = standardReactionChange([{ id: 'CO2(g)' }], [{ id: 'CO(g)' }], 'dGf'); // -257.2
-const DG_300 = gibbsFreeEnergy(-100, -200, 300); // -40
-const COUPLED = 742.2 - 771.6; // -29.4
+const DG_300 = gibbsFreeEnergy(-100, -200, 300);                                    // -40
+const COUPLED = 742.2 - 771.6;                                                     // -29.4
+
+const CARD_AT = i => ({ x: 25.5, y: 10 + i * 13 });
+const STACK_TRAY = { id: 'stack', label: 'The stack', at: { x: 78, y: 33 }, size: { w: 52, h: 52 }, cell: 50, cellH: 13 };
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -61,45 +67,33 @@ export const STAGES = [
     prompt: 'Sort the three changes by whether they run on their own or only while energy is supplied.',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each plate shows one change at 298 K and 1 bar, with a note of what is seen when it is left alone.'
+      body: 'Each card names one change at 298 K and 1 bar, with a note of what is seen when it is left alone. Press Submit when the table shows your answer.'
     },
-    rigs: [
-      {
-        id: 'burn-ch4', label: 'Burning Methane', head: 'diagram',
-        reactantsLabel: 'CH₄ + 2O₂', productsLabel: 'CO₂ + 2H₂O',
-        dH: -890.4, sublabel: 'Keeps burning once lit'
-      },
-      {
-        id: 'cold-pack', label: 'Dissolving a Cold-Pack Salt', head: 'diagram',
-        reactantsLabel: 'NH₄NO₃(s)', productsLabel: 'NH₄⁺ + NO₃⁻',
-        dH: 25.7, sublabel: 'Dissolves by itself and chills the water'
-      },
-      {
-        id: 'split-h2o', label: 'Splitting Liquid Water', head: 'diagram',
-        reactantsLabel: 'H₂O(l)', productsLabel: 'H₂ + ½O₂',
-        dH: 285.8, sublabel: 'Stops the moment the current stops'
+    widget,
+    table: heatTable({
+      pieces: [
+        note('burn', 'Burning methane: keeps burning once lit', { x: 26, y: 12 }),
+        note('cold', 'Cold-pack salt: dissolves by itself and chills the water', { x: 26, y: 31 }),
+        note('split', 'Splitting liquid water: stops the moment the current stops', { x: 26, y: 50 })
+      ],
+      zones: {
+        trays: [
+          { id: 'fav', label: 'Runs on its own', at: { x: 78, y: 34 }, size: { w: 46, h: 50 }, cell: 44, cellH: 16 },
+          { id: 'unfav', label: 'Needs continuous driving', at: { x: 126, y: 34 }, size: { w: 46, h: 50 }, cell: 44, cellH: 16 }
+        ]
       }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'What the change does',
-      bins: [choice('fav', 'Runs on its own'), choice('unfav', 'Needs continuous driving')],
-      items: [
-        choice('burn-ch4', 'Burning methane in air'),
-        choice('cold-pack', 'Dissolving a cold-pack salt in water'),
-        choice('split-h2o', 'Splitting liquid water into hydrogen and oxygen')
-      ]
-    },
+    }),
     hints: [
-      'Read the note on each plate.',
+      'Read the note on each card.',
       'Compare what each change does when it is left alone.',
-      'A change that carries on by itself belongs in the first bin, and one that stops when the supply stops belongs in the second.'
+      'A change that carries on by itself belongs in the first tray, and one that stops when the supply stops belongs in the second.'
     ],
     check(state) {
-      const want = { 'burn-ch4': 'fav', 'cold-pack': 'fav', 'split-h2o': 'unfav' };
-      if (Object.keys(want).some(k => !state.bins[k])) return { ok: false, notYet: true, msg: 'Place all three changes first.' };
-      if (Object.entries(want).every(([k, v]) => state.bins[k] === v)) return { ok: true };
-      return { ok: false, msg: 'Go by the note on each plate, not by the direction of the shelf drawn: what does the change do when it is left alone?' };
+      const t = state.table;
+      const want = { burn: 'fav', cold: 'fav', split: 'unfav' };
+      if (Object.keys(want).some(k => !['fav', 'unfav'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Place all three changes first.' };
+      if (Object.entries(want).every(([k, v]) => whereIs(t, k) === v)) return { ok: true };
+      return { ok: false, msg: 'Go by the note on each card: what does the change do when it is left alone?' };
     },
     reward: {
       log: 'Two changes ran by themselves, and one did not.',
@@ -112,26 +106,28 @@ export const STAGES = [
   {
     id: 's2-combine-dh-ds',
     title: 'Balancing Enthalpy Against Entropy',
-    prompt: 'Find ΔG for the reaction on the plate at 300 K, in kJ/mol.',
+    prompt: 'Set the marker to ΔG for the reaction on the plaque at 300 K, in kJ/mol.',
     briefing: {
       speaker: SPEAKER,
-      body: 'The plate gives the reaction’s ΔH in kilojoules and its ΔS in joules, and the tug-of-war bar shows the two terms pulling against each other.'
+      body: 'The plaque gives the reaction\'s ΔH in kilojoules and its ΔS in joules, and the plot shows a line that moves with temperature.'
     },
-    rigs: [
-      {
-        id: 'tug', label: 'Enthalpy and Entropy Tug-of-War', head: 'gibbs',
-        dH: -100, dS: -200, T: 300, TMin: 200, TMax: 600, hideDG: true, hideTug: true
-      }
-    ],
-    reference: ['ΔG = ΔH − T × ΔS'],
-    widget: { type: 'number', label: 'ΔG at 300 K (kJ/mol)', min: -120, max: 120, step: 20, start: 0 },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plotFixture('plot', { x: 38, y: 30 }, { dH: -100, dS: -200, Ts: [200, 300, 400, 500, 600], tempStart: 2, hideDG: true, hideTug: true, hideCrossing: true, title: 'Free energy' }),
+        plaqueFixture('ref', 'The reaction', { x: 100, y: 16 }, ['ΔH = −100 kJ/mol', 'ΔS = −200 J/(mol·K)', FORMULA], { w: 52 }),
+        markerFixture('dG', 'ΔG at 300 K', { x: 124, y: 44 }, { min: -120, max: 120, step: 20, start: 0, unit: 'kJ/mol', w: 46 })
+      ]
+    }),
     hints: [
-      'Read the ΔH, the ΔS and the temperature from the plate.',
+      'Read the ΔH and the ΔS from the plaque, and the temperature from the dial.',
       'Compare the units of ΔH and ΔS before you put them in the same sum.',
       'Turn ΔS into kilojoules, multiply it by the temperature, and take that off ΔH.'
     ],
     check(state) {
-      if (state.number === DG_300) return { ok: true };
+      const v = markerRead(state.table, 'dG');
+      if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to ΔG.' };
+      if (v === DG_300) return { ok: true };
       return { ok: false, msg: 'Check the units of ΔS against those of ΔH, and the sign of the T × ΔS term when ΔS is negative.' };
     },
     reward: {
@@ -148,40 +144,36 @@ export const STAGES = [
     prompt: 'Sort the four sign combinations by the temperatures at which ΔG is negative.',
     briefing: {
       speaker: SPEAKER,
-      body: 'On each plate the line is ΔG against temperature, and the shaded region is where ΔG is below zero.'
+      body: 'On each card the line is ΔG against temperature, and the shaded strip is where ΔG is below zero.'
     },
-    rigs: [
-      { id: 'both-help', label: 'ΔH < 0, ΔS > 0', head: 'gibbs', dH: -40, dS: 100, T: 300, TMin: 100, TMax: 600 },
-      { id: 'both-oppose', label: 'ΔH > 0, ΔS < 0', head: 'gibbs', dH: 40, dS: -100, T: 300, TMin: 100, TMax: 600 },
-      { id: 'high-t', label: 'ΔH > 0, ΔS > 0', head: 'gibbs', dH: 40, dS: 100, T: 300, TMin: 100, TMax: 600 },
-      { id: 'low-t', label: 'ΔH < 0, ΔS < 0', head: 'gibbs', dH: -40, dS: -100, T: 300, TMin: 100, TMax: 600 }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'Where ΔG is negative',
-      bins: [
-        choice('always', 'At every temperature'),
-        choice('never', 'At no temperature'),
-        choice('high', 'Only at high temperature'),
-        choice('low', 'Only at low temperature')
+    widget,
+    table: heatTable({
+      pieces: [
+        gCard('both-help', 'ΔH < 0, ΔS > 0', { x: 20, y: 14 }, { dH: -40, dS: 100 }),
+        gCard('both-oppose', 'ΔH > 0, ΔS < 0', { x: 54, y: 14 }, { dH: 40, dS: -100 }),
+        gCard('high-t', 'ΔH > 0, ΔS > 0', { x: 88, y: 14 }, { dH: 40, dS: 100 }),
+        gCard('low-t', 'ΔH < 0, ΔS < 0', { x: 122, y: 14 }, { dH: -40, dS: -100 })
       ],
-      items: [
-        choice('both-help', 'ΔH < 0 and ΔS > 0'),
-        choice('both-oppose', 'ΔH > 0 and ΔS < 0'),
-        choice('high-t', 'ΔH > 0 and ΔS > 0'),
-        choice('low-t', 'ΔH < 0 and ΔS < 0')
-      ]
-    },
+      zones: {
+        trays: [
+          { id: 'always', label: 'At every temperature', at: { x: 20, y: 47 }, size: { w: 32, h: 23 }, cell: 31, cellH: 22 },
+          { id: 'never', label: 'At no temperature', at: { x: 54, y: 47 }, size: { w: 32, h: 23 }, cell: 31, cellH: 22 },
+          { id: 'high', label: 'Only when hot', at: { x: 88, y: 47 }, size: { w: 32, h: 23 }, cell: 31, cellH: 22 },
+          { id: 'low', label: 'Only when cold', at: { x: 122, y: 47 }, size: { w: 32, h: 23 }, cell: 31, cellH: 22 }
+        ]
+      }
+    }),
     hints: [
-      'Tap each plate and follow its line from the cold end to the hot end.',
-      'Compare where each line sits against the shaded region at the two ends.',
+      'Follow each card\'s line from the cold end to the hot end.',
+      'Compare where each line sits against the shaded strip at the two ends.',
       'If the line stays on one side the verdict never changes, and if it crosses the verdict flips at one temperature.'
     ],
     check(state) {
+      const t = state.table;
       const want = { 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' };
-      if (Object.keys(want).some(k => !state.bins[k])) return { ok: false, notYet: true, msg: 'Place all four cases first.' };
-      if (Object.entries(want).every(([k, v]) => state.bins[k] === v)) return { ok: true };
-      return { ok: false, msg: 'Check each plate’s line against the shaded region at both ends of the temperature range.' };
+      if (Object.keys(want).some(k => !['always', 'never', 'high', 'low'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Place all four cases first.' };
+      if (Object.entries(want).every(([k, v]) => whereIs(t, k) === v)) return { ok: true };
+      return { ok: false, msg: 'Check each card\'s line against the shaded strip at both ends of the temperature range.' };
     },
     reward: {
       log: 'Each case was sorted by its line.',
@@ -194,27 +186,28 @@ export const STAGES = [
   {
     id: 's4-crossing-temp',
     title: 'Where Ice Starts to Melt',
-    prompt: 'Give the temperature in kelvin at which ΔG is zero for melting ice.',
+    prompt: 'Set the marker to the temperature in kelvin at which ΔG is zero for melting ice.',
     briefing: {
       speaker: SPEAKER,
-      body: 'Ice melts when ΔG turns negative, and the dial sets the temperature the plotter reads.'
+      body: 'Ice melts when ΔG turns negative, and the dial sets the temperature the plot reads.'
     },
-    rigs: [
-      {
-        id: 'melt-ice', label: 'Melting Ice', head: 'gibbs', eq: 'H₂O(s) ⇌ H₂O(l)',
-        dH: 6.01, dS: 22.0, T: 250, TMin: 220, TMax: 320, hideCrossing: true
-      }
-    ],
-    dial: { key: 'temp', label: 'Temperature', unit: 'K', values: [250, 260, 273, 285, 300], start: 1 },
-    reference: ['ΔG = ΔH − T × ΔS'],
-    widget: { type: 'number', label: 'Temperature where ΔG is zero (K)', min: 223, max: 323, step: 10 },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plotFixture('plot', { x: 38, y: 30 }, { dH: 6.01, dS: 22.0, Ts: [250, 260, 273, 285, 300], hideCrossing: true, title: 'Melting ice' }),
+        plaqueFixture('ref', 'What you may use', { x: 100, y: 16 }, [FORMULA, 'H₂O(s) ⇌ H₂O(l)'], { w: 52 }),
+        markerFixture('T', 'ΔG is zero at', { x: 124, y: 44 }, { min: 223, max: 323, step: 10, start: 223, unit: 'K', w: 46 })
+      ]
+    }),
     hints: [
-      'Turn the Temperature dial and watch the ΔG printed under the plotter.',
+      'Turn the Temperature dial and watch the ΔG printed under the plot.',
       'Compare the readings either side of the point where ΔG changes sign.',
       'At the temperature where ΔG is zero, ΔH equals T times ΔS, so you can also solve for T directly.'
     ],
     check(state) {
-      if (Math.abs(state.number - 273) <= 2) return { ok: true };
+      const v = markerRead(state.table, 'T');
+      if (v === 223) return { ok: false, notYet: true, msg: 'Set the marker to the temperature.' };
+      if (Math.abs(v - 273) <= 2) return { ok: true };
       return { ok: false, msg: 'Check the dial for the setting where ΔG reads zero, or set ΔH equal to T × ΔS with both in the same unit.' };
     },
     reward: {
@@ -228,53 +221,35 @@ export const STAGES = [
   {
     id: 's5-formation-gibbs',
     title: 'Free Energy from Formation Values',
-    prompt: 'Use the free energies of formation on the plate to find ΔG for CO(g) + ½O₂(g) → CO₂(g).',
+    prompt: 'Use the free energies of formation on the plaque to find ΔG for CO(g) + ½O₂(g) → CO₂(g), and set it on the dial.',
     briefing: {
       speaker: SPEAKER,
-      body: 'Free energy depends only on a substance’s state, as enthalpy does, so a table of formation values works the same way.'
+      body: 'Free energy depends only on a substance\'s state, as enthalpy does, so a table of formation values works the same way.'
     },
-    rigs: [
-      {
-        id: 'dgf-table',
-        label: 'Free Energies of Formation',
-        head: 'hess',
-        submode: 'formation',
-        hideSeaLevel: true,
-        columnLabel: 'ΔG°f (kJ/mol)',
-        targetEq: 'CO(g) + ½O₂(g) → CO₂(g)',
-        reactants: [
-          { formula: 'CO(g)', n: 1, dHf: FORMATION_TABLE['CO(g)'].dGf },
-          { formula: '½ O₂(g)', n: 0.5, dHf: 0 }
-        ],
-        products: [{ formula: 'CO₂(g)', n: 1, dHf: FORMATION_TABLE['CO2(g)'].dGf }]
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'ΔG (kJ/mol)',
-      options: [
-        choice('right', '−257.2'),
-        choice('flipped', '+257.2'),
-        choice('all', '−531.6'),
-        choice('prod', '−394.4')
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('dgf', 'ΔG°f, kJ/mol', { x: 46, y: 28 }, [`CO(g)    ${FORMATION_TABLE['CO(g)'].dGf}`.replace('-', '−'), 'O₂(g)    0', `CO₂(g)    ${FORMATION_TABLE['CO2(g)'].dGf}`.replace('-', '−')], { w: 70 }),
+        selectorFixture('answer', 'ΔG (kJ/mol)', { x: 120, y: 28 }, { options: ['−257.2', '+257.2', '−531.6', '−394.4'], start: 4, w: 46 })
       ]
-    },
+    }),
     hints: [
-      'Read the free energy of formation of each substance from the table.',
+      'Read the free energy of formation of each substance from the plaque.',
       'Compare the total for the products with the total for the reactants.',
       'Add the free energies of the products, then take off the free energies of the reactants.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a value.' };
-      if (state.choice === 'right') return { ok: true };
-      if (state.choice === 'flipped') return { ok: false, msg: 'The sign is backward: check which total is larger, the products’ or the reactants’.' };
-      if (state.choice === 'all') return { ok: false, msg: 'The reactants are taken off the products, not added to them.' };
-      return { ok: false, msg: 'That is only the products’ total; the reactants’ free energy still has to be taken off.' };
+      const v = dialAt(state.table, 'answer', 'value');
+      if (v === 1) return { ok: true };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Set the value you worked out.' };
+      if (v === 2) return { ok: false, msg: 'The sign is backward: check which total is larger, the products\' or the reactants\'.' };
+      if (v === 3) return { ok: false, msg: 'The reactants are taken off the products, not added to them.' };
+      return { ok: false, msg: 'That is only the products\' total; the reactants\' free energy still has to be taken off.' };
     },
     reward: {
       log: 'The reaction was routed through the elements.',
       title: 'Free Energy of Reaction',
-      body: 'A reaction’s ΔG is the free energies of formation of its products minus those of its reactants. Burning carbon monoxide to carbon dioxide has a ΔG of −257.2 kJ/mol, so it is spontaneous.'
+      body: 'A reaction\'s ΔG is the free energies of formation of its products minus those of its reactants. Burning carbon monoxide to carbon dioxide has a ΔG of −257.2 kJ/mol, so it is spontaneous.'
     }
   },
 
@@ -282,36 +257,36 @@ export const STAGES = [
   {
     id: 's6-diamond-kinetic',
     title: 'Why Diamonds Last',
-    prompt: 'Turning diamond into graphite has a negative ΔG at 298 K; why does a diamond ring not change?',
+    prompt: 'Mark the statement the plot supports: why does a diamond ring not change, when diamond to graphite has a negative ΔG?',
     briefing: {
       speaker: SPEAKER,
-      body: 'The plotter shows where the change sits, and the note beneath it says what is seen in practice.'
+      body: 'The plot shows where the change sits, and the plaque says what is seen in practice.'
     },
-    rigs: [
-      {
-        id: 'diamond', label: 'Diamond to Graphite', head: 'gibbs', eq: 'C(diamond) → C(graphite)',
-        dH: -1.9, dS: 3.3, T: 298, TMin: 200, TMax: 500, barrierNote: 'Seen in practice: no change at 298 K'
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Reason',
-      options: [
-        choice('barrier', 'The change is immeasurably slow because it needs a large energy barrier'),
-        choice('unfav', 'A negative ΔG means a change cannot happen'),
-        choice('eq', 'Diamond and graphite are already at equilibrium')
+    widget,
+    table: heatTable({
+      pieces: [
+        markCard('barrier', 'The change is immeasurably slow because it needs a large energy barrier', { x: 108, y: 11 }),
+        markCard('unfav', 'A negative ΔG means a change cannot happen', { x: 108, y: 30 }),
+        markCard('eq', 'Diamond and graphite are already at equilibrium', { x: 108, y: 49 })
+      ],
+      fixtures: [
+        plotFixture('plot', { x: 38, y: 27 }, { dH: -1.9, dS: 3.3, Ts: [200, 298, 400, 500], tempStart: 2, hideCrossing: true, title: 'Diamond to graphite' }),
+        plaqueFixture('seen', 'Seen in practice', { x: 38, y: 56 }, ['No change at 298 K'], { w: 60 })
       ]
-    },
+    }),
     hints: [
-      'Read the ΔG on the plotter and the note beneath it.',
+      'Tap a statement to mark it, and tap it again to take the mark off.',
       'Compare what the sign of ΔG says with what is seen in practice.',
       'ΔG says which way a change can run, and something else must say how fast it runs.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'barrier') return { ok: true };
-      if (state.choice === 'unfav') return { ok: false, msg: 'Read the sign on the plotter again: a negative ΔG is the sign of a change that can run.' };
-      return { ok: false, msg: 'At equilibrium ΔG would be zero, and the plotter shows it is not.' };
+      const t = state.table;
+      const marked = ['barrier', 'unfav', 'eq'].filter(id => t.pieces[id].props.flipped);
+      if (!marked.length) return { ok: false, notYet: true, msg: 'Mark the statement the plot supports.' };
+      if (marked.length === 1 && marked[0] === 'barrier') return { ok: true };
+      if (marked.includes('unfav')) return { ok: false, msg: 'Read the sign on the plot again: a negative ΔG is the sign of a change that can run.' };
+      if (marked.includes('eq')) return { ok: false, msg: 'At equilibrium ΔG would be zero, and the plot shows it is not.' };
+      return { ok: false, msg: 'Mark only the one statement the plot supports.' };
     },
     reward: {
       log: 'Favourable did not mean fast.',
@@ -324,45 +299,34 @@ export const STAGES = [
   {
     id: 's7-coupled-reactions',
     title: 'Driving an Uphill Reaction',
-    prompt: 'Find ΔG for Fe₂O₃(s) + 3 CO(g) → 2 Fe(s) + 3 CO₂(g) from the two reactions on the stack.',
+    prompt: 'Make the stack add up to Fe₂O₃(s) + 3 CO(g) → 2 Fe(s) + 3 CO₂(g), then set its combined ΔG.',
     briefing: {
       speaker: SPEAKER,
       body: 'The first reaction cannot run alone, but the oxygen it frees is exactly what the second uses.'
     },
-    rigs: [
-      {
-        id: 'smelt',
-        label: 'Blast Furnace Smelting',
-        head: 'hess',
-        submode: 'stack',
-        hideSum: true,
-        targetEq: 'Fe₂O₃(s) + 3 CO(g) → 2 Fe(s) + 3 CO₂(g)',
-        cards: [
-          { id: 'c1', eq: 'Fe₂O₃(s) → 2 Fe(s) + 1.5 O₂(g)', dH: 742.2 },
-          { id: 'c2', eq: '3 CO(g) + 1.5 O₂(g) → 3 CO₂(g)', dH: -771.6 }
-        ]
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Combined ΔG (kJ)',
-      options: [
-        choice('right', '−29.4'),
-        choice('flipped', '+29.4'),
-        choice('all', '+1513.8'),
-        choice('first', '+742.2')
-      ]
-    },
+    widget,
+    table: heatTable({
+      pieces: [
+        eqn('c1', CARD_AT(0), [[1, 'Fe₂O₃(s)']], [[2, 'Fe(s)'], [1.5, 'O₂(g)']], 742.2, { symbol: 'ΔG' }),
+        eqn('c2', CARD_AT(1), [[3, 'CO(g)'], [1.5, 'O₂(g)']], [[3, 'CO₂(g)']], -771.6, { symbol: 'ΔG' })
+      ],
+      fixtures: [
+        stackFixture('wanted', { x: 128, y: 19 }, { tray: 'stack', target: { lhs: [[1, 'Fe₂O₃(s)'], [3, 'CO(g)']], rhs: [[2, 'Fe(s)'], [3, 'CO₂(g)']] }, hideSum: true, w: 44, h: 30, symbol: 'ΔG' }),
+        selectorFixture('answer', 'Combined ΔG (kJ)', { x: 128, y: 48 }, { options: ['−29.4', '+29.4', '+1513.8', '+742.2'], start: 4, w: 44 })
+      ],
+      zones: { trays: [STACK_TRAY] }
+    }),
     hints: [
-      'Read the ΔG of each of the two reactions on the stack.',
+      'Drag both reactions into the stack and read the equation the stack adds up to.',
       'Compare what the first reaction frees with what the second one uses.',
       'The substance that appears in both cancels, so the free energy changes simply add.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a value.' };
-      if (state.choice === 'right') return { ok: true };
-      if (state.choice === 'flipped') return { ok: false, msg: 'The sign is backward: compare how far each reaction climbs or falls and which is larger.' };
-      if (state.choice === 'all') return { ok: false, msg: 'One of the two reactions falls, and a fall is taken off a climb, not added to it.' };
+      const v = dialAt(state.table, 'answer', 'value');
+      if (v === 1) return { ok: true };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Stack the reactions, add their ΔG values, and set the total.' };
+      if (v === 2) return { ok: false, msg: 'The sign is backward: compare how far each reaction climbs or falls and which is larger.' };
+      if (v === 3) return { ok: false, msg: 'One of the two reactions falls, and a fall is taken off a climb, not added to it.' };
       return { ok: false, msg: 'That is only the first reaction; the second one is needed to make it run.' };
     },
     reward: {
@@ -376,33 +340,29 @@ export const STAGES = [
   {
     id: 's8-pick-temp',
     title: 'Dialling Temperature to Tip the Balance',
-    prompt: 'Turn the dial to find the temperature at which this decomposition has a negative ΔG.',
+    prompt: 'Turn the dial to the temperature at which this decomposition first has a negative ΔG.',
     briefing: {
       speaker: SPEAKER,
-      body: 'The reaction takes in heat and gains entropy, and the plotter reads ΔG at the temperature the dial is set to.'
+      body: 'The reaction takes in heat and gains entropy, and the plot reads ΔG at the temperature the dial is set to.'
     },
-    rigs: [
-      {
-        id: 'decomp-t', label: 'High-Temperature Decomposition', head: 'gibbs', eq: 'AB(s) → A(s) + B(g)',
-        dH: 90, dS: 150, T: 300, TMin: 200, TMax: 900, hideCrossing: true
-      }
-    ],
-    dial: { key: 'temp', label: 'Temperature', unit: 'K', values: [300, 450, 600, 750], start: 1 },
-    widget: {
-      type: 'choice',
-      label: 'Temperature with a negative ΔG',
-      options: [choice('750', '750 K'), choice('300', '300 K'), choice('450', '450 K'), choice('600', '600 K')]
-    },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plotFixture('plot', { x: 50, y: 30 }, { dH: 90, dS: 150, Ts: [300, 450, 600, 750], hideCrossing: true, title: 'High-temperature decomposition' }),
+        plaqueFixture('ref', 'The reaction', { x: 114, y: 26 }, ['AB(s) → A(s) + B(g)', 'ΔH = +90 kJ/mol', 'ΔS = +150 J/(mol·K)'], { w: 56 })
+      ]
+    }),
     hints: [
       'Turn the Temperature dial through its settings and read the ΔG at each.',
       'Compare the sign of the ΔG reading at each setting.',
       'Keep the setting where the reading falls below zero, not merely to it.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a temperature.' };
-      if (state.choice === '750') return { ok: true };
-      if (state.choice === '600') return { ok: false, msg: 'At that setting ΔG reads zero, which is the balance point and not below it.' };
-      return { ok: false, msg: 'At that setting the plotter reads ΔG above zero, so the decomposition does not run there.' };
+      const r = plotRead(state.table, 'plot');
+      if (r.T === 300) return { ok: false, notYet: true, msg: 'The dial is where it started: turn it and read ΔG at each setting.' };
+      if (r.dG < 0) return { ok: true };
+      if (Math.abs(r.dG) < 1e-9) return { ok: false, msg: 'At that setting ΔG reads zero, which is the balance point and not below it.' };
+      return { ok: false, msg: 'At that setting the plot reads ΔG above zero, so the decomposition does not run there.' };
     },
     reward: {
       log: 'Only the hottest setting tipped the balance.',
@@ -411,6 +371,19 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag each change into a tray.'],
+  2: ['Turn the Temperature dial; set the marker.'],
+  3: ['Drag each card into a tray.'],
+  4: ['Turn the Temperature dial; set the marker.'],
+  5: ['Turn the dial to the value you worked out.'],
+  6: ['Tap a statement to mark it.'],
+  7: ['Drag cards into the stack.'],
+  8: ['Turn the Temperature dial.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -493,36 +466,58 @@ export const PRACTICE = [
   }
 ];
 
+
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    ------------------------------------------------------------------ */
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tray}`));
+const stack = (...ids) => ids.map(id => put(id, 'tray:stack'));
+
 export const SOLUTIONS = [
-  { bins: { 'burn-ch4': 'fav', 'cold-pack': 'fav', 'split-h2o': 'unfav' } },
-  { number: DG_300 },
-  { bins: { 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' } },
-  { number: 273 },
-  { choice: 'right' },
-  { choice: 'barrier' },
-  { choice: 'right' },
-  { choice: '750' }
+  [...sort({ burn: 'fav', cold: 'fav', split: 'unfav' })],
+  [dial('plot', 'temp', 2), dial('dG', 'value', -40)],
+  [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
+  [dial('plot', 'temp', 3), dial('T', 'value', 273)],
+  [dial('answer', 'value', 1)],
+  [{ flip: 'barrier' }],
+  [...stack('c1', 'c2'), dial('answer', 'value', 1)],
+  [dial('plot', 'temp', 4)]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { bins: { 'burn-ch4': 'fav', 'cold-pack': 'unfav', 'split-h2o': 'unfav' } },
-  { number: 80 },
-  { bins: { 'both-help': 'never', 'both-oppose': 'always', 'high-t': 'high', 'low-t': 'low' } },
-  { number: 323 },
-  { choice: 'flipped' },
-  { choice: 'unfav' },
-  { choice: 'flipped' },
-  { choice: '600' }
+  [...sort({ burn: 'fav', cold: 'unfav', split: 'unfav' })],
+  [dial('dG', 'value', 40)],
+  [...sort({ 'both-help': 'never', 'both-oppose': 'always', 'high-t': 'high', 'low-t': 'low' })],
+  [dial('T', 'value', 303)],
+  [dial('answer', 'value', 2)],
+  [{ flip: 'unfav' }],
+  [...stack('c1', 'c2'), dial('answer', 'value', 2)],
+  [dial('plot', 'temp', 3)]
 ];
 
-export const stateFor = makeStateFor(STAGES);
+function blankState() { return {}; }
 
-export function mount(container, ctx) {
-  return mountThermo(container, ctx, { STAGES, DEBRIEF, toolNoteFor });
+/** Build a full bench state for stage `i` from one of the sets above. */
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
 }
 
-/* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { CO_DG, COUPLED };
+/* ==================================================================
+   THE GAME
+   ================================================================== */
+
+export function mount(container, ctx) {
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
+}
+
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { plotRead, plotAt, stackRead, CO_DG, DG_300, COUPLED };

@@ -98,6 +98,12 @@ const all = await D.loadPool('all');
   D.streakOf(['2026-10-12', '2026-10-14'], '2026-10-15') === 1 ? ok('a gap ends the streak') : fail('gap did not break the streak');
   D.streakOf(['2026-10-10'], '2026-10-15') === 0 ? ok('a stale streak is zero') : fail('stale streak not zero');
   D.streakOf(['2026-02-28', '2026-03-01'], '2026-03-01') === 2 ? ok('streaks cross month ends') : fail('streak broke at a month end');
+  // 2026-10-12 is a Monday, so 10-12..10-18 is one week.
+  D.weekStreakOf(['2026-10-05', '2026-10-14'], '2026-10-16') === 2 ? ok('a weekly streak counts consecutive weeks, any day of the week') : fail('weekly streak miscounted');
+  D.weekStreakOf(['2026-10-05'], '2026-10-16') === 1 ? ok('a weekly streak survives until a whole week is missed') : fail('weekly streak lost too early');
+  D.weekStreakOf(['2026-09-28', '2026-10-14'], '2026-10-16') === 1 ? ok('a missed week ends the weekly streak') : fail('missed week did not break the weekly streak');
+  D.weekStreakOf(['2026-10-04', '2026-10-05'], '2026-10-05') === 2 ? ok('Sunday and Monday are different weeks') : fail('week boundary wrong');
+  D.weekStreakOf(['2026-09-20'], '2026-10-16') === 0 ? ok('a stale weekly streak is zero') : fail('stale weekly streak not zero');
 
   D.isMastered({ c: 2, m: 0 }) && !D.isMastered({ c: 2, m: 2 }) && !D.isMastered({ c: 1, m: 0 }) ? ok('mastered = right twice and right more often than wrong') : fail('mastery rule wrong');
   D.isWeak({ c: 0, m: 1 }) && D.isWeak({ c: 1, m: 1 }) && !D.isWeak({ c: 2, m: 1 }) && !D.isWeak({ c: 3, m: 0 }) ? ok('weak = missed at least as often as got right') : fail('weak rule wrong');
@@ -133,7 +139,7 @@ const all = await D.loadPool('all');
   need.some(id => get(id).earnedBy(empty)) ? fail('a drill plate is earned with no practice') : ok('no drill plate is earned by an empty record');
   const day = n => { const d = new Date(); d.setDate(d.getDate() - n); return D.localDay(d); };
   const rich = D.newPractice();
-  rich.runs = 3; rich.stars.all = 3; rich.best.sprint = 16; rich.days = Array.from({ length: 7 }, (_, i) => day(i));
+  rich.runs = 3; rich.stars.all = 3; rich.best.sprint = 16; rich.days = Array.from({ length: 4 }, (_, i) => day(i * 7));
   for (const id of D.worldQuestionIds(worlds[0])) rich.q[id] = { c: 3, m: 0 };
   need.every(id => get(id).earnedBy({ practice: rich })) ? ok('each plate is earned when its condition is met') : fail(`a drill plate was not earned: ${need.filter(id => !get(id).earnedBy({ practice: rich }))}`);
   need.some(id => 'xp' in get(id) || 'xp_bonus' in get(id)) ? fail('a drill plate carries XP') : ok('drill plates carry no XP');

@@ -313,19 +313,19 @@
       "radius": 0.3,
       "points": [
         [
-          61.79,
+          57.65,
           1.84,
-          -30.89
+          -39.12
         ],
         [
-          61.79,
+          57.65,
           3,
-          -30.89
+          -39.12
         ],
         [
-          67.98,
+          62.89,
           3,
-          -33.99
+          -42.67
         ]
       ]
     },
@@ -506,12 +506,12 @@
     {
       "asset": "wellhead",
       "pos": [
-        60,
+        56,
         0,
-        -30
+        -38
       ],
       "radius": 3.4,
-      "rotY": 0.46,
+      "rotY": 0.6,
       "minTier": "T3"
     },
     {
@@ -583,9 +583,9 @@
     {
       "asset": "sinter-terrace",
       "pos": [
-        28,
+        31,
         0,
-        3
+        -9
       ],
       "radius": 4.6,
       "scale": 0.88,
@@ -623,28 +623,6 @@
       ],
       "radius": 2.3,
       "scale": 1.24,
-      "minTier": "T3"
-    },
-    {
-      "asset": "fumarole",
-      "pos": [
-        -31.45,
-        0,
-        -56.16
-      ],
-      "radius": 2.3,
-      "scale": 0.87,
-      "minTier": "T3"
-    },
-    {
-      "asset": "fumarole",
-      "pos": [
-        -22.98,
-        0,
-        -65.92
-      ],
-      "radius": 2.3,
-      "scale": 1.03,
       "minTier": "T3"
     },
     {
@@ -716,12 +694,34 @@
     {
       "asset": "fumarole",
       "pos": [
-        21.35,
+        90.48,
         0,
-        -2.11
+        -73.38
+      ],
+      "radius": 2.3,
+      "scale": 1.25,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fumarole",
+      "pos": [
+        -87.97,
+        0,
+        -59.84
+      ],
+      "radius": 2.3,
+      "scale": 1.35,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fumarole",
+      "pos": [
+        12.3,
+        0,
+        19.86
       ],
       "radius": 2,
-      "scale": 1,
+      "scale": 0.71,
       "minTier": "T3"
     },
     {
@@ -850,18 +850,6 @@
     {
       "asset": "sulfur-mound",
       "pos": [
-        91.83,
-        0,
-        -71.34
-      ],
-      "radius": 1.6,
-      "scale": 0.86,
-      "rotY": 0.05,
-      "minTier": "T4"
-    },
-    {
-      "asset": "sulfur-mound",
-      "pos": [
         78.87,
         0,
         -46.83
@@ -886,18 +874,6 @@
     {
       "asset": "sulfur-mound",
       "pos": [
-        14.49,
-        0,
-        16.75
-      ],
-      "radius": 1.6,
-      "scale": 0.86,
-      "rotY": 1.55,
-      "minTier": "T4"
-    },
-    {
-      "asset": "sulfur-mound",
-      "pos": [
         -69.91,
         0,
         -93.55
@@ -908,28 +884,28 @@
       "minTier": "T4"
     },
     {
-      "asset": "lava-lobe",
+      "asset": "sulfur-mound",
       "pos": [
-        81.35,
+        59.53,
         0,
-        -30.15
+        -89.11
       ],
-      "radius": 4.6,
-      "scale": 0.98,
-      "rotY": 5.41,
-      "minTier": "T3"
+      "radius": 1.6,
+      "scale": 1.03,
+      "rotY": 5.64,
+      "minTier": "T4"
     },
     {
-      "asset": "lava-lobe",
+      "asset": "sulfur-mound",
       "pos": [
-        -9.11,
+        -50.15,
         0,
-        91.41
+        -77.97
       ],
-      "radius": 4.6,
-      "scale": 0.94,
-      "rotY": 1.01,
-      "minTier": "T3"
+      "radius": 1.6,
+      "scale": 1,
+      "rotY": 2.63,
+      "minTier": "T4"
     },
     {
       "asset": "lava-lobe",
@@ -1030,13 +1006,25 @@
     {
       "asset": "lava-lobe",
       "pos": [
-        16.2,
+        66.27,
         0,
-        61.56
+        51.73
       ],
-      "radius": 3.6,
-      "scale": 0.82,
-      "rotY": 4.21,
+      "radius": 4.6,
+      "scale": 1.09,
+      "rotY": 4.82,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lava-lobe",
+      "pos": [
+        -101.24,
+        0,
+        26.39
+      ],
+      "radius": 4.6,
+      "scale": 1.06,
+      "rotY": 2.21,
       "minTier": "T3"
     },
     {
@@ -1076,6 +1064,18 @@
       "minTier": "T3"
     },
     {
+      "asset": "lava-lobe",
+      "pos": [
+        66.74,
+        0,
+        27.36
+      ],
+      "radius": 3.6,
+      "scale": 0.66,
+      "rotY": 4.37,
+      "minTier": "T3"
+    },
+    {
       "asset": "crate-stack",
       "pos": [
         -58.55,
@@ -1111,28 +1111,6 @@
     {
       "asset": "drum-rack",
       "pos": [
-        -66.71,
-        0,
-        -20.74
-      ],
-      "radius": 1.8,
-      "rotY": 4.18,
-      "minTier": "T4"
-    },
-    {
-      "asset": "drum-rack",
-      "pos": [
-        82.51,
-        0,
-        29.8
-      ],
-      "radius": 1.8,
-      "rotY": 2.31,
-      "minTier": "T4"
-    },
-    {
-      "asset": "drum-rack",
-      "pos": [
         73.8,
         0,
         19.84
@@ -1142,11 +1120,33 @@
       "minTier": "T4"
     },
     {
+      "asset": "drum-rack",
+      "pos": [
+        72.11,
+        0,
+        40.86
+      ],
+      "radius": 1.8,
+      "rotY": 1.9,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-rack",
+      "pos": [
+        82.42,
+        0,
+        41.23
+      ],
+      "radius": 1.8,
+      "rotY": 4.2,
+      "minTier": "T4"
+    },
+    {
       "asset": "probe-stake",
       "pos": [
-        41.82,
+        9.84,
         0,
-        6.68
+        54.97
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1154,9 +1154,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        73.71,
+        43.22,
         0,
-        60.59
+        -54.26
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1164,9 +1164,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        -6.02,
+        66.84,
         0,
-        78.96
+        34.57
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1174,9 +1174,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        -18.6,
+        -41.64,
         0,
-        -27.68
+        24.29
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1184,9 +1184,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        -13.74,
+        52.15,
         0,
-        -14.29
+        19.29
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1194,9 +1194,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        -38.37,
+        -9.2,
         0,
-        -51.19
+        -54.6
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1204,9 +1204,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        -39.33,
+        66.1,
         0,
-        56.48
+        -23.2
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1214,9 +1214,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        25.72,
+        -12.1,
         0,
-        31.31
+        79.97
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1224,9 +1224,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        37.23,
+        93.7,
         0,
-        -83.98
+        -7.8
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1234,9 +1234,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        56.03,
+        -44.62,
         0,
-        43.38
+        58.16
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1244,9 +1244,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        44,
+        4.38,
         0,
-        35.33
+        33.15
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1254,9 +1254,9 @@
     {
       "asset": "probe-stake",
       "pos": [
-        24.87,
+        -61.79,
         0,
-        -80.63
+        19.54
       ],
       "radius": 0.4,
       "minTier": "T4"
@@ -1270,7 +1270,7 @@
       ],
       "radius": 4.4,
       "scale": 1.1,
-      "rotY": 4.09,
+      "rotY": 6.07,
       "minTier": "T3"
     },
     {
@@ -1282,7 +1282,7 @@
       ],
       "radius": 4.4,
       "scale": 1.1,
-      "rotY": 5.72,
+      "rotY": 5.81,
       "minTier": "T3"
     },
     {
@@ -1582,44 +1582,59 @@
         40.95
       ],
       "label": "Bench 1 - Heat and Temperature",
-      "structure": "contact-hut",
-      "built": true
+      "structure": "wellhead-exchanger",
+      "built": true,
+      "flat": {
+        "x": 31.78,
+        "z": 46.23,
+        "r": 11.76
+      }
     },
     {
       "id": "site-2",
       "questId": "q2-calorimetry",
       "stage": 2,
       "pos": [
-        51.36,
+        23.55,
         0,
-        16.69
+        6.75
       ],
       "approachPos": [
-        46.98,
+        27.97,
         1.6,
-        15.27
+        8.02
       ],
       "label": "Bench 2 - Calorimetry",
-      "structure": "bath-house",
-      "built": true
+      "structure": "spring-shelf",
+      "built": true,
+      "flat": {
+        "x": 23.16,
+        "z": 6.15,
+        "r": 10.79
+      }
     },
     {
       "id": "site-3",
       "questId": "q3-enthalpy",
       "stage": 3,
       "pos": [
-        50.74,
+        50.07,
         0,
-        -18.47
+        -20.23
       ],
       "approachPos": [
-        46.42,
+        45.8,
         1.6,
-        -16.9
+        -18.51
       ],
       "label": "Bench 3 - Reaction Enthalpy",
-      "structure": "fuel-store",
-      "built": true
+      "structure": "boiler-room",
+      "built": true,
+      "flat": {
+        "x": 51.35,
+        "z": -21.51,
+        "r": 10.68
+      }
     },
     {
       "id": "site-4",
@@ -1636,8 +1651,13 @@
         -40.95
       ],
       "label": "Bench 4 - Bond Enthalpies",
-      "structure": "cracking-coil",
-      "built": true
+      "structure": "fumarole-coil",
+      "built": true,
+      "flat": {
+        "x": 32.32,
+        "z": -46.38,
+        "r": 11.78
+      }
     },
     {
       "id": "site-5",
@@ -1654,8 +1674,13 @@
         -40.95
       ],
       "label": "Bench 5 - Hess's Law",
-      "structure": "flue-route",
-      "built": true
+      "structure": "separator-manifold",
+      "built": true,
+      "flat": {
+        "x": -31.49,
+        "z": -46.75,
+        "r": 12.22
+      }
     },
     {
       "id": "site-6",
@@ -1672,8 +1697,13 @@
         -16.9
       ],
       "label": "Bench 6 - Entropy",
-      "structure": "expansion-cell",
-      "built": true
+      "structure": "silencer-pair",
+      "built": true,
+      "flat": {
+        "x": -54.59,
+        "z": -20.5,
+        "r": 13.51
+      }
     },
     {
       "id": "site-7",
@@ -1690,8 +1720,13 @@
         15.27
       ],
       "label": "Bench 7 - Free Energy",
-      "structure": "furnace-balance",
-      "built": true
+      "structure": "control-room",
+      "built": true,
+      "flat": {
+        "x": -51.95,
+        "z": 17.82,
+        "r": 10.82
+      }
     }
   ],
   "spawn": {
@@ -1722,26 +1757,26 @@
       },
       "site-2": {
         "pos": [
-          46.98,
+          27.97,
           1.6,
-          15.27
+          8.02
         ],
         "lookAt": [
-          51.36,
+          23.55,
           1.2,
-          16.69
+          6.75
         ]
       },
       "site-3": {
         "pos": [
-          46.42,
+          45.8,
           1.6,
-          -16.9
+          -18.51
         ],
         "lookAt": [
-          50.74,
+          50.07,
           1.2,
-          -18.47
+          -20.23
         ]
       },
       "site-4": {
@@ -1803,16 +1838,7 @@
       "site-5",
       "site-6",
       "site-7"
-    ],
-    "siteDescriptions": {
-      "site-1": "Bench 1 of seven, standing on the ring round the hot spring, the first on the road from the landing pad.",
-      "site-2": "Bench 2 of seven, standing on the ring round the hot spring, a short walk from the one before it.",
-      "site-3": "Bench 3 of seven, standing on the ring round the hot spring, a short walk from the one before it.",
-      "site-4": "Bench 4 of seven, standing on the ring round the hot spring, a short walk from the one before it.",
-      "site-5": "Bench 5 of seven, standing on the ring round the hot spring, a short walk from the one before it.",
-      "site-6": "Bench 6 of seven, standing on the ring round the hot spring, a short walk from the one before it.",
-      "site-7": "Bench 7 of seven, standing on the ring round the hot spring, a short walk from the one before it."
-    }
+    ]
   },
   "tracks": []
 }

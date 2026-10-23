@@ -19,12 +19,19 @@
  * of every prop, the pipe and the rail, every approach on open ground facing
  * the way the player walks in, the boss's ground at the rim kept open.
  *
+ * THE BENCHES ARE BUILT INTO THE FIELD (`src/three/ember/host-plan.js`): a wellhead's heat exchanger, a sampling shelf
+ * at the spring's edge, a boiler room, a coil over a fumarole, a separator and its two routes, the silencer bay and the
+ * turbine hall's control room. No shelter stands on a ring. Each host declares its footprint (`extent`, in its own frame)
+ * and the generator keeps every free prop out of it and out of the lane in front of its plate; `verify:ember` measures
+ * the real build against the declaration.
+ *
  * Run: node tools/gen-ember-layout.mjs
  */
 
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { HOST_PLAN, LANE } from '../src/three/ember/host-plan.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -53,27 +60,66 @@ const ARENA = { boss: [0, 0, -63], player: [0, 1.6, -47] };
 
 /* ---------------------------------------------------------------- the sites */
 
-const QUESTS = [
-  ['q1-flow', 'Heat and Temperature', 'contact-hut'],
-  ['q2-calorimetry', 'Calorimetry', 'bath-house'],
-  ['q3-enthalpy', 'Reaction Enthalpy', 'fuel-store'],
-  ['q4-bonds', 'Bond Enthalpies', 'cracking-coil'],
-  ['q5-hess', "Hess's Law", 'flue-route'],
-  ['q6-entropy', 'Entropy', 'expansion-cell'],
-  ['q7-gibbs', 'Free Energy', 'furnace-balance']
-];
-const ANGLES = [34, 72, 110, 146, 214, 250, 288];
+const APPROACH = 4.6;      // how far in front of the plate the player is asked to stand
 
-const sites = QUESTS.map(([questId, title, structure], i) => {
-  const a = deg(ANGLES[i]);
-  const x = RING * Math.sin(a), z = RING * Math.cos(a);
-  const ax = (RING - 4.6) * Math.sin(a), az = (RING - 4.6) * Math.cos(a);
+const QUESTS = [
+  ['q1-flow', 'Heat and Temperature'],
+  ['q2-calorimetry', 'Calorimetry'],
+  ['q3-enthalpy', 'Reaction Enthalpy'],
+  ['q4-bonds', 'Bond Enthalpies'],
+  ['q5-hess', "Hess's Law"],
+  ['q6-entropy', 'Entropy'],
+  ['q7-gibbs', 'Free Energy']
+];
+
+/**
+ * Where each host stands: at an angle (degrees from the south, toward the east) and a radius, its plate facing the middle of the
+ * field (the player comes in from the lamp road and stands between the plate and the spring) or, when the plan says `faceOut`,
+ * facing away from it, so the machinery behind the plate is toward the spring.
+ */
+const SITE_DEFS = QUESTS.map(([questId, title], i) => {
+  const id = `site-${i + 1}`;
+  const plan = HOST_PLAN[id];
+  const a = deg(plan.angle);
+  const out = [Math.sin(a), Math.cos(a)];
+  const r = plan.radius ?? RING;
+  const f = plan.faceOut ? out : [-out[0], -out[1]];
+  return { id, questId, title, stage: i + 1, pos: [out[0] * r, out[1] * r], f };
+});
+
+/** A host-frame point as a world point: x to the player's right, z toward the player. */
+function toWorld(def, lx, lz) {
+  const [px, pz] = def.pos;
+  const [fx, fz] = def.f;
+  return [px + lx * fz + lz * fx, pz - lx * fx + lz * fz];
+}
+function hostRect(def, [x0, x1, z0, z1]) {
+  const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([lx, lz]) => toWorld(def, lx, lz));
   return {
-    id: `site-${i + 1}`, questId, stage: i + 1,
-    pos: [round(x), 0, round(z)],
-    approachPos: [round(ax), 1.6, round(az)],
-    label: `Bench ${i + 1} - ${title}`,
-    structure, built: true
+    minX: Math.min(...pts.map(p => p[0])), maxX: Math.max(...pts.map(p => p[0])),
+    minZ: Math.min(...pts.map(p => p[1])), maxZ: Math.max(...pts.map(p => p[1]))
+  };
+}
+const unionRect = (a, b) => ({ minX: Math.min(a.minX, b.minX), maxX: Math.max(a.maxX, b.maxX), minZ: Math.min(a.minZ, b.minZ), maxZ: Math.max(a.maxZ, b.maxZ) });
+function rectDist(x, z, r) {
+  const dx = Math.max(r.minX - x, 0, x - r.maxX), dz = Math.max(r.minZ - z, 0, z - r.maxZ);
+  return Math.hypot(dx, dz);
+}
+
+const sites = SITE_DEFS.map(d => {
+  const plan = HOST_PLAN[d.id];
+  const [fx, fz] = d.f;
+  // The ground that must be level: the host's machinery and the lane in front of its plate.
+  const area = unionRect(hostRect(d, plan.extent), hostRect(d, [-LANE.hw, LANE.hw, LANE.from, LANE.to]));
+  const cx = (area.minX + area.maxX) / 2, cz = (area.minZ + area.maxZ) / 2;
+  const r = Math.hypot(area.maxX - area.minX, area.maxZ - area.minZ) / 2 + 0.8;
+  return {
+    id: d.id, questId: d.questId, stage: d.stage,
+    pos: [round(d.pos[0]), 0, round(d.pos[1])],
+    approachPos: [round(d.pos[0] + fx * APPROACH), 1.6, round(d.pos[1] + fz * APPROACH)],
+    label: `Bench ${d.stage} - ${d.title}`,
+    structure: plan.structure, built: true,
+    flat: { x: round(cx), z: round(cz), r: round(r) }
   };
 });
 
@@ -122,11 +168,15 @@ const distSeg = (x, z, a, b) => {
   const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / L2));
   return Math.hypot(x - (a[0] + dx * t), z - (a[1] + dz * t));
 };
+/** Rects (world AABB) that no free prop may stand in: every host's real extent and its lane. */
+const KEEP = [];
+const keep = (name, r, { margin = 0.8, owner = null } = {}) => KEEP.push({ name, ...r, margin, owner });
 const rimDist = (x, z) => RIM.radius - Math.hypot(x - RIM.cx, z - RIM.cz);   // > 0 past the edge
 const railDist = (x, z) => Math.hypot(x - RIM.cx, z - RIM.cz) - RIM.rail;     // > 0 on the walk's side
 function fits(x, z, r, pad = 0.6) {
   if (!taken.every(t => Math.hypot(x - t.x, z - t.z) >= t.r + r + pad)) return false;
   if (!segs.every(s => distSeg(x, z, s.a, s.b) >= s.r + r + pad)) return false;
+  if (!KEEP.every(k => rectDist(x, z, k) >= r + k.margin)) return false;
   // Inside the walk, nothing stands at the rail or past it.
   if (railDist(x, z) < r + 1.2) return false;
   return true;
@@ -142,11 +192,12 @@ function claimRun(run, extra = 1.4) {
   }
 }
 
-// Every site claims its shelter and the walk to its bench before anything else is placed.
-for (const s of sites) {
-  taken.push({ x: s.pos[0], z: s.pos[2], r: 6.4 });
-  taken.push({ x: s.approachPos[0], z: s.approachPos[2], r: 3.2 });
+// Every host claims its whole footprint, and the lane in front of its plate, before anything free is placed.
+for (const d of SITE_DEFS) {
+  keep(`${d.id} host`, hostRect(d, HOST_PLAN[d.id].extent), { owner: d.id });
+  keep(`${d.id} approach`, hostRect(d, [-LANE.hw, LANE.hw, LANE.from, LANE.to]), { margin: 0.2, owner: d.id });
 }
+for (const s of sites) taken.push({ x: s.approachPos[0], z: s.approachPos[2], r: 3.2 });
 // The spring and its banks, the lamp road (as a ring of claims), the spawn and its road, the lane to the rim.
 taken.push({ x: 0, z: 0, r: SPRING + 3.5 });
 for (let i = 0; i < 48; i++) {
@@ -161,7 +212,7 @@ taken.push({ x: ARENA.player[0], z: ARENA.player[2], r: 5 });
 for (const s of sites) {
   const [ax, , az] = s.approachPos;
   const n = Math.hypot(ax, az);
-  for (let r = ROAD + 2; r < n; r += 3) taken.push({ x: ax / n * r, z: az / n * r, r: 2.2 });
+  for (let r = Math.min(ROAD + 2, n); r <= Math.max(ROAD + 2, n); r += 3) taken.push({ x: ax / n * r, z: az / n * r, r: 2.2 });
 }
 claimRun(runs[0]);
 
@@ -208,7 +259,7 @@ function well(x, z) {
 }
 well(50, -74);
 well(-56, -70);
-well(60, -30);
+well(56, -38);
 
 /* ---- the Fifth's siphon, clamped to the main on the overlook ---- */
 {
@@ -237,7 +288,7 @@ add('mud-pot', 25, -16, 3.2, { minTier: 'T3' });
 add('mud-pot', 21, 22, 2.8, { scale: 0.85, minTier: 'T3' });
 add('sinter-terrace', -25, 9, 5.2, { scale: 1.0, rotY: 0.4, minTier: 'T3' });
 add('sinter-terrace', 7, -27, 4.4, { scale: 0.82, rotY: 2.1, minTier: 'T3' });
-add('sinter-terrace', 28, 3, 4.6, { scale: 0.88, rotY: 4.0, minTier: 'T3' });
+add('sinter-terrace', 31, -9, 4.6, { scale: 0.88, rotY: 4.0, minTier: 'T3' });
 add('habitat', -36, 86, 6, { rotY: round(deg(160)), minTier: 'T3' });
 add('habitat', -64, 77, 6, { rotY: round(deg(120)), minTier: 'T3' });
 
@@ -290,6 +341,42 @@ for (let i = 0; i < POSTS; i++) {
 for (const z of [48, 60, 72]) for (const x of [-3.6, 3.6]) landmarks.push({ asset: 'lamp-post', pos: [x, 0, z], radius: 0.6, minTier: 'T3' });
 for (const z of [-52, -58]) for (const x of [-7.4, 7.4]) landmarks.push({ asset: 'lamp-post', pos: [x, 0, z], radius: 0.6, minTier: 'T3' });
 
+/* ---------------------------------------------------------------- self-check */
+
+let problems = 0;
+const bad = msg => { problems++; console.error(`  LAYOUT: ${msg}`); };
+const nm = l => `${l.asset}@${l.pos[0]},${l.pos[2]}`;
+const rectOverlap = (a, b) => a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
+// Every free prop (and a lamp post) stands clear of every host's real extent and lane. The wellheads, the plant and the explicit
+// vent field are placed by hand, so this is where a hand-placed one is caught.
+for (const l of landmarks) {
+  for (const k of KEEP) if (rectDist(l.pos[0], l.pos[2], k) < l.radius + (k.margin > 0.5 ? 0.3 : 0.05) - 0.001) bad(`${nm(l)} stands in the ${k.name} keep-out`);
+}
+// The hosts' extents do not touch each other (one host's own pieces and lane may), and none touches the spring, the rail, the pipe or the boss's ground.
+for (let i = 0; i < KEEP.length; i++) for (let j = i + 1; j < KEEP.length; j++) {
+  const a = KEEP[i], b = KEEP[j];
+  if (a.owner && a.owner === b.owner) continue;
+  if (rectOverlap(a, b)) bad(`${a.name} and ${b.name} extents overlap`);
+}
+for (const d of SITE_DEFS) {
+  const [x0, x1, z0, z1] = HOST_PLAN[d.id].extent;
+  for (const [lx, lz] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) {
+    const [x, z] = toWorld(d, lx, lz);
+    if (Math.hypot(x, z) < SPRING + 3.2) bad(`${d.id} reaches ${Math.hypot(x, z).toFixed(1)} m from the spring's middle (its bowl and lip stand to ${SPRING + 3.2})`);
+    if (railDist(x, z) < 2) bad(`${d.id} reaches the rim's rail`);
+  }
+}
+for (const k of KEEP.filter(k => !/approach/.test(k.name))) {
+  for (const seg of segs) if (rectDist(seg.a[0], seg.a[1], k) < seg.r - 1.0 || rectDist(seg.b[0], seg.b[1], k) < seg.r - 1.0) bad(`${k.name} stands under the caldera main`);
+  if (rectDist(ARENA.boss[0], ARENA.boss[2], k) < 11) bad(`${k.name} reaches the Crucible's ground`);
+}
+// Sites 8 apart, at least; every approach is on the shelf and clear of the spring.
+for (let i = 0; i < sites.length; i++) for (let j = i + 1; j < sites.length; j++) {
+  const got = Math.hypot(sites[i].pos[0] - sites[j].pos[0], sites[i].pos[2] - sites[j].pos[2]);
+  if (got < 8) bad(`${sites[i].id} and ${sites[j].id} are ${got.toFixed(1)} apart`);
+}
+if (problems) { console.error(`${problems} layout problem(s); nothing written.`); process.exit(1); }
+
 /* ---------------------------------------------------------------- the world */
 
 const world = {
@@ -320,8 +407,7 @@ const world = {
   spawn: { pos: [0, 1.6, 88], lookAt: [0, 1.6, 40] },
   t2: { stillCamera: Object.fromEntries(sites.map(s => [s.id, { pos: s.approachPos, lookAt: [s.pos[0], 1.2, s.pos[2]] }])) },
   t1: {
-    siteOrder: sites.map(s => s.id),
-    siteDescriptions: Object.fromEntries(sites.map((s, i) => [s.id, `Bench ${i + 1} of seven, standing on the ring round the hot spring, ${i === 0 ? 'the first on the road from the landing pad' : 'a short walk from the one before it'}.`]))
+    siteOrder: sites.map(s => s.id)
   },
   tracks: []
 };

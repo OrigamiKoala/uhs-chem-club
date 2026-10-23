@@ -1,6 +1,8 @@
 # Avalon — UHS Chemistry Club RPG Competition
 
-**Avalon** is a year-long RPG competition and spaceborne molecular simulator for the University High School Chemistry Club. Four rival corporate flagships explore derelict alien worlds to unlock chemical principles from the ground up without textbook jargon.
+**Avalon** is a year-long RPG competition and spaceborne molecular simulator for the University High School Chemistry Club, for students aged 12 to 17. Four Imperial guilds aboard one salvage starship explore derelict alien worlds and unlock chemical principles from the ground up: plain words first, the real chemistry term once it is earned.
+
+Two roads: the Learn track (fourteen worlds, six built, no XP) and the Charge Gardens campaign (the competition: XP and Standings). Product truth is in `PRODUCT.md`; engineering rules in `CLAUDE.md`.
 
 ---
 
@@ -16,7 +18,7 @@ Browser — Vite + Three.js, DOM UI layered over one persistent WebGL canvas
 Apps Script Web App (doPost) — routing, grading, scoring, never hashes passwords
    │
    ▼
-Google Sheet "Avalon DB" (6 tabs)
+Google Sheet (7 tabs: Config, Players, Progress, LearnProgress, PlayerState, Submissions, Inventory)
 ```
 
 ---
@@ -36,12 +38,11 @@ Google Sheet "Avalon DB" (6 tabs)
 
 ---
 
-## Hardware Quality Tiers
+## Graphics
 
-Avalon is calibrated for high school classrooms with varied hardware:
-- **T3 (Desktop / Discrete GPU):** 60 FPS target, full particle starfield, bloom, specular lighting.
-- **T2 (Standard / Chromebook):** 30 FPS target, DPR 1, no post-processing, battery-saving procedural lighting.
-- **T1 (Non-WebGL Fallback):** Zero WebGL requirement. Replaces 3D viewer with static SVG backdrops and standard accessible `<select>` dropdowns. All quests are 100% solvable in T1.
+Two settings, chosen in Settings (a measured tier is never written down, only a chosen one):
+- **3D On (T4, default):** walk the ship and the worlds in first person; every bench is built into its world and the camera leans in over the table. A phone is not disqualified (DPR capped at 1.5, no shadow map on handsets).
+- **3D Off (T1):** no WebGL needed. The same tabletops are drawn on a canvas, with static SVG backdrops and native form controls. Every stage is solvable here.
 
 ---
 

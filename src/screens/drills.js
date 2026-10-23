@@ -7,12 +7,12 @@
  * the player sits at.
  *
  * Modes
- *   Daily Set    five questions, the same for everyone that day; finishing one keeps the streak
+ *   Daily Set    five questions, the same for everyone that day; finishing one in a week keeps the streak
  *   Quick Run    ten questions from every world or one, leaning toward what is shaky
  *   Timed Round  ninety seconds on the answer clock, three misses and it is over
  *   Weak Spots   what you have missed more often than you have got right
  *
- * Rewards are stars, a day streak, mastery tiers per world and commendations —
+ * Rewards are stars, a week streak, mastery tiers per world and commendations —
  * all cosmetic. A drill pays no XP and never reaches Standings, and nothing
  * here may call the XP rails (`verify:learn` scans for it).
  */
@@ -25,7 +25,7 @@ import { soundscape } from '../audio/soundscape.js';
 import {
   RUN_LENGTH, DAILY_LENGTH, SPRINT_SECONDS, SPRINT_LIVES, TIERS,
   normalizePractice, drillWorlds, loadPool, worldMastery, overallMastery,
-  streakOf, doneToday, weakIds, mulberry32, pickRun, pickDaily, pickWeak,
+  weekStreakOf, doneToday, weakIds, mulberry32, pickRun, pickDaily, pickWeak,
   withShuffledOptions, shuffled, recordAnswer, recordRun, recordSprint, starsFor, localDay
 } from '../learn/drills.js';
 
@@ -86,7 +86,7 @@ export function renderDrills(container, params = {}) {
     run = null;
     const p = practice();
     const worlds = drillWorlds();
-    const streak = streakOf(p.days);
+    const streak = weekStreakOf(p.days);
     const overall = overallMastery(p);
     const starTotal = Object.values(p.stars).reduce((s, n) => s + n, 0);
     const weakCount = weakIds(p).length;
@@ -99,7 +99,7 @@ export function renderDrills(container, params = {}) {
           art: '/art/starmap.jpg',
           title: 'Drill Deck',
           actions: statRow([
-            { label: 'Day Streak', value: String(streak), plain: true },
+            { label: 'Week Streak', value: String(streak), plain: true },
             { label: 'Mastered', value: `${overall.mastered} / ${overall.total}`, plain: true },
             { label: 'Stars', value: String(starTotal), plain: true }
           ])
@@ -113,7 +113,7 @@ export function renderDrills(container, params = {}) {
             <h2 class="drill-card-title">Daily Set</h2>
             <p class="drill-card-line">${DAILY_LENGTH} questions, the same for every crew member today.</p>
             <div class="drill-card-foot">
-              <span class="tag ${daily ? 'live' : ''}">${daily ? 'Done today' : streak ? `Streak: ${streak} day${streak === 1 ? '' : 's'}` : 'Start a streak'}</span>
+              <span class="tag ${daily ? 'live' : ''}">${daily ? 'Done today' : streak ? `Streak: ${streak} week${streak === 1 ? '' : 's'}` : 'Start a streak'}</span>
               <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="daily">${daily ? 'Again' : 'Start'}</button>
             </div>
           </article>
@@ -424,7 +424,7 @@ export function renderDrills(container, params = {}) {
     }
     session.savePractice();
     session.checkCommendations();
-    const streak = streakOf(p.days);
+    const streak = weekStreakOf(p.days);
 
     container.innerHTML = `
       <div class="screen-container m-screen m-drills">
@@ -435,7 +435,7 @@ export function renderDrills(container, params = {}) {
           <p class="drill-result-line">${esc(detail)}</p>
           <div class="drill-result-stats">
             <span class="tag">Best streak in round: ${r.bestCombo}</span>
-            <span class="tag ${streak ? 'live' : ''}">Day streak: ${streak}</span>
+            <span class="tag ${streak ? 'live' : ''}">Week streak: ${streak}</span>
           </div>
           <div class="drill-result-keys">
             <button type="button" class="btn-primary" data-again>Again</button>

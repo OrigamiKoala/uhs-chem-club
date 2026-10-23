@@ -123,3 +123,8 @@ All four are `PlateBench` subclasses (`engine/plates.js`) with a built twin thro
 Every Lanternfall bench now stands solid parts on its table (`engine/lab-props.js`), has its layout held by `verify:table`'s audit,
 reads in real terms and prints how to use it (`table/notes.js`). The record of what changed and what was left is in
 `docs/plans/bench-tabletop.md`, "Lanternfall audit pass".
+
+## Tabletop and retirement update (2026-10-22)
+
+- Every Lanternfall quest is played on the Tabletop (`Table3D` across optics, cloud, address/filling, spectrum, trends and cuvette kits).
+- `lightbench3d.js`, `cloudplate3d.js`, `boxrack3d.js`, `electronbench3d.js`, and `plates3d.js` are retired (T7).

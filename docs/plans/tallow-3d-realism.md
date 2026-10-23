@@ -136,3 +136,8 @@ Four changes got that, none of them visible:
    pylon mast stay at 512; drums read from ten metres across four repeats, and a
    deck repeated nine times, drop to 256 — where the repeat is already supplying
    the density that resolution would have.
+
+## Tabletop and retirement update (2026-10-22)
+
+- Every Tallow quest and the Salt Hopper boss are played on the Tabletop (`Table3D` with the atom, card and mass kits).
+- `scope3d.js`, `corebench3d.js`, `catalogue3d.js`, and `assay3d.js` are retired (T7 of `bench-tabletop.md`).

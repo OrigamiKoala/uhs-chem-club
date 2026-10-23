@@ -58,7 +58,6 @@ const LEWIS = await import('../src/learn/engine/lewis.js');
 const VSEPR = await import('../src/learn/engine/vsepr.js');
 const MOD = await import('../src/learn/engine/mo.js');
 const GAS = await import('../src/learn/engine/gasdata.js');
-const { recordCurve } = await import('../src/learn/engine/gasrig.js');
 const TABLE = await import('../src/learn/table/model.js');
 
 /**
@@ -1539,58 +1538,6 @@ async function checkDrawn(q, mod) {
     const thermoHeads = ['contact', 'cup', 'diagram', 'bonds', 'hess', 'box', 'gibbs'];
     const lightRigs = (st.rigs || []).filter(r => !rackHeads.includes(r.head) && !electronHeads.includes(r.head) && !ligarHeads.includes(r.head) && !gasHeads.includes(r.head) && !thermoHeads.includes(r.head));
 
-    // Ligar's three plate benches. The declaration is held to the real tables,
-    // then every plate is drawn at phone and bench size.
-    const bondRigs = (st.rigs || []).filter(r => bondHeads.includes(r.head));
-    if (bondRigs.length) {
-      const { BondBench } = await import('../src/learn/engine/bondbench.js');
-      const BD = await import('../src/learn/engine/bonddata.js');
-      const proto = BondBench.prototype;
-      const bench = Object.create(proto);
-      bench.cfg = { settings: st.settings || [], setting: st.start || 1 };
-      const ids = new Set();
-      for (const raw of bondRigs) {
-        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
-        ids.add(raw.id);
-        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
-        if (raw.head === 'pair') {
-          const p = BD.PAIRS[raw.pair];
-          if (!p) { fail(`${label}: plate "${raw.id}" names a pair with no measured bond "${raw.pair}"`); bad++; }
-          else if (!(st.settings || []).includes(p.r0)) { fail(`${label}: plate "${raw.id}" has no crank setting at its bond length, so its bottom cannot be found`); bad++; }
-        } else if (!BD.LATTICES[raw.lattice]) {
-          fail(`${label}: plate "${raw.id}" names a lattice with no real figures "${raw.lattice}"`); bad++;
-        }
-        const item = proto.prepare.call(bench, raw);
-        item.trail = raw.head === 'pair' ? [st.settings?.[(st.start || 1) - 1], ...(raw.head === 'pair' ? [BD.PAIRS[raw.pair]?.r0] : [])].filter(Boolean) : [];
-        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
-      }
-      if (bondRigs.some(r => r.head === 'pair') && !(Array.isArray(st.settings) && st.settings.length > 1)) {
-        fail(`${label}: pair plates need crank settings`); bad++;
-      }
-    }
-    const slateRigs = (st.rigs || []).filter(r => slateHeads.includes(r.head));
-    if (slateRigs.length) {
-      const { PairBoard } = await import('../src/learn/engine/pairboard.js');
-      const LW = await import('../src/learn/engine/lewis.js');
-      const proto = PairBoard.prototype;
-      const bench = Object.create(proto);
-      bench.cfg = { hand: 'bond', hands: ['bond', 'lone', 'x'], charges: true };
-      const ids = new Set();
-      for (const raw of slateRigs) {
-        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
-        ids.add(raw.id);
-        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
-        const mol = LW.MOLECULES[raw.mol];
-        if (!mol) { fail(`${label}: plate "${raw.id}" names an unknown molecule "${raw.mol}"`); bad++; continue; }
-        for (const sym of mol.syms) if (!LW.VALENCE[sym]) { fail(`${label}: plate "${raw.id}" has an atom with no valence "${sym}"`); bad++; }
-        if (raw.prefill) {
-          const r = LW.planLewis(mol, raw.prefill, raw.charge);
-          if (r.left < 0) { fail(`${label}: plate "${raw.id}" prefills more electrons than its tray holds`); bad++; }
-        }
-        const item = proto.prepare.call(bench, raw);
-        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
-      }
-    }
     const rigRigs = (st.rigs || []).filter(r => rigHeads.includes(r.head));
     if (rigRigs.length) {
       const { DomainRig } = await import('../src/learn/engine/domainrig.js');
@@ -1635,101 +1582,6 @@ async function checkDrawn(q, mod) {
           }
         }
         const item = proto.prepare.call(bench, { ...raw, progress: raw.head === 'spectrum' ? 1 : 0 });
-        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
-      }
-    }
-    // Bellows: the gas rig. The declaration is held to the real gas tables, then every
-    // plate is drawn at phone and bench size under the dials as the stage lays them.
-    const gasRigs = (st.rigs || []).filter(r => gasHeads.includes(r.head));
-    if (gasRigs.length) {
-      const { GasRig } = await import('../src/learn/engine/gasrig.js');
-      const proto = GasRig.prototype;
-      const bench = Object.create(proto);
-      bench.clock = 0.8;
-      bench.cfg = { ...GasRig.blankCfg(), ...GAS.benchCfg(st, {}) };
-      const ids = new Set();
-      for (const raw of gasRigs) {
-        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
-        ids.add(raw.id);
-        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
-        if (raw.head !== 'mixture' && raw.head !== 'record' && !GAS.GASES[raw.gas]) { fail(`${label}: plate "${raw.id}" names a gas with no real figures "${raw.gas}"`); bad++; }
-        if (raw.head === 'mixture') {
-          if (!raw.parts?.every(p => GAS.GASES[p.gas] && p.n > 0)) { fail(`${label}: mixture "${raw.id}" holds a part with no real gas or no amount`); bad++; }
-          if (!(raw.V > 0) || !(raw.T > 0)) { fail(`${label}: mixture "${raw.id}" has no room or no temperature`); bad++; }
-          // Every setting of the dials must read on the gauge the plate has.
-          const mvs = (st.volumes?.length && raw.follow !== false) ? st.volumes.map((_, k) => k + 1) : [1];
-          const mts = (st.temps?.length && raw.follow !== false) ? st.temps.map((_, k) => k + 1) : [1];
-          for (const vi of mvs) for (const ti of mts) {
-            const ms = GAS.mixtureState(raw, { ...bench.cfg, volume: vi, temp: ti });
-            const P = GAS.planMixture(raw.parts, ms.T, ms.V).P;
-            if (!(P > 0) || P > (st.gaugeMax || 400) * 1.05) { fail(`${label}: mixture "${raw.id}" reads ${P.toFixed(0)} kPa at settings ${vi}/${ti}, off a gauge that stops at ${st.gaugeMax || 400}`); bad++; }
-          }
-        }
-        if (raw.head === 'cylinder') {
-          // A dial the plate ignores is a control that does nothing: a rigid tank on a stage with a piston dial.
-          if (st.volumes?.length > 1 && raw.hold === 'V' && raw.follow !== false) { fail(`${label}: cylinder "${raw.id}" is a rigid tank, so the stage's volume dial moves nothing on it`); bad++; }
-          if (st.volumes?.length > 1 && raw.hold === 'P' && raw.follow !== false) { fail(`${label}: cylinder "${raw.id}" is under a free piston, so the stage's volume dial moves nothing on it`); bad++; }
-          if (st.temps?.length > 1 && raw.follow === false && !gasRigs.some(r => r.head === 'cylinder' && r.follow !== false)) { fail(`${label}: no cylinder follows the stage's temperature dial`); bad++; }
-          if (!(raw.n >= 0) || !Number.isFinite(raw.n ?? 1)) { fail(`${label}: cylinder "${raw.id}" holds a bad amount of gas`); bad++; }
-          if (raw.hold === 'P' && !(raw.P0 > 0)) { fail(`${label}: cylinder "${raw.id}" has a free piston with no weight on it`); bad++; }
-          // Every setting a dial can reach must be a real, positive reading (a van der Waals gas
-          // squeezed past its own size has none, and the plate would read a pressure that cannot exist).
-          const volumes = (st.volumes?.length && raw.hold !== 'V' && raw.follow !== false) ? st.volumes.map((_, k) => k + 1) : [1];
-          const temps = (st.temps?.length && raw.follow !== false) ? st.temps.map((_, k) => k + 1) : [1];
-          for (const vi of volumes) for (const ti of temps) {
-            const r = GAS.planGas({ ...raw, n: raw.n }, { ...bench.cfg, volume: vi, temp: ti });
-            if (!(r.P > 0) || !Number.isFinite(r.P)) { fail(`${label}: cylinder "${raw.id}" reads no real pressure at volume setting ${vi}, temperature setting ${ti}`); bad++; }
-            if (r.P > (st.gaugeMax || 400) * 1.05 && !raw.noGaugeLimit) { fail(`${label}: cylinder "${raw.id}" reads ${r.P.toFixed(0)} kPa at settings ${vi}/${ti}, off a gauge that stops at ${st.gaugeMax || 400}`); bad++; }
-          }
-        }
-        if (raw.head === 'record' && !(raw.record && raw.record.x && raw.record.y && raw.record.xmax > raw.record.xmin)) { fail(`${label}: record "${raw.id}" has no axes`); bad++; }
-        if ((raw.head === 'leak' || raw.head === 'tube') && !(st.times?.length > 1)) { fail(`${label}: plate "${raw.id}" needs a time dial`); bad++; }
-        const item = proto.prepare.call(bench, raw);
-        item.trail = [{ n: raw.n || 1, T: raw.T || 300, V: raw.V || 10, P: 100, Z: 1, key: 'a' }];
-        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
-      }
-    }
-    const thermoRigs = (st.rigs || []).filter(r => thermoHeads.includes(r.head));
-    if (thermoRigs.length) {
-      const { Calorimeter } = await import('../src/learn/engine/calorimeter.js');
-      const TD = await import('../src/learn/engine/thermodata.js');
-      const proto = Calorimeter.prototype;
-      const bench = Object.create(proto);
-      bench.clock = 0.6;
-      bench.cfg = { ...Calorimeter.blankCfg(), ...TD.benchCfg(st, {}) };
-      const ids = new Set();
-      for (const raw of thermoRigs) {
-        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
-        ids.add(raw.id);
-        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
-        const item = proto.prepare.call(bench, raw);
-        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
-      }
-    }
-    const rackRigs = (st.rigs || []).filter(r => rackHeads.includes(r.head));
-    if (rackRigs.length) {
-      const { BoxRack } = await import('../src/learn/engine/boxrack.js');
-      const E = await import('../src/learn/engine/electrons.js');
-      const proto = BoxRack.prototype;
-      const bench = Object.create(proto);
-      bench.cfg = { hand: 'u', core: false, show: { n: true, l: true, ml: true, ms: true }, clouds: true };
-      const ids = new Set();
-      for (const raw of rackRigs) {
-        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
-        ids.add(raw.id);
-        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
-        if (raw.head === 'rack') {
-          for (const id of (raw.rows || [])) if (!E.rowOf(id)) { fail(`${label}: plate "${raw.id}" lists an unknown row "${id}"`); bad++; }
-          if (raw.layout && !['atomic', 'address', 'molecular'].includes(raw.layout)) { fail(`${label}: plate "${raw.id}" has an unknown layout`); bad++; }
-          if (raw.sample && E.MEASURED[raw.sample] === undefined) { fail(`${label}: plate "${raw.id}" names a sample with no measured magnet reading`); bad++; }
-          for (const [key, v] of Object.entries(raw.prefill || {})) {
-            const [rowId, idx] = key.split(':');
-            if (!E.rowOf(rowId) || Number(idx) >= E.boxesOf(E.rowOf(rowId).l) || !/^(u|d|ud)$/.test(v)) { fail(`${label}: plate "${raw.id}" prefills a box that does not exist or holds an illegal pair`); bad++; }
-          }
-        } else if (E.zOf(raw.sym) < 1) {
-          fail(`${label}: strip plate "${raw.id}" names an unknown element "${raw.sym}"`); bad++;
-        }
-        const item = proto.prepare.call(bench, raw);
         cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
       }
     }
@@ -3932,6 +3784,268 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   }
 
   if (failures === before) ok('Bellows: every graded pressure, volume, amount, share, speed and leak agrees with the real tables, and every claim a stage teaches is true of its table');
+}
+
+/* ------------------------------------------------------------------
+   EVERY FIGURE AN EMBER REACH STAGE GRADES AGAINST IS RECOMPUTED FROM THE REAL
+   TABLES, and every claim a stage teaches is checked on the table that teaches
+   it (plan `bench-tabletop.md`, T6): a bath that does not warm when a pack gives
+   heat out, a stack that does not add up to the reaction it is asked for, a
+   crossing the line does not cross, a ranking the other column would get wrong.
+   The kit (`table/kits/heat.js`) reads every plate through `thermodata.js`, so an
+   answer authored as a literal in a solution script can drift from the
+   instrument that teaches it, and one recomputed here cannot.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const HK = await import('../src/learn/table/kits/heat.js');
+  const TD = await import('../src/learn/engine/thermodata.js');
+  const get = async id => { const q = getQuest('unit05', id); return q && q.status === 'live' ? q.module() : null; };
+  const [e1, e2, e3, e4, e5, e6, e7, eb] = await Promise.all(['q1-flow', 'q2-calorimetry', 'q3-enthalpy', 'q4-bonds', 'q5-hess', 'q6-entropy', 'q7-gibbs', 'boss-crucible'].map(get));
+  const near = (a, b, tol, what) => { if (!(Math.abs(a - b) <= tol)) fail(`${what}: graded ${a}, the real figure is ${Number(b).toFixed(4)}`); };
+  const same = (a, b, what) => { if (String(a) !== String(b)) fail(`${what}: graded ${a}, the real answer is ${b}`); };
+  const holds = (cond, what) => { if (!cond) fail(what); };
+  const start = (q, i) => TABLE.createTable(q.STAGES[i].table, q.STAGES[i].title);
+  const done = (q, i) => TABLE.runScript(start(q, i), q.SOLUTIONS[i], { strict: true });
+  const num = label => Number(String(label).replace('−', '-').replace('+', '').replace(/ kJ.*$/, ''));
+  const picked = (t, id = 'answer') => num(t.fixtures[id].props.options[Math.round(t.fixtures[id].dials.value.value) - 1]);
+  const tray = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
+  const marker = (t, id) => HK.markerRead(t, id);
+
+  /* ---- the tables themselves ---- */
+  near(TD.SPECIFIC_HEAT_WATER, 4.184, 1e-9, 'thermodata: the specific heat of water');
+  near(TD.equilibriumTemp(100, 0.449, 80, 100, 0.449, 20), 50, 1e-9, 'thermodata: equal blocks meet halfway');
+  near(TD.bondEnthalpySum([{ bond: 'C-H', count: 4 }, { bond: 'O=O', count: 2 }], [{ bond: 'C=O', count: 2 }, { bond: 'O-H', count: 4 }]).net, -802, 1e-9, 'thermodata: the methane ledger');
+  near(TD.gibbsFreeEnergy(-100, -200, 300), -40, 1e-9, 'thermodata: ΔG at 300 K');
+  near(TD.crossingTemperature(6.01, 22.0), 273.2, 0.2, 'thermodata: ice melts at 273 K');
+  for (const [k, v] of Object.entries(TD.FORMATION_TABLE)) holds(v.dGf - (v.dHf - 298.15 * 0 / 1000) <= 1e6 && Number.isFinite(v.S0), `thermodata: ${k} has no entropy`);
+
+  if (e1) {
+    const q = 'unit05/q1-flow';
+    near(HK.blockRead(done(e1, 0), 'a').T, marker(done(e1, 0), 'tfinal'), 0.5, `${q} stage 1 (where the blocks finish)`);
+    {
+      const t = done(e1, 1);
+      const a = HK.blockRead(t, 'a'); const b = HK.blockRead(t, 'b');
+      holds(a.T < a.T0 && b.T > b.T0, `${q} stage 2: the hot block does not fall and the cold one rise when they join`);
+      same(HK.dialAt(t, 'arrow', 'value'), a.T0 > b.T0 ? 1 : 2, `${q} stage 2 (the way energy crosses)`);
+    }
+    {
+      const t = TABLE.runScript(start(e1, 3), [{ place: { piece: 'warmer', to: 'slot:cup.mouth' } }]);
+      holds(HK.cupRead(t, 'cup').dT > 0.5, `${q} stage 4: the hand warmer does not warm the bath`);
+      const u = TABLE.runScript(start(e1, 3), [{ place: { piece: 'cold', to: 'slot:cup.mouth' } }]);
+      holds(HK.cupRead(u, 'cup').dT < -0.5, `${q} stage 4: the cold pack does not cool the bath`);
+    }
+    {
+      const t = TABLE.runScript(start(e1, 4), [{ place: { piece: 'sampleA', to: 'slot:cup.mouth' } }]);
+      holds(HK.cupRead(t, 'cup').dT < -0.5 && t.pieces.sampleA.props.dH > 0, `${q} stage 5: Sample A does not cool the bath while it takes energy in`);
+    }
+    {
+      const t = done(e1, 5);
+      holds(HK.shelvesRead(t, 'chart').dH > 0 && start(e1, 5).pieces.sampleA.props.dH > 0, `${q} stage 6: the chart built is not the one the sample's ΔH draws`);
+    }
+    {
+      const t = done(e1, 6);
+      holds(HK.blockRead(t, 'cold').T >= 35, `${q} stage 7: joining the cold block to the bath does not warm it`);
+      const u = TABLE.runScript(start(e1, 6), [{ place: { piece: 'cold', to: 'piece:spark' } }]);
+      holds(HK.blockRead(u, 'cold').T < 21, `${q} stage 7: the spark warms the cold block (it should barely move it)`);
+    }
+    {
+      const t = start(e1, 7);
+      for (const [id, tr] of Object.entries({ burn: 'exo', melt: 'endo', condense: 'exo', nh4no3: 'endo' })) same(t.pieces[id].props.dH < 0 ? 'exo' : 'endo', tr, `${q} stage 8 (${id})`);
+    }
+  }
+
+  if (e2) {
+    const q = 'unit05/q2-calorimetry';
+    {
+      const t = done(e2, 0);
+      near(HK.cupRead(t, 'cupB').dT, HK.cupRead(t, 'cupA').dT, 0.05, `${q} stage 1 (equal rises)`);
+      near(HK.cupRead(t, 'cupB').joules / HK.cupRead(t, 'cupA').joules, 2, 1e-9, `${q} stage 1: twice the water does not take twice the heat`);
+    }
+    {
+      const t = done(e2, 1);
+      near(HK.cupRead(t, 'iron').dT, HK.cupRead(t, 'water').dT, 0.1, `${q} stage 2 (equal rises)`);
+      holds(HK.cupRead(t, 'iron').joules < HK.cupRead(t, 'water').joules / 5, `${q} stage 2: the iron does not need far less heat than the water`);
+    }
+    near(marker(done(e2, 2), 'joules'), TD.heatTransfer(100, TD.SPECIFIC_HEAT_WATER, HK.cupRead(start(e2, 2), 'cup').dT), 25, `${q} stage 3 (joules for the rise printed)`);
+    {
+      const t = TABLE.runScript(start(e2, 3), [{ place: { piece: 'metal', to: 'slot:cup.mouth' } }]);
+      const r = HK.cupRead(t, 'cup'); const b = t.pieces.metal.props;
+      near(Number(TD.blockSpecificHeat(b.m, b.T, r.mWater, r.T0, r.Tf).toFixed(2)), marker(done(e2, 3), 'c'), 0.021, `${q} stage 4 (the specific heat of Metal M)`);
+    }
+    {
+      const t = TABLE.runScript(start(e2, 4), [{ place: { piece: 'metal', to: 'slot:cup.mouth' } }]);
+      const r = HK.cupRead(t, 'cup'); const b = t.pieces.metal.props;
+      const c = TD.blockSpecificHeat(b.m, b.T, r.mWater, r.T0, r.Tf);
+      const list = { al: 0.90, fe: 0.45, cu: 0.39, ag: 0.24 };
+      same(Object.keys(list).sort((x, y) => Math.abs(list[x] - c) - Math.abs(list[y] - c))[0], tray(done(e2, 4), 'cu') === 'answer' ? 'cu' : '', `${q} stage 5 (the metal the measured c names)`);
+    }
+    near(marker(done(e2, 5), 'joules'), HK.cupRead(TABLE.runScript(start(e2, 5), [{ place: { piece: 'rxn', to: 'slot:cup.mouth' } }]), 'cup').q, 25, `${q} stage 6 (the heat the bath caught)`);
+    {
+      const t = TABLE.runScript(start(e2, 6), [{ place: { piece: 'rxn', to: 'slot:cup.mouth' } }]);
+      near(marker(done(e2, 6), 'perMole'), HK.cupRead(t, 'cup').q / 1000 / t.pieces.rxn.props.moles, 1, `${q} stage 7 (kJ per mole)`);
+    }
+    {
+      const on = TABLE.runScript(start(e2, 7), [{ place: { piece: 'rxn', to: 'slot:cup.mouth' } }]);
+      const off = TABLE.apply(on, { setDial: { fixture: 'cup', dial: 'lid', value: 2 } });
+      holds(HK.cupRead(off, 'cup').q < HK.cupRead(on, 'cup').q, `${q} stage 8: the open cup does not lose heat`);
+    }
+  }
+
+  if (e3) {
+    const q = 'unit05/q3-enthalpy';
+    {
+      const t = TABLE.runScript(start(e3, 0), [{ place: { piece: 'mg', to: 'slot:cup.mouth' } }]);
+      near(marker(done(e3, 0), 'dH'), -HK.cupRead(t, 'cup').q / 1000 / 0.05, 1, `${q} stage 1 (ΔH from the bath's gain)`);
+    }
+    {
+      const lo = TABLE.runScript(start(e3, 1), [{ place: { piece: 'mg', to: 'slot:cup.mouth' } }]);
+      const hi = TABLE.apply(lo, { setDial: { fixture: 'cup', dial: 'moles', value: 2 } });
+      near(HK.cupRead(hi, 'cup').q / HK.cupRead(lo, 'cup').q, 2, 1e-9, `${q} stage 2: twice the moles is not twice the heat`);
+      near(HK.cupRead(hi, 'cup').q / HK.cupRead(hi, 'cup').moles, HK.cupRead(lo, 'cup').q / HK.cupRead(lo, 'cup').moles, 1e-6, `${q} stage 2: the heat per mole moves`);
+    }
+    {
+      const t = TABLE.apply(start(e3, 2), { setDial: { fixture: 'chart', dial: 'dir', value: 2 } });
+      holds(HK.shelvesRead(t, 'chart').dH > 0, `${q} stage 3: splitting water does not climb`);
+      same(done(e3, 2).pieces.plus.zone, 'slot:answer', `${q} stage 3 (+285.8 in the slot)`);
+    }
+    near(TD.FUELS.methane.dHc * -(8.02 / 16.04), 445, 0.5, `${q} stage 4 (the heat of 8.02 g)`);
+    holds(done(e3, 4).fixtures.chart.dials.after && HK.shelvesRead(done(e3, 4), 'chart').dH > 0, `${q} stage 5`);
+    near(TD.FORMATION_TABLE['H2O(l)'].dHf - TD.FORMATION_TABLE['H2O(g)'].dHf, -44, 0.1, `${q} stage 6 (the step between steam and liquid)`);
+    near(222.5 / 890 * 16, marker(done(e3, 6), 'grams'), 0.15, `${q} stage 7 (grams for 222.5 kJ)`);
+    {
+      const per = id => Math.abs(TD.FUELS[id].dHc) / TD.FUELS[id].molarMass;
+      const want = ['methanol', 'methane', 'hydrogen'].sort((a, b) => per(a) - per(b));
+      same(done(e3, 7).zones.rail.order.join(), want.join(), `${q} stage 8 (heat per gram, lowest to highest)`);
+    }
+  }
+
+  if (e4) {
+    const q = 'unit05/q4-bonds';
+    near(marker(done(e4, 0), 'cost'), TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 1 (the cost of H–H)`);
+    {
+      const t = done(e4, 1);
+      near(HK.wellRead(t, 'crank').released, TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 2 (what falling back gives out)`);
+    }
+    near(HK.ledgerRead(done(e4, 2), 'ledger').net, e4.CH4_SUMS.net, 1e-9, `${q} stage 3 (the sorted ledger's net)`);
+    {
+      const t = start(e4, 3);
+      near(HK.ledgerRead(t, 'ledger').net, -802, 1e-9, `${q} stage 4 (the ledger as laid)`);
+      near(Number(t.pieces.minus.props.value), -802, 1e-9, `${q} stage 4 (the card in the slot)`);
+    }
+    holds(Math.abs(HK.ledgerRead(start(e4, 4), 'ledger').net - -890) > 50, `${q} stage 5: the estimate and the measured value do not differ`);
+    holds(HK.ledgerRead(start(e4, 5), 'ledger').formed > HK.ledgerRead(start(e4, 5), 'ledger').broken, `${q} stage 6: the new bonds do not pay back more than the old cost`);
+    {
+      const t = done(e4, 6);
+      holds(t.zones.rail.order.join() === 'single,double', `${q} stage 7 (the rail)`);
+      holds(HK.wellRead(t, 'double').D > HK.wellRead(t, 'single').D, `${q} stage 7: the double bond is not deeper than the single`);
+    }
+    {
+      const t = done(e4, 7);
+      near(HK.ledgerRead(t, 'ledger').net, e4.NO_SUMS.net, 1e-9, `${q} stage 8 (the climbing ledger)`);
+      holds(HK.ledgerRead(t, 'ledger').net > 0, `${q} stage 8: the reaction does not climb`);
+    }
+  }
+
+  if (e5) {
+    const q = 'unit05/q5-hess';
+    const answerDH = [-393.5, -110.5, 66.4, -74.8];
+    for (let i = 0; i < 4; i++) {
+      const t = done(e5, i);
+      const r = HK.stackRead(t, 'wanted');
+      holds(r.matches, `${q} stage ${i + 1}: the solution's stack does not add up to the reaction wanted`);
+      near(r.dH, answerDH[i], 0.05, `${q} stage ${i + 1} (the stack's ΔH)`);
+      near(picked(t), answerDH[i], 0.05, `${q} stage ${i + 1} (the number set)`);
+    }
+    {
+      const t = done(e5, 5);
+      const r = HK.stackRead(t, 'wanted');
+      holds(r.matches, `${q} stage 6: the solution's stack does not add up to the reaction wanted`);
+      near(r.dH, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'dHf'), 0.05, `${q} stage 6 (products less reactants)`);
+      near(picked(t), r.dH, 0.05, `${q} stage 6 (the number set)`);
+    }
+    {
+      const t = done(e5, 6);
+      const A = HK.stackRead(t, 'routeA'); const B = HK.stackRead(t, 'routeB');
+      holds(A.matches && B.matches, `${q} stage 7: a route does not add up to the reaction wanted`);
+      near(A.dH, B.dH, 1e-9, `${q} stage 7: the two routes do not share a ΔH`);
+    }
+    near(picked(done(e5, 7)), TD.FORMATION_TABLE['CO(g)'].dHf, 0.05, `${q} stage 8 (the formation value of CO)`);
+  }
+
+  if (e6) {
+    const q = 'unit05/q6-entropy';
+    near(marker(done(e6, 0), 'ways'), HK.waysOf(8, 2), 1e-9, `${q} stage 1 (arrangements of two in eight)`);
+    same(HK.waysOf(4, 2), 6, `${q} stage 1 (the shut gate)`);
+    {
+      // After many shakes the particles are spread over both halves far more often than crowded into one.
+      const t = TABLE.runScript(start(e6, 1), Array.from({ length: 60 }, () => ({ run: 'chamber' })));
+      const counts = [0, 0, 0, 0, 0];
+      for (const s of HK.shakesOf(t, 'chamber')) counts[s.filter(c => c <= 4).length]++;
+      holds(counts[2] > counts[4] * 2 && counts[2] > counts[0] * 2, `${q} stage 2: the shakes do not favour the spread-out arrangements (${counts.join(' ')})`);
+    }
+    same(done(e6, 2).zones.rail.order.join(), 'ice,water,steam', `${q} stage 3`);
+    {
+      const gas = eq => (eq.match(/\(g\)/g) || []).length;
+      holds(gas('CaO(s) + CO₂(g)') > gas('CaCO₃(s)') && gas('2 NH₃(g)') < gas('N₂(g) + 3 H₂(g)'), `${q} stage 4: the gas count does not decide the signs`);
+    }
+    {
+      const t = TABLE.runScript(start(e6, 5), [{ setDial: { fixture: 'sample', dial: 'temp', value: 3 } }, { run: 'sample' }]);
+      holds(HK.warmRead(t, 'sample').dS > 0, `${q} stage 6: warming does not raise the entropy`);
+    }
+    near(HK.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0'), picked(done(e6, 6)), 0.05, `${q} stage 7 (ΔS° of the lime)`);
+  }
+
+  if (e7) {
+    const q = 'unit05/q7-gibbs';
+    near(marker(done(e7, 1), 'dG'), TD.gibbsFreeEnergy(-100, -200, 300), 1e-9, `${q} stage 2 (ΔG at 300 K)`);
+    {
+      const t = start(e7, 2);
+      for (const [id, want] of Object.entries({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })) {
+        const { dH, dS } = t.pieces[id].props;
+        const lo = TD.gibbsFreeEnergy(dH, dS, 100) < 0; const hi = TD.gibbsFreeEnergy(dH, dS, 600) < 0;
+        same(lo && hi ? 'always' : !lo && !hi ? 'never' : hi ? 'high' : 'low', want, `${q} stage 3 (${id})`);
+      }
+    }
+    near(TD.crossingTemperature(6.01, 22.0), marker(done(e7, 3), 'T'), 2, `${q} stage 4 (the melting point)`);
+    near(picked(done(e7, 4)), TD.standardReactionChange([{ id: 'CO2(g)' }], [{ id: 'CO(g)' }], 'dGf'), 0.05, `${q} stage 5 (ΔG from formation values)`);
+    {
+      const t = start(e7, 5);
+      holds(HK.plotRead(t, 'plot').dG < 0, `${q} stage 6: the diamond's ΔG is not negative at 298 K`);
+    }
+    {
+      const t = done(e7, 6);
+      const r = HK.stackRead(t, 'wanted');
+      holds(r.matches, `${q} stage 7: the solution's stack does not add up to the smelting reaction`);
+      near(r.dH, 742.2 - 771.6, 0.05, `${q} stage 7 (the coupled ΔG)`);
+      near(picked(t), r.dH, 0.05, `${q} stage 7 (the number set)`);
+    }
+    {
+      const t = done(e7, 7);
+      holds(HK.plotRead(t, 'plot').dG < 0, `${q} stage 8: the graded setting is not below zero`);
+      const p = t.fixtures.plot.props;
+      holds(p.Ts.filter(T => TD.gibbsFreeEnergy(p.dH, p.dS, T) < 0).length === 1, `${q} stage 8: more than one setting is below zero`);
+    }
+  }
+
+  if (eb) {
+    const q = 'unit05/boss-crucible';
+    near(marker(done(eb, 0), 'kj'), TD.heatTransfer(500, TD.SPECIFIC_HEAT_WATER, 20) / 1000, 1.1, `${q} phase 1 (the jacket)`);
+    near(HK.cupRead(start(eb, 0), 'jacket').dT, 20, 0.01, `${q} phase 1: the jacket does not rise 20 degrees`);
+    near(HK.ledgerRead(done(eb, 1), 'ledger').net, -93, 1e-9, `${q} phase 2 (ammonia's ledger)`);
+    near(picked(done(eb, 1)), -93, 1e-9, `${q} phase 2 (the estimate set)`);
+    {
+      const t = done(eb, 2);
+      holds(HK.stackRead(t, 'wanted').matches, `${q} phase 3: the stack does not add up to the splitting`);
+      near(HK.stackRead(t, 'wanted').dH, 824.2, 0.05, `${q} phase 3 (the slag)`);
+      near(picked(t), 824.2, 0.05, `${q} phase 3 (the number set)`);
+    }
+    near(picked(done(eb, 3)), 2 * TD.FORMATION_TABLE['H2(g)'].S0 + TD.FORMATION_TABLE['O2(g)'].S0 - 2 * TD.FORMATION_TABLE['H2O(g)'].S0, 0.05, `${q} phase 4 (ΔS° of splitting steam)`);
+    near(marker(done(eb, 4), 'T'), TD.crossingTemperature(176, 160), 1e-9, `${q} phase 5 (the seal)`);
+    for (let i = 0; i < 5; i++) same((eb.STAGES[i].foes || []).length, 1, `${q} phase ${i + 1} (its foes)`);
+  }
+
+  if (failures === before) ok('Ember Reach: every graded temperature, heat, bond sum, stack, entropy and free energy agrees with the real tables, and every claim a stage teaches is true of its table');
 }
 
 /* ------------------------------------------------------------------

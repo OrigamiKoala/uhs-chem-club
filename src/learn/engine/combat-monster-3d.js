@@ -7,6 +7,7 @@
  */
 
 import * as THREE from 'three';
+import { buildBossRig, BOSS_SPECIES } from './boss-models.js';
 
 const AMBER = 0xe59b24;
 const PHOSPHOR = 0x6f8f3f;
@@ -32,13 +33,7 @@ export class CombatMonster3D {
     this.species = species || 'salt husk';
     this.foe = foe || { id: 'foe' };
     this.opts = opts;
-    this.isBoss = Boolean(
-      this.species === 'the hopper' ||
-      this.species === 'the lantern-eater' ||
-      this.species === 'the compressor' ||
-      this.species === 'the crucible' ||
-      this.species === 'basalt warden' && foe.id?.includes('warden')
-    );
+    this.isBoss = BOSS_SPECIES.includes(this.species);
 
     this.group = new THREE.Group();
     this.group.name = `monster:${this.foe.id}`;
@@ -61,12 +56,16 @@ export class CombatMonster3D {
     this.seed = 1.7;
     this.lights = [];
     this.heightOffset = 0;
-    this.onEvent = null;     // the arena listens: 'landed', 'strike', 'slam', 'roar', 'shattered'
+    this.onEvent = null;     // the arena listens: 'landed', 'strike', 'slam', 'roar', 'shattered', 'plate'
+    this.rig = null;         // a boss's articulated body (`boss-models.js`)
+    this.muzzle = null;      // where a bolt leaves from, when the body has a maw, a spout or a fist
+    this.armourPlates = [];  // plates that are struck off as it is hurt
+    this.flying = [];        // plates in the air
 
     // Base position in front of player
-    this.baseX = opts.x || 0;
-    this.baseY = opts.y || 1.15;
-    this.baseZ = opts.z || -2.2;
+    this.baseX = opts.x ?? 0;
+    this.baseY = opts.y ?? 1.15;
+    this.baseZ = opts.z ?? -2.2;
     this.scale = opts.scale || (this.isBoss ? 1.45 : 1.1);
 
     this.group.position.set(this.baseX, this.baseY, this.baseZ);
@@ -99,34 +98,82 @@ export class CombatMonster3D {
     this.group.add(this.hitBox);
   }
 
+  /**
+   * Mark a mesh as armour: it is struck off the body once the wound level reaches `at` (0..1), and falls. A fight resumed
+   * mid-way (`setDamage(level, true)`) finds the plates already gone.
+   */
+  armour(mesh, at) {
+    this.armourPlates.push({ mesh, at, off: false });
+    return mesh;
+  }
+
+  popPlate(p, quiet = false) {
+    if (p.off) return;
+    p.off = true;
+    const scene = this.group.parent;
+    if (quiet || !scene || !p.mesh.parent) { p.mesh.visible = false; return; }
+    this.group.updateMatrixWorld(true);
+    scene.attach(p.mesh);
+    const at = p.mesh.getWorldPosition(new THREE.Vector3());
+    const out = at.clone().sub(this.getCenterWorld(new THREE.Vector3()));
+    out.y = Math.max(out.y, 0.4);
+    out.normalize();
+    const sp = 3 + Math.random() * 3;
+    this.flying.push({
+      mesh: p.mesh,
+      vel: out.multiplyScalar(sp).add(new THREE.Vector3((Math.random() - 0.5) * 2, 2.5 + Math.random() * 2, (Math.random() - 0.5) * 2)),
+      spin: new THREE.Vector3((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 9, (Math.random() - 0.5) * 9),
+      scale0: p.mesh.scale.clone(), life: 0, bounces: 0
+    });
+    this.onEvent?.('plate', at);
+  }
+
+  stepFlying(dt) {
+    for (let i = this.flying.length - 1; i >= 0; i--) {
+      const f = this.flying[i];
+      const m = f.mesh;
+      f.life += dt;
+      f.vel.y -= 15 * dt;
+      m.position.addScaledVector(f.vel, dt);
+      m.rotation.x += f.spin.x * dt;
+      m.rotation.y += f.spin.y * dt;
+      m.rotation.z += f.spin.z * dt;
+      const floor = this.groundAt(m.position.x, m.position.z) + 0.2;
+      if (m.position.y < floor) {
+        m.position.y = floor;
+        if (f.vel.y < 0 && f.bounces < 2) {
+          f.vel.y *= -0.35;
+          f.vel.x *= 0.6; f.vel.z *= 0.6;
+          f.spin.multiplyScalar(0.5);
+          f.bounces++;
+        } else { f.vel.set(0, 0, 0); f.spin.set(0, 0, 0); }
+      }
+      if (f.life > 1.6) {
+        const k = 1 - (f.life - 1.6) / 0.7;
+        if (k <= 0) { m.parent?.remove(m); m.visible = false; this.flying.splice(i, 1); continue; }
+        m.scale.copy(f.scale0).multiplyScalar(k);
+      }
+    }
+  }
+
   buildMesh() {
+    // The six bosses are articulated bodies of their own (`boss-models.js`).
+    if (BOSS_SPECIES.includes(this.species)) {
+      this.rig = buildBossRig(this.species, this);
+      if (this.rig) return;
+    }
     switch (this.species) {
       case 'salt husk':
         this.buildSaltHusk();
         break;
-      case 'the hopper':
-        this.buildTheHopper();
-        break;
       case 'lamp moth':
         this.buildLampMoth();
-        break;
-      case 'the lantern-eater':
-        this.buildTheLanternEater();
-        break;
-      case 'basalt warden':
-        this.buildBasaltWarden();
         break;
       case 'slag crawler':
         this.buildSlagCrawler();
         break;
       case 'gas bladder':
         this.buildGasBladder();
-        break;
-      case 'the compressor':
-        this.buildTheCompressor();
-        break;
-      case 'the crucible':
-        this.buildTheCrucible();
         break;
       case 'recipe golem':
         this.buildRecipeGolem();
@@ -250,118 +297,6 @@ export class CombatMonster3D {
   }
 
   /* -------------------------------------------------------------
-     2. THE HOPPER — Massive Armored Mantis-Stalker Boss
-     ------------------------------------------------------------- */
-  buildTheHopper() {
-    const chitinMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0x48423b,
-      roughness: 0.35,
-      metalness: 0.65,
-      flatShading: true
-    }));
-    const bladeMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0xc8c3b7,
-      roughness: 0.18,
-      metalness: 0.85
-    }));
-    const eyeMat = this.mat(new THREE.MeshBasicMaterial({ color: AMBER }));
-
-    const body = new THREE.Group();
-    body.position.y = 0.85;
-    this.group.add(body);
-    this.animatedParts.push({ obj: body, type: 'breathe', amp: 0.06, speed: 3.2 });
-
-    // Segmented Thorax
-    const thorax = new THREE.Mesh(
-      this.own(new THREE.ConeGeometry(0.48, 1.1, 7)),
-      chitinMat
-    );
-    thorax.rotation.x = 0.35;
-    body.add(thorax);
-
-    // Abdomen extending backwards
-    const abdomen = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.25, 0.45, 1.2, 6)),
-      chitinMat
-    );
-    abdomen.position.set(0, -0.2, -0.55);
-    abdomen.rotation.x = -0.65;
-    body.add(abdomen);
-
-    // Angular Head
-    const head = new THREE.Group();
-    head.position.set(0, 0.72, 0.32);
-    body.add(head);
-
-    const skull = new THREE.Mesh(
-      this.own(new THREE.ConeGeometry(0.32, 0.6, 5)),
-      chitinMat
-    );
-    skull.rotation.x = -0.7;
-    head.add(skull);
-
-    // Dual Glowing Compound Eyes
-    for (const side of [-1, 1]) {
-      const eye = new THREE.Mesh(
-        this.own(new THREE.SphereGeometry(0.1, 8, 8)),
-        eyeMat
-      );
-      eye.position.set(side * 0.22, 0.12, 0.22);
-      head.add(eye);
-    }
-
-    // Antennae
-    for (const side of [-1, 1]) {
-      const ant = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.015, 0.005, 0.8, 4)),
-        bladeMat
-      );
-      ant.position.set(side * 0.18, 0.45, 0.25);
-      ant.rotation.set(0.35, 0, side * 0.45);
-      head.add(ant);
-    }
-
-    // Menacing Folded Scythe Blades
-    this.scythes = [];
-    for (const side of [-1, 1]) {
-      const armRoot = new THREE.Group();
-      armRoot.position.set(side * 0.45, 0.45, 0.25);
-      body.add(armRoot);
-
-      const upperArm = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.12, 0.65, 0.15)),
-        chitinMat
-      );
-      upperArm.position.set(0, 0.3, 0);
-      upperArm.rotation.set(0.5, 0, -side * 0.4);
-      armRoot.add(upperArm);
-
-      // Curved Scythe Blade
-      const blade = new THREE.Mesh(
-        this.own(new THREE.ConeGeometry(0.14, 1.35, 4)),
-        bladeMat
-      );
-      blade.position.set(side * 0.22, -0.25, 0.4);
-      blade.rotation.set(-1.1, 0, side * 0.25);
-      armRoot.add(blade);
-      this.scythes.push(armRoot);
-
-      this.animatedParts.push({ obj: armRoot, type: 'scytheTwitch', side, speed: 2.8 });
-    }
-
-    // Heavy Raptorial Legs
-    for (const side of [-1, 1]) {
-      const leg = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.1, 0.16, 1.4, 5)),
-        chitinMat
-      );
-      leg.position.set(side * 0.65, 0.25, -0.4);
-      leg.rotation.set(-0.45, 0, side * 0.35);
-      this.group.add(leg);
-    }
-  }
-
-  /* -------------------------------------------------------------
      3. LAMP MOTH — Radiant Biomechanical Phosphor Moth
      ------------------------------------------------------------- */
   buildLampMoth() {
@@ -456,187 +391,6 @@ export class CombatMonster3D {
       hind.add(hindMesh);
 
       this.wings.push({ fore, hind, side });
-    }
-  }
-
-  /* -------------------------------------------------------------
-     4. THE LANTERN-EATER — Colossal Shadow Void Leviathan Boss
-     ------------------------------------------------------------- */
-  buildTheLanternEater() {
-    const shadowMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0x16151a,
-      roughness: 0.7,
-      metalness: 0.3,
-      flatShading: true
-    }));
-    const cyanMat = this.mat(new THREE.MeshBasicMaterial({ color: CYAN }));
-    const abyssMat = this.mat(new THREE.MeshBasicMaterial({ color: 0x07060a }));
-
-    const body = new THREE.Group();
-    body.position.y = 1.35;
-    this.group.add(body);
-    this.animatedParts.push({ obj: body, type: 'hover', amp: 0.08, speed: 1.8 });
-
-    // Skeletal Ribcage
-    const chest = new THREE.Mesh(
-      this.own(new THREE.DodecahedronGeometry(0.7, 1)),
-      shadowMat
-    );
-    chest.scale.set(1.2, 1.4, 0.85);
-    body.add(chest);
-
-    // Abyss Siphon Vortex (swirling black maw)
-    const vortex = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.35, 0.08, 8, 24)),
-      cyanMat
-    );
-    vortex.position.set(0, 0.15, 0.4);
-    body.add(vortex);
-    this.animatedParts.push({ obj: vortex, type: 'spinZ', speed: 3.5 });
-
-    const voidCore = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(0.28, 12, 12)),
-      abyssMat
-    );
-    voidCore.position.set(0, 0.15, 0.35);
-    body.add(voidCore);
-
-    // Horned Skull
-    const skull = new THREE.Group();
-    skull.position.set(0, 0.95, 0.3);
-    body.add(skull);
-
-    const headMesh = new THREE.Mesh(
-      this.own(new THREE.ConeGeometry(0.35, 0.75, 4)),
-      shadowMat
-    );
-    headMesh.rotation.x = -0.55;
-    skull.add(headMesh);
-
-    // 4 Cyan Slit Eyes
-    for (const [x, y] of [[-0.15, 0.1], [0.15, 0.1], [-0.08, 0.22], [0.08, 0.22]]) {
-      const eye = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.06, 0.02, 0.04)),
-        cyanMat
-      );
-      eye.position.set(x, y, 0.22);
-      skull.add(eye);
-    }
-
-    // Horns
-    for (const side of [-1, 1]) {
-      const horn = new THREE.Mesh(
-        this.own(new THREE.ConeGeometry(0.09, 0.85, 4)),
-        shadowMat
-      );
-      horn.position.set(side * 0.28, 0.5, -0.1);
-      horn.rotation.set(-0.3, 0, side * 0.55);
-      skull.add(horn);
-    }
-
-    // Sweeping Void Wings (large span)
-    this.wings = [];
-    for (const side of [-1, 1]) {
-      const wingArm = new THREE.Group();
-      wingArm.position.set(side * 0.5, 0.4, 0);
-      body.add(wingArm);
-
-      const wingMesh = new THREE.Mesh(
-        this.own(new THREE.PlaneGeometry(1.6, 1.1, 4, 3)),
-        shadowMat
-      );
-      wingMesh.position.set(side * 0.95, 0.2, 0);
-      wingMesh.rotation.set(0.1, side * 0.2, side * 0.15);
-      wingArm.add(wingMesh);
-
-      this.wings.push({ fore: wingArm, side, amp: 0.35 });
-    }
-  }
-
-  /* -------------------------------------------------------------
-     5. BASALT WARDEN — Volcanic Basalt Titan with Magma Fissures
-     ------------------------------------------------------------- */
-  buildBasaltWarden() {
-    const basaltMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0x242224,
-      roughness: 0.85,
-      metalness: 0.2,
-      flatShading: true
-    }));
-    const magmaMat = this.mat(new THREE.MeshBasicMaterial({ color: MAGMA }));
-
-    const body = new THREE.Group();
-    body.position.y = 1.0;
-    this.group.add(body);
-    this.animatedParts.push({ obj: body, type: 'breathe', amp: 0.04, speed: 1.6 });
-
-    // Hexagonal Columns Torso
-    const torso = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.65, 0.55, 1.15, 6)),
-      basaltMat
-    );
-    body.add(torso);
-
-    // Glowing Magma Fissure Lines
-    const magmaRing = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.58, 0.04, 6, 12)),
-      magmaMat
-    );
-    magmaRing.rotation.x = Math.PI / 2;
-    torso.add(magmaRing);
-
-    const light = this.own(new THREE.PointLight(MAGMA, 1.6, 3.2));
-    light.position.set(0, 0.1, 0.4);
-    torso.add(light);
-    this.coreLight = light;
-
-    // Helm Head
-    const head = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.42, 0.48, 0.42)),
-      basaltMat
-    );
-    head.position.set(0, 0.85, 0.05);
-    body.add(head);
-
-    // Magma Visor
-    const visor = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.32, 0.06, 0.08)),
-      magmaMat
-    );
-    visor.position.set(0, 0.85, 0.25);
-    body.add(visor);
-
-    // Heavy Stone Arms & Fists
-    for (const side of [-1, 1]) {
-      const arm = new THREE.Group();
-      arm.position.set(side * 0.85, 0.55, 0);
-      body.add(arm);
-
-      const upper = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.22, 0.25, 0.7, 6)),
-        basaltMat
-      );
-      upper.position.y = -0.3;
-      arm.add(upper);
-
-      const fist = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.42, 0.42, 0.45)),
-        basaltMat
-      );
-      fist.position.set(side * 0.05, -0.85, 0.2);
-      arm.add(fist);
-
-      this.animatedParts.push({ obj: arm, type: 'sway', side, speed: 1.6, amp: 0.1 });
-    }
-
-    // Heavy Pillar Legs
-    for (const side of [-1, 1]) {
-      const leg = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.28, 0.35, 0.9, 6)),
-        basaltMat
-      );
-      leg.position.set(side * 0.4, -0.55, 0);
-      body.add(leg);
     }
   }
 
@@ -766,147 +520,6 @@ export class CombatMonster3D {
       tentacle.rotation.set(0.15 * Math.sin(angle), 0, 0.15 * Math.cos(angle));
       body.add(tentacle);
       this.animatedParts.push({ obj: tentacle, type: 'swayWave', index: i, speed: 2.0 });
-    }
-  }
-
-  /* -------------------------------------------------------------
-     8. THE COMPRESSOR — Industrial Pneumatic Juggernaut Boss
-     ------------------------------------------------------------- */
-  buildTheCompressor() {
-    const boilerMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0x3e3a36,
-      roughness: 0.65,
-      metalness: 0.65,
-      flatShading: true
-    }));
-    const brassMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0xb89542,
-      roughness: 0.35,
-      metalness: 0.8
-    }));
-    const fireMat = this.mat(new THREE.MeshBasicMaterial({ color: AMBER }));
-
-    const body = new THREE.Group();
-    body.position.y = 1.05;
-    this.group.add(body);
-    this.animatedParts.push({ obj: body, type: 'breathe', amp: 0.04, speed: 2.2 });
-
-    // Main Boiler Chassis
-    const boiler = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.65, 0.65, 1.35, 12)),
-      boilerMat
-    );
-    boiler.rotation.x = Math.PI / 2;
-    body.add(boiler);
-
-    // Furnace Hatch with glowing fire
-    const hatch = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.45, 0.45, 0.12)),
-      fireMat
-    );
-    hatch.position.set(0, 0, 0.72);
-    body.add(hatch);
-
-    // Twin Exhaust Smokestacks
-    for (const side of [-1, 1]) {
-      const stack = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.12, 0.15, 0.95, 8)),
-        boilerMat
-      );
-      stack.position.set(side * 0.45, 0.9, -0.2);
-      body.add(stack);
-    }
-
-    // Spinning Brass Flywheel
-    const flywheel = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.45, 0.06, 8, 20)),
-      brassMat
-    );
-    flywheel.position.set(0.75, 0.2, 0);
-    flywheel.rotation.y = Math.PI / 2;
-    body.add(flywheel);
-    this.animatedParts.push({ obj: flywheel, type: 'spinZ', speed: 6.0 });
-
-    // Dual Crushing Hydraulic Rams
-    this.rams = [];
-    for (const side of [-1, 1]) {
-      const ram = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.35, 0.55, 0.65)),
-        brassMat
-      );
-      ram.position.set(side * 0.95, 0.1, 0.4);
-      body.add(ram);
-      this.rams.push({ mesh: ram, side });
-    }
-  }
-
-  /* -------------------------------------------------------------
-     8b. THE CRUCIBLE — Geothermal Smelting Vessel Boss
-     ------------------------------------------------------------- */
-  buildTheCrucible() {
-    const shellMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0x35312e,
-      roughness: 0.72,
-      metalness: 0.58,
-      flatShading: true
-    }));
-    const brassMat = this.mat(new THREE.MeshStandardMaterial({
-      color: 0xb88a3d,
-      roughness: 0.35,
-      metalness: 0.85
-    }));
-    const magmaMat = this.mat(new THREE.MeshBasicMaterial({ color: MAGMA }));
-
-    const body = new THREE.Group();
-    body.position.y = 1.05;
-    this.group.add(body);
-    this.animatedParts.push({ obj: body, type: 'breathe', amp: 0.04, speed: 2.0 });
-
-    const pot = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.78, 0.54, 1.35, 10)),
-      shellMat
-    );
-    body.add(pot);
-
-    const hoop = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.74, 0.06, 8, 18)),
-      brassMat
-    );
-    hoop.rotation.x = Math.PI / 2;
-    hoop.position.y = 0.25;
-    body.add(hoop);
-
-    const core = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.48, 0.38, 0.12)),
-      magmaMat
-    );
-    core.position.set(0, 0.05, 0.66);
-    body.add(core);
-
-    const light = this.own(new THREE.PointLight(MAGMA, 1.8, 3.6));
-    light.position.set(0, 0.15, 0.85);
-    body.add(light);
-    this.coreLight = light;
-
-    for (const side of [-1, 1]) {
-      const trunnion = new THREE.Group();
-      trunnion.position.set(side * 0.9, 0.25, 0);
-      body.add(trunnion);
-
-      const arm = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.18, 0.22, 0.85, 8)),
-        brassMat
-      );
-      arm.position.y = -0.35;
-      trunnion.add(arm);
-
-      const clamp = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.38, 0.45, 0.55)),
-        shellMat
-      );
-      clamp.position.set(side * 0.05, -0.75, 0.25);
-      trunnion.add(clamp);
-      this.animatedParts.push({ obj: trunnion, type: 'sway', side, speed: 1.8, amp: 0.09 });
     }
   }
 
@@ -1050,7 +663,10 @@ export class CombatMonster3D {
   /** How hurt it is, 0..1. It darkens, glows at the wounds, and moves faster. */
   setDamage(level, snap = false) {
     this.damageTarget = THREE.MathUtils.clamp(level, 0, 1);
-    if (snap) this.damage = this.damageTarget;
+    if (snap) {
+      this.damage = this.damageTarget;
+      for (const p of this.armourPlates) if (this.damage >= p.at) this.popPlate(p, true);
+    }
   }
 
   /** It winds up for an attack. `strike` fires on the event hook when it ends. */
@@ -1144,6 +760,7 @@ export class CombatMonster3D {
 
     // Come apart: pieces fall, bounce, crumble. Nothing else about it runs.
     if (this.debris) {
+      this.stepFlying(dt);
       this.debrisT += dt;
       let live = 0;
       for (const d of this.debris) {
@@ -1211,10 +828,12 @@ export class CombatMonster3D {
     let windBack = 0;
     let crouch = 0;
     let tele = 0;
+    let windK = 0;
     if (this.windup) {
       const w = this.windup;
       w.t += dt;
       const k = Math.min(1, w.t / w.dur);
+      windK = k;
       tele = k * k;
       windBack = -0.9 * k;
       crouch = 0.1 * k;
@@ -1279,6 +898,22 @@ export class CombatMonster3D {
     // Light and colour
     this.applyTint(wound, this.damageFlash, tele);
 
+    // Plates come off as it is hurt, and the ones already off keep falling.
+    for (const p of this.armourPlates) if (!p.off && wound >= p.at) this.popPlate(p);
+    this.stepFlying(dt);
+
+    if (this.rig) {
+      this.rig.update({
+        t: this.elapsed * pace, dt, pace, calm: reduced, wound,
+        wind: windK,
+        lunge: this.lungeT > 0 ? 1 - this.lungeT : 0,
+        hurt: this.staggerT > 0 ? Math.min(1, Math.sin(this.staggerT * Math.PI) * (this.staggerPower || 1)) : 0,
+        roar: this.roarT > 0 ? Math.sin((1 - this.roarT) * Math.PI) : 0,
+        throes: this.throes ? Math.min(1, this.throesT * 1.5) : 0,
+        flash: this.damageFlash
+      });
+    }
+
     if (this.throes) {
       for (const l of this.lights) l.light.intensity = l.intensity * (0.6 + 0.4 * Math.sin(this.elapsed * 40));
     }
@@ -1336,6 +971,8 @@ export class CombatMonster3D {
     for (const d of this.disposables) {
       d.dispose?.();
     }
+    for (const f of this.flying) f.mesh.parent?.remove(f.mesh);
+    this.flying = [];
     this.disposables = [];
     this.materials = [];
     this.animatedParts = [];

@@ -1,10 +1,10 @@
 /**
  * Unit 5 · Bench 1 — Heat and Temperature (q1-flow)
  *
- * The calorimeter's first bench. Two metal blocks, a lidded cup with a bath
- * thermometer, and shelf charts that show a change's energy before and after.
- * Nothing is told: the player joins blocks and reads two traces meet, then
- * reads which way a thermometer moved and what that says about the chemicals.
+ * The wellhead's heat exchanger, and the first of Ember Reach's TABLETOPS (plan `bench-tabletop.md`, phase T6), on the heat kit
+ * (`table/kits/heat.js`). Two metal blocks, a lagged cup with a bath thermometer, and the shelves of an energy chart. Nothing is
+ * told: the player joins blocks and reads two thermometers meet, drops chemicals in a cup and reads which way the bath moved, then
+ * builds the chart that matches.
  *
  *   1  two blocks join                             -> thermal equilibrium
  *   2  which way energy crosses the joint          -> heat
@@ -15,14 +15,18 @@
  *   7  a hot spark and a warm bath                 -> temperature versus total energy
  *   8  four everyday changes                       -> (every change is one or the other)
  *
- * THE EVIDENCE IS ON THE BENCH. Stages 4 to 6 hide the plate's own verdict
- * (`hideVerdict`), so the player reads the thermometer or the shelves rather
- * than a printed word. Stage 7's two plates differ only in how much is hot.
+ * THE EVIDENCE IS ON THE BENCH. The cup prints no verdict: the player reads the thermometer, or the shelves. Stage 7's spark and bath
+ * differ only in how much is hot, and each can be joined to the cold block in turn.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { mountThermo, makeStateFor } from '../../engine/thermomount.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
+import {
+  heatTable, block, charge, shelfCard, tag, stmt, cupFixture, shelvesFixture, selectorFixture, markerFixture, blockRead, cupRead, shelvesRead,
+  markerRead, whereIs, equilibriumTemp, dialAt
+} from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 8 };
 
@@ -39,10 +43,14 @@ export const BUILDS_ON = ['unit04/q1-knocks'];
 
 const SPEAKER = 'Vess';
 
-/** A key whose label says what it does carries no legend. */
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
-const choice = (id, label) => ({ id, label });
+const widget = { type: 'table', label: 'The bench' };
+const FE = 0.449;
+const WATER = 4.184;
+const CUP = 'cup';
+const MOUTH = 'slot:cup.mouth';
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -52,36 +60,37 @@ export const STAGES = [
   {
     id: 's1-equilibrium',
     title: 'Where Both Blocks Settle',
-    prompt: 'Join the two iron blocks and give the temperature at which both finish.',
+    prompt: 'Join the two iron blocks, then set the marker to the temperature at which both finish.',
     briefing: {
       speaker: SPEAKER,
-      body: 'Two blocks of the same iron sit on the bench, one hot and one cold. Join them and watch both thermometer traces.'
+      body: 'Two blocks of the same iron sit on the bench, one hot and one cold. Press Submit when the table shows your answer.'
     },
-    rigs: [
-      {
-        id: 'blocks',
-        label: 'Contact Bridge',
-        head: 'contact',
-        left: { label: 'Block A', T: 80, m: 100, c: 0.449, massLabel: '100 g Fe' },
-        right: { label: 'Block B', T: 20, m: 100, c: 0.449, massLabel: '100 g Fe' },
-        joined: false
-      }
-    ],
-    toggleAction: { group: 'Bridge', label: 'Join Blocks' },
-    widget: { type: 'number', label: 'Settling temperature (°C)', min: 20, max: 80, step: 5 },
+    widget,
+    table: heatTable({
+      pieces: [
+        block('a', 'Block A', { x: 22, y: 42 }, { m: 100, c: FE, T: 80, mat: 'Fe' }),
+        block('b', 'Block B', { x: 58, y: 42 }, { m: 100, c: FE, T: 20, mat: 'Fe' })
+      ],
+      fixtures: [markerFixture('tfinal', 'Both finish at', { x: 112, y: 40 }, { min: 20, max: 80, step: 5, unit: '°C', w: 50 })]
+    }),
     hints: [
-      'Press "Join Blocks" and watch the two thermometer traces on the right of the plate.',
-      'Compare how far each trace moves, given that the two blocks have the same mass and the same metal.',
-      'Look for the level where the upper and lower traces meet and stop changing.'
+      'Drag one block onto the other and watch the thermometer on each.',
+      'Compare how far each reading moves, given that the two blocks have the same mass and the same metal.',
+      'Look for the level where the two readings meet and stop changing.'
     ],
     check(state) {
-      if (state.number === 50) return { ok: true };
-      return state.number > 50
-        ? { ok: false, msg: 'That is nearer Block A’s starting reading than the level the traces meet at.' }
-        : { ok: false, msg: 'That is nearer Block B’s starting reading than the level the traces meet at.' };
+      const t = state.table;
+      const v = markerRead(t, 'tfinal');
+      if (v === 20) return { ok: false, notYet: true, msg: 'Join the blocks, then set the marker to where their readings meet.' };
+      const a = t.pieces.a.props; const b = t.pieces.b.props;
+      const want = equilibriumTemp(a.m, a.c, a.T, b.m, b.c, b.T);
+      if (Math.abs(v - want) < 0.5) return { ok: true };
+      return v > want
+        ? { ok: false, msg: 'That is nearer Block A\'s starting reading than the level the thermometers meet at.' }
+        : { ok: false, msg: 'That is nearer Block B\'s starting reading than the level the thermometers meet at.' };
     },
     reward: {
-      log: 'Both traces met at one level.',
+      log: 'Both thermometers met at one level.',
       title: 'Thermal Equilibrium',
       body: 'Fast-moving particles pass motion to slow ones until both blocks share the same average motion. When nothing changes any more, the blocks are in thermal equilibrium.'
     }
@@ -91,41 +100,28 @@ export const STAGES = [
   {
     id: 's2-direction',
     title: 'Which Way Energy Crossed',
-    prompt: 'When the two blocks touch, which way does energy cross the joint?',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The blocks are already joined and the arrows inside each show how fast its particles move.'
-    },
-    rigs: [
-      {
-        id: 'blocks',
-        label: 'Contact Bridge',
-        head: 'contact',
-        left: { label: 'Block A (80 °C)', T: 80, m: 100, c: 0.449 },
-        right: { label: 'Block B (20 °C)', T: 20, m: 100, c: 0.449 },
-        joined: true,
-        showArrow: true
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Direction of transfer',
-      options: [
-        choice('a-to-b', 'From Block A into Block B'),
-        choice('b-to-a', 'From Block B into Block A'),
-        choice('none', 'No energy crosses the joint')
-      ]
-    },
+    prompt: 'Join the blocks, then set the arrow to the way energy crosses between them.',
+    widget,
+    table: heatTable({
+      pieces: [
+        block('a', 'Block A', { x: 22, y: 42 }, { m: 100, c: FE, T: 80, mat: 'Fe' }),
+        block('b', 'Block B', { x: 58, y: 42 }, { m: 100, c: FE, T: 20, mat: 'Fe' })
+      ],
+      fixtures: [selectorFixture('arrow', 'Energy crosses', { x: 112, y: 40 }, { options: ['Block A to Block B', 'Block B to Block A', 'Neither way'], start: 3, w: 52 })]
+    }),
     hints: [
-      'Compare the particle arrows in Block A with those in Block B at the moment of contact.',
-      'Compare each block’s reading before and after they touch to see which gained and which lost.',
-      'Whichever block’s reading fell gave up energy, and the block whose reading rose took it in.'
+      'Join the two blocks and read each thermometer before and after.',
+      'Compare which block\'s reading fell and which block\'s reading rose.',
+      'Whichever block\'s reading fell gave up energy, and the block whose reading rose took it in.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a direction.' };
-      if (state.choice === 'a-to-b') return { ok: true };
-      if (state.choice === 'b-to-a') return { ok: false, msg: 'Cold is only slower particle motion, so there is nothing in the cooler block to send across.' };
-      return { ok: false, msg: 'One block’s reading fell and the other’s rose, so something did cross the joint.' };
+      const t = state.table;
+      const v = dialAt(t, 'arrow', 'value');
+      const ra = blockRead(t, 'a'); const rb = blockRead(t, 'b');
+      const want = ra.T0 > rb.T0 ? 1 : 2;
+      if (v === want) return { ok: true };
+      if (v === 3) return { ok: false, msg: 'One block\'s reading falls and the other\'s rises when they join, so something does cross.' };
+      return { ok: false, msg: 'Cold is only slower particle motion, so there is nothing in the cooler block to send across.' };
     },
     reward: {
       log: 'The energy moved from the hot block to the cold one.',
@@ -141,43 +137,40 @@ export const STAGES = [
     prompt: 'Sort each part of the bench into the system or the surroundings.',
     briefing: {
       speaker: SPEAKER,
-      body: 'A dashed line on the plate marks off the part being studied, which chemists call the system. Everything outside the line is the surroundings.'
+      body: 'A dashed line on the cup marks off the part being studied, which chemists call the system. Everything outside the line is the surroundings.'
     },
-    rigs: [
-      {
-        id: 'cup',
-        label: 'Boundary View',
-        head: 'contact',
-        left: { label: 'Reacting bonds', T: 65, m: 50, c: 1.0, massLabel: 'Inside dashed line' },
-        right: { label: 'Water + Thermometer', T: 25, m: 100, c: 4.184, massLabel: 'Outside dashed line' },
-        showBoundary: true,
-        joined: false
-      }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'Assign each part',
-      bins: [
-        choice('system', 'System'),
-        choice('surroundings', 'Surroundings')
-      ],
-      items: [
-        choice('reactants', 'The reacting molecules and their bonds'),
-        choice('water', 'The water bath around the sample'),
-        choice('thermo', 'The thermometer bulb in the bath'),
-        choice('cupwall', 'The insulated cup walls')
-      ]
-    },
+    widget,
+    table: (() => {
+      const c = cupFixture(CUP, { x: 30, y: 32 }, { boundary: true, title: 'Cup' });
+      return heatTable({
+        pieces: [
+          { ...charge('rx', 'Reacting chemicals', { x: 30, y: 30 }, { moles: 0.05, dH: 0, shown: 'in the cup' }), zone: MOUTH, fixed: true },
+          tag('reactants', 'The reacting molecules and their bonds', { x: 74, y: 14 }),
+          tag('water', 'The water bath around the sample', { x: 74, y: 27 }),
+          tag('thermo', 'The thermometer bulb in the bath', { x: 74, y: 40 }),
+          tag('cupwall', 'The insulated cup walls', { x: 74, y: 53 })
+        ],
+        fixtures: [c.fixture],
+        zones: {
+          slots: [c.slot],
+          trays: [
+            { id: 'system', label: 'System', at: { x: 120, y: 18 }, size: { w: 30, h: 13 }, cell: 28, cellH: 12 },
+            { id: 'surroundings', label: 'Surroundings', at: { x: 120, y: 46 }, size: { w: 58, h: 26 }, cell: 28, cellH: 12 }
+          ]
+        }
+      });
+    })(),
     hints: [
-      'Look at the dashed line drawn on the plate and at what it encloses.',
-      'Compare each listed part with the two labelled regions on the plate.',
+      'Look at the dashed line drawn on the cup and at what it encloses.',
+      'Compare each part with the two labelled places on the table.',
       'Anything the line encloses is the system, and anything outside it, instruments included, is the surroundings.'
     ],
     check(state) {
+      const t = state.table;
       const want = { reactants: 'system', water: 'surroundings', thermo: 'surroundings', cupwall: 'surroundings' };
-      if (Object.keys(want).some(k => !state.bins[k])) return { ok: false, notYet: true, msg: 'Place all four parts first.' };
-      if (Object.entries(want).every(([k, v]) => state.bins[k] === v)) return { ok: true };
-      return { ok: false, msg: 'Check each part against the dashed line on the plate: it encloses only what is reacting.' };
+      if (Object.keys(want).some(k => !['system', 'surroundings'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Place all four parts first.' };
+      if (Object.entries(want).every(([k, v]) => whereIs(t, k) === v)) return { ok: true };
+      return { ok: false, msg: 'Check each part against the dashed line on the cup: it encloses only what is reacting.' };
     },
     reward: {
       log: 'The line was drawn round the reacting chemicals.',
@@ -190,51 +183,34 @@ export const STAGES = [
   {
     id: 's4-packs',
     title: 'Hand Warmer and Cold Pack',
-    prompt: 'Sort each pack by which way heat crosses the system’s boundary.',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Each cup holds a pack reacting in a bath of water, with a thermometer in the bath.'
-    },
-    rigs: [
-      {
-        id: 'warmer',
-        label: 'Hand Warmer Charge',
-        head: 'cup',
-        hideVerdict: true,
-        waterMass: 100,
-        waterTInit: 22.0,
-        reaction: { label: 'Fe oxidation', moles: 0.04, dH: -165 }
-      },
-      {
-        id: 'coldpack',
-        label: 'Cold Pack Salt',
-        head: 'cup',
-        hideVerdict: true,
-        waterMass: 100,
-        waterTInit: 22.0,
-        reaction: { label: 'Salt dissolution', moles: 0.08, dH: 26 }
-      }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'Direction of heat flow',
-      bins: [
-        choice('out', 'Heat leaves the system'),
-        choice('in', 'Heat enters the system')
-      ],
-      items: [
-        choice('warmer', 'Hand warmer'),
-        choice('coldpack', 'Cold pack')
-      ]
-    },
+    prompt: 'Sort each pack by which way heat crosses the system\'s boundary.',
+    widget,
+    table: (() => {
+      const c = cupFixture(CUP, { x: 30, y: 32 }, { title: 'Cup' });
+      return heatTable({
+        pieces: [
+          charge('warmer', 'Hand warmer', { x: 74, y: 22 }, { moles: 0.04, dH: -165 }),
+          charge('cold', 'Cold pack', { x: 74, y: 44 }, { moles: 0.08, dH: 26 })
+        ],
+        fixtures: [c.fixture],
+        zones: {
+          slots: [c.slot],
+          trays: [
+            { id: 'out', label: 'Heat leaves the system', at: { x: 122, y: 20 }, size: { w: 48, h: 16 }, cell: 22, cellH: 14 },
+            { id: 'in', label: 'Heat enters the system', at: { x: 122, y: 48 }, size: { w: 48, h: 16 }, cell: 22, cellH: 14 }
+          ]
+        }
+      });
+    })(),
     hints: [
-      'Read the bath thermometer on each plate before and after the pack reacts.',
+      'Drop a pack in the cup\'s mouth and read the bath thermometer, then try the other pack.',
       'Compare which way each bath moved with where the heat must have come from or gone to.',
       'A bath that warmed received heat from the system, and a bath that cooled lost heat into it.'
     ],
     check(state) {
-      if (!state.bins.warmer || !state.bins.coldpack) return { ok: false, notYet: true, msg: 'Place both packs first.' };
-      if (state.bins.warmer === 'out' && state.bins.coldpack === 'in') return { ok: true };
+      const t = state.table;
+      if (!['out', 'in'].includes(whereIs(t, 'warmer')) || !['out', 'in'].includes(whereIs(t, 'cold'))) return { ok: false, notYet: true, msg: 'Place both packs first.' };
+      if (whereIs(t, 'warmer') === 'out' && whereIs(t, 'cold') === 'in') return { ok: true };
       return { ok: false, msg: 'The thermometer is in the surroundings, so a bath that warms was given heat, and one that cools gave it away.' };
     },
     reward: {
@@ -247,46 +223,39 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-trace',
-    title: 'Reading the Bath Trace',
-    prompt: 'Sample A dissolves and its bath cools; what happened to the energy of Sample A?',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The thermometer reads the water, not the sample. Decide whose energy the reading describes.'
-    },
-    rigs: [
-      {
-        id: 'sampleA',
-        label: 'Sample A Dissolution',
-        head: 'cup',
-        hideVerdict: true,
-        waterMass: 100,
-        waterTInit: 22.0,
-        TFinal: 16.4,
-        reaction: { label: 'Sample A(s) dissolving', moles: 0.09, dH: 26.0 }
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Sample A’s energy',
-      options: [
-        choice('gained', 'Sample A gained energy'),
-        choice('lost', 'Sample A lost energy'),
-        choice('same', 'Sample A’s energy did not change')
-      ]
-    },
+    title: 'Reading the Bath',
+    prompt: 'Predict what happens to Sample A\'s energy as it dissolves in the bath, then test it.',
+    widget,
+    table: (() => {
+      const c = cupFixture(CUP, { x: 30, y: 32 }, { title: 'Cup', record: true });
+      const token = (id, label, x) => ({ id, label, at: { x, y: 56 }, r: 7 });
+      return heatTable({
+        pieces: [charge('sampleA', 'Sample A', { x: 74, y: 22 }, { moles: 0.09, dH: 26 })],
+        fixtures: [c.fixture],
+        zones: { slots: [c.slot] },
+        prediction: {
+          slot: { id: 'predict', label: 'Sample A\'s energy', at: { x: 118, y: 30 }, size: { w: 30, h: 12 } },
+          tokens: [token('gained', 'Gains energy', 84), token('lost', 'Loses energy', 114), token('same', 'No change', 140)]
+        }
+      });
+    })(),
     hints: [
-      'Read the bath thermometer on the plate and note which way it moved.',
-      'Compare the energy the water lost with where that energy could have gone.',
-      'Energy is not destroyed, so the water’s loss must show up in the system inside the dashed line.'
+      'Place a prediction, drop Sample A in the cup\'s mouth, then press Record.',
+      'Compare the bath thermometer before and after, and ask where the bath\'s energy went.',
+      'Energy is not destroyed, so what the bath lost must show up in the sample inside the dashed line.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what happened to Sample A’s energy.' };
-      if (state.choice === 'gained') return { ok: true };
-      if (state.choice === 'lost') return { ok: false, msg: 'The bath is the part that lost energy, and the thermometer reads the bath.' };
-      return { ok: false, msg: 'The bath’s reading changed, and the energy it lost cannot simply disappear.' };
+      const t = state.table;
+      const token = t.prediction.token;
+      if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+      if (token === 'gained') return { ok: true };
+      if (t.prediction.tested) return token === 'lost'
+        ? { ok: false, msg: 'The bath is the part that lost energy, and the thermometer reads the bath.' }
+        : { ok: false, msg: 'The bath\'s reading changed, and the energy it lost cannot simply disappear.' };
+      return { ok: false, msg: 'Drop Sample A in the cup\'s mouth, press Record, and compare the bath with your prediction.' };
     },
     reward: {
-      log: 'The water’s loss was the sample’s gain.',
+      log: 'The water\'s loss was the sample\'s gain.',
       title: 'Energy Is Conserved',
       body: 'The energy a bath loses is gained by the system, so a cooling bath means the change is endothermic. The thermometer reports on the surroundings, and the system does the opposite.'
     }
@@ -295,49 +264,43 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     id: 's6-diagram',
-    title: 'Where the Bath’s Heat Went',
-    prompt: 'Tap the energy chart that matches Sample A as it dissolves in the cooling bath.',
+    title: 'Where the Bath\'s Heat Went',
+    prompt: 'Set the energy chart so it matches Sample A as it dissolves in the cooling bath.',
     briefing: {
       speaker: SPEAKER,
-      body: 'An energy chart draws the system’s stored energy as a shelf before the change and a shelf after it.'
+      body: 'An energy chart draws the system\'s stored energy as a shelf before the change and a shelf after it.'
     },
-    rigs: [
-      {
-        id: 'uphill',
-        label: 'Chart A',
-        head: 'diagram',
-        hideVerdict: true,
-        hideValue: true,
-        reactantsLabel: 'Sample A(s)',
-        productsLabel: 'Sample A(aq)',
-        dH: 26.0
-      },
-      {
-        id: 'downhill',
-        label: 'Chart B',
-        head: 'diagram',
-        hideVerdict: true,
-        hideValue: true,
-        reactantsLabel: 'Sample A(s)',
-        productsLabel: 'Sample A(aq)',
-        dH: -26.0
-      }
-    ],
-    widget: { type: 'pick', label: 'Selected chart', help: 'Tap Chart A or Chart B on the bench.' },
+    widget,
+    table: (() => {
+      const c = cupFixture(CUP, { x: 30, y: 32 }, { title: 'Cup' });
+      return heatTable({
+        pieces: [charge('sampleA', 'Sample A', { x: 76, y: 22 }, { moles: 0.09, dH: 26 })],
+        fixtures: [
+          c.fixture,
+          shelvesFixture('chart', { x: 120, y: 32 }, {
+            reactants: 'Sample A(s)', products: 'Sample A(aq)', dH: 0, scale: 26, hideValue: true, hideVerdict: true, title: 'Energy chart',
+            build: { afterList: [-26, -13, 0, 13, 26], labels: ['Far lower', 'Lower', 'Level', 'Higher', 'Far higher'], label: 'After shelf' }
+          })
+        ],
+        zones: { slots: [c.slot] }
+      });
+    })(),
     hints: [
-      'Tap each chart on the bench and compare where its before shelf and after shelf sit.',
-      'Compare each chart with what the last stage showed happened to the energy of Sample A.',
+      'Turn the After shelf dial and watch the chart change.',
+      'Compare the chart with what the last stage showed happened to the energy of Sample A.',
       'The chart for a system that gained energy ends on a higher shelf than it began on.'
     ],
     check(state) {
-      if (!state.sample) return { ok: false, notYet: true, msg: 'Tap one of the two charts on the bench.' };
-      if (state.sample === 'uphill') return { ok: true };
+      const t = state.table;
+      const r = shelvesRead(t, 'chart');
+      if (r.dH === 0) return { ok: false, notYet: true, msg: 'The two shelves are level: turn the After shelf dial.' };
+      if (r.up) return { ok: true };
       return { ok: false, msg: 'On that chart the system ends on a lower shelf, which is what a system does when it gives energy to the bath.' };
     },
     reward: {
       log: 'The chart ends on a higher shelf.',
       title: 'Energy Diagram',
-      body: 'An energy diagram draws the system’s stored energy before and after a change. An endothermic change climbs to a higher shelf, and an exothermic change drops to a lower one.'
+      body: 'An energy diagram draws the system\'s stored energy before and after a change. An endothermic change climbs to a higher shelf, and an exothermic change drops to a lower one.'
     }
   },
 
@@ -345,48 +308,28 @@ export const STAGES = [
   {
     id: 's7-bath-spark',
     title: 'The Spark and the Bath',
-    prompt: 'Why does the 40 °C bath warm the cold block more than the 1200 °C spark does?',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Each plate joins a different hot body to the same cold block. Compare where each pair settles.'
-    },
-    rigs: [
-      {
-        id: 'spark',
-        label: '1200 °C Spark (0.001 g)',
-        head: 'contact',
-        left: { label: 'Spark', T: 1200, m: 0.001, c: 0.45, massLabel: '0.001 g Fe' },
-        right: { label: 'Cold Block', T: 20, m: 500, c: 0.45, massLabel: '500 g Fe' },
-        joined: true
-      },
-      {
-        id: 'bath',
-        label: '40 °C Bath (2000 g)',
-        head: 'contact',
-        left: { label: 'Warm Bath', T: 40, m: 2000, c: 4.184, massLabel: '2000 g H₂O' },
-        right: { label: 'Cold Block', T: 20, m: 500, c: 0.45, massLabel: '500 g Fe' },
-        joined: true
-      }
-    ],
-    widget: {
-      type: 'choice',
-      label: 'Reason',
-      options: [
-        choice('total', 'The bath holds far more particles, so far more energy in all'),
-        choice('faster', 'Each water molecule moves faster than each iron atom in the spark'),
-        choice('cold', 'A cooler body always pushes heat harder than a hotter one')
-      ]
-    },
+    prompt: 'Warm the cold block as far as you can by joining it to one of the hot bodies.',
+    widget,
+    table: heatTable({
+      pieces: [
+        block('spark', 'Spark', { x: 22, y: 16 }, { m: 0.001, c: FE, T: 1200, mat: 'Fe', mass: '0.001 g Fe' }),
+        block('bath', 'Warm bath', { x: 22, y: 48 }, { m: 2000, c: WATER, T: 40, mat: 'H₂O', mass: 'a tank of water' }),
+        block('cold', 'Cold block', { x: 66, y: 32 }, { m: 500, c: FE, T: 20, mat: 'Fe' }),
+        { ...stmt('tap', 'Tap card: the tank holds 2000 g of water', { x: 116, y: 22 }), hidden: true, fetchFrom: 'flowline' }
+      ],
+      fetch: [{ id: 'flowline', label: 'Flowline Tap', at: { x: 124, y: 54 } }]
+    }),
     hints: [
-      'Compare where the cold block ends up on each of the two plates.',
-      'Compare the mass written on each hot body, and think about how many particles that is.',
-      'Temperature describes one particle’s average motion, while the energy a body can hand over depends on all of its particles together.'
+      'Drag the cold block onto each hot body in turn and read its thermometer.',
+      'Compare where the cold block ends up after each join.',
+      'Temperature is one particle\'s average motion, while the energy a body can hand over depends on all of its particles together.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'total') return { ok: true };
-      if (state.choice === 'faster') return { ok: false, msg: 'The spark is far hotter than the bath, so its atoms are the ones moving faster.' };
-      return { ok: false, msg: 'Heat crosses from the hotter body to the colder one, never the other way, so that cannot be the reason.' };
+      const t = state.table;
+      const r = blockRead(t, 'cold');
+      if (!r.joined) return { ok: false, notYet: true, msg: 'Join the cold block to one of the hot bodies and read its thermometer.' };
+      if (r.T >= 35) return { ok: true };
+      return { ok: false, msg: 'The cold block has barely warmed: read its thermometer after joining it to each hot body in turn.' };
     },
     reward: {
       log: 'The large, mild bath outweighed the tiny, fierce spark.',
@@ -400,40 +343,32 @@ export const STAGES = [
     id: 's8-four-processes',
     title: 'Four Everyday Processes',
     prompt: 'Sort the four changes into exothermic and endothermic.',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Each plate shows one change as a shelf for its starting materials and a shelf for what they become.'
-    },
-    rigs: [
-      { id: 'burn', label: 'Burning Methane', head: 'diagram', hideVerdict: true, hideValue: true, reactantsLabel: 'CH₄ + 2O₂', productsLabel: 'CO₂ + 2H₂O', dH: -890 },
-      { id: 'melt', label: 'Melting Ice', head: 'diagram', hideVerdict: true, hideValue: true, reactantsLabel: 'H₂O(s)', productsLabel: 'H₂O(l)', dH: 6.0 },
-      { id: 'condense', label: 'Condensing Steam', head: 'diagram', hideVerdict: true, hideValue: true, reactantsLabel: 'H₂O(g)', productsLabel: 'H₂O(l)', dH: -44.0 },
-      { id: 'nh4no3', label: 'Dissolving NH₄NO₃ (Cold Pack)', head: 'diagram', hideVerdict: true, hideValue: true, reactantsLabel: 'NH₄NO₃(s)', productsLabel: 'NH₄⁺ + NO₃⁻', dH: 25.7 }
-    ],
-    widget: {
-      type: 'bins',
-      label: 'Classify each process',
-      bins: [
-        choice('exo', 'Exothermic'),
-        choice('endo', 'Endothermic')
+    widget,
+    table: heatTable({
+      pieces: [
+        shelfCard('burn', 'Burning methane', { x: 22, y: 16 }, { dH: -890, from: 'CH₄ + 2O₂', to: 'CO₂ + 2H₂O' }),
+        shelfCard('melt', 'Melting ice', { x: 52, y: 16 }, { dH: 6, from: 'H₂O(s)', to: 'H₂O(l)' }),
+        shelfCard('condense', 'Condensing steam', { x: 82, y: 16 }, { dH: -44, from: 'H₂O(g)', to: 'H₂O(l)' }),
+        shelfCard('nh4no3', 'Cold-pack salt', { x: 112, y: 16 }, { dH: 25.7, from: 'NH₄NO₃(s)', to: 'NH₄⁺ + NO₃⁻' })
       ],
-      items: [
-        choice('burn', 'Burning methane gas in a burner'),
-        choice('melt', 'Melting solid ice into liquid water'),
-        choice('condense', 'Condensing steam into liquid droplets'),
-        choice('nh4no3', 'Dissolving ammonium nitrate in a cold pack')
-      ]
-    },
+      zones: {
+        trays: [
+          { id: 'exo', label: 'Exothermic', at: { x: 36, y: 50 }, size: { w: 56, h: 22 }, cell: 27, cellH: 20 },
+          { id: 'endo', label: 'Endothermic', at: { x: 108, y: 50 }, size: { w: 56, h: 22 }, cell: 27, cellH: 20 }
+        ]
+      }
+    }),
     hints: [
-      'Tap each plate and compare where its starting shelf and its finishing shelf sit.',
+      'Look at each chart and compare where its starting shelf and its finishing shelf sit.',
       'Compare each finishing shelf with the starting one to see whether the system gained or lost energy.',
       'A system that ends on a lower shelf released energy, and one that ends on a higher shelf absorbed it.'
     ],
     check(state) {
+      const t = state.table;
       const want = { burn: 'exo', melt: 'endo', condense: 'exo', nh4no3: 'endo' };
-      if (Object.keys(want).some(k => !state.bins[k])) return { ok: false, notYet: true, msg: 'Classify all four changes first.' };
-      if (Object.entries(want).every(([k, v]) => state.bins[k] === v)) return { ok: true };
-      return { ok: false, msg: 'Check each change against its own plate: which shelf does the system finish on?' };
+      if (Object.keys(want).some(k => !['exo', 'endo'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Classify all four changes first.' };
+      if (Object.entries(want).every(([k, v]) => whereIs(t, k) === v)) return { ok: true };
+      return { ok: false, msg: 'Check each change against its own chart: which shelf does the system finish on?' };
     },
     reward: {
       log: 'Four changes sorted by their shelves.',
@@ -442,6 +377,19 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag one block onto the other to join them;', 'tap the gap between them to pull them apart.'],
+  2: ['Drag one block onto the other to join them.'],
+  3: ['Drag each part into a tray.'],
+  4: ['Drag a pack onto the cup, then drag each pack into a tray.'],
+  5: ['Place a prediction, drop Sample A on the cup,', 'then press Record.'],
+  6: ['Drop Sample A on the cup to read its bath;', 'turn the After shelf dial to build the chart.'],
+  7: ['Drag the cold block onto a hot body.'],
+  8: ['Drag each chart into a tray.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -521,33 +469,60 @@ export const PRACTICE = [
   }
 ];
 
+
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
+   by drag and by two taps. Nothing here says what a reading is.
    ------------------------------------------------------------------ */
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const join = (a, b) => put(a, `piece:${b}`);
+const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tray}`));
+
 export const SOLUTIONS = [
-  { number: 50 },
-  { choice: 'a-to-b' },
-  { bins: { reactants: 'system', water: 'surroundings', thermo: 'surroundings', cupwall: 'surroundings' } },
-  { bins: { warmer: 'out', coldpack: 'in' } },
-  { choice: 'gained' },
-  { sample: 'uphill' },
-  { choice: 'total' },
-  { bins: { burn: 'exo', melt: 'endo', condense: 'exo', nh4no3: 'endo' } }
+  [join('a', 'b'), dial('tfinal', 'value', 50)],
+  [join('a', 'b'), dial('arrow', 'value', 1)],
+  [...sort({ reactants: 'system', water: 'surroundings', thermo: 'surroundings', cupwall: 'surroundings' })],
+  [put('warmer', MOUTH), put('cold', MOUTH), ...sort({ warmer: 'out', cold: 'in' })],
+  [{ predict: 'gained' }, put('sampleA', MOUTH), { run: CUP }],
+  [put('sampleA', MOUTH), dial('chart', 'after', 5)],
+  [{ fetch: 'flowline' }, join('cold', 'spark'), join('cold', 'bath')],
+  [...sort({ burn: 'exo', melt: 'endo', condense: 'exo', nh4no3: 'endo' })]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { number: 80 },
-  { choice: 'b-to-a' },
-  { bins: { reactants: 'surroundings', water: 'system', thermo: 'surroundings', cupwall: 'surroundings' } },
-  { bins: { warmer: 'in', coldpack: 'out' } },
-  { choice: 'lost' },
-  { sample: 'downhill' },
-  { choice: 'faster' },
-  { bins: { burn: 'endo', melt: 'endo', condense: 'exo', nh4no3: 'endo' } }
+  [join('a', 'b'), dial('tfinal', 'value', 80)],
+  [join('a', 'b'), dial('arrow', 'value', 2)],
+  [...sort({ reactants: 'surroundings', water: 'system', thermo: 'surroundings', cupwall: 'surroundings' })],
+  [put('warmer', MOUTH), put('cold', MOUTH), ...sort({ warmer: 'in', cold: 'out' })],
+  [{ predict: 'lost' }, put('sampleA', MOUTH), { run: CUP }],
+  [put('sampleA', MOUTH), dial('chart', 'after', 1)],
+  [join('cold', 'spark')],
+  [...sort({ burn: 'endo', melt: 'endo', condense: 'exo', nh4no3: 'endo' })]
 ];
 
-export const stateFor = makeStateFor(STAGES);
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
+}
+
+/* ==================================================================
+   THE GAME
+   ================================================================== */
 
 export function mount(container, ctx) {
-  return mountThermo(container, ctx, { STAGES, DEBRIEF, toolNoteFor });
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }
+
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { cupRead, shelvesRead, blockRead };
