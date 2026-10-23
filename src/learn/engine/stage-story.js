@@ -53,7 +53,7 @@ export const STAGE_STORY = {
     1: 'The beacon plates have stopped answering the lamps, and Vess needs to know why.'
   },
   'q3-lines': {
-    2: 'The Fifth left sealed gas tubes among the beacons, and Vess must name what is in them.'
+    3: 'The Fifth left sealed gas tubes among the beacons, and Vess must name what is in them.'
   },
   'q7-pes': {
     5: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'

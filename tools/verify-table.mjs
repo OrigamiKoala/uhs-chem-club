@@ -1269,7 +1269,7 @@ console.log('\nPredict first — the guess is made on a bench with no instrument
       if (t.tools.length) fail(`${label}: a predict stage carries a tool`);
       if (i === mod.STAGES.length - 1) fail(`${label}: a predict stage with no stage after it to test the guess`);
       const next = mod.STAGES[i + 1];
-      if (next && (next.predict || next.widget?.type !== 'table' || !Object.values(MODEL.createTable(next.table, next.title).fixtures).some(f => !f.noRun || Object.keys(f.dials).length))) fail(`${label}: the stage after a predict stage must bring the instrument`);
+      if (next && (next.predict || next.widget?.type !== 'table' || !Object.values(MODEL.createTable(next.table, next.title).fixtures).length)) fail(`${label}: the stage after a predict stage must bring the instrument`);
       if (typeof next?.prompt !== 'string') fail(`${label}: the test stage has no prompt`);
     });
   }

@@ -3,56 +3,62 @@
  *
  * The prism, with gas tubes, and the energy ladder. The aurora over this ice field is the reason the bench exists: a glowing gas
  * does not give out a smear of colour but a handful of exact ones, and that is the first thing anybody ever saw that said an
- * atom's electrons are not free to be anywhere. The quest goes from "which light is which" through "which jump makes which
- * line" to the one place the simple ladder fails.
+ * atom's electrons are not free to be anywhere.
  *
- * The third of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4a), on the optics kit. The bench is the spectrograph
- * sled's own table, tailgate down: sources are plugged into the socket, a reference strip is slid alongside the band, and the
- * energy ladder is worked by dragging its one electron from rung to rung, each drop giving out the line it makes.
+ * The third of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4a), on the optics kit, reworked on 2026-10-23 around ONE
+ * CLICK. The bench is the spectrograph sled's own table, tailgate down: sources are plugged into the socket, a reference strip is
+ * slid alongside the band, and the energy ladder is worked by dragging its one electron from rung to rung, each drop giving out the
+ * line it makes.
+ *
+ * THE CLICK. A player who has just seen a hot filament give every colour expects a hot gas to do the same: a glowing tube is a
+ * glowing thing, so its light should be a smooth rainbow. The guess is asked first, with no prism on the table, and then the prism
+ * shows a few exact colours and nothing between them.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  a hot filament and a gas tube, each in the socket        -> continuous and line spectra
- *   2  name the gas in a sealed tube against reference strips   -> emission spectrum
- *   3  filament light through a cell of cool gas                -> absorption spectrum
- *   4  drag the electron down a rung until it gives out red     -> energy levels, ground and excited states
- *   5  the energy of one line                                   -> the jump's energy leaves as one photon
- *   6  predict a line from the ladder, then make the drop       -> the Bohr model
- *   7  an electron given more than the whole ladder             -> ionization
- *   8  which of three lines a drop on the ladder can make       -> the model's limit
+ *   1  PREDICT: what a glowing hydrogen tube's band looks like (no prism)          -> a guess before the evidence
+ *   2  TEST: four sources, each under the band it makes                            -> continuous and line spectra
+ *   3  name the gas in a sealed tube against reference strips                      -> emission spectrum
+ *   4  drag the electron down a rung until it gives out red                        -> energy levels, ground and excited states
+ *   5  filament light through a cell of cool gas                                   -> absorption spectrum
+ *
+ * Cut on 2026-10-23 (problems doc T6, T7): the energy of a line (a plug-in sum with Planck's constant), the predicted line from the
+ * Bohr formula (AP depth), the electron past the top of the ladder (ionization, met again in q7) and the helium lines that do
+ * not fit the ladder (the limit of a model the quest no longer builds).
  *
  * Every line is a real one (`lightdata.js` `LINES`), every rung the real Bohr value -2.18 x 10^-18 J / n^2, and every drop is
- * asked of `planJump`, so the strip shows exactly the line the electron's fall gives out. Which pair of rungs makes a line the
- * player puts in the probe is `jumpsForLine`.
+ * asked of `planJump`, so the strip shows exactly the line the electron's fall gives out.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { planJump, jumpsForLine, photonJoules, LINES, bohrJoules } from '../../engine/lightdata.js';
 import {
-  opticsTable, spectrograph, energyLadder, linesStrip, plaque, marker, filament, gasTube, coolCell, refStrip, lineChip,
+  opticsTable, spectrograph, energyLadder, linesStrip, filament, gasTube, coolCell, refStrip,
   bandRead, ladderRead, rungOf, seated, TOP
 } from '../../table/kits/optics.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bcontinuous spectrum\b/i, introducedAt: 1 },
-  { term: /\bline spectrum\b/i, introducedAt: 1 },
-  { term: /\bemission spectrum\b/i, introducedAt: 2 },
-  { term: /\babsorption spectrum\b/i, introducedAt: 3 },
+  { term: /\bcontinuous spectrum\b/i, introducedAt: 2 },
+  { term: /\bline spectrum\b/i, introducedAt: 2 },
+  { term: /\bemission spectrum\b/i, introducedAt: 3 },
   { term: /\benergy levels?\b/i, introducedAt: 4 },
   { term: /\bground state\b/i, introducedAt: 4 },
   { term: /\bexcited states?\b/i, introducedAt: 4 },
-  { term: /\bbohr\b/i, introducedAt: 6 },
-  { term: /\bioniz\w*\b/i, introducedAt: 7 }
+  { term: /\babsorption spectrum\b/i, introducedAt: 5 }
 ];
 
 export const BUILDS_ON = ['unit02/q1-wave', 'unit02/q2-photon'];
 
 const SPEAKER = 'Vess';
+
+const QUEST_KEY = 'unit02/q3-lines';
+const GUESS_LABEL = { rainbow: 'A smooth rainbow', exact: 'A few exact colours', one: 'One colour only' };
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -67,79 +73,129 @@ const tray = (id, label, x, y = 55, w = 44, cell = 22, h = 18) => ({ id, label, 
 const where = (t, id) => (t.pieces[id].zone || '').replace(/^tray:/, '');
 const trayed = (t, ids) => ids.every(id => where(t, id) && !where(t, id).startsWith('slot:'));
 
-/** The ladder, with the strip it writes on, at the table's left; stages that also need a plaque or a marker fit them to its right. */
+/** The ladder, with the strip it writes on, at the table's left. */
 const LADDER_AT = { x: 30, y: 32 };
 const LINES_AT = { x: 104, y: 16 };
-const TOP_LABEL = 'top';
 
 /** The red line: the one visible line of hydrogen that is longer than orange. */
 const isRed = nm => nm >= 620 && nm <= 750;
 
+/** The sources of stage 2, and the band each makes (a hot solid fills the band; a glowing gas lights a few places). */
+const SOURCES = { fil: 'band', h: 'lines', he: 'lines', na: 'lines' };
+
+/** Reference strips: hydrogen, helium, sodium and mercury. */
+const STRIP_GAS = [['h', 'Hydrogen', 'H'], ['he', 'Helium', 'He'], ['na', 'Sodium', 'Na'], ['hg', 'Mercury', 'Hg']];
+
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
+  {
+    title: 'A Glowing Tube',
+    // A PREDICT STAGE: the prism is not on the table yet. The guess is made first, here, and comes back with the test.
+    predict: true,
+    prompt: 'A tube of glowing hydrogen sends its light through a prism: what do you think the band looks like?',
+    widget,
+    table: opticsTable({
+      pieces: [],
+      fixtures: [],
+      zones: {},
+      prediction: {
+        slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 30, h: 14 } },
+        tokens: [
+          { id: 'rainbow', label: 'Rainbow', at: { x: 38, y: 48 }, r: 7 },
+          { id: 'exact', label: 'A few colours', at: { x: 75, y: 48 }, r: 7 },
+          { id: 'one', label: 'One colour', at: { x: 112, y: 48 }, r: 7 }
+        ]
+      }
+    }),
+    hints: [
+      'Drag one of the three guesses into the slot.',
+      'Think of a hot wire in a lamp, which glows with every colour, and ask whether a glowing gas would do the same.',
+      'There is no wrong guess yet; commit to the one you would bet on.'
+    ],
+    check(state) {
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      return { ok: true };
+    },
+    onClear(state) {
+      const token = state.table.prediction?.token;
+      if (token) remember(QUEST_KEY, token);
+    },
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'A Guess to Test',
+      body: 'A glowing gas is hot and bright like a glowing wire, so a rainbow is a fair guess. Next, a prism will spread the light of each source across a scale.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 2 */
   (() => {
     const sp = spectrograph('sp', 'Band', { x: 56, y: 21 });
     return {
-      title: 'Filament and Tube',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'A source put in the socket has its light spread by a prism across a scale in nanometres, and the band it makes is the picture to read. Press Submit when the table shows your answer.'
+      title: 'Filament and Tubes',
+      get prompt() {
+        const guess = recall(QUEST_KEY);
+        return guess && GUESS_LABEL[guess]
+          ? `You predicted "${GUESS_LABEL[guess]}": put each light source under the kind of band it makes.`
+          : 'Put each light source under the kind of band it makes.';
       },
-      prompt: 'Put each light source under the kind of band it makes.',
       widget,
       table: opticsTable({
         pieces: [
-          filament('fil', 'Filament', { x: 124, y: 12 }),
-          gasTube('tube', 'Gas tube', { x: 124, y: 34 }, 'H')
+          filament('fil', 'Filament', { x: 111, y: 10 }),
+          gasTube('h', 'Hydrogen tube', { x: 138, y: 10 }, 'H'),
+          gasTube('he', 'Helium tube', { x: 111, y: 30 }, 'He'),
+          gasTube('na', 'Sodium tube', { x: 138, y: 30 }, 'Na')
         ],
         fixtures: [sp.fixture],
-        zones: { slots: sp.slots, trays: [tray('band', 'Lit from end to end', 28), tray('lines', 'Lit in a few places', 75)] }
+        zones: { slots: sp.slots, trays: [tray('band', 'Lit from end to end', 17, 55, 30, 25, 18), tray('lines', 'Lit in a few places', 72, 55, 78, 25, 18)] }
       }),
       hints: [
-        'Drag a source into the socket and look at the band it makes.',
+        'Use the socket: drag a source into it and look at the band.',
         'Compare whether each band is filled from one end to the other or only lit in a few places.',
-        'Put the source whose band is lit everywhere in the first tray and the one lit in only a few exact places in the second.'
+        'Sort the sources by the band each one makes when it is in the socket, not by how it looks on the table.'
       ],
       check(state) {
         const t = state.table;
-        if (!trayed(t, ['fil', 'tube'])) return { ok: false, notYet: true, msg: 'Put both sources under a band.' };
-        if (where(t, 'fil') === 'band' && where(t, 'tube') === 'lines') return { ok: true };
-        return { ok: false, msg: 'A source is under the wrong band: put it in the socket and look at which positions on the scale it lights.' };
+        const ids = Object.keys(SOURCES);
+        if (!trayed(t, ids)) return { ok: false, notYet: true, msg: 'Put every source under a band.' };
+        const wrong = ids.find(id => where(t, id) !== SOURCES[id]);
+        if (!wrong) return { ok: true };
+        return { ok: false, msg: `The ${t.pieces[wrong].label} makes a different band from the one it is under.` };
       },
-      reward: {
-        log: 'A hot wire: every colour. A glowing gas: a few.',
-        title: 'Line Spectrum',
-        body: 'A hot solid gives off an unbroken band of every colour, a continuous spectrum, while a glowing gas gives off only a few bright lines, a line spectrum. The light from a gas is not a smear of colours but a set of exact ones.'
+      get reward() {
+        const guess = recall(QUEST_KEY);
+        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'exact'
+          ? 'You predicted a few exact colours, and the prism agreed. '
+          : 'The prism did not agree with your prediction, which is how a guess gets better. ';
+        return {
+          log: 'A hot wire: every colour. A glowing gas: a few.',
+          title: 'Line Spectrum',
+          body: `${verdict}A hot solid gives off an unbroken band of every colour, a continuous spectrum, while a glowing gas gives off only a few bright lines, a line spectrum.`
+        };
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 2 */
+  /* ---------------------------------------------------------------- 3 */
   (() => {
     const sp = spectrograph('sp', 'Band', { x: 44, y: 27 }, { ref: true, size: { w: 84, h: 52 } });
     return {
       title: 'Name the Gas',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'A reference strip can be slid alongside the band, and the lines on it that fall on a line of the band light up.'
-      },
       prompt: 'Find which reference strip matches the lines of the sealed tube.',
       widget,
       table: opticsTable({
         pieces: [
-          refStrip('h', 'Hydrogen', { x: 104, y: 11 }, 'H'),
-          refStrip('he', 'Helium', { x: 134, y: 11 }, 'He'),
-          refStrip('na', 'Sodium', { x: 104, y: 33 }, 'Na'),
-          gasTube('x', 'Sealed tube', { x: 134, y: 33 }, 'He')
+          ...STRIP_GAS.map(([id, label, gas], i) => refStrip(id, label, { x: i < 3 ? 104 : 130, y: i < 3 ? 11 + i * 21 : 11 }, gas)),
+          gasTube('x', 'Sealed tube', { x: 130, y: 33 }, 'He')
         ],
         fixtures: [sp.fixture],
         zones: { slots: sp.slots }
       }),
       hints: [
-        'Plug the sealed tube into the socket, then slide a reference strip alongside its band.',
+        'Use the socket for the sealed tube and the alongside slot for the strips.',
         'Compare the strip\'s lines with the sealed tube\'s lines, position by position, and watch which of them light.',
         'Try each strip in turn and keep the one whose every line falls exactly on a line of the sealed tube\'s band.'
       ],
@@ -148,7 +204,7 @@ export const STAGES = [
         if (!r.src || r.src.id !== 'x') return { ok: false, notYet: true, msg: 'Plug the sealed tube into the socket to read its lines.' };
         if (!r.ref) return { ok: false, notYet: true, msg: 'Slide a reference strip alongside the band.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
-        return { ok: false, msg: 'Match every line, not just one: the sealed tube\'s lines must sit exactly where the strip\'s do.' };
+        return { ok: false, msg: `The ${r.ref.label} strip has lines where the sealed tube's band is dark, or the tube has lines the strip lacks.` };
       },
       reward: {
         log: 'The sealed tube\'s lines matched one reference exactly.',
@@ -158,7 +214,41 @@ export const STAGES = [
     };
   })(),
 
-  /* ---------------------------------------------------------------- 3 */
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const lad = energyLadder('lad', 'Hydrogen', LADDER_AT);
+    return {
+      title: 'Which Drop',
+      prompt: 'Make the hydrogen atom give out its red line.',
+      widget,
+      table: opticsTable({
+        pieces: [lad.electron],
+        fixtures: [lad.fixture, linesStrip('made', 'Lines made', LINES_AT, 'lad')],
+        zones: { slots: lad.slots }
+      }),
+      hints: [
+        'Use the electron: drag it up the ladder, then drop it onto a lower rung.',
+        'Compare the colour and the wavelength of the line each drop gives out on the strip.',
+        'Drop the electron from each higher rung in turn, and read each line until you meet the red one.'
+      ],
+      check(state) {
+        const read = ladderRead(state.table, 'lad');
+        const l = read.last;
+        if (!l) return { ok: false, notYet: true, msg: 'Move the electron to another rung.' };
+        if (l.up || l.nm == null) return { ok: false, msg: 'That move gave out no light.' };
+        if (isRed(l.nm)) return { ok: true };
+        return { ok: false, msg: 'The last line made is not the red one.' };
+      },
+      reward: {
+        log: 'The red line: down from the third rung to the second.',
+        title: 'Energy Levels',
+        body: 'An electron in hydrogen can only sit on certain rungs, called energy levels, and each line in the spectrum is a jump down between two of them. The lowest rung is the ground state, and any higher one is an excited state.',
+        model: { type: 'ladder', hi: 3, lo: 2, caption: 'The drop from the third rung to the second: the electron lands lower, and the energy it lost leaves as one packet of red light.' }
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
   (() => {
     const sp = spectrograph('sp', 'Band', { x: 44, y: 27 }, { cell: true, ref: true, size: { w: 84, h: 52 } });
     return {
@@ -168,16 +258,17 @@ export const STAGES = [
       table: opticsTable({
         pieces: [
           refStrip('h', 'Hydrogen', { x: 104, y: 11 }, 'H'),
-          refStrip('he', 'Helium', { x: 134, y: 11 }, 'He'),
-          refStrip('na', 'Sodium', { x: 104, y: 33 }, 'Na'),
-          filament('fil', 'Filament', { x: 134, y: 33 }),
-          coolCell('cell', 'Cool cell', { x: 119, y: 52 }, 'H')
+          refStrip('he', 'Helium', { x: 104, y: 32 }, 'He'),
+          refStrip('na', 'Sodium', { x: 104, y: 53 }, 'Na'),
+          refStrip('hg', 'Mercury', { x: 130, y: 11 }, 'Hg'),
+          filament('fil', 'Filament', { x: 130, y: 31 }),
+          coolCell('cell', 'Cool cell', { x: 130, y: 50 }, 'H')
         ],
         fixtures: [sp.fixture],
         zones: { slots: sp.slots }
       }),
       hints: [
-        'Plug the filament into the socket and put the cool cell in front of it, then slide a strip alongside the band.',
+        'Use the socket for the filament, the cell holder for the cool cell and the alongside slot for the strips.',
         'Compare the dark places in the band with the lines on each strip, position by position.',
         'Keep the strip whose every line falls exactly on a dark place in the band behind the cool cell.'
       ],
@@ -186,196 +277,12 @@ export const STAGES = [
         if (!r.src || r.src.kind !== 'filament' || !r.cell) return { ok: false, notYet: true, msg: 'Plug the filament into the socket and put the cool cell in front of it.' };
         if (!r.ref) return { ok: false, notYet: true, msg: 'Slide a reference strip alongside the band.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
-        return { ok: false, msg: 'Compare the band behind the cell with the bare filament\'s, then compare the places where they differ with the strip\'s lines.' };
+        return { ok: false, msg: `The ${r.ref.label} strip has lines where the band behind the cell is bright.` };
       },
       reward: {
         log: 'Cool hydrogen takes out exactly what hot hydrogen gives.',
         title: 'Absorption Spectrum',
-        body: 'Cool hydrogen takes out of the filament\'s light exactly the colours that hot hydrogen gives out, leaving dark lines in the band. That pattern of missing colours is the absorption spectrum, and its lines sit where the emission lines do.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 4 */
-  (() => {
-    const lad = energyLadder('lad', 'Hydrogen', LADDER_AT);
-    return {
-      title: 'Which Jump',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'The rungs are the energies the hydrogen atom\'s electron can have, and it rests on the lowest. Drag it to another rung and the strip records any light that leaves.'
-      },
-      prompt: 'Make the hydrogen atom give out its red line.',
-      widget,
-      table: opticsTable({
-        pieces: [lad.electron],
-        fixtures: [lad.fixture, linesStrip('made', 'Lines made', LINES_AT, 'lad')],
-        zones: { slots: lad.slots }
-      }),
-      hints: [
-        'Drag the electron up to a higher rung, then drop it onto a lower one, and watch the strip.',
-        'Compare the colour and the wavelength of the line each drop gives out.',
-        'Drop the electron from each higher rung in turn, and read each line\'s wavelength until you meet the red one.'
-      ],
-      check(state) {
-        const read = ladderRead(state.table, 'lad');
-        const l = read.last;
-        if (!l) return { ok: false, notYet: true, msg: 'Move the electron to another rung.' };
-        if (l.up || l.nm == null) return { ok: false, msg: 'Light is given out when an electron drops, so the move must run from a higher rung to a lower one.' };
-        if (isRed(l.nm)) return { ok: true };
-        return { ok: false, msg: 'The last line made is not the red one: read each line\'s colour and wavelength on the strip.' };
-      },
-      reward: {
-        log: 'The red line: down from the third rung to the second.',
-        title: 'Energy Levels',
-        body: 'An electron in hydrogen can only sit on certain rungs, called energy levels, and each line in the spectrum is a jump down between two of them. The lowest rung is the ground state, and any higher one is an excited state.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 5 */
-  (() => {
-    const lad = energyLadder('lad', 'Hydrogen', LADDER_AT);
-    return {
-      title: 'Energy of a Line',
-      prompt: 'What is the energy of the 486 nm emission line?',
-      widget,
-      table: opticsTable({
-        pieces: [lad.electron],
-        fixtures: [
-          lad.fixture,
-          linesStrip('made', 'Lines made', { x: 104, y: 13 }, 'lad', { size: { w: 84, h: 24 }, list: false }),
-          plaque('card', 'On the plaque', { x: 104, y: 36 }, ['Worked line: 656 nm is 3.03 x 10^-19 J', 'h 6.626 x 10^-34 J s;  c 3.00 x 10^8 m/s'], { w: 84, h: 20 }),
-          marker('energy', 'Your reading', { x: 104, y: 55 }, { label: 'Energy (x 10^-19 J)', min: 3.5, max: 4.5, step: 0.1, value: 3.5, size: { w: 60, h: 16 } })
-        ],
-        zones: { slots: lad.slots }
-      }),
-      hints: [
-        'Use the worked figure for the 656 nm line to see how a wavelength turns into an energy.',
-        'Turn 486 nm into a frequency with the speed of light, then multiply by Planck\'s constant.',
-        'Convert 486 nm to metres with 10^-9, divide the speed of light by it, multiply the result by 6.626 x 10^-34 J s and set your reading to it.'
-      ],
-      check(state) {
-        const v = state.table.fixtures.energy.dials.n.value;
-        if (v === 3.5) return { ok: false, notYet: true, msg: 'Set the energy you worked out.' };
-        if (v === 4.1) return { ok: true };
-        return { ok: false, msg: 'Check the method on the worked 656 nm line first, then apply it to this line.' };
-      },
-      reward: {
-        log: 'The 486 nm line carries 4.09 x 10^-19 J.',
-        title: 'Energy Out Equals Energy Lost',
-        body: 'The energy given out in a jump is exactly the difference between the two rungs, and it leaves as one photon: ΔE = hν. A bigger drop gives a photon of higher frequency, which is why the blue line comes from a bigger drop than the red.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 6 */
-  (() => {
-    const lad = energyLadder('lad', 'Hydrogen', LADDER_AT);
-    const token = (id, at) => ({ id, label: id, at, r: 6.5 });
-    return {
-      title: 'A Line Not Yet Seen',
-      prompt: 'Predict which wavelength an electron dropping from the fifth rung to the second gives out.',
-      widget,
-      table: opticsTable({
-        pieces: [lad.electron],
-        fixtures: [
-          lad.fixture,
-          linesStrip('made', 'Lines made', { x: 104, y: 13 }, 'lad', { size: { w: 84, h: 24 }, list: false }),
-          plaque('card', 'On the plaque', { x: 104, y: 36 }, ['Rung n sits at -2.18 x 10^-18 J / n^2', 'h 6.626 x 10^-34 J s;  c 3.00 x 10^8 m/s'], { w: 84, h: 20 })
-        ],
-        zones: { slots: lad.slots },
-        prediction: {
-          slot: { id: 'predict', label: 'Line made, in nm', at: { x: 72, y: 53 }, size: { w: 22, h: 12 } },
-          tokens: [token('410', { x: 94, y: 54 }), token('434', { x: 109, y: 54 }), token('486', { x: 124, y: 54 }), token('656', { x: 139, y: 54 })]
-        }
-      }),
-      hints: [
-        'Place a prediction, then drag the electron up to the fifth rung and down to the second to test it.',
-        'Compare the line the strip records with the wavelengths on the tokens.',
-        'Work out the energy of the fifth rung and of the second with the formula on the plaque, subtract, and turn that energy into a wavelength.'
-      ],
-      check(state) {
-        const t = state.table;
-        const token = t.prediction.token;
-        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction for the line first.' };
-        const real = String(Math.round(planJump(5, 2).nm));
-        if (token === real) return { ok: true };
-        const made = ladderRead(t, 'lad').lines.some(n => Math.abs(n - planJump(5, 2).nm) < 1);
-        if (made) return { ok: false, msg: 'The line the drop made is not the one you predicted.' };
-        return { ok: false, msg: 'Work the jump through with the formula, then make the drop on the ladder and compare the line it gives out with your prediction.' };
-      },
-      reward: {
-        log: 'The formula predicts a line the player never tapped.',
-        title: 'The Bohr Model',
-        body: 'The Bohr model puts hydrogen\'s electron on rungs at -2.18 x 10^-18 J divided by n squared, and from that one formula it predicts every line of hydrogen\'s visible spectrum to within a nanometre or two. A drop from the fifth rung to the second gives 434 nm, exactly as measured.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    const lad = energyLadder('lad', 'Hydrogen', LADDER_AT, { top: true });
-    return {
-      title: 'Past the Top',
-      prompt: 'Give the electron more energy than the whole ladder can hold.',
-      widget,
-      table: opticsTable({
-        pieces: [lad.electron],
-        fixtures: [lad.fixture, linesStrip('made', 'Lines made', LINES_AT, 'lad')],
-        zones: { slots: lad.slots }
-      }),
-      hints: [
-        'Drag the electron up the ladder, rung by rung, and read what the strip says about each climb.',
-        'Compare the highest rung with the dashed line above it.',
-        'An electron given more than the whole climb has no rung left to land on.'
-      ],
-      check(state) {
-        const read = ladderRead(state.table, 'lad');
-        if (read.rung === null || read.rung === 1) return { ok: false, notYet: true, msg: 'Move the electron up the ladder.' };
-        if (read.out) return { ok: true };
-        return { ok: false, msg: 'The electron still sits on a rung of the ladder: give it more than the whole climb.' };
-      },
-      reward: {
-        log: 'The top of the ladder is open: the electron is gone.',
-        title: 'Ionization',
-        body: 'Give an electron more than the whole climb and it leaves the atom altogether, which is ionization. Hydrogen\'s electron needs exactly 2.18 x 10^-18 J to climb from its ground state to the open top.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const lad = energyLadder('lad', 'Hydrogen', LADDER_AT, { probeAt: { x: 74, y: 33 } });
-    const chip = (id, nm, x) => lineChip(id, nm, { x, y: 33 });
-    return {
-      title: 'Helium Does Not Fit',
-      prompt: 'Put each line in the tray that says whether any drop on the hydrogen ladder makes it.',
-      widget,
-      table: opticsTable({
-        pieces: [lad.electron, chip('c486', 486, 99), chip('c588', 588, 119), chip('c447', 447, 139)],
-        fixtures: [lad.fixture, linesStrip('made', 'Lines made', { x: 104, y: 13 }, 'lad', { size: { w: 84, h: 24 }, list: false })],
-        zones: { slots: lad.slots, trays: [tray('yes', 'A drop makes it', 82, 54, 38, 18, 20), tray('no', 'No drop makes it', 122, 54, 38, 18, 20)] }
-      }),
-      hints: [
-        'Drag a line into the probe slot and read what the strip says about it.',
-        'Compare each line with the lines the hydrogen ladder gives out when its electron drops.',
-        'A line goes in the first tray only if some pair of rungs gives it, and in the second if none does.'
-      ],
-      check(state) {
-        const t = state.table;
-        const ids = ['c486', 'c588', 'c447'];
-        if (!trayed(t, ids)) return { ok: false, notYet: true, msg: 'Put every line in a tray.' };
-        for (const id of ids) {
-          const makes = jumpsForLine(t.pieces[id].props.nm).length > 0;
-          if (where(t, id) !== (makes ? 'yes' : 'no')) return { ok: false, msg: 'A line is in the wrong tray: put it in the probe slot and read whether any pair of rungs makes it.' };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'One electron fits the ladder; two do not.',
-        title: 'Where the Model Stops',
-        body: 'The ladder fits hydrogen because hydrogen\'s one electron has nothing else to feel. Helium\'s two electrons push on each other, so its rungs no longer follow the formula and the Bohr model cannot place its lines.',
+        body: 'Cool hydrogen takes out of the filament\'s light exactly the colours that hot hydrogen gives out, leaving dark lines in the band. That pattern of missing colours is the absorption spectrum, and its lines sit where the emission lines do.',
         last: true
       }
     };
@@ -384,11 +291,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag a source into the socket,', 'then under the band it makes.'],
-  2: ['Put the tube in the socket, then slide a reference', 'strip into the alongside slot.'],
-  3: ['Put the filament in the socket and the cell in front of it,', 'then slide a reference strip alongside.'],
+  2: ['Drag a source into the socket.'],
+  3: ['Put the tube in the socket, then slide a reference', 'strip into the alongside slot.'],
   4: ['Drag the electron to another rung.', 'Any light that leaves is written on the strip.'],
-  7: ['Drag the electron up past the top rung.']
+  5: ['Put the filament in the socket and the cell in front of it,', 'then slide a reference strip alongside.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -400,7 +306,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An atom\'s electrons sit only on certain energy levels, and light is given out or taken in exactly when an electron moves between two of them. Each gas therefore has a line spectrum no other gas shares, and the Bohr model reads hydrogen\'s from one formula.'
+      body: 'An atom\'s electrons sit only on certain energy levels, and light is given out or taken in exactly when an electron moves between two of them. Each gas therefore has a line spectrum no other gas shares.'
     },
     {
       heading: 'Why It Is Worth It',
@@ -408,7 +314,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'The ladder breaks for helium because an electron is not a bead on a rung. The next bench asks where an electron actually is.'
+      body: 'The ladder only fits hydrogen, because an electron is not a bead on a rung. The next bench asks where an electron actually is.'
     }
   ]
 };
@@ -429,48 +335,48 @@ export const PRACTICE = [
     explanation: 'A glowing gas gives out only certain wavelengths, so its spectrum is a few bright lines. A hot solid gives a continuous band, and cool gas in front of one gives dark absorption lines.'
   },
   {
-    question: 'An electron in a hydrogen atom drops from n = 3 to n = 2. What happens?',
+    question: 'An electron in a hydrogen atom drops from the third energy level to the second. What happens?',
     options: [
       { id: 'a', label: 'A photon with energy equal to the difference between the two levels is given out' },
       { id: 'b', label: 'A photon is absorbed' },
       { id: 'c', label: 'Nothing, because the electron stays in the atom' },
-      { id: 'd', label: 'The atom is ionized' }
+      { id: 'd', label: 'The atom loses the electron' }
     ],
     answer: 'a',
-    explanation: 'Falling to a lower level gives up the energy difference, and it leaves as one photon. Absorbing a photon would raise the electron, and ionization needs the electron to leave altogether.'
+    explanation: 'Falling to a lower level gives up the energy difference, and it leaves as one photon. Absorbing a photon would raise the electron.'
   },
   {
-    question: 'In the Bohr model of hydrogen, which jump gives out the photon of highest frequency?',
+    question: 'Which jump in a hydrogen atom gives out the photon of highest frequency?',
     options: [
-      { id: 'a', label: 'n = 6 to n = 2' },
-      { id: 'b', label: 'n = 3 to n = 2' },
-      { id: 'c', label: 'n = 4 to n = 3' },
-      { id: 'd', label: 'n = 5 to n = 4' }
+      { id: 'a', label: 'Sixth level to second level' },
+      { id: 'b', label: 'Third level to second level' },
+      { id: 'c', label: 'Fourth level to third level' },
+      { id: 'd', label: 'Fifth level to fourth level' }
     ],
     answer: 'a',
-    explanation: 'The bigger the drop in energy, the higher the photon\'s frequency. The levels crowd closer together as n grows, so the drop from n = 6 to n = 2 is the largest of the four.'
+    explanation: 'The bigger the drop in energy, the higher the photon\'s frequency. The levels crowd closer together as they climb, so the drop from the sixth to the second is the largest of the four.'
   },
   {
-    question: 'The Bohr levels of hydrogen are E = -2.18 x 10^-18 J / n^2. How much energy lifts an electron from n = 1 to n = 2?',
+    question: 'A filament\'s light passes through a cool gas, and dark lines appear in its band. Where are the dark lines?',
     options: [
-      { id: 'a', label: '1.64 x 10^-18 J' },
-      { id: 'b', label: '2.18 x 10^-18 J' },
-      { id: 'c', label: '5.45 x 10^-19 J' },
-      { id: 'd', label: '2.73 x 10^-18 J' }
+      { id: 'a', label: 'Where the same gas, glowing, would give out bright lines' },
+      { id: 'b', label: 'At the red end of the band only' },
+      { id: 'c', label: 'At random places' },
+      { id: 'd', label: 'Where the filament gives no light' }
     ],
     answer: 'a',
-    explanation: 'E(1) = -2.18 x 10^-18 J and E(2) = -2.18 x 10^-18 / 4 = -5.45 x 10^-19 J. The difference is 2.18 x 10^-18 - 5.45 x 10^-19 = 1.64 x 10^-18 J.'
+    explanation: 'Atoms take in exactly the energies they give out. The cool gas removes those colours from the filament\'s light and leaves dark lines at the same places.'
   },
   {
-    question: 'Why does the Bohr model fail for atoms with more than one electron?',
+    question: 'Two sealed tubes glow, and their bands show different sets of bright lines. What does that tell you?',
     options: [
-      { id: 'a', label: 'It ignores the repulsion between electrons, which changes the energy levels' },
-      { id: 'b', label: 'It only works for gases' },
-      { id: 'c', label: 'Larger atoms have no energy levels' },
-      { id: 'd', label: 'Photons cannot be absorbed by larger atoms' }
+      { id: 'a', label: 'They hold different gases' },
+      { id: 'b', label: 'One tube is hotter' },
+      { id: 'c', label: 'One tube is brighter' },
+      { id: 'd', label: 'They hold the same gas at different pressures' }
     ],
     answer: 'a',
-    explanation: 'The model was built for one electron attracted by one nucleus. With a second electron the two repel each other, and the simple 1/n^2 pattern no longer fits the levels.'
+    explanation: 'Each gas has its own energy levels and so its own set of lines, like a fingerprint. Different lines mean different atoms.'
   }
 ];
 
@@ -478,35 +384,28 @@ export const PRACTICE = [
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. Sources are plugged in, strips slid alongside, an electron dragged from rung to
-   rung, lines put in the probe, a prediction is a token. Nothing here says what a band or a ladder reads.
+   rung, a prediction is a token. Nothing here says what a band or a ladder reads.
    ------------------------------------------------------------------ */
 
 const put = (piece, to) => ({ place: { piece, to } });
-const reading = (fixture, value) => ({ setDial: { fixture, dial: 'n', value } });
 const rung = n => put('lad.e', `slot:lad.r${n === TOP ? 'top' : n}`);
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [put('fil', 'slot:sp.src'), put('tube', 'slot:sp.src'), put('fil', 'tray:band'), put('tube', 'tray:lines')],
+  [{ predict: 'exact' }],
+  [put('fil', 'slot:sp.src'), put('h', 'slot:sp.src'), put('he', 'slot:sp.src'), put('na', 'slot:sp.src'), put('fil', 'tray:band'), put('h', 'tray:lines'), put('he', 'tray:lines'), put('na', 'tray:lines')],
   [put('x', 'slot:sp.src'), put('h', 'slot:sp.ref'), put('he', 'slot:sp.ref')],
-  [put('fil', 'slot:sp.src'), put('cell', 'slot:sp.cell'), put('he', 'slot:sp.ref'), put('h', 'slot:sp.ref')],
   [rung(3), rung(2)],
-  [rung(4), rung(2), reading('energy', 4.1)],
-  [{ predict: '434' }, rung(5), rung(2)],
-  [rung(TOP)],
-  [put('c486', 'slot:lad.probe'), put('c588', 'slot:lad.probe'), put('c447', 'slot:lad.probe'), put('c486', 'tray:yes'), put('c588', 'tray:no'), put('c447', 'tray:no')]
+  [put('fil', 'slot:sp.src'), put('cell', 'slot:sp.cell'), put('he', 'slot:sp.ref'), put('h', 'slot:sp.ref')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [put('fil', 'tray:lines'), put('tube', 'tray:band')],
+  [],
+  [put('fil', 'tray:lines'), put('h', 'tray:band'), put('he', 'tray:lines'), put('na', 'tray:lines')],
   [put('x', 'slot:sp.src'), put('h', 'slot:sp.ref')],
-  [put('fil', 'slot:sp.src'), put('cell', 'slot:sp.cell'), put('he', 'slot:sp.ref')],
   [rung(4), rung(2)],
-  [rung(4), rung(2), reading('energy', 4.4)],
-  [{ predict: '486' }, rung(5), rung(2)],
-  [rung(6)],
-  [put('c486', 'tray:no'), put('c588', 'tray:yes'), put('c447', 'tray:no')]
+  [put('fil', 'slot:sp.src'), put('cell', 'slot:sp.cell'), put('he', 'slot:sp.ref')]
 ];
 
 function blankState() { return {}; }
@@ -530,4 +429,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { planJump, jumpsForLine, photonJoules, bohrJoules, LINES, seated, rungOf, TOP_LABEL };
+export { planJump, jumpsForLine, photonJoules, bohrJoules, LINES, seated, rungOf, SOURCES, STRIP_GAS, QUEST_KEY };

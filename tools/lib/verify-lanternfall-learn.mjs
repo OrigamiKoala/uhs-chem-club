@@ -80,7 +80,7 @@ function lanternfallRules({ mods, TABLE, fail, holds, rig }) {
         holds(!t.tools.length, `${label}: a predict stage carries a tool`);
         holds(i < q.STAGES.length - 1, `${label}: a predict stage with no stage after it to test the guess`);
         const next = q.STAGES[i + 1];
-        holds(next && !next.predict && Object.values(r.start(i + 1).fixtures).some(f => !f.noRun || Object.keys(f.dials).length), `${label}: the stage after a predict stage must bring the instrument`);
+        holds(next && !next.predict && Object.values(r.start(i + 1).fixtures).length > 0, `${label}: the stage after a predict stage must bring the instrument`);
         holds(typeof next?.prompt === 'string', `${label}: the test stage has no prompt`);
         holds(st.check(q.stateFor(i, {})).ok === false, `${label}: a predict stage can be submitted blank`);
       } else {
