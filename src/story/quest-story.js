@@ -72,6 +72,64 @@ export const QUEST_STORY = {
       'It is bismuth, and a salt flat does not make bismuth.'
     ],
     filed: 'Filed: someone is putting heavy metal into Tallow\'s salt, and no bench here can make it.'
+  },
+
+  /* ---- Bellows: the Fifth jammed the station's holders; the chemistry reads what a gauge counts and ends on a sealed tank that stayed warm ---- */
+  'unit04/q1-knocks': {
+    scene: 'gauge-walls',
+    captions: [
+      'A gauge on the floor, on the side wall and on the roof of a sealed box all read the same.',
+      'The gas is not pressing down with its weight: its particles are knocking on every wall alike.'
+    ],
+    filed: 'Filed: the station\'s gauges read true, so the pressure in the jammed holders is genuine and not a faulty needle.'
+  },
+  'unit04/q2-laws': {
+    scene: 'cold-tank',
+    captions: [
+      'A sealed tank left out in the cold must lose pressure in step with its kelvin temperature.',
+      'Cool one by fifty degrees and its gauge falls by about a sixth.'
+    ],
+    filed: 'Filed: a sealed tank that keeps its pressure through the cold must have something inside it giving off heat.'
+  },
+  'unit04/q3-ideal': {
+    scene: 'equal-rooms',
+    captions: [
+      'A mole of helium and a mole of carbon dioxide fill the same room, though one weighs eleven times the other.',
+      'So a gauge, a room and a temperature are enough to count what is inside a sealed tank.'
+    ],
+    filed: 'Filed: every sealed tank on the station can now be counted from its plate without opening it.'
+  },
+  'unit04/q4-mixtures': {
+    scene: 'mix-share',
+    captions: [
+      'In a mixture each gas pushes as if it were alone, and the gauge simply adds the pushes together.',
+      'Whatever the Fifth added to the fuel line will show up as a push of its own.'
+    ],
+    filed: 'Filed: any gas the Fifth has added to a tank can be read off its own share of the push.'
+  },
+  'unit04/q5-speed': {
+    scene: 'leak-race',
+    captions: [
+      'Lighter gases leak first, so how fast a gas escapes tells you how heavy its particles are.',
+      'The leak at the vent stack emptied at the same pace as krypton.'
+    ],
+    filed: 'Filed: the leak at the vent stack is krypton.'
+  },
+  'unit04/q6-real': {
+    scene: 'crowd-and-pull',
+    captions: [
+      'Squeezed hard, a gas pushes harder than the gas law says, because its particles take up room.',
+      'Cooled, it pushes less, because its particles pull on each other, and that pull is what makes a liquid.'
+    ],
+    filed: 'Filed: the Fifth packed the tanks past where the gas law holds, and only the compressor at the heart of the deck could.'
+  },
+  'unit04/boss-compressor': {
+    scene: 'warm-cylinder',
+    captions: [
+      'The Compressor settles, and in its vault stands a sealed cylinder logged at one pressure for twelve days.',
+      'The deck froze fifty degrees around it, but a sealed gas cannot hold its pressure through that unless something inside is giving off heat.'
+    ],
+    filed: 'Filed: a heat source ran inside the Fifth\'s cylinder for twelve days, and no chemical reaction lasts that long.'
   }
 };
 
