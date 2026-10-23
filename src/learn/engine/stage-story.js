@@ -95,7 +95,7 @@ export const STAGE_STORY = {
 
   /* ---- Bellows: let the pressure out of the fuel station ---- */
   'q1-knocks': {
-    2: 'The Fifth jammed extra gas into the station tanks, and the needles will not come down.'
+    1: 'The Fifth jammed gas into the station\'s holders, and the needles will not come down.'
   },
   'q2-laws': {
     1: 'The station valves will open only for a crew that understands how gas behaves.'

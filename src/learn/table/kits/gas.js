@@ -113,7 +113,7 @@ export const GAS_KIT = {
   id: GAS_KIT_ID,
   kinds: {
     tank: { r: 7 },
-    stmt: rect(9, 'stmt'),
+    stmt: rect(6.4, 'stmt'),
     num: rect(7, 'num'),
     curve: rect(10, 'curve'),
     hist: rect(11, 'hist'),
@@ -157,7 +157,7 @@ export const tank = (id, label, at, { gas, n, P, V = 10, T = 300, parts, sealed 
   piece('tank', id, label, at, { ...(parts ? { parts } : { gas }), ...(n != null ? { n } : {}), ...(P != null ? { P } : {}), V, T, sealed, plate, gaugeMax, showAmount, noGauge },
     { ...(hidden ? { hidden: true } : {}), ...(zone ? { zone } : {}), ...(fetchFrom ? { fetchFrom } : {}), ...(fixed ? { fixed: true } : {}), r: 7 });
 /** A card with a statement or a reading printed on it. */
-export const stmt = (id, label, at, extra = {}) => piece('stmt', id, label, at, {}, extra);
+export const stmt = (id, label, at, extra = {}) => piece('stmt', id, label, at, {}, { r: 6.4, ...extra });
 /** A card with a number on it: an answer a stage cannot build. */
 export const numCard = (id, label, at, value, extra = {}) => piece('num', id, label, at, { value }, extra);
 /** A card with a curve of the ideal law on it, `spec` being `{x, y, fixed, xmin, xmax, ymax, xName, yName}`. */
