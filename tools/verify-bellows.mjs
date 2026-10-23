@@ -448,7 +448,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     {
       const { fieldPointsOf } = await import('../src/three/field-points.js');
       const points = fieldPointsOf(built);
-      const want = [['gauge', 'site-1', 'the holder\'s pedestal gauge'], ['bleed', 'site-5', 'the vent stack\'s bleed valve'], ['drawoff', 'site-6', 'the cold box\'s draw-off']];
+      const want = [['drawoff', 'site-6', 'the cold box\'s draw-off']];
       for (const [id, host, what] of want) {
         check(points.some(p => p.id === id && p.siteId === host), `the "${id}" point feeds ${host} (${what})`, `no "${id}" field point feeds ${host}`);
       }

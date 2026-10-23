@@ -304,10 +304,9 @@ export function buildGaugeGallery(w) {
     { lx: 6.0, lz: -2.0, hw: 0.3, hd: 0.2 },
     { lx: 3.0, lz: -2.6, r: 0.2 }
   ];
-  const fieldPoints = [{
-    id: 'gauge', label: 'Holder Gauge', lx: 6.0, ly: 1.3, lz: -1.9, half: [0.4, 0.4, 0.3],
-    stand: { lx: 6.0, lz: -0.2 }
-  }];
+  // NO FIELD POINT. The holder's pedestal gauge was retired as a fetch (2026-10-23): the card it carried held the same three rings as the
+  // reference gauge on the bench, so it was pure carrying (audit U3). The gauge stays, as part of the gallery.
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
@@ -538,10 +537,9 @@ export function buildLeakStation(w) {
     { lx: 5.8, lz: -5.2, hw: 0.3, hd: 0.2 },
     { lx: 3.6, lz: -1.4, r: 0.2 }
   ];
-  const fieldPoints = [{
-    id: 'bleed', label: 'Stack Leak', lx: 5.8, ly: 0.95, lz: -5.0, half: [0.35, 0.45, 0.35],
-    stand: { lx: 5.8, lz: -3.2 }
-  }];
+  // NO FIELD POINT. The stack's sample was a lock (the bench could not be finished without fetching it); the unmarked leak now stands on
+  // the bench itself (2026-10-23). The bleed valve stays, as part of the stack.
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
