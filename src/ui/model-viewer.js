@@ -41,7 +41,7 @@ function paintFlat(ctx, w, h, parts, t, ay, ax) {
   for (const b of parts.bonds) {
     const [x0, y0, z0] = px(b.a);
     const [x1, y1, z1] = px(b.b);
-    items.push({ z: (z0 + z1) / 2 - 0.01, draw: () => { ctx.strokeStyle = '#8c8376'; ctx.lineWidth = b.r ? Math.max(1, b.r * k * 2) : (b.order >= 3 ? 9 : b.order > 1 ? 6 : 3); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); } });
+    items.push({ z: (z0 + z1) / 2 - 0.01, draw: () => { ctx.strokeStyle = '#8c8376'; ctx.lineWidth = b.thin ? 1.2 : b.r ? Math.max(1, b.r * k * 2) : (b.order >= 3 ? 9 : b.order > 1 ? 6 : 3); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); } });
   }
   for (const s of parts.spheres) {
     const [x, y, z] = px(s.pos);
@@ -140,9 +140,9 @@ export function mountModel(host, spec) {
       const a = new THREE.Vector3(...b.a);
       const c = new THREE.Vector3(...b.b);
       const len = a.distanceTo(c);
-      const n = b.order >= 3 ? 3 : b.order > 1 ? 2 : 1;
+      const n = b.thin ? 1 : b.order >= 3 ? 3 : b.order > 1 ? 2 : 1;
       for (let i = 0; i < n; i++) {
-        const rad = b.r ?? (Number.isInteger(b.order) ? 0.07 : 0.05);
+        const rad = b.thin ? 0.025 : (b.r ?? (Number.isInteger(b.order) ? 0.07 : 0.05));
         const g = new THREE.CylinderGeometry(rad, rad, len, 10);
         geos.push(g);
         const m = new THREE.Mesh(g, mat('#8c8376'));

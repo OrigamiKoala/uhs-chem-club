@@ -550,10 +550,9 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*["']([
     {
       const { fieldPointsOf } = await import('../src/three/field-points.js');
       const points = fieldPointsOf(built);
-      const want = [['flowline', 'site-1', 'the exchanger\'s thermowell tap'], ['edge', 'site-2', 'the sampling basket at the spring'], ['coil', 'site-4', 'the coil\'s gauge board']];
-      for (const [id, host, what] of want) {
-        check(points.some(p => p.id === id && p.siteId === host), `the "${id}" point feeds ${host} (${what})`, `no "${id}" field point feeds ${host}`);
-      }
+      // The three field points were retired (2026-10-23): each fetch carried a copy of what its bench already holds, or fed a stage that
+      // was cut. A fetch stays only where it brings new evidence, and Ember Reach has none left.
+      check(points.length === 0, 'no field point is registered (every fetch carried what its bench holds)', `field points remain (${points.map(p => p.id).join(', ')}) for stages that no longer fetch`);
       const bad = [];
       for (const p of points) {
         const site = world.sites.find(s => s.id === p.host);
@@ -621,6 +620,82 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*["']([
     const overlook = [0, 0, world.rim.cz + world.rim.rail + 2.0];
     check(reachable(overlook[0], overlook[2], 1.0), 'the overlook is reached through the expansion loop', 'the overlook beyond the main cannot be reached');
   }
+}
+
+/* ------------------------------------------------------------ the benches' rework (2026-10-23): what the audit asked of every Ember Reach table */
+
+console.log('\nEmber Reach — the benches and the boss, held to the rules of the rework\n');
+{
+  const MODEL = await import('../src/learn/table/model.js');
+  const { tourSteps } = await import('../src/learn/table/tour.js');
+  const MP = await import('../src/learn/engine/model-parts.js');
+  const { QUEST_STORY } = await import('../src/story/quest-story.js');
+  const { SCENES } = await import('../src/ui/story-scenes.js');
+  const { WORLDS } = await import('../src/learn/curriculum.js');
+  const world5 = WORLDS.find(w => w.id === 'unit05');
+  const mods = new Map();
+  for (const q of world5.quests) mods.set(q.id, await q.module());
+  const counts = { stages: 0, predicts: 0, tours: 0, models: 0 };
+  const bad0 = failures;
+  for (const [id, mod] of mods) {
+    const stages = mod.STAGES;
+    const isBoss = id.startsWith('boss-');
+    if (stages.length < 3 || stages.length > 5) fail(`unit05/${id} has ${stages.length} stages, not 3 to 5`);
+    let predicts = 0;
+    stages.forEach((st, i) => {
+      counts.stages++;
+      const label = `unit05/${id} stage ${i + 1}`;
+      const t = MODEL.createTable(st.table, st.title);
+      // A field fetch must bring new evidence, never a lock, never on a boss: Ember Reach has none left.
+      if (Object.keys(t.fetch).length) fail(`${label}: a field fetch (every one carried what its bench already holds)`);
+      // Predict first: the guess is made with no instrument on the table, and the next stage brings the instrument.
+      if (t.prediction) fail(`${label}: a prediction token on a stage that is not a predict stage`);
+      if (st.predict) {
+        predicts++;
+        counts.predicts++;
+        if (isBoss) fail(`${label}: a boss phase asks for a prediction`);
+        if (Object.values(t.fixtures).some(f => !f.noRun || Object.keys(f.dials).length)) fail(`${label}: a predict stage has a runnable or adjustable instrument on the table`);
+        if (t.tools.length) fail(`${label}: a predict stage carries a tool`);
+        const next = stages[i + 1];
+        if (!next) fail(`${label}: a predict stage with no stage after it to test the guess`);
+        else {
+          const nt = MODEL.createTable(next.table, next.title);
+          if (next.predict || !Object.values(nt.fixtures).length && !Object.values(nt.pieces).some(p => ['block', 'charge', 'eqn', 'bond', 'phase'].includes(p.kind))) fail(`${label}: the stage after a predict stage must bring the instrument`);
+          if (typeof next.prompt !== 'string') fail(`${label}: the test stage has no prompt`);
+        }
+        const slot = Object.values(t.zones.slots);
+        if (!slot.length) fail(`${label}: a predict stage with no slot for the guess`);
+        if (typeof st.onClear !== 'function') fail(`${label}: a predict stage does not keep its guess (onClear)`);
+      }
+      // The Tour: a step for every instrument, in plain words, and no word the quest has not earned.
+      const steps = tourSteps(t, {});
+      counts.tours++;
+      for (const f of Object.values(t.fixtures)) {
+        if (f.props?.backdrop) continue;
+        if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: the instrument "${f.label}" is not in the Tour`);
+      }
+      for (const v of mod.VOCABULARY || []) {
+        if (v.introducedAt > i) for (const s of steps) if (v.term.test(`${s.name} ${s.desc}`)) fail(`${label}: Tour step "${s.name}" uses a word the quest has not earned yet (${v.term})`);
+      }
+      // A reward model builds, and its counts are the spec's own.
+      const r = (() => { try { return st.reward; } catch (e) { return null; } })();
+      if (r?.model) {
+        counts.models++;
+        try { const parts = MP.modelParts(r.model); if (!parts.spheres.length) fail(`${label}: the reward model has nothing in it`); } catch (e) { fail(`${label}: the reward model does not build (${e.message})`); }
+        if (!MP.captionOf(r.model)) fail(`${label}: the reward model has no words under it`);
+      }
+    });
+    if (!isBoss && !predicts) fail(`unit05/${id} has no predict stage for its click`);
+    if (predicts > 2) fail(`unit05/${id} asks for ${predicts} predictions: one for the click and at most one for a new case`);
+  }
+  // Every story animation Ember Reach plays names a painter that exists.
+  for (const key of ['unit05/q1-flow', 'unit05/q5-hess', 'unit05/q7-gibbs', 'unit05/boss-crucible']) {
+    const st = QUEST_STORY[key];
+    if (!st) fail(`${key} has no story animation`);
+    else if (!SCENES[st.scene]) fail(`${key} names the painter "${st.scene}", which does not exist`);
+  }
+  for (const key of Object.keys(QUEST_STORY)) if (key.startsWith('unit05/') && !mods.has(key.replace('unit05/', ''))) fail(`${key} is a story animation for no quest`);
+  check(failures === bad0, `${counts.stages} stages in ${mods.size} quests: 3 to 5 each, one prediction on each click, no fetch, a Tour step for every instrument, ${counts.models} reward model(s) that build, four story animations with painters`);
 }
 
 console.log('');

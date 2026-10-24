@@ -15,6 +15,7 @@ import {
   blockRead, cupRead, shelvesRead, wellRead, ledgerRead, stackRead, cardTerms, fmtEqn, fmtSide, signedKJ, fixed, markerRead, plotRead, warmRead,
   cellsOpen, loggedArrangements, waysOf, shakesOf, occupiedCells, sig, WELL, LID_LOSS, whereIs
 } from './heat-read.js';
+import { bondAtoms, inkOfElement, phaseDots } from './heat-parts.js';
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -120,8 +121,11 @@ function paintBlock(ctx, p, state, o) {
 function paintCharge(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.charge, '#1d1a16');
   const sc = o.sc;
-  say(ctx, p.label, o.x, box.y0 + 3.0 * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
-  say(ctx, p.props.shown ?? `${sig(p.props.moles, 3)} mol`, o.x, box.y0 + 8.4 * sc, Math.max(6, 1.8 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
+  const tried = p.props.rise != null;
+  say(ctx, p.label, o.x, box.y0 + (tried ? 2.5 : 3.0) * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
+  say(ctx, p.props.shown ?? `${sig(p.props.moles, 3)} mol`, o.x, box.y0 + (tried ? 6.1 : 8.4) * sc, Math.max(6, 1.8 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
+  // A tin that has been in the cup keeps what the bath did, so the readings can be compared once the tins are out again.
+  if (tried) say(ctx, `bath ${fixed(p.props.rise, 1, true)} °C`, o.x, box.y0 + 9.6 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, color: p.props.rise > 0.05 ? WARM : p.props.rise < -0.05 ? COLD : DUST, maxW: box.w - 2 * sc });
 }
 
 function paintEqn(ctx, p, state, o) {
@@ -137,12 +141,33 @@ function paintEqn(ctx, p, state, o) {
   if (t.scale > 1) say(ctx, `× ${t.scale}`, box.x0 + box.w - 1.2 * sc, box.y0 + 7.9 * sc, Math.max(6, 1.8 * sc), { align: 'right', weight: 700, color: AMBER });
 }
 
+/** The picture of a bond: two atoms with the rod (or rods) between them, flat. The built table stands the same two atoms up as solids. */
+export function paintBondIcon(ctx, which, cx, cy, size) {
+  const { a, b, order } = bondAtoms(which);
+  const r = size * 0.2;
+  const gap = size * 0.62;
+  for (let k = 0; k < order; k++) {
+    const off = (k - (order - 1) / 2) * r * 0.55;
+    ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, r * 0.3);
+    ctx.beginPath(); ctx.moveTo(cx - gap / 2, cy + off); ctx.lineTo(cx + gap / 2, cy + off); ctx.stroke();
+  }
+  ctx.lineWidth = 1;
+  for (const [x, el] of [[cx - gap / 2, a], [cx + gap / 2, b]]) {
+    ctx.fillStyle = inkOfElement(el); ctx.strokeStyle = '#2e2a26';
+    ctx.beginPath(); ctx.arc(x, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+}
+
 function paintBond(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.bond, '#1d1a16');
   const sc = o.sc;
-  say(ctx, p.label, o.x, box.y0 + 3.0 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
-  const line = `${p.props.note ? `${p.props.note} · ` : ''}${p.props.dH} kJ`;
-  say(ctx, line, o.x, box.y0 + 8.3 * sc, Math.max(5.8, 1.7 * sc), { align: 'center', color: AMBER, maxW: box.w - 2 * sc });
+  // The left third holds the two atoms: drawn here on the drawn table, stood up as solids on the built one (`o.flat`).
+  if (!o.flat) paintBondIcon(ctx, p.props.which, box.x0 + box.w * 0.19, o.y, box.h * 0.9);
+  const cx = o.x + box.w * 0.15;
+  const maxW = box.w * 0.66;
+  say(ctx, p.label, cx, box.y0 + 3.0 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW });
+  say(ctx, p.props.note || '', cx, box.y0 + 6.2 * sc, Math.max(5.6, 1.6 * sc), { align: 'center', color: DUST, maxW });
+  say(ctx, `${p.props.dH} kJ`, cx, box.y0 + 9.0 * sc, Math.max(5.8, 1.7 * sc), { align: 'center', color: AMBER, maxW });
 }
 
 /** Two shelves drawn the way an energy diagram draws them: before on the left, after on the right, at their heights. */
@@ -171,31 +196,29 @@ function paintShelfCard(ctx, p, state, o) {
   say(ctx, `${p.props.from ?? ''} → ${p.props.to ?? ''}`, box.x0 + box.w / 2, box.y0 + box.h - 1.9 * sc, Math.max(5.5, 1.5 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
 }
 
-function particles(ctx, kind, x0, y0, w, h, sc, seedKey) {
+/** The dozen particles of a phase (`heat-parts.js`), seen a little from the side, each with the streak of how fast it is moving. */
+function particles(ctx, p, x0, y0, w, h, sc) {
+  const dots = phaseDots(p.props.phase, p.props.T ?? 20);
+  const r = Math.max(1.2, sc * 0.55);
   ctx.fillStyle = PHOS;
   ctx.strokeStyle = PHOS;
-  const r = Math.max(1.2, sc * 0.55);
-  if (kind === 'solid') {
-    const cols = 5; const rows = 3;
-    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) { ctx.beginPath(); ctx.arc(x0 + (i + 0.5) * w / cols, y0 + (j + 0.5) * h / rows, r, 0, Math.PI * 2); ctx.fill(); }
-  } else if (kind === 'liquid') {
-    const pts = [[0.1, 0.8], [0.3, 0.7], [0.5, 0.82], [0.7, 0.68], [0.9, 0.8], [0.2, 0.45], [0.45, 0.5], [0.62, 0.42], [0.82, 0.5], [0.35, 0.22], [0.6, 0.18]];
-    for (const [u, v] of pts) { ctx.beginPath(); ctx.arc(x0 + u * w, y0 + v * h, r, 0, Math.PI * 2); ctx.fill(); }
-  } else {
-    const pts = [[0.12, 0.25], [0.5, 0.15], [0.86, 0.3], [0.28, 0.7], [0.68, 0.62], [0.9, 0.85]];
-    for (const [u, v] of pts) {
-      const px = x0 + u * w; const py = y0 + v * h;
-      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - sc * 2.2, py + sc * 1.2); ctx.stroke(); ctx.globalAlpha = 1;
-    }
+  ctx.lineWidth = Math.max(1, sc * 0.2);
+  for (const d of dots) {
+    // Deeper into the box is a little up and to the right.
+    const px = x0 + (d.u * 0.86 + d.w * 0.12) * w;
+    const py = y0 + (d.v * 0.86 + (1 - d.w) * 0.12) * h;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - d.tail * sc * 4.2, py + d.tail * sc * 1.8); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
   }
-  void seedKey;
+  ctx.lineWidth = 1;
 }
 
 function paintPhaseCard(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.phase, '#16140f');
   const sc = o.sc;
-  particles(ctx, p.props.phase, box.x0 + 1.4 * sc, box.y0 + 1.4 * sc, box.w - 2.8 * sc, box.h - 8 * sc, sc, p.id);
+  if (!o.flat) particles(ctx, p, box.x0 + 1.4 * sc, box.y0 + 1.4 * sc, box.w - 2.8 * sc, box.h - 8 * sc, sc);
   say(ctx, p.label, box.x0 + box.w / 2, box.y0 + box.h - 3.2 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
 }
 
@@ -283,7 +306,7 @@ export function faceKey(p, state) {
   const pr = p.props;
   let extra = '';
   if (p.kind === 'block') { const r = blockRead(state, p.id); extra = `${r.T.toFixed(1)}|${r.joined ? 1 : 0}`; }
-  return `${p.kind}|${p.label}|${pr.flipped ? 1 : 0}|${pr.scale || 1}|${pr.shown ?? ''}|${extra}`;
+  return `${p.kind}|${p.label}|${pr.flipped ? 1 : 0}|${pr.scale || 1}|${pr.shown ?? ''}|${pr.rise ?? ''}|${pr.T ?? ''}|${extra}`;
 }
 
 /* ------------------------------------------------------------------
@@ -316,7 +339,7 @@ function paintCup(ctx, f, state, b) {
   ctx.fillStyle = '#100f0c';
   ctx.fillRect(F.x(cx0), F.y(cy0), F.len(cx1 - cx0), F.len(cy1 - cy0));
   const level = Math.min(1, 0.45 + (r.mWater / (p.vmax || 220)) * 0.5);
-  ctx.fillStyle = r.Tf > r.T0 + 0.05 ? 'rgba(192,101,43,0.30)' : r.Tf < r.T0 - 0.05 ? 'rgba(111,143,176,0.32)' : 'rgba(111,143,63,0.22)';
+  ctx.fillStyle = Math.abs(r.c - 4.184) > 0.01 ? 'rgba(119,121,122,0.45)' : r.Tf > r.T0 + 0.05 ? 'rgba(192,101,43,0.30)' : r.Tf < r.T0 - 0.05 ? 'rgba(111,143,176,0.32)' : 'rgba(111,143,63,0.22)';
   ctx.fillRect(F.x(cx0), F.y(cy1 - (cy1 - cy0) * level), F.len(cx1 - cx0), F.len((cy1 - cy0) * level));
   ctx.strokeStyle = STEEL; ctx.lineWidth = 2;
   ctx.strokeRect(Math.round(F.x(cx0)) + 0.5, Math.round(F.y(cy0)) + 0.5, Math.round(F.len(cx1 - cx0)), Math.round(F.len(cy1 - cy0)));
@@ -527,8 +550,9 @@ function paintPlot(ctx, f, state, b) {
   ctx.beginPath(); ctx.moveTo(F.x(X(r.T)), F.y(py)); ctx.lineTo(F.x(X(r.T)), F.y(py + ph)); ctx.stroke();
   const y = f.size.h - 3.6;
   say(ctx, `${Math.round(r.T)} K`, F.x(2.5), F.y(y), F.size(2.6, 6.4), { color: DUST, weight: 700 });
-  if (!p.hideTug) say(ctx, `ΔH ${signedKJ(r.dH)}   TΔS ${signedKJ(r.TdS)}`, F.x(f.size.w / 2), F.y(y), F.size(2.2, 6), { color: DUST, align: 'center', maxW: F.len(f.size.w * 0.5) });
-  if (!p.hideDG) say(ctx, `ΔG ${signedKJ(r.dG)} kJ`, F.x(f.size.w - 2.5), F.y(y), F.size(2.7, 6.5), { color: AMBER, weight: 700, align: 'right' });
+  // `words` prints the two pulls and their net in plain words, until the bench has earned the symbols.
+  if (!p.hideTug) say(ctx, p.words ? `HEAT ${signedKJ(r.dH)}   SPREAD ${signedKJ(r.TdS)}` : `ΔH ${signedKJ(r.dH)}   TΔS ${signedKJ(r.TdS)}`, F.x(f.size.w / 2), F.y(y), F.size(2.2, 6), { color: DUST, align: 'center', maxW: F.len(f.size.w * 0.5) });
+  if (!p.hideDG) say(ctx, `${p.words ? 'NET' : 'ΔG'} ${signedKJ(r.dG)} kJ`, F.x(f.size.w - 2.5), F.y(y), F.size(2.7, 6.5), { color: AMBER, weight: 700, align: 'right' });
 }
 
 function paintWarm(ctx, f, state, b) {

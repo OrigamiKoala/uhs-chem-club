@@ -345,10 +345,8 @@ export function buildWellheadExchanger(w) {
     { lx: 6.45, lz: -1.7, hw: 0.3, hd: 0.2 },
     { lx: 3.0, lz: -2.2, r: 0.2 }
   );
-  const fieldPoints = [{
-    id: 'flowline', label: 'Flowline Tap', lx: 6.45, ly: 1.3, lz: -1.6, half: [0.4, 0.4, 0.3],
-    stand: { lx: 6.45, lz: -0.1 }
-  }];
+  // NO FIELD POINT. The flowline point was retired: the tank's weight is printed on the bench itself, and the prediction stage no longer needs a tap reading (a fetch stays only where what is fetched is new evidence).
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders: out.colliders, vents: out.vents, fieldPoints };
 }
 
@@ -415,10 +413,8 @@ export function buildSpringShelf(w) {
 
   k.lampMast(g, -3.1, -2.4, { h: 3.7, arm: [3.1, 2.1] });
   colliders.push({ lx: -3.1, lz: -2.4, r: 0.2 });
-  const fieldPoints = [{
-    id: 'edge', label: 'Spring Basket', lx: 5.6, ly: 1.05, lz: -4.8, half: [0.45, 0.35, 0.4],
-    stand: { lx: 5.6, lz: -2.4 }
-  }];
+  // NO FIELD POINT. The edge point was retired: the fitting prints its own starting temperature, so the basket tag carried a copy of what the bench holds (a fetch stays only where what is fetched is new evidence).
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
@@ -552,10 +548,8 @@ export function buildFumaroleCoil(w) {
 
   k.lampMast(g, 3.2, -2.3, { h: 3.7, arm: [-2.8, 2.1] });
   out.colliders.push({ lx: 3.2, lz: -2.3, r: 0.2 });
-  const fieldPoints = [{
-    id: 'coil', label: 'Coil Gauges', lx: 6.3, ly: 1.45, lz: -1.8, half: [0.55, 0.35, 0.3],
-    stand: { lx: 6.3, lz: -0.1 }
-  }];
+  // NO FIELD POINT. The coil point was retired: the stage that read the coil's gauge board was cut, and its water state is not asked on the bench (a fetch stays only where what is fetched is new evidence).
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders: out.colliders, vents: out.vents, fieldPoints };
 }
 

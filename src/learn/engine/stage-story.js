@@ -118,32 +118,27 @@ export const STAGE_STORY = {
 
   /* ---- Ember Reach: trace the Fifth Guild's geothermal siphon ---- */
   'q1-flow': {
-    1: 'Two basalt manifold blocks glow beside the caldera rim, waiting for Vess to bridge them.',
-    8: 'Four unmarked vent lines hiss into the station.'
+    2: 'A shelter\'s heating valve is frozen shut, and Vess has two ways to thaw it.',
+    4: 'The shelters\' emergency kits hold warmers, packs and tablets, and Vess is checking each one.'
   },
   'q2-calorimetry': {
-    1: 'The geothermal cooling jackets need a calibrated water bath before the main valves open.',
-    8: 'A technician left the cover off the reserve bath.'
+    1: 'The cooling jackets can hold water or iron, and Vess must choose before the main valves open.',
+    3: 'A fitting from the siphon line carries no stamp, and Vess wants its metal named.'
   },
   'q3-enthalpy': {
-    1: 'The Fifth left fuel canisters along the ridge, and Vess needs to know what each charge delivers.',
-    8: 'Three fuel tanks stand ready for the ascent skiff.'
+    2: 'The ascent skiff can lift only so much fuel, so Vess must pick its tank with care.'
   },
   'q4-bonds': {
-    1: 'The siphon’s cracking coil pulls gas molecules apart over the vent.',
-    6: 'A scorched ledger beside the burner asks where the flame’s energy truly originates.'
+    1: 'The Fifth\'s cracking coil pulls gas molecules apart over the vent, and Vess wants to know what that costs.'
   },
   'q5-hess': {
-    1: 'The direct vent shaft is sealed, so Vess must chart a multi-step route to the same depth.',
-    8: 'One last sealed flue pipe hides its formation mark.'
+    1: 'The direct vent shaft is sealed, so Vess must work out its heat from the routes that are open.'
   },
   'q6-entropy': {
-    2: 'A burst bypass valve scatters vent gas into an evacuated chamber.',
-    7: 'The caldera’s limestone rim cracks into escaping gas.'
+    1: 'A burst bypass valve scatters vent gas into an empty chamber, and Vess wants to know where it ends up.'
   },
   'q7-gibbs': {
-    1: 'Some vent pipes run without pumps while others stall the moment the current drops.',
-    8: 'The Crucible’s outer lock waits for the right furnace setting.'
+    1: 'The shelters\' cold packs chill the water they dissolve in, and Vess wants to know why they work at all.'
   },
 
   /* ---- Kettle: halt the robot foundry ---- */

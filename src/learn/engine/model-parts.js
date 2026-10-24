@@ -16,6 +16,7 @@ import { shellsFor } from '../table/kits/atoms.js';
 import { mulberry32 } from './plates.js';
 // LIGAR: the shapes, crystals and lobes of Ligar's reward cards live in their own file (added, not altered).
 import { ligarParts, ligarCaption, LIGAR_MOLECULES } from './model-parts-ligar.js';
+import { emberModelParts, emberCaption } from './model-parts-ember.js';
 
 /** Display colours, in the plate's weathered palette. */
 const COLOR = { H: '#d8d2c4', C: '#4a4640', O: '#a0522d', Na: '#cfc8b8', Cl: '#c9b66a', proton: '#d99423', neutron: '#8c8376', electron: '#dcd6cc', bond: '#8c8376', ring: '#544e46' };
@@ -141,6 +142,8 @@ export function modelParts(spec) {
   if (spec.type === 'gas') return gasParts(spec);
   const ligar = ligarParts(spec);
   if (ligar) return ligar;
+  const ember = emberModelParts(spec); // Ember Reach's molecules and boxes (model-parts-ember.js)
+  if (ember) return ember;
   if (spec.type === 'molecule') return moleculeParts(spec);
   if (spec.type === 'atoms') {
     const n = spec.items.length;
@@ -164,6 +167,8 @@ export function modelParts(spec) {
 export function captionOf(spec) {
   if (spec.caption) return spec.caption;
   if (spec.type === 'gas') return spec.boxes.map(b => `${b.label ? `${b.label}: ` : ''}${b.parts.map(p => `${p.n} ${p.kind}`).join(' and ')}`).join('. ') + '.';
+  const emberWords = emberCaption(spec);
+  if (emberWords) return emberWords;
   const ligar = ligarCaption(spec);
   if (ligar) return ligar;
   if (spec.type === 'molecule') return `${(MOLECULES[spec.name] || LIGAR_MOLECULES[spec.name])?.formula || spec.name}, as a ball-and-stick model.`;

@@ -31,7 +31,7 @@ export const UNIT_05 = {
       title: 'Heat and Temperature',
       line: 'Touch a hot block to a cold one, watch both thermometers settle, and mark which way energy crossed the boundary.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q1-flow.js')
     },
@@ -40,7 +40,7 @@ export const UNIT_05 = {
       title: 'Calorimetry',
       line: 'Catch a reaction’s heat in a weighed water bath and turn a thermometer rise into joules and kilojoules per mole.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_05 = {
       title: 'Enthalpy of Reaction',
       line: 'Express heat per mole with the system’s sign, flip and scale thermochemical equations, and compare fuels per gram.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 3,
       status: 'live',
       module: () => import('../quests/unit05/q3-enthalpy.js')
     },
@@ -58,7 +58,7 @@ export const UNIT_05 = {
       title: 'Bond Enthalpies',
       line: 'Climb uphill to break reactant bonds into free atoms, drop downhill as product bonds snap together, and compare the two.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q4-bonds.js')
     },
@@ -67,7 +67,7 @@ export const UNIT_05 = {
       title: "Hess's Law and Formation",
       line: 'Stack reaction steps on an enthalpy altitude ladder and measure compounds from the elemental sea-level baseline.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q5-hess.js')
     },
@@ -76,7 +76,7 @@ export const UNIT_05 = {
       title: 'Entropy',
       line: 'Open the stopcock on a partitioned chamber, count the ways particles can spread out, and read ΔS° across phases and reactions.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q6-entropy.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_05 = {
       title: 'Free Energy',
       line: 'Balance ΔH against −TΔS on the plotter, find the temperature where ice melts, and drive an uphill reaction by coupling.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q7-gibbs.js')
     },

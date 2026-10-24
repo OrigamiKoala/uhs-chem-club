@@ -222,3 +222,13 @@ function hash(str) {
 
 /** The fixture kinds and piece kinds the Tour has words for (a kind outside these still gets a generic step). */
 export const TOUR_KINDS = { fixtures: Object.keys(FIXTURE).filter(k => !k.includes(':')), pieces: Object.keys(PIECE), tools: Object.keys(TOOL) };
+
+/**
+ * A kit may bring its own words (`addTourText(fixtures, pieces)`): a fixture kind's `{title, text, dials?}` and a piece kind's
+ * `[title, text, extra?]`, added to the tables above. The Ember Reach heat kit registers its instruments and pieces this way
+ * (`table/kits/heat-tour.js`), so a kit's words live beside the kit.
+ */
+export function addTourText(fixtures = {}, pieces = {}) {
+  Object.assign(FIXTURE, fixtures);
+  Object.assign(PIECE, pieces);
+}
