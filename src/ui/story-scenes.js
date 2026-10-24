@@ -10,6 +10,7 @@
  */
 
 import { mulberry32 } from '../learn/engine/plates.js';
+import { EMBER_SCENES } from './story-scenes-ember.js';
 
 const C = { bg: '#0d0c0a', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', amber: '#d99423', text: '#dcd6cc', pale: '#cfc8b8', iron: '#3c3833' };
 
@@ -260,7 +261,8 @@ export const SCENES = {
   'three-numbers': threeNumbers,
   'balance-bins': balanceBins,
   'scale-count': scaleCount,
-  'hopper-fall': hopperFall
+  'hopper-fall': hopperFall,
+  ...EMBER_SCENES
 };
 
 /** Paint one frame of a scene. An unknown scene paints the bare plate. */

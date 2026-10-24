@@ -72,6 +72,40 @@ export const QUEST_STORY = {
       'It is bismuth, and a salt flat does not make bismuth.'
     ],
     filed: 'Filed: someone is putting heavy metal into Tallow\'s salt, and no bench here can make it.'
+  },
+
+  /* ---- Ember Reach: the Fifth's manifold is frosted over, so what runs inside it takes heat in ---- */
+  'unit05/q1-flow': {
+    scene: 'frost-manifold',
+    captions: [
+      'On the overlook, the Fifth\'s manifold is furred with frost in the middle of a hot caldera.',
+      'A bath that cools means heat is going into the chemicals, so frost on the pipes means heat is going into the manifold.'
+    ],
+    filed: 'Filed: the manifold is taking heat in, so something inside it is running an endothermic change.'
+  },
+  'unit05/q5-hess': {
+    scene: 'two-routes',
+    captions: [
+      'The straight shaft at the separator is sealed, but the stepped pipe beside it starts and ends in the same two places.',
+      'Heat counts only those two places, so the open pipe gives the same total as the shaft nobody can open.'
+    ],
+    filed: 'Filed: the sealed shaft carries the same heat as the open pipe, so no route can hide it.'
+  },
+  'unit05/q7-gibbs': {
+    scene: 'seal-crossing',
+    captions: [
+      'Ice melts at 273 K because that is where the heat it costs and the spreading it gains are equal.',
+      'The limestone seal on the Fifth\'s siphon core is a change of the same kind, and it gives way only above its own crossing.'
+    ],
+    filed: 'Filed: the siphon core is sealed until it is hot enough, and Vess can now find that temperature.'
+  },
+  'unit05/boss-crucible': {
+    scene: 'crucible-open',
+    captions: [
+      'The Crucible splits along its firebrick seams, and inside is a heat exchanger that carried megawatts away without a wisp of steam.',
+      'Below the exchanger, a pipe runs down into the crust.'
+    ],
+    filed: 'Filed: the raiders were feeding an endothermic process far below the crust, and no thermometer at the surface could have seen it.'
   }
 };
 
