@@ -64,33 +64,33 @@ export const STAGE_STORY = {
 
   /* ---- Ligar: clear the rescue pass ---- */
   'q1-joins': {
-    1: 'The Fifth blast scattered rubble across the rescue tunnel mouth.',
-    8: 'The trapped miners ration air while the tunnel gas keeps its recipe.'
+    1: 'The Fifth\'s blast scattered rubble across the rescue tunnel, and Vess needs to know what holds it together.',
+    4: 'The breakers pack their charges by the recipe, so a wrong count wastes them.'
   },
   'q2-lattice': {
-    1: 'The rescue tunnel needs the toughest boulder marked before the breakers start.',
-    8: 'The trapped miners need a liner that holds at 900 degrees without shocking anyone.'
+    1: 'Some of the rubble is rock salt, and Vess wants to know if it is safe near the wiring.',
+    5: 'The trapped miners need a liner that holds at 900 degrees without shocking anyone.'
   },
   'q3-distance': {
-    6: 'The miners need to know which seam will fight the drill the hardest.'
+    2: 'The breaker charge has to carry at least the energy that pulls a seam gas apart.',
+    4: 'Three seam gases hold carbon atoms together, and Vess needs to know how close.'
   },
   'q4-dots': {
     1: 'The blast filled the tunnel with unknown gases, and Vess must draw each one to know which is safe.',
-    8: 'A heavy gas pools at the tunnel floor where the miners kneel.'
+    3: 'A heavy gas pools at the tunnel floor where the miners kneel.'
   },
   'q5-resonance': {
-    1: 'The cutters will trust only the drawing that matches the measured rock.',
-    8: 'The map closes on water, the last molecule on the slate.'
+    1: 'The cutters will trust only the drawing that matches the measured gas.'
   },
   'q6-shape': {
     1: 'The breakers cannot cut until they know what shape each tunnel gas takes.'
   },
   'q7-polarity': {
     1: 'The Fifth left tunnel gases that cling to the rescue gear, and Vess must learn why.',
-    8: 'The wash water waits while the charged rod tests each stream.'
+    4: 'The wash water waits while the charged rod tests each stream.'
   },
   'q9-orbitals': {
-    5: 'The air the miners breathe is the next thing the magnet must test.'
+    2: 'The air the miners breathe is the next thing the magnet must test.'
   },
 
   /* ---- Bellows: let the pressure out of the fuel station ---- */

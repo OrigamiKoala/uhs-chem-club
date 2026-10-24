@@ -1,28 +1,32 @@
 /**
  * boss-warden.js — Learn world 3 elite: THE BASALT WARDEN.
  *
- * The world's last guard, made of everything Ligar measured. Five phases, each on the TABLETOP of a bench the player has
- * worked (plan `bench-tabletop.md`, phase T3c), with a new molecule or a new set of salts on the table and the warden
- * standing in the table's corner, watching it:
+ * The world's last guard, made of everything Ligar measured. Five phases, each on the TABLETOP of a bench the player has worked (plan
+ * `bench-tabletop.md`, phase T3c), each a NEW CASE of an idea that bench taught (a different salt, a different molecule), with the
+ * warden standing in the table's corner, watching it. One decision a phase, and no two phases ask the same kind of thing:
  *
- *   1  the hotplate        three lattices, and which needs the most heat        (bench 3 · bonds kit)
- *   2  the pair slate      SF4, every lamp lit, sulfur past eight               (bench 4 · atom kit)
- *   3  the domain hub      XeF4's hub, and the angle between neighbours         (bench 6 · domain kit)
- *   4  the charged plates  which of three molecules turns                       (bench 7 · domain kit)
+ *   1  the hotplate        three salts, and which needs the most heat           (bench 3 · bonds kit)
+ *   2  the pair slate      hydrogen cyanide, every lamp lit (a triple bond)     (bench 4 · atom kit)
+ *   3  the domain hub      ammonia's hub, and the angle between its hydrogens   (bench 6 · domain kit)
+ *   4  the charged plates  which of three molecules swings round                (bench 7 · domain kit)
  *   5  the magnet          which of three gases it draws in                     (bench 9 · orbital kit)
  *
- * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung
- * is one sentence and never the answer. Nothing blocks a correct commit. A miss costs one point of Integrity and three
- * knock the table back, with every reading and hint still kept. The foe is the warden itself, in the corner pad of each
- * table (`table/layout.js` `FOE_PAD`): it only observes, and a boss phase never declares a field stage (the walk is
- * suspended while the warden stands).
+ * (2026-10-23 rollout: sulfur tetrafluoride and xenon tetrafluoride, which asked for an expanded octet and a six-arm hub that the
+ * benches no longer teach, were replaced by hydrogen cyanide and ammonia; boron trifluoride replaces sulfur tetrafluoride at the
+ * plates, where the same idea, a symmetrical molecule with polar bonds, is a new case.)
  *
- * Clearing it files the Case File clue `clue_ligar_scorch`. The boss pays no XP: the main story never does.
+ * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung is one
+ * sentence and never the answer. Nothing blocks a correct commit. A miss costs one point of Integrity and three knock the table back,
+ * with every reading and hint still kept. The foe is the warden itself, in the corner pad of each table (`table/layout.js`
+ * `FOE_PAD`): it only observes, and a boss phase never declares a field stage (the walk is suspended while the warden stands).
+ *
+ * Clearing it files the Case File clue `clue_ligar_scorch` and plays the quest's one story animation. The boss pays no XP: the main
+ * story never does.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { LATTICES, byLatticeEnergy } from '../../engine/bonddata.js';
-import { MOLECULES, allLit } from '../../engine/lewis.js';
+import { allLit } from '../../engine/lewis.js';
 import { planDomains, planDipole, bondAngles, angleBetween } from '../../engine/vsepr.js';
 import { DIATOMICS } from '../../engine/mo.js';
 import { bondsTable, saltPiece, hotplate, piecesIn } from '../../table/kits/bonds.js';
@@ -54,29 +58,29 @@ const WARDEN_FOE = [{ id: 'warden', label: 'The Basalt Warden' }];
 
 const into = (id, zone, kind = 'slot') => ({ place: { piece: id, to: `${kind}:${zone}` } });
 
-/** The three plating blocks, as the lattices of Ligar's third bench. */
+/** The three plating blocks, as the salts of Ligar's third bench. */
 const PLATING = [['a', 'Plate A', 'NaCl'], ['b', 'Plate B', 'MgO'], ['c', 'Plate C', 'KCl']];
 
-/** Phase 2's table: the tray's tiles down the left and the SF4 slate beside them (the atom kit's, with its scratch corner). */
+/** Phase 2's table: the tray's tiles down the left and the hydrogen cyanide slate beside them (the atom kit's, with its scratch corner). */
 function ventTable() {
-  const part = slateParts('a', 'SF4', slateLayout('SF4', 70, 29, 46));
-  const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back', three: 'Adds three' };
+  const part = slateParts('a', 'HCN', slateLayout('HCN', 70, 29, 46));
+  const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back' };
   const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y }, caption: CAPTION[kind] });
   return atomTable({
     opts: { words: 'shells', slate: true },
-    pieces: [tile('pairs', 'Pair', [12, 10]), tile('lift', 'Lift Out', [34, 10]), tile('three', '3 Pairs', [12, 26]), ...part.pieces],
+    pieces: [tile('pairs', 'Pair', [12, 10]), tile('lift', 'Lift Out', [34, 10]), ...part.pieces],
     fixtures: [part.fixture]
   });
 }
 
-/** Phase 3's table: the xenon hub with its tray of four fluorine atoms, two lone pairs and the protractor, and the angle marker. */
+/** Phase 3's table: the nitrogen hub with its tray of three hydrogen atoms, a lone pair and the protractor, and the angle marker. */
 const HUB_AT = { x: 38, y: 32 };
 function hubTable() {
-  const hs = hubSet('hub', 'Xe', HUB_AT, { label: 'Hub Xe', turner: { x: 100, y: 10.5 } });
+  const hs = hubSet('hub', 'N', HUB_AT, { label: 'Hub N', turner: { x: 100, y: 10.5 } });
   const at0 = { x: 0, y: 0 };
   const inTray = [
-    ...[1, 2, 3, 4].map(i => armPiece(`f${i}`, 'F', at0, 1, 'F')),
-    balloonPiece('l1', at0), balloonPiece('l2', at0),
+    ...[1, 2, 3].map(i => armPiece(`h${i}`, 'H', at0, 1, 'H')),
+    balloonPiece('l1', at0),
     protractorPiece('pr', at0)
   ].map(p => ({ ...p, zone: 'tray:bin' }));
   return domainTable({
@@ -101,7 +105,7 @@ export const STAGES = [
     title: 'Phase 1 · The Plating',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each phase puts one of Ligar\'s benches in front of the warden again; a miss costs a point of Integrity, three knock you back, and nothing you have read is lost. Press Submit when the table shows your answer.'
+      body: 'Each phase puts one of Ligar\'s benches in front of the warden again with a new case on it; a miss costs a point of Integrity, three knock you back, and nothing you have read is lost.'
     },
     prompt: 'Put the plating block that takes the most heat to melt in the marked place.',
     widget: { type: 'table', label: 'The bench' },
@@ -117,9 +121,9 @@ export const STAGES = [
       intent: 'A basalt warden stands over three blocks of its own plating.'
     },
     hints: [
-      'Read the ions printed on each plate, or slide one onto the hotplate and turn the dial up until it gives way.',
+      'Use the hotplate, its heat dial and the marked place.',
       'Compare the charges on the ions of the three plates, and then the distance between their centres.',
-      'The lattice held hardest by charge and by closeness is the one that takes the most heat.'
+      'Slide each plate onto the hotplate and turn the dial up until it gives way, then keep the one that held out longest.'
     ],
     check(state) {
       const t = state.table;
@@ -127,12 +131,12 @@ export const STAGES = [
       if (!held) return { ok: false, notYet: true, msg: 'Put a plate in the marked place.' };
       const hot = byLatticeEnergy(PLATING.map(p => p[2]))[0];
       if (held.props.lattice === hot) return { ok: true };
-      return { ok: false, msg: 'A plate that is held less tightly gives its ions up at a lower temperature. Read the ions again.' };
+      return { ok: false, msg: 'A plate gives way on the hotplate at a higher setting than the one in the marked place.' };
     },
     reward: {
       title: 'Plating Cracked',
-      body: 'The lattice with the larger charges on smaller ions is held hardest, and it takes the most heat to melt. The warden\'s plating gives where it is held least.',
-      log: 'The most tightly held lattice found.'
+      body: 'The salt with the larger charges on smaller ions is held hardest, and it takes the most heat to melt. The warden\'s plating gives where it is held least.',
+      log: 'The most tightly held salt found.'
     }
   },
 
@@ -140,7 +144,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · The Vent',
-    prompt: 'Place all valence electrons for sulfur tetrafluoride until every lamp lights.',
+    prompt: 'Place all valence electrons for hydrogen cyanide until every lamp lights.',
     widget: { type: 'table', label: 'The bench' },
     table: ventTable(),
     foes: WARDEN_FOE,
@@ -150,21 +154,21 @@ export const STAGES = [
       intent: 'The warden vents a thin stream and its seams stand shut.'
     },
     hints: [
-      'Drag the Pair tile onto the gap between two atoms, or onto one atom.',
-      'Compare the lamps on the fluorine atoms with the lamp on sulfur as the electrons run out.',
-      'Put the pairs that are left after the bonds and the fluorine atoms are done onto sulfur.'
+      'Use the Pair tile and the slate.',
+      'Compare the lamps on carbon and nitrogen as the pairs run out.',
+      'Put a pair in the gap between hydrogen and carbon, and put every other pair where the dark lamps are.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
       if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read)) return { ok: true };
       if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
-      return { ok: false, msg: 'Every electron is placed but a lamp is still dark, or an atom has more round it than it can hold.' };
+      return { ok: false, msg: 'Every electron is placed, and a lamp is still dark.' };
     },
     reward: {
       title: 'Vent Sealed',
-      body: 'Sulfur takes four bonds and keeps a lone pair, ten electrons in all. Atoms on the third ring and below can hold more than eight.',
-      log: 'SF4 drawn with sulfur past eight.'
+      body: 'Carbon and nitrogen share three pairs, a triple bond, and nitrogen keeps one lone pair. A triple bond is the same idea as a double one, with one pair more.',
+      log: 'HCN drawn with a triple bond.'
     }
   },
 
@@ -172,7 +176,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · The Joints',
-    prompt: 'Set the angle marker to the angle between neighbouring fluorine atoms on the xenon hub.',
+    prompt: 'Set the angle marker to the angle between two hydrogen atoms on the nitrogen hub.',
     widget: { type: 'table', label: 'The bench' },
     table: hubTable(),
     foes: WARDEN_FOE,
@@ -182,26 +186,25 @@ export const STAGES = [
       intent: 'The warden stands with its columns held square.'
     },
     hints: [
-      'Drop the four fluorine atoms and both lone pairs on the hub, then lay the protractor on two neighbours.',
-      'Compare where the lone pairs settle with where the fluorine atoms settle.',
-      'The fluorine atoms lie in a flat square once the lone pairs are opposite each other.'
+      'Use the hydrogen atoms, the balloon, the protractor and the angle marker.',
+      'Compare the angle you read with the angle four atoms made, and with the angle in water.',
+      'Drop everything from the Arms tray on the hub, lay the protractor on two hydrogen atoms, and set the marker to what it reads.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
       if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      const fs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
-      if (r.lone < 2 || fs.length < 4) return { ok: false, msg: 'Build the hub with everything from the Arms tray on it, then read the protractor between two fluorine atoms that sit next to each other.' };
-      let near = Infinity;
-      for (let i = 0; i < fs.length; i++) for (let j = i + 1; j < fs.length; j++) near = Math.min(near, angleBetween(r.plan, fs[i][1], fs[j][1]));
-      if (Math.abs(v - near) <= 1.5) return { ok: true };
-      return { ok: false, msg: 'Lay the protractor across two fluorine atoms that sit next to each other on the finished hub, and read it again.' };
+      const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
+      if (r.lone < 1 || hs.length < 3) return { ok: false, msg: 'Not everything from the Arms tray is on the hub yet.' };
+      const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
+      if (Math.abs(v - real) <= 1.5) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the angle the protractor reads between two hydrogen atoms on the finished hub.' };
     },
     reward: {
       title: 'Joints Locked',
-      body: 'Six domains with two lone pairs opposite leave the four atoms in a flat square, 90 degrees apart. XeF₄ is square planar.',
-      log: 'XeF4 built square.'
+      body: 'Three atoms and a lone pair make a low pyramid, and the lone pair squeezes the angle between the atoms a little below 109.5 degrees. Ammonia is trigonal pyramidal.',
+      log: 'NH3 built as a pyramid.'
     }
   },
 
@@ -209,16 +212,16 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · The Coolant',
-    prompt: 'Put every molecule that turns in the electric field into the tray.',
+    prompt: 'Put every molecule that swings round in the electric field into the tray.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
         molCard('a', 'CO2', { x: 14, y: 53 }, { field: true }),
-        molCard('b', 'SF4', { x: 42, y: 53 }, { field: true }),
+        molCard('b', 'BF3', { x: 42, y: 53 }, { field: true }),
         molCard('c', 'NH3', { x: 70, y: 53 }, { field: true }),
         arrowsTool('ar', { x: 100, y: 10 })
       ],
-      zones: { trays: [{ id: 'turns', label: 'Turns in the field', at: { x: 114, y: 44 }, size: { w: 58, h: 26 }, cell: 20 }] },
+      zones: { trays: [{ id: 'turns', label: 'Swings round', at: { x: 114, y: 44 }, size: { w: 58, h: 26 }, cell: 20 }] },
       fixtures: [plates('pl', FIELD_AT, { size: { w: 70, h: 38 } })]
     }),
     foes: WARDEN_FOE,
@@ -228,23 +231,24 @@ export const STAGES = [
       intent: 'The warden stands between the plates, with a coolant line to each molecule.'
     },
     hints: [
-      'Put each molecule between the plates, switch the field on and lay the arrows on it.',
-      'Compare the net arrow on each plate once the bond arrows are added.',
-      'A molecule turns when its bond arrows add to a net arrow and stays still when they cancel.'
+      'Use the molecules, the arrows, the plates and "Switch Field".',
+      'Compare the net arrow on each card once the bond arrows are added.',
+      'Put each molecule between the plates in turn, lay the arrows on it, switch the field on, and keep the ones that swing round.'
     ],
     check(state) {
       const t = state.table;
       const ids = ['a', 'b', 'c'];
       const got = ids.filter(id => t.pieces[id].zone === 'tray:turns');
-      if (!got.length) return { ok: false, notYet: true, msg: 'Put the molecules that turn into the tray.' };
+      if (!got.length) return { ok: false, notYet: true, msg: 'Put the molecules that swing round into the tray.' };
       const want = ids.filter(id => molRead(t.pieces[id]).polar);
-      if (got.join() === want.join()) return { ok: true };
-      return { ok: false, msg: 'Switch the field on and watch which molecules do not move, then check the tray against them.' };
+      if (got.some(id => !want.includes(id))) return { ok: false, msg: 'The tray holds a molecule that did not swing round.' };
+      if (want.some(id => !got.includes(id))) return { ok: false, msg: 'A molecule that swung round is not in the tray.' };
+      return { ok: true };
     },
     reward: {
       title: 'Coolant Grounded',
-      body: 'Sulfur tetrafluoride and ammonia have a net pull because their shapes are lopsided, so they turn. Carbon dioxide\'s pulls cancel in a straight line, so it does not.',
-      log: 'Two polar molecules and one nonpolar one found.'
+      body: 'Ammonia has a net pull because its lone pair makes it lopsided, so it swings round. Carbon dioxide and boron trifluoride have polar bonds that cancel, so they do not.',
+      log: 'One polar molecule and two nonpolar ones found.'
     }
   },
 
@@ -271,21 +275,21 @@ export const STAGES = [
       intent: 'The warden stands over three gas lines, none of them marked.'
     },
     hints: [
-      'Put each gas in the test slot and press "Test Sample".',
+      'Use the gas cards, the test slot and "Test Sample".',
       'Compare how hard the magnet pulls on each of the three gases.',
-      'Electrons that stand alone in a box are the ones a magnet pulls.'
+      'Put each gas in the test slot, press "Test Sample", and keep the one the magnet pulled.'
     ],
     check(state) {
       const t = state.table;
       const held = piecesIn(t, 'slot:drawn', 'mocard')[0];
       if (!held) return { ok: false, notYet: true, msg: 'Put a gas in the marked place.' };
       if (DIATOMICS[held.props.mol].unpaired > 0) return { ok: true };
-      return { ok: false, msg: 'Test all three gases with the magnet and compare what each does.' };
+      return { ok: false, msg: 'The magnet did not pull the gas in the marked place.' };
     },
     reward: {
       title: 'Core Exposed',
-      body: 'Only oxygen has electrons standing alone, in two separate antibonding boxes, so only oxygen is pulled by the magnet. Nitrogen and fluorine have every electron paired.',
-      log: 'The paramagnetic gas found.'
+      body: 'Only oxygen has electrons standing alone, in two separate upper boxes, so only oxygen is pulled by the magnet. Nitrogen and fluorine have every electron paired.',
+      log: 'The magnetic gas found.'
     }
   }
 ];
@@ -310,17 +314,17 @@ const test = (id) => [into(id, 'test'), { run: 'magnet' }];
 /** The bench state that solves each phase, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
   [into('b', 'most')],
-  [...['aj01', 'aj02', 'aj03', 'aj04'].flatMap(j => deal(j)), ...['a1', 'a2', 'a3', 'a4'].flatMap(a => deal(a, 1, 'three')), ...deal('a0')],
-  [...on('f1', 'f2', 'f3', 'f4', 'l1', 'l2'), ...read('f1', 'f2'), set(90)],
-  [between('a'), field, free('a', 14, 53), between('b'), into('b', 'turns', 'tray'), between('c'), into('c', 'turns', 'tray')],
+  [...deal('aj01'), ...deal('aj12', 3), ...deal('a2')],
+  [...on('h1', 'h2', 'h3', 'l1'), ...read('h1', 'h2'), set(107)],
+  [between('a'), field, free('a', 14, 53), between('b'), free('b', 42, 53), between('c'), into('c', 'turns', 'tray')],
   [...test('n2'), ...test('o2'), ...test('f2'), into('o2', 'drawn')]
 ];
 
 /** A plausible wrong answer per phase. Each must be refused, and must say why. */
 export const MISSES = [
   [into('a', 'most')],
-  [...['aj01', 'aj02', 'aj03', 'aj04'].flatMap(j => deal(j))],
-  [...on('f1', 'f2', 'f3', 'f4', 'l1', 'l2'), ...read('f1', 'f2'), set(120)],
+  [...deal('aj01'), ...deal('aj12')],
+  [...on('h1', 'h2', 'h3', 'l1'), ...read('h1', 'h2'), set(120)],
   [into('a', 'turns', 'tray'), into('b', 'turns', 'tray')],
   [into('n2', 'drawn')]
 ];
@@ -344,7 +348,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase was a bench you had already worked: a lattice, a Lewis structure, a shape, a field and a magnet. That is all of Ligar, and it was enough to read the guard.'
+      body: 'Every phase was a bench you had already worked, with a new case on it: a salt, a drawing, a shape, a field and a magnet. That is all of Ligar, and it was enough to read the guard.'
     },
     {
       heading: 'Next',
@@ -369,37 +373,37 @@ export const PRACTICE = [
     explanation: 'Lattice energy rises with ion charge and falls with ion size. MgO has 2+ and 2− ions that are small, so it is held hardest and melts highest.'
   },
   {
-    question: 'In the Lewis structure of SF₄, how many lone pairs are on sulfur?',
+    question: 'In the Lewis structure of hydrogen cyanide, HCN, how many pairs are shared between the carbon and the nitrogen?',
     options: [
-      { id: 'a', label: 'One' },
-      { id: 'b', label: 'None' },
+      { id: 'a', label: 'Three' },
+      { id: 'b', label: 'One' },
       { id: 'c', label: 'Two' },
-      { id: 'd', label: 'Three' }
+      { id: 'd', label: 'Four' }
     ],
     answer: 'a',
-    explanation: 'SF₄ has 34 valence electrons. Four bonds and twelve lone pairs on the fluorine atoms use 32, leaving one lone pair on sulfur.'
+    explanation: 'HCN has 10 valence electrons. Carbon shares one pair with hydrogen and three with nitrogen, and nitrogen keeps one lone pair, so every atom has a full outer shell.'
   },
   {
-    question: 'What is the F–Xe–F angle between neighbouring fluorine atoms in XeF₄?',
+    question: 'Why is the angle between the hydrogen atoms in ammonia a little less than 109.5°?',
     options: [
-      { id: 'a', label: '90°' },
-      { id: 'b', label: '109.5°' },
-      { id: 'c', label: '120°' },
-      { id: 'd', label: '180°' }
+      { id: 'a', label: 'Its lone pair pushes the bonding pairs closer together' },
+      { id: 'b', label: 'Nitrogen is larger than hydrogen' },
+      { id: 'c', label: 'The N–H bonds are double bonds' },
+      { id: 'd', label: 'Ammonia has no lone pair' }
     ],
     answer: 'a',
-    explanation: 'XeF₄ is square planar: six domains, with the two lone pairs opposite, so neighbouring atoms are 90 degrees apart.'
+    explanation: 'The lone pair on nitrogen takes more room than a bonding pair, squeezing the angle between the three hydrogen atoms to about 107 degrees.'
   },
   {
-    question: 'Which of these molecules is polar?',
+    question: 'Which molecule is polar?',
     options: [
       { id: 'a', label: 'NH₃' },
       { id: 'b', label: 'CO₂' },
-      { id: 'c', label: 'XeF₄' },
-      { id: 'd', label: 'BF₃' }
+      { id: 'c', label: 'BF₃' },
+      { id: 'd', label: 'CCl₄' }
     ],
     answer: 'a',
-    explanation: 'Ammonia is trigonal pyramidal, so its bond dipoles add. The other three are symmetrical and their dipoles cancel.'
+    explanation: 'Ammonia is a pyramid, so its bond dipoles add. The other three are symmetrical and their dipoles cancel.'
   },
   {
     question: 'Which diatomic molecule is paramagnetic?',
@@ -439,4 +443,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { planDomains, planDipole, bondAngles, LATTICES, MOLECULES };
+export { planDomains, planDipole, bondAngles, LATTICES };

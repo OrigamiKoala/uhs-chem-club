@@ -1236,6 +1236,8 @@ console.log('\nTour — every tool on a table has a step that says what it is an
         if (v.introducedAt > i) for (const s of steps) if (!s.flag.startsWith(`tour_${t.kit}_`) || s.flag.includes('_bench_') ? false : v.term.test(`${s.name} ${s.desc}`)) fail(`${label}: Tour step "${s.name}" uses a word the quest has not earned yet (${v.term})`);
       }
       if (new Set(steps.map(s => s.flag)).size !== steps.length) fail(`${label}: two Tour steps share a once-only flag`);
+      // Ligar's tools all have words of their own (`table/tour-ligar.js`): none is left to the generic "drag it to move it" step.
+      if (key.startsWith('unit03/')) for (const s of steps) if (/: drag it to move it, or tap it once|dial by dragging its knob|Press ".*" to use it\.$/.test(s.desc)) fail(`${label}: Tour step "${s.name}" is the generic one: Ligar's tools have words of their own`);
       for (const f of Object.values(t.fixtures)) {
         if (f.props?.backdrop) continue;
         if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: the instrument "${f.label}" is not in the Tour`);
@@ -1257,7 +1259,7 @@ console.log('\nPredict first — the guess is made on a bench with no instrument
   const before = failures;
   let predicts = 0;
   for (const [key, mod] of mods) {
-    if (!key.startsWith('unit01/')) continue; // the other worlds follow as the rollout reaches them
+    if (!key.startsWith('unit01/') && !key.startsWith('unit03/')) continue; // the other worlds follow as the rollout reaches them (Ligar joined 2026-10-23)
     mod.STAGES.forEach((st, i) => {
       if (st.widget?.type !== 'table') return;
       const t = MODEL.createTable(st.table, st.title);
@@ -1269,7 +1271,9 @@ console.log('\nPredict first — the guess is made on a bench with no instrument
       if (t.tools.length) fail(`${label}: a predict stage carries a tool`);
       if (i === mod.STAGES.length - 1) fail(`${label}: a predict stage with no stage after it to test the guess`);
       const next = mod.STAGES[i + 1];
-      if (next && (next.predict || next.widget?.type !== 'table' || !Object.values(MODEL.createTable(next.table, next.title).fixtures).some(f => !f.noRun))) fail(`${label}: the stage after a predict stage must bring the instrument`);
+      // The instrument is a fixture with a key or a dial (Tallow's beam), or, on Ligar's benches, any fixture or any piece other than a guess card (the atoms to press, the slate, the rig, the plates).
+      const brings = nt => Object.values(nt.fixtures).some(f => !f.noRun || Object.keys(f.dials).length || (key.startsWith('unit03/') && !f.props?.backdrop)) || (key.startsWith('unit03/') && Object.values(nt.pieces).some(q => q.kind !== 'guess' && !q.hidden));
+      if (next && (next.predict || next.widget?.type !== 'table' || !brings(MODEL.createTable(next.table, next.title)))) fail(`${label}: the stage after a predict stage must bring the instrument`);
       if (typeof next?.prompt !== 'string') fail(`${label}: the test stage has no prompt`);
     });
   }

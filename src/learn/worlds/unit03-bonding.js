@@ -31,16 +31,16 @@ export const UNIT_03 = {
       title: 'What Holds',
       line: 'Test what grips the blast rubble.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q1-joins.js')
     },
     {
       id: 'q2-lattice',
       title: 'Stone and Wire',
-      line: 'Break boulders and pick the rescue liner.',
+      line: 'Test the rubble and pick the rescue liner.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q2-lattice.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_03 = {
       title: 'Bond Energy',
       line: 'Measure bonds to size the breaker charge.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q3-distance.js')
     },
@@ -58,16 +58,16 @@ export const UNIT_03 = {
       title: 'Lewis Structures',
       line: 'Draw molecules to map the weak seams.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q4-dots.js')
     },
     {
       id: 'q5-resonance',
-      title: 'Charge and Resonance',
-      line: 'Judge each drawing to find the weakest charge.',
+      title: 'Resonance',
+      line: 'Measure the bonds the drawings disagree about.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 3,
       status: 'live',
       module: () => import('../quests/unit03/q5-resonance.js')
     },
@@ -76,7 +76,7 @@ export const UNIT_03 = {
       title: 'Molecular Shape',
       line: 'Read shapes to place the breakthrough.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q6-shape.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_03 = {
       title: 'Polarity',
       line: 'Sort molecules by how the field turns them.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit03/q7-polarity.js')
     },
@@ -94,7 +94,7 @@ export const UNIT_03 = {
       title: 'Hybridization',
       line: 'Blend orbitals to explain the rigid seams.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q8-hybrid.js')
     },
@@ -103,7 +103,7 @@ export const UNIT_03 = {
       title: 'Molecular Orbitals',
       line: "Fill electron boxes to read the warden's core.",
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 3,
       status: 'live',
       optional: true,
       module: () => import('../quests/unit03/q9-orbitals.js')

@@ -659,10 +659,9 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     {
       const { fieldPointsOf } = await import('../src/three/field-points.js');
       const points = fieldPointsOf(built);
-      check(points.some(p => p.id === 'chip' && p.siteId === 'site-2'), 'the "chip" point feeds site-2 (the ore drift)',
-        'no "chip" field point feeds site-2: q2-lattice sends the player to the seam');
-      check(points.some(p => p.id === 'sump' && p.siteId === 'site-7'), 'the "sump" point feeds site-7 (the sump and pump station)',
-        'no "sump" field point feeds site-7: q7-polarity sends the player to the draw-off on the sump');
+      // Ligar's two field stops (q2-lattice's seam chip and q7-polarity's sump stream) were retired with the 2026-10-23 rollout: each
+      // carried a copy of what the bench already held. No quest sends the player to a field point now, and none is registered.
+      check(!points.some(p => p.id === 'chip' || p.id === 'sump'), 'no retired Ligar field point (chip, sump) is registered', 'a retired Ligar field point is still registered');
       const bad = [];
       for (const p of points) {
         const site = world.sites.find(s => s.id === p.host);

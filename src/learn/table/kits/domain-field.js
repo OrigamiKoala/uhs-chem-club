@@ -141,10 +141,10 @@ function rotationBetween(a, b) {
 }
 
 /** The view a molecule is seen from: side-on for two atoms (so the bond lies across the plate), the usual turn otherwise. */
-const viewFor = read => (read.plan.n === 1 ? { yaw: Math.PI / 2, pitch: 0 } : { yaw: YAW0, pitch: PITCH });
+export const viewFor = read => (read.plan.n === 1 ? { yaw: Math.PI / 2, pitch: 0 } : { yaw: YAW0, pitch: PITCH });
 
 /** The vectors of a card at rest: the planner's, turned half a turn about the vertical if the card is flipped. */
-function restVectors(p, read) {
+export function restVectors(p, read) {
   return read.plan.vectors.map(a => ({ ...a, v: p.props.flipped ? turnY(a.v) : a.v }));
 }
 
@@ -227,7 +227,9 @@ function paintCard(ctx, p, state, o) {
   const pose = isD ? dmolPose(p, state) : { vectors: restVectors(p, read), view: viewFor(read), turned: false };
   const S = h * (read.plan.n === 1 ? 0.38 : 0.27);
   const cy = y0 + h * 0.38;
-  const star = paintStar(ctx, o.x, cy, S, read.hub, pose.vectors, pose.view);
+  // At `3D On` the tile carries the molecule itself as a solid (`engine/ligar-mol3d.js`), so the face keeps its words and leaves the picture to it.
+  const solid = Boolean(o.flat);
+  const star = solid ? null : paintStar(ctx, o.x, cy, S, read.hub, pose.vectors, pose.view);
   const size = Math.max(6, Math.round(h * 0.15));
   fitted(ctx, read.label, x0 + 3, y0 + h * 0.92, w * 0.5, { size, weight: 700, align: 'left', color: PLATE_COLORS.text });
   const shows = p.props.show || [];
@@ -236,7 +238,7 @@ function paintCard(ctx, p, state, o) {
   if (shows.includes('angles') && read.angles.length) note(`ATOMS ${read.angles.join(' ')}°`);
   if (arrowsOn(state, p)) {
     // An arrow across each bond toward the atom that pulls the pair harder, and the sum of them all.
-    read.dip.arrows.forEach((a, k) => {
+    if (!solid) read.dip.arrows.forEach((a, k) => {
       const pv = pose.vectors.filter(v => v.kind === 'atom')[k];
       if (!pv) return;
       const sign = a.d >= 0 ? 1 : -1;
@@ -244,7 +246,7 @@ function paintCard(ctx, p, state, o) {
       const p1 = project(pv.v.map(c => c * (sign > 0 ? 0.86 : 0.28)), pose.view.yaw, pose.view.pitch);
       if (Math.abs(a.d) > 0.01) arrow(ctx, o.x + p0.x * S, cy + p0.y * S, o.x + p1.x * S, cy + p1.y * S, 1.4, PLATE_COLORS.text, Math.max(3, h * 0.07));
     });
-    if (read.polar) {
+    if (read.polar && !solid) {
       const net = read.dip.net.map(c => c / read.dip.mag);
       const rot = pose.turned ? [-1, 0, 0] : (p.props.flipped ? turnY(net) : net);
       const pr = project(pose.turned ? rot : rot, pose.view.yaw, pose.view.pitch);
