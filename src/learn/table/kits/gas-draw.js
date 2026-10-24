@@ -15,7 +15,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import {
   rigRead, valueOf, speedScreen, tallestBar, shareAbove, tankRead, commonRead, partialOf, scaleRead, pinholeRead, tubeRead, walkRead,
-  markerRead, seatedIn, GASES, sig, litres, speeds, speedBins, recordCurve, kPaToAtm, kPaToMmHg, ATM_KPA, secondsOf
+  markerRead, seatedIn, GASES, sig, litres, speeds, speedBins, recordCurve, kPaToAtm, kPaToMmHg, ATM_KPA, secondsOf, boxRead
 } from './gas-read.js';
 
 const AMBER = PLATE_COLORS.amber;
@@ -260,12 +260,12 @@ export function rigGeometry(f, lay) {
   };
 }
 
-const KEYS = ['gauge', 'volume', 'temperature', 'kelvin', 'amount', 'knocks', 'speed', 'energy', 'z', 'mass', 'room', 'pull', 'pullShare'];
+export const KEYS = ['gauge', 'ideal', 'off', 'volume', 'temperature', 'kelvin', 'amount', 'knocks', 'speed', 'energy', 'z', 'mass', 'room', 'pull', 'pullShare'];
 
 /** The readouts a cylinder prints, in order, as `[label, value, tone]`. A stage turns each on with `show` (gauge, volume, temperature, amount are on). */
 export function rigLines(q, f) {
   const show = f.props.show || {};
-  const w = { gauge: 'GAUGE', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'KNOCKS', speed: 'SPEED', energy: 'ENERGY OF MOTION', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
+  const w = { gauge: 'GAUGE', ideal: 'GAS LAW SAYS', off: 'OFF THE LAW', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'KNOCKS', speed: 'SPEED', energy: 'ENERGY OF MOTION', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
   const on = k => (k === 'gauge' || k === 'volume' || k === 'temperature' || k === 'amount' ? show[k] !== false : Boolean(show[k]));
   const units = f.props.units || 'kpa';
   const out = [];
@@ -276,7 +276,14 @@ export function rigLines(q, f) {
     if (k === 'gauge') {
       v = units === 'atm' ? `${sig(q.atm, 3)} atm` : units === 'both' ? `${sig(q.P, 3)} kPa` : `${sig(q.P, 3)} kPa`;
       if (units === 'rings') v = `${sig(q.atm, 3)} atm`;
-    } else if (k === 'volume') v = `${litres(q.V)} L`;
+      // Until a card has named the unit, a gauge prints its figure and nothing else.
+      if (units === 'plain') v = `${sig(q.P, 3)}`;
+    } else if (k === 'off') {
+      // How far the real gauge sits from what the gas law says, as a share of it; the sign says which side.
+      const pct = q.ideal > 0 ? ((q.P - q.ideal) / q.ideal) * 100 : 0;
+      v = `${pct > 0.05 ? '+' : pct < -0.05 ? '−' : ''}${Math.round(Math.abs(pct))} %`;
+    } else if (k === 'ideal') v = units === 'plain' ? `${sig(q.ideal, 3)}` : `${sig(q.ideal, 3)} kPa`;
+    else if (k === 'volume') v = `${litres(q.V)} L`;
     else if (k === 'temperature') v = `${Math.round(q.tC)} °C`;
     else if (k === 'kelvin') v = `${Math.round(q.T)} K`;
     else if (k === 'amount') v = `${sig(q.n, 3)} mol`;
@@ -318,7 +325,8 @@ function paintBarrel(ctx, F, g, cj, q, f, b) {
   const room = Math.max(1, pxp - bx0 - 2);
   ctx.fillStyle = PHOS;
   ctx.strokeStyle = PHOS;
-  for (let i = 0; i < q.dots; i++) {
+  // The built table stands the particles up as bodies in the glass (`gas-3d.js`); the same count is drawn here when it does not.
+  for (let i = 0; i < (b.bodies ? 0 : q.dots); i++) {
     const x = bx0 + 1.5 + rnd() * room;
     const y = by0 + 1.2 + rnd() * Math.max(1, by1 - by0 - 2.4);
     ctx.beginPath(); ctx.arc(x, y, dr, 0, Math.PI * 2); ctx.fill();
@@ -377,6 +385,60 @@ function paintScreen(ctx, F, g, q, f, b) {
     ctx.beginPath(); ctx.moveTo(tx, b.Y(sy0) - F.len(0.4)); ctx.lineTo(tx - F.len(1.2), b.Y(sy0) - F.len(2.2)); ctx.lineTo(tx + F.len(1.2), b.Y(sy0) - F.len(2.2)); ctx.closePath(); ctx.fill();
     say(ctx, `MARK ${f.props.target} m/s`, X0, b.Y(sy0) - F.len(3.2), F.size(2.2, 6), { color: AMBER, maxW: F.len(sx1 - sx0) });
   }
+}
+
+/**
+ * Where a sealed box's picture stands, in table units, from its box and its dials: the vessel (a square), and the words that name each
+ * wall's gauge. The painter and the built table's glass cube both read this, so the glass is exactly over the vessel.
+ */
+export function boxGeometry(f, lay) {
+  const b = lay.box;
+  const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : b.y0 + 6;
+  const side = f.props.side ?? 17;
+  const y0 = lastDial + 9;
+  const x0 = b.x0 + 4;
+  return { vessel: { x0, x1: x0 + side, y0, y1: y0 + side }, side, roofAt: y0 - 1.6, floorAt: y0 + side + 3.8, sideAt: x0 + side + 3 };
+}
+
+/** The sealed box: a vessel of gas, and a gauge on its roof, its side wall and its floor, each reading printed beside its wall. */
+function paintBox(ctx, f, state, b) {
+  const F = frameOf(b);
+  const q = boxRead(state, f.id);
+  const g = boxGeometry(f, b.lay);
+  const box = b.lay.box;
+  const v = g.vessel;
+  const vx0 = b.X(v.x0); const vx1 = b.X(v.x1); const vy0 = b.Y(v.y0); const vy1 = b.Y(v.y1);
+  ctx.fillStyle = '#100f0c';
+  ctx.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(Math.round(vx0) + 0.5, Math.round(vy0) + 0.5, Math.round(vx1 - vx0), Math.round(vy1 - vy0));
+  // Each gauge sits in a port on its wall: a short thick bar.
+  ctx.strokeStyle = DUST;
+  ctx.lineWidth = Math.max(2, F.len(0.7));
+  const mx = (vx0 + vx1) / 2; const my = (vy0 + vy1) / 2;
+  ctx.beginPath(); ctx.moveTo(mx - F.len(2.4), vy0); ctx.lineTo(mx + F.len(2.4), vy0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(vx1, my - F.len(2.4)); ctx.lineTo(vx1, my + F.len(2.4)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mx - F.len(2.4), vy1); ctx.lineTo(mx + F.len(2.4), vy1); ctx.stroke();
+  ctx.lineWidth = 1;
+  if (!b.bodies) {
+    const rnd = seeded(`${f.id}|box`);
+    ctx.fillStyle = PHOS;
+    for (let i = 0; i < q.dots; i++) {
+      ctx.beginPath();
+      ctx.arc(vx0 + F.len(1.2) + rnd() * (vx1 - vx0 - F.len(2.4)), vy0 + F.len(1.2) + rnd() * (vy1 - vy0 - F.len(2.4)), Math.max(1.1, F.len(0.55)), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  const plain = (f.props.units || 'kpa') === 'plain';
+  const val = P => (plain ? `${sig(P, 3)}` : `${sig(P, 3)} kPa`);
+  const size = F.size(2.5, 6.5);
+  const word = F.size(2.3, 6);
+  const wall = id => q.walls.find(w => w.id === id);
+  say(ctx, `${wall('roof').label}  ${val(wall('roof').P)}`, mx, F.y(g.roofAt - box.y0), size, { align: 'center', weight: 700, color: PHOS, maxW: F.len(g.side + 12) });
+  say(ctx, `${wall('floor').label}  ${val(wall('floor').P)}`, mx, F.y(g.floorAt - box.y0), size, { align: 'center', weight: 700, color: PHOS, maxW: F.len(g.side + 12) });
+  say(ctx, wall('side').label, F.x(g.sideAt - box.x0), my - F.len(1.6), word, { color: DIM, maxW: F.len(box.x1 - g.sideAt - 2) });
+  say(ctx, val(wall('side').P), F.x(g.sideAt - box.x0), my + F.len(1.6), size, { weight: 700, color: PHOS, maxW: F.len(box.x1 - g.sideAt - 2) });
 }
 
 function paintRig(ctx, f, state, b) {
@@ -448,7 +510,7 @@ function paintCommon(ctx, f, state, b) {
   ctx.fillStyle = PHOS;
   kinds.forEach(k => {
     const rnd = seeded(`${f.id}|${k.gas}`);
-    const dots = Math.max(1, Math.round(k.n * 12));
+    const dots = b.bodies ? 0 : Math.max(1, Math.round(k.n * 12));
     for (let i = 0; i < dots; i++) shape(ctx, k.shape, b.X(x0 + 1.5 + rnd() * (w - 3)), b.Y(y0 + 1.5 + rnd() * (h - 3)), Math.max(1.4, F.len(0.55)));
   });
   const lines = [['GAUGE', `${sig(rd.P, 3)} kPa`], ['ROOM', `${litres(rd.V)} L`], ['TEMPERATURE', `${Math.round(rd.T - 273.15)} °C`]];
@@ -515,7 +577,7 @@ function paintPinhole(ctx, f, state, b) {
     ctx.fillStyle = PHOS;
     for (let k = 0; k < 24; k++) {
       const x = F.x(x0 + 1 + rnd() * (w - 2)); const y = F.y(top + 1 + rnd() * (h - 2));
-      if (k < dots) { ctx.beginPath(); ctx.arc(x, y, Math.max(1.1, F.len(0.5)), 0, Math.PI * 2); ctx.fill(); }
+      if (k < dots && !b.bodies) { ctx.beginPath(); ctx.arc(x, y, Math.max(1.1, F.len(0.5)), 0, Math.PI * 2); ctx.fill(); }
     }
     say(ctx, `${c.label}${c.sealed ? '' : `  ${c.sym}`}`, F.x(x0), F.y(top - 1.3), F.size(2.3, 6), { color: DUST, weight: 700, maxW: F.len(w) });
     say(ctx, 'LEFT', F.x(x0), F.y(top + h + 2.6), F.size(2.3, 6), { color: DIM });
@@ -617,6 +679,7 @@ function paintMarker(ctx, f, state, b) {
 
 export function paintFixture(ctx, f, state, b) {
   if (f.kind === 'rig') paintRig(ctx, f, state, b);
+  else if (f.kind === 'box') paintBox(ctx, f, state, b);
   else if (f.kind === 'rings') paintRings(ctx, f, state, b);
   else if (f.kind === 'common') paintCommon(ctx, f, state, b);
   else if (f.kind === 'scale') paintScale(ctx, f, state, b);

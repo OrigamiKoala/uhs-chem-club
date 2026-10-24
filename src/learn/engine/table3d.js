@@ -446,10 +446,12 @@ export class Table3D extends BenchViewer3D {
       // the flat picture shows; the controls below are still the table's.
       const dress = kit.dress3d?.(f, state, { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y, skin: this.skin });
       if (dress) this.fixtureRoot.add(dress);
+      // A dressing may be alive (Bellows' gas: a crowd of moving particles): it names `userData.sync(f, state)`, asked whenever the table
+      // changes, and `userData.tick(dt, still)`, asked every frame (`still` for reduced motion).
       const own = kit.fixture3d?.(f, { THREE, scale: s, mats, toPlate: this.map.toPlate, plaque: (t, w, h, o) => this.plaque(t, w, h, o) });
       if (own?.group) {
         this.fixtureRoot.add(own.group);
-        this.fixtures.set(f.id, { custom: own, knobs: {} });
+        this.fixtures.set(f.id, { custom: own, knobs: {}, dress });
         continue;
       }
       const knobs = {};
@@ -468,7 +470,7 @@ export class Table3D extends BenchViewer3D {
         this.fixtureRoot.add(knob);
         knobs[d.name] = { knob, a, b, top: DECK_TOP };
       }
-      if (!lay.run) { this.fixtures.set(f.id, { knobs }); continue; }
+      if (!lay.run) { this.fixtures.set(f.id, { knobs, dress }); continue; }
       const rp = this.map.toPlate({ x: (lay.run.x0 + lay.run.x1) / 2, y: (lay.run.y0 + lay.run.y1) / 2 });
       const kw = (lay.run.x1 - lay.run.x0) * s;
       const kd = (lay.run.y1 - lay.run.y0) * s;
@@ -482,7 +484,7 @@ export class Table3D extends BenchViewer3D {
       label.rotation.x = -Math.PI / 2;
       label.position.set(rp.x, DECK_TOP + 0.0165, rp.z);
       this.fixtureRoot.add(label);
-      this.fixtures.set(f.id, { knobs });
+      this.fixtures.set(f.id, { knobs, dress });
     }
 
     // The paper strip the recorder prints on.
@@ -673,6 +675,7 @@ export class Table3D extends BenchViewer3D {
     for (const f of Object.values(this.state.fixtures)) {
       const rec = this.fixtures.get(f.id);
       if (!rec) continue;
+      rec.dress?.userData?.sync?.(f, this.state);
       if (rec.custom) { rec.custom.update?.(f, this.state); continue; }
       for (const [name, d] of Object.entries(f.dials)) {
         const k = rec.knobs[name];
@@ -1194,6 +1197,7 @@ export class Table3D extends BenchViewer3D {
   update(delta) {
     super.update(delta);
     this.tickPieces(delta);
+    for (const rec of this.fixtures?.values() || []) rec.dress?.userData?.tick?.(delta, this.reduced);
   }
 
   /* ---------------- clicks, the field, [E] ---------------- */

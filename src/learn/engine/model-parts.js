@@ -9,9 +9,11 @@
  *   { type: 'atom', p, n, charge?, focus?: 'nucleus', caption? }       one atom: a nucleus and its electrons on shells
  *   { type: 'atoms', items: [{ p, n, charge?, label? }], caption? }    atoms side by side (isotopes, ions)
  *   { type: 'molecule', name, caption? }                               a ball-and-stick molecule
+ *   { type: 'gas', boxes: [{ label?, w?, h?, d?, parts: [{ kind, n }] }], caption? }   vessels of gas side by side (Bellows)
  */
 
 import { shellsFor } from '../table/kits/atoms.js';
+import { mulberry32 } from './plates.js';
 
 /** Display colours, in the plate's weathered palette. */
 const COLOR = { H: '#d8d2c4', C: '#4a4640', O: '#a0522d', Na: '#cfc8b8', Cl: '#c9b66a', proton: '#d99423', neutron: '#8c8376', electron: '#dcd6cc', bond: '#8c8376', ring: '#544e46' };
@@ -83,8 +85,58 @@ export function moleculeParts(spec) {
   return { spheres, bonds, rings: [], electrons: [], radius: Math.max(...m.atoms.map(a => Math.hypot(a[1], a[2], a[3]))) + 0.5 };
 }
 
+/* ---- BELLOWS: vessels of gas (added with the 2026-10-23 Bellows pass; nothing above this block was changed) ---- */
+
+/** A gas particle's colour and its size, by gas: heavier gases are bigger, as their atoms and molecules are. */
+const GAS_LOOK = {
+  He: ['#e1dccb', 0.1], H2: ['#e1dccb', 0.1], Ne: ['#cfc8b8', 0.12], N2: ['#a59c86', 0.15], O2: ['#a0522d', 0.15], Ar: ['#8c8376', 0.16],
+  CO2: ['#6b625a', 0.2], CH4: ['#b8afa0', 0.16], NH3: ['#c9b66a', 0.15], Kr: ['#7b7468', 0.19], Xe: ['#57514a', 0.23]
+};
+
+/** `n` particles of each kind in each box: the same count and places every time (a seeded shuffle), none inside another. */
+export function gasParts(spec) {
+  const boxes = spec.boxes;
+  const gap = 0.9;
+  const widths = boxes.map(b => b.w ?? 2.4);
+  const total = widths.reduce((a, b) => a + b, 0) + gap * (boxes.length - 1);
+  const parts = { spheres: [], bonds: [], rings: [], electrons: [], radius: total / 2 + 0.7 };
+  let x = -total / 2;
+  boxes.forEach((b, bi) => {
+    const w = widths[bi];
+    const h = b.h ?? 1.7;
+    const d = b.d ?? 1.7;
+    const cx = x + w / 2;
+    x += w + gap;
+    const rnd = mulberry32(0x5eed + bi * 97);
+    const placed = [];
+    for (const part of b.parts) {
+      const [color, r] = GAS_LOOK[part.kind] || ['#a59c86', 0.15];
+      for (let k = 0; k < part.n; k++) {
+        let pos = null;
+        for (let tries = 0; tries < 60 && !pos; tries++) {
+          const c = [cx + (rnd() - 0.5) * (w - 2 * r), (rnd() - 0.5) * (h - 2 * r), (rnd() - 0.5) * (d - 2 * r)];
+          if (placed.every(o => Math.hypot(o.pos[0] - c[0], o.pos[1] - c[1], o.pos[2] - c[2]) >= (o.r + r) * 1.02)) pos = c;
+        }
+        const at = pos || [cx + (rnd() - 0.5) * (w - 2 * r), (rnd() - 0.5) * (h - 2 * r), (rnd() - 0.5) * (d - 2 * r)];
+        const sphere = { pos: at, r, color, kind: part.kind };
+        placed.push(sphere);
+        parts.spheres.push(sphere);
+      }
+    }
+    // The vessel: its twelve edges as thin rods.
+    const [hx, hy, hz] = [w / 2, h / 2, d / 2];
+    const corner = (sx, sy, sz) => [cx + sx * hx, sy * hy, sz * hz];
+    for (const sy of [-1, 1]) for (const sz of [-1, 1]) parts.bonds.push({ a: corner(-1, sy, sz), b: corner(1, sy, sz), order: 1, r: 0.02 });
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.bonds.push({ a: corner(sx, -1, sz), b: corner(sx, 1, sz), order: 1, r: 0.02 });
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) parts.bonds.push({ a: corner(sx, sy, -1), b: corner(sx, sy, 1), order: 1, r: 0.02 });
+  });
+  parts.radius = Math.max(parts.radius, total / 2 + 0.7);
+  return parts;
+}
+
 /** The parts of any model spec, side by side where it lists several atoms. */
 export function modelParts(spec) {
+  if (spec.type === 'gas') return gasParts(spec);
   if (spec.type === 'molecule') return moleculeParts(spec);
   if (spec.type === 'atoms') {
     const n = spec.items.length;
@@ -107,6 +159,7 @@ export function modelParts(spec) {
 /** The words under a model: the spec's own caption, else the counts it was built from. */
 export function captionOf(spec) {
   if (spec.caption) return spec.caption;
+  if (spec.type === 'gas') return spec.boxes.map(b => `${b.label ? `${b.label}: ` : ''}${b.parts.map(p => `${p.n} ${p.kind}`).join(' and ')}`).join('. ') + '.';
   if (spec.type === 'molecule') return `${MOLECULES[spec.name]?.formula || spec.name}, as a ball-and-stick model.`;
   const one = it => `${it.label ? `${it.label}: ` : ''}${it.p} protons, ${it.n} neutrons, ${shellsOf(it.p, it.charge || 0).reduce((a, b) => a + b, 0)} electrons`;
   if (spec.type === 'atoms') return spec.items.map(one).join('. ') + '.';

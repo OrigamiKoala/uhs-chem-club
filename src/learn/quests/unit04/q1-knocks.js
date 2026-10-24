@@ -1,28 +1,27 @@
 /**
  * q1-knocks.js — Bellows, bench one: PRESSURE AND TEMPERATURE.
  *
- * The gauge gallery on a gasholder's flank, and the first of Bellows' TABLETOPS (plan `bench-tabletop.md`, phase T5), on the gas kit
- * (`table/kits/gas.js`). A cylinder with a piston you set by hand, a gauge, a thermometer, a counter that ticks for every knock on the
- * far wall and a window onto the particles themselves. Nothing here is told: the player moves the piston and watches a needle and a
- * counter move together, and what the needle has been measuring all along is the knocking.
+ * The gauge gallery on a gasholder's flank, on the gas kit (`table/kits/gas.js`). The Fifth jammed gas into the station's holders and the
+ * needles will not come down; before anyone can let it out, the crew has to know what a gauge is actually measuring.
  *
- *   1  what moves with the gauge as the piston moves       -> pressure
- *   2  what adding gas does to it                          -> (pressure follows the amount)
- *   3  what heating does to the particles                  -> kinetic energy
- *   4  how the speeds of the particles compare             -> Maxwell–Boltzmann distribution
- *   5  a light gas and a heavy one at one temperature      -> (equal energy, unequal speed)
- *   6  one push, three scales                              -> atm, kPa, mmHg
- *   7  where the pressure would reach zero                 -> absolute zero, kelvin
- *   8  which statements the bench has shown                -> kinetic molecular theory
+ * THE CLICK. Most players arrive believing a gas pushes the way a weight does: down, so a gauge in the floor of a box of air must read
+ * more than one in the roof. Stage 1 asks for that guess (a predict stage: the question and four cards, no instrument) and stage 2 puts
+ * the same gauge on a box's roof, side wall and floor. The three read alike, and warming the box raises all three together. The wrong
+ * model is a card on the bench, the box contradicts it, and only then is the word given: pressure, particles knocking every wall.
  *
- * THE EVIDENCE IS ON THE BENCH. Stage 1 moves only the piston, so the particles' speed, number and warmth do not change while the gauge
- * and the knock counter rise and fall together: the only thing left to be measured is the knocking. Stage 6 puts a reference gauge
- * with all three rings beside a cylinder that carries one, so the conversion is read off a gauge, never given. Stage 7's strip is
- * ruled well past the coldest point the heater reaches, so a line laid across the readings can be carried on to where it meets zero.
+ *   1  PREDICT: which of a box's three gauges reads highest        (no instrument)
+ *   2  TEST: a gauge on the roof, the side wall and the floor      -> Pressure
+ *   3  squeeze the same gas: which readings move with the gauge    -> Boyle's law
+ *   4  heat the gas, rank four snapshots of its speeds             -> A Spread of Speeds
+ *   5  a light and a heavy gas at one temperature                  -> Kinetic Energy, Kinetic Molecular Theory
  *
- * FIELD. The gauge gallery's pedestal gauge on the holder's own pipe (`bellows/stations.js` `buildGaugeGallery`) is the field point
- * `gauge`: a card with the holder's three-ring reading, carried back to the bench (stage 6). It is evidence, never a lock; at T1 to
- * T3 the same fetch is a drawn site plate.
+ * (Cut as repeats: the three-scale unit conversion, the line carried to absolute zero (now earned on bench two, where the same line is
+ * drawn for room against heat), the heat-until-fast target, and the closing statement-marking.)
+ *
+ * THE EVIDENCE IS ON THE BENCH. In stage 3 only the piston moves, so the particles' speed, number and warmth stay put while the gauge and
+ * the knock counter rise and fall together. In stage 4 the 3D crowd is the speed screen: every particle at its own speed, from the same
+ * distribution the screen draws. A word is plain until its card has earned it, on the dials too: the gauges print bare figures until
+ * stage 2 names the unit.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -30,25 +29,26 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  gasTable, rig, chip, stmt, markCard, numCard, rings, markerFixture, rigAt, cylRead, whereIs, speedBins, toKelvin, histCard, kPaToAtm, ATM_KPA, markerRead
+  gasTable, rig, box, chip, histCard, boxRead, rigAt, cylRead, whereIs, speedBins, toKelvin
 } from '../../table/kits/gas.js';
+import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf } from './_shared.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bpressure\b/i, introducedAt: 1 },
-  { term: /\bkinetic energy\b/i, introducedAt: 3 },
+  { term: /\bpressure\b/i, introducedAt: 2 },
+  { term: /\b(?:kpa|kilopascals?)\b/i, introducedAt: 2 },
+  { term: /\bboyle.?s law\b/i, introducedAt: 3 },
   { term: /\bmaxwell.boltzmann\b/i, introducedAt: 4 },
-  { term: /\b(?:atm|atmospheres?|kpa|kilopascals?|mmhg)\b/i, introducedAt: 6 },
-  { term: /\babsolute zero\b/i, introducedAt: 7 },
-  { term: /\bkelvin\b/i, introducedAt: 7 },
-  { term: /\bkinetic molecular theory\b/i, introducedAt: 8 }
+  { term: /\bkinetic energy\b/i, introducedAt: 5 },
+  { term: /\bkinetic molecular theory\b/i, introducedAt: 5 }
 ];
 
 /** Mole, particle and the other words Tallow earned are plain here. */
 export const BUILDS_ON = ['unit01/q6-weigh'];
 
-const SPEAKER = 'Vess';
+/** The key the player's guess is kept under (`engine/predict.js`). */
+export const QUEST_KEY = 'unit04/q1-knocks';
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -57,100 +57,113 @@ export function toolNoteFor() { return null; }
    THE TABLES
    ------------------------------------------------------------------ */
 
-const widget = { type: 'table', label: 'The bench' };
-const T0 = 298.15;
 const RIG = 'rig';
+const BOX = 'box';
+const T0 = 298.15;
 
-/** The piston's detents, in litres: even steps, so the barrel is as long as the room in it. */
-const VOL = [8, 12, 16, 20, 24, 28, 32];
-const AMOUNTS = [1, 1.5, 2, 2.5, 3, 3.5, 4];
-const WARM = [0, 25, 100, 200, 400];
-const SPREAD = [-73, 27, 127, 227, 327, 427, 527];
-const COLD = [-100, -50, 0, 50, 100, 200];
-
-export const SPEED_MARK = 1500;
-export const ZERO_TOL = 10;
-const REF_SPEEDS = Math.max(...speedBins('N2', toKelvin(SPREAD[0], 'C'), 24, 2400));
-
-const ONE = (gas, extra = {}) => [{ id: 'a', label: 'Cylinder A', gas, n: 1, hold: 'dial', V: 20, T: T0, ...extra }];
-
-/** The four chips of stage 1 and the two trays they go in. */
-const READINGS = [['knocks', 'KNOCKS'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']];
-
-/** The reward card of each stage: the idea just worked out, named (unchanged by the conversion to a table). */
-const STAGE_REWARDS = [
-  {
-      reward: {
-        log: 'The gauge follows the knocks.',
-        title: 'Pressure',
-        body: 'The gauge reads pressure: the combined push of all the particles knocking on the wall. Squeeze the same particles into less room and they knock more often, so the pressure climbs.'
-      }
-  },
-  {
-      reward: {
-        log: 'Twice the gas, twice the pressure.',
-        title: 'Pressure Follows the Amount',
-        body: 'Twice the particles in the same room knock twice as often, so the pressure doubles. At a fixed volume and temperature the pressure is proportional to the amount of gas.'
-      }
-  },
-  {
-      reward: {
-        log: 'Hotter particles move faster.',
-        title: 'Kinetic Energy',
-        body: 'Heated particles move faster, and the energy of that motion is their kinetic energy. Temperature measures the average kinetic energy of the particles.'
-      }
-  },
-  {
-      reward: {
-        log: 'A spread of speeds with one peak.',
-        title: 'Maxwell–Boltzmann Distribution',
-        body: 'The speeds follow a Maxwell–Boltzmann distribution: a spread of speeds with a peak. Heating moves the peak to higher speeds and flattens the spread.'
-      }
-  },
-  {
-      reward: {
-        log: 'The same energy, a different speed.',
-        title: 'Same Temperature, Same Energy',
-        body: 'At one temperature every gas has the same average kinetic energy, so the lighter particles must move faster. The temperature fixes the energy, never the speed.'
-      }
-  },
-  {
-      reward: {
-        log: 'One push, three scales.',
-        title: 'Atmospheres, Kilopascals, mmHg',
-        body: 'The three rings are three units for the same pressure: one atmosphere (atm) is 101.3 kilopascals (kPa) is 760 millimetres of mercury (mmHg). Any reading in one unit can be turned into either of the others.'
-      }
-  },
-  {
-      reward: {
-        log: 'Zero pressure at the coldest possible point.',
-        title: 'Absolute Zero',
-        body: 'Carried back, the line reaches zero pressure at −273 °C. Nothing can be colder, because the particles would have no motion left to lose. That point is absolute zero, and the kelvin scale starts counting from it.'
-      }
-  },
-  {
-      reward: {
-        log: 'The whole picture, in one theory.',
-        title: 'Kinetic Molecular Theory',
-        body: 'Everything the bench has shown fits one picture, the kinetic molecular theory. A gas is a crowd of tiny particles in constant random motion, far apart, and its pressure is their knocking on the walls.',
-        last: true
-      }
-  }
+/** The guesses of stage 1 and the verdicts of stage 2: one statement per wall, and the one that says they are alike. */
+export const GUESSES = [
+  ['roof', 'The roof gauge reads most'],
+  ['side', 'The side gauge reads most'],
+  ['floor', 'The floor gauge reads most'],
+  ['same', 'All three read the same']
 ];
 
+/** The heater of stage 2, in degrees C: the box is warmed and every gauge is read again. */
+const BOX_TEMPS = [20, 60, 100, 150, 200];
+/** The piston's settings in stage 3, in litres: even halvings, so the barrel is as long as the room in it. */
+const SQUEEZE = [24, 12, 8, 6];
+/** Stage 4's heater, in degrees C, and the shared scale of its screen and snapshots. */
+const SPREAD = [-73, 27, 127, 227, 327, 427, 527];
+const REF_SPEEDS = Math.max(...speedBins('N2', toKelvin(SPREAD[0], 'C'), 24, 2400));
+/** The readings of stage 3 and of stage 5. */
+const READINGS = [['knocks', 'KNOCKS'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']];
+
+/** Which wall a box reads highest, or 'same' when no wall reads more than the others (the gas knocks every wall alike). */
+export function wallMost(q) {
+  const ps = q.walls.map(w => w.P);
+  const hi = Math.max(...ps);
+  const lo = Math.min(...ps);
+  if (hi - lo <= hi * 0.005) return 'same';
+  return q.walls.find(w => w.P === hi).id;
+}
+
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE FIVE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
+  predictStage({
+    key: QUEST_KEY,
+    title: 'Guess the Gauges',
+    prompt: 'Which of a sealed box\'s three gauges, on its roof, side wall and floor, will read the highest?',
+    items: GUESSES,
+    hints: [
+      'Use the four cards and the slot.',
+      'Picture the gas in the box and what it is doing to each wall.',
+      'There is no wrong guess yet; commit to the card you would bet on.'
+    ],
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'A Guess Worth Testing',
+      body: 'Gauges are about to be fitted to a real box of gas, one on each of those walls, and they will say which guess holds.'
+    }
+  }),
+
+  /* ---------------------------------------------------------------- 2 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 23 }, { cyls: ONE('He'), volumes: VOL, volumeStart: 4, vmax: 32, show: { knocks: true, speed: true }, words: { speed: 'SPEED' } });
+    const b = box(BOX, { x: 34, y: 33 }, {
+      gas: 'N2', n: 1, V: 10, T: 300, temps: BOX_TEMPS, tempList: 'C', tempStart: 1, units: 'plain', gaugeMax: 600, label: 'Holder 4, sealed',
+      plot: { x: 'TC', y: 'P' }
+    });
     return {
-      title: 'Rising and Falling',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'This bench holds helium in a cylinder with a piston, a gauge for the pressure — how hard the gas pushes — and a counter for the knocks on the wall. Press Submit when the table shows your answer.'
+      title: 'A Gauge on Every Wall',
+      // The guess comes back here, locked in: it is the first thing the player reads about the test.
+      get prompt() {
+        return youPredicted(QUEST_KEY, GUESSES, 'which statement do the three gauges back up?', 'Which statement do the three gauges back up?');
       },
+      widget,
+      table: gasTable({
+        pieces: cardColumn(GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: { x: 90 + (i % 2) * 38, y: 44.5 + Math.floor(i / 2) * 13 } })),
+        fixtures: [b],
+        zones: { slots: [{ id: 'show', label: 'What the gauges show', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
+      }, { recorder: { at: { x: 109, y: 11 }, size: { w: 36, h: 14 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Gauge', yUnit: '', xDigits: 0 } }),
+      hints: [
+        'Use the "Heater" dial and "Record", then lay a card in the slot.',
+        'Compare the three gauges with each other, and then again after the box is warmed.',
+        'Lay the card that says what the three readings do together, whatever you guessed.'
+      ],
+      check(state) {
+        const t = state.table;
+        const card = cardIn(t, 'show');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = wallMost(boxRead(t, BOX));
+        if (card.id === want) return { ok: true };
+        const names = { roof: 'roof', side: 'side wall', floor: 'floor' };
+        return { ok: false, msg: `The ${names[card.id] || 'side wall'} gauge does not read more than the other two.` };
+      },
+      // The verdict on the guess opens the card; it never says the guess cost anything.
+      get reward() {
+        const g = guessOf(QUEST_KEY, GUESSES);
+        const verdict = !g ? '' : g.id === 'same' ? 'You predicted this one, and the gauges agreed. ' : 'The gauges did not agree with your prediction, which is how a guess gets better. ';
+        return {
+          log: 'All three gauges read alike.',
+          title: 'Pressure',
+          body: `${verdict}The gas pushes on every wall alike, because its particles fly every way and knock them all: it is knocking, not weight. That push is called pressure, and it is read in kilopascals (kPa).`,
+          model: { type: 'gas', boxes: [{ label: 'Sealed box', w: 2.6, parts: [{ kind: 'N2', n: 12 }] }], caption: 'A box of gas: 12 particles flying every way, one for each twelfth of a mole, so every wall is knocked alike. Not to scale.' }
+        };
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 3 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Holder 2', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+      show: { knocks: true, speed: true }, words: { speed: 'SPEED' }, label: 'Holder'
+    });
+    return {
+      title: 'Squeeze the Crowd',
       prompt: 'Sort each reading by whether it changes along with the gauge as the piston moves.',
       widget,
       table: gasTable({
@@ -164,133 +177,88 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Turn the Piston dial through its whole range and watch every reading on the cylinder.',
-        'Compare which readings rise and fall alongside the gauge and which stay where they were.',
-        'Put each reading in the tray for what you saw it do while the piston moved.'
+        'Use the "Piston" dial.',
+        'Compare each reading at the biggest room with the same reading at the smallest.',
+        'A reading goes with the gauge only if it is different at the two ends of the dial.'
       ],
       check(state) {
         const t = state.table;
-        const ids = READINGS.map(x => x[0]);
-        if (!ids.every(id => whereIs(t, id) === 'moves' || whereIs(t, id) === 'stays')) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
+        if (!READINGS.every(([id]) => ['moves', 'stays'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
         const a = rigAt(t, RIG, { volume: 1 })[0];
-        const b = rigAt(t, RIG, { volume: VOL.length })[0];
-        const changes = { knocks: a.knocks !== b.knocks, speed: a.mean !== b.mean, amount: a.n !== b.n, temp: a.T !== b.T };
-        for (const [id, label] of READINGS) {
-          const want = changes[id] ? 'moves' : 'stays';
-          if (whereIs(t, id) !== want) return { ok: false, msg: `Move the piston again and watch the ${label.toLowerCase()} beside the gauge: does it change along with it?` };
-        }
+        const z = rigAt(t, RIG, { volume: SQUEEZE.length })[0];
+        const changes = { knocks: a.knocks !== z.knocks, speed: a.mean !== z.mean, amount: a.n !== z.n, temp: a.T !== z.T };
+        const wrongMoves = READINGS.some(([id]) => whereIs(t, id) === 'moves' && !changes[id]);
+        const wrongStays = READINGS.some(([id]) => whereIs(t, id) === 'stays' && changes[id]);
+        if (wrongMoves) return { ok: false, msg: 'The "Moves with the gauge" tray holds a reading that is the same at every piston setting.' };
+        if (wrongStays) return { ok: false, msg: 'The "Stays put" tray holds a reading that is different at two piston settings.' };
         return { ok: true };
       },
-      ...STAGE_REWARDS[0]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 2 */
-  (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'N2', hold: 'V', V: 20, T: T0 }], amounts: AMOUNTS, amountStart: 1, vmax: 20,
-      show: { knocks: true }, plot: { x: 'n', y: 'P' }
-    });
-    return {
-      title: 'Twice the Gas',
-      briefing: { speaker: SPEAKER, body: 'The Gas in dial now adds gas to the cylinder, and Record drops its readings on the paper strip.' },
-      prompt: 'Add gas until the gauge reads three times its first reading.',
-      widget,
-      table: gasTable({ fixtures: [r] }, { recorder: { at: { x: 112, y: 24 }, size: { w: 40, h: 26 }, xLabel: 'Amount', xUnit: 'mol', yLabel: 'Gauge', yUnit: 'kPa', xDigits: 1 } }),
-      hints: [
-        'Press Record at the starting amount, then add gas a step at a time and press Record again.',
-        'Compare each new gauge reading with the first one on the paper strip.',
-        'Divide a reading by the first to see by what factor the gauge has moved, and stop when that factor is the one asked for.'
-      ],
-      check(state) {
-        const t = state.table;
-        const first = rigAt(t, RIG, { amount: 1 })[0].P;
-        const now = cylRead(t, RIG, 0);
-        if (Math.round(t.fixtures[RIG].dials.amount.value) === 1) return { ok: false, notYet: true, msg: 'The cylinder holds its starting amount: add gas and watch the gauge.' };
-        const ratio = now.P / first;
-        if (Math.abs(ratio - 3) < 0.015) return { ok: true };
-        return { ok: false, msg: ratio < 3 ? 'The gauge has not yet reached three times its first reading: divide the reading by the first one.' : 'The gauge has gone past three times its first reading: divide the reading by the first one.' };
-      },
-      ...STAGE_REWARDS[1]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 3 */
-  (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', hold: 'V', V: 20, T: T0 }], temps: WARM, tempList: 'C', tempStart: 2, vmax: 20,
-      show: { speed: true, energy: true }, cols: 1
-    });
-    return {
-      title: 'Warming Up',
-      briefing: { speaker: SPEAKER, body: 'The Heater dial now warms the gas, and the cylinder prints the average speed of its particles.' },
-      prompt: 'Heat the gas until its particles average more than 1500 m/s.',
-      widget,
-      table: gasTable({ fixtures: [r] }),
-      hints: [
-        'Turn the Heater dial up one setting at a time and watch the speed reading.',
-        'Compare the average speed at each setting with the mark the prompt names.',
-        'Stop on a setting whose average speed is past the mark.'
-      ],
-      check(state) {
-        const t = state.table;
-        const q = cylRead(t, RIG, 0);
-        if (Math.round(t.fixtures[RIG].dials.temp.value) === 2) return { ok: false, notYet: true, msg: 'The heater is where it started: turn it and watch the speed.' };
-        if (q.mean > SPEED_MARK) return { ok: true };
-        return { ok: false, msg: 'The average speed is not yet past the mark: compare the reading with the mark at each setting.' };
-      },
-      ...STAGE_REWARDS[2]
+      reward: {
+        log: 'Only the knocks follow the gauge.',
+        title: 'Boyle\'s Law',
+        body: 'Squeezing the same particles into less room changes neither their speed nor their number, so they simply reach the walls more often. Half the room gives twice the knocks and twice the pressure, which is Boyle\'s law.',
+        model: {
+          type: 'gas',
+          boxes: [{ label: 'Whole room', w: 3.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Half the room', w: 1.7, parts: [{ kind: 'He', n: 12 }] }],
+          caption: 'The same 12 helium particles in the whole room and in half of it. Not to scale.'
+        }
+      }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const r = rig(RIG, { x: 36, y: 24 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'N2', hold: 'V', V: 20, T: T0 }], temps: SPREAD, tempList: 'C', tempStart: 2, vmax: 20,
-      speedScreen: true, screenRef: REF_SPEEDS, show: { amount: false }
+    const r = rig(RIG, { x: 31, y: 27 }, {
+      cyls: [{ id: 'a', label: 'Holder 3', gas: 'N2', n: 1, hold: 'V', V: 20, T: T0 }], temps: SPREAD, tempList: 'C', tempStart: 2, vmax: 20,
+      speedScreen: true, screenRef: REF_SPEEDS, show: { amount: false }, w: 54, label: 'Holder'
     });
-    // Three snapshots of nitrogen's speeds, taken at three temperatures the player is never told: A is the hottest, B the coldest.
+    // Four snapshots of nitrogen's speeds, taken at four temperatures the player is never told.
     const snap = (id, label, C) => histCard(id, label, { x: 0, y: 0 }, 'N2', toKelvin(C, 'C'), REF_SPEEDS);
     return {
       title: 'A Crowd, Not a Line',
-      prompt: 'Put the three speed snapshots in order from the coldest gas to the hottest.',
+      prompt: 'Put the four speed snapshots in order from the coldest gas to the hottest.',
       widget,
       table: gasTable({
-        pieces: [snap('a', 'SNAPSHOT A', 527), snap('b', 'SNAPSHOT B', 27), snap('c', 'SNAPSHOT C', 227)],
+        pieces: [snap('a', 'SNAPSHOT A', 527), snap('b', 'SNAPSHOT B', 27), snap('c', 'SNAPSHOT C', 227), snap('d', 'SNAPSHOT D', -73)],
         fixtures: [r],
-        zones: { rail: { id: 'rail', at: { x: 109, y: 40 }, size: { w: 80, h: 22 }, first: 'Coldest', last: 'Hottest', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] } }
+        zones: { rail: { id: 'rail', at: { x: 103, y: 42 }, size: { w: 88, h: 22 }, first: 'Coldest', last: 'Hottest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
       }),
       hints: [
-        'Turn the Heater dial from its coldest setting to its hottest and watch the speed screen change shape.',
-        'Compare where the tallest bar stands and how tall it is in each snapshot with how the screen looked at each setting.',
-        'Put the snapshot whose bars lie furthest left and stand tallest at the cold end of the rail, and the flattest, furthest right at the hot end.'
+        'Use the "Heater" dial, and drag the snapshots along the strip.',
+        'Compare the speed screen at each setting with the snapshots.',
+        'Match each snapshot to the heater setting whose screen looks like it, then order the settings.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three snapshots on the rail.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four snapshots on the strip.' };
         const temp = id => t.pieces[id].props.T;
-        const want = ['a', 'b', 'c'].sort((x, y) => temp(x) - temp(y));
+        const want = ['a', 'b', 'c', 'd'].sort((x, y) => temp(x) - temp(y));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Turn the Heater dial and compare each snapshot with the screen: where does the tallest bar stand as the gas warms, and how tall is it?' };
+        return { ok: false, msg: 'Two neighbouring snapshots on the strip are the wrong way round.' };
       },
-      ...STAGE_REWARDS[3]
+      reward: {
+        log: 'Every gas is a spread of speeds.',
+        title: 'A Spread of Speeds',
+        body: 'The particles of one gas do not all go at one speed: they make a spread with one peak, which chemists call the Maxwell–Boltzmann distribution. Heating slides the peak to higher speeds and flattens the spread.'
+      }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const rg = (id, at, gas, n, start) => rig(id, at, {
-      cyls: [{ id: 'a', label: gas === 'He' ? 'Cylinder A' : 'Cylinder B', gas, n, hold: 'V', V: 20, T: T0 }], temps: [0, 100, 200, 300], tempList: 'C', tempStart: start, vmax: 20, compact: true, w: 34,
+    const rg = (id, at, label, gas, n, start) => rig(id, at, {
+      cyls: [{ id: 'a', label, gas, n, hold: 'V', V: 20, T: T0 }], temps: [0, 100, 200, 300], tempList: 'C', tempStart: start, vmax: 20, compact: true, w: 34,
       show: { gauge: false, volume: false, speed: true, energy: true }, words: { speed: 'SPEED', energy: 'ENERGY' }
     });
+    const chips = [['energy', 'ENERGY'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']];
     return {
       title: 'Light and Heavy',
       prompt: 'Set both cylinders to one temperature, then sort each reading by whether the two gases share it.',
       widget,
       table: gasTable({
-        pieces: [['energy', 'ENERGY'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']].map(([id, label], i) => chip(id, label, { x: 12 + i * 18, y: 53 })),
-        fixtures: [rg('ra', { x: 20, y: 25 }, 'He', 1, 1), rg('rb', { x: 58, y: 25 }, 'CO2', 2, 3)],
+        pieces: chips.map(([id, label], i) => chip(id, label, { x: 12 + i * 18, y: 53 })),
+        fixtures: [rg('ra', { x: 20, y: 25 }, 'Holder 5', 'He', 1, 1), rg('rb', { x: 58, y: 25 }, 'Holder 6', 'CO2', 2, 3)],
         zones: {
           trays: [
             { id: 'same', label: 'Same in both', at: { x: 94, y: 33 }, size: { w: 34, h: 36 }, cell: 17 },
@@ -299,147 +267,38 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Turn both Heater dials until the two thermometers read alike.',
-        'Compare the readings printed on the two cylinders at that one temperature.',
-        'Put a reading in "Same in both" only if the two cylinders print the same figure for it.'
+        'Use both "Heater" dials.',
+        'Compare the figures printed on the two cylinders at one temperature.',
+        'A reading goes in "Same in both" only if the two cylinders print the same figure for it.'
       ],
       check(state) {
         const t = state.table;
         const a = cylRead(t, 'ra', 0);
         const b = cylRead(t, 'rb', 0);
-        const ids = ['energy', 'speed', 'amount', 'temp'];
-        if (!ids.every(id => whereIs(t, id) === 'same' || whereIs(t, id) === 'different')) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
-        if (Math.abs(a.T - b.T) > 0.01) return { ok: false, msg: 'The two cylinders are not at one temperature yet: turn the Heater dials until the thermometers read alike.' };
+        if (!chips.every(([id]) => ['same', 'different'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
+        if (Math.abs(a.T - b.T) > 0.01) return { ok: false, msg: 'The two cylinders are not at one temperature yet.' };
         const same = { energy: Math.abs(a.energy - b.energy) < 1e-9, speed: Math.abs(a.mean - b.mean) < 1e-6, amount: a.n === b.n, temp: true };
-        for (const id of ids) {
-          if (whereIs(t, id) !== (same[id] ? 'same' : 'different')) return { ok: false, msg: `Compare the ${id === 'temp' ? 'temperature' : id} printed on the two cylinders: do the figures match?` };
-        }
+        if (chips.some(([id]) => whereIs(t, id) === 'same' && !same[id])) return { ok: false, msg: 'The "Same in both" tray holds a reading that the two cylinders print differently.' };
+        if (chips.some(([id]) => whereIs(t, id) === 'different' && same[id])) return { ok: false, msg: 'The "Different" tray holds a reading that the two cylinders print alike.' };
         return { ok: true };
       },
-      ...STAGE_REWARDS[4]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 6 */
-  (() => {
-    const a = rig('ra', { x: 36, y: 20 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'N2', n: 1.4625, hold: 'V', V: 24, T: 300 }], vmax: 24, units: 'atm', show: { amount: false }, w: 62
-    });
-    const ref = rings('ref', { x: 100, y: 19 }, { atms: [0.5, 1, 1.5, 2, 2.5, 3], start: 2 });
-    const cards = [['n114', '114', 114], ['n152', '152', 152], ['n1140', '1140', 1140], ['n15', '15.2', 15.2]];
-    return {
-      title: 'Three Scales',
-      prompt: 'Put the reading of Cylinder A\'s gauge, in kilopascals, in the slot.',
-      widget,
-      table: gasTable({
-        pieces: [
-          ...cards.map(([id, label, v], i) => numCard(id, label, { x: 14 + i * 20, y: 52 }, v)),
-          { ...stmt('holder', 'Holder gauge: 1 atm = 101 kPa = 760 mmHg', { x: 126, y: 42 }), hidden: true, fetchFrom: 'gauge' }
-        ],
-        fixtures: [a, ref],
-        zones: { slots: [{ id: 'answer', label: 'A, in kPa', at: { x: 98, y: 50 }, size: { w: 20, h: 11 } }] },
-        fetch: [{ id: 'gauge', label: 'Holder Gauge', at: { x: 132, y: 55 } }]
-      }),
-      hints: [
-        'Turn the Set to dial on the reference gauge and read all three of its rings at once; the holder\'s own gauge shows the same three.',
-        'Turn the dial until the atmosphere ring matches Cylinder A\'s gauge, then read the kilopascal ring.',
-        'Put the card that matches the kilopascal ring in the slot.'
-      ],
-      check(state) {
-        const t = state.table;
-        const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
-        const want = Math.round(kPaToAtm(cylRead(t, 'ra', 0).P) * ATM_KPA);
-        if (card.props.value === want) return { ok: true };
-        return { ok: false, msg: 'Turn the reference gauge until its atmosphere ring matches Cylinder A\'s gauge, then read the kilopascal ring beside it.' };
-      },
-      ...STAGE_REWARDS[5]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    const r = rig(RIG, { x: 36, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', hold: 'V', V: 20, T: T0 }], temps: COLD, tempList: 'C', tempStart: 3, vmax: 20, plot: { x: 'TC', y: 'P' }
-    });
-    return {
-      title: 'Where It Stops',
-      briefing: { speaker: SPEAKER, body: 'The paper strip is ruled well past the coldest setting, and the straightedge in the dock lays a line across the readings.' },
-      prompt: 'Set the marker to the temperature at which the gas pressure would reach zero.',
-      widget,
-      table: gasTable({
-        fixtures: [r, markerFixture('zero', 'Pressure reaches zero at', { x: 108, y: 54 }, { min: -400, max: 0, step: 10, start: 0, unit: '°C', w: 50 })],
-        tools: ['straightedge']
-      }, { recorder: { at: { x: 112, y: 22 }, size: { w: 42, h: 28 }, xLabel: 'Temperature', xUnit: '°C', yLabel: 'Pressure', yUnit: 'kPa', range: { xMin: -300, xMax: 250, yMin: 0, yMax: 250 } } }),
-      hints: [
-        'Step the Heater dial through every setting and press Record at each one.',
-        'Lay the straightedge across the points and follow the line down toward the bottom of the paper strip.',
-        'Read the temperature at which the line reaches the bottom edge of the strip, and set the marker to it.'
-      ],
-      check(state) {
-        const t = state.table;
-        const v = markerRead(t, 'zero');
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the temperature you read off the line.' };
-        if (Math.abs(v - (-273.15)) <= ZERO_TOL) return { ok: true };
-        return { ok: false, msg: t.recorder.tool ? 'Follow the laid line down to the bottom edge of the strip and read the temperature beneath that point.' : 'Record some readings and lay the straightedge across them, then follow the line to the bottom edge of the strip.' };
-      },
-      ...STAGE_REWARDS[6]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const r = rig(RIG, { x: 36, y: 31 }, {
-      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'N2', hold: 'dial', V: 20, T: T0 }], volumes: VOL, volumeStart: 4, temps: [-100, 0, 25, 200, 500], tempList: 'C', tempStart: 3, vmax: 32,
-      speedScreen: true, screenRef: REF_SPEEDS, show: { speed: true, energy: true }, words: { energy: 'ENERGY OF MOTION' }
-    });
-    const statements = [
-      ['moving', 'Gas particles are always moving'],
-      ['knock', 'Knocks on the walls make pressure'],
-      ['apart', 'Gas particles are far apart'],
-      ['stop', 'Cooling a gas to 0 °C stops its particles'],
-      ['slower', 'Hotter gas particles move more slowly'],
-      ['equal', 'Every particle moves at the same speed']
-    ];
-    return {
-      title: 'What the Bench Showed',
-      prompt: 'Mark every statement the bench has shown to be true of a gas.',
-      widget,
-      table: gasTable({
-        pieces: statements.map(([id, label], i) => markCard(id, label, { x: 93 + (i % 2) * 37, y: 12 + Math.floor(i / 2) * 19 })),
-        fixtures: [r]
-      }),
-      hints: [
-        'Move the piston and the heater and test each statement against what the cylinder does.',
-        'Compare each statement with the knock window, the speed screen and the thermometer in turn.',
-        'Mark only the statements that nothing on the cylinder contradicts.'
-      ],
-      check(state) {
-        const t = state.table;
-        const marked = statements.map(s => s[0]).filter(id => t.pieces[id].props.flipped);
-        if (!marked.length) return { ok: false, notYet: true, msg: 'Tap the statements that are true to mark them.' };
-        const want = TRUE_STATEMENTS;
-        if (marked.slice().sort().join() === want.slice().sort().join()) return { ok: true };
-        if (marked.some(id => !want.includes(id))) return { ok: false, msg: 'One of the marked statements is contradicted by something the bench has shown: test each against the speed screen and the thermometer.' };
-        return { ok: false, msg: 'A statement the bench has shown to be true is still unmarked: look back at the window and the knock counter.' };
-      },
-      ...STAGE_REWARDS[7]
+      reward: {
+        log: 'The same energy, a different speed.',
+        title: 'Kinetic Energy',
+        body: 'At one temperature every gas has the same average energy of motion, called kinetic energy, so the lighter particles must move faster. Together the benches give the kinetic molecular theory: a gas is a crowd of particles in constant random motion, and its pressure is their knocking on the walls.',
+        last: true
+      }
     };
   })()
 ];
 
-export const TRUE_STATEMENTS = ['moving', 'knock', 'apart'];
-
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Turn the Piston dial and watch the readings;', 'drag each chip into a tray.'],
-  2: ['Turn the Gas in dial, then press Record.'],
-  3: ['Turn the Heater dial to warm the gas.'],
-  4: ['Turn the Heater dial and watch the speed screen;', 'drag each snapshot into its place on the rail.'],
-  5: ['Turn each Heater dial, then drag the chips', 'into the trays.'],
-  6: ['Turn the Set to dial; drag the card into the slot.'],
-  7: ['Record each setting, lay the straightedge,', 'then set the marker.'],
-  8: ['Tap a statement to mark it.']
+  1: ['Drag one card into the slot.'],
+  2: ['Turn the Heater dial and press Record,', 'then drag a card into the slot.'],
+  3: ['Turn the Piston dial and watch the readings;', 'drag each chip into a tray.'],
+  4: ['Turn the Heater dial and watch the speed screen;', 'drag each snapshot into its place on the strip.'],
+  5: ['Turn each Heater dial, then drag the chips', 'into the trays.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -447,11 +306,11 @@ applyNotes(STAGES, NOTES);
    THE DEBRIEF
    ------------------------------------------------------------------ */
 export const DEBRIEF = {
-  speaker: SPEAKER,
+  speaker: 'Vess',
   sections: [
     {
       heading: 'What You Found',
-      body: 'A gauge counts knocks. More gas, less room or more heat all make the knocks harder or more frequent, and the temperature is the average energy of the crowd that does the knocking. The coldest a gas can get is where that motion ends.'
+      body: 'A gauge counts knocks, and it counts them the same on every wall. More gas, less room or more heat all make the knocks harder or more frequent, and the temperature is the average energy of the crowd that does the knocking.'
     },
     {
       heading: 'Why It Is Worth It',
@@ -459,7 +318,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'The next bench changes one thing at a time and reads off exactly how the others answer.'
+      body: 'The next bench changes one thing at a time on a gas and reads off exactly how the others answer.'
     }
   ]
 };
@@ -472,12 +331,34 @@ export const PRACTICE = [
     question: 'According to kinetic molecular theory, what causes the pressure of a gas?',
     options: [
       { id: 'a', label: 'Particles colliding with the walls of the container' },
-      { id: 'b', label: 'The weight of the gas pressing on its container' },
+      { id: 'b', label: 'The weight of the gas pressing down on its container' },
       { id: 'c', label: 'Attractions between the particles' },
       { id: 'd', label: 'The particles being at rest against the walls' }
     ],
     answer: 'a',
     explanation: 'The pressure is the combined force of countless collisions between moving particles and the container walls, divided by the wall area.'
+  },
+  {
+    question: 'Gauges are fitted to the roof, the side wall and the floor of a sealed box of gas. How do the three readings compare?',
+    options: [
+      { id: 'a', label: 'They are all the same' },
+      { id: 'b', label: 'The floor reads the most, because the gas is heavy' },
+      { id: 'c', label: 'The roof reads the most, because the gas rises' },
+      { id: 'd', label: 'The side wall reads the most, because it is the widest' }
+    ],
+    answer: 'a',
+    explanation: 'The particles fly in every direction and knock every wall alike, so the pressure is the same on all of them.'
+  },
+  {
+    question: 'A piston squeezes a gas into half the room at the same temperature. What happens to the knocks on the walls and to the pressure?',
+    options: [
+      { id: 'a', label: 'Both double' },
+      { id: 'b', label: 'Both halve' },
+      { id: 'c', label: 'The knocks double and the pressure stays the same' },
+      { id: 'd', label: 'Neither changes' }
+    ],
+    answer: 'a',
+    explanation: 'The same particles in half the room reach the walls twice as often, so the knocks double and so does the pressure.'
   },
   {
     question: 'A sealed, rigid container of gas is heated. What happens to the average kinetic energy of the particles and to the pressure?',
@@ -500,31 +381,8 @@ export const PRACTICE = [
     ],
     answer: 'a',
     explanation: 'Average kinetic energy depends only on temperature. With the same energy, the lighter helium atoms must be moving faster than the heavier krypton atoms.'
-  },
-  {
-    question: 'What is 1.50 atm in kilopascals?',
-    options: [
-      { id: 'a', label: '152 kPa' },
-      { id: 'b', label: '114 kPa' },
-      { id: 'c', label: '15.2 kPa' },
-      { id: 'd', label: '1140 kPa' }
-    ],
-    answer: 'a',
-    explanation: 'One atmosphere is 101.3 kPa, so 1.50 atm is 1.50 × 101.3 = 152 kPa.'
-  },
-  {
-    question: 'On a graph of the pressure of a fixed amount of gas in a rigid container against temperature in °C, at what temperature does the straight line reach zero pressure?',
-    options: [
-      { id: 'a', label: '−273 °C' },
-      { id: 'b', label: '0 °C' },
-      { id: 'c', label: '−100 °C' },
-      { id: 'd', label: '+273 °C' }
-    ],
-    answer: 'a',
-    explanation: 'The line, carried back, meets zero pressure at −273 °C, which is absolute zero, or 0 K.'
   }
 ];
-
 
 /* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
@@ -532,33 +390,21 @@ export const PRACTICE = [
    by drag and by two taps. Nothing here says what a reading is.
    ------------------------------------------------------------------ */
 
-const put = (piece, to) => ({ place: { piece, to } });
-const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
-const sort = (spec) => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tray}`));
-const mark = ids => ids.map(id => ({ flip: id }));
-
 export const SOLUTIONS = [
-  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 7), ...sort({ knocks: 'moves', speed: 'stays', amount: 'stays', temp: 'stays' })],
-  [{ run: RIG }, dial(RIG, 'amount', 3), { run: RIG }, dial(RIG, 'amount', 5), { run: RIG }],
-  [dial(RIG, 'temp', 4)],
-  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('b', 'rail:0'), put('c', 'rail:1'), put('a', 'rail:2')],
-  [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'same', temp: 'same', speed: 'different', amount: 'different' })],
-  [{ fetch: 'gauge' }, dial('ref', 'pressure', 3), put('n152', 'slot:answer')],
-  [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 2), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, dial(RIG, 'temp', 6), { run: RIG },
-    { lay: { kind: 'straightedge', through: [0, 3] } }, dial('zero', 'value', -270)],
-  [dial(RIG, 'volume', 2), dial(RIG, 'temp', 5), ...mark(TRUE_STATEMENTS)]
+  [put('floor', 'slot:predict')],
+  [dial(BOX, 'temp', 3), { run: BOX }, dial(BOX, 'temp', 5), { run: BOX }, put('same', 'slot:show')],
+  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 4), ...sort({ knocks: 'moves', speed: 'stays', amount: 'stays', temp: 'stays' })],
+  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
+  [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'same', temp: 'same', speed: 'different', amount: 'different' })]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
+  [],
+  [dial(BOX, 'temp', 3), { run: BOX }, put('floor', 'slot:show')],
   sort({ knocks: 'stays', speed: 'moves', amount: 'stays', temp: 'stays' }),
-  [dial(RIG, 'amount', 3), { run: RIG }],
-  [dial(RIG, 'temp', 3)],
-  [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2')],
-  [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'different', temp: 'same', speed: 'same', amount: 'different' })],
-  [put('n114', 'slot:answer')],
-  [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 6), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, dial('zero', 'value', -100)],
-  [...mark(['moving', 'knock', 'stop'])]
+  [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
+  [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'different', temp: 'same', speed: 'same', amount: 'different' })]
 ];
 
 function blankState() { return {}; }
@@ -582,4 +428,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { rigAt, cylRead };
+export { rigAt, cylRead, boxRead };

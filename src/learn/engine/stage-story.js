@@ -95,22 +95,25 @@ export const STAGE_STORY = {
 
   /* ---- Bellows: let the pressure out of the fuel station ---- */
   'q1-knocks': {
-    2: 'The Fifth jammed extra gas into the station tanks, and the needles will not come down.'
+    1: 'The Fifth jammed gas into the station\'s holders, and the needles will not come down.'
   },
   'q2-laws': {
-    1: 'The station valves will open only for a crew that understands how gas behaves.'
+    1: 'Cold is settling on the deck, and Vess needs to know what it does to a gas.',
+    5: 'A sealed tank from the raiders\' cargo pod has been left out on the deck.'
   },
   'q3-ideal': {
-    5: 'A hiss sounds behind an unmarked hatch.'
+    3: 'Four of the holders are jammed, and Vess must know which hold more gas than the reference.'
   },
   'q4-mixtures': {
-    6: 'The Fifth slips quiet argon into the blend.'
+    1: 'The Fifth fed a second gas into the fuel line, and Vess must see what each gas does.'
   },
   'q5-speed': {
-    4: 'A pinhole leak is bleeding gas out of the station.'
+    1: 'A pinhole leak is bleeding gas out of the station, and Vess wants to know who loses it first.',
+    3: 'Something is leaking from the vent stack, and Vess needs to name it.'
   },
   'q6-real': {
-    1: 'The Fifth packed the station tanks tighter than any gas law was meant for.'
+    1: 'The Fifth packed the station tanks tighter than any gas law was meant for.',
+    4: 'The liquefier at the cold box turns gases to liquid, and some turn far more easily than others.'
   },
 
   /* ---- Ember Reach: trace the Fifth Guild's geothermal siphon ---- */

@@ -71,6 +71,17 @@ const TOOL = {
   straightedge: ['Straightedge', 'Press "Straightedge" to lay a line across the points on the strip, so you can see whether they fall in a straight line.']
 };
 
+/**
+ * A kit's own words (`registerTour`), kept apart from the shared tables above so a world's tour text lives with its kit and never
+ * edits another world's. Keys are `<kit>:<kind>` for an instrument or a piece and `<kit>:<dial label>` for a dial.
+ */
+const EXTRA = { fixtures: {}, pieces: {}, dials: {} };
+export function registerTour(kitId, { fixtures = {}, pieces = {}, dials = {} } = {}) {
+  for (const [k, v] of Object.entries(fixtures)) EXTRA.fixtures[`${kitId}:${k}`] = v;
+  for (const [k, v] of Object.entries(pieces)) EXTRA.pieces[`${kitId}:${k}`] = v;
+  for (const [k, v] of Object.entries(dials)) EXTRA.dials[`${kitId}:${k}`] = v;
+}
+
 const hasTrays = t => Object.keys(t.zones?.trays || {}).some(id => !id.startsWith('scr-'));
 /** The slot a choice goes in, named as the table names it: whatever is in it when Submit is pressed is the answer. */
 const slotSentence = t => {
@@ -82,17 +93,22 @@ const hasCounts = t => Object.values(t.pieces || {}).some(p => p.kind === 'speci
 const quote = s => `"${s}"`;
 
 /** The generic text for a fixture whose kind has no entry: its label, its key and its dials. */
-function fallbackFixture(f) {
+function fallbackFixture(f, kitId) {
   const bits = [`${f.label}.`];
   if (f.runLabel) bits.push(`Press ${quote(f.runLabel)} to use it.`);
-  for (const d of Object.values(f.dials || {})) bits.push(DIAL[d.label] || `Move the ${quote(d.label || 'its')} dial by dragging its knob or tapping its groove.`);
+  for (const d of Object.values(f.dials || {})) bits.push(dialText(d, kitId));
   return bits.join(' ');
+}
+
+/** What one dial does: the kit's own words for it (`registerTour`), else the shared ones, else the plain how-to. */
+function dialText(d, kitId) {
+  return EXTRA.dials[`${kitId}:${d.label}`] || DIAL[d.label] || `Move the ${quote(d.label || 'its')} dial by dragging its knob or tapping its groove.`;
 }
 
 /** The title and text of a fixture: what it is and does, then each dial it carries that the text has not covered. */
 function fixtureStep(f, kitId) {
-  const entry = FIXTURE[`${kitId}:${f.kind}`] || FIXTURE[f.kind];
-  if (!entry) return { title: f.label, text: fallbackFixture(f) };
+  const entry = EXTRA.fixtures[`${kitId}:${f.kind}`] || FIXTURE[`${kitId}:${f.kind}`] || FIXTURE[f.kind];
+  if (!entry) return { title: f.label, text: fallbackFixture(f, kitId) };
   const runSentence = f.runLabel ? `Press "${f.runLabel}" to record the reading as a point on the strip.` : '';
   const text = entry.text
     .replace('{run}', f.runLabel || 'Run')
@@ -100,7 +116,7 @@ function fixtureStep(f, kitId) {
     .replace('{runSentence}', runSentence)
     .replace('{counters}', f.props?.counters ? ' The counter above a pan shows how many atoms are on it.' : '')
     .trim();
-  const dials = entry.dials === false ? [] : Object.values(f.dials || {}).map(d => DIAL[d.label] || `Move the ${quote(d.label || 'its')} dial by dragging its knob or tapping its groove.`);
+  const dials = entry.dials === false ? [] : Object.values(f.dials || {}).map(d => dialText(d, kitId));
   return { title: entry.title || f.label, text: [text, ...dials].join(' ') };
 }
 
@@ -150,7 +166,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
       add('pc_marks', 'Marking particles', 'Tap a particle to mark it as part of your answer. A ring appears round it so you can see which ones you have picked. Tap it again to unmark it. When you press Submit, your answer is the particles that have a ring.');
       continue;
     }
-    const entry = PIECE[kind];
+    const entry = EXTRA.pieces[`${kit}:${kind}`] || PIECE[kind];
     if (entry) add(`pc_${kind}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''));
     else add(`pc_${kind}`, p.label || kind, `${p.label || 'This piece'}: drag it to move it, or tap it once and then tap the place you want it to go.`);
   }
