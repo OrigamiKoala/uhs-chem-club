@@ -227,3 +227,76 @@ inside the rail, and the Compressor has moving parts.
 - Bellows benches were integrated into the plant machinery (T5 of `bench-tabletop.md`).
 - Every Bellows quest is played on the Tabletop (`Table3D` with the gas kit).
 - `gasrig3d.js` and `gasmount.js` are retired (T7); pure gas planners stay in `gasdata.js`.
+
+## The rollout rework (2026-10-23): one click per bench, distinct stages, a crowd you can watch
+
+**This section supersedes the quest tables above wherever they disagree.** Tallow was the pilot (`docs/Avalon problems and clashing rules.md`,
+rollout item); this is Bellows. Bellows still has six benches and the Compressor, but **33 stages instead of 53**
+(q1 5, q2 5, q3 4, q4 5, q5 5, q6 4, boss 5). Nothing here is browser-tested; the owner plays.
+
+**Every bench is built round a click** (T1, T2, T5): the wrong model is a card on the bench, a predict stage (`predict: true`, statement
+cards in one slot, no instrument; `_shared.js` `predictStage`, the guess kept by `engine/predict.js`) asks for it first, the next stage brings the
+instrument and the locked guess back in its prompt and reward, and the word is given only afterwards.
+
+| Bench | Wrong model | Stages (predict stages marked P) | Gone |
+| --- | --- | --- | --- |
+| q1-knocks | a gas presses down like a weight | P three gauges (roof, side, floor) / the same box with a gauge on each wall and a heater / squeeze: which readings follow the gauge (Boyle) / rank four speed snapshots / light and heavy at one temperature | unit conversion, the line to absolute zero (moved to q2), heat-until-fast, statement marking |
+| q2-laws | doubling the Celsius number doubles a gas | P 20 to 40 degrees / heat one cylinder until its room is twice another's (313, not 40) / carry the room-against-heat line to zero room (absolute zero, kelvin, Charles) / P a sealed tank cooled 50 degrees / the tank test (Gay-Lussac) | Boyle repeat stages, the weighted piston fed with gas, combined law, four records |
+| q3-ideal | heavier gas fills more room | P a mole of He against a mole of CO2 / equal rooms (Avogadro, molar volume) / count five tanks against a reference (ideal gas law) / the gas constant | atm constant, naming a gas by weight, density rank, the limestone pellet |
+| q4-mixtures | a second gas crowds the first | P neon's push when helium joins / open both tanks, lay the verdict (partial pressure, Dalton) / nitrogen to 60 percent (mole fraction) / open each tank in turn and rank four by push (the heavy gas has few moles) / sort what falls up the mountain | pour-to-400, share-to-push, argon, the trap |
+| q5-speed | a heavy gas leaks first / all alike | P He or N2 leaks first / rank four chambers by when each runs out (effusion) / set a reference chamber's gas to empty at the pace of the unmarked leak / P where ammonia and hydrogen chloride meet / the tube (diffusion) | speed-peak target, speed rank, fast tail, Graham ratio and the square-root naming, the random walk |
+| q6-real | the gas law is exact | P a hundredfold squeeze against the law / squeeze to the limit, particles drawn at their true size / four cylinders above, on or below the law (ideal, real gas) / rank cold gases by how far each strays | compression factor, the two corrections, van der Waals, three statement stages |
+| boss-compressor | | intake (gauge x4) / heater (room doubled, the 54 degree trap) / count tanks / open each tank and rank by push / match a leak with the reference chamber's gas | the figure-by-hand phases (volume at 750 K, grams of oxygen, partial pressure of helium) |
+
+**The Compressor** keeps its one health bar and its five phases, each now a different idea from a different bench and none a figure to work
+out by hand. A boss phase has no prediction and no field stage.
+
+**Misses (T4)** name what the table shows that disagrees ("Two neighbouring tanks on the strip are the wrong way round") or that the tray holds a
+reading that differs; none carries the reason. `verify:learn` now fails any Bellows refusal containing reasoning words (mass, weight, lighter,
+moles, kelvin, peak, because...), in addition to the answer search.
+
+**Fetches (U3).** Two of the three field points are retired: the holder's pedestal gauge (`gauge`, a copy of the reference gauge the bench holds)
+and the stack's sample (`bleed`, a lock: the stage could not be finished without it). The unmarked leak now stands on the bench as a sealed
+chamber. `drawoff` stays as the one optional field fetch of the world (q6 stage 4): the cold box's record of when ammonia, nitrogen and helium
+turn liquid, which is new evidence and which the stage does not need. `stations.js` keeps the hardware and returns no field point for the two;
+`verify:bellows` expects only `drawoff`.
+
+**3D (U1, C10).** The glass over a vessel is now full of a real crowd. `engine/gas-particles.js` (`ParticleField`, instanced bodies) puts one
+particle per dot the flat picture draws (a twelfth of a mole), each at a speed taken from the gas's own Maxwell-Boltzmann distribution at its
+temperature (`speedQuantiles`, stratified so a gas at a temperature is always the same crowd), bouncing in a vessel whose length is the room the
+planner gives; `trueSize` draws each particle at the share of the room the planner says it takes (q6). `table/kits/gas-3d.js` dresses the
+cylinder (glass, a moving piston and rod, a weight on a free piston), the new **sealed box** (`gas.js` `box`, `gas-read.js` `boxRead`: a glass
+cube with a gauge head on its roof, side wall and floor, needles turned by the planner's one pressure), the pinhole chambers (the particles that
+are left) and the common tank (a different shape of particle for each gas, circle, square, triangle, diamond). Reduced motion holds the crowd
+still; the flat pictures draw the same counts at `3D Off` (the painters skip their dots when the built table stands the bodies up, `b.bodies`).
+The only shared-engine edit is additive: `table3d.js` calls a dressing's `userData.sync(f, state)` on every state and `userData.tick(dt, still)`
+every frame. Flat things stay flat (strips, snapshots, the tube's fronts). Reward cards carry `reward.model` of type `gas`
+(`model-parts.js` `gasParts`, vessels of seeded particles, drawn by the existing viewer): q1 stages 2 and 3, q3 stage 2, q4 stage 2, q6 stage 2.
+
+**Tools say what they do (U5).** Hint rung 1 names the control only. `table/tour-bellows.js` gives every gas instrument and kind of piece a Tour
+step in the three beats, registered through `tour.js` `registerTour` (a small additive hook; kit-specific text lives with the kit). The gauges
+print bare figures until a card names the unit (`units: 'plain'`), and pressure, kelvin, partial pressure and the rest are earned on the cards
+`VOCABULARY` names. New kit pieces: a gas dial on a pinhole chamber (`picks`, the reference chamber), `printMass` on a tank, `off` ("OFF THE
+LAW") and `ideal` ("GAS LAW SAYS") lines on a cylinder; `stmt` cards are now 6.4 radius so a column of them fits.
+
+**Stakes (T8).** One lead line per bench on the stage the stake belongs to (`stage-story.js`), and the stake lives in the labels: the cylinders
+are "Holder 4, sealed", "Pod tank, sealed", "STACK LEAK", "SEAL B"; the tanks are the station's jammed holders.
+
+**Story animations (item 11).** `QUEST_STORY` has seven Bellows entries (`unit04/*`) and `ui/story-scenes-bellows.js` seven painters, spread into
+`SCENES` by one line. Each ends on a `Filed:` line that continues the thread: the gauges read true (q1), a sealed tank that keeps its pressure in the
+cold has heat inside it (q2), tanks can be counted from their plates (q3), a gas the Fifth adds shows as a push of its own (q4), the stack leak is
+krypton (q5), the tanks were packed past the gas law (q6), and the Compressor's cylinder held its pressure twelve days (boss: the Warm Cylinder
+clue). Scene figures are read from `gasdata.js`.
+
+**Age band (T6).** Copy is written for 12 to 17: the arithmetic stages (R in atmospheres, grams from a gauge, Graham's square root, van der Waals)
+are cut and the ideas kept with handles (match a leak, rank by push, read the gauge beside the law's figure). Practice problems stay answerable.
+
+**Checks.** `verify:learn`'s Bellows block is rewritten stage by stage (three gauges alike at every heater setting; the room doubles at 313 not 40;
+the line reaches zero room at 0 K; equal moles fill equal rooms and weigh eleven times as much; the count of every tank; neon unchanged in a mix and
+the heaviest gas not first in the push ranking; the lighter gas empties first; the squeezed gauge above the law and the cold ones below, in the same order
+at every setting; every boss phase) and holds all eight predict stages to "no instrument, three or more cards, one slot, an instrument next". `verify:story`
+counts a Bellows animation for every quest.
+
+**For the orchestrator.** World counts are now 6 benches + 1 boss = 7 quests, 33 stages (was 53); the whole registry is 44 quests, 38 benches,
+6 bosses, 310 stages (PRODUCT.md and `verify:docs` still say 330). `engine-and-worlds.md` describes the old Bellows gas kit and the three field points.
+`verify:docs` also reports "CLAUDE.md names assets-src/, which does not exist", which this branch did not cause.
