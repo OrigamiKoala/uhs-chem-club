@@ -22,6 +22,8 @@
 
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS } from './shells-draw.js';
+import { buildPlateFrame } from '../../engine/lab-props.js';
+import { buildArrowRod } from '../../engine/lab-props-lanternfall.js';
 import {
   arrowsOf, boxKey, boxPieceId, placeElectron, removeElectron, whyNoRoom, addressOfToken, placedTokens, MEASURED, rackPull, sameAddress,
   fmtMl, rowOf, boxesOf, rackFor, groundConfig
@@ -88,6 +90,21 @@ function run(state, fixtureId) {
 
 const rect = (r, kind, extra = {}) => ({ r, rect: RECTS[kind], ...extra });
 
+/**
+ * An orbital box as the solid thing it is: a low slab with the box's picture on it (the ring on the target, the finder's light) and a rod
+ * standing in it for each electron, an up arrow with its head at the top and a down arrow hanging the other way (Lanternfall, 2026-10-23).
+ */
+function piece3d(p, state, c) {
+  if (p.kind !== 'box') return null;
+  const g = buildPlateFrame(c, { face: c.face(), frame: false });
+  const here = arrowsOf(state, p);
+  const has = d => (Array.isArray(here) ? here.includes(d) : String(here).includes(d));
+  if (has('u')) { const r = buildArrowRod(c, { up: true }); r.position.set(-c.hw * 0.42, 0.005, 0); g.add(r); }
+  if (has('d')) { const r = buildArrowRod(c, { up: false }); r.position.set(c.hw * 0.42, 0.005 + 0.034, 0); g.add(r); }
+  g.userData.height = 0.05;
+  return g;
+}
+
 export const SHELLS_KIT = {
   id: SHELLS_KIT_ID,
   kinds: {
@@ -106,6 +123,7 @@ export const SHELLS_KIT = {
   run,
   paintPiece,
   paintFixture,
+  piece3d,
   deckStyle: () => 'instrument',
   printed: p => (p.kind === 'box' ? '' : String(p.label)),
   faceKey

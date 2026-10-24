@@ -275,10 +275,9 @@ export function buildWaveTank(w, site) {
     k.cyl(g, [0.07, 0.07, 0.05, 10], M.steel, [RX, 1.36, Z0 + 1.2]);
     k.tag(g, 'CHART 1', { w: 0.42, h: 0.16 }, [RX, 1.14, RZ + 0.18]);
   }
-  const fieldPoints = [{
-    id: 'flume', label: 'Flume Strip', lx: 3.7, ly: 1.0, lz: -2.0, half: [0.42, 0.4, 0.4],
-    stand: { lx: 4.1, lz: -1.0 }
-  }];
+  // The flume's chart recorder is still a post on the shore, but no stage fetches from it any more (2026-10-23): the strip carried a
+  // water wave the lamp screen did not need, and a fetch must bring new evidence (problems doc U3).
+  const fieldPoints = [];
 
   const colliders = [
     { lx: 0, lz: Z0, hw: 5.95, hd: 1.6 },
@@ -840,10 +839,8 @@ export function buildWaterHole(w, site) {
     k.cyl(g, [0.09, 0.09, 0.22, 12], M.glass, [WX - 0.45, 0.2, WZ + 0.05]);                            // the bucket, drawn up beside the post
     k.tag(g, 'LAKE 9', { w: 0.42, h: 0.16 }, [WX, 1.18, WZ + 0.19]);
   }
-  const fieldPoints = [{
-    id: 'hole', label: 'Ice Hole Water', lx: -4.0, ly: 1.1, lz: -4.1, half: [0.5, 0.5, 0.5],
-    stand: { lx: -4.9, lz: -3.2 }
-  }];
+  // The sampling winch is scenery now (2026-10-23): the lake-water blank it fetched was an empty cuvette the bench already held.
+  const fieldPoints = [];
 
   // The work lantern, hung from the tripod's head on a wire over the bench.
   k.strut(g, apex, [0.4, 3.45, 0.2], 0.012, M.darkSteel);

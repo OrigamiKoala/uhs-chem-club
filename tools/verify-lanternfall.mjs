@@ -459,10 +459,9 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     {
       const { fieldPointsOf } = await import('../src/three/field-points.js');
       const points = fieldPointsOf(built);
-      check(points.some(p => p.id === 'flume' && p.siteId === 'site-1'), 'the "flume" point feeds site-1 (the wave flume)',
-        'no "flume" field point feeds site-1: q1-wave sends the player to the flume\'s chart recorder');
-      check(points.some(p => p.id === 'hole' && p.siteId === 'site-9'), 'the "hole" point feeds site-9 (the cuvette sled by the ice hole)',
-        'no "hole" field point feeds site-9: q9-absorb sends the player to the sampling winch at the hole cut through the ice');
+      // 2026-10-23: both Lanternfall field points were cut (each carried a copy of what the bench held), so the world registers none and
+      // no stage sends the player to one. A field point added again must bring new evidence and pass the checks below.
+      check(points.length === 0, 'Lanternfall registers no field point (no stage fetches)', `unexpected field point(s): ${points.map(p => p.id).join(', ')}`);
       const bad = [];
       for (const p of points) {
         const site = world.sites.find(s => s.id === p.host);

@@ -1776,7 +1776,7 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
       if (bodies !== 1) fail(`one strip is ${bodies} instanced bodies, not one`);
       const shown = () => { const m = new THREE.Matrix4(); let n = 0; for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); if (m.elements[0] > 1e-6) n++; } return n; };
       if (shown() !== 0) fail(`an unfired strip shows ${shown()} electrons`);
-      state = MODEL.runScript(state, [{ place: { piece: 'b', to: 'slot:ch.spec' } }, { run: 'ch' }], { strict: true });
+      state = MODEL.runScript(state, [{ run: 'ch' }], { strict: true });
       viewer.setState(state);
       if (shown() !== 3) fail(`lithium fired shows ${shown()} electrons on the strip, not 3`);
       const m = new THREE.Matrix4();

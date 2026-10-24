@@ -47,19 +47,31 @@ export const STAGE_STORY = {
 
   /* ---- Lanternfall: relight the beacon towers ---- */
   'q1-wave': {
-    2: 'The Fifth Guild dimmed the beacons, so every spare lamp must be measured.'
+    1: 'The Fifth dimmed the beacons, so every spare lamp must be measured.'
   },
   'q2-photon': {
     1: 'The beacon plates have stopped answering the lamps, and Vess needs to know why.'
   },
   'q3-lines': {
-    2: 'The Fifth left sealed gas tubes among the beacons, and Vess must name what is in them.'
+    3: 'The Fifth left sealed gas tubes among the beacons, and Vess must name what is in them.'
+  },
+  'q4-cloud': {
+    1: 'The beacon lamps are tuned to electrons, and Vess wants to know where one actually is.'
+  },
+  'q5-numbers': {
+    1: 'The Fifth scrambled the records tent\'s board, and every box on it must be found by its address.'
+  },
+  'q6-filling': {
+    1: 'The records tent\'s magnet reads the real sample, and Vess wants the board to match it.'
+  },
+  'q8-trends': {
+    1: 'Vess has to sort the camp\'s metal stock by how big and how tightly held its atoms are.'
   },
   'q7-pes': {
-    5: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
+    3: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },
   'q9-absorb': {
-    8: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'
+    5: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'
   },
 
   /* ---- Ligar: clear the rescue pass ---- */

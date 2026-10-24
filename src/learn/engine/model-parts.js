@@ -10,6 +10,7 @@
  *   { type: 'atoms', items: [{ p, n, charge?, label? }], caption? }    atoms side by side (isotopes, ions)
  *   { type: 'molecule', name, caption? }                               a ball-and-stick molecule
  *   { type: 'gas', boxes: [{ label?, w?, h?, d?, parts: [{ kind, n }] }], caption? }   vessels of gas side by side (Bellows)
+ *   Lanternfall's wave, photons, ladder, orbital, rack, radii and cuvette are in `model-parts-lanternfall.js`.
  */
 
 import { shellsFor } from '../table/kits/atoms.js';
@@ -17,6 +18,7 @@ import { mulberry32 } from './plates.js';
 // LIGAR: the shapes, crystals and lobes of Ligar's reward cards live in their own file (added, not altered).
 import { ligarParts, ligarCaption, LIGAR_MOLECULES } from './model-parts-ligar.js';
 import { emberModelParts, emberCaption } from './model-parts-ember.js';
+import { LANTERNFALL_MODELS, lanternfallCaption } from './model-parts-lanternfall.js';
 
 /** Display colours, in the plate's weathered palette. */
 const COLOR = { H: '#d8d2c4', C: '#4a4640', O: '#a0522d', Na: '#cfc8b8', Cl: '#c9b66a', proton: '#d99423', neutron: '#8c8376', electron: '#dcd6cc', bond: '#8c8376', ring: '#544e46' };
@@ -144,6 +146,7 @@ export function modelParts(spec) {
   if (ligar) return ligar;
   const ember = emberModelParts(spec); // Ember Reach's molecules and boxes (model-parts-ember.js)
   if (ember) return ember;
+  if (LANTERNFALL_MODELS[spec.type]) return LANTERNFALL_MODELS[spec.type](spec);
   if (spec.type === 'molecule') return moleculeParts(spec);
   if (spec.type === 'atoms') {
     const n = spec.items.length;
@@ -172,6 +175,7 @@ export function captionOf(spec) {
   const ligar = ligarCaption(spec);
   if (ligar) return ligar;
   if (spec.type === 'molecule') return `${(MOLECULES[spec.name] || LIGAR_MOLECULES[spec.name])?.formula || spec.name}, as a ball-and-stick model.`;
+  if (LANTERNFALL_MODELS[spec.type]) return lanternfallCaption(spec);
   const one = it => `${it.label ? `${it.label}: ` : ''}${it.p} protons, ${it.n} neutrons, ${shellsOf(it.p, it.charge || 0).reduce((a, b) => a + b, 0)} electrons`;
   if (spec.type === 'atoms') return spec.items.map(one).join('. ') + '.';
   return `${one(spec)}.`;

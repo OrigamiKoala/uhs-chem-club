@@ -103,16 +103,16 @@ export const STAGES = [
         hit: 'The eater loses the line it was feeding on and scatters into cold aurora.'
       },
       hints: [
-        'Drag the electron up to a higher rung, then drop it onto a lower one, and watch the strip.',
+        'Use the electron: drag it up the ladder, then drop it onto a lower rung.',
         'Compare the wavelength of the line each drop gives out with the one the eater lamp gives out.',
         'Drop the electron from each higher rung in turn, and keep the drop whose line the strip prints as 486 nm.'
       ],
       check(state) {
         const l = ladderRead(state.table, 'lad').last;
         if (!l) return { ok: false, notYet: true, msg: 'Move the electron to another rung.' };
-        if (l.up || l.nm == null) return { ok: false, msg: 'Light is given out when an electron drops, so the move must run from a higher rung to a lower one.' };
+        if (l.up || l.nm == null) return { ok: false, msg: 'That move gave out no light.' };
         if (Math.abs(l.nm - LADDER_LINE) < 1) return { ok: true };
-        return { ok: false, msg: 'The last line made is not the eater lamp\'s: read each line\'s wavelength on the strip, because two lines can look alike.' };
+        return { ok: false, msg: 'The last line made is not the eater lamp\'s line.' };
       },
       reward: {
         title: 'One Line, One Drop',
@@ -147,7 +147,7 @@ export const STAGES = [
         hit: 'The shell gives way and the eater\'s glow drains into the ice.'
       },
       hints: [
-        'Drag a lamp into the lamp slot and read the speed meter under the tube.',
+        'Use the lamp slot and the speed meter under the tube.',
         'Compare the speed readings across the three lamps rather than the counter.',
         'Look for the lamp whose speed reading is the smallest one above zero.'
       ],
@@ -157,7 +157,7 @@ export const STAGES = [
         if (!held) return { ok: false, notYet: true, msg: 'Put a lamp in the marked place.' };
         const lowest = LAMPS.map(l => l[2]).filter(nm => planPhotocell('Cs', nm, CELL_BRIGHT).freed).sort((p, q) => speedOf(p) - speedOf(q))[0];
         if (held.props.nm === lowest) return { ok: true };
-        return { ok: false, msg: 'Put each lamp in the lamp slot and compare the speed meter before you choose: that lamp frees faster electrons than another does.' };
+        return { ok: false, msg: 'Another lamp frees electrons more slowly than that one.' };
       },
       reward: {
         title: 'Spare Energy Becomes Speed',
@@ -192,7 +192,7 @@ export const STAGES = [
         hit: 'The field fails and the eater is left bare in the dark.'
       },
       hints: [
-        'Press "Test Sample" to see how hard oxygen is pulled, then place four electrons in the p row and press "Test Rack".',
+        'Use "Up", "Down", "Test Sample" and "Test Rack".',
         'Compare the rack\'s pull with the sample\'s, and read how many electrons the board says stand alone.',
         'Count the electrons standing alone in their boxes on the rack that pulls exactly as hard as the sample.'
       ],
@@ -200,7 +200,7 @@ export const STAGES = [
         const v = state.table.fixtures.alone.dials.n.value;
         if (!v) return { ok: false, notYet: true, msg: 'Set the marker to the number you found.' };
         if (v === MEASURED.O) return { ok: true };
-        return { ok: false, msg: 'Match the rack\'s pull to the sample\'s pull, then count the electrons that stand alone on that rack.' };
+        return { ok: false, msg: 'The marker is not the number of electrons standing alone on the rack that pulls as the sample does.' };
       },
       reward: {
         title: 'Lone Electrons Feel the Magnet',
@@ -231,7 +231,7 @@ export const STAGES = [
         hit: 'The core is named, and the eater has nothing left to hide behind.'
       },
       hints: [
-        'Press "Fire Light" on the sealed core, then turn the build\'s dials and watch the outlines over the strip.',
+        'Use "Fire Light" on the sealed core, then the Protons and Electrons dials of the build.',
         'Compare the outlines the build makes with the piles on the strip, and what the heights add up to.',
         'A whole atom has as many electrons as protons, so build the one whose outlines cover every pile.'
       ],
@@ -239,8 +239,8 @@ export const STAGES = [
         const b = buildRead(state.table, 'build');
         if (!b.protons && !b.electrons) return { ok: false, notYet: true, msg: 'Build an atom with the dials.' };
         if (b.whole && b.sym === CORE) return { ok: true };
-        if (!b.whole) return { ok: false, msg: 'The build has a different number of protons and electrons, so it is no whole atom: make them equal and compare the outlines.' };
-        return { ok: false, msg: 'The outlines of that atom do not cover the sealed core\'s piles: add up the heights of every pile and try another.' };
+        if (!b.whole) return { ok: false, msg: 'The build has a different number of protons and electrons.' };
+        return { ok: false, msg: 'The outlines of that atom do not cover the sealed core\'s piles.' };
       },
       reward: {
         title: 'Peaks Add Up to the Atom',
@@ -280,7 +280,7 @@ export const STAGES = [
         hit: 'The dimming is measured, and the eater has no shadow left to hide in.'
       },
       hints: [
-        'Fill the standards with drops, slide each into the beam and press "Record", then put the sealed sample in the beam and read it.',
+        'Use the dropper on the standards, "Record" for each, the straightedge, and the marker.',
         'Lay the straightedge across the standards\' points and find where the sealed sample\'s reading falls along the line.',
         'Read across from the sealed reading to the line, then straight down to the concentration scale, and set the marker there.'
       ],
@@ -288,7 +288,7 @@ export const STAGES = [
         const v = markerRead(state.table, 'conc');
         if (v === 0) return { ok: false, notYet: true, msg: 'Set the concentration you read off the line.' };
         if (v === SEALED_CONC * 1000) return { ok: true };
-        return { ok: false, msg: 'Follow the sealed sample\'s reading across to the line through the standards, then down to the concentration scale.' };
+        return { ok: false, msg: 'The marker is not where the sealed sample\'s reading meets the line through the standards.' };
       },
       reward: {
         title: 'Dimming Measures Amount',
@@ -355,7 +355,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase tested a core quantum phenomenon: quantized spectral lines, photoelectric work functions, Hund\'s rule paramagnetism, core PES energies, and Beer-Lambert absorbance.'
+      body: 'Every phase tested something you worked out at a bench: one line from one drop, the spare energy of a photon, lone electrons in a magnet, the peaks of a spectrum, and the dimming of a beam.'
     },
     {
       heading: 'Next',
@@ -418,7 +418,7 @@ export const PRACTICE = [
       { id: 'c', label: '0.60' }
     ],
     answer: 'a',
-    explanation: 'By the Beer-Lambert law (A = εbc), absorbance is directly proportional to path length b; doubling b doubles A from 0.60 to 1.20.'
+    explanation: 'Light passes through twice as many absorbing particles, so absorbance is proportional to path length; doubling the path doubles it from 0.60 to 1.20.'
   }
 ];
 

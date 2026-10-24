@@ -4,48 +4,50 @@
  * Tallow left the player with electrons on rings at fixed distances and no reason why. Lanternfall is the reason, and it
  * starts with the light itself: the sky over this ice field is the first emission spectrum the player ever sees.
  *
- * The first of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4a), on the optics kit. The bench is the wave flume's
- * observation shelf on the south shore of the lake, and its table is an optical rail: a lamp put in a screen draws its wave
- * and counts the crests that pass each second, a colour dial tunes it, a pulse is timed between two detectors set a measured
- * distance apart, lamps are put on a rail by frequency. The flume itself is the field stage: a strip off its chart recorder,
- * the same picture drawn in water.
+ * The first of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4a), on the optics kit, and reworked on 2026-10-23 around
+ * ONE CLICK (`docs/plans/lanternfall-world.md`). The bench is the wave flume's observation shelf on the south shore of the lake, and
+ * its table is an optical rail: a lamp put in a screen draws its wave and counts the crests that pass each second, a colour dial tunes
+ * it, a pulse is timed between two detectors set a measured distance apart, sources are laid on a rail by frequency.
+ *
+ * THE CLICK. Most players arrive believing colour is a kind of strength: violet is "more energetic" and so must be faster, or red,
+ * the longest wave, must be the one that gets there first. So the quest asks for the guess BEFORE the timer is on the table, and then
+ * the timer says that red and violet cross the same gap in the same time. The trade between crest spacing and crests a second
+ * (stage 1) is only ever a trade at one speed, and that speed is the thing the pulse measures.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  tune a lamp until more crests pass a second than a fixed lamp's -> wavelength, frequency
- *   2  tune the lamp to twice the crest spacing of Sample A            -> they are inversely related
- *   3  time a pulse between two detectors a measured distance apart    -> the speed of light
- *   4  read two reference lamps, work out a lamp that is not on the bench -> frequency from wavelength
- *   5  four lamps on a rail, lowest frequency to highest               -> the visible spectrum
- *   6  tray three lamps under the strip that picks them up             -> the electromagnetic spectrum
- *   7  tray a radio mast, an oven and an X-ray tube by frequency       -> one kind of wave, every size
- *   8  put in the slot the lamp that makes a frequency                  -> every code is an element
+ *   1  tune a spare lamp until more crests pass a second than a beacon's       -> wavelength, frequency
+ *   2  PREDICT: which of red and violet arrives first over one gap (no timer)  -> a guess before the evidence
+ *   3  TEST: time a pulse of each colour between two detectors                 -> the speed of light
+ *   4  five sources laid on a rail, lowest frequency to highest                -> the visible and electromagnetic spectrum
  *   -- debrief: a lamp can be told by its light, and a bright red one will not do what a faint violet one does.
  *
- * EVERY READING IS `lightdata.js`: the crests that fit the ruler are `planTrace`, the time a pulse takes is `pulseNs`, which strip
- * a lamp lights is `planPrism` and `detectorFor`. The kit (`table/kits/optics.js`) only asks what is standing in which slot.
+ * Cut on 2026-10-23 (problems doc T7, U3): "twice as far apart" (stage 1 again with a number), "a lamp not on the bench" (a division,
+ * practised in the Drill Deck), "lowest to highest" with four lamps (stage 4 now holds the lamps among the other sources), "past
+ * the ends" (the same idea as stage 4), and the flume strip, a water wave that carried nothing the screen did not (the field point is gone).
  *
- * `VOCABULARY` publishes the schedule. Wavelength and frequency are earned on the first card; the screen prints the real words
- * from the start, and the stage-one briefing says what the screen counts.
+ * EVERY READING IS `lightdata.js`: the crests that fit the ruler are `planTrace`, the time a pulse takes is `pulseNs`. The kit
+ * (`table/kits/optics.js`) only asks what is standing in which slot.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { fmtLength } from '../../engine/lightbench.js';
 import { planTrace } from '../../engine/lightdata.js';
 import {
-  opticsTable, waveScreen, logRuler, pulseRail, spectrograph, lamp, tunedLamp, waterStrip, radiator, detector, marker,
+  opticsTable, waveScreen, logRuler, pulseRail, lamp, tunedLamp, radiator, detector, marker,
   waveRead, rulerRead, bandRead, pulseRead, seated, pickedUpBy, detectorsOn
 } from '../../table/kits/optics.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 4 };
 
 /** When each withheld word is earned. */
 export const VOCABULARY = [
-  { term: /\belectromagnetic spectrum\b/i, introducedAt: 6 },
-  { term: /\bvisible spectrum\b/i, introducedAt: 5 },
+  { term: /\belectromagnetic spectrum\b/i, introducedAt: 4 },
+  { term: /\bvisible spectrum\b/i, introducedAt: 4 },
   { term: /\bspeed of light\b/i, introducedAt: 3 },
   { term: /\bwavelengths?\b/i, introducedAt: 1 },
   { term: /\bfrequenc(?:y|ies)\b/i, introducedAt: 1 }
@@ -56,9 +58,12 @@ export const BUILDS_ON = [];
 
 const SPEAKER = 'Vess';
 
+/** The key the player's guess is kept under (`engine/predict.js`), and what each guess is called in the prompt. */
+const QUEST_KEY = 'unit02/q1-wave';
+const GUESS_LABEL = { red: 'Red first', violet: 'Violet first', same: 'Together' };
+
 /** The dial, red end first: turning it up raises the frequency. */
 const RED_TO_VIOLET = [700, 650, 600, 550, 500, 450, 400];
-const WIDE_DIAL = [700, 650, 600, 550, 500, 450, 400, 350];
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -72,118 +77,133 @@ const widget = { type: 'table', label: 'The bench' };
 /** A lamp already standing in a screen's holder, fixed there: a reference the player reads and cannot move. */
 const seatedLamp = (id, label, screen, nm) => lamp(id, label, screen.slots[0].at, nm, { fixed: true, zone: `slot:${screen.slots[0].id}` });
 
-/** The trays of a sort: a row of three wide ones across the foot of the table. */
-const tray = (id, label, x, y = 55) => ({ id, label, at: { x, y }, size: { w: 44, h: 18 }, cell: 22 });
-const TRAY_X = [28, 75, 122];
-
 /** Rate of a wave screen, as a number the check compares. */
 const rateOf = (t, id) => { const r = waveRead(t, id); return r && r.kind === 'light' ? r.plan.hz : null; };
 
+/** The five sources of stage 4: the camp's radio mast and oven, two spare lamps, the medic's X-ray tube. Wavelengths in nm. */
+const SOURCES = [
+  ['radio', 'Relay mast', 3e9, 'radiator'],
+  ['micro', 'Galley oven', 1.2e8, 'radiator'],
+  ['red', 'Red lamp', 700, 'lamp'],
+  ['violet', 'Violet lamp', 400, 'lamp'],
+  ['xray', 'Medic X-ray', 0.1, 'radiator']
+];
+/** Lowest frequency first: the longest wavelength first. */
+const BY_FREQUENCY = SOURCES.slice().sort((a, b) => b[2] - a[2]).map(s => s[0]);
+
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const a = waveScreen('a', 'Sample A', { x: 38, y: 20 });
-    const l = waveScreen('l', 'Lamp', { x: 112, y: 23 }, { settings: RED_TO_VIOLET, start: 4 });
+    const a = waveScreen('a', 'Beacon 1', { x: 38, y: 20 }, { plain: true });
+    const l = waveScreen('l', 'Spare lamp', { x: 112, y: 23 }, { settings: RED_TO_VIOLET, start: 4, plain: true });
     return {
       title: 'Red to Violet',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'A lamp put in its holder draws its light as a wave, and the Colour dial tunes it; 10^14 means 1 followed by 14 zeros. Press Submit when the table shows your answer.'
-      },
-      prompt: 'Tune the lamp so that more crests pass each second than pass for Sample A.',
+      prompt: 'Tune the spare lamp until more crests pass each second than pass for Beacon 1.',
       widget,
       table: opticsTable({
         pieces: [
-          seatedLamp('ref', 'Sample A', a, 500),
-          tunedLamp('lamp', 'Lamp', { x: 28, y: 53 }),
-          waterStrip('flume', 'Flume strip', { x: 58, y: 53 }, 0.9, 1.1, { hidden: true, fetchFrom: 'flume' })
-        ],
-        fixtures: [a.fixture, l.fixture],
-        zones: { slots: [...a.slots, ...l.slots] },
-        fetch: [{ id: 'flume', label: 'Flume strip', at: { x: 112, y: 54 } }]
-      }),
-      hints: [
-        'Drag the lamp into its holder, then turn the colour dial and watch the wave change.',
-        'Compare the crests that pass each second on the lamp\'s screen with the number on Sample A\'s.',
-        'Turn the colour dial until the lamp\'s count is the larger of the two, and look at how its crests are spaced.'
-      ],
-      check(state) {
-        const t = state.table;
-        const mine = rateOf(t, 'l');
-        const ref = rateOf(t, 'a');
-        if (mine === null) return { ok: false, notYet: true, msg: 'Put the lamp in its holder to light its screen.' };
-        if (mine > ref) return { ok: true };
-        return { ok: false, msg: 'At this setting fewer crests pass each second than pass for Sample A. Turn the dial and watch what the wave does.' };
-      },
-      reward: {
-        log: 'Violet: crests close together, many a second.',
-        title: 'Wavelength and Frequency',
-        body: 'The distance from one crest to the next is the wavelength, and the number of crests that pass each second is the frequency. Turning from red to violet shortens the wavelength and raises the frequency, so the two move in opposite directions.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 2 */
-  (() => {
-    const a = waveScreen('a', 'Sample A', { x: 38, y: 20 });
-    const l = waveScreen('l', 'Lamp', { x: 112, y: 23 }, { settings: WIDE_DIAL, start: 4 });
-    return {
-      title: 'Twice as Far Apart',
-      prompt: 'Tune the lamp until its crests sit twice as far apart as Sample A\'s.',
-      widget,
-      table: opticsTable({
-        pieces: [
-          seatedLamp('ref', 'Sample A', a, 350),
-          tunedLamp('lamp', 'Lamp', { x: 28, y: 53 })
+          seatedLamp('ref', 'Beacon 1', a, 500),
+          tunedLamp('lamp', 'Spare lamp', { x: 28, y: 53 })
         ],
         fixtures: [a.fixture, l.fixture],
         zones: { slots: [...a.slots, ...l.slots] }
       }),
       hints: [
-        'Put the lamp in its holder and turn the colour dial to see how far apart its crests are at each setting.',
-        'Compare the crest spacing printed on the lamp\'s screen with the crest spacing printed on Sample A\'s.',
-        'Double the spacing printed for Sample A, then turn the dial until the lamp\'s spacing matches that figure.'
+        'Use the Colour dial on the spare lamp\'s screen.',
+        'Compare the crests that pass each second on the spare lamp\'s screen with the number on Beacon 1\'s.',
+        'Turn the dial until the spare lamp\'s count is the larger of the two, and look at how its crests are spaced.'
       ],
       check(state) {
         const t = state.table;
-        const mine = waveRead(t, 'l');
-        const ref = waveRead(t, 'a');
-        if (!mine) return { ok: false, notYet: true, msg: 'Put the lamp in its holder to light its screen.' };
-        if (mine.nm === ref.nm * 2) return { ok: true };
-        return { ok: false, msg: 'Measure Sample A and the lamp, then compare: the lamp\'s crests are not twice as far apart as Sample A\'s at this setting.' };
+        const mine = rateOf(t, 'l');
+        const ref = rateOf(t, 'a');
+        if (mine === null) return { ok: false, notYet: true, msg: 'Put the spare lamp in its holder to light its screen.' };
+        if (mine > ref) return { ok: true };
+        return { ok: false, msg: 'At this setting the spare lamp has fewer crests passing each second than Beacon 1.' };
       },
       reward: {
-        log: 'The wider lamp counted half as fast.',
-        title: 'Two Quantities, One Trade',
-        body: 'The lamp with crests twice as far apart counted exactly half as many each second. Wavelength and frequency are inversely related: whatever you do to one, the other undoes.'
+        log: 'Violet: crests close together, many a second.',
+        title: 'Wavelength and Frequency',
+        body: 'The distance from one crest to the next is the wavelength, and the number of crests that pass each second is the frequency. Turning from red to violet shortens the wavelength and raises the frequency, so the two move in opposite directions.',
+        model: { type: 'wave', nm: [700, 400], caption: 'Red (top) and violet (bottom) over the same length: the violet wave fits more crests, so more of them pass each second.' }
       }
     };
   })(),
 
+  /* ---------------------------------------------------------------- 2 */
+  {
+    title: 'Race Red and Violet',
+    // A PREDICT STAGE: the timer is not on the table yet. The guess is made first, here, and comes back with the test.
+    predict: true,
+    prompt: 'Red and violet light cross the same gap: which one do you think arrives first?',
+    widget,
+    table: opticsTable({
+      pieces: [],
+      fixtures: [],
+      zones: {},
+      prediction: {
+        slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 30, h: 14 } },
+        tokens: [
+          { id: 'red', label: 'Red first', at: { x: 38, y: 48 }, r: 7 },
+          { id: 'violet', label: 'Violet first', at: { x: 75, y: 48 }, r: 7 },
+          { id: 'same', label: 'Together', at: { x: 112, y: 48 }, r: 7 }
+        ]
+      }
+    }),
+    hints: [
+      'Drag one of the three guesses into the slot.',
+      'Think about what a lamp changes when it goes from red to violet: how far apart its crests are, how fast they travel, or both.',
+      'There is no wrong guess yet; commit to the one you would bet on.'
+    ],
+    check(state) {
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      return { ok: true };
+    },
+    onClear(state) {
+      const token = state.table.prediction?.token;
+      if (token) remember(QUEST_KEY, token);
+    },
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'A Guess to Test',
+      body: 'A guess is only worth something if the bench can test it, and a pulse of light can be timed. Next, a timer sends each colour down the same rail.'
+    }
+  },
+
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const rail = pulseRail('rail', 'Pulse timer', { x: 68, y: 21.5 }, {
-      marks: [{ metres: 0, label: '0 m' }, { metres: 1.5, label: '1.5 m' }, { metres: 3, label: '3.0 m' }, { metres: 4.5, label: '4.5 m' }, { metres: 6, label: '6.0 m' }]
+      lamp: true,
+      size: { w: 134, h: 39 },
+      marks: [{ metres: 0, label: '0 m' }, { metres: 1.5, label: '1.5 m' }, { metres: 3, label: '3.0 m' }, { metres: 4.5, label: '4.5 m' }]
     });
     return {
-      title: 'Spacing Times Count',
-      prompt: 'Find how fast light travels.',
+      title: 'Time the Pulses',
+      // The guess comes back here, locked in: it is the first thing the player reads about the test.
+      get prompt() {
+        const guess = recall(QUEST_KEY);
+        return guess && GUESS_LABEL[guess]
+          ? `You predicted "${GUESS_LABEL[guess]}": how fast does violet light travel?`
+          : 'How fast does violet light travel?';
+      },
       widget,
       table: opticsTable({
         pieces: [
-          detector('d1', 'Detector 1', { x: 30, y: 49 }),
-          detector('d2', 'Detector 2', { x: 58, y: 49 })
+          detector('d1', 'Detector 1', { x: 13, y: 50 }),
+          detector('d2', 'Detector 2', { x: 33, y: 50 }),
+          lamp('red', 'Red lamp', { x: 57, y: 50 }, 700),
+          lamp('violet', 'Violet lamp', { x: 80, y: 50 }, 400)
         ],
-        fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 100, y: 53 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 52, h: 16 } })],
+        fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
         zones: { slots: rail.slots },
         recorder: { at: { x: 140, y: 52 }, size: { w: 18, h: 18 }, xLabel: 'Gap', xUnit: 'm', yLabel: 'Time', yUnit: 'ns' }
       }),
       hints: [
-        'Stand a detector on each of two marks and press "Fire Pulse" to time the light between them.',
-        'Compare the gap between the detectors with the time the pulse took to cross it.',
+        'Use "Fire Pulse" with a detector on each of two marks and a lamp in the holder.',
+        'Compare the time the red lamp\'s pulse takes over a gap with the time the violet lamp\'s takes over the same gap.',
         'Divide the gap by the time, turning nanoseconds into seconds with 10^-9, and set your reading to the result.'
       ],
       check(state) {
@@ -191,207 +211,59 @@ export const STAGES = [
         const v = t.fixtures.speed.dials.n.value;
         if (v === 0) return { ok: false, notYet: true, msg: 'Set the speed you worked out.' };
         if (v === 3) return { ok: true };
-        return { ok: false, msg: 'Divide the gap the pulse crossed by the time it took, in the same units, and check the result against your reading.' };
+        return { ok: false, msg: 'Your reading does not match the gap and the pulse time on the timer.' };
       },
-      reward: {
-        log: 'A pulse crossed the gap at one speed.',
-        title: 'The Speed of Light',
-        body: 'Light crosses 3.0 metres in 10 nanoseconds, which is 3.00 x 10^8 metres per second: the speed of light. A lamp\'s wavelength times the crests that pass each second comes to that same figure, so a longer wavelength has to mean a lower frequency.'
+      // The verdict on the guess opens the card; it never says a wrong guess cost anything.
+      get reward() {
+        const guess = recall(QUEST_KEY);
+        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'same'
+          ? 'You predicted that they arrive together, and the timer agreed. '
+          : 'The timer did not agree with your prediction, which is how a guess gets better. ';
+        return {
+          log: 'Red and violet crossed the same gap in the same time.',
+          title: 'The Speed of Light',
+          body: `${verdict}Light crosses a gap at one speed whatever its colour: 3.00 x 10^8 metres per second, the speed of light. That is why a shorter wavelength has to mean a higher frequency, since the two multiply to that speed.`
+        };
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const r = waveScreen('r', 'Screen', { x: 40, y: 21 });
+    const ruler = logRuler('ruler', 'Ruler', { x: 45, y: 19 });
+    const source = ([id, label, nm, kind]) => (kind === 'lamp' ? lamp(id, label, { x: 20, y: 52 }, nm) : radiator(id, label, { x: 20, y: 52 }, nm));
+    const rail = { id: 'rail', at: { x: 74, y: 53 }, size: { w: 134, h: 15 }, first: 'Lowest frequency', last: 'Highest frequency', items: ['xray', 'red', 'radio', 'violet', 'micro'], start: ['xray', 'red', 'radio', 'violet', 'micro'] };
     return {
-      title: 'A Lamp Not on the Bench',
-      prompt: 'What is the frequency of light with a wavelength of 600 nm?',
+      title: 'One Scale',
+      prompt: 'Put the five sources on the rail from lowest frequency to highest.',
       widget,
       table: opticsTable({
-        pieces: [
-          lamp('r1', 'Lamp 1', { x: 104, y: 12 }, 300),
-          lamp('r2', 'Lamp 2', { x: 104, y: 30 }, 500)
-        ],
-        fixtures: [r.fixture, marker('freq', 'Your reading', { x: 108, y: 53 }, { label: 'Frequency (x 10^14 /s)', min: 0, max: 12, step: 0.5, value: 0, size: { w: 56, h: 16 } })],
-        zones: { slots: r.slots }
+        pieces: SOURCES.map(source),
+        fixtures: [ruler.fixture],
+        zones: { slots: ruler.slots, rail }
       }),
       hints: [
-        'Put each reference lamp in the holder in turn and read the wavelength and the frequency its screen prints.',
-        'Turn each wavelength into metres with 10^-9 and multiply it by its frequency, then check that the two products agree.',
-        'Divide that fixed product by 600 nm, written in metres with 10^-9, to get the frequency in waves per second.'
-      ],
-      check(state) {
-        const v = state.table.fixtures.freq.dials.n.value;
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the frequency you worked out.' };
-        if (v === 5) return { ok: true };
-        return { ok: false, msg: 'Use what the two reference lamps show: a wavelength and its frequency are tied together by one fixed product.' };
-      },
-      reward: {
-        log: 'Frequency is the speed of light over wavelength.',
-        title: 'One Division',
-        body: 'Frequency is the speed of light divided by wavelength, so a lamp that is not on the bench still has a frequency you can work out. Any wavelength, measured or merely named, turns into a frequency with that single division.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 5 */
-  (() => {
-    const r = waveScreen('r', 'Screen', { x: 75, y: 20 });
-    const rail = { id: 'rail', at: { x: 75, y: 52 }, size: { w: 124, h: 15 }, first: 'Lowest frequency', last: 'Highest frequency', items: ['a', 'b', 'c', 'd'], start: ['a', 'c', 'b', 'd'] };
-    return {
-      title: 'Lowest to Highest',
-      prompt: 'Put the four lamps on the rail from lowest frequency to highest.',
-      widget,
-      table: opticsTable({
-        pieces: [
-          lamp('a', 'Lamp A', { x: 20, y: 52 }, 520),
-          lamp('b', 'Lamp B', { x: 50, y: 52 }, 680),
-          lamp('c', 'Lamp C', { x: 80, y: 52 }, 430),
-          lamp('d', 'Lamp D', { x: 110, y: 52 }, 600)
-        ],
-        fixtures: [r.fixture],
-        zones: { slots: r.slots, rail }
-      }),
-      hints: [
-        'Drag a lamp from the rail into the holder to read its frequency, then put it back.',
-        'Compare the frequency each lamp\'s screen prints as you try them one at a time.',
-        'Put the lamp with the widest crests at the left end of the rail and the one with the closest crests at the right.'
+        'Use the ruler\'s holder, and drag a source back onto the rail when you have read it.',
+        'Compare the five wavelengths on the ruler, remembering that every wave of light crosses a gap at the same speed.',
+        'The longer the wavelength, the fewer crests pass each second, so line the sources up by wavelength with the longest at the left.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four lamps back on the rail in order.' };
-        const want = ['b', 'd', 'a', 'c'];
-        if (order.join() === want.slice().reverse().join()) {
-          return { ok: false, msg: 'That order runs the wrong way: the lamp at the left end of the rail must have the lowest frequency.' };
+        if (order.length < SOURCES.length) return { ok: false, notYet: true, msg: 'Put all five sources back on the rail.' };
+        if (order.join() === BY_FREQUENCY.join()) return { ok: true };
+        const nm = id => t.pieces[id].props.nm;
+        for (let k = 0; k < order.length - 1; k++) {
+          if (nm(order[k]) < nm(order[k + 1])) {
+            return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and its wavelength is the shorter.` };
+          }
         }
-        if (order.join() !== want.join()) return { ok: false, msg: 'Compare each lamp\'s frequency before you place it.' };
-        return { ok: true };
+        return { ok: false, msg: 'The rail does not run the way the ruler\'s wavelengths do.' };
       },
       reward: {
-        log: 'Red low, violet high.',
-        title: 'The Visible Spectrum',
-        body: 'The light the eye can see runs from red, with the longest wavelengths and lowest frequencies, to violet, with the shortest wavelengths and highest frequencies. That band, from about 700 nm down to about 400 nm, is the visible spectrum.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 6 */
-  (() => {
-    const band = spectrograph('band', 'Band', { x: 56, y: 21 }, { detectors: true });
-    return {
-      title: 'Past the Ends',
-      prompt: 'Put each lamp under the detector that picks up its light.',
-      widget,
-      table: opticsTable({
-        pieces: [
-          lamp('a', 'Lamp A', { x: 115, y: 10 }, 550),
-          lamp('b', 'Lamp B', { x: 137, y: 10 }, 1000),
-          lamp('c', 'Lamp C', { x: 126, y: 28 }, 300)
-        ],
-        fixtures: [band.fixture],
-        zones: {
-          slots: band.slots,
-          trays: [tray('eye', 'The band itself', TRAY_X[0]), tray('ir', 'The infrared strip', TRAY_X[1]), tray('uv', 'The ultraviolet strip', TRAY_X[2])]
-        }
-      }),
-      hints: [
-        'Drag a lamp into the socket and see which part of the band, or which strip beside it, lights up.',
-        'Compare each lamp\'s wavelength with the two ends of the band the eye can see.',
-        'A wavelength longer than red falls past the red end of the band, and one shorter than violet falls past the violet end.'
-      ],
-      check(state) {
-        const t = state.table;
-        const want = { a: 'eye', b: 'ir', c: 'uv' };
-        const where = id => (t.pieces[id].zone || '').replace(/^tray:/, '');
-        if (Object.keys(want).some(id => !where(id) || where(id).startsWith('slot:'))) return { ok: false, notYet: true, msg: 'Put every lamp under a detector.' };
-        for (const id of Object.keys(want)) {
-          if (where(id) !== want[id]) return { ok: false, msg: 'A lamp is under the wrong detector: put it in the socket and see what lights.' };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'Beyond red and beyond violet, there is still light.',
+        log: 'Radio, oven, red, violet, X-ray: one scale.',
         title: 'The Electromagnetic Spectrum',
-        body: 'Beyond red lies infrared, with longer wavelengths and lower frequencies, and beyond violet lies ultraviolet, with shorter wavelengths and higher frequencies. Radio waves, microwaves, X-rays and the rest continue the same line, and together they make up the electromagnetic spectrum, of which visible light is a thin slice.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    const ruler = logRuler('ruler', 'Ruler', { x: 45, y: 19 });
-    return {
-      title: 'Radio to X-ray',
-      prompt: 'Put each source under the frequency it works at.',
-      widget,
-      table: opticsTable({
-        pieces: [
-          radiator('radio', 'Radio mast', { x: 108, y: 10 }, 3e9),
-          radiator('micro', 'Microwave', { x: 135, y: 10 }, 1.2e8),
-          radiator('xray', 'X-ray tube', { x: 121, y: 28 }, 0.1)
-        ],
-        fixtures: [ruler.fixture],
-        zones: {
-          slots: ruler.slots,
-          trays: [tray('f8', '1 x 10^8 per second', TRAY_X[0]), tray('f9', '2.5 x 10^9 per second', TRAY_X[1]), tray('f18', '3 x 10^18 per second', TRAY_X[2])]
-        }
-      }),
-      hints: [
-        'Drag a source into the ruler\'s holder to read the wavelength it works at.',
-        'Divide the speed of light by each wavelength, written in metres with 10^-9, to get that source\'s frequency.',
-        'The longest wavelength has the lowest frequency and the shortest has the highest, so only the sizes of the three figures are left to match.'
-      ],
-      check(state) {
-        const t = state.table;
-        const want = { radio: 'f8', micro: 'f9', xray: 'f18' };
-        const where = id => (t.pieces[id].zone || '').replace(/^tray:/, '');
-        if (Object.keys(want).some(id => !where(id) || where(id).startsWith('slot:'))) return { ok: false, notYet: true, msg: 'Match all three sources.' };
-        for (const id of Object.keys(want)) {
-          if (where(id) !== want[id]) return { ok: false, msg: 'Work one source\'s frequency out from its wavelength and see which figure it lands on.' };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'Metres to a tenth of a nanometre: one kind of wave.',
-        title: 'One Kind of Wave, Every Size',
-        body: 'A radio mast, a microwave oven and an X-ray tube all send out the same kind of wave; only the wavelength differs, from metres down to a tenth of a nanometre. Frequency rises as wavelength falls, by exactly the factor that keeps their product at the speed of light.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const r = waveScreen('r', 'Screen', { x: 42, y: 20 }, { rate: false });
-    return {
-      title: 'Names on the Lamps',
-      prompt: 'Which lamp emits light at a frequency of 5.1 x 10^14 per second?',
-      widget,
-      table: opticsTable({
-        pieces: [
-          lamp('a', 'Lamp A', { x: 30, y: 52 }, 589),
-          lamp('b', 'Lamp B', { x: 62, y: 52 }, 656)
-        ],
-        fixtures: [r.fixture],
-        zones: { slots: [...r.slots, { id: 'match', label: '5.1 x 10^14 per second', at: { x: 112, y: 22 }, size: { w: 28, h: 16 } }] }
-      }),
-      hints: [
-        'Drag a lamp into the holder to read the wavelength its screen prints.',
-        'Divide the speed of light by 5.1 x 10^14 per second to get the wavelength the lamp has to have.',
-        'Turn that wavelength into nanometres with 10^9, then put the lamp that prints it in the matching slot.'
-      ],
-      check(state) {
-        const t = state.table;
-        const there = seated(t, 'match');
-        if (!there) return { ok: false, notYet: true, msg: 'Put a lamp in the matching slot.' };
-        if (there.id === 'a') return { ok: true };
-        return { ok: false, msg: 'Divide the speed of light by 5.1 x 10^14 to find the wavelength, then read the lamp\'s screen against it.' };
-      },
-      reward: {
-        log: 'CAT 11 is sodium, CAT 01 is hydrogen.',
-        title: 'Every Code Is an Element',
-        body: 'Each catalogue code you have been filing by is an element with a name and a symbol: CAT 11 is sodium, Na, and CAT 01 is hydrogen, H. From here on the benches print the symbol beside the code.',
+        body: 'A radio mast, an oven, a lamp and an X-ray tube all send out the same kind of wave; only the wavelength differs. The narrow band the eye can see, about 700 nm (red) to 400 nm (violet), is the visible spectrum, and the whole family is the electromagnetic spectrum.',
         last: true
       }
     };
@@ -401,12 +273,8 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the lamp into its holder.', 'Turn the Colour dial to tune it.'],
-  3: ['Stand a detector on each of two marks,', 'then press Fire Pulse.'],
-  4: ['Put a lamp in the holder to read its screen.'],
-  5: ['Read a lamp in the holder, then put it back.'],
-  6: ['Try each lamp in the socket.'],
-  7: ['Put a source in the holder to read it,', 'then drag it under the figure it matches.'],
-  8: ['Put a lamp in the holder to read it,', 'then drag it to the matching slot.']
+  3: ['Set a lamp and two detectors, then press Fire Pulse.'],
+  4: ['Drag a source into the ruler\'s holder to read it,', 'then back onto the rail.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -426,7 +294,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Great job measuring light on the ice! Next, we\'ll investigate why a bright red lamp can\'t knock an electron loose, but faint violet light can.'
+      body: 'Great job measuring light on the ice. Next, we\'ll investigate why a bright red lamp can\'t knock an electron loose, but faint violet light can.'
     }
   ]
 };
@@ -505,26 +373,18 @@ const reading = (fixture, value) => ({ setDial: { fixture, dial: 'n', value } })
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [{ fetch: 'flume' }, put('flume', 'slot:l.lamp'), put('lamp', 'slot:l.lamp'), colour('l', 6)],
-  [put('lamp', 'slot:l.lamp'), colour('l', 1)],
-  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m2'), { run: 'rail' }, reading('speed', 3)],
-  [put('r1', 'slot:r.lamp'), put('r2', 'slot:r.lamp'), reading('freq', 5)],
-  [put('a', 'slot:r.lamp'), put('c', 'rail:2'), put('a', 'rail:2')],
-  [put('a', 'slot:band.src'), put('b', 'slot:band.src'), put('c', 'slot:band.src'), put('a', 'tray:eye'), put('b', 'tray:ir'), put('c', 'tray:uv')],
-  [put('radio', 'slot:ruler.src'), put('micro', 'slot:ruler.src'), put('xray', 'slot:ruler.src'), put('radio', 'tray:f8'), put('micro', 'tray:f9'), put('xray', 'tray:f18')],
-  [put('a', 'slot:r.lamp'), put('b', 'slot:r.lamp'), put('a', 'slot:match')]
+  [put('lamp', 'slot:l.lamp'), colour('l', 6)],
+  [{ predict: 'same' }],
+  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m3'), put('red', 'slot:rail.lamp'), { run: 'rail' }, put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 3)],
+  [put('radio', 'rail:0'), put('micro', 'rail:1'), put('red', 'rail:2'), put('violet', 'rail:3'), put('xray', 'rail:4')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [put('lamp', 'slot:l.lamp'), colour('l', 2)],
-  [put('lamp', 'slot:l.lamp'), colour('l', 3)],
-  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m1'), { run: 'rail' }, reading('speed', 2.5)],
-  [put('r1', 'slot:r.lamp'), reading('freq', 4)],
-  [put('d', 'rail:0')],
-  [put('a', 'tray:ir'), put('b', 'tray:eye'), put('c', 'tray:uv')],
-  [put('radio', 'tray:f9'), put('micro', 'tray:f8'), put('xray', 'tray:f18')],
-  [put('b', 'slot:match')]
+  [],
+  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m2'), put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 2.5)],
+  [put('violet', 'rail:0')]
 ];
 
 function blankState() { return {}; }
@@ -548,4 +408,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { planTrace, fmtLength, rulerRead, bandRead, pulseRead, pickedUpBy, detectorsOn };
+export { planTrace, fmtLength, rulerRead, bandRead, pulseRead, pickedUpBy, detectorsOn, seated, SOURCES, BY_FREQUENCY, QUEST_KEY };
