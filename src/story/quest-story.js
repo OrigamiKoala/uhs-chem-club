@@ -72,6 +72,88 @@ export const QUEST_STORY = {
       'It is bismuth, and a salt flat does not make bismuth.'
     ],
     filed: 'Filed: someone is putting heavy metal into Tallow\'s salt, and no bench here can make it.'
+  },
+
+  /* ---- Lanternfall (unit02): who dimmed the beacons, and what is the Fifth lighting with a lens no guild lamp can make? ---- */
+  'unit02/q1-wave': {
+    scene: 'wave-beacon',
+    captions: [
+      'Red and violet light cross the same gap in the same time, so a lamp can be told apart only by its wavelength.',
+      'Vess lays the camp\'s radio mast, oven and X-ray tube on the same scale as the beacon lamps.'
+    ],
+    filed: 'Filed: the beacons\' light can be told from any other wave by its wavelength alone.'
+  },
+  'unit02/q2-photon': {
+    scene: 'photon-plate',
+    captions: [
+      'Each photon of red carries too little energy to free an electron, however many arrive.',
+      'One photon of violet is enough, so a dim violet lamp wakes a plate that the brightest red leaves dark.'
+    ],
+    filed: 'Filed: the beacon plates still answer, but only to violet; red at any strength leaves them dark.'
+  },
+  'unit02/q3-lines': {
+    scene: 'line-gas',
+    captions: [
+      'A glowing gas gives only a few exact lines, and no other gas gives the same few.',
+      'The sealed tube found among the beacons gives helium\'s lines, and no other strip fits it.'
+    ],
+    filed: 'Filed: the sealed tube among the beacons holds helium, named by its lines alone.'
+  },
+  'unit02/q4-cloud': {
+    scene: 'cloud-ball',
+    captions: [
+      'Five hundred shots find the electron in five hundred places, and together they make a ball, not a ring.',
+      'No path can be drawn through the dots, only a cloud with a shape.'
+    ],
+    filed: 'Filed: the beacon gases are lit by electrons that have no path, only clouds with a shape.'
+  },
+  'unit02/q5-numbers': {
+    scene: 'rack-address',
+    captions: [
+      'Every box on the records board has an address, and a box takes two electrons pointing opposite ways at most.',
+      'No two electrons in an atom share all four numbers.'
+    ],
+    filed: 'Filed: the records board is sorted by address again, and no electron on it shares all four numbers with another.'
+  },
+  'unit02/q6-filling': {
+    scene: 'rack-fill',
+    captions: [
+      'Carbon\'s rack pulls on the magnet as the real sample does once its last two electrons stand alone.',
+      'Potassium\'s last electron settles in the fourth shell while the third is still not full.'
+    ],
+    filed: 'Filed: the board now matches the magnet for carbon, oxygen and potassium, so its rows can be trusted.'
+  },
+  'unit02/q7-pes': {
+    scene: 'peak-rows',
+    captions: [
+      'Each peak on a spectrum is a row of electrons, and its height counts how many are in it.',
+      'The specimen left at the tower shows peaks of two, two and four.'
+    ],
+    filed: 'Filed: the unlabelled specimen at the tower has peaks of two, two and four, so it is oxygen.'
+  },
+  'unit02/q8-trends': {
+    scene: 'radii-row',
+    captions: [
+      'Across a row each atom has more protons and is smaller, because the extra charge pulls the same shell in.',
+      'Vess sorts the camp\'s metal stock by size and by what it costs to strip an electron.'
+    ],
+    filed: 'Filed: the camp\'s metals can be sorted by size and by what it costs to strip an electron.'
+  },
+  'unit02/q9-absorb': {
+    scene: 'beam-dim',
+    captions: [
+      'Copper takes orange out of white light and leaves blue, and the more copper there is, the more orange it takes out.',
+      'Three standards draw the calibration line, and the sealed tank sample\'s reading is read back off it.'
+    ],
+    filed: 'Filed: the sealed tank water holds copper at 5 millimoles a litre, read from the calibration line.'
+  },
+  'unit02/boss-eater': {
+    scene: 'eater-lens',
+    captions: [
+      'The Lantern-Eater settles into cold ice, and in its core lies a lens ground for light shorter than violet.',
+      'No guild lamp gives light that short.'
+    ],
+    filed: 'Filed: a lens ground for ultraviolet was feeding the Eater, and no guild lamp can make light that short.'
   }
 };
 

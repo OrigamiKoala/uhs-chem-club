@@ -267,9 +267,11 @@ ok('spine beat prerequisite unlock logic validated');
       for (const c of [...st.captions, st.filed]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
     });
   }
-  // Every built Tallow quest, bench or boss, has its one animation.
-  const tallow = WORLDS.find(w => w.id === 'unit01');
-  for (const q of tallow.quests) if (!QUEST_STORY[`unit01/${q.id}`]) fail(`unit01/${q.id} has no story animation`);
+  // Every built Tallow and Lanternfall quest, bench or boss, has its one animation.
+  for (const wid of ['unit01', 'unit02']) {
+    const built = WORLDS.find(w => w.id === wid);
+    for (const q of built.quests) if (!QUEST_STORY[`${wid}/${q.id}`]) fail(`${wid}/${q.id} has no story animation`);
+  }
   if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, short captions, every scene paints at the start, the middle and the end`);
 }
 
