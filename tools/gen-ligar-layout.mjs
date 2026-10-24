@@ -117,7 +117,7 @@ const SITE_DEFS = [
     pos: [26, round(ground(26, -4) + DECK.rise), -4], f: [-1, 0] },
   { id: 'site-4', questId: 'q4-dots', stage: 4, label: 'Bench 4 - Lewis Structures', structure: 'scale-house',
     pos: [26, round(ground(26, 8) + DECK.rise), 8], f: [-1, 0] },
-  { id: 'site-5', questId: 'q5-resonance', stage: 5, label: 'Bench 5 - Charge and Resonance', structure: 'substation',
+  { id: 'site-5', questId: 'q5-resonance', stage: 5, label: 'Bench 5 - Resonance', structure: 'substation',
     pos: [47.5, ground(47.5, 8.5), 8.5], f: [0, -1] },
   { id: 'site-6', questId: 'q6-shape', stage: 6, label: 'Bench 6 - Molecular Shape', structure: 'drill-chamber',
     pos: [94.9, FLOOR_A, -16.5], f: [-1, 0] },
