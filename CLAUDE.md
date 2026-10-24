@@ -105,6 +105,7 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   pane, and a source block, `lab-props.js` `buildScatterFoil` / `buildBeamSource`). Either way **the
   picture is honest**: what is drawn is what is graded. The 3D and drawn benches expose
   the same API and plan through the same pure functions, so a stage grades identically on both.
+- **Atom and particle cards never clip or obscure their contents.** Particle packing (`packCore`) relaxes overlapping grains to enforce visible separation (min distance $\ge 1.76$). Canvas discs and pucks (`paintNucleus`, `paintSpecimen`, etc.) constrain labels, charges, and badges within disc rims (`maxW`, inner radius scaling, bottom capsule foot labels) so text and counts never occlude nucleons or clip circular edges.
 - **NEVER have too many things going on.** One decision per stage; only what that decision needs is on the bench
   (a few pieces, one instrument, its one key). No second task stacked on the first, no extra strip, readout, label or
   angle the answer does not use. When a stage is crowded, remove; do not explain. (`q2-core` stage 1 once stacked a

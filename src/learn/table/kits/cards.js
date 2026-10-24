@@ -234,8 +234,8 @@ function paintElement(ctx, p, state, o) {
   const mid = o.x;
 
   if (v.sealed) {
-    plateText(ctx, '?', mid, y0 + h * 0.46, { size: Math.max(12, Math.round(h * 0.5)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
-    if (roomy) plateText(ctx, 'unmeasured', mid, y0 + h * 0.82, { size: Math.max(6, Math.round(h * 0.11)), align: 'center', base: 'middle', color: PLATE_COLORS.dim });
+    plateText(ctx, '?', mid, y0 + h * 0.46, { size: Math.max(12, Math.round(h * 0.5)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust, maxW: w * 0.88 });
+    if (roomy) plateText(ctx, 'unmeasured', mid, y0 + h * 0.80, { size: Math.max(6, Math.round(h * 0.11)), align: 'center', base: 'middle', color: PLATE_COLORS.dim, maxW: w * 0.88 });
     return;
   }
 
@@ -246,22 +246,22 @@ function paintElement(ctx, p, state, o) {
     ctx.fillStyle = PLATE_COLORS.phosphor;
     for (let i = 0; i < n; i++) {
       ctx.beginPath();
-      ctx.arc(mid + (i - (n - 1) / 2) * gap, y0 + h * 0.1, Math.max(1.2, Math.min(gap * 0.36, h * 0.045)), 0, Math.PI * 2);
+      ctx.arc(mid + (i - (n - 1) / 2) * gap, y0 + h * 0.11, Math.max(1.2, Math.min(gap * 0.36, h * 0.045)), 0, Math.PI * 2);
       ctx.fill();
     }
   }
-  plateText(ctx, v.sym, mid, y0 + h * 0.36, { size: Math.max(10, Math.round(h * 0.3)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text });
+  plateText(ctx, v.sym, mid, y0 + h * 0.36, { size: Math.max(10, Math.round(h * 0.3)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: w * 0.88 });
   const tested = p.props.tested;
   if (tested) {
-    plateText(ctx, TESTED_TEXT[tested] || '', mid, y0 + h * 0.58, { size: Math.max(7, Math.round(h * (roomy ? 0.12 : 0.13))), weight: 700, align: 'center', base: 'middle', color: AMBER });
+    plateText(ctx, TESTED_TEXT[tested] || '', mid, y0 + h * 0.58, { size: Math.max(7, Math.round(h * (roomy ? 0.12 : 0.13))), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: w * 0.88 });
   } else if (roomy) {
-    plateText(ctx, v.name.toUpperCase(), mid, y0 + h * 0.58, { size: Math.max(6, Math.round(h * 0.108)), align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+    plateText(ctx, v.name.toUpperCase(), mid, y0 + h * 0.58, { size: Math.max(6, Math.round(h * 0.108)), align: 'center', base: 'middle', color: PLATE_COLORS.dust, maxW: w * 0.88 });
   }
   if (!v.hide.includes('z')) {
-    plateText(ctx, roomy ? `${v.z} protons` : `${v.z}p`, mid, y0 + h * 0.76, { size: Math.max(8, Math.round(h * (roomy ? 0.14 : 0.19))), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+    plateText(ctx, roomy ? `${v.z} protons` : `${v.z}p`, mid, y0 + h * 0.76, { size: Math.max(7, Math.round(h * (roomy ? 0.13 : 0.17))), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust, maxW: w * 0.88 });
   }
   if (roomy && v.mass != null && !v.hide.includes('mass')) {
-    plateText(ctx, `mass ${v.mass.toFixed(1)}`, mid, y0 + h * 0.91, { size: Math.max(6, Math.round(h * 0.1)), align: 'center', base: 'middle', color: PLATE_COLORS.steel });
+    plateText(ctx, `mass ${v.mass.toFixed(1)}`, mid, y0 + h * 0.90, { size: Math.max(6, Math.round(h * 0.095)), align: 'center', base: 'middle', color: PLATE_COLORS.steel, maxW: w * 0.88 });
   }
 }
 

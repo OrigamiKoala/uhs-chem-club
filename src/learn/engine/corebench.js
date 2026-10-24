@@ -83,6 +83,25 @@ export function packCore(n, rand) {
     }
     shell++;
   }
+  for (let iter = 0; iter < 15; iter++) {
+    for (let i = 0; i < out.length; i++) {
+      for (let j = i + 1; j < out.length; j++) {
+        const dx = out[j][0] - out[i][0];
+        const dy = out[j][1] - out[i][1];
+        const d = Math.hypot(dx, dy);
+        const want = 1.76;
+        if (d < want && d > 1e-4) {
+          const push = (want - d) * 0.5;
+          const nx = dx / d;
+          const ny = dy / d;
+          out[j][0] += nx * push;
+          out[j][1] += ny * push;
+          out[i][0] -= nx * push;
+          out[i][1] -= ny * push;
+        }
+      }
+    }
+  }
   return out;
 }
 

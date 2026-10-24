@@ -683,20 +683,39 @@ function scopePicture(ctx, x, y, r, dish, power) {
   ctx.restore();
 }
 
-/** A strip of printed text along the foot of a disc, on a dark ground, so a picture never hides its name. */
+/** A neat plaque along the foot of a disc, clipped to the rim and sized so the picture above is never crowded. */
 function footLabel(ctx, x, y, r, text, size) {
-  const h = size * 1.35;
-  // The word is shrunk to the strip it stands on, never cut by the rim of the thing it names.
-  const room = r * 1.62;
-  let px = size;
-  if (ctx.measureText) {
-    ctx.font = `500 ${px}px "JetBrains Mono", "Quantico", monospace`;
-    const w = ctx.measureText(text).width;
-    if (w > room && w > 0) px = Math.max(6, Math.floor(size * room / w));
+  if (!text) return;
+  const ly = y + r * 0.68;
+  const px = Math.max(7, Math.min(size || Math.round(r * 0.22), Math.round(r * 0.24)));
+  const h = Math.round(px * 1.35);
+  // Chord at ly: circle half-width is sqrt(r^2 - (0.68*r)^2) ≈ 0.73 * r
+  const maxW = r * 1.36;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.94, 0, Math.PI * 2);
+  ctx.clip();
+
+  ctx.fillStyle = 'rgba(13, 12, 10, 0.82)';
+  const bx = x - maxW / 2;
+  const by = ly - h / 2;
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(bx, by, maxW, h, Math.min(h / 2, 4));
+    ctx.fill();
+  } else {
+    ctx.fillRect(bx, by, maxW, h);
   }
-  ctx.fillStyle = 'rgba(13, 12, 10, 0.78)';
-  ctx.fillRect(x - r * 0.86, y + r * 0.58 - h / 2, r * 1.72, h);
-  plateText(ctx, text, x, y + r * 0.58, { size: px, align: 'center', base: 'middle', color: PLATE_COLORS.text });
+
+  plateText(ctx, text, x, ly, {
+    size: px,
+    weight: 700,
+    align: 'center',
+    base: 'middle',
+    color: PLATE_COLORS.text,
+    maxW: maxW * 0.90
+  });
+  ctx.restore();
 }
 
 function paintAtom(ctx, p, state, o) {
@@ -707,7 +726,7 @@ function paintAtom(ctx, p, state, o) {
   const rd = readAtom(p, state);
   disc(ctx, o.x, o.y, o.r, tint.fill, o.lit ? AMBER : tint.rim, o.lit ? 2 : 1);
   if (!p.props.mask) {
-    plateText(ctx, el.sym, o.x, o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.84 : 1.0))), weight: 700, align: 'center', base: 'middle', color: INK[tintName] });
+    plateText(ctx, el.sym, o.x, o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.78 : 0.92))), weight: 700, align: 'center', base: 'middle', color: INK[tintName], maxW: o.r * 1.4 });
   }
   if (state.opts?.shells) {
     // The outer electrons, as dots on the rim: the picture of what a join fills.
@@ -730,9 +749,9 @@ function paintAtom(ctx, p, state, o) {
   }
   if (rd.charge && state.opts?.charges !== false) {
     const t = `${Math.abs(rd.charge) > 1 ? Math.abs(rd.charge) : ''}${rd.charge > 0 ? '+' : '−'}`;
-    plateText(ctx, t, o.x + o.r * 0.62, o.y - o.r * 0.62, { size: Math.max(8, Math.round(o.r * 0.6)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+    plateText(ctx, t, o.x + o.r * 0.48, o.y - o.r * 0.46, { size: Math.max(7, Math.round(o.r * 0.44)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 0.6 });
   }
-  if (rd.lamp === 'over') lampMark(ctx, o.x - o.r * 0.7, o.y - o.r * 0.7, Math.max(9, o.r * 0.7));
+  if (rd.lamp === 'over') lampMark(ctx, o.x - o.r * 0.65, o.y - o.r * 0.65, Math.max(8, o.r * 0.6));
 }
 
 /** An ion: its symbol on the element's own tint, and the charge it carries printed on its shoulder. */
@@ -741,9 +760,12 @@ function paintIon(ctx, p, state, o) {
   const tint = TINTS[p.props.tint || el.tint];
   const q = p.props.charge || 0;
   disc(ctx, o.x, o.y, o.r, tint.fill, o.lit ? AMBER : tint.rim, o.lit ? 2 : 1);
-  plateText(ctx, el.sym, o.x, o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.84 : 1.0))), weight: 700, align: 'center', base: 'middle', color: INK[p.props.tint || el.tint] });
+  plateText(ctx, el.sym, o.x - (q ? o.r * 0.12 : 0), o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.74 : 0.88))), weight: 700, align: 'center', base: 'middle', color: INK[p.props.tint || el.tint], maxW: o.r * (q ? 1.1 : 1.4) });
   // The charge is always written with its size (2+, 1−), so a single charge is read as plainly as a double.
-  if (q) plateText(ctx, `${Math.abs(q)}${q > 0 ? '+' : '−'}`, o.x + o.r * 0.62, o.y - o.r * 0.62, { size: Math.max(8, Math.round(o.r * 0.6)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+  if (q) {
+    const qText = `${Math.abs(q)}${q > 0 ? '+' : '−'}`;
+    plateText(ctx, qText, o.x + o.r * 0.48, o.y - o.r * 0.46, { size: Math.max(7, Math.round(o.r * 0.44)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 0.6 });
+  }
 }
 
 function paintParticle(ctx, p, state, o) {
@@ -787,15 +809,15 @@ function paintModel(ctx, p, state, o) {
   ctx.lineWidth = o.lit ? 2 : 1;
   ctx.strokeRect(x0 + 0.5, y0 + 0.5, hw * 2 - 1, hh * 2 - 1);
   const cx = o.x;
-  const cy = y0 + hh * 0.9;
-  const R = hh * 0.62;
+  const cy = y0 + hh * 0.85;
+  const R = hh * 0.54;
   const kind = p.props.model;
   ctx.fillStyle = '#b8afa0';
   ctx.strokeStyle = '#b8afa0';
   if (kind === 'solid') {
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
   } else if (kind === 'shell') {
-    ctx.lineWidth = Math.max(2, R * 0.26);
+    ctx.lineWidth = Math.max(2, R * 0.24);
     ctx.beginPath(); ctx.arc(cx, cy, R * 0.88, 0, Math.PI * 2); ctx.stroke();
   } else if (kind === 'spread') {
     // A soft ball with its + charge scattered evenly through it: a rim, and a regular grid of dots.
@@ -806,7 +828,7 @@ function paintModel(ctx, p, state, o) {
       for (let gy = -2; gy <= 2; gy++) {
         const dx = gx * R * 0.4;
         const dy = gy * R * 0.4;
-        if (Math.hypot(dx, dy) > R * 0.85) continue;
+        if (Math.hypot(dx, dy) > R * 0.82) continue;
         ctx.beginPath(); ctx.arc(cx + dx, cy + dy, dot, 0, Math.PI * 2); ctx.fill();
       }
     }
@@ -815,10 +837,10 @@ function paintModel(ctx, p, state, o) {
     ctx.setLineDash?.([Math.max(2, R * 0.12), Math.max(2, R * 0.12)]);
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash?.([]);
-    ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.6, R * 0.12), 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.8, R * 0.14), 0, Math.PI * 2); ctx.fill();
   }
   ctx.lineWidth = 1;
-  plateText(ctx, p.label, o.x, y0 + hh * 1.78, { size: Math.max(8, Math.round(2.4 * o.sc)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: hw * 1.9 });
+  plateText(ctx, p.label, o.x, y0 + hh * 1.68, { size: Math.max(7, Math.round(2.0 * o.sc)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: hw * 1.82 });
 }
 
 /** The lump at the middle of an atom, to scale: a huddle with a stencilled plus on every proton. */
@@ -831,8 +853,11 @@ function paintNucleus(ctx, p, state, o) {
   const rand = mulberry32(hashId(p.id) ^ 0x7a31);
   const pack = packCore(total, rand);
   const spread = Math.max(1, ...pack.map(([x, y]) => Math.hypot(x, y))) + 1;
-  const unit = (o.r * 0.9) / spread;
-  const r = unit * 0.88;
+  const hasLabel = Boolean(p.label);
+  const cy = hasLabel ? o.y - o.r * 0.16 : o.y;
+  const maxR = hasLabel ? o.r * 0.56 : o.r * 0.80;
+  const unit = maxR / spread;
+  const r = unit * 0.80;
   const order = [];
   let m = marked;
   let b = blank;
@@ -844,10 +869,10 @@ function paintNucleus(ctx, p, state, o) {
   for (const i of idx) {
     const [ox, oy] = pack[i];
     const t = CORE_TINTS[order[i]];
-    disc(ctx, o.x + ox * unit, o.y + oy * unit, r, t.fill, t.rim, 1);
-    if (order[i] === 'marked' && r >= 2.4) stencil(ctx, o.x + ox * unit, o.y + oy * unit, r, '+');
+    disc(ctx, o.x + ox * unit, cy + oy * unit, r, t.fill, t.rim, 1);
+    if (order[i] === 'marked' && r >= 2.4) stencil(ctx, o.x + ox * unit, cy + oy * unit, r, '+');
   }
-  if (p.label) footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(8, Math.round(o.r * 0.36)));
+  if (hasLabel) footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(7, Math.round(o.r * 0.22)));
 }
 
 /**
@@ -857,17 +882,28 @@ function paintNucleus(ctx, p, state, o) {
 function paintSpecimen(ctx, p, state, o) {
   const base = '#2a2620';
   disc(ctx, o.x, o.y, o.r, base, o.lit ? AMBER : PLATE_COLORS.steel, o.lit ? 2 : 1);
-  const cy = o.y - o.r * 0.12;
-  const R = o.r * 0.74;
+  const hasLabel = Boolean(p.label);
+  const hasTopBadge = Boolean(p.props.needle || p.props.tested);
+
+  const topBound = hasTopBadge ? -0.48 : -0.78;
+  const botBound = hasLabel ? 0.48 : 0.78;
+  const cy = o.y + o.r * ((topBound + botBound) / 2);
+  const R = o.r * Math.min(0.50, (botBound - topBound) / 2);
+
   if (p.props.casing) {
-    ctx.strokeStyle = 'rgba(184, 175, 160, 0.3)';
-    ctx.lineWidth = 1;
-    for (let k = -2; k <= 2; k++) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(o.x, cy, R * 0.98, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(184, 175, 160, 0.35)';
+    ctx.lineWidth = Math.max(1, o.r * 0.03);
+    for (let k = -3; k <= 3; k++) {
       ctx.beginPath();
-      ctx.moveTo(o.x - R + k * R * 0.5, cy + R);
-      ctx.lineTo(o.x + R + k * R * 0.5, cy - R);
+      ctx.moveTo(o.x - R * 1.5 + k * R * 0.45, cy + R * 1.5);
+      ctx.lineTo(o.x + R * 1.5 + k * R * 0.45, cy - R * 1.5);
       ctx.stroke();
     }
+    ctx.restore();
   } else {
     const rings = p.props.rings || [];
     rings.forEach((n, ri) => {
@@ -881,37 +917,78 @@ function paintSpecimen(ctx, p, state, o) {
       for (let i = 0; i < n; i++) {
         const a = -Math.PI / 2 + (i * 2 * Math.PI) / n + ri * 0.4;
         ctx.beginPath();
-        ctx.arc(o.x + Math.cos(a) * rr, cy + Math.sin(a) * rr, Math.max(1.2, o.r * 0.075), 0, Math.PI * 2);
+        ctx.arc(o.x + Math.cos(a) * rr, cy + Math.sin(a) * rr, Math.max(1.2, o.r * 0.07), 0, Math.PI * 2);
         ctx.fill();
       }
     });
     const total = (p.props.p || 0) + (p.props.n || 0);
-    if (total) disc(ctx, o.x, cy, Math.max(1.6, R * 0.06 * Math.sqrt(total)), CORE_TINTS.marked.fill, CORE_TINTS.marked.rim, 1);
+    if (!p.props.counts && total) {
+      disc(ctx, o.x, cy, Math.max(1.6, R * 0.08 * Math.sqrt(total)), CORE_TINTS.marked.fill, CORE_TINTS.marked.rim, 1);
+    }
     if (p.props.counts) {
-      // What is in the middle, printed in the upper half on a dark ground, above the ring dots.
-      const size = Math.max(6, Math.round(o.r * 0.27));
-      const y1 = o.y - o.r * 0.58;
-      const y2 = y1 + size * 1.2;
-      ctx.fillStyle = 'rgba(13, 12, 10, 0.72)';
-      ctx.fillRect(o.x - o.r * 0.7, y1 - size * 0.62, o.r * 1.4, size * 2.5);
-      plateText(ctx, `${p.props.p} protons`, o.x, y1, { size, align: 'center', base: 'middle', color: PLATE_COLORS.text });
-      plateText(ctx, `${p.props.n} neutrons`, o.x, y2, { size, align: 'center', base: 'middle', color: PLATE_COLORS.text });
+      // What is in the middle, printed neatly on a dark pill, cleanly separated from the rings
+      const size = Math.max(6, Math.round(o.r * 0.15));
+      const boxW = Math.min(R * 1.25, o.r * 1.15);
+      const boxH = Math.round(size * 2.4);
+      ctx.save();
+      ctx.fillStyle = 'rgba(13, 12, 10, 0.85)';
+      const bx = o.x - boxW / 2;
+      const by = cy - boxH / 2;
+      if (ctx.roundRect) {
+        ctx.beginPath(); ctx.roundRect(bx, by, boxW, boxH, 4); ctx.fill();
+      } else {
+        ctx.fillRect(bx, by, boxW, boxH);
+      }
+      plateText(ctx, `${p.props.p} protons`, o.x, cy - size * 0.55, { size, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: boxW * 0.92 });
+      plateText(ctx, `${p.props.n} neutrons`, o.x, cy + size * 0.55, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dust, maxW: boxW * 0.92 });
+      ctx.restore();
     }
   }
+
   if (p.props.needle || p.props.tested) {
-    ctx.fillStyle = 'rgba(13, 12, 10, 0.72)';
-    ctx.fillRect(o.x - o.r * 0.7, o.y - o.r * 0.97, o.r * 1.4, o.r * 0.32);
+    const badgeY = o.y - o.r * 0.68;
+    const badgeSize = Math.max(6, Math.round(o.r * 0.18));
+    const badgeH = Math.round(badgeSize * 1.35);
+    const badgeW = o.r * 1.15;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r * 0.94, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.fillStyle = 'rgba(13, 12, 10, 0.82)';
+    const bx = o.x - badgeW / 2;
+    const by = badgeY - badgeH / 2;
+    if (ctx.roundRect) {
+      ctx.beginPath(); ctx.roundRect(bx, by, badgeW, badgeH, 4); ctx.fill();
+    } else {
+      ctx.fillRect(bx, by, badgeW, badgeH);
+    }
+
+    if (p.props.needle) {
+      const q = (p.props.p || 0) - (p.props.rings || []).reduce((a, b) => a + b, 0);
+      const text = `needle ${q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`}`;
+      plateText(ctx, text, o.x, badgeY, {
+        size: badgeSize,
+        weight: 700,
+        align: 'center',
+        base: 'middle',
+        color: q === 0 ? PLATE_COLORS.dust : AMBER,
+        maxW: badgeW * 0.90
+      });
+    } else if (p.props.tested) {
+      const t = { gives: 'gives', takes: 'takes', inert: 'no trade' }[p.props.tested] || '';
+      plateText(ctx, t, o.x, badgeY, {
+        size: badgeSize,
+        weight: 700,
+        align: 'center',
+        base: 'middle',
+        color: AMBER,
+        maxW: badgeW * 0.90
+      });
+    }
+    ctx.restore();
   }
-  if (p.props.needle) {
-    const q = (p.props.p || 0) - (p.props.rings || []).reduce((a, b) => a + b, 0);
-    plateText(ctx, `needle ${q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`}`, o.x, o.y - o.r * 0.8, { size: Math.max(7, Math.round(o.r * 0.3)), weight: 700, align: 'center', base: 'middle', color: q === 0 ? PLATE_COLORS.dust : AMBER });
-  }
-  if (p.props.tested) {
-    // Short on the disc (its full reading is on the tester's own screen, where there is room to read it).
-    const t = { gives: 'gives', takes: 'takes', inert: 'no trade' }[p.props.tested] || '';
-    plateText(ctx, t, o.x, o.y - o.r * 0.8, { size: Math.max(7, Math.round(o.r * 0.32)), weight: 700, align: 'center', base: 'middle', color: AMBER });
-  }
-  footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(7, Math.round(o.r * 0.36)));
+  if (hasLabel) footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(7, Math.round(o.r * 0.22)));
 }
 
 function paintDish(ctx, p, state, o) {
@@ -924,8 +1001,10 @@ function paintDish(ctx, p, state, o) {
   ctx.beginPath();
   ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
   ctx.stroke();
-  if (p.props.cut === 'none') plateText(ctx, 'unchanged', o.x, o.y - o.r * 0.58, { size: Math.max(7, Math.round(o.r * 0.3)), weight: 700, align: 'center', base: 'middle', color: AMBER });
-  footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(8, Math.round(o.r * 0.38)));
+  if (p.props.cut === 'none') {
+    plateText(ctx, 'unchanged', o.x, o.y - o.r * 0.58, { size: Math.max(7, Math.round(o.r * 0.22)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 1.4 });
+  }
+  footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(7, Math.round(o.r * 0.22)));
 }
 
 function paintLens(ctx, p, state, o) {
@@ -939,7 +1018,7 @@ function paintLens(ctx, p, state, o) {
     ctx.arc(o.x, o.y, o.r * 0.55, 0, Math.PI * 2);
     ctx.stroke();
   }
-  if (!dish) footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(8, Math.round(o.r * 0.36)));
+  if (!dish) footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(7, Math.round(o.r * 0.22)));
 }
 
 function paintTool(ctx, p, state, o) {
@@ -957,7 +1036,7 @@ function paintTool(ctx, p, state, o) {
     for (let i = 1; i <= 5; i++) ctx.lineTo(o.x - o.r * 0.62 + i * o.r * 0.248, o.y - o.r * 0.1 + (i % 2 ? o.r * 0.26 : -o.r * 0.1));
   }
   ctx.stroke();
-  plateText(ctx, p.label, o.x, o.y + o.r * 0.58, { size: Math.max(8, Math.round(o.r * 0.34)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text });
+  plateText(ctx, p.label, o.x, o.y + o.r * 0.58, { size: Math.max(7, Math.round(o.r * 0.28)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: o.r * 1.5 });
 }
 
 function paintDetector(ctx, p, state, o) {
@@ -974,12 +1053,12 @@ function paintDetector(ctx, p, state, o) {
     ctx.stroke();
   }
   if (p.props.count != null) {
-    plateText(ctx, String(p.props.count), o.x, o.y + o.r * 0.1, { size: Math.max(9, Math.round(o.r * 0.7)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+    plateText(ctx, String(p.props.count), o.x, o.y + o.r * 0.1, { size: Math.max(9, Math.round(o.r * 0.65)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 1.7 });
     if (p.props.shots) {
-      plateText(ctx, `of ${p.props.shots}`, o.x, o.y - o.r * 0.62, { size: Math.max(7, Math.round(o.r * 0.32)), align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+      plateText(ctx, `of ${p.props.shots}`, o.x, o.y - o.r * 0.62, { size: Math.max(7, Math.round(o.r * 0.28)), align: 'center', base: 'middle', color: PLATE_COLORS.dust, maxW: o.r * 1.7 });
     }
   }
-  plateText(ctx, p.label, o.x, o.y + o.r * 0.72, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: PLATE_COLORS.text });
+  plateText(ctx, p.label, o.x, o.y + o.r * 0.72, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: o.r * 1.7 });
 }
 
 /**
@@ -1064,7 +1143,7 @@ function paintJoint(ctx, p, state, o) {
     const len = sl ? gaugeLength(sl.mol, sl.placed, lewisKey(p.props.i, p.props.j)) : null;
     if (len != null) {
       const side = ang > -Math.PI / 2 && ang <= Math.PI / 2 ? -1 : 1;
-      plateText(ctx, `${len} pm`, o.x - Math.sin(ang) * o.r * 2.6 * side, o.y + Math.cos(ang) * o.r * 2.6 * side, { size: Math.max(7, Math.round(o.r * 1.05)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+      plateText(ctx, `${len} pm`, o.x - Math.sin(ang) * o.r * 2.6 * side, o.y + Math.cos(ang) * o.r * 2.6 * side, { size: Math.max(7, Math.round(o.r * 1.05)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 2.8 });
     }
   }
   if (!n) {
