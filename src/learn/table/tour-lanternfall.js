@@ -33,6 +33,9 @@ export const LANTERNFALL_TOUR = {
     'trends:spring': { title: 'Spring gauge', text: 'Put an atom in the holder, choose the electron with the "Electron" dial, and press "{run}". The gauge tugs that electron and prints the pull, with the charge in the middle of the atom, the electrons in between and the charge the electron really feels.', dials: false },
     'trends:sizer': { title: 'Size gauge', text: 'Put an atom in the holder and its radius is laid along a scale. Where a "{run}" key is on the gauge, press it to read the radius.', dials: false },
     'trends:strip': { title: 'Stripper', text: 'Put an atom in the holder and press "{run}". The stripper takes off the outermost electron and prints what that cost in energy. Press again to take off the next.', dials: false },
+    'cuvette:spectro': { title: 'Spectrometer', text: 'Slide a cuvette into the beam. The spectrometer shines light through it and prints how much of the light the cuvette takes in. Where there is a dial for the wavelength or the light, turn it to change the beam, and press "{run}" to put the reading on the sheet.', dials: false },
+    'cuvette:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out. Whatever it reads when you press Submit is your answer.', dials: false },
+    'cuvette:plaque': { title: null, text: 'A printed label with a fact you need. You only read it; there is nothing to press.' },
     'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a string onto it and the string is drawn round the ring, lap after lap, so you can see whether the laps land on each other or pile up in a band.' }
   },
   pieces: {
@@ -59,6 +62,10 @@ export const LANTERNFALL_TOUR = {
     'pes:spec': ['Specimens', 'Each card is a sample of one kind of atom. Put it in the holder and fire the light at it; the card keeps a printout of what its strip showed.'],
     'trends:atom': ['Atom cards', 'Each card is a model of one atom drawn to scale, so a bigger atom is a bigger circle. Drag it into a gauge, onto the rail or into a tray.'],
     'trends:electron': ['Add Electron', 'Drag it onto an atom card to put one more electron on that atom.'],
+    'cuvette:cuvette': ['Cuvettes', 'Each cuvette is a small glass cell that holds a solution. Slide it into the spectrometer\'s beam to read it, or lay the dropper on it to add a drop.'],
+    'cuvette:chip': ['Colour chips', 'Each chip is one colour of the spectrum. Drag one into the slot to name the colour you think it is.'],
+    'cuvette:dropper': ['Dropper', 'Lay the dropper on a cuvette to add one drop of the solution. Every drop is the same strength.'],
+    'cuvette:rinse': ['Empty', 'Lay it on a cuvette to pour it out and start again.'],
     'cloud:tile': ['Strings', 'Each string has its own wavelength, printed on it. Drag one onto the track to see whether it closes into one ring.'],
     'cloud:film': ['Films', 'Each film is an outline cut from clear plastic, and all of them cover the same area. Lay one on the plate and it counts the dots inside its outline.']
   }

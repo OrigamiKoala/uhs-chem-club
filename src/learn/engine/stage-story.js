@@ -71,7 +71,7 @@ export const STAGE_STORY = {
     3: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },
   'q9-absorb': {
-    8: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'
+    5: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'
   },
 
   /* ---- Ligar: clear the rescue pass ---- */
