@@ -271,8 +271,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Electromagnetic Spectrum',
     road: 'unit02',
     questKey: 'unit02/q1-wave',
-    stageLabel: 'Bench 1, Stage 6',
-    stageIndex: 5,
+    stageLabel: 'Bench 1, Stage 4',
+    stageIndex: 3,
     route: '#/learn/unit02/q1-wave',
     title: 'Every Kind of Light',
     body: 'The full range of wavelengths of light, from radio waves through visible light to X-rays and gamma rays.'
@@ -282,8 +282,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Threshold Frequency',
     road: 'unit02',
     questKey: 'unit02/q2-photon',
-    stageLabel: 'Bench 2, Stage 2',
-    stageIndex: 1,
+    stageLabel: 'Bench 2, Stage 3',
+    stageIndex: 2,
     route: '#/learn/unit02/q2-photon',
     title: 'Where the Counter Wakes',
     body: 'The lowest frequency of light that frees any electron from a given metal.'
@@ -293,8 +293,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Photon',
     road: 'unit02',
     questKey: 'unit02/q2-photon',
-    stageLabel: 'Bench 2, Stage 3',
-    stageIndex: 2,
+    stageLabel: 'Bench 2, Stage 4',
+    stageIndex: 3,
     route: '#/learn/unit02/q2-photon',
     title: 'A Packet of Light',
     body: 'A single quantum of light, carrying an energy fixed by its frequency, E = hν.'
@@ -304,8 +304,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Work Function',
     road: 'unit02',
     questKey: 'unit02/q2-photon',
-    stageLabel: 'Bench 2, Stage 6',
-    stageIndex: 5,
+    stageLabel: 'Bench 2, Stage 5',
+    stageIndex: 4,
     route: '#/learn/unit02/q2-photon',
     title: 'What the Metal Holds Back',
     body: 'The least energy needed to free an electron from the surface of a metal.'
@@ -315,8 +315,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Line Spectrum',
     road: 'unit02',
     questKey: 'unit02/q3-lines',
-    stageLabel: 'Bench 3, Stage 1',
-    stageIndex: 0,
+    stageLabel: 'Bench 3, Stage 2',
+    stageIndex: 1,
     route: '#/learn/unit02/q3-lines',
     title: 'A Few Exact Colours',
     body: 'The bright lines a glowing gas gives out, which no other gas shares.'
@@ -334,14 +334,14 @@ export const FIELD_MANUAL_TERMS = [
   },
   {
     id: 'u2l_bohr',
-    term: 'Bohr Model',
+    term: "Emission Spectrum",
     road: 'unit02',
     questKey: 'unit02/q3-lines',
-    stageLabel: 'Bench 3, Stage 6',
-    stageIndex: 5,
+    stageLabel: 'Bench 3, Stage 3',
+    stageIndex: 2,
     route: '#/learn/unit02/q3-lines',
-    title: 'Hydrogen from One Formula',
-    body: "A model putting hydrogen's electron on levels at -2.18 × 10⁻¹⁸ J divided by n squared, which predicts its visible lines."
+    title: "Light a Gas Gives Out",
+    body: "The bright lines a glowing gas gives out. Every gas has its own set, so the lines work as a fingerprint for the gas."
   },
   {
     id: 'u2l_orbital',
@@ -367,22 +367,22 @@ export const FIELD_MANUAL_TERMS = [
   },
   {
     id: 'u2l_uncertainty',
-    term: 'Uncertainty Principle',
+    term: "Standing Wave",
     road: 'unit02',
     questKey: 'unit02/q4-cloud',
-    stageLabel: 'Bench 4, Stage 8',
-    stageIndex: 7,
+    stageLabel: 'Bench 4, Stage 3',
+    stageIndex: 2,
     route: '#/learn/unit02/q4-cloud',
-    title: 'No Path to Draw',
-    body: "An electron's position and speed cannot both be known exactly at once, so it has no path."
+    title: "A Wave That Fits",
+    body: "A wave on a ring that survives only if a whole number of its wavelengths fit round it. Electrons follow the same rule, which is why they have only certain energies."
   },
   {
     id: 'u2l_pauli',
     term: 'Pauli Exclusion Principle',
     road: 'unit02',
     questKey: 'unit02/q5-numbers',
-    stageLabel: 'Bench 5, Stage 5',
-    stageIndex: 4,
+    stageLabel: 'Bench 5, Stage 4',
+    stageIndex: 3,
     route: '#/learn/unit02/q5-numbers',
     title: 'One Address Each',
     body: 'No two electrons in an atom can share all four quantum numbers.'
@@ -400,22 +400,22 @@ export const FIELD_MANUAL_TERMS = [
   },
   {
     id: 'u2l_noblegas',
-    term: 'Noble-Gas Notation',
+    term: "Hund's Rule",
     road: 'unit02',
     questKey: 'unit02/q6-filling',
-    stageLabel: 'Bench 6, Stage 5',
-    stageIndex: 4,
+    stageLabel: 'Bench 6, Stage 1',
+    stageIndex: 0,
     route: '#/learn/unit02/q6-filling',
-    title: 'The Core in One Symbol',
-    body: 'Writing a closed core as a noble gas symbol in brackets, followed by the rows beyond it.'
+    title: "Spread Out Before Pairing",
+    body: "In a row of boxes, electrons spread across the boxes before any pair up, and the single ones all point the same way."
   },
   {
     id: 'u2l_binding',
     term: 'Binding Energy',
     road: 'unit02',
     questKey: 'unit02/q7-pes',
-    stageLabel: 'Bench 7, Stage 3',
-    stageIndex: 2,
+    stageLabel: 'Bench 7, Stage 2',
+    stageIndex: 1,
     route: '#/learn/unit02/q7-pes',
     title: 'How Tightly It Is Held',
     body: 'The energy needed to remove an electron from an atom; the closer to the nucleus, the larger.'
@@ -425,8 +425,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Effective Nuclear Charge',
     road: 'unit02',
     questKey: 'unit02/q8-trends',
-    stageLabel: 'Bench 8, Stage 2',
-    stageIndex: 1,
+    stageLabel: 'Bench 8, Stage 3',
+    stageIndex: 2,
     route: '#/learn/unit02/q8-trends',
     title: 'The Charge It Feels',
     body: 'The nuclear charge an outer electron actually feels after the electrons in between have shielded it.'
@@ -436,44 +436,44 @@ export const FIELD_MANUAL_TERMS = [
     term: 'Ionization Energy',
     road: 'unit02',
     questKey: 'unit02/q8-trends',
-    stageLabel: 'Bench 8, Stage 6',
-    stageIndex: 5,
+    stageLabel: 'Bench 8, Stage 4',
+    stageIndex: 3,
     route: '#/learn/unit02/q8-trends',
     title: 'The Cost of One Electron',
     body: 'The energy needed to strip the outermost electron from a gaseous atom.'
   },
   {
     id: 'u2l_en',
-    term: 'Electronegativity',
+    term: "Atomic Radius",
     road: 'unit02',
     questKey: 'unit02/q8-trends',
-    stageLabel: 'Bench 8, Stage 8',
-    stageIndex: 7,
+    stageLabel: 'Bench 8, Stage 2',
+    stageIndex: 1,
     route: '#/learn/unit02/q8-trends',
-    title: 'Pull on a Shared Pair',
-    body: "An atom's pull on a pair of electrons it shares; it rises across a period and falls down a group."
+    title: "How Big an Atom Is",
+    body: "How far an atom's outer electrons sit from its nucleus. Across a row of the table it gets smaller."
   },
   {
     id: 'u2l_absorbance',
     term: 'Absorbance',
     road: 'unit02',
     questKey: 'unit02/q9-absorb',
-    stageLabel: 'Bench 9, Stage 4',
-    stageIndex: 3,
+    stageLabel: 'Bench 9, Stage 3',
+    stageIndex: 2,
     route: '#/learn/unit02/q9-absorb',
     title: 'How Much the Cuvette Dims',
     body: 'The logarithmic measure of how much light a sample takes out of a beam.'
   },
   {
     id: 'u2l_beer',
-    term: 'Beer–Lambert Law',
+    term: "Calibration Curve",
     road: 'unit02',
     questKey: 'unit02/q9-absorb',
-    stageLabel: 'Bench 9, Stage 7',
-    stageIndex: 6,
+    stageLabel: 'Bench 9, Stage 5',
+    stageIndex: 4,
     route: '#/learn/unit02/q9-absorb',
-    title: 'A = εbc',
-    body: 'Absorbance is proportional to path length and to concentration.'
+    title: "Reading Back Off a Line",
+    body: "A line of absorbance against concentration drawn from standards, used to read an unknown sample's concentration back off it."
   },
 
   // --- Learn Unit 3: Ligar (Bonds, Lattices) ---

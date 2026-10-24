@@ -16,6 +16,8 @@ import { registerKit } from './registry.js';
 import { BUILTIN_TOOLS } from '../tools.js';
 import { paintPiece, paintFixture, faceKey, RECTS, cuvetteLook, paintLegend } from './cuvette-draw.js';
 import { buildCuvette, buildDropper, buildRinseBottle, CUVETTE_TOP } from '../../engine/lab-props.js';
+import { buildBeamThrough } from '../../engine/lab-props-lanternfall.js';
+import { wavelengthRgb } from '../../engine/lightdata.js';
 import {
   seatedIn, spectroRead, concOf, MAX_DROPS, COPPER_SWEEP, PATHS, REGIONS
 } from './cuvette-read.js';
@@ -69,6 +71,32 @@ function piece3d(p, state, c) {
   return null;
 }
 
+/**
+ * A beam of light through the cuvette in the spectrometer's well: it goes in whole and comes out dimmer by the share the reading says got
+ * through (`10^-A`), in the colour of the wavelength the dial is on. The picture under it stays the table's own.
+ */
+function dress3d(f, state, c) {
+  if (f.kind !== 'spectro' || f.props.region || f.props.strip || !f.props.slot) return null;
+  const slot = state.zones.slots[f.props.slot];
+  if (!slot) return null;
+  const { THREE, scale: s, toPlate, box } = c;
+  const group = new THREE.Group();
+  const inLen = (slot.at.x - (box.x0 + 1.5)) * s;
+  const outLen = (box.x0 + f.size.w - 2 - slot.at.x) * s;
+  if (inLen <= 0.01 || outLen <= 0.01) return null;
+  const beam = buildBeamThrough(c, { inLen, outLen, gap: 0.004 });
+  const p = toPlate({ x: slot.at.x, y: box.y0 + f.size.h - 3.5 });
+  beam.position.set(p.x, c.ground + 0.03, p.z);
+  group.add(beam);
+  const sync = (fx, st) => {
+    const r = spectroRead(st, fx.id);
+    beam.userData.set(wavelengthRgb(r.nm), r.piece ? Math.pow(10, -r.A) : null);
+  };
+  group.userData.sync = sync;
+  sync(f, state);
+  return group;
+}
+
 /** A tool laid over a cuvette rests on its rim. */
 function restHeight(p, state, at) {
   if (p.kind !== 'dropper' && p.kind !== 'rinse') return 0;
@@ -107,6 +135,7 @@ export const CUVETTE_KIT = {
   paintPiece,
   paintFixture,
   piece3d,
+  dress3d,
   restHeight,
   slot3d: (zone, state) => (Object.values(state.fixtures).some(f => f.kind === 'spectro' && f.props.slot === zone.id) ? 'well' : null),
   deckStyle: () => 'instrument',

@@ -128,3 +128,55 @@ reads in real terms and prints how to use it (`table/notes.js`). The record of w
 
 - Every Lanternfall quest is played on the Tabletop (`Table3D` across optics, cloud, address/filling, spectrum, trends and cuvette kits).
 - `lightbench3d.js`, `cloudplate3d.js`, `boxrack3d.js`, `electronbench3d.js`, and `plates3d.js` are retired (T7).
+
+## The 2026-10-23 rollout pass: every quest cut to one click
+
+Tallow was restructured first (problems doc, "Roll out world by world"); this is Lanternfall's pass. The owner's audit (`docs/Avalon problems
+and clashing rules.md`) said the benches were worksheets: the player followed an instruction and the idea never had to click. Each quest is
+now built around one wrong model the player is likely to hold, put on the table as a guess BEFORE the instrument is there (`predict: true`, then
+`engine/predict.js`), and then contradicted by the bench. The test stage's prompt and reward read the guess back and say whether the bench
+agreed. The guess is never graded.
+
+**World counts after the pass: 10 quests (9 benches + the Lantern-Eater), 49 stages** (was 77): q1-wave 4, q2-photon 5, q3-lines 5,
+q4-cloud 5, q5-numbers 5, q6-filling 5, q7-pes 5, q8-trends 5, q9-absorb 5, boss-eater 5. Nine predict stages (one per bench, none on the boss),
+ten story animations (one per quest).
+
+| Quest | The wrong model | The click (predict, then test) | Kept stages (old numbers) | Cut |
+| --- | --- | --- | --- | --- |
+| q1-wave | colour is a kind of strength: violet is faster, or red gets there first | which of red and violet crosses the same gap first; the pulse timer (with a lamp holder now) says together | 1, 3, 7 (as a five-source rail, lowest to highest frequency) | 2, 4, 5, 6, 8; the flume strip fetch |
+| q2-photon | a brighter lamp is a bigger wave and frees more | how many electrons a very bright red lamp frees from sodium; none | 1, 2, 3, 6 | 4, 5 (Planck sum), 7, 8 |
+| q3-lines | a glowing gas gives a rainbow like a hot wire | what hydrogen's band looks like; four sources sorted by band; sealed tube against four strips | 1, 2, 3, 4 | 5, 6, 7, 8 |
+| q4-cloud | the electron is a planet on a ring | where 500 shots land; four films of one area, one of them the ring | 2, 3, 5, 7 | 1, 4, 6, 8 |
+| q5-numbers | a box is a room and takes any number | how many electrons one box takes; two, and a third is refused | 1 (rewritten as the three-number address), 5 (six candidates), 6 | 2, 3, 4 (now the click), 7, 8 |
+| q6-filling | shells fill in the order they are numbered | where potassium's nineteenth electron goes (3d or 4s) | 1+2 (carbon with the magnet), 3, 4, 8 | 5, 6, 7 |
+| q7-pes | every electron of an atom is held the same way | how many of lithium's electrons the weakest freeing light takes; one | 3, 5, 6, 8 | 1, 2, 4, 7 |
+| q8-trends | more protons and electrons, bigger atom | which of lithium and carbon is bigger; four atoms of one row ranked by the size gauge | 3, 2, 6, 5 | 1, 4, 7, 8 |
+| q9-absorb | a blue solution takes in blue, or gives blue out | which colour the copper solution takes out; the strip shows orange missing | 3, 4, 5, 8 | 1, 2, 6, 7; the lake-water fetch |
+| boss-eater | | | all five phases (one bench each), prompts and misses rewritten | |
+
+- **Field points cut.** `flume` (q1) and `hole` (q9) each carried a copy of what the bench held (a water wave the lamp screen did not need, an
+  empty cuvette). Both are gone from `three/lanternfall/stations.js` (the posts stay as scenery) and `verify:lanternfall` now expects none. A
+  field point added again must bring new evidence and pass the old geometry checks, which are kept.
+- **Copy.** No bench has a briefing (the Tour carries it; only the boss keeps one). Hint rung 1 names the control; the how is printed on the
+  object. Miss messages name what the table shows ("Boron stands left of Beryllium, and it costs more to strip") and never the reasoning;
+  `tools/lib/verify-lanternfall-learn.mjs` fails a miss or a `check()` literal that carries "because", "try", "look for" and the like. Stage
+  one of q1 prints "crest to crest" and "crests a second" on its screens until the card earns "wavelength" and "frequency"
+  (`waveScreen(..., {plain: true})`). AP-depth parts were cut or re-pitched: Planck's sum, the Bohr formula, the successive ionization energies,
+  noble-gas notation, the blocks, the Beer-Lambert prediction, the uncertainty principle, electronegativity. Chromium stays as an optional
+  last stage of q6 and says it is beyond the exam; q5 and q7 say they are optional depth.
+- **A stake on each table.** Beacon 1 and the spare lamp, the camp's relay mast, oven and X-ray tube, the records tent's board, the sealed tank
+  water, the sealed specimen at the tower. One quiet lead line each (`stage-story.js`), none on the boss.
+- **3D.** `dress3d` can now follow the state: a dress group with `userData.sync(fixture, state)` is called by `table3d.js` after every change.
+  New solids in `engine/lab-props-lanternfall.js`: a wave ribbon over the lamp screen (crests and colour follow the dial), packets of light in the
+  photocell's tube (as many as the brightness, as big as the frequency), a beam through the spectrometer's well that comes out as dim as the
+  reading says, and rods for the electrons in each orbital box (an up arrow has its head at the top, a down arrow hangs the other way). The cloud plate's
+  dots were already beads at their depth. Reward cards carry `reward.model` (types in `engine/model-parts-lanternfall.js`: wave, photons, ladder,
+  orbital, rack, radii, cuvette), all derived from the same planners the bench used.
+- **Story.** `story/quest-story.js` holds ten `unit02/...` animations and `ui/story-scenes-lanternfall.js` their painters, each drawn from the
+  numbers measured (the spectrum of oxygen, the radii, the absorbance of the sealed tank). Each ends on a `Filed:` line that continues
+  Tallow's thread: the beacons, the plates that answer only to violet, the tube of helium, the specimen that is oxygen, the water that holds copper,
+  and the lens ground for ultraviolet.
+- **Checks.** The per-quest recomputation moved out of `tools/verify-learn.mjs` into `tools/lib/verify-lanternfall-learn.mjs` and one file per quest
+  in `tools/lib/lanternfall/`; the old block is archived in `archive/2026-10-23/tools/`. `verify:table`'s predict-first check now covers unit02.
+- **Not done.** The benches have not been played: the owner plays them. The Field Manual's Lanternfall terms were re-pointed at the new stages
+  (five of them now name a different term: Emission Spectrum, Standing Wave, Hund's Rule, Atomic Radius, Calibration Curve).
