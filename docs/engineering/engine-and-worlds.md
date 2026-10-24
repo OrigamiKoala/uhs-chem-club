@@ -195,7 +195,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   through `gasdata.js`'s planners); knock counter is the real impact rate; sealed tanks print no gas; words plain until earned.
   The benches are the plant's working points (`bellows/stations.js`, footprints in `bellows/host-plan.js`): 1 gauge gallery on a
   gasholder, 2 the Compressor's piston deck, 3 metering skid, 4 blending manifold, 5 leak-test station at a vent stack, 6 the liquefier's
-  cold box; field points `gauge`, `bleed`, `drawoff`; the Compressor's arena is kept on open ground. `GasRig` is retired. Ember Reach `q1-flow` … `q7-gibbs` + `boss-crucible` are tables on the heat kit
+  cold box; field point `drawoff` only (`gauge` and `bleed` were retired 2026-10-23, the first a copy of what the bench held and the second a lock); the Compressor's arena is kept on open ground. `GasRig` is retired. Ember Reach `q1-flow` … `q7-gibbs` + `boss-crucible` are tables on the heat kit
   (`table/kits/heat.js`, with `heat-read.js`, `heat-draw.js` and `engine/heat-props.js`): blocks that touch and settle on one temperature
   (the only join), a lagged cup with a mouth (a slot) for a hot block or a charge of chemicals and dials for heat, water, moles and the
   lid, energy shelves (built by a dial, reversed by a dial, or drawn on a card), a bond crank, a ledger of bond chips lying in the
@@ -208,7 +208,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   nothing fails `verify:learn`. The hosts are the field's working points (`ember/stations.js`, footprints in `ember/host-plan.js`):
   1 the heat-exchanger plates on a wellhead, 2 a railed sampling shelf at the spring's edge (facing out, the spring behind the plate),
   3 the habitat's boiler room, 4 a sampling coil over a fumarole, 5 the separator and its two routes, 6 the silencer bay, 7 the turbine
-  hall's control room; field points `flowline`, `edge`, `coil` (each a reading card, optional evidence). Record in `docs/plans/ember-reach-world.md`.
+  hall's control room; no field points (`flowline`, `edge` and `coil` were retired 2026-10-23: each carried a copy of what the bench held). Record in `docs/plans/ember-reach-world.md`.
   Its world is a hydrothermal shelf in a caldera under sulphur haze: a banded hot spring at the middle, the
   seven hosts on a 54 m ring (the spring shelf at 24.5 m), a vent field (fumaroles,
   a geyser, mud pots, sinter terraces), the geothermal plant, and the caldera main (an elevated pipe walked
@@ -304,3 +304,24 @@ Story: 4 acts, enemy = the Fifth Guild, all copy as Quartermaster Vess transmiss
 diegetic, withheld vocabulary, never states a stage's route, never between a miss and its message).
 Opening a briefing files it in the Case File notebook (`recordNotebook`, ids only); `verify:story`.
 
+
+## World-by-world rollout (2026-10-23)
+
+Lanternfall, Ligar, Bellows and Ember Reach were reworked to the Tallow pattern (T1 to T8, U1 to U5 of `docs/Avalon problems and clashing rules.md`).
+Each world's build record is in its plan file (`docs/plans/lanternfall-world.md`, `ligar-complete.md`, `bellows-world.md`, `ember-reach-world.md`).
+Registry after the pass: 44 quest modules, 38 benches, 6 bosses, 222 stages. Every reworked bench is cut to 3 to 5 stages, has one
+`predict: true` click stage whose guess the next stage quotes, a lead line (never on a boss), Tour steps for every tool and no briefing; bosses
+keep five distinct phases. Lanternfall 49 stages, Ligar 45, Bellows 33, Ember Reach 33. Field points that only carried a copy of the bench
+(Lanternfall `flume`, ice hole; Ligar `chip`, `sump`; Bellows `gauge`, `bleed`; Ember `flowline`, `edge`, `coil`) or acted as a lock are
+retired; the hardware stays as scenery and each `verify:<world>` expects the new list. 34 story animations exist (Tallow 7, Lanternfall 10,
+Ligar 6, Bellows 7, Ember Reach 4); painters live in `ui/story-scenes-<world>.js`, merged into `SCENES`.
+
+**Shared hooks the passes added**
+- `table/tour.js`: `registerTour(kitId, {fixtures, pieces, dials})` and `addTourText` for a kit's own words; per-world files `tour-ligar.js`, `tour-lanternfall.js`, `tour-bellows.js`, `heat-tour.js`. A `<kit>:<kind>` entry is looked up before the generic one.
+- `engine/table3d.js`: a `dress3d` group may carry `userData.sync(fixture, state)` (called from `syncFixtures`), `userData.update(fixture, state)` (state-following dress) and `userData.tick(dt, still)` (every frame, `still` for reduced motion).
+- `engine/model-parts.js` + `ui/model-viewer.js`: reward model types `gas` (Bellows), shapes/crystals/lobes (`model-parts-ligar.js`), wave/photons/ladder/orbital/rack/radii/cuvette (`model-parts-lanternfall.js`), molecules and boxes (`model-parts-ember.js`). Bond rods take `order` (up to 3), `r` and `thin`.
+- Per-world solids: `gas-particles.js` and `kits/gas-3d.js` (a sealed box and cylinders with moving particles), `ligar-mol3d.js` (molecule cards stood up as solids at `3D On`), `lab-props-lanternfall.js`, `heat-solids.js` and `heat-parts.js` (bath, bond, phase box, cells, chamber).
+- `verify:table` "Predict first" holds `unit01`, `unit02` and `unit03`; Bellows and Ember Reach hold the same rule in `verify:learn` and `verify:ember` (`tools/lib/ember-learn-checks.mjs`). Lanternfall's per-quest checks are in `tools/lib/verify-lanternfall-learn.mjs` and `tools/lib/lanternfall/`.
+- `verify:story` requires an animation for every quest of Tallow, Lanternfall and Bellows.
+
+**Not done / open**: the owner has not played any of the four worlds (nothing was browser-tested). Lanternfall's `src/ui/field-manual.js` was re-pointed to the new stage indexes. The cut stages are in git history (`6628c43`); only Lanternfall's old verify block was archived (`archive/2026-10-23/`). Ligar `q8-hybrid` has no lead line (it is in `NO_LEAD`).

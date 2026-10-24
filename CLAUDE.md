@@ -118,7 +118,7 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   submitted blank. The NEXT stage brings the instrument and the locked guess back in its prompt and reward
   (`engine/predict.js`: `remember` in the predict stage's `onClear`, `recall` in getters on the test stage). The
   guess is never graded and cannot be changed after the result. Tallow: `q2-core` stages 1+2 (predict the atom, then
-  fire the beam) and `q5-assay` stages 5+6. `verify:table` ("Predict first") holds it for `unit01`; other worlds follow.
+  fire the beam) and `q5-assay` stages 5+6. `verify:table` ("Predict first") holds it for `unit01`, `unit02` and `unit03`; Bellows and Ember Reach hold the same rule in `verify:learn` and `verify:ember`.
 - **What is discovered is held in 3D.** A reward about how something is built carries `reward.model` (atom, atoms side
   by side, molecule; `engine/model-parts.js`), mounted under the card by `ui/model-viewer.js` (one small renderer, drag to
   turn, flat canvas at `3D Off`). Counts come from the spec; `verify:table` ("Models") checks them. Add models wherever
@@ -131,7 +131,7 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   `src/ui/story-scenes.js`, player `src/ui/story-anim.js`, hooked in `stagerunner.js` after the debrief). 2 to 4
   captions of at most 2 sentences and 24 words, tying what was measured to the Fifth / the alchemy rumour / the
   Case File; first completion only (synced flag `storyAnim:<world>/<quest>`); skippable; never before or between
-  stages; reduced motion and `3D Off` show the last frame. `verify:story` holds it. Built for Tallow (7).
+  stages; reduced motion and `3D Off` show the last frame. `verify:story` holds it. Built for Tallow (7), Lanternfall (10), Ligar (6), Bellows (7) and Ember Reach (4).
 - **The comms panel is the only screen bolted to the bench** (`PANEL_LAYOUT`: comms only, fixed position; never animate a panel height).
 - **`mountConsole` is the last statement in the Charge Gardens stage render** (it moves the deck into
   CSS3D; later `container.querySelector` calls return null). Use `q()`/`qa()` in `quest.js`.
@@ -151,7 +151,7 @@ a README saying why) or `docs/archive/<date>/`, and cut their wiring out of the 
 ## Build and verify
 
 - `npm run dev` (Vite :3000 with API middleware) · `npm run build` (empties gitignored `dist/`; keep
-  source art in `public/` or `assets-src/`) · `npm run verify` before shipping.
+  source art in `public/`) · `npm run verify` before shipping.
 - `verify` = `verify:quest` (20 Charge Gardens stages, chem card ≤3 sentences, copy mirrors in
   `api/[...route].js` + `Quests.gs`), `:console`, `:learn` (registry, no-XP, practice sets, grading
   tables recomputed from real data, plates drawn in Node, hint/prompt/legend/leak rules, encounter layer),
