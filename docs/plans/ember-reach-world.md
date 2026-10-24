@@ -165,3 +165,55 @@ at dusk) and Lanternfall (night).
 - Ember Reach was re-laid into real plant and vent field hosts (`stations.js`, `gen-ember-layout.mjs`), with the seven old ring shelters retired (T6).
 - Every Ember Reach quest is played on the Tabletop (`Table3D` with the heat kit).
 - `calorimeter3d.js` and `thermomount.js` are retired (T7); pure thermodynamic planners stay in `thermodata.js`.
+
+## Rework record (2026-10-23): one click per bench, fewer and distinct stages, 3D where the idea is spatial
+
+Done against the owner's audit (`docs/Avalon problems and clashing rules.md`, T1 to T8 and U1 to U5), with Tallow (unit01) as the reference.
+The seven benches and the Crucible keep their sites and their order; what changed is what is on the tables. **61 stages became 33**:
+q1 4, q2 4, q3 3, q4 5, q5 4, q6 4, q7 4, the Crucible 5. Every bench is built round one wrong model that the table contradicts, and each
+`predict: true` stage shows only the question and the guesses (cards and a slot, no instrument); the next stage brings the instrument back
+with the locked guess in its prompt and its reward (`engine/predict.js`, keys `unit05/<quest>`).
+
+| Bench | Stages | The wrong model, put on the table | Click (predict, then test) | Stake in the labels |
+| --- | --- | --- | --- | --- |
+| q1-flow | meet at 50 degrees; predict; test; four tins | "hotter means more heat" | welding spark (1200 °C, a speck) or warm tank (40 °C) on the frozen valve | Frozen valve, hand warmer, quicklime, fizzing tablet |
+| q2-calorimetry | predict; test; name a metal; a reaction in a bath | "the same heat warms everything alike" | the iron's heater set until it rises as far as the water | Jacket water, iron pipe, siphon fitting, reserve bath |
+| q3-enthalpy | chart per mole; predict; rank | "the biggest number per mole is the best fuel" | four 10 g tins in a 5 kg tank, ranked on a rail | Skiff fuel tins |
+| q4-bonds | predict; crank; methane ledger; predict (air); air ledger | "breaking a bond gives energy out" | the crank's meter, then a ledger that pays back more than it cost; a second ledger that does not | Cracking coil, nitric oxide |
+| q5-hess | predict; two routes; methane from three cards; limestone from the elements | "a longer route gives out more" | two stacks print the same total | The sealed shaft and the stepped pipe |
+| q6-entropy | predict; shake and count; more room or less; rank four boxes | "gas has to be pushed to spread; entropy is mess" | the chamber's bars (68 spread to 2 crowded of 70) | Burst bypass valve |
+| q7-gibbs | predict; dial the cold-pack salt; four cases; where ice melts | "a change that takes heat in will not run alone" | the plot's net goes below zero once it is warm enough | Shelter cold packs |
+| boss-crucible | jacket, coil, slag, vent, seal | none (no predictions on a boss) | five different tools, one decision each | The Crucible's siphon core |
+
+What was cut and why: q1 repeats (direction, system line, energy chart, the four-process sort) are folded into the pack stage or live in q3; q2's lid-off
+and per-mole stages (per mole is q3's chart); q3's reverse, grams-for-a-dose, state-symbol and per-mole-scoop stages; q4's average-bond, bond-order and
+"why still hot" stages; q5's turn-only and scale-only stages and the unknown formation value; q6's dissolve-a-salt, entropy-table and warming stages (warming
+is a card in the four-box rank); q7's formation-value, diamond and coupling stages (kinetics belongs to Quicklight; coupling and formation values are AP depth the
+idea does not need). Hint rung 1 names the control on every stage; the how-to is printed on the plate (`applyNotes`) and in the Tour. Every refusal names what the table
+shows (the bath's rise, a total, the bar's height) and none states the rule (`tools/lib/ember-learn-checks.mjs` searches each stage's refusals for its feature).
+Age band: Gibbs is "two pulls, one verdict" (the plot prints HEAT, SPREAD and NET in plain words; the symbols come on the reward card), Hess is "a ledger that does not
+care about the road", entropy is "the number of ways" and bond enthalpy is "what the crank's meter reads".
+
+**Field fetches: none left.** The tank's weight, the basket tag and the coil's gauge card each carried a copy of what the bench already holds, or fed a stage that was cut.
+The three field points (`flowline`, `edge`, `coil`) were removed from `three/ember/stations.js` and `verify:ember` now expects none.
+
+**The kit (`table/kits/heat.js`) gained** (all additive): `settle` stamps a tin that has stood in a cup with how far the bath moved (`props.rise`) and a block with
+its trial (`props.trial`), so four readings can be compared once the tins are out again; bond chips draw their two atoms; phase cards hold the same twelve particles
+(`heat-parts.js` `phaseDots`, seeded) with a streak as long as the temperature; the plot can print in plain words (`words`); Tour words for every instrument and piece
+(`heat-tour.js`, registered through `addTourText` in `table/tour.js`).
+
+**3D at `3D On`** (`engine/heat-solids.js`, the same numbers the flat picture prints): the cup's bath is a tinted body as deep as its mass with a thermometer whose column
+stands at the reading (grey for an iron "bath"); the bond crank stands two atoms in space, as far apart as the crank has pulled them, with the rod thinning; a bond
+chip carries its two atoms and rods (a double bond has two); a phase card is a glass box of twelve beads with streaks; the chamber is a glass row with the beads of the last
+shake and the cells have a gate that drops when it is opened. Reactive parts need `Table3D` to follow state: a dress may carry `userData.update(fixture, state)`,
+called from `syncFixtures` (additive change in `engine/table3d.js`). Energy charts, the stack's equations and the balance plot stay flat. Reward models
+(`engine/model-parts-ember.js`, hooked into `model-parts.js`): molecules side by side (hydrogen, oxygen, nitrogen, water, methane, carbon dioxide, ammonia, nitric oxide;
+triple bonds draw three rods) and a box of particles spread through its cells.
+
+**Story**: lead lines (`stage-story.js`) on the first stage of each bench that has a stake; four animations (`story-scenes-ember.js`): `unit05/q1-flow` (the Fifth's
+manifold is frosted: a cooled bath means heat went in), `q5-hess` (the sealed shaft and the open pipe carry the same total), `q7-gibbs` (the crossing, then the
+siphon core's seal) and the Crucible (the casing splits and a pipe runs down into the crust). Each ends on a `Filed:` line that continues Bellows' warm cylinder: the
+Fifth's siphon feeds an endothermic process.
+
+**Counts for the docs pass** (not edited here): Ember Reach is 7 benches + 1 boss = 8 quests, **33 stages** (was 61), so the registry's total goes from 330 to 302.
+`verify:docs` will fail on the PRODUCT.md figures until the orchestrator updates them. `calorimeter3d.js`/`thermomount.js` were already retired.
