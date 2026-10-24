@@ -133,6 +133,13 @@ const electrons = (prefix, n, zone, from = 1) =>
   Array.from({ length: n }, (_, i) => part(`${prefix}${from + i}`, 'electron', 0, 0, true, zone));
 
 const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
+/** A round place round a fixed middle: pieces dropped in it snap onto these rings, closest in first. */
+const orbitAt = (id, x, y, w, h, rings, radii) => ({ ...trayAt(id, '', x, y, w, h), orbit: { rings, radii } });
+/** An individual shell orbit tray: concentric ring round a middle. */
+const shellOrbit = (id, x, y, radius, cap, ringIndex) => ({
+  ...trayAt(id, '', x, y, radius * 2, radius * 2, cap),
+  orbit: { rings: [cap], radii: [radius], ringIndex }
+});
 /** A tray for specimens: wide pieces, so a wider pitch and a deeper tray. */
 const specimenTray = (id, label, x, y = 38, w = 38, h = 20) => ({ id, label, at: { x, y }, size: { w, h }, cell: 19 });
 
@@ -147,8 +154,8 @@ const SHELLS = [
 ];
 const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 24, 40, 30, n);
 
-const needleFixture = (zones, nuc, at, range) => ({
-  id: 'needle', kind: 'needle', label: 'Charge needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
+const needleFixture = (zones, nuc, at, range, size = { w: 40, h: 16 }) => ({
+  id: 'needle', kind: 'needle', label: 'Charge needle', at, size, noRun: true, props: { zones, nucleus: nuc, range }
 });
 
 const inZone = (t, zone, kind) => piecesIn(t, zone, kind).length;
@@ -305,17 +312,23 @@ export const STAGES = [
     prompt: 'Make Sample D electrically neutral.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
+      // Sample D stands in the middle of the bench, the electrons wait along the top, and the needle reads from the
+      // bottom left. Electrons are dragged straight onto the atom and come to rest on rings round its middle; the
+      // rings are not named here (that is stage 5's discovery), they are only where an electron comes to rest.
       pieces: [
-        nucleus('nuc', 'SAMPLE D', 22, 14, 8, 8),
+        nucleus('nuc', 'SAMPLE D', 60, 36, 8, 8),
         ...electrons('e', 10, 'tray:src')
       ],
       zones: {
-        trays: [SOURCE_TRAY('Electrons', 12), trayAt('out', 'Outside the nucleus', 80, 54, 52, 20)]
+        trays: [
+          trayAt('src', 'Electrons', 60, 10.5, 102, 11, 10),
+          orbitAt('atom', 60, 36, 44, 44, [2, 8], [12, 17])
+        ]
       },
-      fixtures: [needleFixture(['tray:out'], 'nuc', { x: 30, y: 38 }, 10)]
+      fixtures: [needleFixture(['tray:atom'], 'nuc', { x: 18, y: 50 }, 10, { w: 30, h: 18 })]
     }),
     hints: [
-      'Use the electron tray and the needle.',
+      'Drag electrons from the tray onto Sample D, and watch the needle.',
       'Each electron you add moves the needle one step, and neutral means the needle rests at zero.',
       'Keep adding electrons until the needle sits on zero, then count what you have placed against what the middle holds.'
     ],
@@ -339,16 +352,23 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        nucleus('nuc', 'SAMPLE D', 14, 12, 11, 12),
-        { ...specimen('r1', 'SAMPLE A', 33, 12, { p: 2, n: 2, rings: [2] }), fixed: true },
-        { ...specimen('r2', 'SAMPLE B', 51, 12, { p: 10, n: 10, rings: [2, 8] }), fixed: true },
-        { ...specimen('r3', 'SAMPLE C', 69, 12, { p: 13, n: 14, rings: [2, 8, 3] }), fixed: true },
+        nucleus('nuc', 'SAMPLE D', 60, 39, 11, 12),
+        { ...specimen('r1', 'SAMPLE A', 16, 26, { p: 2, n: 2, rings: [2] }), fixed: true },
+        { ...specimen('r2', 'SAMPLE B', 16, 48, { p: 10, n: 10, rings: [2, 8] }), fixed: true },
+        { ...specimen('r3', 'SAMPLE C', 104, 38, { p: 13, n: 14, rings: [2, 8, 3] }), fixed: true },
         ...electrons('e', 11, 'tray:src')
       ],
-      zones: { trays: [SOURCE_TRAY('Electrons', 12), ...SHELLS] }
+      zones: {
+        trays: [
+          trayAt('src', 'Electrons', 60, 10.5, 112, 11, 11),
+          shellOrbit('sh1', 60, 39, 12, 2, 0),
+          shellOrbit('sh2', 60, 39, 17, 8, 1),
+          shellOrbit('sh3', 60, 39, 22, 8, 2)
+        ]
+      }
     }),
     hints: [
-      'Use the electron tray and the three shell trays.',
+      'Drag electrons from the tray onto the shells around Sample D.',
       'No sample here holds more than 2 on the first shell or more than 8 on the second, and none of them starts a new shell while a closer one still has room.',
       'Put electrons on the first shell until it holds as many as the first shell does on the open samples, fill the second shell the same way, and only then put what is left on the third shell.'
     ],
@@ -630,7 +650,7 @@ export const SOLUTIONS = [
   [to('core', 'slot:model')],
   [run('beam'), to('core', 'slot:model')],
   [...SPECK_ORDER.map((c, i) => to(`sp${i + 1}`, 'tray:bed')), run('field'), ...SPECK_ORDER.map((c, i) => to(`sp${i + 1}`, c ? 'tray:bends' : 'tray:straight'))],
-  moveAll(ids('e', 1, 8), 'tray:out'),
+  moveAll(ids('e', 1, 8), 'tray:atom'),
   [...moveAll(ids('e', 1, 2), 'tray:sh1'), ...moveAll(ids('e', 3, 10), 'tray:sh2'), to('e11', 'tray:sh3')],
   [
     to('s1', 'slot:tester'), run('tester'), to('s2', 'slot:tester'), run('tester'), to('s3', 'slot:tester'), run('tester'),
@@ -646,7 +666,7 @@ export const MISSES = [
   [],
   [run('beam'), to('even', 'slot:model')],
   [...SPECK_ORDER.map((c, i) => to(`sp${i + 1}`, 'tray:bed')), run('field'), ...SPECK_ORDER.map((c, i) => to(`sp${i + 1}`, 'tray:bends'))],
-  moveAll(ids('e', 1, 5), 'tray:out'),
+  moveAll(ids('e', 1, 5), 'tray:atom'),
   [...moveAll(ids('e', 1, 3), 'tray:sh1'), ...moveAll(ids('e', 4, 11), 'tray:sh2')],
   [to('s4', 'slot:tester'), run('tester'), to('s5', 'slot:tester'), run('tester'), to('s4', 'tray:inert'), to('s5', 'tray:takes')],
   [to('sb', 'tray:other'), to('sc', 'tray:other'), to('sd', 'tray:other'), to('se', 'tray:same')],

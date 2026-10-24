@@ -32,7 +32,7 @@
 
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture, lampMark } from './plates.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
-import { SIZES, rectOf, railPositions } from '../table/snap.js';
+import { SIZES, rectOf, railPositions, zoneAt } from '../table/snap.js';
 import { lineOf, readY, plotUnits } from '../table/recorder.js';
 import { fixtureLayout, pieceTargets, sitePlate, LABEL, labelLines, captionLine } from '../table/layout.js';
 import { paintMat, paintStencil, roundRectPath, MAT } from './table-surface.js';
@@ -129,6 +129,24 @@ export function drawTable(ctx, w, h, state, view = {}) {
   };
   for (const t of Object.values(state.zones.trays)) {
     const r = rectOf(t, SIZES.tray);
+    // An ORBIT is round: the rings an atom's electrons sit on, not a tray with walls. The built table leaves the
+    // rings to the flat picture (the mat), so both views show the same circles under the same electrons.
+    if (t.orbit) {
+      const radii = t.orbit.radii || [];
+      const hover = view.drag?.at ? zoneAt(state, view.drag.at) : null;
+      const isHovered = hover?.kind === 'tray' && hover.id === t.id;
+      ctx.strokeStyle = isHovered ? AMBER : holding ? (mat ? MAT.paint : PLATE_COLORS.steel) : (mat ? MAT.paintDim : PLATE_COLORS.rim);
+      ctx.lineWidth = isHovered ? Math.max(2, sc * 0.32) : (mat ? Math.max(1.5, sc * 0.22) : 1);
+      ctx.setLineDash?.(mat ? [] : [4, 3]);
+      for (const rr of radii) {
+        ctx.beginPath();
+        ctx.arc(X(t.at.x), Y(t.at.y), rr * sc, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.setLineDash?.([]);
+      ctx.lineWidth = 1;
+      continue;
+    }
     // The built table stands a real tray here (walls, a lining); the flat picture keeps only its words and the count, and, while a piece
     // is in the hand, a bright ring just outside the walls: the places it can be put down.
     if (!mat) outline(r, Boolean(holding));

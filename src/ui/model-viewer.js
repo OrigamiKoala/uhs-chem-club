@@ -3,15 +3,232 @@
  *
  * `mountModel(host, spec)` shows the model described by a `reward.model` spec (`learn/engine/model-parts.js`): at `3D On` as solid
  * spheres and rods that turn slowly and can be turned by dragging, and at `3D Off` (or with no WebGL) as the same parts painted flat
- * on a canvas. Reduced motion shows it still. It draws nothing the spec did not say: the parts, and the words under them, come from
- * `model-parts.js`. It owns one small renderer and gives it back on `dispose()`.
+ * on a canvas. A wave is the exception: it is a trace lying on the desk, so it is drawn flat and animated, never turned. Reduced motion
+ * shows it still. It draws nothing the spec did not say: the parts, and the words under them, come from `model-parts.js`. It owns one
+ * small renderer and gives it back on `dispose()`.
  */
 
 import { modelParts, captionOf, electronAt } from '../learn/engine/model-parts.js';
+import { planTrace } from '../learn/engine/lightdata.js';
 import { tierManager } from '../three/tier.js';
 import { session } from '../session.js';
 
 const BG = '#0d0c0a';
+/** The bench's trace moves at one on-screen speed, so a shorter wave passes more crests a second. */
+const WAVE_SPEED = 130;
+
+const smoothstep = x => x * x * (3 - 2 * x);
+/** The trace is wide and short, so on a very wide card it is held to a readable length and centred. */
+const plotWidth = w => Math.max(80, Math.min(1200, w - 2 * Math.max(16, w * 0.03)));
+const plotPad = w => Math.max(Math.max(16, w * 0.03), (w - plotWidth(w)) / 2);
+const rgbCss = rgb => `rgb(${rgb.map(v => Math.max(0, Math.min(255, Math.round(v)))).join(',')})`;
+
+/** How far the wave has been tuned from its first wavelength to its last, 0..1, resting at each end. */
+function waveTune(t) {
+  const p = (t % 10) / 10;
+  if (p < 0.4) return smoothstep(p / 0.4);
+  if (p < 0.5) return 1;
+  if (p < 0.9) return 1 - smoothstep((p - 0.5) / 0.4);
+  return 0;
+}
+
+/** +1 while the wave shortens, -1 while it lengthens, 0 while it rests. */
+function waveDir(t) {
+  const p = (t % 10) / 10;
+  return p < 0.4 ? 1 : p < 0.5 ? 0 : p < 0.9 ? -1 : 0;
+}
+
+/**
+ * The wave, drawn flat on the desk: one trace against the bench's 2400 nm ruler, with the same
+ * two readings the bench prints. The crests travel at one speed, so shortening the wavelength
+ * crowds them together and raises the number passing the gate; the colour follows the wavelength.
+ */
+function drawWave(ctx, w, h, wave, state, still) {
+  const pad = plotPad(w);
+  const plotW = plotWidth(w);
+  const top = 52;
+  const rulerY = h - 26;
+  const midY = (top + rulerY) / 2;
+  const amp = Math.max(12, (rulerY - top) * 0.34);
+  const span = wave.span || 2400;
+  const plan = planTrace(state.nm, span);
+  const colour = rgbCss(plan.rgb || [220, 214, 204]);
+
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, w, h);
+
+  // A slate under the wave: faint graph lines, so the wave reads as lying on the desk.
+  ctx.strokeStyle = 'rgba(140,131,118,0.09)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = pad; x <= pad + plotW + 0.5; x += 48) { ctx.moveTo(x, top - 6); ctx.lineTo(x, rulerY); }
+  for (let y = top - 6; y <= rulerY + 0.5; y += 24) { ctx.moveTo(pad, y); ctx.lineTo(pad + plotW, y); }
+  ctx.stroke();
+
+  // The ruler: ticks every 100 nm, numbered every 400, the bench's 2400 nm span.
+  ctx.strokeStyle = '#544e46';
+  ctx.beginPath();
+  ctx.moveTo(pad, rulerY);
+  ctx.lineTo(pad + plotW, rulerY);
+  ctx.stroke();
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  for (let n = 0; n <= span; n += 100) {
+    const x = pad + (n / span) * plotW;
+    const major = n % 400 === 0;
+    ctx.beginPath();
+    ctx.moveTo(x, rulerY);
+    ctx.lineTo(x, rulerY + (major ? 7 : 4));
+    ctx.stroke();
+    if (major && n < span) {
+      ctx.fillStyle = '#6b625a';
+      ctx.fillText(String(n), x, rulerY + 9);
+    }
+  }
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#6b625a';
+  ctx.fillText('nm', pad + plotW, rulerY + 9);
+
+  // The header: the same two readings the bench prints, live.
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = colour;
+  ctx.fillRect(pad, 10, 16, 16);
+  ctx.strokeStyle = '#544e46';
+  ctx.strokeRect(pad + 0.5, 10.5, 15, 15);
+  ctx.fillStyle = '#8c8376';
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('CREST TO CREST', pad + 24, 17);
+  ctx.fillStyle = '#dcd6cc';
+  ctx.font = 'bold 15px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText(`${Math.round(state.nm)} nm`, pad + 24, 35);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#8c8376';
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('CRESTS A SECOND', w - pad, 17);
+  ctx.fillStyle = '#dcd6cc';
+  ctx.font = 'bold 15px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText(`${plan.e14.toFixed(2)} x 10^14 /s`, w - pad, 35);
+
+  // The trade, in the middle: one goes up exactly as the other goes down.
+  if (plotW >= 560) {
+    ctx.textAlign = 'center';
+    ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.fillStyle = state.dir ? '#d99423' : '#6b625a';
+    ctx.fillText(
+      state.dir > 0 ? 'WAVELENGTH \u2193   FREQUENCY \u2191'
+        : state.dir < 0 ? 'WAVELENGTH \u2191   FREQUENCY \u2193'
+          : still ? 'SHORTER WAVE \u00b7 FASTER CRESTS' : 'HOLDING',
+      pad + plotW / 2, 28
+    );
+  }
+
+  // A faint centre line, so a crest reads as a crest.
+  ctx.strokeStyle = 'rgba(140,131,118,0.28)';
+  ctx.beginPath();
+  ctx.moveTo(pad, midY);
+  ctx.lineTo(pad + plotW, midY);
+  ctx.stroke();
+
+  // The wave, travelling left to right at one on-screen speed. As the wavelength shortens,
+  // more crests pass the gate each second, and the colour follows the wavelength.
+  const wavelengthPx = Math.max(8, (state.nm / span) * plotW);
+  const steps = Math.min(2000, Math.round(plotW * 2));
+  ctx.beginPath();
+  for (let i = 0; i <= steps; i++) {
+    const x = pad + (i / steps) * plotW;
+    const y = midY - amp * Math.cos(2 * Math.PI * ((x - pad) / wavelengthPx - state.phase));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = 3;
+  ctx.shadowColor = colour;
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // The timing gate on the right: it lights as each crest reaches it.
+  const gateX = pad + plotW;
+  const gateLit = Math.cos(2 * Math.PI * (plotW / wavelengthPx - state.phase)) > 0.8;
+  ctx.strokeStyle = gateLit ? '#d99423' : '#544e46';
+  ctx.lineWidth = gateLit ? 2.5 : 1.5;
+  ctx.beginPath();
+  ctx.moveTo(gateX, midY - amp * 1.15);
+  ctx.lineTo(gateX, midY + amp * 1.15);
+  ctx.stroke();
+  if (gateLit) {
+    ctx.fillStyle = '#d99423';
+    ctx.beginPath();
+    ctx.arc(gateX, midY, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Animate a wave model on its own canvas; it lies flat, so there is nothing to turn. */
+function mountWave(view, wave, still) {
+  const canvas = document.createElement('canvas');
+  view.appendChild(canvas);
+  view.style.cursor = 'default';
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const list = wave.nm && wave.nm.length ? wave.nm : [550];
+  const long = Math.max(...list);
+  const short = Math.min(...list);
+  const state = { nm: still ? (long + short) / 2 : long, phase: 0.15, dir: still ? 0 : 1 };
+  let W = 0;
+  let H = 0;
+  let raf = 0;
+  let ro = null;
+
+  const paint = () => drawWave(ctx, W, H, wave, state, still);
+  const resize = () => {
+    const w = Math.max(240, view.clientWidth || 320);
+    const h = Math.max(160, view.clientHeight || 220);
+    if (w === W && h === H) return;
+    W = w;
+    H = h;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paint();
+  };
+  resize();
+  if (typeof ResizeObserver !== 'undefined') {
+    ro = new ResizeObserver(resize);
+    ro.observe(view);
+  } else {
+    window.addEventListener('resize', resize);
+  }
+
+  if (!still) {
+    const t0 = performance.now();
+    let last = t0;
+    const frame = now => {
+      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+      last = now;
+      const t = (now - t0) / 1000;
+      const u = waveTune(t);
+      state.nm = long + (short - long) * u;
+      state.dir = waveDir(t);
+      const wavelengthPx = Math.max(8, (state.nm / (wave.span || 2400)) * plotWidth(W));
+      state.phase += (dt * WAVE_SPEED) / wavelengthPx;
+      paint();
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+  }
+
+  return () => {
+    cancelAnimationFrame(raf);
+    ro?.disconnect();
+    window.removeEventListener('resize', resize);
+    canvas.remove();
+  };
+}
 
 /** Rotate a point about y then x. */
 function turn([x, y, z], ay, ax) {
@@ -64,9 +281,21 @@ export function mountModel(host, spec) {
   const still = Boolean(session.reduceMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const wrap = document.createElement('div');
   wrap.className = 'lq-model';
-  wrap.innerHTML = `<div class="lq-model-view"></div><p class="lq-model-caption">${captionOf(spec).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} ${still ? '' : 'Drag to turn it.'}</p>`;
+  const hint = still ? '' : parts.wave ? 'Watch the crests crowd as the colour shifts.' : 'Drag to turn it.';
+  wrap.innerHTML = `<div class="lq-model-view"></div><p class="lq-model-caption">${captionOf(spec).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} ${hint}</p>`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
+
+  // A wave is a trace on the desk, not a solid to turn: it gets its own flat, animated canvas.
+  if (parts.wave) {
+    const teardownWave = mountWave(view, parts.wave, still);
+    return {
+      dispose() {
+        try { teardownWave(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
 
   let ay = 0.5;
   let ax = 0.25;

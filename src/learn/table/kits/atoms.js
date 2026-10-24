@@ -1661,7 +1661,7 @@ export const ATOMS_KIT = {
     proton: { r: R, nojoin: true },
     speck: { r: R, nojoin: true },
     neutron: { r: R, nojoin: true },
-    electron: { r: R, nojoin: true },
+    electron: { r: R / 2, nojoin: true },
     ion: { r: R, nojoin: true },
     nucleus: { r: 8, nojoin: true },
     specimen: { r: 8, nojoin: true },

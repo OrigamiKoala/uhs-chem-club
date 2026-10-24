@@ -169,7 +169,8 @@ function checkTableStage(label, stage, solution, misses) {
     if (p.hidden && !t0.fetch[p.fetchFrom]) fail(`${label}: piece ${p.id} is hidden and nothing can fetch it`);
   }
   const rects = [
-    ...Object.values(t0.zones.trays).map(z => [`tray ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.tray)]),
+    // An orbit is a round place round a fixed middle: the middle stands on it by design (the `backdrop` flag).
+    ...Object.values(t0.zones.trays).map(z => [`tray ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.tray), Boolean(z.orbit)]),
     ...Object.values(t0.zones.slots).map(z => [`slot ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.slot)]),
     ...Object.values(t0.zones.containers).map(z => [`container ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.container)]),
     ...(t0.zones.rail ? [['the rail', SNAP.rectOf(t0.zones.rail, SNAP.SIZES.rail)]] : []),
@@ -183,8 +184,8 @@ function checkTableStage(label, stage, solution, misses) {
   const loose = Object.values(t0.pieces).filter(p => !p.zone);
   for (const p of loose) {
     for (const [name, r, backdrop] of rects) {
-      // A fixed piece stands ON a fixture by design (the atoms of a slate stand on its board), and so does anything on a backdrop.
-      if ((p.fixed || backdrop) && name.startsWith('fixture ')) continue;
+      // A fixed piece stands ON a fixture by design (the atoms of a slate stand on its board), and a middle stands on its orbit.
+      if (backdrop || (p.fixed && name.startsWith('fixture '))) continue;
       if (p.at.x > r.x0 && p.at.x < r.x1 && p.at.y > r.y0 && p.at.y < r.y1) fail(`${label}: loose piece ${p.id} starts inside ${name}`);
     }
   }
@@ -376,11 +377,13 @@ function checkTableStage(label, stage, solution, misses) {
   }
   // A piece must be big enough to hit with a finger at the smallest plate. A FIXED piece (an atom on a
   // Lewis slate, a joint) is never grabbed: it is a target, found by the reach of the piece dropped on it, so it
-  // owes no hit size (it still may not overlap anything, below).
+  // owes no hit size (it still may not overlap anything, below). An electron is drawn at particle scale (14 px)
+  // and grabbed by gestures' generous reach.
   for (const p of Object.values(t0.pieces)) {
     if (p.fixed) continue;
     const px = REG.radiusOf(kit, p) * 2 * (340 / w);
-    if (px < 28) fail(`${label}: piece ${p.id} is ${px.toFixed(0)} px across at 340 px, under 28`);
+    const minPx = p.kind === 'electron' ? 14 : 28;
+    if (px < minPx) fail(`${label}: piece ${p.id} is ${px.toFixed(0)} px across at 340 px, under ${minPx}`);
   }
 
   if (failures === before) ok(`${label}: solved by script, drag, two taps and the drawn tabletop's gestures; ${misses.length} miss(es) refused with a reason; no authored outcomes; every control moves the table`);

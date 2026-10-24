@@ -1287,10 +1287,10 @@ console.log('The foes — spoil standing in the wells\n');
         if (minY < free.b - eps) fail(`${tag}: the table runs under the foot dock`);
 
         // The smallest piece, in screen pixels.
-        let smallest = Infinity;
         for (const p of Object.values(state.pieces)) {
           // A fixed piece (an atom on a Lewis slate, a joint) is never grabbed: it is a target, found by the reach
-          // of the piece dropped on it, so it owes no hit size.
+          // of the piece dropped on it, so it owes no hit size. An electron is drawn at particle scale (14 px)
+          // and grabbed by gestures' generous reach.
           if (p.hidden || p.fixed) continue;
           const r = REG.radiusOf(kit, p);
           const a = bench.map.toPlate(p.at);
@@ -1299,9 +1299,10 @@ console.log('The foes — spoil standing in the wells\n');
           const pb = new THREE.Vector3(b.x, 0.895, b.z);
           bench.root.localToWorld(pa); bench.root.localToWorld(pb);
           pa.project(camera); pb.project(camera);
-          smallest = Math.min(smallest, 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2));
+          const px = 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2);
+          const minPx = p.kind === 'electron' ? 14 : 28;
+          if (px < minPx) fail(`${tag}: piece ${p.id} is ${px.toFixed(1)} px across, under ${minPx}`);
         }
-        if (smallest < 28) fail(`${tag}: the smallest piece is ${smallest.toFixed(1)} px across, under 28`);
 
         const local = bench.root.worldToLocal(camera.position.clone());
         const inBay = [local.x, local.y + (BAY.PLATE_TOP - 0.895), local.z];

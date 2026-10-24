@@ -367,6 +367,8 @@ export class Table3D extends BenchViewer3D {
       this.fixtureRoot.add(obj);
     };
     for (const t of Object.values(state.zones.trays)) {
+      // An orbit is drawn as rings on the mat, not built as a tray with walls: its electrons sit on the rings.
+      if (t.orbit) continue;
       const r = rectOf(t, SIZES.tray);
       place(buildTray(r.w * s, r.h * s, { wallMat, liningMat: lining }), r);
     }

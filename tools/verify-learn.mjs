@@ -2881,7 +2881,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     {
       const t = end(g2, 3);
       const lump = t.pieces.nuc.props;
-      same(piecesOf(t, 'tray:out', 'electron').length, lump.p, 'unit01/q2-core stage 4 (a neutral atom has as many electrons as protons)');
+      same(piecesOf(t, 'tray:atom', 'electron').length, lump.p, 'unit01/q2-core stage 4 (a neutral atom has as many electrons as protons)');
     }
     // 4. shells fill in order: the graded loading is the real pattern, and so are the open samples
     {

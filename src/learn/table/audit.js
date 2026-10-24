@@ -95,8 +95,12 @@ export function auditTable(state, kit, opts = {}) {
   const add = (name, r, kind, extra = {}) => items.push({ name, r, kind, ...extra });
 
   for (const t of Object.values(state.zones.trays)) {
-    add(`tray ${t.id}`, rectOf(t, SIZES.tray), 'zone', { id: `tray:${t.id}` });
-    for (const l of labelRects(state, 'tray', t)) add(`the label of tray ${t.id}`, l, 'label', { owner: `tray:${t.id}` });
+    // An orbit is round, and the atom's fixed middle stands in it by design: treat it as a backdrop (things stand on it),
+    // while its electrons are still held to the circle's own box.
+    add(`tray ${t.id}`, rectOf(t, SIZES.tray), 'zone', { id: `tray:${t.id}`, backdrop: Boolean(t.orbit) });
+    if (!t.orbit) {
+      for (const l of labelRects(state, 'tray', t)) add(`the label of tray ${t.id}`, l, 'label', { owner: `tray:${t.id}` });
+    }
   }
   for (const t of Object.values(state.zones.slots)) {
     add(`slot ${t.id}`, rectOf(t, SIZES.slot), 'zone', { id: `slot:${t.id}` });
@@ -136,7 +140,7 @@ export function auditTable(state, kit, opts = {}) {
     if (r.x0 < 0 || r.y0 < 0 || r.x1 > w || r.y1 > h) out.push(`piece ${p.id} starts off the table`);
     if (p.zone && p.zone !== 'rail') {
       const z = items.find(i => i.id === p.zone);
-      if (z && (r.x0 < z.r.x0 - 0.01 || r.x1 > z.r.x1 + 0.01 || r.y0 < z.r.y0 - 0.01 || r.y1 > z.r.y1 + 0.01)) {
+      if (z && !z.backdrop && (r.x0 < z.r.x0 - 0.01 || r.x1 > z.r.x1 + 0.01 || r.y0 < z.r.y0 - 0.01 || r.y1 > z.r.y1 + 0.01)) {
         out.push(`piece ${p.id} does not fit inside ${z.name}: it is ${((r.x1 - r.x0)).toFixed(1)} units across in a place ${(z.r.x1 - z.r.x0).toFixed(1)} wide`);
       }
     }

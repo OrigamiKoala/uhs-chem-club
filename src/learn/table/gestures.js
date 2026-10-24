@@ -120,8 +120,11 @@ export class TableGestures {
       const c = this.view.posOf(p.id) || p.at;
       // A piece in the hand is taken again only on the piece itself: a target beside it (the next rung of a ladder, a slot a
       // hair's breadth away) must be tappable, and the generous reach that makes a piece easy to grab would swallow it.
-      const generous = s.carry.held === p.id ? 1 : GRAB_REACH;
-      const reach = Math.max(radiusOf(kit, p) * generous, this.view.pxToUnits(GRAB_MIN_PX));
+      const isOrbitPiece = Boolean(p.zone && s.zones.trays[p.zone.replace(/^tray:/, '')]?.orbit);
+      const generous = (s.carry.held === p.id || (s.carry.held && isOrbitPiece)) ? 1 : GRAB_REACH;
+      const reach = (s.carry.held && isOrbitPiece)
+        ? radiusOf(kit, p)
+        : Math.max(radiusOf(kit, p) * generous, this.view.pxToUnits(GRAB_MIN_PX));
       const d = Math.hypot(c.x - u.x, c.y - u.y);
       if (d <= reach && (!best || d < best.d)) best = { id: p.id, d };
       // A tool that lies ON another piece (a lens over its dish: `kinds.x.onTop`) is the top thing there: a press on its own
@@ -304,7 +307,8 @@ export class TableGestures {
     // half and after it on its right, so the end of a full rail can be tapped. Anything else is a target
     // at the piece itself (a join, or the zone it stands in).
     const target = this.state.pieces[id];
-    this.tapTarget(at && target.zone === 'rail' ? at : target.at);
+    const isOrbit = Boolean(target.zone && this.state.zones.trays[target.zone.replace(/^tray:/, '')]?.orbit);
+    this.tapTarget(at && (target.zone === 'rail' || isOrbit) ? at : target.at);
   }
 
   /** Tap where the held piece should go: resolved exactly as a drop there would be. */

@@ -33,6 +33,8 @@ export const SIZES = {
   container: { w: 20, h: 24 },
   rail: { w: 84, h: 12 },
   fixture: { w: 26, h: 16 },
+  /** How far past a ring zone's outermost circle a drop still lands on the nearest ring. */
+  ring: { r: 10, catch: 8 },
   /** The drawn site plate of a field point (T1 to T3), where a tap takes the item. */
   site: { w: 24, h: 13 }
 };
@@ -107,6 +109,9 @@ export function rectOf(zone, fallback) {
 
 const inRect = (r, p) => p.x >= r.x0 && p.x <= r.x1 && p.y >= r.y0 && p.y <= r.y1;
 
+/** Is `p` inside an orbit zone's circle? An orbit is round, not a rectangle: the hand drops into the atom, not its box. */
+const inOrbit = (zone, p) => Math.hypot(p.x - zone.at.x, p.y - zone.at.y) <= (zone.size?.w ?? SIZES.tray.w) / 2;
+
 /**
  * The zone under a point: the smallest first (a slot inside a tray is the slot),
  * then containers, trays, the rail. Null on open table.
@@ -119,15 +124,73 @@ export function zoneAt(state, p) {
     if (inRect(rectOf(c, SIZES.container), p)) return { kind: 'container', id: c.id };
   }
   for (const t of Object.values(state.zones.trays)) {
-    if (inRect(rectOf(t, SIZES.tray), p)) return { kind: 'tray', id: t.id };
+    if (!t.orbit && inRect(rectOf(t, SIZES.tray), p)) return { kind: 'tray', id: t.id };
+  }
+  // An ORBIT is round: either one multi-ring atom (Stage 4) or concentric shells (Stage 5).
+  // A drop lands in whichever shell ring is nearest, or inside the atom's circle.
+  const orbitTrays = Object.values(state.zones.trays).filter(t => t.orbit);
+  if (orbitTrays.length) {
+    const centers = new Map();
+    for (const t of orbitTrays) {
+      const key = `${t.at.x},${t.at.y}`;
+      if (!centers.has(key)) centers.set(key, []);
+      centers.get(key).push(t);
+    }
+    for (const group of centers.values()) {
+      const c = group[0].at;
+      const d = Math.hypot(p.x - c.x, p.y - c.y);
+      if (group.length === 1 && (group[0].orbit.radii?.length || 0) > 1) {
+        const t = group[0];
+        const maxR = Math.max(...(t.orbit.radii || [(t.size?.w ?? SIZES.tray.w) / 2]));
+        const reach = Math.max(maxR + 4, (t.size?.w ?? SIZES.tray.w) / 2);
+        if (d <= reach) return { kind: 'tray', id: t.id };
+      } else {
+        const maxR = Math.max(...group.map(t => Math.max(...(t.orbit.radii || [(t.size?.w ?? SIZES.tray.w) / 2]))));
+        if (d <= maxR + 4) {
+          let best = group[0];
+          let bestDiff = Infinity;
+          for (const t of group) {
+            const r = t.orbit.radii ? t.orbit.radii[0] : (t.size?.w ?? SIZES.tray.w) / 2;
+            const diff = Math.abs(d - r);
+            if (diff < bestDiff) {
+              bestDiff = diff;
+              best = t;
+            }
+          }
+          return { kind: 'tray', id: best.id };
+        }
+      }
+    }
   }
   const rail = state.zones.rail;
   if (rail && inRect(rectOf(rail, SIZES.rail), p)) return { kind: 'rail', id: rail.id || 'rail' };
   return null;
 }
 
-/** Where a tray's or container's n-th item sits (a grid from its top-left). */
-export function layoutIn(zone, fallback, n) {
+/**
+ * Where the n-th piece of an ORBIT zone sits: on the rings round the zone's centre, closest in first.
+ * `zone.orbit.rings` is the number of places on each ring (2, then 8, then 8, ... by default) and
+ * `zone.orbit.radii` the ring each one is drawn on, in table units. The slots are fixed, so adding or
+ * taking away one electron never moves the others.
+ */
+export function orbitSlot(zone, n, total = 0) {
+  const caps = zone.orbit.rings || [2, 8, 8, 18];
+  const radii = zone.orbit.radii || caps.map((_, i) => (zone.size?.w ?? SIZES.tray.w) * (0.5 - 0.35 / Math.max(1, i + 1)));
+  let ring = 0;
+  let k = n;
+  while (ring < caps.length - 1 && k >= caps[ring]) { k -= caps[ring]; ring++; }
+  const baseCap = Math.max(1, caps[ring] || 1);
+  const cap = caps.length === 1 && total > baseCap ? total : baseCap;
+  const radius = radii[Math.min(ring, radii.length - 1)];
+  const ringIdx = zone.orbit.ringIndex ?? ring;
+  const phase = zone.orbit.phase?.[ring] ?? (-Math.PI / 2 + ringIdx * 0.4);
+  const a = phase + (k * 2 * Math.PI) / cap;
+  return { x: zone.at.x + Math.cos(a) * radius, y: zone.at.y + Math.sin(a) * radius };
+}
+
+/** Where a tray's or container's n-th item sits: a grid from its top-left, or a ring round an orbit's centre. */
+export function layoutIn(zone, fallback, n, total = 0) {
+  if (zone.orbit) return orbitSlot(zone, n, total);
   const r = rectOf(zone, fallback);
   // A zone for big pieces (a dish) declares its own pitch (`cell`); the default is for the small ones.
   const cell = zone.cell || CELL;
@@ -229,7 +292,14 @@ export function pointFor(state, kit, to, id) {
   const t = typeof to === 'string' ? parseTo(to) : to;
   if (t.kind === 'free') return { ...t.at };
   if (t.kind === 'slot') return { ...state.zones.slots[t.id].at };
-  if (t.kind === 'tray') return { ...state.zones.trays[t.id].at };
+  if (t.kind === 'tray') {
+    const zone = state.zones.trays[t.id];
+    if (zone?.orbit) {
+      const items = itemsIn(state, 'tray:' + t.id);
+      return orbitSlot(zone, items.length, items.length + 1);
+    }
+    return { ...zone.at };
+  }
   if (t.kind === 'container') return { ...state.zones.containers[t.id].at };
   if (t.kind === 'piece') {
     // Just touching the target, on whichever side is open table and nearest it. Of every side that would land on the

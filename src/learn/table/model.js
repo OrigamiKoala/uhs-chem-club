@@ -166,10 +166,14 @@ export function createTable(spec, seedKey = '') {
   // A tray may declare `cap`, how many pieces it is meant to hold; the picture prints a stencilled `!` over it.
   for (const t of z.trays || []) {
     s.zones.trays[t.id] = {
-      id: t.id, label: t.label || t.id, at: { ...t.at }, size: { ...SIZES.tray, ...(t.size || {}) },
+      id: t.id, label: t.label !== undefined ? t.label : t.id, at: { ...t.at }, size: { ...SIZES.tray, ...(t.size || {}) },
       ...(t.cap != null ? { cap: t.cap } : {}),
       ...(t.cell ? { cell: t.cell } : {}),
-      ...(t.cellH ? { cellH: t.cellH } : {})
+      ...(t.cellH ? { cellH: t.cellH } : {}),
+      // An ORBIT is a round place round a fixed middle (a nucleus): pieces dropped in it snap onto rings,
+      // closest in first, and the view draws the rings instead of a tray. It holds what stands in it and
+      // refuses nothing; the rings are where a piece comes to rest, not a rule about what may go there.
+      ...(t.orbit ? { orbit: { ...t.orbit } } : {})
     };
   }
   // A slot may name a `row`: the slots that share one are a STRIP (a card dropped on a filled one pushes the row
@@ -287,7 +291,7 @@ function relayout(s, key) {
     for (const c of clusterOf(s, m)) {
       if (s.pieces[c].zone !== key || seen.has(c)) continue;
       seen.add(c);
-      s.pieces[c].at = layoutIn(zone, fallback, n++);
+      s.pieces[c].at = layoutIn(zone, fallback, n++, members.length);
     }
   }
 }

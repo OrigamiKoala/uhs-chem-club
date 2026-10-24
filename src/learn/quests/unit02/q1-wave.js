@@ -128,7 +128,7 @@ export const STAGES = [
         log: 'Violet: crests close together, many a second.',
         title: 'Wavelength and Frequency',
         body: 'The distance from one crest to the next is the wavelength, and the number of crests that pass each second is the frequency. Turning from red to violet shortens the wavelength and raises the frequency, so the two move in opposite directions.',
-        model: { type: 'wave', nm: [700, 400], caption: 'Red (top) and violet (bottom) over the same length: the violet wave fits more crests, so more of them pass each second.' }
+        model: { type: 'wave', nm: [700, 400], caption: 'One wave tuned from red to violet and back: as the crests crowd together, more of them pass each second, and the colour shifts with the wavelength.' }
       }
     };
   })(),

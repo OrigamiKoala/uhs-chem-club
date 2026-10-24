@@ -5,7 +5,7 @@
  * and every part here is DERIVED from the planners the bench asks (`lightdata.js`, `orbitals.js`, `electrons.js`), so a model is
  * the same fact the player worked out, held in the hand and never a second copy of it:
  *
- *   { type: 'wave', nm: [700, 400] }                          waves of light over one length, a bead for each point, an amber bead on each crest
+ *   { type: 'wave', nm: [700, 400] }                          one wave on the desk, tuned from the first wavelength to the last and back
  *   { type: 'photons', metal: 'Na', nm: 400, brightness: 2 }  packets striking a plate, and the electrons that leave it
  *   { type: 'ladder', hi: 3, lo: 2 }                          rungs at their energies, an electron dropped, the packet of light it gave out
  *   { type: 'orbital', orbital: '2pz', dots: 260 }            the dots of one cloud, standing in space where the probe found them
@@ -13,7 +13,8 @@
  *   { type: 'radii', items: [{ sym: 'Li', pm: 152 }, ...] }   atoms as spheres to scale
  *   { type: 'cuvette', solute: 'cuso4', conc: 0.01, nm: 630 } a beam through a cell of solution, dimmer on the far side
  *
- * Each returns `{ spheres, bonds, rings, electrons, radius }`; a sphere is `{ pos, r, color, kind, seg? }` and a bond `{ a, b, order }`.
+ * Each returns `{ spheres, bonds, rings, electrons, radius }`; a wave also carries a `wave` descriptor for its animation. A sphere is
+ * `{ pos, r, color, kind, seg? }` and a bond `{ a, b, order }`.
  * Colours are the plate's weathered palette; a beam of light takes its own colour from `wavelengthRgb`.
  */
 
@@ -40,32 +41,27 @@ const bond = (a, b, order = 1) => ({ a, b, order });
 
 /* ------------------------------------------------------------------ waves */
 
-/** Waves of light, one row each, over a length that stands for the bench's 2400 nm ruler: crests are closer where the wavelength is shorter. */
+/**
+ * ONE wave of light lying flat on the desk, over a length that stands for the bench's 2400 nm ruler.
+ * It carries the two wavelengths it is tuned between; `ui/model-viewer.js` animates it from the first to
+ * the last and back, so the crests crowd together and the colour shifts as the frequency rises.
+ */
 function waveParts(spec) {
-  const list = spec.nm;
+  const list = (spec.nm && spec.nm.length ? spec.nm : [550]).slice();
   const L = 5.2;
   const x0 = -L / 2;
   const amp = 0.42;
   const parts = empty(3.4);
-  list.forEach((nm, row) => {
-    const y0 = (list.length - 1) * 0.7 - row * 1.4;
-    const per = (nm / TRACE_SPAN_NM) * L;
-    const colour = lightColour(nm);
-    const n = 64;
-    let prev = null;
-    for (let i = 0; i < n; i++) {
-      const x = x0 + (L * i) / (n - 1);
-      const y = y0 + amp * Math.cos((2 * Math.PI * (x - x0)) / per);
-      const p = [x, y, 0];
-      parts.spheres.push(sphere(p, 0.04, colour, 'wave', 8));
-      if (prev) parts.bonds.push(bond(prev, p));
-      prev = p;
-    }
-    // A bead on every crest, so the spacing the card talks about can be counted.
-    for (let k = 0; x0 + k * per <= x0 + L + 1e-9; k++) {
-      parts.spheres.push(sphere([x0 + k * per, y0 + amp, 0], 0.1, AMBER, 'crest', 12));
-    }
-  });
+  const nm = list[0];
+  const per = (nm / TRACE_SPAN_NM) * L;
+  const colour = lightColour(nm);
+  const n = 160;
+  for (let i = 0; i < n; i++) {
+    const x = x0 + (L * i) / (n - 1);
+    const z = amp * Math.cos((2 * Math.PI * (x - x0)) / per);
+    parts.spheres.push(sphere([x, 0.05, z], 0.045, colour, 'wave', 6));
+  }
+  parts.wave = { nm: list, span: TRACE_SPAN_NM, length: L, amp, count: n, y: 0.05 };
   return parts;
 }
 
@@ -240,7 +236,7 @@ export const LANTERNFALL_MODELS = {
 /** The words under one of these models when its spec gives none. */
 export function lanternfallCaption(spec) {
   switch (spec.type) {
-    case 'wave': return `Light at ${spec.nm.map(n => `${n} nm`).join(' and ')}, with a bead on every crest.`;
+    case 'wave': return `One wave tuned from ${spec.nm[0]} nm to ${spec.nm[spec.nm.length - 1]} nm and back: the crests crowd together, more pass each second, and the colour shifts.`;
     case 'photons': return `${spec.brightness} packets of ${spec.nm} nm light striking ${spec.metal}.`;
     case 'ladder': return `An electron dropping from rung ${spec.hi} to rung ${spec.lo}, and the packet of light it gives out.`;
     case 'orbital': return `The ${spec.orbital} cloud: ${spec.dots || 260} dots from the probe.`;
