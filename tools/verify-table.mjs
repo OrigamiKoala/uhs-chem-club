@@ -1236,6 +1236,8 @@ console.log('\nTour — every tool on a table has a step that says what it is an
         if (v.introducedAt > i) for (const s of steps) if (!s.flag.startsWith(`tour_${t.kit}_`) || s.flag.includes('_bench_') ? false : v.term.test(`${s.name} ${s.desc}`)) fail(`${label}: Tour step "${s.name}" uses a word the quest has not earned yet (${v.term})`);
       }
       if (new Set(steps.map(s => s.flag)).size !== steps.length) fail(`${label}: two Tour steps share a once-only flag`);
+      // Ligar's tools all have words of their own (`table/tour-ligar.js`): none is left to the generic "drag it to move it" step.
+      if (key.startsWith('unit03/')) for (const s of steps) if (/: drag it to move it, or tap it once|dial by dragging its knob|Press ".*" to use it\.$/.test(s.desc)) fail(`${label}: Tour step "${s.name}" is the generic one: Ligar's tools have words of their own`);
       for (const f of Object.values(t.fixtures)) {
         if (f.props?.backdrop) continue;
         if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: the instrument "${f.label}" is not in the Tour`);

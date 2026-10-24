@@ -13,6 +13,9 @@
  * fails on a tool the Tour does not mention.
  */
 
+// LIGAR (unit03): the steps for Ligar's own instruments and pieces live in their own file, asked first.
+import { ligarFixture, ligarPiece, ligarSkip, LIGAR_KITS } from './tour-ligar.js';
+
 /** What a dial does, by its label. */
 const DIAL = {
   Power: 'The "Power" dial sets how much the lens magnifies: a higher power shows a smaller part of the sample, but bigger.',
@@ -106,7 +109,12 @@ function fallbackFixture(f) {
 }
 
 /** The title and text of a fixture: what it is and does, then each dial it carries that the text has not covered. */
-function fixtureStep(f, kitId) {
+function fixtureStep(f, kitId, table) {
+  const own = ligarFixture(f, kitId, table);
+  if (own) {
+    const dials = own.ownDials ? [] : Object.values(f.dials || {}).map(d => DIAL[d.label] || `Move the ${quote(d.label || 'its')} dial by dragging its knob or tapping its groove.`);
+    return { title: own.title, text: [own.text, ...dials].join(' ') };
+  }
   const entry = FIXTURE[`${kitId}:${f.kind}`] || FIXTURE[f.kind];
   if (!entry) return { title: f.label, text: fallbackFixture(f) };
   const runSentence = f.runLabel ? `Press "${f.runLabel}" to record the reading as a point on the strip.` : '';
@@ -143,7 +151,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
   for (const f of fixtures) {
     // A plain surface things stand on has nothing to explain; one with a key or a dial is an instrument.
     if (f.props?.backdrop && f.noRun && !Object.keys(f.dials || {}).length) continue;
-    const { title, text } = fixtureStep(f, kit);
+    const { title, text } = fixtureStep(f, kit, table);
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
     add(twin ? `fx_${f.kind}_${f.id}` : `fx_${f.kind}`, title, text);
   }
@@ -161,11 +169,14 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
     if (kind === 'lens' && hasFixture('scope')) continue;
     if (kind === 'detector' && hasFixture('beam')) continue;
     if (kind === 'token') continue;
+    if (ligarSkip(table, p)) continue;
     // A marked particle is tapped, not carried.
     if (kind === 'proton' && p.props?.markable) {
       add('pc_marks', 'Marking particles', 'Tap a particle to mark it as part of your answer. A ring appears round it so you can see which ones you have picked. Tap it again to unmark it. When you press Submit, your answer is the particles that have a ring.');
       continue;
     }
+    const lig = ligarPiece(kind, kit, table);
+    if (lig) { add(`pc_${kind}`, lig[0], lig[1]); continue; }
     const entry = PIECE[kind];
     if (entry) add(`pc_${kind}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''));
     else add(`pc_${kind}`, p.label || kind, `${p.label || 'This piece'}: drag it to move it, or tap it once and then tap the place you want it to go.`);
@@ -177,9 +188,9 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
   if (table.zones?.rail) addGeneral('rail', 'The strip', 'Drag cards onto the strip. They stay in the order you put them, and dropping a card between two others makes them slide apart to make room.');
   const drum = Object.values(table.zones?.containers || {}).find(z => z.id === 'drum');
   if (drum) add('drum', drum.label || 'Drum', 'The drum holds the material to pour. Drag from the drum onto the Pour pan, or tap the drum and then the pan. Each pour moves one fixed amount.');
-  if (Object.keys(table.zones?.containers || {}).filter(id => id !== 'drum').length && !hasFixture('balance') && !hasFixture('scale')) add('containers', 'Pans', 'Drag a piece onto a pan to put it there. Whatever is on a pan is what gets weighed.');
+  if (!LIGAR_KITS.has(kit) && Object.keys(table.zones?.containers || {}).filter(id => id !== 'drum').length && !hasFixture('balance') && !hasFixture('scale')) add('containers', 'Pans', 'Drag a piece onto a pan to put it there. Whatever is on a pan is what gets weighed.');
   if (table.prediction) addGeneral('prediction', 'Prediction', 'Drag the token that says what you expect into the slot. It is only your guess: nothing is marked right or wrong, and the next part tests it.');
-  if (table.recorder && table.recorder.box && table.recorder.box.size.w > 2 && Object.values(table.fixtures || {}).some(f => !f.noRun)) addGeneral('strip', 'Paper strip', 'Each time you take a reading, it is added to the strip as a point, so you can compare your readings.');
+  if (!LIGAR_KITS.has(kit) && table.recorder && table.recorder.box && table.recorder.box.size.w > 2 && Object.values(table.fixtures || {}).some(f => !f.noRun)) addGeneral('strip', 'Paper strip', 'Each time you take a reading, it is added to the strip as a point, so you can compare your readings.');
 
   for (const t of table.tools || []) {
     const entry = TOOL[t];

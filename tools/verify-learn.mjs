@@ -647,6 +647,29 @@ function checkStageTable(q, mod) {
       bad++;
     }
 
+    // LIGAR (2026-10-23 rollout, audit T4): a refusal on a Ligar bench names what the table shows that disagrees and never gives the reasoning.
+    // `refusalLeaks` above only searches for the answer; these are the discriminating features each bench teaches, and the words of a reason.
+    if (q.key.startsWith('unit03/')) {
+      const msgs = new Set([missed?.msg, empty?.msg, ...sentenceLiterals(st.check)].filter(Boolean));
+      const REASON = /\b(because|since|therefore|which means|that is why|this means|so that|in order to|the reason)\b/i;
+      const FEATURE = {
+        'unit03/q1-joins': /\b(full outer shell|shell is (?:already )?full|hand(?:s|ed)? over|share[sd]? a pair|metal|nonmetal|noble)\b/i,
+        'unit03/q2-lattice': /\b(free to move|pinned|locked in|mobile|charged particles|ions? (?:can|cannot)|lattice|molecules?|network)\b/i,
+        'unit03/q3-distance': /\b(more pairs|shorter|longer|stronger|deeper|closer together|further apart)\b/i,
+        'unit03/q4-dots': /\b(second pair|double bond|share a second|central atom|incomplete)\b/i,
+        'unit03/q5-resonance': /\b(blend|resonance|between a single and a double|alike)\b/i,
+        'unit03/q6-shape': /\b(leave the flat|pyramid|tetrahedr\w*|lone pair pushes|bent)\b/i,
+        'unit03/q7-polarity': /\b(cancel\w*|symmetr\w*|lopsided|net pull|add up)\b/i,
+        'unit03/q8-hybrid': /\b(blend|hybrid|pi overlap|sigma|side to side)\b/i,
+        'unit03/q9-orbitals': /\b(alone in a box|unpaired|one in each box|hund)\b/i,
+        'unit03/boss-warden': /\b(cancel\w*|symmetr\w*|lopsided|unpaired|triple bond|held (?:harder|hardest))\b/i
+      }[q.key];
+      for (const text of msgs) {
+        if (REASON.test(text)) { fail(`${label}: a refusal gives its reasoning ("${REASON.exec(text)[0]}") in "${text.slice(0, 80)}"`); bad++; }
+        if (FEATURE && FEATURE.test(text)) { fail(`${label}: a refusal names the feature that decides the stage (${FEATURE.exec(text)[0]}) in "${text.slice(0, 80)}"`); bad++; }
+      }
+    }
+
     /* ------------------------------------------------------------------
        NOTHING IS NAMED WITHOUT BEING EXPLAINED — BUT A LABEL IS AN
        EXPLANATION, AND RESTATING IT IS NOISE.

@@ -197,7 +197,7 @@ export const STAGES = [
       const tray = { transfer: 'handed', share: 'shared' };
       const bad = pairs.findIndex((p, i) => p.tray !== tray[want[i]]);
       if (bad >= 0) {
-        return { ok: false, msg: pairs[bad].tray === 'handed' ? 'A pair in "Handed over" has no charges on its faces.' : 'A pair in "Shared" shows a plus and a minus on its faces.' };
+        return { ok: false, msg: pairs[bad].tray === 'handed' ? 'A pair in the left tray shows no charge on its faces.' : 'A pair in the right tray shows a plus and a minus on its faces.' };
       }
       return { ok: true };
     },
