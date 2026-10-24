@@ -2,19 +2,20 @@
  * boss-crucible.js — Learn world 5 elite: THE CRUCIBLE.
  *
  * The Fifth Guild's geothermal siphon core at the rim of the caldera. It is made of everything Ember Reach measured, and each of its
- * five phases puts the TABLETOP of a bench the player has worked back in front of them (plan `bench-tabletop.md`, phase T6), on the heat
- * kit (`table/kits/heat.js`), with a new substance on the table and the Crucible standing in the table's corner, watching it:
+ * five phases puts the TABLETOP of a bench the player has worked back in front of them, on the heat kit (`table/kits/heat.js`), with a
+ * new substance on the table and the Crucible standing in the table's corner, watching it. Each phase is a different tool and ONE decision:
  *
- *   1  the jacket    heat caught by a weighed water jacket                  (bench 2)
- *   2  the coil      ΔH for ammonia from a bond ledger                      (bench 4)
- *   3  the slag      ΔH for splitting iron oxide from a stack of steps      (bench 5)
- *   4  the vent      ΔS for splitting steam from an entropy table           (bench 6)
- *   5  the seal      the temperature at which a decomposition tips over     (bench 7)
+ *   1  the jacket    the heat a weighed water jacket caught                  (the cup, bench 2)
+ *   2  the coil      the ledger of the bonds in ammonia, read                (the ledger, bench 4)
+ *   3  the slag      iron oxide split, from two measured steps               (the stack, bench 5)
+ *   4  the vent      the entropy change of splitting steam                   (the entropy table, bench 6)
+ *   5  the seal      the temperature at which a limestone seal gives way     (the balance plot, bench 7)
  *
  * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung is one sentence
- * and never the answer. Nothing blocks a correct commit. A miss costs one point of Integrity and three knock the table back, with every
- * reading and hint still kept. The foe is the Crucible itself, in the corner pad of each table (`table/layout.js` `FOE_PAD`): it only
- * observes, and a boss phase never declares a field stage (the walk is suspended while the Crucible stands).
+ * and never the answer; rung 1 names the control. A refusal names what the table shows, never the rule. Nothing blocks a correct commit.
+ * A miss costs one point of Integrity and three knock the table back, with every reading and hint still kept. The foe is the Crucible
+ * itself, in the corner pad of each table (`table/layout.js` `FOE_PAD`): it only observes, and a boss phase never declares a field stage
+ * (the walk is suspended while the Crucible stands). No prediction is asked here: a boss tests what the benches taught.
  *
  * Clearing it files the Case File clue `clue_ember_siphon`. The boss pays no XP: the main story never does.
  */
@@ -23,7 +24,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, eqn, bondChip, cupFixture, plotFixture, plaqueFixture, markerFixture, selectorFixture, ledgerFixture, stackFixture, markerRead, dialAt,
-  plotRead, whereIs, SPECIFIC_HEAT_WATER, FORMATION_TABLE, bondEnthalpySum, heatTransfer, crossingTemperature
+  plotRead, ledgerRead, stackRead, cupRead, whereIs, fixed, gibbsFreeEnergy, SPECIFIC_HEAT_WATER, FORMATION_TABLE, bondEnthalpySum, heatTransfer, crossingTemperature
 } from '../../table/kits/heat.js';
 import { session } from '../../../session.js';
 
@@ -54,13 +55,20 @@ const DS_STEAM = 2 * FORMATION_TABLE['H2(g)'].S0 + FORMATION_TABLE['O2(g)'].S0 -
 
 const STACK_TRAY = { id: 'stack', label: 'The stack', at: { x: 76, y: 25 }, size: { w: 52, h: 26 }, cell: 50, cellH: 13 };
 
-/** The reward card of each stage: the idea just worked out, named. */
+/** The reward card of each stage: the idea just worked out, named. No new word is introduced here. */
 const STAGE_REWARDS = [
   { reward: { log: 'The jacket\'s warming gave the heat.', title: 'Jacket Vented', body: 'The heat a bath absorbs is its mass times its specific heat capacity times its temperature rise. The Crucible\'s surplus went into the water, and the jacket now reads true.' } },
-  { reward: { log: 'The product bonds paid back more than they cost.', title: 'Coil Cooled', body: 'Forming six N–H bonds gives back slightly more than breaking N≡N and three H–H bonds costs, so ammonia\'s synthesis releases heat. The coil\'s own energy has gone out of it.' } },
-  { reward: { log: 'The slag came apart in two steps.', title: 'Slag Cracked', body: 'Turning the second card round makes the carbon oxides cancel and leaves iron oxide splitting into iron and oxygen. Hess\'s law gave the climb without anyone running the reaction.' } },
-  { reward: { log: 'Two moles of gas became three.', title: 'Vent Sealed', body: 'Splitting steam turns two moles of gas into three, so the products hold more entropy than the reactants. ΔS° is positive, and the Crucible\'s vent loses its pressure.' } },
-  { reward: { log: 'The seal gave way at its crossing point.', title: 'Seal Broken', body: 'Above ΔH divided by ΔS, the TΔS term outweighs the heat the limestone costs and ΔG turns negative. The Crucible\'s core stands open.', last: true } }
+  {
+    reward: {
+      log: 'The product bonds paid back more than they cost.',
+      title: 'Coil Cooled',
+      body: 'Forming six N–H bonds gives back slightly more than breaking N≡N and three H–H bonds costs, so making ammonia gives out heat. The coil\'s own energy has gone out of it.',
+      model: { type: 'molecules', items: ['nitrogen', 'hydrogen', 'ammonia'], caption: 'Nitrogen and hydrogen, whose bonds come apart, beside ammonia, whose bonds are built.' }
+    }
+  },
+  { reward: { log: 'The slag came apart in two steps.', title: 'Slag Cracked', body: 'Turning the second card round makes the carbon oxides cancel and leaves iron oxide splitting into iron and oxygen. Hess\'s law gave the heat without anyone running the reaction.' } },
+  { reward: { log: 'Two moles of gas became three.', title: 'Vent Sealed', body: 'Splitting steam turns two moles of gas into three, so the products have more ways to arrange than the reactants. The entropy change is positive, and the Crucible\'s vent loses its pressure.' } },
+  { reward: { log: 'The seal gave way at its crossing point.', title: 'Seal Broken', body: 'Above ΔH divided by ΔS, the spreading outweighs the heat the limestone costs and the free energy turns negative. The Crucible\'s core stands open.', last: true } }
 ];
 
 /* ------------------------------------------------------------------
@@ -95,16 +103,16 @@ export const STAGES = [
         intent: 'The Crucible dumps its surplus heat into the water jacket around it.'
       },
       hints: [
-        'Read the jacket\'s mass and its temperature rise from the cup.',
-        'Compare the mass, the specific heat capacity and the rise, each of which the heat depends on.',
+        'Use the cup, the plate of facts and the marker.',
+        'Compare the jacket\'s weight and its rise with the numbers in the formula.',
         'Multiply the three together, then turn the joules into kilojoules.'
       ],
       check(state) {
-        const v = markerRead(state.table, 'kj');
+        const t = state.table;
+        const v = markerRead(t, 'kj');
         if (v === 10) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
         if (Math.abs(v - JACKET_KJ) < 1.1) return { ok: true };
-        if (v > 85) return { ok: false, msg: 'The sum comes out in joules, and a kilojoule is a thousand of them.' };
-        return { ok: false, msg: 'Check that the sum uses the jacket\'s whole mass and the whole of its temperature rise, each once.' };
+        return { ok: false, msg: `The marker reads ${v} kJ, and the jacket rose ${fixed(cupRead(t, 'jacket').dT, 1)} °C.` };
       },
       ...STAGE_REWARDS[0]
     };
@@ -112,18 +120,16 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const cards = ['−93', '+93', '−2346', '+4599'];
-    void cards;
     return {
       id: 'p2-bonds',
       title: 'Phase 2 · The Coil',
-      prompt: 'Sort the bonds into the ledger, then set the estimated ΔH for N₂ + 3 H₂ → 2 NH₃, in kJ/mol.',
+      prompt: 'Read the ledger and set the estimated ΔH for N₂ + 3 H₂ → 2 NH₃, in kJ/mol.',
       widget,
       table: heatTable({
         pieces: [
-          bondChip('nn', 'N≡N', { x: 17, y: 16 }, { note: 'nitrogen' }),
-          bondChip('hh', 'H-H', { x: 17, y: 30 }, { count: 3, note: 'hydrogen' }),
-          bondChip('nh', 'N-H', { x: 17, y: 44 }, { count: 6, note: 'ammonia' })
+          { ...bondChip('nn', 'N≡N', { x: 17, y: 16 }, { note: 'nitrogen' }), zone: 'tray:broken' },
+          { ...bondChip('hh', 'H-H', { x: 17, y: 30 }, { count: 3, note: 'hydrogen' }), zone: 'tray:broken' },
+          { ...bondChip('nh', 'N-H', { x: 17, y: 44 }, { count: 6, note: 'ammonia' }), zone: 'tray:formed' }
         ],
         fixtures: [
           ledgerFixture('ledger', { x: 102, y: 22 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 46, title: 'N₂ + 3 H₂ → 2 NH₃' }),
@@ -143,17 +149,17 @@ export const STAGES = [
         intent: 'Nitrogen and hydrogen charge the Crucible\'s synthesis coil.'
       },
       hints: [
-        'Sort the chips, then read the total for the bonds broken and the total for the bonds formed.',
-        'Compare the cost of reaching free atoms with the payoff of building the product.',
+        'Use the ledger and the answer dial.',
+        'Compare the Broken total with the Formed total.',
         'Take the energy to break the bonds and subtract the energy released by forming the new ones.'
       ],
       check(state) {
-        const v = dialAt(state.table, 'answer', 'value');
+        const t = state.table;
+        const v = dialAt(t, 'answer', 'value');
         if (v === 1) return { ok: true };
         if (v === 4) return { ok: false, notYet: true, msg: 'Set the estimate you worked out.' };
-        if (v === 2) return { ok: false, msg: 'The sign is backward: compare which of the two totals is the larger.' };
-        if (v === 3) return { ok: false, msg: 'That is only the energy of the bonds formed; the cost of the bonds broken still has to be counted.' };
-        return { ok: false, msg: 'The bonds formed give energy back, so their total is taken off the broken total, not added to it.' };
+        const r = ledgerRead(t, 'ledger');
+        return { ok: false, msg: `The ledger reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
       },
       ...STAGE_REWARDS[1]
     };
@@ -185,17 +191,19 @@ export const STAGES = [
         intent: 'Molten iron slag seals the plates of the Crucible\'s lower exchanger.'
       },
       hints: [
-        'Drag both cards into the stack and compare its equation with the target.',
-        'Pick up a card and press Flip, and watch what happens to its ΔH.',
+        'Use the two cards, the stack and the answer dial, and pick a card up for "Flip".',
+        'Compare the equation the stack prints with the target.',
         'Turn the card that has the wrong side, so that everything not in the target cancels, then add the cards.'
       ],
       check(state) {
-        const v = dialAt(state.table, 'answer', 'value');
-        if (v === 1) return { ok: true };
-        if (v === 4) return { ok: false, notYet: true, msg: 'Stack the cards, turning one round if you need to, and set the net.' };
-        if (v === 2) return { ok: false, msg: 'Added as printed, the cards leave carbon dioxide and carbon monoxide uncancelled.' };
-        if (v === 3) return { ok: false, msg: 'The sign is backward: one card is turned round, and the other keeps its own.' };
-        return { ok: false, msg: 'That is only the turned card; the first card is still to be added.' };
+        const t = state.table;
+        const r = stackRead(t, 'wanted');
+        if (r.empty) return { ok: false, notYet: true, msg: 'Stack the cards first.' };
+        const v = dialAt(t, 'answer', 'value');
+        if (v === 1 && r.matches) return { ok: true };
+        if (v === 4) return { ok: false, notYet: true, msg: 'Set the net you worked out.' };
+        if (!r.matches) return { ok: false, msg: 'The stack adds up to a different reaction from the one wanted.' };
+        return { ok: false, msg: 'The net you set is not the total for the cards in the stack.' };
       },
       ...STAGE_REWARDS[2]
     };
@@ -207,12 +215,12 @@ export const STAGES = [
     return {
       id: 'p4-entropy',
       title: 'Phase 4 · The Vent',
-      prompt: 'Use the entropy table to find ΔS° for 2 H₂O(g) → 2 H₂(g) + O₂(g), and set it on the dial.',
+      prompt: 'Use the entropy table to set the entropy change for 2 H₂O(g) → 2 H₂(g) + O₂(g) on the dial.',
       widget,
       table: heatTable({
         fixtures: [
-          plaqueFixture('s0', 'S° at 298 K, J/(mol·K)', { x: 46, y: 34 }, [`H₂O(g)    ${s0('H2O(g)')}`, `H₂(g)    ${s0('H2(g)')}`, `O₂(g)    ${s0('O2(g)')}`], { w: 70 }),
-          selectorFixture('answer', 'ΔS° (J/(mol·K))', { x: 112, y: 40 }, { options: ['+89.0', '−89.0', '+277.8', '+466.6'], start: 4, w: 46 })
+          plaqueFixture('s0', 'Entropy at 298 K, J/(mol·K)', { x: 46, y: 34 }, [`H₂O(g)    ${s0('H2O(g)')}`, `H₂(g)    ${s0('H2(g)')}`, `O₂(g)    ${s0('O2(g)')}`], { w: 70 }),
+          selectorFixture('answer', 'ΔS (J/(mol·K))', { x: 112, y: 40 }, { options: ['+89.0', '−89.0', '+277.8', '+466.6'], start: 4, w: 46 })
         ]
       }),
       foes: CRUCIBLE_FOE,
@@ -222,7 +230,7 @@ export const STAGES = [
         intent: 'The Crucible\'s top vent splits steam into two different gases.'
       },
       hints: [
-        'Read the S° of each substance from the table, and count the moles of each in the equation.',
+        'Use the table and the answer dial.',
         'Compare the total for the products with the total for the reactants, counting every mole.',
         'Add the entropies of the products, then take off those of the reactants, each multiplied by its moles.'
       ],
@@ -230,9 +238,7 @@ export const STAGES = [
         const v = dialAt(state.table, 'answer', 'value');
         if (v === 1) return { ok: true };
         if (v === 4) return { ok: false, notYet: true, msg: 'Set the value you worked out.' };
-        if (v === 2) return { ok: false, msg: 'The sign is backward: two moles of gas become three, and the table shows which total is larger.' };
-        if (v === 3) return { ok: false, msg: 'The equation has two moles of steam, and each mole carries its own entropy.' };
-        return { ok: false, msg: 'That is only the products\' total; the reactants\' entropy still has to be taken off.' };
+        return { ok: false, msg: 'The dial does not match the table.' };
       },
       ...STAGE_REWARDS[3]
     };
@@ -243,13 +249,13 @@ export const STAGES = [
     return {
       id: 'p5-gibbs',
       title: 'Phase 5 · The Seal',
-      prompt: 'Set the marker to the temperature in kelvin at which ΔG reaches zero for the limestone seal.',
+      prompt: 'Set the marker to the temperature in kelvin at which the free energy reaches zero for the limestone seal.',
       widget,
       table: heatTable({
         fixtures: [
-          plotFixture('plot', { x: 38, y: 30 }, { dH: 176, dS: 160, Ts: [600, 800, 900, 1000, 1100, 1200, 1400], tempStart: 3, hideCrossing: true, hideTug: true, title: 'Limestone seal' }),
+          plotFixture('plot', { x: 38, y: 30 }, { dH: 176, dS: 160, Ts: [600, 800, 900, 1000, 1100, 1200, 1400], tempStart: 3, hideCrossing: true, hideTug: true, words: true, title: 'Limestone seal' }),
           plaqueFixture('ref', 'The reaction', { x: 98, y: 33 }, ['CaCO₃(s) → CaO(s) + CO₂(g)', 'ΔG = ΔH − T × ΔS'], { w: 52 }),
-          markerFixture('T', 'ΔG is zero at', { x: 98, y: 52 }, { min: 700, max: 1500, step: 100, start: 700, unit: 'K', w: 46 })
+          markerFixture('T', 'Free energy is zero at', { x: 98, y: 52 }, { min: 700, max: 1500, step: 100, start: 700, unit: 'K', w: 46 })
         ]
       }),
       foes: CRUCIBLE_FOE,
@@ -259,15 +265,16 @@ export const STAGES = [
         intent: 'The Crucible drives its core up toward the heat at which its limestone seal gives way.'
       },
       hints: [
-        'Read the ΔH, the ΔS and their units from the plot, and turn the Temperature dial.',
-        'Compare the units of ΔH and ΔS before you put them in one equation.',
-        'Set ΔG to zero, put both in the same unit, and solve for the temperature.'
+        'Use the "Temperature" dial and the marker.',
+        'Compare the net the plot prints at each setting, and look for where it changes sign.',
+        'The seal gives way where the net is zero, so set the marker at the temperature between the last positive reading and the first negative one.'
       ],
       check(state) {
-        const v = markerRead(state.table, 'T');
+        const t = state.table;
+        const v = markerRead(t, 'T');
         if (v === 700) return { ok: false, notYet: true, msg: 'Set the marker to the temperature.' };
         if (v === T_SEAL) return { ok: true };
-        return { ok: false, msg: 'Check that ΔH and ΔS are in the same energy unit before you divide one by the other.' };
+        return { ok: false, msg: `At ${v} K the net balance reads ${fixed(gibbsFreeEnergy(176, 160, v), 1, true)} kJ.` };
       },
       ...STAGE_REWARDS[4]
     };
@@ -277,7 +284,7 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Set the marker; the cup prints no heat.'],
-  2: ['Drag each chip into a tray, then turn the dial.'],
+  2: ['Turn the dial to the value you worked out.'],
   3: ['Drag cards into the stack; Flip turns one round.'],
   4: ['Turn the dial to the value you worked out.'],
   5: ['Turn the Temperature dial; set the marker.']
@@ -378,7 +385,7 @@ const stack = (...ids) => ids.map(id => put(id, 'tray:stack'));
 
 export const SOLUTIONS = [
   [dial('kj', 'value', 42)],
-  [...sort({ nn: 'broken', hh: 'broken', nh: 'formed' }), dial('answer', 'value', 1)],
+  [dial('answer', 'value', 1)],
   [...stack('c1', 'c2'), { flip: 'c2' }, dial('answer', 'value', 1)],
   [dial('answer', 'value', 1)],
   [dial('plot', 'temp', 5), dial('T', 'value', 1100)]
@@ -386,7 +393,7 @@ export const SOLUTIONS = [
 
 export const MISSES = [
   [dial('kj', 'value', 22)],
-  [...sort({ nn: 'broken', hh: 'broken', nh: 'formed' }), dial('answer', 'value', 2)],
+  [dial('answer', 'value', 2)],
   [...stack('c1', 'c2'), dial('answer', 'value', 2)],
   [dial('answer', 'value', 2)],
   [dial('T', 'value', 700 + 100)]

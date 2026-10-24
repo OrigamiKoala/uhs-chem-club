@@ -11,6 +11,10 @@
 
 /** Words a refusal may not carry on a stage: the rule or the answer the stage is asking the player to find. Per quest, per stage (1-based). */
 const LEAKS = {
+  'boss-crucible': {
+    2: [/\bsubtract|minus/i, /\bpays? back|gives? back/i],
+    5: [/\b1100\b/, /zero/i]
+  },
   'q7-gibbs': {
     2: [/\b250\b/, /lowest/i, /spreading|spread/i, /sign/i],
     3: [/cross/i, /flips?/i],
@@ -330,6 +334,31 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(HK.markerRead(done(e7, 3), 'T'), T_ICE, 2, `${q} stage 4 (the marker)`);
       holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 3), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 4: the dial has no setting at the melting point`);
     }
+  }
+
+  /* ---- boss-crucible ---- */
+  const eb = mods['boss-crucible'];
+  if (eb) {
+    const q = 'unit05/boss-crucible';
+    const num = label => Number(String(label).replace('−', '-').replace('+', '').replace(/ kJ.*$/, ''));
+    const picked = (t, id = 'answer') => num(t.fixtures[id].props.options[Math.round(t.fixtures[id].dials.value.value) - 1]);
+    near(HK.markerRead(done(eb, 0), 'kj'), TD.heatTransfer(500, TD.SPECIFIC_HEAT_WATER, 20) / 1000, 1.1, `${q} phase 1 (the jacket)`);
+    near(HK.cupRead(start(eb, 0), 'jacket').dT, 20, 0.01, `${q} phase 1: the jacket does not rise 20 degrees`);
+    near(HK.ledgerRead(start(eb, 1), 'ledger').net, -93, 1e-9, `${q} phase 2 (ammonia's ledger, as laid)`);
+    near(picked(done(eb, 1)), -93, 1e-9, `${q} phase 2 (the estimate set)`);
+    {
+      const t = done(eb, 2);
+      holds(HK.stackRead(t, 'wanted').matches, `${q} phase 3: the stack does not add up to the splitting`);
+      near(HK.stackRead(t, 'wanted').dH, 824.2, 0.05, `${q} phase 3 (the slag)`);
+      near(picked(t), 824.2, 0.05, `${q} phase 3 (the number set)`);
+    }
+    near(picked(done(eb, 3)), 2 * TD.FORMATION_TABLE['H2(g)'].S0 + TD.FORMATION_TABLE['O2(g)'].S0 - 2 * TD.FORMATION_TABLE['H2O(g)'].S0, 0.05, `${q} phase 4 (the entropy change of splitting steam)`);
+    near(HK.markerRead(done(eb, 4), 'T'), TD.crossingTemperature(176, 160), 1e-9, `${q} phase 5 (the seal)`);
+    for (let i = 0; i < 5; i++) same((eb.STAGES[i].foes || []).length, 1, `${q} phase ${i + 1} (its foes)`);
+    // The five phases are five different tools, one decision each, and none asks for a prediction.
+    const kinds = eb.STAGES.map((st, i) => Object.values(start(eb, i).fixtures).map(f => f.kind).filter(k => !['plaque', 'marker', 'selector'].includes(k)).sort().join('+'));
+    same(new Set(kinds).size, 5, `${q} (five distinct tools: ${kinds.join(' | ')})`);
+    holds(eb.STAGES.every(st => !st.predict), `${q}: a boss phase asks for a prediction`);
   }
 
   void bad;
