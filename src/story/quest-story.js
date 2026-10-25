@@ -1,67 +1,82 @@
 /**
- * quest-story.js — the one story animation a quest plays after it, and only that one.
+ * quest-story.js — the one story animation a quest ends on, and only that one. It is Vess's debrief.
  *
- * PURE DATA. A quest's animation is a short scene (drawn by `ui/story-scenes.js`, from the same numbers the
- * bench measured) with two to four captions that tie what the player just did to the grand storyline: the
- * Fifth, the rumour of alchemy, the Case File. It plays once, after the debrief of a quest the player has just
- * finished, and never again; a replay costs and earns nothing (`session` flag `storyAnim:<key>`). It is never
- * played before or between stages, and a boss's animation is that boss's whole story budget beyond its nameplate.
+ * PURE DATA. A quest's animation is a scene (drawn by `ui/story-scenes.js`, from the same numbers the bench measured)
+ * and the few lines Vess says over it. It replaces the debrief card: each `beats[i].say` is the part of the old debrief
+ * that reviews an idea the quest worked out, said while the scene shows that idea, and the last line, `filed`, is the one
+ * thing the quest adds to the case against the Fifth (the rumour of alchemy, the Case File), so the animation always
+ * reviews the lesson AND moves the investigation on. A beat's `to` is where in the scene (`t`, 0..1) its picture ends; the
+ * filed line runs from the last `to` to 1. It plays whenever the quest's last stage is cleared, is skippable, and never plays
+ * before or between stages. A quest with no animation here still ends on its debrief card (`DEBRIEF` in the quest file).
  *
  * Rules, held by `verify:story`:
  *   - at most ONE animation per quest, keyed `<world>/<quest>`;
- *   - 2 to 4 captions, each at most 2 sentences and 24 words, no emoji, no "!"; and one `filed` line ("Filed: ...", one sentence, 24 words) that
- *     says what the quest has just added to the case against the Fifth, so every animation moves the investigation forward;
+ *   - 3 to 5 beats, each at most 2 sentences and 36 words, no emoji, no "!"; `to` rises from 0 to under 1;
+ *   - one `filed` line ("Filed: ...", one sentence, 24 words) that says what the quest has just added to the case;
  *   - the scene names a painter that exists;
- *   - it uses only words the quest itself has earned by its last reward card: a caption is read at the end of the quest.
+ *   - it uses only words the quest itself has earned by its last reward card, and none that a later bench of the world
+ *     introduces: Vess reviews what the player has just learned, in the words they now have.
  */
 
 export const QUEST_STORY = {
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'unit01/q1-grain': {
     scene: 'grain-resolve',
-    captions: [
-      'Under the lens, the grey powder is only carbon and sodium, lying loose beside each other.',
-      'Joined atoms split under the cutter, but a single atom never does.'
+    beats: [
+      { to: 0.22, say: 'Zoom in far enough and the grey powder stops being smooth. It is atoms of carbon and sodium, lying loose beside each other.' },
+      { to: 0.46, say: 'A substance made of one kind of atom is an element. Different atoms sitting together without joining make a mixture, and that is all this powder is.' },
+      { to: 0.70, say: 'Atoms that are joined make a molecule. The cutter splits a molecule into its atoms, but a single atom never splits.' },
+      { to: 0.90, say: 'Join atoms of different elements and you have a compound, a new substance. Loose atoms never become one, so anything new would have to be inside the atoms.' }
     ],
     filed: 'Filed: the powder is ordinary and nothing in it is new.'
   },
   'unit01/q2-core': {
     scene: 'beam-foil',
-    captions: [
-      'Turning salt into gold would mean changing the protons inside every atom of it.',
-      'Nothing on these benches can reach the tiny middle of an atom, so none of that can be done here.'
+    beats: [
+      { to: 0.24, say: 'Fire a beam at a thin foil and nearly every shot goes straight through. An atom is mostly empty space, with a tiny dense center, the nucleus.' },
+      { to: 0.50, say: 'The nucleus holds protons, each +1, and neutrons, which carry no charge. The electrons, each -1, sit far outside it in shells.' },
+      { to: 0.74, say: 'The protons decide which element an atom is. The electrons in the outer shell, the valence electrons, decide how it reacts.' },
+      { to: 0.90, say: 'To turn salt into gold you would have to change the protons inside the nucleus. Nothing on these benches can reach that deep.' }
     ],
     filed: 'Filed: if gold turns up in a salt pan, someone brought it.'
   },
   'unit01/q3-catalogue': {
     scene: 'chart-fill',
-    captions: [
-      'Sodium gives an electron away and chlorine takes one on, which is why salt is made of just those two.',
-      'Vess checks the raiders\' manifest against the chart, one element at a time.'
+    beats: [
+      { to: 0.24, say: 'Put the atoms in order of their protons, the atomic number, and the same pattern keeps repeating. Laid out in rows, that is the periodic table.' },
+      { to: 0.48, say: 'A row, a period, ends when a shell fills up. A column, a group, shares one outer-shell count, so its atoms behave alike.' },
+      { to: 0.74, say: 'Metals on the left hand electrons over, and nonmetals on the right take them on. The noble gases at the edge want nothing.' },
+      { to: 0.90, say: 'That is why salt is sodium and chlorine: one gives and one takes. With the chart I can check any manifest, one element at a time.' }
     ],
     filed: 'Filed: a salt flat holds sodium, chlorine and little else, so anything more was brought in.'
   },
   'unit01/q4-ledger': {
     scene: 'three-numbers',
-    captions: [
-      'Protons, neutrons and charge pin down any atom exactly, so a label can be checked against its counts.',
-      'Vess runs the raiders\' sealed canisters through the same ledger, one at a time.'
+    beats: [
+      { to: 0.24, say: 'Three numbers describe any atom: its protons, its neutrons and its charge. Protons plus neutrons is the mass number.' },
+      { to: 0.48, say: 'Change the protons and it is a different element. Change only the neutrons and it is an isotope, which behaves exactly the same.' },
+      { to: 0.74, say: 'Take electrons off and the atom is a cation; add some and it is an anion. One magnesium and two chlorines cancel to zero.' },
+      { to: 0.90, say: 'A label can claim anything, but the counts cannot be argued with. I will run the raiders\' sealed canisters through the same ledger.' }
     ],
     filed: 'Filed: no raider label can disguise an atom from the ledger.'
   },
   'unit01/q5-assay': {
     scene: 'balance-bins',
-    captions: [
-      'Natural chlorine always balances at 35.5, however much of it is weighed.',
-      'Of the three samples sold as natural, only one did.'
+    beats: [
+      { to: 0.24, say: 'A real sample of an element is a mixture of isotopes, in proportions that are fixed. Here, three chlorine atoms in four are chlorine-35.' },
+      { to: 0.50, say: 'The listed mass is an average over that mixture, weighted by how common each isotope is, so it leans toward the common one.' },
+      { to: 0.74, say: 'Any single atom has a whole-number mass, but an average rarely does. The decimal tells you how the mix sits: 35.5 is nearer 35 than 37.' },
+      { to: 0.90, say: 'Natural chlorine balances at 35.5, however much of it is weighed. Of the three samples sold as natural, only one did.' }
     ],
     filed: 'Filed: two of the raiders\' samples had been tampered with.'
   },
   'unit01/q6-weigh': {
     scene: 'scale-count',
-    captions: [
-      'Weighing counted the sealed crate without opening it, so nothing in the stores can hide inside one.',
-      'Vess starts on the sealed drums on the dock.'
+    beats: [
+      { to: 0.24, say: 'Nobody can count atoms, so we weigh them. Atoms of one kind all weigh the same, so a pan that balances the crate holds the same number.' },
+      { to: 0.50, say: 'The listed mass of a substance, in grams, is one mole of it. One mole always holds 6.02 × 10²³ atoms or molecules, whatever it is made of.' },
+      { to: 0.76, say: 'The molar mass is the bridge: divide grams by it to get moles, multiply moles by it to get grams. A formula is a count, and a balance reads a mass.' },
+      { to: 0.90, say: 'So a sealed crate can be counted without opening it, and nothing in the stores can hide inside one. The sealed drums on the dock are next.' }
     ],
     filed: 'Filed: every sealed drum in the stores can now be counted without opening it.'
   },
@@ -117,9 +132,11 @@ export const QUEST_STORY = {
 
   'unit01/boss-hopper': {
     scene: 'hopper-fall',
-    captions: [
-      'The Hopper settles into cold salt, and in its chute lies an ingot nobody mined.',
-      'It is bismuth, and a salt flat does not make bismuth.'
+    beats: [
+      { to: 0.26, say: 'Each phase of that fight was a bench you had already worked: matter, the atom, the chart, isotopes and the mole. That was enough to read the machine.' },
+      { to: 0.50, say: 'The Hopper has collapsed into cold slag. Its chute holds a lump that nobody mined.' },
+      { to: 0.74, say: 'It is bismuth. No salt flat makes bismuth on its own, and nothing we weighed or counted could have made it here.' },
+      { to: 0.90, say: 'The ingot goes into the Case File. The next world asks why the electrons in every atom you have weighed sit only where they do.' }
     ],
     filed: 'Filed: someone is putting heavy metal into Tallow\'s salt, and no bench here can make it.'
   },
@@ -297,8 +314,13 @@ export const QUEST_STORY = {
   }
 };
 
-/** The story animation a quest plays, or null. */
+/** The story animation a quest ends on, or null. */
 export const storyFor = key => QUEST_STORY[key] || null;
 
-/** The session flag that records an animation as played. */
+/** The session flag that records an animation as seen. It gates nothing: a quest ends on it every time. */
 export const storyFlag = key => `storyAnim:${key}`;
+
+/** The lines Vess says over a quest's scene, in order, each with the scene time its picture ends on: the beats, then the filed line. */
+export function storyLines(story) {
+  return [...story.beats.map(b => ({ say: b.say, to: b.to })), { say: story.filed, to: 1, filed: true }];
+}

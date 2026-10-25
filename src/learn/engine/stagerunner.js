@@ -184,13 +184,16 @@ export function createRunner(container, ctx, cfg) {
 
   function next() {
     if (index >= STAGES.length - 1) {
-      // The quest's one story animation plays after its debrief, the first time only (`story/quest-story.js`), then the player leaves.
+      // The quest ends on its story animation, which is Vess's debrief said over a scene (`story/quest-story.js`); a quest that
+      // has none yet ends on the debrief card. Either way the player then leaves.
       const leave = () => ctx.exit();
-      frame.showDebrief(cfg.DEBRIEF, () => {
-        const key = ctx.world && ctx.quest ? `${ctx.world.id}/${ctx.quest.id}` : null;
-        if (!key || typeof document === 'undefined') { leave(); return; }
-        import('../../ui/story-anim.js').then(m => (m.storyPending(key) ? m.playQuestStory(key) : null)).catch(() => {}).then(leave);
-      });
+      const card = () => frame.showDebrief(cfg.DEBRIEF, leave);
+      const key = ctx.world && ctx.quest ? `${ctx.world.id}/${ctx.quest.id}` : null;
+      if (!key || typeof document === 'undefined') { card(); return; }
+      import('../../ui/story-anim.js')
+        .then(m => (m.hasStory(key) ? m.playQuestStory(key).then(() => true) : false))
+        .catch(() => false)
+        .then(played => (played ? leave() : card()));
       return;
     }
     loadStage(index + 1);

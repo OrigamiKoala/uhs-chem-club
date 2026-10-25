@@ -122,8 +122,13 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   **The Tour** (`Tour` key, and stage-one briefings) is built from the table, not the viewer: `table/tour.js` `tourSteps(table, {intro})`
   gives one step per fixture and per kind of piece on the stage, `frame.setTourSteps` holds them, and `frame.showBriefing` runs them (bare:
   unmet ones only, flags `tour_<kit>_<what>`; `force`: all). It works at `3D Off` too.
-  **Story animations:** `src/story/quest-story.js` (data), `src/ui/story-scenes.js` (2D painters, pure functions of `t`) and
-  `src/ui/story-anim.js` (the player) give each Tallow quest one animation after its debrief, once, hooked in `stagerunner.js` `next()`. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
+  **Story animations (Vess's debrief, folded in):** `src/story/quest-story.js` (data: a scene, 3 to 5 `beats` of `{to, say}`, and a `filed` line),
+  `src/ui/story-scenes.js` (2D painters, pure functions of `t` and an ambient `clock`, built on `src/ui/story-kit.js`: shaded balls, hard shadows, tags,
+  leaders, brackets, a beam balance) and `src/ui/story-anim.js` (the player) end each Tallow quest, hooked in `stagerunner.js` `next()` in place of
+  `frame.showDebrief`; a quest with no entry still ends on its `DEBRIEF` card. A beat's `to` is the scene time its picture ends on, so each line of Vess is
+  said over the phase of the scene that shows it; the player moves `t` from one `to` to the next, prints the line through `createTransmissionElement`, and
+  steps on Next/Back/Enter/Space/arrows (a printing line finishes first), Skip/Esc leaves. `kit.setLabelScale` grows printed labels on a small canvas (a
+  phone); `verify:story` paints every scene at every beat. Painters are authored in 1280 x 720 units. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
   recursion otherwise, leaving the stage UI up and the router dead); `disposeLearnQuest` and `LearnFrame.dispose` guard every step.
   The star map draws planets, names and rings only (no acts, no light-years, scattered positions); Tallow's crates are chipped, rusted
   and rounded (`createSalvageCrateTexture`, `boxUVs`).

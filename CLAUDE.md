@@ -128,11 +128,15 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   evidence the bench itself measured, and a `Filed:` line ending the quest's animation that the next bench picks up.
   Only earned words, no jargon, no atmosphere, no invented numbers or events, nothing that restates the lesson.
   `verify:story` fails a caption using a word a later bench introduces.
-- **A quest ends on one story animation, never more** (`src/story/quest-story.js`, painters in
-  `src/ui/story-scenes.js`, player `src/ui/story-anim.js`, hooked in `stagerunner.js` after the debrief). 2 to 4
-  captions of at most 2 sentences and 24 words, tying what was measured to the Fifth / the alchemy rumour / the
-  Case File; first completion only (synced flag `storyAnim:<world>/<quest>`); skippable; never before or between
-  stages; reduced motion and `3D Off` show the last frame. `verify:story` holds it. Built for Tallow (7), Lanternfall (10), Ligar (6), Bellows (7) and Ember Reach (4).
+- **A quest ends on one story animation, which is Vess's debrief** (`src/story/quest-story.js`, painters in
+  `src/ui/story-scenes*.js` over the kit `src/ui/story-kit.js`, player `src/ui/story-anim.js`, hooked in `stagerunner.js`
+  `next()` in place of the debrief card). 3 to 5 beats, each a line of Vess (at most 2 sentences, 36 words) that
+  reviews an idea the quest worked out, said over the part of the scene that shows it (a beat's `to` is where its picture
+  ends), then one `Filed:` line that moves the case against the Fifth on. The player steps at their own pace (Next, Back,
+  Enter/Space/arrows; Skip or Esc leaves, losing nothing); it plays on every completion, never before or between stages;
+  reduced motion and `3D Off` show each beat's last frame. Words: only what the quest has earned, none a later bench
+  introduces. A quest with no animation yet still ends on its `DEBRIEF` card. `verify:story` holds it. Built for Tallow (7),
+  Lanternfall (10), Ligar (6), Bellows (7) and Ember Reach (4).
 - **The comms panel is the only screen bolted to the bench** (`PANEL_LAYOUT`: comms only, fixed position; never animate a panel height).
 - **`mountConsole` is the last statement in the Charge Gardens stage render** (it moves the deck into
   CSS3D; later `container.querySelector` calls return null). Use `q()`/`qa()` in `quest.js`.

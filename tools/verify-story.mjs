@@ -9,6 +9,7 @@
  *   - Boss debrief clue wiring
  *   - Quest 1 contract debrief clue wiring
  *   - Max 2 sentences per transmission rule across story spine
+ *   - Quest story animations (Vess's debrief over a scene): beats, filed line, vocabulary, every scene paints
  *
  * Run with `npm run verify:story`.
  */
@@ -219,35 +220,50 @@ ok('spine beat prerequisite unlock logic validated');
   ok(`${ids.length} lore ids all resolve, in story order, with nothing authored outside the story files`);
 }
 
-// 9. Quest story animations: at most one per quest, after it; short captions; a scene that exists and paints.
+// 9. Quest story animations: Vess's debrief said over one scene. At most one per quest; 3 to 5 beats that review what the quest
+//    taught; one filed line that moves the case on; a scene that exists and paints at every beat.
 {
-  const { QUEST_STORY } = await import('../src/story/quest-story.js');
+  const { QUEST_STORY, storyLines } = await import('../src/story/quest-story.js');
   const { SCENES, paintScene } = await import('../src/ui/story-scenes.js');
   const quests = new Map();
   for (const w of WORLDS) for (const q of w.quests) quests.set(`${w.id}/${q.id}`, q);
+  // A 2D context that records nothing and answers every call, so a painter can be run in Node. Gradients answer too.
   const stub = () => {
     const calls = { n: 0, nan: 0 };
-    const target = new Proxy({}, {
-      get: (_, k) => (k === 'calls' ? calls : (...args) => { calls.n++; if (args.some(a => typeof a === 'number' && !Number.isFinite(a))) calls.nan++; }),
+    const make = () => new Proxy(function () {}, {
+      get: (_, k) => {
+        if (k === 'calls') return calls;
+        if (k === 'measureText') return () => ({ width: 80 });
+        return (...args) => {
+          calls.n++;
+          if (args.some(a => typeof a === 'number' && !Number.isFinite(a))) calls.nan++;
+          return /^create/.test(String(k)) ? make() : undefined;
+        };
+      },
       set: () => true
     });
-    return target;
+    return make();
   };
   let played = 0;
   for (const [key, st] of Object.entries(QUEST_STORY)) {
     const q = quests.get(key);
     if (!q) { fail(`story animation "${key}" names no quest`); continue; }
     if (!SCENES[st.scene]) fail(`story animation "${key}" names scene "${st.scene}", which has no painter`);
-    if (!Array.isArray(st.captions) || st.captions.length < 2 || st.captions.length > 4) fail(`story animation "${key}" needs 2 to 4 captions`);
-    for (const c of st.captions || []) {
-      if (c.trim().split(/\s+/).length > 24) fail(`story animation "${key}" caption is over 24 words: "${c}"`);
-      if (sentenceCount(c) > 2) fail(`story animation "${key}" caption is over 2 sentences: "${c}"`);
-      if (/!/.test(c) || /\p{Extended_Pictographic}/u.test(c)) fail(`story animation "${key}" caption carries "!" or an emoji: "${c}"`);
+    if (!Array.isArray(st.beats) || st.beats.length < 3 || st.beats.length > 5) fail(`story animation "${key}" needs 3 to 5 beats`);
+    let prev = 0;
+    for (const b of st.beats || []) {
+      if (!(b.to > prev && b.to < 1)) fail(`story animation "${key}" beat ends at ${b.to}, which must rise from ${prev} and stay under 1`);
+      prev = b.to;
+      const say = String(b.say || '');
+      if (say.trim().split(/\s+/).length > 36) fail(`story animation "${key}" line is over 36 words: "${say}"`);
+      if (sentenceCount(say) > 2) fail(`story animation "${key}" line is over 2 sentences: "${say}"`);
+      if (/!/.test(say) || /\p{Extended_Pictographic}/u.test(say)) fail(`story animation "${key}" line carries "!" or an emoji: "${say}"`);
     }
-    if (typeof st.filed !== 'string' || !/^Filed: /.test(st.filed) || sentenceCount(st.filed) !== 1 || st.filed.trim().split(/\s+/).length > 24) fail(`story animation "${key}" needs one \"Filed: ...\" sentence of at most 24 words`);
-    for (const t of [0, 0.5, 1]) {
+    if (typeof st.filed !== 'string' || !/^Filed: /.test(st.filed) || sentenceCount(st.filed) !== 1 || st.filed.trim().split(/\s+/).length > 24) fail(`story animation "${key}" needs one "Filed: ..." sentence of at most 24 words`);
+    // Every picture Vess speaks over must paint: the start, each line's last frame, and the end.
+    for (const t of [0, ...storyLines(st).map(l => l.to), 0.5, 1]) {
       const ctx = stub();
-      paintScene(st.scene, ctx, 960, 540, t);
+      try { paintScene(st.scene, ctx, 1280, 720, t, 0); paintScene(st.scene, ctx, 1280, 720, t, 7.3); } catch (err) { fail(`story animation "${key}" throws at t=${t}: ${err.message}`); continue; }
       if (!ctx.calls.n) fail(`story animation "${key}" paints nothing at t=${t}`);
       if (ctx.calls.nan) fail(`story animation "${key}" draws NaN at t=${t}`);
     }
@@ -264,7 +280,7 @@ ok('spine beat prerequisite unlock logic validated');
       for (let k = 0; k < qi; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) own.add(v.term.source);
       const later = [];
       for (let k = qi + 1; k < mods2.length; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) if (!own.has(v.term.source)) later.push(v.term);
-      for (const c of [...st.captions, st.filed]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
+      for (const c of [...st.beats.map(b => b.say), st.filed]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
     });
   }
   // Every built Tallow, Lanternfall and Bellows quest, bench or boss, has its one animation.
@@ -272,7 +288,7 @@ ok('spine beat prerequisite unlock logic validated');
     const built = WORLDS.find(w => w.id === wid);
     for (const q of built.quests) if (!QUEST_STORY[`${wid}/${q.id}`]) fail(`${wid}/${q.id} has no story animation`);
   }
-  if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, short captions, every scene paints at the start, the middle and the end`);
+  if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, 3 to 5 lines of Vess, a filed line, and every scene paints at every line`);
 }
 
 if (failures > 0) {
