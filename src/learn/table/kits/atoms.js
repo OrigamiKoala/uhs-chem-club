@@ -791,7 +791,7 @@ function paintParticle(ctx, p, state, o) {
 function paintSpeck(ctx, p, state, o) {
   const tag = p.props.deflect || '';
   disc(ctx, o.x, o.y, o.r, '#6a645a', o.lit ? AMBER : '#8c8376', o.lit ? 2.5 : 1);
-  if (tag) plateText(ctx, tag, o.x, o.y, { size: Math.max(7, Math.round(o.r * 0.4)), weight: 700, align: 'center', base: 'middle', color: '#16140f' });
+  if (tag) plateText(ctx, tag, o.x, o.y, { size: Math.max(7, Math.round(o.r * 0.36)), weight: 700, align: 'center', base: 'middle', color: '#16140f', maxW: o.r * 1.5 });
 }
 
 /**
@@ -1614,7 +1614,13 @@ function run(state, fixtureId) {
 function piece3d(p, state, c) {
   if (c.skin !== LIGAR_SKIN) return null;
   switch (p.kind) {
-    case 'atom': case 'ion': { const f = c.faceInfo({ physical: true }); return buildAtomBall(c, { face: f.mat, body: f.body, flat: Boolean(p.props.slate) }); }
+    case 'atom': case 'ion': {
+      if (p.props?.slate) {
+        const f = c.faceInfo({ physical: true });
+        return buildAtomBall(c, { face: f.mat, body: f.body, flat: true });
+      }
+      return null;
+    }
     case 'joint': return buildJointSocket(c, { face: c.face() });
     case 'pairs': case 'single': case 'lift': case 'three': case 'fcstamp': case 'mark': case 'gauge': return buildToolCap(c, { face: c.face() });
     default: return null;
@@ -1659,7 +1665,7 @@ export const ATOMS_KIT = {
   kinds: {
     atom: { r: R, split: true },
     proton: { r: R, nojoin: true },
-    speck: { r: R, nojoin: true },
+    speck: { r: R, nojoin: true, ball: true },
     neutron: { r: R, nojoin: true },
     electron: { r: R / 2, nojoin: true },
     ion: { r: R, nojoin: true },

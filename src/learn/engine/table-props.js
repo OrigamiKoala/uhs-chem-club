@@ -261,6 +261,43 @@ export function buildBead(r, faceMat, bodyMat) {
   return g;
 }
 
+/**
+ * A ball: a full sphere resting in a low turned collar on the table, with the painted face
+ * printed on its crown. The collar grounds the ball on the metal bench so it does not roll,
+ * and the crown cap shows what the drawn table paints, undistorted from above.
+ */
+export function buildBall(r, faceMat, bodyMat, { showCap = true } = {}) {
+  const g = new THREE.Group();
+  const collarH = r * 0.14;
+  // A low turned collar for the ball to sit in, so it rests firmly on the tabletop.
+  const collarProf = [
+    [r * 0.35, 0], [r * 0.62, 0], [r * 0.66, collarH * 0.35],
+    [r * 0.62, collarH], [r * 0.44, collarH * 1.08], [r * 0.35, collarH]
+  ];
+  g.add(meshOf(lathe(collarProf, 28), bodyMat, { receive: false }));
+  const cy = collarH * 0.5 + r * 0.96;
+  const sphereGeo = new THREE.SphereGeometry(r, 32, 22);
+  const ball = meshOf(sphereGeo, bodyMat);
+  ball.position.y = cy;
+  g.add(ball);
+  if (faceMat && showCap) {
+    const capR = r * 0.86;
+    const theta = Math.asin(Math.min(0.99, capR / r));
+    const capGeo = new THREE.SphereGeometry(r * 1.004, 32, 10, 0, Math.PI * 2, 0, theta);
+    const pos = capGeo.attributes.position;
+    const uv = capGeo.attributes.uv;
+    for (let i = 0; i < pos.count; i++) {
+      uv.setXY(i, 0.5 + (pos.getX(i) / capR) * 0.47, 0.5 - (pos.getZ(i) / capR) * 0.47);
+    }
+    uv.needsUpdate = true;
+    const cap = meshOf(capGeo, faceMat, { cast: false });
+    cap.position.y = cy;
+    g.add(cap);
+  }
+  g.userData.height = cy + r;
+  return g;
+}
+
 /** A puck: a turned disc with a bevelled edge, the face printed on its top. */
 export function buildPuck(r, thick, faceMat, bodyMat) {
   const g = new THREE.Group();
@@ -398,3 +435,6 @@ export function buildCase(hw, hh, faceMat, bodyMat) {
   g.userData.height = t;
   return g;
 }
+
+export { buildAtom3D, buildAtom3D as buildAtom } from './atom3d.js';
+

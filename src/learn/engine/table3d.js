@@ -49,7 +49,7 @@ import { weatherFace } from './table-surface.js';
 import {
   DISH_H, PUCK_H, CARD_H, makeKitMaterials, jitter, shade, roundedSlab,
   buildTray, buildSlot, buildJar, buildDeck, buildKnob, buildKey,
-  buildBead, buildPuck, buildDish, buildLens, buildCutter, buildCard, buildCase
+  buildBead, buildBall, buildAtom, buildPuck, buildDish, buildLens, buildCutter, buildCard, buildCase
 } from './table-props.js';
 import { makeLabMaterials, buildInstrumentCase, buildSocket, buildTrack } from './lab-props.js';
 import { makeLigarMaterials, LIGAR_SKIN } from './ligar-props.js';
@@ -967,7 +967,33 @@ export class Table3D extends BenchViewer3D {
         this.heldRing(g, r * 1.2);
         return g;
       }
-      const bead = kind && !kind.tool && ['atom', 'proton', 'neutron', 'electron', 'ion'].includes(p.kind);
+      if (p.kind === 'speck' || kind?.ball) {
+        const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
+        const hasTag = Boolean(p.props?.deflect);
+        g.add(buildBall(r, mat, this.mine(new THREE.MeshStandardMaterial({
+          color: this.faceColour(canvas, N),
+          roughness: 0.38,
+          metalness: 0.12
+        })), { showCap: hasTag }));
+        this.heldRing(g, r);
+        return g;
+      }
+      if (p.kind === 'atom' || (p.kind === 'ion' && !p.props?.slate)) {
+        const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
+        const atomMesh = buildAtom(r, p, kit, this.state, {
+          faceMat: mat,
+          bodyColor: this.faceColour(canvas, N),
+          own: m => this.mine(m),
+          THREE
+        });
+        g.add(atomMesh);
+        g.userData.joinY = atomMesh.userData.joinY;
+        g.userData.height = atomMesh.userData.height;
+        g.userData.tick = atomMesh.userData.tick;
+        this.heldRing(g, r);
+        return g;
+      }
+      const bead = kind && !kind.tool && ['proton', 'neutron', 'electron', 'ion'].includes(p.kind);
       if (bead) {
         const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
         g.add(buildBead(r, mat, this.mine(new THREE.MeshStandardMaterial({ color: this.faceColour(canvas, N), roughness: 0.55, metalness: 0.05 }))));
@@ -1209,6 +1235,7 @@ export class Table3D extends BenchViewer3D {
     super.update(delta);
     this.tickPieces(delta);
     for (const rec of this.fixtures?.values() || []) rec.dress?.userData?.tick?.(delta, this.reduced);
+    for (const e of this.entries.values()) e.group?.userData?.tick?.(delta, this.reduced);
   }
 
   /* ---------------- clicks, the field, [E] ---------------- */

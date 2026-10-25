@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Put Them In Order',
-    prompt: 'Lay the six cards on the strip, from fewest protons on the left to most on the right.',
+    prompt: 'Sort the elements from smallest to largest.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'].map((id, i) => card(id, { x: 30 + 18 * i, y: 48 })),
@@ -203,14 +203,14 @@ export const STAGES = [
     reward: {
       log: 'Six cards laid in count order.',
       title: 'Atomic Number',
-      body: 'You laid the cards from fewest protons to most, and the scope files every atom the same way. That count has a name: the atomic number.'
+      body: 'You laid the cards from fewest protons to most (smallest to largest). The number of protons is called the atomic number.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Set aside every card where the pattern starts over.',
+    prompt: 'Pick the elements where the number of valence electrons resets.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: RUN_18.map((id, i) => card(id, { x: X(i % 9), y: i < 9 ? 14 : 30 })),
@@ -248,7 +248,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lay The Last Row',
-    prompt: 'File the eight loose cards into the empty bottom row, ordered left to right by atomic number.',
+    prompt: 'Place the remaining cards in the bottom row. Hint: use the number of valence electrons to determine the order.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
@@ -330,7 +330,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Put every card on the chart that will not trade an electron in the tray.',
+    prompt: 'Find every element that won\'t trade electrons and put them in the tray.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: chartCards({ fixed: false }),
