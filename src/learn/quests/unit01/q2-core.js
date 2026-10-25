@@ -348,7 +348,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Where the Electrons Sit',
-    prompt: 'Place all 11 electrons of Sample D into their shells.',
+    prompt: 'Place all 11 electrons of Sample D into their shells. Follow the pattern in Samples A, B, and C. Make sure the shells have the right number of electrons!',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [

@@ -12,6 +12,7 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
 
 ## Teaching doctrine (applies to every Learn quest, stage, hint and boss)
 
+- **Table piece geometry (`table-props.js` / `table3d.js` / `atom3d.js`):** Cards are rounded slabs, tokens are pucks, subatomic particles are beads or balls (`buildBall` for specks), and atoms (`buildAtom3D`) are full 3D models with a clustered nucleus (protons and neutrons) in the center, 3D tilted orbital rings according to electron shells, and electrons orbiting continuously along their paths, grounded by a contact base pedestal on the tabletop plate. Specks representing unseparated protons/neutrons share identical neutral appearance before experimental sorting.
 - **The answer is the table where it can be built.** Every quest is an open tabletop graded on what is on the table, not on an authored multiple-choice question unless the stage is an unbuildable reading.
 - **Every drag has a two-tap twin.** Any piece or tool that can be dragged into place can also be picked up with a tap and put down with a second tap where it goes.
 - **Ordering is dragging into place on a rail, never clicking in sequence.** Rank, sequence and sorting stages are rails or slots arranged by dragging pieces into order.
