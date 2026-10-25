@@ -83,49 +83,56 @@ export const QUEST_STORY = {
   /* ---- Ligar (2026-10-23 rollout): the blast at the rescue pass, and what held the rock together ---- */
   'unit03/q1-joins': {
     scene: 'bond-pairs',
-    captions: [
-      'Every pair that held filled both outer shells, and a pair with a full shell already came apart.',
-      'The rubble round the tunnel mouth is only atoms held together this way.'
+    beats: [
+      { to: 0.2, say: 'Atoms join to fill their outer shells, and there are only two ways to do it: hand electrons over, or hold pairs between you.' },
+      { to: 0.4, say: 'A metal with a nonmetal hands electrons over and makes an ionic bond; two nonmetals hold pairs and make a covalent bond.' },
+      { to: 0.6, say: 'How many electrons each outer shell has to move is a count, not a preference, which is why one compound only ever has one recipe.' },
+      { to: 0.8, say: 'The rubble round the tunnel mouth is made of joins like these. Next I hit, heat and charge a whole block of each kind.' }
     ],
     filed: 'Filed: the blast broke the rock apart, but every bond in the rubble is an ordinary one.'
   },
   'unit03/q2-lattice': {
     scene: 'liner-heat',
-    captions: [
-      'Salt gave way at 801 degrees and passed a current only once it was molten.',
-      'Only the covalent network stayed solid at 900 degrees and passed none, so it makes the liner.'
+    beats: [
+      { to: 0.25, say: 'Salt gave way at 801 degrees and passed a current only once it was molten, as ions in a lattice do. Separate molecules melt easily and never conduct.' },
+      { to: 0.5, say: 'A network bonded all the way through barely melts at all, and a metal carries a current cold.' },
+      { to: 0.75, say: 'Nothing you measured belongs to an atom: it belongs to how atoms are held together. So the bond type tells you what a material will do before you test it.' }
     ],
     filed: 'Filed: a liner of covalent network will hold the trapped miners\' vessel at 900 degrees without passing a current.'
   },
   'unit03/q3-distance': {
     scene: 'well-depth',
-    captions: [
-      'A bond is a well, and the deeper it is, the more energy it takes to pull the atoms apart.',
-      'A breaker charge has to carry more than the bond it must break.'
+    beats: [
+      { to: 0.25, say: 'Two atoms settle where the pull between them and the push between their nuclei balance. That sets how long the bond is and how much it costs to break.' },
+      { to: 0.5, say: 'A bond is a well: the deeper it is, the more energy it takes to pull the atoms apart. More shared pairs sit closer and hold harder.' },
+      { to: 0.75, say: 'Every bond length and bond energy in a table is a point on one of these curves, so a breaker charge can be loaded for the bond it has to beat.' }
     ],
     filed: 'Filed: the breaker charges are sized to the strongest bond in the pass.'
   },
   'unit03/q7-polarity': {
     scene: 'field-swing',
-    captions: [
-      'Water swung round in the field and carbon dioxide stayed put, however polar its bonds.',
-      'A charged rod bent the stream of water too, so a whole liquid shows what its molecules do.'
+    beats: [
+      { to: 0.25, say: 'A bond is polar when its atoms pull the pair unequally, and a molecule is polar when those pulls do not cancel.' },
+      { to: 0.5, say: 'Shape decides: water swung round in the field, while carbon dioxide stayed put, however polar its bonds.' },
+      { to: 0.75, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. A charged rod bent the stream of water too, so a whole liquid shows what its molecules do.' }
     ],
     filed: 'Filed: the gases that cling to the rescue gear are the polar ones, and a charged rod can pick them out.'
   },
   'unit03/q9-orbitals': {
     scene: 'magnet-pull',
-    captions: [
-      'A magnet pulled on oxygen because two of its electrons stand alone, and no drawing of pairs shows that.',
-      'Nitrogen, with every electron paired, was left where it was.'
+    beats: [
+      { to: 0.25, say: 'Atomic boxes combine into molecular orbitals, half of them bonding and half antibonding, and electrons fill them from the bottom up, one to a box before any pair up.' },
+      { to: 0.5, say: 'Oxygen\'s last two electrons stand alone, and that is why a magnet pulled on it. Nitrogen, with every electron paired, was left where it was.' },
+      { to: 0.75, say: 'Where a Lewis structure fails, as with oxygen\'s magnetism, the boxes still work, which is why chemists keep both models. Ligar\'s last guard stands at the end of the cut.' }
     ],
     filed: 'Filed: a magnet can find the oxygen in the pass, however it is hidden among the other gases.'
   },
   'unit03/boss-warden': {
     scene: 'warden-cut',
-    captions: [
-      'The warden settles back into quarry stone, and the slab behind it has been cut clean through.',
-      'The cut runs through ionic and covalent rock alike, and no bond in Ligar gives way so evenly.'
+    beats: [
+      { to: 0.25, say: 'Every phase was a bench you had already worked, with a new case on it: a salt, a drawing, a shape, a field and a magnet. That was enough to read the guard.' },
+      { to: 0.5, say: 'The warden settles back into quarry stone, and the slab behind it has been cut clean through, ionic and covalent rock alike.' },
+      { to: 0.75, say: 'No chartered refinery torch makes heat like that, and whoever made the cut was not working with bonds at all. The slab goes into the Case File.' }
     ],
     filed: 'Filed: the slab was cut with heat no ordinary bond survives, and no bench in Ligar can make it.'
   },
@@ -144,171 +151,195 @@ export const QUEST_STORY = {
   /* ---- Bellows: the Fifth jammed the station's holders; the chemistry reads what a gauge counts and ends on a sealed tank that stayed warm ---- */
   'unit04/q1-knocks': {
     scene: 'gauge-walls',
-    captions: [
-      'A gauge on the floor, on the side wall and on the roof of a sealed box all read the same.',
-      'The gas is not pressing down with its weight: its particles are knocking on every wall alike.'
+    beats: [
+      { to: 0.25, say: 'A gauge on the floor, on the side wall and on the roof of a sealed box all read the same, because a gauge counts knocks and counts them alike on every wall.' },
+      { to: 0.5, say: 'The gas is not pressing down with its weight: more gas, less room or more heat all make the knocks harder or more frequent.' },
+      { to: 0.75, say: 'Temperature is the average energy of the crowd that does the knocking. Every gas law you will meet is one of these relationships written down with numbers.' }
     ],
     filed: 'Filed: the station\'s gauges read true, so the pressure in the jammed holders is genuine and not a faulty needle.'
   },
   'unit04/q2-laws': {
     scene: 'cold-tank',
-    captions: [
-      'A sealed tank left out in the cold must lose pressure in step with its kelvin temperature.',
-      'Cool one by fifty degrees and its gauge falls by about a sixth.'
+    beats: [
+      { to: 0.25, say: 'A gas does not care about the number on a Celsius thermometer. Its room, and its pressure in a sealed tank, follow the kelvin temperature, counted up from absolute zero.' },
+      { to: 0.5, say: 'So a sealed tank left out in the cold must lose pressure in step with its kelvin temperature: cool one by fifty degrees and its gauge falls by about a sixth.' },
+      { to: 0.75, say: 'Every cold-weather check on the station comes down to this, and a tank that does not follow it has something wrong inside.' }
     ],
     filed: 'Filed: a sealed tank that keeps its pressure through the cold must have something inside it giving off heat.'
   },
   'unit04/q3-ideal': {
     scene: 'equal-rooms',
-    captions: [
-      'A mole of helium and a mole of carbon dioxide fill the same room, though one weighs eleven times the other.',
-      'So a gauge, a room and a temperature are enough to count what is inside a sealed tank.'
+    beats: [
+      { to: 0.25, say: 'A gas takes up room according to how many particles it has, not what they are.' },
+      { to: 0.5, say: 'A mole of helium and a mole of carbon dioxide fill the same room, though one weighs eleven times the other.' },
+      { to: 0.75, say: 'So a pressure, a room and a temperature are enough to count a sealed tank without opening it, which is the first check when a holder reads too high.' }
     ],
     filed: 'Filed: every sealed tank on the station can now be counted from its plate without opening it.'
   },
   'unit04/q4-mixtures': {
     scene: 'mix-share',
-    captions: [
-      'In a mixture each gas pushes as if it were alone, and the gauge simply adds the pushes together.',
-      'Whatever the Fifth added to the fuel line will show up as a push of its own.'
+    beats: [
+      { to: 0.25, say: 'Every gas in a tank pushes as if it were alone, and the gauge adds the pushes up. Each gas\'s share of the push is its share of the particles.' },
+      { to: 0.5, say: 'The moles, not the weight, decide who pushes hardest. Splitting a tank\'s push gas by gas is how a crew sees what has been added to it.' },
+      { to: 0.75, say: 'The station\'s air is a mixture, and so is the fuel in its lines, so whatever the Fifth added will show up as a push of its own.' }
     ],
     filed: 'Filed: any gas the Fifth has added to a tank can be read off its own share of the push.'
   },
   'unit04/q5-speed': {
     scene: 'leak-race',
-    captions: [
-      'Lighter gases leak first, so how fast a gas escapes tells you how heavy its particles are.',
-      'The leak at the vent stack emptied at the same pace as krypton.'
+    beats: [
+      { to: 0.25, say: 'The lighter the gas, the faster its particles go, so the sooner it leaks through a hole and the further it spreads in the same time.' },
+      { to: 0.5, say: 'The leak at the vent stack emptied at the same pace as krypton, and a leak that matches a known gas has the same kind of particle.' },
+      { to: 0.75, say: 'The last bench squeezes and chills a gas until the gas laws stop being true.' }
     ],
     filed: 'Filed: the leak at the vent stack is krypton.'
   },
   'unit04/q6-real': {
     scene: 'crowd-and-pull',
-    captions: [
-      'Squeezed hard, a gas pushes harder than the gas law says, because its particles take up room.',
-      'Cooled, it pushes less, because its particles pull on each other, and that pull is what makes a liquid.'
+    beats: [
+      { to: 0.25, say: 'A real gas reads above the gas law where its particles crowd, because they take up room.' },
+      { to: 0.5, say: 'It reads below it where they cling, because they pull on each other, and that same pull is what turns a gas into a liquid.' },
+      { to: 0.75, say: 'So a gas is closest to ideal when it is thin and warm, and every pressure vessel on the cloud deck is designed knowing exactly where the gas law stops being true.' }
     ],
     filed: 'Filed: the Fifth packed the tanks past where the gas law holds, and only the compressor at the heart of the deck could.'
   },
   'unit04/boss-compressor': {
     scene: 'warm-cylinder',
-    captions: [
-      'The Compressor settles, and in its vault stands a sealed cylinder logged at one pressure for twelve days.',
-      'The deck froze fifty degrees around it, but a sealed gas cannot hold its pressure through that unless something inside is giving off heat.'
+    beats: [
+      { to: 0.25, say: 'Every phase was a bench you had already worked: a piston, a heater, a count, a blend and a pinhole. That was enough to read the machine and to read what it was keeping.' },
+      { to: 0.5, say: 'The Compressor stands cold in its housing. In its vault is a sealed cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it.' },
+      { to: 0.75, say: 'Gay-Lussac\'s law says no sealed gas can do that unless something inside is giving off heat. The cylinder goes into the Case File.' }
     ],
     filed: 'Filed: a heat source ran inside the Fifth\'s cylinder for twelve days, and no chemical reaction lasts that long.'
   },
   /* ---- Ember Reach: the Fifth's manifold is frosted over, so what runs inside it takes heat in ---- */
   'unit05/q1-flow': {
     scene: 'frost-manifold',
-    captions: [
-      'On the overlook, the Fifth\'s manifold is furred with frost in the middle of a hot caldera.',
-      'A bath that cools means heat is going into the chemicals, so frost on the pipes means heat is going into the manifold.'
+    beats: [
+      { to: 0.25, say: 'Heat is energy crossing from a hotter body to a colder one until both read the same. A temperature says how fast the particles move, not how much energy a body can hand over.' },
+      { to: 0.5, say: 'A thermometer in a bath reports on the surroundings of whatever is reacting: a bath that cools means heat is going into the chemicals, which is endothermic.' },
+      { to: 0.75, say: 'On the overlook, the Fifth\'s manifold is furred with frost in the middle of a hot caldera. Frost on the pipes means heat is going into the manifold.' }
     ],
     filed: 'Filed: the manifold is taking heat in, so something inside it is running an endothermic change.'
   },
   'unit05/q5-hess': {
     scene: 'two-routes',
-    captions: [
-      'The straight shaft at the separator is sealed, but the stepped pipe beside it starts and ends in the same two places.',
-      'Heat counts only those two places, so the open pipe gives the same total as the shaft nobody can open.'
+    beats: [
+      { to: 0.25, say: 'The heat of a reaction depends only on where it starts and where it finishes. So steps can be added, turned round and doubled.' },
+      { to: 0.5, say: 'A reaction nobody can run can still be worked out from ones that were measured, because measured from the elements, every compound sits at a height of its own.' },
+      { to: 0.75, say: 'The straight shaft at the separator is sealed, but the stepped pipe beside it starts and ends in the same two places. Heat counts only those two places, so the open pipe gives the same total.' }
     ],
     filed: 'Filed: the sealed shaft carries the same heat as the open pipe, so no route can hide it.'
   },
   'unit05/q7-gibbs': {
     scene: 'seal-crossing',
-    captions: [
-      'Ice melts at 273 K because that is where the heat it costs and the spreading it gains are equal.',
-      'The limestone seal on the Fifth\'s siphon core is a change of the same kind, and it gives way only above its own crossing.'
+    beats: [
+      { to: 0.25, say: 'Two pulls decide whether a change runs on its own: the heat it gives out or takes in, and the spreading it gains.' },
+      { to: 0.5, say: 'The free energy, ΔG = ΔH − TΔS, sets them against each other, and temperature turns up the spreading until a change that takes heat in can still run.' },
+      { to: 0.75, say: 'Ice melts at 273 K because that is where the heat it costs and the spreading it gains are equal, and the limestone seal on the Fifth\'s siphon core gives way only above its own crossing.' }
     ],
-    filed: 'Filed: the siphon core is sealed until it is hot enough, and Vess can now find that temperature.'
+    filed: 'Filed: the siphon core is sealed until it is hot enough, and I can now find that temperature.'
   },
   'unit05/boss-crucible': {
     scene: 'crucible-open',
-    captions: [
-      'The Crucible splits along its firebrick seams, and inside is a heat exchanger that carried megawatts away without a wisp of steam.',
-      'Below the exchanger, a pipe runs down into the crust.'
+    beats: [
+      { to: 0.25, say: 'Every phase was a bench you had already worked: a bath, a ledger of bonds, a stack of steps, a table of entropies and a balance of two terms. That was enough to read the machine.' },
+      { to: 0.5, say: 'The Crucible splits along its firebrick seams. Inside is a heat exchanger that carried megawatts away from the shelters without a wisp of steam reaching the sky.' },
+      { to: 0.75, say: 'Below the exchanger, a pipe runs down into the crust. The siphon manifold goes into the Case File.' }
     ],
     filed: 'Filed: the raiders were feeding an endothermic process far below the crust, and no thermometer at the surface could have seen it.'
   },
   /* ---- Lanternfall (unit02): who dimmed the beacons, and what is the Fifth lighting with a lens no guild lamp can make? ---- */
   'unit02/q1-wave': {
     scene: 'wave-beacon',
-    captions: [
-      'Red and violet light cross the same gap in the same time, so a lamp can be told apart only by its wavelength.',
-      'Vess lays the camp\'s radio mast, oven and X-ray tube on the same scale as the beacon lamps.'
+    beats: [
+      { to: 0.25, say: 'Light is a wave, and every wave has a wavelength and a frequency that trade against each other through one fixed speed, 3.00 × 10⁸ metres per second.' },
+      { to: 0.5, say: 'What the eye calls colour is a thin slice of the electromagnetic spectrum. A radio mast, an oven and an X-ray tube sit on the same scale, at other wavelengths.' },
+      { to: 0.75, say: 'Red and violet cross the same gap in the same time. Next I want to know why a bright red lamp cannot knock an electron loose when a faint violet one can.' }
     ],
     filed: 'Filed: the beacons\' light can be told from any other wave by its wavelength alone.'
   },
   'unit02/q2-photon': {
     scene: 'photon-plate',
-    captions: [
-      'Each photon of red carries too little energy to free an electron, however many arrive.',
-      'One photon of violet is enough, so a dim violet lamp wakes a plate that the brightest red leaves dark.'
+    beats: [
+      { to: 0.25, say: 'Light comes in packets called photons, and each photon\'s energy is set by its frequency. An electron leaves a metal only if one photon carries more than the metal\'s work function.' },
+      { to: 0.5, say: 'No number of weaker photons can add up to it. A photon of red carries too little, however many arrive, while one photon of violet is enough.' },
+      { to: 0.75, say: 'Energy comes in amounts, not smooth slopes, so electrons can only hold certain energies. The sky over this ice glows in a few sharp colours, and I want to know why.' }
     ],
     filed: 'Filed: the beacon plates still answer, but only to violet; red at any strength leaves them dark.'
   },
   'unit02/q3-lines': {
     scene: 'line-gas',
-    captions: [
-      'A glowing gas gives only a few exact lines, and no other gas gives the same few.',
-      'The sealed tube found among the beacons gives helium\'s lines, and no other strip fits it.'
+    beats: [
+      { to: 0.2, say: 'An atom\'s electrons sit only on certain energy levels, in the ground state or in an excited state. Light is given out or taken in exactly when an electron moves between two levels.' },
+      { to: 0.4, say: 'So a glowing gas gives an emission spectrum of a few exact lines that no other gas shares, where a hot solid gives a continuous spectrum.' },
+      { to: 0.6, say: 'Every aurora, neon sign and star is read this way: the colours say which atoms are there, and the dark lines of an absorption spectrum say which cool atoms lie in front.' },
+      { to: 0.8, say: 'The ladder only fits hydrogen, because an electron is not a bead on a rung. I want to know where an electron actually is.' }
     ],
     filed: 'Filed: the sealed tube among the beacons holds helium, named by its lines alone.'
   },
   'unit02/q4-cloud': {
     scene: 'cloud-ball',
-    captions: [
-      'Five hundred shots find the electron in five hundred places, and together they make a ball, not a ring.',
-      'No path can be drawn through the dots, only a cloud with a shape.'
+    beats: [
+      { to: 0.25, say: 'An electron has no path. Five hundred shots find it in five hundred places, and together they make a ball, not a ring.' },
+      { to: 0.5, say: 'What it has is an orbital, a cloud of probability: round for s, two-lobed for p, four-lobed or ringed for d. Each orbital holds a standing wave that fits its shell.' },
+      { to: 0.75, say: 'Every bond is made of these clouds overlapping, and every shape a molecule takes follows from how they point. Next, every electron gets an address.' }
     ],
     filed: 'Filed: the beacon gases are lit by electrons that have no path, only clouds with a shape.'
   },
   'unit02/q5-numbers': {
     scene: 'rack-address',
-    captions: [
-      'Every box on the records board has an address, and a box takes two electrons pointing opposite ways at most.',
-      'No two electrons in an atom share all four numbers.'
+    beats: [
+      { to: 0.25, say: 'Numbers name every box: n for its shell, l for its shape and ml for its orientation.' },
+      { to: 0.5, say: 'A box holds two electrons that point opposite ways, and no two electrons in an atom share all four numbers. From that one rule the capacity of every shell follows.' },
+      { to: 0.75, say: 'The rows of the periodic table are those shells counted out loud: two, eight, eighteen. Next I fill the boxes in the order an atom actually does.' }
     ],
     filed: 'Filed: the records board is sorted by address again, and no electron on it shares all four numbers with another.'
   },
   'unit02/q6-filling': {
     scene: 'rack-fill',
-    captions: [
-      'Carbon\'s rack pulls on the magnet as the real sample does once its last two electrons stand alone.',
-      'Potassium\'s last electron settles in the fourth shell while the third is still not full.'
+    beats: [
+      { to: 0.25, say: 'Electrons fill the lowest rows first and spread across a row before pairing, so carbon\'s last two stand alone. A magnet reads how many stand alone.' },
+      { to: 0.5, say: 'The ladder is ordered by energy and not by shell, so potassium\'s last electron settles in the fourth shell while the third is still not full.' },
+      { to: 0.75, say: 'Nearly everything an element does follows from its outer rows, and you can now write them down and check them against a magnet. Next I measure what each electron costs.' }
     ],
     filed: 'Filed: the board now matches the magnet for carbon, oxygen and potassium, so its rows can be trusted.'
   },
   'unit02/q7-pes': {
     scene: 'peak-rows',
-    captions: [
-      'Each peak on a spectrum is a row of electrons, and its height counts how many are in it.',
-      'The specimen left at the tower shows peaks of two, two and four.'
+    beats: [
+      { to: 0.25, say: 'A photoelectron spectrum has one peak for every row of electrons. Its height is how many electrons the row holds, and its position is how tightly they are held.' },
+      { to: 0.5, say: 'It is the configuration measured instead of written, and the experiment that proved the rows you filled on the rack are real. Nobody drew the ladder in; the spectrum shows it.' },
+      { to: 0.75, say: 'The specimen left at the tower shows peaks of two, two and four. Binding energy has a pattern across the whole table, and the next bench follows it.' }
     ],
     filed: 'Filed: the unlabelled specimen at the tower has peaks of two, two and four, so it is oxygen.'
   },
   'unit02/q8-trends': {
     scene: 'radii-row',
-    captions: [
-      'Across a row each atom has more protons and is smaller, because the extra charge pulls the same shell in.',
-      'Vess sorts the camp\'s metal stock by size and by what it costs to strip an electron.'
+    beats: [
+      { to: 0.25, say: 'One law explains the table: charge pulls, distance weakens the pull, and the electrons in between cancel some of the charge.' },
+      { to: 0.5, say: 'Across a row each atom has more protons and is smaller, because the extra charge pulls the same shell in. Radius and ionization energy are that law measured two ways.' },
+      { to: 0.75, say: 'Nearly every property a chemist predicts starts from where an element sits on the table. I sort the camp\'s metal stock by size and by what it costs to strip an electron.' }
     ],
     filed: 'Filed: the camp\'s metals can be sorted by size and by what it costs to strip an electron.'
   },
   'unit02/q9-absorb': {
     scene: 'beam-dim',
-    captions: [
-      'Copper takes orange out of white light and leaves blue, and the more copper there is, the more orange it takes out.',
-      'Three standards draw the calibration line, and the sealed tank sample\'s reading is read back off it.'
+    beats: [
+      { to: 0.25, say: 'A solution looks the colour of the light it leaves behind: copper takes orange out of white light and leaves blue, its complementary colour.' },
+      { to: 0.5, say: 'The absorbance of a coloured solution rises in step with its concentration, so a reading of light measures an amount of matter.' },
+      { to: 0.75, say: 'Three standards draw the calibration line, and the sealed tank sample\'s reading is read back off it. Pharmacies, water labs and hospitals measure what is dissolved the same way.' },
+      { to: 0.9, say: 'One feeder still haunts the ice: the Lantern-Eater, made of everything you have measured here.' }
     ],
     filed: 'Filed: the sealed tank water holds copper at 5 millimoles a litre, read from the calibration line.'
   },
   'unit02/boss-eater': {
     scene: 'eater-lens',
-    captions: [
-      'The Lantern-Eater settles into cold ice, and in its core lies a lens ground for light shorter than violet.',
-      'No guild lamp gives light that short.'
+    beats: [
+      { to: 0.25, say: 'Every phase of that fight was a bench you had already worked: a line, a photon, a magnet, a spectrum and a beam.' },
+      { to: 0.5, say: 'The Lantern-Eater has collapsed into shimmering ice. In its core lies a precision lens ground from fluorite, for light shorter than violet.' },
+      { to: 0.75, say: 'No guild lamp gives light that short. Someone put high-energy optics here on purpose.' },
+      { to: 0.9, say: 'The lens goes into the Case File. Across the fog rise the crystal lattices of Ligar, held together by the very electron pairs you have mapped.' }
     ],
     filed: 'Filed: a lens ground for ultraviolet was feeding the Eater, and no guild lamp can make light that short.'
   }

@@ -11,45 +11,13 @@
 
 import { mulberry32 } from '../learn/engine/plates.js';
 import { morse, PAIRS } from '../learn/engine/bonddata.js';
+import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
+const C = KIT;
 
-const C = { bg: '#0d0c0a', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', amber: '#d99423', text: '#dcd6cc', pale: '#cfc8b8', iron: '#3c3833' };
 
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const win = (t, a, b) => clamp01((t - a) / (b - a));
 const ease = v => v * v * (3 - 2 * v);
-
-function disc(ctx, x, y, r, fill, stroke = null) {
-  ctx.beginPath();
-  ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
-}
-
-function line(ctx, x0, y0, x1, y1, color, width = 1, dash = null) {
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.setLineDash?.(dash || []);
-  ctx.stroke();
-  ctx.setLineDash?.([]);
-}
-
-function text(ctx, str, x, y, { size = 12, color = C.dust, align = 'center', weight = 400 } = {}) {
-  ctx.font = `${weight} ${size}px Quantico, "JetBrains Mono", monospace`;
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(str, x, y);
-}
-
-function ground(ctx, w, h) {
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(0, 0, w, h);
-  line(ctx, 0, h * 0.86, w, h * 0.86, C.rim, 2);
-}
 
 const label = h => Math.max(11, h * 0.04);
 
@@ -180,69 +148,9 @@ function fieldSwing(ctx, w, h, t) {
   if (on > 0.9) text(ctx, 'stayed put', dx, cy - h * 0.2, { size: label(h) });
 }
 
-/* ---- q9-orbitals: a magnet draws in oxygen and leaves nitrogen alone ---- */
-function magnetPull(ctx, w, h, t) {
-  ground(ctx, w, h);
-  const pull = ease(win(t, 0.2, 0.75));
-  // The magnet: a horseshoe at the top.
-  const mx = w * 0.5;
-  const my = h * 0.2;
-  ctx.strokeStyle = C.steel;
-  ctx.lineWidth = Math.max(6, h * 0.03);
-  ctx.beginPath();
-  ctx.arc(mx, my, w * 0.07, Math.PI, 0, true);
-  ctx.moveTo(mx - w * 0.07, my);
-  ctx.lineTo(mx - w * 0.07, my + h * 0.1);
-  ctx.moveTo(mx + w * 0.07, my);
-  ctx.lineTo(mx + w * 0.07, my + h * 0.1);
-  ctx.stroke();
-  const flask = (x, name, drawn) => {
-    const y = h * 0.7 - (drawn ? pull * h * 0.28 : 0);
-    ctx.fillStyle = C.iron;
-    ctx.fillRect(x - w * 0.05, y, w * 0.1, h * 0.12);
-    ctx.strokeStyle = drawn && pull > 0.9 ? C.amber : C.steel;
-    ctx.strokeRect(x - w * 0.05 + 0.5, y + 0.5, w * 0.1 - 1, h * 0.12 - 1);
-    text(ctx, name, x, y + h * 0.06, { size: label(h), color: C.text });
-  };
-  flask(w * 0.3, 'N₂', false);
-  flask(w * 0.7, 'O₂', true);
-  text(ctx, 'not pulled', w * 0.3, h * 0.93, { size: label(h) });
-  if (pull > 0.9) text(ctx, 'pulled', w * 0.7, h * 0.93, { size: label(h), color: C.amber });
-}
-
-/* ---- boss-warden: the warden settles into quarry stone and the slab behind it has been cut clean through ---- */
-function wardenCut(ctx, w, h, t) {
-  ground(ctx, w, h);
-  const rand = mulberry32(0x77);
-  const fall = ease(win(t, 0.1, 0.55));
-  for (let i = 0; i < 7; i++) {
-    const bx = w * (0.1 + i * 0.055);
-    const bh = h * (0.22 + rand() * 0.2);
-    const sink = fall * (h * 0.86 - h * 0.35 - bh);
-    ctx.fillStyle = C.iron;
-    ctx.fillRect(bx, h * 0.35 + sink, w * 0.045, bh);
-    ctx.strokeStyle = C.steel;
-    ctx.strokeRect(bx + 0.5, h * 0.35 + sink + 0.5, w * 0.045 - 1, bh - 1);
-  }
-  // The slab behind it, and the cut: a straight line that runs through it without a ragged edge.
-  const sx = w * 0.55;
-  const sw = w * 0.34;
-  const sy = h * 0.22;
-  const sh = h * 0.56;
-  ctx.fillStyle = C.dim;
-  ctx.fillRect(sx, sy, sw, sh);
-  ctx.strokeStyle = C.steel;
-  ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
-  const cut = ease(win(t, 0.5, 0.85));
-  line(ctx, sx - w * 0.02, sy + sh * 0.2, sx - w * 0.02 + (sw + w * 0.04) * cut, sy + sh * 0.2 + (sh * 0.6) * cut, C.amber, 3);
-  if (t > 0.88) text(ctx, 'cut clean through', sx + sw / 2, sy - h * 0.05, { size: label(h), color: C.amber });
-}
-
 export const LIGAR_SCENES = {
   'bond-pairs': bondPairs,
   'liner-heat': linerHeat,
   'well-depth': wellDepth,
   'field-swing': fieldSwing,
-  'magnet-pull': magnetPull,
-  'warden-cut': wardenCut
 };

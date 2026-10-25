@@ -12,8 +12,9 @@
 import {
   GASES, pressureIdeal, planMixture, leftAfter, halfTime, pressureVdw, speeds
 } from '../learn/engine/gasdata.js';
+import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
+const C = KIT;
 
-const C = { bg: '#0d0c0a', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', amber: '#d99423', text: '#dcd6cc', pale: '#cfc8b8', iron: '#3c3833' };
 
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const win = (t, a, b) => clamp01((t - a) / (b - a));
@@ -21,37 +22,6 @@ const ease = v => v * v * (3 - 2 * v);
 /** A point bouncing between 0 and 1: the same `u` and `t` always give the same place. */
 const bounce = (u, speed, t) => { const x = (u + speed * t) % 2; return x < 1 ? x : 2 - x; };
 const hash = (i, k) => { let a = Math.imul((i + 1) * 7919 + (k + 1) * 104729, 0x45d9f3b); a = Math.imul(a ^ (a >>> 16), 0x45d9f3b); return ((a ^ (a >>> 16)) >>> 0) / 4294967296; };
-
-function disc(ctx, x, y, r, fill, stroke = null) {
-  ctx.beginPath();
-  ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
-}
-
-function line(ctx, x0, y0, x1, y1, color, width = 1) {
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.stroke();
-}
-
-function text(ctx, str, x, y, { size = 12, color = C.dust, align = 'center', weight = 400 } = {}) {
-  ctx.font = `${weight} ${size}px Quantico, "JetBrains Mono", monospace`;
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(str, x, y);
-}
-
-function ground(ctx, w, h) {
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(0, 0, w, h);
-  line(ctx, 0, h * 0.9, w, h * 0.9, C.rim, 2);
-}
 
 const frame = (ctx, x, y, w, h, color = C.steel) => {
   ctx.fillStyle = '#100f0c';
@@ -211,29 +181,6 @@ function crowdAndPull(ctx, w, h, t) {
   if (t > 0.9) text(ctx, `${co.P >= co.ideal ? '+' : '−'}${Math.round(Math.abs(co.P / co.ideal - 1) * 100)} %`, rx + rw / 2, h * 0.86, { size: Math.max(12, h * 0.046), color: C.amber, weight: 700 });
 }
 
-/* ---- boss-compressor: a sealed cylinder holds its pressure for twelve days while the deck cools around it ---- */
-function warmCylinder(ctx, w, h, t) {
-  ground(ctx, w, h);
-  const days = Math.round(12 * ease(win(t, 0.1, 0.9)));
-  const deck = 20 - 50 * ease(win(t, 0.1, 0.9));
-  ctx.fillStyle = C.iron;
-  ctx.fillRect(w * 0.3, h * 0.34, w * 0.3, h * 0.36);
-  ctx.strokeStyle = C.steel;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(w * 0.3, h * 0.34, w * 0.3, h * 0.36);
-  // The gauge does not move; the heat source inside is the one amber mark.
-  dial(ctx, w * 0.45, h * 0.2, h * 0.08, 0.62, 'gauge', 'unchanged');
-  disc(ctx, w * 0.45, h * 0.52, h * 0.035, C.amber);
-  const tx = w * 0.78;
-  ctx.fillStyle = C.rim;
-  ctx.fillRect(tx - 3, h * 0.2, 6, h * 0.55);
-  ctx.fillStyle = C.dust;
-  const colH = h * 0.55 * ((deck + 50) / 90);
-  ctx.fillRect(tx - 3, h * 0.2 + h * 0.55 - colH, 6, colH);
-  text(ctx, `deck ${Math.round(deck)} °C`, tx, h * 0.82, { size: Math.max(12, h * 0.046), color: C.text, weight: 700 });
-  text(ctx, `day ${days}`, w * 0.45, h * 0.83, { size: Math.max(12, h * 0.05), color: C.text, weight: 700 });
-}
-
 export const BELLOWS_SCENES = {
   'gauge-walls': gaugeWalls,
   'cold-tank': coldTank,
@@ -241,5 +188,4 @@ export const BELLOWS_SCENES = {
   'mix-share': mixShare,
   'leak-race': leakRace,
   'crowd-and-pull': crowdAndPull,
-  'warm-cylinder': warmCylinder
 };

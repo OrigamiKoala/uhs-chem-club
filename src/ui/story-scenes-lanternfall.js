@@ -11,46 +11,14 @@ import { mulberry32 } from '../learn/engine/plates.js';
 import { planTrace, wavelengthRgb, planPhotocell, planAbsorb, LINES } from '../learn/engine/lightdata.js';
 import { sampleOrbital } from '../learn/engine/orbitals.js';
 import { planPES, rackFor, groundConfig, LADDER, boxesOf, RADIUS as ATOM_RADIUS } from '../learn/engine/electrons.js';
+import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
+const C = KIT;
 
-const C = { bg: '#0d0c0a', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', amber: '#d99423', text: '#dcd6cc', pale: '#cfc8b8', iron: '#3c3833' };
 
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const win = (t, a, b) => clamp01((t - a) / (b - a));
 const ease = v => v * v * (3 - 2 * v);
 const css = rgb => (rgb ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})` : C.pale);
-
-function disc(ctx, x, y, r, fill, stroke = null) {
-  ctx.beginPath();
-  ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
-}
-
-function line(ctx, x0, y0, x1, y1, color, width = 1, dash = null) {
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.setLineDash?.(dash || []);
-  ctx.stroke();
-  ctx.setLineDash?.([]);
-}
-
-function text(ctx, str, x, y, { size = 12, color = C.dust, align = 'center', weight = 400 } = {}) {
-  ctx.font = `${weight} ${size}px Quantico, "JetBrains Mono", monospace`;
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(str, x, y);
-}
-
-function ground(ctx, w, h) {
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(0, 0, w, h);
-  line(ctx, 0, h * 0.86, w, h * 0.86, C.rim, 2);
-}
 
 const label = (ctx, w, h, str, color = C.dust) => text(ctx, str, w / 2, h * 0.93, { size: Math.max(11, h * 0.04), color });
 
@@ -215,59 +183,6 @@ function radiiRow(ctx, w, h, t) {
   if (t > 0.85) text(ctx, 'more protons, smaller atom', w / 2, h * 0.93, { size: Math.max(11, h * 0.04), color: C.amber });
 }
 
-/* ---- q9-absorb: a beam goes into the tank sample whole and comes out dimmer by what the reading says ---- */
-function beamDim(ctx, w, h, t) {
-  ground(ctx, w, h);
-  const A = planAbsorb('cuso4', 630, 1, 0.005);
-  const through = Math.pow(10, -A);
-  const colour = css(wavelengthRgb(630));
-  const cw = w * 0.2;
-  const cx = w / 2;
-  ctx.strokeStyle = C.steel;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(cx - cw / 2, h * 0.28, cw, h * 0.34);
-  const rand = mulberry32(0x9d);
-  for (let i = 0; i < 40; i++) disc(ctx, cx - cw / 2 + 8 + rand() * (cw - 16), h * 0.3 + rand() * h * 0.3, 2, '#6f8f9d');
-  const run = win(t, 0.05, 0.7);
-  ctx.globalAlpha = 1;
-  line(ctx, w * 0.06, h * 0.45, cx - cw / 2, h * 0.45, colour, 6 * Math.min(1, run * 2));
-  ctx.globalAlpha = Math.max(0.15, through);
-  line(ctx, cx + cw / 2, h * 0.45, cx + cw / 2 + w * 0.34 * clamp01(run * 1.5 - 0.3), h * 0.45, colour, 6);
-  ctx.globalAlpha = 1;
-  if (t > 0.75) text(ctx, 'sealed tank water: 5 mmol/L of copper', w / 2, h * 0.84, { size: Math.max(11, h * 0.042), color: C.amber });
-}
-
-/* ---- boss-eater: the Eater settles into cold ice and a ground lens is left, its focus beyond the violet end ---- */
-function eaterLens(ctx, w, h, t) {
-  ground(ctx, w, h);
-  const fall = ease(win(t, 0.1, 0.65));
-  ctx.fillStyle = C.iron;
-  ctx.strokeStyle = C.steel;
-  [[0.38, 0.12, 0.24, 0.12], [0.3, 0.26, 0.4, 0.18], [0.36, 0.46, 0.28, 0.12]].forEach(([bx, by, bw, bh]) => {
-    const sink = fall * (h * 0.86 - (by + bh) * h);
-    ctx.globalAlpha = 1 - fall * 0.5;
-    ctx.fillRect(bx * w, by * h + sink, bw * w, bh * h);
-    ctx.strokeRect(bx * w + 0.5, by * h + sink + 0.5, bw * w - 1, bh * h - 1);
-    ctx.globalAlpha = 1;
-  });
-  const show = ease(win(t, 0.65, 0.95));
-  ctx.globalAlpha = show;
-  ctx.beginPath();
-  ctx.ellipse(w / 2, h * 0.74, w * 0.07, h * 0.07, 0, 0, Math.PI * 2);
-  ctx.fillStyle = C.pale;
-  ctx.fill();
-  ctx.strokeStyle = C.amber;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // the band the eye sees, and the light beyond its violet end that the lens is ground for
-  const bx = w * 0.62;
-  const bw = w * 0.3;
-  for (let i = 0; i < 40; i++) ctx.fillStyle = css(wavelengthRgb(380 + (i / 40) * 370)), ctx.fillRect(bx + (i / 40) * bw, h * 0.7, bw / 40 + 1, h * 0.06);
-  line(ctx, bx - 4, h * 0.67, bx - 4, h * 0.79, C.amber, 2, [4, 4]);
-  text(ctx, 'ground for light shorter than violet', w / 2, h * 0.9, { size: Math.max(11, h * 0.04), color: C.amber });
-  ctx.globalAlpha = 1;
-}
-
 export const LANTERNFALL_SCENES = {
   'wave-beacon': waveBeacon,
   'photon-plate': photonPlate,
@@ -277,6 +192,4 @@ export const LANTERNFALL_SCENES = {
   'rack-fill': rackFill,
   'peak-rows': peakRows,
   'radii-row': radiiRow,
-  'beam-dim': beamDim,
-  'eater-lens': eaterLens
 };

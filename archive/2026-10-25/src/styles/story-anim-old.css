@@ -1,0 +1,57 @@
+/* ===================================================================
+   STORY ANIMATION (once, after a quest)
+   One 2D scene and a few captions on an obsidian plate. Filament, not LED: no glow.
+   =================================================================== */
+.story-anim {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(8, 7, 6, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 16px;
+}
+
+.story-anim-frame {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  background: var(--plate-100, #0d0c0a);
+  border: 1px solid var(--border-durasteel);
+}
+
+.story-anim-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.story-anim-caption {
+  margin: 0;
+  min-height: 3.4em;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-durasteel);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.story-anim-skip {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+
+.story-anim-caption.story-anim-filed {
+  color: var(--accent-amber);
+}

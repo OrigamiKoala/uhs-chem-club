@@ -11,31 +11,13 @@
 
 import { SPECIFIC_HEAT_WATER, hessStackEnthalpy, crossingTemperature, gibbsFreeEnergy } from '../learn/engine/thermodata.js';
 import { mulberry32 } from '../learn/engine/plates.js';
+import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
+const C = { ...KIT, cold: '#6f8fb0', warm: '#c0652b' };
 
-const C = { bg: '#0d0c0a', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', amber: '#d99423', text: '#dcd6cc', pale: '#cfc8b8', iron: '#3c3833', cold: '#6f8fb0', warm: '#c0652b' };
 
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const win = (t, a, b) => clamp01((t - a) / (b - a));
 const ease = v => v * v * (3 - 2 * v);
-
-function line(ctx, x0, y0, x1, y1, color, width = 1, dash = null) {
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.setLineDash?.(dash || []);
-  ctx.stroke();
-  ctx.setLineDash?.([]);
-}
-
-function disc(ctx, x, y, r, fill, stroke = null) {
-  ctx.beginPath();
-  ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
-}
 
 function box(ctx, x, y, w, h, fill, stroke = C.steel, lw = 1) {
   ctx.fillStyle = fill;
@@ -43,20 +25,6 @@ function box(ctx, x, y, w, h, fill, stroke = C.steel, lw = 1) {
   ctx.strokeStyle = stroke;
   ctx.lineWidth = lw;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-}
-
-function text(ctx, str, x, y, { size = 12, color = C.dust, align = 'center', weight = 400 } = {}) {
-  ctx.font = `${weight} ${size}px Quantico, "JetBrains Mono", monospace`;
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(str, x, y);
-}
-
-function ground(ctx, w, h) {
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(0, 0, w, h);
-  line(ctx, 0, h * 0.88, w, h * 0.88, C.rim, 2);
 }
 
 const fs = h => Math.max(11, h * 0.04);
@@ -170,32 +138,8 @@ function sealCrossing(ctx, w, h, t) {
   text(ctx, 'temperature', w / 2, h * 0.94, { size: fs(h), color: C.dust });
 }
 
-/* ---- boss-crucible: the casing splits along its seams, and a pipe runs down from the exchanger into the crust ---- */
-function crucibleOpen(ctx, w, h, t) {
-  ground(ctx, w, h);
-  const open = ease(win(t, 0.12, 0.65));
-  const cx = w / 2; const top = h * 0.14; const cH = h * 0.5; const cW = w * 0.2;
-  // The exchanger plates between the halves.
-  const plates = 7;
-  for (let i = 0; i < plates; i++) {
-    const x = cx - cW * 0.7 + (i / (plates - 1)) * cW * 1.4;
-    line(ctx, x, top + cH * 0.12, x, top + cH * 0.88, C.steel, 3);
-  }
-  // The two halves of the casing, drawn apart.
-  const gap = open * w * 0.16;
-  box(ctx, cx - cW - gap, top, cW, cH, C.iron, C.steel, 2);
-  box(ctx, cx + gap, top, cW, cH, C.iron, C.steel, 2);
-  text(ctx, 'exchanger', cx, top - h * 0.04, { size: fs(h), color: C.dust });
-  // The pipe from the exchanger down into the crust, drawn on as time runs.
-  const draw = ease(win(t, 0.5, 0.9));
-  const pipeTop = top + cH;
-  line(ctx, cx, pipeTop, cx, pipeTop + (h * 0.88 - pipeTop) * draw, C.amber, 5);
-  if (draw > 0.6) text(ctx, 'down into the crust', cx + w * 0.12, pipeTop + (h * 0.88 - pipeTop) * 0.6, { size: fs(h), color: C.dust, align: 'left' });
-}
-
 export const EMBER_SCENES = {
   'frost-manifold': frostManifold,
   'two-routes': twoRoutes,
   'seal-crossing': sealCrossing,
-  'crucible-open': crucibleOpen
 };

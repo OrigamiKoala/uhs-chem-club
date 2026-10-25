@@ -128,7 +128,12 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `frame.showDebrief`; a quest with no entry still ends on its `DEBRIEF` card. A beat's `to` is the scene time its picture ends on, so each line of Vess is
   said over the phase of the scene that shows it; the player moves `t` from one `to` to the next, prints the line through `createTransmissionElement`, and
   steps on Next/Back/Enter/Space/arrows (a printing line finishes first), Skip/Esc leaves. `kit.setLabelScale` grows printed labels on a small canvas (a
-  phone); `verify:story` paints every scene at every beat. Painters are authored in 1280 x 720 units. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
+  phone); `verify:story` paints every scene at every beat. The Tallow painters (`story-scenes.js`) and the boss finales and two benches
+  (`story-scenes-finales.js`) are authored in 1280 x 720 units with one phase for each line of Vess; the other worlds' painters
+  (`story-scenes-ligar.js`, `-bellows.js`, `-ember.js`, `-lanternfall.js`) were drawn on 960 x 540, so `legacy()` in `story-scenes.js` runs them in those
+  units scaled to the canvas, and their `beats` are spaced evenly over the scene's one sweep of `t`. Their helpers (`disc`, `line`, `text`, `ground`) are the kit's,
+  so every scene shares the plate, the shaded matter and the hard shadows. A new boss follows the finale shape (lit bench by bench .0-.25, settles .25-.5, gives up
+  its find .5-.75, into the Case File .75-.92, brackets to the end). The pre-rework player, painters and data are in `archive/2026-10-25/`. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
   recursion otherwise, leaving the stage UI up and the router dead); `disposeLearnQuest` and `LearnFrame.dispose` guard every step.
   The star map draws planets, names and rings only (no acts, no light-years, scattered positions); Tallow's crates are chipped, rusted
   and rounded (`createSalvageCrateTexture`, `boxUVs`).

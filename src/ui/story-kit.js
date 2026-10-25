@@ -9,7 +9,7 @@
 import { mulberry32 } from '../learn/engine/plates.js';
 
 export const C = {
-  bg0: '#0c0b09', bg1: '#15130f', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', faint: '#2a2622',
+  bg: '#0d0c0a', bg0: '#0c0b09', bg1: '#15130f', rim: '#2e2a26', steel: '#6b625a', dust: '#b8afa0', dim: '#544e46', faint: '#2a2622',
   amber: '#e59b24', text: '#dcd6cc', pale: '#cfc8b8', iron: '#3c3833', green: '#78a142', rust: '#9a4a2e', danger: '#b8382c'
 };
 
@@ -50,8 +50,12 @@ export function alpha(ctx, a, fn) {
   ctx.globalAlpha = prev;
 }
 
+/** The clock of the frame being painted (seconds), set by `paintScene`, so painters that were written without one still get drifting dust. */
+let sceneClock = 0;
+export const setSceneClock = c => { sceneClock = Number(c) || 0; };
+
 /** The plate every scene sits on: dark ground, a faint survey grid, registration ticks, a vignette, grain, drifting dust. */
-export function plate(ctx, w, h, clock = 0) {
+export function plate(ctx, w, h, clock = sceneClock) {
   const g = ctx.createLinearGradient(0, 0, 0, h);
   g.addColorStop(0, C.bg1);
   g.addColorStop(1, C.bg0);
@@ -113,6 +117,12 @@ export function bench(ctx, w, h, y = 0.84) {
   ctx.fillRect(0, by + 2, w, 1);
 }
 
+/** The plate with a floor under it at 86% of the height: where the older painters stand their things. */
+export function ground(ctx, w, h) {
+  plate(ctx, w, h);
+  bench(ctx, w, h, 0.86);
+}
+
 /** A hard, flat contact shadow: no blur. */
 export function contact(ctx, x, y, rx, ry = rx * 0.28, a = 0.5) {
   ctx.beginPath();
@@ -121,20 +131,68 @@ export function contact(ctx, x, y, rx, ry = rx * 0.28, a = 0.5) {
   ctx.fill();
 }
 
-/** A matte ball, lit from the upper left. `kind` is a MATTER key. */
-export function ball(ctx, x, y, r, kind = 'C', { shadow = false, rim = true } = {}) {
-  const [base, hi, edge] = MATTER[kind] || MATTER.C;
-  r = Math.max(0.6, r);
-  if (shadow) contact(ctx, x + r * 0.2, y + r * 1.02, r * 0.95, r * 0.26, 0.42);
-  const g = ctx.createRadialGradient(x - r * 0.38, y - r * 0.42, r * 0.08, x, y, r * 1.02);
+/** Spheres are drawn many times a frame, so each (colours, radius) is painted once on a small canvas and stamped. Node has no canvas: it draws direct. */
+const SPRITES = new Map();
+function paintSphere(c, x, y, r, [base, hi, edge], rim) {
+  const g = c.createRadialGradient(x - r * 0.38, y - r * 0.42, r * 0.08, x, y, r * 1.02);
   g.addColorStop(0, hi);
   g.addColorStop(0.45, base);
   g.addColorStop(1, edge);
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = g;
-  ctx.fill();
-  if (rim && r > 3) { ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1; ctx.stroke(); }
+  c.beginPath();
+  c.arc(x, y, r, 0, Math.PI * 2);
+  c.fillStyle = g;
+  c.fill();
+  if (rim && r > 3) { c.strokeStyle = 'rgba(0,0,0,0.55)'; c.lineWidth = 1; c.stroke(); }
+}
+function sphere(ctx, x, y, r, colors, rim) {
+  r = Math.max(0.6, r);
+  if (typeof document === 'undefined' || r < 3) { paintSphere(ctx, x, y, r, colors, rim); return; }
+  // A painter drawing in scaled units (`legacy` in story-scenes) still gets a sprite at the real pixel size.
+  let k = 1;
+  try { k = Math.max(1, Math.round((ctx.getTransform?.().a || 1) * 4) / 4); } catch (err) { k = 1; }
+  const q = Math.round(r * 2) / 2;
+  const key = `${colors[0]}|${colors[1]}|${q}|${rim ? 1 : 0}|${k}`;
+  let sp = SPRITES.get(key);
+  if (!sp) {
+    if (SPRITES.size > 600) SPRITES.clear();
+    const px = Math.ceil(q * 2 * k) + 4;
+    const cv = document.createElement('canvas');
+    cv.width = px; cv.height = px;
+    const c2 = cv.getContext?.('2d');
+    if (!c2) { paintSphere(ctx, x, y, r, colors, rim); return; }
+    c2.scale(k, k);
+    paintSphere(c2, px / (2 * k), px / (2 * k), q, colors, rim);
+    sp = { cv, size: px / k };
+    SPRITES.set(key, sp);
+  }
+  ctx.drawImage(sp.cv, x - sp.size / 2, y - sp.size / 2, sp.size, sp.size);
+}
+
+/** A matte ball, lit from the upper left. `kind` is a MATTER key. */
+export function ball(ctx, x, y, r, kind = 'C', { shadow = false, rim = true } = {}) {
+  r = Math.max(0.6, r);
+  if (shadow) contact(ctx, x + r * 0.2, y + r * 1.02, r * 0.95, r * 0.26, 0.42);
+  sphere(ctx, x, y, r, MATTER[kind] || MATTER.C, rim);
+}
+
+const hexOf = c => (/^#[0-9a-f]{6}$/i.test(c) ? [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)) : null);
+const mixRgb = (a, b, k) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',')})`;
+
+/**
+ * A disc of any colour: the older painters ask for one by `fill` (and an optional `stroke` ring). A hex colour becomes a
+ * lit matte ball like the rest of the kit; a small disc, or any other colour string, stays flat.
+ */
+export function disc(ctx, x, y, r, fill, stroke = null) {
+  const base = hexOf(fill);
+  if (base && r >= 5) {
+    sphere(ctx, x, y, r, [fill, mixRgb(base, [255, 250, 235], 0.5), mixRgb(base, [0, 0, 0], 0.6)], false);
+  } else {
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+  if (stroke) { ctx.beginPath(); ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2); ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
 }
 
 /** A thin ring (an orbit, a selection, a lens edge). */
@@ -262,4 +320,9 @@ export function balance(ctx, cx, cy, half, tilt, { pivotX = cx, drop = half * 0.
   ctx.fillStyle = '#b8afa0';
   ctx.fill();
   return { left: { x: lx, y: ly + drop }, right: { x: rx, y: ry + drop }, pan: pan * 1.15 };
+}
+
+/** `text` as the older painters call it: a printed label, so it grows on a small screen. */
+export function legacyText(ctx, str, x, y, opts = {}) {
+  text(ctx, str, x, y, { scale: true, ...opts });
 }

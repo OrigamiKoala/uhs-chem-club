@@ -17,9 +17,10 @@ import { BELLOWS_SCENES } from './story-scenes-bellows.js';
 import { LIGAR_SCENES } from './story-scenes-ligar.js';
 import { EMBER_SCENES } from './story-scenes-ember.js';
 import { LANTERNFALL_SCENES } from './story-scenes-lanternfall.js';
+import { FINALE_SCENES } from './story-scenes-finales.js';
 import {
   C, clamp01, win, ease, easeOut, lerp, alpha, plate, bench, contact, ball, ring, line, rod, text, tag, leader,
-  brackets, balance
+  brackets, balance, setSceneClock
 } from './story-kit.js';
 
 const TAU = Math.PI * 2;
@@ -1268,6 +1269,18 @@ function hopperFall(ctx, w, h, t, clock = 0) {
   if (f > 0) brackets(ctx, fx - 176, fy - 166, 352, 290, C.amber, f, 4);
 }
 
+/**
+ * The other worlds' painters were drawn on a 960 x 540 plate. They run in those units, scaled up to the canvas, so
+ * their lines, labels and sizes come out as drawn; only the plate under them and the shading of their discs are the kit's.
+ */
+const legacy = scenes => Object.fromEntries(Object.entries(scenes).map(([id, fn]) => [id, (ctx, w, h, t) => {
+  const k = w / 960;
+  ctx.save();
+  ctx.scale(k, k);
+  fn(ctx, 960, h / k, t);
+  ctx.restore();
+}]));
+
 export const SCENES = {
   'grain-resolve': grainResolve,
   'beam-foil': beamFoil,
@@ -1277,13 +1290,16 @@ export const SCENES = {
   'scale-count': scaleCount,
   'hopper-fall': hopperFall,
   // The other worlds' painters, each in its own file.
-  ...BELLOWS_SCENES,
-  ...LIGAR_SCENES,
-  ...EMBER_SCENES,
-  ...LANTERNFALL_SCENES
+  ...legacy(BELLOWS_SCENES),
+  ...legacy(LIGAR_SCENES),
+  ...legacy(EMBER_SCENES),
+  ...legacy(LANTERNFALL_SCENES),
+  // The boss finales and two benches redrawn on the kit; they replace the same ids above.
+  ...FINALE_SCENES
 };
 
 /** Paint one frame of a scene. An unknown scene paints the bare plate. */
 export function paintScene(id, ctx, w, h, t, clock = 0) {
+  setSceneClock(clock);
   (SCENES[id] || ((c, ww, hh, _t, ck) => plate(c, ww, hh, ck)))(ctx, w, h, clamp01(t), clock);
 }
