@@ -381,6 +381,26 @@ export function needleReading(state, fixtureId) {
   return q;
 }
 
+/**
+ * The mass measurement: protons and neutrons weigh 1 each; electrons weigh basically nothing.
+ * `fixture.props = {zones: [zone keys of the atom], nucleus: id of fixed nucleus lump}`.
+ */
+export function massReading(state, fixtureId) {
+  const f = state.fixtures[fixtureId];
+  if (!f) return 0;
+  const zones = new Set(f.props.zones || []);
+  let m = 0;
+  const lump = f.props.nucleus && state.pieces[f.props.nucleus];
+  if (lump && !lump.hidden) {
+    m += (lump.props.p || 0) + (lump.props.n || 0);
+  }
+  for (const p of Object.values(state.pieces)) {
+    if (p.hidden || !p.zone || !zones.has(p.zone)) continue;
+    if (p.kind === 'proton' || p.kind === 'neutron') m += 1;
+  }
+  return m;
+}
+
 /** How many pieces of a kind stand in a zone. */
 export function countIn(state, zone, kind) {
   return Object.values(state.pieces).filter(p => !p.hidden && p.zone === zone && (!kind || p.kind === kind)).length;
@@ -790,7 +810,7 @@ function paintParticle(ctx, p, state, o) {
  */
 function paintSpeck(ctx, p, state, o) {
   const tag = p.props.deflect || '';
-  disc(ctx, o.x, o.y, o.r, '#6a645a', o.lit ? AMBER : '#8c8376', o.lit ? 2.5 : 1);
+  disc(ctx, o.x, o.y, o.r, '#847c6e', o.lit ? AMBER : '#8c8376', o.lit ? 2.5 : 1);
   if (tag) plateText(ctx, tag, o.x, o.y, { size: Math.max(7, Math.round(o.r * 0.36)), weight: 700, align: 'center', base: 'middle', color: '#16140f', maxW: o.r * 1.5 });
 }
 
@@ -888,7 +908,7 @@ function paintSpecimen(ctx, p, state, o) {
   const topBound = hasTopBadge ? -0.48 : -0.78;
   const botBound = hasLabel ? 0.48 : 0.78;
   const cy = o.y + o.r * ((topBound + botBound) / 2);
-  const R = o.r * Math.min(0.50, (botBound - topBound) / 2);
+  const R = o.r * Math.min(0.58, (botBound - topBound) / 2);
 
   if (p.props.casing) {
     ctx.save();
@@ -906,24 +926,66 @@ function paintSpecimen(ctx, p, state, o) {
     ctx.restore();
   } else {
     const rings = p.props.rings || [];
-    rings.forEach((n, ri) => {
-      const rr = R * (0.3 + 0.7 * ((ri + 1) / Math.max(rings.length, 1)));
-      ctx.strokeStyle = PLATE_COLORS.dim;
-      ctx.lineWidth = 1;
+    const totalShells = Math.max(rings.length, p.props.maxRings || 1);
+    const rInner = Math.max(8, R * 0.24);
+    const rOuter = R * 1.05;
+    const trackWidth = (rOuter - rInner) / totalShells;
+
+    // Concentric track bands separating the shells
+    for (let ri = 0; ri < totalShells; ri++) {
+      const bIn = rInner + ri * trackWidth;
+      const bOut = rInner + (ri + 1) * trackWidth;
+      ctx.fillStyle = ri % 2 === 0 ? 'rgba(0, 0, 0, 0.20)' : 'rgba(255, 255, 255, 0.025)';
       ctx.beginPath();
-      ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = CORE_TINTS.light.fill;
-      for (let i = 0; i < n; i++) {
-        const a = -Math.PI / 2 + (i * 2 * Math.PI) / n + ri * 0.4;
+      ctx.arc(o.x, cy, bOut, 0, Math.PI * 2);
+      ctx.arc(o.x, cy, bIn, 0, Math.PI * 2, true);
+      ctx.fill();
+    }
+
+    // Shell orbit lines and electrons
+    const dotR = Math.max(1.8, Math.min(o.r * 0.046, trackWidth * 0.32));
+    for (let ri = 0; ri < totalShells; ri++) {
+      const bIn = rInner + ri * trackWidth;
+      const bOut = rInner + (ri + 1) * trackWidth;
+      const rr = (bIn + bOut) / 2;
+      const n = ri < rings.length ? rings[ri] : 0;
+      const isOccupied = n > 0;
+
+      if (isOccupied) {
+        ctx.strokeStyle = 'rgba(220, 214, 204, 0.72)';
+        ctx.lineWidth = Math.max(1.6, o.r * 0.013);
         ctx.beginPath();
-        ctx.arc(o.x + Math.cos(a) * rr, cy + Math.sin(a) * rr, Math.max(1.2, o.r * 0.07), 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = CORE_TINTS.light.fill;
+        for (let i = 0; i < n; i++) {
+          const a = -Math.PI / 2 + (i * 2 * Math.PI) / n + ri * 0.4;
+          const ex = o.x + Math.cos(a) * rr;
+          const ey = cy + Math.sin(a) * rr;
+          ctx.beginPath();
+          ctx.arc(ex, ey, dotR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#1d1a16';
+          ctx.lineWidth = Math.max(1, o.r * 0.008);
+          ctx.stroke();
+        }
+      } else {
+        // Empty shell guide ring
+        ctx.strokeStyle = 'rgba(184, 175, 160, 0.35)';
+        ctx.lineWidth = Math.max(1.2, o.r * 0.009);
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
-    });
+    }
+
     const total = (p.props.p || 0) + (p.props.n || 0);
     if (!p.props.counts && total) {
-      disc(ctx, o.x, cy, Math.max(1.6, R * 0.08 * Math.sqrt(total)), CORE_TINTS.marked.fill, CORE_TINTS.marked.rim, 1);
+      const nucR = Math.min(rInner * 0.88, Math.max(6, R * 0.042 * Math.sqrt(total)));
+      disc(ctx, o.x, cy, nucR, CORE_TINTS.marked.fill, CORE_TINTS.marked.rim, 1);
     }
     if (p.props.counts) {
       // What is in the middle, printed neatly on a dark pill, cleanly separated from the rings
@@ -1256,7 +1318,7 @@ function faceKey(p, state, at) {
     case 'atom': {
       if (p.props.slate) { const a = slateAtom(p, state); return `slate|${p.props.el}|${a.lone}|${a.dots}|${a.around}|${a.lamp}|${p.props.stamped ? a.fc : ''}|${p.props.marked ? 1 : 0}`; }
       const r = readAtom(p, state);
-      return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}|${state.opts?.charges === false ? 0 : 1}`;
+      return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}|${state.opts?.charges === false ? 0 : 1}|${state.opts?.atom3d === false ? 0 : 1}`;
     }
     case 'dish': return `${p.props.sample.id}|${p.props.cut || ''}|${p.props.settled ? 1 : 0}|${p.props.view ?? ''}`;
     case 'lens': {
@@ -1264,7 +1326,7 @@ function faceKey(p, state, at) {
       return d ? `${d.id}|${d.props.sample.id}|${scopePower(state)}|${d.props.cut || ''}|${d.props.settled ? 1 : 0}` : '';
     }
     case 'joint': return `${p.props.pairs || 0}|${p.props.measured ? 1 : 0}`;
-    case 'ion': return `${p.props.el}|${p.props.charge || 0}|${p.props.tint || ''}`;
+    case 'ion': return `${p.props.el}|${p.props.charge || 0}|${p.props.tint || ''}|${state.opts?.atom3d === false ? 0 : 1}`;
     case 'specimen': return JSON.stringify(p.props);
     case 'nucleus': return `${p.props.p}|${p.props.n}`;
     case 'detector': return `${p.props.count ?? ''}|${p.props.shots ?? ''}`;
@@ -1312,6 +1374,42 @@ function paintNeedle(ctx, f, state, b) {
   plateText(ctx, '+', cx + Math.cos(-Math.PI / 2 + sweep) * R * 1.0 + endSize * 0.9, cy + Math.sin(-Math.PI / 2 + sweep) * R + endSize * 0.1, { size: endSize, weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
   const text = q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`;
   plateText(ctx, text, b.x1 - 4, b.y0 + h * 0.3, { size: Math.max(10, Math.round(h * 0.26)), weight: 700, align: 'right', base: 'middle', color: q === 0 ? PLATE_COLORS.dust : AMBER });
+}
+
+function paintMass(ctx, f, state, b) {
+  const m = massReading(state, f.id);
+  const range = f.props.range || 12;
+  const w = b.x1 - b.x0;
+  const h = b.y1 - b.y0;
+  const cx = (b.x0 + b.x1) / 2;
+  const cy = b.y0 + h * 0.86;
+  const R = Math.min(w * 0.42, h * 0.62);
+  const sweep = 0.55 * Math.PI;
+  ctx.strokeStyle = PLATE_COLORS.steel;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, -Math.PI / 2 - sweep, -Math.PI / 2 + sweep);
+  ctx.stroke();
+  const ticks = Math.min(range, 6);
+  for (let i = 0; i <= ticks; i++) {
+    const a = -Math.PI / 2 - sweep + (i / ticks) * (sweep * 2);
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * R * (i === 0 || i === ticks ? 0.78 : 0.88), cy + Math.sin(a) * R * (i === 0 || i === ticks ? 0.78 : 0.88));
+    ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+    ctx.stroke();
+  }
+  const clamped = Math.max(0, Math.min(range, m));
+  const a = -Math.PI / 2 - sweep + (clamped / range) * (sweep * 2);
+  ctx.strokeStyle = m === 0 ? PLATE_COLORS.dust : AMBER;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(a) * R * 0.92, cy + Math.sin(a) * R * 0.92);
+  ctx.stroke();
+  const endSize = Math.max(8, Math.round(h * 0.20));
+  plateText(ctx, '0', cx + Math.cos(-Math.PI / 2 - sweep) * R * 1.0 - endSize * 0.9, cy + Math.sin(-Math.PI / 2 - sweep) * R + endSize * 0.1, { size: endSize, weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+  plateText(ctx, `${range}`, cx + Math.cos(-Math.PI / 2 + sweep) * R * 1.0 + endSize * 0.9, cy + Math.sin(-Math.PI / 2 + sweep) * R + endSize * 0.1, { size: endSize, weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+  plateText(ctx, `${m}`, b.x1 - 4, b.y0 + h * 0.3, { size: Math.max(10, Math.round(h * 0.26)), weight: 700, align: 'right', base: 'middle', color: m === 0 ? PLATE_COLORS.dust : AMBER });
 }
 
 /**
@@ -1478,6 +1576,7 @@ function paintFixture(ctx, f, state, b) {
   if (f.kind === 'plate') paintPlate(ctx, f, state, b);
   else if (f.kind === 'slate') paintSlate(ctx, f, state, b);
   else if (f.kind === 'needle') paintNeedle(ctx, f, state, b);
+  else if (f.kind === 'mass') paintMass(ctx, f, state, b);
   else if (f.kind === 'beam') paintBeam(ctx, f, state, b);
   else if (f.kind === 'field') paintField(ctx, f, state, b);
   else if (f.kind === 'tester') paintTester(ctx, f, state, b);

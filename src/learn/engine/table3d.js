@@ -49,7 +49,7 @@ import { weatherFace } from './table-surface.js';
 import {
   DISH_H, PUCK_H, CARD_H, makeKitMaterials, jitter, shade, roundedSlab,
   buildTray, buildSlot, buildJar, buildDeck, buildKnob, buildKey,
-  buildBead, buildBall, buildAtom, buildPuck, buildDish, buildLens, buildCutter, buildCard, buildCase
+  buildBead, buildBall, buildAtom, buildModel3D, buildNucleus3D, buildSpecimen3D, buildPuck, buildDish, buildLens, buildCutter, buildCard, buildCase
 } from './table-props.js';
 import { makeLabMaterials, buildInstrumentCase, buildSocket, buildTrack } from './lab-props.js';
 import { makeLigarMaterials, LIGAR_SKIN } from './ligar-props.js';
@@ -370,6 +370,14 @@ export class Table3D extends BenchViewer3D {
       // An orbit is drawn as rings on the mat, not built as a tray with walls: its electrons sit on the rings.
       if (t.orbit) continue;
       const r = rectOf(t, SIZES.tray);
+      if (t.spot || t.nucleus) {
+        const rad = ((t.size?.w ?? SIZES.tray.w) / 2) * s;
+        place(buildDish(rad, this.mine(new THREE.MeshStandardMaterial({ color: 0x1a1814, roughness: 0.85, metalness: 0.1 })), {
+          enamel: this.mine(new THREE.MeshStandardMaterial({ color: 0x14120e, roughness: 0.7, metalness: 0.2 })),
+          rim: wallMat
+        }), r);
+        continue;
+      }
       place(buildTray(r.w * s, r.h * s, { wallMat, liningMat: lining }), r);
     }
     for (const t of Object.values(state.zones.slots)) {
@@ -802,7 +810,8 @@ export class Table3D extends BenchViewer3D {
   pieceSignature(kit, p) {
     const f = faceOf(kit, p, this.state);
     const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
-    return `${p.kind}|${radiusOf(kit, p)}|${f.text}|${f.badge}|${f.flipped ? 1 : 0}|${p.token ? 1 : 0}|${kit.faceKey ? kit.faceKey(p, this.state, at) : ''}`;
+    const atom3d = this.state?.opts?.atom3d !== false && !this.state?.opts?.diskAtoms && !p.props?.disk;
+    return `${p.kind}|${radiusOf(kit, p)}|${f.text}|${f.badge}|${f.flipped ? 1 : 0}|${p.token ? 1 : 0}|${atom3d ? 1 : 0}|${kit.faceKey ? kit.faceKey(p, this.state, at) : ''}`;
   }
 
   /**
@@ -811,7 +820,7 @@ export class Table3D extends BenchViewer3D {
    * `rect` ({hw, hh} in table units) paints a card's proportions; otherwise a square canvas holds a disc.
    * @returns {{mat: THREE.Material, canvas: HTMLCanvasElement, N: number}}
    */
-  faceMaterial(kit, p, { N = 384, rect = null, physical = false } = {}) {
+  faceMaterial(kit, p, { N = 384, rect = null, physical = false, bg = null } = {}) {
     const rU = radiusOf(kit, p);
     const K = 36;
     const W = rect ? Math.round(rect.hw * 2 * K) : N;
@@ -820,7 +829,7 @@ export class Table3D extends BenchViewer3D {
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.fillStyle = '#16140f';
+    ctx.fillStyle = bg || '#16140f';
     ctx.fillRect(0, 0, W, H);
     const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
     if (rect) kit.paintPiece(ctx, p, this.state, { x: W / 2, y: H / 2, r: rU * K, lit: false, sc: K, flat: true });
@@ -933,6 +942,22 @@ export class Table3D extends BenchViewer3D {
       return g;
     }
 
+    // A 3D prediction model card ('solid', 'spread', 'core')
+    if (p.kind === 'model') {
+      const { mat } = this.faceMaterial(kit, p, { rect: kind?.rect });
+      const modelMesh = buildModel3D(r, p, kit, this.state, {
+        faceMat: mat,
+        own: m => this.mine(m),
+        THREE,
+        s
+      });
+      g.add(modelMesh);
+      g.userData.height = modelMesh.userData.height;
+      g.userData.tick = modelMesh.userData.tick;
+      this.heldRing(g, Math.hypot(kind?.rect?.hw || 11, kind?.rect?.hh || 8) * s);
+      return g;
+    }
+
     // A card the kit paints: a rounded slab with the face stuck on.
     if (kit.paintPiece && kind?.rect) {
       const { mat } = this.faceMaterial(kit, p, { rect: kind.rect });
@@ -967,18 +992,48 @@ export class Table3D extends BenchViewer3D {
         this.heldRing(g, r * 1.2);
         return g;
       }
-      if (p.kind === 'speck' || kind?.ball) {
-        const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
-        const hasTag = Boolean(p.props?.deflect);
-        g.add(buildBall(r, mat, this.mine(new THREE.MeshStandardMaterial({
-          color: this.faceColour(canvas, N),
-          roughness: 0.38,
-          metalness: 0.12
-        })), { showCap: hasTag }));
+      if (p.kind === 'nucleus') {
+        const { mat } = this.faceMaterial(kit, p);
+        const nucMesh = buildNucleus3D(r, p, kit, this.state, {
+          faceMat: mat,
+          own: m => this.mine(m),
+          THREE,
+          s
+        });
+        g.add(nucMesh);
+        g.userData.height = nucMesh.userData.height;
         this.heldRing(g, r);
         return g;
       }
-      if (p.kind === 'atom' || (p.kind === 'ion' && !p.props?.slate)) {
+      if (p.kind === 'specimen') {
+        const { mat } = this.faceMaterial(kit, p);
+        const specMesh = buildSpecimen3D(r, p, kit, this.state, {
+          faceMat: mat,
+          own: m => this.mine(m),
+          THREE,
+          s
+        });
+        g.add(specMesh);
+        g.userData.height = specMesh.userData.height;
+        g.userData.tick = specMesh.userData.tick;
+        this.heldRing(g, r);
+        return g;
+      }
+      if (['proton', 'neutron', 'electron', 'speck'].includes(p.kind) || kind?.ball) {
+        const bg = p.kind === 'proton' ? '#b8541c' : p.kind === 'neutron' ? '#736d64' : p.kind === 'electron' ? '#a39d91' : '#847c6e';
+        const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true, bg });
+        const bodyCol = this.faceColour(canvas, N);
+        const hasTag = Boolean(p.props?.deflect);
+        g.add(buildBall(r, mat, this.mine(new THREE.MeshStandardMaterial({
+          color: bodyCol,
+          roughness: 0.42,
+          metalness: 0.18
+        })), { showCap: true }));
+        this.heldRing(g, r);
+        return g;
+      }
+      const isDiskAtom = (this.state?.opts?.atom3d === false || this.state?.opts?.diskAtoms || p.props?.disk);
+      if (!isDiskAtom && (p.kind === 'atom' || (p.kind === 'ion' && !p.props?.slate))) {
         const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
         const atomMesh = buildAtom(r, p, kit, this.state, {
           faceMat: mat,
@@ -993,7 +1048,7 @@ export class Table3D extends BenchViewer3D {
         this.heldRing(g, r);
         return g;
       }
-      const bead = kind && !kind.tool && ['proton', 'neutron', 'electron', 'ion'].includes(p.kind);
+      const bead = kind && !kind.tool && ['atom', 'proton', 'neutron', 'electron', 'ion'].includes(p.kind);
       if (bead) {
         const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
         g.add(buildBead(r, mat, this.mine(new THREE.MeshStandardMaterial({ color: this.faceColour(canvas, N), roughness: 0.55, metalness: 0.05 }))));

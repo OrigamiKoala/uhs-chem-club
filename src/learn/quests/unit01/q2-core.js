@@ -155,7 +155,7 @@ const SHELLS = [
 const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 24, 40, 30, n);
 
 const needleFixture = (zones, nuc, at, range, size = { w: 40, h: 16 }) => ({
-  id: 'needle', kind: 'needle', label: 'Charge needle', at, size, noRun: true, props: { zones, nucleus: nuc, range }
+  id: 'needle', kind: 'needle', label: 'Charge', at, size, noRun: true, props: { zones, nucleus: nuc, range }
 });
 
 const inZone = (t, zone, kind) => piecesIn(t, zone, kind).length;
@@ -353,9 +353,9 @@ export const STAGES = [
     table: atomTable({
       pieces: [
         nucleus('nuc', 'SAMPLE D', 60, 39, 11, 12),
-        { ...specimen('r1', 'SAMPLE A', 16, 26, { p: 2, n: 2, rings: [2] }), fixed: true },
-        { ...specimen('r2', 'SAMPLE B', 16, 48, { p: 10, n: 10, rings: [2, 8] }), fixed: true },
-        { ...specimen('r3', 'SAMPLE C', 104, 38, { p: 13, n: 14, rings: [2, 8, 3] }), fixed: true },
+        { ...specimen('r1', 'SAMPLE A', 16, 26, { p: 2, n: 2, rings: [2], maxRings: 3 }), fixed: true },
+        { ...specimen('r2', 'SAMPLE B', 16, 48, { p: 10, n: 10, rings: [2, 8], maxRings: 3 }), fixed: true },
+        { ...specimen('r3', 'SAMPLE C', 104, 38, { p: 13, n: 14, rings: [2, 8, 3], maxRings: 3 }), fixed: true },
         ...electrons('e', 11, 'tray:src')
       ],
       zones: {

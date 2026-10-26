@@ -101,21 +101,25 @@ function heap(groups) {
   return out;
 }
 
-/** The atom being built: the middle, the outside and the needle clipped on both. */
+/** The atom being built: the middle, the outside rings and the charge & mass meters. */
 const BUILD = {
-  trays: [trayAt('core', 'The middle', 23, 34, 40, 20), trayAt('out', 'Outside', 57, 34, 22, 20)],
-  needle: { id: 'needle', kind: 'needle', label: 'Needle', at: { x: 94, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }
+  trays: [
+    { ...trayAt('core', 'The middle', 36, 33, 12, 12), spot: true },
+    { ...trayAt('out', '', 36, 33, 30, 20), orbit: { rings: [2, 8], radii: [10, 15] } }
+  ],
+  needle: { id: 'needle', kind: 'needle', label: 'Needle', at: { x: 80, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } },
+  mass: { id: 'mass', kind: 'mass', label: 'Mass', at: { x: 104, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 12 } }
 };
 
-/** The shell trays of an atom with a nucleus at the top left: one per shell, closest in first. */
-const SHELLS = [
-  trayAt('sh1', 'Shell 1', 14, 46, 20, 16, 2),
-  trayAt('sh2', 'Shell 2', 48, 46, 40, 20, 8),
-  trayAt('sh3', 'Shell 3', 98, 54, 40, 20, 8)
-];
-const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 24, 40, 30, n);
-const needleFixture = (zones, nuc, at, range) => ({
-  id: 'needle', kind: 'needle', label: 'Charge needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
+const shellOrbit = (id, x, y, radius, cap, ringIndex, label = '') => ({
+  ...trayAt(id, label, x, y, radius * 2, radius * 2, cap),
+  orbit: { rings: [cap], radii: [radius], ringIndex }
+});
+const massFixture = (zones, nuc, at, range, size = { w: 22, h: 18 }) => ({
+  id: 'mass', kind: 'mass', label: 'Mass', at, size, noRun: true, props: { zones, nucleus: nuc, range }
+});
+const needleFixture = (zones, nuc, at, range, size = { w: 22, h: 18 }) => ({
+  id: 'needle', kind: 'needle', label: 'Charge needle', at, size, noRun: true, props: { zones, nucleus: nuc, range }
 });
 
 const count = (t, zone, kind) => piecesIn(t, zone, kind).length;
@@ -141,7 +145,7 @@ export const STAGES = [
         ...heap([['proton', 4], ['neutron', 4], ['electron', 4]])
       ],
       zones: { trays: BUILD.trays },
-      fixtures: [BUILD.needle]
+      fixtures: [BUILD.needle, BUILD.mass]
     }),
     hints: [
       'Use the heap, the two trays and the needle.',
@@ -181,7 +185,8 @@ export const STAGES = [
       fixtures: [
         plate('la', 'Label A', 44, ['lithium (Li)', 'atomic number 3', 'mass number 7', 'needle 0']),
         plate('lb', 'Label B', 99, ['lithium (Li)', 'atomic number 3', 'mass number 6', 'needle 0']),
-        BUILD.needle
+        BUILD.needle,
+        BUILD.mass
       ]
     }),
     hints: [
@@ -269,7 +274,8 @@ export const STAGES = [
       fixtures: [
         plate('la', 'Label A', 44, ['beryllium (Be)', 'atomic number 4', 'mass number 9']),
         plate('lb', 'Label B', 99, ['lithium (Li)', 'atomic number 3', 'mass number 7']),
-        BUILD.needle
+        BUILD.needle,
+        BUILD.mass
       ]
     }),
     hints: [
@@ -302,13 +308,23 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        nucleus('nuc', 'SAMPLE A', 14, 11, 12, 12),
+        nucleus('nuc', 'SAMPLE A', 38, 35, 12, 12),
         ...electrons('e', 2, 'tray:sh1'),
         ...electrons('e', 8, 'tray:sh2', 3),
         ...electrons('e', 2, 'tray:sh3', 11)
       ],
-      zones: { trays: [SOURCE_TRAY('Taken off', 12), ...SHELLS] },
-      fixtures: [needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 50, y: 13 }, 4)]
+      zones: {
+        trays: [
+          trayAt('src', 'Taken off', 92, 47, 38, 20, 12),
+          shellOrbit('sh1', 38, 35, 12, 2, 0, 'Shell 1'),
+          shellOrbit('sh2', 38, 35, 17, 8, 1, 'Shell 2'),
+          shellOrbit('sh3', 38, 35, 22, 8, 2, 'Shell 3')
+        ]
+      },
+      fixtures: [
+        needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 80, y: 18 }, 4),
+        massFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 104, y: 18 }, 30)
+      ]
     }),
     hints: [
       'Use the shells, the tray beside them and the needle.',
@@ -338,14 +354,24 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        nucleus('nuc', 'SAMPLE A', 14, 11, 17, 18),
+        nucleus('nuc', 'SAMPLE A', 38, 35, 17, 18),
         ...electrons('e', 2, 'tray:sh1'),
         ...electrons('e', 8, 'tray:sh2', 3),
         ...electrons('e', 7, 'tray:sh3', 11),
         ...electrons('e', 3, 'tray:src', 18)
       ],
-      zones: { trays: [SOURCE_TRAY('Spare electrons', 3), ...SHELLS] },
-      fixtures: [needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 50, y: 13 }, 4)]
+      zones: {
+        trays: [
+          trayAt('src', 'Spare electrons', 92, 47, 38, 20, 3),
+          shellOrbit('sh1', 38, 35, 12, 2, 0, 'Shell 1'),
+          shellOrbit('sh2', 38, 35, 17, 8, 1, 'Shell 2'),
+          shellOrbit('sh3', 38, 35, 22, 8, 2, 'Shell 3')
+        ]
+      },
+      fixtures: [
+        needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 80, y: 18 }, 4),
+        massFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 104, y: 18 }, 40)
+      ]
     }),
     hints: [
       'Use the spare electrons, the shells and the needle.',
@@ -378,7 +404,8 @@ export const STAGES = [
         ...[56, 66, 76, 86, 96, 106].map((x, i) => ({ id: `b${i + 1}`, kind: 'ion', label: 'SAMPLE B', at: { x, y: 11 }, props: { el: 'Cl', charge: -1 } }))
       ],
       zones: { trays: [trayAt('pad', 'Pad', 88, 35, 50, 22)] },
-      fixtures: [{ id: 'needle', kind: 'needle', label: 'Pad charge', at: { x: 30, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:pad'], range: 4 } }]
+      fixtures: [{ id: 'needle', kind: 'needle', label: 'Pad charge', at: { x: 30, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:pad'], range: 4 } }],
+      opts: { atom3d: false }
     }),
     hints: [
       'Use the ions and the pad with its needle.',

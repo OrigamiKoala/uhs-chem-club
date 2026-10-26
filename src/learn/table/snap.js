@@ -124,7 +124,14 @@ export function zoneAt(state, p) {
     if (inRect(rectOf(c, SIZES.container), p)) return { kind: 'container', id: c.id };
   }
   for (const t of Object.values(state.zones.trays)) {
-    if (!t.orbit && inRect(rectOf(t, SIZES.tray), p)) return { kind: 'tray', id: t.id };
+    if (!t.orbit) {
+      if (t.spot || t.nucleus || t.round) {
+        const rad = (t.size?.w ?? SIZES.tray.w) / 2;
+        if (Math.hypot(p.x - t.at.x, p.y - t.at.y) <= rad) return { kind: 'tray', id: t.id };
+      } else if (inRect(rectOf(t, SIZES.tray), p)) {
+        return { kind: 'tray', id: t.id };
+      }
+    }
   }
   // An ORBIT is round: either one multi-ring atom (Stage 4) or concentric shells (Stage 5).
   // A drop lands in whichever shell ring is nearest, or inside the atom's circle.
@@ -191,6 +198,23 @@ export function orbitSlot(zone, n, total = 0) {
 /** Where a tray's or container's n-th item sits: a grid from its top-left, or a ring round an orbit's centre. */
 export function layoutIn(zone, fallback, n, total = 0) {
   if (zone.orbit) return orbitSlot(zone, n, total);
+  if (zone.spot || zone.nucleus) {
+    if (total <= 1) return { x: zone.at.x, y: zone.at.y };
+    if (total <= 4) {
+      const a = (n * 2 * Math.PI) / total - Math.PI / 2;
+      return { x: zone.at.x + Math.cos(a) * 2.4, y: zone.at.y + Math.sin(a) * 2.4 };
+    }
+    const centerCount = total <= 6 ? 1 : 2;
+    const outerCount = total - centerCount;
+    if (n < centerCount) {
+      const off = centerCount === 1 ? 0 : (n === 0 ? -1.5 : 1.5);
+      return { x: zone.at.x + off, y: zone.at.y };
+    }
+    const idx = n - centerCount;
+    const a = (idx * 2 * Math.PI) / outerCount - Math.PI / 2;
+    const rad = total <= 6 ? 3.3 : 3.8;
+    return { x: zone.at.x + Math.cos(a) * rad, y: zone.at.y + Math.sin(a) * rad };
+  }
   const r = rectOf(zone, fallback);
   // A zone for big pieces (a dish) declares its own pitch (`cell`); the default is for the small ones.
   const cell = zone.cell || CELL;

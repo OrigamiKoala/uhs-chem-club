@@ -170,6 +170,9 @@ export function createTable(spec, seedKey = '') {
       ...(t.cap != null ? { cap: t.cap } : {}),
       ...(t.cell ? { cell: t.cell } : {}),
       ...(t.cellH ? { cellH: t.cellH } : {}),
+      ...(t.spot ? { spot: true } : {}),
+      ...(t.nucleus ? { nucleus: true } : {}),
+      ...(t.round ? { round: true } : {}),
       // An ORBIT is a round place round a fixed middle (a nucleus): pieces dropped in it snap onto rings,
       // closest in first, and the view draws the rings instead of a tray. It holds what stands in it and
       // refuses nothing; the rings are where a piece comes to rest, not a rule about what may go there.

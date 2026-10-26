@@ -147,6 +147,23 @@ export function drawTable(ctx, w, h, state, view = {}) {
       ctx.lineWidth = 1;
       continue;
     }
+    if (t.spot || t.nucleus) {
+      const rad = (t.size?.w ?? SIZES.tray.w) / 2;
+      const hover = view.drag?.at ? zoneAt(state, view.drag.at) : null;
+      const isHovered = hover?.kind === 'tray' && hover.id === t.id;
+      ctx.fillStyle = '#1a1814';
+      ctx.beginPath();
+      ctx.arc(X(t.at.x), Y(t.at.y), rad * sc, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isHovered ? AMBER : (holding ? PLATE_COLORS.steel : PLATE_COLORS.rim);
+      ctx.lineWidth = isHovered ? Math.max(2, sc * 0.32) : 1.5;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      if (t.label) {
+        words(t.label, t.at.x, t.at.y - rad - 1.2, { size: 2.2, align: 'center', color: ink.label });
+      }
+      continue;
+    }
     // The built table stands a real tray here (walls, a lining); the flat picture keeps only its words and the count, and, while a piece
     // is in the hand, a bright ring just outside the walls: the places it can be put down.
     if (!mat) outline(r, Boolean(holding));

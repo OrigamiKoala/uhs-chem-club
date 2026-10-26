@@ -342,7 +342,8 @@ export const STAGES = [
         tool('lens', 'Lens')
       ],
       fixtures: [scopeFixture],
-      notes: JOIN_NOTES
+      notes: JOIN_NOTES,
+      opts: { atom3d: false }
     }),
     hints: [
       'Use the lens on Sample A, then join loose atoms.',
@@ -378,7 +379,8 @@ export const STAGES = [
         tool('lens', 'Lens')
       ],
       fixtures: [scopeFixture],
-      notes: JOIN_NOTES
+      notes: JOIN_NOTES,
+      opts: { atom3d: false }
     }),
     hints: [
       'Use the lens on each sample, then join loose atoms.',
@@ -419,7 +421,8 @@ export const STAGES = [
       notes: [
         { at: { x: 4, y: 24.5 }, text: 'Drop one atom onto another to join them.' },
         { at: { x: 4, y: 29 }, text: 'Tap the join between two atoms to break it.' }
-      ]
+      ],
+      opts: { atom3d: false }
     }),
     hints: [
       'Use both trays, and join atoms by dropping one on another.',

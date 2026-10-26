@@ -262,38 +262,33 @@ export function buildBead(r, faceMat, bodyMat) {
 }
 
 /**
- * A ball: a full sphere resting in a low turned collar on the table, with the painted face
- * printed on its crown. The collar grounds the ball on the metal bench so it does not roll,
- * and the crown cap shows what the drawn table paints, undistorted from above.
+ * A ball: a full solid round sphere resting directly on the tabletop, with the painted face
+ * mapped onto its surface.
  */
-export function buildBall(r, faceMat, bodyMat, { showCap = true } = {}) {
+export function buildBall(r, faceMat, bodyMat, { showCap = true, collar = false } = {}) {
   const g = new THREE.Group();
-  const collarH = r * 0.14;
-  // A low turned collar for the ball to sit in, so it rests firmly on the tabletop.
-  const collarProf = [
-    [r * 0.35, 0], [r * 0.62, 0], [r * 0.66, collarH * 0.35],
-    [r * 0.62, collarH], [r * 0.44, collarH * 1.08], [r * 0.35, collarH]
-  ];
-  g.add(meshOf(lathe(collarProf, 28), bodyMat, { receive: false }));
-  const cy = collarH * 0.5 + r * 0.96;
-  const sphereGeo = new THREE.SphereGeometry(r, 32, 22);
-  const ball = meshOf(sphereGeo, bodyMat);
+  if (collar) {
+    const collarH = r * 0.14;
+    const collarProf = [
+      [r * 0.35, 0], [r * 0.62, 0], [r * 0.66, collarH * 0.35],
+      [r * 0.62, collarH], [r * 0.44, collarH * 1.08], [r * 0.35, collarH]
+    ];
+    g.add(meshOf(lathe(collarProf, 28), bodyMat, { receive: false }));
+  }
+  const cy = r;
+  const sphereGeo = new THREE.SphereGeometry(r, 32, 24);
+  const pos = sphereGeo.attributes.position;
+  const uv = sphereGeo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    uv.setXY(i, 0.5 + (x / r) * 0.46, 0.5 - (z / r) * 0.46);
+  }
+  uv.needsUpdate = true;
+  const mat = (showCap && faceMat) ? faceMat : (bodyMat || faceMat);
+  const ball = meshOf(sphereGeo, mat);
   ball.position.y = cy;
   g.add(ball);
-  if (faceMat && showCap) {
-    const capR = r * 0.86;
-    const theta = Math.asin(Math.min(0.99, capR / r));
-    const capGeo = new THREE.SphereGeometry(r * 1.004, 32, 10, 0, Math.PI * 2, 0, theta);
-    const pos = capGeo.attributes.position;
-    const uv = capGeo.attributes.uv;
-    for (let i = 0; i < pos.count; i++) {
-      uv.setXY(i, 0.5 + (pos.getX(i) / capR) * 0.47, 0.5 - (pos.getZ(i) / capR) * 0.47);
-    }
-    uv.needsUpdate = true;
-    const cap = meshOf(capGeo, faceMat, { cast: false });
-    cap.position.y = cy;
-    g.add(cap);
-  }
   g.userData.height = cy + r;
   return g;
 }
@@ -436,5 +431,5 @@ export function buildCase(hw, hh, faceMat, bodyMat) {
   return g;
 }
 
-export { buildAtom3D, buildAtom3D as buildAtom } from './atom3d.js';
+export { buildAtom3D, buildAtom3D as buildAtom, buildModel3D, buildNucleus3D, buildSpecimen3D } from './atom3d.js';
 

@@ -134,8 +134,16 @@ export const STAGES = [
         { id: 'refe', kind: 'specimen', label: 'CORE OUTSIDE', at: { x: 36, y: 11 }, fixed: true, props: { p: 6, n: 6, rings: [2, 4], needle: true } },
         ...heap()
       ],
-      zones: { trays: [trayAt('core', 'The middle', 23, 34, 40, 20), trayAt('out', 'Outside', 57, 34, 22, 20)] },
-      fixtures: [{ id: 'needle', kind: 'needle', label: 'Charge needle', at: { x: 94, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }]
+      zones: {
+        trays: [
+          { ...trayAt('core', 'The middle', 36, 33, 12, 12), spot: true },
+          { ...trayAt('out', '', 36, 33, 30, 20), orbit: { rings: [2, 8], radii: [10, 15] } }
+        ]
+      },
+      fixtures: [
+        { id: 'needle', kind: 'needle', label: 'Charge', at: { x: 80, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } },
+        { id: 'mass', kind: 'mass', label: 'Mass', at: { x: 104, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 12 } }
+      ]
     }),
     foes: HOPPER_FOE,
     encounter: {
