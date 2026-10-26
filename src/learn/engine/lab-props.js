@@ -181,8 +181,8 @@ export function buildEmitter(c, { text = '' } = {}) {
   win.position.set(bw / 2 - wr * 0.5 + 0.0066, bodyH * 0.55, 0);
   g.add(win);
   if (text) {
-    const tag = c.label(text, bw * 0.46, Math.min(hh * 0.52, 0.05));
-    tag.position.set(bw * 0.14, bodyH + 0.0006, bd * 0.18);
+    const tag = c.label(text, bw * 0.44, Math.min(hh * 0.52, 0.05));
+    tag.position.set(bw * 0.24, bodyH + 0.0006, bd * 0.18);
     g.add(tag);
   }
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {

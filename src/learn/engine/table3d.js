@@ -473,6 +473,7 @@ export class Table3D extends BenchViewer3D {
       // A world with gear of its own turns a bigger knob in a wider groove: a dial that is hard to see is a dial nobody turns.
       const knobR = this.skin ? Math.min(0.036, s * 2.2) : Math.min(0.026, s * 1.6);
       for (const d of lay.dials) {
+        if (f.kind === 'view' && (d.name === 'turn' || d.name === 'tilt')) continue;
         const a = this.map.toPlate({ x: d.x0, y: d.y });
         const b = this.map.toPlate({ x: d.x1, y: d.y });
         // The groove the knob rides in: a dark slot cut in the deck, with a lit edge along it.
@@ -1242,7 +1243,14 @@ export class Table3D extends BenchViewer3D {
       const pl = this.map.toPlate(at);
       const isLensOverDish = p?.kind === 'lens' && Boolean(dishUnder(id, this.state, at));
       // A kit may say how high a piece rests where it is (`kit.restHeight`: a dropper laid over a cuvette rests on its rim).
-      const baseElev = isLensOverDish ? DISH_H + 0.002 : (getKit(this.state.kit).restHeight?.(p, this.state, at) || 0);
+      const kitElev = getKit(this.state.kit).restHeight?.(p, this.state, at);
+      let socketElev = 0;
+      if (!kitElev && p?.zone?.startsWith('slot:')) {
+        const slot = this.state.zones?.slots?.[p.zone.slice(5)];
+        const role = slot ? getKit(this.state.kit).slot3d?.(slot, this.state, { skin: this.skin }) : null;
+        if (role === 'holder') socketElev = 0.0105;
+      }
+      const baseElev = isLensOverDish ? DISH_H + 0.002 : (kitElev || socketElev || 0);
       e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);
     }
     const m = this._swarmM || (this._swarmM = new THREE.Matrix4());

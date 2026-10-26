@@ -386,6 +386,7 @@ export class LearnFrame {
       else if (act === 'open-panel') this.setPanelClosed(false);
       else if (act === 'stand') this.tableCbs?.onStand?.();
       else if (act === 'lean') this.tableCbs?.onLean?.();
+      else if (act === 'slice-explainer') import('../../ui/slice-explainer.js').then(m => m.showSliceExplainerModal());
 
       // Any stage already cleared can be walked back into. This is a study road
       // and re-reading is the point of it; there is no XP here for a replay to
@@ -889,9 +890,11 @@ export class LearnFrame {
 
   updateStageActions() {
     if (!this.el.stageActions) return;
+    const hasSlice = Boolean(this.stage?.hasSliceExplainer || this.stage?.table?.fixtures?.some?.(f => f.dials?.slice || f.props?.slice));
     this.el.stageActions.innerHTML = `
       <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Replay the instrument tour">Tour</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
+      ${hasSlice ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="slice-explainer" title="View 3D animation explaining how orbital slicing works">Slice 3D</button>' : ''}
       ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel to view 3D bench" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
   }
@@ -1302,12 +1305,17 @@ export class LearnFrame {
     let i = 0;
     const total = debrief.sections.length;
     let debriefTx = null;
+    let debriefOrbitalView = null;
     let finished = false;
 
     const cleanupTx = () => {
       if (debriefTx?.destroy) {
         debriefTx.destroy();
         debriefTx = null;
+      }
+      if (debriefOrbitalView?.dispose) {
+        try { debriefOrbitalView.dispose(); } catch (e) {}
+        debriefOrbitalView = null;
       }
     };
 
@@ -1337,6 +1345,7 @@ export class LearnFrame {
           <span class="tag live">${i + 1} / ${total}</span>
         </div>
         <div id="lq-debrief-transmission" class="lq-modal-tx"></div>
+        ${s.orbitals ? '<div id="lq-debrief-orbitals" style="margin: 0.5rem 0 1rem; border: 1px solid #2e2a26; border-radius: 4px; overflow: hidden; background: #0d0c0a;"></div>' : ''}
         <div class="debrief-controls-left lq-modal-keys">
           <button type="button" class="btn-secondary" data-step="-1" ${i === 0 ? 'disabled' : ''}>Back</button>
           ${last
@@ -1355,6 +1364,17 @@ export class LearnFrame {
         variant: 'hero'
       });
       document.getElementById('lq-debrief-transmission')?.appendChild(debriefTx.element);
+
+      if (s.orbitals) {
+        const host = document.getElementById('lq-debrief-orbitals');
+        if (host) {
+          const still = Boolean(session.reduceMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+          import('../../ui/model-viewer.js').then(m => {
+            if (this.disposed || !host.isConnected) return;
+            debriefOrbitalView = m.mountDebriefOrbitalViewer(host, s.orbitals, still);
+          }).catch(err => console.error('Debrief orbital viewer failed:', err));
+        }
+      }
 
       document.querySelectorAll('[data-step]').forEach(btn => {
         btn.addEventListener('click', () => {

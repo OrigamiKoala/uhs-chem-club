@@ -86,10 +86,12 @@ export function engravedPlaque(text, opts = {}) {
   // Word wrap, measured against the real font. Nothing is dropped: if the text
   // is longer than the plate, the plate gets a smaller face, not fewer words.
   const maxW = w - pad * 2;
+  const maxH = h - pad * 2;
   const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const minFont = 10;
   let fontSize = size;
   let lines = [];
-  for (let attempt = 0; attempt < 8; attempt++) {
+  for (let attempt = 0; attempt < 50; attempt++) {
     ctx.font = `${fontSize}px "Share Tech Mono", monospace`;
     lines = [];
     let line = '';
@@ -103,8 +105,21 @@ export function engravedPlaque(text, opts = {}) {
       }
     }
     if (line) lines.push(line);
-    if ((lines.length * fontSize * 1.28) + pad * 2 <= h) break;
-    fontSize -= 3;
+
+    let maxLineW = 0;
+    for (const l of lines) {
+      const lw = ctx.measureText(l).width + tracking * l.length;
+      if (lw > maxLineW) maxLineW = lw;
+    }
+    const blockH = lines.length * fontSize * 1.28;
+    if (maxLineW <= maxW && blockH <= maxH) break;
+    if (fontSize <= minFont) break;
+
+    const scaleW = maxLineW > maxW ? maxW / maxLineW : 1;
+    const scaleH = blockH > maxH ? maxH / blockH : 1;
+    const scale = Math.min(scaleW, scaleH);
+    const nextSize = Math.min(fontSize - 1, Math.floor(fontSize * scale));
+    fontSize = Math.max(minFont, nextSize);
   }
 
   const drawTracked = (str, x, y) => {
@@ -117,14 +132,14 @@ export function engravedPlaque(text, opts = {}) {
 
   const lineH = fontSize * 1.28;
   const blockH = lines.length * lineH;
-  let y = align === 'middle' ? (h - blockH) / 2 : pad;
+  let y = align === 'middle' ? Math.max(pad, (h - blockH) / 2) : pad;
 
   for (const line of lines) {
     let x = pad;
     if (align === 'center' || align === 'middle') {
       let lw = 0;
       for (const ch of line) lw += ctx.measureText(ch).width + tracking;
-      x = (w - lw) / 2;
+      x = Math.max(pad, (w - lw) / 2);
     }
     // Engraved: a dark line under the glyph, never a glow.
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';

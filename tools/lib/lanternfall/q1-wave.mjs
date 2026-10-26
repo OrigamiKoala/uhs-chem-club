@@ -18,12 +18,11 @@ export default async function check(q1, { D, TABLE, near, same, holds, rig }) {
     same(Object.keys(t.fixtures).length + Object.values(t.pieces).filter(p => !p.token).length, 0, 'unit02/q1-wave stage 2 (nothing else on the bench)');
     same(end(1).prediction.token, 'same', 'unit02/q1-wave stage 2 (the guess in the solution)');
   }
-  // 3. a pulse is timed between two detectors by the planner, the same for the red lamp and the violet one, and the reading is that speed
+  // 3. a pulse is timed between two detectors by the planner for the first lamp, and the reading is that speed
   {
     const e = end(2);
     const rows = e.recorder.rows;
-    same(rows.map(r => r.label), ['Red lamp', 'Violet lamp'], 'unit02/q1-wave stage 3 (a timing for each lamp)');
-    holds(rows.length === 2 && rows[0].x === rows[1].x && rows[0].y === rows[1].y, 'unit02/q1-wave stage 3: red and violet are not timed over the same gap in the same time');
+    same(rows.map(r => r.label), ['Red lamp'], 'unit02/q1-wave stage 3 (a timing for the first lamp)');
     near(D.pulseNs(rows[0].x), rows[0].y, 1e-9, 'unit02/q1-wave stage 3 (the pulse time is the planner\'s)');
     near(rows[0].x / (rows[0].y * 1e-9) / 1e8, D.LIGHT_SPEED / 1e8, 0.05, 'unit02/q1-wave stage 3 (gap over time is the speed of light, x 10^8)');
     same(e.fixtures.speed.dials.n.value, 3, 'unit02/q1-wave stage 3 (the reading is that speed)');
@@ -36,24 +35,38 @@ export default async function check(q1, { D, TABLE, near, same, holds, rig }) {
     const prompt = q1.STAGES[2].prompt;
     holds(typeof prompt === 'string' && prompt.split(/\s+/).length <= 25, 'unit02/q1-wave stage 3: the prompt is not a short sentence');
   }
-  // 4. the rail runs from the lowest frequency to the highest, and each source's frequency is the planner's
+  // 4. the other lamp is timed down the rail; red and violet cross the same gap in the same time
   {
-    const t = start(3);
+    const e = end(3);
+    const rows = e.recorder.rows;
+    same(rows.map(r => r.label), ['Violet lamp'], 'unit02/q1-wave stage 4 (a timing for the other lamp)');
+    near(D.pulseNs(rows[0].x), rows[0].y, 1e-9, 'unit02/q1-wave stage 4 (the pulse time is the planner\'s)');
+    near(rows[0].x / (rows[0].y * 1e-9) / 1e8, D.LIGHT_SPEED / 1e8, 0.05, 'unit02/q1-wave stage 4 (gap over time is the speed of light, x 10^8)');
+    same(e.fixtures.speed.dials.n.value, 3, 'unit02/q1-wave stage 4 (the reading is that speed)');
+    holds(start(3).fixtures.speed.dials.n.value !== 3, 'unit02/q1-wave stage 4: the reading starts on the answer');
+    const e2 = end(2);
+    holds(e2.recorder.rows[0].x === rows[0].x && e2.recorder.rows[0].y === rows[0].y, 'unit02/q1-wave: red and violet are not timed over the same gap in the same time');
+    const prompt = q1.STAGES[3].prompt;
+    holds(typeof prompt === 'string' && prompt.split(/\s+/).length <= 25, 'unit02/q1-wave stage 4: the prompt is not a short sentence');
+  }
+  // 5. the rail runs from the lowest frequency to the highest, and each source's frequency is the planner's
+  {
+    const t = start(4);
     const ids = Object.values(t.pieces).map(p => p.id);
-    same(ids.length, 5, 'unit02/q1-wave stage 4 (five sources)');
+    same(ids.length, 5, 'unit02/q1-wave stage 5 (five sources)');
     const byHz = ids.slice().sort((a, b) => D.nmToHz(t.pieces[a].props.nm) - D.nmToHz(t.pieces[b].props.nm));
-    same(end(3).zones.rail.order, byHz, 'unit02/q1-wave stage 4 (lowest frequency first)');
-    same(byHz, q1.BY_FREQUENCY, 'unit02/q1-wave stage 4 (the quest\'s own order)');
-    holds(t.zones.rail.order.join() !== byHz.join(), 'unit02/q1-wave stage 4: the rail starts in the answer\'s order');
+    same(end(4).zones.rail.order, byHz, 'unit02/q1-wave stage 5 (lowest frequency first)');
+    same(byHz, q1.BY_FREQUENCY, 'unit02/q1-wave stage 5 (the quest\'s own order)');
+    holds(t.zones.rail.order.join() !== byHz.join(), 'unit02/q1-wave stage 5: the rail starts in the answer\'s order');
     // the ruler reads every one of them, and the two visible lamps are among them (so the bench's misconception that invisible light is another thing fails)
     for (const id of ids) {
       const r = OPT.rulerRead(TABLE.runScript(t, [{ place: { piece: id, to: 'slot:ruler.src' } }], { strict: true }), 'ruler');
-      same(r && r.nm, t.pieces[id].props.nm, `unit02/q1-wave stage 4 (the ruler reads ${id})`);
+      same(r && r.nm, t.pieces[id].props.nm, `unit02/q1-wave stage 5 (the ruler reads ${id})`);
       const log = Math.log10(t.pieces[id].props.nm);
-      holds(log >= -1 && log <= 10, `unit02/q1-wave stage 4: ${id} is off the ruler`);
+      holds(log >= -1 && log <= 10, `unit02/q1-wave stage 5: ${id} is off the ruler`);
     }
     const vis = ids.filter(id => D.isVisible(t.pieces[id].props.nm));
-    same(vis.length, 2, 'unit02/q1-wave stage 4 (two lamps the eye can see)');
-    holds(vis.every(id => byHz.indexOf(id) > 0 && byHz.indexOf(id) < byHz.length - 1), 'unit02/q1-wave stage 4: a visible lamp is at an end, so "violet is the highest" would pass');
+    same(vis.length, 2, 'unit02/q1-wave stage 5 (two lamps the eye can see)');
+    holds(vis.every(id => byHz.indexOf(id) > 0 && byHz.indexOf(id) < byHz.length - 1), 'unit02/q1-wave stage 5: a visible lamp is at an end, so "violet is the highest" would pass');
   }
 }

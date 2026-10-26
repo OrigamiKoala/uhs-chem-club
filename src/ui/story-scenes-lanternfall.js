@@ -85,7 +85,7 @@ function lineGas(ctx, w, h, t) {
   for (const nm of LINES.He) { ctx.globalAlpha = on; line(ctx, xOf(nm), h * 0.25, xOf(nm), h * 0.45, css(wavelengthRgb(nm)), 3); ctx.globalAlpha = 1; }
   const slide = 1 - ease(win(t, 0.4, 0.8));
   for (const [gas, y] of [['He', 0.6], ['H', 0.72]]) {
-    const dx = gas === 'He' ? slide * w * 0.18 : -w * 0.12;
+    const dx = gas === 'He' ? slide * w * 0.18 : 0;
     ctx.fillStyle = C.iron;
     ctx.fillRect(bx, h * (y - 0.04), bw, h * 0.08);
     for (const nm of LINES[gas]) line(ctx, xOf(nm) + dx, h * (y - 0.04), xOf(nm) + dx, h * (y + 0.04), C.pale, 2);

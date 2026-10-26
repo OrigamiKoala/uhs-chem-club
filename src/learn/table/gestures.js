@@ -28,7 +28,7 @@ import {
   SIZES, GRAB_REACH, rectOf, zoneAt, railIndexAt, resolveDrop, targetString
 } from './snap.js';
 import { snapDial } from './model.js';
-import { fixtureLayout, sitePlate } from './layout.js';
+import { fixtureLayout, sitePlate, joystickGeometry } from './layout.js';
 
 /** Pixels a press must move before it is a drag and not a tap. */
 export const SLOP_PX = 5;
@@ -172,7 +172,16 @@ export class TableGestures {
       const lay = fixtureLayout(f);
       const pad = this.view.pxToUnits(10);
       for (const d of lay.dials) {
-        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= Math.max(pad, d.grab || 0)) return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
+        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= Math.max(pad, d.grab || 0)) {
+          return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
+        }
+      }
+      if (f.kind === 'view' || f.props?.joystick) {
+        const j = joystickGeometry(f);
+        if (Math.hypot(u.x - j.cx, u.y - j.cy) <= j.r + pad) {
+          const vf = f;
+          return { kind: 'joystick', fixture: f.id, cx: j.cx, cy: j.cy, r: j.r, start: u, initialTurn: vf.dials?.turn?.value ?? 0, initialTilt: vf.dials?.tilt?.value ?? 0 };
+        }
       }
       const r = lay.run;
       if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
@@ -205,9 +214,32 @@ export class TableGestures {
     return rec.rows.length > 0 && inRect(rectOf(rec.box, { w: 30, h: 18 }), u);
   }
 
+  cloudHit(u) {
+    for (const f of Object.values(this.state.fixtures)) {
+      if (f.kind !== 'cloud' || !f.props.view) continue;
+      const lay = fixtureLayout(f);
+      const dialRows = lay.dials;
+      const picTop = (dialRows.length ? dialRows[dialRows.length - 1].y - lay.box.y0 : 6) + 3.6;
+      const pic = f.props.pic ?? 34;
+      const px0 = lay.box.x0 + 2.5;
+      const py0 = lay.box.y0 + picTop;
+      if (u.x >= px0 && u.x <= px0 + pic && u.y >= py0 && u.y <= py0 + pic) {
+        return { kind: 'cloudImage', fixture: f.id, view: f.props.view, px0, py0, pic };
+      }
+      const sx = px0 + pic + 2.5;
+      const sw = f.size.w - (2.5 + pic + 2.5) - 1.5;
+      if (u.x >= sx && u.x <= sx + sw && u.y >= py0 + 16 && u.y <= py0 + 34) {
+        const btnIdx = u.y <= py0 + 24.5 ? 0 : 1;
+        return { kind: 'cloudButton', fixture: f.id, view: f.props.view, btnIdx };
+      }
+    }
+    return null;
+  }
+
   /** Would a press at `u` take hold of something? (The built view asks, so an empty spot stays a look.) */
   wouldGrab(u) {
     if (this.fixtureHit(u)) return true;
+    if (this.cloudHit(u)) return true;
     if (this.linkAt(u)) return true;
     const id = this.pieceAt(u);
     if (id && !this.state.pieces[id].fixed) return true;
@@ -221,8 +253,31 @@ export class TableGestures {
   pointerDown(u) {
     if (!this.state) return;
     const fh = this.fixtureHit(u);
+    if (fh?.kind === 'joystick') { this.gesture = { kind: 'joystick', ...fh }; this.joystickTo(fh, u); return; }
     if (fh?.kind === 'dial') { this.gesture = { kind: 'dial', ...fh }; this.dialTo(fh, u); return; }
     if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
+    const ch = this.cloudHit(u);
+    if (ch) {
+      if (ch.kind === 'cloudImage') {
+        const vf = this.state.fixtures[ch.view];
+        const turn = vf?.dials?.turn?.value ?? 0;
+        const tilt = vf?.dials?.tilt?.value ?? 0;
+        this.gesture = {
+          kind: 'cloudRotate',
+          fixture: ch.fixture,
+          view: ch.view,
+          start: u,
+          initialTurn: turn,
+          initialTilt: tilt,
+          moved: false
+        };
+        return;
+      }
+      if (ch.kind === 'cloudButton') {
+        this.gesture = { kind: 'cloudButton', ...ch };
+        return;
+      }
+    }
     const bond = this.linkAt(u);
     if (bond) { this.gesture = { kind: 'bond', ...bond }; return; }
     const id = this.pieceAt(u);
@@ -242,7 +297,30 @@ export class TableGestures {
   pointerMove(u) {
     const g = this.gesture;
     if (!g || !this.state) return;
+    if (g.kind === 'joystick') { this.joystickTo(g, u); return; }
     if (g.kind === 'dial') { this.dialTo(g, u); return; }
+    if (g.kind === 'cloudRotate') {
+      const dx = u.x - g.start.x;
+      const dy = u.y - g.start.y;
+      if (Math.hypot(dx, dy) >= this.view.pxToUnits(SLOP_PX)) g.moved = true;
+      if (g.moved) {
+        const vf = this.state.fixtures[g.view];
+        if (vf) {
+          const turnStep = Math.round(dx * 0.45);
+          const tiltStep = Math.round(-dy * 0.45);
+          const newTurn = ((g.initialTurn + turnStep) % 12 + 12) % 12;
+          const newTilt = Math.max(-3, Math.min(3, g.initialTilt + tiltStep));
+          if (newTurn !== vf.dials?.turn?.value) {
+            this.view.dispatch({ setDial: { fixture: g.view, dial: 'turn', value: newTurn } });
+          }
+          if (newTilt !== vf.dials?.tilt?.value) {
+            this.view.dispatch({ setDial: { fixture: g.view, dial: 'tilt', value: newTilt } });
+          }
+          this.view.changed?.();
+        }
+      }
+      return;
+    }
     if (g.kind === 'jar') {
       if (Math.hypot(u.x - g.start.x, u.y - g.start.y) >= this.view.pxToUnits(SLOP_PX)) g.moved = true;
       return;
@@ -265,6 +343,32 @@ export class TableGestures {
     const g = this.gesture;
     this.gesture = null;
     if (!g || !this.state) return;
+    if (g.kind === 'cloudRotate') {
+      if (!g.moved) {
+        const vf = this.state.fixtures[g.view];
+        if (vf?.dials?.slice) {
+          const cur = vf.dials.slice.value;
+          this.view.dispatch({ setDial: { fixture: g.view, dial: 'slice', value: cur ? 0 : 1 } });
+        }
+      }
+      return;
+    }
+    if (g.kind === 'cloudButton') {
+      const nowCh = this.cloudHit(u);
+      if (nowCh?.kind === 'cloudButton' && nowCh.btnIdx === g.btnIdx) {
+        const vf = this.state.fixtures[g.view];
+        if (g.btnIdx === 0) {
+          this.view.dispatch({ setDial: { fixture: g.view, dial: 'turn', value: 0 } });
+          this.view.dispatch({ setDial: { fixture: g.view, dial: 'tilt', value: 0 } });
+          if (vf?.dials?.slice) {
+            this.view.dispatch({ setDial: { fixture: g.view, dial: 'slice', value: 1 } });
+          }
+        } else {
+          import('../../ui/slice-explainer.js').then(m => m.showSliceExplainerModal?.());
+        }
+      }
+      return;
+    }
     if (g.kind === 'run') {
       const hit = this.fixtureHit(u);
       if (hit?.kind === 'run' && hit.fixture === g.fixture) this.view.dispatch({ run: g.fixture });
@@ -367,5 +471,28 @@ export class TableGestures {
     const frac = Math.max(0, Math.min(1, (u.x - t.x0) / (t.x1 - t.x0)));
     const value = snapDial(d, d.min + frac * (d.max - d.min));
     if (value !== d.value) this.view.dispatch({ setDial: { fixture: h.fixture, dial: h.dial, value } });
+  }
+
+  joystickTo(h, u) {
+    const f = this.state.fixtures[h.fixture];
+    if (!f || !f.dials?.turn || !f.dials?.tilt) return;
+    const R = h.r;
+    let dx = u.x - h.cx;
+    let dy = u.y - h.cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist > R) {
+      dx = (dx / dist) * R;
+      dy = (dy / dist) * R;
+    }
+    const fx = Math.max(-1, Math.min(1, dx / R));
+    const fy = Math.max(-1, Math.min(1, dy / R));
+    const turnVal = Math.max(0, Math.min(11, Math.round(((fx + 1) / 2) * 11)));
+    const tiltVal = Math.max(-3, Math.min(3, Math.round(-fy * 3)));
+    if (turnVal !== f.dials.turn.value) {
+      this.view.dispatch({ setDial: { fixture: h.fixture, dial: 'turn', value: turnVal } });
+    }
+    if (tiltVal !== f.dials.tilt.value) {
+      this.view.dispatch({ setDial: { fixture: h.fixture, dial: 'tilt', value: tiltVal } });
+    }
   }
 }

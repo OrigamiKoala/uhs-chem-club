@@ -17,7 +17,7 @@
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS } from './cloud-draw.js';
 import { buildPlateFrame } from '../../engine/lab-props.js';
-import { SHOT_STEPS, MAX_SHOTS, trackReason, FILMS, plateRead } from './cloud-read.js';
+import { SHOT_STEPS, MAX_SHOTS, trackReason, FILMS, plateRead, trackRead, RING_CIRCUMFERENCE_PM, viewRead } from './cloud-read.js';
 import { fixtureLayout } from '../layout.js';
 
 export const CLOUD_KIT_ID = 'cloud';
@@ -84,6 +84,196 @@ function piece3d(p, state, c) {
   return null;
 }
 
+/** A film or tile standing in a holder slot rests on the socket's rubber pad. */
+function restHeight(p) {
+  if (p?.zone?.startsWith('slot:')) return 0.0105;
+  return 0;
+}
+
+/** Solid 3D wave standing over the ring track when a tile is seated. */
+function dress3d(f, state, c) {
+  const { THREE, scale: s, toPlate, box } = c;
+  const group = new THREE.Group();
+  if (f.kind === 'wavering') {
+    const w = f.size.w;
+    const h = f.size.h;
+    const cxRel = w * 0.62;
+    const cyRel = h * 0.55;
+    const R_units = Math.min(w * 0.3, h * 0.34);
+    const R_m = R_units * s;
+    const centerPlate = toPlate({ x: box.x0 + cxRel, y: box.y0 + cyRel });
+
+    const waveGroup = new THREE.Group();
+    waveGroup.position.set(centerPlate.x, c.ground + 0.004, centerPlate.z);
+    group.add(waveGroup);
+
+    const N = 120;
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array((N + 1) * 3);
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.LineBasicMaterial({ color: 0x78a142, linewidth: 2 });
+    const line = new THREE.Line(geo, mat);
+    line.visible = false;
+    waveGroup.add(line);
+
+    let activeRead = null;
+    let phase = 0;
+
+    const sync = (fixture, st) => {
+      activeRead = trackRead(st, fixture.id);
+      if (!activeRead || !activeRead.nm) {
+        line.visible = false;
+        return;
+      }
+      line.visible = true;
+      const n = RING_CIRCUMFERENCE_PM / activeRead.nm;
+      const A_m = R_m * 0.16;
+      mat.color.set(activeRead.fits ? 0x78a142 : 0xd99423);
+      for (let i = 0; i <= N; i++) {
+        const th = (i / N) * Math.PI * 2;
+        const y = activeRead.fits ? A_m * Math.cos(n * th) : A_m * 0.3 * Math.cos(n * th);
+        pos[i * 3] = R_m * Math.cos(th);
+        pos[i * 3 + 1] = Math.max(0.001, y + A_m * 0.4);
+        pos[i * 3 + 2] = R_m * Math.sin(th);
+      }
+      geo.attributes.position.needsUpdate = true;
+    };
+
+    group.userData.tick = (delta, reduced) => {
+      if (!line.visible || reduced || !activeRead || !activeRead.nm) return;
+      phase += delta * 2.4;
+      const n = RING_CIRCUMFERENCE_PM / activeRead.nm;
+      const A_m = R_m * 0.16;
+      for (let i = 0; i <= N; i++) {
+        const th = (i / N) * Math.PI * 2;
+        const y = activeRead.fits
+          ? A_m * Math.cos(n * th) * Math.cos(phase)
+          : A_m * 0.08 * Math.cos(n * th - phase); // non-integer smeared/cancelled
+        pos[i * 3 + 1] = Math.max(0.001, y + A_m * 0.3);
+      }
+      geo.attributes.position.needsUpdate = true;
+    };
+
+    group.userData.sync = sync;
+    sync(f, state);
+  }
+  if (f.kind === 'cloud') {
+    const lay = fixtureLayout(f);
+    const dialRows = lay.dials;
+    const picTop = (dialRows.length ? dialRows[dialRows.length - 1].y - lay.box.y0 : 6) + 3.6;
+    const pic = f.props.pic ?? 34;
+    const s_units = pic * s;
+    const centerPlate = toPlate({ x: box.x0 + 2.5 + pic / 2, y: box.y0 + picTop + pic / 2 });
+
+    const own = c.own ? c.own.bind(c) : m => { m.userData.tableOwned = true; return m; };
+    const slicePlaneGeo = new THREE.PlaneGeometry(s_units * 0.95, s_units * 0.95);
+    const slicePlaneMat = own(new THREE.MeshBasicMaterial({
+      color: 0x4ade80,
+      transparent: true,
+      opacity: 0.18,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    }));
+    slicePlaneMat.userData = { ...slicePlaneMat.userData, tableOwned: true };
+    const slicePlane = new THREE.Mesh(slicePlaneGeo, slicePlaneMat);
+    const edgeMat = own(new THREE.LineBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.8 }));
+    edgeMat.userData = { ...edgeMat.userData, tableOwned: true };
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(slicePlaneGeo),
+      edgeMat
+    );
+    slicePlane.add(edges);
+    slicePlane.position.set(centerPlate.x, c.ground + 0.035, centerPlate.z);
+    slicePlane.rotation.x = -Math.PI / 2;
+    slicePlane.visible = false;
+    group.add(slicePlane);
+
+    const syncCloud = (fixture, st) => {
+      const read = plateRead(st, fixture.id);
+      slicePlane.visible = Boolean(read.slice);
+      if (read.slice) {
+        slicePlane.rotation.set(0, 0, 0);
+        slicePlane.rotation.x = -Math.PI / 2 - (read.view?.pitch || 0);
+        slicePlane.rotation.y = -(read.view?.yaw || 0);
+        const isEmpty = read.shown.length <= 0.06 * read.fired;
+        const color = isEmpty ? 0x4ade80 : 0xe59b24;
+        slicePlaneMat.color.set(color);
+        edges.material.color.set(color);
+      }
+    };
+    group.userData.sync = syncCloud;
+    syncCloud(f, state);
+  }
+  if (f.kind === 'view') {
+    const slice = Boolean(f.dials?.slice);
+    const jcx = f.at.x - (slice ? 6.5 : 5);
+    const jcy = f.at.y + (slice ? 0.5 : 1);
+    const centerPlate = toPlate({ x: jcx, y: jcy });
+    const R_m = 8.5 * s;
+
+    const own = c.own ? c.own.bind(c) : m => { m.userData.tableOwned = true; return m; };
+
+    // Bezel ring for socket
+    const bezelMat = c.mats?.lining || own(new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.6 }));
+    bezelMat.userData = { ...bezelMat.userData, tableOwned: true };
+    const bezelGeo = new THREE.CylinderGeometry(R_m * 0.95, R_m, 0.005, 32);
+    const bezel = new THREE.Mesh(bezelGeo, bezelMat);
+    bezel.position.set(centerPlate.x, c.ground + 0.002, centerPlate.z);
+    group.add(bezel);
+
+    // Inner socket bowl
+    const bowlMat = own(new THREE.MeshStandardMaterial({ color: 0x14120f, roughness: 0.85 }));
+    bowlMat.userData = { ...bowlMat.userData, tableOwned: true };
+    const bowlGeo = new THREE.CylinderGeometry(R_m * 0.78, R_m * 0.68, 0.004, 24);
+    const bowl = new THREE.Mesh(bowlGeo, bowlMat);
+    bowl.position.set(centerPlate.x, c.ground + 0.003, centerPlate.z);
+    group.add(bowl);
+
+    // Joystick stick pivot group
+    const stickGroup = new THREE.Group();
+    stickGroup.position.set(centerPlate.x, c.ground + 0.003, centerPlate.z);
+    group.add(stickGroup);
+
+    // Shaft
+    const shaftLen = 0.038;
+    const shaftGeo = new THREE.CylinderGeometry(0.003, 0.0035, shaftLen, 12);
+    shaftGeo.translate(0, shaftLen / 2, 0);
+    const shaftMat = own(new THREE.MeshStandardMaterial({ color: 0xa8a096, metalness: 0.8, roughness: 0.2 }));
+    shaftMat.userData = { ...shaftMat.userData, tableOwned: true };
+    const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+    stickGroup.add(shaft);
+
+    // Knob ball
+    const knobGeo = new THREE.SphereGeometry(0.009, 20, 16);
+    const knobMat = c.mats?.brass || own(new THREE.MeshStandardMaterial({ color: 0xd4a742, metalness: 0.7, roughness: 0.3 }));
+    knobMat.userData = { ...knobMat.userData, tableOwned: true };
+    const knob = new THREE.Mesh(knobGeo, knobMat);
+    knob.position.set(0, shaftLen, 0);
+    stickGroup.add(knob);
+
+    // Rubber collar at base
+    const collarGeo = new THREE.CylinderGeometry(0.007, 0.012, 0.006, 16);
+    const collarMat = c.mats?.rubber || own(new THREE.MeshStandardMaterial({ color: 0x1a1815, roughness: 0.9 }));
+    collarMat.userData = { ...collarMat.userData, tableOwned: true };
+    const collar = new THREE.Mesh(collarGeo, collarMat);
+    collar.position.set(0, 0.003, 0);
+    stickGroup.add(collar);
+
+    const syncJoystick = (fixture, st) => {
+      const v = viewRead(st, fixture.id);
+      const fx = (v.turn / 11) * 2 - 1;
+      const fy = -(v.tilt / 3);
+      const maxTilt = 0.35;
+      stickGroup.rotation.z = -fx * maxTilt;
+      stickGroup.rotation.x = fy * maxTilt;
+    };
+    group.userData.sync = syncJoystick;
+    group.userData.update = syncJoystick;
+    syncJoystick(f, state);
+  }
+  return group;
+}
+
 export const CLOUD_KIT = {
   id: CLOUD_KIT_ID,
   kinds: {
@@ -95,9 +285,11 @@ export const CLOUD_KIT = {
   paintPiece,
   paintFixture,
   piece3d,
+  dress3d,
   pilesOf,
-  slot3d: () => 'holder',
+  slot3d: (zone, state) => (state?.prediction && zone.id === state.prediction.slot ? null : 'holder'),
   deckStyle: () => 'instrument',
+  restHeight,
   printed: p => String(p.label),
   faceKey
 };
@@ -166,16 +358,19 @@ export function cloudPlate(id, label, at, orbital, { seed = 1, ring = null, ring
   };
 }
 
-/** The view every turning cloud shares: turn (0 to 330 degrees, 30 a step) and tilt (-90 to 90), and optionally a slice switch. */
+/** The joystick view every turning cloud shares: turn (0 to 330 degrees, 30 a step) and tilt (-90 to 90), and optionally a slice switch. */
 export function viewFixture(id, at, { slice = false } = {}) {
   const rows = 2 + (slice ? 1 : 0);
-  const size = { w: 44, h: 8 + 5 * (rows - 1) + 8 };
+  const size = { w: 44, h: slice ? 28 : 22 };
   const dials = {
     turn: { min: 0, max: 11, step: 1, value: 1, label: 'Turn (deg)', labels: Array.from({ length: 12 }, (_, i) => String(i * 30)) },
     tilt: { min: -3, max: 3, step: 1, value: 1, label: 'Tilt (deg)', labels: [-3, -2, -1, 0, 1, 2, 3].map(i => String(i * 30)) }
   };
   if (slice) dials.slice = { min: 0, max: 1, step: 1, value: 0, label: 'Slice', labels: ['Off', 'On'] };
-  return { id, kind: 'view', label: 'View', at: { ...at }, size, noRun: true, dials, props: {} };
+  return {
+    id, kind: 'view', label: 'View', at: { ...at }, size, noRun: true, dials,
+    props: { joystick: true }
+  };
 }
 
 /** The ring track: a slot for a tile of string, and the wave it makes there. */

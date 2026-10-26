@@ -93,40 +93,39 @@ const hands = (x, y, pitch = 18) => [hand('up', 'up', { x, y }), hand('down', 'd
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 40, y: 32 }, { target: TARGET, finder: 'addr', readout: false, labels: false });
+    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 40, y: 32 }, { target: TARGET, finder: 'addr', readout: false, labels: true, show: { ml: true } });
     const strip = addressStrip('addr', { x: 112, y: 26 }, { fields: ['n', 'l', 'ml'], show: ['n', 'l', 'ml'], start: { n: 1, l: 0, ml: 0 } });
     return {
-      title: 'The Address of a Box',
-      prompt: 'Set the address so that the lit box is the ringed one.',
+      title: 'Orbital Quantum Numbers',
+      prompt: 'Set the quantum numbers (n, l, ml) to select the targeted orbital (2p, ml = +1).',
       widget,
       table: shellsTable({ pieces: rack.boxes, fixtures: [rack.fixture, strip] }),
       hints: [
-        'Use the three cells of the address strip.',
-        'Change one cell at a time and compare where the light goes on the rack.',
-        'The first cell picks the floor, the second picks the row on that floor, and the third picks the box along the row.'
+        'n (principal quantum number) sets the energy level: 1 for 1s, 2 for 2s and 2p.',
+        'l (angular momentum quantum number) sets the orbital shape: 0 for spherical (s), 1 for dumbbell (p).',
+        'ml (magnetic quantum number) selects the orbital orientation: for 2p, ml is -1, 0, or +1.'
       ],
       check(state) {
         const a = addressOfFinder(state.table, 'addr');
         const room = findRoom(a);
-        if (!room.exists) return { ok: false, msg: 'No box has the address you set.' };
+        if (!room.exists) return { ok: false, msg: 'No orbital has the quantum numbers you set.' };
         if (room.row === TARGET.row && room.idx === TARGET.idx) return { ok: true };
-        return { ok: false, msg: 'The lit box is not the ringed one.' };
+        return { ok: false, msg: 'The lit box is not the targeted orbital.' };
       },
       reward: {
-        log: 'Three numbers name one box.',
-        title: 'An Address for Every Box',
-        body: 'Every box has a three-number address: the shell n (principal quantum number) counts outward, the subshell l (angular momentum quantum number) sets the shape, and the orbital ml (magnetic quantum number) picks the box along its row. This bench is an optional Deep Dive.',
-        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s rack: the boxes of the 1s, 2s and 2p rows, lowest at the bottom, with a rod for each electron.' }
+        log: 'Three quantum numbers name one orbital.',
+        title: 'An Address for Every Orbital',
+        body: 'Every orbital has a three-number address: the shell n (principal quantum number) sets the energy level and size, the subshell l (angular momentum quantum number) sets the shape (0 for s, 1 for p), and the orbital ml (magnetic quantum number) picks the specific spatial orientation.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 2 */
   {
-    title: 'How Many in a Box',
+    title: 'How Many in an Orbital',
     // A PREDICT STAGE: the rack is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'How many electrons do you think one orbital box can hold?',
+    prompt: 'How many electrons do you think one orbital can hold?',
     widget,
     table: shellsTable({
       pieces: [],
@@ -143,8 +142,8 @@ export const STAGES = [
     }),
     hints: [
       'Drag one of the three guesses into the slot.',
-      'Think of a box as a room: ask whether a room has a limit, and what could set it.',
-      'There is no wrong guess yet; commit to the one you would bet on.'
+      'Think of an orbital: does an orbital have a limit, and what might set it?',
+      'There is no wrong guess yet; commit to the one you want to test.'
     ],
     check(state) {
       if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
@@ -157,34 +156,34 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'A Guess to Test',
-      body: 'A room with no stated limit is a fair picture of a box, and the rack can test it. Next, arrows will be dropped into a box until something gives.'
+      body: 'How many electrons can fit into a single orbital? On the next stage, you will test whether electrons can pack in without limit or if something stops them.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const rack = shelf('rack', ['1s', '2s', '2p'], { x: 38, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
-    const count = marker('count', 'Most in one box', { x: 112, y: 52 }, { min: 0, max: 6, step: 1, value: 0, size: { w: 36, h: 12 } });
+    const count = marker('count', 'Most in one orbital', { x: 112, y: 52 }, { min: 0, max: 6, step: 1, value: 0, size: { w: 36, h: 12 } });
     return {
-      title: 'Pack One Box',
+      title: 'Pack One Orbital',
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": set the marker to the most electrons the rack will put in one box.`
-          : 'Set the marker to the most electrons the rack will put in one box.';
+          ? `You predicted "${GUESS_LABEL[guess]}": test how many electrons one orbital can hold using the Add tools, then set the marker.`
+          : 'Test how many electrons one orbital can hold using the Add tools, then set the marker to the maximum capacity.';
       },
       widget,
       table: shellsTable({ pieces: [...rack.boxes, ...hands(92, 22)], fixtures: [rack.fixture, count] }),
       hints: [
-        'Use "Up" and "Down" on one box, and the marker.',
-        'Compare what the rack does when you drop a second arrow on a box, pointing the same way and pointing the other way.',
-        'Keep dropping arrows on one box until the rack refuses another, then count what the box holds.'
+        'Use the "Add ↑" and "Add ↓" tools to place electrons into an orbital box.',
+        'Try adding electrons to the same box: see whether it accepts electrons with the same spin or opposite spin.',
+        'Keep adding electrons until the orbital refuses any more, then set the marker to what it held.'
       ],
       check(state) {
         const marked = state.table.fixtures.count.dials.n.value;
         if (marked === 0) return { ok: false, notYet: true, msg: 'Set the marker to the number you found.' };
         if (marked === 2) return { ok: true };
-        return { ok: false, msg: 'The marker and the most the rack put in one box are not the same number.' };
+        return { ok: false, msg: 'The marker and the maximum electrons that fit in one orbital are not the same number.' };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
@@ -192,10 +191,9 @@ export const STAGES = [
           ? 'You predicted two, and the rack agreed. '
           : 'The rack did not agree with your prediction, which is how a guess gets better. ';
         return {
-          log: 'A second arrow the same way is refused. Opposite is fine.',
+          log: 'An orbital holds two electrons with opposite spins.',
           title: 'Spin',
-          body: `${verdict}A box takes two electrons at most, and only when one points up and the other down. That direction is the electron's spin.`,
-          model: { type: 'rack', z: 2, caption: 'Helium\'s two electrons in one box: one rod pointing up and one pointing down.' }
+          body: `${verdict}An orbital takes two electrons at most, and only when one points up (+½) and the other down (-½). That direction is the electron's spin.`
         };
       }
     };
@@ -274,10 +272,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Turn the cells of the address strip', 'and watch which box lights.'],
-  3: ['Drag an arrow onto a box to place an electron.'],
+  1: ['Adjust the quantum numbers (n, l, ml)', 'to select the target orbital.'],
+  3: ['Use "Add ↑" and "Add ↓" tools to place electrons in an orbital box.'],
   4: ['Drag each electron onto the rack. The rack refuses', 'any it cannot hold, and says why.'],
-  5: ['Drop arrows on boxes until the rack takes no more.']
+  5: ['Use "Add ↑" and "Add ↓" to fill every orbital box in the third shell.']
 };
 applyNotes(STAGES, NOTES);
 

@@ -184,7 +184,7 @@ export const STAGES = [
     const sp = spectrograph('sp', 'Band', { x: 44, y: 27 }, { ref: true, size: { w: 84, h: 52 } });
     return {
       title: 'Name the Gas',
-      prompt: 'Find which reference strip matches the lines of the sealed tube.',
+      prompt: 'Pick the element in the sealed tube.',
       widget,
       table: opticsTable({
         pieces: [
@@ -197,12 +197,12 @@ export const STAGES = [
       hints: [
         'Use the socket for the sealed tube and the alongside slot for the strips.',
         'Compare the strip\'s lines with the sealed tube\'s lines, position by position, and watch which of them light.',
-        'Try each strip in turn and keep the one whose every line falls exactly on a line of the sealed tube\'s band.'
+        'Try each element in turn and keep the one whose every line falls exactly on a line of the sealed tube\'s band.'
       ],
       check(state) {
         const r = bandRead(state.table, 'sp');
         if (!r.src || r.src.id !== 'x') return { ok: false, notYet: true, msg: 'Plug the sealed tube into the socket to read its lines.' };
-        if (!r.ref) return { ok: false, notYet: true, msg: 'Slide a reference strip alongside the band.' };
+        if (!r.ref) return { ok: false, notYet: true, msg: 'Slide an element\'s strip alongside the band.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
         return { ok: false, msg: `The ${r.ref.label} strip has lines where the sealed tube's band is dark, or the tube has lines the strip lacks.` };
       },
@@ -253,7 +253,7 @@ export const STAGES = [
     const sp = spectrograph('sp', 'Band', { x: 44, y: 27 }, { cell: true, ref: true, size: { w: 84, h: 52 } });
     return {
       title: 'Light Through Cool Gas',
-      prompt: 'Find which reference strip matches the dark lines the cool cell cuts out of the filament\'s light.',
+      prompt: 'Pick the element in the cool cell.',
       widget,
       table: opticsTable({
         pieces: [
@@ -270,12 +270,12 @@ export const STAGES = [
       hints: [
         'Use the socket for the filament, the cell holder for the cool cell and the alongside slot for the strips.',
         'Compare the dark places in the band with the lines on each strip, position by position.',
-        'Keep the strip whose every line falls exactly on a dark place in the band behind the cool cell.'
+        'Keep the element whose every line falls exactly on a dark place in the band behind the cool cell.'
       ],
       check(state) {
         const r = bandRead(state.table, 'sp');
         if (!r.src || r.src.kind !== 'filament' || !r.cell) return { ok: false, notYet: true, msg: 'Plug the filament into the socket and put the cool cell in front of it.' };
-        if (!r.ref) return { ok: false, notYet: true, msg: 'Slide a reference strip alongside the band.' };
+        if (!r.ref) return { ok: false, notYet: true, msg: 'Slide an element\'s strip alongside the band.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
         return { ok: false, msg: `The ${r.ref.label} strip has lines where the band behind the cell is bright.` };
       },
@@ -292,9 +292,9 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   2: ['Drag a source into the socket.'],
-  3: ['Put the tube in the socket, then slide a reference', 'strip into the alongside slot.'],
+  3: ['Put the tube in the socket, then slide an element\'s', 'strip into the alongside slot.'],
   4: ['Drag the electron to another rung.', 'Any light that leaves is written on the strip.'],
-  5: ['Put the filament in the socket and the cell in front of it,', 'then slide a reference strip alongside.']
+  5: ['Put the filament in the socket and the cell in front of it,', 'then slide an element\'s strip alongside.']
 };
 applyNotes(STAGES, NOTES);
 

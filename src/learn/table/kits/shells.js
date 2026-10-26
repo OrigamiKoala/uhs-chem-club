@@ -179,7 +179,7 @@ export function shelf(rackId, rows, at, { pre = null, locked = false, target = n
   return {
     fixture: {
       id: `shelf-${rackId}`, kind: 'shelf', label: ' ', at: { ...at }, size: { w, h }, noRun: true, dials: {},
-      props: { backdrop: true, rack: rackId, rows, ...(show ? { show } : {}), ...(finder ? { finder } : {}), ...(reach ? { reach: true } : {}), ...(core ? { core } : {}), readout, labels }
+      props: { backdrop: true, rack: rackId, rows, ...(show ? { show } : {}), ...(finder ? { finder } : {}), ...(target ? { target } : {}), ...(reach ? { reach: true } : {}), ...(core ? { core } : {}), readout, labels }
     },
     boxes,
     size: { w, h }
@@ -196,7 +196,7 @@ export const rackOfCounts = counts => rackFor(0, { counts });
    ------------------------------------------------------------------ */
 
 /** An arrow to deal: `up` or `down`, and `lift` to take one out. `label` renames it (a stage that deals one kind of electron). */
-export const hand = (id, kind, at, label = null) => ({ id, kind, label: label || { up: 'Up', down: 'Down', lift: 'Lift Out' }[kind], at, props: {} });
+export const hand = (id, kind, at, label = null) => ({ id, kind, label: label || { up: 'Add ↑', down: 'Add ↓', lift: 'Remove' }[kind], at, props: {} });
 
 /** A small card with a short label (a subshell type), to be put in a tray. */
 export const tag = (id, label, at) => ({ id, kind: 'tag', label, at, props: {} });

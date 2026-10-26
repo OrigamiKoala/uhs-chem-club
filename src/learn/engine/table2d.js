@@ -270,6 +270,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     // A dial's name and where it stands are printed on the plate in both views; only its track and
     // knob are the drawn table's own (the built table stands a real knob on it).
     for (const d of lay.dials) {
+      if (f.kind === 'view' && (d.name === 'turn' || d.name === 'tilt')) continue;
       const dial = f.dials[d.name];
       const frac = dial.max === dial.min ? 0 : (dial.value - dial.min) / (dial.max - dial.min);
       if (view.controls !== false) {

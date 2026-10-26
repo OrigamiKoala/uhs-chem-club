@@ -96,11 +96,31 @@ function paintBox(ctx, p, state, o) {
   ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1);
   ctx.lineWidth = 1;
   if (p.props.target) {
-    // The box a stage asks for the address of, ringed.
+    // The target box: drawn clearly inside the piece boundary so it is visible in both 2D and 3D.
     ctx.strokeStyle = AMBER;
-    ctx.setLineDash?.([3, 3]);
-    ctx.strokeRect(x0 - 3.5, y0 - 3.5, w + 7, h + 7);
-    ctx.setLineDash?.([]);
+    ctx.lineWidth = Math.max(2, 1.8 * o.sc);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, Math.min(w, h) * 0.32, 0, Math.PI * 2);
+    ctx.stroke();
+    // Inner dot
+    ctx.fillStyle = AMBER;
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, Math.max(1.5, 1.5 * o.sc), 0, Math.PI * 2);
+    ctx.fill();
+    // Corner brackets
+    const bsz = Math.min(w, h) * 0.22;
+    ctx.lineWidth = Math.max(1.5, 1.2 * o.sc);
+    ctx.beginPath();
+    // top-left
+    ctx.moveTo(x0 + 2.5, y0 + 2.5 + bsz); ctx.lineTo(x0 + 2.5, y0 + 2.5); ctx.lineTo(x0 + 2.5 + bsz, y0 + 2.5);
+    // top-right
+    ctx.moveTo(x0 + w - 2.5 - bsz, y0 + 2.5); ctx.lineTo(x0 + w - 2.5, y0 + 2.5); ctx.lineTo(x0 + w - 2.5, y0 + 2.5 + bsz);
+    // bottom-left
+    ctx.moveTo(x0 + 2.5, y0 + h - 2.5 - bsz); ctx.lineTo(x0 + 2.5, y0 + h - 2.5); ctx.lineTo(x0 + 2.5 + bsz, y0 + h - 2.5);
+    // bottom-right
+    ctx.moveTo(x0 + w - 2.5 - bsz, y0 + h - 2.5); ctx.lineTo(x0 + w - 2.5, y0 + h - 2.5); ctx.lineTo(x0 + w - 2.5, y0 + h - 2.5 - bsz);
+    ctx.stroke();
+    ctx.lineWidth = 1;
   }
   const pre = p.props.pre || '';
   const len = h * 0.78;
@@ -255,21 +275,29 @@ function paintShelf(ctx, f, state, b) {
   ctx.strokeStyle = DIM;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(F.x(3.5), F.y(bottom - y0)); ctx.lineTo(F.x(3.5), F.y(top - y0 + 2));
-  ctx.moveTo(F.x(3.5), F.y(top - y0)); ctx.lineTo(F.x(2.2), F.y(top - y0 + 2.6)); ctx.lineTo(F.x(4.8), F.y(top - y0 + 2.6)); ctx.closePath();
+  ctx.moveTo(F.x(6.5), F.y(bottom - y0)); ctx.lineTo(F.x(6.5), F.y(top - y0 + 2));
+  ctx.moveTo(F.x(6.5), F.y(top - y0)); ctx.lineTo(F.x(5.0), F.y(top - y0 + 2.6)); ctx.lineTo(F.x(8.0), F.y(top - y0 + 2.6)); ctx.closePath();
   ctx.stroke();
-  say(ctx, 'ENERGY', F.x(3.5), F.y(top - y0 - 2), F.size(2.1, 6), { align: 'center', color: DIM });
+  say(ctx, 'ENERGY', F.x(6.5), F.y(top - y0 - 2), F.size(2.1, 6), { align: 'center', color: DIM });
   const show = f.props.show || null;
   const lit = f.props.finder ? finderLight(state, f.props.finder) : null;
   for (const r of rows) {
     const row = rowOf(r.id);
+    const qn = [show?.n ? `n=${row.n}` : '', show?.l ? `l=${row.l}` : ''].filter(Boolean).join(' ');
     const label = show
-      ? [show.n ? `n=${row.n}` : '', show.l ? `l=${row.l}` : ''].filter(Boolean).join(' ')
+      ? (qn ? `${r.id} ${qn}` : r.id)
       : (f.props.labels === false ? '' : r.id);
     say(ctx, label, F.x(r.x0 - x0 - 1.4), F.y(r.y - y0), F.size(2.4, 7), { align: 'right', color: DIM });
     if (lit && lit.floor === row.n) {
       ctx.fillStyle = AMBER;
-      ctx.fillRect(F.x(5.4), F.y(r.y - y0 - 3.2), F.len(1.2), F.len(6.4));
+      ctx.fillRect(F.x(9.5), F.y(r.y - y0 - 3.2), F.len(1.2), F.len(6.4));
+    }
+    // If this row contains the target box, draw a TARGET indicator above it
+    if (f.props.target && f.props.target.row === r.id) {
+      const ti = f.props.target.idx;
+      const count = 2 * row.l + 1;
+      const bx = r.x0 + RECTS.box.hw + ti * ((r.x1 - r.x0) / count);
+      say(ctx, 'TARGET', F.x(bx - x0), F.y(r.y - y0 - (show?.ml ? 8.8 : 5.6)), F.size(2.0, 7), { align: 'center', color: AMBER, weight: 700 });
     }
     // The ml of each box and the cloud this row's electrons make, drawn to scale beside it.
     if (show?.ml && rows.length <= 4) {

@@ -14,7 +14,7 @@ export const LANTERNFALL_TOUR = {
     'optics:ruler': { title: 'Ruler', text: 'The ruler runs from the smallest waves to the largest, and each tick is ten times the last. Drag a source into its holder and the ruler marks how long that source\'s waves are, from one crest to the next.' },
     'optics:pulse': { title: 'Pulse timer', text: 'A rail with a holder for a lamp at one end and marks along it. Stand a lamp in the holder and a detector on each of two marks, then press "{run}". The timer prints the gap between the two detectors and how long the pulse of light took to cross it.', dials: false },
     'optics:band': { title: 'Prism and band', text: 'Drag a source into the socket and the prism spreads its light into a band, with a scale of nanometres under it. A band lit from end to end holds every colour; a band lit in only a few places holds only those colours. Where a slot says "Alongside", a glass strip slid beside the band lights the lines of the strip that fall on a line of the band.' },
-    'optics:cell': { title: 'Photocell', text: 'Light shines on a metal plate in the holder, and the electrons it knocks loose run into the counting cup. The cup counts how many leave each second and the meter shows the speed of the fastest. Turn the dials to change the light, then read the cup and the meter.' },
+    'optics:cell': { title: 'Photocell', text: 'Light shines on a metal plate in the holder, knocking electrons loose toward the collector. Read "Freed Per Second" to see how many leave and "Fastest Electron" for their speed. Turn the dials to change the light.' },
     'optics:ladder': { title: 'Energy ladder', text: 'The rungs are the only energies the electron of a hydrogen atom can have, and it starts on the lowest. Drag the electron to another rung. When it drops, the strip beside it records the light that leaves, and the rungs crowd closer together as they climb.', dials: false },
     'optics:lines': { title: 'Lines strip', text: 'This strip writes down the light each drop of the electron gives out, as lines on the same scale as the band. A climb gives out nothing, so nothing is written.', dials: false },
     'optics:plaque': { title: null, text: 'A printed plate of facts. You only read it; there is nothing to press.' },
@@ -22,9 +22,9 @@ export const LANTERNFALL_TOUR = {
 
     /* ---- cloud ---- */
     'cloud:cloud': { title: 'Plate', text: 'The plate shows where a probe finds an electron. Set the "Exposure" dial to one, fifty or five hundred shots, then press "{run}": every shot leaves a dot, and the dots from earlier shots stay. Where a slot sits beside the plate, a film laid in it counts the dots inside its outline.', dials: false },
-    'cloud:view': { title: 'View', text: 'The View turns and tilts every cloud on the table at once, so you can look at a cloud from another side. A "Slice" switch, where there is one, keeps only the dots in a thin slab through the middle of the cloud.', dials: false },
-    'shells:shelf': { title: 'Rack', text: 'The rack is a ladder of boxes with the lowest energy at the bottom. Whatever electrons stand in a box are drawn in it as arrows pointing up or down. Drop an arrow on a box to put an electron there.', dials: false },
-    'shells:finder': { title: 'Address strip', text: 'Each cell is one number of a box\'s address. Drag a cell\'s knob to change it. The box the address names lights up on the rack, and if no box has that address, nothing lights.', dials: false },
+    'cloud:view': { title: 'View and slice', text: 'The View turns and tilts every cloud on the table at once, or drag the picture to turn freely. A "Slice" switch keeps only the dots in a thin slab through the middle, letting you find the empty plane between lobes.', dials: false },
+    'shells:shelf': { title: 'Orbital energy ladder', text: 'A ladder of orbitals arranged by energy, lowest at the bottom (1s, 2s, 2p). Each box represents an orbital where electrons can live.', dials: false },
+    'shells:finder': { title: 'Quantum selector', text: 'Three dials that select an orbital: shell n (energy floor), subshell l (shape: 0 for s, 1 for p), and orbital ml (orientation). Turn a dial to light the matching orbital.', dials: false },
     'shells:magnet': { title: 'Magnet', text: 'A magnet reads how hard something is pulled. Press "{run}" to read the pull. Electrons that stand alone, pointing the same way, add to the pull, and two pointing opposite ways cancel.', dials: false },
     'shells:marker': { title: 'Marker', text: 'Use the dial to set the number you have counted. Whatever it reads when you press Submit is your answer.', dials: false },
     'pes:pes': { title: 'Chamber and strip', text: 'Put a specimen card in the holder and press "{run}". Light knocks electrons off the atom, and each lands on the strip at the energy it took to remove it; electrons removed at the same energy pile up. A "Light energy" dial, where there is one, sets how strong the light is, and a light only takes off the electrons it has enough energy for.', dials: false },
@@ -53,11 +53,11 @@ export const LANTERNFALL_TOUR = {
 
     /* ---- cloud ---- */
     'cloud:cloud': ['Clouds', 'Each card shows the dots that many probe shots left for one electron. Turn the View to see it from another side, then drag the card where it belongs.'],
-    'shells:box': ['Boxes', 'Each box is one orbital. The arrows in it are its electrons.'],
-    'shells:up': ['Up arrow', 'Drag it onto a box to put an electron there pointing up.'],
-    'shells:down': ['Down arrow', 'Drag it onto a box to put an electron there pointing down.'],
-    'shells:lift': ['Lift Out', 'Drag it onto a box to take one electron out of it.'],
-    'shells:etok': ['Electron cards', 'Each card is one electron with its address printed on it. Drag it onto the rack and it stands in the box its address names, or the rack says why it cannot.'],
+    'shells:box': ['Orbitals', 'Each box is one orbital. The arrows inside show the electrons placed in it.'],
+    'shells:up': ['Add Up tool', 'Drag or tap this tool onto an orbital box to place an electron pointing up.'],
+    'shells:down': ['Add Down tool', 'Drag or tap this tool onto an orbital box to place an electron pointing down.'],
+    'shells:lift': ['Remove tool', 'Drag or tap this tool onto an orbital box to take an electron out of it.'],
+    'shells:etok': ['Electron cards', 'Each card is an electron with its four numbers. Drag it onto the ladder to stand in its orbital.'],
     'shells:ccard': ['Written forms', 'Each card is a way of writing down an arrangement of electrons. Drag one into the slot to say which one you think the rack reads.'],
     'pes:spec': ['Specimens', 'Each card is a sample of one kind of atom. Put it in the holder and fire the light at it; the card keeps a printout of what its strip showed.'],
     'trends:atom': ['Atom cards', 'Each card is a model of one atom drawn to scale, so a bigger atom is a bigger circle. Drag it into a gauge, onto the rail or into a tray.'],

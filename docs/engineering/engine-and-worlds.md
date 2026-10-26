@@ -319,9 +319,9 @@ Opening a briefing files it in the Case File notebook (`recordNotebook`, ids onl
 
 Lanternfall, Ligar, Bellows and Ember Reach were reworked to the Tallow pattern (T1 to T8, U1 to U5 of `docs/Avalon problems and clashing rules.md`).
 Each world's build record is in its plan file (`docs/plans/lanternfall-world.md`, `ligar-complete.md`, `bellows-world.md`, `ember-reach-world.md`).
-Registry after the pass: 44 quest modules, 38 benches, 6 bosses, 222 stages. Every reworked bench is cut to 3 to 5 stages, has one
+Registry after the pass: 44 quest modules, 38 benches, 6 bosses, 223 stages. Every reworked bench is cut to 3 to 5 stages, has one
 `predict: true` click stage whose guess the next stage quotes, a lead line (never on a boss), Tour steps for every tool and no briefing; bosses
-keep five distinct phases. Lanternfall 49 stages, Ligar 45, Bellows 33, Ember Reach 33. Field points that only carried a copy of the bench
+keep five distinct phases. Lanternfall 50 stages, Ligar 45, Bellows 33, Ember Reach 33. Field points that only carried a copy of the bench
 (Lanternfall `flume`, ice hole; Ligar `chip`, `sump`; Bellows `gauge`, `bleed`; Ember `flowline`, `edge`, `coil`) or acted as a lock are
 retired; the hardware stays as scenery and each `verify:<world>` expects the new list. 34 story animations exist (Tallow 7, Lanternfall 10,
 Ligar 6, Bellows 7, Ember Reach 4); painters live in `ui/story-scenes-<world>.js`, merged into `SCENES`.

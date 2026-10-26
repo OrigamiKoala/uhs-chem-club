@@ -205,7 +205,11 @@ export const STAGES = [
       reward: {
         log: 'Only whole numbers of waves survive the lap.',
         title: 'Standing Wave',
-        body: 'A wave on a ring survives only if a whole number of wavelengths fits, because otherwise each lap cancels the one before. Electrons are held to the same rule, which is why they behave as waves as well as particles: wave-particle duality.'
+        body: 'A wave on a ring survives only if a whole number of wavelengths fits, because non-integer laps meet out of phase and crests cancel troughs to zero. Whole numbers meet peak to peak, reinforcing into a permanent standing wave. Electrons follow this same rule: wave-particle duality.',
+        model: {
+          type: 'standing-wave',
+          caption: 'Why non-integers cancel: Lap 1 meets Lap 2 out of phase (crest cancels trough → zero). Whole numbers meet peak to peak, reinforcing into a permanent standing wave.'
+        }
       }
     };
   })(),
@@ -218,11 +222,12 @@ export const STAGES = [
       title: 'Two Lobes',
       prompt: 'Find the view in which a slice through the middle of Sample C shows almost no dots.',
       widget,
+      hasSliceExplainer: true,
       table: cloudTable({ pieces: [], fixtures: [c.fixture, v] }),
       hints: [
-        'Use "Fire" at 500 shots, then the Turn and Tilt dials and the Slice switch.',
+        'Use "Fire" at 500 shots, then move the joystick and use the Slice switch.',
         'Compare the sides you look from, noting the direction in which the dots gather and the flat plane they never cross.',
-        'Turn the cloud until you look along the gap between its lobes, then switch Slice on and see whether the middle goes empty.'
+        'Move the joystick to turn and tilt the cloud until you look along the gap between its lobes, then switch Slice on and see whether the middle goes empty.'
       ],
       check(state) {
         const t = state.table;
@@ -236,7 +241,7 @@ export const STAGES = [
         log: 'Two lobes, and a flat plane with nothing in it.',
         title: 'p Orbital',
         body: 'A p orbital has two lobes with a node between them, a flat plane through the nucleus where the electron is never found. The round orbitals met so far are s orbitals, and the two-lobed ones are p orbitals.',
-        model: { type: 'orbital', orbital: '2pz', dots: 260, caption: 'A p cloud: two lobes of dots with an empty plane between them.' }
+        model: { type: 'orbital', orbital: '2pz', dots: 260, slice: true, caption: 'A p cloud: two lobes of dots with an empty nodal plane between them.' }
       }
     };
   })(),
@@ -262,7 +267,7 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Use the Turn and Tilt dials, then drag each cloud into a tray.',
+        'Move the joystick to view the clouds from different sides, then drag each cloud into a tray.',
         'Compare each cloud with the two-lobed shape you already know, and look for extra lobes or a ring.',
         'Count the lobes from the clearest side of each cloud, and look for a ring round the middle of the two-lobed one.'
       ],
@@ -279,7 +284,10 @@ export const STAGES = [
         log: 'Four lobes, four lobes, and one with a ring.',
         title: 'd Orbitals',
         body: 'From the third shell up there are five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. They matter most in the transition metals, which this world will reach before it ends.',
-        model: { type: 'orbital', orbital: '3dz2', dots: 300, caption: 'The d cloud with a ring: two lobes and a ring of dots round the middle.' },
+        model: {
+          type: 'd-orbitals',
+          caption: 'The five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. Select each orbital to view its 3D lobes.'
+        },
         last: true
       }
     };
@@ -290,8 +298,8 @@ export const STAGES = [
 const NOTES = {
   2: ['Lay a film on the plate to count the dots it catches.'],
   3: ['Try a string on the track.'],
-  4: ['Turn the View dials to see the cloud from another side.'],
-  5: ['Turn and tilt the view, then drag each cloud into a tray.']
+  4: ['Move the joystick to view the cloud from another side.'],
+  5: ['Move the joystick to view the clouds from different sides, then drag each cloud into a tray.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -303,7 +311,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An electron has no path. What it has is an orbital, a cloud of probability whose shape is set by the energy it has: round for s, two-lobed for p, four-lobed or ringed for d. Each orbital holds a standing wave that fits its shell.'
+      body: 'An electron has no path. What it has is an orbital, a cloud of probability whose shape is set by the energy it has: round for s, two-lobed for p, four-lobed or ringed for d. Each orbital holds a standing wave that fits its shell.',
+      orbitals: {
+        types: ['s', 'p', 'd'],
+        caption: 'Compare the fundamental orbital shapes in 3D: spherical s, two-lobed p, and multi-lobed d orbitals.'
+      }
     },
     {
       heading: 'Why It Is Worth It',

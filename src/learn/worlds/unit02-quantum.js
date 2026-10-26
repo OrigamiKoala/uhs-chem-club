@@ -25,7 +25,7 @@ export const UNIT_02 = {
   brief: 'Find out why electrons sit only at certain energies, how light reveals them, and how their arrangement shapes the periodic table.',
 
   quests: [
-    { id: 'q1-wave', title: 'Light as a Wave', line: 'Tune spare lamps while the beacons stay dark.', arena: 'bench', stageCount: 4, status: 'live', module: () => import('../quests/unit02/q1-wave.js') },
+    { id: 'q1-wave', title: 'Light as a Wave', line: 'Tune spare lamps while the beacons stay dark.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q1-wave.js') },
     { id: 'q2-photon', title: 'Photons', line: 'Test why the moths drink violet and shun red.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q2-photon.js') },
     { id: 'q3-lines', title: 'Line Spectra', line: 'Read each beacon gas by its lines.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q3-lines.js') },
     { id: 'q4-cloud', title: 'Orbitals', line: 'Map where the beacon electrons hide.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q4-cloud.js') },

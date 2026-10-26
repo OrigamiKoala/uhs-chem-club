@@ -3728,6 +3728,9 @@ body.bench-deployed .modal-container .modal-card {
 .lq-tmsg .lq-hints:empty { display: none; }
 .lq-tmsg .lq-hint { margin: 0 !important; font-size: 0.8rem !important; line-height: 1.35 !important; }
 .lq-tmsg .lq-reward-body { margin: 0 !important; font-size: 0.82rem; line-height: 1.4; }
+.lq-tmsg:has(.lq-model) { max-height: min(500px, 64vh); }
+.lq-tmsg .lq-model { margin-top: 4px; }
+.lq-tmsg .lq-model-view { height: 200px; }
 
 @media (max-width: 768px) {
   .lq-tstrip,

@@ -137,7 +137,7 @@ now built around one wrong model the player is likely to hold, put on the table 
 `engine/predict.js`), and then contradicted by the bench. The test stage's prompt and reward read the guess back and say whether the bench
 agreed. The guess is never graded.
 
-**World counts after the pass: 10 quests (9 benches + the Lantern-Eater), 49 stages** (was 77): q1-wave 4, q2-photon 5, q3-lines 5,
+**World counts after the pass: 10 quests (9 benches + the Lantern-Eater), 50 stages** (was 77): q1-wave 5, q2-photon 5, q3-lines 5,
 q4-cloud 5, q5-numbers 5, q6-filling 5, q7-pes 5, q8-trends 5, q9-absorb 5, boss-eater 5. Nine predict stages (one per bench, none on the boss),
 ten story animations (one per quest).
 

@@ -112,6 +112,15 @@ export function sitePlate(entry) {
   return entry?.at ? rectOf(entry, SIZES.site) : null;
 }
 
+/** The circular joystick socket geometry on a view fixture. */
+export function joystickGeometry(f) {
+  const slice = Boolean(f.dials?.slice);
+  const cx = f.at.x - (slice ? 6.5 : 5);
+  const cy = f.at.y + (slice ? 0.5 : 1);
+  const r = 8.5;
+  return { cx, cy, r, slice };
+}
+
 /**
  * The controls of a fixture, in table units: its box, one track per dial, and
  * its Run key. Shared by the picture and the hit test so they cannot disagree.
@@ -127,9 +136,17 @@ export function fixtureLayout(f) {
   const top = r.y0 + (f.props?.top ?? 8);
   // `grab` (per dial, in units) widens the band round a track in which a press takes the dial: a row of atoms
   // drawn on the track is its handle.
-  const dials = names.map((name, i) => ({
-    name, x0: r.x0 + m, x1: r.x1 - m, y: top + i * pitch, grab: f.props?.grab?.[name] ?? 0
-  }));
+  const dials = names.map((name, i) => {
+    if (f.kind === 'view') {
+      const j = joystickGeometry(f);
+      if (name === 'turn') return { name, x0: j.cx - j.r, x1: j.cx + j.r, y: j.cy - 2.5, grab: 2.8 };
+      if (name === 'tilt') return { name, x0: j.cx - j.r, x1: j.cx + j.r, y: j.cy + 2.5, grab: 2.8 };
+      if (name === 'slice') return { name, x0: f.at.x + 5, x1: f.at.x + 18, y: f.at.y + 1, grab: 3 };
+    }
+    return {
+      name, x0: r.x0 + m, x1: r.x1 - m, y: top + i * pitch, grab: f.props?.grab?.[name] ?? 0
+    };
+  });
   const bottom = top + Math.max(0, names.length - 1) * pitch;
   // A gauge, or a dial that only sets, has no Run key (`fixture.noRun`).
   const wide = f.runLabel ? Math.max(9, f.runLabel.length * 1.9 + 3) : 9;

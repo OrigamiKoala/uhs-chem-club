@@ -42,13 +42,13 @@ import {
   waveRead, rulerRead, bandRead, pulseRead, seated, pickedUpBy, detectorsOn
 } from '../../table/kits/optics.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 5 };
 
 /** When each withheld word is earned. */
 export const VOCABULARY = [
-  { term: /\belectromagnetic spectrum\b/i, introducedAt: 4 },
-  { term: /\bvisible spectrum\b/i, introducedAt: 4 },
-  { term: /\bspeed of light\b/i, introducedAt: 3 },
+  { term: /\belectromagnetic spectrum\b/i, introducedAt: 5 },
+  { term: /\bvisible spectrum\b/i, introducedAt: 5 },
+  { term: /\bspeed of light\b/i, introducedAt: 4 },
   { term: /\bwavelengths?\b/i, introducedAt: 1 },
   { term: /\bfrequenc(?:y|ies)\b/i, introducedAt: 1 }
 ];
@@ -60,7 +60,21 @@ const SPEAKER = 'Vess';
 
 /** The key the player's guess is kept under (`engine/predict.js`), and what each guess is called in the prompt. */
 const QUEST_KEY = 'unit02/q1-wave';
+const FIRST_LAMP_KEY = 'unit02/q1-wave/first-lamp';
 const GUESS_LABEL = { red: 'Red first', violet: 'Violet first', same: 'Together' };
+
+function getFirstLamp(state) {
+  const rows = state?.table?.recorder?.rows || [];
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const lbl = (rows[i].label || '').toLowerCase();
+    if (lbl.includes('violet')) return 'violet';
+    if (lbl.includes('red')) return 'red';
+  }
+  const seatedPiece = seated(state?.table, 'rail.lamp');
+  if (seatedPiece?.id === 'violet') return 'violet';
+  if (seatedPiece?.id === 'red') return 'red';
+  return 'red';
+}
 
 /** The dial, red end first: turning it up raises the frequency. */
 const RED_TO_VIOLET = [700, 650, 600, 550, 500, 450, 400];
@@ -181,13 +195,13 @@ export const STAGES = [
       marks: [{ metres: 0, label: '0 m' }, { metres: 1.5, label: '1.5 m' }, { metres: 3, label: '3.0 m' }, { metres: 4.5, label: '4.5 m' }]
     });
     return {
-      title: 'Time the Pulses',
+      title: 'Time a Pulse',
       // The guess comes back here, locked in: it is the first thing the player reads about the test.
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": how fast does violet light travel?`
-          : 'How fast does violet light travel?';
+          ? `You predicted "${GUESS_LABEL[guess]}": time either lamp to find how fast its light travels.`
+          : 'Time either lamp to find how fast its light travels.';
       },
       widget,
       table: opticsTable({
@@ -203,7 +217,7 @@ export const STAGES = [
       }),
       hints: [
         'Use "Fire Pulse" with a detector on each of two marks and a lamp in the holder.',
-        'Compare the time the red lamp\'s pulse takes over a gap with the time the violet lamp\'s takes over the same gap.',
+        'Read the gap between the detectors and the pulse time on the timer.',
         'Divide the gap by the time, turning nanoseconds into seconds with 10^-9, and set your reading to the result.'
       ],
       check(state) {
@@ -213,7 +227,67 @@ export const STAGES = [
         if (v === 3) return { ok: true };
         return { ok: false, msg: 'Your reading does not match the gap and the pulse time on the timer.' };
       },
-      // The verdict on the guess opens the card; it never says a wrong guess cost anything.
+      onClear(state) {
+        const used = getFirstLamp(state);
+        remember(FIRST_LAMP_KEY, used);
+      },
+      reward: {
+        log: 'One lamp timed down the rail.',
+        title: 'The First Timing',
+        body: 'Light from the lamp crosses the gap in nanoseconds, working out to 3.00 x 10^8 metres per second. Next, time the other lamp down the same rail to see how its speed compares.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const rail = pulseRail('rail', 'Pulse timer', { x: 68, y: 21.5 }, {
+      lamp: true,
+      size: { w: 134, h: 39 },
+      marks: [{ metres: 0, label: '0 m' }, { metres: 1.5, label: '1.5 m' }, { metres: 3, label: '3.0 m' }, { metres: 4.5, label: '4.5 m' }]
+    });
+    let stage4Notes = [];
+    return {
+      title: 'The Other Lamp',
+      get prompt() {
+        const first = recall(FIRST_LAMP_KEY) || 'red';
+        const otherLabel = first === 'red' ? 'violet' : 'red';
+        return `Now time the ${otherLabel} lamp: how fast does its light travel?`;
+      },
+      widget,
+      get table() {
+        const first = recall(FIRST_LAMP_KEY) || 'red';
+        const otherId = first === 'red' ? 'violet' : 'red';
+        const otherLabel = otherId === 'violet' ? 'Violet lamp' : 'Red lamp';
+        const otherNm = otherId === 'violet' ? 400 : 700;
+        const t = opticsTable({
+          pieces: [
+            detector('d1', 'Detector 1', { x: 13, y: 50 }),
+            detector('d2', 'Detector 2', { x: 33, y: 50 }),
+            lamp(otherId, otherLabel, { x: 57, y: 50 }, otherNm)
+          ],
+          fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
+          zones: { slots: rail.slots },
+          recorder: { at: { x: 140, y: 52 }, size: { w: 18, h: 18 }, xLabel: 'Gap', xUnit: 'm', yLabel: 'Time', yUnit: 'ns' }
+        });
+        if (stage4Notes.length) t.notes = stage4Notes.map(n => ({ ...n }));
+        return t;
+      },
+      set table(spec) {
+        if (spec?.notes) stage4Notes = spec.notes;
+      },
+      hints: [
+        'Put the lamp in the holder, place two detectors, and press "Fire Pulse".',
+        'Compare this lamp\'s pulse time over a gap with your reading from the first lamp.',
+        'Divide the gap by the time, turning nanoseconds into seconds with 10^-9, and set your reading to the result.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = t.fixtures.speed.dials.n.value;
+        if (v === 0) return { ok: false, notYet: true, msg: 'Set the speed you worked out.' };
+        if (v === 3) return { ok: true };
+        return { ok: false, msg: 'Your reading does not match the gap and the pulse time on the timer.' };
+      },
       get reward() {
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'same'
@@ -228,7 +302,7 @@ export const STAGES = [
     };
   })(),
 
-  /* ---------------------------------------------------------------- 4 */
+  /* ---------------------------------------------------------------- 5 */
   (() => {
     const ruler = logRuler('ruler', 'Ruler', { x: 45, y: 19 });
     const source = ([id, label, nm, kind]) => (kind === 'lamp' ? lamp(id, label, { x: 20, y: 52 }, nm) : radiator(id, label, { x: 20, y: 52 }, nm));
@@ -274,7 +348,8 @@ export const STAGES = [
 const NOTES = {
   1: ['Drag the lamp into its holder.', 'Turn the Colour dial to tune it.'],
   3: ['Set a lamp and two detectors, then press Fire Pulse.'],
-  4: ['Drag a source into the ruler\'s holder to read it,', 'then back onto the rail.']
+  4: ['Set the lamp and two detectors, then press Fire Pulse.'],
+  5: ['Drag a source into the ruler\'s holder to read it,', 'then back onto the rail.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -375,7 +450,8 @@ const reading = (fixture, value) => ({ setDial: { fixture, dial: 'n', value } })
 export const SOLUTIONS = [
   [put('lamp', 'slot:l.lamp'), colour('l', 6)],
   [{ predict: 'same' }],
-  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m3'), put('red', 'slot:rail.lamp'), { run: 'rail' }, put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 3)],
+  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m3'), put('red', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 3)],
+  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m3'), put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 3)],
   [put('radio', 'rail:0'), put('micro', 'rail:1'), put('red', 'rail:2'), put('violet', 'rail:3'), put('xray', 'rail:4')]
 ];
 
@@ -383,6 +459,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [put('lamp', 'slot:l.lamp'), colour('l', 2)],
   [],
+  [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m2'), put('red', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 2.5)],
   [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m2'), put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 2.5)],
   [put('violet', 'rail:0')]
 ];

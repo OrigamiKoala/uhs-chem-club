@@ -9,9 +9,12 @@
  */
 
 import { modelParts, captionOf, electronAt } from '../learn/engine/model-parts.js';
-import { planTrace } from '../learn/engine/lightdata.js';
+import { planTrace, bohrJoules } from '../learn/engine/lightdata.js';
 import { tierManager } from '../three/tier.js';
 import { session } from '../session.js';
+import { mountDOrbitals3D, mountDebriefOrbitalViewer } from './orbital-3d-viewer.js';
+
+export { mountDebriefOrbitalViewer };
 
 const BG = '#0d0c0a';
 /** The bench's trace moves at one on-screen speed, so a shorter wave passes more crests a second. */
@@ -230,6 +233,825 @@ function mountWave(view, wave, still) {
   };
 }
 
+/**
+ * Animate the Bohr energy ladder: rungs at their energies, an electron dropping
+ * from a higher rung to a lower one, and the emission of a photon wavepacket / energy packet.
+ * Fixed front-on, never rotated, so the levels and drop are completely clear.
+ */
+function drawLadder(ctx, w, h, ladder, progress, still) {
+  const pad = Math.max(16, Math.min(32, w * 0.035));
+  const top = 38;
+  const bottom = h - 34;
+  const hSpan = bottom - top;
+
+  // Background and slate grid
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = 'rgba(140,131,118,0.07)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = pad; x <= w - pad + 0.5; x += 40) { ctx.moveTo(x, top - 8); ctx.lineTo(x, bottom + 12); }
+  for (let y = top - 8; y <= bottom + 12.5; y += 24) { ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); }
+  ctx.stroke();
+
+  // Spacing of rungs: physical Bohr model -1/n^2 crowding
+  // n = 1 at bottom; n = 2, 3, 4, 5 crowd towards top
+  const yOf = n => {
+    if (n === 1) return bottom;
+    if (n === 2) return bottom - 0.44 * hSpan;
+    if (n === 3) return bottom - 0.70 * hSpan;
+    if (n === 4) return bottom - 0.85 * hSpan;
+    if (n === 5) return bottom - 0.93 * hSpan;
+    return top; // top / infinity
+  };
+
+  const hi = ladder.hi || 3;
+  const lo = ladder.lo || 2;
+  const yHi = yOf(hi);
+  const yLo = yOf(lo);
+  const colour = ladder.colour || '#ff3b30';
+
+  // Horizontal layout
+  const labelW = w >= 560 ? 80 : 54;
+  const ladX0 = pad + labelW;
+  const ladW = Math.max(70, Math.min(150, (w - pad * 2) * 0.22));
+  const ladX1 = ladX0 + ladW;
+  const xElectron = ladX0 + ladW * 0.5;
+  const xEmitStart = ladX1 + 10;
+  const xEmitEnd = w - pad - 12;
+
+  // Header: Clear description of the process
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#8c8376';
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('BOHR ENERGY LADDER', pad, 12);
+
+  ctx.fillStyle = '#dcd6cc';
+  ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText(`DROP: n = ${hi} \u2192 n = ${lo}`, pad + 130, 10);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = colour;
+  ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText(`${ladder.nm} nm LIGHT GIVEN OUT`, w - pad, 10);
+
+  // Ladder upright rails
+  ctx.strokeStyle = '#3e3933';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(ladX0, top - 6);
+  ctx.lineTo(ladX0, bottom + 6);
+  ctx.moveTo(ladX1, top - 6);
+  ctx.lineTo(ladX1, bottom + 6);
+  ctx.stroke();
+
+  // Draw the rungs
+  const rungs = [1, 2, 3, 4, 5];
+  for (const n of rungs) {
+    const y = yOf(n);
+    const isHi = n === hi;
+    const isLo = n === lo;
+    const isTarget = isHi || isLo;
+
+    // Rung line
+    ctx.strokeStyle = isHi ? '#d99423' : isLo ? '#dcd6cc' : '#544e46';
+    ctx.lineWidth = isTarget ? 3 : 1.5;
+    if (isTarget) {
+      ctx.shadowColor = isHi ? 'rgba(217, 148, 35, 0.4)' : 'rgba(220, 214, 204, 0.3)';
+      ctx.shadowBlur = 8;
+    }
+    ctx.beginPath();
+    ctx.moveTo(ladX0 - 2, y);
+    ctx.lineTo(ladX1 + 2, y);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Labels on left
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = isTarget ? 'bold 11px ui-monospace, SFMono-Regular, Menlo, monospace' : '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.fillStyle = isHi ? '#d99423' : isLo ? '#dcd6cc' : n === 1 ? '#8c8376' : '#6b625a';
+    const tag = n === 1 ? (w >= 540 ? 'n = 1 (ground)' : 'n = 1')
+      : isHi ? (w >= 540 ? `n = ${n} (excited)` : `n = ${n}`)
+      : isLo ? (w >= 540 ? `n = ${n} (lower)` : `n = ${n}`)
+      : `n = ${n}`;
+    ctx.fillText(tag, ladX0 - 8, y);
+
+    // Energy on right (if space permits)
+    if (w >= 520) {
+      ctx.textAlign = 'left';
+      ctx.font = '9px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillStyle = isTarget ? (isHi ? '#d99423' : '#dcd6cc') : '#544e46';
+      const joules = bohrJoules(n);
+      ctx.fillText(`${(joules / 1e-18).toFixed(3)} \u00d7 10^-18 J`, ladX1 + 8, y);
+    }
+  }
+
+  // Top open limit (n = infinity, 0 J)
+  const yTopLine = yOf(6);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#544e46';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(ladX0 - 2, yTopLine);
+  ctx.lineTo(ladX1 + 2, yTopLine);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#6b625a';
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('0 J (top)', ladX0 - 8, yTopLine);
+
+  // Transition vertical arrow between rungs hi and lo
+  const xArrow = ladX0 + 16;
+  ctx.strokeStyle = colour;
+  ctx.fillStyle = colour;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(xArrow, yHi + 3);
+  ctx.lineTo(xArrow, yLo - 6);
+  ctx.stroke();
+  // Arrow head pointing down
+  ctx.beginPath();
+  ctx.moveTo(xArrow, yLo - 1);
+  ctx.lineTo(xArrow - 4, yLo - 7);
+  ctx.lineTo(xArrow + 4, yLo - 7);
+  ctx.closePath();
+  ctx.fill();
+
+  // Energy delta label on the arrow
+  if (w >= 600) {
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = colour;
+    ctx.font = '9px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.fillText(`\u0394E = ${(ladder.joules / 1e-18).toFixed(3)} \u00d7 10^-18 J`, xArrow + 6, (yHi + yLo) / 2);
+  }
+
+  // Animation timeline (progress in 0..1):
+  // 0.00..0.22 : Electron rests on rung hi (excited)
+  // 0.22..0.40 : Electron drops down to rung lo
+  // 0.38..0.88 : Photon wavepacket emerges from drop point and travels right
+  // 0.88..1.00 : Rest on lo before looping
+  const p = still ? 0.6 : progress;
+
+  let electronY = yHi;
+  let electronSettled = false;
+  let showGhost = false;
+
+  if (p < 0.22) {
+    // Excited state
+    electronY = yHi;
+  } else if (p < 0.40) {
+    // Dropping
+    const uDrop = smoothstep((p - 0.22) / 0.18);
+    electronY = yHi + uDrop * (yLo - yHi);
+    showGhost = true;
+  } else {
+    // Settled on lower rung
+    electronY = yLo;
+    electronSettled = true;
+    showGhost = true;
+  }
+
+  // Ghost origin marker on rung hi
+  if (showGhost) {
+    ctx.save();
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = 'rgba(217, 148, 35, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(xElectron, yHi, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Drop ripple on impact
+  if (!still && p >= 0.38 && p <= 0.55) {
+    const rip = (p - 0.38) / 0.17;
+    ctx.save();
+    ctx.strokeStyle = `rgba(220, 214, 204, ${1 - rip})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(xElectron, yLo, 6 + rip * 20, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draw the electron
+  ctx.save();
+  ctx.shadowColor = electronSettled ? '#dcd6cc' : '#d99423';
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(xElectron, electronY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = electronSettled ? '#8c8376' : '#d99423';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Photon / Wave emission
+  // Active when p >= 0.36
+  if (p >= 0.36) {
+    const pWave = still ? 0.5 : (p - 0.36) / 0.52;
+    const waveAlpha = still ? 1 : (pWave < 0.1 ? pWave / 0.1 : pWave > 0.85 ? Math.max(0, (1 - pWave) / 0.15) : 1);
+
+    if (waveAlpha > 0) {
+      const yWaveMid = (yHi + yLo) / 2;
+      const xPkt = xEmitStart + pWave * (xEmitEnd - xEmitStart);
+      const pktLen = Math.min(120, (xEmitEnd - xEmitStart) * 0.45);
+      const sigma = pktLen * 0.28;
+      const wavePx = 15;
+      const amp = 16;
+
+      ctx.save();
+      ctx.globalAlpha = waveAlpha;
+
+      // Concentric emission ripples at start of release
+      if (!still && pWave < 0.35) {
+        const arcProg = pWave / 0.35;
+        for (let k = 0; k < 3; k++) {
+          const arcR = (arcProg * 45 + k * 14) % 45;
+          const arcAlpha = Math.max(0, 1 - arcR / 45) * 0.6;
+          ctx.strokeStyle = colour;
+          ctx.globalAlpha = waveAlpha * arcAlpha;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(ladX1 + 4, yWaveMid, arcR, -Math.PI * 0.4, Math.PI * 0.4);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = waveAlpha;
+      }
+
+      // Sine wavepacket with Gaussian envelope
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = colour;
+      ctx.shadowBlur = 12;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+
+      const steps = 80;
+      for (let i = 0; i <= steps; i++) {
+        const x = xPkt - pktLen / 2 + (i / steps) * pktLen;
+        const dx = x - xPkt;
+        const env = Math.exp(-(dx * dx) / (2 * sigma * sigma));
+        const y = yWaveMid - amp * env * Math.sin((2 * Math.PI * dx) / wavePx - pWave * 26);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Glowing photon particle core
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(xPkt, yWaveMid, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(xPkt, yWaveMid, 8, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Explanatory badge accompanying the photon
+      if (w >= 440) {
+        const badgeX = Math.min(w - pad - 80, Math.max(xEmitStart + 70, xPkt));
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, monospace';
+        ctx.fillStyle = colour;
+        ctx.fillText(`PHOTON EMITTED \u00b7 ${ladder.nm} nm`, badgeX, yWaveMid - 22);
+
+        ctx.textBaseline = 'top';
+        ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+        ctx.fillStyle = '#dcd6cc';
+        ctx.fillText('Lost energy released as light', badgeX, yWaveMid + 22);
+      }
+      ctx.restore();
+    }
+  }
+
+  // Footer note
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = '#8c8376';
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('When an electron drops a rung, the atom loses energy and releases one photon of light.', w / 2, h - 8);
+}
+
+/**
+ * Animate a 3D standing wave on an orbit: shows why non-integer wavelengths cancel out.
+ * Features interactive orbit tilt & turn, wavelength mode switching (1.5λ cancels, 1.33λ smears, 2λ fits, 3λ fits),
+ * and dynamic visualization of Lap 1 (crest) vs Lap 2 (trough) destructive interference.
+ */
+function mountStandingWave3D(view, wrap, config, still) {
+  const modes = config.modes || [
+    { id: '1.5', n: 1.5, label: '1.5λ (Cancels)', desc: 'Lap 1 (+1 crest) meets Lap 2 (-1 trough) at the exact same spot → 1 + (-1) = 0 (destructive cancellation)', fits: false },
+    { id: '1.33', n: 1.333, label: '1.33λ (Smears)', desc: 'Fractional laps shift phase continuously, smearing into zero standing amplitude over time', fits: false },
+    { id: '2', n: 2.0, label: '2.0λ (Fits)', desc: 'Laps land peak-to-peak in phase → reinforces into a resonant 2-wavelength standing wave', fits: true },
+    { id: '3', n: 3.0, label: '3.0λ (Fits)', desc: 'Whole number of 3 wavelengths reinforces into a permanent 6-node standing wave', fits: true }
+  ];
+
+  let currentMode = modes.find(m => m.id === config.defaultMode) || modes[0];
+  let viewMode = 'all'; // 'all', 'laps', 'net'
+
+  // 1. Controls bar
+  const bar = document.createElement('div');
+  bar.className = 'lq-sw-bar';
+  bar.style.cssText = 'display:flex;gap:4px;padding:6px 8px;background:#14120f;border-bottom:1px solid #2e2a26;flex-wrap:wrap;align-items:center;';
+
+  const label = document.createElement('span');
+  label.textContent = 'WAVE:';
+  label.style.cssText = 'font-family:ui-monospace,monospace;font-size:10px;font-weight:bold;color:#8c8376;margin-right:2px;';
+  bar.appendChild(label);
+
+  const modeButtons = [];
+  modes.forEach(m => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = m.label;
+    const isAct = m.id === currentMode.id;
+    btn.style.cssText = `font-family:ui-monospace,monospace;font-size:10px;padding:3px 7px;cursor:pointer;border:1px solid ${isAct ? '#d99423' : '#3e3933'};background:${isAct ? '#2a2214' : '#1a1815'};color:${isAct ? '#d99423' : '#a59c86'};border-radius:2px;`;
+    btn.addEventListener('click', () => {
+      currentMode = m;
+      modeButtons.forEach(({ b, mode }) => {
+        const act = mode.id === currentMode.id;
+        b.style.borderColor = act ? '#d99423' : '#3e3933';
+        b.style.background = act ? '#2a2214' : '#1a1815';
+        b.style.color = act ? '#d99423' : '#a59c86';
+      });
+      updateStatus();
+    });
+    bar.appendChild(btn);
+    modeButtons.push({ b: btn, mode: m });
+  });
+
+  // Layer toggle
+  const layerWrap = document.createElement('div');
+  layerWrap.style.cssText = 'margin-left:auto;display:flex;gap:3px;align-items:center;';
+  const layerLabel = document.createElement('span');
+  layerLabel.textContent = 'SHOW:';
+  layerLabel.style.cssText = 'font-family:ui-monospace,monospace;font-size:9px;color:#6b625a;margin-right:2px;';
+  layerWrap.appendChild(layerLabel);
+
+  const layerBtns = [
+    { id: 'all', label: 'All' },
+    { id: 'laps', label: 'Laps 1 & 2' },
+    { id: 'net', label: 'Net Sum' }
+  ].map(ly => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = ly.label;
+    const isAct = ly.id === viewMode;
+    btn.style.cssText = `font-family:ui-monospace,monospace;font-size:9px;padding:2px 5px;cursor:pointer;border:1px solid ${isAct ? '#8c8376' : '#2e2a26'};background:${isAct ? '#26221d' : '#14120f'};color:${isAct ? '#dcd6cc' : '#6b625a'};border-radius:2px;`;
+    btn.addEventListener('click', () => {
+      viewMode = ly.id;
+      layerBtns.forEach(({ b, id }) => {
+        const act = id === viewMode;
+        b.style.borderColor = act ? '#8c8376' : '#2e2a26';
+        b.style.background = act ? '#26221d' : '#14120f';
+        b.style.color = act ? '#dcd6cc' : '#6b625a';
+      });
+    });
+    layerWrap.appendChild(btn);
+    return { b: btn, id: ly.id };
+  });
+  bar.appendChild(layerWrap);
+
+  // Status banner with live explanation
+  const statusBar = document.createElement('div');
+  statusBar.className = 'lq-sw-status';
+  statusBar.style.cssText = 'padding:5px 10px;font-family:ui-monospace,monospace;font-size:11px;background:#0d0c0a;border-bottom:1px solid #24201c;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;';
+
+  const updateStatus = () => {
+    const badgeColor = currentMode.fits ? '#4ade80' : '#f59e0b';
+    const tag = currentMode.fits ? 'REINFORCES' : 'CANCELS OUT';
+    statusBar.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;padding:1px 5px;background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}44;font-size:9px;font-weight:bold;border-radius:2px;">${tag}</span>
+        <span style="color:#dcd6cc;">${currentMode.desc}</span>
+      </div>
+      <div style="font-size:10px;display:flex;gap:8px;">
+        <span style="color:#34d399;font-weight:bold;">— Lap 1</span>
+        <span style="color:#fb923c;font-weight:bold;">— Lap 2</span>
+        <span style="color:#38bdf8;font-weight:bold;">— Net Wave</span>
+      </div>
+    `;
+  };
+  updateStatus();
+
+  wrap.insertBefore(statusBar, view);
+  wrap.insertBefore(bar, statusBar);
+
+  let disposed = false;
+  let raf = 0;
+  let ro = null;
+  let teardown = () => {};
+
+  // Drag tilt & turn
+  let ay = 0.55;
+  let ax = 0.45;
+  let drag = null;
+  const onDown = e => { drag = { x: e.clientX, y: e.clientY }; try { view.setPointerCapture(e.pointerId); } catch (err) {} };
+  const onMove = e => {
+    if (!drag) return;
+    ay += (e.clientX - drag.x) * 0.01;
+    ax = Math.max(-0.1, Math.min(1.4, ax + (e.clientY - drag.y) * 0.01));
+    drag = { x: e.clientX, y: e.clientY };
+  };
+  const onUp = () => { drag = null; };
+  view.addEventListener('pointerdown', onDown);
+  view.addEventListener('pointermove', onMove);
+  view.addEventListener('pointerup', onUp);
+  view.addEventListener('pointercancel', onUp);
+
+  const initSolid = async () => {
+    const THREE = await import('three');
+    if (disposed) return;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const getW = () => Math.max(240, view.clientWidth || 320);
+    const getH = () => Math.max(200, view.clientHeight || 220);
+    renderer.setSize(getW(), getH());
+    view.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(36, getW() / getH(), 0.1, 100);
+    camera.position.set(0, 2.5, 4.4);
+    camera.lookAt(0, 0, 0);
+
+    scene.add(new THREE.HemisphereLight(0xe8e2d4, 0x1a1814, 1.2));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.3);
+    sun.position.set(4, 5, 3);
+    scene.add(sun);
+
+    const orbitGroup = new THREE.Group();
+    scene.add(orbitGroup);
+
+    // 1. Central Nucleus
+    const nucGeo = new THREE.SphereGeometry(0.18, 20, 16);
+    const nucMat = new THREE.MeshStandardMaterial({ color: 0xd99423, emissive: 0xd99423, emissiveIntensity: 0.8, roughness: 0.3 });
+    const nucleus = new THREE.Mesh(nucGeo, nucMat);
+    orbitGroup.add(nucleus);
+
+    // Nucleus glow ring
+    const nucHaloGeo = new THREE.RingGeometry(0.22, 0.26, 32);
+    const nucHaloMat = new THREE.MeshBasicMaterial({ color: 0xd99423, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+    const nucHalo = new THREE.Mesh(nucHaloGeo, nucHaloMat);
+    nucHalo.rotation.x = Math.PI / 2;
+    orbitGroup.add(nucHalo);
+
+    // 2. Base circular track (Bohr orbit plane)
+    const R = config.r || 1.6;
+    const trackGeo = new THREE.RingGeometry(R - 0.008, R + 0.008, 96);
+    const trackMat = new THREE.MeshBasicMaterial({ color: 0x48423a, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+    const trackMesh = new THREE.Mesh(trackGeo, trackMat);
+    trackMesh.rotation.x = Math.PI / 2;
+    orbitGroup.add(trackMesh);
+
+    // Spoke grid lines
+    const gridMat = new THREE.LineBasicMaterial({ color: 0x2e2924, transparent: true, opacity: 0.4 });
+    const gridGeo = new THREE.BufferGeometry();
+    const gridPts = [];
+    for (let a = 0; a < 8; a++) {
+      const th = (a / 8) * Math.PI * 2;
+      gridPts.push(0, 0, 0, R * 1.2 * Math.cos(th), 0, R * 1.2 * Math.sin(th));
+    }
+    gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(gridPts, 3));
+    orbitGroup.add(new THREE.LineSegments(gridGeo, gridMat));
+
+    // 3. Dynamic Wave Meshes
+    const SEGMENTS = 240;
+    const lap1Geo = new THREE.BufferGeometry();
+    const lap1Pos = new Float32Array((SEGMENTS + 1) * 3);
+    lap1Geo.setAttribute('position', new THREE.BufferAttribute(lap1Pos, 3));
+    const lap1Mat = new THREE.LineBasicMaterial({ color: 0x34d399, linewidth: 2.5 });
+    const lap1Line = new THREE.Line(lap1Geo, lap1Mat);
+    orbitGroup.add(lap1Line);
+
+    const lap2Geo = new THREE.BufferGeometry();
+    const lap2Pos = new Float32Array((SEGMENTS + 1) * 3);
+    lap2Geo.setAttribute('position', new THREE.BufferAttribute(lap2Pos, 3));
+    const lap2Mat = new THREE.LineBasicMaterial({ color: 0xfb923c, linewidth: 2.5 });
+    const lap2Line = new THREE.Line(lap2Geo, lap2Mat);
+    orbitGroup.add(lap2Line);
+
+    const sumGeo = new THREE.BufferGeometry();
+    const sumPos = new Float32Array((SEGMENTS + 1) * 3);
+    sumGeo.setAttribute('position', new THREE.BufferAttribute(sumPos, 3));
+    const sumMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 3 });
+    const sumLine = new THREE.Line(sumGeo, sumMat);
+    orbitGroup.add(sumLine);
+
+    // 4. Vertical Connector Struts (showing crest-to-trough cancellation)
+    const STRUTS = 24;
+    const strutGeo = new THREE.BufferGeometry();
+    const strutPos = new Float32Array(STRUTS * 2 * 3);
+    strutGeo.setAttribute('position', new THREE.BufferAttribute(strutPos, 3));
+    const strutMat = new THREE.LineDashedMaterial({ color: 0xa8a29e, dashSize: 0.04, gapSize: 0.02, transparent: true, opacity: 0.5 });
+    const strutLines = new THREE.LineSegments(strutGeo, strutMat);
+    orbitGroup.add(strutLines);
+
+    const A = config.amp || 0.36;
+    const t0 = performance.now();
+
+    const updateWaveBuffers = (timeSec) => {
+      const n = currentMode.n;
+      const omega = still ? 0 : 2.2;
+      const phase = timeSec * omega;
+
+      lap1Line.visible = viewMode === 'all' || viewMode === 'laps';
+      lap2Line.visible = viewMode === 'all' || viewMode === 'laps';
+      sumLine.visible = viewMode === 'all' || viewMode === 'net';
+      strutLines.visible = (viewMode === 'all' || viewMode === 'laps') && !currentMode.fits;
+
+      for (let i = 0; i <= SEGMENTS; i++) {
+        const u = i / SEGMENTS;
+        const th = u * Math.PI * 2;
+        const cosTh = Math.cos(th);
+        const sinTh = Math.sin(th);
+
+        const y1 = A * Math.cos(n * th - phase);
+        const y2 = A * Math.cos(n * (th + Math.PI * 2) - phase);
+        const ySum = (y1 + y2) * 0.7;
+
+        const idx = i * 3;
+        lap1Pos[idx] = R * cosTh;
+        lap1Pos[idx + 1] = y1;
+        lap1Pos[idx + 2] = R * sinTh;
+
+        lap2Pos[idx] = R * cosTh;
+        lap2Pos[idx + 1] = y2;
+        lap2Pos[idx + 2] = R * sinTh;
+
+        sumPos[idx] = R * cosTh;
+        sumPos[idx + 1] = ySum;
+        sumPos[idx + 2] = R * sinTh;
+      }
+      lap1Geo.attributes.position.needsUpdate = true;
+      lap2Geo.attributes.position.needsUpdate = true;
+      sumGeo.attributes.position.needsUpdate = true;
+
+      for (let s = 0; s < STRUTS; s++) {
+        const u = s / STRUTS;
+        const th = u * Math.PI * 2;
+        const cosTh = Math.cos(th);
+        const sinTh = Math.sin(th);
+        const y1 = A * Math.cos(n * th - phase);
+        const y2 = A * Math.cos(n * (th + Math.PI * 2) - phase);
+
+        const sIdx = s * 6;
+        strutPos[sIdx] = R * cosTh;
+        strutPos[sIdx + 1] = y1;
+        strutPos[sIdx + 2] = R * sinTh;
+
+        strutPos[sIdx + 3] = R * cosTh;
+        strutPos[sIdx + 4] = y2;
+        strutPos[sIdx + 5] = R * sinTh;
+      }
+      strutGeo.attributes.position.needsUpdate = true;
+      strutLines.computeLineDistances();
+    };
+
+    const resize = () => {
+      const w = getW();
+      const h = getH();
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(resize);
+      ro.observe(view);
+    } else {
+      window.addEventListener('resize', resize);
+    }
+
+    const frame = now => {
+      if (disposed) return;
+      if (!still && !drag) ay += 0.005;
+      orbitGroup.rotation.set(ax, ay, 0);
+
+      const t = (now - t0) / 1000;
+      updateWaveBuffers(t);
+
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+
+    teardown = () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+      window.removeEventListener('resize', resize);
+      renderer.dispose();
+      nucGeo.dispose();
+      nucMat.dispose();
+      nucHaloGeo.dispose();
+      nucHaloMat.dispose();
+      trackGeo.dispose();
+      trackMat.dispose();
+      gridGeo.dispose();
+      gridMat.dispose();
+      lap1Geo.dispose();
+      lap1Mat.dispose();
+      lap2Geo.dispose();
+      lap2Mat.dispose();
+      sumGeo.dispose();
+      sumMat.dispose();
+      strutGeo.dispose();
+      strutMat.dispose();
+      renderer.domElement.remove();
+    };
+  };
+
+  // 2D flat canvas fallback
+  const initFlat = () => {
+    const canvas = document.createElement('canvas');
+    view.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0, H = 0;
+    const t0 = performance.now();
+
+    const paint = now => {
+      if (disposed) return;
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, W, H);
+      const cx = W / 2;
+      const cy = H / 2;
+      const R = Math.min(W, H) * 0.32;
+      const A = R * 0.24;
+
+      ctx.fillStyle = '#d99423';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#3e3933';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const n = currentMode.n;
+      const t = still ? 0 : (now - t0) / 1000;
+      const phase = t * 2.2;
+
+      if (viewMode === 'all' || viewMode === 'laps') {
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (let i = 0; i <= 180; i++) {
+          const th = (i / 180) * Math.PI * 2;
+          const r = R + A * Math.cos(n * th - phase);
+          const px = cx + r * Math.cos(th);
+          const py = cy - r * Math.sin(th);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = '#fb923c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i <= 180; i++) {
+          const th = (i / 180) * Math.PI * 2;
+          const r = R + A * Math.cos(n * (th + Math.PI * 2) - phase);
+          const px = cx + r * Math.cos(th);
+          const py = cy - r * Math.sin(th);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+
+      if (viewMode === 'all' || viewMode === 'net') {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let i = 0; i <= 180; i++) {
+          const th = (i / 180) * Math.PI * 2;
+          const y1 = A * Math.cos(n * th - phase);
+          const y2 = A * Math.cos(n * (th + Math.PI * 2) - phase);
+          const r = R + (y1 + y2) * 0.7;
+          const px = cx + r * Math.cos(th);
+          const py = cy - r * Math.sin(th);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    };
+
+    const resize = () => {
+      W = Math.max(240, view.clientWidth || 320);
+      H = Math.max(200, view.clientHeight || 220);
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      paint(performance.now());
+    };
+    resize();
+
+    const frame = now => {
+      if (disposed) return;
+      paint(now);
+      raf = requestAnimationFrame(frame);
+    };
+    if (!still) raf = requestAnimationFrame(frame);
+
+    teardown = () => {
+      cancelAnimationFrame(raf);
+      canvas.remove();
+    };
+  };
+
+  const wants3D = tierManager.currentTier !== 'T1';
+  if (wants3D) {
+    initSolid().catch(() => { if (!disposed) initFlat(); });
+  } else {
+    initFlat();
+  }
+
+  return () => {
+    disposed = true;
+    cancelAnimationFrame(raf);
+    view.removeEventListener('pointerdown', onDown);
+    view.removeEventListener('pointermove', onMove);
+    view.removeEventListener('pointerup', onUp);
+    view.removeEventListener('pointercancel', onUp);
+    try { teardown(); } catch (err) {}
+    bar.remove();
+    statusBar.remove();
+  };
+}
+
+/** Animate a ladder model on its own canvas; flat, front-on, never rotated. */
+function mountLadder(view, ladder, still) {
+  const canvas = document.createElement('canvas');
+  view.appendChild(canvas);
+  view.style.cursor = 'pointer';
+  view.title = 'Click to replay drop';
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0;
+  let H = 0;
+  let raf = 0;
+  let ro = null;
+
+  let t0 = performance.now();
+  const CYCLE = 4.2; // seconds
+
+  const paint = now => {
+    const t = still ? 0 : (now - t0) / 1000;
+    const progress = (t % CYCLE) / CYCLE;
+    drawLadder(ctx, W, H, ladder, progress, still);
+  };
+
+  const resize = () => {
+    const w = Math.max(240, view.clientWidth || 320);
+    const h = Math.max(160, view.clientHeight || 220);
+    if (w === W && h === H) return;
+    W = w;
+    H = h;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paint(performance.now());
+  };
+  resize();
+
+  if (typeof ResizeObserver !== 'undefined') {
+    ro = new ResizeObserver(resize);
+    ro.observe(view);
+  } else {
+    window.addEventListener('resize', resize);
+  }
+
+  const restart = () => { t0 = performance.now(); };
+  canvas.addEventListener('click', restart);
+
+  if (!still) {
+    const frame = now => {
+      paint(now);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+  }
+
+  return () => {
+    cancelAnimationFrame(raf);
+    ro?.disconnect();
+    window.removeEventListener('resize', resize);
+    canvas.removeEventListener('click', restart);
+    canvas.remove();
+  };
+}
+
 /** Rotate a point about y then x. */
 function turn([x, y, z], ay, ax) {
   const cy = Math.cos(ay), sy = Math.sin(ay);
@@ -281,7 +1103,11 @@ export function mountModel(host, spec) {
   const still = Boolean(session.reduceMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const wrap = document.createElement('div');
   wrap.className = 'lq-model';
-  const hint = still ? '' : parts.wave ? 'Watch the crests crowd as the colour shifts.' : 'Drag to turn it.';
+  const hint = still ? ''
+    : parts.wave ? 'Watch the crests crowd as the colour shifts.'
+    : parts.ladder ? 'Watch the electron drop and release a packet of light (click to replay).'
+    : parts.standingWave ? 'Drag to tilt and turn. Tap buttons to test integer vs non-integer waves.'
+    : 'Drag to turn it.';
   wrap.innerHTML = `<div class="lq-model-view"></div><p class="lq-model-caption">${captionOf(spec).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} ${hint}</p>`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
@@ -292,6 +1118,56 @@ export function mountModel(host, spec) {
     return {
       dispose() {
         try { teardownWave(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // A ladder is an energy scale, not a solid to turn: it gets its own flat, animated drop and photon emission.
+  if (parts.ladder) {
+    const teardownLadder = mountLadder(view, parts.ladder, still);
+    return {
+      dispose() {
+        try { teardownLadder(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // A standing wave on an orbit: 3D animated model showing why non-integer waves cancel out.
+  if (parts.standingWave) {
+    const teardownStandingWave = mountStandingWave3D(view, wrap, parts.standingWave, still);
+    return {
+      dispose() {
+        try { teardownStandingWave(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // The five d-orbitals: interactive 3D model with individual orbital selection, lobe boundary surfaces, and donut ring
+  if (parts.dOrbitals) {
+    const teardownDOrbitals = mountDOrbitals3D(view, wrap, parts.dOrbitals, still);
+    return {
+      dispose() {
+        try { teardownDOrbitals(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // An orbital with slice active: 3D slice explainer showing nodal planes.
+  if (spec.type === 'orbital' && spec.slice) {
+    let explainerObj = null;
+    let isDisposed = false;
+    import('./slice-explainer.js').then(m => {
+      if (isDisposed) return;
+      explainerObj = m.mountSliceExplainer(view);
+    });
+    return {
+      dispose() {
+        isDisposed = true;
+        try { explainerObj?.dispose(); } catch (err) {}
         wrap.remove();
       }
     };

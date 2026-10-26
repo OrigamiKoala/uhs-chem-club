@@ -141,9 +141,9 @@ export const STAGES = [
         zones: { slots: cell.slots }
       }),
       hints: [
-        'Use the Colour dial and the Brightness dial, and watch the cup.',
-        'Compare what the cup collects for red at full brightness with what it collects for violet at its dimmest.',
-        'Try every colour on the dial at both ends of the brightness dial until the cup collects something.'
+        'Use the Colour dial and the Brightness dial, and watch "Freed Per Second".',
+        'Compare what frees for red at full brightness with what frees for violet at its dimmest.',
+        'Try different colours on the dial until electrons break free from the plate.'
       ],
       check(state) {
         const r = cellRead(state.table, 'cell');
@@ -152,7 +152,7 @@ export const STAGES = [
         if (r.fixture.dials.colour.value === 1 && r.brightness === 5) {
           return { ok: false, notYet: true, msg: 'Nothing is leaving the plate with the lamp as it stands.' };
         }
-        return { ok: false, msg: 'The cup is empty at this setting.' };
+        return { ok: false, msg: 'No electrons are freed at this setting.' };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
@@ -183,8 +183,8 @@ export const STAGES = [
       }),
       hints: [
         'Use the Colour dial, stepping it one setting at a time.',
-        'Watch the cup as you go: every setting past the first one that frees electrons frees them too.',
-        'Stop on the setting just after the cup leaves empty.'
+        'Watch "Freed Per Second": every setting past the first one that frees electrons frees them too.',
+        'Stop on the first setting where electrons break free from the plate.'
       ],
       check(state) {
         const r = cellRead(state.table, 'cell');
@@ -192,11 +192,11 @@ export const STAGES = [
         const first = firstFreeing(r.fixture.props.settings, 'Na', 3);
         if (v === first) return { ok: true };
         if (v === 1) return { ok: false, notYet: true, msg: 'The lamp is where it started. Set it, then press Submit.' };
-        if (v < first) return { ok: false, msg: 'The cup is empty at this setting.' };
-        return { ok: false, msg: 'The cup was already collecting electrons at a lower setting.' };
+        if (v < first) return { ok: false, msg: 'No electrons are freed at this setting.' };
+        return { ok: false, msg: 'Electrons were already freed at a lower setting.' };
       },
       reward: {
-        log: 'The cup wakes at one setting and not before.',
+        log: 'Electrons break free at one setting and not before.',
         title: 'Threshold Frequency',
         body: 'Below one particular frequency no electron leaves, however bright the lamp is; at and above it electrons come off at once. That cut-off is the threshold frequency, and every metal has its own.'
       }
@@ -208,7 +208,7 @@ export const STAGES = [
     const cell = photocell('cell', 'Photocell', { x: 52, y: 26 }, { lamp: true, brightness: { start: 2 } });
     return {
       title: 'Turn Up the Lamp',
-      prompt: 'Double the number of electrons the cup collects each second.',
+      prompt: 'Double the number of electrons freed each second.',
       widget,
       table: opticsTable({
         pieces: [seatedPlate('na', 'Sodium', cell, 'Na'), lamp('v', 'Violet lamp', cell.slots[1].at, 400, { fixed: true, zone: `slot:${cell.slots[1].id}` })],
@@ -216,16 +216,16 @@ export const STAGES = [
         zones: { slots: cell.slots }
       }),
       hints: [
-        'Use the Brightness dial, and watch both the cup and the speed meter.',
+        'Use the Brightness dial, and watch both the count and the speed meter.',
         'Compare the count and the speed at the lowest brightness with the count and the speed at a higher one.',
-        'Raise the brightness a step at a time until the cup collects twice what it did when you began.'
+        'Raise the brightness a step at a time until Freed Per Second is twice what you began with.'
       ],
       check(state) {
         const r = cellRead(state.table, 'cell');
         const began = planPhotocell('Na', 400, cell.fixture.dials.brightness.value).count;
         if (r.count === began * 2) return { ok: true };
-        if (r.count === began) return { ok: false, notYet: true, msg: 'The cup is collecting what it did when you began.' };
-        return { ok: false, msg: 'The cup is not collecting twice what it did when you began.' };
+        if (r.count === began) return { ok: false, notYet: true, msg: 'Freed Per Second is still what it was when you began.' };
+        return { ok: false, msg: 'Freed Per Second is not twice what you began with.' };
       },
       reward: {
         log: 'Brighter: more electrons, same speed.',
@@ -256,8 +256,8 @@ export const STAGES = [
       }),
       hints: [
         'Use the Colour dial and "Record" with each plate in the holder.',
-        'Compare the setting where each plate\'s cup first leaves zero.',
-        'Put the plate that woke at the lowest frequency at the left end of the rail.'
+        'Compare the wavelength where each plate first frees electrons.',
+        'Put the plate that frees electrons at the longest wavelength (lowest frequency) at the left end of the rail.'
       ],
       check(state) {
         const t = state.table;
@@ -267,12 +267,12 @@ export const STAGES = [
         if (order.join() === want.join()) return { ok: true };
         const nm = id => thresholdNm(t.pieces[id].props.metal);
         for (let k = 0; k < order.length - 1; k++) {
-          if (nm(order[k]) < nm(order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and its cup needs shorter waves to wake.` };
+          if (nm(order[k]) < nm(order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} holds electrons tighter than ${t.pieces[order[k + 1]].label}: it needs shorter waves to free any.` };
         }
-        return { ok: false, msg: 'The rail does not run the way the cups wake.' };
+        return { ok: false, msg: 'The rail does not run from loosest electron grip to tightest.' };
       },
       reward: {
-        log: 'Cesium wakes first, then sodium, then zinc.',
+        log: 'Cesium frees electrons easiest, then sodium, then zinc.',
         title: 'Work Function',
         body: 'The least energy that frees an electron from a metal is its work function, about 3.4 x 10^-19 J for cesium, 3.7 for sodium and 6.9 for zinc. The higher it is, the higher the frequency a photon needs before it frees anything.',
         last: true
@@ -283,8 +283,8 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  2: ['Drag the plate into the holder.', 'Turn the dials and watch the cup.'],
-  4: ['Turn the Brightness dial and watch the cup.'],
+  2: ['Drag the plate into the holder.', 'Turn the dials and watch Freed Per Second.'],
+  4: ['Turn the Brightness dial and watch Freed Per Second.'],
   5: ['Try each plate in the holder.']
 };
 applyNotes(STAGES, NOTES);

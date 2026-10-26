@@ -389,7 +389,7 @@ function paintRuler(ctx, f, state, b) {
   }
   ctx.stroke();
   const marks = [[-1, '0.1 nm'], [3, '1 um'], [6, '1 mm'], [9, '1 m']];
-  for (const [d, label] of marks) say(ctx, label, F.x(xOf(d)), F.y(y + 5), F.size(2.2, 6), { align: 'center', color: DIM });
+  for (const [d, label] of marks) say(ctx, label, F.x(xOf(d)), F.y(y + 5), F.size(2.2, 6), { align: d === LO ? 'left' : 'center', color: DIM });
   // The slice of it the eye answers to.
   ctx.fillStyle = 'rgba(184, 175, 160, 0.16)';
   ctx.fillRect(F.x(xOf(Math.log10(VISIBLE.min))), F.y(y - 5), F.len(xOf(Math.log10(VISIBLE.max)) - xOf(Math.log10(VISIBLE.min))), F.len(10));
@@ -568,6 +568,7 @@ function paintCup(ctx, F, x, y, w, h, count) {
 
 function paintCellFixture(ctx, f, state, b) {
   const F = frameOf(b);
+  holderWord(ctx, F, state, f, f.props.holder, 'HOLDER');
   const w = f.size.w;
   const h = f.size.h;
   const read = cellRead(state, f.id);
@@ -602,9 +603,9 @@ function paintCellFixture(ctx, f, state, b) {
       ctx.fill();
     }
   }
-  // The counting cup the collector empties into.
+  // The collector the freed electrons gather at.
   paintCup(ctx, F, tx1 + 4, tubeY + 1, 11, tubeH - 1, read.count);
-  say(ctx, 'CUP', F.x(tx1 + 9.5), F.y(tubeY - 2.2), F.size(2.2, 6), { align: 'center', color: DIM });
+  say(ctx, 'COLLECTOR', F.x(tx1 + 9.5), F.y(tubeY - 2.2), F.size(2.2, 6), { align: 'center', color: DIM });
   // The two meters.
   const my = tubeY + tubeH + 3;
   const mw = (w - 6 - (f.noRun ? 0 : 18)) / 2;

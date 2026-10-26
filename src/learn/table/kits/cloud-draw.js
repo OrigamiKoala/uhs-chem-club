@@ -76,7 +76,7 @@ function drawAxes(ctx, x0, y0, size, view) {
  * Dots in a square of side `size` pixels at (x0, y0), `half` bohr from the middle to an edge. `dots` are `{a, b, c}` projected;
  * a turning cloud shades near dots bigger and brighter than far ones (depth is all a flat picture of a solid has).
  */
-export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view = null, rings = true, circleOne = false, bodies = false } = {}) {
+export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view = null, rings = true, circleOne = false, bodies = false, slice = false, sliceEmpty = false } = {}) {
   const k = size / (2 * half);
   const cx = x0 + size / 2;
   const cy = y0 + size / 2;
@@ -96,6 +96,21 @@ export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view
     const step = 100 / BOHR_PM;
     for (let r = step; r < half * 1.5; r += step) { ctx.beginPath(); ctx.arc(cx, cy, r * k, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
+  }
+  if (slice) {
+    ctx.save();
+    const slabHalf = 1.0 * k;
+    ctx.fillStyle = sliceEmpty ? 'rgba(74, 222, 128, 0.09)' : 'rgba(229, 155, 36, 0.08)';
+    ctx.fillRect(x0, cy - slabHalf, size, slabHalf * 2);
+    ctx.strokeStyle = sliceEmpty ? '#4ade80' : '#e59b24';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x0, cy - slabHalf); ctx.lineTo(x0 + size, cy - slabHalf);
+    ctx.moveTo(x0, cy + slabHalf); ctx.lineTo(x0 + size, cy + slabHalf);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
   }
   const dot = Math.max(1.4, size * 0.014);
   ctx.fillStyle = PHOS;
@@ -238,9 +253,14 @@ function paintPlate(ctx, f, state, b) {
   const picTop = (dialRows.length ? dialRows[dialRows.length - 1].y - F.r.y0 : 6) + 3.6;
   const pic = f.props.pic ?? 34;
   const turning = read.plane === 'turn';
+  const isEmptySlice = Boolean(read.slice && read.shown.length <= 0.06 * read.fired);
   const g = paintDots(ctx, F.x(2.5), F.y(picTop), F.len(pic), f.props.extent ?? 5, read.shown, {
-    turning, view: read.view, circleOne: f.props.circleOne !== false, bodies: b.bodies
+    turning, view: read.view, circleOne: f.props.circleOne !== false, bodies: b.bodies,
+    slice: read.slice, sliceEmpty: isEmptySlice
   });
+  if (turning) {
+    say(ctx, 'DRAG IMAGE TO ROTATE', F.x(2.5 + pic / 2), F.y(picTop + pic + 2.4), F.size(2.0, 6), { align: 'center', color: DIM });
+  }
   // The counting ring, and the film's outline, over the picture.
   const ring = ringRead(state, f.id);
   if (ring && ring.rpm > 0) {
@@ -292,9 +312,24 @@ function paintPlate(ctx, f, state, b) {
     ly += 3.6;
   }
   if (read.slice) {
-    sideLine(ctx, F, sx, ly, 'SLICE ON', AMBER, sw);
+    sideLine(ctx, F, sx, ly, isEmptySlice ? '★ NODAL PLANE' : 'SLICE ON', isEmptySlice ? '#4ade80' : AMBER, sw);
     ly += 3.6;
-    sideLine(ctx, F, sx, ly, `${read.shown.length} DOTS SHOWN`, DIM, sw);
+    sideLine(ctx, F, sx, ly, `${read.shown.length} OF ${read.fired} IN SLAB`, DIM, sw);
+    ly += 3.6;
+    if (isEmptySlice) {
+      sideLine(ctx, F, sx, ly, 'NO ELECTRONS HERE', '#4ade80', sw);
+    } else {
+      sideLine(ctx, F, sx, ly, 'CUTTING LOBES', DIM, sw);
+    }
+    ly += 4.5;
+  }
+  if (f.props.view) {
+    well(ctx, F.x(sx), F.y(ly), F.len(sw), F.len(6.5), { fill: isEmptySlice ? '#1a2e1d' : WELL, stroke: isEmptySlice ? '#4ade80' : RIM });
+    say(ctx, 'NODAL SLICE (XY)', F.x(sx + sw / 2), F.y(ly + 3.25), F.size(2.1, 6.5), { align: 'center', color: isEmptySlice ? '#4ade80' : PLATE_COLORS.text, weight: 700 });
+    ly += 7.8;
+
+    well(ctx, F.x(sx), F.y(ly), F.len(sw), F.len(6.5), { fill: WELL, stroke: RIM });
+    say(ctx, '3D SLICE DEMO', F.x(sx + sw / 2), F.y(ly + 3.25), F.size(2.1, 6.5), { align: 'center', color: AMBER, weight: 700 });
   }
 }
 
@@ -302,7 +337,127 @@ function paintView(ctx, f, state, b) {
   const F = frameOf(b);
   const v = viewRead(state, f.id);
   const deg = n => `${Math.round(n * 30)}`;
-  say(ctx, `FROM ${deg(v.turn)} ROUND, ${deg(v.tilt)} UP`, F.x(f.size.w - 2), F.y(f.size.h - 3), F.size(2.2, 6), { align: 'right', color: DIM });
+  const slice = Boolean(f.dials?.slice);
+
+  // Fixture local coordinates
+  const lcx = f.size.w / 2 - (slice ? 6.5 : 5);
+  const lcy = f.size.h / 2 + (slice ? 0.5 : 1);
+  const R = 8.2;
+
+  const cx = F.x(lcx);
+  const cy = F.y(lcy);
+  const r = F.len(R);
+
+  // 1. Header plaque
+  say(ctx, 'JOYSTICK VIEW', F.x(2.5), F.y(4.5), F.size(2.6, 7.5), { color: AMBER, weight: 700 });
+
+  // 2. Joystick socket (recessed dish)
+  ctx.save();
+  // Bezel ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + F.len(1.2), 0, Math.PI * 2);
+  ctx.fillStyle = '#22201d';
+  ctx.fill();
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = Math.max(1, F.sc * 0.12);
+  ctx.stroke();
+
+  // Socket well
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#100e0c';
+  ctx.fill();
+  ctx.strokeStyle = '#3a342c';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Subtle coordinate grid inside socket
+  ctx.strokeStyle = 'rgba(140, 131, 118, 0.18)';
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath();
+  ctx.moveTo(cx - r + 3, cy); ctx.lineTo(cx + r - 3, cy);
+  ctx.moveTo(cx, cy - r + 3); ctx.lineTo(cx, cy + r - 3);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Rim tick marks (cardinal & 30 deg)
+  for (let i = 0; i < 12; i++) {
+    const th = (i / 12) * Math.PI * 2;
+    const isMajor = i % 3 === 0;
+    const r1 = r - (isMajor ? F.len(1.4) : F.len(0.8));
+    ctx.strokeStyle = isMajor ? STEEL : 'rgba(140, 131, 118, 0.35)';
+    ctx.lineWidth = isMajor ? 1.2 : 0.8;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(th) * r1, cy + Math.sin(th) * r1);
+    ctx.lineTo(cx + Math.cos(th) * r, cy + Math.sin(th) * r);
+    ctx.stroke();
+  }
+
+  // 3. Puck / Joystick stick and head
+  const fx = (v.turn / 11) * 2 - 1;
+  const fy = -(v.tilt / 3);
+  const px = F.x(lcx + fx * R * 0.72);
+  const py = F.y(lcy + fy * R * 0.72);
+  const pr = F.len(2.6);
+
+  // Shaft from center to knob
+  ctx.strokeStyle = '#8c8376';
+  ctx.lineWidth = Math.max(2, F.sc * 0.28);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(px, py);
+  ctx.stroke();
+
+  // Knob shadow
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.beginPath();
+  ctx.arc(px + F.len(0.6), py + F.len(0.8), pr, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Knob ball outer body
+  const grad = ctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, pr * 0.1, px, py, pr);
+  grad.addColorStop(0, '#f5deb3');
+  grad.addColorStop(0.35, '#d4a742');
+  grad.addColorStop(0.85, '#8c6b24');
+  grad.addColorStop(1, '#3a2e10');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(px, py, pr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#221a0a';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Knob grip ring
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(px, py, pr * 0.58, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Center indicator pip
+  ctx.fillStyle = '#fffae0';
+  ctx.beginPath();
+  ctx.arc(px - pr * 0.25, py - pr * 0.25, pr * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+
+  // 4. Right side readouts
+  const rx = f.size.w - 17;
+  well(ctx, F.x(rx), F.y(3.5), F.len(15), F.len(slice ? 18.5 : 13), { fill: WELL, stroke: RIM });
+  say(ctx, `TURN ${deg(v.turn)}°`, F.x(rx + 1.8), F.y(7.2), F.size(2.3, 6.8), { color: PHOS, weight: 700 });
+  say(ctx, `TILT ${v.tilt >= 0 ? '+' : ''}${deg(v.tilt)}°`, F.x(rx + 1.8), F.y(11.4), F.size(2.3, 6.8), { color: PHOS, weight: 700 });
+
+  if (slice) {
+    const isNodal = v.slice && state.fixtures?.c && plateRead(state, 'c')?.shown?.length <= 0.06 * (plateRead(state, 'c')?.fired || 1);
+    const sliceColor = v.slice ? (isNodal ? '#4ade80' : AMBER) : DIM;
+    say(ctx, `SLICE ${v.slice ? 'ON' : 'OFF'}`, F.x(rx + 1.8), F.y(15.8), F.size(2.2, 6.2), { color: sliceColor, weight: 700 });
+    say(ctx, isNodal ? '★ NODAL' : 'TAP TO TOGGLE', F.x(rx + 1.8), F.y(19.8), F.size(1.9, 5.2), { color: isNodal ? '#4ade80' : DIM });
+  }
+
+  // 5. Instruction line at bottom
+  say(ctx, 'DRAG JOYSTICK TO AIM', F.x(f.size.w - 2), F.y(f.size.h - 2.6), F.size(2.0, 5.5), { align: 'right', color: DIM });
 }
 
 function paintTrack(ctx, f, state, b) {

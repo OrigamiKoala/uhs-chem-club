@@ -65,6 +65,33 @@ function waveParts(spec) {
   return parts;
 }
 
+/* ------------------------------------------------------------------ standing waves on a ring */
+
+/**
+ * A de Broglie electron wave on a circular ring track: demonstrates destructive interference when
+ * non-integer wavelengths wrap around the orbit, and constructive resonance into a standing wave
+ * when a whole number of wavelengths fits.
+ */
+function standingWaveParts(spec) {
+  const parts = empty(2.8);
+  // Center nucleus sphere (required by verify:table parts.spheres.length check)
+  parts.spheres.push(sphere([0, 0, 0], 0.16, AMBER, 'nucleus', 16));
+  // Orbit circular guide ring
+  parts.rings.push({ center: [0, 0, 0], r: 1.6, tilt: 0 });
+  parts.standingWave = {
+    r: 1.6,
+    amp: 0.36,
+    modes: [
+      { id: '1.5', n: 1.5, wl: 221, label: '1.5λ (Cancels)', desc: 'Lap 1 (+1 crest) meets Lap 2 (-1 trough) → 1 + (-1) = 0 (cancels completely)', fits: false },
+      { id: '1.33', n: 1.333, wl: 250, label: '1.33λ (Smears)', desc: 'Fractional laps shift each round, smearing into zero standing amplitude', fits: false },
+      { id: '2', n: 2.0, wl: 166, label: '2.0λ (Fits)', desc: 'Laps land peak-to-peak in phase → resonant 2-wavelength standing wave', fits: true },
+      { id: '3', n: 3.0, wl: 111, label: '3.0λ (Fits)', desc: 'Whole number of 3 wavelengths reinforces into a 6-node standing wave', fits: true }
+    ],
+    defaultMode: spec.mode || '1.5'
+  };
+  return parts;
+}
+
 /* ------------------------------------------------------------------ photons */
 
 const METAL_COLOUR = { Cs: '#c4b383', Na: '#b9b5a4', Zn: '#8e9ba3' };
@@ -104,16 +131,27 @@ function photonParts(spec) {
 function ladderParts(spec) {
   const parts = empty(3.3);
   const yOf = n => 2.4 * (-1 / (n * n)) + 1.0;
+  const hi = spec.hi || 3;
+  const lo = spec.lo || 2;
   const rungs = spec.rungs || 6;
   for (let n = 1; n <= rungs; n++) parts.bonds.push(bond([-1.1, yOf(n), 0], [1.1, yOf(n), 0], 2));
-  const jump = planJump(spec.hi, spec.lo);
+  const jump = planJump(hi, lo);
   // The electron stands where it dropped to; a faint one marks the rung it fell from.
-  parts.spheres.push(sphere([0.2, yOf(spec.lo) + 0.12, 0], 0.12, PALE, 'electron', 14));
-  parts.spheres.push(sphere([-0.5, yOf(spec.hi) + 0.12, 0], 0.1, DIM, 'was', 12));
-  parts.bonds.push(bond([-0.5, yOf(spec.hi) + 0.05, 0], [0.2, yOf(spec.lo) + 0.2, 0]));
+  parts.spheres.push(sphere([0.2, yOf(lo) + 0.12, 0], 0.12, PALE, 'electron', 14));
+  parts.spheres.push(sphere([-0.5, yOf(hi) + 0.12, 0], 0.1, DIM, 'was', 12));
+  parts.bonds.push(bond([-0.5, yOf(hi) + 0.05, 0], [0.2, yOf(lo) + 0.2, 0]));
   // The light it gave out: a packet leaving the atom, in its own colour.
   const colour = lightColour(jump.nm);
-  for (let i = 0; i < 4; i++) parts.spheres.push(sphere([1.3 + i * 0.35, (yOf(spec.hi) + yOf(spec.lo)) / 2 + (i % 2 ? 0.08 : -0.08), 0], 0.1 - i * 0.012, colour, 'photon', 12));
+  for (let i = 0; i < 4; i++) parts.spheres.push(sphere([1.3 + i * 0.35, (yOf(hi) + yOf(lo)) / 2 + (i % 2 ? 0.08 : -0.08), 0], 0.1 - i * 0.012, colour, 'photon', 12));
+  parts.ladder = {
+    hi,
+    lo,
+    rungs,
+    nm: jump.nm,
+    joules: jump.joules,
+    colour,
+    caption: spec.caption
+  };
   return parts;
 }
 
@@ -130,6 +168,25 @@ function orbitalParts(spec) {
   const parts = empty(2.6);
   for (const p of pts) parts.spheres.push(sphere([p.x * k, p.z * k, p.y * k], 0.045, AMBER, 'dot', 6));
   parts.spheres.push(sphere([0, 0, 0], 0.1, PALE, 'nucleus', 12));
+  if (id === '3dz2' || spec.dOrbitals) {
+    parts.dOrbitals = {
+      orbitals: ['3dz2', '3dxy', '3dxz', '3dyz', '3dx2y2'],
+      caption: spec.caption || 'The five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle.'
+    };
+  }
+  return parts;
+}
+
+/** The five d orbitals: animated 3D lobe boundary surfaces and probability dots. */
+function dOrbitalsParts(spec) {
+  const parts = empty(2.8);
+  const pts = sampleOrbital('3dz2', 120, 1);
+  for (const p of pts) parts.spheres.push(sphere([p.x * 0.12, p.z * 0.12, p.y * 0.12], 0.045, AMBER, 'dot', 6));
+  parts.spheres.push(sphere([0, 0, 0], 0.1, PALE, 'nucleus', 12));
+  parts.dOrbitals = {
+    orbitals: ['3dz2', '3dxy', '3dxz', '3dyz', '3dx2y2'],
+    caption: spec.caption || 'The five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle.'
+  };
   return parts;
 }
 
@@ -230,7 +287,9 @@ export const LANTERNFALL_MODELS = {
   orbital: orbitalParts,
   rack: rackParts,
   radii: radiiParts,
-  cuvette: cuvetteParts
+  cuvette: cuvetteParts,
+  'standing-wave': standingWaveParts,
+  'd-orbitals': dOrbitalsParts
 };
 
 /** The words under one of these models when its spec gives none. */
@@ -243,6 +302,8 @@ export function lanternfallCaption(spec) {
     case 'rack': return `The electrons of element ${spec.z}, one arrow each.`;
     case 'radii': return `${spec.items.map(it => `${it.sym} ${it.pm} pm`).join(', ')}, spheres to scale.`;
     case 'cuvette': return `A beam of ${spec.nm} nm light through ${SOLUTES[spec.solute].name}.`;
+    case 'standing-wave': return spec.caption || 'Why non-integers cancel: Lap 1 meets Lap 2 out of phase (crest cancels trough → zero). Whole numbers meet in phase, reinforcing into a permanent standing wave.';
+    case 'd-orbitals': return spec.caption || 'The five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle.';
     default: return '';
   }
 }
