@@ -62,6 +62,7 @@ export function atomParts(spec, origin = [0, 0, 0], extent = 1) {
   const focus = spec.focus === 'nucleus';
   const nuc = nucleusParts(spec.p, spec.n, focus ? 2.2 : 1, origin);
   const parts = { spheres: nuc.spheres, bonds: [], rings: [], electrons: [], radius: nuc.radius };
+  if (spec.eject) parts.eject = spec.eject;
   if (focus) return parts;
   const shells = shellsOf(spec.p, spec.charge || 0);
   shells.forEach((count, k) => {
@@ -187,4 +188,144 @@ export function electronAt(e, t) {
   const x = Math.cos(a) * e.r;
   const z = Math.sin(a) * e.r;
   return [e.center[0] + x, e.center[1] + z * Math.sin(e.tilt), e.center[2] + z * Math.cos(e.tilt)];
+}
+
+/**
+ * Calculates the state of an incoming ray and outermost electron ejection at time `t` (seconds).
+ * Used when `parts.eject` is set on an atom model (e.g. Lanternfall PES).
+ */
+export function ejectionState(parts, t) {
+  if (!parts.electrons || parts.electrons.length === 0) return null;
+  let outerIdx = 0;
+  for (let i = 1; i < parts.electrons.length; i++) {
+    if (parts.electrons[i].ring >= parts.electrons[outerIdx].ring) outerIdx = i;
+  }
+  const outerE = parts.electrons[outerIdx];
+  const T = 4.0;
+  const cycle = Math.floor(t / T);
+  const tau = t - cycle * T;
+  const tHitRel = 1.0;
+  const tImpactGlobal = cycle * T + tHitRel;
+  const hitPos = electronAt(outerE, tImpactGlobal);
+
+  // Ray source point (incoming from top-left outside outer shell)
+  const srcPos = [hitPos[0] - 2.6, hitPos[1] + 2.2, hitPos[2] + 1.4];
+
+  let rayVisible = false;
+  let rayHead = srcPos;
+  let rayTail = srcPos;
+  let flash = 0;
+  let flashR = 0;
+
+  if (tau >= 0.25 && tau < tHitRel) {
+    rayVisible = true;
+    const u = (tau - 0.25) / (tHitRel - 0.25);
+    rayHead = [
+      srcPos[0] + u * (hitPos[0] - srcPos[0]),
+      srcPos[1] + u * (hitPos[1] - srcPos[1]),
+      srcPos[2] + u * (hitPos[2] - srcPos[2])
+    ];
+    const uTail = Math.max(0, u - 0.42);
+    rayTail = [
+      srcPos[0] + uTail * (hitPos[0] - srcPos[0]),
+      srcPos[1] + uTail * (hitPos[1] - srcPos[1]),
+      srcPos[2] + uTail * (hitPos[2] - srcPos[2])
+    ];
+  } else if (tau >= tHitRel && tau < tHitRel + 0.12) {
+    rayVisible = true;
+    const uTail = Math.min(1, (tau - tHitRel) / 0.12);
+    rayTail = [
+      srcPos[0] + (0.58 + uTail * 0.42) * (hitPos[0] - srcPos[0]),
+      srcPos[1] + (0.58 + uTail * 0.42) * (hitPos[1] - srcPos[1]),
+      srcPos[2] + (0.58 + uTail * 0.42) * (hitPos[2] - srcPos[2])
+    ];
+    rayHead = hitPos;
+  }
+
+  // Impact flash burst
+  if (tau >= tHitRel && tau < tHitRel + 0.26) {
+    const fProgress = (tau - tHitRel) / 0.26;
+    flash = 1 - fProgress;
+    flashR = 0.06 + fProgress * 0.28;
+  }
+
+  // Escape direction calculation
+  const rx = hitPos[0] - outerE.center[0];
+  const ry = hitPos[1] - outerE.center[1];
+  const rz = hitPos[2] - outerE.center[2];
+  const rLen = Math.hypot(rx, ry, rz) || 1;
+  const dx = hitPos[0] - srcPos[0];
+  const dy = hitPos[1] - srcPos[1];
+  const dz = hitPos[2] - srcPos[2];
+  const dLen = Math.hypot(dx, dy, dz) || 1;
+  const a = outerE.phase + tImpactGlobal * outerE.speed;
+  const vx = -Math.sin(a) * outerE.r * outerE.speed;
+  const vz = Math.cos(a) * outerE.r * outerE.speed;
+  const vy = vz * Math.sin(outerE.tilt);
+  const vzOrb = vz * Math.cos(outerE.tilt);
+  const vLen = Math.hypot(vx, vy, vzOrb) || 1;
+
+  let ex = 1.0 * (rx / rLen) + 0.6 * (dx / dLen) + 0.35 * (vx / vLen);
+  let ey = 1.0 * (ry / rLen) + 0.6 * (dy / dLen) + 0.35 * (vy / vLen);
+  let ez = 1.0 * (rz / rLen) + 0.6 * (dz / dLen) + 0.35 * (vzOrb / vLen);
+  const eLen = Math.hypot(ex, ey, ez) || 1;
+  ex /= eLen; ey /= eLen; ez /= eLen;
+
+  const speed = 2.4;
+  const isEjecting = tau >= tHitRel && tau < 2.8;
+
+  let electronPos;
+  let electronScale = 1;
+  let electronColor = '#dcd6cc';
+
+  if (tau < tHitRel) {
+    electronPos = electronAt(outerE, t);
+    electronScale = 1;
+  } else if (isEjecting) {
+    const dt = tau - tHitRel;
+    const dist = speed * dt + 0.25 * dt * dt;
+    electronPos = [hitPos[0] + ex * dist, hitPos[1] + ey * dist, hitPos[2] + ez * dist];
+
+    if (dt < 0.18) {
+      electronColor = '#ffffff';
+      electronScale = 1.25;
+    } else if (dt < 0.45) {
+      electronColor = '#ffe082';
+      electronScale = 1.1;
+    } else if (tau < 2.2) {
+      electronColor = '#dcd6cc';
+      electronScale = 1.0;
+    } else {
+      electronColor = '#dcd6cc';
+      electronScale = Math.max(0, 1 - (tau - 2.2) / 0.6);
+    }
+  } else if (tau < 3.4) {
+    electronPos = electronAt(outerE, t);
+    electronScale = 0;
+  } else {
+    electronPos = electronAt(outerE, t);
+    electronScale = Math.min(1, (tau - 3.4) / 0.6);
+  }
+
+  const trailPos = dtTrail => {
+    if (!isEjecting || tau - dtTrail < tHitRel) return null;
+    const prevDt = (tau - dtTrail) - tHitRel;
+    const prevDist = speed * prevDt + 0.25 * prevDt * prevDt;
+    return [hitPos[0] + ex * prevDist, hitPos[1] + ey * prevDist, hitPos[2] + ez * prevDist];
+  };
+
+  return {
+    outerIdx,
+    rayVisible,
+    rayHead,
+    rayTail,
+    hitPos,
+    flash,
+    flashR,
+    isEjecting,
+    electronPos,
+    electronScale,
+    electronColor,
+    trailPos
+  };
 }

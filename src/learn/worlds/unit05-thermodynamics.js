@@ -40,7 +40,7 @@ export const UNIT_05 = {
       title: 'Calorimetry',
       line: 'Measure reaction heat in a water bath to calculate specific heat capacity and molar enthalpy.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },

@@ -91,7 +91,7 @@ export const STAGES = [
     reward: {
       log: 'Two blocks met at one reading.',
       title: 'Thermal Equilibrium',
-      body: 'Touching blocks transfer energy until they reach the same temperature, which is thermal equilibrium. The energy transferred from the hotter block to the colder one is heat.'
+      body: 'Touching blocks transfer energy until they reach the same temperature, which is thermal equilibrium. The energy transferred from the hotter block to the colder one is heat (q), measured in joules (J).'
     }
   },
 
@@ -159,7 +159,7 @@ export const STAGES = [
     reward: {
       log: 'The tank warmed the valve; the spark barely did.',
       title: 'Temperature Is Not Amount',
-      body: 'Temperature measures average particle motion, not total heat. The tank contains vastly more particles than a spark, so it delivers far more heat even at a lower temperature.'
+      body: 'Temperature (T) measures average particle motion, not total heat. Heat transferred (q) depends on mass (m) as well as temperature: the tank has vast mass, delivering far more heat than a tiny spark.'
     }
   },
 
@@ -206,7 +206,7 @@ export const STAGES = [
       reward: {
         log: 'Two baths warmed and two cooled.',
         title: 'Exothermic and Endothermic',
-        body: 'An exothermic process releases heat to its surroundings, warming the water. An endothermic process absorbs heat, cooling the water. The reacting chemicals are the system, and everything outside is the surroundings.'
+        body: 'An exothermic process releases heat (q < 0), warming surroundings with a positive temperature change (ΔT > 0). An endothermic process absorbs heat (q > 0), cooling surroundings (negative ΔT). The chemicals are the system; the bath is the surroundings.'
       }
     };
   })()
@@ -229,7 +229,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Heat flows from a hotter object to a colder one until both reach thermal equilibrium. Temperature measures average particle motion rather than total heat energy, and the water bath measures temperature changes in the surroundings.'
+      body: 'Heat (q) flows from hotter objects to colder ones until both reach thermal equilibrium. Temperature (T) measures average particle motion, whereas total heat transferred depends on mass (m) and temperature change (ΔT).'
     }
   ]
 };

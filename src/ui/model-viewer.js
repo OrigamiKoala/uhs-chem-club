@@ -8,11 +8,12 @@
  * small renderer and gives it back on `dispose()`.
  */
 
-import { modelParts, captionOf, electronAt } from '../learn/engine/model-parts.js';
+import { modelParts, captionOf, electronAt, ejectionState } from '../learn/engine/model-parts.js';
 import { planTrace, bohrJoules } from '../learn/engine/lightdata.js';
 import { tierManager } from '../three/tier.js';
 import { session } from '../session.js';
 import { mountDOrbitals3D, mountDebriefOrbitalViewer } from './orbital-3d-viewer.js';
+import { mountFilling } from './filling-animator.js';
 
 export { mountDebriefOrbitalViewer };
 
@@ -1134,9 +1135,56 @@ function paintFlat(ctx, w, h, parts, t, ay, ax) {
     const [x, y, z] = px(s.pos);
     items.push({ z, draw: () => { ctx.beginPath(); ctx.arc(x, y, Math.max(1.5, s.r * k), 0, Math.PI * 2); ctx.fillStyle = s.color; ctx.fill(); ctx.strokeStyle = '#2e2a26'; ctx.lineWidth = 1; ctx.stroke(); } });
   }
-  for (const e of parts.electrons) {
-    const [x, y, z] = px(electronAt(e, t));
-    items.push({ z, draw: () => { ctx.beginPath(); ctx.arc(x, y, Math.max(2, k * 0.05), 0, Math.PI * 2); ctx.fillStyle = '#dcd6cc'; ctx.fill(); } });
+  const es = parts.eject ? ejectionState(parts, t) : null;
+  if (es && es.rayVisible) {
+    const [x0, y0] = px(es.rayTail);
+    const [x1, y1, z1] = px(es.rayHead);
+    items.push({
+      z: z1,
+      draw: () => {
+        ctx.strokeStyle = '#ffd54f';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+    });
+  }
+  if (es && es.flash > 0) {
+    const [fx, fy, fz] = px(es.hitPos);
+    items.push({
+      z: fz + 0.05,
+      draw: () => {
+        ctx.beginPath();
+        ctx.arc(fx, fy, Math.max(3, es.flashR * k * 2), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${es.flash * 0.85})`;
+        ctx.fill();
+      }
+    });
+  }
+  for (let i = 0; i < parts.electrons.length; i++) {
+    const e = parts.electrons[i];
+    const isOuter = es && i === es.outerIdx;
+    const pos = isOuter ? es.electronPos : electronAt(e, t);
+    const scale = isOuter ? es.electronScale : 1;
+    const color = isOuter ? es.electronColor : '#dcd6cc';
+    if (scale > 0.01) {
+      const [x, y, z] = px(pos);
+      items.push({
+        z,
+        draw: () => {
+          ctx.beginPath();
+          ctx.arc(x, y, Math.max(1.5, k * 0.05 * scale), 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        }
+      });
+    }
   }
   items.sort((a, b) => a.z - b.z).forEach(i => i.draw());
 }
@@ -1155,10 +1203,22 @@ export function mountModel(host, spec) {
     : parts.wave ? 'Watch the crests crowd as the colour shifts.'
     : parts.ladder ? 'Watch the electron drop and release a packet of light (click to replay).'
     : parts.standingWave ? 'Drag to tilt and turn. Tap buttons to test integer vs non-integer waves.'
+    : parts.filling ? 'Watch electrons fill by energy order and Hund\'s rule (click to replay).'
     : 'Drag to turn it.';
   wrap.innerHTML = `<div class="lq-model-view"></div><p class="lq-model-caption">${captionOf(spec).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} ${hint}</p>`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
+
+  // An orbital filling / electron configuration model: 2D animated energy ladder, boxes & spin arrows.
+  if (parts.filling) {
+    const teardownFilling = mountFilling(view, parts.filling, still);
+    return {
+      dispose() {
+        try { teardownFilling(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
 
   // A wave is a trace on the desk, not a solid to turn: it gets its own flat, animated canvas.
   if (parts.wave) {
@@ -1248,15 +1308,16 @@ export function mountModel(host, spec) {
     view.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     const t0 = performance.now();
+    const tStill = parts.eject ? 1.0 : 0;
     const frame = now => {
       if (disposed) return;
       if (!still && !drag) ay += 0.004;
-      paintFlat(ctx, canvas.width, canvas.height, parts, still ? 0 : (now - t0) / 1000, ay, ax);
+      paintFlat(ctx, canvas.width, canvas.height, parts, still ? tStill : (now - t0) / 1000, ay, ax);
       if (!still || drag) raf = requestAnimationFrame(frame);
     };
     frame(t0);
     if (still) { // a still picture repaints only when it is turned
-      const repaint = () => paintFlat(ctx, canvas.width, canvas.height, parts, 0, ay, ax);
+      const repaint = () => paintFlat(ctx, canvas.width, canvas.height, parts, tStill, ay, ax);
       view.addEventListener('pointermove', repaint);
     }
     teardown = () => canvas.remove();
@@ -1320,8 +1381,72 @@ export function mountModel(host, spec) {
       m.rotation.x = Math.PI / 2 - r.tilt;
       group.add(m);
     }
-    const eMeshes = parts.electrons.map(e => {
-      const m = new THREE.Mesh(sphere(0.06, 12), mat('#dcd6cc'));
+    let rayMesh = null;
+    let rayTip = null;
+    let flashMesh = null;
+    let flashMat = null;
+    let trailMeshes = [];
+    let outerMat = null;
+    let outerIdx = -1;
+
+    if (parts.eject) {
+      for (let i = 0; i < parts.electrons.length; i++) {
+        if (outerIdx === -1 || parts.electrons[i].ring >= parts.electrons[outerIdx].ring) outerIdx = i;
+      }
+      outerMat = new THREE.MeshStandardMaterial({ color: 0xdcd6cc, roughness: 0.62, metalness: 0.15 });
+      mats.set('outerMat', outerMat);
+
+      const rayGeo = new THREE.CylinderGeometry(0.022, 0.022, 1, 8);
+      geos.push(rayGeo);
+      const rayMat = new THREE.MeshStandardMaterial({
+        color: 0xffd54f,
+        emissive: 0xffb300,
+        emissiveIntensity: 0.9,
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.95
+      });
+      mats.set('rayMat', rayMat);
+      rayMesh = new THREE.Mesh(rayGeo, rayMat);
+      rayMesh.visible = false;
+      group.add(rayMesh);
+
+      const tipGeo = sphere(0.055, 10);
+      const tipMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      mats.set('tipMat', tipMat);
+      rayTip = new THREE.Mesh(tipGeo, tipMat);
+      rayTip.visible = false;
+      group.add(rayTip);
+
+      const flashGeo = sphere(1, 16);
+      flashMat = new THREE.MeshBasicMaterial({
+        color: 0xfff9c4,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false
+      });
+      mats.set('flashMat', flashMat);
+      flashMesh = new THREE.Mesh(flashGeo, flashMat);
+      flashMesh.visible = false;
+      group.add(flashMesh);
+
+      trailMeshes = [0, 1, 2].map(k => {
+        const trMat = new THREE.MeshBasicMaterial({
+          color: 0xffe082,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false
+        });
+        mats.set(`trailMat_${k}`, trMat);
+        const trMesh = new THREE.Mesh(sphere(0.038 - k * 0.008, 8), trMat);
+        trMesh.visible = false;
+        group.add(trMesh);
+        return { mesh: trMesh, mat: trMat };
+      });
+    }
+
+    const eMeshes = parts.electrons.map((e, i) => {
+      const m = new THREE.Mesh(sphere(0.06, 12), (parts.eject && i === outerIdx) ? outerMat : mat('#dcd6cc'));
       group.add(m);
       return m;
     });
@@ -1330,8 +1455,80 @@ export function mountModel(host, spec) {
       if (disposed) return;
       if (!still && !drag) ay += 0.006;
       group.rotation.set(ax, ay, 0);
-      const t = still ? 0 : (now - t0) / 1000;
-      parts.electrons.forEach((e, i) => eMeshes[i].position.set(...electronAt(e, t)));
+      const t = (still && parts.eject) ? 1.0 : still ? 0 : (now - t0) / 1000;
+      if (parts.eject) {
+        const es = ejectionState(parts, t);
+        if (es) {
+          parts.electrons.forEach((e, i) => {
+            if (i === es.outerIdx) {
+              eMeshes[i].position.set(...es.electronPos);
+              eMeshes[i].scale.setScalar(es.electronScale);
+              eMeshes[i].visible = es.electronScale > 0.01;
+              if (es.electronColor === '#ffffff') {
+                outerMat.color.set(0xffffff);
+                outerMat.emissive.set(0xffe082);
+                outerMat.emissiveIntensity = 0.9;
+              } else if (es.electronColor === '#ffe082') {
+                outerMat.color.set(0xffe082);
+                outerMat.emissive.set(0xffd54f);
+                outerMat.emissiveIntensity = 0.5;
+              } else {
+                outerMat.color.set(0xdcd6cc);
+                outerMat.emissive.set(0x000000);
+                outerMat.emissiveIntensity = 0;
+              }
+            } else {
+              eMeshes[i].position.set(...electronAt(e, t));
+              eMeshes[i].scale.setScalar(1);
+              eMeshes[i].visible = true;
+            }
+          });
+
+          if (es.rayVisible) {
+            rayMesh.visible = true;
+            rayTip.visible = true;
+            const a = new THREE.Vector3(...es.rayTail);
+            const b = new THREE.Vector3(...es.rayHead);
+            const len = a.distanceTo(b);
+            if (len > 0.001) {
+              rayMesh.position.copy(a).lerp(b, 0.5);
+              rayMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+              rayMesh.scale.set(1, len, 1);
+            }
+            rayTip.position.copy(b);
+          } else {
+            rayMesh.visible = false;
+            rayTip.visible = false;
+          }
+
+          if (es.flash > 0) {
+            flashMesh.visible = true;
+            flashMesh.position.set(...es.hitPos);
+            flashMesh.scale.setScalar(es.flashR);
+            flashMat.opacity = es.flash * 0.85;
+          } else {
+            flashMesh.visible = false;
+          }
+
+          if (es.isEjecting) {
+            trailMeshes.forEach((tr, k) => {
+              const dtTrail = (k + 1) * 0.05;
+              const pos = es.trailPos(dtTrail);
+              if (pos) {
+                tr.mesh.visible = true;
+                tr.mesh.position.set(...pos);
+                tr.mat.opacity = Math.max(0, (0.55 - k * 0.16) * es.electronScale);
+              } else {
+                tr.mesh.visible = false;
+              }
+            });
+          } else {
+            trailMeshes.forEach(tr => { tr.mesh.visible = false; });
+          }
+        }
+      } else {
+        parts.electrons.forEach((e, i) => eMeshes[i].position.set(...electronAt(e, t)));
+      }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(frame);
     };

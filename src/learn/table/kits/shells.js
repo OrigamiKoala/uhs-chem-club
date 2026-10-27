@@ -26,7 +26,7 @@ import { dress3d } from './shells-3d.js';
 import { buildPlateFrame } from '../../engine/lab-props.js';
 import {
   arrowsOf, boxKey, boxPieceId, placeElectron, removeElectron, whyNoRoom, addressOfToken, placedTokens, MEASURED, rackPull, sameAddress,
-  fmtMl, rowOf, boxesOf, rackFor, groundConfig
+  fmtMl, rowOf, boxesOf, rackFor, groundConfig, readOf
 } from './shells-read.js';
 
 export const SHELLS_KIT_ID = 'shells';
@@ -77,6 +77,14 @@ function planJoin(a, b, state) {
 function run(state, fixtureId) {
   const f = state.fixtures[fixtureId];
   if (!f || f.noRun) return null;
+  if (f.kind === 'well') {
+    const r = readOf(state, f.props.rack || 'rack');
+    if (r.total === 0) return { noop: 'Place electrons on the rack first.' };
+    let val = 1; // ground state
+    if (!r.laddered) val = 2; // excited (electrons can fall)
+    else if (!r.ruleHolds) val = 3; // Hund's rule violation
+    return { dials: { [f.id]: { state: val } } };
+  }
   if (f.kind === 'magnet') {
     if (f.props.sample != null) {
       const m = MEASURED[f.props.sample];
@@ -238,6 +246,15 @@ export function addressStrip(id, at, { fields = ['n', 'l', 'ml', 'ms'], show = f
   }
   const rows = Object.keys(dials).length;
   return { id, kind: 'finder', label: 'Address', at: { ...at }, size: { w: 52, h: 8 + 5 * (rows - 1) + 9 }, noRun: true, dials, props: { show, fixed, rack } };
+}
+
+/** The Energy Well: checks whether electrons are in ground state or if any can fall to lower rungs. */
+export function energyWell(id, at, { rack = 'rack', size = { w: 34, h: 36 }, label = 'Energy Well', runLabel = 'Test Energy' } = {}) {
+  return {
+    id, kind: 'well', label, at: { ...at }, size, runLabel,
+    dials: { state: { min: 0, max: 3, step: 1, value: 0 } },
+    props: { hidden: ['state'], rack }
+  };
 }
 
 /** The magnet. `sample` is an element or ion symbol (`MEASURED`): it reports that REAL sample. Without one, `rack` names the rack it reports. */

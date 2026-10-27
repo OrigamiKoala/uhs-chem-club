@@ -121,6 +121,53 @@ export function whyNoRoom(a) {
 export const reachPm = (n, l) => Math.round(((BOHR_PM / 2) * (3 * n * n - l * (l + 1))) / 10) * 10;
 
 /* ------------------------------------------------------------------
+   THE ENERGY WELL
+   ------------------------------------------------------------------ */
+
+/**
+ * The Energy Well reading: whether tested, whether ground state, whether any electrons
+ * sit above empty levels and can fall to a lower row.
+ */
+export function wellRead(state, fid) {
+  const f = state.fixtures[fid];
+  if (!f) return null;
+  const rackId = f.props.rack || 'rack';
+  const r = readOf(state, rackId);
+  const v = f.dials?.state?.value || 0;
+  const tested = v > 0;
+
+  let lowestOpen = null;
+  let canFall = false;
+
+  for (const row of LADDER) {
+    const count = r.counts[row.id] || 0;
+    const cap = capacityOf(row.id);
+    if (count < cap && !lowestOpen) lowestOpen = row.id;
+    if (lowestOpen && count > 0 && LADDER.findIndex(x => x.id === row.id) > LADDER.findIndex(x => x.id === lowestOpen)) {
+      canFall = true;
+    }
+  }
+
+  const isGround = r.total > 0 && r.laddered && r.ruleHolds;
+  const isExcited = r.total > 0 && (!r.laddered || canFall);
+  const hundIssue = r.total > 0 && !r.ruleHolds;
+
+  return {
+    id: fid,
+    tested,
+    total: r.total,
+    isGround,
+    isExcited,
+    hundIssue,
+    canFall,
+    lowestOpen,
+    config: r.config,
+    laddered: r.laddered,
+    ruleHolds: r.ruleHolds
+  };
+}
+
+/* ------------------------------------------------------------------
    THE MAGNET
    ------------------------------------------------------------------ */
 

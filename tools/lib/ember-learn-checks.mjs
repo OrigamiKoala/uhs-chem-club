@@ -41,8 +41,9 @@ const LEAKS = {
   },
   'q2-calorimetry': {
     2: [/tenth/i, /less energy/i, /\bsmaller\b/i, /needs? (a )?(smaller|lower)/i],
-    3: [/\bcopper\b/i, /\bc\b.*\b0\.\d/i, /\bmass\b/i],
-    4: [/multipl/i, /4\.184/, /\bmass\b/i]
+    3: [/multipl/i, /4\.184/, /2092/i],
+    4: [/\bcopper\b/i, /\bc\b.*\b0\.\d/i, /\bmass\b/i],
+    5: [/multipl/i, /4\.184/, /\bmass\b/i]
   },
   'q1-flow': {
     1: [/halfway/i, /\baverage\b/i, /\bmiddle\b/i],
@@ -136,7 +137,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e2 = mods['q2-calorimetry'];
   if (e2) {
     const q = 'unit05/q2-calorimetry';
-    holds(e2.STAGES.length === 4, `${q} should have four stages`);
+    holds(e2.STAGES.length === 5, `${q} should have five stages`);
     {
       const t = done(e2, 1);
       near(HK.cupRead(t, 'iron').dT, HK.cupRead(t, 'water').dT, 0.1, `${q} stage 2 (equal rises)`);
@@ -147,21 +148,26 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(Boolean(e2.STAGES[0].predict) && !Object.values(start(e2, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
     }
     {
+      const t = done(e2, 2);
+      near(HK.markerRead(t, 'joules'), e2.CHECKS.Q_WATER, 35, `${q} stage 3 (the heat absorbed)`);
+      same(e2.STAGES[2].check(e2.stateFor(2, e2.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
+    }
+    {
       // The fitting is copper: the c the bath's rise gives is the listed copper value, and no other metal on the plate is as near.
-      const t = run(start(e2, 2), [{ place: { piece: 'fitting', to: 'slot:cup.mouth' } }]);
+      const t = run(start(e2, 3), [{ place: { piece: 'fitting', to: 'slot:cup.mouth' } }]);
       const r = HK.cupRead(t, 'cup'); const b = t.pieces.fitting.props;
       const c = TD.blockSpecificHeat(b.m, b.T, r.mWater, r.T0, r.Tf);
       const list = { al: TD.SPECIFIC_HEATS.aluminum.c, fe: TD.SPECIFIC_HEATS.iron.c, cu: TD.SPECIFIC_HEATS.copper.c, ag: TD.SPECIFIC_HEATS.silver.c };
       const nearest = Object.keys(list).sort((x, y) => Math.abs(list[x] - c) - Math.abs(list[y] - c))[0];
-      same(nearest, 'cu', `${q} stage 3 (the metal the measured c names)`);
-      holds(Math.abs(list.fe - c) > 0.04, `${q} stage 3: iron is too near copper to tell apart`);
-      holds(Boolean(t.pieces.fitting.props.trial), `${q} stage 3: a block that has been in the bath does not keep its trial`);
-      same(e2.STAGES[2].check(e2.stateFor(2, e2.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
+      same(nearest, 'cu', `${q} stage 4 (the metal the measured c names)`);
+      holds(Math.abs(list.fe - c) > 0.04, `${q} stage 4: iron is too near copper to tell apart`);
+      holds(Boolean(t.pieces.fitting.props.trial), `${q} stage 4: a block that has been in the bath does not keep its trial`);
+      same(e2.STAGES[3].check(e2.stateFor(3, e2.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
     }
     {
-      const t = run(start(e2, 3), [{ place: { piece: 'mix', to: 'slot:cup.mouth' } }]);
-      near(e2.CHECKS.Q_STAGE4, HK.cupRead(t, 'cup').q, 1, `${q} stage 4 (the heat the bath caught)`);
-      near(HK.markerRead(done(e2, 3), 'joules'), HK.cupRead(t, 'cup').q, 25, `${q} stage 4 (the marker)`);
+      const t = run(start(e2, 4), [{ place: { piece: 'mix', to: 'slot:cup.mouth' } }]);
+      near(e2.CHECKS.Q_STAGE4, HK.cupRead(t, 'cup').q, 1, `${q} stage 5 (the heat the bath caught)`);
+      near(HK.markerRead(done(e2, 4), 'joules'), HK.cupRead(t, 'cup').q, 25, `${q} stage 5 (the marker)`);
     }
   }
 

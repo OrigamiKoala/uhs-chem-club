@@ -62,7 +62,7 @@ export const STAGE_STORY = {
     1: 'The Fifth scrambled the records tent\'s board, and every box on it must be found by its address.'
   },
   'q6-filling': {
-    1: 'The records tent\'s magnet reads the real sample, and Vess wants the board to match it.'
+    1: 'The records tent\'s board holds every row in energy order, and Vess wants each atom filled from lowest energy up.'
   },
   'q8-trends': {
     1: 'Vess has to sort the camp\'s metal stock by how big and how tightly held its atoms are.'

@@ -299,11 +299,11 @@ export const QUEST_STORY = {
   'unit02/q6-filling': {
     scene: 'rack-fill',
     beats: [
-      { to: 0.25, say: 'Electrons fill the lowest rows first and spread across a row before pairing, so carbon\'s last two stand alone. A magnet reads how many stand alone.' },
+      { to: 0.25, say: 'Electrons fill the lowest rows first and spread across a row before pairing, so carbon\'s last two stand alone.' },
       { to: 0.5, say: 'The ladder is ordered by energy and not by shell, so potassium\'s last electron settles in the fourth shell while the third is still not full.' },
-      { to: 0.75, say: 'Nearly everything an element does follows from its outer rows, and you can now write them down and check them against a magnet. Next I measure what each electron costs.' }
+      { to: 0.75, say: 'Nearly everything an element does follows from its outer rows, written down in energy order. Next I measure what each electron costs.' }
     ],
-    filed: 'Filed: the board now matches the magnet for carbon, oxygen and potassium, so its rows can be trusted.'
+    filed: 'Filed: the board fills from lowest energy up, so its rows can be trusted.'
   },
   'unit02/q7-pes': {
     scene: 'peak-rows',

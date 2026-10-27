@@ -307,7 +307,7 @@ function slide(state, f) {
   const layer = f.props.layer ?? 0;
   const row = f.props.cells[layer].map(id => ionIn(state, id)).filter(Boolean);
   const below = (f.props.cells[layer + 1] || []).map(id => ionIn(state, id)).filter(Boolean);
-  if (!row.length || !below.length) return { noop: 'There is nothing to slide against yet: put ions in two rows.' };
+  if (!row.length || !below.length) return { noop: 'Put ions in the top two rows before sliding a layer.' };
   const to = !g.slid;
   return { stamp: Object.fromEntries(row.map(p => [p.id, { slid: to }])) };
 }
@@ -653,10 +653,17 @@ function paintPiece(ctx, p, state, o) {
   const fn = PAINTERS[p.kind];
   if (fn) { fn(ctx, p, state, o); return true; }
   const drawn = ATOMS_KIT.paintPiece(ctx, p, state, o);
-  // An ion that now faces a like charge wears the stencilled `!`: the grid has just told the player so.
+  // An ion that now faces a like charge wears an alert ring and stencilled `!`.
   if (drawn && p.kind === 'ion') {
     const f = Object.values(state.fixtures).find(x => x.kind === 'lattice');
-    if (f && gridRead(state, f.id).facing.has(p.id)) lampMark(ctx, o.x + o.r * 0.62, o.y - o.r * 0.62, Math.max(9, o.r * 0.8));
+    if (f && gridRead(state, f.id).facing.has(p.id)) {
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = Math.max(1.5, o.r * 0.14);
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r * 0.92, 0, Math.PI * 2);
+      ctx.stroke();
+      lampMark(ctx, o.x + o.r * 0.62, o.y - o.r * 0.62, Math.max(8, o.r * 0.75));
+    }
   }
   return drawn;
 }
@@ -718,14 +725,139 @@ function paintHotplate(ctx, f, state, b) {
   ctx.strokeRect(Math.round(x0) + 0.5, Math.round(y0) + 0.5, Math.round(x1 - x0), Math.round(y1 - y0));
 }
 
-/** The grid board: what it holds, in words. */
+/** The grid board: what it holds, in words and on the crystal lattice. */
 function paintLattice(ctx, f, state, b) {
   const g = gridRead(state, f.id);
-  const size = Math.max(7, Math.round(2.3 * b.sc));
-  const line = g.slid
-    ? `SLID: ${g.faced} PAIRS FACE LIKE CHARGES`
-    : `PLACED ${g.filled} OF ${g.total}: ${g.like} LIKE TOUCH`;
-  plateText(ctx, line, b.x0 + 1.5 * b.sc, b.y0 + 8.4 * b.sc, { size, weight: 700, color: g.slid && g.faced ? AMBER : PLATE_COLORS.dust });
+  const sc = b.sc;
+  const X = b.X;
+  const Y = b.Y;
+  const size = Math.max(7, Math.round(2.1 * sc));
+  const subSize = Math.max(6, Math.round(1.6 * sc));
+
+  const cells = f.props.cells || [];
+  const layer = f.props.layer ?? 0;
+
+  if (!g.slid) {
+    // Intact lattice: draw electrostatic attraction bonds between opposite charges
+    ctx.lineWidth = Math.max(1.5, sc * 0.16);
+    for (let r = 0; r < cells.length; r++) {
+      for (let c = 0; c < cells[r].length; c++) {
+        const p = ionIn(state, cells[r][c]);
+        if (!p) continue;
+        const pSign = signOf(p);
+
+        if (c + 1 < cells[r].length) {
+          const q = ionIn(state, cells[r][c + 1]);
+          if (q) {
+            const qSign = signOf(q);
+            const pAt = state.pieces[p.id]?.at || p.at;
+            const qAt = state.pieces[q.id]?.at || q.at;
+            ctx.strokeStyle = pSign !== qSign ? 'rgba(90, 118, 142, 0.45)' : 'rgba(229, 155, 36, 0.7)';
+            ctx.beginPath();
+            ctx.moveTo(X(pAt.x), Y(pAt.y));
+            ctx.lineTo(X(qAt.x), Y(qAt.y));
+            ctx.stroke();
+          }
+        }
+        if (r + 1 < cells.length) {
+          const q = ionIn(state, cells[r + 1][c]);
+          if (q) {
+            const qSign = signOf(q);
+            const pAt = state.pieces[p.id]?.at || p.at;
+            const qAt = state.pieces[q.id]?.at || q.at;
+            ctx.strokeStyle = pSign !== qSign ? 'rgba(90, 118, 142, 0.45)' : 'rgba(229, 155, 36, 0.7)';
+            ctx.beginPath();
+            ctx.moveTo(X(pAt.x), Y(pAt.y));
+            ctx.lineTo(X(qAt.x), Y(qAt.y));
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    ctx.lineWidth = 1;
+  } else {
+    // Slid state: draw the cleavage fracture plane and vertical repulsion indicators
+    const yCleave = 19;
+    const row0 = cells[layer] || [];
+    const row1 = cells[layer + 1] || [];
+    const sFirst = state.zones.slots[row0[0]];
+    const sLast = state.zones.slots[row0[row0.length - 1]];
+    const xStart = sFirst ? sFirst.at.x - 7 : 78;
+    const xEnd = sLast ? sLast.at.x + 14 + 7 : 148;
+
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = Math.max(1.8, sc * 0.2);
+    ctx.setLineDash?.([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(X(xStart), Y(yCleave));
+    ctx.lineTo(X(xEnd), Y(yCleave));
+    ctx.stroke();
+    ctx.setLineDash?.([]);
+
+    plateText(ctx, 'CLEAVAGE PLANE — SHEAR FRACTURE', (X(xStart) + X(xEnd)) / 2, Y(yCleave) - 2.6 * sc, {
+      size: subSize, weight: 700, align: 'center', color: AMBER
+    });
+
+    row0.forEach((id0, c) => {
+      const p = ionIn(state, id0);
+      const q = ionIn(state, row1[c + 1]);
+      if (p && q && signOf(p) === signOf(q)) {
+        const slotQ = state.zones.slots[row1[c + 1]];
+        const xPos = slotQ ? slotQ.at.x : 85 + (c + 1) * 14;
+        ctx.strokeStyle = AMBER;
+        ctx.lineWidth = Math.max(1.4, sc * 0.16);
+        ctx.beginPath();
+        ctx.moveTo(X(xPos), Y(15.2));
+        ctx.lineTo(X(xPos), Y(13.2));
+        ctx.moveTo(X(xPos - 1.2), Y(14.2));
+        ctx.lineTo(X(xPos), Y(13.2));
+        ctx.lineTo(X(xPos + 1.2), Y(14.2));
+        ctx.moveTo(X(xPos), Y(22.8));
+        ctx.lineTo(X(xPos), Y(24.8));
+        ctx.moveTo(X(xPos - 1.2), Y(23.8));
+        ctx.lineTo(X(xPos), Y(24.8));
+        ctx.lineTo(X(xPos + 1.2), Y(23.8));
+        ctx.stroke();
+      }
+    });
+    ctx.lineWidth = 1;
+  }
+
+  // Plate readout: two informative lines
+  let l1 = '';
+  let l2 = '';
+  let c1 = PLATE_COLORS.dust;
+  let c2 = PLATE_COLORS.dim;
+
+  if (g.slid) {
+    l1 = `CLEAVED: ${g.faced} LIKE PAIRS MEET & REPEL`;
+    l2 = `ELECTROSTATIC REPULSION FRACTURES CRYSTAL`;
+    c1 = AMBER;
+    c2 = AMBER;
+  } else if (g.like > 0) {
+    l1 = `PLACED ${g.filled} OF ${g.total}: ${g.like} LIKE TOUCH`;
+    l2 = `LIKE CHARGES REPEL — MUST ALTERNATE`;
+    c1 = AMBER;
+    c2 = PLATE_COLORS.dust;
+  } else if (g.filled === g.total) {
+    l1 = `LATTICE LOCKED: 12 OF 12 IONS STABLE`;
+    l2 = `PRESS "SLIDE A LAYER" TO TEST CLEAVAGE`;
+    c1 = AMBER;
+    c2 = PLATE_COLORS.dust;
+  } else if (g.filled > 0) {
+    l1 = `PLACED ${g.filled} OF ${g.total}: OPPOSITES ATTRACT`;
+    l2 = `CONTINUE ALTERNATING Na⁺ AND Cl⁻`;
+    c1 = PLATE_COLORS.dust;
+    c2 = PLATE_COLORS.dim;
+  } else {
+    l1 = `CRYSTAL LATTICE: 0 OF 12 IONS`;
+    l2 = `PACK ALTERNATING CHARGES INTO GRID`;
+    c1 = PLATE_COLORS.dust;
+    c2 = PLATE_COLORS.dim;
+  }
+
+  plateText(ctx, l1, b.x0 + 1.5 * sc, b.y0 + 5.8 * sc, { size, weight: 700, color: c1 });
+  plateText(ctx, l2, b.x0 + 1.5 * sc, b.y0 + 10.2 * sc, { size: subSize, weight: 500, color: c2 });
 }
 
 /**

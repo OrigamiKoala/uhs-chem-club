@@ -103,11 +103,11 @@ const heat = value => ({ setDial: { fixture: 'hp', dial: 'heat', value } });
 
 /** The twelve ions of stage 4: six sodium ions and six chlorine ions in two rows, and a 4 x 3 grid of cells. */
 const IONS = [
-  ...Array.from({ length: 6 }, (_, i) => ({ id: `na${i + 1}`, kind: 'ion', label: 'Na', at: { x: 9 + i * 13.5, y: 38 }, props: { el: 'Na', charge: 1 } })),
-  ...Array.from({ length: 6 }, (_, i) => ({ id: `cl${i + 1}`, kind: 'ion', label: 'Cl', at: { x: 9 + i * 13.5, y: 54 }, props: { el: 'Cl', charge: -1 } }))
+  ...Array.from({ length: 6 }, (_, i) => ({ id: `na${i + 1}`, kind: 'ion', label: 'Na', at: { x: 14 + (i % 3) * 14, y: 20 + Math.floor(i / 3) * 15 }, props: { el: 'Na', charge: 1, disk: true } })),
+  ...Array.from({ length: 6 }, (_, i) => ({ id: `cl${i + 1}`, kind: 'ion', label: 'Cl', at: { x: 14 + (i % 3) * 14, y: 50 + Math.floor(i / 3) * 15 }, props: { el: 'Cl', charge: -1, disk: true } }))
 ];
 const CELLS = Array.from({ length: 3 }, (_, r) => Array.from({ length: 4 }, (_, c) => `g${r}${c}`));
-const GRID_SLOTS = CELLS.flatMap((row, r) => row.map((id, c) => ({ id, label: '', at: { x: 96 + c * 14, y: 12 + r * 14 }, size: { w: 13.4, h: 13.4 } })));
+const GRID_SLOTS = CELLS.flatMap((row, r) => row.map((id, c) => ({ id, label: '', at: { x: 80 + c * 14, y: 12 + r * 14 }, size: { w: 13.4, h: 13.4 } })));
 
 /** The block standing in a tray, as pieces. */
 const trayOf = (t, id) => piecesIn(t, `tray:${id}`, 'slab');
@@ -224,9 +224,10 @@ export const STAGES = [
       pieces: IONS,
       zones: { slots: GRID_SLOTS },
       fixtures: [{
-        id: 'grid', kind: 'lattice', label: 'Grid', at: { x: 116, y: 59 }, size: { w: 62, h: 16 }, runLabel: 'Slide a Layer',
+        id: 'grid', kind: 'lattice', label: 'Grid', at: { x: 101, y: 59 }, size: { w: 62, h: 16 }, runLabel: 'Slide a Layer',
         props: { cells: CELLS, layer: 0 }
-      }]
+      }],
+      opts: { diskAtoms: true }
     }),
     hints: [
       'Use the ions, the grid and "Slide a Layer".',
@@ -290,7 +291,8 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  3: ['Drag a block onto the hotplate,', 'then turn the heat dial.']
+  3: ['Drag a block onto the hotplate,', 'then turn the heat dial.'],
+  4: ['Alternate charges on the grid,', 'then press "Slide a Layer".']
 };
 applyNotes(STAGES, NOTES);
 

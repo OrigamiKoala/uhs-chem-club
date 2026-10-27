@@ -160,7 +160,7 @@ export const STAGES = [
           log: 'The outer electron is the loosely held one.',
           title: 'Binding Energy',
           body: `${verdict}The energy needed to remove an electron is its binding energy, and the closer an electron sits to the nucleus the more tightly it is bound. Lithium's outer electron comes off with far less than the two beside the nucleus.`,
-          model: { type: 'atom', p: 3, n: 4, caption: 'Lithium: two electrons on the shell close to the middle, held tightly, and one on the shell outside, held loosely. Not to scale.' }
+          model: { type: 'atom', p: 3, n: 4, eject: true, caption: 'Lithium: two electrons on the shell close to the middle, held tightly, and one on the shell outside, held loosely. Not to scale.' }
         };
       }
     };

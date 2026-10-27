@@ -211,7 +211,16 @@ export function plateMap(bounds, { margin = 0.06 } = {}) {
  */
 export function pieceTargets(state, drag = null, railGap = null) {
   const out = {};
-  for (const p of Object.values(state.pieces)) out[p.id] = p.at;
+  for (const p of Object.values(state.pieces)) {
+    if (p.props?.slid) {
+      out[p.id] = {
+        x: p.at.x + (p.props.slideDx ?? 14),
+        y: p.at.y + (p.props.slideDy ?? -2.5)
+      };
+    } else {
+      out[p.id] = p.at;
+    }
+  }
   if (drag && railGap !== null && state.zones.rail?.order.includes(drag.id)) {
     const others = state.zones.rail.order.filter(o => o !== drag.id);
     const pos = railPositions(state.zones.rail, others.length, railGap);

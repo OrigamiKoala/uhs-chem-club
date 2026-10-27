@@ -11,7 +11,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import {
-  arrowsOf, readOf, finderLight, addressOfFinder, magnetRead, reachPm, rowOf, mlOf, fmtMl, groundConfig, LADDER, capacityOf, fmtMs, zOf, symbolOf
+  arrowsOf, readOf, finderLight, addressOfFinder, magnetRead, wellRead, reachPm, rowOf, mlOf, fmtMl, groundConfig, LADDER, capacityOf, fmtMs, zOf, symbolOf
 } from './shells-read.js';
 
 const AMBER = PLATE_COLORS.amber;
@@ -260,7 +260,14 @@ function paintShelf(ctx, f, state, b) {
   if (f.props.readout !== false) {
     const core = f.props.core && state.fixtures[f.props.core]?.dials.core.value >= 1;
     say(ctx, `PLACED ${read.total}`, F.x(2), F.y(4.2), sz, { color: PHOS, weight: 700 });
-    say(ctx, `UNPAIRED ${read.unpaired}`, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: PHOS, weight: 700 });
+    const hasMagnet = Object.values(state.fixtures).some(x => x.kind === 'magnet');
+    if (hasMagnet) {
+      say(ctx, `UNPAIRED ${read.unpaired}`, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: PHOS, weight: 700 });
+    } else {
+      const stText = read.total === 0 ? '' : (read.laddered && read.ruleHolds ? 'GROUND STATE' : 'EXCITED');
+      const stColor = read.laddered && read.ruleHolds ? '#78a142' : AMBER;
+      say(ctx, stText, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: stColor, weight: 700 });
+    }
     const written = core ? read.short : read.config;
     say(ctx, written || 'NOTHING PLACED', F.x(f.size.w / 2), F.y(8.4), F.size(2.6, 7), { align: 'center', color: written ? DUST : DIM, weight: 600, maxW: F.len(f.size.w - 4) });
   }
@@ -375,9 +382,67 @@ function paintMagnet(ctx, f, state, b) {
   if (l2) say(ctx, l2, cx, F.y(l2Y), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w - 3) });
 }
 
+function paintWell(ctx, f, state, b) {
+  const F = frameOf(b);
+  const read = wellRead(state, f.id);
+  const w = f.size.w;
+  const cx = F.x(w / 2);
+  const top = F.y(6);
+
+  // Stylized potential energy well (tiered basin)
+  const sc = F.sc;
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = Math.max(1.4, sc * 0.8);
+  ctx.beginPath();
+  ctx.moveTo(cx - 10 * sc, top + 2 * sc);
+  ctx.lineTo(cx - 7 * sc, top + 10 * sc);
+  ctx.lineTo(cx - 4 * sc, top + 10 * sc);
+  ctx.lineTo(cx - 3 * sc, top + 14 * sc);
+  ctx.lineTo(cx + 3 * sc, top + 14 * sc);
+  ctx.lineTo(cx + 4 * sc, top + 10 * sc);
+  ctx.lineTo(cx + 7 * sc, top + 10 * sc);
+  ctx.lineTo(cx + 10 * sc, top + 2 * sc);
+  ctx.stroke();
+
+  // Basin bottom rung (ground state well, 1s)
+  ctx.strokeStyle = read?.isGround ? '#78a142' : DUST;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 3 * sc, top + 14 * sc);
+  ctx.lineTo(cx + 3 * sc, top + 14 * sc);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // Potential gradient arrow pointing down into the well
+  ctx.strokeStyle = read?.isExcited ? AMBER : DIM;
+  ctx.beginPath();
+  ctx.moveTo(cx, top + 3 * sc);
+  ctx.lineTo(cx, top + 8 * sc);
+  ctx.lineTo(cx - 1.5 * sc, top + 6.5 * sc);
+  ctx.moveTo(cx, top + 8 * sc);
+  ctx.lineTo(cx + 1.5 * sc, top + 6.5 * sc);
+  ctx.stroke();
+
+  // Readouts
+  if (!read || !read.tested) {
+    say(ctx, 'POTENTIAL WELL', cx, F.y(23.5), F.size(2.3, 7), { align: 'center', color: DIM, weight: 700 });
+    say(ctx, 'NOT TESTED', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: DIM });
+  } else if (read.isGround) {
+    say(ctx, 'GROUND STATE', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: '#78a142', weight: 700 });
+    say(ctx, 'LOWEST ENERGY', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: '#78a142' });
+  } else if (read.isExcited) {
+    say(ctx, 'EXCITED STATE', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700 });
+    say(ctx, `CAN FALL TO ${(read.lowestOpen || 'LOWER').toUpperCase()}`, cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: AMBER });
+  } else if (read.hundIssue) {
+    say(ctx, 'HUND\'S RULE', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700 });
+    say(ctx, 'SPREAD BEFORE PAIRING', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: AMBER });
+  }
+}
+
 function paintFixture(ctx, f, state, b) {
   if (f.kind === 'shelf') paintShelf(ctx, f, state, b);
   else if (f.kind === 'finder') paintFinder(ctx, f, state, b);
+  else if (f.kind === 'well') paintWell(ctx, f, state, b);
   else if (f.kind === 'magnet') paintMagnet(ctx, f, state, b);
 }
 

@@ -14,7 +14,7 @@
 
 import * as THREE from 'three';
 import { zOf, symbolOf } from './shells-read.js';
-import { readOf, magnetRead } from './shells-read.js';
+import { readOf, magnetRead, wellRead } from './shells-read.js';
 
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
@@ -404,9 +404,196 @@ function dressMagnet(f, state, c) {
 }
 
 /**
+ * 3D Dressing for the Energy Well fixture (`well`).
+ * Shows tiered orbital shelves with falling electron spheres that settle into lower wells.
+ */
+function dressWell(f, state, c) {
+  const { own, scale: s, toPlate, box, ground } = c;
+  const group = new THREE.Group();
+  group.name = `dress-well-${f.id}`;
+
+  const cx = (box.x0 + box.x1) / 2;
+  const cy = (box.y0 + box.y1) / 2;
+  const basePos = toPlate({ x: cx, y: cy });
+
+  // Base plate
+  const baseMat = own(new THREE.MeshStandardMaterial({
+    color: 0x181a1d, roughness: 0.75, metalness: 0.5
+  }));
+  const baseGeo = own(new THREE.CylinderGeometry(4.2 * s, 4.6 * s, 0.003, 24));
+  const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+  baseMesh.position.set(basePos.x, ground + 0.0015, basePos.z);
+  baseMesh.receiveShadow = true;
+  group.add(baseMesh);
+
+  // Central energy pillar
+  const pillarHeight = 0.045;
+  const pillarMat = own(new THREE.MeshStandardMaterial({
+    color: 0x2e3238, roughness: 0.45, metalness: 0.7
+  }));
+  const pillarGeo = own(new THREE.CylinderGeometry(0.55 * s, 0.75 * s, pillarHeight, 16));
+  const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+  pillar.position.set(basePos.x, ground + pillarHeight / 2 + 0.003, basePos.z);
+  pillar.castShadow = true;
+  group.add(pillar);
+
+  // Filament indicator at top of pillar
+  const lampMat = own(new THREE.MeshStandardMaterial({
+    color: 0x444038, emissive: 0x221a0a, emissiveIntensity: 0.2, roughness: 0.3, metalness: 0.2
+  }));
+  const lampGeo = own(new THREE.SphereGeometry(0.8 * s, 12, 8));
+  const lamp = new THREE.Mesh(lampGeo, lampMat);
+  lamp.position.set(basePos.x, ground + pillarHeight + 0.005, basePos.z);
+  group.add(lamp);
+
+  // Tiered orbital shelves (1s lowest, 2s, 2p, 3s, 4s/3d highest)
+  const tierHeights = [
+    ground + 0.009, // 1s
+    ground + 0.017, // 2s
+    ground + 0.024, // 2p
+    ground + 0.032, // 3s/3p
+    ground + 0.040  // 4s/3d
+  ];
+
+  const shelfMat = own(new THREE.MeshStandardMaterial({
+    color: 0x6e6557, roughness: 0.4, metalness: 0.6
+  }));
+
+  const tiers = tierHeights.map((h, i) => {
+    const rad = (3.4 - i * 0.45) * s;
+    const shelfGeo = own(new THREE.CylinderGeometry(rad, rad * 1.05, 0.0016, 20));
+    const mesh = new THREE.Mesh(shelfGeo, shelfMat);
+    mesh.position.set(basePos.x, h, basePos.z);
+    mesh.receiveShadow = true;
+    group.add(mesh);
+    return { h, rad, mesh };
+  });
+
+  // Dynamic electron spheres group
+  const electronsGroup = new THREE.Group();
+  electronsGroup.name = 'well-electrons';
+  group.add(electronsGroup);
+
+  const elecGeo = own(new THREE.SphereGeometry(0.7 * s, 10, 8));
+  const elecMatGround = own(new THREE.MeshStandardMaterial({
+    color: 0x78a142, emissive: 0x78a142, emissiveIntensity: 0.8, roughness: 0.25, metalness: 0.2
+  }));
+  const elecMatExcited = own(new THREE.MeshStandardMaterial({
+    color: 0xe59b24, emissive: 0xe59b24, emissiveIntensity: 0.85, roughness: 0.25, metalness: 0.2
+  }));
+
+  const particles = [];
+  const maxSpheres = 12;
+
+  for (let i = 0; i < maxSpheres; i++) {
+    const mesh = new THREE.Mesh(elecGeo, elecMatGround);
+    mesh.visible = false;
+    electronsGroup.add(mesh);
+    particles.push({
+      mesh,
+      currentY: tierHeights[0],
+      targetY: tierHeights[0],
+      currentRad: tiers[0].rad * 0.7,
+      angle: (i * Math.PI * 2) / 6,
+      velY: 0,
+      active: false
+    });
+  }
+
+  const sync = (fixture, st) => {
+    const read = wellRead(st, fixture.id);
+    const rackRead = readOf(st, fixture.props.rack || 'rack');
+    const counts = rackRead.counts;
+    const isGround = read?.isGround ?? false;
+    const isExcited = read?.isExcited ?? false;
+
+    // Lamp indicator color
+    if (!read || !read.tested) {
+      lampMat.emissive.setHex(0x332810);
+      lampMat.emissiveIntensity = 0.3;
+    } else if (isGround) {
+      lampMat.emissive.setHex(0x78a142);
+      lampMat.emissiveIntensity = 1.0;
+    } else {
+      lampMat.emissive.setHex(0xe59b24);
+      lampMat.emissiveIntensity = 1.0;
+    }
+
+    // Determine spheres per tier from rack counts
+    // Tiers: 0: 1s, 1: 2s, 2: 2p, 3: 3s/3p, 4: 4s/3d
+    const tierSphereCounts = [
+      Math.min(2, counts['1s'] || 0),
+      Math.min(2, counts['2s'] || 0),
+      Math.min(4, Math.ceil((counts['2p'] || 0) * (4 / 6))),
+      Math.min(2, (counts['3s'] || 0) + (counts['3p'] || 0)),
+      Math.min(2, (counts['4s'] || 0) + (counts['3d'] || 0))
+    ];
+
+    let pIdx = 0;
+    tierSphereCounts.forEach((cnt, tierIdx) => {
+      const th = tierHeights[tierIdx];
+      const trad = tiers[tierIdx].rad * 0.75;
+      for (let k = 0; k < cnt && pIdx < maxSpheres; k++) {
+        const p = particles[pIdx++];
+        p.active = true;
+        p.mesh.visible = true;
+        p.mesh.material = isGround ? elecMatGround : elecMatExcited;
+        p.targetY = th + 0.002;
+        p.currentRad = trad;
+        p.angle = (k * Math.PI * 2) / Math.max(1, cnt) + tierIdx * 0.8;
+
+        // If newly excited and sitting above empty levels, kick down
+        if (isExcited && read?.tested && tierIdx > 0 && (counts['1s'] || 0) < 2) {
+          // Drop to tier 0
+          p.targetY = tierHeights[0] + 0.002;
+          p.velY = -0.15;
+        }
+      }
+    });
+
+    for (; pIdx < maxSpheres; pIdx++) {
+      particles[pIdx].active = false;
+      particles[pIdx].mesh.visible = false;
+    }
+  };
+
+  let globalTime = 0;
+  group.userData.tick = (delta, still) => {
+    if (still) return;
+    globalTime += delta;
+    const dt = Math.min(delta, 0.05);
+
+    particles.forEach(p => {
+      if (!p.active) return;
+      // Spring gravity fall physics towards targetY
+      const diff = p.currentY - p.targetY;
+      const k = 36.0;
+      const damp = 8.0;
+      const force = -k * diff - damp * p.velY;
+      p.velY += force * dt;
+      p.currentY += p.velY * dt;
+
+      // Orbital slow rotation around the central pillar
+      p.angle += 0.8 * dt;
+      const x = basePos.x + p.currentRad * Math.cos(p.angle);
+      const z = basePos.z + p.currentRad * Math.sin(p.angle);
+      p.mesh.position.set(x, p.currentY, z);
+    });
+  };
+
+  group.userData.sync = sync;
+  sync(f, state);
+
+  return group;
+}
+
+/**
  * Solid parts for `SHELLS_KIT` fixtures at `3D On`.
  */
 export function dress3d(f, state, c) {
+  if (f.kind === 'well') {
+    return dressWell(f, state, c);
+  }
   if (f.kind === 'magnet') {
     return dressMagnet(f, state, c);
   }

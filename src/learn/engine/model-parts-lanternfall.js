@@ -226,6 +226,13 @@ function rackParts(spec) {
       }
     }
   });
+  parts.filling = {
+    z: spec.z,
+    stage: spec.stage,
+    caption: spec.caption,
+    counts,
+    rack
+  };
   parts.radius = Math.max(2.4, yTop + 1.1, 1.2 + Math.max(...rows.map(r => boxesOf(r.l))) * 0.4);
   return parts;
 }

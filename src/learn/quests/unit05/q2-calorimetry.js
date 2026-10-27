@@ -28,11 +28,11 @@ import {
   SPECIFIC_HEAT_WATER, heatTransfer, blockSpecificHeat
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
   { term: /\bspecific heat capacity\b/i, introducedAt: 2 },
-  { term: /\bcalorimeter\b/i, introducedAt: 4 }
+  { term: /\bcalorimeter\b/i, introducedAt: 5 }
 ];
 
 /** The bench reads a thermometer as particle motion, and counts in moles. */
@@ -125,17 +125,61 @@ export const STAGES = [
       reward: {
         log: 'Iron needed a tenth of the water\'s energy.',
         title: 'Specific Heat Capacity',
-        body: 'Specific heat capacity (c) is the heat needed to warm one gram by one degree: 4.184 J/(g·°C) for water and 0.449 J/(g·°C) for iron. Total heat absorbed or released is given by q = m × c × ΔT.'
+        body: 'Specific heat capacity (c) is the heat needed to warm one gram by one degree: 4.184 J/(g·°C) for water and 0.449 J/(g·°C) for iron.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
+    const w = cupFixture('water', { x: 30, y: 32 }, { title: 'Water bath · 100 g', water: 100, T0: 20, joules: Q_WATER });
+    return {
+      id: 's3-equation',
+      title: 'The Heat Equation',
+      prompt: 'Set the marker to the heat the water bath absorbed, in joules.',
+      widget,
+      table: heatTable({
+        fixtures: [
+          w.fixture,
+          plaqueFixture('ref', 'What you may use', { x: 106, y: 19 }, [
+            FORMULA,
+            'q: heat transferred (in joules, J)',
+            'm: mass of substance (in grams, g)',
+            'c: specific heat capacity (J/(g·°C))',
+            'ΔT: temperature rise (T_final − T_initial)',
+            'c of water = 4.184 J/(g·°C)'
+          ], { w: 68 }),
+          markerFixture('joules', 'Heat absorbed', { x: 106, y: 49 }, { min: 1000, max: 4000, step: 50, start: 1000, unit: 'J', w: 56 })
+        ],
+        zones: { slots: [w.slot] }
+      }),
+      hints: [
+        'Use the cup, the plate of facts and the marker.',
+        'Compare the bath\'s mass and its thermometer rise with the four symbols in the formula.',
+        'Multiply mass by specific heat capacity and temperature rise to calculate heat in joules.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'joules');
+        if (v === 1000) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        if (Math.abs(v - Q_WATER) <= 35) return { ok: true };
+        const r = cupRead(t, 'water');
+        return { ok: false, msg: `The marker reads ${v} J, and the bath has risen ${fixed(r.dT, 1)} °C.` };
+      },
+      reward: {
+        log: 'The formula q = m c ΔT gave the bath\'s heat.',
+        title: 'The Heat Equation',
+        body: 'Heat transferred is q = m × c × ΔT: q is heat in joules, m is mass in grams, c is specific heat capacity in J/(g·°C), and ΔT is temperature change. Each gram needs c joules for every degree it warms.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
     const a = cupFixture('cup', { x: 28, y: 33 }, { title: 'Bath · 100 g', water: 100, T0: 20 });
     const names = [['al', 'Aluminium'], ['fe', 'Iron'], ['cu', 'Copper'], ['ag', 'Silver']];
     return {
-      id: 's3-fitting',
+      id: 's4-fitting',
       title: 'Naming a Metal',
       prompt: 'Which metal is the siphon fitting?',
       widget,
@@ -146,7 +190,15 @@ export const STAGES = [
         ],
         fixtures: [
           a.fixture,
-          plaqueFixture('ref', 'What you may use', { x: 122, y: 20 }, [FORMULA, 'c of water = 4.184 J/(g·°C)', 'Aluminium: 0.897 J/(g·°C)', 'Iron: 0.449 J/(g·°C)', 'Copper: 0.385 J/(g·°C)', 'Silver: 0.235 J/(g·°C)'], { w: 52 })
+          plaqueFixture('ref', 'What you may use', { x: 122, y: 20 }, [
+            FORMULA,
+            'Heat gained by water = heat lost by metal',
+            'c of water = 4.184 J/(g·°C)',
+            'Aluminium: 0.897 J/(g·°C)',
+            'Iron: 0.449 J/(g·°C)',
+            'Copper: 0.385 J/(g·°C)',
+            'Silver: 0.235 J/(g·°C)'
+          ], { w: 52 })
         ],
         zones: { slots: [a.slot, { id: 'answer', label: 'The fitting is', at: { x: 130, y: 52 }, size: { w: 28, h: 12 } }] }
       }),
@@ -172,11 +224,11 @@ export const STAGES = [
     };
   })(),
 
-  /* ---------------------------------------------------------------- 4 */
+  /* ---------------------------------------------------------------- 5 */
   (() => {
     const a = cupFixture('cup', { x: 28, y: 33 }, { title: 'Reserve bath · 200 g', water: BATH_4, T0: 21 });
     return {
-      id: 's4-reaction',
+      id: 's5-reaction',
       title: 'Catching a Reaction',
       prompt: 'Set the marker to the heat the reaction gave out into the bath, in joules.',
       widget,
@@ -184,7 +236,11 @@ export const STAGES = [
         pieces: [charge('mix', 'Neutralising mix', { x: 76, y: 20 }, MIX)],
         fixtures: [
           a.fixture,
-          plaqueFixture('ref', 'What you may use', { x: 118, y: 18 }, [FORMULA, 'c of the bath = 4.184 J/(g·°C)'], { w: 52 }),
+          plaqueFixture('ref', 'What you may use', { x: 118, y: 18 }, [
+            FORMULA,
+            'q_reaction = −q_bath',
+            'c of the bath = 4.184 J/(g·°C)'
+          ], { w: 52 }),
           markerFixture('joules', 'Heat given out', { x: 118, y: 44 }, { min: 2000, max: 5000, step: 50, start: 2000, unit: 'J', w: 52 })
         ],
         zones: { slots: [a.slot] }
@@ -216,8 +272,9 @@ export const STAGES = [
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Turn the iron\'s "Heater" dial.'],
-  3: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
-  4: ['Drag the mix onto the cup, then set the marker.']
+  3: ['Set the marker.'],
+  4: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
+  5: ['Drag the mix onto the cup, then set the marker.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -229,7 +286,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Different substances require different amounts of heat per degree of warming according to their specific heat capacity. In an insulated calorimeter, q = m × c × ΔT converts a measured temperature rise into joules released by a reaction.'
+      body: 'Specific heat capacity (c) is the heat needed to warm one gram of a substance by one degree. The heat equation q = m × c × ΔT connects mass in grams (m), specific heat capacity (c), and temperature change (ΔT) to heat in joules (q), allowing a calorimeter to measure reaction energy.'
     }
   ]
 };
@@ -305,6 +362,7 @@ const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value 
 export const SOLUTIONS = [
   [put('iron', 'slot:guess')],
   [dial('iron', 'heat', 2)],
+  [dial('joules', 'value', 2100)],
   [put('fitting', MOUTH), put('cu', 'slot:answer')],
   [put('mix', MOUTH), dial('joules', 'value', 3350)]
 ];
@@ -313,6 +371,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [],
   [dial('iron', 'heat', 3)],
+  [dial('joules', 'value', 1500)],
   [put('fitting', MOUTH), put('fe', 'slot:answer')],
   [put('mix', MOUTH), dial('joules', 'value', 2800)]
 ];

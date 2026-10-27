@@ -25,6 +25,7 @@ export const LANTERNFALL_TOUR = {
     'cloud:view': { title: 'View and slice', text: 'The View turns and tilts every cloud on the table at once, or drag the picture to turn freely. A "Slice" switch keeps only the dots in a thin slab through the middle, letting you find the empty plane between lobes.', dials: false },
     'shells:shelf': { title: 'Orbital energy ladder', text: 'A ladder of orbitals arranged by energy, lowest at the bottom (1s, 2s, 2p). Each box represents an orbital where electrons can live.', dials: false },
     'shells:finder': { title: 'Quantum selector', text: 'Three dials that select an orbital: shell n (energy floor), subshell l (shape: 0 for s, 1 for p), and orbital ml (orientation). Turn a dial to light the matching orbital.', dials: false },
+    'shells:well': { title: 'Energy well', text: 'Tests whether the atom is in its lowest energy state. Press "{run}" to check if any electrons can fall to a lower row.', dials: false },
     'shells:magnet': {
       title: f => (f.props?.sample != null ? 'Sample magnet' : f.props?.rack ? 'Rack magnet' : 'Magnet'),
       text: f => (f.props?.sample != null
