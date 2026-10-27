@@ -84,18 +84,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
     key: QUEST_KEY,
-    title: 'Guess the Squeeze',
-    prompt: 'The gas law says helium squeezed to a hundredth of its room reads a hundred times higher: what does a real gauge read?',
+    title: 'Compression Prediction',
+    prompt: 'The gas law predicts helium squeezed to a hundredth of its volume reads a hundred times higher: what does a real gauge read?',
     items: GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Picture the particles of the gas crowded together in almost no room.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Place a card in the slot.',
+      'Consider whether gas particles occupy physical volume at high pressures.',
+      'Select the card corresponding to your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Guess Worth Testing',
-      body: 'A cylinder that prints its gauge beside the figure the gas law gives is about to be set out, with a piston that squeezes harder than any before.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'A compression cylinder will now test whether helium deviates from the gas law under high pressure.'
     }
   }),
 
@@ -106,36 +106,34 @@ export const STAGES = [
       show: { temperature: false, amount: false, ideal: true }
     });
     return {
-      title: 'Squeezed Hard',
+      title: 'High-Pressure Compression',
       get prompt() {
-        return youPredicted(QUEST_KEY, GUESSES, 'squeeze the helium as far as the piston goes, then lay the card for how its gauge compares with the gas law.', 'Squeeze the helium as far as the piston goes, then lay the card for how its gauge compares with the gas law.');
+        return youPredicted(QUEST_KEY, GUESSES, 'Compress the helium fully, then place the card for how the gauge compares with the gas law.', 'Compress the helium fully, then place the card for how the gauge compares with the gas law.');
       },
       widget,
       table: gasTable({
         pieces: [stmt('less', 'Less than the gas law says', { x: 90, y: 45 }), stmt('exact', 'Exactly what the gas law says', { x: 128, y: 45 }), stmt('more', 'More than the gas law says', { x: 109, y: 57.5 })],
         fixtures: [r],
-        zones: { slots: [{ id: 'show', label: 'The gauge, against the law', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
+        zones: { slots: [{ id: 'show', label: 'Prediction', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Use the "Piston" dial, then lay a card in the slot.',
-        'Compare the gauge with the figure the gas law says at the smallest room.',
-        'Lay the card that says which side of the gas law\'s figure the gauge is on.'
+        'Turn the Piston dial, then place a card in the slot.',
+        'Compare the gauge with the gas law value at minimum volume.',
+        'Select the card that matches whether the gauge reads above or below the gas law.'
       ],
       check(state) {
         const t = state.table;
         const card = cardIn(t, 'show');
-        if (Math.round(t.fixtures[RIG].dials.volume.value) !== SQUEEZE.length) return { ok: false, notYet: true, msg: 'Squeeze the helium as far as the piston goes first.' };
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (Math.round(t.fixtures[RIG].dials.volume.value) !== SQUEEZE.length) return { ok: false, notYet: true, msg: 'Compress the cylinder to minimum volume first.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (card.id === sideOf(cylRead(t, RIG, 0))) return { ok: true };
-        return { ok: false, msg: 'The gauge is not on the side of the gas law\'s figure that card says.' };
+        return { ok: false, msg: 'The gauge is not on that side of the gas law value.' };
       },
       get reward() {
-        const g = guessOf(QUEST_KEY, GUESSES);
-        const verdict = !g ? '' : g.id === 'more' ? 'You predicted this one, and the gauge agreed. ' : 'The gauge did not agree with your prediction, which is how a guess gets better. ';
         return {
           log: 'Squeezed hard, the gauge reads above the law.',
-          title: 'Particles Take Room',
-          body: `${verdict}Squeezed hard, helium reads more than the gas law says, because its particles are not points: they take up room themselves, so there is less room left for them to move in.`,
+          title: 'Molecular Volume',
+          body: 'At high pressures, helium exerts more pressure than the gas law predicts. Gas particles occupy finite volume themselves, leaving less empty space to move in.',
           model: {
             type: 'gas',
             boxes: [{ label: 'Roomy', w: 3.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Squeezed', w: 1.0, h: 1.0, d: 1.0, parts: [{ kind: 'He', n: 12 }] }],
@@ -154,7 +152,7 @@ export const STAGES = [
     });
     const tray = (id, label, y) => ({ id, label, at: { x: 133, y }, size: { w: 30, h: 14 }, cell: 17 });
     return {
-      title: 'Which Side of the Law',
+      title: 'Deviations from Ideal Behavior',
       prompt: 'Sort each cylinder by whether its gauge reads above, on or below what the gas law says.',
       widget,
       table: gasTable({
@@ -163,22 +161,22 @@ export const STAGES = [
         zones: { trays: [tray('above', 'Reads above the law', 11), tray('on', 'Reads on the law', 31), tray('below', 'Reads below the law', 51)] }
       }),
       hints: [
-        'Use the three trays.',
-        'Compare each cylinder\'s gauge with the figure printed as the gas law\'s, side by side.',
-        'A cylinder goes in the first tray if its gauge is the larger figure, and in the last if it is the smaller.'
+        'Place each cylinder chip into a tray.',
+        'Compare each cylinder\'s gauge reading with the calculated gas law figure.',
+        'Place a cylinder in the above tray if its gauge is higher, and below if lower.'
       ],
       check(state) {
         const t = state.table;
-        if (!CASES.every(c => ['above', 'on', 'below'].includes(whereIs(t, c.id)))) return { ok: false, notYet: true, msg: 'Put every cylinder in a tray.' };
+        if (!CASES.every(c => ['above', 'on', 'below'].includes(whereIs(t, c.id)))) return { ok: false, notYet: true, msg: 'Place every cylinder in a tray.' };
         const side = c => TRAY_OF[sideOf(cylRead(t, c.id === 'a' || c.id === 'b' ? 'r1' : 'r2', c.id))];
         const bad = CASES.filter(c => whereIs(t, c.id) !== side(c));
-        if (bad.length) return { ok: false, msg: `Holder ${bad[0].id.toUpperCase()}'s gauge and the gas law's figure do not fit the tray it is in.` };
+        if (bad.length) return { ok: false, msg: `Holder ${bad[0].id.toUpperCase()}'s gauge does not match its tray.` };
         return { ok: true };
       },
       reward: {
-        log: 'Squeezed gases read above, cold gases below.',
-        title: 'Ideal Gas, Real Gas',
-        body: 'A gas that always follows the gas law is called an ideal gas, and real gases stray from it: above it when squeezed, because their particles take up room, and below it when cold, because their particles pull on each other. Only a thin, warm gas stays on the law.'
+        log: 'Compressed gases read above, cold gases below.',
+        title: 'Ideal Gas and Real Gas',
+        body: 'A gas that strictly follows the gas law is an ideal gas. Real gases deviate under extreme conditions: reading above the law when compressed because particles take up space, and below when cooled because intermolecular forces pull them together.'
       }
     };
   })(),
@@ -191,8 +189,8 @@ export const STAGES = [
       show: { gauge: false, volume: false, temperature: false, amount: false, off: true }
     });
     return {
-      title: 'Who Strays Furthest',
-      prompt: 'Rank the three cold gases from the one that strays furthest from the gas law to the one that strays least.',
+      title: 'Deviation Comparison',
+      prompt: 'Rank the three cold gases on the rail from the one that differs most from the gas law to the one that differs least.',
       widget,
       table: gasTable({
         pieces: [
@@ -200,27 +198,27 @@ export const STAGES = [
           { ...stmt('draw', 'Liquid at (°C): NH₃ −33 N₂ −196 He −269', { x: 100, y: 43 }), hidden: true, fetchFrom: 'drawoff' }
         ],
         fixtures: [r],
-        zones: { rail: { id: 'rail', at: { x: 108, y: 24 }, size: { w: 66, h: 16 }, first: 'Strays furthest', last: 'Strays least', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] } },
+        zones: { rail: { id: 'rail', at: { x: 108, y: 24 }, size: { w: 66, h: 16 }, first: 'Largest deviation', last: 'Smallest deviation', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] } },
         fetch: [{ id: 'drawoff', label: 'Cold Draw-off', at: { x: 130, y: 56 } }]
       }),
       hints: [
-        'Use the "Heater" dial, and drag the chips along the strip.',
-        'Compare how far each cylinder sits off the law, whichever side it is on, at each setting.',
-        'Put first the cylinder that sits furthest off the law at every setting of the dial.'
+        'Turn the Heater dial, then arrange the chips on the rail.',
+        'Compare how far each cylinder deviates from the gas law at each temperature.',
+        'Place the cylinder with the greatest deviation at the left end of the rail.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three cylinders on the strip.' };
+        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three cylinders on the rail.' };
         const dev = id => { const q = cylRead(t, RIG, id); return Math.abs(q.P - q.ideal) / q.ideal; };
         const want = ['a', 'b', 'c'].sort((x, y) => dev(y) - dev(x));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two neighbouring cylinders on the strip are the wrong way round.' };
+        return { ok: false, msg: 'Two adjacent cylinders on the rail are in the wrong order.' };
       },
       reward: {
-        log: 'The stronger the pull, the further a gas strays.',
-        title: 'Strong Pulls Stray Furthest',
-        body: 'The harder a gas\'s particles pull on one another, the further its gauge falls below the gas law when it is cold: ammonia most, nitrogen less, helium hardly at all. The same pull is what lets a cold gas turn into a liquid.',
+        log: 'Stronger intermolecular forces cause greater deviation.',
+        title: 'Intermolecular Attractions',
+        body: 'Stronger attractions between particles cause colder gases to fall further below ideal gas law predictions: ammonia most, nitrogen less, and helium least. These same attractive forces allow gases to condense into liquids.',
         last: true
       }
     };
@@ -229,10 +227,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag one card into the slot.'],
-  2: ['Turn the Piston dial,', 'then drag a card into the slot.'],
+  1: ['Place a card in the slot.'],
+  2: ['Turn the Piston dial,', 'then place a card in the slot.'],
   3: ['Drag each chip into a tray.'],
-  4: ['Turn the Heater dial,', 'then drag the chips along the strip.']
+  4: ['Turn the Heater dial,', 'then arrange the chips on the rail.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -243,16 +241,8 @@ export const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A real gas reads above the gas law where its particles crowd, and below it where they cling, so it is closest to ideal when it is thin and warm. The same pull that holds it back is what turns it into a liquid.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every pressure vessel on the cloud deck is designed with this in mind. The gas law is a very good first answer, and now you know exactly where it stops being one.'
-    },
-    {
-      heading: 'Next',
-      body: 'Something at the heart of the deck is running every pump at once, and it is reading you as closely as you have read the gas.'
+      heading: 'Summary',
+      body: 'Real gases deviate from ideal behavior at high pressures due to molecular volume and at low temperatures due to intermolecular attractions. Real gases behave most ideally at low pressures and high temperatures.'
     }
   ]
 };

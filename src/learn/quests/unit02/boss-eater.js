@@ -86,7 +86,7 @@ export const STAGES = [
       title: 'Phase 1 · The Eater\'s Lamp',
       briefing: {
         speaker: SPEAKER,
-        body: 'This is the Lantern-Eater, and each phase puts one of the benches in front of it again. A miss costs the table a point of Integrity; three knock it back, and nothing you have read is lost.'
+        body: 'Each phase presents a measurement from a previous bench. Three incorrect attempts will reset the phase, but your data is preserved.'
       },
       prompt: 'Make the eater lamp\'s hydrogen give out its 486 nm line.',
       widget,
@@ -204,7 +204,7 @@ export const STAGES = [
       },
       reward: {
         title: 'Unpaired Electrons Feel the Magnet',
-        body: 'Unpaired electrons are pulled by a magnet, and paired electrons cancel each other out. Electrons spread across a row before they pair up, which is Hund\'s rule.',
+        body: 'Unpaired electrons are pulled by a magnetic field, while paired electrons cancel each other out. Electrons occupy degenerate orbitals singly with parallel spins before pairing, which is Hund\'s rule.',
         log: 'The sample\'s pull matches a rack with the right number of lone electrons.'
       }
     };
@@ -244,7 +244,7 @@ export const STAGES = [
       },
       reward: {
         title: 'Peaks Add Up to the Atom',
-        body: 'The heights of all the peaks add up to the number of electrons, and in a neutral atom that is the atomic number. A spectrum can therefore name an atom nobody has labelled.',
+        body: 'The heights of all the peaks sum to the total number of electrons, which equals the atomic number in a neutral atom. A photoelectron spectrum therefore identifies the element.',
         log: 'The peak heights summed to one atomic number.'
       }
     };

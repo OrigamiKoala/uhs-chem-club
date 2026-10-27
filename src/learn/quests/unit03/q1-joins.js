@@ -118,16 +118,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Two of the Same',
-    prompt: 'When two hydrogen atoms are pressed together, what do you think happens?',
+    prompt: 'When two hydrogen atoms are brought together, what happens?',
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
       'Picture two identical atoms pressed together, and ask what they have to give each other.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Press the atoms together and see what they do.'
+      title: 'Prediction Recorded',
+      body: 'The next stage tests what happens when two hydrogen atoms meet.'
     }
   }),
 
@@ -135,7 +135,7 @@ export const STAGES = [
   {
     title: 'Press Them Together',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'press each pair together, then sort it by whether it stayed together.');
+      return testPrompt(QUEST_KEY, GUESSES, 'test each pair of atoms and sort them by whether they stay together.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
@@ -164,9 +164,9 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Sodium with chlorine held. Neon with neon came apart. Hydrogen with hydrogen held. Argon with hydrogen came apart.',
-        title: 'What Holds Is Called a Bond',
-        body: `${verdictLine(QUEST_KEY, 'hold')}Two atoms that stay together after you let go are held by a chemical bond, and each bond that formed left both atoms with a full outer shell. A pair with an atom whose shell was already full came apart.`,
-        model: { type: 'molecule', name: 'hydrogen', caption: 'Two hydrogen atoms held by one bond, as a ball-and-stick model.' }
+        title: 'Chemical Bonds',
+        body: `${verdictLine(QUEST_KEY, 'hold')}Two atoms that stay together are held by a chemical bond, giving both atoms a full outer shell. A pair with an atom whose outer shell was already full separated.`,
+        model: { type: 'molecule', name: 'hydrogen', caption: 'Two hydrogen atoms held by a single covalent bond.' }
       };
     }
   },
@@ -203,16 +203,16 @@ export const STAGES = [
     },
     reward: {
       log: 'Two pairs handed over, two held between.',
-      title: 'Ionic and Covalent',
-      body: 'A metal and a nonmetal hand electrons over and are held by the pull between the charges that makes, which is an ionic bond. Two nonmetals each refuse to give one up, so they hold pairs between them instead, which is a covalent bond.',
-      model: { type: 'atoms', items: [{ p: 11, n: 12, charge: 1, label: 'Sodium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride ion' }], caption: 'An ionic pair: sodium handed one electron to chlorine. Not to scale.' }
+      title: 'Ionic and Covalent Bonds',
+      body: 'A metal and a nonmetal hand electrons over to form ions held by opposite charges, making an ionic bond. Two nonmetals share electron pairs between them, forming a covalent bond.',
+      model: { type: 'atoms', items: [{ p: 11, n: 12, charge: 1, label: 'Sodium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride ion' }], caption: 'An ionic pair: sodium cation and chloride anion.' }
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'How Many It Takes',
-    prompt: 'Build a unit in which every atom\'s outer shell is full and the needle reads zero.',
+    prompt: 'Build a unit where every atom has a full outer shell and the net charge is zero.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
@@ -222,7 +222,7 @@ export const STAGES = [
     hints: [
       'Use the chlorine atoms and the needle.',
       'Compare the face of the magnesium atom after each chlorine joins it with the needle.',
-      'Add one chlorine at a time and stop when the magnesium atom has nothing left to give.'
+      'Add one chlorine at a time until the net charge reads zero.'
     ],
     check(state) {
       const t = state.table;
@@ -233,15 +233,15 @@ export const STAGES = [
     },
     reward: {
       log: 'Magnesium took chlorines until nothing was left to give.',
-      title: 'The Counts Fix the Ratio',
-      body: 'A magnesium atom has two electrons to hand over and a chlorine atom takes exactly one each, so it takes two chlorines to clear one magnesium and cancel the charges to zero. The ratio in an ionic compound falls straight out of the counts on the outer shells.',
-      model: { type: 'atoms', items: [{ p: 17, n: 18, charge: -1, label: 'Chloride' }, { p: 12, n: 12, charge: 2, label: 'Magnesium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride' }], caption: 'One magnesium ion with two chloride ions: +2 against two of −1. Not to scale.' }
+      title: 'Formula Ratios',
+      body: 'A magnesium atom has two electrons to hand over and each chlorine accepts one, so two chlorines balance one magnesium to reach a net charge of zero. Outer shell electron counts fix the formula ratio of ionic compounds.',
+      model: { type: 'atoms', items: [{ p: 17, n: 18, charge: -1, label: 'Chloride' }, { p: 12, n: 12, charge: 2, label: 'Magnesium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride' }], caption: 'One magnesium ion (Mg²⁺) and two chloride ions (Cl⁻).' }
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'More Than One Pair',
+    title: 'Multiple Bonds',
     prompt: 'Sort each pair of atoms into a tray by how many electron pairs are held between them.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
@@ -269,8 +269,8 @@ export const STAGES = [
     reward: {
       log: 'One pair, two pairs, three pairs.',
       title: 'Double and Triple Bonds',
-      body: 'An atom with two places to fill holds two pairs with its partner, and one with three places holds three, because each shared pair fills one place on each side at once. One shared pair is a single bond, two is a double bond and three is a triple bond.',
-      model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide: each oxygen is held to the carbon by two shared pairs, a double bond.' },
+      body: 'An atom sharing two electron pairs forms a double bond, and one sharing three forms a triple bond. Each shared pair fills one electron vacancy on both atoms simultaneously.',
+      model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide: carbon shares two electron pairs with each oxygen, forming double bonds.' },
       last: true
     }
   }
@@ -284,15 +284,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Atoms join to fill their outer shells, and there are only two ways to do it: hand electrons over, or hold pairs between you. A metal with a nonmetal does the first and makes an ionic bond; two nonmetals do the second and make a covalent bond.'
+      body: 'Atoms bond to achieve full outer shells. Metals transfer electrons to nonmetals in ionic bonds, while nonmetals share electron pairs in covalent bonds.'
     },
     {
-      heading: 'Why the Recipe Is Fixed',
-      body: 'How many electrons each outer shell has to move is a count, not a preference. That count decides how many of each element end up in a compound, which is why one compound only ever has one recipe.'
+      heading: 'Fixed Ratios',
+      body: 'Valence electron counts determine how many atoms combine to achieve full shells and neutral charge, fixing the compound formula.'
     },
     {
       heading: 'Next',
-      body: 'The rubble round the tunnel mouth is made of joins like these. The next bench takes a whole block of each kind and asks what it does when you hit it, heat it and put a current through it.'
+      body: 'The next bench tests the physical and electrical properties of ionic, molecular, and network solids.'
     }
   ]
 };
@@ -312,7 +312,7 @@ export const PRACTICE = [
       { id: 'd', label: 'Hydrogen and hydrogen' }
     ],
     answer: 'a',
-    explanation: 'An ionic bond needs one atom willing to hand electrons over and one willing to take them — a metal with a nonmetal. Sodium is the only metal in the list, so only that pair transfers.'
+    explanation: 'An ionic bond requires a metal and a nonmetal to transfer electrons. Sodium is a metal and chlorine is a nonmetal, so they form an ionic bond.'
   },
   {
     question: 'Neon will not bond to anything. Why not?',
@@ -323,7 +323,7 @@ export const PRACTICE = [
       { id: 'd', label: 'It is a metal' }
     ],
     answer: 'b',
-    explanation: 'Neon carries eight electrons on its outer shell. Atoms bond in order to reach a full outer shell, and neon is already there, so there is nothing for a bond to do.'
+    explanation: 'Neon has a complete valence shell of eight electrons. Because atoms bond to achieve full valence shells, neon is energetically stable and chemically inert.'
   },
   {
     question: 'Magnesium has two electrons on its outer shell and chlorine needs one. How many chlorine atoms does one magnesium atom bond to?',
@@ -334,7 +334,7 @@ export const PRACTICE = [
       { id: 'd', label: 'Four' }
     ],
     answer: 'b',
-    explanation: 'Magnesium has two electrons to give and each chlorine takes only one, so it takes two chlorines to clear both. That is why the compound is MgCl2 and the charges cancel: one +2 against two −1.'
+    explanation: 'Magnesium loses two electrons and each chlorine accepts one. Therefore, two chloride ions balance one magnesium ion to produce neutral MgCl2.'
   },
   {
     question: 'Two oxygen atoms bond together. What kind of bond is it, and how many pairs of electrons does it hold?',
@@ -345,7 +345,7 @@ export const PRACTICE = [
       { id: 'd', label: 'Covalent, holding three pairs' }
     ],
     answer: 'c',
-    explanation: 'Both atoms are nonmetals, so they share rather than transfer: the bond is covalent. Oxygen has six on its outer shell and needs two more, so the two atoms hold two shared pairs — a double bond.'
+    explanation: 'Both atoms are nonmetals, forming a covalent bond. Oxygen has six valence electrons and shares two pairs to complete its octet, forming a double bond.'
   },
   {
     question: 'Aluminium has three electrons on its outer shell and chlorine needs one. What is the ratio of aluminium to chlorine in the compound they make?',
@@ -356,7 +356,7 @@ export const PRACTICE = [
       { id: 'd', label: '3 to 1' }
     ],
     answer: 'c',
-    explanation: 'Aluminium hands over three electrons and each chlorine takes one, so three chlorines are needed to absorb them all. The compound is AlCl3, and its +3 and three −1 charges cancel exactly.'
+    explanation: 'Aluminium forms an Al3+ cation and each chlorine forms a Cl- anion. Three chloride ions balance one aluminium ion, yielding AlCl3.'
   }
 ];
 

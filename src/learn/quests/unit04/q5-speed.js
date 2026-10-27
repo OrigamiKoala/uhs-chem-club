@@ -77,18 +77,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
     key: KEY_LEAK,
-    title: 'Guess the Leak',
+    title: 'Effusion Prediction',
     prompt: 'A helium chamber and a nitrogen chamber each have a tiny hole in the wall: which one runs out of gas first?',
     items: LEAK_GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Picture the particles of each gas flying about, and how often they come to the hole.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Place a card in the slot.',
+      'Consider how particle velocity affects how often molecules reach a pinhole.',
+      'Select the card corresponding to your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Guess Worth Testing',
-      body: 'A row of chambers with pinholes is about to be set out, and a stopwatch will say whether the guess holds.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'Chambers with pinholes will now be tested to observe which gas escapes faster.'
     }
   }),
 
@@ -98,37 +98,35 @@ export const STAGES = [
       chambers: CHAMBERS.map(([id, gas]) => ({ id, gas, label: `CHAMBER ${id.toUpperCase()}` })), times: TIMES, timeStart: 1, w: 100, record: false
     });
     return {
-      title: 'Four Pinholes',
+      title: 'Effusion Rates',
       get prompt() {
-        return youPredicted(KEY_LEAK, LEAK_GUESSES, 'rank the four chambers from the first to run out to the last.', 'Rank the four chambers from the first to run out to the last.');
+        return youPredicted(KEY_LEAK, LEAK_GUESSES, 'Rank the four chambers on the rail from earliest to empty to latest to empty.', 'Rank the four chambers on the rail from earliest to empty to latest to empty.');
       },
       widget,
       table: gasTable({
         pieces: CHAMBERS.map(([id]) => chip(id, `CHAMBER ${id.toUpperCase()}`, { x: 0, y: 0 })),
         fixtures: [p],
-        zones: { rail: { id: 'rail', at: { x: 75, y: 56 }, size: { w: 84, h: 14 }, first: 'Runs out first', last: 'Runs out last', items: CHAMBERS.map(([id]) => id), start: CHAMBERS.map(([id]) => id) } }
+        zones: { rail: { id: 'rail', at: { x: 75, y: 56 }, size: { w: 84, h: 14 }, first: 'Empties first', last: 'Empties last', items: CHAMBERS.map(([id]) => id), start: CHAMBERS.map(([id]) => id) } }
       }),
       hints: [
-        'Use the "Stopwatch" dial, and drag the chips along the strip.',
-        'Compare how much gas is left in each chamber at the same time.',
-        'Put the chamber with the least gas left at the first end of the strip, and the one with the most at the other.'
+        'Turn the Stopwatch dial to observe the chambers over time.',
+        'Compare the remaining gas in each chamber at equal times.',
+        'Place the chamber that empties earliest at the left end of the rail.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four chambers on the strip.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four chambers on the rail.' };
         const gasOf = id => CHAMBERS.find(c => c[0] === id)[1];
         const want = CHAMBERS.map(c => c[0]).sort((x, y) => halfTime(gasOf(x), T0) - halfTime(gasOf(y), T0));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two neighbouring chambers on the strip are the wrong way round.' };
+        return { ok: false, msg: 'Two adjacent chambers on the rail are in the wrong order.' };
       },
       get reward() {
-        const g = guessOf(KEY_LEAK, LEAK_GUESSES);
-        const verdict = !g ? '' : g.id === 'he' ? 'You predicted this one, and the chambers agreed. ' : 'The chambers did not agree with your prediction, which is how a guess gets better. ';
         return {
-          log: 'The lightest gas ran out first.',
+          log: 'The lightest gas emptied fastest.',
           title: 'Effusion',
-          body: `${verdict}A gas leaking through a pinhole is effusing, and the lighter the gas the sooner it runs out, because its particles move faster and come to the hole more often.`
+          body: 'Gas escaping through a pinhole into a vacuum undergoes effusion. Lighter gas molecules have higher average speeds at a given temperature, reaching the hole more frequently and effusing faster.'
         };
       }
     };
@@ -141,28 +139,28 @@ export const STAGES = [
       picks: { ref: { gases: REFERENCE_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false
     });
     return {
-      title: 'Name the Leak',
-      prompt: 'Set the reference chamber\'s gas so that it empties at the same pace as the stack leak.',
+      title: 'Identifying an Unknown Gas',
+      prompt: 'Set the reference gas so its effusion rate matches the unknown sample.',
       widget,
       table: gasTable({ fixtures: [p] }),
       hints: [
-        'Use the "Gas" dial and the "Stopwatch" dial.',
-        'Compare the time each chamber takes to be half empty.',
-        'Stop on the gas whose time to half empty matches the leak\'s.'
+        'Adjust the Gas dial and use the Stopwatch dial.',
+        'Compare the time required for each chamber to reach half its initial amount.',
+        'Select the reference gas whose half-time matches the unknown sample.'
       ],
       check(state) {
         const t = state.table;
         const r = pinholeRead(t, PIN);
         const ref = r.chambers[0];
         const leak = r.chambers[1];
-        if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'The reference is where it started: turn its Gas dial and compare the times.' };
+        if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Gas dial to test different gases.' };
         if (ref.gas === leak.gas) return { ok: true };
-        return { ok: false, msg: ref.half < leak.half ? 'The reference chamber empties faster than the stack leak.' : 'The reference chamber empties more slowly than the stack leak.' };
+        return { ok: false, msg: ref.half < leak.half ? 'The reference chamber empties faster than the unknown sample.' : 'The reference chamber empties more slowly than the unknown sample.' };
       },
       reward: {
-        log: 'A leak matched to a gas you know.',
-        title: 'Naming by Leak',
-        body: 'Gases that empty at the same pace have particles of the same mass, so an unknown gas can be named by matching its leak to a gas you know. The heavier the gas, the slower it leaks.'
+        log: 'Effusion rate matched to reference gas.',
+        title: 'Effusion Rate and Molar Mass',
+        body: 'Gases with identical effusion rates at the same temperature have the same molar mass. Comparing an unknown gas to reference standards identifies its molecular weight.'
       }
     };
   })(),
@@ -170,18 +168,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   predictStage({
     key: KEY_TUBE,
-    title: 'Guess the Meeting',
-    prompt: 'Ammonia and hydrogen chloride are let into the two ends of a long tube of still air: where do they meet?',
+    title: 'Gas Meeting Point',
+    prompt: 'Ammonia and hydrogen chloride are let into opposite ends of a long tube of still air: where do they meet?',
     items: TUBE_GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Ammonia\'s particles are lighter than hydrogen chloride\'s; ask which gas will creep further in the same time.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Place a card in the slot.',
+      'Ammonia molecules have lower molar mass than hydrogen chloride molecules.',
+      'Select the card corresponding to your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Second Guess',
-      body: 'A tube of still air is about to be set out with a gas let in at each end, and a white ring will show where they meet.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'A tube with opposing gas inputs will test where the two gases meet.'
     }
   }),
 
@@ -189,38 +187,36 @@ export const STAGES = [
   (() => {
     const tb = tube('tube', { x: 42, y: 28 }, { ends: ['NH3', 'HCl'], times: TUBE_TIMES, timeStart: 1, length: TUBE_CM });
     return {
-      title: 'The Race Down the Tube',
+      title: 'Diffusion Along a Tube',
       get prompt() {
-        return youPredicted(KEY_TUBE, TUBE_GUESSES, 'run the stopwatch until the gases meet, then lay the card for where the ring formed.', 'Run the stopwatch until the gases meet, then lay the card for where the ring formed.');
+        return youPredicted(KEY_TUBE, TUBE_GUESSES, 'Run the stopwatch until the gases meet, then place the card for where the ring formed.', 'Run the stopwatch until the gases meet, then place the card for where the ring formed.');
       },
       widget,
       table: gasTable({
         pieces: [stmt('nh3', 'Nearer the ammonia end', { x: 97, y: 45 }), stmt('mid', 'Halfway', { x: 131, y: 45 }), stmt('hcl', 'Nearer the hydrogen chloride end', { x: 114, y: 57.5 })],
         fixtures: [tb],
-        zones: { slots: [{ id: 'show', label: 'Where the ring formed', at: { x: 114, y: 26 }, size: { w: 38, h: 12 } }] }
+        zones: { slots: [{ id: 'show', label: 'Prediction', at: { x: 114, y: 26 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Use the "Stopwatch" dial and "Check".',
-        'Compare how far each gas has crept at the same time.',
-        'Lay the card for the side of the tube the white ring is nearer to.'
+        'Advance the Stopwatch dial and press Check.',
+        'Observe how far each gas migrates through the tube over time.',
+        'Place the card corresponding to the position where the reaction ring appears.'
       ],
       check(state) {
         const t = state.table;
         const card = cardIn(t, 'show');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const f = t.fixtures.tube;
         const end = { ...t, fixtures: { ...t.fixtures, tube: { ...f, dials: { ...f.dials, time: { ...f.dials.time, value: f.props.times.length } } } } };
         const want = ringCard(tubeRead(end, 'tube').ringFromLeft);
         if (card.id === want) return { ok: true };
-        return { ok: false, msg: 'The white ring is not where that card puts it.' };
+        return { ok: false, msg: 'The reaction ring does not form at that position.' };
       },
       get reward() {
-        const g = guessOf(KEY_TUBE, TUBE_GUESSES);
-        const verdict = !g ? '' : g.id === 'hcl' ? 'You predicted this one, and the tube agreed. ' : 'The tube did not agree with your prediction, which is how a guess gets better. ';
         return {
-          log: 'The ring formed nearer the heavier gas.',
+          log: 'The reaction ring formed closer to the heavier gas.',
           title: 'Diffusion',
-          body: `${verdict}Gases spread through other gas by diffusion, far more slowly than their particles fly because they keep colliding, and the lighter gas still spreads faster. So the ring forms nearer the heavier gas's end.`,
+          body: 'Gases disperse through other gases by diffusion. Frequent molecular collisions slow net movement, but lighter molecules travel faster on average, causing the reaction ring to form closer to the heavier gas.',
           last: true
         };
       }
@@ -230,11 +226,11 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag one card into the slot.'],
-  2: ['Turn the Stopwatch dial,', 'then drag the chips along the strip.'],
-  3: ['Turn the Gas dial and the Stopwatch dial.'],
-  4: ['Drag one card into the slot.'],
-  5: ['Turn the Stopwatch dial and press Check,', 'then drag a card into the slot.']
+  1: ['Place a card in the slot.'],
+  2: ['Turn the Stopwatch dial,', 'then arrange the chips on the rail.'],
+  3: ['Adjust the Gas and Stopwatch dials.'],
+  4: ['Place a card in the slot.'],
+  5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -245,16 +241,8 @@ export const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'The lighter the gas, the faster its particles go, so the sooner it leaks through a hole and the further it spreads in the same time. A leak that matches a known gas has the same kind of particle.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'This is how a crew names a gas it cannot open: let it leak, and match its pace to one it knows.'
-    },
-    {
-      heading: 'Next',
-      body: 'The last bench squeezes and chills a gas until the gas laws stop being true.'
+      heading: 'Summary',
+      body: 'Lighter gas molecules have higher average velocities at a given temperature, causing them to effuse through pinholes and diffuse through other gases more rapidly than heavier molecules.'
     }
   ]
 };

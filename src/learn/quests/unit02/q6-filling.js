@@ -253,7 +253,7 @@ export const STAGES = [
       reward: {
         log: 'The sample is pulled harder than the rule predicts.',
         title: 'The Chromium Exception',
-        body: 'Chromium moves one 4s electron into 3d, so every box in the 3d row holds one, and copper does the same to fill its 3d row. The ladder alone predicts a smaller pull, but the magnet measures the real one. This is beyond the exam.',
+        body: 'Chromium moves one 4s electron into 3d, so every box in the 3d row holds one (4s¹ 3d⁵), and copper does the same to fill its 3d row (4s¹ 3d¹⁰). The resulting half-filled and filled subshells minimize electron repulsion and increase magnetic pull.',
         model: { type: 'rack', z: 24, caption: 'Chromium: one electron unpaired in 4s and one unpaired in each of the five 3d boxes, six pointing the same way.' },
         last: true
       }
@@ -276,15 +276,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Electrons fill the lowest rows first, spread across a row before pairing, and the ladder is ordered by energy and not by shell. A magnet reads how many are unpaired.'
+      body: 'Electrons fill the lowest available energy levels first (Aufbau principle) and occupy degenerate orbitals singly with parallel spins before pairing (Hund\'s rule). Unpaired electrons produce a net magnetic attraction (paramagnetism).'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Nearly everything an element does follows from the few electrons in its outer rows. You can now write them down and check them against a magnet.'
+      body: 'Chemical properties and bonding behavior depend on the valence electrons. Writing configurations explains how elements react and form ions.'
     },
     {
       heading: 'Next',
-      body: 'The core bench from Tallow can pull those electrons off one at a time. The next two benches measure what it costs, and read it back as a spectrum.'
+      body: 'The next bench measures the energy required to remove each electron, verifying electron configurations experimentally.'
     }
   ]
 };
@@ -338,7 +338,7 @@ export const PRACTICE = [
     explanation: 'Unpaired electrons pointing the same way add up to a pull. Atoms with every electron paired are only pushed away very slightly.'
   },
   {
-    question: '(Beyond the exam.) Chromium\'s ground state is [Ar] 4s¹ 3d⁵, not [Ar] 4s² 3d⁴. What does the magnet find?',
+    question: 'Chromium\'s ground state is [Ar] 4s¹ 3d⁵, not [Ar] 4s² 3d⁴. What does the magnet find?',
     options: [
       { id: 'a', label: 'Six unpaired electrons' },
       { id: 'b', label: 'Four unpaired electrons' },

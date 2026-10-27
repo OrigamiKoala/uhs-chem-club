@@ -57,18 +57,18 @@ const STACK_TRAY = { id: 'stack', label: 'The stack', at: { x: 76, y: 25 }, size
 
 /** The reward card of each stage: the idea just worked out, named. No new word is introduced here. */
 const STAGE_REWARDS = [
-  { reward: { log: 'The jacket\'s warming gave the heat.', title: 'Jacket Vented', body: 'The heat a bath absorbs is its mass times its specific heat capacity times its temperature rise. The Crucible\'s surplus went into the water, and the jacket now reads true.' } },
+  { reward: { log: 'The jacket\'s warming gave the heat.', title: 'Jacket Vented', body: 'The heat absorbed equals mass times specific heat capacity times temperature change (q = m·c·ΔT). The water jacket absorbed 41.8 kJ of thermal energy from the Crucible.' } },
   {
     reward: {
       log: 'The product bonds paid back more than they cost.',
       title: 'Coil Cooled',
-      body: 'Forming six N–H bonds gives back slightly more than breaking N≡N and three H–H bonds costs, so making ammonia gives out heat. The coil\'s own energy has gone out of it.',
-      model: { type: 'molecules', items: ['nitrogen', 'hydrogen', 'ammonia'], caption: 'Nitrogen and hydrogen, whose bonds come apart, beside ammonia, whose bonds are built.' }
+      body: 'Forming six N–H bonds releases more energy than breaking one N≡N triple bond and three H–H single bonds consumes. The net reaction is exothermic, releasing 93 kJ/mol.',
+      model: { type: 'molecules', items: ['nitrogen', 'hydrogen', 'ammonia'], caption: 'Nitrogen and hydrogen reactants beside synthesized ammonia molecules.' }
     }
   },
-  { reward: { log: 'The slag came apart in two steps.', title: 'Slag Cracked', body: 'Turning the second card round makes the carbon oxides cancel and leaves iron oxide splitting into iron and oxygen. Hess\'s law gave the heat without anyone running the reaction.' } },
-  { reward: { log: 'Two moles of gas became three.', title: 'Vent Sealed', body: 'Splitting steam turns two moles of gas into three, so the products have more ways to arrange than the reactants. The entropy change is positive, and the Crucible\'s vent loses its pressure.' } },
-  { reward: { log: 'The seal gave way at its crossing point.', title: 'Seal Broken', body: 'Above ΔH divided by ΔS, the spreading outweighs the heat the limestone costs and the free energy turns negative. The Crucible\'s core stands open.', last: true } }
+  { reward: { log: 'The slag came apart in two steps.', title: 'Slag Cracked', body: 'Reversing the second reaction step cancels carbon monoxide and carbon dioxide intermediates. Combining the enthalpy changes yields +824.2 kJ/mol for the decomposition of iron oxide via Hess\'s law.' } },
+  { reward: { log: 'Two moles of gas became three.', title: 'Vent Sealed', body: 'Splitting steam converts two moles of reactant gas into three moles of product gas. The net increase in gas molecules yields a positive standard entropy change of +89.0 J/(mol·K).' } },
+  { reward: { log: 'The seal gave way at its crossing point.', title: 'Seal Broken', body: 'The decomposition becomes spontaneous when temperature exceeds the crossing point (T = ΔH / ΔS = 1100 K). Above this temperature, free energy is negative (ΔG < 0).', last: true } }
 ];
 
 /* ------------------------------------------------------------------
@@ -82,10 +82,6 @@ export const STAGES = [
     return {
       id: 'p1-jacket',
       title: 'Phase 1 · The Jacket',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'This is the siphon core the Fifth Guild built at the rim, and each phase puts one of the benches in front of it again. A miss costs the table a point of Integrity; three knock it back, and nothing you have read is lost.'
-      },
       prompt: 'Set the marker to the heat the water jacket absorbed from the Crucible, in kilojoules.',
       widget,
       table: heatTable({
@@ -283,10 +279,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Set the marker; the cup prints no heat.'],
-  2: ['Turn the dial to the value you worked out.'],
-  3: ['Drag cards into the stack; Flip turns one round.'],
-  4: ['Turn the dial to the value you worked out.'],
+  1: ['Set the marker.'],
+  2: ['Turn the dial to your answer.'],
+  3: ['Drag cards into the stack; tap Flip to reverse.'],
+  4: ['Turn the dial to your answer.'],
   5: ['Turn the Temperature dial; set the marker.']
 };
 applyNotes(STAGES, NOTES);
@@ -299,16 +295,8 @@ export const DEBRIEF = {
   clueAwarded: 'clue_ember_siphon',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'The Crucible splits along its firebrick seams. Inside is a heat exchanger that carried megawatts away from the shelters without a wisp of steam reaching the sky.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every phase was a bench you had already worked: a bath, a ledger of bonds, a stack of steps, a table of entropies and a balance of two terms. That is all of Ember Reach, and it was enough to read the machine.'
-    },
-    {
-      heading: 'Next',
-      body: 'The siphon manifold goes into the Case File. The raiders were feeding a hidden endothermic process far below the crust, and no thermometer at the surface could have seen it.'
+      heading: 'The Siphon Manifold',
+      body: 'The Crucible\'s geothermal core operated through coordinated thermodynamic processes: heat transfer across water jackets, bond rearrangements, multi-step enthalpy balances, gas entropy expansion, and temperature-dependent free energy equilibria.'
     }
   ]
 };

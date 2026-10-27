@@ -18,7 +18,7 @@ import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS } from './cloud-draw.js';
 import { buildPlateFrame } from '../../engine/lab-props.js';
 import { SHOT_STEPS, MAX_SHOTS, trackReason, FILMS, plateRead, trackRead, RING_CIRCUMFERENCE_PM, viewRead } from './cloud-read.js';
-import { fixtureLayout } from '../layout.js';
+import { fixtureLayout, joystickGeometry } from '../layout.js';
 
 export const CLOUD_KIT_ID = 'cloud';
 export const CLOUD_BOUNDS_H = 64;
@@ -131,10 +131,10 @@ function dress3d(f, state, c) {
       mat.color.set(activeRead.fits ? 0x78a142 : 0xd99423);
       for (let i = 0; i <= N; i++) {
         const th = (i / N) * Math.PI * 2;
-        const y = activeRead.fits ? A_m * Math.cos(n * th) : A_m * 0.3 * Math.cos(n * th);
-        pos[i * 3] = R_m * Math.cos(th);
-        pos[i * 3 + 1] = Math.max(0.001, y + A_m * 0.4);
-        pos[i * 3 + 2] = R_m * Math.sin(th);
+        const dr = activeRead.fits ? A_m * Math.cos(n * th) : A_m * 0.3 * Math.cos(n * th);
+        pos[i * 3] = (R_m + dr) * Math.cos(th);
+        pos[i * 3 + 1] = 0.002;
+        pos[i * 3 + 2] = (R_m + dr) * Math.sin(th);
       }
       geo.attributes.position.needsUpdate = true;
     };
@@ -146,10 +146,12 @@ function dress3d(f, state, c) {
       const A_m = R_m * 0.16;
       for (let i = 0; i <= N; i++) {
         const th = (i / N) * Math.PI * 2;
-        const y = activeRead.fits
+        const dr = activeRead.fits
           ? A_m * Math.cos(n * th) * Math.cos(phase)
           : A_m * 0.08 * Math.cos(n * th - phase); // non-integer smeared/cancelled
-        pos[i * 3 + 1] = Math.max(0.001, y + A_m * 0.3);
+        pos[i * 3] = (R_m + dr) * Math.cos(th);
+        pos[i * 3 + 1] = 0.002;
+        pos[i * 3 + 2] = (R_m + dr) * Math.sin(th);
       }
       geo.attributes.position.needsUpdate = true;
     };
@@ -157,59 +159,10 @@ function dress3d(f, state, c) {
     group.userData.sync = sync;
     sync(f, state);
   }
-  if (f.kind === 'cloud') {
-    const lay = fixtureLayout(f);
-    const dialRows = lay.dials;
-    const picTop = (dialRows.length ? dialRows[dialRows.length - 1].y - lay.box.y0 : 6) + 3.6;
-    const pic = f.props.pic ?? 34;
-    const s_units = pic * s;
-    const centerPlate = toPlate({ x: box.x0 + 2.5 + pic / 2, y: box.y0 + picTop + pic / 2 });
-
-    const own = c.own ? c.own.bind(c) : m => { m.userData.tableOwned = true; return m; };
-    const slicePlaneGeo = new THREE.PlaneGeometry(s_units * 0.95, s_units * 0.95);
-    const slicePlaneMat = own(new THREE.MeshBasicMaterial({
-      color: 0x4ade80,
-      transparent: true,
-      opacity: 0.18,
-      side: THREE.DoubleSide,
-      depthWrite: false
-    }));
-    slicePlaneMat.userData = { ...slicePlaneMat.userData, tableOwned: true };
-    const slicePlane = new THREE.Mesh(slicePlaneGeo, slicePlaneMat);
-    const edgeMat = own(new THREE.LineBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.8 }));
-    edgeMat.userData = { ...edgeMat.userData, tableOwned: true };
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(slicePlaneGeo),
-      edgeMat
-    );
-    slicePlane.add(edges);
-    slicePlane.position.set(centerPlate.x, c.ground + 0.035, centerPlate.z);
-    slicePlane.rotation.x = -Math.PI / 2;
-    slicePlane.visible = false;
-    group.add(slicePlane);
-
-    const syncCloud = (fixture, st) => {
-      const read = plateRead(st, fixture.id);
-      slicePlane.visible = Boolean(read.slice);
-      if (read.slice) {
-        slicePlane.rotation.set(0, 0, 0);
-        slicePlane.rotation.x = -Math.PI / 2 - (read.view?.pitch || 0);
-        slicePlane.rotation.y = -(read.view?.yaw || 0);
-        const isEmpty = read.shown.length <= 0.06 * read.fired;
-        const color = isEmpty ? 0x4ade80 : 0xe59b24;
-        slicePlaneMat.color.set(color);
-        edges.material.color.set(color);
-      }
-    };
-    group.userData.sync = syncCloud;
-    syncCloud(f, state);
-  }
   if (f.kind === 'view') {
-    const slice = Boolean(f.dials?.slice);
-    const jcx = f.at.x - (slice ? 6.5 : 5);
-    const jcy = f.at.y + (slice ? 0.5 : 1);
-    const centerPlate = toPlate({ x: jcx, y: jcy });
-    const R_m = 8.5 * s;
+    const j = joystickGeometry(f);
+    const centerPlate = toPlate({ x: j.cx, y: j.cy });
+    const R_m = j.r * s;
 
     const own = c.own ? c.own.bind(c) : m => { m.userData.tableOwned = true; return m; };
 
@@ -261,7 +214,7 @@ function dress3d(f, state, c) {
 
     const syncJoystick = (fixture, st) => {
       const v = viewRead(st, fixture.id);
-      const fx = (v.turn / 11) * 2 - 1;
+      const fx = (v.turn / 12) * 2 - 1;
       const fy = -(v.tilt / 3);
       const maxTilt = 0.35;
       stickGroup.rotation.z = -fx * maxTilt;
@@ -323,7 +276,7 @@ export const filmPiece = (id, label, at, shape) => {
    FIXTURES (each builder returns the fixture and the zones it owns)
    ------------------------------------------------------------------ */
 
-const EXPOSURE = ['1 shot', '50 shots', '500 shots'];
+const SHOT_LABELS = ['1', '50', '500'];
 
 /**
  * A cloud plate: an exposure dial, a Run key that fires, and the picture. `ring` ('disc' or 'band') gives it a counting ring (a dial
@@ -336,7 +289,7 @@ export function cloudPlate(id, label, at, orbital, { seed = 1, ring = null, ring
   const picTop = 8 + 5 * Math.max(0, rows - 1) + 3.6;
   const size = { w: 64, h: Math.round((picTop + side + 8.5) * 10) / 10 };
   const dials = {};
-  if (exposure) dials.burst = { min: 1, max: 3, step: 1, value: 1, label: 'Exposure', labels: EXPOSURE };
+  if (exposure) dials.burst = { min: 1, max: 3, step: 1, value: 1, label: 'Number of shots:', labels: SHOT_LABELS };
   if (ring) dials.ring = { min: 0, max: ringMax, step: ringStep, value: 0, label: 'Ring (pm)' };
   if (slice) dials.slice = { min: 0, max: 1, step: 1, value: 0, label: 'Slice', labels: ['Off', 'On'] };
   dials.fired = { min: 0, max: MAX_SHOTS, step: 1, value: 0 };
@@ -360,16 +313,15 @@ export function cloudPlate(id, label, at, orbital, { seed = 1, ring = null, ring
 
 /** The joystick view every turning cloud shares: turn (0 to 330 degrees, 30 a step) and tilt (-90 to 90), and optionally a slice switch. */
 export function viewFixture(id, at, { slice = false } = {}) {
-  const rows = 2 + (slice ? 1 : 0);
-  const size = { w: 44, h: slice ? 28 : 22 };
+  const size = slice ? { w: 54, h: 32 } : { w: 42, h: 24 };
   const dials = {
-    turn: { min: 0, max: 11, step: 1, value: 1, label: 'Turn (deg)', labels: Array.from({ length: 12 }, (_, i) => String(i * 30)) },
-    tilt: { min: -3, max: 3, step: 1, value: 1, label: 'Tilt (deg)', labels: [-3, -2, -1, 0, 1, 2, 3].map(i => String(i * 30)) }
+    turn: { min: 0, max: 12, step: 0.05, value: 1, label: 'Turn' },
+    tilt: { min: -3, max: 3, step: 0.05, value: 1, label: 'Tilt' }
   };
   if (slice) dials.slice = { min: 0, max: 1, step: 1, value: 0, label: 'Slice', labels: ['Off', 'On'] };
   return {
     id, kind: 'view', label: 'View', at: { ...at }, size, noRun: true, dials,
-    props: { joystick: true }
+    props: { joystick: true, hideLabel: true }
   };
 }
 

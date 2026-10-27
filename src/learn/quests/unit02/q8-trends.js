@@ -184,7 +184,7 @@ export const STAGES = [
   (() => {
     const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { between: true, feel: true } });
     return {
-      title: 'Plus One, Not Plus Eleven',
+      title: 'Effective Nuclear Charge',
       prompt: 'Sort the atoms by the charge their outermost electron actually feels.',
       widget,
       table: trendsTable({
@@ -218,7 +218,7 @@ export const STAGES = [
   (() => {
     const st = stripFixture(STRIP, { x: 27, y: 18 });
     return {
-      title: 'Three Costs',
+      title: 'Ionization Energy',
       prompt: 'Order lithium, beryllium and boron by the energy it costs to strip one electron, cheapest first.',
       widget,
       table: trendsTable({
@@ -245,7 +245,7 @@ export const STAGES = [
       reward: {
         log: 'Li 520, B 801, Be 899.',
         title: 'Ionization Energy',
-        body: 'The energy it takes to strip the outermost electron from an atom is its ionization energy, and it generally rises across a row. Boron dips below beryllium because its outer electron is in a 2p row, which holds an electron less tightly than a 2s row does.'
+        body: 'The energy required to remove the outermost electron from an atom is its ionization energy, which generally rises across a row. Boron dips below beryllium because its outer electron is in a 2p subshell, which is higher in energy and shielded by the 2s electrons.'
       }
     };
   })(),
@@ -255,7 +255,7 @@ export const STAGES = [
     const st = stripFixture(STRIP, { x: 27, y: 18 });
     const sz = sizerFixture(SIZER, { x: 76, y: 15 });
     return {
-      title: 'Plus, Minus and Neutral',
+      title: 'Ionic Radii',
       prompt: 'Make a sodium ion and a chlorine ion, then order them with a sodium atom, smallest first.',
       widget,
       table: trendsTable({
@@ -307,15 +307,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'One law explains the table: charge pulls, distance weakens the pull, and the electrons in between cancel some of the charge. Radius and ionization energy are that law measured two ways.'
+      body: 'Atomic structure governs periodic trends: nuclear charge pulls electrons inward, inner electrons shield outer electrons, and greater distance reduces attraction.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Nearly every property a chemist predicts about an element starts from where it sits on the table. You now know why.'
-    },
-    {
-      heading: 'Next',
-      body: 'That finishes the atoms of Lanternfall. The next world asks what happens when two of them come close enough to share what you have just measured.'
+      heading: 'Why It Matters',
+      body: 'Trends in atomic radius, effective nuclear charge, and ionization energy explain how elements interact and react across the periodic table.'
     }
   ]
 };
@@ -355,7 +351,7 @@ export const PRACTICE = [
       { id: 'd', label: 'Sodium' }
     ],
     answer: 'a',
-    explanation: 'Beryllium holds its outer electron harder than lithium or sodium, and a little harder than boron, whose outer electron is in a 2p row.'
+    explanation: 'Beryllium holds its outer electron harder than lithium or sodium, and a little harder than boron, whose outer electron is in a 2p subshell.'
   },
   {
     question: 'A sodium atom loses its outer electron and becomes Na+. How does its size change?',

@@ -257,7 +257,7 @@ function drawScale(ctx, w, h, rig, cfg, o) {
     plateText(ctx, name, ox, y - h * 0.035 - small * 0.25, { align: 'center', size: small * 0.85, color: PLATE_COLORS.amber });
   }
 
-  plateText(ctx, 'WAVELENGTH, EACH TICK TEN TIMES THE LAST', w / 2, h * 0.9, { align: 'center', size: small * 0.9, color: PLATE_COLORS.dim });
+  plateText(ctx, 'WAVELENGTH', w / 2, h * 0.9, { align: 'center', size: small * 0.9, color: PLATE_COLORS.dim });
 
   // The visible band, for a sense of where the eye sits on the ruler.
   ctx.fillStyle = 'rgba(184, 175, 160, 0.16)';

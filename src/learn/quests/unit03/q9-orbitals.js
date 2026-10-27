@@ -75,16 +75,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'A Magnet and a Gas',
-    prompt: 'A strong magnet is held beside a sealed flask of oxygen gas: what does it do to the oxygen?',
+    prompt: 'Does an external magnetic field attract oxygen gas, O2?',
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Picture the gases you know that metal fridge magnets stick to, and the gases they ignore.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Consider whether all electrons in molecular oxygen are truly paired in reality.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Put each gas beside the magnet and see how hard it pulls.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Test each diatomic gas sample beside the magnet on the bench.'
     }
   }),
 
@@ -92,7 +92,7 @@ export const STAGES = [
   {
     title: 'Four Gases',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'sort each gas by whether the magnet pulls on it.');
+      return testPrompt(QUEST_KEY, GUESSES, 'sort each gas by whether it is attracted to the magnet.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: moTable({
@@ -108,8 +108,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the gas cards, the test slot, "Test Sample" and the two trays.',
-      'Compare how hard the magnet pulls on each of the four gases.',
-      'Put each gas in the test slot, press "Test Sample", and file the gas by what the magnet did.'
+      'Test each diatomic gas to observe its magnetic behavior.',
+      'Sort gases attracted to the magnetic field into "Pulled" and the others into "Not pulled".'
     ],
     check(state) {
       const t = state.table;
@@ -123,8 +123,8 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Oxygen and diboron were pulled. Nitrogen and fluorine were not.',
-        title: 'Some Gases Are Magnetic',
-        body: `${verdictLine(QUEST_KEY, 'pulled')}Oxygen gas is pulled by a magnet, which is strange for a gas made of ordinary pairs of atoms. A Lewis drawing with every electron in a pair cannot say why, so the next bench looks for what a drawing misses.`
+        title: 'Paramagnetism in Diatomic Gases',
+        body: `${verdictLine(QUEST_KEY, 'pulled')}Liquid and gaseous oxygen are paramagnetic and attracted to a magnetic field. Standard Lewis structures show only paired electrons and fail to explain this paramagnetism, requiring molecular orbital theory.`
       };
     }
   },
@@ -134,7 +134,7 @@ export const STAGES = [
     const rack = moRack('a', 'O2', RACK_AT, { plain: true });
     return {
       title: 'Oxygen\'s Boxes',
-      prompt: 'Pour oxygen\'s twelve electrons into the boxes until the rack pulls on the magnet as hard as the real sample does.',
+      prompt: 'Fill oxygen\'s molecular orbital energy levels with its twelve valence electrons following the Aufbau principle and Hund\'s rule.',
       widget: { type: 'table', label: 'The bench' },
       table: moTable({
         zones: { containers: [moSupply('supply', 'Electrons', JAR_AT, DIATOMICS.O2.e), ...rack.containers] },
@@ -142,8 +142,8 @@ export const STAGES = [
       }),
       hints: [
         'Use the jar of electrons, the boxes and the magnet.',
-        'Compare the boxes in the top row of the electrons you placed: how many hold one arrow, and how many two.',
-        'Pour the electrons in from the bottom of the ladder up, putting one in each box of a row before pairing any, and test the sample with the magnet.'
+        'Fill degenerate pi-star antibonding orbitals singly with parallel spins before pairing.',
+        'Add twelve electrons starting from the lowest energy molecular orbitals upward.'
       ],
       check(state) {
         const t = state.table;
@@ -156,9 +156,9 @@ export const STAGES = [
       },
       reward: {
         log: 'Two electrons stand alone.',
-        title: 'Molecular Orbitals',
-        body: 'When two atoms join, their orbitals combine into molecular orbitals: the lower boxes hold the atoms together, the bonding orbitals, and the upper ones push them apart, the antibonding orbitals. Oxygen\'s last two electrons go one each into two separate upper boxes, so they stand alone and a magnet pulls them.',
-        model: { type: 'molecule', name: 'oxygen', caption: 'Oxygen: two atoms held by a double bond, with two electrons standing alone. Drag to turn it.' },
+        title: 'Molecular Orbital Theory and Paramagnetism',
+        body: 'Atomic orbitals combine into bonding orbitals and higher-energy antibonding orbitals. In O2, Hund\'s rule places the last two valence electrons unpaired into separate degenerate antibonding orbitals, explaining its paramagnetism.',
+        model: { type: 'molecule', name: 'oxygen', caption: 'Oxygen molecule showing two unpaired electrons in antibonding molecular orbitals.' },
         last: true
       }
     };
@@ -172,16 +172,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'What You Found',
-      body: 'Atomic boxes combine into molecular ones, half of them bonding and half antibonding, and electrons fill them from the bottom up, one to a box before any pair up. Oxygen\'s last two electrons stand alone, and that is why a magnet pulls it.'
+      heading: 'Summary',
+      body: 'Molecular orbital theory describes bonding through combinations of atomic orbitals into bonding and antibonding molecular orbitals. Oxygen possesses two unpaired electrons in antibonding orbitals, accounting for its paramagnetism.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Where a Lewis structure fails, as with oxygen\'s magnetism, the boxes still work. That is why chemists keep both models and know which question each one answers.'
+      heading: 'Bond Order and Stability',
+      body: 'Bond order equals half the difference between bonding and antibonding electrons, providing quantitative predictions of bond stability.'
     },
     {
       heading: 'Next',
-      body: 'Ligar\'s last guard stands at the end of the cut. It is made of everything you have measured here.'
+      body: 'Apply concepts of chemical bonding, molecular geometry, and electron structure in the unit assessment.'
     }
   ]
 };

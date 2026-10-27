@@ -29,7 +29,7 @@ export const UNIT_03 = {
     {
       id: 'q1-joins',
       title: 'What Holds',
-      line: 'Test what grips the blast rubble.',
+      line: 'Distinguish ionic, covalent, and metallic bonding.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -38,7 +38,7 @@ export const UNIT_03 = {
     {
       id: 'q2-lattice',
       title: 'Stone and Wire',
-      line: 'Test the rubble and pick the rescue liner.',
+      line: 'Relate macroscopic properties to crystal lattices and networks.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -47,7 +47,7 @@ export const UNIT_03 = {
     {
       id: 'q3-distance',
       title: 'Bond Energy',
-      line: 'Measure bonds to size the breaker charge.',
+      line: 'Examine potential energy curves and bond energies.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -56,7 +56,7 @@ export const UNIT_03 = {
     {
       id: 'q4-dots',
       title: 'Lewis Structures',
-      line: 'Draw molecules to map the weak seams.',
+      line: 'Construct Lewis structures and apply the octet rule.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -65,7 +65,7 @@ export const UNIT_03 = {
     {
       id: 'q5-resonance',
       title: 'Resonance',
-      line: 'Measure the bonds the drawings disagree about.',
+      line: 'Model resonance hybrids with intermediate bond orders.',
       arena: 'bench',
       stageCount: 3,
       status: 'live',
@@ -74,7 +74,7 @@ export const UNIT_03 = {
     {
       id: 'q6-shape',
       title: 'Molecular Shape',
-      line: 'Read shapes to place the breakthrough.',
+      line: 'Predict three-dimensional geometries using VSEPR theory.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -83,7 +83,7 @@ export const UNIT_03 = {
     {
       id: 'q7-polarity',
       title: 'Polarity',
-      line: 'Sort molecules by how the field turns them.',
+      line: 'Determine molecular polarity from bond dipoles and symmetry.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -92,7 +92,7 @@ export const UNIT_03 = {
     {
       id: 'q8-hybrid',
       title: 'Hybridization',
-      line: 'Blend orbitals to explain the rigid seams.',
+      line: 'Form hybrid orbitals, sigma bonds, and pi bonds.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -101,7 +101,7 @@ export const UNIT_03 = {
     {
       id: 'q9-orbitals',
       title: 'Molecular Orbitals',
-      line: "Fill electron boxes to read the warden's core.",
+      line: 'Fill molecular orbitals and explain paramagnetism.',
       arena: 'bench',
       stageCount: 3,
       status: 'live',
@@ -111,7 +111,7 @@ export const UNIT_03 = {
     {
       id: 'boss-warden',
       title: 'Basalt Warden',
-      line: 'Crack the warden, expose the heat-weapon cut.',
+      line: 'Apply bonding concepts to analyze the basalt warden.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

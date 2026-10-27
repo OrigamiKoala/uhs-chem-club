@@ -91,7 +91,7 @@ export const STAGES = [
     reward: {
       log: 'Two blocks met at one reading.',
       title: 'Thermal Equilibrium',
-      body: 'Touching blocks pass energy between them until both read the same temperature, which is called thermal equilibrium. The energy that crossed, always from the hotter block to the colder one, is called heat.'
+      body: 'Touching blocks transfer energy until they reach the same temperature, which is thermal equilibrium. The energy transferred from the hotter block to the colder one is heat.'
     }
   },
 
@@ -114,7 +114,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Compare the temperature on each card with how much material it holds.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to the card you expect to deliver more heat.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -128,7 +128,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the source you would bet on. Next, the frozen valve can be touched to each source and its thermometer read.'
+      body: 'Next, test each source on the frozen valve and observe the temperature change.'
     }
   },
 
@@ -136,13 +136,7 @@ export const STAGES = [
   {
     id: 's3-spark-tank',
     title: 'The Spark and the Tank',
-    // The guess comes back here, locked in.
-    get prompt() {
-      const guess = recall(QUEST_KEY);
-      return guess && GUESS_LABEL[guess]
-        ? `You predicted ${GUESS_LABEL[guess]}: warm the frozen valve as far as you can by joining it to a source.`
-        : 'Warm the frozen valve as far as you can by joining it to a source.';
-    },
+    prompt: 'Warm the frozen valve as far as you can by joining it to a source.',
     widget,
     table: heatTable({
       pieces: [
@@ -154,7 +148,7 @@ export const STAGES = [
     hints: [
       'Use the three blocks and the thermometer printed on each.',
       'Compare how far the valve\'s reading rises after each source, and how much of each source there is.',
-      'A source can only hand over the energy its particles hold, so a pinch of material has little to give however hot it is.'
+      'Heat transferred depends on the total mass of the source as well as its temperature.'
     ],
     check(state) {
       const r = blockRead(state.table, 'valve');
@@ -162,16 +156,10 @@ export const STAGES = [
       if (r.T >= 30) return { ok: true };
       return { ok: false, msg: `The frozen valve reads ${fixed(r.T, 1)} °C.` };
     },
-    get reward() {
-      const guess = recall(QUEST_KEY);
-      const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'tank'
-        ? 'You bet on the tank, and the thermometer agreed. '
-        : 'The thermometer did not agree with your bet, which is how a guess gets better. ';
-      return {
-        log: 'The tank warmed the valve; the spark barely did.',
-        title: 'Temperature Is Not Amount',
-        body: `${verdict}Temperature tells how fast each particle moves, not how much energy there is to give. The tank holds a huge number of slower particles, so it warmed the valve, while the few fast ones in a spark hardly did.`
-      };
+    reward: {
+      log: 'The tank warmed the valve; the spark barely did.',
+      title: 'Temperature Is Not Amount',
+      body: 'Temperature measures average particle motion, not total heat. The tank contains vastly more particles than a spark, so it delivers far more heat even at a lower temperature.'
     }
   },
 
@@ -218,7 +206,7 @@ export const STAGES = [
       reward: {
         log: 'Two baths warmed and two cooled.',
         title: 'Exothermic and Endothermic',
-        body: 'A change that gives heat out to its surroundings is exothermic, and the water around it warms. A change that takes heat in is endothermic, and the water cools. The chemicals inside the dashed line are the system, and everything outside it is the surroundings.'
+        body: 'An exothermic process releases heat to its surroundings, warming the water. An endothermic process absorbs heat, cooling the water. The reacting chemicals are the system, and everything outside is the surroundings.'
       }
     };
   })()
@@ -241,15 +229,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Heat is energy crossing from a hotter body to a colder one until both read the same. A body\'s temperature says how fast its particles move, not how much energy it can hand over, and the thermometer in a bath reports on the surroundings of whatever is reacting.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every measurement at Ember Reach is a bath, a thermometer and a decision about which side of the line the energy went. A hot spark and a warm tank are only the first two things that will not be what they look like.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench turns a thermometer rise into joules, so that heat has a size as well as a direction.'
+      body: 'Heat flows from a hotter object to a colder one until both reach thermal equilibrium. Temperature measures average particle motion rather than total heat energy, and the water bath measures temperature changes in the surroundings.'
     }
   ]
 };

@@ -312,24 +312,10 @@ function paintPlate(ctx, f, state, b) {
     ly += 3.6;
   }
   if (read.slice) {
-    sideLine(ctx, F, sx, ly, isEmptySlice ? '★ NODAL PLANE' : 'SLICE ON', isEmptySlice ? '#4ade80' : AMBER, sw);
+    sideLine(ctx, F, sx, ly, 'SLICE ON', PHOS, sw);
     ly += 3.6;
-    sideLine(ctx, F, sx, ly, `${read.shown.length} OF ${read.fired} IN SLAB`, DIM, sw);
-    ly += 3.6;
-    if (isEmptySlice) {
-      sideLine(ctx, F, sx, ly, 'NO ELECTRONS HERE', '#4ade80', sw);
-    } else {
-      sideLine(ctx, F, sx, ly, 'CUTTING LOBES', DIM, sw);
-    }
+    sideLine(ctx, F, sx, ly, `DOTS: ${read.shown.length}`, read.shown.length <= 0.06 * read.fired ? '#4ade80' : DIM, sw);
     ly += 4.5;
-  }
-  if (f.props.view) {
-    well(ctx, F.x(sx), F.y(ly), F.len(sw), F.len(6.5), { fill: isEmptySlice ? '#1a2e1d' : WELL, stroke: isEmptySlice ? '#4ade80' : RIM });
-    say(ctx, 'NODAL SLICE (XY)', F.x(sx + sw / 2), F.y(ly + 3.25), F.size(2.1, 6.5), { align: 'center', color: isEmptySlice ? '#4ade80' : PLATE_COLORS.text, weight: 700 });
-    ly += 7.8;
-
-    well(ctx, F.x(sx), F.y(ly), F.len(sw), F.len(6.5), { fill: WELL, stroke: RIM });
-    say(ctx, '3D SLICE DEMO', F.x(sx + sw / 2), F.y(ly + 3.25), F.size(2.1, 6.5), { align: 'center', color: AMBER, weight: 700 });
   }
 }
 
@@ -340,16 +326,16 @@ function paintView(ctx, f, state, b) {
   const slice = Boolean(f.dials?.slice);
 
   // Fixture local coordinates
-  const lcx = f.size.w / 2 - (slice ? 6.5 : 5);
-  const lcy = f.size.h / 2 + (slice ? 0.5 : 1);
-  const R = 8.2;
+  const lcx = slice ? 18 : 14;
+  const lcy = f.size.h / 2;
+  const R = slice ? 12 : 9.5;
 
   const cx = F.x(lcx);
   const cy = F.y(lcy);
   const r = F.len(R);
 
   // 1. Header plaque
-  say(ctx, 'JOYSTICK VIEW', F.x(2.5), F.y(4.5), F.size(2.6, 7.5), { color: AMBER, weight: 700 });
+  say(ctx, 'JOYSTICK', F.x(2.5), F.y(3.6), F.size(2.5, 7.0), { color: AMBER, weight: 700 });
 
   // 2. Joystick socket (recessed dish)
   ctx.save();
@@ -384,7 +370,7 @@ function paintView(ctx, f, state, b) {
   for (let i = 0; i < 12; i++) {
     const th = (i / 12) * Math.PI * 2;
     const isMajor = i % 3 === 0;
-    const r1 = r - (isMajor ? F.len(1.4) : F.len(0.8));
+    const r1 = r - (isMajor ? F.len(1.5) : F.len(0.9));
     ctx.strokeStyle = isMajor ? STEEL : 'rgba(140, 131, 118, 0.35)';
     ctx.lineWidth = isMajor ? 1.2 : 0.8;
     ctx.beginPath();
@@ -394,15 +380,15 @@ function paintView(ctx, f, state, b) {
   }
 
   // 3. Puck / Joystick stick and head
-  const fx = (v.turn / 11) * 2 - 1;
+  const fx = (v.turn / 12) * 2 - 1;
   const fy = -(v.tilt / 3);
-  const px = F.x(lcx + fx * R * 0.72);
-  const py = F.y(lcy + fy * R * 0.72);
-  const pr = F.len(2.6);
+  const px = F.x(lcx + fx * R * 0.75);
+  const py = F.y(lcy + fy * R * 0.75);
+  const pr = F.len(3.2);
 
   // Shaft from center to knob
   ctx.strokeStyle = '#8c8376';
-  ctx.lineWidth = Math.max(2, F.sc * 0.28);
+  ctx.lineWidth = Math.max(2.5, F.sc * 0.35);
   ctx.beginPath();
   ctx.moveTo(cx, cy);
   ctx.lineTo(px, py);
@@ -443,21 +429,29 @@ function paintView(ctx, f, state, b) {
 
   ctx.restore();
 
-  // 4. Right side readouts
-  const rx = f.size.w - 17;
-  well(ctx, F.x(rx), F.y(3.5), F.len(15), F.len(slice ? 18.5 : 13), { fill: WELL, stroke: RIM });
-  say(ctx, `TURN ${deg(v.turn)}°`, F.x(rx + 1.8), F.y(7.2), F.size(2.3, 6.8), { color: PHOS, weight: 700 });
-  say(ctx, `TILT ${v.tilt >= 0 ? '+' : ''}${deg(v.tilt)}°`, F.x(rx + 1.8), F.y(11.4), F.size(2.3, 6.8), { color: PHOS, weight: 700 });
+  // 4. Right side readouts & controls
+  const rx = slice ? 33 : 25;
+  const rw = f.size.w - rx - 2.5;
+
+  well(ctx, F.x(rx), F.y(3.5), F.len(rw), F.len(12.5), { fill: WELL, stroke: RIM });
+  say(ctx, `TURN ${deg(v.turn)}°`, F.x(rx + rw / 2), F.y(7.2), F.size(2.3, 6.8), { align: 'center', color: PHOS, weight: 700 });
+  say(ctx, `TILT ${v.tilt >= 0 ? '+' : ''}${deg(v.tilt)}°`, F.x(rx + rw / 2), F.y(11.8), F.size(2.3, 6.8), { align: 'center', color: PHOS, weight: 700 });
 
   if (slice) {
-    const isNodal = v.slice && state.fixtures?.c && plateRead(state, 'c')?.shown?.length <= 0.06 * (plateRead(state, 'c')?.fired || 1);
-    const sliceColor = v.slice ? (isNodal ? '#4ade80' : AMBER) : DIM;
-    say(ctx, `SLICE ${v.slice ? 'ON' : 'OFF'}`, F.x(rx + 1.8), F.y(15.8), F.size(2.2, 6.2), { color: sliceColor, weight: 700 });
-    say(ctx, isNodal ? '★ NODAL' : 'TAP TO TOGGLE', F.x(rx + 1.8), F.y(19.8), F.size(1.9, 5.2), { color: isNodal ? '#4ade80' : DIM });
+    const sliceActive = Boolean(v.slice);
+    well(ctx, F.x(rx), F.y(18), F.len(rw), F.len(8), {
+      fill: sliceActive ? '#1a2e1d' : WELL,
+      stroke: sliceActive ? '#4ade80' : RIM
+    });
+    say(ctx, sliceActive ? 'SLICE ON' : 'SLICE OFF', F.x(rx + rw / 2), F.y(22.8), F.size(2.3, 6.8), {
+      align: 'center',
+      color: sliceActive ? '#4ade80' : DIM,
+      weight: 700
+    });
   }
 
   // 5. Instruction line at bottom
-  say(ctx, 'DRAG JOYSTICK TO AIM', F.x(f.size.w - 2), F.y(f.size.h - 2.6), F.size(2.0, 5.5), { align: 'right', color: DIM });
+  say(ctx, 'DRAG JOYSTICK OR IMAGE', F.x(f.size.w / 2), F.y(f.size.h - 1.8), F.size(2.0, 5.5), { align: 'center', color: DIM });
 }
 
 function paintTrack(ctx, f, state, b) {

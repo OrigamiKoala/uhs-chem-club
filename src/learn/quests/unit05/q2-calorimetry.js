@@ -83,7 +83,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Picture the same electric heater switched on under each one, and which thermometer you expect to climb faster.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to the card you expect to warm up more.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -97,7 +97,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the one you would bet on. Next, two cups on the same kind of heater will test it.'
+      body: 'Next, test both materials on the heater to measure how each warms.'
     }
   },
 
@@ -108,12 +108,7 @@ export const STAGES = [
     return {
       id: 's2-test',
       title: 'Equal Rises',
-      get prompt() {
-        const guess = recall(QUEST_KEY);
-        return guess && GUESS_LABEL[guess]
-          ? `You predicted ${GUESS_LABEL[guess]}: set the iron's heater so the iron rises as far as the water does.`
-          : 'Set the iron\'s heater so the iron rises as far as the water does.';
-      },
+      prompt: 'Set the iron\'s heater so the iron rises as far as the water does.',
       widget,
       table: heatTable({ fixtures: [w.fixture, i.fixture], zones: { slots: [w.slot, i.slot] } }),
       hints: [
@@ -127,16 +122,10 @@ export const STAGES = [
         if (Math.abs(I.dT - W.dT) < 0.1) return { ok: true };
         return { ok: false, msg: `The iron has risen ${fixed(I.dT, 1)} °C and the water ${fixed(W.dT, 1)} °C.` };
       },
-      get reward() {
-        const guess = recall(QUEST_KEY);
-        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'iron'
-          ? 'You bet on the iron, and the thermometers agreed. '
-          : 'The thermometers did not agree with your bet, which is how a guess gets better. ';
-        return {
-          log: 'Iron needed a tenth of the water\'s energy.',
-          title: 'Specific Heat Capacity',
-          body: `${verdict}Iron needed only about a tenth of the energy water did for the same rise. The energy that warms one gram by one degree is a material's specific heat capacity, c: 4.184 J for water and 0.449 J for iron, so the heat a sample takes in is q = m × c × ΔT.`
-        };
+      reward: {
+        log: 'Iron needed a tenth of the water\'s energy.',
+        title: 'Specific Heat Capacity',
+        body: 'Specific heat capacity (c) is the heat needed to warm one gram by one degree: 4.184 J/(g·°C) for water and 0.449 J/(g·°C) for iron. Total heat absorbed or released is given by q = m × c × ΔT.'
       }
     };
   })(),
@@ -164,7 +153,7 @@ export const STAGES = [
       hints: [
         'Use the cup, the fitting, the plate of facts and the slot.',
         'Compare how far the bath rose with how far the fitting fell.',
-        'Work the energy the bath gained back into the fitting\'s own mass and drop in temperature, then match the result to the list.'
+        'Use the heat gained by the water to calculate the fitting\'s specific heat capacity, then match it to the list.'
       ],
       check(state) {
         const t = state.table;
@@ -178,7 +167,7 @@ export const STAGES = [
       reward: {
         log: 'The measured c matched one metal on the list.',
         title: 'A Fingerprint',
-        body: 'Specific heat capacity belongs to the material, not to the sample, so measuring it can name a metal. In the cup, the energy the bath gained is the energy the metal lost.'
+        body: 'Specific heat capacity is a characteristic property of each substance. In an insulated cup, the heat gained by the water equals the heat lost by the metal fitting.'
       }
     };
   })(),
@@ -203,7 +192,7 @@ export const STAGES = [
       hints: [
         'Use the cup, the mix, the plate of facts and the marker.',
         'Compare the bath\'s weight and its rise with the numbers in the formula.',
-        'The energy the bath gained is its weight times c times its rise, and the reaction gave out that much.'
+        'Calculate the heat gained by the bath using q = m × c × ΔT, which equals the heat released by the reaction.'
       ],
       check(state) {
         const t = state.table;
@@ -217,7 +206,7 @@ export const STAGES = [
       reward: {
         log: 'The reaction\'s heat was read from the bath.',
         title: 'The Calorimeter',
-        body: 'A cup that traps the heat of a change in a weighed bath, so that a thermometer can measure it, is a calorimeter. The heat the bath gained is the heat the reaction gave out, which is why a calorimeter has a lid: heat that escapes never reaches the thermometer.'
+        body: 'A calorimeter traps heat in a weighed bath so a thermometer can measure the reaction. The heat gained by the bath equals the heat released by the reaction.'
       }
     };
   })()
@@ -240,15 +229,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The same energy warms different materials by very different amounts, and each material has its own specific heat capacity. A weighed bath turns a thermometer rise into joules by q = m × c × ΔT, and in a lidded cup the bath\'s gain is exactly what the sample or the reaction lost.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Nobody can put a joule meter inside a bond. Every heat figure in the rest of this world was first caught this way, in a bath with a lid, and the same bath is why a plant cools its machines with water.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench shares that heat out per mole of chemicals, so that a small scoop and a large one can be compared.'
+      body: 'Different substances require different amounts of heat per degree of warming according to their specific heat capacity. In an insulated calorimeter, q = m × c × ΔT converts a measured temperature rise into joules released by a reaction.'
     }
   ]
 };

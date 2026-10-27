@@ -34,7 +34,7 @@ export function cardColumn(items, { x = 34, y0 = null, pitch = 14 } = {}) {
  * The table of a predict stage: the guesses as cards on the left, and one slot on the right to lay the chosen one in. No fixture, no
  * tool, no key: the guess is made before the experiment is on the table.
  */
-export function predictTable(items, { slot = 'predict', label = 'My prediction' } = {}) {
+export function predictTable(items, { slot = 'predict', label = 'Prediction' } = {}) {
   return gasTable({
     pieces: cardColumn(items),
     zones: { slots: [{ id: slot, label, at: { x: 108, y: 30 }, size: { w: 40, h: 14 } }] }
@@ -42,7 +42,7 @@ export function predictTable(items, { slot = 'predict', label = 'My prediction' 
 }
 
 /** The check, onClear and reward-verdict wiring of a predict stage, so every quest's is the same. */
-export function predictStage({ key, title, prompt, items, hints, reward, slot = 'predict', label = 'My prediction' }) {
+export function predictStage({ key, title, prompt, items, hints, reward, slot = 'predict', label = 'Prediction' }) {
   return {
     title,
     predict: true,
@@ -51,7 +51,7 @@ export function predictStage({ key, title, prompt, items, hints, reward, slot = 
     table: predictTable(items, { slot, label }),
     hints,
     check(state) {
-      if (!cardIn(state.table, slot)) return { ok: false, notYet: true, msg: 'Lay one card in the slot.' };
+      if (!cardIn(state.table, slot)) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -69,10 +69,7 @@ export function guessOf(key, items) {
   return hit ? { id: hit[0], label: hit[1] } : null;
 }
 
-/** "You predicted ...", or nothing: the opening of a test stage's prompt and the verdict that opens its reward. */
-export const youPredicted = (key, items, rest, plain) => {
-  const g = guessOf(key, items);
-  return g ? `You predicted "${g.label}": ${rest}` : plain;
-};
+/** Direct prompt without prediction echo text. */
+export const youPredicted = (key, items, rest, plain) => plain;
 
 export { whereIs };

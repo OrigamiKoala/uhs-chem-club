@@ -890,12 +890,10 @@ export class LearnFrame {
 
   updateStageActions() {
     if (!this.el.stageActions) return;
-    const hasSlice = Boolean(this.stage?.hasSliceExplainer || this.stage?.table?.fixtures?.some?.(f => f.dials?.slice || f.props?.slice));
     this.el.stageActions.innerHTML = `
       <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Replay the instrument tour">Tour</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
-      ${hasSlice ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="slice-explainer" title="View 3D animation explaining how orbital slicing works">Slice 3D</button>' : ''}
-      ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel to view 3D bench" aria-label="Fold stage panel">Fold Panel</button>' : ''}
+      ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
   }
 

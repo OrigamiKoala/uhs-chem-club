@@ -343,8 +343,8 @@ export function showSliceExplainerModal() {
     <div class="lq-slice-explainer-modal" style="max-width:580px;margin:auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #29241f;padding-bottom:8px;">
         <div>
-          <span class="eyebrow lit" style="color:#e59b24;font-size:10px;letter-spacing:1px;font-weight:700;">3D ORBITAL SLICING</span>
-          <h3 style="margin:2px 0 0;font-size:1.15rem;color:#dcd6cc;font-weight:700;">What is a Slice?</h3>
+          <span class="eyebrow lit" style="color:#e59b24;font-size:10px;letter-spacing:1px;font-weight:700;">ORBITAL SLICING</span>
+          <h3 style="margin:2px 0 0;font-size:1.15rem;color:#dcd6cc;font-weight:700;">Cross-Sectional Slicing</h3>
         </div>
         <button type="button" class="btn-secondary quest-btn-sm" data-close-modal="true" style="padding:3px 8px;">✕</button>
       </div>
@@ -353,13 +353,13 @@ export function showSliceExplainerModal() {
 
       <div style="background:#14120f;border:1px solid #29241f;padding:12px;font-size:12px;line-height:1.6;color:#dcd6cc;margin-bottom:14px;border-radius:2px;">
         <div style="margin-bottom:8px;">
-          <strong style="color:#e59b24;">1. Orbitals are 3D clouds:</strong> Electrons do not orbit on rings; they form a 3D probability cloud. When looking at a 3D cloud from the front, electrons in front and back overlap in your sight, hiding the empty space inside.
+          <strong style="color:#e59b24;">1. Probability Clouds:</strong> Electrons occupy three-dimensional probability distributions rather than fixed orbits. Projecting a cloud onto a flat plane causes foreground and background density to overlap.
         </div>
         <div style="margin-bottom:8px;">
-          <strong style="color:#38bdf8;">2. A slice is a thin flat slab:</strong> Turning "Slice" ON keeps only the electrons lying inside a thin flat slab cut through the middle. Everything outside the slab is cut away.
+          <strong style="color:#38bdf8;">2. Cross-Sectional Slicing:</strong> Slicing isolates a thin cross-section through the center of the orbital, removing occluding density in front and behind.
         </div>
         <div>
-          <strong style="color:#4ade80;">3. The Nodal Plane:</strong> Between the two lobes of a p orbital lies a flat plane where the electron is <em>never found</em> (probability density = 0). When you rotate the cloud so your slice aligns with this plane, the slice shows almost no dots!
+          <strong style="color:#4ade80;">3. Nodal Planes:</strong> A p orbital contains a nodal plane between its lobes where electron probability density is zero. Orienting the slice along this plane reveals the absence of electron density.
         </div>
       </div>
 

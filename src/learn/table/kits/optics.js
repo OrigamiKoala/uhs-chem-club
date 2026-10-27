@@ -22,7 +22,7 @@ import { registerKit } from './registry.js';
 import { pulseNs, nmToHz } from '../../engine/lightdata.js';
 import { detectorsOn, pulseRead, cellRead, settleLadder, TOP, seated, waveRead } from './optics-read.js';
 import { wavelengthRgb } from '../../engine/lightdata.js';
-import { buildWaveRibbon, buildPhotonRow } from '../../engine/lab-props-lanternfall.js';
+import { buildPhotonRow } from '../../engine/lab-props-lanternfall.js';
 import { paintPiece, faceKey, paintFixture, RECTS, lampLook } from './optics-draw.js';
 import { litSource } from './optics-read.js';
 import {
@@ -121,22 +121,7 @@ function dress3d(f, state, c) {
   const { THREE, scale: s, toPlate, box } = c;
   const group = new THREE.Group();
   const put = (obj, ux, uy, y = 0) => { const p = toPlate({ x: ux, y: uy }); obj.position.set(p.x, c.ground + y, p.z); group.add(obj); return obj; };
-  if (f.kind === 'wave') {
-    // The wave itself, standing over its screen: a ribbon with as many crests as the lamp's light has along the ruler (Lanternfall, 2026-10-23).
-    const x0f = f.props.left ?? 24;
-    const rw = f.size.w - x0f - 2;
-    const top = f.dials.colour ? 13 : 6;
-    const wy0 = top + 9 + 2;
-    const wy1 = f.size.h - 7;
-    const rib = buildWaveRibbon(c, { len: rw * s * 0.94, rise: (wy1 - wy0) * s * 0.75 });
-    put(rib, box.x0 + x0f + rw / 2, box.y0 + (wy0 + wy1) / 2, 0.006);
-    const sync = (fx, st) => {
-      const r = waveRead(st, fx.id);
-      rib.userData.set(r && r.kind === 'light' ? r.plan.crests : null, r && r.kind === 'light' ? wavelengthRgb(r.nm) : null);
-    };
-    group.userData.sync = sync;
-    sync(f, state);
-  } else if (f.kind === 'cell') {
+  if (f.kind === 'cell') {
     // Packets of light in the tube: as many as the lamp's brightness, as big as the colour's frequency (a brighter lamp is more packets, never bigger).
     const tx0c = f.props.tx0 ?? 20;
     const tx1c = f.size.w - 24;
@@ -351,7 +336,7 @@ export function photocell(id, label, at, { settings = null, start = 1, lamp: lam
       id, kind: 'cell', label, at: { ...at }, size: sz, dials,
       ...(record ? { runLabel: typeof record === 'string' ? record : 'Record' } : { noRun: true }),
       props: {
-        backdrop: true, holder, ...(lampSlot ? { lamp: lampId } : {}), ...(settings ? { settings } : {}),
+        backdrop: true, hideLabel: true, holder, ...(lampSlot ? { lamp: lampId } : {}), ...(settings ? { settings } : {}),
         ...(typeof brightness === 'number' ? { brightness } : {}), rowPitch: 6, tubeTop, tubeH, meterH, ...(lampSlot ? { tx0: 27 } : {})
       }
     },

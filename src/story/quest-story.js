@@ -154,7 +154,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.25, say: 'A gauge on the floor, on the side wall and on the roof of a sealed box all read the same, because a gauge counts knocks and counts them alike on every wall.' },
       { to: 0.5, say: 'The gas is not pressing down with its weight: more gas, less room or more heat all make the knocks harder or more frequent.' },
-      { to: 0.75, say: 'Temperature is the average energy of the crowd that does the knocking. Every gas law you will meet is one of these relationships written down with numbers.' }
+      { to: 0.75, say: 'Temperature measures the average kinetic energy of the particles, and pressure reflects how frequently and forcefully they collide with walls.' }
     ],
     filed: 'Filed: the station\'s gauges read true, so the pressure in the jammed holders is genuine and not a faulty needle.'
   },
@@ -190,7 +190,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.25, say: 'The lighter the gas, the faster its particles go, so the sooner it leaks through a hole and the further it spreads in the same time.' },
       { to: 0.5, say: 'The leak at the vent stack emptied at the same pace as krypton, and a leak that matches a known gas has the same kind of particle.' },
-      { to: 0.75, say: 'The last bench squeezes and chills a gas until the gas laws stop being true.' }
+      { to: 0.75, say: 'Graham\'s law connects effusion and diffusion rates inversely to the square root of molar mass.' }
     ],
     filed: 'Filed: the leak at the vent stack is krypton.'
   },
@@ -206,7 +206,7 @@ export const QUEST_STORY = {
   'unit04/boss-compressor': {
     scene: 'warm-cylinder',
     beats: [
-      { to: 0.25, say: 'Every phase was a bench you had already worked: a piston, a heater, a count, a blend and a pinhole. That was enough to read the machine and to read what it was keeping.' },
+      { to: 0.25, say: 'The compressor has ceased operation after each gas subsystem was stabilized.' },
       { to: 0.5, say: 'The Compressor stands cold in its housing. In its vault is a sealed cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it.' },
       { to: 0.75, say: 'Gay-Lussac\'s law says no sealed gas can do that unless something inside is giving off heat. The cylinder goes into the Case File.' }
     ],

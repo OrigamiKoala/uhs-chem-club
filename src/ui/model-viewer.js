@@ -169,6 +169,63 @@ function drawWave(ctx, w, h, wave, state, still) {
     ctx.arc(gateX, midY, 3.5, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Label the wavelength between two adjacent crests directly on the wave
+  const p = ((state.phase % 1) + 1) % 1;
+  const maxK = Math.ceil(plotW / wavelengthPx);
+  let bestX1 = null;
+  let bestDist = Infinity;
+  for (let k = -2; k <= maxK; k++) {
+    const c1 = pad + (k + p) * wavelengthPx;
+    const c2 = c1 + wavelengthPx;
+    if (c1 >= pad + 8 && c2 <= pad + plotW - 8) {
+      const mid = (c1 + c2) / 2;
+      const d = Math.abs(mid - (pad + plotW / 2));
+      if (d < bestDist) {
+        bestDist = d;
+        bestX1 = c1;
+      }
+    }
+  }
+  if (bestX1 != null) {
+    const x1 = bestX1;
+    const x2 = bestX1 + wavelengthPx;
+    const yCrest = midY - amp;
+    const yDim = Math.max(38, yCrest - 14);
+
+    ctx.save();
+    // Vertical dashed guides from peak to dimension line
+    ctx.strokeStyle = 'rgba(217, 148, 35, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(x1, yCrest); ctx.lineTo(x1, yDim - 2);
+    ctx.moveTo(x2, yCrest); ctx.lineTo(x2, yDim - 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Double-headed arrow line
+    ctx.strokeStyle = '#d99423';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, yDim); ctx.lineTo(x2, yDim);
+    ctx.moveTo(x1 + 5, yDim - 3); ctx.lineTo(x1, yDim); ctx.lineTo(x1 + 5, yDim + 3);
+    ctx.moveTo(x2 - 5, yDim - 3); ctx.lineTo(x2, yDim); ctx.lineTo(x2 - 5, yDim + 3);
+    ctx.stroke();
+
+    // Wavelength label
+    const text = `Wavelength: ${Math.round(state.nm)} nm`;
+    ctx.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    const tw = ctx.measureText(text).width;
+    const tx = (x1 + x2) / 2;
+    ctx.fillStyle = 'rgba(20, 18, 16, 0.85)';
+    ctx.fillRect(tx - tw / 2 - 4, yDim - 15, tw + 8, 13);
+    ctx.fillStyle = '#fffae0';
+    ctx.fillText(text, tx, yDim - 3);
+    ctx.restore();
+  }
 }
 
 /** Animate a wave model on its own canvas; it lies flat, so there is nothing to turn. */
@@ -284,18 +341,9 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
   // Header: Clear description of the process
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillStyle = '#8c8376';
-  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillText('BOHR ENERGY LADDER', pad, 12);
-
   ctx.fillStyle = '#dcd6cc';
   ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillText(`DROP: n = ${hi} \u2192 n = ${lo}`, pad + 130, 10);
-
-  ctx.textAlign = 'right';
-  ctx.fillStyle = colour;
-  ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillText(`${ladder.nm} nm LIGHT GIVEN OUT`, w - pad, 10);
+  ctx.fillText(`DROP: n = ${hi} \u2192 n = ${lo}`, pad, 10);
 
   // Ladder upright rails
   ctx.strokeStyle = '#3e3933';

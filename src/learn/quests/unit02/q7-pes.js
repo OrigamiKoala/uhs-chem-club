@@ -293,11 +293,11 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'This is the experiment that proved the rows you filled on the rack are real. Nobody drew the ladder in; the spectrum shows it.'
+      body: 'PES provides direct experimental evidence for subshell energy levels and electron configurations. The spectrum directly reflects the underlying electronic structure.'
     },
     {
       heading: 'Next',
-      body: 'Binding energy has a pattern across the whole table. The next bench measures the pull on an electron directly and follows it across and down.'
+      body: 'Binding energy follows predictable periodic trends across rows and down columns. The next bench measures atomic radii and ionization energies across the periodic table.'
     }
   ]
 };

@@ -107,13 +107,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Water\'s Electrons',
-    prompt: 'Place all of water\'s outer-shell electrons on the slate until every atom\'s lamp is lit.',
+    prompt: 'Place all valence electrons on the slate so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'H2O', 82, 28, 62]]),
     hints: [
       'Use the Pair tile and the slate.',
-      'Compare each atom\'s count with its lamp: hydrogen wants two and the others eight.',
-      'Fill the gaps between atoms first, then put whatever electrons are left onto the atom whose lamp is still dark.'
+      'Place electron pairs in bonds and as lone pairs to satisfy hydrogen\'s duet and oxygen\'s octet.',
+      'Form single bonds to both hydrogens, then add remaining electrons as lone pairs on oxygen.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
@@ -124,9 +124,9 @@ export const STAGES = [
     },
     reward: {
       log: 'Every electron placed, every lamp lit.',
-      title: 'Lewis Structure',
-      body: 'A drawing that puts every valence — outer-shell — electron in a bond or on an atom is a Lewis structure. Pairs on one atom are lone pairs, and each atom is content with eight round it, two for hydrogen: the octet rule.',
-      model: { type: 'shape', mol: 'H2O', caption: 'Water: two bonds and two lone pairs (the faint lobes) round the oxygen.' }
+      title: 'Lewis Structure and Octet Rule',
+      body: 'A Lewis structure represents all valence electrons distributed into covalent bonds or lone pairs. Most main group atoms attain stability with an octet of eight valence electrons, or a duet of two for hydrogen.',
+      model: { type: 'shape', mol: 'H2O', caption: 'Water molecule showing two covalent bonds and two lone pairs on oxygen.' }
     }
   },
 
@@ -134,16 +134,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Carbon Dioxide',
-    prompt: 'How many electron pairs do you think join the carbon to each oxygen in carbon dioxide?',
+    prompt: 'How many electron pairs join carbon to each oxygen atom in carbon dioxide?',
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Picture the electrons each atom brings, and what each atom needs round it to be content.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Count the total valence electrons available and consider how to fulfill each octet.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Place the electrons of carbon dioxide and watch the lamps.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Distribute the valence electrons of carbon dioxide on the slate to verify octets.'
     }
   }),
 
@@ -151,14 +151,14 @@ export const STAGES = [
   {
     title: 'Two Pairs Short',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'place all of carbon dioxide\'s electrons on the slate until every lamp is lit.');
+      return testPrompt(QUEST_KEY, GUESSES, 'distribute all valence electrons on the slate to give every atom a complete octet.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'CO2', 80, 28, 68]]),
     hints: [
       'Use the Pair tile, "Lift Out" and the slate.',
-      'Compare the lamp on carbon with the lamps on the oxygen atoms once a pair stands in each gap.',
-      'Where an atom is short, lift a pair off its neighbour with "Lift Out" and put it in the gap between them.'
+      'Check whether carbon has a full octet when single bonds are used.',
+      'Convert lone pairs from adjacent oxygen atoms into shared pairs to complete carbon\'s octet.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
@@ -170,9 +170,9 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Neighbours share a second pair.',
-        title: 'Multiple Bonds Share More',
-        body: `${verdictLine(QUEST_KEY, 'two')}When one pair in a gap leaves an atom short, the atoms beside it share a second pair between them. Carbon dioxide ends with a double bond on each side of the carbon.`,
-        model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide: two shared pairs between the carbon and each oxygen.' }
+        title: 'Double Bonds and Octets',
+        body: `${verdictLine(QUEST_KEY, 'two')}When single bonds leave an atom short of an octet, lone pairs become shared pairs. Carbon dioxide achieves a complete octet on every atom by forming a double bond to each oxygen.`,
+        model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide molecule with two double bonds.' }
       };
     }
   },
@@ -180,13 +180,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Middle',
-    prompt: 'Build hypofluorous acid, HOF, so that every lamp is lit and no electron is left.',
+    prompt: 'Construct hypofluorous acid, HOF, so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'HOF', 82, 32, 62, HOF_POS]]),
     hints: [
       'Use the Pair tile and the slate.',
-      'Compare how many shared pairs each atom is allowed to take on this board.',
-      'The atom the others attach to must be allowed more than a single shared pair.'
+      'Identify which atom can form more than one covalent bond.',
+      'Hydrogen and fluorine only form single bonds, so oxygen must be the central atom.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
@@ -198,20 +198,20 @@ export const STAGES = [
     reward: {
       log: 'The atom that joins the others.',
       title: 'Central Atom',
-      body: 'The atom in the middle, which the others attach to, is the central atom. An atom that can share only one pair, like hydrogen or fluorine, can never be it.'
+      body: 'The atom that links multiple terminal atoms is the central atom. Terminal atoms like hydrogen and fluorine can only form a single covalent bond and cannot serve as the central atom.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Amber Lamp',
-    prompt: 'Place every electron in boron trifluoride so that no electron is left and no atom holds more than it can.',
+    prompt: 'Distribute all valence electrons in boron trifluoride so no atom exceeds an octet.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'BF3', 82, 34, 62]]),
     hints: [
       'Use the Pair tile and the slate.',
-      'Compare how many shared pairs boron can take with how many each fluorine atom is willing to share.',
-      'Count the shared pairs round boron when every fluorine atom takes exactly one.'
+      'Distribute single bonds to each fluorine atom, then add lone pairs to complete fluorine octets.',
+      'Boron contributes three valence electrons and is stable with six valence electrons in BF3.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
@@ -226,8 +226,8 @@ export const STAGES = [
     reward: {
       log: 'Boron stops at six.',
       title: 'Incomplete Octet',
-      body: 'An atom that ends with fewer than eight electrons round it has an incomplete octet. Boron is the usual case: it brings three electrons, and fluorine will not share a second pair to make up the rest.',
-      model: { type: 'shape', mol: 'BF3', caption: 'Boron trifluoride: three bonds in a flat triangle, six electrons round the boron.' },
+      body: 'An atom that remains stable with fewer than eight valence electrons has an incomplete octet. Boron trifluoride contains three single bonds, giving boron six valence electrons without completing an octet.',
+      model: { type: 'shape', mol: 'BF3', caption: 'Boron trifluoride molecule with trigonal planar geometry and six electrons on boron.' },
       last: true
     }
   }
@@ -246,16 +246,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A Lewis structure puts every outer-shell electron somewhere: in a bond between two atoms or as a lone pair on one. Most atoms stop at eight round them, but when one pair leaves an atom short the neighbours share a second, and boron stops at six.'
+      heading: 'Summary',
+      body: 'Lewis structures show the distribution of valence electrons into covalent bonds and lone pairs. Most elements form bonds to achieve an octet of electrons, though some elements like boron form stable molecules with an incomplete octet.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Every shape, charge and reaction in the rest of this unit begins from one of these drawings. If you can place the electrons, you can say what the molecule will do.'
+      heading: 'Structure and Bonding',
+      body: 'Multiple bonds form when single bonds leave atoms without a complete octet. The least electronegative non-hydrogen atom typically serves as the central atom.'
     },
     {
       heading: 'Next',
-      body: 'Some molecules have more than one good drawing. The next bench measures a bond in the real molecule and sets it against the drawing.'
+      body: 'The next bench investigates molecules whose electronic structures require resonance hybrids to represent accurately.'
     }
   ]
 };

@@ -126,7 +126,7 @@ export const STAGES = [
     const sp = spectro(SP, SPEC_AT, { strip: true, label: 'White light through the cuvette' });
     const chips = COLOURS.map((c, i) => chip(`c-${c.id}`, c.label, c.nm, { x: 14 + i * 22, y: 53 }));
     return {
-      title: 'Why Copper Looks Blue',
+      title: 'Complementary Color',
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
@@ -170,7 +170,7 @@ export const STAGES = [
   (() => {
     const sp = spectro(SP, SPEC_AT, { tune: true, xAxis: 'nm', label: 'Spectrometer' });
     return {
-      title: 'The Best Wavelength',
+      title: 'Peak Absorbance',
       prompt: 'Set the wavelength at which the solution dims the beam most.',
       widget,
       table: cuvetteTable({
@@ -205,7 +205,7 @@ export const STAGES = [
   (() => {
     const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
     return {
-      title: 'Doubling the Strength',
+      title: 'Concentration and Absorbance',
       prompt: 'Fill Cuvette B so that it takes in twice as much light as Cuvette A.',
       widget,
       table: cuvetteTable({
@@ -231,8 +231,8 @@ export const STAGES = [
       },
       reward: {
         log: 'Twice the concentration, twice the absorbance.',
-        title: 'A Straight Line Through Zero',
-        body: 'Twice the concentration gave twice the absorbance, and four times gave four times. That is what you would expect if each absorbing particle in the beam takes out its own share of the light.',
+        title: 'Linear Relationship',
+        body: 'Doubling the concentration doubles the absorbance. Each absorbing particle removes its own share of light, making absorbance proportional to concentration.',
         model: { type: 'cuvette', solute: 'cuso4', conc: 0.004, nm: 630, caption: 'Twice as many dots of copper in the beam take out twice as much of it.' }
       }
     };
@@ -242,7 +242,7 @@ export const STAGES = [
   (() => {
     const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
     return {
-      title: 'The Sealed Tank Sample',
+      title: 'Calibration Curve',
       prompt: 'Determine the concentration of the sealed copper solution using the calibration line.',
       widget,
       table: cuvetteTable({
@@ -294,15 +294,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A solution looks the colour of the light it leaves behind. The absorbance of a coloured solution rises in step with its concentration, which lets a reading of light measure an amount of matter.'
+      body: 'A solution displays the complementary color of the light it absorbs. Absorbance is directly proportional to concentration, allowing light measurement to quantify solute amounts.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Every pharmacy, water lab and hospital measures something dissolved this way. The same line you drew from three standards sits behind most of those numbers.'
-    },
-    {
-      heading: 'Next',
-      body: 'That is the last bench on Lanternfall. One feeder still haunts the ice: the Lantern-Eater, made of everything you have measured here.'
+      heading: 'Why It Matters',
+      body: 'Spectrophotometry and calibration curves are standard analytical methods used across chemistry, biochemistry, and medicine to determine unknown concentrations.'
     }
   ]
 };

@@ -82,18 +82,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
     key: KEY_ROOM,
-    title: 'Guess the Room',
+    title: 'Temperature and Volume',
     prompt: 'A gas under a light piston is warmed from 20 °C to 40 °C: how much bigger does the room it fills get?',
     items: ROOM_GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Picture the particles speeding up under a piston that is free to rise.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Choose one of the cards.',
+      'Consider how heating affects gas particles under a free piston.',
+      'Select the card that matches your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Guess Worth Testing',
-      body: 'Two cylinders of the same gas are about to be set side by side, and one heater will say whether the guess holds.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'Two gas cylinders will now test how temperature changes affect gas volume.'
     }
   }),
 
@@ -105,16 +105,16 @@ export const STAGES = [
       cyls: [{ id: 'a', label: 'Holder 8', ...base }], temps: DOUBLE_TEMPS, tempList: 'C', tempStart: 1, vmax: 60, compact: true, w: 34, show: { gauge: false, amount: false }
     });
     return {
-      title: 'Twice the Room',
+      title: 'Doubling Volume',
       get prompt() {
         return youPredicted(KEY_ROOM, ROOM_GUESSES, 'set Holder 8\'s heater so that its room is twice Holder 7\'s.', 'Set Holder 8\'s heater so that its room is twice Holder 7\'s.');
       },
       widget,
       table: gasTable({ fixtures: [a, b] }),
       hints: [
-        'Use the "Heater" dial of Holder 8.',
-        'Compare the two rooms printed on the cylinders at each setting.',
-        'Step through every setting and find the one where Holder 8\'s room is exactly two of Holder 7\'s.'
+        'Turn Holder 8\'s Heater dial.',
+        'Compare the volumes of both cylinders at each setting.',
+        'Find the setting where Holder 8\'s volume is exactly double Holder 7\'s.'
       ],
       check(state) {
         const t = state.table;
@@ -124,12 +124,10 @@ export const STAGES = [
         return { ok: false, msg: ratio < 2 ? 'Holder 8\'s room is still less than double Holder 7\'s.' : 'Holder 8\'s room is already more than double Holder 7\'s.' };
       },
       get reward() {
-        const g = guessOf(KEY_ROOM, ROOM_GUESSES);
-        const verdict = !g ? '' : g.id === 'little' ? 'You predicted this one, and the cylinders agreed. ' : 'The cylinders did not agree with your prediction, which is how a guess gets better. ';
         return {
           log: 'Twice the room took 313 degrees, not 40.',
-          title: 'Not Double the Number',
-          body: `${verdict}Twice the room took 313 °C, not 40 °C, so the room does not follow the Celsius number. It follows how far the gas is above some colder zero that has not been found yet.`
+          title: 'Temperature and Volume',
+          body: 'Doubling volume required heating to 313 °C rather than 40 °C. Gas volume scales with absolute temperature measured from absolute zero, not the Celsius scale.'
         };
       }
     };
@@ -142,7 +140,7 @@ export const STAGES = [
       show: { gauge: false, amount: false }, plot: { x: 'TC', y: 'V' }
     });
     return {
-      title: 'Where the Room Runs Out',
+      title: 'Extrapolating to Zero Volume',
       prompt: 'Set the marker to the temperature at which the room of the gas would reach zero.',
       widget,
       table: gasTable({
@@ -150,9 +148,9 @@ export const STAGES = [
         tools: ['straightedge']
       }, { recorder: { at: { x: 112, y: 24 }, size: { w: 42, h: 28 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Room', yUnit: 'L', range: { xMin: -300, xMax: 250, yMin: 0, yMax: 45 } } }),
       hints: [
-        'Use the "Heater" dial, "Record" and the straightedge.',
-        'Record the room at several settings, then lay the straightedge across the points.',
-        'Follow the laid line down to the bottom edge of the strip, where the room is zero, and read the temperature beneath it.'
+        'Use the "Heater" dial, "Record", and the straightedge.',
+        'Record readings at several settings, then align the straightedge across them.',
+        'Find the temperature where the line reaches zero volume.'
       ],
       check(state) {
         const t = state.table;
@@ -164,7 +162,7 @@ export const STAGES = [
       reward: {
         log: 'The room reaches zero at −273 °C.',
         title: 'Absolute Zero',
-        body: 'The line reaches zero room at −273 °C, the coldest anything can be, called absolute zero; counting up from there gives the kelvin scale. Room is proportional to the kelvin temperature, so twice the kelvin is twice the room, which is Charles\'s law.'
+        body: 'Extrapolating the line shows volume reaching zero at −273 °C, known as absolute zero. Measuring upward from absolute zero defines the kelvin scale. Volume is directly proportional to kelvin temperature (Charles\'s law).'
       }
     };
   })(),
@@ -172,18 +170,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   predictStage({
     key: KEY_TANK,
-    title: 'Guess the Tank',
+    title: 'Temperature and Pressure',
     prompt: 'A sealed tank cools from 20 °C to −30 °C: what does its gauge do?',
     items: TANK_GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'The tank is sealed, so its room and its gas cannot change; ask what cooling does to the knocks.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Choose one of the cards.',
+      'The tank is rigid, so volume is fixed; consider how cooling affects collisions.',
+      'Select the card that matches your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Second Guess',
-      body: 'A sealed tank is about to be cooled on the bench, and its gauge will say how far the guess holds.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'A sealed tank will now be cooled on the bench to test how temperature change affects gas pressure.'
     }
   }),
 
@@ -194,7 +192,7 @@ export const STAGES = [
       show: { amount: false, volume: false }, plot: { x: 'TC', y: 'P' }
     });
     return {
-      title: 'The Tank in the Cold',
+      title: 'Pressure in the Cold',
       get prompt() {
         return youPredicted(KEY_TANK, TANK_GUESSES, 'cool the tank to −30 °C, then lay the card for what its gauge did.', 'Cool the tank to −30 °C, then lay the card for what its gauge did.');
       },
@@ -205,9 +203,9 @@ export const STAGES = [
         zones: { slots: [{ id: 'show', label: 'What the gauge did', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
       }, { recorder: { at: { x: 109, y: 11 }, size: { w: 36, h: 14 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Gauge', yUnit: '' } }),
       hints: [
-        'Use the "Heater" dial and "Record", then lay a card in the slot.',
-        'Compare the gauge at the setting the prompt names with the gauge you started from.',
-        'Lay the card that says how much of the first reading the gauge lost.'
+        'Use the "Heater" dial and "Record", then place a card in the slot.',
+        'Compare the gauge at −30 °C with the starting reading at 20 °C.',
+        'Select the card indicating the fraction of initial pressure lost.'
       ],
       check(state) {
         const t = state.table;
@@ -219,12 +217,10 @@ export const STAGES = [
         return { ok: false, msg: 'The gauge at the cooled setting is not the share of the first reading that card says.' };
       },
       get reward() {
-        const g = guessOf(KEY_TANK, TANK_GUESSES);
-        const verdict = !g ? '' : g.id === 'sixth' ? 'You predicted this one, and the tank agreed. ' : 'The tank did not agree with your prediction, which is how a guess gets better. ';
         return {
           log: 'The gauge fell with the kelvin temperature.',
           title: 'Gay-Lussac\'s Law',
-          body: `${verdict}In a sealed tank the pressure goes in step with the kelvin temperature, so cooling takes the same share off the gauge as it takes off the kelvin. This is Gay-Lussac's law.`
+          body: 'In a sealed rigid tank, gas pressure is directly proportional to kelvin temperature. Cooling reduces pressure by the exact fraction that the kelvin temperature drops (Gay-Lussac\'s law).'
         };
       }
     };
@@ -233,11 +229,11 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag one card into the slot.'],
+  1: ['Place a card in the slot.'],
   2: ['Turn Holder 8\'s Heater dial.'],
   3: ['Record each setting, lay the straightedge,', 'then set the marker.'],
-  4: ['Drag one card into the slot.'],
-  5: ['Turn the Heater dial and press Record,', 'then drag a card into the slot.']
+  4: ['Place a card in the slot.'],
+  5: ['Turn the Heater dial and Record,', 'then place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -248,16 +244,8 @@ export const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A gas does not care about the number on a Celsius thermometer. Its room, and its pressure in a sealed tank, follow the kelvin temperature, counted up from the cold at which the particles would have nothing left to lose.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every cold-weather check on the station comes down to this. A sealed tank in the cold must lose pressure in step with its kelvin temperature, and one that does not has something wrong with it.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench lets nothing be held fixed, and looks for the single rule that ties room, pressure, temperature and amount together.'
+      heading: 'Summary',
+      body: 'Gas volume and pressure are directly proportional to absolute temperature in kelvin, not Celsius. Extrapolating volume to zero defines absolute zero at −273 °C (0 K). At constant pressure, volume scales with kelvin temperature (Charles\'s law); at constant volume, pressure scales with kelvin temperature (Gay-Lussac\'s law).'
     }
   ]
 };

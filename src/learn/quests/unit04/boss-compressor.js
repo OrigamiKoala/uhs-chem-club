@@ -79,37 +79,37 @@ const cyl = (id, label, gas, extra = {}) => ({ id, label, gas, n: 1, T: T0, V: 2
 const STAGE_REWARDS = [
   {
     reward: {
-      log: 'The gauge set to four times the plaque.',
-      title: 'Intake Choked',
-      body: 'A quarter of the room gives four times the pressure: the same particles knock four times as often. The compressor\'s intake can be starved by the same squeeze that fills it.'
+      log: 'Intake pressure adjusted.',
+      title: 'Intake Pressure',
+      body: 'Reducing volume to one-fourth increases pressure fourfold at constant temperature, as gas particles collide with container walls four times as frequently.'
     }
   },
   {
     reward: {
-      log: 'The room doubled at 327 degrees.',
-      title: 'Heater Choked',
-      body: 'The room follows the kelvin temperature, so doubling it took 327 °C and not 54 °C. The compressor\'s heater was running to the wrong number.'
+      log: 'Volume doubled with temperature.',
+      title: 'Thermal Expansion',
+      body: 'Gas volume is directly proportional to absolute temperature in kelvin. Doubling the initial 300 K requires heating to 600 K (327 °C), not 54 °C.'
     }
   },
   {
     reward: {
-      log: 'Four tanks counted from their plates.',
-      title: 'Tanks Counted',
-      body: 'A gauge, a room and a temperature are enough to count the particles in a sealed tank without opening it. The compressor\'s tanks were counted from their plates.'
+      log: 'Particle quantities determined.',
+      title: 'Mole Counting',
+      body: 'Pressure, volume, and temperature together determine the exact mole quantity of gas in a sealed vessel according to the ideal gas law.'
     }
   },
   {
     reward: {
-      log: 'Three tanks ranked by their push.',
-      title: 'Blend Split',
-      body: 'In one room at one temperature the gas with the most moles pushes hardest, whatever its particles weigh. The compressor\'s blend was read gas by gas.'
+      log: 'Gases ranked by partial pressure.',
+      title: 'Partial Pressures',
+      body: 'At equal volume and temperature, the gas with the most moles produces the highest pressure regardless of molecular mass.'
     }
   },
   {
     reward: {
-      log: 'An unmarked seal named by its leak.',
-      title: 'Compressor Still',
-      body: 'Gases that leak at the same pace have particles of the same mass. The seal\'s pace matched xenon\'s, and the compressor\'s last leak is named.',
+      log: 'Seal leak identified.',
+      title: 'Effusion Match',
+      body: 'Gases with equal effusion rates share identical molar masses. The leak rate matches xenon, identifying the escaping gas.',
       last: true
     }
   }
@@ -130,7 +130,7 @@ export const STAGES = [
       title: 'Phase 1 · The Intake',
       briefing: {
         speaker: SPEAKER,
-        body: 'Each phase puts one of the benches in front of the compressor again. A miss costs the table a point of Integrity; three knock it back, and nothing you have read is lost.'
+        body: 'Apply the gas relationships from each bench to stabilize the compressor and clear the fault.'
       },
       prompt: 'Bring the gauge to four times the figure on the plaque.',
       widget,
@@ -142,19 +142,19 @@ export const STAGES = [
         intent: 'The compressor cycles at a steady stroke over its intake.'
       },
       hints: [
-        'Use the "Piston" dial.',
+        'Turn the Piston dial.',
         'Compare the reading at each setting with the figure on the plaque.',
-        'Find the setting at which the room has fallen by the same factor that the gauge must climb.'
+        'Select the setting where volume has decreased by the same factor pressure must increase.'
       ],
       check(state) {
         const t = state.table;
         const q = cylRead(t, RIG, 0);
         const start = pressureIdeal(1, T0, INTAKE_VOLUMES[INTAKE_START - 1]);
-        if (Math.abs(q.P - start) < 1e-6) return { ok: false, notYet: true, msg: 'The gauge still reads what it did when the phase began.' };
+        if (Math.abs(q.P - start) < 1e-6) return { ok: false, notYet: true, msg: 'The gauge still reads its starting value.' };
         if (Math.abs(q.P / start - INTAKE_FACTOR) < 0.01) return { ok: true };
         return q.P / start < INTAKE_FACTOR
-          ? { ok: false, msg: 'The gauge is still short of what the phase asks for.' }
-          : { ok: false, msg: 'The gauge has gone past what the phase asks for.' };
+          ? { ok: false, msg: 'The gauge reading is below the target figure.' }
+          : { ok: false, msg: 'The gauge reading exceeds the target figure.' };
       },
       ...STAGE_REWARDS[0]
     };
@@ -169,7 +169,7 @@ export const STAGES = [
     return {
       id: 'phase2',
       title: 'Phase 2 · The Heater',
-      prompt: 'Heat the helium until its room has doubled.',
+      prompt: 'Heat the helium until its volume has doubled.',
       widget,
       table: gasTable({ fixtures: [r] }),
       foes: COMPRESSOR_FOE,
@@ -179,16 +179,16 @@ export const STAGES = [
         intent: 'The compressor swells its heater cylinder against the weight on the piston.'
       },
       hints: [
-        'Use the "Heater" dial.',
-        'Compare the room at each setting with the room it started at.',
-        'Find the setting at which the room is exactly two of the room it started at, whatever the number on the dial is.'
+        'Turn the Heater dial.',
+        'Compare the volume at each setting with the starting volume.',
+        'Select the setting where the volume is exactly twice the starting volume.'
       ],
       check(state) {
         const t = state.table;
-        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'The heater is where it started: turn it and watch the room.' };
+        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Heater dial to adjust temperature.' };
         const ratio = cylRead(t, RIG, 0).V / cylRead({ ...t, fixtures: { ...t.fixtures, [RIG]: { ...t.fixtures[RIG], dials: { ...t.fixtures[RIG].dials, temp: { ...t.fixtures[RIG].dials.temp, value: 1 } } } } }, RIG, 0).V;
         if (Math.abs(ratio - 2) < 0.02) return { ok: true };
-        return { ok: false, msg: ratio < 2 ? 'The room is still less than double what it started at.' : 'The room is already more than double what it started at.' };
+        return { ok: false, msg: ratio < 2 ? 'The volume has not yet doubled.' : 'The volume has increased past double.' };
       },
       ...STAGE_REWARDS[1]
     };
@@ -202,7 +202,7 @@ export const STAGES = [
     return {
       id: 'phase3',
       title: 'Phase 3 · The Tanks',
-      prompt: 'Put each tank in the tray for how many particles it holds compared with Tank A.',
+      prompt: 'Sort each tank into a tray based on particle count compared to Tank A.',
       widget,
       table: gasTable({
         pieces: TANKS.map(t => mk(t, { x: xs[t.id], y: 54 }, t.id === 'a' ? { fixed: true } : {})),
@@ -215,19 +215,19 @@ export const STAGES = [
         intent: 'The compressor keeps its tanks shut and shows only their plates.'
       },
       hints: [
-        'Use the three trays.',
-        'Compare each tank\'s gauge, room and temperature with Tank A\'s, one reading at a time.',
-        'A bigger room or a higher gauge means more particles, and a higher temperature means fewer for the same gauge and room.'
+        'Drag each tank into a tray.',
+        'Compare each tank\'s pressure, volume, and temperature with Tank A.',
+        'Determine particle counts from the ideal gas law relationship.'
       ],
       check(state) {
         const t = state.table;
         const ids = ['b', 'c', 'd'];
-        if (!ids.every(id => ['fewer', 'same', 'more'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every tank in a tray.' };
+        if (!ids.every(id => ['fewer', 'same', 'more'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Place every tank in a tray.' };
         const nA = tankMoles(t.pieces.a);
         for (const id of ids) {
           const ratio = tankMoles(t.pieces[id]) / nA;
           const want = Math.abs(ratio - 1) < 1e-6 ? 'same' : ratio > 1 ? 'more' : 'fewer';
-          if (whereIs(t, id) !== want) return { ok: false, msg: `Tank ${id.toUpperCase()}'s gauge, room and temperature do not fit the tray it is in.` };
+          if (whereIs(t, id) !== want) return { ok: false, msg: `Tank ${id.toUpperCase()} does not belong in that tray.` };
         }
         return { ok: true };
       },
@@ -241,14 +241,14 @@ export const STAGES = [
     return {
       id: 'phase4',
       title: 'Phase 4 · The Blend',
-      prompt: 'Put the three tanks on the strip from the gas that pushes hardest to the gas that pushes least.',
+      prompt: 'Arrange the three tanks on the rail from highest pressure to lowest pressure.',
       widget,
       table: gasTable({
         pieces: BLEND.map(([id, gas, n]) => tank(id, `TANK ${id.toUpperCase()}`, { x: 0, y: 0 }, { gas, n, V: BLEND_V, T: T0, noGauge: true, printMass: true })),
         fixtures: [ct.fixture],
         zones: {
           trays: [ct.tray],
-          rail: { id: 'rail', at: { x: 108, y: 48 }, size: { w: 80, h: 16 }, first: 'Pushes hardest', last: 'Pushes least', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] }
+          rail: { id: 'rail', at: { x: 108, y: 48 }, size: { w: 80, h: 16 }, first: 'Highest pressure', last: 'Lowest pressure', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] }
         }
       }),
       foes: COMPRESSOR_FOE,
@@ -258,17 +258,17 @@ export const STAGES = [
         intent: 'The compressor holds its blending tanks at one steady push.'
       },
       hints: [
-        'Drag a tank into the place under the common tank to read its push, and drag it back to the strip.',
-        'Compare the pushes of tanks that fill the same room at the same temperature, not their weights.',
-        'Put the tank with the largest push at the strong end of the strip and the smallest at the other end.'
+        'Drag a tank into the common tank tray to read its pressure, then return it to the rail.',
+        'Compare pressures of tanks with equal volume and temperature rather than their masses.',
+        'Place the tank with the highest pressure at the left end of the rail.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three tanks on the strip.' };
+        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three tanks on the rail.' };
         const want = BLEND.map(b => b[0]).sort((x, y) => tankRead(t.pieces[y]).P - tankRead(t.pieces[x]).P);
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two neighbouring tanks on the strip are the wrong way round.' };
+        return { ok: false, msg: 'Two adjacent tanks on the rail are in the wrong order.' };
       },
       ...STAGE_REWARDS[3]
     };
@@ -283,7 +283,7 @@ export const STAGES = [
     return {
       id: 'phase5',
       title: 'Phase 5 · The Seals',
-      prompt: 'Set the reference chamber\'s gas so that it empties at the same pace as the unmarked seal.',
+      prompt: 'Set the reference gas so its effusion rate matches the unmarked seal.',
       widget,
       table: gasTable({ fixtures: [p] }),
       foes: COMPRESSOR_FOE,
@@ -293,16 +293,16 @@ export const STAGES = [
         intent: 'A pinhole hisses in the compressor\'s flank, and nothing says what is leaving it.'
       },
       hints: [
-        'Use the "Gas" dial and the "Stopwatch" dial.',
-        'Compare the time each chamber takes to be half empty.',
-        'Stop on the gas whose time to half empty matches the seal\'s.'
+        'Adjust the Gas and Stopwatch dials.',
+        'Compare the time required for each chamber to reach half its initial amount.',
+        'Select the reference gas whose half-time matches the seal.'
       ],
       check(state) {
         const t = state.table;
         const r = pinholeRead(t, PIN);
         const ref = r.chambers[0];
         const seal = r.chambers[1];
-        if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'The reference is where it started: turn its Gas dial and compare the times.' };
+        if (Math.round(t.fixtures[PIN].dials.ref.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Gas dial to test different gases.' };
         if (ref.gas === seal.gas) return { ok: true };
         return { ok: false, msg: ref.half < seal.half ? 'The reference chamber empties faster than the seal.' : 'The reference chamber empties more slowly than the seal.' };
       },
@@ -313,11 +313,11 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Turn the Piston dial and read the gauge.'],
-  2: ['Turn the Heater dial and watch the room.'],
+  1: ['Turn the Piston dial to adjust pressure.'],
+  2: ['Turn the Heater dial to adjust temperature.'],
   3: ['Drag each tank into a tray.'],
-  4: ['Open one tank at a time to read its push,', 'then put it back on the strip.'],
-  5: ['Turn the Gas dial and the Stopwatch dial.']
+  4: ['Open one tank at a time to read its pressure,', 'then place it on the rail.'],
+  5: ['Adjust the Gas and Stopwatch dials.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -330,15 +330,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The compressor stands cold in its housing. In its vault is a sealed cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it, and Gay-Lussac\'s law says no sealed gas can do that.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every phase was a bench you had already worked: a piston, a heater, a count, a blend and a pinhole. That is all of Bellows, and it was enough to read the machine and to read what it was keeping.'
+      body: 'The compressor stands cold in its housing. In its vault is a sealed cylinder logged at constant pressure for twelve days while surroundings froze fifty degrees, violating Gay-Lussac\'s law for an unheated gas.'
     },
     {
       heading: 'Next',
-      body: 'The cylinder goes into the Case File. Something inside it was giving off heat for twelve days, and no gas law explains where that heat came from.'
+      body: 'The cylinder goes into the Case File. Something inside it maintained heat for twelve days, which cannot be explained by standard gas behavior.'
     }
   ]
 };

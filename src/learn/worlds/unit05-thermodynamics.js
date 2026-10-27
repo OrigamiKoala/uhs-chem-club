@@ -21,15 +21,15 @@ export const UNIT_05 = {
   world: 'Ember Reach',
   place: 'Volcanic vent field',
   title: 'Thermodynamics',
-  line: 'Heat into and out of a cup, the energy in bonds, and why some changes run on their own.',
+  line: 'Thermal energy transfer, reaction enthalpy, bond energies, entropy, and Gibbs free energy.',
   brief:
-    'The vents at Ember Reach never cool. Everything that happens here either gives heat to the rock around it or takes heat from it, and the only instrument that never lies is a well-insulated cup with a thermometer in the lid.',
+    'Thermodynamics governs energy transformations and spontaneity. In Ember Reach, explore heat transfer in calorimetry, multi-step reaction enthalpies, and the balance of enthalpy and entropy.',
 
   quests: [
     {
       id: 'q1-flow',
       title: 'Heat and Temperature',
-      line: 'Touch a hot block to a cold one, watch both thermometers settle, and mark which way energy crossed the boundary.',
+      line: 'Touch a hot block to a cold one, observe temperature equalization, and identify the direction of thermal energy transfer.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -38,7 +38,7 @@ export const UNIT_05 = {
     {
       id: 'q2-calorimetry',
       title: 'Calorimetry',
-      line: 'Catch a reaction’s heat in a weighed water bath and turn a thermometer rise into joules and kilojoules per mole.',
+      line: 'Measure reaction heat in a water bath to calculate specific heat capacity and molar enthalpy.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -47,7 +47,7 @@ export const UNIT_05 = {
     {
       id: 'q3-enthalpy',
       title: 'Enthalpy of Reaction',
-      line: 'Express heat per mole with the system’s sign, flip and scale thermochemical equations, and compare fuels per gram.',
+      line: 'Relate reaction heat to molar enthalpy, reaction stoichiometry, and fuel energy density.',
       arena: 'bench',
       stageCount: 3,
       status: 'live',
@@ -56,7 +56,7 @@ export const UNIT_05 = {
     {
       id: 'q4-bonds',
       title: 'Bond Enthalpies',
-      line: 'Climb uphill to break reactant bonds into free atoms, drop downhill as product bonds snap together, and compare the two.',
+      line: 'Estimate reaction enthalpy by balancing the energy required to break bonds with energy released forming bonds.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -65,7 +65,7 @@ export const UNIT_05 = {
     {
       id: 'q5-hess',
       title: "Hess's Law and Formation",
-      line: 'Stack reaction steps on an enthalpy altitude ladder and measure compounds from the elemental sea-level baseline.',
+      line: 'Combine multi-step reaction enthalpies using Hess\'s law and standard enthalpies of formation.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -74,7 +74,7 @@ export const UNIT_05 = {
     {
       id: 'q6-entropy',
       title: 'Entropy',
-      line: 'Open the stopcock on a partitioned chamber, count the ways particles can spread out, and read ΔS° across phases and reactions.',
+      line: 'Model particle dispersal across microstates and evaluate entropy changes across phase transitions and reactions.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -83,7 +83,7 @@ export const UNIT_05 = {
     {
       id: 'q7-gibbs',
       title: 'Free Energy',
-      line: 'Balance ΔH against −TΔS on the plotter, find the temperature where ice melts, and drive an uphill reaction by coupling.',
+      line: 'Evaluate spontaneity by balancing enthalpy and entropy across temperatures using Gibbs free energy.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -92,7 +92,7 @@ export const UNIT_05 = {
     {
       id: 'boss-crucible',
       title: 'The Crucible',
-      line: 'Crack the Fifth Guild’s geothermal siphon core at the caldera rim across five thermodynamic phases.',
+      line: 'Solve five thermodynamic challenges across calorimetry, bond energies, Hess\'s law, entropy, and free energy.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

@@ -183,7 +183,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'A Guess to Test',
-      body: 'A guess is only worth something if the bench can test it, and a pulse of light can be timed. Next, a timer sends each colour down the same rail.'
+      body: 'To test whether color affects speed, the pulse timer will measure how long each wavelength takes to cross the gap.'
     }
   },
 
@@ -211,7 +211,7 @@ export const STAGES = [
           lamp('red', 'Red lamp', { x: 57, y: 50 }, 700),
           lamp('violet', 'Violet lamp', { x: 80, y: 50 }, 400)
         ],
-        fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
+        fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed _ x 10^8 m/s', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
         zones: { slots: rail.slots },
         recorder: { at: { x: 140, y: 52 }, size: { w: 18, h: 18 }, xLabel: 'Gap', xUnit: 'm', yLabel: 'Time', yUnit: 'ns' }
       }),
@@ -266,7 +266,7 @@ export const STAGES = [
             detector('d2', 'Detector 2', { x: 33, y: 50 }),
             lamp(otherId, otherLabel, { x: 57, y: 50 }, otherNm)
           ],
-          fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
+          fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed _ x 10^8 m/s', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
           zones: { slots: rail.slots },
           recorder: { at: { x: 140, y: 52 }, size: { w: 18, h: 18 }, xLabel: 'Gap', xUnit: 'm', yLabel: 'Time', yUnit: 'ns' }
         });
@@ -369,7 +369,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Great job measuring light on the ice. Next, we\'ll investigate why a bright red lamp can\'t knock an electron loose, but faint violet light can.'
+      body: 'Next, we examine why a bright red lamp cannot knock an electron loose, while faint violet light can.'
     }
   ]
 };

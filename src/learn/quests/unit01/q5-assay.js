@@ -166,7 +166,7 @@ export const STAGES = [
     reward: {
       log: 'Sample A: 30 atoms at 35, 10 at 37, all chlorine. Sample B: sodium and chlorine.',
       title: 'A Sample Is a Mix of Isotopes',
-      body: 'Both bins of Sample A read chlorine, so every atom holds 17 protons, and the 35s and the 37s differ only in neutrons, which makes them isotopes of each other. Sample B\'s bins read two different names, so that one is two elements. A natural sample of one element is a mixture of its isotopes.'
+      body: 'Both bins of Sample A contain chlorine with 17 protons, differing only in neutrons as isotopes. Sample B contains two distinct elements. Natural samples are mixtures of isotopes.'
     }
   },
 
@@ -209,7 +209,7 @@ export const STAGES = [
     reward: {
       log: 'Both samples split 75 to 25.',
       title: 'Abundance',
-      body: 'Two samples of different sizes gave the same split, because the proportions of an element\'s isotopes belong to the material and not to the scoop you took. The share of a sample that is one isotope is called that isotope\'s abundance. Here it is 75 percent at weight 35 and 25 percent at weight 37.'
+      body: 'Isotope proportions are consistent regardless of sample size. The percentage of an element occurring as a specific isotope is its abundance: here, 75% at mass 35 and 25% at mass 37.'
     }
   },
 
@@ -244,7 +244,7 @@ export const STAGES = [
     reward: {
       log: '35.5 sits a quarter of the way from 35 to 37.',
       title: 'The Listed Mass Is an Average',
-      body: 'The mass listed for an element is not the weight of any single atom. It is what one atom weighs on average across a natural sample, so it leans toward whichever isotope is common. Three quarters of this sample weighs 35, which is why the figure lands at 35.5.'
+      body: 'A listed atomic mass is the average mass across a natural sample, leaning toward more common isotopes. Because 75% of chlorine is chlorine-35, the average is 35.5.'
     }
   },
 
@@ -276,7 +276,7 @@ export const STAGES = [
     reward: {
       log: 'Sample A averages 10.8 per atom.',
       title: 'Average Atomic Mass',
-      body: 'You just worked out the average atomic mass: each isotope\'s mass counted in proportion to how much of it there is. Because the two amounts are not equal, that is called a weighted average rather than a plain one. It is the mass listed for every element, and it is why those numbers are almost never whole.'
+      body: 'Average atomic mass is the weighted average of an element\'s isotopes, weighted by their abundance. This is why listed masses are rarely whole numbers.'
     }
   },
 
@@ -400,7 +400,7 @@ export const STAGES = [
     reward: {
       log: 'Sample A averages 20.2: 90 atoms light, 10 heavy.',
       title: 'The Average Pins the Mix',
-      body: 'The weighting runs both ways: the abundances give you the average, and the average plus the two weights gives you the abundances. That is how a sealed sample is identified without being opened. It is also how the isotope proportions of the elements were first measured.'
+      body: 'The relationship works both ways: abundances determine average mass, and average mass reveals the isotope abundances of a sample.'
     }
   },
 
@@ -439,7 +439,7 @@ export const STAGES = [
     reward: {
       log: 'One sample natural, two altered.',
       title: 'The Mass Is a Fingerprint of the Mix',
-      body: 'All three samples were chlorine, and only one of them had the natural mix. A listed mass says more than which element you have: it says what proportions that element\'s isotopes turn up in. Change the mix and the weight moves off the listed figure.',
+      body: 'All three samples were chlorine, but only one had the natural mix. Listed atomic mass reflects natural isotope proportions; altering the mix changes the measured mass.',
       last: true
     }
   }
@@ -460,10 +460,6 @@ export const DEBRIEF = {
     {
       heading: 'Why It Has a Decimal',
       body: 'A single atom always has a whole-number mass, but an average over a mixture usually does not. The average leans toward the most common isotope, so the decimal tells you how the mix sits.'
-    },
-    {
-      heading: 'Next',
-      body: 'Excellent assaying! Now that you know how average atomic mass works, let\'s see how chemists count trillions of atoms just by weighing them.'
     }
   ]
 };

@@ -48,7 +48,7 @@ export function predictStage({ key, title, prompt, cards, hints, reward }) {
       const held = piecesIn(state.table, `slot:${SLOT.id}`)[0];
       if (held) remember(key, held.id);
     },
-    reward: { log: 'Prediction locked in.', ...reward }
+    reward: { log: 'Prediction recorded.', ...reward }
   };
 }
 
@@ -69,5 +69,5 @@ export function testPrompt(key, cards, question) {
 export function verdictLine(key, rightId) {
   const id = recall(key);
   if (!id) return '';
-  return id === rightId ? 'You predicted this one, and the bench agreed. ' : 'The bench did not agree with your prediction, which is how an idea gets better. ';
+  return id === rightId ? 'Your prediction was confirmed. ' : 'Your prediction was not confirmed. ';
 }

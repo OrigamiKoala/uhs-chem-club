@@ -177,6 +177,17 @@ export class TableGestures {
         }
       }
       if (f.kind === 'view' || f.props?.joystick) {
+        if (f.dials?.slice) {
+          const rx = 33;
+          const rw = f.size.w - rx - 2.5;
+          const bx0 = lay.box.x0 + rx;
+          const bx1 = bx0 + rw;
+          const by0 = lay.box.y0 + 18;
+          const by1 = by0 + 8;
+          if (u.x >= bx0 - 1 && u.x <= bx1 + 1 && u.y >= by0 - 1 && u.y <= by1 + 1) {
+            return { kind: 'viewSlice', fixture: f.id };
+          }
+        }
         const j = joystickGeometry(f);
         if (Math.hypot(u.x - j.cx, u.y - j.cy) <= j.r + pad) {
           const vf = f;
@@ -226,12 +237,6 @@ export class TableGestures {
       if (u.x >= px0 && u.x <= px0 + pic && u.y >= py0 && u.y <= py0 + pic) {
         return { kind: 'cloudImage', fixture: f.id, view: f.props.view, px0, py0, pic };
       }
-      const sx = px0 + pic + 2.5;
-      const sw = f.size.w - (2.5 + pic + 2.5) - 1.5;
-      if (u.x >= sx && u.x <= sx + sw && u.y >= py0 + 16 && u.y <= py0 + 34) {
-        const btnIdx = u.y <= py0 + 24.5 ? 0 : 1;
-        return { kind: 'cloudButton', fixture: f.id, view: f.props.view, btnIdx };
-      }
     }
     return null;
   }
@@ -253,6 +258,15 @@ export class TableGestures {
   pointerDown(u) {
     if (!this.state) return;
     const fh = this.fixtureHit(u);
+    if (fh?.kind === 'viewSlice') {
+      const f = this.state.fixtures[fh.fixture];
+      if (f?.dials?.slice) {
+        const cur = f.dials.slice.value;
+        this.view.dispatch({ setDial: { fixture: fh.fixture, dial: 'slice', value: cur ? 0 : 1 } });
+        this.view.changed?.();
+      }
+      return;
+    }
     if (fh?.kind === 'joystick') { this.gesture = { kind: 'joystick', ...fh }; this.joystickTo(fh, u); return; }
     if (fh?.kind === 'dial') { this.gesture = { kind: 'dial', ...fh }; this.dialTo(fh, u); return; }
     if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
@@ -271,10 +285,6 @@ export class TableGestures {
           initialTilt: tilt,
           moved: false
         };
-        return;
-      }
-      if (ch.kind === 'cloudButton') {
-        this.gesture = { kind: 'cloudButton', ...ch };
         return;
       }
     }
@@ -306,14 +316,14 @@ export class TableGestures {
       if (g.moved) {
         const vf = this.state.fixtures[g.view];
         if (vf) {
-          const turnStep = Math.round(dx * 0.45);
-          const tiltStep = Math.round(-dy * 0.45);
-          const newTurn = ((g.initialTurn + turnStep) % 12 + 12) % 12;
-          const newTilt = Math.max(-3, Math.min(3, g.initialTilt + tiltStep));
-          if (newTurn !== vf.dials?.turn?.value) {
+          const turnDelta = dx * 0.25;
+          const tiltDelta = -dy * 0.25;
+          const newTurn = Math.round((((g.initialTurn + turnDelta) % 12 + 12) % 12) * 100) / 100;
+          const newTilt = Math.round(Math.max(-3, Math.min(3, g.initialTilt + tiltDelta)) * 100) / 100;
+          if (Math.abs(newTurn - (vf.dials?.turn?.value ?? 0)) > 0.005) {
             this.view.dispatch({ setDial: { fixture: g.view, dial: 'turn', value: newTurn } });
           }
-          if (newTilt !== vf.dials?.tilt?.value) {
+          if (Math.abs(newTilt - (vf.dials?.tilt?.value ?? 0)) > 0.005) {
             this.view.dispatch({ setDial: { fixture: g.view, dial: 'tilt', value: newTilt } });
           }
           this.view.changed?.();
@@ -349,22 +359,6 @@ export class TableGestures {
         if (vf?.dials?.slice) {
           const cur = vf.dials.slice.value;
           this.view.dispatch({ setDial: { fixture: g.view, dial: 'slice', value: cur ? 0 : 1 } });
-        }
-      }
-      return;
-    }
-    if (g.kind === 'cloudButton') {
-      const nowCh = this.cloudHit(u);
-      if (nowCh?.kind === 'cloudButton' && nowCh.btnIdx === g.btnIdx) {
-        const vf = this.state.fixtures[g.view];
-        if (g.btnIdx === 0) {
-          this.view.dispatch({ setDial: { fixture: g.view, dial: 'turn', value: 0 } });
-          this.view.dispatch({ setDial: { fixture: g.view, dial: 'tilt', value: 0 } });
-          if (vf?.dials?.slice) {
-            this.view.dispatch({ setDial: { fixture: g.view, dial: 'slice', value: 1 } });
-          }
-        } else {
-          import('../../ui/slice-explainer.js').then(m => m.showSliceExplainerModal?.());
         }
       }
       return;
@@ -486,8 +480,8 @@ export class TableGestures {
     }
     const fx = Math.max(-1, Math.min(1, dx / R));
     const fy = Math.max(-1, Math.min(1, dy / R));
-    const turnVal = Math.max(0, Math.min(11, Math.round(((fx + 1) / 2) * 11)));
-    const tiltVal = Math.max(-3, Math.min(3, Math.round(-fy * 3)));
+    const turnVal = Math.round(Math.max(0, Math.min(12, ((fx + 1) / 2) * 12)) * 100) / 100;
+    const tiltVal = Math.round(Math.max(-3, Math.min(3, -fy * 3)) * 100) / 100;
     if (turnVal !== f.dials.turn.value) {
       this.view.dispatch({ setDial: { fixture: h.fixture, dial: 'turn', value: turnVal } });
     }

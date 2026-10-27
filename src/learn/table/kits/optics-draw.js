@@ -393,7 +393,6 @@ function paintRuler(ctx, f, state, b) {
   // The slice of it the eye answers to.
   ctx.fillStyle = 'rgba(184, 175, 160, 0.16)';
   ctx.fillRect(F.x(xOf(Math.log10(VISIBLE.min))), F.y(y - 5), F.len(xOf(Math.log10(VISIBLE.max)) - xOf(Math.log10(VISIBLE.min))), F.len(10));
-  say(ctx, 'EACH TICK TEN TIMES THE LAST', F.x(x0 + rw / 2), F.y(h - 3), F.size(2.1, 6), { align: 'center', color: DIM });
   if (read) {
     const x = xOf(Math.log10(read.nm));
     ctx.fillStyle = PHOS;
@@ -609,7 +608,7 @@ function paintCellFixture(ctx, f, state, b) {
   // The two meters.
   const my = tubeY + tubeH + 3;
   const mw = (w - 6 - (f.noRun ? 0 : 18)) / 2;
-  readout(ctx, F, 3, my, mw - 1, mh, 'FREED PER SECOND', String(read.count), { color: read.count ? PHOS : DIM });
+  readout(ctx, F, 3, my, mw - 1, mh, 'ELECTRONS PER SECOND', String(read.count), { color: read.count ? PHOS : DIM });
   readout(ctx, F, 3 + mw + 1, my, mw - 1, mh, 'FASTEST ELECTRON', read.freed ? `${read.speed.toFixed(1)} x 10^5 m/s` : '0.0 x 10^5 m/s', { color: read.freed ? PHOS : DIM });
 }
 

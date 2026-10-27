@@ -95,13 +95,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Two Arms',
-    prompt: 'Set the angle marker to the angle two arms make when they push as far apart as they can.',
+    prompt: 'Set the angle marker to the bond angle between two electron domains pushing as far apart as possible.',
     widget: { type: 'table', label: 'The bench' },
     table: hubTable({ sym: 'X', arms: [A('a1', 'A', 1, 'Arm'), A('a2', 'A', 1, 'Arm')], marker: { label: 'Angle' } }),
     hints: [
       'Use the arms, the protractor and the angle marker.',
-      'Compare the angle the protractor reads with how far apart two arms could possibly get.',
-      'Drop both arms on the hub, lay the protractor on one arm and then the other, and set the marker to what it reads.'
+      'Measure the angle between the two arms with the protractor.',
+      'Attach both arms to the hub, measure the angle with the protractor, and set the marker to 180 degrees.'
     ],
     check(state) {
       const t = state.table;
@@ -115,9 +115,9 @@ export const STAGES = [
     },
     reward: {
       log: 'Two arms settle opposite.',
-      title: 'Electron Domain, Linear',
-      body: 'Each arm is a region of electrons round the hub, an electron domain. Two domains settle opposite each other, 180 degrees apart, in a linear arrangement.',
-      model: { type: 'shape', mol: 'CO2', caption: 'Carbon dioxide: two arms on the carbon settle 180 degrees apart, in a line. Drag to turn it.' }
+      title: 'Linear Geometry',
+      body: 'Each arm represents an electron domain around the central atom. Two electron domains orient in opposite directions at an angle of 180 degrees, producing a linear geometry.',
+      model: { type: 'shape', mol: 'CO2', caption: 'Carbon dioxide: two electron domains around carbon adopt a linear geometry at 180 degrees.' }
     }
   },
 
@@ -125,16 +125,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Four Arms',
-    prompt: 'Four arms push each other as far apart as they can round one hub: where do they settle?',
+    prompt: 'What arrangement and bond angle do four electron domains adopt around a central atom?',
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Picture four arms that can point anywhere, not only along the table, pushing each other away.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Consider three-dimensional space rather than just a two-dimensional plane.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Put four arms on the hub and read the angle between any two.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Attach four arms to the hub on the bench and measure the angle between them.'
     }
   }),
 
@@ -142,14 +142,14 @@ export const STAGES = [
   {
     title: 'Four on the Hub',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'set the angle marker to the angle any two of the four arms make.');
+      return testPrompt(QUEST_KEY, GUESSES, 'set the angle marker to the measured angle between any two of the four arms.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: hubTable({ sym: 'X', arms: [1, 2, 3, 4].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Angle' } }),
     hints: [
       'Use the arms, the protractor, the turn dial and the angle marker.',
-      'Turn the hub to see which arm leaves the flat, and compare the angle with four arms to the angle with three.',
-      'Drop the arms on one at a time, laying the protractor on a pair after each, and set the marker to what it reads with all four on.'
+      'Rotate the hub to observe the three-dimensional arrangement of the four domains.',
+      'Attach all four arms to the hub and measure the bond angle between any two arms with the protractor.'
     ],
     check(state) {
       const t = state.table;
@@ -164,9 +164,9 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Four arms leave the plane.',
-        title: 'Tetrahedral, and VSEPR',
-        body: `${verdictLine(QUEST_KEY, 'solid')}Four domains reach the corners of a tetrahedron, a pyramid with a triangle base, about 109.5 degrees apart. Domains arranging themselves as far apart as they can get is the idea behind VSEPR.`,
-        model: { type: 'shape', mol: 'CH4', caption: 'Methane: four arms on the carbon, tetrahedral. Drag to turn it.' }
+        title: 'Tetrahedral Geometry and VSEPR',
+        body: `${verdictLine(QUEST_KEY, 'solid')}Four electron domains repel each other into the corners of a tetrahedron with bond angles of 109.5 degrees. This arrangement minimizes electron repulsion according to VSEPR theory.`,
+        model: { type: 'shape', mol: 'CH4', caption: 'Methane molecule with tetrahedral geometry.' }
       };
     }
   },
@@ -174,13 +174,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Unseen Arm',
-    prompt: 'Build ammonia\'s hub so that nitrogen sits at the peak of a low pyramid of its three hydrogen atoms.',
+    prompt: 'Construct the geometry of ammonia with nitrogen at the apex and three hydrogen atoms forming the base.',
     widget: { type: 'table', label: 'The bench' },
     table: hubTable({ sym: 'N', label: 'Hub N', arms: [A('h1', 'H'), A('h2', 'H'), A('h3', 'H'), L('l1')], gauge: true, protractor: false }),
     hints: [
       'Use the hydrogen atoms, the balloon and the turn dial.',
-      'Compare the height reading with the three atoms alone and with everything in the tray on the hub.',
-      'Drop the three hydrogen atoms on the hub, turn it and look at how they sit round the nitrogen, then try the balloon.'
+      'Attach the three hydrogen atoms and the lone pair balloon to the central nitrogen atom.',
+      'The lone pair occupies a domain, repelling the three bonding pairs into a trigonal pyramidal shape.'
     ],
     check(state) {
       const r = hubRead(state.table, 'hub');
@@ -190,9 +190,9 @@ export const STAGES = [
     },
     reward: {
       log: 'A lone pair is an arm you cannot see in the shape.',
-      title: 'Trigonal Pyramidal',
-      body: 'A lone pair takes a domain but no atom, so three atoms and a lone pair make a molecule with its atoms in a low pyramid, trigonal pyramidal. The lone pair points away from the atoms, out of the shape.',
-      model: { type: 'shape', mol: 'NH3', caption: 'Ammonia: the faint lobe is the lone pair, an arm with no atom on it. Drag to turn it.' }
+      title: 'Trigonal Pyramidal Geometry',
+      body: 'A lone pair occupies an electron domain without contributing an atom to the molecular geometry. Three bonding domains and one lone pair form a trigonal pyramidal shape with the central atom at the apex of a pyramid.',
+      model: { type: 'shape', mol: 'NH3', caption: 'Ammonia molecule showing a trigonal pyramidal geometry with a lone pair on nitrogen.' }
     }
   },
 
@@ -204,8 +204,8 @@ export const STAGES = [
     table: hubTable({ sym: 'O', label: 'Hub O', arms: [A('h1', 'H'), A('h2', 'H'), L('l1'), L('l2')], marker: { label: 'Angle' } }),
     hints: [
       'Use the arms, the balloons, the protractor and the angle marker.',
-      'Compare the angle you read with the angle the hub with four atoms made.',
-      'Drop everything in the tray on the hub, lay the protractor on the two hydrogen atoms, and set the marker to what it reads.'
+      'Attach two hydrogen arms and two lone pair balloons to oxygen, then measure the H-O-H angle.',
+      'Lone pair repulsion reduces the bond angle below 109.5 degrees to 104.5 degrees.'
     ],
     check(state) {
       const t = state.table;
@@ -220,9 +220,9 @@ export const STAGES = [
     },
     reward: {
       log: 'Lone pairs push harder.',
-      title: 'Bent',
-      body: 'Two atoms and two lone pairs make a bent — V-shaped — molecule. Lone pairs push harder than bonding pairs, so the angle closes below 109.5 degrees: to 107 in ammonia and 104.5 in water.',
-      model: { type: 'shape', mol: 'H2O', caption: 'Water: two atoms and two lone pairs, bent at 104.5 degrees. Drag to turn it.' },
+      title: 'Bent Molecular Geometry',
+      body: 'Two bonding domains and two lone pairs produce a bent molecular geometry. Because lone pair electrons exert stronger electrostatic repulsion than bonding pairs, the bond angle compresses to 104.5 degrees in water.',
+      model: { type: 'shape', mol: 'H2O', caption: 'Water molecule with a bent molecular geometry and a 104.5 degree bond angle.' },
       last: true
     }
   }
@@ -235,16 +235,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'What You Found',
-      body: 'Domains push apart until they are as far from each other as they can get, and the arrangement they settle in fixes the shape. Lone pairs take a domain but no atom, and they squeeze the angles because they push harder.'
+      heading: 'Summary',
+      body: 'VSEPR theory explains molecular geometry based on electron domain repulsion. Nonbonding lone pairs repel more strongly than bonding pairs, compressing adjacent bond angles.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'From a Lewis structure you can now count the domains, say how they settle, and name the shape the atoms make. A few of those shapes are symmetrical and the rest are not, and that decides which way a molecule leans.'
+      heading: 'Geometry Determination',
+      body: 'Counting electron domains on the central atom gives the electron geometry, while the arrangement of bonded atoms determines the molecular geometry.'
     },
     {
       heading: 'Next',
-      body: 'The next bench puts molecules between charged plates to see which ones swing round.'
+      body: 'The next bench tests molecular polarity by observing how molecules behave in an electric field.'
     }
   ]
 };

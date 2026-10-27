@@ -98,16 +98,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Drawn Two Ways',
-    prompt: 'Ozone is drawn with one double bond and one single bond: how do you expect the two to measure?',
+    prompt: 'How will the two oxygen-oxygen bond lengths in ozone compare when measured experimentally?',
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Recall how much shorter a double bond was than a single bond when you pulled the pairs apart.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Recall the difference in length between single and double bonds, and whether ozone might behave differently.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Clamp the gauge across each of ozone\'s bonds.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Use the bond gauge to measure both bonds of ozone on the bench.'
     }
   }),
 
@@ -115,7 +115,7 @@ export const STAGES = [
   {
     title: 'Same Length',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'set the dial to the measured length of ozone\'s second bond, in pm.');
+      return testPrompt(QUEST_KEY, GUESSES, 'set the dial to the measured length of ozone\'s second bond in picometers.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'O3', 46, 32, 44, DRAWINGS.O3]], {
@@ -127,8 +127,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the gauge and the dial.',
-      'Compare the reading of the first bond with the reading of the second, and with what the drawing says about them.',
-      'Clamp the gauge on the second bond, and set the dial to the number it reads.'
+      'Measure both bonds with the gauge and compare the values.',
+      'Clamp the gauge onto the second bond and set the dial to its measured length.'
     ],
     check(state) {
       const t = state.table;
@@ -141,9 +141,9 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Both bonds measured 128 pm.',
-        title: 'Resonance',
-        body: `${verdictLine(QUEST_KEY, 'same')}The drawing shows one double bond and one single, but both bonds measure alike, between a single and a double. The real molecule is a blend of drawings, and that blend is called resonance.`,
-        model: { type: 'molecule', name: 'ozone', caption: 'Ozone: both bonds are the same length, between single and double. Drag to turn it.' }
+        title: 'Resonance Hybrid',
+        body: `${verdictLine(QUEST_KEY, 'same')}Although a single Lewis structure depicts one double bond and one single bond, both bonds measure an identical 128 pm, between a single and a double bond. The true molecule is a blend of structures called a resonance hybrid.`,
+        model: { type: 'molecule', name: 'ozone', caption: 'Ozone molecule: both oxygen-oxygen bonds have identical intermediate length.' }
       };
     }
   },
@@ -151,7 +151,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Both Ways',
-    prompt: 'Find every different way to light all of ozone\'s lamps, one way to a slate.',
+    prompt: 'Draw both valid resonance structures of ozone, with one structure on each slate.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([
       ['a', 'O3', 52, 40, 36, skeleton('O3')],
@@ -159,8 +159,8 @@ export const STAGES = [
     ], { pieces: [PAIR([12, 8]), LIFT([34, 8])] }),
     hints: [
       'Use the Pair tile, "Lift Out" and the two slates.',
-      'Compare the two slates and see which oxygen atom holds the double bond on each.',
-      'Light every lamp on one slate, then light them again on the other with the double bond on the other side.'
+      'Complete the octet on each atom for both structures by placing the double bond on different sides.',
+      'Draw one resonance structure with the double bond on the left and the second with the double bond on the right.'
     ],
     check(state) {
       const t = state.table;
@@ -175,7 +175,7 @@ export const STAGES = [
     reward: {
       log: 'The same molecule, two drawings.',
       title: 'Resonance Structures',
-      body: 'Drawings that differ only in where the electrons sit are resonance structures. Ozone has two, and the real molecule is a blend of both, which is why neither drawing alone matches what the gauge read.',
+      body: 'Resonance structures are two or more valid Lewis structures that differ only in the placement of electrons. Ozone is a resonance hybrid that averages both structures, explaining why experimental bond lengths are alike.',
       last: true
     }
   }
@@ -192,16 +192,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A drawing is a way to count the electrons, and some molecules have more than one good drawing. Where they do, the real molecule is a blend of them, with bonds between whole numbers.'
+      heading: 'Summary',
+      body: 'When a single Lewis structure cannot adequately describe electron delocalization, multiple resonance structures represent the molecule. The true electronic structure is a resonance hybrid with identical intermediate bond lengths.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Ozone, nitrate and carbonate all measure differently from any one drawing of them. Resonance is how a model that draws only whole bonds can still describe them.'
+      heading: 'Resonance Hybrids',
+      body: 'Molecules such as ozone, nitrate, and carbonate possess equivalent bonds whose bond lengths and strengths lie between single and double bonds.'
     },
     {
       heading: 'Next',
-      body: 'A drawing says what is bonded to what, but not the shape. The next bench pushes the arms apart and reads the angles.'
+      body: 'The next bench uses Valence Shell Electron Pair Repulsion (VSEPR) theory to predict three-dimensional molecular geometries from electron pair arrangements.'
     }
   ]
 };

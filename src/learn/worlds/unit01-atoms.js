@@ -31,7 +31,7 @@ export const UNIT_01 = {
     {
       id: 'q1-grain',
       title: 'Atoms, Elements and Mixtures',
-      line: 'Sort the scattered minerals and break the salt guards.',
+      line: 'Sort samples into elements, compounds, and mixtures.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -40,7 +40,7 @@ export const UNIT_01 = {
     {
       id: 'q2-core',
       title: 'Inside an Atom',
-      line: 'Look inside the atom to read what the raiders left.',
+      line: 'Probe the nucleus, protons, neutrons, and electron shells.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -58,7 +58,7 @@ export const UNIT_01 = {
     {
       id: 'q4-ledger',
       title: 'Isotopes and Ions',
-      line: 'Describe every atom with three numbers for the ledger.',
+      line: 'Track protons, neutrons, and electrons to describe isotopes and ions.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -67,7 +67,7 @@ export const UNIT_01 = {
     {
       id: 'q5-assay',
       title: 'Atomic Mass',
-      line: 'Weigh the isotopes hiding inside every listed mass.',
+      line: 'Calculate average atomic mass from isotope abundances.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -76,7 +76,7 @@ export const UNIT_01 = {
     {
       id: 'q6-weigh',
       title: 'Counting By Weight',
-      line: 'Count atoms by weighing them for the refinery stores.',
+      line: 'Use molar mass to count atoms and molecules by weight.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -85,7 +85,7 @@ export const UNIT_01 = {
     {
       id: 'boss-hopper',
       title: 'The Hopper',
-      line: 'Bring down the walking hopper and claim its slag.',
+      line: 'Synthesize atomic structure and mass across five phases.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

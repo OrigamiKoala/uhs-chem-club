@@ -87,7 +87,7 @@ const EMPTY_SLICE = 0.06;
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Where the Dots Land',
+    title: 'Electron Location',
     // A PREDICT STAGE: the probe is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
     prompt: 'A probe finds hydrogen\'s electron five hundred times: where do you think the dots land?',
@@ -121,7 +121,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'A Guess to Test',
-      body: 'A ring is how most pictures of an atom draw an electron, so it is a fair guess. Next, a probe will find the electron again and again and leave a dot each time.'
+      body: 'Early atomic models placed electrons on circular tracks. Next, repeated measurements test whether electrons follow fixed orbits or form probability clouds.'
     }
   },
 
@@ -131,12 +131,12 @@ export const STAGES = [
     const at = [[98, 16], [124, 16], [98, 44], [124, 44]];
     const shapes = ['ring', 'disc', 'hollow', 'lobes'];
     return {
-      title: 'Five Hundred Shots',
+      title: 'Measuring the Cloud',
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": which film catches the most of the beacon atom's dots?`
-          : 'Which film catches the most of the beacon atom\'s dots?';
+          ? `You predicted "${GUESS_LABEL[guess]}": which film catches the most of the atom's electron dots?`
+          : 'Which film catches the most of the atom\'s electron dots?';
       },
       widget,
       table: cloudTable({
@@ -145,7 +145,7 @@ export const STAGES = [
         zones: { slots: a.slots }
       }),
       hints: [
-        'Use "Fire" with the exposure at 500 shots, then lay a film on the plate.',
+        'Use "Fire" with Number of shots at 500, then lay a film on the plate.',
         'Compare the count each film catches, and look at where on the plate the dots lie thickest.',
         'Lay each of the four films in turn, note its count, and keep the film that catches the most.'
       ],
@@ -222,7 +222,6 @@ export const STAGES = [
       title: 'Two Lobes',
       prompt: 'Find the view in which a slice through the middle of Sample C shows almost no dots.',
       widget,
-      hasSliceExplainer: true,
       table: cloudTable({ pieces: [], fixtures: [c.fixture, v] }),
       hints: [
         'Use "Fire" at 500 shots, then move the joystick and use the Slice switch.',
@@ -286,7 +285,7 @@ export const STAGES = [
         body: 'From the third shell up there are five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. They matter most in the transition metals, which this world will reach before it ends.',
         model: {
           type: 'd-orbitals',
-          caption: 'The five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. Select each orbital to view its 3D lobes.'
+          caption: 'The five d orbitals: four have four lobes, and one has two lobes with a center ring.'
         },
         last: true
       }
@@ -311,19 +310,19 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An electron has no path. What it has is an orbital, a cloud of probability whose shape is set by the energy it has: round for s, two-lobed for p, four-lobed or ringed for d. Each orbital holds a standing wave that fits its shell.',
+      body: 'An electron has no fixed orbit. It occupies an orbital, a probability cloud whose shape depends on energy: spherical for s, two-lobed for p, and multi-lobed or ringed for d. Each orbital represents a standing electron wave.',
       orbitals: {
         types: ['s', 'p', 'd'],
-        caption: 'Compare the fundamental orbital shapes in 3D: spherical s, two-lobed p, and multi-lobed d orbitals.'
+        caption: 'Fundamental orbital boundary surfaces: spherical s, two-lobed p, and multi-lobed d orbitals.'
       }
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every bond in this universe is made of these clouds overlapping, and every shape a molecule takes follows from how they point. You will meet all of them again in the next world.'
+      body: 'Chemical bonds form when these atomic orbitals overlap, and molecular geometry follows directly from how the orbitals point in space.'
     },
     {
       heading: 'Next',
-      body: 'A cloud has a shape and a size. The next bench gives every electron an address, four numbers that say which cloud it is in and how it spins.'
+      body: 'Each orbital has a specific size, shape, and orientation. The next bench assigns each electron four quantum numbers that define its state and spin.'
     }
   ]
 };

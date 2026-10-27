@@ -75,7 +75,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Picture a cold pack squeezed in a warm room, and what the water in it does.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to the card you expect based on whether endothermic dissolution can occur spontaneously.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -89,7 +89,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the answer you would bet on. Next, a plot will show the salt\'s balance at each temperature from a freezer to a warm room.'
+      body: 'Next, inspect the free energy balance across different temperatures on the plot.'
     }
   },
 
@@ -97,12 +97,7 @@ export const STAGES = [
   {
     id: 's2-plot',
     title: 'Heat Against Spreading',
-    get prompt() {
-      const guess = recall(QUEST_KEY);
-      return guess && GUESS_LABEL[guess]
-        ? `You predicted ${GUESS_LABEL[guess]}: turn the dial to the lowest temperature at which the salt dissolves on its own.`
-        : 'Turn the dial to the lowest temperature at which the salt dissolves on its own.';
-    },
+    prompt: 'Turn the dial to the lowest temperature at which the salt dissolves on its own.',
     widget,
     table: heatTable({
       fixtures: [
@@ -112,7 +107,7 @@ export const STAGES = [
     hints: [
       'Use the "Temperature" dial and read the line printed under the plot.',
       'Compare the net at each setting, and look for where it changes sign.',
-      'A change runs on its own wherever the net is below zero, so keep the coldest setting that reads below it.'
+      'A process is spontaneous when free energy change is negative, so select the lowest temperature with negative net energy.'
     ],
     check(state) {
       const r = plotRead(state.table, 'plot');
@@ -121,16 +116,10 @@ export const STAGES = [
       if (r.dG < 0) return { ok: false, msg: 'A colder setting also reads below zero.' };
       return { ok: false, msg: `At ${r.T} K the net reads ${fixed(r.dG, 1, true)} kJ.` };
     },
-    get reward() {
-      const guess = recall(QUEST_KEY);
-      const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'on'
-        ? 'You bet on it dissolving, and the plot agreed. '
-        : 'The plot did not agree with your bet, which is how a guess gets better. ';
-      return {
-        log: 'The net went below zero once it was warm enough.',
-        title: 'Free Energy',
-        body: `${verdict}A change that runs on its own is spontaneous, and what decides it is the free energy: the heat the change takes in, set against the spreading it gains, which grows with temperature. A cold pack takes heat in yet is spontaneous at room temperature, because spreading wins once it is warm enough.`
-      };
+    reward: {
+      log: 'The net went below zero once it was warm enough.',
+      title: 'Free Energy',
+      body: 'A process that occurs without sustained external energy input is spontaneous, determined by the Gibbs free energy change: ΔG = ΔH − TΔS. Even an endothermic process can be spontaneous at sufficiently high temperatures when positive entropy change outweighs enthalpy.'
     }
   },
 
@@ -159,7 +148,7 @@ export const STAGES = [
     hints: [
       'Use the four cards and the four trays.',
       'Follow each card\'s line from the cold end to the hot end and compare it with the shaded strip.',
-      'A line that stays on one side never changes its verdict, and a line that crosses flips it at one temperature.'
+      'Examine the signs of ΔH and ΔS in ΔG = ΔH − TΔS to determine temperature dependence.'
     ],
     check(state) {
       const t = state.table;
@@ -172,7 +161,7 @@ export const STAGES = [
     reward: {
       log: 'Each case was sorted by its line.',
       title: 'Temperature as a Lever',
-      body: 'When the heat and the spreading pull the same way, the verdict is the same at every temperature. When they pull against each other, temperature tips the balance: a high temperature lets spreading win, and a low one lets the heat win.'
+      body: 'When ΔH and ΔS have opposing thermodynamic effects, temperature determines spontaneity. High temperatures favor the entropy term (TΔS), whereas low temperatures make the enthalpy term (ΔH) dominant.'
     }
   },
 
@@ -191,7 +180,7 @@ export const STAGES = [
     hints: [
       'Use the "Temperature" dial and the marker.',
       'Compare the net at each setting, and look for where it changes sign.',
-      'Ice starts to melt at the temperature where the net is zero, so set the marker there.'
+      'Phase transitions occur at equilibrium where the net free energy change equals zero.'
     ],
     check(state) {
       const t = state.table;
@@ -203,7 +192,7 @@ export const STAGES = [
     reward: {
       log: 'The line crossed zero at the melting point.',
       title: 'The Crossing',
-      body: 'The net balance for melting ice crosses zero at 273 K, where the heat melting costs exactly equals the spreading it gains. Below it ice stays solid, and above it ice melts, which is why the crossing temperature is the melting point.'
+      body: 'The net free energy change for melting ice crosses zero at 273 K, where ΔH = TΔS. Below 273 K, ΔG > 0 and ice remains solid; above 273 K, ΔG < 0 and melting is spontaneous.'
     }
   }
 ];
@@ -225,15 +214,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Two pulls decide whether a change runs on its own: the heat it gives out or takes in, and the spreading it gains. The free energy, ΔG = ΔH − TΔS, sets them against each other, and temperature turns up the spreading until a change that takes heat in can still run.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'This one balance explains why ice melts, why a cold pack works and why some pipes run without pumps. Nothing in it is a rule to memorise.'
-    },
-    {
-      heading: 'Next',
-      body: 'The caldera rim holds the Fifth Guild\'s siphon core, and every tool from this world will be needed to crack it.'
+      body: 'Spontaneity is governed by Gibbs free energy: ΔG = ΔH − TΔS. Enthalpy and entropy can either cooperate or compete, with temperature scaling the entropy contribution to determine whether a process proceeds spontaneously.'
     }
   ]
 };

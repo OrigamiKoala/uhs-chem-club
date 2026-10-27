@@ -75,7 +75,7 @@ export const STAGES = [
     title: 'Phase 1 · Hull Plates',
     briefing: {
       speaker: 'Vess',
-      body: 'The Hopper has risen out of the salt flat. Each of its five phases is a bench you have already used, and three wrong answers knock the rig back.'
+      body: 'Each phase reviews a bench from this world. Three mistakes reset the encounter.'
     },
     prompt: 'Sort each hull plate as an element, a compound, or a mixture.',
     widget: { type: 'table', label: 'The bench' },
@@ -344,15 +344,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The Hopper has collapsed into cold slag. Its chute holds a lump of bismuth, and no salt flat makes bismuth on its own.'
+      body: 'The Hopper has collapsed into cold slag, leaving a sample of bismuth.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase was a bench you had already worked: matter, atoms, the table, charge and weight. That is all of Tallow, and it was enough to read the machine.'
-    },
-    {
-      heading: 'Next',
-      body: 'The ingot goes into the Case File. The next world asks why the electrons in every atom you have weighed sit only where they do.'
+      body: 'Every phase reviewed core principles from this world: matter, atomic structure, periodic trends, charge, and mass.'
     }
   ]
 };

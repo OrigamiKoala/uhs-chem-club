@@ -91,15 +91,15 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'The Bottom',
-    prompt: 'Pull the hydrogen pair apart and let go where its energy is lowest.',
+    prompt: 'Adjust the hydrogen internuclear distance to find where potential energy is lowest.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.085, plot: { y0: 26, foot: 9 } })]
     }),
     hints: [
       'Use the hand on the track.',
-      'Compare the energy on either side of the lowest point the trace has drawn.',
-      'Let go at the separation under the point where the energy is most negative.'
+      'Observe potential energy as internuclear distance changes.',
+      'Release at the internuclear separation where potential energy is at its minimum.'
     ],
     check(state) {
       const r = wellRead(state.table, 'w').rows[0];
@@ -112,15 +112,15 @@ export const STAGES = [
     reward: {
       log: 'The lowest point of the trace.',
       title: 'Potential Energy Curve',
-      body: 'The trace is a potential energy curve: the energy of the pair at every separation. Its lowest point is where the atoms are happiest, and that separation is the bond length; squeezed closer, the two nuclei push each other away and the energy climbs steeply.',
-      model: { type: 'molecule', name: 'hydrogen', caption: 'A hydrogen pair at the bottom of its well: the bond length is the gap between the two centres.' }
+      body: 'The curve plots potential energy against internuclear distance. The minimum represents the equilibrium bond length, where attractive and repulsive electrostatic forces balance.',
+      model: { type: 'molecule', name: 'hydrogen', caption: 'Hydrogen molecule at its equilibrium bond length.' }
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Pulling Apart',
-    prompt: 'Set the depth marker to the energy it takes to pull the hydrogen-chlorine pair completely apart.',
+    prompt: 'Set the depth marker to the energy required to dissociate the hydrogen-chlorine bond.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       fixtures: [wells('w', [row('a', 'H-Cl', 'Pair A', 250)], {
@@ -130,8 +130,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the hand on the track and the depth marker.',
-      'Measure from the zero line down to the lowest point the trace has reached.',
-      'Set the marker so its line lies along the bottom of the trace, and the number beside it is the energy.'
+      'Measure the energy difference between the zero reference line and the well minimum.',
+      'Align the marker with the well minimum to measure the bond dissociation energy.'
     ],
     check(state) {
       const r = wellRead(state.table, 'w');
@@ -145,7 +145,7 @@ export const STAGES = [
     reward: {
       log: 'The depth of the well.',
       title: 'Bond Energy',
-      body: 'The depth of the well, measured from the zero line down to its bottom, is the energy it takes to pull the atoms completely apart. That is the bond energy.'
+      body: 'The depth of the potential well from zero energy corresponds to the bond dissociation energy, which is the energy required to break the bond.'
     }
   },
 
@@ -153,16 +153,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'More Pairs, More Room?',
-    prompt: 'How far apart do two carbon atoms sit when three pairs hold them, compared with one pair?',
+    prompt: 'How does carbon-carbon bond length change when sharing three electron pairs versus one pair?',
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Picture the shared pairs sitting in the gap between the atoms, and what they do to the atoms.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Consider how increasing shared electron density affects attraction between nuclei.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Pull the wells for a single, a double and a triple bond.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Test the potential energy curves for single, double, and triple bonds on the bench.'
     }
   }),
 
@@ -170,7 +170,7 @@ export const STAGES = [
   {
     title: 'Three Wells',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'order the three carbon-carbon pairs from the longest bond to the shortest.');
+      return testPrompt(QUEST_KEY, GUESSES, 'order the three carbon-carbon pairs from longest to shortest bond length.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
@@ -182,8 +182,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the three hands and the rail.',
-      'Compare where each trace bottoms out along the separation axis, and how deep each one goes.',
-      'Pull each pair until its trace has a bottom, then put first the card whose lowest point sits at the widest separation.'
+      'Identify the equilibrium internuclear distance for each carbon-carbon bond.',
+      'Arrange the pairs on the rail from longest to shortest equilibrium bond length.'
     ],
     check(state) {
       const t = state.table;
@@ -197,8 +197,8 @@ export const STAGES = [
       return {
         log: 'The more pairs shared, the shorter the bond.',
         title: 'Bond Order',
-        body: `${verdictLine(QUEST_KEY, 'closer')}The number of shared pairs between two atoms is the bond order, and each extra pair draws the atoms closer and digs the well deeper. A shorter bond is a stronger bond.`,
-        model: { type: 'molecule', name: 'nitrogen', caption: 'Nitrogen: three shared pairs (a triple bond) hold its atoms close.' }
+        body: `${verdictLine(QUEST_KEY, 'closer')}Bond order represents the number of shared electron pairs. Higher bond order pulls nuclei closer together into a deeper well, producing a shorter and stronger bond.`,
+        model: { type: 'molecule', name: 'nitrogen', caption: 'Nitrogen molecule with a triple covalent bond.' }
       };
     }
   },
@@ -206,7 +206,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Salt Strength',
-    prompt: 'Rank the three salts by how much heat each takes to melt, the most first.',
+    prompt: 'Rank the three ionic compounds from highest to lowest melting point.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -219,8 +219,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the hotplate and its heat dial.',
-      'Compare the setting at which each salt melts, and the charges and ion sizes printed on its card.',
-      'Slide each salt onto the plate and turn the dial up until it gives way, then rank them by the setting.'
+      'Compare melting temperatures with ionic charges and ionic radii on each card.',
+      'Place each compound on the hotplate, record when it melts, and order them from highest to lowest melting point.'
     ],
     check(state) {
       const t = state.table;
@@ -232,9 +232,9 @@ export const STAGES = [
     },
     reward: {
       log: 'Magnesium oxide took the most heat. Potassium chloride took the least.',
-      title: 'Charge and Size Set the Hold',
-      body: 'A salt takes more heat to melt when its ions carry bigger charges and sit closer together, because that holds the lattice harder. Magnesium oxide, with charges of 2 on small ions, outlasted both of the salts with charges of 1.',
-      model: { type: 'crystal', cation: 'Mg', anion: 'O', n: 3, caption: 'Magnesium oxide: charges of 2+ and 2− on small ions, held hardest of the three.' },
+      title: 'Lattice Energy and Ion Properties',
+      body: 'Lattice energy increases with higher ionic charges and smaller ionic radii. Magnesium oxide contains divalent ions with small radii, producing a stronger lattice than compounds with singly charged ions.',
+      model: { type: 'crystal', cation: 'Mg', anion: 'O', n: 3, caption: 'Magnesium oxide crystal lattice with Mg2+ and O2- ions.' },
       last: true
     }
   }
@@ -253,16 +253,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'What You Found',
-      body: 'Two atoms settle where the pull between them and the push between their nuclei balance, and that sets how long the bond is and how much it costs to break. More shared pairs sit closer and hold harder, and a salt is held by charge over distance.'
+      heading: 'Summary',
+      body: 'Covalent bond length reflects the balance between nuclear attraction and electrostatic repulsion. Higher bond orders result in shorter, stronger bonds. In ionic solids, lattice energy increases with higher ionic charge and smaller interionic distance.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Every bond length and bond energy in a table is a point on one of these curves. The breakers can now be loaded for the bond they have to beat, instead of by guesswork.'
+      heading: 'Bond Curves',
+      body: 'Potential energy curves quantify the equilibrium bond distance at their minimum and bond dissociation energy at their well depth.'
     },
     {
       heading: 'Next',
-      body: 'The next bench lays the electrons out on a slate, so you can see where each one of a molecule\'s pairs goes.'
+      body: 'The next bench uses Lewis dot diagrams to track valence electron sharing and octet fulfillment across molecules.'
     }
   ]
 };

@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Put Them In Order',
-    prompt: 'Sort the elements from smallest to largest.',
+    prompt: 'Lay the six cards on the strip, from fewest protons on the left to most on the right.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'].map((id, i) => card(id, { x: 30 + 18 * i, y: 48 })),
@@ -203,14 +203,14 @@ export const STAGES = [
     reward: {
       log: 'Six cards laid in count order.',
       title: 'Atomic Number',
-      body: 'You laid the cards from fewest protons to most (smallest to largest). The number of protons is called the atomic number.'
+      body: 'You laid the cards from fewest protons to most. That proton count is the atomic number.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Pick the elements where the number of valence electrons resets.',
+    prompt: 'Set aside every card where the pattern starts over.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: RUN_18.map((id, i) => card(id, { x: X(i % 9), y: i < 9 ? 14 : 30 })),
@@ -241,14 +241,14 @@ export const STAGES = [
     reward: {
       log: 'Repeat measured at 8.',
       title: 'Periods',
-      body: 'The outer-shell count climbs and starts over, again and again, because one shell fills up and a new one opens. Breaking the row wherever it starts over yields periods of 2, 8, and 8 cards. The ten middle columns appear later, leaving the gap between group 2 and 13.'
+      body: 'Outer-shell electrons increase and reset as each shell fills up. Breaking the rows where the count resets creates periods of 2, 8, and 8 elements, with a gap between groups 2 and 13.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lay The Last Row',
-    prompt: 'Place the remaining cards in the bottom row. Hint: use the number of valence electrons to determine the order.',
+    prompt: 'File the eight loose cards into the empty bottom row, ordered left to right by atomic number.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
@@ -284,7 +284,7 @@ export const STAGES = [
     reward: {
       log: 'Chart complete: 18 cards, three rows.',
       title: 'The Periodic Table',
-      body: 'That chart is the periodic table. You built it from two things you measured yourself: one number to put the cards in order, and one pattern to say where a row ends. Chemists have drawn it this way since Dmitri Mendeleev laid his own cards out in 1869, and the dotted gap marks ten more columns the full table fits between groups 2 and 13.'
+      body: 'This arrangement is the periodic table. Elements are ordered by atomic number, with row breaks where electron patterns repeat.'
     }
   },
 
@@ -330,7 +330,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Find every element that won\'t trade electrons and put them in the tray.',
+    prompt: 'Put every card on the chart that will not trade an electron in the tray.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: chartCards({ fixed: false }),
@@ -406,7 +406,7 @@ export const STAGES = [
     reward: {
       log: 'All six filed by what they do.',
       title: 'Metals and Nonmetals',
-      body: 'Atoms on the left of the chart hand electrons over, and those are the metals. Atoms on the right take electrons on, and those are the nonmetals. The keenest of each get their own name: group 1 are the alkali metals and group 17 are the halogens.'
+      body: 'Elements on the left that give electrons are metals; group 1 are alkali metals. Elements on the right that take electrons are nonmetals; group 17 are halogens.'
     }
   },
 
@@ -445,7 +445,7 @@ export const STAGES = [
     reward: {
       log: 'Missing card worked out: 14.',
       title: 'A Chart That Predicts',
-      body: 'You just described an atom nobody at this bench has ever measured, using nothing but the shape of the chart. The card that belongs in that slot is silicon, atomic number 14. Mendeleev did exactly this with three empty slots in 1871 and was proved right on all three.',
+      body: 'The periodic table predicts missing elements from surrounding patterns. The card in that slot is silicon, with atomic number 14.',
       last: true
     }
   }
@@ -461,15 +461,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Every kind of atom has an atomic number, which is simply how many protons it has. Put them in that order and a pattern repeats, which is what the periodic table is. One number orders everything: the row an atom lands in, the group it joins, and what it does with its outer electrons.'
+      body: 'Elements are ordered by atomic number, the proton count. As shells fill, chemical properties repeat periodically.'
     },
     {
-      heading: 'Rows and Columns',
-      body: 'A row is a period, and it ends when a shell fills up. A column is a group, and everything in it has the same outer-shell count, which is why it behaves the same way: metals on the left hand electrons over, nonmetals on the right take them on, and the noble gases at the edge want nothing.'
-    },
-    {
-      heading: 'Next',
-      body: 'Nice detective work assembling the chart! Next, we\'ll track how protons, neutrons, and electrons balance inside each atom.'
+      heading: 'Periods and Groups',
+      body: 'Rows are periods, ending when a shell fills. Columns are groups, sharing valence electron counts and similar chemical behavior.'
     }
   ]
 };

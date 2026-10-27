@@ -65,7 +65,7 @@ function gaugeWalls(ctx, w, h, t) {
   dial(ctx, w * 0.5, h * 0.17, h * 0.07, frac, 'roof', val);
   dial(ctx, w * 0.8, h * 0.5, h * 0.07, frac, 'side wall', val);
   dial(ctx, w * 0.5, h * 0.8, h * 0.07, frac, 'floor', val);
-  if (t > 0.8) text(ctx, 'all three alike', w * 0.17, h * 0.5, { size: Math.max(11, h * 0.042), color: C.amber });
+  if (t > 0.8) text(ctx, 'all three equal', w * 0.17, h * 0.5, { size: Math.max(11, h * 0.042), color: C.amber });
 }
 
 /* ---- q2-laws: a sealed tank cooled by fifty degrees, its gauge falling in step with the kelvin temperature ---- */
@@ -90,7 +90,7 @@ function coldTank(ctx, w, h, t) {
   const colH = h * 0.55 * ((tC + 50) / 90);
   ctx.fillRect(tx - 3, h * 0.2 + h * 0.55 - colH, 6, colH);
   text(ctx, `${Math.round(tC)} °C`, tx, h * 0.82, { size: Math.max(12, h * 0.046), color: C.text, weight: 700 });
-  if (t > 0.85) text(ctx, 'falls in step', w * 0.2, h * 0.5, { size: Math.max(11, h * 0.04), color: C.dust });
+  if (t > 0.85) text(ctx, 'proportional drop', w * 0.2, h * 0.5, { size: Math.max(11, h * 0.04), color: C.dust });
 }
 
 /* ---- q3-ideal: a mole of a light gas and a mole of a heavy one fill the same room ---- */
@@ -109,7 +109,7 @@ function equalRooms(ctx, w, h, t) {
     text(ctx, `${Math.round(GASES[gas].M)} g`, x + bw / 2, by + bh + h * 0.13, { size: Math.max(11, h * 0.04), color: C.amber, weight: 700 });
   });
   text(ctx, `${shown} particles each`, w / 2, h * 0.14, { size: Math.max(12, h * 0.05), color: C.text });
-  if (t > 0.8) text(ctx, 'the same room', w / 2, h * 0.2, { size: Math.max(11, h * 0.04), color: C.amber });
+  if (t > 0.8) text(ctx, 'equal volume', w / 2, h * 0.2, { size: Math.max(11, h * 0.04), color: C.amber });
 }
 
 /* ---- q4-mixtures: each gas's push stacked up to the gauge ---- */
@@ -131,7 +131,7 @@ function mixShare(ctx, w, h, t) {
   ctx.strokeRect(x0, y, full, bh);
   if (t > 0.85) {
     text(ctx, `gauge ${Math.round(m.P)}`, w / 2, y + bh + h * 0.1, { size: Math.max(12, h * 0.05), color: C.amber, weight: 700 });
-    text(ctx, 'each gas on its own, added up', w / 2, y + bh + h * 0.18, { size: Math.max(11, h * 0.038), color: C.dust });
+    text(ctx, 'sum of partial pressures', w / 2, y + bh + h * 0.18, { size: Math.max(11, h * 0.038), color: C.dust });
   }
 }
 
@@ -151,7 +151,7 @@ function leakRace(ctx, w, h, t) {
     text(ctx, GASES[g].sym, x + cw / 2, cy + ch + h * 0.07, { size: Math.max(11, h * 0.042), color: C.dust });
     text(ctx, `${halfTime(g, 300).toFixed(1)} s`, x + cw / 2, cy + ch + h * 0.13, { size: Math.max(10, h * 0.036), color: i === 0 ? C.amber : C.dim });
   });
-  if (t > 0.85) text(ctx, 'the lighter the gas, the sooner it is gone', w / 2, h * 0.16, { size: Math.max(11, h * 0.042), color: C.text });
+  if (t > 0.85) text(ctx, 'lighter gases effuse faster', w / 2, h * 0.16, { size: Math.max(11, h * 0.042), color: C.text });
 }
 
 /* ---- q6-real: a squeezed gas reads above the law, a cooled one below ---- */

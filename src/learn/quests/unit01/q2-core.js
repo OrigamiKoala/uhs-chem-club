@@ -341,14 +341,14 @@ export const STAGES = [
     reward: {
       log: 'Sample D carries 8 electrons.',
       title: 'Neutral Atoms Balance',
-      body: 'The needle reads the total charge on the atom - a neutral atom has a charge of 0, so it has the same number of protons as electrons.'
+      body: 'The needle reads the total charge on the atom: a neutral atom has a charge of 0, with equal numbers of protons and electrons.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Where the Electrons Sit',
-    prompt: 'Place all 11 electrons of Sample D into their shells. Follow the pattern in Samples A, B, and C. Make sure the shells have the right number of electrons!',
+    prompt: 'Place all 11 electrons of Sample D into their shells.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -447,7 +447,7 @@ export const STAGES = [
     reward: {
       log: 'Both cased samples tested and filed.',
       title: 'Valence Electrons',
-      body: 'Atoms achieve stability when their outer shells are full. The electrons in the outermost shell are the valence electrons, and they decide how an atom reacts: one valence electron gets given away, seven takes one to make eight, and a full shell of eight trades nothing at all.'
+      body: 'Electrons in the outermost shell are valence electrons, which determine how an atom reacts: one valence electron is given away, seven takes one to fill the shell, and a full shell of eight trades nothing.'
     }
   },
 
@@ -494,7 +494,7 @@ export const STAGES = [
       log: 'Samples B and E match Sample A. Samples C and D do not.',
       model: { type: 'atoms', items: [{ p: 6, n: 6, label: 'Sample A' }, { p: 6, n: 7, label: 'Sample B' }], caption: 'Sample A and Sample B: the same 6 protons and 6 electrons, one more neutron in B. Not to scale.' },
       title: 'Elements and Isotopes',
-      body: 'What kind of atom you have depends only on the number of protons, which is called the atomic number. Samples A, B and E all have 6 protons (carbon), while Samples C and D have other counts (nitrogen and boron). Atoms with the same number of protons but different numbers of neutrons are called isotopes.'
+      body: 'An element is identified solely by its proton count, the atomic number. Atoms with the same number of protons but different numbers of neutrons are isotopes.'
     }
   },
 
@@ -561,12 +561,8 @@ export const DEBRIEF = {
       body: 'An atom is mostly empty space with a nucleus at the center. The nucleus holds protons and neutrons, and electrons sit outside it in shells.'
     },
     {
-      heading: 'What Each One Does',
-      body: 'Protons (+1) decide which element you have. Neutrons (0) only add weight. Electrons (-1) cancel the protons, and the ones in the outer shell decide how the atom reacts.'
-    },
-    {
-      heading: 'Next',
-      body: 'You have now counted protons for a dozen atoms. Next, we\'ll look at how to sort atoms!'
+      heading: 'Subatomic Particles',
+      body: 'Protons (+1) determine the element. Neutrons (0) add mass. Electrons (-1) balance charge, and outer-shell electrons govern chemical reactivity.'
     }
   ]
 };

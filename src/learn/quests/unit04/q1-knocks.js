@@ -95,18 +95,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
     key: QUEST_KEY,
-    title: 'Guess the Gauges',
+    title: 'Gauge Comparison',
     prompt: 'Which of a sealed box\'s three gauges, on its roof, side wall and floor, will read the highest?',
     items: GUESSES,
     hints: [
-      'Use the four cards and the slot.',
-      'Picture the gas in the box and what it is doing to each wall.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Choose one of the cards.',
+      'Consider how gas particles move and collide with each wall.',
+      'Select the card that matches your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Guess Worth Testing',
-      body: 'Gauges are about to be fitted to a real box of gas, one on each of those walls, and they will say which guess holds.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'Gauges on the roof, side wall, and floor will now test how pressure is distributed.'
     }
   }),
 
@@ -117,7 +117,7 @@ export const STAGES = [
       plot: { x: 'TC', y: 'P' }
     });
     return {
-      title: 'A Gauge on Every Wall',
+      title: 'Pressure on Container Walls',
       // The guess comes back here, locked in: it is the first thing the player reads about the test.
       get prompt() {
         return youPredicted(QUEST_KEY, GUESSES, 'which statement do the three gauges back up?', 'Which statement do the three gauges back up?');
@@ -129,27 +129,24 @@ export const STAGES = [
         zones: { slots: [{ id: 'show', label: 'What the gauges show', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
       }, { recorder: { at: { x: 109, y: 11 }, size: { w: 36, h: 14 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Gauge', yUnit: '', xDigits: 0 } }),
       hints: [
-        'Use the "Heater" dial and "Record", then lay a card in the slot.',
-        'Compare the three gauges with each other, and then again after the box is warmed.',
-        'Lay the card that says what the three readings do together, whatever you guessed.'
+        'Use the "Heater" dial and "Record", then place a card in the slot.',
+        'Compare the three gauges with each other as temperature changes.',
+        'Select the card describing how the three readings compare.'
       ],
       check(state) {
         const t = state.table;
         const card = cardIn(t, 'show');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         const want = wallMost(boxRead(t, BOX));
         if (card.id === want) return { ok: true };
         const names = { roof: 'roof', side: 'side wall', floor: 'floor' };
         return { ok: false, msg: `The ${names[card.id] || 'side wall'} gauge does not read more than the other two.` };
       },
-      // The verdict on the guess opens the card; it never says the guess cost anything.
       get reward() {
-        const g = guessOf(QUEST_KEY, GUESSES);
-        const verdict = !g ? '' : g.id === 'same' ? 'You predicted this one, and the gauges agreed. ' : 'The gauges did not agree with your prediction, which is how a guess gets better. ';
         return {
           log: 'All three gauges read alike.',
           title: 'Pressure',
-          body: `${verdict}The gas pushes on every wall alike, because its particles fly every way and knock them all: it is knocking, not weight. That push is called pressure, and it is read in kilopascals (kPa).`,
+          body: 'The gas pushes on every wall alike because its particles fly in all directions and collide with all walls. That push is pressure, measured in kilopascals (kPa).',
           model: { type: 'gas', boxes: [{ label: 'Sealed box', w: 2.6, parts: [{ kind: 'N2', n: 12 }] }], caption: 'A box of gas: 12 particles flying every way, one for each twelfth of a mole, so every wall is knocked alike. Not to scale.' }
         };
       }
@@ -163,7 +160,7 @@ export const STAGES = [
       show: { knocks: true, speed: true }, words: { speed: 'SPEED' }, label: 'Holder'
     });
     return {
-      title: 'Squeeze the Crowd',
+      title: 'Volume and Pressure',
       prompt: 'Sort each reading by whether it changes along with the gauge as the piston moves.',
       widget,
       table: gasTable({
@@ -178,8 +175,8 @@ export const STAGES = [
       }),
       hints: [
         'Use the "Piston" dial.',
-        'Compare each reading at the biggest room with the same reading at the smallest.',
-        'A reading goes with the gauge only if it is different at the two ends of the dial.'
+        'Compare each reading across different piston positions.',
+        'Sort each reading by whether its value changes with the piston.'
       ],
       check(state) {
         const t = state.table;
@@ -196,7 +193,7 @@ export const STAGES = [
       reward: {
         log: 'Only the knocks follow the gauge.',
         title: 'Boyle\'s Law',
-        body: 'Squeezing the same particles into less room changes neither their speed nor their number, so they simply reach the walls more often. Half the room gives twice the knocks and twice the pressure, which is Boyle\'s law.',
+        body: 'Compressing a gas into less volume increases wall collision frequency without changing particle speed or count. Halving volume doubles the collision rate and doubles the pressure (Boyle\'s law).',
         model: {
           type: 'gas',
           boxes: [{ label: 'Whole room', w: 3.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Half the room', w: 1.7, parts: [{ kind: 'He', n: 12 }] }],
@@ -215,7 +212,7 @@ export const STAGES = [
     // Four snapshots of nitrogen's speeds, taken at four temperatures the player is never told.
     const snap = (id, label, C) => histCard(id, label, { x: 0, y: 0 }, 'N2', toKelvin(C, 'C'), REF_SPEEDS);
     return {
-      title: 'A Crowd, Not a Line',
+      title: 'Speed Distribution',
       prompt: 'Put the four speed snapshots in order from the coldest gas to the hottest.',
       widget,
       table: gasTable({
@@ -240,7 +237,7 @@ export const STAGES = [
       reward: {
         log: 'Every gas is a spread of speeds.',
         title: 'A Spread of Speeds',
-        body: 'The particles of one gas do not all go at one speed: they make a spread with one peak, which chemists call the Maxwell–Boltzmann distribution. Heating slides the peak to higher speeds and flattens the spread.'
+        body: 'Particles in a gas do not move at a single speed; they form a distribution described by the Maxwell–Boltzmann distribution. Heating shifts the peak to higher speeds and broadens the spread.'
       }
     };
   })(),
@@ -253,7 +250,7 @@ export const STAGES = [
     });
     const chips = [['energy', 'ENERGY'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']];
     return {
-      title: 'Light and Heavy',
+      title: 'Mass and Kinetic Energy',
       prompt: 'Set both cylinders to one temperature, then sort each reading by whether the two gases share it.',
       widget,
       table: gasTable({
@@ -268,8 +265,8 @@ export const STAGES = [
       }),
       hints: [
         'Use both "Heater" dials.',
-        'Compare the figures printed on the two cylinders at one temperature.',
-        'A reading goes in "Same in both" only if the two cylinders print the same figure for it.'
+        'Compare the values on the two cylinders at the same temperature.',
+        'Place readings into "Same in both" only if both cylinders display matching values.'
       ],
       check(state) {
         const t = state.table;
@@ -285,7 +282,7 @@ export const STAGES = [
       reward: {
         log: 'The same energy, a different speed.',
         title: 'Kinetic Energy',
-        body: 'At one temperature every gas has the same average energy of motion, called kinetic energy, so the lighter particles must move faster. Together the benches give the kinetic molecular theory: a gas is a crowd of particles in constant random motion, and its pressure is their knocking on the walls.',
+        body: 'At a given temperature, all gases share the same average kinetic energy, so lighter particles move faster. Kinetic molecular theory models gas pressure as continuous collisions of moving particles against container walls.',
         last: true
       }
     };
@@ -294,11 +291,11 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag one card into the slot.'],
-  2: ['Turn the Heater dial and press Record,', 'then drag a card into the slot.'],
-  3: ['Turn the Piston dial and watch the readings;', 'drag each chip into a tray.'],
-  4: ['Turn the Heater dial and watch the speed screen;', 'drag each snapshot into its place on the strip.'],
-  5: ['Turn each Heater dial, then drag the chips', 'into the trays.']
+  1: ['Place a card in the slot.'],
+  2: ['Turn the Heater dial and Record,', 'then place a card in the slot.'],
+  3: ['Turn the Piston dial,', 'then sort each chip into a tray.'],
+  4: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
+  5: ['Turn both Heater dials,', 'then sort chips into trays.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -309,16 +306,8 @@ export const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A gauge counts knocks, and it counts them the same on every wall. More gas, less room or more heat all make the knocks harder or more frequent, and the temperature is the average energy of the crowd that does the knocking.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every gas law you will meet is one of these relationships written down with numbers. You have now seen where each one comes from.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench changes one thing at a time on a gas and reads off exactly how the others answer.'
+      heading: 'Summary',
+      body: 'Gas pressure results from particles colliding with container walls, distributed equally across all surfaces. Temperature reflects average kinetic energy, so heating increases collision force and frequency, while compression increases collision frequency.'
     }
   ]
 };

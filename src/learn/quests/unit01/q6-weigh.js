@@ -142,7 +142,7 @@ export const STAGES = [
     reward: {
       log: 'Crate balanced by the same weight of carbon.',
       title: 'Counting By Weighing',
-      body: 'Nobody counted the crate and nobody has to: atoms of one kind all weigh the same, so a pan that balances it holds the same number of atoms. The scoops you poured were counted, so the crate is counted too. This is how chemists count things far too small to count one by one.'
+      body: 'Identical atoms have identical mass, so balanced pans contain equal numbers of atoms. Weighing allows counting particles that are too small to count directly.'
     }
   },
 
@@ -188,7 +188,7 @@ export const STAGES = [
       log: 'Methane on the scale: one carbon and four hydrogen.',
       model: { type: 'molecule', name: 'methane', caption: 'CH₄: one carbon atom (dark) and four hydrogen atoms (pale).' },
       title: 'Formula Mass',
-      body: 'The scale read 12.0 + 1.0 + 1.0 + 1.0 + 1.0, the listed masses of the atoms in one molecule, added up. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
+      body: 'Adding the atomic masses of all atoms in a molecule gives its formula mass: 12.0 + (4 × 1.0) = 16.0 for methane (CH₄).'
     }
   },
 
@@ -228,7 +228,7 @@ export const STAGES = [
     reward: {
       log: 'Three samples of 60: 60, 720 and 960 on the scale.',
       title: 'Equal Counts Weigh In the Same Ratio',
-      body: 'Three samples holding exactly the same number of atoms weighed 60, 720 and 960 — one, twelve and sixteen times each other, which is the ratio of their listed masses. It has to come out that way: if one carbon atom weighs twelve times one hydrogen atom, any equal counts of the two weigh in that same twelve to one ratio. Run that backwards and you have a way of measuring out equal counts without counting anything.'
+      body: 'Equal numbers of atoms have masses in exact proportion to their atomic masses: hydrogen (1), carbon (12), and oxygen (16) weigh 60, 720, and 960.'
     }
   },
 
@@ -265,7 +265,7 @@ export const STAGES = [
     reward: {
       log: '12.0 g of carbon matches 16.0 g of oxygen.',
       title: 'The Mole',
-      body: "Take the listed mass of any element in grams and you have taken the same number of atoms every time, and that amount is called one mole of it. Nobody picked the number: it falls out of the listed masses already being ratios of one another. It works out to 6.02 x 10^23 atoms — a 6 followed by 23 zeros — a figure called Avogadro's number, and that count being far too big to say any other way is the whole reason the word mole exists."
+      body: 'The atomic mass of any element in grams contains one mole of atoms. One mole equals 6.02 × 10²³ particles, known as Avogadro\'s number.'
     }
   },
 
@@ -304,7 +304,7 @@ export const STAGES = [
       log: 'One mole of carbon dioxide weighs 44.0 grams.',
       model: { type: 'molecule', name: 'carbon dioxide', caption: 'CO₂: one carbon atom (dark) between two oxygen atoms (red-brown).' },
       title: 'Molar Mass',
-      body: 'The rule does not stop at elements: add up the listed masses of every atom in one molecule of a compound and that many grams of it is one mole of its molecules. Here 12.0 + 16.0 + 16.0 = 44.0, so 44.0 grams holds 6.02 x 10^23 molecules of it. That figure, grams per mole, is called the molar mass, and every substance has one.'
+      body: 'The mass in grams of one mole of a substance is its molar mass. For CO₂, 12.0 + (2 × 16.0) = 44.0 grams per mole.'
     }
   },
 
@@ -342,7 +342,7 @@ export const STAGES = [
     reward: {
       log: 'The drum holds 4 matching scoops: 4 moles.',
       title: 'Grams and Moles Convert Both Ways',
-      body: 'The molar mass is the bridge between the two: divide a mass in grams by it to get moles, multiply moles by it to get grams. 72 grams at 18 grams per mole is 4 moles, and those 4 moles hold four times 6.02 x 10^23 molecules. Every real measurement you can take is a mass and every recipe is a count, so this is the conversion that joins the two.'
+      body: 'Molar mass converts between mass and moles: dividing 72 grams of water by 18 g/mol yields 4 moles of water.'
     }
   },
 
@@ -378,7 +378,7 @@ export const STAGES = [
     reward: {
       log: '2 moles of water hold 4 moles of hydrogen.',
       title: 'A Recipe Reads in Moles',
-      body: 'The numbers in a formula are a ratio of atoms, and a ratio does not care what unit you count in: two hydrogen per molecule is also two moles of hydrogen per mole of molecules. So two moles of this compound hold four moles of hydrogen and two moles of oxygen. That is why the formula written for a single molecule is the same formula a yard uses to weigh out a shipment.'
+      body: 'Chemical formulas express mole ratios: each mole of H₂O contains two moles of hydrogen atoms and one mole of oxygen atoms.'
     }
   },
 
@@ -418,7 +418,7 @@ export const STAGES = [
     reward: {
       log: 'The lightest drum holds the most atoms.',
       title: 'Weight Is Not Count',
-      body: 'The lightest drum on the floor holds the most atoms, because a hydrogen atom weighs a sixteenth of what an oxygen atom does. A balance only ever reports mass, so a count is always a mass divided by a molar mass. Every real measurement in chemistry begins with that division and ends with the reverse of it.',
+      body: 'Because lighter atoms have smaller molar masses, a given mass of lighter elements contains more atoms than the same mass of heavier ones.',
       last: true
     }
   }
@@ -437,10 +437,6 @@ export const DEBRIEF = {
     {
       heading: 'Why It Is Worth It',
       body: 'A formula is a count and a balance reads a mass, and until you can turn one into the other a recipe cannot be prepared. The molar mass provides that conversion.'
-    },
-    {
-      heading: 'Next',
-      body: 'You\'ve mastered weighing and counting on Tallow! Now, one colossal rogue machine stands on the salt flats: the refinery Hopper. Let\'s put everything together!'
     }
   ]
 };

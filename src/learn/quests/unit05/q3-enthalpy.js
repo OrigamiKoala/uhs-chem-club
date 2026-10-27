@@ -100,7 +100,7 @@ export const STAGES = [
       reward: {
         log: 'The shelf dropped 160 kJ per mole.',
         title: 'Enthalpy Change',
-        body: 'Enthalpy change, ΔH, is the energy a reaction takes in or gives out per mole. The powder gave 8,000 J to the bath from 0.05 mol, so its shelf drops 160 kJ per mole. A minus sign means the chemicals ended with less stored energy.'
+        body: 'Enthalpy change, ΔH, is the heat absorbed or released per mole of reaction. Dissolving 0.05 mol released 8,000 J to the bath, giving ΔH = −160 kJ/mol, where a negative sign indicates an exothermic change.'
       }
     };
   })(),
@@ -125,7 +125,7 @@ export const STAGES = [
     hints: [
       'Use the four cards and the slot.',
       'Compare what each card says about a mole with what a mole weighs.',
-      'There is no wrong guess yet; commit to the fuel you would bet on.'
+      'Commit to the fuel you expect to release the most heat per gram.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -139,7 +139,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the fuel you would bet on. Next, ten grams of each can be burned under the same tank of water.'
+      body: 'Next, burn ten grams of each fuel under the tank to measure the heat released per gram.'
     }
   },
 
@@ -150,12 +150,7 @@ export const STAGES = [
     return {
       id: 's3-rank',
       title: 'Ten Grams Each',
-      get prompt() {
-        const guess = recall(QUEST_KEY);
-        return guess && GUESS_LABEL[guess]
-          ? `You predicted ${GUESS_LABEL[guess]}: order the four tins by how far each warms the same tank.`
-          : 'Order the four tins by how far each warms the same tank.';
-      },
+      prompt: 'Order the four tins by how far each warms the same tank.',
       widget,
       table: heatTable({
         // A tin bumped out of the cup's mouth comes to rest on the strip below the rail.
@@ -181,17 +176,11 @@ export const STAGES = [
         const k = tins.findIndex((p, i) => i > 0 && tins[i - 1].props.rise > p.props.rise);
         return { ok: false, msg: `${tins[k - 1].label} sits left of ${tins[k].label}, and the tank rose ${fixed(tins[k - 1].props.rise, 1)} °C for the one and ${fixed(tins[k].props.rise, 1)} °C for the other.` };
       },
-      get reward() {
-        const guess = recall(QUEST_KEY);
-        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === BY_GRAM[BY_GRAM.length - 1]
-          ? 'You bet on hydrogen, and the tank agreed. '
-          : 'The tank did not agree with your bet, which is how a guess gets better. ';
-        return {
-          log: 'Hydrogen warmed the tank most per gram.',
-          title: 'Energy per Gram',
-          body: `${verdict}Hydrogen gives out the least energy per mole yet the most per gram, because a mole of it weighs so little. A skiff that must lift its own fuel is judged in kilojoules per gram.`,
-          model: { type: 'molecules', items: ['hydrogen', 'methane'], caption: 'A hydrogen molecule, 2 g a mole, beside a methane molecule, 16 g a mole.' }
-        };
+      reward: {
+        log: 'Hydrogen warmed the tank most per gram.',
+        title: 'Energy per Gram',
+        body: 'Hydrogen releases the least heat per mole yet the most heat per gram because of its low molar mass (2.0 g/mol). Fuel energy density depends on mass rather than moles.',
+        model: { type: 'molecules', items: ['hydrogen', 'methane'], caption: 'A hydrogen molecule, 2 g a mole, beside a methane molecule, 16 g a mole.' }
       }
     };
   })()
@@ -213,15 +202,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A reaction\'s enthalpy change is the energy it takes in or gives out per mole, and a minus sign means the chemicals ended with less. A bigger number per mole is not a better fuel: weight decides, and the lightest molecule carries the most energy per gram.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every fuel the raiders left on the ridge can now be ranked for the skiff in a single run under a tank of water. The same bath will measure the energy of anything else they left behind.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench looks inside the molecules, to ask where a reaction\'s energy comes from.'
+      body: 'Reaction enthalpy is expressed per mole of substance, with a negative sign indicating released heat. While molar enthalpy tracks reaction stoichiometry, energy density per gram depends on molar mass, making lightweight fuels like hydrogen highly energetic by mass.'
     }
   ]
 };

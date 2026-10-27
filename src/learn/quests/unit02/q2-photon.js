@@ -126,7 +126,7 @@ export const STAGES = [
   (() => {
     const cell = photocell('cell', 'Photocell', { x: 52, y: 31 }, { settings: SWEEP, start: 1, brightness: { start: 5 } });
     return {
-      title: 'A Plate That Will Not Give',
+      title: 'Freeing Electrons',
       // The guess comes back here, locked in.
       get prompt() {
         const guess = recall(QUEST_KEY);
@@ -141,7 +141,7 @@ export const STAGES = [
         zones: { slots: cell.slots }
       }),
       hints: [
-        'Use the Colour dial and the Brightness dial, and watch "Freed Per Second".',
+        'Use the Colour dial and the Brightness dial, and watch "Electrons Per Second".',
         'Compare what frees for red at full brightness with what frees for violet at its dimmest.',
         'Try different colours on the dial until electrons break free from the plate.'
       ],
@@ -162,8 +162,8 @@ export const STAGES = [
         return {
           log: 'Red at full brightness: nothing. Violet, barely lit: electrons.',
           title: 'The Photoelectric Effect',
-          body: `${verdict}Red at full strength frees nothing, while violet at a whisper frees electrons at once. A wave picture says the bright lamp should win, so light must hand over its energy in some other way.`,
-          model: { type: 'photons', metal: 'Na', nm: 400, brightness: 1, caption: 'One packet of violet light freeing one electron from sodium. A red packet of the same size is too weak to free any.' }
+          body: `${verdict}Red light at full brightness frees nothing, while dim violet light frees electrons immediately. A wave model predicts that higher brightness delivers more energy, so light must deliver its energy in discrete packets.`,
+          model: { type: 'photons', metal: 'Na', nm: 400, brightness: 1, caption: 'A violet photon carries enough energy to free an electron from sodium, while a red photon carries too little.' }
         };
       }
     };
@@ -173,7 +173,7 @@ export const STAGES = [
   (() => {
     const cell = photocell('cell', 'Photocell', { x: 52, y: 26 }, { settings: NEAR_SODIUM, start: 1, brightness: 3 });
     return {
-      title: 'Where It Wakes',
+      title: 'Finding the Threshold',
       prompt: 'Find the lowest frequency that knocks electrons loose from the sodium plate.',
       widget,
       table: opticsTable({
@@ -183,7 +183,7 @@ export const STAGES = [
       }),
       hints: [
         'Use the Colour dial, stepping it one setting at a time.',
-        'Watch "Freed Per Second": every setting past the first one that frees electrons frees them too.',
+        'Watch "Electrons Per Second": every setting past the first one that frees electrons frees them too.',
         'Stop on the first setting where electrons break free from the plate.'
       ],
       check(state) {
@@ -207,7 +207,7 @@ export const STAGES = [
   (() => {
     const cell = photocell('cell', 'Photocell', { x: 52, y: 26 }, { lamp: true, brightness: { start: 2 } });
     return {
-      title: 'Turn Up the Lamp',
+      title: 'Increasing Brightness',
       prompt: 'Double the number of electrons freed each second.',
       widget,
       table: opticsTable({
@@ -218,20 +218,20 @@ export const STAGES = [
       hints: [
         'Use the Brightness dial, and watch both the count and the speed meter.',
         'Compare the count and the speed at the lowest brightness with the count and the speed at a higher one.',
-        'Raise the brightness a step at a time until Freed Per Second is twice what you began with.'
+        'Raise the brightness a step at a time until Electrons Per Second is twice what you began with.'
       ],
       check(state) {
         const r = cellRead(state.table, 'cell');
         const began = planPhotocell('Na', 400, cell.fixture.dials.brightness.value).count;
         if (r.count === began * 2) return { ok: true };
-        if (r.count === began) return { ok: false, notYet: true, msg: 'Freed Per Second is still what it was when you began.' };
-        return { ok: false, msg: 'Freed Per Second is not twice what you began with.' };
+        if (r.count === began) return { ok: false, notYet: true, msg: 'Electrons Per Second is still what it was when you began.' };
+        return { ok: false, msg: 'Electrons Per Second is not twice what you began with.' };
       },
       reward: {
         log: 'Brighter: more electrons, same speed.',
         title: 'Photon',
         body: 'Brightness changes how many electrons leave but not how fast, as if the light arrived in separate packets and each packet freed one electron. Each packet is a photon, and a brighter lamp sends more photons every second, not stronger ones.',
-        model: { type: 'photons', metal: 'Na', nm: 400, brightness: 4, caption: 'Four packets of violet light free four electrons, each leaving at the same speed. A brighter lamp is more packets, never bigger ones.' }
+        model: { type: 'photons', metal: 'Na', nm: 400, brightness: 4, caption: 'Four violet photons free four electrons at the same speed. Greater brightness means more photons per second, not higher photon energy.' }
       }
     };
   })(),
@@ -283,8 +283,8 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  2: ['Drag the plate into the holder.', 'Turn the dials and watch Freed Per Second.'],
-  4: ['Turn the Brightness dial and watch Freed Per Second.'],
+  2: ['Drag the plate into the holder.', 'Turn the dials and watch Electrons Per Second.'],
+  4: ['Turn the Brightness dial and watch Electrons Per Second.'],
   5: ['Try each plate in the holder.']
 };
 applyNotes(STAGES, NOTES);
@@ -301,11 +301,11 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Energy comes in amounts, not smooth slopes. Every atom you have met has electrons that can only hold certain energies, and this is why.'
+      body: 'Energy is quantized rather than continuous. Electrons in an atom can only hold specific amounts of energy.'
     },
     {
       heading: 'Next',
-      body: 'The sky over this ice field is glowing in a handful of sharp colours. The next bench asks what a gas must be doing to give out exactly those.'
+      body: 'Glowing gases emit light at only specific wavelengths. The next bench examines what electrons do to produce those distinct lines.'
     }
   ]
 };

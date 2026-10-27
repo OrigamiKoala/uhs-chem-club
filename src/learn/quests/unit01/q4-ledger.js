@@ -209,7 +209,7 @@ export const STAGES = [
       log: 'Sample B: 3 protons, 3 neutrons, 3 electrons.',
       model: { type: 'atoms', items: [{ p: 3, n: 4, label: 'Lithium-7' }, { p: 3, n: 3, label: 'Lithium-6' }], caption: 'Lithium-7 and lithium-6: 3 protons and 3 electrons each, 4 neutrons against 3. Not to scale.' },
       title: 'Isotope Notation',
-      body: 'Two numbers describe any atom: the atomic number, which says which element it is, and the mass number, which says how heavy this one is. Chemists write that as lithium-6, or as the mass number above the atomic number beside the symbol. Every other count falls out of the pair.'
+      body: 'Two numbers define an atom: the atomic number identifies the element, and the mass number gives its total protons and neutrons. Together they identify specific isotopes like lithium-6.'
     }
   },
 
@@ -389,7 +389,7 @@ export const STAGES = [
     reward: {
       log: 'Sample A loaded 2 / 8 / 8. Needle on minus one.',
       title: 'Anions',
-      body: 'An atom carrying a negative charge is called an anion. This one holds 18 electrons against 17 protons, because filling the outer shell matters more than balancing the needle. Nonmetals sit one or two electrons short of full, so they take rather than give, and what you built is a chloride ion.'
+      body: 'An atom with a negative charge is an anion. It holds 18 electrons against 17 protons to complete its outer shell, forming a chloride ion.'
     }
   },
 
@@ -501,10 +501,6 @@ export const DEBRIEF = {
     {
       heading: 'What Each Number Does',
       body: 'Change the protons and it is a different element. Change the neutrons and it is an isotope, which behaves exactly the same. Change the electrons and it is an ion: a cation if you took some off, an anion if you put some on.'
-    },
-    {
-      heading: 'Next',
-      body: 'Great work balancing the ledger! Next up, we\'ll discover why atomic masses on the periodic table aren\'t neat whole numbers.'
     }
   ]
 };

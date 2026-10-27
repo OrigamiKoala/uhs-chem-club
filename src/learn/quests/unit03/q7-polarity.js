@@ -81,7 +81,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Which End',
-    prompt: 'Set the hydrogen chloride molecule between the plates so that it does not swing when the field comes on.',
+    prompt: 'Orient the hydrogen chloride molecule between the plates so that it remains aligned when the field is switched on.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [molCard('a', 'HCl', rowAt(0), { turn: true }), arrowsTool('ar', { x: 130, y: 14 })],
@@ -89,8 +89,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the molecule, the arrows, the plates and "Switch Field".',
-      'Compare the arrow across the bond, and the end that swings toward the positive plate, with each atom\'s pull.',
-      'Put the molecule between the plates, switch the field on, and turn the card round until it no longer swings.'
+      'Identify which atom is more electronegative and bears a partial negative charge.',
+      'Align the partially negative chlorine atom toward the positive plate so the molecule does not rotate.'
     ],
     check(state) {
       const b = dmolBehaviour(state.table.pieces.a, state.table);
@@ -100,9 +100,9 @@ export const STAGES = [
     },
     reward: {
       log: 'The harder puller takes the minus.',
-      title: 'Partial Charge, Polar Bond',
-      body: 'An atom that pulls the shared pair harder ends up with a partial negative charge, and the atom at the other end with a partial positive one. A bond like that is a polar bond, and the negative end is the one that turns toward the positive plate.',
-      model: { type: 'shape', mol: 'HCl', caption: 'Hydrogen chloride: chlorine pulls the pair harder, so it is the partly negative end.' }
+      title: 'Polar Covalent Bonds',
+      body: 'Unequal sharing of electrons produces partial charges: the more electronegative chlorine atom becomes partially negative while hydrogen becomes partially positive. This creates a polar covalent bond that aligns in an electric field.',
+      model: { type: 'shape', mol: 'HCl', caption: 'Hydrogen chloride molecule with a polar covalent bond.' }
     }
   },
 
@@ -110,16 +110,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Two Pulls',
-    prompt: 'Carbon dioxide has two strongly polar bonds: will it swing round between the charged plates?',
+    prompt: 'Does carbon dioxide align in an external electric field despite possessing polar bonds?',
     cards: GUESSES,
     hints: [
       'Use the two cards and the slot.',
-      'Picture the two pulls, which way each one points, and what they add up to.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Consider whether the two opposing C=O bond dipoles cancel out.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Put molecules between the plates and switch the field on.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Test each molecule between the electric field plates on the bench.'
     }
   }),
 
@@ -127,7 +127,7 @@ export const STAGES = [
   {
     title: 'Five Molecules',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'sort each molecule by whether it swings round when the field is switched on.');
+      return testPrompt(QUEST_KEY, GUESSES, 'sort each molecule by whether it aligns in the electric field.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
@@ -141,8 +141,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the molecules, the arrows, the plates, "Switch Field" and the two trays.',
-      'Compare the direction of the bond arrows on each card with the arrow they add up to.',
-      'Put each molecule between the plates in turn, lay the arrows on it, switch the field on, and file it by what it did.'
+      'Use the arrows tool to determine whether individual bond dipoles cancel out.',
+      'Place each molecule between the plates, activate the field, and sort it based on its dipole alignment.'
     ],
     check(state) {
       const t = state.table;
@@ -156,9 +156,9 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Water, ammonia and chloroform swung round. Carbon dioxide and carbon tetrachloride stayed put.',
-        title: 'Polar and Nonpolar Molecules',
-        body: `${verdictLine(QUEST_KEY, 'stays')}A molecule whose bond pulls add up to a net pull, a molecular dipole, is polar and swings round in a field; one whose pulls cancel is nonpolar, however polar each bond is. A straight or evenly built molecule cancels its pulls, and a bent or lopsided one cannot.`,
-        model: { type: 'shape', mol: 'H2O', caption: 'Water is bent, so its two pulls add into one. Drag to turn it.' }
+        title: 'Molecular Polarity and Symmetry',
+        body: `${verdictLine(QUEST_KEY, 'stays')}A polar molecule has bond dipole moments that sum to a net dipole moment, aligning in an electric field. In symmetrical molecules like carbon dioxide and carbon tetrachloride, individual bond dipoles cancel, making them nonpolar.`,
+        model: { type: 'shape', mol: 'H2O', caption: 'Water molecule: bent geometry prevents bond dipoles from canceling.' }
       };
     }
   },
@@ -166,7 +166,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Charged Rod',
-    prompt: 'Put the streams that a charged rod bends into the tray.',
+    prompt: 'Sort the liquid streams that are deflected by a charged rod into the tray.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
@@ -177,8 +177,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the charged rod, the streams and the tray.',
-      'Compare the streams that bend with what the molecules of each liquid did in the field.',
-      'Lay the rod on one stream at a time, watch which way it runs, and put the ones that bend in the tray.'
+      'Observe which liquid streams are deflected toward the charged rod.',
+      'Test each stream with the charged rod and place polar liquids that deflect into the tray.'
     ],
     check(state) {
       const t = state.table;
@@ -192,8 +192,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Polar liquids bend; nonpolar ones do not.',
-      title: 'Polar Liquids Bend',
-      body: 'A stream of molecules that swing round in a field is pulled by a charged rod, and a stream of molecules that do not is left alone. The shape of the molecule decides what the whole liquid does.',
+      title: 'Deflection of Polar Liquids',
+      body: 'Molecules with permanent dipole moments reorient in the presence of an electric field and are attracted to an electrostatic charge. Consequently, streams of polar liquids deflect toward a charged rod, whereas nonpolar liquids do not.',
       last: true
     }
   }
@@ -210,16 +210,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A bond is polar when its atoms pull the pair unequally, and a molecule is polar when those pulls do not cancel. Shape decides: symmetrical molecules cancel their pulls even when every bond is strongly polar.'
+      heading: 'Summary',
+      body: 'A covalent bond is polar when electrons are shared unequally due to electronegativity differences. A molecule is polar only when its bond dipoles do not cancel out due to molecular geometry.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Whether a molecule is polar decides what it dissolves in, how it attracts its neighbours and how it behaves near a charge. You can now tell from a Lewis structure and a shape.'
+      heading: 'Symmetry and Dipoles',
+      body: 'Symmetrical molecular geometries cancel equal bond dipoles, resulting in nonpolar molecules despite containing polar bonds.'
     },
     {
       heading: 'Next',
-      body: 'The next bench asks what the orbitals look like that make these bonds, and why some bonds turn and some will not.'
+      body: 'The next bench investigates orbital hybridization and how atomic orbitals mix to form sigma and pi bonds.'
     }
   ]
 };

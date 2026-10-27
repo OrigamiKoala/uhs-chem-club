@@ -93,7 +93,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Picture the two atoms held side by side, and what you would have to do to separate them.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to the card you expect to match the energy change of separating the atoms.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -107,7 +107,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the answer you would bet on. Next, a crank can pull the two atoms apart and a meter will say what happened.'
+      body: 'Next, pull the two bonded atoms apart with the crank and measure the energy change.'
     }
   },
 
@@ -115,12 +115,7 @@ export const STAGES = [
   {
     id: 's2-crank',
     title: 'The Crank',
-    get prompt() {
-      const guess = recall(KEY_1);
-      return guess && GUESS_1[guess]
-        ? `You predicted ${GUESS_1[guess]}: pull the bond completely apart, then set the marker to the energy change of the two atoms.`
-        : 'Pull the bond completely apart, then set the marker to the energy change of the two atoms.';
-    },
+    prompt: 'Pull the bond completely apart, then set the marker to the energy change of the two atoms.',
     widget,
     table: heatTable({
       fixtures: [
@@ -143,17 +138,11 @@ export const STAGES = [
       if (v === -HH) return { ok: false, msg: 'The meter says ENERGY IN, and the marker sits below zero.' };
       return { ok: false, msg: 'The marker and the meter show different figures.' };
     },
-    get reward() {
-      const guess = recall(KEY_1);
-      const verdict = !guess || !GUESS_1[guess] ? '' : guess === 'in'
-        ? 'You bet on energy going in, and the meter agreed. '
-        : 'The meter did not agree with your bet, which is how a guess gets better. ';
-      return {
-        log: 'The crank took energy in.',
-        title: 'Bond Enthalpy',
-        body: `${verdict}Pulling bonded atoms apart takes energy in: the energy to break one mole of a bond is its bond enthalpy, 436 kJ/mol for H–H. Letting free atoms snap back together gives the same energy back out.`,
-        model: { type: 'molecule', name: 'hydrogen', caption: 'A hydrogen molecule: two atoms and the bond between them.' }
-      };
+    reward: {
+      log: 'The crank took energy in.',
+      title: 'Bond Enthalpy',
+      body: 'Breaking bonds requires energy: the energy needed to break one mole of a bond is its bond enthalpy (436 kJ/mol for H–H). Forming that bond releases the exact same amount of energy.',
+      model: { type: 'molecule', name: 'hydrogen', caption: 'A hydrogen molecule: two atoms and the bond between them.' }
     }
   },
 
@@ -161,7 +150,7 @@ export const STAGES = [
   {
     id: 's3-methane',
     title: 'Burning Methane, Bond by Bond',
-    prompt: 'Sort each bond into the tray for bonds that break or bonds that form when methane burns.',
+    prompt: 'Sort each bond by whether it breaks or forms when methane burns.',
     widget,
     table: heatTable({
       pieces: CH4_CHIPS.map(([id, bond, count, noteText], i) => bondChip(id, bond, { x: 17, y: 14 + i * 13 }, { count, note: noteText })),
@@ -185,7 +174,7 @@ export const STAGES = [
     reward: {
       log: 'Burning methane paid back more than it cost.',
       title: 'Broken Less Formed',
-      body: 'Breaking bonds takes energy in, and forming bonds gives it back out. Burning methane breaks bonds worth 2,648 kJ and forms bonds worth 3,450 kJ, so 802 kJ more comes back than went in, and ΔH is the energy of the bonds broken minus the energy of the bonds formed.',
+      body: 'Bond breaking requires energy, while bond formation releases energy. Burning methane breaks bonds costing 2,648 kJ and forms bonds releasing 3,450 kJ, so ΔH is −802 kJ from broken bonds minus formed bonds.',
       model: { type: 'molecules', items: ['methane', 'oxygen', 'carbon dioxide', 'water'], caption: 'Methane and oxygen, whose bonds come apart, beside carbon dioxide and water, whose bonds are built.' }
     }
   },
@@ -209,7 +198,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Picture the bonds of nitrogen and oxygen coming apart and the bonds of nitric oxide being built.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to whether forming the product bonds releases more energy than breaking the reactant bonds costs.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -223,7 +212,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Read the Ledger',
-      body: 'You have picked what you expect. Next, the bonds of this reaction are laid in a ledger, ready to be read.'
+      body: 'Next, inspect the bond ledger to see whether bond formation balances the cost of breaking bonds.'
     }
   },
 
@@ -231,12 +220,7 @@ export const STAGES = [
   {
     id: 's5-air',
     title: 'The Air Ledger',
-    get prompt() {
-      const guess = recall(KEY_2);
-      return guess && GUESS_2[guess]
-        ? `You predicted ${GUESS_2[guess]}: read the ledger and lay the card for what the bath will do.`
-        : 'Read the ledger and lay the card for what the bath will do.';
-    },
+    prompt: 'Read the ledger and lay the card for what the bath will do.',
     widget,
     table: heatTable({
       pieces: [
@@ -269,17 +253,11 @@ export const STAGES = [
       const r = ledgerRead(t, 'ledger');
       return { ok: false, msg: `The ledger reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
     },
-    get reward() {
-      const guess = recall(KEY_2);
-      const verdict = !guess || !GUESS_2[guess] ? '' : guess === 'cool'
-        ? 'You predicted this one, and the ledger agreed. '
-        : 'The ledger did not agree with your prediction, which is how a guess gets better. ';
-      return {
-        log: 'The bonds formed paid back less than the bonds broken cost.',
-        title: 'A Climbing Reaction',
-        body: `${verdict}Here the bonds formed pay back ${signedKJ(NO_SUMS.net).replace('+', '')} kJ less than the bonds broken cost, so ΔH is positive and the bath cools. Not every reaction runs downhill, which is why nitrogen and oxygen sit side by side in air without burning.`,
-        model: { type: 'molecules', items: ['nitrogen', 'oxygen', 'nitric oxide'], caption: 'Nitrogen with its triple bond, oxygen with its double bond, and nitric oxide.' }
-      };
+    reward: {
+      log: 'The bonds formed paid back less than the bonds broken cost.',
+      title: 'Endothermic Bond Balance',
+      body: 'Forming product bonds releases 181 kJ less than breaking reactant bonds costs. Because bond breaking exceeds bond formation, ΔH is positive (+181 kJ/mol) and the reaction absorbs heat from the surroundings.',
+      model: { type: 'molecules', items: ['nitrogen', 'oxygen', 'nitric oxide'], caption: 'Nitrogen with its triple bond, oxygen with its double bond, and nitric oxide.' }
     }
   }
 ];
@@ -302,15 +280,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Breaking a bond takes energy in and forming one gives it out. A reaction releases heat when the bonds it forms are worth more than the bonds it breaks, and takes heat in when they are worth less.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'The Fifth\'s coil pulls gas molecules apart over the vent, and every bond it breaks has to be paid for from somewhere. A reaction that climbs, like the one in air, never runs unless something keeps feeding it.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench shows that a reaction\'s heat does not depend on the route it takes, so a reaction no one can run can still be worked out.'
+      body: 'Breaking bonds requires energy, while forming bonds releases energy. A reaction releases net heat when product bonds are stronger than reactant bonds, and absorbs net heat when reactant bonds are stronger.'
     }
   ]
 };

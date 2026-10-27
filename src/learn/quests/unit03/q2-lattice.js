@@ -129,12 +129,12 @@ export const STAGES = [
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Picture what salt is made of, and what a current needs in order to get through a block.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Consider the structure of salt and the requirements for electrical conduction.',
+      'Select the card matching your prediction.'
     ],
     reward: {
-      title: 'A Guess Comes First',
-      body: 'Your guess is locked in, and the next bench tests it. Wire up the blocks and watch the lamp.'
+      title: 'Prediction Recorded',
+      body: 'Your prediction is recorded. Test the blocks on the bench to observe their electrical conductivity.'
     }
   }),
 
@@ -142,7 +142,7 @@ export const STAGES = [
   {
     title: 'Wire Each Block',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'sort the four blocks into trays by when each passes a current.');
+      return testPrompt(QUEST_KEY, GUESSES, 'sort the four blocks into trays by when each conducts electrical current.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
@@ -158,8 +158,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the leads, the hotplate and the three trays.',
-      'Compare the lamp on each block cold with the lamp once the block is on the plate and has given way.',
-      'Clip the leads on each block cold, then again after it has melted, and file it by what its lamp did.'
+      'Compare the conductivity of each block at room temperature and when molten.',
+      'Clip the leads onto each block cold and molten, then sort each into its corresponding tray.'
     ],
     check(state) {
       const t = state.table;
@@ -172,9 +172,9 @@ export const STAGES = [
     },
     get reward() {
       return {
-        log: 'Salt lit the lamp only when molten. Copper lit it cold and molten. The other two never lit it.',
-        title: 'What It Takes to Conduct',
-        body: `${verdictLine(QUEST_KEY, 'dark')}A current is charge on the move, so a material conducts only if it holds charged particles that are free to travel. Copper's electrons flow even cold, while the salt's ions are pinned in place until it melts.`
+        log: 'Salt conducted only when molten. Copper conducted cold and molten. The other two never conducted.',
+        title: 'Conditions for Conduction',
+        body: `${verdictLine(QUEST_KEY, 'dark')}Electrical conduction requires charged particles that are free to move. Copper contains mobile valence electrons, whereas solid salt ions are pinned in a lattice until melted.`
       };
     }
   },
@@ -182,7 +182,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Heat All Four',
-    prompt: 'Order the four blocks by how much heat each one takes to come apart.',
+    prompt: 'Order the four blocks from lowest to highest melting point.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -196,8 +196,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the hotplate and its heat dial.',
-      'Compare the setting of the dial at which each block gives way.',
-      'Put the block that gave way at the lowest setting at the left end of the rail and the one that held out longest at the right.'
+      'Observe the temperature at which each block melts.',
+      'Arrange the blocks from lowest melting point on the left to highest on the right.'
     ],
     check(state) {
       const t = state.table;
@@ -210,15 +210,15 @@ export const STAGES = [
     },
     reward: {
       log: 'Block B 115 C. Block A 801 C. Block C 1085 C. Block D 1710 C.',
-      title: 'The Melting Point Measures the Hold',
-      body: 'The temperature a solid comes apart at is its melting point, and it measures how hard the whole block is held together. These four went at 115, 801, 1085 and 1710 degrees, so whatever does the holding is not the same thing in each.'
+      title: 'Melting Points and Bond Strength',
+      body: 'The melting point measures the energy needed to disrupt the solid structure. The four materials melted at 115 C, 801 C, 1085 C, and 1710 C, reflecting differences in their bonding and structure.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Build the Salt',
-    prompt: 'Build a grid of all twelve ions with no two alike touching, then slide one layer.',
+    prompt: 'Build a grid of all twelve ions alternating charges, then slide one layer.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: IONS,
@@ -230,8 +230,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the ions, the grid and "Slide a Layer".',
-      'Look at the charge marked on each ion as you set it down, and at what stands beside it and below it.',
-      'Alternate the charges along every row and down every column, then slide one layer and read which ions now face each other.'
+      'Alternate positive and negative charges along every row and column.',
+      'Fill the grid with alternating ions, then slide one layer to observe charge repulsion.'
     ],
     check(state) {
       const g = gridRead(state.table, 'grid');
@@ -243,16 +243,16 @@ export const STAGES = [
     },
     reward: {
       log: 'The slid layer put like against like.',
-      title: 'A Lattice, and Why It Shatters',
-      body: 'An ionic solid is a repeating three-dimensional grid of ions called a lattice, with every plus among minuses and every minus among pluses. Knock one layer sideways by a step and every pair that was pulling is suddenly pushing, so the block splits clean along that plane. That is why a lattice is hard and yet brittle.',
-      model: { type: 'crystal', cation: 'Na', anion: 'Cl', n: 3, caption: 'A small block of salt: sodium and chlorine ions alternating in every direction. Drag to turn it.' }
+      title: 'Lattices and Cleavage',
+      body: 'An ionic solid forms a repeating crystal lattice where each ion is surrounded by opposite charges. Shifting a layer aligns like charges that repel, causing the brittle crystal to fracture along flat planes.',
+      model: { type: 'crystal', cation: 'Na', anion: 'Cl', n: 3, caption: 'Sodium and chloride ions alternating in a three-dimensional crystal lattice.' }
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Pick the Liner',
-    prompt: 'Put the block that stays solid at 900 degrees and passes no current in the liner slot.',
+    prompt: 'Place the block that stays solid at 900 degrees and does not conduct into the liner slot.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -267,8 +267,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the hotplate, the leads and the liner slot.',
-      'Compare which blocks are still solid at 900 degrees with which of those light the lamp.',
-      'Test the blocks that stay solid at 900 with the leads, and keep only the one that never lights the lamp.'
+      'Identify which blocks remain solid at 900 degrees and test their electrical conductivity.',
+      'Place the block that remains solid at 900 degrees and does not conduct into the liner slot.'
     ],
     check(state) {
       const t = state.table;
@@ -281,8 +281,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Block D: still solid at 900 degrees, no current.',
-      title: 'Why the Arches Are Still Standing',
-      body: 'The only block that stays solid at 900 degrees and passes nothing is the covalent network, where every atom is bonded on to the next all the way through, so coming apart at all means breaking those bonds one by one. The arches outside are built the same way, and what a material is good for is decided by what holds its atoms.',
+      title: 'Network Covalent Solids',
+      body: 'Covalent network solids consist of atoms linked in a continuous three-dimensional network of covalent bonds. Melting requires breaking these strong covalent bonds directly, giving the material a very high melting point and non-conducting behavior.',
       last: true
     }
   }
@@ -301,16 +301,16 @@ export const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'Ions in a repeating grid are hard, brittle and pass a current only once they are melted; separate molecules melt easily and never conduct; a network bonded all the way through barely melts at all; and a metal carries a current cold.'
+      heading: 'Summary',
+      body: 'Ionic solids form crystal lattices that are hard, brittle, and conduct electricity only when molten or dissolved. Molecular solids melt at low temperatures and do not conduct. Covalent networks possess high melting points and do not conduct. Metals conduct electricity in both solid and liquid states.'
     },
     {
-      heading: 'Why It Works',
-      body: 'Nothing you measured was a property of an atom. Every one of them was a property of how atoms are held together, which is why knowing the bond type tells you what a material will do before you have tested anything.'
+      heading: 'Structure and Properties',
+      body: 'Macroscopic properties such as melting point, mechanical hardness, and electrical conductivity directly reflect the underlying chemical bonds and structural arrangements.'
     },
     {
       heading: 'Next',
-      body: 'The breakers need to know how much energy it takes to pull a bond apart. The next bench pulls two atoms apart by hand and keeps the energy at every step.'
+      body: 'The next bench measures bond energy and internuclear distance by observing the forces between two bonding atoms.'
     }
   ]
 };

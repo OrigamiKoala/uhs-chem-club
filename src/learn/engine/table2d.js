@@ -263,14 +263,14 @@ export function drawTable(ctx, w, h, state, view = {}) {
       ctx.fill();
     }
     outline(lay.box, false, false);
-    words(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { size: 2.6, color: ink.label });
+    if (f.label && !f.props?.hideLabel) words(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { size: 2.6, color: ink.label });
     // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
     // the built table paints it into the plate's own picture, so the two cannot differ.
     kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false });
     // A dial's name and where it stands are printed on the plate in both views; only its track and
     // knob are the drawn table's own (the built table stands a real knob on it).
     for (const d of lay.dials) {
-      if (f.kind === 'view' && (d.name === 'turn' || d.name === 'tilt')) continue;
+      if (f.kind === 'view') continue;
       const dial = f.dials[d.name];
       const frac = dial.max === dial.min ? 0 : (dial.value - dial.min) / (dial.max - dial.min);
       if (view.controls !== false) {
@@ -285,7 +285,10 @@ export function drawTable(ctx, w, h, state, view = {}) {
       }
       const shown = dial.labels ? dial.labels[Math.round((dial.value - dial.min) / (dial.step || 1))] ?? dial.value : dial.value;
       // The words stand well clear above the track, where the knob never covers them (the built knob is a real cylinder).
-      words(`${dial.label || d.name} ${shown}`, d.x0, Math.max(d.y - DIAL_WORDS_ABOVE, lay.box.y0 + 6.3), { size: 2.4, color: ink.text, maxW: d.x1 - d.x0 });
+      const dialText = dial.label && dial.label.includes('_')
+        ? dial.label.replace('_', shown)
+        : `${dial.label || d.name} ${shown}`;
+      words(dialText, d.x0, Math.max(d.y - DIAL_WORDS_ABOVE, lay.box.y0 + 6.3), { size: 2.4, color: ink.text, maxW: d.x1 - d.x0 });
       // A tick under every step of a stepped dial, so the knob has places to be and the player sees how many.
       if (mat && dial.step && dial.max > dial.min) {
         const n = Math.round((dial.max - dial.min) / dial.step);

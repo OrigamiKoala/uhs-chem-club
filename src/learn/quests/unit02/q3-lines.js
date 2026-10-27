@@ -218,7 +218,7 @@ export const STAGES = [
   (() => {
     const lad = energyLadder('lad', 'Hydrogen', LADDER_AT);
     return {
-      title: 'Which Drop',
+      title: 'Hydrogen Red Line',
       prompt: 'Make the hydrogen atom give out its red line.',
       widget,
       table: opticsTable({
@@ -243,7 +243,7 @@ export const STAGES = [
         log: 'The red line: down from the third rung to the second.',
         title: 'Energy Levels',
         body: 'An electron in hydrogen can only sit on certain rungs, called energy levels, and each line in the spectrum is a jump down between two of them. The lowest rung is the ground state, and any higher one is an excited state.',
-        model: { type: 'ladder', hi: 3, lo: 2, caption: 'The drop from the third rung to the second: the electron lands lower, and the energy it lost leaves as one packet of red light.' }
+        model: { type: 'ladder', hi: 3, lo: 2, caption: 'An electron dropping from the third energy level to the second emits the difference in energy as a photon of red light.' }
       }
     };
   })(),
@@ -294,7 +294,7 @@ const NOTES = {
   2: ['Drag a source into the socket.'],
   3: ['Put the tube in the socket, then slide an element\'s', 'strip into the alongside slot.'],
   4: ['Drag the electron to another rung.', 'Any light that leaves is written on the strip.'],
-  5: ['Put the filament in the socket and the cell in front of it,', 'then slide an element\'s strip alongside.']
+  5: ['Put the filament in the socket, the cool cell in front of it,', 'then find which element is in the cell.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -310,11 +310,11 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every aurora, every neon sign and every star is read this way. The colours say which atoms are there, and the dark lines say which cool atoms lie in front of them.'
+      body: 'Line spectra identify elements across chemistry and astronomy. Emission lines reveal which atoms are present, while dark absorption lines show which cool gases lie in front of a light source.'
     },
     {
       heading: 'Next',
-      body: 'The ladder only fits hydrogen, because an electron is not a bead on a rung. The next bench asks where an electron actually is.'
+      body: 'The simple ladder model only fits single-electron atoms like hydrogen. The next bench examines where electrons actually reside in three dimensions.'
     }
   ]
 };

@@ -165,12 +165,12 @@ export const STAGES = [
     const rack = shelf('rack', ['1s', '2s', '2p'], { x: 38, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
     const count = marker('count', 'Most in one orbital', { x: 112, y: 52 }, { min: 0, max: 6, step: 1, value: 0, size: { w: 36, h: 12 } });
     return {
-      title: 'Pack One Orbital',
+      title: 'Orbital Capacity',
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": test how many electrons one orbital can hold using the Add tools, then set the marker.`
-          : 'Test how many electrons one orbital can hold using the Add tools, then set the marker to the maximum capacity.';
+          ? `You predicted "${GUESS_LABEL[guess]}": test how many electrons one orbital can hold, then set the marker.`
+          : 'Test how many electrons one orbital can hold, then set the marker to the maximum capacity.';
       },
       widget,
       table: shellsTable({ pieces: [...rack.boxes, ...hands(92, 22)], fixtures: [rack.fixture, count] }),
@@ -203,7 +203,7 @@ export const STAGES = [
   (() => {
     const rack = shelf('rack', ['1s', '2s', '2p'], { x: 36, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
     return {
-      title: 'The Impossible Pair',
+      title: 'The Pauli Principle',
       prompt: 'Place the six candidate electrons on the rack, and put the one the rack refuses in the tray.',
       widget,
       table: shellsTable({
@@ -240,7 +240,7 @@ export const STAGES = [
     const rack = shelf('rack', ['3s', '3p', '3d'], { x: 40, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
     const count = marker('count', 'Electrons in the third shell', { x: 114, y: 48 }, { min: 2, max: 32, step: 2, value: 2, size: { w: 46, h: 12 } });
     return {
-      title: 'A Full Shell',
+      title: 'Shell Capacity',
       prompt: 'Fill every box of the third shell, then set the marker to the number of electrons it holds.',
       widget,
       table: shellsTable({ pieces: [...rack.boxes, ...hands(90, 20)], fixtures: [rack.fixture, count] }),
@@ -287,25 +287,25 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Numbers name every box: n for its shell, l for its shape and ml for its orientation. A box holds two electrons that point opposite ways, no two electrons in an atom share all four numbers, and from that one rule the capacity of every shell follows.'
+      body: 'Four quantum numbers define every electron: n for the shell, l for orbital shape, ml for spatial orientation, and ms for spin. Each orbital holds up to two electrons with opposite spins, and no two electrons in an atom share all four numbers.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'The rows of the periodic table are the shells and subshells counted out loud. Two, eight, eighteen: you have just derived the pattern the table was built on.'
+      body: 'Shell capacities of 2, 8, 18, and 32 electrons follow directly from quantum number rules, establishing the row lengths of the periodic table.'
     },
     {
       heading: 'Next',
-      body: 'The next bench fills those boxes in the order an atom actually does, from hydrogen on, and meets the places where the rule and the magnet disagree.'
+      body: 'The next bench fills orbitals in order of increasing energy to determine ground-state electron configurations.'
     }
   ]
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS. This bench is beyond the exam, and each question says so.
+   PRACTICE PROBLEMS
    ------------------------------------------------------------------ */
 export const PRACTICE = [
   {
-    question: '(Beyond the exam.) Which quantum number determines the shape of an orbital?',
+    question: 'Which quantum number determines the shape of an orbital?',
     options: [
       { id: 'a', label: 'The angular momentum quantum number, l' },
       { id: 'b', label: 'The principal quantum number, n' },
@@ -316,7 +316,7 @@ export const PRACTICE = [
     explanation: 'l sets the shape: 0 for s, 1 for p, 2 for d. n sets the size and energy, ml the orientation and ms the direction of spin.'
   },
   {
-    question: '(Beyond the exam.) How many orbitals are in a d subshell?',
+    question: 'How many orbitals are in a d subshell?',
     options: [
       { id: 'a', label: '1' },
       { id: 'b', label: '3' },
@@ -327,7 +327,7 @@ export const PRACTICE = [
     explanation: 'For d, l = 2, so ml takes the values -2, -1, 0, +1 and +2: five orbitals, which hold ten electrons between them.'
   },
   {
-    question: '(Beyond the exam.) Which set of quantum numbers cannot describe an electron?',
+    question: 'Which set of quantum numbers cannot describe an electron?',
     options: [
       { id: 'a', label: 'n = 2, l = 2, ml = 0, ms = +1/2' },
       { id: 'b', label: 'n = 3, l = 1, ml = -1, ms = -1/2' },
@@ -338,7 +338,7 @@ export const PRACTICE = [
     explanation: 'l must be smaller than n. With n = 2, l can only be 0 or 1, so l = 2 names no orbital.'
   },
   {
-    question: '(Beyond the exam.) How many electrons can the n = 4 shell hold?',
+    question: 'How many electrons can the n = 4 shell hold?',
     options: [
       { id: 'a', label: '16' },
       { id: 'b', label: '8' },
@@ -349,7 +349,7 @@ export const PRACTICE = [
     explanation: 'A shell holds 2n² electrons. For n = 4 that is 2 x 16 = 32.'
   },
   {
-    question: '(Beyond the exam.) The Pauli exclusion principle says that:',
+    question: 'The Pauli exclusion principle says that:',
     options: [
       { id: 'a', label: 'No two electrons in an atom can have all four quantum numbers the same' },
       { id: 'b', label: 'Electrons fill the lowest energy orbitals first' },

@@ -105,9 +105,9 @@ export const STAGES = [
     title: 'Phase 1 · The Plating',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each phase puts one of Ligar\'s benches in front of the warden again with a new case on it; a miss costs a point of Integrity, three knock you back, and nothing you have read is lost.'
+      body: 'Apply the bonding and structural concepts learned across Ligar to analyze each property of the warden.'
     },
-    prompt: 'Put the plating block that takes the most heat to melt in the marked place.',
+    prompt: 'Place the ionic block with the highest melting point into the marked slot.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: PLATING.map(([id, label, lat], i) => saltPiece(id, label, lat, { x: 22 + i * 34, y: 56 })),
@@ -122,8 +122,8 @@ export const STAGES = [
     },
     hints: [
       'Use the hotplate, its heat dial and the marked place.',
-      'Compare the charges on the ions of the three plates, and then the distance between their centres.',
-      'Slide each plate onto the hotplate and turn the dial up until it gives way, then keep the one that held out longest.'
+      'Compare lattice energies based on ionic charges and internuclear distances.',
+      'Heat each ionic block to observe its melting point, then place the highest melting block into the slot.'
     ],
     check(state) {
       const t = state.table;
@@ -134,8 +134,8 @@ export const STAGES = [
       return { ok: false, msg: 'A plate gives way on the hotplate at a higher setting than the one in the marked place.' };
     },
     reward: {
-      title: 'Plating Cracked',
-      body: 'The salt with the larger charges on smaller ions is held hardest, and it takes the most heat to melt. The warden\'s plating gives where it is held least.',
+      title: 'Lattice Energy and Melting Point',
+      body: 'The ionic solid with smaller, higher-charge ions exhibits the highest lattice energy and melting point. Magnesium oxide (Mg2+, O2-) is held hardest and requires the most heat to melt.',
       log: 'The most tightly held salt found.'
     }
   },
@@ -144,7 +144,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · The Vent',
-    prompt: 'Place all valence electrons for hydrogen cyanide until every lamp lights.',
+    prompt: 'Distribute all valence electrons for hydrogen cyanide until every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
     table: ventTable(),
     foes: WARDEN_FOE,
@@ -155,8 +155,8 @@ export const STAGES = [
     },
     hints: [
       'Use the Pair tile and the slate.',
-      'Compare the lamps on carbon and nitrogen as the pairs run out.',
-      'Put a pair in the gap between hydrogen and carbon, and put every other pair where the dark lamps are.'
+      'Place a single bond between H and C, then share enough electron pairs between C and N to satisfy both octets.',
+      'Form a triple bond between carbon and nitrogen, leaving one lone pair on nitrogen.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
@@ -166,8 +166,8 @@ export const STAGES = [
       return { ok: false, msg: 'Every electron is placed, and a lamp is still dark.' };
     },
     reward: {
-      title: 'Vent Sealed',
-      body: 'Carbon and nitrogen share three pairs, a triple bond, and nitrogen keeps one lone pair. A triple bond is the same idea as a double one, with one pair more.',
+      title: 'Triple Covalent Bond',
+      body: 'Carbon and nitrogen share three electron pairs, forming a triple bond, while nitrogen retains one lone pair. This gives both carbon and nitrogen complete octets in hydrogen cyanide.',
       log: 'HCN drawn with a triple bond.'
     }
   },
@@ -187,8 +187,8 @@ export const STAGES = [
     },
     hints: [
       'Use the hydrogen atoms, the balloon, the protractor and the angle marker.',
-      'Compare the angle you read with the angle four atoms made, and with the angle in water.',
-      'Drop everything from the Arms tray on the hub, lay the protractor on two hydrogen atoms, and set the marker to what it reads.'
+      'Attach three hydrogen atoms and one lone pair to nitrogen, then measure the H-N-H angle.',
+      'Lone pair repulsion compresses the tetrahedral angle from 109.5 degrees to 107 degrees in ammonia.'
     ],
     check(state) {
       const t = state.table;
@@ -202,8 +202,8 @@ export const STAGES = [
       return { ok: false, msg: 'The marker does not match the angle the protractor reads between two hydrogen atoms on the finished hub.' };
     },
     reward: {
-      title: 'Joints Locked',
-      body: 'Three atoms and a lone pair make a low pyramid, and the lone pair squeezes the angle between the atoms a little below 109.5 degrees. Ammonia is trigonal pyramidal.',
+      title: 'Trigonal Pyramidal Angle',
+      body: 'Three bonding pairs and one nonbonding lone pair form a trigonal pyramidal molecular geometry. Repulsion from the lone pair compresses the H-N-H bond angles to 107 degrees.',
       log: 'NH3 built as a pyramid.'
     }
   },
@@ -212,7 +212,7 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · The Coolant',
-    prompt: 'Put every molecule that swings round in the electric field into the tray.',
+    prompt: 'Place every molecule with a net dipole moment that aligns in the electric field into the tray.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
@@ -232,8 +232,8 @@ export const STAGES = [
     },
     hints: [
       'Use the molecules, the arrows, the plates and "Switch Field".',
-      'Compare the net arrow on each card once the bond arrows are added.',
-      'Put each molecule between the plates in turn, lay the arrows on it, switch the field on, and keep the ones that swing round.'
+      'Evaluate molecular geometry to determine whether polar bond dipoles cancel out.',
+      'Ammonia has an asymmetrical trigonal pyramidal geometry that aligns in the field, while CO2 and BF3 cancel their dipoles.'
     ],
     check(state) {
       const t = state.table;
@@ -246,8 +246,8 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      title: 'Coolant Grounded',
-      body: 'Ammonia has a net pull because its lone pair makes it lopsided, so it swings round. Carbon dioxide and boron trifluoride have polar bonds that cancel, so they do not.',
+      title: 'Dipole Cancellation and Polarity',
+      body: 'Ammonia has a net dipole moment due to its trigonal pyramidal shape and aligns in an electric field. Linear carbon dioxide and trigonal planar boron trifluoride are symmetrical, so their bond dipoles cancel.',
       log: 'One polar molecule and two nonpolar ones found.'
     }
   },
@@ -256,7 +256,7 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · The Core',
-    prompt: 'Put the gas the magnet draws in the marked place.',
+    prompt: 'Place the paramagnetic gas attracted to the magnet into the marked slot.',
     widget: { type: 'table', label: 'The bench' },
     table: moTable({
       pieces: GASES.map(([id, label, mol], i) => moCard(id, label, { x: 20 + i * 34, y: 52 }, { mol })),
@@ -276,8 +276,8 @@ export const STAGES = [
     },
     hints: [
       'Use the gas cards, the test slot and "Test Sample".',
-      'Compare how hard the magnet pulls on each of the three gases.',
-      'Put each gas in the test slot, press "Test Sample", and keep the one the magnet pulled.'
+      'Test each gas with the magnet to identify which one exhibits paramagnetism.',
+      'Select oxygen, whose molecular orbital configuration contains two unpaired electrons.'
     ],
     check(state) {
       const t = state.table;
@@ -287,8 +287,8 @@ export const STAGES = [
       return { ok: false, msg: 'The magnet did not pull the gas in the marked place.' };
     },
     reward: {
-      title: 'Core Exposed',
-      body: 'Only oxygen has electrons standing alone, in two separate upper boxes, so only oxygen is pulled by the magnet. Nitrogen and fluorine have every electron paired.',
+      title: 'Paramagnetism and Unpaired Electrons',
+      body: 'Molecular orbital theory shows that oxygen has two unpaired electrons in degenerate antibonding pi-star orbitals, making it paramagnetic. Nitrogen and fluorine have all electrons paired and are diamagnetic.',
       log: 'The magnetic gas found.'
     }
   }
@@ -343,16 +343,16 @@ export const DEBRIEF = {
   clueAwarded: 'clue_ligar_scorch',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'The warden settles back into quarry stone. Look at the cut behind it: that face was sliced clean through ionic and covalent rock alike, with heat no refinery torch the Guilds ever chartered could make.'
+      heading: 'Summary',
+      body: 'The warden is cleared. Analysis confirms distinct ionic and covalent mineral phases, reflecting bonding principles across different chemical structures.'
     },
     {
-      heading: 'Why It Is Worth It',
-      body: 'Every phase was a bench you had already worked, with a new case on it: a salt, a drawing, a shape, a field and a magnet. That is all of Ligar, and it was enough to read the guard.'
+      heading: 'Bonding Review',
+      body: 'Solving each phase required evaluating lattice energy, Lewis structure octets, VSEPR molecular geometry, dipole symmetry, and molecular orbital configurations.'
     },
     {
       heading: 'Next',
-      body: 'The slab behind the warden goes into the Case File. Whoever made that cut was not working with bonds at all.'
+      body: 'The mineral sample from the site is recorded in the Case File for the investigation.'
     }
   ]
 };

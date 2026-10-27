@@ -242,7 +242,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Elements',
-    prompt: 'Sort the ore into trays so that each tray holds one element only.',
+    prompt: 'Sort the atoms into trays so that each tray holds one element only.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -299,7 +299,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'What the Blade Cannot Cut',
+    title: 'What the Cutter Cannot Split',
     prompt: 'Which one sample can the cutter not split?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
@@ -510,11 +510,7 @@ const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Matter is made of atoms. One element on its own is an element, different elements bonded together make a compound, and elements just sitting together unbonded make a mixture.'
-    },
-    {
-      heading: 'What the numbers mean',
-      body: 'Nice job! Now let\'s go explore what an atom is made of.'
+      body: 'Matter is made of atoms. A substance with one kind of atom is an element, bonded different elements form a compound, and unbonded atoms form a mixture.'
     }
   ]
 };

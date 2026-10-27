@@ -74,7 +74,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Picture the particles starting in the left half with a shut wall, and the wall then opening.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to the card you expect based on how particles distribute randomly.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -88,61 +88,48 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the place you would bet on. Next, a chamber will put the four particles in new places again and again, and count where they stand.'
+      body: 'Next, shake the chamber repeatedly to record where the particles distribute.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
-  (() => {
-    return {
-      id: 's2-shake',
-      title: 'Shake and Count',
-      get prompt() {
-        const guess = recall(QUEST_KEY);
-        return guess && GUESS_LABEL[guess]
-          ? `You predicted ${GUESS_LABEL[guess]}: shake the chamber again and again, then lay the card for where the particles stand most often.`
-          : 'Shake the chamber again and again, then lay the card for where the particles stand most often.';
-      },
-      widget,
-      table: heatTable({
-        pieces: [
-          tag('left', 'Back in the left half', { x: 84, y: 57.4 }),
-          tag('spread', 'Spread over both halves', { x: 110, y: 57.4 }),
-          tag('right', 'Pulled into the right half', { x: 136, y: 57.4 })
-        ],
-        fixtures: [chamberFixture('chamber', { x: 45, y: 27 }, { cells: 8, particles: 4, title: 'Open chamber of 8 cells' })],
-        zones: { slots: [{ id: 'answer', label: 'Most often', at: { x: 118, y: 28 }, size: { w: 36, h: 14 } }] }
-      }),
-      hints: [
-        'Use the "Shake" key, the bars under the chamber and the slot.',
-        'Compare how tall each bar stands after many shakes.',
-        'Each shake puts the particles in a new set of cells at random, so the bar that grows tallest marks the arrangements that are most numerous.'
+  {
+    id: 's2-shake',
+    title: 'Shake and Count',
+    prompt: 'Shake the chamber repeatedly, then place the card for where particles occur most often.',
+    widget,
+    table: heatTable({
+      pieces: [
+        tag('left', 'Back in the left half', { x: 84, y: 57.4 }),
+        tag('spread', 'Spread over both halves', { x: 110, y: 57.4 }),
+        tag('right', 'Pulled into the right half', { x: 136, y: 57.4 })
       ],
-      check(state) {
-        const t = state.table;
-        const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
-        if (card.id === 'spread') return { ok: true };
-        const k = shakesOf(t, 'chamber').length;
-        if (k < 10) return { ok: false, msg: `The bars have counted only ${k} shakes so far.` };
-        return card.id === 'left'
-          ? { ok: false, msg: `The bar for all four in the left half stands at ${tally(t, 4)} of ${k} shakes.` }
-          : { ok: false, msg: `The bar for none in the left half stands at ${tally(t, 0)} of ${k} shakes.` };
-      },
-      get reward() {
-        const guess = recall(QUEST_KEY);
-        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'spread'
-          ? 'You bet on spread out, and the bars agreed. '
-          : 'The bars did not agree with your bet, which is how a guess gets better. ';
-        return {
-          log: 'Spread out turned up almost every time.',
-          title: 'Entropy',
-          body: `${verdict}Nothing pulls the particles apart: spread-out arrangements simply outnumber crowded ones, ${TOTAL_WAYS - CROWDED_WAYS} to ${CROWDED_WAYS} out of ${TOTAL_WAYS}. The number of ways a system can be arranged is its entropy, and it rises when particles have more room.`,
-          model: { type: 'box', cells: 8, filled: [1, 3, 6, 8], gate: 4, caption: 'Four particles spread over a box of eight cells, with the wall open.' }
-        };
-      }
-    };
-  })(),
+      fixtures: [chamberFixture('chamber', { x: 45, y: 27 }, { cells: 8, particles: 4, title: 'Open chamber of 8 cells' })],
+      zones: { slots: [{ id: 'answer', label: 'Most often', at: { x: 118, y: 28 }, size: { w: 36, h: 14 } }] }
+    }),
+    hints: [
+      'Use the "Shake" key, the bars under the chamber and the slot.',
+      'Compare how tall each bar stands after many shakes.',
+      'Random distribution makes the most probable configurations occur with the highest frequency.'
+    ],
+    check(state) {
+      const t = state.table;
+      const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (card.id === 'spread') return { ok: true };
+      const k = shakesOf(t, 'chamber').length;
+      if (k < 10) return { ok: false, msg: `The bars have counted only ${k} shakes so far.` };
+      return card.id === 'left'
+        ? { ok: false, msg: `The bar for all four in the left half stands at ${tally(t, 4)} of ${k} shakes.` }
+        : { ok: false, msg: `The bar for none in the left half stands at ${tally(t, 0)} of ${k} shakes.` };
+    },
+    reward: {
+      log: 'Spread out turned up almost every time.',
+      title: 'Entropy',
+      body: `Spread-out arrangements outnumber concentrated ones, with ${TOTAL_WAYS - CROWDED_WAYS} of ${TOTAL_WAYS} possible configurations. The measure of the number of microstates available to a system is its entropy, which increases as particles disperse.`,
+      model: { type: 'box', cells: 8, filled: [1, 3, 6, 8], gate: 4, caption: 'Four particles spread over a box of eight cells, with the wall open.' }
+    }
+  },
 
   /* ---------------------------------------------------------------- 3 */
   {
@@ -167,7 +154,7 @@ export const STAGES = [
     hints: [
       'Use the four cards and the two trays.',
       'Compare the free-moving gas and liquid on the two sides of each change.',
-      'Particles that are free to roam have far more ways to arrange than particles held in place, and gas roams most.'
+      'States with greater freedom of motion have higher entropy, with gases having significantly higher entropy than liquids or solids.'
     ],
     check(state) {
       const t = state.table;
@@ -180,7 +167,7 @@ export const STAGES = [
     reward: {
       log: 'Gas decided the sign.',
       title: 'Room and the Sign of ΔS',
-      body: 'A change that gives particles more room, such as melting, or making gas from a solid, raises the entropy, and one that crowds them lowers it. The entropy change, ΔS, is positive when a reaction makes gas and negative when it uses gas up.'
+      body: 'Processes that increase particle dispersal or produce gas increase entropy, giving a positive entropy change (ΔS). Conversely, processes that constrain particles or consume gas result in a negative ΔS.'
     }
   },
 
@@ -202,7 +189,7 @@ export const STAGES = [
     hints: [
       'Use the four boxes and the rail.',
       'Compare how much room each particle has and how long its streak is in each box.',
-      'More room and faster motion both give the particles more ways to arrange, so order the boxes from least of both to most.'
+      'Both spatial dispersion across phases and increased thermal motion increase the available microstates.'
     ],
     check(state) {
       const order = state.table.zones.rail.order;
@@ -216,7 +203,7 @@ export const STAGES = [
     reward: {
       log: 'Room and motion both added ways.',
       title: 'Solid, Liquid, Gas, and Warming',
-      body: 'For one substance a solid has the fewest ways to arrange its particles, a liquid more and a gas the most. Warming adds ways too, because faster particles can share their energy in more ways, so entropy rises with temperature as well as room.'
+      body: 'For a substance, entropy increases from solid to liquid to gas as spatial microstates increase. Increasing temperature also increases entropy because thermal energy can be distributed across more accessible energy levels.'
     }
   }
 ];
@@ -238,15 +225,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Entropy counts the ways a system can be arranged. Particles spread out because spread-out arrangements outnumber crowded ones, not because anything pushes, and more room, more gas or more warmth all add ways.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Gas that escapes into an empty chamber never crowds back on its own, and this is the whole reason. Every reaction that makes gas has that spreading working for it.'
-    },
-    {
-      heading: 'Next',
-      body: 'The last bench sets the heat a change gives out against the spreading it gains, to decide which changes run by themselves.'
+      body: 'Entropy quantifies the number of accessible microstates in a system. Dispersal occurs spontaneously because dispersed states are statistically far more numerous, and entropy increases with phase transitions (solid to liquid to gas) and temperature.'
     }
   ]
 };

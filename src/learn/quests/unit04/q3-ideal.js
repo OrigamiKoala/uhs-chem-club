@@ -75,18 +75,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
     key: QUEST_KEY,
-    title: 'Guess the Room',
+    title: 'Molar Mass and Volume',
     prompt: 'One mole each of helium and carbon dioxide sit at one temperature under the same weight: which fills more room?',
     items: GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Picture a mole of each: how many particles is that, and what does each particle weigh?',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Choose one of the cards.',
+      'Consider whether molecular mass alters the volume of one mole of gas.',
+      'Select the card that matches your prediction.'
     ],
     reward: {
-      log: 'Prediction locked in.',
-      title: 'A Guess Worth Testing',
-      body: 'Two cylinders under the same weight are about to be set side by side, and their pistons will say whether the guess holds.'
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'Two cylinders will now test whether different gases occupy different volumes at equal temperature and pressure.'
     }
   }),
 
@@ -101,7 +101,7 @@ export const STAGES = [
       show: { gauge: false, mass: true }
     });
     return {
-      title: 'The Same Room',
+      title: 'Molar Volume',
       get prompt() {
         return youPredicted(QUEST_KEY, GUESSES, 'add gas to Holder 11 until it fills the same room as Holder 10.', 'Add gas to Holder 11 until it fills the same room as Holder 10.');
       },
@@ -109,8 +109,8 @@ export const STAGES = [
       table: gasTable({ fixtures: [a, b] }),
       hints: [
         'Use the "Gas in" dial of Holder 11.',
-        'Compare the two rooms printed on the cylinders at each setting, and count the particles in each.',
-        'Stop on the setting where the two rooms match, whatever the two masses say.'
+        'Compare the volumes of both cylinders at each setting.',
+        'Stop at the setting where Holder 11 matches the volume of Holder 10.'
       ],
       check(state) {
         const t = state.table;
@@ -121,16 +121,14 @@ export const STAGES = [
         return { ok: false, msg: vb < va ? 'Holder 11 fills less room than Holder 10.' : 'Holder 11 fills more room than Holder 10.' };
       },
       get reward() {
-        const g = guessOf(QUEST_KEY, GUESSES);
-        const verdict = !g ? '' : g.id === 'same' ? 'You predicted this one, and the cylinders agreed. ' : 'The cylinders did not agree with your prediction, which is how a guess gets better. ';
         return {
           log: 'A mole of either gas fills the same room.',
           title: 'Molar Volume',
-          body: `${verdict}One mole of any gas fills about 22.4 litres at 0 °C and ordinary air pressure, the molar volume, though a mole of carbon dioxide weighs eleven times a mole of helium. Equal numbers of particles fill equal rooms whatever the gas: this is Avogadro's law.`,
+          body: 'One mole of any ideal gas fills about 22.4 litres at 0 °C and ordinary air pressure (molar volume), regardless of particle mass. Equal numbers of particles fill equal volumes: this is Avogadro\'s law.',
           model: {
             type: 'gas',
             boxes: [{ label: 'Helium', w: 2.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Carbon dioxide', w: 2.4, parts: [{ kind: 'CO2', n: 12 }] }],
-            caption: 'One mole of each, 12 particles for each: the carbon dioxide ones are bigger and heavier, but the room is the same. Not to scale.'
+            caption: 'One mole of each, 12 particles for each: particle mass differs, but volume is equal.'
           }
         };
       }
@@ -143,7 +141,7 @@ export const STAGES = [
     const tray = (id, label, x) => ({ id, label, at: { x, y: 24 }, size: { w: 46, h: 24 }, cell: 15 });
     const xs = { a: 14, b: 44, c: 68, d: 92, e: 116 };
     return {
-      title: 'Count the Tanks',
+      title: 'Counting Moles from Pressure',
       prompt: 'Put each tank in the tray for how many particles it holds compared with Tank A.',
       widget,
       table: gasTable({
@@ -151,9 +149,9 @@ export const STAGES = [
         zones: { trays: [tray('fewer', 'Fewer particles', 25), tray('same', 'The same number', 75), tray('more', 'More particles', 125)] }
       }),
       hints: [
-        'Use the three trays.',
-        'Compare each tank\'s gauge, room and temperature with Tank A\'s, one reading at a time.',
-        'A bigger room or a higher gauge means more particles, and a higher temperature means fewer for the same gauge and room.'
+        'Sort each tank into one of the three trays.',
+        'Compare each tank\'s gauge, room and temperature with Tank A\'s.',
+        'Higher pressure or room means more particles, while higher temperature means fewer particles for the same room.'
       ],
       check(state) {
         const t = state.table;
@@ -170,7 +168,7 @@ export const STAGES = [
       reward: {
         log: 'A gauge, a room and a temperature count the gas.',
         title: 'Counting From a Gauge',
-        body: 'More pressure or more room means more particles, and a higher temperature means fewer for the same pressure and room: the moles are the pressure times the room, over the temperature, times a constant. Together with the benches before, this is the ideal gas law.'
+        body: 'Mole quantity in a gas is directly proportional to pressure and volume, and inversely proportional to absolute temperature. Combining these dependencies yields the ideal gas law.'
       }
     };
   })(),
@@ -182,7 +180,7 @@ export const STAGES = [
       temps: [0, 27, 127], tempList: 'C', tempStart: 1, amounts: [1, 2], amountStart: 1, vmax: 22.4, show: { kelvin: true, volume: false }, plot: { x: 'nT', y: 'PV' }
     });
     return {
-      title: 'The Same Number',
+      title: 'The Ideal Gas Constant',
       prompt: 'Find what pressure times room, divided by amount times kelvin, comes to, and put its card in the slot.',
       widget,
       table: gasTable({
@@ -194,7 +192,7 @@ export const STAGES = [
       hints: [
         'Use both dials, "Record" and the straightedge.',
         'Record readings at several settings and lay the straightedge across the points.',
-        'Take one reading and divide its pressure times room by its amount times kelvin.'
+        'Divide pressure times room by amount times kelvin for any point.'
       ],
       check(state) {
         const t = state.table;
@@ -206,7 +204,7 @@ export const STAGES = [
       reward: {
         log: 'One number ties every reading together.',
         title: 'The Gas Constant',
-        body: 'Pressure times room, divided by amount times kelvin, comes to 8.31 for every reading in these units. That number is the gas constant, written R, and the whole relation PV = nRT is the ideal gas law.',
+        body: 'Pressure times room, divided by amount times kelvin, equals 8.31 for every reading in these units. That number is the gas constant, written R, and the whole relation PV = nRT is the ideal gas law.',
         last: true
       }
     };
@@ -215,10 +213,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag one card into the slot.'],
+  1: ['Place a card in the slot.'],
   2: ['Turn Holder 11\'s Gas in dial.'],
-  3: ['Drag each tank into a tray.'],
-  4: ['Record readings, lay the straightedge,', 'then drag a card into the slot.']
+  3: ['Sort each tank into a tray.'],
+  4: ['Record readings, lay the straightedge,', 'then place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -229,16 +227,8 @@ export const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
-      heading: 'What You Found',
-      body: 'A gas takes up room according to how many particles it has, not what they are. A pressure, a room and a temperature are enough to count a sealed tank without opening it.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'Every tank on the station can now be counted from its plate. That is the first thing to check when a holder reads too high.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench puts several gases into one tank and asks what each of them is doing.'
+      heading: 'Summary',
+      body: 'Equal volumes of all gases at identical temperature and pressure contain identical particle counts (Avogadro\'s law). Combining pressure, volume, temperature, and mole count produces the ideal gas law: PV = nRT, where R = 8.31 kPa·L/(mol·K).'
     }
   ]
 };

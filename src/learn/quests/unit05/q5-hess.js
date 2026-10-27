@@ -87,7 +87,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the slot.',
       'Picture the carbon starting in the same place and finishing in the same place by either route.',
-      'There is no wrong guess yet; commit to the card you would bet on.'
+      'Commit to the card you expect based on whether the reaction pathway changes the total energy.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -101,7 +101,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'You have picked the route you would bet on. Next, each route can be built from measured steps and its total read.'
+      body: 'Next, build each route from measured steps and compare their total enthalpy changes.'
     }
   },
 
@@ -109,12 +109,7 @@ export const STAGES = [
   {
     id: 's2-routes',
     title: 'Two Routes, One Total',
-    get prompt() {
-      const guess = recall(QUEST_KEY);
-      return guess && GUESS_LABEL[guess]
-        ? `You predicted ${GUESS_LABEL[guess]}: build C(s) + O₂(g) → CO₂(g) on both stacks, by two different routes.`
-        : 'Build C(s) + O₂(g) → CO₂(g) on both stacks, by two different routes.';
-    },
+    prompt: 'Build C(s) + O₂(g) → CO₂(g) on both stacks, by two different routes.',
     widget,
     table: (() => {
       const target = { lhs: [[1, C], [1, O2]], rhs: [[1, CO2]] };
@@ -139,7 +134,7 @@ export const STAGES = [
     hints: [
       'Use the three cards and the two stacks.',
       'Compare the total each stack prints, and where each route begins and ends.',
-      'If a quantity depends only on where you start and finish, the stops along the way cannot change it.'
+      'Because enthalpy depends only on the starting and finishing states, different pathways yield the same total.'
     ],
     check(state) {
       const t = state.table;
@@ -151,16 +146,10 @@ export const STAGES = [
       if (ids(A) === ids(B)) return { ok: false, msg: 'Both routes hold the same cards.' };
       return { ok: true };
     },
-    get reward() {
-      const guess = recall(QUEST_KEY);
-      const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'same'
-        ? 'You predicted this, and both stacks agreed. '
-        : 'Both stacks printed the same total, which did not match your bet. ';
-      return {
-        log: 'Both routes ended at the same total.',
-        title: 'Hess\'s Law',
-        body: `${verdict}However many steps the carbon took, the heat came to the same −393.5 kJ. The heat of a reaction depends only on where it starts and where it finishes, never on the route, which is Hess's law.`
-      };
+    reward: {
+      log: 'Both routes ended at the same total.',
+      title: 'Hess\'s Law',
+      body: 'The enthalpy change of a reaction depends only on its initial and final states, not the pathway taken. This principle is Hess\'s law.'
     }
   },
 
@@ -182,13 +171,13 @@ export const STAGES = [
     hints: [
       'Use the three cards, the stack and the answer dial, and pick a card up for "Flip" and "Larger".',
       'Compare the target equation with what each card makes and uses, one substance at a time.',
-      'Turn or double cards until carbon dioxide, water and oxygen all cancel, then add the cards as they stand.'
+      'Reverse or multiply steps until intermediate substances cancel, then sum their enthalpy changes.'
     ],
     check(state) { return stackAnswer(state, 1); },
     reward: {
       log: 'Three cards cancelled to leave methane.',
       title: 'Cancelling Steps',
-      body: 'Every substance that is not in the target has to cancel, so cards are turned round and doubled until it does. Burning carbon, burning two hydrogens and running the methane card backwards leaves −74.8 kJ for building methane, a reaction no cup could run.'
+      body: 'Intermediate substances that do not appear in the net equation must cancel. Reversing a step changes the sign of its enthalpy change, and multiplying a step scales it proportionally.'
     }
   },
 
@@ -209,14 +198,14 @@ export const STAGES = [
     }),
     hints: [
       'Use the three formation cards, the stack and the answer dial, and pick a card up for "Flip".',
-      'Compare the trip down from the reactant to the elements with the trip up to the products.',
-      'Turn the reactant\'s card round so it is unmade, then add the three cards.'
+      'Compare the formation of the reactant with the formation of the products from their constituent elements.',
+      'Reverse the reactant formation step so it decomposes to elements, then sum the formation enthalpies.'
     ],
     check(state) { return stackAnswer(state, 1); },
     reward: {
       log: 'Down to the elements and back up to the products.',
       title: 'Products Less Reactants',
-      body: 'The heat to make one mole of a substance from its elements is its standard enthalpy of formation, and the elements themselves sit at zero, like sea level. A reaction is then the formation values of its products minus those of its reactants, which is why limestone needs heat to split.'
+      body: 'The enthalpy change to form one mole of a substance from its elements in their standard states is its standard enthalpy of formation. Reaction enthalpy equals the sum of product formation enthalpies minus reactant formation enthalpies.'
     }
   }
 ];
@@ -238,15 +227,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The heat of a reaction depends only on where it starts and where it finishes, so steps can be added, turned round and doubled, and a reaction nobody can run can still be worked out from ones that were measured. Measured from the elements, every compound sits at a height of its own.'
-    },
-    {
-      heading: 'Why It Is Worth It',
-      body: 'With a table of formation values you can predict the heat of a reaction nobody has ever run, and check a stranger\'s claim about one against the same ledger.'
-    },
-    {
-      heading: 'Next',
-      body: 'The next bench leaves the heat behind and asks why some changes happen on their own at all.'
+      body: 'Reaction enthalpy depends solely on the initial and final states, allowing unmeasured reactions to be calculated by combining known steps. Using standard enthalpies of formation, reaction enthalpies are determined by subtracting reactant values from product values.'
     }
   ]
 };
