@@ -17,7 +17,6 @@ export const LANTERNFALL_TOUR = {
     'optics:cell': { title: 'Photocell', text: 'Light shines on a metal plate in the holder, knocking electrons loose toward the collector. Read "Electrons Per Second" to see how many leave and "Fastest Electron" for their speed. Turn the dials to change the light.' },
     'optics:ladder': { title: 'Energy ladder', text: 'The rungs are the only energies the electron of a hydrogen atom can have, and it starts on the lowest. Drag the electron to another rung. When it drops, the strip beside it records the light that leaves, and the rungs crowd closer together as they climb.', dials: false },
     'optics:lines': { title: 'Lines strip', text: 'This strip writes down the light each drop of the electron gives out, as lines on the same scale as the band. A climb gives out nothing, so nothing is written.', dials: false },
-    'optics:plaque': { title: null, text: 'A printed plate of facts. You only read it; there is nothing to press.' },
     'optics:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out. Whatever it reads when you press Submit is your answer.', dials: false },
 
     /* ---- cloud ---- */
@@ -39,10 +38,9 @@ export const LANTERNFALL_TOUR = {
     'pes:writer': { title: 'Page of rows', text: 'Each dial is one row of an atom, lowest energy at the top. Set it to the number of electrons you think that row holds.', dials: false },
     'trends:spring': { title: 'Spring gauge', text: 'Put an atom in the holder, choose the electron with the "Electron" dial, and press "{run}". The gauge tugs that electron and prints the pull, with the charge in the middle of the atom, the electrons in between and the charge the electron really feels.', dials: false },
     'trends:sizer': { title: 'Size gauge', text: 'Put an atom in the holder and its radius is laid along a scale. Where a "{run}" key is on the gauge, press it to read the radius.', dials: false },
-    'trends:strip': { title: 'Stripper', text: 'Put an atom in the holder and press "{run}". The stripper takes off the outermost electron and prints what that cost in energy. Press again to take off the next.', dials: false },
+    'trends:strip': { title: 'Electron Remover', text: 'Put an atom in the holder and press "{run}". The electron remover takes off the outermost electron and prints what that required in energy. Press again to take off the next.', dials: false },
     'cuvette:spectro': { title: 'Spectrometer', text: 'Slide a cuvette into the beam. The spectrometer shines light through it and prints how much of the light the cuvette takes in. Where there is a dial for the wavelength or the light, turn it to change the beam, and press "{run}" to put the reading on the sheet.', dials: false },
     'cuvette:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out. Whatever it reads when you press Submit is your answer.', dials: false },
-    'cuvette:plaque': { title: null, text: 'A printed label with a fact you need. You only read it; there is nothing to press.' },
     'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a string onto it and the string is drawn round the ring, lap after lap, so you can see whether the laps land on each other or pile up in a band.' }
   },
   pieces: {

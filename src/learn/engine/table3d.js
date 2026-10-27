@@ -1249,6 +1249,7 @@ export class Table3D extends BenchViewer3D {
         const slot = this.state.zones?.slots?.[p.zone.slice(5)];
         const role = slot ? getKit(this.state.kit).slot3d?.(slot, this.state, { skin: this.skin }) : null;
         if (role === 'holder') socketElev = 0.0105;
+        else if (role === 'well') socketElev = 0.022;
       }
       const baseElev = isLensOverDish ? DISH_H + 0.002 : (kitElev || socketElev || 0);
       e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);

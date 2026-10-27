@@ -55,7 +55,7 @@ const PLAIN = {
   lines: 'Lines',
   count: 'Electrons freed per second',
   speed: 'Fastest electron',
-  absorb: 'Dimming'
+  absorb: 'Absorbance'
 };
 
 function words(cfg) { return { ...PLAIN, ...(cfg.labels || {}) }; }

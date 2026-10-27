@@ -72,8 +72,8 @@ function piece3d(p, state, c) {
 }
 
 /**
- * A beam of light through the cuvette in the spectrometer's well: it goes in whole and comes out dimmer by the share the reading says got
- * through (`10^-A`), in the colour of the wavelength the dial is on. The picture under it stays the table's own.
+ * A beam of light through the cuvette in the spectrometer's well: it enters from the lamp housing and exits into the
+ * photodetector, attenuated according to transmittance (`10^-A`), in the colour of the wavelength the dial is on.
  */
 function dress3d(f, state, c) {
   if (f.kind !== 'spectro' || f.props.region || f.props.strip || !f.props.slot) return null;
@@ -84,9 +84,9 @@ function dress3d(f, state, c) {
   const inLen = (slot.at.x - (box.x0 + 1.5)) * s;
   const outLen = (box.x0 + f.size.w - 2 - slot.at.x) * s;
   if (inLen <= 0.01 || outLen <= 0.01) return null;
-  const beam = buildBeamThrough(c, { inLen, outLen, gap: 0.004 });
-  const p = toPlate({ x: slot.at.x, y: box.y0 + f.size.h - 3.5 });
-  beam.position.set(p.x, c.ground + 0.03, p.z);
+  const beam = buildBeamThrough(c, { inLen, outLen, gap: 0.030 });
+  const p = toPlate({ x: slot.at.x, y: slot.at.y - (RECTS.cuvette?.hh || 10) * 0.22 });
+  beam.position.set(p.x, c.ground + 0.048, p.z);
   group.add(beam);
   const sync = (fx, st) => {
     const r = spectroRead(st, fx.id);
@@ -138,7 +138,7 @@ export const CUVETTE_KIT = {
   dress3d,
   restHeight,
   slot3d: (zone, state) => (Object.values(state.fixtures).some(f => f.kind === 'spectro' && f.props.slot === zone.id) ? 'well' : null),
-  deckStyle: () => 'instrument',
+  deckStyle: f => (f?.props?.slot ? null : 'instrument'),
   printed: p => String(p.label),
   faceKey
 };
@@ -177,7 +177,7 @@ export const readingCard = (id, label, nm, at) => ({ id, kind: 'reading', label,
  * light dial with a molecule to watch, and `strip` the strip of light that gets through the cuvette in the holder.
  */
 export function spectro(id, at, {
-  tune = false, pathDial = false, record = true, xAxis = 'conc', word = 'DIMMING', nmFixed = 630, pathFixed = 1, start = 2,
+  tune = false, pathDial = false, record = true, xAxis = 'conc', word = 'ABSORBANCE', nmFixed = 630, pathFixed = 1, start = 2,
   region = false, molecule = 'HCl', strip = false, label = 'Spectrometer', w = 74, h = 40
 } = {}) {
   const size = { w, h };

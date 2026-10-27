@@ -15,7 +15,6 @@ const STEEL = '#544e46';
 const PALE = '#dcd6cc';
 const AMBER = '#d99423';
 const AMBER_GLOW = 'rgba(217, 148, 35, 0.4)';
-const TEXT = '#fffae0';
 const MUTED = '#8c8376';
 const GRID = 'rgba(140, 131, 118, 0.08)';
 const BOX_BG = '#1a1815';
@@ -34,7 +33,7 @@ const ELEMENTS = {
 
 /**
  * Build the list of electron placement events for a given Z.
- * Each item: { id, row, box, spin, subshell, label, badge }
+ * Each item: { num, row, box, spin, text }
  */
 function buildElectronSteps(z) {
   const steps = [];
@@ -42,33 +41,30 @@ function buildElectronSteps(z) {
   if (z <= 10) {
     // Light elements: 1s, 2s, 2p
     // 1s
-    if (z >= 1) steps.push({ num: 1, row: '1s', box: 0, spin: 'u', text: '1s¹', badge: 'AUFBAU: Lowest energy orbital (1s) fills first' });
-    if (z >= 2) steps.push({ num: 2, row: '1s', box: 0, spin: 'd', text: '1s²', badge: 'PAULI EXCLUSION: Electrons pair with opposite spin (↑↓)' });
+    if (z >= 1) steps.push({ num: 1, row: '1s', box: 0, spin: 'u', text: '1s¹' });
+    if (z >= 2) steps.push({ num: 2, row: '1s', box: 0, spin: 'd', text: '1s²' });
     // 2s
-    if (z >= 3) steps.push({ num: 3, row: '2s', box: 0, spin: 'u', text: '1s² 2s¹', badge: 'AUFBAU: 1s full → next lowest level is 2s' });
-    if (z >= 4) steps.push({ num: 4, row: '2s', box: 0, spin: 'd', text: '1s² 2s²', badge: '1s and 2s full (4 electrons total)' });
+    if (z >= 3) steps.push({ num: 3, row: '2s', box: 0, spin: 'u', text: '1s² 2s¹' });
+    if (z >= 4) steps.push({ num: 4, row: '2s', box: 0, spin: 'd', text: '1s² 2s²' });
     // 2p
-    if (z >= 5) steps.push({ num: 5, row: '2p', box: 0, spin: 'u', text: '1s² 2s² 2p¹', badge: '2p subshell begins (2px orbital)' });
-    if (z >= 6) steps.push({ num: 6, row: '2p', box: 1, spin: 'u', text: '1s² 2s² 2p²', badge: "HUND'S RULE: Parallel spins in separate boxes before pairing" });
-    if (z >= 7) steps.push({ num: 7, row: '2p', box: 2, spin: 'u', text: '1s² 2s² 2p³', badge: "HUND'S RULE: Three unpaired electrons singly occupy 2px, 2py, 2pz" });
-    if (z >= 8) steps.push({ num: 8, row: '2p', box: 0, spin: 'd', text: '1s² 2s² 2p⁴', badge: 'PAIRING: All 2p orbitals singly occupied → 4th electron pairs in 2px' });
-    if (z >= 9) steps.push({ num: 9, row: '2p', box: 1, spin: 'd', text: '1s² 2s² 2p⁵', badge: 'PAIRING: 5th electron pairs in 2py' });
-    if (z >= 10) steps.push({ num: 10, row: '2p', box: 2, spin: 'd', text: '1s² 2s² 2p⁶', badge: 'NEON: Noble gas core complete (octet full)' });
+    if (z >= 5) steps.push({ num: 5, row: '2p', box: 0, spin: 'u', text: '1s² 2s² 2p¹' });
+    if (z >= 6) steps.push({ num: 6, row: '2p', box: 1, spin: 'u', text: '1s² 2s² 2p²' });
+    if (z >= 7) steps.push({ num: 7, row: '2p', box: 2, spin: 'u', text: '1s² 2s² 2p³' });
+    if (z >= 8) steps.push({ num: 8, row: '2p', box: 0, spin: 'd', text: '1s² 2s² 2p⁴' });
+    if (z >= 9) steps.push({ num: 9, row: '2p', box: 1, spin: 'd', text: '1s² 2s² 2p⁵' });
+    if (z >= 10) steps.push({ num: 10, row: '2p', box: 2, spin: 'd', text: '1s² 2s² 2p⁶' });
   } else if (z === 19) {
     // Potassium: Argon core + 19th in 4s
-    steps.push({
-      num: 19, row: '4s', box: 0, spin: 'u', text: '[Ar] 4s¹',
-      badge: 'ENERGY ORDER: 4s sits below 3d on the energy ladder → 19th e⁻ fills 4s first!'
-    });
+    steps.push({ num: 19, row: '4s', box: 0, spin: 'u', text: '[Ar] 4s¹' });
   } else if (z === 20) {
     // Calcium
-    steps.push({ num: 19, row: '4s', box: 0, spin: 'u', text: '[Ar] 4s¹', badge: '4s sits below 3d on the energy ladder' });
-    steps.push({ num: 20, row: '4s', box: 0, spin: 'd', text: '[Ar] 4s²', badge: '4s subshell full with 2 electrons' });
+    steps.push({ num: 19, row: '4s', box: 0, spin: 'u', text: '[Ar] 4s¹' });
+    steps.push({ num: 20, row: '4s', box: 0, spin: 'd', text: '[Ar] 4s²' });
   } else if (z >= 21) {
     // Scandium
-    steps.push({ num: 19, row: '4s', box: 0, spin: 'u', text: '[Ar] 4s¹', badge: '4s sits below 3d on the energy ladder' });
-    steps.push({ num: 20, row: '4s', box: 0, spin: 'd', text: '[Ar] 4s²', badge: '4s subshell full with 2 electrons' });
-    steps.push({ num: 21, row: '3d', box: 0, spin: 'u', text: '[Ar] 4s² 3d¹', badge: '3d SUBSHELL: With 4s full, 21st electron enters 3d (Transition Metals)!' });
+    steps.push({ num: 19, row: '4s', box: 0, spin: 'u', text: '[Ar] 4s¹' });
+    steps.push({ num: 20, row: '4s', box: 0, spin: 'd', text: '[Ar] 4s²' });
+    steps.push({ num: 21, row: '3d', box: 0, spin: 'u', text: '[Ar] 4s² 3d¹' });
   }
 
   return steps;
@@ -178,8 +174,6 @@ export function drawFilling(ctx, w, h, spec, progress, still) {
 
   // Current electron count placed so far
   const placedCount = still ? steps.length : currentStepIdx;
-  const currentBadge = steps[Math.min(steps.length - 1, Math.max(0, currentStepIdx - (slotProgress >= steps.length ? 1 : 0)))]?.badge
-    || 'Complete Ground State';
   const currentConfig = placedCount > 0 ? steps[Math.min(steps.length - 1, placedCount - 1)].text : (info.core ? `[${info.core}]` : 'Empty');
 
   // Top Header: Element & Configuration
@@ -455,25 +449,6 @@ export function drawFilling(ctx, w, h, spec, progress, still) {
       }
     }
   }
-
-  // -------------------------------------------------------------
-  // BOTTOM CONCEPT BANNER
-  // -------------------------------------------------------------
-  const bannerY = h - 18;
-  const bannerW = Math.min(w - 48, 560);
-  const bannerH = 22;
-
-  ctx.fillStyle = 'rgba(20, 18, 15, 0.9)';
-  ctx.fillRect(w / 2 - bannerW / 2, bannerY - bannerH / 2, bannerW, bannerH);
-  ctx.strokeStyle = 'rgba(217, 148, 35, 0.4)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(w / 2 - bannerW / 2, bannerY - bannerH / 2, bannerW, bannerH);
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillStyle = TEXT;
-  ctx.fillText(currentBadge, w / 2, bannerY);
 }
 
 /**

@@ -127,8 +127,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
-      body: 'More protons and more electrons is more of everything, so a bigger atom is a fair guess. Next, a size gauge will read the atoms of one row.'
+      title: 'Prediction',
+      body: 'More protons and electrons might seem like they should make an atom larger, but added positive charge pulls electrons closer.'
     }
   },
 
@@ -150,9 +150,9 @@ export const STAGES = [
         zones: { slots: sz.slots, rail: railAt('Largest atom', 'Smallest atom') }
       }),
       hints: [
-        'Use the size gauge: lay an atom in it to read its radius.',
-        'Compare the radii of the four atoms with the number of protons on each.',
-        'Put the atom with the largest radius at the left of the rail and the smallest at the right.'
+        'Place an atom in the size gauge to read its radius.',
+        'Compare the radii across the row as the number of protons increases.',
+        'Place the largest radius at the left of the rail and the smallest at the right.'
       ],
       check(state) {
         const t = state.table;
@@ -168,13 +168,13 @@ export const STAGES = [
       get reward() {
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'li'
-          ? 'You predicted that lithium is bigger, and the gauge agreed. '
-          : 'The gauge did not agree with your prediction, which is how a guess gets better. ';
+          ? 'Lithium is indeed the larger atom. '
+          : 'Carbon is smaller than lithium despite having more particles. ';
         return {
           log: 'Across the row, the atoms shrink.',
           title: 'Atomic Radius',
-          body: `${verdict}How far an atom's outer electrons sit from its nucleus is its atomic radius, and across a row it shrinks even though each atom has more protons and more electrons than the one before.`,
-          model: { type: 'radii', items: [{ sym: 'Li', pm: 152 }, { sym: 'Be', pm: 112 }, { sym: 'B', pm: 85 }, { sym: 'C', pm: 77 }], caption: 'Lithium, beryllium, boron and carbon as spheres to scale: the atoms get smaller as the protons increase.' }
+          body: `${verdict}Atomic radius decreases across a row because additional protons pull the valence electron shell closer to the nucleus.`,
+          model: { type: 'radii', shrink: true, items: [{ sym: 'Li', pm: 152 }, { sym: 'Be', pm: 112 }, { sym: 'B', pm: 85 }, { sym: 'C', pm: 77 }], caption: 'Lithium, beryllium, boron and carbon: atoms shrink across the row as nuclear charge increases.' }
         };
       }
     };
@@ -193,9 +193,9 @@ export const STAGES = [
         zones: { slots: sp.slots, trays: [tray('one', 'Feels +1', { x: 125, y: 16 }, 44), tray('two', 'Feels +2', { x: 125, y: 43 }, 44)] }
       }),
       hints: [
-        'Use the spring gauge: put an atom in the holder with the dial on its outermost electron, and press "Tug Electron".',
-        'Compare the charge at the middle with the electrons between and with the charge the electron feels.',
-        'Subtract the electrons between from the charge at the middle and tray each atom by what is left.'
+        'Place an atom in the holder and press "Tug Electron" to measure the pull.',
+        'Compare the nuclear charge with the number of inner electrons between it and the outer electron.',
+        'Subtract inner electrons from nuclear charge to find the net charge.'
       ],
       check(state) {
         const t = state.table;
@@ -208,8 +208,14 @@ export const STAGES = [
       reward: {
         log: 'Eleven protons, ten electrons in the way.',
         title: 'Shielding and Effective Nuclear Charge',
-        body: 'The electrons between an outer electron and the nucleus cancel most of the charge, an effect called shielding, and what is left is the effective nuclear charge: +1 for sodium\'s outer electron, eleven protons less ten shielding electrons. By Coulomb\'s law the pull on an electron grows with that charge and falls off quickly with distance.',
-        model: { type: 'atom', p: 11, n: 12, caption: 'Sodium: eleven protons in the middle, and ten electrons on the two shells between them and the lone outer electron.' }
+        body: 'Inner electrons provide shielding by cancelling part of the positive charge from the nucleus. The remaining net attraction is the effective nuclear charge. By Coulomb\'s law, this determines the pull on the outer electron: sodium has 11 protons and 10 shielding electrons, leaving an effective charge of +1.',
+        model: {
+          type: 'shielding',
+          sym: 'Na',
+          p: 11,
+          n: 12,
+          caption: '10 inner electrons cancel 10 positive charges from the nucleus, leaving a net +1 pull on the outer electron.'
+        }
       }
     };
   })(),
@@ -224,10 +230,10 @@ export const STAGES = [
       table: trendsTable({
         pieces: row([['b', 'B'], ['li', 'Li'], ['be', 'Be']]),
         fixtures: [st.fixture],
-        zones: { slots: st.slots, rail: railAt('Costs least', 'Costs most') }
+        zones: { slots: st.slots, rail: railAt('Requires least energy', 'Requires most energy') }
       }),
       hints: [
-        'Use the stripper: put an atom in the holder and press "Strip Electron".',
+        'Use the electron remover: put an atom in the holder and press "Remove Electron".',
         'Compare the three costs, and compare their order with the order of the atoms across the row.',
         'Put the atom with the smallest cost at the left of the rail and the largest at the right.'
       ],
@@ -267,7 +273,7 @@ export const STAGES = [
         zones: { slots: [...st.slots, ...sz.slots], rail: railAt('Smallest size', 'Largest size') }
       }),
       hints: [
-        'Use "Strip Electron" with a sodium atom in the stripper, "Add Electron" on the chlorine card, and the size gauge.',
+        'Use "Remove Electron" with a sodium atom in the electron remover, "Add Electron" on the chlorine card, and the size gauge.',
         'Lay each of the three in the size gauge and compare the radii with the charge on each card.',
         'Put the smallest of the three at the left of the rail and the largest at the right.'
       ],
@@ -307,11 +313,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Atomic structure governs periodic trends: nuclear charge pulls electrons inward, inner electrons shield outer electrons, and greater distance reduces attraction.'
+      body: 'Nuclear charge pulls electrons inward, inner electrons shield outer electrons, and greater distance reduces attraction.'
     },
     {
       heading: 'Why It Matters',
-      body: 'Trends in atomic radius, effective nuclear charge, and ionization energy explain how elements interact and react across the periodic table.'
+      body: 'Effective nuclear charge and atomic radius determine how strongly an atom holds its electrons and how it reacts.'
     }
   ]
 };

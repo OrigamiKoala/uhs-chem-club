@@ -186,7 +186,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'Filling shell by shell in numerical order is a fair guess. Next, the energy ladder will reveal which level actually lies lower in energy.'
     }
   },

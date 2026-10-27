@@ -60,21 +60,75 @@ function tintOf(piece) {
 function paintCuvette(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.cuvette);
   say(ctx, p.label, o.x, box.y0 + 1.9 * o.sc, Math.max(6.5, 1.9 * o.sc), { align: 'center', weight: 700, maxW: box.w - 2 });
-  const tw = 7 * o.sc;
-  const th = 10.4 * o.sc;
-  const tx = o.x - tw / 2;
-  const ty = box.y0 + 4 * o.sc;
-  ctx.fillStyle = '#16140f';
-  ctx.fillRect(tx, ty, tw, th);
+
+  // Authentic cuvette proportions in 2D: slender column (aspect ratio ~2.2:1), clear optical walls, open top, thick glass floor.
+  const cw = 5.2 * o.sc;
+  const ch = 11.6 * o.sc;
+  const tx = o.x - cw / 2;
+  const ty = box.y0 + 3.4 * o.sc;
+  const floorH = 1.6 * o.sc;
+
+  // Hollow chamber background
+  ctx.fillStyle = '#141718';
+  ctx.fillRect(tx, ty, cw, ch);
+
+  // Thick optical glass floor
+  ctx.fillStyle = '#2a3336';
+  ctx.fillRect(tx, ty + ch - floorH, cw, floorH);
+
   const level = p.props.sealed ? 0.8 : Math.min(1, (p.props.drops || 0) / 6);
   if (concOf(p) > 0 || p.props.blank) {
-    const lv = p.props.blank ? 0.8 : (p.props.conc != null ? 0.8 : level);
+    const rawLv = p.props.blank ? 0.8 : (p.props.conc != null ? 0.8 : level);
+    const lv = 0.22 + 0.78 * rawLv;
+    const liquidH = (ch - floorH - 1.2 * o.sc) * lv;
+    const ly = ty + ch - floorH - liquidH;
+
+    // Liquid fill
     ctx.fillStyle = tintOf(p);
-    ctx.fillRect(tx + 1, ty + th * (1 - lv), tw - 2, th * lv);
-    if (p.props.blank) { ctx.strokeStyle = STEEL; ctx.strokeRect(tx + 1.5, ty + th * 0.2 + 0.5, tw - 3, th * 0.8 - 2); }
+    ctx.beginPath();
+    ctx.moveTo(tx + 1, ly);
+    ctx.quadraticCurveTo(o.x, ly + 1.0 * o.sc, tx + cw - 1, ly);
+    ctx.lineTo(tx + cw - 1, ty + ch - floorH);
+    ctx.lineTo(tx + 1, ty + ch - floorH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Meniscus surface tension highlight
+    ctx.strokeStyle = p.props.blank ? STEEL : 'rgba(180, 220, 255, 0.65)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(tx + 1, ly);
+    ctx.quadraticCurveTo(o.x, ly + 1.0 * o.sc, tx + cw - 1, ly);
+    ctx.stroke();
   }
-  ctx.strokeStyle = DUST;
-  ctx.strokeRect(tx + 0.5, ty + 0.5, tw - 1, th - 1);
+
+  // Clear optical walls (Left and Right) and open top U-frame
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(tx + 0.5, ty);
+  ctx.lineTo(tx + 0.5, ty + ch);
+  ctx.lineTo(tx + cw - 0.5, ty + ch);
+  ctx.lineTo(tx + cw - 0.5, ty);
+  ctx.stroke();
+
+  // Open top lip ticks
+  ctx.beginPath();
+  ctx.moveTo(tx - 0.8 * o.sc, ty + 0.5);
+  ctx.lineTo(tx + 1.2 * o.sc, ty + 0.5);
+  ctx.moveTo(tx + cw - 1.2 * o.sc, ty + 0.5);
+  ctx.lineTo(tx + cw + 0.8 * o.sc, ty + 0.5);
+  ctx.stroke();
+
+  // Etched optical path orientation mark "▽" near top
+  ctx.fillStyle = '#e4edea';
+  ctx.beginPath();
+  ctx.moveTo(o.x - 1.2 * o.sc, ty + 1.2 * o.sc);
+  ctx.lineTo(o.x + 1.2 * o.sc, ty + 1.2 * o.sc);
+  ctx.lineTo(o.x, ty + 2.5 * o.sc);
+  ctx.closePath();
+  ctx.fill();
+
   if (!p.props.sealed && p.props.conc == null) say(ctx, `${p.props.drops || 0} DROPS`, o.x, box.y0 + box.h - 1.6 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'center', color: DUST, maxW: box.w - 2 });
   else if (p.props.read != null) say(ctx, p.props.read.toFixed(3), o.x, box.y0 + box.h - 1.6 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'center', color: PHOS, weight: 700, maxW: box.w - 2 });
 }
@@ -188,8 +242,8 @@ function paintMolecule(ctx, f, state, b) {
 function paintStrip(ctx, f, state, b) {
   const F = frameOf(b);
   const piece = seatedIn(state, f.props.slot);
-  const x0 = F.x(2.5);
-  const w = F.len(f.size.w - 5);
+  const x0 = F.x(24);
+  const w = F.len(f.size.w - 26);
   const y0 = F.y(f.size.h - 11.5);
   const h = F.len(5);
   const solute = piece?.props.solute || 'cuso4';
@@ -204,7 +258,7 @@ function paintStrip(ctx, f, state, b) {
   }
   ctx.strokeStyle = RIM;
   ctx.strokeRect(Math.round(x0) + 0.5, Math.round(y0) + 0.5, Math.round(w), Math.round(h));
-  say(ctx, piece ? 'LIGHT THAT GETS THROUGH' : 'NO CUVETTE IN THE BEAM', x0, y0 - F.len(1.9), F.size(2.4, 6), { color: piece ? DUST : DIM });
+  say(ctx, piece ? 'LIGHT THAT GETS THROUGH' : 'NO CUVETTE IN THE BEAM', x0, y0 - F.len(1.9), F.size(2.4, 6), { color: piece ? DUST : DIM, maxW: w });
 }
 
 function paintSpectro(ctx, f, state, b) {
@@ -215,7 +269,7 @@ function paintSpectro(ctx, f, state, b) {
   const x = 23;
   const top = f.props.readAt ?? 24;
   if (!r.piece) { say(ctx, 'NO CUVETTE IN THE BEAM', F.x(x), F.y(top), F.size(2.6, 7), { color: DIM, maxW: F.len(f.size.w - x - 2) }); return; }
-  say(ctx, `${f.props.word || 'DIMMING'} ${r.A.toFixed(3)}`, F.x(x), F.y(top), F.size(3, 8), { color: PHOS, weight: 700, maxW: F.len(f.size.w - x - 2) });
+  say(ctx, `${f.props.word || 'ABSORBANCE'} ${r.A.toFixed(3)}`, F.x(x), F.y(top), F.size(3, 8), { color: PHOS, weight: 700, maxW: F.len(f.size.w - x - 2) });
   say(ctx, `${r.nm} nm, ${r.path} cm`, F.x(x), F.y(top + 4), F.size(2.5, 7), { color: DUST, maxW: F.len(f.size.w - x - 2) });
   // How much of the beam is left, as a bar.
   const left = Math.pow(10, -r.A);

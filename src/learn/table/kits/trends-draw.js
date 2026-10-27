@@ -144,8 +144,8 @@ function paintStrip(ctx, f, state, b) {
   const r = stripRead(state, f.id);
   const x = 22;
   if (!r.piece) { say(ctx, 'NO ATOM IN THE HOLDER', F.x(x), F.y(12), F.size(2.6, 7), { color: DIM, maxW: F.len(f.size.w - x - 2) }); return; }
-  say(ctx, `ELECTRONS TAKEN OFF ${Math.max(0, r.charge)}`, F.x(x), F.y(11.6), F.size(2.6, 7), { color: DUST, maxW: F.len(f.size.w - x - 2) });
-  say(ctx, r.last != null ? `LAST COST ${r.last} kJ/mol` : 'NOTHING STRIPPED YET', F.x(x), F.y(15.4), F.size(2.6, 7), { color: r.last != null ? PHOS : DIM, weight: 700, maxW: F.len(f.size.w - x - 2) });
+  say(ctx, `${Math.max(0, r.charge)} ELECTRONS TAKEN OFF`, F.x(x), F.y(11.6), F.size(2.6, 7), { color: DUST, maxW: F.len(f.size.w - x - 2) });
+  say(ctx, r.last != null ? `REQUIRED ${r.last} kJ/mol` : 'NOTHING REMOVED YET', F.x(x), F.y(15.4), F.size(2.6, 7), { color: r.last != null ? PHOS : DIM, weight: 700, maxW: F.len(f.size.w - x - 2) });
 }
 
 export function paintFixture(ctx, f, state, b) {

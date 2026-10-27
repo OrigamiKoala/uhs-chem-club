@@ -155,7 +155,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'How many electrons can fit into a single orbital? On the next stage, you will test whether electrons can pack in without limit or if something stops them.'
     }
   },

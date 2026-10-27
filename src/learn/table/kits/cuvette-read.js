@@ -79,8 +79,8 @@ export function colourOfNm(nm) {
 /** The colour a solute takes out of white light: the one its absorption peaks in. */
 export const missingColour = solute => colourOfNm(SOLUTES[solute].peak);
 
-/** The share of white light that gets through `piece` at `nm` (1 cm). */
-export const gotThrough = (solute, conc, nm) => Math.pow(10, -planAbsorb(solute, nm, 1, conc));
+/** The share of white light that gets through `piece` at `nm` (effective visual path). */
+export const gotThrough = (solute, conc, nm, path = 8) => Math.pow(10, -planAbsorb(solute, nm, path, conc));
 
 /** The chip standing in a slot, as its colour, or null. */
 export function chipIn(state, slotId) {

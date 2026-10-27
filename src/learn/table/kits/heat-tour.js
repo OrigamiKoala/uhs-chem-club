@@ -49,10 +49,6 @@ const FIXTURES = {
     title: 'Warmed sample', dials: false,
     text: 'A sample sits in a box with a heater dial beside it. Turn the "Heater" dial to warm the sample, and its particles move faster, which the streaks behind them show. Press "Record" to write down what warming did.'
   },
-  'heat:plaque': {
-    title: 'Plate of facts',
-    text: 'A printed plate of facts you may use. You only read it; there is nothing to press.'
-  },
   'heat:marker': {
     title: 'Number marker', dials: false,
     text: 'The marker holds a number. Drag its knob along the groove, or tap the groove, to set the number you worked out. Whatever it reads when you press Submit is your answer.'

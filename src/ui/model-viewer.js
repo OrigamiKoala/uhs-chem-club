@@ -14,6 +14,10 @@ import { tierManager } from '../three/tier.js';
 import { session } from '../session.js';
 import { mountDOrbitals3D, mountDebriefOrbitalViewer } from './orbital-3d-viewer.js';
 import { mountFilling } from './filling-animator.js';
+import { mountRadiiShrink } from './radii-shrink-animator.js';
+import { mountShieldingExplainer } from './shielding-explainer.js';
+import { mountIonicRadius } from './ionic-radius-animator.js';
+import { mountCuvetteExplainer } from './cuvette-explainer.js';
 
 export { mountDebriefOrbitalViewer };
 
@@ -1204,10 +1208,25 @@ export function mountModel(host, spec) {
     : parts.ladder ? 'Watch the electron drop and release a packet of light (click to replay).'
     : parts.standingWave ? 'Drag to tilt and turn. Tap buttons to test integer vs non-integer waves.'
     : parts.filling ? 'Watch electrons fill by energy order and Hund\'s rule (click to replay).'
+    : parts.shielding ? ''
+    : parts.ionicRadius ? 'Tap actions to test adding or removing an electron. Drag to turn.'
+    : parts.cuvette ? 'Drag to turn. Toggle white light or 630 nm beam to see absorption.'
+    : parts.radiiShrink ? 'Drag to turn it.'
     : 'Drag to turn it.';
   wrap.innerHTML = `<div class="lq-model-view"></div><p class="lq-model-caption">${captionOf(spec).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} ${hint}</p>`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
+
+  // Electron shielding and effective nuclear charge (Zeff): 3D animated explainer
+  if (parts.shielding || spec.type === 'shielding') {
+    const teardownShielding = mountShieldingExplainer(view, wrap, parts.shielding || spec, still);
+    return {
+      dispose() {
+        try { teardownShielding?.dispose?.(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
 
   // An orbital filling / electron configuration model: 2D animated energy ladder, boxes & spin arrows.
   if (parts.filling) {
@@ -1259,6 +1278,39 @@ export function mountModel(host, spec) {
     return {
       dispose() {
         try { teardownDOrbitals(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // Periodic atomic radius trend: 3D animated atom shrinking as protons & electrons are added
+  if (parts.radiiShrink) {
+    const teardownRadiiShrink = mountRadiiShrink(view, wrap, parts.radiiShrink, still);
+    return {
+      dispose() {
+        try { teardownRadiiShrink(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // Ionic radius trend: 3D animated explainer showing how adding/removing an electron affects size
+  if (parts.ionicRadius) {
+    const teardownIonicRadius = mountIonicRadius(view, wrap, parts.ionicRadius, still);
+    return {
+      dispose() {
+        try { teardownIonicRadius(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // Cuvette: 3D interactive explainer demonstrating complementary colour and Beer's law absorbance
+  if (parts.cuvette || spec.type === 'cuvette') {
+    const teardownCuvette = mountCuvetteExplainer(view, wrap, parts.cuvette || spec, still);
+    return {
+      dispose() {
+        try { teardownCuvette?.dispose?.(); } catch (err) { /* gone */ }
         wrap.remove();
       }
     };

@@ -41,7 +41,6 @@ const FIXTURE = {
   tester: { title: 'Tester', text: 'Drag a {item} into the slot, then press "{run}". The tester shows what the atom does with the electrons in its outer shell: it gives one away, takes one on, shares, or keeps all of them.' },
   'cards:tester': { title: 'Tester', text: 'Drag a card into the slot, then press "{run}". The tester shows what that atom does with the electrons in its outer shell: it gives one away, takes one on, shares, or keeps all of them.' },
   stamp: { title: 'Stamp', dials: false, text: 'Use the stamp to write down a number for the unmeasured card. ' + DIAL.Protons },
-  plate: { title: null, text: 'A printed label with facts about a sample. You only read it; there is nothing to press.' },
   assay: { title: 'Chute, bins and beam', text: 'Drag a sample onto the chute, then press "{run}". The atoms fall into bins sorted by weight, each bin shows how many atoms it caught, and the beam underneath tips toward the heavier side.' },
   coder: { title: 'Code reader', dials: false, text: 'Use the "Bin" dial to pick a bin, then press "{run}". It shows the name of the element that bin\'s atoms belong to.' },
   balance: { title: 'Balance', text: 'Two pans hang from a beam. The beam tips down toward the heavier pan, and lies flat when both pans weigh the same.{counters}' },
@@ -173,6 +172,8 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
   for (const f of fixtures) {
     // A plain surface things stand on has nothing to explain; one with a key or a dial is an instrument.
     if (f.props?.backdrop && f.noRun && !Object.keys(f.dials || {}).length) continue;
+    // Printed plaques and plates display static facts with nothing to press or interact with; omit from Tour.
+    if (f.kind === 'plaque' || f.kind === 'plate') continue;
     const { title, text } = fixtureStep(f, kit, table);
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
     add(twin ? `fx_${f.kind}_${f.id}` : `fx_${f.kind}`, title, text);

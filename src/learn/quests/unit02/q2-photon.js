@@ -117,7 +117,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'A wave that is bigger carries more energy, so it is fair to guess that a brighter lamp frees more. Next, a photocell will test it.'
     }
   },

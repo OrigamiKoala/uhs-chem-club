@@ -251,6 +251,25 @@ function radiiParts(spec) {
   const shift = x / 2 - 0.12;
   for (const { it, r, c } of placed) parts.spheres.push(sphere([c - shift, 0, 0], r, ATOM_COLOUR[it.sym] || STEEL, it.sym, 24));
   parts.radius = x / 2 + 0.4;
+  const isPeriodTrend = spec.shrink || (items && items.length >= 3 && items[0]?.sym === 'Li' && items[items.length - 1]?.sym === 'C');
+  if (isPeriodTrend) {
+    parts.radiiShrink = {
+      items: spec.items,
+      steps: [
+        { sym: 'Li', z: 3, n: 4, pm: 152, inner: 2, outer: 1 },
+        { sym: 'Be', z: 4, n: 5, pm: 112, inner: 2, outer: 2 },
+        { sym: 'B',  z: 5, n: 6, pm: 85,  inner: 2, outer: 3 },
+        { sym: 'C',  z: 6, n: 6, pm: 77,  inner: 2, outer: 4 }
+      ]
+    };
+  }
+  const hasIons = spec.type === 'ionic-radius' || spec.ionic || (items && items.some(it => it.sym?.includes('+') || it.sym?.includes('-')));
+  if (hasIons) {
+    parts.ionicRadius = {
+      items: spec.items,
+      caption: spec.caption
+    };
+  }
   return parts;
 }
 
@@ -260,10 +279,10 @@ function radiiParts(spec) {
 function cuvetteParts(spec) {
   const parts = empty(3.3);
   const path = spec.path || 1;
-  const w = 0.9 + 0.5 * path;
+  const w = 0.5 + 0.35 * path;
   const hw = w / 2;
-  const hh = 1.0;
-  const hd = 0.7;
+  const hh = 1.35;
+  const hd = 0.45;
   const corners = [];
   for (const x of [-hw, hw]) for (const y of [-hh, hh]) for (const z of [-hd, hd]) corners.push([x, y, z]);
   for (let i = 0; i < corners.length; i++) for (let j = i + 1; j < corners.length; j++) {
@@ -282,6 +301,33 @@ function cuvetteParts(spec) {
   const out = Math.max(1, Math.round(dots * through));
   for (let i = 0; i < out; i++) parts.spheres.push(sphere([hw + 0.2 + (i * (3 - hw - 0.3)) / dots, 0, 0], 0.07, colour, 'beam-out', 10));
   parts.absorbance = A;
+  parts.cuvette = {
+    solute: spec.solute || 'cuso4',
+    conc: spec.conc ?? 0.01,
+    nm: spec.nm || 630,
+    path,
+    mode: spec.mode,
+    caption: spec.caption
+  };
+  return parts;
+}
+
+/* ------------------------------------------------------------------ shielding and effective nuclear charge */
+
+/** Shielding and effective nuclear charge: inner electrons cancel nuclear attraction for valence electrons. */
+function shieldingParts(spec) {
+  const sym = spec.sym || 'Na';
+  const z = spec.p || (sym === 'Na' ? 11 : sym === 'Mg' ? 12 : 3);
+  const parts = empty(3.4);
+  for (let i = 0; i < z; i++) {
+    parts.spheres.push(sphere([0, 0, 0], 0.08, AMBER, 'proton', 12));
+  }
+  parts.shielding = {
+    sym,
+    z,
+    n: spec.n || 12,
+    caption: spec.caption
+  };
   return parts;
 }
 
@@ -294,9 +340,11 @@ export const LANTERNFALL_MODELS = {
   orbital: orbitalParts,
   rack: rackParts,
   radii: radiiParts,
+  'ionic-radius': radiiParts,
   cuvette: cuvetteParts,
   'standing-wave': standingWaveParts,
-  'd-orbitals': dOrbitalsParts
+  'd-orbitals': dOrbitalsParts,
+  shielding: shieldingParts
 };
 
 /** The words under one of these models when its spec gives none. */
@@ -307,10 +355,12 @@ export function lanternfallCaption(spec) {
     case 'ladder': return `An electron dropping from rung ${spec.hi} to rung ${spec.lo}, and the packet of light it gives out.`;
     case 'orbital': return `The ${spec.orbital} cloud: ${spec.dots || 260} dots from the probe.`;
     case 'rack': return `The electrons of element ${spec.z}, one arrow each.`;
+    case 'ionic-radius':
     case 'radii': return `${spec.items.map(it => `${it.sym} ${it.pm} pm`).join(', ')}, spheres to scale.`;
     case 'cuvette': return `A beam of ${spec.nm} nm light through ${SOLUTES[spec.solute].name}.`;
     case 'standing-wave': return spec.caption || 'Why non-integers cancel: Lap 1 meets Lap 2 out of phase (crest cancels trough → zero). Whole numbers meet in phase, reinforcing into a permanent standing wave.';
     case 'd-orbitals': return spec.caption || 'The five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle.';
+    case 'shielding': return spec.caption || '10 inner electrons cancel 10 positive charges from the nucleus, leaving a net +1 pull on the outer electron.';
     default: return '';
   }
 }

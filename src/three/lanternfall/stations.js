@@ -800,7 +800,7 @@ export function buildWaterHole(w, site) {
   k.box(g, [3.6, 0.1, 2.0], M.steel, [SX, 0.45, -3.6], null, true);
   for (const dx of [-1.55, 1.55]) k.box(g, [0.08, 0.7, 0.08], M.darkSteel, [SX + dx, 0.85, -3.0]);
   k.box(g, [3.2, 0.05, 0.4], M.darkSteel, [SX, 1.2, -3.0]);
-  for (let i = 0; i < 12; i++) k.cyl(g, [0.05, 0.05, 0.28, 8], M.glass, [SX - 1.4 + i * 0.255, 1.36, -3.0]);
+  for (let i = 0; i < 12; i++) k.box(g, [0.08, 0.28, 0.08], M.glass, [SX - 1.4 + i * 0.255, 1.36, -3.0]);
   k.box(g, [1.3, 0.75, 0.75], M.caseDark, [SX + 0.7, 0.88, -4.0], null, true);
   k.cyl(g, [0.1, 0.1, 0.5, 12], M.darkSteel, [SX - 0.1, 0.9, -4.0], [0, 0, Math.PI / 2]);
   k.box(g, [0.7, 0.45, 0.5], M.timber, [SX - 1.1, 0.72, -4.1]);

@@ -50,10 +50,6 @@ const FIXTURES = {
     title: 'Scale',
     text: 'Drag a tank onto the pan to weigh it. The reading is the mass of the gas inside, in grams.'
   },
-  plaque: {
-    title: 'Plaque',
-    text: 'A printed card of facts. You only read it; there is nothing to press.'
-  },
   marker: {
     title: 'Marker',
     dials: false,

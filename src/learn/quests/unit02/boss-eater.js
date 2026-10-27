@@ -255,7 +255,7 @@ export const STAGES = [
     const sp = spectro(SP, { x: 39, y: 22 }, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
     return {
       id: 'phase5',
-      title: 'Phase 5 · The Dimmed Cell',
+      title: 'Phase 5 · The Absorbing Cell',
       prompt: 'Set the marker to the concentration of the eater\'s sealed copper solution, in mmol/L.',
       widget,
       table: cuvetteTable({
@@ -275,9 +275,9 @@ export const STAGES = [
       foes: EATER_FOE,
       encounter: {
         species: 'the lantern-eater',
-        act: 'Measure Dim',
-        intent: 'The eater dims the light that passes through the cell.',
-        hit: 'The dimming is measured, and the eater has no shadow left to hide in.'
+        act: 'Read Absorbance',
+        intent: 'The eater absorbs the light that passes through the cell.',
+        hit: 'The absorbance is measured, and the eater has no shadow left to hide in.'
       },
       hints: [
         'Use the dropper on the standards, "Record" for each, the straightedge, and the marker.',
@@ -291,8 +291,8 @@ export const STAGES = [
         return { ok: false, msg: 'The marker is not where the sealed sample\'s reading meets the line through the standards.' };
       },
       reward: {
-        title: 'Dimming Measures Amount',
-        body: 'Standards of known concentration make a line of absorbance against concentration, and an unknown solution is read back off that line. More dissolved copper dims the light more.',
+        title: 'Absorbance Measures Concentration',
+        body: 'Standards of known concentration make a line of absorbance against concentration, and an unknown solution is read back off that line. Higher solute concentration yields greater absorbance.',
         log: 'The sealed solution\'s absorbance sat on the standards\' line.'
       }
     };
@@ -355,7 +355,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase tested something you worked out at a bench: one line from one drop, the spare energy of a photon, lone electrons in a magnet, the peaks of a spectrum, and the dimming of a beam.'
+      body: 'Every phase tested something you worked out at a bench: one line from one drop, the spare energy of a photon, lone electrons in a magnet, the peaks of a spectrum, and the absorbance of a solution.'
     },
     {
       heading: 'Next',

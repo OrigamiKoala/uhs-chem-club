@@ -391,39 +391,136 @@ export function buildElectronBall(c) {
 export const CUVETTE_TOP = 0.108;
 
 /**
- * A cuvette in its stand: a glass cell on a steel foot, a liquid column in it that rises with what it holds (`level` 0 to 1) and
- * is tinted by `tint` (an rgb triple and a 0 to 1 depth), and a legend plate on the foot. `legend` is a flat mesh the kit painted.
+ * A cuvette in its stand: a slender optical glass cell on a precision foot, with clear optical windows along the beam axis (x),
+ * frosted handling faces front and back (z), an open top, an etched path mark, and a liquid column with a meniscus.
  */
 export function buildCuvette(c, { level = 0, tint = null, legend = null } = {}) {
   const { hw, hh, mats: m } = c;
   const g = new THREE.Group();
-  const footH = 0.012;
-  g.add(at(mesh(roundedSlab(hw * 1.9, hh * 1.9, footH, Math.min(hw, hh) * 0.18, 0.003), m.labCast), 0, 0, 0));
-  const cw = hw * 0.92;
-  const cd = hh * 0.72;
+  const footH = 0.007;
+  const baseW = hw * 1.55;
+  const baseD = hh * 1.55;
+  // Sleek weighted carrier foot.
+  g.add(at(mesh(roundedSlab(baseW, baseD, footH, Math.min(baseW, baseD) * 0.12, 0.002), m.labCast), 0, 0, 0));
+
+  // Authentic cuvette proportions: tall, slender vertical rectangular column (square cross-section, height ~3.3x width).
+  const cw = 0.030;
+  const cd = 0.030;
   const ch = CUVETTE_TOP - footH;
-  const cz = -hh * 0.3;
-  // The glass: a rectangular cell (glass is cut, so its edges are sharp) with a thick floor.
-  const cell = mesh(new THREE.BoxGeometry(cw, ch, cd), m.labGlass, { cast: false });
-  cell.position.set(0, footH + ch / 2, cz);
-  g.add(cell);
-  g.add(at(mesh(new THREE.BoxGeometry(cw * 1.02, ch * 0.04, cd * 1.02), m.labGlass, { cast: false }), 0, footH + ch * 0.02, cz));
+  const cz = -hh * 0.22;
+
+  // A precision socket collar on the foot holding the cuvette base.
+  const collarW = cw + 0.006;
+  const collarD = cd + 0.006;
+  const collarH = 0.008;
+  g.add(at(mesh(wallGeometry(collarW, collarD, 0.0026, collarH, 0.002, 0.0008), m.labSteel), 0, footH, cz));
+  g.add(at(mesh(new THREE.BoxGeometry(cw, 0.0012, cd), m.labRubber), 0, footH + 0.0006, cz));
+
+  // Thick solid optical glass base (standard 4 mm floor).
+  const floorH = 0.004;
+  const floor = mesh(new THREE.BoxGeometry(cw, floorH, cd), m.labGlass, { cast: false });
+  floor.position.set(0, footH + floorH / 2, cz);
+  g.add(floor);
+
+  // Four vertical walls forming the hollow cell:
+  const wall = 0.0022;
+  const wallH = ch - floorH;
+  const iw = cw - 2 * wall;
+  const id = cd - 2 * wall;
+
+  // 1) Clear optical windows (Left at -x and Right at +x) for the light beam:
+  const optMat = m.labGlass;
+  const leftWall = mesh(new THREE.BoxGeometry(wall, wallH, cd), optMat, { cast: false });
+  leftWall.position.set(-cw / 2 + wall / 2, footH + floorH + wallH / 2, cz);
+  const rightWall = mesh(new THREE.BoxGeometry(wall, wallH, cd), optMat, { cast: false });
+  rightWall.position.set(cw / 2 - wall / 2, footH + floorH + wallH / 2, cz);
+  g.add(leftWall, rightWall);
+
+  // 2) Frosted/ground glass handling faces (Front at +z and Back at -z) so fingers don't smudge the optical beam path:
+  const frostedMat = c.own(new THREE.MeshPhysicalMaterial({
+    color: 0xeef5f3,
+    roughness: 0.58,
+    metalness: 0.02,
+    transparent: true,
+    opacity: 0.48,
+    depthWrite: false,
+    clearcoat: 0.15,
+    clearcoatRoughness: 0.2
+  }));
+  const frontWall = mesh(new THREE.BoxGeometry(iw, wallH, wall), frostedMat, { cast: false });
+  frontWall.position.set(0, footH + floorH + wallH / 2, cz + cd / 2 - wall / 2);
+  const backWall = mesh(new THREE.BoxGeometry(iw, wallH, wall), frostedMat, { cast: false });
+  backWall.position.set(0, footH + floorH + wallH / 2, cz - cd / 2 + wall / 2);
+  g.add(frontWall, backWall);
+
+  // 3) Polished open-top rim: open vessel, no steel collar.
+  const rim = mesh(wallGeometry(cw, cd, wall, 0.0016, 0.001, 0.0003), m.labGlass, { cast: false });
+  rim.position.set(0, CUVETTE_TOP - 0.0016, cz);
+  g.add(rim);
+
+  // 4) Etched optical path triangle orientation mark "▽" near the top of the front face:
+  const triShape = new THREE.Shape();
+  const tw = 0.0032, th = 0.0036;
+  triShape.moveTo(-tw / 2, th / 2);
+  triShape.lineTo(tw / 2, th / 2);
+  triShape.lineTo(0, -th / 2);
+  triShape.closePath();
+  const markMat = c.own(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7, transparent: true, opacity: 0.75 }));
+  const tri = mesh(new THREE.ShapeGeometry(triShape), markMat, { cast: false, receive: false });
+  tri.position.set(0, CUVETTE_TOP - 0.009, cz + cd / 2 + 0.0004);
+  g.add(tri);
+
+  // 5) Subtle etched graduation mark (10 mm path line):
+  const grad = mesh(new THREE.PlaneGeometry(0.012, 0.0008), markMat, { cast: false, receive: false });
+  grad.position.set(0, CUVETTE_TOP - 0.022, cz + cd / 2 + 0.0004);
+  g.add(grad);
+
+  // 6) Liquid column and meniscus inside the hollow chamber:
   if (level > 0) {
-    const lh = Math.max(0.004, (ch - 0.006) * Math.min(1, level));
+    const maxLh = wallH - 0.006;
+    const lh = Math.max(0.018, maxLh * (0.22 + 0.78 * Math.min(1, level)));
     const colour = tint ? new THREE.Color(`rgb(${tint.rgb[0]}, ${tint.rgb[1]}, ${tint.rgb[2]})`) : new THREE.Color(0x9cc3cf);
-    const liquid = c.own(new THREE.MeshStandardMaterial({
-      color: colour, roughness: 0.12, metalness: 0, transparent: true, opacity: tint ? 0.28 + 0.6 * tint.depth : 0.35, depthWrite: false
+    const liquidMat = c.own(new THREE.MeshPhysicalMaterial({
+      color: colour,
+      roughness: 0.08,
+      metalness: 0,
+      transmission: 0.62,
+      transparent: true,
+      opacity: tint ? 0.35 + 0.58 * tint.depth : 0.42,
+      depthWrite: false
     }));
-    const col = mesh(new THREE.BoxGeometry(cw * 0.9, lh, cd * 0.88), liquid, { cast: false });
-    col.position.set(0, footH + 0.004 + lh / 2, cz);
+    const col = mesh(new THREE.BoxGeometry(iw * 0.96, lh, id * 0.96), liquidMat, { cast: false });
+    col.position.set(0, footH + floorH + lh / 2, cz);
     g.add(col);
-    // A meniscus: a thin brighter lip on top of the column.
-    g.add(at(mesh(new THREE.BoxGeometry(cw * 0.9, 0.0012, cd * 0.88), c.own(new THREE.MeshStandardMaterial({ color: colour.clone().multiplyScalar(1.4), roughness: 0.05, transparent: true, opacity: 0.55, depthWrite: false })), { cast: false }), 0, footH + 0.004 + lh, cz));
+
+    // Meniscus: curved top surface
+    const menMat = c.own(new THREE.MeshPhysicalMaterial({
+      color: colour.clone().multiplyScalar(1.2),
+      roughness: 0.04,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false
+    }));
+    const men = mesh(new THREE.PlaneGeometry(iw * 0.95, id * 0.95), menMat, { cast: false });
+    men.rotation.x = -Math.PI / 2;
+    men.position.set(0, footH + floorH + lh, cz);
+    g.add(men);
+
+    // Meniscus wetting rim along glass walls
+    const lipMat = c.own(new THREE.MeshStandardMaterial({
+      color: colour.clone().multiplyScalar(1.4),
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false
+    }));
+    const lip = mesh(wallGeometry(iw * 0.96, id * 0.96, 0.0014, 0.0015, 0.0005, 0.0002), lipMat, { cast: false });
+    lip.position.set(0, footH + floorH + lh - 0.0008, cz);
+    g.add(lip);
   }
-  // The frosted stopper rim on top: a steel collar so the cell reads as a vessel, not a box.
-  g.add(at(mesh(roundedSlab(cw * 1.08, cd * 1.08, 0.006, 0.004, 0.001), m.labSteel), 0, CUVETTE_TOP - 0.003, cz));
+
   if (legend) {
-    legend.position.set(0, footH + 0.0006, hh * 0.56);
+    legend.position.set(0, footH + 0.0006, hh * 0.46);
     g.add(legend);
   }
   return done(g, CUVETTE_TOP);

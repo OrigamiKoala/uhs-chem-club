@@ -19,7 +19,7 @@
  *
  *   1  PREDICT: which colour of white light the copper solution takes out (no spectrometer)  -> a guess before the evidence
  *   2  TEST: put the colour the strip shows missing in the slot                              -> complementary colour
- *   3  tune the wavelength to where the solution dims the beam most                          -> absorbance
+ *   3  tune the wavelength to peak absorbance (where the solution absorbs light most strongly)-> absorbance
  *   4  fill Cuvette B so that it takes in twice as much light as Cuvette A                   -> a straight line through zero
  *   5  fill standards, lay the straightedge, read the sealed sample's strength               -> the calibration curve
  *
@@ -75,7 +75,7 @@ export const SEALED_CONC = 0.005;
 export const COPPER = 0.01;
 
 const REC = { at: { x: 112, y: 13 }, size: { w: 30, h: 18 } };
-const recorder = (xLabel, xUnit) => ({ ...REC, xLabel, xUnit, yLabel: 'Reading', yUnit: '' });
+const recorder = (xLabel, xUnit) => ({ ...REC, xLabel, xUnit, yLabel: 'Absorbance', yUnit: '' });
 
 /* ------------------------------------------------------------------
    THE STAGES
@@ -116,7 +116,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'A blue solution looks blue, so taking blue out or putting blue in are both fair guesses. Next, a spectrometer will show what light gets through.'
     }
   },
@@ -160,7 +160,7 @@ export const STAGES = [
           log: 'Orange missing, so the rest looks blue.',
           title: 'Complementary Colour',
           body: `${verdict}A solution looks the colour opposite the one it takes in: copper(II) sulfate removes orange and leaves blue. The colour you see is the complementary colour of the light that is missing.`,
-          model: { type: 'cuvette', solute: 'cuso4', conc: 0.01, nm: 630, caption: 'A beam of orange light goes into the copper solution whole and comes out dim: the dots of copper take it in.' }
+          model: { type: 'cuvette', solute: 'cuso4', conc: 0.01, nm: 630, mode: 'white', caption: 'White light enters the copper solution: copper(II) ions absorb orange photons, allowing blue light to pass through.' }
         };
       }
     };
@@ -171,7 +171,7 @@ export const STAGES = [
     const sp = spectro(SP, SPEC_AT, { tune: true, xAxis: 'nm', label: 'Spectrometer' });
     return {
       title: 'Peak Absorbance',
-      prompt: 'Set the wavelength at which the solution dims the beam most.',
+      prompt: 'Set the wavelength of maximum absorbance for the solution.',
       widget,
       table: cuvetteTable({
         pieces: [cuvette('cu', 'TANK WATER', { x: 0, y: 0 }, { conc: COPPER, zone: BEAM })],
@@ -180,8 +180,8 @@ export const STAGES = [
       }, { recorder: recorder('Wavelength', 'nm') }),
       hints: [
         'Use the Wavelength dial and "Record" at each setting.',
-        'Compare the readings on the sheet either side of the largest.',
-        'Stop the dial on the setting where the reading is greater than at every other.'
+        'Compare the absorbance readings across the spectrum to find the peak.',
+        'Stop the dial on the wavelength where absorbance is highest.'
       ],
       check(state) {
         const t = state.table;
@@ -191,12 +191,12 @@ export const STAGES = [
         const best = reads.indexOf(Math.max(...reads)) + 1;
         if (now === start && t.recorder.rows.length === 0) return { ok: false, notYet: true, msg: 'The lamp is where it started.' };
         if (now === best) return { ok: true };
-        return { ok: false, msg: 'This setting does not give the biggest reading.' };
+        return { ok: false, msg: 'This setting does not give the maximum absorbance.' };
       },
       reward: {
-        log: 'The reading peaks near 630 nm.',
+        log: 'Absorbance peaks near 630 nm.',
         title: 'Absorbance',
-        body: 'How much the cuvette dims a beam is its absorbance, and it is largest at the wavelength the solution takes in best. Measuring at that peak gives the biggest and most reliable reading.'
+        body: 'Absorbance measures how much light a solution absorbs at a given wavelength. It is highest at the absorption maximum (λ_max), where the solution absorbs light most strongly. Measuring at this peak gives the largest and most reliable reading.'
       }
     };
   })(),
@@ -206,7 +206,7 @@ export const STAGES = [
     const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
     return {
       title: 'Concentration and Absorbance',
-      prompt: 'Fill Cuvette B so that it takes in twice as much light as Cuvette A.',
+      prompt: 'Fill Cuvette B so that its absorbance is twice that of Cuvette A.',
       widget,
       table: cuvetteTable({
         pieces: [
@@ -227,7 +227,7 @@ export const STAGES = [
         const b = absorbOf(t.pieces.b);
         if (!(concOf(t.pieces.b) > 0)) return { ok: false, notYet: true, msg: 'Cuvette B is empty.' };
         if (a > 0 && Math.abs(b - 2 * a) < 0.0005) return { ok: true };
-        return { ok: false, msg: b > 2 * a ? 'Cuvette B takes in more than twice as much as Cuvette A.' : 'Cuvette B takes in less than twice as much as Cuvette A.' };
+        return { ok: false, msg: b > 2 * a ? 'Cuvette B has more than twice the absorbance of Cuvette A.' : 'Cuvette B has less than twice the absorbance of Cuvette A.' };
       },
       reward: {
         log: 'Twice the concentration, twice the absorbance.',
@@ -271,7 +271,7 @@ export const STAGES = [
         log: 'The line through the standards gave the sealed reading back.',
         title: 'Calibration Curve',
         body: 'Standards of known concentration give a line of absorbance against concentration, and an unknown sample\'s reading is read back off that line. This calibration curve is how a chemist measures how much of a coloured substance is dissolved.',
-        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'The sealed sample: half the copper of the first cuvette, so the beam comes out less dimmed.' },
+        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'The sealed sample: half the concentration of the first cuvette, so its absorbance is half as large.' },
         last: true
       }
     };

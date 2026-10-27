@@ -125,7 +125,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'A glowing gas is hot and bright like a glowing wire, so a rainbow is a fair guess. Next, a prism will spread the light of each source across a scale.'
     }
   },

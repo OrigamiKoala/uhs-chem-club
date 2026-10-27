@@ -94,7 +94,7 @@ export function renderBridge(container) {
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <div>
               <div style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--accent-amber);">UHS Chemistry Club</div>
-              <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting Tuesday 10/13 in 702</div>
+              <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting Tuesday 11/10 in 702</div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Main Briefing">

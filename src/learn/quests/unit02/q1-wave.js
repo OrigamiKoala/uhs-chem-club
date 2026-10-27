@@ -152,7 +152,7 @@ export const STAGES = [
     title: 'Race Red and Violet',
     // A PREDICT STAGE: the timer is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Red and violet light cross the same gap: which one do you think arrives first?',
+    prompt: 'Which color of light moves faster?',
     widget,
     table: opticsTable({
       pieces: [],
@@ -161,9 +161,9 @@ export const STAGES = [
       prediction: {
         slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 30, h: 14 } },
         tokens: [
-          { id: 'red', label: 'Red first', at: { x: 38, y: 48 }, r: 7 },
-          { id: 'violet', label: 'Violet first', at: { x: 75, y: 48 }, r: 7 },
-          { id: 'same', label: 'Together', at: { x: 112, y: 48 }, r: 7 }
+          { id: 'red', label: 'Red', at: { x: 38, y: 48 }, r: 7 },
+          { id: 'violet', label: 'Violet', at: { x: 75, y: 48 }, r: 7 },
+          { id: 'same', label: 'Same speed', at: { x: 112, y: 48 }, r: 7 }
         ]
       }
     }),
@@ -182,7 +182,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'To test whether color affects speed, the pulse timer will measure how long each wavelength takes to cross the gap.'
     }
   },
@@ -309,7 +309,7 @@ export const STAGES = [
     const rail = { id: 'rail', at: { x: 74, y: 53 }, size: { w: 134, h: 15 }, first: 'Lowest frequency', last: 'Highest frequency', items: ['xray', 'red', 'radio', 'violet', 'micro'], start: ['xray', 'red', 'radio', 'violet', 'micro'] };
     return {
       title: 'One Scale',
-      prompt: 'Put the five sources on the rail from lowest frequency to highest.',
+      prompt: 'Order the five sources of light form lowest to highest frequency.',
       widget,
       table: opticsTable({
         pieces: SOURCES.map(source),

@@ -129,13 +129,13 @@ export function sizerFixture(id, at, { measure = false, label = 'Size gauge', w 
 }
 
 /** The stripper: a holder and a Strip Electron key; each press takes the outermost electron off and reads what it cost. */
-export function stripFixture(id, at, { label = 'Stripper' } = {}) {
+export function stripFixture(id, at, { label = 'Electron Remover', runLabel = 'Remove Electron' } = {}) {
   const size = { w: 46, h: 32 };
   const slotId = `${id}.atom`;
   const x0 = at.x - size.w / 2;
   const y0 = at.y - size.h / 2;
   return {
-    fixture: { id, kind: 'strip', label, at: { ...at }, size, runLabel: 'Strip Electron', dials: {}, props: { backdrop: true, slot: slotId } },
+    fixture: { id, kind: 'strip', label, at: { ...at }, size, runLabel, dials: {}, props: { backdrop: true, slot: slotId } },
     slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 11, h: 11 } }],
     size
   };

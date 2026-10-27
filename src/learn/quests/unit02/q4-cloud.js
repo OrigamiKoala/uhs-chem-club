@@ -120,7 +120,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'Early atomic models placed electrons on circular tracks. Next, repeated measurements test whether electrons follow fixed orbits or form probability clouds.'
     }
   },

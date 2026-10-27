@@ -115,7 +115,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'A Guess to Test',
+      title: 'Prediction',
       body: 'If every electron were held the same way, a light would take all of them or none. Next, a chamber will fire light of any strength at lithium.'
     }
   },

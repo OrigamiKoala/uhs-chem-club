@@ -672,6 +672,7 @@ console.log('\nEmber Reach — the benches and the boss, held to the rules of th
       counts.tours++;
       for (const f of Object.values(t.fixtures)) {
         if (f.props?.backdrop) continue;
+        if (f.kind === 'plaque' || f.kind === 'plate') continue;
         if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: the instrument "${f.label}" is not in the Tour`);
       }
       for (const v of mod.VOCABULARY || []) {
