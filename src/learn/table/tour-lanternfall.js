@@ -25,7 +25,13 @@ export const LANTERNFALL_TOUR = {
     'cloud:view': { title: 'View and slice', text: 'The View turns and tilts every cloud on the table at once, or drag the picture to turn freely. A "Slice" switch keeps only the dots in a thin slab through the middle, letting you find the empty plane between lobes.', dials: false },
     'shells:shelf': { title: 'Orbital energy ladder', text: 'A ladder of orbitals arranged by energy, lowest at the bottom (1s, 2s, 2p). Each box represents an orbital where electrons can live.', dials: false },
     'shells:finder': { title: 'Quantum selector', text: 'Three dials that select an orbital: shell n (energy floor), subshell l (shape: 0 for s, 1 for p), and orbital ml (orientation). Turn a dial to light the matching orbital.', dials: false },
-    'shells:magnet': { title: 'Magnet', text: 'A magnet reads how hard something is pulled. Press "{run}" to read the pull. Electrons that stand alone, pointing the same way, add to the pull, and two pointing opposite ways cancel.', dials: false },
+    'shells:magnet': {
+      title: f => (f.props?.sample != null ? 'Sample magnet' : f.props?.rack ? 'Rack magnet' : 'Magnet'),
+      text: f => (f.props?.sample != null
+        ? 'A magnet reads how hard something is pulled. Press "{run}" to read the pull of the real sample. The number it prints is how hard that element\'s atoms pull on a magnet.'
+        : 'This magnet reads the pull of the electrons on the rack. Press "{run}" to read their pull. Unpaired electrons add to the pull, and paired electrons cancel.'),
+      dials: false
+    },
     'shells:marker': { title: 'Marker', text: 'Use the dial to set the number you have counted. Whatever it reads when you press Submit is your answer.', dials: false },
     'pes:pes': { title: 'Chamber and strip', text: 'Put a specimen card in the holder and press "{run}". Light knocks electrons off the atom, and each lands on the strip at the energy it took to remove it; electrons removed at the same energy pile up. A "Light energy" dial, where there is one, sets how strong the light is, and a light only takes off the electrons it has enough energy for.', dials: false },
     'pes:build': { title: 'Build an atom', text: 'Set the Protons and Electrons dials to build an atom. The peaks that atom would make are drawn over the strip as outlines, so you can see whether they cover the specimen\'s piles.', dials: false },

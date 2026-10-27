@@ -103,7 +103,7 @@ export const STAGES = [
         return { ok: true };
       },
       reward: {
-        log: 'Carbon is pulled: two electrons stand alone, pointing alike.',
+        log: 'Carbon is pulled: two electrons are unpaired, pointing alike.',
         title: 'Aufbau and Hund',
         body: 'Electrons fill the lowest rows first, from the bottom of the ladder up: the aufbau principle. In a row they spread across the boxes before any pair up, all pointing the same way, which is Hund\'s rule, and an atom with unpaired electrons is pulled into a magnet and is called paramagnetic.',
         model: { type: 'rack', z: 6, caption: 'Carbon\'s six electrons: the two lowest rows full, and the last two in separate 2p boxes pointing the same way.' }
@@ -240,7 +240,7 @@ export const STAGES = [
       hints: [
         'Use "Up", "Down", "Test Sample" and "Test Rack".',
         'Compare the two pulls and ask which arrangement of the last six electrons would make the rack pull harder.',
-        'Count how many electrons would have to stand alone in separate boxes, pointing the same way, to match the sample\'s pull.'
+        'Count how many unpaired electrons would have to stand in separate boxes, pointing the same way, to match the sample\'s pull.'
       ],
       check(state) {
         const t = state.table;
@@ -254,7 +254,7 @@ export const STAGES = [
         log: 'The sample is pulled harder than the rule predicts.',
         title: 'The Chromium Exception',
         body: 'Chromium moves one 4s electron into 3d, so every box in the 3d row holds one, and copper does the same to fill its 3d row. The ladder alone predicts a smaller pull, but the magnet measures the real one. This is beyond the exam.',
-        model: { type: 'rack', z: 24, caption: 'Chromium: one electron alone in 4s and one alone in each of the five 3d boxes, six pointing the same way.' },
+        model: { type: 'rack', z: 24, caption: 'Chromium: one electron unpaired in 4s and one unpaired in each of the five 3d boxes, six pointing the same way.' },
         last: true
       }
     };
@@ -276,7 +276,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Electrons fill the lowest rows first, spread across a row before pairing, and the ladder is ordered by energy and not by shell. A magnet reads how many stand alone.'
+      body: 'Electrons fill the lowest rows first, spread across a row before pairing, and the ladder is ordered by energy and not by shell. A magnet reads how many are unpaired.'
     },
     {
       heading: 'Why It Is Worth It',

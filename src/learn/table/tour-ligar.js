@@ -80,7 +80,7 @@ const FIXTURE = {
   },
   'mo:rack': {
     title: 'Ladder of boxes',
-    text: () => 'The ladder runs from low energy at the bottom to high energy at the top. The two atoms\' own boxes stand at the sides, and the boxes they make together stand in the middle, in rows. Drag an electron from the jar into a box (or tap the jar, then the box); a box takes two, one pointing each way. The ladder counts what you have placed and how many electrons stand alone in a box.',
+    text: () => 'The ladder runs from low energy at the bottom to high energy at the top. The two atoms\' own boxes stand at the sides, and the boxes they make together stand in the middle, in rows. Drag an electron from the jar into a box (or tap the jar, then the box); a box takes two, one pointing each way. The ladder counts what you have placed and how many electrons are unpaired.',
     dials: false
   }
 };

@@ -335,7 +335,7 @@ function paintRack(ctx, f, state, b) {
   // What the rack reads, when there are electrons to count.
   if (f.props.live && merged) {
     const read = readOf(state, f.props.rack, order);
-    const lines = [`PLACED ${read.total}`, `ALONE IN A BOX ${read.unpaired}`];
+    const lines = [`PLACED ${read.total}`, `UNPAIRED ${read.unpaired}`];
     if (f.props.counts) lines.push(`LOWER ${read.bonding}  UPPER ${read.anti}`);
     lines.forEach((t, i) => plateText(ctx, t, b.x1 - 3, b.y0 + size * (1.4 + i * 1.5), { size, align: 'right', weight: 700, color: PHOS }));
   }
@@ -366,7 +366,7 @@ function paintMagnet(ctx, f, state, b) {
   let l1 = f.props.slot ? 'TEST THE GAS IN THE SLOT' : 'NOT TESTED';
   let l2 = '';
   if (read?.tested) {
-    l1 = read.pull > 0 ? 'PULLED IN' : 'PUSHED OUT';
+    l1 = read.pull > 0 ? 'ATTRACTED' : 'REPELLED';
     l2 = read.pull > 0 ? `STRENGTH ${read.pull}` : 'SLIGHTLY';
   }
   fitted(ctx, l1, cx, top + r * 3.2, w - 4, { size: size * 0.95, weight: 700, color: read?.tested ? AMBER : PLATE_COLORS.dim });
@@ -426,7 +426,7 @@ function paintCard(ctx, p, state, o) {
   if (p.props.counts) fitted(ctx, cardCounts(mol).text, o.x, y0 + hh * 1.4, hw * 1.86, { size: Math.max(7, size * 0.78), color: PLATE_COLORS.dust });
   const pull = cardPull(p);
   if (pull !== null) {
-    fitted(ctx, pull > 0 ? `PULLED IN ${pull}` : 'PUSHED OUT', o.x, y0 + hh * 1.4, hw * 1.86, { size: Math.max(7, size * 0.82), weight: 700, color: AMBER });
+    fitted(ctx, pull > 0 ? `ATTRACTED ${pull}` : 'REPELLED', o.x, y0 + hh * 1.4, hw * 1.86, { size: Math.max(7, size * 0.82), weight: 700, color: AMBER });
   }
 }
 

@@ -138,14 +138,16 @@ function fixtureStep(f, kitId, table) {
   const entry = EXTRA.fixtures[`${kitId}:${f.kind}`] || FIXTURE[`${kitId}:${f.kind}`] || FIXTURE[f.kind];
   if (!entry) return { title: f.label, text: fallbackFixture(f, kitId) };
   const runSentence = f.runLabel ? `Press "${f.runLabel}" to record the reading as a point on the strip.` : '';
-  const text = entry.text
+  const rawTitle = typeof entry.title === 'function' ? entry.title(f, table) : entry.title;
+  const rawText = typeof entry.text === 'function' ? entry.text(f, table) : entry.text;
+  const text = rawText
     .replace('{run}', f.runLabel || 'Run')
     .replace('{item}', 'sample')
     .replace('{runSentence}', runSentence)
     .replace('{counters}', f.props?.counters ? ' The counter above a pan shows how many atoms are on it.' : '')
     .trim();
   const dials = entry.dials === false ? [] : Object.values(f.dials || {}).map(d => dialText(d, kitId));
-  return { title: entry.title || f.label, text: [text, ...dials].join(' ') };
+  return { title: rawTitle || f.label, text: [text, ...dials].join(' ') };
 }
 
 /**

@@ -62,7 +62,7 @@ export function toolNoteFor() { return null; }
 
 const widget = { type: 'table', label: 'The bench' };
 
-const tray = (id, label, at, size, cell = 17) => ({ id, label, at, size, cell });
+const tray = (id, label, at, size, cell = size?.w ?? 40, cellH = size?.h ?? 14) => ({ id, label, at, size, cell, cellH });
 const inTray = (t, id) => (t.pieces[id].zone || '').startsWith('tray:');
 
 const ROWS_N3 = ['1s', '2s', '2p', '3s', '3p', '3d'];
@@ -209,7 +209,7 @@ export const STAGES = [
       table: shellsTable({
         pieces: [...rack.boxes, ...tokensOf(CANDIDATES, TWO_COLUMNS)],
         fixtures: [rack.fixture],
-        zones: { trays: [tray('no', 'Cannot be placed', { x: 108, y: 56 }, { w: 40, h: 14 }, 20)] }
+        zones: { trays: [tray('no', 'Cannot be placed', { x: 108, y: 56 }, { w: 40, h: 14 })] }
       }),
       hints: [
         'Use the candidates: drop each one on the rack and watch whether it stands.',

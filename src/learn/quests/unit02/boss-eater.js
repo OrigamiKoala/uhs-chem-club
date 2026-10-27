@@ -173,7 +173,7 @@ export const STAGES = [
     return {
       id: 'phase3',
       title: 'Phase 3 · The Magnet Shield',
-      prompt: 'Set the marker to how many electrons in an oxygen atom stand alone in a box.',
+      prompt: 'Set the marker to how many electrons in an oxygen atom are unpaired.',
       widget,
       table: shellsTable({
         pieces: [...rack.boxes, hand('up', 'up', { x: 76, y: 8 }), hand('down', 'down', { x: 92, y: 8 }), hand('lift', 'lift', { x: 108, y: 8 })],
@@ -181,7 +181,7 @@ export const STAGES = [
           rack.fixture,
           magnet('msample', { x: 88, y: 46 }, { sample: 'O' }),
           magnet('mrack', { x: 123, y: 46 }, { rack: 'rack' }),
-          shellsMarker('alone', 'Alone in a box', { x: 96, y: 21 }, { min: 0, max: 8, step: 1, value: 0, size: { w: 40, h: 12 }, title: 'Oxygen' })
+          shellsMarker('alone', 'Unpaired', { x: 96, y: 21 }, { min: 0, max: 8, step: 1, value: 0, size: { w: 40, h: 12 }, title: 'Oxygen' })
         ]
       }),
       foes: EATER_FOE,
@@ -193,18 +193,18 @@ export const STAGES = [
       },
       hints: [
         'Use "Up", "Down", "Test Sample" and "Test Rack".',
-        'Compare the rack\'s pull with the sample\'s, and read how many electrons the board says stand alone.',
-        'Count the electrons standing alone in their boxes on the rack that pulls exactly as hard as the sample.'
+        'Compare the rack\'s pull with the sample\'s, and read how many electrons the board says are unpaired.',
+        'Count the unpaired electrons on the rack that pulls exactly as hard as the sample.'
       ],
       check(state) {
         const v = state.table.fixtures.alone.dials.n.value;
         if (!v) return { ok: false, notYet: true, msg: 'Set the marker to the number you found.' };
         if (v === MEASURED.O) return { ok: true };
-        return { ok: false, msg: 'The marker is not the number of electrons standing alone on the rack that pulls as the sample does.' };
+        return { ok: false, msg: 'The marker is not the number of unpaired electrons on the rack that pulls as the sample does.' };
       },
       reward: {
-        title: 'Lone Electrons Feel the Magnet',
-        body: 'Electrons that stand alone in a box are pulled by a magnet, and paired electrons cancel each other out. Electrons spread across a row before they pair up, which is Hund\'s rule.',
+        title: 'Unpaired Electrons Feel the Magnet',
+        body: 'Unpaired electrons are pulled by a magnet, and paired electrons cancel each other out. Electrons spread across a row before they pair up, which is Hund\'s rule.',
         log: 'The sample\'s pull matches a rack with the right number of lone electrons.'
       }
     };

@@ -11,7 +11,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import {
-  arrowsOf, readOf, finderLight, addressOfFinder, magnetRead, reachPm, rowOf, mlOf, fmtMl, groundConfig, LADDER, capacityOf, fmtMs, zOf
+  arrowsOf, readOf, finderLight, addressOfFinder, magnetRead, reachPm, rowOf, mlOf, fmtMl, groundConfig, LADDER, capacityOf, fmtMs, zOf, symbolOf
 } from './shells-read.js';
 
 const AMBER = PLATE_COLORS.amber;
@@ -260,7 +260,7 @@ function paintShelf(ctx, f, state, b) {
   if (f.props.readout !== false) {
     const core = f.props.core && state.fixtures[f.props.core]?.dials.core.value >= 1;
     say(ctx, `PLACED ${read.total}`, F.x(2), F.y(4.2), sz, { color: PHOS, weight: 700 });
-    say(ctx, `ALONE IN A BOX ${read.unpaired}`, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: PHOS, weight: 700 });
+    say(ctx, `UNPAIRED ${read.unpaired}`, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: PHOS, weight: 700 });
     const written = core ? read.short : read.config;
     say(ctx, written || 'NOTHING PLACED', F.x(f.size.w / 2), F.y(8.4), F.size(2.6, 7), { align: 'center', color: written ? DUST : DIM, weight: 600, maxW: F.len(f.size.w - 4) });
   }
@@ -345,14 +345,34 @@ function paintMagnet(ctx, f, state, b) {
   ctx.fillStyle = DUST;
   ctx.fillRect(cx - r - F.sc, top + r * 1.5, 2 * F.sc, 1.3 * F.sc);
   ctx.fillRect(cx + r - F.sc, top + r * 1.5, 2 * F.sc, 1.3 * F.sc);
-  let l1 = read.target === 'sample' ? 'NOT TESTED' : 'NOT TESTED';
+
+  // 2D Atom disc representing sample or rack state
+  const isSample = f.props.sample != null;
+  const sym = isSample ? f.props.sample : (symbolOf(readOf(state, f.props.rack || 'rack').total) || 'C');
+  const atomY = !read.tested ? 19.5 : (read.pull > 0 ? 14.8 : 24.8);
+  const atomR = F.len(2.4);
+  const ay = F.y(atomY);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, ay, atomR, 0, Math.PI * 2);
+  ctx.fillStyle = read.tested ? (read.pull > 0 ? 'rgba(217, 148, 35, 0.22)' : 'rgba(115, 109, 100, 0.22)') : 'rgba(255, 255, 255, 0.06)';
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = read.tested ? (read.pull > 0 ? AMBER : DUST) : DIM;
+  ctx.stroke();
+  say(ctx, sym, cx, ay + F.size(1.0, 3), F.size(2.0, 6), { align: 'center', color: read.tested ? (read.pull > 0 ? AMBER : DUST) : DIM, weight: 700 });
+  ctx.restore();
+
+  let l1 = 'NOT TESTED';
   let l2 = '';
   if (read.tested) {
-    l1 = read.pull > 0 ? 'PULLED IN' : 'PUSHED OUT';
+    l1 = read.pull > 0 ? 'ATTRACTED' : 'REPELLED';
     l2 = read.pull > 0 ? `STRENGTH ${read.pull}` : 'SLIGHTLY';
   }
-  say(ctx, l1, cx, F.y(18.2), F.size(2.4, 7), { align: 'center', color: read.tested ? AMBER : DIM, weight: 700, maxW: F.len(w - 3) });
-  if (l2) say(ctx, l2, cx, F.y(22.4), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w - 3) });
+  const l1Y = !read.tested ? 24.5 : (read.pull > 0 ? 19.2 : 16.5);
+  const l2Y = read.pull > 0 ? 22.8 : 19.8;
+  say(ctx, l1, cx, F.y(l1Y), F.size(2.4, 7), { align: 'center', color: read.tested ? AMBER : DIM, weight: 700, maxW: F.len(w - 3) });
+  if (l2) say(ctx, l2, cx, F.y(l2Y), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w - 3) });
 }
 
 function paintFixture(ctx, f, state, b) {
