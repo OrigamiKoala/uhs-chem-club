@@ -117,7 +117,7 @@ export const STAGES = [
       log: 'Two arms settle opposite.',
       title: 'Linear Geometry',
       body: 'Each arm represents an electron domain around the central atom. Two electron domains orient in opposite directions at an angle of 180 degrees, producing a linear geometry.',
-      model: { type: 'shape', mol: 'CO2', caption: 'Carbon dioxide: two electron domains around carbon adopt a linear geometry at 180 degrees.' }
+      model: { type: 'shape', mol: 'CO2', caption: 'CO₂ · Linear (180°)' }
     }
   },
 
@@ -166,7 +166,7 @@ export const STAGES = [
         log: 'Four arms leave the plane.',
         title: 'Tetrahedral Geometry and VSEPR',
         body: `${verdictLine(QUEST_KEY, 'solid')}Four electron domains repel each other into the corners of a tetrahedron with bond angles of 109.5 degrees. This arrangement minimizes electron repulsion according to VSEPR theory.`,
-        model: { type: 'shape', mol: 'CH4', caption: 'Methane molecule with tetrahedral geometry.' }
+        model: { type: 'shape', mol: 'CH4', caption: 'CH₄ · Tetrahedral (109.5°)' }
       };
     }
   },
@@ -192,7 +192,7 @@ export const STAGES = [
       log: 'A lone pair is an arm you cannot see in the shape.',
       title: 'Trigonal Pyramidal Geometry',
       body: 'A lone pair occupies an electron domain without contributing an atom to the molecular geometry. Three bonding domains and one lone pair form a trigonal pyramidal shape with the central atom at the apex of a pyramid.',
-      model: { type: 'shape', mol: 'NH3', caption: 'Ammonia molecule showing a trigonal pyramidal geometry with a lone pair on nitrogen.' }
+      model: { type: 'shape', mol: 'NH3', caption: 'NH₃ · Trigonal pyramidal (107°)' }
     }
   },
 
@@ -222,7 +222,7 @@ export const STAGES = [
       log: 'Lone pairs push harder.',
       title: 'Bent Molecular Geometry',
       body: 'Two bonding domains and two lone pairs produce a bent molecular geometry. Because lone pair electrons exert stronger electrostatic repulsion than bonding pairs, the bond angle compresses to 104.5 degrees in water.',
-      model: { type: 'shape', mol: 'H2O', caption: 'Water molecule with a bent molecular geometry and a 104.5 degree bond angle.' },
+      model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Bent (104.5°)' },
       last: true
     }
   }

@@ -686,7 +686,6 @@ function mountStandingWave3D(view, wrap, config, still) {
     statusBar.innerHTML = `
       <div style="display:flex;align-items:center;gap:6px;">
         <span style="display:inline-block;padding:1px 5px;background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}44;font-size:9px;font-weight:bold;border-radius:2px;">${tag}</span>
-        <span style="color:#dcd6cc;">${currentMode.desc}</span>
       </div>
       <div style="font-size:10px;display:flex;gap:8px;">
         <span style="color:#34d399;font-weight:bold;">— Lap 1</span>
@@ -1114,6 +1113,41 @@ function turn([x, y, z], ay, ax) {
   return [x1, y * cx - z1 * sx, y * sx + z1 * cx];
 }
 
+function cleaveState(parts, t) {
+  if (!parts.cleave) return null;
+  const cycle = t % 4.0;
+  let shear = 0;
+  let lift = 0;
+  let broken = false;
+  if (cycle < 1.0) {
+    shear = 0;
+    lift = 0;
+  } else if (cycle < 1.8) {
+    const u = (cycle - 1.0) / 0.8;
+    const s = u * u * (3 - 2 * u);
+    shear = s * 1.0;
+    lift = 0;
+    broken = s > 0.35;
+  } else if (cycle < 2.8) {
+    const u = (cycle - 1.8) / 1.0;
+    const s = u * u * (3 - 2 * u);
+    shear = 1.0;
+    lift = s * 0.75;
+    broken = true;
+  } else if (cycle < 3.5) {
+    shear = 1.0;
+    lift = 0.75;
+    broken = true;
+  } else {
+    const u = (cycle - 3.5) / 0.5;
+    const s = 1 - u * u * (3 - 2 * u);
+    shear = s * 1.0;
+    lift = s * 0.75;
+    broken = s > 0.1;
+  }
+  return { shear, lift, broken, active: lift > 0.02 };
+}
+
 /** The flat picture: the same parts, projected, back to front. */
 function paintFlat(ctx, w, h, parts, t, ay, ax) {
   ctx.fillStyle = BG;
@@ -1121,6 +1155,7 @@ function paintFlat(ctx, w, h, parts, t, ay, ax) {
   const k = (Math.min(w, h) * 0.42) / Math.max(1, parts.radius);
   const px = ([x, y, z]) => { const [a, b, c] = turn([x, y, z], ay, ax); return [w / 2 + a * k, h / 2 - b * k, c]; };
   const items = [];
+  const cs = parts.cleave ? cleaveState(parts, t) : null;
   for (const r of parts.rings) {
     const steps = 48;
     const pts = [];
@@ -1131,12 +1166,19 @@ function paintFlat(ctx, w, h, parts, t, ay, ax) {
     items.push({ z: -99, draw: () => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.strokeStyle = '#544e46'; ctx.lineWidth = 1; ctx.stroke(); } });
   }
   for (const b of parts.bonds) {
-    const [x0, y0, z0] = px(b.a);
-    const [x1, y1, z1] = px(b.b);
+    const isTopA = b.a[1] > 0.4;
+    const isTopB = b.b[1] > 0.4;
+    if (cs && cs.broken && (isTopA !== isTopB)) continue;
+    const aPos = cs && isTopA ? [b.a[0] + cs.shear, b.a[1] + cs.lift, b.a[2]] : b.a;
+    const bPos = cs && isTopB ? [b.b[0] + cs.shear, b.b[1] + cs.lift, b.b[2]] : b.b;
+    const [x0, y0, z0] = px(aPos);
+    const [x1, y1, z1] = px(bPos);
     items.push({ z: (z0 + z1) / 2 - 0.01, draw: () => { ctx.strokeStyle = '#8c8376'; ctx.lineWidth = b.thin ? 1.2 : b.r ? Math.max(1, b.r * k * 2) : (b.order >= 3 ? 9 : b.order > 1 ? 6 : 3); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); } });
   }
   for (const s of parts.spheres) {
-    const [x, y, z] = px(s.pos);
+    const isTop = s.pos[1] > 0.4;
+    const sPos = cs && isTop ? [s.pos[0] + cs.shear, s.pos[1] + cs.lift, s.pos[2]] : s.pos;
+    const [x, y, z] = px(sPos);
     items.push({ z, draw: () => { ctx.beginPath(); ctx.arc(x, y, Math.max(1.5, s.r * k), 0, Math.PI * 2); ctx.fillStyle = s.color; ctx.fill(); ctx.strokeStyle = '#2e2a26'; ctx.lineWidth = 1; ctx.stroke(); } });
   }
   const es = parts.eject ? ejectionState(parts, t) : null;
@@ -1203,17 +1245,8 @@ export function mountModel(host, spec) {
   const still = Boolean(session.reduceMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const wrap = document.createElement('div');
   wrap.className = 'lq-model';
-  const hint = still ? ''
-    : parts.wave ? 'Watch the crests crowd as the colour shifts.'
-    : parts.ladder ? 'Watch the electron drop and release a packet of light (click to replay).'
-    : parts.standingWave ? 'Drag to tilt and turn. Tap buttons to test integer vs non-integer waves.'
-    : parts.filling ? 'Watch electrons fill by energy order and Hund\'s rule (click to replay).'
-    : parts.shielding ? ''
-    : parts.ionicRadius ? 'Tap actions to test adding or removing an electron. Drag to turn.'
-    : parts.cuvette ? 'Drag to turn. Toggle white light or 630 nm beam to see absorption.'
-    : parts.radiiShrink ? 'Drag to turn it.'
-    : 'Drag to turn it.';
-  wrap.innerHTML = `<div class="lq-model-view"></div><p class="lq-model-caption">${captionOf(spec).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} ${hint}</p>`;
+  const caption = (captionOf(spec) || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  wrap.innerHTML = `<div class="lq-model-view"></div>${caption ? `<p class="lq-model-caption">${caption}</p>` : ''}`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
 
@@ -1360,7 +1393,7 @@ export function mountModel(host, spec) {
     view.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     const t0 = performance.now();
-    const tStill = parts.eject ? 1.0 : 0;
+    const tStill = parts.eject ? 1.0 : parts.cleave ? 2.5 : 0;
     const frame = now => {
       if (disposed) return;
       if (!still && !drag) ay += 0.004;
@@ -1402,11 +1435,14 @@ export function mountModel(host, spec) {
       if (!sphereGeos.has(key)) { const g = new THREE.SphereGeometry(r, seg, Math.max(4, Math.round(seg * 0.7))); geos.push(g); sphereGeos.set(key, g); }
       return sphereGeos.get(key);
     };
+    const sphereEntries = [];
     for (const s of parts.spheres) {
       const m = new THREE.Mesh(sphere(s.r, s.seg || 20), mat(s.color));
       m.position.set(...s.pos);
       group.add(m);
+      if (parts.cleave) sphereEntries.push({ mesh: m, orig: [...s.pos], isTop: s.pos[1] > 0.4 });
     }
+    const bondEntries = [];
     for (const b of parts.bonds) {
       const a = new THREE.Vector3(...b.a);
       const c = new THREE.Vector3(...b.b);
@@ -1423,6 +1459,11 @@ export function mountModel(host, spec) {
         if (n === 2) m.position.y += (i ? 0.1 : -0.1);
         else if (n === 3) m.position.y += (i - 1) * 0.16;
         group.add(m);
+        if (parts.cleave) {
+          const isCross = (b.a[1] > 0.4) !== (b.b[1] > 0.4);
+          const isBothTop = (b.a[1] > 0.4) && (b.b[1] > 0.4);
+          bondEntries.push({ mesh: m, isCross, isBothTop, origPos: m.position.clone() });
+        }
       }
     }
     for (const r of parts.rings) {
@@ -1507,7 +1548,19 @@ export function mountModel(host, spec) {
       if (disposed) return;
       if (!still && !drag) ay += 0.006;
       group.rotation.set(ax, ay, 0);
-      const t = (still && parts.eject) ? 1.0 : still ? 0 : (now - t0) / 1000;
+      const t = (still && parts.eject) ? 1.0 : (still && parts.cleave) ? 2.5 : still ? 0 : (now - t0) / 1000;
+      if (parts.cleave) {
+        const cs = cleaveState(parts, t);
+        if (cs) {
+          for (const se of sphereEntries) {
+            if (se.isTop) se.mesh.position.set(se.orig[0] + cs.shear, se.orig[1] + cs.lift, se.orig[2]);
+          }
+          for (const be of bondEntries) {
+            if (be.isCross) be.mesh.visible = !cs.broken;
+            else if (be.isBothTop) be.mesh.position.set(be.origPos.x + cs.shear, be.origPos.y + cs.lift, be.origPos.z);
+          }
+        }
+      }
       if (parts.eject) {
         const es = ejectionState(parts, t);
         if (es) {

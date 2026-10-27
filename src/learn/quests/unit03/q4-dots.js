@@ -125,8 +125,7 @@ export const STAGES = [
     reward: {
       log: 'Every electron placed, every lamp lit.',
       title: 'Lewis Structure and Octet Rule',
-      body: 'A Lewis structure represents all valence electrons distributed into covalent bonds or lone pairs. Most main group atoms attain stability with an octet of eight valence electrons, or a duet of two for hydrogen.',
-      model: { type: 'shape', mol: 'H2O', caption: 'Water molecule showing two covalent bonds and two lone pairs on oxygen.' }
+      body: 'A Lewis structure represents all valence electrons distributed into covalent bonds or lone pairs. Most main group atoms attain stability with an octet of eight valence electrons, or a duet of two for hydrogen.'
     }
   },
 
@@ -171,8 +170,7 @@ export const STAGES = [
       return {
         log: 'Neighbours share a second pair.',
         title: 'Double Bonds and Octets',
-        body: `${verdictLine(QUEST_KEY, 'two')}When single bonds leave an atom short of an octet, lone pairs become shared pairs. Carbon dioxide achieves a complete octet on every atom by forming a double bond to each oxygen.`,
-        model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide molecule with two double bonds.' }
+        body: `${verdictLine(QUEST_KEY, 'two')}When single bonds leave an atom short of an octet, lone pairs become shared pairs. Carbon dioxide achieves a complete octet on every atom by forming a double bond to each oxygen.`
       };
     }
   },
@@ -227,7 +225,6 @@ export const STAGES = [
       log: 'Boron stops at six.',
       title: 'Incomplete Octet',
       body: 'An atom that remains stable with fewer than eight valence electrons has an incomplete octet. Boron trifluoride contains three single bonds, giving boron six valence electrons without completing an octet.',
-      model: { type: 'shape', mol: 'BF3', caption: 'Boron trifluoride molecule with trigonal planar geometry and six electrons on boron.' },
       last: true
     }
   }

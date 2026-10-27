@@ -165,8 +165,7 @@ export const STAGES = [
       return {
         log: 'Sodium with chlorine held. Neon with neon came apart. Hydrogen with hydrogen held. Argon with hydrogen came apart.',
         title: 'Chemical Bonds',
-        body: `${verdictLine(QUEST_KEY, 'hold')}Two atoms that stay together are held by a chemical bond, giving both atoms a full outer shell. A pair with an atom whose outer shell was already full separated.`,
-        model: { type: 'molecule', name: 'hydrogen', caption: 'Two hydrogen atoms held by a single covalent bond.' }
+        body: `${verdictLine(QUEST_KEY, 'hold')}Two atoms that stay together are held by a chemical bond, giving both atoms a full outer shell. A pair with an atom whose outer shell was already full separated.`
       };
     }
   },
@@ -204,8 +203,7 @@ export const STAGES = [
     reward: {
       log: 'Two pairs handed over, two held between.',
       title: 'Ionic and Covalent Bonds',
-      body: 'A metal and a nonmetal hand electrons over to form ions held by opposite charges, making an ionic bond. Two nonmetals share electron pairs between them, forming a covalent bond.',
-      model: { type: 'atoms', items: [{ p: 11, n: 12, charge: 1, label: 'Sodium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride ion' }], caption: 'An ionic pair: sodium cation and chloride anion.' }
+      body: 'A metal and a nonmetal hand electrons over to form ions held by opposite charges, making an ionic bond. Two nonmetals share electron pairs between them, forming a covalent bond.'
     }
   },
 
@@ -234,8 +232,7 @@ export const STAGES = [
     reward: {
       log: 'Magnesium took chlorines until nothing was left to give.',
       title: 'Formula Ratios',
-      body: 'A magnesium atom has two electrons to hand over and each chlorine accepts one, so two chlorines balance one magnesium to reach a net charge of zero. Outer shell electron counts fix the formula ratio of ionic compounds.',
-      model: { type: 'atoms', items: [{ p: 17, n: 18, charge: -1, label: 'Chloride' }, { p: 12, n: 12, charge: 2, label: 'Magnesium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride' }], caption: 'One magnesium ion (Mg²⁺) and two chloride ions (Cl⁻).' }
+      body: 'A magnesium atom has two electrons to hand over and each chlorine accepts one, so two chlorines balance one magnesium to reach a net charge of zero. Outer shell electron counts fix the formula ratio of ionic compounds.'
     }
   },
 
@@ -270,7 +267,6 @@ export const STAGES = [
       log: 'One pair, two pairs, three pairs.',
       title: 'Double and Triple Bonds',
       body: 'An atom sharing two electron pairs forms a double bond, and one sharing three forms a triple bond. Each shared pair fills one electron vacancy on both atoms simultaneously.',
-      model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide: carbon shares two electron pairs with each oxygen, forming double bonds.' },
       last: true
     }
   }

@@ -89,7 +89,7 @@ function crystalParts(spec) {
       if (b) bonds.push({ a: index.get(`${x},${y},${z}`), b, order: 1 });
     }
   }
-  return { spheres, bonds, rings: [], electrons: [], radius: half * pitch * 1.75 + 0.5 };
+  return { spheres, bonds, rings: [], electrons: [], radius: half * pitch * 1.75 + 0.5, cleave: true };
 }
 
 /** One lobe along `dir`: a chain of shrinking spheres, fat end outward. */

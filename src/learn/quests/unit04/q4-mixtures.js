@@ -130,12 +130,7 @@ export const STAGES = [
         return {
           log: 'Neon exerts the same pressure alone and in the mix.',
           title: 'Partial Pressure',
-          body: 'Each gas exerts the same pressure as if it were alone in the container, known as its partial pressure. The total pressure is the sum of all partial pressures, which is Dalton\'s law.',
-          model: {
-            type: 'gas',
-            boxes: [{ label: 'One tank', w: 3.2, parts: [{ kind: 'He', n: 12 }, { kind: 'Ne', n: 7 }] }],
-            caption: 'Helium (12 particles) and neon (7) in one tank: each knocks the walls as if the other were not there. Not to scale.'
-          }
+          body: 'Each gas exerts the same pressure as if it were alone in the container, known as its partial pressure. The total pressure is the sum of all partial pressures, which is Dalton\'s law.'
         };
       }
     };

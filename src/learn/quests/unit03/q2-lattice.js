@@ -59,9 +59,9 @@ export const BUILDS_ON = ['unit03/q1-joins'];
 /** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
 const QUEST_KEY = 'unit03/q2-lattice';
 const GUESSES = [
-  ['lights', 'the lamp lights on the cold salt', ['The lamp lights', 'Salt is made of', 'charged particles']],
-  ['dark', 'the lamp stays dark on the cold salt', ['The lamp stays dark', 'while the salt', 'is a solid']],
-  ['never', 'the lamp never lights on salt', ['The lamp never lights', 'Salt is not', 'a metal']]
+  ['lights', 'the lamp lights on the cold salt', ['The lamp lights', 'Salt has', 'charged particles']],
+  ['dark', 'the lamp stays dark on the cold salt', ['The lamp stays dark', 'Ions are locked', 'in the solid']],
+  ['never', 'the lamp never lights on salt', ['The lamp never lights', 'Salt does not', 'carry current']]
 ];
 
 /**
@@ -94,7 +94,7 @@ const BENCH_Y = 44;
 const TOOLS_Y = 61;
 const bench = (i, step = 24) => ({ x: 14 + i * step, y: BENCH_Y });
 /** What each tool does, printed under the place it hangs (`caption`): a bench that has to be known before it can be used is a bad bench. */
-const CAPTION = { hammer: 'Strikes a block', leads: 'Tests a block' };
+const CAPTION = { hammer: 'Strikes a block', leads: 'Tests current' };
 const toolAt = (id, label, i) => ({ id, kind: id, label, at: { x: 14 + i * 28, y: TOOLS_Y }, caption: CAPTION[id] });
 const leads = i => toolAt('leads', 'Leads', i);
 const plate = max => hotplate('hp', PLATE_AT, { max });
@@ -129,12 +129,12 @@ export const STAGES = [
     cards: GUESSES,
     hints: [
       'Use the three cards and the slot.',
-      'Consider the structure of salt and the requirements for electrical conduction.',
-      'Select the card matching your prediction.'
+      'Consider whether ions in a solid can move to carry current.',
+      'Choose the card matching your prediction.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'Your prediction is recorded. Test the blocks on the bench to observe their electrical conductivity.'
+      body: 'Prediction recorded. Next, test which materials have charges free to move.'
     }
   }),
 
@@ -142,7 +142,7 @@ export const STAGES = [
   {
     title: 'Wire Each Block',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'sort the four blocks into trays by when each conducts electrical current.');
+      return testPrompt(QUEST_KEY, GUESSES, 'sort the four blocks into trays by whether electrons or ions can move.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
@@ -153,13 +153,13 @@ export const STAGES = [
         slabPiece('s4', 'BLOCK D', ARCH, bench(3)),
         leads(0)
       ],
-      zones: { trays: [tray('both', 'Cold and molten', 14), tray('molten', 'Only when molten', 37), tray('never', 'Never', 60)] },
+      zones: { trays: [tray('both', 'Mobile electrons', 14), tray('molten', 'Ions freed by melting', 37), tray('never', 'No mobile charges', 60)] },
       fixtures: [plate(2000)]
     }),
     hints: [
       'Use the leads, the hotplate and the three trays.',
-      'Compare the conductivity of each block at room temperature and when molten.',
-      'Clip the leads onto each block cold and molten, then sort each into its corresponding tray.'
+      'Test which blocks conduct cold, only when melted, or never.',
+      'Sort each block into the tray matching which of its charges can move.'
     ],
     check(state) {
       const t = state.table;
@@ -173,8 +173,8 @@ export const STAGES = [
     get reward() {
       return {
         log: 'Salt conducted only when molten. Copper conducted cold and molten. The other two never conducted.',
-        title: 'Conditions for Conduction',
-        body: `${verdictLine(QUEST_KEY, 'dark')}Electrical conduction requires charged particles that are free to move. Copper contains mobile valence electrons, whereas solid salt ions are pinned in a lattice until melted.`
+        title: 'Charge Mobility',
+        body: `${verdictLine(QUEST_KEY, 'dark')}Electrical conduction requires charges that are free to move. Copper contains mobile valence electrons that flow cold and molten. Solid salt ions are locked in fixed positions until melted, while molecular and network solids have no mobile charges.`
       };
     }
   },
@@ -182,7 +182,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Heat All Four',
-    prompt: 'Order the four blocks from lowest to highest melting point.',
+    prompt: 'Order the four blocks on the rail from lowest to highest melting point to compare bond strengths.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -191,12 +191,12 @@ export const STAGES = [
         slabPiece('s3', 'BLOCK C', COPPER, bench(2)),
         slabPiece('s4', 'BLOCK D', ARCH, bench(3))
       ],
-      zones: { rail: { id: 'rail', at: { x: 56, y: 55 }, size: { w: 104, h: 14 }, first: 'Comes apart first', last: 'Comes apart last', items: ['s1', 's2', 's3', 's4'], start: ['s1', 's4', 's2', 's3'] } },
+      zones: { rail: { id: 'rail', at: { x: 56, y: 55 }, size: { w: 104, h: 14 }, first: 'Weakest hold', last: 'Strongest hold', items: ['s1', 's2', 's3', 's4'], start: ['s1', 's4', 's2', 's3'] } },
       fixtures: [plate(2000)]
     }),
     hints: [
       'Use the hotplate and its heat dial.',
-      'Observe the temperature at which each block melts.',
+      'Compare the temperatures at which the different structures break apart.',
       'Arrange the blocks from lowest melting point on the left to highest on the right.'
     ],
     check(state) {
@@ -210,8 +210,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Block B 115 C. Block A 801 C. Block C 1085 C. Block D 1710 C.',
-      title: 'Melting Points and Bond Strength',
-      body: 'The melting point measures the energy needed to disrupt the solid structure. The four materials melted at 115 C, 801 C, 1085 C, and 1710 C, reflecting differences in their bonding and structure.'
+      title: 'Hold Between Particles',
+      body: 'Melting point measures the energy needed to overcome the hold between particles. Molecular solids separate at low heat without breaking internal bonds. Ionic lattices and metals require high heat to disrupt, while covalent networks require breaking covalent bonds directly.'
     }
   },
 
@@ -245,8 +245,8 @@ export const STAGES = [
     reward: {
       log: 'The slid layer put like against like.',
       title: 'Lattices and Cleavage',
-      body: 'An ionic solid forms a repeating crystal lattice where each ion is surrounded by opposite charges. Shifting a layer aligns like charges that repel, causing the brittle crystal to fracture along flat planes.',
-      model: { type: 'crystal', cation: 'Na', anion: 'Cl', n: 3, caption: 'Sodium and chloride ions alternating in a three-dimensional crystal lattice.' }
+      body: 'Ionic solids form a repeating crystal lattice where each ion is surrounded by opposite charges. Shifting a layer aligns like charges that repel, causing the brittle crystal to fracture along flat planes.',
+      model: { type: 'crystal', cation: 'Na', anion: 'Cl', n: 3, caption: 'Alternating sodium and chloride ions in a crystal lattice.' }
     }
   },
 
@@ -268,8 +268,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the hotplate, the leads and the liner slot.',
-      'Identify which blocks remain solid at 900 degrees and test their electrical conductivity.',
-      'Place the block that remains solid at 900 degrees and does not conduct into the liner slot.'
+      'Find which blocks resist 900 degrees and test them for mobile charges.',
+      'Place the block that remains solid at 900 degrees with no mobile charges into the liner slot.'
     ],
     check(state) {
       const t = state.table;
@@ -283,7 +283,7 @@ export const STAGES = [
     reward: {
       log: 'Block D: still solid at 900 degrees, no current.',
       title: 'Network Covalent Solids',
-      body: 'Covalent network solids consist of atoms linked in a continuous three-dimensional network of covalent bonds. Melting requires breaking these strong covalent bonds directly, giving the material a very high melting point and non-conducting behavior.',
+      body: 'Covalent network solids consist of atoms linked in a continuous three-dimensional network of covalent bonds. With no mobile charges and immense bond strength throughout the network, the material does not conduct and resists high temperatures.',
       last: true
     }
   }
@@ -304,11 +304,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'Summary',
-      body: 'Ionic solids form crystal lattices that are hard, brittle, and conduct electricity only when molten or dissolved. Molecular solids melt at low temperatures and do not conduct. Covalent networks possess high melting points and do not conduct. Metals conduct electricity in both solid and liquid states.'
+      body: 'Ionic solids form crystal lattices that are brittle and conduct electricity only when molten. Molecular solids melt at low temperatures and never conduct. Covalent networks possess high melting points and do not conduct. Metals conduct electricity in both solid and liquid states.'
     },
     {
       heading: 'Structure and Properties',
-      body: 'Macroscopic properties such as melting point, mechanical hardness, and electrical conductivity directly reflect the underlying chemical bonds and structural arrangements.'
+      body: 'Melting point, mechanical brittleness, and electrical conductivity directly reflect whether particles are separate molecules, ions in a lattice, atoms in a covalent network, or metal cations in a sea of electrons.'
     },
     {
       heading: 'Next',

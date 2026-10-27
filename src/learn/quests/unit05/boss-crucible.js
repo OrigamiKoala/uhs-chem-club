@@ -62,8 +62,7 @@ const STAGE_REWARDS = [
     reward: {
       log: 'The product bonds paid back more than they cost.',
       title: 'Coil Cooled',
-      body: 'Forming six N–H bonds releases more energy than breaking one N≡N triple bond and three H–H single bonds consumes. The net reaction is exothermic, releasing 93 kJ/mol.',
-      model: { type: 'molecules', items: ['nitrogen', 'hydrogen', 'ammonia'], caption: 'Nitrogen and hydrogen reactants beside synthesized ammonia molecules.' }
+      body: 'Forming six N–H bonds releases more energy than breaking one N≡N triple bond and three H–H single bonds consumes. The net reaction is exothermic, releasing 93 kJ/mol.'
     }
   },
   { reward: { log: 'The slag came apart in two steps.', title: 'Slag Cracked', body: 'Reversing the second reaction step cancels carbon monoxide and carbon dioxide intermediates. Combining the enthalpy changes yields +824.2 kJ/mol for the decomposition of iron oxide via Hess\'s law.' } },

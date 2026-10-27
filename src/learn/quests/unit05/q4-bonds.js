@@ -141,8 +141,7 @@ export const STAGES = [
     reward: {
       log: 'The crank took energy in.',
       title: 'Bond Enthalpy',
-      body: 'Breaking bonds requires energy: the energy needed to break one mole of a bond is its bond enthalpy (436 kJ/mol for H–H). Forming that bond releases the exact same amount of energy.',
-      model: { type: 'molecule', name: 'hydrogen', caption: 'A hydrogen molecule: two atoms and the bond between them.' }
+      body: 'Breaking bonds requires energy: the energy needed to break one mole of a bond is its bond enthalpy (436 kJ/mol for H–H). Forming that bond releases the exact same amount of energy.'
     }
   },
 
@@ -174,8 +173,7 @@ export const STAGES = [
     reward: {
       log: 'Burning methane paid back more than it cost.',
       title: 'Broken Less Formed',
-      body: 'Bond breaking requires energy, while bond formation releases energy. Burning methane breaks bonds costing 2,648 kJ and forms bonds releasing 3,450 kJ, so ΔH is −802 kJ from broken bonds minus formed bonds.',
-      model: { type: 'molecules', items: ['methane', 'oxygen', 'carbon dioxide', 'water'], caption: 'Methane and oxygen, whose bonds come apart, beside carbon dioxide and water, whose bonds are built.' }
+      body: 'Bond breaking requires energy, while bond formation releases energy. Burning methane breaks bonds costing 2,648 kJ and forms bonds releasing 3,450 kJ, so ΔH is −802 kJ from broken bonds minus formed bonds.'
     }
   },
 
@@ -256,8 +254,7 @@ export const STAGES = [
     reward: {
       log: 'The bonds formed paid back less than the bonds broken cost.',
       title: 'Endothermic Bond Balance',
-      body: 'Forming product bonds releases 181 kJ less than breaking reactant bonds costs. Because bond breaking exceeds bond formation, ΔH is positive (+181 kJ/mol) and the reaction absorbs heat from the surroundings.',
-      model: { type: 'molecules', items: ['nitrogen', 'oxygen', 'nitric oxide'], caption: 'Nitrogen with its triple bond, oxygen with its double bond, and nitric oxide.' }
+      body: 'Forming product bonds releases 181 kJ less than breaking reactant bonds costs. Because bond breaking exceeds bond formation, ΔH is positive (+181 kJ/mol) and the reaction absorbs heat from the surroundings.'
     }
   }
 ];

@@ -155,9 +155,6 @@ export function mountIonicRadius(view, wrap, spec, still) {
         <span style="display:inline-block;padding:1px 6px;background:${currentMode.tagColor}22;color:${currentMode.tagColor};border:1px solid ${currentMode.tagColor}44;font-size:10px;font-weight:700;border-radius:2px;">${currentMode.tag}</span>
         <span style="color:#dcd6cc;font-weight:600;">${currentMode.metric}</span>
       </div>
-      <div style="font-size:10px;color:#8c8376;">
-        ${currentMode.desc}
-      </div>
     `;
   };
   updateStatus();

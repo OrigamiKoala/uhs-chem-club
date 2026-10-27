@@ -158,7 +158,6 @@ export const STAGES = [
         log: 'Two electrons stand alone.',
         title: 'Molecular Orbital Theory and Paramagnetism',
         body: 'Atomic orbitals combine into bonding orbitals and higher-energy antibonding orbitals. In O2, Hund\'s rule places the last two valence electrons unpaired into separate degenerate antibonding orbitals, explaining its paramagnetism.',
-        model: { type: 'molecule', name: 'oxygen', caption: 'Oxygen molecule showing two unpaired electrons in antibonding molecular orbitals.' },
         last: true
       }
     };

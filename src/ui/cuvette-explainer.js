@@ -36,9 +36,9 @@ const SPECTRUM_CHANNELS = [
 ];
 
 const PRESETS = [
-  { label: '1 Drop (0.004 M)',  conc: 0.004, ionCount: 18, drops: 1 },
-  { label: '2 Drops (0.008 M)', conc: 0.008, ionCount: 36, drops: 2 },
-  { label: '3 Drops (0.012 M)', conc: 0.012, ionCount: 54, drops: 3 }
+  { label: '2.0 mmol/L', conc: 0.002, ionCount: 16 },
+  { label: '4.0 mmol/L', conc: 0.004, ionCount: 32 },
+  { label: '8.0 mmol/L', conc: 0.008, ionCount: 64 }
 ];
 
 /**
@@ -57,23 +57,27 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
   const soluteKey = spec.solute || 'cuso4';
   const solute = SOLUTES[soluteKey] || SOLUTES.cuso4;
   let mode = spec.mode || (spec.nm === 630 && spec.conc && spec.conc <= 0.005 ? 'mono' : 'white');
-  let currentConc = spec.conc ?? 0.008;
+  let currentConc = spec.conc ?? 0.004;
 
-  // Orbit rotation
-  let ay = 0.42;
-  let ax = 0.20;
+  // Stable, fixed lab viewpoint (no auto-rotation)
+  let ay = 0.22;
+  let ax = 0.08;
   let drag = null;
+
+  // Suppress duplicate outer caption so only one clean footer is displayed
+  const captionEl = wrap.querySelector('.lq-model-caption');
+  if (captionEl) captionEl.style.display = 'none';
 
   // 1. Controls bar
   const controlBar = document.createElement('div');
   controlBar.className = 'cuvette-controls';
   controlBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:6px 12px;background:#14120f;border-bottom:1px solid #2a241e;font-family:ui-monospace,monospace;font-size:11px;';
 
-  // Light Beam Mode buttons
+  // Mode buttons
   const modeGroup = document.createElement('div');
   modeGroup.style.cssText = 'display:flex;align-items:center;gap:4px;';
   const modeLabel = document.createElement('span');
-  modeLabel.textContent = 'LIGHT:';
+  modeLabel.textContent = 'MODE:';
   modeLabel.style.cssText = 'font-weight:700;color:#8c8376;margin-right:2px;';
   modeGroup.appendChild(modeLabel);
 
@@ -84,7 +88,7 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
 
   const btnMono = document.createElement('button');
   btnMono.type = 'button';
-  btnMono.textContent = '630 nm Orange (Beer\'s Law)';
+  btnMono.textContent = 'Beer\'s Law (630 nm Orange)';
   btnMono.style.cssText = 'padding:3px 9px;cursor:pointer;border-radius:2px;font-family:ui-monospace,monospace;font-size:11px;font-weight:600;transition:all 0.15s ease;';
 
   modeGroup.appendChild(btnWhite);
@@ -101,7 +105,7 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
   const concBtns = PRESETS.map(preset => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = `${preset.drops} Drop${preset.drops > 1 ? 's' : ''}`;
+    btn.textContent = preset.label;
     btn.title = preset.label;
     btn.style.cssText = 'padding:3px 8px;cursor:pointer;border-radius:2px;font-family:ui-monospace,monospace;font-size:11px;font-weight:600;transition:all 0.15s ease;';
     btn.addEventListener('click', () => {
@@ -136,7 +140,7 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
   // 3. Info / Caption footer
   const infoFooter = document.createElement('div');
   infoFooter.className = 'cuvette-footer';
-  infoFooter.style.cssText = 'padding:6px 12px;background:#0d0c0a;border-top:1px solid #221e1a;font-family:ui-monospace,monospace;font-size:10px;color:#8c8376;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;';
+  infoFooter.style.cssText = 'padding:8px 12px;background:#0d0c0a;border-top:1px solid #221e1a;font-family:ui-monospace,monospace;font-size:11px;color:#8c8376;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
 
   const updateUI = () => {
     // Mode button states
@@ -151,7 +155,7 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
 
     // Conc button states
     concBtns.forEach(({ btn, preset }) => {
-      const active = Math.abs(preset.conc - currentConc) < 0.001;
+      const active = Math.abs(preset.conc - currentConc) < 0.0005;
       btn.style.background = active ? '#2c2214' : '#1a1815';
       btn.style.border = `1px solid ${active ? '#d99423' : '#332d26'}`;
       btn.style.color = active ? '#d99423' : '#a59c86';
@@ -165,42 +169,40 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
     if (isWhite) {
       readoutBar.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="color:#ffffff;font-weight:700;">● Incident: White Light</span>
+          <span style="color:#ffffff;font-weight:700;">Incident White Light</span>
           <span style="color:#6b625a;">→</span>
           <span style="color:#fb923c;font-weight:700;">Cu²⁺ Absorbs Orange (~630 nm)</span>
           <span style="color:#6b625a;">→</span>
-          <span style="color:#38bdf8;font-weight:700;">● Transmitted: Blue Light</span>
+          <span style="color:#38bdf8;font-weight:700;">Transmitted Blue Light</span>
         </div>
-        <div style="color:#38bdf8;font-weight:600;font-size:10px;">Complementary Colour: Blue is what remains</div>
+        <div style="color:#38bdf8;font-weight:600;font-size:10px;">Complementary Color</div>
       `;
       infoFooter.innerHTML = `
-        <span style="color:#dcd6cc;">Copper(II) ions absorb orange photons from white light. The remaining unabsorbed wavelengths (blue, cyan, green) pass through together, appearing blue to our eyes.</span>
-        <div style="display:flex;gap:8px;font-size:10px;">
+        <div style="display:flex;gap:12px;font-size:10px;font-weight:600;">
           <span style="color:#ffffff;">White In</span>
-          <span style="color:#fb923c;">Orange Taken Out</span>
-          <span style="color:#38bdf8;">Blue Emerges</span>
+          <span style="color:#fb923c;">Orange Absorbed</span>
+          <span style="color:#38bdf8;">Blue Out</span>
         </div>
       `;
     } else {
       readoutBar.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="color:#fb923c;font-weight:700;">Incident I₀ = 100%</span>
+          <span style="color:#fb923c;font-weight:700;">I₀ = 100%</span>
           <span style="color:#6b625a;">|</span>
-          <span style="color:#94a3b8;">Path b = 1.0 cm</span>
+          <span style="color:#94a3b8;">b = 1.0 cm</span>
           <span style="color:#6b625a;">|</span>
           <span style="color:#d99423;font-weight:700;">c = ${(currentConc * 1000).toFixed(1)} mmol/L</span>
           <span style="color:#6b625a;">|</span>
           <span style="color:#4ade80;font-weight:700;">A = ${A.toFixed(2)}</span>
           <span style="color:#6b625a;">|</span>
-          <span style="color:#fb923c;font-weight:700;">Transmitted I = ${tPct}%</span>
+          <span style="color:#fb923c;font-weight:700;">I = ${tPct}%</span>
         </div>
-        <div style="color:#8c8376;font-size:10px;">Beer's Law: A = ε · b · c &nbsp;(T = 10<sup>-A</sup> = ${(T).toFixed(2)})</div>
+        <div style="color:#8c8376;font-size:10px;font-weight:600;">A = ε · b · c</div>
       `;
       infoFooter.innerHTML = `
-        <span style="color:#dcd6cc;">Beer-Lambert Law: Each dissolved copper particle intercepts its share of 630 nm light. Doubling concentration doubles absorbing ions, doubling absorbance (A ∝ c).</span>
-        <div style="display:flex;gap:8px;font-size:10px;">
-          <span style="color:#fb923c;">Orange Beam (630 nm)</span>
-          <span style="color:#4ade80;">A = ε·b·c</span>
+        <div style="display:flex;gap:12px;font-size:10px;font-weight:600;">
+          <span style="color:#fb923c;">630 nm Beam</span>
+          <span style="color:#4ade80;">A ∝ c</span>
         </div>
       `;
     }
@@ -529,6 +531,19 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
       root.add(outBeam);
       beamMeshes.push(outBeam);
 
+      // Section D: Source emitter housing (left) and detector sensor housing (right)
+      const capGeo = new THREE.CylinderGeometry(0.38, 0.42, 0.22, 24);
+      capGeo.rotateZ(Math.PI / 2);
+      const capMat = new THREE.MeshStandardMaterial({ color: 0x222628, roughness: 0.5, metalness: 0.5 });
+
+      const sourceHousing = new THREE.Mesh(capGeo, capMat);
+      sourceHousing.position.set(X_IN_START - 0.11, 0, 0);
+      root.add(sourceHousing);
+
+      const detectorHousing = new THREE.Mesh(capGeo, capMat);
+      detectorHousing.position.set(X_OUT_END + 0.11, 0, 0);
+      root.add(detectorHousing);
+
       // 6. Traveling Photons Initialization
       beamParticles = [];
       const particleGeo = new THREE.SphereGeometry(0.038, 10, 8);
@@ -593,10 +608,7 @@ export function mountCuvetteExplainer(view, wrap, spec, still = false) {
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
 
-      if (!isPaused) {
-        if (!drag) ay += 0.0035; // gentle idle rotation
-      }
-
+      // Fixed viewpoint (no continuous auto-rotation)
       root.rotation.y = ay;
       root.rotation.x = ax;
 

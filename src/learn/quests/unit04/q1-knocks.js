@@ -146,8 +146,7 @@ export const STAGES = [
         return {
           log: 'All three gauges read alike.',
           title: 'Pressure',
-          body: 'The gas pushes on every wall alike because its particles fly in all directions and collide with all walls. That push is pressure, measured in kilopascals (kPa).',
-          model: { type: 'gas', boxes: [{ label: 'Sealed box', w: 2.6, parts: [{ kind: 'N2', n: 12 }] }], caption: 'A box of gas: 12 particles flying every way, one for each twelfth of a mole, so every wall is knocked alike. Not to scale.' }
+          body: 'The gas pushes on every wall alike because its particles fly in all directions and collide with all walls. That push is pressure, measured in kilopascals (kPa).'
         };
       }
     };
@@ -193,12 +192,7 @@ export const STAGES = [
       reward: {
         log: 'Only the knocks follow the gauge.',
         title: 'Boyle\'s Law',
-        body: 'Compressing a gas into less volume increases wall collision frequency without changing particle speed or count. Halving volume doubles the collision rate and doubles the pressure (Boyle\'s law).',
-        model: {
-          type: 'gas',
-          boxes: [{ label: 'Whole room', w: 3.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Half the room', w: 1.7, parts: [{ kind: 'He', n: 12 }] }],
-          caption: 'The same 12 helium particles in the whole room and in half of it. Not to scale.'
-        }
+        body: 'Compressing a gas into less volume increases wall collision frequency without changing particle speed or count. Halving volume doubles the collision rate and doubles the pressure (Boyle\'s law).'
       }
     };
   })(),

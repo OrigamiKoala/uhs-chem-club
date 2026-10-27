@@ -124,12 +124,7 @@ export const STAGES = [
         return {
           log: 'A mole of either gas fills the same room.',
           title: 'Molar Volume',
-          body: 'One mole of any ideal gas fills about 22.4 litres at 0 °C and ordinary air pressure (molar volume), regardless of particle mass. Equal numbers of particles fill equal volumes: this is Avogadro\'s law.',
-          model: {
-            type: 'gas',
-            boxes: [{ label: 'Helium', w: 2.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Carbon dioxide', w: 2.4, parts: [{ kind: 'CO2', n: 12 }] }],
-            caption: 'One mole of each, 12 particles for each: particle mass differs, but volume is equal.'
-          }
+          body: 'One mole of any ideal gas fills about 22.4 litres at 0 °C and ordinary air pressure (molar volume), regardless of particle mass. Equal numbers of particles fill equal volumes: this is Avogadro\'s law.'
         };
       }
     };

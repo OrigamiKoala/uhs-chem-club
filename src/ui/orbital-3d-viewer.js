@@ -220,10 +220,6 @@ export function mountDOrbitals3D(view, wrap, config, still) {
         <span style="display:inline-block;padding:1px 5px;background:#d9942322;color:#d99423;border:1px solid #d9942355;font-size:10px;font-weight:bold;border-radius:2px;">${activeOrbital.name}</span>
         <span style="color:#dcd6cc;font-weight:600;">${activeOrbital.shape}</span>
       </div>
-      <div style="color:#8c8376;font-size:10px;line-height:1.4;">${activeOrbital.desc}</div>
-      <div style="display:flex;gap:8px;font-size:9.5px;color:#a59c86;margin-top:2px;">
-        ${activeOrbital.features.map(f => `<span style="background:#1a1815;padding:1px 5px;border:1px solid #2e2a26;border-radius:2px;">• ${f}</span>`).join('')}
-      </div>
     `;
   };
   updateStatus();

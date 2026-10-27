@@ -58,11 +58,6 @@ export function mountSliceExplainer(mountEl) {
   const canvasWrap = document.createElement('div');
   canvasWrap.style.cssText = 'width:100%;height:260px;position:relative;cursor:grab;touch-action:none;';
 
-  const hintEl = document.createElement('div');
-  hintEl.style.cssText = 'position:absolute;bottom:6px;left:10px;font-family:ui-monospace,monospace;font-size:10px;color:#6b625a;pointer-events:none;';
-  hintEl.textContent = 'Drag to freely rotate orbital in 3D';
-  canvasWrap.appendChild(hintEl);
-
   container.appendChild(toolbar);
   container.appendChild(statusEl);
   container.appendChild(canvasWrap);
@@ -73,19 +68,12 @@ export function mountSliceExplainer(mountEl) {
     const tag = !sliceOn
       ? '<span style="padding:1px 6px;background:#38bdf822;color:#38bdf8;border:1px solid #38bdf844;border-radius:2px;font-weight:700;">FULL CLOUD</span>'
       : dotsInSlice <= 5
-        ? '<span style="padding:1px 6px;background:#4ade8022;color:#4ade80;border:1px solid #4ade8044;border-radius:2px;font-weight:700;">EMPTY SLICE ★</span>'
+        ? '<span style="padding:1px 6px;background:#4ade8022;color:#4ade80;border:1px solid #4ade8044;border-radius:2px;font-weight:700;">EMPTY SLICE</span>'
         : '<span style="padding:1px 6px;background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44;border-radius:2px;font-weight:700;">DENSE SLICE</span>';
-
-    const desc = !sliceOn
-      ? 'Viewing all 260 electron shots in 3D.'
-      : dotsInSlice <= 5
-        ? 'Nodal plane between lobes: almost no electrons touch this plane!'
-        : 'Slice cutting through lobes: electrons caught inside slab.';
 
     statusEl.innerHTML = `
       <div style="display:flex;align-items:center;gap:6px;">
         ${tag}
-        <span style="color:#dcd6cc;">${desc}</span>
       </div>
       <div style="color:#8c8376;">
         IN SLICE: <strong style="color:${dotsInSlice <= 5 ? '#4ade80' : '#e59b24'};">${dotsInSlice}</strong> / ${TOTAL_DOTS}
@@ -350,18 +338,6 @@ export function showSliceExplainerModal() {
       </div>
 
       <div id="slice-explainer-mount" style="margin-bottom:14px;"></div>
-
-      <div style="background:#14120f;border:1px solid #29241f;padding:12px;font-size:12px;line-height:1.6;color:#dcd6cc;margin-bottom:14px;border-radius:2px;">
-        <div style="margin-bottom:8px;">
-          <strong style="color:#e59b24;">1. Probability Clouds:</strong> Electrons occupy three-dimensional probability distributions rather than fixed orbits. Projecting a cloud onto a flat plane causes foreground and background density to overlap.
-        </div>
-        <div style="margin-bottom:8px;">
-          <strong style="color:#38bdf8;">2. Cross-Sectional Slicing:</strong> Slicing isolates a thin cross-section through the center of the orbital, removing occluding density in front and behind.
-        </div>
-        <div>
-          <strong style="color:#4ade80;">3. Nodal Planes:</strong> A p orbital contains a nodal plane between its lobes where electron probability density is zero. Orienting the slice along this plane reveals the absence of electron density.
-        </div>
-      </div>
 
       <div style="display:flex;justify-content:flex-end;gap:8px;">
         <button type="button" class="btn-primary" data-close-modal="true">Back to Bench</button>

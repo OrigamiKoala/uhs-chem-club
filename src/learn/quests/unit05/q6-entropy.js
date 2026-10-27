@@ -126,8 +126,7 @@ export const STAGES = [
     reward: {
       log: 'Spread out turned up almost every time.',
       title: 'Entropy',
-      body: `Spread-out arrangements outnumber concentrated ones, with ${TOTAL_WAYS - CROWDED_WAYS} of ${TOTAL_WAYS} possible configurations. The measure of the number of microstates available to a system is its entropy, which increases as particles disperse.`,
-      model: { type: 'box', cells: 8, filled: [1, 3, 6, 8], gate: 4, caption: 'Four particles spread over a box of eight cells, with the wall open.' }
+      body: `Spread-out arrangements outnumber concentrated ones, with ${TOTAL_WAYS - CROWDED_WAYS} of ${TOTAL_WAYS} possible configurations. The measure of the number of microstates available to a system is its entropy, which increases as particles disperse.`
     }
   },
 

@@ -179,8 +179,7 @@ export const STAGES = [
       reward: {
         log: 'Hydrogen warmed the tank most per gram.',
         title: 'Energy per Gram',
-        body: 'Hydrogen releases the least heat per mole yet the most heat per gram because of its low molar mass (2.0 g/mol). Fuel energy density depends on mass rather than moles.',
-        model: { type: 'molecules', items: ['hydrogen', 'methane'], caption: 'A hydrogen molecule, 2 g a mole, beside a methane molecule, 16 g a mole.' }
+        body: 'Hydrogen releases the least heat per mole yet the most heat per gram because of its low molar mass (2.0 g/mol). Fuel energy density depends on mass rather than moles.'
       }
     };
   })()

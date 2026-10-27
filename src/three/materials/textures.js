@@ -646,7 +646,7 @@ export function createClubHoloTexture() {
   ctx.lineTo(976, 184);
   ctx.stroke();
 
-  // DIRECTIONS: ONLY show Star Map & message to check out star map
+  // DIRECTIONS: Show Star Map navigation
   ctx.textAlign = 'center';
 
   // Star Map Box
@@ -660,12 +660,8 @@ export function createClubHoloTexture() {
   ctx.font = 'bold 36px sans-serif';
   ctx.shadowColor = '#d99423';
   ctx.shadowBlur = 8;
-  ctx.fillText('◀  STAR MAP', 512, 282);
+  ctx.fillText('◀  STAR MAP', 512, 305);
   ctx.shadowBlur = 0;
-
-  ctx.font = '20px monospace';
-  ctx.fillStyle = '#f6ecd9';
-  ctx.fillText('Check out the latest quests!', 512, 332);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);

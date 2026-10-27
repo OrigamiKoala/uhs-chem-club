@@ -112,8 +112,7 @@ export const STAGES = [
     reward: {
       log: 'The lowest point of the trace.',
       title: 'Potential Energy Curve',
-      body: 'The curve plots potential energy against internuclear distance. The minimum represents the equilibrium bond length, where attractive and repulsive electrostatic forces balance.',
-      model: { type: 'molecule', name: 'hydrogen', caption: 'Hydrogen molecule at its equilibrium bond length.' }
+      body: 'The curve plots potential energy against internuclear distance. The minimum represents the equilibrium bond length, where attractive and repulsive electrostatic forces balance.'
     }
   },
 
@@ -197,8 +196,7 @@ export const STAGES = [
       return {
         log: 'The more pairs shared, the shorter the bond.',
         title: 'Bond Order',
-        body: `${verdictLine(QUEST_KEY, 'closer')}Bond order represents the number of shared electron pairs. Higher bond order pulls nuclei closer together into a deeper well, producing a shorter and stronger bond.`,
-        model: { type: 'molecule', name: 'nitrogen', caption: 'Nitrogen molecule with a triple covalent bond.' }
+        body: `${verdictLine(QUEST_KEY, 'closer')}Bond order represents the number of shared electron pairs. Higher bond order pulls nuclei closer together into a deeper well, producing a shorter and stronger bond.`
       };
     }
   },
@@ -214,7 +212,7 @@ export const STAGES = [
         saltPiece('b', 'KCl', 'KCl', { x: 56, y: 56 }),
         saltPiece('c', 'MgO', 'MgO', { x: 88, y: 56 })
       ],
-      zones: { rail: { id: 'rail', at: { x: 56, y: 56 }, size: { w: 104, h: 16 }, first: 'Takes the most heat', last: 'Takes the least', items: ['a', 'b', 'c'], start: ['b', 'a', 'c'] } },
+      zones: { rail: { id: 'rail', at: { x: 56, y: 56 }, size: { w: 104, h: 16 }, first: 'Highest', last: 'Lowest', items: ['a', 'b', 'c'], start: ['b', 'a', 'c'] } },
       fixtures: [hotplate('hp', { x: 49, y: 19 }, { w: 92, h: 32, max: 3000 })]
     }),
     hints: [
@@ -234,7 +232,6 @@ export const STAGES = [
       log: 'Magnesium oxide took the most heat. Potassium chloride took the least.',
       title: 'Lattice Energy and Ion Properties',
       body: 'Lattice energy increases with higher ionic charges and smaller ionic radii. Magnesium oxide contains divalent ions with small radii, producing a stronger lattice than compounds with singly charged ions.',
-      model: { type: 'crystal', cation: 'Mg', anion: 'O', n: 3, caption: 'Magnesium oxide crystal lattice with Mg2+ and O2- ions.' },
       last: true
     }
   }

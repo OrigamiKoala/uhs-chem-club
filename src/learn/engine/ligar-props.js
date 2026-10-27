@@ -535,17 +535,9 @@ export function buildToolCap(c, { face }) {
   return done(g, H + 0.001);
 }
 
-/** A socket in a board where a pair of electrons is set: a turned brass ring with the painted face (the pair it holds) inside it. */
-export function buildJointSocket(c, { face }) {
-  const { hw, mats: m } = c;
-  const g = new THREE.Group();
-  const R = hw;
-  g.add(mesh(lathe([[R * 0.78, 0], [R * 1.0, 0], [R * 1.02, 0.004], [R * 0.96, 0.009], [R * 0.78, 0.008]], 28), m.ligBrassWorn));
-  const disc = mesh(new THREE.CircleGeometry(R * 0.8, 28), face, { cast: false });
-  disc.rotation.x = -Math.PI / 2;
-  disc.position.y = 0.0012;
-  g.add(disc);
-  return done(g, 0.009);
+/** A socket in a board where a pair of electrons is set: empty in 3D so the slate's Lewis bond lines connect atoms directly. */
+export function buildJointSocket(c) {
+  return new THREE.Group();
 }
 
 /* ------------------------------------------------------------------ the hub of arms, balloons, the protractor */

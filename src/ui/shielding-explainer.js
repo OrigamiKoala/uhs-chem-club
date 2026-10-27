@@ -157,18 +157,16 @@ export function mountShieldingExplainer(view, wrap, spec, still = false) {
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="color:#d99423;font-weight:700;">+${atom.z} Protons</span>
           <span style="color:#6b625a;">−</span>
-          <span style="color:#60a5fa;font-weight:700;">${atom.coreElectrons} Inner Electrons</span>
+          <span style="color:#60a5fa;font-weight:700;">${atom.coreElectrons} Core</span>
           <span style="color:#6b625a;">=</span>
-          <span style="color:#4ade80;font-weight:700;">+${atom.zeff} Effective Pull</span>
+          <span style="color:#4ade80;font-weight:700;">Zeff = +${atom.zeff}</span>
         </div>
-        <div style="color:#8c8376;font-size:10px;">Zeff = ${atom.z} − ${atom.coreElectrons} = +${atom.zeff}</div>
       `;
       infoFooter.innerHTML = `
-        <span style="color:#dcd6cc;">${atom.descShielded}</span>
-        <div style="display:flex;gap:10px;font-size:10px;">
+        <div style="display:flex;gap:12px;font-size:10px;">
           <span style="color:#d99423;">● Nucleus</span>
-          <span style="color:#60a5fa;">● Shield (${atom.coreElectrons}e⁻)</span>
-          <span style="color:#4ade80;">● Outer e⁻</span>
+          <span style="color:#60a5fa;">● Core (${atom.coreElectrons} e⁻)</span>
+          <span style="color:#4ade80;">● Valence e⁻</span>
         </div>
       `;
     } else {
@@ -176,15 +174,13 @@ export function mountShieldingExplainer(view, wrap, spec, still = false) {
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="color:#f87171;font-weight:700;">+${atom.z} Unshielded Protons</span>
           <span style="color:#6b625a;">=</span>
-          <span style="color:#f87171;font-weight:700;">+${atom.z} Full Pull</span>
+          <span style="color:#f87171;font-weight:700;">Full Pull (+${atom.z})</span>
         </div>
-        <div style="color:#8c8376;font-size:10px;">No shielding: outer shell pulled inward</div>
       `;
       infoFooter.innerHTML = `
-        <span style="color:#dcd6cc;">${atom.descUnshielded}</span>
-        <div style="display:flex;gap:10px;font-size:10px;">
+        <div style="display:flex;gap:12px;font-size:10px;">
           <span style="color:#f87171;">● Nucleus (+${atom.z})</span>
-          <span style="color:#4ade80;">● Outer e⁻</span>
+          <span style="color:#4ade80;">● Valence e⁻</span>
         </div>
       `;
     }

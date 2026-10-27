@@ -142,8 +142,7 @@ export const STAGES = [
       return {
         log: 'Both bonds measured 128 pm.',
         title: 'Resonance Hybrid',
-        body: `${verdictLine(QUEST_KEY, 'same')}Although a single Lewis structure depicts one double bond and one single bond, both bonds measure an identical 128 pm, between a single and a double bond. The true molecule is a blend of structures called a resonance hybrid.`,
-        model: { type: 'molecule', name: 'ozone', caption: 'Ozone molecule: both oxygen-oxygen bonds have identical intermediate length.' }
+        body: `${verdictLine(QUEST_KEY, 'same')}Although a single Lewis structure depicts one double bond and one single bond, both bonds measure an identical 128 pm, between a single and a double bond. The true molecule is a blend of structures called a resonance hybrid.`
       };
     }
   },

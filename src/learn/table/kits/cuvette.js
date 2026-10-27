@@ -72,8 +72,9 @@ function piece3d(p, state, c) {
 }
 
 /**
- * A beam of light through the cuvette in the spectrometer's well: it enters from the lamp housing and exits into the
- * photodetector, attenuated according to transmittance (`10^-A`), in the colour of the wavelength the dial is on.
+ * A beam of light through the cuvette in the spectrophotometer's optical chamber: it enters from the lamp housing and
+ * exits into the photodetector sensor at the chamber edge, attenuated according to transmittance (10^-A). It never
+ * crosses into the digital display or control panel.
  */
 function dress3d(f, state, c) {
   if (f.kind !== 'spectro' || f.props.region || f.props.strip || !f.props.slot) return null;
@@ -81,13 +82,42 @@ function dress3d(f, state, c) {
   if (!slot) return null;
   const { THREE, scale: s, toPlate, box } = c;
   const group = new THREE.Group();
-  const inLen = (slot.at.x - (box.x0 + 1.5)) * s;
-  const outLen = (box.x0 + f.size.w - 2 - slot.at.x) * s;
+
+  // Beam spans strictly from light source at left of chamber to detector sensor on right of well
+  const inLen = (slot.at.x - (box.x0 + 2.5)) * s;
+  const outLen = 9.5 * s;
   if (inLen <= 0.01 || outLen <= 0.01) return null;
   const beam = buildBeamThrough(c, { inLen, outLen, gap: 0.030 });
   const p = toPlate({ x: slot.at.x, y: slot.at.y - (RECTS.cuvette?.hh || 10) * 0.22 });
   beam.position.set(p.x, c.ground + 0.048, p.z);
   group.add(beam);
+
+  // 3D Spectrophotometer Casing Hardware
+  const casingMat = c.mats?.dark || (c.mat ? c.mat(0x1b1916) : new THREE.MeshStandardMaterial({ color: 0x1b1916, roughness: 0.7, metalness: 0.3 }));
+  if (casingMat.userData) casingMat.userData.tableOwned = true;
+  const sensorMat = c.mats?.steel || (c.mat ? c.mat(0x242d30) : new THREE.MeshStandardMaterial({ color: 0x242d30, roughness: 0.4, metalness: 0.6 }));
+  if (sensorMat.userData) sensorMat.userData.tableOwned = true;
+
+  // 1. Lamp Housing block on left
+  const lampP = toPlate({ x: box.x0 + 2.0, y: slot.at.y - (RECTS.cuvette?.hh || 10) * 0.22 });
+  const lampBox = new THREE.Mesh(new THREE.BoxGeometry(2.5 * s, 0.040, 16 * s), casingMat);
+  lampBox.position.set(lampP.x, c.ground + 0.020, lampP.z);
+  group.add(lampBox);
+
+  // 2. Photodetector Sensor Housing block on right of cuvette
+  const detP = toPlate({ x: slot.at.x + 9.5, y: slot.at.y - (RECTS.cuvette?.hh || 10) * 0.22 });
+  const detBox = new THREE.Mesh(new THREE.BoxGeometry(2.2 * s, 0.040, 16 * s), sensorMat);
+  detBox.position.set(detP.x, c.ground + 0.020, detP.z);
+  group.add(detBox);
+
+  // 3. Digital LCD Screen Bezel Frame on right
+  const scrX = box.x0 + 26 + (f.size.w - 28.5) / 2;
+  const scrY = box.y0 + 4.5 + 21.5 / 2;
+  const scrP = toPlate({ x: scrX, y: scrY });
+  const scrBezel = new THREE.Mesh(new THREE.BoxGeometry((f.size.w - 28.5) * s, 0.006, 21.5 * s), sensorMat);
+  scrBezel.position.set(scrP.x, c.ground + 0.003, scrP.z);
+  group.add(scrBezel);
+
   const sync = (fx, st) => {
     const r = spectroRead(st, fx.id);
     beam.userData.set(wavelengthRgb(r.nm), r.piece ? Math.pow(10, -r.A) : null);
@@ -160,9 +190,9 @@ export const cuvette = (id, label, at, { drops = 0, conc = null, sealed = false,
   props: { solute, ...(conc != null ? { conc } : { drops }), ...(sealed ? { sealed: true } : {}), ...(blank ? { blank: true } : {}) }
 });
 
-// A tool says what it does, printed under the place it hangs: a dropper is not told from a wash bottle by its shape alone.
-export const dropper = (id, at, label = 'Add Drop') => ({ id, kind: 'dropper', label, at, props: {}, caption: 'Add Drop' });
-export const rinser = (id, at, label = 'Empty') => ({ id, kind: 'rinse', label, at, props: {}, caption: 'Empty' });
+// Solute preparation tools: Cu²⁺ stock adds 2.0 mmol/L per drop; Rinse bottle resets to 0.0 mmol/L pure solvent.
+export const dropper = (id, at, label = 'Cu²⁺ Stock') => ({ id, kind: 'dropper', label, at, props: {}, caption: '+2.0 mmol/L' });
+export const rinser = (id, at, label = 'Rinse') => ({ id, kind: 'rinse', label, at, props: {}, caption: 'Reset to 0' });
 export const chip = (id, label, nm, at) => ({ id, kind: 'chip', label, at, props: { nm } });
 export const motionCard = (id, label, at) => ({ id, kind: 'motion', label, at, props: {} });
 export const readingCard = (id, label, nm, at) => ({ id, kind: 'reading', label, at, props: { nm } });

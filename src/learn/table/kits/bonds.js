@@ -794,7 +794,7 @@ function paintLattice(ctx, f, state, b) {
     ctx.stroke();
     ctx.setLineDash?.([]);
 
-    plateText(ctx, 'CLEAVAGE PLANE — SHEAR FRACTURE', (X(xStart) + X(xEnd)) / 2, Y(yCleave) - 2.6 * sc, {
+    plateText(ctx, 'CLEAVAGE PLANE', (X(xStart) + X(xEnd)) / 2, Y(yCleave) - 2.6 * sc, {
       size: subSize, weight: 700, align: 'center', color: AMBER
     });
 
@@ -830,28 +830,28 @@ function paintLattice(ctx, f, state, b) {
   let c2 = PLATE_COLORS.dim;
 
   if (g.slid) {
-    l1 = `CLEAVED: ${g.faced} LIKE PAIRS MEET & REPEL`;
-    l2 = `ELECTROSTATIC REPULSION FRACTURES CRYSTAL`;
+    l1 = `${g.faced} like charges align and repel`;
+    l2 = 'Repulsion cleaves the crystal';
     c1 = AMBER;
     c2 = AMBER;
   } else if (g.like > 0) {
-    l1 = `PLACED ${g.filled} OF ${g.total}: ${g.like} LIKE TOUCH`;
-    l2 = `LIKE CHARGES REPEL — MUST ALTERNATE`;
+    l1 = `${g.like} like charges touch`;
+    l2 = 'Like charges repel: alternate charges';
     c1 = AMBER;
     c2 = PLATE_COLORS.dust;
   } else if (g.filled === g.total) {
-    l1 = `LATTICE LOCKED: 12 OF 12 IONS STABLE`;
-    l2 = `PRESS "SLIDE A LAYER" TO TEST CLEAVAGE`;
+    l1 = 'Lattice complete: all ions stable';
+    l2 = 'Press "Slide a Layer" to test cleavage';
     c1 = AMBER;
     c2 = PLATE_COLORS.dust;
   } else if (g.filled > 0) {
-    l1 = `PLACED ${g.filled} OF ${g.total}: OPPOSITES ATTRACT`;
-    l2 = `CONTINUE ALTERNATING Na⁺ AND Cl⁻`;
+    l1 = `${g.filled} of ${g.total} ions placed`;
+    l2 = 'Alternate positive and negative charges';
     c1 = PLATE_COLORS.dust;
     c2 = PLATE_COLORS.dim;
   } else {
-    l1 = `CRYSTAL LATTICE: 0 OF 12 IONS`;
-    l2 = `PACK ALTERNATING CHARGES INTO GRID`;
+    l1 = '0 of 12 ions placed';
+    l2 = 'Pack alternating charges into grid';
     c1 = PLATE_COLORS.dust;
     c2 = PLATE_COLORS.dim;
   }

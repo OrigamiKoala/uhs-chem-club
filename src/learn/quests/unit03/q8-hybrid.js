@@ -169,7 +169,7 @@ export const STAGES = [
         log: 'An s orbital and three p orbitals make four.',
         title: 'Hybrid Orbitals, sp³',
         body: 'Mixing one 2s orbital and three 2p orbitals generates four degenerate sp³ hybrid orbitals directed toward the corners of a tetrahedron at 109.5 degrees. Each hybrid orbital accommodates a bonding pair or lone pair.',
-        model: { type: 'lobes', n: 4, caption: 'Four equivalent sp³ hybrid orbitals in a tetrahedral arrangement.' }
+        model: { type: 'lobes', n: 4, caption: 'sp³ Hybrid Orbitals' }
       }
     };
   })(),
@@ -206,8 +206,7 @@ export const STAGES = [
     reward: {
       log: 'End to end, then side to side.',
       title: 'Sigma and Pi Bonds',
-      body: 'Head-on overlap of hybrid orbitals along the internuclear axis forms a sigma bond. Lateral overlap of unhybridized parallel p orbitals above and below the axis forms a pi bond, making a double bond one sigma and one pi bond.',
-      model: { type: 'molecule', name: 'ethene', caption: 'Ethene molecule with a carbon-carbon double bond consisting of one sigma and one pi bond.' }
+      body: 'Head-on overlap of hybrid orbitals along the internuclear axis forms a sigma bond. Lateral overlap of unhybridized parallel p orbitals above and below the axis forms a pi bond, making a double bond one sigma and one pi bond.'
     }
   },
 
@@ -237,7 +236,6 @@ export const STAGES = [
       log: 'A single bond turns; a double bond holds.',
       title: 'Restricted Rotation',
       body: 'A single bond consists of a cylindrically symmetrical sigma bond that permits free rotation. In contrast, rotating a double bond breaks the parallel overlap of pi orbitals, resulting in restricted rotation.',
-      model: { type: 'molecule', name: 'ethane', caption: 'Ethane molecule showing free rotation around its carbon-carbon sigma bond.' },
       last: true
     }
   }

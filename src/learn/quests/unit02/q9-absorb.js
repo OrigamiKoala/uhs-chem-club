@@ -203,75 +203,75 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
+    const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrophotometer' });
     return {
       title: 'Concentration and Absorbance',
-      prompt: 'Fill Cuvette B so that its absorbance is twice that of Cuvette A.',
+      prompt: 'Prepare Cuvette B so that its absorbance is twice that of Cuvette A.',
       widget,
       table: cuvetteTable({
         pieces: [
-          cuvette('a', 'CUVETTE A', { x: 14, y: 53 }, { drops: 2 }), cuvette('b', 'CUVETTE B', { x: 36, y: 53 }, { drops: 0 }),
-          dropper('drop', { x: 62, y: 51 }), rinser('empty', { x: 84, y: 51 })
+          cuvette('a', 'CUVETTE A', { x: 18, y: 53 }, { drops: 2 }), cuvette('b', 'CUVETTE B', { x: 42, y: 53 }, { drops: 0 }),
+          dropper('drop', { x: 70, y: 52 }), rinser('empty', { x: 92, y: 52 })
         ],
-        fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 29 }, [], { w: 50 })],
+        fixtures: [sp.fixture],
         zones: { slots: sp.slots }
       }, { recorder: recorder('Concentration', 'mmol/L') }),
       hints: [
-        'Use the dropper on a cuvette to fill it, then slide the cuvette into the beam.',
-        'Compare the reading of Cuvette A with the readings of Cuvette B as you add drops to it.',
-        'Add drops to Cuvette B and read it each time until its reading is twice Cuvette A\'s.'
+        'Use Cu²⁺ Stock to increase concentration in Cuvette B, then slide it into the beam.',
+        'Compare the absorbance of Cuvette A with Cuvette B as you add stock solute.',
+        'Add stock until Cuvette B reaches 8.0 mmol/L, giving twice the absorbance of Cuvette A.'
       ],
       check(state) {
         const t = state.table;
         const a = absorbOf(t.pieces.a);
         const b = absorbOf(t.pieces.b);
-        if (!(concOf(t.pieces.b) > 0)) return { ok: false, notYet: true, msg: 'Cuvette B is empty.' };
+        if (!(concOf(t.pieces.b) > 0)) return { ok: false, notYet: true, msg: 'Cuvette B has no solute added.' };
         if (a > 0 && Math.abs(b - 2 * a) < 0.0005) return { ok: true };
-        return { ok: false, msg: b > 2 * a ? 'Cuvette B has more than twice the absorbance of Cuvette A.' : 'Cuvette B has less than twice the absorbance of Cuvette A.' };
+        return { ok: false, msg: b > 2 * a ? 'Cuvette B absorbance is too high.' : 'Cuvette B absorbance is too low.' };
       },
       reward: {
         log: 'Twice the concentration, twice the absorbance.',
-        title: 'Linear Relationship',
-        body: 'Doubling the concentration doubles the absorbance. Each absorbing particle removes its own share of light, making absorbance proportional to concentration.',
-        model: { type: 'cuvette', solute: 'cuso4', conc: 0.004, nm: 630, caption: 'Twice as many dots of copper in the beam take out twice as much of it.' }
+        title: 'Concentration and Absorbance',
+        body: 'Absorbance depends on solute concentration, not liquid volume. Doubling the dissolved molecules in the beam path doubles the light absorbed (A ∝ c).',
+        model: { type: 'cuvette', solute: 'cuso4', conc: 0.008, nm: 630, caption: 'Doubling concentration doubles absorbing copper(II) ions in the beam path, doubling absorbance.' }
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
+    const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrophotometer' });
     return {
       title: 'Calibration Curve',
-      prompt: 'Determine the concentration of the sealed copper solution using the calibration line.',
+      prompt: 'Determine the concentration of the unknown sample using the calibration line.',
       widget,
       table: cuvetteTable({
         pieces: [
           cuvette('s1', 'STANDARD 1', { x: 14, y: 53 }, { drops: 0 }), cuvette('s2', 'STANDARD 2', { x: 36, y: 53 }, { drops: 0 }), cuvette('s3', 'STANDARD 3', { x: 58, y: 53 }, { drops: 0 }),
-          cuvette('sealed', 'SEALED TANK SAMPLE', { x: 80, y: 53 }, { conc: SEALED_CONC, sealed: true }),
-          dropper('drop', { x: 106, y: 52.5 }), rinser('empty', { x: 126, y: 52.5 })
+          cuvette('sealed', 'SEALED SAMPLE', { x: 80, y: 53 }, { conc: SEALED_CONC, sealed: true }),
+          dropper('drop', { x: 104, y: 52 }), rinser('empty', { x: 124, y: 52 })
         ],
-        fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 25.2 }, [], { w: 50 }), markerFixture('conc', 'Sealed sample (mmol/L)', { x: 122, y: 38.4 }, { max: 8, step: 0.5, w: 44 })],
+        fixtures: [sp.fixture, markerFixture('conc', 'Unknown sample (mmol/L)', { x: 122, y: 35 }, { max: 8, step: 0.5, w: 44 })],
         zones: { slots: sp.slots },
         tools: ['straightedge']
       }, { recorder: { ...recorder('Concentration', 'mmol/L'), at: { x: 112, y: 11 } } }),
       hints: [
-        'Use the dropper on the standards, "Record" for each, the straightedge, and the marker.',
-        'Lay the straightedge across the standards\' points and find where the sealed sample\'s reading falls along the line.',
-        'Read across from the sealed reading to the line, then straight down to the concentration scale, and set the marker there.'
+        'Prepare the standards with stock solute, record each in the spectrophotometer, and lay the straightedge.',
+        'Find where the unknown sample\'s absorbance falls on the line.',
+        'Set the marker to the concentration that matches the unknown sample\'s absorbance on the calibration line.'
       ],
       check(state) {
         const t = state.table;
         const v = markerRead(t, 'conc');
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the concentration you read off the line.' };
+        if (v === 0) return { ok: false, notYet: true, msg: 'Set the unknown sample\'s concentration.' };
         if (v === SEALED_CONC * 1000) return { ok: true };
-        return { ok: false, msg: 'The marker is not where the sealed sample\'s reading meets the line through the standards.' };
+        return { ok: false, msg: 'The marker does not match the unknown sample\'s absorbance on the calibration line.' };
       },
       reward: {
-        log: 'The line through the standards gave the sealed reading back.',
+        log: 'Calibration line gave the unknown concentration.',
         title: 'Calibration Curve',
-        body: 'Standards of known concentration give a line of absorbance against concentration, and an unknown sample\'s reading is read back off that line. This calibration curve is how a chemist measures how much of a coloured substance is dissolved.',
-        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'The sealed sample: half the concentration of the first cuvette, so its absorbance is half as large.' },
+        body: 'Standards of known concentration establish the linear relationship between absorbance and concentration. An unknown sample\'s absorbance is then read off the line to determine its exact concentration.',
+        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'Unknown sample: concentration is determined directly from its absorbance on the calibration line.' },
         last: true
       }
     };
@@ -282,7 +282,7 @@ export const STAGES = [
 const NOTES = {
   2: ['Put the cuvette in the holder to see the light', 'that gets through it.'],
   3: ['Put a cuvette in the holder and turn the', 'Wavelength dial.'],
-  4: ['Lay the dropper on a cuvette to add a drop;', 'lay Empty on one to start again.']
+  4: ['Stock adds +2.0 mmol/L;', 'Rinse resets to 0.0 mmol/L.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -294,11 +294,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A solution displays the complementary color of the light it absorbs. Absorbance is directly proportional to concentration, allowing light measurement to quantify solute amounts.'
+      body: 'Absorbance depends on solute concentration, not liquid volume. In a standard 1.0 cm cell, doubling concentration doubles the absorbing particles encountered by the light beam, doubling absorbance (A = ε·b·c).'
     },
     {
       heading: 'Why It Matters',
-      body: 'Spectrophotometry and calibration curves are standard analytical methods used across chemistry, biochemistry, and medicine to determine unknown concentrations.'
+      body: 'Spectrophotometry quantifies dissolved compounds directly from absorbance. Constructing a calibration curve from known standards allows rapid determination of unknown sample concentrations.'
     }
   ]
 };

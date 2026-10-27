@@ -133,12 +133,7 @@ export const STAGES = [
         return {
           log: 'Squeezed hard, the gauge reads above the law.',
           title: 'Molecular Volume',
-          body: 'At high pressures, helium exerts more pressure than the gas law predicts. Gas particles occupy finite volume themselves, leaving less empty space to move in.',
-          model: {
-            type: 'gas',
-            boxes: [{ label: 'Roomy', w: 3.4, parts: [{ kind: 'He', n: 12 }] }, { label: 'Squeezed', w: 1.0, h: 1.0, d: 1.0, parts: [{ kind: 'He', n: 12 }] }],
-            caption: 'The same 12 particles in a roomy vessel and in a squeezed one. Not to scale.'
-          }
+          body: 'At high pressures, helium exerts more pressure than the gas law predicts. Gas particles occupy finite volume themselves, leaving less empty space to move in.'
         };
       }
     };

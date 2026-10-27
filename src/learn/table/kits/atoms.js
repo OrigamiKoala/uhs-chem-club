@@ -1129,7 +1129,6 @@ function paintDetector(ctx, p, state, o) {
  */
 function paintSlateAtom(ctx, p, state, o) {
   const a = slateAtom(p, state);
-  const sl = slateOf(state, p.props.slate);
   disc(ctx, o.x, o.y, o.r, '#16140f', o.lit ? AMBER : PLATE_COLORS.steel, o.lit ? 2 : 1.4);
   // The lamp ring.
   if (a.lamp === 'full' || a.lamp === 'expanded' || a.lamp === 'amber') {
@@ -1163,70 +1162,15 @@ function paintSlateAtom(ctx, p, state, o) {
     ctx.stroke();
     ctx.setLineDash?.([]);
   }
-  // Pairs and singles round the rim, on the side away from its joints.
-  let bx = 0;
-  let by = 0;
-  for (const [jid, i, j] of sl.fixture.props.joints) {
-    if (i !== a.i && j !== a.i) continue;
-    const jp = state.pieces[jid];
-    bx += jp.at.x - p.at.x;
-    by += jp.at.y - p.at.y;
-  }
-  const base = bx || by ? Math.atan2(-by, -bx) : -Math.PI / 2;
-  const n = a.lone + a.dots;
-  const gap = n > 3 ? 0.95 : 1.2;
-  ctx.fillStyle = PLATE_COLORS.phosphor;
-  const dotR = Math.max(1.1, o.r * 0.1);
-  for (let k = 0; k < n; k++) {
-    const ang = base + (k - (n - 1) / 2) * gap;
-    const cx = o.x + Math.cos(ang) * o.r * 0.7;
-    const cy = o.y + Math.sin(ang) * o.r * 0.7;
-    if (k >= a.lone) {
-      ctx.beginPath(); ctx.arc(cx, cy, dotR, 0, Math.PI * 2); ctx.fill();
-    } else {
-      const tx = -Math.sin(ang) * o.r * 0.16;
-      const ty = Math.cos(ang) * o.r * 0.16;
-      ctx.beginPath(); ctx.arc(cx + tx, cy + ty, dotR, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx - tx, cy - ty, dotR, 0, Math.PI * 2); ctx.fill();
-    }
-  }
 }
 
-/** A joint: the place a pair could go between two atoms; a shared pair stands in it as a bar. */
+/** A joint: the place a pair could go between two atoms. */
 function paintJoint(ctx, p, state, o) {
-  const A = state.pieces[p.props.a].at;
-  const B = state.pieces[p.props.b].at;
-  const ang = Math.atan2(B.y - A.y, B.x - A.x);
-  const n = p.props.pairs || 0;
-  disc(ctx, o.x, o.y, o.r, '#1d1b17', o.lit ? AMBER : (n ? PLATE_COLORS.phosphor : PLATE_COLORS.rim), o.lit ? 2 : 1.2);
-  // The bond gauge's reading, printed beside the joint: the length the real molecule measures here.
-  if (p.props.measured && n) {
-    const sl = slateOf(state, p.props.slate);
-    const len = sl ? gaugeLength(sl.mol, sl.placed, lewisKey(p.props.i, p.props.j)) : null;
-    if (len != null) {
-      const side = ang > -Math.PI / 2 && ang <= Math.PI / 2 ? -1 : 1;
-      plateText(ctx, `${len} pm`, o.x - Math.sin(ang) * o.r * 2.6 * side, o.y + Math.cos(ang) * o.r * 2.6 * side, { size: Math.max(7, Math.round(o.r * 1.05)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 2.8 });
-    }
-  }
-  if (!n) {
-    ctx.strokeStyle = PLATE_COLORS.dim;
-    ctx.lineWidth = 1;
-    ctx.setLineDash?.([2, 2]);
+  if (o.lit) {
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(o.x, o.y, o.r * 0.5, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash?.([]);
-    return;
-  }
-  ctx.strokeStyle = PLATE_COLORS.phosphor;
-  ctx.lineWidth = Math.max(1.4, o.r * 0.2);
-  const nx = -Math.sin(ang);
-  const ny = Math.cos(ang);
-  for (let k = 0; k < n; k++) {
-    const off = (k - (n - 1) / 2) * o.r * 0.55;
-    ctx.beginPath();
-    ctx.moveTo(o.x + nx * off - Math.cos(ang) * o.r * 0.62, o.y + ny * off - Math.sin(ang) * o.r * 0.62);
-    ctx.lineTo(o.x + nx * off + Math.cos(ang) * o.r * 0.62, o.y + ny * off + Math.sin(ang) * o.r * 0.62);
+    ctx.arc(o.x, o.y, o.r * 0.6, 0, Math.PI * 2);
     ctx.stroke();
   }
 }
@@ -1490,26 +1434,136 @@ function paintReader(ctx, f, state, b) {
 }
 
 /**
- * A slate's board: a line from every joint to its two atoms (dashed while nothing stands in the joint, solid
- * when a pair does), and the tray's count. It reads the pieces and nothing else.
+ * A slate's board: Lewis bond lines fully connecting atoms (single, double, triple), lone pair electron
+ * dots drawn around the central chips, and the tray's count. It reads the pieces and nothing else.
  */
 function paintSlate(ctx, f, state, b) {
   const sl = slateOf(state, f.id);
-  ctx.lineWidth = 1;
+
+  // 1. Bonds between atoms (represented as lines fully connecting the two atoms)
   for (const [jid, i, j] of f.props.joints) {
     const jp = state.pieces[jid];
+    const apA = state.pieces[f.props.atoms[i]];
+    const apB = state.pieces[f.props.atoms[j]];
+    if (!jp || !apA || !apB) continue;
+    const ax = b.X(apA.at.x);
+    const ay = b.Y(apA.at.y);
+    const bx = b.X(apB.at.x);
+    const by = b.Y(apB.at.y);
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
     const n = jp.props.pairs || 0;
-    ctx.strokeStyle = n ? PLATE_COLORS.phosphor : PLATE_COLORS.rim;
-    ctx.setLineDash?.(n ? [] : [3, 4]);
-    for (const id of [f.props.atoms[i], f.props.atoms[j]]) {
-      const ap = state.pieces[id];
+
+    if (!n) {
+      // Empty joint: faint dashed guide line between atoms, and a subtle drop indicator at the midpoint
+      ctx.strokeStyle = jp.lit ? AMBER : PLATE_COLORS.rim;
+      ctx.lineWidth = 1;
+      ctx.setLineDash?.([3, 4]);
       ctx.beginPath();
-      ctx.moveTo(b.X(ap.at.x), b.Y(ap.at.y));
-      ctx.lineTo(b.X(jp.at.x), b.Y(jp.at.y));
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
       ctx.stroke();
+      ctx.setLineDash?.([]);
+
+      const mx = (ax + bx) / 2;
+      const my = (ay + by) / 2;
+      ctx.strokeStyle = jp.lit ? AMBER : PLATE_COLORS.dim;
+      ctx.lineWidth = jp.lit ? 2 : 1;
+      ctx.setLineDash?.([2, 2]);
+      ctx.beginPath();
+      ctx.arc(mx, my, Math.max(3, b.sc * 0.7), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash?.([]);
+    } else {
+      // Bond lines fully connecting the two atoms (Lewis diagram)
+      ctx.strokeStyle = jp.lit ? AMBER : PLATE_COLORS.phosphor;
+      ctx.lineWidth = Math.max(1.8, b.sc * 0.24);
+      ctx.setLineDash?.([]);
+      const off = Math.max(2.8, b.sc * 0.42);
+      for (let k = 0; k < n; k++) {
+        const d = (k - (n - 1) / 2) * off;
+        ctx.beginPath();
+        ctx.moveTo(ax + nx * d, ay + ny * d);
+        ctx.lineTo(bx + nx * d, by + ny * d);
+        ctx.stroke();
+      }
+    }
+
+    // Bond length gauge reading if measured
+    if (jp.props.measured && n) {
+      const gLen = gaugeLength(sl.mol, sl.placed, lewisKey(i, j));
+      if (gLen != null) {
+        const mx = (ax + bx) / 2;
+        const my = (ay + by) / 2;
+        const ang = Math.atan2(dy, dx);
+        const side = ang > -Math.PI / 2 && ang <= Math.PI / 2 ? -1 : 1;
+        const dist = Math.max(12, b.sc * 2.2);
+        plateText(ctx, `${gLen} pm`, mx + nx * side * dist, my + ny * side * dist, {
+          size: Math.max(8, Math.round(b.sc * 1.8)),
+          weight: 700,
+          align: 'center',
+          base: 'middle',
+          color: AMBER
+        });
+      }
     }
   }
-  ctx.setLineDash?.([]);
+
+  // 2. Electron lone pairs drawn as dots around the central / atom chips instead of on them
+  for (const aid of f.props.atoms) {
+    const ap = state.pieces[aid];
+    if (!ap) continue;
+    const a = slateAtom(ap, state);
+    const n = a.lone + a.dots;
+    if (!n) continue;
+
+    // Vector pointing towards joints connected to this atom
+    let bxSum = 0;
+    let bySum = 0;
+    for (const [jid, i, j] of f.props.joints) {
+      if (f.props.atoms[i] !== aid && f.props.atoms[j] !== aid) continue;
+      const jp = state.pieces[jid];
+      if (jp) {
+        bxSum += jp.at.x - ap.at.x;
+        bySum += jp.at.y - ap.at.y;
+      }
+    }
+    const base = bxSum || bySum ? Math.atan2(-bySum, -bxSum) : -Math.PI / 2;
+    const gap = n > 3 ? 0.85 : 1.1;
+    const atomX = b.X(ap.at.x);
+    const atomY = b.Y(ap.at.y);
+    const dotDist = (SLATE_R + 1.8) * b.sc;
+    const dotR = Math.max(1.8, b.sc * 0.38);
+    ctx.fillStyle = PLATE_COLORS.phosphor;
+
+    for (let k = 0; k < n; k++) {
+      const ang = base + (k - (n - 1) / 2) * gap;
+      const cx = atomX + Math.cos(ang) * dotDist;
+      const cy = atomY + Math.sin(ang) * dotDist;
+      if (k >= a.lone) {
+        // Single unpaired electron: one dot
+        ctx.beginPath();
+        ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Lone pair: two dots side-by-side tangent to the circle
+        const spread = Math.max(2.6, b.sc * 0.52);
+        const tx = -Math.sin(ang) * spread;
+        const ty = Math.cos(ang) * spread;
+        ctx.beginPath();
+        ctx.arc(cx + tx, cy + ty, dotR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx - tx, cy - ty, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // 3. Tray count & charge
   const size = Math.max(8, Math.round(2.3 * b.sc));
   plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
   if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 4, b.y0 + size * 2.4, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
@@ -1711,6 +1765,7 @@ function run(state, fixtureId) {
  * pair of electrons a stamped cap, the sockets on a board brass rings. Other worlds keep the shared bead (null).
  */
 function piece3d(p, state, c) {
+  if (p.kind === 'joint') return buildJointSocket(c, { face: c.face() });
   if (c.skin !== LIGAR_SKIN) return null;
   switch (p.kind) {
     case 'atom': case 'ion': {
@@ -1720,7 +1775,6 @@ function piece3d(p, state, c) {
       }
       return null;
     }
-    case 'joint': return buildJointSocket(c, { face: c.face() });
     case 'pairs': case 'single': case 'lift': case 'three': case 'fcstamp': case 'mark': case 'gauge': return buildToolCap(c, { face: c.face() });
     default: return null;
   }

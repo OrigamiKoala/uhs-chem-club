@@ -50,11 +50,12 @@ function slab(ctx, o, { hw, hh }, tone = '#2a2620') {
   return { x0, y0, w, h };
 }
 
-/** The tint of a solution: more of it, a deeper colour. Lake water is clear. */
+/** The tint of a solution: concentration sets color depth. Solvent is clear water. */
 function tintOf(piece) {
   const conc = concOf(piece);
-  const a = Math.min(0.85, conc / 0.012);
-  return `rgba(60, 120, 170, ${a.toFixed(2)})`;
+  if (conc <= 0 && !piece.props.blank) return 'rgba(210, 235, 250, 0.14)';
+  const a = Math.min(0.88, 0.22 + (conc / 0.012) * 0.66);
+  return `rgba(38, 140, 220, ${a.toFixed(2)})`;
 }
 
 function paintCuvette(ctx, p, state, o) {
@@ -76,31 +77,27 @@ function paintCuvette(ctx, p, state, o) {
   ctx.fillStyle = '#2a3336';
   ctx.fillRect(tx, ty + ch - floorH, cw, floorH);
 
-  const level = p.props.sealed ? 0.8 : Math.min(1, (p.props.drops || 0) / 6);
-  if (concOf(p) > 0 || p.props.blank) {
-    const rawLv = p.props.blank ? 0.8 : (p.props.conc != null ? 0.8 : level);
-    const lv = 0.22 + 0.78 * rawLv;
-    const liquidH = (ch - floorH - 1.2 * o.sc) * lv;
-    const ly = ty + ch - floorH - liquidH;
+  // In spectrophotometry, cuvettes are always filled to the standard optical mark (volume does not determine absorbance).
+  const liquidH = (ch - floorH - 1.2 * o.sc) * 0.82;
+  const ly = ty + ch - floorH - liquidH;
 
-    // Liquid fill
-    ctx.fillStyle = tintOf(p);
-    ctx.beginPath();
-    ctx.moveTo(tx + 1, ly);
-    ctx.quadraticCurveTo(o.x, ly + 1.0 * o.sc, tx + cw - 1, ly);
-    ctx.lineTo(tx + cw - 1, ty + ch - floorH);
-    ctx.lineTo(tx + 1, ty + ch - floorH);
-    ctx.closePath();
-    ctx.fill();
+  // Liquid fill (color intensity represents solute concentration)
+  ctx.fillStyle = tintOf(p);
+  ctx.beginPath();
+  ctx.moveTo(tx + 1, ly);
+  ctx.quadraticCurveTo(o.x, ly + 1.0 * o.sc, tx + cw - 1, ly);
+  ctx.lineTo(tx + cw - 1, ty + ch - floorH);
+  ctx.lineTo(tx + 1, ty + ch - floorH);
+  ctx.closePath();
+  ctx.fill();
 
-    // Meniscus surface tension highlight
-    ctx.strokeStyle = p.props.blank ? STEEL : 'rgba(180, 220, 255, 0.65)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(tx + 1, ly);
-    ctx.quadraticCurveTo(o.x, ly + 1.0 * o.sc, tx + cw - 1, ly);
-    ctx.stroke();
-  }
+  // Meniscus surface tension highlight
+  ctx.strokeStyle = concOf(p) > 0 ? 'rgba(180, 225, 255, 0.65)' : 'rgba(200, 220, 235, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(tx + 1, ly);
+  ctx.quadraticCurveTo(o.x, ly + 1.0 * o.sc, tx + cw - 1, ly);
+  ctx.stroke();
 
   // Clear optical walls (Left and Right) and open top U-frame
   ctx.strokeStyle = STEEL;
@@ -129,8 +126,13 @@ function paintCuvette(ctx, p, state, o) {
   ctx.closePath();
   ctx.fill();
 
-  if (!p.props.sealed && p.props.conc == null) say(ctx, `${p.props.drops || 0} DROPS`, o.x, box.y0 + box.h - 1.6 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'center', color: DUST, maxW: box.w - 2 });
-  else if (p.props.read != null) say(ctx, p.props.read.toFixed(3), o.x, box.y0 + box.h - 1.6 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'center', color: PHOS, weight: 700, maxW: box.w - 2 });
+  // Solute concentration display on cuvette base (or absorbance for measured unknown)
+  const c = concOf(p);
+  const text = p.props.sealed
+    ? (p.props.read != null ? `A = ${p.props.read.toFixed(3)}` : 'UNKNOWN')
+    : `${(c * 1000).toFixed(1)} mmol/L`;
+  const col = p.props.sealed && p.props.read != null ? PHOS : (c > 0 ? AMBER : DUST);
+  say(ctx, text, o.x, box.y0 + box.h - 1.6 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'center', color: col, weight: 600, maxW: box.w - 2 });
 }
 
 function paintChip(ctx, p, state, o) {
@@ -157,19 +159,22 @@ function paintTool(ctx, p, state, o) {
   say(ctx, p.label, o.x, o.y, Math.max(7, 2 * o.sc), { align: 'center', weight: 700, maxW: box.w - 3 });
 }
 
-/** What the built table needs of a cuvette: how full its column is and how deeply it is tinted (an rgb triple and a 0 to 1 depth). */
+/** What the built table needs of a cuvette: full optical column height, and tint depth scaling with concentration. */
 export function cuvetteLook(p) {
   const conc = concOf(p);
-  const level = p.props.sealed || p.props.blank || p.props.conc != null ? 0.8 : Math.min(1, (p.props.drops || 0) / 6);
-  const depth = Math.min(0.85, conc / 0.012);
-  return { level: conc > 0 || p.props.blank ? level : 0, tint: conc > 0 ? { rgb: [60, 120, 170], depth } : null };
+  const depth = Math.min(0.88, 0.2 + (conc / 0.012) * 0.7);
+  return { level: 0.82, tint: conc > 0 ? { rgb: [38, 140, 220], depth } : { rgb: [210, 235, 250], depth: 0.06 } };
 }
 
-/** The words on a cuvette's foot: its name over its drops or its reading, painted on a flat legend of `W` x `H` pixels. */
+/** The words on a cuvette's foot: its name over its concentration (or absorbance once read). */
 export function paintLegend(ctx, p, W, H) {
   say(ctx, p.label, W / 2, H * 0.32, H * 0.38, { align: 'center', weight: 700, maxW: W - 8 });
-  if (!p.props.sealed && p.props.conc == null) say(ctx, `${p.props.drops || 0} DROPS`, W / 2, H * 0.74, H * 0.3, { align: 'center', color: DUST, maxW: W - 8 });
-  else if (p.props.read != null) say(ctx, p.props.read.toFixed(3), W / 2, H * 0.74, H * 0.3, { align: 'center', color: PHOS, weight: 700, maxW: W - 8 });
+  const c = concOf(p);
+  const text = p.props.sealed
+    ? (p.props.read != null ? `A = ${p.props.read.toFixed(3)}` : 'UNKNOWN')
+    : `${(c * 1000).toFixed(1)} mmol/L`;
+  const col = p.props.sealed && p.props.read != null ? PHOS : (c > 0 ? AMBER : DUST);
+  say(ctx, text, W / 2, H * 0.74, H * 0.3, { align: 'center', color: col, weight: 600, maxW: W - 8 });
 }
 
 const PAINTERS = { cuvette: paintCuvette, chip: paintChip, motion: paintMotion, reading: paintReading, dropper: paintTool, rinse: paintTool };
@@ -266,18 +271,73 @@ function paintSpectro(ctx, f, state, b) {
   if (f.props.molecule && f.dials.region) { paintMolecule(ctx, f, state, b); return; }
   if (f.props.strip) { paintStrip(ctx, f, state, b); return; }
   const r = spectroRead(state, f.id);
-  const x = 23;
-  const top = f.props.readAt ?? 24;
-  if (!r.piece) { say(ctx, 'NO CUVETTE IN THE BEAM', F.x(x), F.y(top), F.size(2.6, 7), { color: DIM, maxW: F.len(f.size.w - x - 2) }); return; }
-  say(ctx, `${f.props.word || 'ABSORBANCE'} ${r.A.toFixed(3)}`, F.x(x), F.y(top), F.size(3, 8), { color: PHOS, weight: 700, maxW: F.len(f.size.w - x - 2) });
-  say(ctx, `${r.nm} nm, ${r.path} cm`, F.x(x), F.y(top + 4), F.size(2.5, 7), { color: DUST, maxW: F.len(f.size.w - x - 2) });
-  // How much of the beam is left, as a bar.
+
+  // Optical compartment (Left: x = 1 to 24)
+  const optX0 = F.x(1.5);
+  const optY0 = F.y(4.5);
+  const optW = F.len(23);
+  const optH = F.len(f.size.h - 6);
+
+  ctx.fillStyle = '#111415';
+  ctx.fillRect(optX0, optY0, optW, optH);
+  ctx.strokeStyle = '#1f2527';
+  ctx.strokeRect(Math.round(optX0) + 0.5, Math.round(optY0) + 0.5, Math.round(optW), Math.round(optH));
+
+  say(ctx, 'SOURCE', F.x(2.5), F.y(7.5), F.size(1.8, 6), { color: DUST, weight: 600 });
+  say(ctx, 'SENSOR', F.x(23.5), F.y(7.5), F.size(1.8, 6), { align: 'right', color: DUST, weight: 600 });
+
+  // Light beam guide in optical compartment
+  const beamY = F.y(f.size.h - 14.7);
+  ctx.strokeStyle = 'rgba(251, 146, 60, 0.25)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(F.x(3.5), beamY);
+  ctx.lineTo(F.x(22.5), beamY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Digital Display Panel (Right: x = 26 to 72, y = 4.5 to 26)
+  const sx = 26;
+  const sy = 4.5;
+  const sw = f.size.w - sx - 2.5;
+  const sh = 21.5;
+
+  const scrX = F.x(sx);
+  const scrY = F.y(sy);
+  const scrW = F.len(sw);
+  const scrH = F.len(sh);
+
+  ctx.fillStyle = '#080c0e';
+  ctx.fillRect(scrX, scrY, scrW, scrH);
+  ctx.strokeStyle = '#1e282c';
+  ctx.strokeRect(Math.round(scrX) + 0.5, Math.round(scrY) + 0.5, Math.round(scrW), Math.round(scrH));
+
+  // Screen header
+  say(ctx, 'SPECTROPHOTOMETER', F.x(sx + 2), F.y(sy + 3.0), F.size(2.0, 6), { color: DUST, weight: 600 });
+
+  if (!r.piece) {
+    say(ctx, 'CELL EMPTY', F.x(sx + 2), F.y(sy + 9.5), F.size(3.0, 8), { color: DIM, weight: 700 });
+    say(ctx, `Wavelength ${r.nm} nm  |  Path 1.0 cm`, F.x(sx + 2), F.y(sy + 14.5), F.size(2.0, 6.5), { color: DUST });
+    say(ctx, 'Slide cuvette into beam to read', F.x(sx + 2), F.y(sy + 18.0), F.size(1.8, 6), { color: '#4d483f' });
+    return;
+  }
+
+  // Active reading
+  say(ctx, `${f.props.word || 'ABSORBANCE'}  ${r.A.toFixed(3)}`, F.x(sx + 2), F.y(sy + 9.5), F.size(3.4, 9.5), { color: PHOS, weight: 700 });
   const left = Math.pow(10, -r.A);
-  const bw = f.size.w - x - 2;
-  ctx.strokeStyle = RIM;
-  ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(top + 6.6)) + 0.5, Math.round(F.len(bw)), Math.round(F.len(1.8)));
+  const tPct = (left * 100).toFixed(1);
+  say(ctx, `T = ${tPct}%  |  ${r.nm} nm  |  ${r.path} cm`, F.x(sx + 2), F.y(sy + 14.2), F.size(2.1, 7), { color: DUST });
+
+  // Transmittance bar
+  const barX = F.x(sx + 2);
+  const barY = F.y(sy + 17.2);
+  const barW = F.len(sw - 4);
+  const barH = F.len(2.0);
+  ctx.strokeStyle = '#223035';
+  ctx.strokeRect(Math.round(barX) + 0.5, Math.round(barY) + 0.5, Math.round(barW), Math.round(barH));
   ctx.fillStyle = AMBER;
-  ctx.fillRect(F.x(x) + 1, F.y(top + 6.6) + 1, Math.max(0, F.len(bw) * left - 1), Math.max(1, F.len(1.8) - 2));
+  ctx.fillRect(barX + 1, barY + 1, Math.max(0, barW * left - 1), Math.max(1, barH - 2));
 }
 
 function paintPlaque(ctx, f, state, b) {

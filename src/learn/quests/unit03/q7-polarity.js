@@ -102,7 +102,7 @@ export const STAGES = [
       log: 'The harder puller takes the minus.',
       title: 'Polar Covalent Bonds',
       body: 'Unequal sharing of electrons produces partial charges: the more electronegative chlorine atom becomes partially negative while hydrogen becomes partially positive. This creates a polar covalent bond that aligns in an electric field.',
-      model: { type: 'shape', mol: 'HCl', caption: 'Hydrogen chloride molecule with a polar covalent bond.' }
+      model: { type: 'shape', mol: 'HCl', caption: 'HCl · Polar' }
     }
   },
 
@@ -158,7 +158,7 @@ export const STAGES = [
         log: 'Water, ammonia and chloroform swung round. Carbon dioxide and carbon tetrachloride stayed put.',
         title: 'Molecular Polarity and Symmetry',
         body: `${verdictLine(QUEST_KEY, 'stays')}A polar molecule has bond dipole moments that sum to a net dipole moment, aligning in an electric field. In symmetrical molecules like carbon dioxide and carbon tetrachloride, individual bond dipoles cancel, making them nonpolar.`,
-        model: { type: 'shape', mol: 'H2O', caption: 'Water molecule: bent geometry prevents bond dipoles from canceling.' }
+        model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Net dipole' }
       };
     }
   },
