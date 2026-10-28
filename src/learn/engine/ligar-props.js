@@ -542,13 +542,22 @@ export function buildJointSocket(c) {
 
 /* ------------------------------------------------------------------ the hub of arms, balloons, the protractor */
 
-/** The hub: a heavy cast ball on a turned base, sockets all round it, the atom's symbol on a plate on its crown. */
+/** The hub: a heavy cast ball floating above its turned emitter base on the plate, sockets all round it, the atom's symbol on a plate on its crown. */
 export function buildHubBall(c, { face, body }) {
   const { hw, mats: m } = c;
   const g = new THREE.Group();
   const R = hw * 1.0;
+  // Pedestal base anchored to the bench plate
   g.add(mesh(lathe([[R * 0.5, 0], [R * 0.9, 0], [R * 0.96, R * 0.12], [R * 0.7, R * 0.22], [R * 0.4, R * 0.26]], 32), m.ligIron));
-  const cy = R * 0.26 + R * 0.7;
+  // Levitation emitter collar on the base
+  const emitter = mesh(new THREE.TorusGeometry(R * 0.42, R * 0.04, 8, 24), m.ligBrassWorn);
+  emitter.rotation.x = Math.PI / 2;
+  emitter.position.y = R * 0.26;
+  g.add(emitter);
+
+  // The hub ball floats in the air above the bench plate
+  const floatY = R * 2.4;
+  const cy = floatY;
   const bodyMat = c.own(new THREE.MeshPhysicalMaterial({ color: body, roughness: 0.3, metalness: 0.2, clearcoat: 0.6, clearcoatRoughness: 0.26 }));
   const ball = mesh(new THREE.SphereGeometry(R * 0.7, 36, 24), bodyMat);
   ball.position.y = cy;
@@ -579,7 +588,19 @@ export function buildArmBall(c, { face, body, mult = 1 }) {
   const { hw, mats: m } = c;
   const g = new THREE.Group();
   const R = hw * 0.82;
-  g.add(mesh(lathe([[0, 0], [R * 0.55, 0], [R * 0.6, R * 0.1], [R * 0.4, R * 0.18], [0, R * 0.2]], 24), m.ligIron));
+  const stand = new THREE.Group();
+  stand.name = 'arm-stand';
+  const baseMesh = mesh(lathe([[0, 0], [R * 0.55, 0], [R * 0.6, R * 0.1], [R * 0.4, R * 0.18], [0, R * 0.2]], 24), m.ligIron);
+  stand.add(baseMesh);
+  // A bond to a neighbour, one brass band round the stem per shared pair.
+  for (let i = 0; i < Math.min(3, mult); i++) {
+    const band = at(mesh(new THREE.TorusGeometry(R * 0.5, R * 0.05, 6, 20), m.ligBrassWorn), 0, R * 0.22 + i * R * 0.1, 0);
+    band.rotation.x = Math.PI / 2;
+    stand.add(band);
+  }
+  g.add(stand);
+  g.userData.baseMesh = stand;
+
   const cy = R * 0.2 + R * 0.88;
   const bodyMat = c.own(new THREE.MeshPhysicalMaterial({ color: body, roughness: 0.34, metalness: 0.04, clearcoat: 0.55, clearcoatRoughness: 0.28 }));
   const ball = mesh(new THREE.SphereGeometry(R, 32, 22), bodyMat);
@@ -597,12 +618,6 @@ export function buildArmBall(c, { face, body, mult = 1 }) {
   cap.position.y = cy;
   g.add(cap);
   g.userData.joinY = cy;
-  // A bond to a neighbour, one brass band round the stem per shared pair.
-  for (let i = 0; i < Math.min(3, mult); i++) {
-    const band = at(mesh(new THREE.TorusGeometry(R * 0.5, R * 0.05, 6, 20), m.ligBrassWorn), 0, R * 0.22 + i * R * 0.1, 0);
-    band.rotation.x = Math.PI / 2;
-    g.add(band);
-  }
   return done(g, cy + R * 0.88);
 }
 
@@ -611,17 +626,22 @@ export function buildBalloonLobe(c) {
   const { hw, mats: m } = c;
   const g = new THREE.Group();
   const R = hw * 0.78;
-  g.add(mesh(lathe([[0, 0], [R * 0.5, 0], [R * 0.54, R * 0.1], [R * 0.3, R * 0.2], [0, R * 0.2]], 24), m.ligIron));
+  const stand = mesh(lathe([[0, 0], [R * 0.5, 0], [R * 0.54, R * 0.1], [R * 0.3, R * 0.2], [0, R * 0.2]], 24), m.ligIron);
+  g.add(stand);
+  g.userData.baseMesh = stand;
+
+  const cy = R * 0.2 + R * 1.18 * 0.9;
   const lobe = c.own(new THREE.MeshPhysicalMaterial({ color: 0xb9a56a, roughness: 0.18, metalness: 0, transparent: true, opacity: 0.62, clearcoat: 1, clearcoatRoughness: 0.1 }));
   const geo = new THREE.SphereGeometry(R, 28, 18);
   geo.scale(1, 1.18, 0.82);
   const balloon = mesh(geo, lobe, { cast: false });
-  balloon.position.y = R * 0.2 + R * 1.18 * 0.9;
+  balloon.position.y = cy;
   g.add(balloon);
   // A knot at the neck.
   const knot = at(mesh(new THREE.TorusGeometry(R * 0.2, R * 0.07, 6, 14), m.ligBrassWorn), 0, R * 0.2 + R * 0.12, 0);
   knot.rotation.x = Math.PI / 2;
   g.add(knot);
+  g.userData.joinY = cy;
   return done(g, R * 0.2 + R * 2.1);
 }
 

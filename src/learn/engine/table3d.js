@@ -1252,7 +1252,34 @@ export class Table3D extends BenchViewer3D {
         else if (role === 'well') socketElev = 0.022;
       }
       const baseElev = isLensOverDish ? DISH_H + 0.002 : (kitElev || socketElev || 0);
-      e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);
+
+      const customPose = getKit(this.state.kit).piecePose3d?.(p, this.state, {
+        at, pl, ground: GROUND_Y, map: this.map, s: this.map.s,
+        lift: this.lifts[id] || 0,
+        isDragging: this.drag?.id === id,
+        toPlate: this.map.toPlate,
+        THREE
+      });
+
+      if (customPose) {
+        e.group.position.set(customPose.x, customPose.y, customPose.z);
+        if (customPose.quaternion) {
+          e.group.quaternion.copy(customPose.quaternion);
+        } else if (customPose.rotation) {
+          e.group.rotation.set(customPose.rotation.x || 0, customPose.rotation.y || 0, customPose.rotation.z || 0);
+        } else {
+          e.group.quaternion.identity();
+        }
+        if (e.group.userData.baseMesh) {
+          e.group.userData.baseMesh.visible = !customPose.hideBase;
+        }
+      } else {
+        e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);
+        e.group.quaternion.identity();
+        if (e.group.userData.baseMesh) {
+          e.group.userData.baseMesh.visible = true;
+        }
+      }
     }
     const m = this._swarmM || (this._swarmM = new THREE.Matrix4());
     for (const sw of this.swarms?.values() || []) {

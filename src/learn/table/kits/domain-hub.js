@@ -326,7 +326,7 @@ export function paintHubLink(ctx, link, o) {
   return true;
 }
 
-export const hubLinkRods = link => (link?.hub ? (link.lone ? 1 : link.mult || 1) : undefined);
+export const hubLinkRods = link => (link?.hub ? (link.lone ? 0 : link.mult || 1) : undefined);
 
 /** The plate behind a hub: how many arms it holds and the angle the protractor last read. */
 function paintHubPlate(ctx, f, state, b) {

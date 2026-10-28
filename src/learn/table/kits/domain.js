@@ -13,10 +13,11 @@
  * (one id, `domain`) the way a table declares it.
  */
 
+import * as THREE from 'three';
 import { registerKit } from './registry.js';
 import {
   planHubJoin, hubPairable, paintHubKind, printedHub, faceKeyHub, paintHubLink, hubLinkRods, paintHubFixture, settleHubs,
-  HUB_R, ARM_R
+  HUB_R, ARM_R, turnOf, openingView, hubRead
 } from './domain-hub.js';
 import {
   planFieldJoin, fieldPairable, runPlates, paintFieldKind, printedField, faceKeyField, paintFieldFixture, MOL_RECT, STREAM_RECT,
@@ -122,6 +123,70 @@ function piece3d(p, state, c) {
   }
 }
 
+/**
+ * Solid positioning for domain pieces on the bench: the hub ball floats above its emitter base,
+ * and attached arms/balloons spread out around it in true 3D space according to their VSEPR vectors.
+ */
+function piecePose3d(p, state, c) {
+  if (c.isDragging) return null;
+  if (p.kind === 'hub') {
+    return { x: c.pl.x, y: c.ground, z: c.pl.z };
+  }
+  if (p.kind === 'arm' || p.kind === 'balloon') {
+    const hubId = p.joinedTo?.find(id => state.pieces[id]?.kind === 'hub');
+    if (!hubId) return null;
+    const hub = state.pieces[hubId];
+    if (!hub) return null;
+    const r = hubRead(state, hub.id);
+    const idx = r.index(p.id);
+    if (idx < 0 || !r.plan?.vectors?.[idx]) return null;
+
+    const v = r.plan.vectors[idx].v;
+    const view = openingView(r.plan.vectors);
+    const yaw = view.yaw + turnOf(state, hub);
+
+    // Rotate unit vector around vertical Y axis
+    const wx = v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw);
+    const wy = v[1];
+    const wz = -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw);
+
+    const plHub = c.toPlate(hub.at);
+    const floatY = HUB_R * c.s * 2.4;
+    const hubCenterX = plHub.x;
+    const hubCenterY = c.ground + floatY;
+    const hubCenterZ = plHub.z;
+
+    const bondDist = 15.5 * c.s;
+    const targetX = hubCenterX + bondDist * wx;
+    const targetY = hubCenterY + bondDist * wy;
+    const targetZ = hubCenterZ + bondDist * wz;
+
+    const cy = p.kind === 'balloon'
+      ? (ARM_R * c.s * 0.78 * (0.2 + 1.18 * 0.9))
+      : (ARM_R * c.s * 0.82 * (0.2 + 0.88));
+
+    if (p.kind === 'balloon') {
+      const dir = new THREE.Vector3(wx, wy, wz).normalize();
+      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      return {
+        x: targetX,
+        y: targetY - cy,
+        z: targetZ,
+        quaternion: quat,
+        hideBase: true
+      };
+    }
+
+    return {
+      x: targetX,
+      y: targetY - cy,
+      z: targetZ,
+      hideBase: true
+    };
+  }
+  return null;
+}
+
 export const DOMAIN_KIT = {
   id: DOMAIN_KIT_ID,
   joinGap: 1.25,
@@ -144,6 +209,7 @@ export const DOMAIN_KIT = {
   run,
   settle,
   piece3d,
+  piecePose3d,
   deck3d: ligarDeck,
   paintPiece,
   printed,
