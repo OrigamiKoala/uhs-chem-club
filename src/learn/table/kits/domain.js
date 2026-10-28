@@ -32,6 +32,7 @@ import { piecesIn } from './atoms.js';
 import {
   LIGAR_SKIN, buildHubBall, buildArmBall, buildBalloonLobe, buildProtractor, buildEnamelTile, buildProbe, buildToolCap, ligarDeck
 } from '../../engine/ligar-props.js';
+import { buildOrbitalPiece3D, buildMixer3D } from '../../engine/orbital-props.js';
 
 export const DOMAIN_KIT_ID = 'domain';
 
@@ -118,9 +119,18 @@ function piece3d(p, state, c) {
     case 'stream': return buildEnamelTile(c, {});
     case 'arrows': return buildProbe(c, { text: p.label });
     case 'rod': return buildProbe(c, { text: p.label, rod: true });
-    case 'swapper': case 'orb': return buildToolCap(c, { face: c.face() });
+    case 'swapper': return buildToolCap(c, { face: c.face() });
+    case 'orb': return buildOrbitalPiece3D(c, p, state);
     default: return null;
   }
+}
+
+/** 3D fixture dressing: physical mixing vortex and blossoming 3D hybrid orbitals for the mixer. */
+function dress3d(f, state, c) {
+  if (f.kind === 'mixbowl') {
+    return buildMixer3D(f, state, c);
+  }
+  return null;
 }
 
 /**
@@ -149,6 +159,7 @@ function piecePose3d(p, state, c) {
     const wx = v[0] * Math.cos(yaw) + v[2] * Math.sin(yaw);
     const wy = v[1];
     const wz = -v[0] * Math.sin(yaw) + v[2] * Math.cos(yaw);
+    const dir = new THREE.Vector3(wx, wy, wz).normalize();
 
     const plHub = c.toPlate(hub.at);
     const floatY = HUB_R * c.s * 2.4;
@@ -156,26 +167,28 @@ function piecePose3d(p, state, c) {
     const hubCenterY = c.ground + floatY;
     const hubCenterZ = plHub.z;
 
-    const bondDist = 15.5 * c.s;
+    if (p.kind === 'balloon') {
+      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      const lobeDist = 13.0 * c.s;
+      const targetX = hubCenterX + lobeDist * wx;
+      const targetY = hubCenterY + lobeDist * wy;
+      const targetZ = hubCenterZ + lobeDist * wz;
+      return {
+        x: targetX,
+        y: targetY,
+        z: targetZ,
+        quaternion: quat,
+        hideBase: true,
+        centerLobe: true
+      };
+    }
+
+    const bondDist = 18.0 * c.s;
     const targetX = hubCenterX + bondDist * wx;
     const targetY = hubCenterY + bondDist * wy;
     const targetZ = hubCenterZ + bondDist * wz;
 
-    const cy = p.kind === 'balloon'
-      ? (ARM_R * c.s * 0.78 * (0.2 + 1.18 * 0.9))
-      : (ARM_R * c.s * 0.82 * (0.2 + 0.88));
-
-    if (p.kind === 'balloon') {
-      const dir = new THREE.Vector3(wx, wy, wz).normalize();
-      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-      return {
-        x: targetX,
-        y: targetY - cy,
-        z: targetZ,
-        quaternion: quat,
-        hideBase: true
-      };
-    }
+    const cy = ARM_R * c.s * 0.82 * (0.2 + 0.88);
 
     return {
       x: targetX,
@@ -210,6 +223,7 @@ export const DOMAIN_KIT = {
   settle,
   piece3d,
   piecePose3d,
+  dress3d,
   deck3d: ligarDeck,
   paintPiece,
   printed,

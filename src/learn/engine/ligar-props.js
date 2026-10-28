@@ -562,14 +562,7 @@ export function buildHubBall(c, { face, body }) {
   const ball = mesh(new THREE.SphereGeometry(R * 0.7, 36, 24), bodyMat);
   ball.position.y = cy;
   g.add(ball);
-  // Socket rings round the equator, where an arm clips on.
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    const ring = mesh(new THREE.TorusGeometry(R * 0.11, R * 0.03, 8, 16), m.ligBrassWorn);
-    ring.position.set(Math.cos(a) * R * 0.69, cy, Math.sin(a) * R * 0.69);
-    ring.lookAt(ring.position.x * 2, cy, ring.position.z * 2);
-    g.add(ring);
-  }
+
   const capR = R * 0.5;
   const capGeo = new THREE.SphereGeometry(R * 0.704, 32, 10, 0, Math.PI * 2, 0, Math.asin(capR / (R * 0.7)));
   const p = capGeo.attributes.position;
@@ -628,21 +621,32 @@ export function buildBalloonLobe(c) {
   const R = hw * 0.78;
   const stand = mesh(lathe([[0, 0], [R * 0.5, 0], [R * 0.54, R * 0.1], [R * 0.3, R * 0.2], [0, R * 0.2]], 24), m.ligIron);
   g.add(stand);
-  g.userData.baseMesh = stand;
 
-  const cy = R * 0.2 + R * 1.18 * 0.9;
-  const lobe = c.own(new THREE.MeshPhysicalMaterial({ color: 0xb9a56a, roughness: 0.18, metalness: 0, transparent: true, opacity: 0.62, clearcoat: 1, clearcoatRoughness: 0.1 }));
+  const lobeGroup = new THREE.Group();
+  lobeGroup.name = 'balloon-lobe-content';
+
+  const lobeMat = c.own(new THREE.MeshPhysicalMaterial({ color: 0xb9a56a, roughness: 0.18, metalness: 0, transparent: true, opacity: 0.62, clearcoat: 1, clearcoatRoughness: 0.1 }));
   const geo = new THREE.SphereGeometry(R, 28, 18);
-  geo.scale(1, 1.18, 0.82);
-  const balloon = mesh(geo, lobe, { cast: false });
-  balloon.position.y = cy;
-  g.add(balloon);
+  geo.scale(1, 1.25, 0.82);
+  const balloon = mesh(geo, lobeMat, { cast: false });
+  lobeGroup.add(balloon);
+
   // A knot at the neck.
-  const knot = at(mesh(new THREE.TorusGeometry(R * 0.2, R * 0.07, 6, 14), m.ligBrassWorn), 0, R * 0.2 + R * 0.12, 0);
+  const knot = mesh(new THREE.TorusGeometry(R * 0.2, R * 0.07, 6, 14), m.ligBrassWorn);
   knot.rotation.x = Math.PI / 2;
-  g.add(knot);
+  knot.position.y = -R * 1.05;
+  lobeGroup.add(knot);
+
+  const cy = R * 0.2 + R * 1.25;
+  lobeGroup.position.y = cy;
+  g.add(lobeGroup);
+
+  g.userData.baseMesh = stand;
+  g.userData.lobeGroup = lobeGroup;
+  g.userData.cy = cy;
+  g.userData.R = R;
   g.userData.joinY = cy;
-  return done(g, R * 0.2 + R * 2.1);
+  return done(g, cy + R * 1.25);
 }
 
 /** A protractor: a disc of clear acrylic, its degrees (the kit's painted face, with the reading) engraved in it, a brass pivot at the middle. */

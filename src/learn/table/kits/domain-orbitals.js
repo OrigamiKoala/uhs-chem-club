@@ -202,6 +202,16 @@ function paintBowl(ctx, f, state, b) {
   const x = b.x1 - 1.5 * b.sc;
   plateText(ctx, read.blend.blends ? `LOBES ${read.lobes}` : 'LOBES', x, b.y0 + 3.6 * b.sc, { size, weight: 700, align: 'right', base: 'middle', color: read.blend.blends ? PLATE_COLORS.phosphor : PLATE_COLORS.dim });
   plateText(ctx, read.blend.blends ? `LEFT OVER ${read.leftoverP}` : 'LEFT OVER', x, b.y0 + 6.5 * b.sc, { size, weight: 700, align: 'right', base: 'middle', color: read.blend.blends ? PLATE_COLORS.dust : PLATE_COLORS.dim });
+  if (b?.screens) {
+    if (read.blend.blends) {
+      ctx.strokeStyle = PLATE_COLORS.steel;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(out.x, out.y, L * 0.42, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    return;
+  }
   if (!read.held.length) {
     plateText(ctx, 'NOTHING MIXED', out.x, out.y, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dim });
     return;

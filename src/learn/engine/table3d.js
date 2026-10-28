@@ -207,6 +207,23 @@ export class Table3D extends BenchViewer3D {
   unitsAtRay(ray = this.raycaster.ray) {
     // While the view is turned up at the boss, the glass is not looking at the plate: a press is aimed at nothing.
     if (!this.map || this.gazing) return null;
+
+    if (ray === this.raycaster.ray && this.pieceRoot?.children?.length) {
+      const hits = this.raycaster.intersectObjects(this.pieceRoot.children, true);
+      for (const hit of hits) {
+        let cur = hit.object;
+        while (cur && cur.parent !== this.pieceRoot) cur = cur.parent;
+        if (!cur) continue;
+        const id = cur.userData.id;
+        if (!id || id === this.drag?.id) continue;
+        const p = this.state.pieces[id];
+        if (!p || p.hidden) continue;
+        const elevated = cur.position.y > GROUND_Y + 0.1;
+        if (!elevated) continue;
+        return { ...p.at };
+      }
+    }
+
     this.root.updateMatrixWorld(true);
     const inv = (this._invRoot || (this._invRoot = new THREE.Matrix4())).copy(this.root.matrixWorld).invert();
     const o = ray.origin.clone().applyMatrix4(inv);
@@ -916,6 +933,7 @@ export class Table3D extends BenchViewer3D {
     const square = p.kind === 'card' || Boolean(p.token);
     const g = new THREE.Group();
     g.name = `piece-${p.id}`;
+    g.userData.id = p.id;
     const k = this.kitMats;
     const tone = (mat, amount = 0.07) => {
       const m = this.mine(mat.clone());
@@ -939,6 +957,7 @@ export class Table3D extends BenchViewer3D {
     });
     if (solid) {
       g.add(solid);
+      Object.assign(g.userData, solid.userData);
       this.heldRing(g, kind?.rect ? Math.hypot(kind.rect.hw, kind.rect.hh) * s : r);
       return g;
     }
@@ -1273,11 +1292,21 @@ export class Table3D extends BenchViewer3D {
         if (e.group.userData.baseMesh) {
           e.group.userData.baseMesh.visible = !customPose.hideBase;
         }
+        if (e.group.userData.lobeGroup) {
+          if (customPose.centerLobe) {
+            e.group.userData.lobeGroup.position.set(0, 0, 0);
+          } else {
+            e.group.userData.lobeGroup.position.set(0, e.group.userData.cy || 0, 0);
+          }
+        }
       } else {
         e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);
         e.group.quaternion.identity();
         if (e.group.userData.baseMesh) {
           e.group.userData.baseMesh.visible = true;
+        }
+        if (e.group.userData.lobeGroup) {
+          e.group.userData.lobeGroup.position.set(0, e.group.userData.cy || 0, 0);
         }
       }
     }
