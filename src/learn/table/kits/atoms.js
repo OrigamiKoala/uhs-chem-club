@@ -579,7 +579,8 @@ export function slateParts(id, molKey, points, { chip = null, prefill = null } =
   }));
   const xs = points.map(p => p.x);
   const ys = points.map(p => p.y);
-  const b = { x0: Math.min(...xs) - SLATE_R - 3, x1: Math.max(...xs) + SLATE_R + 3, y0: Math.min(...ys) - SLATE_R - 6.5, y1: Math.max(...ys) + SLATE_R + 3 };
+  // Expand slate boundaries so electron pairs / lone pairs are not hidden under the timber frame or corner straps.
+  const b = { x0: Math.min(...xs) - SLATE_R - 5.5, x1: Math.max(...xs) + SLATE_R + 5.5, y0: Math.min(...ys) - SLATE_R - 6.5, y1: Math.max(...ys) + SLATE_R + 6 };
   const fixture = {
     id, kind: 'slate', label: mol.label, noRun: true,
     at: { x: r1((b.x0 + b.x1) / 2), y: r1((b.y0 + b.y1) / 2) }, size: { w: r1(b.x1 - b.x0), h: r1(b.y1 - b.y0) },

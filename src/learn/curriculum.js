@@ -139,6 +139,17 @@ export async function loadQuestModule(quest) {
     return mod && typeof mod.mount === 'function' ? mod : null;
   } catch (err) {
     console.error(`Learn quest "${quest.key}" failed to load:`, err);
+    if (typeof window !== 'undefined') {
+      const msg = String(err?.message || err);
+      if (msg.includes('dynamically imported module') || msg.includes('MIME type')) {
+        const last = sessionStorage.getItem('avalon_chunk_reload');
+        const now = Date.now();
+        if (!last || now - parseInt(last, 10) > 10000) {
+          sessionStorage.setItem('avalon_chunk_reload', String(now));
+          window.location.reload();
+        }
+      }
+    }
     return null;
   }
 }

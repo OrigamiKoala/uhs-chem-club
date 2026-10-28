@@ -11,7 +11,18 @@
   <!-- Installed to a Home Screen, Avalon launches with no address bar. That is
        the only route to a full screen on iPhone Safari, which has no
        Fullscreen API; see src/game-mode.js. -->
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
+  <script>
+    // Auto-reload when dynamic imports fail due to deployment chunk hash changes
+    window.addEventListener('vite:preloadError', () => {
+      const last = sessionStorage.getItem('avalon_chunk_reload');
+      const now = Date.now();
+      if (!last || now - parseInt(last, 10) > 10000) {
+        sessionStorage.setItem('avalon_chunk_reload', String(now));
+        window.location.reload();
+      }
+    });
+  </script>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
