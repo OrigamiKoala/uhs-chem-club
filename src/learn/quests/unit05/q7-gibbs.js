@@ -47,6 +47,7 @@ const GUESS_LABEL = { on: '"It dissolves on its own"', off: '"It stays solid"', 
 
 // Stage 2: ammonium nitrate dissolving takes in 25.7 kJ per mole and gains 108 J/(mol·K) of spreading.
 const SALT = { dH: 25.7, dS: 108, Ts: [150, 200, 250, 298, 350] };
+const T_SALT = crossingTemperature(25.7, 108);
 const SALT_FIRST = SALT.Ts.find(T => gibbsFreeEnergy(SALT.dH, SALT.dS, T) < 0);
 // Stage 4: ammonia synthesis gives out 92 kJ per mole of reaction and loses 199 J/(mol·K) of spreading; ΔG at 298 K is -32.7 kJ.
 const HABER = { dH: -92, dS: -199, T: 298 };
@@ -103,24 +104,24 @@ export const STAGES = [
   {
     id: 's2-plot',
     title: 'Heat Against Spreading',
-    prompt: 'Turn the dial to the lowest temperature at which the salt dissolves on its own.',
+    prompt: 'Set the marker to the temperature in kelvin at which the salt starts to dissolve on its own.',
     widget,
     table: heatTable({
       fixtures: [
-        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Cold-pack salt in water', w: 64 })
+        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Cold-pack salt in water', w: 64 }),
+        markerFixture('T', 'Starts to dissolve at', { x: 118, y: 30 }, { min: 150, max: 350, step: 5, start: 150, unit: 'K', w: 52 })
       ]
     }),
     hints: [
-      'Use the "Temperature" dial and read the line printed under the plot.',
-      'Compare the net at each setting, and look for where it changes sign.',
-      'A process is spontaneous when free energy change is negative, so select the lowest temperature with negative net energy.'
+      'Use the "Temperature" dial, the line printed under the plot and the marker.',
+      'Compare the net at two neighbouring settings, one above zero and one below.',
+      'The net moves steadily between two settings, so the zero lies in proportion between them.'
     ],
     check(state) {
-      const r = plotRead(state.table, 'plot');
-      if (r.T === SALT.Ts[0]) return { ok: false, notYet: true, msg: 'The dial is where it started: turn it and read the net at each setting.' };
-      if (r.T === SALT_FIRST) return { ok: true };
-      if (r.dG < 0) return { ok: false, msg: 'A colder setting also reads below zero.' };
-      return { ok: false, msg: `At ${r.T} K the net reads ${fixed(r.dG, 1, true)} kJ.` };
+      const v = markerRead(state.table, 'T');
+      if (v === 150) return { ok: false, notYet: true, msg: 'Set the marker to the temperature.' };
+      if (Math.abs(v - T_SALT) <= 12) return { ok: true };
+      return { ok: false, msg: `At ${v} K the net reads ${fixed(gibbsFreeEnergy(SALT.dH, SALT.dS, v), 1, true)} kJ.` };
     },
     reward: {
       log: 'The net went below zero once it was warm enough.',
@@ -335,7 +336,7 @@ const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tr
 
 export const SOLUTIONS = [
   [put('on', 'slot:guess')],
-  [dial('plot', 'temp', SALT.Ts.indexOf(SALT_FIRST) + 1)],
+  [dial('T', 'value', 240)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
   [dial('answer', 'value', HABER_RIGHT)],
   [dial('plot', 'temp', 3), dial('T', 'value', 273)]
@@ -344,7 +345,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [dial('plot', 'temp', 2)],
+  [dial('T', 'value', 300)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'low', 'low-t': 'high' })],
   [dial('answer', 'value', 2)],
   [dial('plot', 'temp', 5), dial('T', 'value', 303)]
@@ -371,5 +372,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { SALT, SALT_FIRST, ICE, T_ICE, HABER, HABER_DG, HABER_OPTIONS, HABER_RIGHT };
+export const CHECKS = { SALT, SALT_FIRST, T_SALT, ICE, T_ICE, HABER, HABER_DG, HABER_OPTIONS, HABER_RIGHT };
 export { plotRead, plotAt };

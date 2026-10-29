@@ -165,7 +165,7 @@ function paintBond(ctx, p, state, o) {
   if (!o.flat) paintBondIcon(ctx, p.props.which, box.x0 + box.w * 0.19, o.y, box.h * 0.9);
   const cx = o.x + box.w * 0.15;
   const maxW = box.w * 0.66;
-  say(ctx, p.label, cx, box.y0 + 3.0 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW });
+  say(ctx, `${p.label}${(p.props.scale || 1) > 1 ? ` ×${p.props.scale}` : ''}`, cx, box.y0 + 3.0 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW });
   say(ctx, p.props.note || '', cx, box.y0 + 6.2 * sc, Math.max(5.6, 1.6 * sc), { align: 'center', color: DUST, maxW });
   say(ctx, `${p.props.dH} kJ`, cx, box.y0 + 9.0 * sc, Math.max(5.8, 1.7 * sc), { align: 'center', color: AMBER, maxW });
 }

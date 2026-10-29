@@ -151,24 +151,29 @@ export const STAGES = [
   {
     id: 's3-methane',
     title: 'Burning Methane, Bond by Bond',
-    prompt: 'Sort each bond by whether it breaks or forms when methane burns.',
+    prompt: 'Fill the ledger for burning methane: put each bond in its tray and set how many of it there are.',
     widget,
     table: heatTable({
-      pieces: CH4_CHIPS.map(([id, bond, count, noteText], i) => bondChip(id, bond, { x: 17, y: 14 + i * 13 }, { count, note: noteText })),
+      pieces: CH4_CHIPS.map(([id, bond, count, noteText], i) => bondChip(id, bond, { x: 17, y: 14 + i * 13 }, { note: noteText })),
       fixtures: [ledgerFixture('ledger', { x: 121, y: 34 }, { broken: 'broken', formed: 'formed', hideNet: false, w: 50, title: 'CH₄ + 2O₂ → CO₂ + 2H₂O' })],
       zones: { trays: trays(66) }
     }),
     hints: [
-      'Use the four bond chips, the two trays and the ledger.',
-      'Compare each chip\'s molecule with the equation printed on the ledger.',
-      'Bonds in the molecules on the left of the arrow come apart, and bonds in the molecules on the right are built.'
+      'Use the four bond chips, the two trays and the ledger, and pick a chip up for "Larger".',
+      'Compare each chip\'s molecule with the equation printed on the ledger, counting every molecule the equation uses.',
+      'Bonds in the molecules left of the arrow come apart and bonds in the molecules right of it are built, and each molecule holds as many of a bond as its formula shows.'
     ],
     check(state) {
       const t = state.table;
       const want = { ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' };
       if (Object.keys(want).some(k => !['broken', 'formed'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every bond needs a tray.' };
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
-      if (!wrong) return { ok: true };
+      if (!wrong) {
+        const off = CH4_CHIPS.find(([id, , n]) => (t.pieces[id].props.scale || 1) !== n);
+        if (!off) return { ok: true };
+        const k = t.pieces[off[0]].props.scale || 1;
+        return { ok: false, msg: `The ledger counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} from the ${off[3]} chip.` };
+      }
       const tray = t.zones.trays[whereIs(t, wrong[0])];
       return { ok: false, msg: `The "${tray.label}" tray holds a bond from a molecule on the ${wrong[1] === 'broken' ? 'left' : 'right'} of the arrow.` };
     },
@@ -399,7 +404,7 @@ const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tr
 export const SOLUTIONS = [
   [put('in', 'slot:guess')],
   [dial('crank', 'pull', 7), dial('change', 'value', HH)],
-  [...sort({ ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' })],
+  [...sort({ ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' }), ...CH4_CHIPS.map(([id, , n]) => ({ scale: { piece: id, factor: n } }))],
   [put('cool', 'slot:guess')],
   [put('cool', 'slot:answer')],
   [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), dial('dH', 'value', -184)]

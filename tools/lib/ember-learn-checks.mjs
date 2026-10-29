@@ -365,8 +365,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(dGs.filter(r => r.dG < 0).length >= 2, `${q} stage 2: only one setting reads below zero`);
       same(SALT_FIRST, 250, `${q} stage 2 (the coldest setting below zero)`);
       holds(TD.crossingTemperature(SALT.dH, SALT.dS) < SALT_FIRST && TD.crossingTemperature(SALT.dH, SALT.dS) > SALT.Ts[1], `${q} stage 2: the crossing is not between two settings`);
-      same(HK.plotRead(done(e7, 1), 'plot').T, SALT_FIRST, `${q} stage 2 (the setting graded)`);
-      holds(HK.plotRead(done(e7, 1), 'plot').dG < 0, `${q} stage 2: the graded setting is not below zero`);
+      near(HK.markerRead(done(e7, 1), 'T'), e7.CHECKS.T_SALT, 12, `${q} stage 2 (the marker)`);
     }
     {
       const t = start(e7, 2);

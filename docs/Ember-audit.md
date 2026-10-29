@@ -139,7 +139,7 @@ Verdicts: Op = operable by a hand; Int = intuitive from the table; Busy = busywo
 
 ## What is still weak
 
-Rebuilt in the second round: q4 s5 and s6 and the ledger now hide the Broken and Formed kJ totals (`hideTotals` on `ledgerFixture`), so the player adds the chips' energies; q7 s5 and Crucible phase 5 print ΔH and ΔS on a plate so the temperature is computed, with the dial left as a check. Not rebuilt: q4 s3 (counts on the chips are still pre-multiplied), q6 s3 (no particle picture), q7 s2 (dial reading is the idea there); the three bullets below about them still stand.
+Rebuilt in the second round: q4 s5 and s6 and the ledger now hide the Broken and Formed kJ totals (`hideTotals` on `ledgerFixture`), so the player adds the chips' energies; q7 s5 and Crucible phase 5 print ΔH and ΔS on a plate so the temperature is computed, with the dial left as a check. Third round: q4 s3 now gives single-bond chips and the player sets each count with "Larger" (bond chips are scalable, `maxScale` 4, counts multiply in `ledgerRead`); q7 s2 asks for the temperature the salt starts to dissolve at, read between two dial settings (about 238 K, ±12). Not rebuilt: q6 s3 (still sorts printed equations; it needs a new before-and-after particle card).
 
 - The re-audit passes were not run: after the fixes I re-viewed only the new stages (q4 s6, q6 s5, q7 s4, q2 s4, boss p2). A full second pass over every stage in the browser is still owed.
 - q4 s3 and s5 still ask for reading a printed equation or two printed totals. A rebuild would put a molecule picture (atoms and rods) on each chip's tray so the player counts the bonds themselves.

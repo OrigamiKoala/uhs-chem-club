@@ -157,12 +157,13 @@ export function wellRead(state, fid) {
 
 export function ledgerRead(state, fid) {
   const p = state.fixtures[fid].props;
-  const sum = list => list.reduce((a, c) => a + (c.props.dH ?? 0) * (c.props.count || 1), 0);
+  const times = c => (c.props.count || 1) * (c.props.scale || 1);
+  const sum = list => list.reduce((a, c) => a + (c.props.dH ?? 0) * times(c), 0);
   const brokenChips = piecesInTray(state, p.broken);
   const formedChips = piecesInTray(state, p.formed);
   const broken = sum(brokenChips);
   const formed = sum(formedChips);
-  return { broken, formed, net: broken - formed, brokenChips, formedChips, nBroken: brokenChips.reduce((a, c) => a + (c.props.count || 1), 0), nFormed: formedChips.reduce((a, c) => a + (c.props.count || 1), 0) };
+  return { broken, formed, net: broken - formed, brokenChips, formedChips, nBroken: brokenChips.reduce((a, c) => a + times(c), 0), nFormed: formedChips.reduce((a, c) => a + times(c), 0) };
 }
 
 /* ------------------------------------------------------------------

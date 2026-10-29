@@ -188,7 +188,7 @@ export const HEAT_KIT = {
     block: { r: 8, rect: RECTS.block, split: true },
     charge: rect(7, 'charge'),
     eqn: rect(6.3, 'eqn', { flip: true, scale: true }),
-    bond: rect(6.3, 'bond'),
+    bond: rect(6.3, 'bond', { scale: true }),
     shelf: rect(10, 'shelf'),
     phase: rect(10, 'phase'),
     stmt: rect(7, 'stmt'),
@@ -199,7 +199,7 @@ export const HEAT_KIT = {
     chip: rect(6.3, 'chip'),
     ptc: { r: 6.3, nojoin: true }
   },
-  maxScale: 3,
+  maxScale: 4,
   planJoin,
   pairable: (a, b) => a.kind === 'block' && b.kind === 'block',
   run,
@@ -211,7 +211,7 @@ export const HEAT_KIT = {
   deckStyle: () => 'instrument',
   slot3d: () => 'well',
   // What a piece's face prints as one line of words: a card its first line (long words break in two), an equation card its equation.
-  printed: p => (p.kind === 'tag' ? wrap(p.label, 17)[0] : p.kind === 'note' ? wrapN(p.label, 30, 3)[0] : p.kind === 'stmt' ? wrap(p.label)[0] : p.kind === 'eqn' ? fmtEqn(cardTerms(p)) : p.kind === 'ptc' ? '' : String(p.label)),
+  printed: p => (p.kind === 'tag' ? wrap(p.label, 17)[0] : p.kind === 'note' ? wrapN(p.label, 30, 3)[0] : p.kind === 'stmt' ? wrap(p.label)[0] : p.kind === 'eqn' ? fmtEqn(cardTerms(p)) : p.kind === 'ptc' ? '' : p.kind === 'bond' && (p.props.scale || 1) > 1 ? `${p.label} ×${p.props.scale}` : String(p.label)),
   faceKey
 };
 
