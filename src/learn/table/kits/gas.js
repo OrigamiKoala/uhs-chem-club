@@ -204,7 +204,7 @@ export function rig(id, at, o = {}) {
   const lines = key.filter(on).length;
   const cols = o.cols ?? (compact || speedScreen ? 1 : 2);
   const rows = Math.ceil(lines / cols);
-  const topRel = Math.max(8 + Math.max(0, nd - 1) * 5 + 7, 14);
+  const topRel = nd ? Math.max(8 + Math.max(0, nd - 1) * 5 + 7, 14) : 12;
   const BH = compact ? 5.6 : 7;
   const block = BH + 3.4 + rows * 3.3;
   const pitch = rowH ?? (block + 2.6);
@@ -213,8 +213,8 @@ export function rig(id, at, o = {}) {
   const height = h ?? Math.max(topRel + (n - 1) * pitch + block + (runKey ? 6.4 : 2.6), speedScreen ? topRel + (screenH ?? 15) + 8 : 0);
   const width = w ?? (compact ? 36 : 62);
   // A lone full-size cylinder names itself in the panel's title; the glass leans over any name printed above the barrel.
-  const titled = cyls.length === 1 && !o.title;
-  const titleOf = titled ? `${cyls[0].label || `${label} A`}${cyls[0].sealed || !GASES[cyls[0].gas] ? '' : `  ${GASES[cyls[0].gas].sym}`}` : null;
+  const titled = cyls.length === 1;
+  const titleOf = titled ? o.title || `${cyls[0].label || `${label} A`}${cyls[0].sealed || !GASES[cyls[0].gas] ? '' : `  ${GASES[cyls[0].gas].sym}`}` : null;
   const props = {
     cyls: cyls.map((c, i) => ({ id: c.id || String.fromCharCode(97 + i), ...c, label: c.label || `${label} ${String.fromCharCode(65 + i)}` })),
     ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), ...(amounts ? { amounts } : {}),

@@ -2702,7 +2702,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
     {
       const t = start(b6, 2);
-      const side = c => b6.sideOf(rd(t, c.id === 'a' || c.id === 'b' ? 'r1' : 'r2', {}, ['a', 'c'].includes(c.id) ? 0 : 1));
+      const side = c => b6.sideOf(rd(t, `r${c.id}`, {}, 0));
       const sides = b6.CASES.map(side);
       same(sides.join(), 'more,less,exact,less', `${q} stage 3 (the side of the law each cylinder reads on)`);
       const d = done(b6, 2);

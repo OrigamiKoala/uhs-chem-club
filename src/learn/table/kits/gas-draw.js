@@ -249,7 +249,7 @@ export function rigGeometry(f, lay) {
   const compact = Boolean(f.props.compact);
   const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : b.y0 + 6;
   // The glass tube stands up from the plate and leans over what is behind it, so it starts clear of the dial row.
-  const top = Math.max(lastDial + 7, b.y0 + 14);
+  const top = lay.dials.length ? Math.max(lastDial + 7, b.y0 + 14) : b.y0 + 12;
   const screenW = f.props.speedScreen ? (f.props.screenW ?? Math.min(30, (b.x1 - b.x0) * 0.46)) : 0;
   const bl = b.x0 + 2 + 1.4;
   const br = b.x1 - 2 - (screenW ? screenW + 2.5 : 0);

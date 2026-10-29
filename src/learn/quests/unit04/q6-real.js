@@ -141,9 +141,10 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const mk = (id, at, cases) => rig(id, at, {
-      cyls: cases.map(c => cyl(c.id, `Holder ${c.id.toUpperCase()}`, c.gas, { V: c.V, T: c.T, hold: 'V' })), vmax: 24.6, compact: true, w: 44, trueSize: true, rowH: 23,
-      show: { temperature: true, amount: false, ideal: true }
+    const mk = (c, at) => rig(`r${c.id}`, at, {
+      cyls: [cyl(c.id, `Holder ${c.id.toUpperCase()}`, c.gas, { V: c.V, T: c.T, hold: 'V' })], vmax: 24.6, compact: true, w: 44, trueSize: true,
+      title: `Holder ${c.id.toUpperCase()}  ${GASES[c.gas].sym}, ${c.V} L, ${c.T} K`,
+      show: { volume: false, temperature: false, amount: false, ideal: true }
     });
     const tray = (id, label, y) => ({ id, label, at: { x: 133, y }, size: { w: 30, h: 14 }, cell: 17 });
     return {
@@ -152,18 +153,18 @@ export const STAGES = [
       widget,
       table: gasTable({
         pieces: CASES.map((c, i) => chip(c.id, `HOLDER ${c.id.toUpperCase()}`, { x: 106, y: 10 + i * 14 })),
-        fixtures: [mk('r1', { x: 25, y: 32 }, CASES.slice(0, 2)), mk('r2', { x: 73, y: 32 }, CASES.slice(2))],
+        fixtures: CASES.map((c, i) => mk(c, { x: 25 + (i % 2) * 48, y: 16.2 + Math.floor(i / 2) * 31.6 })),
         zones: { trays: [tray('above', 'Reads above the law', 11), tray('on', 'Reads on the law', 31), tray('below', 'Reads below the law', 51)] }
       }),
       hints: [
-        'Place each cylinder chip into a tray.',
-        'Compare each cylinder\'s gauge reading with the calculated gas law figure.',
-        'Place a cylinder in the above tray if its gauge is higher, and below if lower.'
+        'Drag each chip into a tray.',
+        'Compare each holder\'s gauge with the gas law figure printed under it.',
+        'Look at how much room each holder\'s gas has and how cold it is, and compare that with the holder that reads on the law.'
       ],
       check(state) {
         const t = state.table;
         if (!CASES.every(c => ['above', 'on', 'below'].includes(whereIs(t, c.id)))) return { ok: false, notYet: true, msg: 'Place every cylinder in a tray.' };
-        const side = c => TRAY_OF[sideOf(cylRead(t, c.id === 'a' || c.id === 'b' ? 'r1' : 'r2', c.id))];
+        const side = c => TRAY_OF[sideOf(cylRead(t, `r${c.id}`, c.id))];
         const bad = CASES.filter(c => whereIs(t, c.id) !== side(c));
         if (bad.length) return { ok: false, msg: `Holder ${bad[0].id.toUpperCase()}'s gauge does not match its tray.` };
         return { ok: true };
