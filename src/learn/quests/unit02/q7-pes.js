@@ -202,7 +202,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const ch = chamber(CHAMBER, CH, ['o', 'f', 'n'], { axisLabel: 'BINDING ENERGY, MJ/mol' });
+    const ch = chamber(CHAMBER, { x: CH.x, y: CH.y - 1 }, ['o', 'f', 'n'], { axisLabel: 'BINDING ENERGY, MJ/mol', h: 38 });
     return {
       title: 'Oxygen, Fluorine, Neon',
       prompt: 'Rank the three specimens by how tightly they hold their innermost electrons, loosest first.',

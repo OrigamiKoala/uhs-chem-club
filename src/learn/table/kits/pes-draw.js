@@ -92,7 +92,7 @@ function paintSpec(ctx, p, state, o) {
   }
   ctx.strokeStyle = peaks ? STEEL : DIM;
   ctx.beginPath(); ctx.moveTo(x0 + 3, base + 0.5); ctx.lineTo(x0 + w - 3, base + 0.5); ctx.stroke();
-  if (p.props.note) say(ctx, p.props.note, o.x, y0 + h * 0.93, Math.max(6, h * 0.14), { align: 'center', color: DIM, maxW: w - 3 });
+  if (p.props.note) say(ctx, p.props.note, o.x, y0 + h * 0.9, Math.max(6, h * 0.14), { align: 'center', color: DUST, maxW: w - 3 });
 }
 
 export function paintPiece(ctx, p, state, o) {

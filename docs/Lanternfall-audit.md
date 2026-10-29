@@ -54,7 +54,7 @@ Operable / Intuitive / Busywork / Intuition / Accurate. "ok" means no defect fou
 - Added `q1-wave` 6 (c = λν), `q2-photon` 6 (E = hν, kinetic energy of the freed electron), `q6-filling` 6 (Cl⁻), `q7-pes` 6 (successive ionization energies). Stage counts moved in each quest's `meta`, `worlds/unit02-quantum.js` and `PRODUCT.md` (288 stages). `verify:table`, `verify:story`, `verify:docs`, `verify:lanternfall`, `verify:bench`, `verify:tallow`, `verify:bellows` and `verify:ember` pass. `verify:learn` fails only on the other agent's bank check.
 - Also: `q5-numbers` stage 4 note is one line (it had split across the plate); `q6-filling` prompt uses a true minus (the font has no superscript minus); `q8-trends` stage 5 rail moved clear of the size gauge; `q8-trends` 6 and 7 added (electron affinity, electronegativity) with `gainFixture`; bench cap raised to 7 stages.
 - Played by hand this round: `q6-filling` 6 (Cl⁻ built with drags, reward shown), `q8-trends` 6 (two atoms measured). Screenshot only: `q4-cloud` 2 to 4, `q5-numbers` 1, 3 to 5, `q7-pes` 2 to 4 and 6, `q8-trends` 2 to 5, `q9-absorb` 1 to 3. Still never opened: `q9-absorb` 4 and 5, `boss-eater`.
-- Open layout defects: `q7-pes` stage 4 end label "Held loosest" hidden behind the chamber and the "N protons" notes low-contrast; `q7-pes` 2 and 3 chamber labels crowded by the holder ring; `q5-numbers` 1 dial labels overlapped by the knobs.
+- Open layout defects: `q5-numbers` 1 dial labels overlapped by the knobs; boss phase 5 calibration plot small. (Fixed in round three: `q7-pes` 4 end labels and notes, `q7-pes` holder over the energy dial.)
 - Earlier (superseded by the commit 63c6af0): not committed: the four quest files, `unit02-quantum.js` and `PRODUCT.md`, because the quest files also carry another agent's uncommitted `PRACTICE` removal.
 
 ## Still open
@@ -72,3 +72,9 @@ Operable / Intuitive / Busywork / Intuition / Accurate. "ok" means no defect fou
 - Looked at (screenshot only): boss phases 1 to 5 render and read; `q9-absorb` 1 to 3.
 - Played by hand: `q9-absorb` 4 (cuvette into the holder, Record, reading), `q9-absorb` 5 (one standard recorded).
 - Still never solved by hand: `q9-absorb` 4 and 5 to completion, every boss phase.
+
+## Third round
+
+- `q7-pes` stage 4: the chamber is 38 units tall so "Held loosest" and "Held tightest" show; the specimen notes ("10 protons") use the brighter text colour.
+- `q7-pes` stage 2: the holder sat over the Light energy dial's track; it now sits lower when the chamber has an energy dial. Played: dial dragged to 50 MJ/mol, Fire Light, three electrons land on the strip.
+- A full second audit pass over every changed stage was NOT done; each stage touched this run was replayed once after its change, and the rest were only looked at. No browser play of the boss to a solution, of `q3-lines`, `q4-cloud`, `q5-numbers` beyond the screenshots above, or of `q8-trends` 7.

@@ -94,7 +94,7 @@ export function chamber(id, at, sources, { energyDial = false, rings = false, mo
       }
     },
     // The holder is as wide as the specimen card that stands in it (22 units).
-    slots: [{ id: slotId, label: 'Holder', at: { x: x0 + 13, y: y0 + 15 }, size: { w: 24, h: 16 } }],
+    slots: [{ id: slotId, label: 'Holder', at: { x: x0 + 13, y: y0 + (energyDial ? 24 : 15) }, size: { w: 24, h: 16 } }],
     size,
     slotId
   };
