@@ -73,7 +73,7 @@ const HUB_AT = { x: 40, y: 32 };
 const binTray = (label = 'Arms') => ({ id: 'bin', label, at: { x: 106, y: 15 }, size: { w: 52, h: 15 }, cell: 13 });
 
 /** A hub table: the hub, the pieces in the tray, the protractor, the dial that turns the view, a marker to set. */
-function hubTable({ sym, arms, label = 'Hub A', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
+function hubTable({ sym, arms, label = 'Centre atom', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
   const hs = hubSet('hub', sym, HUB_AT, { label, gauge, turner: roomy ? { x: 96, y: 31 } : { x: 108, y: 35 } });
   const inTray = arms.map(a => ({ ...a, zone: 'tray:bin' }));
   // Six or more pieces: a longer tray, and the protractor moves down beside the turn dial to make room for it.
@@ -160,8 +160,8 @@ export const STAGES = [
     table: hubTable({ sym: 'X', arms: [1, 2, 3, 4].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Angle' } }),
     hints: [
       'Use the arms, the protractor, the turn dial and the angle marker.',
-      'Rotate the hub to observe the three-dimensional arrangement of the four domains.',
-      'Attach all four arms to the hub and measure the bond angle between any two arms with the protractor.'
+      'Turn the view to see whether the arms stay in one flat layer, then read the angle between several different pairs.',
+      'Attach all four arms, lay the protractor on two of them, and set the marker to the number it reads.'
     ],
     check(state) {
       const t = state.table;
@@ -177,7 +177,7 @@ export const STAGES = [
       return {
         log: 'Four arms leave the plane.',
         title: 'Tetrahedral Geometry and VSEPR',
-        body: `${verdictLine(QUEST_KEY, 'solid')}Four electron domains repel each other into the corners of a tetrahedron with bond angles of 109.5 degrees. This arrangement minimizes electron repulsion according to VSEPR theory.`,
+        body: `${verdictLine(QUEST_KEY, 'solid')}Four electron domains repel each other, and in space they get furthest apart at the corners of a tetrahedron, 109.5 degrees from each other. Laid flat they would crowd to 90 degrees, which is closer. This is the idea behind VSEPR theory.`,
         model: { type: 'shape', mol: 'CH4', caption: 'CH₄ · Tetrahedral (109.5°)' }
       };
     }
