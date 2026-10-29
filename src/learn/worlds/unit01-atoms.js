@@ -78,7 +78,7 @@ export const UNIT_01 = {
       title: 'Counting By Weight',
       line: 'Use molar mass to count atoms and molecules by weight.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 12,
       status: 'live',
       module: () => import('../quests/unit01/q6-weigh.js')
     },

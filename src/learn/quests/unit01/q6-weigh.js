@@ -38,18 +38,21 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { piecesIn, formulaOf, scratchCorner, TABLE_BOUNDS, PARKED_RECORDER } from '../../table/kits/atoms.js';
 import {
   massTable, balanceTable, crate, pourSteps, balanceRead, counterOf, scaleRead, speciesMass, panLoad
 } from '../../table/kits/mass.js';
 import { lineOf, readY } from '../../table/recorder.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 12 };
 
 /** When each withheld word is earned. Specific terms first. */
 export const VOCABULARY = [
   { term: /\bformula mass\b/i, introducedAt: 2 },
+  { term: /\bpercent by mass\b/i, introducedAt: 9 },
+  { term: /\bempirical formula\b/i, introducedAt: 11 },
+  { term: /\bmolecular formula\b/i, introducedAt: 12 },
   { term: /\bavogadro\w*\b/i, introducedAt: 4 },
   { term: /\bmolar\b/i, introducedAt: 5 },
   { term: /\bmoles?\b/i, introducedAt: 4 }
@@ -102,7 +105,7 @@ function countersMatch(t) {
 }
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE TWELVE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -418,7 +421,152 @@ export const STAGES = [
     reward: {
       log: 'The lightest drum holds the most atoms.',
       title: 'Weight Is Not Count',
-      body: 'Because lighter atoms have smaller molar masses, a given mass of lighter elements contains more atoms than the same mass of heavier ones.',
+      body: 'Because lighter atoms have smaller molar masses, a given mass of lighter elements contains more atoms than the same mass of heavier ones.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 9 */
+  {
+    title: 'Where the Weight Sits',
+    prompt: 'What percent of a water molecule\'s weight is its oxygen atom?',
+    entry: { id: 'ans', label: 'Oxygen', unit: '%' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      bounds: { ...TABLE_BOUNDS },
+      recorder: PARKED_RECORDER,
+      pieces: [
+        { id: 'o', kind: 'atom', label: 'O', at: { x: 14, y: 14 }, props: { el: 'O' } },
+        { id: 'h1', kind: 'atom', label: 'H', at: { x: 28, y: 14 }, props: { el: 'H' } },
+        { id: 'h2', kind: 'atom', label: 'H', at: { x: 42, y: 14 }, props: { el: 'H' } }
+      ],
+      zones: {
+        containers: [{ id: 'pan', label: 'Pan', at: { x: 98, y: 50 }, size: { w: 40, h: 24 }, cell: 13 }]
+      },
+      fixtures: [
+        { id: 'scale', kind: 'scale', label: 'Scale', at: { x: 98, y: 16 }, size: { w: 44, h: 26 }, noRun: true, props: { pan: 'container:pan', unit: 'u' } },
+        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: 58, y: 30 }, size: { w: 30, h: 16 }, noRun: true, props: { lines: ['hydrogen 1.0', 'oxygen 16.0'] } }
+      ]
+    }),
+    hints: [
+      'Build the molecule on the scale\'s pan and read its weight.',
+      'Compare the oxygen atom\'s listed weight with the weight of the whole molecule.',
+      'Divide the oxygen atom\'s weight by the molecule\'s weight, then scale it to a hundred.'
+    ],
+    check(state) {
+      const t = state.table;
+      const atoms = piecesIn(t, 'container:pan', 'atom');
+      if (!atoms.length) return { ok: false, notYet: true, msg: 'The pan is empty. Build the molecule and drag it onto the pan.' };
+      const ids = atoms.map(a => a.id);
+      if (!ids.every(id => t.pieces[id].joinedTo.length > 0) || formulaOf(ids, t) !== 'H₂O') return { ok: false, notYet: true, msg: 'Join the three atoms into one water molecule on the pan.' };
+      const v = entryNumber(t, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a percent.' };
+      if (Math.abs(v - 88.9) <= 0.6) return { ok: true };
+      if (Math.abs(v - 33.3) < 1) return { ok: false, msg: 'That is the share of the atoms. The atoms do not weigh the same.' };
+      return { ok: false, msg: 'That share of 18.0 is not the oxygen atom\'s 16.0.' };
+    },
+    reward: {
+      log: 'Oxygen is 16 of the water molecule\'s 18.',
+      title: 'Percent by Mass',
+      body: 'An element\'s percent by mass in a compound is its total atomic mass divided by the formula mass, times 100. Oxygen is one atom in three, but 16.0 of 18.0, so 88.9% of the mass.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 10 */
+  {
+    title: 'Atoms in a Weighed Sample',
+    prompt: 'How many hydrogen atoms are in 36 grams of water?',
+    entry: { id: 'ans', label: 'Hydrogen atoms', unit: '× 10²³' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [{ ...crate('w', 'WATER', { x: 40, y: 38 }, { species: 'water', grams: 36, note: '36 g' }), fixed: true }],
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'One mole', at: { x: 92, y: 26 }, size: { w: 52, h: 24 }, noRun: true, props: { lines: ['water 18 g', '6.02 × 10²³ particles'] } }
+      ]
+    }),
+    hints: [
+      'Type the number of hydrogen atoms, as a multiple of 10²³.',
+      'Work out how many moles of water the crate holds, then how many hydrogen atoms each water molecule brings.',
+      'Moles of hydrogen atoms times 6.02 × 10²³ gives the atoms.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the count, as a multiple of 10²³.' };
+      const want = (36 / 18) * 2 * 6.02;
+      if (Math.abs(v - want) <= 0.35) return { ok: true };
+      if (Math.abs(v - 12.04) < 0.35) return { ok: false, msg: 'That counts the water molecules. Each molecule holds more than one hydrogen atom.' };
+      if (Math.abs(v - 6.02) < 0.35 || Math.abs(v - 2.0) < 0.1) return { ok: false, msg: 'The crate holds more than one mole of water.' };
+      return { ok: false, msg: 'That count of hydrogen atoms does not match the moles in the crate.' };
+    },
+    reward: {
+      log: '36 g of water holds 24.1 × 10²³ hydrogen atoms.',
+      title: 'From Grams to Particles',
+      body: '36 g is 2 mol of water, which holds 2 × 6.02 × 10²³ molecules and twice that many hydrogen atoms: 24.1 × 10²³. Grams convert to moles by molar mass, and moles to particles by Avogadro\'s number.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 11 */
+  {
+    title: 'The Recipe From the Weights',
+    prompt: 'How many hydrogen atoms join each carbon atom in this compound?',
+    entry: { id: 'ans', label: 'Hydrogen atoms per carbon atom', unit: '' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        { ...crate('c', 'CARBON', { x: 28, y: 38 }, { species: 'carbon', grams: 24, note: '24.0 g' }), fixed: true },
+        { ...crate('h', 'HYDROGEN', { x: 64, y: 38 }, { species: 'hydrogen', grams: 6, note: '6.0 g' }), fixed: true }
+      ],
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: 112, y: 30 }, size: { w: 40, h: 22 }, noRun: true, props: { lines: ['carbon 12.0 g/mol', 'hydrogen 1.0 g/mol'] } }
+      ]
+    }),
+    hints: [
+      'Type how many hydrogen atoms there are for every carbon atom.',
+      'Compare the moles of each element: atoms combine in the ratio of their moles.',
+      'Divide each crate\'s grams by its grams per mole, then divide the larger count by the smaller.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number.' };
+      if (Math.abs(v - 3) < 0.01) return { ok: true };
+      if (Math.abs(v - 0.25) < 0.01) return { ok: false, msg: 'That is the ratio of the grams, not of the atoms, and it is upside down.' };
+      if (Math.abs(v - 4) < 0.01) return { ok: false, msg: 'That is the ratio of the grams. The atoms do not weigh the same.' };
+      return { ok: false, msg: 'That ratio does not match the moles in the two crates.' };
+    },
+    reward: {
+      log: '2.0 mol carbon, 6.0 mol hydrogen: 3 hydrogen for each carbon.',
+      title: 'Empirical Formula',
+      body: 'The simplest whole-number ratio of atoms in a compound is its empirical formula. Weighing the elements and converting to moles gives the ratio: here CH₃, three hydrogen atoms for each carbon.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 12 */
+  {
+    title: 'The Whole Molecule',
+    prompt: 'How many carbon atoms does one molecule of this compound hold?',
+    entry: { id: 'ans', label: 'Carbon atoms in one molecule', unit: '' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [],
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'Compound', at: { x: 75, y: 34 }, size: { w: 56, h: 26 }, noRun: true, props: { lines: ['3 H for each C', 'one mole weighs 30.0 g', 'carbon 12.0, hydrogen 1.0'] } }
+      ]
+    }),
+    hints: [
+      'Type the number of carbon atoms in one molecule.',
+      'The ratio gives the weight of the smallest unit, and the molecule is a whole number of those units.',
+      'Divide the molecule\'s weight by the weight of one carbon with its three hydrogens.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number.' };
+      if (Math.abs(v - 2) < 0.01) return { ok: true };
+      if (Math.abs(v - 1) < 0.01) return { ok: false, msg: 'One carbon with its three hydrogens weighs less than the molecule does.' };
+      return { ok: false, msg: 'That many carbon atoms, with three hydrogens each, would not weigh 30.0.' };
+    },
+    reward: {
+      log: 'CH₃ weighs 15; the molecule weighs 30: C₂H₆.',
+      title: 'Molecular Formula',
+      body: 'The molecular formula is a whole-number multiple of the empirical formula. CH₃ weighs 15.0 and the molecule 30.0, so there are two units: C₂H₆.',
       last: true
     }
   }
@@ -509,6 +657,7 @@ export const PRACTICE = [
 const to = (piece, target) => ({ place: { piece, to: target } });
 const weighIn = piece => [to(piece, 'slot:pan'), { run: 'scale' }];
 const joinTo = (a, b) => ({ join: [a, b] });
+const typed = (id, value) => ({ type: { entry: id, value: String(value) } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
@@ -519,7 +668,11 @@ export const SOLUTIONS = [
   pourSteps('carbon dioxide', 11, 4),
   [...pourSteps('water', 6, 3), { setDial: { fixture: 'tally', dial: 'n', value: 4 } }],
   pourSteps('hydrogen', 1, 4),
-  [to('d2', 'slot:weigh'), to('d2', 'rail:0'), to('d1', 'slot:weigh'), to('d1', 'rail:1'), to('d3', 'slot:weigh'), to('d3', 'rail:2')]
+  [to('d2', 'slot:weigh'), to('d2', 'rail:0'), to('d1', 'slot:weigh'), to('d1', 'rail:1'), to('d3', 'slot:weigh'), to('d3', 'rail:2')],
+  [joinTo('h1', 'o'), joinTo('h2', 'o'), to('o', 'container:pan'), typed('ans', '88.9')],
+  [typed('ans', '24.08')],
+  [typed('ans', '3')],
+  [typed('ans', '2')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -531,7 +684,11 @@ export const MISSES = [
   pourSteps('carbon dioxide', 11, 2),
   [...pourSteps('water', 6, 3), { setDial: { fixture: 'tally', dial: 'n', value: 1 } }],
   pourSteps('hydrogen', 1, 2),
-  [to('d3', 'slot:weigh'), to('d3', 'rail:2')]
+  [to('d3', 'slot:weigh'), to('d3', 'rail:2')],
+  [joinTo('h1', 'o'), joinTo('h2', 'o'), to('o', 'container:pan'), typed('ans', '33.3')],
+  [typed('ans', '12.04')],
+  [typed('ans', '4')],
+  [typed('ans', '1')]
 ];
 
 function blankState() { return {}; }

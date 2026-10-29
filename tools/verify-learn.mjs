@@ -3427,6 +3427,14 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const drums = ['d1', 'd2', 'd3'].map(id => ({ id, atoms: declared(q6, 7, id).props.grams / m(declared(q6, 7, id).props.species), grams: declared(q6, 7, id).props.grams }));
       same(end(q6, 7).zones.rail.order, drums.slice().sort((a, b) => a.atoms - b.atoms).map(d => d.id), 'unit01/q6-weigh stage 8 (the rail, fewest atoms to most)');
       holds(drums.slice().sort((a, b) => b.grams - a.grams)[0].id !== drums.slice().sort((a, b) => b.atoms - a.atoms)[0].id, 'unit01/q6-weigh stage 8: the heaviest drum holds the most atoms, so weight is no trap');
+    // 9 to 12. the typed worked figures, recomputed from the listed masses
+    {
+      const typedOf = k => Number(end(q6, k).entries.ans);
+      near(typedOf(8), Math.round(m('oxygen') / (m('oxygen') + 2 * m('hydrogen')) * 1000) / 10, 'unit01/q6-weigh stage 9 (oxygen\'s percent by mass in water)');
+      near(typedOf(9), Math.round((36 / m('water')) * 2 * 6.02 * 100) / 100, 'unit01/q6-weigh stage 10 (hydrogen atoms in 36 g of water, in units of 10^23)');
+      near(typedOf(10), (24 / m('carbon') > 0) ? (6 / M.listedMass('H')) / (24 / m('carbon')) : NaN, 'unit01/q6-weigh stage 11 (hydrogen atoms for each carbon)');
+      near(typedOf(11), 30 / (m('carbon') + 3 * M.listedMass('H')) , 'unit01/q6-weigh stage 12 (carbon atoms in one molecule)');
+    }
     }
   }
 
