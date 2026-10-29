@@ -619,7 +619,7 @@ export function massTable(spec) {
 /** A crate or a drum: a rect piece standing in a pan, sealed or open (`props {species, n | grams, sealed?, note?}`). */
 export const crate = (id, label, at, props) => ({ id, kind: 'crate', label, at, props });
 
-const PANS_Y = 48;
+const PANS_Y = 50;
 const pan = (id, label, at, extra = {}) => ({ id, label, at, size: { w: 30, h: 24 }, cell: 30, ...extra });
 
 /**

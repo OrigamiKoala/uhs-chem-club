@@ -414,9 +414,9 @@ export const STAGES = [
       zones: {
         slots: [{ id: 'tester', label: 'Sample', at: { x: 66, y: 53 } }],
         trays: [
-          specimenTray('gives', 'Gives one away', 21, 34, 38, 16),
-          specimenTray('takes', 'Takes one on', 60, 34, 38, 16),
-          specimenTray('inert', 'Will not trade', 99, 34, 38, 16)
+          specimenTray('gives', 'Gives one away', 21, 38, 38, 14),
+          specimenTray('takes', 'Takes one on', 60, 38, 38, 14),
+          specimenTray('inert', 'Will not trade', 99, 38, 38, 14)
         ]
       },
       fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Run Tester', at: { x: 96, y: 54 }, size: { w: 40, h: 16 }, props: { slot: 'tester' } }]

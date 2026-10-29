@@ -568,6 +568,19 @@ export function createRunner(container, ctx, cfg) {
       });
     }
     tabletop.setState(state.table, { stageIndex: index, newStage: true, undo: history.length });
+    // A built bench takes a while to stand up; say so until its first frames are drawn, so a black pane is not read as a broken one.
+    if (benchesAre3D() && typeof document !== 'undefined' && !(tabletop.elapsed > 1.5) && !document.querySelector('.lq-building')) {
+      const note = document.createElement('p');
+      note.className = 'lq-building';
+      note.setAttribute('role', 'status');
+      note.textContent = 'Building the bench';
+      document.body.appendChild(note);
+      const t0 = Date.now();
+      const poll = setInterval(() => {
+        // `elapsed` only counts once the world has loaded and the table is being drawn.
+        if (disposed || !tabletop || tabletop.elapsed > 1.5 || Date.now() - t0 > 60000) { clearInterval(poll); note.remove(); }
+      }, 500);
+    }
     // The Tour explains each instrument and kind of piece on this stage's table, and the opening line of its briefing.
     frame.setTourSteps(tourSteps(state.table, stage.encounter ? { intro: stage.briefing?.body || '', speaker: stage.briefing?.speaker || 'Vess' } : {}));
   }

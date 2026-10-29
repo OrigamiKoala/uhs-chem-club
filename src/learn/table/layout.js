@@ -83,7 +83,7 @@ export function labelLines(state, kind, zone) {
     return zone.label?.trim() ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
   }
   const out = [];
-  if (zone.label?.trim()) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above, align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
+  if (zone.label?.trim()) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above - (kind === 'container' && state?.kit === 'mass' ? 1.7 : 0), align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
   return out;
 }
 

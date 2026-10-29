@@ -3436,6 +3436,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       near(typedOf(9), Math.round((36 / m('water')) * 2 * 6.02 * 100) / 100, 'unit01/q6-weigh stage 10 (hydrogen atoms in 36 g of water, in units of 10^23)');
       { const t11 = end(q6, 10); near(typedOf(10), M.counterOf(t11, 'balance', 'R') / M.counterOf(t11, 'balance', 'L'), 'unit01/q6-weigh stage 11 (hydrogen atoms for each carbon, from the two counters)'); }
       near(typedOf(11), 30 / (m('carbon') + 3 * M.listedMass('H')) , 'unit01/q6-weigh stage 12 (carbon atoms in one molecule)');
+      { const g = id => declared(q6, 12, id).props.grams; near(typedOf(12), (g('mix') - g('sand')) / g('mix') * 100, 'unit01/q6-weigh stage 13 (the salt\'s percent of the mixture)'); }
     }
     }
   }

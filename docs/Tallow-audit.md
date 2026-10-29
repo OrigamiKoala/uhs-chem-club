@@ -97,14 +97,20 @@ Phase 2 loaded: gauges clear of the heap after the fix. Phases 1, 3, 4, 5 not op
 
 ## Open items
 
-- **Black pane at bench entry (10 to 20 s):** the bench is built on the main thread, so the page cannot paint a "Building the bench" note until it is done. I tried a note in `stagerunner.js`; it never showed and was reverted. A fix means yielding a frame before the build, in shared engine code.
-- **Specimen discs are small** (`q2-core` 6 to 8, `q4` 3): the counts and needle on a disc are about 6 px at the default camera. Raising the specimen radius from 8 to 10 broke the layout of `q2` 6 and `q4` 3 and was reverted; the stages need their trays moved with it.
-- The first lens picture at power 1 is a blank glass; "clumps" is never drawn.
-- Pan labels (`q6`) sit half under the pan rim.
-- `q6` stage 8 ranks drums by reading the scale's atom counter, which is copying; stage 6 sets a tally dial against a drum.
-- `q5` stage 10 can still be solved by hunting the dial to the balance point, then typing the dial's value.
-- Nothing covers AP 1.4 (composition of mixtures) or reads a printed mass spectrum as a graph.
-- A real-hand check of every stage remains owed.
+Fixed in the third pass (looked at in the browser unless noted):
+
+- **Black pane at bench entry:** `stagerunner.js` `syncTabletop` now puts "Building the bench" over the pane until `tabletop.elapsed` passes 1.5 s (the world takes about 8 s to load, during which `elapsed` stays 0). Seen in the browser on `q2-core`.
+- **Specimen discs:** radius 8 to 10, counts and needle badge printed larger (`atoms.js`), `q2` 6 trays and `q4` 3 trays moved to suit. Counts are readable at the default camera but sit close to the electron dots.
+- **Pan labels under the rim:** mass-kit container labels stand 1.7 units higher (`layout.js`), pans at y 50, the counted sack and the stage 11 plate moved down. Looked at.
+- **`q6` 8:** the scale no longer prints an atom counter; a plate gives the weight of one mole and the player ranks by moles. Not played.
+- **`q5` 10:** the canister holds 40 atoms and the dial counts atoms, so the dial value is not the percent. Not played again.
+- **AP 1.4:** `q6` stage 13 (percent salt in a washed mixture). Played by hand: weighed the mixture, typed 75, reward shown.
+- The first lens picture at power 1 is a smooth solid by design (the scope draws an unbroken solid below the resolving power); not changed.
+
+Still open:
+
+- Reading a printed mass spectrum as a graph with peaks: not built. The tipped piles stand in for it.
+- A real-hand check of every stage that was only looked at remains owed.
 
 ## AP coverage (Unit 1)
 
@@ -113,7 +119,7 @@ Phase 2 loaded: gauges clear of the heap after the fix. Phases 1, 3, 4, 5 not op
 | 1.1 moles, molar mass, Avogadro | `q6` 4 to 8, 10 | covered, quantitative added (grams to particles) |
 | 1.2 mass spectra of elements | `q5` 1 to 4, 9, 10 | piles of tipped atoms are a mass spectrum; never shown as a graph with peaks and relative abundance |
 | 1.3 composition of pure substances | `q6` 9 to 12 | added: percent by mass, empirical, molecular formula |
-| 1.4 composition of mixtures | none | missing |
+| 1.4 composition of mixtures | `q6` 13 | added: percent of a component by mass in a washed mixture |
 | 1.5 atomic structure, configuration | `q2` 4 to 6 | shells to 2, 8, 8; subshell configurations belong to Lanternfall |
 | 1.6 PES | Lanternfall `q7` | out of world |
 | 1.7 periodic trends | Lanternfall `q8`, `q3` | `q3` has the groups; trends out of world |

@@ -3756,3 +3756,17 @@ body.bench-leaning .boss-hud {
 .lq-entry-input { width: 96px; min-height: 36px; padding: 4px 8px; text-align: right; font-variant-numeric: tabular-nums; }
 .lq-entry-unit { font-size: 12px; color: var(--text-muted); min-width: 22px; }
 @media (max-width: 768px) { .lq-entry-input { min-height: 44px; } }
+
+/* Shown over a built bench until its first frames are drawn (`stagerunner.js` `syncTabletop`). */
+.lq-building {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  z-index: 40;
+  pointer-events: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}

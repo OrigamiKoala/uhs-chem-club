@@ -45,13 +45,14 @@ import {
 } from '../../table/kits/mass.js';
 import { lineOf, readY } from '../../table/recorder.js';
 
-export const meta = { stageCount: 12 };
+export const meta = { stageCount: 13 };
 
 /** When each withheld word is earned. Specific terms first. */
 export const VOCABULARY = [
   { term: /\bformula mass\b/i, introducedAt: 2 },
   { term: /\bpercent by mass\b/i, introducedAt: 9 },
   { term: /\bempirical formula\b/i, introducedAt: 11 },
+  { term: /\bcomposition of a mixture\b/i, introducedAt: 13 },
   { term: /\bmolecular formula\b/i, introducedAt: 12 },
   { term: /\bavogadro\w*\b/i, introducedAt: 4 },
   { term: /\bmolar\b/i, introducedAt: 5 },
@@ -105,7 +106,7 @@ function countersMatch(t) {
 }
 
 /* ------------------------------------------------------------------
-   THE TWELVE STAGES
+   THE THIRTEEN STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -122,7 +123,7 @@ export const STAGES = [
       capacity: 600,
       extra: {
         pieces: [{ ...crate('sack', 'SACK', { x: 14, y: 52 }, { species: 'carbon', n: 100, note: 'counted: 100' }), hidden: true, fetchFrom: 'sack' }],
-        fetch: [{ id: 'sack', label: 'Counted sack', at: { x: 75, y: 66 }, size: { w: 22, h: 10 } }]
+        fetch: [{ id: 'sack', label: 'Counted sack', at: { x: 75, y: 67.5 }, size: { w: 22, h: 8 } }]
       }
     }),
     hints: [
@@ -400,12 +401,15 @@ export const STAGES = [
         slots: [{ id: 'weigh', label: 'Scale pan', at: { x: 118, y: 52 }, size: { w: 22, h: 18 } }],
         rail: { id: 'rail', at: { x: 56, y: 54 }, size: { w: 84, h: 20 }, first: 'fewest atoms', last: 'most atoms', items: ['d1', 'd2', 'd3'], start: ['d1', 'd3', 'd2'] }
       },
-      fixtures: [{ id: 'scale', kind: 'scale', label: 'Scale', at: { x: 118, y: 22 }, size: { w: 56, h: 34 }, noRun: true, props: { pan: 'slot:weigh', unit: 'g', counter: { label: 'ATOMS' } } }]
+      fixtures: [
+        { id: 'scale', kind: 'scale', label: 'Scale', at: { x: 118, y: 22 }, size: { w: 56, h: 34 }, noRun: true, props: { pan: 'slot:weigh', unit: 'g' } },
+        { id: 'plate', kind: 'plate', label: 'One mole weighs', at: { x: 40, y: 22 }, size: { w: 52, h: 24 }, noRun: true, props: { lines: ['H 1.0 g', 'C 12.0 g', 'O 16.0 g'] } }
+      ]
     }),
     hints: [
       'Use the scale\'s pan and the rail.',
-      'The heaviest drum is not always the one with the most atoms, so compare the counters.',
-      'Put the drums in order of their atom counters, the smallest count at the left end.'
+      'The heaviest drum is not always the one with the most atoms, so weigh each drum before you rank it.',
+      'Work out the moles in each drum from its weight and the weight of one mole, and rank by moles, the fewest at the left end.'
     ],
     check(state) {
       const t = state.table;
@@ -414,7 +418,7 @@ export const STAGES = [
       const atoms = id => molesOf(t.pieces[id].props.species, t.pieces[id].props.grams);
       const want = ['d1', 'd2', 'd3'].sort((a, b) => atoms(a) - atoms(b));
       if (order.join() !== want.join()) {
-        return { ok: false, msg: 'The rail is not in order of the atom counters.' };
+        return { ok: false, msg: 'The rail is not in order of how many atoms each drum holds.' };
       }
       return { ok: true };
     },
@@ -518,7 +522,7 @@ export const STAGES = [
       steps: { hydrogen: 1 },
       capacity: 10,
       extra: {
-        fixtures: [{ id: 'plate', kind: 'plate', label: 'Compound', at: { x: 75, y: 66 }, size: { w: 90, h: 12 }, noRun: true, props: { lines: ['hydrogen in it 6.0 g', 'g/mol: C 12.0, H 1.0'] } }]
+        fixtures: [{ id: 'plate', kind: 'plate', label: 'Compound', at: { x: 75, y: 67.5 }, size: { w: 90, h: 9 }, noRun: true, props: { lines: ['hydrogen in it 6.0 g', 'g/mol: C 12.0, H 1.0'] } }]
       }
     }),
     hints: [
@@ -576,7 +580,43 @@ export const STAGES = [
     reward: {
       log: 'CH₃ weighs 15; the molecule weighs 30: C₂H₆.',
       title: 'Molecular Formula',
-      body: 'The molecular formula is a whole-number multiple of the empirical formula. CH₃ weighs 15.0 and the molecule 30.0, so there are two units: C₂H₆.',
+      body: 'The molecular formula is a whole-number multiple of the empirical formula. CH₃ weighs 15.0 and the molecule 30.0, so there are two units: C₂H₆.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 13 */
+  {
+    title: 'How Much of the Mixture Is Salt',
+    prompt: 'What percent of the mixture\'s weight is salt?',
+    entry: { id: 'ans', label: 'Salt', unit: '%' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        { ...crate('mix', 'SALT AND SAND', { x: 18, y: 44 }, { species: 'water', grams: 40, sealed: true, note: 'before washing' }) },
+        { ...crate('sand', 'SAND', { x: 46, y: 44 }, { species: 'water', grams: 10, sealed: true, note: 'left on the filter' }) }
+      ],
+      zones: { slots: [{ id: 'weigh', label: 'Scale pan', at: { x: 118, y: 52 }, size: { w: 22, h: 18 } }] },
+      fixtures: [
+        { id: 'scale', kind: 'scale', label: 'Scale', at: { x: 118, y: 22 }, size: { w: 56, h: 34 }, noRun: true, props: { pan: 'slot:weigh', unit: 'g' } },
+        { id: 'plate', kind: 'plate', label: 'Washed', at: { x: 52, y: 14 }, size: { w: 76, h: 16 }, noRun: true, props: { lines: ['the salt dissolved and washed away', 'only the sand stayed'] } }
+      ]
+    }),
+    hints: [
+      'Use the scale\'s pan to weigh each crate.',
+      'Compare what the mixture weighed before washing with what was left after.',
+      'The salt is the weight that washed away: divide it by the weight of the whole mixture, then scale it to a hundred.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a percent.' };
+      if (Math.abs(v - 75) <= 0.6) return { ok: true };
+      if (Math.abs(v - 25) < 0.6) return { ok: false, msg: 'That is the share that stayed on the filter.' };
+      return { ok: false, msg: 'That share of the mixture\'s weight does not match what washed away.' };
+    },
+    reward: {
+      log: 'The mixture was 75 percent salt by weight.',
+      title: 'Composition of a Mixture',
+      body: 'A mixture\'s composition is the weight of each part over the weight of the whole. The salt was 40.0 g minus 10.0 g, so 30.0 g of 40.0 g: 75% salt by mass.',
       last: true
     }
   }
@@ -682,7 +722,8 @@ export const SOLUTIONS = [
   [joinTo('h1', 'o'), joinTo('h2', 'o'), to('o', 'container:pan'), typed('ans', '88.9')],
   [typed('ans', '24.08')],
   [...pourSteps('hydrogen', 1, 6), typed('ans', '3')],
-  [typed('ans', '2')]
+  [typed('ans', '2')],
+  [typed('ans', '75')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -698,7 +739,8 @@ export const MISSES = [
   [joinTo('h1', 'o'), joinTo('h2', 'o'), to('o', 'container:pan'), typed('ans', '33.3')],
   [typed('ans', '12.04')],
   [...pourSteps('hydrogen', 1, 6), typed('ans', '4')],
-  [typed('ans', '1')]
+  [typed('ans', '1')],
+  [typed('ans', '25')]
 ];
 
 function blankState() { return {}; }

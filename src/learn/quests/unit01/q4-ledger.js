@@ -227,8 +227,8 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('same', 'Reacts the same way', 30, 36, 44),
-          specimenTray('other', 'Reacts differently', 82, 36, 44)
+          specimenTray('same', 'Reacts the same way', 30, 40, 44),
+          specimenTray('other', 'Reacts differently', 82, 40, 44)
         ]
       }
     }),

@@ -996,8 +996,8 @@ function paintSpecimen(ctx, p, state, o) {
     }
     if (p.props.counts) {
       // What is in the middle, printed neatly on a dark pill, cleanly separated from the rings
-      const size = Math.max(6, Math.round(o.r * 0.15));
-      const boxW = Math.min(R * 1.25, o.r * 1.15);
+      const size = Math.max(7, Math.round(o.r * 0.21));
+      const boxW = o.r * 1.55;
       const boxH = Math.round(size * 2.4);
       ctx.save();
       ctx.fillStyle = 'rgba(13, 12, 10, 0.85)';
@@ -1016,9 +1016,9 @@ function paintSpecimen(ctx, p, state, o) {
 
   if (p.props.needle || p.props.tested) {
     const badgeY = o.y - o.r * 0.68;
-    const badgeSize = Math.max(6, Math.round(o.r * 0.18));
+    const badgeSize = Math.max(7, Math.round(o.r * 0.23));
     const badgeH = Math.round(badgeSize * 1.35);
-    const badgeW = o.r * 1.15;
+    const badgeW = o.r * 1.55;
     ctx.save();
     ctx.beginPath();
     ctx.arc(o.x, o.y, o.r * 0.94, 0, Math.PI * 2);
@@ -1835,7 +1835,7 @@ export const ATOMS_KIT = {
     electron: { r: R / 2, nojoin: true },
     ion: { r: R, nojoin: true },
     nucleus: { r: 8, nojoin: true },
-    specimen: { r: 8, nojoin: true },
+    specimen: { r: 10, nojoin: true },
     detector: { r: R, nojoin: true },
     card: { r: R, nojoin: true },
     model: { r: 9, nojoin: true, rect: { hw: 11, hh: 8 } },
