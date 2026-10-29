@@ -1,65 +1,43 @@
-# Prompt: Ligar teaching pass
+# Prompt: Ligar, the remaining teaching pass
 
-You are improving how well the world of **Ligar** (`unit03`, bonding) in Avalon (repo `~/chem-3d`) teaches. Avalon is a browser chemistry game for students aged 12 to 17. When a student finishes Ligar they should be able to handle the AP Chemistry Unit 2 questions (molecular and ionic compound structure and properties), and it should be fun.
+Do the whole job in one autonomous run: do not stop between tasks to ask me what is next. Ask only about a conflict with PRODUCT.md or a decision that is genuinely mine.
 
-Another agent already audited Ligar, added missing AP content and fixed operability bugs. Your job is different: **judge and rewrite the teaching itself.** Whether a stage can be operated is settled. Whether a student learns from it is not.
+**Start by reading `docs/original-prompt.md`** (setup tricks for the browser, the audit and fix process, the rules and the traps; world = Ligar, unit = `unit03`) and follow it. This file adds only what is specific to where Ligar stands now. Then read `docs/Ligar-audit.md`, especially its work log, the teaching-quality section, and the open defects.
 
-## Read first, in this order
+## What has been done (do not redo it, but do re-check it by playing it)
 
-1. `PRODUCT.md`. Its invariants are hard constraints. If anything below conflicts with it, stop and ask the owner.
-2. `docs/Ligar-audit.md`: coverage table, teaching-quality section, work log, open defects.
-3. `docs/Avalon problems and clashing rules.md` and `CLAUDE.md` (teaching doctrine, hard rules, "retire by archiving").
-4. The quests: `src/learn/quests/unit03/q1-joins.js` to `q9-orbitals.js` and `boss-warden.js`.
+A previous agent audited Ligar, fixed operability bugs and rewrote or added these stages. **None of them has been played by a student, and most were checked only with scripted actions plus screenshots**, so treat them as unproven:
 
-## How to teach (the owner's brief)
+- `q2-lattice` 6, 7: alloys (hammer pure, substitutional and interstitial blocks; sort atoms by width).
+- `q3-distance` 1 (pull and push traces), 2 (energy for 2 mol), 6 (Coulomb's law ranking of an unheated salt).
+- `q4-dots` 1 (count the valence electrons; the slate hides its total).
+- `q5-resonance` 4 to 8 (formal charge: stamp and mark, hand count, two drawings, where the minus goes; bond order 4/3).
+- `q6-shape` 3 (add arms until the depth gauge leaves zero), 6, 7 (octahedral, square planar).
+- `q7-polarity` 1 (electronegativity: Arrows readings sorted into three bands).
+- `q8-hybrid` 3 (was black; fixed), 5 (objective prompt), 6 (count sigma and pi).
+- `q1-joins` 2, 3, 5 (atoms in a grid; stage 5 now reasons from outer electrons).
+- Fixed in shared code: orbital nameplates sized in metres; lean-in view kept on a slipped drag; lone-pair dots hidden behind far-side atoms; `nojoin` cards.
 
-- Give students facts they could not reasonably infer: show them, state them, or have a character tell them. Then let them discover the consequences by manipulating the system. Build chemical intuition, not recall. The discovery path need not follow the historical path.
-- For quantitative content follow Brilliant's approach, not plug-and-chug: start from a concrete visual situation; ask for a prediction before any calculation; build each relationship by proportional reasoning ("if I double this, what happens to that?") before naming a formula; introduce a formula only as shorthand for something already understood; ramp the numbers (friendly values and estimation first, realistic later); make units and sanity checks part of the play; give wrong answers visible, informative consequences, not just "wrong".
-- Chemistry must be accurate. Simplifying is fine; saying something false is not.
-- Keep the storyline, characters and voice (Vess, the Fifth). Dialogue text may be rewritten.
+## What is still open (your work)
 
-## The job
+1. **Never played by an agent:** `q5` stages 1 to 3, the whole of `boss-warden`, `q2` stages 1 to 5 beyond a look, `q6` stages 1, 2, 4, 5, `q7` stages 2 to 5, `q8` stages 1, 2, 4, `q9` stages 1 and 2. Play every one of these and every stage listed above **with real gestures**, and fix what you find.
+2. **Known weak stages:**
+   - `q1-joins` stage 2 shows the outcome of a join only as a rod or a drift; stage 3 sorts by a charge seen on the atom faces; nothing yet makes "a full outer shell" feel necessary, and electronegativity (taught only in `q7`) arrives after the idea it explains.
+   - `q2-lattice` stages 2 and 3 sort to a taxonomy (conducts cold / only molten / never; rank by melting point) without asking the student to reason about why; the electron sea is not drawn on the metal pictures; alloys' effect on conductivity and melting point is untested.
+   - `q9-orbitals` stage 3 is overloaded (twelve electron pieces, a ladder, jargon labels "PUSHES" and "HOLDS", counters, a magnet at once) and is beyond AP; cut what the decision does not need.
+   - `q8` stage 5 observes a refusal; look for a task that makes the student predict first.
+   - `q8` stage 3's mixer readout ("NOTHING MIXED") is partly covered by the knob.
+   - The Warden: phases should re-test earlier ideas, not introduce new ones; check it against the audit's teaching questions.
+3. **Missing content:** five-domain shapes (trigonal bipyramidal, seesaw, T-shaped) are not built; hybridization read from a formula is thin; `q6` and `q7` have little quantitative content; the electron sea and metallic bonding as a topic are only implied. Add what AP Unit 2 needs, preferring stages on the bench the idea belongs to.
+4. **Student-confusion risk you cannot measure:** list the stages where you suspect a first-time student gets lost but could not prove it, so I can play those first.
 
-For **every stage of every Ligar bench and the Warden**, play it as a first-time student would and answer three questions:
+## Ligar-specific traps
 
-1. **Intuitive?** Can a student tell what to do and what happened, from the table alone?
-2. **Busywork?** Is the task carrying an idea, or is it matching a printed fact to a tray, copying a number, hunting a value, or solving by trial until a light turns on?
-3. **Does the setup build intuition?** Does the picture or the manipulation make the idea feel necessary, or could a student pass without understanding?
+- The two-sided `verify` hard-codes stage indices for several Ligar quests in `tools/verify-learn.mjs`; inserting a stage shifts them and the `NOTES` keys in the quest file.
+- Chart and counts: `src/learn/worlds/unit03-bonding.js` and `PRODUCT.md` (currently 237 stages).
+- A new bench needs a site in `tools/gen-ligar-layout.mjs` and `src/three/world-data/ligar.json`, and `verify:ligar` checks overlap and walkability. Prefer stages.
+- `q7` Arrows tool: a card must be a field card (`molCard(..., { field: true })`) or a dropped tool will not join.
 
-Then rewrite the weakest stages. Prefer new tasks over new text. Cut or merge stages that repeat an idea (but note: application stages that use an idea on a new case are not repeats).
+## Deliver
 
-### Where to start (priority order)
-
-1. `q1-joins`: stages 3 and 5 sort printed facts into trays; nothing makes "a full outer shell" feel necessary; stage 2's outcome is a rod or a drift the student must interpret. Electronegativity (now taught in `q7`) arrives after the idea it explains.
-2. `q4-dots`: a student can reach water's drawing by hunting for lit lamps without counting valence electrons.
-3. `q5-resonance`: stages 1 to 3 have never been played by an agent. Stage 3 is rearranging one double bond.
-4. `q3-distance` stage 2 (reading a depth off a graph) and stage 6 (it ranks salts, never computes a number). `q8-hybrid` stages 1, 2, 4 and 5 (stage 5 is a refusal demo). `q7-polarity` stages 3 and 4.
-5. `q9-orbitals` (beyond AP; overloaded; should be marked optional on the bench) and `boss-warden` (never played; phases should re-test earlier ideas, not new ones).
-6. Quantitative depth across the world: few stages ask the student to compute a number they can sanity-check. Where it fits, add them (Coulomb's law ratios, formal charge arithmetic, bond order, counting sigma and pi bonds). Five-domain shapes (trigonal bipyramidal, seesaw, T-shaped) are not built yet; hybridization read from a formula is thin.
-
-## Setup (what already works, and traps)
-
-- `npm run dev -- --port 3011 --strictPort`. Open it in the built-in browser, **3D On** (the owner wants benches played in 3D). Sign in with **Continue as Guest**, join a guild, skip onboarding.
-- Quests unlock in order. To open any bench, in the page console: `const {session}=await import('/src/session.js'); for (const q of ['q1-joins','q2-lattice','q3-distance','q4-dots','q5-resonance','q6-shape','q7-polarity','q8-hybrid','q9-orbitals']) session.markLearnQuestComplete('unit03', q)`.
-- A deep link first flies the ship; **reload the page with the quest hash** (`#/learn/unit03/q4-dots`) to land on the bench.
-- To jump to a stage: set `globalThis.__LQ_TEST__ = { runner: r => { window.__R = r } }` then change the hash to a quest; then `window.__R.loadStage(i)` (0-based). Skip the Tour dialog.
-- **Operate with real gestures** (drag, click-then-click, dials), not only `window.__R.act(...)`. Scripted solutions pass `npm run verify:table` while real play fails: this happened twice (a card kind marked `nojoin` so a dropped tool never joined; a drag that threw the camera off the bench). If a real gesture does not work, that is a defect to fix and log.
-- The pane is small; zoom screenshots to read labels. If something is hard to read at the default view, say so.
-- Traps already hit: `c.label(text, w, h)` takes **metres** (a 128 m plate once blacked out every orbital bench); `wells()` in `q3-distance.js` silently drops options it does not list; the stage count lives in three places (`meta.stageCount`, `src/learn/worlds/unit03-bonding.js`, and the counts in `PRODUCT.md` and the verify scripts' stage indices); new tools and pieces need a Tour step in `src/learn/table/tour-ligar.js` or `verify:table` fails.
-
-## Rules for changes
-
-- Follow `PRODUCT.md` and `CLAUDE.md`: one decision per stage; predict first only on the click stage or a new case; prompts state the objective, never the route (at most 25 words, no "!"); three one-sentence hints (control, what to look at, method); every stage ends on a reward card of one to three sentences; no feature advertising; plain words until earned; never give away the answer in a prompt, hint or miss message.
-- **Never delete** code or docs that were once real. Move them to `archive/<date>/` with a README saying why (see `CLAUDE.md`).
-- Other agents are working on the other worlds. Do not change other worlds. Shared engine, kit and verify changes must keep every other world passing.
-- Reuse existing kits and pieces. A brand new bench needs a world site (`tools/gen-ligar-layout.mjs`, `src/three/world-data/ligar.json`) and about ten wiring files; prefer new stages on the existing bench for the concept unless the owner asks for a bench.
-- After each bench: replay the changed stages in the browser by hand and check the console; run `npm run verify:learn verify:table verify:story verify:docs verify:ligar verify:bench` (one at a time; each as `npm run verify:<name>`); fix what you broke; commit with a message that says the **teaching** change. Do **not** run the full `npm run verify` casually: it ends in `npm run build`, which wipes `dist/` (rescue non-build files such as `dist/art` first).
-- Keep `docs/Ligar-audit.md` current: add what you played, what you judged, what you changed, and what is still weak. Update `CLAUDE.md` with changed stage counts and anything a later agent must know.
-
-## What to deliver
-
-1. A per-stage table in `docs/Ligar-audit.md`: stage, played how (real gestures or not), intuitive / busywork / intuition verdicts with one line of evidence each.
-2. The rewrites, committed bench by bench.
-3. A final summary: what changed, what is still weak, which concepts you added or recommend adding, and a short list of things only the owner can judge by playing (you cannot see a student's confusion).
-
-If something blocks you (a bench crashes, a gesture cannot be made to work), log it in the audit and move on rather than stalling.
+Everything in `docs/original-prompt.md` section 3, plus: in `docs/Ligar-audit.md`, mark each stage listed above as played-by-real-gesture or not, and finish with the short list of stages only I can judge by playing.
