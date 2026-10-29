@@ -18,7 +18,8 @@ const LEAKS = {
   'q7-gibbs': {
     2: [/\b250\b/, /lowest/i, /spreading|spread/i, /sign/i],
     3: [/cross/i, /flips?/i],
-    4: [/\b273\b/, /zero/i, /divid/i]
+    4: [/32\.7/, /\b59\.3\b/, /convert/i],
+    5: [/\b273\b/, /zero/i, /divid/i]
   },
   'q6-entropy': {
     2: [/outnumber/i, /\bmost\b/i, /\bspread\b/i, /\b70\b|\b68\b/],
@@ -364,9 +365,20 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       }
     }
     {
-      near(T_ICE, 273, 1, `${q} stage 4 (the melting point)`);
-      near(HK.markerRead(done(e7, 3), 'T'), T_ICE, 2, `${q} stage 4 (the marker)`);
-      holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 3), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 4: the dial has no setting at the melting point`);
+      // ΔG at 298 K from ΔH and ΔS in different units: the right option is the one the units agree on, and every slip is a real slip.
+      const { HABER, HABER_OPTIONS, HABER_RIGHT } = e7.CHECKS;
+      const dG = HABER.dH - HABER.T * HABER.dS / 1000;
+      near(dG, -32.7, 0.1, `${q} stage 4 (ΔG at 298 K)`);
+      same(HABER_OPTIONS[HABER_RIGHT - 1], '−32.7 kJ', `${q} stage 4 (the option graded)`);
+      near(HABER.dH + HABER.T * HABER.dS / 1000, -151.3, 0.1, `${q} stage 4 (the sign slip)`);
+      near(HABER.dH - HABER.T * HABER.dS, 59210, 1, `${q} stage 4 (the unit slip)`);
+      same(e7.STAGES[3].check(e7.stateFor(3, e7.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
+      same(e7.STAGES[3].check(e7.stateFor(3, e7.MISSES[3])).ok, false, `${q} stage 4 (the miss)`);
+    }
+    {
+      near(T_ICE, 273, 1, `${q} stage 5 (the melting point)`);
+      near(HK.markerRead(done(e7, 4), 'T'), T_ICE, 2, `${q} stage 5 (the marker)`);
+      holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 4), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 5: the dial has no setting at the melting point`);
     }
   }
 

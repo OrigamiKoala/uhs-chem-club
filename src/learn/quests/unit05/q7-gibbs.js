@@ -22,10 +22,10 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, note, gCard, plotFixture, markerFixture, markerRead, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
+  heatTable, note, gCard, plotFixture, markerFixture, markerRead, plaqueFixture, selectorFixture, dialAt, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
   { term: /\bspontaneous\b/i, introducedAt: 2 },
@@ -48,7 +48,13 @@ const GUESS_LABEL = { on: '"It dissolves on its own"', off: '"It stays solid"', 
 // Stage 2: ammonium nitrate dissolving takes in 25.7 kJ per mole and gains 108 J/(mol·K) of spreading.
 const SALT = { dH: 25.7, dS: 108, Ts: [150, 200, 250, 298, 350] };
 const SALT_FIRST = SALT.Ts.find(T => gibbsFreeEnergy(SALT.dH, SALT.dS, T) < 0);
-// Stage 4: melting ice takes in 6.01 kJ per mole and gains 22.0 J/(mol·K).
+// Stage 4: ammonia synthesis gives out 92 kJ per mole of reaction and loses 199 J/(mol·K) of spreading; ΔG at 298 K is -32.7 kJ.
+const HABER = { dH: -92, dS: -199, T: 298 };
+const HABER_DG = gibbsFreeEnergy(HABER.dH, HABER.dS, HABER.T);
+// The four answers on the dial: the right one first, then the slips a student makes.
+const HABER_OPTIONS = ['−92 kJ', '+59,210 kJ', '−32.7 kJ', '−151 kJ', '—'];
+const HABER_RIGHT = 3;
+// Stage 5: melting ice takes in 6.01 kJ per mole and gains 22.0 J/(mol·K).
 const ICE = { dH: 6.01, dS: 22.0, Ts: [250, 260, 273, 285, 300] };
 const T_ICE = crossingTemperature(ICE.dH, ICE.dS);
 
@@ -167,7 +173,44 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   {
-    id: 's4-ice',
+    id: 's4-number',
+    title: 'Free Energy at 298 K',
+    prompt: 'Set the answer to the free energy change ΔG of this reaction at 298 K.',
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('facts', 'N₂ + 3 H₂ → 2 NH₃', { x: 52, y: 26 }, [
+          'ΔH = −92 kJ',
+          'ΔS = −199 J/(mol·K)',
+          'T = 298 K',
+          'ΔG = ΔH − TΔS'
+        ], { w: 70 }),
+        selectorFixture('answer', 'ΔG at 298 K', { x: 116, y: 46 }, { options: HABER_OPTIONS, start: HABER_OPTIONS.length, w: 52 })
+      ]
+    }),
+    hints: [
+      'Use the plate of facts and the answer dial.',
+      'Compare the size of ΔH in kJ with the size of TΔS, which carries the units of ΔS.',
+      'Work out TΔS in kJ, then subtract it from ΔH, keeping the sign of ΔS.'
+    ],
+    check(state) {
+      const k = dialAt(state.table, 'answer', 'value');
+      if (k === HABER_RIGHT) return { ok: true };
+      if (k === HABER_OPTIONS.length) return { ok: false, notYet: true, msg: 'Set the figure you worked out.' };
+      if (k === 4) return { ok: false, msg: 'The plate gives ΔS as a loss, and that figure makes the reaction run harder than its heat alone.' };
+      if (k === 1) return { ok: false, msg: 'That is ΔH alone, and the plate also gives a ΔS and a temperature.' };
+      return { ok: false, msg: 'That figure is about 640 times the ΔH on the plate: kJ and J are not the same size.' };
+    },
+    reward: {
+      log: 'ΔG at 298 K came to −32.7 kJ.',
+      title: 'ΔG From ΔH and ΔS',
+      body: 'ΔG = ΔH − TΔS with ΔS in J/(mol·K) turned into kJ/(mol·K): TΔS = 298 K × (−0.199 kJ/K) = −59.3 kJ, so ΔG = −92 − (−59.3) = −32.7 kJ. A negative ΔG means the reaction runs on its own at this temperature, though less strongly than ΔH alone suggests.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 5 */
+  {
+    id: 's5-ice',
     title: 'Where Ice Starts to Melt',
     prompt: 'Set the marker to the temperature in kelvin at which ice starts to melt.',
     widget,
@@ -202,7 +245,8 @@ const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Turn the "Temperature" dial.'],
   3: ['Drag each card into a tray.'],
-  4: ['Turn the "Temperature" dial; set the marker.']
+  4: ['Turn the answer dial.'],
+  5: ['Turn the "Temperature" dial; set the marker.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -291,6 +335,7 @@ export const SOLUTIONS = [
   [put('on', 'slot:guess')],
   [dial('plot', 'temp', SALT.Ts.indexOf(SALT_FIRST) + 1)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
+  [dial('answer', 'value', HABER_RIGHT)],
   [dial('plot', 'temp', 3), dial('T', 'value', 273)]
 ];
 
@@ -299,6 +344,7 @@ export const MISSES = [
   [],
   [dial('plot', 'temp', 2)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'low', 'low-t': 'high' })],
+  [dial('answer', 'value', 2)],
   [dial('plot', 'temp', 5), dial('T', 'value', 303)]
 ];
 
@@ -323,5 +369,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { SALT, SALT_FIRST, ICE, T_ICE };
+export const CHECKS = { SALT, SALT_FIRST, ICE, T_ICE, HABER, HABER_DG, HABER_OPTIONS, HABER_RIGHT };
 export { plotRead, plotAt };

@@ -85,7 +85,7 @@ export const UNIT_05 = {
       title: 'Free Energy',
       line: 'Evaluate spontaneity by balancing enthalpy and entropy across temperatures using Gibbs free energy.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q7-gibbs.js')
     },
