@@ -18,9 +18,11 @@
  *   3  place carbon dioxide's electrons                            -> multiple bonds share more
  *   4  build HOF, where only one atom can join the other two        -> central atom
  *   5  boron trifluoride, where boron's lamp stays amber           -> incomplete octet
+ *   7  sulfur tetrafluoride, where sulfur's lamp shows ten          -> expanded octet
+ *   8  nitric oxide, eleven electrons and one left unpaired         -> odd-electron molecule
  *
  * Cut (2026-10-23): "what is left over" (water already leaves lone pairs), the ammonium ion (a charge dial for a count the AP exam
- * asks), nitric oxide and SF6 (free radical and expanded octet are beyond a first course).
+ * asks), nitric oxide and SF6 (free radical and expanded octet; restored 2026-10-29 as stages 7 and 8).
  *
  * Stage 4 is HOF, not HCN: on this board hydrogen and fluorine take one pair only, so the oxygen between them is the one atom that can
  * join them, which is something the player can FIND. (HCN has an isomer, HNC, that lights every lamp as well.)
@@ -38,10 +40,12 @@ import { atomTable, slateOf, slateParts, slateLayout } from '../../table/kits/at
 import { MOLECULES, DRAWINGS, planLewis, allLit, trayFor } from '../../engine/lewis.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bincomplete octets?\b/i, introducedAt: 6 },
+  { term: /\bexpanded octets?\b/i, introducedAt: 7 },
+  { term: /\bunpaired electrons?\b|\bfree radicals?\b|\bodd.electron\b/i, introducedAt: 8 },
   { term: /\bcentral atoms?\b/i, introducedAt: 5 },
   { term: /\blewis structures?\b/i, introducedAt: 2 },
   { term: /\blone pairs?\b/i, introducedAt: 2 },
@@ -258,7 +262,62 @@ export const STAGES = [
     reward: {
       log: 'Boron stops at six.',
       title: 'Incomplete Octet',
-      body: 'An atom that remains stable with fewer than eight valence electrons has an incomplete octet. Boron trifluoride contains three single bonds, giving boron six valence electrons without completing an octet.',
+      body: 'An atom that remains stable with fewer than eight valence electrons has an incomplete octet. Boron trifluoride contains three single bonds, giving boron six valence electrons without completing an octet.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    title: 'More Than Eight',
+    prompt: 'Distribute all valence electrons in sulfur tetrafluoride so every fluorine atom has a full outer shell.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'SF4', 82, 32, 54]]),
+    hints: [
+      'Use the Pair tile and the slate.',
+      'Fluorine takes one shared pair only, so count what is left once each fluorine is full.',
+      'Every fluorine needs a bond and three lone pairs; place the electrons that remain on sulfur.'
+    ],
+    check(state) {
+      const sl = slateOf(state.table, 'a');
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      const atoms = sl.read.atoms;
+      if (atoms.some(a => a.lamp === 'over')) return { ok: false, msg: 'An atom has more round it than it can hold.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
+      if (atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine lamp is still dark.' };
+      if (atoms[0].lamp === 'expanded') return { ok: true };
+      return { ok: false, msg: 'Every electron is placed, and sulfur is not joined to all four fluorine atoms.' };
+    },
+    reward: {
+      log: 'Sulfur holds ten.',
+      title: 'Expanded Octet',
+      body: 'An atom in the third period or below can hold more than eight valence electrons, which is an expanded octet. Sulfur in SF₄ has four bonds and a lone pair, ten electrons in all, while fluorine and the other second-period atoms never exceed eight.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    title: 'One Left Over',
+    prompt: 'Distribute all eleven valence electrons in nitric oxide so oxygen has a full outer shell.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'NO', 82, 36, 62]], { single: true }),
+    hints: [
+      'Use the Pair tile, the Single tile and the slate.',
+      'Give oxygen its eight first and see how many electrons nitrogen is left with.',
+      'Eleven is odd, so one electron cannot be paired; put it on nitrogen as a single electron.'
+    ],
+    check(state) {
+      const sl = slateOf(state.table, 'a');
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
+      const [n, o] = sl.read.atoms;
+      if (o.lamp !== 'full') return { ok: false, msg: 'Every electron is placed, and oxygen does not have eight round it.' };
+      if (n.around === 7 && n.dots === 1) return { ok: true };
+      return { ok: false, msg: 'Every electron is placed, and nitrogen does not have seven round it with one electron on its own.' };
+    },
+    reward: {
+      log: 'One electron stays unpaired.',
+      title: 'Odd-Electron Molecules',
+      body: 'A molecule with an odd number of valence electrons cannot give every atom an octet, because one electron has no partner. That unpaired electron makes nitric oxide a free radical, and it sits on nitrogen with seven round it.',
       last: true
     }
   }
@@ -369,7 +428,9 @@ export const SOLUTIONS = [
   [guess('two')],
   [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2)],
   [...deal('aj01'), ...deal('aj12'), ...deal('a1', 2), ...deal('a2', 3)],
-  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3)]
+  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3)],
+  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('aj04'), ...deal('a0'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3), ...deal('a4', 3)],
+  [...deal('aj01', 2), ...deal('a0'), ...deal('a0', 1, 'single'), ...deal('a1', 2)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -379,7 +440,9 @@ export const MISSES = [
   [],
   [...deal('aj01'), ...deal('aj12'), ...deal('a0', 3), ...deal('a2', 3)],
   [...deal('aj02'), ...deal('a1', 3), ...deal('a2', 3)],
-  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('a1', 2), ...deal('a2', 2), ...deal('a3', 2)]
+  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('a1', 2), ...deal('a2', 2), ...deal('a3', 2)],
+  [...deal('aj01'), ...deal('aj02'), ...deal('aj03'), ...deal('aj04'), ...deal('a1', 3), ...deal('a2', 3), ...deal('a3', 3), ...deal('a4', 3)],
+  [...deal('aj01', 3), ...deal('a0'), ...deal('a1')]
 ];
 
 function blankState() { return {}; }

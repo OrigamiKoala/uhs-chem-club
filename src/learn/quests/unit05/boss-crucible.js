@@ -20,7 +20,7 @@
  * Clearing it files the Case File clue `clue_ember_siphon`. The boss pays no XP: the main story never does.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
   heatTable, eqn, bondChip, cupFixture, plotFixture, plaqueFixture, markerFixture, selectorFixture, ledgerFixture, stackFixture, markerRead, dialAt,
@@ -81,13 +81,13 @@ export const STAGES = [
     return {
       id: 'p1-jacket',
       title: 'Phase 1 · The Jacket',
-      prompt: 'Set the marker to the heat the water jacket absorbed from the Crucible, in kilojoules.',
+      prompt: 'Type the heat the water jacket absorbed from the Crucible, in kilojoules.',
+      entry: { id: 'kj', label: 'Heat absorbed', unit: 'kJ' },
       widget,
       table: heatTable({
         fixtures: [
           c.fixture,
-          plaqueFixture('ref', 'What you may use', { x: 88, y: 24 }, ['q = m × c × ΔT', 'c of water = 4.184 J/(g·°C)', '1 kJ = 1000 J'], { w: 52 }),
-          markerFixture('kj', 'Heat absorbed', { x: 88, y: 48 }, { min: 10, max: 90, step: 2, start: 10, unit: 'kJ', w: 46 })
+          plaqueFixture('ref', 'What you may use', { x: 88, y: 24 }, ['q = m × c × ΔT', 'c of water = 4.184 J/(g·°C)', '1 kJ = 1000 J'], { w: 52 })
         ],
         zones: { slots: [c.slot] }
       }),
@@ -104,10 +104,10 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'kj');
-        if (v === 10) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        const v = entryNumber(t, 'kj');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
         if (Math.abs(v - JACKET_KJ) < 1.1) return { ok: true };
-        return { ok: false, msg: `The marker reads ${v} kJ, and the jacket rose ${fixed(cupRead(t, 'jacket').dT, 1)} °C.` };
+        return { ok: false, msg: `${v} kJ would warm the 500 g jacket ${fixed((v * 1000) / (500 * SPECIFIC_HEAT_WATER), 1)} °C, and it rose ${fixed(cupRead(t, 'jacket').dT, 1)} °C.` };
       },
       ...STAGE_REWARDS[0]
     };
@@ -373,7 +373,7 @@ const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tr
 const stack = (...ids) => ids.map(id => put(id, 'tray:stack'));
 
 export const SOLUTIONS = [
-  [dial('kj', 'value', 42)],
+  [{ type: { entry: 'kj', value: '42' } }],
   [dial('answer', 'value', 1)],
   [...stack('c1', 'c2'), { flip: 'c2' }, dial('answer', 'value', 1)],
   [dial('answer', 'value', 1)],
@@ -381,7 +381,7 @@ export const SOLUTIONS = [
 ];
 
 export const MISSES = [
-  [dial('kj', 'value', 22)],
+  [{ type: { entry: 'kj', value: '22' } }],
   [dial('answer', 'value', 2)],
   [...stack('c1', 'c2'), dial('answer', 'value', 2)],
   [dial('answer', 'value', 2)],

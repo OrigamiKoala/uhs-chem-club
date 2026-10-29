@@ -95,6 +95,7 @@ const PIECE = {
   'bonds:pairtag': ['Pair cards', 'Each card names one pair of atoms and shows the rods held between them. Put the cards in order on the strip.'],
   'bonds:ion': ['Ions', 'Each ion shows its element and its charge, + or −. Drag an ion into a cell of the grid; ions in cells that touch sit side by side.'],
   'atoms:pairs': ['Pair', 'Drag the Pair tile onto a joint to share a pair of electrons between the two atoms beside it, or onto an atom to leave the pair on that atom. The lamps show what each placing did.'],
+  'atoms:single': ['Single', 'Drag the Single tile onto an atom to leave one unpaired electron on it. The slate counts it as one electron, and the atom\'s lamp counts it round that atom.'],
   'atoms:lift': ['Lift Out', 'Drag "Lift Out" onto a joint or an atom to take a pair back off it, so you can try it somewhere else.'],
   'atoms:fcstamp': ['Stamp', 'Drag the Stamp onto an atom of the drawing. It prints the charge that atom carries, which changes when you change the drawing.'],
   'atoms:mark': ['Mark', 'Drag the Mark onto an atom to leave a dashed ring on it. Your answer is the atom that wears the ring when you press Submit.'],
@@ -109,7 +110,7 @@ const PIECE = {
   'domain:arrows': ['Arrows', 'Lay the Arrows on a molecule card. It draws an arrow across each bond toward the atom that pulls the shared pair harder, and one amber arrow for the total pull. The size of the total is printed on the card.'],
   'domain:rod': ['Charged rod', 'Lay the rod on a stream. A charged rod pulls on a stream whose molecules turn in a field and bends it toward the rod; any other stream runs straight on.'],
   'domain:stream': ['Streams', 'Each stream is a thin flow of one liquid. The dashed line shows where it would fall if nothing pulled it.'],
-  'domain:orb': ['Orbitals', 'Each piece is one orbital of an atom, drawn with the electrons in it. Drop one in the bowl to blend it, or drop one on another orbital to try to bond the two.'],
+  'domain:orb': ['Orbitals', 'Each piece is one orbital of an atom, drawn with the electrons in it. Drop one in the bowl to blend it, or drop one on another orbital to try to bond the two. A bonded pair of atoms is drawn together.'],
   'mo:mocard': ['Gas cards', 'Each card is one gas. Drag a card into the "Gas to test" slot and press "Test Sample"; the card keeps the reading the magnet gave.']
 };
 

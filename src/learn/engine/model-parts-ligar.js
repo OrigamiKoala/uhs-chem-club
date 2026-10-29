@@ -7,6 +7,7 @@
  *   { type: 'shape', mol, lone?: false, caption? }        a hub and its arms where `vsepr.planDomains` settles them (lone pairs as faint lobes)
  *   { type: 'crystal', cation, anion, n?, caption? }      an n x n x n block of alternating ions (the lattice of `bonds.js`' grid)
  *   { type: 'lobes', n, caption? }                        the lobes of n blended orbitals, pointing where n arms settle
+ *   { type: 'sigma-pi', mode? }                          two atoms' orbitals merging as the nuclei approach (`ui/bond-overlap-animator.js`)
  *   { type: 'molecule', name }                            the small hand-set molecules in `LIGAR_MOLECULES` (found by `model-parts.js`)
  *
  * The viewer draws spheres, rods, rings and electrons; a lobe is a short chain of shrinking spheres, which is how a lobe is drawn
@@ -115,6 +116,7 @@ export function ligarParts(spec) {
   if (spec.type === 'shape') return shapeParts(spec);
   if (spec.type === 'crystal') return crystalParts(spec);
   if (spec.type === 'lobes') return lobesParts(spec);
+  if (spec.type === 'sigma-pi') return { spheres: [{ pos: [-0.75, 0, 0], r: 0.16, color: COLOR.C, kind: 'C' }, { pos: [0.75, 0, 0], r: 0.16, color: COLOR.C, kind: 'C' }], bonds: [], rings: [], electrons: [], radius: 2.8, sigmaPi: { mode: spec.mode || 'sigma' } };
   return null;
 }
 
@@ -124,5 +126,6 @@ export function ligarCaption(spec) {
   if (spec.type === 'shape') return `${RIG_MOLECULES[spec.mol]?.label || spec.mol}, with each arm where the arms settle.`;
   if (spec.type === 'crystal') return `A block of ${spec.cation} and ${spec.anion} ions, alternating in every direction.`;
   if (spec.type === 'lobes') return `${spec.n} lobes pointing as far apart as they can.`;
+  if (spec.type === 'sigma-pi') return 'Two atomic orbitals added together as the nuclei approach.';
   return null;
 }

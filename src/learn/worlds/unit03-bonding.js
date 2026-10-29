@@ -58,7 +58,7 @@ export const UNIT_03 = {
       title: 'Lewis Structures',
       line: 'Construct Lewis structures and apply the octet rule.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit03/q4-dots.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_03 = {
       title: 'Polarity',
       line: 'Determine molecular polarity from bond dipoles and symmetry.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit03/q7-polarity.js')
     },

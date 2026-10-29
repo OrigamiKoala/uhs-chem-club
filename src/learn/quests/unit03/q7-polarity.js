@@ -31,20 +31,21 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { RIG_MOLECULES, planDipole, bondKind, EN } from '../../engine/vsepr.js';
+import { RIG_MOLECULES, planDipole, bondKind, EN, ionicPercent } from '../../engine/vsepr.js';
 import {
   domainTable, plates, marker, markerValue, molCard, molOf, molRead, streamPiece, arrowsTool, rodTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\belectronegativ\w*/i, introducedAt: 1 },
   { term: /\bmolecular dipoles?\b|\bdipoles?\b/i, introducedAt: 4 },
   { term: /\bnonpolar\b/i, introducedAt: 4 },
   { term: /\bpolar\b/i, introducedAt: 2 },
-  { term: /\bpartial charges?\b/i, introducedAt: 2 }
+  { term: /\bpartial charges?\b/i, introducedAt: 2 },
+  { term: /\bpercent ionic character\b/i, introducedAt: 7 }
 ];
 
 export const BUILDS_ON = ['unit03/q6-shape', 'unit03/q1-joins', 'unit02/q8-trends'];
@@ -115,7 +116,7 @@ export const STAGES = [
     reward: {
       log: 'The bigger the difference in pull, the more one-sided the bond.',
       title: 'Electronegativity',
-      body: 'Electronegativity is how strongly an atom pulls shared electrons toward itself. The number on each card is the difference between its two atoms: 0 for H₂, 0.96 for HCl, 3.16 for KF. Above about 1.7 the pair is taken over entirely, which is an ionic bond.'
+      body: 'Electronegativity is how strongly an atom pulls shared electrons toward itself. The number on each card is the difference between its two atoms: 0 for H₂, 0.96 for HCl, 3.16 for KF. Above about 1.7 the bond is counted as ionic.'
     }
   },
 
@@ -263,7 +264,35 @@ export const STAGES = [
     reward: {
       log: 'Nitrogen pulls 0.8 harder than hydrogen.',
       title: 'A Gap You Can Calculate',
-      body: 'Nitrogen pulls at 3.0 and hydrogen at 2.2, so each N–H bond pair is pulled toward nitrogen with a difference of 0.8. A gap of 0.4 to 1.7 makes a polar covalent bond, and each bond in ammonia is polar.',
+      body: 'Nitrogen pulls at 3.0 and hydrogen at 2.2, so each N–H bond pair is pulled toward nitrogen with a difference of 0.8. A gap of 0.4 to 1.7 makes a polar covalent bond, and each bond in ammonia is polar.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    title: 'How Ionic Is It',
+    prompt: 'Set the marker to the percent of a full charge that hydrogen chloride\'s measured dipole shows is pulled across its bond.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('hcl', 'HCl', { x: 40, y: 32 }, { show: ['dipole'] })],
+      fixtures: [marker('ionic', { x: 104, y: 32 }, { label: 'Percent', max: 100 })]
+    }),
+    hints: [
+      'Use the molecule card and the marker.',
+      'Find the dipole a full charge would give across that bond length, then compare the measured dipole with it.',
+      'Multiply the full-charge figure by the bond length in angstroms (10 pm is 0.1 Å), then divide the measured dipole by that and give the share as a percent.'
+    ],
+    check(state) {
+      const v = markerValue(state.table, 'ionic');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a percent.' };
+      const want = Math.round(ionicPercent('HCl'));
+      if (Math.abs(v - want) <= 2) return { ok: true };
+      return { ok: false, msg: v > want ? 'The marker is higher than the measured dipole reaches as a share of the full-charge dipole.' : 'The marker is lower than the measured dipole reaches as a share of the full-charge dipole.' };
+    },
+    reward: {
+      log: 'The measured dipole is about 18% of a full charge.',
+      title: 'Percent Ionic Character',
+      body: 'Percent ionic character is the measured dipole divided by the dipole of a full charge across the same bond length. Hydrogen chloride reaches about 18%, hydrogen fluoride about 41%, and no bond reaches 100%, so the 1.7 gap is a rule of thumb.',
       last: true
     }
   }
@@ -378,7 +407,8 @@ export const SOLUTIONS = [
     gap('b'), into('b', 'turns'), gap('c'), into('c', 'stays'), gap('d'), into('d', 'turns'), gap('e'), into('e', 'turns')
   ],
   [lay('rod', 's1'), lay('rod', 's2'), lay('rod', 's3'), into('s2', 'bent'), into('s3', 'bent')],
-  [{ setDial: { fixture: 'gapn', dial: 'value', value: 8 } }]
+  [{ setDial: { fixture: 'gapn', dial: 'value', value: 8 } }],
+  [{ setDial: { fixture: 'ionic', dial: 'value', value: 18 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -388,7 +418,8 @@ export const MISSES = [
   [],
   [into('a', 'turns'), into('b', 'turns'), into('c', 'stays'), into('d', 'turns'), into('e', 'turns')],
   [into('s1', 'bent'), into('s3', 'bent')],
-  [{ setDial: { fixture: 'gapn', dial: 'value', value: 3 } }]
+  [{ setDial: { fixture: 'gapn', dial: 'value', value: 3 } }],
+  [{ setDial: { fixture: 'ionic', dial: 'value', value: 100 } }]
 ];
 
 function blankState() { return {}; }

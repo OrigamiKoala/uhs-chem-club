@@ -18,15 +18,16 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { heatTable, charge, note, cupFixture, shelvesFixture, plaqueFixture, markerFixture, markerRead, cupRead, shelvesRead, fixed, FUELS, SPECIFIC_HEAT_WATER } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
-  { term: /\benthalpy\b/i, introducedAt: 1 }
+  { term: /\benthalpy\b/i, introducedAt: 1 },
+  { term: /\blimiting reactant\b/i, introducedAt: 7 }
 ];
 
 /** Moles and molar mass are Tallow's; heat in a bath is this world's first two benches. */
@@ -56,6 +57,17 @@ const EQN_DH = -572;
 const H2_GRAMS = 6;
 const REACTIONS_RUN = H2_GRAMS / 2.0 / 2;
 const Q_EQN = REACTIONS_RUN * -EQN_DH;
+
+// Stage 6: 0.25 mol of the powder in a 400 g bath at 20 degrees: a rise of 23.9 degrees.
+const FINAL_MOLES = [0.05, 0.1];
+const FINAL_BATH = 400;
+const FINAL_T0 = 20;
+const FINAL_ASKED = 0.25;
+const T_FINAL = FINAL_T0 + (FINAL_ASKED * -POWDER.dH * 1000) / (FINAL_BATH * SPECIFIC_HEAT_WATER);
+// Stage 7: HCl + NaOH -> NaCl + H2O gives out 56 kJ per mole of reaction; 0.040 mol of acid meets 0.060 mol of base.
+const NEUT_DH = -56;
+const NEUT = { acid: 0.04, base: 0.06 };
+const Q_NEUT = Math.min(NEUT.acid, NEUT.base) * -NEUT_DH;
 
 // Stage 4: ten grams of each fuel into a 5000 g tank.
 const GRAMS = 10;
@@ -123,13 +135,13 @@ export const STAGES = [
     return {
       id: 's2-scale',
       title: 'More Powder, More Heat',
-      prompt: 'Set the marker to the heat that 0.30 mol of the powder gives out, in kilojoules.',
+      prompt: 'Type the heat that 0.30 mol of the powder gives out, in kilojoules.',
+      entry: { id: 'kj', label: 'Heat given out', unit: 'kJ' },
       widget,
       table: heatTable({
         pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, POWDER)],
         fixtures: [
           c.fixture,
-          markerFixture('kj', 'Heat given out', { x: 120, y: 30 }, { min: 4, max: 120, step: 2, start: 4, unit: 'kJ', w: 50 })
         ],
         zones: { slots: [c.slot] }
       }),
@@ -140,12 +152,12 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'kj');
-        if (v === 4) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        const v = entryNumber(t, 'kj');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
         if (Math.abs(v - Q_ASKED) <= 1) return { ok: true };
         const r = cupRead(t, 'cup');
         if (!r.item) return { ok: false, msg: 'The powder has not been in the cup yet.' };
-        return { ok: false, msg: `The marker reads ${v} kJ, and the cup caught ${fixed(r.q / 1000, 1)} kJ from ${fixed(r.moles, 2)} mol.` };
+        return { ok: false, msg: `${v} kJ is not what the cup caught: it caught ${fixed(r.q / 1000, 1)} kJ from ${fixed(r.moles, 2)} mol.` };
       },
       reward: {
         log: '0.30 mol of the powder gave out 48 kJ.',
@@ -238,7 +250,8 @@ export const STAGES = [
   {
     id: 's5-equation',
     title: 'Per Equation',
-    prompt: 'Set the marker to the heat released when 6.0 g of hydrogen burns, in kilojoules.',
+    prompt: 'Type the heat released when 6.0 g of hydrogen burns, in kilojoules.',
+    entry: { id: 'kj', label: 'Heat released', unit: 'kJ' },
     widget,
     table: heatTable({
       fixtures: [
@@ -247,7 +260,6 @@ export const STAGES = [
           `ΔH = ${EQN_DH} kJ`,
           'Molar mass of H₂ = 2.0 g/mol'
         ], { w: 76 }),
-        markerFixture('kj', 'Heat released', { x: 112, y: 46 }, { min: 100, max: 1500, step: 10, start: 100, unit: 'kJ', w: 56 })
       ]
     }),
     hints: [
@@ -256,15 +268,84 @@ export const STAGES = [
       'Find how many times the equation as written is carried out, then multiply its ΔH by that.'
     ],
     check(state) {
-      const v = markerRead(state.table, 'kj');
-      if (v === 100) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+      const v = entryNumber(state.table, 'kj');
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
       if (Math.abs(v - Q_EQN) <= 10) return { ok: true };
-      return { ok: false, msg: `The marker reads ${v} kJ, and the plate gives ${Math.abs(EQN_DH)} kJ.` };
+      return { ok: false, msg: `${v} kJ does not follow from the plate, which gives ${Math.abs(EQN_DH)} kJ.` };
     },
     reward: {
       log: '6.0 g of hydrogen released about 860 kJ.',
       title: 'ΔH Goes With the Equation',
       body: 'A ΔH belongs to the equation it is written beside: −572 kJ is for 2 mol of H₂ burning, not 1 mol. Count how many times the equation as written is carried out, and multiply.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const c = cupFixture('cup', { x: 28, y: 31 }, { title: 'Bath · 400 g', water: FINAL_BATH, T0: FINAL_T0, molesList: FINAL_MOLES });
+    return {
+      id: 's6-final',
+      title: 'The Bath\'s Final Temperature',
+      prompt: 'Type the temperature the bath reaches with 0.25 mol of the powder, in °C.',
+      entry: { id: 't', label: 'Final temperature', unit: '°C' },
+      widget,
+      table: heatTable({
+        pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, POWDER)],
+        fixtures: [c.fixture],
+        zones: { slots: [c.slot] }
+      }),
+      hints: [
+        'Use the cup, its "Moles reacted" dial and the powder.',
+        'Compare how far the bath rises at each setting of the dial.',
+        'The rise grows in step with the moles, and the final temperature is the starting one plus the rise.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = entryNumber(t, 't');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in °C.' };
+        if (Math.abs(v - T_FINAL) <= 0.6) return { ok: true };
+        const rises = FINAL_MOLES.map(n => fixed((n * -POWDER.dH * 1000) / (FINAL_BATH * SPECIFIC_HEAT_WATER), 1));
+        return { ok: false, msg: `The bath rises ${rises[0]} °C with ${FINAL_MOLES[0]} mol and ${rises[1]} °C with ${FINAL_MOLES[1]} mol, and ${fixed(v, 1)} °C is a rise of ${fixed(v - FINAL_T0, 1)} °C.` };
+      },
+      reward: {
+        log: '0.25 mol of the powder took the 400 g bath to about 44 °C.',
+        title: 'Predicting a Temperature',
+        body: 'Heat from the reaction is n × ΔH, and the bath warms by that heat divided by m × c: 40 kJ into 400 g of water is a rise of 23.9 °C, so the bath ends near 44 °C. The same steps, run forwards, predict what a thermometer will read.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    id: 's7-limiting',
+    title: 'Which Runs Out?',
+    prompt: 'Type the heat given out when the acid and the base react completely, in kJ.',
+    entry: { id: 'q', label: 'Heat given out', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('facts', 'HCl + NaOH → NaCl + H₂O', { x: 52, y: 28 }, [
+          'ΔH = −56 kJ for each mole of reaction',
+          'The cup holds 0.040 mol of HCl',
+          'and 0.060 mol of NaOH.'
+        ], { w: 80 })
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'Compare the moles of each reactant with the one-to-one ratio in the equation.',
+      'The reaction stops when the reactant there is less of is used up, so count the moles of reaction from that one.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'q');
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+      if (Math.abs(v - Q_NEUT) <= 0.06) return { ok: true };
+      return { ok: false, msg: `${fixed(v, 2)} kJ is the heat of ${fixed(v / -NEUT_DH, 3)} mol of reaction, and the cup holds ${NEUT.acid.toFixed(3)} mol of HCl and ${NEUT.base.toFixed(3)} mol of NaOH, one for one.` };
+    },
+    reward: {
+      log: 'The 0.040 mol of acid ran out first: 2.24 kJ.',
+      title: 'The Limiting Reactant',
+      body: 'The reactant that runs out first, here the 0.040 mol of HCl, is the limiting reactant, and it sets how many moles of reaction happen. The heat is that many moles times ΔH: 0.040 × 56 = 2.24 kJ, and the extra NaOH stays unreacted.'
     }
   }
 ];
@@ -272,10 +353,12 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the powder onto the cup, then turn the dial.'],
-  2: ['Drag the powder onto the cup, turn the dial, then set the marker.'],
+  2: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
   3: ['Drag the card you choose into the slot.'],
   4: ['Drag a tin onto the cup, then back to the rail.'],
-  5: ['Set the marker.']
+  5: ['Type your answer in the field under the plate.'],
+  6: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
+  7: ['Type your answer in the field under the plate.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -363,19 +446,23 @@ const rail = order => order.map((id, i) => put(id, `rail:${i}`));
 
 export const SOLUTIONS = [
   [put('powder', MOUTH), dial('chart', 'after', 2)],
-  [put('powder', MOUTH), dial('cup', 'moles', 3), dial('kj', 'value', 48)],
+  [put('powder', MOUTH), dial('cup', 'moles', 3), { type: { entry: 'kj', value: '48' } }],
   [put('hydrogen', 'slot:guess')],
   [...tryAll(), ...rail(BY_GRAM)],
-  [dial('kj', 'value', 860)]
+  [{ type: { entry: 'kj', value: '860' } }],
+  [put('powder', MOUTH), { type: { entry: 't', value: '43.9' } }],
+  [{ type: { entry: 'q', value: '2.24' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [put('powder', MOUTH), dial('chart', 'after', 4)],
-  [put('powder', MOUTH), dial('cup', 'moles', 3), dial('kj', 'value', 32)],
+  [put('powder', MOUTH), dial('cup', 'moles', 3), { type: { entry: 'kj', value: '32' } }],
   [],
   [...tryAll(), ...rail(['methane', 'hydrogen', 'methanol', 'carbon'])],
-  [dial('kj', 'value', 570)]
+  [{ type: { entry: 'kj', value: '570' } }],
+  [put('powder', MOUTH), { type: { entry: 't', value: '40' } }],
+  [{ type: { entry: 'q', value: '3.36' } }]
 ];
 
 function blankState() { return {}; }
@@ -399,5 +486,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { POWDER, AFTER, SCALE_MOLES, Q_ASKED, Q_EQN, EQN_DH, GRAMS, TANK, FUEL_IDS, BY_GRAM, riseOf, molesOf };
+export const CHECKS = { T_FINAL, Q_NEUT, POWDER, AFTER, SCALE_MOLES, Q_ASKED, Q_EQN, EQN_DH, GRAMS, TANK, FUEL_IDS, BY_GRAM, riseOf, molesOf };
 export { cupRead, shelvesRead };

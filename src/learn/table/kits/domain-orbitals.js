@@ -15,6 +15,9 @@
  * a sigma bond (end to end); two p orbitals of the same axis side by side make a pi bond. A pair, an empty box, two
  * lobes pointing away from each other, p orbitals on different axes: nothing joins, and the reason is the picture.
  *
+ * A SEATED ORBITAL (`orbital(..., { seat, apart })`) belongs to its atom: it cannot be carried off, and overlapping it with another
+ * seated orbital brings the two atoms together until their nuclei stand `apart` apart (`settleSeated`).
+ *
  * A TWIST (fixture `twist`, one dial): the far end of a bond turned by hand. `vsepr.planTwist` says whether it will
  * turn; if it will not, `settle` sends the knob back and says why.
  */
@@ -65,13 +68,14 @@ export function planOrbJoin(a, b, state) {
     if (x.props.e !== 1) return { holds: false, reason: noElectron(x) };
     if (bondedOrb(state, x) && !a.joinedTo.includes(b.id)) return { holds: false, reason: 'One of those orbitals is already in a bond.' };
   }
+  const seated = Boolean(a.props.seat && b.props.seat);
   const facing = (!a.props.to || a.props.to === b.props.atom) && (!b.props.to || b.props.to === a.props.atom);
   if (!facing) return { holds: false, reason: 'Those two orbitals do not point at each other.' };
   if (a.props.type === 'p' && b.props.type === 'p') {
     if (a.props.axis !== b.props.axis) return { holds: false, reason: 'Those p orbitals point different ways, so they cannot overlap side by side.' };
-    return { holds: true, link: { type: 'pi' }, reason: 'The p orbitals overlap side by side, above and below the line between the atoms.' };
+    return { holds: true, link: { type: 'pi', ...(seated ? { seated } : {}) }, reason: 'The p orbitals overlap side by side, above and below the line between the atoms.' };
   }
-  return { holds: true, link: { type: 'sigma' }, reason: 'The orbitals overlap end to end, along the line between the atoms.' };
+  return { holds: true, link: { type: 'sigma', ...(seated ? { seated } : {}) }, reason: 'The orbitals overlap end to end, along the line between the atoms.' };
 }
 
 /** Every bond built on the table: `{sigma, pi}` and the pairs. */
@@ -85,6 +89,50 @@ export function bondsBuilt(state) {
   }
   return out;
 }
+
+/* ------------------------------------------------------------------
+   SEATED ORBITALS
+   ------------------------------------------------------------------ */
+
+/**
+ * A SEATED orbital is part of an atom, not a loose piece: `props.seat {dx, dy}` is where its handle stands from the atom's
+ * nucleus, and the atom is where it was laid out (`home - seat`) until it is bonded. `settleSeated` poses every seated orbital
+ * after any action, from the table alone: an atom whose orbital is in a bond has moved along the line to its partner until the
+ * nuclei stand `props.apart` apart, and every orbital of that atom has moved with it. An orbital let go anywhere else goes
+ * back to its seat, so the orbitals of an atom never come apart.
+ */
+export const seatedOrb = p => p && p.kind === 'orb' && Boolean(p.props.seat);
+
+export function settleSeated(s) {
+  const orbs = Object.values(s.pieces).filter(seatedOrb);
+  if (!orbs.length) return;
+  const home = new Map();
+  for (const p of orbs) if (!home.has(p.props.atom)) home.set(p.props.atom, { x: p.home.x - p.props.seat.dx, y: p.home.y - p.props.seat.dy });
+  const centre = new Map([...home].map(([k, v]) => [k, { ...v }]));
+  for (const [key, link] of Object.entries(s.links)) {
+    if (!link.seated) continue;
+    const [x, y] = key.split('|').map(id => s.pieces[id]);
+    if (!x || !y) continue;
+    const a0 = home.get(x.props.atom);
+    const b0 = home.get(y.props.atom);
+    const len = Math.hypot(b0.x - a0.x, b0.y - a0.y) || 1;
+    const ux = (b0.x - a0.x) / len;
+    const uy = (b0.y - a0.y) / len;
+    const mx = (a0.x + b0.x) / 2;
+    const my = (a0.y + b0.y) / 2;
+    const d = (x.props.apart || y.props.apart || len) / 2;
+    centre.set(x.props.atom, { x: mx - ux * d, y: my - uy * d });
+    centre.set(y.props.atom, { x: mx + ux * d, y: my + uy * d });
+  }
+  for (const p of orbs) {
+    const c = centre.get(p.props.atom);
+    p.at = { x: c.x + p.props.seat.dx, y: c.y + p.props.seat.dy };
+    p.zone = null;
+  }
+}
+
+/** The nucleus an orbital belongs to, as the table stands: where its atom is. */
+export const seatCentre = p => ({ x: p.at.x - p.props.seat.dx, y: p.at.y - p.props.seat.dy });
 
 /* ------------------------------------------------------------------
    THE TWIST
@@ -143,7 +191,49 @@ function electrons(ctx, x, y, e, size, color) {
   if (e >= 2) arrow(ctx, x + size * 0.35, y - h * 0.5, x + size * 0.35, y + h * 0.5, Math.max(1.2, size * 0.14), color, Math.max(2.5, size * 0.3));
 }
 
+/**
+ * A seated orbital drawn flat: its lobe stands from the atom's nucleus (the p orbital, which stands up out of the plate,
+ * is the nucleus itself with a ring round it), so an atom reads as one thing with its orbitals round it.
+ */
+function paintSeated(ctx, p, state, o) {
+  const k = o.r / ORB_R;
+  const cx = o.x - p.props.seat.dx * k;
+  const cy = o.y - p.props.seat.dy * k;
+  const bonded = bondedOrb(state, p);
+  const col = bonded ? PLATE_COLORS.phosphor : AMBER;
+  if (p.props.type === 'p') {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = 'rgba(229, 155, 36, 0.14)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 9 * k, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    atomDisc(ctx, cx, cy, 3.2 * k, 'C');
+  } else {
+    const a = p.props.dir ?? 0;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    lobe(ctx, cx, cy, a, 22 * k, 7 * k, col, true);
+    ctx.restore();
+    if (p.props.to === 'h') atomDisc(ctx, cx + Math.cos(a) * 25 * k, cy + Math.sin(a) * 25 * k, 2.4 * k, 'H');
+  }
+  if (p.props.e) electrons(ctx, o.x, o.y, p.props.e, 7 * k, PLATE_COLORS.text);
+  if (o.lit) {
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  const name = p.props.atomLabel ? `${p.props.atomLabel} ${p.label}` : p.label;
+  const lx = p.props.type === 'p' ? cx : o.x;
+  const ly = p.props.type === 'p' ? cy + 13 * k : o.y + 5.5 * k;
+  plateText(ctx, name, lx, ly, { size: Math.max(6, Math.round(o.r * 0.38)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+}
+
 function paintOrb(ctx, p, state, o) {
+  if (seatedOrb(p)) { paintSeated(ctx, p, state, o); return; }
   const t = p.props.type;
   const bonded = bondedOrb(state, p);
   disc(ctx, o.x, o.y, o.r, '#16140f', o.lit ? AMBER : bonded ? PLATE_COLORS.phosphor : PLATE_COLORS.steel, o.lit || bonded ? 2 : 1);
@@ -188,7 +278,7 @@ export function paintOrbLink(ctx, link, o) {
   return true;
 }
 
-export const orbLinkRods = link => (link?.type === 'pi' ? 2 : link?.type === 'sigma' ? 1 : undefined);
+export const orbLinkRods = link => (link?.seated ? 0 : link?.type === 'pi' ? 2 : link?.type === 'sigma' ? 1 : undefined);
 
 /** The hybrid lobes a bowl makes, pointing where that many arms settle, and the p orbitals left over. */
 function paintBowl(ctx, f, state, b) {
@@ -293,7 +383,7 @@ export function paintOrbKind(ctx, p, state, o) {
 }
 
 export const printedOrb = p => (p.kind === 'orb' ? (p.props.atomLabel ? `${p.props.atomLabel} ${p.label}` : p.label) : undefined);
-export const faceKeyOrb = (p, state) => (p.kind === 'orb' ? `${p.props.type}|${p.props.e}|${p.props.axis || ''}|${p.props.dir ?? ''}|${bondedOrb(state, p) ? 1 : 0}` : undefined);
+export const faceKeyOrb = (p, state) => (p.kind === 'orb' ? `${p.props.type}|${p.props.e}|${p.props.axis || ''}|${p.props.dir ?? ''}|${bondedOrb(state, p) ? 1 : 0}|${p.props.seat ? p.joinedTo.join(',') : ''}` : undefined);
 
 export function paintOrbFixture(ctx, f, state, b) {
   if (f.kind === 'mixbowl') { paintBowl(ctx, f, state, b); return true; }
@@ -306,9 +396,9 @@ export function paintOrbFixture(ctx, f, state, b) {
    ------------------------------------------------------------------ */
 
 /** An orbital piece. `type` is 's' | 'p' | 'd' | a hybrid; `atom` is the atom it belongs to (the other of two cannot be it). */
-export const orbital = (id, type, atom, at, { e = 0, axis = null, to = null, dir = null, label = null, atomLabel = null } = {}) => ({
+export const orbital = (id, type, atom, at, { e = 0, axis = null, to = null, dir = null, label = null, atomLabel = null, seat = null, apart = null, nucleus = false } = {}) => ({
   id, kind: 'orb', label: label || (SUP[type] || type), at,
-  props: { type, atom, e, ...(axis ? { axis } : {}), ...(to ? { to } : {}), ...(dir != null ? { dir } : {}), ...(atomLabel ? { atomLabel } : {}) }
+  props: { type, atom, e, ...(axis ? { axis } : {}), ...(to ? { to } : {}), ...(dir != null ? { dir } : {}), ...(atomLabel ? { atomLabel } : {}), ...(seat ? { seat } : {}), ...(apart ? { apart } : {}), ...(nucleus ? { nucleus } : {}) }
 });
 
 /** A mixing bowl: the container the orbitals are dropped in, and the fixture that draws what comes out of it. */

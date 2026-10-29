@@ -21,7 +21,7 @@
  */
 
 import {
-  RIG_MOLECULES, planDomains, planDipole, bondAngles, EN
+  RIG_MOLECULES, planDomains, planDipole, bondAngles, EN, BOND_DIPOLE, E_DEBYE_PER_ANGSTROM
 } from '../../engine/vsepr.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { rectOf, SIZES } from '../snap.js';
@@ -238,6 +238,11 @@ function paintCard(ctx, p, state, o) {
   if (shows.includes('pulls')) {
     const syms = [...new Set([read.hub, ...read.arms.filter(x => x.kind === 'atom').map(x => x.sym)])];
     note(syms.map(y => `${y} ${(EN[y] ?? 0).toFixed(1)}`).join('  '));
+  }
+  if (shows.includes('dipole') && BOND_DIPOLE[read.id]) {
+    const b = BOND_DIPOLE[read.id];
+    note(`${b.mu.toFixed(2)} D   ${b.pm} pm`);
+    fitted(ctx, `FULL CHARGE ${E_DEBYE_PER_ANGSTROM.toFixed(2)} D PER Å`, x0 + w - 3, y0 + h * 0.93, w * 0.55, { size: Math.max(5, Math.round(h * 0.1)), align: 'right', color: PLATE_COLORS.dust });
   }
   if (shows.includes('angles') && read.angles.length) note(`ATOMS ${read.angles.join(' ')}°`);
   if (arrowsOn(state, p)) {

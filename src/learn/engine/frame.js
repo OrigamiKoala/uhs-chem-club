@@ -731,6 +731,11 @@ export class LearnFrame {
     c.textContent = label ? `Carrying ${label}` : '';
   }
 
+  /** Put text in the stage's number field without announcing it (an undo, a restart). */
+  setEntry(text) {
+    if (this.el.entry && this.el.entry.value !== text) this.el.entry.value = text;
+  }
+
   /** The element the quest's instrument renders into. */
   get instrumentHost() {
     return this.el.scope;
@@ -782,12 +787,27 @@ export class LearnFrame {
     // "next" from the stage before skipped the stage it was pressed on.
     const commitLabel = stage.commitLabel || 'Submit';
     this.encounter.begin(stage.encounter || null, { index: stage.index, count: this.stageCount });
+    // A stage that asks for a number (`stage.entry`) gets a field to type it in, ahead of the keys.
+    const e = stage.entry;
+    const entryHtml = e
+      ? `<label class="lq-entry"><span class="lq-entry-label">${esc(e.label)}</span><input class="form-input lq-entry-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="12" data-entry="${esc(e.id)}" aria-label="${esc(e.label)}"><span class="lq-entry-unit">${esc(e.unit || '')}</span></label>`
+      : '';
     this.el.actions.innerHTML = `
+      ${entryHtml}
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
     this.el.hintKey = this.el.actions.querySelector('.lq-hint-key');
+    this.el.entry = this.el.actions.querySelector('.lq-entry-input');
+    if (this.el.entry) {
+      // Letters typed here are the player's answer, not the bench's keys.
+      this.el.entry.addEventListener('keydown', ev => {
+        ev.stopPropagation();
+        if (ev.key === 'Enter') { ev.preventDefault(); this.opts.onSubmit(); }
+      });
+      this.el.entry.addEventListener('input', () => this.opts.onEntry?.(this.el.entry.dataset.entry, this.el.entry.value));
+    }
 
     const dockCommit = this.el.dockCommit;
     if (dockCommit) {

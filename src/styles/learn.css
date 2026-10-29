@@ -3749,3 +3749,10 @@ body.bench-leaning .boss-hud {
   transform: none;
   width: min(340px, calc(100vw - 24px));
 }
+
+/* A stage that asks for a number: the field sits ahead of Hint and Submit. */
+.lq-entry { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; }
+.lq-entry-label { font-size: 12px; color: var(--text-muted); }
+.lq-entry-input { width: 96px; min-height: 36px; padding: 4px 8px; text-align: right; font-variant-numeric: tabular-nums; }
+.lq-entry-unit { font-size: 12px; color: var(--text-muted); min-width: 22px; }
+@media (max-width: 768px) { .lq-entry-input { min-height: 44px; } }

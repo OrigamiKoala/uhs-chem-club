@@ -69,6 +69,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const near = (a, b, tol, what) => { if (!(Math.abs(a - b) <= tol)) f(`${what}: graded ${a}, the real figure is ${Number(b).toFixed(4)}`); };
   const same = (a, b, what) => { if (String(a) !== String(b)) f(`${what}: graded ${a}, the real answer is ${b}`); };
   const holds = (cond, what) => { if (!cond) f(what); };
+  const typed = (t, id) => Number(t.entries?.[id]);
   const start = (q, i) => TABLE.createTable(q.STAGES[i].table, q.STAGES[i].title);
   const done = (q, i) => TABLE.runScript(start(q, i), q.SOLUTIONS[i], { strict: true });
   const run = (t, script) => TABLE.runScript(t, script);
@@ -100,7 +101,20 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e1 = mods['q1-flow'];
   if (e1) {
     const q = 'unit05/q1-flow';
-    holds(e1.STAGES.length === 4, `${q} should have four stages`);
+    holds(e1.STAGES.length === 5, `${q} should have five stages`);
+    {
+      // Unequal blocks: exactly one pair finishes at 27 degrees, and it is not the average of its two readings.
+      const t = start(e1, 4);
+      const ids4 = ['p', 'q', 'r', 's'];
+      const pairs = [];
+      for (let x = 0; x < 4; x++) for (let y = x + 1; y < 4; y++) {
+        const u = run(t, [{ place: { piece: ids4[x], to: `piece:${ids4[y]}` } }]);
+        if (Math.abs(HK.blockRead(u, ids4[x]).T - 27) < 0.6) pairs.push(ids4[x] + ids4[y]);
+      }
+      same(pairs.join(), 'pq', `${q} stage 5 (the pairs that finish at 27)`);
+      holds(Math.abs((t.pieces.p.props.T + t.pieces.q.props.T) / 2 - 27) > 20, `${q} stage 5: the average of the pair is near the answer`);
+      same(e1.STAGES[4].check(e1.stateFor(4, e1.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
+    }
     {
       // Exactly one pair of the four blocks finishes at 50 degrees, and it is the solution.
       const t = start(e1, 0);
@@ -143,7 +157,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e2 = mods['q2-calorimetry'];
   if (e2) {
     const q = 'unit05/q2-calorimetry';
-    holds(e2.STAGES.length === 6, `${q} should have six stages`);
+    holds(e2.STAGES.length === 7, `${q} should have seven stages`);
     {
       const t = done(e2, 1);
       near(HK.cupRead(t, 'iron').dT, HK.cupRead(t, 'water').dT, 0.1, `${q} stage 2 (equal rises)`);
@@ -155,7 +169,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     }
     {
       const t = done(e2, 2);
-      near(HK.markerRead(t, 'joules'), e2.CHECKS.Q_WATER, 35, `${q} stage 3 (the heat absorbed)`);
+      near(typed(t, 'joules'), e2.CHECKS.Q_WATER, 35, `${q} stage 3 (the heat absorbed)`);
       same(e2.STAGES[2].check(e2.stateFor(2, e2.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
     }
     {
@@ -183,7 +197,14 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     {
       const t = run(start(e2, 5), [{ place: { piece: 'mix', to: 'slot:cup.mouth' } }]);
       near(e2.CHECKS.Q_STAGE4, HK.cupRead(t, 'cup').q, 1, `${q} stage 6 (the heat the bath caught)`);
-      near(HK.markerRead(done(e2, 5), 'joules'), HK.cupRead(t, 'cup').q, 25, `${q} stage 6 (the marker)`);
+      near(typed(done(e2, 5), 'joules'), HK.cupRead(t, 'cup').q, 25, `${q} stage 6 (the figure typed)`);
+    }
+    {
+      // Ice at 0 degrees to steam at 100: melt, warm, boil.
+      near(e2.CHECKS.Q_CURVE, (10 * 334 + 10 * 4.184 * 100 + 10 * 2260) / 1000, 1e-9, `${q} stage 7 (the heat for the whole path)`);
+      same(e2.STAGES[6].check(e2.stateFor(6, e2.SOLUTIONS[6])).ok, true, `${q} stage 7 (the solution)`);
+      same(e2.STAGES[6].check(e2.stateFor(6, e2.MISSES[6])).ok, false, `${q} stage 7 (the miss)`);
+      same(e2.STAGES[6].check(e2.stateFor(6, {})).notYet, true, `${q} stage 7 (an empty field)`);
     }
   }
 
@@ -237,6 +258,19 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(e3.CHECKS.Q_EQN, (6 / 2.0 / 2) * -e3.CHECKS.EQN_DH, 1e-9, `${q} stage 5 (the heat for the amount burned)`);
       holds(Math.abs(e3.CHECKS.Q_EQN - 6 / 2.016 * -TD.FUELS.hydrogen.dHc) < 10, `${q} stage 5: the equation's ΔH is not twice hydrogen's heat of combustion`);
       same(e3.STAGES[4].check(e3.stateFor(4, e3.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
+    }
+    {
+      // A forward prediction: the bath's rise grows with the moles, and the answer sits past the dial.
+      const t = start(e3, 5);
+      const rise = k => HK.cupRead(run(run(t, [{ place: { piece: 'powder', to: 'slot:cup.mouth' } }]), [{ setDial: { fixture: 'cup', dial: 'moles', value: k } }]), 'cup').dT;
+      near(rise(2) / rise(1), 2, 1e-9, `${q} stage 6 (twice the moles, twice the rise)`);
+      near(e3.CHECKS.T_FINAL, 20 + 5 * rise(1), 1e-6, `${q} stage 6 (the temperature asked for)`);
+      same(e3.STAGES[5].check(e3.stateFor(5, e3.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
+      same(e3.STAGES[5].check(e3.stateFor(5, e3.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
+      // Limiting reactant: the smaller amount of the one-to-one pair sets the heat.
+      near(e3.CHECKS.Q_NEUT, 0.04 * 56, 1e-9, `${q} stage 7 (the heat from the limiting reactant)`);
+      same(e3.STAGES[6].check(e3.stateFor(6, e3.SOLUTIONS[6])).ok, true, `${q} stage 7 (the solution)`);
+      same(e3.STAGES[6].check(e3.stateFor(6, e3.MISSES[6])).ok, false, `${q} stage 7 (the miss)`);
     }
   }
 
@@ -401,7 +435,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     const q = 'unit05/boss-crucible';
     const num = label => Number(String(label).replace('−', '-').replace('+', '').replace(/ kJ.*$/, ''));
     const picked = (t, id = 'answer') => num(t.fixtures[id].props.options[Math.round(t.fixtures[id].dials.value.value) - 1]);
-    near(HK.markerRead(done(eb, 0), 'kj'), TD.heatTransfer(500, TD.SPECIFIC_HEAT_WATER, 20) / 1000, 1.1, `${q} phase 1 (the jacket)`);
+    near(Number(done(eb, 0).entries.kj), TD.heatTransfer(500, TD.SPECIFIC_HEAT_WATER, 20) / 1000, 1.1, `${q} phase 1 (the jacket)`);
     near(HK.cupRead(start(eb, 0), 'jacket').dT, 20, 0.01, `${q} phase 1: the jacket does not rise 20 degrees`);
     near(HK.ledgerRead(start(eb, 1), 'ledger').net, -93, 1e-9, `${q} phase 2 (ammonia's ledger, as laid)`);
     near(picked(done(eb, 1)), -93, 1e-9, `${q} phase 2 (the estimate set)`);

@@ -23,7 +23,7 @@ import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { heatTable, block, charge, note, cupFixture, blockRead, cupRead, shelvesRead, whereIs, fixed } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
   { term: /\bthermal equilibrium\b/i, introducedAt: 1 },
@@ -209,7 +209,47 @@ export const STAGES = [
         body: 'An exothermic process releases heat (q < 0), warming surroundings with a positive temperature change (ΔT > 0). An endothermic process absorbs heat (q > 0), cooling surroundings (negative ΔT). The chemicals are the system; the bath is the surroundings.'
       }
     };
-  })()
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
+  {
+    id: 's5-unequal',
+    title: 'Unequal Blocks',
+    prompt: 'Join two blocks so that both finish at 27 °C.',
+    widget,
+    table: heatTable({
+      pieces: [
+        block('p', 'Water', { x: 20, y: 24 }, { m: 300, c: WATER, T: 20, mat: 'H₂O' }),
+        block('q', 'Iron', { x: 52, y: 24 }, { m: 300, c: FE, T: 90, mat: 'Fe' }),
+        block('r', 'Water', { x: 84, y: 24 }, { m: 100, c: WATER, T: 80, mat: 'H₂O' }),
+        block('s', 'Iron', { x: 116, y: 24 }, { m: 100, c: FE, T: 20, mat: 'Fe' })
+      ]
+    }),
+    hints: [
+      'Use the four blocks and the thermometer printed on each.',
+      'Compare each block\'s weight and material as well as its starting reading.',
+      'The pair settles nearer the block that takes more energy to change its temperature, which is its mass times its specific heat capacity.'
+    ],
+    check(state) {
+      const t = state.table;
+      const groups = new Map();
+      for (const id of ['p', 'q', 'r', 's']) {
+        const r = blockRead(t, id);
+        if (r.joined) groups.set([...r.cluster].sort().join(), r);
+      }
+      if (!groups.size) return { ok: false, notYet: true, msg: 'Join two blocks, then read their thermometers.' };
+      for (const r of groups.values()) if (r.cluster.length === 2 && Math.abs(r.T - 27) < 0.6) return { ok: true };
+      const r = [...groups.values()][0];
+      return r.cluster.length === 2
+        ? { ok: false, msg: `Those two blocks both read ${fixed(r.T, 1)} °C.` }
+        : { ok: false, msg: `The group you joined holds ${r.cluster.length} blocks, and they read ${fixed(r.T, 1)} °C.` };
+    },
+    reward: {
+      log: 'The pair settled nearer the block with more m × c.',
+      title: 'Unequal Blocks',
+      body: 'Joined blocks settle where the heat one loses equals the heat the other gains. Water holds far more energy per degree than iron, so 300 g of water at 20 °C and 300 g of iron at 90 °C settle at about 27 °C, not at the average.'
+    }
+  }
 ];
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
@@ -217,7 +257,8 @@ const NOTES = {
   1: ['Drag one block onto another to join them;', 'tap the gap between them to pull them apart.'],
   2: ['Drag the card you choose into the slot.'],
   3: ['Drag the frozen valve onto a source.'],
-  4: ['Drag a tin onto the cup, then drag each tin into a tray.']
+  4: ['Drag a tin onto the cup, then drag each tin into a tray.'],
+  5: ['Drag one block onto another to join them;', 'tap the gap between them to pull them apart.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -306,7 +347,8 @@ export const SOLUTIONS = [
   [join('a', 'b')],
   [put('tank', 'slot:guess')],
   [join('valve', 'tank')],
-  [...trials, ...sort({ warmer: 'out', lime: 'out', cold: 'in', fizz: 'in' })]
+  [...trials, ...sort({ warmer: 'out', lime: 'out', cold: 'in', fizz: 'in' })],
+  [join('p', 'q')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -314,7 +356,8 @@ export const MISSES = [
   [join('a', 'c')],
   [],
   [join('valve', 'spark')],
-  [...trials, ...sort({ warmer: 'out', lime: 'in', cold: 'in', fizz: 'out' })]
+  [...trials, ...sort({ warmer: 'out', lime: 'in', cold: 'in', fizz: 'out' })],
+  [join('r', 's')]
 ];
 
 function blankState() { return {}; }

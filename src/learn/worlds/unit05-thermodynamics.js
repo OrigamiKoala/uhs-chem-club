@@ -31,7 +31,7 @@ export const UNIT_05 = {
       title: 'Heat and Temperature',
       line: 'Touch a hot block to a cold one, observe temperature equalization, and identify the direction of thermal energy transfer.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q1-flow.js')
     },
@@ -40,7 +40,7 @@ export const UNIT_05 = {
       title: 'Calorimetry',
       line: 'Measure heat in a water bath: specific heat capacity, melting ice and a reaction\'s energy.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_05 = {
       title: 'Enthalpy of Reaction',
       line: 'Relate reaction heat to molar enthalpy, reaction stoichiometry, and fuel energy density.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit05/q3-enthalpy.js')
     },

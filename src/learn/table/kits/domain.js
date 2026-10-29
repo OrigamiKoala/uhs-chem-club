@@ -26,13 +26,13 @@ import {
 import { buildMolModel } from '../../engine/ligar-mol3d.js';
 import { YAW0 } from './domain-draw.js';
 import {
-  planOrbJoin, paintOrbKind, printedOrb, faceKeyOrb, paintOrbLink, orbLinkRods, paintOrbFixture, ORB_R
+  planOrbJoin, settleSeated, seatedOrb, paintOrbKind, printedOrb, faceKeyOrb, paintOrbLink, orbLinkRods, paintOrbFixture, ORB_R
 } from './domain-orbitals.js';
 import { piecesIn } from './atoms.js';
 import {
   LIGAR_SKIN, buildHubBall, buildArmBall, buildBalloonLobe, buildProtractor, buildEnamelTile, buildProbe, buildToolCap, ligarDeck
 } from '../../engine/ligar-props.js';
-import { buildOrbitalPiece3D, buildMixer3D } from '../../engine/orbital-props.js';
+import { buildOrbitalPiece3D, buildMixer3D, SEAT_FLOAT } from '../../engine/orbital-props.js';
 
 export const DOMAIN_KIT_ID = 'domain';
 
@@ -64,6 +64,7 @@ function run(state, fixtureId) {
 
 function settle(s) {
   settleHubs(s);
+  settleSeated(s);
 }
 
 function paintPiece(ctx, p, state, o) {
@@ -138,6 +139,8 @@ function dress3d(f, state, c) {
  * and attached arms/balloons spread out around it in true 3D space according to their VSEPR vectors.
  */
 function piecePose3d(p, state, c) {
+  // A seated orbital stands in the atom's own plane, above the plate, wherever it is carried.
+  if (seatedOrb(p)) return { x: c.pl.x, y: c.ground + SEAT_FLOAT * c.s + (c.lift || 0), z: c.pl.z, hideBase: true };
   if (c.isDragging) return null;
   if (p.kind === 'hub') {
     return { x: c.pl.x, y: c.ground, z: c.pl.z };

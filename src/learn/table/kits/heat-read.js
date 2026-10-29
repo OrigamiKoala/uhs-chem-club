@@ -218,6 +218,18 @@ export function stackRead(state, fid) {
   return { cards, net, dH, matches, lhs, rhs, empty: cards.length === 0 };
 }
 
+/** How a stack's net differs from the reaction wanted, as the species it makes too many of (+) or too few of (−). */
+export function stackGap(state, fid) {
+  const r = stackRead(state, fid);
+  const target = state.fixtures[fid].props.target || {};
+  const out = [];
+  for (const s of new Set([...Object.keys(r.net), ...Object.keys(target)])) {
+    const d = (r.net[s] || 0) - (target[s] || 0);
+    if (Math.abs(d) > 1e-9) out.push(`${d > 0 ? '+' : '−'}${fmtCoef(Math.abs(d))}${s}`.replace(/ ([^ ]+)$/, ' $1'));
+  }
+  return out.join(', ');
+}
+
 /** A target equation `lhs` / `rhs` as the map a stack's net is compared with. */
 export function targetMap(lhs, rhs) {
   const m = {};

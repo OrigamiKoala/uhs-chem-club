@@ -87,6 +87,30 @@ const carbon = (atom, at, ids, o = {}) => [
 
 const RAIL_Y = 54;
 
+/**
+ * The two carbons of ethene, each ONE atom: a nucleus with its three sp2 lobes (one toward the other carbon, two toward hydrogens) and
+ * the p orbital standing through it. Every orbital is seated on its atom (`seat`: its handle's offset from the nucleus), so they never
+ * come apart; bonding two draws the atoms together until the nuclei are `apart` units apart (`domain-orbitals.js` `settleSeated`).
+ */
+const SEAT_R = 14;
+const APART = 24;
+function ethene() {
+  const atoms = [
+    { id: 'c1', name: 'Carbon 1', at: { x: 40, y: 32 }, to: 'c2', toward: 0, k: 'a' },
+    { id: 'c2', name: 'Carbon 2', at: { x: 112, y: 32 }, to: 'c1', toward: Math.PI, k: 'b' }
+  ];
+  const out = [];
+  for (const c of atoms) {
+    const lobes = [[c.toward, c.to], [c.toward + (2 * Math.PI) / 3, 'h'], [c.toward - (2 * Math.PI) / 3, 'h']];
+    lobes.forEach(([dir, to], i) => {
+      const seat = { dx: Math.cos(dir) * SEAT_R, dy: Math.sin(dir) * SEAT_R };
+      out.push(orb(`${c.k}${i + 1}`, 'sp2', c.id, { x: c.at.x + seat.dx, y: c.at.y + seat.dy }, { e: 1, to, dir, label: 'lobe', seat, apart: APART }));
+    });
+    out.push(orb(`${c.k}p`, 'p', c.id, { ...c.at }, { e: 1, axis: 'z', to: c.to, label: 'p', seat: { dx: 0, dy: 0 }, apart: APART, nucleus: true, atomLabel: c.name }));
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------
    THE NINE STAGES
    ------------------------------------------------------------------ */
@@ -188,13 +212,8 @@ export const STAGES = [
     prompt: 'Form both covalent bonds between the two carbon atoms in ethene from their orbitals.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
-      pieces: [
-        orb('a1', 'sp2', 'c1', { x: 54, y: 32 }, { e: 1, to: 'c2', dir: 0.3, label: 'lobe' }), orb('a2', 'sp2', 'c1', { x: 22, y: 18 }, { e: 1, to: 'h', dir: -2.4, label: 'lobe' }),
-        orb('a3', 'sp2', 'c1', { x: 22, y: 46 }, { e: 1, to: 'h', dir: 2.4, label: 'lobe' }), orb('ap', 'p', 'c1', { x: 38, y: 32 }, { e: 1, axis: 'z', to: 'c2', label: 'p' }),
-        orb('b1', 'sp2', 'c2', { x: 96, y: 32 }, { e: 1, to: 'c1', dir: Math.PI - 0.3, label: 'lobe' }), orb('b2', 'sp2', 'c2', { x: 128, y: 18 }, { e: 1, to: 'h', dir: -0.7, label: 'lobe' }),
-        orb('b3', 'sp2', 'c2', { x: 128, y: 46 }, { e: 1, to: 'h', dir: 0.7, label: 'lobe' }), orb('bp', 'p', 'c2', { x: 112, y: 32 }, { e: 1, axis: 'z', to: 'c1', label: 'p' })
-      ],
-      fixtures: [plate('c1', 'Carbon 1', { x: 38, y: 32 }, { w: 68, h: 56 }), plate('c2', 'Carbon 2', { x: 112, y: 32 }, { w: 68, h: 56 })]
+      pieces: ethene(),
+      fixtures: [plate('bench', 'C₂H₄', { x: 76, y: 32 }, { w: 146, h: 60 })]
     }),
     hints: [
       'Use the orbitals of both carbon atoms.',
@@ -214,7 +233,8 @@ export const STAGES = [
     reward: {
       log: 'End to end, then side to side.',
       title: 'Sigma and Pi Bonds',
-      body: 'Head-on overlap of hybrid orbitals along the internuclear axis forms a sigma bond. Lateral overlap of unhybridized parallel p orbitals above and below the axis forms a pi bond, making a double bond one sigma and one pi bond.'
+      body: 'Head-on overlap of hybrid orbitals along the internuclear axis forms a sigma bond. Lateral overlap of unhybridized parallel p orbitals above and below the axis forms a pi bond, making a double bond one sigma and one pi bond.',
+      model: { type: 'sigma-pi', mode: 'both' }
     }
   },
 

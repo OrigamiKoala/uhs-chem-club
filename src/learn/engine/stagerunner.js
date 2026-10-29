@@ -66,6 +66,8 @@ export function blankAnswer(stage) {
 
 /** What a move changes about a table, as one string: everything but what the last action said and what is in the hand. */
 const tableBody = t => JSON.stringify({ ...t, last: null, carry: null });
+/** The number a stage's field holds (`stage.entry`), read as a decimal; NaN when it is empty or not a number. */
+export const entryNumber = (table, id) => { const t = String(table.entries?.[id] ?? '').trim().replace(',', '.'); return t === '' ? NaN : Number(t); };
 
 /**
  * The end state of a table stage from a script of actions (a `SOLUTIONS` or
@@ -109,6 +111,7 @@ export function createRunner(container, ctx, cfg) {
     quest: ctx?.quest,
     world: ctx?.world,
     onSubmit: () => submit(),
+    onEntry: (id, value) => act({ type: { entry: id, value } }),
     onNext: () => next(),
     onJump: i => loadStage(i),
     onExit: () => ctx.exit()
@@ -471,6 +474,8 @@ export function createRunner(container, ctx, cfg) {
     state.choice = table.prediction?.token ?? null;
     frame.clearBanner();
     tabletop?.setState?.(state.table, { undo: history.length });
+    const e = STAGES[index]?.entry;
+    if (e) frame.setEntry(table.entries?.[e.id] ?? '');
     cfg.onWidgetChange?.(runner);
     return state.table;
   }
@@ -507,7 +512,7 @@ export function createRunner(container, ctx, cfg) {
     } else {
       const moved = tableBody(before) !== tableBody(after);
       // A dial dragged is many `setDial`s in a second: one step back, not forty.
-      const dialKey = verb === 'setDial' ? `${action.setDial.fixture}.${action.setDial.dial}` : null;
+      const dialKey = verb === 'setDial' ? `${action.setDial.fixture}.${action.setDial.dial}` : verb === 'type' ? `entry.${action.type.entry}` : null;
       const same = dialKey && lastDial && lastDial.key === dialKey && Date.now() - lastDial.t < 1500;
       if (moved && !same) {
         history.push(holdBase || before);

@@ -36,6 +36,7 @@
  *   split    'id' | [a, b]                break every join of id, or just a-b
  *   pour     { from, to, what, amount }   between containers, clamped to what is there/fits
  *   setDial  { fixture, dial, value }     clamped and stepped to the dial's own range
+ *   type     { entry, value }             the text typed in the stage's number field (kept as typed, at most 12 characters)
  *   run      'fixtureId'                  the kit reads the fixture; the recorder keeps it
  *   flip     'id'                         a card, face down or up
  *   scale    { piece, factor }            a card's multiplier, 1..kit.maxScale
@@ -72,7 +73,7 @@ import { fileCard } from '../engine/catalogue.js';
 
 export { clusterOf, itemsIn, zoneKey, parseTo, pointFor };
 
-export const VERBS = ['pick', 'place', 'join', 'split', 'pour', 'setDial', 'run', 'flip', 'scale', 'predict', 'fetch', 'lay'];
+export const VERBS = ['pick', 'place', 'join', 'split', 'pour', 'setDial', 'type', 'run', 'flip', 'scale', 'predict', 'fetch', 'lay'];
 
 const clone = o => structuredClone(o);
 const round = v => Math.round(v * 1e9) / 1e9;
@@ -135,6 +136,8 @@ export function createTable(spec, seedKey = '') {
     recorder: emptyRecorder(spec.recorder),
     carry: { held: null, field: null },
     prediction: null,
+    // What the player has typed into the stage's number field (`type`), by field id.
+    entries: {},
     tools: [...(spec.tools || [])],
     // Printed on the plate (`{at, text}`): how a stage tells the player what its tools and its answer do, where the
     // hand is looking. Plain text the drawn and the built table both print; never a tooltip, never read by a check.
@@ -433,6 +436,12 @@ const HANDLERS = {
     const kept = kit.dialed ? kit.dialed(s, s.fixtures[arg.fixture], arg.dial) : null;
     if (kept?.props) Object.assign(s.fixtures[arg.fixture].props, kept.props);
     return { value: d.value };
+  },
+
+  type(s, kit, arg) {
+    if (!arg || typeof arg.entry !== 'string') return fail('no such field');
+    s.entries = { ...(s.entries || {}), [arg.entry]: String(arg.value ?? '').slice(0, 12) };
+    return { entry: arg.entry };
   },
 
   run(s, kit, arg) {

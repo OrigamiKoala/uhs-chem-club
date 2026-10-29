@@ -25,6 +25,22 @@ export const EN = {
   Be: 1.57, B: 2.04, Mg: 1.31, Al: 1.61, Si: 1.90, P: 2.19, S: 2.58, Xe: 2.60, Br: 2.96, I: 2.66
 };
 
+/**
+ * Measured gas-phase dipole moment (debye) and bond length (pm) of a diatomic. A bond with a full charge
+ * pulled the whole way across its length would have `E_DEBYE_PER_PM * pm` debye; the share the measured
+ * dipole reaches is the bond's percent ionic character.
+ */
+export const BOND_DIPOLE = {
+  HCl: { mu: 1.08, pm: 127 },
+  HF: { mu: 1.82, pm: 92 },
+  HBr: { mu: 0.82, pm: 141 }
+};
+export const E_DEBYE_PER_ANGSTROM = 4.8;
+export function ionicPercent(mol) {
+  const b = BOND_DIPOLE[mol];
+  return b ? (100 * b.mu) / (E_DEBYE_PER_ANGSTROM * b.pm / 100) : null;
+}
+
 const norm = v => {
   const m = Math.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / m, v[1] / m, v[2] / m];

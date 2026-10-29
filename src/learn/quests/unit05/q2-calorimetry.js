@@ -20,7 +20,7 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
@@ -28,12 +28,13 @@ import {
   SPECIFIC_HEAT_WATER, heatTransfer, blockSpecificHeat
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bspecific heat capacity\b/i, introducedAt: 2 },
   { term: /\bheat of fusion\b/i, introducedAt: 4 },
-  { term: /\bcalorimeter\b/i, introducedAt: 6 }
+  { term: /\bcalorimeter\b/i, introducedAt: 6 },
+  { term: /\bheat of vaporization\b/i, introducedAt: 7 }
 ];
 
 /** The bench reads a thermometer as particle motion, and counts in moles. */
@@ -59,6 +60,15 @@ const FITTING = { m: 50, c: 0.385, T: 65.4 };
 // Stage 4: 20 g of ice at 0 degrees melts in 100 g of water at 20 degrees (334 J/g) and the bath ends at 3.4 degrees.
 const ICE = { m: 20, c: 2.09, T: 0, latent: 334 };
 const Q_MELT = ICE.m * ICE.latent;
+// Stage 7: 10.0 g of ice at 0 degrees to steam at 100 degrees: 3.34 + 4.18 + 22.6 kJ.
+const Q_CURVE = (10 * 334 + 10 * SPECIFIC_HEAT_WATER * 100 + 10 * 2260) / 1000;
+/** Where a given heat (J) leaves those 10.0 g, in words. */
+function reached(q) {
+  if (q < 3340) return `${fixed(q / 334, 1)} g melted, still at 0 °C`;
+  if (q < 3340 + 10 * SPECIFIC_HEAT_WATER * 100) return `as water at ${fixed((q - 3340) / (10 * SPECIFIC_HEAT_WATER), 0)} °C`;
+  if (q < 3340 + 10 * SPECIFIC_HEAT_WATER * 100 + 22600) return `boiling at 100 °C with ${fixed((q - 3340 - 10 * SPECIFIC_HEAT_WATER * 100) / 2260, 1)} g turned to steam`;
+  return 'as steam above 100 °C';
+}
 // Stage 6: 0.06 mol of a neutralising mix, 55.8 kJ/mol, into a 200 g bath: 3348 J.
 const MIX = { moles: 0.06, dH: -55.8 };
 const BATH_4 = 200;
@@ -140,7 +150,8 @@ export const STAGES = [
     return {
       id: 's3-equation',
       title: 'The Heat Equation',
-      prompt: 'Set the marker to the heat the water bath absorbed, in joules.',
+      prompt: 'Type the heat the water bath absorbed, in joules.',
+      entry: { id: 'joules', label: 'Heat absorbed', unit: 'J' },
       widget,
       table: heatTable({
         fixtures: [
@@ -153,7 +164,6 @@ export const STAGES = [
             'ΔT: temperature rise (T_final − T_initial)',
             'c of water = 4.184 J/(g·°C)'
           ], { w: 68 }),
-          markerFixture('joules', 'Heat absorbed', { x: 106, y: 49 }, { min: 1000, max: 4000, step: 50, start: 1000, unit: 'J', w: 56 })
         ],
         zones: { slots: [w.slot] }
       }),
@@ -164,11 +174,11 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'joules');
-        if (v === 1000) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        const v = entryNumber(t, 'joules');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in joules.' };
         if (Math.abs(v - Q_WATER) <= 35) return { ok: true };
         const r = cupRead(t, 'water');
-        return { ok: false, msg: `The marker reads ${v} J, and the bath has risen ${fixed(r.dT, 1)} °C.` };
+        return { ok: false, msg: `${v} J would warm the 100 g bath ${fixed(v / (100 * SPECIFIC_HEAT_WATER), 1)} °C, and the bath rose ${fixed(r.dT, 1)} °C.` };
       },
       reward: {
         log: 'The formula q = m c ΔT gave the bath\'s heat.',
@@ -184,7 +194,8 @@ export const STAGES = [
     return {
       id: 's4-ice',
       title: 'Ice in the Bath',
-      prompt: 'Set the marker to the heat the ice absorbed while it melted, in joules.',
+      prompt: 'Type the heat the ice absorbed while it melted, in joules.',
+      entry: { id: 'joules', label: 'Heat absorbed by melting', unit: 'J' },
       widget,
       table: heatTable({
         pieces: [block('ice', 'Ice cube', { x: 62, y: 50 }, { ...ICE, mass: '20.0 g ice', mat: 'H₂O' })],
@@ -196,7 +207,6 @@ export const STAGES = [
             'Meltwater then warms like any water.',
             'c of water = 4.184 J/(g·°C)'
           ], { w: 64 }),
-          markerFixture('joules', 'Heat absorbed by melting', { x: 108, y: 48 }, { min: 4000, max: 9000, step: 100, start: 4000, unit: 'J', w: 56 })
         ],
         zones: { slots: [a.slot] }
       }),
@@ -207,12 +217,12 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'joules');
-        if (v === 4000) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        const v = entryNumber(t, 'joules');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in joules.' };
         if (Math.abs(v - Q_MELT) <= 150) return { ok: true };
         const r = cupRead(t, 'cup');
         if (!r.item) return { ok: false, msg: 'The ice has not been in the cup yet.' };
-        return { ok: false, msg: `The marker reads ${v} J. The bath fell ${fixed(-r.dT, 1)} °C and now reads ${fixed(r.Tf, 1)} °C.` };
+        return { ok: false, msg: `${v} J is not what the bath gave up: it fell ${fixed(-r.dT, 1)} °C and now reads ${fixed(r.Tf, 1)} °C.` };
       },
       reward: {
         log: 'Melting 20 g of ice took about 6,700 J at 0 °C.',
@@ -278,7 +288,8 @@ export const STAGES = [
     return {
       id: 's5-reaction',
       title: 'Catching a Reaction',
-      prompt: 'Set the marker to the heat the reaction gave out into the bath, in joules.',
+      prompt: 'Type the heat the reaction gave out into the bath, in joules.',
+      entry: { id: 'joules', label: 'Heat given out', unit: 'J' },
       widget,
       table: heatTable({
         pieces: [charge('mix', 'Neutralising mix', { x: 76, y: 20 }, MIX)],
@@ -289,7 +300,6 @@ export const STAGES = [
             'q_reaction = −q_bath',
             'c of the bath = 4.184 J/(g·°C)'
           ], { w: 52 }),
-          markerFixture('joules', 'Heat given out', { x: 118, y: 44 }, { min: 2000, max: 5000, step: 50, start: 2000, unit: 'J', w: 52 })
         ],
         zones: { slots: [a.slot] }
       }),
@@ -300,12 +310,12 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'joules');
-        if (v === 2000) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        const v = entryNumber(t, 'joules');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in joules.' };
         if (Math.abs(v - Q_STAGE4) <= 25) return { ok: true };
         const rise = t.pieces.mix.props.rise;
         if (rise == null) return { ok: false, msg: 'The mix has not been in the cup yet.' };
-        return { ok: false, msg: `The marker reads ${v} J, and the bath rose ${fixed(rise, 1)} °C.` };
+        return { ok: false, msg: `${v} J would warm the ${BATH_4} g bath ${fixed(v / (BATH_4 * SPECIFIC_HEAT_WATER), 1)} °C, and the bath rose ${fixed(rise, 1)} °C.` };
       },
       reward: {
         log: 'The reaction\'s heat was read from the bath.',
@@ -313,17 +323,54 @@ export const STAGES = [
         body: 'A calorimeter traps heat in a weighed bath so a thermometer can measure the reaction. The heat gained by the bath equals the heat released by the reaction.'
       }
     };
-  })()
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    id: 's7-curve',
+    title: 'Ice to Steam',
+    prompt: 'Type the heat needed to turn 10.0 g of ice at 0 °C into steam at 100 °C, in kilojoules.',
+    entry: { id: 'kj', label: 'Heat needed', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('ref', 'What you may use', { x: 50, y: 28 }, [
+          FORMULA,
+          'Melting ice: 334 J for every gram',
+          'Boiling water: 2260 J for every gram',
+          'Temperature stays fixed during melting and boiling.',
+          'c of water = 4.184 J/(g·°C)'
+        ], { w: 80 }),
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'Follow the ice through each stage in turn: melting, warming the water, then boiling.',
+      'Find the heat for each stage separately, then add them, and turn the joules into kilojoules.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'kj');
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+      if (Math.abs(v - Q_CURVE) <= 0.35) return { ok: true };
+      return { ok: false, msg: `${fixed(v, 1)} kJ would leave the 10.0 g ${reached(v * 1000)}.` };
+    },
+    reward: {
+      log: 'Ice at 0 °C needed about 30 kJ to become steam at 100 °C.',
+      title: 'Heat of Vaporization',
+      body: 'The path has three costs: 3.34 kJ to melt the ice, 4.18 kJ to warm the water to 100 °C, and 22.6 kJ to boil it, which is the heat of vaporization. Boiling costs most of the total because it pulls the particles completely apart.'
+    }
+  }
 ];
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Turn the iron\'s "Heater" dial.'],
-  3: ['Set the marker.'],
-  4: ['Drag the ice onto the cup, then set the marker.'],
+  3: ['Type your answer in the field under the plate.'],
+  4: ['Drag the ice onto the cup, then type your answer.'],
   5: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
-  6: ['Drag the mix onto the cup, then set the marker.']
+  6: ['Drag the mix onto the cup, then type your answer.'],
+  7: ['Type your answer in the field under the plate.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -411,20 +458,22 @@ const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value 
 export const SOLUTIONS = [
   [put('iron', 'slot:guess')],
   [dial('iron', 'heat', 2)],
-  [dial('joules', 'value', 2100)],
-  [put('ice', MOUTH), dial('joules', 'value', 6700)],
+  [{ type: { entry: 'joules', value: '2100' } }],
+  [put('ice', MOUTH), { type: { entry: 'joules', value: '6700' } }],
   [put('fitting', MOUTH), put('cu', 'slot:answer')],
-  [put('mix', MOUTH), dial('joules', 'value', 3350)]
+  [put('mix', MOUTH), { type: { entry: 'joules', value: '3350' } }],
+  [{ type: { entry: 'kj', value: '30.1' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [dial('iron', 'heat', 3)],
-  [dial('joules', 'value', 1500)],
-  [put('ice', MOUTH), dial('joules', 'value', 7000)],
+  [{ type: { entry: 'joules', value: '1500' } }],
+  [put('ice', MOUTH), { type: { entry: 'joules', value: '7000' } }],
   [put('fitting', MOUTH), put('fe', 'slot:answer')],
-  [put('mix', MOUTH), dial('joules', 'value', 2800)]
+  [put('mix', MOUTH), { type: { entry: 'joules', value: '2800' } }],
+  [{ type: { entry: 'kj', value: '7.5' } }]
 ];
 
 function blankState() { return {}; }
@@ -448,5 +497,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { Q_WATER, Q_MELT, Q_STAGE4, FITTING, MIX, BATH_4, IRON_C };
+export const CHECKS = { Q_WATER, Q_MELT, Q_CURVE, Q_STAGE4, FITTING, MIX, BATH_4, IRON_C };
 export { cupRead, blockSpecificHeat };

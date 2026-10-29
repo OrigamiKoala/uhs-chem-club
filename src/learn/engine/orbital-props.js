@@ -90,12 +90,159 @@ function createElectronMesh(c, radius, emissiveColor = COLOR.electronGlow) {
 
 /* ------------------------------------------------------------------ 3D ORBITAL PIECE */
 
+/* ------------------------------------------------------------------ SEATED ORBITALS (one atom) */
+
+/** How high, in table units, a seated atom's orbital plane floats above the plate: clear of the p orbital standing through it. */
+export const SEAT_FLOAT = 18;
+const SEAT_LOBE = 22;
+const SEAT_P = 17;
+
+/**
+ * An orbital that is part of an atom (`props.seat`, `kit domain-orbitals.js`): the lobe is drawn from the atom's nucleus, not from
+ * the piece's own spot, so the orbitals of one atom stand round one nucleus. The p orbital (`props.nucleus`) carries the atom itself:
+ * the nucleus on a stem from a brass foot, with its name on the foot. A lobe that points at a hydrogen shows the hydrogen nucleus.
+ * Once an orbital is in a bond it turns green and swells toward its partner; the orbital with the lower id also draws the cloud
+ * the two share (a spindle on the axis for a sigma bond, one above and one below the axis for a pi bond), faded in as the atoms arrive.
+ */
+function buildSeatedOrbital3D(c, p, state) {
+  const u = c.s || 0.01;
+  const g = new THREE.Group();
+  const seat = p.props.seat;
+  const N = new THREE.Vector3(-seat.dx * u, 0, -seat.dy * u);
+  const bonded = bondedOrb(state, p);
+  const partnerId = p.joinedTo.find(id => state.pieces[id]?.kind === 'orb');
+  const partner = partnerId ? state.pieces[partnerId] : null;
+
+  const mk = (color, opacity) => own(c, new THREE.MeshStandardMaterial({
+    color, roughness: 0.22, metalness: 0.08, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide
+  }));
+  const pos = mk(bonded ? COLOR.bondedGlow : COLOR.amberPhase, bonded ? 0.6 : 0.5);
+  const neg = mk(bonded ? COLOR.bondedGlow : COLOR.cyanPhase, bonded ? 0.6 : 0.5);
+
+  const cloud = new THREE.Group();
+  cloud.position.copy(N);
+  g.add(cloud);
+  const swell = new THREE.Group();
+  cloud.add(swell);
+
+  const electrons = [];
+  const eR = 1.5 * u;
+  const addElectron = (at, dir, phase, tint) => {
+    const e = createElectronMesh(c, eR, tint);
+    e.position.copy(at);
+    cloud.add(e);
+    electrons.push({ mesh: e, base: at.clone(), dir, phase });
+  };
+
+  if (p.props.type === 'p') {
+    const geo = buildTeardropLobeGeo(SEAT_P * u, 8.5 * u);
+    const up = new THREE.Mesh(geo, pos);
+    const down = new THREE.Mesh(geo, neg);
+    down.rotation.x = Math.PI;
+    swell.add(up, down);
+    const e = p.props.e || 0;
+    if (e >= 1) addElectron(new THREE.Vector3(0, SEAT_P * 0.55 * u, 0), new THREE.Vector3(0, 1, 0), 0, COLOR.electronGlow);
+    if (e >= 2) addElectron(new THREE.Vector3(0, -SEAT_P * 0.55 * u, 0), new THREE.Vector3(0, -1, 0), Math.PI, COLOR.spinDown);
+  } else {
+    const dirAng = p.props.dir ?? 0;
+    const dir = new THREE.Vector3(Math.cos(dirAng), 0, Math.sin(dirAng)).normalize();
+    const major = new THREE.Mesh(buildTeardropLobeGeo(SEAT_LOBE * u, 8 * u), pos);
+    const minor = new THREE.Mesh(buildTeardropLobeGeo(6 * u, 2.6 * u), neg);
+    major.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    minor.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().negate());
+    swell.add(major, minor);
+    if ((p.props.e || 0) >= 1) addElectron(dir.clone().multiplyScalar(SEAT_LOBE * 0.55 * u), dir, 0, COLOR.electronGlow);
+    if (p.props.to === 'h') {
+      const h = new THREE.Mesh(
+        new THREE.SphereGeometry(2.6 * u, 16, 12),
+        own(c, new THREE.MeshStandardMaterial({ color: 0xd8d2c4, roughness: 0.4, metalness: 0.2 }))
+      );
+      h.position.copy(dir.clone().multiplyScalar((SEAT_LOBE + 1.5) * u)).add(N);
+      g.add(h);
+    }
+  }
+
+  if (p.props.nucleus) {
+    const nuc = new THREE.Mesh(
+      new THREE.SphereGeometry(3.3 * u, 22, 16),
+      own(c, new THREE.MeshStandardMaterial({ color: COLOR.carbonHub, roughness: 0.35, metalness: 0.55 }))
+    );
+    nuc.position.copy(N);
+    g.add(nuc);
+    const brass = m => m?.ligBrassWorn || own(c, new THREE.MeshStandardMaterial({ color: COLOR.brass, roughness: 0.46, metalness: 0.82 }));
+    const footH = 1.6 * u;
+    const foot = new THREE.Mesh(buildPedestalGeo(6.5 * u, footH), brass(c.mats));
+    foot.position.set(N.x, -SEAT_FLOAT * u, N.z);
+    foot.castShadow = true;
+    g.add(foot);
+    const stemLen = (SEAT_FLOAT - 3.3) * u - footH;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.7 * u, 0.9 * u, stemLen, 12), brass(c.mats));
+    stem.position.set(N.x, -SEAT_FLOAT * u + footH + stemLen / 2, N.z);
+    g.add(stem);
+    if (c.label && p.props.atomLabel) {
+      const plaque = c.label(p.props.atomLabel, 9 * u, 2.6 * u, { dim: false, bg: '#16140f' });
+      if (plaque) {
+        plaque.position.set(N.x, -SEAT_FLOAT * u + footH * 0.6, N.z + 6.4 * u);
+        plaque.rotation.x = -0.25;
+        g.add(plaque);
+      }
+    }
+  }
+
+  // What the pair shares, drawn once, by the lower id.
+  let shared = null;
+  if (bonded && partner && p.id < partner.id) {
+    const mine = { x: p.at.x - seat.dx, y: p.at.y - seat.dy };
+    const theirs = { x: partner.at.x - partner.props.seat.dx, y: partner.at.y - partner.props.seat.dy };
+    const mid = new THREE.Vector3(N.x + ((theirs.x - mine.x) / 2) * u, 0, N.z + ((theirs.y - mine.y) / 2) * u);
+    const along = Math.atan2(theirs.y - mine.y, theirs.x - mine.x);
+    const gap = Math.hypot(theirs.x - mine.x, theirs.y - mine.y);
+    const sharedMat = own(c, new THREE.MeshStandardMaterial({
+      color: COLOR.bondedGlow, roughness: 0.2, emissive: COLOR.bondedGlow, emissiveIntensity: 0.25, transparent: true, opacity: 0, depthWrite: false
+    }));
+    const spindle = (y, rx, ry) => {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), sharedMat);
+      m.scale.set(rx * u, ry * u, ry * u);
+      m.position.set(mid.x, y * u, mid.z);
+      m.rotation.y = -along;
+      return m;
+    };
+    shared = new THREE.Group();
+    if (p.props.type === 'p') {
+      shared.add(spindle(SEAT_P * 0.62, gap * 0.55 + 3, 5.2), spindle(-SEAT_P * 0.62, gap * 0.55 + 3, 5.2));
+    } else {
+      shared.add(spindle(0, gap * 0.5, 4.2));
+    }
+    shared.userData.mat = sharedMat;
+    g.add(shared);
+  }
+
+  const wide = p.props.type === 'p' ? 1.75 : 1.2;
+  let t = 0;
+  let grow = bonded ? 0 : 1;
+  g.userData.tick = (delta, still) => {
+    t += delta;
+    if (bonded) grow = Math.min(1, grow + delta / 0.9);
+    const k = bonded ? 1 + (wide - 1) * grow : 1;
+    if (p.props.type === 'p') swell.scale.set(k, 1, k);
+    else swell.scale.set(1, k, k);
+    if (shared) shared.userData.mat.opacity = 0.42 * grow;
+    if (still) return;
+    for (const em of electrons) {
+      em.mesh.position.copy(em.base).addScaledVector(em.dir, Math.sin(t * 2.6 + em.phase) * 0.9 * u);
+    }
+  };
+  g.userData.tick(0, true);
+  return g;
+}
+
 /**
  * Builds an authentic 3D orbital model in space for any quest bench.
  * Renders true 3D clouds (spherical s, dumbbell p, directional hybrid lobe)
  * with quantum phase colors and visible electrons inside the clouds.
  */
 export function buildOrbitalPiece3D(c, p, state) {
+  if (p.props.seat) return buildSeatedOrbital3D(c, p, state);
   const { hw, mats: m } = c;
   const g = new THREE.Group();
   const R = hw || 0.032;
