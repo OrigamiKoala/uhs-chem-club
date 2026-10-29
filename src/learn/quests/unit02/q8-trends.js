@@ -80,7 +80,7 @@ const NAMES = { Li: 'LITHIUM', Na: 'SODIUM', Be: 'BERYLLIUM', Mg: 'MAGNESIUM', B
 /** Cards in a row along the bottom: `[id, sym]` each, labelled with the element's name. */
 const row = list => list.map(([id, sym, label], i) => atomCard(id, label || NAMES[sym], sym, rowAt(i)));
 
-const railAt = (first, last) => ({ id: 'rail', at: { x: 108, y: 36 }, size: { w: 80, h: 12 }, first, last, items: [] });
+const railAt = (first, last) => ({ id: 'rail', at: { x: 108, y: 35 }, size: { w: 80, h: 17 }, first, last, items: [], labelLift: 1.6 });
 const railOf = t => t.zones.rail.order.slice();
 const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
 const sym = (t, id) => t.pieces[id].props.sym;

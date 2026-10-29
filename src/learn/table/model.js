@@ -205,7 +205,9 @@ export function createTable(spec, seedKey = '') {
     s.zones.rail = {
       id: z.rail.id || 'rail', label: z.rail.label || '', at: { ...z.rail.at },
       size: { ...SIZES.rail, ...(z.rail.size || {}) },
-      first: z.rail.first || '', last: z.rail.last || '', order: []
+      first: z.rail.first || '', last: z.rail.last || '', order: [],
+      // A rail may stand its end words higher: a card on it has thickness, and in 3D its top edge rises over the word.
+      ...(z.rail.labelLift ? { labelLift: z.rail.labelLift } : {})
     };
   }
 

@@ -74,8 +74,8 @@ export function labelLines(state, kind, zone) {
     // The ends are named above the PIECES on the rail, which may be taller than the rail's own strip (a block, a card): a word printed
     // under a piece that stands on it is a word nobody reads.
     const top = Math.min(r.y0, zone.at.y - railHalf(state, zone));
-    if (zone.first) out.push({ x: r.x0, baseline: top - LABEL.above, align: 'left', text: zone.first, size: fitSize(zone.first, r.w / 2 - 1) });
-    if (zone.last) out.push({ x: r.x1, baseline: top - LABEL.above, align: 'right', text: zone.last, size: fitSize(zone.last, r.w / 2 - 1) });
+    if (zone.first) out.push({ x: r.x0, baseline: top - LABEL.above - (zone.labelLift || 0), align: 'left', text: zone.first, size: fitSize(zone.first, r.w / 2 - 1) });
+    if (zone.last) out.push({ x: r.x1, baseline: top - LABEL.above - (zone.labelLift || 0), align: 'right', text: zone.last, size: fitSize(zone.last, r.w / 2 - 1) });
     return out;
   }
   const r = rectOf(zone, kind === 'slot' ? SIZES.slot : kind === 'container' ? SIZES.container : SIZES.tray);

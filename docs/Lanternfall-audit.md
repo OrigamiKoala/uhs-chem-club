@@ -93,3 +93,8 @@ Seen, not fixed:
 - The boss's reward card sits over most of the bench after a stage clears (the camera lifts to the foe).
 
 Still not done: a hand solution of `q3-lines` 2 to 5, `q4-cloud` 2 to 4, `q5-numbers` 4 and 5, `q6-filling` 1 to 5, `q7-pes` 2 to 5, `q9-absorb` 1 to 5 (stage 4's reading and stage 5's first standard only), boss phases 2 to 5. A third pass over the rest was not run.
+
+## Fifth round: seen issues
+
+- **Rail cards over end labels and the how-to note (`q8-trends` 6 and 7):** the rail zone now takes `labelLift` (`table/layout.js` `labelLines`, copied by `table/model.js`), which stands the end words higher, and the `q8-trends` rail is 17 units tall like its cards so the printed note keeps clear of them. A global lift was tried first and broke other worlds' layout checks (`unit01/q6-weigh`, `unit03/q3-distance`, `unit04/q5-speed`), so it is opt-in. Played: four cards laid on the rail, no overlap with "Pulls hardest", "Pulls least" or the note.
+- **Boss reward card over the bench:** not a defect. The camera looks up at the foe for 1.7 to 4.6 s after a clear (`boss-arena.js` `gaze`) and returns; the screenshot was taken during that look.
