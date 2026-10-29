@@ -214,7 +214,7 @@ export const STAGES = [
     title: 'The Middle',
     prompt: 'Construct hypofluorous acid, HOF, so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'HOF', 82, 32, 62, HOF_POS]]),
+    table: slateTable([['a', 'HOF', 82, 35, 62, HOF_POS]]),
     hints: [
       'Use the Pair tile and the slate.',
       'Identify which atom can form more than one covalent bond.',
@@ -239,7 +239,7 @@ export const STAGES = [
     title: 'The Amber Lamp',
     prompt: 'Distribute all valence electrons in boron trifluoride so no atom exceeds an octet.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'BF3', 82, 34, 62]]),
+    table: slateTable([['a', 'BF3', 82, 36, 62]]),
     hints: [
       'Use the Pair tile and the slate.',
       'Distribute single bonds to each fluorine atom, then add lone pairs to complete fluorine octets.',

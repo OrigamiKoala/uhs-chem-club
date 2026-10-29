@@ -1203,8 +1203,8 @@ export class BenchViewer3D {
     const L = this.lean;
     if (!L) return;
     L.look.release = false;
-    L.look.yaw = THREE.MathUtils.clamp(L.look.yaw - dx * 0.0022, -0.3, 0.3);
-    L.look.pitch = THREE.MathUtils.clamp(L.look.pitch - dy * 0.0022, -0.2, 0.2);
+    L.look.yaw = THREE.MathUtils.clamp(L.look.yaw - dx * 0.0015, -0.14, 0.14);
+    L.look.pitch = THREE.MathUtils.clamp(L.look.pitch - dy * 0.0015, -0.09, 0.09);
   }
 
   /** The lean pose carried out into the world: a camera position and orientation. */

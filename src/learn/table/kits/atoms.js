@@ -580,7 +580,7 @@ export function slateParts(id, molKey, points, { chip = null, prefill = null, hi
   const xs = points.map(p => p.x);
   const ys = points.map(p => p.y);
   // Expand slate boundaries so electron pairs / lone pairs are not hidden under the timber frame or corner straps.
-  const b = { x0: Math.min(...xs) - SLATE_R - 5.5, x1: Math.max(...xs) + SLATE_R + 5.5, y0: Math.min(...ys) - SLATE_R - 6.5, y1: Math.max(...ys) + SLATE_R + 6 };
+  const b = { x0: Math.min(...xs) - SLATE_R - 5.5, x1: Math.max(...xs) + SLATE_R + 5.5, y0: Math.min(...ys) - SLATE_R - 8.6, y1: Math.max(...ys) + SLATE_R + 6 };
   const fixture = {
     id, kind: 'slate', label: mol.label, noRun: true,
     at: { x: r1((b.x0 + b.x1) / 2), y: r1((b.y0 + b.y1) / 2) }, size: { w: r1(b.x1 - b.x0), h: r1(b.y1 - b.y0) },
@@ -1147,19 +1147,21 @@ function paintSlateAtom(ctx, p, state, o) {
     ctx.setLineDash?.([]);
   }
   plateText(ctx, p.props.el, o.x, o.y - o.r * 0.12, { size: Math.max(9, Math.round(o.r * (p.props.el.length > 1 ? 0.8 : 1.0))), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
-  plateText(ctx, `${a.around}/${a.goal}`, o.x, o.y + o.r * 0.5, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: a.lamp === 'short' ? PLATE_COLORS.dim : PLATE_COLORS.text });
+  // A stamped atom prints its charge where the count sits (the shoulder is off the puck's face at 3D On).
+  if (!p.props.stamped) plateText(ctx, `${a.around}/${a.goal}`, o.x, o.y + o.r * 0.5, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: a.lamp === 'short' ? PLATE_COLORS.dim : PLATE_COLORS.text });
   if (a.lamp === 'over') lampMark(ctx, o.x + o.r * 0.7, o.y - o.r * 0.7, Math.max(9, o.r * 0.7));
   // The charge stamp: what this atom carries, printed on its shoulder (live, so it follows the drawing). A mark, never a colour alone.
   if (p.props.stamped) {
     const q = a.fc;
-    plateText(ctx, q === 0 ? '0' : `${Math.abs(q) > 1 ? Math.abs(q) : ''}${q > 0 ? '+' : '−'}`, o.x - o.r * 0.78, o.y - o.r * 0.78, { size: Math.max(8, Math.round(o.r * 0.62)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+    plateText(ctx, q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`, o.x, o.y + o.r * 0.5, { size: Math.max(9, Math.round(o.r * 0.5)), weight: 700, align: 'center', base: 'middle', color: AMBER });
   }
   if (p.props.marked) {
+    // Inside the rim: a ring drawn outside the disc is off the puck's face at 3D On.
     ctx.strokeStyle = AMBER;
-    ctx.lineWidth = Math.max(1.4, o.r * 0.12);
+    ctx.lineWidth = Math.max(2, o.r * 0.16);
     ctx.setLineDash?.([Math.max(3, o.r * 0.28), Math.max(2, o.r * 0.18)]);
     ctx.beginPath();
-    ctx.arc(o.x, o.y, o.r * 1.18, 0, Math.PI * 2);
+    ctx.arc(o.x, o.y, o.r * 0.96, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash?.([]);
   }
@@ -1569,8 +1571,8 @@ function paintSlate(ctx, f, state, b) {
   // 3. Tray count & charge
   const size = Math.max(8, Math.round(2.3 * b.sc));
   // A stage that asks the player to count the electrons does not print the count (`props.hideTotal`).
-  if (!f.props.hideTotal) plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
-  if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 4, b.y0 + size * 2.4, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
+  if (!f.props.hideTotal) plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 8, b.y0 + size * 1.6, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
+  if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 8, b.y0 + size * 2.9, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
 }
 
 /** A label plate: the lines of a sample's label, printed flat under the plate's name. */
