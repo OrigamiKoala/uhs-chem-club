@@ -192,6 +192,7 @@ export const HEAT_KIT = {
     shelf: rect(10, 'shelf'),
     phase: rect(10, 'phase'),
     stmt: rect(7, 'stmt'),
+    shift: rect(9, 'shift'),
     tag: rect(6.3, 'tag'),
     note: rect(8.5, 'note'),
     gcard: rect(11, 'gcard'),
@@ -211,7 +212,7 @@ export const HEAT_KIT = {
   deckStyle: () => 'instrument',
   slot3d: () => 'well',
   // What a piece's face prints as one line of words: a card its first line (long words break in two), an equation card its equation.
-  printed: p => (p.kind === 'tag' ? wrap(p.label, 17)[0] : p.kind === 'note' ? wrapN(p.label, 30, 3)[0] : p.kind === 'stmt' ? wrap(p.label)[0] : p.kind === 'eqn' ? fmtEqn(cardTerms(p)) : p.kind === 'ptc' ? '' : p.kind === 'bond' && (p.props.scale || 1) > 1 ? `${p.label} ×${p.props.scale}` : String(p.label)),
+  printed: p => (p.kind === 'tag' ? wrap(p.label, 17)[0] : p.kind === 'note' ? wrapN(p.label, 30, 3)[0] : p.kind === 'stmt' ? wrap(p.label)[0] : p.kind === 'shift' ? p.label : p.kind === 'eqn' ? fmtEqn(cardTerms(p)) : p.kind === 'ptc' ? '' : p.kind === 'bond' && (p.props.scale || 1) > 1 ? `${p.label} ×${p.props.scale}` : String(p.label)),
   faceKey
 };
 
@@ -245,6 +246,8 @@ export const bondChip = (id, bond, at, { label = null, dH = null, count = 1, not
 export const shelfCard = (id, label, at, { dH, from = '', to = '' }, extra = {}) => piece('shelf', id, label, at, { dH, from, to }, extra);
 /** A box of a sample's particles: `phase` is 'solid', 'liquid' or 'gas', `T` the temperature in °C that sets how fast they move. */
 export const phaseCard = (id, label, at, phase, extra = {}, T = null) => piece('phase', id, label, at, { phase, ...(T != null ? { T } : {}) }, extra);
+/** A change drawn as particles before and after: `before` and `after` are lists of `[phase, count]` (solid, liquid or gas). */
+export const shiftCard = (id, label, at, { before, after }, extra = {}) => piece('shift', id, label, at, { before, after }, extra);
 /** A card with a statement on it. */
 export const stmt = (id, label, at, extra = {}) => piece('stmt', id, label, at, {}, extra);
 /** A short card of words (two lines of 17 characters): a part of the bench, a change. */

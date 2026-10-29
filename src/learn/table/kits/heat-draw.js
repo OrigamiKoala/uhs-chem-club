@@ -13,7 +13,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import {
   blockRead, cupRead, shelvesRead, wellRead, ledgerRead, stackRead, cardTerms, fmtEqn, fmtSide, signedKJ, fixed, markerRead, plotRead, warmRead,
-  cellsOpen, loggedArrangements, waysOf, shakesOf, occupiedCells, sig, WELL, LID_LOSS, whereIs
+  cellsOpen, loggedArrangements, waysOf, shakesOf, occupiedCells, sig, WELL, LID_LOSS, whereIs, seededRng
 } from './heat-read.js';
 import { bondAtoms, inkOfElement, phaseDots } from './heat-parts.js';
 
@@ -42,6 +42,7 @@ export const RECTS = Object.freeze({
   shelf: { hw: 12.5, hh: 9.5 },
   phase: { hw: 12.5, hh: 9.5 },
   stmt: { hw: 17, hh: 5 },
+  shift: { hw: 17, hh: 10 },
   num: { hw: 8, hh: 4.6 },
   chip: { hw: 9, hh: 4.2 },
   tag: { hw: 13, hh: 5.6 },
@@ -231,6 +232,42 @@ function paintStmt(ctx, p, state, o) {
   lines.forEach((ln, i) => say(ctx, ln, o.x, o.y + (i - (lines.length - 1) / 2) * size * 1.2, size, { align: 'center', weight: 600, maxW: box.w - 3 * o.sc, color: marked ? AMBER : PLATE_COLORS.text }));
 }
 
+/**
+ * A change drawn as two small boxes of particles, before and after, one dot per particle: a solid sits in rows at the bottom, a liquid
+ * in a loose heap, a gas spread over the whole box. `props.before` and `props.after` are lists of `[phase, count]`.
+ */
+function paintShift(ctx, p, state, o) {
+  const box = slab(ctx, o, RECTS.shift, '#2a2620');
+  const sc = o.sc;
+  say(ctx, p.label, o.x, box.y0 + 2.6 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 600, maxW: box.w - 2 * sc });
+  const bw = box.w * 0.38;
+  const bh = box.h * 0.56;
+  const by = box.y0 + box.h - bh - 1.4 * sc;
+  const side = (x0, groups, seed) => {
+    ctx.strokeStyle = DUST; ctx.strokeRect(x0 + 0.5, by + 0.5, bw - 1, bh - 1);
+    const rnd = seededRng(`${p.id}|${seed}`);
+    const r = Math.max(2.2, 1.05 * sc);
+    let row = 0;
+    for (const [phase, n] of groups) {
+      for (let k = 0; k < n; k++) {
+        let x; let y;
+        if (phase === 'gas') { x = x0 + r + 1 + rnd() * (bw - 2 * r - 2); y = by + r + 1 + rnd() * (bh - 2 * r - 2); } else {
+          const per = Math.max(1, Math.floor((bw - 2) / (2.4 * r)));
+          const cx = k % per; const cy = Math.floor(k / per) + row;
+          x = x0 + 1 + r + cx * 2.4 * r + (phase === 'liquid' && cy % 2 ? r : 0) + (phase === 'liquid' ? (rnd() - 0.5) * r * 0.5 : 0);
+          y = by + bh - 1 - r - cy * 2.2 * r;
+        }
+        ctx.fillStyle = phase === 'gas' ? PHOS : phase === 'liquid' ? COLD : AMBER;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+      if (phase !== 'gas') row += Math.ceil(n / Math.max(1, Math.floor((bw - 2) / (2.4 * r))));
+    }
+  };
+  side(box.x0 + box.w * 0.05, p.props.before || [], 'b');
+  side(box.x0 + box.w * 0.57, p.props.after || [], 'a');
+  say(ctx, '→', o.x, by + bh / 2, Math.max(7, 2.4 * sc), { align: 'center', color: DIM });
+}
+
 function paintTag(ctx, p, state, o) {
   const marked = Boolean(p.props.flipped);
   const box = slab(ctx, o, RECTS.tag, marked ? '#33290f' : '#2a2620');
@@ -293,7 +330,7 @@ function paintParticle(ctx, p, state, o) {
   ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 0.45, 0, Math.PI * 2); ctx.fill();
 }
 
-const PAINTERS = { block: paintBlock, charge: paintCharge, eqn: paintEqn, bond: paintBond, shelf: paintShelfCard, phase: paintPhaseCard, stmt: paintStmt, tag: paintTag, note: paintNote, gcard: paintGCard, num: paintNum, chip: paintChip, ptc: paintParticle };
+const PAINTERS = { block: paintBlock, charge: paintCharge, eqn: paintEqn, bond: paintBond, shelf: paintShelfCard, phase: paintPhaseCard, stmt: paintStmt, shift: paintShift, tag: paintTag, note: paintNote, gcard: paintGCard, num: paintNum, chip: paintChip, ptc: paintParticle };
 
 export function paintPiece(ctx, p, state, o) {
   const fn = PAINTERS[p.kind];

@@ -67,6 +67,7 @@ const PIECES = {
   shelf: ['Energy charts', 'Each small chart has a left shelf for the energy before a change and a right shelf for the energy after it. Drag a chart to where it belongs.'],
   phase: ['Particle boxes', 'Each box holds the same twelve particles, and a short streak on a particle shows how fast it is moving. Drag a box to where it belongs, or onto the strip in the order you choose.'],
   stmt: ['Statement cards', 'Each card holds a short statement. Drag a card to where it belongs. Where a stage asks you to mark cards, tap one to ring it and tap it again to take the ring off.'],
+  shift: ['Change cards', 'Each card names a change and draws its particles before it on the left and after it on the right, one dot for each particle. Drag a card to where it belongs.'],
   tag: ['Name cards', 'Each card names one thing. Drag a card to where it belongs, or tap it once and then tap the place you want it to go.'],
   note: ['Cards', 'Each card holds a few words. Drag the card you choose to where it belongs, or tap it once and then tap the place; the card in a slot is your answer when you press Submit.'],
   gcard: ['Line cards', 'Each card draws a line: the net balance of one kind of change as the temperature rises, with the stretch below zero shaded. Drag a card into a tray.'],

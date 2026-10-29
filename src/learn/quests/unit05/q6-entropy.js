@@ -21,7 +21,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, phaseCard, stmt, tag, note, chamberFixture, shakesOf, whereIs, waysOf, plaqueFixture, markerFixture, markerRead, FORMATION_TABLE, fixed
+  heatTable, phaseCard, stmt, shiftCard, tag, note, chamberFixture, shakesOf, whereIs, waysOf, plaqueFixture, markerFixture, markerRead, FORMATION_TABLE, fixed
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 5 };
@@ -150,10 +150,10 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        stmt('melt', 'Ice melting', { x: 22, y: 14 }),
-        stmt('lime', 'CaCO₃(s) → CaO(s) + CO₂(g)', { x: 58, y: 14 }),
-        stmt('haber', 'N₂(g) + 3 H₂(g) → 2 NH₃(g)', { x: 94, y: 14 }),
-        stmt('dew', 'Steam condensing', { x: 130, y: 14 })
+        shiftCard('melt', 'Ice melting', { x: 22, y: 15 }, { before: [['solid', 4]], after: [['liquid', 4]] }),
+        shiftCard('lime', 'CaCO₃ → CaO + CO₂', { x: 58, y: 15 }, { before: [['solid', 2]], after: [['solid', 2], ['gas', 2]] }),
+        shiftCard('haber', 'N₂ + 3 H₂ → 2 NH₃', { x: 94, y: 15 }, { before: [['gas', 4]], after: [['gas', 2]] }),
+        shiftCard('dew', 'Steam condensing', { x: 130, y: 15 }, { before: [['gas', 4]], after: [['liquid', 4]] })
       ],
       zones: {
         trays: [
@@ -164,7 +164,7 @@ export const STAGES = [
     }),
     hints: [
       'Use the four cards and the two trays.',
-      'Compare the free-moving gas and liquid on the two sides of each change.',
+      'Compare the particles before and after on each card: how far apart they are and how many there are.',
       'States with greater freedom of motion have higher entropy, with gases having significantly higher entropy than liquids or solids.'
     ],
     check(state) {

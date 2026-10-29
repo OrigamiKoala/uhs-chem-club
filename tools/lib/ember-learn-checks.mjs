@@ -328,7 +328,9 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const gas = eq => (eq.match(/\(g\)/g) || []).length;
       const t = start(e6, 2);
       holds(gas('CaO(s) + CO₂(g)') > gas('CaCO₃(s)') && gas('2 NH₃(g)') < gas('N₂(g) + 3 H₂(g)'), `${q} stage 3: the gas count does not decide the signs`);
-      holds(t.pieces.lime.label.includes('CO₂(g)') && t.pieces.haber.label.includes('NH₃(g)'), `${q} stage 3: the equations on the cards are not the ones counted`);
+      const dots = (c, side, ph) => c.props[side].filter(([x]) => x === ph).reduce((n, [, k]) => n + k, 0);
+      holds(dots(t.pieces.lime, 'after', 'gas') > dots(t.pieces.lime, 'before', 'gas') && dots(t.pieces.haber, 'after', 'gas') < dots(t.pieces.haber, 'before', 'gas'), `${q} stage 3: the particles drawn on the cards are not the ones the equations count`);
+      holds(t.pieces.melt.props.before[0][0] === 'solid' && t.pieces.melt.props.after[0][0] === 'liquid' && t.pieces.dew.props.before[0][0] === 'gas' && t.pieces.dew.props.after[0][0] === 'liquid', `${q} stage 3: the melting and condensing cards do not draw the phases they name`);
       holds(TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0') > 0 && TD.standardReactionChange([{ id: 'NH3(g)', n: 2 }], [{ id: 'N2(g)' }, { id: 'H2(g)', n: 3 }], 'S0') < 0, `${q} stage 3: the entropy table disagrees with the gas count`);
     }
     {
