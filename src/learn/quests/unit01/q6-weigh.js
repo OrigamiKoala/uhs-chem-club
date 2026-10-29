@@ -356,7 +356,7 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: balanceTable({
       unit: 'g',
-      counters: { L: { label: 'H ATOMS', of: 'H' }, R: { label: 'H ATOMS', of: 'H' } },
+      counters: { L: { label: 'H ATOMS', of: 'H', hidden: true }, R: { label: 'H ATOMS', of: 'H' } },
       refCrate: crate('two', 'WATER', { x: 0, y: 0 }, { species: 'water', grams: 36, note: '2 moles' }),
       drum: { label: 'Hydrogen drum', what: 'hydrogen', amount: 10 },
       steps: { hydrogen: 1 },
@@ -364,8 +364,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the drum and the right pan.',
-      'Compare it with the left counter, which counts only the hydrogen atoms in the water.',
-      'Each water molecule holds two hydrogen atoms, so there are more hydrogen atoms in the water than molecules.'
+      'Work out how many moles of hydrogen atoms two moles of water hold, and read the right counter against that many moles.',
+      'Each water molecule holds two hydrogen atoms, so there are more moles of hydrogen atoms in the water than moles of water.'
     ],
     check(state) {
       const t = state.table;
@@ -373,8 +373,8 @@ export const STAGES = [
       if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some hydrogen onto it.' };
       if (!c.same) {
         return { ok: false, msg: c.r > c.l
-          ? 'The right counter reads more than the left.'
-          : 'The right counter reads less than the left.' };
+          ? 'The right pan holds more hydrogen atoms than two moles of water do.'
+          : 'The right pan holds fewer hydrogen atoms than two moles of water do.' };
       }
       return { ok: true };
     },

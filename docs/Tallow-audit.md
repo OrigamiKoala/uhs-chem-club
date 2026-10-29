@@ -7,7 +7,7 @@ Oct 29, 2026. World: Tallow (`unit01`, atoms, the table, the mole): six benches 
 - Played at `3D On` in the Browser pane as a guest, on a dev server at :3021. Stages were reached with the runner's `loadStage` through `__LQ_TEST__`.
 - **What was played by hand (real pointer gestures, typed answers, Submit):** `q1-grain` stage 1 (lens tap-tap, lens drag, power dial drag) and stage 2 (lens drag onto a dish, dial); `q5-assay` stage 4 (sample to chute, Tip Sample, typed answer); `q6-weigh` stage 9 (join three atoms, drag the molecule to the pan, a wrong typed figure refused with its reason, then the right one and the reward card).
 - **What was only loaded and looked at (a screenshot of the bench; not solved):** `q1-grain` 3 to 8; `q2-core` 1 to 5; `q3-catalogue` 1, 3, 5, 7; `q4-ledger` 1, 5, 7, 8; `q5-assay` 1, 3, 10; `q6-weigh` 10, 11; `boss-hopper` phase 2.
-- **Never opened in the browser:** `q2-core` 6 to 8; `q3` 2, 4, 6; `q4` 2 to 4, 6; `q5` 2, 5 to 9; `q6` 1 to 8, 12; Hopper phases 1, 3, 4, 5. Those are rated from source and from `verify:*` only. Treat any verdict marked (src) as unplayed.
+- **Second pass (also only loaded and looked at, not solved):** `q2-core` 6 to 8; `q3` 2, 4, 6; `q4` 2, 3, 4, 6; `q5` 2, 5, 6, 8, 9; `q6` 1, 3, 4 (poured by hand), 5, 6, 7, 8, 12; Hopper phases 1, 3, 4, 5 (phases 4 and 5 show the boss for about ten seconds after a stage jump before the camera settles on the bench; that is the jump, not play). **Still never played to a solution by a hand:** every stage not listed under "played by hand" above, including all of `q2`, `q3`, `q4`, the Hopper.
 - Scripted solutions (`SOLUTIONS`, `MISSES`) pass for every stage; that is what `verify:learn` and `verify:table` prove, not that a hand can do them.
 - AP references are Course and Exam Description **Unit 1, Atomic Structure and Properties** by topic number (1.1 moles and molar mass, 1.2 mass spectra of elements, 1.3 elemental composition of pure substances, 1.4 composition of mixtures, 1.5 atomic structure and electron configuration, 1.6 photoelectron spectroscopy, 1.7 periodic trends, 1.8 valence electrons and ionic compounds). The CED PDF in `docs/` was not read in full here; topic names are from memory of the CED.
 
@@ -91,15 +91,20 @@ Phase 2 loaded: gauges clear of the heap after the fix. Phases 1, 3, 4, 5 not op
 | D4 | `q5` stage 3, 5, 6 printed the answer on a "Listed" plate | plates removed. |
 | D6 | `q6` balance counters ("ATOMS 6.02 × 10²³") were about 8 px and unreadable at the default camera | `mass.js` `paintBalance` counter text enlarged. Looked at after the change. |
 | D7 | A pour into the right pan left no visible trace (the 3D fill slab sat behind the pan's wall) | `table3d.js` `syncJars`: any pour fills at least 0.018 m. Played: one pour, the pan shows green. |
+| D8 | `q6` stage 7 printed the target count on the left counter (matching two readouts) | left counter hidden (`counters.L.hidden`); the student works out the moles of hydrogen atoms. Looked at; not played. |
+| D9 | `q5` stage 10, `q6` 11 and 12 were plate-and-type | stage 10 is a sealed lithium canister against a mix on the balance; 11 pours the compound's hydrogen against the carbon with both atom counters; 12 builds trial molecules on a scale. Stage 10 played (dial drag); 11 and 12 looked at. |
 | D5 | `q4` gauge was labelled "Needle" where the rest of Tallow says "Charge" | label unified. |
 
 ## Open items
 
-- A first-time player sees a black pane for about 10 to 20 seconds while a bench's world builds (longer with other jobs running); nothing says it is loading. Not changed: shared engine, outside this world.
-- `q5` stage 10 and `q6` 10 to 12 are plate-and-type benches. They carry the AP arithmetic with refusals that name the slip, but nothing in the picture builds intuition for percent or empirical formulas. A better version would show the two crates on a balance with the moles as scoops (as stage 6 does).
+- **Black pane at bench entry (10 to 20 s):** the bench is built on the main thread, so the page cannot paint a "Building the bench" note until it is done. I tried a note in `stagerunner.js`; it never showed and was reverted. A fix means yielding a frame before the build, in shared engine code.
+- **Specimen discs are small** (`q2-core` 6 to 8, `q4` 3): the counts and needle on a disc are about 6 px at the default camera. Raising the specimen radius from 8 to 10 broke the layout of `q2` 6 and `q4` 3 and was reverted; the stages need their trays moved with it.
 - The first lens picture at power 1 is a blank glass; "clumps" is never drawn.
-- Nothing yet covers AP 1.4 (composition of mixtures) or reading a printed mass spectrum as a graph.
-- A real-hand check of every stage is still owed; see below.
+- Pan labels (`q6`) sit half under the pan rim.
+- `q6` stage 8 ranks drums by reading the scale's atom counter, which is copying; stage 6 sets a tally dial against a drum.
+- `q5` stage 10 can still be solved by hunting the dial to the balance point, then typing the dial's value.
+- Nothing covers AP 1.4 (composition of mixtures) or reads a printed mass spectrum as a graph.
+- A real-hand check of every stage remains owed.
 
 ## AP coverage (Unit 1)
 

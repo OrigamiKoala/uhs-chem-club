@@ -476,7 +476,7 @@ function paintBalance(ctx, f, state, b) {
   // The atom counters, where the stage fits one: a count of atoms, and nothing else.
   for (const side of ['L', 'R']) {
     const c = f.props.counters?.[side];
-    if (!c) continue;
+    if (!c || c.hidden) continue;
     const text = `${c.label || 'ATOMS'} ${countText(counterOf(state, f.id, side))}`;
     plateText(ctx, text, side === 'L' ? b.x0 + 2 * sc : b.x1 - 2 * sc, b.y0 + h * 0.88, { size: Math.max(9, Math.round(3.1 * sc)), align: side === 'L' ? 'left' : 'right', weight: 700, color: PLATE_COLORS.text });
   }

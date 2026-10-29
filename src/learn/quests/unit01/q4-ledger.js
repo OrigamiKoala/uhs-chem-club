@@ -119,7 +119,7 @@ const massFixture = (zones, nuc, at, range, size = { w: 22, h: 18 }) => ({
   id: 'mass', kind: 'mass', label: 'Mass', at, size, noRun: true, props: { zones, nucleus: nuc, range }
 });
 const needleFixture = (zones, nuc, at, range, size = { w: 22, h: 18 }) => ({
-  id: 'needle', kind: 'needle', label: 'Charge needle', at, size, noRun: true, props: { zones, nucleus: nuc, range }
+  id: 'needle', kind: 'needle', label: 'Charge', at, size, noRun: true, props: { zones, nucleus: nuc, range }
 });
 
 const count = (t, zone, kind) => piecesIn(t, zone, kind).length;
