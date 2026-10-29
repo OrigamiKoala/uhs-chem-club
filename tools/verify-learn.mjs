@@ -3335,17 +3335,31 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const t = end(q5, 1);
       for (const id of ['a', 'b']) same(Number(q5.STAGES[1].table.zones.trays.find(z => `tray:${z.id}` === t.pieces[id].zone).label.match(/^(\d+)/)[1]), share(id), `unit01/q5-assay stage 2 (${id}'s tray)`);
     }
-    // 3 and 4. the fulcrum finds the weighted average, and the dial can reach it
-    for (const [i, listedMass] of [[2, 35.5], [3, null]]) {
-      const piece = declared(q5, i, 'a');
+    // 3. the fulcrum finds the weighted average (a hunt: the listed mass is not on the table)
+    {
+      const piece = declared(q5, 2, 'a');
       const avg = avgOf(piece);
-      const t = end(q5, i);
-      near(t.fixtures.assay.dials.pivot.value, avg, `unit01/q5-assay stage ${i + 1} (the fulcrum rests at the average)`);
-      near(M.assayRead(t, 'assay').net, 0, `unit01/q5-assay stage ${i + 1} (the beam lies level)`);
-      const d = q5.STAGES[i].table.fixtures.find(f => f.id === 'assay').dials.pivot;
-      holds(Math.abs((avg - d.min) / d.step - Math.round((avg - d.min) / d.step)) < 1e-9, `unit01/q5-assay stage ${i + 1}: the fulcrum's steps never land on the average`);
-      if (listedMass != null) near(avg, listedMass, `unit01/q5-assay stage ${i + 1} (the plate's listed mass is the average)`);
-      holds(Math.abs(avg - d.value) > d.step, `unit01/q5-assay stage ${i + 1}: the fulcrum starts at the answer`);
+      const t = end(q5, 2);
+      near(t.fixtures.assay.dials.pivot.value, avg, 'unit01/q5-assay stage 3 (the fulcrum rests at the average)');
+      near(M.assayRead(t, 'assay').net, 0, 'unit01/q5-assay stage 3 (the beam lies level)');
+      const d = q5.STAGES[2].table.fixtures.find(f => f.id === 'assay').dials.pivot;
+      holds(Math.abs((avg - d.min) / d.step - Math.round((avg - d.min) / d.step)) < 1e-9, 'unit01/q5-assay stage 3: the fulcrum\'s steps never land on the average');
+      near(avg, 35.5, 'unit01/q5-assay stage 3 (chlorine\'s average)');
+      holds(Math.abs(avg - d.value) > d.step, 'unit01/q5-assay stage 3: the fulcrum starts at the answer');
+      holds(!q5.STAGES[2].table.fixtures.some(f => f.kind === 'plate'), 'unit01/q5-assay stage 3: a plate prints the answer');
+    }
+    // 4 and 9. a typed weighted average, worked from the declared piles
+    for (const i of [3, 8]) {
+      const piece = declared(q5, i, 'a');
+      near(Number(end(q5, i).entries.ans), Math.round(avgOf(piece) * 10) / 10, `unit01/q5-assay stage ${i + 1} (the typed average)`);
+      holds(Boolean(q5.STAGES[i].entry), `unit01/q5-assay stage ${i + 1}: no field for the average`);
+    }
+    // 10. the share of the heavier isotope from the average
+    {
+      const lines = q5.STAGES[9].table.fixtures.find(f => f.kind === 'plate').props.lines.join(' ');
+      const [lo, hi] = lines.match(/weigh (\d+) or (\d+)/).slice(1).map(Number);
+      const avg = Number(lines.match(/average weight ([\d.]+)/)[1]);
+      near(Number(end(q5, 9).entries.ans), Math.round((avg - lo) / (hi - lo) * 100), 'unit01/q5-assay stage 10 (the percent of heavy atoms)');
     }
     // 5. a sample in one bin balances at that bin's own weight: a prediction on a new case
     {

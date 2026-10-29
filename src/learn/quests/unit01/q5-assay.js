@@ -36,11 +36,11 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { massTable, assayRead, balanceRead, mixRead } from '../../table/kits/mass.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 10 };
 
 /**
  * When each withheld word is earned. Everything the first four benches taught —
@@ -117,12 +117,13 @@ const trayAt = (id, label, x, y, w, cell = 19, h = 22) => ({ id, label, at: { x,
 const CL = [{ mass: 35, n: 30 }, { mass: 37, n: 10 }];
 const NE = [{ mass: 20, n: 36 }, { mass: 22, n: 4 }];
 const B = [{ mass: 10, n: 8 }, { mass: 11, n: 32 }];
+const MG = [{ mass: 24, n: 32 }, { mass: 25, n: 4 }, { mass: 26, n: 4 }];
 
 const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
 const chuteSample = t => assayRead(t, 'assay');
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE TEN STAGES
    Exported so `verify:learn` and `verify:table` can run SOLUTIONS and MISSES through every `check`.
    ------------------------------------------------------------------ */
 export const STAGES = [
@@ -215,16 +216,13 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Where 35.5 Sits',
+    title: 'Where the Piles Balance',
     prompt: 'Find the point where Sample A\'s piles balance on the beam.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [sample('a', 'SAMPLE A', CL, { x: SAMPLE_X, y: 34 })],
       zones: { slots: [CHUTE] },
-      fixtures: [
-        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['chlorine', 'listed mass', '35.5'] } },
-        assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(34.5, 37.5, 36) })
-      ]
+      fixtures: [assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(34.5, 37.5, 36) })]
     }),
     hints: [
       'Use "Tip Sample" and the "Fulcrum" dial.',
@@ -251,7 +249,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Work Out the Average',
-    prompt: 'Find the point where this boron sample balances on the beam.',
+    prompt: 'What does one atom of this boron sample weigh on average?',
+    entry: { id: 'ans', label: 'Average weight', unit: 'u' },
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [sample('a', 'SAMPLE A', B, { x: SAMPLE_X, y: 34 }, { note: '40 atoms, nothing listed for it' })],
@@ -259,19 +258,20 @@ export const STAGES = [
       fixtures: [assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(9.5, 11.5, 10.5) })]
     }),
     hints: [
-      'Use "Tip Sample" and the "Fulcrum" dial.',
+      'Use "Tip Sample" to see the tallies, and the "Fulcrum" dial to test your figure.',
       'Read the tally over each bin and notice which pile is the bigger.',
-      'Multiply each bin\'s weight by its share of the atoms and add the two results, then check that the fulcrum agrees.'
+      'Multiply each bin\'s weight by its share of the atoms and add the two results.'
     ],
     check(state) {
       const r = chuteSample(state.table);
-      if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip the sample into the chute, then slide the fulcrum.' };
-      if (!r.level) {
-        const middle = (r.bins[0].mass + r.bins[r.bins.length - 1].mass) / 2;
-        if (r.pivot === middle) return { ok: false, msg: 'The beam dips at the middle of the two weights.' };
-        return { ok: false, msg: 'The beam still dips.' };
-      }
-      return { ok: true };
+      if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip the sample into the chute to see its piles.' };
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the average weight of one atom.' };
+      const want = averageOf(B);
+      if (Math.abs(v - want) <= 0.051) return { ok: true };
+      const middle = (B[0].mass + B[1].mass) / 2;
+      if (Math.abs(v - middle) < 0.051) return { ok: false, msg: 'The two piles are not the same size, so the beam would not balance at the middle of their weights.' };
+      return { ok: false, msg: v < B[0].mass || v > B[1].mass ? 'An average cannot lie outside the lightest and heaviest atom.' : 'Slide the fulcrum to that weight: the beam does not lie level there.' };
     },
     reward: {
       log: 'Sample A averages 10.8 per atom.',
@@ -289,9 +289,6 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [{ ...sample('a', 'SAMPLE A', [{ mass: 19, n: 40 }], { x: SAMPLE_X, y: 34 }), fixed: true }],
-      fixtures: [
-        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['fluorine', 'listed mass', '19.0'] } }
-      ],
       prediction: {
         slot: { id: 'predict', label: 'My prediction', at: { x: 87, y: 24 }, size: { w: 34, h: 16 } },
         tokens: [
@@ -332,10 +329,7 @@ export const STAGES = [
     table: massTable({
       pieces: [sample('a', 'SAMPLE A', [{ mass: 19, n: 40 }], { x: SAMPLE_X, y: 34 })],
       zones: { slots: [CHUTE] },
-      fixtures: [
-        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['fluorine', 'listed mass', '19.0'] } },
-        assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(18, 20, 19.6) })
-      ]
+      fixtures: [assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(18, 20, 19.6) })]
     }),
     hints: [
       'Use "Tip Sample" and the "Fulcrum" dial.',
@@ -439,7 +433,71 @@ export const STAGES = [
     reward: {
       log: 'One sample natural, two altered.',
       title: 'The Mass Is a Fingerprint of the Mix',
-      body: 'All three samples were chlorine, but only one had the natural mix. Listed atomic mass reflects natural isotope proportions; altering the mix changes the measured mass.',
+      body: 'All three samples were chlorine, but only one had the natural mix. Listed atomic mass reflects natural isotope proportions; altering the mix changes the measured mass.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 9 */
+  {
+    title: 'Three Piles',
+    prompt: 'What does one atom of this magnesium sample weigh on average?',
+    entry: { id: 'ans', label: 'Average weight', unit: 'u' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [sample('a', 'SAMPLE A', MG, { x: SAMPLE_X, y: 34 }, { code: 'magnesium' })],
+      zones: { slots: [CHUTE] },
+      fixtures: [assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(23.5, 26.5, 25) })]
+    }),
+    hints: [
+      'Use "Tip Sample" to see the tallies, and the "Fulcrum" dial to test your figure.',
+      'Most of the atoms stand in one pile, so the average sits close to that pile\'s weight.',
+      'Multiply each pile\'s weight by its share of the atoms and add the three results.'
+    ],
+    check(state) {
+      const r = chuteSample(state.table);
+      if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip the sample into the chute to see its piles.' };
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the average weight of one atom.' };
+      if (Math.abs(v - averageOf(MG)) <= 0.051) return { ok: true };
+      if (Math.abs(v - 25) < 0.051) return { ok: false, msg: 'The three piles are not the same size, so the beam would not balance at the middle pile\'s weight.' };
+      return { ok: false, msg: 'Slide the fulcrum to that weight: the beam does not lie level there.' };
+    },
+    reward: {
+      log: 'Magnesium averages 24.3 across three isotopes.',
+      title: 'Any Number of Isotopes',
+      body: 'The same sum works for three isotopes or thirty: each weight counts in proportion to its share of the atoms. Magnesium is mostly mass 24, so its average, 24.3, sits just above 24.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 10 */
+  {
+    title: 'Share From the Average',
+    prompt: 'What percent of these lithium atoms weigh 7?',
+    entry: { id: 'ans', label: 'Weigh 7', unit: '%' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [],
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'Lithium', at: { x: 62, y: 30 }, size: { w: 36, h: 22 }, noRun: true, props: { lines: ['atoms weigh 6 or 7', 'average weight 6.9'] } }
+      ]
+    }),
+    hints: [
+      'Type the percent of atoms that weigh 7.',
+      'If every atom weighed 6 the average would be 6, and each atom that weighs 7 raises the average a little.',
+      'Find how far the average sits above 6, and what fraction of the way that is from 6 to 7.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a percent.' };
+      if (Math.abs(v - 90) <= 0.51) return { ok: true };
+      if (Math.abs(v - 50) < 0.51) return { ok: false, msg: 'With half the atoms at each weight the average would be at the middle of the two weights.' };
+      if (Math.abs(v - 10) < 0.51) return { ok: false, msg: 'With that few heavy atoms the average would sit much nearer 6 than 6.9 does.' };
+      return { ok: false, msg: 'That share of weight-7 atoms would not average 6.9.' };
+    },
+    reward: {
+      log: 'Lithium: 90 percent weigh 7.',
+      title: 'Working Back From the Average',
+      body: 'The average sat 0.9 of the way from 6 to 7, so 90% of the atoms weigh 7. Natural lithium is close to this: about 92% lithium-7.',
       last: true
     }
   }
@@ -531,6 +589,7 @@ export const PRACTICE = [
 
 const to = (piece, target) => ({ place: { piece, to: target } });
 const tip = piece => [to(piece, 'slot:chute'), { run: 'assay' }];
+const typed = (id, value) => ({ type: { entry: id, value: String(value) } });
 const slide = value => ({ setDial: { fixture: 'assay', dial: 'pivot', value } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
@@ -538,11 +597,13 @@ export const SOLUTIONS = [
   [...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:one'), ...tip('b'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('b', 'tray:two')],
   [...tip('a'), ...tip('b'), to('a', 'tray:s75'), to('b', 'tray:s75')],
   [...tip('a'), slide(35.5)],
-  [...tip('a'), slide(10.8)],
+  [...tip('a'), typed('ans', '10.8')],
   [{ predict: 't-pile' }],
   [...tip('a'), slide(19)],
   [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 4 } }],
-  [...tip('a'), slide(35.5), ...tip('b'), slide(36), ...tip('c'), slide(35), to('a', 'tray:natural'), to('b', 'tray:altered'), to('c', 'tray:altered')]
+  [...tip('a'), slide(35.5), ...tip('b'), slide(36), ...tip('c'), slide(35), to('a', 'tray:natural'), to('b', 'tray:altered'), to('c', 'tray:altered')],
+  [...tip('a'), typed('ans', '24.3')],
+  [typed('ans', '90')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -550,11 +611,13 @@ export const MISSES = [
   [...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:two'), to('b', 'tray:two')],
   [...tip('a'), ...tip('b'), to('a', 'tray:s75'), to('b', 'tray:s25')],
   [...tip('a'), slide(36)],
-  [...tip('a'), slide(10.5)],
+  [...tip('a'), typed('ans', '10.5')],
   [],
   [...tip('a')],
   [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 1 } }],
-  [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:natural'), to('b', 'tray:natural'), to('c', 'tray:altered')]
+  [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:natural'), to('b', 'tray:natural'), to('c', 'tray:altered')],
+  [...tip('a'), typed('ans', '25')],
+  [typed('ans', '50')]
 ];
 
 function blankState() { return {}; }

@@ -69,7 +69,7 @@ export const UNIT_01 = {
       title: 'Atomic Mass',
       line: 'Calculate average atomic mass from isotope abundances.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 10,
       status: 'live',
       module: () => import('../quests/unit01/q5-assay.js')
     },

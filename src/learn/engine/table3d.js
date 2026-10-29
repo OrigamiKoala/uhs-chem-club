@@ -1339,16 +1339,16 @@ export class Table3D extends BenchViewer3D {
       const l = this.lifts[id] || 0;
       this.lifts[id] = Math.abs(want - l) < 0.0005 ? want : l + (want - l) * k;
     }
-    if (this.drag) {
-      const dp = this.state.pieces[this.drag.id];
-      if (dp) {
-        const kit = getKit(this.state.kit);
-        const sig = this.pieceSignature(kit, dp);
-        const e = this.entries.get(this.drag.id);
-        if (e && e.sig !== sig) {
-          this.syncPieces();
-        }
-      }
+    // The dragged piece's face can depend on where it is held; so can a lens's, which keeps easing
+    // toward its drop point after the pointer lets go, so it is rechecked until it arrives.
+    const watch = new Set(this.drag ? [this.drag.id] : []);
+    for (const [id, p] of Object.entries(this.state.pieces)) if (p.kind === 'lens') watch.add(id);
+    for (const id of watch) {
+      const dp = this.state.pieces[id];
+      if (!dp) continue;
+      const kit = getKit(this.state.kit);
+      const e = this.entries.get(id);
+      if (e && e.sig !== this.pieceSignature(kit, dp)) { this.syncPieces(); break; }
     }
     this.placePieces();
   }
