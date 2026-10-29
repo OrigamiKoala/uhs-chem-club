@@ -114,9 +114,19 @@ function dress3d(f, state, c) {
   const scrX = box.x0 + 26 + (f.size.w - 28.5) / 2;
   const scrY = box.y0 + 4.5 + 21.5 / 2;
   const scrP = toPlate({ x: scrX, y: scrY });
-  const scrBezel = new THREE.Mesh(new THREE.BoxGeometry((f.size.w - 28.5) * s, 0.006, 21.5 * s), sensorMat);
-  scrBezel.position.set(scrP.x, c.ground + 0.003, scrP.z);
-  group.add(scrBezel);
+  // A frame, not a slab: the readout is painted on the plate inside it and must stay in view.
+  const bw = f.size.w - 28.5;
+  const bh = 21.5;
+  const edge = 0.5;
+  const strip = (w, h, dx, dz) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w * s, 0.006, h * s), sensorMat);
+    m.position.set(scrP.x + dx * s, c.ground + 0.003, scrP.z + dz * s);
+    group.add(m);
+  };
+  strip(bw, edge, 0, -(bh - edge) / 2);
+  strip(bw, edge, 0, (bh - edge) / 2);
+  strip(edge, bh, -(bw - edge) / 2, 0);
+  strip(edge, bh, (bw - edge) / 2, 0);
 
   const sync = (fx, st) => {
     const r = spectroRead(st, fx.id);

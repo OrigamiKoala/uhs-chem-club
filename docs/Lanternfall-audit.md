@@ -64,3 +64,11 @@ Operable / Intuitive / Busywork / Intuition / Accurate. "ok" means no defect fou
 - Dial reliability by a real mouse; a tap on a dial track does nothing.
 - The small recorder plot on the pulse timer bench.
 - Whether the new typed stages' numbers feel friendly to a 12-year-old: only the owner can judge.
+
+## Second round (play of q9-absorb and boss-eater)
+
+- **Blocking defect fixed:** at 3D On the spectrophotometer's digital readout (`ABSORBANCE 0.100`, transmittance bar) was invisible on every spectrometer stage (`q9-absorb` 2 to 5 and boss phase 5): a solid bezel slab in `cuvette.js` `dress3d` lay over the painted display. It is now a thin frame. Played: cuvette in the beam, Record, the reading shows.
+- `q9-absorb` stage 5: the calibration plot was about 100 px wide with unreadable axes; enlarged (42 x 24 units). Boss phase 5's plot is still the small one (the foe pad and the plaque leave no room); the absorbance readout itself now shows.
+- Looked at (screenshot only): boss phases 1 to 5 render and read; `q9-absorb` 1 to 3.
+- Played by hand: `q9-absorb` 4 (cuvette into the holder, Record, reading), `q9-absorb` 5 (one standard recorded).
+- Still never solved by hand: `q9-absorb` 4 and 5 to completion, every boss phase.

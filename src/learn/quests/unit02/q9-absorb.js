@@ -74,7 +74,7 @@ const SPEC_AT = { x: 39, y: 22 };
 export const SEALED_CONC = 0.005;
 export const COPPER = 0.01;
 
-const REC = { at: { x: 112, y: 13 }, size: { w: 30, h: 18 } };
+const REC = { at: { x: 113, y: 13 }, size: { w: 42, h: 24 } };
 const recorder = (xLabel, xUnit) => ({ ...REC, xLabel, xUnit, yLabel: 'Absorbance', yUnit: '' });
 
 /* ------------------------------------------------------------------
@@ -254,7 +254,7 @@ export const STAGES = [
         fixtures: [sp.fixture, markerFixture('conc', 'Unknown sample (mmol/L)', { x: 122, y: 35 }, { max: 8, step: 0.5, w: 44 })],
         zones: { slots: sp.slots },
         tools: ['straightedge']
-      }, { recorder: { ...recorder('Concentration', 'mmol/L'), at: { x: 112, y: 11 } } }),
+      }, { recorder: { ...recorder('Concentration', 'mmol/L'), at: { x: 113, y: 13 } } }),
       hints: [
         'Prepare the standards with stock solute, record each in the spectrophotometer, and lay the straightedge.',
         'Find where the unknown sample\'s absorbance falls on the line.',
