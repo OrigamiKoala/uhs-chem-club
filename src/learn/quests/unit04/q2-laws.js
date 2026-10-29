@@ -120,7 +120,7 @@ export const STAGES = [
       hints: [
         'Turn Holder 8\'s Heater dial.',
         'Compare the volumes of both cylinders at each setting.',
-        'Find the setting where Holder 8\'s volume is exactly double Holder 7\'s.'
+        'At each setting work out how many times bigger Holder 8\'s room is than Holder 7\'s, and stop where that reads two.'
       ],
       check(state) {
         const t = state.table;
@@ -155,8 +155,8 @@ export const STAGES = [
       }, { recorder: { at: { x: 112, y: 24 }, size: { w: 42, h: 28 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Room', yUnit: 'L', range: { xMin: -300, xMax: 300, yMin: 0, yMax: 48 } } }),
       hints: [
         'Use the "Heater" dial, "Record", and the straightedge.',
-        'Record readings at several settings, then align the straightedge across them.',
-        'Find the temperature where the line reaches zero volume.'
+        'Record readings at several settings, then drag from one reading to another to lay the straightedge across them.',
+        'Follow the line down the strip to where the room would run out.'
       ],
       check(state) {
         const t = state.table;
@@ -211,7 +211,7 @@ export const STAGES = [
       hints: [
         'Use the "Heater" dial and "Record", then place a card in the slot.',
         'Compare the gauge at −30 °C with the starting reading at 20 °C.',
-        'Select the card indicating the fraction of initial pressure lost.'
+        'Divide the cooled reading by the starting one to see what share of it is left.'
       ],
       check(state) {
         const t = state.table;

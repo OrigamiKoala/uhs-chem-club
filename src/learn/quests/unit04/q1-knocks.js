@@ -134,7 +134,7 @@ export const STAGES = [
       hints: [
         'Use the "Heater" dial, then place a card in the slot.',
         'Compare the three gauges with each other as temperature changes.',
-        'Select the card describing how the three readings compare.'
+        'Read the three figures at one setting, then again at a hotter one, and see which of them ever differ.'
       ],
       check(state) {
         const t = state.table;

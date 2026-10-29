@@ -2576,6 +2576,13 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(fits.length === 1 && fits[0][2] === b3.SEALED.gas, `${q} stage 6: mass over moles (${molar.toFixed(1)}) does not single out ${b3.SEALED.gas}`);
       holds(Object.values(start(b3, 5).fixtures).some(f => f.kind === 'plaque' && f.props.lines.some(l => /Mass of gas/.test(l))), `${q} stage 6: the plate does not print the mass`);
       same(Object.values(done(b3, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'co2', `${q} stage 6 (the card laid)`);
+      // Stage 7: moles from atmospheres and degrees C; the Celsius-as-kelvin and kilopascal-R slips are cards.
+      const n7 = (b3.ATM_PLATE.P * b3.ATM_PLATE.V) / (b3.R_ATM * (b3.ATM_PLATE.TC + 273.15));
+      holds(b3.UNIT_CARDS.filter(c => Math.abs(c[2] - n7) / n7 < 0.03).length === 1, `${q} stage 7: exactly one card should be the moles (${n7.toFixed(3)})`);
+      const slipC = (b3.ATM_PLATE.P * b3.ATM_PLATE.V) / (b3.R_ATM * b3.ATM_PLATE.TC);
+      const slipR = (b3.ATM_PLATE.P * b3.ATM_PLATE.V) / (G.R * (b3.ATM_PLATE.TC + 273.15));
+      holds(b3.UNIT_CARDS.some(c => Math.abs(c[2] - slipC) / slipC < 0.03) && b3.UNIT_CARDS.some(c => Math.abs(c[2] - slipR) / slipR < 0.05), `${q} stage 7: the unit slips are not cards`);
+      same(Object.values(done(b3, 6).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 7 (the card laid)`);
     }
   }
 

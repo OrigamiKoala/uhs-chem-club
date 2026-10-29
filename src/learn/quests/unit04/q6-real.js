@@ -88,9 +88,9 @@ export const STAGES = [
     prompt: 'The gas law predicts helium squeezed to a hundredth of its volume reads a hundred times higher: what does a real gauge read?',
     items: GUESSES,
     hints: [
-      'Place a card in the slot.',
-      'Consider whether gas particles occupy physical volume at high pressures.',
-      'Select the card corresponding to your prediction.'
+      'Lay one card in the slot.',
+      'Picture the gas squeezed until its particles nearly fill the room: ask whether they can still be treated as points.',
+      'Ask whether the gauge could rise by more or by less than the law says when the particles themselves take up room.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -119,7 +119,7 @@ export const STAGES = [
       hints: [
         'Turn the Piston dial, then place a card in the slot.',
         'Compare the gauge with the gas law value at minimum volume.',
-        'Select the card that matches whether the gauge reads above or below the gas law.'
+        'Read the gauge and the gas law figure at the smallest room and see which is larger.'
       ],
       check(state) {
         const t = state.table;
@@ -200,7 +200,7 @@ export const STAGES = [
       hints: [
         'Turn the Heater dial, then arrange the chips on the rail.',
         'Compare how far each cylinder deviates from the gas law at each temperature.',
-        'Place the cylinder with the greatest deviation at the left end of the rail.'
+        'Work out the gap between each gauge and its gas law figure as a share of that figure.'
       ],
       check(state) {
         const t = state.table;

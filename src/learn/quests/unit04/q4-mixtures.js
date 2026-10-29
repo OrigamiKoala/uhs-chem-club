@@ -119,7 +119,7 @@ export const STAGES = [
       hints: [
         'Drag Tank B, then Tank A, into the tray under the common tank.',
         'Compare neon\'s pressure in the common tank with Tank B\'s gauge.',
-        'Place the card matching neon\'s pressure change when the second tank opened.'
+        'Read the figure printed for neon after the first tank is open, then again after the second opens beside it.'
       ],
       check(state) {
         const t = state.table;
@@ -157,7 +157,7 @@ export const STAGES = [
       hints: [
         'Drag tanks into or out of the tray under the common tank.',
         'Compare each gas\'s share of the pressure with its share of the moles.',
-        'Select tanks so that nitrogen provides 60 percent of the total moles.'
+        'Add up the moles in the tray and divide nitrogen\'s by the total.'
       ],
       check(state) {
         const t = state.table;
@@ -195,7 +195,7 @@ export const STAGES = [
       hints: [
         'Drag a tank into the common tank tray to read its pressure, then return it to the rail.',
         'Compare the pressures of tanks with equal volume and temperature rather than their masses.',
-        'Place the tank with the highest pressure at the left end of the rail.'
+        'Open each tank into the common tank in turn and rank the tanks by the figure each one prints.'
       ],
       check(state) {
         const t = state.table;
@@ -240,7 +240,7 @@ export const STAGES = [
       hints: [
         'Turn the Height dial to change altitude.',
         'Compare each reading at sea level with its value at maximum altitude.',
-        'Place a reading in the falling tray only if its value decreases at higher altitude.'
+        'Set the dial to 8850 m, note each reading, then set it back to sea level and compare before sorting.'
       ],
       check(state) {
         const t = state.table;

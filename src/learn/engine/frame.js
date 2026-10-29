@@ -205,8 +205,9 @@ export const PANEL_LAYOUT = {
 
 /** At most `n` sentences of `text`; a briefing is a line or two, never a manual. */
 function clampSentences(text, n) {
-  const parts = String(text || '').match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [];
-  return parts.slice(0, n).join('').trim();
+  // A sentence ends at a stop followed by a space: the point in "1.5 L" or "8.31" does not end one.
+  const parts = String(text || '').trim().split(/(?<=[.!?]["')\]]*)\s+/);
+  return parts.slice(0, n).join(' ').trim();
 }
 
 export class LearnFrame {

@@ -16,6 +16,7 @@
  *   4  the number that pressure x room / amount x kelvin comes to       -> The Gas Constant
  *   5  how many moles a tank's plate says it holds                       -> Using the Ideal Gas Law (a figure worked out)
  *   6  which gas fills a sealed tank, from its plate and its mass        -> Molar Mass From a Tank
+ *   7  a plate in atmospheres and degrees C: the moles, with units checked -> Units in the Gas Law
  *
  * (Cut as repeats or as arithmetic past the idea: the second gas constant for a gauge in atmospheres, naming a gas from its weight, the
  * density ranking, and the pellet of limestone, which were the same counting at AP depth.)
@@ -28,7 +29,7 @@ import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, plaqueFixture, GASES, R } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bmolar volume\b/i, introducedAt: 2 },
@@ -77,8 +78,13 @@ export const MOLE_CARDS = [['a', '1.0 mol', 1.0], ['b', '0.10 mol', 0.1], ['c', 
 export const SEALED = { gas: 'CO2', P: 250, V: 10, T: 300 };
 export const GAS_CARDS = [['n2', 'Nitrogen, 28 g/mol', 'N2'], ['o2', 'Oxygen, 32 g/mol', 'O2'], ['ar', 'Argon, 40 g/mol', 'Ar'], ['co2', 'Carbon dioxide, 44 g/mol', 'CO2']];
 
+/** Stage 7: a plate in atmospheres and degrees C, R in atmospheres, and the figures to lay: the moles, the Celsius-as-kelvin slip, the kilopascal R slip, and a mixed-up product. */
+export const ATM_PLATE = { P: 2.5, V: 5, TC: 27 };
+export const R_ATM = 0.0821;
+export const UNIT_CARDS = [['a', '0.51 mol', 0.51], ['b', '5.6 mol', 5.6], ['c', '0.0050 mol', 0.005], ['d', '1.5 mol', 1.5]];
+
 /* ------------------------------------------------------------------
-   THE SIX STAGES
+   THE SEVEN STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -119,7 +125,7 @@ export const STAGES = [
       hints: [
         'Use the "Gas in" dial of Holder 11.',
         'Compare the volumes of both cylinders at each setting.',
-        'Stop at the setting where Holder 11 matches the volume of Holder 10.'
+        'Where the rooms match, read the amount of gas in each holder.'
       ],
       check(state) {
         const t = state.table;
@@ -274,7 +280,39 @@ export const STAGES = [
       reward: {
         log: 'Mass over moles named the gas.',
         title: 'Molar Mass From a Tank',
-        body: 'The tank holds about 1.0 mol and weighs 44 g, so one mole weighs 44 g: carbon dioxide. A gauge, a room, a temperature and a mass are enough to name an unlabelled gas.',
+        body: 'The tank holds about 1.0 mol and weighs 44 g, so one mole weighs 44 g: carbon dioxide. A gauge, a room, a temperature and a mass are enough to name an unlabelled gas.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Tank Y', { x: 32, y: 33 }, ['Gas: argon', `Gauge: ${ATM_PLATE.P} atm`, `Room: ${ATM_PLATE.V} L`, `Temperature: ${ATM_PLATE.TC} °C`], { w: 52 });
+    return {
+      title: 'Units in the Gas Law',
+      prompt: 'Lay the card for how many moles of gas Tank Y holds.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(UNIT_CARDS),
+        fixtures: [plate],
+        zones: { slots: [answerSlot('Moles in Tank Y')] }
+      }),
+      hints: [
+        'Read the gauge, room and temperature from the plate, and the gas constant printed beside it.',
+        'Check that every figure is in the unit the gas constant uses: atmospheres, litres and kelvin.',
+        'Add 273 to the Celsius figure, then put the three figures into pressure times room, divided by the gas constant times kelvin.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, UNIT_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = (ATM_PLATE.P * ATM_PLATE.V) / (R_ATM * (ATM_PLATE.TC + 273.15));
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'That is more gas than the plate allows.' : 'That is less gas than the plate allows.' };
+      },
+      reward: {
+        log: 'Every figure in the gas constant\'s units.',
+        title: 'Units in the Gas Law',
+        body: 'With R = 0.0821 L·atm per mol·K, the gauge must be in atm, the room in L and the temperature in kelvin: n = (2.5 × 5) ÷ (0.0821 × 300) = 0.51 mol. Using 27 instead of 300, or the kilopascal R, gives an answer ten times too large or a hundred times too small.',
         last: true
       }
     };
@@ -287,7 +325,8 @@ const NOTES = {
   2: ['Turn Holder 11\'s Gas in dial.'],
   4: ['Record readings, lay the straightedge,', 'then place a card in the slot.'],
   5: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
-  6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.']
+  6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
+  7: ['R = 0.0821 L·atm per mol·K.', 'Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -375,7 +414,8 @@ export const SOLUTIONS = [
   [...sort({ b: 'same', c: 'more', d: 'fewer', e: 'fewer' })],
   [dial(RIG, 'temp', 1), dial(RIG, 'amount', 1), { run: RIG }, dial(RIG, 'temp', 3), dial(RIG, 'amount', 2), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, put('n831', 'slot:answer')],
   [put('a', 'slot:answer')],
-  [put('co2', 'slot:answer')]
+  [put('co2', 'slot:answer')],
+  [put('a', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -385,7 +425,8 @@ export const MISSES = [
   [...sort({ b: 'more', c: 'more', d: 'fewer', e: 'fewer' })],
   [dial(RIG, 'temp', 1), { run: RIG }, put('n83', 'slot:answer')],
   [put('c', 'slot:answer')],
-  [put('ar', 'slot:answer')]
+  [put('ar', 'slot:answer')],
+  [put('b', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

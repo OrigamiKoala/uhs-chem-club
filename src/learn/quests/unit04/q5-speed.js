@@ -117,7 +117,7 @@ export const STAGES = [
       hints: [
         'Turn the Stopwatch dial to observe the chambers over time.',
         'Compare the remaining gas in each chamber at equal times.',
-        'Place the chamber that empties earliest at the left end of the rail.'
+        'Set the stopwatch to one time and rank the chambers by how much gas each has left.'
       ],
       check(state) {
         const t = state.table;
@@ -152,7 +152,7 @@ export const STAGES = [
       hints: [
         'Adjust the Gas dial and use the Stopwatch dial.',
         'Compare the time required for each chamber to reach half its initial amount.',
-        'Select the reference gas whose half-time matches the unknown sample.'
+        'Change the reference gas until its half-empty time matches the sample\'s.'
       ],
       check(state) {
         const t = state.table;
@@ -206,7 +206,7 @@ export const STAGES = [
       hints: [
         'Advance the Stopwatch dial and press Check.',
         'Observe how far each gas migrates through the tube over time.',
-        'Place the card corresponding to the position where the reaction ring appears.'
+        'Run the stopwatch to its last setting and read where the white ring sits along the tube.'
       ],
       check(state) {
         const t = state.table;
