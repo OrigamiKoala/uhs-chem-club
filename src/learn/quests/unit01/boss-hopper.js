@@ -141,8 +141,8 @@ export const STAGES = [
         ]
       },
       fixtures: [
-        { id: 'needle', kind: 'needle', label: 'Charge', at: { x: 80, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } },
-        { id: 'mass', kind: 'mass', label: 'Mass', at: { x: 104, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 12 } }
+        { id: 'needle', kind: 'needle', label: 'Charge', at: { x: 80, y: 31 }, size: { w: 22, h: 14 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } },
+        { id: 'mass', kind: 'mass', label: 'Mass', at: { x: 104, y: 31 }, size: { w: 22, h: 14 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 12 } }
       ]
     }),
     foes: HOPPER_FOE,

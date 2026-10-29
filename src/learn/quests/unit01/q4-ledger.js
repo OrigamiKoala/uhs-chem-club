@@ -107,8 +107,8 @@ const BUILD = {
     { ...trayAt('core', 'The middle', 36, 33, 12, 12), spot: true },
     { ...trayAt('out', '', 36, 33, 30, 20), orbit: { rings: [2, 8], radii: [10, 15] } }
   ],
-  needle: { id: 'needle', kind: 'needle', label: 'Needle', at: { x: 80, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } },
-  mass: { id: 'mass', kind: 'mass', label: 'Mass', at: { x: 104, y: 33 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 12 } }
+  needle: { id: 'needle', kind: 'needle', label: 'Charge', at: { x: 80, y: 29 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } },
+  mass: { id: 'mass', kind: 'mass', label: 'Mass', at: { x: 104, y: 29 }, size: { w: 22, h: 17 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 12 } }
 };
 
 const shellOrbit = (id, x, y, radius, cap, ringIndex, label = '') => ({
