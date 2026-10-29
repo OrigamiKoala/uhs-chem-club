@@ -929,6 +929,34 @@ function paintWells(ctx, f, state, b) {
     }
     ctx.stroke();
     ctx.setLineDash?.([]);
+    // `props.components`: the two things the curve is made of, drawn over the same stretch. The Morse curve is exactly their sum:
+    // the pull of the nuclei for the electrons (negative, long reach) plus the push of nucleus against nucleus and cloud against cloud (positive, short reach).
+    if (f.props.components) {
+      const parts = [
+        { name: 'pull', color: PLATE_COLORS.phosphor, at: z => -2 * pair.de * Math.exp(-pair.k * (z - pair.r0)) },
+        { name: 'push', color: PLATE_COLORS.dust, at: z => pair.de * Math.exp(-2 * pair.k * (z - pair.r0)) }
+      ];
+      for (const part of parts) {
+        ctx.strokeStyle = part.color;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash?.([2, 3]);
+        ctx.beginPath();
+        let begun = false;
+        let lastX = null;
+        let lastY = null;
+        for (let d = a; d <= z; d += 1) {
+          const e = part.at(d);
+          if (e > hi || e < lo) { begun = false; continue; }
+          const x = X(d);
+          const y = Y(e);
+          if (!begun) { ctx.moveTo(x, y); begun = true; } else ctx.lineTo(x, y);
+          lastX = x; lastY = y;
+        }
+        ctx.stroke();
+        ctx.setLineDash?.([]);
+        if (lastX != null) plateText(ctx, part.name, lastX + 2, lastY + (part.name === 'pull' ? size * 0.9 : -size * 0.4), { size, color: part.color });
+      }
+    }
     // Where the hand has the pair now: a small square on the curve, and the reading.
     const e = Math.min(hi, morse(pair, row.gap));
     ctx.fillStyle = AMBER;

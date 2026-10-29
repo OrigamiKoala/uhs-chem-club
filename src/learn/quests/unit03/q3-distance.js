@@ -53,14 +53,14 @@ export function toolNoteFor() { return null; }
    ------------------------------------------------------------------ */
 
 /** A well fixture's declaration: `rows` are `{id, pair, label, start}`, one hand each; `box` its place and size. */
-function wells(id, rows, { at, size, dmax = 300, top = 9, pitch = 7, margin = 4, discs = false, marker = null, release = null, plot, runLabel, min = 0, grab = 0, icon }) {
+function wells(id, rows, { at, size, dmax = 300, top = 9, pitch = 7, margin = 4, discs = false, marker = null, release = null, plot, runLabel, min = 0, grab = 0, icon, discK = 0, components = false }) {
   const dials = {};
   for (const r of rows) dials[r.id] = { min, max: dmax, step: 2, value: r.start, label: r.label };
   if (marker) dials[marker.id] = { min: 0, max: marker.max, step: marker.step, value: 0, label: marker.label };
   return {
     id, kind: 'wells', label: 'Pull the pair', at, size, ...(runLabel ? { runLabel } : { noRun: true }), dials,
     props: {
-      rows, top, rowPitch: pitch, margin, discs, plot, ...(marker ? { marker: marker.id } : {}), ...(release ? { release } : {}),
+      rows, top, rowPitch: pitch, margin, discs, plot, ...(components ? { components } : {}), ...(discK ? { discK } : {}), ...(marker ? { marker: marker.id } : {}), ...(release ? { release } : {}),
       ...(grab ? { grab: { [rows[0].id]: grab } } : {}), ...(icon ? { icon } : {})
     }
   };
@@ -95,11 +95,11 @@ export const STAGES = [
     prompt: 'Adjust the hydrogen internuclear distance to find where potential energy is lowest.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
-      fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.17, plot: { y0: 26, foot: 9 } })]
+      fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.17, components: true, plot: { y0: 26, foot: 9 } })]
     }),
     hints: [
       'Use the hand on the track.',
-      'Observe potential energy as internuclear distance changes.',
+      'Watch the dotted pull and push traces as well as the energy trace while you move the hand.',
       'Release at the internuclear separation where potential energy is at its minimum.'
     ],
     check(state) {
@@ -113,7 +113,7 @@ export const STAGES = [
     reward: {
       log: 'The lowest point of the trace.',
       title: 'Potential Energy Curve',
-      body: 'The curve plots potential energy against internuclear distance. The minimum represents the equilibrium bond length, where attractive and repulsive electrostatic forces balance.'
+      body: 'The energy curve is the sum of two dotted traces: the pull of each nucleus on the other atom\'s electron, which reaches far, and the push of the atoms against each other, which only counts up close. The minimum is the equilibrium bond length, where the two balance.'
     }
   },
 
