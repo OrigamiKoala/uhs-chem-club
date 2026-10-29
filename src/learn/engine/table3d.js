@@ -633,7 +633,8 @@ export class Table3D extends BenchViewer3D {
       const level = Math.min(1, total / cap);
       const r = jar.rect;
       jar.fill.visible = total > 0;
-      const h = Math.max(0.001, level * 0.034);
+      // Any pour shows over the jar's wall: a few grams lie as a slab at least this high, and a full jar fills to the rim.
+      const h = total > 0 ? Math.max(0.018, level * 0.034) : 0.001;
       jar.fill.scale.set((r.x1 - r.x0) * s - 0.016, h, (r.y1 - r.y0) * s - 0.016);
       jar.fill.position.y = GROUND_Y + h / 2;
     }

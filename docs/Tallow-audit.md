@@ -89,6 +89,8 @@ Phase 2 loaded: gauges clear of the heap after the fix. Phases 1, 3, 4, 5 not op
 | D2 | `q1-grain` 5 and 7-atom heaps ran under the Lens panel | pitch 11, start 10. |
 | D3 | `q4-ledger` and Hopper phase 2: particles covered the lower scales of the gauges | gauges moved up (Hopper gauges shortened to stay out of the foe's corner). |
 | D4 | `q5` stage 3, 5, 6 printed the answer on a "Listed" plate | plates removed. |
+| D6 | `q6` balance counters ("ATOMS 6.02 × 10²³") were about 8 px and unreadable at the default camera | `mass.js` `paintBalance` counter text enlarged. Looked at after the change. |
+| D7 | A pour into the right pan left no visible trace (the 3D fill slab sat behind the pan's wall) | `table3d.js` `syncJars`: any pour fills at least 0.018 m. Played: one pour, the pan shows green. |
 | D5 | `q4` gauge was labelled "Needle" where the rest of Tallow says "Charge" | label unified. |
 
 ## Open items
@@ -118,7 +120,7 @@ Phase 2 loaded: gauges clear of the heap after the fix. Phases 1, 3, 4, 5 not op
 - Played q1 stages 1, 2; looked at the rest as listed above.
 - Fixed D1 to D5; q5 rebuilt as above (8 to 10 stages); q6 8 to 12 stages; chart, `verify-learn` recomputations and PRODUCT.md counts updated.
 - `verify:learn`, `:table`, `:story`, `:docs`, `:tallow`, `:lanternfall`, `:bellows`, `:ember` and `:bench` pass.
-- Not done: a second full audit pass (see below).
+- Second pass: looked at `q6` 1, 3, 4, 6 and poured by hand on stage 4. Still never opened: the stages listed under 'Never opened' except those; a third pass was not run.
 
 ## What only the owner can judge
 

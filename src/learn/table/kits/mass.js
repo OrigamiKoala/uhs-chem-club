@@ -478,7 +478,7 @@ function paintBalance(ctx, f, state, b) {
     const c = f.props.counters?.[side];
     if (!c) continue;
     const text = `${c.label || 'ATOMS'} ${countText(counterOf(state, f.id, side))}`;
-    plateText(ctx, text, side === 'L' ? b.x0 + 2 * sc : b.x1 - 2 * sc, b.y0 + h * 0.88, { size: Math.max(7, Math.round(2.1 * sc)), align: side === 'L' ? 'left' : 'right', weight: 700, color: PLATE_COLORS.text });
+    plateText(ctx, text, side === 'L' ? b.x0 + 2 * sc : b.x1 - 2 * sc, b.y0 + h * 0.88, { size: Math.max(9, Math.round(3.1 * sc)), align: side === 'L' ? 'left' : 'right', weight: 700, color: PLATE_COLORS.text });
   }
   if (f.props.pans.R && typeof f.props.pans.R === 'object') {
     // The made-up pile on the right pan: every atom of it, light and heavy.
