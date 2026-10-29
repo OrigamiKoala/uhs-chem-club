@@ -35,9 +35,11 @@ import {
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
+  { term: /\bsquare planar\b/i, introducedAt: 7 },
+  { term: /\boctahedral\b/i, introducedAt: 6 },
   { term: /\bbent\b/i, introducedAt: 5 },
   { term: /\btrigonal pyramidal\b/i, introducedAt: 4 },
   { term: /\btetrahedral\b/i, introducedAt: 3 },
@@ -71,13 +73,15 @@ const HUB_AT = { x: 40, y: 32 };
 const binTray = (label = 'Arms') => ({ id: 'bin', label, at: { x: 106, y: 15 }, size: { w: 52, h: 15 }, cell: 13 });
 
 /** A hub table: the hub, the pieces in the tray, the protractor, the dial that turns the view, a marker to set. */
-function hubTable({ sym, arms, label = 'Hub A', marker: mk = null, gauge = false, protractor = true }) {
-  const hs = hubSet('hub', sym, HUB_AT, { label, gauge, turner: { x: 108, y: 35 } });
+function hubTable({ sym, arms, label = 'Hub A', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
+  const hs = hubSet('hub', sym, HUB_AT, { label, gauge, turner: roomy ? { x: 96, y: 31 } : { x: 108, y: 35 } });
   const inTray = arms.map(a => ({ ...a, zone: 'tray:bin' }));
+  // Six or more pieces: a longer tray, and the protractor moves down beside the turn dial to make room for it.
+  const tray = roomy ? { ...binTray('Arms'), at: { x: 111.3, y: 14 }, size: { w: 76.5, h: 15 }, cell: 12.7 } : binTray('Arms');
   return domainTable({
-    pieces: [hs.piece, ...inTray, ...(protractor ? [protractorPiece('pr', { x: 139.5, y: 15 }, 'Reads an angle')] : [])],
-    zones: { trays: [binTray('Arms')] },
-    fixtures: [hs.fixture, hs.turner, ...(mk ? [marker('mark', { x: 108, y: 54 }, mk)] : [])]
+    pieces: [hs.piece, ...inTray, ...(protractor ? [protractorPiece('pr', roomy ? { x: 136, y: 33 } : { x: 139.5, y: 15 }, 'Reads an angle')] : [])],
+    zones: { trays: [tray] },
+    fixtures: [hs.fixture, hs.turner, ...(mk ? [marker('mark', roomy ? { x: 96, y: 50 } : { x: 108, y: 54 }, mk)] : [])]
   });
 }
 
@@ -88,8 +92,16 @@ const L = id => balloonPiece(id, at0);
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
 const ANGLE_TOL = 1.5;
 
+/** The smallest angle the protractor can read between two of the hub's arms that pass `keep`. */
+function smallestAngle(read, keep) {
+  const ids = read.arms.map((a, i) => [a, i]).filter(([a]) => keep(a)).map(([, i]) => i);
+  let best = Infinity;
+  for (let x = 0; x < ids.length; x++) for (let y = x + 1; y < ids.length; y++) best = Math.min(best, angleBetween(read.plan, ids[x], ids[y]));
+  return best;
+}
+
 /* ------------------------------------------------------------------
-   THE FIVE STAGES
+   THE SEVEN STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -222,7 +234,65 @@ export const STAGES = [
       log: 'Lone pairs push harder.',
       title: 'Bent Molecular Geometry',
       body: 'Two bonding domains and two lone pairs produce a bent molecular geometry. Because lone pair electrons exert stronger electrostatic repulsion than bonding pairs, the bond angle compresses to 104.5 degrees in water.',
-      model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Bent (104.5°)' },
+      model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Bent (104.5°)' }
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'Six on the Hub',
+    prompt: 'Set the angle marker to the smallest angle between two of six arms on the hub.',
+    widget: { type: 'table', label: 'The bench' },
+    table: hubTable({ sym: 'X', arms: [1, 2, 3, 4, 5, 6].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Angle' }, roomy: true }),
+    hints: [
+      'Use the arms, the protractor and the angle marker.',
+      'Read the angle between several different pairs of arms; the pairs do not all read the same.',
+      'Attach all six arms, then compare readings between neighbouring arms and between opposite ones.'
+    ],
+    check(state) {
+      const t = state.table;
+      const r = hubRead(t, 'hub');
+      const v = markerValue(t, 'mark');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      if (r.n !== 6) return { ok: false, msg: 'All six arms are not on the hub yet.' };
+      const real = smallestAngle(r, a => a.kind === 'arm');
+      if (near(v, real, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the smallest angle the protractor reads between two of the six arms.' };
+    },
+    reward: {
+      log: 'Six arms settle on the corners of an octahedron.',
+      title: 'Octahedral Geometry',
+      body: 'Six electron domains push apart to the corners of an octahedron: every arm has four neighbours at 90° and one opposite at 180°. Sulfur hexafluoride, SF₆, has this shape and holds twelve electrons round sulfur, more than an octet.',
+      model: { type: 'shape', mol: 'SF6', caption: 'SF₆ · Octahedral (90°)' }
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    title: 'Two Unseen Arms on Six',
+    prompt: 'Put four arms and two lone pairs on the hub, then set the marker to the smallest angle between two arms.',
+    widget: { type: 'table', label: 'The bench' },
+    table: hubTable({ sym: 'X', arms: [...[1, 2, 3, 4].map(i => A(`a${i}`, 'A', 1, 'Arm')), L('l1'), L('l2')], marker: { label: 'Angle' }, roomy: true }),
+    hints: [
+      'Use the arms, the balloons, the protractor and the angle marker.',
+      'Turn the view to see which way the two balloons point, then read angles between pairs of arms.',
+      'Two balloons settle as far from each other as they can, which decides where the four arms sit.'
+    ],
+    check(state) {
+      const t = state.table;
+      const r = hubRead(t, 'hub');
+      const v = markerValue(t, 'mark');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      if (r.lone < 2 || r.atoms < 4) return { ok: false, msg: 'Not everything from the tray is on the hub yet.' };
+      const real = smallestAngle(r, a => a.kind === 'arm');
+      if (near(v, real, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the smallest angle the protractor reads between two of the four arms.' };
+    },
+    reward: {
+      log: 'Two lone pairs sit opposite, and the four atoms lie flat.',
+      title: 'Square Planar Geometry',
+      body: 'Of six domains, two lone pairs take opposite corners, leaving the four atoms in one flat square with 90° between neighbours. Xenon tetrafluoride, XeF₄, has this square planar shape.',
+      model: { type: 'shape', mol: 'XeF4', caption: 'XeF₄ · Square planar (90°)' },
       last: true
     }
   }
@@ -327,7 +397,9 @@ export const SOLUTIONS = [
   [guess('solid')],
   [...on('a1', 'a2', 'a3', 'a4'), ...read('a1', 'a2'), set(110)],
   [...on('h1', 'h2', 'h3', 'l1')],
-  [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(104)]
+  [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(104)],
+  [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), ...read('a1', 'a3'), set(90)],
+  [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), ...read('a1', 'a3'), set(90)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -336,7 +408,9 @@ export const MISSES = [
   [],
   [...on('a1', 'a2', 'a3', 'a4'), set(90)],
   [...on('h1', 'h2', 'h3')],
-  [...on('h1', 'h2', 'l1', 'l2'), set(110)]
+  [...on('h1', 'h2', 'l1', 'l2'), set(110)],
+  [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), set(109)],
+  [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), set(180)]
 ];
 
 function blankState() { return {}; }

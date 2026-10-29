@@ -95,7 +95,7 @@ export const STAGES = [
     prompt: 'Adjust the hydrogen internuclear distance to find where potential energy is lowest.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
-      fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.085, plot: { y0: 26, foot: 9 } })]
+      fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.17, plot: { y0: 26, foot: 9 } })]
     }),
     hints: [
       'Use the hand on the track.',
