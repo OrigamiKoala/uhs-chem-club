@@ -17,6 +17,7 @@ import { mountFilling } from './filling-animator.js';
 import { mountRadiiShrink } from './radii-shrink-animator.js';
 import { mountShieldingExplainer } from './shielding-explainer.js';
 import { mountIonicRadius } from './ionic-radius-animator.js';
+import { mountBondOverlap } from './bond-overlap-animator.js';
 import { mountCuvetteExplainer } from './cuvette-explainer.js';
 
 export { mountDebriefOrbitalViewer };
@@ -1322,6 +1323,17 @@ export function mountModel(host, spec) {
     return {
       dispose() {
         try { teardownRadiiShrink(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
+
+  // Sigma and pi bonds: two atomic orbitals blending as the nuclei approach
+  if (parts.sigmaPi) {
+    const teardownSigmaPi = mountBondOverlap(view, wrap, parts.sigmaPi, still);
+    return {
+      dispose() {
+        try { teardownSigmaPi(); } catch (err) { /* gone */ }
         wrap.remove();
       }
     };

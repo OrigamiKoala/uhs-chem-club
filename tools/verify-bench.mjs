@@ -1342,18 +1342,22 @@ console.log('The foes — spoil standing in the wells\n');
         b2.settleLean();
         camera.updateMatrixWorld(true);
         let id = 40;
-        const px = u => {
+        // A hand aims at what it sees: a piece standing well above the plate (a floating atom's orbitals) is aimed at where it
+        // stands, not at the plate point under it, which another piece's solid may lie in front of.
+        const px = (u, onId) => {
           const pl = b2.map.toPlate(u);
           const p = new THREE.Vector3(pl.x, b2.groundY, pl.z);
+          const g = onId && b2.entries.get(onId)?.group;
+          if (g && g.position.y > b2.groundY + 0.1) p.copy(g.position);
           b2.root.localToWorld(p);
           p.project(camera);
           return { clientX: (p.x + 1) / 2 * 1920, clientY: (1 - p.y) / 2 * 1080 };
         };
-        const ev = u => ({ ...px(u), pointerId: id, preventDefault() {} });
-        const down = u => { id++; b2._onPointerDown(ev(u)); if (b2.grabbing) presses++; };
-        const move = u => b2._onPointerMove(ev(u));
-        const up = u => b2._onPointerUp(ev(u));
-        const tap = u => { down(u); up(u); };
+        const ev = (u, onId) => ({ ...px(u, onId), pointerId: id, preventDefault() {} });
+        const down = (u, onId) => { id++; b2._onPointerDown(ev(u, onId)); if (b2.grabbing) presses++; };
+        const move = (u, onId) => b2._onPointerMove(ev(u, onId));
+        const up = (u, onId) => b2._onPointerUp(ev(u, onId));
+        const tap = (u, onId) => { down(u, onId); up(u, onId); };
         try {
           for (const step of script) {
             const verb = Object.keys(step)[0];
@@ -1365,8 +1369,9 @@ console.log('The foes — spoil standing in the wells\n');
             if (piece) {
               const c = { ...st.pieces[piece].at };
               const p = SNAP.pointFor(st, kit, to, piece);
-              if (mode === 'drag') { down(c); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p); up(p); }
-              else { tap(c); tap(to.startsWith('piece:') ? { ...st.pieces[to.slice(6)].at } : p); }
+              const onTo = to.startsWith('piece:') ? to.slice(6) : null;
+              if (mode === 'drag') { down(c, piece); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p, onTo); up(p, onTo); }
+              else { tap(c, piece); tap(onTo ? { ...st.pieces[onTo].at } : p, onTo); }
             } else if (verb === 'setDial') {
               const lay = LAYOUT.fixtureLayout(st.fixtures[arg.fixture]);
               const t = lay.dials.find(x => x.name === arg.dial);

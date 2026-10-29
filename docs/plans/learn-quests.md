@@ -1,6 +1,6 @@
 # The Learn road: the quest plan
 
-**Status (2026-10-10): Lanternfall is built; the rest is planned.** The road was
+**Status (2026-10-29): Lanternfall, Ligar, Bellows and Ember Reach are built, with Kettle's first bench. The rest is planned.** (Written 2026-10-10 as "Lanternfall is built; the rest is planned"; AP numbers and gaps were re-checked on 2026-10-29, see `docs/AP-coverage-audit.md`.) The road was
 reordered the same day (see "Done already" below), and all nine Lanternfall quests were
 built that day with the ground to walk them on (`lanternfall-world.md` says what was built
 and where it differs from this plan). This file plans every quest the Learn road still
@@ -468,6 +468,8 @@ The card on stage 1 says plainly that the AP exam does not assess this bench.
 `VOCABULARY`: aufbau 1, Hund 2, paramagnetic/diamagnetic 2, configuration 3,
 noble-gas notation 5, block 6.
 
+> **Built differently (audit 2026-10-29).** The built quest has five stages (carbon, oxygen, potassium predict and test, scandium). Stage 7 above, the configuration of an ion, was cut, and CED 1.5.A asks for "an atom or its ions". Restore it as a stage or, at the least, as two practice items (Cl⁻, Fe³⁺; 4s empties first).
+
 ### q7-pes — Photoelectron Spectroscopy (core bench, `spectrum` field)
 
 | # | Objective | Evidence | Card names |
@@ -498,6 +500,8 @@ noble-gas notation 5, block 6.
 
 `VOCABULARY`: Coulomb's law 1, shielding / effective nuclear charge 2, atomic
 radius 3, ionic radius 5, ionization energy 6, electronegativity 8.
+
+> **Built differently, and a gap (audit 2026-10-29).** The built quest has five stages and dropped stages 7 and 8 above; its header says electronegativity and electron affinity "go to the Drill Deck", but none of its five practice items contain either term. CED 1.7.A.2 lists both, with ionization energy and radii. Restore them: either stage 8 as drafted (pull on a shared pair; electron affinity as the energy change on adding an electron) or three practice items covering the trend across a period and down a group. Ligar `q7` stage 1 meets electronegativity only as a printed difference on a card.
 
 ### q9-absorb — Spectroscopy (light bench, cuvette head)
 
@@ -635,8 +639,7 @@ easier to edit:
   labelled on its card, and kept out of the AP-style practice problems unless
   labelled there too.
 - **CED** gives the AP Course and Exam Description topics the quest covers. They
-  are numbered from the 2019/2020 CED, so check them against the current CED
-  before relying on them. "AP coverage" at the end maps every CED topic to a
+  are numbered from the current CED (rechecked 2026-10-29: 7.1 to 7.12, 8.1 to 8.11, 9.1 to 9.11). "AP coverage" at the end maps every CED topic to a
   quest.
 - Stage 8 of almost every quest is a **sealed sample**: the whole quest at
   once, with nothing labelled. That is the pattern every built quest already
@@ -732,7 +735,7 @@ with one API, and declarations checked by `verify:learn`.
 4. Pick the R that matches a kPa gauge. *Two values of R on the plate.*
 5. Weigh a tank of unknown gas and name it. *Mass over moles gives the molar mass.*
 6. Find a gas's density at set conditions.
-7. A reaction in the cylinder gives off a gas: find its volume. *The balanced equation is supplied.*
+7. A reaction in the cylinder gives off a gas: find its volume. *The balanced equation is supplied.* (**Cut in the build**; the Bellows quest has no gas stoichiometry. It now lives in Kettle `q6` stage 5, CED 4.5.A.3.)
 8. Say why every gas has the same molar volume. *Particle volume is negligible against the space.*
 
 #### `q4-mixtures` · Partial Pressures · CED 3.4 · gas rig, second tank
@@ -746,6 +749,8 @@ with one API, and declarations checked by `verify:learn`.
 8. Sealed tank: find the moles of each gas from the gauge readings.
 
 #### `q5-speed` · Speed and Escape · CED 3.5 · gas rig, speed screen, pinhole
+
+> **Scope (audit 2026-10-29).** The CED has only KE = ½mv² and the Maxwell–Boltzmann picture (3.5). Effusion, diffusion, Graham's law and root-mean-square speed (stages 4 to 8, as built) are not on the exam. Label those cards and practice items "beyond the exam", not only stage 5.
 1. Heat the gas and describe what the speed screen does. *The peak moves right and flattens.*
 2. Compare He, N₂ and CO₂ at one temperature. *Lighter is faster.*
 3. Say what fraction of particles clears a speed bar at two temperatures. *Tail area* (a preview of activation energy).
@@ -770,6 +775,8 @@ with one API, and declarations checked by `verify:learn`.
 ### World 5 — Ember Reach (`unit05`, thermodynamics): 7 quests
 
 **Built (2026-10-15).** See `ember-reach-world.md` for what was built and where it parted from the stage lists below.
+
+> **Cut in the build, and still owed (audit 2026-10-29, `AP-coverage-audit.md`).** The built quests dropped four things the drafts below carried, and the CED needs each: (1) `q1` stage 6 and `q3` stage 5, the energy diagram (CED 6.2): restore one reaction-progress diagram stage in `q3`; (2) `q7` stage 5, ΔG° from formation free energies, `ΔG° = ΣΔGf° (products) − ΣΔGf° (reactants)` (CED 9.3.A.3): add as a typed stage using a ΔGf° table, the same skill as `q6` stage 5 for entropy; (3) `q7` stage 6, kinetic control (CED 9.4): now Quicklight `q5` stage 3; (4) `q7` stage 7, coupled reactions (CED 9.7): now Teeter `q8` stage 7. Also owed in `q2`: the condensation and freezing sign flip (CED 6.5.A.2, now Mirrowen `q5` stage 4) and, in `q7` or `q3`, dissolving as exo- or endothermic from interaction strengths (CED 6.1.A.4, now Mirrowen `q6` stage 6).
 
 #### `q1-flow` · Heat and Temperature · CED 6.1–6.3 · calorimeter
 1. Touch a hot block to a cold one and say where both end. → **thermal equilibrium**
@@ -875,7 +882,9 @@ with one API, and declarations checked by `verify:learn`.
 7. Say why ice floats. *Hydrogen-bonded open lattice.*
 8. Collect a gas over water and find its own pressure. *Dalton's law from Bellows plus vapour pressure.*
 
-#### `q4-solids` · Kinds of Solid · CED 3.2, 2.4 · join bench slab plates (q2-lattice) plus metals
+#### `q4-solids` · Kinds of Solid · CED 3.2 (2.4 is Ligar `q2`) · join bench slab plates (q2-lattice) plus metals
+
+> **Overlap (audit 2026-10-29).** Ligar `q2-lattice` is built and already covers ionic, metallic, network and molecular solids, alloys, conduction and brittleness (CED 2.4 and most of 3.2). Keep here only what Ligar does not: molecular solids held by intermolecular forces, amorphous vs crystalline, and the four-way sealed sort. Stages 1 to 4 below repeat Ligar and should be cut or shortened.
 1. Strike a metal block. *It bends and does not shatter.* → **metallic bonding**
 2. Pass a current through it cold.
 3. Swap in some larger atoms (brass). → **substitutional alloy**
@@ -889,20 +898,20 @@ with one API, and declarations checked by `verify:learn`.
 1. Heat ice steadily. *The temperature stops twice.* → **heating curve**
 2. Say where the heat went on the flat parts. → **heat of fusion, heat of vaporization**
 3. Find the heat to melt a given mass. *q = nΔH*
-4. Find the total heat from ice at −10 °C to steam at 110 °C.
+4. Find the total heat from ice at −10 °C to steam at 110 °C, then the heat released when that steam condenses and freezes again. *Condensation is the negative of vaporization; fusion and freezing likewise.* (CED 6.5.A.2; Ember Reach `q2` stage 7 already does the upward trip.)
 5. Say why steam burns worse than boiling water.
 6. Say which phase a substance is in at a given P and T. → **phase diagram** (beyond the exam)
 7. Find the triple point and the critical point. (beyond the exam)
 8. Say why water's melting line leans the wrong way. (beyond the exam)
 
-#### `q6-solution` · Solutions · CED 3.7, 3.8, 3.10, 1.4 · flask bench
+#### `q6-solution` · Solutions · CED 3.7, 3.8, 3.10, 6.1, 6.4 · flask bench
 1. Dissolve a salt and watch the particle window. *Ions spread out, each wrapped in water.* → **solution, solute, solvent**
 2. Make 0.100 M from a weighed mass in a volumetric flask. → **molarity**
 3. Dilute it and say what stayed the same. *Moles.* → **dilution**
 4. Count the particles CaCl₂ gives per formula. *Three.* → **strong electrolyte**
 5. Say which of two solids dissolves in water and which in hexane. → **"like dissolves like"**, **solubility**
-6. Say what warming does to the solubility of a solid and of a gas.
-7. Find the mass percent of one component in a mixture. → **mass percent**
+6. Dissolve a salt in a calorimeter cup, read ΔT, and say whether dissolving is exothermic or endothermic and why. *Compare the strengths of ion–ion and ion–water interactions.* (CED 6.1.A.4, 6.4.A.7; reuses the Ember Reach calorimeter. Solubility against temperature moves to practice.)
+7. Find the mass percent of one component in a mixture. → **mass percent** (CED 3.7. Purity from elemental analysis, CED 1.4, is Kettle `q6` stage 8.)
 8. Prepare a solution to a specification from a stock.
 
 #### `q7-separate` · Separating Mixtures · CED 3.9 · flask bench (strip, column)
@@ -962,15 +971,15 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 7. Say why a weak acid stays whole in a net ionic equation.
 8. Write the molecular, complete ionic and net ionic equations for one reaction. → **complete ionic equation**
 
-#### `q6-stoich` · Stoichiometry · CED 4.5 · the pot, assay balance
+#### `q6-stoich` · Stoichiometry · CED 4.5, 1.4 · the pot, assay balance
 1. Find moles of product from moles of reactant. → **mole ratio**
 2. Go from grams to grams.
 3. Use a kit of bolts and brackets and say which runs out. → **limiting reactant**
-4. Find the limiting reactant from masses.
-5. Find how much of the other is left. → **excess reactant**
+4. Find the limiting reactant from masses, and how much of the other is left. → **excess reactant**
+5. Heat CaCO₃ and collect the CO₂, then type the volume it fills at 25 °C and 1.00 atm. *The balanced equation gives the moles; PV = nRT gives the room.* (CED 4.5.A.3, the one place stoichiometry meets the gas law; Bellows `q3` stage 7 planned this and was cut. Collected over water, subtract the vapour pressure from Bellows `q4`.)
 6. Find the most product possible. → **theoretical yield**
 7. Weigh what was actually made. → **percent yield**
-8. Filter, dry and weigh a precipitate to find the percent chloride in a sample. → **gravimetric analysis**
+8. Filter, dry and weigh a precipitate to find the percent chloride in a sample, then the percent purity of the salt. → **gravimetric analysis** (CED 1.4: elemental composition shows purity)
 
 #### `q7-titrate` · Titration · CED 4.6 · the pot, burette head
 1. Add base from the burette until the colour changes. → **titration, burette, indicator**
@@ -1050,24 +1059,24 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 7. Explain each shift with Q.
 8. Choose conditions for the most ammonia.
 
-#### `q7-dissolve` · Solubility Equilibria · CED 7.11–7.13 · solubility beaker
+#### `q7-dissolve` · Solubility Equilibria · CED 7.11, 7.12 · solubility beaker
 1. Add solid until it stops dissolving. *The ion meters stop.* → **saturated solution, Ksp**
 2. Write a Ksp expression.
 3. Find AgCl's molar solubility from its Ksp. → **molar solubility**
 4. Compare the solubilities of salts with different formula ratios. *Not by Ksp alone.*
 5. Add a common ion. *A precipitate forms.* → **common-ion effect**
 6. Use Q against Ksp to say whether a precipitate forms.
-7. Say why acid dissolves a hydroxide or carbonate. → **pH and solubility**
+7. Add the common ion to a 1:1 salt and to a 1:2 salt and compare how far each solubility falls. *Not by Ksp alone.* (pH and solubility, CED 8.11, moved to Verdigris `q8` stage 7, after acids are earned.)
 8. Sealed.
 
-#### `q8-free` · Free Energy and K · CED 7.14, 9.5 · favourability plotter
+#### `q8-free` · Free Energy and K · CED 9.5, 9.7 · favourability plotter
 1. Find the link between ΔG° and K for three reactions. → **ΔG° = −RT ln K**
 2. Say what sign of ΔG° goes with K > 1.
 3. Calculate K from ΔG°.
 4. Say how temperature moves K through ΔG°.
 5. Say what decides whether a salt dissolves. → **free energy of dissolution**
 6. Say why some salts dissolve while cooling the water.
-7. Compare ΔG with ΔG° away from equilibrium. (beyond the exam)
+7. Drive an unfavourable reaction by pairing it with a favourable one that shares an intermediate (ATP to ADP). *The two ΔG° add.* → **coupled reactions** (CED 9.7; Ember Reach `q7` stage 7 was cut when that quest was built). ΔG = ΔG° + RT ln Q is not on the CED equation list; if kept it goes to practice, labelled beyond the exam.
 8. Sealed.
 
 ---
@@ -1141,17 +1150,17 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 4. Find pH from the ratio. → **Henderson–Hasselbalch equation**
 5. Mix equal amounts. *pH = pKa.*
 6. Build a buffer at pH 4.7.
-7. Add base and find the new pH.
+7. Add base and find the new pH. (beyond the exam: the CED excludes computing the pH change on adding acid or base to a buffer. Keep it qualitative on the exam track, or label the card.)
 8. Sealed.
 
-#### `q8-capacity` · pKa, Protonation and Capacity · CED 8.7, 8.10 · pH bench
+#### `q8-capacity` · pKa, Protonation and Capacity · CED 8.7, 8.10, 8.11 · pH bench
 1. Say which form dominates below the pKa. → **protonation state**
 2. Say which dominates above it.
 3. Say why an indicator changes colour where it does.
 4. Compare a dilute buffer with a concentrated one. → **buffer capacity**
 5. Overwhelm a buffer.
 6. Say why a ratio far from 1 buffers poorly.
-7. Read an amino acid's forms at three pHs. (beyond the exam)
+7. Add acid to a saturated solution of a hydroxide and then of a chloride, and say which dissolves more. *Qualitative only: the CED excludes computing solubility as a function of pH.* → **pH and solubility** (CED 8.11). The amino-acid forms stage (beyond the exam) moves to practice.
 8. Sealed.
 
 ---
@@ -1162,7 +1171,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 1. Drop zinc into copper solution and read the oxidation numbers before and after.
 2. Split the reaction in two. → **half-reaction**
 3. Balance aluminium with Cu²⁺. *Electrons lost equal electrons gained.*
-4. Name the species that does each job. → **oxidizing agent, reducing agent**
+4. Name the species that does each job. → **oxidizing agent, reducing agent** (beyond the exam: the CED says the terms will not be assessed. Keep the words, label the card.)
 5. Balance a reaction in acid with H₂O and H⁺.
 6. Balance permanganate with iron(II).
 7. Balance a reaction in base. (beyond the exam)
@@ -1178,7 +1187,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 7. Place a sealed metal in the series.
 8. Pick a metal to plate out another by displacement.
 
-#### `q3-galvanic` · Galvanic Cells · CED 9.7 · cell bench
+#### `q3-galvanic` · Galvanic Cells · CED 9.8 · cell bench
 1. Separate the two halves and wire them. *No current.*
 2. Add the bridge. *Current.* → **salt bridge**
 3. Read which way the electrons go.
@@ -1188,7 +1197,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 7. Write the cell in shorthand. → **cell notation** (beyond the exam)
 8. Sealed.
 
-#### `q4-potential` · Cell Potential · CED 9.7, 9.8 · cell bench, potential board
+#### `q4-potential` · Cell Potential · CED 9.9 · cell bench, potential board
 1. Read each metal against a standard and build a table. → **standard reduction potential**
 2. Find a cell's voltage. → **E°cell** (cathode minus anode)
 3. Say what a positive E° means.
@@ -1198,17 +1207,17 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 7. Pick the best pair for a battery.
 8. Sealed.
 
-#### `q5-load` · Under Load · CED 9.9 · cell bench (run time)
+#### `q5-load` · Under Load · CED 9.10 · cell bench (run time)
 1. Run the cell and watch the voltage fall.
 2. Say what Q does to the voltage (qualitatively).
 3. Say why the cell is dead when Q = K. *E = 0.*
 4. Build a cell from one metal at two concentrations. → **concentration cell**
-5. Calculate a voltage away from standard. → **Nernst equation** (beyond the exam)
+5. Calculate a voltage away from standard. → **Nernst equation**, E = E° − (RT/nF) ln Q (in scope: CED 9.10 puts it on the equation list, so give it a typed-answer stage like Bellows)
 6. Raise the cathode concentration.
 7. Compare alkaline, lead–acid and lithium-ion cells (descriptive).
 8. Sealed.
 
-#### `q6-electrolysis` · Electrolysis · CED 9.10 · cell bench, power supply, balance
+#### `q6-electrolysis` · Electrolysis · CED 9.8, 9.11 · cell bench, power supply, balance
 1. Push current through a cell the wrong way. → **electrolytic cell, electrolysis**
 2. Electrolyse molten NaCl. *Sodium at one electrode, chlorine at the other.*
 3. Find charge from current and time. → **coulomb**
@@ -1262,10 +1271,10 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 7. Say why three-body steps are rare.
 8. Sealed.
 
-#### `q5-hill` · Energy Profiles · CED 5.6, 5.10 · energy-profile screen
+#### `q5-hill` · Energy Profiles · CED 5.6, 5.10, 9.4 · energy-profile screen
 1. Read the top of the hill. → **transition state**
-2. Read Ea.
-3. Read ΔH.
+2. Read Ea and ΔH from the profile.
+3. Find a reaction that runs downhill in energy and still never moves at room temperature. *A tall hill.* → **kinetic control** (CED 9.4; Ember Reach `q7` stage 6 was cut when that quest was built, since it needs this bench.)
 4. Find the reverse Ea.
 5. Read a two-humped profile. → **intermediate**
 6. Say which hump is slowest.
@@ -1471,17 +1480,28 @@ power uses), is left uncharted unless wanted.
 
 ### AP coverage (every CED topic → its quest)
 
+Rewritten 2026-10-29 against the current CED (Course Framework V.1; `docs/ap-chemistry-course-and-exam-description.pdf`),
+which has 7.1 to 7.12, 8.1 to 8.11 and 9.1 to 9.11. The full reasoning and the built-track findings are in
+`docs/AP-coverage-audit.md`. **B** = built, **P** = planned in this file, **FIX** = a stage owed that is not yet in
+the built quest.
+
 | Unit | Topic → quest |
 | --- | --- |
-| 1 | 1.1 Tallow q6 · 1.2 Tallow q5 · 1.3 Kettle q1 · 1.4 Mirrowen q6 · 1.5 Lanternfall q6 (Tallow q2) · 1.6 Lanternfall q7 · 1.7 Lanternfall q8 · 1.8 Tallow q4, Ligar q1 |
-| 2 | 2.1 Ligar q1, q7 · 2.2 Ligar q3 · 2.3 Ligar q2, q3 · 2.4 Mirrowen q4 · 2.5 Ligar q4 · 2.6 Ligar q5 · 2.7 Ligar q6, q8 |
-| 3 | 3.1 Mirrowen q2, q3 · 3.2 Mirrowen q4 · 3.3 Mirrowen q1 · 3.4 Bellows q2–q4 · 3.5 Bellows q1, q5 · 3.6 Bellows q6 · 3.7, 3.8, 3.10 Mirrowen q6 · 3.9 Mirrowen q7 · 3.11 Lanternfall q1, q9 · 3.12 Lanternfall q2 · 3.13 Lanternfall q9 |
-| 4 | 4.1, 4.4 Kettle q3 · 4.2 Kettle q5 · 4.3 Kettle q4 · 4.5 Kettle q6 · 4.6 Kettle q7 · 4.7 Kettle q8 · 4.8 Kettle q8, Verdigris q1 · 4.9 Kettle q8, Brinewire q1 |
-| 5 | 5.1 Quicklight q1 · 5.2 q2 · 5.3 q3 · 5.4, 5.5 q4 · 5.6, 5.10 q5 · 5.7–5.9 q6 · 5.11 q7 |
-| 6 | 6.1–6.3 Ember Reach q1 · 6.4 ER q2 · 6.5 Mirrowen q5 · 6.6 ER q3 · 6.7 ER q4 · 6.8, 6.9 ER q5 |
-| 7 | 7.1, 7.8 Teeter q1 · 7.2 q3 · 7.3 q2, q3 · 7.4, 7.5 q2 · 7.6 q4 · 7.7 q5 · 7.9, 7.10 q6 · 7.11–7.13 q7 · 7.14 q8 |
-| 8 | 8.1 Verdigris q1, q2 · 8.2 q2 · 8.3 q3 · 8.4 q5, q7 · 8.5 q6 · 8.6 q4 · 8.7 q8 · 8.8, 8.9 q7 · 8.10 q8 |
-| 9 | 9.1, 9.2 Ember Reach q6 · 9.3, 9.4, 9.6 ER q7 · 9.5 Teeter q8 · 9.7 Brinewire q3, q4 · 9.8 Brinewire q4 · 9.9 Brinewire q5 · 9.10 Brinewire q6 |
+| 1 | 1.1 Tallow q6 (B; **FIX**: grams or moles to particle count with Avogadro's number is never asked, add a stage or practice) · 1.2 Tallow q5 (B) · 1.3 Kettle q1 (B) · 1.4 Kettle q6 stage 8 purity (P) · 1.5 Lanternfall q6 (B; **FIX**: configurations of ions) · 1.6 Lanternfall q7 (B) · 1.7 Lanternfall q8 (B; **FIX**: electron affinity and the electronegativity trend) · 1.8 Tallow q3, q4, Ligar q1 (B; group reactivity trends not found) |
+| 2 | 2.1 Ligar q1, q7 · 2.2 q3 · 2.3 q2, q3 · 2.4 q2 · 2.5 q4 · 2.6 q5 · 2.7 q6, q7, q8 (all B) |
+| 3 | 3.1 Mirrowen q2, q3 · 3.2 Ligar q2 (B) and Mirrowen q4, reduced · 3.3 Mirrowen q1 · 3.4 Bellows q1 to q4 (B) · 3.5 Bellows q1, q5 (B) · 3.6 Bellows q6 (B) · 3.7, 3.8, 3.10 Mirrowen q6 · 3.9 Mirrowen q7 · 3.11 to 3.13 Lanternfall q1, q2, q9 (B) |
+| 4 | 4.1, 4.4 Kettle q3 · 4.2 q5 · 4.3 q4 · 4.5 q6 including the gas stage 5 · 4.6 q7 · 4.7 q8 · 4.8 q8, Verdigris q1 · 4.9 q8, Brinewire q1 (all P) |
+| 5 | 5.1 Quicklight q1 · 5.2 q2 · 5.3 q3 · 5.4, 5.5 q4 · 5.6, 5.10 q5 · 5.7 to 5.9 q6 · 5.11 q7 (all P) |
+| 6 | 6.1 Ember Reach q1 (B) and Mirrowen q6 stage 6 (dissolving) · 6.2 Ember Reach q3 (B; **FIX**: reaction-progress diagram) · 6.3 q1 (B) · 6.4 q2 (B), Mirrowen q6 stage 6 · 6.5 q2 stages 4, 7 (B) and Mirrowen q5 (P) · 6.6 q3 (B) · 6.7 q4 (B) · 6.8 q5 (B) · 6.9 q5 (B) |
+| 7 | 7.1, 7.8 Teeter q1 · 7.2 q3 · 7.3 q2, q3 · 7.4, 7.5 q2 · 7.6 q4 · 7.7 q5 · 7.9, 7.10 q6 · 7.11, 7.12 q7 (all P) |
+| 8 | 8.1 Verdigris q1, q2 · 8.2 q2 · 8.3 q3 · 8.4 q5, q7 · 8.5 q6 · 8.6 q4 · 8.7 q8 · 8.8, 8.9 q7 · 8.10 q8 · 8.11 q8 stage 7 (all P) |
+| 9 | 9.1, 9.2 Ember Reach q6 (B) · 9.3 Ember Reach q7 (B; **FIX**: ΔG° from ΔGf°) · 9.4 Quicklight q5 stage 3 (P) · 9.5 Teeter q8 (P) · 9.6 Ember Reach q7 stage 1 (B) and Teeter q8 (P) · 9.7 Teeter q8 stage 7 (P) · 9.8 Brinewire q3, q6 (P) · 9.9 q4 · 9.10 q5 (Nernst, in scope) · 9.11 q6 (all P) |
+
+Scope labels (CED exclusion statements): beyond the exam are quantum-number assignment, Aufbau exceptions (Cr, Cu),
+hybrid-orbital derivation and d-orbital hybridization, molecular orbital diagrams, phase diagrams, colligative
+properties and molality, Arrhenius calculations, Kc/Kp conversion, Lewis acid–base, oxidizing and reducing agent as
+terms, the pH change on adding acid or base to a buffer, solubility as a function of pH as a calculation, Henderson–Hasselbalch derivation,
+effusion, Graham's law and van der Waals corrections (not in the CED at all).
 
 ### Size of the road
 
@@ -1563,6 +1583,8 @@ updated.
 - [x] The rest of the road drafted as a proposal (this file).
 - [x] Lanternfall: all nine quests, four instruments, the ground, the verifiers (2026-10-10).
 - [x] Tallow site 6 (2026-10-10).
+- [x] AP audit against the current CED: numbering corrected, coverage table rewritten, scope labels fixed, missing AP stages added to Teeter q7/q8, Verdigris q8, Kettle q6, Mirrowen q4/q5/q6, Quicklight q5, with the stages the built Lanternfall and Ember Reach quests cut listed as owed (2026-10-29, `docs/AP-coverage-audit.md`).
+- [ ] The built-quest fixes the audit marks **FIX** (Avogadro arithmetic, ion configurations, electron affinity and electronegativity trend, energy diagram, ΔG° from ΔGf°).
 - [ ] The user's edits to the proposal; then the placeholder charts replaced.
 - [ ] Decisions 5–12 above.
 - [ ] Steps 5–8 and 11.

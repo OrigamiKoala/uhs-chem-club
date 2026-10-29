@@ -95,7 +95,7 @@ const PIECE = {
   'bonds:pairtag': ['Pair cards', 'Each card names one pair of atoms and shows the rods held between them. Put the cards in order on the strip.'],
   'bonds:ion': ['Ions', 'Each ion shows its element and its charge, + or −. Drag an ion into a cell of the grid; ions in cells that touch sit side by side.'],
   'atoms:pairs': ['Pair', 'Drag the Pair tile onto a joint to share a pair of electrons between the two atoms beside it, or onto an atom to leave the pair on that atom. The lamps show what each placing did.'],
-  'atoms:single': ['Single', 'Drag the Single tile onto an atom to leave one unpaired electron on it. The slate counts it as one electron, and the atom\'s lamp counts it round that atom.'],
+  'atoms:single': ['Single', 'Drag the Single tile onto an atom to leave a single electron on it. The slate counts it as one electron, and the atom\'s lamp counts it round that atom.'],
   'atoms:lift': ['Lift Out', 'Drag "Lift Out" onto a joint or an atom to take a pair back off it, so you can try it somewhere else.'],
   'atoms:fcstamp': ['Stamp', 'Drag the Stamp onto an atom of the drawing. It prints the charge that atom carries, which changes when you change the drawing.'],
   'atoms:mark': ['Mark', 'Drag the Mark onto an atom to leave a dashed ring on it. Your answer is the atom that wears the ring when you press Submit.'],

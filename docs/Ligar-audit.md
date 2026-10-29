@@ -34,10 +34,13 @@ This section is the status of record. Older sections below are a history; where 
 | 8 | Alloys' effect on conduction: `q2` stage 10 clips the leads on brass, steel, salt and a network block and sorts by the lamp (alloys light it; the reward says they conduct slightly less well than the pure metal) | `q2-lattice` 10 | done |
 | 9 | `q9` stage 3 still asks for twelve electron pours into a ladder; optional and not AP | `q9-orbitals` 3 | done |
 | 10 | The element "O" in the mono face reads as "0" on slates, ozone and nitrate stages | `atoms.js` | done |
-| 11 | Protractor: once laid on the plate it is a clear disc, nearly invisible, and a hand-made drag did not read an angle (the scripted pointer path does) | `q6` 1, 3, 5 to 9 | done |
+| 11 | Protractor: once laid on the plate it is a clear disc, nearly invisible, and a hand-made drag did not read an angle (the scripted pointer path does) | `q6` 1, 3, 5 to 9 | disc made visible; a drag by hand is still unconfirmed |
 | 12 | Dial label sits under the knob at its start position; the nitrate slate's title sits behind the frame | shared marker painter, `atoms.js` | done |
 | 13 | The new pull numbers on `q1` stage 3 have no Tour step; the line printed on the plate is the only legend | `tour-ligar.js` | done |
 | 14 | `fadeAudio` throws `IndexSizeError` (volume 3.1 outside [0, 1]) in `src/ui/cinematic.js:105` during the landing | not Ligar | done |
+| 17 | Expanded octets: `q4` stage 7 asks for sulfur tetrafluoride; fluorine takes one pair, so the last two electrons can only go on sulfur, whose lamp shows ten | `q4-dots` 7 | done (scripts only) |
+| 18 | Odd-electron species: `q4` stage 8 places nitric oxide's eleven electrons with the new Single tile; oxygen is full and nitrogen ends at seven with one electron on its own | `q4-dots` 8 | done (scripts only) |
+| 19 | Percent ionic character: `q7` stage 7 prints HCl's measured dipole (1.08 D), bond length (127 pm) and the full-charge figure (4.80 D per Å); the student sets the marker to the percent (about 18). Data in `vsepr.js` `BOND_DIPOLE`, `ionicPercent` | `q7-polarity` 7 | done (scripts only) |
 | 15 | Stages never played by a hand gesture: `q5` 5 to 8 (looked at), `q6` 3 to 9, `q7` 2, 4, 5, `q8` 1, 2, 4 to 7, 9, `q9` 1 to 3, `q2` 1, 3 to 8, `q1` 1, 2, 4, 5, `q3`, `q4`, Warden phases 2 to 5. A full second audit by gesture was not done | all | open |
 | 16 | Student-confusion list (end of this file) needs a person to play it | all | open |
 
@@ -262,3 +265,5 @@ Changed and checked (all 13 `verify:*` scripts print OK at commit "Ligar open it
 - **FIXED: q9 stage 3 rack boxes drawing at 3D On:** electrons seated or poured into the rack boxes are now drawn at 3D On. `buildSlot` in `table-props.js` makes `liningMat` optional; `table3d.js` passes no lining for flat boxes (`kit.noJarFill`, where contents are painted on the mat), leaving regular card/slot linings intact on other benches. The arrows painted on the mat are now visible inside the rack boxes.
 
 Still open from the list: 7 (carbonate, excluded by request), 11 (protractor by hand, unconfirmed), 15 (hand-play coverage; `q2` 10 was run by `verify:bench` only), 16 (student-confusion list). Stage total 247.
+
+Expanded octets, odd-electron species and percent ionic character were added after the open-items pass (rows 17 to 19): `q4` is 8 stages and `q7` 7. All of `verify:learn`, `table`, `docs`, `story`, `ligar` and `bench` print OK. None of the three stages was played by hand. Still not covered: numeric lattice energy, bond-enthalpy sums (Ember Reach `q4-bonds`), intermolecular forces (Unit 3).

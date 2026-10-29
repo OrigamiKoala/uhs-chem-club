@@ -271,7 +271,7 @@ export const STAGES = [
     title: 'More Than Eight',
     prompt: 'Distribute all valence electrons in sulfur tetrafluoride so every fluorine atom has a full outer shell.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'SF4', 82, 32, 54]]),
+    table: slateTable([['a', 'SF4', 82, 32, 46]]),
     hints: [
       'Use the Pair tile and the slate.',
       'Fluorine takes one shared pair only, so count what is left once each fluorine is full.',
