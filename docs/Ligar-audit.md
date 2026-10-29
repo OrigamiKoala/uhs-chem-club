@@ -203,3 +203,18 @@ Method: the dev server at 3D On in the Browser pane, guest profile, `loadStage` 
 6. `q7` 3: the field switch reacts late; a student may click twice.
 7. `q9` 3: the whole stage.
 8. The Warden phases 2 to 5 as a first-time sequence (the foe's lines and the integrity bar were not read).
+
+### Third step: the rest of the rework (Oct 29, 2026)
+
+- **`q2-lattice` 8 "Alloys on the Hotplate" (new):** rail copper, brass, iron and steel by melting point. Each alloy melts below its pure metal, and the reward says why (foreign atoms break up the rows). Stages 2 and 3 now send the student to the pictures first (which particles carry charge; which blocks are separate groups) and call the heating a check on a prediction. They still end in a sort and a ranking.
+- **`q6-shape` 10 "Count the Domains" (new):** SF₄ card with no lone pair drawn; the marker is set to the domains on sulfur (6 valence electrons, 4 bonds, 1 lone pair = 5), so the number has to be counted from the formula. Played by a real drag of the knob (the knob lands a step short of where the pointer ends, so a student will adjust).
+- **`q8` 8 "Three Lobes":** played end to end by gesture (three drags into the bowl, LOBES 3, LEFT OVER 1, Submit, reward).
+- **`q9` 3:** the rack prints HIGHER ENERGY and LOWER ENERGY (the direction of the ladder, which "from the lowest box" needed); the count lines moved off the frame. Looked at in 3D; not poured by hand.
+- Stage total 244. `verify:learn`, `table`, `docs`, `story`, `ligar` and `bench` pass after each change.
+
+Left undone, with the reason:
+- **`q5` carbonate:** same four-pairs-over-three-bonds arithmetic as nitrate, so it would repeat stage 8, not add an idea.
+- **`q7` quantitative stage:** the Arrows tool already prints the pull difference, so a "set the difference" dial would be copying a number. A real one needs an atom-pull readout that the student must subtract, which means a new kit reading.
+- **Warden phase 3:** still reads and types a protractor angle from ammonia.
+- **Alloy conduction:** not tested; both brass and steel conduct, so it would not discriminate anything.
+- A full second audit pass by gesture over every stage was not done; the table above says which stages were played.

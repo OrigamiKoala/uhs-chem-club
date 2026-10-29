@@ -31,11 +31,11 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { RIG_MOLECULES, planDomains, bondAngles, angleBetween, SHAPES } from '../../engine/vsepr.js';
 import {
-  domainTable, hubSet, armPiece, balloonPiece, protractorPiece, marker, markerValue, hubRead, molRead, piecesIn
+  domainTable, hubSet, armPiece, balloonPiece, protractorPiece, marker, markerValue, hubRead, molRead, molCard, piecesIn
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 9 };
+export const meta = { stageCount: 10 };
 
 export const VOCABULARY = [
   { term: /\bseesaw\b|\bt-shaped\b/i, introducedAt: 9 },
@@ -106,7 +106,7 @@ function smallestAngle(read, keep) {
 }
 
 /* ------------------------------------------------------------------
-   THE NINE STAGES
+   THE TEN STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -358,7 +358,36 @@ export const STAGES = [
       log: 'Three lone pairs leave the two atoms opposite.',
       title: 'Linear, From Five Domains',
       body: 'Lone pairs take the flat ring, where they are furthest from one another, so three of them leave the two atoms on the axis, 180° apart: xenon difluoride, XeF₂, is linear. One lone pair on five gives a seesaw (SF₄) and two give a T-shape (ClF₃).',
-      model: { type: 'shape', mol: 'XeF2', caption: 'XeF₂ · Linear (180°)' },
+      model: { type: 'shape', mol: 'XeF2', caption: 'XeF₂ · Linear (180°)' }
+    }
+  },
+
+  /* ---------------------------------------------------------------- 10 */
+  {
+    title: 'Count the Domains',
+    prompt: 'Set the marker to the number of electron domains on the sulfur atom in sulfur tetrafluoride.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('sf', 'SF4', { x: 40, y: 32 })],
+      fixtures: [marker('mark', { x: 104, y: 32 }, { label: 'Domains', max: 8 })]
+    }),
+    hints: [
+      'Use the molecule card and the marker.',
+      'Sulfur has six valence electrons, and each bond to a fluorine atom takes one of them into a shared pair.',
+      'Add the bonds to the lone pairs that the remaining electrons form.'
+    ],
+    check(state) {
+      const t = state.table;
+      const v = markerValue(t, 'mark');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of domains.' };
+      if (v === planDomains(RIG_MOLECULES.SF4.arms).n) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the bonds and lone pairs on the sulfur atom.' };
+    },
+    reward: {
+      log: 'Four bonds and one lone pair make five domains.',
+      title: 'Counting Domains From a Formula',
+      body: 'Sulfur brings six electrons: four go into bonds with fluorine, and the other two form one lone pair. Four bonds and one lone pair are five domains, so sulfur tetrafluoride is a seesaw.',
+      model: { type: 'shape', mol: 'SF4', caption: 'SF₄ · Seesaw (5 domains)' },
       last: true
     }
   }
@@ -467,7 +496,8 @@ export const SOLUTIONS = [
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), ...read('a1', 'a3'), set(90)],
   [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), ...read('a1', 'a3'), set(90)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5'), ...read('a3', 'a4'), set(120)],
-  [...on('a1', 'a2', 'l1', 'l2', 'l3'), { setDial: { fixture: 'hub-turn', dial: 'turn', value: 90 } }, ...read('a1', 'a2'), set(180)]
+  [...on('a1', 'a2', 'l1', 'l2', 'l3'), { setDial: { fixture: 'hub-turn', dial: 'turn', value: 90 } }, ...read('a1', 'a2'), set(180)],
+  [set(5)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -480,7 +510,8 @@ export const MISSES = [
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), set(109)],
   [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), set(180)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5'), set(90)],
-  [...on('a1', 'a2', 'l1', 'l2', 'l3'), set(120)]
+  [...on('a1', 'a2', 'l1', 'l2', 'l3'), set(120)],
+  [set(4)]
 ];
 
 function blankState() { return {}; }

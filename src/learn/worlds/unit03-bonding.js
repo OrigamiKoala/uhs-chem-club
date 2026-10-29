@@ -40,7 +40,7 @@ export const UNIT_03 = {
       title: 'Stone and Wire',
       line: 'Relate macroscopic properties to crystal lattices and networks.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit03/q2-lattice.js')
     },
@@ -76,7 +76,7 @@ export const UNIT_03 = {
       title: 'Molecular Shape',
       line: 'Predict three-dimensional geometries using VSEPR theory.',
       arena: 'bench',
-      stageCount: 9,
+      stageCount: 10,
       status: 'live',
       module: () => import('../quests/unit03/q6-shape.js')
     },

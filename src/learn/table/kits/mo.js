@@ -329,6 +329,11 @@ function paintRack(ctx, f, state, b) {
         if (tag) fitted(ctx, tag, X(box.x), Y(box.y), box.w * sc * 0.8, { size: size * 1.3, weight: 700, color: AMBER });
       }
     }
+    // A plain rack still says which way is up the energy ladder.
+    if (f.props.plain) {
+      plateText(ctx, 'HIGHER ENERGY', b.x0 + 14, b.y0 + size * 2, { size, color: PLATE_COLORS.dim });
+      plateText(ctx, 'LOWER ENERGY', b.x0 + 14, b.y1 - size * 3.4, { size, color: PLATE_COLORS.dim });
+    }
   } else {
     plateText(ctx, 'APART', X(f.at.x), Y(g.rows[0].y - 2), { size, align: 'center', color: PLATE_COLORS.dim });
   }
@@ -338,7 +343,7 @@ function paintRack(ctx, f, state, b) {
     const read = readOf(state, f.props.rack, order);
     const lines = f.props.plain ? [`UNPAIRED ${read.unpaired}`] : [`PLACED ${read.total}`, `UNPAIRED ${read.unpaired}`];
     if (f.props.counts) lines.push(`LOWER ${read.bonding}  UPPER ${read.anti}`);
-    lines.forEach((t, i) => plateText(ctx, t, b.x1 - 3, b.y0 + size * (1.4 + i * 1.5), { size, align: 'right', weight: 700, color: PHOS }));
+    lines.forEach((t, i) => plateText(ctx, t, b.x1 - 12, b.y0 + size * (2 + i * 1.5), { size, align: 'right', weight: 700, color: PHOS }));
   }
 }
 

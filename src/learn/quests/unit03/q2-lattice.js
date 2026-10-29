@@ -41,7 +41,7 @@ import {
 } from '../../table/kits/bonds.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 /**
  * When each withheld word is earned. Specific terms first: the schedule is
@@ -85,6 +85,7 @@ const ARCH = { build: 'web', melt: 1710, tint: 'iron' };
 const COPPER = { build: 'metallic', melt: 1085, tint: 'rust' };
 // The alloy blocks of stages 6 and 7 (`joinbench.js` `planSlab`): one kind of atom in rows, with a few atoms of another kind mixed in.
 const BRASS = { build: 'metallic', alloy: 'sub', melt: 930, tint: 'rust' };
+const IRON = { build: 'metallic', melt: 1538, tint: 'pale' };
 const STEEL = { build: 'metallic', alloy: 'int', melt: 1450, tint: 'pale' };
 const sealed = (d, melt) => ({ ...d, melt, sealed: true });
 
@@ -164,8 +165,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the leads, the hotplate and the three trays.',
-      'Test which blocks conduct cold, only when melted, or never.',
-      'Sort each block into the tray matching which of its charges can move.'
+      'Look at each block\'s picture and ask which particles carry a charge and what would let them move.',
+      'Test each block with the leads cold, then molten, and file it by when the lamp lights.'
     ],
     check(state) {
       const t = state.table;
@@ -202,8 +203,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the hotplate and its heat dial.',
-      'Compare the temperatures at which the different structures break apart.',
-      'Arrange the blocks from lowest melting point on the left to highest on the right.'
+      'Look at each picture: which blocks are separate groups of atoms, and which are joined all the way through?',
+      'Predict the order from the pictures, then heat each block to confirm or correct it.'
     ],
     check(state) {
       const t = state.table;
@@ -365,6 +366,42 @@ export const STAGES = [
       log: 'Similar widths replace; much smaller atoms fit in the gaps.',
       title: 'Substitutional and Interstitial Alloys',
       body: 'An atom of similar size takes the place of a metal atom: that is a substitutional alloy, such as brass (copper and zinc). Much smaller atoms such as carbon or hydrogen fit in the gaps between the metal atoms: that is an interstitial alloy, such as steel.',
+    }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    title: 'Alloys on the Hotplate',
+    prompt: 'Order the four metal blocks on the rail from lowest to highest melting point.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('a1', 'BLOCK A', COPPER, bench(0)),
+        slabPiece('a2', 'BLOCK B', BRASS, bench(1)),
+        slabPiece('a3', 'BLOCK C', IRON, bench(2)),
+        slabPiece('a4', 'BLOCK D', STEEL, bench(3))
+      ],
+      zones: { rail: { id: 'rail', at: { x: 56, y: 55 }, size: { w: 104, h: 14 }, first: 'Lowest', last: 'Highest', items: ['a1', 'a2', 'a3', 'a4'], start: ['a3', 'a1', 'a4', 'a2'] } },
+      fixtures: [plate(2000)]
+    }),
+    hints: [
+      'Use the hotplate and its heat dial.',
+      'Look at which blocks carry foreign atoms among their rows, and compare the temperatures at which they melt.',
+      'Heat each block until it melts, then place the blocks on the rail from the lowest melting point to the highest.'
+    ],
+    check(state) {
+      const t = state.table;
+      const order = t.zones.rail.order;
+      const melt = id => declOf(t.pieces[id]).melt;
+      const want = order.slice().sort((a, b) => melt(a) - melt(b));
+      if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four blocks back on the rail in order.' };
+      if (order.join() === want.join()) return { ok: true };
+      return { ok: false, msg: 'Two neighbouring blocks on the rail are in the wrong order.' };
+    },
+    reward: {
+      log: 'Brass 930 C, copper 1085 C, steel 1450 C, iron 1538 C.',
+      title: 'Alloys Melt Lower',
+      body: 'Each alloy melted below the pure metal it is made from (brass below copper, steel below iron). Foreign atoms break up the regular rows, so the metal holds together less strongly and gives way at a lower temperature.',
       last: true
     }
   }
@@ -500,7 +537,11 @@ export const SOLUTIONS = [
     { join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] },
     into('m1', 'bends'), into('m3', 'dents'), into('m2', 'holds')
   ],
-  [into('x1', 'replace'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')]
+  [into('x1', 'replace'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')],
+  [
+    onPlate('a1', 0), onPlate('a2', 1), onPlate('a3', 2), onPlate('a4', 3), heat(950), heat(1100), heat(1460), heat(1550),
+    { place: { piece: 'a2', to: 'rail:0' } }, { place: { piece: 'a1', to: 'rail:1' } }, { place: { piece: 'a4', to: 'rail:2' } }, { place: { piece: 'a3', to: 'rail:3' } }
+  ]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -511,7 +552,8 @@ export const MISSES = [
   [{ place: { piece: 'na1', to: grid(0, 0) } }, { place: { piece: 'na2', to: grid(0, 1) } }],
   [{ place: { piece: 'x3', to: 'slot:liner' } }],
   [{ join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] }, into('m1', 'dents'), into('m3', 'bends'), into('m2', 'holds')],
-  [into('x1', 'gap'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')]
+  [into('x1', 'gap'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')],
+  [{ place: { piece: 'a3', to: 'rail:0' } }]
 ];
 
 function blankState() { return {}; }
