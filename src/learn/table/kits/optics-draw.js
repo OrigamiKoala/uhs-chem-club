@@ -640,8 +640,8 @@ function paintLadder(ctx, f, state, b) {
     ctx.lineTo(F.x(sx + half), F.y(y));
     ctx.stroke();
     ctx.lineWidth = 1;
-    say(ctx, `n = ${n}`, F.x(sx - half - 1.5), F.y(y), F.size(2.5, 6.5), { align: 'right', color: on ? AMBER : DIM });
-    say(ctx, (bohrJoules(n) / 1e-18).toFixed(3), F.x(sx + half + 1.5), F.y(y), F.size(2.3, 6), { align: 'left', color: on ? AMBER : DIM });
+    say(ctx, `n = ${n}`, F.x(sx - half - 4.5), F.y(y), F.size(2.5, 6.5), { align: 'right', color: on ? AMBER : DIM });
+    say(ctx, `\u2212${(bohrJoules(n) / 1e-18).toFixed(3)}`, F.x(sx + half + 5), F.y(y), F.size(1.9, 5.5), { align: 'left', color: on ? AMBER : DIM });
   }
   // The open top: where the ladder ends.
   const ty = centre(TOP) ?? 9;
@@ -652,8 +652,8 @@ function paintLadder(ctx, f, state, b) {
   ctx.lineTo(F.x(sx + half), F.y(ty));
   ctx.stroke();
   ctx.setLineDash?.([]);
-  say(ctx, f.props.topLabel || 'top', F.x(sx - half - 1.5), F.y(ty), F.size(2.5, 6.5), { align: 'right', color: DIM });
-  say(ctx, '0', F.x(sx + half + 1.5), F.y(ty), F.size(2.3, 6), { align: 'left', color: DIM });
+  say(ctx, f.props.topLabel || 'top', F.x(sx - half - 4.5), F.y(ty), F.size(2.5, 6.5), { align: 'right', color: DIM });
+  say(ctx, '0', F.x(sx + half + 5), F.y(ty), F.size(1.9, 5.5), { align: 'left', color: DIM });
   say(ctx, '10^-18 J, NOT TO SCALE', F.x(w - 1.5), F.y(3.6), F.size(2.1, 6), { align: 'right', color: DIM });
   // The move the electron last made, as an arrow between its two rungs.
   const arrow = (hi, lo, up) => {
