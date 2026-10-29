@@ -67,7 +67,7 @@ export const UNIT_03 = {
       title: 'Resonance',
       line: 'Model resonance hybrids with intermediate bond orders.',
       arena: 'bench',
-      stageCount: 3,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit03/q5-resonance.js')
     },

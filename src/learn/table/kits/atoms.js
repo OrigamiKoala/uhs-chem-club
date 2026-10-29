@@ -1532,7 +1532,9 @@ function paintSlate(ctx, f, state, b) {
         bySum += jp.at.y - ap.at.y;
       }
     }
-    const base = bxSum || bySum ? Math.atan2(-bySum, -bxSum) : -Math.PI / 2;
+    let base = bxSum || bySum ? Math.atan2(-bySum, -bxSum) : -Math.PI / 2;
+    // Dots straight behind an atom (the far side of a tilted table) hide behind its puck: swing them to the side so they can be counted.
+    if (Math.sin(base) < -0.7) base += 0.95;
     const gap = n > 3 ? 0.85 : 1.1;
     const atomX = b.X(ap.at.x);
     const atomY = b.Y(ap.at.y);

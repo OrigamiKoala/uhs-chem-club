@@ -30,12 +30,14 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { atomTable, slateOf, slateParts, slateLayout } from '../../table/kits/atoms.js';
+import { EN } from '../../engine/vsepr.js';
 import { MOLECULES, DRAWINGS, allLit, drawing, drawingKey, gaugeLength, linkKey, planLewis } from '../../engine/lewis.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 3 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
+  { term: /\bformal charges?\b/i, introducedAt: 4 },
   { term: /\bresonance structures?\b/i, introducedAt: 3 },
   { term: /\bresonance\b/i, introducedAt: 2 }
 ];
@@ -63,11 +65,13 @@ export function toolNoteFor() { return null; }
 
 const OPTS = { words: 'shells', slate: true };
 /** What each tool does, printed under the place it hangs. */
-const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back', gauge: 'Measures a bond' };
+const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back', fcstamp: 'Prints charge', mark: 'Marks an atom', gauge: 'Measures a bond' };
 const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y }, caption: CAPTION[kind] });
 const PAIR = (at) => tile('pairs', 'Pair', at);
 const LIFT = (at) => tile('lift', 'Lift Out', at);
 const GAUGE = (at) => tile('gauge', 'Gauge', at);
+const STAMP = (at) => tile('fcstamp', 'Stamp', at);
+const MARK = (at) => tile('mark', 'Mark', at);
 
 /** One stage's table: its slates (`[id, molecule, cx, cy, size, prefill?]`), the pieces on top and any extra furniture. */
 function slateTable(slates, { pieces = [], fixtures = [] } = {}) {
@@ -87,11 +91,12 @@ const skeleton = mol => drawing(Object.fromEntries(MOLECULES[mol].links.map(([i,
 /** A slate's reading as a drawing: whether it is finished, which drawing it is, and what has been dealt on top of the skeleton. */
 function drawn(t, id, base = 0) {
   const sl = slateOf(t, id);
-  return { sl, lit: allLit(sl.read), key: drawingKey(sl.mol, sl.placed), dealt: sl.used - base, empty: sl.used - base === 0 };
+  return { sl, lit: allLit(sl.read), key: drawingKey(sl.mol, sl.placed), fcs: sl.read.atoms.map(a => a.fc), dealt: sl.used - base, empty: sl.used - base === 0 };
 }
+const markedAtoms = (t, id) => slateOf(t, id).atoms.filter(a => t.pieces[a].props.marked);
 
 /* ------------------------------------------------------------------
-   THE THREE STAGES
+   THE SEVEN STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -174,7 +179,121 @@ export const STAGES = [
     reward: {
       log: 'The same molecule, two drawings.',
       title: 'Resonance Structures',
-      body: 'Resonance structures are two or more valid Lewis structures that differ only in the placement of electrons. Ozone is a resonance hybrid that averages both structures, explaining why experimental bond lengths are alike.',
+      body: 'Resonance structures are two or more valid Lewis structures that differ only in the placement of electrons. Ozone is a resonance hybrid that averages both structures, explaining why experimental bond lengths are alike.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 4 */
+  {
+    title: 'Who Owns What',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Drop the stamp on an atom and it prints the charge that atom carries; a mark stays on the atom you put it on.'
+    },
+    prompt: 'Mark the atom in carbon monoxide that carries a positive charge.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'CO', 84, 26, 52, DRAWINGS.CO]], { pieces: [STAMP([13, 10]), MARK([37, 10])] }),
+    hints: [
+      'Drop the stamp on each atom of the drawing and read the number it prints.',
+      'Compare the electrons each atom brings with the electrons it owns, counting a bond as one and a lone pair as two.',
+      'An atom that owns one electron fewer than it brought reads positive, so put the mark on that one.'
+    ],
+    check(state) {
+      const t = state.table;
+      const sl = slateOf(t, 'a');
+      const marked = markedAtoms(t, 'a');
+      if (!marked.length) return { ok: false, notYet: true, msg: 'Put the mark on an atom.' };
+      const plus = sl.atoms.filter((id, i) => sl.read.atoms[i].fc > 0);
+      if (marked.length === plus.length && marked.every(id => plus.includes(id))) return { ok: true };
+      return { ok: false, msg: 'The mark is on an atom that owns as many electrons as it brought, or more: stamp both atoms and compare what they print.' };
+    },
+    reward: {
+      log: 'Brought minus owned.',
+      title: 'Formal Charge',
+      body: 'An atom\'s formal charge is the electrons it brings minus the electrons it owns, counting each bond as one and each lone pair as two. In this drawing oxygen is +1 and carbon is −1.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 5 */
+  {
+    title: 'Do the Count',
+    prompt: 'Set the dial to the formal charge of the middle oxygen in this drawing of ozone.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'O3', 46, 32, 44, DRAWINGS.O3]], {
+      fixtures: [{
+        id: 'fc', kind: 'tally', label: 'Middle oxygen', at: { x: 96, y: 32 }, size: { w: 40, h: 16 }, noRun: true,
+        dials: { fc: { min: -3, max: 3, step: 1, value: -3, label: 'Charge' } }
+      }]
+    }),
+    hints: [
+      'Set the dial to the charge you worked out.',
+      'Count the lone-pair electrons on the middle oxygen, then the bonds it holds, counting a double bond as two.',
+      'Subtract those two counts from the six electrons an oxygen atom brings.'
+    ],
+    check(state) {
+      const v = state.table.fixtures.fc.dials.fc.value;
+      if (v === -3) return { ok: false, notYet: true, msg: 'Set the dial to a charge.' };
+      const want = planLewis('O3', DRAWINGS.O3).atoms[0].fc;
+      if (v === want) return { ok: true };
+      return { ok: false, msg: 'The dial does not match six minus the electrons this atom owns in the drawing.' };
+    },
+    reward: {
+      log: 'Six brought, five owned.',
+      title: 'Counting It Yourself',
+      body: 'Formal charge = valence electrons − (lone-pair electrons + bonds). The middle oxygen brings 6 and owns 2 + 3 = 5, so it is +1; the single-bonded end owns 7 and is −1, and the charges sum to the molecule\'s charge of 0.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'Two Drawings',
+    prompt: 'Draw carbon dioxide in the most stable way it can be drawn.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'CO2', 84, 26, 52]], { pieces: [PAIR([12, 10]), LIFT([12, 28]), STAMP([12, 46])] }),
+    hints: [
+      'Deal pairs onto the slate until every lamp is lit, then drop the stamp on each atom.',
+      'Light the lamps a second way, stamp the atoms again, and compare the charges the two drawings give.',
+      'Prefer the drawing whose stamped charges sit closest to zero.'
+    ],
+    check(state) {
+      const d = drawn(state.table, 'a');
+      if (d.empty) return { ok: false, notYet: true, msg: 'Deal the electrons onto the slate.' };
+      if (!d.lit) return { ok: false, msg: 'A lamp is still dark, or electrons are still left to place: light every lamp first.' };
+      if (d.fcs.every(q => q === 0)) return { ok: true };
+      return { ok: false, msg: 'Every lamp is lit, but the lamps cannot choose between drawings. Stamp the atoms: another way of lighting them leaves the charges nearer zero.' };
+    },
+    reward: {
+      log: 'Charges near zero win.',
+      title: 'Charges Near Zero',
+      body: 'Between two drawings of the same molecule, prefer the one whose atoms carry formal charges closest to zero. A +1 and a −1 on neighbouring atoms cost the drawing stability.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    title: 'Where the Minus Goes',
+    prompt: 'Draw thiocyanate with its negative charge on the atom that pulls electrons harder.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'SCN', 84, 26, 52]], { pieces: [PAIR([12, 10]), LIFT([12, 28]), STAMP([12, 46])] }),
+    hints: [
+      'Deal pairs onto the slate until every lamp is lit, and stamp the atoms to see where the minus sits.',
+      'Light the lamps a second way and compare which atom carries the negative charge in each drawing.',
+      'Choose the drawing that puts the negative charge on the atom that pulls electrons harder.'
+    ],
+    check(state) {
+      const d = drawn(state.table, 'a');
+      if (d.empty) return { ok: false, notYet: true, msg: 'Deal the electrons onto the slate.' };
+      if (!d.lit) return { ok: false, msg: 'A lamp is still dark, or electrons are still left to place: light every lamp first.' };
+      const syms = d.sl.mol.syms;
+      const minus = d.fcs.map((q, i) => [q, i]).filter(([q]) => q < 0).map(([, i]) => i);
+      const pullers = Math.max(...syms.map(x => EN[x]));
+      if (minus.length === 1 && d.fcs.every(q => Math.abs(q) <= 1) && EN[syms[minus[0]]] === pullers) return { ok: true };
+      return { ok: false, msg: 'Every lamp is lit, but the minus sits on the atom that pulls less. Stamp the atoms and compare which atom each drawing puts it on.' };
+    },
+    reward: {
+      log: 'The minus goes where the pull is.',
+      title: 'The Stronger Puller Takes the Minus',
+      body: 'When two drawings have similar charges, the better one puts the negative charge on the atom that pulls electrons harder. Nitrogen pulls harder than sulfur, so it takes the minus here.',
       last: true
     }
   }
@@ -221,26 +340,26 @@ export const PRACTICE = [
     explanation: 'Either drawing alone predicts one short bond and one long one. The measured equal lengths show the electrons are shared across both, which resonance describes.'
   },
   {
-    question: 'Ozone has two resonance structures. How do they differ?',
+    question: 'Two Lewis structures of the same molecule differ only in their formal charges. Which is usually the better?',
     options: [
-      { id: 'a', label: 'Only in which oxygen atom holds the double bond' },
-      { id: 'b', label: 'In how many atoms they contain' },
-      { id: 'c', label: 'In how many electrons they hold' },
-      { id: 'd', label: 'In which atom is in the middle' }
+      { id: 'a', label: 'The one whose formal charges are closest to zero' },
+      { id: 'b', label: 'The one with the most charges' },
+      { id: 'c', label: 'The one with a positive charge on the most electronegative atom' },
+      { id: 'd', label: 'The one with the most lone pairs' }
     ],
     answer: 'a',
-    explanation: 'Both drawings have the same atoms, the same electrons and the same middle atom. Only the place of the double bond moves.'
+    explanation: 'Structures with formal charges near zero are more stable, and a negative charge belongs on the more electronegative atom.'
   },
   {
-    question: 'The two O–O bonds in ozone are both 128 pm long. What explains this?',
+    question: 'An atom brings 6 valence electrons. In a drawing it has two lone pairs and one double bond. What is its formal charge?',
     options: [
-      { id: 'a', label: 'Resonance: the real molecule is a blend of two equivalent structures' },
-      { id: 'b', label: 'Ozone has two double bonds' },
-      { id: 'c', label: 'Ozone has two single bonds' },
-      { id: 'd', label: 'Ozone is nonpolar' }
+      { id: 'a', label: '0' },
+      { id: 'b', label: '+1' },
+      { id: 'c', label: '−1' },
+      { id: 'd', label: '+2' }
     ],
     answer: 'a',
-    explanation: 'Either structure alone predicts one long and one short bond. The measured equal lengths show the electrons are shared across both, which resonance describes.'
+    explanation: 'Formal charge is 6 − (4 lone-pair electrons + 2 bonds) = 0.'
   },
   {
     question: 'What is the bond order of each N–O bond in the nitrate ion, NO₃⁻?',
@@ -285,14 +404,22 @@ export const SOLUTIONS = [
   [
     ...deal('aj01'), ...deal('a0'), ...deal('a1', 2), ...deal('a2', 3),
     ...deal('bj02'), ...deal('b0'), ...deal('b2', 2), ...deal('b1', 3)
-  ]
+  ],
+  [use('fcstamp', 'a0'), use('fcstamp', 'a1'), use('mark', 'a1')],
+  [{ setDial: { fixture: 'fc', dial: 'fc', value: 1 } }],
+  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a1'), use('fcstamp', 'a2')],
+  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a2')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [use('gauge', 'aj01'), { setDial: { fixture: 'len', dial: 'len', value: 120 } }],
-  [...deal('a0', 2), ...deal('b0', 2)]
+  [...deal('a0', 2), ...deal('b0', 2)],
+  [use('fcstamp', 'a0'), use('mark', 'a0')],
+  [{ setDial: { fixture: 'fc', dial: 'fc', value: 0 } }],
+  [...deal('aj01', 3), ...deal('aj12'), ...deal('a0'), ...deal('a2', 3)],
+  [...deal('aj01'), ...deal('aj12', 3), ...deal('a0', 3), ...deal('a2')]
 ];
 
 function blankState() { return {}; }

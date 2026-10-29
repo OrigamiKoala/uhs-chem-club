@@ -94,6 +94,8 @@ const PIECE = {
   'bonds:ion': ['Ions', 'Each ion shows its element and its charge, + or −. Drag an ion into a cell of the grid; ions in cells that touch sit side by side.'],
   'atoms:pairs': ['Pair', 'Drag the Pair tile onto a joint to share a pair of electrons between the two atoms beside it, or onto an atom to leave the pair on that atom. The lamps show what each placing did.'],
   'atoms:lift': ['Lift Out', 'Drag "Lift Out" onto a joint or an atom to take a pair back off it, so you can try it somewhere else.'],
+  'atoms:fcstamp': ['Stamp', 'Drag the Stamp onto an atom of the drawing. It prints the charge that atom carries, which changes when you change the drawing.'],
+  'atoms:mark': ['Mark', 'Drag the Mark onto an atom to leave a dashed ring on it. Your answer is the atom that wears the ring when you press Submit.'],
   'atoms:gauge': ['Gauge', 'Drag the Gauge onto a joint. It clamps across that bond and prints how long the bond measures in the real molecule, in pm, which is not always what the drawing says.'],
   'domain:hub': ['Hub', 'The hub is the atom in the middle. Drop arms and balloons on it and they push each other as far apart as they can get, in every direction, not only along the table.'],
   'domain:arm': ['Arms', 'Each arm is an atom that clips onto the hub. Drag an arm from the tray onto the hub; drag it off again to take it away. A double or triple bond is still one arm.'],
