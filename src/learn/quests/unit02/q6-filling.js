@@ -110,10 +110,11 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const rack = shelf('rack', ['1s', '2s', '2p', '3s'], SHELF_AT);
+    // The rack does not print the configuration here: writing it from the arrows is the task, not copying a printed line.
+    const rack = shelf('rack', ['1s', '2s', '2p', '3s'], SHELF_AT, { readout: false });
     return {
       title: 'Eight for Oxygen',
-      prompt: 'Build oxygen on the rack, then put the card that says what the rack reads in the slot.',
+      prompt: 'Build oxygen on the rack, then put the card that writes its electron arrangement in the slot.',
       widget,
       table: shellsTable({
         pieces: [
@@ -122,12 +123,12 @@ export const STAGES = [
           ...cards([['p4', '1s² 2s² 2p⁴'], ['p6', '1s² 2s² 2p⁶'], ['p5', '1s² 2s² 2p⁵'], ['s4', '1s² 2s⁴ 2p²']])
         ],
         fixtures: [rack.fixture],
-        zones: { slots: [{ id: 'reads', label: 'What the rack reads', at: { x: 112, y: 24 }, size: { w: 28, h: 13 } }] }
+        zones: { slots: [{ id: 'reads', label: 'Oxygen\'s arrangement', at: { x: 112, y: 24 }, size: { w: 28, h: 13 } }] }
       }),
       hints: [
         'Use "Add ↑" and "Add ↓" on the boxes, and the slot for the card.',
         'Fill the lowest rows first, then pair one box in 2p for oxygen\'s eighth electron.',
-        'Count the electrons in each row and match the rack\'s readout to a card.'
+        'Count the electrons in each row, and write each count as a small raised number after the row\'s name.'
       ],
       check(state) {
         const t = state.table;
@@ -136,7 +137,7 @@ export const STAGES = [
         if (r.total === 0) return { ok: false, notYet: true, msg: 'Place oxygen\'s electrons on the rack.' };
         if (!card) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
         if (r.total !== 8 || !isLaddered(r.counts)) return { ok: false, msg: 'Oxygen has eight electrons in the lowest available rows.' };
-        if (card.label !== r.config) return { ok: false, msg: 'The card does not match what the rack reads.' };
+        if (card.label !== r.config) return { ok: false, msg: 'That card does not match the electrons in each row of the rack.' };
         return { ok: true };
       },
       reward: {

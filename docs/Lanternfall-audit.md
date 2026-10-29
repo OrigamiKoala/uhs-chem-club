@@ -98,3 +98,15 @@ Still not done: a hand solution of `q3-lines` 2 to 5, `q4-cloud` 2 to 4, `q5-num
 
 - **Rail cards over end labels and the how-to note (`q8-trends` 6 and 7):** the rail zone now takes `labelLift` (`table/layout.js` `labelLines`, copied by `table/model.js`), which stands the end words higher, and the `q8-trends` rail is 17 units tall like its cards so the printed note keeps clear of them. A global lift was tried first and broke other worlds' layout checks (`unit01/q6-weigh`, `unit03/q3-distance`, `unit04/q5-speed`), so it is opt-in. Played: four cards laid on the rail, no overlap with "Pulls hardest", "Pulls least" or the note.
 - **Boss reward card over the bench:** not a defect. The camera looks up at the foe for 1.7 to 4.6 s after a clear (`boss-arena.js` `gaze`) and returns; the screenshot was taken during that look.
+
+## Sixth round: third pass
+
+Solved on the live bench (scripted solutions, then a screenshot of the solved state; Submit pressed on `q3-lines` 2): `q3-lines` 2 to 5, `q4-cloud` 2 to 5, `q5-numbers` 4, `q6-filling` 2. These are scripted, so they show what the bench draws when solved, not that a hand can do each move (`verify:bench` replays real pointer paths for those).
+
+Found and fixed:
+- **`q6-filling` 2 was copying:** the rack printed `1s² 2s² 2p⁴` and the stage asked for the card that matches what the rack reads. The rack's readout is now off on that stage (`shelf(..., { readout: false })`), the prompt asks for the card that writes oxygen's arrangement, and the third hint says how to turn counts into a configuration. The player writes the notation from the arrows.
+- **`q5-numbers` 1 dial names:** knobs stood on the first letter of "Shell (n)", "Subshell (l)", "Orbital (ml)". The address strip's dial pitch is 7 and its words start 3.6 units in (`shells.js` `addressStrip`, `table2d.js`). Looked at: all three names read.
+
+Seen, not fixed: `q4-cloud` 5's joystick title ("JOYSTICK") is clipped by the tray label above it; moving the joystick down makes the tray label overlap it (`verify:table` fails), so it stays. `q8-trends` and `q7-pes` were not solved again this round; the dev server reloaded repeatedly while another agent edited shared files.
+
+Not solved this round: `q6-filling` 1, 3, 4, 5, `q7-pes` 2 to 5, `q9-absorb` 1 to 3, boss phases 2 to 5 (looked at in earlier rounds).

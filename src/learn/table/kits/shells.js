@@ -245,7 +245,7 @@ export function addressStrip(id, at, { fields = ['n', 'l', 'ml', 'ms'], show = f
     }
   }
   const rows = Object.keys(dials).length;
-  return { id, kind: 'finder', label: 'Address', at: { ...at }, size: { w: 52, h: 8 + 5 * (rows - 1) + 9 }, noRun: true, dials, props: { show, fixed, rack } };
+  return { id, kind: 'finder', label: 'Address', at: { ...at }, size: { w: 52, h: 8 + 7 * (rows - 1) + 9 }, noRun: true, dials, props: { show, fixed, rack, rowPitch: 7 } };
 }
 
 /** The Energy Well: checks whether electrons are in ground state or if any can fall to lower rungs. */
