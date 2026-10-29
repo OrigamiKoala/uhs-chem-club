@@ -88,6 +88,8 @@ const FIXTURE = {
 /** A kind of piece, by `kit:kind`: `[title, text, optional (table) => extra sentence]`. */
 const PIECE = {
   'bonds:slab': ['Blocks', 'Each block is a lump of material, with a picture of its atoms under the glass. Drag a block onto the hotplate to heat it.', t => (hasKind(t, 'leads') ? ' Lay the leads on a block to test it.' : '')],
+  'bonds:hammer': ['Hammer', 'Drag the hammer onto a block to strike it once. The block shows what the blow did to it, and the picture of its atoms shows how the rows moved.'],
+  'bonds:guess': ['Atom cards', 'Each card carries a few words. Drag a card to the slot or tray where it belongs.'],
   'bonds:leads': ['Leads', 'The leads clip across the block they lie on, and they light a lamp on that block while a current passes through it. Drag the leads onto a block and watch the lamp; lift them off to test another block.'],
   'bonds:salt': ['Salt cards', 'Each card is one salt, drawn as its two kinds of ion touching, with the charge on each and the distance between their centres. Drag a card onto the hotplate to melt it.'],
   'bonds:pairtag': ['Pair cards', 'Each card names one pair of atoms and shows the rods held between them. Put the cards in order on the strip.'],

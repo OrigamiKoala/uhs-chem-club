@@ -40,7 +40,7 @@ export const UNIT_03 = {
       title: 'Stone and Wire',
       line: 'Relate macroscopic properties to crystal lattices and networks.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit03/q2-lattice.js')
     },

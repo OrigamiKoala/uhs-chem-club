@@ -541,14 +541,25 @@ export function planSlab(slab, state = 'intact') {
         let px = (x + 0.5) / across;
         let py = (y + 0.5) / down;
         if (state === 'struck') {
-          // Bends under the hammer: rows shift smoothly along a shear angle
-          px += (y / down) * 0.07;
+          // Bends under the hammer: rows shift smoothly along a shear angle. A foreign atom in the layers (`slab.alloy`) catches the
+          // rows on each other, so a substitutional alloy gives less, and an interstitial one is not struck into a new shape at all.
+          px += (y / down) * (slab.alloy === 'sub' ? 0.03 : 0.07);
         }
         if (state === 'molten') {
           px = 0.08 + rand() * 0.84;
           py = 0.10 + rand() * 0.80;
         }
-        cells.push({ x: px, y: py, sign: 1, group: 0 });
+        const foreign = slab.alloy === 'sub' && (x + y * 2) % 5 === 0;
+        cells.push({ x: px, y: py, sign: 1, group: 0, ...(foreign ? { size: 1.3, tint: 'sand' } : {}) });
+      }
+    }
+    // An interstitial alloy: much smaller atoms sit in the gaps between the metal atoms, bonded to nothing drawn.
+    if (slab.alloy === 'int') {
+      for (let y = 0; y < down - 1; y++) {
+        for (let x = 0; x < across - 1; x++) {
+          if ((x * 3 + y) % 4 !== 0) continue;
+          cells.push({ x: state === 'molten' ? 0.08 + rand() * 0.84 : (x + 1) / across, y: state === 'molten' ? 0.10 + rand() * 0.80 : (y + 1) / down, sign: 0, group: 1, size: 0.45, tint: 'iron' });
+        }
       }
     }
     if (state !== 'molten') {

@@ -107,7 +107,9 @@ export function hotplateUnder(p, state) {
 export const declOf = p => ({ id: p.id, ...p.props.slab });
 
 /** What a blow does to each build: the old join bench's own mapping, and nothing else. */
-export function strikeOf(build) {
+export function strikeOf(build, alloy = null) {
+  if (build === 'metallic' && alloy === 'int') return 'held';
+  if (build === 'metallic' && alloy === 'sub') return 'dented';
   return build === 'web' ? 'held' : build === 'metallic' ? 'bent' : build === 'grid' ? 'cleaved' : 'crumbled';
 }
 
@@ -120,11 +122,11 @@ export function slabView(p, state) {
   const plate = hotplateUnder(p, state);
   const molten = Boolean(plate) && plate.temp >= d.melt;
   const struck = Boolean(p.props.struck);
-  const phase = molten ? 'molten' : (struck && d.build !== 'web' ? 'struck' : 'intact');
+  const phase = molten ? 'molten' : (struck && d.build !== 'web' && d.alloy !== 'int' ? 'struck' : 'intact');
   const leads = p.joinedTo.map(id => state.pieces[id]).find(o => o?.kind === 'leads') || null;
   return {
     d, plate, temp: plate ? plate.temp : null, molten, struck, phase,
-    blow: struck ? strikeOf(d.build) : null,
+    blow: struck ? strikeOf(d.build, d.alloy) : null,
     leads: Boolean(leads),
     current: leads ? conductionOf(d, molten) : null,
     lifted: p.props.lifted || []
@@ -461,12 +463,12 @@ export function paintSlabPicture(ctx, decl, phase, box, lifted = []) {
       ctx.stroke();
       return;
     }
-    disc(ctx, x, y, r, tint);
+    disc(ctx, x, y, r * (c.size || 1), c.tint ? (TINTS[c.tint] || tint) : tint);
     if (c.sign) sign(ctx, x, y, r, c.sign);
   });
 }
 
-const BLOW_WORD = { cleaved: 'SPLIT', crumbled: 'CRUMBLED', bent: 'BENT', held: 'HELD' };
+const BLOW_WORD = { cleaved: 'SPLIT', crumbled: 'CRUMBLED', bent: 'BENT', dented: 'DENTED', held: 'HELD' };
 
 function paintSlab(ctx, p, state, o) {
   const v = slabView(p, state);

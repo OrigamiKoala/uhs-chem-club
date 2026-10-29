@@ -37,17 +37,20 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { conductionOf } from '../../engine/joinbench.js';
 import {
-  bondsTable, slabPiece, hotplate, declOf, gridRead, piecesIn
+  bondsTable, slabPiece, hotplate, declOf, gridRead, piecesIn, guessCard, strikeOf
 } from '../../table/kits/bonds.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 7 };
 
 /**
  * When each withheld word is earned. Specific terms first: the schedule is
  * searched in order and the first match decides when a word becomes sayable.
  */
 export const VOCABULARY = [
+  { term: /\bsubstitutional\b/i, introducedAt: 7 },
+  { term: /\binterstitial\b/i, introducedAt: 7 },
+  { term: /\balloys?\b/i, introducedAt: 6 },
   { term: /\bmelting points?\b/i, introducedAt: 3 },
   { term: /\blattices?\b/i, introducedAt: 4 },
   { term: /\bbrittle\b/i, introducedAt: 4 },
@@ -80,6 +83,9 @@ const SALT = { build: 'grid', melt: 801, tint: 'bone' };
 const VENT = { build: 'clusters', melt: 115, tint: 'sand', cluster: 3, groups: 8 };
 const ARCH = { build: 'web', melt: 1710, tint: 'iron' };
 const COPPER = { build: 'metallic', melt: 1085, tint: 'rust' };
+// The alloy blocks of stages 6 and 7 (`joinbench.js` `planSlab`): one kind of atom in rows, with a few atoms of another kind mixed in.
+const BRASS = { build: 'metallic', alloy: 'sub', melt: 930, tint: 'rust' };
+const STEEL = { build: 'metallic', alloy: 'int', melt: 1450, tint: 'pale' };
 const sealed = (d, melt) => ({ ...d, melt, sealed: true });
 
 /* ------------------------------------------------------------------
@@ -284,6 +290,81 @@ export const STAGES = [
       log: 'Block D: still solid at 900 degrees, no current.',
       title: 'Network Covalent Solids',
       body: 'Covalent network solids consist of atoms linked in a continuous three-dimensional network of covalent bonds. With no mobile charges and immense bond strength throughout the network, the material does not conduct and resists high temperatures.',
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'Hammer the Metals',
+    prompt: 'Hammer each block and sort it by how far it gives way.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('m1', 'BLOCK A', COPPER, bench(0)),
+        slabPiece('m2', 'BLOCK B', STEEL, bench(1)),
+        slabPiece('m3', 'BLOCK C', BRASS, bench(2)),
+        toolAt('hammer', 'Hammer', 0)
+      ],
+      zones: { trays: [tray('bends', 'Bends a lot', 14), tray('dents', 'Dents a little', 37), tray('holds', 'Does not give', 60)] }
+    }),
+    hints: [
+      'Use the hammer and the three trays.',
+      'Strike each block and compare how far its rows of atoms shift, then look at what sits among them.',
+      'The more foreign atoms sit in the way of the sliding rows, the less the block gives.'
+    ],
+    check(state) {
+      const t = state.table;
+      const ids = ['m1', 'm2', 'm3'];
+      const word = { bent: 'bends', dented: 'dents', held: 'holds' };
+      const want = id => word[strikeOf(declOf(t.pieces[id]).build, declOf(t.pieces[id]).alloy)];
+      const where = Object.fromEntries(ids.map(id => [id, ['bends', 'dents', 'holds'].find(k => trayOf(t, k).some(p => p.id === id)) || null]));
+      if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
+      if (ids.some(id => !t.pieces[id].props.struck)) return { ok: false, notYet: true, msg: 'Strike every block before you submit.' };
+      const wrong = ids.find(id => where[id] !== want(id));
+      if (wrong) return { ok: false, msg: `${name(t.pieces[wrong])} did something other than its tray says when it was struck.` };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Block A bent most. Block C dented a little. Block B did not give.',
+      title: 'Alloys',
+      body: 'In a pure metal the rows of atoms slide over each other, so it bends. An alloy is a metal mixed with atoms of another element, which sit in the way of the sliding rows: the alloy gives less, and is harder.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    title: 'Where the Atoms Go',
+    prompt: 'Sort each atom by where it sits in iron (atoms 140 pm wide): in an iron atom\'s place, or in a gap.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        guessCard('x1', 'Nickel', ['Nickel', '135 pm'], { x: 20, y: 22 }), guessCard('x2', 'Carbon', ['Carbon', '70 pm'], { x: 58, y: 22 }),
+        guessCard('x3', 'Chromium', ['Chromium', '140 pm'], { x: 20, y: 50 }), guessCard('x4', 'Hydrogen', ['Hydrogen', '25 pm'], { x: 58, y: 50 })
+      ],
+      zones: { trays: [
+        { id: 'replace', label: 'In its place', at: { x: 118, y: 19 }, size: { w: 60, h: 22 }, cell: 28 },
+        { id: 'gap', label: 'In a gap', at: { x: 118, y: 52 }, size: { w: 60, h: 22 }, cell: 28 }
+      ] }
+    }),
+    hints: [
+      'Use the four atoms and the two trays.',
+      'Compare each atom\'s width with the 140 pm width of an iron atom.',
+      'An atom close to the width of an iron atom can stand in a row; a much smaller one fits between the rows.'
+    ],
+    check(state) {
+      const t = state.table;
+      const ids = ['x1', 'x2', 'x3', 'x4'];
+      const want = { x1: 'replace', x3: 'replace', x2: 'gap', x4: 'gap' };
+      const where = Object.fromEntries(ids.map(id => [id, ['replace', 'gap'].find(k => t.pieces[id].zone === `tray:${k}`) || null]));
+      if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: 'Sort every atom into a tray before you submit.' };
+      const wrong = ids.find(id => where[id] !== want[id]);
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that its width does not fit.` };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Similar widths replace; much smaller atoms fit in the gaps.',
+      title: 'Substitutional and Interstitial Alloys',
+      body: 'An atom of similar size takes the place of a metal atom: that is a substitutional alloy, such as brass (copper and zinc). Much smaller atoms such as carbon or hydrogen fit in the gaps between the metal atoms: that is an interstitial alloy, such as steel.',
       last: true
     }
   }
@@ -414,7 +495,12 @@ export const SOLUTIONS = [
     { place: { piece: 's2', to: 'rail:0' } }, { place: { piece: 's1', to: 'rail:1' } }, { place: { piece: 's3', to: 'rail:2' } }, { place: { piece: 's4', to: 'rail:3' } }
   ],
   [...CHECKER, { run: 'grid' }],
-  [onPlate('x1', 0), onPlate('x2', 1), onPlate('x3', 2), onPlate('x4', 3), heat(900), clip('x4'), { place: { piece: 'x4', to: 'slot:liner' } }]
+  [onPlate('x1', 0), onPlate('x2', 1), onPlate('x3', 2), onPlate('x4', 3), heat(900), clip('x4'), { place: { piece: 'x4', to: 'slot:liner' } }],
+  [
+    { join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] },
+    into('m1', 'bends'), into('m3', 'dents'), into('m2', 'holds')
+  ],
+  [into('x1', 'replace'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -423,7 +509,9 @@ export const MISSES = [
   [into('s1', 'both'), into('s2', 'never'), into('s3', 'both'), into('s4', 'never')],
   [{ place: { piece: 's4', to: 'rail:0' } }],
   [{ place: { piece: 'na1', to: grid(0, 0) } }, { place: { piece: 'na2', to: grid(0, 1) } }],
-  [{ place: { piece: 'x3', to: 'slot:liner' } }]
+  [{ place: { piece: 'x3', to: 'slot:liner' } }],
+  [{ join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] }, into('m1', 'dents'), into('m3', 'bends'), into('m2', 'holds')],
+  [into('x1', 'gap'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')]
 ];
 
 function blankState() { return {}; }
