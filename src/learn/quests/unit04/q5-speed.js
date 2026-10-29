@@ -17,6 +17,7 @@
  *   4  PREDICT: where two gases let in at the two ends of a tube meet
  *   5  TEST: the race down the tube                              -> Diffusion
  *   6  the molar mass of an unknown gas, from how long it takes to half-empty -> Graham's law (a figure worked out)
+ *   7  the speed that carries the average kinetic energy at 300 K     -> Root-Mean-Square Speed (a figure worked out)
  *
  * (Cut as repeats or as past the idea: the speed-peak target and the ranking of three gases' speeds, which bench one works out; the fast
  * tail of a heated gas; the ratio and the square-root law, which were arithmetic on the same leak; and the random walk of a smell,
@@ -27,15 +28,16 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, GASES, front } from '../../table/kits/gas.js';
+import { gasTable, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, plaqueFixture, GASES, front } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\beffusion\b/i, introducedAt: 2 },
   { term: /\bdiffusion\b/i, introducedAt: 5 },
-  { term: /\bgraham.?s law\b/i, introducedAt: 6 }
+  { term: /\bgraham.?s law\b/i, introducedAt: 6 },
+  { term: /\broot.mean.square\b/i, introducedAt: 7 }
 ];
 
 /** Pressure, kelvin, the speed screen and the gas laws are plain words here. */
@@ -63,6 +65,9 @@ export const SAMPLE = 'Kr';
 /** Stage 6: the reference gases on its dial, the unknown (not on the dial), and the figures to lay: the right mass, helium doubled, the nearest reference's, and a half of the answer. */
 export const MASS_GASES = ['He', 'Ne', 'Ar', 'Kr'];
 export const UNKNOWN = 'CH4';
+/** Stage 7: nitrogen at 300 K. The cards: the answer, the mean speed the screen shows, the slip of leaving out the 3, and the slip of using grams for kilograms. */
+export const SPEED_GAS = { gas: 'N2', T: 300 };
+export const SPEED_CARDS = [['a', '517 m/s', 517], ['b', '476 m/s', 476], ['c', '298 m/s', 298], ['d', '16 m/s', 16]];
 export const MASS_CARDS = [['a', '8 g/mol', 8], ['b', '16 g/mol', 16], ['c', '20 g/mol', 20], ['d', '32 g/mol', 32]];
 /** The tube: its length in centimetres and the stopwatch's seconds. */
 export const TUBE_CM = 100;
@@ -258,12 +263,50 @@ export const STAGES = [
       reward: {
         log: 'Time grew as the square root of the mass.',
         title: 'Graham\'s Law',
-        body: 'The half-empty time goes as the square root of the molar mass, so a time ratio of 2 means a mass ratio of 4 (Graham\'s law). The unknown takes twice as long as helium, so its molar mass is 4 × 4 = 16 g/mol: methane.',
+        body: 'The half-empty time goes as the square root of the molar mass, so a time ratio of 2 means a mass ratio of 4 (Graham\'s law). The unknown takes twice as long as helium, so its molar mass is 4 × 4 = 16 g/mol: methane.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const g = SPEED_GAS;
+    const plate = plaqueFixture('plate', 'Nitrogen gas', { x: 32, y: 33 }, [`Molar mass: ${GASES[g.gas].M.toFixed(1)} g/mol`, `Temperature: ${g.T} K`, 'Kinetic energy per mole: 3/2 RT', 'R = 8.314 J per mol·K'], { w: 56 });
+    return {
+      title: 'Particle Speed',
+      prompt: 'Lay the card for the speed at which a nitrogen particle\'s kinetic energy equals the average at 300 K.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(SPEED_CARDS),
+        fixtures: [plate],
+        zones: { slots: [answerSlot('Speed')] }
+      }),
+      hints: [
+        'Read the figures from the plate, then lay a card in the slot.',
+        'Set the kinetic energy of one mole, one half times the molar mass times the speed squared, equal to the plate\'s figure.',
+        'Work in kilograms per mole, divide by the molar mass, then take the square root.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, SPEED_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = rmsOf();
+        if (Math.abs(v - want) / want < 0.01) return { ok: true };
+        return { ok: false, msg: v > want ? 'A particle moving that fast has more than the average kinetic energy.' : 'A particle moving that slowly has less than the average kinetic energy.' };
+      },
+      reward: {
+        log: 'The average energy fixes the speed.',
+        title: 'Root-Mean-Square Speed',
+        body: 'Setting ½Mv² = 3/2 RT gives the root-mean-square speed, v = √(3RT ÷ M) = √(3 × 8.314 × 300 ÷ 0.0280) ≈ 517 m/s. It sits a little above the mean speed, and the molar mass must be in kg/mol.',
         last: true
       }
     };
   })()
 ];
+
+/** The speed whose kinetic energy is the average at stage 7's temperature, in m/s: the square root of 3RT over the molar mass in kg/mol. */
+export function rmsOf(g = SPEED_GAS) {
+  return Math.sqrt((3 * 8.314 * g.T) / (GASES[g.gas].M / 1000));
+}
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
@@ -272,7 +315,8 @@ const NOTES = {
   3: ['Adjust the Gas and Stopwatch dials.'],
   4: ['Place a card in the slot.'],
   5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],
-  6: ['Turn the Gas dial,', 'then place a card in the slot.']
+  6: ['Turn the Gas dial,', 'then place a card in the slot.'],
+  7: ['Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -360,7 +404,8 @@ export const SOLUTIONS = [
   [dial(PIN, 'time', 2), dial(PIN, 'ref', 3)],
   [put('hcl', 'slot:predict')],
   [dial('tube', 'time', 6), { run: 'tube' }, put('hcl', 'slot:show')],
-  [dial(PIN, 'ref', 2), put('b', 'slot:answer')]
+  [dial(PIN, 'ref', 2), put('b', 'slot:answer')],
+  [put('a', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -370,7 +415,8 @@ export const MISSES = [
   [dial(PIN, 'ref', 2)],
   [],
   [dial('tube', 'time', 6), { run: 'tube' }, put('mid', 'slot:show')],
-  [dial(PIN, 'ref', 2), put('c', 'slot:answer')]
+  [dial(PIN, 'ref', 2), put('c', 'slot:answer')],
+  [put('b', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

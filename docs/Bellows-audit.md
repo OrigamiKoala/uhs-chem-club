@@ -42,6 +42,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 4 | Gauge at 1.5 L, past the dial | Played: dial dragged, card dragged, Submit, reward | ok | ok | N: worked figure with a "squeeze cannot lower it" sanity card | extrapolation from the bench | ok | 3.4 |
 | 5 | Order four speed snapshots by temperature | Viewed (screens, snapshots, rail) | ok | ok | N: comparing shapes | speed screen + 3D crowd | ok | 3.5 (Maxwell-Boltzmann) |
 | 6 | Set Holder 6's heater so the two gases carry the same energy (was a sort of four readings) | Played: heater track clicked to 100 °C, both ENERGY readings 7.73 | ok (dial hit band widened) | ok | N | same energy, 3x the speed | ok | 3.5 |
+| 7 | Gas pressure in atm from a mercury U-tube (new, round 2) | Code, verify; the drawn tube was not looked at | ok | ok | N | the column is drawn at 0.05 units a millimetre beside its figure | ok (950 mmHg = 1.25 atm) | 3.4 (manometer, mmHg) |
 
 ### q2-laws (The Gas Laws)
 
@@ -53,6 +54,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 4 | Predict a sealed tank cooled to −30 °C | Code | ok | ok | N | the Celsius model is a card | ok | 3.4 |
 | 5 | Cool the tank, lay the card | Code | ok | ok | N | the plotted line | ok | 3.4 (Gay-Lussac) |
 | 6 | Room at 327 °C past the dial (new) | Viewed: kelvin readout beside room | ok | ok | N | room over kelvin is constant | ok | 3.4 |
+| 7 | Final gauge after a squeeze and a heating together (new, round 2) | Code, verify | ok | ok | N | the squeeze-alone, heating-alone and Celsius-ratio slips are cards | ok (600 kPa) | 3.4 (combined law) |
 
 ### q3-ideal (The Ideal Gas Law)
 
@@ -65,6 +67,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 5 | Moles from a printed plate (new) | Viewed | ok | ok | N | slips: decimal point, factor of ten | ok | 3.4 |
 | 6 | Name a sealed gas from plate and mass (new) | Played: drag, Submit, reward | ok | ok | N | moles then molar mass | ok | 3.4 (molar mass from density) |
 | 7 | Atmospheres, litres, degrees C (new) | Code, verify | ok | ok | N | the unit slips are cards | ok | 3.4 |
+| 8 | Grams per litre from gauge, kelvin and molar mass (new, round 2) | Code, verify | ok | ok | N | moles-per-litre and the inverted quotient are cards | ok (1.76 g/L) | 3.4 (d = PM/RT) |
 
 ### q4-mixtures (Partial Pressures)
 
@@ -74,8 +77,9 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 2 | Open both tanks, read neon's own push | Played: tanks dragged into the tray (readout 150 kPa for Ne) | fixed (drop by pointer) | ok | N | each gas has its own particle shape | ok | 3.4 (Dalton) |
 | 3 | Open tanks until nitrogen is 60 % | Viewed | ok | ok | hunting, but each try shows the share | shares printed | ok | 3.4 |
 | 4 | Rank four tanks by push | Code | ok | ok | N | moles beat weight | ok | 3.4 |
-| 5 | Altitude: sort four readings | Code | ok | ok | Y (sorting) | the share stays, the push falls | ok | 3.4 |
+| 5 | Altitude: set the height where oxygen's own push has halved (was a sort of four readings) | Code, verify; one of four dial settings passes | ok | ok | N | the mixture holds while the push falls | ok (5500 m: 0.52) | 3.4 |
 | 6 | Oxygen's own push from moles and the gauge (new) | Code, verify | ok | ok | N | the moles-as-share slip is a card | ok | 3.4 |
+| 7 | Gas alone over water: gauge minus vapour pressure (new, round 2) | Code, verify | ok | ok | N | adding the vapour on is a card | ok (752 − 24 = 728 mmHg) | 3.4 (collected over water; the moles of product are Kettle's) |
 
 ### q5-speed (Speed and Escape)
 
@@ -87,6 +91,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 4 | Predict where NH₃ and HCl meet | Code | ok | ok | N | | ok | 3.5 |
 | 5 | Run the tube, lay the card | Code | ok | ok | N | | ok | 3.5 (diffusion) |
 | 6 | Molar mass from a half-empty time (new) | Viewed | ok | the mass is printed on the gas dial | N | the nearest-match slip is a card | ok (CH₄ 16.04) | 3.5 (Graham) |
+| 7 | Speed that carries the average kinetic energy at 300 K (new, round 2) | Code, verify | ok | ok | N | the mean speed, the missing 3 and grams for kilograms are cards | ok (517 m/s) | 3.5 (rms speed, KE = 3/2 RT) |
 
 ### q6-real (Real Gases)
 
@@ -94,15 +99,20 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Predict a squeezed gauge against the gas law | Code | ok | ok | N | | ok | 3.6 |
 | 2 | Squeeze helium, lay the card | Viewed | ok | ok | N | particles drawn at true size | ok | 3.6 |
-| 3 | Sort four holders above, on, below the law | Viewed after rebuild | ok | ok | Y (sorting printed pairs) | | ok | 3.6 |
+| 3 | Warm cramped CO₂ until its gauge reads on the law (was a sort of four holders) | Code, verify; one of five heater settings passes (900 K) | ok | ok | N | below when cold, above when hot, between them the two effects cancel | ok (vdW ratios checked) | 3.6 |
 | 4 | Rank cold gases by deviation | Code | ok | ok | N | optional draw-off record is new evidence | ok | 3.6, 3.3 |
 
 ### boss-compressor
 
 | Phase | Evidence | Verdict |
 | --- | --- | --- |
-| 1 intake | Viewed: bench, foe plate and HUD render, piston dial reads | ok |
-| 2 to 5 | Code, verify:bellows | each phase reuses an idea from a bench; no new figure work |
+| 1 intake: piston and heater together, gauge hidden, six times the plaque | Code, verify (only the pair 5 L / 177 °C passes); bench layout checked by verify:bench | rebuilt, round 2: combined law, a Celsius trap in the dial labels |
+| 2 blend: nitrogen 60 kPa of a 100 kPa gauge from four tanks | Code, verify (only tanks A, B, C pass) | rebuilt: two quantities at once; the old rank of three tanks is cut |
+| 3 tanks: the mass of gas from a plate in atm, L and °C | Code, verify | rebuilt: a worked figure with the Celsius, moles-as-grams and doubled slips as cards |
+| 4 cold box: warm ammonia until the gauge reads on the gas law | Code, verify (only 1200 K passes) | new, the boss now draws on bench six |
+| 5 seals: match the reference gas to the unmarked seal | Code, verify | unchanged |
+
+The old phases 2 to 4 (heat to double the room, sort tanks by particles, rank three tanks) repeated stages the benches already ask. They were replaced, not archived: their stage ideas live on in q2 s2, q3 s3 and q4 s4, and no check was removed without a replacement.
 
 ## AP coverage
 
@@ -110,14 +120,15 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | --- | --- | --- |
 | 3.4 Ideal gas law: Boyle, Charles, Gay-Lussac, Avogadro | q1 s3 s4, q2, q3 | covered, with worked figures |
 | 3.4 PV = nRT with units (atm, kPa, L, K) | q3 s4 s5 s7 | covered (new) |
-| 3.4 molar mass from mass, P, V, T | q3 s6 | covered (new); the density form d = PM/RT is not named |
+| 3.4 molar mass from mass, P, V, T; density d = PM/RT | q3 s6, s8 | covered |
 | 3.4 Dalton's law, mole fraction, partial pressure figures | q4 | covered (new figure stage) |
-| 3.5 KMT: kinetic energy and temperature, Maxwell-Boltzmann | q1 s5 s6 | qualitative only; the formula KE = 3/2 kT and root-mean-square speed are not worked |
+| 3.5 KMT: kinetic energy and temperature, Maxwell-Boltzmann; root-mean-square speed | q1 s5 s6, q5 s7 | covered; u = √(3RT/M) is worked once |
 | 3.5 effusion, Graham's law | q5 | covered with a figure (new) |
 | 3.6 deviation from ideal: size and attractions, high P / low T | q6 | qualitative, correct; no van der Waals constants (not on the AP exam) |
-| Combined gas law P₁V₁/T₁ = P₂V₂/T₂ | q1 s4, q2 s6 build both halves | not asked for as one figure |
-| Manometers, mmHg and torr | none | missing |
-| Gas stoichiometry, gas collected over water | Kettle (unit07) | out of this world |
+| Combined gas law P₁V₁/T₁ = P₂V₂/T₂ | q2 s7, boss phase 1 | covered |
+| Manometers, mmHg and torr | q1 s7, q4 s7 | covered (open-tube manometer; mmHg and atm) |
+| Gas collected over water | q4 s7 (vapour pressure only) | covered; the moles of product are Kettle's |
+| Gas stoichiometry | Kettle (unit07) | out of this world |
 
 ## Work log
 
@@ -134,10 +145,9 @@ Done after the changes above, over the changed stages only (see "Played / Viewed
 
 ## Still weak
 
-- q4 s5 and q6 s3 are still sorts of printed readings; each carries a reasoning step (matching two heaters, comparing two figures) but the answer is read off a figure. Replace with a built target if a later pass has time.
-- q2 s2 and q4 s3 are search tasks over discrete dial settings. Their answers cannot be guessed, but a student could still solve them by trial.
-- Boss phases reuse bench ideas; none asks for a worked figure.
-- No stage names combined gas law, root-mean-square speed, density d = PM/RT, manometers or mmHg.
+- q2 s2 and q4 s3 are searches over discrete dial settings. Their answers cannot be guessed, but a student could still solve them by trial. q6 s3 and boss phase 4 are searches over five heater settings, of the same kind.
+- The manometer is a drawing painted on a plaque (`paintManometer` in `gas-draw.js`); it has no 3D body, and it was not looked at in a browser. Only an open-tube manometer is drawn, not a closed one.
+- Gas over water stops at the vapour correction. Turning that pressure into moles of the product belongs to Kettle.
 - The Tour was not read word by word for the new stages; `verify:table` passes (it checks that every kind has a step) and the new stages use only cards, plates and dials that already have steps.
 
 ## What only a person can judge
@@ -145,5 +155,13 @@ Done after the changes above, over the changed stages only (see "Played / Viewed
 - Whether the worked-figure stages feel like reasoning or like arithmetic; whether the slip cards are too obvious.
 - Whether "six times its starting figure" reads as a puzzle or as a trick.
 - Whether the tank tag and the printed plates are large enough on a phone (375 px landscape); I checked an 800 x 600 pane only.
-- Whether any stage is still crowded: stage 2 of q5 (four chambers, a dial and a rail) and q6 s3 (four panels and three trays).
+- Whether any stage is still crowded: stage 2 of q5 (four chambers, a dial and a rail) and boss phase 2 (four tanks and the common tank).
+- Whether the hidden gauge in boss phase 1 reads as fair, or as a trap; and whether the U-tube on q1 s7 reads at a glance.
 - The feel of the 3D camera on a real touch drag.
+
+## Round 2
+
+7. Rebuilt q4 s5 (altitude: set the height where oxygen's own push has halved) and q6 s3 (warm cramped CO₂ until its gauge reads on the law). Both were sorts of printed readings.
+8. Added q1 s7 (manometer), q2 s7 (combined gas law), q3 s8 (density), q4 s7 (gas over water) and q5 s7 (root-mean-square speed). Each is a worked figure with its slips as cards.
+9. Rewrote boss phases 1 to 4 (see the boss table). Boss phase 3's answer slot sits clear of the foe's corner.
+10. Stage counts: q1 7, q2 7, q3 8, q4 7, q5 7, q6 4, boss 5 = 45. `verify:learn`, `table`, `story`, `bellows`, `bench`, `run`, `drills`, `arena`, `sync`, `tallow`, `lanternfall`, `ligar` and `ember` pass. Nothing was played in a browser this round.

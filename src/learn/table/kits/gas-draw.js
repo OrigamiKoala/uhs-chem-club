@@ -673,7 +673,52 @@ function paintWalk(ctx, f, state, b) {
 
 function paintPlaque(ctx, f, state, b) {
   const F = frameOf(b);
-  (f.props.lines || []).forEach((line, i) => say(ctx, line, F.x(2.2), F.y(8.4 + i * 3.8), F.size(2.7, 6.5), { color: DUST, maxW: F.len(f.size.w - 4) }));
+  const m = f.props.manometer;
+  (f.props.lines || []).forEach((line, i) => say(ctx, line, F.x(2.2), F.y(8.4 + i * 3.8), F.size(2.7, 6.5), { color: DUST, maxW: F.len(m ? f.size.w * 0.5 : f.size.w - 4) }));
+  if (m) paintManometer(ctx, f, F, m);
+}
+
+/**
+ * A U-tube of mercury on a plaque: the gas is on the left, the right limb is open to the air. `m.h` is how many millimetres the mercury
+ * stands higher on the open side (below zero: lower), drawn at 0.05 units a millimetre, and printed beside the two levels.
+ */
+function paintManometer(ctx, f, F, m) {
+  const w = f.size.w;
+  const h = f.size.h;
+  const xl = w * 0.55;
+  const xr = w * 0.74;
+  const tw = 3.2;
+  const top = 10;
+  const bot = h - 4;
+  const d = m.h * 0.05;
+  const yL = 21 + d / 2;
+  const yR = 21 - d / 2;
+  ctx.fillStyle = DUST;
+  ctx.fillRect(F.x(xl - tw / 2), F.y(yL), F.len(tw), F.len(bot - yL));
+  ctx.fillRect(F.x(xr - tw / 2), F.y(yR), F.len(tw), F.len(bot - yR));
+  ctx.fillRect(F.x(xl - tw / 2), F.y(bot - tw), F.len(xr - xl + tw), F.len(tw));
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(F.x(xl - tw / 2), F.y(top)); ctx.lineTo(F.x(xl - tw / 2), F.y(bot)); ctx.lineTo(F.x(xr + tw / 2), F.y(bot)); ctx.lineTo(F.x(xr + tw / 2), F.y(top));
+  ctx.moveTo(F.x(xl + tw / 2), F.y(top)); ctx.lineTo(F.x(xl + tw / 2), F.y(bot - tw)); ctx.lineTo(F.x(xr - tw / 2), F.y(bot - tw)); ctx.lineTo(F.x(xr - tw / 2), F.y(top));
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  say(ctx, 'GAS', F.x(xl), F.y(top - 2.6), F.size(2.5, 6.5), { align: 'center', color: PHOS });
+  say(ctx, 'AIR', F.x(xr), F.y(top - 2.6), F.size(2.5, 6.5), { align: 'center', color: DIM });
+  // The two levels, joined by a rule that carries the difference.
+  const xd = xr + tw / 2 + 2.4;
+  ctx.strokeStyle = AMBER;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(F.x(xl + tw / 2), F.y(yL)); ctx.lineTo(F.x(xd + 1), F.y(yL));
+  ctx.moveTo(F.x(xr + tw / 2), F.y(yR)); ctx.lineTo(F.x(xd + 1), F.y(yR));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(F.x(xd), F.y(yL)); ctx.lineTo(F.x(xd), F.y(yR));
+  ctx.stroke();
+  say(ctx, `${Math.abs(m.h)} mm`, F.x(xd + 1.6), F.y((yL + yR) / 2), F.size(2.5, 6.5), { color: AMBER, weight: 700, maxW: F.len(w - xd - 2) });
 }
 
 function paintMarker(ctx, f, state, b) {

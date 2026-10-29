@@ -5,13 +5,13 @@
  * TABLETOP of a bench the player has worked, on the gas kit (`table/kits/gas.js`), with the compressor standing in the table's corner,
  * watching it. Each phase is a DIFFERENT idea from a different bench, and each asks the player to use it, not to read a figure off a plate:
  *
- *   1  the intake   squeeze the gas until the gauge reads four times the plaque     (bench 1: squeezing and the knocks)
- *   2  the heater   heat the helium until its room has doubled                      (bench 2: the room follows the kelvin, not the Celsius number)
- *   3  the tanks    sort the tanks by how many particles each holds                 (bench 3: equal rooms, counting from a plate)
- *   4  the blend    open each tank in turn and rank them by their push              (bench 4: the moles decide the push)
- *   5  the seals    set a reference chamber to leak at the pace of the unmarked one (bench 5: the lighter gas leaks first)
+ *   1  the intake   set a piston AND a heater so the gauge reads six times the plaque (benches 1 and 2: room and kelvin together; the gauge is hidden)
+ *   2  the blend    open tanks until nitrogen pushes 60 kPa of a 100 kPa gauge        (bench 4: the moles decide each push, and the pushes add)
+ *   3  the tanks    the mass of gas in a sealed tank from its plate in atm, L and C    (bench 3: the gas law with its units, then the molar mass)
+ *   4  the cold box warm a cramped cold gas until its gauge reads on the gas law      (bench 6: pull and size cancel)
+ *   5  the seals    set a reference chamber to leak at the pace of the unmarked one   (bench 5: the lighter gas leaks first)
  *
- * (There is no prediction and no field stage in a fight, and the old phases that asked for a figure to be worked out by hand were cut.)
+ * (There is no prediction and no field stage in a fight. Phases 1 to 3 ask for a worked figure or a target that cannot be read off the bench; a phase 3 card is a figure, never a guess.)
  *
  * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung is one sentence
  * and never the answer. Nothing blocks a correct commit. A miss costs one point of Integrity and three knock the table back, with every
@@ -24,14 +24,14 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  gasTable, rig, tank, pinhole, commonTank, plaqueFixture, cylRead, tankRead, tankMoles, whereIs, pinholeRead, pressureIdeal, sig
+  gasTable, rig, tank, pinhole, commonTank, commonRead, partialOf, plaqueFixture, cylRead, tankRead, tankMoles, pinholeRead, pressureIdeal, sig, toKelvin, GASES
 } from '../../table/kits/gas.js';
-import { widget, put, dial, sort } from './_shared.js';
+import { widget, put, dial, answerCards, answerSlot, answerOf } from './_shared.js';
 import { session } from '../../../session.js';
 
 export const meta = { stageCount: 5 };
 
-export const BUILDS_ON = ['unit04/q1-knocks', 'unit04/q2-laws', 'unit04/q3-ideal', 'unit04/q4-mixtures', 'unit04/q5-speed'];
+export const BUILDS_ON = ['unit04/q1-knocks', 'unit04/q2-laws', 'unit04/q3-ideal', 'unit04/q4-mixtures', 'unit04/q5-speed', 'unit04/q6-real'];
 
 const SPEAKER = 'Vess';
 
@@ -52,26 +52,30 @@ const T0 = 300;
    Each phase keeps the top-right corner clear for the foe (`FOE_PAD`: x from 126.5, y to 23.5 on a 150 x 64 table).
    ------------------------------------------------------------------ */
 
-/** Phase 1: the intake's cylinder, the room it starts in, and the factor the gauge is asked to climb. */
+/** Phase 1: the intake's cylinder (it starts at 20 L and 27 C), and the factor the gauge is asked to climb. Only one pair of settings makes six. */
 const INTAKE_VOLUMES = [5, 10, 20, 40];
 const INTAKE_START = 3;
-const INTAKE_FACTOR = 4;
-/** Phase 2: the heater's settings in degrees C (one is double the number it starts at, and one is double the room). */
-export const HEATER_TEMPS = [27, 54, 127, 327, 427];
-const HEATER_P = 101.3;
-/** Phase 3: the reference tank and the three to sort. */
-export const TANKS = [
-  { id: 'a', gas: 'He', P: 100, V: 10, T: 300 },
-  { id: 'b', gas: 'N2', P: 100, V: 10, T: 300 },
-  { id: 'c', gas: 'Ar', P: 100, V: 10, T: 150 },
-  { id: 'd', gas: 'He', P: 100, V: 5, T: 300 }
-];
-/** Phase 4: three tanks of 20 L at 300 K; the heaviest gas has the fewest moles. */
-export const BLEND = [['a', 'N2', 1.0], ['b', 'CO2', 0.5], ['c', 'He', 1.5]];
-const BLEND_V = 20;
+const INTAKE_TEMPS = [27, 77, 127, 177, 327];
+export const INTAKE_FACTOR = 6;
+/** Phase 2: four tanks of 100 L at 300 K. Nitrogen must push 60 kPa of a 100 kPa gauge, which three of them do together. */
+export const BLEND = [['a', 'N2', 1.5], ['b', 'N2', 0.9], ['c', 'He', 1.6], ['d', 'Ar', 0.8]];
+export const BLEND_V = 100;
+export const BLEND_WANT = { N2: 60, total: 100, tol: 1 };
+/** Phase 3: the mass of gas in a tank from its plate (atmospheres, litres, degrees C). The cards: the answer, Celsius as kelvin, moles taken for grams, and a doubled mass. */
+export const WEIGH = { gas: 'He', P: 2.0, V: 10, TC: 27 };
+export const R_ATM = 0.0821;
+export const WEIGH_CARDS = [['a', '3.2 g', 3.2], ['b', '36 g', 36], ['c', '0.81 g', 0.81], ['d', '6.5 g', 6.5]];
+/** Phase 4: ammonia in a small room, and the heater's settings (kelvin): the gauge reads on the gas law at one of them. */
+export const COLD_V = 0.5;
+export const COLD_TEMPS = [300, 600, 900, 1200, 2000];
 /** Phase 5: the unmarked seal's gas, and the gases the reference can be set to. */
 export const SEAL = 'Xe';
 export const SEAL_GASES = ['Ne', 'Ar', 'Kr', 'Xe'];
+
+/** The grams of gas in phase 3's tank: moles from the gas law in atmospheres and kelvin, times the molar mass. */
+export function weighGrams(w = WEIGH) {
+  return ((w.P * w.V) / (R_ATM * (w.TC + 273.15))) * GASES[w.gas].M;
+}
 
 const cyl = (id, label, gas, extra = {}) => ({ id, label, gas, n: 1, T: T0, V: 20, hold: 'dial', ...extra });
 
@@ -79,30 +83,30 @@ const cyl = (id, label, gas, extra = {}) => ({ id, label, gas, n: 1, T: T0, V: 2
 const STAGE_REWARDS = [
   {
     reward: {
-      log: 'Intake pressure adjusted.',
-      title: 'Intake Pressure',
-      body: 'Reducing volume to one-fourth increases pressure fourfold at constant temperature, as gas particles collide with container walls four times as frequently.'
+      log: 'Intake pressure set.',
+      title: 'Combined Gas Law',
+      body: 'The gauge goes up as the room shrinks and as the kelvin temperature rises, and the two factors multiply: a quarter of the room gives 4 times the gauge, and 450 K against 300 K gives another 1.5, so 6 times.'
     }
   },
   {
     reward: {
-      log: 'Volume doubled with temperature.',
-      title: 'Thermal Expansion',
-      body: 'Gas volume is directly proportional to absolute temperature in kelvin. Doubling the initial 300 K requires heating to 600 K (327 °C), not 54 °C.'
-    }
-  },
-  {
-    reward: {
-      log: 'Particle quantities determined.',
-      title: 'Mole Counting',
-      body: 'Pressure, volume, and temperature together determine the exact mole quantity of gas in a sealed vessel according to the ideal gas law.'
-    }
-  },
-  {
-    reward: {
-      log: 'Gases ranked by partial pressure.',
+      log: 'Blend pressures set.',
       title: 'Partial Pressures',
-      body: 'At equal volume and temperature, the gas with the most moles produces the highest pressure regardless of molecular mass.'
+      body: 'Each gas pushes by its own moles, and the pushes add. Nitrogen\'s 2.4 mol of the 4.0 mol in the tank is a share of 0.6, so it makes 60 kPa of the 100 kPa gauge.'
+    }
+  },
+  {
+    reward: {
+      log: 'Tank weighed.',
+      title: 'Mass From the Gas Law',
+      body: 'n = PV ÷ RT = (2.0 × 10) ÷ (0.0821 × 300) = 0.81 mol, and 0.81 mol × 4.0 g/mol is about 3.2 g. The temperature goes in as 300 K, not 27.'
+    }
+  },
+  {
+    reward: {
+      log: 'Holder read on the law.',
+      title: 'Real Gas Crossing',
+      body: 'Cold ammonia reads below the gas law because its particles pull on each other; very hot, the room the particles fill pushes the gauge above it. Near 1200 K the two effects cancel.'
     }
   },
   {
@@ -122,9 +126,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
     const r = rig(RIG, { x: 44, y: 32 }, {
-      cyls: [cyl('a', 'INTAKE', 'N2')], volumes: INTAKE_VOLUMES, volumeStart: INTAKE_START, vmax: 40, show: { temperature: false, amount: false }
+      cyls: [cyl('a', 'INTAKE', 'N2')], volumes: INTAKE_VOLUMES, volumeStart: INTAKE_START, temps: INTAKE_TEMPS, tempList: 'C', tempStart: 1, vmax: 40,
+      show: { gauge: false, amount: false }
     });
-    const began = sig(pressureIdeal(1, T0, INTAKE_VOLUMES[INTAKE_START - 1]), 3);
+    const began = sig(pressureIdeal(1, toKelvin(INTAKE_TEMPS[0], 'C'), INTAKE_VOLUMES[INTAKE_START - 1]), 3);
     return {
       id: 'phase1',
       title: 'Phase 1 · The Intake',
@@ -132,29 +137,27 @@ export const STAGES = [
         speaker: SPEAKER,
         body: 'Apply the gas relationships from each bench to stabilize the compressor and clear the fault.'
       },
-      prompt: 'Bring the gauge to four times the figure on the plaque.',
+      prompt: 'Set the piston and heater so the gauge will read six times the figure on the plaque.',
       widget,
       table: gasTable({ fixtures: [r, plaqueFixture('began', 'The gauge began at', { x: 106, y: 36 }, [`${began} kPa`], { w: 44 })] }),
       foes: COMPRESSOR_FOE,
       encounter: {
         species: 'the compressor',
-        act: 'Set Piston',
+        act: 'Set Intake',
         intent: 'The compressor cycles at a steady stroke over its intake.'
       },
       hints: [
-        'Turn the Piston dial.',
-        'Compare the reading at each setting with the figure on the plaque.',
-        'Select the setting where volume has decreased by the same factor pressure must increase.'
+        'Turn the Piston and Heater dials.',
+        'Work out how much the piston setting multiplies the gauge, and how much the heater setting multiplies it.',
+        'The gauge goes with the kelvin temperature and against the room, so the two factors multiply to the target.'
       ],
       check(state) {
         const t = state.table;
-        const q = cylRead(t, RIG, 0);
-        const start = pressureIdeal(1, T0, INTAKE_VOLUMES[INTAKE_START - 1]);
-        if (Math.abs(q.P - start) < 1e-6) return { ok: false, notYet: true, msg: 'The gauge still reads its starting value.' };
-        if (Math.abs(q.P / start - INTAKE_FACTOR) < 0.01) return { ok: true };
-        return q.P / start < INTAKE_FACTOR
-          ? { ok: false, msg: 'The gauge reading is below the target figure.' }
-          : { ok: false, msg: 'The gauge reading exceeds the target figure.' };
+        const start = pressureIdeal(1, toKelvin(INTAKE_TEMPS[0], 'C'), INTAKE_VOLUMES[INTAKE_START - 1]);
+        const k = cylRead(t, RIG, 0).P / start;
+        if (Math.abs(k - 1) < 1e-6) return { ok: false, notYet: true, msg: 'The dials are where they started.' };
+        if (Math.abs(k / INTAKE_FACTOR - 1) < 0.01) return { ok: true };
+        return { ok: false, msg: k < INTAKE_FACTOR ? 'With these settings the gauge will read less than six times the figure.' : 'With these settings the gauge will read more than six times the figure.' };
       },
       ...STAGE_REWARDS[0]
     };
@@ -162,33 +165,38 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const r = rig(RIG, { x: 44, y: 32 }, {
-      cyls: [cyl('a', 'HEATER', 'He', { hold: 'P', P0: HEATER_P, V: 24.6, T: 300.15 })], temps: HEATER_TEMPS, tempList: 'C', tempStart: 1, vmax: 60,
-      show: { gauge: false, amount: false }
-    });
+    const ct = commonTank(CT, { x: 36, y: 31 }, { V: BLEND_V, T: T0, of: VALVES, show: { partials: true, share: true }, words: 3 });
+    const at = [[86, 31], [110, 31], [86, 52], [110, 52]];
     return {
       id: 'phase2',
-      title: 'Phase 2 · The Heater',
-      prompt: 'Heat the helium until its volume has doubled.',
+      title: 'Phase 2 · The Blend',
+      prompt: 'Open tanks into the common tank until nitrogen alone pushes 60 kPa and the gauge reads 100 kPa.',
       widget,
-      table: gasTable({ fixtures: [r] }),
+      table: gasTable({
+        pieces: BLEND.map(([id, gas, n], i) => tank(id, `TANK ${id.toUpperCase()}`, { x: at[i][0], y: at[i][1] }, { gas, n, V: BLEND_V, T: T0, showAmount: true, noGauge: true, plate: false })),
+        fixtures: [ct.fixture],
+        zones: { trays: [ct.tray] }
+      }),
       foes: COMPRESSOR_FOE,
       encounter: {
         species: 'the compressor',
-        act: 'Heat Helium',
-        intent: 'The compressor swells its heater cylinder against the weight on the piston.'
+        act: 'Open Tanks',
+        intent: 'The compressor keeps its blending tanks shut.'
       },
       hints: [
-        'Turn the Heater dial.',
-        'Compare the volume at each setting with the starting volume.',
-        'Select the setting where the volume is exactly twice the starting volume.'
+        'Drag tanks into or out of the tray under the common tank.',
+        'Compare nitrogen\'s own push and the total gauge with the targets after each tank.',
+        'Every tank adds its moles to the total, and only a nitrogen tank adds to nitrogen\'s push.'
       ],
       check(state) {
         const t = state.table;
-        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Heater dial to adjust temperature.' };
-        const ratio = cylRead(t, RIG, 0).V / cylRead({ ...t, fixtures: { ...t.fixtures, [RIG]: { ...t.fixtures[RIG], dials: { ...t.fixtures[RIG].dials, temp: { ...t.fixtures[RIG].dials.temp, value: 1 } } } } }, RIG, 0).V;
-        if (Math.abs(ratio - 2) < 0.02) return { ok: true };
-        return { ok: false, msg: ratio < 2 ? 'The volume has not yet doubled.' : 'The volume has increased past double.' };
+        const rd = commonRead(t, CT);
+        if (!rd.tanks.length) return { ok: false, notYet: true, msg: 'Open a tank into the common tank first.' };
+        const n2 = partialOf(rd, 'N2');
+        const w = BLEND_WANT;
+        if (Math.abs(n2 - w.N2) <= w.tol && Math.abs(rd.P - w.total) <= w.tol) return { ok: true };
+        if (Math.abs(n2 - w.N2) > w.tol) return { ok: false, msg: n2 < w.N2 ? 'Nitrogen alone pushes less than the target.' : 'Nitrogen alone pushes more than the target.' };
+        return { ok: false, msg: rd.P < w.total ? 'The gauge reads less than the target.' : 'The gauge reads more than the target.' };
       },
       ...STAGE_REWARDS[1]
     };
@@ -196,40 +204,35 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const mk = ({ id, gas, P, V, T }, at, extra = {}) => tank(id, `TANK ${id.toUpperCase()}`, at, { gas, P, V, T, plate: true, gaugeMax: 300, ...extra });
-    const tray = (id, label, x) => ({ id, label, at: { x, y: 30 }, size: { w: 38, h: 20 }, cell: 15 });
-    const xs = { a: 14, b: 44, c: 74, d: 104 };
+    const w = WEIGH;
+    const plate = plaqueFixture('plate', 'Sealed tank', { x: 34, y: 33 }, [`Gas: helium, ${GASES[w.gas].M.toFixed(1)} g/mol`, `Gauge: ${w.P} atm`, `Room: ${w.V} L`, `Temperature: ${w.TC} °C`], { w: 52 });
     return {
       id: 'phase3',
       title: 'Phase 3 · The Tanks',
-      prompt: 'Sort each tank into a tray based on particle count compared to Tank A.',
+      prompt: 'Lay the card for the mass of gas in the sealed tank.',
       widget,
       table: gasTable({
-        pieces: TANKS.map(t => mk(t, { x: xs[t.id], y: 54 }, t.id === 'a' ? { fixed: true } : {})),
-        zones: { trays: [tray('fewer', 'Fewer particles', 25), tray('same', 'The same number', 65), tray('more', 'More particles', 105)] }
+        pieces: answerCards(WEIGH_CARDS),
+        fixtures: [plate],
+        zones: { slots: [{ ...answerSlot('Mass of gas'), at: { x: 104, y: 27 }, size: { w: 36, h: 12 } }] }
       }),
       foes: COMPRESSOR_FOE,
       encounter: {
         species: 'the compressor',
-        act: 'Count Tanks',
-        intent: 'The compressor keeps its tanks shut and shows only their plates.'
+        act: 'Weigh Gas',
+        intent: 'The compressor shows only the plate of its tank.'
       },
       hints: [
-        'Drag each tank into a tray.',
-        'Compare each tank\'s pressure, volume, and temperature with Tank A.',
-        'Determine particle counts from the ideal gas law relationship.'
+        'Read the figures from the plate, then lay a card in the slot.',
+        'Find the moles first with the temperature in kelvin, then the mass those moles weigh.',
+        'Use R = 0.0821 L·atm per mol·K, then multiply the moles by the molar mass.'
       ],
       check(state) {
-        const t = state.table;
-        const ids = ['b', 'c', 'd'];
-        if (!ids.every(id => ['fewer', 'same', 'more'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Place every tank in a tray.' };
-        const nA = tankMoles(t.pieces.a);
-        for (const id of ids) {
-          const ratio = tankMoles(t.pieces[id]) / nA;
-          const want = Math.abs(ratio - 1) < 1e-6 ? 'same' : ratio > 1 ? 'more' : 'fewer';
-          if (whereIs(t, id) !== want) return { ok: false, msg: `Tank ${id.toUpperCase()} does not belong in that tray.` };
-        }
-        return { ok: true };
+        const v = answerOf(state.table, WEIGH_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = weighGrams();
+        if (Math.abs(v - want) / want < 0.04) return { ok: true };
+        return { ok: false, msg: v > want ? 'The tank holds less gas than that.' : 'The tank holds more gas than that.' };
       },
       ...STAGE_REWARDS[2]
     };
@@ -237,38 +240,34 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const ct = commonTank(CT, { x: 36, y: 30 }, { V: BLEND_V, T: T0, of: VALVES, show: { partials: true }, words: 2 });
+    const r = rig(RIG, { x: 44, y: 32 }, {
+      cyls: [cyl('a', 'HOLDER', 'NH3', { V: COLD_V, hold: 'V', vdw: true })], temps: COLD_TEMPS, tempList: 'K', tempStart: 1, vmax: 24.6, w: 62, trueSize: true,
+      title: `Holder  ${GASES.NH3.sym}, ${COLD_V} L`, show: { temperature: false, amount: false, volume: false, ideal: true }
+    });
     return {
       id: 'phase4',
-      title: 'Phase 4 · The Blend',
-      prompt: 'Arrange the three tanks on the rail from highest pressure to lowest pressure.',
+      title: 'Phase 4 · The Cold Box',
+      prompt: 'Set the heater until the gauge matches the gas law figure printed with it.',
       widget,
-      table: gasTable({
-        pieces: BLEND.map(([id, gas, n]) => tank(id, `TANK ${id.toUpperCase()}`, { x: 0, y: 0 }, { gas, n, V: BLEND_V, T: T0, noGauge: true, printMass: true })),
-        fixtures: [ct.fixture],
-        zones: {
-          trays: [ct.tray],
-          rail: { id: 'rail', at: { x: 108, y: 48 }, size: { w: 80, h: 16 }, first: 'Highest pressure', last: 'Lowest pressure', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] }
-        }
-      }),
+      table: gasTable({ fixtures: [r] }),
       foes: COMPRESSOR_FOE,
       encounter: {
         species: 'the compressor',
-        act: 'Rank Tanks',
-        intent: 'The compressor holds its blending tanks at one steady push.'
+        act: 'Warm Holder',
+        intent: 'The compressor squeezes a cold holder of ammonia.'
       },
       hints: [
-        'Drag a tank into the common tank tray to read its pressure, then return it to the rail.',
-        'Compare pressures of tanks with equal volume and temperature rather than their masses.',
-        'Place the tank with the highest pressure at the left end of the rail.'
+        'Turn the Heater dial.',
+        'Compare the gauge with the gas law figure at each setting, and note which side of it the gauge is on.',
+        'The gauge sits below the figure at one end of the dial and above it at the other, so look between those settings.'
       ],
       check(state) {
         const t = state.table;
-        const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three tanks on the rail.' };
-        const want = BLEND.map(b => b[0]).sort((x, y) => tankRead(t.pieces[y]).P - tankRead(t.pieces[x]).P);
-        if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Two adjacent tanks on the rail are in the wrong order.' };
+        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Heater dial.' };
+        const q = cylRead(t, RIG, 0);
+        const ratio = q.P / q.ideal;
+        if (Math.abs(ratio - 1) <= 0.02) return { ok: true };
+        return { ok: false, msg: ratio > 1 ? 'The gauge reads above the gas law figure.' : 'The gauge reads below the gas law figure.' };
       },
       ...STAGE_REWARDS[3]
     };
@@ -313,10 +312,10 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Turn the Piston dial to adjust pressure.'],
-  2: ['Turn the Heater dial to adjust temperature.'],
-  3: ['Drag each tank into a tray.'],
-  4: ['Open one tank at a time to read its pressure,', 'then place it on the rail.'],
+  1: ['Turn the Piston and Heater dials.'],
+  2: ['Drag tanks into or out of the tray.'],
+  3: ['R = 0.0821 L·atm per mol·K.', 'Place a card in the slot.'],
+  4: ['Turn the Heater dial.'],
   5: ['Adjust the Gas and Stopwatch dials.']
 };
 applyNotes(STAGES, NOTES);
@@ -408,21 +407,19 @@ export const PRACTICE = [
 
 /** The bench state that solves each phase, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [dial(RIG, 'volume', 1)],
+  [dial(RIG, 'volume', 1), dial(RIG, 'temp', 4)],
+  [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('c', `tray:${VALVES}`)],
+  [put('a', 'slot:answer')],
   [dial(RIG, 'temp', 4)],
-  [...sort({ b: 'same', c: 'more', d: 'fewer' })],
-  [
-    put('c', `tray:${VALVES}`), put('c', 'rail:0'), put('a', `tray:${VALVES}`), put('a', 'rail:1'), put('b', `tray:${VALVES}`), put('b', 'rail:2')
-  ],
   [dial(PIN, 'time', 4), dial(PIN, 'ref', 4)]
 ];
 
 /** A plausible wrong answer per phase. Each must be refused, and must say why. */
 export const MISSES = [
-  [dial(RIG, 'volume', 2)],
+  [dial(RIG, 'volume', 1), dial(RIG, 'temp', 3)],
+  [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('d', `tray:${VALVES}`)],
+  [put('b', 'slot:answer')],
   [dial(RIG, 'temp', 2)],
-  [...sort({ b: 'more', c: 'more', d: 'fewer' })],
-  [put('b', 'rail:0'), put('a', 'rail:1'), put('c', 'rail:2')],
   [dial(PIN, 'ref', 3)]
 ];
 

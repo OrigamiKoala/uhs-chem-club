@@ -2628,9 +2628,10 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(GK.partialOf(hi, 'O2') < GK.partialOf(lo, 'O2') && hi.P < lo.P, `${q} stage 5: the push does not fall with height`);
       near(lo.P, G.ATM_KPA, 0.1, `${q} stage 5: the sea-level reading is not one atmosphere`);
       near(hi.P, G.airPressureAt(8850), 0.2, `${q} stage 5: the top reading is not the air at 8850 m`);
-      const d = done(b4, 4);
-      same(['o2share', 'n2share'].map(id => tray(d, id)).join(), 'stays,stays', `${q} stage 5 (the shares stay put)`);
-      same(['o2push', 'total'].map(id => tray(d, id)).join(), 'falls,falls', `${q} stage 5 (the pushes fall)`);
+      // The prompt asks for half of oxygen's sea-level push: exactly one height does it.
+      const half = Array.from({ length: b4.HEIGHTS.length }, (_, k) => k + 1).filter(k => Math.abs(GK.partialOf(at(k), 'O2') / GK.partialOf(at(1), 'O2') - 0.5) <= b4.HALF_TOL);
+      same(half.join(), '3', `${q} stage 5 (the one height where oxygen's push has halved)`);
+      same(Math.round(done(b4, 4).fixtures.ct.dials.volume.value), 3, `${q} stage 5 (the graded setting)`);
     }
   }
 
@@ -2708,13 +2709,12 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(props(t, 'rig').trueSize === true, `${q} stage 2: the crowd is not drawn at its true size`);
     }
     {
+      // Stage 3: the heater crosses the gas law, and exactly one setting reads on it (cold reads below, hot and cramped above).
       const t = start(b6, 2);
-      const side = c => b6.sideOf(rd(t, `r${c.id}`, {}, 0));
-      const sides = b6.CASES.map(side);
-      same(sides.join(), 'more,less,exact,less', `${q} stage 3 (the side of the law each cylinder reads on)`);
-      const d = done(b6, 2);
-      for (const c of b6.CASES) same(tray(d, c.id), { more: 'above', exact: 'on', less: 'below' }[side(c)], `${q} stage 3 (holder ${c.id})`);
-      holds(new Set(b6.CASES.map(c => tray(d, c.id))).size === 3, `${q} stage 3: not every tray is used`);
+      const sides = props(t, 'rig').temps.map((_, k) => b6.sideOf(rd(t, 'rig', { temp: k + 1 })));
+      same(sides.join(), 'less,less,less,exact,more', `${q} stage 3 (the side of the law at each heater setting)`);
+      same(Math.round(done(b6, 2).fixtures.rig.dials.temp.value), 4, `${q} stage 3 (the graded setting)`);
+      holds(Math.round(t.fixtures.rig.dials.temp.value) === 1, `${q} stage 3: the dial does not start cold`);
     }
     // Stage 4: the order holds at EVERY setting of the dial, and the fetch is evidence, never a lock.
     {
@@ -2731,38 +2731,105 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     function put3(piece, index) { return { place: { piece, to: `rail:${index}` } }; }
   }
 
+  /* ---- the figure stages added after the audit: combined law, density, speed, manometer, gas over water ---- */
+  {
+    const cardId = (q, i) => Object.values(done(q, i).pieces).find(x => x.zone === 'slot:answer')?.id;
+    const only = (cards, want, tol) => cards.filter(c => Math.abs(c[2] - want) / want < tol).length === 1;
+    if (b1) {
+      const q = 'unit04/q1-knocks';
+      const want = b1.manoAtm();
+      holds(only(b1.MANO_CARDS, want, 0.03), `${q} stage 7: exactly one card should be the pressure (${want.toFixed(3)} atm)`);
+      holds(b1.MANO_CARDS.some(c => Math.abs(c[2] - (b1.MANO.air - b1.MANO.h) / 760) < 0.01) && b1.MANO_CARDS.some(c => Math.abs(c[2] - b1.MANO.h / 760) < 0.01), `${q} stage 7: the subtract slip and the column-alone slip are not cards`);
+      const p = Object.values(start(b1, 6).fixtures).find(f => f.kind === 'plaque');
+      holds(p && p.props.manometer && p.props.manometer.h === b1.MANO.h, `${q} stage 7: the plate does not draw the mercury column`);
+      same(cardId(b1, 6), 'a', `${q} stage 7 (the card laid)`);
+    }
+    if (b2) {
+      const q = 'unit04/q2-laws';
+      const c = b2.COMBINED;
+      const want = b2.combinedP();
+      holds(only(b2.COMBINED_CARDS, want, 0.03), `${q} stage 7: exactly one card should be the final gauge (${want.toFixed(1)} kPa)`);
+      holds(b2.COMBINED_CARDS.some(k => Math.abs(k[2] - c.P * (c.V1 / c.V2)) < 1) && b2.COMBINED_CARDS.some(k => Math.abs(k[2] - c.P * ((c.C2 + 273.15) / (c.C1 + 273.15))) < 1), `${q} stage 7: the squeeze-alone and heating-alone slips are not cards`);
+      holds(b2.COMBINED_CARDS.some(k => Math.abs(k[2] - c.P * (c.V1 / c.V2) * (c.C2 / c.C1)) / (c.P * (c.V1 / c.V2) * (c.C2 / c.C1)) < 0.05), `${q} stage 7: the Celsius-ratio slip is not a card`);
+      same(cardId(b2, 6), 'a', `${q} stage 7 (the card laid)`);
+    }
+    if (b3) {
+      const q = 'unit04/q3-ideal';
+      const want = b3.densityOf();
+      near(want, (b3.DENSE.P * G.GASES[b3.DENSE.gas].M) / (G.R * b3.DENSE.T), 1e-9, `${q} stage 8: density is not PM over RT`);
+      holds(only(b3.DENSE_CARDS, want, 0.03), `${q} stage 8: exactly one card should be the density (${want.toFixed(3)} g/L)`);
+      holds(b3.DENSE_CARDS.some(k => Math.abs(k[2] - b3.DENSE.P / (G.R * b3.DENSE.T)) < 0.002), `${q} stage 8: moles per litre is not a slip card`);
+      same(cardId(b3, 7), 'a', `${q} stage 8 (the card laid)`);
+    }
+    if (b4) {
+      const q = 'unit04/q4-mixtures';
+      const want = b4.OVER_WATER.total - b4.OVER_WATER.vapor;
+      holds(only(b4.WATER_CARDS, want, 0.01), `${q} stage 7: exactly one card should be the gas alone (${want} mmHg)`);
+      holds(b4.WATER_CARDS.some(k => k[2] === b4.OVER_WATER.total + b4.OVER_WATER.vapor), `${q} stage 7: the added-vapour slip is not a card`);
+      same(cardId(b4, 6), 'a', `${q} stage 7 (the card laid)`);
+    }
+    if (b5) {
+      const q = 'unit04/q5-speed';
+      const want = b5.rmsOf();
+      near(want, G.speeds(b5.SPEED_GAS.gas, b5.SPEED_GAS.T).rms, 1, `${q} stage 7: the speed is not the table's root-mean-square speed`);
+      holds(only(b5.SPEED_CARDS, want, 0.01), `${q} stage 7: exactly one card should be the speed (${want.toFixed(1)} m/s)`);
+      holds(b5.SPEED_CARDS.some(k => Math.abs(k[2] - G.speeds(b5.SPEED_GAS.gas, b5.SPEED_GAS.T).mean) < 1), `${q} stage 7: the mean speed is not a slip card`);
+      same(cardId(b5, 6), 'a', `${q} stage 7 (the card laid)`);
+    }
+  }
+
   /* ---- boss-compressor ---- */
   if (bb) {
     const q = 'unit04/boss-compressor';
+    // Phase 1: piston and heater together; exactly one pair of settings makes six, the gauge is hidden, and the plaque gives the start.
     {
       const t = start(bb, 0);
-      const v0 = Math.round(t.fixtures.rig.dials.volume.value);
-      near(rd(t, 'rig', { volume: 1 }).P / rd(t, 'rig', { volume: v0 }).P, 4, 1e-9, `${q} phase 1: the setting graded is not four times the start`);
-      holds(done(bb, 0).fixtures.rig.dials.volume.value === 1, `${q} phase 1 (the graded setting)`);
-    }
-    {
-      const t = start(bb, 1);
-      const temps = props(t, 'rig').temps;
-      const v = i => rd(t, 'rig', { temp: i }).V / rd(t, 'rig', { temp: 1 }).V;
-      near(v(temps.indexOf(327) + 1), 2, 0.02, `${q} phase 2 (double the room at 327 C)`);
-      holds(v(temps.indexOf(54) + 1) < 1.12, `${q} phase 2: the Celsius trap setting is not a trap`);
-      holds(Math.round(done(bb, 1).fixtures.rig.dials.temp.value) === temps.indexOf(327) + 1, `${q} phase 2 (the graded setting)`);
-    }
-    {
-      const t = done(bb, 2);
-      const ref = GK.tankMoles(t.pieces.a);
-      for (const id of ['b', 'c', 'd']) {
-        const n = GK.tankMoles(t.pieces[id]);
-        same(tray(t, id), Math.abs(n - ref) < 1e-9 ? 'same' : n > ref ? 'more' : 'fewer', `${q} phase 3 (tank ${id})`);
+      const p0 = props(t, 'rig');
+      const base = rd(t, 'rig').P;
+      const hits = [];
+      for (let v = 1; v <= p0.volumes.length; v++) for (let k = 1; k <= p0.temps.length; k++) {
+        if (Math.abs(rd(t, 'rig', { volume: v, temp: k }).P / base / bb.INTAKE_FACTOR - 1) < 0.01) hits.push(`${v}/${k}`);
       }
-      holds(new Set(['b', 'c', 'd'].map(id => tray(t, id))).size === 3, `${q} phase 3: the three tanks do not use three trays`);
+      same(hits.join(), '1/4', `${q} phase 1 (the one pair of settings that makes six times the start)`);
+      holds(p0.show.gauge === false, `${q} phase 1: the gauge is shown, so the factor can be read off`);
+      holds(Math.round(t.fixtures.rig.dials.temp.value) === 1, `${q} phase 1: the heater does not start at 27 C`);
+      const d = done(bb, 0);
+      same(`${Math.round(d.fixtures.rig.dials.volume.value)}/${Math.round(d.fixtures.rig.dials.temp.value)}`, '1/4', `${q} phase 1 (the graded settings)`);
     }
+    // Phase 2: nitrogen at 60 kPa of a 100 kPa gauge is met by one set of tanks and no other.
     {
-      const t = done(bb, 3);
-      const byP = t.zones.rail.order.map(id => GK.tankRead(t.pieces[id]).P);
-      holds(byP.every((v, k) => !k || v < byP[k - 1]), `${q} phase 4: the strip is not strongest push first`);
-      const heaviest = bb.BLEND.map(b => b[0]).sort((x, y) => G.GASES[t.pieces[y].props.gas].M - G.GASES[t.pieces[x].props.gas].M)[0];
-      holds(t.zones.rail.order[0] !== heaviest, `${q} phase 4: the heaviest gas pushes hardest, so the phase has no trap`);
+      const ids = bb.BLEND.map(b => b[0]);
+      const hits = [];
+      for (let m = 1; m < 1 << ids.length; m++) {
+        const set = ids.filter((_, i) => m & (1 << i));
+        const items = set.map(id => { const b = bb.BLEND.find(x => x[0] === id); return { gas: b[1], n: b[2] }; });
+        const r = G.planMixture(items, 300, bb.BLEND_V);
+        const n2 = r.rows.filter(x => x.gas === 'N2').reduce((a, x) => a + x.P, 0);
+        if (Math.abs(n2 - bb.BLEND_WANT.N2) <= bb.BLEND_WANT.tol && Math.abs(r.P - bb.BLEND_WANT.total) <= bb.BLEND_WANT.tol) hits.push(set.join(''));
+      }
+      same(hits.join(), 'abc', `${q} phase 2 (the one set of tanks that makes nitrogen 60 kPa of 100)`);
+      const t = done(bb, 1);
+      const rdc = GK.commonRead(t, 'ct');
+      near(GK.partialOf(rdc, 'N2'), bb.BLEND_WANT.N2, bb.BLEND_WANT.tol, `${q} phase 2 (the graded nitrogen push)`);
+      holds(rdc.tanks.length === 3, `${q} phase 2: the solution opens ${rdc.tanks.length} tanks`);
+    }
+    // Phase 3: moles by PV/RT in atm and kelvin, times the molar mass; the Celsius-as-kelvin, moles-as-grams and doubled slips are cards.
+    {
+      const want = bb.weighGrams();
+      holds(bb.WEIGH_CARDS.filter(c => Math.abs(c[2] - want) / want < 0.04).length === 1, `${q} phase 3: exactly one card should be the mass (${want.toFixed(2)} g)`);
+      const w = bb.WEIGH;
+      const slipC = ((w.P * w.V) / (bb.R_ATM * w.TC)) * G.GASES[w.gas].M;
+      const slipN = (w.P * w.V) / (bb.R_ATM * (w.TC + 273.15));
+      holds(bb.WEIGH_CARDS.some(c => Math.abs(c[2] - slipC) / slipC < 0.04) && bb.WEIGH_CARDS.some(c => Math.abs(c[2] - slipN) / slipN < 0.04), `${q} phase 3: the Celsius slip and the moles-as-grams slip are not cards`);
+      same(Object.values(done(bb, 2).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} phase 3 (the card laid)`);
+      holds(Object.values(start(bb, 2).fixtures).some(f => f.kind === 'plaque' && f.props.lines.some(l => /°C/.test(l))), `${q} phase 3: the plate does not print degrees C`);
+    }
+    // Phase 4: the heater crosses the gas law, and exactly one setting reads on it.
+    {
+      const t = start(bb, 3);
+      const sides = props(t, 'rig').temps.map((_, k) => { const c = rd(t, 'rig', { temp: k + 1 }); return Math.abs(c.P / c.ideal - 1) <= 0.02 ? 'on' : c.P < c.ideal ? 'below' : 'above'; });
+      same(sides.join(), 'below,below,below,on,above', `${q} phase 4 (the side of the law at each heater setting)`);
+      same(Math.round(done(bb, 3).fixtures.rig.dials.temp.value), 4, `${q} phase 4 (the graded setting)`);
     }
     {
       const d = done(bb, 4);

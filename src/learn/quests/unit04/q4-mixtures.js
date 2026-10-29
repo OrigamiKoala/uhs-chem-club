@@ -13,8 +13,9 @@
  *   2  TEST: open the tanks, read each gas's own push           -> Partial Pressure, Dalton's law
  *   3  open tanks until nitrogen is 60 percent of the push      -> Mole Fraction
  *   4  open each tank in turn, rank them by push                -> (the moles decide, never the weight)
- *   5  sort what changes as the air gets thinner                -> Thin Air
+ *   5  set the height where oxygen's own push has halved         -> Thin Air
  *   6  oxygen's own push in a tank, from its moles and the gauge -> Using Partial Pressures (a figure worked out)
+ *   7  a gas collected over water: its own push beside the vapour  -> Gas Over Water (a figure worked out)
  *
  * (Cut as repeats: the pour-until-400 stage, which the test of stage 2 already shows; the push of one gas from a share, which stage 3
  * reads off the tank; adding argon, which is stage 2 again; and the trap that pulls one gas out, which was the same counting.)
@@ -25,12 +26,12 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  gasTable, tank, chip, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, plaqueFixture, AIR, GASES
+  gasTable, tank, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, plaqueFixture, AIR, GASES
 } from '../../table/kits/gas.js';
-import { widget, put, dial, sort, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 import { stmt } from '../../table/kits/gas.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bpartial pressures?\b/i, introducedAt: 2 },
@@ -69,11 +70,17 @@ export const RANK_V = 20;
 export const HEIGHTS = [23.62, 33.76, 45.46, 67.74];
 export const HEIGHT_NAMES = ['Sea level', '3000 m', '5500 m', '8850 m'];
 export const AIR_T = 288.15;
+/** Stage 5 accepts oxygen's own pressure within this much of half its sea-level figure (one dial setting does). */
+export const HALF_TOL = 0.08;
 export const AIR_PARTS = AIR.map(a => ({ gas: a.gas, n: a.n / 100 }));
 
 /** Stage 6: a tank of nitrogen and oxygen whose face lists the moles of each, and the figures to lay: oxygen's own push, the slip of reading its moles as a share, nitrogen's push and the whole gauge. */
 export const BLEND_TANK = [{ gas: 'N2', n: 0.6 }, { gas: 'O2', n: 0.2 }];
 export const PUSH_CARDS = [['a', '50 kPa', 50], ['b', '40 kPa', 40], ['c', '150 kPa', 150], ['d', '200 kPa', 200]];
+
+/** Stage 7: a jar of gas over water. The cards: the gas alone, the vapour added on (the slip), the vapour alone and the whole gauge. */
+export const OVER_WATER = { total: 752, vapor: 24 };
+export const WATER_CARDS = [['a', '728 mmHg', 728], ['b', '776 mmHg', 776], ['c', '24 mmHg', 24], ['d', '752 mmHg', 752]];
 
 const t10 = (id, label, at, gas, n, extra = {}) => tank(id, label, at, { gas, n, V: V0, T: T0, gaugeMax: 400, ...extra });
 
@@ -218,53 +225,36 @@ export const STAGES = [
     const ct = commonTank(CT, { x: 36, y: 32 }, {
       V: HEIGHTS[0], T: AIR_T, of: VALVES, volumes: HEIGHTS, volumeStart: 1, volumeNames: HEIGHT_NAMES, volumeLabel: 'Height', show: { partials: true, share: true }, words: 3
     });
-    const things = [['o2share', 'OXYGEN SHARE'], ['o2push', 'OXYGEN PUSH'], ['total', 'TOTAL PUSH'], ['n2share', 'NITROGEN SHARE']];
     return {
       title: 'Atmospheric Pressure and Altitude',
-      prompt: 'Turn the Height dial, then sort each reading by whether it falls as altitude increases.',
+      prompt: 'Set the Height dial so oxygen\'s own pressure is half its sea-level pressure.',
       widget,
       table: gasTable({
-        pieces: [
-          tank('air', 'AIR', { x: 0, y: 0 }, { parts: AIR_PARTS, V: HEIGHTS[0], T: AIR_T, plate: true, gaugeMax: 150, zone: OPEN }),
-          ...things.map(([id, label], i) => chip(id, label, { x: 84 + (i % 2) * 20, y: 12 + Math.floor(i / 2) * 13 }))
-        ],
+        pieces: [tank('air', 'AIR', { x: 0, y: 0 }, { parts: AIR_PARTS, V: HEIGHTS[0], T: AIR_T, plate: true, gaugeMax: 150, zone: OPEN })],
         fixtures: [ct.fixture],
-        zones: {
-          trays: [
-            ct.tray,
-            { id: 'falls', label: 'Decreases with altitude', at: { x: 90, y: 49 }, size: { w: 36, h: 22 }, cell: 17 },
-            { id: 'stays', label: 'Constant with altitude', at: { x: 128, y: 49 }, size: { w: 28, h: 22 }, cell: 15 }
-          ]
-        }
+        zones: { trays: [ct.tray] }
       }),
       hints: [
-        'Turn the Height dial to change altitude.',
-        'Compare each reading at sea level with its value at maximum altitude.',
-        'Set the dial to 8850 m, note each reading, then set it back to sea level and compare before sorting.'
+        'Turn the Height dial.',
+        'Compare oxygen\'s own pressure at each height with its figure at sea level.',
+        'The air keeps its mixture as it thins, so look for the height where the total pressure has halved.'
       ],
       check(state) {
         const t = state.table;
-        if (!things.every(([id]) => ['falls', 'stays'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Place every reading in a tray.' };
-        if (Math.round(t.fixtures[CT].dials.volume.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Height dial to observe readings at altitude.' };
-        const at = k => commonRead({ ...t, fixtures: { ...t.fixtures, [CT]: { ...t.fixtures[CT], dials: { ...t.fixtures[CT].dials, volume: { ...t.fixtures[CT].dials.volume, value: k } } } } }, CT);
-        const lo = at(1);
-        const hi = at(HEIGHTS.length);
-        const share = (r, g) => partialOf(r, g) / r.P;
-        const falls = {
-          o2share: share(hi, 'O2') < share(lo, 'O2') - 1e-6, o2push: partialOf(hi, 'O2') < partialOf(lo, 'O2') - 1e-6,
-          total: hi.P < lo.P - 1e-6, n2share: share(hi, 'N2') < share(lo, 'N2') - 1e-6
-        };
-        if (things.some(([id]) => whereIs(t, id) === 'falls' && !falls[id])) return { ok: false, msg: 'A reading placed in the decreasing tray does not decrease with altitude.' };
-        if (things.some(([id]) => whereIs(t, id) === 'stays' && falls[id])) return { ok: false, msg: 'A reading placed in the constant tray decreases with altitude.' };
-        return { ok: true };
+        const k = Math.round(t.fixtures[CT].dials.volume.value);
+        if (k === 1) return { ok: false, notYet: true, msg: 'Turn the Height dial.' };
+        const at = j => partialOf(commonRead({ ...t, fixtures: { ...t.fixtures, [CT]: { ...t.fixtures[CT], dials: { ...t.fixtures[CT].dials, volume: { ...t.fixtures[CT].dials.volume, value: j } } } } }, CT), 'O2');
+        const ratio = at(k) / at(1);
+        if (Math.abs(ratio - 0.5) <= HALF_TOL) return { ok: true };
+        return { ok: false, msg: ratio > 0.5 ? 'Oxygen\'s pressure here is more than half its sea-level figure.' : 'Oxygen\'s pressure here is less than half its sea-level figure.' };
       },
       reward: {
-        log: 'Atmospheric pressure drops while mixture proportions stay constant.',
+        log: 'Oxygen\'s own pressure falls with the air\'s.',
         title: 'Atmospheric Pressure at Altitude',
-        body: 'At higher altitudes, atmospheric pressure drops while the mole fraction of each gas stays constant. The partial pressure of oxygen decreases in direct proportion to the total pressure drop.'
+        body: 'Air keeps its mixture as it thins: oxygen stays about a fifth of the particles at every height. So oxygen\'s own pressure falls exactly as the air\'s does, and halves where the air pressure halves.'
       }
     };
-  })()  ,
+  })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
@@ -295,7 +285,39 @@ export const STAGES = [
       reward: {
         log: 'A gas\'s share of the moles is its share of the gauge.',
         title: 'Using Partial Pressures',
-        body: 'Oxygen is 0.2 of 0.8 mol, a mole fraction of 0.25, so its partial pressure is 0.25 × 200 kPa = 50 kPa. The partial pressures add back to the gauge: 150 + 50 = 200 kPa.',
+        body: 'Oxygen is 0.2 of 0.8 mol, a mole fraction of 0.25, so its partial pressure is 0.25 × 200 kPa = 50 kPa. The partial pressures add back to the gauge: 150 + 50 = 200 kPa.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Gas over water', { x: 32, y: 33 }, [`Jar gauge: ${OVER_WATER.total} mmHg`, `Water vapour: ${OVER_WATER.vapor} mmHg`, 'The jar holds only the gas and the vapour'], { w: 62 });
+    return {
+      title: 'Gas Over Water',
+      prompt: 'Lay the card for the pressure of the gas alone in the jar, apart from the water vapour.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(WATER_CARDS),
+        fixtures: [plate],
+        zones: { slots: [answerSlot('Gas alone')] }
+      }),
+      hints: [
+        'Read the figures from the plate, then lay a card in the slot.',
+        'The gauge counts every gas in the jar, and the water vapour is one of them.',
+        'Take the pressure of the water vapour away from the gauge.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, WATER_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = OVER_WATER.total - OVER_WATER.vapor;
+        if (Math.abs(v - want) / want < 0.01) return { ok: true };
+        return { ok: false, msg: v > want ? 'The gas alone pushes less than that.' : 'The gas alone pushes more than that.' };
+      },
+      reward: {
+        log: 'The jar\'s gauge is the gas plus the vapour.',
+        title: 'Gas Over Water',
+        body: 'The partial pressures add to the gauge: 752 mmHg = P(gas) + 24 mmHg. So the gas alone pushes 752 − 24 = 728 mmHg.',
         last: true
       }
     };
@@ -308,8 +330,9 @@ const NOTES = {
   2: ['Open both tanks, then place a card in the slot.'],
   3: ['Drag tanks into or out of the tray.'],
   4: ['Open one tank at a time to read its pressure,', 'then place it on the rail.'],
-  5: ['Turn the Height dial, then sort each reading into a tray.'],
-  6: ['Place a card in the slot.']
+  5: ['Turn the Height dial.'],
+  6: ['Place a card in the slot.'],
+  7: ['Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -398,7 +421,8 @@ export const SOLUTIONS = [
   [
     put('c', OPEN), put('c', 'rail:0'), put('a', OPEN), put('a', 'rail:1'), put('d', OPEN), put('d', 'rail:2'), put('b', OPEN), put('b', 'rail:3')
   ],
-  [dial(CT, 'volume', 4), ...sort({ o2share: 'stays', n2share: 'stays', o2push: 'falls', total: 'falls' })],
+  [dial(CT, 'volume', 3)],
+  [put('a', 'slot:answer')],
   [put('a', 'slot:answer')]
 ];
 
@@ -408,7 +432,8 @@ export const MISSES = [
   [put('b', OPEN), put('a', OPEN), put('lower', 'slot:show')],
   [put('c', OPEN)],
   [put('d', 'rail:0'), put('b', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
-  [dial(CT, 'volume', 4), ...sort({ o2share: 'falls', n2share: 'stays', o2push: 'falls', total: 'falls' })],
+  [dial(CT, 'volume', 4)],
+  [put('b', 'slot:answer')],
   [put('b', 'slot:answer')]
 ];
 

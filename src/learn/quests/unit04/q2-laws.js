@@ -17,19 +17,20 @@
  *   4  PREDICT: a sealed tank cools by 50 degrees, what does its gauge do
  *   5  TEST: cool the tank and read what the gauge did             -> Gay-Lussac's law
  *   6  the heater dial stops at 177 C: the room at 327 C            -> Using Charles's law (a figure worked from the bench)
+ *   7  a gas squeezed and heated at once: the final gauge          -> Combined Gas Law (a figure worked from a plate)
  *
  * (Cut as repeats: the quarter-room stage and the knocks-double stage, which bench one's squeeze already works out; the weighted piston
- * fed with gas, which bench three finds again as the room one mole fills; the combined-law stage and the four plotted records.)
+ * fed with gas, which bench three finds again as the room one mole fills; the four plotted records. The combined-law stage came back as stage 7, since squeezing and heating together is a new case.)
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, rig, markerFixture, markerRead, rigAt, cylRead } from '../../table/kits/gas.js';
+import { gasTable, rig, markerFixture, markerRead, rigAt, cylRead, plaqueFixture } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, cardColumn, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\babsolute zero\b/i, introducedAt: 3 },
@@ -74,6 +75,15 @@ export const COOL_AT = 3;
 const REACH_TEMPS = [27, 77, 127, 177];
 const BEYOND_C = 327;
 export const REACH_CARDS = [['a', '49 L', 49], ['b', '290 L', 290], ['c', '36 L', 36], ['d', '73 L', 73]];
+
+/** Stage 7: a sealed gas squeezed and heated together. The cards: the full answer, the Celsius-ratio slip, the squeeze alone and the heating alone. */
+export const COMBINED = { P: 100, V1: 6, V2: 2, C1: 27, C2: 327 };
+export const COMBINED_CARDS = [['a', '600 kPa', 600], ['b', '3600 kPa', 3600], ['c', '300 kPa', 300], ['d', '200 kPa', 200]];
+
+/** The final gauge of stage 7: pressure follows the squeeze and the kelvin temperature together. */
+export function combinedP(c = COMBINED) {
+  return c.P * (c.V1 / c.V2) * ((c.C2 + 273.15) / (c.C1 + 273.15));
+}
 
 /** How a tank's gauge changed between two settings, as the card that says so. */
 export function fallCard(from, to) {
@@ -264,7 +274,40 @@ export const STAGES = [
       reward: {
         log: 'Room over kelvin stayed the same.',
         title: 'Using Charles\'s Law',
-        body: 'Room divided by kelvin is the same at every setting, about 0.081 L per K, so 600 K fills about 49 L. Always turn °C into kelvin before comparing temperatures: the Celsius figures would have given nearly 300 L.',
+        body: 'Room divided by kelvin is the same at every setting, about 0.081 L per K, so 600 K fills about 49 L. Always turn °C into kelvin before comparing temperatures: the Celsius figures would have given nearly 300 L.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const c = COMBINED;
+    const plate = plaqueFixture('plate', 'Sealed gas', { x: 32, y: 33 }, [`Start: ${c.P} kPa, ${c.V1} L, ${c.C1} °C`, `End: ${c.V2} L, ${c.C2} °C`, 'Gas in: unchanged'], { w: 52 });
+    return {
+      title: 'Combined Gas Law',
+      prompt: 'Lay the card for the gauge reading after the gas is squeezed and heated as the plate says.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(COMBINED_CARDS),
+        fixtures: [plate],
+        zones: { slots: [answerSlot('Final gauge')] }
+      }),
+      hints: [
+        'Read the start and end figures from the plate, then lay a card in the slot.',
+        'Find how much the squeeze multiplies the gauge, then how much the heating multiplies it.',
+        'Multiply the starting gauge by both factors, with the temperatures in kelvin.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, COMBINED_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = combinedP();
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'The final gauge is lower than that.' : 'The final gauge is higher than that.' };
+      },
+      reward: {
+        log: 'Squeezing and heating multiply the gauge.',
+        title: 'Combined Gas Law',
+        body: 'For a fixed amount of gas, P₁V₁ ÷ T₁ = P₂V₂ ÷ T₂ with T in kelvin. Here the squeeze triples the gauge and heating from 300 K to 600 K doubles it: 100 × 3 × 2 = 600 kPa.',
         last: true
       }
     };
@@ -278,7 +321,8 @@ const NOTES = {
   3: ['Record each setting, lay the straightedge,', 'then set the marker.'],
   4: ['Place a card in the slot.'],
   5: ['Turn the Heater dial and Record,', 'then place a card in the slot.'],
-  6: ['Turn the Heater dial,', 'then place a card in the slot.']
+  6: ['Turn the Heater dial,', 'then place a card in the slot.'],
+  7: ['Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -367,7 +411,8 @@ export const SOLUTIONS = [
     { lay: { kind: 'straightedge', through: [0, 3] } }, dial('zero', 'value', -270)],
   [put('sixth', 'slot:predict')],
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, put('sixth', 'slot:show')],
-  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), put('a', 'slot:answer')]
+  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), put('a', 'slot:answer')],
+  [put('a', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -377,7 +422,8 @@ export const MISSES = [
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 5), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, dial('zero', 'value', -100)],
   [],
   [dial(RIG, 'temp', 3), put('half', 'slot:show')],
-  [dial(RIG, 'temp', 4), put('b', 'slot:answer')]
+  [dial(RIG, 'temp', 4), put('b', 'slot:answer')],
+  [put('b', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

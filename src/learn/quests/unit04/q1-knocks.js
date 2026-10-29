@@ -15,6 +15,7 @@
  *   4  the piston stops at 3 L: what does the gauge read at 1.5 L  -> Using Boyle's law (a figure worked out from the bench)
  *   5  heat the gas, rank four snapshots of its speeds             -> A Spread of Speeds
  *   6  a light and a heavy gas at one temperature                  -> Kinetic Energy, Kinetic Molecular Theory
+ *   7  a mercury U-tube: the gas pressure in atmospheres             -> Reading a Manometer (a figure worked out from a picture)
  *
  * (Cut as repeats: the three-scale unit conversion, the line carried to absolute zero (now earned on bench two, where the same line is
  * drawn for room against heat), the heat-until-fast target, and the closing statement-marking.)
@@ -30,11 +31,11 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  gasTable, rig, box, chip, histCard, boxRead, rigAt, cylRead, whereIs, speedBins, toKelvin
+  gasTable, rig, box, chip, histCard, plaqueFixture, boxRead, rigAt, cylRead, whereIs, speedBins, toKelvin
 } from '../../table/kits/gas.js';
 import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bpressure\b/i, introducedAt: 2 },
@@ -44,6 +45,12 @@ export const VOCABULARY = [
   { term: /\bkinetic energy\b/i, introducedAt: 6 },
   { term: /\bkinetic molecular theory\b/i, introducedAt: 6 }
 ];
+
+/** Stage 7: a gas on a mercury U-tube open to the air. The cards: the answer, the column taken off the air, the column alone and the unconverted mmHg. */
+export const MANO = { air: 760, h: 190 };
+export const MANO_CARDS = [['a', '1.25 atm', 1.25], ['b', '0.75 atm', 0.75], ['c', '0.25 atm', 0.25], ['d', '950 atm', 950]];
+/** The gas pressure of stage 7 in atmospheres: the air plus the extra height of mercury on the open side, over 760 mmHg to the atmosphere. */
+export const manoAtm = (m = MANO) => (m.air + m.h) / 760;
 
 /** Mole, particle and the other words Tallow earned are plain here. */
 export const BUILDS_ON = ['unit01/q6-weigh'];
@@ -292,7 +299,39 @@ export const STAGES = [
       reward: {
         log: 'The same energy, a different speed.',
         title: 'Kinetic Energy',
-        body: 'The two gases carry the same average kinetic energy when they share a temperature, though helium\'s particles move about three times faster. Kinetic molecular theory takes temperature as the average kinetic energy of the particles, whatever their mass.',
+        body: 'The two gases carry the same average kinetic energy when they share a temperature, though helium\'s particles move about three times faster. Kinetic molecular theory takes temperature as the average kinetic energy of the particles, whatever their mass.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Mercury gauge', { x: 36, y: 32 }, [`Air: ${MANO.air} mmHg`, `1 atm = 760 mmHg`], { w: 70, manometer: { h: MANO.h } });
+    return {
+      title: 'Reading a Manometer',
+      prompt: 'Lay the card for the gas pressure, in atmospheres, from the mercury levels on the plate.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(MANO_CARDS),
+        fixtures: [plate],
+        zones: { slots: [answerSlot('Gas pressure')] }
+      }),
+      hints: [
+        'Read the two levels and the air pressure from the plate, then lay a card in the slot.',
+        'Ask which side of the tube the mercury is pushed up on, and what that says about the gas against the air.',
+        'Add or subtract the height difference in mmHg from the air pressure, then divide by 760 mmHg per atmosphere.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, MANO_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = manoAtm();
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'The gas pushes less hard than that.' : 'The gas pushes harder than that.' };
+      },
+      reward: {
+        log: 'The column is the gas against the air.',
+        title: 'Reading a Manometer',
+        body: 'The mercury stands 190 mm higher on the open side, so the gas pushes 190 mmHg harder than the air: 760 + 190 = 950 mmHg, which is 950 ÷ 760 = 1.25 atm. A pressure in mmHg is the height of mercury it holds up.',
         last: true
       }
     };
@@ -306,7 +345,8 @@ const NOTES = {
   3: ['Turn the Piston dial.'],
   4: ['Turn the Piston dial,', 'then place a card in the slot.'],
   5: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
-  6: ['Turn Holder 6\'s Heater dial.']
+  6: ['Turn Holder 6\'s Heater dial.'],
+  7: ['Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -396,7 +436,8 @@ export const SOLUTIONS = [
   [dial(RIG, 'volume', 1), dial(RIG, 'volume', 5)],
   [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), put('a', 'slot:answer')],
   [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
-  [dial('rb', 'temp', 3)]
+  [dial('rb', 'temp', 3)],
+  [put('a', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -406,7 +447,8 @@ export const MISSES = [
   [dial(RIG, 'volume', 3)],
   [dial(RIG, 'volume', 6), put('b', 'slot:answer')],
   [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
-  [dial('rb', 'temp', 4)]
+  [dial('rb', 'temp', 4)],
+  [put('b', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

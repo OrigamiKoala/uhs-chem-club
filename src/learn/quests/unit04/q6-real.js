@@ -8,12 +8,12 @@
  * THE CLICK. Players treat the gas law as exact: squeeze helium to a hundredth of its room and the gauge must read a hundred times
  * more. Stage 1 asks for that guess (a predict stage, no instrument). Stage 2 squeezes helium as far as the piston goes, with the
  * particles drawn at the share of the room they truly take: the crowd fills the glass, and the gauge reads MORE than the law says.
- * The particles are not points. Stage 3 sorts four gases by which side of the law they read on (cooled gases read below it), and
+ * The particles are not points. Stage 3 warms a cramped cold gas until the pull between particles and the room they fill cancel, and
  * stage 4 ranks cold gases by how far they stray, with the plant's own record of when each turns liquid as new evidence.
  *
  *   1  PREDICT: helium squeezed to a hundredth of its room, against the gas law
  *   2  TEST: squeeze it all the way, lay the card for the gauge        -> Particles Take Room
- *   3  four cylinders: above, on or below the law                      -> Ideal Gas, Real Gas
+ *   3  warm carbon dioxide until its gauge matches the law              -> Ideal Gas, Real Gas
  *   4  rank cold gases by how far each strays                          -> Strong Pulls Stray Furthest
  *
  * (Cut as past the idea or repeated: the compression-factor readings and the two corrections in kilopascals, the van der Waals
@@ -28,8 +28,8 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, rig, chip, stmt, whereIs, cylRead, rigAt, GASES } from '../../table/kits/gas.js';
-import { widget, put, dial, sort, cardIn, predictStage, youPredicted, guessOf } from './_shared.js';
+import { gasTable, rig, chip, stmt, cylRead, rigAt, GASES } from '../../table/kits/gas.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf } from './_shared.js';
 
 export const meta = { stageCount: 4 };
 
@@ -54,6 +54,9 @@ const RIG = 'rig';
 
 /** The piston's settings for stage 2 (litres): a thousand-fold squeeze in six steps. */
 export const SQUEEZE = [24.6, 2.5, 0.5, 0.2, 0.1, 0.06];
+/** Stage 3: carbon dioxide in a small room, and the heater's settings (kelvin): the gauge crosses the gas law between the third and fifth. */
+export const HOLD_V = 0.5;
+export const HOT = [250, 400, 600, 900, 1500];
 /** The cold settings of stage 4 (kelvin). */
 export const COLD = [200, 220, 240];
 
@@ -67,15 +70,6 @@ export function sideOf(q) {
   const ratio = q.ideal > 0 ? q.P / q.ideal : 1;
   return ratio > 1.02 ? 'more' : ratio < 0.98 ? 'less' : 'exact';
 }
-
-/** Stage 3's four cylinders: where each stands, and the tray (above, on or below) the plates put it in. */
-export const CASES = [
-  { id: 'a', gas: 'He', V: 0.1, T: 300 },
-  { id: 'b', gas: 'CO2', V: 0.5, T: 230 },
-  { id: 'c', gas: 'N2', V: 24.6, T: 300 },
-  { id: 'd', gas: 'NH3', V: 0.5, T: 250 }
-];
-const TRAY_OF = { more: 'above', exact: 'on', less: 'below' };
 
 /* ------------------------------------------------------------------
    THE FOUR STAGES
@@ -141,38 +135,32 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const mk = (c, at) => rig(`r${c.id}`, at, {
-      cyls: [cyl(c.id, `Holder ${c.id.toUpperCase()}`, c.gas, { V: c.V, T: c.T, hold: 'V' })], vmax: 24.6, compact: true, w: 44, trueSize: true,
-      title: `Holder ${c.id.toUpperCase()}  ${GASES[c.gas].sym}, ${c.V} L, ${c.T} K`,
-      show: { volume: false, temperature: false, amount: false, ideal: true }
+    const r = rig(RIG, { x: 36, y: 30 }, {
+      cyls: [cyl('a', 'Holder A', 'CO2', { V: HOLD_V, hold: 'V' })], temps: HOT, tempList: 'K', tempStart: 1, vmax: 24.6, w: 62, trueSize: true,
+      title: `Holder A  ${GASES.CO2.sym}, ${HOLD_V} L`, show: { temperature: false, amount: false, volume: false, ideal: true }
     });
-    const tray = (id, label, y) => ({ id, label, at: { x: 133, y }, size: { w: 30, h: 14 }, cell: 17 });
     return {
       title: 'Deviations from Ideal Behavior',
-      prompt: 'Sort each cylinder by whether its gauge reads above, on or below what the gas law says.',
+      prompt: 'Set the heater until the gauge matches the gas law figure printed with it.',
       widget,
-      table: gasTable({
-        pieces: CASES.map((c, i) => chip(c.id, `HOLDER ${c.id.toUpperCase()}`, { x: 106, y: 10 + i * 14 })),
-        fixtures: CASES.map((c, i) => mk(c, { x: 25 + (i % 2) * 48, y: 16.2 + Math.floor(i / 2) * 31.6 })),
-        zones: { trays: [tray('above', 'Reads above the law', 11), tray('on', 'Reads on the law', 31), tray('below', 'Reads below the law', 51)] }
-      }),
+      table: gasTable({ fixtures: [r] }),
       hints: [
-        'Drag each chip into a tray.',
-        'Compare each holder\'s gauge with the gas law figure printed under it.',
-        'Look at how much room each holder\'s gas has and how cold it is, and compare that with the holder that reads on the law.'
+        'Turn the Heater dial.',
+        'Compare the gauge with the gas law figure at each setting, and note which side of it the gauge is on.',
+        'The gauge sits below the figure at one end of the dial and above it at the other, so look between those settings.'
       ],
       check(state) {
         const t = state.table;
-        if (!CASES.every(c => ['above', 'on', 'below'].includes(whereIs(t, c.id)))) return { ok: false, notYet: true, msg: 'Place every cylinder in a tray.' };
-        const side = c => TRAY_OF[sideOf(cylRead(t, `r${c.id}`, c.id))];
-        const bad = CASES.filter(c => whereIs(t, c.id) !== side(c));
-        if (bad.length) return { ok: false, msg: `Holder ${bad[0].id.toUpperCase()}'s gauge does not match its tray.` };
-        return { ok: true };
+        const q = cylRead(t, RIG, 0);
+        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Heater dial.' };
+        const side = sideOf(q);
+        if (side === 'exact') return { ok: true };
+        return { ok: false, msg: side === 'more' ? 'The gauge reads above the gas law figure.' : 'The gauge reads below the gas law figure.' };
       },
       reward: {
-        log: 'Compressed gases read above, cold gases below.',
+        log: 'Cold, the gauge reads below the law; hot and cramped, above.',
         title: 'Ideal Gas and Real Gas',
-        body: 'A gas that strictly follows the gas law is an ideal gas. Real gases deviate under extreme conditions: reading above the law when compressed because particles take up space, and below when cooled because intermolecular forces pull them together.'
+        body: 'A gas that always reads on the gas law is an ideal gas; a real gas strays from it. Cold, the pulls between particles hold the gauge below the law, and in a small room the space the particles fill pushes it above. Near 900 K the two effects cancel.'
       }
     };
   })(),
@@ -225,7 +213,7 @@ export const STAGES = [
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn the Piston dial,', 'then place a card in the slot.'],
-  3: ['Drag each chip into a tray.'],
+  3: ['Turn the Heater dial.'],
   4: ['Turn the Heater dial,', 'then arrange the chips on the rail.']
 };
 applyNotes(STAGES, NOTES);
@@ -311,7 +299,7 @@ export const PRACTICE = [
 export const SOLUTIONS = [
   [put('exact', 'slot:predict')],
   [dial(RIG, 'volume', 6), put('more', 'slot:show')],
-  [...sort({ a: 'above', b: 'below', c: 'on', d: 'below' })],
+  [dial(RIG, 'temp', 4)],
   [{ fetch: 'drawoff' }, dial(RIG, 'temp', 1), dial(RIG, 'temp', 3), put('b', 'rail:0'), put('a', 'rail:1'), put('c', 'rail:2')]
 ];
 
@@ -319,7 +307,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [],
   [dial(RIG, 'volume', 6), put('exact', 'slot:show')],
-  [...sort({ a: 'on', b: 'below', c: 'on', d: 'below' })],
+  [dial(RIG, 'temp', 2)],
   [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2')]
 ];
 

@@ -17,6 +17,7 @@
  *   5  how many moles a tank's plate says it holds                       -> Using the Ideal Gas Law (a figure worked out)
  *   6  which gas fills a sealed tank, from its plate and its mass        -> Molar Mass From a Tank
  *   7  a plate in atmospheres and degrees C: the moles, with units checked -> Units in the Gas Law
+ *   8  the density of a gas from its gauge, kelvin and molar mass         -> Gas Density (d = PM / RT)
  *
  * (Cut as repeats or as arithmetic past the idea: the second gas constant for a gauge in atmospheres, naming a gas from its weight, the
  * density ranking, and the pellet of limestone, which were the same counting at AP depth.)
@@ -29,7 +30,7 @@ import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, plaqueFixture, GASES, R } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bmolar volume\b/i, introducedAt: 2 },
@@ -81,6 +82,9 @@ export const GAS_CARDS = [['n2', 'Nitrogen, 28 g/mol', 'N2'], ['o2', 'Oxygen, 32
 /** Stage 7: a plate in atmospheres and degrees C, R in atmospheres, and the figures to lay: the moles, the Celsius-as-kelvin slip, the kilopascal R slip, and a mixed-up product. */
 export const ATM_PLATE = { P: 2.5, V: 5, TC: 27 };
 export const R_ATM = 0.0821;
+/** Stage 8: the density of a gas from its plate. The cards: the answer, moles per litre (the unit slip), a factor of ten and the upside-down quotient. */
+export const DENSE = { gas: 'CO2', P: 100, T: 300 };
+export const DENSE_CARDS = [['a', '1.8 g/L', 1.8], ['b', '0.040 g/L', 0.04], ['c', '18 g/L', 18], ['d', '0.57 g/L', 0.57]];
 export const UNIT_CARDS = [['a', '0.51 mol', 0.51], ['b', '5.6 mol', 5.6], ['c', '0.0050 mol', 0.005], ['d', '1.5 mol', 1.5]];
 
 /* ------------------------------------------------------------------
@@ -312,12 +316,50 @@ export const STAGES = [
       reward: {
         log: 'Every figure in the gas constant\'s units.',
         title: 'Units in the Gas Law',
-        body: 'With R = 0.0821 L·atm per mol·K, the gauge must be in atm, the room in L and the temperature in kelvin: n = (2.5 × 5) ÷ (0.0821 × 300) = 0.51 mol. Using 27 instead of 300, or the kilopascal R, gives an answer ten times too large or a hundred times too small.',
+        body: 'With R = 0.0821 L·atm per mol·K, the gauge must be in atm, the room in L and the temperature in kelvin: n = (2.5 × 5) ÷ (0.0821 × 300) = 0.51 mol. Using 27 instead of 300, or the kilopascal R, gives an answer ten times too large or a hundred times too small.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const M = GASES[DENSE.gas].M;
+    const plate = plaqueFixture('plate', 'Tank Z', { x: 32, y: 33 }, [`Gas: carbon dioxide, ${M.toFixed(1)} g/mol`, `Gauge: ${DENSE.P} kPa`, `Temperature: ${DENSE.T} K`], { w: 52 });
+    return {
+      title: 'Gas Density',
+      prompt: 'Lay the card for how many grams of gas fill each litre of Tank Z.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(DENSE_CARDS),
+        fixtures: [plate],
+        zones: { slots: [answerSlot('Grams per litre')] }
+      }),
+      hints: [
+        'Read the figures from the plate, then lay a card in the slot.',
+        'Find the moles in each litre first, then the mass those moles weigh.',
+        'Multiply the gauge by the molar mass, then divide by the gas constant times the kelvin temperature.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, DENSE_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = densityOf();
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'A litre of this gas weighs less than that.' : 'A litre of this gas weighs more than that.' };
+      },
+      reward: {
+        log: 'A litre weighs its moles times the molar mass.',
+        title: 'Gas Density',
+        body: 'Each litre holds P ÷ RT moles, so it weighs d = PM ÷ RT: (100 × 44.0) ÷ (8.31 × 300) = 1.8 g/L. At the same gauge and temperature, a heavier gas is denser.',
         last: true
       }
     };
   })()
 ];
+
+/** The density of stage 8's gas in grams per litre: moles per litre, P over RT, times the molar mass. */
+export function densityOf(d = DENSE) {
+  return ((d.P / (R * d.T)) * GASES[d.gas].M);
+}
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
@@ -326,7 +368,8 @@ const NOTES = {
   4: ['Record readings, lay the straightedge,', 'then place a card in the slot.'],
   5: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
   6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
-  7: ['R = 0.0821 L·atm per mol·K.', 'Place a card in the slot.']
+  7: ['R = 0.0821 L·atm per mol·K.', 'Place a card in the slot.'],
+  8: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -415,6 +458,7 @@ export const SOLUTIONS = [
   [dial(RIG, 'temp', 1), dial(RIG, 'amount', 1), { run: RIG }, dial(RIG, 'temp', 3), dial(RIG, 'amount', 2), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, put('n831', 'slot:answer')],
   [put('a', 'slot:answer')],
   [put('co2', 'slot:answer')],
+  [put('a', 'slot:answer')],
   [put('a', 'slot:answer')]
 ];
 
@@ -426,6 +470,7 @@ export const MISSES = [
   [dial(RIG, 'temp', 1), { run: RIG }, put('n83', 'slot:answer')],
   [put('c', 'slot:answer')],
   [put('ar', 'slot:answer')],
+  [put('b', 'slot:answer')],
   [put('b', 'slot:answer')]
 ];
 

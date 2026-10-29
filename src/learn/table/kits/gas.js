@@ -335,8 +335,9 @@ export function rings(id, at, { atms, start = 1, w = 56, h = 32 } = {}) {
 }
 
 /** A printed reference: lines of text on a plate. */
-export function plaqueFixture(id, label, at, lines, { w = 44 } = {}) {
-  return { id, kind: 'plaque', label, at: { ...at }, size: { w, h: 8.4 + lines.length * 3.8 }, noRun: true, dials: {}, props: { lines: lines.slice() } };
+export function plaqueFixture(id, label, at, lines, { w = 44, manometer = null } = {}) {
+  const h = Math.max(8.4 + lines.length * 3.8, manometer ? 32 : 0);
+  return { id, kind: 'plaque', label, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { lines: lines.slice(), ...(manometer ? { manometer } : {}) } };
 }
 
 /** A number to set: a marker the player sets to what they have read. */
