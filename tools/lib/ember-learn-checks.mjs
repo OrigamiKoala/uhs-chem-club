@@ -401,7 +401,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(dGs.filter(r => r.dG < 0).length >= 2, `${q} stage 2: only one setting reads below zero`);
       same(SALT_FIRST, 250, `${q} stage 2 (the coldest setting below zero)`);
       holds(TD.crossingTemperature(SALT.dH, SALT.dS) < SALT_FIRST && TD.crossingTemperature(SALT.dH, SALT.dS) > SALT.Ts[1], `${q} stage 2: the crossing is not between two settings`);
-      near(HK.markerRead(done(e7, 1), 'T'), e7.CHECKS.T_SALT, 12, `${q} stage 2 (the marker)`);
+      near(Number(done(e7, 1).entries.T), e7.CHECKS.T_SALT, 12, `${q} stage 2 (the figure typed)`);
     }
     {
       const t = start(e7, 2);
@@ -413,10 +413,10 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     }
     {
       // ΔG at 298 K from ΔH and ΔS in different units: the right option is the one the units agree on, and every slip is a real slip.
-      const { HABER, HABER_OPTIONS, HABER_RIGHT } = e7.CHECKS;
+      const { HABER } = e7.CHECKS;
       const dG = HABER.dH - HABER.T * HABER.dS / 1000;
       near(dG, -32.7, 0.1, `${q} stage 4 (ΔG at 298 K)`);
-      same(HABER_OPTIONS[HABER_RIGHT - 1], '−32.7 kJ', `${q} stage 4 (the option graded)`);
+      near(Number(done(e7, 3).entries.dg), dG, 0.1, `${q} stage 4 (the figure typed)`);
       near(HABER.dH + HABER.T * HABER.dS / 1000, -151.3, 0.1, `${q} stage 4 (the sign slip)`);
       near(HABER.dH - HABER.T * HABER.dS, 59210, 1, `${q} stage 4 (the unit slip)`);
       same(e7.STAGES[3].check(e7.stateFor(3, e7.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
@@ -424,7 +424,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     }
     {
       near(T_ICE, 273, 1, `${q} stage 5 (the melting point)`);
-      near(HK.markerRead(done(e7, 4), 'T'), T_ICE, 2, `${q} stage 5 (the marker)`);
+      near(Number(done(e7, 4).entries.T), T_ICE, 2, `${q} stage 5 (the figure typed)`);
       holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 4), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 5: the dial has no setting at the melting point`);
     }
   }
@@ -446,7 +446,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(picked(t), 824.2, 0.05, `${q} phase 3 (the number set)`);
     }
     near(picked(done(eb, 3)), 2 * TD.FORMATION_TABLE['H2(g)'].S0 + TD.FORMATION_TABLE['O2(g)'].S0 - 2 * TD.FORMATION_TABLE['H2O(g)'].S0, 0.05, `${q} phase 4 (the entropy change of splitting steam)`);
-    near(HK.markerRead(done(eb, 4), 'T'), TD.crossingTemperature(176, 160), 1e-9, `${q} phase 5 (the seal)`);
+    near(Number(done(eb, 4).entries.T), TD.crossingTemperature(176, 160), 15, `${q} phase 5 (the seal)`);
     for (let i = 0; i < 5; i++) same((eb.STAGES[i].foes || []).length, 1, `${q} phase ${i + 1} (its foes)`);
     // The five phases are five different tools, one decision each, and none asks for a prediction.
     const kinds = eb.STAGES.map((st, i) => Object.values(start(eb, i).fixtures).map(f => f.kind).filter(k => !['plaque', 'marker', 'selector'].includes(k)).sort().join('+'));

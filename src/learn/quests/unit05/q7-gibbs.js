@@ -18,11 +18,11 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, note, gCard, plotFixture, markerFixture, markerRead, plaqueFixture, selectorFixture, dialAt, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
+  heatTable, note, gCard, plotFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 5 };
@@ -52,9 +52,6 @@ const SALT_FIRST = SALT.Ts.find(T => gibbsFreeEnergy(SALT.dH, SALT.dS, T) < 0);
 // Stage 4: ammonia synthesis gives out 92 kJ per mole of reaction and loses 199 J/(mol·K) of spreading; ΔG at 298 K is -32.7 kJ.
 const HABER = { dH: -92, dS: -199, T: 298 };
 const HABER_DG = gibbsFreeEnergy(HABER.dH, HABER.dS, HABER.T);
-// The four answers on the dial: the right one first, then the slips a student makes.
-const HABER_OPTIONS = ['−92 kJ', '+59,210 kJ', '−32.7 kJ', '−151 kJ', '—'];
-const HABER_RIGHT = 3;
 // Stage 5: melting ice takes in 6.01 kJ per mole and gains 22.0 J/(mol·K).
 const ICE = { dH: 6.01, dS: 22.0, Ts: [250, 260, 273, 285, 300] };
 const T_ICE = crossingTemperature(ICE.dH, ICE.dS);
@@ -104,22 +101,22 @@ export const STAGES = [
   {
     id: 's2-plot',
     title: 'Heat Against Spreading',
-    prompt: 'Set the marker to the temperature in kelvin at which the salt starts to dissolve on its own.',
+    prompt: 'Type the temperature in kelvin at which the salt starts to dissolve on its own.',
+    entry: { id: 'T', label: 'Starts to dissolve at', unit: 'K' },
     widget,
     table: heatTable({
       fixtures: [
-        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Cold-pack salt in water', w: 64 }),
-        markerFixture('T', 'Starts to dissolve at', { x: 118, y: 30 }, { min: 150, max: 350, step: 5, start: 150, unit: 'K', w: 52 })
+        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Cold-pack salt in water', w: 64 })
       ]
     }),
     hints: [
-      'Use the "Temperature" dial, the line printed under the plot and the marker.',
+      'Use the "Temperature" dial and the line printed under the plot.',
       'Compare the net at two neighbouring settings, one above zero and one below.',
       'The net moves steadily between two settings, so the zero lies in proportion between them.'
     ],
     check(state) {
-      const v = markerRead(state.table, 'T');
-      if (v === 150) return { ok: false, notYet: true, msg: 'Set the marker to the temperature.' };
+      const v = entryNumber(state.table, 'T');
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in kelvin.' };
       if (Math.abs(v - T_SALT) <= 12) return { ok: true };
       return { ok: false, msg: `At ${v} K the net reads ${fixed(gibbsFreeEnergy(SALT.dH, SALT.dS, v), 1, true)} kJ.` };
     },
@@ -177,7 +174,8 @@ export const STAGES = [
   {
     id: 's4-number',
     title: 'Free Energy at 298 K',
-    prompt: 'Set the answer to the free energy change ΔG of this reaction at 298 K.',
+    prompt: 'Type the free energy change ΔG of this reaction at 298 K, in kJ.',
+    entry: { id: 'dg', label: 'ΔG at 298 K', unit: 'kJ' },
     widget,
     table: heatTable({
       fixtures: [
@@ -186,22 +184,22 @@ export const STAGES = [
           'ΔS = −199 J/(mol·K)',
           'T = 298 K',
           'ΔG = ΔH − TΔS'
-        ], { w: 70 }),
-        selectorFixture('answer', 'ΔG at 298 K', { x: 116, y: 46 }, { options: HABER_OPTIONS, start: HABER_OPTIONS.length, w: 52 })
+        ], { w: 70 })
       ]
     }),
     hints: [
-      'Use the plate of facts and the answer dial.',
+      'Use the plate of facts.',
       'Compare the size of ΔH in kJ with the size of TΔS, which carries the units of ΔS.',
       'Work out TΔS in kJ, then subtract it from ΔH, keeping the sign of ΔS.'
     ],
     check(state) {
-      const k = dialAt(state.table, 'answer', 'value');
-      if (k === HABER_RIGHT) return { ok: true };
-      if (k === HABER_OPTIONS.length) return { ok: false, notYet: true, msg: 'Set the figure you worked out.' };
-      if (k === 4) return { ok: false, msg: 'The plate gives ΔS as a loss, and that figure makes the reaction run harder than its heat alone.' };
-      if (k === 1) return { ok: false, msg: 'That is ΔH alone, and the plate also gives a ΔS and a temperature.' };
-      return { ok: false, msg: 'That figure is about 640 times the ΔH on the plate: kJ and J are not the same size.' };
+      const v = entryNumber(state.table, 'dg');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
+      if (Math.abs(v - HABER_DG) <= 0.6) return { ok: true };
+      if (Math.abs(v - (HABER.dH + (HABER.T * HABER.dS) / 1000)) <= 2) return { ok: false, msg: 'The plate gives ΔS as a loss, and that figure makes the reaction run harder than its heat alone.' };
+      if (Math.abs(v - HABER.dH) <= 2) return { ok: false, msg: 'That is ΔH alone, and the plate also gives a ΔS and a temperature.' };
+      if (Math.abs(v) > 5000) return { ok: false, msg: `That figure is about ${Math.round(Math.abs(v / HABER.dH))} times the ΔH on the plate: kJ and J are not the same size.` };
+      return { ok: false, msg: `${fixed(v, 1)} kJ needs TΔS to be ${fixed(HABER.dH - v, 1)} kJ, and 298 K times the plate's ΔS gives a different figure.` };
     },
     reward: {
       log: 'ΔG at 298 K came to −32.7 kJ.',
@@ -214,24 +212,24 @@ export const STAGES = [
   {
     id: 's5-ice',
     title: 'Where Ice Starts to Melt',
-    prompt: 'Set the marker to the temperature in kelvin at which ice starts to melt.',
+    prompt: 'Type the temperature in kelvin at which ice starts to melt.',
+    entry: { id: 'T', label: 'Ice starts to melt at', unit: 'K' },
     widget,
     table: heatTable({
       fixtures: [
         plotFixture('plot', { x: 44, y: 30 }, { dH: ICE.dH, dS: ICE.dS, Ts: ICE.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Melting ice', w: 64 }),
-        plaqueFixture('facts', 'Melting ice', { x: 118, y: 16 }, ['ΔH = +6.01 kJ', 'ΔS = +22.0 J/(mol·K)', 'ΔG = ΔH − TΔS'], { w: 52 }),
-        markerFixture('T', 'Ice starts to melt at', { x: 118, y: 44 }, { min: 223, max: 323, step: 10, start: 223, unit: 'K', w: 52 })
+        plaqueFixture('facts', 'Melting ice', { x: 118, y: 16 }, ['ΔH = +6.01 kJ', 'ΔS = +22.0 J/(mol·K)', 'ΔG = ΔH − TΔS'], { w: 52 })
       ]
     }),
     hints: [
-      'Use the "Temperature" dial and the marker.',
+      'Use the plate of facts and the "Temperature" dial.',
       'Work out the temperature from the plate, then turn the dial to that setting to check the net there.',
       'At the melting point ΔG is zero, so ΔH and TΔS are equal once ΔS is in kJ.'
     ],
     check(state) {
       const t = state.table;
-      const v = markerRead(t, 'T');
-      if (v === 223) return { ok: false, notYet: true, msg: 'Set the marker to the temperature.' };
+      const v = entryNumber(t, 'T');
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in kelvin.' };
       if (Math.abs(v - T_ICE) <= 2) return { ok: true };
       return { ok: false, msg: `At ${v} K the net balance reads ${fixed(gibbsFreeEnergy(ICE.dH, ICE.dS, v), 2, true)} kJ.` };
     },
@@ -246,10 +244,10 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
-  2: ['Turn the "Temperature" dial.'],
+  2: ['Turn the "Temperature" dial, then type your answer in the field at the bottom.'],
   3: ['Drag each card into a tray.'],
-  4: ['Turn the answer dial.'],
-  5: ['Turn the "Temperature" dial; set the marker.']
+  4: ['Type your answer in the field at the bottom.'],
+  5: ['Work it out, then type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -336,19 +334,19 @@ const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tr
 
 export const SOLUTIONS = [
   [put('on', 'slot:guess')],
-  [dial('T', 'value', 240)],
+  [{ type: { entry: 'T', value: '240' } }],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
-  [dial('answer', 'value', HABER_RIGHT)],
-  [dial('plot', 'temp', 3), dial('T', 'value', 273)]
+  [{ type: { entry: 'dg', value: '-32.7' } }],
+  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [dial('T', 'value', 300)],
+  [{ type: { entry: 'T', value: '300' } }],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'low', 'low-t': 'high' })],
-  [dial('answer', 'value', 2)],
-  [dial('plot', 'temp', 5), dial('T', 'value', 303)]
+  [{ type: { entry: 'dg', value: '59210' } }],
+  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }]
 ];
 
 function blankState() { return {}; }
@@ -372,5 +370,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { SALT, SALT_FIRST, T_SALT, ICE, T_ICE, HABER, HABER_DG, HABER_OPTIONS, HABER_RIGHT };
+export const CHECKS = { SALT, SALT_FIRST, T_SALT, ICE, T_ICE, HABER, HABER_DG };
 export { plotRead, plotAt };

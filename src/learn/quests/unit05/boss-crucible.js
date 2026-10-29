@@ -246,13 +246,13 @@ export const STAGES = [
     return {
       id: 'p5-gibbs',
       title: 'Phase 5 · The Seal',
-      prompt: 'Set the marker to the temperature in kelvin at which the free energy reaches zero for the limestone seal.',
+      prompt: 'Type the temperature in kelvin at which the free energy reaches zero for the limestone seal.',
+      entry: { id: 'T', label: 'Free energy is zero at', unit: 'K' },
       widget,
       table: heatTable({
         fixtures: [
           plotFixture('plot', { x: 38, y: 30 }, { dH: 176, dS: 160, Ts: [600, 800, 900, 1000, 1100, 1200, 1400], tempStart: 3, hideCrossing: true, hideTug: true, words: true, title: 'Limestone seal' }),
-          plaqueFixture('ref', 'The reaction', { x: 98, y: 28 }, ['CaCO₃(s) → CaO(s) + CO₂(g)', 'ΔH = +176 kJ', 'ΔS = +160 J/(mol·K)', 'ΔG = ΔH − T × ΔS'], { w: 52 }),
-          markerFixture('T', 'Free energy is zero at', { x: 98, y: 54 }, { min: 700, max: 1500, step: 100, start: 700, unit: 'K', w: 46 })
+          plaqueFixture('ref', 'The reaction', { x: 98, y: 28 }, ['CaCO₃(s) → CaO(s) + CO₂(g)', 'ΔH = +176 kJ', 'ΔS = +160 J/(mol·K)', 'ΔG = ΔH − T × ΔS'], { w: 52 })
         ]
       }),
       foes: CRUCIBLE_FOE,
@@ -262,15 +262,15 @@ export const STAGES = [
         intent: 'The Crucible drives its core up toward the heat at which its limestone seal gives way.'
       },
       hints: [
-        'Use the "Temperature" dial and the marker.',
+        'Use the plate of facts and the "Temperature" dial.',
         'Compare the net the plot prints at each setting, and look for where it changes sign.',
         'The seal gives way where the net is zero, so set the marker at the temperature between the last positive reading and the first negative one.'
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'T');
-        if (v === 700) return { ok: false, notYet: true, msg: 'Set the marker to the temperature.' };
-        if (v === T_SEAL) return { ok: true };
+        const v = entryNumber(t, 'T');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in kelvin.' };
+        if (Math.abs(v - T_SEAL) <= 15) return { ok: true };
         return { ok: false, msg: `At ${v} K the net balance reads ${fixed(gibbsFreeEnergy(176, 160, v), 1, true)} kJ.` };
       },
       ...STAGE_REWARDS[4]
@@ -377,7 +377,7 @@ export const SOLUTIONS = [
   [dial('answer', 'value', 1)],
   [...stack('c1', 'c2'), { flip: 'c2' }, dial('answer', 'value', 1)],
   [dial('answer', 'value', 1)],
-  [dial('plot', 'temp', 5), dial('T', 'value', 1100)]
+  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '1100' } }]
 ];
 
 export const MISSES = [
@@ -385,7 +385,7 @@ export const MISSES = [
   [dial('answer', 'value', 2)],
   [...stack('c1', 'c2'), dial('answer', 'value', 2)],
   [dial('answer', 'value', 2)],
-  [dial('T', 'value', 700 + 100)]
+  [{ type: { entry: 'T', value: '800' } }]
 ];
 
 function blankState() { return {}; }
