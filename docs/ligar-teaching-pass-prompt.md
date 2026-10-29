@@ -33,7 +33,7 @@ A previous agent audited Ligar, fixed operability bugs and rewrote or added thes
 
 ## Ligar-specific traps
 
-- The two-sided `verify` hard-codes stage indices for several Ligar quests in `tools/verify-learn.mjs`; inserting a stage shifts them and the `NOTES` keys in the quest file.
+- `tools/verify-learn.mjs` hard-codes stage indices for several Ligar quests; inserting a stage shifts them and the `NOTES` keys in the quest file.
 - Chart and counts: `src/learn/worlds/unit03-bonding.js` and `PRODUCT.md` (currently 237 stages).
 - A new bench needs a site in `tools/gen-ligar-layout.mjs` and `src/three/world-data/ligar.json`, and `verify:ligar` checks overlap and walkability. Prefer stages.
 - `q7` Arrows tool: a card must be a field card (`molCard(..., { field: true })`) or a dropped tool will not join.
