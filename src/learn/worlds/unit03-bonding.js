@@ -94,7 +94,7 @@ export const UNIT_03 = {
       title: 'Hybridization',
       line: 'Form hybrid orbitals, sigma bonds, and pi bonds.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit03/q8-hybrid.js')
     },

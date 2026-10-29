@@ -2220,11 +2220,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
     // 5. a single bond turns and a double bond does not
     {
-      const t = end(4);
-      same(DOM.twistRead(t, 'tw1').free, planTwist('single').free, 'unit03/q8-hybrid stage 5 (the single bond turns)');
-      same(DOM.twistRead(t, 'tw2').free, planTwist('double').free, 'unit03/q8-hybrid stage 5 (the double bond holds)');
-      same(DOM.twistRead(t, 'tw1').angle, 90, 'unit03/q8-hybrid stage 5 (ethane\'s far end is a quarter turn round)');
-      same(DOM.twistRead(t, 'tw2').angle, 0, 'unit03/q8-hybrid stage 5 (ethene\'s far end has not moved)');
+      const t = end(5);
+      same(DOM.twistRead(t, 'tw1').free, planTwist('single').free, 'unit03/q8-hybrid stage 6 (the single bond turns)');
+      same(DOM.twistRead(t, 'tw2').free, planTwist('double').free, 'unit03/q8-hybrid stage 6 (the double bond holds)');
+      same(DOM.twistRead(t, 'tw1').angle, 90, 'unit03/q8-hybrid stage 6 (ethane\'s far end is a quarter turn round)');
+      same(DOM.twistRead(t, 'tw2').angle, 0, 'unit03/q8-hybrid stage 6 (ethene\'s far end has not moved)');
     }
   }
 

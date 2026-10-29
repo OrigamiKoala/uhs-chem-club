@@ -38,10 +38,10 @@ import {
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
-  { term: /\brestricted rotation\b/i, introducedAt: 5 },
+  { term: /\brestricted rotation\b/i, introducedAt: 6 },
   { term: /\bsigma\b|\bpi bonds?\b|\bpi\b/i, introducedAt: 4 },
   { term: /\bsp[3³](?!\w)/i, introducedAt: 3 },
   { term: /\bhybrid(?:s|i[sz]ation|i[sz]ed)?\b/i, introducedAt: 3 }
@@ -57,6 +57,14 @@ const GUESSES = [
   ['four', 'carbon takes four hydrogen atoms', ['Four hydrogens', 'carbon has four', 'orbitals']],
   ['three', 'carbon takes three hydrogen atoms', ['Three hydrogens', 'the three p', 'orbitals bond']],
   ['two', 'carbon takes two hydrogen atoms', ['Two hydrogens', 'one for each', 'single electron']]
+];
+
+/** The second prediction, on a new case: which bond lets its far end turn. Kept under its own key. */
+const TWIST_KEY = 'unit03/q8-hybrid:turn';
+const TWIST_GUESSES = [
+  ['both', 'both bonds let the far end turn', ['Both bonds', 'let the far end', 'turn']],
+  ['single', 'only the single bond lets the far end turn', ['Only the single', 'bond lets the', 'far end turn']],
+  ['neither', 'neither bond lets the far end turn', ['Neither bond', 'lets the far', 'end turn']]
 ];
 
 /** Every piece says what it is (an orbital with its electrons, a bowl, a dial named "Far End"), so no key needs a legend. */
@@ -80,7 +88,7 @@ const carbon = (atom, at, ids, o = {}) => [
 const RAIL_Y = 54;
 
 /* ------------------------------------------------------------------
-   THE FIVE STAGES
+   THE NINE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -211,9 +219,28 @@ export const STAGES = [
   },
 
   /* ---------------------------------------------------------------- 5 */
+  predictStage({
+    key: TWIST_KEY,
+    title: 'Which Bond Turns',
+    prompt: 'Which of ethane\'s C–C single bond and ethene\'s C=C double bond lets the far end of the molecule turn?',
+    cards: TWIST_GUESSES,
+    hints: [
+      'Use the three cards and the slot.',
+      'Think about whether the side-by-side overlap of a double bond survives a turn.',
+      'Pick the card that matches your prediction.'
+    ],
+    reward: {
+      title: 'Prediction',
+      body: 'Your prediction is recorded. Turn the far end of each bond on the bench.'
+    }
+  }),
+
+  /* ---------------------------------------------------------------- 6 */
   {
     title: 'Twisting',
-    prompt: 'Find out which of these two bonds lets its far end turn a quarter turn.',
+    get prompt() {
+      return testPrompt(TWIST_KEY, TWIST_GUESSES, 'find out which of these two bonds lets its far end turn a quarter turn.');
+    },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       fixtures: [twist('tw1', { x: 37, y: 32 }, 'single', { label: 'C₂H₆', size: { w: 62, h: 50 } }), twist('tw2', { x: 105, y: 32 }, 'double', { label: 'C₂H₄', size: { w: 62, h: 50 } })]
@@ -232,14 +259,16 @@ export const STAGES = [
       if (!double.tried) return { ok: false, notYet: true, msg: 'Try turning the other bond\'s far end as well.' };
       return { ok: true };
     },
-    reward: {
+    get reward() {
+      return {
       log: 'A single bond turns; a double bond holds.',
       title: 'Restricted Rotation',
-      body: 'A single bond consists of a cylindrically symmetrical sigma bond that permits free rotation. In contrast, rotating a double bond breaks the parallel overlap of pi orbitals, resulting in restricted rotation.'
+      body: verdictLine(TWIST_KEY, 'single') + 'A single bond consists of a cylindrically symmetrical sigma bond that permits free rotation. In contrast, rotating a double bond breaks the parallel overlap of pi orbitals, resulting in restricted rotation.'
+      };
     }
   },
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 7 */
   {
     title: 'Counting Sigma and Pi',
     prompt: 'Set the markers to the number of sigma bonds and the number of pi bonds in hydrogen cyanide, HCN.',
@@ -267,9 +296,82 @@ export const STAGES = [
       log: 'Two sigma bonds and two pi bonds.',
       title: 'Counting Sigma and Pi',
       body: 'Every single, double or triple bond holds one sigma bond; each further shared pair is a pi bond. HCN has a single C–H bond and a C≡N triple bond: 1 + 1 = 2 sigma bonds, and 2 pi bonds in the triple bond.',
-      last: true
     }
-  }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'B' });
+    return {
+      title: 'Three Lobes',
+      prompt: 'Mix boron\'s orbitals in the bowl to make one lobe for each fluorine atom on the card.',
+      widget: { type: 'table', label: 'The bench' },
+      table: domainTable({
+        pieces: [
+          orb('os', 's', 'b', { x: 14, y: RAIL_Y }, { e: 1, label: 's' }), orb('opx', 'p', 'b', { x: 34, y: RAIL_Y }, { e: 1, axis: 'x', label: 'px' }),
+          orb('opy', 'p', 'b', { x: 54, y: RAIL_Y }, { e: 1, axis: 'y', label: 'py' }), orb('opz', 'p', 'b', { x: 74, y: RAIL_Y }, { e: 0, axis: 'z', label: 'pz' }),
+          molCard('ref', 'BF3', { x: 126, y: 24 }, { show: ['arms'] })
+        ],
+        zones: { containers: [mx.bowl] },
+        fixtures: [mx.fixture]
+      }),
+      hints: [
+        'Use the four orbitals and the mixing bowl.',
+        'Count the arms on the card, then count the lobes the bowl makes.',
+        'The bowl makes as many lobes as the orbitals put into it; an orbital left out stays as it is.'
+      ],
+      check(state) {
+        const r = bowlRead(state.table, 'mx');
+        if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the bowl.' };
+        const want = molRead(state.table.pieces.ref).domains;
+        if (r.lobes === want) return { ok: true };
+        return { ok: false, msg: 'The lobes that come out are not as many as the arms on the card.' };
+      },
+      reward: {
+        log: 'An s orbital and two p orbitals make three.',
+        title: 'sp² Hybrid Orbitals',
+        body: 'Mixing one s and two p orbitals gives three sp² lobes, 120° apart in one plane, which is the shape of BF₃. The p orbital left out stands upright over the plane and is empty here.',
+        model: { type: 'lobes', n: 3, caption: 'sp² Hybrid Orbitals' }
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 9 */
+  (() => {
+    const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'C' });
+    return {
+      title: 'Two Lobes',
+      prompt: 'Mix carbon\'s orbitals in the bowl to make one lobe for each oxygen atom on the card.',
+      widget: { type: 'table', label: 'The bench' },
+      table: domainTable({
+        pieces: [
+          ...carbon('c', { x: 0, y: 0 }, ['os', 'opx', 'opy', 'opz']).map((p, i) => ({ ...p, at: { x: 14 + i * 20, y: RAIL_Y } })),
+          molCard('ref', 'CO2', { x: 126, y: 24 }, { show: ['arms'] })
+        ],
+        zones: { containers: [mx.bowl] },
+        fixtures: [mx.fixture]
+      }),
+      hints: [
+        'Use the four orbitals and the mixing bowl.',
+        'A double bond is one arm, so count the arms on the card, not the lines.',
+        'Put in as many orbitals as there are arms, one of them the s orbital.'
+      ],
+      check(state) {
+        const r = bowlRead(state.table, 'mx');
+        if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the bowl.' };
+        const want = molRead(state.table.pieces.ref).domains;
+        if (r.lobes === want) return { ok: true };
+        return { ok: false, msg: 'The lobes that come out are not as many as the arms on the card.' };
+      },
+      reward: {
+        log: 'An s orbital and one p orbital make two.',
+        title: 'sp Hybrid Orbitals',
+        body: 'Mixing one s and one p orbital gives two sp lobes pointing opposite ways, 180° apart, which is the shape of CO₂. Carbon keeps two p orbitals out of the bowl, and each forms one pi bond with an oxygen.',
+        model: { type: 'lobes', n: 2, caption: 'sp Hybrid Orbitals' },
+        last: true
+      }
+    };
+  })()
 ];
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
@@ -376,8 +478,11 @@ export const SOLUTIONS = [
   [bond('h1', 'cpx'), bond('h2', 'cpy')],
   ['os', 'opx', 'opy', 'opz'].map(id => mix(id, 'mx')),
   [bond('a1', 'b1'), bond('ap', 'bp')],
+  [guess('single')],
   [turn('tw1', 90), turn('tw2', 90)],
-  [{ setDial: { fixture: 'sig', dial: 'value', value: 2 } }, { setDial: { fixture: 'pi', dial: 'value', value: 2 } }]
+  [{ setDial: { fixture: 'sig', dial: 'value', value: 2 } }, { setDial: { fixture: 'pi', dial: 'value', value: 2 } }],
+  ['os', 'opx', 'opy'].map(id => mix(id, 'mx')),
+  ['os', 'opx'].map(id => mix(id, 'mx'))
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -386,8 +491,11 @@ export const MISSES = [
   [bond('h1', 'cpx')],
   [mix('os', 'mx'), mix('opx', 'mx')],
   [bond('a1', 'b1')],
+  [],
   [turn('tw1', 60), turn('tw2', 90)],
-  [{ setDial: { fixture: 'sig', dial: 'value', value: 3 } }, { setDial: { fixture: 'pi', dial: 'value', value: 1 } }]
+  [{ setDial: { fixture: 'sig', dial: 'value', value: 3 } }, { setDial: { fixture: 'pi', dial: 'value', value: 1 } }],
+  [mix('os', 'mx'), mix('opx', 'mx')],
+  [mix('os', 'mx'), mix('opx', 'mx'), mix('opy', 'mx')]
 ];
 
 function blankState() { return {}; }

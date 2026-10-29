@@ -213,7 +213,7 @@ function paintBowl(ctx, f, state, b) {
     return;
   }
   if (!read.held.length) {
-    plateText(ctx, 'NOTHING MIXED', out.x, out.y, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dim });
+    plateText(ctx, 'NOTHING MIXED', out.x, out.y + L * 0.5, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dim });
     return;
   }
   atomDisc(ctx, out.x, out.y, Math.max(4, L * 0.16), f.props.hub || 'C');
