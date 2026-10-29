@@ -78,3 +78,18 @@ Operable / Intuitive / Busywork / Intuition / Accurate. "ok" means no defect fou
 - `q7-pes` stage 4: the chamber is 38 units tall so "Held loosest" and "Held tightest" show; the specimen notes ("10 protons") use the brighter text colour.
 - `q7-pes` stage 2: the holder sat over the Light energy dial's track; it now sits lower when the chamber has an energy dial. Played: dial dragged to 50 MJ/mol, Fire Light, three electrons land on the strip.
 - A full second audit pass over every changed stage was NOT done; each stage touched this run was replayed once after its change, and the rest were only looked at. No browser play of the boss to a solution, of `q3-lines`, `q4-cloud`, `q5-numbers` beyond the screenshots above, or of `q8-trends` 7.
+
+## Fourth round: second pass
+
+Played by hand with real gestures this round: `q2-photon` 6 (a refused figure with its reason, then the right one and the reward); `q7-pes` 6 (a refused count); `q8-trends` 7 (four atoms measured on the Bond Gauge, a wrong rail order refused with the pair that is wrong, the right order and the reward); boss phase 1 (electron dragged to n = 4 then n = 2, "LAST DROP GAVE OUT 486 nm", Submit, the reward card); `q5-numbers` 3 (two up electrons into one box: the second refused).
+
+Fixed:
+- `q5-numbers` 3 (and every rack): the refusal ended "A box takes at most one of each", which stated the very capacity the stage asks the player to find. It now says only that the box already holds an electron pointing that way (`engine/electrons.js`).
+- `q7-pes` 6: the refusal message now says what to look at (the next energy on the plate is not much bigger than the one before it).
+
+Seen, not fixed:
+- Cards laid on a rail cover its end labels and the how-to note (`q8-trends` 7: "Pulls hardest" is hidden by the first card; pitch is tight with four cards).
+- While a drag is under way the camera eases, so a second drag started from a stale screenshot misses; not a defect of the bench.
+- The boss's reward card sits over most of the bench after a stage clears (the camera lifts to the foe).
+
+Still not done: a hand solution of `q3-lines` 2 to 5, `q4-cloud` 2 to 4, `q5-numbers` 4 and 5, `q6-filling` 1 to 5, `q7-pes` 2 to 5, `q9-absorb` 1 to 5 (stage 4's reading and stage 5's first standard only), boss phases 2 to 5. A third pass over the rest was not run.

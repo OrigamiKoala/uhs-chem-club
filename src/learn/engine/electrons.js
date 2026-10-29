@@ -226,7 +226,7 @@ export function placeElectron(rack, rowId, idx, spin) {
   const key = boxKey(rowId, idx);
   const here = rack[key] || '';
   if (here.includes(spin)) {
-    return { refused: `This box already holds an electron pointing ${spin === 'u' ? 'up' : 'down'}. A box takes at most one of each.` };
+    return { refused: `This box already holds an electron pointing ${spin === 'u' ? 'up' : 'down'}.` };
   }
   const next = { ...rack };
   next[key] = (here + spin).split('').sort().reverse().join('');

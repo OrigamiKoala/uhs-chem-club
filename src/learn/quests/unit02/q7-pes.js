@@ -295,7 +295,7 @@ export const STAGES = [
         const v = entryNumber(state.table, 'ans');
         if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a whole number.' };
         if (v === 2) return { ok: true };
-        return { ok: false, msg: 'The energies do not climb steeply at the step that figure implies.' };
+        return { ok: false, msg: 'After that many electrons, the next energy on the plate is not much bigger than the one before it.' };
       },
       reward: {
         log: 'The big jump marks the first electron from a closer shell.',
