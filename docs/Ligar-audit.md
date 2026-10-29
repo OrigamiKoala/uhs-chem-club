@@ -53,3 +53,9 @@ Work after this audit is recorded at the end of this file.
 ## Work log
 
 - **q3-distance, new stage 6 "A Salt Not Yet Heated"** (AP 2.3): rail NaF, NaCl, KCl and MgO by how hard the ions are held, with no hotplate. NaF is the one salt the player never melted, so the printed charges and centre distances are the only evidence. The reward states Coulomb's law as charge product over distance and shows the numbers (1/235, 1/283, 1/319, 4/212; MgO is about five times NaCl, against 3795 and 787 kJ/mol measured). Verified: `verify:learn`, `verify:table`, `verify:story`, `verify:docs`, `verify:ligar`; stage rendered in 3D with no console errors. Not done: the stage still asks for a ranking, not a computed number; a proportional "double the charge" stage and a plot-legibility fix for stage 1 remain.
+
+## Blockers and bugs logged, not fixed
+
+- `src/ui/cinematic.js:105` `fadeAudio` throws `IndexSizeError` (volume 3.1173 outside [0, 1]) during the landing sequence. Not Ligar-specific, not touched.
+- Deep links such as `#/learn/unit03/q1-joins` first redirect to the world (the ship flies there); a page reload on the quest hash lands on the bench. Quests also stay locked until the one before is complete, so auditing a later bench needs the guest profile unlocked (`session.markLearnQuestComplete`).
+- `__LQ_TEST__.runner` plus `runner.loadStage(i)` is the fastest way to open a given stage when auditing.
