@@ -130,9 +130,8 @@ export function buildOrbitalPiece3D(c, p, state) {
   const plaqueH = baseH * 0.65;
   const labelText = p.props.atomLabel ? `${p.props.atomLabel} ${p.label}` : p.label;
   if (c.label) {
-    const labelMesh = c.label(labelText, 128, 48, { dim: false, bg: '#16140f' });
+    const labelMesh = c.label(labelText, plaqueW, plaqueH, { dim: false, bg: '#16140f' });
     if (labelMesh) {
-      labelMesh.scale.set(plaqueW / 0.1, plaqueH / 0.04, 1);
       labelMesh.position.set(0, baseH * 0.5, baseR * 0.88);
       labelMesh.rotation.x = -0.25;
       g.add(labelMesh);
@@ -440,9 +439,8 @@ export function buildMixer3D(f, state, c) {
 
   // Carbon symbol plaque on plinth
   if (c.label) {
-    const hubLabel = c.label(f.props.hub || 'C', 64, 64, { dim: false, bg: '#16140f' });
+    const hubLabel = c.label(f.props.hub || 'C', 0.024, 0.024, { dim: false, bg: '#16140f' });
     if (hubLabel) {
-      hubLabel.scale.set(0.024, 0.024, 1);
       hubLabel.position.set(0, 0.012, 0.048);
       reactorGroup.add(hubLabel);
     }
