@@ -174,6 +174,9 @@ a README saying why) or `docs/archive/<date>/`, and cut their wiring out of the 
 
 ## Where the rest lives
 
+Ligar's teaching audit (AP Unit 2 coverage, per-bench intuition and busywork review, open defects, the fix list) is `docs/Ligar-audit.md`.
+Ligar now holds: `q3-distance` 6 stages (Coulomb's law on an unheated salt), `q5-resonance` 7 (formal charge, hand-counted), `q6-shape` 7 (octahedral and square planar). Table nameplates are sized in metres (`c.label(text, w, h)`).
+
 Architecture, the Learn engine, tabletop layout rules, per-world notes, the 3D worlds and ship, mobile, the player
 journey and progression are in `docs/engineering/engine-and-worlds.md`. Plans and per-world records are in
 `docs/plans/`. Retired code is kept, not deleted, under `archive/` (never built, imported or verified). Old
