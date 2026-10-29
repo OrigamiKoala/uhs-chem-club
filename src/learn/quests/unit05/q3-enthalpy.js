@@ -356,9 +356,9 @@ const NOTES = {
   2: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
   3: ['Drag the card you choose into the slot.'],
   4: ['Drag a tin onto the cup, then back to the rail.'],
-  5: ['Type your answer in the field under the plate.'],
+  5: ['Type your answer in the field at the bottom.'],
   6: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
-  7: ['Type your answer in the field under the plate.']
+  7: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 

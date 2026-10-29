@@ -366,11 +366,11 @@ export const STAGES = [
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Turn the iron\'s "Heater" dial.'],
-  3: ['Type your answer in the field under the plate.'],
+  3: ['Type your answer in the field at the bottom.'],
   4: ['Drag the ice onto the cup, then type your answer.'],
   5: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
   6: ['Drag the mix onto the cup, then type your answer.'],
-  7: ['Type your answer in the field under the plate.']
+  7: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
