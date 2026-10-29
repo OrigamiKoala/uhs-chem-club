@@ -89,7 +89,7 @@ export const STAGES = [
       pieces: [
         molCard('a', 'H2', pullRow(0), { field: true }), molCard('b', 'HBr', pullRow(1), { field: true }), molCard('c', 'KF', pullRow(2), { field: true }),
         molCard('d', 'HCl', pullRow(3), { field: true }),
-        arrowsTool('ar', { x: 128, y: 53 })
+        arrowsTool('ar', { x: 128, y: 49 })
       ],
       zones: { trays: [
         { id: 'none', label: 'Shared evenly', at: { x: 26, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },

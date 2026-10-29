@@ -466,6 +466,20 @@ export function paintSlabPicture(ctx, decl, phase, box, lifted = []) {
     disc(ctx, x, y, r * (c.size || 1), c.tint ? (TINTS[c.tint] || tint) : tint);
     if (c.sign) sign(ctx, x, y, r, c.sign);
   });
+  // A metal's outer electrons are not held by one atom: a loose scatter of them runs between the ions, one per ion.
+  if (decl.build === 'metallic') {
+    const ions = lay.cells.filter(c => c.sign > 0);
+    ctx.fillStyle = PLATE_COLORS.phosphor;
+    ions.forEach((c, i) => {
+      const a = ((i * 2654435761) % 997) / 997 * Math.PI * 2;
+      const d = r * 1.55;
+      const ex = Math.min(x0 + w - 1, Math.max(x0 + 1, px(c) + Math.cos(a) * d));
+      const ey = Math.min(y0 + h - 1, Math.max(y0 + 1, py(c) + Math.sin(a) * d));
+      ctx.beginPath();
+      ctx.arc(ex, ey, Math.max(1, r * 0.3), 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
 }
 
 const BLOW_WORD = { cleaved: 'SPLIT', crumbled: 'CRUMBLED', bent: 'BENT', dented: 'DENTED', held: 'HELD' };

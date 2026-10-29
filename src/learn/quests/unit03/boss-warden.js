@@ -144,7 +144,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · The Vent',
-    prompt: 'Distribute all valence electrons for hydrogen cyanide until every atom satisfies the octet rule.',
+    prompt: 'Distribute all valence electrons for hydrogen cyanide until every atom has a full outer shell.',
     widget: { type: 'table', label: 'The bench' },
     table: ventTable(),
     foes: WARDEN_FOE,

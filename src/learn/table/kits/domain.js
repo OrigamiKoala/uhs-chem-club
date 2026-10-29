@@ -212,7 +212,7 @@ export const DOMAIN_KIT = {
     dmol: { r: 9, rect: MOL_RECT },
     tmol: { r: 9, rect: MOL_RECT, flip: true },
     stream: { r: 9, rect: STREAM_RECT },
-    arrows: { r: 6.5, tool: true, onTop: true },
+    arrows: { r: 8.5, tool: true, onTop: true },
     rod: { r: 6.5, tool: true, onTop: true },
     swapper: { r: 6.5, tool: true, onTop: true },
     orb: { r: ORB_R }

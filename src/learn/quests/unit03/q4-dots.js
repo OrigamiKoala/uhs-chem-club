@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Water\'s Electrons',
-    prompt: 'Place all valence electrons on the slate so that every atom satisfies the octet rule.',
+    prompt: 'Place all valence electrons on the slate so that every atom has a full outer shell.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'H2O', 82, 28, 62]]),
     hints: [
@@ -212,7 +212,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Middle',
-    prompt: 'Construct hypofluorous acid, HOF, so that every atom satisfies the octet rule.',
+    prompt: 'Construct hypofluorous acid, HOF, so that every atom has a full outer shell.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'HOF', 82, 35, 62, HOF_POS]]),
     hints: [

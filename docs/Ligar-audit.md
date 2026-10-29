@@ -136,3 +136,70 @@ Work after this audit is recorded at the end of this file.
 - **Camera drag on a missed grab.** In `q6-shape` stage 3 a drag that started on empty plate moved the view until the table was out of sight. The code clamps look to about ±0.2 rad, so it may have been something else (a dragged piece), not reproduced.
 - **`q1-joins` stage 5** still uses the crowded single row.
 - Everything in the revised priority list below item 1 is still to do: `q6` number entry, `q3` stages 1 and 2, repeated stages in `q2` and `q7`, electronegativity and bond type, 5 and 6 domain shapes, alloys, optional label on `q9`.
+
+## Second pass: the remaining teaching work (Oct 29, 2026)
+
+Method: the dev server at 3D On in the Browser pane, guest profile, `loadStage` through `__LQ_TEST__`. "Real gesture" below means a pointer drag or click in the 3D view (not `window.__R.act`). Many benches take 5 to 10 s to appear after a stage change (the pane is black until the world finishes loading); a screenshot taken sooner is not a defect.
+
+### Played, by stage
+
+| Stage | How it was played | Result |
+| --- | --- | --- |
+| `q5` 1 (predict) | real drag of a card into the slot, Submit, Next | works |
+| `q5` 2 (bond length) | real drag of the Gauge onto a bond (reads 128 pm); real drag of the dial | works; the dial label sits under the knob at its start position (shared marker painter, not changed) |
+| `q5` 3 (two ozone drawings) | real drag of "Adds a pair" onto a bond (bond became double) | works. **Fixed:** the "n OF 18 LEFT" count sat behind the timber frame and under the right atom of a wide slate |
+| `q5` 4 (stamp and mark on CO) | real drags of Stamp and Mark | **Defect found and fixed:** the stamp registered but printed nothing (the shoulder position is off the puck's face at 3D On) and the mark ring was drawn outside the puck. The charge now replaces the electron count on the atom (C −1, O +1) and the ring is inside the rim |
+| `q5` 5 (dial for the middle oxygen) | looked at, not operated | reads clearly; atom symbol "O" in the mono face reads like a zero at the default view |
+| `q5` 6 (CO₂ drawing) | one real drag of "Adds a pair" between two atoms | works; the slate sits far back and small |
+| `q5` 7 (SCN⁻), 8 (nitrate 4/3) | looked at, not operated | count clipped as above (fixed); the NO₃⁻ title sits behind the frame |
+| `q6` 1 (two arms) | real drags and taps of arms onto the hub | arms join and settle apart. **Not confirmed by hand:** laying the protractor on two arms. Once dropped on the plate it is a clear acrylic disc that is almost invisible on the dark plate, and my drags did not read an angle (the scripted pointer path in `verify:bench` does) |
+| `q6` 3, 4, 5, 6, 7 | not played by gesture | rely on `verify:table` and `verify:bench` (pointer paths by drag and by two taps) |
+| `q6` 8, 9 (new) | `verify:bench` pointer paths only | stage 9 needs the Turn dial (the top arm hides behind a balloon at the default view) |
+| `q7` 1 (electronegativity sort) | real drag of Arrows onto the HCl card (joins, prints NET 0.96) | works. The tool is a thin pen: readable but small |
+| `q7` 2 (predict) | looked at | reads |
+| `q7` 3 (sort in the field) | real click on "Switch Field" | works; the screen lags a moment behind the click, so a double click switches it back off |
+| `q7` 4, 5 | not played | |
+| `q8` 3 (bowl) | real drags of s and px into the bowl (readout LOBES 2, LEFT OVER 2) | works and renders (the earlier black bench is fixed). The empty-bowl readout "NOTHING MIXED" was under the knob and now sits lower |
+| `q8` 1, 2, 4, 5, 6 | not played by gesture | |
+| `q8` 7, 8, 9 (new: predict the twist, boron, carbon in CO₂) | `verify:bench` only | |
+| `q9` 1, 2 | not played | |
+| `q9` 3 | not played; edited from source | the rack no longer prints PUSHES / HOLDS or a PLACED count, the prompt is an objective |
+| `q1` 3 | real drag: Mg pressed onto O (joins, rod drawn) | the pull numbers are legible after enlarging them |
+| `q2` 2 | looked at | legible at the default camera; the three tray names still state the possible answers |
+| `boss-warden` phase 1 | real drag of Plate B into the slot, Submit | works (hints, miss and win paths unplayed) |
+| `boss-warden` phases 2 and 4 | looked at | readable |
+| `boss-warden` phases 3 and 5 | not played | |
+
+### Changes this pass
+
+- **Shared slate painter (`atoms.js`):** stamped charge visible, mark ring on the puck, count and charge lines moved clear of the frame; slate top margin raised so the count clears wide slates. `q4-dots` and `q5` slates were moved down to stay on the table.
+- **`bench3d.js`:** a slipped drag in the lean-in view swings less (about 8° of yaw instead of 17°).
+- **`q1-joins` 3:** each atom prints how hard it pulls on shared electrons (`opts.pull`), the stage sorts handed-over from shared pairs by comparing the numbers, then pressing to confirm. The reward ties ionic and covalent to the gap between the pulls (the word electronegativity is earned in `q7`). Electronegativity is no longer used before it is seen.
+- **`q2-lattice`:** the metal block pictures now draw one free electron per ion between the ions (the electron sea). Stages 2 and 3 are unchanged (see below).
+- **`q6-shape` 8, 9:** five domains settle as axis and ring (middle of the three angles: 120°); two atoms and three lone pairs give 180° (XeF₂), with SF₄ and ClF₃ named in the reward.
+- **`q8-hybrid`:** new predict stage before the twist (which bond lets the far end turn), then the twist; new stages "Three Lobes" (boron, BF₃, sp²) and "Two Lobes" (carbon, CO₂, sp), so hybridization is read from the number of arms on a formula card. Now 9 stages.
+- **`q9-orbitals` 3:** unearned row words and the PLACED counter removed; one count (UNPAIRED) remains.
+- **`q4-dots`, `boss-warden`:** prompts said "octet" for molecules containing hydrogen; now "full outer shell".
+- **`q7`:** the Arrows tool is larger (table radius 8.5).
+- **Tools:** `tools/verify-bench.mjs` prints the differing values when `BENCH_DIFF=1` is set.
+- **Counts:** 242 stages (Ligar: q1 5, q2 7, q3 6, q4 6, q5 8, q6 9, q7 5, q8 9, q9 3, Warden 5).
+
+### Still weak, not done
+
+- `q2-lattice` 2 and 3 still sort or rank to results found by heating and clipping; they do not ask for a reason. Alloys' effect on conduction and melting point is untested.
+- `q6` and `q7` have little quantitative content (angles are read and typed; no ΔEN arithmetic beyond stage 1's bands; no bond-order or lattice-energy ratios).
+- `q9` stage 3 still asks for twelve electron pours into a molecular orbital ladder; the stage is optional and not AP.
+- `q5` nitrate and carbonate resonance with three drawings are practice questions only.
+- The Warden's phase 3 (type an angle from a protractor) repeats the reading-and-typing mechanism.
+- The "O" in the mono face reads as "0" on every Lewis slate and on the nitrate/ozone stages.
+
+### Stages I suspect confuse a first-time student (play these first)
+
+1. `q6` 1 and 3: laying the protractor on two arms. The disc is nearly invisible once on the plate and the second arm hides behind balloons or the hub at the default view.
+2. `q6` 9 and `q6` 7: reading an angle between arms that sit behind a balloon needs the Turn dial; nothing tells the student that.
+3. `q5` 4: Stamp and Mark are two tools used in order (stamp both atoms, then mark one); the prompt says only "mark the atom".
+4. `q8` 3, 8, 9: three controls (pieces, bowl, readout) and the lobe model; whether a student sees why an orbital "left over" matters.
+5. `q1` 3: whether the pull numbers are read as a gap or as two separate facts.
+6. `q7` 3: the field switch reacts late; a student may click twice.
+7. `q9` 3: the whole stage.
+8. The Warden phases 2 to 5 as a first-time sequence (the foe's lines and the integrity bar were not read).
