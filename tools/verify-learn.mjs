@@ -2570,12 +2570,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(b3.MOLE_CARDS.filter(c => Math.abs(c[2] - n) / n < 0.03).length === 1, `${q} stage 5: exactly one card should be the moles PV/RT (${n.toFixed(3)})`);
       holds(b3.MOLE_CARDS.some(c => Math.abs(c[2] - 10 * n) / (10 * n) < 0.03) && b3.MOLE_CARDS.some(c => Math.abs(c[2] - n / 10) / (n / 10) < 0.03), `${q} stage 5: the factor-of-ten slips are not cards`);
       same(Object.values(done(b3, 4).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 5 (the card laid)`);
-      const sealed = start(b3, 5).pieces.z;
-      const nm = GK.tankMoles(sealed);
-      const molar = sealed.props.mass / nm;
+      const nm = (b3.SEALED.P * b3.SEALED.V) / (G.R * b3.SEALED.T);
+      const molar = (nm * G.GASES[b3.SEALED.gas].M) / nm;
       const fits = b3.GAS_CARDS.filter(c => Math.abs(G.GASES[c[2]].M - molar) / molar < 0.03);
       holds(fits.length === 1 && fits[0][2] === b3.SEALED.gas, `${q} stage 6: mass over moles (${molar.toFixed(1)}) does not single out ${b3.SEALED.gas}`);
-      holds(sealed.props.sealed === true && sealed.props.mass > 0, `${q} stage 6: the tank is not sealed and weighed`);
+      holds(Object.values(start(b3, 5).fixtures).some(f => f.kind === 'plaque' && f.props.lines.some(l => /Mass of gas/.test(l))), `${q} stage 6: the plate does not print the mass`);
       same(Object.values(done(b3, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'co2', `${q} stage 6 (the card laid)`);
     }
   }

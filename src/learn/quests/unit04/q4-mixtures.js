@@ -25,7 +25,7 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  gasTable, tank, chip, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, AIR, GASES
+  gasTable, tank, chip, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, plaqueFixture, AIR, GASES
 } from '../../table/kits/gas.js';
 import { widget, put, dial, sort, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 import { stmt } from '../../table/kits/gas.js';
@@ -268,18 +268,19 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const m = tank('m', 'TANK M', { x: 30, y: 33 }, { parts: BLEND_TANK, V: V0, T: T0, plate: true, gaugeMax: 300, fixed: true });
-    m.props.partsPlate = true;
+    const total = planMixture(BLEND_TANK, T0, V0).P;
+    const plate = plaqueFixture('plate', 'Tank M', { x: 32, y: 33 }, [`Gauge: ${Math.round(total)} kPa`, `Room: ${V0} L, ${T0} K`, 'Nitrogen: 0.6 mol', 'Oxygen: 0.2 mol'], { w: 52 });
     return {
       title: 'Using Partial Pressures',
       prompt: 'Lay the card for the pressure oxygen alone makes in Tank M.',
       widget,
       table: gasTable({
-        pieces: [m, ...answerCards(PUSH_CARDS)],
+        pieces: answerCards(PUSH_CARDS),
+        fixtures: [plate],
         zones: { slots: [answerSlot('Oxygen alone')] }
       }),
       hints: [
-        'Read the tank\'s gauge and the moles of each gas from its face.',
+        'Read the gauge and the moles of each gas from the tank\'s plate.',
         'Find oxygen\'s share of all the moles in the tank.',
         'Multiply that share by the tank\'s gauge.'
       ],

@@ -25,7 +25,7 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, R } from '../../table/kits/gas.js';
+import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, plaqueFixture, GASES, R } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, answerOf } from './_shared.js';
 
 export const meta = { stageCount: 6 };
@@ -215,17 +215,18 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const t = tank('x', 'TANK X', { x: 30, y: 33 }, { gas: PLATE.gas, P: PLATE.P, V: PLATE.V, T: PLATE.T, plate: true, gaugeMax: 300, fixed: true });
+    const plate = plaqueFixture('plate', 'Tank X', { x: 32, y: 33 }, ['Gas: nitrogen', `Gauge: ${PLATE.P} kPa`, `Room: ${PLATE.V} L`, `Temperature: ${PLATE.T} K`], { w: 52 });
     return {
       title: 'Using the Ideal Gas Law',
       prompt: 'Lay the card for how many moles of gas Tank X holds.',
       widget,
       table: gasTable({
-        pieces: [t, ...answerCards(MOLE_CARDS)],
+        pieces: answerCards(MOLE_CARDS),
+        fixtures: [plate],
         zones: { slots: [answerSlot('Moles in Tank X')] }
       }),
       hints: [
-        'Read the tank\'s gauge, room and temperature from its face.',
+        'Read the gauge, room and temperature from the tank\'s plate.',
         'Put the figures into pressure times room, divided by the gas constant times kelvin.',
         'Check the units: the gas constant is in kPa and litres, so use the gauge in kPa and the room in litres.'
       ],
@@ -246,17 +247,19 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const t = tank('z', 'SEALED', { x: 30, y: 33 }, { gas: SEALED.gas, P: SEALED.P, V: SEALED.V, T: SEALED.T, plate: true, gaugeMax: 300, sealed: true, printMass: true, fixed: true });
+    const grams = ((SEALED.P * SEALED.V) / (R * SEALED.T)) * GASES[SEALED.gas].M;
+    const plate = plaqueFixture('plate', 'Sealed tank', { x: 32, y: 33 }, ['Gas: not labelled', `Gauge: ${SEALED.P} kPa`, `Room: ${SEALED.V} L`, `Temperature: ${SEALED.T} K`, `Mass of gas: ${grams.toFixed(1)} g`], { w: 52 });
     return {
       title: 'Molar Mass From a Tank',
       prompt: 'Lay the card for the gas in the sealed tank.',
       widget,
       table: gasTable({
-        pieces: [t, ...answerCards(GAS_CARDS)],
+        pieces: answerCards(GAS_CARDS),
+        fixtures: [plate],
         zones: { slots: [answerSlot('Gas in the tank')] }
       }),
       hints: [
-        'Read the sealed tank\'s gauge, room, temperature and mass from its face.',
+        'Read the gauge, room, temperature and mass from the sealed tank\'s plate.',
         'Find how many moles the tank holds, then compare that with the mass.',
         'The mass divided by the moles is the mass of one mole, which each card prints.'
       ],
