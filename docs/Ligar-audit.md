@@ -253,3 +253,11 @@ Left undone (all of these are listed as open in Open items):
 - **Warden phase 3:** still reads and types a protractor angle from ammonia.
 - **Alloy conduction:** not tested; both brass and steel conduct, so it would not discriminate anything.
 - A full second audit pass by gesture over every stage was not done; the table above says which stages were played.
+
+### Update after the open-items pass (usage limit reached)
+
+Changed and checked (all 13 `verify:*` scripts print OK at commit "Ligar open items"): items 1 and 2 (`q2` stage 9 ranks four unheated blocks from their pictures; stage 2 trays now name what the lamp did), 3 (`q3` stage 1 asks where the atoms stay put), 4 (`q1` stage 2 prints that a ring lights when a shell is full), 5 (`q7` stage 6 subtracts printed pulls), 6 (`q6` stage 5 and Warden phase 3 ask for the gap below 109.5), 9 (`q9` stage 3 seats ten electrons; two are poured), 10 (sans-serif element symbols), 11 (brass protractor disc), 12 (dial track lowered, slate title moved), 13 (Tour sentence for pull), 14 (audio volume clamped). Stage total 246. Not re-played by hand after these edits: `q2` 9, `q7` 6, `q6` 5.
+
+**Newly found and still open:** in `q9` stage 3 the electrons seated or poured into the rack boxes are not drawn at 3D On (the box shows a bare plate; the UNPAIRED count does change). Cause: a flat box's lining plate in `table3d.js` / `table-props.js` `buildSlot` covers the arrows painted on the mat. Removing the lining was tried and reverted because it was unverified and affects other benches. Until fixed, `q9` stage 3 cannot be completed by sight.
+
+Still open from the list: 7 (carbonate, excluded by request), 8 (alloy conduction), 15 (hand-play coverage), 16 (student-confusion list).
