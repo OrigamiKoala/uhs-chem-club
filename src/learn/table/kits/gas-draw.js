@@ -248,7 +248,8 @@ export function rigGeometry(f, lay) {
   const cyls = f.props.cyls || [];
   const compact = Boolean(f.props.compact);
   const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : b.y0 + 6;
-  const top = Math.max(lastDial + 3.6, b.y0 + 10.5);
+  // The glass tube stands up from the plate and leans over what is behind it, so it starts clear of the dial row.
+  const top = Math.max(lastDial + 7, b.y0 + 14);
   const screenW = f.props.speedScreen ? (f.props.screenW ?? Math.min(30, (b.x1 - b.x0) * 0.46)) : 0;
   const bl = b.x0 + 2 + 1.4;
   const br = b.x1 - 2 - (screenW ? screenW + 2.5 : 0);
@@ -343,9 +344,9 @@ function paintBarrel(ctx, F, g, cj, q, f, b) {
       ctx.fillRect(Math.min(bx1 - F.len(3), pxp + F.len(2)), (by0 + by1) / 2 - F.len(1.7), F.len(3), F.len(3.4));
     }
   }
-  // Under the barrel the cylinder's name, and the gas it holds.
+  // Above the barrel (clear of the glass that leans over it) the cylinder's name, and the gas it holds.
   const sealed = cj.c.sealed;
-  say(ctx, `${q.label}${sealed ? '' : `  ${q.sym}`}`, bx0, by0 - F.len(1.1), F.size(2.3, 6), { color: DUST, weight: 700, maxW: bx1 - bx0 });
+  if (!f.props.titled) say(ctx, `${q.label}${sealed ? '' : `  ${q.sym}`}`, bx0, by0 - F.len(5), F.size(2.3, 6), { color: DUST, weight: 700, maxW: bx1 - bx0 });
 }
 
 function paintScreen(ctx, F, g, q, f, b) {
@@ -395,7 +396,8 @@ export function boxGeometry(f, lay) {
   const b = lay.box;
   const lastDial = lay.dials.length ? Math.max(...lay.dials.map(d => d.y)) : b.y0 + 6;
   const side = f.props.side ?? 17;
-  const y0 = lastDial + 9;
+  // The glass cube stands up from the plate and leans over what is behind it, so it starts a cube's height below the dials.
+  const y0 = lastDial + 18;
   const x0 = b.x0 + 4;
   return { vessel: { x0, x1: x0 + side, y0, y1: y0 + side }, side, roofAt: y0 - 1.6, floorAt: y0 + side + 3.8, sideAt: x0 + side + 3 };
 }
@@ -435,10 +437,14 @@ function paintBox(ctx, f, state, b) {
   const size = F.size(2.5, 6.5);
   const word = F.size(2.3, 6);
   const wall = id => q.walls.find(w => w.id === id);
-  say(ctx, `${wall('roof').label}  ${val(wall('roof').P)}`, mx, F.y(g.roofAt - box.y0), size, { align: 'center', weight: 700, color: PHOS, maxW: F.len(g.side + 12) });
-  say(ctx, `${wall('floor').label}  ${val(wall('floor').P)}`, mx, F.y(g.floorAt - box.y0), size, { align: 'center', weight: 700, color: PHOS, maxW: F.len(g.side + 12) });
-  say(ctx, wall('side').label, F.x(g.sideAt - box.x0), my - F.len(1.6), word, { color: DIM, maxW: F.len(box.x1 - g.sideAt - 2) });
-  say(ctx, val(wall('side').P), F.x(g.sideAt - box.x0), my + F.len(1.6), size, { weight: 700, color: PHOS, maxW: F.len(box.x1 - g.sideAt - 2) });
+  // The three readings stand in a column beside the vessel: the glass cube at 3D On would hide a figure printed behind or above it.
+  const col = F.x(g.sideAt - box.x0);
+  const colW = F.len(box.x1 - g.sideAt - 2);
+  [['roof', v.y0 + 2.6], ['side', (v.y0 + v.y1) / 2], ['floor', v.y1 - 2.6]].forEach(([id, y]) => {
+    const yy = F.y(y - box.y0);
+    say(ctx, wall(id).label, col, yy - F.len(1.5), word, { color: DIM, maxW: colW });
+    say(ctx, val(wall(id).P), col, yy + F.len(1.5), size, { weight: 700, color: PHOS, maxW: colW });
+  });
 }
 
 function paintRig(ctx, f, state, b) {

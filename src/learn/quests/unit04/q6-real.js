@@ -142,7 +142,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const mk = (id, at, cases) => rig(id, at, {
-      cyls: cases.map(c => cyl(c.id, `Holder ${c.id.toUpperCase()}`, c.gas, { V: c.V, T: c.T, hold: 'V' })), vmax: 24.6, compact: true, w: 44, trueSize: true,
+      cyls: cases.map(c => cyl(c.id, `Holder ${c.id.toUpperCase()}`, c.gas, { V: c.V, T: c.T, hold: 'V' })), vmax: 24.6, compact: true, w: 44, trueSize: true, rowH: 23,
       show: { temperature: true, amount: false, ideal: true }
     });
     const tray = (id, label, y) => ({ id, label, at: { x: 133, y }, size: { w: 30, h: 14 }, cell: 17 });

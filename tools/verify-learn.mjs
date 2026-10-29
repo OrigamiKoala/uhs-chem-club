@@ -2443,9 +2443,23 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       near(r(2).P / r(1).P, 2, 1e-9, `${q} stage 3: half the room is not twice the gauge (the card says so)`);
       holds(props(t, 'rig').volumes[1] * 2 === props(t, 'rig').volumes[0], `${q} stage 3: the second piston setting is not half the first`);
     }
-    // Stage 4: the snapshots are four temperatures in order, the screen's peak moves right and flattens, the crowd is a spread.
+    // Stage 3 asks for six times the starting gauge, and one setting does it. Stage 4 goes beyond the dial's last setting: the figure comes from gauge x room.
     {
-      const t = done(b1, 3);
+      const t = done(b1, 2);
+      const vols = props(t, 'rig').volumes;
+      const want = vols.filter((_, k) => Math.abs(rd(t, 'rig', { volume: k + 1 }).P / rd(t, 'rig', { volume: 1 }).P - 6) < 0.02);
+      holds(want.length === 1, `${q} stage 3: exactly one piston setting should give six times the starting gauge (found ${want.length})`);
+      const t4 = start(b1, 3);
+      const a = rd(t4, 'rig', { volume: 1 });
+      const real = (a.P * a.V) / 1.5;
+      const cards = b1.BEYOND_CARDS;
+      holds(cards.filter(c => Math.abs(c[2] - real) / real < 0.02).length === 1, `${q} stage 4: exactly one card should match gauge x room divided by the new room (${real.toFixed(0)})`);
+      holds(Math.min(...props(t4, 'rig').volumes) > 1.5, `${q} stage 4: the dial reaches 1.5 L, so the figure can be read off`);
+      holds(cards.some(c => c[2] < a.P), `${q} stage 4: no card is a squeeze that lowers the gauge`);
+    }
+    // Stage 5: the snapshots are four temperatures in order, the screen's peak moves right and flattens, the crowd is a spread.
+    {
+      const t = done(b1, 4);
       const temps = t.zones.rail.order.map(id => t.pieces[id].props.T);
       holds(temps.every((v, k) => !k || v > temps[k - 1]) && temps.length === 4, `${q} stage 4: the rail is not coldest first`);
       const lo = G.speedBins('N2', temps[0], 40, 2400); const hi = G.speedBins('N2', temps[3], 40, 2400);
@@ -2456,9 +2470,9 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(sp[sp.length - 1] > sp[0] * 3, `${q} stage 4: the 3D crowd is not a spread of speeds`);
       near(sp.reduce((a, b) => a + b, 0) / sp.length, G.speeds('N2', 300).mean, G.speeds('N2', 300).mean * 0.06, `${q} stage 4: the 3D crowd does not average the gas's mean speed`);
     }
-    // Stage 5: one temperature, one energy, two speeds.
+    // Stage 6: one temperature, one energy, two speeds.
     {
-      const t = done(b1, 4);
+      const t = done(b1, 5);
       const a = GK.cylRead(t, 'ra', 0); const b = GK.cylRead(t, 'rb', 0);
       near(a.energy, b.energy, 1e-9, `${q} stage 5: the two gases do not share an average kinetic energy`);
       holds(a.mean > b.mean * 2, `${q} stage 5: helium is not much faster than carbon dioxide`);

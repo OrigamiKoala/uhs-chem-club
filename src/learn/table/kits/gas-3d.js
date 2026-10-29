@@ -129,7 +129,7 @@ function dressBox(f, state, c) {
   const v = g.vessel;
   const w = (v.x1 - v.x0) * s;
   const d = (v.y1 - v.y0) * s;
-  const h = w * 0.95;
+  const h = w * 0.72;
   const at = toPlate({ x: (v.x0 + v.x1) / 2, y: (v.y0 + v.y1) / 2 });
   const body = new THREE.Group();
   body.position.set(at.x, c.ground + 0.002, at.z);

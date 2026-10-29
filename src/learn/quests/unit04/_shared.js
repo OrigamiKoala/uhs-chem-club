@@ -69,6 +69,20 @@ export function guessOf(key, items) {
   return hit ? { id: hit[0], label: hit[1] } : null;
 }
 
+/**
+ * ANSWER CARDS: a figure to lay in one slot, for a stage whose answer is worked out and cannot be built. `items` is `[[id, label, value], ...]`;
+ * the cards stand two by two under the slot, the way a predict stage's guesses do, and `answerOf` reads the figure of the card laid.
+ */
+export function answerCards(items, { x = 90, y = 44.5 } = {}) {
+  return items.map(([id, label], i) => stmt(id, label, { x: x + (i % 2) * 38, y: y + Math.floor(i / 2) * 13 }));
+}
+export const answerSlot = (label = 'Your figure') => ({ id: 'answer', label, at: { x: 109, y: 27 }, size: { w: 38, h: 12 } });
+export function answerOf(t, items) {
+  const card = cardIn(t, 'answer');
+  const hit = card && items.find(i => i[0] === card.id);
+  return hit ? hit[2] : null;
+}
+
 /** Direct prompt without prediction echo text. */
 export const youPredicted = (key, items, rest, plain) => plain;
 

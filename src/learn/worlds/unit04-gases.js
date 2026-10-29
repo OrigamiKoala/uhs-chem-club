@@ -30,7 +30,7 @@ export const UNIT_04 = {
       title: 'Pressure and Temperature',
       line: 'Learn what the pressure gauge is really counting.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q1-knocks.js')
     },

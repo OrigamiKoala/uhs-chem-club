@@ -11,9 +11,10 @@
  *
  *   1  PREDICT: which of a box's three gauges reads highest        (no instrument)
  *   2  TEST: a gauge on the roof, the side wall and the floor      -> Pressure
- *   3  squeeze the same gas: which readings move with the gauge    -> Boyle's law
- *   4  heat the gas, rank four snapshots of its speeds             -> A Spread of Speeds
- *   5  a light and a heavy gas at one temperature                  -> Kinetic Energy, Kinetic Molecular Theory
+ *   3  squeeze the gas until the gauge reads six times as much    -> Boyle's law
+ *   4  the piston stops at 3 L: what does the gauge read at 1.5 L  -> Using Boyle's law (a figure worked out from the bench)
+ *   5  heat the gas, rank four snapshots of its speeds             -> A Spread of Speeds
+ *   6  a light and a heavy gas at one temperature                  -> Kinetic Energy, Kinetic Molecular Theory
  *
  * (Cut as repeats: the three-scale unit conversion, the line carried to absolute zero (now earned on bench two, where the same line is
  * drawn for room against heat), the heat-until-fast target, and the closing statement-marking.)
@@ -31,17 +32,17 @@ import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, rig, box, chip, histCard, boxRead, rigAt, cylRead, whereIs, speedBins, toKelvin
 } from '../../table/kits/gas.js';
-import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf } from './_shared.js';
+import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bpressure\b/i, introducedAt: 2 },
   { term: /\b(?:kpa|kilopascals?)\b/i, introducedAt: 2 },
   { term: /\bboyle.?s law\b/i, introducedAt: 3 },
-  { term: /\bmaxwell.boltzmann\b/i, introducedAt: 4 },
-  { term: /\bkinetic energy\b/i, introducedAt: 5 },
-  { term: /\bkinetic molecular theory\b/i, introducedAt: 5 }
+  { term: /\bmaxwell.boltzmann\b/i, introducedAt: 5 },
+  { term: /\bkinetic energy\b/i, introducedAt: 6 },
+  { term: /\bkinetic molecular theory\b/i, introducedAt: 6 }
 ];
 
 /** Mole, particle and the other words Tallow earned are plain here. */
@@ -71,13 +72,16 @@ export const GUESSES = [
 
 /** The heater of stage 2, in degrees C: the box is warmed and every gauge is read again. */
 const BOX_TEMPS = [20, 60, 100, 150, 200];
-/** The piston's settings in stage 3, in litres: even halvings, so the barrel is as long as the room in it. */
-const SQUEEZE = [24, 12, 8, 6];
+/** The piston's settings in stages 3 and 4, in litres: 24 and its halving, then the room that gives three, four, six and eight times the gauge. */
+const SQUEEZE = [24, 12, 8, 6, 4, 3];
+/** Stage 3 asks for this many times the starting gauge. */
+const TIMES_AS_MUCH = 6;
+/** Stage 4's room beyond the dial (litres), and the figures to lay: the gauge there, the slip of halving once, the squeeze that lowers it, and double the answer. */
+const BEYOND = 1.5;
+export const BEYOND_CARDS = [['a', '1660 kPa', 1660], ['b', '830 kPa', 830], ['c', '6.5 kPa', 6.5], ['d', '3320 kPa', 3320]];
 /** Stage 4's heater, in degrees C, and the shared scale of its screen and snapshots. */
 const SPREAD = [-73, 27, 127, 227, 327, 427, 527];
 const REF_SPEEDS = Math.max(...speedBins('N2', toKelvin(SPREAD[0], 'C'), 24, 2400));
-/** The readings of stage 3 and of stage 5. */
-const READINGS = [['knocks', 'KNOCKS'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']];
 
 /** Which wall a box reads highest, or 'same' when no wall reads more than the others (the gas knocks every wall alike). */
 export function wallMost(q) {
@@ -99,22 +103,21 @@ export const STAGES = [
     prompt: 'Which of a sealed box\'s three gauges, on its roof, side wall and floor, will read the highest?',
     items: GUESSES,
     hints: [
-      'Choose one of the cards.',
-      'Consider how gas particles move and collide with each wall.',
-      'Select the card that matches your prediction.'
+      'Lay one card in the slot.',
+      'Picture one particle of the gas flying about inside the box and ask which walls it reaches.',
+      'Ask what a gauge fixed to a wall can feel: the weight of the gas above it, or something else.'
     ],
     reward: {
       log: 'Prediction recorded.',
       title: 'Prediction Recorded',
-      body: 'Gauges on the roof, side wall, and floor will now test how pressure is distributed.'
+      body: 'Locked in. The next bench fits one gauge to each of the box\'s three walls.'
     }
   }),
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const b = box(BOX, { x: 34, y: 33 }, {
-      gas: 'N2', n: 1, V: 10, T: 300, temps: BOX_TEMPS, tempList: 'C', tempStart: 1, units: 'plain', gaugeMax: 600, label: 'Holder 4, sealed',
-      plot: { x: 'TC', y: 'P' }
+      gas: 'N2', n: 1, V: 10, T: 300, temps: BOX_TEMPS, tempList: 'C', tempStart: 1, units: 'plain', gaugeMax: 600, label: 'Holder 4, sealed'
     });
     return {
       title: 'Pressure on Container Walls',
@@ -127,9 +130,9 @@ export const STAGES = [
         pieces: cardColumn(GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: { x: 90 + (i % 2) * 38, y: 44.5 + Math.floor(i / 2) * 13 } })),
         fixtures: [b],
         zones: { slots: [{ id: 'show', label: 'What the gauges show', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
-      }, { recorder: { at: { x: 109, y: 11 }, size: { w: 36, h: 14 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Gauge', yUnit: '', xDigits: 0 } }),
+      }),
       hints: [
-        'Use the "Heater" dial and "Record", then place a card in the slot.',
+        'Use the "Heater" dial, then place a card in the slot.',
         'Compare the three gauges with each other as temperature changes.',
         'Select the card describing how the three readings compare.'
       ],
@@ -160,44 +163,67 @@ export const STAGES = [
     });
     return {
       title: 'Volume and Pressure',
-      prompt: 'Sort each reading by whether it changes along with the gauge as the piston moves.',
+      prompt: `Set the piston so the gauge reads ${TIMES_AS_MUCH} times its starting figure.`,
       widget,
-      table: gasTable({
-        pieces: READINGS.map(([id, label], i) => chip(id, label, { x: 11 + i * 17, y: 52 })),
-        fixtures: [r],
-        zones: {
-          trays: [
-            { id: 'moves', label: 'Moves with the gauge', at: { x: 101, y: 17 }, size: { w: 58, h: 21 }, cell: 19 },
-            { id: 'stays', label: 'Stays put', at: { x: 101, y: 52 }, size: { w: 58, h: 21 }, cell: 19 }
-          ]
-        }
-      }),
+      table: gasTable({ fixtures: [r] }),
       hints: [
-        'Use the "Piston" dial.',
-        'Compare each reading across different piston positions.',
-        'Sort each reading by whether its value changes with the piston.'
+        'Turn the "Piston" dial and watch the gauge.',
+        'Compare the gauge with the room at each setting, and with the knocks.',
+        'Find what happens to the gauge each time the room is halved, then work out the room that gives six times.'
       ],
       check(state) {
         const t = state.table;
-        if (!READINGS.every(([id]) => ['moves', 'stays'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
-        const a = rigAt(t, RIG, { volume: 1 })[0];
-        const z = rigAt(t, RIG, { volume: SQUEEZE.length })[0];
-        const changes = { knocks: a.knocks !== z.knocks, speed: a.mean !== z.mean, amount: a.n !== z.n, temp: a.T !== z.T };
-        const wrongMoves = READINGS.some(([id]) => whereIs(t, id) === 'moves' && !changes[id]);
-        const wrongStays = READINGS.some(([id]) => whereIs(t, id) === 'stays' && changes[id]);
-        if (wrongMoves) return { ok: false, msg: 'The "Moves with the gauge" tray holds a reading that is the same at every piston setting.' };
-        if (wrongStays) return { ok: false, msg: 'The "Stays put" tray holds a reading that is different at two piston settings.' };
-        return { ok: true };
+        if (Math.round(t.fixtures[RIG].dials.volume.value) === 1) return { ok: false, notYet: true, msg: 'The piston is where it started: turn it and watch the gauge.' };
+        const ratio = cylRead(t, RIG, 0).P / rigAt(t, RIG, { volume: 1 })[0].P;
+        if (Math.abs(ratio - TIMES_AS_MUCH) < 0.02) return { ok: true };
+        return { ok: false, msg: ratio < TIMES_AS_MUCH ? `The gauge reads less than ${TIMES_AS_MUCH} times its starting figure.` : `The gauge reads more than ${TIMES_AS_MUCH} times its starting figure.` };
       },
       reward: {
-        log: 'Only the knocks follow the gauge.',
+        log: 'Gauge times room stayed the same.',
         title: 'Boyle\'s Law',
-        body: 'Compressing a gas into less volume increases wall collision frequency without changing particle speed or count. Halving volume doubles the collision rate and doubles the pressure (Boyle\'s law).'
+        body: 'Squeezing a gas into less room makes the same particles knock more often, and the gauge rises as the room falls: 24 L and 104 give about 2500, and so do 4 L and 623. At one temperature, pressure times volume is constant (Boyle\'s law).'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Holder 2', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+      show: { speed: false }, label: 'Holder'
+    });
+    return {
+      title: 'Using Boyle\'s Law',
+      prompt: `Lay the card for what the gauge would read at ${BEYOND} L, beyond the piston dial's last setting.`,
+      widget,
+      table: gasTable({
+        pieces: answerCards(BEYOND_CARDS),
+        fixtures: [r],
+        zones: { slots: [answerSlot('Gauge at 1.5 L')] }
+      }),
+      hints: [
+        'Turn the "Piston" dial to read the gauge at each setting.',
+        'Multiply the gauge by the room at several settings and compare the products.',
+        'Divide that product by the new room.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = answerOf(t, BEYOND_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const a = rigAt(t, RIG, { volume: 1 })[0];
+        const want = (a.P * a.V) / BEYOND;
+        if (Math.abs(v - want) / want < 0.02) return { ok: true };
+        return { ok: false, msg: v < a.P ? 'That reading is lower than the gauge at 24 L, and squeezing the gas cannot lower it.' : 'That reading does not fit the gauge-times-room figure of the other settings.' };
+      },
+      reward: {
+        log: 'Gauge times room, divided by the new room.',
+        title: 'Using Boyle\'s Law',
+        body: 'Because pressure times volume stays about 2500, the gauge at 1.5 L is 2500 ÷ 1.5, close to 1660 kPa. Write it P₁V₁ = P₂V₂ and check the result: squeezing a gas can only raise its gauge.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
   (() => {
     const r = rig(RIG, { x: 31, y: 27 }, {
       cyls: [{ id: 'a', label: 'Holder 3', gas: 'N2', n: 1, hold: 'V', V: 20, T: T0 }], temps: SPREAD, tempList: 'C', tempStart: 2, vmax: 20,
@@ -236,7 +262,7 @@ export const STAGES = [
     };
   })(),
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 6 */
   (() => {
     const rg = (id, at, label, gas, n, start) => rig(id, at, {
       cyls: [{ id: 'a', label, gas, n, hold: 'V', V: 20, T: T0 }], temps: [0, 100, 200, 300], tempList: 'C', tempStart: start, vmax: 20, compact: true, w: 34,
@@ -286,10 +312,11 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
-  2: ['Turn the Heater dial and Record,', 'then place a card in the slot.'],
-  3: ['Turn the Piston dial,', 'then sort each chip into a tray.'],
-  4: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
-  5: ['Turn both Heater dials,', 'then sort chips into trays.']
+  2: ['Turn the Heater dial,', 'then place a card in the slot.'],
+  3: ['Turn the Piston dial.'],
+  4: ['Turn the Piston dial,', 'then place a card in the slot.'],
+  5: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
+  6: ['Turn both Heater dials,', 'then sort chips into trays.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -375,8 +402,9 @@ export const PRACTICE = [
 
 export const SOLUTIONS = [
   [put('floor', 'slot:predict')],
-  [dial(BOX, 'temp', 3), { run: BOX }, dial(BOX, 'temp', 5), { run: BOX }, put('same', 'slot:show')],
-  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 4), ...sort({ knocks: 'moves', speed: 'stays', amount: 'stays', temp: 'stays' })],
+  [dial(BOX, 'temp', 3), dial(BOX, 'temp', 5), put('same', 'slot:show')],
+  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 5)],
+  [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), put('a', 'slot:answer')],
   [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
   [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'same', temp: 'same', speed: 'different', amount: 'different' })]
 ];
@@ -384,8 +412,9 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [dial(BOX, 'temp', 3), { run: BOX }, put('floor', 'slot:show')],
-  sort({ knocks: 'stays', speed: 'moves', amount: 'stays', temp: 'stays' }),
+  [dial(BOX, 'temp', 3), put('floor', 'slot:show')],
+  [dial(RIG, 'volume', 3)],
+  [dial(RIG, 'volume', 6), put('b', 'slot:answer')],
   [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
   [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'different', temp: 'same', speed: 'same', amount: 'different' })]
 ];
