@@ -28,7 +28,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { DIATOMICS } from '../../engine/mo.js';
+import { DIATOMICS, fillMO, boxKeyMO } from '../../engine/mo.js';
 import {
   moTable, moRack, moSupply, magnet, moCard, fillSteps, readOf, matchesGround, magnetRead
 } from '../../table/kits/mo.js';
@@ -62,6 +62,8 @@ export function toolNoteFor() { return null; }
    ------------------------------------------------------------------ */
 
 const RACK_AT = { x: 74, y: 32 };
+/** Electrons of oxygen already seated in the lower boxes of stage 3. */
+const SEATED = 10;
 const JAR_AT = { x: 15, y: 40 };
 
 /** The gases of stage 2: a sample card each, in a row along the bottom. */
@@ -132,18 +134,21 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const rack = moRack('a', 'O2', RACK_AT, { plain: true });
+    // The ten electrons that fill the lower boxes are already seated; the last two are the decision.
+    const seated = fillMO(DIATOMICS.O2.order, SEATED);
+    for (const c of rack.containers) c.contents = { electron: (seated[boxKeyMO(c.props.mo.row, c.props.mo.idx)] || '').length };
     return {
       title: 'Oxygen\'s Boxes',
-      prompt: 'Pour oxygen\'s twelve valence electrons into the boxes so that the rack pulls on the magnet like the real sample.',
+      prompt: 'Pour the two electrons left in the jar into the boxes so that the rack pulls on the magnet like the real sample.',
       widget: { type: 'table', label: 'The bench' },
       table: moTable({
-        zones: { containers: [moSupply('supply', 'Electrons', JAR_AT, DIATOMICS.O2.e), ...rack.containers] },
+        zones: { containers: [moSupply('supply', 'Electrons', JAR_AT, DIATOMICS.O2.e - SEATED), ...rack.containers] },
         fixtures: [rack.fixture, magnet('magnet', { x: 134, y: 36 }, { mol: 'O2' })]
       }),
       hints: [
         'Use the jar of electrons, the boxes and the magnet.',
         'Compare the rack\'s UNPAIRED count with the pull the magnet gives the real sample.',
-        'Fill from the lowest box upward, and give each box of a level one electron before pairing any.'
+        'Electrons settle in the lowest box with room, and boxes of equal energy each take one before any takes a second.'
       ],
       check(state) {
         const t = state.table;
@@ -258,18 +263,26 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 const test = id => [{ place: { piece: id, to: 'slot:test' } }, { run: 'magnet' }];
 const file = (id, zone) => ({ place: { piece: id, to: `tray:${zone}` } });
 
+/** The pours that finish oxygen's ground state from the seated ten: what the full fill has beyond the seated one. */
+function lastSteps() {
+  const full = fillMO(DIATOMICS.O2.order, DIATOMICS.O2.e);
+  const seated = fillMO(DIATOMICS.O2.order, SEATED);
+  return Object.entries(full).map(([k, v]) => [k, v.length - (seated[k] || '').length]).filter(([, n]) => n > 0)
+    .map(([k, n]) => ({ pour: { from: 'supply', to: `a.${k}`, what: 'electron', amount: n } }));
+}
+
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
   [guess('pulled')],
   [...test('n2'), file('n2', 'ignored'), ...test('o2'), file('o2', 'pulled'), ...test('f2'), file('f2', 'ignored'), ...test('b2'), file('b2', 'pulled')],
-  [...fillSteps('a', DIATOMICS.O2.order, DIATOMICS.O2.e), { run: 'magnet' }]
+  [...lastSteps(), { run: 'magnet' }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [file('n2', 'pulled'), file('o2', 'ignored'), file('f2', 'ignored'), file('b2', 'pulled')],
-  [pour('g2s:0', 2), pour('u2s:0', 2), pour('g2p:0', 2), pour('p2p:0', 2), pour('p2p:1', 2), pour('q2p:0', 2), { run: 'magnet' }]
+  [pour('q2p:0', 2), { run: 'magnet' }]
 ];
 
 function blankState() { return {}; }

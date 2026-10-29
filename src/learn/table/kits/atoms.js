@@ -749,7 +749,7 @@ function paintAtom(ctx, p, state, o) {
   disc(ctx, o.x, o.y, o.r, tint.fill, o.lit ? AMBER : tint.rim, o.lit ? 2 : 1);
   if (!p.props.mask) {
     const up = state.opts?.pull && EN[el.sym] != null ? 0.32 : 0;
-    plateText(ctx, el.sym, o.x, o.y + o.r * (0.04 - up), { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.78 : 0.92) * (up ? 0.8 : 1))), weight: 700, align: 'center', base: 'middle', color: INK[tintName], maxW: o.r * 1.4 });
+    plateText(ctx, el.sym, o.x, o.y + o.r * (0.04 - up), { face: 'sans-serif', size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.78 : 0.92) * (up ? 0.8 : 1))), weight: 700, align: 'center', base: 'middle', color: INK[tintName], maxW: o.r * 1.4 });
   }
   if (state.opts?.shells) {
     // The outer electrons, as dots on the rim: the picture of what a join fills.
@@ -1152,7 +1152,7 @@ function paintSlateAtom(ctx, p, state, o) {
     }
     ctx.setLineDash?.([]);
   }
-  plateText(ctx, p.props.el, o.x, o.y - o.r * 0.12, { size: Math.max(9, Math.round(o.r * (p.props.el.length > 1 ? 0.8 : 1.0))), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+  plateText(ctx, p.props.el, o.x, o.y - o.r * 0.12, { size: Math.max(9, Math.round(o.r * (p.props.el.length > 1 ? 0.8 : 1.0))), weight: 700, face: 'sans-serif', align: 'center', base: 'middle', color: PLATE_COLORS.dust });
   // A stamped atom prints its charge where the count sits (the shoulder is off the puck's face at 3D On).
   if (!p.props.stamped) plateText(ctx, `${a.around}/${a.goal}`, o.x, o.y + o.r * 0.5, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: a.lamp === 'short' ? PLATE_COLORS.dim : PLATE_COLORS.text });
   if (a.lamp === 'over') lampMark(ctx, o.x + o.r * 0.7, o.y - o.r * 0.7, Math.max(9, o.r * 0.7));

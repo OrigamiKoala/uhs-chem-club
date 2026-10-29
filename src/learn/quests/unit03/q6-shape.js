@@ -217,24 +217,24 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Two Unseen Arms',
-    prompt: 'Set the angle marker to the measured bond angle between the two hydrogen atoms in water.',
+    prompt: 'Set the marker to how many degrees the H–O–H angle in water falls short of the tetrahedral angle, 109.5°.',
     widget: { type: 'table', label: 'The bench' },
     table: hubTable({ sym: 'O', label: 'Hub O', arms: [A('h1', 'H'), A('h2', 'H'), L('l1'), L('l2')], marker: { label: 'Angle' } }),
     hints: [
       'Use the arms, the balloons, the protractor and the angle marker.',
-      'Attach two hydrogen arms and two lone pair balloons to oxygen, then measure the H-O-H angle.',
-      'Lone pair repulsion reduces the bond angle below 109.5 degrees to 104.5 degrees.'
+      'Attach two hydrogen arms and two lone pair balloons to oxygen, then measure the H-O-H angle with the protractor.',
+      'Subtract the angle the protractor reads from 109.5 and round to a whole number of degrees.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of degrees.' };
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
       if (r.lone < 2 || hs.length < 2) return { ok: false, msg: 'Not everything from the tray is on the hub yet.' };
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
-      if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the angle the protractor reads between the two hydrogen atoms.' };
+      if (near(v, 109.5 - real, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the gap between 109.5 and the angle the protractor reads between the two hydrogen atoms.' };
     },
     reward: {
       log: 'Lone pairs push harder.',
@@ -492,7 +492,7 @@ export const SOLUTIONS = [
   [guess('solid')],
   [...on('a1', 'a2', 'a3', 'a4'), set(4)],
   [...on('h1', 'h2', 'h3', 'l1')],
-  [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(104)],
+  [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(5)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), ...read('a1', 'a3'), set(90)],
   [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), ...read('a1', 'a3'), set(90)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5'), ...read('a3', 'a4'), set(120)],
@@ -506,7 +506,7 @@ export const MISSES = [
   [],
   [...on('a1', 'a2', 'a3', 'a4'), set(3)],
   [...on('h1', 'h2', 'h3')],
-  [...on('h1', 'h2', 'l1', 'l2'), set(110)],
+  [...on('h1', 'h2', 'l1', 'l2'), set(15)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), set(109)],
   [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), set(180)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5'), set(90)],

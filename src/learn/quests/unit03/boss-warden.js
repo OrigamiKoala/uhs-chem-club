@@ -176,7 +176,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · The Joints',
-    prompt: 'Set the angle marker to the angle between two hydrogen atoms on the nitrogen hub.',
+    prompt: 'Set the marker to how many degrees the H–N–H angle in ammonia falls short of the tetrahedral angle, 109.5°.',
     widget: { type: 'table', label: 'The bench' },
     table: hubTable(),
     foes: WARDEN_FOE,
@@ -187,19 +187,19 @@ export const STAGES = [
     },
     hints: [
       'Use the hydrogen atoms, the balloon, the protractor and the angle marker.',
-      'Attach three hydrogen atoms and one lone pair to nitrogen, then measure the H-N-H angle.',
-      'Lone pair repulsion compresses the tetrahedral angle from 109.5 degrees to 107 degrees in ammonia.'
+      'Attach three hydrogen atoms and one lone pair to nitrogen, then measure an H-N-H angle with the protractor.',
+      'Subtract the angle the protractor reads from 109.5 and round to a whole number of degrees.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of degrees.' };
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
       if (r.lone < 1 || hs.length < 3) return { ok: false, msg: 'Not everything from the Arms tray is on the hub yet.' };
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
-      if (Math.abs(v - real) <= 1.5) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the angle the protractor reads between two hydrogen atoms on the finished hub.' };
+      if (Math.abs(v - (109.5 - real)) <= 1.2) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the gap between 109.5 and the angle the protractor reads between two hydrogen atoms on the finished hub.' };
     },
     reward: {
       title: 'Trigonal Pyramidal Angle',
@@ -315,7 +315,7 @@ const test = (id) => [into(id, 'test'), { run: 'magnet' }];
 export const SOLUTIONS = [
   [into('b', 'most')],
   [...deal('aj01'), ...deal('aj12', 3), ...deal('a2')],
-  [...on('h1', 'h2', 'h3', 'l1'), ...read('h1', 'h2'), set(107)],
+  [...on('h1', 'h2', 'h3', 'l1'), ...read('h1', 'h2'), set(3)],
   [between('a'), field, free('a', 14, 53), between('b'), free('b', 42, 53), between('c'), into('c', 'turns', 'tray')],
   [...test('n2'), ...test('o2'), ...test('f2'), into('o2', 'drawn')]
 ];

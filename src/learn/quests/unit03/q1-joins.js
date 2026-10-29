@@ -288,6 +288,7 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
+  2: ['A ring lights on an atom when its outer shell is full.'],
   3: ['The number on each atom is how hard it pulls on shared electrons.']
 };
 applyNotes(STAGES, NOTES);

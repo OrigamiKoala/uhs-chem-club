@@ -654,7 +654,8 @@ export function buildProtractor(c, { face }) {
   const { hw, mats: m } = c;
   const g = new THREE.Group();
   const R = hw;
-  g.add(mesh(new THREE.CylinderGeometry(R, R, 0.005, 40), m.labGlass, { cast: false }));
+  // Brass, not clear acrylic: a clear disc is nearly invisible on the dark plate once it is laid on an arm.
+  g.add(mesh(new THREE.CylinderGeometry(R, R, 0.005, 40), m.ligBrassWorn, { cast: false }));
   const ring = mesh(new THREE.TorusGeometry(R * 0.99, 0.0025, 6, 40), m.labSteel);
   ring.rotation.x = Math.PI / 2;
   ring.position.y = 0.0025;

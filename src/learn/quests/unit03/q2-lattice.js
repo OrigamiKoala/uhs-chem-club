@@ -41,7 +41,7 @@ import {
 } from '../../table/kits/bonds.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 9 };
 
 /**
  * When each withheld word is earned. Specific terms first: the schedule is
@@ -149,7 +149,7 @@ export const STAGES = [
   {
     title: 'Wire Each Block',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'sort the four blocks into trays by whether electrons or ions can move.');
+      return testPrompt(QUEST_KEY, GUESSES, 'sort the four blocks into trays by when the lamp lights.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
@@ -160,7 +160,7 @@ export const STAGES = [
         slabPiece('s4', 'BLOCK D', ARCH, bench(3)),
         leads(0)
       ],
-      zones: { trays: [tray('both', 'Mobile electrons', 14), tray('molten', 'Ions freed by melting', 37), tray('never', 'No mobile charges', 60)] },
+      zones: { trays: [tray('both', 'Lit cold and molten', 14), tray('molten', 'Lit only when molten', 37), tray('never', 'Never lit', 60)] },
       fixtures: [plate(2000)]
     }),
     hints: [
@@ -402,6 +402,41 @@ export const STAGES = [
       log: 'Brass 930 C, copper 1085 C, steel 1450 C, iron 1538 C.',
       title: 'Alloys Melt Lower',
       body: 'Each alloy melted below the pure metal it is made from (brass below copper, steel below iron). Foreign atoms break up the regular rows, so the metal holds together less strongly and gives way at a lower temperature.',
+    }
+  },
+
+  /* ---------------------------------------------------------------- 9 */
+  {
+    title: 'Blocks Not Yet Heated',
+    prompt: 'Order the four blocks on the rail from lowest to highest melting point without heating any of them.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('r1', 'BLOCK A', { build: 'web', melt: 2200, tint: 'iron' }, bench(0)),
+        slabPiece('r2', 'BLOCK B', { build: 'clusters', melt: 60, tint: 'sand', cluster: 3, groups: 8 }, bench(1)),
+        slabPiece('r3', 'BLOCK C', { build: 'grid', melt: 993, tint: 'bone' }, bench(2)),
+        slabPiece('r4', 'BLOCK D', { build: 'metallic', melt: 1085, tint: 'rust' }, bench(3))
+      ],
+      zones: { rail: { id: 'rail', at: { x: 56, y: 55 }, size: { w: 104, h: 14 }, first: 'Lowest', last: 'Highest', items: ['r1', 'r2', 'r3', 'r4'], start: ['r1', 'r2', 'r3', 'r4'] } }
+    }),
+    hints: [
+      'Use the four blocks and the rail.',
+      'Each block\'s picture shows how its particles are held; compare them with the blocks you heated before.',
+      'Particles that are separate groups let go first, and atoms joined all the way through let go last.'
+    ],
+    check(state) {
+      const t = state.table;
+      const order = t.zones.rail.order;
+      const melt = id => declOf(t.pieces[id]).melt;
+      const want = order.slice().sort((a, b) => melt(a) - melt(b));
+      if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four blocks back on the rail in order.' };
+      if (order.join() === want.join()) return { ok: true };
+      return { ok: false, msg: 'Two neighbouring blocks on the rail are in the wrong order for the way their particles are held.' };
+    },
+    reward: {
+      log: 'Molecular, ionic, metallic, then network.',
+      title: 'Predicting From Structure',
+      body: 'With no hotplate, the pictures were enough: separate molecules melt lowest, an ionic lattice and a metal need much more, and atoms joined all the way through hold on longest. The structure of a material predicts how it behaves.',
       last: true
     }
   }
@@ -541,7 +576,8 @@ export const SOLUTIONS = [
   [
     onPlate('a1', 0), onPlate('a2', 1), onPlate('a3', 2), onPlate('a4', 3), heat(950), heat(1100), heat(1460), heat(1550),
     { place: { piece: 'a2', to: 'rail:0' } }, { place: { piece: 'a1', to: 'rail:1' } }, { place: { piece: 'a4', to: 'rail:2' } }, { place: { piece: 'a3', to: 'rail:3' } }
-  ]
+  ],
+  [{ place: { piece: 'r2', to: 'rail:0' } }, { place: { piece: 'r3', to: 'rail:1' } }, { place: { piece: 'r4', to: 'rail:2' } }, { place: { piece: 'r1', to: 'rail:3' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -553,7 +589,8 @@ export const MISSES = [
   [{ place: { piece: 'x3', to: 'slot:liner' } }],
   [{ join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] }, into('m1', 'dents'), into('m3', 'bends'), into('m2', 'holds')],
   [into('x1', 'gap'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')],
-  [{ place: { piece: 'a3', to: 'rail:0' } }]
+  [{ place: { piece: 'a3', to: 'rail:0' } }],
+  [{ place: { piece: 'r1', to: 'rail:0' } }]
 ];
 
 function blankState() { return {}; }

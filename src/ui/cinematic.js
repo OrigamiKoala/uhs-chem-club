@@ -102,7 +102,7 @@ export function playCinematic(id) {
             const elapsed = now - fadeStart;
             const progress = Math.min(1, elapsed / fadeDuration);
             if (video) {
-              video.volume = Math.max(0, startVol * (1 - progress));
+              video.volume = Math.min(1, Math.max(0, startVol * (1 - progress)));
             }
             if (progress < 1) {
               requestAnimationFrame(fadeAudio);

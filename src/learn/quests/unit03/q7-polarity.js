@@ -31,13 +31,13 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { RIG_MOLECULES, planDipole, bondKind } from '../../engine/vsepr.js';
+import { RIG_MOLECULES, planDipole, bondKind, EN } from '../../engine/vsepr.js';
 import {
-  domainTable, plates, molCard, molOf, molRead, streamPiece, arrowsTool, rodTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
+  domainTable, plates, marker, markerValue, molCard, molOf, molRead, streamPiece, arrowsTool, rodTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\belectronegativ\w*/i, introducedAt: 1 },
@@ -235,6 +235,35 @@ export const STAGES = [
       log: 'Polar liquids bend; nonpolar ones do not.',
       title: 'Deflection of Polar Liquids',
       body: 'Molecules with permanent dipole moments reorient in the presence of an electric field and are attracted to an electrostatic charge. Consequently, streams of polar liquids deflect toward a charged rod, whereas nonpolar liquids do not.',
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'The Gap in Numbers',
+    prompt: 'Set the marker to how much harder nitrogen pulls than hydrogen on a shared pair in ammonia, in tenths.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('nh', 'NH3', { x: 40, y: 32 }, { show: ['pulls'] })],
+      fixtures: [marker('gapn', { x: 104, y: 32 }, { label: 'Tenths', max: 30 })]
+    }),
+    hints: [
+      'Use the molecule card and the marker.',
+      'The card prints how hard each kind of atom in the molecule pulls.',
+      'Subtract the smaller pull from the larger and give the answer in tenths, so 0.5 is 5.'
+    ],
+    check(state) {
+      const t = state.table;
+      const v = markerValue(t, 'gapn');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of tenths.' };
+      const want = Math.round((EN.N - EN.H) * 10);
+      if (Math.abs(v - want) <= 1) return { ok: true };
+      return { ok: false, msg: v > want ? 'The marker is larger than the gap between the two printed pulls.' : 'The marker is smaller than the gap between the two printed pulls.' };
+    },
+    reward: {
+      log: 'Nitrogen pulls 0.8 harder than hydrogen.',
+      title: 'A Gap You Can Calculate',
+      body: 'Nitrogen pulls at 3.0 and hydrogen at 2.2, so each N–H bond pair is pulled toward nitrogen with a difference of 0.8. A gap of 0.4 to 1.7 makes a polar covalent bond, and each bond in ammonia is polar.',
       last: true
     }
   }
@@ -348,7 +377,8 @@ export const SOLUTIONS = [
     gap('a'), lay('ar', 'a'), field, into('a', 'stays'),
     gap('b'), into('b', 'turns'), gap('c'), into('c', 'stays'), gap('d'), into('d', 'turns'), gap('e'), into('e', 'turns')
   ],
-  [lay('rod', 's1'), lay('rod', 's2'), lay('rod', 's3'), into('s2', 'bent'), into('s3', 'bent')]
+  [lay('rod', 's1'), lay('rod', 's2'), lay('rod', 's3'), into('s2', 'bent'), into('s3', 'bent')],
+  [{ setDial: { fixture: 'gapn', dial: 'value', value: 8 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -357,7 +387,8 @@ export const MISSES = [
   [gap('a')],
   [],
   [into('a', 'turns'), into('b', 'turns'), into('c', 'stays'), into('d', 'turns'), into('e', 'turns')],
-  [into('s1', 'bent'), into('s3', 'bent')]
+  [into('s1', 'bent'), into('s3', 'bent')],
+  [{ setDial: { fixture: 'gapn', dial: 'value', value: 3 } }]
 ];
 
 function blankState() { return {}; }

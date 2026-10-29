@@ -21,7 +21,7 @@
  */
 
 import {
-  RIG_MOLECULES, planDomains, planDipole, bondAngles
+  RIG_MOLECULES, planDomains, planDipole, bondAngles, EN
 } from '../../engine/vsepr.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { rectOf, SIZES } from '../snap.js';
@@ -235,6 +235,10 @@ function paintCard(ctx, p, state, o) {
   const shows = p.props.show || [];
   const note = text => fitted(ctx, text, x0 + w - 3, y0 + h * 0.79, w * 0.9, { size: Math.max(6, Math.round(h * 0.13)), align: 'right', color: PLATE_COLORS.dust });
   if (shows.includes('arms')) note(`ARMS ${read.domains}`);
+  if (shows.includes('pulls')) {
+    const syms = [...new Set([read.hub, ...read.arms.filter(x => x.kind === 'atom').map(x => x.sym)])];
+    note(syms.map(y => `${y} ${(EN[y] ?? 0).toFixed(1)}`).join('  '));
+  }
   if (shows.includes('angles') && read.angles.length) note(`ATOMS ${read.angles.join(' ')}°`);
   if (arrowsOn(state, p)) {
     // An arrow across each bond toward the atom that pulls the pair harder, and the sum of them all.

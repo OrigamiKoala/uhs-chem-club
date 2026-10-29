@@ -2065,7 +2065,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(q6.STAGES[2].table.pieces && Object.values(q6.STAGES[2].table.pieces).filter(p => p.kind === 'arm').length >= 5, 'unit03/q6-shape stage 3: the tray holds no more arms than the answer');
       const t5 = end(4); const r5 = DOM.hubRead(t5, 'hub');
       same(bondAngles(r5.plan).join(), '104.5', 'unit03/q6-shape stage 5 (water)');
-      near(dial(t5, 'mark'), 104.5, 1.5, 'unit03/q6-shape stage 5 (the marker)');
+      near(dial(t5, 'mark'), 109.5 - 104.5, 1.5, 'unit03/q6-shape stage 5 (the marker: the gap below 109.5)');
     }
     // 2. the predict stage holds the guesses and no instrument; the flat idea (a plus sign at 90 degrees) is a card, and four arms do not settle there
     {
@@ -2247,8 +2247,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         const boxes = Object.values(t.zones.containers).filter(c => c.props?.mo?.rack === f.props.rack);
         same(boxes.length, rowsMO(d.order).reduce((n, r) => n + r.boxes, 0), `unit03/q9-orbitals stage ${i + 1} (boxes on ${f.props.mol}'s rack)`);
         holds(boxes.every(c => c.capacity === 2), `unit03/q9-orbitals stage ${i + 1}: a box that does not hold exactly a pair`);
-        same(MO.supplyLeft(t), d.e, `unit03/q9-orbitals stage ${i + 1} (the jar holds ${f.props.mol}'s valence electrons)`);
-        holds(Object.keys(MO.rackOf(t, f.props.rack)).length === 0, `unit03/q9-orbitals stage ${i + 1}: the rack starts with electrons on it`);
+        same(MO.supplyLeft(t) + MO.readOf(t, f.props.rack).total, d.e, `unit03/q9-orbitals stage ${i + 1} (the jar and the seated boxes hold ${f.props.mol}'s valence electrons)`);
+        holds(i === 2 || Object.keys(MO.rackOf(t, f.props.rack)).length === 0, `unit03/q9-orbitals stage ${i + 1}: the rack starts with electrons on it`);
         // The graded fill is the ground state, and it is the planner's: the rack reads what fillMO says.
         const e = end(i);
         same(MO.readOf(e, f.props.rack).total, d.e, `unit03/q9-orbitals stage ${i + 1} (electrons on the rack)`);
@@ -2317,7 +2317,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       same(r.lone, 1, 'boss-warden phase 3 (lone pairs on the hub)');
       const plan = planDomains(RIG_MOLECULES.NH3.arms);
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm').map(([, i]) => i);
-      near(DM.markerValue(t, 'mark'), angleBetween(r.plan, hs[0], hs[1]), 1.5, 'boss-warden phase 3 (the angle between hydrogens)');
+      near(DM.markerValue(t, 'mark'), 109.5 - angleBetween(r.plan, hs[0], hs[1]), 1.2, 'boss-warden phase 3 (the gap below 109.5)');
       same(r.plan.shape, plan.shape, 'boss-warden phase 3 (the hub\'s shape is NH3\'s)');
       near(angleBetween(r.plan, hs[0], hs[1]), 107, 0.01, 'boss-warden phase 3 (107 degrees)');
     }

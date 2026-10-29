@@ -64,13 +64,14 @@ export function hashId(str) {
 /** Text in the instrument's mono face, sized to the plate. */
 export function plateText(ctx, text, x, y, o = {}) {
   let size = o.size || 12;
-  ctx.font = `${o.weight || 500} ${size}px "JetBrains Mono", "Quantico", monospace`;
+  const face = o.face || '"JetBrains Mono", "Quantico", monospace';
+  ctx.font = `${o.weight || 500} ${size}px ${face}`;
   // A word that must stand in a given width (`maxW`, pixels) is set smaller until it fits: never cut, never past the edge.
   if (o.maxW && ctx.measureText) {
     const w = ctx.measureText(String(text)).width;
     if (w > o.maxW && w > 0) {
       size = Math.max(6, Math.floor(size * o.maxW / w));
-      ctx.font = `${o.weight || 500} ${size}px "JetBrains Mono", "Quantico", monospace`;
+      ctx.font = `${o.weight || 500} ${size}px ${face}`;
     }
   }
   ctx.textAlign = o.align || 'left';

@@ -40,7 +40,7 @@ export const UNIT_03 = {
       title: 'Stone and Wire',
       line: 'Relate macroscopic properties to crystal lattices and networks.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit03/q2-lattice.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_03 = {
       title: 'Polarity',
       line: 'Determine molecular polarity from bond dipoles and symmetry.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit03/q7-polarity.js')
     },

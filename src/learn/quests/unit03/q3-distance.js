@@ -92,7 +92,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'The Bottom',
-    prompt: 'Adjust the hydrogen internuclear distance to find where potential energy is lowest.',
+    prompt: 'Leave the hand where the two hydrogen atoms would stay put if you let go.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.17, components: true, plot: { y0: 26, foot: 9 } })]
@@ -100,7 +100,7 @@ export const STAGES = [
     hints: [
       'Use the hand on the track.',
       'Watch the dotted pull and push traces as well as the energy trace while you move the hand.',
-      'Release at the internuclear separation where potential energy is at its minimum.'
+      'A pair left alone moves toward lower energy, so it stays put where no move would lower it.'
     ],
     check(state) {
       const r = wellRead(state.table, 'w').rows[0];

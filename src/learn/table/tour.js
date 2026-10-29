@@ -93,6 +93,7 @@ export function registerTour(kitId, { fixtures = {}, pieces = {}, dials = {} } =
 const ligarAtomSentence = t => (t.opts?.shells
   ? ' The dots round an atom\'s rim are the electrons on its outer shell, and a ring lights when that shell is full.'
     + (t.opts.charges === false ? '' : ' After a join, a + or − on an atom\'s face is the charge it carries.')
+    + (t.opts.pull ? ' The number under the symbol is how hard the atom pulls on electrons it shares.' : '')
   : '');
 
 /** The slot a guess goes in: only your guess, never marked right or wrong, and the next bench tests it. */
