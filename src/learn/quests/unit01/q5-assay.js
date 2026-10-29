@@ -40,7 +40,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { massTable, assayRead, balanceRead, mixRead } from '../../table/kits/mass.js';
 
-export const meta = { stageCount: 10 };
+export const meta = { stageCount: 11 };
 
 /**
  * When each withheld word is earned. Everything the first four benches taught —
@@ -50,7 +50,8 @@ export const meta = { stageCount: 10 };
 export const VOCABULARY = [
   { term: /\babundances?\b/i, introducedAt: 2 },
   { term: /\baverage atomic mass\b/i, introducedAt: 4 },
-  { term: /\bweighted average\b/i, introducedAt: 4 }
+  { term: /\bweighted average\b/i, introducedAt: 4 },
+  { term: /\bmass spectrum\b/i, introducedAt: 11 }
 ];
 
 const SPEAKER = 'Vess';
@@ -118,13 +119,14 @@ const CL = [{ mass: 35, n: 30 }, { mass: 37, n: 10 }];
 const NE = [{ mass: 20, n: 36 }, { mass: 22, n: 4 }];
 const B = [{ mass: 10, n: 8 }, { mass: 11, n: 32 }];
 const LI = [{ mass: 6, n: 4 }, { mass: 7, n: 36 }];
+const SPEC = [{ mass: 28, pct: 90 }, { mass: 29, pct: 6 }, { mass: 30, pct: 4 }];
 const MG = [{ mass: 24, n: 32 }, { mass: 25, n: 4 }, { mass: 26, n: 4 }];
 
 const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
 const chuteSample = t => assayRead(t, 'assay');
 
 /* ------------------------------------------------------------------
-   THE TEN STAGES
+   THE ELEVEN STAGES
    Exported so `verify:learn` and `verify:table` can run SOLUTIONS and MISSES through every `check`.
    ------------------------------------------------------------------ */
 export const STAGES = [
@@ -507,7 +509,39 @@ export const STAGES = [
     reward: {
       log: 'Lithium: 90 percent weigh 7.',
       title: 'Working Back From the Average',
-      body: 'The average sat 0.9 of the way from 6 to 7, so 90% of the atoms weigh 7. Natural lithium is close to this: about 92% lithium-7.',
+      body: 'The average sat 0.9 of the way from 6 to 7, so 90% of the atoms weigh 7. Natural lithium is close to this: about 92% lithium-7.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 11 */
+  {
+    title: 'Reading a Spectrum',
+    prompt: 'What is the average weight of one atom of this element, from its spectrum?',
+    entry: { id: 'ans', label: 'Average weight', unit: 'u' },
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [],
+      fixtures: [
+        { id: 'spec', kind: 'spectrum', label: 'Share of atoms (%)', at: { x: 75, y: 34 }, size: { w: 100, h: 52 }, noRun: true, props: { peaks: SPEC, axis: { min: 27, max: 31 } } }
+      ]
+    }),
+    hints: [
+      'Read the weight under each bar and the share of atoms it stands for.',
+      'Most of the atoms are in one bar, so the average sits close to that weight.',
+      'Multiply each weight by its share as a fraction of one, and add the three results.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ans');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the average weight of one atom.' };
+      const want = SPEC.reduce((m, p) => m + p.mass * p.pct / 100, 0);
+      if (Math.abs(v - want) <= 0.051) return { ok: true };
+      if (Math.abs(v - 29) < 0.051) return { ok: false, msg: 'The bars are not the same height, so the atoms are not shared equally between the three weights.' };
+      return { ok: false, msg: 'That average does not match the heights of the bars.' };
+    },
+    reward: {
+      log: 'The spectrum averages 28.14.',
+      title: 'Mass Spectrum',
+      body: 'A mass spectrum plots each isotope\'s weight against its share of the atoms, and the average atomic mass is the sum of weight times share. Here 90% at 28, 6% at 29 and 4% at 30 average 28.14.',
       last: true
     }
   }
@@ -613,7 +647,8 @@ export const SOLUTIONS = [
   [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 4 } }],
   [...tip('a'), slide(35.5), ...tip('b'), slide(36), ...tip('c'), slide(35), to('a', 'tray:natural'), to('b', 'tray:altered'), to('c', 'tray:altered')],
   [...tip('a'), typed('ans', '24.3')],
-  [typed('ans', '90')]
+  [typed('ans', '90')],
+  [typed('ans', '28.14')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -627,7 +662,8 @@ export const MISSES = [
   [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 1 } }],
   [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:natural'), to('b', 'tray:natural'), to('c', 'tray:altered')],
   [...tip('a'), typed('ans', '25')],
-  [typed('ans', '50')]
+  [typed('ans', '50')],
+  [typed('ans', '29')]
 ];
 
 function blankState() { return {}; }

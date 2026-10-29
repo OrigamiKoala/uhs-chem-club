@@ -508,7 +508,44 @@ function paintFixture(ctx, f, state, b) {
   else if (f.kind === 'balance') paintBalance(ctx, f, state, b);
   else if (f.kind === 'scale') paintScale(ctx, f, state, b);
   else if (f.kind === 'mixer' || f.kind === 'tally') paintMixer(ctx, f, state, b);
+  else if (f.kind === 'spectrum') paintSpectrum(ctx, f, b);
   else ATOMS_KIT.paintFixture?.(ctx, f, state, b);
+}
+
+/**
+ * A mass spectrum, drawn flat: one bar for each isotope, its weight along the bottom and its share of the atoms up the side
+ * (`props.peaks: [{ mass, pct }]`, `props.axis: { min, max }`). A printed graph, so nothing here is read from the table's state.
+ */
+function paintSpectrum(ctx, f, b) {
+  const sc = b.sc;
+  const w = b.x1 - b.x0;
+  const h = b.y1 - b.y0;
+  const peaks = f.props.peaks || [];
+  const { min, max } = f.props.axis || { min: Math.min(...peaks.map(p => p.mass)) - 1, max: Math.max(...peaks.map(p => p.mass)) + 1 };
+  const left = b.x0 + 9 * sc;
+  const right = b.x1 - 3 * sc;
+  const top = b.y0 + 7 * sc;
+  const base = b.y1 - 10 * sc;
+  const size = Math.max(8, Math.round(2.3 * sc));
+  const xOf = m => left + ((m - min) / (max - min)) * (right - left);
+  const yOf = pct => base - (pct / 100) * (base - top);
+  ctx.lineWidth = 1;
+  for (const pct of [0, 25, 50, 75, 100]) {
+    ctx.strokeStyle = pct === 0 ? PLATE_COLORS.dust : PLATE_COLORS.rim;
+    ctx.beginPath();
+    ctx.moveTo(left, yOf(pct) + 0.5);
+    ctx.lineTo(right, yOf(pct) + 0.5);
+    ctx.stroke();
+    plateText(ctx, String(pct), left - 1.5 * sc, yOf(pct), { size, align: 'right', base: 'middle', color: PLATE_COLORS.dust });
+  }
+  for (const p of peaks) {
+    const x = xOf(p.mass);
+    const bw = Math.max(3, 2.2 * sc);
+    ctx.fillStyle = PLATE_COLORS.phosphor;
+    ctx.fillRect(x - bw / 2, yOf(p.pct), bw, base - yOf(p.pct));
+    plateText(ctx, String(p.mass), x, base + 3.2 * sc, { size, align: 'center', base: 'middle', weight: 700, color: PLATE_COLORS.text });
+  }
+  plateText(ctx, 'weight of one atom', (left + right) / 2, b.y1 - 2.6 * sc, { size: Math.max(7, size - 1), align: 'center', base: 'middle', color: PLATE_COLORS.dust });
 }
 
 function paintMixer(ctx, f, state, b) {

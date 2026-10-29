@@ -46,6 +46,7 @@ const FIXTURE = {
   balance: { title: 'Balance', text: 'Two pans hang from a beam. The beam tips down toward the heavier pan, and lies flat when both pans weigh the same.{counters}' },
   scale: { title: 'Scale', text: 'Drag something onto the pan to read how much it weighs. {runSentence}' },
   mixer: { title: 'Mix', text: 'This pan is filled with atoms of two kinds, a lighter kind and a heavier kind. The weight on the pan depends on how many of each there are.' },
+  spectrum: { title: 'Bar graph', dials: false, text: 'Each bar is one weight of atom. Read the weight under it, and how high it stands against the scale on the left: the share of all the atoms that weigh that much.' },
   tally: { title: 'Tally', dials: false, text: 'Use the "Moles" dial to enter the number you worked out.' }
 };
 

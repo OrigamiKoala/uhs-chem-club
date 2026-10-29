@@ -109,7 +109,7 @@ Fixed in the third pass (looked at in the browser unless noted):
 
 Still open:
 
-- Reading a printed mass spectrum as a graph with peaks: not built. The tipped piles stand in for it.
+- Reading a printed mass spectrum as a graph: built as `q5` stage 11 (a `spectrum` fixture, three bars, typed average). Played by hand: a wrong answer refused with its reason, then 28.14 and the reward card. The bench is plate-and-type again; the tipped piles in stages 3, 4 and 9 are what builds the idea.
 - A real-hand check of every stage that was only looked at remains owed.
 
 ## AP coverage (Unit 1)
@@ -117,7 +117,7 @@ Still open:
 | Topic | Where | State |
 | --- | --- | --- |
 | 1.1 moles, molar mass, Avogadro | `q6` 4 to 8, 10 | covered, quantitative added (grams to particles) |
-| 1.2 mass spectra of elements | `q5` 1 to 4, 9, 10 | piles of tipped atoms are a mass spectrum; never shown as a graph with peaks and relative abundance |
+| 1.2 mass spectra of elements | `q5` 1 to 4, 9 to 11 | tipped piles, then a drawn spectrum with bars and a percent scale (stage 11) |
 | 1.3 composition of pure substances | `q6` 9 to 12 | added: percent by mass, empirical, molecular formula |
 | 1.4 composition of mixtures | `q6` 13 | added: percent of a component by mass in a washed mixture |
 | 1.5 atomic structure, configuration | `q2` 4 to 6 | shells to 2, 8, 8; subshell configurations belong to Lanternfall |

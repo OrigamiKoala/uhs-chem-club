@@ -3363,6 +3363,12 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       near(Number(end(q5, 9).entries.ans), heavy[0] / mixer.total * 100, 'unit01/q5-assay stage 10 (the percent of heavy atoms)');
       same(M.countOfSample(can), mixer.total, 'unit01/q5-assay stage 10 (the canister and the mix hold the same number of atoms)');
     }
+    // 11. a typed average read off a drawn spectrum
+    {
+      const peaks = q5.STAGES[10].table.fixtures.find(f => f.kind === 'spectrum').props.peaks;
+      holds(Math.abs(peaks.reduce((n, p) => n + p.pct, 0) - 100) < 1e-9, 'unit01/q5-assay stage 11: the bars do not sum to 100 percent');
+      near(Number(end(q5, 10).entries.ans), Math.round(peaks.reduce((m, p) => m + p.mass * p.pct / 100, 0) * 100) / 100, 'unit01/q5-assay stage 11 (the average of the drawn spectrum)');
+    }
     // 5. a sample in one bin balances at that bin's own weight: a prediction on a new case
     {
       const piece = declared(q5, 5, 'a');
