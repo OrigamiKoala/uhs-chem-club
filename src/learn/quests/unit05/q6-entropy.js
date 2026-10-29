@@ -218,12 +218,12 @@ export const STAGES = [
     widget,
     table: heatTable({
       fixtures: [
-        plaqueFixture('s0', 'Entropy of one mole at 298 K, J/(mol·K)', { x: 50, y: 30 }, [
+        plaqueFixture('s0', 'Entropy of one mole at 298 K, J/(mol·K)', { x: 46, y: 30 }, [
           `CaCO₃(s)    ${S0('CaCO3(s)')}`,
           `CaO(s)    ${S0('CaO(s)')}`,
           `CO₂(g)    ${S0('CO2(g)')}`
-        ], { w: 76 }),
-        markerFixture('dS', 'Entropy change', { x: 116, y: 30 }, { min: 0, max: 400, step: 5, start: 0, unit: 'J/(mol·K)', w: 56 })
+        ], { w: 72 }),
+        markerFixture('dS', 'Entropy change', { x: 118, y: 30 }, { min: 0, max: 400, step: 5, start: 0, unit: 'J/(mol·K)', w: 54 })
       ]
     }),
     hints: [
