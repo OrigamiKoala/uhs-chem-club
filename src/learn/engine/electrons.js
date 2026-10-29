@@ -409,6 +409,9 @@ export const IONIZATION = {
   Na: 496, Mg: 738, Al: 578, K: 419
 };
 
+/** Electron affinities, kJ/mol released when a gaseous neutral atom gains one electron (negative: energy has to be put in). */
+export const ELECTRON_AFFINITY = { Li: 60, C: 122, N: -7, O: 141, F: 328, Na: 53, Cl: 349 };
+
 /** Magnesium's successive ionization energies, kJ/mol. */
 export const MG_SUCCESSIVE = [738, 1451, 7733];
 

@@ -38,6 +38,7 @@ export const LANTERNFALL_TOUR = {
     'pes:writer': { title: 'Page of rows', text: 'Each dial is one row of an atom, lowest energy at the top. Set it to the number of electrons you think that row holds.', dials: false },
     'trends:spring': { title: 'Spring gauge', text: 'Put an atom in the holder, choose the electron with the "Electron" dial, and press "{run}". The gauge tugs that electron and prints the pull, with the charge in the middle of the atom, the electrons in between and the charge the electron really feels.', dials: false },
     'trends:sizer': { title: 'Size gauge', text: 'Put an atom in the holder and its radius is laid along a scale. Where a "{run}" key is on the gauge, press it to read the radius.', dials: false },
+    'trends:gain': { title: 'Atom gauge', text: 'Put an atom in the holder and press "{run}". The gauge prints one reading for that atom, and the reading stays on the gauge until you measure another atom.', dials: false },
     'trends:strip': { title: 'Electron Remover', text: 'Put an atom in the holder and press "{run}". The electron remover takes off the outermost electron and prints what that required in energy. Press again to take off the next.', dials: false },
     'cuvette:spectro': { title: 'Spectrometer', text: 'Slide a cuvette into the optical beam. The spectrometer shines light through it and prints the reading.', dials: false },
     'cuvette:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out.', dials: false },

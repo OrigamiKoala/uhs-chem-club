@@ -36,16 +36,18 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  trendsTable, atomCard, electronPiece, springFixture, sizerFixture, stripFixture,
+  trendsTable, gainFixture, gainOf, atomCard, electronPiece, springFixture, sizerFixture, stripFixture,
   springRead, sizeRead, stripRead, pullOf, hardestPull, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell,
   RADIUS, ION_RADIUS, IONIZATION, zOf, nameOf
 } from '../../table/kits/trends.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bionization energ(?:y|ies)\b/i, introducedAt: 4 },
   { term: /\bionic radi(?:us|i)\b/i, introducedAt: 5 },
+  { term: /\belectron affinity\b/i, introducedAt: 6 },
+  { term: /\belectronegativity\b/i, introducedAt: 7 },
   { term: /\beffective nuclear charge\b/i, introducedAt: 3 },
   { term: /\bshielding\b/i, introducedAt: 3 },
   { term: /\bcoulomb.?s law\b/i, introducedAt: 3 },
@@ -70,10 +72,11 @@ const widget = { type: 'table', label: 'The bench' };
 const SPRING = 'sp';
 const SIZER = 'sz';
 const STRIP = 'st';
+const GAIN = 'ga';
 
 const ROW_Y = 53;
 const rowAt = i => ({ x: 14 + i * 24, y: ROW_Y });
-const NAMES = { Li: 'LITHIUM', Na: 'SODIUM', Be: 'BERYLLIUM', Mg: 'MAGNESIUM', B: 'BORON', C: 'CARBON', N: 'NITROGEN', F: 'FLUORINE', K: 'POTASSIUM', Cl: 'CHLORINE' };
+const NAMES = { Li: 'LITHIUM', Na: 'SODIUM', Be: 'BERYLLIUM', Mg: 'MAGNESIUM', B: 'BORON', C: 'CARBON', N: 'NITROGEN', F: 'FLUORINE', K: 'POTASSIUM', Cl: 'CHLORINE', O: 'OXYGEN' };
 /** Cards in a row along the bottom: `[id, sym]` each, labelled with the element's name. */
 const row = list => list.map(([id, sym, label], i) => atomCard(id, label || NAMES[sym], sym, rowAt(i)));
 
@@ -270,7 +273,7 @@ export const STAGES = [
           electronPiece('e', { x: 96, y: ROW_Y - 2 })
         ],
         fixtures: [st.fixture, sz.fixture],
-        zones: { slots: [...st.slots, ...sz.slots], rail: railAt('Smallest size', 'Largest size') }
+        zones: { slots: [...st.slots, ...sz.slots], rail: { ...railAt('Smallest size', 'Largest size'), at: { x: 116, y: 38 }, size: { w: 64, h: 12 } } }
       }),
       hints: [
         'Use "Remove Electron" with a sodium atom in the electron remover, "Add Electron" on the chlorine card, and the size gauge.',
@@ -292,6 +295,80 @@ export const STAGES = [
         title: 'Ionic Radius',
         body: 'A positive ion is much smaller than its atom, because losing the outer shell leaves the remaining electrons pulled in by the same nucleus. A negative ion is bigger, since an extra electron adds repulsion without any extra pull. These sizes are the ionic radius.',
         model: { type: 'radii', items: [{ sym: 'Na+', pm: 102 }, { sym: 'Cl-', pm: 181 }, { sym: 'Na', pm: 186 }], caption: 'The sodium ion, the chlorine ion and the sodium atom as spheres to scale: losing the outer shell shrinks sodium a great deal.' },
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const g = gainFixture(GAIN, { x: 27, y: 18 }, { mode: 'affinity' });
+    return {
+      title: 'Electron Affinity',
+      prompt: 'Order carbon, nitrogen, oxygen and fluorine by the energy released when each gains an electron, most first.',
+      widget,
+      table: trendsTable({
+        pieces: row([['c', 'C'], ['n', 'N'], ['o', 'O'], ['f', 'F']]),
+        fixtures: [g.fixture],
+        zones: { slots: g.slots, rail: railAt('Releases most energy', 'Releases least energy') }
+      }),
+      hints: [
+        'Put an atom in the holder and press "Add Electron".',
+        'Compare the four readings, and compare their order with the order of the atoms across the row.',
+        'Put the atom that releases the most energy at the left of the rail and the one that releases the least at the right.'
+      ],
+      check(state) {
+        const t = state.table;
+        const order = railOf(t);
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms on the rail.' };
+        const val = id => gainOf(sym(t, id), 'affinity');
+        const want = order.slice().sort((a, b) => val(b) - val(a));
+        if (order.join() === want.join()) return { ok: true };
+        for (let k = 0; k < order.length - 1; k++) {
+          if (val(order[k]) < val(order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and it releases less energy.` };
+        }
+        return { ok: false, msg: 'The rail does not run the way the readings do.' };
+      },
+      reward: {
+        log: 'F 328, O 141, C 122, N -7.',
+        title: 'Electron Affinity',
+        body: 'The energy released when a gaseous atom gains an electron is its electron affinity. It generally rises across a period, so fluorine releases the most; nitrogen releases almost none, because its extra electron must pair up in a half-filled 2p subshell.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const g = gainFixture(GAIN, { x: 27, y: 18 }, { mode: 'pauling', label: 'Bond Gauge', runLabel: 'Measure Pull' });
+    return {
+      title: 'Pull in a Bond',
+      prompt: 'Order sodium, carbon, oxygen and fluorine by how hard each pulls on the electrons it shares in a bond, strongest first.',
+      widget,
+      table: trendsTable({
+        pieces: row([['na', 'Na'], ['c', 'C'], ['o', 'O'], ['f', 'F']]),
+        fixtures: [g.fixture],
+        zones: { slots: g.slots, rail: railAt('Pulls hardest', 'Pulls least') }
+      }),
+      hints: [
+        'Put an atom in the holder and press "Measure Pull".',
+        'Compare the four readings with where each atom sits in the table, left to right and top to bottom.',
+        'Put the atom with the largest reading at the left of the rail and the smallest at the right.'
+      ],
+      check(state) {
+        const t = state.table;
+        const order = railOf(t);
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms on the rail.' };
+        const val = id => gainOf(sym(t, id), 'pauling');
+        const want = order.slice().sort((a, b) => val(b) - val(a));
+        if (order.join() === want.join()) return { ok: true };
+        for (let k = 0; k < order.length - 1; k++) {
+          if (val(order[k]) < val(order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and it pulls less.` };
+        }
+        return { ok: false, msg: 'The rail does not run the way the readings do.' };
+      },
+      reward: {
+        log: 'F 3.98, O 3.44, C 2.55, Na 0.93.',
+        title: 'Electronegativity',
+        body: 'An atom\'s pull on the electrons it shares in a bond is its electronegativity. It rises across a period and falls down a group, so fluorine pulls hardest and a metal such as sodium pulls least. The atom with the larger value takes the bigger share of a shared pair.',
         last: true
       }
     };
@@ -301,7 +378,9 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   2: ['Lay an atom in the size gauge to read its size.'],
-  3: ['Drag an atom into the holder, then press Tug Electron.']
+  3: ['Drag an atom into the holder, then press Tug Electron.'],
+  6: ['Drag an atom into the holder, then press Add Electron.'],
+  7: ['Drag an atom into the holder, then press Measure Pull.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -336,13 +415,16 @@ const SIZER_SLOT = `slot:${SIZER}.atom`;
 const tug = id => [put(id, SPRING_SLOT), { run: SPRING }];
 const strip = (id, times = 1) => [put(id, STRIP_SLOT), ...Array.from({ length: times }, () => ({ run: STRIP }))];
 const size = id => [put(id, SIZER_SLOT)];
+const gain = id => [put(id, `slot:${GAIN}.atom`), { run: GAIN }];
 
 export const SOLUTIONS = [
   [{ predict: 'li' }],
   [...['li', 'be', 'b', 'c'].flatMap(size), put('li', 'rail:0'), put('be', 'rail:1'), put('b', 'rail:2'), put('c', 'rail:3')],
   [...['li', 'na', 'be', 'mg'].flatMap(id => [put(id, SPRING_SLOT)]), put('li', 'tray:one'), put('na', 'tray:one'), put('be', 'tray:two'), put('mg', 'tray:two')],
   [...strip('li'), ...strip('be'), ...strip('b'), put('li', 'rail:0'), put('b', 'rail:1'), put('be', 'rail:2')],
-  [...strip('na2'), { join: ['e', 'cl'] }, put('na2', 'rail:0'), put('cl', 'rail:1'), put('na1', 'rail:2')]
+  [...strip('na2'), { join: ['e', 'cl'] }, put('na2', 'rail:0'), put('cl', 'rail:1'), put('na1', 'rail:2')],
+  [...['c', 'n', 'o', 'f'].flatMap(gain), put('f', 'rail:0'), put('o', 'rail:1'), put('c', 'rail:2'), put('n', 'rail:3')],
+  [...['na', 'c', 'o', 'f'].flatMap(gain), put('f', 'rail:0'), put('o', 'rail:1'), put('c', 'rail:2'), put('na', 'rail:3')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -351,7 +433,9 @@ export const MISSES = [
   [put('c', 'rail:0'), put('b', 'rail:1'), put('be', 'rail:2'), put('li', 'rail:3')],
   [put('li', 'tray:two'), put('na', 'tray:two'), put('be', 'tray:one'), put('mg', 'tray:one')],
   [...strip('li'), ...strip('be'), ...strip('b'), put('li', 'rail:0'), put('be', 'rail:1'), put('b', 'rail:2')],
-  [...strip('na2'), { join: ['e', 'cl'] }, put('na2', 'rail:0'), put('na1', 'rail:1'), put('cl', 'rail:2')]
+  [...strip('na2'), { join: ['e', 'cl'] }, put('na2', 'rail:0'), put('na1', 'rail:1'), put('cl', 'rail:2')],
+  [...['c', 'n', 'o', 'f'].flatMap(gain), put('o', 'rail:0'), put('f', 'rail:1'), put('c', 'rail:2'), put('n', 'rail:3')],
+  [...['na', 'c', 'o', 'f'].flatMap(gain), put('na', 'rail:0'), put('c', 'rail:1'), put('o', 'rail:2'), put('f', 'rail:3')]
 ];
 
 function blankState() { return {}; }

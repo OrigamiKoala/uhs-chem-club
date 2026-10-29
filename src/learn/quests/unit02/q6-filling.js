@@ -284,7 +284,7 @@ export const STAGES = [
     const rack = shelf('rack', rows, SHELF_AT, { pre: rackFor(10), locked: true });
     return {
       title: 'A Chloride Ion',
-      prompt: 'Build the chloride ion, Cl\u207b, on the rack at the lowest possible energy.',
+      prompt: 'Build the chloride ion, Cl\u2212, on the rack at the lowest possible energy.',
       widget,
       table: shellsTable({
         pieces: [...rack.boxes, ...hands(86, 10, 16)],

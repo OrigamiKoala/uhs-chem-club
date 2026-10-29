@@ -10,7 +10,7 @@
  */
 
 import { PLATE_COLORS } from '../../engine/plates.js';
-import { itemOf, springRead, sizeRead, stripRead } from './trends-read.js';
+import { itemOf, springRead, sizeRead, stripRead, gainRead } from './trends-read.js';
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -148,8 +148,25 @@ function paintStrip(ctx, f, state, b) {
   say(ctx, r.last != null ? `REQUIRED ${r.last} kJ/mol` : 'NOTHING REMOVED YET', F.x(x), F.y(15.4), F.size(2.6, 7), { color: r.last != null ? PHOS : DIM, weight: 700, maxW: F.len(f.size.w - x - 2) });
 }
 
+function paintGain(ctx, f, state, b) {
+  const F = frameOf(b);
+  const r = gainRead(state, f.id);
+  const x = 22;
+  const maxW = F.len(f.size.w - x - 2);
+  if (!r.piece) { say(ctx, 'NO ATOM IN THE HOLDER', F.x(x), F.y(12), F.size(2.6, 7), { color: DIM, maxW }); return; }
+  if (r.last == null) { say(ctx, 'NOTHING MEASURED YET', F.x(x), F.y(12), F.size(2.6, 7), { color: DIM, maxW }); return; }
+  if (r.mode === 'pauling') {
+    say(ctx, 'PULL ON SHARED ELECTRONS', F.x(x), F.y(11.6), F.size(2.4, 6.5), { color: DUST, maxW });
+    say(ctx, r.last.toFixed(2), F.x(x), F.y(15.6), F.size(3, 7.5), { color: PHOS, weight: 700, maxW });
+    return;
+  }
+  say(ctx, 'ENERGY RELEASED', F.x(x), F.y(11.6), F.size(2.6, 7), { color: DUST, maxW });
+  say(ctx, `${r.last < 0 ? '\u2212' : ''}${Math.abs(r.last)} kJ/mol`, F.x(x), F.y(15.6), F.size(2.8, 7), { color: PHOS, weight: 700, maxW });
+}
+
 export function paintFixture(ctx, f, state, b) {
   if (f.kind === 'spring') paintSpring(ctx, f, state, b);
   else if (f.kind === 'sizer') paintSizer(ctx, f, state, b);
   else if (f.kind === 'strip') paintStrip(ctx, f, state, b);
+  else if (f.kind === 'gain') paintGain(ctx, f, state, b);
 }

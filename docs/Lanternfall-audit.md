@@ -1,6 +1,6 @@
 # Lanternfall audit
 
-Oct 29, 2026. World: Lanternfall (`unit02`, light, orbitals, trends): nine benches and the Eater. After this pass: 6 + 6 + 5 + 5 + 5 + 6 + 6 + 5 + 5 stages and 5 boss phases (four stages added, 49 to 53 counting the boss).
+Oct 29, 2026. World: Lanternfall (`unit02`, light, orbitals, trends): nine benches and the Eater. After this pass: 6 + 6 + 5 + 5 + 5 + 6 + 6 + 5 + 5 stages and 5 boss phases (six stages added).
 
 ## Method and limits (read this first)
 
@@ -41,7 +41,7 @@ Operable / Intuitive / Busywork / Intuition / Accurate. "ok" means no defect fou
 | --- | --- | --- |
 | 1.5 Configuration | q6-filling 1 to 6 | Covered. Neutral atoms through scandium; ion configurations now asked (Cl⁻ built; Fe³⁺ stated in the reward, not built, because the bench ladder puts 4s below 3d for every atom and cannot show the reversal). |
 | 1.6 PES | q7-pes 1 to 5 | Covered. |
-| 1.7 Periodic trends | q8-trends 1 to 5; q7-pes 6 | Radius, Zeff, ionization energy and ionic radius covered; successive ionization energies now asked (q7-pes 6). **Electron affinity and the electronegativity trend are still not taught.** The trends kit has no plaque or "add an electron" fixture, so this needs a new fixture. |
+| 1.7 Periodic trends | q8-trends 1 to 5; q7-pes 6 | Radius, Zeff, ionization energy and ionic radius covered; successive ionization energies now asked (q7-pes 6). Electron affinity (`q8-trends` 6) and electronegativity (`q8-trends` 7) are now taught on a new Atom gauge fixture (`gainFixture`); stage 6 was played in the browser up to two atoms (carbon 122 kJ/mol, nitrogen −7 kJ/mol), stage 7 by script only. |
 | 3.11 Photons, c = λν | q1-wave 6 | Now a typed worked figure, proportional first (a mast to scale from). |
 | 3.12 Photoelectric, E = hν | q2-photon 6 | Now a typed worked figure: photon energy minus work function. Boss phase 2 still tests the idea on the bench. |
 | 3.13 Beer-Lambert | q9-absorb | Bench only (calibration). Not re-audited. |
@@ -52,12 +52,14 @@ Operable / Intuitive / Busywork / Intuition / Accurate. "ok" means no defect fou
 - Fixed the energy ladder labels and sign (`table/kits/optics-draw.js`), committed as 4999e53.
 - `q1-wave` stage 1: equal case message.
 - Added `q1-wave` 6 (c = λν), `q2-photon` 6 (E = hν, kinetic energy of the freed electron), `q6-filling` 6 (Cl⁻), `q7-pes` 6 (successive ionization energies). Stage counts moved in each quest's `meta`, `worlds/unit02-quantum.js` and `PRODUCT.md` (288 stages). `verify:table`, `verify:story`, `verify:docs`, `verify:lanternfall`, `verify:bench`, `verify:tallow`, `verify:bellows` and `verify:ember` pass. `verify:learn` fails only on the other agent's bank check.
-- Not committed: the four quest files, `unit02-quantum.js` and `PRODUCT.md`, because the quest files also carry another agent's uncommitted `PRACTICE` removal.
+- Also: `q5-numbers` stage 4 note is one line (it had split across the plate); `q6-filling` prompt uses a true minus (the font has no superscript minus); `q8-trends` stage 5 rail moved clear of the size gauge; `q8-trends` 6 and 7 added (electron affinity, electronegativity) with `gainFixture`; bench cap raised to 7 stages.
+- Played by hand this round: `q6-filling` 6 (Cl⁻ built with drags, reward shown), `q8-trends` 6 (two atoms measured). Screenshot only: `q4-cloud` 2 to 4, `q5-numbers` 1, 3 to 5, `q7-pes` 2 to 4 and 6, `q8-trends` 2 to 5, `q9-absorb` 1 to 3. Still never opened: `q9-absorb` 4 and 5, `boss-eater`.
+- Open layout defects: `q7-pes` stage 4 end label "Held loosest" hidden behind the chamber and the "N protons" notes low-contrast; `q7-pes` 2 and 3 chamber labels crowded by the holder ring; `q5-numbers` 1 dial labels overlapped by the knobs.
+- Earlier (superseded by the commit 63c6af0): not committed: the four quest files, `unit02-quantum.js` and `PRODUCT.md`, because the quest files also carry another agent's uncommitted `PRACTICE` removal.
 
 ## Still open
 
 - Play `q4-cloud` to `boss-eater` by hand; this pass did not.
-- Electron affinity and electronegativity (needs a fixture).
 - Fe³⁺ (and other transition-metal ions) built on a bench with the reversed ladder.
 - Dial reliability by a real mouse; a tap on a dial track does nothing.
 - The small recorder plot on the pulse timer bench.

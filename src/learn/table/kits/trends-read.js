@@ -9,7 +9,7 @@
  */
 
 import { planPull, shellsOf, outerShell } from '../../engine/electronbench.js';
-import { RADIUS, ION_RADIUS, IONIZATION, MG_SUCCESSIVE, zOf, nameOf } from '../../engine/electrons.js';
+import { RADIUS, ION_RADIUS, IONIZATION, MG_SUCCESSIVE, ELECTRON_AFFINITY, ELECTRONEGATIVITY, zOf, nameOf } from '../../engine/electrons.js';
 
 export { planPull, shellsOf, outerShell, RADIUS, ION_RADIUS, IONIZATION, MG_SUCCESSIVE, zOf, nameOf };
 
@@ -98,6 +98,20 @@ export function stripRead(state, id) {
   if (!piece) return { piece: null };
   const charge = piece.props.charge || 0;
   return { piece, charge, next: charge >= 0 ? costOf(piece.props.sym, charge) : null, last: piece.props.lastCost ?? null };
+}
+
+/** What the adder or the bond gauge reads for a neutral atom: `mode` 'affinity' (kJ/mol released) or 'pauling' (pull on shared electrons). */
+export function gainOf(sym, mode) {
+  const t = mode === 'pauling' ? ELECTRONEGATIVITY : ELECTRON_AFFINITY;
+  return t[sym] ?? null;
+}
+
+/** The adder or bond gauge: the atom in its holder and what the last press read. */
+export function gainRead(state, id) {
+  const f = state.fixtures[id];
+  const piece = seatedIn(state, f.props.slot);
+  if (!piece) return { piece: null };
+  return { piece, mode: f.props.mode, last: piece.props.lastGain ?? null, charge: piece.props.charge || 0 };
 }
 
 /** The size of an atom piece as it stands now (null where unsized). */

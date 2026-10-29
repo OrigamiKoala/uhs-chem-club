@@ -274,7 +274,7 @@ export const STAGES = [
 const NOTES = {
   1: ['Adjust the quantum numbers (n, l, ml)', 'to select the target orbital.'],
   3: ['Use "Add ↑" and "Add ↓" tools to place electrons in an orbital box.'],
-  4: ['Drag each electron onto the rack. The rack refuses', 'any it cannot hold, and says why.'],
+  4: ['Drag each electron onto the rack. It refuses any it cannot hold.'],
   5: ['Use "Add ↑" and "Add ↓" to fill every orbital box in the third shell.']
 };
 applyNotes(STAGES, NOTES);

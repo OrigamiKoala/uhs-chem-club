@@ -13,7 +13,7 @@
 
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS } from './trends-draw.js';
-import { seatedIn, pullOf, costOf, itemOf, shellsNow, radiusOf } from './trends-read.js';
+import { seatedIn, pullOf, costOf, itemOf, shellsNow, radiusOf, gainOf } from './trends-read.js';
 
 export const TRENDS_KIT_ID = 'trends';
 export const TRENDS_BOUNDS_H = 64;
@@ -39,6 +39,13 @@ function run(state, fixtureId) {
     const cost = costOf(piece.props.sym, charge);
     if (cost == null) return { noop: 'The bench has measured no further than that.' };
     return { x: charge + 1, y: cost, label: piece.props.sym, stamp: { [piece.id]: { charge: charge + 1, lastCost: cost } } };
+  }
+  if (f.kind === 'gain') {
+    if (!piece) return { noop: 'Put an atom in the holder first.' };
+    if ((piece.props.charge || 0) !== 0) return { noop: 'This gauge reads neutral atoms only.' };
+    const v = gainOf(piece.props.sym, f.props.mode);
+    if (v == null) return { noop: 'The bench has no reading for that atom.' };
+    return { x: 1, y: v, label: piece.props.sym, stamp: { [piece.id]: { lastGain: v } } };
   }
   if (f.kind === 'sizer') {
     if (!piece) return { noop: 'Put an atom in the holder first.' };
@@ -136,6 +143,19 @@ export function stripFixture(id, at, { label = 'Electron Remover', runLabel = 'R
   const y0 = at.y - size.h / 2;
   return {
     fixture: { id, kind: 'strip', label, at: { ...at }, size, runLabel, dials: {}, props: { backdrop: true, slot: slotId } },
+    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 11, h: 11 } }],
+    size
+  };
+}
+
+/** The adder (`mode: 'affinity'`) or the bond gauge (`mode: 'pauling'`): a holder and one key that prints a reading for the neutral atom in it. */
+export function gainFixture(id, at, { mode = 'affinity', label = 'Electron Adder', runLabel = 'Add Electron' } = {}) {
+  const size = { w: 46, h: 32 };
+  const slotId = `${id}.atom`;
+  const x0 = at.x - size.w / 2;
+  const y0 = at.y - size.h / 2;
+  return {
+    fixture: { id, kind: 'gain', label, at: { ...at }, size, runLabel, dials: {}, props: { backdrop: true, slot: slotId, mode } },
     slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 11, h: 11 } }],
     size
   };
