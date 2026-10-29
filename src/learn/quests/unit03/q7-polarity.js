@@ -87,8 +87,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
-        molCard('a', 'H2', pullRow(0), {}), molCard('b', 'HBr', pullRow(1), {}), molCard('c', 'KF', pullRow(2), {}),
-        molCard('d', 'HCl', pullRow(3), {}),
+        molCard('a', 'H2', pullRow(0), { field: true }), molCard('b', 'HBr', pullRow(1), { field: true }), molCard('c', 'KF', pullRow(2), { field: true }),
+        molCard('d', 'HCl', pullRow(3), { field: true }),
         arrowsTool('ar', { x: 128, y: 53 })
       ],
       zones: { trays: [

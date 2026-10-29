@@ -867,8 +867,9 @@ export class BenchViewer3D {
       this.lastPointer = { x: e.clientX, y: e.clientY };
       this.movedWhileDown += Math.abs(dx) + Math.abs(dy);
 
-      if (this.leaning && !this.fpsControls) {
-        // Leaned in on standalone / headless bench: swing a little and settle back on release.
+      if (this.leaning) {
+        // Leaned in (standalone, or deployed in a world): a drag swings the view a little and it settles back on release. A slipped
+        // grab on the plate must never walk the player off the bench (and a phone has no key to lean back in); Leave Bench and the walk keys do that.
         if (this.movedWhileDown >= 6) this.leanLook(dx, dy);
         return;
       }

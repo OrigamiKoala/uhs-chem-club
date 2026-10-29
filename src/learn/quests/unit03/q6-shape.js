@@ -73,7 +73,7 @@ const HUB_AT = { x: 40, y: 32 };
 const binTray = (label = 'Arms') => ({ id: 'bin', label, at: { x: 106, y: 15 }, size: { w: 52, h: 15 }, cell: 13 });
 
 /** A hub table: the hub, the pieces in the tray, the protractor, the dial that turns the view, a marker to set. */
-function hubTable({ sym, arms, label = 'Centre atom', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
+function hubTable({ sym, arms, label = 'Hub', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
   const hs = hubSet('hub', sym, HUB_AT, { label, gauge, turner: roomy ? { x: 96, y: 31 } : { x: 108, y: 35 } });
   const inTray = arms.map(a => ({ ...a, zone: 'tray:bin' }));
   // Six or more pieces: a longer tray, and the protractor moves down beside the turn dial to make room for it.
@@ -112,7 +112,7 @@ export const STAGES = [
     title: 'Two Arms',
     prompt: 'Set the angle marker to the bond angle between two electron domains pushing as far apart as possible.',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'X', arms: [A('a1', 'A', 1, 'Arm'), A('a2', 'A', 1, 'Arm')], marker: { label: 'Angle' } }),
+    table: hubTable({ sym: 'Hub', arms: [A('a1', 'Arm', 1, 'Arm'), A('a2', 'Arm', 1, 'Arm')], marker: { label: 'Angle' } }),
     hints: [
       'Use the arms, the protractor and the angle marker.',
       'Measure the angle between the two arms with the protractor.',
@@ -160,7 +160,7 @@ export const STAGES = [
       return testPrompt(QUEST_KEY, GUESSES, 'add arms one at a time and set the marker to the fewest arms that cannot all lie flat on the plate.');
     },
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'X', arms: [1, 2, 3, 4, 5].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Arms', max: 6 }, gauge: 'thick', protractor: false, roomy: true }),
+    table: hubTable({ sym: 'Hub', arms: [1, 2, 3, 4, 5].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), marker: { label: 'Arms', max: 6 }, gauge: 'thick', protractor: false, roomy: true }),
     hints: [
       'Use the arms, the turn dial and the marker; the plate reads the depth of the arms.',
       'Add the arms one at a time and note the depth reading after each one.',
@@ -247,7 +247,7 @@ export const STAGES = [
     title: 'Six on the Hub',
     prompt: 'Set the angle marker to the smallest angle between two of six arms on the hub.',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'X', arms: [1, 2, 3, 4, 5, 6].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Angle' }, roomy: true }),
+    table: hubTable({ sym: 'Hub', arms: [1, 2, 3, 4, 5, 6].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), marker: { label: 'Angle' }, roomy: true }),
     hints: [
       'Use the arms, the protractor and the angle marker.',
       'Read the angle between several different pairs of arms; the pairs do not all read the same.',
@@ -276,7 +276,7 @@ export const STAGES = [
     title: 'Two Unseen Arms on Six',
     prompt: 'Put four arms and two lone pairs on the hub, then set the marker to the smallest angle between two arms.',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'X', arms: [...[1, 2, 3, 4].map(i => A(`a${i}`, 'A', 1, 'Arm')), L('l1'), L('l2')], marker: { label: 'Angle' }, roomy: true }),
+    table: hubTable({ sym: 'Hub', arms: [...[1, 2, 3, 4].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), L('l1'), L('l2')], marker: { label: 'Angle' }, roomy: true }),
     hints: [
       'Use the arms, the balloons, the protractor and the angle marker.',
       'Turn the view to see which way the two balloons point, then read angles between pairs of arms.',

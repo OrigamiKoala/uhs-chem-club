@@ -255,8 +255,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
-      pieces: pairsAt(12, [10, 40, 70, 100], P5),
-      zones: { trays: [trayAt('one', 'One pair', 24, 38, 28, 16), trayAt('two', 'Two pairs', 60, 38, 28, 16), trayAt('three', 'Three pairs', 96, 38, 28, 16)] }
+      pieces: pairsGrid([10, 27], [22, 82], P5),
+      zones: { trays: [trayAt('one', 'One pair', 24, 50, 28, 16), trayAt('two', 'Two pairs', 60, 50, 28, 16), trayAt('three', 'Three pairs', 96, 50, 28, 16)] }
     }),
     hints: [
       'Use the atoms and the three trays.',
