@@ -34,9 +34,10 @@ import { EN } from '../../engine/vsepr.js';
 import { MOLECULES, DRAWINGS, allLit, drawing, drawingKey, gaugeLength, linkKey, planLewis } from '../../engine/lewis.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
+  { term: /\bfractional bond orders?\b/i, introducedAt: 8 },
   { term: /\bformal charges?\b/i, introducedAt: 4 },
   { term: /\bresonance structures?\b/i, introducedAt: 3 },
   { term: /\bresonance\b/i, introducedAt: 2 }
@@ -293,7 +294,42 @@ export const STAGES = [
     reward: {
       log: 'The minus goes where the pull is.',
       title: 'The Stronger Puller Takes the Minus',
-      body: 'When two drawings have similar charges, the better one puts the negative charge on the atom that pulls electrons harder. Nitrogen pulls harder than sulfur, so it takes the minus here.',
+      body: 'When two drawings have similar charges, the better one puts the negative charge on the atom that pulls electrons harder. Nitrogen pulls harder than sulfur, so it takes the minus here.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    title: 'Four Over Three',
+    prompt: 'Set the dial to the order of each nitrogen-oxygen bond in the real nitrate ion.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'NO3', 44, 30, 44, DRAWINGS.NO3_a]], {
+      pieces: [GAUGE([100, 46])],
+      fixtures: [{
+        id: 'order', kind: 'tally', label: 'Each bond', at: { x: 94, y: 24 }, size: { w: 40, h: 16 }, noRun: true,
+        dials: { order: { min: 1, max: 2, step: 1 / 12, value: 1, label: 'Order', labels: Array.from({ length: 13 }, (_, k) => (1 + k / 12).toFixed(2)) } }
+      }]
+    }),
+    hints: [
+      'Drop the gauge on all three bonds of the drawing and compare the readings.',
+      'Compare the number of shared pairs in the whole ion with the number of bonds that hold them.',
+      'Share the pairs equally among the bonds that hold them, and set the dial to that.'
+    ],
+    check(state) {
+      const t = state.table;
+      const v = t.fixtures.order.dials.order.value;
+      if (v === 1) return { ok: false, notYet: true, msg: 'Set the dial to a bond order.' };
+      const sl = slateOf(t, 'a');
+      const bonds = Object.values(sl.placed.bonds).filter(n => n > 0);
+      const order = bonds.reduce((a, n) => a + n, 0) / bonds.length;
+      if (Math.abs(v - order) <= 0.02) return { ok: true };
+      if (Math.abs(v - Math.round(v)) < 0.01) return { ok: false, msg: 'A whole number does not describe all three bonds of this ion.' };
+      return { ok: false, msg: 'Count the shared pairs in the whole drawing and share them among the bonds.' };
+    },
+    reward: {
+      log: 'Four pairs share three bonds.',
+      title: 'Fractional Bond Order',
+      body: 'Four shared pairs spread over three equal bonds give each a bond order of one and a third. A bond order that is not a whole number belongs to a molecule whose electrons are shared among several bonds.',
       last: true
     }
   }
@@ -408,7 +444,8 @@ export const SOLUTIONS = [
   [use('fcstamp', 'a0'), use('fcstamp', 'a1'), use('mark', 'a1')],
   [{ setDial: { fixture: 'fc', dial: 'fc', value: 1 } }],
   [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a1'), use('fcstamp', 'a2')],
-  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a2')]
+  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a2')],
+  [use('gauge', 'aj01'), use('gauge', 'aj02'), use('gauge', 'aj03'), { setDial: { fixture: 'order', dial: 'order', value: 4 / 3 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -419,7 +456,8 @@ export const MISSES = [
   [use('fcstamp', 'a0'), use('mark', 'a0')],
   [{ setDial: { fixture: 'fc', dial: 'fc', value: 0 } }],
   [...deal('aj01', 3), ...deal('aj12'), ...deal('a0'), ...deal('a2', 3)],
-  [...deal('aj01'), ...deal('aj12', 3), ...deal('a0', 3), ...deal('a2')]
+  [...deal('aj01'), ...deal('aj12', 3), ...deal('a0', 3), ...deal('a2')],
+  [use('gauge', 'aj01'), { setDial: { fixture: 'order', dial: 'order', value: 1.5 } }]
 ];
 
 function blankState() { return {}; }

@@ -1898,9 +1898,9 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     {
       const t = endOf(1);
       const mk = BOND.wellRead(t, 'w').marker;
-      near(mk, PAIRS['H-Cl'].de, 15, 'unit03/q3-distance stage 2 (the depth of H-Cl, kJ/mol)');
+      near(mk, 2 * PAIRS['H-Cl'].de, 25, 'unit03/q3-distance stage 2 (twice the depth of H-Cl, kJ/mol: 2 mol of bonds)');
       const d = t.fixtures.w.dials.depth;
-      if (!(d.max >= PAIRS['H-Cl'].de * 1.1)) fail('unit03/q3-distance stage 2: the marker cannot reach below the bottom of the well');
+      if (!(d.max >= PAIRS['H-Cl'].de * 2.1)) fail('unit03/q3-distance stage 2: the marker cannot reach below the bottom of the well');
     }
     // 3. the predict stage holds the guesses and no instrument; the wrong idea (more pairs sit further apart) is a card
     {

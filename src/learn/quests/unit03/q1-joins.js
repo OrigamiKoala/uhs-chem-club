@@ -251,7 +251,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Multiple Bonds',
-    prompt: 'Sort each pair of atoms into a tray by how many electron pairs are held between them.',
+    prompt: 'Sort each pair of atoms into a tray by how many electron pairs its two atoms will share.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
@@ -259,9 +259,9 @@ export const STAGES = [
       zones: { trays: [trayAt('one', 'One pair', 24, 50, 28, 16), trayAt('two', 'Two pairs', 60, 50, 28, 16), trayAt('three', 'Three pairs', 96, 50, 28, 16)] }
     }),
     hints: [
-      'Use the atoms and the three trays.',
-      'Compare the number of rods between the two atoms of a pair after you press it.',
-      'Each rod is one shared pair, so file each pair by the number of rods you counted.'
+      'Use the atoms and the three trays; pressing a pair shows what it does.',
+      'Count the outer electrons on each atom and how many more it needs to fill its outer shell.',
+      'Each shared pair gives both atoms one more electron, so the pairs shared equal the electrons each atom is short.'
     ],
     check(state) {
       const t = state.table;
@@ -269,10 +269,9 @@ export const STAGES = [
       if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
-      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together.' };
       const want = ['one', 'two', 'three', 'one'];
       const bad = pairs.findIndex((p, i) => p.tray !== want[i]);
-      if (bad >= 0) return { ok: false, msg: `A pair in the "${{ one: 'One pair', two: 'Two pairs', three: 'Three pairs' }[pairs[bad].tray]}" tray has a different number of rods between its atoms.` };
+      if (bad >= 0) return { ok: false, msg: `A pair in the "${{ one: 'One pair', two: 'Two pairs', three: 'Three pairs' }[pairs[bad].tray]}" tray does not match the electrons its atoms are short of; press the pair to check.` };
       return { ok: true };
     },
     reward: {

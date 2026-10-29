@@ -120,7 +120,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Pulling Apart',
-    prompt: 'Set the depth marker to the energy required to dissociate the hydrogen-chlorine bond.',
+    prompt: 'Set the depth marker to the energy needed to break the bonds in 2 mol of hydrogen chloride.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       fixtures: [wells('w', [row('a', 'H-Cl', 'Pair A', 250)], {
@@ -130,22 +130,22 @@ export const STAGES = [
     }),
     hints: [
       'Use the hand on the track and the depth marker.',
-      'Measure the energy difference between the zero reference line and the well minimum.',
-      'Align the marker with the well minimum to measure the bond dissociation energy.'
+      'Read how deep the well is below the zero line; the plot is for 1 mol of bonds.',
+      'Twice as many bonds need twice the energy, so scale the depth of the well to 2 mol.'
     ],
     check(state) {
       const r = wellRead(state.table, 'w');
       if (!r.marker) return { ok: false, notYet: true, msg: 'Set the depth marker against the trace.' };
-      const de = r.rows[0].de;
-      if (Math.abs(r.marker - de) <= 15) return { ok: true };
-      return r.marker < de
-        ? { ok: false, msg: 'The marker\'s line sits above the bottom of the trace.' }
-        : { ok: false, msg: 'The marker\'s line sits below the bottom of the trace.' };
+      const want = 2 * r.rows[0].de;
+      if (Math.abs(r.marker - want) <= 25) return { ok: true };
+      return r.marker < want
+        ? { ok: false, msg: 'The marker\'s line sits above the energy that 2 mol of these bonds need.' }
+        : { ok: false, msg: 'The marker\'s line sits below the energy that 2 mol of these bonds need.' };
     },
     reward: {
       log: 'The depth of the well.',
       title: 'Bond Energy',
-      body: 'The depth of the potential well from zero energy corresponds to the bond dissociation energy, which is the energy required to break the bond.'
+      body: 'The depth of the well is the bond energy, the energy to break 1 mol of the bonds: about 431 kJ/mol for H–Cl. Twice the bonds take twice the energy, so 2 mol take about 862 kJ.'
     }
   },
 
@@ -274,7 +274,8 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the hand along its track.']
+  1: ['Drag the hand along its track.'],
+  2: ['The plot is for 1 mol of H–Cl bonds.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -376,7 +377,7 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
   [hand('a', 90), hand('a', 40), hand('a', 74)],
-  [hand('a', 200), hand('a', 127), hand('a', 300), hand('depth', 430)],
+  [hand('a', 200), hand('a', 127), hand('a', 300), hand('depth', 860)],
   [guess('closer')],
   [hand('a', 120), hand('b', 154), hand('c', 134), to('b', 0), to('c', 1), to('a', 2)],
   [onPlate('a', 0), onPlate('b', 1), onPlate('c', 2), heat(775), heat(825), heat(2875), to('c', 0), to('a', 1), to('b', 2)],
@@ -386,7 +387,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [hand('a', 120)],
-  [hand('a', 127), hand('depth', 200)],
+  [hand('a', 127), hand('depth', 430)],
   [],
   [to('a', 0), to('b', 1), to('c', 2)],
   [to('b', 0), to('a', 1), to('c', 2)],

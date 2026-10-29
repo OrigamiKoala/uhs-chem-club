@@ -182,7 +182,7 @@ export const RIG_MOLECULES = {
   XeF4: { id: 'XeF4', label: 'XeF₄', hub: 'Xe', arms: [...many(4, () => A('F')), L(), L()] },
   XeF2: { id: 'XeF2', label: 'XeF₂', hub: 'Xe', arms: [A('F'), A('F'), L(), L(), L()] },
   ClF3: { id: 'ClF3', label: 'ClF₃', hub: 'Cl', arms: [A('F'), A('F'), A('F'), L(), L()] },
-  HCN: { id: 'HCN', label: 'HCN', hub: 'C', arms: [A('H'), A('N', 3)] },
+  HCN: { id: 'HCN', label: 'H–C≡N', hub: 'C', arms: [A('H'), A('N', 3)] },
   C2H4: { id: 'C2H4', label: 'C₂H₄', hub: 'C', arms: [A('H'), A('H'), A('C', 2)] },
   C2H6: { id: 'C2H6', label: 'C₂H₆', hub: 'C', arms: [A('H'), A('H'), A('H'), A('C')] },
   C2H2: { id: 'C2H2', label: 'C₂H₂', hub: 'C', arms: [A('H'), A('C', 3)] }

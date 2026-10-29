@@ -67,7 +67,7 @@ export const UNIT_03 = {
       title: 'Resonance',
       line: 'Model resonance hybrids with intermediate bond orders.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit03/q5-resonance.js')
     },
@@ -94,14 +94,14 @@ export const UNIT_03 = {
       title: 'Hybridization',
       line: 'Form hybrid orbitals, sigma bonds, and pi bonds.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit03/q8-hybrid.js')
     },
     {
       id: 'q9-orbitals',
       title: 'Molecular Orbitals',
-      line: 'Fill molecular orbitals and explain paramagnetism.',
+      line: 'Optional, beyond AP: fill molecular orbitals and explain paramagnetism.',
       arena: 'bench',
       stageCount: 3,
       status: 'live',

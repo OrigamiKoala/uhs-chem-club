@@ -34,11 +34,11 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } from '../../engine/vsepr.js';
 import {
-  domainTable, orbital, mixbowl, twist, bowlRead, bondsBuilt, twistRead, molCard, molRead
+  domainTable, orbital, mixbowl, twist, bowlRead, bondsBuilt, twistRead, molCard, molRead, marker, markerValue
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\brestricted rotation\b/i, introducedAt: 5 },
@@ -213,7 +213,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Twisting',
-    prompt: 'Attempt to rotate the carbon-carbon bond in ethane and ethene by ninety degrees.',
+    prompt: 'Find out which of these two bonds lets its far end turn a quarter turn.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       fixtures: [twist('tw1', { x: 37, y: 32 }, 'single', { label: 'C₂H₆', size: { w: 62, h: 50 } }), twist('tw2', { x: 105, y: 32 }, 'double', { label: 'C₂H₄', size: { w: 62, h: 50 } })]
@@ -235,7 +235,38 @@ export const STAGES = [
     reward: {
       log: 'A single bond turns; a double bond holds.',
       title: 'Restricted Rotation',
-      body: 'A single bond consists of a cylindrically symmetrical sigma bond that permits free rotation. In contrast, rotating a double bond breaks the parallel overlap of pi orbitals, resulting in restricted rotation.',
+      body: 'A single bond consists of a cylindrically symmetrical sigma bond that permits free rotation. In contrast, rotating a double bond breaks the parallel overlap of pi orbitals, resulting in restricted rotation.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'Counting Sigma and Pi',
+    prompt: 'Set the markers to the number of sigma bonds and the number of pi bonds in hydrogen cyanide, HCN.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('hcn', 'HCN', { x: 34, y: 34 })],
+      fixtures: [marker('sig', { x: 100, y: 20 }, { label: 'Sigma', max: 12 }), marker('pi', { x: 100, y: 44 }, { label: 'Pi', max: 12 })]
+    }),
+    hints: [
+      'Use the molecule card and the two markers.',
+      'Count the lines between each pair of atoms in the formula on the card.',
+      'Every bond holds exactly one sigma bond, and each line beyond the first in a bond is a pi bond.'
+    ],
+    check(state) {
+      const t = state.table;
+      const sig = markerValue(t, 'sig');
+      const pi = markerValue(t, 'pi');
+      if (!sig && !pi) return { ok: false, notYet: true, msg: 'Set the markers to numbers of bonds.' };
+      const want = countSigmaPi('HCN');
+      if (sig !== want.sigma) return { ok: false, msg: 'The first marker is not the number of that kind of bond the molecule holds.' };
+      if (pi !== want.pi) return { ok: false, msg: 'The second marker is not the number of that kind of bond the molecule holds.' };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Two sigma bonds and two pi bonds.',
+      title: 'Counting Sigma and Pi',
+      body: 'Every single, double or triple bond holds one sigma bond; each further shared pair is a pi bond. HCN has a single C–H bond and a C≡N triple bond: 1 + 1 = 2 sigma bonds, and 2 pi bonds in the triple bond.',
       last: true
     }
   }
@@ -345,7 +376,8 @@ export const SOLUTIONS = [
   [bond('h1', 'cpx'), bond('h2', 'cpy')],
   ['os', 'opx', 'opy', 'opz'].map(id => mix(id, 'mx')),
   [bond('a1', 'b1'), bond('ap', 'bp')],
-  [turn('tw1', 90), turn('tw2', 90)]
+  [turn('tw1', 90), turn('tw2', 90)],
+  [{ setDial: { fixture: 'sig', dial: 'value', value: 2 } }, { setDial: { fixture: 'pi', dial: 'value', value: 2 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -354,7 +386,8 @@ export const MISSES = [
   [bond('h1', 'cpx')],
   [mix('os', 'mx'), mix('opx', 'mx')],
   [bond('a1', 'b1')],
-  [turn('tw1', 60), turn('tw2', 90)]
+  [turn('tw1', 60), turn('tw2', 90)],
+  [{ setDial: { fixture: 'sig', dial: 'value', value: 3 } }, { setDial: { fixture: 'pi', dial: 'value', value: 1 } }]
 ];
 
 function blankState() { return {}; }

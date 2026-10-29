@@ -107,6 +107,14 @@ Work after this audit is recorded at the end of this file.
   - **Camera trap:** inside a world, a drag on empty plate dropped the player out of the lean-in view, with only an "[E] LEAN IN" prompt to return (a phone has no E key). A drag while leaned in now swings the view a little and settles back (`bench3d.js`); Leave Bench and the walk keys still leave. Reproduced before, and confirmed after, with a real drag.
   - **Ball faces:** the generic hub and arm in `q6-shape` read "Hub" and "Arm" instead of "X" and "A".
   - **`q1-joins` stage 5:** the four pairs are in the same 2 x 2 grid as stages 2 and 3, with trays below.
+- **Teaching fixes after the operability pass:**
+  - **q4-dots, new stage 1 "Count the Electrons":** water's slate hides its "OF 8 LEFT" count and the player sets a dial to the valence electrons the three atoms bring, so the budget is counted before any drawing (previously the tray told the total and a student could hunt for lit lamps). Now 6 stages.
+  - **q1-joins stage 5:** the prompt is now "how many electron pairs its two atoms will share" and pressing is no longer required, so a student can reason from the outer electrons each atom shows (N five, O six, F seven, H one) and how many more it needs; hints and miss message follow that reasoning. Seen: the electrons are visible on the atoms in 3D.
+  - **q3-distance stage 2:** the marker is set to the energy for **2 mol** of H–Cl bonds (the plot is for 1 mol, printed on the table), so it is proportional reasoning with units, not reading a depth off a graph. Reward and verify updated.
+  - **q5-resonance, new stage 8 "Four Over Three":** restored from history: gauge the three equal bonds of nitrate and set a dial to the fractional bond order, 4/3. Now 8 stages.
+  - **q8-hybrid:** stage 5's prompt is an objective ("find out which of these two bonds lets its far end turn a quarter turn") not a command, and a new stage 6 "Counting Sigma and Pi" asks for the sigma and pi bonds of H–C≡N (the HCN card now shows its bond lines). Now 6 stages.
+  - **q9-orbitals:** it was already `optional: true` in the chart (the first audit said it was not); its descriptor line now says "Optional, beyond AP".
+- **Still weak, not fixed:** `q1-joins` stage 3 still sorts by an observed charge on the faces; `q2-lattice` stages 2 and 3 still sort to a taxonomy the student is not asked to reason about; `q5` stages 1 to 3 and the Warden were never played; `q9` stage 3 is still overloaded; `q6` and `q7` have only light quantitative content; `q8` stage 5 is still an observation of a refusal, now with an objective prompt. None of the new stages has been played by a student.
 
 ## Blockers and bugs logged, not fixed
 
