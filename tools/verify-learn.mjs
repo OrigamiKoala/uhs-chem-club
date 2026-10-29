@@ -1966,7 +1966,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const drawn = (t, id) => { const sl = ATOMS.slateOf(t, id); return { bonds: sl.placed.bonds, lone: sl.placed.lone, dots: sl.placed.dots, sl }; };
       const nz = o => Object.entries(o).filter(([, v]) => v).sort();
       const norm = d => JSON.stringify([nz(d.bonds), nz(d.lone), nz(d.dots)]);
-      for (const [i, key] of [[0, 'H2O'], [2, 'CO2'], [4, 'BF3']]) {
+      for (const [i, key] of [[1, 'H2O'], [3, 'CO2'], [5, 'BF3']]) {
         const d = drawn(endOf(i), 'a');
         if (norm(d) !== norm(DRAWINGS[key])) fail(`unit03/q4-dots stage ${i + 1}: the solution leaves a ${key} drawing that is not the intended one`);
         if (!lit(key, DRAWINGS[key])) fail(`unit03/q4-dots stage ${i + 1}: the intended ${key} drawing does not light every lamp`);
@@ -1974,8 +1974,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       }
       // Stage 2 holds the guesses and no instrument; the wrong idea (a single stick to each oxygen) is a card, and it leaves two lamps dark.
       {
-        const t0 = tableOf(1);
-        holds(q4.STAGES[1].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q4-dots stage 2: the predict stage shows an instrument');
+        const t0 = tableOf(2);
+        holds(q4.STAGES[2].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q4-dots stage 3: the predict stage shows an instrument');
         holds(['one', 'two', 'three'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q4-dots stage 2: the guesses are the three cards and nothing else');
         holds(!lit('CO2', drawing({ '0-1': 1, '1-2': 1 }, { 0: 3, 2: 3 })), 'unit03/q4-dots stage 3: carbon dioxide with a single stick to each oxygen lights every lamp');
       }
@@ -1993,13 +1993,13 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       placed = LEWIS.addBond(MOLECULES.HOF, placed, 0, 1).placed;
       if (!LEWIS.addBond(MOLECULES.HOF, placed, 0, 2).refused) fail('unit03/q4-dots stage 4: the board lets one hydrogen atom join two others');
       {
-        const t4 = tableOf(3);
+        const t4 = tableOf(4);
         const a = TABLE.applyAll(t4, [{ join: ['pairs', 'aj01'] }, { join: ['pairs', 'aj02'] }]);
         if (a.last.joined !== false || !a.last.home || !/hydrogen/.test(a.last.reason || '')) fail('unit03/q4-dots stage 4: a second joint on the hydrogen atom is not refused with the board\'s rule');
         if (a.pieces.pairs.at.x !== t4.pieces.pairs.at.x) fail('unit03/q4-dots stage 4: a refused pair does not go back to the tray');
       }
       const bf = planLewis('BF3', DRAWINGS.BF3);
-      if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 5: boron\'s lamp is not amber in the intended BF3 drawing');
+      if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 6: boron\'s lamp is not amber in the intended BF3 drawing');
     }
     if (q5) {
       // Every slate on a bench-five table is Lewis's own molecule, and every graded answer is recomputed here from `planLewis`, the drawings

@@ -58,7 +58,7 @@ export const UNIT_03 = {
       title: 'Lewis Structures',
       line: 'Construct Lewis structures and apply the octet rule.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit03/q4-dots.js')
     },

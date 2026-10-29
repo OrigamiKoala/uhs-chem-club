@@ -38,14 +38,14 @@ import { atomTable, slateOf, slateParts, slateLayout } from '../../table/kits/at
 import { MOLECULES, DRAWINGS, planLewis, allLit, trayFor } from '../../engine/lewis.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
-  { term: /\bincomplete octets?\b/i, introducedAt: 5 },
-  { term: /\bcentral atoms?\b/i, introducedAt: 4 },
-  { term: /\blewis structures?\b/i, introducedAt: 1 },
-  { term: /\blone pairs?\b/i, introducedAt: 1 },
-  { term: /\boctets?\b/i, introducedAt: 1 }
+  { term: /\bincomplete octets?\b/i, introducedAt: 6 },
+  { term: /\bcentral atoms?\b/i, introducedAt: 5 },
+  { term: /\blewis structures?\b/i, introducedAt: 2 },
+  { term: /\blone pairs?\b/i, introducedAt: 2 },
+  { term: /\boctets?\b/i, introducedAt: 2 }
 ];
 
 export const BUILDS_ON = ['unit03/q1-joins', 'unit03/q3-distance', 'unit01/q2-core'];
@@ -92,7 +92,7 @@ function slateTable(slates, { single = false, fixtures = [], tiles = TILES } = {
 const HOF_POS = [[0.5, 0.22], [0.2, 0.78], [0.8, 0.78]];
 
 /* ------------------------------------------------------------------
-   THE FIVE STAGES
+   THE SIX STAGES
    ------------------------------------------------------------------ */
 
 /** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
@@ -104,6 +104,40 @@ const GUESSES = [
 ];
 
 export const STAGES = [
+  /* ---------------------------------------------------------------- 1 */
+  (() => {
+    const part = slateParts('a', 'H2O', slateLayout('H2O', 46, 32, 44, undefined), { hideTotal: true });
+    return {
+      title: 'Count the Electrons',
+      prompt: 'Set the dial to the total number of valence electrons the three atoms of water bring.',
+      widget: { type: 'table', label: 'The bench' },
+      table: atomTable({
+        opts: OPTS,
+        pieces: part.pieces,
+        fixtures: [part.fixture, {
+          id: 'count', kind: 'tally', label: 'Electrons to place', at: { x: 96, y: 32 }, size: { w: 40, h: 16 }, noRun: true,
+          dials: { count: { min: 0, max: 20, step: 1, value: 0, label: 'Total' } }
+        }]
+      }),
+      hints: [
+        'Set the dial to the total you counted.',
+        'Each atom brings the electrons in its outermost shell: count them for hydrogen, then for oxygen.',
+        'Add the valence electrons of every atom in the molecule: two hydrogens and one oxygen.'
+      ],
+      check(state) {
+        const v = state.table.fixtures.count.dials.count.value;
+        if (!v) return { ok: false, notYet: true, msg: 'Set the dial to a number of electrons.' };
+        if (v === trayFor(MOLECULES.H2O)) return { ok: true };
+        return { ok: false, msg: 'The dial does not match the sum of the valence electrons the atoms bring.' };
+      },
+      reward: {
+        log: 'Two hydrogens at 1 and an oxygen at 6.',
+        title: 'The Electron Budget',
+        body: 'Every atom brings its valence electrons: 1 from each hydrogen and 6 from oxygen, 8 in all. Those eight are the whole budget a drawing of water can place.'
+      }
+    };
+  })(),
+
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Water\'s Electrons',
@@ -232,7 +266,7 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag a Pair onto the gap between two atoms,', 'or onto one atom.']
+  2: ['Drag a Pair onto the gap between two atoms,', 'or onto one atom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -330,6 +364,7 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
+  [{ setDial: { fixture: 'count', dial: 'count', value: 8 } }],
   [...deal('aj01'), ...deal('aj02'), ...deal('a0', 2)],
   [guess('two')],
   [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2)],
@@ -339,6 +374,7 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
+  [{ setDial: { fixture: 'count', dial: 'count', value: 7 } }],
   [...deal('aj01'), ...deal('aj02')],
   [],
   [...deal('aj01'), ...deal('aj12'), ...deal('a0', 3), ...deal('a2', 3)],

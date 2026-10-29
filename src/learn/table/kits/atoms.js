@@ -561,7 +561,7 @@ export function slateLayout(molKey, cx, cy, size, pos = null) {
  * board round them, sized to the atoms with room above for the tray's count. A stage that adjusts the
  * charge names its chip (a fixture whose dial is `charge`).
  */
-export function slateParts(id, molKey, points, { chip = null, prefill = null } = {}) {
+export function slateParts(id, molKey, points, { chip = null, prefill = null, hideTotal = false } = {}) {
   const mol = MOLECULES[molKey];
   const r1 = v => Math.round(v * 10) / 10;
   // `prefill` is a drawing (`lewis.js` `drawing(bonds, lone, dots)`) already standing on the slate when the stage
@@ -584,7 +584,7 @@ export function slateParts(id, molKey, points, { chip = null, prefill = null } =
   const fixture = {
     id, kind: 'slate', label: mol.label, noRun: true,
     at: { x: r1((b.x0 + b.x1) / 2), y: r1((b.y0 + b.y1) / 2) }, size: { w: r1(b.x1 - b.x0), h: r1(b.y1 - b.y0) },
-    props: { mol: molKey, atoms: atoms.map(a => a.id), joints: joints.map((j, k) => [j.id, mol.links[k][0], mol.links[k][1]]), ...(chip ? { chip } : {}) }
+    props: { mol: molKey, atoms: atoms.map(a => a.id), joints: joints.map((j, k) => [j.id, mol.links[k][0], mol.links[k][1]]), ...(chip ? { chip } : {}), ...(hideTotal ? { hideTotal } : {}) }
   };
   return { pieces: [...atoms, ...joints], fixture };
 }
@@ -1568,7 +1568,8 @@ function paintSlate(ctx, f, state, b) {
 
   // 3. Tray count & charge
   const size = Math.max(8, Math.round(2.3 * b.sc));
-  plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
+  // A stage that asks the player to count the electrons does not print the count (`props.hideTotal`).
+  if (!f.props.hideTotal) plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
   if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 4, b.y0 + size * 2.4, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
 }
 
