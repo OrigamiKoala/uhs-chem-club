@@ -93,14 +93,26 @@ export function cupRead(state, fid) {
   const moles = item && item.kind === 'charge' ? (d.moles ? p.molesList[Math.round(d.moles.value) - 1] : item.props.moles) : 0;
   let q = joules * loss;
   let Tf;
-  if (item && item.kind === 'block') {
+  let melted = 0;
+  if (item && item.kind === 'block' && item.props.latent) {
+    // Ice (a block with a latent heat in J/g): the bath first warms it to 0 °C, then pays for each gram that melts, and only once it has all
+    // melted do the bath and the meltwater share one temperature. Short of that, the cup holds ice and water at 0 °C.
+    const mi = item.props.m;
+    const L = item.props.latent;
+    const warm = mi * item.props.c * Math.max(0, -item.props.T);
+    const avail = mWater * c * Math.max(0, T0) - warm;
+    if (avail <= 0) Tf = T0 - warm / (mWater * c);
+    else if (avail < mi * L) { Tf = 0; melted = avail / L; }
+    else { Tf = (avail - mi * L) / ((mWater + mi) * c); melted = mi; }
+    q = heatTransfer(mWater, c, Tf - T0);
+  } else if (item && item.kind === 'block') {
     Tf = equilibriumTemp(mWater, c, T0, item.props.m, item.props.c, item.props.T);
     q = heatTransfer(mWater, c, Tf - T0);
   } else {
     if (item && item.kind === 'charge') q += -item.props.dH * moles * 1000 * loss;
     Tf = T0 + q / (mWater * c);
   }
-  return { mWater, c, T0, Tf, dT: Tf - T0, q, joules, item, moles, lidOff, loss };
+  return { mWater, c, T0, Tf, dT: Tf - T0, q, joules, item, moles, lidOff, loss, melted };
 }
 
 /* ------------------------------------------------------------------

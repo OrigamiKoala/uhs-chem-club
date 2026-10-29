@@ -229,8 +229,8 @@ export function heatTable(spec, { w = HEAT_BOUNDS.w, recorder = null } = {}) {
 const piece = (kind, id, label, at, props = {}, extra = {}) => ({ id, kind, label, at, props, ...extra });
 
 /** A body with a mass, a specific heat and a temperature: a block, or a bath. `mat` is how its mass line ends ("Fe"). */
-export const block = (id, label, at, { m, c, T, mat = '', mass = null }, extra = {}) =>
-  piece('block', id, label, at, { m, c, T, mat, ...(mass ? { mass } : {}) }, extra);
+export const block = (id, label, at, { m, c, T, mat = '', mass = null, latent = null }, extra = {}) =>
+  piece('block', id, label, at, { m, c, T, mat, ...(mass ? { mass } : {}), ...(latent ? { latent } : {}) }, extra);
 /** A charge of chemicals for the cup: its moles and its ΔH per mole (the system's sign). `shown` replaces the moles line. */
 export const charge = (id, label, at, { moles, dH, shown = null }, extra = {}) =>
   piece('charge', id, label, at, { moles, dH, ...(shown ? { shown } : {}) }, extra);

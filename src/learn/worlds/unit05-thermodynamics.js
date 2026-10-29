@@ -38,9 +38,9 @@ export const UNIT_05 = {
     {
       id: 'q2-calorimetry',
       title: 'Calorimetry',
-      line: 'Measure reaction heat in a water bath to calculate specific heat capacity and molar enthalpy.',
+      line: 'Measure heat in a water bath: specific heat capacity, melting ice and a reaction\'s energy.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_05 = {
       title: 'Enthalpy of Reaction',
       line: 'Relate reaction heat to molar enthalpy, reaction stoichiometry, and fuel energy density.',
       arena: 'bench',
-      stageCount: 3,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q3-enthalpy.js')
     },

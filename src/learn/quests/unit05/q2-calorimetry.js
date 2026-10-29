@@ -28,11 +28,12 @@ import {
   SPECIFIC_HEAT_WATER, heatTransfer, blockSpecificHeat
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bspecific heat capacity\b/i, introducedAt: 2 },
-  { term: /\bcalorimeter\b/i, introducedAt: 5 }
+  { term: /\bheat of fusion\b/i, introducedAt: 4 },
+  { term: /\bcalorimeter\b/i, introducedAt: 6 }
 ];
 
 /** The bench reads a thermometer as particle motion, and counts in moles. */
@@ -55,7 +56,10 @@ const Q_WATER = 2092;
 const IRON_C = 0.449;
 // Stage 3: 100 g of water at 20 and a 50.0 g fitting of copper (c = 0.385) at 65.4 degrees.
 const FITTING = { m: 50, c: 0.385, T: 65.4 };
-// Stage 4: 0.06 mol of a neutralising mix, 55.8 kJ/mol, into a 200 g bath: 3348 J.
+// Stage 4: 20 g of ice at 0 degrees melts in 100 g of water at 20 degrees (334 J/g) and the bath ends at 3.4 degrees.
+const ICE = { m: 20, c: 2.09, T: 0, latent: 334 };
+const Q_MELT = ICE.m * ICE.latent;
+// Stage 6: 0.06 mol of a neutralising mix, 55.8 kJ/mol, into a 200 g bath: 3348 J.
 const MIX = { moles: 0.06, dH: -55.8 };
 const BATH_4 = 200;
 const Q_STAGE4 = heatTransfer(BATH_4, SPECIFIC_HEAT_WATER, (MIX.moles * -MIX.dH * 1000) / (BATH_4 * SPECIFIC_HEAT_WATER));
@@ -176,6 +180,50 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
+    const a = cupFixture('cup', { x: 26, y: 33 }, { title: 'Bath · 100 g', water: 100, T0: 20 });
+    return {
+      id: 's4-ice',
+      title: 'Ice in the Bath',
+      prompt: 'Set the marker to the heat the ice absorbed while it melted, in joules.',
+      widget,
+      table: heatTable({
+        pieces: [block('ice', 'Ice cube', { x: 62, y: 50 }, { ...ICE, mass: '20.0 g ice', mat: 'H₂O' })],
+        fixtures: [
+          a.fixture,
+          plaqueFixture('ref', 'What you may use', { x: 108, y: 18 }, [
+            FORMULA,
+            'Ice stays at 0 °C until all of it has melted.',
+            'Meltwater then warms like any water.',
+            'c of water = 4.184 J/(g·°C)'
+          ], { w: 64 }),
+          markerFixture('joules', 'Heat absorbed by melting', { x: 108, y: 48 }, { min: 4000, max: 9000, step: 100, start: 4000, unit: 'J', w: 56 })
+        ],
+        zones: { slots: [a.slot] }
+      }),
+      hints: [
+        'Use the cup, the ice cube, the plate of facts and the marker.',
+        'Compare how much heat the bath gave up with how much of it only warmed the water the ice became.',
+        'The bath\'s heat went into melting the ice and then into warming the meltwater from 0 °C to the final reading.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'joules');
+        if (v === 4000) return { ok: false, notYet: true, msg: 'Set the marker to the heat.' };
+        if (Math.abs(v - Q_MELT) <= 150) return { ok: true };
+        const r = cupRead(t, 'cup');
+        if (!r.item) return { ok: false, msg: 'The ice has not been in the cup yet.' };
+        return { ok: false, msg: `The marker reads ${v} J. The bath fell ${fixed(-r.dT, 1)} °C and now reads ${fixed(r.Tf, 1)} °C.` };
+      },
+      reward: {
+        log: 'Melting 20 g of ice took about 6,700 J at 0 °C.',
+        title: 'Heat of Fusion',
+        body: 'Melting takes heat without changing the temperature: the ice drew about 6,700 J from the bath, or 334 J per gram, called the heat of fusion. A change of state spends energy loosening the attractions between particles, so the bath cooled far more than mixing alone would predict.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
+  (() => {
     const a = cupFixture('cup', { x: 28, y: 33 }, { title: 'Bath · 100 g', water: 100, T0: 20 });
     const names = [['al', 'Aluminium'], ['fe', 'Iron'], ['cu', 'Copper'], ['ag', 'Silver']];
     return {
@@ -224,7 +272,7 @@ export const STAGES = [
     };
   })(),
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 6 */
   (() => {
     const a = cupFixture('cup', { x: 28, y: 33 }, { title: 'Reserve bath · 200 g', water: BATH_4, T0: 21 });
     return {
@@ -273,8 +321,9 @@ const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Turn the iron\'s "Heater" dial.'],
   3: ['Set the marker.'],
-  4: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
-  5: ['Drag the mix onto the cup, then set the marker.']
+  4: ['Drag the ice onto the cup, then set the marker.'],
+  5: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
+  6: ['Drag the mix onto the cup, then set the marker.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -363,6 +412,7 @@ export const SOLUTIONS = [
   [put('iron', 'slot:guess')],
   [dial('iron', 'heat', 2)],
   [dial('joules', 'value', 2100)],
+  [put('ice', MOUTH), dial('joules', 'value', 6700)],
   [put('fitting', MOUTH), put('cu', 'slot:answer')],
   [put('mix', MOUTH), dial('joules', 'value', 3350)]
 ];
@@ -372,6 +422,7 @@ export const MISSES = [
   [],
   [dial('iron', 'heat', 3)],
   [dial('joules', 'value', 1500)],
+  [put('ice', MOUTH), dial('joules', 'value', 7000)],
   [put('fitting', MOUTH), put('fe', 'slot:answer')],
   [put('mix', MOUTH), dial('joules', 'value', 2800)]
 ];
@@ -397,5 +448,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { Q_WATER, Q_STAGE4, FITTING, MIX, BATH_4, IRON_C };
+export const CHECKS = { Q_WATER, Q_MELT, Q_STAGE4, FITTING, MIX, BATH_4, IRON_C };
 export { cupRead, blockSpecificHeat };
