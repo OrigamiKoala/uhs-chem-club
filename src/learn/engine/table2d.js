@@ -289,7 +289,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
         ? dial.label.replace('_', shown)
         : `${dial.label || d.name} ${shown}`;
       // The address strip stacks its dials close, and a knob at the low end of one stands over the first letter of its own name: its words start clear of it.
-      const indent = f.kind === 'finder' ? 3.6 : 0;
+      const indent = f.kind === 'finder' || f.kind === 'writer' ? 3.6 : 0;
       words(dialText, d.x0 + indent, Math.max(d.y - DIAL_WORDS_ABOVE, lay.box.y0 + 6.3), { size: 2.4, color: ink.text, maxW: d.x1 - d.x0 - indent });
       // A tick under every step of a stepped dial, so the knob has places to be and the player sees how many.
       if (mat && dial.step && dial.max > dial.min) {

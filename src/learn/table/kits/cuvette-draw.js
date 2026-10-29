@@ -313,8 +313,7 @@ function paintSpectro(ctx, f, state, b) {
   ctx.strokeStyle = '#1e282c';
   ctx.strokeRect(Math.round(scrX) + 0.5, Math.round(scrY) + 0.5, Math.round(scrW), Math.round(scrH));
 
-  // Screen header
-  say(ctx, 'SPECTROPHOTOMETER', F.x(sx + 2), F.y(sy + 3.0), F.size(2.0, 6), { color: DUST, weight: 600 });
+  // No screen header: the fixture's own name stands above the box, and a dial's name lands on this corner.
 
   if (!r.piece) {
     say(ctx, 'CELL EMPTY', F.x(sx + 2), F.y(sy + 9.5), F.size(3.0, 8), { color: DIM, weight: 700 });

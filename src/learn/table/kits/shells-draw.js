@@ -260,14 +260,10 @@ function paintShelf(ctx, f, state, b) {
   if (f.props.readout !== false) {
     const core = f.props.core && state.fixtures[f.props.core]?.dials.core.value >= 1;
     say(ctx, `PLACED ${read.total}`, F.x(2), F.y(4.2), sz, { color: PHOS, weight: 700 });
-    const hasMagnet = Object.values(state.fixtures).some(x => x.kind === 'magnet');
-    if (hasMagnet) {
-      say(ctx, `UNPAIRED ${read.unpaired}`, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: PHOS, weight: 700 });
-    } else {
-      const stText = read.total === 0 ? '' : (read.laddered && read.ruleHolds ? 'GROUND STATE' : 'EXCITED');
-      const stColor = read.laddered && read.ruleHolds ? '#78a142' : AMBER;
-      say(ctx, stText, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: stColor, weight: 700 });
-    }
+    // The count of unpaired electrons is never printed here: the magnet is the instrument that finds it out.
+    const stText = read.total === 0 ? '' : (read.laddered && read.ruleHolds ? 'GROUND STATE' : 'EXCITED');
+    const stColor = read.laddered && read.ruleHolds ? '#78a142' : AMBER;
+    say(ctx, stText, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: stColor, weight: 700 });
     const written = core ? read.short : read.config;
     say(ctx, written || 'NOTHING PLACED', F.x(f.size.w / 2), F.y(8.4), F.size(2.6, 7), { align: 'center', color: written ? DUST : DIM, weight: 600, maxW: F.len(f.size.w - 4) });
   }

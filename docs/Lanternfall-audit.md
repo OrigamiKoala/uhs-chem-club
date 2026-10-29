@@ -110,3 +110,15 @@ Found and fixed:
 Seen, not fixed: `q4-cloud` 5's joystick title ("JOYSTICK") is clipped by the tray label above it; moving the joystick down makes the tray label overlap it (`verify:table` fails), so it stays. `q8-trends` and `q7-pes` were not solved again this round; the dev server reloaded repeatedly while another agent edited shared files.
 
 Not solved this round: `q6-filling` 1, 3, 4, 5, `q7-pes` 2 to 5, `q9-absorb` 1 to 3, boss phases 2 to 5 (looked at in earlier rounds).
+
+## Seventh round: the rest of the third pass
+
+Solved on the live bench by scripted solutions, with a screenshot of the solved state: `q6-filling` 1 to 5, `q7-pes` 2 to 5, `q9-absorb` 1 to 3, boss phases 2 to 5. (Scripted: these show what the bench draws when solved, not that a hand can make each move; `verify:bench` replays real pointer paths.) With rounds four and six, every stage of every Lanternfall bench and the boss has now been loaded and solved on the live bench at least once; the ones played with real gestures are listed in the earlier rounds.
+
+Found and fixed:
+- **Boss phase 3 gave the answer:** the rack's header printed `UNPAIRED 2` when a magnet was on the table, and the stage asks for exactly that count. The header now prints the ground or excited state like every other rack; the magnet's `ATTRACTED STRENGTH` is the evidence (`shells-draw.js`).
+- **`q9-absorb` calibration plot ran off the right edge** after my earlier enlargement (stage 3): now 36 x 22 units at x 111.
+- **`q9-absorb` 3: two labels printed over each other** at the spectrometer's top-left (the display's own "SPECTROPHOTOMETER" header and the wavelength dial's name). The display header is removed; the fixture name stands above the box.
+- **`q7-pes` 5:** the writer's row names ("3s 0", "3p 0") had knobs over their first letters; the writer's words now start 3.6 units in, like the address strip's.
+
+Still open: `q4-cloud` 5 joystick title clipped; boss phase 5's calibration plot is small; whether a real hand can turn the `q1-wave` speed dial; the judgment of whether the new typed and ranking stages suit a 12-year-old.
