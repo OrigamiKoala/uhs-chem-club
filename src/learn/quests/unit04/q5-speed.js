@@ -232,7 +232,7 @@ export const STAGES = [
   (() => {
     const p = pinhole(PIN, { x: 40, y: 30 }, {
       chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: UNKNOWN, label: 'UNKNOWN', sealed: true }],
-      picks: { ref: { gases: MASS_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false
+      picks: { ref: { gases: MASS_GASES, label: 'Gas', start: 1, withMass: true } }, times: TIMES, timeStart: 1, showHalf: true, record: false
     });
     return {
       title: 'Graham\'s Law',
@@ -272,7 +272,7 @@ const NOTES = {
   3: ['Adjust the Gas and Stopwatch dials.'],
   4: ['Place a card in the slot.'],
   5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],
-  6: ['He 4 · Ne 20 · Ar 40 · Kr 84 g/mol.', 'Turn the Gas dial, then place a card in the slot.']
+  6: ['Turn the Gas dial,', 'then place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 

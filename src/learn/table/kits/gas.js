@@ -294,7 +294,7 @@ export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = fal
   const dials = { time: { min: 1, max: times.length, step: 1, value: timeStart, label: 'Stopwatch', labels: times.map(t => `${t} s`) } };
   // A gas dial (`picks: { ref: { gases, label, start } }`): a chamber that names it (`pick: 'ref'`) holds whichever gas the dial stands at.
   for (const [name, p] of Object.entries(picks || {})) {
-    dials[name] = { min: 1, max: p.gases.length, step: 1, value: p.start ?? 1, label: p.label || 'Gas', labels: p.gases.map(g => GASES[g].name) };
+    dials[name] = { min: 1, max: p.gases.length, step: 1, value: p.start ?? 1, label: p.label || 'Gas', labels: p.gases.map(g => (p.withMass ? `${GASES[g].name}, ${Math.round(GASES[g].M)} g/mol` : GASES[g].name)) };
   }
   const nd = Object.keys(dials).length;
   const width = w ?? (chambers.length > 1 ? 66 : 44);

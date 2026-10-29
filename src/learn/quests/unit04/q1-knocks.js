@@ -264,45 +264,35 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const rg = (id, at, label, gas, n, start) => rig(id, at, {
-      cyls: [{ id: 'a', label, gas, n, hold: 'V', V: 20, T: T0 }], temps: [0, 100, 200, 300], tempList: 'C', tempStart: start, vmax: 20, compact: true, w: 34,
+    const HE_C = 100;
+    const rg = (id, at, label, gas, n, extra) => rig(id, at, {
+      cyls: [{ id: 'a', label, gas, n, hold: 'V', V: 20, T: T0, ...(extra.T ? { T: extra.T } : {}) }], ...(extra.temps ? { temps: extra.temps, tempList: 'C', tempStart: 1 } : {}), vmax: 20, compact: true, w: 34,
       show: { gauge: false, volume: false, speed: true, energy: true }, words: { speed: 'SPEED', energy: 'ENERGY' }
     });
-    const chips = [['energy', 'ENERGY'], ['speed', 'SPEED'], ['amount', 'AMOUNT'], ['temp', 'TEMPERATURE']];
     return {
       title: 'Mass and Kinetic Energy',
-      prompt: 'Set both cylinders to one temperature, then sort each reading by whether the two gases share it.',
+      prompt: 'Set Holder 6\'s heater so its particles carry the same energy of motion as Holder 5\'s.',
       widget,
       table: gasTable({
-        pieces: chips.map(([id, label], i) => chip(id, label, { x: 12 + i * 18, y: 53 })),
-        fixtures: [rg('ra', { x: 20, y: 25 }, 'Holder 5', 'He', 1, 1), rg('rb', { x: 58, y: 25 }, 'Holder 6', 'CO2', 2, 3)],
-        zones: {
-          trays: [
-            { id: 'same', label: 'Same in both', at: { x: 94, y: 33 }, size: { w: 34, h: 36 }, cell: 17 },
-            { id: 'different', label: 'Different', at: { x: 132, y: 33 }, size: { w: 34, h: 36 }, cell: 17 }
-          ]
-        }
+        fixtures: [rg('ra', { x: 20, y: 25 }, 'Holder 5', 'He', 1, { T: toKelvin(HE_C, 'C') }), rg('rb', { x: 58, y: 25 }, 'Holder 6', 'CO2', 2, { temps: [0, 50, 100, 150, 200] })]
       }),
       hints: [
-        'Use both "Heater" dials.',
-        'Compare the values on the two cylinders at the same temperature.',
-        'Place readings into "Same in both" only if both cylinders display matching values.'
+        'Turn Holder 6\'s "Heater" dial and watch its ENERGY reading.',
+        'Compare the ENERGY readings of the two cylinders, and then their SPEED readings.',
+        'Stop where the two ENERGY readings agree, then look at what else the two cylinders print alike and what they print differently.'
       ],
       check(state) {
         const t = state.table;
         const a = cylRead(t, 'ra', 0);
         const b = cylRead(t, 'rb', 0);
-        if (!chips.every(([id]) => ['same', 'different'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
-        if (Math.abs(a.T - b.T) > 0.01) return { ok: false, msg: 'The two cylinders are not at one temperature yet.' };
-        const same = { energy: Math.abs(a.energy - b.energy) < 1e-9, speed: Math.abs(a.mean - b.mean) < 1e-6, amount: a.n === b.n, temp: true };
-        if (chips.some(([id]) => whereIs(t, id) === 'same' && !same[id])) return { ok: false, msg: 'The "Same in both" tray holds a reading that the two cylinders print differently.' };
-        if (chips.some(([id]) => whereIs(t, id) === 'different' && same[id])) return { ok: false, msg: 'The "Different" tray holds a reading that the two cylinders print alike.' };
-        return { ok: true };
+        if (Math.round(t.fixtures.rb.dials.temp.value) === 1 && Math.abs(a.energy - b.energy) > 1e-9) return { ok: false, notYet: true, msg: 'Holder 6\'s heater is where it started: turn it and watch its ENERGY reading.' };
+        if (Math.abs(a.energy - b.energy) <= 1e-9) return { ok: true };
+        return { ok: false, msg: a.energy > b.energy ? 'Holder 6\'s particles carry less energy than Holder 5\'s.' : 'Holder 6\'s particles carry more energy than Holder 5\'s.' };
       },
       reward: {
         log: 'The same energy, a different speed.',
         title: 'Kinetic Energy',
-        body: 'At a given temperature, all gases share the same average kinetic energy, so lighter particles move faster. Kinetic molecular theory models gas pressure as continuous collisions of moving particles against container walls.',
+        body: 'The two gases carry the same average kinetic energy when they share a temperature, though helium\'s particles move about three times faster. Kinetic molecular theory takes temperature as the average kinetic energy of the particles, whatever their mass.',
         last: true
       }
     };
@@ -316,7 +306,7 @@ const NOTES = {
   3: ['Turn the Piston dial.'],
   4: ['Turn the Piston dial,', 'then place a card in the slot.'],
   5: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
-  6: ['Turn both Heater dials,', 'then sort chips into trays.']
+  6: ['Turn Holder 6\'s Heater dial.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -406,7 +396,7 @@ export const SOLUTIONS = [
   [dial(RIG, 'volume', 1), dial(RIG, 'volume', 5)],
   [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), put('a', 'slot:answer')],
   [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
-  [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'same', temp: 'same', speed: 'different', amount: 'different' })]
+  [dial('rb', 'temp', 3)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -416,7 +406,7 @@ export const MISSES = [
   [dial(RIG, 'volume', 3)],
   [dial(RIG, 'volume', 6), put('b', 'slot:answer')],
   [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
-  [dial('ra', 'temp', 3), dial('rb', 'temp', 3), ...sort({ energy: 'different', temp: 'same', speed: 'same', amount: 'different' })]
+  [dial('rb', 'temp', 4)]
 ];
 
 function blankState() { return {}; }
