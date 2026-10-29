@@ -68,6 +68,7 @@ import { clusterOf, linkKey as pairKey } from '../snap.js';
 import { buildUnits, drawScopeField, planSettle, planCut, TINTS } from '../../engine/scope.js';
 import { planBeam, packCore, CORE_TINTS } from '../../engine/corebench.js';
 import { zOf, nameOf } from '../../engine/electrons.js';
+import { EN } from '../../engine/vsepr.js';
 import { PLATE_COLORS, plateText, mulberry32, hashId, lampMark } from '../../engine/plates.js';
 import { buildScatterFoil, buildBeamSource, buildChargePlate } from '../../engine/lab-props.js';
 
@@ -747,7 +748,8 @@ function paintAtom(ctx, p, state, o) {
   const rd = readAtom(p, state);
   disc(ctx, o.x, o.y, o.r, tint.fill, o.lit ? AMBER : tint.rim, o.lit ? 2 : 1);
   if (!p.props.mask) {
-    plateText(ctx, el.sym, o.x, o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.78 : 0.92))), weight: 700, align: 'center', base: 'middle', color: INK[tintName], maxW: o.r * 1.4 });
+    const up = state.opts?.pull && EN[el.sym] != null ? 0.32 : 0;
+    plateText(ctx, el.sym, o.x, o.y + o.r * (0.04 - up), { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.78 : 0.92) * (up ? 0.8 : 1))), weight: 700, align: 'center', base: 'middle', color: INK[tintName], maxW: o.r * 1.4 });
   }
   if (state.opts?.shells) {
     // The outer electrons, as dots on the rim: the picture of what a join fills.
@@ -767,6 +769,10 @@ function paintAtom(ctx, p, state, o) {
       ctx.arc(o.x, o.y, o.r * 0.9, 0, Math.PI * 2);
       ctx.stroke();
     }
+  }
+  // How hard the atom pulls on shared electrons (`opts.pull`), printed under the symbol.
+  if (state.opts?.pull && EN[el.sym] != null && !p.props.mask) {
+    plateText(ctx, EN[el.sym].toFixed(1), o.x, o.y + o.r * 0.52, { size: Math.max(9, Math.round(o.r * 0.58)), weight: 700, align: 'center', base: 'middle', color: '#ffffff', maxW: o.r * 1.4 });
   }
   if (rd.charge && state.opts?.charges !== false) {
     const t = `${Math.abs(rd.charge) > 1 ? Math.abs(rd.charge) : ''}${rd.charge > 0 ? '+' : '−'}`;
@@ -1265,7 +1271,7 @@ function faceKey(p, state, at) {
     case 'atom': {
       if (p.props.slate) { const a = slateAtom(p, state); return `slate|${p.props.el}|${a.lone}|${a.dots}|${a.around}|${a.lamp}|${p.props.stamped ? a.fc : ''}|${p.props.marked ? 1 : 0}`; }
       const r = readAtom(p, state);
-      return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}|${state.opts?.charges === false ? 0 : 1}|${state.opts?.atom3d === false ? 0 : 1}`;
+      return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}|${state.opts?.charges === false ? 0 : 1}|${state.opts?.atom3d === false ? 0 : 1}|${state.opts?.pull ? 1 : 0}`;
     }
     case 'dish': return `${p.props.sample.id}|${p.props.cut || ''}|${p.props.settled ? 1 : 0}|${p.props.view ?? ''}`;
     case 'lens': {

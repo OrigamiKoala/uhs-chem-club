@@ -36,6 +36,7 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { atomTable, pairRead, readPiece, closureOf, moleculesOf } from '../../table/kits/atoms.js';
 import { clusterOf } from '../../table/snap.js';
+import { applyNotes } from '../../table/notes.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
 export const meta = { stageCount: 5 };
@@ -85,6 +86,8 @@ const trayAt = (id, label, x, y, w = 26, h = 14) => ({ id, label, at: { x, y }, 
 /** What the faces show: the rings of an outer shell from stage 2 on, the charge once a join has handed an electron (stage 3). */
 const OPTS_2 = { words: 'shells', shells: true, charges: false };
 const OPTS_3 = { words: 'shells', shells: true };
+/** Stage 3 prints how hard each atom pulls on shared electrons, so the gap between two atoms can be compared before a pair is pressed. */
+const OPTS_PULL = { ...OPTS_3, pull: true };
 
 /** The atoms of one stage laid in pairs along y: `[[idA, elA, idB, elB], ...]` at the given x of each pair's left atom. */
 function pairsAt(y, xs, list) {
@@ -185,17 +188,17 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Electron Went',
-    prompt: 'Sort each pair of atoms into a tray by whether an electron was handed over or the two share a pair.',
+    prompt: 'Sort each pair of atoms into a tray by whether one atom takes the electron or the two share a pair.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
-      opts: OPTS_3,
+      opts: OPTS_PULL,
       pieces: pairsGrid([10, 27], [22, 82], P3),
       zones: { trays: [trayAt('handed', 'Handed over', 36, 50, 44, 16), trayAt('shared', 'Shared', 92, 50, 44, 16)] }
     }),
     hints: [
       'Use the atoms and the two trays.',
-      'Compare the faces of a pair after you press it with what sits in the gap between the two atoms.',
-      'In one kind of join an electron crosses over and charges appear; in the other a pair settles between the atoms.'
+      'Compare the two numbers on each pair, then press the pair to see whether the numbers predicted it.',
+      'A big gap between the two numbers lets the stronger puller take an electron; a small gap leaves the pair shared.'
     ],
     check(state) {
       const t = state.table;
@@ -215,7 +218,7 @@ export const STAGES = [
     reward: {
       log: 'Two pairs handed over, two held between.',
       title: 'Ionic and Covalent Bonds',
-      body: 'A metal and a nonmetal hand electrons over to form ions held by opposite charges, making an ionic bond. Two nonmetals share electron pairs between them, forming a covalent bond.'
+      body: 'Where two atoms pull very differently, the stronger puller takes an electron and the two become ions held by opposite charges: an ionic bond. Where the pulls are close, the atoms share an electron pair: a covalent bond.'
     }
   },
 
@@ -282,6 +285,12 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  3: ['The number on each atom is how hard it pulls on shared electrons.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
