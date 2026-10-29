@@ -31,6 +31,43 @@ Oct 28, 2026. World: Ligar (`unit03`, bonding): nine benches and the Basalt Ward
 | `q9-orbitals` Orbitals (3) | Not in the AP CED (molecular orbital theory) | Nothing AP is missed; it is enrichment | Not played. Should say on the bench that it is optional. |
 | `boss-warden` (5 phases) | Review of 2.3, 2.5, 2.7, polarity | Quantitative lattice energy | Not played. |
 
+## Teaching-quality audit (added after the first pass was judged too shallow)
+
+The first version of this audit checked layout and AP coverage and called most benches fine. That was wrong: it looked at one stage per bench and judged how the table looked, not whether a student would know what to do, or would come away with an idea. This section is from actually operating the benches (drag, drop, dials) as a first-time student, in 3D at an 800 px pane, plus a read of each stage's prompt and reward. Benches I operated by hand: `q1-joins` stage 2, `q3-distance` stage 1, `q6-shape` stage 3. Benches I only opened and looked at: `q2`, `q4`, `q7`, `q8` (stages 3 and 5) and `q9` (stage 3). Not opened: `q5` stages 1 to 3, the Warden, and most later stages everywhere. Read these as a student's-eye critique with that coverage, not a complete play-through.
+
+Three questions per bench: Is it **intuitive** (can a first-time player tell what to do and what happened)? Is any of it **busywork** (a task the player performs that carries no idea)? Does the **setup build intuition** (does the picture or the manipulation make the idea feel necessary)?
+
+### What I saw by hand
+
+- **`q1-joins` stage 2, "Press Them Together".** Not intuitive. The eight atoms are small discs in one crowded row along the far edge, with labels (Na, Cl, Ne) hard to read, while the two sorting trays take most of the table. The gesture is "drag one atom of a pair toward its partner", but the pairs sit 12 units apart and neighbouring pairs are close, so a drag easily lands an atom on a stranger (my Ne landed on Cl, my Ar landed on H) and the result is overlapping discs and an unclear outcome. Nothing on the table says in words what happened to a pair; the player must notice a rod or a drift and then decide by memory what the "ring on the rim" means. The idea (a bond is a shared fill of the outer shell) is not forced by the picture.
+- **`q3-distance` stage 1, "The Bottom".** Busywork. The task is to slide a hand until a number is lowest. The curve is a satisfying thing to draw, but the table never shows two atoms moving together or apart, so the student cannot see why the energy climbs when the atoms are too close (the nuclei repel) or flattens when they are far (no pull). "Find the minimum" can be done without understanding why a minimum exists. The axes are tiny and the energy number carries no unit next to it.
+- **`q6-shape` stage 3, "Four on the Hub".** The best moment on the bench is real: drop two arms and they settle straight apart; drop more and they swing into new places. But the prompt is "set the angle marker to the measured angle", which turns it into measure-then-type a number the student may already remember. The hub and arms are labelled "X" and "A", letters nobody has been told about. Worse, a missed grab drags the camera: one slip and the table was out of view (floor only), with no visible way back except leaving and re-entering the bench. A younger student would be lost.
+
+### What I saw by opening the stage
+
+- **`q8-hybrid` stage 3, "Four Lobes".** The bench is almost black: the mixing bowl cannot be seen, and the three orbital pieces and their electrons sit tiny at the bottom edge. A student cannot tell what to do. This is the stage the whole quest is built around.
+- **`q8-hybrid` stage 5, "Twisting".** Two molecules drawn tiny in the middle of two large empty slates; the idea (a double bond cannot turn) is shown only by a refusal when the dial is turned.
+- **`q9-orbitals` stage 3, "Oxygen's Boxes".** Overloaded: twelve green electron pieces, a molecular-orbital ladder with faint "2s/2p" labels, the unexplained words "PUSHES" and "HOLDS" beside the boxes, "PLACED / UNPAIRED" counters and a magnet panel, all at once. This is an idea the AP course does not test. It reads as an exam for a physicist, not a first encounter.
+
+### Per bench verdicts (from the stages and rewards; hand-played ones are marked)
+
+| Bench | Intuitive? | Busywork? | Setup builds intuition? |
+| --- | --- | --- | --- |
+| `q1-joins` | No (hand-played): crowded row, tiny atoms, accidental joins | The "ionic vs covalent" and "single, double, triple" sorts are sorts of printed facts into trays; the outcome of a join is shown, not reasoned | Weak. The fill-the-shell idea is never made necessary: no reason is given for why atoms "want" it, and electronegativity is absent |
+| `q2-lattice` | Partly (opened): the four blocks and three trays read, but the lamp and hotplate text are tiny | Stage 5 ("place the block that stays solid at 900 °C and does not conduct") repeats stages 2 and 3: it is a lookup of the two earlier sorts | Good in stage 4 (build the salt grid, slide a layer, see repulsion and fracture) as the one hands-on moment; stages 2 and 3 are sorting to a known taxonomy |
+| `q3-distance` | Stage 1 no (hand-played); stage 5 yes (heat three salts, rank) | Stage 1 and 2 are hunt-the-number; stage 2 ("set the depth marker to the energy to dissociate") is reading a value off a graph | Stage 5 and the new stage 6 do; stages 1 and 2 do not show the atoms |
+| `q4-dots` | Yes: "Adds a pair" and "Takes one back" read; the count "8 of 8 left" is a good running check | Stage 1 solves by trial until lamps light, so a student can reach water's drawing by hunting lamps without counting valence electrons | Partly. Lamps give instant feedback, which helps, but no stage makes the student *count* valence electrons first |
+| `q5-resonance` | Stage 2 gauge is clean (opened) | Stage 3 ("draw both structures") is rearranging one double bond | Good: the gauge contradicting the drawing is the best hook in the world. Formal charge stages were restored in this pass |
+| `q6-shape` | No (hand-played): generic X/A labels, three dials, camera-drag trap | Setting the marker to a measured number is copying | Dropping arms is the idea; the number entry undermines it |
+| `q7-polarity` | Yes (opened): plates, cards, trays are clear | Stage 4 repeats stage 3 with liquids and a rod: same answer, same reasoning | Good for polarity-as-vector-sum; weak on *why* a bond is polar since electronegativity is never shown as a number |
+| `q8-hybrid` | No (opened): near-black bench, tiny parts | Stage 5 is a refusal demonstration | The mixing idea is strong on paper and invisible on screen |
+| `q9-orbitals` | No (opened): overloaded | Fills boxes by a rule the student has just been told | Not AP content; pushes students who have not met orbitals' energies into a hard diagram |
+| `boss-warden` | Not opened | Phases are re-tests of earlier benches, by design | Not assessed |
+
+### Consequence for the plan
+
+Teaching problems that stop a student learning go **ahead of** adding AP topics, because new content on a bench the student cannot read will not teach. The revised priority list is at the end of this file.
+
 ## Cross-cutting problems
 
 1. **Quantitative side is nearly absent.** No bench asks for a number the player computed. AP expects Coulomb's law reasoning with charge and distance ratios, bond-energy and bond-length trends as data, and formal charge as arithmetic ($FC = V - N - B/2$).
@@ -39,7 +76,7 @@ Oct 28, 2026. World: Ligar (`unit03`, bonding): nine benches and the Basalt Ward
 4. **Legibility.** Painted labels on the tilted 3D mat (atom symbols, gauge readouts, plot axes) are small at a 800 px wide pane. This is the U4 problem in the earlier audit and is still visible.
 5. **Sorts reveal their categories.** Tray names state the possible answers; acceptable when the evidence is discovered, but several sorts in Ligar (q1 s3, q2 s2) still reduce to matching a printed fact to a tray.
 
-## Planned work, in priority order
+## Planned work, in priority order (first pass; superseded by the revised list below)
 
 1. **Quantitative Coulomb stage** in `q3-distance` (replacing the unused ranking of stage 5 with proportional reasoning, then numbers).
 2. **Formal charge** stage in `q5-resonance` or a new bench, using the existing Lewis slate.
@@ -60,3 +97,11 @@ Work after this audit is recorded at the end of this file.
 - `src/ui/cinematic.js:105` `fadeAudio` throws `IndexSizeError` (volume 3.1173 outside [0, 1]) during the landing sequence. Not Ligar-specific, not touched.
 - Deep links such as `#/learn/unit03/q1-joins` first redirect to the world (the ship flies there); a page reload on the quest hash lands on the bench. Quests also stay locked until the one before is complete, so auditing a later bench needs the guest profile unlocked (`session.markLearnQuestComplete`).
 - `__LQ_TEST__.runner` plus `runner.loadStage(i)` is the fastest way to open a given stage when auditing.
+
+## Revised priority list (after the teaching-quality review)
+
+1. **Make stages operable and readable** (blocking): `q8-hybrid` stage 3 bench is black; the camera-drag trap on every bench (a missed grab sends the camera off the table); `q1-joins` crowded pair row and accidental joins; unreadable tiny atoms and labels.
+2. **Replace "type the number you measured" and "find the minimum" with reasoning tasks**: `q6-shape` stage 3 and `q3-distance` stages 1 and 2 (show the two atoms, predict then see the energy, ask why).
+3. **Cut or merge repeated stages**: `q2-lattice` stage 5, `q7-polarity` stage 4, and the listing-the-category sorts in `q1-joins`.
+4. **Add the missing quantitative and conceptual content**: electronegativity and bond type (ΔEN), 5 and 6 domain shapes, alloys, hybridization from a formula.
+5. **Mark `q9-orbitals` as optional enrichment** and cut its on-table load.
