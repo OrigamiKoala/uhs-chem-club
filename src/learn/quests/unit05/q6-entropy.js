@@ -58,6 +58,14 @@ const S0 = id => FORMATION_TABLE[id].S0;
 // Stage 5: CaCO3(s) -> CaO(s) + CO2(g), products less reactants.
 const DS_LIME = S0('CaO(s)') + S0('CO2(g)') - S0('CaCO3(s)');
 
+/** Stage 3: the entropy table's figure for each change, before and after (J/(mol·K)). */
+const SORT_S0 = {
+  melt: [S0('H2O(s)'), S0('H2O(l)')],
+  lime: [S0('CaCO3(s)'), S0('CaO(s)') + S0('CO2(g)')],
+  haber: [S0('N2(g)') + 3 * S0('H2(g)'), 2 * S0('NH3(g)')],
+  dew: [S0('H2O(g)'), S0('H2O(l)')]
+};
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
@@ -165,7 +173,8 @@ export const STAGES = [
       if (Object.keys(want).some(k => !['more', 'fewer'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every change needs a tray.' };
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
       if (!wrong) return { ok: true };
-      return { ok: false, msg: `${t.pieces[wrong[0]].label} does not belong in the "${t.zones.trays[whereIs(t, wrong[0])].label}" tray.` };
+      const [a, b] = SORT_S0[wrong[0]];
+      return { ok: false, msg: `The entropy table has "${t.pieces[wrong[0]].label}" going from ${fixed(a, 1)} to ${fixed(b, 1)} J/(mol·K).` };
     },
     reward: {
       log: 'Gas decided the sign.',

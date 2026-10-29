@@ -162,7 +162,8 @@ export const STAGES = [
       if (Object.keys(want).some(k => !['always', 'never', 'high', 'low'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every card needs a tray.' };
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
       if (!wrong) return { ok: true };
-      return { ok: false, msg: `The card "${t.pieces[wrong[0]].label}" does not belong in the "${t.zones.trays[whereIs(t, wrong[0])].label}" tray.` };
+      const { dH, dS } = t.pieces[wrong[0]].props;
+      return { ok: false, msg: `The line for "${t.pieces[wrong[0]].label}" reads ${fixed(gibbsFreeEnergy(dH, dS, 100), 0, true)} kJ at 100 K and ${fixed(gibbsFreeEnergy(dH, dS, 600), 0, true)} kJ at 600 K.` };
     },
     reward: {
       log: 'Each case was sorted by its line.',

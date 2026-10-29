@@ -143,7 +143,7 @@ Verdicts: Op = operable by a hand; Int = intuitive from the table; Busy = busywo
 - q4 s3 and s5 still ask for reading a printed equation or two printed totals. A rebuild would put a molecule picture (atoms and rods) on each chip's tray so the player counts the bonds themselves.
 - q6 s3 sorts printed equations by their gas count with no picture of the particles.
 - q7 s2, s5 and the boss's last phase hunt a dial value after the sign changes. A formula plate and a marker (as in the new q7 s4) would make T = ΔH/ΔS the thing the student computes.
-- Boss phase 4's miss message gives no consequence.
+- Miss messages were reworked to name what the bench shows: q6 s3 prints the entropy table's before and after figures, q7 s3 prints the line's ΔG at 100 K and 600 K, and boss phase 4 has real slip options (sign, products alone, steam taken off once) with a consequence each. q4 s3 and s5, q5 s3 and s4 and the boss's stack phase still use the generic "adds up to a different reaction" or "wrong tray" wording.
 - The first prediction cards sit near the edge of the slot after Submit; harmless.
 - Mixing-temperature rule (`equilibriumTemp`) ignores the cup's own heat capacity; fine for the lagged cup.
 

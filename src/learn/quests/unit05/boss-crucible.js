@@ -215,7 +215,7 @@ export const STAGES = [
       table: heatTable({
         fixtures: [
           plaqueFixture('s0', 'Entropy at 298 K, J/(mol·K)', { x: 46, y: 34 }, [`H₂O(g)    ${s0('H2O(g)')}`, `H₂(g)    ${s0('H2(g)')}`, `O₂(g)    ${s0('O2(g)')}`], { w: 70 }),
-          selectorFixture('answer', 'ΔS (J/(mol·K))', { x: 112, y: 40 }, { options: ['+89.0', '−89.0', '+277.8', '+466.6'], start: 4, w: 46 })
+          selectorFixture('answer', 'ΔS (J/(mol·K))', { x: 112, y: 40 }, { options: ['+89.0', '−89.0', '+277.8', '+466.6', '—'], start: 5, w: 46 })
         ]
       }),
       foes: CRUCIBLE_FOE,
@@ -232,8 +232,10 @@ export const STAGES = [
       check(state) {
         const v = dialAt(state.table, 'answer', 'value');
         if (v === 1) return { ok: true };
-        if (v === 4) return { ok: false, notYet: true, msg: 'Set the value you worked out.' };
-        return { ok: false, msg: 'The dial does not match the table.' };
+        if (v === 5) return { ok: false, notYet: true, msg: 'Set the value you worked out.' };
+        if (v === 2) return { ok: false, msg: 'That sign says the vent loses room, and the equation turns two moles of gas into three.' };
+        if (v === 4) return { ok: false, msg: `That is the entropy of the products alone, ${(2 * s0('H2(g)') + s0('O2(g)')).toFixed(1)}, with nothing taken off.` };
+        return { ok: false, msg: `That takes steam's ${s0('H2O(g)')} off once, and the equation uses two moles of it.` };
       },
       ...STAGE_REWARDS[3]
     };
