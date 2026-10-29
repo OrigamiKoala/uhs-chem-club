@@ -31,15 +31,15 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { planPhotocell, photonJoules, thresholdNm } from '../../engine/lightdata.js';
 import {
-  opticsTable, photocell, metalPlate, lamp, cellRead, firstFreeing, seated
+  opticsTable, plaque, photocell, metalPlate, lamp, cellRead, firstFreeing, seated
 } from '../../table/kits/optics.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bphotoelectric\b/i, introducedAt: 2 },
@@ -274,7 +274,42 @@ export const STAGES = [
       reward: {
         log: 'Cesium frees electrons easiest, then sodium, then zinc.',
         title: 'Work Function',
-        body: 'The least energy that frees an electron from a metal is its work function, about 3.4 x 10^-19 J for cesium, 3.7 for sodium and 6.9 for zinc. The higher it is, the higher the frequency a photon needs before it frees anything.',
+        body: 'The least energy that frees an electron from a metal is its work function, about 3.4 x 10^-19 J for cesium, 3.7 for sodium and 6.9 for zinc. The higher it is, the higher the frequency a photon needs before it frees anything.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const card = plaque('data', 'Violet light on sodium', { x: 52, y: 26 }, [
+      'Violet light: 7.5 x 10^14 crests a second',
+      'Energy of one photon = 6.6 x 10^-34 J s x crests a second',
+      'Sodium work function: 3.7 x 10^-19 J'
+    ], { w: 104, h: 34 });
+    return {
+      title: 'Energy of a Freed Electron',
+      prompt: 'Type the energy left to the fastest electron that violet light frees from sodium.',
+      entry: { id: 'ans', label: 'Energy left', unit: 'x 10^-19 J' },
+      widget,
+      table: opticsTable({ pieces: [], fixtures: [card], zones: {} }),
+      hints: [
+        'Read the three lines on the plate, then type the figure in the field.',
+        'Work out the energy one photon carries, and compare it with what sodium holds on to.',
+        'The electron keeps the photon\'s energy minus the work function, with both in the same units.'
+      ],
+      check(state) {
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in units of 10^-19 J.' };
+        const photon = 6.6e-34 * 7.5e14 / 1e-19;
+        const want = photon - 3.7;
+        if (Math.abs(v - want) <= 0.15) return { ok: true };
+        if (v >= photon - 0.15) return { ok: false, msg: 'The electron has to pay the work function out of that energy before it leaves.' };
+        return { ok: false, msg: 'That is not what one photon carries once the work function is taken out.' };
+      },
+      reward: {
+        log: 'Photon energy minus work function is what the electron keeps.',
+        title: 'Photon Energy',
+        body: 'One photon carries 6.6 x 10^-34 J s times 7.5 x 10^14 a second, about 5.0 x 10^-19 J. Sodium keeps 3.7 x 10^-19 J of it as the price of leaving, and the fastest electron carries off the remaining 1.3 x 10^-19 J.',
         last: true
       }
     };
@@ -311,67 +346,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'What is the energy of one photon of light with a frequency of 6.0 x 10^14 Hz? (h = 6.626 x 10^-34 J s)',
-    options: [
-      { id: 'a', label: '4.0 x 10^-19 J' },
-      { id: 'b', label: '1.1 x 10^-48 J' },
-      { id: 'c', label: '9.1 x 10^47 J' },
-      { id: 'd', label: '6.6 x 10^-34 J' }
-    ],
-    answer: 'a',
-    explanation: 'A photon\'s energy is Planck\'s constant times its frequency: (6.626 x 10^-34 J s)(6.0 x 10^14 s^-1) = 4.0 x 10^-19 J. Dividing instead of multiplying gives the other figures.'
-  },
-  {
-    question: 'Red light does not free electrons from a metal, however bright the lamp. Ultraviolet light does. Why?',
-    options: [
-      { id: 'a', label: 'Each ultraviolet photon carries more energy than each red photon' },
-      { id: 'b', label: 'Ultraviolet light is brighter than red light' },
-      { id: 'c', label: 'Ultraviolet light travels faster than red light' },
-      { id: 'd', label: 'Red light has too many photons' }
-    ],
-    answer: 'a',
-    explanation: 'A photon\'s energy is proportional to its frequency. Ultraviolet photons have the higher frequency, so only they carry more than the work function. Brightness changes the number of photons, not the energy of each.'
-  },
-  {
-    question: 'A lamp above the threshold frequency is made brighter. What happens in the photocell?',
-    options: [
-      { id: 'a', label: 'More electrons are freed each second, each with the same maximum speed' },
-      { id: 'b', label: 'The same number of electrons are freed, each with a higher maximum speed' },
-      { id: 'c', label: 'More electrons are freed, each with a higher maximum speed' },
-      { id: 'd', label: 'No change' }
-    ],
-    answer: 'a',
-    explanation: 'Brightness sets the number of photons per second, so it sets the number of electrons freed. The energy of each photon, and so the speed of the fastest electron, depends only on frequency.'
-  },
-  {
-    question: 'Metal X has a lower work function than metal Y. Compared with Y, metal X has:',
-    options: [
-      { id: 'a', label: 'A higher threshold frequency' },
-      { id: 'b', label: 'A lower threshold frequency' },
-      { id: 'c', label: 'The same threshold frequency' },
-      { id: 'd', label: 'No threshold frequency' }
-    ],
-    answer: 'b',
-    explanation: 'The threshold photon has just the work function\'s energy. A smaller work function needs a smaller photon energy, and so a lower frequency, to free an electron.'
-  },
-  {
-    question: 'Which observation shows that light behaves as particles and not only as waves?',
-    options: [
-      { id: 'a', label: 'Light of low frequency frees no electrons however bright it is' },
-      { id: 'b', label: 'Light travels at 3.00 x 10^8 m/s in a vacuum' },
-      { id: 'c', label: 'Light has a wavelength' },
-      { id: 'd', label: 'Red light looks different from violet light' }
-    ],
-    answer: 'a',
-    explanation: 'A wave model says a bright enough lamp should free electrons at any frequency. That it does not is evidence that light delivers its energy in separate photons.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. Plates are put in the holder and back on the rail, dials are set, a reading is
@@ -394,7 +368,8 @@ export const SOLUTIONS = [
     put('cs', 'slot:cell.holder'), colour(wakes('Cs')), { run: 'cell' }, put('cs', 'rail:0'),
     put('na', 'slot:cell.holder'), colour(wakes('Na')), { run: 'cell' }, put('na', 'rail:1'),
     put('zn', 'slot:cell.holder'), colour(wakes('Zn')), { run: 'cell' }, put('zn', 'rail:2')
-  ]
+  ],
+  [{ type: { entry: 'ans', value: '1.3' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -403,7 +378,8 @@ export const MISSES = [
   [put('na', 'slot:cell.holder'), colour(3), bright(5)],
   [colour(7)],
   [bright(3)],
-  [put('cs', 'rail:2')]
+  [put('cs', 'rail:2')],
+  [{ type: { entry: 'ans', value: '5' } }]
 ];
 
 function blankState() { return {}; }

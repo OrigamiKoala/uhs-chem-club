@@ -323,67 +323,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Which has the larger atomic radius: sodium or magnesium?',
-    options: [
-      { id: 'a', label: 'Sodium' },
-      { id: 'b', label: 'Magnesium' },
-      { id: 'c', label: 'They are the same' },
-      { id: 'd', label: 'It depends on the temperature' }
-    ],
-    answer: 'a',
-    explanation: 'Across a row each atom has one more proton pulling on the same shell, so atoms shrink from left to right. Sodium is to the left of magnesium.'
-  },
-  {
-    question: 'An outer electron in sodium feels an effective nuclear charge of about +1, though the nucleus has 11 protons. Why?',
-    options: [
-      { id: 'a', label: 'The ten electrons between it and the nucleus cancel most of the charge' },
-      { id: 'b', label: 'Sodium has only one proton' },
-      { id: 'c', label: 'The outer electron has no charge' },
-      { id: 'd', label: 'The nucleus is too far away to matter at all' }
-    ],
-    answer: 'a',
-    explanation: 'Shielding: the inner electrons sit between the outer electron and the nucleus and cancel most of its charge, leaving about +1.'
-  },
-  {
-    question: 'Which of these costs the most energy to strip one electron from?',
-    options: [
-      { id: 'a', label: 'Beryllium' },
-      { id: 'b', label: 'Lithium' },
-      { id: 'c', label: 'Boron' },
-      { id: 'd', label: 'Sodium' }
-    ],
-    answer: 'a',
-    explanation: 'Beryllium holds its outer electron harder than lithium or sodium, and a little harder than boron, whose outer electron is in a 2p subshell.'
-  },
-  {
-    question: 'A sodium atom loses its outer electron and becomes Na+. How does its size change?',
-    options: [
-      { id: 'a', label: 'It gets much smaller' },
-      { id: 'b', label: 'It gets much bigger' },
-      { id: 'c', label: 'It stays the same' },
-      { id: 'd', label: 'It gets slightly bigger' }
-    ],
-    answer: 'a',
-    explanation: 'The outer shell is gone, and the remaining electrons are pulled in by the same nucleus.'
-  },
-  {
-    question: 'A chlorine atom gains an electron and becomes Cl-. How does its size change?',
-    options: [
-      { id: 'a', label: 'It gets bigger' },
-      { id: 'b', label: 'It gets smaller' },
-      { id: 'c', label: 'It stays the same' },
-      { id: 'd', label: 'It vanishes' }
-    ],
-    answer: 'a',
-    explanation: 'The extra electron repels the others and adds no extra pull, so the ion is bigger than the atom.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. Atoms are put in a holder, a key is pressed, electrons are laid on cards, cards

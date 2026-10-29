@@ -32,17 +32,17 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { fmtLength } from '../../engine/lightbench.js';
 import { planTrace } from '../../engine/lightdata.js';
 import {
-  opticsTable, waveScreen, logRuler, pulseRail, lamp, tunedLamp, radiator, detector, marker,
+  opticsTable, plaque, waveScreen, logRuler, pulseRail, lamp, tunedLamp, radiator, detector, marker,
   waveRead, rulerRead, bandRead, pulseRead, seated, pickedUpBy, detectorsOn
 } from '../../table/kits/optics.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 /** When each withheld word is earned. */
 export const VOCABULARY = [
@@ -136,6 +136,7 @@ export const STAGES = [
         const ref = rateOf(t, 'a');
         if (mine === null) return { ok: false, notYet: true, msg: 'Put the spare lamp in its holder to light its screen.' };
         if (mine > ref) return { ok: true };
+        if (mine === ref) return { ok: false, msg: 'At this setting the spare lamp has the same number of crests passing each second as Beacon 1.' };
         return { ok: false, msg: 'At this setting the spare lamp has fewer crests passing each second than Beacon 1.' };
       },
       reward: {
@@ -337,7 +338,41 @@ export const STAGES = [
       reward: {
         log: 'Radio, oven, red, violet, X-ray: one scale.',
         title: 'The Electromagnetic Spectrum',
-        body: 'A radio mast, an oven, a lamp and an X-ray tube all send out the same kind of wave; only the wavelength differs. The narrow band the eye can see, about 700 nm (red) to 400 nm (violet), is the visible spectrum, and the whole family is the electromagnetic spectrum.',
+        body: 'A radio mast, an oven, a lamp and an X-ray tube all send out the same kind of wave; only the wavelength differs. The narrow band the eye can see, about 700 nm (red) to 400 nm (violet), is the visible spectrum, and the whole family is the electromagnetic spectrum.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const plate = plaque('plate', 'Two sources', { x: 56, y: 26 }, [
+      'Relay mast: 3.0 m between crests, 1.0 x 10^8 crests a second',
+      'Galley oven: 12 cm between crests, ? a second',
+      'Speed of light: 3.0 x 10^8 m/s'
+    ], { w: 104, h: 34 });
+    return {
+      title: 'Crests per Second',
+      prompt: 'Type how many crests pass each second for the galley oven\'s waves.',
+      entry: { id: 'ans', label: 'Crests a second', unit: 'x 10^9' },
+      widget,
+      table: opticsTable({ pieces: [], fixtures: [plate], zones: {} }),
+      hints: [
+        'Read the three lines on the plate, then type the figure in the field.',
+        'Compare the oven\'s distance between crests with the mast\'s: how many times shorter is it?',
+        'Crests a second is the speed of light divided by the distance between crests, with both in metres.'
+      ],
+      check(state) {
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure, counted in billions (10^9) of crests a second.' };
+        const want = 3e8 / 0.12 / 1e9;
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        if (v < 0.1) return { ok: false, msg: 'The oven\'s waves are shorter than the mast\'s, so more crests pass each second, not fewer.' };
+        return { ok: false, msg: 'That count does not fit crests 12 cm apart travelling 3.0 x 10^8 m in a second.' };
+      },
+      reward: {
+        log: 'Speed of light divided by crest spacing gives crests a second.',
+        title: 'Speed, Wavelength and Frequency',
+        body: 'The speed of light equals wavelength times frequency, so frequency is 3.0 x 10^8 m/s divided by 0.12 m: 2.5 x 10^9 a second. A wave 25 times shorter than the mast\'s 3.0 m has 25 times the crests a second.',
         last: true
       }
     };
@@ -375,67 +410,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Light has a wavelength of 600 nm. What is its frequency? (c = 3.00 x 10^8 m/s)',
-    options: [
-      { id: 'a', label: '5.00 x 10^14 Hz' },
-      { id: 'b', label: '2.00 x 10^-6 Hz' },
-      { id: 'c', label: '1.80 x 10^17 Hz' },
-      { id: 'd', label: '5.00 x 10^5 Hz' }
-    ],
-    answer: 'a',
-    explanation: 'Frequency is c divided by wavelength: (3.00 x 10^8 m/s) / (600 x 10^-9 m) = 5.00 x 10^14 Hz. Forgetting to convert nanometres to metres is what gives the other figures.'
-  },
-  {
-    question: 'Which of these has the highest frequency?',
-    options: [
-      { id: 'a', label: 'Radio waves' },
-      { id: 'b', label: 'Infrared light' },
-      { id: 'c', label: 'Green light' },
-      { id: 'd', label: 'Ultraviolet light' }
-    ],
-    answer: 'd',
-    explanation: 'Frequency rises as wavelength falls. Ultraviolet has a shorter wavelength than green, infrared and radio, so its frequency is the highest of the four.'
-  },
-  {
-    question: 'A wave\'s wavelength is doubled and its speed stays the same. What happens to its frequency?',
-    options: [
-      { id: 'a', label: 'It doubles' },
-      { id: 'b', label: 'It halves' },
-      { id: 'c', label: 'It stays the same' },
-      { id: 'd', label: 'It quadruples' }
-    ],
-    answer: 'b',
-    explanation: 'Speed equals wavelength times frequency. With the speed fixed, doubling the wavelength means the frequency must halve.'
-  },
-  {
-    question: 'Which colour of visible light has the shortest wavelength?',
-    options: [
-      { id: 'a', label: 'Red' },
-      { id: 'b', label: 'Green' },
-      { id: 'c', label: 'Yellow' },
-      { id: 'd', label: 'Violet' }
-    ],
-    answer: 'd',
-    explanation: 'Visible light runs from red, near 700 nm, to violet, near 400 nm. Violet has the shortest wavelength and therefore the highest frequency of the visible colours.'
-  },
-  {
-    question: 'In a vacuum, how do the speeds of red light and violet light compare?',
-    options: [
-      { id: 'a', label: 'Violet is faster, because its frequency is higher' },
-      { id: 'b', label: 'Red is faster, because its wavelength is longer' },
-      { id: 'c', label: 'They are the same: all light travels at 3.00 x 10^8 m/s' },
-      { id: 'd', label: 'It depends on how bright each one is' }
-    ],
-    answer: 'c',
-    explanation: 'All electromagnetic waves travel at the same speed in a vacuum. Red and violet differ in wavelength and frequency, but their product is always 3.00 x 10^8 m/s.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. Lamps are put in holders and on the rail, dials are set, a pulse is fired.
@@ -444,6 +418,7 @@ export const PRACTICE = [
 
 const put = (piece, to) => ({ place: { piece, to } });
 const colour = (fixture, value) => ({ setDial: { fixture, dial: 'colour', value } });
+const typed = (id, value) => ({ type: { entry: id, value: String(value) } });
 const reading = (fixture, value) => ({ setDial: { fixture, dial: 'n', value } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
@@ -452,7 +427,8 @@ export const SOLUTIONS = [
   [{ predict: 'same' }],
   [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m3'), put('red', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 3)],
   [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m3'), put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 3)],
-  [put('radio', 'rail:0'), put('micro', 'rail:1'), put('red', 'rail:2'), put('violet', 'rail:3'), put('xray', 'rail:4')]
+  [put('radio', 'rail:0'), put('micro', 'rail:1'), put('red', 'rail:2'), put('violet', 'rail:3'), put('xray', 'rail:4')],
+  [typed('ans', '2.5')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -461,7 +437,8 @@ export const MISSES = [
   [],
   [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m2'), put('red', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 2.5)],
   [put('d1', 'slot:rail.m0'), put('d2', 'slot:rail.m2'), put('violet', 'slot:rail.lamp'), { run: 'rail' }, reading('speed', 2.5)],
-  [put('violet', 'rail:0')]
+  [put('violet', 'rail:0')],
+  [typed('ans', '0.025')]
 ];
 
 function blankState() { return {}; }

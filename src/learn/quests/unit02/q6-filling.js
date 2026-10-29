@@ -26,7 +26,7 @@ import {
   readOf, rackOf, rackPull, rackFor, groundConfig, readRack, isLaddered, boxPieceId, configString, shortString, symbolOf
 } from '../../table/kits/shells.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bconfigurations?\b/i, introducedAt: 2 },
@@ -273,7 +273,40 @@ export const STAGES = [
           z: 21,
           stage: 5,
           caption: 'Scandium (Z = 21): With 4s full ([Ar] 4s²), the twenty-first electron enters the 3d subshell ([Ar] 4s² 3d¹).'
-        },
+        }
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const rows = ['1s', '2s', '2p', '3s', '3p'];
+    const rack = shelf('rack', rows, SHELF_AT, { pre: rackFor(10), locked: true });
+    return {
+      title: 'A Chloride Ion',
+      prompt: 'Build the chloride ion, Cl\u207b, on the rack at the lowest possible energy.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...hands(86, 10, 16)],
+        fixtures: [rack.fixture, energyWell('well', { x: 124, y: 44 }, { rack: 'rack', size: { w: 30, h: 32 } })]
+      }),
+      hints: [
+        'Use "Add \u2191" and "Add \u2193" on the boxes, and "Test Energy".',
+        'Count the electrons a neutral chlorine atom has, then change that count for the ion\'s charge.',
+        'The charge tells you how many electrons the ion has gained or lost compared with the atom.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = readOf(t, 'rack');
+        if (r.total <= 10) return { ok: false, notYet: true, msg: 'Place the ion\'s remaining electrons on the rack.' };
+        if (r.total !== 18) return { ok: false, msg: 'The rack holds the wrong number of electrons for this ion: the charge changes the atom\'s count.' };
+        if (!isLaddered(r.counts)) return { ok: false, msg: 'An electron sits in a higher row while a lower row has room.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'Chloride has the same electrons as argon.',
+        title: 'Electron Configurations of Ions',
+        body: 'Chloride has 18 electrons, 1s\u00b2 2s\u00b2 2p\u2076 3s\u00b2 3p\u2076, the same as argon. A metal ion loses its outermost-shell electrons first, so Fe\u00b3\u207a is [Ar] 3d\u2075: its 4s electrons leave before any 3d.',
         last: true
       }
     };
@@ -308,67 +341,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'What is the ground-state electron configuration of oxygen?',
-    options: [
-      { id: 'a', label: '1s² 2s² 2p⁴' },
-      { id: 'b', label: '1s² 2s² 2p⁶' },
-      { id: 'c', label: '1s² 2s⁴ 2p²' },
-      { id: 'd', label: '1s² 2s² 2p⁵' }
-    ],
-    answer: 'a',
-    explanation: 'Oxygen has 8 electrons. They fill 1s (2), then 2s (2), leaving 4 for the 2p row.'
-  },
-  {
-    question: 'How many unpaired electrons does a ground-state nitrogen atom have?',
-    options: [
-      { id: 'a', label: '0' },
-      { id: 'b', label: '1' },
-      { id: 'c', label: '2' },
-      { id: 'd', label: '3' }
-    ],
-    answer: 'd',
-    explanation: 'Nitrogen is 1s² 2s² 2p³. By Hund\'s rule the three 2p electrons occupy three separate boxes, all pointing the same way, so all three are unpaired.'
-  },
-  {
-    question: 'Which row does potassium\'s nineteenth electron go into?',
-    options: [
-      { id: 'a', label: '4s' },
-      { id: 'b', label: '3d' },
-      { id: 'c', label: '4p' },
-      { id: 'd', label: '3p' }
-    ],
-    answer: 'a',
-    explanation: 'Argon has 18 electrons, and the next one goes into 4s, which sits below 3d on the ladder.'
-  },
-  {
-    question: 'According to the aufbau principle, which subshell fills immediately after 4s is full?',
-    options: [
-      { id: 'a', label: '3d' },
-      { id: 'b', label: '4p' },
-      { id: 'c', label: '4d' },
-      { id: 'd', label: '5s' }
-    ],
-    answer: 'a',
-    explanation: 'On the energy ladder, 3d sits between 4s and 4p, so 3d fills once 4s is full.'
-  },
-  {
-    question: 'What is the ground-state electron configuration of scandium (Z = 21)?',
-    options: [
-      { id: 'a', label: '[Ar] 4s² 3d¹' },
-      { id: 'b', label: '[Ar] 3d³' },
-      { id: 'c', label: '[Ar] 4s³' },
-      { id: 'd', label: '[Ar] 4s¹ 3d²' }
-    ],
-    answer: 'a',
-    explanation: 'Scandium has 21 electrons: 18 in the argon core, two filling 4s, and the twenty-first falling into 3d.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES
    ------------------------------------------------------------------ */
 
@@ -383,7 +355,8 @@ export const SOLUTIONS = [
   [...pair('1s', 0), ...pair('2s', 0), up('2p', 0), up('2p', 1), up('2p', 2), down('2p', 0), put('p4', 'slot:reads')],
   [{ predict: 's4' }],
   [up('4s', 0)],
-  [...pair('4s', 0), up('3d', 0), { run: 'well' }]
+  [...pair('4s', 0), up('3d', 0), { run: 'well' }],
+  [...pair('3s', 0), ...pair('3p', 0), ...pair('3p', 1), ...pair('3p', 2)]
 ];
 
 export const MISSES = [
@@ -391,7 +364,8 @@ export const MISSES = [
   [...pair('1s', 0), ...pair('2s', 0), up('2p', 0), up('2p', 1), up('2p', 2), down('2p', 0), put('p6', 'slot:reads')],
   [],
   [up('3d', 0)],
-  [up('4s', 0), ...pair('3d', 0)]
+  [up('4s', 0), ...pair('3d', 0)],
+  [...pair('3s', 0), ...pair('3p', 0), ...pair('3p', 1), up('3p', 2)]
 ];
 
 function blankState() { return {}; }

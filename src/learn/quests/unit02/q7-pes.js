@@ -33,16 +33,16 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  pesTable, specimen, chamber, buildFixture, writerFixture,
+  pesTable, plaqueFixture, specimen, chamber, buildFixture, writerFixture,
   chamberRead, buildRead, writtenRead, writerTarget, freedBy, holdOf, electronsIn, spectrumOf, shellsOf,
   ENERGY_STEPS, TOP_STEP, WRITER_ROWS, BINS, binOf, pilesOf, energyAt, LADDER, groundConfig, zOf
 } from '../../table/kits/pes.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bphotoelectron spectr(?:um|a)\b/i, introducedAt: 3 },
@@ -267,7 +267,40 @@ export const STAGES = [
         log: 'Peak by peak, the spectrum is the arrangement.',
         title: 'The Spectrum Is the Configuration',
         body: 'A photoelectron spectrum is the electron configuration drawn out: each peak is a row, and its height is how many electrons the row holds. Read from the most tightly held peak to the least, it spells the configuration row by row.',
-        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s rows, lowest at the bottom: 2, 2 and 3 electrons, the three in the top row standing alone.' },
+        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s rows, lowest at the bottom: 2, 2 and 3 electrons, the three in the top row standing alone.' }
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Energy to remove each electron in turn', { x: 52, y: 26 }, [
+      'First: 738 kJ/mol',
+      'Second: 1451 kJ/mol',
+      'Third: 7733 kJ/mol',
+      'Fourth: 10543 kJ/mol'
+    ], { w: 70 });
+    return {
+      title: 'Counting Outer Electrons',
+      prompt: 'Type how many outer-shell electrons the sealed atom has.',
+      entry: { id: 'ans', label: 'Outer-shell electrons', unit: '' },
+      widget,
+      table: pesTable({ pieces: [], fixtures: [plate], zones: {} }),
+      hints: [
+        'Read the four energies on the plate, then type the figure in the field.',
+        'Compare each energy with the one before it and find the step that jumps the most.',
+        'Electrons removed before the big jump come from the outer shell; the jump marks the first electron from a shell closer in.'
+      ],
+      check(state) {
+        const v = entryNumber(state.table, 'ans');
+        if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a whole number.' };
+        if (v === 2) return { ok: true };
+        return { ok: false, msg: 'The energies do not climb steeply at the step that figure implies.' };
+      },
+      reward: {
+        log: 'The big jump marks the first electron from a closer shell.',
+        title: 'Successive Ionization Energies',
+        body: 'Each electron is harder to remove than the last, but the cost jumps when the next electron sits in a shell closer to the nucleus. Here it jumps after the second, so the atom has two outer-shell electrons: magnesium.',
         last: true
       }
     };
@@ -303,67 +336,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'In a photoelectron spectrum, what does the height of a peak represent?',
-    options: [
-      { id: 'a', label: 'The number of electrons in that row' },
-      { id: 'b', label: 'The energy of the electrons' },
-      { id: 'c', label: 'The speed of the electrons' },
-      { id: 'd', label: 'The size of the atom' }
-    ],
-    answer: 'a',
-    explanation: 'Peak height is proportional to the number of electrons removed at that binding energy, which is the number in that row. Position gives the binding energy.'
-  },
-  {
-    question: 'A photoelectron spectrum shows three peaks, with relative heights 2, 2 and 3. Which element is it?',
-    options: [
-      { id: 'a', label: 'Nitrogen' },
-      { id: 'b', label: 'Carbon' },
-      { id: 'c', label: 'Oxygen' },
-      { id: 'd', label: 'Boron' }
-    ],
-    answer: 'a',
-    explanation: 'The configuration 1s² 2s² 2p³ has 7 electrons, which is nitrogen.'
-  },
-  {
-    question: 'Why is the 1s peak of neon at a higher binding energy than the 1s peak of fluorine?',
-    options: [
-      { id: 'a', label: 'Neon\'s nucleus has more protons, so it holds its 1s electrons more tightly' },
-      { id: 'b', label: 'Neon has more shells' },
-      { id: 'c', label: 'Neon\'s 1s electrons are farther from its nucleus' },
-      { id: 'd', label: 'Fluorine has no 1s electrons' }
-    ],
-    answer: 'a',
-    explanation: 'Both have two 1s electrons at about the same distance. Neon\'s nuclear charge is greater by one proton, so those electrons are bound more tightly.'
-  },
-  {
-    question: 'Lithium\'s spectrum has a small peak at a low binding energy and a tall peak at a high one. Which electrons make the low peak?',
-    options: [
-      { id: 'a', label: 'The single outer electron, which is held loosely' },
-      { id: 'b', label: 'The two inner electrons' },
-      { id: 'c', label: 'All three electrons' },
-      { id: 'd', label: 'None; the low peak is noise' }
-    ],
-    answer: 'a',
-    explanation: 'The outer electron is far from the nucleus and shielded by the two inner ones, so little energy removes it. The inner pair needs much more.'
-  },
-  {
-    question: 'The 2p electrons in an atom come off with less energy than its 2s electrons. This is because:',
-    options: [
-      { id: 'a', label: 'They are held a little less tightly, so their peak sits at a lower binding energy' },
-      { id: 'b', label: 'They are lighter' },
-      { id: 'c', label: 'They are in a different atom' },
-      { id: 'd', label: 'They have no charge' }
-    ],
-    answer: 'a',
-    explanation: 'In the same shell a p row is held a little less tightly than the s row, so its peak sits closer to the low-energy end.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
    actions, by drag and by two taps. Specimens are put in the chamber and fired, dials are turned, atoms are built and written.
@@ -379,7 +351,8 @@ export const SOLUTIONS = [
   [dial(CHAMBER, 'energy', weakestStep('Li')), { run: CHAMBER }],
   [{ run: CHAMBER }, dial('build', 'protons', 8), dial('build', 'electrons', 8)],
   [put('o', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('f', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('n', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('o', 'rail:0'), put('f', 'rail:1'), put('n', 'rail:2')],
-  [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 2, '2p': 3 })]
+  [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 2, '2p': 3 })],
+  [{ type: { entry: 'ans', value: '2' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -388,7 +361,8 @@ export const MISSES = [
   [dial(CHAMBER, 'energy', 9)],
   [{ run: CHAMBER }, dial('build', 'protons', 9), dial('build', 'electrons', 9)],
   [put('n', 'rail:0')],
-  [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 3, '2p': 2 })]
+  [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 3, '2p': 2 })],
+  [{ type: { entry: 'ans', value: '3' } }]
 ];
 
 function blankState() { return {}; }

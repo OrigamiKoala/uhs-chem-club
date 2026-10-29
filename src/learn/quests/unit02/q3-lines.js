@@ -320,67 +320,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'A gas tube gives out a few bright lines on a dark background. This is:',
-    options: [
-      { id: 'a', label: 'An emission line spectrum' },
-      { id: 'b', label: 'A continuous spectrum' },
-      { id: 'c', label: 'An absorption spectrum' },
-      { id: 'd', label: 'A white-light spectrum' }
-    ],
-    answer: 'a',
-    explanation: 'A glowing gas gives out only certain wavelengths, so its spectrum is a few bright lines. A hot solid gives a continuous band, and cool gas in front of one gives dark absorption lines.'
-  },
-  {
-    question: 'An electron in a hydrogen atom drops from the third energy level to the second. What happens?',
-    options: [
-      { id: 'a', label: 'A photon with energy equal to the difference between the two levels is given out' },
-      { id: 'b', label: 'A photon is absorbed' },
-      { id: 'c', label: 'Nothing, because the electron stays in the atom' },
-      { id: 'd', label: 'The atom loses the electron' }
-    ],
-    answer: 'a',
-    explanation: 'Falling to a lower level gives up the energy difference, and it leaves as one photon. Absorbing a photon would raise the electron.'
-  },
-  {
-    question: 'Which jump in a hydrogen atom gives out the photon of highest frequency?',
-    options: [
-      { id: 'a', label: 'Sixth level to second level' },
-      { id: 'b', label: 'Third level to second level' },
-      { id: 'c', label: 'Fourth level to third level' },
-      { id: 'd', label: 'Fifth level to fourth level' }
-    ],
-    answer: 'a',
-    explanation: 'The bigger the drop in energy, the higher the photon\'s frequency. The levels crowd closer together as they climb, so the drop from the sixth to the second is the largest of the four.'
-  },
-  {
-    question: 'A filament\'s light passes through a cool gas, and dark lines appear in its band. Where are the dark lines?',
-    options: [
-      { id: 'a', label: 'Where the same gas, glowing, would give out bright lines' },
-      { id: 'b', label: 'At the red end of the band only' },
-      { id: 'c', label: 'At random places' },
-      { id: 'd', label: 'Where the filament gives no light' }
-    ],
-    answer: 'a',
-    explanation: 'Atoms take in exactly the energies they give out. The cool gas removes those colours from the filament\'s light and leaves dark lines at the same places.'
-  },
-  {
-    question: 'Two sealed tubes glow, and their bands show different sets of bright lines. What does that tell you?',
-    options: [
-      { id: 'a', label: 'They hold different gases' },
-      { id: 'b', label: 'One tube is hotter' },
-      { id: 'c', label: 'One tube is brighter' },
-      { id: 'd', label: 'They hold the same gas at different pressures' }
-    ],
-    answer: 'a',
-    explanation: 'Each gas has its own energy levels and so its own set of lines, like a fingerprint. Different lines mean different atoms.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. Sources are plugged in, strips slid alongside, an electron dragged from rung to

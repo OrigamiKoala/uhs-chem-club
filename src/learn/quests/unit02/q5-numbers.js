@@ -301,67 +301,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Which quantum number determines the shape of an orbital?',
-    options: [
-      { id: 'a', label: 'The angular momentum quantum number, l' },
-      { id: 'b', label: 'The principal quantum number, n' },
-      { id: 'c', label: 'The magnetic quantum number, ml' },
-      { id: 'd', label: 'The spin quantum number, ms' }
-    ],
-    answer: 'a',
-    explanation: 'l sets the shape: 0 for s, 1 for p, 2 for d. n sets the size and energy, ml the orientation and ms the direction of spin.'
-  },
-  {
-    question: 'How many orbitals are in a d subshell?',
-    options: [
-      { id: 'a', label: '1' },
-      { id: 'b', label: '3' },
-      { id: 'c', label: '5' },
-      { id: 'd', label: '7' }
-    ],
-    answer: 'c',
-    explanation: 'For d, l = 2, so ml takes the values -2, -1, 0, +1 and +2: five orbitals, which hold ten electrons between them.'
-  },
-  {
-    question: 'Which set of quantum numbers cannot describe an electron?',
-    options: [
-      { id: 'a', label: 'n = 2, l = 2, ml = 0, ms = +1/2' },
-      { id: 'b', label: 'n = 3, l = 1, ml = -1, ms = -1/2' },
-      { id: 'c', label: 'n = 4, l = 3, ml = +2, ms = +1/2' },
-      { id: 'd', label: 'n = 1, l = 0, ml = 0, ms = -1/2' }
-    ],
-    answer: 'a',
-    explanation: 'l must be smaller than n. With n = 2, l can only be 0 or 1, so l = 2 names no orbital.'
-  },
-  {
-    question: 'How many electrons can the n = 4 shell hold?',
-    options: [
-      { id: 'a', label: '16' },
-      { id: 'b', label: '8' },
-      { id: 'c', label: '32' },
-      { id: 'd', label: '18' }
-    ],
-    answer: 'c',
-    explanation: 'A shell holds 2n² electrons. For n = 4 that is 2 x 16 = 32.'
-  },
-  {
-    question: 'The Pauli exclusion principle says that:',
-    options: [
-      { id: 'a', label: 'No two electrons in an atom can have all four quantum numbers the same' },
-      { id: 'b', label: 'Electrons fill the lowest energy orbitals first' },
-      { id: 'c', label: 'Orbitals of equal energy fill one electron at a time before pairing' },
-      { id: 'd', label: 'Electrons cannot be in the same shell' }
-    ],
-    answer: 'a',
-    explanation: 'Two electrons may share n, l and ml only if their spins differ, which is why an orbital holds at most two. The other two options describe the aufbau principle and Hund\'s rule.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
    actions, by drag and by two taps. Cells are set, arrows and electrons dropped on boxes, cards put in trays. Nothing here says

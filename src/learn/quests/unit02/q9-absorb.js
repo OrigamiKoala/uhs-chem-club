@@ -304,67 +304,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'A solution of potassium permanganate looks purple. Which colour of light does it absorb most strongly?',
-    options: [
-      { id: 'a', label: 'Green, the colour opposite purple' },
-      { id: 'b', label: 'Purple' },
-      { id: 'c', label: 'Red' },
-      { id: 'd', label: 'It absorbs all colours equally' }
-    ],
-    answer: 'a',
-    explanation: 'A solution looks the complementary colour of the light it absorbs. Purple is the complement of green, and permanganate takes in light near 525 nm, which is green.'
-  },
-  {
-    question: 'A solution has an absorbance of 0.30 in a 1.0 cm cuvette. What would its absorbance be in a 2.0 cm cuvette?',
-    options: [
-      { id: 'a', label: '0.60' },
-      { id: 'b', label: '0.15' },
-      { id: 'c', label: '0.30' },
-      { id: 'd', label: '0.09' }
-    ],
-    answer: 'a',
-    explanation: 'Light passes through twice as many absorbing particles, so it loses twice as much: absorbance is proportional to path length, and 0.30 x 2 = 0.60.'
-  },
-  {
-    question: 'A 0.010 M solution has an absorbance of 0.25. A second solution of the same substance reads 0.50 under the same conditions. Its concentration is:',
-    options: [
-      { id: 'a', label: '0.020 M' },
-      { id: 'b', label: '0.0050 M' },
-      { id: 'c', label: '0.010 M' },
-      { id: 'd', label: '0.040 M' }
-    ],
-    answer: 'a',
-    explanation: 'Absorbance is proportional to concentration when the path and wavelength are the same. The second reading is twice the first, so the concentration is twice as large: 0.020 M.'
-  },
-  {
-    question: 'A blue solution looks blue because it:',
-    options: [
-      { id: 'a', label: 'Takes out the opposite colour, orange, and lets the rest through' },
-      { id: 'b', label: 'Gives out blue light of its own' },
-      { id: 'c', label: 'Takes out blue light' },
-      { id: 'd', label: 'Takes out every colour equally' }
-    ],
-    answer: 'a',
-    explanation: 'The colour we see is what is left of white light once the solution has taken some out. Copper takes out orange, and blue is left.'
-  },
-  {
-    question: 'Why is a calibration curve made from solutions of known concentration?',
-    options: [
-      { id: 'a', label: 'So an unknown sample\'s absorbance can be converted into a concentration' },
-      { id: 'b', label: 'To find the colour of the unknown sample' },
-      { id: 'c', label: 'To remove the need for a spectrometer' },
-      { id: 'd', label: 'To change the wavelength of the lamp' }
-    ],
-    answer: 'a',
-    explanation: 'The standards fix the relationship between absorbance and concentration for that substance and wavelength. An unknown\'s absorbance is then read back along that line to a concentration.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions, by drag
    and by two taps. Cuvettes are filled with drops, slid into the beam and recorded, the straightedge is laid, a marker is set.

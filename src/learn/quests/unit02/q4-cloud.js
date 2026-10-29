@@ -328,67 +328,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'What does an orbital show?',
-    options: [
-      { id: 'a', label: 'The region where an electron is likely to be found' },
-      { id: 'b', label: 'The exact path an electron follows' },
-      { id: 'c', label: 'The size of the nucleus' },
-      { id: 'd', label: 'The speed of an electron at an exact moment' }
-    ],
-    answer: 'a',
-    explanation: 'An orbital is a map of probability: where the electron is likely to be found. No exact path can be drawn through it.'
-  },
-  {
-    question: 'Which orbital shape has two lobes and a node, a plane with no electron density, through the nucleus?',
-    options: [
-      { id: 'a', label: 'A p orbital' },
-      { id: 'b', label: 'An s orbital' },
-      { id: 'c', label: 'A d orbital with four lobes' },
-      { id: 'd', label: 'A 1s orbital' }
-    ],
-    answer: 'a',
-    explanation: 'A p orbital has two lobes either side of the nucleus and a flat node between them. An s orbital is spherical with no such plane.'
-  },
-  {
-    question: 'How many p orbitals are there in the second shell?',
-    options: [
-      { id: 'a', label: 'One' },
-      { id: 'b', label: 'Two' },
-      { id: 'c', label: 'Three' },
-      { id: 'd', label: 'Five' }
-    ],
-    answer: 'c',
-    explanation: 'A p orbital can point along x, y or z, giving three of equal energy: 2px, 2py and 2pz.'
-  },
-  {
-    question: 'Five hundred shots find hydrogen\'s electron. Which outline of the same area would catch the most dots?',
-    options: [
-      { id: 'a', label: 'A solid disc over the middle' },
-      { id: 'b', label: 'A thin ring round the middle' },
-      { id: 'c', label: 'A hollow ring with an empty middle' },
-      { id: 'd', label: 'Two separate lobes' }
-    ],
-    answer: 'a',
-    explanation: 'The 1s cloud is a ball, densest at the middle, so a solid disc over the middle catches the most. A ring or a hollow shape misses the densest part.'
-  },
-  {
-    question: 'An electron behaves as a wave on a circular track only if:',
-    options: [
-      { id: 'a', label: 'A whole number of wavelengths fits round the track' },
-      { id: 'b', label: 'Its wavelength equals the radius' },
-      { id: 'c', label: 'It moves fast enough to complete one lap in a second' },
-      { id: 'd', label: 'The track is exactly one nanometre long' }
-    ],
-    answer: 'a',
-    explanation: 'A wave that does not fit a whole number of times meets itself out of step on the next lap and cancels. Only a standing wave survives, which is why electrons have only certain energies.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
    actions, by drag and by two taps. Shots are fired, views set, films and strings put where they go. Nothing here says
