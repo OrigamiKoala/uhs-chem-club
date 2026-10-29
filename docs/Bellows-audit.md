@@ -43,6 +43,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 5 | Order four speed snapshots by temperature | Viewed (screens, snapshots, rail) | ok | ok | N: comparing shapes | speed screen + 3D crowd | ok | 3.5 (Maxwell-Boltzmann) |
 | 6 | Set Holder 6's heater so the two gases carry the same energy (was a sort of four readings) | Played: heater track clicked to 100 °C, both ENERGY readings 7.73 | ok (dial hit band widened) | ok | N | same energy, 3x the speed | ok | 3.5 |
 | 7 | Gas pressure in atm from a mercury U-tube (new, round 2) | Code, verify; the drawn tube was not looked at | ok | ok | N | the column is drawn at 0.05 units a millimetre beside its figure | ok (950 mmHg = 1.25 atm) | 3.4 (manometer, mmHg) |
+| 8 | Slope of gauge against 1 ÷ room, from recorded points (new, round 3) | Code, verify | ok | ok | N | the line is straight through the origin; the gauge alone is the slip | ok (P×V = 2494 kPa·L) | 3.4 (graphs, slope = nRT) |
 
 ### q2-laws (The Gas Laws)
 
@@ -68,6 +69,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 6 | Name a sealed gas from plate and mass (new) | Played: drag, Submit, reward | ok | ok | N | moles then molar mass | ok | 3.4 (molar mass from density) |
 | 7 | Atmospheres, litres, degrees C (new) | Code, verify | ok | ok | N | the unit slips are cards | ok | 3.4 |
 | 8 | Grams per litre from gauge, kelvin and molar mass (new, round 2) | Code, verify | ok | ok | N | moles-per-litre and the inverted quotient are cards | ok (1.76 g/L) | 3.4 (d = PM/RT) |
+| 9 | Percentage error in the moles from a thermometer that reads 5 K low (new, round 3) | Code, verify | ok | ok | N | the wrong-sign answer is refused with a reason | ok (+1.7%) | experimental error |
 
 ### q4-mixtures (Partial Pressures)
 
@@ -80,6 +82,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 5 | Altitude: set the height where oxygen's own push has halved (was a sort of four readings) | Code, verify; one of four dial settings passes | ok | ok | N | the mixture holds while the push falls | ok (5500 m: 0.52) | 3.4 |
 | 6 | Oxygen's own push from moles and the gauge (new) | Code, verify | ok | ok | N | the moles-as-share slip is a card | ok | 3.4 |
 | 7 | Gas alone over water: gauge minus vapour pressure (new, round 2) | Code, verify | ok | ok | N | adding the vapour on is a card | ok (752 − 24 = 728 mmHg) | 3.4 (collected over water; the moles of product are Kettle's) |
+| 8 | Percentage error in the dry gas when the vapour is not subtracted (new, round 3) | Code, verify | ok | ok | N | the wrong sign and the wrong denominator are refused | ok (+3.3%) | experimental error, gas over water |
 
 ### q5-speed (Speed and Escape)
 
@@ -92,6 +95,7 @@ Verdict key: Op = operable by a hand; Int = intuitive from the table alone; Busy
 | 5 | Run the tube, lay the card | Code | ok | ok | N | | ok | 3.5 (diffusion) |
 | 6 | Molar mass from a half-empty time (new) | Viewed | ok | the mass is printed on the gas dial | N | the nearest-match slip is a card | ok (CH₄ 16.04) | 3.5 (Graham) |
 | 7 | Speed that carries the average kinetic energy at 300 K (new, round 2) | Code, verify | ok | ok | N | the mean speed, the missing 3 and grams for kilograms are cards | ok (517 m/s) | 3.5 (rms speed, KE = 3/2 RT) |
+| 8 | Order four 300 K speed snapshots (He, N₂, CO₂, Xe) from lightest to heaviest (new, round 3) | Code, verify | ok | the earlier stages earn heavier = slower | N: comparing shapes | the heavy gas is taller, narrower, further left | ok | 3.5 (Maxwell-Boltzmann by molar mass) |
 
 ### q6-real (Real Gases)
 
@@ -122,12 +126,14 @@ The old phases 2 to 4 (heat to double the room, sort tanks by particles, rank th
 | 3.4 PV = nRT with units (atm, kPa, L, K) | q3 s4 s5 s7 | covered (new) |
 | 3.4 molar mass from mass, P, V, T; density d = PM/RT | q3 s6, s8 | covered |
 | 3.4 Dalton's law, mole fraction, partial pressure figures | q4 | covered (new figure stage) |
-| 3.5 KMT: kinetic energy and temperature, Maxwell-Boltzmann; root-mean-square speed | q1 s5 s6, q5 s7 | covered; u = √(3RT/M) is worked once |
+| 3.5 KMT: kinetic energy and temperature, Maxwell-Boltzmann by temperature and by molar mass; root-mean-square speed | q1 s5 s6, q5 s7 s8 | covered; u = √(3RT/M) is worked once |
 | 3.5 effusion, Graham's law | q5 | covered with a figure (new) |
 | 3.6 deviation from ideal: size and attractions, high P / low T | q6 | qualitative, correct; no van der Waals constants (not on the AP exam) |
 | Combined gas law P₁V₁/T₁ = P₂V₂/T₂ | q2 s7, boss phase 1 | covered |
 | Manometers, mmHg and torr | q1 s7, q4 s7 | covered (open-tube manometer; mmHg and atm) |
 | Gas collected over water | q4 s7 (vapour pressure only) | covered; the moles of product are Kettle's |
+| Graphs: P against V curves, P against 1/V is a line, slope = nRT; V against °C reaches zero at −273 | q1 s8, q2 s3 | covered |
+| Experimental error: percentage error, direction of a systematic slip (forgotten vapour correction, a thermometer that reads low) | q3 s9, q4 s8 | covered with typed signed answers |
 | Gas stoichiometry | Kettle (unit07) | out of this world |
 
 ## Work log
@@ -145,7 +151,9 @@ Done after the changes above, over the changed stages only (see "Played / Viewed
 
 ## Still weak
 
-- q2 s2 and q4 s3 are searches over discrete dial settings. Their answers cannot be guessed, but a student could still solve them by trial. q6 s3 and boss phase 4 are searches over five heater settings, of the same kind.
+- q6 s3 and boss phase 4 are still searches over five heater settings: the real-gas behaviour cannot be worked out on paper, so a typed answer does not fit them. q2 s2 and q4 s3 were converted to typed answers in round 3.
+- The error stages cover two kinds of slip (a forgotten correction, a miscalibrated instrument). Random error, significant figures and a leaking vessel are not asked.
+- The graph stage asks for one slope. Choosing which of several plots is straight, and reading a graph that is drawn for the player, are not asked.
 - The manometer is a drawing painted on a plaque (`paintManometer` in `gas-draw.js`); it has no 3D body, and it was not looked at in a browser. Only an open-tube manometer is drawn, not a closed one.
 - Gas over water stops at the vapour correction. Turning that pressure into moles of the product belongs to Kettle.
 - The Tour was not read word by word for the new stages; `verify:table` passes (it checks that every kind has a step) and the new stages use only cards, plates and dials that already have steps.
@@ -165,3 +173,10 @@ Done after the changes above, over the changed stages only (see "Played / Viewed
 8. Added q1 s7 (manometer), q2 s7 (combined gas law), q3 s8 (density), q4 s7 (gas over water) and q5 s7 (root-mean-square speed). Each is a worked figure with its slips as cards.
 9. Rewrote boss phases 1 to 4 (see the boss table). Boss phase 3's answer slot sits clear of the foe's corner.
 10. Stage counts: q1 7, q2 7, q3 8, q4 7, q5 7, q6 4, boss 5 = 45. `verify:learn`, `table`, `story`, `bellows`, `bench`, `run`, `drills`, `arena`, `sync`, `tallow`, `lanternfall`, `ligar` and `ember` pass. Nothing was played in a browser this round.
+
+## Round 3
+
+11. Typed entry (the Ember Reach system: `stage.entry`, `entryNumber`, a `type` step in the scripts) replaces the answer cards in q1 s4 s7, q2 s6 s7, q3 s5 s7 s8, q4 s6 s7, q5 s6 s7 and boss phase 3. The `*_CARDS` lists stay as the slips each stage must refuse (verify holds them); the cards are gone from the tables, so the right figure is no longer on screen. Left as cards: q3 s4 (the straightedge's R), q3 s6 (name the gas) and the predict stages.
+12. q2 s2 now asks for the temperature that doubles the room; the dial no longer has a setting at 313 °C, so it cannot be hunted for. q4 s3 asks for nitrogen's share of the total pressure with all four tanks open, and the common tank no longer prints the share.
+13. New stages: q1 s8 (graph, slope), q5 s8 (Maxwell-Boltzmann by molar mass), q3 s9 and q4 s8 (percentage error, signed typed answer, `_shared.js` `entrySigned`).
+14. Counts: q1 8, q2 7, q3 9, q4 8, q5 8, q6 4, boss 5 = 49. PRODUCT.md stages=276 (includes other worlds). The same checks as round 2 pass; nothing was played in a browser.

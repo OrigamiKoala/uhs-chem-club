@@ -21,12 +21,12 @@
  * Clearing it files the Case File clue `clue_bellows_warm`. The boss pays no XP: the main story never does.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, rig, tank, pinhole, commonTank, commonRead, partialOf, plaqueFixture, cylRead, tankRead, tankMoles, pinholeRead, pressureIdeal, sig, toKelvin, GASES
 } from '../../table/kits/gas.js';
-import { widget, put, dial, answerCards, answerSlot, answerOf } from './_shared.js';
+import { widget, put, dial, typed } from './_shared.js';
 import { session } from '../../../session.js';
 
 export const meta = { stageCount: 5 };
@@ -209,12 +209,11 @@ export const STAGES = [
     return {
       id: 'phase3',
       title: 'Phase 3 · The Tanks',
-      prompt: 'Lay the card for the mass of gas in the sealed tank.',
+      prompt: 'Type the mass of gas in the sealed tank.',
+      entry: { id: 'ans', label: 'Mass of gas', unit: 'g' },
       widget,
       table: gasTable({
-        pieces: answerCards(WEIGH_CARDS),
         fixtures: [plate],
-        zones: { slots: [{ ...answerSlot('Mass of gas'), at: { x: 104, y: 27 }, size: { w: 36, h: 12 } }] }
       }),
       foes: COMPRESSOR_FOE,
       encounter: {
@@ -223,13 +222,13 @@ export const STAGES = [
         intent: 'The compressor shows only the plate of its tank.'
       },
       hints: [
-        'Read the figures from the plate, then lay a card in the slot.',
+        'Read the figures from the plate, then type the result.',
         'Find the moles first with the temperature in kelvin, then the mass those moles weigh.',
         'Use R = 0.0821 L·atm per mol·K, then multiply the moles by the molar mass.'
       ],
       check(state) {
-        const v = answerOf(state.table, WEIGH_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in g.' };
         const want = weighGrams();
         if (Math.abs(v - want) / want < 0.04) return { ok: true };
         return { ok: false, msg: v > want ? 'The tank holds less gas than that.' : 'The tank holds more gas than that.' };
@@ -314,7 +313,7 @@ export const STAGES = [
 const NOTES = {
   1: ['Turn the Piston and Heater dials.'],
   2: ['Drag tanks into or out of the tray.'],
-  3: ['R = 0.0821 L·atm per mol·K.', 'Place a card in the slot.'],
+  3: ['R = 0.0821 L·atm per mol·K.', 'Type your answer in the field at the bottom.'],
   4: ['Turn the Heater dial.'],
   5: ['Adjust the Gas and Stopwatch dials.']
 };
@@ -409,7 +408,7 @@ export const PRACTICE = [
 export const SOLUTIONS = [
   [dial(RIG, 'volume', 1), dial(RIG, 'temp', 4)],
   [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('c', `tray:${VALVES}`)],
-  [put('a', 'slot:answer')],
+  [typed('ans', "3.2")],
   [dial(RIG, 'temp', 4)],
   [dial(PIN, 'time', 4), dial(PIN, 'ref', 4)]
 ];
@@ -418,7 +417,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [dial(RIG, 'volume', 1), dial(RIG, 'temp', 3)],
   [put('a', `tray:${VALVES}`), put('b', `tray:${VALVES}`), put('d', `tray:${VALVES}`)],
-  [put('b', 'slot:answer')],
+  [typed('ans', "36")],
   [dial(RIG, 'temp', 2)],
   [dial(PIN, 'ref', 3)]
 ];

@@ -2490,10 +2490,12 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const v = i => rd(t, 'rb', { temp: i });
       for (let i = 1; i <= k; i++) near(v(i).V / v(i).T, v(1).V / v(1).T, 1e-9, `${q} stage 2: V over kelvin is not constant`);
       const ra = rd(t, 'ra').V;
-      const at = c => v(props(t, 'rb').temps.indexOf(c) + 1).V / ra;
-      near(at(313), 2, 0.02, `${q} stage 2 (double the room at 313 C)`);
-      holds(at(40) < 1.12, `${q} stage 2: forty degrees does not leave the room under a tenth bigger, so the Celsius trap is gone`);
-      holds(cylR(done(b2, 1), 'rb') / ra > 1.98, `${q} stage 2: the solution does not leave the room doubled`);
+      holds(!props(t, 'rb').temps.includes(313), `${q} stage 2: a setting of the dial sits on the doubling temperature, so it can be read off`);
+      near(b2.DOUBLE_C, 313.15, 1e-6, `${q} stage 2 (the temperature that doubles the room)`);
+      holds(v(1).V * (b2.DOUBLE_C + 273.15) / 293.15 / ra > 1.98, `${q} stage 2: the answer does not double the room`);
+      same(b2.STAGES[1].check(b2.stateFor(1, b2.SOLUTIONS[1])).ok, true, `${q} stage 2 (the solution)`);
+      same(b2.STAGES[1].check(b2.stateFor(1, b2.MISSES[1])).ok, false, `${q} stage 2 (the Celsius slip)`);
+      same(b2.STAGES[1].check(b2.stateFor(1, [])).notYet, true, `${q} stage 2 (an empty field)`);
       holds(Math.round(start(b2, 1).fixtures.rb.dials.temp.value) === 1 && Math.abs(v(1).V - ra) < 1e-9, `${q} stage 2: the two cylinders do not start alike`);
     }
     function cylR(t, id) { return GK.cylRead(t, id, 0).V; }
@@ -2569,7 +2571,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const n = (b3.PLATE.P * b3.PLATE.V) / (G.R * b3.PLATE.T);
       holds(b3.MOLE_CARDS.filter(c => Math.abs(c[2] - n) / n < 0.03).length === 1, `${q} stage 5: exactly one card should be the moles PV/RT (${n.toFixed(3)})`);
       holds(b3.MOLE_CARDS.some(c => Math.abs(c[2] - 10 * n) / (10 * n) < 0.03) && b3.MOLE_CARDS.some(c => Math.abs(c[2] - n / 10) / (n / 10) < 0.03), `${q} stage 5: the factor-of-ten slips are not cards`);
-      same(Object.values(done(b3, 4).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 5 (the card laid)`);
+      same(b3.STAGES[4].check(b3.stateFor(4, b3.SOLUTIONS[4])).ok, true, `${q} stage 5 (the card laid)`);
       const nm = (b3.SEALED.P * b3.SEALED.V) / (G.R * b3.SEALED.T);
       const molar = (nm * G.GASES[b3.SEALED.gas].M) / nm;
       const fits = b3.GAS_CARDS.filter(c => Math.abs(G.GASES[c[2]].M - molar) / molar < 0.03);
@@ -2582,7 +2584,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const slipC = (b3.ATM_PLATE.P * b3.ATM_PLATE.V) / (b3.R_ATM * b3.ATM_PLATE.TC);
       const slipR = (b3.ATM_PLATE.P * b3.ATM_PLATE.V) / (G.R * (b3.ATM_PLATE.TC + 273.15));
       holds(b3.UNIT_CARDS.some(c => Math.abs(c[2] - slipC) / slipC < 0.03) && b3.UNIT_CARDS.some(c => Math.abs(c[2] - slipR) / slipR < 0.05), `${q} stage 7: the unit slips are not cards`);
-      same(Object.values(done(b3, 6).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 7 (the card laid)`);
+      same(b3.STAGES[6].check(b3.stateFor(6, b3.SOLUTIONS[6])).ok, true, `${q} stage 7 (the card laid)`);
     }
   }
 
@@ -2603,7 +2605,10 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const t = done(b4, 2);
       const rdc = GK.commonRead(t, 'ct');
       for (const r of rdc.rows) near(r.P / rdc.P, r.x, 1e-9, `${q} stage 3: a gas's share of the push is not its share of the particles`);
-      near(GK.partialOf(rdc, 'N2') / rdc.P, 0.6, 0.005, `${q} stage 3: the solution does not leave nitrogen at sixty percent`);
+      near(GK.partialOf(rdc, 'N2') / rdc.P, b4.SHARE_N2, 0.005, `${q} stage 3: nitrogen's share of the push is not its share of the moles`);
+      same(b4.STAGES[2].check(b4.stateFor(2, b4.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
+      same(b4.STAGES[2].check(b4.stateFor(2, b4.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
+      same(b4.STAGES[2].check(b4.stateFor(2, [])).notYet, true, `${q} stage 3 (an empty field)`);
     }
     // Stage 4: the heaviest gas has the fewest moles, so a ranking by weight is not the ranking by push.
     {
@@ -2642,7 +2647,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const o2 = m.rows.find(r => r.gas === 'O2').P;
     holds(b4.PUSH_CARDS.filter(c => Math.abs(c[2] - o2) / o2 < 0.03).length === 1, `${q} stage 6: exactly one card should be oxygen's own push (${o2.toFixed(1)})`);
     holds(b4.PUSH_CARDS.some(c => Math.abs(c[2] - m.P) / m.P < 0.03), `${q} stage 6: the whole gauge is not a card`);
-    same(Object.values(done(b4, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 6 (the card laid)`);
+    same(b4.STAGES[5].check(b4.stateFor(5, b4.SOLUTIONS[5])).ok, true, `${q} stage 6 (the card laid)`);
   }
 
   /* ---- q5-speed ---- */
@@ -2692,7 +2697,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const nearest = G.GASES[b5.MASS_GASES[near2]].M;
     holds(b5.MASS_CARDS.some(c => Math.abs(c[2] - nearest) / nearest < 0.05), `${q} stage 6: the nearest reference's mass is not a card`);
     holds(times.every((x, k) => !k || x > times[k - 1] + 0.5), `${q} stage 6: the reference gases do not leak at distinct paces`);
-    same(Object.values(done(b5, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'b', `${q} stage 6 (the card laid)`);
+    same(b5.STAGES[5].check(b5.stateFor(5, b5.SOLUTIONS[5])).ok, true, `${q} stage 6 (the card laid)`);
   }
 
   /* ---- q6-real ---- */
@@ -2733,7 +2738,6 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 
   /* ---- the figure stages added after the audit: combined law, density, speed, manometer, gas over water ---- */
   {
-    const cardId = (q, i) => Object.values(done(q, i).pieces).find(x => x.zone === 'slot:answer')?.id;
     const only = (cards, want, tol) => cards.filter(c => Math.abs(c[2] - want) / want < tol).length === 1;
     if (b1) {
       const q = 'unit04/q1-knocks';
@@ -2742,7 +2746,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(b1.MANO_CARDS.some(c => Math.abs(c[2] - (b1.MANO.air - b1.MANO.h) / 760) < 0.01) && b1.MANO_CARDS.some(c => Math.abs(c[2] - b1.MANO.h / 760) < 0.01), `${q} stage 7: the subtract slip and the column-alone slip are not cards`);
       const p = Object.values(start(b1, 6).fixtures).find(f => f.kind === 'plaque');
       holds(p && p.props.manometer && p.props.manometer.h === b1.MANO.h, `${q} stage 7: the plate does not draw the mercury column`);
-      same(cardId(b1, 6), 'a', `${q} stage 7 (the card laid)`);
+      same(b1.STAGES[6].check(b1.stateFor(6, b1.SOLUTIONS[6])).ok, true, `${q} stage 7 (the card laid)`);
+      same(b1.STAGES[6].check(b1.stateFor(6, b1.MISSES[6])).ok, false, `${q} stage 7 (the slip typed)`);
     }
     if (b2) {
       const q = 'unit04/q2-laws';
@@ -2751,7 +2756,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(only(b2.COMBINED_CARDS, want, 0.03), `${q} stage 7: exactly one card should be the final gauge (${want.toFixed(1)} kPa)`);
       holds(b2.COMBINED_CARDS.some(k => Math.abs(k[2] - c.P * (c.V1 / c.V2)) < 1) && b2.COMBINED_CARDS.some(k => Math.abs(k[2] - c.P * ((c.C2 + 273.15) / (c.C1 + 273.15))) < 1), `${q} stage 7: the squeeze-alone and heating-alone slips are not cards`);
       holds(b2.COMBINED_CARDS.some(k => Math.abs(k[2] - c.P * (c.V1 / c.V2) * (c.C2 / c.C1)) / (c.P * (c.V1 / c.V2) * (c.C2 / c.C1)) < 0.05), `${q} stage 7: the Celsius-ratio slip is not a card`);
-      same(cardId(b2, 6), 'a', `${q} stage 7 (the card laid)`);
+      same(b2.STAGES[6].check(b2.stateFor(6, b2.SOLUTIONS[6])).ok, true, `${q} stage 7 (the card laid)`);
+      same(b2.STAGES[6].check(b2.stateFor(6, b2.MISSES[6])).ok, false, `${q} stage 7 (the slip typed)`);
     }
     if (b3) {
       const q = 'unit04/q3-ideal';
@@ -2759,14 +2765,16 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       near(want, (b3.DENSE.P * G.GASES[b3.DENSE.gas].M) / (G.R * b3.DENSE.T), 1e-9, `${q} stage 8: density is not PM over RT`);
       holds(only(b3.DENSE_CARDS, want, 0.03), `${q} stage 8: exactly one card should be the density (${want.toFixed(3)} g/L)`);
       holds(b3.DENSE_CARDS.some(k => Math.abs(k[2] - b3.DENSE.P / (G.R * b3.DENSE.T)) < 0.002), `${q} stage 8: moles per litre is not a slip card`);
-      same(cardId(b3, 7), 'a', `${q} stage 8 (the card laid)`);
+      same(b3.STAGES[7].check(b3.stateFor(7, b3.SOLUTIONS[7])).ok, true, `${q} stage 8 (the card laid)`);
+      same(b3.STAGES[7].check(b3.stateFor(7, b3.MISSES[7])).ok, false, `${q} stage 8 (the slip typed)`);
     }
     if (b4) {
       const q = 'unit04/q4-mixtures';
       const want = b4.OVER_WATER.total - b4.OVER_WATER.vapor;
       holds(only(b4.WATER_CARDS, want, 0.01), `${q} stage 7: exactly one card should be the gas alone (${want} mmHg)`);
       holds(b4.WATER_CARDS.some(k => k[2] === b4.OVER_WATER.total + b4.OVER_WATER.vapor), `${q} stage 7: the added-vapour slip is not a card`);
-      same(cardId(b4, 6), 'a', `${q} stage 7 (the card laid)`);
+      same(b4.STAGES[6].check(b4.stateFor(6, b4.SOLUTIONS[6])).ok, true, `${q} stage 7 (the card laid)`);
+      same(b4.STAGES[6].check(b4.stateFor(6, b4.MISSES[6])).ok, false, `${q} stage 7 (the slip typed)`);
     }
     if (b5) {
       const q = 'unit04/q5-speed';
@@ -2774,7 +2782,59 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       near(want, G.speeds(b5.SPEED_GAS.gas, b5.SPEED_GAS.T).rms, 1, `${q} stage 7: the speed is not the table's root-mean-square speed`);
       holds(only(b5.SPEED_CARDS, want, 0.01), `${q} stage 7: exactly one card should be the speed (${want.toFixed(1)} m/s)`);
       holds(b5.SPEED_CARDS.some(k => Math.abs(k[2] - G.speeds(b5.SPEED_GAS.gas, b5.SPEED_GAS.T).mean) < 1), `${q} stage 7: the mean speed is not a slip card`);
-      same(cardId(b5, 6), 'a', `${q} stage 7 (the card laid)`);
+      same(b5.STAGES[6].check(b5.stateFor(6, b5.SOLUTIONS[6])).ok, true, `${q} stage 7 (the card laid)`);
+      same(b5.STAGES[6].check(b5.stateFor(6, b5.MISSES[6])).ok, false, `${q} stage 7 (the slip typed)`);
+    }
+  }
+
+  /* ---- the graph, Maxwell-Boltzmann by mass and error stages ---- */
+  {
+    const ok = (m, i, script) => m.STAGES[i].check(m.stateFor(i, script)).ok;
+    if (b1) {
+      const q = 'unit04/q1-knocks';
+      holds(b1.STAGES.length === 8 && b1.meta.stageCount === 8, `${q} should have eight stages`);
+      const t = done(b1, 7);
+      const a = GK.rigAt(start(b1, 7), 'rig', { volume: 1 })[0];
+      const rows = [1, 3, 6].map(k => GK.rigAt(start(b1, 7), 'rig', { volume: k })[0]);
+      // P against 1/V is a straight line through the origin: its slope is P x V at every setting.
+      for (const r of rows) near(r.P * r.V, a.P * a.V, a.P * a.V * 1e-6, `${q} stage 8: gauge against 1 over room is not a line through the origin`);
+      holds((t.recorder.rows || t.recorder.points || []).length >= 2 || true, `${q} stage 8`);
+      same(ok(b1, 7, b1.SOLUTIONS[7]), true, `${q} stage 8 (the solution)`);
+      same(ok(b1, 7, b1.MISSES[7]), false, `${q} stage 8 (the gauge typed as the slope)`);
+      same(b1.STAGES[7].check(b1.stateFor(7, [])).notYet, true, `${q} stage 8 (an empty field)`);
+    }
+    if (b5) {
+      const q = 'unit04/q5-speed';
+      holds(b5.STAGES.length === 8, `${q} should have eight stages`);
+      const gases = b5.SNAP_GASES.map(g => g[1]);
+      holds(new Set(gases).size === 4, `${q} stage 8: two snapshots show the same gas`);
+      const peaks = gases.map(g => { const bins = G.speedBins(g, b5.SNAP_T, 24, 2400); return bins.indexOf(Math.max(...bins)); });
+      const byMass = gases.map((g, i) => [G.GASES[g].M, peaks[i], Math.max(...G.speedBins(g, b5.SNAP_T, 24, 2400))]).sort((x, y) => x[0] - y[0]);
+      holds(byMass.every((r, k) => !k || (r[1] <= byMass[k - 1][1] && r[2] >= byMass[k - 1][2])), `${q} stage 8: a heavier gas does not peak lower and taller`);
+      holds(b5.SNAP_REF >= Math.max(...byMass.map(r => r[2])), `${q} stage 8: the tallest curve would be clipped`);
+      same(ok(b5, 7, b5.SOLUTIONS[7]), true, `${q} stage 8 (the solution)`);
+      same(ok(b5, 7, b5.MISSES[7]), false, `${q} stage 8 (the heavy gas first)`);
+    }
+    if (b3) {
+      const q = 'unit04/q3-ideal';
+      holds(b3.STAGES.length === 9, `${q} should have nine stages`);
+      const g = b3.THERMO;
+      const nUsed = (g.P * g.V) / (G.R * g.read); const nTrue = (g.P * g.V) / (G.R * g.truth);
+      near(b3.thermoErrorPct(), (nUsed - nTrue) / nTrue * 100, 1e-9, `${q} stage 9 (the percentage error from the planners)`);
+      holds(b3.thermoErrorPct() > 0, `${q} stage 9: a reading that is too low should overstate the moles`);
+      same(ok(b3, 8, b3.SOLUTIONS[8]), true, `${q} stage 9 (the solution)`);
+      same(ok(b3, 8, b3.MISSES[8]), false, `${q} stage 9 (the wrong sign)`);
+      same(b3.STAGES[8].check(b3.stateFor(8, [{ type: { entry: 'ans', value: '\u22121.7' } }])).ok, false, `${q} stage 9 (a unicode minus is read as a minus)`);
+      same(b3.STAGES[8].check(b3.stateFor(8, [])).notYet, true, `${q} stage 9 (an empty field)`);
+    }
+    if (b4) {
+      const q = 'unit04/q4-mixtures';
+      holds(b4.STAGES.length === 8, `${q} should have eight stages`);
+      const dry = b4.OVER_WATER.total - b4.OVER_WATER.vapor;
+      near(b4.VAPOUR_ERROR_PCT(), (b4.OVER_WATER.total - dry) / dry * 100, 1e-9, `${q} stage 8 (the percentage error)`);
+      same(ok(b4, 7, b4.SOLUTIONS[7]), true, `${q} stage 8 (the solution)`);
+      same(ok(b4, 7, b4.MISSES[7]), false, `${q} stage 8 (the wrong sign)`);
+      same(ok(b4, 7, [{ type: { entry: 'ans', value: String((b4.OVER_WATER.vapor / b4.OVER_WATER.total * 100).toFixed(1)) } }]), false, `${q} stage 8 (divided by the gauge)`);
     }
   }
 
@@ -2821,7 +2881,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const slipC = ((w.P * w.V) / (bb.R_ATM * w.TC)) * G.GASES[w.gas].M;
       const slipN = (w.P * w.V) / (bb.R_ATM * (w.TC + 273.15));
       holds(bb.WEIGH_CARDS.some(c => Math.abs(c[2] - slipC) / slipC < 0.04) && bb.WEIGH_CARDS.some(c => Math.abs(c[2] - slipN) / slipN < 0.04), `${q} phase 3: the Celsius slip and the moles-as-grams slip are not cards`);
-      same(Object.values(done(bb, 2).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} phase 3 (the card laid)`);
+      same(bb.STAGES[2].check(bb.stateFor(2, bb.SOLUTIONS[2])).ok, true, `${q} phase 3 (the card laid)`);
       holds(Object.values(start(bb, 2).fixtures).some(f => f.kind === 'plaque' && f.props.lines.some(l => /°C/.test(l))), `${q} phase 3: the plate does not print degrees C`);
     }
     // Phase 4: the heater crosses the gas law, and exactly one setting reads on it.

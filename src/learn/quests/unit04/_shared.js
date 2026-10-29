@@ -83,6 +83,15 @@ export function answerOf(t, items) {
   return hit ? hit[2] : null;
 }
 
+/** A script step that types `value` in the stage's number field `id` (`stage.entry`; read with `entryNumber` from the stage runner). */
+export const typed = (id, value) => ({ type: { entry: id, value: String(value) } });
+
+/** The number in a stage's field when a minus sign is allowed (a percentage error): "−1.7", "-1.7 %" and "1,7" are read as numbers; NaN when empty. */
+export function entrySigned(t, id) {
+  const x = String(t.entries?.[id] ?? '').trim().replace('\u2212', '-').replace(',', '.').replace('%', '').trim();
+  return x === '' ? NaN : Number(x);
+}
+
 /** Direct prompt without prediction echo text. */
 export const youPredicted = (key, items, rest, plain) => plain;
 

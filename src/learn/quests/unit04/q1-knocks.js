@@ -28,14 +28,14 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, rig, box, chip, histCard, plaqueFixture, boxRead, rigAt, cylRead, whereIs, speedBins, toKelvin
 } from '../../table/kits/gas.js';
-import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
+import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf, typed } from './_shared.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bpressure\b/i, introducedAt: 2 },
@@ -201,12 +201,11 @@ export const STAGES = [
     });
     return {
       title: 'Using Boyle\'s Law',
-      prompt: `Lay the card for what the gauge would read at ${BEYOND} L, beyond the piston dial's last setting.`,
+      prompt: `Type what the gauge would read at ${BEYOND} L, beyond the piston dial's last setting.`,
+      entry: { id: 'ans', label: 'Gauge reading', unit: 'kPa' },
       widget,
       table: gasTable({
-        pieces: answerCards(BEYOND_CARDS),
         fixtures: [r],
-        zones: { slots: [answerSlot('Gauge at 1.5 L')] }
       }),
       hints: [
         'Turn the "Piston" dial to read the gauge at each setting.',
@@ -215,8 +214,8 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = answerOf(t, BEYOND_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(t, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in kPa.' };
         const a = rigAt(t, RIG, { volume: 1 })[0];
         const want = (a.P * a.V) / BEYOND;
         if (Math.abs(v - want) / want < 0.02) return { ok: true };
@@ -309,21 +308,20 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Mercury gauge', { x: 36, y: 32 }, [`Air: ${MANO.air} mmHg`, `1 atm = 760 mmHg`], { w: 70, manometer: { h: MANO.h } });
     return {
       title: 'Reading a Manometer',
-      prompt: 'Lay the card for the gas pressure, in atmospheres, from the mercury levels on the plate.',
+      prompt: 'Type the gas pressure, in atmospheres, from the mercury levels on the plate.',
+      entry: { id: 'ans', label: 'Gas pressure', unit: 'atm' },
       widget,
       table: gasTable({
-        pieces: answerCards(MANO_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Gas pressure')] }
       }),
       hints: [
-        'Read the two levels and the air pressure from the plate, then lay a card in the slot.',
+        'Read the two levels and the air pressure from the plate, then type the result.',
         'Ask which side of the tube the mercury is pushed up on, and what that says about the gas against the air.',
         'Add or subtract the height difference in mmHg from the air pressure, then divide by 760 mmHg per atmosphere.'
       ],
       check(state) {
-        const v = answerOf(state.table, MANO_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in atm.' };
         const want = manoAtm();
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         return { ok: false, msg: v > want ? 'The gas pushes less hard than that.' : 'The gas pushes harder than that.' };
@@ -331,7 +329,44 @@ export const STAGES = [
       reward: {
         log: 'The column is the gas against the air.',
         title: 'Reading a Manometer',
-        body: 'The mercury stands 190 mm higher on the open side, so the gas pushes 190 mmHg harder than the air: 760 + 190 = 950 mmHg, which is 950 ÷ 760 = 1.25 atm. A pressure in mmHg is the height of mercury it holds up.',
+        body: 'The mercury stands 190 mm higher on the open side, so the gas pushes 190 mmHg harder than the air: 760 + 190 = 950 mmHg, which is 950 ÷ 760 = 1.25 atm. A pressure in mmHg is the height of mercury it holds up.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 28 }, {
+      cyls: [{ id: 'a', label: 'Holder 13', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+      show: { speed: false }, label: 'Holder', plot: { x: 'invV', y: 'P' }
+    });
+    return {
+      title: 'The Straight Line',
+      prompt: 'Type the slope of the line that the gauge makes when plotted against one divided by the room, in kPa·L.',
+      entry: { id: 'ans', label: 'Slope', unit: 'kPa·L' },
+      widget,
+      table: gasTable({
+        fixtures: [r],
+        tools: ['straightedge']
+      }, { recorder: { at: { x: 111, y: 17 }, size: { w: 40, h: 28 }, xLabel: '1 ÷ room', xUnit: '1/L', yLabel: 'Gauge', yUnit: 'kPa' } }),
+      hints: [
+        'Turn the "Piston" dial and press "Record" at each setting, then lay the straightedge across the points.',
+        'Choose two recorded points and compare how far the gauge rises with how far one divided by the room moves.',
+        'The slope is the rise divided by the run between two points on the line.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = entryNumber(t, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the slope in kPa·L.' };
+        const a = rigAt(t, RIG, { volume: 1 })[0];
+        const want = a.P * a.V;
+        if (Math.abs(v - want) / want < 0.04) return { ok: true };
+        return { ok: false, msg: v < want ? 'The line rises faster than that for each step along the bottom.' : 'The line rises more slowly than that for each step along the bottom.' };
+      },
+      reward: {
+        log: 'Gauge against one over room is a straight line.',
+        title: 'Reading a Graph',
+        body: 'Pressure against volume bends into a curve, but pressure against 1 ÷ volume is a straight line through the origin, because P = (nRT) × (1/V). Its slope is nRT, about 2500 kPa·L for this gas, and the line is flat only if the temperature and the moles stay fixed.',
         last: true
       }
     };
@@ -343,10 +378,11 @@ const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn the Heater dial,', 'then place a card in the slot.'],
   3: ['Turn the Piston dial.'],
-  4: ['Turn the Piston dial,', 'then place a card in the slot.'],
+  4: ['Turn the Piston dial,', 'then type your answer in the field at the bottom.'],
   5: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
   6: ['Turn Holder 6\'s Heater dial.'],
-  7: ['Place a card in the slot.']
+  7: ['Type your answer in the field at the bottom.'],
+  8: ['Record each setting, lay the straightedge,', 'then type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -434,10 +470,11 @@ export const SOLUTIONS = [
   [put('floor', 'slot:predict')],
   [dial(BOX, 'temp', 3), dial(BOX, 'temp', 5), put('same', 'slot:show')],
   [dial(RIG, 'volume', 1), dial(RIG, 'volume', 5)],
-  [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), put('a', 'slot:answer')],
+  [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), typed('ans', "1660")],
   [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
   [dial('rb', 'temp', 3)],
-  [put('a', 'slot:answer')]
+  [typed('ans', "1.25")],
+  [dial(RIG, 'volume', 1), { run: RIG }, dial(RIG, 'volume', 3), { run: RIG }, dial(RIG, 'volume', 6), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 2] } }, typed('ans', '2494')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -445,10 +482,11 @@ export const MISSES = [
   [],
   [dial(BOX, 'temp', 3), put('floor', 'slot:show')],
   [dial(RIG, 'volume', 3)],
-  [dial(RIG, 'volume', 6), put('b', 'slot:answer')],
+  [dial(RIG, 'volume', 6), typed('ans', "830")],
   [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
   [dial('rb', 'temp', 4)],
-  [put('b', 'slot:answer')]
+  [typed('ans', "0.75")],
+  [dial(RIG, 'volume', 1), { run: RIG }, typed('ans', '104')]
 ];
 
 function blankState() { return {}; }

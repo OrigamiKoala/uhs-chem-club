@@ -25,10 +25,10 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, markerFixture, markerRead, rigAt, cylRead, plaqueFixture } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, cardColumn, answerCards, answerSlot, answerOf } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, cardColumn, typed } from './_shared.js';
 
 export const meta = { stageCount: 7 };
 
@@ -63,7 +63,10 @@ export const ROOM_GUESSES = [['twice', 'Twice as big'], ['little', 'A little big
 export const TANK_GUESSES = [['same', 'Stays the same'], ['sixth', 'Falls by about a sixth'], ['half', 'Falls by about a half']];
 
 /** Holder 8's heater, in degrees C: one setting is the trap (40), and one has the room twice Holder 7's. */
-export const DOUBLE_TEMPS = [20, 40, 100, 200, 313, 400];
+/** Stage 2: the room doubles at twice the kelvin temperature, past every setting of the dial. */
+export const DOUBLE_C = 2 * 293.15 - 273.15;
+export const DOUBLE_TOL = 5;
+export const DOUBLE_TEMPS = [20, 40, 100, 200, 400];
 /** Stage 3's heater, in degrees C. The strip is ruled well past the coldest the heater reaches, so the line has to be carried on. */
 const LINE_TEMPS = [20, 60, 100, 150, 200];
 export const ZERO_TOL = 10;
@@ -123,21 +126,22 @@ export const STAGES = [
     return {
       title: 'Doubling Volume',
       get prompt() {
-        return youPredicted(KEY_ROOM, ROOM_GUESSES, 'set Holder 8\'s heater so that its room is twice Holder 7\'s.', 'Set Holder 8\'s heater so that its room is twice Holder 7\'s.');
+        return youPredicted(KEY_ROOM, ROOM_GUESSES, 'type the temperature at which Holder 8\'s room is twice Holder 7\'s.', 'Type the temperature at which Holder 8\'s room is twice Holder 7\'s.');
       },
+      entry: { id: 'ans', label: 'Holder 8 at', unit: '°C' },
       widget,
       table: gasTable({ fixtures: [a, b] }),
       hints: [
-        'Turn Holder 8\'s Heater dial.',
-        'Compare the volumes of both cylinders at each setting.',
-        'At each setting work out how many times bigger Holder 8\'s room is than Holder 7\'s, and stop where that reads two.'
+        'Turn Holder 8\'s Heater dial and read its room at each setting.',
+        'Compare the volumes of both cylinders at each setting, and ask what quantity the room is in step with.',
+        'Room is in step with the kelvin temperature, so find the kelvin figure that is double the starting one, then convert back.'
       ],
       check(state) {
-        const t = state.table;
-        if (Math.round(t.fixtures.rb.dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Holder 8\'s heater is where it started: turn it and watch its room.' };
-        const ratio = cylRead(t, 'rb', 0).V / cylRead(t, 'ra', 0).V;
-        if (Math.abs(ratio - 2) < 0.02) return { ok: true };
-        return { ok: false, msg: ratio < 2 ? 'Holder 8\'s room is still less than double Holder 7\'s.' : 'Holder 8\'s room is already more than double Holder 7\'s.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the temperature in °C.' };
+        const ratio = (v + 273.15) / T20;
+        if (Math.abs(v - DOUBLE_C) <= DOUBLE_TOL) return { ok: true };
+        return { ok: false, msg: ratio < 2 ? `At ${v} °C Holder 8's room is only ${ratio.toFixed(2)} times Holder 7's.` : `At ${v} °C Holder 8's room is ${ratio.toFixed(2)} times Holder 7's.` };
       },
       get reward() {
         return {
@@ -250,12 +254,11 @@ export const STAGES = [
     });
     return {
       title: 'Using Charles\'s Law',
-      prompt: `Lay the card for the room the gas would fill at ${BEYOND_C} °C, beyond the heater dial's last setting.`,
+      prompt: `Type the room the gas would fill at ${BEYOND_C} °C, beyond the heater dial's last setting.`,
+      entry: { id: 'ans', label: 'Room', unit: 'L' },
       widget,
       table: gasTable({
-        pieces: answerCards(REACH_CARDS),
         fixtures: [r],
-        zones: { slots: [answerSlot('Room at 327 °C')] }
       }),
       hints: [
         'Turn the "Heater" dial and read the room and the kelvin figure at each setting.',
@@ -264,8 +267,8 @@ export const STAGES = [
       ],
       check(state) {
         const t = state.table;
-        const v = answerOf(t, REACH_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(t, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in L.' };
         const a = rigAt(t, RIG, { temp: 1 })[0];
         const want = (a.V / a.T) * (BEYOND_C + 273.15);
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
@@ -285,21 +288,20 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Sealed gas', { x: 32, y: 33 }, [`Start: ${c.P} kPa, ${c.V1} L, ${c.C1} °C`, `End: ${c.V2} L, ${c.C2} °C`, 'Gas in: unchanged'], { w: 52 });
     return {
       title: 'Combined Gas Law',
-      prompt: 'Lay the card for the gauge reading after the gas is squeezed and heated as the plate says.',
+      prompt: 'Type the gauge reading after the gas is squeezed and heated as the plate says.',
+      entry: { id: 'ans', label: 'Final gauge', unit: 'kPa' },
       widget,
       table: gasTable({
-        pieces: answerCards(COMBINED_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Final gauge')] }
       }),
       hints: [
-        'Read the start and end figures from the plate, then lay a card in the slot.',
+        'Read the start and end figures from the plate, then type the result.',
         'Find how much the squeeze multiplies the gauge, then how much the heating multiplies it.',
         'Multiply the starting gauge by both factors, with the temperatures in kelvin.'
       ],
       check(state) {
-        const v = answerOf(state.table, COMBINED_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in kPa.' };
         const want = combinedP();
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         return { ok: false, msg: v > want ? 'The final gauge is lower than that.' : 'The final gauge is higher than that.' };
@@ -317,12 +319,12 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
-  2: ['Turn Holder 8\'s Heater dial.'],
+  2: ['Turn Holder 8\'s Heater dial,', 'then type your answer in the field at the bottom.'],
   3: ['Record each setting, lay the straightedge,', 'then set the marker.'],
   4: ['Place a card in the slot.'],
   5: ['Turn the Heater dial and Record,', 'then place a card in the slot.'],
-  6: ['Turn the Heater dial,', 'then place a card in the slot.'],
-  7: ['Place a card in the slot.']
+  6: ['Turn the Heater dial,', 'then type your answer in the field at the bottom.'],
+  7: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -406,24 +408,24 @@ export const PRACTICE = [
 
 export const SOLUTIONS = [
   [put('little', 'slot:predict')],
-  [dial('rb', 'temp', 3), dial('rb', 'temp', 5)],
+  [typed('ans', '313')],
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 2), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, dial(RIG, 'temp', 5), { run: RIG },
     { lay: { kind: 'straightedge', through: [0, 3] } }, dial('zero', 'value', -270)],
   [put('sixth', 'slot:predict')],
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, put('sixth', 'slot:show')],
-  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), put('a', 'slot:answer')],
-  [put('a', 'slot:answer')]
+  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), typed('ans', "49")],
+  [typed('ans', "600")]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [dial('rb', 'temp', 2)],
+  [typed('ans', '40')],
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 5), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, dial('zero', 'value', -100)],
   [],
   [dial(RIG, 'temp', 3), put('half', 'slot:show')],
-  [dial(RIG, 'temp', 4), put('b', 'slot:answer')],
-  [put('b', 'slot:answer')]
+  [dial(RIG, 'temp', 4), typed('ans', "290")],
+  [typed('ans', "3600")]
 ];
 
 function blankState() { return {}; }

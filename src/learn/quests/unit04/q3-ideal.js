@@ -25,12 +25,12 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, plaqueFixture, GASES, R } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, answerOf } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, typed, entrySigned } from './_shared.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
   { term: /\bmolar volume\b/i, introducedAt: 2 },
@@ -90,6 +90,10 @@ export const UNIT_CARDS = [['a', '0.51 mol', 0.51], ['b', '5.6 mol', 5.6], ['c',
 /* ------------------------------------------------------------------
    THE SEVEN STAGES
    ------------------------------------------------------------------ */
+/** Stage 9: a thermometer that reads low. The moles worked out from it, against the true ones, as a percentage. */
+export const THERMO = { P: 100, V: 10, read: 295, truth: 300 };
+export const thermoErrorPct = (g = THERMO) => (g.truth / g.read - 1) * 100;
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
@@ -228,12 +232,11 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Tank X', { x: 32, y: 33 }, ['Gas: nitrogen', `Gauge: ${PLATE.P} kPa`, `Room: ${PLATE.V} L`, `Temperature: ${PLATE.T} K`], { w: 52 });
     return {
       title: 'Using the Ideal Gas Law',
-      prompt: 'Lay the card for how many moles of gas Tank X holds.',
+      prompt: 'Type how many moles of gas Tank X holds.',
+      entry: { id: 'ans', label: 'Moles in Tank X', unit: 'mol' },
       widget,
       table: gasTable({
-        pieces: answerCards(MOLE_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Moles in Tank X')] }
       }),
       hints: [
         'Read the gauge, room and temperature from the tank\'s plate.',
@@ -241,8 +244,8 @@ export const STAGES = [
         'Check the units: the gas constant is in kPa and litres, so use the gauge in kPa and the room in litres.'
       ],
       check(state) {
-        const v = answerOf(state.table, MOLE_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mol.' };
         const want = (PLATE.P * PLATE.V) / (R * PLATE.T);
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         return { ok: false, msg: v > want ? 'That is more gas than the plate allows.' : 'That is less gas than the plate allows.' };
@@ -294,12 +297,11 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Tank Y', { x: 32, y: 33 }, ['Gas: argon', `Gauge: ${ATM_PLATE.P} atm`, `Room: ${ATM_PLATE.V} L`, `Temperature: ${ATM_PLATE.TC} °C`], { w: 52 });
     return {
       title: 'Units in the Gas Law',
-      prompt: 'Lay the card for how many moles of gas Tank Y holds.',
+      prompt: 'Type how many moles of gas Tank Y holds.',
+      entry: { id: 'ans', label: 'Moles in Tank Y', unit: 'mol' },
       widget,
       table: gasTable({
-        pieces: answerCards(UNIT_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Moles in Tank Y')] }
       }),
       hints: [
         'Read the gauge, room and temperature from the plate, and the gas constant printed beside it.',
@@ -307,8 +309,8 @@ export const STAGES = [
         'Add 273 to the Celsius figure, then put the three figures into pressure times room, divided by the gas constant times kelvin.'
       ],
       check(state) {
-        const v = answerOf(state.table, UNIT_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mol.' };
         const want = (ATM_PLATE.P * ATM_PLATE.V) / (R_ATM * (ATM_PLATE.TC + 273.15));
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         return { ok: false, msg: v > want ? 'That is more gas than the plate allows.' : 'That is less gas than the plate allows.' };
@@ -327,21 +329,20 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Tank Z', { x: 32, y: 33 }, [`Gas: carbon dioxide, ${M.toFixed(1)} g/mol`, `Gauge: ${DENSE.P} kPa`, `Temperature: ${DENSE.T} K`], { w: 52 });
     return {
       title: 'Gas Density',
-      prompt: 'Lay the card for how many grams of gas fill each litre of Tank Z.',
+      prompt: 'Type how many grams of gas fill each litre of Tank Z.',
+      entry: { id: 'ans', label: 'Density', unit: 'g/L' },
       widget,
       table: gasTable({
-        pieces: answerCards(DENSE_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Grams per litre')] }
       }),
       hints: [
-        'Read the figures from the plate, then lay a card in the slot.',
+        'Read the figures from the plate, then type the result.',
         'Find the moles in each litre first, then the mass those moles weigh.',
         'Multiply the gauge by the molar mass, then divide by the gas constant times the kelvin temperature.'
       ],
       check(state) {
-        const v = answerOf(state.table, DENSE_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in g/L.' };
         const want = densityOf();
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         return { ok: false, msg: v > want ? 'A litre of this gas weighs less than that.' : 'A litre of this gas weighs more than that.' };
@@ -349,7 +350,39 @@ export const STAGES = [
       reward: {
         log: 'A litre weighs its moles times the molar mass.',
         title: 'Gas Density',
-        body: 'Each litre holds P ÷ RT moles, so it weighs d = PM ÷ RT: (100 × 44.0) ÷ (8.31 × 300) = 1.8 g/L. At the same gauge and temperature, a heavier gas is denser.',
+        body: 'Each litre holds P ÷ RT moles, so it weighs d = PM ÷ RT: (100 × 44.0) ÷ (8.31 × 300) = 1.8 g/L. At the same gauge and temperature, a heavier gas is denser.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 9 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Tank W', { x: 32, y: 33 }, [`Gauge: ${THERMO.P} kPa`, `Room: ${THERMO.V} L`, `Thermometer reads: ${THERMO.read} K`, `True temperature: ${THERMO.truth} K`], { w: 52 });
+    return {
+      title: 'A Thermometer That Reads Low',
+      prompt: 'Type the percentage error in the moles worked out from the thermometer\'s reading, with a minus sign if they come out too low.',
+      entry: { id: 'ans', label: 'Error in moles', unit: '%' },
+      widget,
+      table: gasTable({
+        fixtures: [plate],
+      }),
+      hints: [
+        'Read the figures from the plate, then type the result.',
+        'Work out the moles twice, once with each temperature, and compare the two.',
+        'Percentage error is the difference between the worked figure and the true figure, divided by the true figure, times 100.'
+      ],
+      check(state) {
+        const v = entrySigned(state.table, 'ans');
+        if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the error as a percentage.' };
+        const want = thermoErrorPct();
+        if (Math.abs(v - want) <= 0.02) return { ok: true };
+        if (Math.abs(v + want) <= 0.05) return { ok: false, msg: 'The size is close, but the worked figure lies on the other side of the true one.' };
+        return { ok: false, msg: 'Compare the two worked figures, and divide the difference by the true one.' };
+      },
+      reward: {
+        log: 'A temperature that reads low overstates the moles.',
+        title: 'Percentage Error',
+        body: 'The temperature divides in n = PV ÷ RT, so reading 295 K for 300 K makes the moles come out (300 ÷ 295 − 1) × 100 = 1.7% too high. A small error in a divisor shows up as nearly the same percentage in the result.',
         last: true
       }
     };
@@ -366,10 +399,11 @@ const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn Holder 11\'s Gas in dial.'],
   4: ['Record readings, lay the straightedge,', 'then place a card in the slot.'],
-  5: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
+  5: ['R = 8.31 kPa·L per mol·K.', 'Type your answer in the field at the bottom.'],
   6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
-  7: ['R = 0.0821 L·atm per mol·K.', 'Place a card in the slot.'],
-  8: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.']
+  7: ['R = 0.0821 L·atm per mol·K.', 'Type your answer in the field at the bottom.'],
+  8: ['R = 8.31 kPa·L per mol·K.', 'Type your answer in the field at the bottom.'],
+  9: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -456,10 +490,11 @@ export const SOLUTIONS = [
   [dial('rb', 'amount', 2)],
   [...sort({ b: 'same', c: 'more', d: 'fewer', e: 'fewer' })],
   [dial(RIG, 'temp', 1), dial(RIG, 'amount', 1), { run: RIG }, dial(RIG, 'temp', 3), dial(RIG, 'amount', 2), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, put('n831', 'slot:answer')],
-  [put('a', 'slot:answer')],
+  [typed('ans', "1")],
   [put('co2', 'slot:answer')],
-  [put('a', 'slot:answer')],
-  [put('a', 'slot:answer')]
+  [typed('ans', "0.51")],
+  [typed('ans', "1.8")],
+  [typed('ans', '1.7')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -468,10 +503,11 @@ export const MISSES = [
   [dial('rb', 'amount', 3)],
   [...sort({ b: 'more', c: 'more', d: 'fewer', e: 'fewer' })],
   [dial(RIG, 'temp', 1), { run: RIG }, put('n83', 'slot:answer')],
-  [put('c', 'slot:answer')],
+  [typed('ans', "10")],
   [put('ar', 'slot:answer')],
-  [put('b', 'slot:answer')],
-  [put('b', 'slot:answer')]
+  [typed('ans', "5.6")],
+  [typed('ans', "0.04")],
+  [typed('ans', '-1.7')]
 ];
 
 function blankState() { return {}; }

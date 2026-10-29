@@ -26,12 +26,12 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, plaqueFixture, GASES, front } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
+import { gasTable, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, plaqueFixture, histCard, speedBins, GASES, front } from '../../table/kits/gas.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, typed } from './_shared.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\beffusion\b/i, introducedAt: 2 },
@@ -84,6 +84,11 @@ export function ringCard(ringFromLeft, length = TUBE_CM) {
 /* ------------------------------------------------------------------
    THE FIVE STAGES
    ------------------------------------------------------------------ */
+/** Stage 8: four gases at one temperature, shuffled; the snapshots share one height scale so the heavy gas's tall narrow curve is not clipped. */
+export const SNAP_T = 300;
+export const SNAP_GASES = [['a', 'N2'], ['b', 'Xe'], ['c', 'He'], ['d', 'CO2']];
+export const SNAP_REF = Math.max(...SNAP_GASES.map(([, g]) => Math.max(...speedBins(g, SNAP_T, 24, 2400))));
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   predictStage({
@@ -241,12 +246,11 @@ export const STAGES = [
     });
     return {
       title: 'Graham\'s Law',
-      prompt: 'Lay the card for the mass of one mole of the unknown gas.',
+      prompt: 'Type the mass of one mole of the unknown gas.',
+      entry: { id: 'ans', label: 'Molar mass', unit: 'g/mol' },
       widget,
       table: gasTable({
-        pieces: answerCards(MASS_CARDS),
         fixtures: [p],
-        zones: { slots: [answerSlot('Unknown gas')] }
       }),
       hints: [
         'Turn the "Gas" dial and read each reference gas\'s half-empty time.',
@@ -254,8 +258,8 @@ export const STAGES = [
         'The half-empty time grows with the square root of the mass, so square the ratio of times before scaling a mass.'
       ],
       check(state) {
-        const v = answerOf(state.table, MASS_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in g/mol.' };
         const want = GASES[UNKNOWN].M;
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
         return { ok: false, msg: v > want ? 'The unknown gas has a smaller figure than that.' : 'The unknown gas has a larger figure than that.' };
@@ -274,21 +278,20 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Nitrogen gas', { x: 32, y: 33 }, [`Molar mass: ${GASES[g.gas].M.toFixed(1)} g/mol`, `Temperature: ${g.T} K`, 'Kinetic energy per mole: 3/2 RT', 'R = 8.314 J per mol·K'], { w: 56 });
     return {
       title: 'Particle Speed',
-      prompt: 'Lay the card for the speed at which a nitrogen particle\'s kinetic energy equals the average at 300 K.',
+      prompt: 'Type the speed at which a nitrogen particle\'s kinetic energy equals the average at 300 K.',
+      entry: { id: 'ans', label: 'Speed', unit: 'm/s' },
       widget,
       table: gasTable({
-        pieces: answerCards(SPEED_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Speed')] }
       }),
       hints: [
-        'Read the figures from the plate, then lay a card in the slot.',
+        'Read the figures from the plate, then type the result.',
         'Set the kinetic energy of one mole, one half times the molar mass times the speed squared, equal to the plate\'s figure.',
         'Work in kilograms per mole, divide by the molar mass, then take the square root.'
       ],
       check(state) {
-        const v = answerOf(state.table, SPEED_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in m/s.' };
         const want = rmsOf();
         if (Math.abs(v - want) / want < 0.01) return { ok: true };
         return { ok: false, msg: v > want ? 'A particle moving that fast has more than the average kinetic energy.' : 'A particle moving that slowly has less than the average kinetic energy.' };
@@ -296,12 +299,46 @@ export const STAGES = [
       reward: {
         log: 'The average energy fixes the speed.',
         title: 'Root-Mean-Square Speed',
-        body: 'Setting ½Mv² = 3/2 RT gives the root-mean-square speed, v = √(3RT ÷ M) = √(3 × 8.314 × 300 ÷ 0.0280) ≈ 517 m/s. It sits a little above the mean speed, and the molar mass must be in kg/mol.',
+        body: 'Setting ½Mv² = 3/2 RT gives the root-mean-square speed, v = √(3RT ÷ M) = √(3 × 8.314 × 300 ÷ 0.0280) ≈ 517 m/s. It sits a little above the mean speed, and the molar mass must be in kg/mol.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const snap = (id, label, gas) => histCard(id, label, { x: 0, y: 0 }, gas, SNAP_T, SNAP_REF);
+    return {
+      title: 'Speed Distribution and Mass',
+      prompt: `Put the four speed snapshots in order from the lightest particles to the heaviest, all taken at ${SNAP_T} K.`,
+      widget,
+      table: gasTable({
+        pieces: SNAP_GASES.map(([id, gas]) => snap(id, `SNAPSHOT ${id.toUpperCase()}`, gas)),
+        zones: { rail: { id: 'rail', at: { x: 80, y: 32 }, size: { w: 120, h: 26 }, first: 'Lightest', last: 'Heaviest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
+      }),
+      hints: [
+        'Drag the snapshots along the strip.',
+        'Compare where each curve peaks and how wide it spreads.',
+        'At one temperature every gas has the same average kinetic energy, so the particles of a heavier gas move more slowly.'
+      ],
+      check(state) {
+        const t = state.table;
+        const order = t.zones.rail.order;
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four snapshots on the strip.' };
+        const mass = id => GASES[t.pieces[id].props.gas].M;
+        const want = ['a', 'b', 'c', 'd'].sort((x, y) => mass(x) - mass(y));
+        if (order.join() === want.join()) return { ok: true };
+        return { ok: false, msg: 'Two neighbouring snapshots on the strip are the wrong way round.' };
+      },
+      reward: {
+        log: 'At one temperature the heavier gas is slower.',
+        title: 'Mass and Speed',
+        body: 'At one temperature every gas has the same average kinetic energy, so heavier particles move more slowly. Their curve is taller and narrower with its peak at a lower speed, while a light gas gives a low, wide curve shifted to high speeds.',
         last: true
       }
     };
   })()
 ];
+
 
 /** The speed whose kinetic energy is the average at stage 7's temperature, in m/s: the square root of 3RT over the molar mass in kg/mol. */
 export function rmsOf(g = SPEED_GAS) {
@@ -315,8 +352,9 @@ const NOTES = {
   3: ['Adjust the Gas and Stopwatch dials.'],
   4: ['Place a card in the slot.'],
   5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],
-  6: ['Turn the Gas dial,', 'then place a card in the slot.'],
-  7: ['Place a card in the slot.']
+  6: ['Turn the Gas dial,', 'then type your answer in the field at the bottom.'],
+  7: ['Type your answer in the field at the bottom.'],
+  8: ['Drag the snapshots along the strip.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -404,8 +442,9 @@ export const SOLUTIONS = [
   [dial(PIN, 'time', 2), dial(PIN, 'ref', 3)],
   [put('hcl', 'slot:predict')],
   [dial('tube', 'time', 6), { run: 'tube' }, put('hcl', 'slot:show')],
-  [dial(PIN, 'ref', 2), put('b', 'slot:answer')],
-  [put('a', 'slot:answer')]
+  [dial(PIN, 'ref', 2), typed('ans', "16")],
+  [typed('ans', "517")],
+  [put('c', 'rail:0'), put('a', 'rail:1'), put('d', 'rail:2'), put('b', 'rail:3')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -415,8 +454,9 @@ export const MISSES = [
   [dial(PIN, 'ref', 2)],
   [],
   [dial('tube', 'time', 6), { run: 'tube' }, put('mid', 'slot:show')],
-  [dial(PIN, 'ref', 2), put('c', 'slot:answer')],
-  [put('b', 'slot:answer')]
+  [dial(PIN, 'ref', 2), typed('ans', "20")],
+  [typed('ans', "476")],
+  [put('b', 'rail:0'), put('d', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')]
 ];
 
 function blankState() { return {}; }

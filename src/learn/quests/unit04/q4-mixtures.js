@@ -23,15 +23,15 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, tank, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, plaqueFixture, AIR, GASES
 } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, typed, entrySigned } from './_shared.js';
 import { stmt } from '../../table/kits/gas.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bpartial pressures?\b/i, introducedAt: 2 },
@@ -61,9 +61,10 @@ const V0 = 10;
 export const HELIUM = { gas: 'He', n: 1 };
 export const NEON = { gas: 'Ne', n: 0.6 };
 export const GUESSES = [['same', 'The same'], ['lower', 'Lower'], ['higher', 'Higher']];
-/** Stage 3's four tanks: nitrogen is 60 percent of the moles with the helium and the neon, or with the carbon dioxide alone. */
+/** Stage 3's four tanks, all opened together: nitrogen's mole fraction is SHARE_N2. */
 export const SHARE = [['a', 'He', 0.5], ['b', 'Ne', 0.5], ['c', 'N2', 1.5], ['d', 'CO2', 1.0]];
 /** Stage 4's tanks (20 L, 300 K): the heaviest gas has fewer moles than the lightest. */
+export const SHARE_N2 = 1.5 / 3.5;
 export const RANK = [['a', 'N2', 1.0], ['b', 'CO2', 0.5], ['c', 'He', 1.5], ['d', 'Xe', 0.6]];
 export const RANK_V = 20;
 /** Stage 5: the same air at four heights, and the room (litres) it takes at each. */
@@ -150,11 +151,12 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const ct = commonTank(CT, { x: 36, y: 31 }, { V: V0, T: T0, of: VALVES, show: { partials: true, share: true }, words: 4 });
+    const ct = commonTank(CT, { x: 36, y: 31 }, { V: V0, T: T0, of: VALVES, show: { partials: true }, words: 4 });
     const at = [[92, 16], [116, 16], [92, 40], [116, 40]];
     return {
       title: 'Partial Pressure Fraction',
-      prompt: 'Open tanks into the common tank until nitrogen makes up 60 percent of the total pressure.',
+      prompt: 'Type the fraction of the total pressure that nitrogen makes when all four tanks are open into the common tank.',
+      entry: { id: 'ans', label: 'Nitrogen\'s share', unit: '' },
       widget,
       table: gasTable({
         pieces: SHARE.map(([id, gas, n], i) => t10(id, `TANK ${id.toUpperCase()}`, { x: at[i][0], y: at[i][1] }, gas, n, { showAmount: true, noGauge: true })),
@@ -162,18 +164,16 @@ export const STAGES = [
         zones: { trays: [ct.tray] }
       }),
       hints: [
-        'Drag tanks into or out of the tray under the common tank.',
-        'Compare each gas\'s share of the pressure with its share of the moles.',
-        'Add up the moles in the tray and divide nitrogen\'s by the total.'
+        'Drag the tanks into the tray under the common tank, then type your answer.',
+        'Compare nitrogen\'s own pressure with the total pressure in the common tank.',
+        'Divide nitrogen\'s moles by the total moles of all four tanks, or its pressure by the total pressure.'
       ],
       check(state) {
-        const t = state.table;
-        const rd = commonRead(t, CT);
-        if (!rd.tanks.length) return { ok: false, notYet: true, msg: 'Open a tank into the common tank first.' };
-        const n2 = partialOf(rd, 'N2');
-        const share = rd.P > 0 ? n2 / rd.P : 0;
-        if (n2 > 0 && Math.abs(share - 0.6) < 0.005) return { ok: true };
-        return { ok: false, msg: share < 0.6 ? 'Nitrogen makes up less than 60 percent of the total pressure.' : 'Nitrogen makes up more than 60 percent of the total pressure.' };
+        let v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type nitrogen\'s share as a fraction.' };
+        if (v > 1) v /= 100;
+        if (Math.abs(v - SHARE_N2) <= 0.01) return { ok: true };
+        return { ok: false, msg: v < SHARE_N2 ? 'Nitrogen makes more of the total than that.' : 'Nitrogen makes less of the total than that.' };
       },
       reward: {
         log: 'A gas\'s mole share is its pressure share.',
@@ -262,12 +262,11 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Tank M', { x: 32, y: 33 }, [`Gauge: ${Math.round(total)} kPa`, `Room: ${V0} L, ${T0} K`, 'Nitrogen: 0.6 mol', 'Oxygen: 0.2 mol'], { w: 52 });
     return {
       title: 'Using Partial Pressures',
-      prompt: 'Lay the card for the pressure oxygen alone makes in Tank M.',
+      prompt: 'Type the pressure oxygen alone makes in Tank M.',
+      entry: { id: 'ans', label: 'Oxygen alone', unit: 'kPa' },
       widget,
       table: gasTable({
-        pieces: answerCards(PUSH_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Oxygen alone')] }
       }),
       hints: [
         'Read the gauge and the moles of each gas from the tank\'s plate.',
@@ -275,8 +274,8 @@ export const STAGES = [
         'Multiply that share by the tank\'s gauge.'
       ],
       check(state) {
-        const v = answerOf(state.table, PUSH_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in kPa.' };
         const r = planMixture(BLEND_TANK, T0, V0);
         const want = r.rows.find(x => x.gas === 'O2').P;
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
@@ -295,21 +294,20 @@ export const STAGES = [
     const plate = plaqueFixture('plate', 'Gas over water', { x: 32, y: 33 }, [`Jar gauge: ${OVER_WATER.total} mmHg`, `Water vapour: ${OVER_WATER.vapor} mmHg`, 'The jar holds only the gas and the vapour'], { w: 62 });
     return {
       title: 'Gas Over Water',
-      prompt: 'Lay the card for the pressure of the gas alone in the jar, apart from the water vapour.',
+      prompt: 'Type the pressure of the gas alone in the jar, apart from the water vapour.',
+      entry: { id: 'ans', label: 'Gas alone', unit: 'mmHg' },
       widget,
       table: gasTable({
-        pieces: answerCards(WATER_CARDS),
         fixtures: [plate],
-        zones: { slots: [answerSlot('Gas alone')] }
       }),
       hints: [
-        'Read the figures from the plate, then lay a card in the slot.',
+        'Read the figures from the plate, then type the result.',
         'The gauge counts every gas in the jar, and the water vapour is one of them.',
         'Take the pressure of the water vapour away from the gauge.'
       ],
       check(state) {
-        const v = answerOf(state.table, WATER_CARDS);
-        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mmHg.' };
         const want = OVER_WATER.total - OVER_WATER.vapor;
         if (Math.abs(v - want) / want < 0.01) return { ok: true };
         return { ok: false, msg: v > want ? 'The gas alone pushes less than that.' : 'The gas alone pushes more than that.' };
@@ -317,22 +315,58 @@ export const STAGES = [
       reward: {
         log: 'The jar\'s gauge is the gas plus the vapour.',
         title: 'Gas Over Water',
-        body: 'The partial pressures add to the gauge: 752 mmHg = P(gas) + 24 mmHg. So the gas alone pushes 752 − 24 = 728 mmHg.',
+        body: 'The partial pressures add to the gauge: 752 mmHg = P(gas) + 24 mmHg. So the gas alone pushes 752 − 24 = 728 mmHg.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Jar over water', { x: 32, y: 33 }, [`Gauge: ${OVER_WATER.total} mmHg`, `Water vapour: ${OVER_WATER.vapor} mmHg`, 'The student used the whole gauge', 'as the pressure of the dry gas.'], { w: 56 });
+    return {
+      title: 'A Forgotten Correction',
+      prompt: 'Type the percentage error in the moles of dry gas, with a minus sign if the student\'s figure is too low.',
+      entry: { id: 'ans', label: 'Error in moles', unit: '%' },
+      widget,
+      table: gasTable({
+        fixtures: [plate],
+      }),
+      hints: [
+        'Read the figures from the plate, then type the result.',
+        'The moles are in step with the pressure used, so compare the pressure the student used with the pressure the dry gas really has.',
+        'Percentage error is the difference between the student\'s figure and the true figure, divided by the true figure, times 100.'
+      ],
+      check(state) {
+        const v = entrySigned(state.table, 'ans');
+        if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the error as a percentage.' };
+        const want = VAPOUR_ERROR_PCT();
+        if (Math.abs(v - want) <= 0.06) return { ok: true };
+        if (Math.abs(v + want) <= 0.06) return { ok: false, msg: 'The size is close, but the student\'s figure lies on the other side of the true one.' };
+        return { ok: false, msg: 'Divide the difference by the true pressure of the dry gas, not by the gauge.' };
+      },
+      reward: {
+        log: 'Leaving out the vapour overstates the moles.',
+        title: 'Percentage Error',
+        body: 'The student used 752 mmHg where the dry gas pushes 728 mmHg, so the moles come out (752 − 728) ÷ 728 × 100 = 3.3% too high. A percentage error is the difference divided by the true value, and a systematic slip like this one always pushes the same way.',
         last: true
       }
     };
   })()
 ];
 
+/** Stage 8: the percentage by which the moles come out too high when the vapour is not subtracted. */
+export const VAPOUR_ERROR_PCT = () => ((OVER_WATER.total - (OVER_WATER.total - OVER_WATER.vapor)) / (OVER_WATER.total - OVER_WATER.vapor)) * 100;
+
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Open both tanks, then place a card in the slot.'],
-  3: ['Drag tanks into or out of the tray.'],
+  3: ['Drag tanks into the tray,', 'then type your answer in the field at the bottom.'],
   4: ['Open one tank at a time to read its pressure,', 'then place it on the rail.'],
   5: ['Turn the Height dial.'],
-  6: ['Place a card in the slot.'],
-  7: ['Place a card in the slot.']
+  6: ['Type your answer in the field at the bottom.'],
+  7: ['Type your answer in the field at the bottom.'],
+  8: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -417,24 +451,26 @@ export const PRACTICE = [
 export const SOLUTIONS = [
   [put('same', 'slot:predict')],
   [put('b', OPEN), put('a', OPEN), put('same', 'slot:show')],
-  [put('c', OPEN), put('a', OPEN), put('b', OPEN)],
+  [put('c', OPEN), put('a', OPEN), put('b', OPEN), put('d', OPEN), typed('ans', '0.43')],
   [
     put('c', OPEN), put('c', 'rail:0'), put('a', OPEN), put('a', 'rail:1'), put('d', OPEN), put('d', 'rail:2'), put('b', OPEN), put('b', 'rail:3')
   ],
   [dial(CT, 'volume', 3)],
-  [put('a', 'slot:answer')],
-  [put('a', 'slot:answer')]
+  [typed('ans', "50")],
+  [typed('ans', "728")],
+  [typed('ans', '3.3')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [put('b', OPEN), put('a', OPEN), put('lower', 'slot:show')],
-  [put('c', OPEN)],
+  [put('c', OPEN), typed('ans', '0.6')],
   [put('d', 'rail:0'), put('b', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
   [dial(CT, 'volume', 4)],
-  [put('b', 'slot:answer')],
-  [put('b', 'slot:answer')]
+  [typed('ans', "40")],
+  [typed('ans', "776")],
+  [typed('ans', '-3.3')]
 ];
 
 function blankState() { return {}; }
