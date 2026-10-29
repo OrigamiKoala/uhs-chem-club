@@ -3354,12 +3354,14 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       near(Number(end(q5, i).entries.ans), Math.round(avgOf(piece) * 10) / 10, `unit01/q5-assay stage ${i + 1} (the typed average)`);
       holds(Boolean(q5.STAGES[i].entry), `unit01/q5-assay stage ${i + 1}: no field for the average`);
     }
-    // 10. the share of the heavier isotope from the average
+    // 10. the share of the heavy atoms from a sealed canister's weight (the mix that balances it is the typed share)
     {
-      const lines = q5.STAGES[9].table.fixtures.find(f => f.kind === 'plate').props.lines.join(' ');
-      const [lo, hi] = lines.match(/weigh (\d+) or (\d+)/).slice(1).map(Number);
-      const avg = Number(lines.match(/average weight ([\d.]+)/)[1]);
-      near(Number(end(q5, 9).entries.ans), Math.round((avg - lo) / (hi - lo) * 100), 'unit01/q5-assay stage 10 (the percent of heavy atoms)');
+      const can = declared(q5, 9, 'can');
+      const mixer = q5.STAGES[9].table.fixtures.find(f => f.id === 'mixer').props;
+      const heavy = [...Array(mixer.total + 1).keys()].filter(h => (mixer.total - h) * mixer.light.mass + h * mixer.heavy.mass === M.massOfSample(can));
+      same(heavy.length, 1, 'unit01/q5-assay stage 10 (one mix balances the canister)');
+      near(Number(end(q5, 9).entries.ans), heavy[0] / mixer.total * 100, 'unit01/q5-assay stage 10 (the percent of heavy atoms)');
+      same(M.countOfSample(can), mixer.total, 'unit01/q5-assay stage 10 (the canister and the mix hold the same number of atoms)');
     }
     // 5. a sample in one bin balances at that bin's own weight: a prediction on a new case
     {
@@ -3432,7 +3434,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const typedOf = k => Number(end(q6, k).entries.ans);
       near(typedOf(8), Math.round(m('oxygen') / (m('oxygen') + 2 * m('hydrogen')) * 1000) / 10, 'unit01/q6-weigh stage 9 (oxygen\'s percent by mass in water)');
       near(typedOf(9), Math.round((36 / m('water')) * 2 * 6.02 * 100) / 100, 'unit01/q6-weigh stage 10 (hydrogen atoms in 36 g of water, in units of 10^23)');
-      near(typedOf(10), (24 / m('carbon') > 0) ? (6 / M.listedMass('H')) / (24 / m('carbon')) : NaN, 'unit01/q6-weigh stage 11 (hydrogen atoms for each carbon)');
+      { const t11 = end(q6, 10); near(typedOf(10), M.counterOf(t11, 'balance', 'R') / M.counterOf(t11, 'balance', 'L'), 'unit01/q6-weigh stage 11 (hydrogen atoms for each carbon, from the two counters)'); }
       near(typedOf(11), 30 / (m('carbon') + 3 * M.listedMass('H')) , 'unit01/q6-weigh stage 12 (carbon atoms in one molecule)');
     }
     }

@@ -510,21 +510,24 @@ export const STAGES = [
     prompt: 'How many hydrogen atoms join each carbon atom in this compound?',
     entry: { id: 'ans', label: 'Hydrogen atoms per carbon atom', unit: '' },
     widget: { type: 'table', label: 'The bench' },
-    table: massTable({
-      pieces: [
-        { ...crate('c', 'CARBON', { x: 28, y: 38 }, { species: 'carbon', grams: 24, note: '24.0 g' }), fixed: true },
-        { ...crate('h', 'HYDROGEN', { x: 64, y: 38 }, { species: 'hydrogen', grams: 6, note: '6.0 g' }), fixed: true }
-      ],
-      fixtures: [
-        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: 112, y: 30 }, size: { w: 40, h: 22 }, noRun: true, props: { lines: ['carbon 12.0 g/mol', 'hydrogen 1.0 g/mol'] } }
-      ]
+    table: balanceTable({
+      unit: 'g',
+      counters: { L: { label: 'C ATOMS' }, R: { label: 'H ATOMS' } },
+      refCrate: crate('c', 'CARBON', { x: 0, y: 0 }, { species: 'carbon', grams: 24, note: '24.0 g in the compound' }),
+      drum: { label: 'Hydrogen drum', what: 'hydrogen', amount: 10 },
+      steps: { hydrogen: 1 },
+      capacity: 10,
+      extra: {
+        fixtures: [{ id: 'plate', kind: 'plate', label: 'Compound', at: { x: 75, y: 66 }, size: { w: 90, h: 12 }, noRun: true, props: { lines: ['hydrogen in it 6.0 g', 'g/mol: C 12.0, H 1.0'] } }]
+      }
     }),
     hints: [
-      'Type how many hydrogen atoms there are for every carbon atom.',
-      'Compare the moles of each element: atoms combine in the ratio of their moles.',
+      'Use the drum and the right pan to put the compound\'s hydrogen on the balance, then type the ratio.',
+      'Compare the two atom counters: atoms combine in the ratio of their moles.',
       'Divide each crate\'s grams by its grams per mole, then divide the larger count by the smaller.'
     ],
     check(state) {
+      if (poured(state.table, 'hydrogen') < 6) return { ok: false, notYet: true, msg: 'Pour the compound\'s 6.0 g of hydrogen onto the right pan.' };
       const v = entryNumber(state.table, 'ans');
       if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number.' };
       if (Math.abs(v - 3) < 0.01) return { ok: true };
@@ -546,14 +549,21 @@ export const STAGES = [
     entry: { id: 'ans', label: 'Carbon atoms in one molecule', unit: '' },
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
-      pieces: [],
+      bounds: { ...TABLE_BOUNDS },
+      recorder: PARKED_RECORDER,
+      pieces: [
+        ...[12, 26, 40].map((x, i) => ({ id: `c${i + 1}`, kind: 'atom', label: 'C', at: { x, y: 10 }, props: { el: 'C' } })),
+        ...Array.from({ length: 9 }, (_, i) => ({ id: `h${i + 1}`, kind: 'atom', label: 'H', at: { x: 10 + (i % 5) * 13, y: i < 5 ? 24 : 37 }, props: { el: 'H' } }))
+      ],
+      zones: { containers: [{ id: 'pan', label: 'Pan', at: { x: 98, y: 44 }, size: { w: 36, h: 22 }, cell: 12 }] },
       fixtures: [
-        { id: 'plate', kind: 'plate', label: 'Compound', at: { x: 75, y: 34 }, size: { w: 56, h: 26 }, noRun: true, props: { lines: ['3 H for each C', 'one mole weighs 30.0 g', 'carbon 12.0, hydrogen 1.0'] } }
+        { id: 'scale', kind: 'scale', label: 'Scale', at: { x: 98, y: 14 }, size: { w: 44, h: 22 }, noRun: true, props: { pan: 'container:pan', unit: 'u' } },
+        { id: 'plate', kind: 'plate', label: 'Compound', at: { x: 36, y: 55 }, size: { w: 56, h: 12 }, noRun: true, props: { lines: ['3 H for each C', 'one molecule weighs 30.0'] } }
       ]
     }),
     hints: [
-      'Type the number of carbon atoms in one molecule.',
-      'The ratio gives the weight of the smallest unit, and the molecule is a whole number of those units.',
+      'Use the atoms and the scale\'s pan to weigh a trial molecule, then type the carbon count.',
+      'One carbon with its three hydrogens is the smallest unit; the molecule is a whole number of those units.',
       'Divide the molecule\'s weight by the weight of one carbon with its three hydrogens.'
     ],
     check(state) {
@@ -671,7 +681,7 @@ export const SOLUTIONS = [
   [to('d2', 'slot:weigh'), to('d2', 'rail:0'), to('d1', 'slot:weigh'), to('d1', 'rail:1'), to('d3', 'slot:weigh'), to('d3', 'rail:2')],
   [joinTo('h1', 'o'), joinTo('h2', 'o'), to('o', 'container:pan'), typed('ans', '88.9')],
   [typed('ans', '24.08')],
-  [typed('ans', '3')],
+  [...pourSteps('hydrogen', 1, 6), typed('ans', '3')],
   [typed('ans', '2')]
 ];
 
@@ -687,7 +697,7 @@ export const MISSES = [
   [to('d3', 'slot:weigh'), to('d3', 'rail:2')],
   [joinTo('h1', 'o'), joinTo('h2', 'o'), to('o', 'container:pan'), typed('ans', '33.3')],
   [typed('ans', '12.04')],
-  [typed('ans', '4')],
+  [...pourSteps('hydrogen', 1, 6), typed('ans', '4')],
   [typed('ans', '1')]
 ];
 

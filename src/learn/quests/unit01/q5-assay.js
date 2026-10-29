@@ -117,6 +117,7 @@ const trayAt = (id, label, x, y, w, cell = 19, h = 22) => ({ id, label, at: { x,
 const CL = [{ mass: 35, n: 30 }, { mass: 37, n: 10 }];
 const NE = [{ mass: 20, n: 36 }, { mass: 22, n: 4 }];
 const B = [{ mass: 10, n: 8 }, { mass: 11, n: 32 }];
+const LI = [{ mass: 6, n: 10 }, { mass: 7, n: 90 }];
 const MG = [{ mass: 24, n: 32 }, { mass: 25, n: 4 }, { mass: 26, n: 4 }];
 
 const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
@@ -472,19 +473,28 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 10 */
   {
     title: 'Share From the Average',
-    prompt: 'What percent of these lithium atoms weigh 7?',
+    prompt: 'What percent of the atoms in the sealed lithium canister weigh 7?',
     entry: { id: 'ans', label: 'Weigh 7', unit: '%' },
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
-      pieces: [],
+      pieces: [{ ...sample('can', 'LITHIUM', LI, { x: 30, y: 58 }, { sealed: true, note: '100 atoms of weight 6 or 7' }), fixed: true, zone: 'container:pan-l' }],
+      zones: { containers: [{ id: 'pan-l', label: 'Canister pan', at: { x: 30, y: 58 }, size: { w: 30, h: 26 }, cell: 30 }] },
       fixtures: [
-        { id: 'plate', kind: 'plate', label: 'Lithium', at: { x: 62, y: 30 }, size: { w: 36, h: 22 }, noRun: true, props: { lines: ['atoms weigh 6 or 7', 'average weight 6.9'] } }
+        {
+          id: 'balance', kind: 'balance', label: 'Balance', at: { x: 75, y: 22 }, size: { w: 130, h: 34 }, noRun: true,
+          props: { unit: 'u', pans: { L: 'container:pan-l', R: { mix: 'mixer' } } }
+        },
+        {
+          id: 'mixer', kind: 'mixer', label: 'Mix', at: { x: 122, y: 54 }, size: { w: 46, h: 24 }, noRun: true,
+          props: { total: 100, light: { mass: 6 }, heavy: { mass: 7 } },
+          dials: { heavy: { min: 0, max: 100, step: 5, value: 0, label: 'Heavy atoms' } }
+        }
       ]
     }),
     hints: [
-      'Type the percent of atoms that weigh 7.',
-      'If every atom weighed 6 the average would be 6, and each atom that weighs 7 raises the average a little.',
-      'Find how far the average sits above 6, and what fraction of the way that is from 6 to 7.'
+      'Use the "Heavy atoms" dial to try a mix against the canister, and type the percent that weigh 7.',
+      'With no heavy atoms the mix weighs 600; each heavy atom added raises it by the same amount.',
+      'Find how far the canister\'s weight sits above an all-light 100, and what fraction of the way that is to an all-heavy 100.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ans');
