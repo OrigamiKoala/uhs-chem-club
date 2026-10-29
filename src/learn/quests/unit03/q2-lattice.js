@@ -41,7 +41,7 @@ import {
 } from '../../table/kits/bonds.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 9 };
+export const meta = { stageCount: 10 };
 
 /**
  * When each withheld word is earned. Specific terms first: the schedule is
@@ -437,6 +437,42 @@ export const STAGES = [
       log: 'Molecular, ionic, metallic, then network.',
       title: 'Predicting From Structure',
       body: 'With no hotplate, the pictures were enough: separate molecules melt lowest, an ionic lattice and a metal need much more, and atoms joined all the way through hold on longest. The structure of a material predicts how it behaves.',
+    }
+  },
+
+  /* ---------------------------------------------------------------- 10 */
+  {
+    title: 'Do Alloys Conduct',
+    prompt: 'Clip the leads on each cold block and sort it by whether the lamp lights.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('k1', 'BLOCK A', BRASS, bench(0)),
+        slabPiece('k2', 'BLOCK B', SALT, bench(1)),
+        slabPiece('k3', 'BLOCK C', STEEL, bench(2)),
+        slabPiece('k4', 'BLOCK D', ARCH, bench(3)),
+        leads(0)
+      ],
+      zones: { trays: [tray('lit', 'Lamp lit', 18), tray('dark', 'Lamp dark', 48)] }
+    }),
+    hints: [
+      'Use the leads and the two trays.',
+      'Look at what sits among the metal atoms of each picture, and at what the lamp does.',
+      'Clip the leads on one block at a time, then file it by the lamp.'
+    ],
+    check(state) {
+      const t = state.table;
+      const ids = ['k1', 'k2', 'k3', 'k4'];
+      const where = Object.fromEntries(ids.map(id => [id, ['lit', 'dark'].find(k => trayOf(t, k).some(p => p.id === id)) || null]));
+      if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
+      const wrong = ids.find(id => where[id] !== (conductionOf(declOf(t.pieces[id]), false) ? 'lit' : 'dark'));
+      if (wrong) return { ok: false, msg: `${name(t.pieces[wrong])}'s lamp did not do what its tray says.` };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Brass and steel lit the lamp. Salt and the network stayed dark.',
+      title: 'Alloys Still Conduct',
+      body: 'Brass and steel lit the lamp cold, like any metal: the foreign atoms sit among the metal atoms, but the free outer electrons still run between them. Foreign atoms scatter those electrons a little, so an alloy conducts somewhat less well than the pure metal.',
       last: true
     }
   }
@@ -577,7 +613,8 @@ export const SOLUTIONS = [
     onPlate('a1', 0), onPlate('a2', 1), onPlate('a3', 2), onPlate('a4', 3), heat(950), heat(1100), heat(1460), heat(1550),
     { place: { piece: 'a2', to: 'rail:0' } }, { place: { piece: 'a1', to: 'rail:1' } }, { place: { piece: 'a4', to: 'rail:2' } }, { place: { piece: 'a3', to: 'rail:3' } }
   ],
-  [{ place: { piece: 'r2', to: 'rail:0' } }, { place: { piece: 'r3', to: 'rail:1' } }, { place: { piece: 'r4', to: 'rail:2' } }, { place: { piece: 'r1', to: 'rail:3' } }]
+  [{ place: { piece: 'r2', to: 'rail:0' } }, { place: { piece: 'r3', to: 'rail:1' } }, { place: { piece: 'r4', to: 'rail:2' } }, { place: { piece: 'r1', to: 'rail:3' } }],
+  [clip('k1'), into('k1', 'lit'), clip('k2'), into('k2', 'dark'), clip('k3'), into('k3', 'lit'), clip('k4'), into('k4', 'dark')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -590,7 +627,8 @@ export const MISSES = [
   [{ join: ['hammer', 'm1'] }, { join: ['hammer', 'm2'] }, { join: ['hammer', 'm3'] }, into('m1', 'dents'), into('m3', 'bends'), into('m2', 'holds')],
   [into('x1', 'gap'), into('x3', 'replace'), into('x2', 'gap'), into('x4', 'gap')],
   [{ place: { piece: 'a3', to: 'rail:0' } }],
-  [{ place: { piece: 'r1', to: 'rail:0' } }]
+  [{ place: { piece: 'r1', to: 'rail:0' } }],
+  [into('k1', 'dark'), into('k2', 'lit'), into('k3', 'dark'), into('k4', 'dark')]
 ];
 
 function blankState() { return {}; }

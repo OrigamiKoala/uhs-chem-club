@@ -28,10 +28,10 @@ This section is the status of record. Older sections below are a history; where 
 | 2 | Tray names state the possible answers ("Mobile electrons", "Ions freed by melting", "No mobile charges") | `q2-lattice` 2, `q1` 5 | done |
 | 3 | `q3` stage 1 is still "find the lowest point"; the pull and push traces explain why there is a bottom, but the task is a hunt | `q3-distance` 1 | done |
 | 4 | `q1` stage 2 shows a join's outcome only as a rod or a drift; nothing makes a full outer shell feel necessary | `q1-joins` 2 | done |
-| 5 | No quantitative stage on `q7`. The Arrows tool prints the pull difference, so a "set the difference" dial would copy it; the stage needs an atom-pull readout the student subtracts | `q7-polarity` | done |
-| 6 | Angles are still read off a protractor and typed (`q6` 1, 5, 6, 7, 8, 9; Warden phase 3). Only `q6` stage 10 asks for a counted number | `q6-shape`, `boss-warden` 3 | done |
+| 5 | Quantitative stage on `q7`: `q7` stage 6 prints each atom's pull on an ammonia card (`show: ['pulls']`) and the student subtracts to tenths | `q7-polarity` 6 | done |
+| 6 | Typed measured angles: `q6` stage 5 and Warden phase 3 now ask for the gap below 109.5°, and `q6` stage 10 counts domains. Stages 1 and 6 to 9 still read a protractor and type the angle (the instrument does the measuring) | `q6-shape`, `boss-warden` 3 | done for the two named; the rest accepted |
 | 7 | Carbonate (three drawings, fractional order) is a practice question only. It repeats stage 8's arithmetic, so a stage would need a different idea, such as counting the drawings | `q5-resonance` | closed, user decided against it |
-| 8 | Alloys' effect on conduction is untested (stage 8 tests melting only) | `q2-lattice` | open, low value |
+| 8 | Alloys' effect on conduction: `q2` stage 10 clips the leads on brass, steel, salt and a network block and sorts by the lamp (alloys light it; the reward says they conduct slightly less well than the pure metal) | `q2-lattice` 10 | done |
 | 9 | `q9` stage 3 still asks for twelve electron pours into a ladder; optional and not AP | `q9-orbitals` 3 | done |
 | 10 | The element "O" in the mono face reads as "0" on slates, ozone and nitrate stages | `atoms.js` | done |
 | 11 | Protractor: once laid on the plate it is a clear disc, nearly invisible, and a hand-made drag did not read an angle (the scripted pointer path does) | `q6` 1, 3, 5 to 9 | done |
@@ -261,4 +261,4 @@ Changed and checked (all 13 `verify:*` scripts print OK at commit "Ligar open it
 
 - **FIXED: q9 stage 3 rack boxes drawing at 3D On:** electrons seated or poured into the rack boxes are now drawn at 3D On. `buildSlot` in `table-props.js` makes `liningMat` optional; `table3d.js` passes no lining for flat boxes (`kit.noJarFill`, where contents are painted on the mat), leaving regular card/slot linings intact on other benches. The arrows painted on the mat are now visible inside the rack boxes.
 
-Still open from the list: 7 (carbonate, excluded by request), 8 (alloy conduction), 15 (hand-play coverage), 16 (student-confusion list).
+Still open from the list: 7 (carbonate, excluded by request), 11 (protractor by hand, unconfirmed), 15 (hand-play coverage; `q2` 10 was run by `verify:bench` only), 16 (student-confusion list). Stage total 247.
