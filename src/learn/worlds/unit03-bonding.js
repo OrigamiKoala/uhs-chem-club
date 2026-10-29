@@ -49,7 +49,7 @@ export const UNIT_03 = {
       title: 'Bond Energy',
       line: 'Examine potential energy curves and bond energies.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit03/q3-distance.js')
     },

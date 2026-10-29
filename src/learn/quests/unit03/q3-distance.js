@@ -16,6 +16,7 @@
  *   3  PREDICT: do more shared pairs sit further apart or closer?          (no instrument; the wrong idea is a card)
  *   4  pull three carbon pairs and rail them from the longest bond         -> bond order (and deeper, so stronger)
  *   5  melt three salts and rail them by the heat each takes               -> charge and size set the hold
+ *   6  rail four salts, one never heated, by charges and centre distance   -> Coulomb's law as charge product over distance
  *   -- debrief: what sets a bond's length and its strength.
  *
  * Cut as repeats (2026-10-23): "squeezed" (the trace of stage 1 already climbs on the squeezed side, and the card says so), "two sizes"
@@ -36,7 +37,7 @@ import { PAIRS, LATTICES, planCurve, byLatticeEnergy, coulombIndex, IONS } from 
 import { bondsTable, hotplate, pairTag, saltPiece, wellRead, piecesIn } from '../../table/kits/bonds.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const BUILDS_ON = ['unit03/q1-joins', 'unit03/q2-lattice', 'unit02/q8-trends'];
 
@@ -231,7 +232,41 @@ export const STAGES = [
     reward: {
       log: 'Magnesium oxide took the most heat. Potassium chloride took the least.',
       title: 'Lattice Energy and Ion Properties',
-      body: 'Lattice energy increases with higher ionic charges and smaller ionic radii. Magnesium oxide contains divalent ions with small radii, producing a stronger lattice than compounds with singly charged ions.',
+      body: 'Lattice energy increases with higher ionic charges and smaller ionic radii. Magnesium oxide contains divalent ions with small radii, producing a stronger lattice than compounds with singly charged ions.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    title: 'A Salt Not Yet Heated',
+    prompt: 'Without heating, rank NaF, NaCl, KCl and MgO by how hard their ions are held.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        saltPiece('a', 'NaCl', 'NaCl', { x: 22, y: 56 }),
+        saltPiece('b', 'KCl', 'KCl', { x: 52, y: 56 }),
+        saltPiece('c', 'MgO', 'MgO', { x: 82, y: 56 }),
+        saltPiece('d', 'NaF', 'NaF', { x: 112, y: 56 })
+      ],
+      zones: { rail: { id: 'rail', at: { x: 67, y: 56 }, size: { w: 130, h: 16 }, first: 'Held hardest', last: 'Held least', items: ['a', 'b', 'c', 'd'], start: ['b', 'a', 'd', 'c'] } }
+    }),
+    hints: [
+      'Drag the four salts into order on the rail.',
+      'Compare the charges and the centre-to-centre distance printed on each card.',
+      'A larger product of the two charges held at a shorter distance means a harder hold.'
+    ],
+    check(state) {
+      const t = state.table;
+      const order = t.zones.rail.order;
+      if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four salts on the rail in order.' };
+      const want = order.slice().sort((x, y) => LATTICES[t.pieces[y].props.lattice].energy - LATTICES[t.pieces[x].props.lattice].energy);
+      if (order.join() === want.join()) return { ok: true };
+      return { ok: false, msg: 'Two neighbouring salts are in the wrong order. Check the charges and the centre distances on those two cards.' };
+    },
+    reward: {
+      log: 'Charge product over distance ranked all four salts.',
+      title: 'Coulomb\'s Law',
+      body: 'Lattice energy rises with the product of the ion charges and falls with the distance between their centres (Coulomb\'s law). Charge product over distance is 1/235 for NaF, 1/283 for NaCl, 1/319 for KCl and 4/212 for MgO. MgO scores about five times NaCl, close to the measured 3795 against 787 kJ/mol.',
       last: true
     }
   }
@@ -344,7 +379,8 @@ export const SOLUTIONS = [
   [hand('a', 200), hand('a', 127), hand('a', 300), hand('depth', 430)],
   [guess('closer')],
   [hand('a', 120), hand('b', 154), hand('c', 134), to('b', 0), to('c', 1), to('a', 2)],
-  [onPlate('a', 0), onPlate('b', 1), onPlate('c', 2), heat(775), heat(825), heat(2875), to('c', 0), to('a', 1), to('b', 2)]
+  [onPlate('a', 0), onPlate('b', 1), onPlate('c', 2), heat(775), heat(825), heat(2875), to('c', 0), to('a', 1), to('b', 2)],
+  [to('c', 0), to('d', 1), to('a', 2), to('b', 3)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -353,7 +389,8 @@ export const MISSES = [
   [hand('a', 127), hand('depth', 200)],
   [],
   [to('a', 0), to('b', 1), to('c', 2)],
-  [to('b', 0), to('a', 1), to('c', 2)]
+  [to('b', 0), to('a', 1), to('c', 2)],
+  [to('b', 0), to('a', 1), to('d', 2), to('c', 3)]
 ];
 
 function blankState() { return {}; }
