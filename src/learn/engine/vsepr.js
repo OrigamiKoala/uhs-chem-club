@@ -335,6 +335,26 @@ export function hubHeight(plan) {
   return Math.round((Math.abs(dot(n, t[0])) / m) * 1000) / 1000;
 }
 
+/**
+ * How thick the arrangement of a hub's atoms is: 0 when every atom lies in one flat plane through the hub (any one or two atoms,
+ * three that spread flat), above 0 when they leave it. The thinnest slab through the hub that holds every atom tip, in units of an arm.
+ */
+export function hubThickness(plan) {
+  const t = plan.vectors.filter(v => v.kind === 'atom').map(v => v.v);
+  if (t.length <= 2) return 0;
+  let best = Infinity;
+  for (let i = 0; i < t.length; i++) {
+    for (let j = i + 1; j < t.length; j++) {
+      const n = [t[i][1] * t[j][2] - t[i][2] * t[j][1], t[i][2] * t[j][0] - t[i][0] * t[j][2], t[i][0] * t[j][1] - t[i][1] * t[j][0]];
+      const m = Math.hypot(n[0], n[1], n[2]);
+      if (m < 1e-9) continue;
+      const reach = Math.max(...t.map(v => Math.abs(dot(n, v)) / m));
+      best = Math.min(best, reach);
+    }
+  }
+  return best === Infinity ? 0 : Math.round(best * 1000) / 1000;
+}
+
 /* ------------------------------------------------------------------
    THE MIXER, ALL THE WAY UP (s, p and d orbitals into a bowl)
    ------------------------------------------------------------------ */

@@ -92,6 +92,9 @@ const L = id => balloonPiece(id, at0);
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
 const ANGLE_TOL = 1.5;
 
+/** The fewest arms that cannot all lie flat on the plate: the hub's depth first reads above zero here. `verify:learn` holds it to the planner. */
+const FIRST_UP = 4;
+
 /** The smallest angle the protractor can read between two of the hub's arms that pass `keep`. */
 function smallestAngle(read, keep) {
   const ids = read.arms.map((a, i) => [a, i]).filter(([a]) => keep(a)).map(([, i]) => i);
@@ -152,32 +155,33 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Four on the Hub',
+    title: 'Leaving the Plate',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'set the angle marker to the measured angle between any two of the four arms.');
+      return testPrompt(QUEST_KEY, GUESSES, 'add arms one at a time and set the marker to the fewest arms that cannot all lie flat on the plate.');
     },
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'X', arms: [1, 2, 3, 4].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Angle' } }),
+    table: hubTable({ sym: 'X', arms: [1, 2, 3, 4, 5].map(i => A(`a${i}`, 'A', 1, 'Arm')), marker: { label: 'Arms', max: 6 }, gauge: 'thick', protractor: false, roomy: true }),
     hints: [
-      'Use the arms, the protractor, the turn dial and the angle marker.',
-      'Turn the view to see whether the arms stay in one flat layer, then read the angle between several different pairs.',
-      'Attach all four arms, lay the protractor on two of them, and set the marker to the number it reads.'
+      'Use the arms, the turn dial and the marker; the plate reads the depth of the arms.',
+      'Add the arms one at a time and note the depth reading after each one.',
+      'The answer is the number of arms at which the depth first rises above zero.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      if (r.n !== 4) return { ok: false, msg: 'All four arms are not on the hub yet.' };
-      const real = angleBetween(r.plan, 0, 1);
-      if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the angle the protractor reads between two of the four arms.' };
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of arms.' };
+      if (r.n < FIRST_UP) return { ok: false, msg: 'Add more arms and watch the depth reading before you answer.' };
+      if (v === FIRST_UP) return { ok: true };
+      return v < FIRST_UP
+        ? { ok: false, msg: 'With that many arms the depth still reads zero: they lie flat.' }
+        : { ok: false, msg: 'The depth already rose above zero with fewer arms than that.' };
     },
     get reward() {
       return {
-        log: 'Four arms leave the plane.',
+        log: 'Two and three arms lie flat; four leave the plate.',
         title: 'Tetrahedral Geometry and VSEPR',
-        body: `${verdictLine(QUEST_KEY, 'solid')}Four electron domains repel each other, and in space they get furthest apart at the corners of a tetrahedron, 109.5 degrees from each other. Laid flat they would crowd to 90 degrees, which is closer. This is the idea behind VSEPR theory.`,
+        body: `${verdictLine(QUEST_KEY, 'solid')}Two arms lie opposite and three spread flat at 120 degrees, but four cannot: the arms leave the plane and reach the corners of a tetrahedron, 109.5 degrees apart. Laid flat they would crowd to 90 degrees. This is the idea behind VSEPR theory.`,
         model: { type: 'shape', mol: 'CH4', caption: 'CH₄ · Tetrahedral (109.5°)' }
       };
     }
@@ -395,7 +399,7 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 export const SOLUTIONS = [
   [...on('a1', 'a2'), ...read('a1', 'a2'), set(180)],
   [guess('solid')],
-  [...on('a1', 'a2', 'a3', 'a4'), ...read('a1', 'a2'), set(110)],
+  [...on('a1', 'a2', 'a3', 'a4'), set(4)],
   [...on('h1', 'h2', 'h3', 'l1')],
   [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(104)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), ...read('a1', 'a3'), set(90)],
@@ -406,7 +410,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [...on('a1', 'a2'), set(120)],
   [],
-  [...on('a1', 'a2', 'a3', 'a4'), set(90)],
+  [...on('a1', 'a2', 'a3', 'a4'), set(3)],
   [...on('h1', 'h2', 'h3')],
   [...on('h1', 'h2', 'l1', 'l2'), set(110)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), set(109)],

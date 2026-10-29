@@ -17,7 +17,7 @@
  */
 
 import {
-  planDomains, angleBetween, domainStrain, bestStrain, socketAngle, hubHeight, IDEAL
+  planDomains, angleBetween, domainStrain, bestStrain, socketAngle, hubHeight, hubThickness, IDEAL
 } from '../../engine/vsepr.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import {
@@ -91,7 +91,7 @@ export function hubRead(state, hubId) {
   return {
     id: hubId, arms, plan, n: arms.length,
     atoms: plan.bonds, lone: plan.lone,
-    shape: plan.shape, height: hubHeight(plan),
+    shape: plan.shape, height: hubHeight(plan), thick: hubThickness(plan),
     index: id => arms.findIndex(a => a.id === id)
   };
 }
@@ -339,7 +339,8 @@ function paintHubPlate(ctx, f, state, b) {
   line(`ARMS ${r ? r.n : 0}`, PLATE_COLORS.phosphor);
   const read = protractorReadings(state).find(q => q.hub === f.props.hub);
   line(read ? `ANGLE ${read.angle}°` : 'ANGLE', read ? AMBER : PLATE_COLORS.dim);
-  if (f.props.gauge && r) line(r.height == null ? 'HEIGHT' : `HEIGHT ${r.height.toFixed(2)}`, r.height ? AMBER : PLATE_COLORS.dim);
+  if (f.props.gauge === 'thick' && r) line(`DEPTH ${r.thick.toFixed(2)}`, r.thick > 0.01 ? AMBER : PLATE_COLORS.dim);
+  else if (f.props.gauge && r) line(r.height == null ? 'HEIGHT' : `HEIGHT ${r.height.toFixed(2)}`, r.height ? AMBER : PLATE_COLORS.dim);
 }
 
 /** The frame: spokes to the sockets and the hub's own disc. */
