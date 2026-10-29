@@ -18,8 +18,8 @@
  *
  * Re-pitched and cut (2026-10-23): the bond-order marker for H2, He2 and N2, the three oxygens ranked by length, fluorine's weak link,
  * and diboron's other order of boxes. They are AP bookkeeping about WHICH numbers a bond has; this bench keeps the one thing a
- * first-course student can not get from a Lewis drawing and can see for themselves, a gas that a magnet pulls. The rack names its rows
- * by what they do (holds, pushes) until the last reward earns "bonding" and "antibonding".
+ * first-course student can not get from a Lewis drawing and can see for themselves, a gas that a magnet pulls. The rack names no row
+ * until the last reward earns "bonding" and "antibonding"; it prints one count, UNPAIRED.
  *
  * EVERY COUNT IS `mo.readMO`; every unpaired figure the magnet gives is the real one in `mo.DIATOMICS`, every ground state is
  * `mo.fillMO`, and `verify:learn` checks the graded fills against all three.
@@ -134,7 +134,7 @@ export const STAGES = [
     const rack = moRack('a', 'O2', RACK_AT, { plain: true });
     return {
       title: 'Oxygen\'s Boxes',
-      prompt: 'Fill oxygen\'s molecular orbital energy levels with its twelve valence electrons following the Aufbau principle and Hund\'s rule.',
+      prompt: 'Pour oxygen\'s twelve valence electrons into the boxes so that the rack pulls on the magnet like the real sample.',
       widget: { type: 'table', label: 'The bench' },
       table: moTable({
         zones: { containers: [moSupply('supply', 'Electrons', JAR_AT, DIATOMICS.O2.e), ...rack.containers] },
@@ -142,8 +142,8 @@ export const STAGES = [
       }),
       hints: [
         'Use the jar of electrons, the boxes and the magnet.',
-        'Fill degenerate pi-star antibonding orbitals singly with parallel spins before pairing.',
-        'Add twelve electrons starting from the lowest energy molecular orbitals upward.'
+        'Compare the rack\'s UNPAIRED count with the pull the magnet gives the real sample.',
+        'Fill from the lowest box upward, and give each box of a level one electron before pairing any.'
       ],
       check(state) {
         const t = state.table;

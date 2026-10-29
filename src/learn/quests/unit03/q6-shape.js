@@ -35,9 +35,11 @@ import {
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
+  { term: /\bseesaw\b|\bt-shaped\b/i, introducedAt: 9 },
+  { term: /\btrigonal bipyramidal\b/i, introducedAt: 8 },
   { term: /\bsquare planar\b/i, introducedAt: 7 },
   { term: /\boctahedral\b/i, introducedAt: 6 },
   { term: /\bbent\b/i, introducedAt: 5 },
@@ -104,7 +106,7 @@ function smallestAngle(read, keep) {
 }
 
 /* ------------------------------------------------------------------
-   THE SEVEN STAGES
+   THE NINE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -296,7 +298,67 @@ export const STAGES = [
       log: 'Two lone pairs sit opposite, and the four atoms lie flat.',
       title: 'Square Planar Geometry',
       body: 'Of six domains, two lone pairs take opposite corners, leaving the four atoms in one flat square with 90° between neighbours. Xenon tetrafluoride, XeF₄, has this square planar shape.',
-      model: { type: 'shape', mol: 'XeF4', caption: 'XeF₄ · Square planar (90°)' },
+      model: { type: 'shape', mol: 'XeF4', caption: 'XeF₄ · Square planar (90°)' }
+    }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    title: 'Five on the Hub',
+    prompt: 'Set the angle marker to the middle value of the three different angles between pairs of five arms.',
+    widget: { type: 'table', label: 'The bench' },
+    table: hubTable({ sym: 'Hub', arms: [1, 2, 3, 4, 5].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), marker: { label: 'Angle' }, roomy: true }),
+    hints: [
+      'Use the arms, the protractor and the angle marker.',
+      'Read several pairs of arms: some are neighbours, some are opposite, and the readings fall into three groups.',
+      'Attach all five arms, find the smallest and largest readings, and set the marker to the one between them.'
+    ],
+    check(state) {
+      const t = state.table;
+      const r = hubRead(t, 'hub');
+      const v = markerValue(t, 'mark');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      if (r.n !== 5) return { ok: false, msg: 'All five arms are not on the hub yet.' };
+      const angles = bondAngles(r.plan);
+      const middle = angles[Math.floor(angles.length / 2)];
+      if (near(v, middle, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: 'The marker is not the angle the protractor reads between the arms that are neither the closest pair nor the opposite pair.' };
+    },
+    reward: {
+      log: 'Five arms make two kinds of position.',
+      title: 'Trigonal Bipyramidal Geometry',
+      body: 'Five electron domains settle as two arms on the axis (180° apart) and three in a flat ring round the middle (120° apart); axis and ring arms meet at 90°. This is the trigonal bipyramidal shape of phosphorus pentachloride, PCl₅.',
+      model: { type: 'shape', mol: 'PCl5', caption: 'PCl₅ · Trigonal bipyramidal (90°, 120°, 180°)' }
+    }
+  },
+
+  /* ---------------------------------------------------------------- 9 */
+  {
+    title: 'Three Unseen Arms on Five',
+    prompt: 'Put two arms and three lone pairs on the hub, then set the marker to the angle between the two arms.',
+    widget: { type: 'table', label: 'The bench' },
+    table: hubTable({ sym: 'Hub', arms: [...[1, 2].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), L('l1'), L('l2'), L('l3')], marker: { label: 'Angle' }, roomy: true }),
+    hints: [
+      'Use the arms, the balloons, the protractor and the angle marker.',
+      'Turn the view to see where the three balloons settle, then read the angle between the two arms.',
+      'Balloons take the most spacious places on the hub, which leaves the two arms their own places.'
+    ],
+    check(state) {
+      const t = state.table;
+      const r = hubRead(t, 'hub');
+      const v = markerValue(t, 'mark');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      if (r.lone < 3 || r.atoms < 2) return { ok: false, msg: 'Not everything from the tray is on the hub yet.' };
+      const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
+      const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
+      if (near(v, real, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: 'The marker does not match the angle the protractor reads between the two arms.' };
+    },
+    reward: {
+      log: 'Three lone pairs leave the two atoms opposite.',
+      title: 'Linear, From Five Domains',
+      body: 'Lone pairs take the flat ring, where they are furthest from one another, so three of them leave the two atoms on the axis, 180° apart: xenon difluoride, XeF₂, is linear. One lone pair on five gives a seesaw (SF₄) and two give a T-shape (ClF₃).',
+      model: { type: 'shape', mol: 'XeF2', caption: 'XeF₂ · Linear (180°)' },
       last: true
     }
   }
@@ -403,7 +465,9 @@ export const SOLUTIONS = [
   [...on('h1', 'h2', 'h3', 'l1')],
   [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(104)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), ...read('a1', 'a3'), set(90)],
-  [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), ...read('a1', 'a3'), set(90)]
+  [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), ...read('a1', 'a3'), set(90)],
+  [...on('a1', 'a2', 'a3', 'a4', 'a5'), ...read('a3', 'a4'), set(120)],
+  [...on('a1', 'a2', 'l1', 'l2', 'l3'), { setDial: { fixture: 'hub-turn', dial: 'turn', value: 90 } }, ...read('a1', 'a2'), set(180)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -414,7 +478,9 @@ export const MISSES = [
   [...on('h1', 'h2', 'h3')],
   [...on('h1', 'h2', 'l1', 'l2'), set(110)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), set(109)],
-  [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), set(180)]
+  [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), set(180)],
+  [...on('a1', 'a2', 'a3', 'a4', 'a5'), set(90)],
+  [...on('a1', 'a2', 'l1', 'l2', 'l3'), set(120)]
 ];
 
 function blankState() { return {}; }

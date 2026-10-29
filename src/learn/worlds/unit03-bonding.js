@@ -76,7 +76,7 @@ export const UNIT_03 = {
       title: 'Molecular Shape',
       line: 'Predict three-dimensional geometries using VSEPR theory.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit03/q6-shape.js')
     },

@@ -314,7 +314,8 @@ function paintRack(ctx, f, state, b) {
     // The boxes between them: a row's name at its left, a box (empty here: the electrons are its container's) for each.
     for (const r of g.rows) {
       // A plain rack names a row by what it does (a row that holds the atoms together, a row that pushes them apart) until a card earns the real names.
-      plateText(ctx, f.props.plain ? (r.row.anti ? 'PUSHES' : 'HOLDS') : r.row.label, X(f.at.x - r.width / 2 - 2), Y(r.y) + size * 0.35, {
+      // A plain rack names no row: the order of the energies is the whole idea, and no word is earned yet.
+      if (!f.props.plain) plateText(ctx, r.row.label, X(f.at.x - r.width / 2 - 2), Y(r.y) + size * 0.35, {
         size: size * 1.1, align: 'right', weight: 700, color: r.row.anti ? PLATE_COLORS.dust : PHOS
       });
       for (const box of r.boxes) {
@@ -335,7 +336,7 @@ function paintRack(ctx, f, state, b) {
   // What the rack reads, when there are electrons to count.
   if (f.props.live && merged) {
     const read = readOf(state, f.props.rack, order);
-    const lines = [`PLACED ${read.total}`, `UNPAIRED ${read.unpaired}`];
+    const lines = f.props.plain ? [`UNPAIRED ${read.unpaired}`] : [`PLACED ${read.total}`, `UNPAIRED ${read.unpaired}`];
     if (f.props.counts) lines.push(`LOWER ${read.bonding}  UPPER ${read.anti}`);
     lines.forEach((t, i) => plateText(ctx, t, b.x1 - 3, b.y0 + size * (1.4 + i * 1.5), { size, align: 'right', weight: 700, color: PHOS }));
   }

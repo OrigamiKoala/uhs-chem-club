@@ -1090,6 +1090,7 @@ console.log('The foes — spoil standing in the wells\n');
         const d = JSON.parse(sigOf(direct));
         const keys = Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k]));
         fail(`${tag}: the pointer path by ${mode} does not reach the table the script names (differs in ${keys.join(', ')})`);
+        if (process.env.BENCH_DIFF) for (const k of keys) console.log('   DIFF', k, JSON.stringify(a[k]).slice(0, 600), '|||', JSON.stringify(d[k]).slice(0, 600));
       }
       const bad = MODEL.checkInvariants(state);
       if (bad.length) fail(`${tag}: the table is unsound after the pointer path by ${mode} — ${bad[0]}`);
@@ -1393,6 +1394,7 @@ console.log('The foes — spoil standing in the wells\n');
           const a = JSON.parse(sigOf(st));
           const d = JSON.parse(sigOf(direct));
           fail(`${label}: the pointer path by ${mode} does not reach the table the script names (differs in ${Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k])).join(', ')})`);
+          if (process.env.BENCH_DIFF) for (const k of Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k]))) console.log('   DIFF', k, JSON.stringify(a[k]).slice(0, 700), '|||', JSON.stringify(d[k]).slice(0, 700));
         }
         const solved = stage.check({ ...mod.stateFor(i, {}), table: st });
         if (!solved.ok) fail(`${label}: after the pointer path by ${mode} the stage does not pass (${solved.msg})`);
