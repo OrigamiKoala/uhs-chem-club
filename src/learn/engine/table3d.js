@@ -418,10 +418,11 @@ export class Table3D extends BenchViewer3D {
     for (const c of Object.values(state.zones.containers)) {
       const r = rectOf(c, SIZES.container);
       // A box whose contents are painted on its face (`kit.noJarFill`: an orbital box and the arrows in it) is a low socket, not a jar:
-      // a five-centimetre wall would hide the near half of what is drawn inside it from the leaned-in camera.
+      // a five-centimetre wall would hide the near half of what is drawn inside it from the leaned-in camera. It has no lining plate laid
+      // over the floor, so what is drawn on the mat underneath stays visible.
       const flat = kit.noJarFill?.(c) && !kit.pileOf?.(c);
       place(flat
-        ? buildSlot(r.w * s, r.h * s, { wallMat: mats.top, liningMat: lining })
+        ? buildSlot(r.w * s, r.h * s, { wallMat: mats.top })
         : buildJar(r.w * s, r.h * s, { wallMat: mats.top, liningMat: lining }), r);
       // A pile's contents are its atoms (below), not a level: no slab of fill over them.
       if (kit.pileOf?.(c) || kit.noJarFill?.(c)) continue;

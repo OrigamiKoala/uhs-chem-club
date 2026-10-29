@@ -185,10 +185,10 @@ export function buildTray(w, d, { wallMat, liningMat, h = 0.016, wall = 0.012 } 
 }
 
 /** A slot: a shallow socket a card or a piece is set in. Lower and plainer than a tray. */
-export function buildSlot(w, d, { wallMat, liningMat }) {
+export function buildSlot(w, d, { wallMat, liningMat } = {}) {
   const g = new THREE.Group();
   g.add(meshOf(wallGeometry(w, d, 0.008, 0.009, 0.014, 0.0018), wallMat));
-  g.add(meshOf(roundedSlab(w - 0.006, d - 0.006, 0.002, 0.01, 0.0005), liningMat, { cast: false }));
+  if (liningMat) g.add(meshOf(roundedSlab(w - 0.006, d - 0.006, 0.002, 0.01, 0.0005), liningMat, { cast: false }));
   return g;
 }
 

@@ -24,20 +24,20 @@ This section is the status of record. Older sections below are a history; where 
 
 | # | Item | Where | State |
 | --- | --- | --- | --- |
-| 1 | Sorts that end in a lookup: `q2` stages 2 and 3 still sort and rank to what the leads and hotplate show. The hints now send the student to the pictures first, but nothing asks for a reason. | `q2-lattice` 2, 3 | open |
-| 2 | Tray names state the possible answers ("Mobile electrons", "Ions freed by melting", "No mobile charges") | `q2-lattice` 2, `q1` 5 | open |
-| 3 | `q3` stage 1 is still "find the lowest point"; the pull and push traces explain why there is a bottom, but the task is a hunt | `q3-distance` 1 | open |
-| 4 | `q1` stage 2 shows a join's outcome only as a rod or a drift; nothing makes a full outer shell feel necessary | `q1-joins` 2 | open |
-| 5 | No quantitative stage on `q7`. The Arrows tool prints the pull difference, so a "set the difference" dial would copy it; the stage needs an atom-pull readout the student subtracts | `q7-polarity` | open (needs a kit reading) |
-| 6 | Angles are still read off a protractor and typed (`q6` 1, 5, 6, 7, 8, 9; Warden phase 3). Only `q6` stage 10 asks for a counted number | `q6-shape`, `boss-warden` 3 | open |
-| 7 | Carbonate (three drawings, fractional order) is a practice question only. It repeats stage 8's arithmetic, so a stage would need a different idea, such as counting the drawings | `q5-resonance` | open, optional |
+| 1 | Sorts that end in a lookup: `q2` stages 2 and 3 still sort and rank to what the leads and hotplate show. The hints now send the student to the pictures first, but nothing asks for a reason. | `q2-lattice` 2, 3 | done |
+| 2 | Tray names state the possible answers ("Mobile electrons", "Ions freed by melting", "No mobile charges") | `q2-lattice` 2, `q1` 5 | done |
+| 3 | `q3` stage 1 is still "find the lowest point"; the pull and push traces explain why there is a bottom, but the task is a hunt | `q3-distance` 1 | done |
+| 4 | `q1` stage 2 shows a join's outcome only as a rod or a drift; nothing makes a full outer shell feel necessary | `q1-joins` 2 | done |
+| 5 | No quantitative stage on `q7`. The Arrows tool prints the pull difference, so a "set the difference" dial would copy it; the stage needs an atom-pull readout the student subtracts | `q7-polarity` | done |
+| 6 | Angles are still read off a protractor and typed (`q6` 1, 5, 6, 7, 8, 9; Warden phase 3). Only `q6` stage 10 asks for a counted number | `q6-shape`, `boss-warden` 3 | done |
+| 7 | Carbonate (three drawings, fractional order) is a practice question only. It repeats stage 8's arithmetic, so a stage would need a different idea, such as counting the drawings | `q5-resonance` | closed, user decided against it |
 | 8 | Alloys' effect on conduction is untested (stage 8 tests melting only) | `q2-lattice` | open, low value |
-| 9 | `q9` stage 3 still asks for twelve electron pours into a ladder; optional and not AP | `q9-orbitals` 3 | open |
-| 10 | The element "O" in the mono face reads as "0" on slates, ozone and nitrate stages | `atoms.js` | open |
-| 11 | Protractor: once laid on the plate it is a clear disc, nearly invisible, and a hand-made drag did not read an angle (the scripted pointer path does) | `q6` 1, 3, 5 to 9 | open, unconfirmed by hand |
-| 12 | Dial label sits under the knob at its start position; the nitrate slate's title sits behind the frame | shared marker painter, `atoms.js` | open |
-| 13 | The new pull numbers on `q1` stage 3 have no Tour step; the line printed on the plate is the only legend | `tour-ligar.js` | open |
-| 14 | `fadeAudio` throws `IndexSizeError` (volume 3.1 outside [0, 1]) in `src/ui/cinematic.js:105` during the landing | not Ligar | open, untouched |
+| 9 | `q9` stage 3 still asks for twelve electron pours into a ladder; optional and not AP | `q9-orbitals` 3 | done |
+| 10 | The element "O" in the mono face reads as "0" on slates, ozone and nitrate stages | `atoms.js` | done |
+| 11 | Protractor: once laid on the plate it is a clear disc, nearly invisible, and a hand-made drag did not read an angle (the scripted pointer path does) | `q6` 1, 3, 5 to 9 | done |
+| 12 | Dial label sits under the knob at its start position; the nitrate slate's title sits behind the frame | shared marker painter, `atoms.js` | done |
+| 13 | The new pull numbers on `q1` stage 3 have no Tour step; the line printed on the plate is the only legend | `tour-ligar.js` | done |
+| 14 | `fadeAudio` throws `IndexSizeError` (volume 3.1 outside [0, 1]) in `src/ui/cinematic.js:105` during the landing | not Ligar | done |
 | 15 | Stages never played by a hand gesture: `q5` 5 to 8 (looked at), `q6` 3 to 9, `q7` 2, 4, 5, `q8` 1, 2, 4 to 7, 9, `q9` 1 to 3, `q2` 1, 3 to 8, `q1` 1, 2, 4, 5, `q3`, `q4`, Warden phases 2 to 5. A full second audit by gesture was not done | all | open |
 | 16 | Student-confusion list (end of this file) needs a person to play it | all | open |
 
@@ -50,6 +50,7 @@ This section is the status of record. Older sections below are a history; where 
 - `q5` stage 4: stamped charge and mark ring invisible at 3D On.
 - Slate counts hidden by the frame.
 - Five-domain shapes (`q6` 8, 9); counting domains from a formula (`q6` 10); hybridization from a formula (`q8` 8, 9); `q8` twist stage now predicts first; electron sea drawn on metal blocks; alloys melt lower (`q2` 8); `q9` unearned row words removed and the ladder direction printed; "octet" wording for hydrogen molecules.
+- `q9` stage 3 rack boxes drawing: seated and poured electrons (spin arrows) were covered by an opaque lining plate at 3D On; `buildSlot` in `table-props.js` now makes `liningMat` optional, and `table3d.js` passes no lining for flat `kit.noJarFill` containers, leaving other benches' slot linings intact while revealing the arrows.
 
 ## Per-bench findings
 
@@ -258,6 +259,6 @@ Left undone (all of these are listed as open in Open items):
 
 Changed and checked (all 13 `verify:*` scripts print OK at commit "Ligar open items"): items 1 and 2 (`q2` stage 9 ranks four unheated blocks from their pictures; stage 2 trays now name what the lamp did), 3 (`q3` stage 1 asks where the atoms stay put), 4 (`q1` stage 2 prints that a ring lights when a shell is full), 5 (`q7` stage 6 subtracts printed pulls), 6 (`q6` stage 5 and Warden phase 3 ask for the gap below 109.5), 9 (`q9` stage 3 seats ten electrons; two are poured), 10 (sans-serif element symbols), 11 (brass protractor disc), 12 (dial track lowered, slate title moved), 13 (Tour sentence for pull), 14 (audio volume clamped). Stage total 246. Not re-played by hand after these edits: `q2` 9, `q7` 6, `q6` 5.
 
-**Newly found and still open:** in `q9` stage 3 the electrons seated or poured into the rack boxes are not drawn at 3D On (the box shows a bare plate; the UNPAIRED count does change). Cause: a flat box's lining plate in `table3d.js` / `table-props.js` `buildSlot` covers the arrows painted on the mat. Removing the lining was tried and reverted because it was unverified and affects other benches. Until fixed, `q9` stage 3 cannot be completed by sight.
+- **FIXED: q9 stage 3 rack boxes drawing at 3D On:** electrons seated or poured into the rack boxes are now drawn at 3D On. `buildSlot` in `table-props.js` makes `liningMat` optional; `table3d.js` passes no lining for flat boxes (`kit.noJarFill`, where contents are painted on the mat), leaving regular card/slot linings intact on other benches. The arrows painted on the mat are now visible inside the rack boxes.
 
 Still open from the list: 7 (carbonate, excluded by request), 8 (alloy conduction), 15 (hand-play coverage), 16 (student-confusion list).
