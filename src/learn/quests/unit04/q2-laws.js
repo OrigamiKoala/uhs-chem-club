@@ -152,7 +152,7 @@ export const STAGES = [
       table: gasTable({
         fixtures: [r, markerFixture('zero', 'Room reaches zero at', { x: 108, y: 55 }, { min: -400, max: 0, step: 10, start: 0, unit: '°C', w: 50 })],
         tools: ['straightedge']
-      }, { recorder: { at: { x: 112, y: 24 }, size: { w: 42, h: 28 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Room', yUnit: 'L', range: { xMin: -300, xMax: 250, yMin: 0, yMax: 45 } } }),
+      }, { recorder: { at: { x: 112, y: 24 }, size: { w: 42, h: 28 }, xLabel: 'Heat', xUnit: '°C', yLabel: 'Room', yUnit: 'L', range: { xMin: -300, xMax: 300, yMin: 0, yMax: 48 } } }),
       hints: [
         'Use the "Heater" dial, "Record", and the straightedge.',
         'Record readings at several settings, then align the straightedge across them.',

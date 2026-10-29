@@ -374,7 +374,9 @@ export class TableGestures {
       return;
     }
     if (g.kind === 'piece' && g.moved) {
-      const at = this.view.dragAt?.() || { x: u.x + g.off.x, y: u.y + g.off.y };
+      let at = this.view.dragAt?.() || { x: u.x + g.off.x, y: u.y + g.off.y };
+      // A tall piece is carried by its top, so its foot trails the pointer: a piece whose foot is on open table but whose pointer is over a place goes in that place.
+      if (!zoneAt(this.state, at) && zoneAt(this.state, u)) at = { x: u.x, y: u.y };
       this.view.setDrag?.(null, null);
       this.view.dispatch({ place: { piece: g.id, at } });
       return;

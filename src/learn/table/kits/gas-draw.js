@@ -563,7 +563,7 @@ function paintPinhole(ctx, f, state, b) {
   const r = pinholeRead(state, f.id);
   const n = r.chambers.length;
   const lastDial = b.lay.dials.length ? Math.max(...b.lay.dials.map(d => d.y)) : 8;
-  const top = lastDial - b.lay.box.y0 + 4;
+  const top = lastDial - b.lay.box.y0 + 7;
   const cw = (f.size.w - 4) / n;
   r.chambers.forEach((c, i) => {
     const x0 = 2 + i * cw;
@@ -702,6 +702,20 @@ export function paintLegend(ctx, p, W, H) {
   say(ctx, f.name, W / 2, H * 0.22, H * 0.2, { align: 'center', weight: 700, maxW: W - 8 });
   say(ctx, f.gas, W / 2, H * 0.5, H * 0.26, { align: 'center', weight: 700, color: PHOS, maxW: W - 8 });
   say(ctx, f.mass || f.gauge || f.plate, W / 2, H * 0.78, H * 0.17, { align: 'center', color: f.mass ? AMBER : DUST, weight: f.mass ? 700 : 500, maxW: W - 8 });
+}
+
+/**
+ * A tank's tag, painted for the small plate that stands in front of the built tank (`gas-props.js` `buildTank`): the lid's legend lies
+ * flat under a valve and a gauge head, so every figure a tank prints is repeated here, large, facing the player.
+ */
+export function paintTag(ctx, p, W, H) {
+  const f = tankFace(p);
+  const low = f.mass || f.amount;
+  say(ctx, f.name, W * 0.06, H * 0.17, H * 0.17, { weight: 700, maxW: W * 0.58 });
+  say(ctx, f.gas, W * 0.94, H * 0.17, H * 0.2, { align: 'right', weight: 700, color: PHOS, maxW: W * 0.3 });
+  if (f.gauge) say(ctx, f.gauge, W * 0.06, H * 0.43, H * 0.2, { weight: 700, color: PHOS, maxW: W * 0.88 });
+  if (f.plate) say(ctx, f.plate, W * 0.06, H * (low ? 0.66 : 0.7), H * 0.16, { color: DUST, maxW: W * 0.88 });
+  if (low) say(ctx, low, W * 0.06, H * 0.88, H * 0.17, { weight: 700, color: AMBER, maxW: W * 0.88 });
 }
 
 export { kPaToAtm, kPaToMmHg, seatedIn, secondsOf, speeds, valueOf, tallestBar };

@@ -734,7 +734,8 @@ export class Table3D extends BenchViewer3D {
     const canvas = document.createElement('canvas');
     canvas.width = cw;
     canvas.height = ch;
-    const plot = new TrendPlot(canvas, {});
+    // Seen from the player's seat the strip is small, so its figures are painted large.
+    const plot = new TrendPlot(canvas, { fontPx: 20 });
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
     const mat = this.mine(new THREE.MeshBasicMaterial({ map: tex }));
@@ -792,7 +793,7 @@ export class Table3D extends BenchViewer3D {
           ctx.rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
           ctx.clip();
           ctx.strokeStyle = '#e59b24';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);

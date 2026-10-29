@@ -59,7 +59,8 @@ export class TrendPlot {
   pxOf(x, y) {
     const w = this.canvas?.width || 0;
     const h = this.canvas?.height || 0;
-    const padL = 36, padB = 26, padR = 12, padT = 16;
+    const k = (this.spec.fontPx || 9) / 9;
+    const padL = 36 * k, padB = 26 * k, padR = 12 * k, padT = 16 * k;
     const pw = w - padL - padR;
     const ph = h - padT - padB;
     const { xMin, xMax, yMin, yMax } = this.spec;
@@ -80,10 +81,12 @@ export class TrendPlot {
     ctx.fillStyle = '#0d0c0a';
     ctx.fillRect(0, 0, w, h);
 
-    const padL = 36;
-    const padB = 26;
-    const padR = 12;
-    const padT = 16;
+    // `fontPx` is the tick label's size: a strip painted on a table is seen small, so it asks for a bigger one and every margin follows.
+    const k = (this.spec.fontPx || 9) / 9;
+    const padL = 36 * k;
+    const padB = 26 * k;
+    const padR = 12 * k;
+    const padT = 16 * k;
     const pw = w - padL - padR;
     const ph = h - padT - padB;
 
@@ -102,7 +105,7 @@ export class TrendPlot {
 
     // Grid ticks
     ctx.fillStyle = '#6b625a';
-    ctx.font = '9px monospace';
+    ctx.font = `${Math.round(9 * k)}px monospace`;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
 
@@ -110,7 +113,7 @@ export class TrendPlot {
     for (let i = 0; i <= yTicks; i++) {
       const yVal = yMin + (ySpan * i) / yTicks;
       const yPos = padT + ph - (ph * i) / yTicks;
-      ctx.fillText(this.spec.yDigits ? yVal.toFixed(this.spec.yDigits) : String(Math.round(yVal)), padL - 4, yPos);
+      ctx.fillText(this.spec.yDigits ? yVal.toFixed(this.spec.yDigits) : String(Math.round(yVal)), padL - 4 * k, yPos);
       ctx.strokeStyle = '#1a1816';
       ctx.beginPath();
       ctx.moveTo(padL, yPos);
@@ -124,7 +127,7 @@ export class TrendPlot {
     for (let i = 0; i <= xTicks; i++) {
       const xVal = xMin + (xSpan * i) / xTicks;
       const xPos = padL + (pw * i) / xTicks;
-      ctx.fillText(this.spec.xDigits ? xVal.toFixed(this.spec.xDigits) : String(Math.round(xVal)), xPos, padT + ph + 4);
+      ctx.fillText(this.spec.xDigits ? xVal.toFixed(this.spec.xDigits) : String(Math.round(xVal)), xPos, padT + ph + 4 * k);
       ctx.strokeStyle = '#1a1816';
       ctx.beginPath();
       ctx.moveTo(xPos, padT);
@@ -135,7 +138,14 @@ export class TrendPlot {
     // Axis Labels
     ctx.fillStyle = '#b8afa0';
     ctx.textAlign = 'center';
-    ctx.fillText(`${xLabel}${xUnit ? ' (' + xUnit + ')' : ''}`, padL + pw / 2, padT + ph + 14);
+    ctx.fillText(`${xLabel}${xUnit ? ' (' + xUnit + ')' : ''}`, padL + pw / 2, padT + ph + 14 * k);
+
+    // The vertical axis is named above its top.
+    if (yLabel) {
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`${yLabel}${yUnit ? ' (' + yUnit + ')' : ''}`, 4 * k, 2 * k);
+    }
 
     // Points
     for (const p of this.points) {
@@ -145,7 +155,7 @@ export class TrendPlot {
 
       ctx.fillStyle = p.active ? '#d99423' : '#6f8f3f';
       ctx.beginPath();
-      ctx.arc(px, py, p.active ? 4 : 3, 0, Math.PI * 2);
+      ctx.arc(px, py, (p.active ? 4 : 3) * k, 0, Math.PI * 2);
       ctx.fill();
       if (p.active) {
         ctx.strokeStyle = '#dcd6cc';

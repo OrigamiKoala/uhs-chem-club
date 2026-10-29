@@ -210,7 +210,7 @@ function dressPinhole(f, state, c) {
   const items = [];
   for (let i = 0; i < n; i++) {
     const ux = box.x0 + 2 + i * cw + (cw - 2) / 2;
-    const uy = lastDial + 4 + hu / 2;
+    const uy = lastDial + 7 + hu / 2;
     const p = toPlate({ x: ux, y: uy });
     const cyl = new THREE.Group();
     cyl.position.set(p.x, c.ground + 0.002, p.z);

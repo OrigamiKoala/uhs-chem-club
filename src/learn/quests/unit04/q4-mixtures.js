@@ -110,7 +110,7 @@ export const STAGES = [
       widget,
       table: gasTable({
         pieces: [
-          t10('a', 'TANK A', { x: 92, y: 12 }, HELIUM.gas, HELIUM.n), t10('b', 'TANK B', { x: 114, y: 12 }, NEON.gas, NEON.n),
+          t10('a', 'TANK A', { x: 92, y: 9 }, HELIUM.gas, HELIUM.n), t10('b', 'TANK B', { x: 114, y: 9 }, NEON.gas, NEON.n),
           stmt('same', 'The same', { x: 90, y: 45 }), stmt('lower', 'Lower', { x: 128, y: 45 }), stmt('higher', 'Higher', { x: 109, y: 57.5 })
         ],
         fixtures: [ct.fixture],

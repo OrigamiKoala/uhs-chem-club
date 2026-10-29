@@ -285,7 +285,6 @@ export const STAGES = [
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn Holder 11\'s Gas in dial.'],
-  3: ['Sort each tank into a tray.'],
   4: ['Record readings, lay the straightedge,', 'then place a card in the slot.'],
   5: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
   6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.']

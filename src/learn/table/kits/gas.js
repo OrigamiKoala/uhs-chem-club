@@ -20,7 +20,7 @@
  */
 
 import { registerKit } from './registry.js';
-import { paintPiece, paintFixture, faceKey, RECTS, paintLegend, tankFace, wrap } from './gas-draw.js';
+import { paintPiece, paintFixture, faceKey, RECTS, paintLegend, paintTag, tankFace, wrap } from './gas-draw.js';
 import {
   rigRun, boxRead, pinholeRead, tubeRead, secondsOf, seatedIn, GASES, tankRead, commonRead, valueOf, molesIdeal
 } from './gas-read.js';
@@ -86,7 +86,8 @@ function planJoin(a, b) {
 function piece3d(p, state, c) {
   if (p.kind === 'tank') {
     const legend = c.paint(c.hw * 1.5, c.hw * 1.5, (ctx, W, H) => paintLegend(ctx, p, W, H), { seed: `${p.id}|${faceKey(p)}`, px: 256 });
-    return buildTank(c, { legend, open: p.zone != null });
+    const tag = c.paint(c.hw * 2.3, c.hw * 1.35, (ctx, W, H) => paintTag(ctx, p, W, H), { seed: `${p.id}|tag|${faceKey(p)}`, px: 512 });
+    return buildTank(c, { legend, tag, open: p.zone != null });
   }
   if (p.kind === 'pellet') {
     const legend = c.paint(c.hw * 1.6, 0.03, (ctx, W, H) => {
@@ -297,7 +298,7 @@ export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = fal
   }
   const nd = Object.keys(dials).length;
   const width = w ?? (chambers.length > 1 ? 66 : 44);
-  const height = h ?? (8 + (nd - 1) * 5 + 3.6 + 4 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
+  const height = h ?? (8 + (nd - 1) * 5 + 3.6 + 7 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
   return {
     id, kind: 'pinhole', label: 'Pinhole', at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
     ...(record ? { runLabel } : { noRun: true }),

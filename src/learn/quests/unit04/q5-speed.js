@@ -268,7 +268,7 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
-  2: ['Turn the Stopwatch dial,', 'then arrange the chips on the rail.'],
+  2: ['Turn the Stopwatch dial,', 'then rank the chips.'],
   3: ['Adjust the Gas and Stopwatch dials.'],
   4: ['Place a card in the slot.'],
   5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],

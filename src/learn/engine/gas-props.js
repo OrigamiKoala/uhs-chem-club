@@ -33,7 +33,7 @@ export const TANK_H = 0.2;
  * is a flat mesh painted by the kit (its name, its gas and its gauge), laid on the shoulder facing up. A sealed tank is painted
  * the same: only its legend says less.
  */
-export function buildTank(c, { legend = null, open = false } = {}) {
+export function buildTank(c, { legend = null, tag = null, open = false } = {}) {
   const { hw, mats: m } = c;
   const R = hw * 0.92;
   const g = new THREE.Group();
@@ -66,6 +66,14 @@ export function buildTank(c, { legend = null, open = false } = {}) {
   if (legend) {
     legend.position.set(0, 0.1945, 0);
     g.add(legend);
+  }
+  // A tag leans against the front of the tank, facing the player: the lid's legend is flat under the valve and the gauge head.
+  if (tag) {
+    const th = tag.geometry.parameters.height;
+    const tilt = 0.95;
+    tag.rotation.x = -Math.PI / 2 + tilt;
+    tag.position.set(0, (th / 2) * Math.sin(tilt) + 0.004, R * 0.98 + (th / 2) * Math.cos(tilt));
+    g.add(tag);
   }
   return done(g, TANK_H);
 }
