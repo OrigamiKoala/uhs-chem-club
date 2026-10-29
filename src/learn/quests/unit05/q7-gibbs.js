@@ -218,13 +218,14 @@ export const STAGES = [
     table: heatTable({
       fixtures: [
         plotFixture('plot', { x: 44, y: 30 }, { dH: ICE.dH, dS: ICE.dS, Ts: ICE.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Melting ice', w: 64 }),
-        markerFixture('T', 'Ice starts to melt at', { x: 118, y: 40 }, { min: 223, max: 323, step: 10, start: 223, unit: 'K', w: 52 })
+        plaqueFixture('facts', 'Melting ice', { x: 118, y: 16 }, ['ΔH = +6.01 kJ', 'ΔS = +22.0 J/(mol·K)', 'ΔG = ΔH − TΔS'], { w: 52 }),
+        markerFixture('T', 'Ice starts to melt at', { x: 118, y: 44 }, { min: 223, max: 323, step: 10, start: 223, unit: 'K', w: 52 })
       ]
     }),
     hints: [
       'Use the "Temperature" dial and the marker.',
-      'Compare the net at each setting, and look for where it changes sign.',
-      'Phase transitions occur at equilibrium where the net free energy change equals zero.'
+      'Work out the temperature from the plate, then turn the dial to that setting to check the net there.',
+      'At the melting point ΔG is zero, so ΔH and TΔS are equal once ΔS is in kJ.'
     ],
     check(state) {
       const t = state.table;

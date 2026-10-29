@@ -332,8 +332,8 @@ export function wellFixture(id, at, o = {}) {
 }
 
 /** A ledger: the totals of the chips lying in the `broken` and `formed` trays. */
-export function ledgerFixture(id, at, { broken, formed, hideNet = false, w = 60, title = 'Bond ledger' } = {}) {
-  return { id, kind: 'ledger', label: title, at: { ...at }, size: { w, h: 22 }, noRun: true, dials: {}, props: { broken, formed, hideNet } };
+export function ledgerFixture(id, at, { broken, formed, hideNet = false, hideTotals = false, w = 60, title = 'Bond ledger' } = {}) {
+  return { id, kind: 'ledger', label: title, at: { ...at }, size: { w, h: 22 }, noRun: true, dials: {}, props: { broken, formed, hideNet, ...(hideTotals ? { hideTotals } : {}) } };
 }
 
 /**

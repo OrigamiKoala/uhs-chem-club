@@ -231,7 +231,7 @@ export const STAGES = [
         tag('cool', 'Cools the bath', { x: 110, y: 57.4 }),
         tag('same', 'Leaves it as it is', { x: 136, y: 57.4 })
       ],
-      fixtures: [ledgerFixture('ledger', { x: 108, y: 18 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 52, title: 'N₂ + O₂ → 2 NO' })],
+      fixtures: [ledgerFixture('ledger', { x: 108, y: 18 }, { broken: 'broken', formed: 'formed', hideNet: true, hideTotals: true, w: 52, title: 'N₂ + O₂ → 2 NO' })],
       zones: {
         trays: [
           { id: 'broken', label: 'Broken', at: { x: 40, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },
@@ -242,7 +242,7 @@ export const STAGES = [
     }),
     hints: [
       'Use the ledger, the three cards and the slot.',
-      'Compare the Broken total with the Formed total.',
+      'Compare the energy of the bonds in the Broken tray with those in the Formed tray, counting every bond.',
       'Whichever total is larger decides which way the energy goes, so the bath follows it.'
     ],
     check(state) {
@@ -273,7 +273,7 @@ export const STAGES = [
         bondChip('hc', 'H-Cl', { x: 17, y: 44 }, { count: 2, note: 'hydrogen chloride' })
       ],
       fixtures: [
-        ledgerFixture('ledger', { x: 121, y: 20 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 50, title: 'H₂ + Cl₂ → 2 HCl' }),
+        ledgerFixture('ledger', { x: 121, y: 20 }, { broken: 'broken', formed: 'formed', hideNet: true, hideTotals: true, w: 50, title: 'H₂ + Cl₂ → 2 HCl' }),
         markerFixture('dH', 'Estimated ΔH', { x: 121, y: 48 }, { min: -400, max: 400, step: 2, start: -400, unit: 'kJ', w: 52 })
       ],
       zones: {
@@ -285,7 +285,7 @@ export const STAGES = [
     }),
     hints: [
       'Use the three bond chips, the two trays, the ledger and the marker.',
-      'Compare the Broken total with the Formed total once every chip is in its tray.',
+      'Compare the energy of the bonds broken with the bonds formed, counting every bond on each chip.',
       'Take the energy to break the bonds and subtract the energy released by forming the new ones.'
     ],
     check(state) {

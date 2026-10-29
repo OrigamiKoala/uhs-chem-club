@@ -251,8 +251,8 @@ export const STAGES = [
       table: heatTable({
         fixtures: [
           plotFixture('plot', { x: 38, y: 30 }, { dH: 176, dS: 160, Ts: [600, 800, 900, 1000, 1100, 1200, 1400], tempStart: 3, hideCrossing: true, hideTug: true, words: true, title: 'Limestone seal' }),
-          plaqueFixture('ref', 'The reaction', { x: 98, y: 33 }, ['CaCO₃(s) → CaO(s) + CO₂(g)', 'ΔG = ΔH − T × ΔS'], { w: 52 }),
-          markerFixture('T', 'Free energy is zero at', { x: 98, y: 52 }, { min: 700, max: 1500, step: 100, start: 700, unit: 'K', w: 46 })
+          plaqueFixture('ref', 'The reaction', { x: 98, y: 28 }, ['CaCO₃(s) → CaO(s) + CO₂(g)', 'ΔH = +176 kJ', 'ΔS = +160 J/(mol·K)', 'ΔG = ΔH − T × ΔS'], { w: 52 }),
+          markerFixture('T', 'Free energy is zero at', { x: 98, y: 54 }, { min: 700, max: 1500, step: 100, start: 700, unit: 'K', w: 46 })
         ]
       }),
       foes: CRUCIBLE_FOE,

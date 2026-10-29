@@ -440,7 +440,7 @@ function paintLedger(ctx, f, state, b) {
   const r = ledgerRead(state, f.id);
   const col = (x, name, n, total, color) => {
     say(ctx, name, F.x(x), F.y(5.5), F.size(2.2, 6), { color: DIM });
-    say(ctx, `${total} kJ`, F.x(x), F.y(10), F.size(3.4, 7.5), { color, weight: 700 });
+    if (!f.props.hideTotals) say(ctx, `${total} kJ`, F.x(x), F.y(10), F.size(3.4, 7.5), { color, weight: 700 });
     say(ctx, `${n} bond${n === 1 ? '' : 's'}`, F.x(x), F.y(14.4), F.size(2.2, 6), { color: DUST });
   };
   col(3, 'BROKEN', r.nBroken, r.broken, WARM);
