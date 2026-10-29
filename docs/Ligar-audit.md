@@ -16,6 +16,41 @@ Oct 28, 2026. World: Ligar (`unit03`, bonding): nine benches and the Basalt Ward
 - `PRODUCT.md` says benches that pass a first course (hybridization) "say so on the bench and stay optional". Several concepts below that are AP content were cut earlier as "beyond a first course" (formal charge, 5 and 6 domain shapes). Restoring them is a change of the product's age-band position, not only of copy; they should be marked optional on the bench.
 - `CLAUDE.md` bans crowding ("NEVER have too many things going on"), which limits how much quantitative content one stage may carry. New quantitative content goes into new stages or benches, one idea each.
 
+## Open items (current)
+
+This section is the status of record. Older sections below are a history; where one disagrees with this list, this list wins.
+
+### Open
+
+| # | Item | Where | State |
+| --- | --- | --- | --- |
+| 1 | Sorts that end in a lookup: `q2` stages 2 and 3 still sort and rank to what the leads and hotplate show. The hints now send the student to the pictures first, but nothing asks for a reason. | `q2-lattice` 2, 3 | open |
+| 2 | Tray names state the possible answers ("Mobile electrons", "Ions freed by melting", "No mobile charges") | `q2-lattice` 2, `q1` 5 | open |
+| 3 | `q3` stage 1 is still "find the lowest point"; the pull and push traces explain why there is a bottom, but the task is a hunt | `q3-distance` 1 | open |
+| 4 | `q1` stage 2 shows a join's outcome only as a rod or a drift; nothing makes a full outer shell feel necessary | `q1-joins` 2 | open |
+| 5 | No quantitative stage on `q7`. The Arrows tool prints the pull difference, so a "set the difference" dial would copy it; the stage needs an atom-pull readout the student subtracts | `q7-polarity` | open (needs a kit reading) |
+| 6 | Angles are still read off a protractor and typed (`q6` 1, 5, 6, 7, 8, 9; Warden phase 3). Only `q6` stage 10 asks for a counted number | `q6-shape`, `boss-warden` 3 | open |
+| 7 | Carbonate (three drawings, fractional order) is a practice question only. It repeats stage 8's arithmetic, so a stage would need a different idea, such as counting the drawings | `q5-resonance` | open, optional |
+| 8 | Alloys' effect on conduction is untested (stage 8 tests melting only) | `q2-lattice` | open, low value |
+| 9 | `q9` stage 3 still asks for twelve electron pours into a ladder; optional and not AP | `q9-orbitals` 3 | open |
+| 10 | The element "O" in the mono face reads as "0" on slates, ozone and nitrate stages | `atoms.js` | open |
+| 11 | Protractor: once laid on the plate it is a clear disc, nearly invisible, and a hand-made drag did not read an angle (the scripted pointer path does) | `q6` 1, 3, 5 to 9 | open, unconfirmed by hand |
+| 12 | Dial label sits under the knob at its start position; the nitrate slate's title sits behind the frame | shared marker painter, `atoms.js` | open |
+| 13 | The new pull numbers on `q1` stage 3 have no Tour step; the line printed on the plate is the only legend | `tour-ligar.js` | open |
+| 14 | `fadeAudio` throws `IndexSizeError` (volume 3.1 outside [0, 1]) in `src/ui/cinematic.js:105` during the landing | not Ligar | open, untouched |
+| 15 | Stages never played by a hand gesture: `q5` 5 to 8 (looked at), `q6` 3 to 9, `q7` 2, 4, 5, `q8` 1, 2, 4 to 7, 9, `q9` 1 to 3, `q2` 1, 3 to 8, `q1` 1, 2, 4, 5, `q3`, `q4`, Warden phases 2 to 5. A full second audit by gesture was not done | all | open |
+| 16 | Student-confusion list (end of this file) needs a person to play it | all | open |
+
+### Resolved since the first audit
+
+- `q8` stage 3 rendered black (nameplate sizes in metres); the empty-bowl readout under the knob.
+- Camera swing on a slipped drag in the lean-in view (now smaller, and it settles back).
+- `q1` stage 5 crowded row (now the 2 x 2 grid); `q1` stage 3 sorted by a charge seen on the faces (now compares printed pull numbers).
+- Arrows tool tiny and a dropped tool not joining (cause was a `nojoin` card; a real drag now joins and prints NET 0.96; the tool is larger).
+- `q5` stage 4: stamped charge and mark ring invisible at 3D On.
+- Slate counts hidden by the frame.
+- Five-domain shapes (`q6` 8, 9); counting domains from a formula (`q6` 10); hybridization from a formula (`q8` 8, 9); `q8` twist stage now predicts first; electron sea drawn on metal blocks; alloys melt lower (`q2` 8); `q9` unearned row words removed and the ladder direction printed; "octet" wording for hydrogen molecules.
+
 ## Per-bench findings
 
 | Bench | AP topics covered | AP topics missed or thin | Problems seen |
@@ -95,9 +130,9 @@ Work after this audit is recorded at the end of this file.
 - **q6-shape, new stages 6 and 7** (AP 2.7): "Six on the Hub" (six arms settle into an octahedron; find the smallest angle among pairs that do not all read the same) and "Two Unseen Arms on Six" (four arms and two lone pairs: the pairs sit opposite and the atoms lie flat, square planar). Rewards name octahedral SF₆ and square planar XeF₄ with 3D models. The tray was widened for six pieces (layout checked by `verify:table`). Seen in 3D with six arms attached. Trigonal bipyramidal and seesaw (five domains) are not yet a stage.
 - **q3-distance stage 1:** the two atoms on the track are drawn twice as large; the improvement is small and the stage is still a hunt for the lowest number (see priority 2).
 - **Re-evaluated:** `q2-lattice` stage 5 and `q7-polarity` stage 4 are application stages (use what was learned on a new case), not pure repeats, so they are kept. The first audit's call to cut them was too hasty.
-- **Seen but not fixed:** on `q7-polarity` the Arrows tool, dropped on a card, shows only a tiny tag and no readable arrow at the default 3D camera, so the "pulls" the stages tell the player to use are not visible.
+- **[Resolved; see Open items]** Earlier note: on `q7-polarity` the Arrows tool, dropped on a card, shows only a tiny tag and no readable arrow at the default 3D camera, so the "pulls" the stages tell the player to use are not visible.
 - **q7-polarity, new stage 1 "How Hard Each Atom Pulls"** (AP 2.1): lay the Arrows on H₂, HBr, HCl and KF, read the printed pull, and sort into "Shared evenly", "Pulled toward one" and "Taken by one". The reward names electronegativity and gives the numbers (0, 0.96, 3.16) and the rough 1.7 boundary for an ionic bond. HBr and KF were added to the molecule table (`vsepr.js`); the 3D arrows on a card are now longer and thicker so they can be seen. Later stages moved down one place (vocabulary stages, `verify:learn` indices and the world chart updated). Not done: the sort asks for a band, not a computed difference; HF is deliberately not used because the 1.7 rule would label it ionic.
-- **Unresolved, seen in 3D:** with the Arrows tool, my click-then-click and drag onto a card left the tool lying free over the card instead of joined, while the same join through the game's own action worked and `verify:table` (drag and two taps in 2D) passes. A student may hit this. Needs a real-hand test.
+- **[Resolved; see Open items]** Earlier note: with the Arrows tool, my click-then-click and drag onto a card left the tool lying free over the card instead of joined, while the same join through the game's own action worked and `verify:table` (drag and two taps in 2D) passes. A student may hit this. Needs a real-hand test.
 - **q3-distance stage 1, why there is a bottom:** the plot now also draws two dotted traces over the stretch the hand has been through, "pull" (the nuclei on the other atom's electron, long reach) and "push" (the atoms against each other, short reach). Their sum is exactly the energy curve (Morse is the sum of those two exponentials), so nothing is invented. The reward and the second hint say so. The disc scale option was also being dropped silently (`wells()` did not pass `discK` on), so the atoms are now really drawn larger. Seen in 3D. Still the same task (find the lowest point); the bottom is still found, not told. Stage 2 (set the depth marker) and `q6-shape` stage 3 (type a measured angle) are unchanged.
 - **q6-shape stage 3, redesigned (supersedes the note below):** it is now "Leaving the Plate". The tray holds five arms and the plate has a DEPTH gauge (new `hubThickness` in `vsepr.js`: the thinnest slab through the hub that holds every atom). The player adds arms one at a time, sees DEPTH stay 0.00 for two and three arms and rise to 0.82 at four, and sets a marker to the fewest arms that cannot lie flat (4). It builds on the stage 2 prediction, needs no protractor and no remembered number, and five arms means the answer is not just "all of them". Seen in 3D with three and four arms. The 109.5° figure now comes only in the reward. Still not done: the "X" and "A" ball faces and the camera-drag trap.
 - **q6-shape stage 3, earlier small rework (superseded):** the hub plate no longer says "Hub A" (it says "Centre atom"), hint rung 2 now sends the student to look at whether the arms stay in one flat layer and to compare several pairs, and the reward says why: four arms get furthest apart in space (109.5°), while laid flat they would sit closer (90°). The task is unchanged: attach four arms, read an angle with the protractor, set the marker. I kept it because it is the test of the stage-2 prediction (flat 90°, spread 109°, flat 120°) and the number comes from a measurement; a typed number is still a weak way to show the idea, and the camera-drag trap and the "X" and "A" ball faces are not fixed.
@@ -114,7 +149,7 @@ Work after this audit is recorded at the end of this file.
   - **q5-resonance, new stage 8 "Four Over Three":** restored from history: gauge the three equal bonds of nitrate and set a dial to the fractional bond order, 4/3. Now 8 stages.
   - **q8-hybrid:** stage 5's prompt is an objective ("find out which of these two bonds lets its far end turn a quarter turn") not a command, and a new stage 6 "Counting Sigma and Pi" asks for the sigma and pi bonds of H–C≡N (the HCN card now shows its bond lines). Now 6 stages.
   - **q9-orbitals:** it was already `optional: true` in the chart (the first audit said it was not); its descriptor line now says "Optional, beyond AP".
-- **Still weak, not fixed:** `q1-joins` stage 3 still sorts by an observed charge on the faces; `q2-lattice` stages 2 and 3 still sort to a taxonomy the student is not asked to reason about; `q5` stages 1 to 3 and the Warden were never played; `q9` stage 3 is still overloaded; `q6` and `q7` have only light quantitative content; `q8` stage 5 is still an observation of a refusal, now with an objective prompt. None of the new stages has been played by a student.
+- **[Superseded by Open items]** Status at that time: `q1-joins` stage 3 still sorts by an observed charge on the faces; `q2-lattice` stages 2 and 3 still sort to a taxonomy the student is not asked to reason about; `q5` stages 1 to 3 and the Warden were never played; `q9` stage 3 is still overloaded; `q6` and `q7` have only light quantitative content; `q8` stage 5 is still an observation of a refusal, now with an objective prompt. None of the new stages has been played by a student.
 
 ## Blockers and bugs logged, not fixed
 
@@ -130,12 +165,12 @@ Work after this audit is recorded at the end of this file.
 4. **Add the missing quantitative and conceptual content**: electronegativity and bond type (ΔEN), 5 and 6 domain shapes, alloys, hybridization from a formula.
 5. **Mark `q9-orbitals` as optional enrichment** and cut its on-table load.
 
-## Open defects not fixed
+## Open defects, as first logged (history; the current status is in Open items)
 
 - **FIXED: `q8-hybrid` stage 3 rendered black at 3D On.** Cause: `orbital-props.js` asked the table's `label()` (which takes metres) for a 128 × 48 and a 64 × 64 nameplate and then scaled it, so every orbital piece carried a plane about 140 m wide that blacked out the view. The call now asks for the real size. It affected every orbital piece in the game, including Lanternfall's orbital benches. Remaining on that stage: the mixer readout text ("NOTHING MIXED") is partly covered by the bowl's knob. Earlier notes:  the lean-in camera pose is the normal 55° one, the ground texture is painted (non-empty canvas), the mat and ground meshes are visible, no console errors, and hiding the mixer fixture does not change the picture. Cause not found. A student cannot see the mixing bowl, so this stage cannot teach until it is fixed.
-- **Camera drag on a missed grab.** In `q6-shape` stage 3 a drag that started on empty plate moved the view until the table was out of sight. The code clamps look to about ±0.2 rad, so it may have been something else (a dragged piece), not reproduced.
-- **`q1-joins` stage 5** still uses the crowded single row.
-- Everything in the revised priority list below item 1 is still to do: `q6` number entry, `q3` stages 1 and 2, repeated stages in `q2` and `q7`, electronegativity and bond type, 5 and 6 domain shapes, alloys, optional label on `q9`.
+- **[Mitigated; the swing is smaller and settles back]** Camera drag on a missed grab. In `q6-shape` stage 3 a drag that started on empty plate moved the view until the table was out of sight. The code clamps look to about ±0.2 rad, so it may have been something else (a dragged piece), not reproduced.
+- **[Resolved: now the 2 x 2 grid]** `q1-joins` stage 5 used the crowded single row.
+- **[Status moved to Open items]** At that time, still to do: `q6` number entry, `q3` stages 1 and 2, repeated stages in `q2` and `q7`, electronegativity and bond type, 5 and 6 domain shapes, alloys, optional label on `q9`.
 
 ## Second pass: the remaining teaching work (Oct 29, 2026)
 
@@ -182,9 +217,9 @@ Method: the dev server at 3D On in the Browser pane, guest profile, `loadStage` 
 - **`q4-dots`, `boss-warden`:** prompts said "octet" for molecules containing hydrogen; now "full outer shell".
 - **`q7`:** the Arrows tool is larger (table radius 8.5).
 - **Tools:** `tools/verify-bench.mjs` prints the differing values when `BENCH_DIFF=1` is set.
-- **Counts:** 242 stages (Ligar: q1 5, q2 7, q3 6, q4 6, q5 8, q6 9, q7 5, q8 9, q9 3, Warden 5).
+- **Counts at that point:** 242 stages (q2 and q6 have grown since: now q2 8, q6 10, 244 in all).
 
-### Still weak, not done
+### Still weak at the end of the second pass (superseded by Open items)
 
 - `q2-lattice` 2 and 3 still sort or rank to results found by heating and clipping; they do not ask for a reason. Alloys' effect on conduction and melting point is untested.
 - `q6` and `q7` have little quantitative content (angles are read and typed; no ΔEN arithmetic beyond stage 1's bands; no bond-order or lattice-energy ratios).
@@ -212,7 +247,7 @@ Method: the dev server at 3D On in the Browser pane, guest profile, `loadStage` 
 - **`q9` 3:** the rack prints HIGHER ENERGY and LOWER ENERGY (the direction of the ladder, which "from the lowest box" needed); the count lines moved off the frame. Looked at in 3D; not poured by hand.
 - Stage total 244. `verify:learn`, `table`, `docs`, `story`, `ligar` and `bench` pass after each change.
 
-Left undone, with the reason:
+Left undone (all of these are listed as open in Open items):
 - **`q5` carbonate:** same four-pairs-over-three-bonds arithmetic as nitrate, so it would repeat stage 8, not add an idea.
 - **`q7` quantitative stage:** the Arrows tool already prints the pull difference, so a "set the difference" dial would be copying a number. A real one needs an atom-pull readout that the student must subtract, which means a new kit reading.
 - **Warden phase 3:** still reads and types a protractor angle from ammonia.
