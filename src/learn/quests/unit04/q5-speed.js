@@ -16,6 +16,7 @@
  *   3  set a reference chamber to empty at the sample's pace      -> Naming by Leak
  *   4  PREDICT: where two gases let in at the two ends of a tube meet
  *   5  TEST: the race down the tube                              -> Diffusion
+ *   6  the molar mass of an unknown gas, from how long it takes to half-empty -> Graham's law (a figure worked out)
  *
  * (Cut as repeats or as past the idea: the speed-peak target and the ranking of three gases' speeds, which bench one works out; the fast
  * tail of a heated gas; the ratio and the square-root law, which were arithmetic on the same leak; and the random walk of a smell,
@@ -27,13 +28,14 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, GASES, front } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\beffusion\b/i, introducedAt: 2 },
-  { term: /\bdiffusion\b/i, introducedAt: 5 }
+  { term: /\bdiffusion\b/i, introducedAt: 5 },
+  { term: /\bgraham.?s law\b/i, introducedAt: 6 }
 ];
 
 /** Pressure, kelvin, the speed screen and the gas laws are plain words here. */
@@ -58,6 +60,10 @@ export const CHAMBERS = [['a', 'N2'], ['b', 'H2'], ['c', 'CO2'], ['d', 'He']];
 /** The reference chamber's gases and the sample's gas in stage 3. */
 export const REFERENCE_GASES = ['Ne', 'Ar', 'Kr', 'Xe'];
 export const SAMPLE = 'Kr';
+/** Stage 6: the reference gases on its dial, the unknown (not on the dial), and the figures to lay: the right mass, helium doubled, the nearest reference's, and a half of the answer. */
+export const MASS_GASES = ['He', 'Ne', 'Ar', 'Kr'];
+export const UNKNOWN = 'CH4';
+export const MASS_CARDS = [['a', '8 g/mol', 8], ['b', '16 g/mol', 16], ['c', '20 g/mol', 20], ['d', '32 g/mol', 32]];
 /** The tube: its length in centimetres and the stopwatch's seconds. */
 export const TUBE_CM = 100;
 const TUBE_TIMES = [0, 15, 30, 45, 60, 75];
@@ -81,9 +87,9 @@ export const STAGES = [
     prompt: 'A helium chamber and a nitrogen chamber each have a tiny hole in the wall: which one runs out of gas first?',
     items: LEAK_GUESSES,
     hints: [
-      'Place a card in the slot.',
-      'Consider how particle velocity affects how often molecules reach a pinhole.',
-      'Select the card corresponding to your prediction.'
+      'Lay one card in the slot.',
+      'Picture the particles of each gas flying at the wall and ask which kind reaches the hole more often.',
+      'Ask whether speed at one temperature depends on how heavy a particle is.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -172,9 +178,9 @@ export const STAGES = [
     prompt: 'Ammonia and hydrogen chloride are let into opposite ends of a long tube of still air: where do they meet?',
     items: TUBE_GUESSES,
     hints: [
-      'Place a card in the slot.',
-      'Ammonia molecules have lower molar mass than hydrogen chloride molecules.',
-      'Select the card corresponding to your prediction.'
+      'Lay one card in the slot.',
+      'Compare the speeds of the two gases in the tube as the last bench found them.',
+      'Ask what the particles bump into on the way, and whether that slows both kinds equally.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -216,9 +222,44 @@ export const STAGES = [
         return {
           log: 'The reaction ring formed closer to the heavier gas.',
           title: 'Diffusion',
-          body: 'Gases disperse through other gases by diffusion. Frequent molecular collisions slow net movement, but lighter molecules travel faster on average, causing the reaction ring to form closer to the heavier gas.',
-          last: true
+          body: 'Gases disperse through other gases by diffusion. Frequent molecular collisions slow net movement, but lighter molecules travel faster on average, causing the reaction ring to form closer to the heavier gas.'
         };
+      }
+    };
+  })()  ,
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const p = pinhole(PIN, { x: 40, y: 30 }, {
+      chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: UNKNOWN, label: 'UNKNOWN', sealed: true }],
+      picks: { ref: { gases: MASS_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false
+    });
+    return {
+      title: 'Graham\'s Law',
+      prompt: 'Lay the card for the mass of one mole of the unknown gas.',
+      widget,
+      table: gasTable({
+        pieces: answerCards(MASS_CARDS),
+        fixtures: [p],
+        zones: { slots: [answerSlot('Unknown gas')] }
+      }),
+      hints: [
+        'Turn the "Gas" dial and read each reference gas\'s half-empty time.',
+        'Compare how the half-empty time grows when the mass grows, from helium to neon and from neon to argon.',
+        'The half-empty time grows with the square root of the mass, so square the ratio of times before scaling a mass.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, MASS_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = GASES[UNKNOWN].M;
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'The unknown gas has a smaller figure than that.' : 'The unknown gas has a larger figure than that.' };
+      },
+      reward: {
+        log: 'Time grew as the square root of the mass.',
+        title: 'Graham\'s Law',
+        body: 'The half-empty time goes as the square root of the molar mass, so a time ratio of 2 means a mass ratio of 4 (Graham\'s law). The unknown takes twice as long as helium, so its molar mass is 4 × 4 = 16 g/mol: methane.',
+        last: true
       }
     };
   })()
@@ -230,7 +271,8 @@ const NOTES = {
   2: ['Turn the Stopwatch dial,', 'then arrange the chips on the rail.'],
   3: ['Adjust the Gas and Stopwatch dials.'],
   4: ['Place a card in the slot.'],
-  5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.']
+  5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],
+  6: ['He 4 · Ne 20 · Ar 40 · Kr 84 g/mol.', 'Turn the Gas dial, then place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -317,7 +359,8 @@ export const SOLUTIONS = [
   [dial(PIN, 'time', 3), put('b', 'rail:0'), put('d', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
   [dial(PIN, 'time', 2), dial(PIN, 'ref', 3)],
   [put('hcl', 'slot:predict')],
-  [dial('tube', 'time', 6), { run: 'tube' }, put('hcl', 'slot:show')]
+  [dial('tube', 'time', 6), { run: 'tube' }, put('hcl', 'slot:show')],
+  [dial(PIN, 'ref', 2), put('b', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -326,7 +369,8 @@ export const MISSES = [
   [dial(PIN, 'time', 3), put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
   [dial(PIN, 'ref', 2)],
   [],
-  [dial('tube', 'time', 6), { run: 'tube' }, put('mid', 'slot:show')]
+  [dial('tube', 'time', 6), { run: 'tube' }, put('mid', 'slot:show')],
+  [dial(PIN, 'ref', 2), put('c', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

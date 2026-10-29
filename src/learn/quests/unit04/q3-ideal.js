@@ -14,6 +14,8 @@
  *   2  TEST: add gas until the two cylinders fill the same room         -> Molar Volume, Avogadro's law
  *   3  tanks against a reference: fewer, the same number, or more       -> Counting From a Gauge, the ideal gas law
  *   4  the number that pressure x room / amount x kelvin comes to       -> The Gas Constant
+ *   5  how many moles a tank's plate says it holds                       -> Using the Ideal Gas Law (a figure worked out)
+ *   6  which gas fills a sealed tank, from its plate and its mass        -> Molar Mass From a Tank
  *
  * (Cut as repeats or as arithmetic past the idea: the second gas constant for a gauge in atmospheres, naming a gas from its weight, the
  * density ranking, and the pellet of limestone, which were the same counting at AP depth.)
@@ -24,9 +26,9 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, R } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bmolar volume\b/i, introducedAt: 2 },
@@ -68,8 +70,15 @@ export const TANKS = [
 /** Stage 4's cards: the right one has its decimal point in the right place, and the others do not. */
 export const R_CARDS = [['n831', '8.31', 8.31], ['n0831', '0.0831', 0.0831], ['n83', '83.1', 83.1], ['n101', '101.3', 101.3]];
 
+/** Stage 5: the tank's plate, and the figures to lay: the moles, a decimal slip, a factor-of-ten slip and the gas constant itself. */
+export const PLATE = { gas: 'N2', P: 250, V: 10, T: 300 };
+export const MOLE_CARDS = [['a', '1.0 mol', 1.0], ['b', '0.10 mol', 0.1], ['c', '10 mol', 10], ['d', '8.3 mol', 8.3]];
+/** Stage 6: the sealed tank (the plate and its mass say what gas it is), and a card for each gas it could be. */
+export const SEALED = { gas: 'CO2', P: 250, V: 10, T: 300 };
+export const GAS_CARDS = [['n2', 'Nitrogen, 28 g/mol', 'N2'], ['o2', 'Oxygen, 32 g/mol', 'O2'], ['ar', 'Argon, 40 g/mol', 'Ar'], ['co2', 'Carbon dioxide, 44 g/mol', 'CO2']];
+
 /* ------------------------------------------------------------------
-   THE FOUR STAGES
+   THE SIX STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -79,9 +88,9 @@ export const STAGES = [
     prompt: 'One mole each of helium and carbon dioxide sit at one temperature under the same weight: which fills more room?',
     items: GUESSES,
     hints: [
-      'Choose one of the cards.',
-      'Consider whether molecular mass alters the volume of one mole of gas.',
-      'Select the card that matches your prediction.'
+      'Lay one card in the slot.',
+      'Ask what fixes the room a gas fills: how many particles are in it, or how heavy each one is.',
+      'Picture the same push on a piston from a few heavy particles and from the same number of light ones.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -146,7 +155,7 @@ export const STAGES = [
       hints: [
         'Sort each tank into one of the three trays.',
         'Compare each tank\'s gauge, room and temperature with Tank A\'s.',
-        'Higher pressure or room means more particles, while higher temperature means fewer particles for the same room.'
+        'Work out each tank\'s gauge times room, divided by its temperature, and compare it with Tank A\'s.'
       ],
       check(state) {
         const t = state.table;
@@ -199,7 +208,70 @@ export const STAGES = [
       reward: {
         log: 'One number ties every reading together.',
         title: 'The Gas Constant',
-        body: 'Pressure times room, divided by amount times kelvin, equals 8.31 for every reading in these units. That number is the gas constant, written R, and the whole relation PV = nRT is the ideal gas law.',
+        body: 'Pressure times room, divided by amount times kelvin, equals 8.31 for every reading in these units. That number is the gas constant, written R, and the whole relation PV = nRT is the ideal gas law.'
+      }
+    };
+  })()  ,
+
+  /* ---------------------------------------------------------------- 5 */
+  (() => {
+    const t = tank('x', 'TANK X', { x: 30, y: 33 }, { gas: PLATE.gas, P: PLATE.P, V: PLATE.V, T: PLATE.T, plate: true, gaugeMax: 300, fixed: true });
+    return {
+      title: 'Using the Ideal Gas Law',
+      prompt: 'Lay the card for how many moles of gas Tank X holds.',
+      widget,
+      table: gasTable({
+        pieces: [t, ...answerCards(MOLE_CARDS)],
+        zones: { slots: [answerSlot('Moles in Tank X')] }
+      }),
+      hints: [
+        'Read the tank\'s gauge, room and temperature from its face.',
+        'Put the figures into pressure times room, divided by the gas constant times kelvin.',
+        'Check the units: the gas constant is in kPa and litres, so use the gauge in kPa and the room in litres.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, MOLE_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const want = (PLATE.P * PLATE.V) / (R * PLATE.T);
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'That is more gas than the plate allows.' : 'That is less gas than the plate allows.' };
+      },
+      reward: {
+        log: 'Pressure times room over R times kelvin.',
+        title: 'Using the Ideal Gas Law',
+        body: 'Rearranged, PV = nRT gives n = PV ÷ RT = (250 × 10) ÷ (8.31 × 300), about 1.0 mol. Check the answer by size: a 10 L tank near room temperature holds roughly a mole at 250 kPa, not ten.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const t = tank('z', 'SEALED', { x: 30, y: 33 }, { gas: SEALED.gas, P: SEALED.P, V: SEALED.V, T: SEALED.T, plate: true, gaugeMax: 300, sealed: true, printMass: true, fixed: true });
+    return {
+      title: 'Molar Mass From a Tank',
+      prompt: 'Lay the card for the gas in the sealed tank.',
+      widget,
+      table: gasTable({
+        pieces: [t, ...answerCards(GAS_CARDS)],
+        zones: { slots: [answerSlot('Gas in the tank')] }
+      }),
+      hints: [
+        'Read the sealed tank\'s gauge, room, temperature and mass from its face.',
+        'Find how many moles the tank holds, then compare that with the mass.',
+        'The mass divided by the moles is the mass of one mole, which each card prints.'
+      ],
+      check(state) {
+        const t2 = state.table;
+        const card = cardIn(t2, 'answer');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const hit = GAS_CARDS.find(c => c[0] === card.id);
+        if (hit && hit[2] === SEALED.gas) return { ok: true };
+        return { ok: false, msg: 'That gas does not fit the sealed tank\'s plate.' };
+      },
+      reward: {
+        log: 'Mass over moles named the gas.',
+        title: 'Molar Mass From a Tank',
+        body: 'The tank holds about 1.0 mol and weighs 44 g, so one mole weighs 44 g: carbon dioxide. A gauge, a room, a temperature and a mass are enough to name an unlabelled gas.',
         last: true
       }
     };
@@ -211,7 +283,9 @@ const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn Holder 11\'s Gas in dial.'],
   3: ['Sort each tank into a tray.'],
-  4: ['Record readings, lay the straightedge,', 'then place a card in the slot.']
+  4: ['Record readings, lay the straightedge,', 'then place a card in the slot.'],
+  5: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
+  6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -297,7 +371,9 @@ export const SOLUTIONS = [
   [put('he', 'slot:predict')],
   [dial('rb', 'amount', 2)],
   [...sort({ b: 'same', c: 'more', d: 'fewer', e: 'fewer' })],
-  [dial(RIG, 'temp', 1), dial(RIG, 'amount', 1), { run: RIG }, dial(RIG, 'temp', 3), dial(RIG, 'amount', 2), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, put('n831', 'slot:answer')]
+  [dial(RIG, 'temp', 1), dial(RIG, 'amount', 1), { run: RIG }, dial(RIG, 'temp', 3), dial(RIG, 'amount', 2), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, put('n831', 'slot:answer')],
+  [put('a', 'slot:answer')],
+  [put('co2', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -305,7 +381,9 @@ export const MISSES = [
   [],
   [dial('rb', 'amount', 3)],
   [...sort({ b: 'more', c: 'more', d: 'fewer', e: 'fewer' })],
-  [dial(RIG, 'temp', 1), { run: RIG }, put('n83', 'slot:answer')]
+  [dial(RIG, 'temp', 1), { run: RIG }, put('n83', 'slot:answer')],
+  [put('c', 'slot:answer')],
+  [put('ar', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

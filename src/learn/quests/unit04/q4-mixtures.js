@@ -14,6 +14,7 @@
  *   3  open tanks until nitrogen is 60 percent of the push      -> Mole Fraction
  *   4  open each tank in turn, rank them by push                -> (the moles decide, never the weight)
  *   5  sort what changes as the air gets thinner                -> Thin Air
+ *   6  oxygen's own push in a tank, from its moles and the gauge -> Using Partial Pressures (a figure worked out)
  *
  * (Cut as repeats: the pour-until-400 stage, which the test of stage 2 already shows; the push of one gas from a share, which stage 3
  * reads off the tank; adding argon, which is stage 2 again; and the trap that pulls one gas out, which was the same counting.)
@@ -26,10 +27,10 @@ import { applyNotes } from '../../table/notes.js';
 import {
   gasTable, tank, chip, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, AIR, GASES
 } from '../../table/kits/gas.js';
-import { widget, put, dial, sort, cardIn, predictStage, youPredicted, guessOf } from './_shared.js';
+import { widget, put, dial, sort, cardIn, predictStage, youPredicted, guessOf, answerCards, answerSlot, answerOf } from './_shared.js';
 import { stmt } from '../../table/kits/gas.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bpartial pressures?\b/i, introducedAt: 2 },
@@ -70,6 +71,10 @@ export const HEIGHT_NAMES = ['Sea level', '3000 m', '5500 m', '8850 m'];
 export const AIR_T = 288.15;
 export const AIR_PARTS = AIR.map(a => ({ gas: a.gas, n: a.n / 100 }));
 
+/** Stage 6: a tank of nitrogen and oxygen whose face lists the moles of each, and the figures to lay: oxygen's own push, the slip of reading its moles as a share, nitrogen's push and the whole gauge. */
+export const BLEND_TANK = [{ gas: 'N2', n: 0.6 }, { gas: 'O2', n: 0.2 }];
+export const PUSH_CARDS = [['a', '50 kPa', 50], ['b', '40 kPa', 40], ['c', '150 kPa', 150], ['d', '200 kPa', 200]];
+
 const t10 = (id, label, at, gas, n, extra = {}) => tank(id, label, at, { gas, n, V: V0, T: T0, gaugeMax: 400, ...extra });
 
 /* ------------------------------------------------------------------
@@ -83,9 +88,9 @@ export const STAGES = [
     prompt: 'Neon is in a tank by itself, then helium is added to the same tank: what happens to neon\'s own pressure?',
     items: GUESSES,
     hints: [
-      'Place a card in the slot.',
-      'Consider whether particles of different gases interfere with each other at the container walls.',
-      'Select the card corresponding to your prediction.'
+      'Lay one card in the slot.',
+      'Picture neon\'s particles flying about the tank, and ask whether helium\'s particles change how often they reach a wall.',
+      'Ask whether one gas\'s knocks on the walls depend on what else is in the tank.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -256,7 +261,40 @@ export const STAGES = [
       reward: {
         log: 'Atmospheric pressure drops while mixture proportions stay constant.',
         title: 'Atmospheric Pressure at Altitude',
-        body: 'At higher altitudes, atmospheric pressure drops while the mole fraction of each gas stays constant. The partial pressure of oxygen decreases in direct proportion to the total pressure drop.',
+        body: 'At higher altitudes, atmospheric pressure drops while the mole fraction of each gas stays constant. The partial pressure of oxygen decreases in direct proportion to the total pressure drop.'
+      }
+    };
+  })()  ,
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const m = tank('m', 'TANK M', { x: 30, y: 33 }, { parts: BLEND_TANK, V: V0, T: T0, plate: true, gaugeMax: 300, fixed: true });
+    m.props.partsPlate = true;
+    return {
+      title: 'Using Partial Pressures',
+      prompt: 'Lay the card for the pressure oxygen alone makes in Tank M.',
+      widget,
+      table: gasTable({
+        pieces: [m, ...answerCards(PUSH_CARDS)],
+        zones: { slots: [answerSlot('Oxygen alone')] }
+      }),
+      hints: [
+        'Read the tank\'s gauge and the moles of each gas from its face.',
+        'Find oxygen\'s share of all the moles in the tank.',
+        'Multiply that share by the tank\'s gauge.'
+      ],
+      check(state) {
+        const v = answerOf(state.table, PUSH_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const r = planMixture(BLEND_TANK, T0, V0);
+        const want = r.rows.find(x => x.gas === 'O2').P;
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'Oxygen alone makes less than that.' : 'Oxygen alone makes more than that.' };
+      },
+      reward: {
+        log: 'A gas\'s share of the moles is its share of the gauge.',
+        title: 'Using Partial Pressures',
+        body: 'Oxygen is 0.2 of 0.8 mol, a mole fraction of 0.25, so its partial pressure is 0.25 × 200 kPa = 50 kPa. The partial pressures add back to the gauge: 150 + 50 = 200 kPa.',
         last: true
       }
     };
@@ -269,7 +307,8 @@ const NOTES = {
   2: ['Open both tanks, then place a card in the slot.'],
   3: ['Drag tanks into or out of the tray.'],
   4: ['Open one tank at a time to read its pressure,', 'then place it on the rail.'],
-  5: ['Turn the Height dial, then sort each reading into a tray.']
+  5: ['Turn the Height dial, then sort each reading into a tray.'],
+  6: ['Place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -358,7 +397,8 @@ export const SOLUTIONS = [
   [
     put('c', OPEN), put('c', 'rail:0'), put('a', OPEN), put('a', 'rail:1'), put('d', OPEN), put('d', 'rail:2'), put('b', OPEN), put('b', 'rail:3')
   ],
-  [dial(CT, 'volume', 4), ...sort({ o2share: 'stays', n2share: 'stays', o2push: 'falls', total: 'falls' })]
+  [dial(CT, 'volume', 4), ...sort({ o2share: 'stays', n2share: 'stays', o2push: 'falls', total: 'falls' })],
+  [put('a', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -367,7 +407,8 @@ export const MISSES = [
   [put('b', OPEN), put('a', OPEN), put('lower', 'slot:show')],
   [put('c', OPEN)],
   [put('d', 'rail:0'), put('b', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
-  [dial(CT, 'volume', 4), ...sort({ o2share: 'falls', n2share: 'stays', o2push: 'falls', total: 'falls' })]
+  [dial(CT, 'volume', 4), ...sort({ o2share: 'falls', n2share: 'stays', o2push: 'falls', total: 'falls' })],
+  [put('b', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

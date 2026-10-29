@@ -16,6 +16,7 @@
  *   3  carry the line of room against heat down to zero room       -> Absolute Zero, Kelvin, Charles's law
  *   4  PREDICT: a sealed tank cools by 50 degrees, what does its gauge do
  *   5  TEST: cool the tank and read what the gauge did             -> Gay-Lussac's law
+ *   6  the heater dial stops at 177 C: the room at 327 C            -> Using Charles's law (a figure worked from the bench)
  *
  * (Cut as repeats: the quarter-room stage and the knocks-double stage, which bench one's squeeze already works out; the weighted piston
  * fed with gas, which bench three finds again as the room one mole fills; the combined-law stage and the four plotted records.)
@@ -26,9 +27,9 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, markerFixture, markerRead, rigAt, cylRead } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, cardColumn } from './_shared.js';
+import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, cardColumn, answerCards, answerSlot, answerOf } from './_shared.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\babsolute zero\b/i, introducedAt: 3 },
@@ -69,6 +70,11 @@ export const ZERO_TOL = 10;
 export const COOL_TEMPS = [20, 0, -30, -80];
 export const COOL_AT = 3;
 
+/** Stage 6's heater, in degrees C; the room is asked for at BEYOND_C, past the last setting. The cards: the kelvin answer, the Celsius-ratio slip, a half-step and a tripling. */
+const REACH_TEMPS = [27, 77, 127, 177];
+const BEYOND_C = 327;
+export const REACH_CARDS = [['a', '49 L', 49], ['b', '290 L', 290], ['c', '36 L', 36], ['d', '73 L', 73]];
+
 /** How a tank's gauge changed between two settings, as the card that says so. */
 export function fallCard(from, to) {
   const drop = 1 - to / from;
@@ -86,9 +92,9 @@ export const STAGES = [
     prompt: 'A gas under a light piston is warmed from 20 °C to 40 °C: how much bigger does the room it fills get?',
     items: ROOM_GUESSES,
     hints: [
-      'Choose one of the cards.',
-      'Consider how heating affects gas particles under a free piston.',
-      'Select the card that matches your prediction.'
+      'Lay one card in the slot.',
+      'A free piston rises until the gas pushes back as hard as the weight pushes down: ask what heating does to that push.',
+      'Think about whether 40 is twice 20 on a scale that starts at the coldest possible gas.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -174,9 +180,9 @@ export const STAGES = [
     prompt: 'A sealed tank cools from 20 °C to −30 °C: what does its gauge do?',
     items: TANK_GUESSES,
     hints: [
-      'Choose one of the cards.',
-      'The tank is rigid, so volume is fixed; consider how cooling affects collisions.',
-      'Select the card that matches your prediction.'
+      'Lay one card in the slot.',
+      'The tank is rigid, so its room cannot change: ask what cooling does to the knocks on its walls.',
+      'Ask whether the gauge follows the Celsius figure or the kelvin figure the last bench found.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -224,6 +230,44 @@ export const STAGES = [
         };
       }
     };
+  })()  ,
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Holder 9', gas: 'He', n: 1, hold: 'P', V: 24, T: T20, P0: P_ATM }], temps: REACH_TEMPS, tempList: 'C', tempStart: 1, vmax: 60,
+      show: { gauge: false, amount: false, kelvin: true }
+    });
+    return {
+      title: 'Using Charles\'s Law',
+      prompt: `Lay the card for the room the gas would fill at ${BEYOND_C} °C, beyond the heater dial's last setting.`,
+      widget,
+      table: gasTable({
+        pieces: answerCards(REACH_CARDS),
+        fixtures: [r],
+        zones: { slots: [answerSlot('Room at 327 °C')] }
+      }),
+      hints: [
+        'Turn the "Heater" dial and read the room and the kelvin figure at each setting.',
+        'Divide the room by the kelvin figure at several settings and compare.',
+        'Multiply that quotient by the kelvin figure for 327 °C.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = answerOf(t, REACH_CARDS);
+        if (v == null) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const a = rigAt(t, RIG, { temp: 1 })[0];
+        const want = (a.V / a.T) * (BEYOND_C + 273.15);
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: 'That room does not fit the dial\'s settings carried on to 327 °C.' };
+      },
+      reward: {
+        log: 'Room over kelvin stayed the same.',
+        title: 'Using Charles\'s Law',
+        body: 'Room divided by kelvin is the same at every setting, about 0.081 L per K, so 600 K fills about 49 L. Always turn °C into kelvin before comparing temperatures: the Celsius figures would have given nearly 300 L.',
+        last: true
+      }
+    };
   })()
 ];
 
@@ -233,7 +277,8 @@ const NOTES = {
   2: ['Turn Holder 8\'s Heater dial.'],
   3: ['Record each setting, lay the straightedge,', 'then set the marker.'],
   4: ['Place a card in the slot.'],
-  5: ['Turn the Heater dial and Record,', 'then place a card in the slot.']
+  5: ['Turn the Heater dial and Record,', 'then place a card in the slot.'],
+  6: ['Turn the Heater dial,', 'then place a card in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -321,7 +366,8 @@ export const SOLUTIONS = [
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 2), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, dial(RIG, 'temp', 5), { run: RIG },
     { lay: { kind: 'straightedge', through: [0, 3] } }, dial('zero', 'value', -270)],
   [put('sixth', 'slot:predict')],
-  [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, put('sixth', 'slot:show')]
+  [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 3), { run: RIG }, put('sixth', 'slot:show')],
+  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 4), put('a', 'slot:answer')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -330,7 +376,8 @@ export const MISSES = [
   [dial('rb', 'temp', 2)],
   [dial(RIG, 'temp', 1), { run: RIG }, dial(RIG, 'temp', 5), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, dial('zero', 'value', -100)],
   [],
-  [dial(RIG, 'temp', 3), put('half', 'slot:show')]
+  [dial(RIG, 'temp', 3), put('half', 'slot:show')],
+  [dial(RIG, 'temp', 4), put('b', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

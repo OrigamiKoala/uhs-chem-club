@@ -39,7 +39,7 @@ export const UNIT_04 = {
       title: 'The Gas Laws',
       line: 'Squeeze, heat, and feed gas to find its laws.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q2-laws.js')
     },
@@ -48,7 +48,7 @@ export const UNIT_04 = {
       title: 'The Ideal Gas Law',
       line: 'Count sealed tanks with one equation.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q3-ideal.js')
     },
@@ -57,7 +57,7 @@ export const UNIT_04 = {
       title: 'Partial Pressures',
       line: "Split a tank's push gas by gas.",
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q4-mixtures.js')
     },
@@ -66,7 +66,7 @@ export const UNIT_04 = {
       title: 'Speed and Escape',
       line: 'Race gases through holes and tubes.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q5-speed.js')
     },

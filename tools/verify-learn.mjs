@@ -2509,6 +2509,16 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       holds(t.recorder.axes && t.recorder.axes.range && t.recorder.axes.range.xMin <= -273.15, `${q} stage 3: the strip does not run as far as absolute zero`);
       near(marker(done(b2, 2), 'zero'), -273.15, b2.ZERO_TOL, `${q} stage 3 (the marker)`);
     }
+    // Stage 6: the dial stops short of 327 C, one card is the room there by room over kelvin, and the Celsius-ratio slip is a card.
+    {
+      const t = start(b2, 5);
+      const temps = props(t, 'rig').temps;
+      holds(Math.max(...temps) < 327, `${q} stage 6: the dial reaches 327 C, so the figure can be read off`);
+      const a0 = rd(t, 'rig', { temp: 1 });
+      const real = (a0.V / a0.T) * (327 + 273.15);
+      holds(b2.REACH_CARDS.filter(c => Math.abs(c[2] - real) / real < 0.03).length === 1, `${q} stage 6: exactly one card should be the room at 327 C (${real.toFixed(1)} L)`);
+      holds(b2.REACH_CARDS.some(c => Math.abs(c[2] - a0.V * (327 / 27)) / (a0.V * (327 / 27)) < 0.05), `${q} stage 6: the Celsius-ratio slip is not a card`);
+    }
     // Stage 5: a sealed tank's gauge follows the kelvin temperature, and the card for -30 C is a sixth.
     {
       const t = start(b2, 4);
@@ -2553,6 +2563,20 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       }
       const card = Object.values(done(b3, 3).pieces).find(x => x.zone === 'slot:answer');
       near(card.props.value, G.R, 0.01, `${q} stage 4 (the card laid)`);
+    }
+    // Stage 5: one card is n = PV / RT from the plate, the slips are cards. Stage 6: mass over moles names the sealed gas, and no other card fits.
+    {
+      const n = (b3.PLATE.P * b3.PLATE.V) / (G.R * b3.PLATE.T);
+      holds(b3.MOLE_CARDS.filter(c => Math.abs(c[2] - n) / n < 0.03).length === 1, `${q} stage 5: exactly one card should be the moles PV/RT (${n.toFixed(3)})`);
+      holds(b3.MOLE_CARDS.some(c => Math.abs(c[2] - 10 * n) / (10 * n) < 0.03) && b3.MOLE_CARDS.some(c => Math.abs(c[2] - n / 10) / (n / 10) < 0.03), `${q} stage 5: the factor-of-ten slips are not cards`);
+      same(Object.values(done(b3, 4).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 5 (the card laid)`);
+      const sealed = start(b3, 5).pieces.z;
+      const nm = GK.tankMoles(sealed);
+      const molar = sealed.props.mass / nm;
+      const fits = b3.GAS_CARDS.filter(c => Math.abs(G.GASES[c[2]].M - molar) / molar < 0.03);
+      holds(fits.length === 1 && fits[0][2] === b3.SEALED.gas, `${q} stage 6: mass over moles (${molar.toFixed(1)}) does not single out ${b3.SEALED.gas}`);
+      holds(sealed.props.sealed === true && sealed.props.mass > 0, `${q} stage 6: the tank is not sealed and weighed`);
+      same(Object.values(done(b3, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'co2', `${q} stage 6 (the card laid)`);
     }
   }
 
@@ -2604,6 +2628,16 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
   }
 
+  /* ---- q4 stage 6: oxygen's own push is its mole share of the gauge; the mole-as-share slip and the whole gauge are cards ---- */
+  if (b4) {
+    const q = 'unit04/q4-mixtures';
+    const m = G.planMixture(b4.BLEND_TANK, 300, 10);
+    const o2 = m.rows.find(r => r.gas === 'O2').P;
+    holds(b4.PUSH_CARDS.filter(c => Math.abs(c[2] - o2) / o2 < 0.03).length === 1, `${q} stage 6: exactly one card should be oxygen's own push (${o2.toFixed(1)})`);
+    holds(b4.PUSH_CARDS.some(c => Math.abs(c[2] - m.P) / m.P < 0.03), `${q} stage 6: the whole gauge is not a card`);
+    same(Object.values(done(b4, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'a', `${q} stage 6 (the card laid)`);
+  }
+
   /* ---- q5-speed ---- */
   if (b5) {
     const q = 'unit04/q5-speed';
@@ -2638,6 +2672,20 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const last = start(b5, 4).fixtures.tube.props.times;
       holds(G.front('NH3', last[last.length - 1]) + G.front('HCl', last[last.length - 1]) >= r.length, `${q} stage 5: the stopwatch does not run until the gases meet`);
     }
+  }
+
+  /* ---- q5 stage 6: Graham's law from times; one card is the unknown's molar mass, the nearest reference's mass is a slip, and the unknown is not on the dial ---- */
+  if (b5) {
+    const q = 'unit04/q5-speed';
+    holds(!b5.MASS_GASES.includes(b5.UNKNOWN), `${q} stage 6: the unknown gas is on the reference dial, so it can be matched and not worked out`);
+    const M = G.GASES[b5.UNKNOWN].M;
+    holds(b5.MASS_CARDS.filter(c => Math.abs(c[2] - M) / M < 0.03).length === 1, `${q} stage 6: exactly one card should be the unknown's molar mass (${M.toFixed(1)})`);
+    const times = b5.MASS_GASES.map(g => G.halfTime(g, 300));
+    const near2 = times.map((x, k) => [k, Math.abs(x - G.halfTime(b5.UNKNOWN, 300))]).sort((x, y) => x[1] - y[1])[0][0];
+    const nearest = G.GASES[b5.MASS_GASES[near2]].M;
+    holds(b5.MASS_CARDS.some(c => Math.abs(c[2] - nearest) / nearest < 0.05), `${q} stage 6: the nearest reference's mass is not a card`);
+    holds(times.every((x, k) => !k || x > times[k - 1] + 0.5), `${q} stage 6: the reference gases do not leak at distinct paces`);
+    same(Object.values(done(b5, 5).pieces).find(x => x.zone === 'slot:answer')?.id, 'b', `${q} stage 6 (the card laid)`);
   }
 
   /* ---- q6-real ---- */
