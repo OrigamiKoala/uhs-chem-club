@@ -14,7 +14,7 @@
 import * as THREE from 'three';
 import { COLOR as MODEL_COLOR } from './model-parts-ligar.js';
 
-const RADIUS = { H: 0.2, C: 0.3, N: 0.29, O: 0.28, F: 0.25, B: 0.29, S: 0.34, Cl: 0.34, Xe: 0.38, Na: 0.36, K: 0.4, P: 0.33 };
+const RADIUS = { H: 0.2, C: 0.3, N: 0.29, O: 0.28, F: 0.25, B: 0.29, S: 0.34, Cl: 0.34, Br: 0.36, Xe: 0.38, Na: 0.36, K: 0.4, P: 0.33 };
 const LEN = { H: 0.74, default: 0.9 };
 const AMBER = 0xe59b24;
 
@@ -84,14 +84,14 @@ export function buildMolModel(c, { hub, vectors, yaw = 0, arrows = null, net = n
     arrows.forEach((a, i) => {
       const v = atomVectors[i];
       if (!v || Math.abs(a.d) < 0.01) return;
-      const from = a.d >= 0 ? 0.3 : 0.62;
-      const to = a.d >= 0 ? 0.62 : 0.3;
+      const from = a.d >= 0 ? 0.18 : 0.8;
+      const to = a.d >= 0 ? 0.8 : 0.18;
       const lift = k * 0.12;
       const p0 = pos(v.v, from);
       const p1 = pos(v.v, to);
       p0[1] += lift; p1[1] += lift;
-      g.add(rodBetween(p0, p1, k * 0.022, amber));
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(k * 0.06, k * 0.12, 10), amber);
+      g.add(rodBetween(p0, p1, k * 0.04, amber));
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(k * 0.11, k * 0.22, 10), amber);
       cone.position.set(...p1);
       cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]).normalize());
       g.add(cone);

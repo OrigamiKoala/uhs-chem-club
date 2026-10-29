@@ -17,10 +17,10 @@ import { planDomains, RIG_MOLECULES } from './vsepr.js';
 
 /** Display colours, in the plate's weathered palette. */
 export const COLOR = {
-  H: '#d8d2c4', C: '#4a4640', N: '#7b8794', O: '#a0522d', F: '#a3a86e', B: '#b08a6a', S: '#c9b04a', Cl: '#c9b66a', Xe: '#8a7fa0',
+  H: '#d8d2c4', C: '#4a4640', N: '#7b8794', O: '#a0522d', F: '#a3a86e', B: '#b08a6a', S: '#c9b04a', Cl: '#c9b66a', Xe: '#8a7fa0', Br: '#9a5a3a',
   Na: '#cfc8b8', K: '#b9b2a0', Mg: '#9aa08c', lone: '#5f584e', lobe: '#d99423', lobeAlt: '#8c8376'
 };
-const RADIUS = { H: 0.26, C: 0.4, N: 0.38, O: 0.36, F: 0.32, B: 0.38, S: 0.46, Cl: 0.46, Xe: 0.5, Na: 0.5, K: 0.56, Mg: 0.44 };
+const RADIUS = { H: 0.26, C: 0.4, N: 0.38, O: 0.36, F: 0.32, B: 0.38, S: 0.46, Cl: 0.46, Br: 0.5, Xe: 0.5, Na: 0.5, K: 0.56, Mg: 0.44 };
 const dim = el => RADIUS[el] || 0.35;
 
 /** Ball-and-stick molecules set by hand (display units): the ones a shape model cannot make (a pair, a chain). */

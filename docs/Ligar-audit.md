@@ -96,6 +96,8 @@ Work after this audit is recorded at the end of this file.
 - **q3-distance stage 1:** the two atoms on the track are drawn twice as large; the improvement is small and the stage is still a hunt for the lowest number (see priority 2).
 - **Re-evaluated:** `q2-lattice` stage 5 and `q7-polarity` stage 4 are application stages (use what was learned on a new case), not pure repeats, so they are kept. The first audit's call to cut them was too hasty.
 - **Seen but not fixed:** on `q7-polarity` the Arrows tool, dropped on a card, shows only a tiny tag and no readable arrow at the default 3D camera, so the "pulls" the stages tell the player to use are not visible.
+- **q7-polarity, new stage 1 "How Hard Each Atom Pulls"** (AP 2.1): lay the Arrows on H₂, HBr, HCl and KF, read the printed pull, and sort into "Shared evenly", "Pulled toward one" and "Taken by one". The reward names electronegativity and gives the numbers (0, 0.96, 3.16) and the rough 1.7 boundary for an ionic bond. HBr and KF were added to the molecule table (`vsepr.js`); the 3D arrows on a card are now longer and thicker so they can be seen. Later stages moved down one place (vocabulary stages, `verify:learn` indices and the world chart updated). Not done: the sort asks for a band, not a computed difference; HF is deliberately not used because the 1.7 rule would label it ionic.
+- **Unresolved, seen in 3D:** with the Arrows tool, my click-then-click and drag onto a card left the tool lying free over the card instead of joined, while the same join through the game's own action worked and `verify:table` (drag and two taps in 2D) passes. A student may hit this. Needs a real-hand test.
 
 ## Blockers and bugs logged, not fixed
 

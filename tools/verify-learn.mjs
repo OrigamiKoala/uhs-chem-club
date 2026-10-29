@@ -2111,25 +2111,33 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const polar = m => planDipole(m).polar;
     const end = i => TABLE.runScript(TABLE.createTable(q7.STAGES[i].table, q7.STAGES[i].title), q7.SOLUTIONS[i], { strict: true });
     const start = i => TABLE.createTable(q7.STAGES[i].table, q7.STAGES[i].title);
+    // 0. the pull sort: every card's printed pull falls in one tray by the thresholds, and each tray holds at least one
+    {
+      const t = end(0);
+      const ids = ['a', 'b', 'c', 'd'];
+      const band = m => { const d = planDipole(m).mag; return d < 0.4 ? 'none' : d < 1.7 ? 'part' : 'taken'; };
+      for (const id of ids) same(t.pieces[id].zone, `tray:${band(t.pieces[id].props.mol)}`, `unit03/q7-polarity stage 1 (${t.pieces[id].props.mol})`);
+      holds(['none', 'part', 'taken'].every(z => ids.some(id => band(t.pieces[id].props.mol) === z)), 'unit03/q7-polarity stage 1: a tray is never needed');
+    }
     // 1. chlorine pulls harder; the card is set so that it stays when the field comes on, and it does not start that way
     {
       if (!(EN.Cl > EN.H)) fail('unit03/q7-polarity stage 1: chlorine does not pull harder than hydrogen');
-      holds(DOM.dmolBehaviour(end(0).pieces.a, end(0)).aligned, 'unit03/q7-polarity stage 1: the solution is not set the way the field wants it');
-      const s0 = start(0);
+      holds(DOM.dmolBehaviour(end(1).pieces.a, end(1)).aligned, 'unit03/q7-polarity stage 1: the solution is not set the way the field wants it');
+      const s0 = start(1);
       const put = TABLE.apply(s0, { place: { piece: 'a', to: 'free:37,21' } });
       holds(!DOM.dmolBehaviour(put.pieces.a, put).aligned, 'unit03/q7-polarity stage 1: the card starts already set the way the field wants it');
     }
     // 2. the predict stage holds the guesses and no instrument; the obvious answer (strong polar bonds, so it turns) is a card, and it is wrong
     {
-      const t0 = start(1);
-      holds(q7.STAGES[1].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q7-polarity stage 2: the predict stage shows an instrument');
+      const t0 = start(2);
+      holds(q7.STAGES[2].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q7-polarity stage 2: the predict stage shows an instrument');
       holds(['turns', 'stays'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 2, 'unit03/q7-polarity stage 2: the guesses are the two cards and nothing else');
       same(polar('CO2'), false, 'unit03/q7-polarity stage 2 (carbon dioxide does not turn)');
       holds(planDipole('CO2').arrows.every(a => Math.abs(a.d) > 0.8), 'unit03/q7-polarity stage 2: carbon dioxide\'s bonds are not strongly polar');
     }
     // 3. five molecules, sorted by the planner's own dipole: the rule of thumb (polar bonds, so polar) fails for two, and the bonds of every one are polar
     {
-      const t = end(2);
+      const t = end(3);
       const mols = ['a', 'b', 'c', 'd', 'e'].map(id => [id, t.pieces[id].props.mol]);
       for (const [id, mol] of mols) same(t.pieces[id].zone, `tray:${polar(mol) ? 'turns' : 'stays'}`, `unit03/q7-polarity stage 3 (${mol})`);
       holds(mols.filter(([, m]) => polar(m)).length === 3 && mols.filter(([, m]) => !polar(m)).length === 2, 'unit03/q7-polarity stage 3: the sort is not three that turn and two that stay');
@@ -2138,13 +2146,13 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
     // 4. the streams that bend are the ones whose molecules turn
     {
-      const t = end(3);
+      const t = end(4);
       const real = ['s1', 's2', 's3'].filter(id => polar(t.pieces[id].props.mol));
       same(['s1', 's2', 's3'].filter(id => t.pieces[id].zone === 'tray:bent').join(), real.join(), 'unit03/q7-polarity stage 4 (the liquids a charged rod bends)');
-      holds(!Object.keys(start(3).fetch).length, 'unit03/q7-polarity stage 4: sends the player to fetch something the bench already holds');
+      holds(!Object.keys(start(4).fetch).length, 'unit03/q7-polarity stage 4: sends the player to fetch something the bench already holds');
     }
     // The shapes the reward cards stand up are real rig molecules.
-    for (const [i, mol] of [[0, 'HCl'], [2, 'H2O']]) same(q7.STAGES[i].reward.model?.mol ?? q7.STAGES[i].reward.model, mol, `unit03/q7-polarity stage ${i + 1} (the reward model)`);
+    for (const [i, mol] of [[1, 'HCl'], [3, 'H2O']]) same(q7.STAGES[i].reward.model?.mol ?? q7.STAGES[i].reward.model, mol, `unit03/q7-polarity stage ${i + 1} (the reward model)`);
     // The gap the cards are put in holds a card, in every stage that has plates.
     q7.STAGES.forEach((st, i) => {
       for (const f of Object.values(start(i).fixtures).filter(x => x.kind === 'plates')) {

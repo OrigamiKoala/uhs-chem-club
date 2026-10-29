@@ -85,7 +85,7 @@ export const UNIT_03 = {
       title: 'Polarity',
       line: 'Determine molecular polarity from bond dipoles and symmetry.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q7-polarity.js')
     },

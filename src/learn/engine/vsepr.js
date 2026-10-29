@@ -167,6 +167,8 @@ export const RIG_MOLECULES = {
   H2: { id: 'H2', label: 'H₂', hub: 'H', arms: [A('H')] },
   HCl: { id: 'HCl', label: 'HCl', hub: 'H', arms: [A('Cl')] },
   NaCl: { id: 'NaCl', label: 'NaCl', hub: 'Na', arms: [A('Cl')] },
+  HBr: { id: 'HBr', label: 'HBr', hub: 'H', arms: [A('Br')] },
+  KF: { id: 'KF', label: 'KF', hub: 'K', arms: [A('F')] },
   CO2: { id: 'CO2', label: 'CO₂', hub: 'C', arms: [A('O', 2), A('O', 2)] },
   H2O: { id: 'H2O', label: 'H₂O', hub: 'O', arms: [A('H'), A('H'), L(), L()] },
   NH3: { id: 'NH3', label: 'NH₃', hub: 'N', arms: [A('H'), A('H'), A('H'), L()] },

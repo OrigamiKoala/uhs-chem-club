@@ -37,13 +37,14 @@ import {
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bmolecular dipoles?\b|\bdipoles?\b/i, introducedAt: 3 },
-  { term: /\bnonpolar\b/i, introducedAt: 3 },
-  { term: /\bpolar\b/i, introducedAt: 1 },
-  { term: /\bpartial charges?\b/i, introducedAt: 1 }
+  { term: /\belectronegativ\w*/i, introducedAt: 1 },
+  { term: /\bmolecular dipoles?\b|\bdipoles?\b/i, introducedAt: 4 },
+  { term: /\bnonpolar\b/i, introducedAt: 4 },
+  { term: /\bpolar\b/i, introducedAt: 2 },
+  { term: /\bpartial charges?\b/i, introducedAt: 2 }
 ];
 
 export const BUILDS_ON = ['unit03/q6-shape', 'unit03/q1-joins', 'unit02/q8-trends'];
@@ -69,6 +70,7 @@ export function toolNoteFor() { return null; }
 const PLATES_BIG = { at: { x: 52, y: 21 }, size: { w: 100, h: 40 } };
 const PLATES_SHORT = { at: { x: 37, y: 20 }, size: { w: 70, h: 38 } };
 
+const pullRow = i => ({ x: 13 + i * 27, y: 53 });
 const rowAt = (i, y = 53) => ({ x: 15 + i * 28, y });
 /** The trays stand in a grid at the right of the plates. */
 const TRAY_SPOTS = [{ x: 100, y: 19 }, { x: 133, y: 19 }, { x: 100, y: 50 }, { x: 133, y: 50 }];
@@ -78,6 +80,45 @@ const grid = labels => labels.map(([id, label], i) => ({ id, label, at: { ...TRA
    THE FOUR STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
+  /* ---------------------------------------------------------------- 1 */
+  {
+    title: 'How Hard Each Atom Pulls',
+    prompt: 'Sort each molecule by how unevenly its two atoms share the bond pair: not at all, partly, or one atom takes it.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        molCard('a', 'H2', pullRow(0), {}), molCard('b', 'HBr', pullRow(1), {}), molCard('c', 'KF', pullRow(2), {}),
+        molCard('d', 'HCl', pullRow(3), {}),
+        arrowsTool('ar', { x: 128, y: 53 })
+      ],
+      zones: { trays: [
+        { id: 'none', label: 'Shared evenly', at: { x: 26, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
+        { id: 'part', label: 'Pulled toward one', at: { x: 75, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
+        { id: 'taken', label: 'Taken by one', at: { x: 124, y: 20 }, size: { w: 46, h: 24 }, cell: 22 }
+      ] }
+    }),
+    hints: [
+      'Use the arrows, the molecules and the three trays.',
+      'Lay the arrows on a molecule and read the number printed on its card, then do the same for the others.',
+      'A reading of zero means the bond pair is shared evenly; the larger the reading, the more one atom pulls the pair its way.'
+    ],
+    check(state) {
+      const t = state.table;
+      const ids = ['a', 'b', 'c', 'd'];
+      const where = Object.fromEntries(ids.map(id => [id, ['none', 'part', 'taken'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all four molecules into trays.' };
+      const band = id => { const d = molRead(t.pieces[id]).net; return d < 0.4 ? 'none' : d < 1.7 ? 'part' : 'taken'; };
+      const wrong = ids.find(id => where[id] !== band(id));
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that its printed reading does not fit.` };
+      return { ok: true };
+    },
+    reward: {
+      log: 'The bigger the difference in pull, the more one-sided the bond.',
+      title: 'Electronegativity',
+      body: 'Electronegativity is how strongly an atom pulls shared electrons toward itself. The number on each card is the difference between its two atoms: 0 for H₂, 0.96 for HCl, 3.16 for KF. Above about 1.7 the pair is taken over entirely, which is an ionic bond.'
+    }
+  },
+
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Which End',
@@ -300,6 +341,7 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
+  [lay('ar', 'b'), lay('ar', 'd'), lay('ar', 'a'), lay('ar', 'c'), into('b', 'part'), into('d', 'part'), into('a', 'none'), into('c', 'taken')],
   [gap('a'), { flip: 'a' }],
   [guess('stays')],
   [
@@ -311,6 +353,7 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
+  [into('a', 'part'), into('b', 'none'), into('c', 'none'), into('d', 'none')],
   [gap('a')],
   [],
   [into('a', 'turns'), into('b', 'turns'), into('c', 'stays'), into('d', 'turns'), into('e', 'turns')],
