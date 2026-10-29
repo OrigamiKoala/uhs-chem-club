@@ -91,6 +91,18 @@ function pairsAt(y, xs, list) {
   return list.flatMap(([ia, ea, ib, eb], k) => [atomAt(ia, ea, xs[k], y), atomAt(ib, eb, xs[k] + 12, y)]);
 }
 
+/**
+ * The same pairs in a 2 x 2 grid (rows `ys`, left atoms at `xs`), with the pairs far enough apart that a drag toward a partner can never
+ * land on a stranger.
+ */
+function pairsGrid(ys, xs, list) {
+  return list.flatMap(([ia, ea, ib, eb], k) => {
+    const x = xs[k % 2];
+    const y = ys[Math.floor(k / 2)];
+    return [atomAt(ia, ea, x, y), atomAt(ib, eb, x + 16, y)];
+  });
+}
+
 /** Where a pair stood, from the stage's own declaration: used by the checks to tell a pair from a stranger. */
 const mates = pairs => pairs.map(([a, , b]) => [a, b]);
 
@@ -140,8 +152,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_2,
-      pieces: pairsAt(12, [10, 40, 70, 100], P2),
-      zones: { trays: [trayAt('held', 'Stayed together', 36, 38, 44, 16), trayAt('apart', 'Came apart', 92, 38, 44, 16)] }
+      pieces: pairsGrid([10, 27], [22, 82], P2),
+      zones: { trays: [trayAt('held', 'Stayed together', 36, 50, 44, 16), trayAt('apart', 'Came apart', 92, 50, 44, 16)] }
     }),
     hints: [
       'Use the atoms and the two trays.',
@@ -177,8 +189,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
-      pieces: pairsAt(12, [10, 40, 70, 100], P3),
-      zones: { trays: [trayAt('handed', 'Handed over', 36, 38, 44, 16), trayAt('shared', 'Shared', 92, 38, 44, 16)] }
+      pieces: pairsGrid([10, 27], [22, 82], P3),
+      zones: { trays: [trayAt('handed', 'Handed over', 36, 50, 44, 16), trayAt('shared', 'Shared', 92, 50, 44, 16)] }
     }),
     hints: [
       'Use the atoms and the two trays.',

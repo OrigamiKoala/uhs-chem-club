@@ -91,6 +91,7 @@ Work after this audit is recorded at the end of this file.
 
 - **q3-distance, new stage 6 "A Salt Not Yet Heated"** (AP 2.3): rail NaF, NaCl, KCl and MgO by how hard the ions are held, with no hotplate. NaF is the one salt the player never melted, so the printed charges and centre distances are the only evidence. The reward states Coulomb's law as charge product over distance and shows the numbers (1/235, 1/283, 1/319, 4/212; MgO is about five times NaCl, against 3795 and 787 kJ/mol measured). Verified: `verify:learn`, `verify:table`, `verify:story`, `verify:docs`, `verify:ligar`; stage rendered in 3D with no console errors. Not done: the stage still asks for a ranking, not a computed number; a proportional "double the charge" stage and a plot-legibility fix for stage 1 remain.
 - **q5-resonance, four new stages (4–7)** (AP 2.6, formal charge): "Who Owns What" (stamp the atoms of CO and mark the positive one), "Do the Count" (set a dial to the formal charge of ozone's middle oxygen, no stamp, so the player does the arithmetic), "Two Drawings" (CO₂: choose the drawing with charges nearest zero) and "Where the Minus Goes" (SCN⁻: negative charge on the atom that pulls harder). These stages were retired earlier from the same bench; the kit and engine still supported them, so they were restored with the new dial stage and Tour steps for Stamp and Mark (`tour-ligar.js`). Practice set now holds two formal-charge questions. Also fixed a legibility bug in the shared slate painter (`atoms.js`): lone pairs on an atom at the far side of a slate hid behind its puck at 3D On, so they now swing sideways. Verified: `verify:table`, `learn`, `docs`, `story`, `ligar`, `bench`. Not done: nitrate and carbonate (three structures, fractional bond order) are still only practice questions.
+- **q1-joins stages 2, 3 (and 5 left as is), layout:** pairs moved from one crowded row into a 2 x 2 grid, 60 units apart, so a drag toward a partner can no longer land on a stranger, with larger readable atoms and shorter trays. Replayed by `verify:table` (drag and two taps) and `verify:learn`; looked at in 3D. Stage 5's row of four pairs is unchanged and still crowded.
 
 ## Blockers and bugs logged, not fixed
 
@@ -105,3 +106,10 @@ Work after this audit is recorded at the end of this file.
 3. **Cut or merge repeated stages**: `q2-lattice` stage 5, `q7-polarity` stage 4, and the listing-the-category sorts in `q1-joins`.
 4. **Add the missing quantitative and conceptual content**: electronegativity and bond type (ΔEN), 5 and 6 domain shapes, alloys, hybridization from a formula.
 5. **Mark `q9-orbitals` as optional enrichment** and cut its on-table load.
+
+## Open defects not fixed
+
+- **`q8-hybrid` stage 3 renders almost black at 3D On.** Diagnosed this far: the lean-in camera pose is the normal 55° one, the ground texture is painted (non-empty canvas), the mat and ground meshes are visible, no console errors, and hiding the mixer fixture does not change the picture. Cause not found. A student cannot see the mixing bowl, so this stage cannot teach until it is fixed.
+- **Camera drag on a missed grab.** In `q6-shape` stage 3 a drag that started on empty plate moved the view until the table was out of sight. The code clamps look to about ±0.2 rad, so it may have been something else (a dragged piece), not reproduced.
+- **`q1-joins` stage 5** still uses the crowded single row.
+- Everything in the revised priority list below item 1 is still to do: `q6` number entry, `q3` stages 1 and 2, repeated stages in `q2` and `q7`, electronegativity and bond type, 5 and 6 domain shapes, alloys, optional label on `q9`.
