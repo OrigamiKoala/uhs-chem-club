@@ -21,10 +21,10 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, phaseCard, stmt, tag, note, chamberFixture, shakesOf, whereIs, waysOf
+  heatTable, phaseCard, stmt, tag, note, chamberFixture, shakesOf, whereIs, waysOf, plaqueFixture, markerFixture, markerRead, FORMATION_TABLE, fixed
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 4 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
   { term: /\bentropy\b/i, introducedAt: 2 },
@@ -54,6 +54,10 @@ const tally = (t, n) => shakesOf(t, 'chamber').filter(s => s.filter(c => c <= 4)
 /* ------------------------------------------------------------------
    THE FOUR STAGES
    ------------------------------------------------------------------ */
+const S0 = id => FORMATION_TABLE[id].S0;
+// Stage 5: CaCO3(s) -> CaO(s) + CO2(g), products less reactants.
+const DS_LIME = S0('CaO(s)') + S0('CO2(g)') - S0('CaCO3(s)');
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
@@ -204,6 +208,41 @@ export const STAGES = [
       title: 'Solid, Liquid, Gas, and Warming',
       body: 'For a substance, entropy increases from solid to liquid to gas as spatial microstates increase. Increasing temperature also increases entropy because thermal energy can be distributed across more accessible energy levels.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 5 */
+  {
+    id: 's5-table',
+    title: 'Entropy From a Table',
+    prompt: 'Set the marker to the entropy change ΔS for CaCO₃(s) → CaO(s) + CO₂(g), in J/(mol·K).',
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('s0', 'Entropy of one mole at 298 K, J/(mol·K)', { x: 50, y: 30 }, [
+          `CaCO₃(s)    ${S0('CaCO3(s)')}`,
+          `CaO(s)    ${S0('CaO(s)')}`,
+          `CO₂(g)    ${S0('CO2(g)')}`
+        ], { w: 76 }),
+        markerFixture('dS', 'Entropy change', { x: 116, y: 30 }, { min: 0, max: 400, step: 5, start: 0, unit: 'J/(mol·K)', w: 56 })
+      ]
+    }),
+    hints: [
+      'Use the plate of entropies and the marker.',
+      'Compare what the reaction ends with and what it starts with, one mole of each substance.',
+      'Add the entropies of the substances the reaction makes, then take away the entropy of the one it uses up.'
+    ],
+    check(state) {
+      const v = markerRead(state.table, 'dS');
+      if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the entropy change.' };
+      if (Math.abs(v - DS_LIME) <= 3) return { ok: true };
+      if (Math.abs(v - (S0('CaO(s)') + S0('CO2(g)'))) <= 3) return { ok: false, msg: `The marker reads ${v} J/(mol·K), which is the entropy of what the reaction makes, with nothing taken off.` };
+      return { ok: false, msg: `The marker reads ${v} J/(mol·K). The reaction turns a solid into a solid and a gas.` };
+    },
+    reward: {
+      log: 'ΔS for the limestone reaction came to +160 J/(mol·K).',
+      title: 'ΔS From the Table',
+      body: 'The entropy change is the entropies of the products less those of the reactants, each times its moles: (38.1 + 213.8) − 91.7 = +160.2 J/(mol·K). The positive sign matches what the sort showed: a solid became a solid and a gas.'
+    }
   }
 ];
 
@@ -212,7 +251,8 @@ const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Press "Shake" again and again;', 'drag a card into the slot.'],
   3: ['Drag each change into a tray.'],
-  4: ['Drag the boxes along the rail into order.']
+  4: ['Drag the boxes along the rail into order.'],
+  5: ['Set the marker.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -299,7 +339,8 @@ export const SOLUTIONS = [
   [put('spread', 'slot:guess')],
   [...shakes(30), put('spread', 'slot:answer')],
   [...sort({ melt: 'more', lime: 'more', haber: 'fewer', dew: 'fewer' })],
-  [put('ice', 'rail:0'), put('cold', 'rail:1'), put('hot', 'rail:2'), put('steam', 'rail:3')]
+  [put('ice', 'rail:0'), put('cold', 'rail:1'), put('hot', 'rail:2'), put('steam', 'rail:3')],
+  [{ setDial: { fixture: 'dS', dial: 'value', value: 160 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -307,7 +348,8 @@ export const MISSES = [
   [],
   [...shakes(30), put('left', 'slot:answer')],
   [...sort({ melt: 'fewer', lime: 'more', haber: 'fewer', dew: 'fewer' })],
-  [put('hot', 'rail:0'), put('ice', 'rail:1'), put('cold', 'rail:2'), put('steam', 'rail:3')]
+  [put('hot', 'rail:0'), put('ice', 'rail:1'), put('cold', 'rail:2'), put('steam', 'rail:3')],
+  [{ setDial: { fixture: 'dS', dial: 'value', value: 250 } }]
 ];
 
 function blankState() { return {}; }
@@ -331,5 +373,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { TOTAL_WAYS, CROWDED_WAYS };
+export const CHECKS = { TOTAL_WAYS, CROWDED_WAYS, DS_LIME };
 export { shakesOf, waysOf };

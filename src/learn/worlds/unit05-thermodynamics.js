@@ -58,7 +58,7 @@ export const UNIT_05 = {
       title: 'Bond Enthalpies',
       line: 'Estimate reaction enthalpy by balancing the energy required to break bonds with energy released forming bonds.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit05/q4-bonds.js')
     },
@@ -76,7 +76,7 @@ export const UNIT_05 = {
       title: 'Entropy',
       line: 'Model particle dispersal across microstates and evaluate entropy changes across phase transitions and reactions.',
       arena: 'bench',
-      stageCount: 4,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q6-entropy.js')
     },

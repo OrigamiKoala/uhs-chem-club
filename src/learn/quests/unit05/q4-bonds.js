@@ -29,7 +29,7 @@ import {
   whereIs, bondEnthalpySum, BOND_ENTHALPIES, signedKJ
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bbond enthalpy\b/i, introducedAt: 2 }
@@ -56,6 +56,8 @@ const CH4_SUMS = bondEnthalpySum(CH4_BROKEN, CH4_FORMED);   // broken 2648, form
 const NO_BROKEN = [{ bond: 'N≡N', count: 1 }, { bond: 'O=O', count: 1 }];
 const NO_FORMED = [{ bond: 'N=O', count: 2, dH: 631 }];
 const NO_SUMS = bondEnthalpySum(NO_BROKEN, NO_FORMED);      // broken 1443, formed 1262, net +181
+
+const HCL_SUMS = bondEnthalpySum([{ bond: 'H-H', count: 1 }, { bond: 'Cl-Cl', count: 1 }], [{ bond: 'H-Cl', count: 2 }]);   // broken 678, formed 862, net -184
 
 const HH = BOND_ENTHALPIES['H-H'].dH;
 
@@ -256,6 +258,50 @@ export const STAGES = [
       title: 'Endothermic Bond Balance',
       body: 'Forming product bonds releases 181 kJ less than breaking reactant bonds costs. Because bond breaking exceeds bond formation, ΔH is positive (+181 kJ/mol) and the reaction absorbs heat from the surroundings.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-estimate',
+    title: 'Estimating a ΔH',
+    prompt: 'Set the marker to the estimated ΔH for H₂ + Cl₂ → 2 HCl, in kJ.',
+    widget,
+    table: heatTable({
+      pieces: [
+        bondChip('hh', 'H-H', { x: 17, y: 16 }, { note: 'hydrogen' }),
+        bondChip('cc', 'Cl-Cl', { x: 17, y: 30 }, { note: 'chlorine' }),
+        bondChip('hc', 'H-Cl', { x: 17, y: 44 }, { count: 2, note: 'hydrogen chloride' })
+      ],
+      fixtures: [
+        ledgerFixture('ledger', { x: 121, y: 20 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 50, title: 'H₂ + Cl₂ → 2 HCl' }),
+        markerFixture('dH', 'Estimated ΔH', { x: 121, y: 48 }, { min: -400, max: 400, step: 2, start: -400, unit: 'kJ', w: 52 })
+      ],
+      zones: {
+        trays: [
+          { id: 'broken', label: 'Broken', at: { x: 66, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },
+          { id: 'formed', label: 'Formed', at: { x: 66, y: 50 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 }
+        ]
+      }
+    }),
+    hints: [
+      'Use the three bond chips, the two trays, the ledger and the marker.',
+      'Compare the Broken total with the Formed total once every chip is in its tray.',
+      'Take the energy to break the bonds and subtract the energy released by forming the new ones.'
+    ],
+    check(state) {
+      const t = state.table;
+      const v = markerRead(t, 'dH');
+      if (v === -400) return { ok: false, notYet: true, msg: 'Set the estimate you worked out.' };
+      const r = ledgerRead(t, 'ledger');
+      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Put every bond chip in a tray first.' };
+      if (Math.abs(v - HCL_SUMS.net) <= 2 && r.net === HCL_SUMS.net) return { ok: true };
+      return { ok: false, msg: `The ledger reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
+    },
+    reward: {
+      log: 'Bond enthalpies gave ΔH = −184 kJ for two moles of HCl.',
+      title: 'Estimating ΔH',
+      body: 'Add the energy of every bond broken (436 + 242 = 678 kJ), subtract the energy of every bond formed (2 × 431 = 862 kJ), and the estimate is −184 kJ. It is an estimate because bond enthalpies are averages over many molecules.'
+    }
   }
 ];
 
@@ -265,7 +311,8 @@ const NOTES = {
   2: ['Turn the "Crank" dial, then set the marker.'],
   3: ['Drag each chip into a tray.'],
   4: ['Drag the card you choose into the slot.'],
-  5: ['Drag a card into the slot.']
+  5: ['Drag a card into the slot.'],
+  6: ['Drag each chip into a tray, then set the marker.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -354,7 +401,8 @@ export const SOLUTIONS = [
   [dial('crank', 'pull', 7), dial('change', 'value', HH)],
   [...sort({ ch: 'broken', oo: 'broken', co: 'formed', oh: 'formed' })],
   [put('cool', 'slot:guess')],
-  [put('cool', 'slot:answer')]
+  [put('cool', 'slot:answer')],
+  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), dial('dH', 'value', -184)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -363,7 +411,8 @@ export const MISSES = [
   [dial('crank', 'pull', 7), dial('change', 'value', -HH)],
   [...sort({ ch: 'broken', oo: 'formed', co: 'formed', oh: 'formed' })],
   [],
-  [put('warm', 'slot:answer')]
+  [put('warm', 'slot:answer')],
+  [...sort({ hh: 'broken', cc: 'broken', hc: 'formed' }), dial('dH', 'value', 184)]
 ];
 
 function blankState() { return {}; }
@@ -387,5 +436,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { CH4_SUMS, NO_SUMS, CH4_BROKEN, CH4_FORMED, NO_BROKEN, NO_FORMED, HH };
+export const CHECKS = { HCL_SUMS, CH4_SUMS, NO_SUMS, CH4_BROKEN, CH4_FORMED, NO_BROKEN, NO_FORMED, HH };
 export { ledgerRead, wellRead };

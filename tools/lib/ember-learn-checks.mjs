@@ -24,7 +24,8 @@ const LEAKS = {
   'q6-entropy': {
     2: [/outnumber/i, /\bmost\b/i, /\bspread\b/i, /\b70\b|\b68\b/],
     3: [/\bgas\b/i, /\bmoles?\b/i, /room/i],
-    4: [/room|faster|motion|streak/i]
+    4: [/room|faster|motion|streak/i],
+    5: [/\b160\b/, /subtract|minus|less/i, /\bproducts?\b.*\breactants?\b/i]
   },
   'q5-hess': {
     2: [/state function/i, /\bsame total\b/i, /path|route.*(cannot|never)/i],
@@ -34,7 +35,8 @@ const LEAKS = {
   'q4-bonds': {
     2: [/\b436\b/, /positive/i, /\bplus\b/i, /\+/],
     3: [/starting/i, /reactant/i, /product/i],
-    5: [/larger|bigger|greater/i, /\bcool/i, /\bsubtract|minus/i]
+    5: [/larger|bigger|greater/i, /\bcool/i, /\bsubtract|minus/i],
+    6: [/\b184\b/, /\bsubtract|minus/i]
   },
   'q3-enthalpy': {
     1: [/\b160\b/, /divid/i, /per mole.*8,?000/i],
@@ -242,7 +244,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e4 = mods['q4-bonds'];
   if (e4) {
     const q = 'unit05/q4-bonds';
-    holds(e4.STAGES.length === 5, `${q} should have five stages`);
+    holds(e4.STAGES.length === 6, `${q} should have six stages`);
     {
       const t = run(start(e4, 1), [{ setDial: { fixture: 'crank', dial: 'pull', value: 7 } }]);
       near(HK.wellRead(t, 'crank').E, TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 2 (the cost of H–H)`);
@@ -266,6 +268,11 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(r.net > 0 && r.broken > r.formed, `${q} stage 5: the reaction in air does not climb`);
       same(e4.STAGES[4].check(e4.stateFor(4, e4.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
       holds(Boolean(e4.STAGES[3].predict) && !Object.values(start(e4, 3).fixtures).length, `${q} stage 4: the predict stage shows an instrument`);
+      // Stage 6: the ledger the player fills, and the estimate it gives for the formation of hydrogen chloride.
+      const hc = done(e4, 5);
+      near(HK.ledgerRead(hc, 'ledger').net, e4.CHECKS.HCL_SUMS.net, 1e-9, `${q} stage 6 (the ledger as laid)`);
+      near(e4.CHECKS.HCL_SUMS.net, -184, 1e-9, `${q} stage 6 (H₂ + Cl₂ → 2 HCl)`);
+      near(HK.markerRead(hc, 'dH'), e4.CHECKS.HCL_SUMS.net, 2, `${q} stage 6 (the marker)`);
     }
   }
 
@@ -335,6 +342,11 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const S = TD.FORMATION_TABLE;
       holds(S['H2O(s)'].S0 < S['H2O(l)'].S0 && S['H2O(l)'].S0 < S['H2O(g)'].S0, `${q} stage 4: the entropy table disagrees with the order`);
       holds(TD.entropyOfHeating(100, 4.184, 10, 80) > 0, `${q} stage 4: warming does not raise the entropy`);
+    }
+    {
+      near(e6.CHECKS.DS_LIME, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0'), 1e-9, `${q} stage 5 (ΔS from the table)`);
+      same(e6.STAGES[4].check(e6.stateFor(4, e6.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
+      same(e6.STAGES[4].check(e6.stateFor(4, e6.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
     }
   }
 
