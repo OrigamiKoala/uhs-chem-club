@@ -138,7 +138,7 @@ registerFixture('eqboard', { paint: paintBoard });
    THE PARTICLE WINDOW
    ------------------------------------------------------------------ */
 
-const K = 1.25;
+const K = 2;
 const CAP = 24;
 const GAP = 0.8;
 const LABEL_W = 10;
