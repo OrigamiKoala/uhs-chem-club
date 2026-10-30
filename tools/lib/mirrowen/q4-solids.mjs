@@ -27,7 +27,8 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   // The kind of every sample is the CED's: metals flatten and light the lamp cold; salts shatter and light it only molten; the rest do not light it cold.
   for (const id of Object.keys(S)) {
     const s = S[id];
-    if (s.kind === 'metallic') holds(s.strike === 'flattens' && s.current.cold && s.current.molten, `${q}: ${id} is a metal`);
+    if (s.kind === 'metallic') holds((s.strike === 'flattens' || id === 'gallium') && s.current.cold && s.current.molten, // gallium fractures when struck, and no stage strikes it
+       `${q}: ${id} is a metal`);
     if (s.kind === 'ionic') holds(s.strike === 'shatters' && !s.current.cold && s.current.molten, `${q}: ${id} is a salt`);
     if (s.kind === 'molecular') holds(!s.current.cold && !s.current.molten && S[id].melt.lo < 150, `${q}: ${id} is a molecular solid`);
     if (s.kind === 'network') holds(!s.current.cold && !s.current.molten && s.strike === 'shatters', `${q}: ${id} is a network solid`);
@@ -42,7 +43,8 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   for (const s of [...C.S5, ...C.S6]) same(s.tray, S[s.solid].kind, `${q} sealed (${s.id}'s tray)`);
   holds(new Set(C.S5.map(s => s.tray)).size === 4 && new Set(C.S6.map(s => s.tray)).size === 5, `${q}: a sealed stage has two samples of one kind`);
   // The heater: stage 1 stops at 200 °C, so only the low melters fall; every other stage heats past every sample's last fall.
-  holds(C.S1.every(s => (S[s.solid].melt.hi <= 200) === (s.tray === 'grips')), `${q} stage 1: the 200 °C heater does not split the samples`);
+  holds(C.S1.every(s => s.tray === 'grips' ? S[s.solid].melt.hi <= 200 && !S[s.solid].current.cold : S[s.solid].melt.hi > 200 || S[s.solid].current.cold), `${q} stage 1: the 200 °C heater and the lamp do not split the samples`);
+  holds(C.S1.some(s => s.tray === 'stronger' && S[s.solid].melt.hi <= 200), `${q} stage 1: no sample melts low and is not molecular, so the melting trace alone answers it`);
   for (const s of [...C.S3, ...C.S5, ...C.S6]) holds(S[s.solid].melt.hi <= 2000, `${q}: ${s.id} never runs inside the 2000 °C heater, so the molten lamp could not be tested`);
 
   // A sealed sample is not read off its card; the tests are the evidence, and the window must not be on a sealed stage.

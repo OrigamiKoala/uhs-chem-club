@@ -311,7 +311,7 @@ ranking by the grips already measured and is dropped as a repeat if the audit fi
 - `q1`: stages 6 and 7 are a weigh-and-rank and a typed ratio of molecules (1672, from CRC densities), because a picture cannot show ice and water differing by 9 %. The third belief card reads "each molecule itself melts".
 - `q2`: the rank of four ions replaces the brief's rank of four pairs; stage 7 asks for the ratio of every O–H bond in a mole of water to the pull-apart heat (23).
 - `q3`: stage 1 no longer prints each card's grip, so the flask is the only evidence; the typed boiling point is read between heater steps (88 °C at 65 kPa, ±3); the gas over water is at 35 °C and typed (95.7 kPa).
-- `q4`: naphthalene replaces wax (wax melts over a range and would muddy the glass click); the "pick the solid for a job" stage is dropped (Ligar's lattice bench has it).
+- `q4`: stage 1 offers a Melt and a Current test, and gallium (a metal that melts at 30 °C) is the trap for 'low melting means molecular'; naphthalene replaces wax (wax melts over a range and would muddy the glass click); the "pick the solid for a job" stage is dropped (Ligar's lattice bench has it).
 - `q5`: the three phase-diagram stages are one labelled experiment (a phase map), and stage 7 is a ranked burn.
 - `q6`: **mass percent has no stage** (one end-set problem carries it, labelled beyond the exam); stage 2 asks for the molarity at 400 mL, a volume the Flask dial (100, 250, 500) lacks. The click is the particle count (which of three salts puts the most particles in the water), not dissolving as melting.
 - `q7`: "count the dyes" is folded into the Rf stage to make room for the predict and test pair.

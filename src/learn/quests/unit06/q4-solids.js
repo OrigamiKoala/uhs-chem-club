@@ -55,7 +55,7 @@ const GUESS_LABEL = { alike: 'both would melt at one temperature', differ: 'the 
 
 const S1 = [
   { id: 'ice', solid: 'ice', tray: 'grips' }, { id: 'iodine', solid: 'iodine', tray: 'grips' }, { id: 'naphthalene', solid: 'naphthalene', tray: 'grips' },
-  { id: 'salt', solid: 'salt', tray: 'stronger' }, { id: 'copper', solid: 'copper', tray: 'stronger' }
+  { id: 'gallium', solid: 'gallium', tray: 'stronger' }, { id: 'salt', solid: 'salt', tray: 'stronger' }
 ];
 const S3 = [
   { id: 'quartz', solid: 'quartz', label: 'quartz', tray: 'one' }, { id: 'silica', solid: 'silica', label: 'fused silica', tray: 'range' },
@@ -129,7 +129,8 @@ const meltSay = (p, tray) => {
   const m = p.props.melt;
   if (!m) return NOT_TESTED(p);
   const did = m.held ? `stayed rigid to the top of the heater's range, ${m.maxT} °C` : `fell at ${meltText(m)}`;
-  return cap(`${p.label}'s trace ${did}, and it sits in the "${tray}" tray.`);
+  const lamp = p.props.cur ? `, and its lamp ${p.props.cur.cold ? 'lit' : 'stayed dark'} cold` : ', and it has not had the lamp test';
+  return cap(`${p.label}'s trace ${did}${lamp}, and it sits in the "${tray}" tray.`);
 };
 
 /** Stage 3: the shape of the trace. */
@@ -161,7 +162,7 @@ const recordSay = (p, tray) => {
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const tester = solidTestFixture('tester', TESTER_AT, { tests: ['melt'], T0: -40, maxT: 200 });
+    const tester = solidTestFixture('tester', TESTER_AT, { tests: ['melt', 'current'], T0: -40, maxT: 200 });
     return {
       id: 's1-melt',
       title: 'Five Solids',
@@ -169,15 +170,15 @@ export const STAGES = [
       widget,
       table: benchTable(S1, tester, [['grips', 'Only grips between molecules'], ['stronger', 'Something stronger']]),
       hints: [
-        'Use the tester, its "Heat" key and the two trays.',
-        'Compare how far up the heater\'s range each sample held its shape before it ran.',
-        'The weaker the hold between particles, the less heat it takes to loosen them, and the grips between molecules are weak holds.'
+        'Use the tester, its "Test" dial and key, and the two trays.',
+        'Compare each sample\'s melting trace with whether the lamp lit, cold and molten.',
+        'A solid belongs with the molecular solids only if its trace and its lamp both fit whole molecules held by weak grips.'
       ],
       check: fileCheck(S1, meltSay),
       reward: {
-        log: 'Ice, iodine and naphthalene melted far below the others.',
+        log: 'Ice, iodine and naphthalene melted low and carried no current; gallium melted low and did.',
         title: 'Molecular Solids',
-        body: 'Ice, iodine and naphthalene are made of whole molecules held to one another by weak grips, so a little heat frees them: each is a molecular solid. Melting moves the molecules apart and leaves every one whole.'
+        body: 'Ice, iodine and naphthalene are whole molecules held by weak grips, so a little heat frees them and the lamp stays dark: molecular solids. Gallium melts low too, but its lamp lit, so a low melting point alone does not make a solid molecular.'
       }
     };
   })(),
@@ -356,7 +357,7 @@ const fileAll = (items, dials, override = {}) => items.flatMap(s => file(s, over
 const seeAll = items => items.flatMap(s => [put(s.id, SLOT), put(s.id, `tray:${s.tray}`)]);
 
 export const SOLUTIONS = [
-  fileAll(S1),
+  fileAll(S1, [1, 2]),
   [put('differ', 'slot:guess')],
   fileAll(S3),
   seeAll(S4),
@@ -366,7 +367,7 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  fileAll(S1, [null], { salt: 'grips' }),
+  fileAll(S1, [1, 2], { gallium: 'grips' }),
   [],
   fileAll(S3, [null], { silica: 'one' }),
   seeAll(S4.map(s => (s.id === 'b' ? { ...s, tray: 'amorphous' } : s))),

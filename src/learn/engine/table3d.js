@@ -353,8 +353,8 @@ export class Table3D extends BenchViewer3D {
     this.matSeed = (hashId(`${state.kit}|${this.stageIndex ?? 0}`) % 997) + 1;
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(state.bounds.w * s, state.bounds.h * s),
-      // A little of the picture is its own: a mat in a world lit low (a mine, a dusk) would otherwise print as black on black.
-      this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.86, metalness: 0.04, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: this.skin ? 0.34 : 0.18 }))
+      // A little of the picture is its own: a mat in a world lit low (a mine, a dusk) would otherwise print as black on black. Mirrowen's hosts stand in a cold grey light, so its mat carries more.
+      this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.86, metalness: 0.04, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: this.skin === 'unit06' ? 0.62 : this.skin ? 0.34 : 0.18 }))
     );
     plane.rotation.x = -Math.PI / 2;
     plane.position.set(0, GROUND_Y, 0);

@@ -53,7 +53,7 @@ table; a reading printed as 40.6 where the text said 40.7 (floating-point roundi
 
 | # | Stage | Evidence | Notes (what is weak or unusual) |
 | - | --- | --- | --- |
-| 1 | Five Solids | Bench | Close to a lookup once the samples are heated |
+| 1 | Five Solids | Bench; Viewed (two tests, a Test dial) | Gallium melts low and lights the lamp, so the melting trace alone no longer answers it; the lamp test is needed |
 | 2 | Same Atoms | Bench | Predict: both melt at one temperature (the held belief) |
 | 3 | Quartz and Glass | Bench | The click: a crystal holds one temperature, glass softens over a range; the trace is a smooth curve between two real fixed points |
 | 4 | Inside the Solid | Bench | Reads a picture (crystal against amorphous) |

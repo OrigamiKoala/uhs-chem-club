@@ -6,7 +6,7 @@
  *
  * SOURCES AND ROUNDING.
  *   Melting points, °C, CRC Handbook of Chemistry and Physics ("Physical Constants of Inorganic Compounds" / "of Organic Compounds"),
- *   rounded to 1 °C: ice 0.00, naphthalene 80.26, iodine 113.7, sodium chloride 800.7, potassium chloride 770, copper 1084.6, iron 1538,
+ *   rounded to 1 °C: ice 0.00, gallium 29.76 (a metal that melts in the hand: the bench's trap for 'low melting means molecular'), naphthalene 80.26, iodine 113.7, sodium chloride 800.7, potassium chloride 770, copper 1084.6, iron 1538,
  *   silicon dioxide 1713. (Quartz changes crystal form on the way up and 1713 °C is the melting point of the silica crystal; the bench
  *   says "quartz" and does not follow the changes of form.) Iodine is held in a sealed tester, so it melts and does not sublime.
  *   Glass has no melting point. It goes from rigid to runny over a stretch of temperature, and the two ends given here are the two
@@ -43,6 +43,7 @@ export const SOLIDS = Object.freeze({
   naphthalene: { id: 'naphthalene', name: 'naphthalene',          formula: 'C₁₀H₈',    kind: 'molecular',  crystalline: true,  melt: { lo: 80,   hi: 80 },   strike: 'crumbles', current: { cold: false, molten: false }, picture: 'naphthalene' },
   salt:        { id: 'salt',        name: 'salt',                 formula: 'NaCl',     kind: 'ionic',      crystalline: true,  melt: { lo: 801,  hi: 801 },  strike: 'shatters', current: { cold: false, molten: true },  picture: 'salt' },
   potassium:   { id: 'potassium',   name: 'potassium chloride',   formula: 'KCl',      kind: 'ionic',      crystalline: true,  melt: { lo: 770,  hi: 770 },  strike: 'shatters', current: { cold: false, molten: true },  picture: 'salt' },
+  gallium:     { id: 'gallium',     name: 'gallium',              formula: 'Ga',       kind: 'metallic',   crystalline: true,  melt: { lo: 30,   hi: 30 },   strike: 'shatters', current: { cold: true,  molten: true },  picture: 'copper' },
   copper:      { id: 'copper',      name: 'copper',               formula: 'Cu',       kind: 'metallic',   crystalline: true,  melt: { lo: 1085, hi: 1085 }, strike: 'flattens', current: { cold: true,  molten: true },  picture: 'copper' },
   iron:        { id: 'iron',        name: 'iron',                 formula: 'Fe',       kind: 'metallic',   crystalline: true,  melt: { lo: 1538, hi: 1538 }, strike: 'flattens', current: { cold: true,  molten: true },  picture: 'copper' },
   quartz:      { id: 'quartz',      name: 'quartz',               formula: 'SiO₂',     kind: 'network',    crystalline: true,  melt: { lo: 1713, hi: 1713 }, strike: 'shatters', current: { cold: false, molten: false }, picture: 'quartz' },

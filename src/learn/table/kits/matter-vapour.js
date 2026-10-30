@@ -337,9 +337,9 @@ function paintJar(ctx, f, state, b) {
   }
   say(ctx, 'GAS AND WATER VAPOR', F.x(32), F.y(12), F.size(1.7, 5.8), { color: DIM });
   say(ctx, 'JAR GAUGE', F.x(32), F.y(18.4), F.size(1.9, 6), { color: DIM });
-  say(ctx, `${p.total} kPa`, F.x(32), F.y(22.4), F.size(3.2, 7.6), { color: AMBER, weight: 700 });
+  say(ctx, `${p.total} kPa`, F.x(32), F.y(22.4), F.size(3.0, 7.2), { color: AMBER, weight: 700, maxW: F.len(f.size.w - 36) });
   say(ctx, 'JAR AT', F.x(32), F.y(27.2), F.size(1.9, 6), { color: DIM });
-  say(ctx, `${p.T} °C`, F.x(32), F.y(31), F.size(3.2, 7.6), { color: DUST, weight: 700 });
+  say(ctx, `${p.T} °C`, F.x(32), F.y(31), F.size(3.0, 7.2), { color: DUST, weight: 700, maxW: F.len(f.size.w - 36) });
 }
 
 registerFixture('jar', { paint: paintJar });
