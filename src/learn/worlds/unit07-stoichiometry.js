@@ -63,8 +63,8 @@ export const UNIT_07 = {
       line: "Find which ions in the cloudy pond reacted.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q5-ionic.js')
     },
     {
       id: 'q6-stoich',

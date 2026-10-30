@@ -43,7 +43,7 @@ export const ION_INK = Object.freeze({
 export const inkOfIon = id => ION_INK[id] || '#b8afa0';
 const WATER_INK = '#6f8fb0';
 /** Dissolved ions at which a bulb is at full brightness. */
-export const MAX_LAMP = 12;
+export const MAX_LAMP = 8;
 
 const chargeMark = id => { const q = IONS[id].q; const a = Math.abs(q); return `${a > 1 ? a : ''}${q > 0 ? '+' : '−'}`; };
 const solidInk = formula => (SOLID_LOOK[formula] || { ink: '#d8d2c4' }).ink;
@@ -55,8 +55,8 @@ const solidInk = formula => (SOLID_LOOK[formula] || { ink: '#d8d2c4' }).ink;
 export const SOL_RECT = Object.freeze({ hw: 8.5, hh: 6.6 });
 
 /** A jar of dissolved salt. `sealed` hides its name behind `label` ("Jar 1"). */
-export const solutionJar = (id, at, { cat, an, label = null, sealed = false } = {}, extra = {}) => ({
-  id, kind: 'sol', label: label ?? (sealed ? id : solution(cat, an).text), at, props: { cat, an, ...(sealed ? { sealed: true } : {}) }, ...extra
+export const solutionJar = (id, at, { cat, an, label = null, sealed = false, name = null } = {}, extra = {}) => ({
+  id, kind: 'sol', label: label ?? (sealed ? id : solution(cat, an).text), at, props: { cat, an, ...(sealed ? { sealed: true } : {}), ...(name ? { name } : {}) }, ...extra
 });
 
 function paintSol(ctx, p, state, o) {
@@ -74,13 +74,13 @@ function paintSol(ctx, p, state, o) {
   if (pr.sealed) { say(ctx, p.label, o.x, y + 1.2 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW: box.w - 1.4 * sc }); return; }
   const s = solution(pr.cat, pr.an);
   say(ctx, s.text, o.x, y, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 1.4 * sc });
-  say(ctx, s.name, o.x, y + 2.5 * sc, Math.max(5.8, 1.55 * sc), { align: 'center', color: DUST, maxW: box.w - 1.4 * sc });
+  say(ctx, pr.name ?? s.name, o.x, y + 2.5 * sc, Math.max(5.8, 1.55 * sc), { align: 'center', color: DUST, maxW: box.w - 1.4 * sc });
 }
 
 registerPiece('sol', {
   kind: { r: 7, rect: SOL_RECT, nojoin: true },
   paint: paintSol,
-  faceKey: p => `sol|${p.label}|${p.props.cat}|${p.props.an}|${p.props.sealed ? 1 : 0}`,
+  faceKey: p => `sol|${p.label}|${p.props.cat}|${p.props.an}|${p.props.sealed ? 1 : 0}|${p.props.name ?? ''}`,
   printed: p => String(p.label)
 });
 
