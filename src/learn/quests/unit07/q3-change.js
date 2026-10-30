@@ -9,7 +9,7 @@
  *   1  sort four changes by whether a new substance is in the pot afterwards    -> physical change, chemical change
  *   2  pick the change that lit a lamp but made no new substance               -> evidence of reaction
  *   3  PREDICT: an open pot of steel wool burns; heavier, the same or lighter?  (the held model: burning loses mass)
- *   4  TEST: burn it and lay the card for what the balance shows               -> an open pot GAINS: iron takes oxygen from the air
+ *   4  TEST: burn it and lay the chip for what the balance shows               -> an open pot GAINS: iron takes oxygen from the air
  *   5  three open burns sorted heavier or lighter                                -> a gas that leaves lightens it, a gas that joins weighs more
  *   6  sealed: type what a sealed pot weighs after the burn, past the dial       -> conservation of mass for a whole pot
  *   7  pick the change that leaves the same particles in the pot                 -> salt in water: the ions were there already
@@ -21,7 +21,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { potTable, stmt, plaqueFixture, fixed } from '../../table/kits/pot.js';
+import { potTable, chip, plaqueFixture, fixed } from '../../table/kits/pot.js';
 import { cjar, changePotFixture, potScaleFixture, evidenceFixture, changeRead, scaleRead, lampsRead, LAMPS } from '../../table/kits/pot-change.js';
 import { planChange, CASES } from '../../engine/reactdata-change.js';
 import { pretty } from '../../engine/reactdata.js';
@@ -52,7 +52,7 @@ const QUEST_KEY = 'unit07/q3-change';
 const plan = (id, o) => planChange(id, o);
 
 // Stage 3 and 4: the guess cards.
-const GUESS = { more: 'Weighs more after', same: 'Weighs the same', less: 'Weighs less after' };
+const GUESS = { more: 'Heavier', same: 'The same', less: 'Lighter' };
 const WOOL_OPEN = plan('wool');
 
 // Stage 6: steel wool at three settings, and 83.7 g (1.5 mol of iron) past the dial with the oxygen that goes with it.
@@ -95,12 +95,13 @@ function sortCheck(t, truth) {
    LAYOUT SHARED BY THE STAGES
    ------------------------------------------------------------------ */
 
-const POT_AT = { x: 39, y: 32 };
+const POT_AT = { x: 36, y: 32 };
+const POT_W = 70;
 const TRAY_CELL = { cell: 21, cellH: 14 };
 
 const NEW_TRAYS = [
-  { id: 'same', label: 'Same substance after', at: { x: 114, y: 10 }, size: { w: 66, h: 15 }, ...TRAY_CELL },
-  { id: 'new', label: 'New substance after', at: { x: 114, y: 27 }, size: { w: 66, h: 15 }, ...TRAY_CELL }
+  { id: 'same', label: 'Same substance after', at: { x: 92.5, y: 23.5 }, size: { w: 36, h: 30 }, cell: 17, cellH: 13.4 },
+  { id: 'new', label: 'New substance after', at: { x: 130, y: 23.5 }, size: { w: 36, h: 30 }, cell: 17, cellH: 13.4 }
 ];
 
 const J = (id, at, caseId, name, shownLine, extra) => cjar(id, name, at, caseId, { shown: shownLine }, extra);
@@ -122,7 +123,7 @@ const hidden = (id, at, caseId, letter) => cjar(id, `Sample ${letter}`, at, case
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const pot = changePotFixture('pot', POT_AT, {});
+    const pot = changePotFixture('pot', POT_AT, { w: POT_W });
     const truth = { ice: 'same', sugarwater: 'same', sugarheat: 'new', wool: 'new' };
     return {
       id: 's1-new',
@@ -130,7 +131,7 @@ export const STAGES = [
       prompt: 'Sort the four changes by whether a new substance is in the pot afterwards.',
       widget,
       table: potTable({
-        pieces: [JARS.ice({ x: 91, y: 44 }), JARS.sugarwater({ x: 112, y: 44 }), JARS.sugarheat({ x: 133, y: 44 }), JARS.wool({ x: 91, y: 57.4 })],
+        pieces: [JARS.ice({ x: 82, y: 47 }), JARS.sugarwater({ x: 101, y: 47 }), JARS.sugarheat({ x: 120, y: 47 }), JARS.wool({ x: 139, y: 47 })],
         fixtures: [pot.fixture],
         zones: { slots: [...pot.slots], trays: NEW_TRAYS }
       }),
@@ -155,17 +156,17 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const pot = changePotFixture('pot', POT_AT, {});
-    const lamps = evidenceFixture('lamps', 'pot', { x: 114, y: 13 }, { grid: true });
+    const pot = changePotFixture('pot', POT_AT, { w: POT_W });
+    const lamps = evidenceFixture('lamps', 'pot', { x: 108, y: 12 }, { grid: true });
     return {
       id: 's2-lamp',
       title: 'A Lamp Is Lit',
       prompt: 'Pick the change that lit a lamp without making a new substance.',
       widget,
       table: potTable({
-        pieces: [JARS.dryice({ x: 91, y: 32 }), JARS.wood({ x: 112, y: 32 }), JARS.wool({ x: 91, y: 46 }), JARS.sugarwater({ x: 112, y: 46 })],
+        pieces: [JARS.dryice({ x: 82, y: 31.5 }), JARS.wood({ x: 101, y: 31.5 }), JARS.wool({ x: 82, y: 45.5 }), JARS.sugarwater({ x: 101, y: 45.5 })],
         fixtures: [pot.fixture, lamps],
-        zones: { slots: [...pot.slots, { id: 'pick', label: 'My pick', at: { x: 135, y: 40 }, size: { w: 24, h: 16 } }] }
+        zones: { slots: [...pot.slots, { id: 'pick', label: 'My pick', at: { x: 130, y: 40 }, size: { w: 24, h: 16 } }] }
       }),
       hints: [
         'Use the pot, its "Run" key and the four lamps.',
@@ -197,18 +198,18 @@ export const STAGES = [
     prompt: 'Choose how an open pot of steel wool weighs after the wool burns, compared with before.',
     widget,
     table: potTable({
-      pieces: [stmt('more', GUESS.more, { x: 96.5, y: 48 }), stmt('same', GUESS.same, { x: 131, y: 48 }), stmt('less', GUESS.less, { x: 96.5, y: 59 })],
-      fixtures: [plaqueFixture('what', 'The pot', { x: 40, y: 14 }, ['Open to the air', 'Steel wool, 55.8 g'], { w: 50 })],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 114, y: 26 }, size: { w: 38, h: 14 } }] }
+      pieces: [chip('more', GUESS.more, { x: 40, y: 50 }), chip('same', GUESS.same, { x: 62, y: 50 }), chip('less', GUESS.less, { x: 84, y: 50 })],
+      fixtures: [plaqueFixture('what', 'The pot', { x: 62, y: 14 }, ['Open to the air', 'Steel wool, 55.8 g'], { w: 50 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 62, y: 32 }, size: { w: 38, h: 14 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
+      'Use the three chips and the slot.',
       'Think about what burning does to the wool and what the open lid lets in or out.',
       'Commit to how the weight will change, then burn the wool in the next part and read the balance.'
     ],
     check(state) {
       const card = cardIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a chip in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -224,24 +225,24 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const pot = changePotFixture('pot', POT_AT, {});
-    const bal = potScaleFixture('bal', 'pot', { x: 97, y: 13 });
+    const pot = changePotFixture('pot', POT_AT, { w: POT_W });
+    const bal = potScaleFixture('bal', 'pot', { x: 90, y: 13 });
     return {
       id: 's4-open',
       title: 'Burn It Open',
       get prompt() {
         const g = recall(QUEST_KEY);
         const guess = g && GUESS[g] ? `You guessed "${GUESS[g].toLowerCase()}". ` : '';
-        return `${guess}Lay the card for what the balance shows after the steel wool burns in the open pot.`;
+        return `${guess}Lay the chip for what the balance shows after the steel wool burns in the open pot.`;
       },
       widget,
       table: potTable({
         pieces: [
-          JARS.wool({ x: 133, y: 12 }),
-          stmt('more', GUESS.more, { x: 96.5, y: 48 }), stmt('same', GUESS.same, { x: 131, y: 48 }), stmt('less', GUESS.less, { x: 96.5, y: 59 })
+          JARS.wool({ x: 128, y: 13 }),
+          chip('more', GUESS.more, { x: 84, y: 47 }), chip('same', GUESS.same, { x: 106, y: 47 }), chip('less', GUESS.less, { x: 128, y: 47 })
         ],
         fixtures: [pot.fixture, bal],
-        zones: { slots: [...pot.slots, { id: 'ans', label: 'What the balance showed', at: { x: 114, y: 31 }, size: { w: 38, h: 14 } }] }
+        zones: { slots: [...pot.slots, { id: 'ans', label: 'What the balance showed', at: { x: 106, y: 31 }, size: { w: 38, h: 14 } }] }
       }),
       hints: [
         'Use the wool jar, the pot, its "Run" key and the balance.',
@@ -250,7 +251,7 @@ export const STAGES = [
       ],
       check(state) {
         const card = cardIn(state.table, 'ans');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a chip in the slot.' };
         const t = state.table;
         if (card.id === 'more') return { ok: true };
         const r = changeRead(t, 'pot');
@@ -273,8 +274,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const pot = changePotFixture('pot', POT_AT, {});
-    const bal = potScaleFixture('bal', 'pot', { x: 97, y: 13 });
+    const pot = changePotFixture('pot', POT_AT, { w: POT_W });
+    const bal = potScaleFixture('bal', 'pot', { x: 90, y: 13 });
     const truth = { wool: 'heavier', magnesium: 'heavier', wood: 'lighter' };
     return {
       id: 's5-lighter',
@@ -282,13 +283,13 @@ export const STAGES = [
       prompt: 'Sort the three burns by whether the open pot weighs more or less afterwards.',
       widget,
       table: potTable({
-        pieces: [JARS.wool({ x: 123.5, y: 10 }), JARS.magnesium({ x: 141.5, y: 10 }), JARS.wood({ x: 123.5, y: 24.5 })],
+        pieces: [JARS.wool({ x: 122, y: 11 }), JARS.magnesium({ x: 140, y: 11 }), JARS.wood({ x: 122, y: 26 })],
         fixtures: [pot.fixture, bal],
         zones: {
           slots: [...pot.slots],
           trays: [
-            { id: 'heavier', label: 'Weighs more after', at: { x: 114, y: 39.5 }, size: { w: 66, h: 15 }, ...TRAY_CELL },
-            { id: 'lighter', label: 'Weighs less after', at: { x: 114, y: 56 }, size: { w: 66, h: 15 }, ...TRAY_CELL }
+            { id: 'heavier', label: 'Weighs more after', at: { x: 92.5, y: 45.5 }, size: { w: 36, h: 14 }, cell: 17, cellH: 13.4 },
+            { id: 'lighter', label: 'Weighs less after', at: { x: 130, y: 45.5 }, size: { w: 36, h: 14 }, cell: 17, cellH: 13.4 }
           ]
         }
       }),
@@ -314,8 +315,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const pot = changePotFixture('pot', { x: 39, y: 30 }, { caseId: 'wool', lid: 'dial', amounts: { label: 'Steel wool', ...WOOL_DIAL }, unit: 0.05 });
-    const bal = potScaleFixture('bal', 'pot', { x: 97, y: 13 });
+    const pot = changePotFixture('pot', { x: 36, y: 30 }, { caseId: 'wool', lid: 'dial', amounts: { label: 'Steel wool', ...WOOL_DIAL }, unit: 0.05, w: POT_W });
+    const bal = potScaleFixture('bal', 'pot', { x: 90, y: 13 });
     return {
       id: 's6-sealed',
       title: 'A Sealed Pot',
@@ -352,16 +353,16 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const pot = changePotFixture('pot', POT_AT, {});
+    const pot = changePotFixture('pot', POT_AT, { w: POT_W });
     return {
       id: 's7-same',
       title: 'The Same Particles',
       prompt: 'Pick the change after which the pot holds the same particles it began with.',
       widget,
       table: potTable({
-        pieces: [JARS.saltwater({ x: 91, y: 20 }), JARS.wood({ x: 112, y: 20 }), JARS.wool({ x: 91, y: 36 }), JARS.magnesium({ x: 112, y: 36 })],
+        pieces: [JARS.saltwater({ x: 82, y: 14 }), JARS.wood({ x: 101, y: 14 }), JARS.wool({ x: 82, y: 30 }), JARS.magnesium({ x: 101, y: 30 })],
         fixtures: [pot.fixture],
-        zones: { slots: [...pot.slots, { id: 'pick', label: 'My pick', at: { x: 134, y: 28 }, size: { w: 24, h: 16 } }] }
+        zones: { slots: [...pot.slots, { id: 'pick', label: 'My pick', at: { x: 130, y: 24 }, size: { w: 24, h: 16 } }] }
       }),
       hints: [
         'Use the pot, its "Run" key and the slot.',
@@ -385,8 +386,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 8 */
   (() => {
-    const pot = changePotFixture('pot', POT_AT, { lid: 'sealed' });
-    const lamps = evidenceFixture('lamps', 'pot', { x: 114, y: 12 }, { grid: true });
+    const pot = changePotFixture('pot', POT_AT, { lid: 'sealed', w: POT_W });
+    const lamps = evidenceFixture('lamps', 'pot', { x: 108, y: 12 }, { grid: true });
     const truth = { a: 'new', b: 'same', c: 'same' };
     return {
       id: 's8-sealed',
@@ -394,13 +395,13 @@ export const STAGES = [
       prompt: 'Sort samples A, B and C by whether a new substance forms in the sealed pot.',
       widget,
       table: potTable({
-        pieces: [hidden('a', { x: 91, y: 57 }, 'wood', 'A'), hidden('b', { x: 112, y: 57 }, 'dryice', 'B'), hidden('c', { x: 133, y: 57 }, 'ice', 'C')],
+        pieces: [hidden('a', { x: 82, y: 52 }, 'wood', 'A'), hidden('b', { x: 101, y: 52 }, 'dryice', 'B'), hidden('c', { x: 120, y: 52 }, 'ice', 'C')],
         fixtures: [pot.fixture, lamps],
         zones: {
           slots: [...pot.slots],
           trays: [
-            { id: 'same', label: 'Same substance after', at: { x: 98, y: 36 }, size: { w: 32, h: 26 }, cell: 17, cellH: 13.4 },
-            { id: 'new', label: 'New substance after', at: { x: 131, y: 36 }, size: { w: 32, h: 26 }, cell: 17, cellH: 13.4 }
+            { id: 'same', label: 'Same substance after', at: { x: 92.5, y: 37 }, size: { w: 36, h: 15 }, cell: 17, cellH: 13.4 },
+            { id: 'new', label: 'New substance after', at: { x: 130, y: 37 }, size: { w: 36, h: 15 }, cell: 17, cellH: 13.4 }
           ]
         }
       }),
@@ -430,14 +431,14 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag a jar into the seat, press Run, then drag it into a tray.'],
-  2: ['Run each jar in turn; drag the one you pick into the slot.'],
-  3: ['Drag the card you choose into the slot.'],
-  4: ['Seat the jar, press Run, then drag a card into the slot.'],
-  5: ['Seat each jar, press Run, then drag it into a tray.'],
-  6: ['Set the dials, press Run, then type your answer.'],
-  7: ['Run each jar in turn; drag the one you pick into the slot.'],
-  8: ['Run each sample in turn, then drag it into a tray.']
+  1: ['Seat a jar, press Run, file it.'],
+  2: ['Run each jar; slot your pick.'],
+  3: ['Drag your chip into the slot.'],
+  4: ['Run the pot, then pick a chip.'],
+  5: ['Seat each jar, Run, file it.'],
+  6: ['Set the dials, Run, then type.'],
+  7: ['Run each jar; slot your pick.'],
+  8: ['Run each sample, then file it.']
 };
 applyNotes(STAGES, NOTES);
 
