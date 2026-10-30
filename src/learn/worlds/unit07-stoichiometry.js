@@ -36,8 +36,8 @@ export const UNIT_07 = {
       line: "Read the labels on the foundry's crates.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q2-names.js')
     },
     {
       id: 'q3-change',

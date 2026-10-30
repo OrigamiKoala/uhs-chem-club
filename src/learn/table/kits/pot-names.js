@@ -131,16 +131,16 @@ export function needleRead(state, fid) {
 }
 
 /** A gauge for the tray `tray`. Returns the fixture; stand it beside the tray. */
-export function needleFixture(id, at, { tray, title = 'Charge needle', range = 6, w = 26 } = {}) {
-  return { id, kind: 'ionneedle', label: title, at: { ...at }, size: { w, h: 26 }, noRun: true, dials: {}, props: { tray, range } };
+export function needleFixture(id, at, { tray, title = 'Charge needle', range = 6, w = 24, h = 22 } = {}) {
+  return { id, kind: 'ionneedle', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { tray, range } };
 }
 
 function paintNeedle(ctx, f, state, b) {
   const F = frameOf(b);
   const r = needleRead(state, f.id);
   const w = f.size.w;
-  const cx = F.x(w / 2); const cy = F.y(22.6);
-  const R = F.len(Math.min(w * 0.42, 11));
+  const cx = F.x(w / 2); const cy = F.y(f.size.h - 3.6);
+  const R = F.len(Math.min(w * 0.4, f.size.h - 15));
   const sweep = 0.55 * Math.PI;
   ctx.strokeStyle = STEEL; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2 - sweep, -Math.PI / 2 + sweep); ctx.stroke();
@@ -174,11 +174,11 @@ const WORD = 1.75; // units per character at the strip's word size
  * A label strip. `parts` runs left to right: a string is a word the label already carries, `null` is a slot for a card or chip.
  * Returns the fixture, its slots (stand them where they say) and its size.
  */
-export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = [], slotW = SLOT.w, gap = 2 } = {}) {
+export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = [], slotW = SLOT.w, slotH = SLOT.h, gap = 2, pad = 6 } = {}) {
   const top = 10;
   const widths = parts.map(x => (x === null ? slotW : Math.max(3, x.length * WORD + 1)));
   const w = Math.round((widths.reduce((s, v) => s + v, 0) + gap * (parts.length - 1) + 6) * 10) / 10;
-  const h = Math.round((top + SLOT.h + 6) * 10) / 10;
+  const h = Math.round((top + slotH + pad) * 10) / 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const slots = [];
   const words = [];
@@ -187,12 +187,12 @@ export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = []
   parts.forEach((part, i) => {
     if (part === null) {
       k++;
-      slots.push({ id: `${id}.s${k}`, label: slotLabels[k - 1] || ' ', at: { x: x + slotW / 2, y: y0 + top + SLOT.h / 2 + 0.5 }, size: { w: slotW, h: SLOT.h } });
+      slots.push({ id: `${id}.s${k}`, label: slotLabels[k - 1] || ' ', at: { x: x + slotW / 2, y: y0 + top + slotH / 2 + 0.5 }, size: { w: slotW, h: slotH } });
     } else words.push({ text: part, x: x - x0, w: widths[i] });
     x += widths[i] + gap;
   });
   return {
-    fixture: { id, kind: 'labeler', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, words, slots: slots.map(s => s.id), top } },
+    fixture: { id, kind: 'labeler', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, words, slots: slots.map(s => s.id), top, wordY: top + slotH / 2 + 0.5 } },
     slots, size: { w, h }
   };
 }
@@ -200,7 +200,7 @@ export function labelerFixture(id, at, { parts, title = 'Label', slotLabels = []
 function paintLabeler(ctx, f, state, b) {
   const F = frameOf(b);
   const size = F.size(3.1, 7);
-  for (const wd of f.props.words) say(ctx, wd.text, F.x(wd.x + wd.w / 2), F.y(f.props.top + 6.8), size, { align: 'center', weight: 700, color: DUST, maxW: F.len(wd.w) });
+  for (const wd of f.props.words) say(ctx, wd.text, F.x(wd.x + wd.w / 2), F.y(f.props.wordY), size, { align: 'center', weight: 700, color: DUST, maxW: F.len(wd.w) });
 }
 
 registerFixture('labeler', { paint: paintLabeler });
@@ -216,9 +216,8 @@ export function labelWords(state, fid) {
    ------------------------------------------------------------------ */
 
 /** A window with one seat and a key. `mode` is `'salt'` (Dissolve) or `'molecule'` (Look). Returns the fixture, its seat and its size. */
-export function windowFixture(id, at, { mode = 'salt', title = 'Window', runLabel = mode === 'salt' ? 'Dissolve' : 'Look', w = 84 } = {}) {
+export function windowFixture(id, at, { mode = 'salt', title = 'Window', runLabel = mode === 'salt' ? 'Dissolve' : 'Look', w = 84, h = 46 } = {}) {
   const top = 10;
-  const h = 46;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const slotId = `${id}.seat`;
   return {
