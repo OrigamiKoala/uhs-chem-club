@@ -273,6 +273,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the ledger claims 22.1 tons of iron that its ore cannot give, so something else supplied it.'
   },
+  'unit07/q4-balance': {
+    scene: 'recipe-board',
+    beats: [
+      { to: 0.26, say: 'The furnace recipe lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
+      { to: 0.6, say: 'A coefficient in front of a formula counts molecules, so it changes the atom counts and leaves each substance alone. Raise them one at a time and the rows come closer.' },
+      { to: 0.94, say: 'At 1, 3, 2 and 3 every row agrees: 2 iron, 3 carbon and 6 oxygen on each side.' }
+    ],
+    filed: 'Filed: the furnace recipe, Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, is balanced: every atom of the ore is accounted for.'
+  },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     beats: [

@@ -54,8 +54,8 @@ export const UNIT_07 = {
       line: "Count the atoms on both sides of the furnace recipe.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q4-balance.js')
     },
     {
       id: 'q5-ionic',

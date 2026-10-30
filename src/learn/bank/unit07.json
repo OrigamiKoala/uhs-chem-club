@@ -647,6 +647,145 @@
         ],
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
+    },
+    "q4-balance": {
+      "problems": [
+        {
+          "id": "q4-balance#b1",
+          "quest": "q4-balance",
+          "question": "Which equation balances H₂ + O₂ → H₂O without changing any substance?",
+          "options": [
+            {
+              "id": "a",
+              "label": "H₂ + O₂ → H₂O₂"
+            },
+            {
+              "id": "b",
+              "label": "2 H₂ + O₂ → 2 H₂O"
+            },
+            {
+              "id": "c",
+              "label": "H₂ + O → H₂O"
+            },
+            {
+              "id": "d",
+              "label": "H₂ + 2 O₂ → H₂O"
+            }
+          ],
+          "answer": "b",
+          "explanation": "2 H₂ + O₂ → 2 H₂O has 4 H and 2 O on each side. The other three change a formula (H₂O₂ or O) or leave the atoms unequal, and a small number inside a formula is part of what the substance is."
+        },
+        {
+          "id": "q4-balance#b2",
+          "quest": "q4-balance",
+          "question": "In 4 Fe + 3 O₂ → 2 Fe₂O₃, how many oxygen atoms are on each side of the arrow?",
+          "options": [
+            {
+              "id": "a",
+              "label": "3 on the left and 6 on the right"
+            },
+            {
+              "id": "b",
+              "label": "6 on each side"
+            },
+            {
+              "id": "c",
+              "label": "3 on each side"
+            },
+            {
+              "id": "d",
+              "label": "12 on each side"
+            }
+          ],
+          "answer": "b",
+          "explanation": "3 O₂ is 3 × 2 = 6 oxygen atoms on the left, and 2 Fe₂O₃ is 2 × 3 = 6 on the right. The iron agrees too: 4 on each side."
+        }
+      ],
+      "worked": {
+        "id": "q4-balance#w",
+        "quest": "q4-balance",
+        "title": "Ethane Burning in Oxygen",
+        "setup": "Balance C₂H₆ + O₂ → CO₂ + H₂O. Start with the atoms that appear in only one substance on each side, and keep oxygen for last.",
+        "steps": [
+          {
+            "say": "One C₂H₆ holds 2 carbon atoms. How many CO₂ molecules carry them?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "2/1",
+            "unit": "",
+            "hint": "Each CO₂ holds 1 carbon atom.",
+            "explain": "2 carbon atoms ÷ 1 per CO₂ = 2 CO₂."
+          },
+          {
+            "say": "One C₂H₆ holds 6 hydrogen atoms. How many H₂O molecules carry them?",
+            "kind": "number",
+            "answer": 3,
+            "calc": "6/2",
+            "unit": "",
+            "hint": "Each H₂O holds 2 hydrogen atoms.",
+            "explain": "6 hydrogen atoms ÷ 2 per H₂O = 3 H₂O."
+          },
+          {
+            "say": "With 2 CO₂ and 3 H₂O, how many oxygen atoms are on the right?",
+            "kind": "number",
+            "answer": 7,
+            "calc": "2*2+3*1",
+            "unit": "",
+            "hint": "Each CO₂ holds 2 oxygen atoms and each H₂O holds 1.",
+            "explain": "2 × 2 + 3 × 1 = 7 oxygen atoms."
+          },
+          {
+            "say": "How many O₂ molecules hold 7 oxygen atoms?",
+            "kind": "number",
+            "answer": 3.5,
+            "calc": "7/2",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "Each O₂ holds 2 oxygen atoms.",
+            "explain": "7 ÷ 2 = 3.5 O₂."
+          },
+          {
+            "say": "Can a coefficient be 3.5 molecules?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Yes, keep it"
+              },
+              {
+                "id": "b",
+                "label": "No, double every coefficient"
+              },
+              {
+                "id": "c",
+                "label": "No, round it down to 3"
+              }
+            ],
+            "answer": "b",
+            "hint": "A molecule cannot be split in half.",
+            "explain": "Doubling every coefficient keeps the atoms equal on both sides and makes them whole numbers. Rounding would put the oxygen out of step."
+          },
+          {
+            "say": "After doubling, how many O₂ are in the equation?",
+            "kind": "number",
+            "answer": 7,
+            "calc": "3.5*2",
+            "unit": "",
+            "hint": "Double 3.5.",
+            "explain": "3.5 × 2 = 7 O₂."
+          },
+          {
+            "say": "After doubling, how many H₂O are in the equation?",
+            "kind": "number",
+            "answer": 6,
+            "calc": "3*2",
+            "unit": "",
+            "hint": "Double 3.",
+            "explain": "3 × 2 = 6 H₂O, and the equation is 2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O."
+          }
+        ],
+        "finish": "Balance one kind of atom at a time with the coefficients, start with the atoms found in only one substance on each side, and double everything if a half appears."
+      }
     }
   }
 }
