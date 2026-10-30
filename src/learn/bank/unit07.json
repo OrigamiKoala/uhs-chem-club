@@ -647,6 +647,119 @@
         ],
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
+    },
+    "q3-change": {
+      "problems": [
+        {
+          "id": "q3-change#b1",
+          "quest": "q3-change",
+          "question": "Magnesium ribbon burns in an open crucible, and the white powder left weighs more than the ribbon did. What explains the extra mass?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Oxygen from the air joined the magnesium"
+            },
+            {
+              "id": "b",
+              "label": "The heat of the flame added mass"
+            },
+            {
+              "id": "c",
+              "label": "The magnesium turned into a heavier element"
+            },
+            {
+              "id": "d",
+              "label": "The flame left soot on the powder"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Magnesium burns by joining oxygen from the air, 2 Mg + O₂ → 2 MgO. The oxide holds the magnesium's atoms plus the oxygen's, so it weighs more."
+        },
+        {
+          "id": "q3-change#b2",
+          "quest": "q3-change",
+          "question": "A sealed pot holds 10.0 g of wood chips and 12.0 g of oxygen. The wood burns completely. What does the sealed pot weigh afterwards?",
+          "options": [
+            {
+              "id": "a",
+              "label": "10.0 g"
+            },
+            {
+              "id": "b",
+              "label": "12.0 g"
+            },
+            {
+              "id": "c",
+              "label": "22.0 g"
+            },
+            {
+              "id": "d",
+              "label": "2.0 g"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Nothing enters or leaves a sealed pot, so its mass is conserved: the carbon dioxide and water vapour made weigh 10.0 + 12.0 = 22.0 g in all."
+        }
+      ],
+      "worked": {
+        "id": "q3-change#w",
+        "quest": "q3-change",
+        "title": "Steel Wool in a Sealed Pot",
+        "setup": "4 Fe + 3 O₂ → 2 Fe₂O₃. A sealed pot holds 22.3 g of steel wool, Fe, and enough oxygen. The wool burns completely. (Fe 55.8, O 16.0)",
+        "steps": [
+          {
+            "say": "How many moles of iron are in the pot?",
+            "kind": "number",
+            "answer": 0.4,
+            "calc": "22.3/55.8",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "Moles = mass / molar mass.",
+            "explain": "22.3 g / 55.8 g/mol = 0.400 mol."
+          },
+          {
+            "say": "How many moles of Fe₂O₃ form?",
+            "kind": "number",
+            "answer": 0.2,
+            "calc": "0.400*2/4",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "The equation makes 2 mol of Fe₂O₃ for each 4 mol of Fe.",
+            "explain": "0.400 mol × 2/4 = 0.200 mol."
+          },
+          {
+            "say": "What is the mass of that Fe₂O₃? (159.6 g/mol)",
+            "kind": "number",
+            "answer": 31.9,
+            "calc": "0.200*159.6",
+            "unit": "g",
+            "tol": 0.1,
+            "hint": "Mass = moles × molar mass.",
+            "explain": "0.200 mol × 159.6 g/mol = 31.9 g."
+          },
+          {
+            "say": "How many grams of oxygen joined the iron?",
+            "kind": "number",
+            "answer": 9.6,
+            "calc": "0.200*159.6-22.3",
+            "unit": "g",
+            "tol": 0.1,
+            "hint": "The iron oxide holds the iron and the oxygen that joined it.",
+            "explain": "31.9 g of oxide minus 22.3 g of iron leaves 9.6 g of oxygen."
+          },
+          {
+            "say": "What does the sealed pot weigh afterwards, if it weighed 31.9 g before?",
+            "kind": "number",
+            "answer": 31.9,
+            "calc": "31.9",
+            "unit": "g",
+            "tol": 0.1,
+            "hint": "Nothing enters or leaves a sealed pot.",
+            "explain": "The sealed pot weighs the same afterwards: 31.9 g."
+          }
+        ],
+        "finish": "The extra weight of an open pot would be the 9.6 g of oxygen from the air; in a sealed pot it was already inside, so the weight does not change."
+      }
     }
   }
 }
