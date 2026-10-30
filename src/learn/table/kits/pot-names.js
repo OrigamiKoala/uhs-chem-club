@@ -112,7 +112,7 @@ function paintCrate(ctx, p, state, o) {
 }
 
 registerPiece('crate', {
-  kind: { r: 10, rect: CRATE_RECT, nojoin: true },
+  kind: { r: 6.6, rect: CRATE_RECT, nojoin: true },
   paint: paintCrate,
   faceKey: p => `crate|${p.label}|${p.props.shown ?? ''}`,
   printed: p => String(p.label)

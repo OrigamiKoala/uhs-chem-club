@@ -85,6 +85,8 @@ const tagAt = (id, label, x, y) => tag(id, label, { x, y });
 const chipAt = (id, label, x, y) => chip(id, label, { x, y });
 const trayOf = (id, label, x, y, cols, rows, cell = 14, cellH = cell) => ({ id, label, at: { x, y }, size: { w: cols * cell, h: rows * cellH }, cell, cellH });
 const inTray = (c, tray) => ({ ...c, zone: `tray:${tray}` });
+/** The tray a stage's cards lie in at the start: three across, two down. */
+const cardsTray = (n = 'Cards') => trayOf('cards', n, 115, 18, 3, 2, 19, 12.6);
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -169,7 +171,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const lab = labelerFixture('lab', { x: 114, y: 45 }, { title: 'Label' });
+    const lab = labelerFixture('lab', { x: 116, y: 45 }, { parts: [null, null], title: 'Label' });
     const names = ['sodium', 'magnesium', 'chlorine', 'chloride', 'oxygen', 'oxide'];
     return {
       id: 's3-ide',
@@ -180,7 +182,7 @@ export const STAGES = [
         pieces: [
           { ...ionChip('mg', 'Mg', { x: 0, y: 0 }), zone: 'tray:cell', fixed: true },
           { ...ionChip('ox', 'O', { x: 0, y: 0 }), zone: 'tray:cell', fixed: true },
-          ...names.map((n, i) => tagAt(`w_${n}`, n, 17 + (i % 3) * 30, 44 + Math.floor(i / 3) * 14))
+          ...names.map((n, i) => tagAt(`w_${n}`, n, 15 + (i % 3) * 27, 40 + Math.floor(i / 3) * 14))
         ],
         fixtures: [lab.fixture, plaqueFixture('example', 'Example', { x: 120, y: 13 }, ['K⁺ with Br⁻ is called', 'potassium bromide'], { w: 52 })],
         zones: { trays: [trayOf('cell', 'Cell', 28, 18, 2, 1)], slots: lab.slots }
@@ -209,8 +211,8 @@ export const STAGES = [
   (() => {
     const A = groupIons(FE_A); const B = groupIons(FE_B);
     const mk = (prefix, ions, tray) => ions.map((ion, i) => ({ ...ionChip(`${prefix}${i + 1}`, ion, { x: 0, y: 0 }, { hide: ion.startsWith('Fe') }), zone: `tray:${tray}`, fixed: true }));
-    const la = labelerFixture('la', { x: 96, y: 17 }, { parts: ['iron(', null, ') oxide'], slotW: 22, slotH: 10.5, gap: 0.4, pad: 3, title: 'Label A' });
-    const lb = labelerFixture('lb', { x: 104, y: 47 }, { parts: ['iron(', null, ') oxide'], slotW: 22, slotH: 10.5, gap: 0.4, pad: 3, title: 'Label B' });
+    const la = labelerFixture('la', { x: 92, y: 14 }, { parts: ['iron(', null, ') oxide'], slotW: 22, slotH: 10.5, gap: 0.4, pad: 3, title: 'Label A' });
+    const lb = labelerFixture('lb', { x: 104, y: 46 }, { parts: ['iron(', null, ') oxide'], slotW: 22, slotH: 10.5, gap: 0.4, pad: 3, title: 'Label B' });
     const numerals = ['I', 'II', 'III', 'IV'];
     return {
       id: 's4-numeral',
@@ -223,11 +225,10 @@ export const STAGES = [
           ...numerals.map((n, i) => chipAt(`n${n}`, `(${n})`, 140, 9 + i * 15))
         ],
         fixtures: [
-          needleFixture('na', { x: 50, y: 15 }, { tray: 'ca' }), needleFixture('nb', { x: 62, y: 46 }, { tray: 'cb' }),
-          la.fixture, lb.fixture,
-          plaqueFixture('how', 'The number in brackets', { x: 36, y: 58 }, ['It is the charge of one iron ion.'], { w: 56 })
+          needleFixture('na', { x: 47, y: 13 }, { tray: 'ca' }), needleFixture('nb', { x: 62, y: 46 }, { tray: 'cb' }),
+          la.fixture, lb.fixture
         ],
-        zones: { trays: [trayOf('ca', 'Cell A', 20, 16, 2, 1), trayOf('cb', 'Cell B', 27, 46, 3, 2)], slots: [...la.slots, ...lb.slots] }
+        zones: { trays: [trayOf('ca', 'Cell A', 20, 14, 2, 1), trayOf('cb', 'Cell B', 27, 46, 3, 2)], slots: [...la.slots, ...lb.slots] }
       }),
       hints: [
         'Use the numeral cards and the slot in each label.',
@@ -261,8 +262,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const win = windowFixture('win', { x: 40, y: 20 }, { mode: 'salt', w: 76, h: 34 });
-    const fm = labelerFixture('fm', { x: 75, y: 50 }, { parts: [null, null, null, null, null, null], slotW: 20, slotH: 10.5, pad: 2.5, title: 'Formula' });
+    const win = windowFixture('win', { x: 40, y: 17 }, { mode: 'salt', w: 76, h: 32 });
+    const fm = labelerFixture('fm', { x: 95, y: 47 }, { parts: [null, null, null, null, null], slotW: 19, slotH: 10.5, pad: 2.5, title: 'Formula' });
     const toks = ['Ca', 'NO₃', '(', ')', '₂', '₃'];
     return {
       id: 's5-dissolve',
@@ -271,12 +272,12 @@ export const STAGES = [
       widget,
       table: potTable({
         pieces: [
-          crate('cra', 'Sample A', { x: 104, y: 9 }, { content: { type: 'salt', ...SALT_A, charges: 'none' } }),
-          crate('crb', 'Sample B', { x: 130, y: 9 }, { content: { type: 'salt', ...SALT_B, charges: 'none' } }),
-          ...toks.map((n, i) => chipAt(`f_${i}`, n, 100 + (i % 3) * 21, 24 + Math.floor(i / 3) * 10))
+          crate('cra', 'Sample A', { x: 14, y: 41 }, { content: { type: 'salt', ...SALT_A, charges: 'none' } }),
+          crate('crb', 'Sample B', { x: 14, y: 55 }, { content: { type: 'salt', ...SALT_B, charges: 'none' } }),
+          ...toks.map((n, i) => inTray(chipAt(`f_${i}`, n, 0, 0), 'cards'))
         ],
         fixtures: [win.fixture, fm.fixture],
-        zones: { slots: [win.slot, ...fm.slots] }
+        zones: { trays: [cardsTray()], slots: [win.slot, ...fm.slots] }
       }),
       hints: [
         'Use the window with its "Dissolve" key on each crate, then the formula cards and the six slots.',
@@ -304,8 +305,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const win = windowFixture('win', { x: 38, y: 19 }, { mode: 'molecule', w: 64, h: 34 });
-    const lab = labelerFixture('lab', { x: 100, y: 49 }, { parts: [null, 'nitrogen', null, 'oxide'], slotW: 22, slotH: 10.5, pad: 3, title: 'Label' });
+    const win = windowFixture('win', { x: 34, y: 17 }, { mode: 'molecule', w: 64, h: 32 });
+    const lab = labelerFixture('lab', { x: 67, y: 47 }, { parts: [null, 'nitrogen', null, 'oxide'], slotW: 22, slotH: 10.5, pad: 3, title: 'Label' });
     const nums = ['mono', 'di', 'tri', 'tetra', 'penta'];
     return {
       id: 's6-prefix',
@@ -314,12 +315,12 @@ export const STAGES = [
       widget,
       table: potTable({
         pieces: [
-          crate('cra', 'Sample A', { x: 84, y: 9 }, { shown: nameMolecular(MOL_A), content: { type: 'molecule', formula: MOL_A } }),
-          crate('crb', 'Sample B', { x: 110, y: 9 }, { content: { type: 'molecule', formula: MOL_B } }),
-          ...nums.map((n, i) => chipAt(`p_${n}`, n, 82 + (i % 3) * 21, 23 + Math.floor(i / 3) * 10))
+          crate('cra', 'Sample A', { x: 14, y: 41 }, { shown: nameMolecular(MOL_A), content: { type: 'molecule', formula: MOL_A } }),
+          crate('crb', 'Sample B', { x: 14, y: 55 }, { content: { type: 'molecule', formula: MOL_B } }),
+          ...nums.map((n, i) => inTray(chipAt(`p_${n}`, n, 0, 0), 'cards'))
         ],
-        fixtures: [win.fixture, lab.fixture, plaqueFixture('counts', 'Words for a count', { x: 134, y: 29 }, ['mono 1', 'di 2', 'tri 3', 'tetra 4', 'penta 5'], { w: 24 })],
-        zones: { slots: [win.slot, ...lab.slots] }
+        fixtures: [win.fixture, lab.fixture, plaqueFixture('counts', 'Words for a count', { x: 128, y: 41 }, ['mono 1 · di 2 · tri 3', 'tetra 4 · penta 5'], { w: 40 })],
+        zones: { trays: [cardsTray()], slots: [win.slot, ...lab.slots] }
       }),
       hints: [
         'Use the window with its "Look" key on each crate, then the cards and the two slots on the label.',
@@ -346,8 +347,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const la = labelerFixture('aa', { x: 80, y: 16 }, { parts: [null, 'acid'], title: 'Label A', pad: 3, slotH: 12.5 });
-    const lb = labelerFixture('ab', { x: 80, y: 46 }, { parts: [null, 'acid'], title: 'Label B', pad: 3, slotH: 12.5 });
+    const la = labelerFixture('aa', { x: 26, y: 35 }, { parts: [null, 'acid'], title: 'Label A', pad: 2, slotH: 12.5 });
+    const lb = labelerFixture('ab', { x: 74, y: 35 }, { parts: [null, 'acid'], title: 'Label B', pad: 2, slotH: 12.5 });
     const names = ['hydrochloric', 'nitric', 'chloric', 'hydronitric'];
     return {
       id: 's7-acid',
@@ -358,10 +359,10 @@ export const STAGES = [
         pieces: [
           { ...ionChip('ha', 'H', { x: 0, y: 0 }), zone: 'tray:ca', fixed: true }, { ...ionChip('cl', 'Cl', { x: 0, y: 0 }), zone: 'tray:ca', fixed: true },
           { ...ionChip('hb', 'H', { x: 0, y: 0 }), zone: 'tray:cb', fixed: true }, { ...ionChip('no', 'NO3', { x: 0, y: 0 }), zone: 'tray:cb', fixed: true },
-          ...names.map((n, i) => tagAt(`a_${n}`, n, 134, 9 + i * 15))
+          ...names.map((n, i) => tagAt(`a_${n}`, n, 112, 9 + i * 13))
         ],
-        fixtures: [la.fixture, lb.fixture, plaqueFixture('ex', 'Examples', { x: 36, y: 58 }, ['HBr: hydrobromic acid', 'H₂SO₄: sulfuric acid'], { w: 52 })],
-        zones: { trays: [trayOf('ca', 'Cell A', 22, 14, 2, 1), trayOf('cb', 'Cell B', 22, 40, 2, 1)], slots: [...la.slots, ...lb.slots] }
+        fixtures: [la.fixture, lb.fixture, plaqueFixture('ex', 'Examples', { x: 50, y: 55.7 }, ['HBr: hydrobromic acid', 'H₂SO₄: sulfuric acid'], { w: 56 })],
+        zones: { trays: [trayOf('ca', 'Cell A', 26, 12.5, 2, 1), trayOf('cb', 'Cell B', 74, 12.5, 2, 1)], slots: [...la.slots, ...lb.slots] }
       }),
       hints: [
         'Use the acid cards and the slot in each label.',
@@ -388,8 +389,8 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 8 */
   (() => {
-    const win = windowFixture('win', { x: 40, y: 20 }, { mode: 'salt', w: 76, h: 34 });
-    const lab = labelerFixture('lab', { x: 75, y: 50 }, { parts: [null, null, null], slotW: 22, slotH: 10.5, pad: 3, title: 'Label' });
+    const win = windowFixture('win', { x: 40, y: 17 }, { mode: 'salt', w: 76, h: 32 });
+    const lab = labelerFixture('lab', { x: 82, y: 47 }, { parts: [null, null, null], slotW: 22, slotH: 10.5, pad: 3, title: 'Label' });
     const toks = ['iron', 'copper', '(II)', '(III)', 'sulfate', 'nitrate'];
     return {
       id: 's8-sealed',
@@ -398,11 +399,11 @@ export const STAGES = [
       widget,
       table: potTable({
         pieces: [
-          crate('crx', 'Crate', { x: 100, y: 9 }, { content: { type: 'salt', ...SEALED, hide: [SEALED.cat] } }),
-          ...toks.map((n, i) => chipAt(`k_${i}`, n, 94 + (i % 3) * 21, 25 + Math.floor(i / 3) * 10))
+          crate('crx', 'Crate', { x: 14, y: 46 }, { content: { type: 'salt', ...SEALED, hide: [SEALED.cat] } }),
+          ...toks.map((n, i) => inTray(chipAt(`k_${i}`, n, 0, 0), 'cards'))
         ],
-        fixtures: [win.fixture, lab.fixture, plaqueFixture('names', 'Ion names', { x: 130, y: 9 }, ['NO₃⁻ nitrate', 'SO₄²⁻ sulfate'], { w: 30 })],
-        zones: { slots: [win.slot, ...lab.slots] }
+        fixtures: [win.fixture, lab.fixture, plaqueFixture('names', 'Ion names', { x: 135, y: 47 }, ['NO₃⁻ nitrate', 'SO₄²⁻ sulfate'], { w: 28 })],
+        zones: { trays: [cardsTray()], slots: [win.slot, ...lab.slots] }
       }),
       hints: [
         'Use the window with its "Dissolve" key on the crate, then the cards and the three slots.',
@@ -434,7 +435,7 @@ const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Drag chips from the supply tray into the cell.'],
   3: ['Drag a name card into each slot of the label.'],
-  4: ['Drag a numeral card into the slot of each label.'],
+  4: ['The number in brackets is the charge of one iron ion.', 'Drag a numeral card into the slot of each label.'],
   5: ['Seat a crate in the window, press Dissolve, then fill the formula strip.'],
   6: ['Seat a crate in the window, press Look, then fill the label.'],
   7: ['Drag an acid card into the slot of each label.'],

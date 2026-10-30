@@ -75,7 +75,7 @@ function crateLabels(ctx, w, h, t) {
     const irons = 2;
     const share = ease(win(t, 0.82, 0.92));
     for (let i = 0; i < irons; i++) {
-      chip(ctx, w * (0.62 + 0.1 * i), h * 0.75, u * 1.15, 'Fe', c, false);
+      chip(ctx, w * (0.62 + 0.1 * i), h * 0.75, u * 1.15, 'Fe3', c, false);
       if (share > 0.01) {
         line(ctx, w * (0.62 + 0.1 * i), h * 0.75 - u * 1.4, w * (0.62 + 0.1 * i), h * 0.75 - u * 2.4, C.amber, 2);
       }

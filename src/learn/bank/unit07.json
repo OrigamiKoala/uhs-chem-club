@@ -647,6 +647,60 @@
         ],
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
+    },
+    "q2-names": {
+      "problems": [
+        {
+          "id": "q2-names#b1",
+          "quest": "q2-names",
+          "question": "Aluminium ions are Al³⁺ and oxide ions are O²⁻. What is the formula of the smallest group of them that has no charge?",
+          "options": [
+            {
+              "id": "a",
+              "label": "AlO"
+            },
+            {
+              "id": "b",
+              "label": "Al₂O₃"
+            },
+            {
+              "id": "c",
+              "label": "Al₃O₂"
+            },
+            {
+              "id": "d",
+              "label": "Al₂O₂"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Two Al³⁺ give 6+ and three O²⁻ give 6−, so the charges cancel with 2 Al and 3 O: Al₂O₃."
+        },
+        {
+          "id": "q2-names#b2",
+          "quest": "q2-names",
+          "question": "The formula CuO holds one Cu ion and one O²⁻ ion with no charge overall. What is its name?",
+          "options": [
+            {
+              "id": "a",
+              "label": "copper(I) oxide"
+            },
+            {
+              "id": "b",
+              "label": "copper oxygen"
+            },
+            {
+              "id": "c",
+              "label": "copper(II) oxide"
+            },
+            {
+              "id": "d",
+              "label": "monocopper monoxide"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The single O²⁻ is 2−, so the copper ion is 2+. The Roman numeral is that charge, and the second ion takes -ide: copper(II) oxide."
+        }
+      ]
     }
   }
 }
