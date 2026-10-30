@@ -95,7 +95,7 @@ const PER_LINE = 13;
 export function titratorFixture(id, at, o = {}) {
   const {
     sys = null, perm = null, presses = [0.5, 1, 2, 5, 10], pressStart = 1, window: win = false, unit = 0.00025, indicator = true,
-    title = 'Burette and flask', runLabel = 'Open Tap', baseName = 'Base', acidName = 'acid'
+    named = true, title = named ? 'Burette and flask' : 'Tube and flask', runLabel = 'Open Tap', baseName = 'Base', acidName = 'acid'
   } = o;
   const dials = { press: { min: 1, max: presses.length, step: 1, value: pressStart, label: 'Per press', labels: presses.map(v => `${v} mL`) } };
   const top = contentTop(1);
@@ -113,7 +113,7 @@ export function titratorFixture(id, at, o = {}) {
   return {
     fixture: {
       id, kind: 'titrator', label: title, at: { ...at }, size: { w, h }, dials, runLabel,
-      props: { backdrop: true, top, c0, mode: perm ? 'perm' : 'acid', sys, perm, presses: presses.slice(), window: win, unit, mouth, baseName, acidName }
+      props: { backdrop: true, named, top, c0, mode: perm ? 'perm' : 'acid', sys, perm, presses: presses.slice(), window: win, unit, mouth, baseName, acidName }
     },
     slots, mouth, size: { w, h }
   };
@@ -223,16 +223,16 @@ registerFixture('titrator', { paint: paintTitrator, run: runTitrator });
 
 const TITRATOR_TEXT = f => {
   const p = f.props;
-  const bits = ['The tall tube is a burette. It holds the base, and its scale and "reading" show how much has run out in all.'];
-  bits.push(`The "Per press" dial sets how much one press lets out. Press "${f.runLabel}" to let that much run into the flask below; the burette only gives out, so each press adds to the last, and Undo takes a press back.`);
-  if (p.mouth) bits.push('Drag an indicator card into the slot beside the flask to put it in the flask.');
+  const bits = [`The tall tube${p.named ? ' (a burette)' : ''} holds the base, and its scale and "reading" show how much has run out in all.`];
+  bits.push(`The "Per press" dial sets how much one press lets out. Press "${f.runLabel}" to let that much run into the flask below; the base only runs out, so each press adds to the last, and Undo takes a press back.`);
+  if (p.mouth) bits.push('Drag a dye card into the slot beside the flask to put the dye in the flask.');
   if (p.mode !== 'perm' && p.window) bits.push(`The flask shows its colour, and the window beside it shows a disc for each ${p.unit} mol of ${ionText('H')} and of ${ionText('OH')} left in the flask.`);
   else bits.push('The flask shows the colour of what is in it.');
   return bits.join(' ');
 };
 
 addTourText({
-  'pot:titrator': { title: 'Burette and flask', dials: false, text: TITRATOR_TEXT }
+  'pot:titrator': { title: f => f.label, dials: false, text: TITRATOR_TEXT }
 }, {
-  indicator: ['Indicator cards', 'An indicator is a dye that changes colour. The swatches on the card show the colours it can have. Drag the card into the slot beside the flask; the flask then shows the dye\'s colour.']
+  indicator: ['Dye cards', 'Each card is a dye that changes colour. The swatches on the card show the colours it can have. Drag the card into the slot beside the flask; the flask then shows the dye\'s colour.']
 });

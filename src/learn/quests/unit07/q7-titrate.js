@@ -117,8 +117,6 @@ function missMsg(t, fid, shown, unit) {
   return { ok: false, msg: `${shown} ${unit} does not follow from the burette: ${tail}` };
 }
 
-const pairLines = sys => [`${sys.acid.mL.toFixed(1)} mL of ${sys.acid.M.toFixed(3)} mol/L acid`, `Base ${sys.base.M.toFixed(3)} mol/L`];
-
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
    ------------------------------------------------------------------ */
@@ -161,7 +159,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const t = titratorFixture('tit', { x: 47, y: 32 }, { sys: SYS2, presses: [0.5, 1, 2, 5], baseName: 'Base', acidName: 'acid' });
+    const t = titratorFixture('tit', { x: 47, y: 32 }, { sys: SYS2, presses: [0.5, 1, 2, 5], named: false, baseName: 'Base', acidName: 'acid' });
     return {
       id: 's2-colour',
       title: 'Watch the Colour',
@@ -172,8 +170,8 @@ export const STAGES = [
       },
       widget,
       table: potTable({
-        pieces: [indicatorCard('ph', PH, { x: 100, y: 40 })],
-        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 120, y: 12 }, ['25.0 mL of 0.100 mol/L acid'], { w: 46 })],
+        pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
+        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 120, y: 10 }, ['25.0 mL of 0.100 mol/L acid'], { w: 50 })],
         zones: { slots: [...t.slots] }
       }),
       hints: [
@@ -205,14 +203,14 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const t = titratorFixture('tit', { x: 55, y: 32 }, { sys: SYS3, presses: [0.5, 1, 2, 5], window: true, unit: UNIT3, indicator: false, acidName: 'acid' });
+    const t = titratorFixture('tit', { x: 55, y: 32 }, { sys: SYS3, presses: [0.5, 1, 2, 5], named: true, window: true, unit: UNIT3, indicator: false, acidName: 'acid' });
     return {
       id: 's3-equal',
       title: 'Nothing Left Over',
       prompt: 'Stop the burette where the base has exactly used up the acid in the flask.',
       widget,
       table: potTable({
-        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 127, y: 12 }, ['25.0 mL of 0.200 mol/L acid'], { w: 46 })],
+        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 127, y: 12 }, ['25.0 mL of acid', '0.200 mol/L'], { w: 40 })],
         zones: { slots: [...t.slots] }
       }),
       hints: [
@@ -247,7 +245,7 @@ export const STAGES = [
       entry: { id: 'M', label: 'Acid strength', unit: 'mol/L' },
       widget,
       table: potTable({
-        pieces: [indicatorCard('ph', PH, { x: 100, y: 40 })],
+        pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
         fixtures: [t.fixture],
         zones: { slots: [...t.slots] }
       }),
@@ -281,8 +279,8 @@ export const STAGES = [
       entry: { id: 'M', label: 'Acid strength', unit: 'mol/L' },
       widget,
       table: potTable({
-        pieces: [indicatorCard('ph', PH, { x: 100, y: 40 })],
-        fixtures: [t.fixture, plaqueFixture('facts', 'Sulfuric acid', { x: 118, y: 14 }, ['Each H₂SO₄ particle gives 2 H+.'], { w: 56 })],
+        pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
+        fixtures: [t.fixture, plaqueFixture('facts', 'Sulfuric acid', { x: 118, y: 8 }, ['Each H₂SO₄ particle gives 2 H+.'], { w: 56 })],
         zones: { slots: [...t.slots] }
       }),
       hints: [
@@ -315,8 +313,8 @@ export const STAGES = [
       entry: { id: 'gap', label: 'Between them', unit: 'mL' },
       widget,
       table: potTable({
-        pieces: [indicatorCard('mo', MO, { x: 128, y: 40 })],
-        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 127, y: 12 }, ['25.0 mL of 0.0200 mol/L acid'], { w: 46 })],
+        pieces: [indicatorCard('mo', MO, { x: 127, y: 26 })],
+        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 127, y: 12 }, ['25.0 mL of acid', '0.0200 mol/L'], { w: 40 })],
         zones: { slots: [...t.slots] }
       }),
       hints: [
@@ -345,7 +343,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const t = titratorFixture('tit', { x: 47, y: 32 }, { perm: PERM7, indicator: false, baseName: 'Permanganate', acidName: 'Fe²⁺ sample' });
+    const t = titratorFixture('tit', { x: 47, y: 32 }, { named: true, perm: PERM7, indicator: false, baseName: 'Permanganate', acidName: 'Fe²⁺ sample' });
     return {
       id: 's7-permanganate',
       title: 'Purple Base',
@@ -388,7 +386,7 @@ export const STAGES = [
       entry: { id: 'M', label: 'Acid strength', unit: 'mol/L' },
       widget,
       table: potTable({
-        pieces: [indicatorCard('ph', PH, { x: 100, y: 40 })],
+        pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
         fixtures: [t.fixture],
         zones: { slots: [...t.slots] }
       }),
@@ -415,14 +413,14 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the card you choose into the slot.'],
-  2: ['Drag the card into the slot, set the dial, then press the key.'],
-  3: ['Set the dial, press the key, then watch the window.'],
-  4: ['Drag the card into the slot, run the base in, then type your answer.'],
-  5: ['Drag the card into the slot, run the base in, then type your answer.'],
-  6: ['Drag the card into the slot, run the base in, then type your answer.'],
-  7: ['Run the base in, then type your answer.'],
-  8: ['Drag the card into the slot, run the base in, then type your answer.']
+  1: ['Drag the card you choose', 'into the slot.'],
+  2: ['Drag the card into the slot,', 'set the dial, press the key.'],
+  3: ['Set the dial, press the key,', 'then watch the window.'],
+  4: ['Drag the card into the slot,', 'run the base in, then type.'],
+  5: ['Drag the card into the slot,', 'run the base in, then type.'],
+  6: ['Drag the card into the slot,', 'run the base in, then type.'],
+  7: ['Run the base in,', 'then type your answer.'],
+  8: ['Drag the card into the slot,', 'run the base in, then type.']
 };
 applyNotes(STAGES, NOTES);
 
