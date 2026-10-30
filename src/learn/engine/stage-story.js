@@ -174,6 +174,9 @@ export const STAGE_STORY = {
   'q1-recipe': {
     1: 'Vess holds three scoops from three foundry floors.'
   },
+  'q5-ionic': {
+    1: 'The waste pond turned cloudy overnight, and Vess wants to know what changed in it.'
+  },
   'q6-stoich': {
     1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
   }

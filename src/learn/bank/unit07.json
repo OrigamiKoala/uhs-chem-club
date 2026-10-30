@@ -647,6 +647,60 @@
         ],
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
+    },
+    "q5-ionic": {
+      "problems": [
+        {
+          "id": "q5-ionic#b1",
+          "quest": "q5-ionic",
+          "question": "Solutions of barium chloride and sodium sulfate are mixed and a white solid forms. Which is the net ionic equation?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Ba²⁺(aq) + SO₄²⁻(aq) → BaSO₄(s)"
+            },
+            {
+              "id": "b",
+              "label": "Ba²⁺(aq) + 2 Cl⁻(aq) + 2 Na⁺(aq) + SO₄²⁻(aq) → BaSO₄(s) + 2 Na⁺(aq) + 2 Cl⁻(aq)"
+            },
+            {
+              "id": "c",
+              "label": "Na⁺(aq) + Cl⁻(aq) → NaCl(s)"
+            },
+            {
+              "id": "d",
+              "label": "BaCl₂(aq) + Na₂SO₄(aq) → BaSO₄(s) + 2 NaCl(aq)"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The solid is barium sulfate, so only Ba²⁺ and SO₄²⁻ leave the water. Na⁺ and Cl⁻ stay dissolved on both sides and are left out of the net ionic equation. Choice b is the complete ionic equation."
+        },
+        {
+          "id": "q5-ionic#b2",
+          "quest": "q5-ionic",
+          "question": "A solution of sodium nitrate is mixed with a solution of potassium chloride. What do you see, and why?",
+          "options": [
+            {
+              "id": "a",
+              "label": "A white solid, because chloride ions make solids"
+            },
+            {
+              "id": "b",
+              "label": "A white solid, because the two metals react"
+            },
+            {
+              "id": "c",
+              "label": "No solid, because every pairing of these ions stays dissolved"
+            },
+            {
+              "id": "d",
+              "label": "No solid, because nothing in a mixture ever reacts"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Sodium, potassium and nitrate ions never leave the water, and chloride ions only do so with a few partners such as Ag⁺ and Pb²⁺. Swapping partners gives NaCl and KNO₃, which both stay dissolved."
+        }
+      ]
     }
   }
 }

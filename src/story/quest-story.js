@@ -263,6 +263,16 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: a compound holds the same share of each element every time, so ore\'s share of metal can be worked out.'
   },
+  'unit07/q5-ionic': {
+    scene: 'cloudy-pond',
+    beats: [
+      { to: 0.2, say: 'Two clear jars hold lead, nitrate, potassium and iodide ions. Pour them together and a cloud forms.' },
+      { to: 0.5, say: 'Only one pair of ions meets and packs into a solid, the precipitate. The lead and iodide ions leave the water, and nothing else moves.' },
+      { to: 0.74, say: 'The potassium and nitrate ions are spectator ions: the same discs stand in the water before and after the mixing.' },
+      { to: 0.94, say: 'The net ionic equation keeps only what changed: the lead ion and two iodide ions packing into a solid.' }
+    ],
+    filed: 'Filed: the pond\'s cloud is one pair of ions leaving the water as a solid, and every other ion stood by.'
+  },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     beats: [
