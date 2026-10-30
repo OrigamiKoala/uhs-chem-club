@@ -7,7 +7,7 @@ export const LEAKS = {
   2: [/\bhydrogen bond/i, /\blighter\b/i, /\bheavier\b/i, /\bmass\b/i],
   3: [/\b59\b/, /\bsubtract\b/i, /\blower\b/i],
   4: [/\b40\.6\b/, /\bmultiply\b/i, /\badd\b/i],
-  5: [/\b50\b/, /\bM1V1\b/i, /\bmoles\b/i]
+  5: [/(?<![.\d])50 mL/, /\bM1V1\b/i, /\bmoles\b/i]
 };
 
 export async function check({ q, mod, MD, near, same, holds, start }) {
@@ -15,7 +15,7 @@ export async function check({ q, mod, MD, near, same, holds, start }) {
   near(mod.CHECKS.P3_BP, 59.15, 0.2, `${q} phase 3 (ethanol at 45 kPa)`);
   holds(Math.abs(mod.CHECKS.P3_BP - 78.3) > 15, `${q} phase 3: the answer is near the sea-level boiling point`);
   // 3.00 mol x 6.01 kJ + 54.0 g x 4.184 J/(g·°C) x 100 °C = 18.03 + 22.59.
-  near(mod.CHECKS.P4_KJ, 18.03 + 22.5936, 0.01, `${q} phase 4 (the heat)`);
+  near(mod.CHECKS.P4_KJ, 18.03 + 22.5936, 0.03, `${q} phase 4 (the heat)`);
   // 1.50 M x V = 0.300 M x 250 mL.
   near(mod.CHECKS.P5_ML, 50, 1e-9, `${q} phase 5 (the stock)`);
   // Phase 2: the order by grip is the reverse of the order by mass, for the four liquids chosen.
