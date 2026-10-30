@@ -282,6 +282,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the furnace recipe, Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, is balanced: every atom of the ore is accounted for.'
   },
+  'unit07/q2-names': {
+    scene: 'crate-labels',
+    beats: [
+      { to: 0.3, say: 'Ions carry charges and a compound carries none. One magnesium ion cancels two chlorine ions, so the formula counts the ions in that smallest group: MgCl₂.' },
+      { to: 0.6, say: 'A name says the same in words. The metal keeps its name and the other ion takes the ending -ide, so Mg²⁺ with O²⁻ is magnesium oxide.' },
+      { to: 0.94, say: 'In Fe₂O₃ the three oxide ions hold 6− between them, so each of the two irons is 3+. The Roman numeral is that charge, not a count: iron(III) oxide.' }
+    ],
+    filed: 'Filed: the manifest\'s ore is iron(III) oxide, Fe₂O₃, a compound with a fixed share of metal.'
+  },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     beats: [
