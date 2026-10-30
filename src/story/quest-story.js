@@ -484,7 +484,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: filter paper cannot take the dissolved agent out of the canal water, but boiling the water off leaves it behind.'
   },
-  // @mirrowen boss-undertow
+  'unit06/boss-undertow': {
+    scene: 'undertow-finale',
+    beats: [
+      { to: 0.3, say: 'Every phase of that fight was a bench you had worked: a jar sorted by state, liquids ranked by grip, a boiling point, a heat counted stretch by stretch and a brine thinned.' },
+      { to: 0.6, say: 'The Undertow let go when the readings stopped agreeing with its hold. It slumps back into grey brine along the quay.' },
+      { to: 0.85, say: 'What it was drawing on has a grip on water and thins like any solution. It was made to be taken out again.' }
+    ],
+    filed: 'Filed: the freezing agent behaves like a made liquid and not a mined salt: it dissolves, it thins and it boils off.'
+  },
 };
 
 /** The story animation a quest ends on, or null. */

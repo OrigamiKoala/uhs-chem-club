@@ -221,6 +221,21 @@ export const SPECIES = {
     }
   },
 
+  'the undertow': {
+    name: 'The Undertow',
+    counter: 'Trial missed: the reading does not match what that bench of the harbour shows.',
+    knockback: 'Knocked back. The Undertow drags the quay again, but every reading on your bench remains.',
+    hit: 'The crawler loosens its hold on the ice and slumps into grey brine.',
+    lines: {
+      idle: () => 'The crawler holds the quay in its siphons.',
+      unmoved: () => 'The crawler keeps its grip on the ice.',
+      slackened: () => 'Its siphons slacken.'
+    },
+    plan(enc, foe, probe) {
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
   'the crucible': {
     name: 'The Crucible',
     counter: 'Trial missed: the furnace heat or free-energy balance does not match that setting.',

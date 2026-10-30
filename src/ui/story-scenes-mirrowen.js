@@ -5,7 +5,7 @@
  * glow, every figure read from `matterdata.js`. Pure over a 2D context: importable in Node (`verify:story`).
  */
 
-import { SUBSTANCES, HYDRATION } from '../learn/engine/matterdata.js';
+import { SUBSTANCES, HYDRATION, boilingPoint, PHASE_WATER, stockVolume } from '../learn/engine/matterdata.js';
 import { BOND_ENTHALPIES } from '../learn/engine/thermodata.js';
 import { GLYPHS, inkOf } from '../learn/table/kits/matter-parts.js';
 import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
@@ -88,8 +88,43 @@ function gripBars(ctx, w, h, t) {
   void lerp; void HYDRATION;
 }
 
+/* ---- boss-undertow: five benches light in turn, each with the figure it measured; the crawler lets go ---- */
+function undertowFinale(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const P4 = ((54 / PHASE_WATER.M) * PHASE_WATER.fus + (54 * PHASE_WATER.cLiquid * 100) / 1000);
+  const steps = [
+    ['states', 'solid  liquid  gas'],
+    ['grips', `${SUBSTANCES.ether.grip.toFixed(1)} to ${SUBSTANCES.H2O.grip.toFixed(1)} kJ`],
+    ['boiling', `ethanol ${boilingPoint('ethanol', 45).toFixed(0)} °C at 45 kPa`],
+    ['heat', `${P4.toFixed(1)} kJ for 54 g of ice`],
+    ['dose', `${stockVolume(1.5, 0.3, 250).toFixed(0)} mL of 1.50 M stock`]
+  ];
+  const grip = 1 - ease(win(t, 0.5, 0.78));
+  // The crawler: a dark mass over the quay that loses its hold as the benches light and settles once it is done.
+  ctx.globalAlpha = 0.25 + 0.75 * grip;
+  disc(ctx, 480, 130, 70 * (0.6 + 0.4 * grip), '#2a2926', C.steel);
+  ctx.globalAlpha = 1;
+  steps.forEach(([name, figure], i) => {
+    const on = ease(win(t, 0.02 + i * 0.07, 0.08 + i * 0.07));
+    const x = 120 + i * 180;
+    ctx.fillStyle = on > 0.05 ? C.amber : C.steel;
+    ctx.globalAlpha = 0.35 + 0.65 * on;
+    ctx.fillRect(x - 60, 300, 120, 6);
+    ctx.globalAlpha = 1;
+    text(ctx, name, x, 270, { size: 24, color: on > 0.05 ? C.text : C.dim, weight: 700 });
+    ctx.globalAlpha = on;
+    text(ctx, figure, x, 350, { size: 18, color: C.text });
+    ctx.globalAlpha = 1;
+  });
+  const drop = ease(win(t, 0.55, 0.85));
+  line(ctx, 480, 200, 480, 200 + 120 * drop, C.dust, 2);
+  text(ctx, 'brine', 480, 440, { size: 24, color: C.dust });
+  void lerp; void HYDRATION;
+}
+
 export const MIRROWEN_SCENES = {
   'grip-bars': gripBars,
+  'undertow-finale': undertowFinale,
   ...Q1_SCENES,
   ...Q3_SCENES,
   ...Q4_SCENES,

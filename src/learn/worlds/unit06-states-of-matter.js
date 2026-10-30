@@ -95,8 +95,8 @@ export const UNIT_06 = {
       line: 'A brine crawler drags the harbour toward the freeze.',
       arena: 'boss',
       stageCount: 5,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/boss-undertow.js')
     }
   ]
 };

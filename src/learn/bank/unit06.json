@@ -1075,6 +1075,60 @@
         ],
         "finish": "Rf is a ratio of two distances, so it stays the same however far the front runs, and it can be used to predict a spot's height on a longer strip."
       }
+    },
+    "boss-undertow": {
+      "problems": [
+        {
+          "id": "boss-undertow#b1",
+          "quest": "boss-undertow",
+          "question": "Ethanol boils at 78 °C at sea level. Why does it boil at a lower temperature on a mountain?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Its vapor pressure reaches the lower outside pressure sooner"
+            },
+            {
+              "id": "b",
+              "label": "The bonds inside ethanol molecules are weaker there"
+            },
+            {
+              "id": "c",
+              "label": "Ethanol molecules are lighter on a mountain"
+            },
+            {
+              "id": "d",
+              "label": "Less heat is given to the flask there"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A liquid boils when its vapor pressure equals the pressure outside it; where the air pushes less, that happens at a lower temperature."
+        },
+        {
+          "id": "boss-undertow#b2",
+          "quest": "boss-undertow",
+          "question": "Which of these takes the most heat to pull one mole of its molecules apart?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Diethyl ether"
+            },
+            {
+              "id": "b",
+              "label": "Acetone"
+            },
+            {
+              "id": "c",
+              "label": "Water"
+            },
+            {
+              "id": "d",
+              "label": "Argon"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Water's hydrogen bonds hold its molecules harder than the dipole–dipole and dispersion forces of the others, though water is the lightest of them."
+        }
+      ]
     }
   }
 }
