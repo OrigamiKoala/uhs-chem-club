@@ -84,9 +84,13 @@ Verdicts: **Covered**, **Partial** (a real hole, named), **Gap** (nothing found)
 | 2.6 Resonance, formal charge | Ligar `q5` s1 to 8 | **Covered** | Hand-counted formal charge, fractional bond order. |
 | 2.7 VSEPR, hybridization | Ligar `q6` s1 to 10, `q7` s1 to 7, `q8` s1 to 9 | **Covered** | Shapes from two to six domains with lone pairs; sp, sp², sp³; σ and π. "Geometric isomer" is never named in the quest text (restricted rotation, s5 to 6, is taught). |
 | Beyond the exam, taught | Ligar `q9-orbitals`; hybrid mixing `q8` s3, s8, s9 | n/a | Molecular orbital diagrams and the derivation of hybrid orbitals are excluded by the CED. The track marks `q9` optional. |
-| 3.1 Intermolecular forces | none built | **Unbuilt** | Mirrowen `q2`, `q3`. Bellows `q6` says only that molecules attract a little. |
-| 3.2 Properties of solids | Ligar `q2` (partly) | **Partial** | Ligar already sorts ionic, metallic, network and molecular solids by melting point, conduction and brittleness. The plan gives this to Mirrowen `q4` as well (see B6). |
-| 3.3 Solids, liquids, gases | none built | **Unbuilt** | Mirrowen `q1`. |
+| 3.1 Intermolecular forces | Mirrowen `q2` s1 to 8, `q3` s1, 2, 5, 6 | **Covered** (built 2026-10-30, hand-played only in part) | Dispersion and polarizability, dipole–dipole, hydrogen bonding (the click), ion–dipole, shape, a grip against a bond; vapor pressure, boiling, surface tension and viscosity against grip. 3.1.A.5 (biomolecules) is a bank problem only. |
+| 3.2 Properties of solids | Ligar `q2`; Mirrowen `q4` s1 to 6, `q3` s7 | **Covered** | Ligar: ionic, metallic, network, alloys. Mirrowen `q4` adds molecular solids and crystalline against amorphous (glass against quartz) and a four-way sealed sort; `q3` s7 is why ice floats. 3.2.A.7 (polymers) is a bank problem only. |
+| 3.3 Solids, liquids, gases | Mirrowen `q1` s1 to 8, `q4` s3 to 4 | **Covered** | States told from squeeze and pour, a window of whole molecules (melting and boiling break no bond), the room per molecule, a typed ratio of molecules in a litre of water and of steam. Phase diagrams (excluded) are `q5` s8, labelled. |
+| 3.7, 3.8, 3.10 Solutions | Mirrowen `q6` s1 to 8 | **Covered, mass percent missing** | Molarity (typed), dilution M₁V₁ = M₂V₂ (typed), particles per formula unit (typed), like dissolves like, particulate pictures of solutions. Mass percent (excluded) has no stage. |
+| 3.9 Separations | Mirrowen `q7` s1 to 7 | **Covered** | Filtering against evaporating, paper chromatography with Rf (typed) and a reversing order, distillation; boiling-point elevation (excluded) is s6. |
+| 6.5 Energy of phase changes | Mirrowen `q5` s1 to 7 | **Covered** | The whole heating curve, q = nΔH (typed), the total from ice to steam and the way back (typed, signed), steam against water as a burn. |
+| 6.1.A.4, 6.4.A.7 Dissolving | Mirrowen `q6` s7 | **Covered** | Four salts in the calorimeter cup ranked by where the bath ends. |
 
 ## Gases (CED 3.4 to 3.6)
 

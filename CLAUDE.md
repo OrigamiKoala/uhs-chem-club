@@ -135,8 +135,8 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   Enter/Space/arrows; Skip or Esc leaves, losing nothing); it plays on every completion, never before or between stages;
   reduced motion and `3D Off` show each beat's last frame. Words: only what the quest has earned, none a later bench
   introduces. A quest with no animation yet still ends on its `DEBRIEF` card. `verify:story` holds it. Built for Tallow (7),
-  Lanternfall (10), Ligar (10), Bellows (7) and Ember Reach (8): every quest of those five worlds has one, and `verify:story`
-  fails a quest of `unit01`–`unit05` without it. **A scene shows the mechanism, never a decoration:** what the line says is what
+  Lanternfall (10), Ligar (10), Bellows (7), Ember Reach (8) and Mirrowen (8): every quest of those six worlds has one, and `verify:story`
+  fails a quest of `unit01`–`unit06` without it. **A scene shows the mechanism, never a decoration:** what the line says is what
   moves, and every number on screen is counted or measured from the drawn thing (Bellows: particles bounce on a phase and each wall
   knock is counted from it, `ui/story-sim.js` `wallHits`, so squeezing or heating raises the gauge for the reason it does on the
   bench; Ligar `ui/story-scenes-ligar-mech.js`: valence dots move between atoms, atoms ride the H–Cl well, water turns in the field,
@@ -198,6 +198,8 @@ The cross-world AP check (built track and `docs/plans/learn-quests.md` against t
 
 How to build and audit a Learn world, the pitfall ledger and each world's open items are in `PRODUCT.md` ("Building a Learn world"). Per-world build records, per-bench decisions and layout traps (moved out of this file on 2026-10-29) are in `docs/engineering/engine-and-worlds.md`. The per-world audits are in `docs/archive/2026-10-29/`.
 
+
+Mirrowen (`unit06`) is on the **matter kit** (`table/kits/matter.js`, which extends the heat kit): each bench's instruments and pieces live in their own `matter-<name>.js` and register through `matter-registry.js`; its pure data is `engine/matterdata*.js`; each bench has its own check file in `tools/lib/mirrowen/` (found by name, run from `verify:learn`).
 
 Architecture, the Learn engine, tabletop layout rules, per-world notes, the 3D worlds and ship, mobile, the player
 journey and progression are in `docs/engineering/engine-and-worlds.md`. Plans and per-world records are in

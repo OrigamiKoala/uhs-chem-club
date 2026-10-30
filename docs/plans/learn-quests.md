@@ -863,6 +863,8 @@ with one API, and declarations checked by `verify:learn`.
 
 ---
 
+> **Built differently (2026-10-30, `docs/plans/mirrowen-world.md` and `docs/mirrowen-audit.md`).** The world is built: seven benches and `boss-undertow`. Ids and titles changed to `q1-states` Three States (8), `q2-grip` (8), `q3-boil` (8), `q4-solids` (6, a recap: Ligar holds the metals and alloys), `q5-crossing` (8), `q6-solution` (8), `q7-separate` (7). Parts of the brief below were folded: `q1` s7 is a typed ratio of molecules in a litre of water and of steam; `q2` s5 is a rank of four ions and s6 a rank of butane, pentane and neopentane; `q3` s4 is a typed boiling point on a mountain and s8 a gas over water at 35 °C; `q4` has molecular solids, the glass-and-quartz click and two sealed sorts; `q5` merges the phase-diagram stages into one labelled stage; `q6` has no mass-percent stage; `q7` merges "count the dyes" into the Rf stage. The boss rebuilds five benches with new cases.
+
 ### World 6 — Mirrowen (`unit06`, states of matter, IMFs, solutions): 7 quests
 
 #### `q1-states` · Solids, Liquids and Gases · CED 3.3 · particle window (gas rig)
