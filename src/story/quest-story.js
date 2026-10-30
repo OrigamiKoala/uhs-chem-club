@@ -428,7 +428,14 @@ export const QUEST_STORY = {
       { to: 0.9, say: 'Even so, breaking every O–H bond in a mole of water takes 926 kJ. The forces between molecules are a sliver of the bonds inside them.' }
     ],
     filed: 'Filed: water grips twice as hard as a molecule nearly twice its weight, so the canal ice is held by more than size.'
-  }
+  },
+  // @mirrowen q1-states
+  // @mirrowen q3-boil
+  // @mirrowen q4-solids
+  // @mirrowen q5-crossing
+  // @mirrowen q6-solution
+  // @mirrowen q7-separate
+  // @mirrowen boss-undertow
 };
 
 /** The story animation a quest ends on, or null. */

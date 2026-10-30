@@ -10,6 +10,12 @@ import { BOND_ENTHALPIES } from '../learn/engine/thermodata.js';
 import { GLYPHS, inkOf } from '../learn/table/kits/matter-parts.js';
 import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
 import { win, ease, lerp } from './story-sim.js';
+import { Q1_SCENES } from './story-scenes-mirrowen-q1.js';
+import { Q3_SCENES } from './story-scenes-mirrowen-q3.js';
+import { Q4_SCENES } from './story-scenes-mirrowen-q4.js';
+import { Q5_SCENES } from './story-scenes-mirrowen-q5.js';
+import { Q6_SCENES } from './story-scenes-mirrowen-q6.js';
+import { Q7_SCENES } from './story-scenes-mirrowen-q7.js';
 
 const C = { ...KIT, cold: '#6f8fb0', warm: '#c0652b' };
 
@@ -83,5 +89,11 @@ function gripBars(ctx, w, h, t) {
 }
 
 export const MIRROWEN_SCENES = {
-  'grip-bars': gripBars
+  'grip-bars': gripBars,
+  ...Q1_SCENES,
+  ...Q3_SCENES,
+  ...Q4_SCENES,
+  ...Q5_SCENES,
+  ...Q6_SCENES,
+  ...Q7_SCENES,
 };

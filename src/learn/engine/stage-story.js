@@ -157,6 +157,12 @@ export const STAGE_STORY = {
   'q2-grip': {
     1: 'Vess wants to know how hard molecules hold their neighbours, before she can say what holds the canal ice.'
   },
+  // @mirrowen q1-states
+  // @mirrowen q3-boil
+  // @mirrowen q4-solids
+  // @mirrowen q5-crossing
+  // @mirrowen q6-solution
+  // @mirrowen q7-separate
 
   /* ---- Kettle: halt the robot foundry ---- */
   'q1-recipe': {

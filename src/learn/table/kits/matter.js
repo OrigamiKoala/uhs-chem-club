@@ -18,6 +18,12 @@ import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './matt
 import './matter-tour.js';
 
 /* One import per bench: each file registers its own instruments and pieces (`matter-registry.js`). */
+import './matter-window.js';
+import './matter-vapour.js';
+import './matter-tester.js';
+import './matter-curve.js';
+import './matter-flask.js';
+import './matter-strip.js';
 
 export const MATTER_KIT_ID = 'matter';
 export const MATTER_BOUNDS = HEAT_BOUNDS;

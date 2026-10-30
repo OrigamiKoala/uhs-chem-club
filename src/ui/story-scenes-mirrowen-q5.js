@@ -1,0 +1,6 @@
+/**
+ * story-scenes-mirrowen-q5.js — the story picture(s) of Mirrowen's q5 bench (STUB; the bench's builder fills this in).
+ * Same contract as `story-scenes-mirrowen.js`: pure functions of `t` on a 960-wide plate, SCOURED PLATE palette, every number read from the data.
+ */
+
+export const Q5_SCENES = {};
