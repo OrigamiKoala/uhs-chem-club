@@ -184,10 +184,10 @@ a README saying why) or `docs/archive/<date>/`, and cut their wiring out of the 
   tables recomputed from real data, plates drawn in Node, hint/prompt/legend/leak rules, encounter layer),
   `:table`, `:story`, `:sync`, `:drills`, `:docs` (PRODUCT.md counts vs the registry, retired wording, paths that must exist), `:galaxy`, `:run` (every quest mounts and every stage runs), `:geometry`
   (all 20 reaction animations), `:media`, `:flows`, `:progression`, `:ship`, `:voyage`, `:tallow`,
-  `:ligar`, `:lanternfall`, `:bellows`, `:ember` (each builds its real world in Node and checks overlap,
+  `:ligar`, `:lanternfall`, `:bellows`, `:ember`, `:mirrowen` (each builds its real world in Node and checks overlap,
   buried bodies, walkability flood-fill, lamps-only-lit, shader patches; `:ligar` also holds the mine:
   doorways, grades, rock over every roof, bays inside chambers, hills unclimbed, the guide's route, walls
-  that hold, lamps in every working, the cover mask), `:arena` (the boss table's ground in all five worlds, the five boss bodies, the look up), `:bench` (every built instrument
+  that hold, lamps in every working, the cover mask), `:arena` (the boss table's ground in all six worlds, the six boss bodies, the look up), `:bench` (every built instrument
   on its real bench at six aspects, real pointer paths, foe bodies, and the bench bay in all five worlds), `:holo`, `:normals`, then `build`.
 - Other: `deploy:backend` (clasp), `bake:stills`, `bake:video`, `seed`, `test:load`.
 - Test hooks: `globalThis.__LQ_TEST__` is read in `stagerunner.js`/`plates.js` and inert without it.

@@ -99,6 +99,14 @@ export const DESTINATIONS = {
       atmo: '#c79a62', atmoStrength: 0.58, seed: [6.3, 1.7, 4.1]
     }
   },
+  mirrowen: {
+    key: 'mirrowen', name: 'Mirrowen', hash: '#/learn/unit06',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'ice', colors: ['#7a9a9d', '#a9c4c6', '#d7e4e6', '#4c6c70'],
+      atmo: '#cfe0e3', atmoStrength: 0.6, seed: [2.9, 5.3, 3.7]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

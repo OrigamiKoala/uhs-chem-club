@@ -243,7 +243,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   only a chosen one** (`gfxTierPref`); the tier is decided once at page open. Resolution is paced on
   planets only (`paceResolution`). Shaders compile when a world is built (`warmWorld`). Loop capped at 60 fps.
 - **Worlds** (Erebus `world.js`+`erebus/`, Tallow `tallow.js`+`tallow/`, Lanternfall, Ligar, Bellows,
-  Ember Reach `ember.js`+`ember/`, each laid out by `tools/gen-<world>-layout.*` into `world-data/*.json`):
+  Ember Reach `ember.js`+`ember/`, Mirrowen `mirrowen.js`+`mirrowen/`, each laid out by `tools/gen-<world>-layout.*` into `world-data/*.json`):
   each is one analytic height field + one grid to the horizon, ONE sky function that is also its fog and
   its PMREM environment map, a PBR kit (`materials/pbr-kit.js`: maps agree; OpenGL-style normals —
   never compensate per material, `verify:normals`; `aoMap` uses uv2; `mergeStatic` bakes props, keep
@@ -260,6 +260,12 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques
   (`SKY_RENDER_ORDER`; a world's opaque material must not set `depthWrite:false`).
+- **Mirrowen** (`unit06`, `three/mirrowen.js` + `mirrowen/`, `tools/gen-mirrowen-layout.mjs`, `tools/verify-mirrowen.mjs`): a tidal shelf. A round basin (15 m) at the middle and a canal 16 m wide
+  running north out of it are ONE signed distance (`terrain.js` `waterSD`); a closed ring of colliders (`mirrowen.js` `waterRing`) keeps the walk out, and the sea is a ring laid over the shelf's
+  drowned edge beyond the walk. The canal's far end (north of `water.frozenZ`) is the Fifth's ice: a sheet (`buildWaterGeometry(.., 'ice')`), two hulls (`plant.js` `buildHull`, listed in the JSON's `hulls`)
+  and `ice-wall` landmarks on both banks and across the end; the Undertow is fought on the east bank with that ice behind it (`BOSS_ARENA_SPOTS['boss-undertow']`, species `the undertow`, rig in
+  `boss-models.js`). Seven hosts on a 44 m ring, keyed `site-N` = Bench N (`host-plan.js`): chart house, tank bay, pump house, cutting yard, boiler house, dosing station, distillery. No field points.
+  A quest with a world under it ignores a leftover `ROOM` export (the engine deploys onto the host's bench; `verify:bench` ignores it for walkable units).
 - **Avalon ship** (`three/ship.js` over `three/ship/`, `ship-rooms.js`, `ship-graph.js`): built from a
   shared kit; doors open as you approach, portals are arches; `SHIP_ANCHORS` derived from the graph and
   must stand on clear deck; every doorway names its destination on both faces; lighting rooms declare

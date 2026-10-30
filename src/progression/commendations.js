@@ -376,6 +376,37 @@ export const COMMENDATIONS = [
     hidden: false,
     earnedBy: (s) => manualComplete(s, 'unit05')
   },
+  {
+    id: 'mirrowen_surveyed',
+    name: 'Mirrowen Surveyed',
+    line: 'Completed every built bench across the canals of Mirrowen.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => {
+      if (!s.learn) return false;
+      const q = (getWorld('unit06')?.quests || []).filter(x => x.status === 'live' && x.arena !== 'boss').map(x => x.id);
+      return q.length > 0 && q.every(id => Boolean(s.learn[`unit06/${id}`]?.completedAt));
+    }
+  },
+  {
+    id: 'mirrowen_practice',
+    name: 'Flask Drills',
+    line: 'Worked through the revision problem set on Mirrowen.',
+    tier: 'painted',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit06_practice_done)
+  },
+  {
+    id: 'manual_unit06',
+    name: 'Unit 6 Field Log',
+    line: 'Logged every vocabulary term across Mirrowen.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => manualComplete(s, 'unit06')
+  },
 
   // ===================== DRILL DECK =====================
   // Cosmetic only, like every plate here: a drill pays no XP and never reaches Standings.

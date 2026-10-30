@@ -320,6 +320,16 @@ export const REQUISITIONS = [
     apply: (state) => { state.quarters = state.quarters || {}; state.quarters.calorimeter_ember = true; }
   },
   {
+    id: 'quarters_mirrowen_flask',
+    kind: 'quarters',
+    name: 'Mirrowen Volumetric Flask',
+    line: 'A glass volumetric flask with a single ring etched on its neck, stoppered, half full of canal water.',
+    finish: 'brass',
+    source: { commendation: 'mirrowen_surveyed' },
+    tokenColor: 'var(--accent-amber)',
+    apply: (state) => { state.quarters = state.quarters || {}; state.quarters.flask_mirrowen = true; }
+  },
+  {
     id: 'privilege_comms_relay',
     kind: 'privilege',
     name: 'Comms Relay Feed',

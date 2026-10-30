@@ -17,6 +17,7 @@ import { LigarWorld } from "./ligar.js";
 import { LanternfallWorld } from "./lanternfall.js";
 import { BellowsWorld } from "./bellows.js";
 import { EmberReachWorld } from "./ember.js";
+import { MirrowenWorld } from "./mirrowen.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -50,6 +51,9 @@ const BELLOWS_EXPOSURE = 0.86;
 // Ember Reach is pale sinter under a sulphur haze in the afternoon: brighter ground than
 // Ligar's basalt and a dimmer sky than the salt pan's, so it sits between the two.
 const EMBER_EXPOSURE = 0.98;
+// Mirrowen is frost shingle and grey-green water under a high white haze: pale ground, a bright sky
+// and ice that throws light back, so it takes a little less exposure than Ember Reach.
+const MIRROWEN_EXPOSURE = 0.9;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -87,6 +91,7 @@ class Stage {
     this.lanternfallWorld = null;
     this.bellowsWorld = null;
     this.emberWorld = null;
+    this.mirrowenWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -790,6 +795,10 @@ class Stage {
       if (!this.emberWorld) this.emberWorld = this.warmWorld(new EmberReachWorld(this.renderer));
       return this.emberWorld;
     }
+    if (key === "mirrowen") {
+      if (!this.mirrowenWorld) this.mirrowenWorld = this.warmWorld(new MirrowenWorld(this.renderer));
+      return this.mirrowenWorld;
+    }
     return null;
   }
 
@@ -819,6 +828,7 @@ class Stage {
     if (key === "lanternfall") return LANTERNFALL_EXPOSURE;
     if (key === "bellows") return BELLOWS_EXPOSURE;
     if (key === "ember") return EMBER_EXPOSURE;
+    if (key === "mirrowen") return MIRROWEN_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -995,10 +1005,17 @@ class Stage {
     this.enterLearnWorld(this.emberWorld, EMBER_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows or Ember Reach. */
+  /** Walk out onto Mirrowen, the tidal shelf (Learn world 06). */
+  enterMirrowenScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("mirrowen");
+    this.enterLearnWorld(this.mirrowenWorld, MIRROWEN_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach or Mirrowen. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1231,6 +1248,11 @@ class Stage {
   /** Light an Ember Reach site's indicator when its quest is finished. */
   setEmberSiteComplete(questId, complete) {
     if (this.emberWorld) this.emberWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Mirrowen site's indicator when its quest is finished. */
+  setMirrowenSiteComplete(questId, complete) {
+    if (this.mirrowenWorld) this.mirrowenWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Ligar site's indicator when its quest is finished. */

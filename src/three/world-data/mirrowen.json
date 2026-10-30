@@ -1,0 +1,1147 @@
+{
+  "id": "mirrowen",
+  "name": "Mirrowen",
+  "place": "Tidal shelf",
+  "oneLine": "Solid, liquid and gas, what holds molecules together, and how a mixture comes apart.",
+  "sky": "mirrowen-sky",
+  "terrain": {
+    "heightmap": "mirrowen-shingle",
+    "size": [
+      240,
+      240
+    ],
+    "maxHeight": 1,
+    "material": "frost-shingle"
+  },
+  "ambience": {
+    "keyLight": 15594487,
+    "fillLight": 12439772,
+    "fogColor": 13424602,
+    "fogNear": 60,
+    "fogFar": 700,
+    "dustDensity": 0.3
+  },
+  "shore": 148,
+  "water": {
+    "level": -0.35,
+    "basin": {
+      "x": 0,
+      "z": 0,
+      "radius": 15
+    },
+    "channel": {
+      "ax": 0,
+      "az": -8,
+      "bx": 0,
+      "bz": -96,
+      "half": 8
+    },
+    "frozenZ": -56
+  },
+  "road": {
+    "radius": 27
+  },
+  "lanes": [
+    {
+      "points": [
+        [
+          13,
+          -27
+        ],
+        [
+          13,
+          -54
+        ],
+        [
+          30,
+          -60
+        ]
+      ],
+      "width": 3
+    }
+  ],
+  "arena": {
+    "boss": [
+      30,
+      0,
+      -78
+    ],
+    "player": [
+      30,
+      1.6,
+      -62
+    ]
+  },
+  "hulls": [
+    {
+      "x": 0,
+      "z": -86,
+      "length": 28,
+      "beam": 8.6,
+      "roll": 0.05,
+      "yaw": 0,
+      "freeboard": 4.2
+    },
+    {
+      "x": 0,
+      "z": -64,
+      "length": 10,
+      "beam": 5,
+      "roll": -0.04,
+      "yaw": 0,
+      "freeboard": 2.4,
+      "tug": true
+    }
+  ],
+  "landmarks": [
+    {
+      "asset": "landing-pad",
+      "pos": [
+        62,
+        0,
+        68
+      ],
+      "radius": 10,
+      "minTier": "T3"
+    },
+    {
+      "asset": "harbour-light",
+      "pos": [
+        -9,
+        0,
+        19
+      ],
+      "radius": 2.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        72,
+        0,
+        6
+      ],
+      "radius": 6,
+      "rotY": -1.65,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -72,
+        0,
+        -2
+      ],
+      "radius": 6,
+      "rotY": 1.54,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -30,
+        0,
+        82
+      ],
+      "radius": 6,
+      "rotY": 2.79,
+      "minTier": "T3"
+    },
+    {
+      "asset": "gantry-crane",
+      "pos": [
+        -62,
+        0,
+        -50
+      ],
+      "radius": 7.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -13.2,
+        0,
+        -72
+      ],
+      "radius": 4.4,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -13.2,
+        0,
+        -81.5
+      ],
+      "radius": 4.4,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -13.2,
+        0,
+        -91
+      ],
+      "radius": 4.4,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        13.2,
+        0,
+        -72
+      ],
+      "radius": 4.4,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        13.2,
+        0,
+        -81.5
+      ],
+      "radius": 4.4,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        13.2,
+        0,
+        -91
+      ],
+      "radius": 4.4,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -42,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -31.5,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -21,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        -10.5,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        0,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        10.5,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        21,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        31.5,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-wall",
+      "pos": [
+        42,
+        0,
+        -106.5
+      ],
+      "radius": 5.06,
+      "scale": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        74.79,
+        0,
+        -7.54
+      ],
+      "radius": 2,
+      "rotY": 0.3,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -73.1,
+        0,
+        -12.1
+      ],
+      "radius": 2,
+      "rotY": 3.59,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        66.57,
+        0,
+        -4.33
+      ],
+      "radius": 2,
+      "rotY": 1.07,
+      "minTier": "T3"
+    },
+    {
+      "asset": "drum-rack",
+      "pos": [
+        -20.87,
+        0,
+        75.43
+      ],
+      "radius": 1.8,
+      "rotY": 4.73,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-rack",
+      "pos": [
+        -28.41,
+        0,
+        91.19
+      ],
+      "radius": 1.8,
+      "rotY": 0.1,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-rack",
+      "pos": [
+        80.04,
+        0,
+        15.86
+      ],
+      "radius": 1.8,
+      "rotY": 2.18,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        0.88,
+        0,
+        17.58
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        4.77,
+        0,
+        16.94
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        8.42,
+        0,
+        15.46
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        11.65,
+        0,
+        13.19
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        14.29,
+        0,
+        10.27
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        16.22,
+        0,
+        6.83
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        17.33,
+        0,
+        3.05
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        17.58,
+        0,
+        -0.88
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        16.94,
+        0,
+        -4.77
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        15.46,
+        0,
+        -8.42
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        13.19,
+        0,
+        -11.65
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        10.27,
+        0,
+        -14.29
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -11.65,
+        0,
+        -13.19
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -14.29,
+        0,
+        -10.27
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -16.22,
+        0,
+        -6.83
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -17.33,
+        0,
+        -3.05
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -17.58,
+        0,
+        0.88
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -16.94,
+        0,
+        4.77
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -15.46,
+        0,
+        8.42
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -13.19,
+        0,
+        11.65
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -10.27,
+        0,
+        14.29
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -6.83,
+        0,
+        16.22
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "bollard",
+      "pos": [
+        -3.05,
+        0,
+        17.33
+      ],
+      "radius": 0.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        8.73,
+        0,
+        28.07
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        20.78,
+        0,
+        20.8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        25.15,
+        0,
+        15.22
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        29.35,
+        0,
+        1.79
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        28.92,
+        0,
+        -5.29
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23.15,
+        0,
+        -18.12
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -20.78,
+        0,
+        -20.8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -25.15,
+        0,
+        -15.22
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -29.35,
+        0,
+        -1.79
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -28.92,
+        0,
+        5.29
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23.15,
+        0,
+        18.12
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -18.14,
+        0,
+        23.14
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12.08,
+        0,
+        26.8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -5.31,
+        0,
+        28.92
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -3.6,
+        0,
+        48
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        3.6,
+        0,
+        48
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -3.6,
+        0,
+        60
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        3.6,
+        0,
+        60
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -3.6,
+        0,
+        72
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        3.6,
+        0,
+        72
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        16.4,
+        0,
+        -34
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        16.4,
+        0,
+        -46
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        22,
+        0,
+        -57.5
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        26,
+        0,
+        -66.5
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        34,
+        0,
+        -66.5
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-states",
+      "stage": 1,
+      "pos": [
+        24.6,
+        0,
+        36.48
+      ],
+      "approachPos": [
+        22.03,
+        1.6,
+        32.66
+      ],
+      "label": "Bench 1 - Three States",
+      "structure": "chart-house",
+      "built": true,
+      "flat": {
+        "x": 26,
+        "z": 37.72,
+        "r": 11.19
+      }
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-grip",
+      "stage": 2,
+      "pos": [
+        42.3,
+        0,
+        12.13
+      ],
+      "approachPos": [
+        37.87,
+        1.6,
+        10.86
+      ],
+      "label": "Bench 2 - The Grip Between",
+      "structure": "tank-bay",
+      "built": true,
+      "flat": {
+        "x": 44.99,
+        "z": 13.34,
+        "r": 13.79
+      }
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-boil",
+      "stage": 3,
+      "pos": [
+        40.8,
+        0,
+        -16.48
+      ],
+      "approachPos": [
+        36.53,
+        1.6,
+        -14.76
+      ],
+      "label": "Bench 3 - Liquids and Vapour",
+      "structure": "pump-house",
+      "built": true,
+      "flat": {
+        "x": 42.69,
+        "z": -17.53,
+        "r": 12.23
+      }
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-solids",
+      "stage": 4,
+      "pos": [
+        24.6,
+        0,
+        -36.48
+      ],
+      "approachPos": [
+        22.03,
+        1.6,
+        -32.66
+      ],
+      "label": "Bench 4 - Kinds of Solid",
+      "structure": "cutting-yard",
+      "built": true,
+      "flat": {
+        "x": 27.62,
+        "z": -40.28,
+        "r": 14.73
+      }
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-crossing",
+      "stage": 5,
+      "pos": [
+        -24.6,
+        0,
+        -36.48
+      ],
+      "approachPos": [
+        -22.03,
+        1.6,
+        -32.66
+      ],
+      "label": "Bench 5 - The Crossing",
+      "structure": "boiler-house",
+      "built": true,
+      "flat": {
+        "x": -26.51,
+        "z": -39.48,
+        "r": 13.1
+      }
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-solution",
+      "stage": 6,
+      "pos": [
+        -41.35,
+        0,
+        -15.05
+      ],
+      "approachPos": [
+        -37.02,
+        1.6,
+        -13.48
+      ],
+      "label": "Bench 6 - Taken Into Solution",
+      "structure": "dosing-station",
+      "built": true,
+      "flat": {
+        "x": -43.33,
+        "z": -16.21,
+        "r": 12.07
+      }
+    },
+    {
+      "id": "site-7",
+      "questId": "q7-separate",
+      "stage": 7,
+      "pos": [
+        -41.85,
+        0,
+        13.6
+      ],
+      "approachPos": [
+        -37.47,
+        1.6,
+        12.18
+      ],
+      "label": "Bench 7 - Pulling Apart",
+      "structure": "distillery",
+      "built": true,
+      "flat": {
+        "x": -44.08,
+        "z": 14.61,
+        "r": 11.86
+      }
+    }
+  ],
+  "spawn": {
+    "pos": [
+      0,
+      1.6,
+      88
+    ],
+    "lookAt": [
+      0,
+      1.6,
+      40
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          22.03,
+          1.6,
+          32.66
+        ],
+        "lookAt": [
+          24.6,
+          1.2,
+          36.48
+        ]
+      },
+      "site-2": {
+        "pos": [
+          37.87,
+          1.6,
+          10.86
+        ],
+        "lookAt": [
+          42.3,
+          1.2,
+          12.13
+        ]
+      },
+      "site-3": {
+        "pos": [
+          36.53,
+          1.6,
+          -14.76
+        ],
+        "lookAt": [
+          40.8,
+          1.2,
+          -16.48
+        ]
+      },
+      "site-4": {
+        "pos": [
+          22.03,
+          1.6,
+          -32.66
+        ],
+        "lookAt": [
+          24.6,
+          1.2,
+          -36.48
+        ]
+      },
+      "site-5": {
+        "pos": [
+          -22.03,
+          1.6,
+          -32.66
+        ],
+        "lookAt": [
+          -24.6,
+          1.2,
+          -36.48
+        ]
+      },
+      "site-6": {
+        "pos": [
+          -37.02,
+          1.6,
+          -13.48
+        ],
+        "lookAt": [
+          -41.35,
+          1.2,
+          -15.05
+        ]
+      },
+      "site-7": {
+        "pos": [
+          -37.47,
+          1.6,
+          12.18
+        ],
+        "lookAt": [
+          -41.85,
+          1.2,
+          13.6
+        ]
+      }
+    }
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6",
+      "site-7"
+    ]
+  },
+  "tracks": []
+}
