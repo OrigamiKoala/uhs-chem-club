@@ -263,6 +263,16 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: a compound holds the same share of each element every time, so ore\'s share of metal can be worked out.'
   },
+  'unit07/boss-golem': {
+    scene: 'golem-vault',
+    beats: [
+      { to: 0.22, say: 'Every phase was a bench you had already worked: a heap, a recipe board, a pot, a furnace and a ledger. That was enough to read the golem.' },
+      { to: 0.5, say: 'Its valves close and the steam stops. A recipe with nothing left to run on has nothing left to make.' },
+      { to: 0.7, say: 'Behind it is a vault, and in the vault is the ledger: ore in, metal out.' },
+      { to: 0.92, say: 'The ore in the ledger can give at most 27.9 tons of iron. The ledger claims 50.0, so 22.1 tons of it came from nowhere the ore could supply.' }
+    ],
+    filed: 'Filed: the ledger claims 22.1 tons of iron that its ore cannot give, so something else supplied it.'
+  },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     beats: [

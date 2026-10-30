@@ -18,6 +18,7 @@ import { Q4_SCENES } from './story-scenes-kettle-q4.js';
 import { Q5_SCENES } from './story-scenes-kettle-q5.js';
 import { Q7_SCENES } from './story-scenes-kettle-q7.js';
 import { Q8_SCENES } from './story-scenes-kettle-q8.js';
+import { BOSS_SCENES } from './story-scenes-kettle-boss.js';
 
 const fs = h => Math.max(11, h * 0.04);
 
@@ -177,5 +178,5 @@ function furnaceLedger(ctx, w, h, t) {
 export const KETTLE_SCENES = {
   'three-scoops': threeScoops,
   'furnace-ledger': furnaceLedger,
-  ...Q2_SCENES, ...Q3_SCENES, ...Q4_SCENES, ...Q5_SCENES, ...Q7_SCENES, ...Q8_SCENES
+  ...Q2_SCENES, ...Q3_SCENES, ...Q4_SCENES, ...Q5_SCENES, ...Q7_SCENES, ...Q8_SCENES, ...BOSS_SCENES
 };
