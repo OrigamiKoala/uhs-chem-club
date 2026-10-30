@@ -72,7 +72,7 @@ export const HOST_PLAN = {
   },
   'site-8': {
     questId: 'q8-kinds', label: 'Bench 8 - Kinds of Reaction', title: 'Kinds of Reaction', structure: 'tapping-floor', kind: 'tests', skin: 'deck', plate: 'KET-08',
-    pos: [42, -48], face: [-1, 0],
+    pos: [42, -40], face: [-1, 0],
     // The furnace's tapping floor: the tap hole and its runner, a ladle on rails and a pair of flues with a hood.
     extent: [-7.0, 7.0, -9.4, 0.8]
   }

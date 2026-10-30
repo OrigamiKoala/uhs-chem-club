@@ -81,7 +81,7 @@ export function buildSlagHeap(ctx, lm, seed = 1) {
   const heap = part(ctx, rockGeometry(3.0 * s, 70 + seed, { squash: 0.55, rough: 0.2 }), ctx.M.slagRock, 0, 0, 0, { cast: true });
   heap.rotation.y = lm.rotY || 0;
   g.add(heap);
-  g.userData.colliders = [{ x: 0, z: 0, r: 2.7 * s }];
+  g.userData.colliders = [{ x: 0, z: 0, r: 2.7 * s }];   // the walk goes round the heap's body, not its skirt
   return g;
 }
 

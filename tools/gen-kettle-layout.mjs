@@ -132,7 +132,14 @@ function scatter(asset, count, test, radius, extra = () => ({})) {
   }
 }
 const outer = (x, z) => Math.abs(x) > 56 || z > 70;
-scatter('slag-heap', 12, (x, z) => outer(x, z) || Math.abs(z) > 62, 3.6, () => ({ scale: round(0.8 + rnd() * 0.5), rotY: round(rnd() * 6.28), minTier: 'T3' }));
+// A heap's noise pushes its box out to about 1.3 times the rock's radius, so the footprint is declared at that.
+for (let n = 0, k = 0; n < 10 && k < 3000; k++) {
+  const scale = round(0.8 + rnd() * 0.4), r = round(4.0 * scale + 0.6);
+  const x = (rnd() - 0.5) * 2 * WALK, z = (rnd() - 0.5) * 2 * WALK;
+  if (!(outer(x, z) || Math.abs(z) > 62) || !fits(x, z, r)) continue;
+  add('slag-heap', x, z, r, { scale, rotY: round(rnd() * 6.28), minTier: 'T3' });
+  n++;
+}
 scatter('ingot-stack', 6, (x, z) => z < -50 || Math.abs(x) > 56, 2.0, () => ({ rotY: round(rnd() * 6.28), minTier: 'T4' }));
 scatter('crate-stack', 6, (x, z) => Math.abs(x) > 50 || z > 66, 2.0, () => ({ rotY: round(rnd() * 6.28), minTier: 'T4' }));
 
@@ -142,7 +149,7 @@ for (let z = SPAWN[2] - 4, i = 0; z >= -36; z -= 10, i++) lampAt(i % 2 ? 2.8 : -
 for (const s of sites) {
   const [ax, , az] = s.approachPos;
   const dir = Math.sign(ax);
-  for (let x = 12, i = 0; x <= Math.abs(ax) - 4.5; x += 11, i++) lampAt(dir * x, az + (i % 2 ? 1.9 : -1.9));
+  for (let x = 12, i = 0; x <= Math.abs(ax) - 3.4; x += 11, i++) lampAt(dir * x, az + (i % 2 ? 1.9 : -1.9));
 }
 for (let x = 14; x < PAD[0] - 12; x += 12) lampAt(x, 84 + (PAD[1] - 84) * (x / (PAD[0] - 9)) + 2.2);
 
