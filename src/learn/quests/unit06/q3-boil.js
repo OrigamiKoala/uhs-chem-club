@@ -64,7 +64,7 @@ const mass = id => `${SUBSTANCES[id].M.toFixed(SUBSTANCES[id].M < 100 ? 1 : 0)} 
 const at = (n, y = 54, x0 = 24, pitch = 22) => Array.from({ length: n }, (_, i) => ({ x: x0 + i * pitch, y }));
 /** Where a card returns to when the flask is given another: a shelf at the right, clear of the bottom rail. */
 const shelf = n => Array.from({ length: n }, (_, i) => ({ x: 104 + (i % 2) * 24, y: 12 + Math.floor(i / 2) * 22 }));
-const RAIL = (n, first, last) => ({ at: { x: 75, y: 54 }, size: { w: 24 * n + 8, h: 16 }, first, last });
+const RAIL = (n, first, last) => ({ at: { x: 75, y: 60 }, size: { w: 24 * n + 8, h: 16 }, first, last });
 
 /* ------------------------------------------------------------------
    THE FIGURES THE STAGES GRADE AGAINST (each recomputed in tools/lib/mirrowen/q3-boil.mjs from the CRC)
@@ -157,6 +157,7 @@ export const STAGES = [
       prompt: 'Order ether, ethanol and water by the pressure the gauge settles at in a sealed flask.',
       widget,
       table: matterTable({
+        bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [flask.fixture],
         zones: { slots: [flask.slot], rail: { ...RAIL(3, 'Settles lowest', 'Settles highest'), items: cards.map(c => c.id), start: ['ethanol', 'ether', 'h2o'] } }
@@ -186,6 +187,7 @@ export const STAGES = [
       prompt: 'Order the four samples by the pressure the gauge settles at.',
       widget,
       table: matterTable({
+        bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [flask.fixture],
         zones: { slots: [flask.slot], rail: { ...RAIL(4, 'Settles lowest', 'Settles highest'), items: cards.map(c => c.id), start: ['ether', 'acetone', 'h2o', 'ethanol'] } }
