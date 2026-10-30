@@ -96,8 +96,8 @@ const halfWidth = formula => Math.max(...sketchOf(formula).map(a => Math.abs(a[1
  * numbers mode uses `{ name, species, charge }` instead and has no key.
  */
 export function windowFixture(id, at, { mode, cases, dialLabel = 'Pot', title = 'Window', w = 84, runLabel = 'Run', picture = 27 } = {}) {
-  const dials = { pot: { min: 1, max: cases.length, step: 1, value: 1, label: dialLabel, labels: cases.map(c => c.name) } };
-  const top = contentTop(1);
+  const dials = cases.length > 1 ? { pot: { min: 1, max: cases.length, step: 1, value: 1, label: dialLabel, labels: cases.map(c => c.name) } } : {};
+  const top = contentTop(Object.keys(dials).length);
   const h = Math.round((top + picture + 7.5) * 10) / 10;
   return {
     id, kind: 'kwindow', label: title, at: { ...at }, size: { w, h }, dials, ...(mode === 'numbers' ? { noRun: true } : { runLabel }),
@@ -109,7 +109,7 @@ export function windowFixture(id, at, { mode, cases, dialLabel = 'Pot', title = 
 export function windowRead(state, fid) {
   const f = state.fixtures[fid];
   const p = f.props;
-  const idx = dialAt(state, fid, 'pot') - 1;
+  const idx = f.dials.pot ? dialAt(state, fid, 'pot') - 1 : 0;
   const c = p.cases[idx];
   const sig = `${fid}|${idx}`;
   const ran = p.mode === 'numbers' || state.recorder.rows.some(r => r.label === sig);
@@ -257,7 +257,7 @@ registerPiece('gjar', {
 const SEAT = { w: 18, h: 13 };
 
 /** The burner: a seat for the fuel jar, a seat for an empty gas jar, and a key that burns the fuel in plenty of oxygen. */
-export function burnerFixture(id, at, { title = 'Burner', runLabel = 'Burn', w = 54 } = {}) {
+export function burnerFixture(id, at, { title = 'Burner', runLabel = 'Burn', w = 48 } = {}) {
   const h = 34;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const fuel = `${id}.fuel`; const out = `${id}.out`;
@@ -288,7 +288,7 @@ function paintBurner(ctx, f, state, b) {
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(2.5), F.y(20), F.len(w - 5), F.len(7));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(2.5)) + 0.5, Math.round(F.y(20)) + 0.5, Math.round(F.len(w - 5)), Math.round(F.len(7)));
   say(ctx, r.ran ? 'BURNT' : r.fuel ? 'READY' : 'NO FUEL', F.x(w / 2), F.y(23.5), F.size(2.8, 7), { align: 'center', color: r.ran ? AMBER : DIM, weight: 700 });
-  say(ctx, 'SUPPLIED: oxygen', F.x(3.5), F.y(f.size.h - 7.2), F.size(1.9, 5.8), { color: DIM });
+  say(ctx, 'SUPPLIED: oxygen', F.x(3.5), F.y(f.size.h - 3), F.size(1.9, 5.8), { color: DIM });
 }
 
 function runBurner(state, fid) {
@@ -301,7 +301,7 @@ function runBurner(state, fid) {
 registerFixture('burner', { paint: paintBurner, run: runBurner });
 
 /** The gas rig: a seat for a gas jar, a "Test" dial over the four tests, and a key that runs the test the dial is on. */
-export function gasrigFixture(id, at, { title = 'Gas tests', runLabel = 'Test', w = 62 } = {}) {
+export function gasrigFixture(id, at, { title = 'Gas tests', runLabel = 'Test', w = 70 } = {}) {
   const dials = { test: { min: 1, max: GAS_TEST_ORDER.length, step: 1, value: 1, label: 'Test', labels: GAS_TEST_ORDER.map(k => GAS_TESTS[k].label) } };
   const top = contentTop(1);
   const h = Math.round((top + 26 + 7.5) * 10) / 10;
@@ -375,15 +375,22 @@ registerPiece('rxn', {
   printed: p => String(p.label)
 });
 
-/** The kinds board: a "Look for" dial over the five kinds, and a reading printed beside each card for the kind the dial is on. `rows` is `[{card, y}]`. */
-export function kboardFixture(id, at, { rows, title = 'Kinds board', w = 62, h = 60 } = {}) {
-  const dials = { look: { min: 1, max: KINDS.length, step: 1, value: 1, label: 'Look for', labels: KINDS.map(k => KIND_LABEL[k]) } };
-  return { id, kind: 'kboard', label: title, at: { ...at }, size: { w, h }, dials, noRun: true, props: { backdrop: true, rows: rows.map(r => ({ ...r })) } };
+/** The kinds board: a reading printed beside each reaction card for the kind the "Look for" dial is on. `rows` is `[{card, y}]` (the card's table y). */
+export function kboardFixture(id, at, { rows, title = 'Readings', w = 52, h = 60 } = {}) {
+  return { id, kind: 'kboard', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, rows: rows.map(r => ({ ...r })) } };
 }
+
+/** The "Look for" dial: five kinds of reaction. The board and the cards follow it. */
+export function lookFixture(id, at, { w = 38, title = 'Kind' } = {}) {
+  const dials = { look: { min: 1, max: KINDS.length, step: 1, value: 1, label: 'Look for', labels: KINDS.map(k => KIND_LABEL[k]) } };
+  return { id, kind: 'klook', label: title, at: { ...at }, size: { w, h: 16 }, dials, noRun: true, props: {} };
+}
+
+registerFixture('klook', { paint() {} });
 
 /** The kind the board is looking for, and each card's marks (kind: bool), reconciled with the card's light as it stands. */
 export function boardRead(state) {
-  const f = Object.values(state.fixtures).find(x => x.kind === 'kboard');
+  const f = Object.values(state.fixtures).find(x => x.kind === 'klook');
   if (!f) return null;
   const look = KINDS[dialAt(state, f.id, 'look') - 1];
   const cards = Object.values(state.pieces).filter(p => p.kind === 'rxn');
@@ -422,7 +429,7 @@ function paintBoard(ctx, f, state, b) {
 
 /** Keep what is lit for each kind: the board's dial and the cards' light stay in step (`flip` only knows one light per card). */
 function settleKinds(state) {
-  const board = Object.values(state.fixtures).find(x => x.kind === 'kboard');
+  const board = Object.values(state.fixtures).find(x => x.kind === 'klook');
   if (!board) return;
   const look = KINDS[dialAt(state, board.id, 'look') - 1];
   for (const c of Object.values(state.pieces)) {
@@ -467,16 +474,16 @@ const WINDOW_TEXT = {
 addTourText({
   'pot:kwindow': {
     title: 'Window', dials: false,
-    text: f => WINDOW_TEXT[f.props.mode].replace('{dial}', f.dials.pot.label).replace('{run}', f.runLabel || 'Run')
+    text: f => (f.dials.pot ? WINDOW_TEXT[f.props.mode] : WINDOW_TEXT[f.props.mode].replace(/^The "\{dial\}" dial picks which pot to look at\. /, '')).replace('{dial}', f.dials.pot?.label || '').replace('{run}', f.runLabel || 'Run')
   },
   'pot:burner': { title: 'Burner', dials: false, text: 'Put the fuel jar on the left seat and an empty gas jar on the right seat. Press "Burn" to burn the fuel in oxygen that the burner supplies. The gas jar fills with whatever the burning leaves.' },
   'pot:gasrig': {
     title: 'Gas tests', dials: false,
     text: 'Put a gas jar on the seat. The "Test" dial picks glowing splint, lit splint, limewater or cold glass; press "Test" to try it in the jar. The result stays printed beside the test, so you can compare all four.'
   },
-  'pot:kboard': {
-    title: 'Kinds board', dials: false,
-    text: 'The "Look for" dial picks a kind of reaction. Beside each reaction card, the board prints the reading that kind depends on. Tap a card to light it when its reaction belongs to the kind the dial is on; the board remembers which cards are lit for each kind.'
+  'pot:klook': {
+    title: 'Look for', dials: false,
+    text: 'The "Look for" dial picks a kind of reaction. Beside each reaction card, the board prints the reading that kind depends on. Tap a card to light it when its reaction belongs to the kind the dial is on; the cards remember which kinds they are lit for.'
   }
 }, {
   rxn: ['Reaction cards', 'Each card is one reaction written as an equation, with the state of each substance in brackets: (s) solid, (l) liquid, (g) gas, (aq) dissolved in water. Tap a card to light it, and tap again to put the light out.'],
