@@ -85,6 +85,15 @@ export async function checkKettle({ fail, ok }) {
     if (r && r.msg && METHOD.test(r.msg)) bad(`q6-stoich stage ${i + 1}: a refusal gives the method ("${r.msg}")`);
   });
 
+  // Each other bench keeps its own checks in `tools/lib/kettle-<bench>-checks.mjs` (`export async function check(helpers)` returning a list of problems), loaded when the file exists.
+  const { existsSync } = await import('node:fs');
+  for (const id of ['q2-names', 'q3-change', 'q4-balance', 'q5-ionic', 'q7-titrate', 'q8-kinds', 'boss-golem']) {
+    const url = new URL(`./kettle-${id}-checks.mjs`, import.meta.url);
+    if (!existsSync(url)) continue;
+    const mod = await import(url.href);
+    for (const m of await mod.check({ near })) bad(`${id}: ${m}`);
+  }
+
   for (const m of before) fail(`Kettle: ${m}`);
   if (!before.length) ok('Kettle: every planner agrees with values worked by hand, every graded figure of q6-stoich is recomputed, the pot, jar and balance weigh what they should, no plate prints an answer, no dial stands at an asked amount, and no refusal carries the method');
 }

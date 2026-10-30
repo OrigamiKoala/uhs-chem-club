@@ -31,6 +31,42 @@ export const UNIT_07 = {
       module: () => import('../quests/unit07/q1-recipe.js')
     },
     {
+      id: 'q2-names',
+      title: 'Names and Formulas',
+      line: "Read the labels on the foundry's crates.",
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q3-change',
+      title: 'Physical or Chemical',
+      line: "Does the ore turn into something new?",
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q4-balance',
+      title: 'Balancing Equations',
+      line: "Count the atoms on both sides of the furnace recipe.",
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q5-ionic',
+      title: 'Net Ionic Equations',
+      line: "Find which ions in the cloudy pond reacted.",
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
       id: 'q6-stoich',
       title: 'How Much Is Made',
       line: 'Forty tons of ore: how much iron can it give?',
@@ -38,6 +74,24 @@ export const UNIT_07 = {
       stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit07/q6-stoich.js')
+    },
+    {
+      id: 'q7-titrate',
+      title: 'Titration',
+      line: "Count the acid in the pickling tank.",
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q8-kinds',
+      title: 'Kinds of Reaction',
+      line: "Say what each reaction on the furnace log is doing.",
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
     },
     {
       id: 'boss-golem',

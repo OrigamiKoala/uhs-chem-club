@@ -17,6 +17,12 @@ import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './pot-
 
 /* One import per bench: each file registers its own instruments and pieces. */
 import './pot-reactor.js';
+import './pot-names.js';
+import './pot-change.js';
+import './pot-balance.js';
+import './pot-ionic.js';
+import './pot-titrate.js';
+import './pot-kinds.js';
 
 export const POT_KIT_ID = 'pot';
 export const POT_BOUNDS = HEAT_BOUNDS;

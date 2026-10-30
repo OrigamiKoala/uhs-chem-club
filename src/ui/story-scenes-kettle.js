@@ -12,6 +12,13 @@
 import { ATOMIC, molarMass, parseEquation, reactPlan } from '../learn/engine/reactdata.js';
 import { C, disc, line, legacyText as text, ground, win, ease } from './story-kit.js';
 
+import { Q2_SCENES } from './story-scenes-kettle-q2.js';
+import { Q3_SCENES } from './story-scenes-kettle-q3.js';
+import { Q4_SCENES } from './story-scenes-kettle-q4.js';
+import { Q5_SCENES } from './story-scenes-kettle-q5.js';
+import { Q7_SCENES } from './story-scenes-kettle-q7.js';
+import { Q8_SCENES } from './story-scenes-kettle-q8.js';
+
 const fs = h => Math.max(11, h * 0.04);
 
 function box(ctx, x, y, w, h, fill, stroke = C.steel, lw = 1) {
@@ -169,5 +176,6 @@ function furnaceLedger(ctx, w, h, t) {
 
 export const KETTLE_SCENES = {
   'three-scoops': threeScoops,
-  'furnace-ledger': furnaceLedger
+  'furnace-ledger': furnaceLedger,
+  ...Q2_SCENES, ...Q3_SCENES, ...Q4_SCENES, ...Q5_SCENES, ...Q7_SCENES, ...Q8_SCENES
 };
