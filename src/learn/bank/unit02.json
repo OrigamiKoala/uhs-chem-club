@@ -1,0 +1,2252 @@
+{
+  "world": "unit02",
+  "end": [
+    {
+      "id": "q1-wave#0",
+      "quest": "q1-wave",
+      "question": "Light has a wavelength of 600 nm. What is its frequency? (c = 3.00 x 10^8 m/s)",
+      "options": [
+        {
+          "id": "a",
+          "label": "5.00 x 10^14 Hz"
+        },
+        {
+          "id": "b",
+          "label": "2.00 x 10^-6 Hz"
+        },
+        {
+          "id": "c",
+          "label": "1.80 x 10^17 Hz"
+        },
+        {
+          "id": "d",
+          "label": "5.00 x 10^5 Hz"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Frequency is c divided by wavelength: (3.00 x 10^8 m/s) / (600 x 10^-9 m) = 5.00 x 10^14 Hz. Forgetting to convert nanometres to metres is what gives the other figures."
+    },
+    {
+      "id": "q1-wave#1",
+      "quest": "q1-wave",
+      "question": "Which of these has the highest frequency?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Radio waves"
+        },
+        {
+          "id": "b",
+          "label": "Infrared light"
+        },
+        {
+          "id": "c",
+          "label": "Green light"
+        },
+        {
+          "id": "d",
+          "label": "Ultraviolet light"
+        }
+      ],
+      "answer": "d",
+      "explanation": "Frequency rises as wavelength falls. Ultraviolet has a shorter wavelength than green, infrared and radio, so its frequency is the highest of the four."
+    },
+    {
+      "id": "q1-wave#2",
+      "quest": "q1-wave",
+      "question": "A wave's wavelength is doubled and its speed stays the same. What happens to its frequency?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It doubles"
+        },
+        {
+          "id": "b",
+          "label": "It halves"
+        },
+        {
+          "id": "c",
+          "label": "It stays the same"
+        },
+        {
+          "id": "d",
+          "label": "It quadruples"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Speed equals wavelength times frequency. With the speed fixed, doubling the wavelength means the frequency must halve."
+    },
+    {
+      "id": "q1-wave#4",
+      "quest": "q1-wave",
+      "question": "In a vacuum, how do the speeds of red light and violet light compare?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Violet is faster, because its frequency is higher"
+        },
+        {
+          "id": "b",
+          "label": "Red is faster, because its wavelength is longer"
+        },
+        {
+          "id": "c",
+          "label": "They are the same: all light travels at 3.00 x 10^8 m/s"
+        },
+        {
+          "id": "d",
+          "label": "It depends on how bright each one is"
+        }
+      ],
+      "answer": "c",
+      "explanation": "All electromagnetic waves travel at the same speed in a vacuum. Red and violet differ in wavelength and frequency, but their product is always 3.00 x 10^8 m/s."
+    },
+    {
+      "id": "q2-photon#0",
+      "quest": "q2-photon",
+      "question": "What is the energy of one photon of light with a frequency of 6.0 x 10^14 Hz? (h = 6.626 x 10^-34 J s)",
+      "options": [
+        {
+          "id": "a",
+          "label": "4.0 x 10^-19 J"
+        },
+        {
+          "id": "b",
+          "label": "1.1 x 10^-48 J"
+        },
+        {
+          "id": "c",
+          "label": "9.1 x 10^47 J"
+        },
+        {
+          "id": "d",
+          "label": "6.6 x 10^-34 J"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A photon's energy is Planck's constant times its frequency: (6.626 x 10^-34 J s)(6.0 x 10^14 s^-1) = 4.0 x 10^-19 J. Dividing instead of multiplying gives the other figures."
+    },
+    {
+      "id": "q2-photon#1",
+      "quest": "q2-photon",
+      "question": "Red light does not free electrons from a metal, however bright the lamp. Ultraviolet light does. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Each ultraviolet photon carries more energy than each red photon"
+        },
+        {
+          "id": "b",
+          "label": "Ultraviolet light is brighter than red light"
+        },
+        {
+          "id": "c",
+          "label": "Ultraviolet light travels faster than red light"
+        },
+        {
+          "id": "d",
+          "label": "Red light has too many photons"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A photon's energy is proportional to its frequency. Ultraviolet photons have the higher frequency, so only they carry more than the work function. Brightness changes the number of photons, not the energy of each."
+    },
+    {
+      "id": "q2-photon#2",
+      "quest": "q2-photon",
+      "question": "A lamp above the threshold frequency is made brighter. What happens in the photocell?",
+      "options": [
+        {
+          "id": "a",
+          "label": "More electrons are freed each second, each with the same maximum speed"
+        },
+        {
+          "id": "b",
+          "label": "The same number of electrons are freed, each with a higher maximum speed"
+        },
+        {
+          "id": "c",
+          "label": "More electrons are freed, each with a higher maximum speed"
+        },
+        {
+          "id": "d",
+          "label": "No change"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Brightness sets the number of photons per second, so it sets the number of electrons freed. The energy of each photon, and so the speed of the fastest electron, depends only on frequency."
+    },
+    {
+      "id": "q2-photon#3",
+      "quest": "q2-photon",
+      "question": "Metal X has a lower work function than metal Y. Compared with Y, metal X has:",
+      "options": [
+        {
+          "id": "a",
+          "label": "A higher threshold frequency"
+        },
+        {
+          "id": "b",
+          "label": "A lower threshold frequency"
+        },
+        {
+          "id": "c",
+          "label": "The same threshold frequency"
+        },
+        {
+          "id": "d",
+          "label": "No threshold frequency"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The threshold photon has just the work function's energy. A smaller work function needs a smaller photon energy, and so a lower frequency, to free an electron."
+    },
+    {
+      "id": "q2-photon#4",
+      "quest": "q2-photon",
+      "question": "Which observation shows that light behaves as particles and not only as waves?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Light of low frequency frees no electrons however bright it is"
+        },
+        {
+          "id": "b",
+          "label": "Light travels at 3.00 x 10^8 m/s in a vacuum"
+        },
+        {
+          "id": "c",
+          "label": "Light has a wavelength"
+        },
+        {
+          "id": "d",
+          "label": "Red light looks different from violet light"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A wave model says a bright enough lamp should free electrons at any frequency. That it does not is evidence that light delivers its energy in separate photons."
+    },
+    {
+      "id": "q3-lines#0",
+      "quest": "q3-lines",
+      "question": "A gas tube gives out a few bright lines on a dark background. This is:",
+      "options": [
+        {
+          "id": "a",
+          "label": "An emission line spectrum"
+        },
+        {
+          "id": "b",
+          "label": "A continuous spectrum"
+        },
+        {
+          "id": "c",
+          "label": "An absorption spectrum"
+        },
+        {
+          "id": "d",
+          "label": "A white-light spectrum"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A glowing gas gives out only certain wavelengths, so its spectrum is a few bright lines. A hot solid gives a continuous band, and cool gas in front of one gives dark absorption lines."
+    },
+    {
+      "id": "q3-lines#1",
+      "quest": "q3-lines",
+      "question": "An electron in a hydrogen atom drops from the third energy level to the second. What happens?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A photon with energy equal to the difference between the two levels is given out"
+        },
+        {
+          "id": "b",
+          "label": "A photon is absorbed"
+        },
+        {
+          "id": "c",
+          "label": "Nothing, because the electron stays in the atom"
+        },
+        {
+          "id": "d",
+          "label": "The atom loses the electron"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Falling to a lower level gives up the energy difference, and it leaves as one photon. Absorbing a photon would raise the electron."
+    },
+    {
+      "id": "q3-lines#2",
+      "quest": "q3-lines",
+      "question": "Which jump in a hydrogen atom gives out the photon of highest frequency?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sixth level to second level"
+        },
+        {
+          "id": "b",
+          "label": "Third level to second level"
+        },
+        {
+          "id": "c",
+          "label": "Fourth level to third level"
+        },
+        {
+          "id": "d",
+          "label": "Fifth level to fourth level"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The bigger the drop in energy, the higher the photon's frequency. The levels crowd closer together as they climb, so the drop from the sixth to the second is the largest of the four."
+    },
+    {
+      "id": "q3-lines#3",
+      "quest": "q3-lines",
+      "question": "A filament's light passes through a cool gas, and dark lines appear in its band. Where are the dark lines?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Where the same gas, glowing, would give out bright lines"
+        },
+        {
+          "id": "b",
+          "label": "At the red end of the band only"
+        },
+        {
+          "id": "c",
+          "label": "At random places"
+        },
+        {
+          "id": "d",
+          "label": "Where the filament gives no light"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Atoms take in exactly the energies they give out. The cool gas removes those colours from the filament's light and leaves dark lines at the same places."
+    },
+    {
+      "id": "q3-lines#4",
+      "quest": "q3-lines",
+      "question": "Two sealed tubes glow, and their bands show different sets of bright lines. What does that tell you?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They hold different gases"
+        },
+        {
+          "id": "b",
+          "label": "One tube is hotter"
+        },
+        {
+          "id": "c",
+          "label": "One tube is brighter"
+        },
+        {
+          "id": "d",
+          "label": "They hold the same gas at different pressures"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each gas has its own energy levels and so its own set of lines, like a fingerprint. Different lines mean different atoms."
+    },
+    {
+      "id": "q4-cloud#0",
+      "quest": "q4-cloud",
+      "question": "What does an orbital show?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The region where an electron is likely to be found"
+        },
+        {
+          "id": "b",
+          "label": "The exact path an electron follows"
+        },
+        {
+          "id": "c",
+          "label": "The size of the nucleus"
+        },
+        {
+          "id": "d",
+          "label": "The speed of an electron at an exact moment"
+        }
+      ],
+      "answer": "a",
+      "explanation": "An orbital is a map of probability: where the electron is likely to be found. No exact path can be drawn through it."
+    },
+    {
+      "id": "q4-cloud#1",
+      "quest": "q4-cloud",
+      "question": "Which orbital shape has two lobes and a node, a plane with no electron density, through the nucleus?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A p orbital"
+        },
+        {
+          "id": "b",
+          "label": "An s orbital"
+        },
+        {
+          "id": "c",
+          "label": "A d orbital with four lobes"
+        },
+        {
+          "id": "d",
+          "label": "A 1s orbital"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A p orbital has two lobes either side of the nucleus and a flat node between them. An s orbital is spherical with no such plane."
+    },
+    {
+      "id": "q4-cloud#2",
+      "quest": "q4-cloud",
+      "question": "How many p orbitals are there in the second shell?",
+      "options": [
+        {
+          "id": "a",
+          "label": "One"
+        },
+        {
+          "id": "b",
+          "label": "Two"
+        },
+        {
+          "id": "c",
+          "label": "Three"
+        },
+        {
+          "id": "d",
+          "label": "Five"
+        }
+      ],
+      "answer": "c",
+      "explanation": "A p orbital can point along x, y or z, giving three of equal energy: 2px, 2py and 2pz."
+    },
+    {
+      "id": "q4-cloud#3",
+      "quest": "q4-cloud",
+      "question": "Five hundred shots find hydrogen's electron. Which outline of the same area would catch the most dots?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A solid disc over the middle"
+        },
+        {
+          "id": "b",
+          "label": "A thin ring round the middle"
+        },
+        {
+          "id": "c",
+          "label": "A hollow ring with an empty middle"
+        },
+        {
+          "id": "d",
+          "label": "Two separate lobes"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The 1s cloud is a ball, densest at the middle, so a solid disc over the middle catches the most. A ring or a hollow shape misses the densest part."
+    },
+    {
+      "id": "q4-cloud#4",
+      "quest": "q4-cloud",
+      "question": "An electron behaves as a wave on a circular track only if:",
+      "options": [
+        {
+          "id": "a",
+          "label": "A whole number of wavelengths fits round the track"
+        },
+        {
+          "id": "b",
+          "label": "Its wavelength equals the radius"
+        },
+        {
+          "id": "c",
+          "label": "It moves fast enough to complete one lap in a second"
+        },
+        {
+          "id": "d",
+          "label": "The track is exactly one nanometre long"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A wave that does not fit a whole number of times meets itself out of step on the next lap and cancels. Only a standing wave survives, which is why electrons have only certain energies."
+    },
+    {
+      "id": "q5-numbers#0",
+      "quest": "q5-numbers",
+      "question": "Which quantum number determines the shape of an orbital?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The angular momentum quantum number, l"
+        },
+        {
+          "id": "b",
+          "label": "The principal quantum number, n"
+        },
+        {
+          "id": "c",
+          "label": "The magnetic quantum number, ml"
+        },
+        {
+          "id": "d",
+          "label": "The spin quantum number, ms"
+        }
+      ],
+      "answer": "a",
+      "explanation": "l sets the shape: 0 for s, 1 for p, 2 for d. n sets the size and energy, ml the orientation and ms the direction of spin."
+    },
+    {
+      "id": "q5-numbers#1",
+      "quest": "q5-numbers",
+      "question": "How many orbitals are in a d subshell?",
+      "options": [
+        {
+          "id": "a",
+          "label": "1"
+        },
+        {
+          "id": "b",
+          "label": "3"
+        },
+        {
+          "id": "c",
+          "label": "5"
+        },
+        {
+          "id": "d",
+          "label": "7"
+        }
+      ],
+      "answer": "c",
+      "explanation": "For d, l = 2, so ml takes the values -2, -1, 0, +1 and +2: five orbitals, which hold ten electrons between them."
+    },
+    {
+      "id": "q5-numbers#2",
+      "quest": "q5-numbers",
+      "question": "Which set of quantum numbers cannot describe an electron?",
+      "options": [
+        {
+          "id": "a",
+          "label": "n = 2, l = 2, ml = 0, ms = +1/2"
+        },
+        {
+          "id": "b",
+          "label": "n = 3, l = 1, ml = -1, ms = -1/2"
+        },
+        {
+          "id": "c",
+          "label": "n = 4, l = 3, ml = +2, ms = +1/2"
+        },
+        {
+          "id": "d",
+          "label": "n = 1, l = 0, ml = 0, ms = -1/2"
+        }
+      ],
+      "answer": "a",
+      "explanation": "l must be smaller than n. With n = 2, l can only be 0 or 1, so l = 2 names no orbital."
+    },
+    {
+      "id": "q5-numbers#3",
+      "quest": "q5-numbers",
+      "question": "How many electrons can the n = 4 shell hold?",
+      "options": [
+        {
+          "id": "a",
+          "label": "16"
+        },
+        {
+          "id": "b",
+          "label": "8"
+        },
+        {
+          "id": "c",
+          "label": "32"
+        },
+        {
+          "id": "d",
+          "label": "18"
+        }
+      ],
+      "answer": "c",
+      "explanation": "A shell holds 2n² electrons. For n = 4 that is 2 x 16 = 32."
+    },
+    {
+      "id": "q5-numbers#4",
+      "quest": "q5-numbers",
+      "question": "The Pauli exclusion principle says that:",
+      "options": [
+        {
+          "id": "a",
+          "label": "No two electrons in an atom can have all four quantum numbers the same"
+        },
+        {
+          "id": "b",
+          "label": "Electrons fill the lowest energy orbitals first"
+        },
+        {
+          "id": "c",
+          "label": "Orbitals of equal energy fill one electron at a time before pairing"
+        },
+        {
+          "id": "d",
+          "label": "Electrons cannot be in the same shell"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Two electrons may share n, l and ml only if their spins differ, which is why an orbital holds at most two. The other two options describe the aufbau principle and Hund's rule."
+    },
+    {
+      "id": "q6-filling#0",
+      "quest": "q6-filling",
+      "question": "What is the ground-state electron configuration of oxygen?",
+      "options": [
+        {
+          "id": "a",
+          "label": "1s² 2s² 2p⁴"
+        },
+        {
+          "id": "b",
+          "label": "1s² 2s² 2p⁶"
+        },
+        {
+          "id": "c",
+          "label": "1s² 2s⁴ 2p²"
+        },
+        {
+          "id": "d",
+          "label": "1s² 2s² 2p⁵"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Oxygen has 8 electrons. They fill 1s (2), then 2s (2), leaving 4 for the 2p row."
+    },
+    {
+      "id": "q6-filling#1",
+      "quest": "q6-filling",
+      "question": "How many unpaired electrons does a ground-state nitrogen atom have?",
+      "options": [
+        {
+          "id": "a",
+          "label": "0"
+        },
+        {
+          "id": "b",
+          "label": "1"
+        },
+        {
+          "id": "c",
+          "label": "2"
+        },
+        {
+          "id": "d",
+          "label": "3"
+        }
+      ],
+      "answer": "d",
+      "explanation": "Nitrogen is 1s² 2s² 2p³. By Hund's rule the three 2p electrons occupy three separate boxes, all pointing the same way, so all three are unpaired."
+    },
+    {
+      "id": "q6-filling#2",
+      "quest": "q6-filling",
+      "question": "Which row does potassium's nineteenth electron go into?",
+      "options": [
+        {
+          "id": "a",
+          "label": "4s"
+        },
+        {
+          "id": "b",
+          "label": "3d"
+        },
+        {
+          "id": "c",
+          "label": "4p"
+        },
+        {
+          "id": "d",
+          "label": "3p"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Argon has 18 electrons, and the next one goes into 4s, which sits below 3d on the ladder."
+    },
+    {
+      "id": "q6-filling#3",
+      "quest": "q6-filling",
+      "question": "According to the aufbau principle, which subshell fills immediately after 4s is full?",
+      "options": [
+        {
+          "id": "a",
+          "label": "3d"
+        },
+        {
+          "id": "b",
+          "label": "4p"
+        },
+        {
+          "id": "c",
+          "label": "4d"
+        },
+        {
+          "id": "d",
+          "label": "5s"
+        }
+      ],
+      "answer": "a",
+      "explanation": "On the energy ladder, 3d sits between 4s and 4p, so 3d fills once 4s is full."
+    },
+    {
+      "id": "q6-filling#4",
+      "quest": "q6-filling",
+      "question": "What is the ground-state electron configuration of scandium (Z = 21)?",
+      "options": [
+        {
+          "id": "a",
+          "label": "[Ar] 4s² 3d¹"
+        },
+        {
+          "id": "b",
+          "label": "[Ar] 3d³"
+        },
+        {
+          "id": "c",
+          "label": "[Ar] 4s³"
+        },
+        {
+          "id": "d",
+          "label": "[Ar] 4s¹ 3d²"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Scandium has 21 electrons: 18 in the argon core, two filling 4s, and the twenty-first falling into 3d."
+    },
+    {
+      "id": "q7-pes#0",
+      "quest": "q7-pes",
+      "question": "In a photoelectron spectrum, what does the height of a peak represent?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The number of electrons in that row"
+        },
+        {
+          "id": "b",
+          "label": "The energy of the electrons"
+        },
+        {
+          "id": "c",
+          "label": "The speed of the electrons"
+        },
+        {
+          "id": "d",
+          "label": "The size of the atom"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Peak height is proportional to the number of electrons removed at that binding energy, which is the number in that row. Position gives the binding energy."
+    },
+    {
+      "id": "q7-pes#1",
+      "quest": "q7-pes",
+      "question": "A photoelectron spectrum shows three peaks, with relative heights 2, 2 and 3. Which element is it?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Nitrogen"
+        },
+        {
+          "id": "b",
+          "label": "Carbon"
+        },
+        {
+          "id": "c",
+          "label": "Oxygen"
+        },
+        {
+          "id": "d",
+          "label": "Boron"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The configuration 1s² 2s² 2p³ has 7 electrons, which is nitrogen."
+    },
+    {
+      "id": "q7-pes#2",
+      "quest": "q7-pes",
+      "question": "Why is the 1s peak of neon at a higher binding energy than the 1s peak of fluorine?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Neon's nucleus has more protons, so it holds its 1s electrons more tightly"
+        },
+        {
+          "id": "b",
+          "label": "Neon has more shells"
+        },
+        {
+          "id": "c",
+          "label": "Neon's 1s electrons are farther from its nucleus"
+        },
+        {
+          "id": "d",
+          "label": "Fluorine has no 1s electrons"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Both have two 1s electrons at about the same distance. Neon's nuclear charge is greater by one proton, so those electrons are bound more tightly."
+    },
+    {
+      "id": "q7-pes#3",
+      "quest": "q7-pes",
+      "question": "Lithium's spectrum has a small peak at a low binding energy and a tall peak at a high one. Which electrons make the low peak?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The single outer electron, which is held loosely"
+        },
+        {
+          "id": "b",
+          "label": "The two inner electrons"
+        },
+        {
+          "id": "c",
+          "label": "All three electrons"
+        },
+        {
+          "id": "d",
+          "label": "None; the low peak is noise"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The outer electron is far from the nucleus and shielded by the two inner ones, so little energy removes it. The inner pair needs much more."
+    },
+    {
+      "id": "q7-pes#4",
+      "quest": "q7-pes",
+      "question": "The 2p electrons in an atom come off with less energy than its 2s electrons. This is because:",
+      "options": [
+        {
+          "id": "a",
+          "label": "They are held a little less tightly, so their peak sits at a lower binding energy"
+        },
+        {
+          "id": "b",
+          "label": "They are lighter"
+        },
+        {
+          "id": "c",
+          "label": "They are in a different atom"
+        },
+        {
+          "id": "d",
+          "label": "They have no charge"
+        }
+      ],
+      "answer": "a",
+      "explanation": "In the same shell a p row is held a little less tightly than the s row, so its peak sits closer to the low-energy end."
+    },
+    {
+      "id": "q8-trends#0",
+      "quest": "q8-trends",
+      "question": "Which has the larger atomic radius: sodium or magnesium?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sodium"
+        },
+        {
+          "id": "b",
+          "label": "Magnesium"
+        },
+        {
+          "id": "c",
+          "label": "They are the same"
+        },
+        {
+          "id": "d",
+          "label": "It depends on the temperature"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Across a row each atom has one more proton pulling on the same shell, so atoms shrink from left to right. Sodium is to the left of magnesium."
+    },
+    {
+      "id": "q8-trends#1",
+      "quest": "q8-trends",
+      "question": "An outer electron in sodium feels an effective nuclear charge of about +1, though the nucleus has 11 protons. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The ten electrons between it and the nucleus cancel most of the charge"
+        },
+        {
+          "id": "b",
+          "label": "Sodium has only one proton"
+        },
+        {
+          "id": "c",
+          "label": "The outer electron has no charge"
+        },
+        {
+          "id": "d",
+          "label": "The nucleus is too far away to matter at all"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Shielding: the inner electrons sit between the outer electron and the nucleus and cancel most of its charge, leaving about +1."
+    },
+    {
+      "id": "q8-trends#2",
+      "quest": "q8-trends",
+      "question": "Which of these costs the most energy to strip one electron from?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Beryllium"
+        },
+        {
+          "id": "b",
+          "label": "Lithium"
+        },
+        {
+          "id": "c",
+          "label": "Boron"
+        },
+        {
+          "id": "d",
+          "label": "Sodium"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Beryllium holds its outer electron harder than lithium or sodium, and a little harder than boron, whose outer electron is in a 2p subshell."
+    },
+    {
+      "id": "q8-trends#3",
+      "quest": "q8-trends",
+      "question": "A sodium atom loses its outer electron and becomes Na+. How does its size change?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It gets much smaller"
+        },
+        {
+          "id": "b",
+          "label": "It gets much bigger"
+        },
+        {
+          "id": "c",
+          "label": "It stays the same"
+        },
+        {
+          "id": "d",
+          "label": "It gets slightly bigger"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The outer shell is gone, and the remaining electrons are pulled in by the same nucleus."
+    },
+    {
+      "id": "q8-trends#4",
+      "quest": "q8-trends",
+      "question": "A chlorine atom gains an electron and becomes Cl-. How does its size change?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It gets bigger"
+        },
+        {
+          "id": "b",
+          "label": "It gets smaller"
+        },
+        {
+          "id": "c",
+          "label": "It stays the same"
+        },
+        {
+          "id": "d",
+          "label": "It vanishes"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The extra electron repels the others and adds no extra pull, so the ion is bigger than the atom."
+    },
+    {
+      "id": "q9-absorb#0",
+      "quest": "q9-absorb",
+      "question": "A solution of potassium permanganate looks purple. Which colour of light does it absorb most strongly?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Green, the colour opposite purple"
+        },
+        {
+          "id": "b",
+          "label": "Purple"
+        },
+        {
+          "id": "c",
+          "label": "Red"
+        },
+        {
+          "id": "d",
+          "label": "It absorbs all colours equally"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A solution looks the complementary colour of the light it absorbs. Purple is the complement of green, and permanganate takes in light near 525 nm, which is green."
+    },
+    {
+      "id": "q9-absorb#1",
+      "quest": "q9-absorb",
+      "question": "A solution has an absorbance of 0.30 in a 1.0 cm cuvette. What would its absorbance be in a 2.0 cm cuvette?",
+      "options": [
+        {
+          "id": "a",
+          "label": "0.60"
+        },
+        {
+          "id": "b",
+          "label": "0.15"
+        },
+        {
+          "id": "c",
+          "label": "0.30"
+        },
+        {
+          "id": "d",
+          "label": "0.09"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Light passes through twice as many absorbing particles, so it loses twice as much: absorbance is proportional to path length, and 0.30 x 2 = 0.60."
+    },
+    {
+      "id": "q9-absorb#2",
+      "quest": "q9-absorb",
+      "question": "A 0.010 M solution has an absorbance of 0.25. A second solution of the same substance reads 0.50 under the same conditions. Its concentration is:",
+      "options": [
+        {
+          "id": "a",
+          "label": "0.020 M"
+        },
+        {
+          "id": "b",
+          "label": "0.0050 M"
+        },
+        {
+          "id": "c",
+          "label": "0.010 M"
+        },
+        {
+          "id": "d",
+          "label": "0.040 M"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Absorbance is proportional to concentration when the path and wavelength are the same. The second reading is twice the first, so the concentration is twice as large: 0.020 M."
+    },
+    {
+      "id": "q9-absorb#3",
+      "quest": "q9-absorb",
+      "question": "A blue solution looks blue because it:",
+      "options": [
+        {
+          "id": "a",
+          "label": "Takes out the opposite colour, orange, and lets the rest through"
+        },
+        {
+          "id": "b",
+          "label": "Gives out blue light of its own"
+        },
+        {
+          "id": "c",
+          "label": "Takes out blue light"
+        },
+        {
+          "id": "d",
+          "label": "Takes out every colour equally"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The colour we see is what is left of white light once the solution has taken some out. Copper takes out orange, and blue is left."
+    },
+    {
+      "id": "q9-absorb#4",
+      "quest": "q9-absorb",
+      "question": "Why is a calibration curve made from solutions of known concentration?",
+      "options": [
+        {
+          "id": "a",
+          "label": "So an unknown sample's absorbance can be converted into a concentration"
+        },
+        {
+          "id": "b",
+          "label": "To find the colour of the unknown sample"
+        },
+        {
+          "id": "c",
+          "label": "To remove the need for a spectrometer"
+        },
+        {
+          "id": "d",
+          "label": "To change the wavelength of the lamp"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The standards fix the relationship between absorbance and concentration for that substance and wavelength. An unknown's absorbance is then read back along that line to a concentration."
+    },
+    {
+      "id": "boss-eater#0",
+      "quest": "boss-eater",
+      "question": "Which electronic transition in a hydrogen atom emits a photon in the visible Balmer series?",
+      "options": [
+        {
+          "id": "a",
+          "label": "n = 3 to n = 2"
+        },
+        {
+          "id": "b",
+          "label": "n = 1 to n = 2"
+        },
+        {
+          "id": "c",
+          "label": "n = 4 to n = 1"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The Balmer series consists of transitions ending at n = 2, producing visible light such as the red 656 nm line from n = 3 to n = 2."
+    },
+    {
+      "id": "boss-eater#3",
+      "quest": "boss-eater",
+      "question": "In photoelectron spectroscopy (PES), why does the 1s peak of neon appear at a much higher binding energy than that of oxygen?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Neon has a higher nuclear charge (10 protons vs. 8 protons)"
+        },
+        {
+          "id": "b",
+          "label": "Neon has more valence electrons shielding the core"
+        },
+        {
+          "id": "c",
+          "label": "Neon atoms are smaller and lighter than oxygen atoms"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A greater nuclear charge exerts a stronger Coulombic attraction on core electrons, requiring more energy to eject them."
+    },
+    {
+      "id": "q6-filling#5",
+      "quest": "q6-filling",
+      "question": "What is the electron configuration of Fe³⁺?",
+      "options": [
+        {
+          "id": "a",
+          "label": "[Ar] 3d⁵"
+        },
+        {
+          "id": "b",
+          "label": "[Ar] 4s² 3d³"
+        },
+        {
+          "id": "c",
+          "label": "[Ar] 4s¹ 3d⁴"
+        },
+        {
+          "id": "d",
+          "label": "[Ar] 3d⁶"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Iron is [Ar] 4s² 3d⁶. A cation loses its outermost electrons first, which are the 4s electrons, and then one 3d electron: Fe³⁺ is [Ar] 3d⁵."
+    },
+    {
+      "id": "q6-filling#6",
+      "quest": "q6-filling",
+      "question": "Which species has the configuration 1s² 2s² 2p⁶?",
+      "options": [
+        {
+          "id": "a",
+          "label": "O²⁻"
+        },
+        {
+          "id": "b",
+          "label": "O"
+        },
+        {
+          "id": "c",
+          "label": "O²⁺"
+        },
+        {
+          "id": "d",
+          "label": "S²⁻"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Oxygen has 8 electrons. O²⁻ has 10, which fills the 2p subshell to give the neon configuration."
+    },
+    {
+      "id": "q8-trends#5",
+      "quest": "q8-trends",
+      "question": "Which atom releases more energy when it gains an electron?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Chlorine"
+        },
+        {
+          "id": "b",
+          "label": "Sodium"
+        },
+        {
+          "id": "c",
+          "label": "Magnesium"
+        },
+        {
+          "id": "d",
+          "label": "Neon"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Chlorine has a high effective nuclear charge and a small radius, so an added electron is strongly attracted. Sodium has a weak pull and neon has a full shell."
+    },
+    {
+      "id": "q8-trends#6",
+      "quest": "q8-trends",
+      "question": "Which element is the most electronegative?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Chlorine"
+        },
+        {
+          "id": "b",
+          "label": "Silicon"
+        },
+        {
+          "id": "c",
+          "label": "Phosphorus"
+        },
+        {
+          "id": "d",
+          "label": "Sodium"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Electronegativity rises across a period and falls down a group. Chlorine is farthest right of these."
+    },
+    {
+      "id": "q8-trends#7",
+      "quest": "q8-trends",
+      "question": "Going down group 17 from F to I, how does electronegativity change?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It decreases, because the bonding electrons sit farther from the nucleus and are shielded more"
+        },
+        {
+          "id": "b",
+          "label": "It increases, because there are more protons"
+        },
+        {
+          "id": "c",
+          "label": "It stays the same, because each has seven valence electrons"
+        },
+        {
+          "id": "d",
+          "label": "It increases, because the radius is larger"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Added shells put the valence electrons farther away and shield them, so the nucleus pulls on shared electrons less."
+    }
+  ],
+  "bench": {
+    "q1-wave": {
+      "problems": [
+        {
+          "id": "q1-wave#b1",
+          "quest": "q1-wave",
+          "question": "An FM radio station broadcasts at 9.0 x 10⁷ Hz. What is the wavelength? (c = 3.00 x 10⁸ m/s)",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.30 m"
+            },
+            {
+              "id": "b",
+              "label": "3.3 m"
+            },
+            {
+              "id": "c",
+              "label": "27 m"
+            },
+            {
+              "id": "d",
+              "label": "33 m"
+            }
+          ],
+          "answer": "b",
+          "explanation": "wavelength = speed / frequency = (3.00 x 10⁸) / (9.0 x 10⁷) = 3.3 m."
+        },
+        {
+          "id": "q1-wave#b2",
+          "quest": "q1-wave",
+          "question": "Two waves travel at the same speed. Wave A has twice the frequency of wave B. How do their wavelengths compare?",
+          "options": [
+            {
+              "id": "a",
+              "label": "A's wavelength is twice B's"
+            },
+            {
+              "id": "b",
+              "label": "They are the same"
+            },
+            {
+              "id": "c",
+              "label": "A's wavelength is four times B's"
+            },
+            {
+              "id": "d",
+              "label": "A's wavelength is half of B's"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Speed = wavelength x frequency. With the speed fixed, doubling the frequency halves the wavelength."
+        }
+      ],
+      "worked": {
+        "id": "q1-wave#w",
+        "quest": "q1-wave",
+        "title": "Waves in a Microwave Oven",
+        "setup": "A microwave oven produces waves of frequency 2.45 GHz (2.45 x 10⁹ Hz). Its cavity is 0.306 m wide. Find the wavelength and how many wavelengths fit across the cavity. (c = 3.00 x 10⁸ m/s)",
+        "steps": [
+          {
+            "say": "Which equation links speed, frequency and wavelength?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "speed = wavelength x frequency"
+              },
+              {
+                "id": "b",
+                "label": "speed = wavelength / frequency"
+              },
+              {
+                "id": "c",
+                "label": "speed = frequency / wavelength"
+              },
+              {
+                "id": "d",
+                "label": "speed = wavelength + frequency"
+              }
+            ],
+            "answer": "a",
+            "hint": "Think about crests passing each second: the length of each, times how many.",
+            "explain": "In one second, ν crests pass, each λ long, so the wave travels λν each second: c = λν."
+          },
+          {
+            "say": "What is the wavelength?",
+            "kind": "number",
+            "answer": 0.1224,
+            "calc": "3.00e8/2.45e9",
+            "unit": "m",
+            "hint": "Divide the speed by the frequency. Use 2.45 x 10⁹ Hz, typed as 2.45e9.",
+            "explain": "λ = c / ν = (3.00 x 10⁸) / (2.45 x 10⁹) = 0.122 m, about 12 cm."
+          },
+          {
+            "say": "How long does one full wave cycle take (the period)?",
+            "kind": "number",
+            "answer": 4.08e-10,
+            "calc": "1/2.45e9",
+            "unit": "s",
+            "hint": "The period is 1 divided by the frequency.",
+            "explain": "T = 1 / ν = 1 / (2.45 x 10⁹) = 4.08 x 10⁻¹⁰ s."
+          },
+          {
+            "say": "How many wavelengths fit across the 0.306 m cavity?",
+            "kind": "number",
+            "answer": 2.5,
+            "calc": "0.306/(3.00e8/2.45e9)",
+            "hint": "Divide the cavity width by the wavelength.",
+            "explain": "0.306 / 0.1224 = 2.50 wavelengths. A whole number plus a half sets up a standing pattern with hot and cold spots."
+          },
+          {
+            "say": "The frequency is doubled and the cavity is unchanged. What happens to the wavelength?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "It doubles"
+              },
+              {
+                "id": "b",
+                "label": "It halves"
+              },
+              {
+                "id": "c",
+                "label": "It stays the same"
+              },
+              {
+                "id": "d",
+                "label": "It becomes four times smaller"
+              }
+            ],
+            "answer": "b",
+            "hint": "The speed stays at 3.00 x 10⁸ m/s.",
+            "explain": "With the speed fixed, wavelength is inversely proportional to frequency, so doubling ν halves λ."
+          }
+        ],
+        "finish": "Frequency fixes wavelength through c = λν. Dividing a length by a wavelength counts how many waves fit in it."
+      }
+    },
+    "q2-photon": {
+      "problems": [
+        {
+          "id": "q2-photon#b1",
+          "quest": "q2-photon",
+          "question": "What is the energy of one photon of 500 nm light? (h = 6.626 x 10⁻³⁴ J s, c = 3.00 x 10⁸ m/s)",
+          "options": [
+            {
+              "id": "a",
+              "label": "4.0 x 10⁻²⁸ J"
+            },
+            {
+              "id": "b",
+              "label": "2.0 x 10⁻¹⁹ J"
+            },
+            {
+              "id": "c",
+              "label": "4.0 x 10⁻¹⁶ J"
+            },
+            {
+              "id": "d",
+              "label": "4.0 x 10⁻¹⁹ J"
+            }
+          ],
+          "answer": "d",
+          "explanation": "E = hc / λ = (6.626 x 10⁻³⁴)(3.00 x 10⁸) / (500 x 10⁻⁹ m) = 4.0 x 10⁻¹⁹ J. Convert nanometres to metres first."
+        },
+        {
+          "id": "q2-photon#b2",
+          "quest": "q2-photon",
+          "question": "A metal's threshold frequency is 4.0 x 10¹⁴ Hz. Light of 3.0 x 10¹⁴ Hz shines on it and the lamp is made twice as bright. What happens?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Electrons are freed with less energy"
+            },
+            {
+              "id": "b",
+              "label": "No electrons are freed"
+            },
+            {
+              "id": "c",
+              "label": "Twice as many electrons are freed"
+            },
+            {
+              "id": "d",
+              "label": "Electrons are freed after a delay"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Each photon is below the threshold, and one electron absorbs one photon. More photons per second cannot add up to a freed electron."
+        }
+      ],
+      "worked": {
+        "id": "q2-photon#w",
+        "quest": "q2-photon",
+        "title": "Freeing Electrons with Ultraviolet Light",
+        "setup": "Light of wavelength 250 nm shines on a metal with a work function of 3.20 x 10⁻¹⁹ J. Find the fastest speed of the freed electrons. (h = 6.626 x 10⁻³⁴ J s, c = 3.00 x 10⁸ m/s, electron mass 9.109 x 10⁻³¹ kg)",
+        "steps": [
+          {
+            "say": "What is the frequency of the light?",
+            "kind": "number",
+            "answer": 1200000000000000,
+            "calc": "3.00e8/250e-9",
+            "unit": "Hz",
+            "hint": "Frequency = c / wavelength. Write 250 nm as 250e-9 m.",
+            "explain": "ν = (3.00 x 10⁸) / (250 x 10⁻⁹) = 1.20 x 10¹⁵ Hz."
+          },
+          {
+            "say": "What is the energy of one photon?",
+            "kind": "number",
+            "answer": 7.951e-19,
+            "calc": "6.626e-34*1.2e15",
+            "unit": "J",
+            "hint": "E = hν.",
+            "explain": "E = (6.626 x 10⁻³⁴)(1.20 x 10¹⁵) = 7.95 x 10⁻¹⁹ J."
+          },
+          {
+            "say": "Is a photon energy of 7.95 x 10⁻¹⁹ J enough to free an electron from this metal?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Yes, it is above the work function"
+              },
+              {
+                "id": "b",
+                "label": "No, it is below the work function"
+              },
+              {
+                "id": "c",
+                "label": "Only if the lamp is bright enough"
+              },
+              {
+                "id": "d",
+                "label": "It cannot be told without the metal's mass"
+              }
+            ],
+            "answer": "a",
+            "hint": "Compare the photon energy with 3.20 x 10⁻¹⁹ J.",
+            "explain": "The photon carries 7.95 x 10⁻¹⁹ J, which is more than the 3.20 x 10⁻¹⁹ J needed."
+          },
+          {
+            "say": "How much kinetic energy does a freed electron keep?",
+            "kind": "number",
+            "answer": 4.751e-19,
+            "calc": "7.951e-19-3.20e-19",
+            "unit": "J",
+            "hint": "Photon energy minus work function.",
+            "explain": "KE = 7.95 x 10⁻¹⁹ - 3.20 x 10⁻¹⁹ = 4.75 x 10⁻¹⁹ J."
+          },
+          {
+            "say": "What is the electron's speed? Use KE = ½mv².",
+            "kind": "number",
+            "answer": 1021000,
+            "calc": "Math.sqrt(2*4.751e-19/9.109e-31)",
+            "unit": "m/s",
+            "tol": 0.015,
+            "hint": "Rearrange to v = √(2 KE / m).",
+            "explain": "v = √(2 x 4.75 x 10⁻¹⁹ / 9.109 x 10⁻³¹) = 1.02 x 10⁶ m/s."
+          },
+          {
+            "say": "The lamp is made twice as bright. What happens to each electron's speed?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "It doubles"
+              },
+              {
+                "id": "b",
+                "label": "It stays the same"
+              },
+              {
+                "id": "c",
+                "label": "It rises by a factor of 1.4"
+              },
+              {
+                "id": "d",
+                "label": "It falls by half"
+              }
+            ],
+            "answer": "b",
+            "hint": "Brightness changes how many photons arrive, not the energy of each.",
+            "explain": "Each electron absorbs one photon of the same energy, so its speed is unchanged. Twice as many electrons are freed each second."
+          }
+        ],
+        "finish": "Photon energy minus the work function is the electron's kinetic energy. Frequency sets the energy per photon, and brightness only sets how many photons arrive."
+      }
+    },
+    "q3-lines": {
+      "problems": [
+        {
+          "id": "q3-lines#b1",
+          "quest": "q3-lines",
+          "question": "Which jump in a hydrogen atom gives out light of the longest wavelength?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Fourth level to second level"
+            },
+            {
+              "id": "b",
+              "label": "Fifth level to second level"
+            },
+            {
+              "id": "c",
+              "label": "Third level to second level"
+            },
+            {
+              "id": "d",
+              "label": "Sixth level to second level"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Longest wavelength means lowest energy. The smallest energy gap of these is between levels 3 and 2."
+        },
+        {
+          "id": "q3-lines#b2",
+          "quest": "q3-lines",
+          "question": "An electron in hydrogen jumps up from the second level to the fourth by absorbing a photon. How does that photon compare with the one given out when it falls back from 4 to 2?",
+          "options": [
+            {
+              "id": "a",
+              "label": "It carries exactly the same energy"
+            },
+            {
+              "id": "b",
+              "label": "It carries more energy"
+            },
+            {
+              "id": "c",
+              "label": "It carries less energy"
+            },
+            {
+              "id": "d",
+              "label": "It carries no energy, only momentum"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The gap between levels is fixed. A photon must match it exactly to be absorbed, and the same gap sets the photon given out on the way back."
+        }
+      ],
+      "worked": {
+        "id": "q3-lines#w",
+        "quest": "q3-lines",
+        "title": "The Hydrogen Line from Level 4 to Level 2",
+        "setup": "An electron in a hydrogen atom drops from level n = 4 to n = 2. The energy of level n is -2.178 x 10⁻¹⁸ / n² joules. Find the wavelength of the light given out. (h = 6.626 x 10⁻³⁴ J s, c = 3.00 x 10⁸ m/s)",
+        "steps": [
+          {
+            "say": "What is the energy of level 4?",
+            "kind": "number",
+            "answer": -1.361e-19,
+            "calc": "-2.178e-18/16",
+            "unit": "J",
+            "hint": "Put n = 4 into -2.178 x 10⁻¹⁸ / n².",
+            "explain": "E₄ = -2.178 x 10⁻¹⁸ / 16 = -1.361 x 10⁻¹⁹ J."
+          },
+          {
+            "say": "What is the energy of level 2?",
+            "kind": "number",
+            "answer": -5.445e-19,
+            "calc": "-2.178e-18/4",
+            "unit": "J",
+            "hint": "Put n = 2 into the same equation.",
+            "explain": "E₂ = -2.178 x 10⁻¹⁸ / 4 = -5.445 x 10⁻¹⁹ J."
+          },
+          {
+            "say": "What is the energy of the photon given out? Give it as a positive number.",
+            "kind": "number",
+            "answer": 4.084e-19,
+            "calc": "-1.361e-19-(-5.445e-19)",
+            "unit": "J",
+            "hint": "The photon carries the difference between the two levels.",
+            "explain": "The electron falls to the lower level, so the photon carries E₄ - E₂ = 4.084 x 10⁻¹⁹ J."
+          },
+          {
+            "say": "What is the photon's frequency?",
+            "kind": "number",
+            "answer": 616400000000000,
+            "calc": "4.084e-19/6.626e-34",
+            "unit": "Hz",
+            "hint": "Frequency = energy / h.",
+            "explain": "ν = E / h = (4.084 x 10⁻¹⁹) / (6.626 x 10⁻³⁴) = 6.16 x 10¹⁴ Hz."
+          },
+          {
+            "say": "What is its wavelength in nanometres?",
+            "kind": "number",
+            "answer": 486.7,
+            "calc": "3.00e8/6.164e14*1e9",
+            "unit": "nm",
+            "hint": "Wavelength = c / frequency, then multiply by 10⁹ to convert metres to nanometres.",
+            "explain": "λ = (3.00 x 10⁸) / (6.164 x 10¹⁴) = 4.87 x 10⁻⁷ m = 487 nm."
+          },
+          {
+            "say": "In what part of the spectrum is 487 nm?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Ultraviolet"
+              },
+              {
+                "id": "b",
+                "label": "Visible: blue-green"
+              },
+              {
+                "id": "c",
+                "label": "Infrared"
+              },
+              {
+                "id": "d",
+                "label": "Visible: red"
+              }
+            ],
+            "answer": "b",
+            "hint": "Visible light runs from about 400 nm (violet) to 700 nm (red).",
+            "explain": "487 nm is visible blue-green light, one of the lines in hydrogen's visible series, which all end on level 2."
+          }
+        ],
+        "finish": "The photon's energy is the gap between two levels, and h and c turn that gap into a frequency and a wavelength. Each different jump gives a different line."
+      }
+    },
+    "q4-cloud": {
+      "problems": [
+        {
+          "id": "q4-cloud#b1",
+          "quest": "q4-cloud",
+          "question": "In a picture built from 500 shots at hydrogen's electron, the dots are densest near the nucleus and thin out farther away. What does that show?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The electron orbits at a fixed distance"
+            },
+            {
+              "id": "b",
+              "label": "The electron stays inside the dense region"
+            },
+            {
+              "id": "c",
+              "label": "The electron is most likely near the nucleus, but can be found at any distance with falling chance"
+            },
+            {
+              "id": "d",
+              "label": "The electron moves faster near the nucleus only"
+            }
+          ],
+          "answer": "c",
+          "explanation": "An orbital is a probability map. Dense dots mean a higher chance of finding the electron there, and thinning dots mean a lower chance, not zero."
+        },
+        {
+          "id": "q4-cloud#b2",
+          "quest": "q4-cloud",
+          "question": "How many orbitals are in the third shell (n = 3) in total?",
+          "options": [
+            {
+              "id": "a",
+              "label": "9"
+            },
+            {
+              "id": "b",
+              "label": "3"
+            },
+            {
+              "id": "c",
+              "label": "6"
+            },
+            {
+              "id": "d",
+              "label": "18"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The third shell holds one 3s, three 3p and five 3d orbitals: 1 + 3 + 5 = 9. In general a shell has n² orbitals."
+        }
+      ]
+    },
+    "q5-numbers": {
+      "problems": [
+        {
+          "id": "q5-numbers#b1",
+          "quest": "q5-numbers",
+          "question": "Which orbital has n = 3 and l = 1?",
+          "options": [
+            {
+              "id": "a",
+              "label": "3p"
+            },
+            {
+              "id": "b",
+              "label": "3s"
+            },
+            {
+              "id": "c",
+              "label": "3d"
+            },
+            {
+              "id": "d",
+              "label": "2p"
+            }
+          ],
+          "answer": "a",
+          "explanation": "l = 0 is s, l = 1 is p and l = 2 is d. With n = 3 and l = 1 the orbital is 3p."
+        },
+        {
+          "id": "q5-numbers#b2",
+          "quest": "q5-numbers",
+          "question": "Which values can the magnetic quantum number ml take when l = 2?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0, +1, +2"
+            },
+            {
+              "id": "b",
+              "label": "-1, 0, +1"
+            },
+            {
+              "id": "c",
+              "label": "-2, -1, 0, +1, +2"
+            },
+            {
+              "id": "d",
+              "label": "-2, 0, +2"
+            }
+          ],
+          "answer": "c",
+          "explanation": "ml runs from -l to +l in whole steps. For l = 2 that is five values, one for each d orbital."
+        }
+      ]
+    },
+    "q6-filling": {
+      "problems": [
+        {
+          "id": "q6-filling#b1",
+          "quest": "q6-filling",
+          "question": "What is the ground-state electron configuration of chlorine (Z = 17)?",
+          "options": [
+            {
+              "id": "a",
+              "label": "1s² 2s² 2p⁶ 3s² 3p⁵"
+            },
+            {
+              "id": "b",
+              "label": "1s² 2s² 2p⁶ 3s² 3p⁶"
+            },
+            {
+              "id": "c",
+              "label": "1s² 2s² 2p⁶ 3s² 3p³"
+            },
+            {
+              "id": "d",
+              "label": "1s² 2s² 2p⁶ 3s¹ 3p⁶"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Fill in order: 2 + 2 + 6 + 2 = 12 electrons through 3s, leaving 5 for 3p."
+        },
+        {
+          "id": "q6-filling#b2",
+          "quest": "q6-filling",
+          "question": "Which neutral atom has the same electron configuration as the magnesium ion, Mg²⁺?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Argon"
+            },
+            {
+              "id": "b",
+              "label": "Sodium"
+            },
+            {
+              "id": "c",
+              "label": "Neon"
+            },
+            {
+              "id": "d",
+              "label": "Magnesium"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Mg²⁺ has 12 - 2 = 10 electrons: 1s² 2s² 2p⁶, which is neon's configuration."
+        }
+      ],
+      "worked": {
+        "id": "q6-filling#w",
+        "quest": "q6-filling",
+        "title": "Electrons in the Iron(III) Ion",
+        "setup": "Iron has atomic number 26. Find the configuration of Fe³⁺ and how many unpaired electrons it has.",
+        "steps": [
+          {
+            "say": "How many electrons does a neutral iron atom have?",
+            "kind": "number",
+            "answer": 26,
+            "calc": "26",
+            "hint": "Neutral means electrons equal protons.",
+            "explain": "Fe has 26 protons, so 26 electrons."
+          },
+          {
+            "say": "How many electrons does Fe³⁺ have?",
+            "kind": "number",
+            "answer": 23,
+            "calc": "26-3",
+            "hint": "A 3+ charge means three electrons have been removed.",
+            "explain": "26 − 3 = 23 electrons."
+          },
+          {
+            "say": "Which electrons leave first?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "3d electrons"
+              },
+              {
+                "id": "b",
+                "label": "4s electrons"
+              },
+              {
+                "id": "c",
+                "label": "1s electrons"
+              }
+            ],
+            "answer": "b",
+            "hint": "Remove from the outermost shell.",
+            "explain": "The 4s electrons are in the outermost shell, so they leave before the 3d electrons."
+          },
+          {
+            "say": "How many 3d electrons does Fe³⁺ keep? Neutral iron has six.",
+            "kind": "number",
+            "answer": 5,
+            "calc": "6-1",
+            "hint": "Two 4s electrons go first, then one 3d.",
+            "explain": "Two leave from 4s and one from 3d, so 6 − 1 = 5."
+          },
+          {
+            "say": "Each of five 3d orbitals takes one electron before any pairs. How many unpaired electrons does Fe³⁺ have?",
+            "kind": "number",
+            "answer": 5,
+            "calc": "5",
+            "hint": "Five electrons into five orbitals, one each.",
+            "explain": "With five electrons and five orbitals, each holds one: 5 unpaired."
+          }
+        ],
+        "finish": "Fe³⁺ is [Ar] 3d⁵. A cation loses its 4s electrons before its 3d electrons."
+      }
+    },
+    "q7-pes": {
+      "problems": [
+        {
+          "id": "q7-pes#b1",
+          "quest": "q7-pes",
+          "question": "A photoelectron spectrum has peaks of relative height 2, 2, 6, 2 and 1. Which element is it?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Aluminium"
+            },
+            {
+              "id": "b",
+              "label": "Sodium"
+            },
+            {
+              "id": "c",
+              "label": "Magnesium"
+            },
+            {
+              "id": "d",
+              "label": "Silicon"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The peaks read as 1s² 2s² 2p⁶ 3s² 3p¹. That is 13 electrons, so 13 protons: aluminium."
+        },
+        {
+          "id": "q7-pes#b2",
+          "quest": "q7-pes",
+          "question": "Sodium's 1s electrons need over 1000 eV to remove, but its 3s electron needs about 5 eV. Why such a difference?",
+          "options": [
+            {
+              "id": "a",
+              "label": "1s electrons are heavier"
+            },
+            {
+              "id": "b",
+              "label": "3s electrons are closer to the nucleus"
+            },
+            {
+              "id": "c",
+              "label": "1s electrons sit close to the nucleus and feel almost its full charge, while the 3s electron is shielded"
+            },
+            {
+              "id": "d",
+              "label": "The 3s electron is paired and so held less tightly"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Inner electrons are near the nucleus and unshielded. The outer 3s electron is screened by ten inner electrons, so the nucleus holds it far more weakly."
+        }
+      ]
+    },
+    "q8-trends": {
+      "problems": [
+        {
+          "id": "q8-trends#b1",
+          "quest": "q8-trends",
+          "question": "Which of lithium, sodium and potassium has the highest first ionisation energy?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Sodium"
+            },
+            {
+              "id": "b",
+              "label": "Potassium"
+            },
+            {
+              "id": "c",
+              "label": "All three are equal"
+            },
+            {
+              "id": "d",
+              "label": "Lithium"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Going down a group the outer electron sits in a larger shell, farther from the nucleus and more shielded, so it takes less energy to remove. Lithium's outer electron is held most tightly."
+        },
+        {
+          "id": "q8-trends#b2",
+          "quest": "q8-trends",
+          "question": "The ions O²⁻ and F⁻ have the same number of electrons. Which is larger?",
+          "options": [
+            {
+              "id": "a",
+              "label": "F⁻"
+            },
+            {
+              "id": "b",
+              "label": "O²⁻"
+            },
+            {
+              "id": "c",
+              "label": "They are the same size"
+            },
+            {
+              "id": "d",
+              "label": "It depends on the charge of the electrons"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Both have 10 electrons, but F has 9 protons and O has 8. Fewer protons pull the same electrons less tightly, so O²⁻ is larger."
+        }
+      ],
+      "worked": {
+        "id": "q8-trends#w",
+        "quest": "q8-trends",
+        "title": "Effective Nuclear Charge Across Period 3",
+        "setup": "Treat the 10 core electrons of Na, Mg and Cl as shielding the valence electrons completely.",
+        "steps": [
+          {
+            "say": "What is the effective nuclear charge on a valence electron of Na (Z = 11)? Use Zeff = Z − core electrons.",
+            "kind": "number",
+            "answer": 1,
+            "calc": "11-10",
+            "hint": "Subtract the 10 core electrons from the proton count.",
+            "explain": "11 − 10 = 1."
+          },
+          {
+            "say": "What is it for Mg (Z = 12)?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "12-10",
+            "hint": "Same method.",
+            "explain": "12 − 10 = 2."
+          },
+          {
+            "say": "What is it for Cl (Z = 17)?",
+            "kind": "number",
+            "answer": 7,
+            "calc": "17-10",
+            "hint": "Same method.",
+            "explain": "17 − 10 = 7."
+          },
+          {
+            "say": "So across the period the valence electrons are pulled…",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "more strongly, shrinking the atom"
+              },
+              {
+                "id": "b",
+                "label": "less strongly, enlarging the atom"
+              },
+              {
+                "id": "c",
+                "label": "equally, leaving the radius unchanged"
+              }
+            ],
+            "answer": "a",
+            "hint": "Compare 1, 2 and 7.",
+            "explain": "A larger Zeff pulls the valence shell inward, so atomic radius falls and ionization energy rises from Na to Cl."
+          }
+        ],
+        "finish": "Zeff rises across a period because protons are added while the core shielding stays the same, so atoms get smaller and hold their electrons more tightly."
+      }
+    },
+    "q9-absorb": {
+      "problems": [
+        {
+          "id": "q9-absorb#b1",
+          "quest": "q9-absorb",
+          "question": "A solution of concentration 0.020 M has an absorbance of 0.40 in a 1.0 cm cuvette. A solution of the same substance has an absorbance of 0.60 in the same cuvette. What is its concentration?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.013 M"
+            },
+            {
+              "id": "b",
+              "label": "0.040 M"
+            },
+            {
+              "id": "c",
+              "label": "0.060 M"
+            },
+            {
+              "id": "d",
+              "label": "0.030 M"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Absorbance is proportional to concentration when the path length is fixed. 0.60 is 1.5 times 0.40, so the concentration is 1.5 x 0.020 = 0.030 M."
+        },
+        {
+          "id": "q9-absorb#b2",
+          "quest": "q9-absorb",
+          "question": "Why is a spectrometer usually set to the wavelength where the sample absorbs most?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The light passes through unchanged"
+            },
+            {
+              "id": "b",
+              "label": "A small change in concentration gives the largest change in absorbance"
+            },
+            {
+              "id": "c",
+              "label": "It removes the need for a blank"
+            },
+            {
+              "id": "d",
+              "label": "It makes absorbance independent of concentration"
+            }
+          ],
+          "answer": "b",
+          "explanation": "At the peak the absorbance is highest for a given concentration, so differences between samples are easiest to measure."
+        }
+      ],
+      "worked": {
+        "id": "q9-absorb#w",
+        "quest": "q9-absorb",
+        "title": "Finding a Concentration from Absorbance",
+        "setup": "A standard solution of 0.0040 M has an absorbance of 0.320 in a 1.00 cm cuvette. An unknown sample reads 0.480 in a 2.00 cm cuvette after 10.0 mL of it was diluted to 50.0 mL. Find the concentration of the original sample.",
+        "steps": [
+          {
+            "say": "Beer-Lambert says A = ε b c. Find ε from the standard.",
+            "kind": "number",
+            "answer": 80,
+            "calc": "0.320/(1.00*0.0040)",
+            "unit": "L/(mol cm)",
+            "hint": "Rearrange to ε = A / (b c).",
+            "explain": "ε = 0.320 / (1.00 x 0.0040) = 80 L/(mol cm)."
+          },
+          {
+            "say": "What would the unknown's absorbance be in a 1.00 cm cuvette?",
+            "kind": "number",
+            "answer": 0.24,
+            "calc": "0.480/2.00",
+            "hint": "Absorbance is proportional to path length, so divide by 2.",
+            "explain": "0.480 / 2.00 = 0.240 per centimetre of path."
+          },
+          {
+            "say": "What is the concentration of the diluted sample?",
+            "kind": "number",
+            "answer": 0.003,
+            "calc": "0.240/80",
+            "unit": "M",
+            "hint": "c = A / (ε b), with b = 1.00 cm.",
+            "explain": "c = 0.240 / (80 x 1.00) = 0.0030 M."
+          },
+          {
+            "say": "By what factor was the sample diluted (10.0 mL to 50.0 mL)?",
+            "kind": "number",
+            "answer": 5,
+            "calc": "50.0/10.0",
+            "hint": "Final volume divided by starting volume.",
+            "explain": "50.0 / 10.0 = 5, so the sample was five times more dilute when measured."
+          },
+          {
+            "say": "What was the concentration of the original sample?",
+            "kind": "number",
+            "answer": 0.015,
+            "calc": "0.0030*5",
+            "unit": "M",
+            "hint": "Undo the dilution.",
+            "explain": "0.0030 x 5 = 0.015 M."
+          },
+          {
+            "say": "How many moles of the substance were in the 10.0 mL that was diluted?",
+            "kind": "number",
+            "answer": 0.00015,
+            "calc": "0.015*0.0100",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Moles = concentration x volume in litres.",
+            "explain": "0.015 mol/L x 0.0100 L = 1.5 x 10⁻⁴ mol. Diluting does not change the moles."
+          }
+        ],
+        "finish": "A standard gives ε, ε gives the concentration from an absorbance, and the dilution factor carries it back to the original sample."
+      }
+    },
+    "boss-eater": {
+      "problems": [
+        {
+          "id": "boss-eater#b1",
+          "quest": "boss-eater",
+          "question": "Which hydrogen transition gives out a photon of shorter wavelength: n = 4 to n = 1, or n = 3 to n = 2?",
+          "options": [
+            {
+              "id": "a",
+              "label": "n = 4 to n = 1"
+            },
+            {
+              "id": "b",
+              "label": "n = 3 to n = 2"
+            },
+            {
+              "id": "c",
+              "label": "They give the same wavelength"
+            },
+            {
+              "id": "d",
+              "label": "It cannot be told without the frequency"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The gap between levels 4 and 1 is much larger than between 3 and 2. A larger energy gap gives a higher frequency and a shorter wavelength."
+        },
+        {
+          "id": "boss-eater#b2",
+          "quest": "boss-eater",
+          "question": "Sulfur has atomic number 16. How many outer-shell electrons does a neutral atom have, and how many of them are unpaired?",
+          "options": [
+            {
+              "id": "a",
+              "label": "6 outer electrons, 4 unpaired"
+            },
+            {
+              "id": "b",
+              "label": "4 outer electrons, 2 unpaired"
+            },
+            {
+              "id": "c",
+              "label": "6 outer electrons, 2 unpaired"
+            },
+            {
+              "id": "d",
+              "label": "6 outer electrons, none unpaired"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Sulfur is 1s² 2s² 2p⁶ 3s² 3p⁴. The six outer electrons are 3s² 3p⁴. In 3p, three orbitals take one electron each first, and the fourth pairs up, leaving two unpaired."
+        }
+      ]
+    }
+  }
+}

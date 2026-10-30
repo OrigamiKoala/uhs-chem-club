@@ -516,69 +516,6 @@ const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   Five questions covering atoms, elements, molecules, compounds, and
-   mixtures. Appear after the debrief, before the player exits.
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'You zoom in until matter stops looking smooth and breaks into separate tiny pieces. What are those pieces called?',
-    options: [
-      { id: 'a', label: 'Molecules' },
-      { id: 'b', label: 'Atoms' },
-      { id: 'c', label: 'Elements' },
-      { id: 'd', label: 'Compounds' }
-    ],
-    answer: 'b',
-    explanation: 'Atoms are the tiny particles everything is made of. Zooming in further just shows the same atoms bigger.'
-  },
-  {
-    question: 'A sample contains only carbon (C) atoms and nothing else. What kind of substance is it?',
-    options: [
-      { id: 'a', label: 'A compound' },
-      { id: 'b', label: 'A mixture' },
-      { id: 'c', label: 'A pure element' },
-      { id: 'd', label: 'A molecule' }
-    ],
-    answer: 'c',
-    explanation: 'An element is built from only one kind of atom. Carbon on its own is the element C.'
-  },
-  {
-    question: 'One oxygen (O) atom is bonded to two hydrogen (H) atoms. What have you got?',
-    options: [
-      { id: 'a', label: 'An element' },
-      { id: 'b', label: 'A mixture' },
-      { id: 'c', label: 'A molecule (H₂O)' },
-      { id: 'd', label: 'An atom' }
-    ],
-    answer: 'c',
-    explanation: 'Atoms bonded together make a molecule. This one is water, H₂O — the molecule you copied.'
-  },
-  {
-    question: 'Carbon (C) atoms and sodium (Na) atoms sit in the same jar, not bonded to each other. What is in the jar?',
-    options: [
-      { id: 'a', label: 'A compound' },
-      { id: 'b', label: 'A mixture' },
-      { id: 'c', label: 'A pure element' },
-      { id: 'd', label: 'A molecule' }
-    ],
-    answer: 'b',
-    explanation: 'Different atoms that are not bonded make a mixture, and because nothing holds them together they can be separated again.'
-  },
-  {
-    question: 'Hydrogen peroxide (H₂O₂) is two H atoms bonded to two O atoms, always in that ratio. What is H₂O₂?',
-    options: [
-      { id: 'a', label: 'A mixture' },
-      { id: 'b', label: 'An element' },
-      { id: 'c', label: 'A chemical compound' },
-      { id: 'd', label: 'A loose heap of atoms' }
-    ],
-    answer: 'c',
-    explanation: 'Different elements bonded together in a fixed recipe make a compound. No amount of shaking will separate it.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays
    each one through the reducer by direct actions, by drag and by two taps, and every

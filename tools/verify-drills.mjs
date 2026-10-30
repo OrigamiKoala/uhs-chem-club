@@ -29,7 +29,6 @@ const noop = () => {};
 globalThis.window = globalThis.window || { addEventListener: noop, removeEventListener: noop, location: { hash: '' }, matchMedia: () => ({ matches: false }) };
 
 const D = await import('../src/learn/drills.js');
-const { PROBLEMS_PER_QUEST } = await import('../src/learn/curriculum.js');
 
 /* ---- the pool ---- */
 const worlds = D.drillWorlds();
@@ -54,7 +53,6 @@ const all = await D.loadPool('all');
     const ids = D.worldQuestionIds(w);
     const pool = await D.loadPool(w.id);
     if (pool.length !== ids.length || !pool.every(q => ids.includes(q.id))) fail(`world ${w.id}: loaded ids differ from worldQuestionIds`);
-    if (ids.length !== w.liveQuestCount * PROBLEMS_PER_QUEST) fail(`world ${w.id}: ${ids.length} ids, expected ${w.liveQuestCount * PROBLEMS_PER_QUEST}`);
   }
   ok('every world\'s loaded questions are exactly the ids the mastery map counts');
 }
@@ -143,6 +141,29 @@ const all = await D.loadPool('all');
   for (const id of D.worldQuestionIds(worlds[0])) rich.q[id] = { c: 3, m: 0 };
   need.every(id => get(id).earnedBy({ practice: rich })) ? ok('each plate is earned when its condition is met') : fail(`a drill plate was not earned: ${need.filter(id => !get(id).earnedBy({ practice: rich }))}`);
   need.some(id => 'xp' in get(id) || 'xp_bonus' in get(id)) ? fail('a drill plate carries XP') : ok('drill plates carry no XP');
+}
+
+/* ---- worked problems ---- */
+{
+  const W = await import('../src/learn/worked.js');
+  const B = await import('../src/learn/bank.js');
+  const nums = [['1,660', 1660], ['1.66e3', 1660], ['1.66 x 10^3', 1660], ['\u22125.2', -5.2], ['  0.25 ', 0.25]];
+  nums.every(([t, v]) => Math.abs(W.parseNumber(t) - v) < 1e-9) ? ok('typed figures parse: commas, e-notation, x 10^n, minus sign') : fail('parseNumber misread a figure');
+  ['', 'abc', '1.2.3', '12 g'].every(t => Number.isNaN(W.parseNumber(t))) ? ok('anything that is not a figure is refused, not guessed') : fail('parseNumber accepted junk');
+  const step = { kind: 'number', answer: 100, tol: 0.01 };
+  W.checkStep(step, '100.9').ok && !W.checkStep(step, '102').ok && W.checkStep(step, '').empty && !W.checkStep(step, 'x').empty
+    ? ok('a step takes its tolerance, and a blank is never a miss') : fail('checkStep wrong');
+  const choice = { kind: 'choice', answer: 'b', options: [{ id: 'a', label: 'x' }, { id: 'b', label: 'y' }, { id: 'c', label: 'z' }] };
+  W.checkStep(choice, 'b').ok && !W.checkStep(choice, 'a').ok && W.checkStep(choice, '').empty && W.answerText(choice) === 'y' ? ok('choice steps judge by option id') : fail('choice step wrong');
+  let benchWorlds = 0;
+  for (const w of worlds) {
+    const quests = w.quests.filter(q => q.status === 'live');
+    const withPair = quests.filter(q => B.benchProblems(w, q.id).length === 2).length;
+    withPair === quests.length ? benchWorlds++ : fail(`world ${w.id}: ${quests.length - withPair} bench(es) without two problems`);
+  }
+  benchWorlds === worlds.length ? ok(`every built bench in ${benchWorlds} worlds has its two problems in the pool`) : null;
+  const ids = D.worldQuestionIds(worlds[0]);
+  ids.some(id => /#b[12]$/.test(id)) && ids.some(id => /#\d+$/.test(id)) ? ok('the pool holds both bench problems and the end set') : fail('pool is missing bench or end ids');
 }
 
 /* ---- no XP rails ---- */

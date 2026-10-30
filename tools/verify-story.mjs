@@ -283,8 +283,8 @@ ok('spine beat prerequisite unlock logic validated');
       for (const c of [...st.beats.map(b => b.say), st.filed]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
     });
   }
-  // Every built Tallow, Lanternfall and Bellows quest, bench or boss, has its one animation.
-  for (const wid of ['unit01', 'unit02', 'unit04']) {
+  // Every built Tallow, Lanternfall, Ligar, Bellows and Ember Reach quest, bench or boss, has its one animation.
+  for (const wid of ['unit01', 'unit02', 'unit03', 'unit04', 'unit05']) {
     const built = WORLDS.find(w => w.id === wid);
     for (const q of built.quests) if (!QUEST_STORY[`${wid}/${q.id}`]) fail(`${wid}/${q.id} has no story animation`);
   }

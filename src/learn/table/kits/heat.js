@@ -310,14 +310,14 @@ export function cupFixture(id, at, o = {}) {
  * player set the after shelf with a dial, or `dir` to let them swap the sides (Reverse). `scale` is the ΔH a full-height step stands for.
  */
 export function shelvesFixture(id, at, o = {}) {
-  const { reactants = '', products = '', dH = 0, scale = null, hideValue = false, hideVerdict = false, build = null, dir = false, reverse = false, title = 'Energy shelves', w = 44, afterStart = 3, record = false, runLabel = 'Record' } = o;
+  const { reactants = '', products = '', dH = 0, scale = null, hideValue = false, hideVerdict = false, build = null, dir = false, reverse = false, levels = null, title = 'Energy shelves', w = 44, afterStart = 3, record = false, runLabel = 'Record' } = o;
   const dials = {};
   if (build) dials.after = { min: 1, max: build.afterList.length, step: 1, value: afterStart, label: build.label || 'After shelf', labels: build.labels };
   if (dir) dials.dir = { min: 1, max: 2, step: 1, value: 1, label: 'Direction', labels: ['Forward', 'Reverse'] };
   const top = contentTop(nDials(dials));
   return {
     id, kind: 'shelves', label: title, at: { ...at }, size: { w, h: Math.round((top + 24) * 10) / 10 }, dials, ...(record ? { runLabel } : { noRun: true }),
-    props: { reactantsLabel: reactants, productsLabel: products, dH, ...(scale ? { scale } : {}), hideValue, hideVerdict, ...(build ? { afterList: build.afterList } : {}), reverse }
+    props: { reactantsLabel: reactants, productsLabel: products, dH, ...(scale ? { scale } : {}), hideValue, hideVerdict, ...(build ? { afterList: build.afterList } : {}), ...(levels ? { levels } : {}), reverse }
   };
 }
 

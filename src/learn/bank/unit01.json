@@ -1,0 +1,1395 @@
+{
+  "world": "unit01",
+  "end": [
+    {
+      "id": "q1-grain#1",
+      "quest": "q1-grain",
+      "question": "A sample contains only carbon (C) atoms and nothing else. What kind of substance is it?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A compound"
+        },
+        {
+          "id": "b",
+          "label": "A mixture"
+        },
+        {
+          "id": "c",
+          "label": "A pure element"
+        },
+        {
+          "id": "d",
+          "label": "A molecule"
+        }
+      ],
+      "answer": "c",
+      "explanation": "An element is built from only one kind of atom. Carbon on its own is the element C."
+    },
+    {
+      "id": "q1-grain#2",
+      "quest": "q1-grain",
+      "question": "One oxygen (O) atom is bonded to two hydrogen (H) atoms. What have you got?",
+      "options": [
+        {
+          "id": "a",
+          "label": "An element"
+        },
+        {
+          "id": "b",
+          "label": "A mixture"
+        },
+        {
+          "id": "c",
+          "label": "A molecule (H₂O)"
+        },
+        {
+          "id": "d",
+          "label": "An atom"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Atoms bonded together make a molecule. This one is water, H₂O — the molecule you copied."
+    },
+    {
+      "id": "q1-grain#3",
+      "quest": "q1-grain",
+      "question": "Carbon (C) atoms and sodium (Na) atoms sit in the same jar, not bonded to each other. What is in the jar?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A compound"
+        },
+        {
+          "id": "b",
+          "label": "A mixture"
+        },
+        {
+          "id": "c",
+          "label": "A pure element"
+        },
+        {
+          "id": "d",
+          "label": "A molecule"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Different atoms that are not bonded make a mixture, and because nothing holds them together they can be separated again."
+    },
+    {
+      "id": "q1-grain#4",
+      "quest": "q1-grain",
+      "question": "Hydrogen peroxide (H₂O₂) is two H atoms bonded to two O atoms, always in that ratio. What is H₂O₂?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A mixture"
+        },
+        {
+          "id": "b",
+          "label": "An element"
+        },
+        {
+          "id": "c",
+          "label": "A chemical compound"
+        },
+        {
+          "id": "d",
+          "label": "A loose heap of atoms"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Different elements bonded together in a fixed recipe make a compound. No amount of shaking will separate it."
+    },
+    {
+      "id": "q2-core#0",
+      "quest": "q2-core",
+      "question": "You fire 40 shots at an atom. 39 go straight through and 1 bounces back. What does that tell you?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The atom is solid all the way through"
+        },
+        {
+          "id": "b",
+          "label": "The atom is mostly empty space with a tiny dense nucleus"
+        },
+        {
+          "id": "c",
+          "label": "The atom is a hollow ball"
+        },
+        {
+          "id": "d",
+          "label": "The atom has nothing inside it"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Almost everything passes through because the atom is mostly empty. The one rebound hit the tiny, very dense nucleus."
+    },
+    {
+      "id": "q2-core#1",
+      "quest": "q2-core",
+      "question": "A nucleus holds 8 protons and 8 neutrons. Which element is it?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Carbon (6 protons)"
+        },
+        {
+          "id": "b",
+          "label": "Nitrogen (7 protons)"
+        },
+        {
+          "id": "c",
+          "label": "Oxygen (8 protons)"
+        },
+        {
+          "id": "d",
+          "label": "Neon (10 protons)"
+        }
+      ],
+      "answer": "c",
+      "explanation": "The proton count decides the element. 8 protons is oxygen, whatever the neutron count is."
+    },
+    {
+      "id": "q2-core#2",
+      "quest": "q2-core",
+      "question": "An atom has 6 protons and 6 electrons. What is its charge?",
+      "options": [
+        {
+          "id": "a",
+          "label": "+6"
+        },
+        {
+          "id": "b",
+          "label": "−6"
+        },
+        {
+          "id": "c",
+          "label": "0 (electrically neutral)"
+        },
+        {
+          "id": "d",
+          "label": "+12"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Protons are +1 and electrons are −1, so equal numbers of them cancel out to zero."
+    },
+    {
+      "id": "q2-core#3",
+      "quest": "q2-core",
+      "question": "Carbon has 6 electrons: 2 in the first shell and 4 in the second. How many valence electrons is that?",
+      "options": [
+        {
+          "id": "a",
+          "label": "2"
+        },
+        {
+          "id": "b",
+          "label": "4"
+        },
+        {
+          "id": "c",
+          "label": "6"
+        },
+        {
+          "id": "d",
+          "label": "8"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Valence electrons are the ones in the outermost shell, and carbon keeps 4 there."
+    },
+    {
+      "id": "q2-core#4",
+      "quest": "q2-core",
+      "question": "You knock 2 electrons off a magnesium atom that had 12 protons and 12 electrons. What have you made?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Mg²⁻ (charge -2)"
+        },
+        {
+          "id": "b",
+          "label": "Mg²⁺ (charge +2)"
+        },
+        {
+          "id": "c",
+          "label": "Mg (still neutral)"
+        },
+        {
+          "id": "d",
+          "label": "Na⁺ (a different element)"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The 12 protons stay, so it is still magnesium. With 10 electrons against 12 protons the charge is +2."
+    },
+    {
+      "id": "q3-catalogue#0",
+      "quest": "q3-catalogue",
+      "question": "What does an element's atomic number count?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The protons in its nucleus"
+        },
+        {
+          "id": "b",
+          "label": "The neutrons in its nucleus"
+        },
+        {
+          "id": "c",
+          "label": "Everything in its nucleus added up"
+        },
+        {
+          "id": "d",
+          "label": "Its mass in grams"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The atomic number is the proton count, and the periodic table is ordered by it. Change it and you have a different element."
+    },
+    {
+      "id": "q3-catalogue#1",
+      "quest": "q3-catalogue",
+      "question": "Two elements sit in the same column of the periodic table. What do they share?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The same number of protons"
+        },
+        {
+          "id": "b",
+          "label": "The same number of outer-shell electrons"
+        },
+        {
+          "id": "c",
+          "label": "The same mass"
+        },
+        {
+          "id": "d",
+          "label": "The same number of neutrons"
+        }
+      ],
+      "answer": "b",
+      "explanation": "A column is a group, and everything in it has the same outer-shell count. That is why they react in similar ways."
+    },
+    {
+      "id": "q3-catalogue#2",
+      "quest": "q3-catalogue",
+      "question": "Why do the noble gases in group 18 hardly react with anything?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They have no electrons at all"
+        },
+        {
+          "id": "b",
+          "label": "They are too heavy to move"
+        },
+        {
+          "id": "c",
+          "label": "Their outer shell is already full, so trading gains them nothing"
+        },
+        {
+          "id": "d",
+          "label": "They have no protons in the nucleus"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Eight outer-shell electrons is a full shell. Every other element reacts because it is reaching for that; a noble gas already has it."
+    },
+    {
+      "id": "q3-catalogue#3",
+      "quest": "q3-catalogue",
+      "question": "An element has 3 outer-shell electrons and sits on the left of the periodic table. What is it most likely to do?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Take electrons on, like a halogen"
+        },
+        {
+          "id": "b",
+          "label": "Hand its outer electrons over, like a metal"
+        },
+        {
+          "id": "c",
+          "label": "Refuse to react at all"
+        },
+        {
+          "id": "d",
+          "label": "Lose protons from its nucleus"
+        }
+      ],
+      "answer": "b",
+      "explanation": "With only 1, 2 or 3 outer electrons it is easier to give them away than to collect five more. Elements that do this are the metals."
+    },
+    {
+      "id": "q3-catalogue#4",
+      "quest": "q3-catalogue",
+      "question": "A slot in the periodic table sits between aluminium (13) and phosphorus (15), in the same column as carbon. What can you say about the missing element?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Nothing, until someone measures it"
+        },
+        {
+          "id": "b",
+          "label": "Its atomic number is 14 and it behaves like carbon"
+        },
+        {
+          "id": "c",
+          "label": "Its atomic number is 14 but there is no telling what it does"
+        },
+        {
+          "id": "d",
+          "label": "It must be a noble gas"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The table runs in atomic number order, so the slot is 14. A column shares outer-shell electrons, so it behaves like carbon."
+    },
+    {
+      "id": "q4-ledger#0",
+      "quest": "q4-ledger",
+      "question": "An atom has 15 protons, 16 neutrons and 15 electrons. What is its mass number?",
+      "options": [
+        {
+          "id": "a",
+          "label": "15"
+        },
+        {
+          "id": "b",
+          "label": "16"
+        },
+        {
+          "id": "c",
+          "label": "31"
+        },
+        {
+          "id": "d",
+          "label": "46"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Mass number is protons plus neutrons: 15 + 16 = 31. Electrons weigh too little to count."
+    },
+    {
+      "id": "q4-ledger#1",
+      "quest": "q4-ledger",
+      "question": "Chlorine-37 has an atomic number of 17. How many neutrons does it have?",
+      "options": [
+        {
+          "id": "a",
+          "label": "17"
+        },
+        {
+          "id": "b",
+          "label": "20"
+        },
+        {
+          "id": "c",
+          "label": "37"
+        },
+        {
+          "id": "d",
+          "label": "54"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The number after the name is the mass number. Take the atomic number off it: 37 - 17 = 20 neutrons."
+    },
+    {
+      "id": "q4-ledger#2",
+      "quest": "q4-ledger",
+      "question": "Chlorine-35 and chlorine-37 go into the same reaction. What happens?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They react in exactly the same way"
+        },
+        {
+          "id": "b",
+          "label": "Chlorine-37 reacts faster because it is heavier"
+        },
+        {
+          "id": "c",
+          "label": "Only chlorine-35 reacts at all"
+        },
+        {
+          "id": "d",
+          "label": "They react as two different elements"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Isotopes differ only in neutrons, and reactions are done by electrons. Same protons means same electrons, so they behave the same."
+    },
+    {
+      "id": "q4-ledger#3",
+      "quest": "q4-ledger",
+      "question": "A magnesium atom with 12 protons loses 2 electrons. What has it become?",
+      "options": [
+        {
+          "id": "a",
+          "label": "A different element with 10 protons"
+        },
+        {
+          "id": "b",
+          "label": "An anion with a charge of -2"
+        },
+        {
+          "id": "c",
+          "label": "A cation with a charge of +2"
+        },
+        {
+          "id": "d",
+          "label": "An isotope of magnesium"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Losing electrons leaves protons uncancelled, so the charge goes positive. The nucleus was never touched, so it is still magnesium."
+    },
+    {
+      "id": "q4-ledger#4",
+      "quest": "q4-ledger",
+      "question": "An ion has a charge of +3 and 10 electrons. How many protons does it have?",
+      "options": [
+        {
+          "id": "a",
+          "label": "7"
+        },
+        {
+          "id": "b",
+          "label": "10"
+        },
+        {
+          "id": "c",
+          "label": "13"
+        },
+        {
+          "id": "d",
+          "label": "30"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Charge is protons minus electrons, so protons = 3 + 10 = 13. That is aluminium."
+    },
+    {
+      "id": "q5-assay#0",
+      "quest": "q5-assay",
+      "question": "Chlorine is listed at 35.5, but no chlorine atom weighs 35.5. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The measurement is not precise enough"
+        },
+        {
+          "id": "b",
+          "label": "It is the average over chlorine's natural mix of isotopes"
+        },
+        {
+          "id": "c",
+          "label": "Chlorine atoms lose mass when weighed"
+        },
+        {
+          "id": "d",
+          "label": "It is the mass of a chlorine molecule, not an atom"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Natural chlorine is about 75% chlorine-35 and 25% chlorine-37. Averaging 35 and 37 in those amounts gives 35.5, so the number describes the mixture, not one atom."
+    },
+    {
+      "id": "q5-assay#1",
+      "quest": "q5-assay",
+      "question": "An element has two isotopes: mass 10 at 20% and mass 11 at 80%. What is its average atomic mass?",
+      "options": [
+        {
+          "id": "a",
+          "label": "10.2"
+        },
+        {
+          "id": "b",
+          "label": "10.5"
+        },
+        {
+          "id": "c",
+          "label": "10.8"
+        },
+        {
+          "id": "d",
+          "label": "11.0"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Multiply each mass by its share and add: (0.20 x 10) + (0.80 x 11) = 2 + 8.8 = 10.8. It sits near 11 because mass 11 is the common one."
+    },
+    {
+      "id": "q5-assay#2",
+      "quest": "q5-assay",
+      "question": "An element's average atomic mass is listed as exactly 19.0. What does that most likely mean?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It occurs as only one isotope"
+        },
+        {
+          "id": "b",
+          "label": "It has no neutrons"
+        },
+        {
+          "id": "c",
+          "label": "The number has been rounded off"
+        },
+        {
+          "id": "d",
+          "label": "Its isotopes are present in equal amounts"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A single atom always has a whole-number mass, so a whole-number average means there is nothing to average. Fluorine is essentially all fluorine-19."
+    },
+    {
+      "id": "q5-assay#3",
+      "quest": "q5-assay",
+      "question": "Copper has isotopes of mass 63 and 65, and its average atomic mass is 63.5. Which isotope is more common?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Copper-65, because it is heavier"
+        },
+        {
+          "id": "b",
+          "label": "Copper-63, because the average sits closer to 63"
+        },
+        {
+          "id": "c",
+          "label": "They are equally common"
+        },
+        {
+          "id": "d",
+          "label": "You cannot tell from the average"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The average always leans toward the more common isotope. 63.5 is a quarter of the way from 63 to 65, so about three quarters of copper is copper-63."
+    },
+    {
+      "id": "q5-assay#4",
+      "quest": "q5-assay",
+      "question": "Two samples are both pure chlorine, but one weighs 35.5 per atom and the other 36.0. What is true of the second one?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It contains a different element"
+        },
+        {
+          "id": "b",
+          "label": "Its atoms each carry extra electrons"
+        },
+        {
+          "id": "c",
+          "label": "Its mix of isotopes has been changed from the natural one"
+        },
+        {
+          "id": "d",
+          "label": "It was weighed wrong"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Both are chlorine, so both have 17 protons. Natural chlorine is 75% mass 35 and 25% mass 37, which averages 35.5, so 36.0 means the sample holds extra chlorine-37."
+    },
+    {
+      "id": "q6-weigh#0",
+      "quest": "q6-weigh",
+      "question": "Water is H2O. Hydrogen is 1.0 and oxygen is 16.0. How many moles are in 36 grams of water?",
+      "options": [
+        {
+          "id": "a",
+          "label": "1 mole"
+        },
+        {
+          "id": "b",
+          "label": "2 moles"
+        },
+        {
+          "id": "c",
+          "label": "18 moles"
+        },
+        {
+          "id": "d",
+          "label": "36 moles"
+        }
+      ],
+      "answer": "b",
+      "explanation": "One molecule of water weighs 16.0 + 1.0 + 1.0 = 18.0, so the molar mass is 18 grams per mole. 36 / 18 = 2 moles."
+    },
+    {
+      "id": "q6-weigh#1",
+      "quest": "q6-weigh",
+      "question": "Carbon is 12.0 and oxygen is 16.0. What is the molar mass of carbon dioxide, CO2?",
+      "options": [
+        {
+          "id": "a",
+          "label": "28 grams per mole"
+        },
+        {
+          "id": "b",
+          "label": "32 grams per mole"
+        },
+        {
+          "id": "c",
+          "label": "44 grams per mole"
+        },
+        {
+          "id": "d",
+          "label": "56 grams per mole"
+        }
+      ],
+      "answer": "c",
+      "explanation": "One CO2 holds one carbon and TWO oxygens: 12.0 + 16.0 + 16.0 = 44.0. The answer 28 counts only one oxygen, which is carbon monoxide instead."
+    },
+    {
+      "id": "q6-weigh#2",
+      "quest": "q6-weigh",
+      "question": "You have 12 grams of carbon (12.0) and 12 grams of magnesium (24.3). Which holds more atoms?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The carbon"
+        },
+        {
+          "id": "b",
+          "label": "The magnesium"
+        },
+        {
+          "id": "c",
+          "label": "They hold the same number, because they weigh the same"
+        },
+        {
+          "id": "d",
+          "label": "There is no way to tell"
+        }
+      ],
+      "answer": "a",
+      "explanation": "12 / 12.0 = 1 mole of carbon, but 12 / 24.3 = about 0.49 moles of magnesium. A magnesium atom is roughly twice as heavy, so the same mass of it holds about half as many atoms."
+    },
+    {
+      "id": "q6-weigh#3",
+      "quest": "q6-weigh",
+      "question": "How many moles of hydrogen atoms are in 2 moles of water, H2O?",
+      "options": [
+        {
+          "id": "a",
+          "label": "1"
+        },
+        {
+          "id": "b",
+          "label": "2"
+        },
+        {
+          "id": "c",
+          "label": "4"
+        },
+        {
+          "id": "d",
+          "label": "6"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Each water molecule holds 2 hydrogen atoms, so each mole of water holds 2 moles of hydrogen. Two moles of water therefore hold 2 x 2 = 4 moles of hydrogen atoms."
+    },
+    {
+      "id": "q6-weigh#4",
+      "quest": "q6-weigh",
+      "question": "What does it mean to say you have one mole of iron?",
+      "options": [
+        {
+          "id": "a",
+          "label": "You have one iron atom"
+        },
+        {
+          "id": "b",
+          "label": "You have one gram of iron"
+        },
+        {
+          "id": "c",
+          "label": "You have 6.02 x 10^23 iron atoms, which weigh 55.8 grams"
+        },
+        {
+          "id": "d",
+          "label": "You have as much iron as will fit in a standard container"
+        }
+      ],
+      "answer": "c",
+      "explanation": "A mole is a fixed count, 6.02 x 10^23, chosen so that one mole of any element weighs its listed atomic mass in grams. Iron is listed at 55.8, so one mole of it is 55.8 grams."
+    },
+    {
+      "id": "boss-hopper#0",
+      "quest": "boss-hopper",
+      "question": "Which of the following describes a pure chemical compound?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Two or more elements chemically bonded in a fixed ratio"
+        },
+        {
+          "id": "b",
+          "label": "A physical blend of substances that can be separated by filtration"
+        },
+        {
+          "id": "c",
+          "label": "A substance consisting of only one type of atom"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A compound consists of two or more elements chemically bonded in fixed proportions, unlike a mixture or an element."
+    },
+    {
+      "id": "boss-hopper#1",
+      "quest": "boss-hopper",
+      "question": "An atom has 8 protons, 8 neutrons, and 10 electrons. What is its net charge?",
+      "options": [
+        {
+          "id": "a",
+          "label": "-2"
+        },
+        {
+          "id": "b",
+          "label": "+2"
+        },
+        {
+          "id": "c",
+          "label": "0"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Eight protons (+8) plus ten electrons (-10) gives a net charge of -2."
+    },
+    {
+      "id": "q6-weigh#5",
+      "quest": "q6-weigh",
+      "question": "How many atoms are in 0.250 mol of aluminium? (One mole is 6.02 × 10²³.)",
+      "options": [
+        {
+          "id": "a",
+          "label": "1.51 × 10²³"
+        },
+        {
+          "id": "b",
+          "label": "6.02 × 10²³"
+        },
+        {
+          "id": "c",
+          "label": "2.41 × 10²⁴"
+        },
+        {
+          "id": "d",
+          "label": "4.15 × 10²²"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Atoms = moles × 6.02 × 10²³ = 0.250 × 6.02 × 10²³ = 1.51 × 10²³."
+    },
+    {
+      "id": "q3-catalogue#5",
+      "quest": "q3-catalogue",
+      "question": "Why is potassium more reactive than lithium?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its outer electron is farther from the nucleus and more shielded, so it is lost more easily"
+        },
+        {
+          "id": "b",
+          "label": "It has more outer electrons"
+        },
+        {
+          "id": "c",
+          "label": "It has a higher ionization energy"
+        },
+        {
+          "id": "d",
+          "label": "Its nucleus holds the outer electron more strongly"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Both have one outer electron, but potassium has more shells. The outer electron is farther away and shielded, so it comes off with less energy."
+    },
+    {
+      "id": "q3-catalogue#6",
+      "quest": "q3-catalogue",
+      "question": "Which halogen is the most reactive?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Fluorine"
+        },
+        {
+          "id": "b",
+          "label": "Chlorine"
+        },
+        {
+          "id": "c",
+          "label": "Bromine"
+        },
+        {
+          "id": "d",
+          "label": "Iodine"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Halogens gain an electron. Fluorine is the smallest, so the added electron is pulled in most strongly, and reactivity falls down the group."
+    }
+  ],
+  "bench": {
+    "q1-grain": {
+      "problems": [
+        {
+          "id": "q1-grain#b1",
+          "quest": "q1-grain",
+          "question": "Salt dissolved in water can be recovered by boiling the water away. What does that show about salt water?",
+          "options": [
+            {
+              "id": "a",
+              "label": "It is a compound of salt and water"
+            },
+            {
+              "id": "b",
+              "label": "It is a single element"
+            },
+            {
+              "id": "c",
+              "label": "It is a mixture: the salt and water were never bonded together"
+            },
+            {
+              "id": "d",
+              "label": "Boiling broke the bonds inside the salt"
+            }
+          ],
+          "answer": "c",
+          "explanation": "A mixture can be separated by physical means such as boiling, because its parts are only side by side. Breaking a compound apart takes a chemical change."
+        },
+        {
+          "id": "q1-grain#b2",
+          "quest": "q1-grain",
+          "question": "Which of these is made of molecules but is still an element?",
+          "options": [
+            {
+              "id": "a",
+              "label": "O₂"
+            },
+            {
+              "id": "b",
+              "label": "CO₂"
+            },
+            {
+              "id": "c",
+              "label": "H₂O"
+            },
+            {
+              "id": "d",
+              "label": "NH₃"
+            }
+          ],
+          "answer": "a",
+          "explanation": "O₂ has two bonded atoms of the same kind, so it is a molecule of an element. CO₂, H₂O and NH₃ each bond different elements, so they are compounds."
+        }
+      ]
+    },
+    "q2-core": {
+      "problems": [
+        {
+          "id": "q2-core#b1",
+          "quest": "q2-core",
+          "question": "An atom has 17 protons, 18 neutrons and 17 electrons. How many particles are in its nucleus?",
+          "options": [
+            {
+              "id": "a",
+              "label": "17"
+            },
+            {
+              "id": "b",
+              "label": "35"
+            },
+            {
+              "id": "c",
+              "label": "34"
+            },
+            {
+              "id": "d",
+              "label": "52"
+            }
+          ],
+          "answer": "b",
+          "explanation": "The nucleus holds the protons and neutrons: 17 + 18 = 35. The electrons are outside it."
+        },
+        {
+          "id": "q2-core#b2",
+          "quest": "q2-core",
+          "question": "Why does a sodium atom give up its outer electron more easily than one of its inner electrons?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The outer electron has more mass"
+            },
+            {
+              "id": "b",
+              "label": "The outer electron is attracted by more protons"
+            },
+            {
+              "id": "c",
+              "label": "Inner electrons are neutral"
+            },
+            {
+              "id": "d",
+              "label": "The outer electron is farthest from the nucleus and is shielded by the electrons inside it"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Attraction to the nucleus weakens with distance, and inner electrons shield the outer one from the protons. So the outer electron is the one that comes off."
+        }
+      ]
+    },
+    "q3-catalogue": {
+      "problems": [
+        {
+          "id": "q3-catalogue#b1",
+          "quest": "q3-catalogue",
+          "question": "Which pair of elements behaves most alike in reactions?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Sodium and chlorine"
+            },
+            {
+              "id": "b",
+              "label": "Sodium and magnesium"
+            },
+            {
+              "id": "c",
+              "label": "Sodium and potassium"
+            },
+            {
+              "id": "d",
+              "label": "Sodium and neon"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Sodium and potassium share a column, so both have one outer-shell electron. Elements in the same column behave alike because their outer shells match."
+        },
+        {
+          "id": "q3-catalogue#b2",
+          "quest": "q3-catalogue",
+          "question": "Moving from sodium (11) to argon (18) across one period, what happens to the protons and the outer-shell electrons?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Each step adds one proton and one outer-shell electron"
+            },
+            {
+              "id": "b",
+              "label": "Protons rise but the outer shell stays at one electron"
+            },
+            {
+              "id": "c",
+              "label": "Protons stay at 11 and electrons are added"
+            },
+            {
+              "id": "d",
+              "label": "Each step adds a new shell"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The period fills one shell. Each element along it has one more proton and one more outer electron than the one before, from 1 outer electron at sodium to 8 at argon."
+        }
+      ]
+    },
+    "q4-ledger": {
+      "problems": [
+        {
+          "id": "q4-ledger#b1",
+          "quest": "q4-ledger",
+          "question": "How many electrons does a sulfide ion, S²⁻, have? (Sulfur has atomic number 16.)",
+          "options": [
+            {
+              "id": "a",
+              "label": "16"
+            },
+            {
+              "id": "b",
+              "label": "14"
+            },
+            {
+              "id": "c",
+              "label": "2"
+            },
+            {
+              "id": "d",
+              "label": "18"
+            }
+          ],
+          "answer": "d",
+          "explanation": "A sulfur atom has 16 protons and 16 electrons. The charge of -2 means two extra electrons: 16 + 2 = 18."
+        },
+        {
+          "id": "q4-ledger#b2",
+          "quest": "q4-ledger",
+          "question": "How many protons, neutrons and electrons are in iron-56 with a charge of 3+, Fe³⁺? (Iron has atomic number 26.)",
+          "options": [
+            {
+              "id": "a",
+              "label": "26 protons, 30 neutrons, 29 electrons"
+            },
+            {
+              "id": "b",
+              "label": "26 protons, 30 neutrons, 23 electrons"
+            },
+            {
+              "id": "c",
+              "label": "23 protons, 33 neutrons, 26 electrons"
+            },
+            {
+              "id": "d",
+              "label": "26 protons, 56 neutrons, 23 electrons"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Protons are the atomic number, 26. Neutrons are the mass number minus protons: 56 - 26 = 30. A 3+ charge means three electrons lost, so 26 - 3 = 23."
+        }
+      ]
+    },
+    "q5-assay": {
+      "problems": [
+        {
+          "id": "q5-assay#b1",
+          "quest": "q5-assay",
+          "question": "Boron is 20% boron-10 and 80% boron-11. Which is closest to its average atomic mass?",
+          "options": [
+            {
+              "id": "a",
+              "label": "10.2"
+            },
+            {
+              "id": "b",
+              "label": "10.5"
+            },
+            {
+              "id": "c",
+              "label": "10.8"
+            },
+            {
+              "id": "d",
+              "label": "11.0"
+            }
+          ],
+          "answer": "c",
+          "explanation": "(0.20 x 10) + (0.80 x 11) = 2.0 + 8.8 = 10.8. It sits close to 11 because boron-11 is the common isotope."
+        },
+        {
+          "id": "q5-assay#b2",
+          "quest": "q5-assay",
+          "question": "Silver has isotopes of mass 107 and 109 and an average atomic mass of 107.9. Roughly what share is silver-107?",
+          "options": [
+            {
+              "id": "a",
+              "label": "A little over half"
+            },
+            {
+              "id": "b",
+              "label": "About 10%"
+            },
+            {
+              "id": "c",
+              "label": "Exactly half"
+            },
+            {
+              "id": "d",
+              "label": "Almost all of it"
+            }
+          ],
+          "answer": "a",
+          "explanation": "107.9 is 0.9 of the way up the gap of 2 from 107, so silver-109 supplies about 45% and silver-107 about 55%."
+        }
+      ],
+      "worked": {
+        "id": "q5-assay#w",
+        "quest": "q5-assay",
+        "title": "Average Mass of an Unknown Element",
+        "setup": "An element has 12 protons. In a sample, 78.99% of the atoms have 12 neutrons, 10.00% have 13 neutrons and 11.01% have 14 neutrons. Find the element and its average atomic mass.",
+        "steps": [
+          {
+            "say": "Which element has 12 protons?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Sodium"
+              },
+              {
+                "id": "b",
+                "label": "Magnesium"
+              },
+              {
+                "id": "c",
+                "label": "Aluminium"
+              }
+            ],
+            "answer": "b",
+            "hint": "The proton count is the atomic number. Find 12 in the periodic table.",
+            "explain": "The atomic number is the number of protons. Element 12 is magnesium."
+          },
+          {
+            "say": "What is the mass number of the isotope with 12 neutrons?",
+            "kind": "number",
+            "answer": 24,
+            "calc": "12+12",
+            "hint": "Mass number is protons plus neutrons.",
+            "explain": "Mass number = protons + neutrons = 12 + 12 = 24."
+          },
+          {
+            "say": "Multiply that mass number by its share (0.7899). What does the 24 isotope contribute to the average?",
+            "kind": "number",
+            "answer": 18.96,
+            "calc": "0.7899*24",
+            "tol": 0.005,
+            "hint": "Share of atoms times mass of each atom.",
+            "explain": "0.7899 x 24 = 18.96."
+          },
+          {
+            "say": "What does the 13-neutron isotope (mass 25, share 0.1000) contribute?",
+            "kind": "number",
+            "answer": 2.5,
+            "calc": "0.1*25",
+            "tol": 0.005,
+            "hint": "Same method: share times mass.",
+            "explain": "0.1000 x 25 = 2.500."
+          },
+          {
+            "say": "What does the 14-neutron isotope (mass 26, share 0.1101) contribute?",
+            "kind": "number",
+            "answer": 2.863,
+            "calc": "0.1101*26",
+            "tol": 0.005,
+            "hint": "Same method again.",
+            "explain": "0.1101 x 26 = 2.863."
+          },
+          {
+            "say": "Add the three contributions. What is the average atomic mass?",
+            "kind": "number",
+            "answer": 24.32,
+            "calc": "0.7899*24+0.1*25+0.1101*26",
+            "tol": 0.002,
+            "hint": "The average is the sum of the three contributions.",
+            "explain": "18.96 + 2.50 + 2.86 = 24.32, the mass printed for magnesium."
+          },
+          {
+            "say": "Why does the average sit so close to 24?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The 24 isotope has the most neutrons"
+              },
+              {
+                "id": "b",
+                "label": "Most atoms are the 24 isotope"
+              },
+              {
+                "id": "c",
+                "label": "Heavier isotopes cancel lighter ones"
+              },
+              {
+                "id": "d",
+                "label": "Electrons add mass near 24"
+              }
+            ],
+            "answer": "b",
+            "hint": "Look at which share is largest.",
+            "explain": "The average is pulled toward the most common isotope. 79% of atoms have mass 24."
+          }
+        ],
+        "finish": "Weighting each isotope by its share gives 24.32 for magnesium. The same method works for any element with known isotope shares."
+      }
+    },
+    "q6-weigh": {
+      "problems": [
+        {
+          "id": "q6-weigh#b1",
+          "quest": "q6-weigh",
+          "question": "How many grams are in 0.50 mol of carbon dioxide, CO₂? (C 12.0, O 16.0)",
+          "options": [
+            {
+              "id": "a",
+              "label": "44 g"
+            },
+            {
+              "id": "b",
+              "label": "88 g"
+            },
+            {
+              "id": "c",
+              "label": "22 g"
+            },
+            {
+              "id": "d",
+              "label": "6.0 g"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The molar mass of CO₂ is 12.0 + 2(16.0) = 44.0 g/mol. Half a mole is 44.0 x 0.50 = 22 g."
+        },
+        {
+          "id": "q6-weigh#b2",
+          "quest": "q6-weigh",
+          "question": "Which sample contains the most atoms?",
+          "options": [
+            {
+              "id": "a",
+              "label": "10 g of helium (4.0 g/mol)"
+            },
+            {
+              "id": "b",
+              "label": "10 g of carbon (12.0 g/mol)"
+            },
+            {
+              "id": "c",
+              "label": "10 g of iron (55.8 g/mol)"
+            },
+            {
+              "id": "d",
+              "label": "10 g of lead (207 g/mol)"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Atoms are proportional to moles, and moles = grams / molar mass. For equal masses the lightest atom gives the most moles: helium gives 2.5 mol."
+        }
+      ],
+      "worked": {
+        "id": "q6-weigh#w",
+        "quest": "q6-weigh",
+        "title": "Atoms in a Sample of Glucose",
+        "setup": "A sample of glucose, C₆H₁₂O₆, has a mass of 45.0 g. (C 12.0, H 1.0, O 16.0, one mole is 6.02 x 10²³.) Find the number of hydrogen atoms in it and the percentage of its mass that is carbon.",
+        "steps": [
+          {
+            "say": "What is the molar mass of glucose?",
+            "kind": "number",
+            "answer": 180,
+            "calc": "6*12+12*1+6*16",
+            "unit": "g/mol",
+            "hint": "Add the mass of every atom in one formula: 6 C, 12 H and 6 O.",
+            "explain": "6(12.0) + 12(1.0) + 6(16.0) = 72 + 12 + 96 = 180 g/mol."
+          },
+          {
+            "say": "How many moles of glucose are in 45.0 g?",
+            "kind": "number",
+            "answer": 0.25,
+            "calc": "45/180",
+            "unit": "mol",
+            "hint": "Moles = mass divided by molar mass.",
+            "explain": "45.0 / 180 = 0.250 mol."
+          },
+          {
+            "say": "How many glucose molecules is that?",
+            "kind": "number",
+            "answer": 1.505e+23,
+            "calc": "0.25*6.02e23",
+            "hint": "Multiply moles by 6.02 x 10²³. Type it like 1.5e23.",
+            "explain": "0.250 x 6.02 x 10²³ = 1.51 x 10²³ molecules."
+          },
+          {
+            "say": "How many hydrogen atoms does each molecule hold?",
+            "kind": "number",
+            "answer": 12,
+            "calc": "12",
+            "hint": "Read the subscript on H in the formula.",
+            "explain": "C₆H₁₂O₆ has 12 hydrogen atoms in every molecule."
+          },
+          {
+            "say": "How many hydrogen atoms are in the whole sample?",
+            "kind": "number",
+            "answer": 1.806e+24,
+            "calc": "0.25*6.02e23*12",
+            "hint": "Molecules times hydrogen atoms per molecule.",
+            "explain": "1.51 x 10²³ x 12 = 1.81 x 10²⁴ hydrogen atoms."
+          },
+          {
+            "say": "What mass of carbon is in the sample? Each molecule has 6 carbon atoms.",
+            "kind": "number",
+            "answer": 18,
+            "calc": "0.25*6*12",
+            "unit": "g",
+            "hint": "Moles of carbon atoms is 6 times the moles of glucose. Then multiply by 12.0.",
+            "explain": "0.250 mol x 6 = 1.50 mol of carbon atoms, and 1.50 x 12.0 = 18.0 g."
+          },
+          {
+            "say": "What percentage of the sample's mass is carbon?",
+            "kind": "number",
+            "answer": 40,
+            "calc": "18/45*100",
+            "unit": "%",
+            "hint": "Mass of carbon divided by mass of sample, times 100.",
+            "explain": "18.0 / 45.0 x 100 = 40.0%. This is the same for any amount of glucose."
+          }
+        ],
+        "finish": "Mass led to moles, moles to molecules, and molecules to atoms. The mole is what links a weighed mass to a count of atoms."
+      }
+    },
+    "boss-hopper": {
+      "problems": [
+        {
+          "id": "boss-hopper#b1",
+          "quest": "boss-hopper",
+          "question": "An ion has 12 protons, 12 neutrons and 10 electrons. What is it?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Mg²⁻"
+            },
+            {
+              "id": "b",
+              "label": "Mg²⁺"
+            },
+            {
+              "id": "c",
+              "label": "Ne"
+            },
+            {
+              "id": "d",
+              "label": "Na⁺"
+            }
+          ],
+          "answer": "b",
+          "explanation": "12 protons make it magnesium. Ten electrons against 12 protons leaves a charge of +2, so it is Mg²⁺."
+        },
+        {
+          "id": "boss-hopper#b2",
+          "quest": "boss-hopper",
+          "question": "Which change turns an atom into a different isotope of the same element?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Adding a proton"
+            },
+            {
+              "id": "b",
+              "label": "Adding an electron"
+            },
+            {
+              "id": "c",
+              "label": "Removing an electron"
+            },
+            {
+              "id": "d",
+              "label": "Adding a neutron"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Isotopes differ only in neutron count. Adding a proton makes a different element, and changing electrons makes an ion."
+        }
+      ]
+    }
+  }
+}

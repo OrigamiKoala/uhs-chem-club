@@ -416,14 +416,25 @@ function paintShelves(ctx, f, state, b) {
   const scale = p.scale || Math.max(Math.abs(r.dH), 1);
   const mid = y0 + h * 0.5;
   const dy = Math.max(-0.42, Math.min(0.42, r.dH / (scale * 2.2))) * h;
-  const ya = mid + dy * 0.5; const yb = mid - dy * 0.5;
+  let ya = mid + dy * 0.5; let yb = mid - dy * 0.5;
+  // A reaction-progress diagram: the shelves stand at their printed levels and a curve climbs over the barrier between them.
+  const lv = p.levels;
+  let yPeak = null;
+  if (lv) {
+    const lo = Math.min(lv.r, lv.p); const span = Math.max(lv.peak - lo, 1);
+    const yOf = L => y0 + h * 0.92 - ((L - lo) / span) * h * 0.78;
+    ya = yOf(lv.r); yb = yOf(lv.p); yPeak = yOf(lv.peak);
+  }
   const bw = w * 0.34;
   ctx.strokeStyle = STEEL; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(x0 + w * 0.03, ya); ctx.lineTo(x0 + w * 0.03 + bw, ya); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(x0 + w * 0.97 - bw, yb); ctx.lineTo(x0 + w * 0.97, yb); ctx.stroke();
   ctx.lineWidth = 1;
-  ctx.strokeStyle = DIM; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(x0 + w * 0.03 + bw, ya); ctx.lineTo(x0 + w * 0.97 - bw, yb); ctx.stroke();
+  ctx.strokeStyle = yPeak == null ? DIM : DUST; ctx.setLineDash(yPeak == null ? [3, 3] : []);
+  ctx.beginPath(); ctx.moveTo(x0 + w * 0.03 + bw, ya);
+  if (yPeak == null) ctx.lineTo(x0 + w * 0.97 - bw, yb);
+  else ctx.quadraticCurveTo(x0 + w * 0.5, 2 * yPeak - (ya + yb) / 2, x0 + w * 0.97 - bw, yb);
+  ctx.stroke();
   ctx.setLineDash([]);
   say(ctx, r.from, x0 + w * 0.03, Math.min(y0 + h + F.len(1.8), ya + F.len(3)), F.size(2.1, 5.8), { color: DUST, maxW: bw + F.len(4) });
   say(ctx, r.to, x0 + w * 0.97, Math.min(y0 + h + F.len(1.8), yb + F.len(3)), F.size(2.1, 5.8), { color: DUST, align: 'right', maxW: bw + F.len(4) });

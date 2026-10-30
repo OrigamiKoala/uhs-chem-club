@@ -1,0 +1,2106 @@
+{
+  "world": "unit05",
+  "end": [
+    {
+      "id": "q1-flow#0",
+      "quest": "q1-flow",
+      "question": "Two identical copper blocks at 90 °C and 30 °C are placed in contact inside an insulated box. At what temperature do both blocks finish?",
+      "options": [
+        {
+          "id": "a",
+          "label": "60 °C"
+        },
+        {
+          "id": "b",
+          "label": "45 °C"
+        },
+        {
+          "id": "c",
+          "label": "75 °C"
+        },
+        {
+          "id": "d",
+          "label": "120 °C"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Equal masses of the same metal change by equal amounts, so the blocks meet halfway between their starting temperatures."
+    },
+    {
+      "id": "q1-flow#1",
+      "quest": "q1-flow",
+      "question": "Citric acid and baking soda react in water and the solution cools from 24 °C to 15 °C. Which statement is correct?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The reaction is endothermic, because the chemicals absorbed heat from the water"
+        },
+        {
+          "id": "b",
+          "label": "The reaction is exothermic, because the thermometer reading fell"
+        },
+        {
+          "id": "c",
+          "label": "No heat crossed between the chemicals and the water"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A cooling bath means heat left the water and entered the reacting chemicals, which is what endothermic means."
+    },
+    {
+      "id": "q1-flow#2",
+      "quest": "q1-flow",
+      "question": "On an energy diagram for an exothermic reaction, how do the shelves of the products and the reactants compare?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The products sit lower, because the system released energy"
+        },
+        {
+          "id": "b",
+          "label": "The products sit higher, because the bath warmed up"
+        },
+        {
+          "id": "c",
+          "label": "The two shelves sit at the same height"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The energy released to warm the bath comes from the system dropping to a lower shelf."
+    },
+    {
+      "id": "q1-flow#3",
+      "quest": "q1-flow",
+      "question": "Why can a 1000 g pot of water at 50 °C melt more ice than a 10 g iron nail at 200 °C?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The pot holds far more particles, so it has far more energy to give up in total"
+        },
+        {
+          "id": "b",
+          "label": "Water molecules at 50 °C move faster on average than iron atoms at 200 °C"
+        },
+        {
+          "id": "c",
+          "label": "Heat flows from colder objects into hotter objects when water is present"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Temperature is an average per particle, but the heat a body can deliver depends on how many particles share the energy."
+    },
+    {
+      "id": "q1-flow#4",
+      "quest": "q1-flow",
+      "question": "Which of these changes is exothermic?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Liquid water freezing into ice"
+        },
+        {
+          "id": "b",
+          "label": "Liquid water boiling into steam"
+        },
+        {
+          "id": "c",
+          "label": "Dry ice turning into carbon dioxide gas"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Freezing lets particles lock into stronger attractions and releases heat. Boiling and sublimation need heat to pull particles apart."
+    },
+    {
+      "id": "q2-calorimetry#0",
+      "quest": "q2-calorimetry",
+      "question": "How much heat does 50.0 g of water absorb when it warms from 20.0 °C to 30.0 °C? (c = 4.184 J/(g·°C))",
+      "options": [
+        {
+          "id": "a",
+          "label": "2090 J"
+        },
+        {
+          "id": "b",
+          "label": "1050 J"
+        },
+        {
+          "id": "c",
+          "label": "4180 J"
+        },
+        {
+          "id": "d",
+          "label": "209 J"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The heat is mass times c times the rise: 50.0 g × 4.184 J/(g·°C) × 10.0 °C, which is about 2090 J."
+    },
+    {
+      "id": "q2-calorimetry#1",
+      "quest": "q2-calorimetry",
+      "question": "Two 100 g blocks, one aluminium (c = 0.90 J/(g·°C)) and one silver (c = 0.24 J/(g·°C)), each absorb 900 J. Which warms more?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Silver, because each gram needs less heat per degree"
+        },
+        {
+          "id": "b",
+          "label": "Aluminium, because its specific heat capacity is larger"
+        },
+        {
+          "id": "c",
+          "label": "Both rise by the same amount, because their masses are equal"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The rise is q divided by m times c, so for the same heat and mass the metal with the smaller c warms more."
+    },
+    {
+      "id": "q2-calorimetry#2",
+      "quest": "q2-calorimetry",
+      "question": "A 100 g metal sample cools by 50.0 °C while a water bath absorbs 4500 J from it. What is the metal’s specific heat capacity?",
+      "options": [
+        {
+          "id": "a",
+          "label": "0.90 J/(g·°C)"
+        },
+        {
+          "id": "b",
+          "label": "0.45 J/(g·°C)"
+        },
+        {
+          "id": "c",
+          "label": "1.80 J/(g·°C)"
+        },
+        {
+          "id": "d",
+          "label": "90 J/(g·°C)"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Divide the heat by the mass times the temperature drop: 4500 J divided by 100 g times 50.0 °C gives 0.90 J/(g·°C)."
+    },
+    {
+      "id": "q2-calorimetry#3",
+      "quest": "q2-calorimetry",
+      "question": "In a coffee-cup calorimeter, 0.020 mol of a salt dissolves and absorbs 520 J from the bath. How much heat is absorbed per mole?",
+      "options": [
+        {
+          "id": "a",
+          "label": "26 kJ/mol"
+        },
+        {
+          "id": "b",
+          "label": "10.4 kJ/mol"
+        },
+        {
+          "id": "c",
+          "label": "2.6 kJ/mol"
+        },
+        {
+          "id": "d",
+          "label": "0.026 kJ/mol"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Convert 520 J to 0.520 kJ and divide by the 0.020 mol that dissolved, which gives 26 kJ per mole."
+    },
+    {
+      "id": "q2-calorimetry#4",
+      "quest": "q2-calorimetry",
+      "question": "A student runs an exothermic neutralisation in a thin metal beaker instead of an insulated cup. How does the calculated heat compare with the true value?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It is too low, because heat leaks through the walls instead of warming the solution"
+        },
+        {
+          "id": "b",
+          "label": "It is too high, because the metal conducts extra heat to the thermometer"
+        },
+        {
+          "id": "c",
+          "label": "It is unchanged, because the moles of acid and base are unchanged"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Heat lost through the walls lowers the measured rise, so the heat calculated from the rise is smaller than the true value."
+    },
+    {
+      "id": "q3-enthalpy#0",
+      "quest": "q3-enthalpy",
+      "question": "For N₂(g) + 3 H₂(g) → 2 NH₃(g), ΔH = −92 kJ. What is ΔH for 2 NH₃(g) → N₂(g) + 3 H₂(g)?",
+      "options": [
+        {
+          "id": "a",
+          "label": "+92 kJ"
+        },
+        {
+          "id": "b",
+          "label": "−92 kJ"
+        },
+        {
+          "id": "c",
+          "label": "+184 kJ"
+        },
+        {
+          "id": "d",
+          "label": "0 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Reversing a reaction swaps the reactants and products, so ΔH keeps its size and changes its sign."
+    },
+    {
+      "id": "q3-enthalpy#1",
+      "quest": "q3-enthalpy",
+      "question": "C(s) + O₂(g) → CO₂(g) has ΔH = −393.5 kJ/mol. How much heat is released when 2.00 mol of carbon burns completely?",
+      "options": [
+        {
+          "id": "a",
+          "label": "787 kJ"
+        },
+        {
+          "id": "b",
+          "label": "394 kJ"
+        },
+        {
+          "id": "c",
+          "label": "197 kJ"
+        },
+        {
+          "id": "d",
+          "label": "1574 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Two moles release twice the heat of one mole: 2.00 mol × 393.5 kJ/mol is about 787 kJ."
+    },
+    {
+      "id": "q3-enthalpy#2",
+      "quest": "q3-enthalpy",
+      "question": "Why is a fuel’s ΔH more negative when it burns to liquid water than to water vapour?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Condensing the vapour to a liquid releases extra heat"
+        },
+        {
+          "id": "b",
+          "label": "Condensing the vapour to a liquid absorbs heat from the flame"
+        },
+        {
+          "id": "c",
+          "label": "Liquid water contains more oxygen atoms than vapour"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Liquid water sits lower in enthalpy than vapour, so ending as a liquid releases the enthalpy of condensation as well."
+    },
+    {
+      "id": "q3-enthalpy#3",
+      "quest": "q3-enthalpy",
+      "question": "When 0.10 mol of a salt dissolves in a calorimeter, the water bath loses 1.5 kJ. What is ΔH for dissolving one mole of the salt?",
+      "options": [
+        {
+          "id": "a",
+          "label": "+15 kJ/mol"
+        },
+        {
+          "id": "b",
+          "label": "−15 kJ/mol"
+        },
+        {
+          "id": "c",
+          "label": "+1.5 kJ/mol"
+        },
+        {
+          "id": "d",
+          "label": "−1.5 kJ/mol"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The bath lost the energy the salt gained, so ΔH is positive, and 1.5 kJ divided by 0.10 mol is 15 kJ/mol."
+    },
+    {
+      "id": "q3-enthalpy#4",
+      "quest": "q3-enthalpy",
+      "question": "Burning 1.0 mol of carbon (12.0 g/mol) releases 394 kJ, and burning 1.0 mol of hydrogen (2.0 g/mol) releases 286 kJ. Which releases more heat per gram?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Hydrogen, because a gram of it holds many more moles"
+        },
+        {
+          "id": "b",
+          "label": "Carbon, because 394 kJ is larger than 286 kJ"
+        },
+        {
+          "id": "c",
+          "label": "Both release the same heat per gram"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Divide by the molar mass: hydrogen gives about 143 kJ per gram and carbon about 33 kJ per gram."
+    },
+    {
+      "id": "q4-bonds#0",
+      "quest": "q4-bonds",
+      "question": "Which statement about bond breaking and bond forming is correct?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Breaking a bond absorbs energy, and forming a bond releases energy"
+        },
+        {
+          "id": "b",
+          "label": "Breaking a bond releases energy, and forming a bond absorbs energy"
+        },
+        {
+          "id": "c",
+          "label": "Both breaking and forming a bond release energy"
+        },
+        {
+          "id": "d",
+          "label": "Both breaking and forming a bond absorb energy"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Pulling atoms out of an attraction takes energy in, and letting them fall back into it gives the same energy out."
+    },
+    {
+      "id": "q4-bonds#1",
+      "quest": "q4-bonds",
+      "question": "Breaking H–H (436 kJ/mol) and Cl–Cl (242 kJ/mol) and forming two H–Cl bonds (431 kJ/mol each) gives what ΔH for H₂ + Cl₂ → 2 HCl?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−184 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+184 kJ"
+        },
+        {
+          "id": "c",
+          "label": "−862 kJ"
+        },
+        {
+          "id": "d",
+          "label": "+678 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Breaking costs 436 + 242 = 678 kJ and forming gives back 2 × 431 = 862 kJ, so ΔH is 678 − 862 = −184 kJ."
+    },
+    {
+      "id": "q4-bonds#2",
+      "quest": "q4-bonds",
+      "question": "Which of these bonds between carbon atoms has the highest bond enthalpy?",
+      "options": [
+        {
+          "id": "a",
+          "label": "C≡C, the triple bond"
+        },
+        {
+          "id": "b",
+          "label": "C=C, the double bond"
+        },
+        {
+          "id": "c",
+          "label": "C–C, the single bond"
+        }
+      ],
+      "answer": "a",
+      "explanation": "More shared electron pairs hold the nuclei closer in a deeper well, so the triple bond takes the most energy to break."
+    },
+    {
+      "id": "q4-bonds#3",
+      "quest": "q4-bonds",
+      "question": "For 2 H₂ + O₂ → 2 H₂O (gas), use H–H = 436, O=O = 498 and O–H = 463 kJ/mol. What is the estimated ΔH?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−482 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+482 kJ"
+        },
+        {
+          "id": "c",
+          "label": "−1852 kJ"
+        },
+        {
+          "id": "d",
+          "label": "+1370 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Breaking 2 H–H and 1 O=O costs 1370 kJ, and forming 4 O–H gives back 1852 kJ, so ΔH is 1370 − 1852 = −482 kJ."
+    },
+    {
+      "id": "q4-bonds#4",
+      "quest": "q4-bonds",
+      "question": "Breaking the bonds of a fuel takes energy, yet burning it releases heat. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The product bonds are stronger, so forming them releases more than breaking the fuel’s bonds cost"
+        },
+        {
+          "id": "b",
+          "label": "Breaking the fuel’s bonds releases heat once the first bond has snapped"
+        },
+        {
+          "id": "c",
+          "label": "The oxygen supplies all of the energy and the fuel supplies none"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Energy is released when the total paid back by new bonds is larger than the total spent breaking old ones."
+    },
+    {
+      "id": "q5-hess#0",
+      "quest": "q5-hess",
+      "question": "A → B has ΔH = −50 kJ and B → C has ΔH = +120 kJ. What is ΔH for A → C?",
+      "options": [
+        {
+          "id": "a",
+          "label": "+70 kJ"
+        },
+        {
+          "id": "b",
+          "label": "−70 kJ"
+        },
+        {
+          "id": "c",
+          "label": "+170 kJ"
+        },
+        {
+          "id": "d",
+          "label": "−170 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The steps follow on from each other, so their enthalpy changes add: −50 + 120 = +70 kJ."
+    },
+    {
+      "id": "q5-hess#1",
+      "quest": "q5-hess",
+      "question": "N₂ + 2 O₂ → 2 NO₂ has ΔH = +66.4 kJ. What is ΔH for ½N₂ + O₂ → NO₂?",
+      "options": [
+        {
+          "id": "a",
+          "label": "+33.2 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+132.8 kJ"
+        },
+        {
+          "id": "c",
+          "label": "−33.2 kJ"
+        },
+        {
+          "id": "d",
+          "label": "+66.4 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Halving the equation halves its ΔH, so the reaction that makes one NO₂ has half the value."
+    },
+    {
+      "id": "q5-hess#2",
+      "quest": "q5-hess",
+      "question": "Which of these has a standard enthalpy of formation of exactly zero?",
+      "options": [
+        {
+          "id": "a",
+          "label": "O₂(g)"
+        },
+        {
+          "id": "b",
+          "label": "O(g)"
+        },
+        {
+          "id": "c",
+          "label": "CO(g)"
+        },
+        {
+          "id": "d",
+          "label": "H₂O(g)"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Oxygen gas is the element in its most stable form, so forming it from itself changes nothing. A lone oxygen atom is not the standard state."
+    },
+    {
+      "id": "q5-hess#3",
+      "quest": "q5-hess",
+      "question": "Using ΔH°f(H₂O(l)) = −285.8 kJ/mol, what is ΔH for 2 H₂(g) + O₂(g) → 2 H₂O(l)?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−571.6 kJ"
+        },
+        {
+          "id": "b",
+          "label": "−285.8 kJ"
+        },
+        {
+          "id": "c",
+          "label": "+571.6 kJ"
+        },
+        {
+          "id": "d",
+          "label": "0 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The elements sit at zero, and two moles of liquid water are formed from them, so ΔH is 2 × (−285.8) = −571.6 kJ."
+    },
+    {
+      "id": "q5-hess#4",
+      "quest": "q5-hess",
+      "question": "Why does Hess’s law work?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Enthalpy is a state function, so it depends only on the starting and finishing states"
+        },
+        {
+          "id": "b",
+          "label": "Every step of a reaction has the same ΔH"
+        },
+        {
+          "id": "c",
+          "label": "Intermediate substances always carry no enthalpy"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Because enthalpy depends only on the states at either end, any set of steps joining them must add to the same total."
+    },
+    {
+      "id": "q6-entropy#0",
+      "quest": "q6-entropy",
+      "question": "Which has the greatest entropy per mole at the same temperature?",
+      "options": [
+        {
+          "id": "a",
+          "label": "H₂O(g)"
+        },
+        {
+          "id": "b",
+          "label": "H₂O(l)"
+        },
+        {
+          "id": "c",
+          "label": "H₂O(s)"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A gas has the most freedom of position, so it has the most microstates and the greatest entropy."
+    },
+    {
+      "id": "q6-entropy#1",
+      "quest": "q6-entropy",
+      "question": "What is the sign of ΔS° for 2 SO₂(g) + O₂(g) → 2 SO₃(g)?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Negative, because three moles of gas become two"
+        },
+        {
+          "id": "b",
+          "label": "Positive, because a new compound forms"
+        },
+        {
+          "id": "c",
+          "label": "Zero, because every substance is a gas"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The reaction uses up gas, so there are fewer places for the particles to be and entropy falls."
+    },
+    {
+      "id": "q6-entropy#2",
+      "quest": "q6-entropy",
+      "question": "N₂(g) + 3 H₂(g) → 2 NH₃(g). With S° of 191.6, 130.7 and 192.8 J/(mol·K), what is ΔS°?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−198.1 J/(mol·K)"
+        },
+        {
+          "id": "b",
+          "label": "+198.1 J/(mol·K)"
+        },
+        {
+          "id": "c",
+          "label": "−390.9 J/(mol·K)"
+        },
+        {
+          "id": "d",
+          "label": "+583.7 J/(mol·K)"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Products are 2 × 192.8 = 385.6 and reactants are 191.6 + 3 × 130.7 = 583.7, so ΔS° is 385.6 − 583.7 = −198.1."
+    },
+    {
+      "id": "q6-entropy#3",
+      "quest": "q6-entropy",
+      "question": "Why does a substance’s entropy rise when it is heated at constant phase?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its energy can be shared among a wider range of speeds, spins and vibrations"
+        },
+        {
+          "id": "b",
+          "label": "Its particles move to fixed positions in a crystal"
+        },
+        {
+          "id": "c",
+          "label": "Its particles become fewer in number"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A larger range of possible motions means more microstates, and entropy counts microstates."
+    },
+    {
+      "id": "q6-entropy#4",
+      "quest": "q6-entropy",
+      "question": "Which change has a negative ΔS?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Freezing liquid water"
+        },
+        {
+          "id": "b",
+          "label": "Boiling liquid water"
+        },
+        {
+          "id": "c",
+          "label": "Dissolving sodium chloride in water"
+        },
+        {
+          "id": "d",
+          "label": "Dry ice turning into gas"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Freezing locks mobile molecules into a crystal, which leaves them fewer arrangements; the other changes free particles."
+    },
+    {
+      "id": "q7-gibbs#0",
+      "quest": "q7-gibbs",
+      "question": "A reaction has ΔH = −50 kJ/mol and ΔS = −100 J/(mol·K). What is ΔG at 300 K?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−20 kJ/mol"
+        },
+        {
+          "id": "b",
+          "label": "+20 kJ/mol"
+        },
+        {
+          "id": "c",
+          "label": "−80 kJ/mol"
+        },
+        {
+          "id": "d",
+          "label": "+30 kJ/mol"
+        }
+      ],
+      "answer": "a",
+      "explanation": "TΔS is 300 K × (−0.100 kJ/(mol·K)) = −30 kJ, so ΔG = −50 − (−30) = −20 kJ/mol."
+    },
+    {
+      "id": "q7-gibbs#1",
+      "quest": "q7-gibbs",
+      "question": "A change has ΔH > 0 and ΔS > 0. When is it spontaneous?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Only at high temperature"
+        },
+        {
+          "id": "b",
+          "label": "Only at low temperature"
+        },
+        {
+          "id": "c",
+          "label": "At every temperature"
+        },
+        {
+          "id": "d",
+          "label": "At no temperature"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Entropy gain only outweighs the heat cost once T is large enough, so ΔG turns negative at high temperature."
+    },
+    {
+      "id": "q7-gibbs#2",
+      "quest": "q7-gibbs",
+      "question": "Melting has ΔH = +6.01 kJ/mol and ΔS = +22.0 J/(mol·K). At what temperature is ΔG zero?",
+      "options": [
+        {
+          "id": "a",
+          "label": "273 K"
+        },
+        {
+          "id": "b",
+          "label": "132 K"
+        },
+        {
+          "id": "c",
+          "label": "2.73 K"
+        },
+        {
+          "id": "d",
+          "label": "546 K"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Set ΔH = TΔS and solve: T = 6010 J/mol divided by 22.0 J/(mol·K), which is 273 K."
+    },
+    {
+      "id": "q7-gibbs#3",
+      "quest": "q7-gibbs",
+      "question": "An uphill reaction has ΔG = +60 kJ and is coupled to a reaction with ΔG = −90 kJ. What is the combined ΔG?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−30 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+30 kJ"
+        },
+        {
+          "id": "c",
+          "label": "+150 kJ"
+        },
+        {
+          "id": "d",
+          "label": "−150 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The two free energy changes add, giving +60 + (−90) = −30 kJ, so the coupled pair runs."
+    },
+    {
+      "id": "q7-gibbs#4",
+      "quest": "q7-gibbs",
+      "question": "Why does graphite not appear from a diamond at room temperature when ΔG is negative?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The change is far too slow because of a large activation energy"
+        },
+        {
+          "id": "b",
+          "label": "A negative ΔG means the change is forbidden"
+        },
+        {
+          "id": "c",
+          "label": "Diamond has a lower free energy than graphite"
+        }
+      ],
+      "answer": "a",
+      "explanation": "ΔG tells you whether a change can run, not how fast, and a large barrier can make a favourable change immeasurably slow."
+    },
+    {
+      "id": "boss-crucible#3",
+      "quest": "boss-crucible",
+      "question": "Which reaction has a positive ΔS°?",
+      "options": [
+        {
+          "id": "a",
+          "label": "2 N₂O(g) → 2 N₂(g) + O₂(g)"
+        },
+        {
+          "id": "b",
+          "label": "2 NO₂(g) → N₂O₄(g)"
+        },
+        {
+          "id": "c",
+          "label": "Ag⁺(aq) + Cl⁻(aq) → AgCl(s)"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The first makes three moles of gas from two. The other two use up gas or free ions and lose entropy."
+    },
+    {
+      "id": "q7-gibbs#5",
+      "quest": "q7-gibbs",
+      "question": "Formation free energies are −50 kJ/mol for A and −120 kJ/mol for B. What is ΔG° for A → B?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−70 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+70 kJ"
+        },
+        {
+          "id": "c",
+          "label": "−170 kJ"
+        },
+        {
+          "id": "d",
+          "label": "+170 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "ΔG° = ΣΔGf°(products) − ΣΔGf°(reactants) = −120 − (−50) = −70 kJ."
+    },
+    {
+      "id": "q7-gibbs#6",
+      "quest": "q7-gibbs",
+      "question": "Diamond turning into graphite has a negative ΔG° at 298 K, yet diamonds last for ages. What explains this?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The reaction has a very large activation energy, so it is extremely slow"
+        },
+        {
+          "id": "b",
+          "label": "A negative ΔG° means the reaction cannot occur"
+        },
+        {
+          "id": "c",
+          "label": "The entropy change is zero"
+        },
+        {
+          "id": "d",
+          "label": "Diamond is lower in free energy than graphite"
+        }
+      ],
+      "answer": "a",
+      "explanation": "ΔG° says whether a change can run on its own, not how fast. A tall activation barrier makes the change too slow to see, so kinetics, not thermodynamics, controls the outcome."
+    },
+    {
+      "id": "q7-gibbs#7",
+      "quest": "q7-gibbs",
+      "question": "Reaction 1 has ΔG° = +31 kJ and reaction 2 has ΔG° = −50 kJ. If they are coupled through a shared intermediate, what is the net ΔG°?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−19 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+81 kJ"
+        },
+        {
+          "id": "c",
+          "label": "−81 kJ"
+        },
+        {
+          "id": "d",
+          "label": "+19 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Coupled reactions add: +31 + (−50) = −19 kJ. The pair runs on its own although reaction 1 alone would not."
+    },
+    {
+      "id": "q2-calorimetry#5",
+      "quest": "q2-calorimetry",
+      "question": "How much heat is released when 18.0 g of steam condenses to liquid water at 100 °C? (ΔHvap = 40.7 kJ/mol, H₂O 18.0 g/mol)",
+      "options": [
+        {
+          "id": "a",
+          "label": "40.7 kJ released"
+        },
+        {
+          "id": "b",
+          "label": "40.7 kJ absorbed"
+        },
+        {
+          "id": "c",
+          "label": "733 kJ released"
+        },
+        {
+          "id": "d",
+          "label": "2.26 kJ released"
+        }
+      ],
+      "answer": "a",
+      "explanation": "18.0 g is 1.00 mol. Condensing is the reverse of vaporizing, so the heat has the same size and the opposite direction: 40.7 kJ leaves the water."
+    },
+    {
+      "id": "q2-calorimetry#6",
+      "quest": "q2-calorimetry",
+      "question": "A 2.00 mol sample of a metal has a molar heat capacity of 24.0 J/(mol·K). How much heat raises it by 10.0 K?",
+      "options": [
+        {
+          "id": "a",
+          "label": "480 J"
+        },
+        {
+          "id": "b",
+          "label": "48.0 J"
+        },
+        {
+          "id": "c",
+          "label": "240 J"
+        },
+        {
+          "id": "d",
+          "label": "2.40 J"
+        }
+      ],
+      "answer": "a",
+      "explanation": "q = n × C × ΔT = 2.00 × 24.0 × 10.0 = 480 J."
+    },
+    {
+      "id": "q3-enthalpy#5",
+      "quest": "q3-enthalpy",
+      "question": "On an energy diagram the reactants sit at 80 kJ, the peak at 120 kJ and the products at 30 kJ. What are ΔH and the activation energy?",
+      "options": [
+        {
+          "id": "a",
+          "label": "ΔH = −50 kJ, Ea = 40 kJ"
+        },
+        {
+          "id": "b",
+          "label": "ΔH = +50 kJ, Ea = 40 kJ"
+        },
+        {
+          "id": "c",
+          "label": "ΔH = −50 kJ, Ea = 90 kJ"
+        },
+        {
+          "id": "d",
+          "label": "ΔH = −90 kJ, Ea = 120 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "ΔH is products minus reactants: 30 − 80 = −50 kJ. The activation energy is the climb from the reactants to the peak: 120 − 80 = 40 kJ."
+    },
+    {
+      "id": "q7-gibbs#8",
+      "quest": "q7-gibbs",
+      "question": "A salt dissolves in water and the water cools. What best explains why the salt still dissolves?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The entropy gained by spreading the ions outweighs the heat taken in"
+        },
+        {
+          "id": "b",
+          "label": "Dissolving always gives out heat"
+        },
+        {
+          "id": "c",
+          "label": "Water attracts the ions more strongly than the ions attract each other"
+        },
+        {
+          "id": "d",
+          "label": "The temperature of the room does not matter"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Pulling the lattice apart costs more energy than the ion-water attractions return, so heat is absorbed. The gain in entropy makes ΔG negative anyway."
+    }
+  ],
+  "bench": {
+    "q1-flow": {
+      "problems": [
+        {
+          "id": "q1-flow#b1",
+          "quest": "q1-flow",
+          "question": "A hand warmer gets hot as its chemicals react. Which describes the reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Exothermic, with a positive ΔH"
+            },
+            {
+              "id": "b",
+              "label": "Exothermic, with a negative ΔH"
+            },
+            {
+              "id": "c",
+              "label": "Endothermic, with a negative ΔH"
+            },
+            {
+              "id": "d",
+              "label": "Endothermic, with a positive ΔH"
+            }
+          ],
+          "answer": "b",
+          "explanation": "The chemicals give heat out to the surroundings, so the reaction is exothermic. The system loses energy, so ΔH is negative."
+        },
+        {
+          "id": "q1-flow#b2",
+          "quest": "q1-flow",
+          "question": "On an energy diagram, the reactants sit at 100 kJ and the products at 60 kJ. What is ΔH?",
+          "options": [
+            {
+              "id": "a",
+              "label": "+40 kJ"
+            },
+            {
+              "id": "b",
+              "label": "-160 kJ"
+            },
+            {
+              "id": "c",
+              "label": "+160 kJ"
+            },
+            {
+              "id": "d",
+              "label": "-40 kJ"
+            }
+          ],
+          "answer": "d",
+          "explanation": "ΔH = products - reactants = 60 - 100 = -40 kJ. The products are lower, so the reaction gives out energy."
+        }
+      ],
+      "worked": {
+        "id": "q1-flow#w",
+        "quest": "q1-flow",
+        "title": "A Hot Block Meets a Cold One",
+        "setup": "100 g of water at 80 °C is poured into 100 g of water at 20 °C in an insulated cup. (c = 4.18 J/(g·K).) Find the final temperature.",
+        "steps": [
+          {
+            "say": "By symmetry, what final temperature do equal masses of the same liquid reach?",
+            "kind": "number",
+            "answer": 50,
+            "calc": "(80+20)/2",
+            "unit": "°C",
+            "hint": "Equal masses change by equal amounts.",
+            "explain": "Equal masses meet halfway: (80 + 20) / 2 = 50 °C."
+          },
+          {
+            "say": "How much heat does the hot water give out cooling to that temperature?",
+            "kind": "number",
+            "answer": 12540,
+            "calc": "100*4.18*30",
+            "unit": "J",
+            "tol": 0.01,
+            "hint": "q = m × c × ΔT, with ΔT the fall in temperature.",
+            "explain": "q = 100 × 4.18 × 30 = 12 540 J."
+          },
+          {
+            "say": "How much heat does the cold water take in?",
+            "kind": "number",
+            "answer": 12540,
+            "calc": "100*4.18*30",
+            "unit": "J",
+            "tol": 0.01,
+            "hint": "Heat lost by one equals heat gained by the other.",
+            "explain": "q = 100 × 4.18 × 30 = 12 540 J. The two agree, so no heat was lost to the surroundings."
+          },
+          {
+            "say": "Now the cold cup holds 200 g at 20 °C. Heat lost by the 100 g hot water equals heat gained by the cold water, so 100(80 − T) = 200(T − 20). What is T?",
+            "kind": "number",
+            "answer": 40,
+            "calc": "(100*80+200*20)/300",
+            "unit": "°C",
+            "tol": 0.01,
+            "hint": "Collect T on one side: 8000 + 4000 = 300 T.",
+            "explain": "8000 + 4000 = 300 T, so T = 40 °C. The larger mass moves less."
+          },
+          {
+            "say": "Why does the larger mass change temperature by less?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The same heat is spread over more mass"
+              },
+              {
+                "id": "b",
+                "label": "Water at 20 °C holds less heat"
+              },
+              {
+                "id": "c",
+                "label": "Heat is lost to the cup"
+              }
+            ],
+            "answer": "a",
+            "hint": "q = m × c × ΔT, with q fixed.",
+            "explain": "For the same q, a larger m means a smaller ΔT."
+          }
+        ],
+        "finish": "Heat left the hot water and entered the cold water in equal amounts, so the final temperature lies halfway for equal masses."
+      }
+    },
+    "q2-calorimetry": {
+      "problems": [
+        {
+          "id": "q2-calorimetry#b1",
+          "quest": "q2-calorimetry",
+          "question": "A 100 g aluminium block (c = 0.90 J/(g·°C)) cools from 80 °C to 30 °C. How much heat does it give out?",
+          "options": [
+            {
+              "id": "a",
+              "label": "4500 J"
+            },
+            {
+              "id": "b",
+              "label": "90 J"
+            },
+            {
+              "id": "c",
+              "label": "2700 J"
+            },
+            {
+              "id": "d",
+              "label": "7200 J"
+            }
+          ],
+          "answer": "a",
+          "explanation": "q = mcΔT = 100 x 0.90 x 50 = 4500 J."
+        },
+        {
+          "id": "q2-calorimetry#b2",
+          "quest": "q2-calorimetry",
+          "question": "In a coffee-cup calorimeter the water warms during a reaction. What is the sign of ΔH for the reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Positive"
+            },
+            {
+              "id": "b",
+              "label": "Zero"
+            },
+            {
+              "id": "c",
+              "label": "Negative"
+            },
+            {
+              "id": "d",
+              "label": "It depends on the mass of water"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The water gained the heat that the reaction gave out, so the reaction lost energy and ΔH is negative."
+        }
+      ],
+      "worked": {
+        "id": "q2-calorimetry#w",
+        "quest": "q2-calorimetry",
+        "title": "Which Metal Is It?",
+        "setup": "A 50.0 g piece of metal at 100.0 °C is dropped into 100.0 g of water at 20.0 °C in an insulated cup. The temperature settles at 23.5 °C. Find the specific heat capacity of the metal and identify it. (c of water = 4.184 J/(g·°C))",
+        "steps": [
+          {
+            "say": "By how much does the water warm?",
+            "kind": "number",
+            "answer": 3.5,
+            "calc": "23.5-20.0",
+            "unit": "°C",
+            "hint": "Final temperature minus starting temperature.",
+            "explain": "23.5 - 20.0 = 3.5 °C."
+          },
+          {
+            "say": "How much heat does the water absorb?",
+            "kind": "number",
+            "answer": 1464.4,
+            "calc": "100.0*4.184*3.5",
+            "unit": "J",
+            "tol": 0.005,
+            "hint": "q = mcΔT for the water.",
+            "explain": "q = 100.0 x 4.184 x 3.5 = 1464 J."
+          },
+          {
+            "say": "By how much does the metal cool?",
+            "kind": "number",
+            "answer": 76.5,
+            "calc": "100.0-23.5",
+            "unit": "°C",
+            "hint": "Starting temperature minus final temperature.",
+            "explain": "100.0 - 23.5 = 76.5 °C."
+          },
+          {
+            "say": "How much heat did the metal lose?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The same 1464 J that the water gained"
+              },
+              {
+                "id": "b",
+                "label": "Zero, because it did not change state"
+              },
+              {
+                "id": "c",
+                "label": "Twice what the water gained"
+              },
+              {
+                "id": "d",
+                "label": "Less than the water gained, since some heat escapes"
+              }
+            ],
+            "answer": "a",
+            "hint": "The cup is insulated.",
+            "explain": "No heat escapes, so all the heat the metal lost went into the water."
+          },
+          {
+            "say": "What is the specific heat capacity of the metal?",
+            "kind": "number",
+            "answer": 0.3828,
+            "calc": "1464.4/(50.0*76.5)",
+            "unit": "J/(g·°C)",
+            "tol": 0.005,
+            "hint": "c = q / (m ΔT) for the metal.",
+            "explain": "c = 1464 / (50.0 x 76.5) = 0.383 J/(g·°C)."
+          },
+          {
+            "say": "Which metal fits?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Copper, 0.385 J/(g·°C)"
+              },
+              {
+                "id": "b",
+                "label": "Aluminium, 0.90 J/(g·°C)"
+              },
+              {
+                "id": "c",
+                "label": "Iron, 0.449 J/(g·°C)"
+              },
+              {
+                "id": "d",
+                "label": "Lead, 0.129 J/(g·°C)"
+              }
+            ],
+            "answer": "a",
+            "hint": "Match the nearest value.",
+            "explain": "The calculated 0.383 is within 1% of copper."
+          }
+        ],
+        "finish": "Heat lost by the hot metal equals heat gained by the water, so one measured temperature change gives the metal's heat capacity."
+      }
+    },
+    "q3-enthalpy": {
+      "problems": [
+        {
+          "id": "q3-enthalpy#b1",
+          "quest": "q3-enthalpy",
+          "question": "Burning methane has ΔH = -890 kJ/mol. How much heat is released by burning 0.50 mol?",
+          "options": [
+            {
+              "id": "a",
+              "label": "890 kJ"
+            },
+            {
+              "id": "b",
+              "label": "445 kJ"
+            },
+            {
+              "id": "c",
+              "label": "1780 kJ"
+            },
+            {
+              "id": "d",
+              "label": "89 kJ"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Heat scales with the amount reacting: 0.50 x 890 = 445 kJ."
+        },
+        {
+          "id": "q3-enthalpy#b2",
+          "quest": "q3-enthalpy",
+          "question": "2 H₂ + O₂ → 2 H₂O has ΔH = -572 kJ. What is ΔH for H₂ + ½ O₂ → H₂O?",
+          "options": [
+            {
+              "id": "a",
+              "label": "-572 kJ"
+            },
+            {
+              "id": "b",
+              "label": "-1144 kJ"
+            },
+            {
+              "id": "c",
+              "label": "+286 kJ"
+            },
+            {
+              "id": "d",
+              "label": "-286 kJ"
+            }
+          ],
+          "answer": "d",
+          "explanation": "The equation is halved, so ΔH is halved."
+        }
+      ],
+      "worked": {
+        "id": "q3-enthalpy#w",
+        "quest": "q3-enthalpy",
+        "title": "Enthalpy of Dissolving Sodium Hydroxide",
+        "setup": "Dissolving 2.00 g of NaOH (40.0 g/mol) in 98.0 g of water raises the temperature of the 100.0 g solution by 5.3 °C. Treat the solution as water (4.184 J/(g·°C)). Find ΔH for dissolving one mole of NaOH.",
+        "steps": [
+          {
+            "say": "How many moles of NaOH dissolve?",
+            "kind": "number",
+            "answer": 0.05,
+            "calc": "2.00/40.0",
+            "unit": "mol",
+            "hint": "Moles = mass / molar mass.",
+            "explain": "2.00 / 40.0 = 0.0500 mol."
+          },
+          {
+            "say": "How much heat does the solution absorb?",
+            "kind": "number",
+            "answer": 2217.5,
+            "calc": "100.0*4.184*5.3",
+            "unit": "J",
+            "tol": 0.005,
+            "hint": "q = mcΔT for the solution.",
+            "explain": "q = 100.0 x 4.184 x 5.3 = 2218 J."
+          },
+          {
+            "say": "The solution warmed. What does that say about dissolving?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The process is exothermic, so ΔH is negative"
+              },
+              {
+                "id": "b",
+                "label": "The process is endothermic, so ΔH is negative"
+              },
+              {
+                "id": "c",
+                "label": "The process is exothermic, so ΔH is positive"
+              },
+              {
+                "id": "d",
+                "label": "The process is endothermic, so ΔH is positive"
+              }
+            ],
+            "answer": "a",
+            "hint": "Whose heat warmed the solution?",
+            "explain": "The dissolving gave out the heat that warmed the water, so the system lost energy: exothermic, negative ΔH."
+          },
+          {
+            "say": "What is ΔH per mole in kJ/mol?",
+            "kind": "number",
+            "answer": -44.35,
+            "calc": "-2217.5/0.0500/1000",
+            "unit": "kJ/mol",
+            "tol": 0.005,
+            "hint": "Divide the heat by the moles, convert J to kJ, and give it the sign you found.",
+            "explain": "-2218 J / 0.0500 mol = -44 350 J/mol = -44.4 kJ/mol."
+          },
+          {
+            "say": "How much heat is released by dissolving 0.200 mol? Give the heat as a positive number.",
+            "kind": "number",
+            "answer": 8.87,
+            "calc": "44.35*0.200",
+            "unit": "kJ",
+            "tol": 0.005,
+            "hint": "Heat released scales with moles.",
+            "explain": "44.35 x 0.200 = 8.87 kJ."
+          }
+        ],
+        "finish": "Temperature change gives heat, heat divided by moles gives ΔH per mole, and the direction of the change gives its sign."
+      }
+    },
+    "q4-bonds": {
+      "problems": [
+        {
+          "id": "q4-bonds#b1",
+          "quest": "q4-bonds",
+          "question": "Estimate ΔH for CH₄ + 2 O₂ → CO₂ + 2 H₂O. Bond enthalpies in kJ/mol: C–H 413, O=O 498, C=O 799, O–H 463.",
+          "options": [
+            {
+              "id": "a",
+              "label": "+802 kJ"
+            },
+            {
+              "id": "b",
+              "label": "-1604 kJ"
+            },
+            {
+              "id": "c",
+              "label": "-802 kJ"
+            },
+            {
+              "id": "d",
+              "label": "-3450 kJ"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Breaking: 4(413) + 2(498) = 2648 kJ. Forming: 2(799) + 4(463) = 3450 kJ. ΔH = 2648 - 3450 = -802 kJ."
+        },
+        {
+          "id": "q4-bonds#b2",
+          "quest": "q4-bonds",
+          "question": "Why is an estimate of ΔH from bond enthalpies only approximate?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Tabulated values are averages over many different molecules"
+            },
+            {
+              "id": "b",
+              "label": "Bonds do not break in reactions"
+            },
+            {
+              "id": "c",
+              "label": "Bond enthalpies are always negative"
+            },
+            {
+              "id": "d",
+              "label": "Only single bonds have a bond enthalpy"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A C–H bond in methane is not exactly the same strength as one in ethanol. The table gives an average, so the answer is close but not exact."
+        }
+      ],
+      "worked": {
+        "id": "q4-bonds#w",
+        "quest": "q4-bonds",
+        "title": "Adding Hydrogen to Ethene",
+        "setup": "Estimate ΔH for C₂H₄ + H₂ → C₂H₆ from bond enthalpies (kJ/mol): C=C 614, C–C 348, C–H 413, H–H 436. The four C–H bonds already in ethene are unchanged.",
+        "steps": [
+          {
+            "say": "Which bonds must be broken?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The C=C bond (to become C–C) and the H–H bond"
+              },
+              {
+                "id": "b",
+                "label": "All four C–H bonds and the H–H bond"
+              },
+              {
+                "id": "c",
+                "label": "Only the H–H bond"
+              },
+              {
+                "id": "d",
+                "label": "Only the C=C bond"
+              }
+            ],
+            "answer": "a",
+            "hint": "Compare ethene and hydrogen with ethane. What is no longer there?",
+            "explain": "The double bond is reduced to a single bond, and H–H is consumed. The original C–H bonds stay."
+          },
+          {
+            "say": "How much energy is needed to break C=C and H–H?",
+            "kind": "number",
+            "answer": 1050,
+            "calc": "614+436",
+            "unit": "kJ",
+            "hint": "Add the two bond enthalpies.",
+            "explain": "614 + 436 = 1050 kJ."
+          },
+          {
+            "say": "How much energy is released forming one C–C bond and two new C–H bonds?",
+            "kind": "number",
+            "answer": 1174,
+            "calc": "348+2*413",
+            "unit": "kJ",
+            "hint": "Add the three bond enthalpies.",
+            "explain": "348 + 2(413) = 1174 kJ."
+          },
+          {
+            "say": "What is the estimated ΔH?",
+            "kind": "number",
+            "answer": -124,
+            "calc": "1050-1174",
+            "unit": "kJ",
+            "hint": "ΔH = energy to break - energy released forming.",
+            "explain": "1050 - 1174 = -124 kJ."
+          },
+          {
+            "say": "How much heat is given out when 2.5 mol of ethene reacts? Give it as a positive number.",
+            "kind": "number",
+            "answer": 310,
+            "calc": "124*2.5",
+            "unit": "kJ",
+            "hint": "Multiply the heat per mole by the moles.",
+            "explain": "124 x 2.5 = 310 kJ."
+          }
+        ],
+        "finish": "Add up the bonds broken, subtract the bonds formed, and keep only the bonds that change."
+      }
+    },
+    "q5-hess": {
+      "problems": [
+        {
+          "id": "q5-hess#b1",
+          "quest": "q5-hess",
+          "question": "A reaction has ΔH = -100 kJ. What is ΔH for three times the reverse reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "-300 kJ"
+            },
+            {
+              "id": "b",
+              "label": "+300 kJ"
+            },
+            {
+              "id": "c",
+              "label": "+100 kJ"
+            },
+            {
+              "id": "d",
+              "label": "-33 kJ"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Reversing flips the sign and tripling multiplies by three: +100 x 3 = +300 kJ."
+        },
+        {
+          "id": "q5-hess#b2",
+          "quest": "q5-hess",
+          "question": "ΔH°f values in kJ/mol: CH₄(g) -74.8, CO₂(g) -393.5, H₂O(l) -285.8. What is ΔH for CH₄ + 2 O₂ → CO₂ + 2 H₂O(l)?",
+          "options": [
+            {
+              "id": "a",
+              "label": "-679 kJ"
+            },
+            {
+              "id": "b",
+              "label": "+890.3 kJ"
+            },
+            {
+              "id": "c",
+              "label": "-1090 kJ"
+            },
+            {
+              "id": "d",
+              "label": "-890.3 kJ"
+            }
+          ],
+          "answer": "d",
+          "explanation": "ΔH = Σ products - Σ reactants = (-393.5 + 2(-285.8)) - (-74.8) = -965.1 + 74.8 = -890.3 kJ."
+        }
+      ],
+      "worked": {
+        "id": "q5-hess#w",
+        "quest": "q5-hess",
+        "title": "The Enthalpy of Forming Ethane",
+        "setup": "Ethane cannot be made directly from carbon and hydrogen in a calorimeter. Use these combustion enthalpies (kJ/mol): C(s) -393.5, H₂(g) -285.8, C₂H₆(g) -1560.0 to find ΔH for 2 C(s) + 3 H₂(g) → C₂H₆(g).",
+        "steps": [
+          {
+            "say": "Burning 2 mol of carbon is needed. What is its ΔH?",
+            "kind": "number",
+            "answer": -787,
+            "calc": "2*-393.5",
+            "unit": "kJ",
+            "hint": "Multiply the combustion enthalpy of carbon by 2.",
+            "explain": "2(-393.5) = -787.0 kJ."
+          },
+          {
+            "say": "Burning 3 mol of hydrogen is needed. What is its ΔH?",
+            "kind": "number",
+            "answer": -857.4,
+            "calc": "3*-285.8",
+            "unit": "kJ",
+            "hint": "Multiply by 3.",
+            "explain": "3(-285.8) = -857.4 kJ."
+          },
+          {
+            "say": "The product ethane is burned in reverse (C₂H₆ goes to CO₂ and H₂O). What is that ΔH?",
+            "kind": "number",
+            "answer": 1560,
+            "calc": "1560.0",
+            "unit": "kJ",
+            "hint": "Reversing a reaction flips the sign.",
+            "explain": "Combustion of ethane is -1560.0 kJ, so the reverse is +1560.0 kJ."
+          },
+          {
+            "say": "Add the three steps. What is ΔH for forming ethane?",
+            "kind": "number",
+            "answer": -84.4,
+            "calc": "-787.0-857.4+1560.0",
+            "unit": "kJ",
+            "tol": 0.005,
+            "hint": "Add the three values.",
+            "explain": "-787.0 - 857.4 + 1560.0 = -84.4 kJ."
+          },
+          {
+            "say": "Why can the three steps be added?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Enthalpy is a state function, so the route does not matter"
+              },
+              {
+                "id": "b",
+                "label": "Each step has the same ΔH"
+              },
+              {
+                "id": "c",
+                "label": "The steps happen at the same time"
+              },
+              {
+                "id": "d",
+                "label": "Hess's law only holds for combustion"
+              }
+            ],
+            "answer": "a",
+            "hint": "Think about what ΔH depends on.",
+            "explain": "ΔH depends only on the starting and finishing states, so any route that links them gives the same total."
+          }
+        ],
+        "finish": "Scale and reverse known reactions until they add up to the target, then add the enthalpies."
+      }
+    },
+    "q6-entropy": {
+      "problems": [
+        {
+          "id": "q6-entropy#b1",
+          "quest": "q6-entropy",
+          "question": "What is the sign of ΔS for CaCO₃(s) → CaO(s) + CO₂(g)?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Positive"
+            },
+            {
+              "id": "b",
+              "label": "Negative"
+            },
+            {
+              "id": "c",
+              "label": "Zero"
+            },
+            {
+              "id": "d",
+              "label": "It depends on the temperature only"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A gas forms from solids. A gas has many more arrangements, so the entropy rises."
+        },
+        {
+          "id": "q6-entropy#b2",
+          "quest": "q6-entropy",
+          "question": "Which has the larger standard entropy per mole at 298 K: CO₂(g) or CH₄(g)?",
+          "options": [
+            {
+              "id": "a",
+              "label": "CH₄(g)"
+            },
+            {
+              "id": "b",
+              "label": "They are equal"
+            },
+            {
+              "id": "c",
+              "label": "CO₂(g)"
+            },
+            {
+              "id": "d",
+              "label": "It depends on the pressure only"
+            }
+          ],
+          "answer": "c",
+          "explanation": "CO₂ has three atoms and more ways to vibrate and rotate, so it has more arrangements. Its S° is 213.8 against 186.3 J/(mol·K)."
+        }
+      ],
+      "worked": {
+        "id": "q6-entropy#w",
+        "quest": "q6-entropy",
+        "title": "Is Burning Hydrogen Allowed by Entropy?",
+        "setup": "For 2 H₂(g) + O₂(g) → 2 H₂O(g), ΔH = -483.6 kJ. Standard entropies in J/(mol·K): H₂ 130.7, O₂ 205.2, H₂O(g) 188.8. Show that the total entropy rises at 298 K.",
+        "steps": [
+          {
+            "say": "What is ΔS of the reaction system?",
+            "kind": "number",
+            "answer": -89,
+            "calc": "2*188.8-(2*130.7+205.2)",
+            "unit": "J/K",
+            "hint": "Entropy of products minus entropy of reactants, using the coefficients.",
+            "explain": "ΔS = 2(188.8) - [2(130.7) + 205.2] = 377.6 - 466.6 = -89.0 J/K."
+          },
+          {
+            "say": "Why is that sign expected?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Three moles of gas become two"
+              },
+              {
+                "id": "b",
+                "label": "A solid forms"
+              },
+              {
+                "id": "c",
+                "label": "The reaction absorbs heat"
+              },
+              {
+                "id": "d",
+                "label": "Water has fewer atoms than hydrogen"
+              }
+            ],
+            "answer": "a",
+            "hint": "Count the moles of gas on each side.",
+            "explain": "Fewer gas particles mean fewer arrangements, so the system entropy falls."
+          },
+          {
+            "say": "What is the entropy change of the surroundings, ΔS = -ΔH / T, in J/K?",
+            "kind": "number",
+            "answer": 1623,
+            "calc": "483600/298",
+            "unit": "J/K",
+            "tol": 0.005,
+            "hint": "Convert ΔH to joules first: -483.6 kJ is -483 600 J.",
+            "explain": "Heat released raises the entropy of the surroundings: 483 600 / 298 = 1623 J/K."
+          },
+          {
+            "say": "What is the total entropy change of system plus surroundings?",
+            "kind": "number",
+            "answer": 1534,
+            "calc": "1623-89",
+            "unit": "J/K",
+            "tol": 0.005,
+            "hint": "Add the two changes.",
+            "explain": "-89 + 1623 = 1534 J/K."
+          },
+          {
+            "say": "What does the sign of the total tell you?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The reaction is spontaneous"
+              },
+              {
+                "id": "b",
+                "label": "The reaction cannot happen"
+              },
+              {
+                "id": "c",
+                "label": "The reaction is at equilibrium"
+              },
+              {
+                "id": "d",
+                "label": "The reaction is fast"
+              }
+            ],
+            "answer": "a",
+            "hint": "A process is spontaneous when the total entropy rises.",
+            "explain": "The total is positive, so the reaction is spontaneous even though the system entropy falls."
+          }
+        ],
+        "finish": "A system can lose entropy if it passes enough heat to the surroundings. The total decides."
+      }
+    },
+    "q7-gibbs": {
+      "problems": [
+        {
+          "id": "q7-gibbs#b1",
+          "quest": "q7-gibbs",
+          "question": "A reaction has ΔH = +30 kJ and ΔS = +100 J/K. At what temperature does it become spontaneous?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Below 300 K"
+            },
+            {
+              "id": "b",
+              "label": "Above 30 K"
+            },
+            {
+              "id": "c",
+              "label": "Above 300 K"
+            },
+            {
+              "id": "d",
+              "label": "At no temperature"
+            }
+          ],
+          "answer": "c",
+          "explanation": "ΔG = ΔH - TΔS is zero when T = 30 000 / 100 = 300 K. Above that the -TΔS term wins and ΔG is negative."
+        },
+        {
+          "id": "q7-gibbs#b2",
+          "quest": "q7-gibbs",
+          "question": "A reaction has ΔH = -100 kJ and ΔS = +50 J/K. When is it spontaneous?",
+          "options": [
+            {
+              "id": "a",
+              "label": "At every temperature"
+            },
+            {
+              "id": "b",
+              "label": "Only at low temperature"
+            },
+            {
+              "id": "c",
+              "label": "Only at high temperature"
+            },
+            {
+              "id": "d",
+              "label": "At no temperature"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Both terms favour it: ΔH is negative and -TΔS is negative, so ΔG is negative at any temperature."
+        }
+      ],
+      "worked": {
+        "id": "q7-gibbs#w",
+        "quest": "q7-gibbs",
+        "title": "The Haber Reaction and Temperature",
+        "setup": "For N₂ + 3 H₂ → 2 NH₃, ΔH = -92.2 kJ and ΔS = -198.1 J/K. Find ΔG at 298 K and the temperature at which the reaction stops being spontaneous.",
+        "steps": [
+          {
+            "say": "Write ΔS in kJ/K.",
+            "kind": "number",
+            "answer": -0.1981,
+            "calc": "-198.1/1000",
+            "unit": "kJ/K",
+            "tol": 0.001,
+            "hint": "Divide by 1000 so the units match ΔH.",
+            "explain": "-198.1 J/K = -0.1981 kJ/K."
+          },
+          {
+            "say": "What is TΔS at 298 K?",
+            "kind": "number",
+            "answer": -59.03,
+            "calc": "298*-0.1981",
+            "unit": "kJ",
+            "tol": 0.005,
+            "hint": "Multiply T by ΔS.",
+            "explain": "298 x (-0.1981) = -59.03 kJ."
+          },
+          {
+            "say": "What is ΔG at 298 K?",
+            "kind": "number",
+            "answer": -33.17,
+            "calc": "-92.2-(-59.03)",
+            "unit": "kJ",
+            "tol": 0.005,
+            "hint": "ΔG = ΔH - TΔS.",
+            "explain": "-92.2 - (-59.03) = -33.2 kJ. It is negative, so the reaction is spontaneous at 298 K."
+          },
+          {
+            "say": "At what temperature is ΔG = 0?",
+            "kind": "number",
+            "answer": 465.4,
+            "calc": "-92.2/-0.1981",
+            "unit": "K",
+            "tol": 0.005,
+            "hint": "Set ΔH = TΔS and solve for T.",
+            "explain": "T = ΔH / ΔS = -92.2 / -0.1981 = 465 K."
+          },
+          {
+            "say": "Is the reaction spontaneous above or below 465 K?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Below, because the entropy term grows more positive as T rises"
+              },
+              {
+                "id": "b",
+                "label": "Above, because the reaction is exothermic"
+              },
+              {
+                "id": "c",
+                "label": "Both, because ΔH is negative"
+              },
+              {
+                "id": "d",
+                "label": "Neither"
+              }
+            ],
+            "answer": "a",
+            "hint": "Look at the sign of -TΔS as T increases.",
+            "explain": "ΔS is negative, so -TΔS is positive and grows with T. Above 465 K it outweighs ΔH and ΔG turns positive."
+          },
+          {
+            "say": "Industry runs the reaction near 700 K even so. Why?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The reaction is far too slow at low temperature"
+              },
+              {
+                "id": "b",
+                "label": "ΔG is more negative at 700 K"
+              },
+              {
+                "id": "c",
+                "label": "Entropy becomes positive at 700 K"
+              },
+              {
+                "id": "d",
+                "label": "Ammonia only forms above 465 K"
+              }
+            ],
+            "answer": "a",
+            "hint": "Spontaneous does not mean fast.",
+            "explain": "ΔG says whether a reaction can go, not how quickly. A higher temperature gives a usable rate, and a catalyst and high pressure recover the yield."
+          }
+        ],
+        "finish": "ΔG combines the heat and the entropy terms, and temperature sets which one wins."
+      }
+    },
+    "boss-crucible": {
+      "problems": [
+        {
+          "id": "boss-crucible#b1",
+          "quest": "boss-crucible",
+          "question": "A reaction has ΔH = -100 kJ and ΔS = -200 J/K. What is ΔG at 400 K?",
+          "options": [
+            {
+              "id": "a",
+              "label": "-180 kJ"
+            },
+            {
+              "id": "b",
+              "label": "+20 kJ"
+            },
+            {
+              "id": "c",
+              "label": "-80 kJ"
+            },
+            {
+              "id": "d",
+              "label": "-20 kJ"
+            }
+          ],
+          "answer": "d",
+          "explanation": "ΔG = ΔH - TΔS = -100 - (400)(-0.200) = -100 + 80 = -20 kJ."
+        },
+        {
+          "id": "boss-crucible#b2",
+          "quest": "boss-crucible",
+          "question": "Dissolving ammonium nitrate in water absorbs heat, yet it happens on its own. Why?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The reaction is exothermic"
+            },
+            {
+              "id": "b",
+              "label": "The entropy gain outweighs the heat term, so ΔG is negative"
+            },
+            {
+              "id": "c",
+              "label": "ΔH is negative"
+            },
+            {
+              "id": "d",
+              "label": "Entropy decreases when it dissolves"
+            }
+          ],
+          "answer": "b",
+          "explanation": "ΔH is positive, but the ions spread through the water and entropy rises a lot. The TΔS term is larger than ΔH, so ΔG = ΔH - TΔS is negative."
+        }
+      ],
+      "worked": {
+        "id": "boss-crucible#w",
+        "quest": "boss-crucible",
+        "title": "A Cold Pack Dissolving",
+        "setup": "Dissolving 1.00 mol of ammonium nitrate in 1000 g of water has ΔH = +25.7 kJ and ΔS = +108.7 J/K. Find how far the water cools, whether the process is spontaneous at 298 K, and the temperature at which ΔG would be zero. (c of water = 4.184 J/(g·°C))",
+        "steps": [
+          {
+            "say": "How many degrees does the water cool? The water supplies the 25.7 kJ.",
+            "kind": "number",
+            "answer": 6.143,
+            "calc": "25700/(1000*4.184)",
+            "unit": "°C",
+            "tol": 0.005,
+            "hint": "q = mcΔT, solved for ΔT, with q in joules.",
+            "explain": "ΔT = 25 700 / (1000 x 4.184) = 6.1 °C."
+          },
+          {
+            "say": "What is ΔG at 298 K?",
+            "kind": "number",
+            "answer": -6.69,
+            "calc": "25.7-298*0.1087",
+            "unit": "kJ",
+            "tol": 0.01,
+            "hint": "ΔG = ΔH - TΔS with ΔS in kJ/K.",
+            "explain": "ΔG = 25.7 - (298)(0.1087) = 25.7 - 32.4 = -6.7 kJ."
+          },
+          {
+            "say": "Is dissolving spontaneous at 298 K?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Yes"
+              },
+              {
+                "id": "b",
+                "label": "No"
+              },
+              {
+                "id": "c",
+                "label": "Only if the water is stirred"
+              },
+              {
+                "id": "d",
+                "label": "Only above 298 K"
+              }
+            ],
+            "answer": "a",
+            "hint": "Look at the sign of ΔG.",
+            "explain": "ΔG is negative, so it is spontaneous."
+          },
+          {
+            "say": "At what temperature would ΔG be zero?",
+            "kind": "number",
+            "answer": 236.4,
+            "calc": "25.7/0.1087",
+            "unit": "K",
+            "tol": 0.005,
+            "hint": "T = ΔH / ΔS.",
+            "explain": "T = 25.7 / 0.1087 = 236 K."
+          },
+          {
+            "say": "What does that temperature mean for a cold pack?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "It dissolves on its own at any temperature above 236 K"
+              },
+              {
+                "id": "b",
+                "label": "It only dissolves below 236 K"
+              },
+              {
+                "id": "c",
+                "label": "It never dissolves"
+              },
+              {
+                "id": "d",
+                "label": "It dissolves faster below 236 K"
+              }
+            ],
+            "answer": "a",
+            "hint": "Which term wins above that temperature?",
+            "explain": "Above 236 K, TΔS outweighs ΔH and ΔG is negative. Ordinary room temperature is well above it."
+          }
+        ],
+        "finish": "Calorimetry gave the temperature drop, and ΔH and ΔS together gave the spontaneity and the crossover temperature."
+      }
+    }
+  }
+}

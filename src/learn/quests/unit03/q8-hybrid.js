@@ -420,67 +420,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'What is the hybridization of carbon in CH₄?',
-    options: [
-      { id: 'a', label: 'sp³' },
-      { id: 'b', label: 'sp²' },
-      { id: 'c', label: 'sp' },
-      { id: 'd', label: 'sp³d' }
-    ],
-    answer: 'a',
-    explanation: 'Carbon has four domains, so it blends one s and three p orbitals into four sp³ orbitals.'
-  },
-  {
-    question: 'What is the hybridization of the carbon atoms in ethene, C₂H₄?',
-    options: [
-      { id: 'a', label: 'sp²' },
-      { id: 'b', label: 'sp³' },
-      { id: 'c', label: 'sp' },
-      { id: 'd', label: 'None' }
-    ],
-    answer: 'a',
-    explanation: 'Each carbon has three domains (two C–H and one C=C), so it is sp², with one unhybridized p orbital left for the pi bond.'
-  },
-  {
-    question: 'How many sigma bonds and pi bonds are in a molecule of HCN?',
-    options: [
-      { id: 'a', label: '2 sigma and 2 pi' },
-      { id: 'b', label: '3 sigma and 1 pi' },
-      { id: 'c', label: '1 sigma and 3 pi' },
-      { id: 'd', label: '2 sigma and 1 pi' }
-    ],
-    answer: 'a',
-    explanation: 'The H–C single bond is one sigma. The C≡N triple bond is one sigma and two pi.'
-  },
-  {
-    question: 'Why do the ends turn about a C–C single bond but not about a C=C double bond?',
-    options: [
-      { id: 'a', label: 'Rotating about the double bond would break its pi overlap' },
-      { id: 'b', label: 'A single bond has no electrons' },
-      { id: 'c', label: 'The double bond is longer' },
-      { id: 'd', label: 'Double bonds are ionic' }
-    ],
-    answer: 'a',
-    explanation: 'The pi bond comes from side-to-side overlap of p orbitals, which is lost as one end turns.'
-  },
-  {
-    question: 'A carbon atom has three arms: two bonds to hydrogen and one double bond to another carbon. How many hybrid orbitals does it blend?',
-    options: [
-      { id: 'a', label: 'Three, one for each arm' },
-      { id: 'b', label: 'Four, one for each pair of electrons' },
-      { id: 'c', label: 'Two, one for each atom it bonds to' },
-      { id: 'd', label: 'Five' }
-    ],
-    answer: 'a',
-    explanation: 'A double bond is one arm, so carbon has three arms and blends one s and two p orbitals into three hybrid orbitals, leaving one p orbital for the second bond.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. An orbital is dropped on another (`bond`), in a bowl (`mix`), a knob is turned

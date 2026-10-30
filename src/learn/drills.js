@@ -1,8 +1,8 @@
 /**
  * drills.js — the pure half of the Drill Deck.
  *
- * Every practice question in the Learn track lives in its quest module
- * (`export const PRACTICE`, five per built quest). The Drill Deck
+ * Every practice question in the Learn track lives in the question bank
+ * (`learn/bank.js`, one JSON file per world). The Drill Deck
  * (`screens/drills.js`) pools them in one place and turns them into rounds;
  * this file decides WHAT is asked and what a result means, and touches no DOM,
  * so `tools/verify-drills.mjs` can run all of it in Node.
@@ -22,7 +22,8 @@
  *   best  { sprint: n }        best timed round
  */
 
-import { loadQuestModule, PROBLEMS_PER_QUEST, WORLDS } from './curriculum.js';
+import { WORLDS } from './curriculum.js';
+import { worldProblems } from './bank.js';
 
 export const RUN_LENGTH = 10;
 export const DAILY_LENGTH = 5;
@@ -54,10 +55,6 @@ export function normalizePractice(p) {
   return out;
 }
 
-export function questionId(questId, index) {
-  return `${questId}#${index}`;
-}
-
 /* ------------------------------------------------------------------
    THE POOL
    ------------------------------------------------------------------ */
@@ -69,39 +66,16 @@ export function drillWorlds() {
   return WORLDS.filter(w => w.status === 'live');
 }
 
-/** Ids of every question a world should hold, known without loading a single quest. */
+/** Ids of every question a world holds (bench pairs and the end set). */
 export function worldQuestionIds(world) {
-  const ids = [];
-  for (const q of world.quests.filter(x => x.status === 'live')) {
-    for (let i = 0; i < PROBLEMS_PER_QUEST; i++) ids.push(questionId(q.id, i));
-  }
-  return ids;
+  return worldProblems(world).map(p => p.id);
 }
 
-/**
- * Every problem in a world, road order, each stamped with its id and where it
- * came from. Quests still on the chart contribute nothing; the set is never
- * padded.
- */
+/** Every problem in a world, bench pairs in road order, then the end set. Never padded. */
 export async function loadWorldPractice(world) {
   if (!world) return [];
   if (poolCache.has(world.id)) return poolCache.get(world.id);
-  const live = world.quests.filter(q => q.status === 'live');
-  const mods = await Promise.all(live.map(q => loadQuestModule(q)));
-  const out = [];
-  live.forEach((quest, i) => {
-    const set = mods[i] && Array.isArray(mods[i].PRACTICE) ? mods[i].PRACTICE : [];
-    set.forEach((p, n) => {
-      out.push({
-        ...p,
-        id: questionId(quest.id, n),
-        worldId: world.id,
-        worldName: world.world,
-        questId: quest.id,
-        questTitle: quest.title
-      });
-    });
-  });
+  const out = worldProblems(world);
   poolCache.set(world.id, out);
   return out;
 }

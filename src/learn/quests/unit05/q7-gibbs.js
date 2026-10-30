@@ -4,7 +4,7 @@
  * The turbine hall's control room, on the heat kit (`table/kits/heat.js`). A plot of the net balance of a change against temperature,
  * with a dial that walks along it, and cards that each carry such a line. Whether a change runs on its own depends on two pulls, the heat it
  * takes in or gives out and the spreading it gains, and temperature turns up the second. Four stages and ONE click: the belief that a change
- * which takes heat in will not run by itself.
+ * which takes heat in will not run by itself. A sixth, typed stage sums formation free energies for ΔG° (CED 9.3).
  *
  *   1  PREDICT: a cold pack takes heat in as its salt dissolves; does it dissolve on its own?
  *   2  TEST: turn the dial to the lowest temperature at which it does   -> spontaneous change, free energy
@@ -25,7 +25,7 @@ import {
   heatTable, note, gCard, plotFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bspontaneous\b/i, introducedAt: 2 },
@@ -55,6 +55,9 @@ const HABER_DG = gibbsFreeEnergy(HABER.dH, HABER.dS, HABER.T);
 // Stage 5: melting ice takes in 6.01 kJ per mole and gains 22.0 J/(mol·K).
 const ICE = { dH: 6.01, dS: 22.0, Ts: [250, 260, 273, 285, 300] };
 const T_ICE = crossingTemperature(ICE.dH, ICE.dS);
+// Stage 6: CaCO3 -> CaO + CO2 from free energies of formation (kJ/mol).
+const GF = { reactant: { CaCO3: -1129 }, product: { CaO: -604, CO2: -394 } };
+const GF_DG = (GF.product.CaO + GF.product.CO2) - GF.reactant.CaCO3;
 
 /* ------------------------------------------------------------------
    THE FOUR STAGES
@@ -238,6 +241,42 @@ export const STAGES = [
       title: 'The Crossing',
       body: 'The net free energy change for melting ice crosses zero at 273 K, where ΔH = TΔS. Below 273 K, ΔG > 0 and ice remains solid; above 273 K, ΔG < 0 and melting is spontaneous.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-formation',
+    title: 'Free Energy From Formation',
+    prompt: 'Type ΔG° of this reaction at 298 K, in kJ, from the formation free energies on the plate.',
+    entry: { id: 'dgf', label: 'ΔG° at 298 K', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('facts', 'CaCO₃ → CaO + CO₂', { x: 52, y: 26 }, [
+          'ΔGf° CaCO₃ = −1129 kJ/mol',
+          'ΔGf° CaO = −604 kJ/mol',
+          'ΔGf° CO₂ = −394 kJ/mol',
+          'One mole of each'
+        ], { w: 70 })
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'Each substance in the equation has one formation free energy, and the equation has two sides.',
+      'Add the formation values for one side, add them for the other side, and combine the two totals.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'dgf');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
+      if (Math.abs(v - GF_DG) <= 0.6) return { ok: true };
+      if (Math.abs(v + GF_DG) <= 0.6) return { ok: false, msg: 'The sign is reversed: the totals were combined in the opposite order.' };
+      return { ok: false, msg: `${fixed(v, 0)} kJ does not match the two totals on the plate once they are combined.` };
+    },
+    reward: {
+      log: 'ΔG° came to +131 kJ.',
+      title: 'ΔG° From Formation Values',
+      body: 'ΔG° = ΣΔGf°(products) − ΣΔGf°(reactants) = (−604 − 394) − (−1129) = +131 kJ. A positive ΔG° means this decomposition does not run on its own at 298 K.'
+    }
   }
 ];
 
@@ -247,7 +286,8 @@ const NOTES = {
   2: ['Turn the "Temperature" dial, then type your answer in the field at the bottom.'],
   3: ['Drag each card into a tray.'],
   4: ['Type your answer in the field at the bottom.'],
-  5: ['Work it out, then type your answer in the field at the bottom.']
+  5: ['Work it out, then type your answer in the field at the bottom.'],
+  6: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -265,66 +305,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'A reaction has ΔH = −50 kJ/mol and ΔS = −100 J/(mol·K). What is ΔG at 300 K?',
-    options: [
-      { id: 'a', label: '−20 kJ/mol' },
-      { id: 'b', label: '+20 kJ/mol' },
-      { id: 'c', label: '−80 kJ/mol' },
-      { id: 'd', label: '+30 kJ/mol' }
-    ],
-    answer: 'a',
-    explanation: 'TΔS is 300 K × (−0.100 kJ/(mol·K)) = −30 kJ, so ΔG = −50 − (−30) = −20 kJ/mol.'
-  },
-  {
-    question: 'A change has ΔH > 0 and ΔS > 0. When is it spontaneous?',
-    options: [
-      { id: 'a', label: 'Only at high temperature' },
-      { id: 'b', label: 'Only at low temperature' },
-      { id: 'c', label: 'At every temperature' },
-      { id: 'd', label: 'At no temperature' }
-    ],
-    answer: 'a',
-    explanation: 'Entropy gain only outweighs the heat cost once T is large enough, so ΔG turns negative at high temperature.'
-  },
-  {
-    question: 'Melting has ΔH = +6.01 kJ/mol and ΔS = +22.0 J/(mol·K). At what temperature is ΔG zero?',
-    options: [
-      { id: 'a', label: '273 K' },
-      { id: 'b', label: '132 K' },
-      { id: 'c', label: '2.73 K' },
-      { id: 'd', label: '546 K' }
-    ],
-    answer: 'a',
-    explanation: 'Set ΔH = TΔS and solve: T = 6010 J/mol divided by 22.0 J/(mol·K), which is 273 K.'
-  },
-  {
-    question: 'An uphill reaction has ΔG = +60 kJ and is coupled to a reaction with ΔG = −90 kJ. What is the combined ΔG?',
-    options: [
-      { id: 'a', label: '−30 kJ' },
-      { id: 'b', label: '+30 kJ' },
-      { id: 'c', label: '+150 kJ' },
-      { id: 'd', label: '−150 kJ' }
-    ],
-    answer: 'a',
-    explanation: 'The two free energy changes add, giving +60 + (−90) = −30 kJ, so the coupled pair runs.'
-  },
-  {
-    question: 'Why does graphite not appear from a diamond at room temperature when ΔG is negative?',
-    options: [
-      { id: 'a', label: 'The change is far too slow because of a large activation energy' },
-      { id: 'b', label: 'A negative ΔG means the change is forbidden' },
-      { id: 'c', label: 'Diamond has a lower free energy than graphite' }
-    ],
-    answer: 'a',
-    explanation: 'ΔG tells you whether a change can run, not how fast, and a large barrier can make a favourable change immeasurably slow.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    ------------------------------------------------------------------ */
 
@@ -337,7 +317,8 @@ export const SOLUTIONS = [
   [{ type: { entry: 'T', value: '240' } }],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
   [{ type: { entry: 'dg', value: '-32.7' } }],
-  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }]
+  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }],
+  [{ type: { entry: 'dgf', value: '131' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -346,7 +327,8 @@ export const MISSES = [
   [{ type: { entry: 'T', value: '300' } }],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'low', 'low-t': 'high' })],
   [{ type: { entry: 'dg', value: '59210' } }],
-  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }]
+  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }],
+  [{ type: { entry: 'dgf', value: '-131' } }]
 ];
 
 function blankState() { return {}; }
@@ -370,5 +352,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { SALT, SALT_FIRST, T_SALT, ICE, T_ICE, HABER, HABER_DG };
+export const CHECKS = { SALT, SALT_FIRST, T_SALT, ICE, T_ICE, HABER, HABER_DG, GF, GF_DG };
 export { plotRead, plotAt };

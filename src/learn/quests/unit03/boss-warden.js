@@ -357,68 +357,6 @@ export const DEBRIEF = {
   ]
 };
 
-/* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Which of these ionic solids would you expect to have the highest melting point?',
-    options: [
-      { id: 'a', label: 'MgO' },
-      { id: 'b', label: 'NaCl' },
-      { id: 'c', label: 'KCl' },
-      { id: 'd', label: 'NaI' }
-    ],
-    answer: 'a',
-    explanation: 'Lattice energy rises with ion charge and falls with ion size. MgO has 2+ and 2− ions that are small, so it is held hardest and melts highest.'
-  },
-  {
-    question: 'In the Lewis structure of hydrogen cyanide, HCN, how many pairs are shared between the carbon and the nitrogen?',
-    options: [
-      { id: 'a', label: 'Three' },
-      { id: 'b', label: 'One' },
-      { id: 'c', label: 'Two' },
-      { id: 'd', label: 'Four' }
-    ],
-    answer: 'a',
-    explanation: 'HCN has 10 valence electrons. Carbon shares one pair with hydrogen and three with nitrogen, and nitrogen keeps one lone pair, so every atom has a full outer shell.'
-  },
-  {
-    question: 'Why is the angle between the hydrogen atoms in ammonia a little less than 109.5°?',
-    options: [
-      { id: 'a', label: 'Its lone pair pushes the bonding pairs closer together' },
-      { id: 'b', label: 'Nitrogen is larger than hydrogen' },
-      { id: 'c', label: 'The N–H bonds are double bonds' },
-      { id: 'd', label: 'Ammonia has no lone pair' }
-    ],
-    answer: 'a',
-    explanation: 'The lone pair on nitrogen takes more room than a bonding pair, squeezing the angle between the three hydrogen atoms to about 107 degrees.'
-  },
-  {
-    question: 'Which molecule is polar?',
-    options: [
-      { id: 'a', label: 'NH₃' },
-      { id: 'b', label: 'CO₂' },
-      { id: 'c', label: 'BF₃' },
-      { id: 'd', label: 'CCl₄' }
-    ],
-    answer: 'a',
-    explanation: 'Ammonia is a pyramid, so its bond dipoles add. The other three are symmetrical and their dipoles cancel.'
-  },
-  {
-    question: 'Which diatomic molecule is paramagnetic?',
-    options: [
-      { id: 'a', label: 'O₂' },
-      { id: 'b', label: 'N₂' },
-      { id: 'c', label: 'F₂' },
-      { id: 'd', label: 'H₂' }
-    ],
-    answer: 'a',
-    explanation: 'O₂ has two unpaired electrons in separate π* orbitals. N₂, F₂ and H₂ have every electron paired.'
-  }
-];
-
-
 /* ==================================================================
    THE GAME
    ================================================================== */

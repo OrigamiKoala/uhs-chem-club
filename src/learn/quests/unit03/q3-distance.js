@@ -301,67 +301,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'On a potential energy curve for two bonded atoms, what does the lowest point represent?',
-    options: [
-      { id: 'a', label: 'The bond length, where the energy is a minimum' },
-      { id: 'b', label: 'The separation at which the atoms are fully parted' },
-      { id: 'c', label: 'The point of greatest repulsion' },
-      { id: 'd', label: 'The point where the atoms have no energy' }
-    ],
-    answer: 'a',
-    explanation: 'The atoms are most stable at the separation where attraction and repulsion balance. That separation is the bond length, and the depth of the well there is the bond energy.'
-  },
-  {
-    question: 'Why is the H–H bond shorter than the Cl–Cl bond?',
-    options: [
-      { id: 'a', label: 'Hydrogen atoms are smaller, so their outer shells meet closer together' },
-      { id: 'b', label: 'Hydrogen atoms are lighter' },
-      { id: 'c', label: 'The H–H bond is weaker' },
-      { id: 'd', label: 'Hydrogen atoms carry a charge' }
-    ],
-    answer: 'a',
-    explanation: 'Atomic size sets how close two atoms can get. A hydrogen atom has one small shell, a chlorine atom three, so the chlorine pair sits further apart.'
-  },
-  {
-    question: 'Which carbon–carbon bond is the shortest and the strongest?',
-    options: [
-      { id: 'a', label: 'The triple bond' },
-      { id: 'b', label: 'The double bond' },
-      { id: 'c', label: 'The single bond' },
-      { id: 'd', label: 'All three are the same' }
-    ],
-    answer: 'a',
-    explanation: 'Each extra shared pair draws the atoms closer and holds them harder. C≡C is about 120 pm and 839 kJ/mol, against 154 pm and 348 kJ/mol for C–C.'
-  },
-  {
-    question: 'Which has the largest lattice energy?',
-    options: [
-      { id: 'a', label: 'MgO' },
-      { id: 'b', label: 'NaCl' },
-      { id: 'c', label: 'KCl' },
-      { id: 'd', label: 'NaF' }
-    ],
-    answer: 'a',
-    explanation: 'Lattice energy grows with the product of the ion charges and shrinks with the distance between them. MgO has 2+ and 2− ions that are also small.'
-  },
-  {
-    question: 'Sodium fluoride melts at a higher temperature than sodium chloride. What is the best explanation?',
-    options: [
-      { id: 'a', label: 'Fluoride ions are smaller, so the ions sit closer and are held more strongly' },
-      { id: 'b', label: 'Fluoride has a larger charge than chloride' },
-      { id: 'c', label: 'Sodium fluoride is made of molecules' },
-      { id: 'd', label: 'Sodium fluoride has covalent bonds' }
-    ],
-    answer: 'a',
-    explanation: 'Both ions carry one unit of charge, but fluoride is smaller, so the centres are closer and the lattice energy is larger. More heat is needed to free the ions.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the
    reducer by direct actions, by drag and by two taps. A hand is moved by setting its dial; the plot keeps what the

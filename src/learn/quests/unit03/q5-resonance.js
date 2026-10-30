@@ -361,67 +361,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Ozone is drawn with one double bond and one single bond, but the gauge reads the same length for both. What does that tell you?',
-    options: [
-      { id: 'a', label: 'The real molecule is a blend of two drawings, so both bonds are alike' },
-      { id: 'b', label: 'The gauge is broken' },
-      { id: 'c', label: 'Ozone has two double bonds' },
-      { id: 'd', label: 'Ozone has two single bonds' }
-    ],
-    answer: 'a',
-    explanation: 'Either drawing alone predicts one short bond and one long one. The measured equal lengths show the electrons are shared across both, which resonance describes.'
-  },
-  {
-    question: 'Two Lewis structures of the same molecule differ only in their formal charges. Which is usually the better?',
-    options: [
-      { id: 'a', label: 'The one whose formal charges are closest to zero' },
-      { id: 'b', label: 'The one with the most charges' },
-      { id: 'c', label: 'The one with a positive charge on the most electronegative atom' },
-      { id: 'd', label: 'The one with the most lone pairs' }
-    ],
-    answer: 'a',
-    explanation: 'Structures with formal charges near zero are more stable, and a negative charge belongs on the more electronegative atom.'
-  },
-  {
-    question: 'An atom brings 6 valence electrons. In a drawing it has two lone pairs and one double bond. What is its formal charge?',
-    options: [
-      { id: 'a', label: '0' },
-      { id: 'b', label: '+1' },
-      { id: 'c', label: '−1' },
-      { id: 'd', label: '+2' }
-    ],
-    answer: 'a',
-    explanation: 'Formal charge is 6 − (4 lone-pair electrons + 2 bonds) = 0.'
-  },
-  {
-    question: 'What is the bond order of each N–O bond in the nitrate ion, NO₃⁻?',
-    options: [
-      { id: 'a', label: '1⅓' },
-      { id: 'b', label: '1' },
-      { id: 'c', label: '2' },
-      { id: 'd', label: '1½' }
-    ],
-    answer: 'a',
-    explanation: 'Nitrate has four shared pairs spread over three equivalent bonds, so each has a bond order of 4/3.'
-  },
-  {
-    question: 'How many resonance structures does the carbonate ion have?',
-    options: [
-      { id: 'a', label: 'Three' },
-      { id: 'b', label: 'Two' },
-      { id: 'c', label: 'One' },
-      { id: 'd', label: 'Four' }
-    ],
-    answer: 'a',
-    explanation: 'The double bond can sit on any of the three oxygens, giving three equivalent structures.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN DROPS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the
    reducer by direct actions, by drag and by two taps. A deal is a tray piece dropped on a joint (`<slate>j<i><j>`) or on

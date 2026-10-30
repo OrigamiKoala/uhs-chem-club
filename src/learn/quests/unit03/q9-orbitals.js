@@ -191,67 +191,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'What is the bond order of N₂?',
-    options: [
-      { id: 'a', label: '3' },
-      { id: 'b', label: '2' },
-      { id: 'c', label: '1' },
-      { id: 'd', label: '2.5' }
-    ],
-    answer: 'a',
-    explanation: 'N₂ has 8 electrons in bonding orbitals and 2 in antibonding orbitals: (8 − 2)/2 = 3.'
-  },
-  {
-    question: 'Why does He₂ not exist as a stable molecule?',
-    options: [
-      { id: 'a', label: 'Its bonding and antibonding orbitals are both filled, so its bond order is zero' },
-      { id: 'b', label: 'Helium atoms repel each other electrically' },
-      { id: 'c', label: 'Helium has no electrons' },
-      { id: 'd', label: 'Helium atoms are too big' }
-    ],
-    answer: 'a',
-    explanation: 'Two electrons in the bonding orbital and two in the antibonding orbital cancel: (2 − 2)/2 = 0.'
-  },
-  {
-    question: 'Which statement about O₂ does a molecular orbital diagram explain, but a Lewis structure does not?',
-    options: [
-      { id: 'a', label: 'It is attracted to a magnet because it has two unpaired electrons' },
-      { id: 'b', label: 'It has a double bond' },
-      { id: 'c', label: 'It is a gas at room temperature' },
-      { id: 'd', label: 'It has 12 valence electrons' }
-    ],
-    answer: 'a',
-    explanation: 'The last two electrons go one each into two degenerate π* orbitals, so O₂ is paramagnetic.'
-  },
-  {
-    question: 'Put O₂⁺, O₂ and O₂⁻ in order of increasing bond length.',
-    options: [
-      { id: 'a', label: 'O₂⁺ < O₂ < O₂⁻' },
-      { id: 'b', label: 'O₂⁻ < O₂ < O₂⁺' },
-      { id: 'c', label: 'O₂ < O₂⁺ < O₂⁻' },
-      { id: 'd', label: 'All the same' }
-    ],
-    answer: 'a',
-    explanation: 'Bond orders are 2.5, 2 and 1.5. The higher the bond order, the shorter the bond.'
-  },
-  {
-    question: '(Beyond the exam.) Why is B₂ paramagnetic?',
-    options: [
-      { id: 'a', label: 'Its last two electrons occupy separate π orbitals, since π lies below σ in B₂' },
-      { id: 'b', label: 'It has an odd number of electrons' },
-      { id: 'c', label: 'Its bond order is zero' },
-      { id: 'd', label: 'It has a triple bond' }
-    ],
-    answer: 'a',
-    explanation: 'For B₂ the two π2p orbitals are filled before σ2p, so the last two electrons enter them singly.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. A gas card is put in the test slot and the magnet run, then filed; electrons are

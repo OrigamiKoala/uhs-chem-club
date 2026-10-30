@@ -507,67 +507,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Solid sodium chloride does not conduct electricity, but molten sodium chloride does. Why?',
-    options: [
-      { id: 'a', label: 'Melting turns the ions into metal atoms' },
-      { id: 'b', label: 'Its ions are locked in the lattice when solid and free to move when molten' },
-      { id: 'c', label: 'Heat itself carries the current' },
-      { id: 'd', label: 'Melting adds electrons to the sample' }
-    ],
-    answer: 'b',
-    explanation: 'A current is charge on the move. Sodium chloride has charges either way, but in the solid lattice they are pinned in place; melting frees them, so the charge can travel.'
-  },
-  {
-    question: 'Sugar melts at about 186 degrees and salt at 801. What does that difference tell you?',
-    options: [
-      { id: 'a', label: 'Sugar molecules are held to each other by a much weaker pull than the one between ions' },
-      { id: 'b', label: 'The bonds inside a sugar molecule are weaker than the bonds inside salt' },
-      { id: 'c', label: 'Sugar is a smaller molecule than salt' },
-      { id: 'd', label: 'Salt has more electrons' }
-    ],
-    answer: 'a',
-    explanation: 'Melting sugar only separates whole molecules from each other, and the pull between molecules is weak. Melting salt has to pull apart an ionic lattice, where every ion is gripped by the ions all round it.'
-  },
-  {
-    question: 'Why is an ionic solid hard but brittle — strong to press on, yet it shatters when struck?',
-    options: [
-      { id: 'a', label: 'Its bonds are weak in one direction only' },
-      { id: 'b', label: 'Striking it slides one layer by a step, so like charges meet and repel' },
-      { id: 'c', label: 'It is full of trapped air' },
-      { id: 'd', label: 'The hammer adds charge to it' }
-    ],
-    answer: 'b',
-    explanation: 'In the lattice every ion is surrounded by ions of opposite charge, which is a strong grip. Shift one plane by one ion and all those attractions become repulsions at once, and the crystal splits along that plane.'
-  },
-  {
-    question: 'Diamond melts above 3500 degrees; iodine melts at 114. Both are made only of nonmetals. Why the enormous difference?',
-    options: [
-      { id: 'a', label: 'Diamond is ionic and iodine is covalent' },
-      { id: 'b', label: 'Iodine atoms are heavier, so they need less heat' },
-      { id: 'c', label: 'Diamond is one covalent network, so melting it breaks covalent bonds; iodine is separate molecules held by a weak pull' },
-      { id: 'd', label: 'Diamond conducts heat away faster' }
-    ],
-    answer: 'c',
-    explanation: 'Both are covalent, but they are built differently. Every carbon in diamond is bonded on to its neighbours right through the crystal, so melting it means breaking those bonds; melting iodine only separates I2 molecules that were barely holding on to each other.'
-  },
-  {
-    question: 'An unknown solid melts at 60 degrees, does not conduct as a solid, and still does not conduct once it is molten. How is it built?',
-    options: [
-      { id: 'a', label: 'An ionic lattice' },
-      { id: 'b', label: 'A covalent network' },
-      { id: 'c', label: 'Separate molecules' },
-      { id: 'd', label: 'A metal' }
-    ],
-    answer: 'c',
-    explanation: 'A low melting point rules out both a lattice and a network, which need hundreds or thousands of degrees. Failing to conduct even when molten rules out ions, so what melted was the weak pull between separate molecules.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the
    reducer by direct actions, by drag and by two taps. A block is slid onto the hotplate by setting it down

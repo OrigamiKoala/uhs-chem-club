@@ -42,7 +42,7 @@ For quantitative content, follow Brilliant's approach, not plug-and-chug:
 
 ## 0. Set up (once)
 
-1. Read PRODUCT.md, CLAUDE.md, `docs/Avalon problems and clashing rules.md`, and the world's quest files in `src/learn/quests/{unit}/`.
+1. Read PRODUCT.md, CLAUDE.md, `docs/archive/2026-10-29/Avalon problems and clashing rules.md`, and the world's quest files in `src/learn/quests/{unit}/`.
 2. `npm run dev -- --port 3011 --strictPort` (use another port if taken). Open it in the built-in browser, **3D On**. **Continue as Guest**, join a guild, skip onboarding and cinematics (Esc or Skip).
 3. Unlock every quest in the world (quests open in order): in the page console, `const {session}=await import('/src/session.js'); for (const q of [<every quest id in the world>]) session.markLearnQuestComplete('{unit}', q)`.
 4. Landing on a bench: a deep link first flies the ship. **Set the hash to `#/learn/{unit}/<quest>` and reload the page**; you land on the bench. Skip the Tour dialog.

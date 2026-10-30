@@ -338,67 +338,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'A gas at 120 kPa is compressed at a constant temperature to one third of its volume. What is its new pressure?',
-    options: [
-      { id: 'a', label: '360 kPa' },
-      { id: 'b', label: '40 kPa' },
-      { id: 'c', label: '120 kPa' },
-      { id: 'd', label: '240 kPa' }
-    ],
-    answer: 'a',
-    explanation: 'At a constant temperature the pressure goes inversely with the volume (Boyle\'s law), so one third of the volume gives three times the pressure: 360 kPa.'
-  },
-  {
-    question: 'A gas under a light piston starts at 27 °C. Roughly what temperature doubles its volume?',
-    options: [
-      { id: 'a', label: '327 °C' },
-      { id: 'b', label: '54 °C' },
-      { id: 'c', label: '127 °C' },
-      { id: 'd', label: '600 °C' }
-    ],
-    answer: 'a',
-    explanation: 'The volume follows the kelvin temperature: 27 °C is 300 K, twice that is 600 K, which is 327 °C.'
-  },
-  {
-    question: 'A mixture of 3.0 mol of nitrogen and 1.0 mol of oxygen has a total pressure of 200 kPa. What is the partial pressure of the oxygen?',
-    options: [
-      { id: 'a', label: '50 kPa' },
-      { id: 'b', label: '150 kPa' },
-      { id: 'c', label: '25 kPa' },
-      { id: 'd', label: '100 kPa' }
-    ],
-    answer: 'a',
-    explanation: 'The mole fraction of oxygen is 1.0 / 4.0 = 0.25, and its partial pressure is 0.25 × 200 = 50 kPa.'
-  },
-  {
-    question: 'A chamber of hydrogen and a chamber of carbon dioxide each have a pinhole. Which empties first?',
-    options: [
-      { id: 'a', label: 'Hydrogen, whose particles are lighter and faster' },
-      { id: 'b', label: 'Carbon dioxide, whose particles are heavier' },
-      { id: 'c', label: 'They empty together' },
-      { id: 'd', label: 'Neither empties' }
-    ],
-    answer: 'a',
-    explanation: 'At one temperature the lighter particles move faster and reach the hole more often.'
-  },
-  {
-    question: 'A sealed rigid cylinder of gas is cooled from 400 K to 200 K. What happens to its pressure?',
-    options: [
-      { id: 'a', label: 'It halves' },
-      { id: 'b', label: 'It doubles' },
-      { id: 'c', label: 'It stays the same' },
-      { id: 'd', label: 'It falls to a quarter' }
-    ],
-    answer: 'a',
-    explanation: 'At a fixed volume the pressure is proportional to the kelvin temperature (Gay-Lussac\'s law), so halving the kelvin temperature halves the pressure.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
    actions, by drag and by two taps. Nothing here says what a reading is.

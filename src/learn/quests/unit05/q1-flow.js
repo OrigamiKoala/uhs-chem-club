@@ -276,63 +276,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Two identical copper blocks at 90 °C and 30 °C are placed in contact inside an insulated box. At what temperature do both blocks finish?',
-    options: [
-      { id: 'a', label: '60 °C' },
-      { id: 'b', label: '45 °C' },
-      { id: 'c', label: '75 °C' },
-      { id: 'd', label: '120 °C' }
-    ],
-    answer: 'a',
-    explanation: 'Equal masses of the same metal change by equal amounts, so the blocks meet halfway between their starting temperatures.'
-  },
-  {
-    question: 'Citric acid and baking soda react in water and the solution cools from 24 °C to 15 °C. Which statement is correct?',
-    options: [
-      { id: 'a', label: 'The reaction is endothermic, because the chemicals absorbed heat from the water' },
-      { id: 'b', label: 'The reaction is exothermic, because the thermometer reading fell' },
-      { id: 'c', label: 'No heat crossed between the chemicals and the water' }
-    ],
-    answer: 'a',
-    explanation: 'A cooling bath means heat left the water and entered the reacting chemicals, which is what endothermic means.'
-  },
-  {
-    question: 'On an energy diagram for an exothermic reaction, how do the shelves of the products and the reactants compare?',
-    options: [
-      { id: 'a', label: 'The products sit lower, because the system released energy' },
-      { id: 'b', label: 'The products sit higher, because the bath warmed up' },
-      { id: 'c', label: 'The two shelves sit at the same height' }
-    ],
-    answer: 'a',
-    explanation: 'The energy released to warm the bath comes from the system dropping to a lower shelf.'
-  },
-  {
-    question: 'Why can a 1000 g pot of water at 50 °C melt more ice than a 10 g iron nail at 200 °C?',
-    options: [
-      { id: 'a', label: 'The pot holds far more particles, so it has far more energy to give up in total' },
-      { id: 'b', label: 'Water molecules at 50 °C move faster on average than iron atoms at 200 °C' },
-      { id: 'c', label: 'Heat flows from colder objects into hotter objects when water is present' }
-    ],
-    answer: 'a',
-    explanation: 'Temperature is an average per particle, but the heat a body can deliver depends on how many particles share the energy.'
-  },
-  {
-    question: 'Which of these changes is exothermic?',
-    options: [
-      { id: 'a', label: 'Liquid water freezing into ice' },
-      { id: 'b', label: 'Liquid water boiling into steam' },
-      { id: 'c', label: 'Dry ice turning into carbon dioxide gas' }
-    ],
-    answer: 'a',
-    explanation: 'Freezing lets particles lock into stronger attractions and releases heat. Boiling and sublimation need heat to pull particles apart.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
    by drag and by two taps. Nothing here says what a reading is.

@@ -1,7 +1,7 @@
 /**
  * drills.js — the Drill Deck: every practice question in the Learn track, in one place.
  *
- * The questions live in the quest modules (five per built quest); this screen
+ * The questions live in the question bank (`learn/bank.js`); this screen
  * pools them into rounds and keeps the score. All the choosing and counting is
  * in `learn/drills.js` (pure, verified in Node); this file is only the table
  * the player sits at.
@@ -21,6 +21,8 @@ import { stage } from '../three/stage.js';
 import { session } from '../session.js';
 import { pageHeader, statRow, esc } from '../ui/layout.js';
 import { getWorld } from '../learn/curriculum.js';
+import { worldWorked } from '../learn/bank.js';
+import { mountWorked } from '../ui/worked-problem.js';
 import { soundscape } from '../audio/soundscape.js';
 import {
   RUN_LENGTH, DAILY_LENGTH, SPRINT_SECONDS, SPRINT_LIVES, TIERS,
@@ -186,12 +188,16 @@ export function renderDrills(container, params = {}) {
           <p class="drill-fine">Drills pay no XP and never reach Standings. Stars, streaks and tiers are only for you.</p>
         </section>
 
+        ${workedHtml(p)}
+
         <div class="drill-foot">
           <a href="#/learn" class="btn-secondary quest-btn-sm" style="text-decoration: none;">Learn Road</a>
         </div>
       </div>
     `;
 
+    container.querySelectorAll('[data-worked]').forEach(btn =>
+      btn.addEventListener('click', () => openWorked(btn.dataset.worked)));
     container.querySelector('#drill-scope')?.addEventListener('change', e => {
       scope = e.target.value;
       renderHome();
@@ -200,6 +206,47 @@ export function renderDrills(container, params = {}) {
       btn.addEventListener('click', () => start(btn.dataset.start)));
     container.querySelectorAll('[data-drill-world]').forEach(btn =>
       btn.addEventListener('click', () => { scope = btn.dataset.drillWorld; start('run'); }));
+  }
+
+  /* ---------------------------------------------------------------
+     WORKED PROBLEMS
+     --------------------------------------------------------------- */
+  function workedHtml(p) {
+    const rows = drillWorlds().flatMap(w => worldWorked(w));
+    if (!rows.length) return '';
+    return `
+      <section class="plate drill-mastery" aria-labelledby="drill-worked-title">
+        <div class="m-head drill-mastery-head">
+          <h2 id="drill-worked-title" class="section-title">Worked Problems</h2>
+          <span class="eyebrow">Long problems taken one step at a time.</span>
+        </div>
+        <div class="drill-mastery-list">
+          ${rows.map(wk => `
+            <div class="drill-world-row">
+              <div class="drill-world-name">
+                <span class="eyebrow">${esc(wk.worldName)} · ${esc(wk.questTitle)}</span>
+                <strong>${esc(wk.title)}</strong>
+              </div>
+              <span class="tag ${p.q[wk.id]?.c ? 'live' : ''}">${p.q[wk.id]?.c ? 'Worked' : 'Not yet'}</span>
+              <button type="button" class="btn-secondary quest-btn-sm m-tap" data-worked="${esc(wk.id)}">Open</button>
+            </div>`).join('')}
+        </div>
+      </section>`;
+  }
+
+  function openWorked(id) {
+    const wk = drillWorlds().flatMap(w => worldWorked(w)).find(x => x.id === id);
+    if (!wk) return;
+    stopRun();
+    container.innerHTML = `<div class="screen-container m-screen m-drills"><section class="plate drill-run"><div id="drill-worked-host"></div></section></div>`;
+    mountWorked(container.querySelector('#drill-worked-host'), wk, {
+      onDone: () => {
+        recordAnswer(practice(), wk.id, true);
+        session.savePractice();
+        renderHome();
+      },
+      onLeave: () => renderHome()
+    });
   }
 
   /* ---------------------------------------------------------------

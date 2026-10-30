@@ -11,6 +11,7 @@
 
 import { SPECIFIC_HEAT_WATER, hessStackEnthalpy, crossingTemperature, gibbsFreeEnergy } from '../learn/engine/thermodata.js';
 import { mulberry32 } from '../learn/engine/plates.js';
+import { EMBER_MECHANISMS } from './story-scenes-ember-mech.js';
 import { C as KIT, disc, line, legacyText as text, ground } from './story-kit.js';
 const C = { ...KIT, cold: '#6f8fb0', warm: '#c0652b' };
 
@@ -142,4 +143,6 @@ export const EMBER_SCENES = {
   'frost-manifold': frostManifold,
   'two-routes': twoRoutes,
   'seal-crossing': sealCrossing,
+  // The mechanism pictures (heat swapping, bonds summed, a gas spreading) are in their own file.
+  ...EMBER_MECHANISMS
 };

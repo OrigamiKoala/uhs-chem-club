@@ -3770,3 +3770,39 @@ body.bench-leaning .boss-hud {
   font-size: 0.95rem;
   letter-spacing: 0.04em;
 }
+
+/* ---- Bench practice and worked problems (`ui/bench-practice.js`, `ui/worked-problem.js`) ---- */
+.lq-practice-keys [hidden] { display: none; }
+
+.bp-worked { display: flex; flex-direction: column; gap: 0.75rem; }
+.bp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border-durasteel);
+}
+.bp-title { margin: 3px 0 0; }
+.bp-setup { font-size: 0.95rem; line-height: 1.55; color: var(--text-primary); margin: 0; }
+.bp-say { font-size: 1rem; line-height: 1.45; margin: 0.25rem 0 0; color: var(--text-bright); }
+
+.bp-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.bp-done {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem 0.75rem;
+  padding: 0.45rem 0.7rem;
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-green);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.bp-done-q { color: var(--text-muted); }
+.bp-done-a { font-family: var(--font-mono); color: var(--text-bright); text-align: right; }
+.bp-done-w { grid-column: 1 / -1; color: var(--text-primary); }
+
+.bp-input-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.bp-input { width: 9rem; font-family: var(--font-mono); }
+.bp-unit { font-family: var(--font-mono); color: var(--text-muted); }

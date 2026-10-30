@@ -19,7 +19,8 @@ const LEAKS = {
     2: [/\b250\b/, /lowest/i, /spreading|spread/i, /sign/i],
     3: [/cross/i, /flips?/i],
     4: [/32\.7/, /\b59\.3\b/, /convert/i],
-    5: [/\b273\b/, /zero/i, /divid/i]
+    5: [/\b273\b/, /zero/i, /divid/i],
+    6: [/\b131\b/, /subtract|minus/i]
   },
   'q6-entropy': {
     2: [/outnumber/i, /\bmost\b/i, /\bspread\b/i, /\b70\b|\b68\b/],
@@ -42,14 +43,16 @@ const LEAKS = {
     1: [/\b160\b/, /divid/i, /per mole.*8,?000/i],
     2: [/\b48\b/, /six|6 ?×|times/i, /proportion/i],
     4: [/per gram/i, /weigh/i, /lightest/i, /\bmass\b/i],
-    5: [/\b858\b|\b860\b/, /1\.5/, /times/i, /coefficient/i]
+    5: [/\b858\b|\b860\b/, /1\.5/, /times/i, /coefficient/i],
+    8: [/\b100\b/, /\bsubtract|minus/i]
   },
   'q2-calorimetry': {
     2: [/tenth/i, /less energy/i, /\bsmaller\b/i, /needs? (a )?(smaller|lower)/i],
     3: [/multipl/i, /4\.184/, /2092/i],
     4: [/334/, /fusion/i, /\bmelting (takes|costs)/i],
     5: [/\bcopper\b/i, /\bc\b.*\b0\.\d/i, /\bmass\b/i],
-    6: [/multipl/i, /4\.184/, /\bmass\b/i]
+    6: [/multipl/i, /4\.184/, /\bmass\b/i],
+    8: [/25\.7/, /\badd\b/i, /2260/]
   },
   'q1-flow': {
     1: [/halfway/i, /\baverage\b/i, /\bmiddle\b/i],
@@ -157,7 +160,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e2 = mods['q2-calorimetry'];
   if (e2) {
     const q = 'unit05/q2-calorimetry';
-    holds(e2.STAGES.length === 7, `${q} should have seven stages`);
+    holds(e2.STAGES.length === 8, `${q} should have eight stages`);
     {
       const t = done(e2, 1);
       near(HK.cupRead(t, 'iron').dT, HK.cupRead(t, 'water').dT, 0.1, `${q} stage 2 (equal rises)`);
@@ -202,6 +205,9 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     {
       // Ice at 0 degrees to steam at 100: melt, warm, boil.
       near(e2.CHECKS.Q_CURVE, (10 * 334 + 10 * 4.184 * 100 + 10 * 2260) / 1000, 1e-9, `${q} stage 7 (the heat for the whole path)`);
+      near(e2.CHECKS.Q_COND, (10 * 2260 + 10 * 4.184 * 75) / 1000, 1e-9, `${q} stage 8 (steam to 25 °C water)`);
+      same(e2.STAGES[7].check(e2.stateFor(7, e2.SOLUTIONS[7])).ok, true, `${q} stage 8 (the solution)`);
+      same(e2.STAGES[7].check(e2.stateFor(7, e2.MISSES[7])).ok, false, `${q} stage 8 (the miss)`);
       same(e2.STAGES[6].check(e2.stateFor(6, e2.SOLUTIONS[6])).ok, true, `${q} stage 7 (the solution)`);
       same(e2.STAGES[6].check(e2.stateFor(6, e2.MISSES[6])).ok, false, `${q} stage 7 (the miss)`);
       same(e2.STAGES[6].check(e2.stateFor(6, {})).notYet, true, `${q} stage 7 (an empty field)`);
@@ -211,6 +217,13 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   /* ---- q3-enthalpy ---- */
   const e3 = mods['q3-enthalpy'];
   if (e3) {
+    {
+      const { BARRIER, EA_REVERSE } = e3.CHECKS;
+      near(EA_REVERSE, 100, 1e-9, 'unit05/q3-enthalpy stage 8 (the reverse barrier)');
+      same(e3.STAGES[7].check(e3.stateFor(7, e3.SOLUTIONS[7])).ok, true, 'unit05/q3-enthalpy stage 8 (the solution)');
+      same(e3.STAGES[7].check(e3.stateFor(7, e3.MISSES[7])).ok, false, 'unit05/q3-enthalpy stage 8 (the miss)');
+      holds(BARRIER.peak > BARRIER.r && BARRIER.peak > BARRIER.p, 'unit05/q3-enthalpy stage 8: the hill is not above both shelves');
+    }
     const q = 'unit05/q3-enthalpy';
     {
       // The cup caught 8 kJ from 0.05 mol: 160 kJ for every mole, and the chart that is right drops by exactly that.
@@ -426,6 +439,13 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(T_ICE, 273, 1, `${q} stage 5 (the melting point)`);
       near(Number(done(e7, 4).entries.T), T_ICE, 2, `${q} stage 5 (the figure typed)`);
       holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 4), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 5: the dial has no setting at the melting point`);
+    }
+    {
+      const { GF, GF_DG } = e7.CHECKS;
+      near(GF_DG, 131, 0.1, `${q} stage 6 (ΔG° from formation values)`);
+      near(Number(done(e7, 5).entries.dgf), GF_DG, 0.6, `${q} stage 6 (the figure typed)`);
+      same(e7.STAGES[5].check(e7.stateFor(5, e7.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
+      same(e7.STAGES[5].check(e7.stateFor(5, e7.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
     }
   }
 

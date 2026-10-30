@@ -351,67 +351,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'How many lone pairs are on the oxygen atom in a Lewis structure of H₂O?',
-    options: [
-      { id: 'a', label: 'Two' },
-      { id: 'b', label: 'One' },
-      { id: 'c', label: 'Three' },
-      { id: 'd', label: 'None' }
-    ],
-    answer: 'a',
-    explanation: 'Water has eight valence electrons. Two bonds use four, and the remaining four sit on oxygen as two lone pairs.'
-  },
-  {
-    question: 'What is the best Lewis structure for CO₂?',
-    options: [
-      { id: 'a', label: 'Two double bonds, with two lone pairs on each oxygen' },
-      { id: 'b', label: 'Two single bonds, with three lone pairs on each oxygen' },
-      { id: 'c', label: 'One triple and one single bond' },
-      { id: 'd', label: 'Two double bonds, with no lone pairs' }
-    ],
-    answer: 'a',
-    explanation: 'With 16 valence electrons, two double bonds give carbon and both oxygens eight electrons each.'
-  },
-  {
-    question: 'How many electrons does the Lewis structure of the NH₄⁺ ion contain?',
-    options: [
-      { id: 'a', label: '8' },
-      { id: 'b', label: '9' },
-      { id: 'c', label: '10' },
-      { id: 'd', label: '5' }
-    ],
-    answer: 'a',
-    explanation: 'Nitrogen brings 5 and four hydrogens bring 4, which is 9. The positive charge removes one electron, leaving 8.'
-  },
-  {
-    question: 'Why does boron in BF₃ have only six electrons round it?',
-    options: [
-      { id: 'a', label: 'Boron has only three valence electrons to share, and fluorine does not form a second bond to it' },
-      { id: 'b', label: 'Boron cannot bond to fluorine' },
-      { id: 'c', label: 'Fluorine has an expanded octet' },
-      { id: 'd', label: 'The molecule has an unpaired electron' }
-    ],
-    answer: 'a',
-    explanation: 'Boron brings three electrons, so three single bonds give it six. Fluorine is too electronegative to share more, so the octet stays incomplete.'
-  },
-  {
-    question: 'Which of these can have an expanded octet?',
-    options: [
-      { id: 'a', label: 'Sulfur in SF₆' },
-      { id: 'b', label: 'Nitrogen in NH₃' },
-      { id: 'c', label: 'Oxygen in H₂O' },
-      { id: 'd', label: 'Carbon in CH₄' }
-    ],
-    answer: 'a',
-    explanation: 'Only atoms on the third period or below have room for more than eight electrons, so sulfur holds twelve in SF₆.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN DEALS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one
    through the reducer by direct actions, by drag and by two taps. A deal is a tray piece dropped on

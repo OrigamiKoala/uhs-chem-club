@@ -103,18 +103,57 @@ export const QUEST_STORY = {
   'unit03/q3-distance': {
     scene: 'well-depth',
     beats: [
-      { to: 0.25, say: 'Two atoms settle where the pull between them and the push between their nuclei balance. That sets how long the bond is and how much it costs to break.' },
-      { to: 0.5, say: 'A bond is a well: the deeper it is, the more energy it takes to pull the atoms apart. More shared pairs sit closer and hold harder.' },
-      { to: 0.75, say: 'Every bond length and bond energy in a table is a point on one of these curves, so a breaker charge can be loaded for the bond it has to beat.' }
+      { to: 0.4, say: 'Two atoms settle where the pull between them and the push between their nuclei balance. That sets how long the bond is and how much it costs to break.' },
+      { to: 0.65, say: 'A bond is a well: the deeper it is, the more energy it takes to pull the atoms apart. More shared pairs sit closer and hold harder.' },
+      { to: 0.85, say: 'Every bond length and bond energy in a table is a point on one of these curves, so a breaker charge can be loaded for the bond it has to beat.' }
     ],
     filed: 'Filed: the breaker charges are sized to the strongest bond in the pass.'
+  },
+  'unit03/q4-dots': {
+    scene: 'lewis-count',
+    beats: [
+      { to: 0.26, say: 'Count first: carbon brings 4 valence electrons and each oxygen 6, so the Lewis structure of carbon dioxide has 16 to place.' },
+      { to: 0.48, say: 'Bonds go in first and use 4 of them. Lone pairs then fill each outer oxygen to an octet, and the 12 that are left are all used.' },
+      { to: 0.72, say: 'The central atom has only four electrons around it, short of an octet, and none are left to give it.' },
+      { to: 0.92, say: 'So each oxygen shares one of its lone pairs. Both single bonds become double bonds, and every atom counts eight.' }
+    ],
+    filed: 'Filed: any molecule in the pass can be drawn from its formula by counting valence electrons first.'
+  },
+  'unit03/q5-resonance': {
+    scene: 'resonance-hybrid',
+    beats: [
+      { to: 0.28, say: 'Ozone can be drawn with a double bond on the left and a single bond on the right. Drawn that way, one bond would be short and the other long.' },
+      { to: 0.52, say: 'The other drawing swaps them, and it fits the formula just as well. Neither one matches what is measured.' },
+      { to: 0.78, say: 'Both bonds measure 128 pm, between a double bond and a single: a bond order of 1.5. The molecule is not flipping between drawings.' },
+      { to: 0.92, say: 'Each end carries a formal charge of half a minus. The structures exist on paper, and the real molecule is their average.' }
+    ],
+    filed: 'Filed: where one drawing cannot fit the measured bonds, resonance structures averaged together can.'
+  },
+  'unit03/q6-shape': {
+    scene: 'domain-shapes',
+    beats: [
+      { to: 0.27, say: 'Electron domains repel, so they settle as far apart as they can. Four of them point to the corners of a tetrahedron, 109.5° apart.' },
+      { to: 0.5, say: 'Swap one bonded atom for a lone pair and the shape is trigonal pyramidal. A lone pair pushes harder, so the bond angle closes to 107°.' },
+      { to: 0.76, say: 'With two lone pairs the shape is bent and the angle closes to 104.5°. Count the domains, then the lone pairs, and the shape follows.' }
+    ],
+    filed: 'Filed: any molecule in the pass can be given a shape from its formula alone.'
+  },
+  'unit03/q8-hybrid': {
+    scene: 'hybrid-mix',
+    beats: [
+      { to: 0.26, say: 'A carbon atom has one s orbital and three p orbitals: four orbitals of two different shapes.' },
+      { to: 0.5, say: 'Mixed, they become four equal sp³ hybrid orbitals, 109.5° apart. That is the angle carbon\'s bonds make in methane.' },
+      { to: 0.76, say: 'In a double bond one overlap lies along the axis, a sigma bond, and a second lies above and below it, a pi bond.' },
+      { to: 0.92, say: 'Turn one end of the bond and the pi overlap shrinks to nothing, so a double bond has restricted rotation. The sigma bond is unchanged.' }
+    ],
+    filed: 'Filed: sigma and pi overlap can be counted from a molecule\'s structure alone.'
   },
   'unit03/q7-polarity': {
     scene: 'field-swing',
     beats: [
       { to: 0.25, say: 'A bond is polar when its atoms pull the pair unequally, and a molecule is polar when those pulls do not cancel.' },
-      { to: 0.5, say: 'Shape decides: water swung round in the field, while carbon dioxide stayed put, however polar its bonds.' },
-      { to: 0.75, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. A charged rod bent the stream of water too, so a whole liquid shows what its molecules do.' }
+      { to: 0.8, say: 'Shape decides: water swung round in the field, while carbon dioxide stayed put, however polar its bonds.' },
+      { to: 0.9, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. A charged rod bent the stream of water too, so a whole liquid shows what its molecules do.' }
     ],
     filed: 'Filed: the gases that cling to the rescue gear are the polar ones, and a charged rod can pick them out.'
   },
@@ -221,6 +260,42 @@ export const QUEST_STORY = {
       { to: 0.75, say: 'On the overlook, the Fifth\'s manifold is furred with frost in the middle of a hot caldera. Frost on the pipes means heat is going into the manifold.' }
     ],
     filed: 'Filed: the manifold is taking heat in, so something inside it is running an endothermic change.'
+  },
+  'unit05/q2-calorimetry': {
+    scene: 'heat-swap',
+    beats: [
+      { to: 0.3, say: 'Drop a hot block into cool water and the block cools while the water warms. Heat moves until the two read the same temperature.' },
+      { to: 0.64, say: 'They meet where the heat the block lost has gone into the water. Nothing is made or lost on the way.' },
+      { to: 0.86, say: 'Heat follows q = m × c × ΔT, and the two sides come to the same number of joules. A calorimeter measures one side to learn the other.' }
+    ],
+    filed: 'Filed: a calorimeter reads a reaction\'s heat from the temperature change of a known mass of water.'
+  },
+  'unit05/q3-enthalpy': {
+    scene: 'fuel-bars',
+    beats: [
+      { to: 0.3, say: 'The heat a reaction gives out grows in step with how much reacts: twice the moles, twice the heat.' },
+      { to: 0.6, say: 'Per mole, methane gives out the most of these four fuels and hydrogen the least.' },
+      { to: 0.85, say: 'Per gram the order turns over, and hydrogen leads by a wide margin. A mole of hydrogen weighs so little that its mass carries a lot of heat.' }
+    ],
+    filed: 'Filed: a fuel\'s heat can be worked out from its moles or its grams before any of it is burned.'
+  },
+  'unit05/q4-bonds': {
+    scene: 'bond-ledger',
+    beats: [
+      { to: 0.2, say: 'Breaking a bond takes energy in. Pulling the hydrogen pair apart costs 436 kJ for every mole.' },
+      { to: 0.4, say: 'Splitting chlorine costs another 242, so four separate atoms stand 678 kJ above where the reaction began.' },
+      { to: 0.78, say: 'Forming a bond gives energy back, 431 for each H–Cl. Two of them return 862, more than was paid, so the reaction gives out 184 kJ.' }
+    ],
+    filed: 'Filed: adding the bonds broken and the bonds formed predicts a reaction\'s heat without running it.'
+  },
+  'unit05/q6-entropy': {
+    scene: 'spread-count',
+    beats: [
+      { to: 0.4, say: 'Lift the partition and the gas spreads through the whole box, though nothing pushes it there.' },
+      { to: 0.7, say: 'Count the ways eight particles can split between the halves. An even split can happen in 70 ways, and all eight on one side in just 1.' },
+      { to: 0.9, say: 'That count of ways is what entropy measures. A gas spreads out because spread-out arrangements are overwhelmingly the most numerous.' }
+    ],
+    filed: 'Filed: a change can now be scored by how many more ways it opens up, as well as by its heat.'
   },
   'unit05/q5-hess': {
     scene: 'two-routes',

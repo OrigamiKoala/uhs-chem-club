@@ -400,67 +400,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'According to kinetic molecular theory, what causes the pressure of a gas?',
-    options: [
-      { id: 'a', label: 'Particles colliding with the walls of the container' },
-      { id: 'b', label: 'The weight of the gas pressing down on its container' },
-      { id: 'c', label: 'Attractions between the particles' },
-      { id: 'd', label: 'The particles being at rest against the walls' }
-    ],
-    answer: 'a',
-    explanation: 'The pressure is the combined force of countless collisions between moving particles and the container walls, divided by the wall area.'
-  },
-  {
-    question: 'Gauges are fitted to the roof, the side wall and the floor of a sealed box of gas. How do the three readings compare?',
-    options: [
-      { id: 'a', label: 'They are all the same' },
-      { id: 'b', label: 'The floor reads the most, because the gas is heavy' },
-      { id: 'c', label: 'The roof reads the most, because the gas rises' },
-      { id: 'd', label: 'The side wall reads the most, because it is the widest' }
-    ],
-    answer: 'a',
-    explanation: 'The particles fly in every direction and knock every wall alike, so the pressure is the same on all of them.'
-  },
-  {
-    question: 'A piston squeezes a gas into half the room at the same temperature. What happens to the knocks on the walls and to the pressure?',
-    options: [
-      { id: 'a', label: 'Both double' },
-      { id: 'b', label: 'Both halve' },
-      { id: 'c', label: 'The knocks double and the pressure stays the same' },
-      { id: 'd', label: 'Neither changes' }
-    ],
-    answer: 'a',
-    explanation: 'The same particles in half the room reach the walls twice as often, so the knocks double and so does the pressure.'
-  },
-  {
-    question: 'A sealed, rigid container of gas is heated. What happens to the average kinetic energy of the particles and to the pressure?',
-    options: [
-      { id: 'a', label: 'Both increase' },
-      { id: 'b', label: 'Both decrease' },
-      { id: 'c', label: 'The kinetic energy increases and the pressure stays the same' },
-      { id: 'd', label: 'The kinetic energy stays the same and the pressure increases' }
-    ],
-    answer: 'a',
-    explanation: 'Temperature measures average kinetic energy, so heating raises it. Faster particles hit the walls harder and more often, so the pressure rises too.'
-  },
-  {
-    question: 'Helium and krypton are at the same temperature. Which statement is true?',
-    options: [
-      { id: 'a', label: 'They have the same average kinetic energy, and helium atoms move faster' },
-      { id: 'b', label: 'They have the same average speed, and krypton atoms carry more energy' },
-      { id: 'c', label: 'Krypton atoms have more kinetic energy and move faster' },
-      { id: 'd', label: 'Helium atoms have more kinetic energy but move at the same speed' }
-    ],
-    answer: 'a',
-    explanation: 'Average kinetic energy depends only on temperature. With the same energy, the lighter helium atoms must be moving faster than the heavier krypton atoms.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
    by drag and by two taps. Nothing here says what a reading is.

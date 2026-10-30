@@ -1,23 +1,14 @@
 # The Learn road: the quest plan
 
-**Status (2026-10-29): Lanternfall, Ligar, Bellows and Ember Reach are built, with Kettle's first bench. The rest is planned.** (Written 2026-10-10 as "Lanternfall is built; the rest is planned"; AP numbers and gaps were re-checked on 2026-10-29, see `docs/AP-coverage-audit.md`.) The road was
-reordered the same day (see "Done already" below), and all nine Lanternfall quests were
-built that day with the ground to walk them on (`lanternfall-world.md` says what was built
-and where it differs from this plan). This file plans every quest the Learn road still
-needs, in two levels of detail:
+**Status (2026-10-29): Tallow, Lanternfall, Ligar, Bellows and Ember Reach are built, with Kettle's first bench and boss (44 quests, 293 stages). The other eight worlds are planned.** This file was written on 2026-10-10 and has been reconciled with `PRODUCT.md` ("Building a Learn world"), which wins wherever the two disagree. AP numbers and gaps were re-checked on 2026-10-29 (see `docs/AP-coverage-audit.md`).
 
-- **Lanternfall and Ligar, stage by stage.** All nine quests of **Lanternfall**
-  (world 2, `unit02`, light and electrons; BUILT) and Ligar's benches three to nine
-  (world 3, `unit03`, bonding; still to build). Agreed with the user, and charted under the
-  ids and titles below.
-- **Every other world, as a proposal for the user to edit:** Bellows, Ember
-  Reach, Mirrowen, Kettle, Teeter, Verdigris, Brinewire, Quicklight, Lodestone,
-  Thornmere and Cinder Halo. Each quest has an eight-stage arc, the words it
-  earns, its instrument and its AP topics (see "The rest of the road"). Except
-  for Brinewire, these are **not charted yet**: their world files still hold the
-  original four placeholder quests until the proposal is agreed.
+How to read it:
 
-Every rule in CLAUDE.md binds this plan, and these are the ones it leans on most:
+- **Built worlds (Tallow, Lanternfall, Ligar, Bellows, Ember Reach).** The stage tables for Lanternfall and Ligar, and the quest lists for Bellows and Ember Reach, are **the plan the benches were first built from**, kept as history. The built stages differ (they were audited stage by stage and many were rebuilt, cut or added); the source of truth for what exists is the quest files, the world charts and the audit records in `docs/archive/2026-10-29/`. Build records are in `docs/plans/lanternfall-world.md`, `docs/plans/ligar-complete.md`, `docs/plans/bellows-world.md` and `docs/plans/ember-reach-world.md`.
+- **Unbuilt worlds (Mirrowen, Kettle after `q1`, Teeter, Verdigris, Brinewire, Quicklight, Lodestone, Thornmere, Cinder Halo).** The stage lists are a **proposal for the user to edit**. A world is built from it by following `PRODUCT.md` "Building a Learn world" and the one-shot prompt `docs/world-build-prompt.md`; the stage lists below supply the content (objectives, evidence, the word each card earns, the CED topics), and the rules below and in `PRODUCT.md` supply the form. Except for Brinewire, these worlds are **not charted yet**: their world files still hold the original four placeholder quests until the proposal is agreed.
+- **Instruments.** The instrument names in this plan (`gasrig.js`, `calorimeter.js`, `pot.js`, `flaskbench.js` and so on) are the plan's working names. A built world's instrument is a **table kit** under `src/learn/table/kits/` (the gas kit and the heat kit replaced the gas rig and the calorimeter, which are retired); a new world's instrument is a new kit there.
+
+Every rule in `CLAUDE.md` and `PRODUCT.md` binds this plan, and these are the ones it leans on most:
 
 - **Teach through play; discover, name, use, inside two stages.** Every stage
   below is something the player *does* with an instrument. The word arrives on
@@ -26,21 +17,35 @@ Every rule in CLAUDE.md binds this plan, and these are the ones it leans on most
   It says what the bench shows that lets a player who does not know the answer
   work it out. A stage whose evidence cell would read "hint rung 3" is a broken
   stage.
-- **A prompt states the objective, never the route.** The prompts below are
-  drafts in that form. Rung 1 of the hint ladder says which key to press.
-- **Nothing blocks a correct answer.** No stage needs a key press before Commit.
+- **A prompt states the objective, never the route**: one sentence, at most 25
+  words, no "!". The prompts below are drafts in that form. Rung 1 of the hint
+  ladder names the control; how a tool works is printed on the object.
+- **Nothing blocks a correct answer.** No stage needs a key press before Submit.
   Where operating the instrument IS the answer (set a frequency, fill boxes),
   an untouched bench is a wrong answer with a reason, never a gate.
-- **One briefing per quest**, on stage 1, at most two sentences, saying what the
-  instrument is and what its tools do.
-- **Encounter-first architecture (Phase 8).** Every quest is structured
-  around who the player faces, what the foe holds, and why the chemical move beats
-  them. The chemistry is not an abstract math problem; operating the instrument is
-  the tactical action that resolves the field encounter. Every stage defines an
-  `encounter` block, foe intent, objective, and chemical rationale.
-- **Hints are one sentence each.** Rung 3 gives the method and never the
-  number.
+- **No briefing before a stage.** The Tour explains every tool on the stage's
+  table, in earned words; a briefing survives only on a boss, where it states the
+  fight's rule. (An earlier version of this plan gave every quest a two-sentence
+  briefing; the Tour replaced it.)
+- **Trials, not combat.** An ordinary stage has no foe and no `encounter`: a wrong
+  answer is a missed trial with a reason. Only the six bosses fight (five phases
+  each, re-testing earlier benches' ideas on a new case, one foe from the
+  instrument's own planner, dispersed and never killed, Integrity of three).
+  The earlier "encounter-first architecture" for every quest is retired.
+- **One click, predicted first.** Each bench has one stage whose answer
+  contradicts a common model; a predict stage (question and guesses only, no
+  instrument) comes immediately before the stage that tests it. Predictions are
+  also asked on a new case of an idea already worked out, never on every stage,
+  and are never graded.
+- **Quantity as well as quality.** A CED topic that is a calculation gets a stage
+  where the player produces the number: proportional reasoning first, friendly
+  numbers first, then a typed worked figure past the dial's range, with the
+  common slips refused for a reason (see "Typed worked-figure stages").
+- **Hints are one sentence each**, exactly three: the control, what to look at,
+  the method. Rung 3 gives the method and never the number.
 - **Reward cards are one to three sentences.**
+- **Stage count: 8 is the norm, 6 for a recap**, reached with distinct ideas and
+  never padding; stage 8 is normally a sealed sample.
 - **No XP, ever.**
 
 Decisions already made with the user (2026-10-10):
@@ -58,6 +63,10 @@ Decisions already made with the user (2026-10-10):
 | Electrochemistry | A world of its own: **Brinewire** (copper marsh), world 10, after Verdigris. Quicklight, Lodestone, Thornmere and Cinder Halo moved to 11–14. **Done** (charted). |
 | Solutions / Ksp | Solutions in Mirrowen, solubility equilibria in Teeter, as AP lays them out. |
 | Beyond-AP worlds | Lodestone, Thornmere and Cinder Halo go to intro depth, 5–6 quests each. |
+| Bosses and trials (2026-10-22) | Bosses fight and ordinary stages are trials; foes are dispersed, never killed. One age band for the whole game, 12 to 17. The competition at launch is Quest 1 only. |
+| Curriculum target (2026-10-29) | AP Chemistry coverage, checked against the current CED. Content past the exam is labelled and optional; content on the CED but past a first course says so on the bench. |
+| Stage count (2026-10-29) | 8 stages is the norm and 6 a recap, reached with distinct ideas. This was this plan's own recommendation (decision 11); the user confirmed it. |
+| Briefings (2026-10-23) | Dropped on benches. The Tour explains every tool; a briefing survives only on a boss. |
 
 ---
 
@@ -122,7 +131,7 @@ Decisions already made with the user (2026-10-10):
    of Tallow or Ligar. **Recommendation:** build every quest as a page first. At
    T4 the built instruments build their own room, as Kettle's do now. Write a
    separate `lanternfall-world.md` when the quests are done.
-5. **Ligar sites 5–9.** Seven new benches need five more sites on a world laid
+5. **Ligar sites 5–9.** (*Done: Ligar is built, nine benches and the Warden, with a mine; see `docs/plans/ligar-complete.md`.*) Seven new benches need five more sites on a world laid
    out for four. **Recommendation:** extend `gen-ligar-layout.py`, putting sites
    5–6 on the quarry floor beside the forge and 7–9 under the north arches.
    Re-run `verify:ligar`'s flood fill. Each sign is at most six words, so
@@ -151,9 +160,7 @@ Decisions already made with the user (2026-10-10):
     structure, naming, isomers, properties and reaction *types*, and its
     substitution card points to the Charge Gardens rather than re-teaching
     mechanisms.
-11. **Quest and stage count.** The whole road comes to 97 quests and 776 stages.
-    **Recommendation:** keep 8 stages as the norm, but allow 6 where a quest is
-    a recap. Lodestone `q1` and Thornmere `q5` are candidates.
+11. **Quest and stage count.** (*Decided: 8 stages as the norm, 6 where a quest is a recap. The built worlds sit below the norm in places and are not being grown to it.*) The original estimate for the whole road was 97 quests and 776 stages; that figure is not maintained and the registry's count (`verify:docs`) is the real one. Lodestone `q1` and Thornmere `q5` are recap candidates.
 12. **Placeholder charts.** The original four-quest charts of Bellows, Ember
     Reach, Mirrowen, Kettle (`q2`–`q5`), Teeter, Verdigris, Quicklight,
     Lodestone, Thornmere and Cinder Halo get replaced by the proposal's quest
@@ -162,6 +169,8 @@ Decisions already made with the user (2026-10-10):
 ---
 
 ## The instruments
+
+> **History (reconciled 2026-10-29).** The seven instruments below were built, but not as the standalone `engine/*bench.js` files named here: each became (roughly) a **table kit** in `src/learn/table/kits/` (light bench → `optics`, cloud plate → `cloud`, box rack → `shells`, core bench extensions → `pes` and `trends`, join bench and pair board → `bonds` and `atoms`, domain rig → `domain`). A kit exports pure planners shared by its drawn and built twins, and a bench is a table of pieces, fixtures and zones, not a bespoke instrument module. The contract below (content-free, pure planner, drawn and built twins with one API, checked by `verify:learn`) still holds. New instruments are written as kits; see `PRODUCT.md` "Building a Learn world".
 
 Seven pieces of new work: five new instruments and two extensions. Each one
 follows the existing engine contract. It is content-free. Every reading comes
@@ -357,6 +366,8 @@ declarations to these tables.
 ---
 
 ## World 2 — Lanternfall (`unit02`, light and electrons)
+
+> **History.** Built 2026-10-10 and since audited and reworked (five to seven stages per bench, a typed worked figure on several, new stages 6 and 7 on `q8-trends`, no per-quest briefing). The tables below are the original plan; the quest files are the truth.
 
 Tallow left the player with electrons on rings at fixed distances and no reason
 why. Lanternfall is the reason. It is an ice field under a permanent aurora,
@@ -674,6 +685,8 @@ use. Each case is handled locally, and listed here so it stays visible:
 
 ### New instruments for the rest of the road
 
+> **Working names.** These are plan names. Each is built as a table kit under `src/learn/table/kits/`, as the gas kit (Bellows) and the heat kit (Ember Reach) were. The "Gas rig" and "Calorimeter" rows below are those two kits (`gas*.js`, `heat*.js`); the `gasrig.js` and `calorimeter.js` modules are retired. Where a quest below says "gas rig" or "calorimeter", read the gas kit or the heat kit.
+
 Same contract as above: content-free, pure planners, drawn and built versions
 with one API, and declarations checked by `verify:learn`.
 
@@ -776,7 +789,7 @@ with one API, and declarations checked by `verify:learn`.
 
 **Built (2026-10-15).** See `ember-reach-world.md` for what was built and where it parted from the stage lists below.
 
-> **Cut in the build, and still owed (audit 2026-10-29, `AP-coverage-audit.md`).** The built quests dropped four things the drafts below carried, and the CED needs each: (1) `q1` stage 6 and `q3` stage 5, the energy diagram (CED 6.2): restore one reaction-progress diagram stage in `q3`; (2) `q7` stage 5, ΔG° from formation free energies, `ΔG° = ΣΔGf° (products) − ΣΔGf° (reactants)` (CED 9.3.A.3): add as a typed stage using a ΔGf° table, the same skill as `q6` stage 5 for entropy; (3) `q7` stage 6, kinetic control (CED 9.4): now Quicklight `q5` stage 3; (4) `q7` stage 7, coupled reactions (CED 9.7): now Teeter `q8` stage 7. Also owed in `q2`: the condensation and freezing sign flip (CED 6.5.A.2, now Mirrowen `q5` stage 4) and, in `q7` or `q3`, dissolving as exo- or endothermic from interaction strengths (CED 6.1.A.4, now Mirrowen `q6` stage 6).
+> **Cut in the build, now resolved (audit 2026-10-29).** The energy diagram is `q3` stage 8 (reverse activation energy typed from a reaction-progress diagram); ΔG° from formation free energies is `q7` stage 6 (typed); condensation and cooling heat is `q2` stage 8 (typed); dissolving as exo- or endothermic is a bank problem in `q7` and Mirrowen `q6` stage 6. Kinetic control (CED 9.4) is a bank problem in `q7` and Quicklight `q5` stage 3; coupled reactions (CED 9.7) is a bank problem in `q7` and Teeter `q8` stage 7. The Ember stage cap is now 8.
 
 #### `q1-flow` · Heat and Temperature · CED 6.1–6.3 · calorimeter
 1. Touch a hot block to a cold one and say where both end. → **thermal equilibrium**
@@ -898,7 +911,7 @@ with one API, and declarations checked by `verify:learn`.
 1. Heat ice steadily. *The temperature stops twice.* → **heating curve**
 2. Say where the heat went on the flat parts. → **heat of fusion, heat of vaporization**
 3. Find the heat to melt a given mass. *q = nΔH*
-4. Find the total heat from ice at −10 °C to steam at 110 °C, then the heat released when that steam condenses and freezes again. *Condensation is the negative of vaporization; fusion and freezing likewise.* (CED 6.5.A.2; Ember Reach `q2` stage 7 already does the upward trip.)
+4. Find the total heat from ice at −10 °C to steam at 110 °C, then the heat released when that steam condenses and freezes again. *Condensation is the negative of vaporization; fusion and freezing likewise.* (CED 6.5.A.2; Ember Reach `q2` stage 7 already does the upward trip.) **[typed]** The total heat in kJ, then the heat given out on the way back, as a positive figure; the slip is a negative answer.
 5. Say why steam burns worse than boiling water.
 6. Say which phase a substance is in at a given P and T. → **phase diagram** (beyond the exam)
 7. Find the triple point and the critical point. (beyond the exam)
@@ -906,8 +919,8 @@ with one API, and declarations checked by `verify:learn`.
 
 #### `q6-solution` · Solutions · CED 3.7, 3.8, 3.10, 6.1, 6.4 · flask bench
 1. Dissolve a salt and watch the particle window. *Ions spread out, each wrapped in water.* → **solution, solute, solvent**
-2. Make 0.100 M from a weighed mass in a volumetric flask. → **molarity**
-3. Dilute it and say what stayed the same. *Moles.* → **dilution**
+2. Make 0.100 M from a weighed mass in a volumetric flask. → **molarity** **[typed]** Molarity from a weighed mass and a flask volume.
+3. Dilute it and say what stayed the same. *Moles.* → **dilution** **[typed]** The new molarity by M₁V₁ = M₂V₂ (CED 3.7 equation).
 4. Count the particles CaCl₂ gives per formula. *Three.* → **strong electrolyte**
 5. Say which of two solids dissolves in water and which in hexane. → **"like dissolves like"**, **solubility**
 6. Dissolve a salt in a calorimeter cup, read ΔT, and say whether dissolving is exothermic or endothermic and why. *Compare the strengths of ion–ion and ion–water interactions.* (CED 6.1.A.4, 6.4.A.7; reuses the Ember Reach calorimeter. Solubility against temperature moves to practice.)
@@ -973,18 +986,18 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 #### `q6-stoich` · Stoichiometry · CED 4.5, 1.4 · the pot, assay balance
 1. Find moles of product from moles of reactant. → **mole ratio**
-2. Go from grams to grams.
+2. Go from grams to grams. **[typed]** Grams of product from grams of reactant; the slip is skipping the mole ratio.
 3. Use a kit of bolts and brackets and say which runs out. → **limiting reactant**
-4. Find the limiting reactant from masses, and how much of the other is left. → **excess reactant**
-5. Heat CaCO₃ and collect the CO₂, then type the volume it fills at 25 °C and 1.00 atm. *The balanced equation gives the moles; PV = nRT gives the room.* (CED 4.5.A.3, the one place stoichiometry meets the gas law; Bellows `q3` stage 7 planned this and was cut. Collected over water, subtract the vapour pressure from Bellows `q4`.)
+4. Find the limiting reactant from masses, and how much of the other is left. → **excess reactant** **[typed]** Grams of the other reactant left over.
+5. Heat CaCO₃ and collect the CO₂, then type the volume it fills at 25 °C and 1.00 atm. *The balanced equation gives the moles; PV = nRT gives the room.* (CED 4.5.A.3, the one place stoichiometry meets the gas law; Bellows `q3` stage 7 planned this and was cut. Collected over water, subtract the vapour pressure from Bellows `q4`.) **[typed]** The gas volume in litres.
 6. Find the most product possible. → **theoretical yield**
-7. Weigh what was actually made. → **percent yield**
+7. Weigh what was actually made. → **percent yield** **[typed]** Percent yield from a weighed product.
 8. Filter, dry and weigh a precipitate to find the percent chloride in a sample, then the percent purity of the salt. → **gravimetric analysis** (CED 1.4: elemental composition shows purity)
 
 #### `q7-titrate` · Titration · CED 4.6 · the pot, burette head
 1. Add base from the burette until the colour changes. → **titration, burette, indicator**
 2. Say what "just enough" means. *Moles match.* → **equivalence point**
-3. Find the concentration of an acid.
+3. Find the concentration of an acid. **[typed]** The acid concentration in mol/L.
 4. Titrate H₂SO₄. *It needs twice the base.*
 5. Say what overshooting does to the answer.
 6. Tell the colour change from the true match point. → **endpoint**
@@ -1020,7 +1033,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 2. Say what a coefficient becomes in the ratio. *A power.*
 3. Say what happens to a pure solid or liquid. *It is left out.*
 4. Write the gas version in pressures. → **Kp, Kc**
-5. Calculate K from equilibrium data.
+5. Calculate K from equilibrium data. **[typed]** K to two significant figures from concentrations, with the slip of leaving out a coefficient power.
 6. Say what a large K means.
 7. Say what a small K means.
 8. Sealed: match three reactions to their K.
@@ -1039,14 +1052,14 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 3. Halve them. *K is square-rooted.*
 4. Add two reactions. *Their Ks multiply.*
 5. Convert between Kp and Kc. (beyond the exam)
-6–8. Find a target K from given ones; sealed.
+6–8. Find a target K from given ones; sealed. **[typed]** The target K by reversing, scaling and adding, entered as 3.2e-4.
 
 #### `q5-ice` · Equilibrium Concentrations · CED 7.7 · ICE board
 1. Lay out initial, change and equilibrium amounts. → **ICE table**
 2. Solve for x when it is a perfect square.
-3. Use the small-x approximation when K is small.
+3. Use the small-x approximation when K is small. **[typed]** x, then an equilibrium concentration, when K is small.
 4. Check whether the approximation was fair.
-5. Find K from partial data.
+5. Find K from partial data. **[typed]** K from partial data, using the ICE table.
 6–8. Two problems and a sealed one.
 
 #### `q6-lean` · Le Châtelier's Principle · CED 7.9, 7.10 · stress keys
@@ -1062,7 +1075,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 #### `q7-dissolve` · Solubility Equilibria · CED 7.11, 7.12 · solubility beaker
 1. Add solid until it stops dissolving. *The ion meters stop.* → **saturated solution, Ksp**
 2. Write a Ksp expression.
-3. Find AgCl's molar solubility from its Ksp. → **molar solubility**
+3. Find AgCl's molar solubility from its Ksp. → **molar solubility** **[typed]** Molar solubility in mol/L from Ksp, as 1.3e-5.
 4. Compare the solubilities of salts with different formula ratios. *Not by Ksp alone.*
 5. Add a common ion. *A precipitate forms.* → **common-ion effect**
 6. Use Q against Ksp to say whether a precipitate forms.
@@ -1072,7 +1085,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 #### `q8-free` · Free Energy and K · CED 9.5, 9.7 · favourability plotter
 1. Find the link between ΔG° and K for three reactions. → **ΔG° = −RT ln K**
 2. Say what sign of ΔG° goes with K > 1.
-3. Calculate K from ΔG°.
+3. Calculate K from ΔG°. **[typed]** K from ΔG° at 298 K, with ΔG° in kJ and R in J: the unit slip is a refused option.
 4. Say how temperature moves K through ΔG°.
 5. Say what decides whether a salt dissolves. → **free energy of dissolution**
 6. Say why some salts dissolve while cooling the water.
@@ -1095,7 +1108,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 #### `q2-scale` · pH · CED 8.1, 8.2 · pH meter
 1. Read 0.1, 0.01 and 0.001 M HCl. *One unit per tenfold step.* → **pH**
-2. Find pH from [H₃O⁺].
+2. Find pH from [H₃O⁺]. **[typed]** pH from [H₃O⁺], to two decimals.
 3. Find pOH and the sum. → **pOH**
 4. Find the pH of a strong base.
 5. Say why HCl is fully ionized. → **strong acid, strong base**
@@ -1107,7 +1120,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 1. Compare HCl and acetic acid at the same concentration. → **weak acid**
 2. Count the fraction ionized. → **percent ionization**
 3. Write the expression and its log. → **Ka, pKa**
-4. Find a weak acid's pH with an ICE table.
+4. Find a weak acid's pH with an ICE table. **[typed]** The pH of a weak acid from Ka and a concentration (ICE table).
 5. Dilute a weak acid. *The percent ionized rises.*
 6. Find a weak base's constant. → **Kb**
 7. Multiply Ka and Kb for a conjugate pair. *Kw.*
@@ -1130,7 +1143,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 4. Predict the pH of NaCl, NaF, NH₄Cl and KNO₃ solutions.
 5. Mix unequal amounts. *The excess strong reagent decides the pH.*
 6. Half-neutralize a weak acid and look at what is left.
-7. Calculate a salt solution's pH.
+7. Calculate a salt solution's pH. **[typed]** The pH of a salt solution from Kb or Ka of the ion.
 8. Sealed.
 
 #### `q6-titrate` · Titration Curves · CED 8.5 · burette, curve plotter
@@ -1140,16 +1153,16 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 4. Pick an indicator for each curve.
 5. Find Ka from a curve.
 6. Titrate a diprotic acid. *Two jumps.* → **polyprotic acid**
-7. Find a concentration from the equivalence volume.
+7. Find a concentration from the equivalence volume. **[typed]** The concentration from the equivalence volume.
 8. Sealed.
 
 #### `q7-buffer` · Buffers · CED 8.4, 8.8, 8.9 · buffer flask
 1. Add acid to water and to the mixture. *One barely moves.* → **buffer**
 2. Say what the mixture is made of.
 3. Watch the added H₃O⁺ get caught by A⁻.
-4. Find pH from the ratio. → **Henderson–Hasselbalch equation**
+4. Find pH from the ratio. → **Henderson–Hasselbalch equation** **[typed]** The pH from the Henderson–Hasselbalch equation.
 5. Mix equal amounts. *pH = pKa.*
-6. Build a buffer at pH 4.7.
+6. Build a buffer at pH 4.7. **[typed]** The ratio of base to acid needed for a target pH.
 7. Add base and find the new pH. (beyond the exam: the CED excludes computing the pH change on adding acid or base to a buffer. Keep it qualitative on the exam track, or label the card.)
 8. Sealed.
 
@@ -1199,11 +1212,11 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 #### `q4-potential` · Cell Potential · CED 9.9 · cell bench, potential board
 1. Read each metal against a standard and build a table. → **standard reduction potential**
-2. Find a cell's voltage. → **E°cell** (cathode minus anode)
+2. Find a cell's voltage. → **E°cell** (cathode minus anode) **[typed]** E°cell in volts (cathode minus anode); the slip is doubling E° for a doubled half-reaction.
 3. Say what a positive E° means.
 4. Say why doubling a half-reaction leaves E° alone.
-5. Link E° to ΔG°. → **ΔG° = −nFE°, Faraday constant**
-6. Link E° to K.
+5. Link E° to ΔG°. → **ΔG° = −nFE°, Faraday constant** **[typed]** ΔG° in kJ from n, F and E°.
+6. Link E° to K. **[typed]** K from E° (CED 9.9 pairs ΔG° = −nFE° with ΔG° = −RT ln K).
 7. Pick the best pair for a battery.
 8. Sealed.
 
@@ -1212,7 +1225,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 2. Say what Q does to the voltage (qualitatively).
 3. Say why the cell is dead when Q = K. *E = 0.*
 4. Build a cell from one metal at two concentrations. → **concentration cell**
-5. Calculate a voltage away from standard. → **Nernst equation**, E = E° − (RT/nF) ln Q (in scope: CED 9.10 puts it on the equation list, so give it a typed-answer stage like Bellows)
+5. Calculate a voltage away from standard. → **Nernst equation**, E = E° − (RT/nF) ln Q (in scope: CED 9.10 puts it on the equation list, so give it a typed-answer stage like Bellows) **[typed]** The Nernst voltage at a given Q, in volts.
 6. Raise the cathode concentration.
 7. Compare alkaline, lead–acid and lithium-ion cells (descriptive).
 8. Sealed.
@@ -1221,7 +1234,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 1. Push current through a cell the wrong way. → **electrolytic cell, electrolysis**
 2. Electrolyse molten NaCl. *Sodium at one electrode, chlorine at the other.*
 3. Find charge from current and time. → **coulomb**
-4. Turn moles of electrons into mass plated. → **Faraday's law**
+4. Turn moles of electrons into mass plated. → **Faraday's law** **[typed]** Grams plated from current and time (CED 9.11, I = q/t).
 5. Plate silver for a set time.
 6. Compare electrolysing water with electrolysing brine.
 7. Plate an object and refine copper.
@@ -1247,7 +1260,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 3. Double [C]. *No change.*
 4. Write a rate law from a table. → **method of initial rates**
 5. Find the overall order.
-6. Find k. → **rate constant**
+6. Find k. → **rate constant** **[typed]** k with its units.
 7. Give k's units.
 8. Sealed.
 
@@ -1255,9 +1268,9 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 1. Plot [A]. *A curve.*
 2. Plot ln[A]. *A straight line means first order.* → **integrated rate law**
 3. Plot 1/[A]. *A straight line means second order.*
-4. Find k from the slope.
+4. Find k from the slope. **[typed]** k from the slope of the straight plot.
 5. Measure successive half-lives. *Constant for first order.* → **half-life**
-6. Find what is left after n half-lives.
+6. Find what is left after n half-lives. **[typed]** The fraction (or concentration) left after n half-lives.
 7. Recognize zero order.
 8. Sealed.
 
@@ -1273,7 +1286,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 #### `q5-hill` · Energy Profiles · CED 5.6, 5.10, 9.4 · energy-profile screen
 1. Read the top of the hill. → **transition state**
-2. Read Ea and ΔH from the profile.
+2. Read Ea and ΔH from the profile. **[typed]** Ea and ΔH from a profile with printed levels; stage 4 types the reverse Ea (the same skill as Ember Reach `q3` stage 8).
 3. Find a reaction that runs downhill in energy and still never moves at room temperature. *A tall hill.* → **kinetic control** (CED 9.4; Ember Reach `q7` stage 6 was cut when that quest was built, since it needs this bench.)
 4. Find the reverse Ea.
 5. Read a two-humped profile. → **intermediate**
@@ -1478,6 +1491,45 @@ power uses), is left uncharted unless wanted.
 
 ---
 
+### Typed worked-figure stages (every unbuilt world)
+
+The audit (B4) found that the built Tallow, Lanternfall and Ligar quests left most formulas to one multiple-choice item, and that the free
+response is quantitative. Every unbuilt quest below therefore marks its headline calculation **[typed]**: the player types the figure in the
+stage's number field (`entry: { id, label, unit }`, `entryNumber`), as in Bellows and Ember Reach. The rules that make such a stage fair:
+
+- The formula is printed on a plate, never withheld, and the bench does not show the answer (a worked figure is asked beyond the dial's range
+  or off a printed plaque).
+- Small and large numbers are typed in the form `1.8e-5`; the field says so on its caption.
+- The refusals are the slips students make (a unit off by 1000, a coefficient not raised to its power, Celsius as kelvin, a sign flipped), each
+  with a reason that does not state the answer. `verify:learn` recomputes the answer from the real table.
+- Each typed stage is also a `worked` problem in the bank (4 to 8 small steps with a `calc` expression) so the arithmetic is revisited.
+
+| World | Typed headline stages |
+| --- | --- |
+| Mirrowen | `q5` s4 heat out and in, `q6` s2 molarity, s3 dilution M₁V₁ = M₂V₂ |
+| Kettle | `q6` s2 grams to grams, s4 excess left, s5 gas volume, s7 percent yield; `q7` s3 acid concentration |
+| Teeter | `q2` s5 K, `q4` s6 target K, `q5` s3 and s5 ICE solves, `q7` s3 molar solubility, `q8` s3 K from ΔG° |
+| Verdigris | `q2` s2 pH, `q3` s4 weak-acid pH, `q5` s7 salt pH, `q6` s7 concentration, `q7` s4 and s6 Henderson–Hasselbalch |
+| Brinewire | `q4` s2 E°cell, s5 ΔG°, s6 K; `q5` s5 Nernst; `q6` s4 mass plated |
+| Quicklight | `q2` s6 k with units, `q3` s4 k from a slope and s6 amount left, `q5` s2 and s4 Ea and reverse Ea |
+
+Lodestone, Thornmere and Cinder Halo are beyond the exam and stay descriptive.
+
+### The Lab Notebook (free-response skills)
+
+The free response weights experimental design, data analysis and justification (Science Practices 2, 4 and 6). Content stages do not train
+them. Each world from Bellows on gets one **optional** bench after its boss, `qN-notebook`, that gates nothing and pays no XP, built on that
+world's own instrument so no new hardware is needed. Six stages, in this order:
+
+1. Pick the instrument and the precision for a measurement, and write the figure with the right number of significant figures. → **significant figures**
+2. Given five repeated readings, say whether the spread is random error or a systematic one. *A shifted mean is systematic.*
+3. Pick which plot (x, 1/x, ln x) makes the data a straight line. (Quicklight `q3` teaches this once; here it is asked of this world's data.)
+4. Put the steps of a procedure in order by dragging them onto a rail, then say which step controls the variable. → **control, variable**
+5. Write a claim from a sealed result by choosing the evidence card and the reasoning card that support it.
+6. Say how a stated error would change the answer, and in which direction (Bellows' thermometer reads low).
+
+The Bellows and Ember Reach versions are built first because their error-direction and percentage-error stages already exist.
+
 ### AP coverage (every CED topic → its quest)
 
 Rewritten 2026-10-29 against the current CED (Course Framework V.1; `docs/ap-chemistry-course-and-exam-description.pdf`),
@@ -1487,15 +1539,15 @@ the built quest.
 
 | Unit | Topic → quest |
 | --- | --- |
-| 1 | 1.1 Tallow q6 (B; **FIX**: grams or moles to particle count with Avogadro's number is never asked, add a stage or practice) · 1.2 Tallow q5 (B) · 1.3 Kettle q1 (B) · 1.4 Kettle q6 stage 8 purity (P) · 1.5 Lanternfall q6 (B; **FIX**: configurations of ions) · 1.6 Lanternfall q7 (B) · 1.7 Lanternfall q8 (B; **FIX**: electron affinity and the electronegativity trend) · 1.8 Tallow q3, q4, Ligar q1 (B; group reactivity trends not found) |
+| 1 | 1.1 Tallow q6 (B; particle counts typed in stages 9 to 12 and the worked glucose problem) · 1.2 Tallow q5 (B) · 1.3 Kettle q1 (B) · 1.4 Kettle q6 stage 8 purity (P) · 1.5 Lanternfall q6 (B; Cl⁻ built in stage 6; Fe³⁺ and O²⁻ in the worked problem and bank) · 1.6 Lanternfall q7 (B) · 1.7 Lanternfall q8 (B; electron affinity and electronegativity are stages 6 and 7) · 1.8 Tallow q3, q4, Ligar q1 (B; group reactivity in the `q3-catalogue` bank) |
 | 2 | 2.1 Ligar q1, q7 · 2.2 q3 · 2.3 q2, q3 · 2.4 q2 · 2.5 q4 · 2.6 q5 · 2.7 q6, q7, q8 (all B) |
 | 3 | 3.1 Mirrowen q2, q3 · 3.2 Ligar q2 (B) and Mirrowen q4, reduced · 3.3 Mirrowen q1 · 3.4 Bellows q1 to q4 (B) · 3.5 Bellows q1, q5 (B) · 3.6 Bellows q6 (B) · 3.7, 3.8, 3.10 Mirrowen q6 · 3.9 Mirrowen q7 · 3.11 to 3.13 Lanternfall q1, q2, q9 (B) |
 | 4 | 4.1, 4.4 Kettle q3 · 4.2 q5 · 4.3 q4 · 4.5 q6 including the gas stage 5 · 4.6 q7 · 4.7 q8 · 4.8 q8, Verdigris q1 · 4.9 q8, Brinewire q1 (all P) |
 | 5 | 5.1 Quicklight q1 · 5.2 q2 · 5.3 q3 · 5.4, 5.5 q4 · 5.6, 5.10 q5 · 5.7 to 5.9 q6 · 5.11 q7 (all P) |
-| 6 | 6.1 Ember Reach q1 (B) and Mirrowen q6 stage 6 (dissolving) · 6.2 Ember Reach q3 (B; **FIX**: reaction-progress diagram) · 6.3 q1 (B) · 6.4 q2 (B), Mirrowen q6 stage 6 · 6.5 q2 stages 4, 7 (B) and Mirrowen q5 (P) · 6.6 q3 (B) · 6.7 q4 (B) · 6.8 q5 (B) · 6.9 q5 (B) |
+| 6 | 6.1 Ember Reach q1 (B) and Mirrowen q6 stage 6 (dissolving) · 6.2 Ember Reach q3 (B; stage 8 reaction-progress diagram) · 6.3 q1 (B) · 6.4 q2 (B), Mirrowen q6 stage 6 · 6.5 q2 stages 4, 7, 8 (B) and Mirrowen q5 (P) · 6.6 q3 (B) · 6.7 q4 (B) · 6.8 q5 (B) · 6.9 q5 (B) |
 | 7 | 7.1, 7.8 Teeter q1 · 7.2 q3 · 7.3 q2, q3 · 7.4, 7.5 q2 · 7.6 q4 · 7.7 q5 · 7.9, 7.10 q6 · 7.11, 7.12 q7 (all P) |
 | 8 | 8.1 Verdigris q1, q2 · 8.2 q2 · 8.3 q3 · 8.4 q5, q7 · 8.5 q6 · 8.6 q4 · 8.7 q8 · 8.8, 8.9 q7 · 8.10 q8 · 8.11 q8 stage 7 (all P) |
-| 9 | 9.1, 9.2 Ember Reach q6 (B) · 9.3 Ember Reach q7 (B; **FIX**: ΔG° from ΔGf°) · 9.4 Quicklight q5 stage 3 (P) · 9.5 Teeter q8 (P) · 9.6 Ember Reach q7 stage 1 (B) and Teeter q8 (P) · 9.7 Teeter q8 stage 7 (P) · 9.8 Brinewire q3, q6 (P) · 9.9 q4 · 9.10 q5 (Nernst, in scope) · 9.11 q6 (all P) |
+| 9 | 9.1, 9.2 Ember Reach q6 (B) · 9.3 Ember Reach q7 (B; stage 6 ΔG° from ΔGf°) · 9.4 Quicklight q5 stage 3 (P) · 9.5 Teeter q8 (P) · 9.6 Ember Reach q7 stage 1 (B) and Teeter q8 (P) · 9.7 Teeter q8 stage 7 (P) · 9.8 Brinewire q3, q6 (P) · 9.9 q4 · 9.10 q5 (Nernst, in scope) · 9.11 q6 (all P) |
 
 Scope labels (CED exclusion statements): beyond the exam are quantum-number assignment, Aufbau exceptions (Cr, Cu),
 hybrid-orbital derivation and d-orbital hybridization, molecular orbital diagrams, phase diagrams, colligative
@@ -1507,30 +1559,27 @@ effusion, Graham's law and van der Waals corrections (not in the CED at all).
 
 | | Quests | Stages |
 | --- | --- | --- |
-| Built | 9 | 72 |
-| Lanternfall + Ligar (agreed) | 16 | 128 |
-| This proposal | 72 | 576 |
-| **Whole road** | **97** | **776** |
+| Built (Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Kettle `q1` and the Golem) | 44 | 293 |
+| Still planned (the other eight worlds and Kettle's remaining benches) | not fixed | 6 to 8 per quest |
 
-Each quest also owes five practice problems, so the road carries 485 of them.
+The original estimate for the whole road was 97 quests and 776 stages. It is not maintained: `verify:docs` holds the built counts to the registry, and each new world updates them.
 
 ---
 
 ## What each quest also owes
 
-- **Five `PRACTICE` problems**, AP style. These are the place for numeric
-  practice (photon energy, Beer–Lambert, formal charge) that a stage only
-  teaches once. Beyond-exam quests label their problems that way.
-- **`STAGES`, `SOLUTIONS`, `MISSES`, `stateFor`**, so `verify:learn` grades every
-  stage both ways. Numeric answers will collide with the refusal-message scan
-  (656, 109.5); each collision is a documented allowlist entry, as
-  `q3-catalogue` stage 4's is.
-- **`WITHHELD_VOCAB`** entries in `tools/verify-learn.mjs` for all sixteen quest
-  keys, matching the `VOCABULARY` lines above.
-- **`BUILDS_ON`**, if decision 2 is accepted.
+The full list is `PRODUCT.md` "Building a Learn world" and `src/learn/quests/_template.js`. In short:
+
+- **Practice lives in the question bank**, never in the quest file: exactly two problems after the bench, an optional guided worked problem (4 to 8 steps with a recomputed `calc`) on a computational bench, and the world's end set (`src/learn/bank/<unit>.json`). Quests export no `PRACTICE`. Numeric practice that a stage only teaches once (photon energy, Beer–Lambert, formal charge) goes here. Beyond-exam quests label their problems that way. Ids are never reused.
+- **`STAGES`, `SOLUTIONS`, `MISSES`, `stateFor`**, so `verify:learn` grades every stage both ways. Numeric answers will collide with the refusal-message scan (656, 109.5); each collision is a documented allowlist entry, as `q3-catalogue` stage 4's is.
+- **`VOCABULARY`** (each term mapped to the stage whose card earns it) and `WITHHELD_VOCAB` entries in `tools/verify-learn.mjs` for what is not yet earned.
+- **`BUILDS_ON`**, listing real built quests whose words the bench uses (decision 2, accepted).
+- A Tour step for every new kind of piece or tool, a lead line, and a story animation with a `Filed:` line.
 
 ## Verifier work
 
+- `verify:learn`: a header comment, a reward or a `VOCABULARY` entry that defers a term to the Drill Deck fails unless an item in that world's bank contains the term (the audit found `q8-trends` doing this).
+- `verify:learn`: every stage marked **[typed]** has a `calc` recomputation and a refusal for each listed slip.
 - `verify:learn`: well-formedness for each new declaration type:
   - light-bench sources: real lines within 380–750 nm for visible, real work
     functions
@@ -1553,26 +1602,27 @@ Each quest also owes five practice problems, so the road carries 485 of them.
 3. ~~**Box rack**~~ → `q5-numbers`, `q6-filling`. **Done.**
 4. ~~**Core bench extensions**~~ → `q7-pes`, `q8-trends`. **Done**, as a sibling
    instrument (`electronbench.js`) and not an extension of `corebench.js`. Lanternfall complete.
-5. **Join bench crank** → Ligar `q3-distance` at the Batch House (`built: true`).
-6. **Pair board** → `q4-dots` (Weighbridge), `q5-resonance` (new site 5).
-7. **Domain rig** → `q6-shape`, `q7-polarity`, `q8-hybrid` (sites 6–8).
-8. **Box rack, molecular layout** → `q9-orbitals` (site 9). Ligar complete.
+5. ~~**Join bench crank**~~ → Ligar `q3-distance`. **Done.**
+6. ~~**Pair board**~~ → `q4-dots`, `q5-resonance`. **Done.**
+7. ~~**Domain rig**~~ → `q6-shape`, `q7-polarity`, `q8-hybrid`. **Done.**
+8. ~~**Box rack, molecular layout**~~ → `q9-orbitals`. **Done**; Ligar complete (nine benches, the Warden and a mine).
 9. ~~Lanternfall as walkable ground~~ (its own plan). **Done:** `lanternfall-world.md`.
 10. ~~**Tallow site 6**~~ for `q6-weigh`: the site-5 hopper-gantry builder, laid again.
     **Done**; `SITE_PENDING` is empty.
 11. **The rest of the road, by instrument, in road order where the instruments
-    allow:**
-    - **Kettle:** build `pot.js` and its burette head first, since the pH bench
-      and Thornmere reuse them. Then Bellows (`gasrig.js`), Ember Reach
-      (`calorimeter.js`), Mirrowen (`flaskbench.js`, plus the grip probe on the
-      join bench), Teeter (`pans.js`), Verdigris (`phbench.js`), Brinewire
-      (`cellbench.js`) and Quicklight (`ratebench.js`).
+    allow.** Bellows (the gas kit) and Ember Reach (the heat kit) are **done**.
+    Next:
+    - **Kettle:** the pot and its burette head first, since the pH bench and
+      Thornmere reuse them. Then Mirrowen (the flask bench, plus the grip probe on
+      the join bench), Teeter (the pans), Verdigris (the pH bench), Brinewire (the
+      cell bench) and Quicklight (the rate bench). Each is built as a table kit.
     - **The three beyond-AP worlds** come last. They are mostly reuse: Lodestone
       uses the box rack, domain rig, light bench and cell bench; Thornmere uses
-      the domain rig, pot and grip probe; Cinder Halo needs `detector.js`.
+      the domain rig, pot and grip probe; Cinder Halo needs a detector bench.
 
-Each step ends on a green `npm run verify`, and on CLAUDE.md and this file
-updated.
+A world is built in one pass by following `docs/world-build-prompt.md`. Each
+step ends on `PRODUCT.md` and `CLAUDE.md` updated, and the world's own verify
+script green.
 
 ## Progress
 
@@ -1584,7 +1634,10 @@ updated.
 - [x] Lanternfall: all nine quests, four instruments, the ground, the verifiers (2026-10-10).
 - [x] Tallow site 6 (2026-10-10).
 - [x] AP audit against the current CED: numbering corrected, coverage table rewritten, scope labels fixed, missing AP stages added to Teeter q7/q8, Verdigris q8, Kettle q6, Mirrowen q4/q5/q6, Quicklight q5, with the stages the built Lanternfall and Ember Reach quests cut listed as owed (2026-10-29, `docs/AP-coverage-audit.md`).
-- [ ] The built-quest fixes the audit marks **FIX** (Avogadro arithmetic, ion configurations, electron affinity and electronegativity trend, energy diagram, ΔG° from ΔGf°).
-- [ ] The user's edits to the proposal; then the placeholder charts replaced.
-- [ ] Decisions 5–12 above.
-- [ ] Steps 5–8 and 11.
+- [x] The built-quest fixes the audit marked **FIX** (Avogadro arithmetic, ion configurations, electron affinity and electronegativity trend, energy diagram, ΔG° from ΔGf°, condensation heat), 2026-10-29: bench stages in Ember Reach `q2`, `q3`, `q7`, Lanternfall `q8`, Tallow `q6`, and bank problems for the rest.
+- [x] Typed worked-figure stages marked in every unbuilt world, and the Lab Notebook set planned (2026-10-29, below).
+- [x] Ligar built (nine benches, the Warden, a mine), Bellows and Ember Reach built, and all five worlds audited stage by stage and reworked (2026-10-23 to 2026-10-29; the audits are in `docs/archive/2026-10-29/`).
+- [x] This plan reconciled with `PRODUCT.md` (2026-10-29): encounter-first and per-quest briefings retired, instruments recast as table kits, practice moved to the bank, stage norm set at 8 (6 for a recap).
+- [ ] The user's edits to the proposal for the unbuilt worlds; then the placeholder charts replaced.
+- [ ] Decisions 6 to 10 and 12 above.
+- [ ] The unbuilt worlds (step 11).

@@ -1,0 +1,1596 @@
+{
+  "world": "unit04",
+  "end": [
+    {
+      "id": "q1-knocks#0",
+      "quest": "q1-knocks",
+      "question": "According to kinetic molecular theory, what causes the pressure of a gas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Particles colliding with the walls of the container"
+        },
+        {
+          "id": "b",
+          "label": "The weight of the gas pressing down on its container"
+        },
+        {
+          "id": "c",
+          "label": "Attractions between the particles"
+        },
+        {
+          "id": "d",
+          "label": "The particles being at rest against the walls"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The pressure is the combined force of countless collisions between moving particles and the container walls, divided by the wall area."
+    },
+    {
+      "id": "q1-knocks#1",
+      "quest": "q1-knocks",
+      "question": "Gauges are fitted to the roof, the side wall and the floor of a sealed box of gas. How do the three readings compare?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They are all the same"
+        },
+        {
+          "id": "b",
+          "label": "The floor reads the most, because the gas is heavy"
+        },
+        {
+          "id": "c",
+          "label": "The roof reads the most, because the gas rises"
+        },
+        {
+          "id": "d",
+          "label": "The side wall reads the most, because it is the widest"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The particles fly in every direction and knock every wall alike, so the pressure is the same on all of them."
+    },
+    {
+      "id": "q1-knocks#2",
+      "quest": "q1-knocks",
+      "question": "A piston squeezes a gas into half the room at the same temperature. What happens to the knocks on the walls and to the pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Both double"
+        },
+        {
+          "id": "b",
+          "label": "Both halve"
+        },
+        {
+          "id": "c",
+          "label": "The knocks double and the pressure stays the same"
+        },
+        {
+          "id": "d",
+          "label": "Neither changes"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The same particles in half the room reach the walls twice as often, so the knocks double and so does the pressure."
+    },
+    {
+      "id": "q1-knocks#3",
+      "quest": "q1-knocks",
+      "question": "A sealed, rigid container of gas is heated. What happens to the average kinetic energy of the particles and to the pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Both increase"
+        },
+        {
+          "id": "b",
+          "label": "Both decrease"
+        },
+        {
+          "id": "c",
+          "label": "The kinetic energy increases and the pressure stays the same"
+        },
+        {
+          "id": "d",
+          "label": "The kinetic energy stays the same and the pressure increases"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Temperature measures average kinetic energy, so heating raises it. Faster particles hit the walls harder and more often, so the pressure rises too."
+    },
+    {
+      "id": "q1-knocks#4",
+      "quest": "q1-knocks",
+      "question": "Helium and krypton are at the same temperature. Which statement is true?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They have the same average kinetic energy, and helium atoms move faster"
+        },
+        {
+          "id": "b",
+          "label": "They have the same average speed, and krypton atoms carry more energy"
+        },
+        {
+          "id": "c",
+          "label": "Krypton atoms have more kinetic energy and move faster"
+        },
+        {
+          "id": "d",
+          "label": "Helium atoms have more kinetic energy but move at the same speed"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Average kinetic energy depends only on temperature. With the same energy, the lighter helium atoms must be moving faster than the heavier krypton atoms."
+    },
+    {
+      "id": "q2-laws#0",
+      "quest": "q2-laws",
+      "question": "A gas under a light piston is warmed from 20 °C to 40 °C. Roughly how does its volume change?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It grows by about 7 percent"
+        },
+        {
+          "id": "b",
+          "label": "It doubles"
+        },
+        {
+          "id": "c",
+          "label": "It stays the same"
+        },
+        {
+          "id": "d",
+          "label": "It grows by about 50 percent"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Volume follows the kelvin temperature: 20 °C is 293 K and 40 °C is 313 K, a rise of about 7 percent."
+    },
+    {
+      "id": "q2-laws#1",
+      "quest": "q2-laws",
+      "question": "At what Celsius temperature would the volume of a gas, carried back along its line, reach zero?",
+      "options": [
+        {
+          "id": "a",
+          "label": "−273 °C"
+        },
+        {
+          "id": "b",
+          "label": "0 °C"
+        },
+        {
+          "id": "c",
+          "label": "−100 °C"
+        },
+        {
+          "id": "d",
+          "label": "+273 °C"
+        }
+      ],
+      "answer": "a",
+      "explanation": "That point is absolute zero, 0 K, the start of the kelvin scale."
+    },
+    {
+      "id": "q2-laws#2",
+      "quest": "q2-laws",
+      "question": "A sealed rigid cylinder of gas is cooled from 400 K to 200 K. What happens to its pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It halves"
+        },
+        {
+          "id": "b",
+          "label": "It doubles"
+        },
+        {
+          "id": "c",
+          "label": "It stays the same"
+        },
+        {
+          "id": "d",
+          "label": "It falls to a quarter"
+        }
+      ],
+      "answer": "a",
+      "explanation": "At a fixed volume the pressure is proportional to the kelvin temperature (Gay-Lussac's law), so halving the kelvin temperature halves the pressure."
+    },
+    {
+      "id": "q2-laws#3",
+      "quest": "q2-laws",
+      "question": "A balloon holds 2.0 L of air at 300 K. Heated under the same pressure to 600 K, what is its new volume?",
+      "options": [
+        {
+          "id": "a",
+          "label": "4.0 L"
+        },
+        {
+          "id": "b",
+          "label": "2.0 L"
+        },
+        {
+          "id": "c",
+          "label": "1.0 L"
+        },
+        {
+          "id": "d",
+          "label": "8.0 L"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Volume is proportional to the kelvin temperature (Charles's law), so doubling the kelvin doubles the volume."
+    },
+    {
+      "id": "q2-laws#4",
+      "quest": "q2-laws",
+      "question": "Which of these is the same temperature as 0 K?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Absolute zero, the coldest possible"
+        },
+        {
+          "id": "b",
+          "label": "The freezing point of water"
+        },
+        {
+          "id": "c",
+          "label": "The temperature of room air"
+        },
+        {
+          "id": "d",
+          "label": "The boiling point of water"
+        }
+      ],
+      "answer": "a",
+      "explanation": "0 K is absolute zero, about −273 °C. Water freezes at 273 K."
+    },
+    {
+      "id": "q3-ideal#0",
+      "quest": "q3-ideal",
+      "question": "One mole of helium and one mole of xenon are at the same temperature and pressure. Which fills more room?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They fill the same room"
+        },
+        {
+          "id": "b",
+          "label": "Xenon, because its atoms are heavier"
+        },
+        {
+          "id": "c",
+          "label": "Helium, because its atoms move faster"
+        },
+        {
+          "id": "d",
+          "label": "Xenon, because its atoms are bigger"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Equal numbers of particles of any gas fill equal rooms at the same temperature and pressure (Avogadro's law)."
+    },
+    {
+      "id": "q3-ideal#1",
+      "quest": "q3-ideal",
+      "question": "About how much room does one mole of any gas fill at 0 °C and ordinary air pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "22.4 L"
+        },
+        {
+          "id": "b",
+          "label": "1.0 L"
+        },
+        {
+          "id": "c",
+          "label": "100 L"
+        },
+        {
+          "id": "d",
+          "label": "2.24 L"
+        }
+      ],
+      "answer": "a",
+      "explanation": "This is the molar volume of a gas."
+    },
+    {
+      "id": "q3-ideal#2",
+      "quest": "q3-ideal",
+      "question": "Tank X and Tank Y have the same pressure and the same room, but Tank X is hotter. Which holds more particles?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tank Y, the cooler one"
+        },
+        {
+          "id": "b",
+          "label": "Tank X, the hotter one"
+        },
+        {
+          "id": "c",
+          "label": "They hold the same number"
+        },
+        {
+          "id": "d",
+          "label": "It depends on the gas"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Hotter particles push harder, so fewer of them give the same pressure in the same room."
+    },
+    {
+      "id": "q3-ideal#3",
+      "quest": "q3-ideal",
+      "question": "How many moles of gas are in a rigid 8.31 L tank at 300 K and 300 kPa? (R = 8.31 kPa·L/mol·K)",
+      "options": [
+        {
+          "id": "a",
+          "label": "1.00 mol"
+        },
+        {
+          "id": "b",
+          "label": "0.10 mol"
+        },
+        {
+          "id": "c",
+          "label": "10.0 mol"
+        },
+        {
+          "id": "d",
+          "label": "3.00 mol"
+        }
+      ],
+      "answer": "a",
+      "explanation": "n = PV/RT = (300 × 8.31) / (8.31 × 300) = 1.00 mol."
+    },
+    {
+      "id": "q3-ideal#4",
+      "quest": "q3-ideal",
+      "question": "Which pair of readings multiplies out to the same number for every sample of an ideal gas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Pressure times room, divided by amount times kelvin"
+        },
+        {
+          "id": "b",
+          "label": "Pressure plus room, divided by amount"
+        },
+        {
+          "id": "c",
+          "label": "Pressure times temperature, divided by room"
+        },
+        {
+          "id": "d",
+          "label": "Room divided by pressure"
+        }
+      ],
+      "answer": "a",
+      "explanation": "That quotient is the gas constant, R, which is the same for every reading."
+    },
+    {
+      "id": "q4-mixtures#0",
+      "quest": "q4-mixtures",
+      "question": "Helium is added to a tank that already holds neon, at the same temperature. What happens to the neon's partial pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It stays the same"
+        },
+        {
+          "id": "b",
+          "label": "It rises, because the tank is more crowded"
+        },
+        {
+          "id": "c",
+          "label": "It falls, because the helium takes up room"
+        },
+        {
+          "id": "d",
+          "label": "It becomes the same as the helium's"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each gas pushes as if it were alone, so adding helium adds its own push and leaves the neon's where it was."
+    },
+    {
+      "id": "q4-mixtures#1",
+      "quest": "q4-mixtures",
+      "question": "A tank holds 0.4 mol of nitrogen and 0.1 mol of oxygen and reads 250 kPa. What is the partial pressure of the oxygen?",
+      "options": [
+        {
+          "id": "a",
+          "label": "50 kPa"
+        },
+        {
+          "id": "b",
+          "label": "100 kPa"
+        },
+        {
+          "id": "c",
+          "label": "200 kPa"
+        },
+        {
+          "id": "d",
+          "label": "25 kPa"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Oxygen is 0.1 of 0.5 mol, a mole fraction of 0.2, and 0.2 × 250 = 50 kPa."
+    },
+    {
+      "id": "q4-mixtures#2",
+      "quest": "q4-mixtures",
+      "question": "Two gases are in tanks of the same size at the same temperature. Tank X has more moles but lighter particles. Which pushes harder?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tank X, the one with more moles"
+        },
+        {
+          "id": "b",
+          "label": "The tank with the heavier particles"
+        },
+        {
+          "id": "c",
+          "label": "They push equally"
+        },
+        {
+          "id": "d",
+          "label": "It depends on the gas"
+        }
+      ],
+      "answer": "a",
+      "explanation": "In the same room at the same temperature, the push goes with the number of moles, whatever the particles weigh."
+    },
+    {
+      "id": "q4-mixtures#3",
+      "quest": "q4-mixtures",
+      "question": "Climbing a mountain, you feel short of breath. What has happened to the mole fraction of oxygen in the air?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It is the same; the total pressure is lower"
+        },
+        {
+          "id": "b",
+          "label": "It is much lower"
+        },
+        {
+          "id": "c",
+          "label": "It is much higher"
+        },
+        {
+          "id": "d",
+          "label": "It has dropped to zero"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The air is the same mixture, about 21 percent oxygen, but thinner, so oxygen's partial pressure falls with the total."
+    },
+    {
+      "id": "q4-mixtures#4",
+      "quest": "q4-mixtures",
+      "question": "The gauge of a mixture reads 300 kPa. Gas A pushes with 120 kPa and gas B with 100 kPa; there is one more gas, C. What is C's partial pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "80 kPa"
+        },
+        {
+          "id": "b",
+          "label": "100 kPa"
+        },
+        {
+          "id": "c",
+          "label": "120 kPa"
+        },
+        {
+          "id": "d",
+          "label": "520 kPa"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The partial pressures add up to the total (Dalton's law): 300 − 120 − 100 = 80 kPa."
+    },
+    {
+      "id": "q5-speed#0",
+      "quest": "q5-speed",
+      "question": "Two chambers of the same size, one of hydrogen and one of oxygen, each have a pinhole. Which empties first?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Hydrogen, because its particles are lighter and faster"
+        },
+        {
+          "id": "b",
+          "label": "Oxygen, because its particles are heavier"
+        },
+        {
+          "id": "c",
+          "label": "They empty together"
+        },
+        {
+          "id": "d",
+          "label": "It depends on the size of the hole only"
+        }
+      ],
+      "answer": "a",
+      "explanation": "At one temperature the lighter particles move faster, so more of them reach the hole each second."
+    },
+    {
+      "id": "q5-speed#1",
+      "quest": "q5-speed",
+      "question": "An unknown gas empties through a pinhole at the same pace as neon. What can you say about it?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its particles have about the same mass as neon's"
+        },
+        {
+          "id": "b",
+          "label": "It is lighter than neon"
+        },
+        {
+          "id": "c",
+          "label": "It is heavier than neon"
+        },
+        {
+          "id": "d",
+          "label": "Nothing; leaking tells you nothing about the gas"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The pace of a leak depends on the mass of the particles, so a matching pace means a matching mass."
+    },
+    {
+      "id": "q5-speed#2",
+      "quest": "q5-speed",
+      "question": "Which of these gases leaks fastest through a pinhole at one temperature?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Hydrogen"
+        },
+        {
+          "id": "b",
+          "label": "Helium"
+        },
+        {
+          "id": "c",
+          "label": "Nitrogen"
+        },
+        {
+          "id": "d",
+          "label": "Carbon dioxide"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Hydrogen has the lightest particles, so they move fastest and come to the hole most often."
+    },
+    {
+      "id": "q5-speed#3",
+      "quest": "q5-speed",
+      "question": "Ammonia and hydrogen chloride are let in at the two ends of a tube. The white ring forms nearer which end?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The hydrogen chloride end, because ammonia is lighter and spreads further"
+        },
+        {
+          "id": "b",
+          "label": "The ammonia end, because it is lighter"
+        },
+        {
+          "id": "c",
+          "label": "The middle, because they are let in together"
+        },
+        {
+          "id": "d",
+          "label": "Neither; no ring forms"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The lighter ammonia has crept further when they meet, so the meeting point is nearer the heavier gas's end."
+    },
+    {
+      "id": "q5-speed#4",
+      "quest": "q5-speed",
+      "question": "Why does a smell take seconds to cross a room when its particles move at hundreds of metres a second?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They keep colliding with air particles and wander instead of flying straight"
+        },
+        {
+          "id": "b",
+          "label": "The particles of a smell are slow"
+        },
+        {
+          "id": "c",
+          "label": "The air pushes them back"
+        },
+        {
+          "id": "d",
+          "label": "Smells are not made of particles"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Constant collisions turn a straight run into a random walk, so the distance from the start grows slowly (diffusion)."
+    },
+    {
+      "id": "q6-real#0",
+      "quest": "q6-real",
+      "question": "Helium is squeezed into a very small room. Compared with the gas law, its gauge reads:",
+      "options": [
+        {
+          "id": "a",
+          "label": "Higher, because its particles take up room themselves"
+        },
+        {
+          "id": "b",
+          "label": "Lower, because its particles pull on each other"
+        },
+        {
+          "id": "c",
+          "label": "Exactly the same"
+        },
+        {
+          "id": "d",
+          "label": "Zero"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The particles are not points: in a very small room the room they fill themselves is a large share of it, so the pressure is higher than the law says."
+    },
+    {
+      "id": "q6-real#1",
+      "quest": "q6-real",
+      "question": "Carbon dioxide is cooled until it is close to turning liquid. Compared with the gas law, its gauge reads:",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lower, because its particles pull on each other"
+        },
+        {
+          "id": "b",
+          "label": "Higher, because it is colder"
+        },
+        {
+          "id": "c",
+          "label": "Exactly the same"
+        },
+        {
+          "id": "d",
+          "label": "Infinite"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Slow particles are held back by the pull between them, so they push on the walls less than the gas law says."
+    },
+    {
+      "id": "q6-real#2",
+      "quest": "q6-real",
+      "question": "Under which conditions does a real gas behave most like an ideal gas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Low pressure and high temperature"
+        },
+        {
+          "id": "b",
+          "label": "High pressure and low temperature"
+        },
+        {
+          "id": "c",
+          "label": "High pressure and high temperature"
+        },
+        {
+          "id": "d",
+          "label": "Low pressure and low temperature"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The particles are then far apart and moving too fast for their pulls to matter."
+    },
+    {
+      "id": "q6-real#3",
+      "quest": "q6-real",
+      "question": "Which gas strays furthest from the gas law when cold: helium, nitrogen or ammonia?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ammonia, whose particles pull hardest on each other"
+        },
+        {
+          "id": "b",
+          "label": "Nitrogen"
+        },
+        {
+          "id": "c",
+          "label": "Helium"
+        },
+        {
+          "id": "d",
+          "label": "They stray equally"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The stronger the pull between particles, the further a cold gas strays below the law."
+    },
+    {
+      "id": "q6-real#4",
+      "quest": "q6-real",
+      "question": "An ideal gas has particles that take up no room and pull on nothing. What would happen if one were cooled for ever?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It would stay a gas"
+        },
+        {
+          "id": "b",
+          "label": "It would turn into a liquid"
+        },
+        {
+          "id": "c",
+          "label": "It would turn solid at once"
+        },
+        {
+          "id": "d",
+          "label": "It would explode"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Without any pull between its particles, nothing could hold them together as a liquid."
+    },
+    {
+      "id": "boss-compressor#0",
+      "quest": "boss-compressor",
+      "question": "A gas at 120 kPa is compressed at a constant temperature to one third of its volume. What is its new pressure?",
+      "options": [
+        {
+          "id": "a",
+          "label": "360 kPa"
+        },
+        {
+          "id": "b",
+          "label": "40 kPa"
+        },
+        {
+          "id": "c",
+          "label": "120 kPa"
+        },
+        {
+          "id": "d",
+          "label": "240 kPa"
+        }
+      ],
+      "answer": "a",
+      "explanation": "At a constant temperature the pressure goes inversely with the volume (Boyle's law), so one third of the volume gives three times the pressure: 360 kPa."
+    },
+    {
+      "id": "boss-compressor#1",
+      "quest": "boss-compressor",
+      "question": "A gas under a light piston starts at 27 °C. Roughly what temperature doubles its volume?",
+      "options": [
+        {
+          "id": "a",
+          "label": "327 °C"
+        },
+        {
+          "id": "b",
+          "label": "54 °C"
+        },
+        {
+          "id": "c",
+          "label": "127 °C"
+        },
+        {
+          "id": "d",
+          "label": "600 °C"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The volume follows the kelvin temperature: 27 °C is 300 K, twice that is 600 K, which is 327 °C."
+    },
+    {
+      "id": "boss-compressor#2",
+      "quest": "boss-compressor",
+      "question": "A mixture of 3.0 mol of nitrogen and 1.0 mol of oxygen has a total pressure of 200 kPa. What is the partial pressure of the oxygen?",
+      "options": [
+        {
+          "id": "a",
+          "label": "50 kPa"
+        },
+        {
+          "id": "b",
+          "label": "150 kPa"
+        },
+        {
+          "id": "c",
+          "label": "25 kPa"
+        },
+        {
+          "id": "d",
+          "label": "100 kPa"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The mole fraction of oxygen is 1.0 / 4.0 = 0.25, and its partial pressure is 0.25 × 200 = 50 kPa."
+    },
+    {
+      "id": "q3-ideal#5",
+      "quest": "q3-ideal",
+      "question": "12.25 g of KClO₃ decomposes: 2 KClO₃ → 2 KCl + 3 O₂ (KClO₃ 122.5 g/mol). What volume of O₂ is collected at 25 °C and 1.00 atm? (R = 0.0821 L·atm/(mol·K))",
+      "options": [
+        {
+          "id": "a",
+          "label": "3.67 L"
+        },
+        {
+          "id": "b",
+          "label": "2.45 L"
+        },
+        {
+          "id": "c",
+          "label": "5.51 L"
+        },
+        {
+          "id": "d",
+          "label": "24.5 L"
+        }
+      ],
+      "answer": "a",
+      "explanation": "12.25 g is 0.100 mol KClO₃, which gives 0.150 mol O₂. V = nRT/P = 0.150 × 0.0821 × 298 / 1.00 = 3.67 L."
+    }
+  ],
+  "bench": {
+    "q1-knocks": {
+      "problems": [
+        {
+          "id": "q1-knocks#b1",
+          "quest": "q1-knocks",
+          "question": "A gas in a 4.0 L syringe is at 100 kPa. The plunger is pushed in until the gas fills 2.0 L, at the same temperature. What is the pressure?",
+          "options": [
+            {
+              "id": "a",
+              "label": "50 kPa"
+            },
+            {
+              "id": "b",
+              "label": "100 kPa"
+            },
+            {
+              "id": "c",
+              "label": "400 kPa"
+            },
+            {
+              "id": "d",
+              "label": "200 kPa"
+            }
+          ],
+          "answer": "d",
+          "explanation": "At a fixed temperature, pressure x volume stays constant. Half the volume means twice the pressure: 100 x 4.0 = 200 x 2.0."
+        },
+        {
+          "id": "q1-knocks#b2",
+          "quest": "q1-knocks",
+          "question": "Why does the pressure of a gas in a rigid, sealed can rise when it is heated?",
+          "options": [
+            {
+              "id": "a",
+              "label": "There are more particles in the can"
+            },
+            {
+              "id": "b",
+              "label": "The particles move faster, so they hit the walls harder and more often"
+            },
+            {
+              "id": "c",
+              "label": "Each particle becomes heavier"
+            },
+            {
+              "id": "d",
+              "label": "The particles slow down and crowd the walls"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Heating raises the average kinetic energy. Faster particles strike the walls more often and with more force, so the pressure rises. The number of particles has not changed."
+        }
+      ]
+    },
+    "q2-laws": {
+      "problems": [
+        {
+          "id": "q2-laws#b1",
+          "quest": "q2-laws",
+          "question": "A gas occupies 3.0 L at 300 K. It is cooled to 200 K at constant pressure. What is its new volume?",
+          "options": [
+            {
+              "id": "a",
+              "label": "1.5 L"
+            },
+            {
+              "id": "b",
+              "label": "2.0 L"
+            },
+            {
+              "id": "c",
+              "label": "4.5 L"
+            },
+            {
+              "id": "d",
+              "label": "2.7 L"
+            }
+          ],
+          "answer": "b",
+          "explanation": "At constant pressure, volume is proportional to kelvin temperature: 3.0 x (200 / 300) = 2.0 L."
+        },
+        {
+          "id": "q2-laws#b2",
+          "quest": "q2-laws",
+          "question": "A sealed rigid tank holds gas at 150 kPa and 27 °C. It is heated to 127 °C. What is the new pressure?",
+          "options": [
+            {
+              "id": "a",
+              "label": "190 kPa"
+            },
+            {
+              "id": "b",
+              "label": "600 kPa"
+            },
+            {
+              "id": "c",
+              "label": "112 kPa"
+            },
+            {
+              "id": "d",
+              "label": "200 kPa"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Convert to kelvin: 300 K to 400 K. At constant volume, pressure is proportional to temperature: 150 x (400 / 300) = 200 kPa."
+        }
+      ],
+      "worked": {
+        "id": "q2-laws#w",
+        "quest": "q2-laws",
+        "title": "A Weather Balloon Rises",
+        "setup": "A balloon holds 2.0 L of air at 101 kPa and 27 °C at ground level. It rises to a height where the pressure is 50.5 kPa and the temperature is -23 °C. What is its volume there?",
+        "steps": [
+          {
+            "say": "Write the starting temperature in kelvin.",
+            "kind": "number",
+            "answer": 300,
+            "calc": "27+273",
+            "unit": "K",
+            "hint": "Add 273 to the Celsius temperature.",
+            "explain": "27 + 273 = 300 K."
+          },
+          {
+            "say": "Write the final temperature in kelvin.",
+            "kind": "number",
+            "answer": 250,
+            "calc": "-23+273",
+            "unit": "K",
+            "hint": "Add 273 again.",
+            "explain": "-23 + 273 = 250 K."
+          },
+          {
+            "say": "By what factor does the lower pressure change the volume? (initial pressure / final pressure)",
+            "kind": "number",
+            "answer": 2,
+            "calc": "101/50.5",
+            "hint": "Less pressure on the gas lets it expand: volume goes as 1 / pressure.",
+            "explain": "101 / 50.5 = 2.00, so the pressure drop alone doubles the volume."
+          },
+          {
+            "say": "By what factor does the lower temperature change the volume? (final / initial temperature)",
+            "kind": "number",
+            "answer": 0.8333,
+            "calc": "250/300",
+            "tol": 0.005,
+            "hint": "Volume goes as the kelvin temperature.",
+            "explain": "250 / 300 = 0.833, so the cooling alone shrinks the volume to 83% of its size."
+          },
+          {
+            "say": "What is the final volume?",
+            "kind": "number",
+            "answer": 3.333,
+            "calc": "2.0*2*(250/300)",
+            "unit": "L",
+            "tol": 0.005,
+            "hint": "Multiply the starting volume by both factors.",
+            "explain": "2.0 x 2.00 x 0.833 = 3.3 L."
+          }
+        ],
+        "finish": "Each change acts independently on the volume. Convert to kelvin, find each factor and multiply them together."
+      }
+    },
+    "q3-ideal": {
+      "problems": [
+        {
+          "id": "q3-ideal#b1",
+          "quest": "q3-ideal",
+          "question": "How many moles of gas are in 2.46 L at 1.00 atm and 300 K? (R = 0.0821 L atm/mol K)",
+          "options": [
+            {
+              "id": "a",
+              "label": "1.00 mol"
+            },
+            {
+              "id": "b",
+              "label": "0.0100 mol"
+            },
+            {
+              "id": "c",
+              "label": "0.100 mol"
+            },
+            {
+              "id": "d",
+              "label": "0.0821 mol"
+            }
+          ],
+          "answer": "c",
+          "explanation": "n = PV / RT = (1.00 x 2.46) / (0.0821 x 300) = 0.100 mol."
+        },
+        {
+          "id": "q3-ideal#b2",
+          "quest": "q3-ideal",
+          "question": "At the same temperature and pressure, which gas is denser: carbon dioxide (44 g/mol) or methane (16 g/mol)?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Carbon dioxide"
+            },
+            {
+              "id": "b",
+              "label": "Methane"
+            },
+            {
+              "id": "c",
+              "label": "They have the same density"
+            },
+            {
+              "id": "d",
+              "label": "It depends on the container"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Equal volumes at the same T and P hold equal moles. A mole of CO₂ has the greater mass, so a given volume of CO₂ weighs more."
+        }
+      ],
+      "worked": {
+        "id": "q3-ideal#w",
+        "quest": "q3-ideal",
+        "title": "Identifying a Gas from a Sealed Sample",
+        "setup": "A flask of 0.250 L holds 0.440 g of a gas at 100 kPa and 27 °C. The gas is one of CH₄ (16.0 g/mol), N₂ (28.0 g/mol), CO₂ (44.0 g/mol) or Cl₂ (71.0 g/mol). Which is it? (R = 8.314 kPa L/mol K)",
+        "steps": [
+          {
+            "say": "Write the temperature in kelvin, using 273 as the offset.",
+            "kind": "number",
+            "answer": 300,
+            "calc": "27+273",
+            "unit": "K",
+            "hint": "Add 273 to the Celsius temperature.",
+            "explain": "27 + 273 = 300 K."
+          },
+          {
+            "say": "How many moles of gas are in the flask?",
+            "kind": "number",
+            "answer": 0.01002,
+            "calc": "100*0.250/(8.314*300)",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "n = PV / RT with P in kPa, V in L.",
+            "explain": "n = (100 x 0.250) / (8.314 x 300) = 0.0100 mol."
+          },
+          {
+            "say": "What is the molar mass of the gas?",
+            "kind": "number",
+            "answer": 43.9,
+            "calc": "0.440/(100*0.250/(8.314*300))",
+            "unit": "g/mol",
+            "tol": 0.005,
+            "hint": "Molar mass is mass divided by moles.",
+            "explain": "0.440 / 0.01002 = 43.9 g/mol."
+          },
+          {
+            "say": "Which gas is it?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "CH₄"
+              },
+              {
+                "id": "b",
+                "label": "N₂"
+              },
+              {
+                "id": "c",
+                "label": "CO₂"
+              },
+              {
+                "id": "d",
+                "label": "Cl₂"
+              }
+            ],
+            "answer": "c",
+            "hint": "Compare with the four molar masses.",
+            "explain": "43.9 g/mol matches CO₂ at 44.0."
+          },
+          {
+            "say": "What is the density of the gas in the flask?",
+            "kind": "number",
+            "answer": 1.76,
+            "calc": "0.440/0.250",
+            "unit": "g/L",
+            "hint": "Mass divided by volume.",
+            "explain": "0.440 g / 0.250 L = 1.76 g/L."
+          }
+        ],
+        "finish": "The gas law turns pressure, volume and temperature into moles. Dividing the mass by the moles gives the molar mass, which identifies the gas."
+      }
+    },
+    "q4-mixtures": {
+      "problems": [
+        {
+          "id": "q4-mixtures#b1",
+          "quest": "q4-mixtures",
+          "question": "Air at 101 kPa is 21% oxygen by moles. What is the partial pressure of oxygen?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.21 kPa"
+            },
+            {
+              "id": "b",
+              "label": "21 kPa"
+            },
+            {
+              "id": "c",
+              "label": "101 kPa"
+            },
+            {
+              "id": "d",
+              "label": "80 kPa"
+            }
+          ],
+          "answer": "b",
+          "explanation": "A gas's partial pressure is its mole fraction times the total pressure: 0.21 x 101 = 21 kPa."
+        },
+        {
+          "id": "q4-mixtures#b2",
+          "quest": "q4-mixtures",
+          "question": "A gas is collected over water at a total pressure of 100 kPa. The water vapour pressure is 3.2 kPa. What is the pressure of the dry gas?",
+          "options": [
+            {
+              "id": "a",
+              "label": "103.2 kPa"
+            },
+            {
+              "id": "b",
+              "label": "100 kPa"
+            },
+            {
+              "id": "c",
+              "label": "3.2 kPa"
+            },
+            {
+              "id": "d",
+              "label": "96.8 kPa"
+            }
+          ],
+          "answer": "d",
+          "explanation": "The total is the sum of the partial pressures. Subtract the water vapour: 100 - 3.2 = 96.8 kPa."
+        }
+      ],
+      "worked": {
+        "id": "q4-mixtures#w",
+        "quest": "q4-mixtures",
+        "title": "Hydrogen Collected Over Water",
+        "setup": "A student reacts 0.654 g of zinc (65.4 g/mol) with acid, giving one mole of hydrogen gas for each mole of zinc. The hydrogen is collected over water at 25 °C (298 K) with a total pressure of 101.3 kPa. The water vapour pressure at 25 °C is 3.2 kPa. What volume of gas is collected? (R = 8.314 kPa L/mol K)",
+        "steps": [
+          {
+            "say": "How many moles of zinc react?",
+            "kind": "number",
+            "answer": 0.01,
+            "calc": "0.654/65.4",
+            "unit": "mol",
+            "hint": "Moles = mass / molar mass.",
+            "explain": "0.654 / 65.4 = 0.0100 mol."
+          },
+          {
+            "say": "How many moles of hydrogen form?",
+            "kind": "number",
+            "answer": 0.01,
+            "calc": "0.01*1",
+            "unit": "mol",
+            "hint": "One mole of hydrogen per mole of zinc.",
+            "explain": "The ratio is 1 to 1, so 0.0100 mol of hydrogen."
+          },
+          {
+            "say": "What is the pressure of the hydrogen alone?",
+            "kind": "number",
+            "answer": 98.1,
+            "calc": "101.3-3.2",
+            "unit": "kPa",
+            "hint": "Total pressure minus the pressure of the water vapour.",
+            "explain": "101.3 - 3.2 = 98.1 kPa."
+          },
+          {
+            "say": "What volume does the hydrogen fill?",
+            "kind": "number",
+            "answer": 0.2526,
+            "calc": "0.0100*8.314*298/98.1",
+            "unit": "L",
+            "tol": 0.005,
+            "hint": "V = nRT / P using the hydrogen's own pressure.",
+            "explain": "V = (0.0100 x 8.314 x 298) / 98.1 = 0.253 L."
+          },
+          {
+            "say": "A student wrongly used 101.3 kPa in that step. How would the volume change?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "It would come out too small"
+              },
+              {
+                "id": "b",
+                "label": "It would come out too large"
+              },
+              {
+                "id": "c",
+                "label": "It would be unchanged"
+              },
+              {
+                "id": "d",
+                "label": "It would come out as zero"
+              }
+            ],
+            "answer": "a",
+            "hint": "A higher pressure squeezes the same moles into less room.",
+            "explain": "V = nRT / P, so a larger P gives a smaller V. The hydrogen is pushing at only 98.1 kPa."
+          }
+        ],
+        "finish": "A gas over water is a mixture, so subtract the vapour pressure before using the gas law for the dry gas."
+      }
+    },
+    "q5-speed": {
+      "problems": [
+        {
+          "id": "q5-speed#b1",
+          "quest": "q5-speed",
+          "question": "Root-mean-square speed is proportional to the square root of temperature. By what factor does it change when a gas is heated from 100 K to 400 K?",
+          "options": [
+            {
+              "id": "a",
+              "label": "4"
+            },
+            {
+              "id": "b",
+              "label": "16"
+            },
+            {
+              "id": "c",
+              "label": "2"
+            },
+            {
+              "id": "d",
+              "label": "1/2"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The temperature rises by 4. The speed goes as its square root, so it doubles."
+        },
+        {
+          "id": "q5-speed#b2",
+          "quest": "q5-speed",
+          "question": "How does the effusion rate of helium (4.0 g/mol) compare with that of methane (16 g/mol) at the same temperature?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Helium is 2 times faster"
+            },
+            {
+              "id": "b",
+              "label": "Helium is 4 times faster"
+            },
+            {
+              "id": "c",
+              "label": "Helium is 2 times slower"
+            },
+            {
+              "id": "d",
+              "label": "They are the same"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Rate goes as 1 / √(molar mass). Methane is 4 times heavier, so helium effuses √4 = 2 times faster."
+        }
+      ],
+      "worked": {
+        "id": "q5-speed#w",
+        "quest": "q5-speed",
+        "title": "Naming an Unknown Gas by Its Speed",
+        "setup": "An unknown gas effuses at 0.707 times the rate of oxygen (32.0 g/mol) at the same temperature. Oxygen takes 60.0 s to effuse out of a chamber. Identify the gas and find its time. (R = 8.314 J/mol K)",
+        "steps": [
+          {
+            "say": "What is the root-mean-square speed of oxygen at 300 K? Use u = √(3RT / M) with M in kg/mol.",
+            "kind": "number",
+            "answer": 483.6,
+            "calc": "Math.sqrt(3*8.314*300/0.0320)",
+            "unit": "m/s",
+            "tol": 0.005,
+            "hint": "Molar mass of oxygen is 0.0320 kg/mol.",
+            "explain": "u = √(3 x 8.314 x 300 / 0.0320) = 484 m/s."
+          },
+          {
+            "say": "Graham's law: M(unknown) / M(O₂) = (rate of O₂ / rate of unknown)². What is the right-hand side?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "(1/0.707)^2",
+            "tol": 0.01,
+            "hint": "The rate of O₂ divided by the rate of the unknown is 1 / 0.707.",
+            "explain": "(1 / 0.707)² = 2.00."
+          },
+          {
+            "say": "What is the molar mass of the unknown gas?",
+            "kind": "number",
+            "answer": 64,
+            "calc": "2*32.0",
+            "unit": "g/mol",
+            "tol": 0.01,
+            "hint": "Multiply 32.0 by the result of the last step.",
+            "explain": "2.00 x 32.0 = 64.0 g/mol."
+          },
+          {
+            "say": "Which gas fits?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "SO₂"
+              },
+              {
+                "id": "b",
+                "label": "CO₂"
+              },
+              {
+                "id": "c",
+                "label": "Cl₂"
+              },
+              {
+                "id": "d",
+                "label": "NO₂"
+              }
+            ],
+            "answer": "a",
+            "hint": "Add atomic masses: S is 32.1, O is 16.0.",
+            "explain": "SO₂ has a molar mass of 32.1 + 2(16.0) = 64.1 g/mol."
+          },
+          {
+            "say": "How long does the unknown take to effuse out of the same chamber?",
+            "kind": "number",
+            "answer": 84.9,
+            "calc": "60.0/0.707",
+            "unit": "s",
+            "tol": 0.005,
+            "hint": "It is slower, so its time is the oxygen time divided by 0.707.",
+            "explain": "60.0 / 0.707 = 84.9 s."
+          }
+        ],
+        "finish": "Heavier molecules move more slowly, so Graham's law turns a measured rate into a molar mass."
+      }
+    },
+    "q6-real": {
+      "problems": [
+        {
+          "id": "q6-real#b1",
+          "quest": "q6-real",
+          "question": "In the van der Waals equation, why does the attraction between particles lower the pressure below the ideal value?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Particles take up room and cannot move"
+            },
+            {
+              "id": "b",
+              "label": "Particles near the wall are pulled back by their neighbours, so they hit it more softly"
+            },
+            {
+              "id": "c",
+              "label": "The particles slow down at the wall"
+            },
+            {
+              "id": "d",
+              "label": "The container expands under the attraction"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Attraction pulls a particle back from the wall as it arrives, weakening the collision. The measured pressure is lower than if the particles ignored each other."
+        },
+        {
+          "id": "q6-real#b2",
+          "quest": "q6-real",
+          "question": "Which gas is closest to ideal at 1 atm and 300 K?",
+          "options": [
+            {
+              "id": "a",
+              "label": "NH₃"
+            },
+            {
+              "id": "b",
+              "label": "CO₂"
+            },
+            {
+              "id": "c",
+              "label": "H₂O vapour"
+            },
+            {
+              "id": "d",
+              "label": "H₂"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Hydrogen has small particles that pull on each other very weakly. NH₃ and H₂O attract each other strongly, and CO₂ is larger and more attractive."
+        }
+      ]
+    },
+    "boss-compressor": {
+      "problems": [
+        {
+          "id": "boss-compressor#b1",
+          "quest": "boss-compressor",
+          "question": "What is the pressure of 2.0 mol of gas in a 10 L tank at 300 K? (R = 8.314 kPa L/mol K)",
+          "options": [
+            {
+              "id": "a",
+              "label": "50 kPa"
+            },
+            {
+              "id": "b",
+              "label": "499 kPa"
+            },
+            {
+              "id": "c",
+              "label": "4.99 kPa"
+            },
+            {
+              "id": "d",
+              "label": "1000 kPa"
+            }
+          ],
+          "answer": "b",
+          "explanation": "P = nRT / V = (2.0 x 8.314 x 300) / 10 = 499 kPa."
+        },
+        {
+          "id": "boss-compressor#b2",
+          "quest": "boss-compressor",
+          "question": "What is the density of nitrogen (28.0 g/mol) at 100 kPa and 300 K? (R = 8.314 kPa L/mol K)",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.89 g/L"
+            },
+            {
+              "id": "b",
+              "label": "28 g/L"
+            },
+            {
+              "id": "c",
+              "label": "0.036 g/L"
+            },
+            {
+              "id": "d",
+              "label": "1.12 g/L"
+            }
+          ],
+          "answer": "d",
+          "explanation": "d = PM / RT = (100 x 28.0) / (8.314 x 300) = 1.12 g/L."
+        }
+      ],
+      "worked": {
+        "id": "boss-compressor#w",
+        "quest": "boss-compressor",
+        "title": "A Mixture in a Rigid Cylinder",
+        "setup": "A rigid 10.0 L cylinder holds 0.40 mol of nitrogen (28.0 g/mol) and 0.10 mol of oxygen (32.0 g/mol) at 300 K. Find the pressure, the density, and what heating to 600 K does. (R = 8.314 kPa L/mol K)",
+        "steps": [
+          {
+            "say": "What is the total number of moles of gas?",
+            "kind": "number",
+            "answer": 0.5,
+            "calc": "0.40+0.10",
+            "unit": "mol",
+            "hint": "Add the two amounts.",
+            "explain": "0.40 + 0.10 = 0.50 mol."
+          },
+          {
+            "say": "What is the total pressure?",
+            "kind": "number",
+            "answer": 124.7,
+            "calc": "0.5*8.314*300/10.0",
+            "unit": "kPa",
+            "tol": 0.005,
+            "hint": "P = nRT / V with all the moles.",
+            "explain": "P = (0.50 x 8.314 x 300) / 10.0 = 125 kPa."
+          },
+          {
+            "say": "What is the partial pressure of the oxygen?",
+            "kind": "number",
+            "answer": 24.94,
+            "calc": "(0.10/0.50)*124.7",
+            "unit": "kPa",
+            "tol": 0.005,
+            "hint": "Mole fraction of oxygen times total pressure.",
+            "explain": "(0.10 / 0.50) x 124.7 = 24.9 kPa."
+          },
+          {
+            "say": "What is the mass of gas in the cylinder?",
+            "kind": "number",
+            "answer": 14.4,
+            "calc": "0.40*28.0+0.10*32.0",
+            "unit": "g",
+            "hint": "Moles times molar mass for each gas, added.",
+            "explain": "0.40 x 28.0 + 0.10 x 32.0 = 11.2 + 3.2 = 14.4 g."
+          },
+          {
+            "say": "What is the density of the mixture?",
+            "kind": "number",
+            "answer": 1.44,
+            "calc": "14.4/10.0",
+            "unit": "g/L",
+            "hint": "Mass / volume.",
+            "explain": "14.4 / 10.0 = 1.44 g/L."
+          },
+          {
+            "say": "The cylinder is heated to 600 K. What is the new total pressure?",
+            "kind": "number",
+            "answer": 249.4,
+            "calc": "0.5*8.314*600/10.0",
+            "unit": "kPa",
+            "tol": 0.005,
+            "hint": "Volume and moles are fixed, so pressure doubles with kelvin temperature.",
+            "explain": "P = (0.50 x 8.314 x 600) / 10.0 = 249 kPa, twice the value at 300 K."
+          },
+          {
+            "say": "At 600 K, which gas has the faster average particles?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Nitrogen"
+              },
+              {
+                "id": "b",
+                "label": "Oxygen"
+              },
+              {
+                "id": "c",
+                "label": "They move at the same speed"
+              },
+              {
+                "id": "d",
+                "label": "Neither, because the gases are mixed"
+              }
+            ],
+            "answer": "a",
+            "hint": "Same temperature means same average kinetic energy.",
+            "explain": "Equal average kinetic energy means the lighter particles move faster. Nitrogen is 28.0 against 32.0."
+          }
+        ],
+        "finish": "Total moles set the pressure, mole fractions set the partial pressures, and molar mass sets the density and the speeds."
+      }
+    }
+  }
+}

@@ -1273,11 +1273,11 @@ function hopperFall(ctx, w, h, t, clock = 0) {
  * The other worlds' painters were drawn on a 960 x 540 plate. They run in those units, scaled up to the canvas, so
  * their lines, labels and sizes come out as drawn; only the plate under them and the shading of their discs are the kit's.
  */
-const legacy = scenes => Object.fromEntries(Object.entries(scenes).map(([id, fn]) => [id, (ctx, w, h, t) => {
+const legacy = scenes => Object.fromEntries(Object.entries(scenes).map(([id, fn]) => [id, (ctx, w, h, t, clock = 0) => {
   const k = w / 960;
   ctx.save();
   ctx.scale(k, k);
-  fn(ctx, 960, h / k, t);
+  fn(ctx, 960, h / k, t, clock);
   ctx.restore();
 }]));
 

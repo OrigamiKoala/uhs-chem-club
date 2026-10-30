@@ -23,7 +23,7 @@ import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { heatTable, charge, note, cupFixture, shelvesFixture, plaqueFixture, markerFixture, markerRead, cupRead, shelvesRead, fixed, FUELS, SPECIFIC_HEAT_WATER } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\benthalpy\b/i, introducedAt: 1 },
@@ -47,6 +47,9 @@ const GUESS_LABEL = { hydrogen: 'hydrogen', methane: 'methane', methanol: 'metha
 // Stage 1: 0.05 mol of a powder gives 8 kJ to a 200 g bath: 160 kJ for every mole.
 const POWDER = { moles: 0.05, dH: -160 };
 const AFTER = [-320, -160, 0, 160, 320];
+// Stage 8: a reaction-progress diagram, levels in kJ. The forward barrier is 60 kJ and ΔH is -40 kJ, so the reverse barrier is 100 kJ.
+const BARRIER = { r: 100, p: 60, peak: 160 };
+const EA_REVERSE = BARRIER.peak - BARRIER.p;
 
 // Stage 2: the same powder at three amounts on the dial, and 0.30 mol beyond it (48 kJ).
 const SCALE_MOLES = [0.05, 0.1, 0.2];
@@ -347,6 +350,38 @@ export const STAGES = [
       title: 'The Limiting Reactant',
       body: 'The reactant that runs out first, here the 0.040 mol of HCl, is the limiting reactant, and it sets how many moles of reaction happen. The heat is that many moles times ΔH: 0.040 × 56 = 2.24 kJ, and the extra NaOH stays unreacted.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-barrier',
+    title: 'The Way Back Over the Hill',
+    prompt: 'Type the activation energy of the reverse reaction, in kJ.',
+    entry: { id: 'ea', label: 'Reverse activation energy', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        shelvesFixture('chart', { x: 40, y: 32 }, { reactants: 'Reactants', products: 'Products', dH: BARRIER.p - BARRIER.r, levels: BARRIER, hideValue: true, hideVerdict: true, title: 'Reaction progress', w: 70 }),
+        plaqueFixture('facts', 'Energy levels', { x: 112, y: 32 }, ['Reactants: 100 kJ', 'Top of the hill: 160 kJ', 'Products: 60 kJ'], { w: 36 })
+      ]
+    }),
+    hints: [
+      'Use the diagram and the plate of levels.',
+      'The reverse reaction starts on the products\' shelf and climbs to the top of the same hill.',
+      'Subtract the products\' level from the top of the hill.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ea');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
+      if (Math.abs(v - EA_REVERSE) <= 0.6) return { ok: true };
+      if (Math.abs(v - (BARRIER.peak - BARRIER.r)) <= 0.6) return { ok: false, msg: 'That is the climb from the reactants, and the reverse reaction starts on the other shelf.' };
+      return { ok: false, msg: `${fixed(v, 0)} kJ above the products\' shelf does not reach the top of the hill on the diagram.` };
+    },
+    reward: {
+      log: 'The reverse reaction climbs 100 kJ.',
+      title: 'Activation Energy',
+      body: 'The forward reaction climbs 60 kJ from reactants to the top of the hill and releases 40 kJ overall (ΔH = −40 kJ). The reverse reaction starts lower, so it climbs 60 + 40 = 100 kJ.'
+    }
   }
 ];
 
@@ -358,7 +393,8 @@ const NOTES = {
   4: ['Drag a tin onto the cup, then back to the rail.'],
   5: ['Type your answer in the field at the bottom.'],
   6: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
-  7: ['Type your answer in the field at the bottom.']
+  7: ['Type your answer in the field at the bottom.'],
+  8: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -374,65 +410,6 @@ export const DEBRIEF = {
     }
   ]
 };
-
-/* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'For N₂(g) + 3 H₂(g) → 2 NH₃(g), ΔH = −92 kJ. What is ΔH for 2 NH₃(g) → N₂(g) + 3 H₂(g)?',
-    options: [
-      { id: 'a', label: '+92 kJ' },
-      { id: 'b', label: '−92 kJ' },
-      { id: 'c', label: '+184 kJ' },
-      { id: 'd', label: '0 kJ' }
-    ],
-    answer: 'a',
-    explanation: 'Reversing a reaction swaps the reactants and products, so ΔH keeps its size and changes its sign.'
-  },
-  {
-    question: 'C(s) + O₂(g) → CO₂(g) has ΔH = −393.5 kJ/mol. How much heat is released when 2.00 mol of carbon burns completely?',
-    options: [
-      { id: 'a', label: '787 kJ' },
-      { id: 'b', label: '394 kJ' },
-      { id: 'c', label: '197 kJ' },
-      { id: 'd', label: '1574 kJ' }
-    ],
-    answer: 'a',
-    explanation: 'Two moles release twice the heat of one mole: 2.00 mol × 393.5 kJ/mol is about 787 kJ.'
-  },
-  {
-    question: 'Why is a fuel’s ΔH more negative when it burns to liquid water than to water vapour?',
-    options: [
-      { id: 'a', label: 'Condensing the vapour to a liquid releases extra heat' },
-      { id: 'b', label: 'Condensing the vapour to a liquid absorbs heat from the flame' },
-      { id: 'c', label: 'Liquid water contains more oxygen atoms than vapour' }
-    ],
-    answer: 'a',
-    explanation: 'Liquid water sits lower in enthalpy than vapour, so ending as a liquid releases the enthalpy of condensation as well.'
-  },
-  {
-    question: 'When 0.10 mol of a salt dissolves in a calorimeter, the water bath loses 1.5 kJ. What is ΔH for dissolving one mole of the salt?',
-    options: [
-      { id: 'a', label: '+15 kJ/mol' },
-      { id: 'b', label: '−15 kJ/mol' },
-      { id: 'c', label: '+1.5 kJ/mol' },
-      { id: 'd', label: '−1.5 kJ/mol' }
-    ],
-    answer: 'a',
-    explanation: 'The bath lost the energy the salt gained, so ΔH is positive, and 1.5 kJ divided by 0.10 mol is 15 kJ/mol.'
-  },
-  {
-    question: 'Burning 1.0 mol of carbon (12.0 g/mol) releases 394 kJ, and burning 1.0 mol of hydrogen (2.0 g/mol) releases 286 kJ. Which releases more heat per gram?',
-    options: [
-      { id: 'a', label: 'Hydrogen, because a gram of it holds many more moles' },
-      { id: 'b', label: 'Carbon, because 394 kJ is larger than 286 kJ' },
-      { id: 'c', label: 'Both release the same heat per gram' }
-    ],
-    answer: 'a',
-    explanation: 'Divide by the molar mass: hydrogen gives about 143 kJ per gram and carbon about 33 kJ per gram.'
-  }
-];
 
 /* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
@@ -451,7 +428,8 @@ export const SOLUTIONS = [
   [...tryAll(), ...rail(BY_GRAM)],
   [{ type: { entry: 'kj', value: '860' } }],
   [put('powder', MOUTH), { type: { entry: 't', value: '43.9' } }],
-  [{ type: { entry: 'q', value: '2.24' } }]
+  [{ type: { entry: 'q', value: '2.24' } }],
+  [{ type: { entry: 'ea', value: '100' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -462,7 +440,8 @@ export const MISSES = [
   [...tryAll(), ...rail(['methane', 'hydrogen', 'methanol', 'carbon'])],
   [{ type: { entry: 'kj', value: '570' } }],
   [put('powder', MOUTH), { type: { entry: 't', value: '40' } }],
-  [{ type: { entry: 'q', value: '3.36' } }]
+  [{ type: { entry: 'q', value: '3.36' } }],
+  [{ type: { entry: 'ea', value: '60' } }]
 ];
 
 function blankState() { return {}; }
@@ -486,5 +465,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { T_FINAL, Q_NEUT, POWDER, AFTER, SCALE_MOLES, Q_ASKED, Q_EQN, EQN_DH, GRAMS, TANK, FUEL_IDS, BY_GRAM, riseOf, molesOf };
+export const CHECKS = { BARRIER, EA_REVERSE, T_FINAL, Q_NEUT, POWDER, AFTER, SCALE_MOLES, Q_ASKED, Q_EQN, EQN_DH, GRAMS, TANK, FUEL_IDS, BY_GRAM, riseOf, molesOf };
 export { cupRead, shelvesRead };

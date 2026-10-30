@@ -415,67 +415,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'What is the electron geometry of a central atom with four electron domains?',
-    options: [
-      { id: 'a', label: 'Tetrahedral' },
-      { id: 'b', label: 'Trigonal planar' },
-      { id: 'c', label: 'Linear' },
-      { id: 'd', label: 'Octahedral' }
-    ],
-    answer: 'a',
-    explanation: 'Four domains push to the corners of a tetrahedron, with ideal angles of 109.5 degrees.'
-  },
-  {
-    question: 'What is the molecular geometry of NH₃?',
-    options: [
-      { id: 'a', label: 'Trigonal pyramidal' },
-      { id: 'b', label: 'Trigonal planar' },
-      { id: 'c', label: 'Tetrahedral' },
-      { id: 'd', label: 'Bent' }
-    ],
-    answer: 'a',
-    explanation: 'Nitrogen has four domains, one of them a lone pair. With three atoms only, the shape is trigonal pyramidal.'
-  },
-  {
-    question: 'Why is the H–O–H angle in water (104.5°) smaller than the tetrahedral angle?',
-    options: [
-      { id: 'a', label: 'Lone pairs repel bonding pairs more strongly than bonding pairs repel each other' },
-      { id: 'b', label: 'Oxygen is larger than hydrogen' },
-      { id: 'c', label: 'The O–H bonds are double bonds' },
-      { id: 'd', label: 'Water has no lone pairs' }
-    ],
-    answer: 'a',
-    explanation: 'The two lone pairs on oxygen take more room than bonding pairs, squeezing the bond angle below 109.5 degrees.'
-  },
-  {
-    question: 'How many electron domains does the carbon atom in CO₂ have?',
-    options: [
-      { id: 'a', label: '2' },
-      { id: 'b', label: '4' },
-      { id: 'c', label: '3' },
-      { id: 'd', label: '1' }
-    ],
-    answer: 'a',
-    explanation: 'Each double bond is one region of electron density, so carbon has two domains and CO₂ is linear.'
-  },
-  {
-    question: 'What is the molecular geometry of XeF₄?',
-    options: [
-      { id: 'a', label: 'Square planar' },
-      { id: 'b', label: 'Tetrahedral' },
-      { id: 'c', label: 'Octahedral' },
-      { id: 'd', label: 'Seesaw' }
-    ],
-    answer: 'a',
-    explanation: 'Xenon has six domains, two of them lone pairs placed opposite each other. The four fluorine atoms lie in a plane.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. An arm is dropped on the hub (`on`); nothing here says where an arm settles.

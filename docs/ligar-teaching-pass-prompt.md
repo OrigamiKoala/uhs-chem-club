@@ -2,7 +2,7 @@
 
 Do the whole job in one autonomous run: do not stop between tasks to ask me what is next. Ask only about a conflict with PRODUCT.md or a decision that is genuinely mine.
 
-**Start by reading `docs/original-prompt.md`** (setup tricks for the browser, the audit and fix process, the rules and the traps; world = Ligar, unit = `unit03`) and follow it. This file adds only what is specific to where Ligar stands now. Then read `docs/Ligar-audit.md`, especially its work log, the teaching-quality section, and the open defects.
+**Start by reading `docs/original-prompt.md`** (setup tricks for the browser, the audit and fix process, the rules and the traps; world = Ligar, unit = `unit03`) and follow it. This file adds only what is specific to where Ligar stands now. Then read `docs/archive/2026-10-29/Ligar-audit.md`, especially its work log, the teaching-quality section, and the open defects.
 
 ## What has been done (do not redo it, but do re-check it by playing it)
 
@@ -40,4 +40,4 @@ A previous agent audited Ligar, fixed operability bugs and rewrote or added thes
 
 ## Deliver
 
-Everything in `docs/original-prompt.md` section 3, plus: in `docs/Ligar-audit.md`, mark each stage listed above as played-by-real-gesture or not, and finish with the short list of stages only I can judge by playing.
+Everything in `docs/original-prompt.md` section 3, plus: in `docs/archive/2026-10-29/Ligar-audit.md`, mark each stage listed above as played-by-real-gesture or not, and finish with the short list of stages only I can judge by playing.

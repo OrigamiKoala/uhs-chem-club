@@ -315,69 +315,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   Shown at the END OF THE WORLD, after the last debrief, which is why
-   they may use the real names freely.
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'Which pair of atoms forms an ionic bond?',
-    options: [
-      { id: 'a', label: 'Sodium and chlorine' },
-      { id: 'b', label: 'Chlorine and chlorine' },
-      { id: 'c', label: 'Neon and neon' },
-      { id: 'd', label: 'Hydrogen and hydrogen' }
-    ],
-    answer: 'a',
-    explanation: 'An ionic bond requires a metal and a nonmetal to transfer electrons. Sodium is a metal and chlorine is a nonmetal, so they form an ionic bond.'
-  },
-  {
-    question: 'Neon will not bond to anything. Why not?',
-    options: [
-      { id: 'a', label: 'It is too light' },
-      { id: 'b', label: 'Its outer shell is already full, so a bond would gain it nothing' },
-      { id: 'c', label: 'It has no electrons at all' },
-      { id: 'd', label: 'It is a metal' }
-    ],
-    answer: 'b',
-    explanation: 'Neon has a complete valence shell of eight electrons. Because atoms bond to achieve full valence shells, neon is energetically stable and chemically inert.'
-  },
-  {
-    question: 'Magnesium has two electrons on its outer shell and chlorine needs one. How many chlorine atoms does one magnesium atom bond to?',
-    options: [
-      { id: 'a', label: 'One' },
-      { id: 'b', label: 'Two' },
-      { id: 'c', label: 'Three' },
-      { id: 'd', label: 'Four' }
-    ],
-    answer: 'b',
-    explanation: 'Magnesium loses two electrons and each chlorine accepts one. Therefore, two chloride ions balance one magnesium ion to produce neutral MgCl2.'
-  },
-  {
-    question: 'Two oxygen atoms bond together. What kind of bond is it, and how many pairs of electrons does it hold?',
-    options: [
-      { id: 'a', label: 'Ionic, holding one pair' },
-      { id: 'b', label: 'Covalent, holding one pair' },
-      { id: 'c', label: 'Covalent, holding two pairs' },
-      { id: 'd', label: 'Covalent, holding three pairs' }
-    ],
-    answer: 'c',
-    explanation: 'Both atoms are nonmetals, forming a covalent bond. Oxygen has six valence electrons and shares two pairs to complete its octet, forming a double bond.'
-  },
-  {
-    question: 'Aluminium has three electrons on its outer shell and chlorine needs one. What is the ratio of aluminium to chlorine in the compound they make?',
-    options: [
-      { id: 'a', label: '1 to 1' },
-      { id: 'b', label: '1 to 2' },
-      { id: 'c', label: '1 to 3' },
-      { id: 'd', label: '3 to 1' }
-    ],
-    answer: 'c',
-    explanation: 'Aluminium forms an Al3+ cation and each chlorine forms a Cl- anion. Three chloride ions balance one aluminium ion, yielding AlCl3.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one
    through the reducer by direct actions, by drag and by two taps, and every join in it is the

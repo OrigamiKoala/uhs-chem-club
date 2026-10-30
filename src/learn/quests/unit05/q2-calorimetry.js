@@ -28,7 +28,7 @@ import {
   SPECIFIC_HEAT_WATER, heatTransfer, blockSpecificHeat
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bspecific heat capacity\b/i, introducedAt: 2 },
@@ -61,6 +61,8 @@ const FITTING = { m: 50, c: 0.385, T: 65.4 };
 const ICE = { m: 20, c: 2.09, T: 0, latent: 334 };
 const Q_MELT = ICE.m * ICE.latent;
 // Stage 7: 10.0 g of ice at 0 degrees to steam at 100 degrees: 3.34 + 4.18 + 22.6 kJ.
+// Stage 8: 10.0 g of steam at 100 °C condenses and cools to water at 25 °C; the heat leaves, so it is typed as a positive figure.
+const Q_COND = (10 * 2260 + 10 * SPECIFIC_HEAT_WATER * 75) / 1000;
 const Q_CURVE = (10 * 334 + 10 * SPECIFIC_HEAT_WATER * 100 + 10 * 2260) / 1000;
 /** Where a given heat (J) leaves those 10.0 g, in words. */
 function reached(q) {
@@ -359,6 +361,42 @@ export const STAGES = [
       title: 'Heat of Vaporization',
       body: 'The path has three costs: 3.34 kJ to melt the ice, 4.18 kJ to warm the water to 100 °C, and 22.6 kJ to boil it, which is the heat of vaporization. Boiling costs most of the total because it pulls the particles completely apart.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-condense',
+    title: 'Steam to Water',
+    prompt: 'Type the heat given out when 10.0 g of steam at 100 °C turns into water at 25 °C, in kilojoules.',
+    entry: { id: 'kj', label: 'Heat given out', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('ref', 'What you may use', { x: 50, y: 28 }, [
+          FORMULA,
+          'Boiling water: 2260 J for every gram',
+          'Condensing gives back the same heat.',
+          'c of water = 4.184 J/(g·°C)'
+        ], { w: 80 }),
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'The steam first turns to water at 100 °C, and then the water cools to 25 °C.',
+      'Find the heat for each of the two steps, add them, and turn the joules into kilojoules.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'kj');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+      if (Math.abs(v - Q_COND) <= 0.3) return { ok: true };
+      if (v < 0) return { ok: false, msg: 'The question asks how much heat is given out, so type the amount as a positive figure.' };
+      return { ok: false, msg: `${fixed(v, 1)} kJ would not take the 10.0 g from steam at 100 °C all the way to water at 25 °C.` };
+    },
+    reward: {
+      log: 'Steam turning into 25 °C water gave out about 25.7 kJ.',
+      title: 'Condensing Gives Heat Back',
+      body: 'Condensing releases the same 22.6 kJ that boiling 10.0 g absorbed, and cooling the water from 100 °C to 25 °C releases 3.14 kJ more. Heat leaves the sample in both steps, so the total is 25.7 kJ given out.'
+    }
   }
 ];
 
@@ -370,7 +408,8 @@ const NOTES = {
   4: ['Drag the ice onto the cup, then type your answer.'],
   5: ['Drag the fitting onto the cup;', 'drag a name into the slot.'],
   6: ['Drag the mix onto the cup, then type your answer.'],
-  7: ['Type your answer in the field at the bottom.']
+  7: ['Type your answer in the field at the bottom.'],
+  8: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -388,65 +427,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'How much heat does 50.0 g of water absorb when it warms from 20.0 °C to 30.0 °C? (c = 4.184 J/(g·°C))',
-    options: [
-      { id: 'a', label: '2090 J' },
-      { id: 'b', label: '1050 J' },
-      { id: 'c', label: '4180 J' },
-      { id: 'd', label: '209 J' }
-    ],
-    answer: 'a',
-    explanation: 'The heat is mass times c times the rise: 50.0 g × 4.184 J/(g·°C) × 10.0 °C, which is about 2090 J.'
-  },
-  {
-    question: 'Two 100 g blocks, one aluminium (c = 0.90 J/(g·°C)) and one silver (c = 0.24 J/(g·°C)), each absorb 900 J. Which warms more?',
-    options: [
-      { id: 'a', label: 'Silver, because each gram needs less heat per degree' },
-      { id: 'b', label: 'Aluminium, because its specific heat capacity is larger' },
-      { id: 'c', label: 'Both rise by the same amount, because their masses are equal' }
-    ],
-    answer: 'a',
-    explanation: 'The rise is q divided by m times c, so for the same heat and mass the metal with the smaller c warms more.'
-  },
-  {
-    question: 'A 100 g metal sample cools by 50.0 °C while a water bath absorbs 4500 J from it. What is the metal’s specific heat capacity?',
-    options: [
-      { id: 'a', label: '0.90 J/(g·°C)' },
-      { id: 'b', label: '0.45 J/(g·°C)' },
-      { id: 'c', label: '1.80 J/(g·°C)' },
-      { id: 'd', label: '90 J/(g·°C)' }
-    ],
-    answer: 'a',
-    explanation: 'Divide the heat by the mass times the temperature drop: 4500 J divided by 100 g times 50.0 °C gives 0.90 J/(g·°C).'
-  },
-  {
-    question: 'In a coffee-cup calorimeter, 0.020 mol of a salt dissolves and absorbs 520 J from the bath. How much heat is absorbed per mole?',
-    options: [
-      { id: 'a', label: '26 kJ/mol' },
-      { id: 'b', label: '10.4 kJ/mol' },
-      { id: 'c', label: '2.6 kJ/mol' },
-      { id: 'd', label: '0.026 kJ/mol' }
-    ],
-    answer: 'a',
-    explanation: 'Convert 520 J to 0.520 kJ and divide by the 0.020 mol that dissolved, which gives 26 kJ per mole.'
-  },
-  {
-    question: 'A student runs an exothermic neutralisation in a thin metal beaker instead of an insulated cup. How does the calculated heat compare with the true value?',
-    options: [
-      { id: 'a', label: 'It is too low, because heat leaks through the walls instead of warming the solution' },
-      { id: 'b', label: 'It is too high, because the metal conducts extra heat to the thermometer' },
-      { id: 'c', label: 'It is unchanged, because the moles of acid and base are unchanged' }
-    ],
-    answer: 'a',
-    explanation: 'Heat lost through the walls lowers the measured rise, so the heat calculated from the rise is smaller than the true value.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
    by drag and by two taps. Nothing here says what a reading is.
@@ -462,7 +442,8 @@ export const SOLUTIONS = [
   [put('ice', MOUTH), { type: { entry: 'joules', value: '6700' } }],
   [put('fitting', MOUTH), put('cu', 'slot:answer')],
   [put('mix', MOUTH), { type: { entry: 'joules', value: '3350' } }],
-  [{ type: { entry: 'kj', value: '30.1' } }]
+  [{ type: { entry: 'kj', value: '30.1' } }],
+  [{ type: { entry: 'kj', value: '25.7' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -473,7 +454,8 @@ export const MISSES = [
   [put('ice', MOUTH), { type: { entry: 'joules', value: '7000' } }],
   [put('fitting', MOUTH), put('fe', 'slot:answer')],
   [put('mix', MOUTH), { type: { entry: 'joules', value: '2800' } }],
-  [{ type: { entry: 'kj', value: '7.5' } }]
+  [{ type: { entry: 'kj', value: '7.5' } }],
+  [{ type: { entry: 'kj', value: '3.1' } }]
 ];
 
 function blankState() { return {}; }
@@ -497,5 +479,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { Q_WATER, Q_MELT, Q_CURVE, Q_STAGE4, FITTING, MIX, BATH_4, IRON_C };
+export const CHECKS = { Q_COND, Q_WATER, Q_MELT, Q_CURVE, Q_STAGE4, FITTING, MIX, BATH_4, IRON_C };
 export { cupRead, blockSpecificHeat };

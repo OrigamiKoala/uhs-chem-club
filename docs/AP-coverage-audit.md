@@ -10,7 +10,7 @@ is built, is ALL AP content covered, quantitative content included.
   every learning objective (92), essential knowledge statement, equation line (`EQN:`) and exclusion statement.
 - Built track: loaded every quest module in Node and read each stage's prompt and reward title, the 5 `PRACTICE`
   items per quest, and the quest header comments. I also grepped quest source for specific terms.
-- Read the existing `docs/Bellows-audit.md`, `docs/Ember-audit.md` and `docs/Ligar-audit.md` coverage tables and
+- Read the existing `docs/archive/2026-10-29/Bellows-audit.md`, `docs/archive/2026-10-29/Ember-audit.md` and `docs/archive/2026-10-29/Ligar-audit.md` coverage tables and
   checked them against the CED instead of repeating them.
 - **Not done:** no stage was played (CLAUDE.md: agents do not browser-test). "Covered" means a stage or practice
   item exists for it, not that it teaches well. A grep that finds nothing is reported as "not found", not proof of
@@ -290,3 +290,21 @@ Open:
 7. **Add a typed worked-figure stage** to each unbuilt world for its headline equation (B4).
 8. **Make `verify:learn` fail a header comment or reward that defers a term to the Drill Deck** unless a `PRACTICE`
    item contains it.
+
+---
+
+# Update, 2026-10-29 (second pass)
+
+After the Tallow and Lanternfall updates, already closed in the built track: Avogadro arithmetic (`q6-weigh` stages 9 to 12 and its worked glucose problem), electron affinity and electronegativity (`q8-trends` stages 6, 7), Cl⁻ configuration (`q6-filling` stage 6), typed `c = λν` and `E = hν` (`q1-wave` s6, `q2-photon` s6).
+
+Closed in this pass:
+
+- **ΔG° from ΔGf°** (9.3.A.3): Ember Reach `q7-gibbs` stage 6, typed (CaCO₃ decomposition).
+- **Bank (end sets):** coupled reactions (9.7), thermodynamic vs kinetic control (9.4), dissolving as endothermic with positive entropy (6.1, 9.6), condensation heat and molar heat capacity (6.4, 6.5), reaction-progress diagram ΔH and Ea (6.2), ΔGf sum, Fe³⁺ and O²⁻ configurations (1.5), electron affinity and electronegativity trends (1.7), group reactivity (1.8), particles from moles (1.1), cis/trans from restricted rotation (2.7), gas stoichiometry with the ideal gas law (4.5.A.3, in `unit04`), purity from elemental analysis (1.4, `unit07`).
+- **Worked problems added:** `q1-flow` (heat balance), `q6-filling` (Fe³⁺), `q8-trends` (Zeff across a period).
+
+Still open: Bellows `q5` is not labelled beyond the exam (the project rule strips such tags from cards, so this needs a decision); a heating-curve and a reaction-progress-diagram bench stage (Ember benches are at the 7-stage cap for `q2` and `q3`); everything in Part B for unbuilt worlds (Mirrowen, Kettle `q2`+, Teeter, Verdigris, Brinewire, Quicklight); the free-response skills (B5).
+
+Third pass: Ember `q2-calorimetry` stage 8 (condensation and cooling, heat given out, typed; 6.5.A.2) and `q3-enthalpy` stage 8 (reaction-progress diagram with an activation barrier, reverse Ea typed; 6.2). The Ember stage cap is now 8. Both gaps are removed from the open list above.
+
+Fourth pass: `docs/plans/learn-quests.md` now marks a typed headline stage in every unbuilt world (B4), plans the Lab Notebook set for the free-response skills (B5), resolves the FIX marks, and adds the Drill Deck verifier rule (B6/B7 item 8) as planned work. Still open: the per-LO table, and the verifier rule itself is not implemented.

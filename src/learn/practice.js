@@ -5,8 +5,9 @@
  * The quests are the teaching. A quest ends on its debrief, the player walks out
  * onto the flat, and the next bench is open — putting a quiz between those two
  * moments turns a road into a gate. So the problems wait at the end of the
- * WORLD: five per quest, all of them together, once every bench in that unit has
- * been worked. By then the player has met every idea the set asks about.
+ * WORLD: the end set in `bank/<world>.json`, all together, once every bench in that
+ * unit has been worked. (Each bench also asks two short problems of its own, and
+ * offers a guided worked problem where the bench is computational: `ui/bench-practice.js`.) By then the player has met every idea the set asks about.
  *
  * THREE RULES, AND THEY ARE THE PRODUCT
  *   1. The problems are OPTIONAL. Nothing is locked behind them: the next world
@@ -26,13 +27,12 @@
  * or touches progress — `verify:learn` fails the build if it does.
  */
 
-import { PROBLEMS_PER_QUEST } from './curriculum.js';
 import { isQuestComplete } from './progress.js';
 import { loadWorldPractice } from './drills.js';
 
 /* Re-exported so a caller that has the problem screen does not also need the
    registry just to know how long a set is. */
-export { PROBLEMS_PER_QUEST, loadWorldPractice };
+export { loadWorldPractice };
 
 /** The flag that records "this world's set has been offered once already". */
 export function practiceOfferedFlag(worldId) {

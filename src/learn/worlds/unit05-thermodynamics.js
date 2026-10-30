@@ -40,7 +40,7 @@ export const UNIT_05 = {
       title: 'Calorimetry',
       line: 'Measure heat in a water bath: specific heat capacity, melting ice and a reaction\'s energy.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_05 = {
       title: 'Enthalpy of Reaction',
       line: 'Relate reaction heat to molar enthalpy, reaction stoichiometry, and fuel energy density.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit05/q3-enthalpy.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_05 = {
       title: 'Free Energy',
       line: 'Evaluate spontaneity by balancing enthalpy and entropy across temperatures using Gibbs free energy.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit05/q7-gibbs.js')
     },

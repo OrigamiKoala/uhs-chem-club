@@ -324,67 +324,6 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
-   PRACTICE PROBLEMS
-   ------------------------------------------------------------------ */
-export const PRACTICE = [
-  {
-    question: 'In an H–Cl bond, which atom carries the partial negative charge?',
-    options: [
-      { id: 'a', label: 'Chlorine, because it is more electronegative' },
-      { id: 'b', label: 'Hydrogen, because it is smaller' },
-      { id: 'c', label: 'Neither, because the bond is nonpolar' },
-      { id: 'd', label: 'Hydrogen, because it has fewer electrons' }
-    ],
-    answer: 'a',
-    explanation: 'Chlorine (3.16) pulls the shared pair harder than hydrogen (2.20), so chlorine ends up partially negative.'
-  },
-  {
-    question: 'Why is CO₂ nonpolar although each C=O bond is polar?',
-    options: [
-      { id: 'a', label: 'The molecule is linear, so the two bond dipoles cancel' },
-      { id: 'b', label: 'Carbon and oxygen have the same electronegativity' },
-      { id: 'c', label: 'The molecule is bent' },
-      { id: 'd', label: 'The bonds are triple bonds' }
-    ],
-    answer: 'a',
-    explanation: 'The two equal bond dipoles point in opposite directions along a straight line and cancel.'
-  },
-  {
-    question: 'Which molecule is polar?',
-    options: [
-      { id: 'a', label: 'H₂O' },
-      { id: 'b', label: 'CCl₄' },
-      { id: 'c', label: 'BF₃' },
-      { id: 'd', label: 'CO₂' }
-    ],
-    answer: 'a',
-    explanation: 'Water is bent, so its two O–H bond dipoles add. The other three are symmetrical and their dipoles cancel.'
-  },
-  {
-    question: 'BF₃ has three very polar B–F bonds. Why is the molecule nonpolar?',
-    options: [
-      { id: 'a', label: 'It is trigonal planar, so the three dipoles cancel' },
-      { id: 'b', label: 'It has a lone pair on boron' },
-      { id: 'c', label: 'The bonds are not polar' },
-      { id: 'd', label: 'Fluorine is less electronegative than boron' }
-    ],
-    answer: 'a',
-    explanation: 'Three equal dipoles at 120 degrees to one another add to zero.'
-  },
-  {
-    question: 'Which pair of atoms forms the most polar bond?',
-    options: [
-      { id: 'a', label: 'H and F' },
-      { id: 'b', label: 'H and C' },
-      { id: 'c', label: 'C and C' },
-      { id: 'd', label: 'H and H' }
-    ],
-    answer: 'a',
-    explanation: 'The larger the electronegativity difference, the more polar the bond. H (2.20) and F (3.98) differ most.'
-  }
-];
-
-/* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
    direct actions, by drag and by two taps. A molecule is put between the plates (`gap`), the arrows laid on it, the

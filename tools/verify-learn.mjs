@@ -13,7 +13,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 
 import { join } from 'node:path';
 import {
-  WORLDS, TOTAL_WORLDS, ARENAS, QUEST_STATUSES, PROBLEMS_PER_QUEST,
+  WORLDS, TOTAL_WORLDS, ARENAS, QUEST_STATUSES,
   allQuests, getWorld, getQuest
 } from '../src/learn/curriculum.js';
 // The join bench's pure part. Imported so a pair plate can be PRESSED here and
@@ -276,9 +276,7 @@ for (const q of quests.filter(q => q.status === 'live')) {
   }
   checkStageTable(q, mod);
   await checkDrawn(q, mod);
-  // Owed by EVERY live quest, not only a table-driven one: the world's problem
-  // set is five per built quest, and a quest that grades some other way still
-  // owes its five.
+  // Every live quest, table-driven or not: practice lives in the bank, not here.
   checkPractice(q, mod);
 }
 
@@ -1273,59 +1271,12 @@ async function checkEncounterLayer() {
 await checkEncounterLayer();
 
 /**
- * THE PROBLEM SET. Five per built quest, gathered and shown at the END OF THE
- * WORLD (`src/learn/practice.js`), optional and skippable, reopenable for ever
- * from the star map.
- *
- * Checked here because the set is the one piece of Learn content a player meets
- * outside a quest's own frame: a malformed answer id or an option list of one
- * would be a dead question in a student's hands with nothing to catch it.
- *
- * Practice copy is EXEMPT from the withheld vocabulary. The set runs after the
- * world's last debrief, which is where the real words are introduced — a
- * revision question that had to call an atom "a piece" would be teaching the
- * game's fiction rather than the chemistry.
+ * THE QUESTION BANK. Practice no longer lives in a quest module: a quest that
+ * still exports `PRACTICE` is a leftover, and the problems themselves are
+ * checked per world by `tools/lib/bank-check.mjs` (below).
  */
 function checkPractice(q, mod) {
-  const set = mod.PRACTICE;
-  if (!Array.isArray(set)) {
-    fail(`${q.key}: exports no PRACTICE — every built quest owes ${PROBLEMS_PER_QUEST} problems`);
-    return;
-  }
-  if (set.length !== PROBLEMS_PER_QUEST) {
-    fail(`${q.key}: PRACTICE has ${set.length} problems, expected ${PROBLEMS_PER_QUEST}`);
-    return;
-  }
-
-  let bad = 0;
-  const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
-
-  set.forEach((p, i) => {
-    const label = `${q.key} problem ${i + 1}`;
-    if (!p.question || typeof p.question !== 'string') { fail(`${label}: no question`); bad++; }
-    if (!p.explanation || p.explanation.length < 20) {
-      // A question that is only marked wrong teaches nothing.
-      fail(`${label}: no explanation, or too terse to teach`); bad++;
-    }
-    if (!Array.isArray(p.options) || p.options.length < 3) {
-      fail(`${label}: needs at least three options (got ${p.options?.length ?? 0})`); bad++; return;
-    }
-    const ids = new Set();
-    for (const o of p.options) {
-      if (!o || !o.id || !o.label) { fail(`${label}: an option has no id or label`); bad++; continue; }
-      if (ids.has(o.id)) { fail(`${label}: duplicate option id "${o.id}"`); bad++; }
-      ids.add(o.id);
-      if (emoji.test(o.label)) { fail(`${label}: emoji in an option`); bad++; }
-    }
-    if (!ids.has(p.answer)) {
-      fail(`${label}: answer "${p.answer}" is not one of its own options`); bad++;
-    }
-    if (new Set(p.options.map(o => o.label)).size !== p.options.length) {
-      fail(`${label}: two options read the same`); bad++;
-    }
-  });
-
-  if (!bad) ok(`${q.key}: ${set.length} practice problems, all answerable`);
+  if (mod.PRACTICE !== undefined) fail(`${q.key}: exports PRACTICE — practice lives in src/learn/bank/${q.worldId}.json`);
 }
 
 /**
@@ -1819,7 +1770,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 
 /* ------------------------------------------------------------------
    THE PROBLEM SET IS A WORLD'S, NOT A QUEST'S
-   Five per quest, gathered and shown once the whole unit is worked — and
+   The end set, gathered and shown once the whole unit is worked — and
    never before. A set that opened at the end of a quest would be a gate
    in the middle of a road; a set that opened before the world was done
    would ask about benches the player has not reached yet.
@@ -1828,13 +1779,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   const before = failures;
   const { loadWorldPractice, worldHasPractice, practiceOfferedFlag } =
     await import('../src/learn/practice.js');
+  const { checkBanks } = await import('./lib/bank-check.mjs');
+  checkBanks(WORLDS.filter(x => x.status === 'live'), { fail, ok });
 
   for (const w of WORLDS.filter(x => x.status === 'live')) {
     const set = await loadWorldPractice(w);
-    const expected = w.liveQuestCount * PROBLEMS_PER_QUEST;
-    if (set.length !== expected) {
-      fail(`world ${w.id}: the set has ${set.length} problems, expected ${expected} (${w.liveQuestCount} built quests)`);
-    }
     // Every problem says which bench it came from, so the card can name it.
     for (const p of set) {
       if (!p.questId || !p.questTitle) fail(`world ${w.id}: a problem is not stamped with its quest`);
