@@ -40,7 +40,7 @@ table; a reading printed as 40.6 where the text said 40.7 (floating-point roundi
 
 | # | Stage | Evidence | Notes (what is weak or unusual) |
 | - | --- | --- | --- |
-| 1 | Sealed Liquids | Bench; Viewed in the world host (rail moved clear of the flask after viewing) | Prints each card's grip, so the order can be guessed without the flask |
+| 1 | Sealed Liquids | Bench; Viewed in the world host (rail moved clear of the flask after viewing); the cards no longer print their grips (changed after viewing, unviewed) | The flask is now the only evidence |
 | 2 | Warm and Cold | Bench | Hot water outranks cold ether; a second rank on one instrument |
 | 3 | On the Mountain | Bench | Predict: the click (water always boils at 100 °C) |
 | 4 | Where It Boils | Bench; Viewed (scripted, in the world host) | Typed between heater steps (±3 °C): the plot is the evidence |
@@ -78,7 +78,7 @@ table; a reading printed as 40.6 where the text said 40.7 (floating-point roundi
 | # | Stage | Evidence | Notes (what is weak or unusual) |
 | - | --- | --- | --- |
 | 1 | Four White Powders | Bench | Tray labels are the tightest fit |
-| 2 | Salt in a Flask | Bench | Near plug-and-chug: the plate gives the constants; typed 0.400 M |
+| 2 | Salt in a Flask | Bench | Typed 0.250 M at 400 mL, a volume the Flask dial (100, 250, 500) lacks; the plate still gives the molar mass |
 | 3 | Stock to a Flask | Bench | Typed 25.0 mL between dial steps |
 | 4 | Which Puts More In? | Bench | Predict: the click (the same from all three) |
 | 5 | Particles in the Water | Bench | Typed 1.81 × 10²³ |

@@ -6,7 +6,7 @@
  * belief that a mole of anything dissolved puts a mole of particles in the water.
  *
  *   1  four white powders into water, filed by what the window shows         -> solution, solute, solvent
- *   2  5.85 g of salt made up to the 250 mL mark, typed                      -> molarity
+ *   2  5.85 g of salt made up to 400 mL, a volume the dial lacks, typed                      -> molarity
  *   3  2.00 M stock poured in, topped up to 100 mL, typed between the steps   -> dilution
  *   4  PREDICT: 0.100 mol of salt, of calcium chloride, of sugar: which puts the most particles in the water?
  *   5  TEST: the window for each, then the particles in 0.100 mol of CaCl2, typed -> dissolving into ions
@@ -34,8 +34,6 @@ import {
 
 export const meta = { stageCount: 8 };
 
-/** Mirrowen has no ground yet, so at T4 the table stands in a room of its own (`rooms.js`). */
-export const ROOM = 'foundry';
 
 export const VOCABULARY = [
   { term: /\bsolutions?\b/i, introducedAt: 1 },
@@ -74,9 +72,9 @@ const POWDERS = [
   { id: 'd', sub: 'sand', tray: 'lumps' }
 ];
 const POWDER_UNITS = 6;
-// Stage 2: 5.85 g of salt, a 250 mL mark.
+// Stage 2: 5.85 g of salt made up to 400 mL.
 const SALT_G = 5.85;
-const ASKED_ML = 250;
+const ASKED_ML = 400; // not a step of the Flask dial (100, 250, 500): the figure is worked past it
 const FILLS = [100, 250, 500];
 const M_ASKED = molarityOf('NaCl', SALT_G, ASKED_ML);
 // Stage 3: 2.00 M stock, 100 mL of 0.500 M wanted.
@@ -172,7 +170,7 @@ export const STAGES = [
     return {
       id: 's2-molarity',
       title: 'Salt in a Flask',
-      prompt: 'Type the moles of salt in each litre of solution once the salt on the pan is made up to the 250 mL mark.',
+      prompt: 'Type the moles of salt in each litre of solution once the salt on the pan is made up to 400 mL.',
       entry: { id: 'm', label: 'Moles per litre', unit: 'mol/L' },
       widget,
       table: matterTable({
@@ -193,13 +191,13 @@ export const STAGES = [
         if (Math.abs(v - M_ASKED) <= 0.01) return { ok: true };
         if (t.pieces.salt.props.weighed == null) return { ok: false, msg: 'The salt has not been on the pan yet.' };
         const moles = SALT_G / SOLUTES.NaCl.M;
-        if (Math.abs(v - moles) <= 0.003) return { ok: false, msg: `${fixed(v, 3)} is the amount of salt on the pan alone, and the flask's mark reads ${ASKED_ML} mL.` };
-        return { ok: false, msg: `${v} does not fit ${fixed(SALT_G, 2)} g of salt in a flask whose mark reads ${ASKED_ML} mL.` };
+        if (Math.abs(v - moles) <= 0.003) return { ok: false, msg: `${fixed(v, 3)} is the amount of salt on the pan alone, and the solution is ${ASKED_ML} mL.` };
+        return { ok: false, msg: `${v} does not fit ${fixed(SALT_G, 2)} g of salt made up to ${ASKED_ML} mL.` };
       },
       reward: {
-        log: '5.85 g of salt in the 250 mL flask is 0.400 mol in every litre.',
+        log: '5.85 g of salt made up to 400 mL is 0.250 mol in every litre.',
         title: 'Molarity',
-        body: 'The moles of solute in each litre of solution is its molarity, written M. Here 5.85 g is 0.100 mol, and made up to 250 mL it is 0.400 M. Twice the volume would be half as crowded.'
+        body: 'The moles of solute in each litre of solution is its molarity, written M. Here 5.85 g is 0.100 mol, so 250 mL is 0.400 M and 500 mL is 0.200 M, and 400 mL, between them, is 0.250 M.'
       }
     };
   })(),
@@ -501,7 +499,7 @@ const filePowders = tray => POWDERS.flatMap(s => [put(s.id, MOUTH), put(s.id, `t
 
 export const SOLUTIONS = [
   filePowders(s => s.tray),
-  [put('salt', PAN), put('salt', MOUTH), dial('flask', 'fill', 2), typed('m', '0.400')],
+  [put('salt', PAN), put('salt', MOUTH), dial('flask', 'fill', 2), typed('m', '0.250')],
   [put('stock', MOUTH), dial('flask', 'stock', 2), typed('ml', '25')],
   [put('same', 'slot:guess')],
   [put('cacl2', MOUTH), typed('n', '1.81')],
@@ -536,7 +534,6 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    room: ROOM,
     onLoad() { /* the table is the stage */ }
   });
   runner.start();

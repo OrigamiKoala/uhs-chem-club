@@ -425,6 +425,31 @@
       ],
       "answer": "c",
       "explanation": "The rise is i x K_b x m, and CaCl₂ makes three particles per formula unit against two for NaCl and one for sugar."
+    },
+    {
+      "id": "q6-solution#3",
+      "quest": "q6-solution",
+      "question": "A solution is made by dissolving 12.0 g of sodium chloride in 188 g of water. What is the mass percent of sodium chloride in it? (Mass percent is beyond the AP exam.)",
+      "options": [
+        {
+          "id": "a",
+          "label": "6.0 %"
+        },
+        {
+          "id": "b",
+          "label": "6.4 %"
+        },
+        {
+          "id": "c",
+          "label": "6.8 %"
+        },
+        {
+          "id": "d",
+          "label": "12 %"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Mass percent is the mass of solute over the mass of the whole solution: 12.0 g / (12.0 g + 188 g) = 0.060, or 6.0 %."
     }
   ],
   "bench": {

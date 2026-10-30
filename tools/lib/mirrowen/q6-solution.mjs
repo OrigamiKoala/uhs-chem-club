@@ -24,9 +24,9 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   near(SOL.CaCl2.M, 40.078 + 2 * 35.45, 0.02, `${q}: M of CaCl2`);
   near(SOL.sugar.M, 12 * 12.011 + 22 * 1.008 + 11 * 15.999, 0.05, `${q}: M of sucrose`);
 
-  // Stage 2: 5.85 g / 58.44 g/mol = 0.1001 mol in 0.250 L = 0.4004 mol/L (worked by hand).
-  near(CK.M_ASKED, (5.85 / 58.44) / 0.25, 1e-9, `${q} stage 2 (molarity)`);
-  holds(CK.M_ASKED > 0.39 && CK.M_ASKED < 0.41, `${q} stage 2: the molarity is not 0.400`);
+  // Stage 2: 5.85 g / 58.44 g/mol = 0.1001 mol in 0.400 L = 0.2503 mol/L (worked by hand), a volume the dial (100, 250, 500) lacks.
+  near(CK.M_ASKED, (5.85 / 58.44) / 0.4, 1e-9, `${q} stage 2 (molarity)`);
+  holds(CK.M_ASKED > 0.24 && CK.M_ASKED < 0.26, `${q} stage 2: the molarity is not 0.250`);
   // Stage 3: M1 V1 = M2 V2, 2.00 x V1 = 0.500 x 100.
   near(CK.V_ASKED, 0.5 * 100 / 2.0, 1e-9, `${q} stage 3 (dilution)`);
   holds(!CK.STOCKS.includes(CK.V_ASKED), `${q} stage 3: the answer is a step on the dial, so it could be found by hunting`);
@@ -60,7 +60,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   void done;
   const T = mod.stateFor(1, [{ place: { piece: 'salt', to: 'slot:flask.pan' } }, { place: { piece: 'salt', to: 'slot:flask.mouth' } }, { setDial: { fixture: 'flask', dial: 'fill', value: 2 } }]).table;
   const r2 = FL.flaskRead(T, 'flask');
-  near(r2.c, CK.M_ASKED, 1e-9, `${q} stage 2: the window's molarity`);
+  near(r2.c, (5.85 / 58.44) / 0.25, 1e-9, `${q} stage 2: the window's molarity at the 250 mL step`);
   same(FD.countsOf(FL.dropFor(r2)).total, 2 * Math.round(r2.c * 20), `${q} stage 2: the window's particles`);
   const T3 = mod.stateFor(2, [{ place: { piece: 'stock', to: 'slot:flask.mouth' } }, { setDial: { fixture: 'flask', dial: 'stock', value: 3 } }]).table;
   near(FL.flaskRead(T3, 'flask').c, 2.0 * 30 / 100, 1e-9, `${q} stage 3: the molarity at 30 mL`);

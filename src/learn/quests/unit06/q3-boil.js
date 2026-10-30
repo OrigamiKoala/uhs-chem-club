@@ -32,8 +32,6 @@ import {
 
 export const meta = { stageCount: 8 };
 
-/** Mirrowen has no ground yet, so at T4 the table stands in a room of its own (`rooms.js`). */
-export const ROOM = 'foundry';
 
 export const VOCABULARY = [
   { term: /\bvapou?r pressure\b/i, introducedAt: 1 },
@@ -150,7 +148,7 @@ export const STAGES = [
   (() => {
     const flask = flaskFixture('flask', { x: 41, y: 22 });
     const pos = shelf(3);
-    const cards = S1.map((s, i) => liquidCard(idOf(s), s, SUBSTANCES[s].name.replace('diethyl ', ''), pos[i], { shown: gripText(s) }));
+    const cards = S1.map((s, i) => liquidCard(idOf(s), s, SUBSTANCES[s].name.replace('diethyl ', ''), pos[i]));
     return {
       id: 's1-sealed',
       title: 'Sealed Liquids',
@@ -164,14 +162,14 @@ export const STAGES = [
       }),
       hints: [
         'Use the flask, its "Settle" key and the rail.',
-        'Compare what the gauge settled at for each card with the number printed on the card.',
+        'Compare the pressure the gauge settled at for each card, and with the grips you measured on the second bench.',
         'Rank the cards by the pressure each one settled at, from the lowest to the highest.'
       ],
       check: railCheck(VP25_ORDER.map(idOf), vpOf, fmtP, 'kPa', 'flask'),
       reward: {
         log: 'Every liquid made a pressure and then stopped rising.',
         title: 'Vapor Pressure',
-        body: 'Molecules leave a liquid\'s surface and return to it, and the gauge stops rising when the two flows match. That steady pressure is the liquid\'s vapor pressure, and the weaker a liquid\'s grip, the higher it settles.'
+        body: 'Molecules leave a liquid\'s surface and return to it, and the gauge stops rising when the two flows match. That steady pressure is the liquid\'s vapor pressure. Ether, whose grip is the weakest of the three, settled highest, and water, whose grip is the strongest, lowest.'
       }
     };
   })(),
@@ -514,7 +512,6 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    room: ROOM,
     onLoad() { /* the table is the stage */ }
   });
   runner.start();

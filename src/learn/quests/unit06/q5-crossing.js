@@ -33,8 +33,6 @@ import { startOf, planThermal, heatBetween, heatOf, flatsOf, WATER_TRIPLE } from
 
 export const meta = { stageCount: 8 };
 
-/** Mirrowen has no ground yet, so the table stands in a room of its own (`rooms.js`). */
-export const ROOM = 'foundry';
 
 export const VOCABULARY = [
   { term: /\bheating curve\b/i, introducedAt: 1 },
@@ -477,7 +475,6 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    room: ROOM,
     onLoad() { /* the table is the stage */ }
   });
   runner.start();

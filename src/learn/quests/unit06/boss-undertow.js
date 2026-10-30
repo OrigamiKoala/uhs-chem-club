@@ -40,8 +40,6 @@ export const BUILDS_ON = [
   'unit06/q1-states', 'unit06/q2-grip', 'unit06/q3-boil', 'unit06/q5-crossing', 'unit06/q6-solution'
 ];
 
-/** Mirrowen has no ground yet, so at T4 the table stands in a room of its own (`rooms.js`) unless the world is built. */
-export const ROOM = 'foundry';
 
 const SPEAKER = 'Vess';
 
@@ -386,7 +384,6 @@ export function mount(container, ctx) {
   };
   const runner = createRunner(container, bossCtx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    room: ROOM,
     onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
   runner.start();
