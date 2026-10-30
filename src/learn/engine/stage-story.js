@@ -180,6 +180,9 @@ export const STAGE_STORY = {
   'q2-names': {
     1: 'The foundry\'s crates carry labels nobody can read.'
   },
+  'q3-change': {
+    1: 'The forged ledger says metal came from nowhere, and Vess wants to know whether anything can.'
+  },
   'q6-stoich': {
     1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
   }
