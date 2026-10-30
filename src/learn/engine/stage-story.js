@@ -173,6 +173,9 @@ export const STAGE_STORY = {
   /* ---- Kettle: halt the robot foundry ---- */
   'q1-recipe': {
     1: 'Vess holds three scoops from three foundry floors.'
+  },
+  'q6-stoich': {
+    1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
   }
 };
 

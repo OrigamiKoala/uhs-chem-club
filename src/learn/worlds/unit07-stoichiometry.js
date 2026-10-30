@@ -31,40 +31,13 @@ export const UNIT_07 = {
       module: () => import('../quests/unit07/q1-recipe.js')
     },
     {
-      id: 'q2-ledger',
-      title: 'The Ledger Balances',
-      line: 'Count what went in. It is all still there.',
+      id: 'q6-stoich',
+      title: 'How Much Is Made',
+      line: 'Forty tons of ore: how much iron can it give?',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
-    },
-    {
-      id: 'q3-ratios',
-      title: 'Two Bolts Per Bracket',
-      line: 'The recipe fixes how much of each you need.',
-      arena: 'bench',
-      stageCount: 8,
-      status: 'draft',
-      module: null
-    },
-    {
-      id: 'q4-shortfall',
-      title: 'What Runs Out First',
-      line: 'The smallest pile decides the size of the batch.',
-      arena: 'bench',
-      stageCount: 8,
-      status: 'draft',
-      module: null
-    },
-    {
-      id: 'q5-kinds',
-      title: 'Kinds of Change',
-      line: 'Swap, split, join, or burn.',
-      arena: 'chamber',
-      stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q6-stoich.js')
     },
     {
       id: 'boss-golem',

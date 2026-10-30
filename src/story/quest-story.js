@@ -252,6 +252,27 @@ export const QUEST_STORY = {
     filed: 'Filed: a heat source ran inside the Fifth\'s cylinder for twelve days, and no chemical reaction lasts that long.'
   },
   /* ---- Ember Reach: the Fifth's manifold is frosted over, so what runs inside it takes heat in ---- */
+  /* ---- Kettle: the forged ledger ---- */
+  'unit07/q1-recipe': {
+    scene: 'three-scoops',
+    beats: [
+      { to: 0.22, say: 'Three scoops from three floors, and every molecule in them is the same: two hydrogens joined to one oxygen.' },
+      { to: 0.5, say: 'Loose atoms stirred in beside them do not change the molecule. A compound keeps its recipe, and the extras just sit there.' },
+      { to: 0.74, say: 'Joining only rearranges atoms, so the atoms weigh the same loose or joined.' },
+      { to: 0.94, say: 'The recipe fixes the shares too: oxygen is 16.0 of every 18.0, the same in every scoop.' }
+    ],
+    filed: 'Filed: a compound holds the same share of each element every time, so ore\'s share of metal can be worked out.'
+  },
+  'unit07/q6-stoich': {
+    scene: 'furnace-ledger',
+    beats: [
+      { to: 0.24, say: 'An equation counts molecules, not grams. Two hydrogens and one oxygen make two waters, and the weights still add to 36.0 on both sides.' },
+      { to: 0.5, say: 'So grams reach grams through moles. Three hydrogens to two ammonias is a ratio of moles, whatever they weigh.' },
+      { to: 0.72, say: 'Feed two reactants and the pot stops when one runs out. What is left of the other is the excess.' },
+      { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron. A real furnace keeps only a part of that.' }
+    ],
+    filed: 'Filed: forty tons of ore can give at most 28 tons of iron, so a ledger that shows fifty is forged.'
+  },
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     beats: [

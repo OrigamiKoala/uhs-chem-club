@@ -2882,6 +2882,15 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 }
 
 /* ------------------------------------------------------------------
+   KETTLE (unit07): the planners against values worked by hand, every graded figure of the pot benches recomputed, the pot and the
+   balance replayed, no plate carrying an answer, no refusal carrying the method (`tools/lib/kettle-learn-checks.mjs`).
+   ------------------------------------------------------------------ */
+{
+  const { checkKettle } = await import('./lib/kettle-learn-checks.mjs');
+  await checkKettle({ fail, ok });
+}
+
+/* ------------------------------------------------------------------
    EVERY FIGURE A MIRROWEN STAGE GRADES AGAINST IS RECOMPUTED, from values worked by hand or
    read from the CRC, and every refusal is searched for the rule its stage is asking for. One
    check file per bench in `tools/lib/mirrowen/`, found by name (`tools/lib/mirrowen-learn-checks.mjs`).

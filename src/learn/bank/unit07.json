@@ -516,6 +516,137 @@
         ],
         "finish": "Convert to moles, find which reactant runs out, and that sets the theoretical yield. Actual divided by theoretical is the percent yield."
       }
+    },
+    "q6-stoich": {
+      "problems": [
+        {
+          "id": "q6-stoich#b1",
+          "quest": "q6-stoich",
+          "question": "N₂ + 3 H₂ → 2 NH₃. How many grams of ammonia can 14.0 g of nitrogen make with plenty of hydrogen? (N 14.0, H 1.0)",
+          "options": [
+            {
+              "id": "a",
+              "label": "8.5 g"
+            },
+            {
+              "id": "b",
+              "label": "17.0 g"
+            },
+            {
+              "id": "c",
+              "label": "34.0 g"
+            },
+            {
+              "id": "d",
+              "label": "28.0 g"
+            }
+          ],
+          "answer": "b",
+          "explanation": "14.0 g of N₂ (28.0 g/mol) is 0.500 mol. The equation makes 2 mol of NH₃ for each mol of N₂, so 1.00 mol, and 1.00 mol of NH₃ (17.0 g/mol) weighs 17.0 g."
+        },
+        {
+          "id": "q6-stoich#b2",
+          "quest": "q6-stoich",
+          "question": "A reaction could make 4.5 g of water, and a student collects 3.6 g. What is the percent yield?",
+          "options": [
+            {
+              "id": "a",
+              "label": "125%"
+            },
+            {
+              "id": "b",
+              "label": "20.0%"
+            },
+            {
+              "id": "c",
+              "label": "80.0%"
+            },
+            {
+              "id": "d",
+              "label": "63%"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Percent yield = actual / theoretical × 100 = 3.6 / 4.5 × 100 = 80.0%."
+        }
+      ],
+      "worked": {
+        "id": "q6-stoich#w",
+        "quest": "q6-stoich",
+        "title": "Aluminium Burning in Oxygen",
+        "setup": "4 Al + 3 O₂ → 2 Al₂O₃. A pot is fed 5.4 g of aluminium and 9.6 g of oxygen. Find the mass of Al₂O₃ made and the oxygen left over. (Al 27.0, O 16.0)",
+        "steps": [
+          {
+            "say": "How many moles of aluminium are fed?",
+            "kind": "number",
+            "answer": 0.2,
+            "calc": "5.4/27.0",
+            "unit": "mol",
+            "hint": "Moles = mass / molar mass.",
+            "explain": "5.4 g / 27.0 g/mol = 0.200 mol."
+          },
+          {
+            "say": "How many moles of oxygen, O₂, are fed?",
+            "kind": "number",
+            "answer": 0.3,
+            "calc": "9.6/32.0",
+            "unit": "mol",
+            "hint": "O₂ is two oxygen atoms, 32.0 g/mol.",
+            "explain": "9.6 g / 32.0 g/mol = 0.300 mol."
+          },
+          {
+            "say": "Which reactant runs out first?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Aluminium"
+              },
+              {
+                "id": "b",
+                "label": "Oxygen"
+              },
+              {
+                "id": "c",
+                "label": "Both together"
+              }
+            ],
+            "answer": "a",
+            "hint": "Divide each amount in moles by its coefficient and compare.",
+            "explain": "Aluminium gives 0.200 / 4 = 0.050 and oxygen 0.300 / 3 = 0.100, so aluminium is used up first."
+          },
+          {
+            "say": "How many moles of Al₂O₃ form?",
+            "kind": "number",
+            "answer": 0.1,
+            "calc": "0.200*2/4",
+            "unit": "mol",
+            "hint": "Use the 4 : 2 ratio of aluminium to Al₂O₃.",
+            "explain": "0.200 mol Al × 2/4 = 0.100 mol Al₂O₃."
+          },
+          {
+            "say": "What mass of Al₂O₃ (102.0 g/mol) is that?",
+            "kind": "number",
+            "answer": 10.2,
+            "calc": "0.100*102.0",
+            "unit": "g",
+            "tol": 0.005,
+            "hint": "Mass = moles × molar mass.",
+            "explain": "0.100 mol × 102.0 g/mol = 10.2 g."
+          },
+          {
+            "say": "How many grams of oxygen are left over?",
+            "kind": "number",
+            "answer": 4.8,
+            "calc": "(0.300-0.200*3/4)*32.0",
+            "unit": "g",
+            "tol": 0.01,
+            "hint": "Oxygen used = 0.200 × 3/4 mol; subtract it from what was fed.",
+            "explain": "Used 0.150 mol, left 0.150 mol × 32.0 g/mol = 4.8 g."
+          }
+        ],
+        "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
+      }
     }
   }
 }
