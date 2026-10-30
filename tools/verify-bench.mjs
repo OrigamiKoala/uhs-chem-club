@@ -305,6 +305,7 @@ ok('every Bellows quest is a tabletop: none plays the old gas rig');
    every boss is fought on open ground); its phases stand on the first bench's plate. */
 
 const { EmberReachWorld } = await import('../src/three/ember.js');
+const { KettleWorld } = await import('../src/three/kettle.js');
 ok('every Ember Reach quest is a tabletop: none plays the old calorimeter');
 
 
@@ -783,7 +784,7 @@ console.log('The foes — spoil standing in the wells\n');
 
   for (const [label, key, World] of [
     ['Tallow', 'tallow', TallowWorld], ['Ligar', 'ligar', LigarWorld], ['Lanternfall', 'lanternfall', LanternfallWorld],
-    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld]
+    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Kettle', 'kettle', KettleWorld]
   ]) {
     const proto = World.prototype;
     const baked = proto.bakeStatics;
@@ -1181,7 +1182,7 @@ console.log('The foes — spoil standing in the wells\n');
   const { chromeReserve } = await import('../src/learn/engine/lean.js');
   const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
   const { allQuests } = await import('../src/learn/curriculum.js');
-  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld };
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit07: KettleWorld };
   const worlds = new Map();
   const worldFor = unit => {
     if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }

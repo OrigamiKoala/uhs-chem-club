@@ -112,7 +112,7 @@ export const BOSS_ARENA_SPOTS = {
     playerPos: [0, 1.6, -44],
     lookAtPos: [0, 1.6, -60],
     bossPos: [0, 0, -60],
-    scale: 2.2,
+    scale: 1.4,
     species: 'recipe golem'
   }
 };
