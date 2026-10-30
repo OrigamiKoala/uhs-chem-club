@@ -315,6 +315,37 @@ export function tallyFixture(id, at, { element = 'O', name = 'Oxygen', w = 56 } 
 registerFixture('eqtally', { paint: () => {} });
 
 /* ------------------------------------------------------------------
+   THE FORMULA BUILDER
+   ------------------------------------------------------------------ */
+
+/** The formula the builder's dials spell: the count of each element, and the text (`P₂O₅`; `—` while every dial is at 0). */
+export function formulaRead(state, fid) {
+  const f = state.fixtures[fid];
+  const counts = {};
+  let text = '';
+  for (const el of f.props.elements) {
+    const n = dialAt(state, fid, `el_${el}`);
+    if (n > 0) { counts[el] = n; text += `${el}${n === 1 ? '' : String(n)}`; }
+  }
+  return { f, counts, formula: text, text: text ? pretty(text) : '—' };
+}
+
+/** A formula built by setting how many atoms of each kind it has (`elements`, in the order they are written). */
+export function formulaFixture(id, at, { elements = ['P', 'O'], w = 56, title = 'Formula' } = {}) {
+  const dials = {};
+  elements.forEach(el => { dials[`el_${el}`] = { min: 0, max: 6, step: 1, value: 0, label: `${el} atoms _` }; });
+  return { id, kind: 'eqformula', label: title, at: { ...at }, size: { w, h: R1(contentTop(elements.length) + 9) }, dials, noRun: true, props: { backdrop: true, elements } };
+}
+
+registerFixture('eqformula', {
+  paint(ctx, f, state, b) {
+    const F = frameOf(b);
+    const r = formulaRead(state, f.id);
+    say(ctx, r.text, F.x(f.size.w / 2), F.y(f.size.h - 5.2), F.size(4.4, 9), { align: 'center', weight: 700, color: r.formula ? AMBER : DIM });
+  }
+});
+
+/* ------------------------------------------------------------------
    STATE TILES
    ------------------------------------------------------------------ */
 
@@ -395,6 +426,10 @@ addTourText({
     text: f => (f.props.groups
       ? 'The ledger counts pieces: a group of atoms that stays together is counted once, as one piece. It prints how many of each piece stand on the left of the arrow and on the right, for the numbers set on the board. It only counts: you compare the two columns.'
       : 'The ledger counts atoms, one row for each kind. It prints how many of that atom stand on the left of the arrow and on the right, for the numbers set on the board. It only counts: you compare the two columns.')
+  },
+  'pot:eqformula': {
+    title: 'Formula', dials: false,
+    text: 'Each dial is named for one kind of atom and sets how many of it the formula has. The line at the bottom writes the formula the dials spell, and shows a dash while every dial is at 0.'
   },
   'pot:eqtally': {
     title: 'Tally', dials: false,
