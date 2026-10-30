@@ -298,7 +298,7 @@ export const STAGES = [
       reward: {
         log: 'The sulfuric acid is 0.0720 mol/L.',
         title: 'Two H+ for One Acid',
-        body: 'Each sulfuric acid particle gives two H+, so it takes two OH- to use it up. The 36.5 mL of 0.100 mol/L base held twice as many particles as the acid, so the acid is half of 0.146 mol/L: 0.0720 mol/L.'
+        body: 'Each sulfuric acid particle gives two H+, so it takes two OH- to use it up. About 36 mL of 0.100 mol/L base held twice as many particles as the acid, which puts the acid at 0.0720 mol/L.'
       }
     };
   })(),
@@ -336,7 +336,7 @@ export const STAGES = [
       reward: {
         log: `The colour changed ${fixed(GAP6, 1)} mL before the equivalence point.`,
         title: 'Endpoint',
-        body: 'The endpoint is where the indicator changes colour, and the equivalence point is where the moles match. Methyl orange changed 1.5 mL early in this weak solution; a good titration uses a dye whose endpoint lies close to the equivalence point.'
+        body: 'The endpoint is where the indicator changes colour, and the equivalence point is where the moles match. Methyl orange changed 1.5 mL early in this dilute solution; a good titration uses a dye whose endpoint lies close to the equivalence point.'
       }
     };
   })(),
@@ -371,7 +371,7 @@ export const STAGES = [
       reward: {
         log: 'The iron is 0.0900 mol/L.',
         title: 'A Dye of Its Own',
-        body: 'Permanganate is purple, so the first purple that stays is the endpoint with no indicator at all. Each permanganate particle met five Fe²⁺, so the 23.0 mL of 0.0200 mol/L run in showed 0.0900 mol/L of iron in the sample.'
+        body: 'Permanganate is purple, so the first purple that stays is the endpoint with no indicator at all. Each permanganate particle met five Fe²⁺, so about 22.5 mL of 0.0200 mol/L run in showed 0.0900 mol/L of iron in the sample.'
       }
     };
   })(),
@@ -405,7 +405,7 @@ export const STAGES = [
       reward: {
         log: 'The pickling bath acid is 0.450 mol/L.',
         title: 'The Bath Is Counted',
-        body: 'The bath\'s sulfuric acid is 0.450 mol/L: 45.5 mL of 0.500 mol/L base met 25.0 mL of it, with two H+ for each acid particle. A titration counts an acid by the base that meets it.'
+        body: 'The bath\'s sulfuric acid is 0.450 mol/L: about 45 mL of 0.500 mol/L base met 25.0 mL of it, with two H+ for each acid particle. A titration counts an acid by the base that meets it.'
       }
     };
   })()
