@@ -98,7 +98,7 @@ export const UNIT_07 = {
       title: 'Recipe Golem',
       line: 'Starve the foundry golem and weigh its recipe.',
       arena: 'boss',
-      stageCount: 2,
+      stageCount: 3,
       status: 'live',
       module: () => import('../quests/unit07/boss-golem.js')
     }

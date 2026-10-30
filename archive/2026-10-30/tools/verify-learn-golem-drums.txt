@@ -1,0 +1,15 @@
+// The Recipe Golem's retired phase 2 (feed by weight on two drums), as `tools/verify-learn.mjs` held it until 2026-10-30.
+// Not run. See archive/2026-10-30/README.md.
+    // 2. the same limit by weight: grams over molar mass, the smaller count of moles
+    {
+      const t = end(g, 1);
+      const drum = id => declared(g, 1, id).props;
+      const moles = { Na: drum('dna').grams / M.speciesMass('sodium'), Cl: drum('dcl').grams / M.speciesMass('chlorine') };
+      same([moles.Na, moles.Cl], [3, 2], 'unit07/boss-golem phase 2 (the moles in each drum)');
+      same(H.tallyOf(t, 'tally'), Math.min(moles.Na, moles.Cl), 'unit07/boss-golem phase 2 (the smaller mole count)');
+      holds(moles.Na !== moles.Cl && Number.isInteger(moles.Na) && Number.isInteger(moles.Cl), 'unit07/boss-golem phase 2: the drums hold equal or fractional moles');
+      near(M.scaleRead(t, 'scale').weight, drum('dcl').grams, 'unit07/boss-golem phase 2 (the scale reads the drum on it)');
+      // The plate prints the molar masses the table itself uses.
+      const lines = g.STAGES[1].table.fixtures.find(f => f.id === 'listed').props.lines.join(' ');
+      holds(lines.includes(M.listedMass('Na').toFixed(1)) && lines.includes(M.listedMass('Cl').toFixed(1)), 'unit07/boss-golem phase 2: the plate lists a molar mass that is not the listed one');
+    }

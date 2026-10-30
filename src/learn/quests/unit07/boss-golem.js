@@ -1,30 +1,32 @@
 /**
  * boss-golem.js — Learn world 7 Elite Encounter: Recipe Golem.
  *
- * An automaton bound by strict stoichiometry. Two phases on the TABLETOP (plan `bench-tabletop.md`, phase T2c),
- * each a fresh pair of ingredients, and neither prompt carries a figure the bench has to give:
- *   Phase 1: Limiting feed on two heaps (the heap kit's maker · q1)
- *   Phase 2: The same feed by weight on two drums (the mass kit's scale, grams to moles · Tallow q6)
+ * An automaton bound by strict stoichiometry. Five phases on the TABLETOP, each a fresh case of an idea a bench of Kettle worked out and
+ * none introducing one (`docs/plans/kettle-world.md` section 3.9):
+ *   Phase 1: limiting feed on two heaps         (`q1-recipe`, the heap kit's maker)
+ *   Phase 2: the golem's recipe board           (`q4-balance`)
+ *   Phase 3: the golem's sealed pot             (`q3-change`)
+ *   Phase 4: limiting feed and yield in grams   (`q6-stoich`, the pot)
+ *   Phase 5: the forged ledger                  (`q6-stoich`, grams to tons)
  *
- * The foe is the golem itself, watching the table from its corner (`table/layout.js` `FOE_PAD`): it only
- * observes. Scouting is free, a committed miss costs one of three Integrity, a correct commit wins at any
- * Integrity, and nothing in a phase's answer is changed by the fight. A boss phase never declares a field
- * stage. Kettle has no walkable world, so the golem is fought across a table in the foundry room
- * (`rooms.js`), the same room as the quest before it.
+ * The foe is the golem itself, watching the table from its corner (`table/layout.js` `FOE_PAD`): it only observes. Scouting is free, a
+ * committed miss costs one of three Integrity, a correct commit wins at any Integrity, and nothing in a phase's answer is changed by the
+ * fight. A boss phase never declares a field stage and carries no lead line. The golem stands at the furnace (`boss-arena.js`).
  *
  * Awards Case File clue: clue_kettle_ledger.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { heapTable, heap, dock, product, limitOf, tallyOf } from '../../table/kits/heap.js';
-import { crate } from '../../table/kits/mass.js';
+import { potTable, jar, reactorFixture, weighFixture, weighRead, plaqueFixture, fixed } from '../../table/kits/pot.js';
+import { molarMass, parseEquation, reactPlan } from '../../engine/reactdata.js';
 import { session } from '../../../session.js';
 
-export const meta = { stageCount: 2 };
+export const meta = { stageCount: 3 };
 
-export const BUILDS_ON = ['unit07/q1-recipe'];
+export const BUILDS_ON = ['unit07/q1-recipe', 'unit07/q6-stoich'];
 
-/** The room this boss's tables stand in at T4: Kettle has no world to stand in (`rooms.js`). */
+/** The room this boss's tables stand in until the walkable world carries them (`rooms.js`). */
 export const ROOM = 'foundry';
 
 /** Every key on these benches says what it does on its cap, so none carries a legend. */
@@ -44,6 +46,21 @@ const atomAt = (id, el, x, y) => ({ id, kind: 'atom', label: el, at: { x, y }, p
 
 /** What one unit of sodium chloride takes: the recipe the briefing states, for the check's own arithmetic. */
 const UNIT_NEED = { Na: 1, Cl: 1 };
+
+const widget = { type: 'table', label: 'The bench' };
+
+/* Phase 4: aluminium frees iron from its ore (Fe2O3 + 2 Al -> Al2O3 + 2 Fe); the furnace keeps 80 % of the iron its limit allows. */
+const EQ_THERMITE = 'Fe2O3 + 2 Al -> Al2O3 + 2 Fe';
+const ORE_G = 79.8;
+const AL_G = 10.8;
+const GOLEM_KEEPS = 0.8;
+const THERMITE_PLAN = reactPlan(parseEquation(EQ_THERMITE), { Fe2O3: ORE_G / molarMass('Fe2O3'), Al: AL_G / molarMass('Al') });
+const POSSIBLE_FE = THERMITE_PLAN.made.Fe * molarMass('Fe');
+const GOLEM_PCT = Math.round(POSSIBLE_FE * GOLEM_KEEPS * 10) / 10 / POSSIBLE_FE * 100;
+
+/* Phase 5: the ledger. The furnace turns 79.8 g of ore into 55.8 g of iron; the ledger's ore is 39.9 tons. */
+const EQ_ORE = 'Fe2O3 + 3 CO -> 2 Fe + 3 CO2';
+const LEDGER = { oreTons: 39.9, claimTons: 50.0, possibleTons: 39.9 * (reactPlan(parseEquation(EQ_ORE), { Fe2O3: ORE_G / molarMass('Fe2O3') }).made.Fe * molarMass('Fe')) / ORE_G };
 
 export const STAGES = [
   /* ---------------------------------------------------------------- Phase 1 */
@@ -102,47 +119,94 @@ export const STAGES = [
     }
   },
 
-  /* ---------------------------------------------------------------- Phase 2 */
-  {
-    id: 'phase2',
-    title: 'Phase 2 · Feed by Weight',
-    prompt: 'How many moles of sodium chloride can the golem make from the two drums?',
-    widget: { type: 'table', label: 'The bench' },
-    table: heapTable({
-      pieces: [
-        crate('dna', 'SODIUM', { x: 16, y: 13 }, { species: 'sodium', grams: 69, note: 'drum' }),
-        crate('dcl', 'CHLORINE', { x: 38, y: 13 }, { species: 'chlorine', grams: 71, note: 'drum' })
+  /* ---------------------------------------------------------------- Phase 4 */
+  (() => {
+    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_THERMITE, seats: 2, out: 'Fe', yieldFrac: GOLEM_KEEPS, window: false, title: 'Furnace' });
+    const b = weighFixture('bal', { x: 108, y: 32 });
+    return {
+      id: 'phase4',
+      title: 'Phase 4 · What the Furnace Kept',
+      prompt: 'Type the percent of its possible iron that this furnace made.',
+      entry: { id: 'pct', label: 'Percent made', unit: '%' },
+      widget,
+      table: potTable({
+        pieces: [
+          jar('ore', 'Iron ore', { x: 136, y: 36 }, { species: 'Fe2O3', grams: ORE_G, shown: `${ORE_G.toFixed(1)} g` }),
+          jar('al', 'Aluminium', { x: 136, y: 52 }, { species: 'Al', grams: AL_G, shown: `${AL_G.toFixed(1)} g` }),
+          jar('catch', 'Catch jar', { x: 120, y: 52 }, { catchFor: 'Fe' })
+        ],
+        fixtures: [
+          r.fixture, b.fixture,
+          plaqueFixture('eq', 'Equation and listed masses', { x: 48, y: 56 }, ['Fe₂O₃ + 2 Al → Al₂O₃ + 2 Fe', 'Fe₂O₃ 159.6 · Al 27.0 · Fe 55.8 g/mol'], { w: 80 })
+        ],
+        zones: { slots: [...r.slots, b.slot] }
+      }),
+      foes: GOLEM_FOE,
+      encounter: { species: 'recipe golem', act: 'Charge Furnace', intent: 'The golem feeds its furnace from two hoppers.' },
+      hints: [
+        'Use the furnace, the two jars, the catch jar and the balance.',
+        'Compare the iron on the balance with the iron the equation allows from the reactant that runs out first.',
+        'Find which jar gives out first, work out the iron it allows, then divide what was made by that and multiply by 100.'
       ],
-      zones: { slots: [{ id: 'weigh', label: 'Scale pan', at: { x: 22, y: 46 }, size: { w: 22, h: 18 } }] },
-      fixtures: [
-        { id: 'scale', kind: 'scale', label: 'Scale', at: { x: 56, y: 44 }, size: { w: 38, h: 28 }, noRun: true, props: { pan: 'slot:weigh', unit: 'g' } },
-        { id: 'listed', kind: 'plate', label: 'Listed', at: { x: 68, y: 13 }, size: { w: 40, h: 20 }, noRun: true, props: { lines: ['molar mass', 'sodium 23.0 g/mol', 'chlorine 35.5 g/mol'] } },
-        { id: 'tally', kind: 'tally', label: 'Tally', at: { x: 96, y: 50 }, size: { w: 36, h: 16 }, noRun: true, dials: { n: { min: 0, max: 6, step: 1, value: 0, label: 'Moles' } } }
-      ]
-    }),
-    foes: GOLEM_FOE,
-    encounter: {
-      species: 'recipe golem',
-      act: 'Seal Valves',
-      intent: 'Steam builds behind the valves while the golem waits for its feed.'
-    },
-    check(state) {
-      const n = tallyOf(state.table, 'tally');
-      if (n === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to a count of moles.' };
-      if (n !== 2) return { ok: false, msg: 'Turn each drum\'s weight into moles with the molar masses on the plate, then see which drum runs out first.' };
-      return { ok: true };
-    },
-    hints: [
-      'Drag each drum onto the scale\'s pan and read what it weighs.',
-      'Use the molar masses on the plate to turn each drum\'s weight into moles.',
-      'Each mole of the compound takes one mole of each element, so compare the two mole counts.'
-    ],
-    reward: {
-      title: 'The Same Limit, by Weight',
-      body: 'Dividing a mass by a molar mass gives moles, and moles can be compared the way atoms were. The smaller number of moles still sets how much compound can form.',
-      log: 'Yield set by the drum with fewer moles.'
-    }
-  }
+      check(state) {
+        const v = entryNumber(state.table, 'pct');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the percent.' };
+        if (Math.abs(v - GOLEM_PCT) <= 1) return { ok: true };
+        const w = weighRead(state.table, 'bal');
+        const note = w.item && w.grams > 0 ? ` The balance read ${fixed(w.grams, 1)} g of iron.` : ' Run the furnace and weigh the catch jar.';
+        return { ok: false, msg: `${fixed(v, 1)} % does not follow from the table.${note}` };
+      },
+      reward: {
+        title: 'Yield From the Limit',
+        body: 'The aluminium gave out first, so the iron it allows is 22.3 g. The 17.9 g on the balance is 80 % of that.',
+        log: 'The furnace kept 80 % of the iron its limit allowed.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- Phase 5 */
+  (() => {
+    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_ORE, seats: 1, plenty: ['CO'], out: 'Fe', window: false, title: 'Furnace' });
+    const b = weighFixture('bal', { x: 108, y: 32 });
+    return {
+      id: 'phase5',
+      title: 'Phase 5 · The Ledger',
+      prompt: `Type the most iron, in tons, that ${LEDGER.oreTons.toFixed(1)} tons of ore can give.`,
+      entry: { id: 't', label: 'Iron possible', unit: 't' },
+      widget,
+      table: potTable({
+        pieces: [
+          jar('ore', 'Iron ore', { x: 136, y: 36 }, { species: 'Fe2O3', grams: ORE_G, shown: `${ORE_G.toFixed(1)} g` }),
+          jar('catch', 'Catch jar', { x: 136, y: 52 }, { catchFor: 'Fe' })
+        ],
+        fixtures: [
+          r.fixture, b.fixture,
+          plaqueFixture('led', 'The golem\'s ledger', { x: 48, y: 56 }, [`Ore in: ${LEDGER.oreTons.toFixed(1)} t   Metal out: ${LEDGER.claimTons.toFixed(1)} t`, 'Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂'], { w: 80 })
+        ],
+        zones: { slots: [...r.slots, b.slot] }
+      }),
+      foes: GOLEM_FOE,
+      encounter: { species: 'recipe golem', act: 'Log Output', intent: 'The golem writes its output into the ledger.' },
+      hints: [
+        'Use the furnace, the ore jar, the catch jar and the balance.',
+        'Compare the grams of ore fed with the grams of iron on the balance, and the ledger with what a furnace can make.',
+        'The furnace turns each gram of ore into the same mass of iron, so scale that by the tons of ore in the ledger.'
+      ],
+      check(state) {
+        const v = entryNumber(state.table, 't');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the tons of iron.' };
+        if (Math.abs(v - LEDGER.possibleTons) <= 0.3) return { ok: true };
+        const w = weighRead(state.table, 'bal');
+        const note = w.item && w.grams > 0 ? ` The furnace made ${fixed(w.grams, 1)} g of iron from ${ORE_G.toFixed(1)} g of ore.` : ' Run the furnace and weigh the catch jar.';
+        return { ok: false, msg: `${fixed(v, 1)} t does not follow from the furnace.${note}` };
+      },
+      reward: {
+        title: 'The Ledger Cannot Be True',
+        body: 'The ore in the ledger can give at most 27.9 tons of iron. The ledger claims 50.0 tons: more metal than the equation allows from that ore.',
+        log: 'The ledger claims 50.0 t of metal from ore that can give 27.9 t.'
+      }
+    };
+  })()
 ];
 
 /* ------------------------------------------------------------------
@@ -150,15 +214,20 @@ export const STAGES = [
    ------------------------------------------------------------------ */
 
 const makes = n => Array.from({ length: n }, () => ({ run: 'maker' }));
+const put = (piece, target) => ({ place: { piece, to: target } });
+const typed = (entry, value) => ({ type: { entry, value: String(value) } });
+const weighed = [put('catch', 'slot:pot.out'), { run: 'pot' }, put('catch', 'slot:bal.pan')];
 
 export const SOLUTIONS = [
   [joinTo('na1', 'cl1'), to('na1', 'container:dock'), ...makes(9), { setDial: { fixture: 'tally', dial: 'n', value: 9 } }],
-  [to('dna', 'slot:weigh'), to('dcl', 'slot:weigh'), { setDial: { fixture: 'tally', dial: 'n', value: 2 } }]
+  [put('ore', 'slot:pot.in1'), put('al', 'slot:pot.in2'), ...weighed, typed('pct', '80')],
+  [put('ore', 'slot:pot.in1'), ...weighed, typed('t', '27.9')]
 ];
 
 export const MISSES = [
   [joinTo('na1', 'cl1'), to('na1', 'container:dock'), ...makes(9), { setDial: { fixture: 'tally', dial: 'n', value: 14 } }],
-  [to('dna', 'slot:weigh'), { setDial: { fixture: 'tally', dial: 'n', value: 3 } }]
+  [put('ore', 'slot:pot.in1'), put('al', 'slot:pot.in2'), ...weighed, typed('pct', '100')],
+  [put('ore', 'slot:pot.in1'), ...weighed, typed('t', '50')]
 ];
 
 function blankState() { return {}; }
@@ -173,15 +242,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The golem vents its boiler and freezes. In its log vault we found a ledger: fifty tons of metal logged out against forty tons of ore logged in. No chemistry can do that.'
+      body: 'The golem vents its boiler and freezes. In its log vault we found a ledger: fifty tons of metal logged out against forty tons of ore logged in. No furnace can do that.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Both phases asked the same question, once by counting atoms and once by weighing drums: which ingredient runs out first. That is all of Kettle so far, and it was enough to freeze the golem.'
+      body: 'Every phase asked what a recipe allows: which ingredient runs out, how much of it can be made, and how much was. That was enough to freeze the golem.'
     },
     {
       heading: 'Next',
-      body: 'The ledger goes into the Case File. Something in the foundry is making mass from nothing, and no balance allows that.'
+      body: 'The ledger goes into the Case File. Something in the foundry is writing metal that the ore cannot give.'
     }
   ]
 };
@@ -201,7 +270,6 @@ export function mount(container, ctx) {
 
   const runner = createRunner(container, bossCtx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    // No world under Kettle: the golem is fought across a table in the foundry room.
     room: ROOM,
     onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
@@ -209,3 +277,5 @@ export function mount(container, ctx) {
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+
+export const CHECKS = { EQ_THERMITE, ORE_G, AL_G, GOLEM_KEEPS, GOLEM_PCT, POSSIBLE_FE, LEDGER };
