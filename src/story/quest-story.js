@@ -263,6 +263,16 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: a compound holds the same share of each element every time, so ore\'s share of metal can be worked out.'
   },
+  'unit07/q3-change': {
+    scene: 'sealed-pot',
+    beats: [
+      { to: 0.27, say: 'In an open pot, burning iron takes oxygen from the air, so the balance counts more atoms and reads more.' },
+      { to: 0.52, say: 'The gases a burn makes float out of an open pot, so the balance counts fewer atoms and reads less.' },
+      { to: 0.77, say: 'Seal the lid and nothing gets in or out. The atoms only join up differently, so the balance reads the same before and after.' },
+      { to: 0.94, say: 'The balance changes only when atoms cross the lid. A sealed pot makes nothing and loses nothing.' }
+    ],
+    filed: 'Filed: a sealed pot weighs the same before and after, so the ledger\'s extra metal came from somewhere.'
+  },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     beats: [
