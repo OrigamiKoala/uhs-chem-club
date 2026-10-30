@@ -90,8 +90,8 @@ export const UNIT_07 = {
       line: "Say what each reaction on the furnace log is doing.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q8-kinds.js')
     },
     {
       id: 'boss-golem',

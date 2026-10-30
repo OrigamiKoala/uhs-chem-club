@@ -647,6 +647,135 @@
         ],
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
+    },
+    "q8-kinds": {
+      "problems": [
+        {
+          "id": "q8-kinds#b1",
+          "quest": "q8-kinds",
+          "question": "CaCO₃ → CaO + CO₂. Calcium is +2, carbon +4 and oxygen −2 on both sides. Which kinds does this reaction belong to?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Decomposition, and not redox"
+            },
+            {
+              "id": "b",
+              "label": "Decomposition and redox"
+            },
+            {
+              "id": "c",
+              "label": "Synthesis and redox"
+            },
+            {
+              "id": "d",
+              "label": "Combustion and redox"
+            }
+          ],
+          "answer": "a",
+          "explanation": "One reactant makes two products, so it is a decomposition. No atom's oxidation number changes, so no electrons move and it is not redox."
+        },
+        {
+          "id": "q8-kinds#b2",
+          "quest": "q8-kinds",
+          "question": "Which reaction is both a synthesis and an acid-base reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "NH₃ + HCl → NH₄Cl"
+            },
+            {
+              "id": "b",
+              "label": "2 Mg + O₂ → 2 MgO"
+            },
+            {
+              "id": "c",
+              "label": "Zn + CuSO₄ → ZnSO₄ + Cu"
+            },
+            {
+              "id": "d",
+              "label": "2 H₂O → 2 H₂ + O₂"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Two reactants make one product, which is a synthesis, and HCl gives a hydrogen ion to NH₃, which is an acid-base reaction. The magnesium reaction is synthesis and redox, with no proton moving."
+        }
+      ],
+      "worked": {
+        "id": "q8-kinds#w",
+        "quest": "q8-kinds",
+        "title": "Chromium in Dichromate",
+        "setup": "The dichromate ion Cr₂O₇²⁻ is turned into Cr³⁺ ions. Find the oxidation number of chromium in dichromate and the electrons each ion gains. Oxygen is −2.",
+        "steps": [
+          {
+            "say": "What do the seven oxygen atoms add up to?",
+            "kind": "number",
+            "answer": -14,
+            "calc": "7*(-2)",
+            "unit": "",
+            "hint": "Seven atoms, each −2.",
+            "explain": "7 × (−2) = −14."
+          },
+          {
+            "say": "The whole ion is −2. What must the two chromium atoms add up to?",
+            "kind": "number",
+            "answer": 12,
+            "calc": "-2-(-14)",
+            "unit": "",
+            "hint": "All together must equal the charge: chromium plus −14 is −2.",
+            "explain": "Chromium + (−14) = −2, so the two chromium atoms add up to +12."
+          },
+          {
+            "say": "What is the oxidation number of each chromium atom?",
+            "kind": "number",
+            "answer": 6,
+            "calc": "12/2",
+            "unit": "",
+            "hint": "Share the total between the two atoms.",
+            "explain": "+12 shared by two atoms is +6 each."
+          },
+          {
+            "say": "In Cr³⁺ each chromium is +3. By how much does each chromium's number change?",
+            "kind": "number",
+            "answer": 3,
+            "calc": "6-3",
+            "unit": "",
+            "hint": "Go from +6 to +3.",
+            "explain": "+6 to +3 is a fall of 3."
+          },
+          {
+            "say": "How many electrons do the two chromium atoms of one Cr₂O₇²⁻ gain?",
+            "kind": "number",
+            "answer": 6,
+            "calc": "2*(6-3)",
+            "unit": "electrons",
+            "hint": "Each atom changes by the same amount.",
+            "explain": "2 atoms × 3 = 6 electrons."
+          },
+          {
+            "say": "Is the dichromate ion oxidised or reduced?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Reduced: its numbers fall and it gains electrons"
+              },
+              {
+                "id": "b",
+                "label": "Oxidised: its numbers fall and it gains electrons"
+              },
+              {
+                "id": "c",
+                "label": "Neither: no electrons move"
+              }
+            ],
+            "answer": "a",
+            "hint": "A fall in the number means electrons were gained.",
+            "explain": "Chromium's number falls from +6 to +3, so electrons are gained and the ion is reduced."
+          }
+        ],
+        "finish": "Add the oxygens, take the total from the charge, share it out, then compare the numbers before and after."
+      }
     }
   }
 }

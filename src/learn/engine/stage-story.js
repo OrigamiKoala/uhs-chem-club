@@ -176,6 +176,9 @@ export const STAGE_STORY = {
   },
   'q6-stoich': {
     1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
+  },
+  'q8-kinds': {
+    1: 'Vess finds a furnace log that lists reactions nobody has named.'
   }
 };
 
