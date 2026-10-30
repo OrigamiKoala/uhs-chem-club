@@ -817,8 +817,120 @@ export function buildCrucible(foe) {
   return body;
 }
 
+/* ------------------------------------------------------------------
+   THE UNDERTOW
+   A low brine crawler: a salt-crusted iron hull on six legs, an intake maw at the front and a siphon head on a short neck.
+   ------------------------------------------------------------------ */
+
+export function buildUndertow(foe) {
+  const group = new THREE.Group();
+  group.name = `undertow:${foe.id}`;
+
+  const shadow = contactShadow(0.17);
+  group.add(shadow);
+
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const iron = boilerMaterial();
+  const brass = brassMaterial();
+
+  const hullGeo = own(new RoundedBoxGeometry(0.15, 0.05, 0.09, 2, 0.008));
+  enableAO(hullGeo);
+  const hull = new THREE.Mesh(hullGeo, iron);
+  hull.position.set(0, 0.06, 0);
+  hull.castShadow = true;
+  rig.add(hull);
+
+  const legs = [];
+  const legGeo = own(new THREE.BoxGeometry(0.01, 0.045, 0.01));
+  for (let i = 0; i < 6; i++) {
+    const leg = new THREE.Mesh(legGeo, iron);
+    leg.position.set(-0.055 + (i % 3) * 0.055, 0.022, i < 3 ? -0.05 : 0.05);
+    rig.add(leg);
+    legs.push(leg);
+  }
+
+  const mawGeo = own(new THREE.CylinderGeometry(0.022, 0.03, 0.03, 12));
+  const maw = new THREE.Mesh(mawGeo, brass);
+  maw.rotation.z = Math.PI / 2;
+  maw.position.set(0.09, 0.055, 0);
+  rig.add(maw);
+
+  const neckGeo = own(new THREE.CylinderGeometry(0.008, 0.01, 0.05, 8));
+  const neck = new THREE.Mesh(neckGeo, iron);
+  neck.position.set(-0.04, 0.115, 0);
+  rig.add(neck);
+  const headGeo = own(new THREE.SphereGeometry(0.014, 10, 8));
+  const head = new THREE.Mesh(headGeo, brass);
+  head.position.set(-0.04, 0.145, 0);
+  rig.add(head);
+
+  const hit = hitTarget(0.17, 0.12);
+  hit.position.y = 0.06;
+  group.add(hit);
+
+  const body = {
+    species: 'the undertow',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.17,
+    look: 0,
+    baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced, bearing = 0) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed') {
+        const f = Math.min(1, body.since / 2.2);
+        rig.scale.set(1 + f * 0.25, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.25);
+        if (f >= 0.99) { body.gone = true; group.visible = false; }
+      } else {
+        rig.scale.set(1, 1, 1);
+      }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      group.rotation.y = body.look * 0.3;
+      const slack = body.pose === 'slackened' ? -0.012 : 0;
+      hull.position.y = 0.06 + slack;
+      legs.forEach((leg, i) => { leg.position.y = 0.022 + (body.still ? 0 : Math.sin(t * 2 + body.phase + i) * 0.002); });
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -833,6 +945,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the hopper') return buildHopper(foe);
   if (species === 'the lantern-eater') return buildLanternEater(foe);
   if (species === 'the crucible') return buildCrucible(foe);
+  if (species === 'the undertow') return buildUndertow(foe);
   return null;
 }
 

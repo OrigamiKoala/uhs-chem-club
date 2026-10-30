@@ -1430,7 +1430,7 @@ console.log('The foes — spoil standing in the wells\n');
  *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
  *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
  */
-for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null], ['boss-compressor', 'unit04/boss-compressor.js', null], ['boss-crucible', 'unit05/boss-crucible.js', null]]) {
+for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null], ['boss-compressor', 'unit04/boss-compressor.js', null], ['boss-crucible', 'unit05/boss-crucible.js', null], ['boss-undertow', 'unit06/boss-undertow.js', null]]) {
   console.log(`\n${bossName} on its tables`);
   const MODEL = await import('../src/learn/table/model.js');
   const SNAP = await import('../src/learn/table/snap.js');
@@ -1448,7 +1448,9 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
         ? [['idle'], ['unmoved'], ['laboured'], ['easy'], ['venting'], ['steady'], ['dispersed']]
         : bossName === 'boss-crucible'
           ? [['idle'], ['unmoved'], ['heated'], ['cracked'], ['vented'], ['dispersed']]
-          : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
+          : bossName === 'boss-undertow'
+            ? [['idle'], ['unmoved'], ['slackened'], ['dispersed']]
+            : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
   const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
   const before = failures;
   let fights = 0;
@@ -1553,7 +1555,7 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
       layer.update(0.05);
       const tag = `${label} (the fight)`;
       for (const f of enc.foes) {
-        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : bossName === 'boss-eater' ? ['absorbed', 'ionized', 'unmoved'] : bossName === 'boss-compressor' ? ['laboured', 'venting', 'unmoved'] : bossName === 'boss-crucible' ? ['heated', 'vented', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
+        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : bossName === 'boss-eater' ? ['absorbed', 'ionized', 'unmoved'] : bossName === 'boss-compressor' ? ['laboured', 'venting', 'unmoved'] : bossName === 'boss-crucible' ? ['heated', 'vented', 'unmoved'] : bossName === 'boss-undertow' ? ['slackened', 'idle', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
           const probe = { pose };
           const want = planFoe(enc, f, probe);
           encounter.react(f.id, probe);
