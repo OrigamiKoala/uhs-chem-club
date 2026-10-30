@@ -79,7 +79,7 @@ function ionsIn(t, tray) {
   return c;
 }
 /** The formula chip standing in a slot, or null. */
-const chipIn = (t, slot) => Object.values(t.pieces).find(p => live(p) && p.kind === 'formula' && p.zone === `slot:${slot}`) || null;
+const chipIn = (t, slot) => Object.values(t.pieces).find(p => live(p) && p.kind === 'formula' && (p.zone === `slot:${slot}` || p.zone === `tray:${slot}`)) || null;
 const sameCounts = (a, b) => { const ks = new Set([...Object.keys(a), ...Object.keys(b)]); return [...ks].every(k => (a[k] || 0) === (b[k] || 0)); };
 const total = c => Object.values(c).reduce((a, b) => a + b, 0);
 const plural = n => (n === 1 ? 'disc' : 'discs');
@@ -88,10 +88,10 @@ const pucks = (ids, row, x0, dx) => ids.flatMap((spec, i) => {
   const [id, ion] = spec;
   return [ionPuck(id, ion, { x: x0 + i * dx, y: row })];
 });
-const trayAt = (id, label, at, size) => ({ id, label, at, size, cell: 10, cellH: 10 });
+const trayAt = (id, label, at, size) => ({ id, label, at, size, cell: 14, cellH: 14 });
 
 /* Stage 3 and 4 and 7 and 8 start with the jars already in the seats of the pot. */
-const jarsSeated = (pair, ids, o = {}) => pair.map((s, i) => solutionJar(ids[i], { x: 0, y: 0 }, { ...s, ...(o.sealed ? { label: `Jar ${i + 1}`, sealed: true } : {}), ...(o.names?.[i] ? { name: o.names[i] } : {}) }, { zone: `slot:pot.in${i + 1}` }));
+const jarsSeated = (pair, ids, o = {}) => pair.map((s, i) => solutionJar(ids[i], { x: 0, y: 0 }, { ...s, ...(o.sealed ? { label: `Jar ${'AB'[i]}`, sealed: true } : {}), ...(o.names?.[i] ? { name: o.names[i] } : {}) }, { zone: `slot:pot.in${i + 1}` }));
 
 const GUESS = {
   gnone: 'No ions are left in the water',
@@ -194,7 +194,7 @@ export const STAGES = [
           ...pucks([['pPb', 'Pb2'], ['pNO3', 'NO3'], ['pK', 'K'], ['pI', 'I']], 57, 14, 20)
         ],
         fixtures: [p.fixture],
-        zones: { slots: p.slots, trays: [trayAt('water', 'Still in the water', { x: 132, y: 22 }, { w: 30, h: 24 })] }
+        zones: { slots: p.slots, trays: [trayAt('water', 'Still in the water', { x: 131, y: 20 }, { w: 28, h: 28 })] }
       }),
       hints: [
         'Use the "Mix" key, then drag the ion pucks into the tray.',
@@ -235,15 +235,15 @@ export const STAGES = [
       table: potTable({
         pieces: [
           ...jarsSeated(LEAD, ['pb', 'ki']),
-          ...pucks([['pPb', 'Pb2'], ['pN1', 'NO3'], ['pN2', 'NO3'], ['pK1', 'K'], ['pK2', 'K'], ['pI1', 'I'], ['pI2', 'I']], 57, 10, 11),
-          formulaChip('fPbI2', 'PbI2', 's', { x: 94, y: 57 }),
-          formulaChip('fKNO3', 'KNO3', 's', { x: 115, y: 57 }),
-          formulaChip('fPbNO3', 'Pb(NO3)2', 's', { x: 136, y: 57 })
+          ...pucks([['pPb', 'Pb2'], ['pN1', 'NO3'], ['pN2', 'NO3'], ['pK1', 'K'], ['pK2', 'K'], ['pI1', 'I'], ['pI2', 'I']], 57.5, 8, 12.8),
+          formulaChip('fPbI2', 'PbI2', 's', { x: 99, y: 46 }),
+          formulaChip('fKNO3', 'KNO3', 's', { x: 119.5, y: 46 }),
+          formulaChip('fPbNO3', 'Pb(NO3)2', 's', { x: 140, y: 46 })
         ],
         fixtures: [p.fixture],
         zones: {
-          slots: [...p.slots, { id: 'solid', label: 'Solid formed', at: { x: 122, y: 38 }, size: { w: 24, h: 12 } }],
-          trays: [trayAt('reacted', 'Ions that reacted', { x: 122, y: 16 }, { w: 50, h: 20 })]
+          slots: [...p.slots, { id: 'solid', label: 'Solid formed', at: { x: 119, y: 28 }, size: { w: 24, h: 12 } }],
+          trays: [trayAt('reacted', 'Ions that reacted', { x: 119, y: 12 }, { w: 56, h: 14 })]
         }
       }),
       hints: [
@@ -281,8 +281,8 @@ export const STAGES = [
     prompt: 'Choose the ions you think stay in the water, whatever solution they are mixed with.',
     widget,
     table: potTable({
-      pieces: pucks(POOL.map(id => [`g${id}`, id]), 18, 14, 16).map((p, i) => ({ ...p, at: { x: 14 + (i % 4) * 18, y: 14 + Math.floor(i / 4) * 16 } })),
-      zones: { trays: [trayAt('guess', 'I think these always stay', { x: 112, y: 28 }, { w: 60, h: 24 })] }
+      pieces: pucks(POOL.map(id => [`g${id}`, id]), 18, 14, 16).map((p, i) => ({ ...p, at: { x: 14 + (i % 4) * 20, y: 14 + Math.floor(i / 4) * 20 } })),
+      zones: { trays: [trayAt('guess', 'I think these always stay', { x: 112, y: 28 }, { w: 56, h: 28 })] }
     }),
     hints: [
       'Use the eight ion pucks and the tray.',
@@ -317,9 +317,9 @@ export const STAGES = [
       },
       widget,
       table: potTable({
-        pieces: pucks(POOL.map(id => [`p${id}`, id]), 57, 10, 13),
+        pieces: pucks(POOL.map(id => [`p${id}`, id]), 57, 10, 14.5),
         fixtures: [p.fixture],
-        zones: { slots: p.slots, trays: [trayAt('stayed', 'Stayed every time', { x: 122, y: 22 }, { w: 50, h: 24 })] }
+        zones: { slots: p.slots, trays: [trayAt('stayed', 'Stayed every time', { x: 121, y: 20 }, { w: 56, h: 28 })] }
       }),
       hints: [
         'Use the "Mixture" dial and the "Mix" key, then drag the ion pucks into the tray.',
@@ -361,14 +361,14 @@ export const STAGES = [
       table: potTable({
         pieces: [
           ...jarsSeated(ACID, ['hcl', 'naoh'], { names: ['hydrochloric acid', null] }),
-          ...pucks([['pH', 'H'], ['pOH', 'OH'], ['pNa', 'Na'], ['pCl', 'Cl']], 57, 12, 16),
-          formulaChip('fH2O', 'H2O', 'l', { x: 90, y: 57 }),
-          formulaChip('fNaCl', 'NaCl', 'aq', { x: 114, y: 57 })
+          ...pucks([['pH', 'H'], ['pOH', 'OH'], ['pNa', 'Na'], ['pCl', 'Cl']], 57.5, 12, 20),
+          formulaChip('fH2O', 'H2O', 'l', { x: 92, y: 57.5 }),
+          formulaChip('fNaCl', 'NaCl', 'aq', { x: 113, y: 57.5 })
         ],
         fixtures: [p.fixture],
         zones: {
-          slots: [...p.slots, { id: 'formed', label: 'Formed', at: { x: 132, y: 40 }, size: { w: 24, h: 12 } }],
-          trays: [trayAt('reacted', 'Ions that reacted', { x: 132, y: 18 }, { w: 30, h: 20 })]
+          slots: [...p.slots, { id: 'formed', label: 'Formed', at: { x: 131, y: 43 }, size: { w: 24, h: 12 } }],
+          trays: [trayAt('reacted', 'Ions that reacted', { x: 131, y: 19 }, { w: 28, h: 28 })]
         }
       }),
       hints: [
@@ -409,22 +409,23 @@ export const STAGES = [
       table: potTable({
         pieces: [
           ...jarsSeated(SEALED, ['jar1', 'jar2'], { sealed: true }),
-          ...pucks([['pAg', 'Ag'], ['pBr', 'Br'], ['pK1', 'K'], ['pK2', 'K'], ['pN1', 'NO3'], ['pN2', 'NO3']], 57, 10, 12),
-          formulaChip('fAgBr', 'AgBr', 's', { x: 90, y: 57 }),
-          formulaChip('fKNO3', 'KNO3', 'aq', { x: 112, y: 57 }),
-          formulaChip('fAgNO3', 'AgNO3', 'aq', { x: 134, y: 57 })
+          ...pucks([['pAg', 'Ag'], ['pBr', 'Br'], ['pK1', 'K'], ['pK2', 'K'], ['pN1', 'NO3'], ['pN2', 'NO3']], 57.5, 10, 14),
+          formulaChip('fAgBr', 'AgBr', 's', { x: 98, y: 57.5 }),
+          formulaChip('fKNO3', 'KNO3', 'aq', { x: 118.5, y: 57.5 }),
+          formulaChip('fAgNO3', 'AgNO3', 'aq', { x: 139, y: 57.5 })
         ],
         fixtures: [p.fixture],
         zones: {
-          slots: [...p.slots, { id: 'solid', label: 'Solid formed', at: { x: 122, y: 45 }, size: { w: 24, h: 12 } }],
+          slots: p.slots,
           trays: [
-            trayAt('before', 'Before mixing', { x: 122, y: 11 }, { w: 50, h: 16 }),
-            trayAt('after', 'After mixing', { x: 122, y: 29 }, { w: 50, h: 16 })
+            trayAt('before', 'Before mixing', { x: 103, y: 19 }, { w: 28, h: 28 }),
+            trayAt('after', 'After mixing', { x: 135, y: 19 }, { w: 28, h: 28 }),
+            { id: 'solid', label: 'Solid formed', at: { x: 135, y: 45 }, size: { w: 24, h: 14 }, cell: 24, cellH: 14 }
           ]
         }
       }),
       hints: [
-        'Use the "Mix" key, then drag ion pucks into the two trays and a formula chip into the slot.',
+        'Use the "Mix" key, then drag ion pucks into the two trays and a formula chip into the third.',
         'Compare BEFORE and AFTER: every dissolved ion goes in a tray, and the ions packed together are not dissolved.',
         'The left tray holds the ions of both jars, and the right tray holds the ions still dissolved afterwards.'
       ],
@@ -461,7 +462,7 @@ const NOTES = {
   5: ['Drag your guesses into the tray.'],
   6: ['Turn the dial, press Mix, then drag the ions into the tray.'],
   7: ['Press Mix, then fill the tray and the slot.'],
-  8: ['Press Mix, then fill both trays and the slot.']
+  8: ['Press Mix, then fill the three trays.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -498,7 +499,7 @@ export const SOLUTIONS = [
   [...intray(['gNa', 'gK'], 'guess')],
   [...allFour, ...intray(['pNa', 'pK', 'pNH4', 'pNO3'], 'stayed')],
   [...MIXED, ...intray(['pH', 'pOH'], 'reacted'), put('fH2O', 'slot:formed')],
-  [...MIXED, ...intray(['pAg', 'pBr', 'pK1', 'pN1'], 'before'), ...intray(['pK2', 'pN2'], 'after'), put('fAgBr', 'slot:solid')]
+  [...MIXED, ...intray(['pAg', 'pBr', 'pK1', 'pN1'], 'before'), ...intray(['pK2', 'pN2'], 'after'), put('fAgBr', 'tray:solid')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -510,7 +511,7 @@ export const MISSES = [
   [],
   [...allFour, ...intray(['pNa', 'pK', 'pNH4', 'pNO3', 'pCl'], 'stayed')],
   [...MIXED, ...intray(['pH', 'pOH', 'pNa', 'pCl'], 'reacted'), put('fH2O', 'slot:formed')],
-  [...MIXED, ...intray(['pAg', 'pBr', 'pK1', 'pN1'], 'before'), ...intray(['pK2', 'pN2', 'pAg'], 'after'), put('fAgBr', 'slot:solid')]
+  [...MIXED, ...intray(['pAg', 'pBr', 'pK1', 'pN1'], 'before'), ...intray(['pK2', 'pN2', 'pAg'], 'after'), put('fAgBr', 'tray:solid')]
 ];
 
 function blankState() { return {}; }

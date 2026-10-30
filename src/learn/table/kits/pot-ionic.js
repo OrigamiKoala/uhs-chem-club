@@ -101,7 +101,7 @@ function paintIon(ctx, p, state, o) {
 }
 
 registerPiece('ion', {
-  kind: { r: 4.6, nojoin: true },
+  kind: { r: 6.3, nojoin: true },
   paint: paintIon,
   faceKey: p => `ion|${p.props.ion}`,
   printed: p => String(p.label)
@@ -158,7 +158,7 @@ export const mixesRun = (state, fid) => state.fixtures[fid].props.mixes.map(([A,
    THE POT: BUILDING IT
    ------------------------------------------------------------------ */
 
-const SEAT = { w: 18, h: 13 };
+const SEAT = { w: 20, h: 14 };
 const LW = 24;
 const PANEL = { w: 26, h: 26.5 };
 const LAMP_W = 22;
@@ -182,7 +182,7 @@ export function ionPotFixture(id, at, o = {}) {
     for (let i = 0; i < 2; i++) {
       const sid = `${id}.in${i + 1}`;
       ins.push(sid);
-      slots.push({ id: sid, label: ' ', at: { x: x0 + 12, y: y0 + top + 7.5 + i * 14 }, size: { ...SEAT } });
+      slots.push({ id: sid, label: ' ', at: { x: x0 + 12, y: y0 + top + 7.5 + i * 15 }, size: { ...SEAT } });
     }
   }
   return {
