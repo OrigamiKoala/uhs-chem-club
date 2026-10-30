@@ -1,0 +1,1290 @@
+{
+  "id": "kettle",
+  "name": "Kettle",
+  "place": "Foundry works",
+  "oneLine": "Counting what goes into a reaction and what comes out of it.",
+  "sky": "kettle-sky",
+  "terrain": {
+    "heightmap": "kettle-flat",
+    "size": [
+      240,
+      240
+    ],
+    "maxHeight": 1,
+    "material": "soda-crust"
+  },
+  "ambience": {
+    "keyLight": 16769200,
+    "fillLight": 13483935,
+    "fogColor": 12560253,
+    "fogNear": 60,
+    "fogFar": 650,
+    "dustDensity": 0.4
+  },
+  "road": {
+    "radius": 0
+  },
+  "arena": {
+    "boss": [
+      0,
+      0,
+      -60
+    ],
+    "player": [
+      0,
+      1.6,
+      -44
+    ]
+  },
+  "roads": [
+    {
+      "id": "works-road",
+      "width": 3.4,
+      "pts": [
+        [
+          0,
+          94
+        ],
+        [
+          0,
+          -43
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-1",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          60
+        ],
+        [
+          -37.4,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-2",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          46
+        ],
+        [
+          37.4,
+          46
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-3",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          30
+        ],
+        [
+          -37.4,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-4",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          14
+        ],
+        [
+          37.4,
+          14
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-5",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          0
+        ],
+        [
+          -37.4,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-6",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          -16
+        ],
+        [
+          37.4,
+          -16
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-7",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          -32
+        ],
+        [
+          -37.4,
+          -32
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-8",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          -48
+        ],
+        [
+          37.4,
+          -48
+        ]
+      ]
+    },
+    {
+      "id": "pad-spur",
+      "width": 2.6,
+      "pts": [
+        [
+          0,
+          84
+        ],
+        [
+          47,
+          78
+        ]
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "asset": "landing-pad",
+      "pos": [
+        56,
+        0,
+        78
+      ],
+      "radius": 10,
+      "minTier": "T3"
+    },
+    {
+      "asset": "furnace",
+      "pos": [
+        0,
+        0,
+        -92
+      ],
+      "radius": 13,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        -60,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        -48,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        -36,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        -24,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        24,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        36,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        48,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "silo",
+      "pos": [
+        60,
+        0,
+        -76
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "conveyor",
+      "pos": [
+        -32,
+        0,
+        -90
+      ],
+      "radius": 10,
+      "minTier": "T3"
+    },
+    {
+      "asset": "conveyor",
+      "pos": [
+        32,
+        0,
+        -90
+      ],
+      "radius": 10,
+      "minTier": "T3"
+    },
+    {
+      "asset": "chimney",
+      "pos": [
+        -58,
+        0,
+        -94
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "chimney",
+      "pos": [
+        58,
+        0,
+        -94
+      ],
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank",
+      "pos": [
+        -72,
+        0,
+        -24
+      ],
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank",
+      "pos": [
+        -72,
+        0,
+        4
+      ],
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank",
+      "pos": [
+        -72,
+        0,
+        30
+      ],
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank",
+      "pos": [
+        72,
+        0,
+        -24
+      ],
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank",
+      "pos": [
+        72,
+        0,
+        4
+      ],
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank",
+      "pos": [
+        72,
+        0,
+        30
+      ],
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        68.8,
+        0,
+        -59.97
+      ],
+      "radius": 3.6,
+      "scale": 1.08,
+      "rotY": 2.19,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        60.67,
+        0,
+        -68.55
+      ],
+      "radius": 3.6,
+      "scale": 1.05,
+      "rotY": 4.03,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        42.38,
+        0,
+        -70.84
+      ],
+      "radius": 3.6,
+      "scale": 1.21,
+      "rotY": 6.01,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        86.24,
+        0,
+        -73.17
+      ],
+      "radius": 3.6,
+      "scale": 1.27,
+      "rotY": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        -73.23,
+        0,
+        15.21
+      ],
+      "radius": 3.6,
+      "scale": 1.04,
+      "rotY": 5.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        -32.19,
+        0,
+        85.04
+      ],
+      "radius": 3.6,
+      "scale": 0.97,
+      "rotY": 2.22,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        -81.55,
+        0,
+        87.66
+      ],
+      "radius": 3.6,
+      "scale": 0.86,
+      "rotY": 3.05,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        60.12,
+        0,
+        38.98
+      ],
+      "radius": 3.6,
+      "scale": 0.93,
+      "rotY": 3.63,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        13.95,
+        0,
+        68.88
+      ],
+      "radius": 3.6,
+      "scale": 1.26,
+      "rotY": 1.01,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        89.34,
+        0,
+        -65.2
+      ],
+      "radius": 3.6,
+      "scale": 1.03,
+      "rotY": 2.23,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        60.15,
+        0,
+        -34.21
+      ],
+      "radius": 3.6,
+      "scale": 0.87,
+      "rotY": 2.24,
+      "minTier": "T3"
+    },
+    {
+      "asset": "slag-heap",
+      "pos": [
+        -12.03,
+        0,
+        75.46
+      ],
+      "radius": 3.6,
+      "scale": 1.26,
+      "rotY": 3.53,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ingot-stack",
+      "pos": [
+        60.19,
+        0,
+        -24.91
+      ],
+      "radius": 2,
+      "rotY": 0.82,
+      "minTier": "T4"
+    },
+    {
+      "asset": "ingot-stack",
+      "pos": [
+        77.98,
+        0,
+        -37.96
+      ],
+      "radius": 2,
+      "rotY": 0.61,
+      "minTier": "T4"
+    },
+    {
+      "asset": "ingot-stack",
+      "pos": [
+        -86.16,
+        0,
+        -79.9
+      ],
+      "radius": 2,
+      "rotY": 4.24,
+      "minTier": "T4"
+    },
+    {
+      "asset": "ingot-stack",
+      "pos": [
+        -89.84,
+        0,
+        67.48
+      ],
+      "radius": 2,
+      "rotY": 6.18,
+      "minTier": "T4"
+    },
+    {
+      "asset": "ingot-stack",
+      "pos": [
+        -88.93,
+        0,
+        51.77
+      ],
+      "radius": 2,
+      "rotY": 2.49,
+      "minTier": "T4"
+    },
+    {
+      "asset": "ingot-stack",
+      "pos": [
+        17.11,
+        0,
+        -53.7
+      ],
+      "radius": 2,
+      "rotY": 2.1,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        71.09,
+        0,
+        -37.68
+      ],
+      "radius": 2,
+      "rotY": 2.04,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        61.7,
+        0,
+        -12.91
+      ],
+      "radius": 2,
+      "rotY": 3.62,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -72.46,
+        0,
+        40.9
+      ],
+      "radius": 2,
+      "rotY": 4.53,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        80.21,
+        0,
+        -3.83
+      ],
+      "radius": 2,
+      "rotY": 3.11,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -42.12,
+        0,
+        72.18
+      ],
+      "radius": 2,
+      "rotY": 1.09,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        87.85,
+        0,
+        2.87
+      ],
+      "radius": 2,
+      "rotY": 3.84,
+      "minTier": "T4"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        88
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        78
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        68
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        58
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        48
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        38
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        28
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        18
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        -2
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        -12
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        -22
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        -32
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        58.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        61.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        44.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        47.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        28.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        31.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        12.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        15.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        -1.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        1.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        -17.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        -14.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        -33.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        -30.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        -49.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        -46.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        14,
+        0,
+        84.41
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        26,
+        0,
+        82.88
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        38,
+        0,
+        81.35
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-recipe",
+      "stage": 1,
+      "pos": [
+        -42,
+        0,
+        60
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        60
+      ],
+      "label": "Bench 1 - The Same Recipe",
+      "structure": "assay-yard",
+      "built": true,
+      "flat": {
+        "x": -43.3,
+        "z": 59.75,
+        "r": 10.88
+      }
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-names",
+      "stage": 2,
+      "pos": [
+        42,
+        0,
+        46
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        46
+      ],
+      "label": "Bench 2 - Names and Formulas",
+      "structure": "labelling-shed",
+      "built": true,
+      "flat": {
+        "x": 43,
+        "z": 46,
+        "r": 10.35
+      }
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-change",
+      "stage": 3,
+      "pos": [
+        -42,
+        0,
+        30
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        30
+      ],
+      "label": "Bench 3 - Physical or Chemical",
+      "structure": "charging-pot",
+      "built": true,
+      "flat": {
+        "x": -43.5,
+        "z": 30,
+        "r": 10.43
+      }
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-balance",
+      "stage": 4,
+      "pos": [
+        42,
+        0,
+        14
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        14
+      ],
+      "label": "Bench 4 - Balancing Equations",
+      "structure": "control-room",
+      "built": true,
+      "flat": {
+        "x": 43.2,
+        "z": 13.8,
+        "r": 10.42
+      }
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-ionic",
+      "stage": 5,
+      "pos": [
+        -42,
+        0,
+        0
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        0
+      ],
+      "label": "Bench 5 - Net Ionic Equations",
+      "structure": "effluent-sump",
+      "built": true,
+      "flat": {
+        "x": -43.9,
+        "z": 0,
+        "r": 11.34
+      }
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-stoich",
+      "stage": 6,
+      "pos": [
+        42,
+        0,
+        -16
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        -16
+      ],
+      "label": "Bench 6 - What Is Made",
+      "structure": "charge-floor",
+      "built": true,
+      "flat": {
+        "x": 44.3,
+        "z": -16.2,
+        "r": 11.62
+      }
+    },
+    {
+      "id": "site-7",
+      "questId": "q7-titrate",
+      "stage": 7,
+      "pos": [
+        -42,
+        0,
+        -32
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        -32
+      ],
+      "label": "Bench 7 - Titration",
+      "structure": "pickling-line",
+      "built": true,
+      "flat": {
+        "x": -43.7,
+        "z": -32,
+        "r": 11.05
+      }
+    },
+    {
+      "id": "site-8",
+      "questId": "q8-kinds",
+      "stage": 8,
+      "pos": [
+        42,
+        0,
+        -48
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        -48
+      ],
+      "label": "Bench 8 - Kinds of Reaction",
+      "structure": "tapping-floor",
+      "built": true,
+      "flat": {
+        "x": 43.9,
+        "z": -48,
+        "r": 11.06
+      }
+    }
+  ],
+  "spawn": {
+    "pos": [
+      0,
+      1.6,
+      92
+    ],
+    "lookAt": [
+      0,
+      1.6,
+      40
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          -37.4,
+          1.6,
+          60
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          60
+        ]
+      },
+      "site-2": {
+        "pos": [
+          37.4,
+          1.6,
+          46
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          46
+        ]
+      },
+      "site-3": {
+        "pos": [
+          -37.4,
+          1.6,
+          30
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          30
+        ]
+      },
+      "site-4": {
+        "pos": [
+          37.4,
+          1.6,
+          14
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          14
+        ]
+      },
+      "site-5": {
+        "pos": [
+          -37.4,
+          1.6,
+          0
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          0
+        ]
+      },
+      "site-6": {
+        "pos": [
+          37.4,
+          1.6,
+          -16
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          -16
+        ]
+      },
+      "site-7": {
+        "pos": [
+          -37.4,
+          1.6,
+          -32
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          -32
+        ]
+      },
+      "site-8": {
+        "pos": [
+          37.4,
+          1.6,
+          -48
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          -48
+        ]
+      }
+    }
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6",
+      "site-7",
+      "site-8"
+    ]
+  },
+  "tracks": []
+}

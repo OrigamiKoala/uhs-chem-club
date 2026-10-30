@@ -29,51 +29,51 @@ export const APPROACH = 4.6;
  */
 export const HOST_PLAN = {
   'site-1': {
-    questId: 'q1-recipe', title: 'The Same Recipe', structure: 'assay-yard', kind: 'heap', skin: 'shelf', plate: 'KET-01',
+    questId: 'q1-recipe', label: 'Bench 1 - The Same Recipe', title: 'The Same Recipe', structure: 'assay-yard', kind: 'heap', skin: 'shelf', plate: 'KET-01',
     pos: [-42, 60], face: [1, 0],
     // Three ore bays divided by push walls, their heaps in them, the ore tubs on the right and a grizzly hopper on the left.
-    extent: [-7.1, 7.1, -8.2, 0.8]
+    extent: [-7.1, 7.6, -8.2, 0.8]
   },
   'site-2': {
-    questId: 'q2-names', title: 'Names and Formulas', structure: 'labelling-shed', kind: 'cards', skin: 'desk', plate: 'KET-02',
+    questId: 'q2-names', label: 'Bench 2 - Names and Formulas', title: 'Names and Formulas', structure: 'labelling-shed', kind: 'cards', skin: 'desk', plate: 'KET-02',
     pos: [42, 46], face: [-1, 0],
     // An open-fronted shed with crate racks along its back wall and pallets in front of them.
-    extent: [-6.6, 6.6, -7.6, 0.8]
+    extent: [-6.9, 6.9, -7.6, 0.8]
   },
   'site-3': {
-    questId: 'q3-change', title: 'Physical or Chemical', structure: 'charging-pot', kind: 'pot', skin: 'deck', plate: 'KET-03',
+    questId: 'q3-change', label: 'Bench 3 - Physical or Chemical', title: 'Physical or Chemical', structure: 'charging-pot', kind: 'pot', skin: 'deck', plate: 'KET-03',
     pos: [-42, 30], face: [1, 0],
     // A sealed charging pot on a weighbridge, its indicator column and a chain hoist on an A-frame.
     extent: [-6.5, 6.5, -8.6, 0.8]
   },
   'site-4': {
-    questId: 'q4-balance', title: 'Balancing Equations', structure: 'control-room', kind: 'board', skin: 'desk', plate: 'KET-04',
+    questId: 'q4-balance', label: 'Bench 4 - Balancing Equations', title: 'Balancing Equations', structure: 'control-room', kind: 'board', skin: 'desk', plate: 'KET-04',
     pos: [42, 14], face: [-1, 0],
     // The furnace control room: a cabin with a window on the furnace and the recipe board on its front wall.
     extent: [-7.0, 6.6, -8.0, 0.8]
   },
   'site-5': {
-    questId: 'q5-ionic', title: 'Net Ionic Equations', structure: 'effluent-sump', kind: 'ionic', skin: 'deck', plate: 'KET-05',
+    questId: 'q5-ionic', label: 'Bench 5 - Net Ionic Equations', title: 'Net Ionic Equations', structure: 'effluent-sump', kind: 'ionic', skin: 'deck', plate: 'KET-05',
     pos: [-42, 0], face: [1, 0],
     // A walled effluent sump with two settling tanks over it, a launder channel and a pump.
     extent: [-7.4, 7.4, -9.4, 0.8]
   },
   'site-6': {
-    questId: 'q6-stoich', title: 'How Much Is Made', structure: 'charge-floor', kind: 'pot', skin: 'shelf', plate: 'KET-06',
+    questId: 'q6-stoich', label: 'Bench 6 - What Is Made', title: 'How Much Is Made', structure: 'charge-floor', kind: 'pot', skin: 'shelf', plate: 'KET-06',
     pos: [42, -16], face: [-1, 0],
     // The blast furnace's charge floor: three bunkers, a weigh hopper on a load cell and the skip rail up to the furnace top.
-    extent: [-7.6, 7.2, -9.6, 0.8]
+    extent: [-7.6, 7.2, -10.2, 0.8]
   },
   'site-7': {
-    questId: 'q7-titrate', title: 'Titration', structure: 'pickling-line', kind: 'burette', skin: 'desk', plate: 'KET-07',
+    questId: 'q7-titrate', label: 'Bench 7 - Titration', title: 'Titration', structure: 'pickling-line', kind: 'burette', skin: 'desk', plate: 'KET-07',
     pos: [-42, -32], face: [1, 0],
     // A long acid tank under a burette gantry, a rinse tank beside it and a hoist.
     extent: [-7.2, 7.2, -9.0, 0.8]
   },
   'site-8': {
-    questId: 'q8-kinds', title: 'Kinds of Reaction', structure: 'tapping-floor', kind: 'tests', skin: 'deck', plate: 'KET-08',
+    questId: 'q8-kinds', label: 'Bench 8 - Kinds of Reaction', title: 'Kinds of Reaction', structure: 'tapping-floor', kind: 'tests', skin: 'deck', plate: 'KET-08',
     pos: [42, -48], face: [-1, 0],
     // The furnace's tapping floor: the tap hole and its runner, a ladle on rails and a pair of flues with a hood.
-    extent: [-7.0, 7.0, -9.2, 0.8]
+    extent: [-7.0, 7.0, -9.4, 0.8]
   }
 };
