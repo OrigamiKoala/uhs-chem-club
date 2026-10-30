@@ -58,7 +58,7 @@ const GUESS_LABEL = { heavier: 'the heavier molecule', lighter: 'the lighter mol
 const mass = id => `${SUBSTANCES[id].M.toFixed(SUBSTANCES[id].M < 100 ? 1 : 0)} g/mol`;
 const gripOrder = ids => [...ids].sort((a, b) => SUBSTANCES[a].grip - SUBSTANCES[b].grip);
 const hydOrder = ids => [...ids].sort((a, b) => HYDRATION[a].out - HYDRATION[b].out);
-const kj = v => (v < 1 ? v.toFixed(2) : v.toFixed(1));
+const kj = v => (v < 1 ? (v + 1e-9).toFixed(2) : (v + 1e-9).toFixed(1));
 
 const NOBLE = ['He', 'Ne', 'Ar', 'Xe'];
 const NOBLE_BY_GRIP = gripOrder(NOBLE);
@@ -196,7 +196,7 @@ export const STAGES = [
     }),
     hints: [
       'Use the three cards and the slot.',
-      'Think of what the last two benches showed about size and about a charge that is uneven.',
+      'Think of what the last two stages showed about size and about uneven charge.',
       'Commit to the molecule you expect to hold its neighbours harder.'
     ],
     check(state) {
@@ -346,15 +346,16 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   (() => {
     const probe = probeFixture('probe', PROBE_AT);
-    const at = row(5, 54, 28, 22);
+    const at = row(5, 62, 24, 22);
     const cards = SEALED.map((s, i) => molCard(s.id, s.sub, s.id.toUpperCase(), at[i], { dipoles: true, cloud: SUBSTANCES[s.sub].r != null }));
-    const tray = (id, label, x) => ({ id, label, at: { x, y: 28 }, size: { w: 26, h: 34 }, cell: 22, cellH: 16 });
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 30 }, size: { w: 26, h: 40 }, cell: 22, cellH: 18.5 });
     return {
       id: 's8-sealed',
       title: 'Five Sealed Samples',
       prompt: 'File each sealed sample under the strongest force between its molecules.',
       widget,
       table: matterTable({
+        bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [probe.fixture],
         zones: { slots: [probe.slot], trays: [tray('dispersion', 'Dispersion', 78), tray('dipole', 'Dipole–dipole', 106), tray('hydrogen', 'Hydrogen bond', 134)] }
@@ -389,8 +390,7 @@ const NOTES = {
   4: ['Drag a card into the probe, press its key, then put the card on the rail.'],
   5: ['Drag a card into the probe, press its key, then put the card on the rail.'],
   6: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  7: ['Turn the crank, drag the water into the probe, press its key, then type your answer.'],
-  8: ['Pull each sample in the probe, then drag it to a tray.']
+  7: ['Turn the crank, drag the water into the probe, press its key, then type your answer.']
 };
 applyNotes(STAGES, NOTES);
 

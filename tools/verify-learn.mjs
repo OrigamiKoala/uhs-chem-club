@@ -2882,6 +2882,18 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 }
 
 /* ------------------------------------------------------------------
+   EVERY FIGURE A MIRROWEN STAGE GRADES AGAINST IS RECOMPUTED, from values worked by hand or
+   read from the CRC, and every refusal is searched for the rule its stage is asking for. One
+   check file per bench in `tools/lib/mirrowen/`, found by name (`tools/lib/mirrowen-learn-checks.mjs`).
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const { checkMirrowen } = await import('./lib/mirrowen-learn-checks.mjs');
+  await checkMirrowen({ TABLE, getQuest, fail, ok, sentenceLiterals });
+  if (failures === before) ok('Mirrowen: every graded heat, pressure, concentration and ratio agrees with the CRC and hand-worked values, and no refusal carries the rule');
+}
+
+/* ------------------------------------------------------------------
    TALLOW'S TABLES ARE REAL (plan `bench-tabletop.md`, T1). A table stage declares pieces, and a
    declaration can say a thing the instruments never would: a ring of nine electrons, a particle
    kind the scope has never weighed. Everything declared is held to the real tables (`atoms.js`,

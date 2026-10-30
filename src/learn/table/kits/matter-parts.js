@@ -55,8 +55,8 @@ export function glyphOf(id) {
 /** The radius of an atom's cloud in frame units: a noble gas by its van der Waals radius, anything else by one size. */
 export function cloudRadius(id) {
   const s = SUBSTANCES[id];
-  return s && s.r ? (s.r / 216) * 0.9 : 0.34;
+  return s && s.r ? (s.r / 216) * 1.2 : 0.34;
 }
 
 /** The sign of heat in a pull: a heat in kJ printed to the digits the bench reads. */
-export const fmtKJ = v => (v < 1 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : String(Math.round(v)));
+export const fmtKJ = v => (v < 1 ? (v + 1e-9).toFixed(2) : v < 100 ? (v + 1e-9).toFixed(1) : String(Math.round(v)));

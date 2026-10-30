@@ -14,7 +14,10 @@ import { registerKit } from './registry.js';
 import { HEAT_KIT, HEAT_BOUNDS, HEAT_RECORDER } from './heat.js';
 import { paintPiece, paintFixture, faceKey, RECTS, contentTop } from './matter-draw.js';
 import { probeRead, probeValue, seatedIn } from './matter-read.js';
+import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './matter-registry.js';
 import './matter-tour.js';
+
+/* One import per bench: each file registers its own instruments and pieces (`matter-registry.js`). */
 
 export const MATTER_KIT_ID = 'matter';
 export const MATTER_BOUNDS = HEAT_BOUNDS;
@@ -27,18 +30,42 @@ function run(state, fid) {
     if (!r.item) return { noop: 'Put a card in the probe first.' };
     return { stamp: { [r.item.id]: { grip: probeValue(r.item) } } };
   }
+  const h = fixtureHandler(f.kind);
+  if (h?.run) return h.run(state, fid);
   return HEAT_KIT.run(state, fid);
 }
+
+/** A piece's solid: a registered piece's own, else the heat kit's. */
+const piece3d = (p, state, c) => {
+  const def = pieceDef(p.kind);
+  if (def?.piece3d) return def.piece3d(p, state, c);
+  return HEAT_KIT.piece3d(p, state, c);
+};
+
+const dress3d = (f, state, c) => {
+  const h = fixtureHandler(f.kind);
+  if (h?.dress3d) return h.dress3d(f, state, c);
+  return HEAT_KIT.dress3d(f, state, c);
+};
+
+/** The heat kit's own settling, then every registered fixture's. */
+const settle = state => {
+  HEAT_KIT.settle(state);
+  for (const h of allFixtureHandlers()) h.settle?.(state);
+};
 
 export const MATTER_KIT = {
   ...HEAT_KIT,
   id: MATTER_KIT_ID,
-  kinds: { ...HEAT_KIT.kinds, mol: { r: 7.5, rect: RECTS.mol, nojoin: true } },
+  kinds: { ...HEAT_KIT.kinds, mol: { r: 7.5, rect: RECTS.mol, nojoin: true }, ...pieceKinds() },
   run,
   paintPiece,
   paintFixture,
   faceKey,
-  printed: p => (p.kind === 'mol' ? String(p.label) : HEAT_KIT.printed(p))
+  piece3d,
+  dress3d,
+  settle,
+  printed: p => (p.kind === 'mol' ? String(p.label) : pieceDef(p.kind)?.printed ? pieceDef(p.kind).printed(p) : HEAT_KIT.printed(p))
 };
 
 registerKit(MATTER_KIT);

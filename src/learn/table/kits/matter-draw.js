@@ -9,6 +9,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { paintPiece as heatPiece, paintFixture as heatFixture, faceKey as heatFaceKey, RECTS as HEAT_RECTS, contentTop } from './heat-draw.js';
 import { probeRead } from './matter-read.js';
+import { fixtureHandler, pieceDef } from './matter-registry.js';
 import { glyphOf, inkOf, cloudRadius, fmtKJ, markOf } from './matter-parts.js';
 import { SUBSTANCES } from '../../engine/matterdata.js';
 
@@ -18,7 +19,7 @@ const DUST = PLATE_COLORS.dust;
 const DIM = PLATE_COLORS.dim;
 const STEEL = PLATE_COLORS.steel;
 
-function say(ctx, text, x, y, size, o = {}) {
+export function say(ctx, text, x, y, size, o = {}) {
   ctx.font = `${o.weight || 500} ${Math.max(6, size)}px "JetBrains Mono", "Quantico", monospace`;
   ctx.textAlign = o.align || 'left';
   ctx.textBaseline = o.base || 'middle';
@@ -26,9 +27,9 @@ function say(ctx, text, x, y, size, o = {}) {
   if (o.maxW) ctx.fillText(text, x, y, o.maxW); else ctx.fillText(text, x, y);
 }
 
-export const RECTS = Object.freeze({ ...HEAT_RECTS, mol: { hw: 10, hh: 7.5 } });
+export const RECTS = Object.freeze({ ...HEAT_RECTS, mol: { hw: 10.2, hh: 9.5 } });
 
-function slab(ctx, o, { hw, hh }, tone = '#2a2620') {
+export function slab(ctx, o, { hw, hh }, tone = '#2a2620') {
   const x0 = o.x - hw * o.sc; const y0 = o.y - hh * o.sc; const w = hw * 2 * o.sc; const h = hh * 2 * o.sc;
   ctx.fillStyle = tone; ctx.fillRect(x0, y0, w, h);
   ctx.strokeStyle = o.lit ? AMBER : DUST; ctx.lineWidth = o.lit ? 2 : 1;
@@ -64,7 +65,7 @@ export function paintGlyph(ctx, id, cx, cy, unit, { alpha = 1, cloud = false, ma
   if (marks && SUBSTANCES[id]?.polar) {
     for (const a of g.atoms) {
       const m = markOf(a);
-      if (m) say(ctx, m, cx + a[1] * unit, cy - a[2] * unit - unit * 0.62, Math.max(6, unit * 0.55), { align: 'center', weight: 700, color: m === '+' ? AMBER : PLATE_COLORS.text });
+      if (m) say(ctx, m, cx + a[1] * unit, cy - a[2] * unit - unit * 0.62, Math.max(7, unit * 0.72), { align: 'center', weight: 700, color: m === '+' ? AMBER : PLATE_COLORS.text });
     }
   }
   ctx.lineWidth = 1;
@@ -77,27 +78,35 @@ function paintMol(ctx, p, state, o) {
   const id = p.props.ion ? null : p.props.substance;
   if (p.props.ion) {
     // An ion is a disc as wide as its radius; the sign is its charge.
-    const r = (p.props.r / 140) * 3.0 * sc;
-    ctx.fillStyle = '#2f3d4a'; ctx.beginPath(); ctx.arc(o.x, box.y0 + 5.6 * sc, r, 0, Math.PI * 2); ctx.fill();
+    const r = (p.props.r / 140) * 3.2 * sc;
+    ctx.fillStyle = '#2f3d4a'; ctx.beginPath(); ctx.arc(o.x, box.y0 + 4.8 * sc, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = DUST; ctx.stroke();
-    say(ctx, p.label, o.x, box.y0 + 5.6 * sc, Math.max(6, 2.2 * sc), { align: 'center', weight: 700, color: PLATE_COLORS.text });
   } else {
-    paintGlyph(ctx, id, o.x, box.y0 + 5.2 * sc, 2.8 * sc, { cloud: Boolean(p.props.cloud), marks: Boolean(p.props.dipoles) });
+    paintGlyph(ctx, id, o.x, box.y0 + 4.8 * sc, 3.4 * sc, { cloud: Boolean(p.props.cloud), marks: Boolean(p.props.dipoles) });
   }
-  const name = p.props.ion ? '' : p.label;
-  if (name) say(ctx, name, o.x, box.y0 + box.h - 5.0 * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
-  const second = p.props.shown ?? null;
-  if (second) say(ctx, second, o.x, box.y0 + box.h - 2.3 * sc, Math.max(5.8, 1.7 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
+  // Up to three lines: its name, a second line (the mass), and what the probe read, each on a row of its own.
+  const hasSecond = Boolean(p.props.shown);
+  const hasReading = p.props.grip != null;
+  const name = p.label;
+  const rows = (hasSecond ? 1 : 0) + (hasReading ? 1 : 0);
+  const size = Math.max(6.2, 2.0 * sc);
+  let y = box.y0 + box.h - (1.9 + rows * 3.1 + (name ? 1.2 : 0)) * sc;
+  if (name) { say(ctx, name, o.x, y, size, { align: 'center', weight: 700, maxW: box.w - 2 * sc }); y += 3.4 * sc; }
+  if (hasSecond) { say(ctx, p.props.shown, o.x, y, Math.max(5.8, 1.7 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc }); y += 3.1 * sc; }
   // A card that has been in the probe keeps what it read.
-  if (p.props.grip != null) say(ctx, `${fmtKJ(p.props.grip)} kJ`, o.x, box.y0 + box.h - 2.3 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 2 * sc });
+  if (hasReading) say(ctx, `${fmtKJ(p.props.grip)} kJ`, o.x, y, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 2 * sc });
 }
 
 export function paintPiece(ctx, p, state, o) {
   if (p.kind === 'mol') { paintMol(ctx, p, state, o); return true; }
+  const def = pieceDef(p.kind);
+  if (def?.paint) { def.paint(ctx, p, state, o); return true; }
   return heatPiece(ctx, p, state, o);
 }
 
 export function faceKey(p, state) {
+  const def = pieceDef(p.kind);
+  if (def?.faceKey) return def.faceKey(p, state);
   if (p.kind === 'mol') return `mol|${p.label}|${p.props.substance ?? p.props.ion}|${p.props.grip ?? ''}|${p.props.shown ?? ''}|${p.props.cloud ? 1 : 0}|${p.props.dipoles ? 1 : 0}`;
   return heatFaceKey(p, state);
 }
@@ -106,14 +115,14 @@ export function faceKey(p, state) {
    THE FIXTURES
    ------------------------------------------------------------------ */
 
-const frameOf = b => ({
+export const frameOf = b => ({
   x: d => b.X(b.lay.box.x0 + d),
   y: d => b.Y(b.lay.box.y0 + d),
   len: d => d * b.sc,
   size: (k, min = 6.5) => Math.max(min, k * b.sc)
 });
 
-const topOf = (f, lay) => (lay.dials.length ? lay.dials.reduce((a, d) => Math.max(a, d.y), 0) - lay.box.y0 + 3.6 : 10);
+export const topOf = (f, lay) => (lay.dials.length ? lay.dials.reduce((a, d) => Math.max(a, d.y), 0) - lay.box.y0 + 3.6 : 10);
 
 /**
  * The probe: the card in its slot, four of its molecules in a glass window at the right held to one another, and, once the key is
@@ -153,6 +162,8 @@ function paintProbe(ctx, f, state, b) {
 
 export function paintFixture(ctx, f, state, b) {
   if (f.kind === 'probe') return paintProbe(ctx, f, state, b);
+  const h = fixtureHandler(f.kind);
+  if (h?.paint) return h.paint(ctx, f, state, b);
   return heatFixture(ctx, f, state, b);
 }
 
