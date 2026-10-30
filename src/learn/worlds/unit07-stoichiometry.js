@@ -45,8 +45,8 @@ export const UNIT_07 = {
       line: "Does the ore turn into something new?",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q3-change.js')
     },
     {
       id: 'q4-balance',

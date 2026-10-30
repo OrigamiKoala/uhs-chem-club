@@ -62,7 +62,9 @@ export const CASES = Object.freeze({
   },
   saltwater: {
     id: 'saltwater', name: 'Salt and water', verb: 'dissolves', kind: 'physical', unit: 0.05, dH: 3.9,
-    sample: { f: 'NaCl', st: 's', mol: 0.2 }, becomes: [{ f: 'Na+', st: 'aq', k: 1 }, { f: 'Cl-', st: 'aq', k: 1 }], solvent: 'H2O'
+    sample: { f: 'NaCl', st: 's', mol: 0.2 }, becomes: [{ f: 'Na+', st: 'aq', k: 1 }, { f: 'Cl-', st: 'aq', k: 1 }], solvent: 'H2O',
+    // The crystal is its two ions, held in a lattice: the window draws them as such.
+    crystal: [{ f: 'Na+', st: 's', k: 1 }, { f: 'Cl-', st: 's', k: 1 }]
   },
   dryice: {
     id: 'dryice', name: 'Dry ice', verb: 'warms', kind: 'physical', unit: 0.25, dH: 25.2,
@@ -110,7 +112,7 @@ export function planChange(id, { sealed = false, scale = 1 } = {}) {
   let extent = 1;
   if (c.kind === 'physical') {
     const mol = c.sample.mol * scale;
-    before = [item(c.sample.f, c.sample.st, mol, 'jar')];
+    before = c.crystal ? c.crystal.map(b => item(b.f, b.st, mol * b.k, 'jar')) : [item(c.sample.f, c.sample.st, mol, 'jar')];
     after = c.becomes.map(b => item(b.f, b.st, mol * b.k, 'made'));
     extent = mol;
   } else {
