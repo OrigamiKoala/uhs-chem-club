@@ -3711,11 +3711,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     // 2. the shaker's layers: the true compound settles into one layer, the other into two
     {
       const t = end(k, 1);
-      for (const id of ['b1', 'b2']) {
+      for (const id of ['b1', 'b2', 'b3', 'b4']) {
         const layers = A.layersOf(declared(k, 1, id).props.sample);
         same(t.pieces[id].zone, layers === 1 ? 'tray:true' : 'tray:false', `unit07/q1-recipe stage 2 (${id}: ${layers} layer(s))`);
       }
-      holds(A.layersOf(declared(k, 1, 'b1').props.sample) === 1 && A.layersOf(declared(k, 1, 'b2').props.sample) === 2, 'unit07/q1-recipe stage 2: the samples do not settle into one layer and two');
+      holds(A.layersOf(declared(k, 1, 'b1').props.sample) === 1 && A.layersOf(declared(k, 1, 'b3').props.sample) === 1 && A.layersOf(declared(k, 1, 'b2').props.sample) === 2 && A.layersOf(declared(k, 1, 'b4').props.sample) === 2, 'unit07/q1-recipe stage 2: the four samples do not settle into one layer, two, one and two');
     }
     // 3. the same atoms weigh the same loose and joined, by the listed masses
     {
