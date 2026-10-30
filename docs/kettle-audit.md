@@ -6,6 +6,8 @@ Columns: Operable · Intuitive · Busywork · Builds intuition · Accurate · AP
 
 ## Method and set-up
 
+**Update (owner instruction, 2026-10-30): no more browser testing.** Everything labelled Played, Viewed or `3D Off` / phone-size below was done before that instruction. From here the evidence is Scripted, Bench and Code only, and every stage not marked Played is listed for the owner to play. The hand-play phase of the build prompt is therefore not completed.
+
 A git worktree (`../chem-3d-kettle`) was used so the Mirrowen agent's uncommitted work in the main tree stayed untouched. The dev server ran on :3033 from the worktree; Continue as Guest, Fire guild (the guild confirm is a press-and-hold), `session.markLearnQuestComplete('unit07','q1-recipe')`, hash set to the quest and reloaded,
 `__LQ_TEST__` set, hash changed to another quest and back, `__R.loadStage(i)`. The synthetic browser drag ends short of its target (as `PRODUCT.md` §6 warns), so a drop was always completed with the two-tap twin; a dial drag moved the knob (to "2 g" when "4 g" was aimed at).
 Hand-play also needs 10 to 40 s for the bench to build and the built twin repaints about a second after a state change (the screenshot a moment too early shows the old picture: not a defect).
