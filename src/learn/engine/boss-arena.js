@@ -25,6 +25,7 @@ const BOSS_LOOK = {
   'basalt warden':     { name: 'The Basalt Warden', attack: 0xff4818, ember: 0xff5a1a },
   'the compressor':    { name: 'The Compressor',    attack: 0xdfe6e6, ember: 0xffa53a },
   'the crucible':      { name: 'The Crucible',      attack: 0xff6b2b, ember: 0xff9d3b },
+  'the undertow':      { name: 'The Undertow',      attack: 0xd8ecf2, ember: 0xa9d4e0 },
   'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a }
 };
 
@@ -94,6 +95,16 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -63],
     scale: 1.4,
     species: 'the crucible'
+  },
+  // On the east bank of the canal, with the frozen stretch to its west and the wall of ice behind it
+  // (`world-data/mirrowen.json` keeps this ground open; `verify:mirrowen` holds the two together).
+  'boss-undertow': {
+    worldId: 'unit06',
+    playerPos: [30, 1.6, -62],
+    lookAtPos: [30, 1.6, -78],
+    bossPos: [30, 0, -78],
+    scale: 1.5,
+    species: 'the undertow'
   },
   'boss-golem': {
     worldId: 'unit07',

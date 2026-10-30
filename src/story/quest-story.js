@@ -429,12 +429,61 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: water grips twice as hard as a molecule nearly twice its weight, so the canal ice is held by more than size.'
   },
-  // @mirrowen q1-states
-  // @mirrowen q3-boil
-  // @mirrowen q4-solids
-  // @mirrowen q5-crossing
-  // @mirrowen q6-solution
-  // @mirrowen q7-separate
+  'unit06/q1-states': {
+    scene: 'states-three',
+    beats: [
+      { to: 0.28, say: 'A solid keeps its shape, a liquid keeps its volume and a gas fills its jar. Each jar holds the same eight molecules of water.' },
+      { to: 0.62, say: 'Carry the jar from solid to liquid to gas and the reader names H₂O the whole way. The molecules only change places, so no bond breaks.' },
+      { to: 0.9, say: 'A litre of liquid water weighs about 1,700 times a litre of steam, so a gas is mostly empty space. Melting and boiling overcome the intermolecular forces between molecules, never the bonds inside them.' }
+    ],
+    filed: 'Filed: ice and water are one molecule, so ice is water held still by what lies between its molecules.'
+  },
+  'unit06/q3-boil': {
+    scene: 'boil-flask',
+    beats: [
+      { to: 0.32, say: 'In a sealed flask molecules leave the liquid and come back to it. The gauge stops rising when the leaving and the returning match, and that steady pressure is the vapor pressure.' },
+      { to: 0.66, say: 'Warming the liquid sends more molecules into the vapor, so its vapor pressure climbs: water pushes at 3.2 kPa at 25 °C and at 47.3 kPa at 80 °C.' },
+      { to: 0.92, say: 'A liquid boils when its vapor pressure reaches the pressure outside it. Water does that at 100 °C at sea level, and at 88 °C where the outside pressure is 65 kPa.' }
+    ],
+    filed: 'Filed: the canal water leaves as vapor at any temperature, faster when warm, and boils where its vapor pressure meets the air\'s.'
+  },
+  'unit06/q4-solids': {
+    scene: 'solid-order',
+    beats: [
+      { to: 0.32, say: 'Iodine, naphthalene and ice all melt below 115 °C, and their molecules are still whole afterwards. Only the grips between the molecules gave way.' },
+      { to: 0.7, say: 'Quartz held its shape to 1713 °C and then ran. Fused silica, made of the same atoms, went soft a little at a time from 1040 to 1585 °C.' },
+      { to: 0.9, say: 'In the crystal every silicon has the same angles, so every bond gives way together. In glass the angles differ, so the bonds give way a few at a time.' }
+    ],
+    filed: 'Filed: ice melts at one temperature where glass softens over a range, so the ice sheets are crystals and not glass.'
+  },
+  'unit06/q5-crossing': {
+    scene: 'crossing-curve',
+    beats: [
+      { to: 0.3, say: 'A heating curve climbs while heat warms the ice, then stands still at 0 °C while 6.01 kJ a mole goes in.' },
+      { to: 0.62, say: 'The heat is not lost. It frees the molecules, from the ice and then from the liquid, and boiling a mole takes 40.65 kJ.' },
+      { to: 0.9, say: 'Run it back and the steam condenses and the water freezes, giving out the same heat. The way down totals −54.9 kJ.' }
+    ],
+    filed: 'Filed: ice took 6.01 kJ a mole at 0 °C without warming, so the heat went into the grip between its molecules.'
+  },
+  'unit06/q6-solution': {
+    scene: 'solution-drop',
+    beats: [
+      { to: 0.28, say: 'Dissolved salt is not gone. Its ions leave the crystal one by one and spread through the water, each with water molecules wrapped round it.' },
+      { to: 0.54, say: 'Four pieces of sodium chloride make eight particles, four of calcium chloride make twelve, and four of sugar make four. Molarity counts the pieces, not the particles.' },
+      { to: 0.8, say: 'Topping a flask up with water leaves the moles alone and spreads them over more litres. Twenty-five mL of 2.00 M stock made up to 100 mL is 0.500 M.' },
+      { to: 0.96, say: 'Dissolving also moves heat. Calcium chloride warmed the bath, and sodium chloride, potassium chloride and ammonium nitrate cooled it.' }
+    ],
+    filed: 'Filed: a dissolved salt stays in the canal as separate ions, so the agent can be counted in moles for each litre.'
+  },
+  'unit06/q7-separate': {
+    scene: 'pull-apart',
+    beats: [
+      { to: 0.34, say: 'Filter paper stops what is too big for its pores, but dissolved salt passes through with the water. The filtrate is as salty as what went in, so the agent cannot be filtered out.' },
+      { to: 0.66, say: 'On paper, each dye climbs as far as its grip on the paper and on the liquid allow, so water and hexane with acetone put the same three dyes in opposite orders.' },
+      { to: 0.9, say: 'In the still the liquid held least tightly comes over first: acetone, then ethanol, then water, each vial richer in one but never pure. Boiling the water off leaves the dissolved agent in the flask.' }
+    ],
+    filed: 'Filed: filter paper cannot take the dissolved agent out of the canal water, but boiling the water off leaves it behind.'
+  },
   // @mirrowen boss-undertow
 };
 

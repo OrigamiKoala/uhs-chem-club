@@ -1,5 +1,5 @@
 /**
- * boss-models.js — The five bosses of the walkable worlds, built to stand in an arena (Kettle's golem has no arena yet).
+ * boss-models.js — The six bosses of the walkable worlds, built to stand in an arena (Kettle's golem has no arena yet).
  *
  * `CombatMonster3D` owns what a body DOES in a fight (it arrives, closes in as it is hurt, winds up, lunges, rears, convulses and
  * comes apart; `boss-arena.js` decides when). This file owns what the bodies ARE: six machines of the Fifth Guild, each built from
@@ -10,6 +10,7 @@
  *   basalt warden      Ligar           a colossus of jointed basalt columns, magma in its seams
  *   the compressor     Bellows         a reciprocating compressor on stilts, a pressure gauge for a face
  *   the crucible       Ember Reach     a furnace pot in a gantry that tilts to pour slag
+ *   the undertow       Mirrowen        a brine crawler: a riveted iron tank on six jointed legs, a salt crust, an intake maw and a siphon head
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1010,12 +1011,175 @@ function buildLanternEater(monster) {
   };
 }
 
+
+/* ======================================================================
+   THE UNDERTOW
+   A brine crawler: a riveted cast-iron tank on six jointed legs, crusted white with the salt it has dragged out of the canal.
+   An intake maw rings the front of the tank, and a siphon head on a boom looks out over it with two lenses. It rears its
+   front legs to gather, drops its weight to strike, and what drips from its maw is only water. Its lenses and the glow in
+   its throat are its only light.
+   ====================================================================== */
+
+function buildUndertow(monster) {
+  const k = new Kit(monster);
+  const iron = k.plate(0x676d73);
+  const ironDark = k.plate(0x33373b);
+  const rust = k.plate(0x7d4c36);
+  const salt = k.std(0xe8eeee, { rough: 0.95, metal: 0.0, flat: true });
+  const saltBlue = k.std(0xbcd6e0, { rough: 0.8, metal: 0.0, flat: true });
+  const brass = k.std(0xb48a3a, { rough: 0.4, metal: 0.85 });
+  const steel = k.std(0xcfd4d6, { rough: 0.3, metal: 0.9 });
+  const charcoal = k.std(0x1d2022, { rough: 0.9, metal: 0.3 });
+  const hose = k.std(0x15181a, { rough: 0.9, metal: 0.1 });
+  const lens = k.glow(AMBER, 2.4);
+  const lensSmall = k.glow(AMBER, 1.6);
+  const throat = k.glow(AMBER, 1.2);
+  const drip = monster.mat(new THREE.MeshStandardMaterial({ color: 0xcfe4ea, roughness: 0.3, metalness: 0, transparent: true, opacity: 0, depthWrite: false }));
+  const steam = monster.mat(new THREE.MeshStandardMaterial({ color: 0xe0e6e8, roughness: 1, metalness: 0, transparent: true, opacity: 0, depthWrite: false }));
+
+  const body = k.node(monster.group, 0, 0, 0);
+  const HULL_Y = 2.6;
+  const hull = k.node(body, 0, HULL_Y, 0);
+
+  /* --- the tank: a capsule on its side, hooped, riveted, with a manway and a gauge --- */
+  k.mesh(hull, new THREE.CapsuleGeometry(1.05, 1.4, 6, 20), iron, 0, 0, 0, Math.PI / 2);
+  for (const [z, m] of [[-1.3, ironDark], [-0.45, rust], [0.45, ironDark], [1.3, rust]]) k.torus(hull, 1.075, 0.045, m, 0, 0, z, 0, 0, 0, 6, 30);
+  k.bolts(hull, [-1.1, -0.7, -0.3, 0.1, 0.5, 0.9, 1.3].map(z => [Math.sin(0.5) * 1.07, Math.cos(0.5) * 1.07, z]), 0.03, charcoal, [Math.sin(0.5), Math.cos(0.5), 0]);
+  k.bolts(hull, [-1.1, -0.7, -0.3, 0.1, 0.5, 0.9, 1.3].map(z => [-Math.sin(0.5) * 1.07, Math.cos(0.5) * 1.07, z]), 0.03, charcoal, [-Math.sin(0.5), Math.cos(0.5), 0]);
+  k.cyl(hull, 0.34, 0.34, 0.14, 16, ironDark, 0, 1.06, -0.2);
+  k.torus(hull, 0.3, 0.035, brass, 0, 1.14, -0.2, Math.PI / 2, 0, 0, 6, 22);
+  // The gauge on its flank: a brass bezel and a dark face.
+  k.cyl(hull, 0.2, 0.2, 0.07, 20, brass, 1.07, 0.1, 0.55, 0, 0, Math.PI / 2);
+  k.cyl(hull, 0.16, 0.16, 0.02, 20, charcoal, 1.11, 0.1, 0.55, 0, 0, Math.PI / 2);
+  // The salt it has dragged out of the canal, caked on the back and the shoulders of the tank.
+  for (const [x, y, z, r, m] of [
+    [0.35, 1.0, 0.5, 0.3, salt], [-0.4, 0.95, 0.9, 0.28, salt], [0.1, 1.05, -0.9, 0.34, salt], [-0.55, 0.8, -0.5, 0.26, saltBlue],
+    [0.75, 0.7, -0.3, 0.26, salt], [-0.8, 0.65, 0.2, 0.24, saltBlue], [0.6, 0.78, 1.1, 0.2, salt], [-0.1, 0.9, 1.4, 0.2, salt],
+    [0.95, 0.35, 0.9, 0.2, saltBlue], [-0.98, 0.3, -1.0, 0.22, salt]
+  ]) k.mesh(hull, new THREE.IcosahedronGeometry(r, 0), m, x, y, z).scale.y = 0.65;
+  const flank = k.box(hull, 0.06, 0.8, 1.0, rust, 1.07, -0.25, -0.4, 0, 0, 0.12, 0.012);
+  monster.armour(flank, 0.35);
+  const flank2 = k.box(hull, 0.06, 0.8, 1.0, rust, -1.07, -0.25, 0.4, 0, 0, -0.12, 0.012);
+  monster.armour(flank2, 0.6);
+
+  /* --- the exhaust: a stack off the back that breathes --- */
+  k.cyl(hull, 0.13, 0.17, 0.9, 10, ironDark, 0.45, 1.15, -1.3);
+  k.cyl(hull, 0.19, 0.19, 0.06, 10, charcoal, 0.45, 1.65, -1.3);
+  const puff = k.mesh(hull, new THREE.IcosahedronGeometry(0.35, 1), steam, 0.45, 1.95, -1.3);
+
+  /* --- the legs: three a side, hip -> upper leg -> knee -> lower leg -> a foot pad on the ground --- */
+  const legs = [];
+  for (const sx of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      const z = (i - 1) * 1.3;
+      const hip = k.node(hull, sx * 0.95, -0.2, z);
+      k.cyl(hip, 0.27, 0.27, 0.46, 14, ironDark, 0, 0, 0, Math.PI / 2);
+      k.strut(hip, [0, 0, 0], [sx * 1.6, 0.9, 0], 0.19, iron, 8, 0.23);
+      const knee = k.node(hip, sx * 1.6, 0.9, 0);
+      k.sph(knee, 0.3, rust, 0, 0, 0);
+      k.cyl(knee, 0.2, 0.2, 0.5, 12, ironDark, 0, 0, 0, Math.PI / 2);
+      const dz = (i - 1) * 0.5;
+      k.strut(knee, [0, 0, 0], [sx * 0.5, -3.2, dz], 0.13, ironDark, 8, 0.19);
+      k.bolts(knee, [0.4, 0.9, 1.5, 2.1].map(d => [sx * (0.5 * d / 3.2) + 0.12, -d, dz * d / 3.2]), 0.028, charcoal, [1, 0, 0]);
+      const foot = k.node(knee, sx * 0.5, -3.2, dz);
+      k.cyl(foot, 0.44, 0.52, 0.2, 14, ironDark, 0, 0.1, 0);
+      for (let t = 0; t < 3; t++) {
+        const a = (t - 1) * 0.55;
+        k.box(foot, 0.14, 0.14, 0.46, steel, Math.sin(a) * 0.4, 0.28, Math.cos(a) * 0.4, 0, a, 0, 0.02);
+      }
+      legs.push({ hip, sx, i, ph: i * 2.1 + (sx > 0 ? 0 : 1.0) });
+    }
+  }
+
+  /* --- the intake maw: a toothed ring round the front of the tank, a lit throat behind it --- */
+  const maw = k.node(hull, 0, -0.1, 1.95);
+  k.torus(maw, 0.82, 0.13, ironDark, 0, 0, 0, 0, 0, 0, 8, 28);
+  k.torus(maw, 0.95, 0.04, brass, 0, 0, -0.02, 0, 0, 0, 6, 28);
+  k.mesh(maw, new THREE.CircleGeometry(0.68, 26), throat, 0, 0, -0.08);
+  const teeth = k.node(maw, 0, 0, 0.05);
+  for (let t = 0; t < 10; t++) {
+    const a = (t / 10) * Math.PI * 2;
+    k.cone(teeth, 0.09, 0.42, 5, steel, Math.sin(a) * 0.66, Math.cos(a) * 0.66, 0.1, Math.PI / 2, 0, 0);
+  }
+  const mawPlate = k.box(hull, 0.9, 0.36, 0.06, rust, 0, 0.82, 1.7, 0.25, 0, 0, 0.012);
+  monster.armour(mawPlate, 0.2);
+  // What drips from the maw: water, falling to the ground in front of it.
+  const stream = k.cyl(body, 0.09, 0.07, 1, 8, drip, 0, 1.5, 2.15);
+  stream.scale.y = 0.001;
+
+  /* --- the siphon head, on a boom over the tank: two lenses and a visor --- */
+  k.strut(hull, [0, 0.9, 0.6], [0, 1.9, 1.2], 0.2, ironDark, 8, 0.25);
+  k.sph(hull, 0.28, rust, 0, 1.9, 1.2);
+  const head = k.node(hull, 0, 2.15, 1.55);
+  k.box(head, 0.9, 0.62, 0.95, iron, 0, 0, 0.25, 0, 0, 0, 0.07);
+  k.box(head, 1.0, 0.1, 0.7, ironDark, 0, 0.36, 0.24, -0.16, 0, 0, 0.02);
+  const eyeZ = 0.76;
+  for (const sx of [-1, 1]) {
+    k.cyl(head, 0.17, 0.17, 0.08, 18, lens, sx * 0.24, 0.04, eyeZ, Math.PI / 2);
+    k.torus(head, 0.19, 0.028, ironDark, sx * 0.24, 0.04, eyeZ + 0.02, 0, 0, 0, 8, 20);
+    k.cyl(head, 0.06, 0.06, 0.06, 12, lensSmall, sx * 0.43, -0.2, 0.68, Math.PI / 2);
+  }
+  const headPlate = k.box(head, 0.7, 0.2, 0.05, rust, 0, -0.26, 0.74, 0, 0, 0, 0.01);
+  monster.armour(headPlate, 0.8);
+  for (const sx of [-1, 1]) {
+    const root = k.node(head, sx * 0.34, 0.34, 0.1, -0.2, 0, sx * 0.3);
+    k.strut(root, [0, 0, 0], [0, 0.8, 0.1], 0.016, steel, 5, 0.022);
+  }
+  const muzzle = k.node(head, 0, -0.02, 0.8);
+  monster.muzzle = muzzle;
+
+  /* --- the siphon hoses: from the back of the tank, up over it, to the head --- */
+  for (const sx of [-1, 1]) {
+    k.strut(hull, [sx * 0.55, 0.95, -0.9], [sx * 0.7, 1.9, -0.3], 0.07, hose);
+    k.strut(hull, [sx * 0.7, 1.9, -0.3], [sx * 0.5, 2.2, 0.8], 0.07, hose);
+    k.strut(hull, [sx * 0.5, 2.2, 0.8], [sx * 0.34, 2.2, 1.45], 0.07, hose);
+    k.sph(hull, 0.09, brass, sx * 0.7, 1.9, -0.3);
+    k.sph(hull, 0.09, brass, sx * 0.5, 2.2, 0.8);
+  }
+
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t;
+      // The tank settles on its legs, rears its front end to gather and drops its weight to strike.
+      hull.position.y = HULL_Y + idle * Math.sin(t * 1.3) * 0.04 - 0.35 * down - clamp01(s.throes) * 0.45;
+      hull.position.z = 0.4 * down - 0.1 * up;
+      hull.rotation.x = -0.13 * up + 0.14 * down - 0.1 * s.roar + s.throes * 0.06 * Math.sin(t * 11);
+      hull.rotation.z = Math.sin(t * 5) * s.hurt * 0.05 + idle * Math.sin(t * 0.7) * 0.01;
+      // The legs shuffle in turn at idle; the front pair lifts to gather.
+      for (const l of legs) {
+        const step = idle * clamp01(0.5 + 0.5 * Math.sin(t * 1.6 + l.ph)) * 0.05;
+        const rear = l.i === 2 ? 0.28 * up : 0;
+        l.hip.rotation.z = l.sx * (step + rear + 0.04 * s.roar);
+      }
+      // The maw: a slow turn of the teeth at idle, quick when it gathers and strikes.
+      teeth.rotation.z = idle * t * 0.5 + up * 2.2 + down * 3.5 + s.roar * 1.2;
+      maw.scale.setScalar(1 + 0.08 * (up + down) + 0.04 * s.roar);
+      // The head looks about, lifts to roar and drops on the blow.
+      head.rotation.x = -0.22 * s.roar - 0.14 * up + 0.22 * down;
+      head.rotation.y = idle * Math.sin(t * 0.6) * 0.16;
+      // Water from the maw while it strikes, and the stack breathes harder as it is hurt.
+      const pour = clamp01(0.15 + down * 1.0 + s.wound * 0.35);
+      drip.opacity = 0.1 + 0.3 * pour;
+      stream.scale.set(1 + 0.2 * Math.sin(t * 24), Math.max(0.001, pour * 2.7), 1 + 0.2 * Math.cos(t * 21));
+      stream.position.y = 2.7 - pour * 1.35;
+      const vent = clamp01(0.15 + s.roar * 0.7 + s.wound * 0.4);
+      puff.scale.setScalar(0.5 + vent * 1.2 + idle * Math.sin(t * 3.1) * 0.08);
+      steam.opacity = 0.1 + 0.3 * vent;
+      body.position.y = -clamp01(s.throes) * 0.3;
+      body.rotation.z = Math.sin(t * 36) * 0.012 * s.hurt;
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
   'the hopper': buildHopper,
   'the compressor': buildCompressor,
   'the crucible': buildCrucible,
+  'the undertow': buildUndertow,
   'basalt warden': buildWarden,
   'the lantern-eater': buildLanternEater
 };

@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts fourteen worlds. Five of them — Tallow, Lanternfall, Ligar, Bellows and Ember Reach — are built
+ * The Learn road charts fourteen worlds. Six of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach and Mirrowen — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -16,6 +16,7 @@ import ligarData from '../three/world-data/ligar.json' with { type: 'json' };
 import lanternfallData from '../three/world-data/lanternfall.json' with { type: 'json' };
 import bellowsData from '../three/world-data/bellows.json' with { type: 'json' };
 import emberData from '../three/world-data/ember.json' with { type: 'json' };
+import mirrowenData from '../three/world-data/mirrowen.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -94,6 +95,25 @@ const WORLDS_3D = {
       for (const site of emberData.sites) {
         if (!site.built) continue;
         stage.setEmberSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit06: {
+    id: 'unit06',
+    key: 'mirrowen',
+    worldName: 'Mirrowen',
+    data: mirrowenData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterMirrowenScene(siteId, playerPos, lookAtPos);
+    },
+    siteForQuest(questId) {
+      return mirrowenData.sites.find(s => s.questId === questId) || null;
+    },
+    /** Light the site indicator for every quest the player has finished. */
+    syncProgress(stage, isComplete) {
+      for (const site of mirrowenData.sites) {
+        if (!site.built) continue;
+        stage.setMirrowenSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

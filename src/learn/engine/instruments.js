@@ -31,6 +31,8 @@ const BUILT_BENCHES = new Set([
   'q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real', 'boss-compressor',
   // Unit 5 — Ember Reach
   'q1-flow', 'q2-calorimetry', 'q3-enthalpy', 'q4-bonds', 'q5-hess', 'q6-entropy', 'q7-gibbs', 'boss-crucible',
+  // Unit 6 — Mirrowen
+  'q1-states', 'q2-grip', 'q3-boil', 'q4-solids', 'q5-crossing', 'q6-solution', 'q7-separate', 'boss-undertow',
   // Unit 7 — Kettle
   'q1-recipe', 'boss-golem',
 ]);

@@ -157,12 +157,18 @@ export const STAGE_STORY = {
   'q2-grip': {
     1: 'Vess wants to know how hard molecules hold their neighbours, before she can say what holds the canal ice.'
   },
-  // @mirrowen q1-states
-  // @mirrowen q3-boil
-  // @mirrowen q4-solids
-  // @mirrowen q5-crossing
-  // @mirrowen q6-solution
-  // @mirrowen q7-separate
+  'q1-states': {
+    1: 'Vess wants to know whether the canal ice is a different substance from the water under it.'
+  },
+  'q3-boil': {
+    1: 'Vess asks how the canal\'s water can leave when nothing on the shelf is hot enough to boil it.'
+  },
+  'q4-solids': { 1: 'The ice sheets shatter like glass, and Vess wants to know whether that is what they are.' },
+  'q5-crossing': { 1: 'Vess saw ice take in heat without warming, and wants to know where the heat went.' },
+  'q6-solution': { 1: 'Vess wants to know how much of the agent is in each litre of canal water.' },
+  'q7-separate': {
+    1: 'Vess wants whatever was added to the canal out of it again, without changing the water.'
+  },
 
   /* ---- Kettle: halt the robot foundry ---- */
   'q1-recipe': {

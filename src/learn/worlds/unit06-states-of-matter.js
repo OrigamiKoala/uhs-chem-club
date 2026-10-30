@@ -32,8 +32,8 @@ export const UNIT_06 = {
       line: 'Solid, liquid or gas: what the molecules are doing, and what they are not.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/q1-states.js')
     },
     {
       id: 'q2-grip',
@@ -50,8 +50,8 @@ export const UNIT_06 = {
       line: 'A sealed flask rises to a pressure and stops. Find out why, and when it boils.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/q3-boil.js')
     },
     {
       id: 'q4-solids',
@@ -59,8 +59,8 @@ export const UNIT_06 = {
       line: 'Glass shatters and quartz does not. Same silicon, different order.',
       arena: 'bench',
       stageCount: 6,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/q4-solids.js')
     },
     {
       id: 'q5-crossing',
@@ -68,8 +68,8 @@ export const UNIT_06 = {
       line: 'Pour heat in and the temperature stops moving. Find out where it went.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/q5-crossing.js')
     },
     {
       id: 'q6-solution',
@@ -77,8 +77,8 @@ export const UNIT_06 = {
       line: 'A solid goes missing and is still in the jar.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/q6-solution.js')
     },
     {
       id: 'q7-separate',
@@ -86,8 +86,8 @@ export const UNIT_06 = {
       line: 'Get one thing out of another without changing either.',
       arena: 'bench',
       stageCount: 7,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit06/q7-separate.js')
     },
     {
       id: 'boss-undertow',

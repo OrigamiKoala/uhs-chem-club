@@ -75,9 +75,413 @@
       ],
       "answer": "a",
       "explanation": "The negative ends of the polar water molecules point at the positive ion: an ion–dipole force."
+    },
+    {
+      "id": "q3-boil#0",
+      "quest": "q3-boil",
+      "question": "Acetone's vapor pressure at 25 °C is about 31 kPa and water's is about 3 kPa. Which statement about their boiling points at sea level is most likely true?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Acetone boils at a higher temperature than water"
+        },
+        {
+          "id": "b",
+          "label": "Acetone boils at a lower temperature than water"
+        },
+        {
+          "id": "c",
+          "label": "They boil at the same temperature"
+        },
+        {
+          "id": "d",
+          "label": "Acetone cannot boil"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The liquid with the higher vapor pressure at a given temperature reaches the outside pressure sooner as it is heated, so it boils at a lower temperature."
+    },
+    {
+      "id": "q3-boil#1",
+      "quest": "q3-boil",
+      "question": "Ice floats on liquid water. Which statement explains why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ice molecules are lighter than liquid water molecules"
+        },
+        {
+          "id": "b",
+          "label": "Ice has weaker forces between its molecules than liquid water"
+        },
+        {
+          "id": "c",
+          "label": "Air bubbles trapped in ice always make it float"
+        },
+        {
+          "id": "d",
+          "label": "Hydrogen bonds hold ice's molecules in an open lattice, so ice is less dense than the liquid"
+        }
+      ],
+      "answer": "d",
+      "explanation": "The same molecules take up more space in the open hydrogen-bonded lattice of ice than they do in the liquid."
+    },
+    {
+      "id": "q3-boil#2",
+      "quest": "q3-boil",
+      "question": "Liquid X has a higher surface tension than liquid Y at the same temperature. What does this suggest about the forces between their molecules?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The forces between X's molecules are weaker"
+        },
+        {
+          "id": "b",
+          "label": "The bonds inside X's molecules are stronger"
+        },
+        {
+          "id": "c",
+          "label": "The forces between X's molecules are stronger"
+        },
+        {
+          "id": "d",
+          "label": "X's molecules are lighter"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Molecules at the surface are pulled inward by their neighbours. The stronger that pull, the higher the surface tension."
+    },
+    {
+      "id": "q5-crossing#0",
+      "quest": "q5-crossing",
+      "question": "How much heat vaporizes 90.0 g of water at 100 °C? The heat of vaporization is 40.65 kJ/mol and the molar mass of water is 18.0 g/mol.",
+      "options": [
+        {
+          "id": "a",
+          "label": "203 kJ"
+        },
+        {
+          "id": "b",
+          "label": "40.7 kJ"
+        },
+        {
+          "id": "c",
+          "label": "8.13 kJ"
+        },
+        {
+          "id": "d",
+          "label": "732 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "90.0 g is 5.00 mol, and 5.00 mol × 40.65 kJ/mol = 203 kJ, with no change of temperature."
+    },
+    {
+      "id": "q5-crossing#1",
+      "quest": "q5-crossing",
+      "question": "What is the enthalpy change for 1 mol of steam condensing to water at 100 °C?",
+      "options": [
+        {
+          "id": "a",
+          "label": "-40.65 kJ"
+        },
+        {
+          "id": "b",
+          "label": "+40.65 kJ"
+        },
+        {
+          "id": "c",
+          "label": "0 kJ"
+        },
+        {
+          "id": "d",
+          "label": "-6.01 kJ"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Condensation is the reverse of vaporization, so it has the same size of enthalpy change with the opposite sign."
+    },
+    {
+      "id": "q5-crossing#2",
+      "quest": "q5-crossing",
+      "question": "Beyond the exam: ice is warmed at a constant pressure of 0.3 kPa, which is below water's triple point pressure of 0.611 kPa. What happens?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It turns straight to vapour without becoming liquid"
+        },
+        {
+          "id": "b",
+          "label": "It melts at 0 °C, then boils"
+        },
+        {
+          "id": "c",
+          "label": "It stays solid at every temperature"
+        },
+        {
+          "id": "d",
+          "label": "It melts and boils at the same temperature"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Below the triple point pressure there is no liquid region on water's phase diagram, so the solid becomes vapour directly."
+    },
+    {
+      "id": "q6-solution#0",
+      "quest": "q6-solution",
+      "question": "1.0 L of 0.10 M CaCl₂ and 1.0 L of 0.10 M sugar solution are compared. Which has more dissolved particles, and by how much?",
+      "options": [
+        {
+          "id": "a",
+          "label": "CaCl₂, three times as many"
+        },
+        {
+          "id": "b",
+          "label": "CaCl₂, twice as many"
+        },
+        {
+          "id": "c",
+          "label": "The same number in each"
+        },
+        {
+          "id": "d",
+          "label": "Sugar, because its molecules are larger"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each CaCl₂ separates into Ca²⁺ and two Cl⁻, so 0.10 mol gives 0.30 mol of particles, while 0.10 mol of sugar stays as 0.10 mol of molecules."
+    },
+    {
+      "id": "q6-solution#1",
+      "quest": "q6-solution",
+      "question": "Ammonium nitrate dissolves in water and the water gets colder. What does that show?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Dissolving is endothermic: energy flows into the dissolving process from the water"
+        },
+        {
+          "id": "b",
+          "label": "Dissolving is exothermic: energy flows out to the water"
+        },
+        {
+          "id": "c",
+          "label": "No energy changes when a solid dissolves"
+        },
+        {
+          "id": "d",
+          "label": "The solution has less mass than before"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A falling temperature means energy left the water and went into the process, so dissolving this salt is endothermic."
+    },
+    {
+      "id": "q6-solution#2",
+      "quest": "q6-solution",
+      "question": "What mass of NaCl (58.44 g/mol) is needed to make 500.0 mL of 0.200 M solution?",
+      "options": [
+        {
+          "id": "a",
+          "label": "5.84 g"
+        },
+        {
+          "id": "b",
+          "label": "11.7 g"
+        },
+        {
+          "id": "c",
+          "label": "2.92 g"
+        },
+        {
+          "id": "d",
+          "label": "58.4 g"
+        }
+      ],
+      "answer": "a",
+      "explanation": "0.200 mol/L × 0.5000 L = 0.100 mol, and 0.100 mol × 58.44 g/mol = 5.84 g."
+    },
+    {
+      "id": "q1-states#0",
+      "quest": "q1-states",
+      "question": "Which change makes new molecules?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ice melting"
+        },
+        {
+          "id": "b",
+          "label": "Water boiling"
+        },
+        {
+          "id": "c",
+          "label": "Water being split into hydrogen and oxygen"
+        },
+        {
+          "id": "d",
+          "label": "A puddle freezing"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Melting, boiling and freezing are phase changes: the molecules stay whole. Splitting water breaks its bonds and makes hydrogen and oxygen molecules."
+    },
+    {
+      "id": "q1-states#1",
+      "quest": "q1-states",
+      "question": "Which statement describes a gas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It takes the shape and volume of its container, and its molecules are far apart"
+        },
+        {
+          "id": "b",
+          "label": "It keeps its volume but takes the shape of its container"
+        },
+        {
+          "id": "c",
+          "label": "It keeps its own shape, with its molecules touching in fixed places"
+        },
+        {
+          "id": "d",
+          "label": "Its molecules touch one another but slide past each other"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A gas has neither a definite shape nor a definite volume, because its molecules are far apart and move freely."
+    },
+    {
+      "id": "q7-separate#0",
+      "quest": "q7-separate",
+      "question": "Why can a solution of salt in water not be separated by filtering?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The dissolved ions are too small to be held back by the paper"
+        },
+        {
+          "id": "b",
+          "label": "The salt is heavier than the water"
+        },
+        {
+          "id": "c",
+          "label": "Filter paper dissolves salt"
+        },
+        {
+          "id": "d",
+          "label": "Salt has no charge"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The components of a liquid solution are mixed at the scale of single ions and molecules, so they pass through the pores of the paper together."
+    },
+    {
+      "id": "q7-separate#1",
+      "quest": "q7-separate",
+      "question": "A mixture of acetone (boils at 56 °C) and water (boils at 100 °C) is slowly distilled. What does the first vial of liquid collected hold most of?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Acetone, because its molecules are held to one another less tightly"
+        },
+        {
+          "id": "b",
+          "label": "Water, because it is the lighter molecule"
+        },
+        {
+          "id": "c",
+          "label": "Equal parts of each, because they are mixed"
+        },
+        {
+          "id": "d",
+          "label": "Neither: nothing can be collected below 100 °C"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The liquid with weaker forces between its molecules and the lower boiling point forms more of the vapour, so the first vial is richer in acetone."
+    },
+    {
+      "id": "q7-separate#2",
+      "quest": "q7-separate",
+      "question": "Beyond the exam: 1.0 mol of each of sugar, NaCl and CaCl₂ is dissolved in its own 1.0 kg of water. Treating each as ideal, which boils at the highest temperature?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sugar"
+        },
+        {
+          "id": "b",
+          "label": "NaCl"
+        },
+        {
+          "id": "c",
+          "label": "CaCl₂"
+        },
+        {
+          "id": "d",
+          "label": "They boil at the same temperature"
+        }
+      ],
+      "answer": "c",
+      "explanation": "The rise is i x K_b x m, and CaCl₂ makes three particles per formula unit against two for NaCl and one for sugar."
     }
   ],
   "bench": {
+    "q1-states": {
+      "problems": [
+        {
+          "id": "q1-states#b1",
+          "quest": "q1-states",
+          "question": "A sealed jar of gas is squeezed into a third of its original volume. What happens to its molecules?",
+          "options": [
+            {
+              "id": "a",
+              "label": "They stay the same size and the gaps between them shrink"
+            },
+            {
+              "id": "b",
+              "label": "Each molecule shrinks to a third of its size"
+            },
+            {
+              "id": "c",
+              "label": "Two thirds of the molecules disappear"
+            },
+            {
+              "id": "d",
+              "label": "The bonds inside the molecules break"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A gas is mostly empty space, so squeezing it only pushes the same molecules closer together. The molecules and their bonds are unchanged."
+        },
+        {
+          "id": "q1-states#b2",
+          "quest": "q1-states",
+          "question": "A 1.00 L jar of liquid water weighs 1000 g and a 1.00 L jar of ice weighs 917 g. What does this say about the molecules?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Each molecule in the ice has a little more room"
+            },
+            {
+              "id": "b",
+              "label": "The molecules in ice are lighter"
+            },
+            {
+              "id": "c",
+              "label": "Ice molecules have fewer atoms"
+            },
+            {
+              "id": "d",
+              "label": "Ice molecules are broken into smaller pieces"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Both jars hold the same kind of molecule, so the lighter jar holds fewer of them in the same space. Each molecule in the ice has slightly more room."
+        }
+      ]
+    },
     "q2-grip": {
       "problems": [
         {
@@ -131,6 +535,546 @@
           "explanation": "Bigger electron clouds are easier to distort, so heavier nonpolar molecules attract their neighbours more strongly."
         }
       ]
+    },
+    "q4-solids": {
+      "problems": [
+        {
+          "id": "q4-solids#b1",
+          "quest": "q4-solids",
+          "question": "Quartz and fused silica glass are both SiO₂. Quartz melts at 1713 °C, but the glass goes from rigid to runny over about 1040 to 1585 °C. What explains the difference?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Quartz's particles sit in a repeating pattern and the glass's do not"
+            },
+            {
+              "id": "b",
+              "label": "Quartz is an ionic solid and the glass is a metal"
+            },
+            {
+              "id": "c",
+              "label": "The glass is a molecular solid"
+            },
+            {
+              "id": "d",
+              "label": "The glass has no covalent bonds"
+            }
+          ],
+          "answer": "a",
+          "explanation": "In a crystal every hold is alike, so all of them give way at one temperature. A glass is amorphous: its holds differ from place to place, so they give way a few at a time."
+        },
+        {
+          "id": "q4-solids#b2",
+          "quest": "q4-solids",
+          "question": "Iodine (I₂) melts at 114 °C and sodium chloride at 801 °C. What does melting iodine have to overcome?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Only the weak forces between the I₂ molecules"
+            },
+            {
+              "id": "b",
+              "label": "The bond inside every I₂ molecule"
+            },
+            {
+              "id": "c",
+              "label": "The attraction between oppositely charged ions"
+            },
+            {
+              "id": "d",
+              "label": "The hold of a sea of free electrons"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Iodine is a molecular solid: whole molecules held by weak grips between them. Melting separates the molecules and leaves each I–I bond intact."
+        }
+      ]
+    },
+    "q3-boil": {
+      "problems": [
+        {
+          "id": "q3-boil#b1",
+          "quest": "q3-boil",
+          "question": "Ethanol and water are each sealed in a flask at 25 °C. Ethanol's gauge settles at 7.9 kPa and water's at 3.2 kPa. What does this say about the forces between their molecules?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Ethanol's molecules are held to each other less strongly than water's"
+            },
+            {
+              "id": "b",
+              "label": "Ethanol's molecules are held to each other more strongly than water's"
+            },
+            {
+              "id": "c",
+              "label": "Ethanol has weaker bonds inside its molecules"
+            },
+            {
+              "id": "d",
+              "label": "The two liquids have the same forces and differ only in mass"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The weaker the forces between a liquid's molecules, the more of them escape into the vapor, so the higher its vapor pressure at the same temperature."
+        },
+        {
+          "id": "q3-boil#b2",
+          "quest": "q3-boil",
+          "question": "Water boils at 100 °C at sea level. At the top of a high mountain the outside pressure is lower. What happens to the temperature at which water boils there?",
+          "options": [
+            {
+              "id": "a",
+              "label": "It is higher, because thin air holds heat in"
+            },
+            {
+              "id": "b",
+              "label": "It stays at 100 °C, because that is a fixed property of water"
+            },
+            {
+              "id": "c",
+              "label": "It is lower, because the vapor pressure reaches the lower outside pressure sooner"
+            },
+            {
+              "id": "d",
+              "label": "Water cannot boil there"
+            }
+          ],
+          "answer": "c",
+          "explanation": "A liquid boils when its vapor pressure equals the pressure outside it. A lower outside pressure is matched at a lower temperature."
+        }
+      ],
+      "worked": {
+        "id": "q3-boil#w",
+        "quest": "q3-boil",
+        "title": "Gas Over Water at 40 °C",
+        "setup": "A gas is collected over water at 40 °C. The jar's gauge reads 98.0 kPa, and the vapor pressure of water at 40 °C is 7.4 kPa.",
+        "steps": [
+          {
+            "say": "What does the jar's gauge count?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The gas alone"
+              },
+              {
+                "id": "b",
+                "label": "The gas and the water vapor together"
+              },
+              {
+                "id": "c",
+                "label": "The water vapor alone"
+              }
+            ],
+            "answer": "b",
+            "hint": "Everything in the jar pushes on the gauge.",
+            "explain": "The gauge reads the pressure of everything in the jar: the gas and the water vapor mixed with it."
+          },
+          {
+            "say": "How much of the gauge is the water vapor?",
+            "kind": "number",
+            "answer": 7.4,
+            "calc": "7.4",
+            "unit": "kPa",
+            "tol": 0.01,
+            "hint": "Water's own pressure at the jar's temperature is given.",
+            "explain": "The water vapor pushes with its own vapor pressure at 40 °C, 7.4 kPa."
+          },
+          {
+            "say": "What is the pressure of the gas alone?",
+            "kind": "number",
+            "answer": 90.6,
+            "calc": "98.0-7.4",
+            "unit": "kPa",
+            "tol": 0.005,
+            "hint": "The two pressures add up to the gauge.",
+            "explain": "98.0 - 7.4 = 90.6 kPa."
+          },
+          {
+            "say": "What percentage of the gauge is water vapor?",
+            "kind": "number",
+            "answer": 7.55,
+            "calc": "7.4/98.0*100",
+            "unit": "%",
+            "tol": 0.01,
+            "hint": "Divide the vapor's pressure by the gauge and multiply by 100.",
+            "explain": "7.4 / 98.0 x 100 = 7.6 %."
+          },
+          {
+            "say": "The water is warmed to 60 °C, where its vapor pressure is 19.9 kPa, and the gauge stays at 98.0 kPa. What happens to the gas alone?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "It rises"
+              },
+              {
+                "id": "b",
+                "label": "It falls"
+              },
+              {
+                "id": "c",
+                "label": "It stays the same"
+              }
+            ],
+            "answer": "b",
+            "hint": "The vapor takes a bigger share of the same gauge.",
+            "explain": "More of the gauge is water vapor, so the gas alone is 98.0 - 19.9 = 78.1 kPa."
+          }
+        ],
+        "finish": "The gauge is the gas plus the water vapor. Find the water's vapor pressure at the jar's temperature and take it from the gauge."
+      }
+    },
+    "q5-crossing": {
+      "problems": [
+        {
+          "id": "q5-crossing#b1",
+          "quest": "q5-crossing",
+          "question": "On the heating curve of a pure substance, the line goes level for a while although heat is still being added. What is happening to the sample?",
+          "options": [
+            {
+              "id": "a",
+              "label": "It is changing state, and the heat is spent loosening the attractions between its particles"
+            },
+            {
+              "id": "b",
+              "label": "The heat is being lost to the room"
+            },
+            {
+              "id": "c",
+              "label": "The thermometer has stopped working"
+            },
+            {
+              "id": "d",
+              "label": "The particles have stopped moving"
+            }
+          ],
+          "answer": "a",
+          "explanation": "During a change of state the added heat works against the forces between particles, so their average motion, and the temperature, stays the same."
+        },
+        {
+          "id": "q5-crossing#b2",
+          "quest": "q5-crossing",
+          "question": "1.00 g of steam at 100 °C and 1.00 g of water at 100 °C each cool to 37 °C on a hand. Which gives the hand more heat, and why?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The steam, because it also gives out the heat of vaporization as it condenses"
+            },
+            {
+              "id": "b",
+              "label": "The water, because it is denser"
+            },
+            {
+              "id": "c",
+              "label": "They give the same, because both start at 100 °C"
+            },
+            {
+              "id": "d",
+              "label": "The water, because it cools more slowly"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Steam gives out about 2.26 kJ as it condenses, on top of the 0.26 kJ both give as the liquid cools from 100 °C to 37 °C."
+        }
+      ],
+      "worked": {
+        "id": "q5-crossing#w",
+        "quest": "q5-crossing",
+        "title": "Ice to Warm Water",
+        "setup": "How much heat takes 36.0 g of ice at 0 °C to water at 25.0 °C? The heat of fusion of ice is 6.01 kJ/mol, the specific heat capacity of water is 4.184 J/(g·K) and the molar mass of water is 18.0 g/mol.",
+        "steps": [
+          {
+            "say": "How many moles of water are in 36.0 g?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "36.0/18.0",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Divide the mass by the molar mass.",
+            "explain": "36.0 g / 18.0 g/mol = 2.00 mol."
+          },
+          {
+            "say": "How much heat melts the ice at 0 °C?",
+            "kind": "number",
+            "answer": 12.02,
+            "calc": "2*6.01",
+            "unit": "kJ",
+            "tol": 0.01,
+            "hint": "Heat for a change of state is moles times the heat per mole.",
+            "explain": "2.00 mol × 6.01 kJ/mol = 12.02 kJ. The temperature stays at 0 °C."
+          },
+          {
+            "say": "How much heat then warms the 36.0 g of water from 0 °C to 25.0 °C?",
+            "kind": "number",
+            "answer": 3.77,
+            "calc": "36.0*4.184*25/1000",
+            "unit": "kJ",
+            "tol": 0.01,
+            "hint": "q = m × c × ΔT, then change joules to kilojoules.",
+            "explain": "36.0 × 4.184 × 25.0 = 3766 J = 3.77 kJ."
+          },
+          {
+            "say": "What is the total heat added?",
+            "kind": "number",
+            "answer": 15.79,
+            "calc": "2*6.01+36.0*4.184*25/1000",
+            "unit": "kJ",
+            "tol": 0.01,
+            "hint": "Add the melting and the warming.",
+            "explain": "12.02 + 3.77 = 15.79 kJ."
+          },
+          {
+            "say": "The same water is cooled back to ice at 0 °C. What is the heat change?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "+15.79 kJ"
+              },
+              {
+                "id": "b",
+                "label": "-15.79 kJ"
+              },
+              {
+                "id": "c",
+                "label": "0 kJ"
+              }
+            ],
+            "answer": "b",
+            "hint": "Cooling and freezing are the way up run backwards.",
+            "explain": "Heat leaves the sample on the way down, so the heat change is -15.79 kJ."
+          }
+        ],
+        "finish": "Each level stretch of a heating curve costs moles times a heat per mole, each slope costs m × c × ΔT, and the way back gives out the same heat."
+      }
+    },
+    "q6-solution": {
+      "problems": [
+        {
+          "id": "q6-solution#b1",
+          "quest": "q6-solution",
+          "question": "A student adds water to 50.0 mL of a 0.800 M solution until it measures 200.0 mL. What is the new molarity?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.200 M"
+            },
+            {
+              "id": "b",
+              "label": "0.400 M"
+            },
+            {
+              "id": "c",
+              "label": "0.800 M"
+            },
+            {
+              "id": "d",
+              "label": "3.20 M"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The moles of solute do not change when water is added: 0.800 M × 50.0 mL = M × 200.0 mL, so M = 0.200 M."
+        },
+        {
+          "id": "q6-solution#b2",
+          "quest": "q6-solution",
+          "question": "Hexane dissolves wax but not table salt. Which explanation is best?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Salt is held by strong ion attractions that hexane's weak dispersion forces cannot replace, while wax and hexane both rely on dispersion forces"
+            },
+            {
+              "id": "b",
+              "label": "Hexane is too light to mix with salt"
+            },
+            {
+              "id": "c",
+              "label": "Salt melts at a higher temperature than hexane boils"
+            },
+            {
+              "id": "d",
+              "label": "Wax is a liquid at room temperature"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Substances with similar intermolecular interactions tend to dissolve in each other. Hexane cannot pull ions out of a salt crystal, but it mixes freely with a hydrocarbon such as wax."
+        }
+      ],
+      "worked": {
+        "id": "q6-solution#w",
+        "quest": "q6-solution",
+        "title": "Make a Solution, Then Dilute It",
+        "setup": "14.9 g of KCl (molar mass 74.55 g/mol) is dissolved in water and made up to 500 mL. Then 20.0 mL of that solution is made up to 100 mL with water.",
+        "steps": [
+          {
+            "say": "How many moles of KCl are in 14.9 g?",
+            "kind": "number",
+            "answer": 0.2,
+            "calc": "14.9/74.55",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Divide the grams by the molar mass.",
+            "explain": "14.9 g ÷ 74.55 g/mol = 0.200 mol."
+          },
+          {
+            "say": "What is the molarity of the 500 mL solution?",
+            "kind": "number",
+            "answer": 0.4,
+            "calc": "0.2/0.5",
+            "unit": "mol/L",
+            "tol": 0.01,
+            "hint": "Molarity is moles per litre of solution, so change 500 mL to litres.",
+            "explain": "0.200 mol ÷ 0.500 L = 0.400 M."
+          },
+          {
+            "say": "How many moles of KCl are in the 20.0 mL taken out?",
+            "kind": "number",
+            "answer": 0.008,
+            "calc": "0.4*0.02",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Moles = molarity × litres.",
+            "explain": "0.400 mol/L × 0.0200 L = 0.00800 mol."
+          },
+          {
+            "say": "What is the molarity once that 20.0 mL is made up to 100 mL?",
+            "kind": "number",
+            "answer": 0.08,
+            "calc": "0.008/0.1",
+            "unit": "mol/L",
+            "tol": 0.01,
+            "hint": "The moles are the same; the litres are now 0.100.",
+            "explain": "0.00800 mol ÷ 0.100 L = 0.0800 M, which is M₁V₁ = M₂V₂ (0.400 × 20.0 = 0.0800 × 100)."
+          },
+          {
+            "say": "How many moles of ions (K⁺ and Cl⁻ together) are in the 100 mL?",
+            "kind": "number",
+            "answer": 0.016,
+            "calc": "0.008*2",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Each KCl gives two ions in water.",
+            "explain": "0.00800 mol of KCl × 2 ions each = 0.0160 mol of ions."
+          }
+        ],
+        "finish": "Molarity counts the dissolved formula units in each litre. Adding water keeps the moles and lowers the molarity, and a salt that dissolves into ions puts more particles in the water than its moles of formula units."
+      }
+    },
+    "q7-separate": {
+      "problems": [
+        {
+          "id": "q7-separate#b1",
+          "quest": "q7-separate",
+          "question": "Ink is run on polar paper in a nonpolar solvent. Dye X stays near the start line and dye Y travels with the solvent front. What does this suggest?",
+          "options": [
+            {
+              "id": "a",
+              "label": "X is more polar than Y, because the polar paper holds it more strongly than the nonpolar solvent does"
+            },
+            {
+              "id": "b",
+              "label": "Y is more polar than X, because it moves further"
+            },
+            {
+              "id": "c",
+              "label": "X and Y have the same polarity but different masses"
+            },
+            {
+              "id": "d",
+              "label": "The two dyes are the same substance"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A polar dye is held by polar paper and is poorly carried by a nonpolar solvent, so it stays low. A chromatogram is read this way to infer relative polarities."
+        },
+        {
+          "id": "q7-separate#b2",
+          "quest": "q7-separate",
+          "question": "A salt solution is poured through filter paper and a drop of the filtrate is left to dry on glass. What is left on the glass?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Nothing, because filter paper removes the salt"
+            },
+            {
+              "id": "b",
+              "label": "A white crust of salt, because the dissolved salt passed through the paper"
+            },
+            {
+              "id": "c",
+              "label": "Sand grains from the paper"
+            },
+            {
+              "id": "d",
+              "label": "Pure water"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Dissolved ions are far smaller than the pores of the paper, so they pass through with the water and are left behind when the water dries off."
+        }
+      ],
+      "worked": {
+        "id": "q7-separate#w",
+        "quest": "q7-separate",
+        "title": "Reading a Chromatogram",
+        "setup": "A paper strip runs until the solvent front is 12.5 cm above the start line. The centre of a dye's spot is 8.0 cm above the start line. A second dye in the same run has an Rf of 0.24.",
+        "steps": [
+          {
+            "say": "What is the Rf of the first dye?",
+            "kind": "number",
+            "answer": 0.64,
+            "calc": "8.0/12.5",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "Rf is the spot's distance divided by the front's distance, both from the start line.",
+            "explain": "8.0 / 12.5 = 0.64."
+          },
+          {
+            "say": "Which dye does the paper hold more strongly?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The dye with Rf 0.24"
+              },
+              {
+                "id": "b",
+                "label": "The dye with Rf 0.64"
+              },
+              {
+                "id": "c",
+                "label": "Neither: Rf says nothing about how strongly paper holds a dye"
+              }
+            ],
+            "answer": "a",
+            "hint": "A dye that is held strongly is carried less far by the liquid.",
+            "explain": "The lower Rf means the dye stayed nearer the start line, so the paper held it more strongly than the liquid carried it."
+          },
+          {
+            "say": "How far from the start line is the second dye's spot, in cm?",
+            "kind": "number",
+            "answer": 3.0,
+            "calc": "0.24*12.5",
+            "unit": "cm",
+            "tol": 0.01,
+            "hint": "Distance = Rf times the front's distance.",
+            "explain": "0.24 x 12.5 = 3.0 cm."
+          },
+          {
+            "say": "The strip is run again on a longer sheet until the front is 15.0 cm. How far from the start line is the first dye's spot, in cm?",
+            "kind": "number",
+            "answer": 9.6,
+            "calc": "0.64*15.0",
+            "unit": "cm",
+            "tol": 0.01,
+            "hint": "The Rf of a dye in one solvent does not change with the length of the run.",
+            "explain": "0.64 x 15.0 = 9.6 cm."
+          }
+        ],
+        "finish": "Rf is a ratio of two distances, so it stays the same however far the front runs, and it can be used to predict a spot's height on a longer strip."
+      }
     }
   }
 }

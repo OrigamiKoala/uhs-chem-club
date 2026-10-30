@@ -97,6 +97,14 @@ export const CLUES = {
     name: 'The Siphon Manifold',
     summary: 'A high-capacity geothermal heat exchanger tapped into the caldera main.',
     note: 'The siphon routed megawatts of thermal energy away from the shelters without venting any steam to the sky. The raiders were feeding a hidden endothermic process below the crust.'
+  },
+  clue_mirrowen_agent: {
+    id: 'clue_mirrowen_agent',
+    act: 'act2',
+    source: 'Mirrowen Boss · The Undertow',
+    name: 'The Canal Sample',
+    summary: 'A sealed sample of the fluid the raiders poured into the canal.',
+    note: 'The freezing agent was a synthetic fluid. It was made, not mined, so somebody built a plant to make it.'
   }
 };
 
@@ -295,6 +303,8 @@ export const EPISODES = {
     arrival: 'We are approaching the waterways of Mirrowen. Raiders dumped artificial freezing chemicals into the shipping canals, trapping our supply boats in solid ice.',
     closing: 'The chemical ice has melted and the waterways are flowing freely. Laboratory tests show the freezing chemical was military-grade synthetic fluid.',
     spoilFamily: 'Brine crawlers',
+    bossId: 'boss-undertow',
+    clueId: 'clue_mirrowen_agent',
     paragraphs: [
       'Mirrowen is a watery ocean world where cargo ships travel through deep canal networks to move food and clean water between island cities.',
       'The raiders released chemical agents into the water that forced it to freeze into sharp crystal walls at normal temperatures. Our cargo ships are stuck in the ice, and the creeping frost is crushing their hulls.',

@@ -683,6 +683,39 @@ for (const [questId, bench, stage, term, title, body] of EMBER_REACH) {
 }
 
 /**
+ * Mirrowen. Each term sits at the stage whose reward card earns it, as in the other roads. Terms that are
+ * not listed yet (the heating curve's) wait for their quests' final vocabulary.
+ * [quest id, bench number, stage number, term, title, body]
+ */
+const MIRROWEN = [
+  ['q1-states', 1, 5, 'Intermolecular Forces', 'What Holds Molecules to Each Other', 'The attractions between neighbouring molecules. They are much weaker than the bonds inside a molecule, so melting or boiling pulls molecules apart and leaves each one whole.'],
+  ['q2-grip', 2, 1, 'London Dispersion Forces', 'The Grip Every Particle Has', 'A weak attraction between any two neighbouring atoms or molecules, from momentary uneven charge in their electron clouds. Larger clouds attract harder.'],
+  ['q2-grip', 2, 1, 'Polarizability', 'How Easily a Cloud Is Pushed', 'How easily an electron cloud is pushed out of shape. A larger cloud is more polarizable, so its dispersion forces are stronger.'],
+  ['q2-grip', 2, 2, 'Dipole–Dipole Forces', 'Partial Charges Pulling', 'The attraction between the partly positive end of one polar molecule and the partly negative end of its neighbour.'],
+  ['q2-grip', 2, 4, 'Hydrogen Bonding', 'A Hydrogen Between Two Atoms', 'A strong dipole–dipole attraction between a hydrogen bonded to nitrogen, oxygen or fluorine and a lone pair on nitrogen, oxygen or fluorine in a neighbouring molecule.'],
+  ['q2-grip', 2, 5, 'Ion–Dipole Forces', 'An Ion and the Water Around It', 'The attraction between an ion and the oppositely charged end of a polar molecule, such as a sodium ion and the oxygen end of water.'],
+  ['q3-boil', 3, 1, 'Vapor Pressure', 'The Push of the Vapour Above a Liquid', 'The pressure of the vapour over a liquid in a sealed container once it stops rising. It grows with temperature and is lower where the intermolecular forces are stronger.'],
+  ['q6-solution', 6, 2, 'Molarity', 'Moles in Each Litre', 'The moles of solute in one litre of solution, M = n / V.'],
+  ['q6-solution', 6, 3, 'Dilution', 'Same Moles, More Water', 'Adding solvent lowers the concentration but not the moles of solute, so M₁V₁ = M₂V₂.'],
+  ['q7-separate', 7, 1, 'Chromatography', 'Parts Travelling at Different Speeds', 'A way to separate a mixture because its parts are carried along by a moving solvent at different speeds.'],
+  ['q7-separate', 7, 2, 'Rf', 'How Far a Spot Travelled', 'The distance a spot moved divided by the distance the solvent front moved, a number between 0 and 1.']
+];
+
+for (const [questId, bench, stage, term, title, body] of MIRROWEN) {
+  FIELD_MANUAL_TERMS.push({
+    id: `u6_${questId.split('-')[0]}_s${stage}_${term.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
+    term,
+    road: 'unit06',
+    questKey: `unit06/${questId}`,
+    stageLabel: `Bench ${bench}, Stage ${stage}`,
+    stageIndex: stage - 1,
+    route: `#/learn/unit06/${questId}`,
+    title,
+    body
+  });
+}
+
+/**
  * Checks whether a term is earned based on session state.
  */
 export function isTermEarned(term, sessionState = {}) {
@@ -711,7 +744,8 @@ export function getFieldManualStats(sessionState = {}) {
     unit02: { total: 0, earned: 0 },
     unit03: { total: 0, earned: 0 },
     unit04: { total: 0, earned: 0 },
-    unit05: { total: 0, earned: 0 }
+    unit05: { total: 0, earned: 0 },
+    unit06: { total: 0, earned: 0 }
   };
 
   for (const t of FIELD_MANUAL_TERMS) {
@@ -762,6 +796,7 @@ export function renderFieldManualModal(sessionState = {}, activeFilter = 'all') 
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit03' ? 'active' : ''}" data-filter="unit03">Ligar (${stats.byRoad.unit03.earned}/${stats.byRoad.unit03.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit04' ? 'active' : ''}" data-filter="unit04">Bellows (${stats.byRoad.unit04.earned}/${stats.byRoad.unit04.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit05' ? 'active' : ''}" data-filter="unit05">Ember Reach (${stats.byRoad.unit05.earned}/${stats.byRoad.unit05.total})</button>
+        <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit06' ? 'active' : ''}" data-filter="unit06">Mirrowen (${stats.byRoad.unit06.earned}/${stats.byRoad.unit06.total})</button>
       </div>
 
       <div class="field-manual-grid">
