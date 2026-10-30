@@ -417,6 +417,17 @@ export const QUEST_STORY = {
       { to: 0.9, say: 'The lens goes into the Case File. Across the fog rise the crystal lattices of Ligar, held together by the very electron pairs you have mapped.' }
     ],
     filed: 'Filed: a lens ground for ultraviolet was feeding the Eater, and no guild lamp can make light that short.'
+  },
+
+  /* ---- Mirrowen: what is the canal ice made of, and why does it stay solid when the water beside it does not? ---- */
+  'unit06/q2-grip': {
+    scene: 'grip-bars',
+    beats: [
+      { to: 0.3, say: 'A bigger cloud holds its neighbours harder. Helium needs 0.08 kJ a mole to pull apart and xenon 12.6.' },
+      { to: 0.64, say: 'Water weighs 18 g a mole and hydrogen sulfide 34, yet water needs 40.7 kJ and hydrogen sulfide 18.7. A hydrogen bond beats weight.' },
+      { to: 0.9, say: 'Even so, breaking every O–H bond in a mole of water takes 926 kJ. The forces between molecules are a sliver of the bonds inside them.' }
+    ],
+    filed: 'Filed: water grips twice as hard as a molecule nearly twice its weight, so the canal ice is held by more than size.'
   }
 };
 

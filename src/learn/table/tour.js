@@ -245,3 +245,10 @@ export function addTourText(fixtures = {}, pieces = {}) {
   Object.assign(FIXTURE, fixtures);
   Object.assign(PIECE, pieces);
 }
+
+/** A kit that extends another stands up its instruments under its own name: copy the words of `from:<kind>` to `to:<kind>` where `to` has none. */
+export function aliasTourKit(from, to) {
+  for (const k of Object.keys(FIXTURE)) {
+    if (k.startsWith(`${from}:`)) { const alias = `${to}:${k.slice(from.length + 1)}`; if (!FIXTURE[alias]) FIXTURE[alias] = FIXTURE[k]; }
+  }
+}

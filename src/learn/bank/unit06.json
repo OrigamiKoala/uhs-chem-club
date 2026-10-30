@@ -1,0 +1,136 @@
+{
+  "world": "unit06",
+  "end": [
+    {
+      "id": "q2-grip#0",
+      "quest": "q2-grip",
+      "question": "Hydrogen fluoride (HF) boils at 19.5 °C and hydrogen chloride (HCl) at −85 °C, although HCl is the heavier molecule. What is the main reason?",
+      "options": [
+        {
+          "id": "a",
+          "label": "HF molecules form hydrogen bonds with one another"
+        },
+        {
+          "id": "b",
+          "label": "HF molecules are larger than HCl molecules"
+        },
+        {
+          "id": "c",
+          "label": "HF has a stronger covalent bond inside the molecule"
+        },
+        {
+          "id": "d",
+          "label": "HCl is not polar"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Hydrogen on a highly electronegative atom like fluorine is drawn to a lone pair on the next molecule, a hydrogen bond, which beats the extra dispersion force of the heavier HCl."
+    },
+    {
+      "id": "q2-grip#1",
+      "quest": "q2-grip",
+      "question": "Pulling a mole of liquid ethanol's molecules apart takes 38.6 kJ, and breaking the C–C bond in a mole of ethanol takes 348 kJ. What happens when ethanol boils?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The molecules separate and stay whole"
+        },
+        {
+          "id": "b",
+          "label": "The C–C bonds break and the pieces drift off"
+        },
+        {
+          "id": "c",
+          "label": "The O–H bonds break first"
+        },
+        {
+          "id": "d",
+          "label": "Both the molecules and their bonds separate"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The heat only has to overcome the much weaker forces between molecules, so boiling leaves each molecule intact."
+    },
+    {
+      "id": "q2-grip#2",
+      "quest": "q2-grip",
+      "question": "A diagram shows a sodium ion in water with the oxygen ends of the water molecules pointing at the ion. Which force does it show?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ion–dipole"
+        },
+        {
+          "id": "b",
+          "label": "Dipole–dipole between two ions"
+        },
+        {
+          "id": "c",
+          "label": "London dispersion only"
+        },
+        {
+          "id": "d",
+          "label": "Covalent bonding"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The negative ends of the polar water molecules point at the positive ion: an ion–dipole force."
+    }
+  ],
+  "bench": {
+    "q2-grip": {
+      "problems": [
+        {
+          "id": "q2-grip#b1",
+          "quest": "q2-grip",
+          "question": "Which of these molecules can form hydrogen bonds with others of its own kind?",
+          "options": [
+            {
+              "id": "a",
+              "label": "CH₄"
+            },
+            {
+              "id": "b",
+              "label": "CH₃OH"
+            },
+            {
+              "id": "c",
+              "label": "CO₂"
+            },
+            {
+              "id": "d",
+              "label": "PH₃"
+            }
+          ],
+          "answer": "b",
+          "explanation": "In methanol a hydrogen is attached to oxygen, so it can be drawn to a lone pair on the next molecule. The other three have no H on N, O or F."
+        },
+        {
+          "id": "q2-grip#b2",
+          "quest": "q2-grip",
+          "question": "Fluorine (F₂) is a gas at room temperature and iodine (I₂) is a solid. Both are nonpolar. What explains the difference?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Iodine's larger electron cloud is more polarizable, so its dispersion forces are stronger"
+            },
+            {
+              "id": "b",
+              "label": "Iodine molecules are polar"
+            },
+            {
+              "id": "c",
+              "label": "Iodine forms hydrogen bonds"
+            },
+            {
+              "id": "d",
+              "label": "Fluorine has a stronger bond than iodine"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Bigger electron clouds are easier to distort, so heavier nonpolar molecules attract their neighbours more strongly."
+        }
+      ]
+    }
+  }
+}

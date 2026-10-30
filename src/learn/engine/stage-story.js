@@ -153,6 +153,11 @@ export const STAGE_STORY = {
     1: 'The shelters\' cold packs chill the water they dissolve in, and Vess wants to know why they work at all.'
   },
 
+  /* ---- Mirrowen: what is the canal ice, and why does it hold when the water beside it runs? ---- */
+  'q2-grip': {
+    1: 'Vess wants to know how hard molecules hold their neighbours, before she can say what holds the canal ice.'
+  },
+
   /* ---- Kettle: halt the robot foundry ---- */
   'q1-recipe': {
     1: 'Vess holds three scoops from three foundry floors.'
