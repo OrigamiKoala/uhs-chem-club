@@ -302,6 +302,25 @@ Cut or changed at the gate: `q1` s7 (density) is a weigh-and-rank of three jars 
 ranking by the grips already measured and is dropped as a repeat if the audit finds it adds nothing; `q4` s1 to s4 of the brief
 (metal, brass, steel) are not rebuilt (Ligar); `q7` s6–s7 merged into one beyond-the-exam stage. The boss has no new idea.
 
-## Build record
+## Build record (2026-10-30)
 
-(Filled in at the end of the build; see the sections below.)
+**Built.** Seven benches and a boss, 53 stages: `q1-states` 8, `q2-grip` 8, `q3-boil` 8, `q4-solids` 6, `q5-crossing` 8, `q6-solution` 8, `q7-separate` 7, `boss-undertow` 5 (the registry counts the world's 52nd module and 351st stage with it). One new kit, `matter` (extends the heat kit; each bench's instruments register from their own file through `matter-registry.js`), one data module with sources (`engine/matterdata.js`) and one per bench (`matterdata-<name>.js`), 8 story scenes, a question-bank entry per bench (two problems each, worked problems on `q3`, `q6`, `q7`, end problems), a check file per bench in `tools/lib/mirrowen/`, a walkable world (`three/mirrowen*`, `tools/gen-mirrowen-layout.mjs`, `tools/verify-mirrowen.mjs`), the Undertow's arena, rig and corner body, and the player-facing lists.
+
+**Where the build differs from the spec above, and why.**
+- Stage tables for `q3` to `q7` and the boss were written by each bench's builder in `docs/plans/mirrowen-<quest>.md`, not in section 3; section 3 is the plan, those files are the record.
+- `q1`: stages 6 and 7 are a weigh-and-rank and a typed ratio of molecules (1672, from CRC densities), because a picture cannot show ice and water differing by 9 %. The third belief card reads "each molecule itself melts".
+- `q2`: the rank of four ions replaces the brief's rank of four pairs; stage 7 asks for the ratio of every O–H bond in a mole of water to the pull-apart heat (23).
+- `q3`: the typed boiling point is read between heater steps (88 °C at 65 kPa, ±3); the gas over water is at 35 °C and typed (95.7 kPa).
+- `q4`: naphthalene replaces wax (wax melts over a range and would muddy the glass click); the "pick the solid for a job" stage is dropped (Ligar's lattice bench has it).
+- `q5`: the three phase-diagram stages are one labelled experiment (a phase map), and stage 7 is a ranked burn.
+- `q6`: **mass percent has no stage**. The click is the particle count (which of three salts puts the most particles in the water), not dissolving as melting.
+- `q7`: "count the dyes" is folded into the Rf stage to make room for the predict and test pair.
+- The chart's four placeholder quests were replaced by these eight; the saga's Mirrowen entry gained a boss and a clue.
+- The boss phases rebuild five benches with a new case (jars of other substances; four liquids whose grip order is the reverse of their mass order; ethanol at 45 kPa; 54.0 g of ice melted and warmed to 100 °C; 50 mL of 1.50 M stock for 250 mL of 0.300 M).
+- The world was built by a separate builder from `docs/plans/ember-reach-world.md`'s pattern: a round basin and a frozen canal, seven hosts on a 44 m ring; nothing in it has been walked by a person. The quests' `export const ROOM = 'foundry'` and `room: ROOM` lines are dead now (the engine ignores them once a bench is deployed on a world) and were left in place.
+
+**Shared code changed (all opt-in).** `table/tour.js` (`aliasTourKit`), `engine/foes.js` (the species `the undertow`), `engine/foebody.js` (`buildUndertow`), `engine/boss-arena.js`, `engine/boss-models.js`, `engine/instruments.js`, `three/stage.js`, `three/voyage.js`, `learn/worlds3d.js`, `story/saga.js`, `ui/field-manual.js`, `progression/commendations.js`, `progression/requisitions.js`, `tools/verify-learn.mjs` (one block for Mirrowen), `tools/verify-story.mjs` (unit06 required), `tools/verify-bench.mjs`, `verify-arena.mjs`, `verify-voyage.mjs`, `package.json`. Every world script and every shared check was run after the last change and is green.
+
+**Checks (2026-10-30).** `verify:learn`, `:table`, `:story`, `:docs`, `:drills`, `:sync`, `:run`, `:bench`, `:arena`, `:voyage`, `:tallow`, `:lanternfall`, `:ligar`, `:bellows`, `:ember`, `:mirrowen`, `:quest`, `:console`, `:galaxy`, `:progression` all pass. Not run: `npm run verify` itself (it ends in `npm run build`, which empties `dist/`), `:geometry`, `:media`, `:flows`, `:ship`, `:holo`, `:normals`.
+
+**What was and was not played.** See `docs/mirrowen-audit.md`. In short: every stage was solved by script and by a real pointer path at seven viewports; the first stages of `q2-grip` were played by hand; a few stages of `q1`, `q3`, `q5` and `q6` were viewed in the browser; the rest were not looked at.
