@@ -191,6 +191,9 @@ export const STAGE_STORY = {
   },
   'q7-titrate': {
     1: 'Nobody at the foundry knows how strong the acid in the pickling tank is.'
+  },
+  'q8-kinds': {
+    1: 'Vess finds a furnace log that lists reactions nobody has named.'
   }
 };
 
