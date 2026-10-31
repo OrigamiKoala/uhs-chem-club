@@ -177,6 +177,7 @@ a README saying why) or `docs/archive/<date>/`, and cut their wiring out of the 
 - `npm run dev` (Vite :3000 with API middleware) · `npm run build` (empties gitignored `dist/`; keep
   source art in `public/`) · `npm run verify` before shipping.
 - `vercel.json` configures API proxy rewrites, SPA catch-all routing (`/(.*)` -> `/index.html`), and cache-control headers (`index.html` must-revalidate, `/assets/*` immutable).
+- Vercel Web Analytics is enabled via `@vercel/analytics` initialized in `src/analytics.js` and booted from `src/main.js`. Hash-based client route changes (`#/path`) are recorded with concrete paths and parameterized route patterns in `src/router.js`, with hash URLs normalized via `beforeSend`.
 - PWA manifest (`<link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">`) sets `crossorigin="use-credentials"` so Vercel Preview Deployment Protection (SSO) does not redirect uncredentialed manifest fetches to `vercel.com/sso-api` with CORS errors.
 - Chunk invalidation recovery: `vite:preloadError` in `index.html` and chunk error traps in `curriculum.js` / `learn-quest.js` automatically reload with a debounce timestamp when dynamic module imports fail due to mid-session deployments replacing chunk hashes.
 - `verify` = `verify:quest` (20 Charge Gardens stages, chem card ≤3 sentences, copy mirrors in

@@ -34,6 +34,7 @@ import { renderVoyageHud } from './screens/voyage.js';
 import { renderCaseFile } from './screens/casefile.js';
 import { renderDrills } from './screens/drills.js';
 import { renderContracts } from './screens/contracts.js';
+import { trackPageView } from './analytics.js';
 
 const ROUTE_ROOM = {
   '/': 'cockpit',
@@ -303,6 +304,7 @@ export class Router {
     this.appContainer.innerHTML = '';
     renderVoyageHud(this.appContainer);
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    trackPageView('/voyage', '/voyage');
     return true;
   }
 
@@ -416,5 +418,10 @@ export class Router {
     });
 
     window.scrollTo(0, 0);
+
+    const routePattern = routeDef.pattern
+      ? '/' + routeDef.pattern.map(p => p.startsWith(':') ? `[${p.slice(1)}]` : p).join('/')
+      : raw;
+    trackPageView(raw, routePattern);
   }
 }

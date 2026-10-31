@@ -15,6 +15,7 @@ import { nextLevelRequisition } from './progression/requisitions.js';
 import { progressionFeed } from './progression/feed.js';
 import { initPwaAndOrientation } from './pwa-install.js';
 import { sync } from './sync.js';
+import { initAnalytics } from './analytics.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -30,6 +31,9 @@ const TEAM_LIVERY = {
 
 async function bootstrapApp() {
   const appContainer = document.getElementById('app');
+
+  // Initialize Vercel Analytics
+  initAnalytics();
 
   // 0. Full-screen play. Installed to a Home Screen there is no chrome to
   //    hide, so this reports game mode as already on from the first frame.
