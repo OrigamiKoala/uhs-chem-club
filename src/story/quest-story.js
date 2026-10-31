@@ -321,6 +321,16 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the pickling bath is 0.450 mol/L sulfuric acid, so the foundry\'s acid use can be checked against its ledger.'
   },
+  'unit07/q8-kinds': {
+    scene: 'furnace-log',
+    beats: [
+      { to: 0.24, say: 'The furnace log lists the ore reaction. In Fe₂O₃ each iron atom carries +3 and each oxygen −2, and all together they add up to the charge of the ore, 0.' },
+      { to: 0.5, say: 'The other reactant is CO. Its carbon carries +2 and its oxygen −2, worked the same way.' },
+      { to: 0.78, say: 'Six electrons move, two from each carbon to three on each iron. Iron falls from +3 to 0, so it gained electrons and was reduced; carbon rises to +4 and is oxidised.' },
+      { to: 0.97, say: 'The oxygen leaves the ore for the carbon. That is a redox reaction, and what stays behind is iron.' }
+    ],
+    filed: 'Filed: the furnace log shows the ore giving up its oxygen to carbon, so the ore was reduced, not made from nothing.'
+  },
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     beats: [
