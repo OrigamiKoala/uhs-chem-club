@@ -160,16 +160,14 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Wrong Proportions',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The shaker sorts loose atoms by weight. Draw it under a dish to see whether the sample separates into layers.'
-    },
     prompt: 'Tray the sample that does not behave as a true compound.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('b1', 'SAMPLE A', [{ ...WATER, n: 10 }], 22, 13),
-        dishAt('b2', 'SAMPLE B', [{ ...WATER, n: 8 }, { kinds: ['k01'], n: 7 }], 46, 13),
+        dishAt('b1', 'SAMPLE A', [{ ...WATER, n: 10 }], 14, 13),
+        dishAt('b2', 'SAMPLE B', [{ ...WATER, n: 8 }, { kinds: ['k01'], n: 7 }], 38, 13),
+        dishAt('b3', 'SAMPLE C', [{ ...WATER, n: 12 }], 62, 13),
+        dishAt('b4', 'SAMPLE D', [{ ...WATER, n: 6 }, { kinds: ['k08'], n: 5 }], 86, 13),
         shaker()
       ],
       zones: {
@@ -188,9 +186,9 @@ export const STAGES = [
       const t = state.table;
       const good = dishIn(t, 'true');
       const bad = dishIn(t, 'false');
-      if (good.length + bad.length < 2) return { ok: false, notYet: true, msg: 'Tray both samples before you commit.' };
-      if (good.join() === 'b1' && bad.join() === 'b2') return { ok: true };
-      if (bad.includes('b1') && !bad.includes('b2')) return { ok: false, msg: 'One oxygen to two hydrogens is the recipe you built on the last stage, so there is nothing wrong with that sample.' };
+      if (good.length + bad.length < 4) return { ok: false, notYet: true, msg: 'Tray all four samples before you commit.' };
+      if (good.join() === 'b1,b3' && bad.join() === 'b2,b4') return { ok: true };
+      if (bad.includes('b1') || bad.includes('b3')) return { ok: false, msg: 'One oxygen to two hydrogens is the recipe you built on the last stage, so there is nothing wrong with that sample.' };
       if (bad.length === 2) return { ok: false, msg: 'Draw the shaker under Sample A and look at it closely: is any atom in it sitting outside a molecule?' };
       return { ok: false, msg: 'Draw the shaker under both samples and count the layers each one makes.' };
     },
@@ -204,10 +202,6 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Weigh Before and After',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The scale weighs everything on its pan at once. Each time you press "Weigh" it writes the molecules made and the total weight on the strip.'
-    },
     prompt: 'Find out what joining does to the weight of the atoms on the bench.',
     widget: { type: 'table', label: 'The bench' },
     table: heapTable({
@@ -244,10 +238,6 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'One Heap Runs Out',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The maker copies the molecule in its dock, taking the atoms for each copy from the two heaps.'
-    },
     prompt: 'Mark the heap that runs out first, and set the tally to the number of water molecules the two heaps make.',
     widget: { type: 'table', label: 'The bench' },
     table: heapTable({
@@ -504,7 +494,7 @@ const WEIGH_LOOSE = [to('h1', 'container:pan'), to('h2', 'container:pan'), to('o
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
   [joinTo('h1', 'o1'), joinTo('h2', 'o1')],
-  [joinTo('shaker', 'b1'), joinTo('shaker', 'b2'), to('b1', 'tray:true'), to('b2', 'tray:false')],
+  [joinTo('shaker', 'b1'), joinTo('shaker', 'b2'), joinTo('shaker', 'b3'), joinTo('shaker', 'b4'), to('b1', 'tray:true'), to('b3', 'tray:true'), to('b2', 'tray:false'), to('b4', 'tray:false')],
   [
     ...WEIGH_LOOSE,
     free('h1', 58, 29), free('h2', 58, 44), free('o1', 58, 59),
@@ -524,7 +514,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [joinTo('h1', 'o1')],
-  [to('b1', 'tray:false'), to('b2', 'tray:true')],
+  [to('b1', 'tray:false'), to('b2', 'tray:true'), to('b3', 'tray:false'), to('b4', 'tray:true')],
   [...WEIGH_LOOSE, to('h3', 'container:pan'), to('h4', 'container:pan'), to('o2', 'container:pan'), { run: 'scale' }],
   [
     joinTo('h1', 'o1'), joinTo('h2', 'o1'), to('o1', 'container:dock'),

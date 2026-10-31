@@ -14,7 +14,7 @@ export const SPECIES = Object.freeze({
   Fe2O3: { name: 'Iron ore', ink: '#8a4a32' }, CO: { name: 'Carbon monoxide', ink: '#6b665c' }, Fe: { name: 'Iron', ink: '#9aa0a6' },
   CO2: { name: 'Carbon dioxide', ink: '#4a4640' }, CaCO3: { name: 'Limestone', ink: '#c8c0b0' }, CaO: { name: 'Quicklime', ink: '#e0d8c8' },
   NaCl: { name: 'Salt', ink: '#d8d2c4' }, AgNO3: { name: 'Silver nitrate', ink: '#b0b6bc' }, AgCl: { name: 'Silver chloride', ink: '#e8e4dc' },
-  NaNO3: { name: 'Sodium nitrate', ink: '#cfc8b8' }
+  NaNO3: { name: 'Sodium nitrate', ink: '#cfc8b8' }, Al: { name: 'Aluminium', ink: '#b8bcc0' }, Al2O3: { name: 'Alumina', ink: '#e4dccb' }
 });
 export const nameOfSpecies = f => SPECIES[f]?.name || f;
 export const inkOfSpecies = f => SPECIES[f]?.ink || '#b8afa0';
