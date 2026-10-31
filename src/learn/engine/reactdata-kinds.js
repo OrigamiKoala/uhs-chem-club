@@ -152,10 +152,10 @@ export function oxygenOf(eq) {
    ------------------------------------------------------------------ */
 
 export const GAS_TESTS = Object.freeze({
-  glowing: { label: 'Glowing splint' },
-  lit: { label: 'Lit splint' },
-  limewater: { label: 'Limewater' },
-  glass: { label: 'Cold glass' }
+  glowing: { label: 'Glowing splint', use: 'relights in oxygen' },
+  lit: { label: 'Lit splint', use: 'pops in hydrogen' },
+  limewater: { label: 'Limewater', use: 'turns cloudy in carbon dioxide' },
+  glass: { label: 'Cold glass', use: 'mists over in water vapour' }
 });
 export const GAS_TEST_ORDER = Object.freeze(['glowing', 'lit', 'limewater', 'glass']);
 

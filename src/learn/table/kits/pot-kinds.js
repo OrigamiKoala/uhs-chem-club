@@ -332,13 +332,14 @@ function paintRig(ctx, f, state, b) {
   const r = rigRead(state, f.id);
   const top = topOf(f, b.lay);
   const w = f.size.w;
-  let y = top + 4.2;
+  let y = top + 3.6;
   for (const t of GAS_TEST_ORDER) {
     const cur = t === r.testKey;
     const res = r.shown[t];
-    say(ctx, GAS_TESTS[t].label, F.x(25), F.y(y), F.size(2.1, 6.2), { color: cur ? TEXT : DUST, weight: cur ? 700 : 500 });
-    say(ctx, res ? res.text : '—', F.x(w - 2.5), F.y(y), F.size(2.1, 6.2), { align: 'right', color: res ? AMBER : DIM, weight: 700, maxW: F.len(14) });
-    y += 5.6;
+    say(ctx, GAS_TESTS[t].label, F.x(24), F.y(y), F.size(2.1, 6.2), { color: cur ? TEXT : DUST, weight: cur ? 700 : 500 });
+    say(ctx, GAS_TESTS[t].use, F.x(24), F.y(y + 2.9), F.size(1.8, 5.8), { color: DIM, maxW: F.len(w - 26) });
+    say(ctx, res ? res.text : '—', F.x(w - 2.5), F.y(y), F.size(2.1, 6.2), { align: 'right', color: res ? AMBER : DIM, weight: 700, maxW: F.len(w - 44) });
+    y += 6.2;
   }
 }
 
@@ -369,14 +370,14 @@ function paintRxn(ctx, p, state, o) {
 }
 
 registerPiece('rxn', {
-  kind: { r: 7, rect: RXN_RECT, nojoin: true },
+  kind: { r: 6.5, rect: RXN_RECT, nojoin: true },
   paint: paintRxn,
   faceKey: p => `rxn|${p.label}|${p.props.flipped ? 1 : 0}`,
   printed: p => String(p.label)
 });
 
 /** The kinds board: a reading printed beside each reaction card for the kind the "Look for" dial is on. `rows` is `[{card, y}]` (the card's table y). */
-export function kboardFixture(id, at, { rows, title = 'Readings', w = 52, h = 60 } = {}) {
+export function kboardFixture(id, at, { rows, title = 'Readings', w = 108, h = 60 } = {}) {
   return { id, kind: 'kboard', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, rows: rows.map(r => ({ ...r })) } };
 }
 
@@ -417,13 +418,15 @@ function paintBoard(ctx, f, state, b) {
   const bd = boardRead(state);
   const top = f.at.y - f.size.h / 2;
   const w = f.size.w;
+  const left = f.at.x - w / 2;
   for (const row of f.props.rows) {
-    const d = row.y - top;
+    const dy = row.y + 6.3 - top;
+    const dx = row.x - 25.5 - left;
     ctx.fillStyle = '#100f0c';
-    ctx.fillRect(F.x(1.5), F.y(d - 2.95), F.len(w - 3), F.len(5.9));
+    ctx.fillRect(F.x(dx), F.y(dy - 2.2), F.len(51), F.len(4.4));
     const eq = equationOf(state.pieces[row.card].props.eq);
     const lit = bd.marks[row.card]?.[bd.look];
-    say(ctx, readingFor(bd.look, eq), F.x(3), F.y(d), F.size(2.1, 6.2), { color: lit ? AMBER : DUST, weight: 600, maxW: F.len(w - 6) });
+    say(ctx, readingFor(bd.look, eq), F.x(dx + 1), F.y(dy), F.size(1.9, 6.2), { color: lit ? AMBER : DUST, weight: 600, maxW: F.len(49) });
   }
 }
 

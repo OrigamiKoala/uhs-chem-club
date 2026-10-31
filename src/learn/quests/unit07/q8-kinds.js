@@ -187,9 +187,9 @@ export const STAGES = [
       prompt: 'Put each pot in the tray that matches what the window shows.',
       widget,
       table: potTable({
-        pieces: S1_POTS.map((p, i) => chip(p.id, p.name, { x: 11 + i * 18.6, y: 58.4 })),
+        pieces: S1_POTS.map((p, i) => chip(p.id, p.name, { x: 10.5 + i * 18.6, y: 57.6 })),
         fixtures: [w],
-        zones: { trays: trayZone(S1_TRAYS, { x: 122, y: 12 }, 18, { w: 48, h: 16, cell: 24, cellH: 10 }) }
+        zones: { trays: trayZone(S1_TRAYS, { x: 131.2, y: 12 }, 20, { w: 36, h: 14, cell: 18, cellH: 10 }) }
       }),
       hints: [
         'Use the "Pot" dial and the "Run" key to look at each pot, then drag the pot chips into the trays.',
@@ -222,14 +222,14 @@ export const STAGES = [
       widget,
       table: potTable({
         pieces: [
-          jar('fuel', 'Methane', { x: 12, y: 46 }, { species: FUEL, mol: 1 }),
-          gjar('gas', 'Gas jar', { x: 34, y: 46 }, { empty: true }),
-          ...BURN_FILES.map((f, i) => tag(f.id, f.label, { x: 14 + i * 28, y: 58.2 }))
+          jar('fuel', 'Methane', { x: 12, y: 43.5 }, { species: FUEL, mol: 1 }),
+          gjar('gas', 'Gas jar', { x: 34, y: 43.5 }, { empty: true }),
+          ...BURN_FILES.map((f, i) => tag(f.id, f.label, { x: 14 + i * 28, y: 57.6 }))
         ],
         fixtures: [b.fixture, g.fixture],
         zones: {
           slots: [...b.slots, g.slot],
-          trays: [{ id: 'made', label: 'Made by the burning', at: { x: 136, y: 28 }, size: { w: 28, h: 50 }, cell: 28, cellH: 12 }]
+          trays: [{ id: 'made', label: 'Made by the burning', at: { x: 136, y: 34 }, size: { w: 28, h: 46 }, cell: 28, cellH: 12 }]
         }
       }),
       hints: [
@@ -268,9 +268,9 @@ export const STAGES = [
       prompt: 'Put each pot in the tray that matches what the window shows.',
       widget,
       table: potTable({
-        pieces: S3_POTS.map((p, i) => chip(p.id, p.name, { x: 11 + i * 18.6, y: 58.4 })),
+        pieces: S3_POTS.map((p, i) => chip(p.id, p.name, { x: 10.5 + i * 18.6, y: 57.6 })),
         fixtures: [w],
-        zones: { trays: trayZone(S3_TRAYS, { x: 122, y: 14 }, 22, { w: 48, h: 18, cell: 24, cellH: 10 }) }
+        zones: { trays: trayZone(S3_TRAYS, { x: 128, y: 17 }, 28, { w: 44, h: 18, cell: 22, cellH: 10 }) }
       }),
       hints: [
         'Use the "Pot" dial and the "Run" key to look at each pot, then drag the pot chips into the two trays.',
@@ -452,9 +452,9 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 8 */
   (() => {
-    const rows = S8_CARDS.map((c, i) => ({ card: c.id, y: 9 + i * 6.8 }));
-    const board = kboardFixture('board', { x: 83, y: 32 }, { rows });
-    const look = lookFixture('look', { x: 129.5, y: 12 });
+    const rows = S8_CARDS.map((c, i) => ({ card: c.id, x: i < 4 ? 28 : 84, y: 9 + (i % 4) * 14 }));
+    const board = kboardFixture('board', { x: 56, y: 32 }, { rows });
+    const look = lookFixture('look', { x: 130, y: 12 });
     return {
       id: 's8-sort',
       title: 'The Furnace Log',
@@ -465,7 +465,7 @@ export const STAGES = [
       },
       widget,
       table: potTable({
-        pieces: S8_CARDS.map((c, i) => rxn(c.id, c.eq, { x: 29, y: rows[i].y })),
+        pieces: S8_CARDS.map((c, i) => rxn(c.id, c.eq, { x: rows[i].x, y: rows[i].y })),
         fixtures: [board, look],
         zones: { slots: [] }
       }),
@@ -510,14 +510,10 @@ function burnerGases() { return ['CO2', 'H2O']; }
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Turn the dial, press Run, then drag each chip into a tray.'],
-  2: ['A glowing splint relights in oxygen, a lit splint pops in hydrogen,', 'limewater turns cloudy in carbon dioxide, a cold glass mists in water.'],
-  3: ['Turn the dial, press Run, then drag each chip into a tray.'],
   4: ['Press Run, then drag a particle into each slot.'],
   5: ['Type your answer in the box below.'],
-  6: ['A glowing splint relights in oxygen, a lit splint pops in hydrogen,', 'limewater turns cloudy in carbon dioxide, a cold glass mists in water.'],
   7: ['Drag the card you choose into the slot.'],
-  8: ['Tap a card to light it, tap again to put the light out.']
+  8: ['Tap a card to light it,', 'tap again to put it out.']
 };
 applyNotes(STAGES, NOTES);
 
