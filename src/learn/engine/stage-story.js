@@ -185,6 +185,9 @@ export const STAGE_STORY = {
   },
   'q6-stoich': {
     1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
+  },
+  'q7-titrate': {
+    1: 'Nobody at the foundry knows how strong the acid in the pickling tank is.'
   }
 };
 

@@ -81,8 +81,8 @@ export const UNIT_07 = {
       line: "Count the acid in the pickling tank.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q7-titrate.js')
     },
     {
       id: 'q8-kinds',

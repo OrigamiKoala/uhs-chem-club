@@ -648,6 +648,7 @@
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
     },
+<<<<<<< HEAD
     "q4-balance": {
       "problems": [
         {
@@ -952,6 +953,119 @@
           }
         ],
         "finish": "The extra weight of an open pot would be the 9.6 g of oxygen from the air; in a sealed pot it was already inside, so the weight does not change."
+=======
+    "q7-titrate": {
+      "problems": [
+        {
+          "id": "q7-titrate#b1",
+          "quest": "q7-titrate",
+          "question": "25.0 mL of hydrochloric acid is just used up by 20.0 mL of 0.100 mol/L sodium hydroxide. What is the concentration of the acid?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.100 mol/L"
+            },
+            {
+              "id": "b",
+              "label": "0.0800 mol/L"
+            },
+            {
+              "id": "c",
+              "label": "0.125 mol/L"
+            },
+            {
+              "id": "d",
+              "label": "0.0400 mol/L"
+            }
+          ],
+          "answer": "b",
+          "explanation": "20.0 mL of 0.100 mol/L base holds 0.00200 mol of OH⁻, which meets 0.00200 mol of H⁺. In 0.0250 L that is 0.0800 mol/L."
+        },
+        {
+          "id": "q7-titrate#b2",
+          "quest": "q7-titrate",
+          "question": "25.0 mL of 0.100 mol/L sulfuric acid, H₂SO₄, is titrated with 0.100 mol/L sodium hydroxide. How much base reaches the equivalence point?",
+          "options": [
+            {
+              "id": "a",
+              "label": "25.0 mL"
+            },
+            {
+              "id": "b",
+              "label": "12.5 mL"
+            },
+            {
+              "id": "c",
+              "label": "50.0 mL"
+            },
+            {
+              "id": "d",
+              "label": "100 mL"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The acid holds 0.00250 mol of H₂SO₄, which is 0.00500 mol of H⁺. 0.100 mol/L base holds 0.00500 mol in 0.0500 L, which is 50.0 mL."
+        }
+      ],
+      "worked": {
+        "id": "q7-titrate#w",
+        "quest": "q7-titrate",
+        "title": "Sulfuric Acid Against Sodium Hydroxide",
+        "setup": "A flask holds 20.0 mL of 0.150 mol/L sulfuric acid, H₂SO₄, and it is titrated with 0.200 mol/L sodium hydroxide, NaOH. Find the volume of base at the equivalence point.",
+        "steps": [
+          {
+            "say": "How many moles of H₂SO₄ are in the flask?",
+            "kind": "number",
+            "answer": 0.003,
+            "calc": "0.150*0.0200",
+            "unit": "mol",
+            "tol": 5e-05,
+            "hint": "Moles = concentration × volume in litres.",
+            "explain": "0.150 mol/L × 0.0200 L = 0.00300 mol."
+          },
+          {
+            "say": "How many moles of H⁺ does that give?",
+            "kind": "number",
+            "answer": 0.006,
+            "calc": "2*0.150*0.0200",
+            "unit": "mol",
+            "tol": 5e-05,
+            "hint": "Each H₂SO₄ particle gives two H⁺.",
+            "explain": "2 × 0.00300 mol = 0.00600 mol of H⁺."
+          },
+          {
+            "say": "How many moles of OH⁻ must the base supply at the equivalence point?",
+            "kind": "number",
+            "answer": 0.006,
+            "calc": "2*0.150*0.0200",
+            "unit": "mol",
+            "tol": 5e-05,
+            "hint": "One OH⁻ uses up one H⁺.",
+            "explain": "The moles of OH⁻ equal the moles of H⁺: 0.00600 mol."
+          },
+          {
+            "say": "What volume of 0.200 mol/L base holds that many moles, in litres?",
+            "kind": "number",
+            "answer": 0.03,
+            "calc": "0.00600/0.200",
+            "unit": "L",
+            "tol": 0.0002,
+            "hint": "Volume = moles / concentration.",
+            "explain": "0.00600 mol / 0.200 mol/L = 0.0300 L."
+          },
+          {
+            "say": "How many mL is that?",
+            "kind": "number",
+            "answer": 30,
+            "calc": "0.00600/0.200*1000",
+            "unit": "mL",
+            "tol": 0.2,
+            "hint": "There are 1000 mL in a litre.",
+            "explain": "0.0300 L = 30.0 mL."
+          }
+        ],
+        "finish": "The sulfuric acid takes 30.0 mL of the base, which is more base than the 20.0 mL of acid because each acid particle gives two H⁺."
+>>>>>>> world/unit07-q7
       }
     }
   }

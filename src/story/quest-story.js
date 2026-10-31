@@ -311,6 +311,16 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: forty tons of ore can give at most 28 tons of iron, so a ledger that shows fifty is forged.'
   },
+  'unit07/q7-titrate': {
+    scene: 'burette-count',
+    beats: [
+      { to: 0.24, say: 'A burette lets base into the acid in measured drops, and its reading is the drops counted. Here each drop is half a millilitre.' },
+      { to: 0.5, say: 'Every drop holds the same moles of base, and each mole of base uses up a mole of acid. The flask is counted against the drops, disc for disc.' },
+      { to: 0.74, say: 'When the discs match, that is the equivalence point. The dye turns on the very next drop, which is the endpoint.' },
+      { to: 0.95, say: 'So the acid\'s strength is the base\'s strength times the volume counted, over the volume in the flask.' }
+    ],
+    filed: 'Filed: the pickling bath is 0.450 mol/L sulfuric acid, so the foundry\'s acid use can be checked against its ledger.'
+  },
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     beats: [
