@@ -1,5 +1,5 @@
 /**
- * kettle/host-plan.js — What each of Kettle's eight hosts is, where it stands, and how much ground it takes.
+ * kettle/host-plan.js — What each of Kettle's nine hosts is, where it stands, and how much ground it takes.
  *
  * Pure data, no THREE: the layout generator, the world and `verify:kettle` all stand on this one table.
  * `extent` is the host's footprint in ITS OWN frame, `[x0, x1, z0, z1]`: x to the player's right, z toward the
@@ -75,5 +75,11 @@ export const HOST_PLAN = {
     pos: [42, -40], face: [-1, 0],
     // The furnace's tapping floor: the tap hole and its runner, a ladle on rails and a pair of flues with a hood.
     extent: [-7.0, 7.0, -9.4, 0.8]
+  },
+  'site-9': {
+    questId: 'q9-hsab', label: 'Bench 9 - Hard and Soft', title: 'Hard and Soft', structure: 'refining-vat', kind: 'ionic', skin: 'deck', plate: 'KET-09',
+    pos: [-42, -48], face: [1, 0],
+    // The refining bay: two precipitation vats, an overhead reagent feed manifold, and carboys.
+    extent: [-7.0, 7.0, -8.6, 0.8]
   }
 };

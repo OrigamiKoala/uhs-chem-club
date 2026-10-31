@@ -194,6 +194,9 @@ export const STAGE_STORY = {
   },
   'q8-kinds': {
     1: 'Vess finds a furnace log that lists reactions nobody has named.'
+  },
+  'q9-hsab': {
+    1: 'Vess finds a vat of mixed metal waste that must be separated before the river reaches it.'
   }
 };
 

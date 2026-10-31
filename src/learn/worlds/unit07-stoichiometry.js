@@ -94,6 +94,15 @@ export const UNIT_07 = {
       module: () => import('../quests/unit07/q8-kinds.js')
     },
     {
+      id: 'q9-hsab',
+      title: 'Hard and Soft',
+      line: 'Predict precipitation and reactions by ion firmness.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit07/q9-hsab.js')
+    },
+    {
       id: 'boss-golem',
       title: 'Recipe Golem',
       line: 'Starve the foundry golem and weigh its recipe.',

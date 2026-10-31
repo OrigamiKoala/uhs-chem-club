@@ -3,7 +3,7 @@
  * gen-kettle-layout.mjs — Lays out Kettle's ground and writes `src/three/world-data/kettle.json`.
  *
  * Kettle is an automated foundry works on a soda flat. A slag road runs north from the landing pad and the
- * spawn to the blast furnace; the eight hosts stand either side of it (the odd benches on the west, the even
+ * spawn to the blast furnace; the nine hosts stand either side of it (the odd benches on the west, the even
  * on the east, plates turned to the road), a spur runs to each approach, and a lane of work lamps lines the
  * road and every spur in bench order. Behind the open ground in front of the furnace (where the Recipe Golem
  * is fought) stand a row of silos, two conveyors and the stacks; tanks, slag heaps, ingots and crates fill
@@ -99,7 +99,7 @@ for (const s of sites) taken.push({ x: s.approachPos[0], z: s.approachPos[2], r:
 const roads = [];
 const trunk = [[0, SPAWN[2] + 2], [0, ARENA.player[2] + 1]];
 roads.push({ id: 'works-road', width: 3.4, pts: trunk });
-for (let z = SPAWN[2]; z >= -38; z -= 5) taken.push({ x: 0, z, r: 3.4 });
+for (let z = SPAWN[2]; z >= -48; z -= 5) taken.push({ x: 0, z, r: 3.4 });
 for (const s of sites) {
   const [ax, , az] = s.approachPos;
   roads.push({ id: `spur-${s.id}`, width: 2.4, pts: [[0, az], [ax * 1.0, az]] });
@@ -145,7 +145,7 @@ scatter('crate-stack', 6, (x, z) => Math.abs(x) > 50 || z > 66, 2.0, () => ({ ro
 
 /* ---- the lamps: down the road, and along every spur, in bench order ---- */
 const lampAt = (x, z) => landmarks.push({ asset: 'lamp-post', pos: [round(x), 0, round(z)], radius: 0.6, minTier: 'T3' });
-for (let z = SPAWN[2] - 4, i = 0; z >= -36; z -= 10, i++) lampAt(i % 2 ? 2.8 : -2.8, z);
+for (let z = SPAWN[2] - 4, i = 0; z >= -48; z -= 10, i++) lampAt(i % 2 ? 2.8 : -2.8, z);
 for (const s of sites) {
   const [ax, , az] = s.approachPos;
   const dir = Math.sign(ax);

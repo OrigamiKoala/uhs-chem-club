@@ -188,7 +188,7 @@ a README saying why) or `docs/archive/<date>/`, and cut their wiring out of the 
   buried bodies, walkability flood-fill, lamps-only-lit, shader patches; `:ligar` also holds the mine:
   doorways, grades, rock over every roof, bays inside chambers, hills unclimbed, the guide's route, walls
   that hold, lamps in every working, the cover mask), `:arena` (the boss table's ground in all seven worlds, the seven boss bodies, the look up), `:bench` (every built instrument
-  on its real bench at six aspects, real pointer paths, foe bodies, and the bench bay in all seven worlds), `:kettle` (walkable foundry works, eight hosts, Golem arena), `:mirrowen` (walkable tidal shelf, seven hosts, Undertow arena), `:holo`, `:normals`, then `build`.
+  on its real bench at six aspects, real pointer paths, foe bodies, and the bench bay in all seven worlds), `:kettle` (walkable foundry works, nine hosts, Golem arena), `:mirrowen` (walkable tidal shelf, seven hosts, Undertow arena), `:holo`, `:normals`, then `build`.
 - Other: `deploy:backend` (clasp), `bake:stills`, `bake:video`, `seed`, `test:load`.
 - Test hooks: `globalThis.__LQ_TEST__` is read in `stagerunner.js`/`plates.js` and inert without it.
 
@@ -200,7 +200,7 @@ How to build and audit a Learn world, the pitfall ledger and each world's open i
 
 Mirrowen (`unit06`) is on the **matter kit** (`table/kits/matter.js`, which extends the heat kit): each bench's instruments and pieces live in their own `matter-<name>.js` and register through `matter-registry.js`; its pure data is `engine/matterdata*.js`; each bench has its own check file in `tools/lib/mirrowen/` (found by name, run from `verify:learn`).
 
-Kettle (`unit07`) is on the **pot kit** (`table/kits/pot.js`): each bench's instruments and pieces live in their own `pot-<name>.js` and register through `pot-registry.js`; its pure data is `engine/reactdata*.js`; each bench has its own check file in `tools/lib/kettle-*.mjs` (run from `verify:learn` and `verify:kettle`). Walkable foundry works in `src/three/kettle.js` with eight hosts and the Recipe Golem arena.
+Kettle (`unit07`) is on the **pot kit** (`table/kits/pot.js`): each bench's instruments and pieces live in their own `pot-<name>.js` and register through `pot-registry.js`; its pure data is `engine/reactdata*.js`; each bench has its own check file in `tools/lib/kettle-*.mjs` (run from `verify:learn` and `verify:kettle`). Walkable foundry works in `src/three/kettle.js` with nine hosts and the Recipe Golem arena. Quest 9 (`q9-hsab`) teaches Hard Soft Acid Base Theory (HSAB), polarizability, and selective precipitation using the firmness probe (`hsabprobe`), reaction wells (`hsabwells`), and bond comparator (`hsabbond`).
 
 Ligar (`unit03/q2-lattice` — "Stone and Wire"): material blocks on the bench (`bonds.js`, `ligar-props.js`, `ligar-materials-3d.js`) render physical 3D material models in refractory stone crucible basins with brass bezels:
 - **Ionic crystal lattice** (`SALT` / `grid`): alternating 3D array of small Na⁺ and large Cl⁻ spheres interconnected by dynamic bonds.

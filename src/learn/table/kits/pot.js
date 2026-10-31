@@ -23,6 +23,7 @@ import './pot-balance.js';
 import './pot-ionic.js';
 import './pot-titrate.js';
 import './pot-kinds.js';
+import './pot-hsab.js';
 
 export const POT_KIT_ID = 'pot';
 export const POT_BOUNDS = HEAT_BOUNDS;

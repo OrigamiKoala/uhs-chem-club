@@ -1120,7 +1120,7 @@
           "explanation": "Sodium, potassium and nitrate ions never leave the water, and chloride ions only do so with a few partners such as Ag⁺ and Pb²⁺. Swapping partners gives NaCl and KNO₃, which both stay dissolved."
         }
       ]
-  },
+    },
     "q8-kinds": {
       "problems": [
         {
@@ -1249,6 +1249,60 @@
         ],
         "finish": "Add the oxygens, take the total from the charge, share it out, then compare the numbers before and after."
       }
+    },
+    "q9-hsab": {
+      "problems": [
+        {
+          "id": "q9-hsab#b1",
+          "quest": "q9-hsab",
+          "question": "Under Hard Soft Acid Base (HSAB) theory, why does silver fluoride (AgF) dissolve in water while silver iodide (AgI) precipitates?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Ag⁺ and I⁻ are both soft, forming strong covalent overlap that water cannot break"
+            },
+            {
+              "id": "b",
+              "label": "Ag⁺ and F⁻ are both hard, forming a weak ionic bond"
+            },
+            {
+              "id": "c",
+              "label": "Iodide ions are smaller than fluoride ions and pack closer together"
+            },
+            {
+              "id": "d",
+              "label": "Silver ions always form soluble compounds with all halides"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Silver (Ag⁺) is a soft cation and iodide (I⁻) is a soft anion. Their soft-soft pairing forms strong covalent orbital overlap that drives precipitation, while mismatched AgF remains dissolved in water."
+        },
+        {
+          "id": "q9-hsab#b2",
+          "quest": "q9-hsab",
+          "question": "Which reagent selectively precipitates soft cadmium ions (Cd²⁺) from an industrial solution containing hard calcium ions (Ca²⁺)?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Sodium sulfide (Na₂S), because soft sulfide binds soft cadmium into insoluble CdS"
+            },
+            {
+              "id": "b",
+              "label": "Sodium fluoride (NaF), because hard fluoride binds soft cadmium"
+            },
+            {
+              "id": "c",
+              "label": "Sodium chloride (NaCl), because all chloride salts precipitate"
+            },
+            {
+              "id": "d",
+              "label": "Sodium nitrate (NaNO₃), because all nitrates precipitate"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Sulfide (S²⁻) is a soft base that forms a matched, insoluble precipitate with soft metal cations like Cd²⁺, while hard calcium sulfide remains dissolved in water."
+        }
+      ]
     }
   }
 }

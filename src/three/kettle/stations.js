@@ -1,5 +1,5 @@
 /**
- * kettle/stations.js — The eight hosts: the pieces of the foundry works a Learn bench is built into.
+ * kettle/stations.js — The nine hosts: the pieces of the foundry works a Learn bench is built into.
  *
  * A bench on Kettle is not a bench in a room. It is a working point of the works: the assay yard's ore bays, the
  * labelling shed's crate racks, a sealed charging pot on its weighbridge, the furnace control room with its recipe
@@ -375,6 +375,48 @@ export function buildTappingFloor(w) {
   return finish(h, [-3.2, -1.8, [2.9, 1.8]]);
 }
 
+/* ------------------------------------------------------------------------ 9 */
+
+/** The refining bay: two precipitation vats, an overhead reagent feed manifold, and carboys. */
+export function buildRefiningBay(w) {
+  const h = start(w, 'site-9', 'refining-vat');
+  const { k, M, g } = h;
+  const Z0 = -8.2, Z1 = -4.0;
+  const vat = (x0, x1, z0, z1, rimMat, liquidMat) => {
+    k.box(g, [x1 - x0, 1.1, 0.25], rimMat, [(x0 + x1) / 2, 0.55, z0]);
+    k.box(g, [x1 - x0, 1.1, 0.25], rimMat, [(x0 + x1) / 2, 0.55, z1]);
+    for (const x of [x0, x1]) k.box(g, [0.25, 1.1, z1 - z0], rimMat, [x, 0.55, (z0 + z1) / 2]);
+    k.box(g, [x1 - x0 - 0.3, 0.06, z1 - z0 - 0.3], liquidMat, [(x0 + x1) / 2, 0.9, (z0 + z1) / 2], null, false);
+  };
+  vat(-6.2, -0.6, Z0, Z1, M.concrete, M.pool);
+  vat(0.6, 6.2, Z0, Z1, M.darkSteel, M.acid);
+
+  for (const sx of [-6.4, 6.4]) for (const sz of [Z1, Z0]) k.post(g, sx, sz, 4.2, 0.18);
+  for (const sz of [Z1, Z0]) k.box(g, [13.2, 0.2, 0.2], M.steel, [0, 4.2, sz]);
+  k.box(g, [0.2, 0.2, Z1 - Z0], M.steel, [0, 4.2, (Z0 + Z1) / 2]);
+
+  for (const x of [-3.4, 3.4]) {
+    k.cyl(g, [0.08, 0.08, 1.8, 12], M.copper, [x, 3.2, (Z0 + Z1) / 2]);
+    k.cyl(g, [0.14, 0.14, 0.2, 12], M.brass, [x, 2.2, (Z0 + Z1) / 2]);
+  }
+
+  const rx = -5.4;
+  k.box(g, [1.4, 0.6, 0.9], M.steel, [rx, 0.3, -1.8]);
+  for (let i = 0; i < 2; i++) {
+    k.cyl(g, [0.18, 0.18, 0.5, 14], M.paintYellow, [rx - 0.35 + i * 0.7, 0.85, -1.8]);
+  }
+  k.tag(g, 'REFINING VAT', { w: 0.85, h: 0.17 }, [-3.4, 1.2, Z1 + 0.2]);
+
+  h.colliders.push(
+    { lx: -3.4, lz: (Z0 + Z1) / 2, hw: 2.9, hd: 2.2 },
+    { lx: 3.4, lz: (Z0 + Z1) / 2, hw: 2.9, hd: 2.2 },
+    { lx: rx, lz: -1.8, hw: 0.8, hd: 0.6 }
+  );
+  for (const sx of [-6.4, 6.4]) for (const sz of [Z1, Z0]) h.colliders.push({ lx: sx, lz: sz, r: 0.22 });
+
+  return finish(h, [3.2, -1.6, [-2.9, 1.6]]);
+}
+
 /** Builder per site id. */
 export const HOST_BUILDERS = {
   'site-1': buildAssayYard,
@@ -384,5 +426,6 @@ export const HOST_BUILDERS = {
   'site-5': buildEffluentSump,
   'site-6': buildChargeFloor,
   'site-7': buildPicklingLine,
-  'site-8': buildTappingFloor
+  'site-8': buildTappingFloor,
+  'site-9': buildRefiningBay
 };

@@ -341,6 +341,16 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the furnace log shows the ore giving up its oxygen to carbon, so the ore was reduced, not made from nothing.'
   },
+  'unit07/q9-hsab': {
+    scene: 'hsab-vat',
+    beats: [
+      { to: 0.25, say: 'Ions are not all equally firm. Hard ions are small and compact with rigid clouds, while soft ions are large and squishy.' },
+      { to: 0.5, say: 'Hard cations like calcium lock to hard fluoride with strong ionic attraction. Mismatched pairs stay dissolved in the water.' },
+      { to: 0.75, say: 'Soft silver ions share electrons with soft sulfide through covalent overlap, forming an insoluble black precipitate.' },
+      { to: 0.95, say: 'Hard soft acid base theory explains how the foundry selectively separates precious metals from furnace waste.' }
+    ],
+    filed: 'Filed: selective sulfide precipitation separated twenty tons of real silver from the slag, proving thirty tons of claimed metal never existed.'
+  },
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     beats: [

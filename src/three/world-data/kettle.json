@@ -164,6 +164,20 @@
       ]
     },
     {
+      "id": "spur-site-9",
+      "width": 2.4,
+      "pts": [
+        [
+          0,
+          -48
+        ],
+        [
+          -37.4,
+          -48
+        ]
+      ]
+    },
+    {
       "id": "pad-spur",
       "width": 2.6,
       "pts": [
@@ -764,6 +778,16 @@
     {
       "asset": "lamp-post",
       "pos": [
+        2.8,
+        0,
+        -42
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
         -12,
         0,
         58.1
@@ -1004,6 +1028,36 @@
     {
       "asset": "lamp-post",
       "pos": [
+        -12,
+        0,
+        -49.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        -46.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -34,
+        0,
+        -49.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
         14,
         0,
         84.41
@@ -1216,6 +1270,29 @@
         "z": -40,
         "r": 11.06
       }
+    },
+    {
+      "id": "site-9",
+      "questId": "q9-hsab",
+      "stage": 9,
+      "pos": [
+        -42,
+        0,
+        -48
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        -48
+      ],
+      "label": "Bench 9 - Hard and Soft",
+      "structure": "refining-vat",
+      "built": true,
+      "flat": {
+        "x": -43.5,
+        "z": -48,
+        "r": 10.77
+      }
     }
   ],
   "spawn": {
@@ -1327,6 +1404,18 @@
           1.2,
           -40
         ]
+      },
+      "site-9": {
+        "pos": [
+          -37.4,
+          1.6,
+          -48
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          -48
+        ]
       }
     }
   },
@@ -1339,7 +1428,8 @@
       "site-5",
       "site-6",
       "site-7",
-      "site-8"
+      "site-8",
+      "site-9"
     ]
   },
   "tracks": []

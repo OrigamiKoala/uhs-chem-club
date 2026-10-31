@@ -7,7 +7,7 @@
  *  - NO TWO THINGS OCCUPY THE SAME SPACE, from the declaration (every footprint disjoint, every host's extent and
  *    lane clear of every free prop) AND from the world as built: the real `KettleWorld` is constructed in Node and
  *    every pair of bodies measured; nothing is buried under the ground it stands on.
- *  - All eight benches have a host, every site names a quest the chart declares, and every LIVE quest has a site and
+ *  - All nine benches have a host, every site names a quest the chart declares, and every LIVE quest has a site and
  *    a bench anchor (a quest that is not live yet already has its host, so the bench lands in it the day it goes live).
  *  - A SITE LABEL IS A SIGNPOST: `Bench N - <what it teaches>`, six words at most, sharing a word with its quest.
  *  - Every site FACES ITS APPROACH, stands on level ground, and its bench deploys onto a real plate under a work lamp.
@@ -82,7 +82,7 @@ const chart = readFileSync(join(root, 'src/learn/worlds/unit07-stoichiometry.js'
 const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:\s*["']([^"']+)["'][\s\S]*?status:\s*'(\w+)'/g)].map(m => ({ id: m[1], title: m[2], status: m[3] }));
 {
   const benches = chartQuests.filter(q => !q.id.startsWith('boss'));
-  check(benches.length === 8, `unit07 charts ${benches.length} benches`, `the unit07 chart lists ${benches.length} benches, not eight`);
+  check(benches.length === 9, `unit07 charts ${benches.length} benches`, `the unit07 chart lists ${benches.length} benches, not nine`);
   const siteQuests = world.sites.map(s => s.questId);
   const missing = benches.filter(q => !siteQuests.includes(q.id));
   check(missing.length === 0, 'every charted bench has a host on the ground, live or not', `charted benches with no site: ${missing.map(q => q.id).join(', ')}`);
