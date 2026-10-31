@@ -366,7 +366,7 @@ export const STAGES = [
       reward: {
         log: 'Manganese carries +7 in MnO₄⁻.',
         title: 'Oxidation Number',
-        body: 'The oxidation number of an atom is the charge it would carry if the electrons it shares went wholly to one atom. The numbers on all the atoms of a species add up to its charge, so manganese in MnO₄⁻ is +7. A number that rises means electrons were lost.'
+        body: "An atom's oxidation number is the charge it would carry if the electrons it shares went wholly to one atom. The numbers on a species add up to its charge, so manganese in MnO₄⁻ is +7. A rising number means electrons were lost."
       }
     };
   })(),
