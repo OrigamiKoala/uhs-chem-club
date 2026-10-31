@@ -648,7 +648,6 @@
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
     },
-<<<<<<< HEAD
     "q4-balance": {
       "problems": [
         {
@@ -953,7 +952,8 @@
           }
         ],
         "finish": "The extra weight of an open pot would be the 9.6 g of oxygen from the air; in a sealed pot it was already inside, so the weight does not change."
-=======
+      }
+    },
     "q7-titrate": {
       "problems": [
         {
@@ -1065,7 +1065,6 @@
           }
         ],
         "finish": "The sulfuric acid takes 30.0 mL of the base, which is more base than the 20.0 mL of acid because each acid particle gives two H⁺."
->>>>>>> world/unit07-q7
       }
     }
   }
