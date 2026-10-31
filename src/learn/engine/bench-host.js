@@ -91,6 +91,7 @@ const viewerListeners = new Set();
 /** Called by `BenchViewer3D`'s constructor. */
 export function registerBenchViewer(v) {
   if (!v) return;
+  if (typeof window !== 'undefined') window.__activeBenchViewer = v;
   const at = liveViewers.indexOf(v);
   if (at >= 0) liveViewers.splice(at, 1);
   liveViewers.push(v);

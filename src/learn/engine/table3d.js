@@ -88,7 +88,10 @@ export class Table3D extends BenchViewer3D {
     super(document.body, { backdrop: opts.backdrop || 'lab', world: opts.world || null, room: opts.room || null });
     this.built = true;
     this.host = host || null;
-    if (this.host) this.host.innerHTML = '';
+    if (this.host) {
+      this.host.innerHTML = '';
+      this.host.__table3d = this;
+    }
 
     this.onAction = opts.onAction || null;
     this.toolIds = opts.tools || [];
@@ -1134,6 +1137,7 @@ export class Table3D extends BenchViewer3D {
         this.entries.set(p.id, e);
         this.lifts[p.id] = this.lifts[p.id] || 0;
       }
+      e.group.userData.sync?.(p, this.state);
       e.group.userData.ring.visible = this.state.carry.held === p.id;
     }
     for (const [id, e] of [...this.entries]) {

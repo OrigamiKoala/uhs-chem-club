@@ -28,6 +28,7 @@
 import * as THREE from 'three';
 import { roundedSlab, wallGeometry, lathe, jitter } from './table-props.js';
 import { mulberry32, hashId } from './plates.js';
+import { build3DMaterialBlock } from './ligar-materials-3d.js';
 
 /** The world these props belong to: a table asks for them when its quest's world is this one. */
 export const LIGAR_SKIN = 'unit03';
@@ -221,97 +222,8 @@ export function buildAtomBall(c, { face, body, flat = false }) {
  *
  * `molten` softens the block's outline, as a thing at heat is; the heat itself is on the hotplate under it.
  */
-export function buildOreBlock(c, { tint = 'bone', sealed = false, molten = false, seedId = 'x', atoms = [], cols = 0, rows = 0, ions = false }) {
-  const { hw, hh, mats: m } = c;
-  const g = new THREE.Group();
-  const seed = (hashId(seedId) % 9973) + 1;
-  const bodyH = 0.062;
-  const w = hw * 1.96;
-  const d = hh * 1.96;
-  const k = jitter(seedId, 0.07);
-  if (sealed) {
-    // A steel crate: a rounded case with riveted straps and a hazard-yellow band, its lid the picture.
-    g.add(at(mesh(roundedSlab(w, d, bodyH, 0.016, 0.003), m.ligIron), 0, 0, 0));
-    g.add(at(mesh(roundedSlab(w * 0.985, d * 0.2, 0.006, 0.003, 0.0012), m.ligHazard), 0, bodyH, d * 0.4));
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      const b = bolt(m.labSteel, 0.0058, true);
-      b.position.set(sx * (w / 2 - 0.016), bodyH + 0.0005, sz * (d / 2 - 0.016));
-      g.add(b);
-    }
-  } else {
-    const colour = new THREE.Color(oreColour(tint)).multiplyScalar(k);
-    const rock = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.93, metalness: tint === 'rust' ? 0.12 : 0.02 });
-    g.add(mesh(rockGeometry({ w, h: bodyH, d, seed, colour, round: 0.02, rough: molten ? 0.002 : 0.007 }), c.own(rock)));
-  }
-  // The sawn face: a flat window cut into the top, polished, with the kit's card on it (the lattice as it is now, the block's name,
-  // what has been done to it, the lamp the leads light), set in a worn brass bezel under a pane of glass. The atoms of the picture stand
-  // up under the glass as little balls, so what is drawn is also something seen from the side.
-  const fw = w * 0.9;
-  const fd = d * 0.88;
-  const glassY = bodyH + 0.0125;
-  const rim = mesh(wallGeometry(fw + 0.02, fd + 0.02, 0.008, 0.0125, 0.006, 0.0015), m.ligBrassWorn);
-  rim.position.set(0, bodyH - 0.0005, 0);
-  g.add(rim);
-  const base = mesh(roundedSlab(fw + 0.012, fd + 0.012, 0.005, 0.005, 0.0015), m.ligEnamelBlack);
-  base.position.set(0, bodyH - 0.001, 0);
-  g.add(base);
-  const pic = mesh(new THREE.PlaneGeometry(fw, fd), c.face(), { cast: false });
-  pic.rotation.x = -Math.PI / 2;
-  pic.position.set(0, bodyH + 0.0045, 0);
-  g.add(pic);
-  if (atoms.length && cols) {
-    // The picture's own mapping (`paintSlabPicture`): the card is 756 x 576 px at the table's scale, the picture the top 72% of it, inset by
-    // 7% of its smaller side; a ball's radius is a share of what a cell has to itself.
-    const W = 756; const H = 576;
-    const picW = W - 3; const picH = H * 0.72 - 1.5;
-    const pad = Math.max(2, Math.min(picW, picH) * 0.07);
-    const rPx = Math.max(1.4, Math.min((picW - pad * 2) / (cols * 2.7), (picH - pad * 2) / (rows * 2.7)));
-    const r3 = rPx / W * fw * 1.05;
-    const live = atoms.filter(a => !a.gone);
-    const ballGeo = new THREE.SphereGeometry(1, 14, 10);
-    const ballMat = c.own(new THREE.MeshStandardMaterial({ roughness: 0.38, metalness: 0.12 }));
-    const balls = new THREE.InstancedMesh(ballGeo, ballMat, Math.max(1, live.length));
-    balls.castShadow = false;
-    const mtx = new THREE.Matrix4(); const col = new THREE.Color();
-    const tintCol = new THREE.Color(ORE_BALL[tint] ?? ORE_BALL.bone);
-    live.forEach((a, i) => {
-      const u = (1.5 + pad + a.x * (picW - pad * 2)) / W;
-      const v = (1.5 + pad + a.y * (picH - pad * 2)) / H;
-      mtx.compose(new THREE.Vector3((u - 0.5) * fw, bodyH + 0.0045 + r3 * 0.9, (v - 0.5) * fd), new THREE.Quaternion(), new THREE.Vector3(r3, r3, r3));
-      balls.setMatrixAt(i, mtx);
-      // An ion is lighter for a plus and darker for a minus, and wears the sign; a molecule's atoms all one tone.
-      col.copy(tintCol).multiplyScalar(ions ? (a.sign > 0 ? 1.25 : 0.7) : 1);
-      balls.setColorAt(i, col);
-    });
-    balls.count = live.length;
-    balls.instanceMatrix.needsUpdate = true;
-    if (balls.instanceColor) balls.instanceColor.needsUpdate = true;
-    g.add(balls);
-    if (ions) {
-      // The sign on top of each ion: a bar for a minus, a cross for a plus, in dark ink (never told by colour alone).
-      const bar = new THREE.BoxGeometry(1, 0.0006, 0.22);
-      const barMat = c.own(new THREE.MeshBasicMaterial({ color: 0x15130f }));
-      const strokes = live.reduce((n, a) => n + (a.sign > 0 ? 2 : 1), 0);
-      const marks = new THREE.InstancedMesh(bar, barMat, Math.max(1, strokes));
-      let k = 0;
-      live.forEach(a => {
-        const u = (1.5 + pad + a.x * (picW - pad * 2)) / W;
-        const v = (1.5 + pad + a.y * (picH - pad * 2)) / H;
-        const x = (u - 0.5) * fw; const z = (v - 0.5) * fd; const y = bodyH + 0.0045 + r3 * 1.78;
-        const put = rot => { mtx.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rot, 0)), new THREE.Vector3(r3 * 0.9, r3 * 0.9, r3 * 0.9)); marks.setMatrixAt(k++, mtx); };
-        put(0);
-        if (a.sign > 0) put(Math.PI / 2);
-      });
-      marks.count = k;
-      marks.instanceMatrix.needsUpdate = true;
-      g.add(marks);
-    }
-  }
-  const pane = mesh(new THREE.PlaneGeometry(fw, fd), m.labPane, { cast: false, receive: false });
-  pane.rotation.x = -Math.PI / 2;
-  pane.position.set(0, glassY, 0);
-  g.add(pane);
-  return done(g, glassY + 0.001);
+export function buildOreBlock(c, opts = {}) {
+  return build3DMaterialBlock(c, opts);
 }
 
 /** A small panel lamp: a brass collar and a lens, lit amber while `on` (a mark of light, not a light). */

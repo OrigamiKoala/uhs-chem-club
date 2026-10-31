@@ -1056,7 +1056,7 @@ function paintFixture(ctx, f, state, b) {
 const BLOCK_TOP = 0.078;
 
 function piece3d(p, state, c) {
-  if (c.skin !== LIGAR_SKIN) return null;
+  if (c.skin && c.skin !== LIGAR_SKIN) return null;
   switch (p.kind) {
     case 'slab': {
       // The magnified picture stands up: the atoms `planSlab` lays (the same cells the flat picture paints, less any the tongs lifted) are
@@ -1065,7 +1065,25 @@ function piece3d(p, state, c) {
       const lay = v.d.sealed ? null : planSlab(v.d, v.phase);
       const gone = new Set(v.lifted);
       const atoms = lay ? lay.cells.map((cell, i) => ({ x: cell.x, y: cell.y, sign: cell.sign || 0, gone: gone.has(i) })) : [];
-      return buildOreBlock(c, { tint: v.d.tint, sealed: Boolean(v.d.sealed), molten: v.molten, seedId: p.id, atoms, cols: lay?.cols || 0, rows: lay?.rows || 0, ions: v.d.build === 'grid' });
+      return buildOreBlock(c, {
+        decl: v.d,
+        label: p.label,
+        tint: v.d.tint,
+        sealed: Boolean(v.d.sealed),
+        molten: v.molten,
+        temp: v.temp,
+        phase: v.phase,
+        blow: v.blow,
+        leads: v.leads,
+        current: v.current,
+        seedId: p.id,
+        piece: p,
+        state,
+        atoms,
+        cols: lay?.cols || 0,
+        rows: lay?.rows || 0,
+        ions: v.d.build === 'grid'
+      });
     }
     case 'salt': return buildSaltSpecimen(c, { seedId: p.id, molten: saltView(p, state).molten });
     case 'pairtag': return buildPairTag(c, { seedId: p.id });

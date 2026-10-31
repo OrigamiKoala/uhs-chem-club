@@ -572,7 +572,7 @@ export function createRunner(container, ctx, cfg) {
         // A quest with no world under it stands its table in a room of its own (`rooms.js`).
         room: cfg.room,
         // Whose benches these are (`unit03`): a kit dresses its pieces in that world's own gear (`ligar-props.js`).
-        skin: ctx?.world?.id || null
+        skin: ctx?.world?.id || cfg.skin || (typeof location !== 'undefined' && location.hash.match(/unit\d+/)?.[0]) || null
       });
     }
     tabletop.setState(state.table, { stageIndex: index, newStage: true, undo: history.length });
