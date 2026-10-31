@@ -272,6 +272,7 @@ export const QUEST_STORY = {
       { to: 0.94, say: 'The net ionic equation keeps only what changed: the lead ion and two iodide ions packing into a solid.' }
     ],
     filed: 'Filed: the pond\'s cloud is one pair of ions leaving the water as a solid, and every other ion stood by.'
+  },
   'unit07/boss-golem': {
     scene: 'golem-vault',
     beats: [

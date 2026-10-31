@@ -461,7 +461,7 @@ const NOTES = {
   4: ['Press Mix, then fill the tray and the slot.'],
   5: ['Drag your guesses into the tray.'],
   6: ['Turn the dial, press Mix,', 'then fill the tray.'],
-  7: ['Press Mix, then', 'fill the tray', 'and slot.'],
+  7: ['Fill the tray and slot.'],
   8: ['Press Mix, then fill', 'the three trays.']
 };
 applyNotes(STAGES, NOTES);
