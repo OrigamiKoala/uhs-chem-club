@@ -107,6 +107,14 @@ export const DESTINATIONS = {
       atmo: '#cfe0e3', atmoStrength: 0.6, seed: [2.9, 5.3, 3.7]
     }
   },
+  kettle: {
+    key: 'kettle', name: 'Kettle', hash: '#/learn/unit07',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'desert', colors: ['#e6e0d0', '#cdbf9f', '#a58f68', '#f3eedf'],
+      atmo: '#d6aa62', atmoStrength: 0.56, seed: [7.2, 3.6, 2.7]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

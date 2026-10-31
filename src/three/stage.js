@@ -18,6 +18,7 @@ import { LanternfallWorld } from "./lanternfall.js";
 import { BellowsWorld } from "./bellows.js";
 import { EmberReachWorld } from "./ember.js";
 import { MirrowenWorld } from "./mirrowen.js";
+import { KettleWorld } from "./kettle.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -54,6 +55,8 @@ const EMBER_EXPOSURE = 0.98;
 // Mirrowen is frost shingle and grey-green water under a high white haze: pale ground, a bright sky
 // and ice that throws light back, so it takes a little less exposure than Ember Reach.
 const MIRROWEN_EXPOSURE = 0.9;
+// Kettle is white crust under an amber haze: bright ground, so the exposure sits a little under Ember Reach's.
+const KETTLE_EXPOSURE = 0.94;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -92,6 +95,7 @@ class Stage {
     this.bellowsWorld = null;
     this.emberWorld = null;
     this.mirrowenWorld = null;
+    this.kettleWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -799,6 +803,10 @@ class Stage {
       if (!this.mirrowenWorld) this.mirrowenWorld = this.warmWorld(new MirrowenWorld(this.renderer));
       return this.mirrowenWorld;
     }
+    if (key === "kettle") {
+      if (!this.kettleWorld) this.kettleWorld = this.warmWorld(new KettleWorld(this.renderer));
+      return this.kettleWorld;
+    }
     return null;
   }
 
@@ -829,6 +837,7 @@ class Stage {
     if (key === "bellows") return BELLOWS_EXPOSURE;
     if (key === "ember") return EMBER_EXPOSURE;
     if (key === "mirrowen") return MIRROWEN_EXPOSURE;
+    if (key === "kettle") return KETTLE_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1012,10 +1021,17 @@ class Stage {
     this.enterLearnWorld(this.mirrowenWorld, MIRROWEN_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach or Mirrowen. */
+  /** Walk out onto Kettle, the foundry works on the soda flat (Learn world 07). */
+  enterKettleScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("kettle");
+    this.enterLearnWorld(this.kettleWorld, KETTLE_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen or Kettle. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1253,6 +1269,11 @@ class Stage {
   /** Light a Mirrowen site's indicator when its quest is finished. */
   setMirrowenSiteComplete(questId, complete) {
     if (this.mirrowenWorld) this.mirrowenWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Kettle site's indicator when its quest is finished. */
+  setKettleSiteComplete(questId, complete) {
+    if (this.kettleWorld) this.kettleWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Ligar site's indicator when its quest is finished. */

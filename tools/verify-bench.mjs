@@ -306,6 +306,7 @@ ok('every Bellows quest is a tabletop: none plays the old gas rig');
 
 const { EmberReachWorld } = await import('../src/three/ember.js');
 const { MirrowenWorld } = await import('../src/three/mirrowen.js');
+const { KettleWorld } = await import('../src/three/kettle.js');
 ok('every Ember Reach quest is a tabletop: none plays the old calorimeter');
 
 
@@ -784,7 +785,7 @@ console.log('The foes — spoil standing in the wells\n');
 
   for (const [label, key, World] of [
     ['Tallow', 'tallow', TallowWorld], ['Ligar', 'ligar', LigarWorld], ['Lanternfall', 'lanternfall', LanternfallWorld],
-    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld]
+    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld]
   ]) {
     const proto = World.prototype;
     const baked = proto.bakeStatics;
@@ -1182,7 +1183,7 @@ console.log('The foes — spoil standing in the wells\n');
   const { chromeReserve } = await import('../src/learn/engine/lean.js');
   const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
   const { allQuests } = await import('../src/learn/curriculum.js');
-  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld };
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld };
   const worlds = new Map();
   const worldFor = unit => {
     if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }
@@ -1206,9 +1207,10 @@ console.log('The foes — spoil standing in the wells\n');
     // WORLD under it (Kettle) builds its own room too, but a NAMED one (`rooms.js`, `mod.ROOM`): its table is dressed from
     // that room's materials, never the bench kit's, and the room itself is held to the host's rules below.
     const boss = q.arena === 'boss';
-    // A quest with a WORLD under it stands its table on that world's bench: a leftover `ROOM` export is moot there (the engine ignores it when a bench is deployed).
-    const roomId = WORLD_OF[unit] ? null : (mod.ROOM || null);
     const standalone = boss || !WORLD_OF[unit];
+    // A quest that names a room (`mod.ROOM`) keeps it as the fallback for ground it has no host on; once its world is registered and
+    // walkable its table stands in its host and is dressed from the host's materials, never the room's (`bench3d.js`: a world wins).
+    const roomId = standalone ? (mod.ROOM || null) : null;
     const w = standalone ? null : worldFor(unit);
     const anchor = standalone ? null : w.benchAnchor(questId);
     if (!standalone && !anchor) { fail(`${q.key}: plays table stages but its world has no bench anchor`); continue; }

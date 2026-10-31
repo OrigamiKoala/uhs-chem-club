@@ -2882,6 +2882,15 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 }
 
 /* ------------------------------------------------------------------
+   KETTLE (unit07): the planners against values worked by hand, every graded figure of the pot benches recomputed, the pot and the
+   balance replayed, no plate carrying an answer, no refusal carrying the method (`tools/lib/kettle-learn-checks.mjs`).
+   ------------------------------------------------------------------ */
+{
+  const { checkKettle } = await import('./lib/kettle-learn-checks.mjs');
+  await checkKettle({ fail, ok });
+}
+
+/* ------------------------------------------------------------------
    EVERY FIGURE A MIRROWEN STAGE GRADES AGAINST IS RECOMPUTED, from values worked by hand or
    read from the CRC, and every refusal is searched for the rule its stage is asking for. One
    check file per bench in `tools/lib/mirrowen/`, found by name (`tools/lib/mirrowen-learn-checks.mjs`).
@@ -3702,11 +3711,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     // 2. the shaker's layers: the true compound settles into one layer, the other into two
     {
       const t = end(k, 1);
-      for (const id of ['b1', 'b2']) {
+      for (const id of ['b1', 'b2', 'b3', 'b4']) {
         const layers = A.layersOf(declared(k, 1, id).props.sample);
         same(t.pieces[id].zone, layers === 1 ? 'tray:true' : 'tray:false', `unit07/q1-recipe stage 2 (${id}: ${layers} layer(s))`);
       }
-      holds(A.layersOf(declared(k, 1, 'b1').props.sample) === 1 && A.layersOf(declared(k, 1, 'b2').props.sample) === 2, 'unit07/q1-recipe stage 2: the samples do not settle into one layer and two');
+      holds(A.layersOf(declared(k, 1, 'b1').props.sample) === 1 && A.layersOf(declared(k, 1, 'b3').props.sample) === 1 && A.layersOf(declared(k, 1, 'b2').props.sample) === 2 && A.layersOf(declared(k, 1, 'b4').props.sample) === 2, 'unit07/q1-recipe stage 2: the four samples do not settle into one layer, two, one and two');
     }
     // 3. the same atoms weigh the same loose and joined, by the listed masses
     {
@@ -3813,20 +3822,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       same([H.tallyOf(t, 'tally'), H.madeOf(t, 'made', 'NaCl'), H.heapLeft(t, 'heap-na', 'Na'), H.heapLeft(t, 'heap-cl', 'Cl')], [want.made, want.made, 0, want.left.Cl], 'unit07/boss-golem phase 1 (tally, made, what is left)');
       holds(want.made <= g.STAGES[0].table.fixtures.find(f => f.kind === 'tally').dials.n.max, 'unit07/boss-golem phase 1: the tally cannot reach the answer');
     }
-    // 2. the same limit by weight: grams over molar mass, the smaller count of moles
-    {
-      const t = end(g, 1);
-      const drum = id => declared(g, 1, id).props;
-      const moles = { Na: drum('dna').grams / M.speciesMass('sodium'), Cl: drum('dcl').grams / M.speciesMass('chlorine') };
-      same([moles.Na, moles.Cl], [3, 2], 'unit07/boss-golem phase 2 (the moles in each drum)');
-      same(H.tallyOf(t, 'tally'), Math.min(moles.Na, moles.Cl), 'unit07/boss-golem phase 2 (the smaller mole count)');
-      holds(moles.Na !== moles.Cl && Number.isInteger(moles.Na) && Number.isInteger(moles.Cl), 'unit07/boss-golem phase 2: the drums hold equal or fractional moles');
-      near(M.scaleRead(t, 'scale').weight, drum('dcl').grams, 'unit07/boss-golem phase 2 (the scale reads the drum on it)');
-      // The plate prints the molar masses the table itself uses.
-      const lines = g.STAGES[1].table.fixtures.find(f => f.id === 'listed').props.lines.join(' ');
-      holds(lines.includes(M.listedMass('Na').toFixed(1)) && lines.includes(M.listedMass('Cl').toFixed(1)), 'unit07/boss-golem phase 2: the plate lists a molar mass that is not the listed one');
-    }
-    // A boss phase on a table is a fight on a table: two phases, each names its foe, none sends the player into a world.
+    // The golem's later phases (the pot's yield and ledger) are held in `tools/lib/kettle-boss-golem-checks.mjs`; the retired by-weight drum phase is in `archive/2026-10-30/tools/`.
+    // A boss phase on a table is a fight on a table: each phase names its foe, none sends the player into a world.
     for (const [i, st] of g.STAGES.entries()) {
       holds(Array.isArray(st.foes) && st.foes.length === 1 && st.encounter?.species === 'recipe golem', `unit07/boss-golem phase ${i + 1}: a fight names its foe and its species`);
       holds(!st.field && !(st.table.fetch || []).length, `unit07/boss-golem phase ${i + 1}: a boss never sends the player into the world`);

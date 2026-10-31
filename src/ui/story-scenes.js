@@ -16,6 +16,7 @@ import { mulberry32 } from '../learn/engine/plates.js';
 import { BELLOWS_SCENES } from './story-scenes-bellows.js';
 import { LIGAR_SCENES } from './story-scenes-ligar.js';
 import { EMBER_SCENES } from './story-scenes-ember.js';
+import { KETTLE_SCENES } from './story-scenes-kettle.js';
 import { MIRROWEN_SCENES } from './story-scenes-mirrowen.js';
 import { LANTERNFALL_SCENES } from './story-scenes-lanternfall.js';
 import { FINALE_SCENES } from './story-scenes-finales.js';
@@ -1294,6 +1295,7 @@ export const SCENES = {
   ...legacy(BELLOWS_SCENES),
   ...legacy(LIGAR_SCENES),
   ...legacy(EMBER_SCENES),
+  ...legacy(KETTLE_SCENES),
   ...legacy(MIRROWEN_SCENES),
   ...legacy(LANTERNFALL_SCENES),
   // The boss finales and two benches redrawn on the kit; they replace the same ids above.

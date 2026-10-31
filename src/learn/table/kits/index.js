@@ -26,3 +26,4 @@ import './cuvette.js';
 import './gas.js';
 import './heat.js';
 import './matter.js';
+import './pot.js';

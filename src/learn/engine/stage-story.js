@@ -173,6 +173,27 @@ export const STAGE_STORY = {
   /* ---- Kettle: halt the robot foundry ---- */
   'q1-recipe': {
     1: 'Vess holds three scoops from three foundry floors.'
+  },
+  'q5-ionic': {
+    1: 'The waste pond turned cloudy overnight, and Vess wants to know what changed in it.'
+  },
+  'q4-balance': {
+    1: 'The furnace recipe card on the control-room wall has no numbers, and Vess cannot tell whether it is right.'
+  },
+  'q2-names': {
+    1: 'The foundry\'s crates carry labels nobody can read.'
+  },
+  'q3-change': {
+    1: 'The forged ledger says metal came from nowhere, and Vess wants to know whether anything can.'
+  },
+  'q6-stoich': {
+    1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
+  },
+  'q7-titrate': {
+    1: 'Nobody at the foundry knows how strong the acid in the pickling tank is.'
+  },
+  'q8-kinds': {
+    1: 'Vess finds a furnace log that lists reactions nobody has named.'
   }
 };
 

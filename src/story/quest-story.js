@@ -252,6 +252,95 @@ export const QUEST_STORY = {
     filed: 'Filed: a heat source ran inside the Fifth\'s cylinder for twelve days, and no chemical reaction lasts that long.'
   },
   /* ---- Ember Reach: the Fifth's manifold is frosted over, so what runs inside it takes heat in ---- */
+  /* ---- Kettle: the forged ledger ---- */
+  'unit07/q1-recipe': {
+    scene: 'three-scoops',
+    beats: [
+      { to: 0.22, say: 'Three scoops from three floors, and every molecule in them is the same: two hydrogens joined to one oxygen.' },
+      { to: 0.5, say: 'Loose atoms stirred in beside them do not change the molecule. A compound keeps its recipe, and the extras just sit there.' },
+      { to: 0.74, say: 'Joining only rearranges atoms, so the atoms weigh the same loose or joined.' },
+      { to: 0.94, say: 'The recipe fixes the shares too: oxygen is 16.0 of every 18.0, the same in every scoop.' }
+    ],
+    filed: 'Filed: a compound holds the same share of each element every time, so ore\'s share of metal can be worked out.'
+  },
+  'unit07/q5-ionic': {
+    scene: 'cloudy-pond',
+    beats: [
+      { to: 0.2, say: 'Two clear jars hold lead, nitrate, potassium and iodide ions. Pour them together and a cloud forms.' },
+      { to: 0.5, say: 'Only one pair of ions meets and packs into a solid, the precipitate. The lead and iodide ions leave the water, and nothing else moves.' },
+      { to: 0.74, say: 'The potassium and nitrate ions are spectator ions: the same discs stand in the water before and after the mixing.' },
+      { to: 0.94, say: 'The net ionic equation keeps only what changed: the lead ion and two iodide ions packing into a solid.' }
+    ],
+    filed: 'Filed: the pond\'s cloud is one pair of ions leaving the water as a solid, and every other ion stood by.'
+  },
+  'unit07/boss-golem': {
+    scene: 'golem-vault',
+    beats: [
+      { to: 0.22, say: 'Every phase was a bench you had already worked: a heap, a recipe board, a pot, a furnace and a ledger. That was enough to read the golem.' },
+      { to: 0.5, say: 'Its valves close and the steam stops. A recipe with nothing left to run on has nothing left to make.' },
+      { to: 0.7, say: 'Behind it is a vault, and in the vault is the ledger: ore in, metal out.' },
+      { to: 0.92, say: 'The ore in the ledger can give at most 27.9 tons of iron. The ledger claims 50.0, so 22.1 tons of it came from nowhere the ore could supply.' }
+    ],
+    filed: 'Filed: the ledger claims 22.1 tons of iron that its ore cannot give, so something else supplied it.'
+  },
+  'unit07/q4-balance': {
+    scene: 'recipe-board',
+    beats: [
+      { to: 0.26, say: 'The furnace recipe lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
+      { to: 0.6, say: 'A coefficient in front of a formula counts molecules, so it changes the atom counts and leaves each substance alone. Raise them one at a time and the rows come closer.' },
+      { to: 0.94, say: 'At 1, 3, 2 and 3 every row agrees: 2 iron, 3 carbon and 6 oxygen on each side.' }
+    ],
+    filed: 'Filed: the furnace recipe, Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, is balanced: every atom of the ore is accounted for.'
+  },
+  'unit07/q2-names': {
+    scene: 'crate-labels',
+    beats: [
+      { to: 0.3, say: 'Ions carry charges and a compound carries none. One magnesium ion cancels two chlorine ions, so the formula counts the ions in that smallest group: MgCl₂.' },
+      { to: 0.6, say: 'A name says the same in words. The metal keeps its name and the other ion takes the ending -ide, so Mg²⁺ with O²⁻ is magnesium oxide.' },
+      { to: 0.94, say: 'In Fe₂O₃ the three oxide ions hold 6− between them, so each of the two irons is 3+. The Roman numeral is that charge, not a count: iron(III) oxide.' }
+    ],
+    filed: 'Filed: the manifest\'s ore is iron(III) oxide, Fe₂O₃, a compound with a fixed share of metal.'
+  },
+  'unit07/q3-change': {
+    scene: 'sealed-pot',
+    beats: [
+      { to: 0.27, say: 'In an open pot, burning iron takes oxygen from the air, so the balance counts more atoms and reads more.' },
+      { to: 0.52, say: 'The gases a burn makes float out of an open pot, so the balance counts fewer atoms and reads less.' },
+      { to: 0.77, say: 'Seal the lid and nothing gets in or out. The atoms only join up differently, so the balance reads the same before and after.' },
+      { to: 0.94, say: 'The balance changes only when atoms cross the lid. A sealed pot makes nothing and loses nothing.' }
+    ],
+    filed: 'Filed: a sealed pot weighs the same before and after, so the ledger\'s extra metal came from somewhere.'
+  },
+  'unit07/q6-stoich': {
+    scene: 'furnace-ledger',
+    beats: [
+      { to: 0.24, say: 'An equation counts molecules, not grams. Two hydrogens and one oxygen make two waters, and the weights still add to 36.0 on both sides.' },
+      { to: 0.5, say: 'So grams reach grams through moles. Three hydrogens to two ammonias is a ratio of moles, whatever they weigh.' },
+      { to: 0.72, say: 'Feed two reactants and the pot stops when one runs out. What is left of the other is the excess.' },
+      { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron. A real furnace keeps only a part of that.' }
+    ],
+    filed: 'Filed: forty tons of ore can give at most 28 tons of iron, so a ledger that shows fifty is forged.'
+  },
+  'unit07/q7-titrate': {
+    scene: 'burette-count',
+    beats: [
+      { to: 0.24, say: 'A burette lets base into the acid in measured drops, and its reading is the drops counted. Here each drop is half a millilitre.' },
+      { to: 0.5, say: 'Every drop holds the same moles of base, and each mole of base uses up a mole of acid. The flask is counted against the drops, disc for disc.' },
+      { to: 0.74, say: 'When the discs match, that is the equivalence point. The dye turns on the very next drop, which is the endpoint.' },
+      { to: 0.95, say: 'So the acid\'s strength is the base\'s strength times the volume counted, over the volume in the flask.' }
+    ],
+    filed: 'Filed: the pickling bath is 0.450 mol/L sulfuric acid, so the foundry\'s acid use can be checked against its ledger.'
+  },
+  'unit07/q8-kinds': {
+    scene: 'furnace-log',
+    beats: [
+      { to: 0.24, say: 'The furnace log lists the ore reaction. In Fe₂O₃ each iron atom carries +3 and each oxygen −2, and all together they add up to the charge of the ore, 0.' },
+      { to: 0.5, say: 'The other reactant is CO. Its carbon carries +2 and its oxygen −2, worked the same way.' },
+      { to: 0.78, say: 'Six electrons move, two from each carbon to three on each iron. Iron falls from +3 to 0, so it gained electrons and was reduced; carbon rises to +4 and is oxidised.' },
+      { to: 0.97, say: 'The oxygen leaves the ore for the carbon. That is a redox reaction, and what stays behind is iron.' }
+    ],
+    filed: 'Filed: the furnace log shows the ore giving up its oxygen to carbon, so the ore was reduced, not made from nothing.'
+  },
   'unit05/q1-flow': {
     scene: 'frost-manifold',
     beats: [
