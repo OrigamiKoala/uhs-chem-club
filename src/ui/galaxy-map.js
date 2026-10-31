@@ -67,7 +67,7 @@ export const WORLD_LOOK = {
   unit04:  { kind: 'gas',     base: '#b7c2cc', dark: '#4b5d70', star: 'cool' },
   unit05:  { kind: 'vent',    base: '#6a3626', dark: '#1d0f0a', star: 'warm', vein: '#d9822b' },
   unit06:  { kind: 'tidal',   base: '#7a9a9d', dark: '#2a4244', star: 'cool' },
-  unit07:  { kind: 'lake',    base: '#c19a66', dark: '#5b4126', star: 'warm', vein: '#e8e1cf' },
+  unit07:  { kind: 'lake',    base: '#d8cdb4', dark: '#6a5636', star: 'warm', vein: '#c4893a' },
   unit08:  { kind: 'pans',    base: '#cdbfa0', dark: '#59574c', star: 'warm', vein: '#7d96a3' },
   unit09:  { kind: 'marsh',   base: '#66845c', dark: '#1f3427', star: 'cool', vein: '#4f8f8a' },
   unit10:  { kind: 'copper',  base: '#a8694c', dark: '#43241a', star: 'warm', vein: '#5c9a86' },

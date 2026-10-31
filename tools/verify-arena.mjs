@@ -11,7 +11,7 @@
  *  - IT IS REGISTERED AS A BENCH: `benchAnchor` answers for the boss quest, deploying it counts as an open bench, taking it down
  *    leaves the world exactly as it was (anchor, collider, scene children).
  *  - IT FACES THE PLAYER, between the player and the boss.
- *  - EVERY BOSS BODY IS WELL FORMED (the five of the walkable worlds; Kettle's golem has no arena yet): built, finite, grounded (the flier hovers with its tendrils clear of the ground), a size that
+ *  - EVERY BOSS BODY IS WELL FORMED (the seven of the walkable worlds): built, finite, grounded (the flier hovers with its tendrils clear of the ground), a size that
  *    reads as a boss at the arena's scale, a few thousand to a few tens of thousands of triangles, a muzzle, armour that is struck
  *    off as it is hurt and is already gone when a fight is resumed late, every pose (gathering, striking, rearing, hurt,
  *    convulsing) a finite one, and a collapse that ends.
@@ -30,6 +30,7 @@ await import('../src/three/lanternfall.js');
 await import('../src/three/ligar.js');
 await import('../src/three/bellows.js');
 await import('../src/three/ember.js');
+await import('../src/three/kettle.js');
 const { collectBoxes } = await import('./lib/overlap.mjs');
 const { arenaTablePlan, buildArenaTable, ARENA_TABLE } = await import('../src/three/arena-table.js');
 const { BOSS_ARENA_SPOTS } = await import('../src/learn/engine/boss-arena.js');
@@ -48,7 +49,8 @@ const WORLDS = [
   ['unit02', 'Lanternfall', '../src/three/lanternfall.js', 'LanternfallWorld', 'boss-eater'],
   ['unit03', 'Ligar', '../src/three/ligar.js', 'LigarWorld', 'boss-warden'],
   ['unit04', 'Bellows', '../src/three/bellows.js', 'BellowsWorld', 'boss-compressor'],
-  ['unit05', 'Ember Reach', '../src/three/ember.js', 'EmberReachWorld', 'boss-crucible']
+  ['unit05', 'Ember Reach', '../src/three/ember.js', 'EmberReachWorld', 'boss-crucible'],
+  ['unit07', 'Kettle', '../src/three/kettle.js', 'KettleWorld', 'boss-golem']
 ];
 
 const IGNORED = /cobbles|scrub|pebble|gravel|grass|dust|snow|ice-|decal/i;
@@ -147,14 +149,14 @@ for (const [unit, name, file, ctor, questId] of WORLDS) {
 
 /* ------------------------------------------------------------ the bodies */
 
-console.log('\nthe five bodies');
+console.log('\nthe seven bodies');
 {
   const { CombatMonster3D } = await import('../src/learn/engine/combat-monster-3d.js');
   const { BOSS_SPECIES } = await import('../src/learn/engine/boss-models.js');
-  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible'];
-  check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === 5, 'boss-models.js builds all five', `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
+  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem'];
+  check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === SPECIES.length, 'boss-models.js builds all seven', `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
 
-  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4 };
+  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4 };
   for (const spec of SPECIES) {
     const spotEntry = Object.values(BOSS_ARENA_SPOTS).find(s => s.species === spec);
     const scale = spotEntry?.scale ?? SCALE[spec];

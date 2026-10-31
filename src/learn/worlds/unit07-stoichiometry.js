@@ -15,10 +15,10 @@ export const UNIT_07 = {
   code: '07',
   unit: 'Unit 7',
   world: 'Kettle',
-  place: 'Soda lake',
+  place: 'Foundry works',
   title: 'Stoichiometry and Reactions',
-  line: 'Nothing is lost in the pot.',
-  brief: 'Kettle is one shallow lake that has been boiling for as long as anyone has records of. Whatever goes into it comes back out, rearranged and counted to the last piece.',
+  line: 'Nothing is lost in the furnace.',
+  brief: 'Kettle is an automated foundry works on a dry soda flat. Ore goes into the furnace, metal and slag come out, and every ton has to be accounted for.',
 
   quests: [
     {

@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts fourteen worlds. Six of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach and Mirrowen — are built
+ * The Learn road charts fourteen worlds. Seven of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen and Kettle — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -17,6 +17,7 @@ import lanternfallData from '../three/world-data/lanternfall.json' with { type: 
 import bellowsData from '../three/world-data/bellows.json' with { type: 'json' };
 import emberData from '../three/world-data/ember.json' with { type: 'json' };
 import mirrowenData from '../three/world-data/mirrowen.json' with { type: 'json' };
+import kettleData from '../three/world-data/kettle.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -114,6 +115,26 @@ const WORLDS_3D = {
       for (const site of mirrowenData.sites) {
         if (!site.built) continue;
         stage.setMirrowenSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit07: {
+    id: 'unit07',
+    key: 'kettle',
+    worldName: 'Kettle',
+    data: kettleData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterKettleScene(siteId, playerPos, lookAtPos);
+    },
+    /** The site for a quest, or null. Every bench of the plan has a host already, live or not; the boss and unknown ids have none. */
+    siteForQuest(questId) {
+      return kettleData.sites.find(s => s.questId === questId) || null;
+    },
+    /** Light the site indicator for every quest the player has finished. */
+    syncProgress(stage, isComplete) {
+      for (const site of kettleData.sites) {
+        if (!site.built) continue;
+        stage.setKettleSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

@@ -1,8 +1,8 @@
 /**
- * boss-models.js — The six bosses of the walkable worlds, built to stand in an arena (Kettle's golem has no arena yet).
+ * boss-models.js — The seven bosses of the walkable worlds, built to stand in an arena.
  *
  * `CombatMonster3D` owns what a body DOES in a fight (it arrives, closes in as it is hurt, winds up, lunges, rears, convulses and
- * comes apart; `boss-arena.js` decides when). This file owns what the bodies ARE: six machines of the Fifth Guild, each built from
+ * comes apart; `boss-arena.js` decides when). This file owns what the bodies ARE: seven machines of the Fifth Guild, each built from
  * the working parts of the place it is fought in, ~3 m tall before the arena's 2.2x, with joints that actually hinge.
  *
  *   the hopper         Tallow          a salt-works ore hopper on a mantis's legs, with two sawtooth blades
@@ -11,6 +11,7 @@
  *   the compressor     Bellows         a reciprocating compressor on stilts, a pressure gauge for a face
  *   the crucible       Ember Reach     a furnace pot in a gantry that tilts to pour slag
  *   the undertow       Mirrowen        a brine crawler: a riveted iron tank on six jointed legs, a salt crust, an intake maw and a siphon head
+ *   the recipe golem   Kettle          a furnace vessel on four pipe legs with valve knees, a hopper head, pipe arms and valve-wheel fists
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1173,6 +1174,135 @@ function buildUndertow(monster) {
   };
 }
 
+
+/* ====================================================================== the Recipe Golem */
+
+/**
+ * THE RECIPE GOLEM (Kettle). A furnace vessel on four pipe legs: a riveted drum with a firebrick belly band, a charging hopper for a
+ * head with one lens, two pipe arms ending in valve-wheel fists, a ledger plate on its chest and a stack off its back that breathes.
+ * Each leg is a hip, a pipe, a knee and a foot; each arm a shoulder, a pipe and a fist with a wheel that turns as it strikes.
+ */
+function buildGolem(monster) {
+  const k = new Kit(monster);
+  const iron = k.plate(0x6a6760);
+  const ironDark = k.plate(0x35332f);
+  const rust = k.plate(0x80503a);
+  const brick = k.std(0x7d5644, { rough: 1, metal: 0, flat: true });
+  const brass = k.std(0xb48a3a, { rough: 0.4, metal: 0.85 });
+  const steel = k.std(0xcfd0cc, { rough: 0.3, metal: 0.9 });
+  const charcoal = k.std(0x1d1c1a, { rough: 0.9, metal: 0.3 });
+  const ledger = k.std(0xe6dcc0, { rough: 0.8, metal: 0.0, flat: true });
+  const lens = k.glow(AMBER, 2.4);
+  const mouth = k.glow(AMBER, 1.2);
+  const steam = monster.mat(new THREE.MeshStandardMaterial({ color: 0xe0dcd2, roughness: 1, metalness: 0, transparent: true, opacity: 0, depthWrite: false }));
+
+  const body = k.node(monster.group, 0, 0, 0);
+  const VESSEL_Y = 2.72;
+  const vessel = k.node(body, 0, VESSEL_Y, 0);
+
+  /* --- the vessel: a drum with domed ends, hoops, a firebrick belly band, rivets, a ledger plate on its front --- */
+  k.cyl(vessel, 0.95, 1.05, 1.9, 24, iron, 0, 0.05, 0);
+  k.sph(vessel, 0.95, iron, 0, 1.0, 0, 1, 0.55, 1);
+  k.cyl(vessel, 1.08, 1.08, 0.5, 24, brick, 0, -0.35, 0);
+  for (const y of [-0.8, -0.05, 0.7]) k.torus(vessel, 1.0 + (y < -0.4 ? 0.06 : 0), 0.045, y > 0 ? rust : ironDark, 0, y, 0, Math.PI / 2, 0, 0, 6, 30);
+  k.bolts(vessel, [-0.7, -0.3, 0.1, 0.5, 0.9].map(y => [0, y, 1.0]), 0.035, charcoal, [0, 0, 1]);
+  k.bolts(vessel, [-0.7, -0.3, 0.1, 0.5, 0.9].map(y => [0.9, y, 0.45]), 0.035, charcoal, [0.9, 0, 0.45]);
+  k.box(vessel, 1.0, 0.7, 0.06, ledger, 0, 0.38, 1.04, 0, 0, 0, 0.01);
+  for (let r = 0; r < 4; r++) k.box(vessel, 0.8, 0.03, 0.02, charcoal, 0, 0.6 - r * 0.15, 1.08, 0, 0, 0, 0.005);
+  const chestPlate = k.box(vessel, 0.9, 0.5, 0.06, rust, 0, -0.45, 1.1, 0, 0, 0, 0.012);
+  monster.armour(chestPlate, 0.3);
+  const sidePlate = k.box(vessel, 0.06, 0.9, 0.8, rust, -1.08, 0.2, 0, 0, 0, 0, 0.012);
+  monster.armour(sidePlate, 0.55);
+  const backPlate = k.box(vessel, 0.8, 0.8, 0.06, rust, 0, 0.1, -1.08, 0, 0, 0, 0.012);
+  monster.armour(backPlate, 0.8);
+
+  /* --- the stack off its back, and the steam it lets go --- */
+  k.cyl(vessel, 0.2, 0.28, 1.5, 12, ironDark, 0, 1.7, -0.55);
+  k.cyl(vessel, 0.3, 0.3, 0.1, 12, charcoal, 0, 2.5, -0.55);
+  const puff = k.mesh(vessel, new THREE.IcosahedronGeometry(0.4, 1), steam, 0, 2.9, -0.55);
+
+  /* --- the hopper head: a funnel on a short neck, one lens, a lit mouth, a visor --- */
+  const head = k.node(vessel, 0, 1.45, 0.25);
+  k.cyl(head, 0.2, 0.3, 0.35, 12, ironDark, 0, -0.2, 0);
+  k.cyl(head, 0.7, 0.28, 0.8, 4, iron, 0, 0.3, 0, 0, Math.PI / 4, 0);
+  k.box(head, 1.15, 0.08, 1.15, ironDark, 0, 0.74, 0, 0, 0, 0, 0.02);
+  k.cyl(head, 0.2, 0.2, 0.12, 18, lens, 0, 0.35, 0.66, Math.PI / 2);
+  k.torus(head, 0.22, 0.035, brass, 0, 0.35, 0.68, 0, 0, 0, 8, 20);
+  k.mesh(head, new THREE.CircleGeometry(0.16, 18), mouth, 0, 0.0, 0.43);
+  const visor = k.box(head, 0.6, 0.16, 0.05, rust, 0, 0.62, 0.6, -0.4, 0, 0, 0.01);
+  monster.armour(visor, 0.2);
+  monster.muzzle = k.node(head, 0, 0.35, 0.8);
+
+  /* --- the arms: shoulder -> pipe -> elbow -> pipe -> a fist with a valve wheel --- */
+  const arms = [];
+  for (const sx of [-1, 1]) {
+    const shoulder = k.node(vessel, sx * 1.15, 0.6, 0.1);
+    k.sph(shoulder, 0.32, rust, 0, 0, 0);
+    k.cyl(shoulder, 0.26, 0.26, 0.4, 14, ironDark, 0, 0, 0, 0, 0, Math.PI / 2);
+    k.strut(shoulder, [0, 0, 0], [sx * 0.55, -0.9, 0.35], 0.17, iron, 8, 0.2);
+    const elbow = k.node(shoulder, sx * 0.55, -0.9, 0.35);
+    k.sph(elbow, 0.26, rust, 0, 0, 0);
+    k.strut(elbow, [0, 0, 0], [sx * 0.15, -0.85, 1.0], 0.15, ironDark, 8, 0.19);
+    const fist = k.node(elbow, sx * 0.15, -0.85, 1.0);
+    k.cyl(fist, 0.38, 0.38, 0.5, 14, iron, 0, 0, 0, Math.PI / 2);
+    const wheel = k.node(fist, 0, 0, 0.3);
+    k.torus(wheel, 0.3, 0.04, brass, 0, 0, 0, 0, 0, 0, 6, 22);
+    for (let a = 0; a < 3; a++) k.box(wheel, 0.6, 0.04, 0.04, brass, 0, 0, 0, 0, 0, a * Math.PI / 3, 0.01);
+    arms.push({ shoulder, elbow, fist, wheel, sx });
+  }
+
+  /* --- the legs: four pipes on valve knees, each ending in a flanged foot on the ground --- */
+  const legs = [];
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const hip = k.node(vessel, sx * 0.8, -0.85, sz * 0.7);
+    k.cyl(hip, 0.26, 0.26, 0.4, 14, ironDark, 0, 0, 0, 0, 0, Math.PI / 2);
+    k.strut(hip, [0, 0, 0], [sx * 0.45, -0.8, sz * 0.3], 0.17, iron, 8, 0.2);
+    const knee = k.node(hip, sx * 0.45, -0.8, sz * 0.3);
+    k.sph(knee, 0.23, rust, 0, 0, 0);
+    k.cyl(knee, 0.04, 0.04, 0.35, 8, brass, sx * 0.3, 0.05, 0, 0, 0, Math.PI / 2);      // a valve stem and its wheel
+    k.torus(knee, 0.12, 0.02, brass, sx * 0.47, 0.05, 0, 0, Math.PI / 2, 0, 5, 14);
+    k.strut(knee, [0, 0, 0], [sx * 0.2, -1.05, sz * 0.15], 0.13, ironDark, 8, 0.17);
+    k.bolts(knee, [0.3, 0.6, 0.9].map(d => [sx * 0.2 * d / 1.05 + 0.1, -d, sz * 0.15 * d / 1.05]), 0.028, charcoal, [1, 0, 0]);
+    const foot = k.node(knee, sx * 0.2, -1.05, sz * 0.15);
+    k.cyl(foot, 0.42, 0.5, 0.18, 16, ironDark, 0, 0.09, 0);
+    k.torus(foot, 0.42, 0.03, steel, 0, 0.18, 0, Math.PI / 2, 0, 0, 5, 18);
+    legs.push({ hip, sx, sz, ph: (sx * sz > 0 ? 0 : 2.4) + (sz > 0 ? 1.0 : 0) });
+  }
+
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t;
+      // The vessel settles on its legs, rears to gather and drops its weight to strike.
+      vessel.position.y = VESSEL_Y + idle * Math.sin(t * 1.2) * 0.04 - 0.28 * down - clamp01(s.throes) * 0.4;
+      vessel.position.z = 0.35 * down - 0.1 * up;
+      vessel.rotation.x = -0.1 * up + 0.12 * down - 0.08 * s.roar + s.throes * 0.06 * Math.sin(t * 11);
+      vessel.rotation.z = Math.sin(t * 5) * s.hurt * 0.05;
+      for (const l of legs) {
+        const step = idle * clamp01(0.5 + 0.5 * Math.sin(t * 1.5 + l.ph)) * 0.05;
+        l.hip.rotation.z = l.sx * step * 0.5;
+        l.hip.rotation.x = l.sz * (0.03 * up - 0.03 * down);
+      }
+      // The arms rise to gather and swing down on the blow; the wheels spin as they come.
+      for (const a of arms) {
+        a.shoulder.rotation.x = -1.0 * up + 0.9 * down - 0.3 * s.roar + idle * Math.sin(t * 0.9 + a.sx) * 0.05;
+        a.shoulder.rotation.z = a.sx * (0.1 * up + 0.12 * s.roar);
+        a.elbow.rotation.x = -0.4 * up + 0.3 * down;
+        a.wheel.rotation.z = a.sx * (idle * t * 0.4 + up * 3 + down * 6);
+      }
+      // The head looks about, lifts to roar and drops on the blow.
+      head.rotation.x = -0.2 * s.roar - 0.12 * up + 0.2 * down;
+      head.rotation.y = idle * Math.sin(t * 0.55) * 0.18;
+      const vent = clamp01(0.15 + s.roar * 0.7 + s.wound * 0.4);
+      puff.scale.setScalar(0.5 + vent * 1.2 + idle * Math.sin(t * 3.0) * 0.08);
+      steam.opacity = 0.1 + 0.3 * vent;
+      body.position.y = -clamp01(s.throes) * 0.3;
+      body.rotation.z = Math.sin(t * 36) * 0.012 * s.hurt;
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1181,7 +1311,8 @@ const BUILDERS = {
   'the crucible': buildCrucible,
   'the undertow': buildUndertow,
   'basalt warden': buildWarden,
-  'the lantern-eater': buildLanternEater
+  'the lantern-eater': buildLanternEater,
+  'recipe golem': buildGolem
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */
