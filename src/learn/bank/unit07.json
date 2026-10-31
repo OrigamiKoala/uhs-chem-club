@@ -647,6 +647,425 @@
         ],
         "finish": "Change grams to moles, find which reactant runs out, use the mole ratio from that one, and change back to grams."
       }
+    },
+    "q4-balance": {
+      "problems": [
+        {
+          "id": "q4-balance#b1",
+          "quest": "q4-balance",
+          "question": "Which equation balances H₂ + O₂ → H₂O without changing any substance?",
+          "options": [
+            {
+              "id": "a",
+              "label": "H₂ + O₂ → H₂O₂"
+            },
+            {
+              "id": "b",
+              "label": "2 H₂ + O₂ → 2 H₂O"
+            },
+            {
+              "id": "c",
+              "label": "H₂ + O → H₂O"
+            },
+            {
+              "id": "d",
+              "label": "H₂ + 2 O₂ → H₂O"
+            }
+          ],
+          "answer": "b",
+          "explanation": "2 H₂ + O₂ → 2 H₂O has 4 H and 2 O on each side. The other three change a formula (H₂O₂ or O) or leave the atoms unequal, and a small number inside a formula is part of what the substance is."
+        },
+        {
+          "id": "q4-balance#b2",
+          "quest": "q4-balance",
+          "question": "In 4 Fe + 3 O₂ → 2 Fe₂O₃, how many oxygen atoms are on each side of the arrow?",
+          "options": [
+            {
+              "id": "a",
+              "label": "3 on the left and 6 on the right"
+            },
+            {
+              "id": "b",
+              "label": "6 on each side"
+            },
+            {
+              "id": "c",
+              "label": "3 on each side"
+            },
+            {
+              "id": "d",
+              "label": "12 on each side"
+            }
+          ],
+          "answer": "b",
+          "explanation": "3 O₂ is 3 × 2 = 6 oxygen atoms on the left, and 2 Fe₂O₃ is 2 × 3 = 6 on the right. The iron agrees too: 4 on each side."
+        }
+      ],
+      "worked": {
+        "id": "q4-balance#w",
+        "quest": "q4-balance",
+        "title": "Ethane Burning in Oxygen",
+        "setup": "Balance C₂H₆ + O₂ → CO₂ + H₂O. Start with the atoms that appear in only one substance on each side, and keep oxygen for last.",
+        "steps": [
+          {
+            "say": "One C₂H₆ holds 2 carbon atoms. How many CO₂ molecules carry them?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "2/1",
+            "unit": "",
+            "hint": "Each CO₂ holds 1 carbon atom.",
+            "explain": "2 carbon atoms ÷ 1 per CO₂ = 2 CO₂."
+          },
+          {
+            "say": "One C₂H₆ holds 6 hydrogen atoms. How many H₂O molecules carry them?",
+            "kind": "number",
+            "answer": 3,
+            "calc": "6/2",
+            "unit": "",
+            "hint": "Each H₂O holds 2 hydrogen atoms.",
+            "explain": "6 hydrogen atoms ÷ 2 per H₂O = 3 H₂O."
+          },
+          {
+            "say": "With 2 CO₂ and 3 H₂O, how many oxygen atoms are on the right?",
+            "kind": "number",
+            "answer": 7,
+            "calc": "2*2+3*1",
+            "unit": "",
+            "hint": "Each CO₂ holds 2 oxygen atoms and each H₂O holds 1.",
+            "explain": "2 × 2 + 3 × 1 = 7 oxygen atoms."
+          },
+          {
+            "say": "How many O₂ molecules hold 7 oxygen atoms?",
+            "kind": "number",
+            "answer": 3.5,
+            "calc": "7/2",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "Each O₂ holds 2 oxygen atoms.",
+            "explain": "7 ÷ 2 = 3.5 O₂."
+          },
+          {
+            "say": "Can a coefficient be 3.5 molecules?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Yes, keep it"
+              },
+              {
+                "id": "b",
+                "label": "No, double every coefficient"
+              },
+              {
+                "id": "c",
+                "label": "No, round it down to 3"
+              }
+            ],
+            "answer": "b",
+            "hint": "A molecule cannot be split in half.",
+            "explain": "Doubling every coefficient keeps the atoms equal on both sides and makes them whole numbers. Rounding would put the oxygen out of step."
+          },
+          {
+            "say": "After doubling, how many O₂ are in the equation?",
+            "kind": "number",
+            "answer": 7,
+            "calc": "3.5*2",
+            "unit": "",
+            "hint": "Double 3.5.",
+            "explain": "3.5 × 2 = 7 O₂."
+          },
+          {
+            "say": "After doubling, how many H₂O are in the equation?",
+            "kind": "number",
+            "answer": 6,
+            "calc": "3*2",
+            "unit": "",
+            "hint": "Double 3.",
+            "explain": "3 × 2 = 6 H₂O, and the equation is 2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O."
+          }
+        ],
+        "finish": "Balance one kind of atom at a time with the coefficients, start with the atoms found in only one substance on each side, and double everything if a half appears."
+      }
+    },
+    "q2-names": {
+      "problems": [
+        {
+          "id": "q2-names#b1",
+          "quest": "q2-names",
+          "question": "Aluminium ions are Al³⁺ and oxide ions are O²⁻. What is the formula of the smallest group of them that has no charge?",
+          "options": [
+            {
+              "id": "a",
+              "label": "AlO"
+            },
+            {
+              "id": "b",
+              "label": "Al₂O₃"
+            },
+            {
+              "id": "c",
+              "label": "Al₃O₂"
+            },
+            {
+              "id": "d",
+              "label": "Al₂O₂"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Two Al³⁺ give 6+ and three O²⁻ give 6−, so the charges cancel with 2 Al and 3 O: Al₂O₃."
+        },
+        {
+          "id": "q2-names#b2",
+          "quest": "q2-names",
+          "question": "The formula CuO holds one Cu ion and one O²⁻ ion with no charge overall. What is its name?",
+          "options": [
+            {
+              "id": "a",
+              "label": "copper(I) oxide"
+            },
+            {
+              "id": "b",
+              "label": "copper oxygen"
+            },
+            {
+              "id": "c",
+              "label": "copper(II) oxide"
+            },
+            {
+              "id": "d",
+              "label": "monocopper monoxide"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The single O²⁻ is 2−, so the copper ion is 2+. The Roman numeral is that charge, and the second ion takes -ide: copper(II) oxide."
+        }
+      ]
+  },
+    "q3-change": {
+      "problems": [
+        {
+          "id": "q3-change#b1",
+          "quest": "q3-change",
+          "question": "Magnesium ribbon burns in an open crucible, and the white powder left weighs more than the ribbon did. What explains the extra mass?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Oxygen from the air joined the magnesium"
+            },
+            {
+              "id": "b",
+              "label": "The heat of the flame added mass"
+            },
+            {
+              "id": "c",
+              "label": "The magnesium turned into a heavier element"
+            },
+            {
+              "id": "d",
+              "label": "The flame left soot on the powder"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Magnesium burns by joining oxygen from the air, 2 Mg + O₂ → 2 MgO. The oxide holds the magnesium's atoms plus the oxygen's, so it weighs more."
+        },
+        {
+          "id": "q3-change#b2",
+          "quest": "q3-change",
+          "question": "A sealed pot holds 10.0 g of wood chips and 12.0 g of oxygen. The wood burns completely. What does the sealed pot weigh afterwards?",
+          "options": [
+            {
+              "id": "a",
+              "label": "10.0 g"
+            },
+            {
+              "id": "b",
+              "label": "12.0 g"
+            },
+            {
+              "id": "c",
+              "label": "22.0 g"
+            },
+            {
+              "id": "d",
+              "label": "2.0 g"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Nothing enters or leaves a sealed pot, so its mass is conserved: the carbon dioxide and water vapour made weigh 10.0 + 12.0 = 22.0 g in all."
+        }
+      ],
+      "worked": {
+        "id": "q3-change#w",
+        "quest": "q3-change",
+        "title": "Steel Wool in a Sealed Pot",
+        "setup": "4 Fe + 3 O₂ → 2 Fe₂O₃. A sealed pot holds 22.3 g of steel wool, Fe, and enough oxygen. The wool burns completely. (Fe 55.8, O 16.0)",
+        "steps": [
+          {
+            "say": "How many moles of iron are in the pot?",
+            "kind": "number",
+            "answer": 0.4,
+            "calc": "22.3/55.8",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "Moles = mass / molar mass.",
+            "explain": "22.3 g / 55.8 g/mol = 0.400 mol."
+          },
+          {
+            "say": "How many moles of Fe₂O₃ form?",
+            "kind": "number",
+            "answer": 0.2,
+            "calc": "0.400*2/4",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "The equation makes 2 mol of Fe₂O₃ for each 4 mol of Fe.",
+            "explain": "0.400 mol × 2/4 = 0.200 mol."
+          },
+          {
+            "say": "What is the mass of that Fe₂O₃? (159.6 g/mol)",
+            "kind": "number",
+            "answer": 31.9,
+            "calc": "0.200*159.6",
+            "unit": "g",
+            "tol": 0.1,
+            "hint": "Mass = moles × molar mass.",
+            "explain": "0.200 mol × 159.6 g/mol = 31.9 g."
+          },
+          {
+            "say": "How many grams of oxygen joined the iron?",
+            "kind": "number",
+            "answer": 9.6,
+            "calc": "0.200*159.6-22.3",
+            "unit": "g",
+            "tol": 0.1,
+            "hint": "The iron oxide holds the iron and the oxygen that joined it.",
+            "explain": "31.9 g of oxide minus 22.3 g of iron leaves 9.6 g of oxygen."
+          },
+          {
+            "say": "What does the sealed pot weigh afterwards, if it weighed 31.9 g before?",
+            "kind": "number",
+            "answer": 31.9,
+            "calc": "31.9",
+            "unit": "g",
+            "tol": 0.1,
+            "hint": "Nothing enters or leaves a sealed pot.",
+            "explain": "The sealed pot weighs the same afterwards: 31.9 g."
+          }
+        ],
+        "finish": "The extra weight of an open pot would be the 9.6 g of oxygen from the air; in a sealed pot it was already inside, so the weight does not change."
+      }
+    },
+    "q7-titrate": {
+      "problems": [
+        {
+          "id": "q7-titrate#b1",
+          "quest": "q7-titrate",
+          "question": "25.0 mL of hydrochloric acid is just used up by 20.0 mL of 0.100 mol/L sodium hydroxide. What is the concentration of the acid?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.100 mol/L"
+            },
+            {
+              "id": "b",
+              "label": "0.0800 mol/L"
+            },
+            {
+              "id": "c",
+              "label": "0.125 mol/L"
+            },
+            {
+              "id": "d",
+              "label": "0.0400 mol/L"
+            }
+          ],
+          "answer": "b",
+          "explanation": "20.0 mL of 0.100 mol/L base holds 0.00200 mol of OH⁻, which meets 0.00200 mol of H⁺. In 0.0250 L that is 0.0800 mol/L."
+        },
+        {
+          "id": "q7-titrate#b2",
+          "quest": "q7-titrate",
+          "question": "25.0 mL of 0.100 mol/L sulfuric acid, H₂SO₄, is titrated with 0.100 mol/L sodium hydroxide. How much base reaches the equivalence point?",
+          "options": [
+            {
+              "id": "a",
+              "label": "25.0 mL"
+            },
+            {
+              "id": "b",
+              "label": "12.5 mL"
+            },
+            {
+              "id": "c",
+              "label": "50.0 mL"
+            },
+            {
+              "id": "d",
+              "label": "100 mL"
+            }
+          ],
+          "answer": "c",
+          "explanation": "The acid holds 0.00250 mol of H₂SO₄, which is 0.00500 mol of H⁺. 0.100 mol/L base holds 0.00500 mol in 0.0500 L, which is 50.0 mL."
+        }
+      ],
+      "worked": {
+        "id": "q7-titrate#w",
+        "quest": "q7-titrate",
+        "title": "Sulfuric Acid Against Sodium Hydroxide",
+        "setup": "A flask holds 20.0 mL of 0.150 mol/L sulfuric acid, H₂SO₄, and it is titrated with 0.200 mol/L sodium hydroxide, NaOH. Find the volume of base at the equivalence point.",
+        "steps": [
+          {
+            "say": "How many moles of H₂SO₄ are in the flask?",
+            "kind": "number",
+            "answer": 0.003,
+            "calc": "0.150*0.0200",
+            "unit": "mol",
+            "tol": 5e-05,
+            "hint": "Moles = concentration × volume in litres.",
+            "explain": "0.150 mol/L × 0.0200 L = 0.00300 mol."
+          },
+          {
+            "say": "How many moles of H⁺ does that give?",
+            "kind": "number",
+            "answer": 0.006,
+            "calc": "2*0.150*0.0200",
+            "unit": "mol",
+            "tol": 5e-05,
+            "hint": "Each H₂SO₄ particle gives two H⁺.",
+            "explain": "2 × 0.00300 mol = 0.00600 mol of H⁺."
+          },
+          {
+            "say": "How many moles of OH⁻ must the base supply at the equivalence point?",
+            "kind": "number",
+            "answer": 0.006,
+            "calc": "2*0.150*0.0200",
+            "unit": "mol",
+            "tol": 5e-05,
+            "hint": "One OH⁻ uses up one H⁺.",
+            "explain": "The moles of OH⁻ equal the moles of H⁺: 0.00600 mol."
+          },
+          {
+            "say": "What volume of 0.200 mol/L base holds that many moles, in litres?",
+            "kind": "number",
+            "answer": 0.03,
+            "calc": "0.00600/0.200",
+            "unit": "L",
+            "tol": 0.0002,
+            "hint": "Volume = moles / concentration.",
+            "explain": "0.00600 mol / 0.200 mol/L = 0.0300 L."
+          },
+          {
+            "say": "How many mL is that?",
+            "kind": "number",
+            "answer": 30,
+            "calc": "0.00600/0.200*1000",
+            "unit": "mL",
+            "tol": 0.2,
+            "hint": "There are 1000 mL in a litre.",
+            "explain": "0.0300 L = 30.0 mL."
+          }
+        ],
+        "finish": "The sulfuric acid takes 30.0 mL of the base, which is more base than the 20.0 mL of acid because each acid particle gives two H⁺."
+      }
     }
   }
 }

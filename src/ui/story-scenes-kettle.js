@@ -18,6 +18,7 @@ import { Q4_SCENES } from './story-scenes-kettle-q4.js';
 import { Q5_SCENES } from './story-scenes-kettle-q5.js';
 import { Q7_SCENES } from './story-scenes-kettle-q7.js';
 import { Q8_SCENES } from './story-scenes-kettle-q8.js';
+import { BOSS_SCENES } from './story-scenes-kettle-boss.js';
 
 const fs = h => Math.max(11, h * 0.04);
 
@@ -34,12 +35,13 @@ const RADIUS = { H: 0.017, O: 0.026, N: 0.024 };
 
 /** One water molecule centred on (x, y): an oxygen with two hydrogens on it. Returns its atoms, so the scene can count them. */
 function water(ctx, x, y, u, a = 1) {
-  ctx.globalAlpha = a;
+  const prev = ctx.globalAlpha;
+  ctx.globalAlpha = prev * a;
   const atoms = [['O', x, y], ['H', x - u * 0.9, y + u * 0.75], ['H', x + u * 0.9, y + u * 0.75]];
   line(ctx, x, y, atoms[1][1], atoms[1][2], C.dim, 2);
   line(ctx, x, y, atoms[2][1], atoms[2][2], C.dim, 2);
   for (const [el, ax, ay] of atoms) disc(ctx, ax, ay, u * (el === 'O' ? 0.62 : 0.4), INK[el]);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = prev;
   return atoms.map(a2 => a2[0]);
 }
 
@@ -120,6 +122,7 @@ function furnaceLedger(ctx, w, h, t) {
   ground(ctx, w, h);
   // Beat one (0 to 0.25): two hydrogens and one oxygen make two waters; the masses are counted from the atoms drawn.
   const a = ease(win(t, 0.0, 0.2));
+  ctx.globalAlpha = 1 - 0.8 * ease(win(t, 0.26, 0.32));
   {
     const u = h * 0.03;
     const lhs = { H: 4, O: 2 };
@@ -138,16 +141,20 @@ function furnaceLedger(ctx, w, h, t) {
       void lhs;
     }
   }
+  ctx.globalAlpha = 1;
   // Beat two (0.25 to 0.5): the mole ratio, three hydrogens to two ammonias, counted by pairing the discs.
   const b = ease(win(t, 0.26, 0.46));
+  ctx.globalAlpha = 1 - 0.8 * ease(win(t, 0.5, 0.56));
   if (b > 0.01) {
     const y = h * 0.42; const u = h * 0.022;
     for (let i = 0; i < 6; i++) disc(ctx, w * (0.08 + 0.045 * i), y, u * b, INK.H);
     for (let i = 0; i < 4; i++) disc(ctx, w * (0.58 + 0.06 * i), y, u * 1.2 * b, INK.N);
     if (b > 0.7) text(ctx, '6 H₂ → 4 NH₃: the ratio is 3 to 2', w * 0.4, y + h * 0.06, { size: fs(h), color: C.dust });
   }
+  ctx.globalAlpha = 1;
   // Beat three (0.5 to 0.72): two piles, one runs out; what is left is counted.
   const c = ease(win(t, 0.5, 0.68));
+  ctx.globalAlpha = 1 - 0.8 * ease(win(t, 0.74, 0.8));
   if (c > 0.01) {
     const y = h * 0.62; const u = h * 0.02;
     const plan = reactPlan(parseEquation('2 H2 + O2 -> 2 H2O'), { H2: 5, O2: 2 });
@@ -157,6 +164,7 @@ function furnaceLedger(ctx, w, h, t) {
     for (let i = 0; i < 2; i++) disc(ctx, w * (0.4 + 0.05 * i), y, u * 1.2, c > 0.6 ? C.dim : INK.O);
     if (c > 0.7) text(ctx, `oxygen gone, ${plan.left.H2} hydrogen left`, w * 0.62, y, { size: fs(h), color: C.amber });
   }
+  ctx.globalAlpha = 1;
   // Beat four (0.72 to 1): the ledger. Forty tons of ore can give POSSIBLE tons; the ledger says fifty.
   const d = ease(win(t, 0.74, 0.96));
   if (d > 0.01) {
@@ -177,5 +185,5 @@ function furnaceLedger(ctx, w, h, t) {
 export const KETTLE_SCENES = {
   'three-scoops': threeScoops,
   'furnace-ledger': furnaceLedger,
-  ...Q2_SCENES, ...Q3_SCENES, ...Q4_SCENES, ...Q5_SCENES, ...Q7_SCENES, ...Q8_SCENES
+  ...Q2_SCENES, ...Q3_SCENES, ...Q4_SCENES, ...Q5_SCENES, ...Q7_SCENES, ...Q8_SCENES, ...BOSS_SCENES
 };
