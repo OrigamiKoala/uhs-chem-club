@@ -36,8 +36,8 @@ export const UNIT_07 = {
       line: "Read the labels on the foundry's crates.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q2-names.js')
     },
     {
       id: 'q3-change',
@@ -45,8 +45,8 @@ export const UNIT_07 = {
       line: "Does the ore turn into something new?",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q3-change.js')
     },
     {
       id: 'q4-balance',
@@ -54,8 +54,8 @@ export const UNIT_07 = {
       line: "Count the atoms on both sides of the furnace recipe.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q4-balance.js')
     },
     {
       id: 'q5-ionic',
@@ -81,8 +81,8 @@ export const UNIT_07 = {
       line: "Count the acid in the pickling tank.",
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit07/q7-titrate.js')
     },
     {
       id: 'q8-kinds',
@@ -98,7 +98,7 @@ export const UNIT_07 = {
       title: 'Recipe Golem',
       line: 'Starve the foundry golem and weigh its recipe.',
       arena: 'boss',
-      stageCount: 2,
+      stageCount: 3,
       status: 'live',
       module: () => import('../quests/unit07/boss-golem.js')
     }
