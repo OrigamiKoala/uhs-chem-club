@@ -210,7 +210,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Set aside every card where the pattern starts over.',
+    prompt: 'Set aside every card where the number of valence electrons resets to one.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: RUN_18.map((id, i) => card(id, { x: X(i % 9), y: i < 9 ? 14 : 30 })),
@@ -361,7 +361,7 @@ export const STAGES = [
     reward: {
       log: 'Group 18 never trades.',
       title: 'Noble Gases',
-      body: 'Group 18 are the noble gases, and they almost never react. Eight outer-shell electrons is a full shell, so there is nothing to gain by trading. Every other atom on the chart is reaching for that full shell, which is why it trades at all.'
+      body: 'Atoms are happy when they have a full outer shell (8 electrons).Group 18 are the noble gases, and they have a full outer shell, so there is nothing to gain by trading. Every other atom on the chart is reaching for that full shell, which is why they trade.'
     }
   },
 

@@ -258,7 +258,7 @@ export const STAGES = [
       return {
         log: 'Per 40 shots: most through, 2 turned aside, 1 straight back.',
         title: 'The Nucleus',
-        body: `${verdict}An atom is almost entirely empty space, with nearly everything it weighs packed into a tiny lump at its center called the nucleus.`,
+        body: `${verdict}An atom is almost entirely empty space, with nearly everything it weighs packed into a tiny lump at its center called the nucleus. So when a beam of particles is fired, most pass through, but a few bounce off the center.`,
         model: { type: 'atom', p: 6, n: 6, caption: 'A carbon atom, not to scale: the real nucleus is far smaller than the space round it.' }
       };
     }

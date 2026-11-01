@@ -2541,6 +2541,34 @@ body.bench-deployed .modal-container .modal-card {
   overflow-y: auto;
 }
 
+/* Dedicated full-screen display for worked problems and end-of-quest practice,
+   cutting out the 3D scene cleanly instead of docking to a tiny side card. */
+body.bench-deployed .modal-container:has(.lq-practice-options),
+body.bench-deployed .modal-container:has(#bp-host),
+body.bench-deployed .modal-container:has(.bp-worked),
+body.bench-deployed .modal-container:has(.lq-practice-question),
+body.bench-deployed .modal-container.modal-fullscreen-practice {
+  justify-content: center;
+  align-items: center;
+  background: #080706;
+  padding: 2rem 1.5rem;
+}
+
+body.bench-deployed .modal-container:has(.lq-practice-options) .modal-card,
+body.bench-deployed .modal-container:has(#bp-host) .modal-card,
+body.bench-deployed .modal-container:has(.bp-worked) .modal-card,
+body.bench-deployed .modal-container:has(.lq-practice-question) .modal-card,
+body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
+  width: min(760px, 92vw);
+  max-width: 760px;
+  margin: 0 auto;
+  background: #141210;
+  border: 1px solid var(--border-durasteel);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  padding: 2.2rem 2.6rem;
+  max-height: 90vh;
+}
+
 /* Below the width where a docked card would leave no bench beside it, the
    transmission goes back to being a card over the view — an unreadable panel
    next to an unreadable bench helps nobody. */

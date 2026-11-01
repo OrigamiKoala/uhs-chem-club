@@ -526,8 +526,8 @@ export const FIELD_MANUAL_TERMS = [
     term: 'The Mole',
     road: 'unit01',
     questKey: 'unit01/q6-weigh',
-    stageLabel: 'Bench 6, Stage 4',
-    stageIndex: 3,
+    stageLabel: 'Bench 6, Stage 3',
+    stageIndex: 2,
     route: '#/learn/unit01/q6-weigh',
     title: 'Counting by Mass',
     body: 'The SI unit of amount of substance containing exactly 6.02214076 × 10²³ elementary entities.'

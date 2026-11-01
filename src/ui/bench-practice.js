@@ -36,9 +36,12 @@ export function runBenchPractice(worldId, questId) {
   return new Promise(resolve => {
     let settled = false;
     let view = null;
+    const modalEl = document.getElementById('modal-container');
+    modalEl?.classList.add('modal-fullscreen-practice');
     const finish = () => {
       if (settled) return;
       settled = true;
+      modalEl?.classList.remove('modal-fullscreen-practice');
       view?.dispose();
       resolve();
     };

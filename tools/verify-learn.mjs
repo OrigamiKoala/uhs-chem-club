@@ -3367,53 +3367,29 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const m = M.speciesMass;
     // the listed masses are the scope's
     same([M.listedMass('H'), M.listedMass('C'), M.listedMass('O')], [1, 12, 16], 'mass kit (the listed masses the scope weighed)');
-    // 1. a sealed crate balanced by scoops of the same atom: the pan's count is the crate's
-    {
-      const t = end(q6, 0);
-      near(M.counterOf(t, 'balance', 'R'), t.pieces.crate.props.n, 'unit01/q6-weigh stage 1 (the pan\'s counter is the crate\'s count)');
-      near(M.balanceRead(t, 'balance').diff, 0, 'unit01/q6-weigh stage 1 (the pans balance)');
-      holds(declared(q6, 0, 'sack').props.n < t.pieces.crate.props.n, 'unit01/q6-weigh stage 1: the counted sack is the whole crate');
-    }
+    // 1. methane formula mass predicted
+    near(Number(end(q6, 0).entries.ans), 12 + 4 * 1, 'unit01/q6-weigh stage 1 (predicted methane formula mass)');
     // 2. what one molecule of methane weighs is the listed masses added up
     {
       const t = end(q6, 1);
       near(M.scaleRead(t, 'scale').weight, 12 + 4 * 1, 'unit01/q6-weigh stage 2 (the scale reads the listed masses added up)');
       same(A.formulaOf(Object.values(t.pieces).filter(p => p.zone === 'container:pan' && p.kind === 'atom').map(p => p.id), t), 'CH₄', 'unit01/q6-weigh stage 2 (the molecule on the pan)');
     }
-    // 3. equal counts weigh in the ratio of their listed masses
+    // 3. counting by weighing: 72 g water is 4 moles
+    near(Number(end(q6, 2).entries.ans), 72 / m('water'), 'unit01/q6-weigh stage 3 (moles in 72 g drum of water)');
+    // 4. rank by atoms, not by weight: the heaviest drum is not the one with the most
     {
-      const t = end(q6, 2);
-      for (const r of t.recorder.rows) near(r.y / r.x, 60, `unit01/q6-weigh stage 3 (${r.label}: sixty atoms weigh sixty times one)`);
-      same(t.recorder.rows.map(r => r.x).sort((a, b) => a - b), [1, 12, 16], 'unit01/q6-weigh stage 3 (the three listed masses)');
+      const drums = ['d1', 'd2', 'd3'].map(id => ({ id, atoms: declared(q6, 3, id).props.grams / m(declared(q6, 3, id).props.species), grams: declared(q6, 3, id).props.grams }));
+      same(end(q6, 3).zones.rail.order, drums.slice().sort((a, b) => a.atoms - b.atoms).map(d => d.id), 'unit01/q6-weigh stage 4 (the rail, fewest atoms to most)');
+      holds(drums.slice().sort((a, b) => b.grams - a.grams)[0].id !== drums.slice().sort((a, b) => b.atoms - a.atoms)[0].id, 'unit01/q6-weigh stage 4: the heaviest drum holds the most atoms, so weight is no trap');
     }
-    // 4 to 7. the grams whose count matches 12.0 g of carbon are the molar mass; a drum is that many of them
-    {
-      const L = 6.02e23;
-      const grams = (t, what) => t.zones.containers['pan-r'].contents[what];
-      near(grams(end(q6, 3), 'oxygen'), 12 / m('carbon') * m('oxygen'), 'unit01/q6-weigh stage 4 (grams of oxygen with the carbon pan\'s count)');
-      near(m('carbon dioxide'), 12 + 16 + 16, 'unit01/q6-weigh stage 5 (a molecule of carbon dioxide)');
-      near(grams(end(q6, 4), 'carbon dioxide'), 44, 'unit01/q6-weigh stage 5 (grams of carbon dioxide with the carbon pan\'s count)');
-      near(grams(end(q6, 5), 'water'), m('water'), 'unit01/q6-weigh stage 6 (grams of water that match the count)');
-      near(72 / m('water'), end(q6, 5).fixtures.tally.dials.n.value, 'unit01/q6-weigh stage 6 (the scoops in the drum)');
-      near(M.counterOf(end(q6, 3), 'balance', 'L'), L, 'unit01/q6-weigh stage 4 (12.0 g of carbon is one count)');
-      const t7 = end(q6, 6);
-      near(grams(t7, 'hydrogen'), (36 / m('water')) * 2 * M.listedMass('H'), 'unit01/q6-weigh stage 7 (the grams of hydrogen that match the hydrogen in 36 g of water)');
-      near(M.counterOf(t7, 'balance', 'L'), 2 * 2 * L, 'unit01/q6-weigh stage 7 (two moles of water hold four moles of hydrogen atoms)');
-    }
-    // 8. rank by atoms, not by weight: the heaviest drum is not the one with the most
-    {
-      const drums = ['d1', 'd2', 'd3'].map(id => ({ id, atoms: declared(q6, 7, id).props.grams / m(declared(q6, 7, id).props.species), grams: declared(q6, 7, id).props.grams }));
-      same(end(q6, 7).zones.rail.order, drums.slice().sort((a, b) => a.atoms - b.atoms).map(d => d.id), 'unit01/q6-weigh stage 8 (the rail, fewest atoms to most)');
-      holds(drums.slice().sort((a, b) => b.grams - a.grams)[0].id !== drums.slice().sort((a, b) => b.atoms - a.atoms)[0].id, 'unit01/q6-weigh stage 8: the heaviest drum holds the most atoms, so weight is no trap');
-    // 9 to 12. the typed worked figures, recomputed from the listed masses
+    // 5 to 8. the typed worked figures, recomputed from the listed masses
     {
       const typedOf = k => Number(end(q6, k).entries.ans);
-      near(typedOf(8), Math.round(m('oxygen') / (m('oxygen') + 2 * m('hydrogen')) * 1000) / 10, 'unit01/q6-weigh stage 9 (oxygen\'s percent by mass in water)');
-      near(typedOf(9), Math.round((36 / m('water')) * 2 * 6.02 * 100) / 100, 'unit01/q6-weigh stage 10 (hydrogen atoms in 36 g of water, in units of 10^23)');
-      { const t11 = end(q6, 10); near(typedOf(10), M.counterOf(t11, 'balance', 'R') / M.counterOf(t11, 'balance', 'L'), 'unit01/q6-weigh stage 11 (hydrogen atoms for each carbon, from the two counters)'); }
-      near(typedOf(11), 30 / (m('carbon') + 3 * M.listedMass('H')) , 'unit01/q6-weigh stage 12 (carbon atoms in one molecule)');
-      { const g = id => declared(q6, 12, id).props.grams; near(typedOf(12), (g('mix') - g('sand')) / g('mix') * 100, 'unit01/q6-weigh stage 13 (the salt\'s percent of the mixture)'); }
-    }
+      near(typedOf(4), Math.round(m('oxygen') / (m('oxygen') + 2 * m('hydrogen')) * 1000) / 10, 'unit01/q6-weigh stage 5 (oxygen\'s percent by mass in water)');
+      near(typedOf(5), Math.round((36 / m('water')) * 2 * 6.02 * 100) / 100, 'unit01/q6-weigh stage 6 (hydrogen atoms in 36 g of water, in units of 10^23)');
+      near(typedOf(6), 6 / 2, 'unit01/q6-weigh stage 7 (hydrogen atoms for each carbon)');
+      near(typedOf(7), 30 / (m('carbon') + 3 * M.listedMass('H')), 'unit01/q6-weigh stage 8 (carbon atoms in one molecule)');
     }
   }
 

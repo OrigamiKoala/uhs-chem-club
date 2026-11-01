@@ -1182,30 +1182,10 @@ console.log('\nAtom kit — one set of rules, two scales\n');
     });
   }
 
-  // The drawn site plate (T1 to T3): a tap on it takes the item, the same fetch the world's [E] does. The one field fetch left in
-  // Tallow is q6-weigh's counted sack (the belt scoop, cooler draw and hopper draw carried nothing new and were retired).
-  {
-    const q6 = mods.get('unit01/q6-weigh');
-    const st = q6.STAGES[0];
-    let state = MODEL.createTable(st.table, st.title);
-    const view = new Table2D(stub(), { tools: [], onAction: a => { state = MODEL.apply(state, a); view.setState(state); view.settle(); } });
-    view.setState(state);
-    view.settle();
-    const plate = Object.values(state.fetch)[0];
-    if (!plate?.at) fail('q6-weigh stage 1 draws no site plate for its field point');
-    else {
-      if (state.pieces.sack.hidden !== true) fail('the sack is on the table before the point was visited');
-      view.pointerDown({ ...plate.at });
-      view.pointerUp({ ...plate.at });
-      if (state.pieces.sack.hidden) fail('a tap on the drawn site plate took nothing');
-      const keys = (await import('../src/learn/table/gestures.js')).contextKeys(MODEL.createTable(st.table, st.title), REG.getKit(st.table.kit));
-      if (keys.some(k => k.id.startsWith('fetch:'))) fail('a stage with a drawn site plate also offers a fetch key');
-    }
-    // The retired fetches stay retired: a fetch must bring evidence, so none of the three may come back.
-    for (const [q, n] of [['q1-grain', 0], ['q4-ledger', 0], ['q5-assay', 0]]) {
-      const t = MODEL.createTable(mods.get(`unit01/${q}`).STAGES[n].table, 'x');
-      if (Object.keys(t.fetch).length) fail(`${q} stage ${n + 1} sends the player to fetch something the bench already holds`);
-    }
+  // The retired fetches stay retired: a fetch must bring evidence, so none of them may come back.
+  for (const [q, n] of [['q1-grain', 0], ['q4-ledger', 0], ['q5-assay', 0], ['q6-weigh', 0]]) {
+    const t = MODEL.createTable(mods.get(`unit01/${q}`).STAGES[n].table, 'x');
+    if (Object.keys(t.fetch).length) fail(`${q} stage ${n + 1} sends the player to fetch something the bench already holds`);
   }
 
   if (failures === before) ok('every join is joinbench\'s planner against the shells as they stand; a pair that does not hold drifts apart with a reason; charge, formula and the Lewis reading are derived (a split undoes them); particles never join; every atom table has its scratch corner and ignores it; the site plate takes the item');

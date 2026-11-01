@@ -75,7 +75,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.24, say: 'Nobody can count atoms, so we weigh them. Atoms of one kind all weigh the same, so a pan that balances the crate holds the same number.' },
       { to: 0.50, say: 'The listed mass of a substance, in grams, is one mole of it. One mole always holds 6.02 × 10²³ atoms or molecules, whatever it is made of.' },
-      { to: 0.76, say: 'The molar mass is the bridge: divide grams by it to get moles, multiply moles by it to get grams. A formula is a count, and a balance reads a mass.' },
+      { to: 0.76, say: 'If there are 72 grams of water and each mole weighs 18 grams, then there are 4 moles of water.' },
       { to: 0.90, say: 'So a sealed crate can be counted without opening it, and nothing in the stores can hide inside one. The sealed drums on the dock are next.' }
     ],
     filed: 'Filed: every sealed drum in the stores can now be counted without opening it.'

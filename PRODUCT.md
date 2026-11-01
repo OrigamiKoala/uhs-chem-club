@@ -70,10 +70,10 @@ A chemistry course often lectures abstractly before students touch an instrument
 
 ## Capabilities and Constraints
 
-<!-- facts: worlds=14 built_worlds=7 quests=60 benches=53 bosses=7 stages=416 -->
+<!-- facts: worlds=14 built_worlds=7 quests=60 benches=53 bosses=7 stages=411 -->
 
 - **Campaign: Quest 1, The Charge Gardens of Erebus.** 20 stages, 650 XP, a scan → compare → commit loop, physically honest 3D reaction animations, a chemistry card after every solve and an epilogue that gathers the terminology into a debrief.
-- **Learn track:** fourteen worlds in road order: Tallow (atoms, the table, the mole), Lanternfall (light, orbitals, trends), Ligar (bonding), Bellows (gases), Ember Reach (thermodynamics), Mirrowen (states of matter), Kettle (stoichiometry and reactions), Teeter (equilibrium), Verdigris (acids and bases), Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic) and Cinder Halo (nuclear). **Seven are built**: Tallow (6 benches + the Hopper), Lanternfall (9 + the Eater), Ligar (9 + the Warden), Bellows (6 + the Compressor), Ember Reach (7 + the Crucible), Mirrowen (7 + the Undertow) and Kettle (9 benches + the Golem). That is **60 quest modules: 53 benches and 7 bosses, 416 stages**. Every built world is open from the start; inside a world, quest N opens when N−1 is complete. The other seven are charted only and hold nothing shut.
+- **Learn track:** fourteen worlds in road order: Tallow (atoms, the table, the mole), Lanternfall (light, orbitals, trends), Ligar (bonding), Bellows (gases), Ember Reach (thermodynamics), Mirrowen (states of matter), Kettle (stoichiometry and reactions), Teeter (equilibrium), Verdigris (acids and bases), Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic) and Cinder Halo (nuclear). **Seven are built**: Tallow (6 benches + the Hopper), Lanternfall (9 + the Eater), Ligar (9 + the Warden), Bellows (6 + the Compressor), Ember Reach (7 + the Crucible), Mirrowen (7 + the Undertow) and Kettle (9 benches + the Golem). That is **60 quest modules: 53 benches and 7 bosses, 411 stages**. Every built world is open from the start; inside a world, quest N opens when N−1 is complete. The other seven are charted only and hold nothing shut.
 - **Walkable worlds:** Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen and Kettle. Every built quest is a tabletop; at `3D On` the camera leans in over the plate.
 - **The Drill Deck holds practice in one place.** Every bench problem and every end-of-world question (the question bank, one JSON file per world), asked in rounds (a Daily Set, a Quick Run, a Timed Round, Weak Spots) with stars, a **weekly** streak, per-world mastery tiers and a few cosmetic commendations. Each bench also asks two problems after its debrief, and offers a guided worked problem on computational benches. Optional and skippable at every point; pays no XP, never reaches Standings, gates nothing. A 2D screen on every setting.
 - **The story is kept in the Case File's Notebook.** Every briefing, transmission and piece of evidence files itself there as it is seen.
@@ -273,7 +273,7 @@ The audits that produced this section followed one protocol, worth repeating for
 
 ## 8. Status of the built worlds
 
-Counts are 416 stages in 60 quests. Every stage of every world has been loaded and solved by script at least once. Hand play by a real gesture is partial everywhere, and in no world has a student played it.
+Counts are 411 stages in 60 quests. Every stage of every world has been loaded and solved by script at least once. Hand play by a real gesture is partial everywhere, and in no world has a student played it.
 
 | World | Built | Known open items |
 | --- | --- | --- |

@@ -111,7 +111,18 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
 - **NEVER have too many things going on.** One decision per stage; only what that decision needs is on the bench
   (a few pieces, one instrument, its one key). No second task stacked on the first, no extra strip, readout, label or
   angle the answer does not use. When a stage is crowded, remove; do not explain. (`q2-core` stage 1 once stacked a
-  prediction, a strip and a model choice and was cut back to one: lay a model, fire the beam.)
+  prediction, a strip and a model choice and was cut back to one: lay a model, fire the beam; `q6-weigh` replaced the cluttered two-pan balance setup with direct massTable reasoning and explicit atomic masses: C=12.0, H=1.0).
+- **Tallow Bench 6 (`q6-weigh`): Counting by Weight.** 8 stages on `massTable`:
+  1. Predict formula mass of methane (CH₄) from atomic masses (C=12.0, H=1.0).
+  2. Confirm on scale (build CH₄ on pan, scale reads 16.0 u).
+  3. Introduce the mole by counting by weighing (72.0 g water drum / 18.0 g/mol = 4 moles).
+  4. Rank three drums by atom count (moles = mass / molar mass; lightest drum holds the most atoms).
+  5. Percent by mass (oxygen in water: 16.0 / 18.0 = 88.9%).
+  6. Atoms in a weighed sample (36 g water -> 2 mol × 2 H × 6.02 × 10²³ = 24.1 × 10²³ H atoms).
+  7. Empirical formula directly from element masses (24.0 g C and 6.0 g H -> 2.0 mol C and 6.0 mol H -> 3 H per C; clean massTable without two-pan balance).
+  8. Molecular formula (CH₃ unit in 30.0 g/mol molecule -> C₂H₆; atomic masses C=12.0, H=1.0 explicitly shown on plate).
+  Debrief beat: "If there are 72 grams of water and each mole weighs 18 grams, then there are 4 moles of water."
+- **Full-screen clean display for practice and worked problems.** Practice questions and worked problems at the end of each bench cut out the 3D world with an opaque dark backdrop (`body.bench-deployed .modal-container.modal-fullscreen-practice` and `:has(.lq-practice-options, .bp-worked)`), dedicating the whole screen to a spacious, clean, and minimalistic centered card instead of docking to a tiny side card over the 3D scene.
 - **Discover it, never read it off.** No stage asks the player to report what is visible on the table (printed +, labels).
   The property under study starts hidden and an instrument reveals it (`q2-core` stage 3: identical specks, the
   `field` fixture's charged plates, sort by bent or straight). The Tour replaces stage briefings on benches, every
