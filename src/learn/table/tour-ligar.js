@@ -111,7 +111,8 @@ const PIECE = {
   'domain:rod': ['Charged rod', 'Lay the rod on a stream. A charged rod pulls on a stream whose molecules turn in a field and bends it toward the rod; any other stream runs straight on.'],
   'domain:stream': ['Streams', 'Each stream is a thin flow of one liquid. The dashed line shows where it would fall if nothing pulled it.'],
   'domain:orb': ['Orbitals', 'Each piece is one orbital of an atom, drawn with the electrons in it. Drop one in the bowl to blend it, or drop one on another orbital to try to bond the two. A bonded pair of atoms is drawn together.'],
-  'mo:mocard': ['Gas cards', 'Each card is one gas. Drag a card into the "Gas to test" slot and press "Test Sample"; the card keeps the reading the magnet gave.']
+  'mo:mocard': ['Gas cards', 'Each card is one gas. Drag a card into the "Gas to test" slot and press "Test Sample"; the card keeps the reading the magnet gave.'],
+  'mo:card': ['Cards', 'Each card shows an orbital combination or diatomic molecule. Drag a card to sort it into the matching tray.']
 };
 
 /** A piece the instrument's own step already explains (a slate's fixed atoms and joints), so the Tour leaves it out. */

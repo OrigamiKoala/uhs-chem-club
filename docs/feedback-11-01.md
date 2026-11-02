@@ -54,3 +54,33 @@ This document contains feedback from the user audit on 2026-11-01.
 
 For worked problems and the problems at the end of each quest, don't put it in a tiny window on the left side overlaying the 3D world. Cut out the 3D world and dedicate the whole screen to the display - make it look good, clean, minimalistic, and simple.
 
+## Lanternfall and Ligar
+
+![alt text](image-25.png) The explanation needs a better animation - the current animation with something spinning in 3D space is not helpful. I want to see a photon strike a metal surface and an electron pop off. Then, as the number of photons increase, the number of electrons emitted increases. Finally, as the energy of the photons increase, the energy of the electrons emitted increases.
+
+![alt text](image-26.png) On all of these Ligar benches, remove the weird colored dots (I assume they are photons) - they will just confuse the user into thinking they are electrons.
+
+![alt text](image-27.png) Remove all text, labels, and numbers from the explanation animation.
+
+![alt text](image-28.png) For this explainer animation, make sure it fits in the window, so I don't have to scroll. Also, remove the top bar that says "Plane:" and "Slice: ON". Remove "Empty slice" and "In slice:" - I only want to see the visual.
+
+![alt text](image-29.png) For this explainer animation, remove the "+ Phase" and "- Phase" labels, as well as any text that goes where "All five d orbitals" and "Five degenerate d orbitals" are.
+
+![alt text](image-30.png) For this bench (and the boron one), don't show the 2D projection of the orbitals, and enlarge the 3D model so it clearly sits on the tabletop and is huge.
+
+![alt text](image-31.png) For this stage, make the cards much smaller so they actually fit in the "pulled" and "not pulled" boxes, and align the snapped locations so they are inside the boxes.
+
+![alt text](image-32.png) When I click around, nothing happens on this stage.
+
+In Lanternfall, add a quest that introduces wavefunctions and atomic orbitals in a super visual way.
+
+Expand the Molecular Orbitals quest so it shows the user visually how the atomic orbitals add up or subtract to form the molecular orbitals. Include plenty of visualizations of atoms transitioning between free and bonded, and how the orbitals change shape from AOs to MOs. Also include lots of more beginner information about bonding vs antibonding and other crucial MO concepts. You will probably have to build a ton of stages, and maybe even another quest or two.
+
+## Bellows
+
+![alt text](image-33.png) For this stage, and in general, the straightedge doesn't give me the slope - also, instead of having me plot values, I should have a slider where I can change the volume, and see the pressure increase (an analogue pressure gauge's needle moves). That's more fun.
+
+
+
+
+

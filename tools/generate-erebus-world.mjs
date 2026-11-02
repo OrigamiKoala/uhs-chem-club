@@ -102,7 +102,7 @@ for (const s of sites) {
 const erebusWorld = {
   id: "erebus",
   name: "The Charge Gardens",
-  oneLine: "Find what pulls. Draw the line.",
+  oneLine: "Electric charges, electrostatic forces, and Coulomb's law.",
   sky: "erebus-sky",
   terrain: {
     heightmap: "erebus-heightmap",

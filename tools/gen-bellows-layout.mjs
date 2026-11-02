@@ -237,7 +237,7 @@ const world = {
   id: 'bellows',
   name: 'Bellows',
   place: 'Cloud deck',
-  oneLine: 'Learn how pressure, temperature, volume and amount tie together in a gas, and where the gas law stops being true.',
+  oneLine: 'Gas laws, the ideal gas equation, and kinetic molecular theory.',
   sky: 'bellows-sky',
   terrain: { heightmap: 'bellows-deck', size: [200, 200], maxHeight: 0, material: 'tread-plate' },
   ambience: {

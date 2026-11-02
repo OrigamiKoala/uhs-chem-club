@@ -12,8 +12,8 @@ export const UNIT_09 = {
   world: 'Verdigris',
   place: 'Acid marsh',
   title: 'Acids and Bases',
-  line: 'Something gives it up, something takes it.',
-  brief: 'The marsh on Verdigris eats boots, hull plate and survey drones at different speeds. Everything down there is either handing something over or grabbing for it.',
+  line: 'Acid-base reactions, pH scale, and buffer systems.',
+  brief: 'Investigate proton transfer, acid and base strength, pH calculations, and buffer solutions across four benches.',
 
   quests: [
     {

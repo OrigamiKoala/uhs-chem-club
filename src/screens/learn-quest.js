@@ -57,7 +57,7 @@ export function disposeLearnQuest() {
 }
 
 function shell({ world, quest, body, inWorld, overWorld }) {
-  const mod = inWorld ? ' learn-quest-inworld' : (overWorld ? ' learn-quest-overworld' : '');
+  const mod = inWorld ? ' learn-quest-inworld' : (overWorld ? ' learn-quest-overworld' : ' learn-quest-2d');
   return `
     <div class="screen-container m-screen m-learn-quest${mod}">
       <div class="learn-host-bar plate">

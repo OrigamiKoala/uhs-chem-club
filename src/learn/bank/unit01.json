@@ -1150,40 +1150,48 @@
             "explain": "Mass number = protons + neutrons = 12 + 12 = 24."
           },
           {
-            "say": "Multiply that mass number by its share (0.7899). What does the 24 isotope contribute to the average?",
+            "say": "In 100 atoms, how many have 12 neutrons?",
             "kind": "number",
-            "answer": 18.96,
-            "calc": "0.7899*24",
-            "tol": 0.005,
-            "hint": "Share of atoms times mass of each atom.",
-            "explain": "0.7899 x 24 = 18.96."
+            "answer": 78.99,
+            "calc": "0.7899*100",
+            "hint": "What percentage of atoms have 12 neutrons? How many atoms total are there?",
+            "explain": "0.7899 x 100 = 78.99"
           },
           {
-            "say": "What does the 13-neutron isotope (mass 25, share 0.1000) contribute?",
+            "say": "In total, how much do the 12-neutron atoms weigh?",
             "kind": "number",
-            "answer": 2.5,
-            "calc": "0.1*25",
-            "tol": 0.005,
-            "hint": "Same method: share times mass.",
-            "explain": "0.1000 x 25 = 2.500."
+            "answer": 1896,
+            "calc": "78.99*24",
+            "tol": 5,
+            "hint": "How many 12-neutron atoms are there? How much does each one weigh?",
+            "explain": "78.99 x 24 = 1896."
           },
           {
-            "say": "What does the 14-neutron isotope (mass 26, share 0.1101) contribute?",
+            "say": "In total, how much do the 13-neutron atoms weigh?",
             "kind": "number",
-            "answer": 2.863,
-            "calc": "0.1101*26",
-            "tol": 0.005,
+            "answer": 250,
+            "calc": "10*25",
+            "tol": 5,
+            "hint": "Same method: find the number of 13-neutron atoms, and how much each weighs.",
+            "explain": "10.00 x 25 = 250.0."
+          },
+          {
+            "say": "In total, how much do the 14-neutron atoms weigh?",
+            "kind": "number",
+            "answer": 286.3,
+            "calc": "11.01*26",
+            "tol": 5,
             "hint": "Same method again.",
-            "explain": "0.1101 x 26 = 2.863."
+            "explain": "11.01 x 26 = 286.3."
           },
           {
-            "say": "Add the three contributions. What is the average atomic mass?",
+            "say": "What is the average mass of the 100 atoms?",
             "kind": "number",
             "answer": 24.32,
-            "calc": "0.7899*24+0.1*25+0.1101*26",
+            "calc": "(1896+250+286.3)/100",
             "tol": 0.002,
-            "hint": "The average is the sum of the three contributions.",
-            "explain": "18.96 + 2.50 + 2.86 = 24.32, the mass printed for magnesium."
+            "hint": "The average mass is the total mass divided by the number of atoms.",
+            "explain": "(1896 + 250 + 286.3)/100 = 24.32, the mass printed for magnesium."
           },
           {
             "say": "Why does the average sit so close to 24?",

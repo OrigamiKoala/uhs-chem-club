@@ -122,6 +122,7 @@ function photonParts(spec) {
       parts.spheres.push(sphere([1.7 + plan.speed * 0.12, y, z], 0.1, PALE, 'electron', 10));
     }
   }
+  parts.photons = { metal: spec.metal || 'Na', nm: spec.nm || 400, brightness: spec.brightness || 2 };
   return parts;
 }
 

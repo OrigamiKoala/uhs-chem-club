@@ -16,8 +16,8 @@ export const UNIT_10 = {
   world: 'Brinewire',
   place: 'Copper marsh',
   title: 'Electrochemistry',
-  line: 'Redox, cells, and the current between two metals.',
-  brief: 'A brine marsh threaded with old copper, where two metals in the salt make a battery that hums. Find out which way the electrons go and what they can be made to do.',
+  line: 'Redox reactions, galvanic cells, and cell potentials.',
+  brief: 'Explore oxidation-reduction reactions, galvanic cells, standard reduction potentials, and electrolysis across six benches.',
 
   quests: [
     { id: 'q1-halves', title: 'Half-Reactions', line: 'Splitting a redox reaction and balancing what moves.', arena: 'bench', stageCount: 8, status: 'draft', module: null },

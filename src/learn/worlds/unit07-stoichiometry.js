@@ -17,8 +17,8 @@ export const UNIT_07 = {
   world: 'Kettle',
   place: 'Foundry works',
   title: 'Stoichiometry and Reactions',
-  line: 'Nothing is lost in the furnace.',
-  brief: 'Kettle is an automated foundry works on a dry soda flat. Ore goes into the furnace, metal and slag come out, and every ton has to be accounted for.',
+  line: 'Chemical equations, reaction types, and stoichiometry.',
+  brief: 'Practice balancing chemical equations, identifying reaction types, determining limiting reactants, and calculating reaction stoichiometry across nine benches.',
 
   quests: [
     {

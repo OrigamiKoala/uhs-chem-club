@@ -383,7 +383,7 @@ const world = {
   id: 'ember',
   name: 'Ember Reach',
   place: 'Volcanic vent field',
-  oneLine: 'Heat into and out of a cup, the energy in bonds, and why some changes run on their own.',
+  oneLine: 'Thermal energy transfer, reaction enthalpy, bond energies, entropy, and Gibbs free energy.',
   sky: 'ember-sky',
   terrain: { heightmap: 'ember-sinter', size: [240, 240], maxHeight: 2.0, material: 'sinter-crust' },
   ambience: {

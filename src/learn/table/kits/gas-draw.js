@@ -344,9 +344,52 @@ function paintBarrel(ctx, F, g, cj, q, f, b) {
       ctx.fillRect(Math.min(bx1 - F.len(3), pxp + F.len(2)), (by0 + by1) / 2 - F.len(1.7), F.len(3), F.len(3.4));
     }
   }
+  // Analogue round pressure gauge with swinging needle atop the barrel
+  const gr = Math.max(7, F.len(3.8));
+  const gx = bx0 + gr + F.len(0.5);
+  const gy = by0 - gr - F.len(1.2);
+  // Stem connecting to barrel
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = Math.max(1.5, F.len(0.6));
+  ctx.beginPath();
+  ctx.moveTo(gx, gy + gr);
+  ctx.lineTo(gx, by0);
+  ctx.stroke();
+  // Bezel & dark face
+  ctx.fillStyle = '#16140f';
+  ctx.beginPath();
+  ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = DUST;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  // Gauge scale arc
+  ctx.strokeStyle = DIM;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(gx, gy, gr * 0.75, Math.PI * 0.75, Math.PI * 2.25);
+  ctx.stroke();
+  // Needle pointing to current pressure
+  const pMax = f.props.pmax || 1000;
+  const pFrac = Math.max(0, Math.min(1, (q.P || 0) / pMax));
+  const needleAng = Math.PI * 0.75 + pFrac * Math.PI * 1.5;
+  const nx = gx + Math.cos(needleAng) * (gr * 0.72);
+  const ny = gy + Math.sin(needleAng) * (gr * 0.72);
+  ctx.strokeStyle = AMBER;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(gx, gy);
+  ctx.lineTo(nx, ny);
+  ctx.stroke();
+  // Center pivot pin
+  ctx.fillStyle = '#dcd6cc';
+  ctx.beginPath();
+  ctx.arc(gx, gy, Math.max(1.5, gr * 0.18), 0, Math.PI * 2);
+  ctx.fill();
+
   // Above the barrel (clear of the glass that leans over it) the cylinder's name, and the gas it holds.
   const sealed = cj.c.sealed;
-  if (!f.props.titled) say(ctx, `${q.label}${sealed ? '' : `  ${q.sym}`}`, bx0, by0 - F.len(5), F.size(2.3, 6), { color: DUST, weight: 700, maxW: bx1 - bx0 });
+  if (!f.props.titled) say(ctx, `${q.label}${sealed ? '' : `  ${q.sym}`}`, gx + gr + F.len(2.5), by0 - F.len(5), F.size(2.3, 6), { color: DUST, weight: 700, maxW: bx1 - (gx + gr) });
 }
 
 function paintScreen(ctx, F, g, q, f, b) {

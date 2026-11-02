@@ -2194,6 +2194,60 @@
         "finish": "A standard gives ε, ε gives the concentration from an absorbance, and the dilution factor carries it back to the original sample."
       }
     },
+    "q10-wavefunctions": {
+      "problems": [
+        {
+          "id": "q10-wavefunctions#b1",
+          "quest": "q10-wavefunctions",
+          "question": "How many radial nodes does a 3p orbital have?",
+          "options": [
+            {
+              "id": "a",
+              "label": "1"
+            },
+            {
+              "id": "b",
+              "label": "0"
+            },
+            {
+              "id": "c",
+              "label": "2"
+            },
+            {
+              "id": "d",
+              "label": "3"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Radial nodes equal n - l - 1. For a 3p orbital, n = 3 and l = 1, so 3 - 1 - 1 = 1 radial node."
+        },
+        {
+          "id": "q10-wavefunctions#b2",
+          "quest": "q10-wavefunctions",
+          "question": "What is the physical meaning of squaring the wavefunction, |ψ|²?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The probability density of finding the electron at a point in space"
+            },
+            {
+              "id": "b",
+              "label": "The electric charge density of the atomic nucleus"
+            },
+            {
+              "id": "c",
+              "label": "The exact speed and trajectory of the electron"
+            },
+            {
+              "id": "d",
+              "label": "The magnetic moment of the electron spin"
+            }
+          ],
+          "answer": "a",
+          "explanation": "According to the Born interpretation of quantum mechanics, |ψ|² gives the probability density of finding the electron per unit volume."
+        }
+      ]
+    },
     "boss-eater": {
       "problems": [
         {

@@ -61,6 +61,11 @@ export const HOST_PLAN = {
     structure: 'water-hole', kind: 'light', skin: 'shelf', plate: 'BN-09',
     // The cuvette sled, the tripod over the hole cut through the lake ice.
     extent: [-4.4, 5.3, -7.7, 0.7]
+  },
+  'site-10': {
+    structure: 'wavefunction-dome', kind: 'cloud', skin: 'desk', plate: 'BN-10',
+    // The geodesic resonance dome framing the wavefunction analysis station.
+    extent: [-5.0, 5.0, -6.5, 0.7]
   }
 };
 

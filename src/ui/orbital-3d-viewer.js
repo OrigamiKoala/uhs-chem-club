@@ -194,38 +194,12 @@ export function mountDOrbitals3D(view, wrap, config, still) {
         b.style.color = act ? '#d99423' : '#a59c86';
       });
       updateScene();
-      updateStatus();
     });
     bar.appendChild(btn);
     btns.push({ b: btn, item: o });
   });
 
-  // Phase legend
-  const legend = document.createElement('div');
-  legend.style.cssText = 'margin-left:auto;display:flex;gap:8px;align-items:center;font-size:10px;font-family:ui-monospace,monospace;';
-  legend.innerHTML = `
-    <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;background:#e69f00;border-radius:1px;"></span><span style="color:#e69f00;">+ Phase</span></span>
-    <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;background:#0072b2;border-radius:1px;"></span><span style="color:#38bdf8;">− Phase</span></span>
-  `;
-  bar.appendChild(legend);
-
-  // 2. Status / description box
-  const statusBox = document.createElement('div');
-  statusBox.className = 'lq-orbital-status';
-  statusBox.style.cssText = 'padding:6px 10px;background:#100e0c;border-bottom:1px solid #24201c;font-family:ui-monospace,monospace;font-size:11px;display:flex;flex-direction:column;gap:3px;';
-
-  const updateStatus = () => {
-    statusBox.innerHTML = `
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="display:inline-block;padding:1px 5px;background:#d9942322;color:#d99423;border:1px solid #d9942355;font-size:10px;font-weight:bold;border-radius:2px;">${activeOrbital.name}</span>
-        <span style="color:#dcd6cc;font-weight:600;">${activeOrbital.shape}</span>
-      </div>
-    `;
-  };
-  updateStatus();
-
-  wrap.insertBefore(statusBox, view);
-  wrap.insertBefore(bar, statusBox);
+  wrap.insertBefore(bar, view);
 
   let disposed = false;
   let raf = 0;

@@ -12,8 +12,8 @@ export const UNIT_08 = {
   world: 'Teeter',
   place: 'Salt pans',
   title: 'Equilibrium',
-  line: 'Both ways at once, and still.',
-  brief: 'The pans on Teeter never fill and never dry. Something is running in both directions at the same rate, and the trick is learning to lean on it.',
+  line: 'Dynamic equilibrium, equilibrium constants, and Le Chatelier’s principle.',
+  brief: 'Explore reversible reactions, dynamic equilibrium, equilibrium constants, and Le Chatelier’s principle across four benches.',
 
   quests: [
     {

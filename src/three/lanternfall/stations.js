@@ -855,6 +855,45 @@ export function buildWaterHole(w, site) {
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
+export function buildWavefunctionDome(w, site) {
+  const k = kitFor(w);
+  const M = w.M;
+  const g = new THREE.Group();
+  g.name = 'wavefunction-dome';
+  const bench = buildLfBench(w.ctx, { kind: 'cloud', plate: HOST_PLAN['site-10'].plate, skin: HOST_PLAN['site-10'].skin });
+  g.add(bench.group);
+
+  const Z0 = -3.8;
+  for (const sx of [-3.8, -1.9, 1.9, 3.8]) {
+    k.post(g, sx, Z0 - 1.2, 3.2, 0.1);
+  }
+  k.box(g, [8.2, 0.12, 0.12], M.darkSteel, [0, 3.2, Z0 - 1.2]);
+  k.box(g, [6.0, 0.1, 0.1], M.steel, [0, 3.7, Z0 - 2.0]);
+  for (const sx of [-3.8, 3.8]) {
+    k.strut(g, [sx, 3.2, Z0 - 1.2], [sx * 0.75, 3.7, Z0 - 2.0], 0.05, M.darkSteel);
+    k.strut(g, [sx * 0.75, 3.7, Z0 - 2.0], [0, 4.0, Z0 - 2.4], 0.045, M.darkSteel);
+  }
+  k.cyl(g, [0.3, 0.3, 0.6, 12], M.darkSteel, [0, 4.0, Z0 - 2.4], [0, 0, Math.PI / 2]);
+
+  k.box(g, [0.9, 1.4, 0.8], M.caseDark, [-3.4, 0.7, Z0], null, true);
+  k.cyl(g, [0.18, 0.18, 0.5, 12], M.glass, [-3.4, 1.65, Z0]);
+  k.tag(g, 'HARMONIC 10', { w: 0.6, h: 0.18 }, [-3.4, 1.1, Z0 + 0.41]);
+
+  k.box(g, [0.8, 1.2, 0.7], M.steel, [3.4, 0.6, Z0], null, true);
+  k.box(g, [0.7, 0.2, 0.6], M.darkSteel, [3.4, 0.9, Z0]);
+
+  k.strut(g, [0, 3.2, Z0 - 1.2], [0, 3.3, 0.3], 0.04, M.darkSteel);
+  k.lamp(g, 0, 3.2, 0.3);
+
+  const colliders = [
+    { lx: 0, lz: Z0 - 1.2, hw: 4.2, hd: 0.6 },
+    { lx: -3.4, lz: Z0, hw: 0.6, hd: 0.5 },
+    { lx: 3.4, lz: Z0, hw: 0.5, hd: 0.5 },
+    { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
+  ];
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints: [] };
+}
+
 /** The host builder for each site, by site id. */
 export const HOST_BUILDERS = {
   'site-1': buildWaveTank,
@@ -865,5 +904,6 @@ export const HOST_BUILDERS = {
   'site-6': buildRecordsNorth,
   'site-7': buildDetectorMast,
   'site-8': buildTileStore,
-  'site-9': buildWaterHole
+  'site-9': buildWaterHole,
+  'site-10': buildWavefunctionDome
 };

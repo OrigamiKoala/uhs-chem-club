@@ -12,8 +12,8 @@ export const UNIT_11 = {
   world: 'Quicklight',
   place: 'Storm belt',
   title: 'Kinetics',
-  line: 'Whether it happens is one question. How fast is another.',
-  brief: 'Quicklight runs a belt of dry lightning that never touches down twice in the same hour. Everything in the belt is possible; almost nothing is quick.',
+  line: 'Reaction rates, rate laws, activation energy, and catalysis.',
+  brief: 'Examine reaction rates, experimental rate laws, collision theory, activation energy, and catalysts across four benches.',
 
   quests: [
     {

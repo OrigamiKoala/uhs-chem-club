@@ -15,8 +15,8 @@ export const UNIT_14 = {
   world: 'Cinder Halo',
   place: 'Crater sea',
   title: 'Nuclear Chemistry',
-  line: 'The thing that would not divide, dividing.',
-  brief: 'Cinder Halo is a ring of craters that are still warm and no one can say from what. Whatever happened here went deeper than any furnace can reach.',
+  line: 'Radioactive decay, nuclear reactions, and half-life.',
+  brief: 'Explore radioactive decay modes, nuclear equations, half-life kinetics, and mass-energy equivalence across four benches.',
 
   quests: [
     {

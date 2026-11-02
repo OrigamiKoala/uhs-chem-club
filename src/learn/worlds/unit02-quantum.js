@@ -34,6 +34,7 @@ export const UNIT_02 = {
     { id: 'q7-pes', title: 'Photoelectron Spectroscopy', line: 'Measure electron binding energies to map atomic shells.', arena: 'bench', stageCount: 6, status: 'live', module: () => import('../quests/unit02/q7-pes.js') },
     { id: 'q8-trends', title: 'Periodic Trends', line: 'Chart how hard each atom pulls its electrons.', arena: 'bench', stageCount: 7, status: 'live', module: () => import('../quests/unit02/q8-trends.js') },
     { id: 'q9-absorb', title: 'Spectroscopy', line: 'Measure how much light a solution absorbs as concentration changes.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q9-absorb.js') },
+    { id: 'q10-wavefunctions', title: 'Wavefunctions', line: 'Explore wavefunctions, probability density, and orbital shapes.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q10-wavefunctions.js') },
     { id: 'boss-eater', title: 'The Lantern-Eater', line: 'Starve the Lantern-Eater and take its lens.', arena: 'boss', stageCount: 5, status: 'live', module: () => import('../quests/unit02/boss-eater.js') }
   ]
 };

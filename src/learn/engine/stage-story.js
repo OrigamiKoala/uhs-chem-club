@@ -73,6 +73,9 @@ export const STAGE_STORY = {
   'q9-absorb': {
     5: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'
   },
+  'q10-wavefunctions': {
+    1: 'Vess needs to map the wave crests and nodes where the beacon electrons hide.'
+  },
 
   /* ---- Ligar: clear the rescue pass ---- */
   'q1-joins': {

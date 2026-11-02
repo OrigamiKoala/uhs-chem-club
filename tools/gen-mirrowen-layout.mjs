@@ -283,7 +283,7 @@ const world = {
   id: 'mirrowen',
   name: 'Mirrowen',
   place: 'Tidal shelf',
-  oneLine: 'Solid, liquid and gas, what holds molecules together, and how a mixture comes apart.',
+  oneLine: 'States of matter, phase changes, and solutions.',
   sky: 'mirrowen-sky',
   terrain: { heightmap: 'mirrowen-shingle', size: [240, 240], maxHeight: 1.0, material: 'frost-shingle' },
   ambience: {

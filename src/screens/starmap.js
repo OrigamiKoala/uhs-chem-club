@@ -25,7 +25,7 @@ const SECTORS = [
     world: "Erebus",
     place: "Desert world",
     quest: "The Charge Gardens",
-    line: "",
+    line: "Electric charges, electrostatic forces, and Coulomb's law.",
     status: "live"
   },
   {
@@ -143,7 +143,7 @@ function galaxyNodes(cleared, isComplete) {
     code: "SEC 01",
     name: "Erebus",
     place: "Desert world",
-    line: "Find what pulls. Draw the line.",
+    line: "Electric charges, electrostatic forces, and Coulomb's law.",
     state: isComplete ? "complete" : "open",
     act: "act1",
     quests: [{ done: isComplete, live: true, title: "The Charge Gardens" }],

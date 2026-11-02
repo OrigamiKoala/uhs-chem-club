@@ -40,8 +40,8 @@ export const MO_RECORDER = Object.freeze({ at: { x: 147.4, y: 61.6 }, size: { w:
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
 
-/** A card on a rail: wide enough to carry a formula and a count line. */
-export const CARD_RECT = Object.freeze({ hw: 16, hh: 9 });
+/** A card on a rail: compact dimensions so it fits cleanly inside sorting trays without overflowing. */
+export const CARD_RECT = Object.freeze({ hw: 9, hh: 5.5 });
 
 /* ------------------------------------------------------------------
    THE RACK'S GEOMETRY (pure; the fixture's picture and the containers' places both read it)
@@ -422,17 +422,18 @@ function paintCard(ctx, p, state, o) {
   const x0 = o.x - hw;
   const y0 = o.y - hh;
   slab(ctx, x0, y0, hw * 2, hh * 2, o.lit);
-  const size = Math.max(8, Math.round(hh * 0.46));
+  const size = Math.max(7, Math.round(hh * 0.46));
   const mol = p.props.mol;
-  if (!mol) {
-    fitted(ctx, p.label, o.x, o.y, hw * 1.8, { size: size * 1.05, weight: 700 });
+  const pull = cardPull(p);
+  const hasSub = Boolean(p.props.counts || pull !== null);
+  if (!mol || !hasSub) {
+    fitted(ctx, p.label, o.x, o.y, hw * 1.8, { size: size * 1.25, weight: 700 });
     return;
   }
-  fitted(ctx, p.label, o.x, y0 + hh * 0.62, hw * 1.8, { size: size * 1.25, weight: 700 });
-  if (p.props.counts) fitted(ctx, cardCounts(mol).text, o.x, y0 + hh * 1.4, hw * 1.86, { size: Math.max(7, size * 0.78), color: PLATE_COLORS.dust });
-  const pull = cardPull(p);
+  fitted(ctx, p.label, o.x, y0 + hh * 0.65, hw * 1.8, { size: size * 1.15, weight: 700 });
+  if (p.props.counts) fitted(ctx, cardCounts(mol).text, o.x, y0 + hh * 1.42, hw * 1.86, { size: Math.max(6, size * 0.75), color: PLATE_COLORS.dust });
   if (pull !== null) {
-    fitted(ctx, pull > 0 ? `ATTRACTED ${pull}` : 'REPELLED', o.x, y0 + hh * 1.4, hw * 1.86, { size: Math.max(7, size * 0.82), weight: 700, color: AMBER });
+    fitted(ctx, pull > 0 ? `ATTRACTED ${pull}` : 'REPELLED', o.x, y0 + hh * 1.42, hw * 1.86, { size: Math.max(6, size * 0.78), weight: 700, color: AMBER });
   }
 }
 

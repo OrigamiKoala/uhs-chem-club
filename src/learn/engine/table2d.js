@@ -178,6 +178,22 @@ export function drawTable(ctx, w, h, state, view = {}) {
   for (const c of Object.values(state.zones.containers)) {
     const r = rectOf(c, SIZES.container);
     if (!mat) outline(r, Boolean(holding) || view.pourFrom === c.id, false);
+    if (view.pourFrom === c.id) {
+      ctx.save();
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = AMBER;
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(X(r.x0) - 1, Y(r.y0) - 1, r.w * sc + 2, r.h * sc + 2);
+      ctx.restore();
+    } else if (view.pourFrom && !c.props?.still) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(74, 222, 128, 0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(X(r.x0) - 0.5, Y(r.y0) - 0.5, r.w * sc + 1, r.h * sc + 1);
+      ctx.restore();
+    }
     // A kit may draw a container's contents itself (a heap is a pile of dots, not a level and a number):
     // `view.piles === false` leaves the dots to the built table, which stands them up.
     if (kit.paintContainer?.(ctx, c, state, { X, Y, sc, bodies: view.piles === false })) {
@@ -368,6 +384,25 @@ export function drawTable(ctx, w, h, state, view = {}) {
     plateText(ctx, label, X(c.x), Y(c.y), { size: Math.max(9, Math.min(12, r * 0.7)), align: 'center', base: 'middle', color: lit ? AMBER : PLATE_COLORS.text });
   }
 
+  // Active dragged pour item (e.g. electron being dragged from a jar into a box)
+  if (view.drag?.kind === 'pour') {
+    const d = view.drag;
+    const px = X(d.at.x);
+    const py = Y(d.at.y);
+    ctx.save();
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(px, py, 6 * sc, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+    plateText(ctx, 'e\u207b', px, py, { size: Math.max(8, Math.round(5.5 * sc)), weight: 700, align: 'center', base: 'middle', color: '#0d0c0a' });
+  }
+
   raster(ctx, w, h);
   aperture(ctx, w, h);
   return [];
@@ -395,6 +430,10 @@ function drawRecorder(ctx, state, X, Y, sc) {
     ctx.lineTo(px(pu.xhi), py(readY(line, pu.xhi)));
     ctx.stroke();
     ctx.restore?.();
+
+    // Display slope badge on the plot/straightedge
+    const slopeVal = Math.round(line.slope * 10) / 10;
+    plateText(ctx, `Slope = ${slopeVal}`, X(r.x1) - 3, Y(r.y0) + 3, { size: Math.max(8, Math.round(3.2 * sc)), align: 'right', base: 'top', color: AMBER, weight: 700 });
   }
   ctx.fillStyle = PLATE_COLORS.dust;
   for (const row of rec.rows) ctx.fillRect(px(row.x) - 1.5, py(row.y) - 1.5, 3, 3);

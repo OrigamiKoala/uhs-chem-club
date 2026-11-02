@@ -35,51 +35,14 @@ export function mountSliceExplainer(mountEl) {
   container.className = 'slice-explainer-view';
   container.style.cssText = 'position:relative;width:100%;background:#0d0c0a;border:1px solid #332d26;border-radius:2px;overflow:hidden;';
 
-  // Header & Controls toolbar
-  const toolbar = document.createElement('div');
-  toolbar.style.cssText = 'padding:8px 12px;background:#14120f;border-bottom:1px solid #29241f;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;';
-
-  toolbar.innerHTML = `
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-      <span style="font-family:ui-monospace,monospace;font-size:11px;color:#8c8376;font-weight:700;">PLANE:</span>
-      <button type="button" class="btn-secondary quest-btn-sm" data-plane="nodal" style="font-size:11px;padding:3px 8px;background:#1a2e1d;border-color:#4ade80;color:#4ade80;">Nodal Plane (z=0)</button>
-      <button type="button" class="btn-secondary quest-btn-sm" data-plane="lobes" style="font-size:11px;padding:3px 8px;">Lobe Axis (z)</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <button type="button" class="btn-secondary quest-btn-sm" data-slice-toggle="true" style="font-size:11px;padding:3px 8px;color:#e59b24;border-color:#e59b24;">Slice: ON</button>
-    </div>
-  `;
-
-  // Status readout
-  const statusEl = document.createElement('div');
-  statusEl.style.cssText = 'padding:6px 12px;background:#0f0e0c;border-bottom:1px solid #24201c;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:ui-monospace,monospace;font-size:11px;';
-
   // 3D Canvas wrapper
   const canvasWrap = document.createElement('div');
-  canvasWrap.style.cssText = 'width:100%;height:260px;position:relative;cursor:grab;touch-action:none;';
+  canvasWrap.style.cssText = 'width:100%;height:220px;position:relative;cursor:grab;touch-action:none;';
 
-  container.appendChild(toolbar);
-  container.appendChild(statusEl);
   container.appendChild(canvasWrap);
   mountEl.appendChild(container);
 
-  const updateStatus = (dotsInSlice) => {
-    const isNodal = planeMode === 'nodal';
-    const tag = !sliceOn
-      ? '<span style="padding:1px 6px;background:#38bdf822;color:#38bdf8;border:1px solid #38bdf844;border-radius:2px;font-weight:700;">FULL CLOUD</span>'
-      : dotsInSlice <= 5
-        ? '<span style="padding:1px 6px;background:#4ade8022;color:#4ade80;border:1px solid #4ade8044;border-radius:2px;font-weight:700;">EMPTY SLICE</span>'
-        : '<span style="padding:1px 6px;background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44;border-radius:2px;font-weight:700;">DENSE SLICE</span>';
-
-    statusEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:6px;">
-        ${tag}
-      </div>
-      <div style="color:#8c8376;">
-        IN SLICE: <strong style="color:${dotsInSlice <= 5 ? '#4ade80' : '#e59b24'};">${dotsInSlice}</strong> / ${TOTAL_DOTS}
-      </div>
-    `;
-  };
+  const updateStatus = () => {};
 
   // Drag interaction
   const onDown = e => {
@@ -94,7 +57,6 @@ export function mountSliceExplainer(mountEl) {
     yaw += dx * 0.015;
     pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch + dy * 0.015));
     planeMode = 'free';
-    updateButtons();
     drag = { x: e.clientX, y: e.clientY };
   };
   const onUp = () => {
@@ -107,47 +69,6 @@ export function mountSliceExplainer(mountEl) {
   canvasWrap.addEventListener('pointerup', onUp);
   canvasWrap.addEventListener('pointercancel', onUp);
 
-  const updateButtons = () => {
-    toolbar.querySelectorAll('[data-plane]').forEach(btn => {
-      const p = btn.dataset.plane;
-      const act = p === planeMode;
-      btn.style.background = act ? (p === 'nodal' ? '#1a2e1d' : '#26221d') : '';
-      btn.style.borderColor = act ? (p === 'nodal' ? '#4ade80' : '#e59b24') : '';
-      btn.style.color = act ? (p === 'nodal' ? '#4ade80' : '#e59b24') : '';
-    });
-    const toggleBtn = toolbar.querySelector('[data-slice-toggle]');
-    if (toggleBtn) {
-      toggleBtn.textContent = sliceOn ? 'Slice: ON' : 'Slice: OFF';
-      toggleBtn.style.color = sliceOn ? '#e59b24' : '#8c8376';
-      toggleBtn.style.borderColor = sliceOn ? '#e59b24' : '#332d26';
-    }
-  };
-
-  toolbar.addEventListener('click', e => {
-    const planeBtn = e.target.closest('[data-plane]');
-    if (planeBtn) {
-      planeMode = planeBtn.dataset.plane;
-      if (planeMode === 'nodal') {
-        yaw = 0;
-        pitch = 0;
-        sliceOn = true;
-      } else if (planeMode === 'lobes') {
-        yaw = Math.PI / 2;
-        pitch = 0;
-        sliceOn = true;
-      }
-      updateButtons();
-      soundscape.playCrtTick?.();
-      return;
-    }
-    const toggleBtn = e.target.closest('[data-slice-toggle]');
-    if (toggleBtn) {
-      sliceOn = !sliceOn;
-      updateButtons();
-      soundscape.playCrtTick?.();
-    }
-  });
-
   // Three.js renderer
   let cleanupThree = () => {};
   const init3D = async () => {
@@ -157,7 +78,7 @@ export function mountSliceExplainer(mountEl) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     const w = canvasWrap.clientWidth || 320;
-    const h = 260;
+    const h = canvasWrap.clientHeight || 220;
     renderer.setSize(w, h);
     canvasWrap.appendChild(renderer.domElement);
 
@@ -328,16 +249,16 @@ export function showSliceExplainerModal() {
   let explainer = null;
 
   const html = `
-    <div class="lq-slice-explainer-modal" style="max-width:580px;margin:auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #29241f;padding-bottom:8px;">
+    <div class="lq-slice-explainer-modal" style="max-width:520px;margin:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;border-bottom:1px solid #29241f;padding-bottom:6px;">
         <div>
           <span class="eyebrow lit" style="color:#e59b24;font-size:10px;letter-spacing:1px;font-weight:700;">ORBITAL SLICING</span>
-          <h3 style="margin:2px 0 0;font-size:1.15rem;color:#dcd6cc;font-weight:700;">Cross-Sectional Slicing</h3>
+          <h3 style="margin:2px 0 0;font-size:1.1rem;color:#dcd6cc;font-weight:700;">Cross-Sectional Slicing</h3>
         </div>
         <button type="button" class="btn-secondary quest-btn-sm" data-close-modal="true" style="padding:3px 8px;">✕</button>
       </div>
 
-      <div id="slice-explainer-mount" style="margin-bottom:14px;"></div>
+      <div id="slice-explainer-mount" style="margin-bottom:10px;"></div>
 
       <div style="display:flex;justify-content:flex-end;gap:8px;">
         <button type="button" class="btn-primary" data-close-modal="true">Back to Bench</button>

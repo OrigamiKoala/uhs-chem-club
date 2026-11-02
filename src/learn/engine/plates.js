@@ -155,6 +155,10 @@ export class PlateBench {
 
     this.onResize = () => this.layoutAll();
     window.addEventListener('resize', this.onResize);
+    if (typeof ResizeObserver === 'function' && this.host) {
+      this.ro = new ResizeObserver(() => this.layoutAll());
+      this.ro.observe(this.host);
+    }
     globalThis.__LQ_TEST__?.bench?.(this);
   }
 
@@ -324,6 +328,8 @@ export class PlateBench {
     if (this.raf) cancelAnimationFrame(this.raf);
     this.raf = null;
     window.removeEventListener('resize', this.onResize);
+    this.ro?.disconnect();
+    this.ro = null;
     if (this.host) this.host.innerHTML = '';
     this.plates = [];
   }

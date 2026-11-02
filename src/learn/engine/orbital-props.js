@@ -140,9 +140,6 @@ function buildSeatedOrbital3D(c, p, state) {
     const down = new THREE.Mesh(geo, neg);
     down.rotation.x = Math.PI;
     swell.add(up, down);
-    const e = p.props.e || 0;
-    if (e >= 1) addElectron(new THREE.Vector3(0, SEAT_P * 0.55 * u, 0), new THREE.Vector3(0, 1, 0), 0, COLOR.electronGlow);
-    if (e >= 2) addElectron(new THREE.Vector3(0, -SEAT_P * 0.55 * u, 0), new THREE.Vector3(0, -1, 0), Math.PI, COLOR.spinDown);
   } else {
     const dirAng = p.props.dir ?? 0;
     const dir = new THREE.Vector3(Math.cos(dirAng), 0, Math.sin(dirAng)).normalize();
@@ -151,7 +148,6 @@ function buildSeatedOrbital3D(c, p, state) {
     major.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
     minor.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().negate());
     swell.add(major, minor);
-    if ((p.props.e || 0) >= 1) addElectron(dir.clone().multiplyScalar(SEAT_LOBE * 0.55 * u), dir, 0, COLOR.electronGlow);
     if (p.props.to === 'h') {
       const h = new THREE.Mesh(
         new THREE.SphereGeometry(2.6 * u, 16, 12),
@@ -349,20 +345,6 @@ export function buildOrbitalPiece3D(c, p, state) {
     }));
     cloudGroup.add(new THREE.Mesh(new THREE.SphereGeometry(sRadius * 0.55, 20, 16), innerMat));
 
-    // Electrons inside s cloud
-    if (eCount >= 1) {
-      const e1 = createElectronMesh(c, eRadius, COLOR.electronGlow);
-      e1.position.set(sRadius * 0.38, 0, 0);
-      electronsGroup.add(e1);
-      electronMeshes.push({ mesh: e1, basePos: new THREE.Vector3(sRadius * 0.38, 0, 0), speed: 2.2, phase: 0 });
-    }
-    if (eCount >= 2) {
-      const e2 = createElectronMesh(c, eRadius * 0.95, COLOR.spinDown);
-      e2.position.set(-sRadius * 0.38, 0, 0);
-      electronsGroup.add(e2);
-      electronMeshes.push({ mesh: e2, basePos: new THREE.Vector3(-sRadius * 0.38, 0, 0), speed: 2.2, phase: Math.PI });
-    }
-
   } else if (type === 'p') {
     // P ORBITAL: Two opposite teardrop lobes along the declared axis
     const pLen = R * 0.94;
@@ -392,22 +374,6 @@ export function buildOrbitalPiece3D(c, p, state) {
     nodeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), axisDir);
     cloudGroup.add(nodeMesh);
 
-    // Electrons inside p lobes
-    if (eCount >= 1) {
-      const e1 = createElectronMesh(c, eRadius, COLOR.electronGlow);
-      const pos1 = axisDir.clone().multiplyScalar(pLen * 0.55);
-      e1.position.copy(pos1);
-      electronsGroup.add(e1);
-      electronMeshes.push({ mesh: e1, basePos: pos1, dir: axisDir, speed: 2.6, phase: 0 });
-    }
-    if (eCount >= 2) {
-      const e2 = createElectronMesh(c, eRadius * 0.95, COLOR.spinDown);
-      const pos2 = negDir.clone().multiplyScalar(pLen * 0.55);
-      e2.position.copy(pos2);
-      electronsGroup.add(e2);
-      electronMeshes.push({ mesh: e2, basePos: pos2, dir: negDir, speed: 2.6, phase: Math.PI });
-    }
-
   } else {
     // HYBRID ORBITAL (sp, sp2, sp3, or directional lobe)
     const majorLen = R * 1.15;
@@ -431,22 +397,6 @@ export function buildOrbitalPiece3D(c, p, state) {
 
     cloudGroup.add(majorMesh);
     cloudGroup.add(minorMesh);
-
-    // Electrons inside hybrid lobe
-    if (eCount >= 1) {
-      const e1 = createElectronMesh(c, eRadius, COLOR.electronGlow);
-      const pos1 = dirVec.clone().multiplyScalar(majorLen * 0.58);
-      e1.position.copy(pos1);
-      electronsGroup.add(e1);
-      electronMeshes.push({ mesh: e1, basePos: pos1, dir: dirVec, speed: 2.4, phase: 0 });
-    }
-    if (eCount >= 2) {
-      const e2 = createElectronMesh(c, eRadius * 0.95, COLOR.spinDown);
-      const pos2 = dirVec.clone().multiplyScalar(majorLen * 0.44);
-      e2.position.copy(pos2);
-      electronsGroup.add(e2);
-      electronMeshes.push({ mesh: e2, basePos: pos2, dir: dirVec, speed: 2.4, phase: Math.PI });
-    }
   }
 
   // 4. Live electron circulation & cloud quantum breathing
@@ -458,22 +408,6 @@ export function buildOrbitalPiece3D(c, p, state) {
     // Subtle cloud breathing
     const breath = 1 + Math.sin(t * 2.4) * 0.022;
     cloudGroup.scale.set(breath, breath, breath);
-
-    // Animate electrons inside clouds
-    for (const em of electronMeshes) {
-      if (type === 's') {
-        const rad = em.basePos.length();
-        const ang = t * em.speed + em.phase;
-        em.mesh.position.set(
-          Math.cos(ang) * rad,
-          Math.sin(ang * 1.5) * (rad * 0.28),
-          Math.sin(ang) * rad
-        );
-      } else if (em.dir) {
-        const wobble = Math.sin(t * em.speed + em.phase) * (R * 0.06);
-        em.mesh.position.copy(em.basePos).addScaledVector(em.dir, wobble);
-      }
-    }
   };
 
   return g;
@@ -570,15 +504,15 @@ export function buildMixer3D(f, state, c) {
   root.add(reactorGroup);
 
   // Stepped brass pedestal
-  const plinthGeo = new THREE.CylinderGeometry(0.044, 0.052, 0.022, 28);
+  const plinthGeo = new THREE.CylinderGeometry(0.088, 0.104, 0.038, 28);
   const plinthMesh = new THREE.Mesh(plinthGeo, rimMat);
-  plinthMesh.position.y = 0.011;
+  plinthMesh.position.y = 0.019;
   plinthMesh.receiveShadow = true;
   reactorGroup.add(plinthMesh);
 
   // Central Hub Carbon Atom
-  const hubRadius = 0.018;
-  const hubY = 0.022 + hubRadius * 1.6;
+  const hubRadius = 0.034;
+  const hubY = 0.038 + hubRadius * 1.5;
   const hubMat = own(c, new THREE.MeshStandardMaterial({ color: COLOR.carbonHub, roughness: 0.32, metalness: 0.25 }));
   const hubMesh = new THREE.Mesh(new THREE.SphereGeometry(hubRadius, 24, 18), hubMat);
   hubMesh.position.y = hubY;
@@ -586,9 +520,9 @@ export function buildMixer3D(f, state, c) {
 
   // Carbon symbol plaque on plinth
   if (c.label) {
-    const hubLabel = c.label(f.props.hub || 'C', 0.024, 0.024, { dim: false, bg: '#16140f' });
+    const hubLabel = c.label(f.props.hub || 'C', 0.034, 0.034, { dim: false, bg: '#16140f' });
     if (hubLabel) {
-      hubLabel.position.set(0, 0.012, 0.048);
+      hubLabel.position.set(0, 0.02, 0.096);
       reactorGroup.add(hubLabel);
     }
   }
@@ -643,7 +577,6 @@ export function buildMixer3D(f, state, c) {
         const geo = new THREE.SphereGeometry(0.012, 14, 10);
         const mat = own(c, new THREE.MeshStandardMaterial({ color: COLOR.amberPhase, transparent: true, opacity: 0.65 }));
         orbGroup.add(new THREE.Mesh(geo, mat));
-        orbGroup.add(createElectronMesh(c, 0.0035, COLOR.electronGlow));
       } else {
         const pLen = 0.018;
         const pRad = 0.007;
@@ -653,7 +586,6 @@ export function buildMixer3D(f, state, c) {
         m2.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0));
         orbGroup.add(m1);
         orbGroup.add(m2);
-        orbGroup.add(createElectronMesh(c, 0.0032, COLOR.electronGlow));
       }
       inputOrbsGroup.add(orbGroup);
     });
@@ -697,11 +629,11 @@ export function buildMixer3D(f, state, c) {
       vectors = plan.vectors.map(v => new THREE.Vector3(...v.v).normalize());
     }
 
-    // Build the 3D hybrid lobes with electrons inside
-    const lobeLen = 0.052;
-    const lobeRad = 0.021;
+    // Build the 3D hybrid lobes
+    const lobeLen = 0.118;
+    const lobeRad = 0.046;
     const lobeGeo = buildTeardropLobeGeo(lobeLen, lobeRad);
-    const backGeo = buildTeardropLobeGeo(lobeLen * 0.32, lobeRad * 0.42);
+    const backGeo = buildTeardropLobeGeo(lobeLen * 0.30, lobeRad * 0.40);
 
     const matLobePos = own(c, new THREE.MeshStandardMaterial({
       color: COLOR.amberPhase,
@@ -734,20 +666,14 @@ export function buildMixer3D(f, state, c) {
       backMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.clone().negate());
       lobeRoot.add(backMesh);
 
-      // Electron inside each hybrid cloud!
-      const eMesh = createElectronMesh(c, 0.0052, COLOR.electronGlow);
-      const ePos = v.clone().multiplyScalar(lobeLen * 0.62);
-      eMesh.position.copy(ePos);
-      lobeRoot.add(eMesh);
-
       hybridGroup.add(lobeRoot);
-      hybridLobeMeshes.push({ group: lobeRoot, eMesh, baseEPos: ePos, dir: v, idx });
+      hybridLobeMeshes.push({ group: lobeRoot, dir: v, idx });
     });
 
     // If leftover p orbitals exist (e.g. sp2 has 1 leftover p orbital, sp has 2)
     if (read.leftoverP > 0) {
-      const pLen = 0.046;
-      const pRad = 0.018;
+      const pLen = 0.108;
+      const pRad = 0.040;
       const unhybPGeo = buildTeardropLobeGeo(pLen, pRad);
       for (let k = 0; k < Math.min(read.leftoverP, 2); k++) {
         const pAxis = k === 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
@@ -761,13 +687,8 @@ export function buildMixer3D(f, state, c) {
         p2.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pAxis.clone().negate());
         pRoot.add(p2);
 
-        // Electron in leftover p orbital
-        const pEMesh = createElectronMesh(c, 0.0048, COLOR.spinDown);
-        pEMesh.position.copy(pAxis.clone().multiplyScalar(pLen * 0.58));
-        pRoot.add(pEMesh);
-
         hybridGroup.add(pRoot);
-        hybridLobeMeshes.push({ group: pRoot, eMesh: pEMesh, baseEPos: pEMesh.position.clone(), dir: pAxis, idx: 90 + k });
+        hybridLobeMeshes.push({ group: pRoot, dir: pAxis, idx: 90 + k });
       }
     }
   }
@@ -810,12 +731,6 @@ export function buildMixer3D(f, state, c) {
     // Continuous 3D rotation of hybrid orbitals around the vertical axis
     // so the student can inspect the spatial arrangement from all angles
     hybridGroup.rotation.y += delta * 0.65;
-
-    // Animate electrons hovering inside each hybrid cloud
-    for (const h of hybridLobeMeshes) {
-      const wobble = Math.sin(mixTime * 2.6 + h.idx) * 0.0028;
-      h.eMesh.position.copy(h.baseEPos).addScaledVector(h.dir, wobble);
-    }
   };
 
   return root;

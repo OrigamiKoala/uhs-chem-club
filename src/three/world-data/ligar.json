@@ -2,7 +2,7 @@
   "id": "ligar",
   "name": "Ligar",
   "place": "Basalt arches",
-  "oneLine": "Nothing here stands alone.",
+  "oneLine": "Chemical bonding, molecular structure, and orbitals.",
   "sky": "ligar-sky",
   "terrain": {
     "heightmap": "ligar-basalt",

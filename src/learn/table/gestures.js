@@ -200,13 +200,23 @@ export class TableGestures {
     return null;
   }
 
-  containerAt(u) {
+  containerAt(u, padding = 0) {
+    let best = null;
+    let minD = Infinity;
     for (const c of Object.values(this.state.zones.containers)) {
       // A container that is `still` (a heap, a dock, a pan) holds things but is never poured from or into.
       if (c.props?.still) continue;
-      if (inRect(rectOf(c, SIZES.container), u)) return c.id;
+      const r = rectOf(c, SIZES.container);
+      const expanded = padding ? { x0: r.x0 - padding, x1: r.x1 + padding, y0: r.y0 - padding, y1: r.y1 + padding } : r;
+      if (inRect(expanded, u)) {
+        const d = Math.hypot(u.x - c.at.x, u.y - c.at.y);
+        if (d < minD) {
+          minD = d;
+          best = c.id;
+        }
+      }
     }
-    return null;
+    return best;
   }
 
   /** The drawn site plate under a point, when something there is still to be taken. */
@@ -333,6 +343,10 @@ export class TableGestures {
     }
     if (g.kind === 'jar') {
       if (Math.hypot(u.x - g.start.x, u.y - g.start.y) >= this.view.pxToUnits(SLOP_PX)) g.moved = true;
+      if (g.moved) {
+        this.view.setDrag?.({ id: `pour:${g.id}`, at: u, kind: 'pour', from: g.id }, null);
+        this.view.changed?.();
+      }
       return;
     }
     if (g.kind !== 'piece') return;
@@ -421,7 +435,8 @@ export class TableGestures {
 
   /** A jar: drag to another jar pours into it; tap one, then another, does the same. */
   jarUp(g, u) {
-    const over = this.containerAt(u);
+    this.view.setDrag?.(null, null);
+    const over = this.containerAt(u, 3.5);
     const from = g.id;
     if (g.moved) {
       this.pourFrom = null;
@@ -489,6 +504,15 @@ export class TableGestures {
     }
     if (tiltVal !== f.dials.tilt.value) {
       this.view.dispatch({ setDial: { fixture: h.fixture, dial: 'tilt', value: tiltVal } });
+    }
+  }
+
+  cancel() {
+    this.gesture = null;
+    this.view.setDrag?.(null, null);
+    if (this.pourFrom) {
+      this.pourFrom = null;
+      this.view.changed?.();
     }
   }
 }

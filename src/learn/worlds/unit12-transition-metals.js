@@ -13,8 +13,8 @@ export const UNIT_12 = {
   world: 'Lodestone',
   place: 'Iron canyons',
   title: 'Transition Metals',
-  line: 'The d-block: many charges, colour, and magnetism.',
-  brief: 'Work with the metals in the middle of the table: their electron configurations, their many charges, and the coloured compounds they form.',
+  line: 'Transition metal configurations, oxidation states, and coordination complexes.',
+  brief: 'Work with transition metal electron configurations, variable oxidation states, coordination complexes, and magnetic properties.',
 
   quests: [
     { id: 'q1-dblock', title: 'The d-Block', line: 'Configurations and ions of the transition metals.', arena: 'bench', stageCount: 8, status: 'draft', module: null },

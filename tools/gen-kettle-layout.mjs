@@ -181,7 +181,7 @@ const world = {
   id: 'kettle',
   name: 'Kettle',
   place: 'Foundry works',
-  oneLine: 'Counting what goes into a reaction and what comes out of it.',
+  oneLine: 'Chemical equations, reaction types, and stoichiometry.',
   sky: 'kettle-sky',
   terrain: { heightmap: 'kettle-flat', size: [240, 240], maxHeight: 1.0, material: 'soda-crust' },
   ambience: { keyLight: 0xffe0b0, fillLight: 0xcdbf9f, fogColor: 0xbfa77d, fogNear: 60, fogFar: 650, dustDensity: 0.4 },

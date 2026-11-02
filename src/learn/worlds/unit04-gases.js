@@ -21,8 +21,8 @@ export const UNIT_04 = {
   world: 'Bellows',
   place: 'Cloud deck',
   title: 'Gases',
-  line: 'Squeeze it, warm it, watch it answer.',
-  brief: 'There is no ground on Bellows, only deck after deck of pressurised cloud. Every gauge on the ship was calibrated somewhere in that column.',
+  line: 'Gas laws, the ideal gas equation, and kinetic molecular theory.',
+  brief: 'Investigate gas pressure, empirical gas laws, the ideal gas equation, partial pressures, and kinetic molecular theory across six benches.',
 
   quests: [
     {

@@ -122,21 +122,6 @@ function dress3d(f, state, c) {
   const group = new THREE.Group();
   const put = (obj, ux, uy, y = 0) => { const p = toPlate({ x: ux, y: uy }); obj.position.set(p.x, c.ground + y, p.z); group.add(obj); return obj; };
   if (f.kind === 'cell') {
-    // Packets of light in the tube: as many as the lamp's brightness, as big as the colour's frequency (a brighter lamp is more packets, never bigger).
-    const tx0c = f.props.tx0 ?? 20;
-    const tx1c = f.size.w - 24;
-    const topc = f.props.tubeTop ?? 12;
-    const tubeHc = f.props.tubeH ?? 15;
-    const row = buildPhotonRow(c, { len: (tx1c - tx0c) * s * 0.8, max: 5 });
-    put(row, box.x0 + (tx0c + tx1c) / 2, box.y0 + topc + tubeHc / 2, 0.026);
-    const sync = (fx, st) => {
-      const r = cellRead(st, fx.id);
-      row.userData.set(r.nm != null ? r.brightness : 0, r.nm != null ? wavelengthRgb(r.nm) : null, r.f14 != null ? Math.min(1, r.f14 / 12) : 0.5);
-    };
-    group.userData.sync = sync;
-    sync(f, state);
-  }
-  if (f.kind === 'cell') {
     const tx0 = f.props.tx0 ?? 20;
     const tx1 = f.size.w - 24;
     const top = f.props.tubeTop ?? 12;

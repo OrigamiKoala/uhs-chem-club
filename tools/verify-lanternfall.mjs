@@ -124,7 +124,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)'[\s\S]*?status:\s*'(\w+)'/g)]
       .map(m => [m[1], m[2]]).filter(([, st]) => st === 'live').map(([id]) => id)
   );
-  check(questIds.length === 9, `unit02 charts ${questIds.length} quests`, `the unit02 chart lists ${questIds.length} quests, not nine`);
+  check(questIds.length === 10, `unit02 charts ${questIds.length} quests`, `the unit02 chart lists ${questIds.length} quests, not ten`);
 
   const siteQuests = world.sites.map(s => s.questId);
   const missing = questIds.filter(q => live.has(q) && !siteQuests.includes(q));

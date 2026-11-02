@@ -22,8 +22,8 @@ export const UNIT_06 = {
   world: 'Mirrowen',
   place: 'Tidal shelf',
   title: 'States of Matter',
-  line: 'Same stuff, three tempers.',
-  brief: 'Mirrowen has a tide that comes in as ice and leaves as steam. Nothing on the shelf changes what it is made of, only how tightly it is holding on.',
+  line: 'Intermolecular forces, phase changes, and solutions.',
+  brief: 'Investigate intermolecular forces, vapor pressure, phase transitions, heating curves, and solutions across seven benches.',
 
   quests: [
     {

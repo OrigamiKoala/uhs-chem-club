@@ -578,7 +578,7 @@ if (fail) { console.log('refusing to write'); process.exit(1); }
 /* --------------------------------------------------------------------- write */
 
 const data = {
-  id: 'ligar', name: 'Ligar', place: 'Basalt arches', oneLine: 'Nothing here stands alone.',
+  id: 'ligar', name: 'Ligar', place: 'Basalt arches', oneLine: 'Chemical bonding, molecular structure, and orbitals.',
   sky: 'ligar-sky',
   terrain: prev.terrain,
   ambience: prev.ambience,

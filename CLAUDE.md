@@ -67,6 +67,7 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
 - **Boss = one health bar over its fight** (`boss-arena.js`, `boss-hud.js`); cosmetic only, never
   refuses an answer. FPS combat layer was removed; `encounter3d.js` takes no part in Commit. The boss stands in the world
   across the table (see Boss arenas); on a table with no arena (Kettle) its toy stands in the table's corner pad.
+- **World descriptors:** state what the stage/unit covers clearly and factually (e.g. Tallow: "Atomic structure, elements, and the periodic table."), never cheesy slogans or dramatic taglines. Used across the Learn tab, Star Map, world cards, and detail plates.
 - Quest descriptors: where it happens, title, one short line (story-flavoured, naming the mission).
 
 ## Hard rules that outrank the rest
@@ -123,6 +124,7 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   8. Molecular formula (CH₃ unit in 30.0 g/mol molecule -> C₂H₆; atomic masses C=12.0, H=1.0 explicitly shown on plate).
   Debrief beat: "If there are 72 grams of water and each mole weighs 18 grams, then there are 4 moles of water."
 - **Full-screen clean display for practice and worked problems.** Practice questions and worked problems at the end of each bench cut out the 3D world with an opaque dark backdrop (`body.bench-deployed .modal-container.modal-fullscreen-practice` and `:has(.lq-practice-options, .bp-worked)`), dedicating the whole screen to a spacious, clean, and minimalistic centered card instead of docking to a tiny side card over the 3D scene.
+- **Full-screen dedicated layout for 3D Off learn quests.** At `3D Off` (`.learn-quest-2d`), the bench and deck expand to take up the full screen width and viewport height instead of being constrained to a centered box with empty gutters. The interactive tabletop occupies the spacious left workbench, dynamically sizing to fill available space, while the learn portion (prompt, telemetry readouts, input widgets, hints, and commit controls) sits in a dedicated, ergonomic right console. The 3D in-world/overworld presentation remains completely untouched.
 - **Discover it, never read it off.** No stage asks the player to report what is visible on the table (printed +, labels).
   The property under study starts hidden and an instrument reveals it (`q2-core` stage 3: identical specks, the
   `field` fixture's charged plates, sort by bent or straight). The Tour replaces stage briefings on benches, every
@@ -220,6 +222,20 @@ Ligar (`unit03/q2-lattice` — "Stone and Wire"): material blocks on the bench (
 - **Metallic solid** (`COPPER`, `BRASS`, `IRON`, `STEEL` / `metallic`): close-packed metallic cation lattices with mobile delocalized electron sea; supports substitutional alloys (brass) and interstitial alloys (steel).
 - **Covalent network solid** (`ARCH` / `web`): cross-braced continuous 3D covalent framework.
 - **Thermal Shaking & Molten Transitions:** As hotplate heat increases below melting point ($T < T_{\text{melt}}$), atoms vibrate with frequency and amplitude scaling smoothly with normalized temperature $T / T_{\text{melt}}$, and bonds dynamically flex to track oscillating atom endpoints. When $T \ge T_{\text{melt}}$ (or `v.molten`), the solid structure collapses into a rippling molten liquid pool with traveling surface waves, material-specific incandescent emissive glow, free-swimming ions for molten salt, and live conduction indicator lamps.
+
+## Key Learn Features & World Benchmarks
+
+- **Lanternfall (Unit 02 — Quantum Mechanics):** 10 quests on Aurora ice.
+  - `q10-wavefunctions`: Wavefunctions ($\psi$), probability density ($|\psi|^2$), radial nodes in $s$ orbitals, angular planar nodes in $p$ and conical/planar nodes in $d$ orbitals, and total node accounting ($n - 1 = (n - l - 1) + l$). Located at Station 10 (`site-10`, Wavefunction Dome).
+  - Photoelectric Effect Explainer (`ui/photoelectric-explainer.js`): Interactive photon absorption model demonstrating intensity vs frequency, electron ejection thresholds, and kinetic energy scaling.
+  - Clean visualizations: Clean hydrogen emission ladder (rungs, drop, and wavepacket only), borderless/toolbar-less orbital slice explorer, and unencumbered 3D d-orbital viewer.
+- **Ligar (Unit 03 — Bonding & Molecular Geometry):** 9 quests in basalt cuttings and chambers.
+  - `q9-orbitals`: Expanded 6-stage Molecular Orbital (MO) quest covering magnetic field deflection (paramagnetism of $O_2, B_2$ vs diamagnetism of $N_2, F_2$), in-phase AO addition (bonding density between nuclei) vs out-of-phase subtraction (antibonding nodal plane), cylindrical $\sigma / \sigma^*$ vs planar $\pi / \pi^*$ symmetry, Hund's rule electron filling into degenerate $\pi^*_{2p}$ orbitals with liquid oxygen magnet pull, and bond order / diatomic stability.
+  - Compact MO gas cards with enlarged magnet trays; high-precision electron pouring with active drag ghost and box highlight wells.
+  - Enlarged hybrid orbital mixer on plinth with flat 2D canvas projections suppressed when 3D is active.
+- **Bellows (Unit 04 — Gas Laws):** 6 quests on the cloud deck.
+  - Straightedge slope badges rendered live along fitted lines in both 2D canvas and 3D space.
+  - Analogue circular pressure gauge with swinging needle responding dynamically to cylinder volume adjustments on the Boyle's law bench (`q1-knocks`).
 
 Architecture, the Learn engine, tabletop layout rules, per-world notes, the 3D worlds and ship, mobile, the player
 journey and progression are in `docs/engineering/engine-and-worlds.md`. Plans and per-world records are in

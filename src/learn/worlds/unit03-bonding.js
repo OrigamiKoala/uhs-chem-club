@@ -103,7 +103,7 @@ export const UNIT_03 = {
       title: 'Molecular Orbitals',
       line: 'Optional, beyond AP: fill molecular orbitals and explain paramagnetism.',
       arena: 'bench',
-      stageCount: 3,
+      stageCount: 6,
       status: 'live',
       optional: true,
       module: () => import('../quests/unit03/q9-orbitals.js')

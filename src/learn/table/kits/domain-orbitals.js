@@ -306,24 +306,9 @@ function paintBowl(ctx, f, state, b) {
     plateText(ctx, 'NOTHING MIXED', out.x, out.y + L * 0.5, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dim });
     return;
   }
-  atomDisc(ctx, out.x, out.y, Math.max(4, L * 0.16), f.props.hub || 'C');
   if (!read.blend.blends) {
     plateText(ctx, read.s ? 'NOTHING NEW' : 'NO s ORBITAL', out.x, out.y + L * 0.5, { size, align: 'center', base: 'middle', color: PLATE_COLORS.dim });
     return;
-  }
-  // The lobes point where that many arms settle (the planner's own), seen from the plate's usual view.
-  const plan = planDomains(Array.from({ length: read.lobes }, () => ({ kind: 'atom', sym: 'X', mult: 1 })));
-  for (const v of plan.vectors) {
-    const p = project(v.v, 0.35, 0.3);
-    const ang = Math.atan2(p.y, p.x);
-    lobe(ctx, out.x, out.y, ang, L * Math.min(1, 0.45 + Math.hypot(p.x, p.y) * 0.55), L * 0.2, PLATE_COLORS.phosphor, true);
-    lobe(ctx, out.x, out.y, ang + Math.PI, L * 0.16, L * 0.06, PLATE_COLORS.dim, false);
-  }
-  // A p orbital left out of the bowl stands at right angles to the lobes.
-  for (let k = 0; k < Math.min(read.leftoverP, 2); k++) {
-    const sgn = k ? -1 : 1;
-    lobe(ctx, out.x + sgn * L * 0.05, out.y - L * 0.02, -Math.PI / 2 + sgn * 0.25, L * 0.55, L * 0.1, AMBER, false);
-    lobe(ctx, out.x + sgn * L * 0.05, out.y - L * 0.02, Math.PI / 2 + sgn * 0.25, L * 0.55, L * 0.1, AMBER, false);
   }
   void lobePath;
 }

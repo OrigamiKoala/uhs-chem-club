@@ -19,6 +19,7 @@ import { mountShieldingExplainer } from './shielding-explainer.js';
 import { mountIonicRadius } from './ionic-radius-animator.js';
 import { mountBondOverlap } from './bond-overlap-animator.js';
 import { mountCuvetteExplainer } from './cuvette-explainer.js';
+import { mountPhotoelectricExplainer } from './photoelectric-explainer.js';
 
 export { mountDebriefOrbitalViewer };
 
@@ -336,20 +337,12 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
   const colour = ladder.colour || '#ff3b30';
 
   // Horizontal layout
-  const labelW = w >= 560 ? 80 : 54;
-  const ladX0 = pad + labelW;
+  const ladX0 = pad + 16;
   const ladW = Math.max(70, Math.min(150, (w - pad * 2) * 0.22));
   const ladX1 = ladX0 + ladW;
   const xElectron = ladX0 + ladW * 0.5;
   const xEmitStart = ladX1 + 10;
   const xEmitEnd = w - pad - 12;
-
-  // Header: Clear description of the process
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = '#dcd6cc';
-  ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillText(`DROP: n = ${hi} \u2192 n = ${lo}`, pad, 10);
 
   // Ladder upright rails
   ctx.strokeStyle = '#3e3933';
@@ -381,29 +374,9 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
     ctx.lineTo(ladX1 + 2, y);
     ctx.stroke();
     ctx.shadowBlur = 0;
-
-    // Labels on left
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.font = isTarget ? 'bold 11px ui-monospace, SFMono-Regular, Menlo, monospace' : '10px ui-monospace, SFMono-Regular, Menlo, monospace';
-    ctx.fillStyle = isHi ? '#d99423' : isLo ? '#dcd6cc' : n === 1 ? '#8c8376' : '#6b625a';
-    const tag = n === 1 ? (w >= 540 ? 'n = 1 (ground)' : 'n = 1')
-      : isHi ? (w >= 540 ? `n = ${n} (excited)` : `n = ${n}`)
-      : isLo ? (w >= 540 ? `n = ${n} (lower)` : `n = ${n}`)
-      : `n = ${n}`;
-    ctx.fillText(tag, ladX0 - 8, y);
-
-    // Energy on right (if space permits)
-    if (w >= 520) {
-      ctx.textAlign = 'left';
-      ctx.font = '9px ui-monospace, SFMono-Regular, Menlo, monospace';
-      ctx.fillStyle = isTarget ? (isHi ? '#d99423' : '#dcd6cc') : '#544e46';
-      const joules = bohrJoules(n);
-      ctx.fillText(`${(joules / 1e-18).toFixed(3)} \u00d7 10^-18 J`, ladX1 + 8, y);
-    }
   }
 
-  // Top open limit (n = infinity, 0 J)
+  // Top open limit (n = infinity)
   const yTopLine = yOf(6);
   ctx.setLineDash([4, 4]);
   ctx.strokeStyle = '#544e46';
@@ -413,10 +386,6 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
   ctx.lineTo(ladX1 + 2, yTopLine);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.textAlign = 'right';
-  ctx.fillStyle = '#6b625a';
-  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillText('0 J (top)', ladX0 - 8, yTopLine);
 
   // Transition vertical arrow between rungs hi and lo
   const xArrow = ladX0 + 16;
@@ -434,15 +403,6 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
   ctx.lineTo(xArrow + 4, yLo - 7);
   ctx.closePath();
   ctx.fill();
-
-  // Energy delta label on the arrow
-  if (w >= 600) {
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = colour;
-    ctx.font = '9px ui-monospace, SFMono-Regular, Menlo, monospace';
-    ctx.fillText(`\u0394E = ${(ladder.joules / 1e-18).toFixed(3)} \u00d7 10^-18 J`, xArrow + 6, (yHi + yLo) / 2);
-  }
 
   // Animation timeline (progress in 0..1):
   // 0.00..0.22 : Electron rests on rung hi (excited)
@@ -571,30 +531,9 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
       ctx.arc(xPkt, yWaveMid, 8, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Explanatory badge accompanying the photon
-      if (w >= 440) {
-        const badgeX = Math.min(w - pad - 80, Math.max(xEmitStart + 70, xPkt));
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, monospace';
-        ctx.fillStyle = colour;
-        ctx.fillText(`PHOTON EMITTED \u00b7 ${ladder.nm} nm`, badgeX, yWaveMid - 22);
-
-        ctx.textBaseline = 'top';
-        ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
-        ctx.fillStyle = '#dcd6cc';
-        ctx.fillText('Lost energy released as light', badgeX, yWaveMid + 22);
-      }
       ctx.restore();
     }
   }
-
-  // Footer note
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillStyle = '#8c8376';
-  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
-  ctx.fillText('When an electron drops a rung, the atom loses energy and releases one photon of light.', w / 2, h - 8);
 }
 
 /**
@@ -1250,6 +1189,17 @@ export function mountModel(host, spec) {
   wrap.innerHTML = `<div class="lq-model-view"></div>${caption ? `<p class="lq-model-caption">${caption}</p>` : ''}`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
+
+  // Photoelectric effect: 2D animated photon strike, electron emission, brightness & frequency physics
+  if (parts.photons || spec.type === 'photons') {
+    const teardownPE = mountPhotoelectricExplainer(view, wrap, parts.photons || spec, still);
+    return {
+      dispose() {
+        try { teardownPE?.dispose?.(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
 
   // Electron shielding and effective nuclear charge (Zeff): 3D animated explainer
   if (parts.shielding || spec.type === 'shielding') {

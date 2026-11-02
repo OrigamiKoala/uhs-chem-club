@@ -341,8 +341,8 @@ export const STAGES = [
       show: { speed: false }, label: 'Holder', plot: { x: 'invV', y: 'P' }
     });
     return {
-      title: 'The Straight Line',
-      prompt: 'Type the slope of the line that the gauge makes when plotted against one divided by the room, in kPa·L.',
+      title: 'Boyle\'s Law & The Straight Line',
+      prompt: 'Adjust the cylinder volume to watch the gauge swing, lay the straightedge along the points, and enter the slope.',
       entry: { id: 'ans', label: 'Slope', unit: 'kPa·L' },
       widget,
       table: gasTable({
@@ -350,9 +350,9 @@ export const STAGES = [
         tools: ['straightedge']
       }, { recorder: { at: { x: 111, y: 17 }, size: { w: 40, h: 28 }, xLabel: '1 ÷ room', xUnit: '1/L', yLabel: 'Gauge', yUnit: 'kPa' } }),
       hints: [
-        'Turn the "Piston" dial and press "Record" at each setting, then lay the straightedge across the points.',
-        'Choose two recorded points and compare how far the gauge rises with how far one divided by the room moves.',
-        'The slope is the rise divided by the run between two points on the line.'
+        'Move the "Piston" volume slider to squeeze the gas: observe how the analogue pressure gauge needle swings up.',
+        'Press "Record" at several volume settings, then drag across the points on the plot to lay the straightedge.',
+        'The plot displays the slope on the line — enter that slope value.'
       ],
       check(state) {
         const t = state.table;

@@ -1664,6 +1664,503 @@
 
 .learn-site-meta { font-size: 0.68rem; }
 
+/* ===================================================================
+   LEARN QUEST 2D — Full-screen edge-to-edge layout for 3D Off
+   Replaces the centered, floating postcard layout with a spacious,
+   dedicated workbench on the left and a rich learn console on the right.
+   Zero wasted margins, full viewport height utilization.
+   =================================================================== */
+
+.screen-container.m-learn-quest.learn-quest-2d {
+  max-width: 100vw !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0.65rem 1.25rem 0.85rem !important;
+  box-sizing: border-box !important;
+}
+
+@media (min-width: 861px) and (min-height: 521px) {
+  .screen-container.m-learn-quest.learn-quest-2d {
+    height: calc(100dvh - var(--hud-h)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.45rem !important;
+    overflow: hidden !important;
+  }
+}
+
+/* ---- Top Header Bar ---- */
+.learn-quest-2d .learn-host-bar {
+  flex: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.85rem !important;
+  padding: 0.35rem 0.85rem !important;
+  margin: 0 !important;
+  min-height: 40px !important;
+  background: var(--plate-200) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-top-color: var(--seam-light) !important;
+  border-bottom-color: var(--seam-dark) !important;
+  border-radius: var(--radius-sm, 3px) var(--radius-sm, 3px) 0 0 !important;
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+.learn-quest-2d .learn-host-back {
+  flex: none !important;
+  min-height: 30px !important;
+  padding: 4px 12px !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.learn-quest-2d .learn-host-id {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 0.65rem !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.learn-quest-2d .learn-host-title {
+  font-family: var(--font-display) !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text-bright) !important;
+}
+
+.learn-quest-2d .learn-host-builds {
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  color: var(--text-muted) !important;
+  margin-left: 0.5rem !important;
+}
+
+.learn-quest-2d .learn-host-builds a {
+  color: var(--accent-gold) !important;
+  text-decoration: underline !important;
+}
+
+/* ---- Stage Progress Rail ---- */
+.learn-quest-2d .lq-rail {
+  flex: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 4px 8px !important;
+  margin: 0 !important;
+  background: var(--plate-100) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-top: none !important;
+  border-radius: 0 0 var(--radius-sm, 3px) var(--radius-sm, 3px) !important;
+  box-shadow: inset 0 1px 0 var(--seam-dark) !important;
+}
+
+.learn-quest-2d .lq-lamp {
+  flex: 0 1 70px !important;
+  max-width: 70px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--plate-300) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--text-muted) !important;
+  transition: all 0.15s ease !important;
+}
+
+.learn-quest-2d .lq-lamp.done {
+  background: rgba(120, 161, 66, 0.16) !important;
+  border-color: var(--accent-green) !important;
+  color: var(--accent-green) !important;
+}
+
+.learn-quest-2d .lq-lamp.here {
+  background: var(--plate-400) !important;
+  border-color: var(--accent-amber) !important;
+  color: var(--accent-amber) !important;
+  box-shadow: inset 0 0 0 1px var(--accent-amber), 0 0 8px rgba(229, 155, 36, 0.25) !important;
+}
+
+/* ---- LQ Frame Mount Point ---- */
+.learn-quest-2d .learn-quest-mount {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.learn-quest-2d .lq {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45rem !important;
+}
+
+/* ---- Main 2-Column Body ---- */
+@media (min-width: 861px) and (min-height: 521px) {
+  .learn-quest-2d .lq-body {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.45fr) clamp(380px, 34vw, 500px) !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+    margin-top: 0.15rem !important;
+  }
+}
+
+/* ---- Left Panel: Interactive Workbench ---- */
+.learn-quest-2d .lq-stage {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  background: var(--plate-200) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-top-color: var(--seam-light) !important;
+  border-bottom-color: var(--seam-dark) !important;
+  border-radius: var(--radius-sm, 3px) !important;
+  padding: 0.75rem !important;
+  box-sizing: border-box !important;
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.learn-quest-2d .lq-stage-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.1rem 0.25rem 0.5rem !important;
+  border-bottom: 1px solid var(--seam-dark) !important;
+  box-shadow: 0 1px 0 var(--seam-light) !important;
+  flex: none !important;
+}
+
+.learn-quest-2d .lq-stage-id {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 0.65rem !important;
+}
+
+.learn-quest-2d .lq-stage-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text-bright) !important;
+  text-shadow: var(--engrave) !important;
+  margin: 0 !important;
+}
+
+.learn-quest-2d .lq-stage-count {
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--accent-amber) !important;
+}
+
+.learn-quest-2d .lq-stage-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.learn-quest-2d .lq-stage-actions .quest-btn-sm {
+  min-height: 30px !important;
+  padding: 4px 12px !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+.learn-quest-2d .lq-controls {
+  flex: none !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 0.6rem !important;
+  padding: 0.5rem 0.75rem !important;
+  background: var(--plate-100) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: var(--radius-sm, 2px) !important;
+}
+
+.learn-quest-2d .lq-controls:empty {
+  display: none !important;
+}
+
+.learn-quest-2d .lq-scope {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+.learn-quest-2d .scope-grid,
+.learn-quest-2d .table-grid {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+.learn-quest-2d .scope-plate {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  background: var(--plate-000, #080708) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.learn-quest-2d .scope-aperture,
+.learn-quest-2d .scope-aperture.table-aperture {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  max-height: none !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--plate-000, #080708) !important;
+}
+
+.learn-quest-2d .scope-aperture canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
+  touch-action: none !important;
+  cursor: grab !important;
+}
+
+.learn-quest-2d .scope-aperture canvas:active {
+  cursor: grabbing !important;
+}
+
+.learn-quest-2d .table-tools {
+  flex: none !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  padding: 0.45rem 0.6rem 0.1rem !important;
+}
+
+/* ---- Right Panel: Learn Slate ---- */
+.learn-quest-2d .lq-deck {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: static !important;
+  top: auto !important;
+  background: var(--plate-200) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-top-color: var(--seam-light) !important;
+  border-bottom-color: var(--seam-dark) !important;
+  border-radius: var(--radius-sm, 3px) !important;
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  overflow: hidden !important;
+}
+
+.learn-quest-2d .lq-prompt {
+  flex: none !important;
+  padding: 1.15rem 1.35rem 1rem !important;
+  background: var(--plate-100) !important;
+  border-bottom: 1px solid var(--seam-dark) !important;
+  box-shadow: 0 1px 0 var(--seam-light) !important;
+}
+
+.learn-quest-2d .lq-story {
+  margin: 0 0 0.5rem !important;
+  padding-left: 8px !important;
+  border-left: 2px solid var(--accent-amber) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.82rem !important;
+  line-height: 1.4 !important;
+  color: var(--accent-amber) !important;
+  letter-spacing: 0.04em !important;
+}
+
+.learn-quest-2d .lq-prompt-body {
+  margin: 0 !important;
+  font-size: 1.08rem !important;
+  line-height: 1.55 !important;
+  font-weight: 600 !important;
+  color: var(--text-bright) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+.learn-quest-2d .lq-bench-guide {
+  flex: none !important;
+  margin: 0 !important;
+  padding: 0.6rem 1.35rem !important;
+  border-bottom: 1px solid var(--seam-dark) !important;
+}
+
+.learn-quest-2d .lq-foe {
+  flex: none !important;
+  margin: 0.5rem 1.35rem 0 !important;
+}
+
+.learn-quest-2d .lq-deck-body {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.9rem !important;
+  padding: 1.15rem 1.35rem !important;
+}
+
+.learn-quest-2d .lq-deck-foot {
+  flex: none !important;
+  margin-top: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+  padding: 0.9rem 1.35rem 1.1rem !important;
+  background: var(--plate-100) !important;
+  border-top: 1px solid var(--seam-dark) !important;
+  box-shadow: inset 0 1px 0 var(--seam-light) !important;
+}
+
+.learn-quest-2d .lq-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.learn-quest-2d .lq-actions .lq-commit {
+  flex: 1 1 auto !important;
+  min-height: 44px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+}
+
+.learn-quest-2d .lq-actions .lq-hint-key {
+  flex: 0 0 auto !important;
+  min-height: 44px !important;
+  padding: 0 1.25rem !important;
+  font-size: 0.8rem !important;
+}
+
+.learn-quest-2d .choice-option.lq-bin-key,
+.learn-quest-2d .choice-option {
+  min-height: 42px !important;
+  padding: 8px 12px !important;
+  background: var(--plate-200) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 3px !important;
+  transition: all 0.15s ease !important;
+}
+
+.learn-quest-2d .choice-option.lq-bin-key:hover,
+.learn-quest-2d .choice-option:hover {
+  background: var(--plate-300) !important;
+  border-color: var(--accent-amber) !important;
+}
+
+.learn-quest-2d .choice-option.lq-bin-key.selected,
+.learn-quest-2d .choice-option.selected {
+  background: var(--plate-400) !important;
+  border-color: var(--accent-amber) !important;
+  box-shadow: inset 0 0 0 1px var(--accent-amber) !important;
+}
+
+.learn-quest-2d .lq-banner:not(:empty) {
+  margin-bottom: 0.25rem !important;
+}
+
+.learn-quest-2d .stage-error-banner {
+  padding: 0.65rem 0.85rem !important;
+  border-radius: 3px !important;
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+}
+
+.learn-quest-2d .stage-success-banner {
+  padding: 0.65rem 0.85rem !important;
+  border-radius: 3px !important;
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+}
+
+.learn-quest-2d .lq-reward {
+  padding: 0.65rem 0.85rem !important;
+  background: rgba(120, 161, 66, 0.12) !important;
+  border: 1px solid var(--accent-green) !important;
+  border-radius: 3px !important;
+}
+
+.learn-quest-2d .lq-reward-body {
+  margin: 0 !important;
+  font-size: 0.92rem !important;
+  line-height: 1.5 !important;
+  color: var(--text-bright) !important;
+}
+
+/* Responsive adaptation for tablets / small screens */
+@media (max-width: 860px) {
+  .screen-container.m-learn-quest.learn-quest-2d {
+    height: auto !important;
+    min-height: calc(100dvh - var(--hud-h)) !important;
+    overflow-y: auto !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+  .learn-quest-2d .lq-body {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    height: auto !important;
+  }
+  .learn-quest-2d .lq-stage {
+    min-height: 380px !important;
+    height: 52vh !important;
+  }
+  .learn-quest-2d .lq-deck {
+    height: auto !important;
+    max-height: none !important;
+  }
+  .learn-quest-2d .lq-deck-body {
+    overflow-y: visible !important;
+  }
+}
+
 /* A DRAWN instrument, worked on ground the player walked to.
    The flat is still alive behind the page — dust drifting, the mast lamp
    turning — but it is put behind smoked glass, because a scope screen has to be

@@ -14,7 +14,7 @@ export const UNIT_13 = {
   place: 'Fen forest',
   title: 'Organic Chemistry',
   line: 'Carbon chains, functional groups, and isomers.',
-  brief: 'Build molecules on carbon backbones, name them, and see how a small group of atoms decides how a whole molecule behaves.',
+  brief: 'Investigate hydrocarbon structures, organic nomenclature, structural isomers, and functional groups.',
 
   quests: [
     { id: 'q1-chains', title: 'Carbon Chains', line: 'Hydrocarbons and how they are named.', arena: 'bench', stageCount: 8, status: 'draft', module: null },

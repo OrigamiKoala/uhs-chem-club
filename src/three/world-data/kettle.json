@@ -2,7 +2,7 @@
   "id": "kettle",
   "name": "Kettle",
   "place": "Foundry works",
-  "oneLine": "Counting what goes into a reaction and what comes out of it.",
+  "oneLine": "Chemical equations, reaction types, and stoichiometry.",
   "sky": "kettle-sky",
   "terrain": {
     "heightmap": "kettle-flat",

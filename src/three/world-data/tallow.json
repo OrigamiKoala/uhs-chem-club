@@ -2,7 +2,7 @@
   "id": "tallow",
   "name": "Tallow",
   "place": "Salt flats",
-  "oneLine": "Learn atomic structure, elements, and isotopes.",
+  "oneLine": "Atomic structure, elements, and the periodic table.",
   "sky": "tallow-sky",
   "terrain": {
     "heightmap": "tallow-hardpan",

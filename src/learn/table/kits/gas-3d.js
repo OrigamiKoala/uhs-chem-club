@@ -72,14 +72,21 @@ function dressRig(f, state, c) {
       cyl.add(weight);
     }
     if (cj.c.hold === 'V') { plate.visible = true; rod.visible = false; }
+    const gauge = gaugeHead(c, r * 0.45);
+    gauge.position.set(-len / 2 + 0.015, dia + 0.012, 0);
+    cyl.add(gauge);
     group.add(cyl);
-    return { j, cj, len, dia, r, field, plate, rod, weight };
+    return { j, cj, len, dia, r, field, plate, rod, weight, gauge };
   });
   group.userData.sync = (live, st) => {
     const reads = rigRead(st, live.id);
     items.forEach(it => {
       const q = reads[it.j];
       if (!q) return;
+      if (it.gauge?.userData?.needle) {
+        const pFrac = clamp(q.P / (live.props.pmax || 1000), 0, 1);
+        it.gauge.userData.needle.rotation.y = -Math.PI * 0.75 + pFrac * Math.PI * 1.5;
+      }
       const frac = clamp(q.V / (live.props.vmax || vmax), 0.02, 1);
       const px = -it.len / 2 + frac * it.len;
       const inner = it.dia * 0.31;

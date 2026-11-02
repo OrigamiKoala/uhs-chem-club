@@ -65,7 +65,8 @@ const SITE_DEFS = [
   { id: 'site-6', questId: 'q6-filling', stage: 6, label: 'Bench 6 - Electron Configuration', pos: [6, -52 - TENT_SPAN], f: [0, -1] },
   { id: 'site-7', questId: 'q7-pes', stage: 7, label: 'Bench 7 - Photoelectron Spectroscopy', pos: [-38, -44], f: [0, 1] },
   { id: 'site-8', questId: 'q8-trends', stage: 8, label: 'Bench 8 - Periodic Trends', pos: [-62, -8], f: [1, 0] },
-  { id: 'site-9', questId: 'q9-absorb', stage: 9, label: 'Bench 9 - Spectroscopy', pos: [-25, 12], f: [-1, 0] }
+  { id: 'site-9', questId: 'q9-absorb', stage: 9, label: 'Bench 9 - Spectroscopy', pos: [-25, 12], f: [-1, 0] },
+  { id: 'site-10', questId: 'q10-wavefunctions', stage: 10, label: 'Bench 10 - Wavefunctions', pos: [-48, 18], f: [0, 1] }
 ];
 
 /** A host-frame point as a world point: x to the player's right, z toward the player. */
@@ -122,11 +123,12 @@ function lm(asset, x, z, { rotY = 0, scale = 1, radius = 2, minTier = 'T3', host
 const HOST_CIRCLE = {      // [local x, local z behind the plate (positive), radius]
   'site-1': [0, 5.5, 6.5], 'site-2': [0, 4.0, 4.2], 'site-3': [4.5, 4.0, 7.5], 'site-4': [0, 6.5, 5.5],
   'site-5': [0, 3.0, 0.45], 'site-6': [0, 3.0, 0.45], 'site-7': [2.0, 4.0, 6.0], 'site-8': [3.0, 5.0, 8.5],
-  'site-9': [0.5, 4.5, 5.0]
+  'site-9': [0.5, 4.5, 5.0], 'site-10': [0, 3.5, 4.5]
 };
 const HOST_ASSET = {
   'site-1': 'wave-tank', 'site-2': 'photocell-mast', 'site-3': 'spectrograph-sled', 'site-4': 'crawler-lab',
-  'site-5': 'records-tent', 'site-6': 'records-tent', 'site-7': 'detector-mast', 'site-8': 'tile-store', 'site-9': 'water-hole'
+  'site-5': 'records-tent', 'site-6': 'records-tent', 'site-7': 'detector-mast', 'site-8': 'tile-store', 'site-9': 'water-hole',
+  'site-10': 'wavefunction-dome'
 };
 for (const d of SITE_DEFS) {
   const [lx, back, radius] = HOST_CIRCLE[d.id];
@@ -322,7 +324,7 @@ const world = {
   id: 'lanternfall',
   name: 'Lanternfall',
   place: 'Aurora ice',
-  oneLine: 'Learn how light, energy levels, orbitals and periodic trends explain the electrons you met on Tallow.',
+  oneLine: 'Light, energy levels, orbitals, and periodic trends.',
   sky: 'lanternfall-sky',
   terrain: { heightmap: 'lanternfall-ice', size: [240, 240], maxHeight: 4.0, material: 'packed-ice' },
   ambience: {
