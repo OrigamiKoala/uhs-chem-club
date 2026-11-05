@@ -316,4 +316,4 @@ Fourth pass: `docs/plans/learn-quests.md` now marks a typed headline stage in ev
 
 ## Teeter built (2026-11-04)
 
-Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (no Kp/Kc stage; halving not built); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.
+Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (K of a reversed, doubled, halved and added reaction; no Kp/Kc stage); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.

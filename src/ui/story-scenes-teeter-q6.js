@@ -65,7 +65,7 @@ function scale(ctx, Q, K, K0, x, y, w, size) {
 
 function leanPush(ctx, w, h, t) {
   ground(ctx, w, h);
-  const ph = PHASES.find(p => t < p.b) || PHASES[3];
+  const ph = PHASES.find(p => t <= p.b) || PHASES[3];
   const res = leanStress(RXN, BASE, ph.st);
   const tick = Math.round(ease(win(t, ph.a + (ph.b - ph.a) * 0.08, ph.b - (ph.b - ph.a) * 0.05)) * TICKS);
   const now = leanAt(RXN, res, tick);

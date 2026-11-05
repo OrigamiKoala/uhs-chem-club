@@ -74,12 +74,12 @@ function panBothWays(ctx, w, h, t) {
   // Beat one (0 to 0.3): a pan that started with A alone; the lines run from tick 0 to 60 and flatten.
   // Beat two (0.3 to 0.66): the settled pan runs from tick 60 to 130, particles ringed, the two counts counted from the drawn changes.
   // Beat three (0.66 to 1): a pan that started with B alone runs to the same level.
-  if (t < 0.66) {
-    const k = t < 0.3 ? Math.round(ease(win(t, 0, 0.3)) * 60) : 60 + Math.round(ease(win(t, 0.3, 0.66)) * 70);
-    dish(ctx, FROM_A, k, dx, dy, dw, dh, t >= 0.3);
+  if (t <= 0.66) {
+    const k = t <= 0.3 ? Math.round(ease(win(t, 0, 0.3)) * 60) : 60 + Math.round(ease(win(t, 0.3, 0.66)) * 70);
+    dish(ctx, FROM_A, k, dx, dy, dw, dh, t > 0.3);
     graph(ctx, FROM_A, k, gx, gy, gw, gh);
-    text(ctx, t < 0.3 ? 'A alone, then settling' : 'the settled pan, eight particles ringed', w * 0.5, h * 0.08, { size: fs(h), color: C.dust });
-    if (t >= 0.3) {
+    text(ctx, t <= 0.3 ? 'A alone, then settling' : 'the settled pan, eight particles ringed', w * 0.5, h * 0.08, { size: fs(h), color: C.dust });
+    if (t > 0.3) {
       // The counts: every change drawn between tick 60 and now.
       let f = 0; let v = 0;
       for (let i = 61; i <= k; i++) { f += FROM_A.fwd[i]; v += FROM_A.rev[i]; }

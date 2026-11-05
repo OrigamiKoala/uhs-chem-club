@@ -1647,4 +1647,4 @@ script green.
 
 ### Teeter: built differently (2026-11-04)
 
-Ids follow the brief; the boss `boss-tipper` was added. `q2-k` adds a predict stage and drops the separate Kp gauge stage; `q3-q` stage 1 became "lay the mixture already at equilibrium" and the full direction sort is only in stage 8; `q4-properties` drops the Kp/Kc stage and the halving stage; `q6-lean` has no stand-alone "remove a product" stage (worked in stages 7 and 8) and its stage 8 is a three-dial search (weak); `q8-free` stage 6 uses NH4Cl, adjacent to Ember Reach `q7-gibbs`. The pan is drawn flat. Spec: `docs/plans/teeter-world.md`.
+Ids follow the brief; the boss `boss-tipper` was added. `q2-k` adds a predict stage and drops the separate Kp gauge stage; `q3-q` stage 1 became "lay the mixture already at equilibrium" and the full direction sort is only in stage 8; `q4-properties` drops the Kp/Kc stage and its stage 4 halves every amount; `q6-lean` stage 8 takes NH₃ out of a settled vessel; `q8-free` stage 6 uses NH4Cl, adjacent to Ember Reach `q7-gibbs`. The pan is drawn flat. Spec: `docs/plans/teeter-world.md`.

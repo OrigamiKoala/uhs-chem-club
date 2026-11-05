@@ -34,7 +34,7 @@ function panel(ctx, x, y, w, h, cols, max, p, { dash = null } = {}) {
 
 function iceBars(ctx, w, h, t) {
   ground(ctx, w, h);
-  const beat = t < 0.32 ? 0 : t < 0.64 ? 1 : 2;
+  const beat = t <= 0.32 ? 0 : t <= 0.64 ? 1 : 2;
   const [lo, hi] = [[0, 0.32], [0.32, 0.64], [0.64, 1]][beat];
   const k = ease(win(t, lo + 0.03, hi - 0.1));
   const sets = [

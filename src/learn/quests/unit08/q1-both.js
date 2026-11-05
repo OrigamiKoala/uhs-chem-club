@@ -146,7 +146,7 @@ export const STAGES = [
     table: pansTable({
       fixtures: [
         panFixture('pan', { x: 52, y: 32 }, { ...P_LEVEL, b0: 0, seed: 23, start: 100, tracer: true, title: 'Settled pan, eight particles ringed' }),
-        selectorFixture('verdict', 'What is happening', { x: 127, y: 22 }, { options: ['Everything has stopped', 'Particles are still changing', ' '], start: 3, list: true })
+        selectorFixture('verdict', 'What is happening', { x: 127, y: 22 }, { options: ['Nothing changes', 'Both changes go on', ' '], start: 3, list: true })
       ]
     }),
     hints: [
