@@ -353,9 +353,9 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   (() => {
     const slots = [
-      { id: 'go-p', label: 'Makes SO₃', at: { x: 137, y: 11 }, size: { w: 26, h: 14 } },
-      { id: 'go-r', label: 'Makes SO₂ and O₂', at: { x: 137, y: 31 }, size: { w: 26, h: 14 } },
-      { id: 'stay', label: 'No change', at: { x: 137, y: 51 }, size: { w: 26, h: 14 } }
+      { id: 'go-p', label: 'Makes SO₃', at: { x: 131, y: 11 }, size: { w: 30, h: 14 } },
+      { id: 'go-r', label: 'Makes SO₂ and O₂', at: { x: 131, y: 31 }, size: { w: 30, h: 14 } },
+      { id: 'stay', label: 'No change', at: { x: 131, y: 51 }, size: { w: 30, h: 14 } }
     ];
     const WAY = { 'go-p': 'forward', 'go-r': 'reverse', stay: 'none' };
     return {

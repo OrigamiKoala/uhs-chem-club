@@ -49,7 +49,7 @@ function put(ctx, s, x, y, size, { color = TEXT, align = 'center', weight = 500,
 /** A number as printed: plain, or `m × 10` with the exponent raised and smaller. `prefix` is plain text before it ("K = "). */
 function putNum(ctx, v, sf, cx, y, size, { color = TEXT, weight = 500, align = 'center', prefix = '' } = {}) {
   const a = Math.abs(v) * (1 + 1e-12);
-  if (!(a >= 1e5 || a < 1e-3)) { put(ctx, prefix + fmtNum(v, sf), cx, y, size, { color, align, weight }); return; }
+  if (v === 0 || !(a >= 1e5 || a < 1e-3)) { put(ctx, prefix + fmtNum(v, sf), cx, y, size, { color, align, weight }); return; }
   const { m, e } = sciParts(v, sf);
   const main = `${prefix}${m} × 10`;
   const ex = `${e < 0 ? '−' : ''}${Math.abs(e)}`;

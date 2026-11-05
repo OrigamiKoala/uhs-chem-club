@@ -27,7 +27,7 @@ export const STAGE_STORY = {
     1: 'The Fifth says this pan is finished once it stops changing, and Vess wants to see it run.'
   },
   'q2-k': {
-    1: 'The Fifth\'s pans never hold equal amounts, and Vess wants to know what they do hold.'
+    1: 'Vess has three of the Fifth\'s pans that began differently, and wants to see where each ends.'
   },
   'q3-q': {
     1: 'A pan is mixed to a recipe, and Vess wants to say which way it goes before it moves.'
