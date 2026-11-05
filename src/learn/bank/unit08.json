@@ -843,6 +843,149 @@
      "explanation": "Q = 0.60 / 0.60 = 1.0, which is below K, so the mixture makes more B."
     }
    ]
+  },
+  "boss-tipper": {
+   "problems": [
+    {
+     "id": "boss-tipper#b1",
+     "quest": "boss-tipper",
+     "question": "2 A ⇌ B has K = 1.2. A mixture holds 0.50 mol/L of A and 0.50 mol/L of B. Which way does it go?",
+     "options": [
+      {
+       "id": "a",
+       "label": "Toward B, because the amounts are equal"
+      },
+      {
+       "id": "b",
+       "label": "Toward A, because Q is 2.0 and K is 1.2"
+      },
+      {
+       "id": "c",
+       "label": "It does not change, because the amounts are equal"
+      },
+      {
+       "id": "d",
+       "label": "Toward B, because Q is 0.5"
+      }
+     ],
+     "answer": "b",
+     "explanation": "Q = [B] / [A]² = 0.50 / 0.25 = 2.0, which is above K = 1.2, so the mixture makes A until Q falls to K. Equal amounts do not mean equilibrium."
+    },
+    {
+     "id": "boss-tipper#b2",
+     "quest": "boss-tipper",
+     "question": "N₂O₄ ⇌ 2 NO₂ is at equilibrium in a sealed vessel. The vessel is squeezed to half its volume at the same temperature. What happens to K and to the amount of NO₂?",
+     "options": [
+      {
+       "id": "a",
+       "label": "K stays the same and the NO₂ amount falls"
+      },
+      {
+       "id": "b",
+       "label": "K doubles and the NO₂ amount rises"
+      },
+      {
+       "id": "c",
+       "label": "K halves and the NO₂ amount falls"
+      },
+      {
+       "id": "d",
+       "label": "K stays the same and the NO₂ amount rises"
+      }
+     ],
+     "answer": "a",
+     "explanation": "Squeezing doubles the pressure of both gases, which puts Q at twice K. The vessel moves toward N₂O₄, the side with fewer molecules, so NO₂ falls. Only a change of temperature changes K."
+    }
+   ],
+   "worked": {
+    "id": "boss-tipper#w",
+    "quest": "boss-tipper",
+    "title": "Which Way a Mixture Goes",
+    "setup": "2 SO₂ + O₂ ⇌ 2 SO₃ has K = 280 at 1000 K. A vessel holds 0.20 mol/L SO₂, 0.10 mol/L O₂ and 0.50 mol/L SO₃. Find Q and say which way the mixture goes.",
+    "steps": [
+     {
+      "say": "Which expression is Q for this reaction?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "[SO₃]² / ([SO₂]² [O₂])"
+       },
+       {
+        "id": "b",
+        "label": "[SO₃] / ([SO₂] [O₂])"
+       },
+       {
+        "id": "c",
+        "label": "([SO₂]² [O₂]) / [SO₃]²"
+       },
+       {
+        "id": "d",
+        "label": "2[SO₃] / (2[SO₂] [O₂])"
+       }
+      ],
+      "answer": "a",
+      "hint": "Products go on top and reactants below, each raised to its coefficient.",
+      "explain": "The 2 in front of SO₂ and SO₃ becomes a power, so Q = [SO₃]² / ([SO₂]² [O₂])."
+     },
+     {
+      "say": "What is [SO₃]² for 0.50 mol/L of SO₃?",
+      "kind": "number",
+      "answer": 0.25,
+      "calc": "0.50**2",
+      "unit": "(mol/L)²",
+      "tol": 0.01,
+      "hint": "Multiply 0.50 by itself.",
+      "explain": "0.50² = 0.25."
+     },
+     {
+      "say": "What is [SO₂]² [O₂] for 0.20 mol/L SO₂ and 0.10 mol/L O₂?",
+      "kind": "number",
+      "answer": 0.004,
+      "calc": "0.20**2*0.10",
+      "unit": "(mol/L)³",
+      "tol": 0.01,
+      "hint": "Square the SO₂ amount, then multiply by the O₂ amount.",
+      "explain": "0.20² × 0.10 = 0.040 × 0.10 = 0.0040."
+     },
+     {
+      "say": "What is Q?",
+      "kind": "number",
+      "answer": 62.5,
+      "calc": "0.50**2/(0.20**2*0.10)",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "Divide the first result by the second.",
+      "explain": "Q = 0.25 / 0.0040 = 62.5."
+     },
+     {
+      "say": "Compare Q with K = 280. Which way does the mixture go?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "Toward SO₃, because Q is below K"
+       },
+       {
+        "id": "b",
+        "label": "Toward SO₂ and O₂, because Q is below K"
+       },
+       {
+        "id": "c",
+        "label": "Toward SO₃, because Q is above K"
+       },
+       {
+        "id": "d",
+        "label": "It does not change"
+       }
+      ],
+      "answer": "a",
+      "hint": "A mixture moves until Q reaches K.",
+      "explain": "Q = 62.5 is below K = 280, so the mixture makes more SO₃ until Q rises to K."
+     }
+    ],
+    "finish": "Work out Q the way K is written, then set it against K to see which way the mixture goes."
+   }
   }
  }
 }

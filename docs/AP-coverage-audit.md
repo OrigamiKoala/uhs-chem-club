@@ -312,3 +312,8 @@ Still open: Bellows `q5` is not labelled beyond the exam (the project rule strip
 Third pass: Ember `q2-calorimetry` stage 8 (condensation and cooling, heat given out, typed; 6.5.A.2) and `q3-enthalpy` stage 8 (reaction-progress diagram with an activation barrier, reverse Ea typed; 6.2). The Ember stage cap is now 8. Both gaps are removed from the open list above.
 
 Fourth pass: `docs/plans/learn-quests.md` now marks a typed headline stage in every unbuilt world (B4), plans the Lab Notebook set for the free-response skills (B5), resolves the FIX marks, and adds the Drill Deck verifier rule (B6/B7 item 8) as planned work. Still open: the per-LO table, and the verifier rule itself is not implemented.
+
+
+## Teeter built (2026-11-04)
+
+Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (no Kp/Kc stage; halving not built); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.

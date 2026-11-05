@@ -929,8 +929,138 @@ export function buildUndertow(foe) {
   return body;
 }
 
+/* ------------------------------------------------------------------
+   THE TIPPER
+   A beam pump: a trestle, a beam on a pivot and a shallow pan hung from each end. It sits level, rocks a little when idle and tips to the
+   side the planner says (`foes.js` `the tipper`: `plan.lean`, -1 to 1).
+   ------------------------------------------------------------------ */
+
+export function buildTipper(foe) {
+  const group = new THREE.Group();
+  group.name = `tipper:${foe.id}`;
+
+  const shadow = contactShadow(0.16);
+  group.add(shadow);
+
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const iron = boilerMaterial();
+  const brass = brassMaterial();
+
+  // The trestle: two legs under a cross-piece, on a foot.
+  const footGeo = own(new THREE.BoxGeometry(0.1, 0.012, 0.05));
+  const foot = new THREE.Mesh(footGeo, iron);
+  foot.position.set(0, 0.006, 0);
+  rig.add(foot);
+  const legGeo = own(new THREE.BoxGeometry(0.009, 0.1, 0.009));
+  for (const lz of [-0.016, 0.016]) {
+    const leg = new THREE.Mesh(legGeo, iron);
+    leg.position.set(0, 0.062, lz);
+    rig.add(leg);
+  }
+  const PIVOT_Y = 0.105;
+
+  // The beam, on a pivot pin; the pans hang from its ends and are held level by their own hangers.
+  const beam = new THREE.Group();
+  beam.position.set(0, PIVOT_Y, 0);
+  rig.add(beam);
+  const beamGeo = own(new THREE.BoxGeometry(0.2, 0.008, 0.012));
+  enableAO(beamGeo);
+  const beamMesh = new THREE.Mesh(beamGeo, iron);
+  beamMesh.castShadow = true;
+  beam.add(beamMesh);
+  const pinGeo = own(new THREE.CylinderGeometry(0.008, 0.008, 0.044, 10));
+  const pin = new THREE.Mesh(pinGeo, brass);
+  pin.rotation.x = Math.PI / 2;
+  beam.add(pin);
+
+  const hangers = [];
+  const panGeo = own(new THREE.CylinderGeometry(0.03, 0.026, 0.008, 14));
+  const chainGeo = own(new THREE.BoxGeometry(0.002, 0.03, 0.002));
+  for (const ex of [-0.09, 0.09]) {
+    const hanger = new THREE.Group();
+    hanger.position.set(ex, 0, 0);
+    beam.add(hanger);
+    for (const cz of [-0.01, 0.01]) {
+      const chain = new THREE.Mesh(chainGeo, brass);
+      chain.position.set(0, -0.016, cz);
+      hanger.add(chain);
+    }
+    const dish = new THREE.Mesh(panGeo, iron);
+    dish.position.set(0, -0.034, 0);
+    hanger.add(dish);
+    hangers.push(hanger);
+  }
+
+  const hit = hitTarget(0.14, 0.14);
+  hit.position.y = 0.07;
+  group.add(hit);
+
+  const body = {
+    species: 'the tipper',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.14,
+    look: 0,
+    baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced, bearing = 0) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed') {
+        const f = Math.min(1, body.since / 2.2);
+        rig.scale.set(1 + f * 0.25, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.25);
+        if (f >= 0.99) { body.gone = true; group.visible = false; }
+      } else {
+        rig.scale.set(1, 1, 1);
+      }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      group.rotation.y = body.look * 0.3;
+      // Level at rest (with a slow rock when idle), tipped by the planner's lean; a tipped beam without a lean tips to the right.
+      const lean = body.pose === 'tipped' ? (typeof body.plan?.lean === 'number' && body.plan.lean !== 0 ? Math.max(-1, Math.min(1, body.plan.lean)) : 1) : 0;
+      const rock = !body.still && (body.pose === 'idle' || body.pose === 'unmoved') ? Math.sin(t * 0.9 + body.phase) * 0.035 : 0;
+      const tilt = -lean * 0.34 + rock;
+      beam.rotation.z = tilt;
+      for (const h of hangers) h.rotation.z = -tilt;
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -946,6 +1076,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the lantern-eater') return buildLanternEater(foe);
   if (species === 'the crucible') return buildCrucible(foe);
   if (species === 'the undertow') return buildUndertow(foe);
+  if (species === 'the tipper') return buildTipper(foe);
   return null;
 }
 

@@ -31,6 +31,7 @@ import { LATTICES } from './bonddata.js';
 import { planDomains, planDipole, planTwist, planMix } from './vsepr.js';
 import { planGas, planMixture, mixtureState, leftAfter } from './gasdata.js';
 import { gibbsFreeEnergy, hessStackEnthalpy, bondEnthalpySum } from './thermodata.js';
+import { direction, gaugePos } from './eqdata.js';
 
 /**
  * How the Compressor answers a push, as a ratio of the push now to the push the stage
@@ -202,6 +203,30 @@ export const SPECIES = {
         return { pose: left >= BLADDER.FULL ? 'idle' : 'venting', left };
       }
       // On a table the compressor only watches, like the other table bosses: it takes the pose it is handed.
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
+  'the tipper': {
+    name: 'The Tipper',
+    counter: 'Trial missed: the reading does not match what that pan of the salt works shows.',
+    knockback: 'Knocked back. The Tipper swings level again, but every reading on your pans remains.',
+    hit: 'The Tipper stops rocking and settles level on its pivot, its two pans balanced.',
+    lines: {
+      idle: () => 'The beam rocks gently on its pivot.',
+      unmoved: () => 'The beam rests on its pivot.',
+      level: () => 'The beam swings level on its pivot.',
+      tipped: p => (p.lean > 0 ? 'The beam tips toward its right-hand pan.' : p.lean < 0 ? 'The beam tips toward its left-hand pan.' : 'The beam tips to one side.')
+    },
+    /**
+     * @param {object} probe `{ pose }` (a table: the Tipper only watches), or `{ kind: 'gauge', Q, K }` as a Q against K scale reads it:
+     *   the beam sits level when Q is on K and tips to the side Q lies on, by the same place the gauge puts its marker.
+     */
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'gauge') {
+        const dir = direction(probe.Q, probe.K);
+        return dir === 'none' ? { pose: 'level', lean: 0 } : { pose: 'tipped', lean: gaugePos(probe.Q, probe.K, probe.decades ?? 1.5) };
+      }
       return { pose: probe?.pose || 'unmoved' };
     }
   },
@@ -477,8 +502,21 @@ function crucibleArt(pose, plan = {}) {
   return svg(bowl + rim + trunnions + legs, 'The Crucible');
 }
 
+function tipperArt(pose, plan = {}) {
+  const trestle = `<path d="M22 48 L32 24 L42 48 M26 40 L38 40" fill="none" stroke="${EDGE}" stroke-width="2" stroke-linejoin="round"/>`;
+  const lean = pose === 'tipped' ? (plan.lean > 0 ? 1 : plan.lean < 0 ? -1 : 0) : 0;
+  const dy = -lean * 6;
+  const beam = `<path d="M8 ${24 + dy} L56 ${24 - dy}" stroke="${EDGE}" stroke-width="3" stroke-linecap="round"/>` +
+    `<ellipse cx="9" cy="${30 + dy}" rx="7" ry="2.4" fill="${BODY}" stroke="${EDGE}" stroke-width="1.2"/><path d="M5 ${25 + dy} L4 ${30 + dy} M13 ${25 + dy} L14 ${30 + dy}" stroke="${INK}" stroke-width="0.8"/>` +
+    `<ellipse cx="55" cy="${30 - dy}" rx="7" ry="2.4" fill="${BODY}" stroke="${EDGE}" stroke-width="1.2"/><path d="M51 ${25 - dy} L50 ${30 - dy} M59 ${25 - dy} L60 ${30 - dy}" stroke="${INK}" stroke-width="0.8"/>`;
+  const pivot = `<circle cx="32" cy="24" r="3.4" fill="${BODY}" stroke="${pose === 'level' ? LIT : EDGE}" stroke-width="1.5"/>`;
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${trestle}${beam}${pivot}</g>`, 'The Tipper, still');
+  return svg(trestle + beam + pivot, 'The Tipper');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the tipper') return tipperArt(pose, plan);
   if (species === 'the crucible') return crucibleArt(pose, plan);
   if (species === 'the compressor') return compressorArt(pose, plan);
   if (species === 'the hopper') return hopperArt(pose, plan);

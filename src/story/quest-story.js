@@ -20,6 +20,16 @@
 
 export const QUEST_STORY = {
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
+  'unit08/boss-tipper': {
+    scene: 'tipper-open',
+    beats: [
+      { to: 0.25, say: 'Every phase was a pan you had already worked. That was enough to read the Tipper: its beam tips by where Q stands against K.' },
+      { to: 0.5, say: 'As the mixture settles the beam comes level. It rests when Q reaches K, and the amounts need not be equal.' },
+      { to: 0.76, say: 'Behind it is the Fifth\'s last pan. Opened from A alone or from B alone, it settles on the same ratio.' },
+      { to: 0.94, say: 'Its particles are still changing, in both directions. The Fifth called it finished, but it is only in balance.' }
+    ],
+    filed: 'Filed: the Fifth\'s last pan settles on the same ratio from both ends, and its particles are still changing.'
+  },
   'unit08/q4-properties': {
     scene: 'k-rewrite',
     beats: [

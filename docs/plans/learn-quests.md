@@ -1643,3 +1643,8 @@ script green.
 - [ ] The user's edits to the proposal for the unbuilt worlds; then the placeholder charts replaced.
 - [ ] Decisions 6 to 10 and 12 above.
 - [ ] The unbuilt worlds (step 11).
+
+
+### Teeter: built differently (2026-11-04)
+
+Ids follow the brief; the boss `boss-tipper` was added. `q2-k` adds a predict stage and drops the separate Kp gauge stage; `q3-q` stage 1 became "lay the mixture already at equilibrium" and the full direction sort is only in stage 8; `q4-properties` drops the Kp/Kc stage and the halving stage; `q6-lean` has no stand-alone "remove a product" stage (worked in stages 7 and 8) and its stage 8 is a three-dial search (weak); `q8-free` stage 6 uses NH4Cl, adjacent to Ember Reach `q7-gibbs`. The pan is drawn flat. Spec: `docs/plans/teeter-world.md`.

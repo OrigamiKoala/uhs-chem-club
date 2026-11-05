@@ -17,6 +17,7 @@ import { TEETER_Q2_SCENES } from './story-scenes-teeter-q2.js';
 import { TEETER_Q3_SCENES } from './story-scenes-teeter-q3.js';
 import { TEETER_Q4_SCENES } from './story-scenes-teeter-q4.js';
 import { TEETER_Q5_SCENES } from './story-scenes-teeter-q5.js';
+import { TEETER_BOSS_SCENES } from './story-scenes-teeter-boss.js';
 
 const N = 48;
 const KF = 0.1; const KR = 0.05;
@@ -116,5 +117,6 @@ export const TEETER_SCENES = {
   ...TEETER_Q7_SCENES,
   ...TEETER_Q8_SCENES,
   ...TEETER_Q6_SCENES,
+  ...TEETER_BOSS_SCENES,
   'pan-both-ways': panBothWays
 };

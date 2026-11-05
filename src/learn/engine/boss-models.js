@@ -1,5 +1,5 @@
 /**
- * boss-models.js — The seven bosses of the walkable worlds, built to stand in an arena.
+ * boss-models.js — The eight bosses of the walkable worlds, built to stand in an arena.
  *
  * `CombatMonster3D` owns what a body DOES in a fight (it arrives, closes in as it is hurt, winds up, lunges, rears, convulses and
  * comes apart; `boss-arena.js` decides when). This file owns what the bodies ARE: seven machines of the Fifth Guild, each built from
@@ -12,6 +12,7 @@
  *   the crucible       Ember Reach     a furnace pot in a gantry that tilts to pour slag
  *   the undertow       Mirrowen        a brine crawler: a riveted iron tank on six jointed legs, a salt crust, an intake maw and a siphon head
  *   the recipe golem   Kettle          a furnace vessel on four pipe legs with valve knees, a hopper head, pipe arms and valve-wheel fists
+ *   the tipper         Teeter          a beam pump grown huge: a lattice beam on a pivot, a salt pan hung from each end, a dial over the pivot
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1303,6 +1304,162 @@ function buildGolem(monster) {
   };
 }
 
+/* ====================================================================== the Tipper */
+
+/** The Tipper's face: a scale with its zero at the top and a tick at each tenfold step either side, drawn once. */
+function levelFace(size = 256) {
+  try {
+    const c = canvas2d(size, size);
+    const g = c.getContext('2d');
+    g.fillStyle = '#d8d2c0';
+    g.fillRect(0, 0, size, size);
+    const cx = size / 2;
+    const span = 4.6;
+    g.strokeStyle = '#1c1a17';
+    for (let i = 0; i <= 30; i++) {
+      const a = -Math.PI / 2 + (i / 30 - 0.5) * span;
+      const major = i % 5 === 0;
+      g.lineWidth = major ? size * 0.016 : size * 0.007;
+      g.beginPath();
+      g.moveTo(cx + Math.cos(a) * size * (major ? 0.31 : 0.34), cx + Math.sin(a) * size * (major ? 0.31 : 0.34));
+      g.lineTo(cx + Math.cos(a) * size * 0.37, cx + Math.sin(a) * size * 0.37);
+      g.stroke();
+    }
+    g.strokeStyle = '#b8681a';
+    g.lineWidth = size * 0.034;
+    g.beginPath();
+    g.moveTo(cx, cx - size * 0.28);
+    g.lineTo(cx, cx - size * 0.42);
+    g.stroke();
+    return new THREE.CanvasTexture(c);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * THE TIPPER (Teeter). A beam pump grown to a boss: a riveted lattice beam on a pivot at the apex of two trestles, a shallow salt pan
+ * hung from each end (the left one rust, the right one slate), and a dial on a neck above the pivot that follows the beam. It rocks
+ * at idle, tips up to gather and slams down on the blow; a wound leaves it listing. The pans hang from their own pins and stay level.
+ */
+function buildTipper(monster) {
+  const k = new Kit(monster);
+  const iron = k.plate(0x7d8078);
+  const ironDark = k.plate(0x3f423e);
+  const rust = k.plate(0xa9622c);
+  const slate = k.plate(0x4f6b7a);
+  const charcoal = k.std(0x1f1f1d, { rough: 0.85, metal: 0.4 });
+  const steel = k.std(0xd2d4cf, { rough: 0.25, metal: 0.92 });
+  const brass = k.std(0xb8913f, { rough: 0.4, metal: 0.85 });
+  const salt = k.std(0xe4ddca, { rough: 0.95, metal: 0.0, flat: true });
+  const brineA = k.std(0xb4642a, { rough: 0.7, metal: 0.1 });
+  const brineB = k.std(0x6f8fb0, { rough: 0.7, metal: 0.1 });
+  const lens = k.glow(AMBER, 2.2);
+  const faceTex = levelFace();
+  if (faceTex) monster.own(faceTex);
+  const face = monster.mat(new THREE.MeshStandardMaterial({ color: 0xffffff, map: faceTex, roughness: 0.55, metalness: 0.0 }));
+
+  const PIVOT_Y = 3.6;
+  const HALF = 3.4;
+  const body = k.node(monster.group, 0, 0, 0);
+
+  /* --- the plinth: a deep iron base with a salt-stained lip --- */
+  k.box(body, 5.6, 0.5, 2.7, ironDark, 0, 0.25, 0, 0, 0, 0, 0.06);
+  k.box(body, 4.9, 0.14, 2.1, charcoal, 0, 0.57, 0, 0, 0, 0, 0.03);
+  k.box(body, 5.7, 0.08, 2.8, salt, 0, 0.04, 0, 0, 0, 0, 0.02);
+  k.bolts(body, [-2.4, -1.6, -0.8, 0, 0.8, 1.6, 2.4].map(x => [x, 0.52, 1.37]), 0.05, steel, [0, 0, 1]);
+
+  /* --- the trestles: a pair of legs a side, braced, meeting at the pivot housing --- */
+  const lean = Math.atan2(1.8, PIVOT_Y - 0.55);
+  for (const sz of [-1, 1]) {
+    for (const sx of [-1, 1]) {
+      k.strut(body, [sx * 1.8, 0.55, sz * 0.9], [0, PIVOT_Y, sz * 0.9], 0.17, iron, 8, 0.2);
+      k.sph(body, 0.22, ironDark, sx * 1.8, 0.58, sz * 0.9);
+    }
+    k.strut(body, [-1.15, 1.75, sz * 0.9], [1.15, 1.75, sz * 0.9], 0.1, ironDark, 8);
+    k.strut(body, [-0.75, 2.45, sz * 0.9], [0.75, 2.45, sz * 0.9], 0.08, ironDark, 8);
+  }
+  // Armour: a plate on each front leg and one on each side of the plinth, struck off as it is wounded.
+  for (const sx of [-1, 1]) {
+    const leg = k.box(body, 0.9, 1.0, 0.07, rust, sx * 0.95, 1.32, 1.06, 0, 0, -sx * lean, 0.014);
+    monster.armour(leg, sx < 0 ? 0.3 : 0.55);
+    const side = k.box(body, 0.07, 0.5, 1.5, rust, sx * 2.88, 0.3, 0, 0, 0, 0, 0.012);
+    monster.armour(side, sx < 0 ? 0.75 : 0.9);
+  }
+
+  /* --- the pivot housing: a bearing block across the trestles with a brass collar either side --- */
+  k.cyl(body, 0.52, 0.52, 2.3, 24, ironDark, 0, PIVOT_Y, 0, Math.PI / 2);
+  for (const sz of [-1, 1]) {
+    k.torus(body, 0.55, 0.07, brass, 0, PIVOT_Y, sz * 1.12, 0, 0, 0, 8, 28);
+    k.cyl(body, 0.2, 0.2, 0.14, 12, steel, 0, PIVOT_Y, sz * 1.22, Math.PI / 2);
+  }
+
+  /* --- the beam: a riveted lattice, flanged above and below, on the pivot --- */
+  const beam = k.node(body, 0, PIVOT_Y, 0);
+  k.box(beam, HALF * 2 + 0.6, 0.12, 1.0, ironDark, 0, 0.3, 0, 0, 0, 0, 0.03);
+  k.box(beam, HALF * 2 + 0.6, 0.12, 1.0, ironDark, 0, -0.3, 0, 0, 0, 0, 0.03);
+  k.box(beam, HALF * 2 + 0.6, 0.48, 0.2, iron, 0, 0, 0, 0, 0, 0, 0.03);
+  for (let i = -6; i < 6; i++) {
+    const x0 = i * 0.56 + 0.1;
+    const up = i % 2 === 0;
+    for (const sz of [-1, 1]) k.strut(beam, [x0, up ? -0.26 : 0.26, sz * 0.46], [x0 + 0.56, up ? 0.26 : -0.26, sz * 0.46], 0.045, ironDark, 6);
+  }
+  k.bolts(beam, Array.from({ length: 22 }, (_, i) => [-HALF - 0.1 + i * 0.32, 0.3, 0.52]), 0.04, steel, [0, 0, 1]);
+  k.box(beam, 0.9, 0.5, 1.12, rust, 0, 0, 0, 0, 0, 0, 0.04);          // the saddle over the pivot
+
+  /* --- the pans: a shallow dish on two chains from each end, one rust, one slate --- */
+  const hangers = [];
+  for (const sx of [-1, 1]) {
+    const end = k.node(beam, sx * HALF, 0, 0);
+    k.cyl(end, 0.16, 0.16, 1.14, 12, brass, 0, 0, 0, Math.PI / 2);
+    const hang = k.node(end, 0, 0, 0);
+    for (const sz of [-1, 1]) k.strut(hang, [0, 0, sz * 0.5], [sx * 0.04, -1.25, sz * 0.78], 0.04, steel, 6);
+    k.cyl(hang, 1.1, 0.85, 0.3, 24, sx < 0 ? rust : slate, 0, -1.4, 0);
+    k.torus(hang, 1.1, 0.06, ironDark, 0, -1.26, 0, Math.PI / 2, 0, 0, 6, 32);
+    k.cyl(hang, 0.96, 0.96, 0.06, 24, sx < 0 ? brineA : brineB, 0, -1.27, 0);
+    for (let m = 0; m < 5; m++) k.sph(hang, 0.14, salt, Math.cos(m * 1.26) * 0.5, -1.22, Math.sin(m * 1.26) * 0.5, 1, 0.55, 1);
+    hangers.push(hang);
+  }
+
+  /* --- the head: a dial on a neck over the pivot, two lenses over it --- */
+  const head = k.node(body, 0, PIVOT_Y + 0.5, 0.1);
+  k.cyl(head, 0.24, 0.3, 0.7, 12, ironDark, 0, 0.25, 0);
+  const dial = k.node(head, 0, 0.95, 0);
+  k.cyl(dial, 0.72, 0.72, 0.34, 32, ironDark, 0, 0, 0, Math.PI / 2);
+  k.torus(dial, 0.72, 0.07, brass, 0, 0, 0.17, 0, 0, 0, 10, 36);
+  k.mesh(dial, new THREE.CircleGeometry(0.66, 40), face, 0, 0, 0.2);
+  const needle = k.node(dial, 0, 0, 0.24);
+  k.box(needle, 0.04, 0.5, 0.015, charcoal, 0, 0.22, 0, 0, 0, 0, 0.004);
+  k.box(needle, 0.05, 0.18, 0.015, charcoal, 0, -0.1, 0, 0, 0, 0, 0.004);
+  k.cyl(needle, 0.06, 0.06, 0.03, 12, brass, 0, 0, 0.01, Math.PI / 2);
+  for (const sx of [-1, 1]) {
+    k.cyl(dial, 0.17, 0.17, 0.14, 16, ironDark, sx * 0.4, 0.86, 0.12, Math.PI / 2 - 0.3);
+    k.cyl(dial, 0.12, 0.12, 0.05, 16, lens, sx * 0.4, 0.88, 0.2, Math.PI / 2 - 0.3);
+    k.torus(dial, 0.17, 0.025, brass, sx * 0.4, 0.88, 0.19, -0.3, 0, 0, 8, 20);
+  }
+  monster.muzzle = k.node(dial, 0, 0.2, 0.5);
+
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t;
+      // The beam rocks at idle, tips up on its right to gather, drops on the blow and lists the more it is hurt.
+      const tilt = Math.max(-0.36, Math.min(0.36,
+        idle * Math.sin(t * 0.9) * 0.07 + 0.3 * up - 0.38 * down - 0.14 * s.wound + s.roar * Math.sin(t * 7) * 0.08 + s.throes * Math.sin(t * 13) * 0.1));
+      beam.rotation.z = tilt;
+      const swing = idle * Math.sin(t * 1.3) * 0.03;
+      for (const h of hangers) h.rotation.z = -tilt + swing;
+      needle.rotation.z = -tilt * 5.5;
+      head.position.y = PIVOT_Y + 0.5 - 0.06 * s.hurt - 0.2 * down - clamp01(s.throes) * 0.3;
+      head.rotation.x = -0.12 * s.roar + 0.1 * down;
+      head.rotation.y = idle * Math.sin(t * 0.5) * 0.12;
+      body.position.y = -clamp01(s.throes) * 0.25;
+      body.rotation.z = Math.sin(t * 36) * 0.012 * s.hurt;
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1312,7 +1469,8 @@ const BUILDERS = {
   'the undertow': buildUndertow,
   'basalt warden': buildWarden,
   'the lantern-eater': buildLanternEater,
-  'recipe golem': buildGolem
+  'recipe golem': buildGolem,
+  'the tipper': buildTipper
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */

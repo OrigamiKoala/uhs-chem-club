@@ -105,6 +105,14 @@ export const CLUES = {
     name: 'The Canal Sample',
     summary: 'A sealed sample of the fluid the raiders poured into the canal.',
     note: 'The freezing agent was a synthetic fluid. It was made, not mined, so somebody built a plant to make it.'
+  },
+  clue_teeter_pan: {
+    id: 'clue_teeter_pan',
+    act: 'act3',
+    source: 'Teeter Boss · The Tipper',
+    name: 'The Last Pan',
+    summary: 'A sealed salt pan the Fifth filed as finished, still turning over inside.',
+    note: 'Filled from either end it settles on the same ratio, and its particles keep changing in both directions. The Fifth did not finish this pan; they stopped measuring it.'
   }
 };
 
@@ -339,6 +347,8 @@ export const EPISODES = {
     arrival: 'Alarms are sounding across the chemical refinery on Teeter. Raiders pushed the balance valves out of alignment, threatening to trigger a runaway chemical explosion.',
     closing: 'The reaction tanks are back in balance and the refinery is safe. Security logs reveal the raiders caused this panic to sneak into the high-security storage rooms.',
     spoilFamily: 'Balance husks',
+    bossId: 'boss-tipper',
+    clueId: 'clue_teeter_pan',
     paragraphs: [
       'Teeter houses a massive chemical processing plant that produces clean fertilizers and medical fluids for dozens of surrounding farming worlds.',
       'The reactions inside these tanks are two-way streets that need a delicate balance between forward and backward flow. The raiders tampered with the controls, pushing the chemicals to one side so the tanks are shaking violently.',

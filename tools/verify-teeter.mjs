@@ -35,6 +35,7 @@ import { checkTeeterQ6 } from './lib/teeter-q6-checks.mjs';
 import { checkTeeterQ7 } from './lib/teeter-q7-checks.mjs';
 import { checkTeeterQ4 } from './lib/teeter-q4-checks.mjs';
 import { checkTeeterQ5 } from './lib/teeter-q5-checks.mjs';
+import { checkTeeterBoss } from './lib/teeter-boss-checks.mjs';
 import { HOST_PLAN, LANE } from '../src/three/teeter/host-plan.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -55,6 +56,7 @@ await checkTeeterQ7(ok, fail);
 await checkTeeterQ6(ok, fail);
 await checkTeeterQ4(ok, fail);
 await checkTeeterQ5(ok, fail);
+await checkTeeterBoss(ok, fail);
 
 console.log(`\nTeeter — ${world.name}, ${world.place}\n`);
 
@@ -127,7 +129,7 @@ const PLAN_QUESTS = ['q1-both', 'q2-k', 'q3-q', 'q4-properties', 'q5-ice', 'q6-l
 
   const stale = world.sites.filter(s => s.built !== existsSync(join(root, 'src/learn/quests/unit08', `${s.questId}.js`)));
   check(stale.length === 0, 'a site is built exactly when its quest has a module (rerun tools/gen-teeter-layout.mjs when one lands)', `sites whose built flag disagrees with src/learn/quests/unit08: ${stale.map(s => s.id).join(', ')}`);
-  const stateless = chartQuests.filter(q => q.status === 'live' && !world.sites.find(s => s.questId === q.id)?.built);
+  const stateless = chartQuests.filter(q => q.status === 'live' && !q.id.startsWith('boss') && !world.sites.find(s => s.questId === q.id)?.built);
   check(stateless.length === 0, 'every live chart quest has its site built', `live quests whose site is sealed: ${stateless.map(q => q.id).join(', ')}`);
 
   const stem = w => w.toLowerCase().replace(/[^a-z]/g, '').slice(0, 4);

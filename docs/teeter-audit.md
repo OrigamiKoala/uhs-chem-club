@@ -19,3 +19,22 @@ Setting of the play pass: built-in browser at 800 x 600, `3D Off` (Teeter has no
 | story | Pan Both Ways | n/a | | | | yes | | Viewed | Beat 1 plays and paints; beats 2 and 3 viewed by `verify:story` paint check only. |
 
 Left open for q1: selector option names are invisible until the dial moves; the pan at 800 x 600 is small (plot about 60 px wide); phone width (375) not checked; `3D On` not checked.
+
+
+## q2-k to q8-free and boss-tipper (second session)
+
+Evidence labels: **Scripted** = `verify:learn`/`verify:table` solved it by script, drag and two-tap, and refused every authored miss; **Viewed** = loaded at 800 x 600 in `3D Off` and looked at (zoomed screenshots); **Played** = real two-tap gestures in the browser.
+
+| Bench | Stages | Evidence | Findings |
+| --- | --- | --- | --- |
+| q2-k | 1 to 8 | Scripted all; Viewed 1 to 5; Played 2 (Settle, B over line, A under line: all three pans read 2.00); one 3D On view of stage 2 | Bars printed "NaN × 10^-infinity" for zero: fixed. Lead line gave away the click: replaced. Typed field at stage 5 small. |
+| q3-q | 1 to 8 | Scripted all; Viewed 1, 3, 8 | Stage 8 trays clipped at the table's right edge: moved. Stage 3 prints Q and K values (evidence by design). |
+| q4-properties | 1 to 8 | Scripted all; Viewed 1, 6, 8 | Reaction-card text is small at 800 px. No Kp/Kc and no halving stage. |
+| q5-ice | 1 to 8 | Scripted all; Viewed 2, 5, 8 | Reads cleanly. Stage 2 prints K and the start (constants given by design). |
+| q6-lean | 1 to 8 | Scripted all; Viewed 1, 8 | Stage 8 is a dial search (anti-pattern, weak). Header title clips at 800 px. |
+| q7-dissolve | 1 to 8 | Scripted all; Viewed 1, 2, 7 | Reads cleanly. |
+| q8-free | 1 to 8 | Scripted all; Viewed 3, 7 | Stage 3 prints the rule and constants; stage 6 adjacent to Ember Reach q7-gibbs. |
+| boss-tipper | 5 phases | Scripted all (`verify:table`, `verify:bench` at 7 viewports by pointer path, `verify:arena` body) | Never seen or played; the arena body and finale are measured, not looked at. |
+| walkable world | | `verify:teeter` and `verify:voyage`; one 3D On view of a bench built in the world | Visual quality of terrain, sky and brine unseen beyond the one bench view (paving under the bench looked right). |
+
+Not done anywhere in q2 to q8 and the boss: hand play of every stage, a second pass, 375 px landscape, `3D On` per bench, story animations viewed (only q1-both's beat 1 was seen).

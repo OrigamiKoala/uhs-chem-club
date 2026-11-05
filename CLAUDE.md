@@ -236,6 +236,7 @@ Ligar (`unit03/q2-lattice` — "Stone and Wire"): material blocks on the bench (
 - **Bellows (Unit 04 — Gas Laws):** 6 quests on the cloud deck.
   - Straightedge slope badges rendered live along fitted lines in both 2D canvas and 3D space.
   - Analogue circular pressure gauge with swinging needle responding dynamically to cylinder volume adjustments on the Boyle's law bench (`q1-knocks`).
+- **Teeter (Unit 08 — Equilibrium):** 8 benches on the pans kit (`table/kits/pans*.js`, planners in `engine/eqdata.js`) and `boss-tipper` (`unit08/boss-tipper.js`, species `the tipper`: a beam pump, table body in `engine/foebody.js`, arena body in `engine/boss-models.js`). Its 5 phases re-test q1 (which of three pans is in equilibrium), q2 (typed K of 2 SO₂ + O₂ ⇌ 2 SO₃), q3 (the 2 A ⇌ B mixture that makes more A), q6 (squeezing N₂O₄ ⇌ 2 NO₂) and q5 (typed [HI] from unequal starts); its checks are `tools/lib/teeter-boss-checks.mjs`, its finale is `tipper-open` (`ui/story-scenes-teeter-boss.js`) and it files `clue_teeter_pan`.
 
 Architecture, the Learn engine, tabletop layout rules, per-world notes, the 3D worlds and ship, mobile, the player
 journey and progression are in `docs/engineering/engine-and-worlds.md`. Plans and per-world records are in

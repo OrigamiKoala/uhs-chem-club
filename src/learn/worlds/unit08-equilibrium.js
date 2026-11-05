@@ -97,6 +97,15 @@ export const UNIT_08 = {
       stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit08/q8-free.js')
+    },
+    {
+      id: 'boss-tipper',
+      title: 'The Tipper',
+      line: 'The beam pump at the largest pan calls every pan finished; test five pans against it.',
+      arena: 'boss',
+      stageCount: 5,
+      status: 'live',
+      module: () => import('../quests/unit08/boss-tipper.js')
     }
   ]
 };

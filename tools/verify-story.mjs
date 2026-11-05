@@ -46,6 +46,7 @@ const bossWarden = await import('../src/learn/quests/unit03/boss-warden.js');
 const bossGolem = await import('../src/learn/quests/unit07/boss-golem.js');
 const bossCompressor = await import('../src/learn/quests/unit04/boss-compressor.js');
 const bossCrucible = await import('../src/learn/quests/unit05/boss-crucible.js');
+const bossTipper = await import('../src/learn/quests/unit08/boss-tipper.js');
 
 const sentenceCount = (str) => (String(str || '').match(/[.!?]+(?=\s|$)/g) || []).length;
 
@@ -148,7 +149,8 @@ const bossModules = [
   { name: 'Basalt Warden (Ligar)', mod: bossWarden },
   { name: 'Recipe Golem (Kettle)', mod: bossGolem },
   { name: 'The Compressor (Bellows)', mod: bossCompressor },
-  { name: 'The Crucible (Ember Reach)', mod: bossCrucible }
+  { name: 'The Crucible (Ember Reach)', mod: bossCrucible },
+  { name: 'The Tipper (Teeter)', mod: bossTipper }
 ];
 
 for (const b of bossModules) {
