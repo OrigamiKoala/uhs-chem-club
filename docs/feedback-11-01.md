@@ -78,9 +78,17 @@ Expand the Molecular Orbitals quest so it shows the user visually how the atomic
 
 ## Bellows
 
-![alt text](image-33.png) For this stage, and in general, the straightedge doesn't give me the slope - also, instead of having me plot values, I should have a slider where I can change the volume, and see the pressure increase (an analogue pressure gauge's needle moves). That's more fun.
+![alt text](image-33.png) For this stage, instead of having me plot values, I should have a slider where I can change the volume, and see the pressure increase (an analogue pressure gauge's needle moves). That's more fun.
 
+![alt text](image-34.png) For this stage, the dial isn't a continuum - make it smooth and continuous. Right now, I have to guess the temperature is around 300 because there isn't a dial setting near there - the only dial settings are 200 and 400.
 
+![alt text](image-35.png) For this and the other stages, use the word "Volume" instead of "room", because "room" is awkward and everybody knows what volume is.
 
+![alt text](image-36.png) The straightedge doesn't give me the y-intercept, and the line is too thick - make it thinner, and make sure it doesn't overlap the slope. Plus, because of foreshortening, the slope display is really small and hard to read.
 
+![alt text](image-37.png) Currently, on this stage the heater temperature decreases as the dial goes to the right, unintutively. Make sure the temperature decreases as it goes to the left, not the right. Also, you should introduce kelvins first (first quest ahead of the current first quest), so that way the user can get a sense for proportions based off of absolute temperature scales, not weird negative numbers.
+
+![alt text](image-38.png) Make sure at some point before this stage you actually mention the ideal gas law equation - you hint at it but never actually reveal it.
+
+![alt text](image-39.png) For this bench (and ALL the other stages in Bellows as well), stop using weird language like "Gauge" and "Room" and "push". Just call it pressure and volume.
 
