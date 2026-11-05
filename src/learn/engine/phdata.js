@@ -43,7 +43,7 @@ export const PKA = Object.freeze({
   HF: 3.17, HCl: -6.3, HBr: -9.0,
   CH4: 50, NH3: 38, H2O: 15.7,
   HClO: 7.5, HClO4: -10,
-  acetic: 4.76, ethanol: 15.9, chloroacetic: 2.87, dichloroacetic: 1.29, trichloroacetic: 0.65
+  acetic: 4.74, ethanol: 15.9, chloroacetic: 2.87, dichloroacetic: 1.29, trichloroacetic: 0.65
 });
 
 /** Indicators: transition pKa and the colour range (pH). */

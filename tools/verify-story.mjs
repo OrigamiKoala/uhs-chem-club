@@ -290,6 +290,8 @@ ok('spine beat prerequisite unlock logic validated');
     const built = WORLDS.find(w => w.id === wid);
     for (const q of built.quests) if (!QUEST_STORY[`${wid}/${q.id}`]) fail(`${wid}/${q.id} has no story animation`);
   }
+  // Verdigris is built bench by bench: every quest of unit09 that has a module has its one animation (the charted ones have none yet).
+  for (const q of WORLDS.find(w => w.id === 'unit09').quests) if (q.module && !QUEST_STORY[`unit09/${q.id}`]) fail(`unit09/${q.id} has no story animation`);
   if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, 3 to 5 lines of Vess, a filed line, and every scene paints at every line`);
 }
 

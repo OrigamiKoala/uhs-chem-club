@@ -22,6 +22,11 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
+  'q3-weak': {
+    1: 'Two of the Fifth\'s tanks hold the same amount of acid, and Vess wants to compare what they read.'
+  },
+
   /* ---- Teeter: the Fifth calls a pan finished; is it? ---- */
   'q1-both': {
     1: 'The Fifth says this pan is finished once it stops changing, and Vess wants to see it run.'

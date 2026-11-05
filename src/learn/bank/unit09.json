@@ -1,0 +1,130 @@
+{
+  "world": "unit09",
+  "end": [],
+  "bench": {
+    "q3-weak": {
+      "problems": [
+        {
+          "id": "q3-weak#b1",
+          "quest": "q3-weak",
+          "question": "Two flasks each hold 0.10 M of a different acid. One reads pH 1.00 and the other reads pH 2.88. Which statement is true?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Both flasks hold the same amount of hydronium"
+            },
+            {
+              "id": "b",
+              "label": "The pH 1.00 flask has a larger share of its acid ionized"
+            },
+            {
+              "id": "c",
+              "label": "The pH 2.88 flask holds more acid"
+            },
+            {
+              "id": "d",
+              "label": "Concentration alone sets the pH"
+            }
+          ],
+          "answer": "b",
+          "explanation": "The flasks hold the same amount of acid, so the lower pH means more hydronium, which means a larger share of the acid has ionized."
+        },
+        {
+          "id": "q3-weak#b2",
+          "quest": "q3-weak",
+          "question": "A 0.0010 M solution of a weak acid is compared with a 0.10 M solution of the same acid. Which has the larger percent ionization?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The 0.0010 M solution"
+            },
+            {
+              "id": "b",
+              "label": "The 0.10 M solution"
+            },
+            {
+              "id": "c",
+              "label": "They are equal, because the acid is the same"
+            },
+            {
+              "id": "d",
+              "label": "Neither, because a weak acid does not ionize"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Ka stays the same, so a more dilute weak acid has to ionize a larger share of itself to keep the ratio at Ka."
+        }
+      ],
+      "worked": {
+        "id": "q3-weak#w",
+        "quest": "q3-weak",
+        "title": "pH of a Weak Acid",
+        "setup": "What is the pH of 0.20 M hypochlorous acid, HClO? Its Ka is 3.0 × 10⁻⁸, so the acid ionizes only a very little.",
+        "steps": [
+          {
+            "say": "Let x be the hydronium concentration. The ClO⁻ it comes with is also x. Which ratio equals Ka?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "x² / (0.20 − x)"
+              },
+              {
+                "id": "b",
+                "label": "x / (0.20 − x)"
+              },
+              {
+                "id": "c",
+                "label": "x² × (0.20 − x)"
+              }
+            ],
+            "answer": "a",
+            "hint": "Ka is the two ions multiplied, over the acid that is still whole.",
+            "explain": "H₃O⁺ times ClO⁻ is x times x, and the acid still whole is 0.20 − x."
+          },
+          {
+            "say": "Ka is tiny, so 0.20 − x is about 0.20. What is Ka × 0.20, the value of x²?",
+            "kind": "number",
+            "answer": 6e-09,
+            "calc": "3.0e-8*0.20",
+            "unit": "M²",
+            "tol": 0.01,
+            "hint": "Multiply 3.0 × 10⁻⁸ by 0.20.",
+            "explain": "3.0 × 10⁻⁸ × 0.20 = 6.0 × 10⁻⁹."
+          },
+          {
+            "say": "What is x, the hydronium concentration in mol/L?",
+            "kind": "number",
+            "answer": 7.746e-05,
+            "calc": "Math.sqrt(3.0e-8*0.20)",
+            "unit": "M",
+            "tol": 0.01,
+            "hint": "Take the square root of the last answer.",
+            "explain": "The square root of 6.0 × 10⁻⁹ is 7.7 × 10⁻⁵."
+          },
+          {
+            "say": "What is the pH?",
+            "kind": "number",
+            "answer": 4.111,
+            "calc": "-Math.log10(Math.sqrt(3.0e-8*0.20))",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "The pH is the negative log of the hydronium concentration.",
+            "explain": "−log(7.7 × 10⁻⁵) = 4.11."
+          },
+          {
+            "say": "What percent of the acid has ionized?",
+            "kind": "number",
+            "answer": 0.03873,
+            "calc": "Math.sqrt(3.0e-8*0.20)/0.20*100",
+            "unit": "%",
+            "tol": 0.02,
+            "hint": "Divide x by the 0.20 M put in and multiply by 100.",
+            "explain": "7.7 × 10⁻⁵ / 0.20 × 100 = 0.039 percent."
+          }
+        ],
+        "finish": "Write Ka as the ratio of the two ions over the acid still whole, take the acid still whole as the amount put in, and solve for x."
+      }
+    }
+  }
+}

@@ -364,7 +364,9 @@ function checkStageTable(q, mod) {
     'unit02/q9-absorb': /\b(molecular spectroscopy|complementary colou?rs?|absorbance|beer.?lambert|calibration curves?)\b/i,
     'unit02/q3-lines': /\b(continuous spectrum|line spectrum|emission spectrum|absorption spectrum|energy levels?|ground state|excited states?|bohr|ioniz\w*)\b/i,
     'unit02/q2-photon': /\b(threshold frequency|photoelectric|photons?|planck.?s constant|work functions?)\b/i,
-    'unit02/q1-wave': /\b(electromagnetic spectrum|visible spectrum|speed of light|wavelengths?|frequenc(?:y|ies))\b/i
+    'unit02/q1-wave': /\b(electromagnetic spectrum|visible spectrum|speed of light|wavelengths?|frequenc(?:y|ies))\b/i,
+    // Verdigris: the words each bench earns on a reward card (its own VOCABULARY says at which stage).
+    'unit09/q3-weak': /\b(weak acids?|strong acids?|ioniz\w*|percent ionization|Ka|pKa|Kb)\b/
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 
@@ -2900,6 +2902,17 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   const { checkMirrowen } = await import('./lib/mirrowen-learn-checks.mjs');
   await checkMirrowen({ TABLE, getQuest, fail, ok, sentenceLiterals });
   if (failures === before) ok('Mirrowen: every graded heat, pressure, concentration and ratio agrees with the CRC and hand-worked values, and no refusal carries the rule');
+}
+
+/* ------------------------------------------------------------------
+   VERDIGRIS (unit09): the planners, windows, meter, rig and story numbers of each built bench against values worked by hand. One check
+   file per bench (`tools/lib/verdigris-<quest>-checks.mjs`); add a line here when a bench is built. (marker: verdigris bench checks)
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const { checkVerdigrisQ3 } = await import('./lib/verdigris-q3-checks.mjs');
+  await checkVerdigrisQ3({ ok, fail });
+  if (failures === before) ok('Verdigris q3-weak: every flask, window, rig reading, typed slip, sort and story number agrees with the values worked by hand');
 }
 
 /* ------------------------------------------------------------------

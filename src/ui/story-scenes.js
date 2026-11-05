@@ -20,6 +20,7 @@ import { KETTLE_SCENES } from './story-scenes-kettle.js';
 import { MIRROWEN_SCENES } from './story-scenes-mirrowen.js';
 import { LANTERNFALL_SCENES } from './story-scenes-lanternfall.js';
 import { TEETER_SCENES } from './story-scenes-teeter.js';
+import { VERDIGRIS_SCENES } from './story-scenes-verdigris.js';
 import { FINALE_SCENES } from './story-scenes-finales.js';
 import {
   C, clamp01, win, ease, easeOut, lerp, alpha, plate, bench, contact, ball, ring, line, rod, text, tag, leader,
@@ -1300,6 +1301,7 @@ export const SCENES = {
   ...legacy(MIRROWEN_SCENES),
   ...legacy(LANTERNFALL_SCENES),
   ...legacy(TEETER_SCENES),
+  ...legacy(VERDIGRIS_SCENES),
   // The boss finales and two benches redrawn on the kit; they replace the same ids above.
   ...FINALE_SCENES
 };

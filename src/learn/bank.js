@@ -39,8 +39,9 @@ import unit05 from './bank/unit05.json' with { type: 'json' };
 import unit06 from './bank/unit06.json' with { type: 'json' };
 import unit07 from './bank/unit07.json' with { type: 'json' };
 import unit08 from './bank/unit08.json' with { type: 'json' };
+import unit09 from './bank/unit09.json' with { type: 'json' };
 
-export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08 };
+export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09 };
 
 const EMPTY = { world: null, end: [], bench: {} };
 

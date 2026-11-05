@@ -19,6 +19,17 @@
  */
 
 export const QUEST_STORY = {
+  /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
+  'unit09/q3-weak': {
+    scene: 'weak-windows',
+    beats: [
+      { to: 0.26, say: 'At the same strength, 0.10 M, hydrochloric acid handed over every proton and acetic acid only a few. The pH shows it: 1.00 against 2.88.' },
+      { to: 0.54, say: 'Dilute acetic acid and a larger share of it ionizes: 3 of 200 units at 0.10 M, 8 at 0.010 M and 25 at 0.0010 M. The pH rises, yet more has let go.' },
+      { to: 0.76, say: 'H₃O⁺ times CH₃COO⁻ over CH₃COOH comes to one number in every flask. That number is Ka, and it belongs to the acid, not to how much was put in.' },
+      { to: 0.94, say: 'Take any acid and its base: Ka times Kb comes to 1.0 × 10⁻¹⁴. So a larger Ka always goes with a smaller Kb.' }
+    ],
+    filed: 'Filed: the Fifth\'s tanks held equal amounts of acid but not equal amounts of hydronium; amount is not strength.'
+  },
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
   'unit08/boss-tipper': {
     scene: 'tipper-open',
