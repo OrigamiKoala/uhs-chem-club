@@ -35,6 +35,8 @@ const BUILT_BENCHES = new Set([
   'q1-states', 'q2-grip', 'q3-boil', 'q4-solids', 'q5-crossing', 'q6-solution', 'q7-separate', 'boss-undertow',
   // Unit 7 — Kettle
   'q1-recipe', 'boss-golem',
+  // Unit 8 — Teeter
+  'q1-both', 'q2-k', 'q3-q', 'q4-properties', 'q5-ice', 'q6-lean', 'q7-dissolve', 'q8-free', 'boss-tipper',
 ]);
 
 /**

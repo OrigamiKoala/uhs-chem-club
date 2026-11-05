@@ -372,7 +372,7 @@
       }
      ],
      "answer": "a",
-     "explanation": "Flipping gives 1/0.50 = 2.0, and writing it twice as large squares that: 4.0."
+     "explanation": "Flipping gives 1/0.50 = 2.0, and doubling every amount squares that: 4.0."
     },
     {
      "id": "q4-properties#b2",
@@ -407,13 +407,13 @@
     "setup": "X ⇌ Y has K = 0.10, and 2 Y ⇌ Z has K = 50. Find K for 2 X ⇌ Z, and then for the reaction written the other way round.",
     "steps": [
      {
-      "say": "What is K for 2 X ⇌ 2 Y, the first reaction written twice as large?",
+      "say": "What is K for 2 X ⇌ 2 Y, the first reaction with every amount doubled?",
       "kind": "number",
       "answer": 0.01,
       "calc": "0.10**2",
       "unit": "",
       "tol": 0.01,
-      "hint": "Writing every amount c times as large raises K to the power c.",
+      "hint": "Multiplying every amount by c raises K to the power c.",
       "explain": "0.10 squared is 0.010."
      },
      {
@@ -430,7 +430,7 @@
        },
        {
         "id": "c",
-        "label": "Written twice as large"
+        "label": "Every amount doubled"
        },
        {
         "id": "d",

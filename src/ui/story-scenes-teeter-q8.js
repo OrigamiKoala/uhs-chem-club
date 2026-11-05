@@ -117,9 +117,9 @@ function couple(ctx, w, h, p) {
 
 function freeK(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t < 0.26) pans(ctx, w, h, ease(win(t, 0, 0.2)));
-  else if (t < 0.52) curve(ctx, w, h, win(t, 0.26, 0.5));
-  else if (t < 0.76) warm(ctx, w, h, win(t, 0.52, 0.74));
+  if (t <= 0.26) pans(ctx, w, h, ease(win(t, 0, 0.2)));
+  else if (t <= 0.52) curve(ctx, w, h, win(t, 0.26, 0.5));
+  else if (t <= 0.76) warm(ctx, w, h, win(t, 0.52, 0.74));
   else couple(ctx, w, h, win(t, 0.76, 0.96));
 }
 

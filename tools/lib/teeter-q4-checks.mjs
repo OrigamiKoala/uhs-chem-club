@@ -1,5 +1,5 @@
 /** Hand-worked checks for q4-properties (Combining K). Each expected value was worked on paper, never produced by the code under test. */
-import { Q4, kOfNet, netOfCards, fmtK, chainEquilibrium, iceAmounts, kReverse, kScale, kAdd } from '../../src/learn/engine/eqdata.js';
+import { kpFromKc, Q4, kOfNet, netOfCards, fmtK, chainEquilibrium, iceAmounts, kReverse, kScale, kAdd } from '../../src/learn/engine/eqdata.js';
 
 export async function checkTeeterQ4(ok, bad) {
   const near = (got, want, rel, label) => (Math.abs(got - want) <= rel * Math.abs(want) ? ok(`q4 ${label}: ${got.toPrecision(4)} ≈ ${want}`) : bad(`q4 ${label}: got ${got}, expected ${want}`));
@@ -35,4 +35,8 @@ export async function checkTeeterQ4(ok, bad) {
   if (fmtK(3.2e-4) === '3.20e-4' && fmtK(4) === '4.00' && fmtK(0.25) === '0.250') ok('q4 K prints to three figures'); else bad('q4 fmtK');
   // The mixture really is at equilibrium by an independent route.
   near(iceAmounts({ A: -1, B: -1, C: 1 }, { A: 1, B: 1, C: 0 }, 4).amounts.C, 0.60961, 1e-4, 'ICE agrees with the quadratic');
+  // Kp = Kc (RT)^dn, by hand: RT = 0.082057 × 298 = 24.455; N2O4 <-> 2 NO2 (dn +1): 0.0059 × 24.455 = 0.14428; 2 C <-> D (dn −1): 100 / 24.455 = 4.0892; dn 0: unchanged.
+  near(kpFromKc(0.0059, 1, 298), 0.14428, 1e-4, 'Kp of N2O4 <-> 2 NO2 from Kc 0.0059 at 298 K');
+  near(kpFromKc(100, -1, 298), 4.0892, 1e-4, 'Kp of 2 C <-> D from Kc 100');
+  near(kpFromKc(4, 0, 298), 4, 1e-12, 'Kp = Kc when the gas count does not change');
 }

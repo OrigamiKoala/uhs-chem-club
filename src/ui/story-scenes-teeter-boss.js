@@ -38,7 +38,7 @@ function bar(ctx, x, base, name, amount, scale, ink) {
 
 function tipperOpen(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t < 0.5) {
+  if (t <= 0.5) {
     // The beam, with the mixture of 2 A ⇌ B on it settling; the tilt follows the place the gauge puts Q against K.
     const eq = settleAmounts(A2B, MIX);
     const p = ease(win(t, 0.04, 0.46));
@@ -61,7 +61,7 @@ function tipperOpen(ctx, w, h, t) {
     alpha(ctx, level ? 1 : 0, () => tag(ctx, 'the beam is level', rx, h * 0.7, { size: 22, color: C.amber, edge: C.amber }));
     return;
   }
-  if (t < 0.76) {
+  if (t <= 0.76) {
     // The Fifth's last pan, opened from A alone and from B alone.
     const p = ease(win(t, 0.52, 0.7));
     text(ctx, 'A ⇌ B, opened from either end', w / 2, h * 0.07, { size: 24, color: C.dust });

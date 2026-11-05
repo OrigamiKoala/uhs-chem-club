@@ -163,7 +163,7 @@ export const STAGES = [
   {
     id: 's2-ratio',
     title: 'The Ratio Rig',
-    get prompt() { return guessLine('Lay tiles on the rig so that it reads the same number on all three settled pans.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Arrange tiles on the rig into a ratio that comes out the same for all three settled pans.', recall(QUEST_KEY)); },
     widget,
     table: rigTable('ab', AB_PANS, [['A', 1], ['B', 1]]),
     hints: [
@@ -187,7 +187,7 @@ export const STAGES = [
   {
     id: 's3-powers',
     title: 'Two of the Same',
-    prompt: 'Lay tiles on the rig so that it reads the same number on all three settled pans of this reaction.',
+    prompt: 'Arrange tiles on the rig into a ratio that comes out the same for all three settled pans of this reaction.',
     widget,
     table: rigTable('hi', HI_PANS, [['H2', 1], ['I2', 1], ['HI', 1], ['HI', 2]], { top: 2, bottom: 2 }),
     hints: [
@@ -207,7 +207,7 @@ export const STAGES = [
   {
     id: 's4-solids',
     title: 'A Pan With Solids',
-    prompt: 'Lay tiles on the rig so that it reads the same number on all three settled pans of this reaction.',
+    prompt: 'Arrange tiles on the rig into a ratio that comes out the same for all three settled pans of this reaction.',
     widget,
     table: rigTable('caco3', CA_PANS, [['CaCO3', 1], ['CaO', 1], ['CO2', 1]], { top: 2, bottom: 2 }),
     hints: [

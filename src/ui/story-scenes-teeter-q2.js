@@ -39,8 +39,8 @@ function ratioHolds(ctx, w, h, t) {
   ground(ctx, w, h);
   const pw = w * 0.27; const ph = h * 0.5; const py = h * 0.14; const gap = (w - 3 * pw) / 4;
   const x = i => gap + i * (pw + gap);
-  if (t < 0.7) {
-    const hi = t >= 0.35;
+  if (t <= 0.7) {
+    const hi = t > 0.35;
     const sys = hi ? HI : AB;
     const starts = hi
       ? [{ H2: 1, I2: 1 }, { HI: 1 }, { H2: 0.6, I2: 1.4, HI: 0.5 }]

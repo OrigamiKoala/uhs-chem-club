@@ -353,10 +353,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   (() => {
     const slots = [
-      { id: 'go-p', label: 'Makes SO₃', at: { x: 131, y: 11 }, size: { w: 30, h: 14 } },
-      { id: 'go-r', label: 'Makes SO₂ and O₂', at: { x: 131, y: 31 }, size: { w: 30, h: 14 } },
-      { id: 'stay', label: 'No change', at: { x: 131, y: 51 }, size: { w: 30, h: 14 } }
+      { id: 'go-p', label: 'Makes SO₃', at: { x: 131.5, y: 11 }, size: { w: 33, h: 14 } },
+      { id: 'go-r', label: 'Makes SO₂ and O₂', at: { x: 131.5, y: 31 }, size: { w: 33, h: 14 } },
+      { id: 'stay', label: 'No change', at: { x: 131.5, y: 51 }, size: { w: 33, h: 14 } }
     ];
+    // A narrower vessel leaves the right of the table to the three slots.
+    const narrow = testVessel('tv', { x: 56, y: 22 }, { system: 'so3', q: true, w: 106 });
     const WAY = { 'go-p': 'forward', 'go-r': 'reverse', stay: 'none' };
     return {
       id: 's8-sealed',
@@ -365,8 +367,8 @@ export const STAGES = [
       widget,
       table: pansTable({
         pieces: S8.map((c, i) => cardOf('so3', c, i, { sealed: true })),
-        fixtures: [vessel('so3', true).fixture],
-        zones: { slots: [vessel('so3', true).seat, ...slots] }
+        fixtures: [narrow.fixture],
+        zones: { slots: [narrow.seat, ...slots] }
       }, { h: TABLE_H }),
       hints: [
         'Use the cards, the slot in the vessel, the "Run" key and the three slots at the right.',

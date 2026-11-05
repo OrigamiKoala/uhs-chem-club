@@ -135,9 +135,9 @@ function rank(ctx, w, h, p) {
 
 function solubilityTrade(ctx, w, h, t) {
   ground(ctx, w, h);
-  if (t < 0.26) scoops(ctx, w, h, win(t, 0, 0.26));
-  else if (t < 0.5) trade(ctx, w, h, win(t, 0.26, 0.5));
-  else if (t < 0.76) common(ctx, w, h, win(t, 0.5, 0.76));
+  if (t <= 0.26) scoops(ctx, w, h, win(t, 0, 0.26));
+  else if (t <= 0.5) trade(ctx, w, h, win(t, 0.26, 0.5));
+  else if (t <= 0.76) common(ctx, w, h, win(t, 0.5, 0.76));
   else rank(ctx, w, h, win(t, 0.76, 1));
 }
 

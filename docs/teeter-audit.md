@@ -38,3 +38,54 @@ Evidence labels: **Scripted** = `verify:learn`/`verify:table` solved it by scrip
 | walkable world | | `verify:teeter` and `verify:voyage`; one 3D On view of a bench built in the world | Visual quality of terrain, sky and brine unseen beyond the one bench view (paving under the bench looked right). |
 
 Not done anywhere in q2 to q8 and the boss: hand play of every stage, a second pass, 375 px landscape, `3D On` per bench, story animations viewed (only q1-both's beat 1 was seen).
+
+
+# Pass 2 (2026-11-05): 3D On, and the weak spots closed
+
+Pass 2 was at **3D On**, 1280 x 800: the voyage lands on Teeter, the player disembarks onto the salt flats and opens a quest at its bench in the walkable world. The 3D bench is what the owner plays, so this pass outranks the 3D Off pass above. `loadStage(i)` (the `__LQ_TEST__` hook) jumps between stages; every answer below was given with real taps.
+
+## Played at 3D On (taps, accepted by the stage)
+
+| Bench | Stage | What was done |
+| --- | --- | --- |
+| q2-k | 2 The Ratio Rig | Settle, tile B over tile A; all three pans read 2.00 |
+| q4-properties | 1 The Other Way Round | card to the check, Flip, Read K (0.250), tile 1.25, Submit |
+| q4-properties | 4 Every Amount Halved | card to the check, Larger, Read K (16.0), tile 6.00, Submit |
+| q6-lean | 8 Taking NH₃ Out | take-out dial 0.5, Run x6 (NH₃ 0.97, then 0.50, then 0.66), "Less than before", Submit |
+| q7-dissolve | 1 Adding Solid | eight scoops to saturation, Submit |
+| boss-tipper | phase 1 The Pans | stepped back, looked up at the Tipper, leaned in, Pan 2, Submit: bar 1000 to 800, Flawless |
+
+## Viewed at 3D On
+
+q1-both 1 to 8; q2-k 2, 4, 5, 8; q3-q 1, 3, 6, 8; q4-properties 6, 8; q5-ice 1, 5; q6-lean 1, 5, 7; q7-dissolve 4, 7, 8; q8-free 1, 4, 7, 8; the boss table and the Tipper (a beam balance on a trestle, two pans, a dial, pump jacks behind). Every story animation was viewed: q1 (four beats), q2 (three), a beat each of q3 to q8.
+
+## Defects found and fixed in pass 2
+
+| Defect | Found by | Fix |
+| --- | --- | --- |
+| Story painters showed the NEXT scene at the end of a beat (they switched on `t < x` and a beat ends at `t = x`): q7 showed empty meters and bars, q6 an empty graph | Viewed at 3D On | switch on `t <= x` in the q1, q2, q4, q5, q6, q7, q8 and boss painters |
+| Awkward prompts ("made half as large", "Lay tiles on the rig so that it reads") | Owner | "with every amount halved", "Arrange tiles on the rig into a ratio that comes out the same for all three settled pans"; same wording in hints, rewards, bank, story |
+| The letter O reads as 0 in the bench type | Viewed | the halving card uses W |
+| q3-q stage 8: answer slots overlapped the vessel and hung off the table | Viewed | narrower vessel, slots at x 131.5 |
+| Selector options hidden until the dial moved | Played | `selectorFixture({ list: true })` prints every option on the card |
+| q6-lean header title clipped | Viewed | `.learn-quest-2d .learn-host-title` wraps |
+| Boss phase 4 reward claimed the pressure "doubled" at any volume | Played | "raised the pressure", "Q above K" |
+| Reaction-card text small | Viewed | equation text 3.0 x scale, K and badge 2.4 x scale |
+| Saga text described a refinery and tanks | Read | rewritten to the salt pans |
+| `unit08` missing from `BUILT_BENCHES` | Read | added |
+
+## Weak spots from the first report
+
+| Weak spot | Now |
+| --- | --- |
+| q1-both s1 and s4 read a marker off a curve | s1: what the settled pan holds (Only A, Only B, Both A and B). s4: the B-only pan's A against the dashed line (Lower, Level, Higher) |
+| q6-lean s8 searched three dials | s8 takes NH₃ out of a settled vessel; one decision |
+| q6-lean had no remove-a-product stage | s8 is that stage |
+| q4-properties had no halving stage | s4: K of M + N ⇌ W from 2 M + 2 N ⇌ 2 W (K 36), answer 6 |
+
+## Still open
+
+- Kp/Kc is `q4-properties` stage 7 (added at the owner's request, beyond the exam; it replaced "a stack already built"). Played at 3D On: the Kc tile was refused with a reason, 0.144 was accepted.
+- The pan is drawn flat on the bench; the bench is 3D.
+- Six stages were played at 3D On and about 40 viewed; the other stages are scripted. q3-q, q5-ice and q8-free were not clicked through at 3D On, and boss phases 2, 3 and 5 were not played at 3D On.
+- 375 px portrait was not checked (benches need landscape; `verify:bench` covers 667 x 375).

@@ -121,6 +121,8 @@ export function direction(Q, K, tol = 1e-9) {
 
 export const kReverse = K => 1 / K;
 export const kScale = (K, c) => Math.pow(K, c);
+/** Kp from Kc for a change of `dn` moles of gas, at `T` kelvin: Kp = Kc (RT)^dn, R = 0.082057 L·atm/(mol·K). */
+export const kpFromKc = (Kc, dn, T) => Kc * Math.pow(R_ATM * T, dn);
 export const kAdd = (...Ks) => Ks.reduce((p, k) => p * k, 1);
 
 /* ------------------------------------------------------------------ ICE */
@@ -262,6 +264,8 @@ export const Q4 = Object.freeze({
   flipOne: { lhs: [[2, 'D']], rhs: [[1, 'E']], K: 0.8 },
   doubleOne: { lhs: [[1, 'F'], [1, 'G']], rhs: [[1, 'H']], K: 5.0 },
   bothOne: { lhs: [[1, 'M'], [1, 'N']], rhs: [[2, 'O']], K: 0.4 },
+  // Written twice as large already (K 36): the card half as large reads at the square root, 6.
+  halfOne: { lhs: [[2, 'M'], [2, 'N']], rhs: [[2, 'W']], K: 36 },
   addX: { lhs: [[1, 'X']], rhs: [[1, 'Y']], K: 2.0 },
   addY: { lhs: [[1, 'Y']], rhs: [[1, 'Z']], K: 0.3 },
   // The stack stages
@@ -369,7 +373,7 @@ export function settleMixture(ksp, [m, n], cat0, an0) {
  * ratio (`skip`: pure solids) and the unit its amounts are in. The rig reads `ratio()` over the arrangement of tiles laid on it; the
  * Q/K gauge reads the same `ratio()` over a mixture and sets it against K. */
 
-const R_ATM = 0.082057; // L·atm/(mol·K)
+export const R_ATM = 0.082057; // L·atm/(mol·K)
 
 export const K_SYSTEMS = Object.freeze({
   ab: { id: 'ab', eq: 'A ⇌ B', species: { A: -1, B: 1 }, K: 2, unit: 'mol/L', kind: 'c', model: true, source: 'model reaction: the pan of q1-both, K = kf/kr = 2' },

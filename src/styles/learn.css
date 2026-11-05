@@ -1721,9 +1721,8 @@
   align-items: baseline !important;
   gap: 0.65rem !important;
   min-width: 0 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
+  overflow: visible !important;
+  white-space: normal !important;
 }
 
 .learn-quest-2d .learn-host-title {
@@ -1733,6 +1732,9 @@
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   color: var(--text-bright) !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  line-height: 1.15 !important;
 }
 
 .learn-quest-2d .learn-host-builds {

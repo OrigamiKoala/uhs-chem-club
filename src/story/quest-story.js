@@ -125,7 +125,7 @@ export const QUEST_STORY = {
     scene: 'k-rewrite',
     beats: [
       { to: 0.3, say: 'Flip a reaction and the same mixture gives 1 over the old K. The ratio belongs to the way the reaction is written.' },
-      { to: 0.58, say: 'Write it twice as large and K is squared, not doubled; every amount in the ratio is raised to the power two.' },
+      { to: 0.58, say: 'Double every amount and K is squared, not doubled; every amount in the ratio is raised to the power two.' },
       { to: 0.92, say: 'When two reactions add up to a third, the middle substance cancels and the K of the pair is the product of the two.' }
     ],
     filed: 'Filed: the ratio belongs to the way the reaction is written; rewrite it and the number changes by rule.'

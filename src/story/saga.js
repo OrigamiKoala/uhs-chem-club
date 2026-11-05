@@ -352,19 +352,19 @@ export const EPISODES = {
     worldId: 'unit08',
     worldName: 'Teeter',
     act: 'act3',
-    arrival: 'Alarms are sounding across the chemical refinery on Teeter. Raiders pushed the balance valves out of alignment, threatening to trigger a runaway chemical explosion.',
-    closing: 'The reaction tanks are back in balance and the refinery is safe. Security logs reveal the raiders caused this panic to sneak into the high-security storage rooms.',
+    arrival: 'We are over the salt pans of Teeter: flat dishes of brine, each left sealed by the Fifth and still marked as running. A beam pump stands at the far end.',
+    closing: 'The pans are read and the pump is stopped. Every pan the Fifth sealed was still changing in both directions when they stopped measuring it.',
     spoilFamily: 'Balance husks',
     bossId: 'boss-tipper',
     clueId: 'clue_teeter_pan',
     paragraphs: [
-      'Teeter houses a massive chemical processing plant that produces clean fertilizers and medical fluids for dozens of surrounding farming worlds.',
-      'The reactions inside these tanks are two-way streets that need a delicate balance between forward and backward flow. The raiders tampered with the controls, pushing the chemicals to one side so the tanks are shaking violently.',
-      'When you push a balanced reaction by changing temperature or pressure, it pushes back in the opposite direction. You need to adjust the conditions to steer the reaction back to the center before the pipes burst.'
+      'Teeter is a field of shallow pans. Each holds a reversible reaction that the Fifth set going and then sealed.',
+      'A pan that looks finished is not. Its particles keep reacting in both directions at equal rates, so its amounts stay fixed while the reaction runs on.',
+      'To read a pan you find the ratio it settles on, say which way a new mixture will move, and predict how it shifts when you push it.'
     ],
-    incident: 'Saboteurs altered the control valves on reversible chemical tanks, pushing the plant toward a dangerous explosion.',
-    objective: 'Counter the pressure and temperature shifts to guide the chemical reactions back into stable balance.',
-    caseFileNote: 'The raiders deliberately caused this emergency as a distraction while their agents stole high-grade purification filters from the central vault.'
+    incident: 'The Fifth filed these pans as finished. Vess wants to know whether they were.',
+    objective: 'Read each pan: where it settles, which way it moves, and what pushes it.',
+    caseFileNote: 'The Fifth filed sealed pans as finished. They had only stopped measuring them.'
   },
   unit09: {
     worldId: 'unit09',

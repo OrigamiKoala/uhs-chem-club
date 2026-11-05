@@ -46,12 +46,12 @@ function paintRxn(ctx, p, state, o) {
   const marked = t.flipped || t.scale > 1;
   const box = slab(ctx, o, RECT_RXN, marked ? '#2c2412' : '#2a2620');
   const sc = o.sc;
-  say(ctx, fmtRxn(t), o.x, box.y0 + 2.9 * sc, Math.max(6, 2.0 * sc), { align: 'center', weight: 600, maxW: box.w - 2.4 * sc });
+  say(ctx, fmtRxn(t), o.x, box.y0 + 3.3 * sc, Math.max(7, 3.0 * sc), { align: 'center', weight: 600, maxW: box.w - 2.4 * sc });
   if (p.props.K != null && !p.props.hideK) {
-    say(ctx, `${marked ? 'given K' : 'K'} ${fmtK(p.props.K)}`, box.x0 + 1.4 * sc, box.y0 + 7.9 * sc, Math.max(5.8, 1.8 * sc), { color: marked ? DUST : AMBER, weight: 700, maxW: box.w * 0.5 });
+    say(ctx, `${marked ? 'given K' : 'K'} ${fmtK(p.props.K)}`, box.x0 + 1.4 * sc, box.y0 + 8.3 * sc, Math.max(6.5, 2.4 * sc), { color: marked ? DUST : AMBER, weight: 700, maxW: box.w * 0.5 });
   }
   const badge = [t.flipped ? 'FLIPPED' : '', t.scale > 1 ? `× ${t.scale}` : ''].filter(Boolean).join(' ');
-  if (badge) say(ctx, badge, box.x0 + box.w - 1.4 * sc, box.y0 + 7.9 * sc, Math.max(5.8, 1.8 * sc), { align: 'right', weight: 700, color: AMBER, maxW: box.w * 0.45 });
+  if (badge) say(ctx, badge, box.x0 + box.w - 1.4 * sc, box.y0 + 8.3 * sc, Math.max(6.5, 2.4 * sc), { align: 'right', weight: 700, color: AMBER, maxW: box.w * 0.45 });
 }
 
 registerPiece('rxn', {

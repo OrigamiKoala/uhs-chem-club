@@ -33,14 +33,14 @@ function bars(ctx, x, y, w, h, mix, names) {
 
 function kRewrite(ctx, w, h, t) {
   ground(ctx, w, h);
-  const chain = t >= 0.58;
+  const chain = t > 0.58;
   const mix = chain ? Q4.mixChain : Q4.mixP;
   bars(ctx, w * 0.06, h * 0.14, w * 0.3, h * 0.62, mix, ['A', 'B', 'C']);
   const rows = [];
   if (!chain) {
     const base = { lhs: Q4.P.lhs, rhs: Q4.P.rhs, mix };
     rows.push({ card: base, at: 0 });
-    if (t < 0.3) rows.push({ card: { ...base, flipped: true }, at: 0.06 });
+    if (t <= 0.3) rows.push({ card: { ...base, flipped: true }, at: 0.06 });
     else rows.push({ card: { ...base, scale: 2 }, at: 0.3 });
   } else {
     rows.push({ card: { lhs: Q4.chain1.lhs, rhs: Q4.chain1.rhs, mix }, at: 0.58 });
