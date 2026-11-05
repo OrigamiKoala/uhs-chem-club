@@ -121,6 +121,8 @@ export function direction(Q, K, tol = 1e-9) {
 
 export const kReverse = K => 1 / K;
 export const kScale = (K, c) => Math.pow(K, c);
+/** Kp from Kc for a change of `dn` moles of gas, at `T` kelvin: Kp = Kc (RT)^dn, R = 0.082057 L·atm/(mol·K). */
+export const kpFromKc = (Kc, dn, T) => Kc * Math.pow(R_ATM * T, dn);
 export const kAdd = (...Ks) => Ks.reduce((p, k) => p * k, 1);
 
 /* ------------------------------------------------------------------ ICE */
@@ -371,7 +373,7 @@ export function settleMixture(ksp, [m, n], cat0, an0) {
  * ratio (`skip`: pure solids) and the unit its amounts are in. The rig reads `ratio()` over the arrangement of tiles laid on it; the
  * Q/K gauge reads the same `ratio()` over a mixture and sets it against K. */
 
-const R_ATM = 0.082057; // L·atm/(mol·K)
+export const R_ATM = 0.082057; // L·atm/(mol·K)
 
 export const K_SYSTEMS = Object.freeze({
   ab: { id: 'ab', eq: 'A ⇌ B', species: { A: -1, B: 1 }, K: 2, unit: 'mol/L', kind: 'c', model: true, source: 'model reaction: the pan of q1-both, K = kf/kr = 2' },

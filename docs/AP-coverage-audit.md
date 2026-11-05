@@ -174,7 +174,7 @@ plan now says its numbers are the current CED's. Where they differed:
 | Verdigris `q7` s7 "Add base and find the new pH" | in scope | Excluded ("computation of the change in pH resulting from the addition of an acid or a base to a buffer") | Labelled beyond the exam in the plan. |
 | Brinewire `q1` s4 oxidizing and reducing agent | taught | "Meaning of the terms reducing agent and oxidizing agent will not be assessed" | Labelled beyond the exam in the plan. |
 | Quicklight `q5` s7 Arrhenius | beyond the exam | Excluded | Correct. |
-| Teeter `q4` s5 Kp/Kc | beyond the exam | Excluded | Correct. |
+| Teeter `q4` s7 Kp/Kc | beyond the exam | Built at the owner's request | Kept; marked beyond the exam. |
 | Mirrowen `q7` s6 to 7 colligative | beyond the exam | Excluded | Correct. |
 | Bellows `q5` (built) | not labelled | Not in the CED | Plan labels all of stages 4 to 8. **The built cards and practice are not yet labelled.** |
 
@@ -316,4 +316,4 @@ Fourth pass: `docs/plans/learn-quests.md` now marks a typed headline stage in ev
 
 ## Teeter built (2026-11-04)
 
-Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (K of a reversed, doubled, halved and added reaction; no Kp/Kc stage); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.
+Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (K of a reversed, doubled, halved and added reaction; stage 7 Kp from Kc); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.

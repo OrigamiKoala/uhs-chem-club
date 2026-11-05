@@ -85,7 +85,7 @@ q1-both 1 to 8; q2-k 2, 4, 5, 8; q3-q 1, 3, 6, 8; q4-properties 6, 8; q5-ice 1, 
 
 ## Still open
 
-- No Kp/Kc stage (beyond the exam; the 8 stages hold no room).
+- Kp/Kc is `q4-properties` stage 7 (added at the owner's request, beyond the exam; it replaced "a stack already built"). Played at 3D On: the Kc tile was refused with a reason, 0.144 was accepted.
 - The pan is drawn flat on the bench; the bench is 3D.
 - Six stages were played at 3D On and about 40 viewed; the other stages are scripted. q3-q, q5-ice and q8-free were not clicked through at 3D On, and boss phases 2, 3 and 5 were not played at 3D On.
 - 375 px portrait was not checked (benches need landscape; `verify:bench` covers 667 x 375).

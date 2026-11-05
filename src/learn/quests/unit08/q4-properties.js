@@ -12,26 +12,29 @@
  *   4  a card written half as large (K given for the doubled card)                  -> the square root
  *   5  two cards on the check, then two it cannot read                                -> the K of two added reactions is the product
  *   6  stack three cards into a wanted reaction                                       -> flip, enlarge, cancel
- *   7  a stack that is already built: its K from the printed K values                 -> rules as shorthand
+ *   7  Kp from Kc at 298 K, two worked reactions on a plate                           -> Kp = Kc (RT)^dn (beyond the exam)
  *   8  typed: the K of a wanted reaction from two printed K values
  *
  * THE WRONG MODEL IS ON THE TABLE. The prediction offers "K doubles"; the check reads the doubled card at K squared.
  *
  * Substances are letters (A, B, C ...): the rules of K do not depend on the chemistry. The K printed on a card is a given; the K of a
- * rewritten card is never printed, it is read from the mixture. Stage 5 of the spec ("Kp from Kc", beyond the exam) is not built.
+ * rewritten card is never printed, it is read from the mixture. Stage 7 is Kp from Kc (beyond the exam, built at the owner's request); it replaced "a stack already built".
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { pansTable, note, pieceIn } from '../../table/kits/pans.js';
+import { pansTable, note, pieceIn, plaqueFixture } from '../../table/kits/pans.js';
 import { rxnCard, kTile, checkFixture, stackFixture, stackMatches, stackCards, checkLog, fmtRxn } from '../../table/kits/pans-cards.js';
-import { Q4, fmtK, kReverse, kScale, kAdd, kOfCardByRule, netOfCards } from '../../engine/eqdata.js';
+import { Q4, fmtK, kReverse, kScale, kAdd, kOfCardByRule, netOfCards, kpFromKc, R_ATM } from '../../engine/eqdata.js';
 
 export const meta = { stageCount: 8 };
 
-export const VOCABULARY = [];
+export const VOCABULARY = [
+  { term: /\bKp\b/, introducedAt: 7 },
+  { term: /\bKc\b/, introducedAt: 7 }
+];
 
 /** K itself is q2's; this bench only rewrites it. */
 export const BUILDS_ON = ['unit08/q2-k'];
@@ -65,6 +68,12 @@ const T7 = {
   c: fmtK(kScale(Q4.readA.K, 2) + kReverse(Q4.readB.K))
 };
 const K8 = kAdd(kScale(Q4.typedA.K, 2), kReverse(Q4.typedB.K));
+
+/** Stage 7: Kp from Kc at 298 K (RT = 24.5 L·atm/mol). Two worked reactions carry both numbers; the asked one carries Kc only. */
+const KPT = 298;
+const KP = { RT: R_ATM * KPT, zero: { kc: 4.0, dn: 0 }, minus: { kc: 100, dn: -1 }, ask: { kc: 0.0059, dn: 1 } };
+const KP_RIGHT = kpFromKc(KP.ask.kc, KP.ask.dn, KPT);
+const T7K = { right: fmtK(KP_RIGHT), a: fmtK(KP.ask.kc), b: fmtK(KP.ask.kc / KP.RT), c: fmtK(KP.ask.kc * KP.RT * KP.RT) };
 
 const TARGET6 = { A: -2, B: -2, D: 2 };
 const WANT6 = '2 A + 2 B ⇌ 2 D';
@@ -314,35 +323,38 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   {
-    id: 's7-read',
-    title: 'A Stack Already Built',
-    prompt: 'Lay the tile for the K of the reaction the stack adds up to.',
+    id: 's7-kp',
+    title: 'K From Pressures',
+    prompt: 'Lay the tile for Kp of N₂O₄ ⇌ 2 NO₂ at 298 K, which has Kc 0.0059.',
     widget,
     table: pansTable({
-      pieces: [
-        rxnCard('s1', { x: 28, y: 14 }, Q4.readA, { zone: 'tray:stack' }),
-        rxnCard('s2', { x: 28, y: 28 }, Q4.readB, { zone: 'tray:stack' }),
-        ...tiles([T7.a, T7.b, T7.c, T7.right])
+      pieces: [...tiles([T7K.b, T7K.a, T7K.c, T7K.right])],
+      fixtures: [
+        plaqueFixture('given', 'Kc is K from mol/L, Kp is K from atm', { x: 58, y: 24 }, [
+          `A ⇌ B: Kc ${fmtK(KP.zero.kc)}, Kp ${fmtK(kpFromKc(KP.zero.kc, KP.zero.dn, KPT))}`,
+          `2 C ⇌ D: Kc ${fmtK(KP.minus.kc)}, Kp ${fmtK(kpFromKc(KP.minus.kc, KP.minus.dn, KPT))}`,
+          `RT at 298 K: ${fmtK(KP.RT)} L·atm/mol`
+        ], { w: 80 })
       ],
-      fixtures: [stackFixture('stack', { x: 82, y: 22 }, { tray: 'stack', wanted: null, w: 50, h: 32 })],
-      zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 28, y: 21 }, size: { w: 54, h: 28 }, cell: 50, cellH: 13 }], slots: [answerSlot('K of the stack')] }
-    }),
+      zones: { slots: [answerSlot('Kp of N₂O₄ ⇌ 2 NO₂')] }
+    }, TALL),
     hints: [
-      'Use the stack, the two cards in it, and the tiles.',
-      'Read how each card in the stack has been changed (flipped, multiplied, or both), beside the K it was printed with.',
-      'Change each printed K as its card was changed, then combine the changed values the way the cards are combined.'
+      'Use the plate and the tiles.',
+      'Compare Kc with Kp for each reaction on the plate, and count the gas molecules on each side of each.',
+      'Where the gas count changes, Kp differs from Kc by RT once for each molecule gained or lost; find which way for 2 C ⇌ D, then apply it to N₂O₄ ⇌ 2 NO₂.'
     ],
     check(state) {
-      return tileCheck(state, T7.right, t => {
-        const cards = stackCards(t, 'stack');
-        const flipped = cards.filter(c => c.flipped).map(c => c.id).join(', ');
-        return `The stack holds ${cards.length} cards, ${flipped ? 'one flipped' : 'none flipped'} and one multiplied; that tile does not match the K values printed on them changed to fit.`;
+      return tileCheck(state, T7K.right, (t, tile) => {
+        const l = tile.label;
+        if (l === T7K.a) return 'That is Kc itself. On the plate, Kp equals Kc only for A ⇌ B, where the gas count does not change.';
+        if (l === T7K.b) return 'That divides Kc by RT. On the plate, 2 C ⇌ D loses a gas molecule and Kp comes out below Kc; N₂O₄ ⇌ 2 NO₂ gains one.';
+        return `Kc is 0.0059 and RT is ${fmtK(KP.RT)}; that tile changes Kc by more than one RT.`;
       });
     },
     reward: {
-      log: 'The stack read at the product of its changed K values.',
-      title: 'Reading a Stack',
-      body: 'The K of a stack is the product of its cards\' changed K values: 1 divided by K for a flipped card, and K to the power c for a card written c times as large.'
+      log: 'Kp followed Kc by one factor of RT per gas molecule gained.',
+      title: 'Kp and Kc',
+      body: 'Kc is K from concentrations in mol/L and Kp is K from pressures in atm. They are equal when the gas count does not change, and otherwise differ by RT for every molecule gained or lost: Kp = Kc × (RT) raised to the change in gas molecules.'
     }
   },
 
