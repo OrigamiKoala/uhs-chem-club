@@ -8,7 +8,7 @@
  * share the planner does not give. Water is not drawn. A METER laid in the flask's seat reads its pH; a flask with no seat has no meter.
  */
 
-import { ACIDS, BASES, strongAcid, weakAcid, weakBase, sci } from '../../engine/phdata.js';
+import { ACIDS, BASES, NEUTRAL_SALTS, strongAcid, weakAcid, weakBase, sci, titrationPH } from '../../engine/phdata.js';
 import { mulberry32 } from '../../engine/plates.js';
 
 export const UNITS = 200;
@@ -16,6 +16,7 @@ export const UNITS = 200;
 /** The planner's answer for a flask's solute. `solute`: `{ id, c, T? }`; `id` is a key of ACIDS (acid forms) or BASES. */
 export function solveSolute(solute) {
   const { id, c, T = 25 } = solute;
+  if (NEUTRAL_SALTS[id]) { const h = Math.sqrt(1e-14); return { side: 'salt', h, oh: h, pH: 7, pOH: 7, ionized: 0, species: NEUTRAL_SALTS[id] }; }
   const a = ACIDS[id];
   if (a) {
     if (a.strong) return { side: 'acid', ...strongAcid(c, { T }), A: c, HA: 0, species: a };
@@ -37,7 +38,23 @@ export function flaskSol(p) {
 }
 
 /** pH of the flask, as the planner gives it (not rounded). */
-export const flaskPH = f => flaskSol(f.props).pH;
+export const flaskPH = f => (f.props.neut ? mixOf(f).pH : flaskSol(f.props).pH);
+
+/**
+ * A MIX FIXTURE (`ph-mix.js`): an analyte flask of V mL with a jug of a titrant poured in `step` mL at a time. What it holds after `poured`
+ * pours: the pH from the charge-balance solver, and how much of the analyte has been used up (the window's count, of 100).
+ * `mix`: { type: 'strongAcid' | 'weakAcid' | 'weakBase', id (a key of ACIDS or BASES), c, V (mL), ct, step (mL), max }
+ */
+export function mixOf(f) {
+  const m = f.props.neut;
+  const k = Math.round(f.dials.poured?.value ?? 0);
+  const mL = k * m.step;
+  const nA = (m.c * m.V) / 1000; const nT = (m.ct * mL) / 1000;
+  const analyte = m.type === 'weakAcid' ? { type: 'weakAcid', Ka: ACIDS[m.id].Ka } : m.type === 'weakBase' ? { type: 'weakBase', Kb: BASES[m.id].Kb } : { type: 'strongAcid' };
+  const pH = titrationPH({ analyte, c0: m.c, V0: m.V / 1000, ct: m.ct, vt: mL / 1000 }).pH;
+  const used = Math.round(100 * Math.min(1, nT / nA));
+  return { k, mL, nA, nT, pH, used, left: 100 - used };
+}
 
 /**
  * The species of the flask in mol/L, keyed as the rig's tiles are: an acid flask `{ H, A, HA }` (hydronium, its leftover, the acid that
@@ -70,6 +87,7 @@ export const ionText = s => String(s).replace(/⁻/g, '−');
 
 /** The species of a window: what a whole unit is, what a unit that has let go is made of. Colours and names. */
 export function windowSpecies(w) {
+  if (w.side === 'salt') return { whole: { ink: ACID_INK, name: w.species.formula }, parts: [{ ink: H_INK, name: 'H₃O⁺' }, { ink: OH_INK, name: 'OH⁻' }] };
   if (w.side === 'acid') {
     return { whole: { ink: ACID_INK, name: w.species.formula }, parts: [{ ink: H_INK, name: 'H₃O⁺' }, { ink: BASE_INK, name: w.species.base }] };
   }

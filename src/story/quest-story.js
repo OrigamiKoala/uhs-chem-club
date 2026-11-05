@@ -20,6 +20,46 @@
 
 export const QUEST_STORY = {
   /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
+  'unit09/q2-scale': {
+    scene: 'scale',
+    beats: [
+      { to: 0.26, say: 'Each tenfold dilution of hydrochloric acid raised the pH by 1: 1.00, 2.00, 3.00. pH is minus the log of the hydronium, so one step is a factor of ten.' },
+      { to: 0.52, say: 'On sodium hydroxide the pOH counts hydroxide the way pH counts hydronium. The two readings add to 14.00 every time at 25 °C.' },
+      { to: 0.78, say: 'Diluted again and again, hydrochloric acid reads 6.00, 6.79, 6.98 and 7.00. The hydronium of water itself is a floor the pH does not pass.' },
+      { to: 0.94, say: 'Water at 50 °C reads 6.63 yet holds equal H₃O⁺ and OH⁻. Neutral means equal amounts, not a pH of 7.' }
+    ],
+    filed: 'Filed: each step of pH is a factor of ten, so the Fifth\'s one number hid how big the differences were.'
+  },
+  'unit09/q1-handover': {
+    scene: 'handover',
+    beats: [
+      { to: 0.26, say: 'When HCl meets water, the marked hydrogen leaves as a proton and lands on a water molecule: 8 of 8 here. That makes hydronium, and HCl a Brønsted–Lowry acid.' },
+      { to: 0.52, say: 'Ammonia has no OH, yet it took a proton from water in 3 of 8 cells. A substance that takes a proton is a Brønsted–Lowry base.' },
+      { to: 0.78, say: 'Each acid and what it leaves behind differ by one proton: they are a conjugate pair. Water turns up on both sides, so water is amphoteric.' },
+      { to: 0.94, say: 'Even pure water makes a few ions, 1.0 × 10⁻⁷ mol/L of each. Multiplied they give Kw, 1.0 × 10⁻¹⁴ at 25 °C.' }
+    ],
+    filed: 'Filed: an acid hands a proton to water, so the Fifth\'s word names a transfer, not a substance.'
+  },
+  'unit09/q8-capacity': {
+    scene: 'capacity-limit',
+    beats: [
+      { to: 0.26, say: 'At pH 3 the strip read 98 acetic acid to 2 acetate, and at pH 6 it read 5 to 95. An acid is mostly protonated below its pKa and mostly deprotonated above it.' },
+      { to: 0.5, say: 'The same pour moved the 0.010 M buffer from 4.75 to 4.27 and the 0.10 M buffer from 4.74 to 4.70. Buffer capacity grows with the amount of each member.' },
+      { to: 0.76, say: 'Flask 1 held 40 spheres of acetate and each pour used 5. After 8 pours 2 were left and the pH had fallen from 4.75 to 3.05.' },
+      { to: 0.94, say: 'Two pours of acid dissolved 10 spheres of magnesium hydroxide, because the acid takes up its hydroxide, and none of the silver chloride. A basic anion makes a salt more soluble as the pH falls.' }
+    ],
+    filed: 'Filed: a buffer has a limit, set by how much of its members it holds; the Fifth\'s last tank was past it.'
+  },
+  'unit09/q7-buffer': {
+    scene: 'buffer-catch',
+    beats: [
+      { to: 0.28, say: 'The same pour of acid took the water from 7.00 to 2.04 and the mixture only from 4.74 to 4.66. The mixture is a buffer.' },
+      { to: 0.52, say: 'In the buffer each sphere of acid was caught by an acetate. Acetate fell from 100 spheres to 90 and acetic acid rose from 100 to 110.' },
+      { to: 0.76, say: 'Base is caught the other way: acetic acid fell from 100 to 90 and acetate rose to 110, so the pH rose only from 4.74 to 4.83.' },
+      { to: 0.94, say: 'The pH is the pKa plus the log of acetate over acetic acid. Acetate to acetic acid of 100 to 100 reads 4.74, 150 to 50 reads 5.22, and 100 to 10 reads 5.74.' }
+    ],
+    filed: 'Filed: the sluice that resisted held a weak acid and its conjugate base together; the Fifth never mixed the two.'
+  },
   'unit09/q3-weak': {
     scene: 'weak-windows',
     beats: [
@@ -29,6 +69,35 @@ export const QUEST_STORY = {
       { to: 0.94, say: 'Take any acid and its base: Ka times Kb comes to 1.0 × 10⁻¹⁴. So a larger Ka always goes with a smaller Kb.' }
     ],
     filed: 'Filed: the Fifth\'s tanks held equal amounts of acid but not equal amounts of hydronium; amount is not strength.'
+  },
+  'unit09/q6-titrate': {
+    scene: 'titration-reads',
+    beats: [
+      { to: 0.28, say: 'Poured into 25.0 mL of hydrochloric acid, the base moved the pH slowly, then at 25.0 mL it leapt through 7.00. That steep rise is the equivalence point.' },
+      { to: 0.54, say: 'Acetic acid took the same 25.0 mL of base, yet it read 8.72 there while hydrochloric acid read 7.00. The equivalence point depends on the acid.' },
+      { to: 0.78, say: 'Half way to each equivalence point the pH matched the acid\'s pKa: 4.75 for acetic acid and 3.75 for formic acid. That is the half-equivalence point.' },
+      { to: 0.94, say: 'Sulfurous acid rose steeply twice, at 10.0 mL and 20.0 mL. A polyprotic acid gives up its protons one step at a time.' }
+    ],
+    filed: 'Filed: the equivalence point depends on the acid; the Fifth\'s pH of 7 was a guess, not a reading.'
+  },
+  'unit09/q4-structure': {
+    scene: 'race-pairs',
+    beats: [
+      { to: 0.28, say: 'Raced against chloride, HF kept all 100 protons, while HCl gave all 100 to fluoride. Fluorine pulls hardest on electrons, yet HF is the weaker acid.' },
+      { to: 0.54, say: 'HBr gave 96 of 100 protons to chloride, and HCl gave only 4 to bromide. Down a group the bond is longer and the acid stronger.' },
+      { to: 0.78, say: 'Each extra oxygen on chlorine pulls charge toward itself, the inductive effect, so the leftover base holds its charge better and the acid is stronger.' },
+      { to: 0.94, say: 'Resonance spreads the charge of acetate over two oxygens. Acetic acid gave up its protons to ethoxide; ethanol could not return the favour.' }
+    ],
+    filed: 'Filed: the Fifth ranked acids by their atoms; strength follows how well the leftover base holds the charge.'
+  },
+  'unit09/q5-salts': {
+    scene: 'salt-reads',
+    beats: [
+      { to: 0.3, say: 'Acid and base used up exactly read 7.00 only when both were strong. Acetic acid with sodium hydroxide read 8.72, and ammonia with hydrochloric acid read 5.28.' },
+      { to: 0.62, say: 'Sodium chloride read 7.00, sodium fluoride 8.09 and ammonium chloride 5.13. The ion of a weak parent reacts with water; the ions of strong parents do not.' },
+      { to: 0.94, say: 'When one reagent is left over, it decides the pH. After 20.0 mL of base met 30.0 mL of acid, 33 of 100 acid units were left and the flask read 1.70.' }
+    ],
+    filed: 'Filed: neutralising is not the same as neutral; the Fifth\'s salt left the water basic.'
   },
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
   'unit08/boss-tipper': {

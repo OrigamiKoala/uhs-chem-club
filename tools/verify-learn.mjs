@@ -366,7 +366,14 @@ function checkStageTable(q, mod) {
     'unit02/q2-photon': /\b(threshold frequency|photoelectric|photons?|planck.?s constant|work functions?)\b/i,
     'unit02/q1-wave': /\b(electromagnetic spectrum|visible spectrum|speed of light|wavelengths?|frequenc(?:y|ies))\b/i,
     // Verdigris: the words each bench earns on a reward card (its own VOCABULARY says at which stage).
-    'unit09/q3-weak': /\b(weak acids?|strong acids?|ioniz\w*|percent ionization|Ka|pKa|Kb)\b/
+    'unit09/q2-scale': /\b(pOH|strong bases?|strong acids?)\b/,
+    'unit09/q1-handover': /\b(Br[øo]nsted|hydronium|conjugate|amphoteric|autoionization|Kw|Lewis)\b/i,
+    'unit09/q7-buffer': /\b(buffers?|Henderson.Hasselbalch)\b/i,
+    'unit09/q8-capacity': /\b(protonation state|indicators?|buffer capacity|solubility)\b/i,
+    'unit09/q3-weak': /\b(weak acids?|strong acids?|ioniz\w*|percent ionization|Ka|pKa|Kb)\b/,
+    'unit09/q4-structure': /\b(conjugate bases?|inductive effect)\b/i,
+    'unit09/q5-salts': /\b(salt hydrolysis|hydrolys\w*|buffers?|titrat\w*|equivalence)\b/i,
+    'unit09/q6-titrate': /\b(titration curves?|equivalence points?|half-equivalence points?|indicators?|polyprotic)\b/i
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 
@@ -2910,9 +2917,48 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
    ------------------------------------------------------------------ */
 {
   const before = failures;
+  const { checkVerdigrisQ2 } = await import('./lib/verdigris-q2-checks.mjs');
+  const beforeQ2 = failures;
+  await checkVerdigrisQ2({ ok, fail });
+  if (failures === beforeQ2) ok('Verdigris q2-scale: every flask, meter, typed slip, dial and story number agrees with the values worked by hand');
+  const { checkVerdigrisQ1 } = await import('./lib/verdigris-q1-checks.mjs');
+  const beforeQ1 = failures;
+  await checkVerdigrisQ1({ ok, fail });
+  if (failures === beforeQ1) ok('Verdigris q1-handover: every window, water, pair, rig reading and story number agrees with the values worked by hand');
   const { checkVerdigrisQ3 } = await import('./lib/verdigris-q3-checks.mjs');
   await checkVerdigrisQ3({ ok, fail });
   if (failures === before) ok('Verdigris q3-weak: every flask, window, rig reading, typed slip, sort and story number agrees with the values worked by hand');
+}
+{
+  const before = failures;
+  const { checkVerdigrisQ6 } = await import('./lib/verdigris-q6-checks.mjs');
+  await checkVerdigrisQ6({ ok, fail });
+  if (failures === before) ok('Verdigris q6-titrate: every titration reading, dye window, typed slip, verdict and story number agrees with the values worked by hand');
+}
+{
+  const before = failures;
+  const { checkVerdigrisQ4 } = await import('./lib/verdigris-q4-checks.mjs');
+  await checkVerdigrisQ4({ ok, fail });
+  if (failures === before) ok('Verdigris q4-structure: every race count, rank, refusal and story number agrees with the values worked by hand');
+}
+{
+  const before = failures;
+  const { checkVerdigrisQ5 } = await import('./lib/verdigris-q5-checks.mjs');
+  await checkVerdigrisQ5({ ok, fail });
+  if (failures === before) ok('Verdigris q5-salts: every pour, salt flask, typed slip, sort and story number agrees with the values worked by hand');
+}
+
+{
+  const before = failures;
+  const { checkVerdigrisQ7 } = await import('./lib/verdigris-q7-checks.mjs');
+  await checkVerdigrisQ7({ ok, fail });
+  if (failures === before) ok('Verdigris q7-buffer: every flask, pour, window count, typed slip, refusal and story number agrees with the values worked by hand');
+}
+{
+  const before = failures;
+  const { checkVerdigrisQ8 } = await import('./lib/verdigris-q8-checks.mjs');
+  await checkVerdigrisQ8({ ok, fail });
+  if (failures === before) ok('Verdigris q8-capacity: every strip, pour, capacity count, typed slip, refusal and story number agrees with the values worked by hand');
 }
 
 /* ------------------------------------------------------------------

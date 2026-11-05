@@ -46,6 +46,12 @@ export const PKA = Object.freeze({
   acetic: 4.74, ethanol: 15.9, chloroacetic: 2.87, dichloroacetic: 1.29, trichloroacetic: 0.65
 });
 
+/** Salts of a strong acid and a strong base: neither ion takes part (q5). */
+export const NEUTRAL_SALTS = Object.freeze({
+  nacl: { id: 'nacl', name: 'sodium chloride', formula: 'NaCl' },
+  kno3: { id: 'kno3', name: 'potassium nitrate', formula: 'KNO₃' }
+});
+
 /** Indicators: transition pKa and the colour range (pH). */
 export const INDICATORS = Object.freeze({
   methylOrange: { id: 'methylOrange', name: 'methyl orange', pKa: 3.7, range: [3.1, 4.4], acidColour: 'red', baseColour: 'yellow' },
@@ -78,8 +84,9 @@ export const fmt = (v, d = 2) => (Math.abs(v) < 5 * 10 ** (-d - 1) ? (0).toFixed
 /** A concentration in scientific form with a true minus: "2.4 × 10⁻³"; zero prints as "0". */
 export function sci(v, sig = 2) {
   if (!v) return '0';
-  const e = Math.floor(Math.log10(Math.abs(v)) + 1e-12);
-  const m = v / 10 ** e;
+  let e = Math.floor(Math.log10(Math.abs(v)) + 1e-12);
+  let m = v / 10 ** e;
+  if (Number((m + 1e-12).toFixed(sig - 1)) >= 10) { e += 1; m = v / 10 ** e; }
   const sup = String(e).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
   return `${(m + 1e-12).toFixed(sig - 1)} × 10${sup}`;
 }
@@ -213,6 +220,18 @@ export function bufferAfterBase({ Ka, nHA, nA, V, nOH, vAdd = 0, T = 25 }) {
   return mixture({ V: V + vAdd, acids: [{ n: nHA + nA, Ka }], cations: nA + nOH, T });
 }
 
+/**
+ * A flask of `nHA` mol acid and `nA` mol of its salt in `V` L (both 0 = plain water), after `nH` mol of strong acid and `nOH` mol of strong
+ * base have been poured in with `vAdd` L of water. Returns the pH and the moles of HA and A⁻ (their sum is the buffer's total).
+ */
+export function bufferState({ Ka, nHA = 0, nA = 0, V, nH = 0, nOH = 0, vAdd = 0, T = 25 }) {
+  const Vt = V + vAdd; const tot = nHA + nA;
+  if (!tot) { const m = mixture({ V: Vt, cations: nOH, anions: nH, T }); return { ...m, HA: 0, A: 0, Vt }; }
+  const m = mixture({ V: Vt, acids: [{ n: tot, Ka }], cations: nA + nOH, anions: nH, T });
+  const A = (tot * Ka) / (m.h + Ka);
+  return { ...m, HA: tot - A, A, Vt };
+}
+
 /** Fractions of HA and A⁻ at a pH (monoprotic). */
 export function fractions(pKa, pH) {
   const r = 10 ** (pH - pKa);
@@ -233,6 +252,34 @@ export function raceShare(pKaX, pKaY) {
   return s / (1 + s);
 }
 
+/**
+ * The cards of the proton race (q4). Each acid names its leftover base; `pKa` is the planner's only input and is never printed.
+ * Acids a bench adds are listed here once, so the race, the checks and the story read one table.
+ */
+export const RACE = Object.freeze({
+  hf:    { id: 'hf',    acid: 'HF',        base: 'F⁻',         pKa: PKA.HF },
+  hcl:   { id: 'hcl',   acid: 'HCl',       base: 'Cl⁻',        pKa: PKA.HCl },
+  hbr:   { id: 'hbr',   acid: 'HBr',       base: 'Br⁻',        pKa: PKA.HBr },
+  ch4:   { id: 'ch4',   acid: 'CH₄',       base: 'CH₃⁻',       pKa: PKA.CH4 },
+  nh3:   { id: 'nh3',   acid: 'NH₃',       base: 'NH₂⁻',       pKa: PKA.NH3 },
+  h2o:   { id: 'h2o',   acid: 'H₂O',       base: 'OH⁻',        pKa: PKA.H2O },
+  hclo:  { id: 'hclo',  acid: 'HClO',      base: 'ClO⁻',       pKa: PKA.HClO },
+  hclo2: { id: 'hclo2', acid: 'HClO₂',     base: 'ClO₂⁻',      pKa: 1.96 },
+  hclo3: { id: 'hclo3', acid: 'HClO₃',     base: 'ClO₃⁻',      pKa: -1.0 },
+  hclo4: { id: 'hclo4', acid: 'HClO₄',     base: 'ClO₄⁻',      pKa: PKA.HClO4 },
+  acetic:{ id: 'acetic',acid: 'CH₃COOH',   base: 'CH₃COO⁻',    pKa: PKA.acetic },
+  formic:{ id: 'formic',acid: 'HCOOH',     base: 'HCOO⁻',      pKa: 3.75 },
+  ethanol:{ id: 'ethanol', acid: 'CH₃CH₂OH', base: 'CH₃CH₂O⁻', pKa: PKA.ethanol },
+  cl1:   { id: 'cl1',   acid: 'CH₂ClCOOH', base: 'CH₂ClCOO⁻',  pKa: PKA.chloroacetic },
+  cl2:   { id: 'cl2',   acid: 'CHCl₂COOH', base: 'CHCl₂COO⁻',  pKa: PKA.dichloroacetic },
+  cl3:   { id: 'cl3',   acid: 'CCl₃COOH',  base: 'CCl₃COO⁻',   pKa: PKA.trichloroacetic }
+});
+
+/** Of `n` protons that start on the acid X, how many end on the base left by Y (whole number, the window's count). */
+export const raceCount = (idX, idY, n = 100) => Math.round(n * raceShare(RACE[idX].pKa, RACE[idY].pKa));
+/** The ids of a set of race cards, strongest acid first. */
+export const raceOrder = ids => [...ids].sort((a, b) => RACE[a].pKa - RACE[b].pKa);
+
 /* ------------------------------------------------------------------ helper views used by benches */
 
 /** A solution spec -> the planner's answer. `kind`: 'strongAcid' | 'strongBase' | 'weakAcid' | 'weakBase' | 'saltA' | 'saltB' | 'water'. */
@@ -249,4 +296,106 @@ export function solve(spec) {
     case 'neutralSalt': { const Kw = waterKw(T); const h = Math.sqrt(Kw); return { h, oh: h, pH: pOf(h), pOH: pOf(h) }; }
     default: throw new Error(`solve: unknown kind ${kind}`);
   }
+}
+
+/* ------------------------------------------------------------------ the titration bench (q6-titrate): volumes in mL */
+
+/** Sealed unknowns of the titration bench: a strong acid of a strength to find, and a weak acid whose constant is to be found. */
+export const TITRATION_UNKNOWNS = Object.freeze({ strong: { c: 0.1256 }, weak: { Ka: 7.0e-6, c: 0.0800 } });
+
+/**
+ * A titration in the bench's units. `spec`: { analyte (as `titrationPH`), c0 (M), V0 (mL), ct (M) }. pH after `mL` of titrant.
+ */
+export function titrationML(spec, mL) {
+  return titrationPH({ analyte: spec.analyte, c0: spec.c0, V0: spec.V0 / 1000, ct: spec.ct, vt: mL / 1000 }).pH;
+}
+
+/** First equivalence volume in mL (moles of analyte over the titrant strength). */
+export const equivalenceML = spec => 1000 * equivalenceVolume({ c0: spec.c0, V0: spec.V0 / 1000, ct: spec.ct });
+
+/** The volume (mL) at which the titration reads `pH`, by bisection (pH is monotone in the volume, up or down). */
+export function volumeAtPH(spec, pH, hi = 60) {
+  const up = titrationML(spec, hi) > titrationML(spec, 0);
+  let a = 0; let b = hi;
+  for (let i = 0; i < 80; i++) {
+    const m = (a + b) / 2;
+    const above = titrationML(spec, m) > pH;
+    if (above === up) b = m; else a = m;
+  }
+  return (a + b) / 2;
+}
+
+/** Share of an indicator in its second (base) colour at a pH. */
+export const indicatorShare = (ind, pH) => 1 / (1 + 10 ** (ind.pKa - pH));
+
+/** The volumes (mL) between which an indicator changes colour (its pKa less and plus one pH unit), in volume order. */
+export function indicatorWindowML(spec, ind, span = 1) {
+  const a = volumeAtPH(spec, ind.pKa - span); const b = volumeAtPH(spec, ind.pKa + span);
+  return { from: Math.min(a, b), to: Math.max(a, b) };
+}
+
+/** True when an indicator's whole colour change falls within `tol` mL of the equivalence volume. */
+export function indicatorEndsAtEquivalence(spec, ind, tol = 0.3) {
+  const w = indicatorWindowML(spec, ind); const eq = equivalenceML(spec);
+  return w.from >= eq - tol && w.to <= eq + tol;
+}
+
+/* ------------------------------------------------------------------ q1-handover / q2-scale additions */
+
+/** Strong bases: hydroxides per formula unit and the cation they leave. */
+export const STRONG_BASES = Object.freeze({
+  naoh:  { id: 'naoh',  name: 'sodium hydroxide', formula: 'NaOH',    cation: 'Na⁺',  n: 1 },
+  baoh2: { id: 'baoh2', name: 'barium hydroxide', formula: 'Ba(OH)₂', cation: 'Ba²⁺', n: 2 }
+});
+
+/** Mol/L of water itself (about 1000 g/L over 18.0 g/mol): the share of water that has ionized is h over this. */
+export const WATER_MOLAR = 55.5;
+
+/** The ions of water, optionally with a strong acid or base added (mol/L), at T. */
+export function waterIons({ T = 25, acid = 0, base = 0 } = {}) {
+  if (base > 0) { const r = strongBase(base, { T }); return { h: r.h, oh: r.oh }; }
+  if (acid > 0) { const r = strongAcid(acid, { T }); return { h: r.h, oh: r.oh }; }
+  const h = Math.sqrt(waterKw(T));
+  return { h, oh: h };
+}
+
+/** Hydrogens and charge of a formula as printed (subscript digits, a trailing ⁺ ⁻ ²⁻). Heavy part = the formula with H and charge removed. */
+export function formulaStats(f) {
+  const sub = '₀₁₂₃₄₅₆₇₈₉';
+  let h = 0; let skel = '';
+  for (let i = 0; i < f.length; i++) {
+    const ch = f[i];
+    if (ch === 'H' && !/[a-z]/.test(f[i + 1] || '')) {
+      let n = ''; while (sub.includes(f[i + 1])) { n += sub.indexOf(f[i + 1]); i++; }
+      h += n === '' ? 1 : Number(n);
+    } else if (ch === '⁺' || ch === '⁻' || ch === '²' || ch === '³') {
+      continue;
+    } else skel += ch;
+  }
+  const m = /(²|³)?([⁺⁻])$/.exec(f);
+  const charge = m ? (m[2] === '⁺' ? 1 : -1) * (m[1] ? (m[1] === '²' ? 2 : 3) : 1) : 0;
+  return { h, charge, skel };
+}
+
+/** True when `acid` and `base` are a conjugate pair: the base is the acid less one hydrogen ion. */
+export function isConjugate(acid, base) {
+  const a = formulaStats(acid); const b = formulaStats(base);
+  return a.skel === b.skel && a.h === b.h + 1 && a.charge === b.charge + 1;
+}
+
+/** Lewis adduct (q1 stage 7): BF₃ takes the lone pair of NH₃; the reaction goes to completion in the window. */
+export const LEWIS = Object.freeze({ acid: 'BF₃', base: 'NH₃', adduct: 'F₃B–NH₃', share: 1 });
+
+/**
+ * q2-scale: one strong acid, strong base or pure water in a flask. `id`: a strong acid of ACIDS (`hcl`), a key of STRONG_BASES, or `water`.
+ * Returns the species and readings; `ionized` is the fraction of formula units that have come apart (1 for a strong acid or base, the
+ * share of the water itself for water, which rounds to none of 200).
+ */
+export function scaleSolution({ id, c = 0, T = 25 }) {
+  if (id === 'water') { const w = waterIons({ T }); return { h: w.h, oh: w.oh, pH: pOf(w.h), pOH: pOf(w.oh), ionized: w.h / WATER_MOLAR, kind: 'water' }; }
+  const sb = STRONG_BASES[id];
+  if (sb) { const r = strongBase(c, { n: sb.n, T }); return { ...r, kind: 'base', n: sb.n }; }
+  const a = ACIDS[id];
+  if (a?.strong) { const r = strongAcid(c, { T }); return { ...r, kind: 'acid', n: 1 }; }
+  throw new Error(`scaleSolution: unknown solute ${id}`);
 }

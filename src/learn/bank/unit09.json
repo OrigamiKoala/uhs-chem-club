@@ -2,6 +2,174 @@
   "world": "unit09",
   "end": [],
   "bench": {
+    "q2-scale": {
+      "problems": [
+        {
+          "id": "q2-scale#b1",
+          "quest": "q2-scale",
+          "question": "One flask of hydrochloric acid reads pH 3.00 and another reads pH 5.00. How do their hydronium concentrations compare?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The pH 3.00 flask holds 100 times as much"
+            },
+            {
+              "id": "b",
+              "label": "The pH 3.00 flask holds 2 times as much"
+            },
+            {
+              "id": "c",
+              "label": "The pH 5.00 flask holds 100 times as much"
+            },
+            {
+              "id": "d",
+              "label": "They hold the same, since both are acids"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Each step of 1 on the pH scale is a factor of ten in hydronium, so two steps is a factor of 100, and the lower pH has more hydronium."
+        },
+        {
+          "id": "q2-scale#b2",
+          "quest": "q2-scale",
+          "question": "Pure water at 50 °C reads pH 6.63. Which statement is true?",
+          "options": [
+            {
+              "id": "a",
+              "label": "It is acidic, because its pH is below 7"
+            },
+            {
+              "id": "b",
+              "label": "It is neutral, because H₃O⁺ and OH⁻ are present in equal amounts"
+            },
+            {
+              "id": "c",
+              "label": "It is basic, because Kw has grown"
+            },
+            {
+              "id": "d",
+              "label": "It is no longer pure water"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Water still makes equal amounts of H₃O⁺ and OH⁻ when warmed, so it is neutral. Kw is larger at 50 °C, so neutral sits below pH 7."
+        }
+      ],
+      "worked": {
+        "id": "q2-scale#w",
+        "quest": "q2-scale",
+        "title": "pH of a Strong Base",
+        "setup": "What is the pH of 0.0050 M barium hydroxide, Ba(OH)₂, at 25 °C? It is a strong base, so it comes apart completely.",
+        "steps": [
+          {
+            "say": "How many hydroxide ions does each Ba(OH)₂ unit give?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "1"
+              },
+              {
+                "id": "b",
+                "label": "2"
+              },
+              {
+                "id": "c",
+                "label": "3"
+              }
+            ],
+            "answer": "b",
+            "hint": "Count the OH groups in the formula.",
+            "explain": "Ba(OH)₂ has two OH groups, so each unit gives two OH⁻."
+          },
+          {
+            "say": "What is the hydroxide concentration in mol/L?",
+            "kind": "number",
+            "answer": 0.01,
+            "calc": "2*0.0050",
+            "unit": "M",
+            "tol": 0.01,
+            "hint": "Multiply 0.0050 by the number of hydroxides per unit.",
+            "explain": "2 × 0.0050 = 0.010 mol/L."
+          },
+          {
+            "say": "What is the pOH?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "-Math.log10(2*0.0050)",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "The pOH is the negative log of the hydroxide concentration.",
+            "explain": "−log(0.010) = 2.00."
+          },
+          {
+            "say": "What is the pH?",
+            "kind": "number",
+            "answer": 12,
+            "calc": "14+Math.log10(2*0.0050)",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "At 25 °C the pH and pOH add to 14.",
+            "explain": "14.00 − 2.00 = 12.00."
+          }
+        ],
+        "finish": "Count the hydroxides per unit, find the hydroxide concentration, take the negative log for the pOH, and subtract from 14."
+      }
+    },
+    "q1-handover": {
+      "problems": [
+        {
+          "id": "q1-handover#b1",
+          "quest": "q1-handover",
+          "question": "Ammonia, NH₃, is poured into water and forms NH₄⁺ and OH⁻. What did the ammonia do?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Acted as a base by taking a proton from water"
+            },
+            {
+              "id": "b",
+              "label": "Acted as an acid by giving a proton to water"
+            },
+            {
+              "id": "c",
+              "label": "Released the OH⁻ from its own formula"
+            },
+            {
+              "id": "d",
+              "label": "Acted as neither, because it has no OH"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The NH₃ gained a hydrogen ion from a water molecule, which left the OH⁻ behind. A base is a proton taker; it does not need OH in its formula."
+        },
+        {
+          "id": "q1-handover#b2",
+          "quest": "q1-handover",
+          "question": "HCO₃⁻ gives a proton to OH⁻. Which substance is left as its conjugate base?",
+          "options": [
+            {
+              "id": "a",
+              "label": "H₂CO₃"
+            },
+            {
+              "id": "b",
+              "label": "CO₃²⁻"
+            },
+            {
+              "id": "c",
+              "label": "H₂O"
+            },
+            {
+              "id": "d",
+              "label": "HCO₃²⁻"
+            }
+          ],
+          "answer": "b",
+          "explanation": "A conjugate base is the acid less one proton: HCO₃⁻ loses an H⁺ and becomes CO₃²⁻, with one more negative charge than before."
+        }
+      ]
+    },
     "q3-weak": {
       "problems": [
         {
@@ -124,6 +292,491 @@
           }
         ],
         "finish": "Write Ka as the ratio of the two ions over the acid still whole, take the acid still whole as the amount put in, and solve for x."
+      }
+    },
+    "q4-structure": {
+      "problems": [
+        {
+          "id": "q4-structure#b1",
+          "quest": "q4-structure",
+          "question": "HF, HCl and HBr are raced against each other. Which lists them from strongest acid to weakest?",
+          "options": [
+            { "id": "a", "label": "HF, HCl, HBr" },
+            { "id": "b", "label": "HBr, HCl, HF" },
+            { "id": "c", "label": "HCl, HF, HBr" },
+            { "id": "d", "label": "They are equally strong" }
+          ],
+          "answer": "b",
+          "explanation": "Going down the group the H\u2013X bond gets longer and weaker and the halide is larger, so the acid gives up its proton more easily. HF is the weakest of the three."
+        },
+        {
+          "id": "q4-structure#b2",
+          "quest": "q4-structure",
+          "question": "Which acid is the strongest?",
+          "options": [
+            { "id": "a", "label": "HClO" },
+            { "id": "b", "label": "HClO\u2082" },
+            { "id": "c", "label": "HClO\u2083" },
+            { "id": "d", "label": "HClO\u2084" }
+          ],
+          "answer": "d",
+          "explanation": "Each extra oxygen on chlorine pulls charge toward itself (the inductive effect), so the conjugate base holds its charge better and the acid is stronger."
+        }
+      ]
+    },
+    "q6-titrate": {
+      "problems": [
+        {
+          "id": "q6-titrate#b1",
+          "quest": "q6-titrate",
+          "question": "A weak acid is titrated with sodium hydroxide. At the equivalence point the pH is:",
+          "options": [
+            {
+              "id": "a",
+              "label": "Exactly 7"
+            },
+            {
+              "id": "b",
+              "label": "Above 7"
+            },
+            {
+              "id": "c",
+              "label": "Below 7"
+            },
+            {
+              "id": "d",
+              "label": "Exactly 14"
+            }
+          ],
+          "answer": "b",
+          "explanation": "When the weak acid is used up, the base left in the flask is the acid's conjugate base, which is a weak base, so the pH is above 7."
+        },
+        {
+          "id": "q6-titrate#b2",
+          "quest": "q6-titrate",
+          "question": "A weak acid is titrated, and the pH reads 4.80 when half of the base needed to reach the equivalence point has been poured. What is the pKa of the acid?",
+          "options": [
+            {
+              "id": "a",
+              "label": "About 4.80"
+            },
+            {
+              "id": "b",
+              "label": "About 9.60"
+            },
+            {
+              "id": "c",
+              "label": "About 2.40"
+            },
+            {
+              "id": "d",
+              "label": "About 7.00"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Half way, half of the acid has become its conjugate base, so the pH equals the pKa."
+        }
+      ],
+      "worked": {
+        "id": "q6-titrate#w",
+        "quest": "q6-titrate",
+        "title": "Strength From a Titration",
+        "setup": "A 20.00 mL sample of hydrochloric acid needs 16.0 mL of 0.150 M sodium hydroxide to reach its equivalence point. What is the strength of the acid?",
+        "steps": [
+          {
+            "say": "How many moles of sodium hydroxide were poured? Use litres for the volume.",
+            "kind": "number",
+            "answer": 0.0024,
+            "calc": "0.150*0.0160",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Multiply the strength by the volume in litres.",
+            "explain": "0.150 mol/L times 0.0160 L is 0.00240 mol."
+          },
+          {
+            "say": "At the equivalence point, how does the amount of hydrochloric acid compare with the base poured?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The same amount"
+              },
+              {
+                "id": "b",
+                "label": "Twice as much"
+              },
+              {
+                "id": "c",
+                "label": "Half as much"
+              }
+            ],
+            "answer": "a",
+            "hint": "The acid has just been used up, one for one.",
+            "explain": "Hydrochloric acid and sodium hydroxide react one for one, so the amounts are equal."
+          },
+          {
+            "say": "The sample is 20.00 mL, which is how many litres?",
+            "kind": "number",
+            "answer": 0.02,
+            "calc": "20.00/1000",
+            "unit": "L",
+            "tol": 0.01,
+            "hint": "There are 1000 mL in a litre.",
+            "explain": "20.00 mL is 0.02000 L."
+          },
+          {
+            "say": "What is the strength of the acid, in mol/L?",
+            "kind": "number",
+            "answer": 0.12,
+            "calc": "0.0024/0.02000",
+            "unit": "M",
+            "tol": 0.01,
+            "hint": "Divide the moles of acid by the volume of the sample in litres.",
+            "explain": "0.00240 mol in 0.02000 L is 0.120 mol/L."
+          }
+        ],
+        "finish": "At the equivalence point the amount of base poured equals the amount of acid, so divide that amount by the volume of the sample."
+      }
+    },
+    "q7-buffer": {
+      "problems": [
+        {
+          "id": "q7-buffer#b1",
+          "quest": "q7-buffer",
+          "question": "A flask holds 0.10 M acetic acid and 0.10 M acetate. A little strong acid is poured in and the pH barely moves. What took up the acid?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The acetate, which became acetic acid"
+            },
+            {
+              "id": "b",
+              "label": "The acetic acid, which became acetate"
+            },
+            {
+              "id": "c",
+              "label": "The water, which became hydroxide"
+            },
+            {
+              "id": "d",
+              "label": "Nothing, because a buffer cannot react"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The conjugate base, acetate, takes a proton from the added acid and becomes acetic acid, so almost no free hydronium is left to lower the pH."
+        },
+        {
+          "id": "q7-buffer#b2",
+          "quest": "q7-buffer",
+          "question": "A buffer of acetic acid and acetate reads a pH equal to the pKa of acetic acid. What does that say about the amounts?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Acetate and acetic acid are present in equal amounts"
+            },
+            {
+              "id": "b",
+              "label": "There is ten times more acetate than acetic acid"
+            },
+            {
+              "id": "c",
+              "label": "There is ten times more acetic acid than acetate"
+            },
+            {
+              "id": "d",
+              "label": "There is no acetic acid left"
+            }
+          ],
+          "answer": "a",
+          "explanation": "In pH = pKa + log([A⁻]/[HA]) the log is zero only when the ratio is 1, so the two amounts are equal."
+        }
+      ],
+      "worked": {
+        "id": "q7-buffer#w",
+        "quest": "q7-buffer",
+        "title": "pH of a Buffer",
+        "setup": "What is the pH of a buffer made of 0.40 M acetic acid and 0.20 M acetate? The pKa of acetic acid is 4.74.",
+        "steps": [
+          {
+            "say": "Which ratio goes inside the log in the Henderson–Hasselbalch equation?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "[acetate] / [acetic acid] = 0.20 / 0.40"
+              },
+              {
+                "id": "b",
+                "label": "[acetic acid] / [acetate] = 0.40 / 0.20"
+              },
+              {
+                "id": "c",
+                "label": "[acetate] × [acetic acid]"
+              }
+            ],
+            "answer": "a",
+            "hint": "The base form goes on top and the acid form underneath.",
+            "explain": "The equation is pH = pKa + log([A⁻]/[HA]), with acetate on top."
+          },
+          {
+            "say": "What is the ratio of acetate to acetic acid?",
+            "kind": "number",
+            "answer": 0.5,
+            "calc": "0.20/0.40",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "Divide 0.20 by 0.40.",
+            "explain": "0.20 / 0.40 = 0.50."
+          },
+          {
+            "say": "What is the log of that ratio?",
+            "kind": "number",
+            "answer": -0.301,
+            "calc": "Math.log10(0.20/0.40)",
+            "unit": "",
+            "tol": 0.02,
+            "hint": "The log of one half is negative, because the ratio is below 1.",
+            "explain": "log(0.50) = −0.30."
+          },
+          {
+            "say": "What is the pH?",
+            "kind": "number",
+            "answer": 4.439,
+            "calc": "4.74+Math.log10(0.20/0.40)",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "Add the log to the pKa.",
+            "explain": "4.74 + (−0.30) = 4.44."
+          }
+        ],
+        "finish": "Put acetate over acetic acid inside the log, take its value, and add it to the pKa."
+      }
+    },
+    "q5-salts": {
+      "problems": [
+        {
+          "id": "q5-salts#b1",
+          "quest": "q5-salts",
+          "question": "Equal moles of acetic acid and sodium hydroxide are mixed, with none of either left over. Which describes the solution?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Neutral, pH 7"
+            },
+            {
+              "id": "b",
+              "label": "Basic, because acetate takes protons from water"
+            },
+            {
+              "id": "c",
+              "label": "Acidic, because acetic acid is an acid"
+            },
+            {
+              "id": "d",
+              "label": "Basic, because sodium hydroxide is in excess"
+            }
+          ],
+          "answer": "b",
+          "explanation": "The acid and base are used up exactly, but acetate is the conjugate base of a weak acid and reacts with water to make hydroxide, so the pH is above 7."
+        },
+        {
+          "id": "q5-salts#b2",
+          "quest": "q5-salts",
+          "question": "Which 0.10 M solution has a pH below 7?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Sodium chloride"
+            },
+            {
+              "id": "b",
+              "label": "Potassium nitrate"
+            },
+            {
+              "id": "c",
+              "label": "Ammonium chloride"
+            },
+            {
+              "id": "d",
+              "label": "Sodium fluoride"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Ammonium is the conjugate acid of a weak base and gives protons to water. Chloride and nitrate come from strong acids and do nothing, and fluoride makes the solution basic."
+        }
+      ],
+      "worked": {
+        "id": "q5-salts#w",
+        "quest": "q5-salts",
+        "title": "pH After Mixing",
+        "setup": "40.0 mL of 0.10 M hydrochloric acid is mixed with 25.0 mL of 0.10 M sodium hydroxide. What is the pH of the mixture?",
+        "steps": [
+          {
+            "say": "How many moles of hydrochloric acid are in 40.0 mL of 0.10 M?",
+            "kind": "number",
+            "answer": 0.004,
+            "calc": "0.10*0.0400",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Multiply the concentration by the volume in litres.",
+            "explain": "0.10 mol/L × 0.0400 L = 4.0 × 10⁻³ mol."
+          },
+          {
+            "say": "How many moles of acid are left after the base has reacted with it? The base is 0.10 M and 25.0 mL.",
+            "kind": "number",
+            "answer": 0.0014999999999999996,
+            "calc": "0.10*0.0400-0.10*0.0250",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Subtract the moles of base from the moles of acid.",
+            "explain": "4.0 × 10⁻³ − 2.5 × 10⁻³ = 1.5 × 10⁻³ mol."
+          },
+          {
+            "say": "What is the total volume of the mixture in litres?",
+            "kind": "number",
+            "answer": 0.065,
+            "calc": "0.0400+0.0250",
+            "unit": "L",
+            "tol": 0.01,
+            "hint": "Add the two volumes.",
+            "explain": "40.0 mL + 25.0 mL = 65.0 mL = 0.0650 L."
+          },
+          {
+            "say": "What is the concentration of H₃O⁺ in mol/L?",
+            "kind": "number",
+            "answer": 0.023076923076923078,
+            "calc": "(0.10*0.0400-0.10*0.0250)/0.0650",
+            "unit": "M",
+            "tol": 0.01,
+            "hint": "Divide the moles of acid left by the total volume.",
+            "explain": "1.5 × 10⁻³ mol / 0.0650 L = 0.023 M."
+          },
+          {
+            "say": "What is the pH?",
+            "kind": "number",
+            "answer": 1.6368220975871743,
+            "calc": "-Math.log10((0.10*0.0400-0.10*0.0250)/0.0650)",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "The pH is the negative log of the concentration.",
+            "explain": "−log(0.023) = 1.64."
+          }
+        ],
+        "finish": "Find the moles left over, divide by the total volume, then take the negative log."
+      }
+    },
+    "q8-capacity": {
+      "problems": [
+        {
+          "id": "q8-capacity#b1",
+          "quest": "q8-capacity",
+          "question": "Acetic acid has a pKa of 4.74. In a solution at pH 3, which form is there more of?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Acetic acid, the protonated form"
+            },
+            {
+              "id": "b",
+              "label": "Acetate, the deprotonated form"
+            },
+            {
+              "id": "c",
+              "label": "Equal amounts of both"
+            },
+            {
+              "id": "d",
+              "label": "Neither, because the acid is weak"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Below the pKa the solution is rich in hydronium, so the acid holds on to its proton and the protonated form is the larger."
+        },
+        {
+          "id": "q8-capacity#b2",
+          "quest": "q8-capacity",
+          "question": "Two buffers have the same ratio of acetate to acetic acid, but one is ten times more concentrated. The same amount of strong acid is added to each. Which pH changes less?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The more concentrated buffer"
+            },
+            {
+              "id": "b",
+              "label": "The more dilute buffer"
+            },
+            {
+              "id": "c",
+              "label": "Both change by the same amount, because the ratio is the same"
+            },
+            {
+              "id": "d",
+              "label": "Neither changes, because both are buffers"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The concentrated buffer holds ten times as much acetate to take up the acid, so the same pour is a smaller share of what it holds and the pH moves less."
+        }
+      ],
+      "worked": {
+        "id": "q8-capacity#w",
+        "quest": "q8-capacity",
+        "title": "How Much a Buffer Can Take",
+        "setup": "A buffer holds 0.0060 mol of acetate and 0.0060 mol of acetic acid. Each pour adds 0.00050 mol of strong acid. How many pours can it take before the acetate is used up?",
+        "steps": [
+          {
+            "say": "Which member of the buffer takes up added acid?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Acetate, the base"
+              },
+              {
+                "id": "b",
+                "label": "Acetic acid, the acid"
+              },
+              {
+                "id": "c",
+                "label": "Water"
+              }
+            ],
+            "answer": "a",
+            "hint": "The base form accepts protons.",
+            "explain": "Acetate takes a proton from the added acid and becomes acetic acid."
+          },
+          {
+            "say": "How many moles of acetate can take acid?",
+            "kind": "number",
+            "answer": 0.006,
+            "calc": "0.0060",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "It is the amount of acetate in the buffer.",
+            "explain": "The buffer holds 0.0060 mol of acetate."
+          },
+          {
+            "say": "How many pours use up that acetate?",
+            "kind": "number",
+            "answer": 12,
+            "calc": "0.0060/0.00050",
+            "unit": "pours",
+            "tol": 0.01,
+            "hint": "Divide the acetate by the acid in one pour.",
+            "explain": "0.0060 / 0.00050 = 12 pours."
+          },
+          {
+            "say": "How many moles of acetic acid are there after those pours?",
+            "kind": "number",
+            "answer": 0.012,
+            "calc": "0.0060+12*0.00050",
+            "unit": "mol",
+            "tol": 0.01,
+            "hint": "Add the acid from the pours to the acetic acid already there.",
+            "explain": "0.0060 + 12 × 0.00050 = 0.012 mol."
+          }
+        ],
+        "finish": "The acetate sets the limit: divide it by the acid in one pour."
       }
     }
   }

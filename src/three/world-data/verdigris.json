@@ -1698,7 +1698,7 @@
       ],
       "label": "Bench 1 - The Handover",
       "structure": "sluice-gate",
-      "built": false,
+      "built": true,
       "flat": {
         "x": -43.9,
         "z": 62,
@@ -1721,7 +1721,7 @@
       ],
       "label": "Bench 2 - Reading the Scale",
       "structure": "gauge-house",
-      "built": false,
+      "built": true,
       "flat": {
         "x": 43.2,
         "z": 48,
@@ -1767,7 +1767,7 @@
       ],
       "label": "Bench 4 - Acid Structure",
       "structure": "valve-gallery",
-      "built": false,
+      "built": true,
       "flat": {
         "x": 43.2,
         "z": 20,
@@ -1790,7 +1790,7 @@
       ],
       "label": "Bench 5 - Salts",
       "structure": "settling-basin",
-      "built": false,
+      "built": true,
       "flat": {
         "x": -43.8,
         "z": 6,
@@ -1813,7 +1813,7 @@
       ],
       "label": "Bench 6 - Titration Curves",
       "structure": "dosing-tower",
-      "built": false,
+      "built": true,
       "flat": {
         "x": 43.5,
         "z": -8,
@@ -1836,7 +1836,7 @@
       ],
       "label": "Bench 7 - Buffers",
       "structure": "surge-tank",
-      "built": false,
+      "built": true,
       "flat": {
         "x": -43.7,
         "z": -22,
@@ -1859,7 +1859,7 @@
       ],
       "label": "Bench 8 - pKa and Capacity",
       "structure": "reserve-vats",
-      "built": false,
+      "built": true,
       "flat": {
         "x": 43.4,
         "z": -34,

@@ -22,7 +22,28 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  'q5-salts': {
+    1: 'The Fifth neutralised a tank and called it safe, and Vess wants to measure what was left.'
+  },
+  'q4-structure': {
+    1: 'The Fifth ranked its tanks by what they were made of, and Vess wants to test that ranking.'
+  },
   /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
+  'q6-titrate': {
+    1: 'The Fifth reported the moment a tank was neutral, and Vess wants to watch an acid being used up.'
+  },
+  'q2-scale': {
+    1: 'The Fifth gives one number for the marsh, and Vess wants to know what it counts.'
+  },
+  'q1-handover': {
+    1: 'The Fifth calls the marsh water acid, and Vess wants to see what that word means for the water.'
+  },
+  'q8-capacity': {
+    1: 'The Fifth\'s sluice held, then failed, and Vess wants to find how much it could take.'
+  },
+  'q7-buffer': {
+    1: 'One of the Fifth\'s sluices took the acid and one did not, and Vess wants to see why.'
+  },
   'q3-weak': {
     1: 'Two of the Fifth\'s tanks hold the same amount of acid, and Vess wants to compare what they read.'
   },

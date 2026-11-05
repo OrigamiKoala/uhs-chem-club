@@ -21,6 +21,15 @@ import './ph-tour.js';
 /* One import per instrument: each file registers its own fixtures and pieces. (marker: ph instruments) */
 import './ph-flask.js';
 import './ph-rig.js';
+import './ph-burette.js';
+import './ph-curve.js';
+import './ph-pour.js';
+import './ph-scale.js';
+import './ph-race.js';
+import './ph-mix.js';
+import './ph-buffer.js';
+import './ph-strip.js';
+import './ph-solid.js';
 
 export const PH_KIT_ID = 'ph';
 export const PH_BOUNDS = HEAT_BOUNDS;
@@ -72,6 +81,8 @@ export const PH_KIT = {
   piece3d,
   dress3d,
   settle,
+  // What the hand passed through on a dial (the fraction strip keeps the pH range it has been moved over): a fixture handler's `dialed`.
+  dialed: (state, f, name) => fixtureHandler(f.kind)?.dialed?.(state, f, name) || null,
   printed: p => (pieceDef(p.kind)?.printed ? pieceDef(p.kind).printed(p) : HEAT_KIT.printed(p))
 };
 
@@ -89,3 +100,12 @@ export * from './heat.js';
 export * from './ph-read.js';
 export { flaskFixture, meterPiece } from './ph-flask.js';
 export { rigParts, tile } from './ph-rig.js';
+export { buretteFixture, buretteRead, POUR_LABELS } from './ph-burette.js';
+export { curveFixture, curveRows } from './ph-curve.js';
+export { scaleFlask, scaleMeter, scaleWindow, scaleRead, scaleMeterRead, strengthText } from './ph-scale.js';
+export { pourFixture, pourRead, sceneNames, formulaChip } from './ph-pour.js';
+export { raceParts, acidCard, raceRead, nameAcid, nameBase } from './ph-race.js';
+export { neutParts } from './ph-mix.js';
+export { mixFixture, mixRead, U as MIX_UNIT } from './ph-buffer.js';
+export { stripFixture, stripRead } from './ph-strip.js';
+export { solidFixture, solidRead, solidAfter, saturatedSpheres } from './ph-solid.js';

@@ -48,6 +48,10 @@ export function checkVerdigrisData() {
   // race
   near('race equal', D.raceShare(5, 5), 0.5, 1e-9);
   if (D.raceShare(3.17, -6.3) > 0.01) fails.push('race: HF with Cl- should leave protons almost all on HF side? (K tiny)');
+  // buffers (q7): hand values pKa + log(nA/nHA) for 90/110 and 150/50, and water + 0.0010 mol acid in 110 mL
+  near('bufferState 90/110', D.bufferState({ Ka: 1.8e-5, nHA: 0.0100, nA: 0.0100, V: 0.1, nH: 0.0010, vAdd: 0.010 }).pH, 4.6576, 0.003);
+  near('bufferState 150/50', D.bufferState({ Ka: 1.8e-5, nHA: 0.0050, nA: 0.0150, V: 0.1 }).pH, 5.2218, 0.003);
+  near('bufferState water + acid', D.bufferState({ V: 0.1, nH: 0.0010, vAdd: 0.010 }).pH, 2.0414, 0.001);
   // table sanity
   rel('Kb acetate', D.BASES.acetate.Kb, 5.556e-10);
   near('Ka * Kb = Kw for NH3', D.ACIDS.nh4.Ka * D.BASES.nh3.Kb, 1e-14, 1e-20);
