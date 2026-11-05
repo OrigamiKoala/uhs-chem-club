@@ -31,6 +31,7 @@
     "verify:run": "node tools/verify-quest-run.mjs",
     "verify:lanternfall": "node tools/verify-lanternfall.mjs",
     "verify:bellows": "node tools/verify-bellows.mjs",
+    "verify:teeter": "node tools/verify-teeter.mjs",
     "verify:ember": "node tools/verify-ember.mjs",
     "verify:mirrowen": "node tools/verify-mirrowen.mjs",
     "verify:kettle": "node tools/verify-kettle.mjs",
