@@ -317,3 +317,6 @@ Fourth pass: `docs/plans/learn-quests.md` now marks a typed headline stage in ev
 ## Teeter built (2026-11-04)
 
 Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (K of a reversed, doubled, halved and added reaction; stage 7 Kp from Kc); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.
+
+
+Unit 8 topics 8.1 to 8.11 now have benches (`unit09`, built 2026-11-05): 8.1 `q1-handover`, `q2-scale`; 8.2 `q2-scale`; 8.3 `q3-weak`; 8.4 `q5-salts`, `q7-buffer`; 8.5 `q6-titrate`; 8.6 `q4-structure`; 8.7 `q6-titrate` s5, `q8-capacity`; 8.8, 8.9 `q7-buffer`; 8.10 `q8-capacity`; 8.11 `q8-capacity` s7 (qualitative only, as the CED excludes computing solubility as a function of pH). The pH change on adding acid or base to a buffer is not computed (q7 s7 is a direction verdict); polyprotic species concentrations are not computed (q6 s6 is qualitative); weak acid plus weak base (8.4.A.4) is a bank problem only. See `docs/verdigris-audit.md`.

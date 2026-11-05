@@ -1096,7 +1096,9 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 ---
 
-### World 9 — Verdigris (`unit09`, acids and bases): 8 quests
+### World 9 — Verdigris (`unit09`, acids and bases): 8 quests — BUILT 2026-11-05
+
+**Built differently** (full list in `docs/plans/verdigris-world.md` section 7): a boss `boss-leach` was added; `q1` merged the brief's stages 5 and 6 and added a predict pair at 2/3; `q2` moved the strong-acid stage to `q3` and added a 50 °C neutral-water predict pair; `q3` stage 8 uses the ratio rig on three pairs instead of an operations dial; `q4` ranks by a proton race instead of lookups; `q5` gained a salt sort with the meter; `q6` stage 5 uses dye tubes on one weak-acid titration; `q7` has a predict pair and a build stage; `q8` merged its two protonation stages into a predict/test pair and its stage 3 is a typed indicator pKa.
 
 #### `q1-handover` · Acids and Bases · CED 8.1 · pH bench (particle window)
 1. Add HCl to water and say where the proton went. → **Brønsted–Lowry acid and base, hydronium**
