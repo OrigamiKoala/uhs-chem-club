@@ -13,6 +13,7 @@
  *   the undertow       Mirrowen        a brine crawler: a riveted iron tank on six jointed legs, a salt crust, an intake maw and a siphon head
  *   the recipe golem   Kettle          a furnace vessel on four pipe legs with valve knees, a hopper head, pipe arms and valve-wheel fists
  *   the tipper         Teeter          a beam pump grown huge: a lattice beam on a pivot, a salt pan hung from each end, a dial over the pivot
+ *   the leach          Verdigris       a sump pump: a volute casing on braced legs, five intake vats, two jointed intake hoses for arms
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1460,6 +1461,130 @@ function buildTipper(monster) {
   };
 }
 
+/* ====================================================================== the Leach */
+
+/**
+ * THE LEACH (Verdigris). A sump pump that learned to hunt: a volute casing on four braced legs, a motor column and a domed head
+ * with two lenses, five copper-rimmed intake vats ringed round its back (one for each sample it holds) and two long intake hoses
+ * for arms, each jointed at the shoulder, the elbow and the wrist and ending in a bell-mouth. At idle the hoses sway and the motor
+ * shudders; the arms rise to gather, swing down on the blow, and a wound leaves it listing with its hoses slack.
+ */
+function buildLeach(monster) {
+  const k = new Kit(monster);
+  const verd = k.plate(0x4f8a74);
+  const verdDark = k.plate(0x2d5748);
+  const iron = k.plate(0x6a6e68);
+  const ironDark = k.plate(0x33373a);
+  const rust = k.plate(0x8a5a36);
+  const copper = k.std(0x9a6b3d, { rough: 0.45, metal: 0.9 });
+  const steel = k.std(0xcfd3cd, { rough: 0.25, metal: 0.92 });
+  const rubber = k.std(0x1d1f1c, { rough: 0.9, metal: 0.05 });
+  const sludge = k.std(0x4a5a2e, { rough: 0.55, metal: 0.05 });
+  const hose = k.std(0x2a3a33, { rough: 0.8, metal: 0.1 });
+  const lens = k.glow(AMBER, 2.2);
+
+  const body = k.node(monster.group, 0, 0, 0);
+
+  /* --- the sled: a deep iron base with a green-stained lip --- */
+  k.box(body, 5.6, 0.45, 3.6, ironDark, 0, 0.22, 0, 0, 0, 0, 0.06);
+  k.box(body, 5.0, 0.12, 3.0, rubber, 0, 0.5, 0, 0, 0, 0, 0.03);
+  k.bolts(body, [-2.4, -1.6, -0.8, 0, 0.8, 1.6, 2.4].map(x => [x, 0.46, 1.81]), 0.05, steel, [0, 0, 1]);
+
+  /* --- four braced legs, hip to knee to foot pad, from the casing to the sled's corners --- */
+  for (const sz of [-1, 1]) {
+    for (const sx of [-1, 1]) {
+      const hip = [sx * 1.1, 1.8, sz * 0.8], knee = [sx * 2.5, 1.5, sz * 1.3], foot = [sx * 2.7, 0.55, sz * 1.5];
+      k.strut(body, hip, knee, 0.16, iron, 8, 0.2);
+      k.strut(body, knee, foot, 0.13, ironDark, 8, 0.15);
+      k.sph(body, 0.22, ironDark, ...knee);
+      k.cyl(body, 0.34, 0.4, 0.14, 12, ironDark, foot[0], 0.57, foot[2]);
+    }
+  }
+
+  /* --- the volute casing: a fat green scroll with a discharge flange, armoured on the front --- */
+  k.sph(body, 1.5, verd, 0, 2.0, 0, 1, 0.85, 1);
+  k.torus(body, 1.35, 0.1, copper, 0, 2.0, 0, Math.PI / 2, 0, 0, 8, 36);
+  k.cyl(body, 0.45, 0.45, 1.3, 16, verdDark, -1.85, 2.0, 0, 0, 0, Math.PI / 2);          // the discharge, to the left
+  k.torus(body, 0.5, 0.06, copper, -2.5, 2.0, 0, 0, Math.PI / 2, 0, 8, 20);
+  for (let i = 0; i < 10; i++) {                                                           // casing bolts
+    const a = (i / 10) * Math.PI * 2;
+    k.cyl(body, 0.07, 0.07, 0.1, 6, steel, Math.cos(a) * 1.43, 2.0 + Math.sin(a) * 0.1, Math.sin(a) * 1.43, Math.PI / 2, -a, 0);
+  }
+  for (const sx of [-1, 1]) {
+    const plate = k.box(body, 1.0, 1.0, 0.08, rust, sx * 0.62, 1.95, 1.34, 0.1, sx * 0.3, 0, 0.015);
+    monster.armour(plate, sx < 0 ? 0.3 : 0.55);
+    const flank = k.box(body, 0.08, 0.9, 1.3, rust, sx * 1.52, 2.2, -0.2, 0, 0, sx * 0.18, 0.015);
+    monster.armour(flank, sx < 0 ? 0.75 : 0.9);
+  }
+
+  /* --- the motor column and head --- */
+  k.cyl(body, 0.85, 0.95, 1.6, 24, ironDark, 0, 3.7, 0);
+  for (let i = 0; i < 4; i++) k.torus(body, 0.9, 0.05, copper, 0, 3.2 + i * 0.35, 0, Math.PI / 2, 0, 0, 6, 28);
+  const head = k.node(body, 0, 4.55, 0.05);
+  k.sph(head, 0.8, verdDark, 0, 0.25, 0, 1, 0.8, 1);
+  for (const sx of [-1, 1]) {
+    k.cyl(head, 0.2, 0.2, 0.16, 16, ironDark, sx * 0.34, 0.3, 0.6, Math.PI / 2);
+    k.cyl(head, 0.14, 0.14, 0.05, 16, lens, sx * 0.34, 0.3, 0.7, Math.PI / 2);
+    k.torus(head, 0.2, 0.03, copper, sx * 0.34, 0.3, 0.69, 0, 0, 0, 8, 20);
+  }
+  k.cyl(head, 0.1, 0.1, 0.6, 8, steel, 0, 1.0, -0.1);                                       // a breather stack
+
+  /* --- five intake vats ringed round the back, each piped to the casing --- */
+  const vatLevels = [];
+  for (let i = 0; i < 5; i++) {
+    const a = Math.PI * (0.62 + i * 0.19);                                                  // the back arc, left to right behind the casing
+    const x = Math.cos(a) * 2.3, z = -Math.abs(Math.sin(a)) * 2.0 - 0.1;
+    k.cyl(body, 0.58, 0.62, 1.0, 20, i % 2 ? verd : verdDark, x, 1.3, z);
+    k.torus(body, 0.6, 0.06, copper, x, 1.82, z, Math.PI / 2, 0, 0, 8, 24);
+    const level = k.cyl(body, 0.5, 0.5, 0.05, 20, sludge, x, 1.78, z);
+    vatLevels.push(level);
+    k.strut(body, [x * 0.6, 1.9, z * 0.6], [x, 1.5, z], 0.09, hose, 8);
+  }
+
+  /* --- two arms: intake hoses jointed at the shoulder, elbow and wrist, ending in bell-mouths --- */
+  const arms = [];
+  for (const sx of [-1, 1]) {
+    const shoulder = k.node(body, sx * 1.45, 3.4, 0.2);
+    k.sph(shoulder, 0.34, copper, 0, 0, 0);
+    k.cyl(shoulder, 0.3, 0.3, 0.3, 14, ironDark, sx * 0.1, 0, 0, 0, 0, Math.PI / 2);
+    k.strut(shoulder, [0, 0, 0], [0, -1.7, 0], 0.2, hose, 10);
+    for (let r = 0; r < 4; r++) k.torus(shoulder, 0.23, 0.035, steel, 0, -0.35 - r * 0.38, 0, Math.PI / 2, 0, 0, 6, 16);
+    const elbow = k.node(shoulder, 0, -1.7, 0);
+    k.sph(elbow, 0.3, copper, 0, 0, 0);
+    k.strut(elbow, [0, 0, 0], [0, -1.55, 0], 0.17, hose, 10);
+    for (let r = 0; r < 3; r++) k.torus(elbow, 0.2, 0.03, steel, 0, -0.35 - r * 0.4, 0, Math.PI / 2, 0, 0, 6, 16);
+    const wrist = k.node(elbow, 0, -1.55, 0);
+    k.sph(wrist, 0.24, copper, 0, 0, 0);
+    k.cyl(wrist, 0.2, 0.62, 0.7, 20, verdDark, 0, -0.4, 0, 0, 0, 0, true);                // the bell-mouth
+    k.torus(wrist, 0.62, 0.06, copper, 0, -0.76, 0, Math.PI / 2, 0, 0, 8, 28);
+    k.cyl(wrist, 0.5, 0.5, 0.04, 20, sludge, 0, -0.5, 0);
+    arms.push({ sx, shoulder, elbow, wrist });
+  }
+  monster.muzzle = k.node(arms[1].wrist, 0, -0.85, 0);
+
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t;
+      for (const a of arms) {
+        const ph = a.sx * 0.9;
+        a.shoulder.rotation.x = -0.7 - 1.75 * up + 0.5 * down + idle * Math.sin(t * 0.8 + ph) * 0.07 + 0.18 * s.wound + s.roar * Math.sin(t * 6 + ph) * 0.1;
+        a.shoulder.rotation.z = a.sx * (0.18 + 0.2 * s.roar) + idle * Math.sin(t * 0.55 + ph) * 0.05;
+        a.elbow.rotation.x = -0.5 + 0.7 * up - 0.95 * down + idle * Math.sin(t * 1.1 + ph) * 0.1 + 0.3 * s.wound;
+        a.wrist.rotation.x = 0.4 * up - 0.35 * down + idle * Math.sin(t * 1.7 + ph) * 0.08;
+      }
+      head.rotation.y = idle * Math.sin(t * 0.45) * 0.14;
+      head.rotation.x = -0.14 * s.roar + 0.12 * down;
+      head.position.y = 4.55 - 0.05 * s.hurt - 0.18 * down - clamp01(s.throes) * 0.35;
+      // The motor shudders; the vats slop; a wound leaves it listing.
+      body.rotation.z = -0.07 * s.wound + Math.sin(t * 34) * 0.01 * (idle + s.hurt) + Math.sin(t * 36) * 0.012 * s.hurt;
+      body.position.y = -clamp01(s.throes) * 0.3;
+      vatLevels.forEach((v, i) => { v.position.y = 1.78 + Math.sin(t * 2.2 + i) * 0.02 * idle - 0.06 * s.wound; });
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1470,7 +1595,8 @@ const BUILDERS = {
   'basalt warden': buildWarden,
   'the lantern-eater': buildLanternEater,
   'recipe golem': buildGolem,
-  'the tipper': buildTipper
+  'the tipper': buildTipper,
+  'the leach': buildLeach
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */

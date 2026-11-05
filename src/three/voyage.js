@@ -123,6 +123,14 @@ export const DESTINATIONS = {
       atmo: '#dfe3dc', atmoStrength: 0.5, seed: [3.8, 6.2, 1.4]
     }
   },
+  verdigris: {
+    key: 'verdigris', name: 'Verdigris', hash: '#/learn/unit09',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'desert', colors: ['#5f7f63', '#3f5648', '#8da58f', '#a9b4a0'],
+      atmo: '#a8b8a6', atmoStrength: 0.55, seed: [5.1, 2.7, 6.3]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

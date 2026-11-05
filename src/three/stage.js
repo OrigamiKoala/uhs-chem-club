@@ -20,6 +20,7 @@ import { EmberReachWorld } from "./ember.js";
 import { MirrowenWorld } from "./mirrowen.js";
 import { KettleWorld } from "./kettle.js";
 import { TeeterWorld } from "./teeter.js";
+import { VerdigrisWorld } from "./verdigris.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -60,6 +61,8 @@ const MIRROWEN_EXPOSURE = 0.9;
 const KETTLE_EXPOSURE = 0.94;
 // Teeter is white crust and pale brine under a near-white haze: the brightest ground of the Learn worlds, so it takes the least exposure.
 const TEETER_EXPOSURE = 0.88;
+// Verdigris is dark green water and olive peat under a low grey-green haze: mid-bright ground, so it sits between Teeter and Mirrowen.
+const VERDIGRIS_EXPOSURE = 0.96;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -100,6 +103,7 @@ class Stage {
     this.mirrowenWorld = null;
     this.kettleWorld = null;
     this.teeterWorld = null;
+    this.verdigrisWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -815,6 +819,10 @@ class Stage {
       if (!this.teeterWorld) this.teeterWorld = this.warmWorld(new TeeterWorld(this.renderer));
       return this.teeterWorld;
     }
+    if (key === "verdigris") {
+      if (!this.verdigrisWorld) this.verdigrisWorld = this.warmWorld(new VerdigrisWorld(this.renderer));
+      return this.verdigrisWorld;
+    }
     return null;
   }
 
@@ -847,6 +855,7 @@ class Stage {
     if (key === "mirrowen") return MIRROWEN_EXPOSURE;
     if (key === "kettle") return KETTLE_EXPOSURE;
     if (key === "teeter") return TEETER_EXPOSURE;
+    if (key === "verdigris") return VERDIGRIS_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1044,10 +1053,17 @@ class Stage {
     this.enterLearnWorld(this.teeterWorld, TEETER_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle or Teeter. */
+  /** Walk out onto Verdigris, the acid marsh (Learn world 09). */
+  enterVerdigrisScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("verdigris");
+    this.enterLearnWorld(this.verdigrisWorld, VERDIGRIS_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter or Verdigris. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1295,6 +1311,11 @@ class Stage {
   /** Light a Teeter site's indicator when its quest is finished. */
   setTeeterSiteComplete(questId, complete) {
     if (this.teeterWorld) this.teeterWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Verdigris site's indicator when its quest is finished. */
+  setVerdigrisSiteComplete(questId, complete) {
+    if (this.verdigrisWorld) this.verdigrisWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Ligar site's indicator when its quest is finished. */

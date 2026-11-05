@@ -1,0 +1,1995 @@
+{
+  "id": "verdigris",
+  "name": "Verdigris",
+  "place": "Acid marsh",
+  "oneLine": "Acids and bases, pH, weak acid equilibria, titration curves and buffers.",
+  "sky": "verdigris-sky",
+  "terrain": {
+    "heightmap": "verdigris-marsh",
+    "size": [
+      240,
+      240
+    ],
+    "maxHeight": 0.4,
+    "material": "peat-mud"
+  },
+  "ambience": {
+    "keyLight": 15854290,
+    "fillLight": 11123118,
+    "fogColor": 10793122,
+    "fogNear": 45,
+    "fogFar": 520,
+    "dustDensity": 0.1
+  },
+  "road": {
+    "radius": 0
+  },
+  "arena": {
+    "boss": [
+      0,
+      0,
+      -54
+    ],
+    "player": [
+      0,
+      1.6,
+      -38
+    ]
+  },
+  "plaza": {
+    "minX": -14,
+    "maxX": 14,
+    "minZ": -62,
+    "maxZ": -32
+  },
+  "roads": [
+    {
+      "id": "causeway",
+      "width": 4,
+      "pts": [
+        [
+          0,
+          94
+        ],
+        [
+          0,
+          -31
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-1",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          62
+        ],
+        [
+          -37.4,
+          62
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-2",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          48
+        ],
+        [
+          37.4,
+          48
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-3",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          34
+        ],
+        [
+          -37.4,
+          34
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-4",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          20
+        ],
+        [
+          37.4,
+          20
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-5",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          6
+        ],
+        [
+          -37.4,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-6",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          -8
+        ],
+        [
+          37.4,
+          -8
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-7",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          -22
+        ],
+        [
+          -37.4,
+          -22
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-8",
+      "width": 3.2,
+      "pts": [
+        [
+          0,
+          -34
+        ],
+        [
+          37.4,
+          -34
+        ]
+      ]
+    },
+    {
+      "id": "pad-spur",
+      "width": 3,
+      "pts": [
+        [
+          0,
+          84
+        ],
+        [
+          51,
+          84
+        ]
+      ]
+    }
+  ],
+  "pools": [
+    {
+      "id": "pool-w0",
+      "minX": -35,
+      "maxX": -4.5,
+      "minZ": 65.4,
+      "maxZ": 93,
+      "area": 841.8
+    },
+    {
+      "id": "pool-w1",
+      "minX": -35,
+      "maxX": -4.5,
+      "minZ": 37.4,
+      "maxZ": 58.6,
+      "area": 646.6
+    },
+    {
+      "id": "pool-w2",
+      "minX": -35,
+      "maxX": -4.5,
+      "minZ": 9.4,
+      "maxZ": 30.6,
+      "area": 646.6
+    },
+    {
+      "id": "pool-w3",
+      "minX": -35,
+      "maxX": -4.5,
+      "minZ": -18.6,
+      "maxZ": 2.6,
+      "area": 646.6
+    },
+    {
+      "id": "pool-w4",
+      "minX": -35,
+      "maxX": -15.5,
+      "minZ": -59,
+      "maxZ": -25.4,
+      "area": 655.2
+    },
+    {
+      "id": "pool-e0",
+      "minX": 4.5,
+      "maxX": 35,
+      "minZ": 51.4,
+      "maxZ": 80.6,
+      "area": 890.6
+    },
+    {
+      "id": "pool-e1",
+      "minX": 4.5,
+      "maxX": 35,
+      "minZ": 23.4,
+      "maxZ": 44.6,
+      "area": 646.6
+    },
+    {
+      "id": "pool-e2",
+      "minX": 4.5,
+      "maxX": 35,
+      "minZ": -4.6,
+      "maxZ": 16.6,
+      "area": 646.6
+    },
+    {
+      "id": "pool-e3",
+      "minX": 4.5,
+      "maxX": 35,
+      "minZ": -30.6,
+      "maxZ": -11.4,
+      "area": 585.6
+    },
+    {
+      "id": "pool-e4",
+      "minX": 15.5,
+      "maxX": 35,
+      "minZ": -59,
+      "maxZ": -37.4,
+      "area": 421.2
+    },
+    {
+      "id": "pool-sump",
+      "minX": -95,
+      "maxX": 95,
+      "minZ": -130,
+      "maxZ": -62,
+      "largest": true,
+      "area": 12920
+    },
+    {
+      "id": "far-w",
+      "minX": -200,
+      "maxX": -112,
+      "minZ": -100,
+      "maxZ": 100,
+      "decor": true,
+      "area": 17600
+    },
+    {
+      "id": "far-e",
+      "minX": 112,
+      "maxX": 200,
+      "minZ": -100,
+      "maxZ": 100,
+      "decor": true,
+      "area": 17600
+    },
+    {
+      "id": "far-s",
+      "minX": -80,
+      "maxX": 80,
+      "minZ": 112,
+      "maxZ": 190,
+      "decor": true,
+      "area": 12480
+    }
+  ],
+  "landmarks": [
+    {
+      "asset": "landing-pad",
+      "pos": [
+        60,
+        0,
+        84
+      ],
+      "radius": 10,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        -19.75,
+        0,
+        79.2
+      ],
+      "radius": 4.4,
+      "rotY": 1.3,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank-pier",
+      "pos": [
+        -19.75,
+        0,
+        48
+      ],
+      "radius": 4.4,
+      "rotY": 2.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        -19.75,
+        0,
+        20
+      ],
+      "radius": 4.4,
+      "rotY": 3.9,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank-pier",
+      "pos": [
+        -19.75,
+        0,
+        -8
+      ],
+      "radius": 4.4,
+      "rotY": 5.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pump-house",
+      "pos": [
+        -25.25,
+        0,
+        -42.2
+      ],
+      "radius": 7,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        19.75,
+        0,
+        66
+      ],
+      "radius": 4.4,
+      "rotY": 6.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank-pier",
+      "pos": [
+        19.75,
+        0,
+        34
+      ],
+      "radius": 4.4,
+      "rotY": 7.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        19.75,
+        0,
+        6
+      ],
+      "radius": 4.4,
+      "rotY": 9.1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "tank-pier",
+      "pos": [
+        19.75,
+        0,
+        -21
+      ],
+      "radius": 4.4,
+      "rotY": 10.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        25.25,
+        0,
+        -48.2
+      ],
+      "radius": 4.4,
+      "rotY": 11.7,
+      "minTier": "T3"
+    },
+    {
+      "asset": "valve-pier",
+      "pos": [
+        -72,
+        0,
+        -92
+      ],
+      "radius": 2.6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "valve-pier",
+      "pos": [
+        -36,
+        0,
+        -92
+      ],
+      "radius": 2.6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "valve-pier",
+      "pos": [
+        36,
+        0,
+        -92
+      ],
+      "radius": 2.6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "valve-pier",
+      "pos": [
+        72,
+        0,
+        -92
+      ],
+      "radius": 2.6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        -54,
+        0,
+        -92
+      ],
+      "radius": 4.4,
+      "rotY": -5.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        0,
+        0,
+        -92
+      ],
+      "radius": 4.4,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "fort-tower",
+      "pos": [
+        54,
+        0,
+        -92
+      ],
+      "radius": 4.4,
+      "rotY": 5.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        -64,
+        0,
+        22
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        -64,
+        0,
+        -6
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        64,
+        0,
+        36
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        64,
+        0,
+        -8
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        -72,
+        0,
+        48
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        -74,
+        0,
+        -14
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        72,
+        0,
+        16
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "storage-tank",
+      "pos": [
+        72,
+        0,
+        -22
+      ],
+      "radius": 3.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        55.9,
+        0,
+        -12.89
+      ],
+      "radius": 4.01,
+      "scale": 0.82,
+      "rotY": 1.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        63.47,
+        0,
+        -53.67
+      ],
+      "radius": 5.13,
+      "scale": 1.09,
+      "rotY": 3.95,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        -73.28,
+        0,
+        -26.51
+      ],
+      "radius": 5.18,
+      "scale": 1.1,
+      "rotY": 2.87,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        -80.15,
+        0,
+        3.96
+      ],
+      "radius": 4.68,
+      "scale": 0.98,
+      "rotY": 4.21,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        81.19,
+        0,
+        0.03
+      ],
+      "radius": 5.18,
+      "scale": 1.1,
+      "rotY": 2.74,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        -77.22,
+        0,
+        15.62
+      ],
+      "radius": 5.55,
+      "scale": 1.19,
+      "rotY": 5.63,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        81.83,
+        0,
+        -25.74
+      ],
+      "radius": 3.97,
+      "scale": 0.81,
+      "rotY": 5.26,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        -55.92,
+        0,
+        32.65
+      ],
+      "radius": 4.39,
+      "scale": 0.91,
+      "rotY": 4.66,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        72.13,
+        0,
+        37.55
+      ],
+      "radius": 4.05,
+      "scale": 0.83,
+      "rotY": 5.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rubble-heap",
+      "pos": [
+        -88.44,
+        0,
+        15.62
+      ],
+      "radius": 4.39,
+      "scale": 0.91,
+      "rotY": 3.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        59.93,
+        0,
+        -30.59
+      ],
+      "radius": 1.8,
+      "rotY": 4.9,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        85.43,
+        0,
+        16.24
+      ],
+      "radius": 1.8,
+      "rotY": 2.5,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        -55,
+        0,
+        88.95
+      ],
+      "radius": 1.8,
+      "rotY": 1.69,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        56.15,
+        0,
+        57.03
+      ],
+      "radius": 1.8,
+      "rotY": 5.55,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        -89.25,
+        0,
+        90.08
+      ],
+      "radius": 1.8,
+      "rotY": 1.04,
+      "minTier": "T4"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        60.2,
+        0,
+        11.49
+      ],
+      "radius": 1.8,
+      "rotY": 3.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -67.25,
+        0,
+        2.34
+      ],
+      "radius": 1.8,
+      "rotY": 5.96,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -58.95,
+        0,
+        -43.88
+      ],
+      "radius": 1.8,
+      "rotY": 2.8,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -69.27,
+        0,
+        -48.14
+      ],
+      "radius": 1.8,
+      "rotY": 5.74,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        55.79,
+        0,
+        13.11
+      ],
+      "radius": 1.8,
+      "rotY": 6.2,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        80.33,
+        0,
+        16.91
+      ],
+      "radius": 1.8,
+      "rotY": 0.17,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        89.96,
+        0,
+        19.18
+      ],
+      "radius": 1.8,
+      "rotY": 4.96,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -83.89,
+        0,
+        66.96
+      ],
+      "radius": 1.8,
+      "rotY": 1.03,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -54.61,
+        0,
+        -57.34
+      ],
+      "radius": 1.8,
+      "rotY": 0.28,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        72.31,
+        0,
+        26.47
+      ],
+      "radius": 1.4,
+      "rotY": 3.8,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -87.2,
+        0,
+        49.16
+      ],
+      "radius": 1.4,
+      "rotY": 4.42,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -68.44,
+        0,
+        52.34
+      ],
+      "radius": 1.4,
+      "rotY": 1.98,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        78.93,
+        0,
+        45.6
+      ],
+      "radius": 1.4,
+      "rotY": 5.31,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -42.06,
+        0,
+        -8.08
+      ],
+      "radius": 1.4,
+      "rotY": 3.15,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -79.26,
+        0,
+        44.76
+      ],
+      "radius": 1.4,
+      "rotY": 0.05,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        85.01,
+        0,
+        89.79
+      ],
+      "radius": 1.4,
+      "rotY": 3.68,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -80,
+        0,
+        -9.11
+      ],
+      "radius": 1.4,
+      "rotY": 2.22,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -78.32,
+        0,
+        -54.21
+      ],
+      "radius": 1.4,
+      "rotY": 3.29,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -69.72,
+        0,
+        35.16
+      ],
+      "radius": 1.4,
+      "rotY": 4.22,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        80.88,
+        0,
+        -32.15
+      ],
+      "radius": 1.4,
+      "rotY": 1.19,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -80.74,
+        0,
+        38.31
+      ],
+      "radius": 1.4,
+      "rotY": 3.18,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        89.22,
+        0,
+        75.86
+      ],
+      "radius": 1.4,
+      "rotY": 5.24,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        39.32,
+        0,
+        -23.62
+      ],
+      "radius": 1.4,
+      "rotY": 0.18,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        65.74,
+        0,
+        45.47
+      ],
+      "radius": 1.4,
+      "rotY": 3.32,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        77.17,
+        0,
+        13.5
+      ],
+      "radius": 1.4,
+      "rotY": 4.56,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -87.44,
+        0,
+        -39.8
+      ],
+      "radius": 1.4,
+      "rotY": 4.88,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        58.7,
+        0,
+        -24.64
+      ],
+      "radius": 1.4,
+      "rotY": 2.64,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -66.67,
+        0,
+        61.78
+      ],
+      "radius": 1.4,
+      "rotY": 2.2,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        74.41,
+        0,
+        49.66
+      ],
+      "radius": 1.4,
+      "rotY": 5.85,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -51.4,
+        0,
+        -11.59
+      ],
+      "radius": 1.4,
+      "rotY": 2.15,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        64.34,
+        0,
+        13.87
+      ],
+      "radius": 1.4,
+      "rotY": 0.21,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        75.47,
+        0,
+        -58.95
+      ],
+      "radius": 1.4,
+      "rotY": 0.23,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        85.59,
+        0,
+        -55.05
+      ],
+      "radius": 1.4,
+      "rotY": 1.22,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        41.62,
+        0,
+        57.24
+      ],
+      "radius": 1.4,
+      "rotY": 5.75,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        60.1,
+        0,
+        41.07
+      ],
+      "radius": 1.4,
+      "rotY": 1.94,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -83.93,
+        0,
+        34
+      ],
+      "radius": 1.4,
+      "rotY": 1.07,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        40.07,
+        0,
+        -48.45
+      ],
+      "radius": 1.4,
+      "rotY": 4.08,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        56.67,
+        0,
+        20.97
+      ],
+      "radius": 1.4,
+      "rotY": 2.71,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        43.22,
+        0,
+        -50.99
+      ],
+      "radius": 1.4,
+      "rotY": 3.44,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -72.31,
+        0,
+        -3.74
+      ],
+      "radius": 1.4,
+      "rotY": 5.15,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        91.61,
+        0,
+        -24.82
+      ],
+      "radius": 1.4,
+      "rotY": 4.95,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        75.26,
+        0,
+        -6.16
+      ],
+      "radius": 1.4,
+      "rotY": 4.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        73.6,
+        0,
+        0.75
+      ],
+      "radius": 1.4,
+      "rotY": 3.76,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -88.83,
+        0,
+        -50.53
+      ],
+      "radius": 1.4,
+      "rotY": 5.26,
+      "minTier": "T4"
+    },
+    {
+      "asset": "reeds",
+      "pos": [
+        -90.4,
+        0,
+        -59.55
+      ],
+      "radius": 1.4,
+      "rotY": 3.12,
+      "minTier": "T4"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        88
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        78
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        68
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        58
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        48
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        38
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        28
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        18
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        -2
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -2.8,
+        0,
+        -12
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        2.8,
+        0,
+        -22
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        60.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        63.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -34,
+        0,
+        60.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        46.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        49.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        34,
+        0,
+        46.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        32.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        35.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -34,
+        0,
+        32.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        18.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        21.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        34,
+        0,
+        18.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        4.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        7.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -34,
+        0,
+        4.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        -9.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        -6.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        34,
+        0,
+        -9.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -12,
+        0,
+        -23.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -23,
+        0,
+        -20.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -34,
+        0,
+        -23.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        12,
+        0,
+        -35.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        23,
+        0,
+        -32.1
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        34,
+        0,
+        -35.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        14,
+        0,
+        81.8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        26,
+        0,
+        86.2
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        38,
+        0,
+        81.8
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -10,
+        0,
+        -36
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        10,
+        0,
+        -36
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -10,
+        0,
+        -50
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        10,
+        0,
+        -50
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-handover",
+      "stage": 1,
+      "pos": [
+        -42,
+        0,
+        62
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        62
+      ],
+      "label": "Bench 1 - The Handover",
+      "structure": "sluice-gate",
+      "built": false,
+      "flat": {
+        "x": -43.9,
+        "z": 62,
+        "r": 11.06
+      }
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-scale",
+      "stage": 2,
+      "pos": [
+        42,
+        0,
+        48
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        48
+      ],
+      "label": "Bench 2 - Reading the Scale",
+      "structure": "gauge-house",
+      "built": false,
+      "flat": {
+        "x": 43.2,
+        "z": 48,
+        "r": 10.56
+      }
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-weak",
+      "stage": 3,
+      "pos": [
+        -42,
+        0,
+        34
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        34
+      ],
+      "label": "Bench 3 - Weak Acids",
+      "structure": "twin-tanks",
+      "built": true,
+      "flat": {
+        "x": -43.5,
+        "z": 34,
+        "r": 10.77
+      }
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-structure",
+      "stage": 4,
+      "pos": [
+        42,
+        0,
+        20
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        20
+      ],
+      "label": "Bench 4 - Acid Structure",
+      "structure": "valve-gallery",
+      "built": false,
+      "flat": {
+        "x": 43.2,
+        "z": 20,
+        "r": 10.7
+      }
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-salts",
+      "stage": 5,
+      "pos": [
+        -42,
+        0,
+        6
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        6
+      ],
+      "label": "Bench 5 - Salts",
+      "structure": "settling-basin",
+      "built": false,
+      "flat": {
+        "x": -43.8,
+        "z": 6,
+        "r": 10.99
+      }
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-titrate",
+      "stage": 6,
+      "pos": [
+        42,
+        0,
+        -8
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        -8
+      ],
+      "label": "Bench 6 - Titration Curves",
+      "structure": "dosing-tower",
+      "built": false,
+      "flat": {
+        "x": 43.5,
+        "z": -8,
+        "r": 10.77
+      }
+    },
+    {
+      "id": "site-7",
+      "questId": "q7-buffer",
+      "stage": 7,
+      "pos": [
+        -42,
+        0,
+        -22
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        -22
+      ],
+      "label": "Bench 7 - Buffers",
+      "structure": "surge-tank",
+      "built": false,
+      "flat": {
+        "x": -43.7,
+        "z": -22,
+        "r": 10.91
+      }
+    },
+    {
+      "id": "site-8",
+      "questId": "q8-capacity",
+      "stage": 8,
+      "pos": [
+        42,
+        0,
+        -34
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        -34
+      ],
+      "label": "Bench 8 - pKa and Capacity",
+      "structure": "reserve-vats",
+      "built": false,
+      "flat": {
+        "x": 43.4,
+        "z": -34,
+        "r": 10.84
+      }
+    }
+  ],
+  "spawn": {
+    "pos": [
+      0,
+      1.6,
+      92
+    ],
+    "lookAt": [
+      0,
+      1.6,
+      40
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          -37.4,
+          1.6,
+          62
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          62
+        ]
+      },
+      "site-2": {
+        "pos": [
+          37.4,
+          1.6,
+          48
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          48
+        ]
+      },
+      "site-3": {
+        "pos": [
+          -37.4,
+          1.6,
+          34
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          34
+        ]
+      },
+      "site-4": {
+        "pos": [
+          37.4,
+          1.6,
+          20
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          20
+        ]
+      },
+      "site-5": {
+        "pos": [
+          -37.4,
+          1.6,
+          6
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          6
+        ]
+      },
+      "site-6": {
+        "pos": [
+          37.4,
+          1.6,
+          -8
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          -8
+        ]
+      },
+      "site-7": {
+        "pos": [
+          -37.4,
+          1.6,
+          -22
+        ],
+        "lookAt": [
+          -42,
+          1.2,
+          -22
+        ]
+      },
+      "site-8": {
+        "pos": [
+          37.4,
+          1.6,
+          -34
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          -34
+        ]
+      }
+    }
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6",
+      "site-7",
+      "site-8"
+    ]
+  },
+  "tracks": []
+}

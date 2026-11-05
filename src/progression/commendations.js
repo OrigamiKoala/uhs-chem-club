@@ -249,6 +249,15 @@ export const COMMENDATIONS = [
     earnedBy: (s) => Boolean(s.learn && s.learn['unit08/q1-both']?.completedAt)
   },
   {
+    id: 'learn_q6_handover',
+    name: 'The Handover',
+    line: 'Followed a proton across the sluice gate of Verdigris.',
+    tier: 'brass',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit09/q1-handover']?.completedAt)
+  },
+  {
     id: 'learn_q4_weigh',
     name: 'Molar Scale',
     line: 'Counted by weighing on the salt flats of Tallow.',

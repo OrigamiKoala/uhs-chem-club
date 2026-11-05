@@ -27,7 +27,8 @@ const BOSS_LOOK = {
   'the crucible':      { name: 'The Crucible',      attack: 0xff6b2b, ember: 0xff9d3b },
   'the undertow':      { name: 'The Undertow',      attack: 0xd8ecf2, ember: 0xa9d4e0 },
   'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a },
-  'the tipper':        { name: 'The Tipper',        attack: 0xe9eee8, ember: 0xa9c4c2 }
+  'the tipper':        { name: 'The Tipper',        attack: 0xe9eee8, ember: 0xa9c4c2 },
+  'the leach':         { name: 'The Leach',         attack: 0xb7d8c4, ember: 0x8fc2a4 }
 };
 
 /** Health is cosmetic: each phase takes an equal share, and the last takes the rest. */
@@ -125,6 +126,16 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -54],
     scale: 1.4,
     species: 'the tipper'
+  },
+  // On the pump house court at the south end of the spine, on the shore of the sump, the largest pool (`world-data/verdigris.json` keeps this
+  // ground open; `verify:verdigris` holds the two together). The Leach's body is in `boss-models.js`; the quest `boss-leach` is built apart.
+  'boss-leach': {
+    worldId: 'unit09',
+    playerPos: [0, 1.6, -38],
+    lookAtPos: [0, 1.6, -54],
+    bossPos: [0, 0, -54],
+    scale: 1.4,
+    species: 'the leach'
   }
 };
 

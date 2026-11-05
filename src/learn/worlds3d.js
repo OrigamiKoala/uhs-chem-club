@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts fourteen worlds. Eight of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle and Teeter — are built
+ * The Learn road charts fourteen worlds. Nine of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter and Verdigris — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -19,6 +19,7 @@ import emberData from '../three/world-data/ember.json' with { type: 'json' };
 import mirrowenData from '../three/world-data/mirrowen.json' with { type: 'json' };
 import kettleData from '../three/world-data/kettle.json' with { type: 'json' };
 import teeterData from '../three/world-data/teeter.json' with { type: 'json' };
+import verdigrisData from '../three/world-data/verdigris.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -156,6 +157,26 @@ const WORLDS_3D = {
       for (const site of teeterData.sites) {
         if (!site.built) continue;
         stage.setTeeterSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit09: {
+    id: 'unit09',
+    key: 'verdigris',
+    worldName: 'Verdigris',
+    data: verdigrisData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterVerdigrisScene(siteId, playerPos, lookAtPos);
+    },
+    /** The site for a quest, or null. Every bench of the plan has a host already, live or not; the boss and unknown ids have none. */
+    siteForQuest(questId) {
+      return verdigrisData.sites.find(s => s.questId === questId) || null;
+    },
+    /** Light the site indicator for every quest the player has finished. */
+    syncProgress(stage, isComplete) {
+      for (const site of verdigrisData.sites) {
+        if (!site.built) continue;
+        stage.setVerdigrisSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },
