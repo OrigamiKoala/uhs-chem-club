@@ -413,11 +413,12 @@ export function markerFixture(id, label, at, { min = 0, max = 8, step = 0.5, w =
 }
 
 /** A dial with named positions: set it to the one the table shows. */
-export function selectorFixture(id, label, at, { options, start = 1, w = 46 } = {}) {
+export function selectorFixture(id, label, at, { options, start = 1, w = 46, list = false } = {}) {
+  const shown = options.filter(o => o.trim()).length;
   return {
-    id, kind: 'selector', label, at: { ...at }, size: { w, h: 16 }, noRun: true,
+    id, kind: 'selector', label, at: { ...at }, size: { w, h: list ? 15 + shown * 3.5 : 16 }, noRun: true,
     dials: { value: { min: 1, max: options.length, step: 1, value: start, label: 'Set to', labels: options } },
-    props: { options }
+    props: { options, ...(list ? { list: true } : {}) }
   };
 }
 

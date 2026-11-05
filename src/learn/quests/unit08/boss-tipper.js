@@ -242,7 +242,7 @@ export const STAGES = [
     table: pansTable({
       fixtures: [
         stressVessel('v', { x: 52, y: 30 }, { ...P4, dials: { vol: { ...P4_VOL, value: P4_VOL.max } } }),
-        selectorFixture('ans', 'NO₂ amount', { x: 127, y: 40 }, { options: P4_OPTIONS, start: 4 })
+        selectorFixture('ans', 'NO₂ amount', { x: 127, y: 40 }, { options: P4_OPTIONS, start: 4, list: true })
       ]
     }),
     foes: TIPPER_FOE,
@@ -269,7 +269,7 @@ export const STAGES = [
     reward: {
       log: 'Squeezing the vessel left less NO₂.',
       title: 'Which Side Has Fewer Molecules',
-      body: 'The squeeze doubled the pressure of both gases and put Q at twice K, so the vessel moved toward N₂O₄, which has fewer molecules than the NO₂ it comes from. The NO₂ amount fell.'
+      body: 'Squeezing the vessel raised the pressure of both gases and put Q above K, so the vessel moved toward N₂O₄, which has fewer molecules than the NO₂ it comes from. The NO₂ amount fell.'
     }
   },
 

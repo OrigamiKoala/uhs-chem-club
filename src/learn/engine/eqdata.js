@@ -262,6 +262,8 @@ export const Q4 = Object.freeze({
   flipOne: { lhs: [[2, 'D']], rhs: [[1, 'E']], K: 0.8 },
   doubleOne: { lhs: [[1, 'F'], [1, 'G']], rhs: [[1, 'H']], K: 5.0 },
   bothOne: { lhs: [[1, 'M'], [1, 'N']], rhs: [[2, 'O']], K: 0.4 },
+  // Written twice as large already (K 36): the card half as large reads at the square root, 6.
+  halfOne: { lhs: [[2, 'M'], [2, 'N']], rhs: [[2, 'W']], K: 36 },
   addX: { lhs: [[1, 'X']], rhs: [[1, 'Y']], K: 2.0 },
   addY: { lhs: [[1, 'Y']], rhs: [[1, 'Z']], K: 0.3 },
   // The stack stages

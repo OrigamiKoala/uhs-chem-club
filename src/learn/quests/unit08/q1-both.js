@@ -4,10 +4,10 @@
  * Teeter's salt pans, on the pans kit (`table/kits/pans.js`). A pan holds 48 particles; each is A (orange) or B (blue) and turns to the
  * other with a fixed chance per tick. Eight stages and ONE click: the belief that once the amounts stop changing, nothing is happening.
  *
- *   1  A alone, run until it settles                  -> some A is left; the amounts stop changing
+ *   1  A alone, run until it settles; what does the pan hold?  -> some A is left; the amounts stop changing
  *   2  PREDICT: what are the particles doing once the graph is flat?
  *   3  TEST: ringed particles in the settled pan      -> dynamic equilibrium (both changes keep going)
- *   4  B alone, run until it settles                  -> the same level from the other end
+ *   4  B alone, run until it settles; against the dashed line   -> the same level from the other end
  *   5  match the settled pan to a particle diagram    -> a particulate picture of equilibrium (CED 7.8)
  *   6  two settled pans, one statement is false       -> the amounts need not be equal
  *   7  label two pans with an arrow                   -> reversible reaction (double arrow)
@@ -23,7 +23,7 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { pansTable, panFixture, markerFixture, selectorFixture, note, panRead, pieceIn, dialValue, TRACERS, stateOfParticle } from '../../table/kits/pans.js';
+import { pansTable, panFixture, selectorFixture, note, panRead, pieceIn, dialValue, TRACERS, stateOfParticle } from '../../table/kits/pans.js';
 import { diagramCard, arrowCard } from '../../table/kits/pans-pan.js';
 
 export const meta = { stageCount: 8 };
@@ -52,17 +52,9 @@ const GUESS = {
 // The pans: 48 particles; A turns to B with chance kf per tick and B to A with chance kr.
 const P_LEVEL = { kf: 0.1, kr: 0.05 };
 const TOL = 5;
-
-/** The marker is checked against the level the pan has settled at, or waits until the pan has run long enough to have one. */
-function markerCheck(state, fid, markerId) {
-  const t = state.table;
-  const r = panRead(t, fid);
-  const v = dialValue(t, markerId);
-  if (r.settledA == null) return { ok: false, notYet: true, msg: 'The orange line on the graph is still falling.' };
-  if (Math.abs(v - r.settledA) <= TOL) return { ok: true };
-  if (r.t < 60) return { ok: false, msg: 'The orange line on the graph has not stopped moving.' };
-  return { ok: false, msg: v > r.settledA ? 'The orange line on the graph flattens below the marker.' : 'The orange line on the graph flattens above the marker.' };
-}
+const LEVEL_A = Math.round(48 * P_LEVEL.kr / (P_LEVEL.kf + P_LEVEL.kr));
+const HOLDS = ['Only A', 'Only B', 'Both A and B', ' '];
+const VS_DASHED = ['Lower', 'Level', 'Higher', ' '];
 
 /** How many times the ringed particles changed colour in the strip (the last 40 ticks). */
 function ringedChanges(r) {
@@ -79,20 +71,29 @@ export const STAGES = [
   {
     id: 's1-settle',
     title: 'A Alone',
-    prompt: 'Mark how many particles of A are left once the amounts in the pan stop changing.',
+    prompt: 'Run the pan until the amounts stop changing, then set the dial to what it holds.',
     widget,
     table: pansTable({
       fixtures: [
         panFixture('pan', { x: 52, y: 27 }, { ...P_LEVEL, b0: 0, seed: 11, title: 'Pan: A alone' }),
-        markerFixture('mark', 'A left', { x: 126, y: 24 }, { min: 0, max: 48, step: 1, start: 48 })
+        selectorFixture('ans', 'The pan holds', { x: 126, y: 24 }, { options: HOLDS, start: 4, list: true })
       ]
     }),
     hints: [
-      'Use the "Run" key on the pan and the marker.',
-      'Watch the orange line on the graph until it stops moving.',
-      'Set the marker to where the orange line has flattened.'
+      'Use the "Run" key on the pan and the answer dial.',
+      'Watch the orange and blue lines on the graph until both stop moving.',
+      'Compare the two counts under the graph once the lines are flat with the counts when the pan began.'
     ],
-    check(state) { return markerCheck(state, 'pan', 'mark'); },
+    check(state) {
+      const t = state.table;
+      const v = Math.round(dialValue(t, 'ans'));
+      if (v === 4) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      const r = panRead(t, 'pan');
+      if (r.settledA == null) return { ok: false, notYet: true, msg: 'The orange line on the graph is still falling.' };
+      if (v === 3) return { ok: true };
+      if (v === 1) return { ok: false, msg: `The counts under the graph read ${r.a} of A and ${r.b} of B.` };
+      return { ok: false, msg: `The counts under the graph read ${r.a} of A and ${r.b} of B once the lines are flat.` };
+    },
     reward: {
       log: 'Some A was left when the amounts stopped changing.',
       title: 'The Amounts Settle',
@@ -145,7 +146,7 @@ export const STAGES = [
     table: pansTable({
       fixtures: [
         panFixture('pan', { x: 52, y: 32 }, { ...P_LEVEL, b0: 0, seed: 23, start: 100, tracer: true, title: 'Settled pan, eight particles ringed' }),
-        selectorFixture('verdict', 'What is happening', { x: 127, y: 22 }, { options: ['Everything has stopped', 'Particles are still changing', ' '], start: 3 })
+        selectorFixture('verdict', 'What is happening', { x: 127, y: 22 }, { options: ['Everything has stopped', 'Particles are still changing', ' '], start: 3, list: true })
       ]
     }),
     hints: [
@@ -175,20 +176,30 @@ export const STAGES = [
   {
     id: 's4-from-b',
     title: 'B Alone',
-    prompt: 'Mark how many particles of A there are once a pan that starts with only B has stopped changing.',
+    prompt: 'Run the B-only pan until it stops changing, then set the dial to where its A ends against the dashed line.',
     widget,
     table: pansTable({
       fixtures: [
         panFixture('pan', { x: 52, y: 27 }, { ...P_LEVEL, b0: 48, seed: 31, title: 'Pan: B alone', ghost: { b0: 0, seed: 11 } }),
-        markerFixture('mark', 'A left', { x: 126, y: 24 }, { min: 0, max: 48, step: 1, start: 0 })
+        selectorFixture('ans', 'A against the dashed line', { x: 126, y: 24 }, { options: VS_DASHED, start: 4, list: true })
       ]
     }),
     hints: [
-      'Use the "Run" key on the pan and the marker; the dashed line is the pan that started with only A.',
-      'Compare where the orange line ends with where it ended when A went first.',
-      'Set the marker to where the orange line has flattened.'
+      'Use the "Run" key on the pan and the answer dial; the dashed line is the pan that started with only A.',
+      'Compare where the orange line ends with where the dashed orange line ended.',
+      'Look at both lines once the solid one has flattened, and see whether one stands above the other.'
     ],
-    check(state) { return markerCheck(state, 'pan', 'mark'); },
+    check(state) {
+      const t = state.table;
+      const v = Math.round(dialValue(t, 'ans'));
+      if (v === 4) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      const r = panRead(t, 'pan');
+      if (r.settledA == null) return { ok: false, notYet: true, msg: 'The orange line on the graph is still moving.' };
+      const same = Math.abs(r.settledA - LEVEL_A) <= TOL;
+      const truth = same ? 2 : r.settledA > LEVEL_A ? 3 : 1;
+      if (v === truth) return { ok: true };
+      return { ok: false, msg: `The solid orange line flattens near ${Math.round(r.settledA)} particles of A; the dashed one flattened near ${LEVEL_A}.` };
+    },
     reward: {
       log: 'B alone settled at the same amounts.',
       title: 'Same Level From Either End',
@@ -360,10 +371,10 @@ const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value 
 const runs = (fid, n) => Array.from({ length: n }, () => ({ run: fid }));
 
 export const SOLUTIONS = [
-  [...runs('pan', 10), dial('mark', 'value', 15)],
+  [...runs('pan', 10), dial('ans', 'value', 3)],
   [put('both', 'slot:guess')],
   [dial('verdict', 'value', 2)],
-  [...runs('pan', 10), dial('mark', 'value', 15)],
+  [...runs('pan', 10), dial('ans', 'value', 2)],
   [...runs('pan', 10), put('d4', 'slot:match')],
   [put('c-equal', 'slot:false')],
   [put('one', 'slot:l1'), put('two', 'slot:l2')],
@@ -371,10 +382,10 @@ export const SOLUTIONS = [
 ];
 
 export const MISSES = [
-  [...runs('pan', 10), dial('mark', 'value', 0)],
+  [...runs('pan', 10), dial('ans', 'value', 1)],
   [],
   [dial('verdict', 'value', 1)],
-  [...runs('pan', 10), dial('mark', 'value', 48)],
+  [...runs('pan', 10), dial('ans', 'value', 3)],
   [...runs('pan', 10), put('d2', 'slot:match')],
   [put('c-both', 'slot:false')],
   [put('two', 'slot:l1'), put('one', 'slot:l2')],

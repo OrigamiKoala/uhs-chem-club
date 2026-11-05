@@ -343,7 +343,7 @@ export const STAGES = [
       ],
       fixtures: [
         stackFixture('wanted', { x: 128, y: 18 }, { tray: 'stack', target: { lhs: [[1, 'glucose'], [1, 'ATP']], rhs: [[1, 'glucose-6-phosphate'], [1, 'ADP']] }, hideSum: true, w: 44, h: 30, symbol: 'ΔG°' }),
-        selectorFixture('answer', 'Net ΔG° (kJ/mol)', { x: 128, y: 42 }, { options: ['−16.7', '+44.3', '+16.7', '−44.3'], start: 4, w: 44 }),
+        selectorFixture('answer', 'Net ΔG° (kJ/mol)', { x: 128, y: 47.5 }, { options: ['−16.7', '+44.3', '+16.7', '−44.3'], start: 4, w: 44 }),
         plaqueFixture('ph', 'Given', { x: 26, y: 58 }, ['ΔG° at pH 7 and 298 K', 'Pi is phosphate'], { w: 44 })
       ],
       zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 78, y: 33 }, size: { w: 52, h: 52 }, cell: 50, cellH: 13 }] }

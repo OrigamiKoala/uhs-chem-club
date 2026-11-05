@@ -9,7 +9,7 @@
  *   1  flip a card on the check, then give the K of a card the check cannot read     -> 1/K for the reverse reaction
  *   2  PREDICT: what does writing the reaction twice as large do to K?
  *   3  TEST: double a card on the check, then a card it cannot read                  -> K raised to a power
- *   4  a card flipped and doubled                                                     -> the changes combine, one after the other
+ *   4  a card written half as large (K given for the doubled card)                  -> the square root
  *   5  two cards on the check, then two it cannot read                                -> the K of two added reactions is the product
  *   6  stack three cards into a wanted reaction                                       -> flip, enlarge, cancel
  *   7  a stack that is already built: its K from the printed K values                 -> rules as shorthand
@@ -53,8 +53,8 @@ const TALL = { h: 70 };
 const neg = k => `−${fmtK(k)}`;
 const T1 = { right: fmtK(kReverse(Q4.flipOne.K)), a: neg(Q4.flipOne.K), b: fmtK(1 - Q4.flipOne.K), c: fmtK(Q4.flipOne.K * Q4.flipOne.K) };
 const T3 = { right: fmtK(kScale(Q4.doubleOne.K, 2)), a: fmtK(2 * Q4.doubleOne.K), b: fmtK(Q4.doubleOne.K), c: fmtK(Q4.doubleOne.K / 2) };
-const K4 = kScale(kReverse(Q4.bothOne.K), 2);
-const T4 = { right: fmtK(K4), a: fmtK(kScale(Q4.bothOne.K, 2)), b: fmtK(kReverse(Q4.bothOne.K)), c: fmtK(2 * kReverse(Q4.bothOne.K)) };
+const K4 = kScale(Q4.halfOne.K, 0.5);
+const T4 = { right: fmtK(K4), a: fmtK(Q4.halfOne.K / 2), b: fmtK(2 * Q4.halfOne.K), c: fmtK(kScale(Q4.halfOne.K, 2)) };
 const K5 = kAdd(Q4.addX.K, Q4.addY.K);
 const T5 = { right: fmtK(K5), a: fmtK(Q4.addX.K + Q4.addY.K), b: fmtK(Q4.addX.K / Q4.addY.K), c: fmtK(Q4.addX.K - Q4.addY.K) };
 const K7 = kAdd(kOfCardByRule(Q4.readA, { scale: Q4.readA.scale }), kOfCardByRule(Q4.readB, { flipped: true }));
@@ -106,7 +106,7 @@ export const STAGES = [
   {
     id: 's1-reverse',
     title: 'The Other Way Round',
-    prompt: 'Lay the tile for the K of the card 2 D ⇌ E when it is flipped.',
+    prompt: 'Lay the K tile for E ⇌ 2 D, which is the card 2 D ⇌ E written in the reverse direction.',
     widget,
     table: pansTable({
       pieces: [
@@ -115,7 +115,7 @@ export const STAGES = [
         ...tiles([T1.b, T1.right, T1.a, T1.c])
       ],
       fixtures: [checkAt(Q4.mixP, ['A', 'B', 'C'])],
-      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of 2 D ⇌ E')] }
+      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of E ⇌ 2 D')] }
     }, TALL),
     hints: [
       'Use the pan check with "Read K", the "Flip" key while you hold a card, and the tiles.',
@@ -139,10 +139,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     id: 's2-predict',
-    title: 'Twice as Large',
+    title: 'Doubling a Reaction',
     // A PREDICT STAGE: no check, no card, no tile. The guess comes back with the test.
     predict: true,
-    prompt: 'What happens to the K of A + B ⇌ C when it is written twice as large?',
+    prompt: 'What happens to the K of A + B ⇌ C when every amount in it is doubled?',
     widget,
     table: pansTable({
       pieces: [note('doubles', GUESS.doubles, { x: 30, y: 14 }), note('same', GUESS.same, { x: 78, y: 14 }), note('squares', GUESS.squares, { x: 30, y: 36 }), note('halves', GUESS.halves, { x: 78, y: 36 })],
@@ -150,8 +150,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the four cards and the slot.',
-      'Think about whether writing the same reaction twice as large changes the mixture or only the way it is written.',
-      'K is a ratio of amounts, so work out what that ratio becomes when every amount in it is written twice.'
+      'Think about whether doubling every amount in the same reaction changes the mixture or only the way it is written.',
+      'K is a ratio of amounts, so work out what that ratio becomes when every amount in it is doubled.'
     ],
     check(state) {
       if (!pieceIn(state.table, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
@@ -164,17 +164,17 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the pan check reads the K of a card made twice as large.'
+      body: 'Next, the pan check reads the K of a card with every amount doubled.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     id: 's3-double',
-    title: 'Made Larger',
+    title: 'Every Amount Doubled',
     get prompt() {
       const g = guessLine();
-      return g ? `You predicted "${GUESS[g]}". Lay the tile for the K of the card F + G ⇌ H when it is written twice as large.` : 'Lay the tile for the K of the card F + G ⇌ H when it is written twice as large.';
+      return g ? `You predicted "${GUESS[g]}". Lay the tile for the K of F + G ⇌ H when every amount in it is doubled.` : 'Lay the tile for the K of F + G ⇌ H when every amount in it is doubled.';
     },
     widget,
     table: pansTable({
@@ -188,8 +188,8 @@ export const STAGES = [
     }, TALL),
     hints: [
       'Use the pan check with "Read K", the "Larger" key while you hold a card, and the tiles.',
-      'Compare the K the check reads for A + B ⇌ C as it is written with the K it reads when the card is made twice as large.',
-      'Find how the K changed when the card was made twice as large, then make that same change to the K printed on the other card.'
+      'Compare the K the check reads for A + B ⇌ C as it is written with the K it reads when every amount in the card is doubled.',
+      'Find how the K changed when every amount was doubled, then make that same change to the K printed on the other card.'
     ],
     check(state) {
       return tileCheck(state, T3.right, t => {
@@ -202,44 +202,44 @@ export const STAGES = [
       const g = guessLine();
       const said = !g ? '' : g === 'squares' ? 'You predicted the K would be multiplied by itself, and the check agreed. ' : g === 'doubles' ? 'You predicted K would double; the check read the doubled card at a very different number. ' : 'The check did not agree with your prediction, which is how a guess gets better. ';
       return {
-        log: 'A card twice as large read at K squared.',
+        log: 'A card with every amount doubled read at K squared.',
         title: 'K to a Power',
-        body: `${said}Writing every amount in a reaction c times as large raises its K to the power c. Doubling the reaction squares K; it does not double it.`
+        body: `${said}Multiplying every amount in a reaction by c raises its K to the power c. Doubling every amount squares K; it does not double it.`
       };
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    id: 's4-both',
-    title: 'Turned and Doubled',
-    prompt: 'Lay the tile for the K of the card M + N ⇌ 2 O when it is flipped and written twice as large.',
+    id: 's4-half',
+    title: 'Every Amount Halved',
+    prompt: 'Lay the K tile for M + N ⇌ W, which is 2 M + 2 N ⇌ 2 W with every amount halved.',
     widget,
     table: pansTable({
       pieces: [
         rxnCard('p', { x: CARD_X, y: 12 }, Q4.P),
-        rxnCard('m', { x: CARD_X, y: 28 }, Q4.bothOne),
+        rxnCard('m', { x: CARD_X, y: 28 }, Q4.halfOne),
         ...tiles([T4.b, T4.c, T4.a, T4.right])
       ],
       fixtures: [checkAt(Q4.mixP, ['A', 'B', 'C'])],
-      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of M + N ⇌ 2 O')] }
+      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of M + N ⇌ W')] }
     }, TALL),
     hints: [
-      'Use the pan check, the "Flip" and "Larger" keys while you hold a card, and the tiles.',
-      'Read the check for A + B ⇌ C flipped, made larger, and both, and compare each with the card as written.',
-      'The card is changed in two ways, so make to its printed K the change each one made on the check, one after the other.'
+      'Use the pan check with "Read K", the "Larger" key while you hold a card, and the tiles.',
+      'Read the check for A + B ⇌ C as written and with every amount doubled, and compare the two K values.',
+      'Doubling every amount changed K by a rule on the check; the card on the table is already doubled, so undo that change on its printed K.'
     ],
     check(state) {
       return tileCheck(state, T4.right, t => {
-        const eq = eqOf(Q4.P, { flipped: true, scale: 2 });
+        const eq = eqOf(Q4.P, { scale: 2 });
         const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that tile does not make the same changes to the K on M + N ⇌ 2 O.` : 'The check has not read a card that is both flipped and larger yet.';
+        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that tile does not undo that change on the K of 2 M + 2 N ⇌ 2 W.` : 'The check has not read a card made larger yet.';
       });
     },
     reward: {
-      log: 'A flipped, doubled card read at both changes.',
-      title: 'Two Changes, One After the Other',
-      body: 'A card changed in two ways has its K changed in the same two ways: one divided into 1 for the flip, and a power for the larger amounts. The order does not matter.'
+      log: 'A card with every amount halved read at the square root of its K.',
+      title: 'K to a Fraction',
+      body: 'Halving every amount in a reaction takes the square root of its K, which undoes the squaring that doubling does. Multiplying every amount by c raises K to the power c.'
     }
   },
 
@@ -296,7 +296,7 @@ export const STAGES = [
     hints: [
       'Use the three cards, the "Flip" and "Larger" keys while you hold a card, and the stack.',
       'Compare what the stack adds up to with the wanted reaction, substance by substance.',
-      'A substance must appear once on each side to cancel, so flip a card that has it on the wrong side and make cards larger until the amounts match.'
+      'A substance must appear once on each side to cancel, so flip a card that has it on the wrong side and multiply cards with "Larger" until the amounts match.'
     ],
     check(state) {
       const t = state.table;
@@ -308,7 +308,7 @@ export const STAGES = [
     reward: {
       log: 'The stack added up to the wanted reaction.',
       title: 'Cancelling to a Wanted Reaction',
-      body: 'To reach a wanted reaction, flip a card to put a substance on the side it is needed, make cards larger until the amounts match, and let what is left over cancel.'
+      body: 'To reach a wanted reaction, flip a card to put a substance on the side it is needed, multiply cards with "Larger" until the amounts match, and let what is left over cancel.'
     }
   },
 
@@ -329,14 +329,14 @@ export const STAGES = [
     }),
     hints: [
       'Use the stack, the two cards in it, and the tiles.',
-      'Read how each card in the stack has been changed, flipped, larger, or both, beside the K it was printed with.',
+      'Read how each card in the stack has been changed (flipped, multiplied, or both), beside the K it was printed with.',
       'Change each printed K as its card was changed, then combine the changed values the way the cards are combined.'
     ],
     check(state) {
       return tileCheck(state, T7.right, t => {
         const cards = stackCards(t, 'stack');
         const flipped = cards.filter(c => c.flipped).map(c => c.id).join(', ');
-        return `The stack holds ${cards.length} cards, ${flipped ? 'one flipped' : 'none flipped'} and one made larger; that tile does not match the K values printed on them changed to fit.`;
+        return `The stack holds ${cards.length} cards, ${flipped ? 'one flipped' : 'none flipped'} and one multiplied; that tile does not match the K values printed on them changed to fit.`;
       });
     },
     reward: {
@@ -404,7 +404,7 @@ export const SOLUTIONS = [
   [put('p', 'tray:chk'), read, flip('p'), read, put('t2', 'slot:ans')],
   [put('squares', 'slot:guess')],
   [put('p', 'tray:chk'), read, larger('p', 2), read, put('t3', 'slot:ans')],
-  [put('p', 'tray:chk'), flip('p'), larger('p', 2), read, put('t4', 'slot:ans')],
+  [put('p', 'tray:chk'), larger('p', 2), read, put('t4', 'slot:ans')],
   [put('c1', 'tray:chk'), read, put('c2', 'tray:chk'), read, put('t3', 'slot:ans')],
   [put('a', 'tray:stack'), larger('a', 2), put('b', 'tray:stack'), flip('b'), larger('b', 2)],
   [put('t4', 'slot:ans')],
@@ -415,7 +415,7 @@ export const MISSES = [
   [put('p', 'tray:chk'), flip('p'), read, put('t1', 'slot:ans')],
   [],
   [put('p', 'tray:chk'), larger('p', 2), read, put('t1', 'slot:ans')],
-  [put('p', 'tray:chk'), flip('p'), larger('p', 2), read, put('t1', 'slot:ans')],
+  [put('p', 'tray:chk'), larger('p', 2), read, put('t1', 'slot:ans')],
   [put('c1', 'tray:chk'), put('c2', 'tray:chk'), read, put('t1', 'slot:ans')],
   [put('a', 'tray:stack'), put('b', 'tray:stack')],
   [put('t1', 'slot:ans')],

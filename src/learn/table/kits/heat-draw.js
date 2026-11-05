@@ -638,6 +638,16 @@ function paintMarker(ctx, f, state, b) {
 function paintSelector(ctx, f, state, b) {
   const F = frameOf(b);
   const i = Math.round(f.dials.value.value) - 1;
+  if (f.props.list) {
+    // Every option stands on the card; the one the dial points at is lit.
+    let row = 0;
+    f.props.options.forEach((o, k) => {
+      if (!o.trim()) return;
+      say(ctx, o, F.x(3), F.y(14.2 + row * 3.5), F.size(3, 8), { align: 'left', weight: k === i ? 700 : 400, color: k === i ? AMBER : DIM, maxW: F.len(f.size.w - 6) });
+      row++;
+    });
+    return;
+  }
   say(ctx, f.props.options[i] ?? '', F.x(f.size.w - 3), F.y(f.size.h - 3.4), F.size(3.4, 8), { align: 'right', weight: 700, color: AMBER, maxW: F.len(f.size.w - 6) });
 }
 

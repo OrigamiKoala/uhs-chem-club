@@ -83,6 +83,9 @@ export function pansTable(spec, { w = PANS_BOUNDS.w, h = PANS_BOUNDS.h, recorder
   return { kit: PANS_KIT_ID, bounds: { w, h }, tools: [], recorder: recorder || { ...HEAT_RECORDER, at: { x: w - 2.6, y: h - 2.4 } }, ...spec };
 }
 
+import { selectorFixture as heatSelector } from './heat.js';
+/** A selector with `list: true` prints every option on its card, so text choices are readable before the dial moves. */
+export const selectorFixture = (id, label, at, o = {}) => heatSelector(id, label, at, { list: false, ...o });
 export * from './heat.js';
 export * from './pans-read.js';
 export { panFixture } from './pans-pan.js';
