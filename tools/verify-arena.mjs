@@ -32,6 +32,7 @@ await import('../src/three/bellows.js');
 await import('../src/three/ember.js');
 await import('../src/three/mirrowen.js');
 await import('../src/three/kettle.js');
+await import('../src/three/teeter.js');
 const { collectBoxes } = await import('./lib/overlap.mjs');
 const { arenaTablePlan, buildArenaTable, ARENA_TABLE } = await import('../src/three/arena-table.js');
 const { BOSS_ARENA_SPOTS } = await import('../src/learn/engine/boss-arena.js');
@@ -52,7 +53,8 @@ const WORLDS = [
   ['unit04', 'Bellows', '../src/three/bellows.js', 'BellowsWorld', 'boss-compressor'],
   ['unit05', 'Ember Reach', '../src/three/ember.js', 'EmberReachWorld', 'boss-crucible'],
   ['unit06', 'Mirrowen', '../src/three/mirrowen.js', 'MirrowenWorld', 'boss-undertow'],
-  ['unit07', 'Kettle', '../src/three/kettle.js', 'KettleWorld', 'boss-golem']
+  ['unit07', 'Kettle', '../src/three/kettle.js', 'KettleWorld', 'boss-golem'],
+  ['unit08', 'Teeter', '../src/three/teeter.js', 'TeeterWorld', 'boss-tipper']
 ];
 
 const IGNORED = /cobbles|scrub|pebble|gravel|grass|dust|snow|ice-|decal/i;

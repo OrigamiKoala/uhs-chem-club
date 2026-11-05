@@ -192,3 +192,400 @@ export function ionProduct([m, n], cat, an) { return Math.pow(cat, m) * Math.pow
 export function kFromDeltaG(dGkJ, T = 298.15) { return Math.exp(-(dGkJ * 1000) / (R_GAS * T)); }
 export function deltaGFromK(K, T = 298.15) { return -(R_GAS * T * Math.log(K)) / 1000; }
 export const coupledDeltaG = (...dGs) => dGs.reduce((s, g) => s + g, 0);
+
+/* ================================================================== Teeter · q4-properties: the K of a rewritten reaction (CED 7.6) */
+
+/** K printed to three figures; a very large or very small one in the e-form a student types (3.20e-4). */
+export function fmtK(K) {
+  const k = K * (1 + 1e-9);
+  if (k >= 1000 || k < 0.001) {
+    const [m, e] = k.toExponential(2).split('e');
+    return `${m}e${Number(e)}`;
+  }
+  return Number(k.toPrecision(3)).toFixed(Math.max(0, 2 - Math.floor(Math.log10(Math.abs(Number(k.toPrecision(3)))))));
+}
+
+/** A reaction card as it stands: turned round if flipped, every coefficient times its multiplier. `lhs`, `rhs` are `[[n, species], ...]`. */
+export function rewriteCard({ lhs, rhs, flipped = false, scale = 1 }) {
+  const [L, R] = flipped ? [rhs, lhs] : [lhs, rhs];
+  return { lhs: L.map(([n, s]) => [n * scale, s]), rhs: R.map(([n, s]) => [n * scale, s]) };
+}
+
+/** What a set of cards adds up to: species -> signed coefficient (products positive), species that cancel removed. */
+export function netOfCards(cards) {
+  const net = {};
+  for (const c of cards) {
+    const t = rewriteCard(c);
+    for (const [n, s] of t.rhs) net[s] = (net[s] || 0) + n;
+    for (const [n, s] of t.lhs) net[s] = (net[s] || 0) - n;
+  }
+  for (const s of Object.keys(net)) if (Math.abs(net[s]) < 1e-9) delete net[s];
+  return net;
+}
+
+/** The two sides of a net, as `[[n, species], ...]` lists. */
+export function netSides(net) {
+  const lhs = Object.entries(net).filter(([, n]) => n < 0).map(([s, n]) => [-n, s]);
+  const rhs = Object.entries(net).filter(([, n]) => n > 0).map(([s, n]) => [n, s]);
+  return { lhs, rhs };
+}
+
+/** The K a mixture at equilibrium gives a reaction written as `net`: the ratio of the amounts it holds, read with this reaction's powers. */
+export const kOfNet = (net, amounts) => ratio(net, amounts);
+
+/**
+ * Amounts of a chain of one-for-one steps (S0 ⇌ S1 ⇌ S2 ...) at equilibrium, with `total` shared between them: each step's K is the
+ * ratio of the next amount to the one before.
+ */
+export function chainEquilibrium(Ks, names, total) {
+  const rel = [1];
+  for (const K of Ks) rel.push(rel[rel.length - 1] * K);
+  const sum = rel.reduce((a, b) => a + b, 0);
+  return Object.fromEntries(names.map((n, i) => [n, (total * rel[i]) / sum]));
+}
+
+const Q4_P = { A: -1, B: -1, C: 1 };
+const Q4_P_MIX = iceAmounts(Q4_P, { A: 1, B: 1, C: 0 }, 4).amounts;
+const Q4_CHAIN_MIX = chainEquilibrium([0.5, 3.0], ['A', 'B', 'C'], 2.4);
+
+/**
+ * The cards of q4. A card printed with K is a given; the K of a card the pan check measures is the ratio of the amounts its mixture
+ * holds. `K` on a pan-check card is that measured ratio, never typed in.
+ */
+export const Q4 = Object.freeze({
+  mixP: Q4_P_MIX,
+  mixChain: Q4_CHAIN_MIX,
+  P: { lhs: [[1, 'A'], [1, 'B']], rhs: [[1, 'C']], K: kOfNet(Q4_P, Q4_P_MIX) },
+  chain1: { lhs: [[1, 'A']], rhs: [[1, 'B']], K: kOfNet({ A: -1, B: 1 }, Q4_CHAIN_MIX) },
+  chain2: { lhs: [[1, 'B']], rhs: [[1, 'C']], K: kOfNet({ B: -1, C: 1 }, Q4_CHAIN_MIX) },
+  // Transfer cards (K given, no mixture on the check for them)
+  flipOne: { lhs: [[2, 'D']], rhs: [[1, 'E']], K: 0.8 },
+  doubleOne: { lhs: [[1, 'F'], [1, 'G']], rhs: [[1, 'H']], K: 5.0 },
+  bothOne: { lhs: [[1, 'M'], [1, 'N']], rhs: [[2, 'O']], K: 0.4 },
+  addX: { lhs: [[1, 'X']], rhs: [[1, 'Y']], K: 2.0 },
+  addY: { lhs: [[1, 'Y']], rhs: [[1, 'Z']], K: 0.3 },
+  // The stack stages
+  buildA: { lhs: [[1, 'A'], [1, 'B']], rhs: [[1, 'C']], K: 4.0 },
+  buildB: { lhs: [[1, 'D']], rhs: [[1, 'C']], K: 0.5 },
+  buildC: { lhs: [[1, 'C']], rhs: [[1, 'E']], K: 3.0 },
+  readA: { lhs: [[1, 'X']], rhs: [[1, 'Y']], K: 3.0, scale: 2 },
+  readB: { lhs: [[1, 'Z']], rhs: [[2, 'Y']], K: 0.4, flipped: true },
+  typedA: { lhs: [[1, 'A']], rhs: [[1, 'B']], K: 0.08 },
+  typedB: { lhs: [[1, 'C']], rhs: [[2, 'B']], K: 20 }
+});
+
+/** K of one card as it stands, by the rule alone (used only to lay out the answer tiles and to check the stages, never printed as evidence). */
+export const kOfCardByRule = (card, { flipped = false, scale = 1 } = {}) => kScale(flipped ? kReverse(card.K) : card.K, scale);
+
+/* ================================================================== Teeter · q5-ice: equilibrium concentrations (CED 7.7) */
+
+/** The change-row chip for a species with signed coefficient `nu`: "−x", "+2x". */
+export const iceChipLabel = nu => `${nu < 0 ? '−' : '+'}${Math.abs(nu) === 1 ? '' : Math.abs(nu)}x`;
+
+/** The equilibrium expression of one species: its start and its change chip, "1.0 − x", "2x". */
+export function iceExpression(start, nu) {
+  const ch = `${Math.abs(nu) === 1 ? '' : Math.abs(nu)}x`;
+  if (start === 0) return ch;
+  return `${Number(start.toPrecision(3))} ${nu < 0 ? '−' : '+'} ${ch}`;
+}
+
+/**
+ * The small-x extent: leave the reactants at their start amounts in the ratio and solve for x. For a reaction whose products start at zero
+ * x^m · Π ν^ν = K · Π c0^|ν| with m the sum of the product coefficients.
+ */
+export function approxExtent(species, initial, K) {
+  let m = 0; let top = K; let nuProd = 1;
+  for (const [name, nu] of Object.entries(species)) {
+    if (nu > 0) { m += nu; nuProd *= Math.pow(nu, nu); } else top *= Math.pow(initial[name], -nu);
+  }
+  return Math.pow(top / nuProd, 1 / m);
+}
+
+/** The share of the first reactant's start that has reacted when the reaction settles, as a percentage. */
+export function reactedPercent(species, initial, K) {
+  const x = iceExtent(species, initial, K);
+  const [name, nu] = Object.entries(species).find(([, n]) => n < 0);
+  return (100 * -nu * x) / initial[name];
+}
+
+/** K from a start and one settled amount: x from the known species, every amount from x, then the ratio. */
+export function kFromPartial(species, initial, known) {
+  const x = (known.value - (initial[known.name] ?? 0)) / species[known.name];
+  const am = {};
+  for (const [name, nu] of Object.entries(species)) am[name] = (initial[name] ?? 0) + nu * x;
+  return { x, amounts: am, K: ratio(species, am) };
+}
+
+/* ------------------------------------------------------------------ the solubility beaker (Teeter q7-dissolve) */
+
+/**
+ * The most formula units per litre a beaker can hold dissolved when the water already carries `cat0` of the cation and `an0` of the
+ * anion from other sources (a soluble salt with the ion in common, or a mixture). 0 when the ions already present are at or past Ksp.
+ * Ideal solution: concentrations stand for activities, no ion pairs, the volume does not change.
+ */
+export function dissolveCap(ksp, [m, n], cat0 = 0, an0 = 0) {
+  if (ionProduct([m, n], cat0, an0) >= ksp) return 0;
+  const f = s => m * Math.log(m * s + cat0) + n * Math.log(n * s + an0) - Math.log(ksp);
+  let lo = 0, hi = molarSolubility(ksp, [m, n]);
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    if (f(mid) < 0) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/**
+ * A beaker holding `total` mol/L of a salt (dissolved plus solid) in water that already carries `cat0` and `an0` of its ions:
+ * what is dissolved, what lies on the floor, the two ion concentrations and the ion product Q.
+ */
+export function dissolveState(ksp, ions, total, cat0 = 0, an0 = 0) {
+  const [m, n] = ions;
+  const cap = dissolveCap(ksp, ions, cat0, an0);
+  const dissolved = Math.min(total, cap);
+  const cat = cat0 + m * dissolved;
+  const an = an0 + n * dissolved;
+  return { cap, dissolved, solid: total - dissolved, cat, an, Q: ionProduct(ions, cat, an), saturated: total > cap };
+}
+
+/**
+ * Two solutions mixed, no solid yet: the ion product Q the mixture has, whether it is past Ksp, and (if so) how many mol/L of the salt
+ * come out as solid before the ions are back at Ksp.
+ */
+export function settleMixture(ksp, [m, n], cat0, an0) {
+  const Q = ionProduct([m, n], cat0, an0);
+  if (!(Q > ksp * (1 + 1e-9))) return { Q, forms: false, precipitate: 0 };
+  let lo = 0, hi = Math.min(cat0 / m, an0 / n);
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    if (ionProduct([m, n], cat0 - m * mid, an0 - n * mid) > ksp) lo = mid; else hi = mid;
+  }
+  return { Q, forms: true, precipitate: (lo + hi) / 2 };
+}
+
+/* ====================================================================== Teeter q2-k and q3-q: the ratio rig and the Q/K gauge
+ * (appended by the builder of those two benches; every function pure, nothing here is drawn)
+ *
+ * A "system" is a reaction with its constant: species with signed coefficients (reactants negative), K, the species left out of the
+ * ratio (`skip`: pure solids) and the unit its amounts are in. The rig reads `ratio()` over the arrangement of tiles laid on it; the
+ * Q/K gauge reads the same `ratio()` over a mixture and sets it against K. */
+
+const R_ATM = 0.082057; // L·atm/(mol·K)
+
+export const K_SYSTEMS = Object.freeze({
+  ab: { id: 'ab', eq: 'A ⇌ B', species: { A: -1, B: 1 }, K: 2, unit: 'mol/L', kind: 'c', model: true, source: 'model reaction: the pan of q1-both, K = kf/kr = 2' },
+  hi: { id: 'hi', eq: 'H₂ + I₂ ⇌ 2 HI', species: { H2: -1, I2: -1, HI: 2 }, names: { H2: 'H₂', I2: 'I₂' }, K: 54, unit: 'mol/L', kind: 'c', T: 698, source: REACTIONS.hi.source },
+  n2o4: { id: 'n2o4', eq: '2 NO₂ ⇌ N₂O₄', species: { NO2: -2, N2O4: 1 }, names: { NO2: 'NO₂', N2O4: 'N₂O₄' }, K: 6.7, unit: 'atm', kind: 'p', T: 298, source: REACTIONS.n2o4.source },
+  caco3: {
+    id: 'caco3', eq: 'CaCO₃(s) ⇌ CaO(s) + CO₂(g)', species: { CaCO3: -1, CaO: 1, CO2: 1 }, names: { CaCO3: 'CaCO₃', CaO: 'CaO', CO2: 'CO₂' },
+    skip: ['CaCO3', 'CaO'], K: 0.22, unit: 'atm', units: { CaCO3: 'mol', CaO: 'mol', CO2: 'atm' }, kind: 'p', T: 1073, solid: { V: 10, T: 1073 },
+    source: 'decomposition pressure of CaCO₃ near 800 °C (1073 K), about 0.22 atm; the solids are 10 L of vessel at 1073 K'
+  },
+  so3: { id: 'so3', eq: '2 SO₂ + O₂ ⇌ 2 SO₃', species: { SO2: -2, O2: -1, SO3: 2 }, names: { SO2: 'SO₂', O2: 'O₂', SO3: 'SO₃' }, K: 280, unit: 'mol/L', kind: 'c', T: 1000, source: 'textbook Kc about 2.8 × 10² at 1000 K (cross-check: ΔG° near −10 kJ gives Kp 3.3 per atm, Kc = Kp·RT = 270)' },
+  a2b: { id: 'a2b', eq: '2 A ⇌ B', species: { A: -2, B: 1 }, K: 1.2, unit: 'mol/L', kind: 'c', model: true, source: 'model reaction' },
+  abc: { id: 'abc', eq: 'A + B ⇌ 2 C', species: { A: -1, B: -1, C: 2 }, K: 3.6, unit: 'mol/L', kind: 'c', model: true, source: 'model reaction' }
+});
+
+/** A species as it is printed (subscripts). */
+export const spName = (sys, sp) => sys.names?.[sp] ?? sp;
+
+/**
+ * The amounts a mixture settles at. Solids are not in the ratio: a vessel with solids settles where the gas holds the pressure K
+ * (one gas, coefficient 1), and the solid changes by the moles of gas made, n = P·V/(R·T) (`sys.solid`).
+ */
+export function settleAmounts(sys, start, K = sys.K) {
+  if (sys.solid) {
+    const f = sys.solid.V / (R_ATM * sys.solid.T);
+    const peq = K;
+    const n = (peq - (start.CO2 ?? 0)) * f;
+    if (start.CaCO3 - n < 0 || start.CaO + n < 0) throw new Error('not enough solid to reach the pressure');
+    return { CaCO3: start.CaCO3 - n, CaO: start.CaO + n, CO2: peq };
+  }
+  return iceAmounts(sys.species, start, K, sys.skip || []).amounts;
+}
+
+/** The ratio of the reaction over a set of amounts: Q for a mixture, K for a settled one. */
+export const systemRatio = (sys, amounts) => ratio(sys.species, amounts, sys.skip || []);
+
+/** Net exponent of each species for an arrangement of tiles (`top`, `bottom`: lists of `{sp, p}`). */
+export function rigSpecies(top, bottom) {
+  const m = {};
+  for (const t of top) m[t.sp] = (m[t.sp] || 0) + t.p;
+  for (const t of bottom) m[t.sp] = (m[t.sp] || 0) - t.p;
+  return m;
+}
+
+/** What the rig reads on one pan: the ratio of the laid tiles over that pan's amounts. 1 for an empty rig. */
+export const rigReading = (top, bottom, amounts) => ratio(rigSpecies(top, bottom), amounts);
+
+/** Do the readings of the pans agree (all within `tol` of one another)? */
+export function readingsAgree(vals, tol = 0.004) {
+  if (!vals.length || !vals.every(v => Number.isFinite(v) && v > 0)) return false;
+  return Math.max(...vals) <= Math.min(...vals) * (1 + tol);
+}
+
+/** Is the arrangement the system's ratio (products over reactants: 'K'), the same turned over ('inverse'), or neither (null)? */
+export function rigOrientation(sys, top, bottom) {
+  const net = rigSpecies(top, bottom);
+  const names = Object.keys(sys.species).filter(s => !(sys.skip || []).includes(s));
+  const used = Object.keys(net).filter(s => net[s] !== 0);
+  if (used.some(s => !names.includes(s)) || names.some(s => !used.includes(s))) return null;
+  if (names.every(s => net[s] === sys.species[s])) return 'K';
+  if (names.every(s => net[s] === -sys.species[s])) return 'inverse';
+  return null;
+}
+
+/**
+ * The figures a student gets from the usual slips, for a typed K. `noPower`: coefficients left out; `inverted`: reactants over
+ * products; `invertedNoPower`; `multiplied`: each amount times its coefficient instead of raised to it; `added`: the amounts of a side
+ * added instead of multiplied.
+ */
+export function kSlips(sys, amounts) {
+  const sp = Object.keys(sys.species).filter(s => !(sys.skip || []).includes(s));
+  const prod = fn => sp.reduce((q, s) => q * Math.pow(fn(s), Math.sign(sys.species[s])), 1);
+  const right = systemRatio(sys, amounts);
+  const side = sg => sp.filter(s => Math.sign(sys.species[s]) === sg).reduce((t, s) => t + Math.pow(amounts[s], Math.abs(sys.species[s])), 0);
+  return {
+    right,
+    noPower: prod(s => amounts[s]),
+    inverted: 1 / right,
+    invertedNoPower: 1 / prod(s => amounts[s]),
+    multiplied: prod(s => Math.abs(sys.species[s]) * amounts[s]),
+    added: side(1) / side(-1)
+  };
+}
+
+/** Where the gauge's needle stands, -1 to 1: log10(Q/K) over `decades` decades each way, clamped to the ends. */
+export const gaugePos = (Q, K, decades = 3) => Math.max(-1, Math.min(1, Math.log10(Q / K) / decades));
+
+/** A mixture left to itself: its Q, which way it goes, and the amounts it settles at. */
+export function runMixture(sys, amounts) {
+  const Q = systemRatio(sys, amounts);
+  return { Q, K: sys.K, dir: direction(Q, sys.K, 1e-6), after: settleAmounts(sys, amounts) };
+}
+
+/** A number as printed to `sf` significant figures: plain between 0.001 and 100 000, else "m × 10^e". */
+export function fmtNum(v, sf = 3) {
+  if (!Number.isFinite(v)) return '—';
+  if (v === 0) return '0';
+  const a = Math.abs(v) * (1 + 1e-12);
+  if (a >= 1e5 || a < 1e-3) { const s = sciParts(v, sf); return `${s.m} × 10^${s.e < 0 ? '−' : ''}${Math.abs(s.e)}`; }
+  const dec = Math.max(0, sf - 1 - Math.floor(Math.log10(a)));
+  return (v * (1 + (v > 0 ? 1e-12 : -1e-12))).toFixed(dec);
+}
+
+/** The mantissa (as text, `sf` figures) and exponent of v. */
+export function sciParts(v, sf = 2) {
+  const a = Math.abs(v) * (1 + 1e-12);
+  let e = Math.floor(Math.log10(a));
+  let m = a / Math.pow(10, e);
+  if (Number(m.toFixed(sf - 1)) >= 10) { m /= 10; e += 1; }
+  return { m: (v < 0 ? '-' : '') + m.toFixed(sf - 1), e };
+}
+
+/* ================================================================== Teeter · q6-lean: pushing a settled gas (CED 7.9, 7.10) */
+
+/**
+ * The gas reactions of the vessel. `Kref` is Kp (atm to the power of the change in gas moles) at `Tref`; K at another temperature follows
+ * the van 't Hoff relation with ΔH held constant: ln(K2/K1) = −(ΔH/R)(1/T2 − 1/T1). Held constant, ΔH makes the Haber K a little off the
+ * tabulated one far from `Tref` (about a third at 773 K); the bench uses it as the rule it teaches.
+ */
+export const LEAN_RXNS = Object.freeze({
+  haber: {
+    id: 'haber', eq: 'N₂ + 3 H₂ ⇌ 2 NH₃', species: { N2: -1, H2: -3, NH3: 2 }, names: { N2: 'N₂', H2: 'H₂', NH3: 'NH₃' }, product: 'NH3',
+    dH: -92.2, Tref: 673.15, Kref: 1.64e-4,
+    source: 'Kp = 1.64e-4 atm⁻² at 400 °C (Kc = 0.5 L²/mol²); ΔH = −92.2 kJ per mole of reaction'
+  },
+  n2o4: {
+    id: 'n2o4', eq: 'N₂O₄ ⇌ 2 NO₂', species: { N2O4: -1, NO2: 2 }, names: { N2O4: 'N₂O₄', NO2: 'NO₂' }, product: 'NO2',
+    dH: 57.2, Tref: 298.15, Kref: 1 / REACTIONS.n2o4.Kp,
+    source: 'reciprocal of Kp = 6.7 atm⁻¹ for 2 NO₂ ⇌ N₂O₄ at 298 K; ΔH = +57.2 kJ per mole of reaction (ΔHf NO₂ 33.2, N₂O₄ 9.2 kJ/mol)'
+  }
+});
+
+/** Chance-free relaxation: every amount moves its share of the way to the new balance by 1 − e^(−k t) after t ticks. */
+export const LEAN_RATE = 0.1;
+/** The factor a catalyst multiplies the rate by (forward and reverse alike). */
+export const LEAN_CAT = 5;
+
+/** Kp at T (kelvin) by the van 't Hoff relation. */
+export function leanK(rxn, T) { return rxn.Kref * Math.exp(-((rxn.dH * 1000) / R_GAS) * (1 / T - 1 / rxn.Tref)); }
+
+/** Pressure of each gas (atm) for amounts `n` (mol) in V litres at T. */
+export function leanPressures(rxn, n, V, T) {
+  const out = {};
+  for (const name of Object.keys(rxn.species)) out[name] = (n[name] || 0) * R_ATM * T / V;
+  return out;
+}
+
+/** Q (in pressures) for the amounts as they stand. 0 when a product is missing. */
+export function leanQ(rxn, n, V, T) { return ratio(rxn.species, leanPressures(rxn, n, V, T)); }
+
+/** Total pressure (atm) of the reacting gases and `inert` mol of a gas that does not react. */
+export function leanTotalP(rxn, n, V, T, inert = 0) {
+  return (Object.keys(rxn.species).reduce((s, k) => s + (n[k] || 0), 0) + inert) * R_ATM * T / V;
+}
+
+/** Amounts of the gases once settled: the extent that puts Q on K(T), found by bisection on ln Q − ln K. */
+export function leanSettle(rxn, n, V, T) {
+  const K = leanK(rxn, T);
+  let lo = -Infinity; let hi = Infinity;
+  for (const [name, nu] of Object.entries(rxn.species)) {
+    const x0 = n[name] || 0;
+    if (nu > 0) lo = Math.max(lo, -x0 / nu); else hi = Math.min(hi, x0 / -nu);
+  }
+  const at = x => { const m = {}; for (const [name, nu] of Object.entries(rxn.species)) m[name] = (n[name] || 0) + nu * x; return m; };
+  const f = x => Math.log(leanQ(rxn, at(x), V, T)) - Math.log(K);
+  let a = lo + 1e-14 * (1 + Math.abs(lo)); let b = hi - 1e-14 * (1 + Math.abs(hi));
+  for (let i = 0; i < 200; i++) { const m = (a + b) / 2; if (f(m) < 0) a = m; else b = m; }
+  const x = (a + b) / 2;
+  return { x, n: at(x), K, Q: K };
+}
+
+/**
+ * One change made to a settled (or mixed) vessel. `base` is `{n, V, T}` as it stands; `st` is `{add: {species: mol (negative takes out)},
+ * V, T, inert, catalyst}`. Returns the vessel right after the change (`post`, the amounts as they were but Q and K re-read), where it
+ * settles (`eq`), the direction Q points, and the rate of settling `k`.
+ */
+export function leanStress(rxn, base, st = {}) {
+  const n = { ...base.n };
+  for (const [sp, d] of Object.entries(st.add || {})) n[sp] = Math.max(0, (n[sp] || 0) + d);
+  const V = st.V ?? base.V; const T = st.T ?? base.T;
+  const K = leanK(rxn, T);
+  const Q = leanQ(rxn, n, V, T);
+  const eq = leanSettle(rxn, n, V, T);
+  const inert = st.inert || 0;
+  return {
+    base, post: { n, V, T, Q, K, P: leanTotalP(rxn, n, V, T, inert) }, eq: { ...eq, V, T, P: leanTotalP(rxn, eq.n, V, T, inert) },
+    dir: direction(Q, K, 1e-6), inert, k: LEAN_RATE * (st.catalyst ? LEAN_CAT : 1)
+  };
+}
+
+/** The vessel `t` ticks after the change: every amount has moved the share 1 − e^(−k t) of its way. */
+export function leanAt(rxn, res, t) {
+  const frac = t <= 0 ? 0 : 1 - Math.exp(-res.k * t);
+  const n = {};
+  for (const [sp, nu] of Object.entries(rxn.species)) n[sp] = res.post.n[sp] + nu * res.eq.x * frac;
+  const { V, T, K } = res.post;
+  return { n, Q: leanQ(rxn, n, V, T), K, P: leanTotalP(rxn, n, V, T, res.inert), frac };
+}
+
+/** The first tick by which the vessel is within `tol` of the way to its balance. */
+export const leanSettleTick = (k, tol = 0.02) => Math.ceil(Math.log(1 / tol) / k - 1e-9);
+
+/** Settle `mix` at V and T, then take out all the product `cycles` times, settling again each time; `made` counts what was taken out and what is left. */
+export function leanYield(rxn, mix, { V, T, cycles = 0 }) {
+  let n = leanSettle(rxn, mix, V, T).n;
+  let out = 0;
+  for (let c = 0; c < cycles; c++) { out += n[rxn.product]; n = { ...n, [rxn.product]: 0 }; n = leanSettle(rxn, n, V, T).n; }
+  return { n, out, made: out + n[rxn.product] };
+}
+
+/** The reactions of q5 (ICE tables). K is Kc at the stated temperature; the pans labelled "A ⇌ 2 B" are stand-ins with the K printed on them. */
+export const Q5 = Object.freeze({
+  hi: { eq: 'H₂ + I₂ ⇌ 2 HI', species: { 'H₂': -1, 'I₂': -1, 'HI': 2 }, K: 54, T: 698 },
+  n2o4: { eq: 'N₂O₄ ⇌ 2 NO₂', species: { 'N₂O₄': -1, 'NO₂': 2 }, K: 5.9e-3, T: 298 },
+  gen: { eq: 'A ⇌ 2 B', species: { A: -1, B: 2 } }
+});
+
+/** `[{name, nu, init}]` for a reaction and its start amounts (species not named start at zero). */
+export const iceColumns = (species, init) => Object.entries(species).map(([name, nu]) => ({ name, nu, init: init[name] ?? 0 }));

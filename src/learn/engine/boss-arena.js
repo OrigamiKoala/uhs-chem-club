@@ -26,7 +26,8 @@ const BOSS_LOOK = {
   'the compressor':    { name: 'The Compressor',    attack: 0xdfe6e6, ember: 0xffa53a },
   'the crucible':      { name: 'The Crucible',      attack: 0xff6b2b, ember: 0xff9d3b },
   'the undertow':      { name: 'The Undertow',      attack: 0xd8ecf2, ember: 0xa9d4e0 },
-  'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a }
+  'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a },
+  'the tipper':        { name: 'The Tipper',        attack: 0xe9eee8, ember: 0xa9c4c2 }
 };
 
 /** Health is cosmetic: each phase takes an equal share, and the last takes the rest. */
@@ -114,6 +115,16 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -60],
     scale: 1.4,
     species: 'recipe golem'
+  },
+  // On the plaza at the north end of the causeway, on the shore of the largest pan (`world-data/teeter.json` keeps this ground open;
+  // `verify:teeter` holds the two together). The Tipper's body is built with its quest (`boss-models.js`); until then this is the ground only.
+  'boss-tipper': {
+    worldId: 'unit08',
+    playerPos: [0, 1.6, -38],
+    lookAtPos: [0, 1.6, -54],
+    bossPos: [0, 0, -54],
+    scale: 1.4,
+    species: 'the tipper'
   }
 };
 

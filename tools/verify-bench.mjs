@@ -307,6 +307,7 @@ ok('every Bellows quest is a tabletop: none plays the old gas rig');
 const { EmberReachWorld } = await import('../src/three/ember.js');
 const { MirrowenWorld } = await import('../src/three/mirrowen.js');
 const { KettleWorld } = await import('../src/three/kettle.js');
+const { TeeterWorld } = await import('../src/three/teeter.js');
 ok('every Ember Reach quest is a tabletop: none plays the old calorimeter');
 
 
@@ -785,7 +786,7 @@ console.log('The foes — spoil standing in the wells\n');
 
   for (const [label, key, World] of [
     ['Tallow', 'tallow', TallowWorld], ['Ligar', 'ligar', LigarWorld], ['Lanternfall', 'lanternfall', LanternfallWorld],
-    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld]
+    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld], ['Teeter', 'teeter', TeeterWorld]
   ]) {
     const proto = World.prototype;
     const baked = proto.bakeStatics;
@@ -1183,7 +1184,7 @@ console.log('The foes — spoil standing in the wells\n');
   const { chromeReserve } = await import('../src/learn/engine/lean.js');
   const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
   const { allQuests } = await import('../src/learn/curriculum.js');
-  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld };
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld, unit08: TeeterWorld };
   const worlds = new Map();
   const worldFor = unit => {
     if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }

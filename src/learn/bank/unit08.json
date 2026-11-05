@@ -1,60 +1,848 @@
 {
-  "world": "unit08",
-  "end": [],
-  "bench": {
-    "q1-both": {
-      "problems": [
-        {
-          "id": "q1-both#b1",
-          "quest": "q1-both",
-          "question": "A sealed flask holding A and B has stopped changing colour. Which statement is correct?",
-          "options": [
-            {
-              "id": "a",
-              "label": "The reaction has stopped"
-            },
-            {
-              "id": "b",
-              "label": "A and B are still reacting, in both directions, at about the same rate"
-            },
-            {
-              "id": "c",
-              "label": "All of the A has been used up"
-            },
-            {
-              "id": "d",
-              "label": "Only the forward reaction is still going"
-            }
-          ],
-          "answer": "b",
-          "explanation": "A flask that looks unchanged is in dynamic equilibrium: both changes keep going, so the amounts stay the same."
-        },
-        {
-          "id": "q1-both#b2",
-          "quest": "q1-both",
-          "question": "One flask starts with only reactant and another starts with only product, under the same conditions. Both are left until nothing seems to change. What do they show?",
-          "options": [
-            {
-              "id": "a",
-              "label": "The same amounts of reactant and product in both"
-            },
-            {
-              "id": "b",
-              "label": "Only product in both"
-            },
-            {
-              "id": "c",
-              "label": "Equal amounts of reactant and product in each"
-            },
-            {
-              "id": "d",
-              "label": "The first flask ends with more product than the second"
-            }
-          ],
-          "answer": "a",
-          "explanation": "A reversible reaction reaches the same equilibrium amounts from either end; the amounts belong to the reaction and the conditions, not to the start."
-        }
-      ]
+ "world": "unit08",
+ "end": [],
+ "bench": {
+  "q1-both": {
+   "problems": [
+    {
+     "id": "q1-both#b1",
+     "quest": "q1-both",
+     "question": "A sealed flask holding A and B has stopped changing colour. Which statement is correct?",
+     "options": [
+      {
+       "id": "a",
+       "label": "The reaction has stopped"
+      },
+      {
+       "id": "b",
+       "label": "A and B are still reacting, in both directions, at about the same rate"
+      },
+      {
+       "id": "c",
+       "label": "All of the A has been used up"
+      },
+      {
+       "id": "d",
+       "label": "Only the forward reaction is still going"
+      }
+     ],
+     "answer": "b",
+     "explanation": "A flask that looks unchanged is in dynamic equilibrium: both changes keep going, so the amounts stay the same."
+    },
+    {
+     "id": "q1-both#b2",
+     "quest": "q1-both",
+     "question": "One flask starts with only reactant and another starts with only product, under the same conditions. Both are left until nothing seems to change. What do they show?",
+     "options": [
+      {
+       "id": "a",
+       "label": "The same amounts of reactant and product in both"
+      },
+      {
+       "id": "b",
+       "label": "Only product in both"
+      },
+      {
+       "id": "c",
+       "label": "Equal amounts of reactant and product in each"
+      },
+      {
+       "id": "d",
+       "label": "The first flask ends with more product than the second"
+      }
+     ],
+     "answer": "a",
+     "explanation": "A reversible reaction reaches the same equilibrium amounts from either end; the amounts belong to the reaction and the conditions, not to the start."
     }
+   ]
+  },
+  "q7-dissolve": {
+   "problems": [
+    {
+     "id": "q7-dissolve#b1",
+     "quest": "q7-dissolve",
+     "question": "At 25 °C, BaSO₄ has Ksp = 1.1e−10 and CaF₂ has Ksp = 3.9e−11. Which statement about their molar solubilities is correct?",
+     "options": [
+      {
+       "id": "a",
+       "label": "BaSO₄ is more soluble, because its Ksp is larger"
+      },
+      {
+       "id": "b",
+       "label": "CaF₂ is more soluble, even though its Ksp is smaller"
+      },
+      {
+       "id": "c",
+       "label": "They are equally soluble, because both Ksp values are near 1e−10"
+      },
+      {
+       "id": "d",
+       "label": "The Ksp values cannot be used to find a molar solubility"
+      }
+     ],
+     "answer": "b",
+     "explanation": "For BaSO₄, s = √(1.1e−10) = 1.0e−5 mol/L. For CaF₂, Ksp = 4s³, so s = 2.1e−4 mol/L. A smaller Ksp does not mean a lower solubility when the salts give different numbers of ions."
+    },
+    {
+     "id": "q7-dissolve#b2",
+     "quest": "q7-dissolve",
+     "question": "Solid AgCl sits in water at equilibrium. A solution of NaCl is stirred in. What happens to the concentration of dissolved Ag⁺?",
+     "options": [
+      {
+       "id": "a",
+       "label": "It rises, because there is more chloride to hold the silver"
+      },
+      {
+       "id": "b",
+       "label": "It falls, because extra Cl⁻ pushes more AgCl out as solid until [Ag⁺][Cl⁻] is back at Ksp"
+      },
+      {
+       "id": "c",
+       "label": "It stays the same, because Ksp does not change"
+      },
+      {
+       "id": "d",
+       "label": "It falls to zero, because no silver can stay dissolved with chloride present"
+      }
+     ],
+     "answer": "b",
+     "explanation": "Adding Cl⁻ makes Q greater than Ksp, so AgCl precipitates until the ion product is back at Ksp. Ksp is unchanged, but [Ag⁺] is lower than in pure water: the common-ion effect."
+    }
+   ],
+   "worked": {
+    "id": "q7-dissolve#w",
+    "quest": "q7-dissolve",
+    "title": "Solubility of Lead(II) Iodide",
+    "setup": "PbI₂ has Ksp = 9.8e−9 at 25 °C. Find its molar solubility in pure water, then in 0.10 mol/L NaI, treating both solutions as ideal.",
+    "steps": [
+     {
+      "say": "Which expression is Ksp for PbI₂(s) ⇌ Pb²⁺ + 2 I⁻?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "[Pb²⁺][I⁻]"
+       },
+       {
+        "id": "b",
+        "label": "[Pb²⁺][I⁻]²"
+       },
+       {
+        "id": "c",
+        "label": "[Pb²⁺]²[I⁻]"
+       },
+       {
+        "id": "d",
+        "label": "[PbI₂][Pb²⁺][I⁻]²"
+       }
+      ],
+      "answer": "b",
+      "hint": "Each ion is raised to its coefficient, and the solid is left out.",
+      "explain": "Ksp = [Pb²⁺][I⁻]². The solid has no concentration term."
+     },
+     {
+      "say": "If s mol/L of PbI₂ dissolves, what are [Pb²⁺] and [I⁻]?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "s and s"
+       },
+       {
+        "id": "b",
+        "label": "s and 2s"
+       },
+       {
+        "id": "c",
+        "label": "2s and s"
+       },
+       {
+        "id": "d",
+        "label": "s and s²"
+       }
+      ],
+      "answer": "b",
+      "hint": "Count the ions one formula unit gives.",
+      "explain": "Each PbI₂ gives one Pb²⁺ and two I⁻, so [Pb²⁺] = s and [I⁻] = 2s."
+     },
+     {
+      "say": "Put these in Ksp = s(2s)² = 4s³. What is s³?",
+      "kind": "number",
+      "answer": 2.45e-09,
+      "calc": "9.8e-9/4",
+      "unit": "mol³/L³",
+      "tol": 0.01,
+      "hint": "Divide Ksp by 4.",
+      "explain": "s³ = 9.8e−9 / 4 = 2.45e−9."
+     },
+     {
+      "say": "What is s, the molar solubility in pure water?",
+      "kind": "number",
+      "answer": 0.001348,
+      "calc": "Math.pow(9.8e-9/4, 1/3)",
+      "unit": "mol/L",
+      "tol": 0.01,
+      "hint": "Take the cube root of s³.",
+      "explain": "s = ∛(2.45e−9) = 1.35e−3 mol/L."
+     },
+     {
+      "say": "In 0.10 mol/L NaI, [I⁻] is about 0.10, so Ksp = s × (0.10)². What is s?",
+      "kind": "number",
+      "answer": 9.8e-07,
+      "calc": "9.8e-9/(0.10*0.10)",
+      "unit": "mol/L",
+      "tol": 0.01,
+      "hint": "Divide Ksp by 0.10 squared.",
+      "explain": "s = 9.8e−9 / 0.010 = 9.8e−7 mol/L; the iodide from the dissolved PbI₂ is tiny beside 0.10."
+     },
+     {
+      "say": "How many times less soluble is PbI₂ in the NaI solution than in pure water?",
+      "kind": "number",
+      "answer": 1375,
+      "calc": "Math.pow(9.8e-9/4, 1/3)/(9.8e-9/(0.10*0.10))",
+      "unit": "times",
+      "tol": 0.02,
+      "hint": "Divide the pure-water figure by the NaI figure.",
+      "explain": "1.35e−3 / 9.8e−7 is about 1400: the common ion cuts the solubility by that factor."
+     }
+    ],
+    "finish": "Write Ksp from the equation, put the ions in terms of s, and solve; a common ion changes only the starting concentration of one ion."
+   }
+  },
+  "q8-free": {
+   "problems": [
+    {
+     "id": "q8-free#b1",
+     "quest": "q8-free",
+     "question": "A reaction has ΔG° = +20 kJ/mol at 298 K. Which value is closest to its K?",
+     "options": [
+      {
+       "id": "a",
+       "label": "3.1 × 10⁻⁴"
+      },
+      {
+       "id": "b",
+       "label": "3.1 × 10⁴"
+      },
+      {
+       "id": "c",
+       "label": "0.99"
+      },
+      {
+       "id": "d",
+       "label": "0, because the reaction cannot happen"
+      }
+     ],
+     "answer": "a",
+     "explanation": "K = e^(−ΔG°/RT) with ΔG° in joules: e^(−20000/(8.314 × 298)) = 3.1 × 10⁻⁴. A positive ΔG° gives a K below 1 that is small but not zero, so a little product still forms."
+    },
+    {
+     "id": "q8-free#b2",
+     "quest": "q8-free",
+     "question": "A reaction with ΔG° = +22.0 kJ/mol is paired with a second reaction, ΔG° = −30.5 kJ/mol, that shares an intermediate with it. What is true of the pair?",
+     "options": [
+      {
+       "id": "a",
+       "label": "The two ΔG° values add to −8.5 kJ/mol, so the pair can run"
+      },
+      {
+       "id": "b",
+       "label": "The two ΔG° values add to +8.5 kJ/mol, so the pair cannot run"
+      },
+      {
+       "id": "c",
+       "label": "The two ΔG° values add to −52.5 kJ/mol, so the pair can run"
+      },
+      {
+       "id": "d",
+       "label": "The first reaction still cannot run, so the pair cannot either"
+      }
+     ],
+     "answer": "a",
+     "explanation": "For coupled reactions the ΔG° values add: +22.0 + (−30.5) = −8.5 kJ/mol. The net is negative, so the pair runs even though the first reaction would not alone."
+    }
+   ],
+   "worked": {
+    "id": "q8-free#w",
+    "quest": "q8-free",
+    "title": "K for N₂O₄ ⇌ 2 NO₂ at 350 K",
+    "setup": "For N₂O₄(g) ⇌ 2 NO₂(g), ΔH° = +57.2 kJ/mol and ΔS° = +175.8 J/(mol·K). Take both as constant and use R = 8.314 J/(mol·K). Find K at 350 K.",
+    "steps": [
+     {
+      "say": "What is TΔS° at 350 K, in kJ/mol?",
+      "kind": "number",
+      "answer": 61.53,
+      "calc": "350*175.8/1000",
+      "unit": "kJ/mol",
+      "tol": 0.005,
+      "hint": "Multiply T by ΔS° in J/(mol·K), then divide by 1000 to get kJ.",
+      "explain": "350 × 175.8 = 61 530 J/mol = 61.53 kJ/mol."
+     },
+     {
+      "say": "What is ΔG° at 350 K, in kJ/mol?",
+      "kind": "number",
+      "answer": -4.33,
+      "calc": "57.2-350*175.8/1000",
+      "unit": "kJ/mol",
+      "tol": 0.005,
+      "hint": "ΔG° = ΔH° − TΔS°.",
+      "explain": "57.2 − 61.53 = −4.33 kJ/mol."
+     },
+     {
+      "say": "Write that ΔG° in joules per mole.",
+      "kind": "number",
+      "answer": -4330,
+      "calc": "(57.2-350*175.8/1000)*1000",
+      "unit": "J/mol",
+      "tol": 0.005,
+      "hint": "R is in joules, so the ΔG° must be too.",
+      "explain": "−4.33 kJ/mol = −4330 J/mol."
+     },
+     {
+      "say": "What is −ΔG°/RT?",
+      "kind": "number",
+      "answer": 1.488,
+      "calc": "4330/(8.314*350)",
+      "unit": "",
+      "tol": 0.005,
+      "hint": "Divide by R × T, with T in kelvin, and the sign flips because of the minus in front.",
+      "explain": "4330 / (8.314 × 350) = 1.488."
+     },
+     {
+      "say": "What is K?",
+      "kind": "number",
+      "answer": 4.43,
+      "calc": "Math.exp(4330/(8.314*350))",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "K = e raised to the number you just found.",
+      "explain": "e^1.488 = 4.43."
+     },
+     {
+      "say": "At 298 K the ΔG° of this reaction is +4.8 kJ/mol. What did warming to 350 K do?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "Raised K above 1, so more product is favoured"
+       },
+       {
+        "id": "b",
+        "label": "Lowered K, so more reactant is favoured"
+       },
+       {
+        "id": "c",
+        "label": "Left K unchanged, because ΔH° and ΔS° have the same signs"
+       },
+       {
+        "id": "d",
+        "label": "Raised ΔG°, so less product is favoured"
+       }
+      ],
+      "answer": "a",
+      "hint": "Compare the sign of ΔG° at the two temperatures.",
+      "explain": "ΔG° fell from +4.8 to −4.33 kJ/mol, so K went from below 1 to above 1 and the pan holds more product."
+     }
+    ],
+    "finish": "TΔS° and ΔH° give ΔG°, and ΔG° in joules over RT, with its sign flipped, is the power of e that gives K."
+   }
+  },
+  "q4-properties": {
+   "problems": [
+    {
+     "id": "q4-properties#b1",
+     "quest": "q4-properties",
+     "question": "For A ⇌ B, K = 0.50. What is K for 2 B ⇌ 2 A?",
+     "options": [
+      {
+       "id": "a",
+       "label": "4.0"
+      },
+      {
+       "id": "b",
+       "label": "2.0"
+      },
+      {
+       "id": "c",
+       "label": "1.0"
+      },
+      {
+       "id": "d",
+       "label": "0.25"
+      }
+     ],
+     "answer": "a",
+     "explanation": "Flipping gives 1/0.50 = 2.0, and writing it twice as large squares that: 4.0."
+    },
+    {
+     "id": "q4-properties#b2",
+     "quest": "q4-properties",
+     "question": "A ⇌ B has K = 2.0 and B ⇌ C has K = 5.0. What is K for A ⇌ C?",
+     "options": [
+      {
+       "id": "a",
+       "label": "10"
+      },
+      {
+       "id": "b",
+       "label": "7.0"
+      },
+      {
+       "id": "c",
+       "label": "2.5"
+      },
+      {
+       "id": "d",
+       "label": "0.40"
+      }
+     ],
+     "answer": "a",
+     "explanation": "The two reactions add up to A ⇌ C, so their K values multiply: 2.0 × 5.0 = 10."
+    }
+   ],
+   "worked": {
+    "id": "q4-properties#w",
+    "quest": "q4-properties",
+    "title": "A Reaction Made From Two Others",
+    "setup": "X ⇌ Y has K = 0.10, and 2 Y ⇌ Z has K = 50. Find K for 2 X ⇌ Z, and then for the reaction written the other way round.",
+    "steps": [
+     {
+      "say": "What is K for 2 X ⇌ 2 Y, the first reaction written twice as large?",
+      "kind": "number",
+      "answer": 0.01,
+      "calc": "0.10**2",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "Writing every amount c times as large raises K to the power c.",
+      "explain": "0.10 squared is 0.010."
+     },
+     {
+      "say": "To make 2 X ⇌ Z from 2 X ⇌ 2 Y, how must 2 Y ⇌ Z be used?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "As written, so the 2 Y cancels"
+       },
+       {
+        "id": "b",
+        "label": "Flipped"
+       },
+       {
+        "id": "c",
+        "label": "Written twice as large"
+       },
+       {
+        "id": "d",
+        "label": "Not used"
+       }
+      ],
+      "answer": "a",
+      "hint": "The 2 Y made by the first reaction must be used up by the second.",
+      "explain": "2 Y is made on the right of the first and used on the left of the second, so the second stays as written."
+     },
+     {
+      "say": "What is K for 2 X ⇌ Z?",
+      "kind": "number",
+      "answer": 0.5,
+      "calc": "0.010*50",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "When two reactions add up to a third, multiply their K values.",
+      "explain": "0.010 times 50 is 0.50."
+     },
+     {
+      "say": "What is K for Z ⇌ 2 X?",
+      "kind": "number",
+      "answer": 2.0,
+      "calc": "1/0.50",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "The reverse reaction has 1 divided by K.",
+      "explain": "1 divided by 0.50 is 2.0."
+     }
+    ],
+    "finish": "Flipping takes 1 over K, writing larger takes a power, and adding reactions multiplies their K values."
+   }
+  },
+  "q5-ice": {
+   "problems": [
+    {
+     "id": "q5-ice#b1",
+     "quest": "q5-ice",
+     "question": "For N₂O₄ ⇌ 2 NO₂ starting with 1.0 M N₂O₄, x mol/L of N₂O₄ reacts. What is [NO₂] at equilibrium?",
+     "options": [
+      {
+       "id": "a",
+       "label": "2x"
+      },
+      {
+       "id": "b",
+       "label": "x"
+      },
+      {
+       "id": "c",
+       "label": "1.0 + x"
+      },
+      {
+       "id": "d",
+       "label": "1.0 − x"
+      }
+     ],
+     "answer": "a",
+     "explanation": "Each N₂O₄ that reacts makes two NO₂, so NO₂ is 2x."
+    },
+    {
+     "id": "q5-ice#b2",
+     "quest": "q5-ice",
+     "question": "A ⇌ B + C has K = 1.0 × 10⁻⁸ and starts with 1.0 M A. How does [A] at equilibrium compare with 1.0 M?",
+     "options": [
+      {
+       "id": "a",
+       "label": "Almost the same"
+      },
+      {
+       "id": "b",
+       "label": "About half"
+      },
+      {
+       "id": "c",
+       "label": "Nearly zero"
+      },
+      {
+       "id": "d",
+       "label": "Greater"
+      }
+     ],
+     "answer": "a",
+     "explanation": "A tiny K means almost none reacts, so 1.0 − x is almost 1.0 and the approximation is fair."
+    }
+   ],
+   "worked": {
+    "id": "q5-ice#w",
+    "quest": "q5-ice",
+    "title": "N₂O₄ From a Small Start",
+    "setup": "N₂O₄ ⇌ 2 NO₂ has K = 0.0059. A pan starts with 0.40 M N₂O₄ and no NO₂. Find [NO₂] when it settles.",
+    "steps": [
+     {
+      "say": "What change goes in the NO₂ column of the ICE table?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "+2x"
+       },
+       {
+        "id": "b",
+        "label": "+x"
+       },
+       {
+        "id": "c",
+        "label": "−2x"
+       },
+       {
+        "id": "d",
+        "label": "−x"
+       }
+      ],
+      "answer": "a",
+      "hint": "The change is x times the coefficient, and NO₂ is made.",
+      "explain": "NO₂ has coefficient 2 and is made, so its change is +2x."
+     },
+     {
+      "say": "Treat 0.40 − x as 0.40. What is x?",
+      "kind": "number",
+      "answer": 0.02429,
+      "calc": "Math.sqrt(0.0059*0.40/4)",
+      "unit": "M",
+      "tol": 0.02,
+      "hint": "K = (2x)² / 0.40, so x² = K × 0.40 / 4.",
+      "explain": "x = √(0.0059 × 0.40 / 4) = 0.0243 M."
+     },
+     {
+      "say": "What percent of the 0.40 M N₂O₄ is that x?",
+      "kind": "number",
+      "answer": 6.07,
+      "calc": "0.02429/0.40*100",
+      "unit": "%",
+      "tol": 0.02,
+      "hint": "Divide x by the start and multiply by 100.",
+      "explain": "0.0243 / 0.40 is 6.1 %."
+     },
+     {
+      "say": "Is the approximation fair?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "No, more than 5 % reacted"
+       },
+       {
+        "id": "b",
+        "label": "Yes, x is small"
+       },
+       {
+        "id": "c",
+        "label": "Yes, K is small"
+       },
+       {
+        "id": "d",
+        "label": "No, K is too large"
+       }
+      ],
+      "answer": "a",
+      "hint": "Compare the percent with 5 %.",
+      "explain": "6.1 % is over 5 %, so 0.40 − x cannot be treated as 0.40."
+     },
+     {
+      "say": "Solve 4x² + 0.0059x − 0.00236 = 0 for x.",
+      "kind": "number",
+      "answer": 0.023567,
+      "calc": "(-0.0059+Math.sqrt(0.0059**2+16*0.0059*0.40))/8",
+      "unit": "M",
+      "tol": 0.02,
+      "hint": "Use the quadratic formula and take the positive root.",
+      "explain": "x = 0.0236 M."
+     },
+     {
+      "say": "What is [NO₂] when the pan settles?",
+      "kind": "number",
+      "answer": 0.047134,
+      "calc": "2*(-0.0059+Math.sqrt(0.0059**2+16*0.0059*0.40))/8",
+      "unit": "M",
+      "tol": 0.02,
+      "hint": "NO₂ is 2x.",
+      "explain": "2 × 0.0236 = 0.0471 M."
+     }
+    ],
+    "finish": "Check the approximation against 5 % of the start; if it fails, solve the quadratic."
+   }
+  },
+  "q6-lean": {
+   "problems": [
+    {
+     "id": "q6-lean#b1",
+     "quest": "q6-lean",
+     "question": "N₂ + 3 H₂ ⇌ 2 NH₃ is settled in a sealed vessel. More N₂ is added at the same volume and temperature. What happens to the amount of NH₃ and to K?",
+     "options": [
+      {
+       "id": "a",
+       "label": "NH₃ rises and K is unchanged"
+      },
+      {
+       "id": "b",
+       "label": "NH₃ falls and K is unchanged"
+      },
+      {
+       "id": "c",
+       "label": "NH₃ rises and K rises"
+      },
+      {
+       "id": "d",
+       "label": "NH₃ is unchanged and K falls"
+      }
+     ],
+     "answer": "a",
+     "explanation": "Adding N₂ pushes Q below K, so the vessel makes more NH₃ until Q is back on the same K. Only a change of temperature changes K."
+    },
+    {
+     "id": "q6-lean#b2",
+     "quest": "q6-lean",
+     "question": "Argon is added to the settled vessel of N₂ + 3 H₂ ⇌ 2 NH₃ without changing its volume. Which statement is correct?",
+     "options": [
+      {
+       "id": "a",
+       "label": "The total pressure rises and the NH₃ amount does not change"
+      },
+      {
+       "id": "b",
+       "label": "The total pressure rises and the NH₃ amount rises"
+      },
+      {
+       "id": "c",
+       "label": "The total pressure stays the same"
+      },
+      {
+       "id": "d",
+       "label": "The NH₃ amount falls because the argon crowds the gases"
+      }
+     ],
+     "answer": "a",
+     "explanation": "The argon adds to the total pressure but leaves the pressure of N₂, H₂ and NH₃ unchanged, so Q stays on K and nothing shifts."
+    }
+   ]
+  },
+  "q2-k": {
+   "problems": [
+    {
+     "id": "q2-k#b1",
+     "quest": "q2-k",
+     "question": "Two flasks of the same reaction at the same temperature start with different amounts and both reach equilibrium. What do they share?",
+     "options": [
+      {
+       "id": "a",
+       "label": "The same amount of each substance"
+      },
+      {
+       "id": "b",
+       "label": "The same K"
+      },
+      {
+       "id": "c",
+       "label": "The same amount of product"
+      },
+      {
+       "id": "d",
+       "label": "Equal amounts of reactant and product"
+      }
+     ],
+     "answer": "b",
+     "explanation": "The amounts depend on the start; the ratio of products over reactants, K, depends only on the reaction and the temperature."
+    },
+    {
+     "id": "q2-k#b2",
+     "quest": "q2-k",
+     "question": "For 2 NO₂ ⇌ N₂O₄, which expression gives Kp?",
+     "options": [
+      {
+       "id": "a",
+       "label": "P(N₂O₄) / P(NO₂)"
+      },
+      {
+       "id": "b",
+       "label": "P(NO₂)² / P(N₂O₄)"
+      },
+      {
+       "id": "c",
+       "label": "P(N₂O₄) / P(NO₂)²"
+      },
+      {
+       "id": "d",
+       "label": "P(N₂O₄) × P(NO₂)²"
+      }
+     ],
+     "answer": "c",
+     "explanation": "Products over reactants, with each pressure raised to its coefficient: the 2 in front of NO₂ becomes a square."
+    }
+   ],
+   "worked": {
+    "id": "q2-k#w",
+    "quest": "q2-k",
+    "title": "K for Hydrogen Iodide",
+    "setup": "At 698 K, H₂ + I₂ ⇌ 2 HI is at equilibrium with 0.200 mol/L H₂, 0.200 mol/L I₂ and 1.47 mol/L HI. Find Kc.",
+    "steps": [
+     {
+      "say": "What is the square of the HI concentration?",
+      "kind": "number",
+      "answer": 2.1609,
+      "calc": "1.47*1.47",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "The 2 in front of HI makes it a power.",
+      "explain": "1.47 × 1.47 = 2.16."
+     },
+     {
+      "say": "What is the product of the H₂ and I₂ concentrations?",
+      "kind": "number",
+      "answer": 0.04,
+      "calc": "0.200*0.200",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "Both reactants have a coefficient of 1.",
+      "explain": "0.200 × 0.200 = 0.0400."
+     },
+     {
+      "say": "What is Kc?",
+      "kind": "number",
+      "answer": 54.02,
+      "calc": "1.47*1.47/(0.200*0.200)",
+      "unit": "",
+      "tol": 0.02,
+      "hint": "Products over reactants.",
+      "explain": "2.16 / 0.0400 = 54."
+     },
+     {
+      "say": "A pan of this reaction has a Kc far above 1. What does that say about it at equilibrium?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "Almost no product forms"
+       },
+       {
+        "id": "b",
+        "label": "Almost no reactant is left"
+       },
+       {
+        "id": "c",
+        "label": "Equal amounts are present"
+       },
+       {
+        "id": "d",
+        "label": "The reaction has stopped"
+       }
+      ],
+      "answer": "b",
+      "hint": "A large K means the reaction goes nearly to completion.",
+      "explain": "A large K means products are strongly favoured, so very little reactant remains."
+     }
+    ],
+    "finish": "Write products over reactants, raise each amount to its coefficient, and put in the equilibrium amounts."
+   }
+  },
+  "q3-q": {
+   "problems": [
+    {
+     "id": "q3-q#b1",
+     "quest": "q3-q",
+     "question": "A mixture has Q below K. What happens when it is left alone?",
+     "options": [
+      {
+       "id": "a",
+       "label": "It makes more reactant until Q equals K"
+      },
+      {
+       "id": "b",
+       "label": "It makes more product until Q equals K"
+      },
+      {
+       "id": "c",
+       "label": "Nothing; it is at equilibrium"
+      },
+      {
+       "id": "d",
+       "label": "It makes more product until Q is far above K"
+      }
+     ],
+     "answer": "b",
+     "explanation": "Below K the mixture has too little product for equilibrium, so the forward change wins until Q rises to K."
+    },
+    {
+     "id": "q3-q#b2",
+     "quest": "q3-q",
+     "question": "For A ⇌ B with K = 2.0, a mixture holds 0.60 mol/L of A and 0.60 mol/L of B. Which way does it go?",
+     "options": [
+      {
+       "id": "a",
+       "label": "It stays as it is, because the amounts are equal"
+      },
+      {
+       "id": "b",
+       "label": "It makes more A"
+      },
+      {
+       "id": "c",
+       "label": "It makes more B"
+      },
+      {
+       "id": "d",
+       "label": "It cannot be told without more data"
+      }
+     ],
+     "answer": "c",
+     "explanation": "Q = 0.60 / 0.60 = 1.0, which is below K, so the mixture makes more B."
+    }
+   ]
   }
+ }
 }

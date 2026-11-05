@@ -26,6 +26,30 @@ export const STAGE_STORY = {
   'q1-both': {
     1: 'The Fifth says this pan is finished once it stops changing, and Vess wants to see it run.'
   },
+  'q2-k': {
+    1: 'The Fifth\'s pans never hold equal amounts, and Vess wants to know what they do hold.'
+  },
+  'q3-q': {
+    1: 'A pan is mixed to a recipe, and Vess wants to say which way it goes before it moves.'
+  },
+  'q4-properties': {
+    1: 'The Fifth reports one pan\'s K and says it covers three ways of writing the reaction.'
+  },
+  'q5-ice': {
+    1: 'The ledger gives a pan\'s start and K, and Vess needs what the pan holds when it settles.'
+  },
+
+  'q6-lean': {
+    1: 'The Fifth added a drop to a settled vessel, and Vess wants to see where the amounts go.'
+  },
+
+  'q8-free': {
+    1: 'The Fifth says some changes cannot happen, and Vess wants the number that says how far one goes.'
+  },
+
+  'q7-dissolve': {
+    1: 'Salt on the dike dissolves and comes back, and Vess wants to know how much a pan can hold.'
+  },
 
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'q1-grain': {

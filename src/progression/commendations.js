@@ -240,6 +240,15 @@ export const COMMENDATIONS = [
     earnedBy: (s) => Boolean(s.learn && s.learn['unit07/q1-recipe']?.completedAt)
   },
   {
+    id: 'learn_q5_both',
+    name: 'Both Ways',
+    line: 'Ran a salt pan from either end at the sluice gate of Teeter.',
+    tier: 'brass',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit08/q1-both']?.completedAt)
+  },
+  {
     id: 'learn_q4_weigh',
     name: 'Molar Scale',
     line: 'Counted by weighing on the salt flats of Tallow.',

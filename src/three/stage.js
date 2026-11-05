@@ -19,6 +19,7 @@ import { BellowsWorld } from "./bellows.js";
 import { EmberReachWorld } from "./ember.js";
 import { MirrowenWorld } from "./mirrowen.js";
 import { KettleWorld } from "./kettle.js";
+import { TeeterWorld } from "./teeter.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -57,6 +58,8 @@ const EMBER_EXPOSURE = 0.98;
 const MIRROWEN_EXPOSURE = 0.9;
 // Kettle is white crust under an amber haze: bright ground, so the exposure sits a little under Ember Reach's.
 const KETTLE_EXPOSURE = 0.94;
+// Teeter is white crust and pale brine under a near-white haze: the brightest ground of the Learn worlds, so it takes the least exposure.
+const TEETER_EXPOSURE = 0.88;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -96,6 +99,7 @@ class Stage {
     this.emberWorld = null;
     this.mirrowenWorld = null;
     this.kettleWorld = null;
+    this.teeterWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -807,6 +811,10 @@ class Stage {
       if (!this.kettleWorld) this.kettleWorld = this.warmWorld(new KettleWorld(this.renderer));
       return this.kettleWorld;
     }
+    if (key === "teeter") {
+      if (!this.teeterWorld) this.teeterWorld = this.warmWorld(new TeeterWorld(this.renderer));
+      return this.teeterWorld;
+    }
     return null;
   }
 
@@ -838,6 +846,7 @@ class Stage {
     if (key === "ember") return EMBER_EXPOSURE;
     if (key === "mirrowen") return MIRROWEN_EXPOSURE;
     if (key === "kettle") return KETTLE_EXPOSURE;
+    if (key === "teeter") return TEETER_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1028,10 +1037,17 @@ class Stage {
     this.enterLearnWorld(this.kettleWorld, KETTLE_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen or Kettle. */
+  /** Walk out onto Teeter, the salt pans (Learn world 08). */
+  enterTeeterScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("teeter");
+    this.enterLearnWorld(this.teeterWorld, TEETER_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle or Teeter. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1274,6 +1290,11 @@ class Stage {
   /** Light a Kettle site's indicator when its quest is finished. */
   setKettleSiteComplete(questId, complete) {
     if (this.kettleWorld) this.kettleWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Teeter site's indicator when its quest is finished. */
+  setTeeterSiteComplete(questId, complete) {
+    if (this.teeterWorld) this.teeterWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Ligar site's indicator when its quest is finished. */

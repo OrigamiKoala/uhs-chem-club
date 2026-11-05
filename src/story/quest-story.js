@@ -20,6 +20,24 @@
 
 export const QUEST_STORY = {
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
+  'unit08/q4-properties': {
+    scene: 'k-rewrite',
+    beats: [
+      { to: 0.3, say: 'Flip a reaction and the same mixture gives 1 over the old K. The ratio belongs to the way the reaction is written.' },
+      { to: 0.58, say: 'Write it twice as large and K is squared, not doubled; every amount in the ratio is raised to the power two.' },
+      { to: 0.92, say: 'When two reactions add up to a third, the middle substance cancels and the K of the pair is the product of the two.' }
+    ],
+    filed: 'Filed: the ratio belongs to the way the reaction is written; rewrite it and the number changes by rule.'
+  },
+  'unit08/q5-ice': {
+    scene: 'ice-bars',
+    beats: [
+      { to: 0.32, say: 'A reactant falls by x and a product rises by x times its coefficient, so the HI bar rises twice as far as the H₂ bar falls.' },
+      { to: 0.64, say: 'With a small K, hardly any reactant is used up. K is a ratio of amounts, not the share that turns over.' },
+      { to: 0.94, say: 'From a small start the same K uses up much more of the reactant, so the shortcut fails and the quadratic is needed.' }
+    ],
+    filed: 'Filed: the amounts the Fifth reported follow from the start and K; they were not found in the pan.'
+  },
   'unit08/q1-both': {
     scene: 'pan-both-ways',
     beats: [
@@ -28,6 +46,54 @@ export const QUEST_STORY = {
       { to: 0.9, say: 'Start from B alone and the pan settles at the same amounts. A reversible reaction can be reached from either end.' }
     ],
     filed: 'Filed: a pan the Fifth calls finished is still turning over, so it is only balanced.'
+  },
+  'unit08/q6-lean': {
+    scene: 'lean-push',
+    beats: [
+      { to: 0.3, say: 'Add H₂ to a settled vessel and Q drops below K. The amounts then move, using up N₂ as well, until Q is back on K.' },
+      { to: 0.52, say: 'Squeeze the vessel and Q drops below K again, so the vessel makes more NH₃ and ends with fewer molecules.' },
+      { to: 0.72, say: 'Add argon and the pressure rises, but the pressure of each gas that reacts does not. Q stays on K and nothing moves.' },
+      { to: 0.92, say: 'Heat the vessel and K itself changes, here falling. Of all the changes tried, only temperature moves K.' }
+    ],
+    filed: 'Filed: a pan pushed out of balance moves to balance again, and only heat changes where balance is.'
+  },
+  'unit08/q2-k': {
+    scene: 'ratio-holds',
+    beats: [
+      { to: 0.33, say: 'Three pans of A and B begin differently and settle at different amounts. B over A comes out the same on all three.' },
+      { to: 0.68, say: 'With H₂ and I₂ making HI, the 2 in the equation becomes a power. HI squared over H₂ times I₂ is the same on every pan.' },
+      { to: 0.92, say: 'That number is K. A large K leaves almost no reactant, and a small K leaves almost no product.' }
+    ],
+    filed: 'Filed: whatever the start, the Fifth\'s pans settle on the same ratio.'
+  },
+  'unit08/q3-q': {
+    scene: 'needle-to-k',
+    beats: [
+      { to: 0.33, say: 'A mixture with far more B than A has a Q above K. Left alone, it makes A until Q comes down to K.' },
+      { to: 0.66, say: 'A mixture with equal amounts has a Q below K, so it makes B. Which amount is larger does not decide the direction.' },
+      { to: 0.92, say: 'A mixture whose Q is already K does not change. Below K a reaction makes products; above K it makes reactants.' }
+    ],
+    filed: 'Filed: the Fifth\'s pan was mixed away from K and moved back by itself; nothing was added.'
+  },
+  'unit08/q8-free': {
+    scene: 'free-k',
+    beats: [
+      { to: 0.26, say: 'Settle three pans and the lower the ΔG°, the more product each holds. Even the pan with a positive ΔG° holds some product.' },
+      { to: 0.52, say: 'Product held against ΔG° is one smooth curve. At ΔG° = 0 the pan holds equal amounts and K is 1; below zero, K is above 1.' },
+      { to: 0.76, say: 'Warm a pan and ΔG° = ΔH° − TΔS° moves along a line, taking K with it. For a reaction that takes in heat, K rises as it warms.' },
+      { to: 0.92, say: 'Pair a reaction that cannot run alone with one that can, and their ΔG° values add. Here +13.8 and −30.5 leave −16.7 kJ/mol, so the pair runs.' }
+    ],
+    filed: 'Filed: the Fifth\'s impossible reactions are only unfavoured; paired with another they go.'
+  },
+  'unit08/q7-dissolve': {
+    scene: 'solubility-trade',
+    beats: [
+      { to: 0.26, say: 'Add solid to water and the meters rise, until one more scoop changes nothing. The water is saturated, and the extra solid lies on the floor.' },
+      { to: 0.5, say: 'Even then, units keep leaving the solid and coming back, at about the same rate. That balance is why the Ksp, a product of ion concentrations, stays fixed.' },
+      { to: 0.76, say: 'Put the same ion in the water first and the solid gives up less. AgCl dissolves 1.3e−5 mol/L in water and 1.8e−9 mol/L with 0.10 mol/L chloride already there.' },
+      { to: 0.94, say: 'Ksp alone does not rank salts. Ag₂CrO₄ has the smaller Ksp and still holds more dissolved, 6.5e−5 mol/L against 1.3e−5.' }
+    ],
+    filed: 'Filed: a pan holds a fixed amount of each salt, and less of it when a second salt shares an ion.'
   },
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'unit01/q1-grain': {

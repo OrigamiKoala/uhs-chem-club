@@ -8,8 +8,15 @@
  * and draws it over the first.
  */
 
+import { TEETER_Q6_SCENES } from './story-scenes-teeter-q6.js';
 import { simulatePan, rng } from '../learn/engine/eqdata.js';
 import { C, line, text, ground, win, ease } from './story-kit.js';
+import { TEETER_Q8_SCENES } from './story-scenes-teeter-q8.js';
+import { TEETER_Q7_SCENES } from './story-scenes-teeter-q7.js';
+import { TEETER_Q2_SCENES } from './story-scenes-teeter-q2.js';
+import { TEETER_Q3_SCENES } from './story-scenes-teeter-q3.js';
+import { TEETER_Q4_SCENES } from './story-scenes-teeter-q4.js';
+import { TEETER_Q5_SCENES } from './story-scenes-teeter-q5.js';
 
 const N = 48;
 const KF = 0.1; const KR = 0.05;
@@ -102,5 +109,12 @@ function panBothWays(ctx, w, h, t) {
 }
 
 export const TEETER_SCENES = {
+  ...TEETER_Q2_SCENES,
+  ...TEETER_Q3_SCENES,
+  ...TEETER_Q4_SCENES,
+  ...TEETER_Q5_SCENES,
+  ...TEETER_Q7_SCENES,
+  ...TEETER_Q8_SCENES,
+  ...TEETER_Q6_SCENES,
   'pan-both-ways': panBothWays
 };

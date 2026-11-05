@@ -34,6 +34,69 @@ export const UNIT_08 = {
       stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit08/q1-both.js')
+    },
+    {
+      id: 'q2-k',
+      title: 'The Number That Holds',
+      line: 'Pans that begin differently settle at different amounts; find what they share.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q2-k.js')
+    },
+    {
+      id: 'q3-q',
+      title: 'Which Way It Goes',
+      line: 'A pan is mixed to a recipe; say which way it will move before it does.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q3-q.js')
+    },
+    {
+      id: 'q4-properties',
+      title: 'Combining K',
+      line: 'Rewrite a reaction and its K changes by rule; find how.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q4-properties.js')
+    },
+    {
+      id: 'q5-ice',
+      title: 'Equilibrium Concentrations',
+      line: 'The ledger gives a pan\u2019s start and K; work out what is left.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q5-ice.js')
+    },
+    {
+      id: 'q6-lean',
+      title: 'Le Chatelier\u2019s Principle',
+      line: 'The Fifth added a drop to a settled vessel; see where the amounts go.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q6-lean.js')
+    },
+    {
+      id: 'q7-dissolve',
+      title: 'Solubility Equilibria',
+      line: 'Salt dissolves and comes back out; find how much a beaker can hold.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q7-dissolve.js')
+    },
+    {
+      id: 'q8-free',
+      title: 'Free Energy and K',
+      line: 'The lower the free energy, the more product a pan holds when it settles.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit08/q8-free.js')
     }
   ]
 };

@@ -115,6 +115,14 @@ export const DESTINATIONS = {
       atmo: '#d6aa62', atmoStrength: 0.56, seed: [7.2, 3.6, 2.7]
     }
   },
+  teeter: {
+    key: 'teeter', name: 'Teeter', hash: '#/learn/unit08',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'desert', colors: ['#e7e4d8', '#c9cfc8', '#9bb0ad', '#f4f2ea'],
+      atmo: '#dfe3dc', atmoStrength: 0.5, seed: [3.8, 6.2, 1.4]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

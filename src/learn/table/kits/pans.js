@@ -18,6 +18,12 @@ import './pans-tour.js';
 
 /* One import per bench: each file registers its own instruments and pieces. */
 import './pans-pan.js';
+import './pans-ratio.js';
+import './pans-stress.js';
+import './pans-beaker.js';
+import './pans-free.js';
+import './pans-cards.js';
+import './pans-ice.js';
 
 export const PANS_KIT_ID = 'pans';
 export const PANS_BOUNDS = HEAT_BOUNDS;
