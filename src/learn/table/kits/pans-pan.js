@@ -10,7 +10,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture, registerPiece } from './pans-registry.js';
-import { say, frameOf } from './matter-draw.js';
+import { say, slab, frameOf } from './matter-draw.js';
 import { rng } from '../../engine/eqdata.js';
 import { panRead, historyOf, systemOf, stateOfParticle, PAN_TICKS, PAN_STEP, TRACERS } from './pans-read.js';
 
@@ -73,7 +73,7 @@ function paintPlot(ctx, F, f, r, x, y, w, h) {
     const gh = historyOf({ ...r.sys, b0: p.ghost.b0, seed: p.ghost.seed });
     ctx.globalAlpha = 0.35;
     ctx.strokeStyle = B_INK; ctx.setLineDash([3, 3]); ctx.beginPath();
-    for (let t = 0; t <= PAN_TICKS; t++) { const px = F.x(X(t)); const py = F.y(Y(gh.b[t])); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    for (let t = 0; t <= r.t; t++) { const px = F.x(X(t)); const py = F.y(Y(gh.b[t])); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
     ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   draw(t => n - r.hist.b[t], A_INK);
@@ -103,15 +103,17 @@ function paintPan(ctx, f, state, b) {
   const r = panRead(state, f.id);
   const p = f.props;
   const w = f.size.w; const h = f.size.h;
-  say(ctx, f.label, F.x(2.5), F.y(4.2), F.size(2.5, 6.2), { color: DIM, weight: 700, maxW: F.len(w - 5) });
   const top = 9;
   const hasWin = p.window !== false;
   const ww = hasWin ? 30 : 0;
   const px = hasWin ? ww + 7 : 3.5;
-  const ph = p.tracer ? h - top - 28 : h - top - 11;
+  const ph = p.tracer ? h - top - 30 : h - top - 11;
   if (hasWin) paintWindow(ctx, F, r, 3.5, top, ww, p.tracer ? ph : Math.min(ph, ww * 0.75), p.tracer);
   paintPlot(ctx, F, f, r, px, top, w - px - 3.5, ph);
-  if (p.tracer) paintStrip(ctx, F, r, px, top + ph + 3.5, w - px - 3.5, 14);
+  if (p.tracer) {
+    paintStrip(ctx, F, r, px, top + ph + 5, w - px - 3.5, 13.5);
+    say(ctx, 'ringed spheres, last 40 ticks', F.x(px), F.y(top + ph + 2.6), F.size(1.9, 5.6), { color: DIM, maxW: F.len(w - px - 3.5) });
+  }
   const y = h - 3.6;
   const sz = F.size(2.3, 6);
   say(ctx, `time ${r.t}`, F.x(2.5), F.y(y - (hasWin ? 0 : 4.3)), sz, { color: DUST, weight: 700 });
@@ -185,3 +187,24 @@ registerPiece('dgm', {
 
 /** A diagram card of `a` orange and `b` blue spheres. */
 export const diagramCard = (id, label, at, a, b, extra = {}) => ({ id, kind: 'dgm', label, at, props: { a, b }, ...extra });
+
+/* ------------------------------------------------------------------
+   THE ARROW CARD: a reaction written with one arrow or two
+   ------------------------------------------------------------------ */
+
+const RECT_ARW = { hw: 12, hh: 6.5 };
+
+function paintArrow(ctx, p, state, o) {
+  const box = slab(ctx, o, RECT_ARW, '#2a2620');
+  say(ctx, String(p.label), o.x, o.y, Math.max(9, 4.4 * o.sc), { align: 'center', weight: 700, maxW: box.w - 2 * o.sc });
+}
+
+registerPiece('arw', {
+  kind: { r: 7, rect: RECT_ARW, nojoin: true },
+  paint: paintArrow,
+  faceKey: p => `arw|${p.label}`,
+  printed: p => String(p.label)
+});
+
+/** An arrow card; `label` is the written reaction. */
+export const arrowCard = (id, label, at, extra = {}) => ({ id, kind: 'arw', label, at, props: {}, ...extra });

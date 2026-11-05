@@ -23,8 +23,8 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { pansTable, panFixture, markerFixture, selectorFixture, note, tag, panRead, pieceIn, dialValue, TRACERS, stateOfParticle } from '../../table/kits/pans.js';
-import { diagramCard } from '../../table/kits/pans-pan.js';
+import { pansTable, panFixture, markerFixture, selectorFixture, note, panRead, pieceIn, dialValue, TRACERS, stateOfParticle } from '../../table/kits/pans.js';
+import { diagramCard, arrowCard } from '../../table/kits/pans-pan.js';
 
 export const meta = { stageCount: 8 };
 
@@ -281,7 +281,7 @@ export const STAGES = [
     prompt: 'Lay on each pan the arrow card that describes how it reacts.',
     widget,
     table: pansTable({
-      pieces: [tag('one', 'A → B', { x: 124, y: 16 }), tag('two', 'A ⇌ B', { x: 124, y: 36 })],
+      pieces: [arrowCard('one', 'A → B', { x: 124, y: 16 }), arrowCard('two', 'A ⇌ B', { x: 124, y: 36 })],
       fixtures: [
         panFixture('p1', { x: 28, y: 25 }, { kf: 0.1, kr: 0, b0: 0, seed: 52, start: 30, title: 'Pan 1', ...compact }),
         panFixture('p2', { x: 78, y: 25 }, { ...P_LEVEL, b0: 0, seed: 51, start: 30, title: 'Pan 2', ...compact })
