@@ -1059,8 +1059,103 @@ export function buildTipper(foe) {
   return body;
 }
 
+/* ------------------------------------------------------------------
+   THE LEACH
+   A sump pump: a squat casing on a sled, five small intake vats ringed behind it and two hoses. It sways when idle; the vats stand
+   high and the hoses lift on `acid`, sit level on `neutral`, and sag with the vats low on `base` (`foes.js` `the leach`).
+   ------------------------------------------------------------------ */
+
+export function buildLeach(foe) {
+  const group = new THREE.Group();
+  group.name = `leach:${foe.id}`;
+  group.scale.setScalar(0.6);
+  const shadow = contactShadow(0.16);
+  group.add(shadow);
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+  const iron = boilerMaterial();
+  const brass = brassMaterial();
+
+  const sledGeo = own(new THREE.BoxGeometry(0.15, 0.012, 0.09));
+  const sled = new THREE.Mesh(sledGeo, iron); sled.position.set(0, 0.006, 0); rig.add(sled);
+  const casingGeo = own(new THREE.SphereGeometry(0.036, 14, 10));
+  const casing = new THREE.Mesh(casingGeo, iron); casing.scale.set(1, 0.85, 1); casing.position.set(0, 0.05, 0.01); rig.add(casing);
+  const colGeo = own(new THREE.CylinderGeometry(0.016, 0.018, 0.04, 12));
+  const col = new THREE.Mesh(colGeo, brass); col.position.set(0, 0.095, 0.01); rig.add(col);
+
+  const vatGeo = own(new THREE.CylinderGeometry(0.012, 0.013, 0.03, 10));
+  const levelGeo = own(new THREE.CylinderGeometry(0.0105, 0.0105, 0.004, 10));
+  const levels = [];
+  for (let i = 0; i < 5; i++) {
+    const a = Math.PI * (0.15 + i * 0.175);
+    const vat = new THREE.Mesh(vatGeo, iron);
+    vat.position.set(Math.cos(a) * 0.058, 0.027, -0.02 - Math.sin(a) * 0.022);
+    rig.add(vat);
+    const lv = new THREE.Mesh(levelGeo, brass);
+    lv.position.set(vat.position.x, 0.04, vat.position.z);
+    rig.add(lv); levels.push(lv);
+  }
+  const hoseGeo = own(new THREE.CylinderGeometry(0.005, 0.005, 0.07, 8));
+  const hoses = [-1, 1].map(sx => {
+    const piv = new THREE.Group(); piv.position.set(sx * 0.03, 0.075, 0.03); rig.add(piv);
+    const h = new THREE.Mesh(hoseGeo, iron); h.position.set(0, -0.035, 0); piv.add(h);
+    return { piv, sx };
+  });
+
+  const hit = hitTarget(0.14, 0.14);
+  hit.position.y = 0.07;
+  group.add(hit);
+
+  const body = {
+    species: 'the leach',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.14, look: 0, baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose; body.since = 0; body.gone = false; group.visible = true;
+      if (instant) body.snap();
+    },
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+    update(dt, reduced, bearing = 0) {
+      body.t += dt; body.since += dt; body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed') {
+        const f = Math.min(1, body.since / 2.2);
+        rig.scale.set(1 + f * 0.25, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.25);
+        if (f >= 0.99) { body.gone = true; group.visible = false; }
+      } else rig.scale.set(1, 1, 1);
+      body.write(reduced ? 0 : body.t);
+    },
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      group.rotation.y = body.look * 0.3;
+      const idle = !body.still && (body.pose === 'idle' || body.pose === 'unmoved');
+      const lift = body.pose === 'acid' ? 1 : body.pose === 'base' ? -1 : 0;
+      hoses.forEach((h, i) => { h.piv.rotation.z = h.sx * (0.35 + 0.35 * lift) + (idle ? Math.sin(t * 0.8 + i) * 0.05 : 0); });
+      levels.forEach((l, i) => { l.position.y = 0.04 + lift * 0.008 + (idle ? Math.sin(t * 2 + i) * 0.0015 : 0); });
+      casing.position.x = idle ? Math.sin(t * 34) * 0.0004 : 0;
+    },
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -1077,6 +1172,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the crucible') return buildCrucible(foe);
   if (species === 'the undertow') return buildUndertow(foe);
   if (species === 'the tipper') return buildTipper(foe);
+  if (species === 'the leach') return buildLeach(foe);
   return null;
 }
 

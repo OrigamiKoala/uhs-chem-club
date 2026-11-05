@@ -2960,6 +2960,12 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   await checkVerdigrisQ8({ ok, fail });
   if (failures === before) ok('Verdigris q8-capacity: every strip, pour, capacity count, typed slip, refusal and story number agrees with the values worked by hand');
 }
+{
+  const before = failures;
+  const { checkVerdigrisBoss } = await import('./lib/verdigris-boss-checks.mjs');
+  await checkVerdigrisBoss({ ok, fail });
+  if (failures === before) ok('Verdigris boss-leach: every phase figure, slip refusal, corner, planner pose and story number agrees with the values worked by hand');
+}
 
 /* ------------------------------------------------------------------
    TALLOW'S TABLES ARE REAL (plan `bench-tabletop.md`, T1). A table stage declares pieces, and a

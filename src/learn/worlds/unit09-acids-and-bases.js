@@ -104,8 +104,8 @@ export const UNIT_09 = {
       line: 'The sump pump at the pump house calls every vat safe; test five vats against it.',
       arena: 'boss',
       stageCount: 5,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit09/boss-leach.js')
     }
   ]
 };

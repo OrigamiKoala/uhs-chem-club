@@ -1,6 +1,232 @@
 {
   "world": "unit09",
-  "end": [],
+  "end": [
+    {
+      "id": "q1-handover#e1",
+      "quest": "q1-handover",
+      "question": "In NH₃ + H₂O ⇌ NH₄⁺ + OH⁻, which species is the conjugate acid?",
+      "options": [
+        {
+          "id": "a",
+          "label": "OH⁻"
+        },
+        {
+          "id": "b",
+          "label": "NH₄⁺"
+        },
+        {
+          "id": "c",
+          "label": "H₂O"
+        },
+        {
+          "id": "d",
+          "label": "NH₃"
+        }
+      ],
+      "answer": "b",
+      "explanation": "NH₃ takes a proton from water and becomes NH₄⁺. The conjugate acid of a base is the base plus one proton."
+    },
+    {
+      "id": "q2-scale#e1",
+      "quest": "q2-scale",
+      "question": "What is the pH of 0.0020 M hydrochloric acid?",
+      "options": [
+        {
+          "id": "a",
+          "label": "11.30"
+        },
+        {
+          "id": "b",
+          "label": "2.00"
+        },
+        {
+          "id": "c",
+          "label": "3.00"
+        },
+        {
+          "id": "d",
+          "label": "2.70"
+        }
+      ],
+      "answer": "d",
+      "explanation": "Hydrochloric acid is strong, so [H₃O⁺] is 0.0020 M and pH = −log 0.0020 = 2.70."
+    },
+    {
+      "id": "q2-scale#e2",
+      "quest": "q2-scale",
+      "question": "Pure water at 50 °C reads pH 6.63. What is the best description?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Neutral, with equal H₃O⁺ and OH⁻"
+        },
+        {
+          "id": "b",
+          "label": "Acidic, because the pH is below 7"
+        },
+        {
+          "id": "c",
+          "label": "Basic, because the water is warm"
+        },
+        {
+          "id": "d",
+          "label": "Neutral only at pH 7.00"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Kw is larger at 50 °C, so neutral water holds more of each ion and its pH is below 7. Equal amounts of the two ions is what makes it neutral."
+    },
+    {
+      "id": "q3-weak#e1",
+      "quest": "q3-weak",
+      "question": "A 0.10 M solution of a weak acid has Ka = 1.0 × 10⁻⁵. What is its pH, taking x much smaller than 0.10?",
+      "options": [
+        {
+          "id": "a",
+          "label": "5.00"
+        },
+        {
+          "id": "b",
+          "label": "1.00"
+        },
+        {
+          "id": "c",
+          "label": "3.00"
+        },
+        {
+          "id": "d",
+          "label": "2.00"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Ka = x² / 0.10, so x² = 1.0 × 10⁻⁶ and x = 1.0 × 10⁻³ mol/L of H₃O⁺. The pH is 3.00."
+    },
+    {
+      "id": "q4-structure#e1",
+      "quest": "q4-structure",
+      "question": "Which is the stronger acid, HCl or HBr, and why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "HCl, because chlorine is more electronegative"
+        },
+        {
+          "id": "b",
+          "label": "HBr, because its longer bond is easier to break"
+        },
+        {
+          "id": "c",
+          "label": "HCl, because its bond is longer"
+        },
+        {
+          "id": "d",
+          "label": "They are equal, because both are strong acids in the same way"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Going down the group the H–X bond lengthens and weakens, and the larger halide holds the charge over more space. HBr gives up its proton more readily than HCl."
+    },
+    {
+      "id": "q5-salts#e1",
+      "quest": "q5-salts",
+      "question": "Ammonium chloride is dissolved in water. Is the solution acidic, neutral or basic, and why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Basic, because chloride takes protons"
+        },
+        {
+          "id": "b",
+          "label": "Neutral, because the salt is made from an acid and a base"
+        },
+        {
+          "id": "c",
+          "label": "Acidic, because NH₄⁺ is a weak acid and Cl⁻ does nothing"
+        },
+        {
+          "id": "d",
+          "label": "Neutral, because every salt is neutral"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Chloride comes from a strong acid and leaves the water alone, but ammonium is the conjugate acid of a weak base and hands protons to water. The pH is below 7."
+    },
+    {
+      "id": "q6-titrate#e1",
+      "quest": "q6-titrate",
+      "question": "A weak acid with pKa 4.74 is titrated with sodium hydroxide. What does the pH read at half of the equivalence volume?",
+      "options": [
+        {
+          "id": "a",
+          "label": "9.48"
+        },
+        {
+          "id": "b",
+          "label": "7.00"
+        },
+        {
+          "id": "c",
+          "label": "2.37"
+        },
+        {
+          "id": "d",
+          "label": "4.74"
+        }
+      ],
+      "answer": "d",
+      "explanation": "At half of the equivalence volume half of the acid has become its conjugate base, so the two are equal and pH = pKa."
+    },
+    {
+      "id": "q7-buffer#e1",
+      "quest": "q7-buffer",
+      "question": "A buffer holds acetate and acetic acid (pKa 4.74) in the ratio 10 to 1. What is its pH?",
+      "options": [
+        {
+          "id": "a",
+          "label": "5.74"
+        },
+        {
+          "id": "b",
+          "label": "4.74"
+        },
+        {
+          "id": "c",
+          "label": "3.74"
+        },
+        {
+          "id": "d",
+          "label": "6.74"
+        }
+      ],
+      "answer": "a",
+      "explanation": "pH = pKa + log(10 / 1) = 4.74 + 1 = 5.74."
+    },
+    {
+      "id": "q8-capacity#e1",
+      "quest": "q8-capacity",
+      "question": "Acetic acid (pKa 4.74) sits in a solution at pH 2. Which form is there more of?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Equal amounts"
+        },
+        {
+          "id": "b",
+          "label": "Acetate, CH₃COO⁻"
+        },
+        {
+          "id": "c",
+          "label": "Acetic acid, CH₃COOH"
+        },
+        {
+          "id": "d",
+          "label": "Neither"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Below the pKa the acid is mostly protonated. At pH 2 the ratio of acetate to acetic acid is about 10⁻²·⁷⁴, so acetic acid dominates."
+    }
+  ],
   "bench": {
     "q2-scale": {
       "problems": [
@@ -301,23 +527,47 @@
           "quest": "q4-structure",
           "question": "HF, HCl and HBr are raced against each other. Which lists them from strongest acid to weakest?",
           "options": [
-            { "id": "a", "label": "HF, HCl, HBr" },
-            { "id": "b", "label": "HBr, HCl, HF" },
-            { "id": "c", "label": "HCl, HF, HBr" },
-            { "id": "d", "label": "They are equally strong" }
+            {
+              "id": "a",
+              "label": "HF, HCl, HBr"
+            },
+            {
+              "id": "b",
+              "label": "HBr, HCl, HF"
+            },
+            {
+              "id": "c",
+              "label": "HCl, HF, HBr"
+            },
+            {
+              "id": "d",
+              "label": "They are equally strong"
+            }
           ],
           "answer": "b",
-          "explanation": "Going down the group the H\u2013X bond gets longer and weaker and the halide is larger, so the acid gives up its proton more easily. HF is the weakest of the three."
+          "explanation": "Going down the group the H–X bond gets longer and weaker and the halide is larger, so the acid gives up its proton more easily. HF is the weakest of the three."
         },
         {
           "id": "q4-structure#b2",
           "quest": "q4-structure",
           "question": "Which acid is the strongest?",
           "options": [
-            { "id": "a", "label": "HClO" },
-            { "id": "b", "label": "HClO\u2082" },
-            { "id": "c", "label": "HClO\u2083" },
-            { "id": "d", "label": "HClO\u2084" }
+            {
+              "id": "a",
+              "label": "HClO"
+            },
+            {
+              "id": "b",
+              "label": "HClO₂"
+            },
+            {
+              "id": "c",
+              "label": "HClO₃"
+            },
+            {
+              "id": "d",
+              "label": "HClO₄"
+            }
           ],
           "answer": "d",
           "explanation": "Each extra oxygen on chlorine pulls charge toward itself (the inductive effect), so the conjugate base holds its charge better and the acid is stronger."
@@ -778,6 +1028,60 @@
         ],
         "finish": "The acetate sets the limit: divide it by the acid in one pour."
       }
+    },
+    "boss-leach": {
+      "problems": [
+        {
+          "id": "boss-leach#b1",
+          "quest": "boss-leach",
+          "question": "A flask of pure water at 60 °C reads pH 6.51. Which describes it?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Acidic, because its pH is below 7"
+            },
+            {
+              "id": "b",
+              "label": "Neutral, because H₃O⁺ and OH⁻ are equal"
+            },
+            {
+              "id": "c",
+              "label": "Basic, because it is warm"
+            },
+            {
+              "id": "d",
+              "label": "Neutral only if the pH is exactly 7"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Pure water always holds equal H₃O⁺ and OH⁻, which is what neutral means. Kw grows with temperature, so the neutral pH falls to 6.51 at 60 °C."
+        },
+        {
+          "id": "boss-leach#b2",
+          "quest": "boss-leach",
+          "question": "Ammonia is titrated with hydrochloric acid and the pH at the equivalence point is 5.28. Which indicator changes colour closest to that point?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Any of them, because the pH jumps there"
+            },
+            {
+              "id": "b",
+              "label": "Phenolphthalein, which changes from 8.2 to 10.0"
+            },
+            {
+              "id": "c",
+              "label": "Bromothymol blue, which changes from 6.0 to 7.6"
+            },
+            {
+              "id": "d",
+              "label": "Methyl red, which changes from 4.4 to 6.2"
+            }
+          ],
+          "answer": "d",
+          "explanation": "The equivalence point of a weak base with a strong acid is acidic, because the ammonium that forms is a weak acid. Methyl red changes around pH 5, so it is the dye that turns near 25 mL."
+        }
+      ]
     }
   }
 }

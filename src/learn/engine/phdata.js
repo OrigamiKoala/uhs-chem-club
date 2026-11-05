@@ -35,7 +35,8 @@ export const ACIDS = Object.freeze({
 export const BASES = Object.freeze({
   nh3:     { id: 'nh3',     name: 'ammonia',           formula: 'NH₃',      acid: 'NH₄⁺',     Kb: 1.8e-5 },
   acetate: { id: 'acetate', name: 'acetate ion',       formula: 'CH₃COO⁻',  acid: 'CH₃COOH',  Kb: KW25 / 1.8e-5 },
-  fluoride:{ id: 'fluoride',name: 'fluoride ion',      formula: 'F⁻',       acid: 'HF',       Kb: KW25 / 6.8e-4 }
+  fluoride:{ id: 'fluoride',name: 'fluoride ion',      formula: 'F⁻',       acid: 'HF',       Kb: KW25 / 6.8e-4 },
+  carbonate:{ id: 'carbonate', name: 'carbonate ion',   formula: 'CO₃²⁻',    acid: 'HCO₃⁻',    Kb: KW25 / 4.7e-11 }
 });
 
 /** pKa values for the proton race of q4 (water-scale values from standard tables; strong acids are textbook estimates). */
@@ -49,7 +50,8 @@ export const PKA = Object.freeze({
 /** Salts of a strong acid and a strong base: neither ion takes part (q5). */
 export const NEUTRAL_SALTS = Object.freeze({
   nacl: { id: 'nacl', name: 'sodium chloride', formula: 'NaCl' },
-  kno3: { id: 'kno3', name: 'potassium nitrate', formula: 'KNO₃' }
+  kno3: { id: 'kno3', name: 'potassium nitrate', formula: 'KNO₃' },
+  kcl: { id: 'kcl', name: 'potassium chloride', formula: 'KCl' }
 });
 
 /** Indicators: transition pKa and the colour range (pH). */

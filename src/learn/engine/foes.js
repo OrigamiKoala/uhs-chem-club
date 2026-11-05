@@ -32,6 +32,7 @@ import { planDomains, planDipole, planTwist, planMix } from './vsepr.js';
 import { planGas, planMixture, mixtureState, leftAfter } from './gasdata.js';
 import { gibbsFreeEnergy, hessStackEnthalpy, bondEnthalpySum } from './thermodata.js';
 import { direction, gaugePos } from './eqdata.js';
+import { neutralPH } from './phdata.js';
 
 /**
  * How the Compressor answers a push, as a ratio of the push now to the push the stage
@@ -226,6 +227,32 @@ export const SPECIES = {
       if (probe?.kind === 'gauge') {
         const dir = direction(probe.Q, probe.K);
         return dir === 'none' ? { pose: 'level', lean: 0 } : { pose: 'tipped', lean: gaugePos(probe.Q, probe.K, probe.decades ?? 1.5) };
+      }
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
+  'the leach': {
+    name: 'The Leach',
+    counter: 'Trial missed: the reading does not match what that vat of the acid marsh shows.',
+    knockback: 'Knocked back. The Leach draws its hoses in, but every reading on your flasks remains.',
+    hit: 'The Leach runs dry and its hoses go slack over the empty vats.',
+    lines: {
+      idle: () => 'The motor shudders and the five vats slop.',
+      unmoved: () => 'The Leach sits with its hoses in the vats.',
+      acid: () => 'The Leach lifts its hoses; the vats stand high.',
+      neutral: () => 'The Leach holds its hoses level over the vats.',
+      base: () => 'The Leach lets its hoses sag; the vats stand low.'
+    },
+    /**
+     * @param {object} probe `{ pose }` (a table: the Leach only watches), or `{ kind: 'ph', pH, T }` as a meter reads a flask: the vats
+     *   stand high below the neutral pH of that temperature, level on it and low above it.
+     */
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'ph') {
+        const n = neutralPH(probe.T ?? 25);
+        const d = probe.pH - n;
+        return { pose: Math.abs(d) <= 0.005 ? 'neutral' : d < 0 ? 'acid' : 'base', off: d };
       }
       return { pose: probe?.pose || 'unmoved' };
     }
@@ -514,8 +541,19 @@ function tipperArt(pose, plan = {}) {
   return svg(trestle + beam + pivot, 'The Tipper');
 }
 
+function leachArt(pose, plan = {}) {
+  const lift = pose === 'acid' ? -5 : pose === 'base' ? 5 : 0;
+  const casing = `<ellipse cx="32" cy="38" rx="14" ry="10" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/><path d="M20 48 L16 56 M44 48 L48 56" stroke="${EDGE}" stroke-width="2"/>`;
+  const vats = [10, 20, 30, 40, 50].map(x => `<rect x="${x - 3}" y="${18 + lift / 2}" width="6" height="9" fill="${BODY}" stroke="${EDGE}" stroke-width="1"/>`).join('');
+  const hoses = `<path d="M22 32 L10 ${22 + lift} M42 32 L54 ${22 + lift}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
+  const lens = `<circle cx="32" cy="30" r="2.4" fill="${pose === 'neutral' ? LIT : BODY}" stroke="${EDGE}" stroke-width="1"/>`;
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${casing}${vats}${hoses}</g>`, 'The Leach, dry');
+  return svg(vats + casing + hoses + lens, 'The Leach');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the leach') return leachArt(pose, plan);
   if (species === 'the tipper') return tipperArt(pose, plan);
   if (species === 'the crucible') return crucibleArt(pose, plan);
   if (species === 'the compressor') return compressorArt(pose, plan);

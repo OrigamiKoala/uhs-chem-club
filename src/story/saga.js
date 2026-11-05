@@ -106,6 +106,14 @@ export const CLUES = {
     summary: 'A sealed sample of the fluid the raiders poured into the canal.',
     note: 'The freezing agent was a synthetic fluid. It was made, not mined, so somebody built a plant to make it.'
   },
+  clue_verdigris_leach: {
+    id: 'clue_verdigris_leach',
+    act: 'act3',
+    source: 'Verdigris Boss · The Leach',
+    name: 'The Unmeasured Vat',
+    summary: 'A sealed vat from the pump house, labelled only "acid" in the Fifth\'s hand.',
+    note: 'Read with a meter, a lens and a dye, the water is not simply acid. The Fifth gave it one word and never measured it.'
+  },
   clue_teeter_pan: {
     id: 'clue_teeter_pan',
     act: 'act3',
@@ -362,17 +370,19 @@ export const EPISODES = {
     worldId: 'unit09',
     worldName: 'Verdigris',
     act: 'act3',
-    arrival: 'Emergency call from the swamp fortress on Verdigris. Raiders ruptured industrial acid tanks, and the corrosive liquid is eating through the building foundations.',
-    closing: 'The acid spills have been safely neutralized and the fortress walls are secure. Chemical analysis shows the acid came from old government supplies abandoned decades ago.',
+    arrival: 'The marsh fortress on Verdigris has been sealed off. The Fifth\'s notices on the gates say the water is "acid", and nothing more.',
+    closing: 'The marsh has been measured, tank by tank, and the pump house is quiet. The Fifth\'s word "acid" described none of it exactly.',
     spoilFamily: 'Caustic leaches',
+    bossId: 'boss-leach',
+    clueId: 'clue_verdigris_leach',
     paragraphs: [
-      'Verdigris is a humid wetland world built around an old communications fortress that keeps our emergency radios connected across the sector.',
-      'The raiders blasted the storage vats, dumping thousands of gallons of strong acid into the shallow water around the support pillars. The acid is dissolving the steel beams and concrete footings beneath our feet.',
-      'Acids can be safely disarmed by adding the right amount of a basic substance to turn them into harmless water and salt. You need to measure how strong the acid is and mix the exact neutralizer needed to protect the fortress.'
+      'Verdigris is a wet marsh built around an old fortress that keeps our radios connected across the sector. Pumps and sluices move its water from vat to vat.',
+      'The Fifth Guild put notices on every gate calling the marsh water "acid" and kept the crews out. Nobody on the notices measured anything, and the water in the vats does not all behave the same way.',
+      'To read the water you need a meter, a window onto what the water holds, and a dye. Measure each tank, then find out what the Fifth\'s one word was hiding.'
     ],
-    incident: 'Industrial acid tanks were ruptured around the fortress support pillars, rapidly corroding the metal structure.',
-    objective: 'Measure the strength of the spilled acid and apply basic neutralizers to save the fortress foundations.',
-    caseFileNote: 'The acid barrels carried military markings from thirty years ago. The raiders are using gear left behind when the old government abandoned frontier garrisons to fend for themselves.'
+    incident: 'The Fifth sealed the fortress and labelled the marsh water "acid" without measuring it.',
+    objective: 'Measure the marsh water vat by vat and find what the Fifth\'s one word left out.',
+    caseFileNote: 'The Fifth never measured the water. Every notice on the gates says "acid", and the vats show it was not that simple.'
   },
   unit10: {
     worldId: 'unit10',

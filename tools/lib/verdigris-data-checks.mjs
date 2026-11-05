@@ -52,6 +52,15 @@ export function checkVerdigrisData() {
   near('bufferState 90/110', D.bufferState({ Ka: 1.8e-5, nHA: 0.0100, nA: 0.0100, V: 0.1, nH: 0.0010, vAdd: 0.010 }).pH, 4.6576, 0.003);
   near('bufferState 150/50', D.bufferState({ Ka: 1.8e-5, nHA: 0.0050, nA: 0.0150, V: 0.1 }).pH, 5.2218, 0.003);
   near('bufferState water + acid', D.bufferState({ V: 0.1, nH: 0.0010, vAdd: 0.010 }).pH, 2.0414, 0.001);
+  // boss-leach: hand values (closed forms worked on paper)
+  near('carbonate 0.10 pH', D.saltOfWeakAcid(4.7e-11, 0.10).pH, 11.6539, 0.001);
+  near('carbonate flask via BASES', D.weakBase(D.BASES.carbonate.Kb, 0.10).pH, 11.6539, 0.001);
+  near('NH4+ 0.20 pH', D.weakAcid(D.ACIDS.nh4.Ka, 0.20).pH, 4.9771, 0.001);
+  near('water 60 pH', D.scaleSolution({ id: 'water', T: 60 }).pH, 6.5086, 0.001);
+  near('HCl 2.8e-7 pH', D.scaleSolution({ id: 'hcl', c: 2.8e-7 }).pH, 6.5058, 0.001);
+  near('NaOH 8.6e-7 at 60 pH', D.scaleSolution({ id: 'naoh', c: 8.6e-7, T: 60 }).pH, 6.9996, 0.001);
+  near('HF 0.0010 pH', D.weakAcid(6.8e-4, 0.001).pH, 3.2581, 0.001);
+  near('formic 0.050 pH', D.weakAcid(1.8e-4, 0.05).pH, 2.5359, 0.001);
   // table sanity
   rel('Kb acetate', D.BASES.acetate.Kb, 5.556e-10);
   near('Ka * Kb = Kw for NH3', D.ACIDS.nh4.Ka * D.BASES.nh3.Kb, 1e-14, 1e-20);

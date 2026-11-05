@@ -99,6 +99,17 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: neutralising is not the same as neutral; the Fifth\'s salt left the water basic.'
   },
+  /* ---- Verdigris: the Fifth called the marsh water acid and measured nothing ---- */
+  'unit09/boss-leach': {
+    scene: 'leach-open',
+    beats: [
+      { to: 0.25, say: 'Warm water read 6.51 and held equal H₃O⁺ and OH⁻, so it was neutral. The base that read 7.00 held far more OH⁻ than H₃O⁺.' },
+      { to: 0.5, say: 'Formic acid read 2.54, acetic acid 2.88 and hydrofluoric acid 3.26. The pH followed the H₃O⁺ each flask held, not the share of its acid that had let go.' },
+      { to: 0.76, say: 'Ammonia used up 25.0 mL of acid at a pH of 5.28. Methyl red changed within that volume, and the other dyes did not.' },
+      { to: 0.94, say: '100 acetic acid spheres with 227 of acetate read 5.10. A pH comes from a ratio you can build.' }
+    ],
+    filed: 'Filed: the Fifth called the water acid and measured nothing; every flask we read said something more exact.'
+  },
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
   'unit08/boss-tipper': {
     scene: 'tipper-open',
