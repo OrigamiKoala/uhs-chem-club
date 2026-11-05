@@ -1,0 +1,399 @@
+/**
+ * Unit 8 · Bench 1 — Running Both Ways (q1-both)
+ *
+ * Teeter's salt pans, on the pans kit (`table/kits/pans.js`). A pan holds 48 particles; each is A (orange) or B (blue) and turns to the
+ * other with a fixed chance per tick. Eight stages and ONE click: the belief that once the amounts stop changing, nothing is happening.
+ *
+ *   1  A alone, run until it settles                  -> some A is left; the amounts stop changing
+ *   2  PREDICT: what are the particles doing once the graph is flat?
+ *   3  TEST: ringed particles in the settled pan      -> dynamic equilibrium (both changes keep going)
+ *   4  B alone, run until it settles                  -> the same level from the other end
+ *   5  match the settled pan to a particle diagram    -> a particulate picture of equilibrium (CED 7.8)
+ *   6  two settled pans, one statement is false       -> the amounts need not be equal
+ *   7  label two pans with an arrow                   -> reversible reaction (double arrow)
+ *   8  three sealed pans: which has reached equilibrium
+ *
+ * THE WRONG MODEL IS ON THE TABLE. Card 1 of the prediction says nothing is happening. The ringed particles of stage 3 change colour in a
+ * pan whose graph has not moved, and the two counts both run.
+ *
+ * Simulation: each particle changes with a fixed chance per tick (`engine/eqdata.js`). Real reactions are not all one-step collisions.
+ *
+ * This quest pays no XP, writes no Submission and never reaches Standings.
+ */
+
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { remember, recall } from '../../engine/predict.js';
+import { pansTable, panFixture, markerFixture, selectorFixture, note, tag, panRead, pieceIn, dialValue, TRACERS, stateOfParticle } from '../../table/kits/pans.js';
+import { diagramCard } from '../../table/kits/pans-pan.js';
+
+export const meta = { stageCount: 8 };
+
+export const VOCABULARY = [
+  { term: /\bdynamic equilibrium\b/i, introducedAt: 3 },
+  { term: /\bequilibrium\b/i, introducedAt: 3 },
+  { term: /\breversible reaction\b/i, introducedAt: 7 },
+  { term: /\bdouble arrow\b/i, introducedAt: 7 }
+];
+
+/** Amounts of particles are Tallow's; no other quest's words are used here. */
+export const BUILDS_ON = ['unit01/q6-weigh'];
+
+export function toolNoteFor() { return null; }
+
+const widget = { type: 'table', label: 'The bench' };
+const QUEST_KEY = 'unit08/q1-both';
+const GUESS = {
+  stopped: 'Nothing is happening: every change has stopped',
+  allB: 'All the A has turned to B and stays there',
+  both: 'A keeps turning to B and B keeps turning back to A',
+  oneway: 'A keeps turning to B, and none turns back'
+};
+
+// The pans: 48 particles; A turns to B with chance kf per tick and B to A with chance kr.
+const P_LEVEL = { kf: 0.1, kr: 0.05 };
+const TOL = 5;
+
+/** The marker is checked against the level the pan has settled at, or waits until the pan has run long enough to have one. */
+function markerCheck(state, fid, markerId) {
+  const t = state.table;
+  const r = panRead(t, fid);
+  const v = dialValue(t, markerId);
+  if (r.settledA == null) return { ok: false, notYet: true, msg: 'The orange line on the graph is still falling.' };
+  if (Math.abs(v - r.settledA) <= TOL) return { ok: true };
+  if (r.t < 60) return { ok: false, msg: 'The orange line on the graph has not stopped moving.' };
+  return { ok: false, msg: v > r.settledA ? 'The orange line on the graph flattens below the marker.' : 'The orange line on the graph flattens above the marker.' };
+}
+
+/** How many times the ringed particles changed colour in the strip (the last 40 ticks). */
+function ringedChanges(r) {
+  let k = 0;
+  for (const i of TRACERS) for (let t = Math.max(1, r.t - 39); t <= r.t; t++) if (stateOfParticle(r.hist, i, t) !== stateOfParticle(r.hist, i, t - 1)) k++;
+  return k;
+}
+
+const predictCard = (id, at) => note(id, GUESS[id], at);
+const compact = { window: false, h: 42, w: 46 };
+
+export const STAGES = [
+  /* ---------------------------------------------------------------- 1 */
+  {
+    id: 's1-settle',
+    title: 'A Alone',
+    prompt: 'Mark how many particles of A are left once the amounts in the pan stop changing.',
+    widget,
+    table: pansTable({
+      fixtures: [
+        panFixture('pan', { x: 52, y: 27 }, { ...P_LEVEL, b0: 0, seed: 11, title: 'Pan: A alone' }),
+        markerFixture('mark', 'A left', { x: 126, y: 24 }, { min: 0, max: 48, step: 1, start: 48 })
+      ]
+    }),
+    hints: [
+      'Use the "Run" key on the pan and the marker.',
+      'Watch the orange line on the graph until it stops moving.',
+      'Set the marker to where the orange line has flattened.'
+    ],
+    check(state) { return markerCheck(state, 'pan', 'mark'); },
+    reward: {
+      log: 'Some A was left when the amounts stopped changing.',
+      title: 'The Amounts Settle',
+      body: 'Started with only A, the pan did not turn all of it into B. After a while the number of each stopped changing, with some A left.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 2 */
+  {
+    id: 's2-predict',
+    title: 'What Is Happening?',
+    // A PREDICT STAGE: the pan is not on the table. The guess is made here and comes back with the test.
+    predict: true,
+    prompt: 'Once the graph is flat, which best describes what the particles in the pan are doing?',
+    widget,
+    table: pansTable({
+      pieces: [predictCard('stopped', { x: 30, y: 14 }), predictCard('allB', { x: 78, y: 14 }), predictCard('both', { x: 30, y: 36 }), predictCard('oneway', { x: 78, y: 36 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+    }),
+    hints: [
+      'Use the four cards and the slot.',
+      'Think about what each card would look like for the particles themselves, not for the graph.',
+      'A flat graph says the numbers stopped changing; decide whether that means the particles stopped.'
+    ],
+    check(state) {
+      const card = pieceIn(state.table, 'guess');
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      return { ok: true };
+    },
+    onClear(state) {
+      const card = pieceIn(state.table, 'guess');
+      if (card) remember(QUEST_KEY, card.id);
+    },
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'Prediction',
+      body: 'Next, a settled pan is put under a ring test to see what its particles do.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 3 */
+  {
+    id: 's3-tracer',
+    title: 'Ringed Particles',
+    get prompt() {
+      const g = recall(QUEST_KEY);
+      return g && GUESS[g] ? `You predicted "${GUESS[g]}". Say what the ringed particles show is happening in the settled pan.` : 'Say what the ringed particles show is happening in the settled pan.';
+    },
+    widget,
+    table: pansTable({
+      fixtures: [
+        panFixture('pan', { x: 52, y: 32 }, { ...P_LEVEL, b0: 0, seed: 23, start: 100, tracer: true, title: 'Settled pan, eight particles ringed' }),
+        selectorFixture('verdict', 'What is happening', { x: 127, y: 22 }, { options: ['Everything has stopped', 'Particles are still changing', ' '], start: 3 })
+      ]
+    }),
+    hints: [
+      'Use the "Run" key if you like, and the answer dial.',
+      'Follow the ringed particles in the strip under the graph and read the two counts.',
+      'A graph that is flat can hide changes that cancel each other out.'
+    ],
+    check(state) {
+      const v = dialValue(state.table, 'verdict');
+      if (v === 3) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 2) return { ok: true };
+      const r = panRead(state.table, 'pan');
+      return { ok: false, msg: `The ringed particles changed colour ${ringedChanges(r)} times in the strip, and the two counts under the graph are not zero.` };
+    },
+    get reward() {
+      const g = recall(QUEST_KEY);
+      const verdict = !g || !GUESS[g] ? '' : g === 'both' ? 'You predicted changes both ways, and the ringed particles agreed. ' : 'The ringed particles did not agree with your prediction, which is how a guess gets better. ';
+      return {
+        log: 'Particles kept changing in a flat pan.',
+        title: 'Dynamic Equilibrium',
+        body: `${verdict}The graph is flat because A turns to B at about the same rate that B turns back to A. This state, with both changes still going on, is called dynamic equilibrium.`
+      };
+    }
+  },
+
+  /* ---------------------------------------------------------------- 4 */
+  {
+    id: 's4-from-b',
+    title: 'B Alone',
+    prompt: 'Mark how many particles of A there are once a pan that starts with only B has stopped changing.',
+    widget,
+    table: pansTable({
+      fixtures: [
+        panFixture('pan', { x: 52, y: 27 }, { ...P_LEVEL, b0: 48, seed: 31, title: 'Pan: B alone', ghost: { b0: 0, seed: 11 } }),
+        markerFixture('mark', 'A left', { x: 126, y: 24 }, { min: 0, max: 48, step: 1, start: 0 })
+      ]
+    }),
+    hints: [
+      'Use the "Run" key on the pan and the marker; the dashed line is the pan that started with only A.',
+      'Compare where the orange line ends with where it ended when A went first.',
+      'Set the marker to where the orange line has flattened.'
+    ],
+    check(state) { return markerCheck(state, 'pan', 'mark'); },
+    reward: {
+      log: 'B alone settled at the same amounts.',
+      title: 'Same Level From Either End',
+      body: 'Started from B alone, the pan settled at the same numbers of A and B as it did started from A alone. Where it settles belongs to the pan, not to how it was started.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 5 */
+  {
+    id: 's5-diagram',
+    title: 'A Picture of the Settled Pan',
+    prompt: 'Lay the particle diagram that matches the pan once it is in equilibrium.',
+    widget,
+    table: pansTable({
+      pieces: [
+        diagramCard('d1', 'Diagram 1', { x: 22, y: 58 }, 48, 0),
+        diagramCard('d2', 'Diagram 2', { x: 48, y: 58 }, 24, 24),
+        diagramCard('d3', 'Diagram 3', { x: 74, y: 58 }, 8, 40),
+        diagramCard('d4', 'Diagram 4', { x: 100, y: 58 }, 16, 32)
+      ],
+      fixtures: [panFixture('pan', { x: 52, y: 25 }, { ...P_LEVEL, b0: 0, seed: 71, title: 'Pan: A alone', h: 42 })],
+      zones: { slots: [{ id: 'match', label: 'Matches the settled pan', at: { x: 127, y: 38 }, size: { w: 24, h: 22 } }] }
+    }, { h: 70 }),
+    hints: [
+      'Use the "Run" key and the diagram cards.',
+      'Compare the settled pan\'s window with the number of orange and blue spheres on each card.',
+      'The card must show the same proportion of orange to blue as the window.'
+    ],
+    check(state) {
+      const t = state.table;
+      const card = pieceIn(t, 'match');
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      const r = panRead(t, 'pan');
+      if (r.meanA == null) return { ok: false, notYet: true, msg: 'The pan has not settled yet.' };
+      const { a, b } = card.props;
+      const want = r.meanA / r.n;
+      if (Math.abs(a / (a + b) - want) <= 0.08) return { ok: true };
+      if (b === 0) return { ok: false, msg: 'The pan\'s graph shows blue spheres in it; that card has none.' };
+      if (a === b) return { ok: false, msg: 'The two lines on the graph end at different heights; that card shows them level.' };
+      return { ok: false, msg: a / (a + b) > want ? 'The orange line on the graph ends lower than that card shows.' : 'The orange line on the graph ends higher than that card shows.' };
+    },
+    reward: {
+      log: 'The diagram with the settled proportion matches.',
+      title: 'Equilibrium, Drawn',
+      body: 'A particle diagram of a pan in equilibrium shows both kinds present, in numbers that stay fixed. The picture is a snapshot; the particles in it are still changing.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-not-equal',
+    title: 'Two Settled Pans',
+    prompt: 'Lay the statement that these two settled pans show to be false.',
+    widget,
+    table: pansTable({
+      pieces: [
+        note('c-equal', 'A and B are always equal in number', { x: 26, y: 58 }),
+        note('c-both', 'Changes keep going in both directions', { x: 76, y: 58 }),
+        note('c-agree', 'On each pan, the two counts are about the same', { x: 126, y: 58 })
+      ],
+      fixtures: [
+        panFixture('p1', { x: 28, y: 25 }, { ...P_LEVEL, b0: 0, seed: 41, start: 100, title: 'Pan 1', ...compact }),
+        panFixture('p2', { x: 78, y: 25 }, { kf: 0.1, kr: 0.1, b0: 0, seed: 42, start: 100, title: 'Pan 2', ...compact })
+      ],
+      zones: { slots: [{ id: 'false', label: 'False', at: { x: 126, y: 26 }, size: { w: 36, h: 14 } }] }
+    }, { h: 70 }),
+    hints: [
+      'Use the "Run" key if you like, and the three cards.',
+      'Read where the orange and blue lines end on each pan, and the two counts under it.',
+      'Test each statement against both pans; only one of them fails.'
+    ],
+    check(state) {
+      const c = pieceIn(state.table, 'false');
+      if (!c) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (c.id === 'c-equal') return { ok: true };
+      if (c.id === 'c-both') return { ok: false, msg: 'On both pans, both counts under the graph are above zero.' };
+      return { ok: false, msg: 'On both pans, the two counts under the graph are close to each other.' };
+    },
+    reward: {
+      log: 'The amounts were not equal; the rates were about the same.',
+      title: 'Not Equal Amounts',
+      body: 'In equilibrium the forward and reverse rates are equal, but the amounts of A and B need not be. Pan 1 settled with about twice as much B as A, while its two counts matched.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    id: 's7-arrows',
+    title: 'Writing the Pans',
+    prompt: 'Lay on each pan the arrow card that describes how it reacts.',
+    widget,
+    table: pansTable({
+      pieces: [tag('one', 'A → B', { x: 124, y: 16 }), tag('two', 'A ⇌ B', { x: 124, y: 36 })],
+      fixtures: [
+        panFixture('p1', { x: 28, y: 25 }, { kf: 0.1, kr: 0, b0: 0, seed: 52, start: 30, title: 'Pan 1', ...compact }),
+        panFixture('p2', { x: 78, y: 25 }, { ...P_LEVEL, b0: 0, seed: 51, start: 30, title: 'Pan 2', ...compact })
+      ],
+      zones: {
+        slots: [
+          { id: 'l1', label: 'Pan 1 is written', at: { x: 28, y: 54 }, size: { w: 24, h: 8 } },
+          { id: 'l2', label: 'Pan 2 is written', at: { x: 78, y: 54 }, size: { w: 24, h: 8 } }
+        ]
+      }
+    }),
+    hints: [
+      'Use the "Run" key on each pan and the two arrow cards.',
+      'Compare the "B to A" count on the two pans, and where each blue line ends.',
+      'A pan where B never turns back is written with a single arrow; one where it does is written with an arrow each way.'
+    ],
+    check(state) {
+      const t = state.table;
+      const a = pieceIn(t, 'l1'); const b = pieceIn(t, 'l2');
+      if (!a || !b) return { ok: false, notYet: true, msg: 'Lay a card on each pan.' };
+      if (a.id === 'one' && b.id === 'two') return { ok: true };
+      return a.id !== 'one'
+        ? { ok: false, msg: 'Pan 1\'s "B to A" count is 0 and its blue line ends at the top of the graph.' }
+        : { ok: false, msg: 'Pan 2\'s "B to A" count is above zero and its blue line stops below the top of the graph.' };
+    },
+    reward: {
+      log: 'The pan with changes both ways takes the double arrow.',
+      title: 'Reversible Reaction',
+      body: 'A reaction that can go both ways is a reversible reaction, written with a double arrow, ⇌. A single arrow means B never turns back into A.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-sealed',
+    title: 'Sealed Pans',
+    prompt: 'Set the dial to the pan that has reached equilibrium.',
+    widget,
+    table: pansTable({
+      fixtures: [
+        panFixture('p1', { x: 25, y: 25 }, { kf: 0.1, kr: 0, b0: 0, seed: 61, start: 60, title: 'Pan 1', ...compact }),
+        panFixture('p2', { x: 75, y: 25 }, { kf: 0.004, kr: 0.002, b0: 0, seed: 62, start: 60, title: 'Pan 2', ...compact }),
+        panFixture('p3', { x: 125, y: 25 }, { kf: 0.06, kr: 0.09, b0: 0, seed: 63, start: 60, title: 'Pan 3', ...compact }),
+        selectorFixture('pick', 'Reached equilibrium', { x: 75, y: 55 }, { options: ['Pan 1', 'Pan 2', 'Pan 3', ' '], start: 4, w: 56 })
+      ]
+    }),
+    hints: [
+      'Use the "Run" key on each pan and the answer dial.',
+      'Compare the graphs and the two counts under each one.',
+      'Equilibrium needs a graph that has stopped moving and changes still counted in both directions.'
+    ],
+    check(state) {
+      const v = dialValue(state.table, 'pick');
+      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 3) return { ok: true };
+      if (v === 1) return { ok: false, msg: 'Pan 1\'s graph has stopped moving, and its "B to A" count is 0.' };
+      return { ok: false, msg: 'Pan 2\'s graph is still moving.' };
+    },
+    reward: {
+      log: 'Pan 3 was in equilibrium.',
+      title: 'Spotting Equilibrium',
+      body: 'A pan is in equilibrium when its amounts hold steady and both changes are still being counted. A pan that stopped because nothing turns back is finished, not in equilibrium.'
+    }
+  }
+];
+
+/** The quest's closing card, shown only where a quest has no story animation yet. */
+export const DEBRIEF = {
+  title: 'Running Both Ways',
+  body: 'A pan that has stopped changing is still turning over, at about the same rate in both directions.'
+};
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+/** Run a pan `n` times (ten ticks each). */
+const runs = (fid, n) => Array.from({ length: n }, () => ({ run: fid }));
+
+export const SOLUTIONS = [
+  [...runs('pan', 10), dial('mark', 'value', 15)],
+  [put('both', 'slot:guess')],
+  [dial('verdict', 'value', 2)],
+  [...runs('pan', 10), dial('mark', 'value', 15)],
+  [...runs('pan', 10), put('d4', 'slot:match')],
+  [put('c-equal', 'slot:false')],
+  [put('one', 'slot:l1'), put('two', 'slot:l2')],
+  [dial('pick', 'value', 3)]
+];
+
+export const MISSES = [
+  [...runs('pan', 10), dial('mark', 'value', 0)],
+  [],
+  [dial('verdict', 'value', 1)],
+  [...runs('pan', 10), dial('mark', 'value', 48)],
+  [...runs('pan', 10), put('d2', 'slot:match')],
+  [put('c-both', 'slot:false')],
+  [put('two', 'slot:l1'), put('one', 'slot:l2')],
+  [dial('pick', 'value', 1)]
+];
+
+function blankState() { return {}; }
+
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
+}
+
+export function mount(container, ctx) {
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
+}
+
+export const CHECKS = { P_LEVEL, TOL };

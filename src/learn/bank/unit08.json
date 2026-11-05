@@ -1,0 +1,60 @@
+{
+  "world": "unit08",
+  "end": [],
+  "bench": {
+    "q1-both": {
+      "problems": [
+        {
+          "id": "q1-both#b1",
+          "quest": "q1-both",
+          "question": "A sealed flask holding A and B has stopped changing colour. Which statement is correct?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The reaction has stopped"
+            },
+            {
+              "id": "b",
+              "label": "A and B are still reacting, in both directions, at about the same rate"
+            },
+            {
+              "id": "c",
+              "label": "All of the A has been used up"
+            },
+            {
+              "id": "d",
+              "label": "Only the forward reaction is still going"
+            }
+          ],
+          "answer": "b",
+          "explanation": "A flask that looks unchanged is in dynamic equilibrium: both changes keep going, so the amounts stay the same."
+        },
+        {
+          "id": "q1-both#b2",
+          "quest": "q1-both",
+          "question": "One flask starts with only reactant and another starts with only product, under the same conditions. Both are left until nothing seems to change. What do they show?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The same amounts of reactant and product in both"
+            },
+            {
+              "id": "b",
+              "label": "Only product in both"
+            },
+            {
+              "id": "c",
+              "label": "Equal amounts of reactant and product in each"
+            },
+            {
+              "id": "d",
+              "label": "The first flask ends with more product than the second"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A reversible reaction reaches the same equilibrium amounts from either end; the amounts belong to the reaction and the conditions, not to the start."
+        }
+      ]
+    }
+  }
+}

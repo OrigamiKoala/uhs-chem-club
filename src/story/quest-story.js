@@ -19,6 +19,16 @@
  */
 
 export const QUEST_STORY = {
+  /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
+  'unit08/q1-both': {
+    scene: 'pan-both-ways',
+    beats: [
+      { to: 0.3, say: 'Start a pan with only A and the amounts settle, with some A left. Where the graph goes flat looks like the end of the change.' },
+      { to: 0.66, say: 'Ring some particles and they keep changing colour in the flat pan, A to B and back. That is dynamic equilibrium: both changes keep going, at about the same rate.' },
+      { to: 0.9, say: 'Start from B alone and the pan settles at the same amounts. A reversible reaction can be reached from either end.' }
+    ],
+    filed: 'Filed: a pan the Fifth calls finished is still turning over, so it is only balanced.'
+  },
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'unit01/q1-grain': {
     scene: 'grain-resolve',

@@ -22,6 +22,11 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Teeter: the Fifth calls a pan finished; is it? ---- */
+  'q1-both': {
+    1: 'The Fifth says this pan is finished once it stops changing, and Vess wants to see it run.'
+  },
+
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'q1-grain': {
     1: 'Raiders scattered grey powder across the refinery yard, and Vess needs to know if it is something new.',

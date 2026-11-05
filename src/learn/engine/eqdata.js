@@ -63,19 +63,25 @@ export function pansExpectedB(n, kf, kr, b0, t) {
 }
 
 /**
- * Run the pan. Returns per-tick history: b[t] is the count of B after tick t (b[0] is the start), fwd[t] and rev[t] are the
- * conversions that happened in tick t (index 0 is 0). Each particle changes independently, so the counts scatter around the
- * expected curve; the tallies are the events actually drawn.
+ * Run the pan, particle by particle. Returns per-tick history: `b[t]` is the count of B after tick t (`b[0]` is the start), `fwd[t]` and
+ * `rev[t]` are the conversions that happened in tick t (index 0 is 0), and `states[t * n + i]` is 1 when particle i is B after tick t.
+ * Particles 0..b0-1 start as B. Each particle changes independently, so the counts scatter around the expected curve; the tallies are
+ * the events actually drawn, and the colour of each particle is the one the tallies count.
  */
 export function simulatePan({ n, b0, kf, kr, ticks, seed }) {
   const r = rng(seed);
+  const states = new Uint8Array((ticks + 1) * n);
+  for (let i = 0; i < b0; i++) states[i] = 1;
+  const hist = { n, b: [b0], fwd: [0], rev: [0], states };
   let b = b0;
-  const hist = { b: [b], fwd: [0], rev: [0] };
   for (let t = 1; t <= ticks; t++) {
     let f = 0, v = 0;
-    const a = n - b;
-    for (let i = 0; i < a; i++) if (r() < kf) f++;
-    for (let i = 0; i < b; i++) if (r() < kr) v++;
+    for (let i = 0; i < n; i++) {
+      const was = states[(t - 1) * n + i];
+      let now = was;
+      if (was) { if (r() < kr) { now = 0; v++; } } else if (r() < kf) { now = 1; f++; }
+      states[t * n + i] = now;
+    }
     b += f - v;
     hist.b.push(b); hist.fwd.push(f); hist.rev.push(v);
   }
