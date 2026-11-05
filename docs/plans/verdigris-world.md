@@ -111,7 +111,7 @@ Click: s1 (log scale) and s6/s7.
 Planner: `weakAcid(Ka, c)` exact quadratic; `weakBase`. Data (see §4): acetic Ka = 1.8 × 10⁻⁵; HF 6.8 × 10⁻⁴ (hydrofluoric, one ionization); NH₃ Kb = 1.8 × 10⁻⁵; HCN 4.9 × 10⁻¹⁰.
 
 1. **Predict** (no instrument). P: "A flask of 0.10 M hydrochloric acid and a flask of 0.10 M acetic acid are read. How do their pH readings compare?" Cards: *The same* · *Acetic acid is lower* · *Acetic acid is higher* · *Acetic acid reads 7*. The model held: *The same*.
-2. P: "Read the three flasks of 0.10 M acid and sort them by how much of the acid has let go of its proton." Ev: flasks HCl, acetic, HF; meter on each (1.00, 2.88, 2.17) and a window with 200 units. Two trays (*nearly all*, *only some*). Miss: acetic in *nearly all* → "The meter read 2.88 for acetic acid, 1.00 for hydrochloric acid at the same concentration." R: **weak acid** versus strong acid (fully ionized). Quotes the guess. Rung 1/2.
+2. P: "Read the three flasks of 0.10 M acid and sort them by how much of the acid has let go of its proton." Ev: flasks HCl, acetic, HF; meter on each (1.00, 2.88, 2.10) and a window with 200 units. Two trays (*nearly all*, *only some*). Miss: acetic in *nearly all* → "The meter read 2.88 for acetic acid, 1.00 for hydrochloric acid at the same concentration." R: **weak acid** versus strong acid (fully ionized). Quotes the guess. Rung 1/2.
 3. **Typed** percent ionized of acetic acid (1.3 %) from the meter 2.88 and the 0.10 M label. Slips: 2.88 % (pH as percent), 0.0013. R: **percent ionization**. Rung 3/4.
 4. P: "Complete the ratio on the rig so it gives the same reading in the three acetic acid flasks." Ev: three flasks 0.10, 0.010, 0.0010 M acetic acid, windows, tiles H₃O⁺, A⁻, HA; the rig reads 1.8 × 10⁻⁵ for the right arrangement and drifts otherwise. Miss: "The rig read 1.3 × 10⁻³, 4.2 × 10⁻⁴ and 1.3 × 10⁻⁴ on the three flasks." R: **Ka**, **pKa** = −log Ka. Not a dial hunt: the arrangement is the answer.
 5. **Typed** pH of 0.15 M acetic acid (2.79). No flask with this concentration; ICE chips from `pans-ice` style are in a side card: picture is the 0.10 M flask. Slips: 5.57 (no square root), 0.82 (assumed fully ionized). Rung 6.
@@ -123,7 +123,7 @@ Click: s1/s2.
 ### 3.4 `q4-structure` Acid Strength and Structure (8.6)
 
 Instrument: **proton race**. For each test the player lays an acid card in one slot and the conjugate-base card of another acid in the other slot; **Run** shows the window of 100 proton-holding sites where the protons end up (`raceShare`, from the pKa pair). Cards print the structure (bond length and energy where stated). Reading is the *race result*, never the pKa.
-pKa data (§4): HF 3.17, HCl about −6.3, HBr about −9; CH₄ about 50, NH₃ about 38, H₂O 15.7; HClO 7.5, HClO₄ about −10; acetic 4.76, ethanol about 16; CH₂ClCOOH 2.87, CHCl₂COOH 1.29, CCl₃COOH 0.65.
+pKa data (§4): HF 3.17, HCl about −6.3, HBr about −9; CH₄ about 50, NH₃ about 38, H₂O 15.7; HClO 7.5, HClO₄ about −10; acetic 4.74, ethanol about 16; CH₂ClCOOH 2.87, CHCl₂COOH 1.29, CCl₃COOH 0.65.
 1. **Predict**: "Rank HF, HCl and HBr from strongest to weakest acid." Rail of three cards ordered by dragging; the model held: HF first (most electronegative). No instrument; blank cannot be submitted.
 2. P: "Race the three acids and rank them from strongest to weakest." Ev: race instrument with cards HF, HCl, HBr and bond length/energy printed on each (HF 92 pm, 565 kJ/mol; HCl 127 pm, 431; HBr 141 pm, 366). Rail order. Miss: HF first → "In the race, HF's base kept the proton from Cl⁻." R: weaker/longer bond, easier to let go (down a group). Earns nothing new but **conjugate base stability** as idea. Quotes the guess.
 3. P: "Rank CH₄, NH₃, H₂O and HF from strongest to weakest acid." Race; cards print electronegativity of the central atom (2.55, 3.04, 3.44, 3.98). R: across a period, the more electronegative atom holds the charge of the conjugate base better.
@@ -152,7 +152,7 @@ Instrument: burette (pour 5 mL steps, plus a finer 0.1 mL mode near the jump), p
 1. P: "Titrate 25.0 mL of 0.100 M hydrochloric acid with 0.100 M sodium hydroxide and mark the volume at which the acid is used up." Ev: curve to the volume poured; marker on the volume axis; steep jump. Miss: marker before the jump → "The curve was still near pH 1 there." R: **titration curve**, **equivalence point**.
 2. **Predict**. "Titrate 0.100 M acetic acid with 0.100 M sodium hydroxide. What is the pH at the equivalence point?" Cards 7 / above 7 / below 7 / 13.
 3. P: "Titrate acetic acid and read the pH at the equivalence point." Ev: curve (8.72). Verdict: class. R: weak acid → basic at equivalence (conjugate base). Quotes the guess.
-4. P: "Find the pH halfway to the equivalence point and say what it tells you." Ev: curve; marker at half the equivalence volume; the reading 4.76; verdict dial: pKa / Ka / 7 / equivalence pH. R: **half-equivalence point**: pH = pKa (8.5.A.3).
+4. P: "Find the pH halfway to the equivalence point and say what it tells you." Ev: curve; marker at half the equivalence volume; the reading 4.74; verdict dial: pKa / Ka / 7 / equivalence pH. R: **half-equivalence point**: pH = pKa (8.5.A.3).
 5. P: "Pick the indicator that changes colour at the equivalence of this curve." Ev: rack methyl orange (3.7), methyl red (5.1), bromothymol blue (7.0), phenolphthalein (9.3) laid on curves; a strip tints at its pKa. Two curves (strong/strong, weak/strong). Miss: bromothymol blue for acetic acid → "That strip changed colour before the jump." R: **indicator** (8.7.A.3, forward link q8).
 6. P: "Titrate the diprotic acid and say how many acidic protons it has." Ev: sulfurous acid (pKa 1.9 and 7.2) with sodium hydroxide, curve with two jumps; verdict dial 1/2/3. R: **polyprotic acid**; qualitative only (CED exclusion on computing every species).
 7. **Typed** concentration of 25.00 mL of unknown HCl whose equivalence needs 31.4 mL of 0.100 M NaOH (0.126 M). Slips: 0.100 × 31.4 (3.14), 0.0314. Picture: curve to the volume poured, volume on a 0.1 mL dial. Rung 6.
@@ -162,11 +162,11 @@ Click: s2/s3.
 ### 3.7 `q7-buffer` Buffers (8.4, 8.8, 8.9)
 
 1. **Predict**. "A drop of acid is added to plain water and to a mixture of acetic acid and sodium acetate. Which flask's pH moves more?" Cards: *Water* · *Mixture* · *Both the same* · *Neither moves*. No instrument.
-2. P: "Add the same acid to a flask of water and to a flask of the mixture and say which flask's pH moves more." Ev: two flasks, Pour key (the same volume), meters (7.00 → 3.00; 4.76 → 4.7x). Verdict. Quotes the guess. R: **buffer**.
+2. P: "Add the same acid to a flask of water and to a flask of the mixture and say which flask's pH moves more." Ev: two flasks, Pour key (the same volume), meters (7.00 → 3.00; 4.74 → 4.7x). Verdict. Quotes the guess. R: **buffer**.
 3. P: "Say what the mixture holds that water does not." Ev: window of the mixture with 100 HA and 100 A⁻ units, versus water window; trays *acid and its conjugate base* is a plain label? That prints the answer. Rebuilt: the player lays species cards (HA, A⁻, H₃O⁺, OH⁻, Na⁺) on the mixture's window to match counts. Pieces graded against planner. R: both members of a pair in large amounts (8.8.A.1).
 4. P: "Add acid to the mixture and watch what takes it." Ev: pour in 20 H₃O⁺ units; window animation: the A⁻ count falls by the same 20 and the HA count rises by 20 (counted, `story-sim`-style). Verdict dial: *A⁻ is used up* / *HA is used up* / *both unchanged*. R: the conjugate base takes added acid.
-5. **Typed** pH of a mixture with 0.30 M acetate and 0.10 M acetic acid (5.23). Slips: ratio inverted (4.28), pKa only (4.76). Past the dial's range (flask ratios 1:1, 2:1 available). Rung 4/6. R: **Henderson–Hasselbalch equation** pH = pKa + log([A⁻]/[HA]) (8.9.A.1).
-6. **Typed** the ratio of acetate to acetic acid needed for pH 4.40 (0.44). Slips: 2.3 (inverted), 4.40/4.76. Rung 6.
+5. **Typed** pH of a mixture with 0.30 M acetate and 0.10 M acetic acid (5.22). Slips: ratio inverted (4.27), pKa only (4.74). Past the dial's range (flask ratios 1:1, 2:1 available). Rung 4/6. R: **Henderson–Hasselbalch equation** pH = pKa + log([A⁻]/[HA]) (8.9.A.1).
+6. **Typed** the ratio of acetate to acetic acid needed for pH 4.40 (0.45). Slips: 2.2 (inverted), 4.40/4.74. Rung 6.
 7. P: "Add strong base to the mixture and say which member of the pair it uses up." Ev: window animation; verdict dial *HA* / *A⁻* / *neither*. Qualitative: the pH change is not computed (8.4.A.2; CED exclusion stated on the card).
 8. Sealed: three unlabelled flasks; find which two are buffers by adding acid and base (Pour key) and meters; typed pH of one by H–H from a window count. Miss: names the meter's reading.
 Click: s1/s2.
@@ -191,7 +191,7 @@ Species *the leach*: a sump pump with five intake vats; each vat is one sample o
 2. q3 s2/s5: three weak acid flasks at one concentration; rank by pH without the meter on two flasks.
 3. q5 s3/s5 on new salts (NH₄NO₃, Na₂CO₃ as sodium carbonate pH, KCl): sort acidic / neutral / basic.
 4. q6 s5: pick the indicator for a base-in-acid titration (a weak base titrated with strong acid; equivalence acidic).
-5. q7 s5/s6: a buffer target (type the ratio for pH 5.10 using acetic: 2.19).
+5. q7 s5/s6: a buffer target (type the ratio for pH 5.10 using acetic: 2.27).
 Finale `leach-open` files the clue `clue_verdigris_leach`.
 
 ## 4. Data and planners (Phase 1; written in `src/learn/engine/phdata.js`)
@@ -206,7 +206,7 @@ All pure; no DOM. Each reading is one function the drawn and the built twin shar
 | `weakBase(Kb, c)` | same with OH⁻ | NH₃ 0.10 M: pH 11.12 |
 | `saltPH(Ka or Kb of the ion, c)` | hydrolysis of the conjugate | NaCH₃COO 0.10 M: pH 8.87; 0.050 M: 8.72 |
 | `mixPH(...)` | titration/mixture solver by charge balance (bisection on pH), monoprotic, diprotic | hand: 30 mL 0.10 HCl + 20 mL 0.10 NaOH → 1.70; equivalence acetic 8.72 |
-| `bufferPH(pKa, nA, nHA)` | exact charge balance and H–H | acetate/acid 3:1 → 5.23; target 4.40 → ratio 0.44 |
+| `bufferPH(pKa, nA, nHA)` | exact charge balance and H–H | acetate/acid 3:1 → 5.22; target 4.40 → ratio 0.45 |
 | `fractions(pKa, pH)` | α(HA), α(A⁻) | pH = pKa → 0.5/0.5 |
 | `raceShare(pKaX, pKaY)` | share of protons on each side | K = 10^(pKaY − pKaX) |
 | `INDICATORS` | methyl orange 3.7 (3.1 to 4.4), methyl red 5.1 (4.4 to 6.2), bromothymol blue 7.0 (6.0 to 7.6), phenolphthalein 9.3 (8.2 to 10.0) | standard |
