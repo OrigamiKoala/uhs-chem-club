@@ -154,12 +154,12 @@ registerFixture('cellboard', { paint: paintBoard, settle, dress3d: dressBoard })
  * Returns `{ fixture, slot, size }`.
  */
 export function boardFixture(id, at, { strip = true, title = 'Potential board' } = {}) {
-  const w = strip ? 92 : 62; const h = 50;
+  const w = strip ? 92 : 62; const h = 56;
   const cup = { w: 14, h: 15 };
   const refAt = { x: 5, y: 26 };
   const metalAt = { x: 34, y: 26 };
   const meter = { x: 8, y: 3, w: 38, h: 12 };
-  const stripRect = { x: 62, y: 3, w: 28, h: 44 };
+  const stripRect = { x: 62, y: 3, w: 28, h: 46 };
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const slot = { id: `${id}.seat`, label: ' ', at: { x: x0 + metalAt.x + cup.w / 2, y: y0 + metalAt.y - 1 }, size: { w: 18, h: 9 } };
   return {

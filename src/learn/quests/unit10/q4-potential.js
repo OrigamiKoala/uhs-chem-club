@@ -54,7 +54,7 @@ const GUESS = {
 /* ---------------------------------------------------------------- what each stage puts on the table (inputs; every figure shown is the planner's) */
 
 const SEAT = 'slot:board.seat';
-const BOARD_AT = { x: 48, y: 28 };
+const BOARD_AT = { x: 48, y: 31 };
 const E = id => METALS[id].E0;
 const S1_METALS = ['mg', 'zn', 'cu', 'ag'];
 const S1_WANT = activityOrder(S1_METALS);
@@ -72,7 +72,7 @@ const put = (piece, to) => ({ place: { piece, to } });
 const run = fixture => ({ run: fixture });
 const typed = (entry, value) => ({ type: { entry, value: String(value) } });
 
-function boardTable(electrodes, { w = 176, h = 58, extras = [], fixtures = [], pieces = [], zones = {} } = {}) {
+function boardTable(electrodes, { w = 176, h = 64, extras = [], fixtures = [], pieces = [], zones = {} } = {}) {
   const b = boardFixture('board', BOARD_AT);
   return cellTable({
     pieces: [...electrodes, ...pieces],
@@ -136,7 +136,7 @@ export const STAGES = [
     prompt: 'Find the voltage, in volts, of a cell made from magnesium and silver.',
     widget,
     entry: { id: 'e', label: 'Cell voltage', unit: 'V' },
-    table: boardTable([electrodePiece('e-mg', 'mg', { x: 118, y: 12 }), electrodePiece('e-ag', 'ag', { x: 118, y: 32 })], { w: 150, h: 58 }),
+    table: boardTable([electrodePiece('e-mg', 'mg', { x: 118, y: 12 }), electrodePiece('e-ag', 'ag', { x: 118, y: 32 })], { w: 150, h: 64 }),
     hints: [
       'Read both electrodes on the board, then type the voltage of the cell in the field.',
       'Compare the two readings: the cell takes its voltage from how far apart they are.',
@@ -304,7 +304,7 @@ export const STAGES = [
     entry: { id: 'kj', label: 'Energy released', unit: 'kJ' },
     table: boardTable(
       [electrodePiece('e-mg', 'mg', { x: 118, y: 10 }), electrodePiece('e-cu', 'cu', { x: 118, y: 28 })],
-      { w: 176, h: 66, fixtures: [plaqueFixture('plate', 'For reference', { x: 144, y: 53 }, ['1 mol of electrons carries 96,485 C', '1 V pushes 1 J for each C'], { w: 52 })] }
+      { w: 176, h: 70, fixtures: [plaqueFixture('plate', 'For reference', { x: 144, y: 57 }, ['1 mol of electrons carries 96,485 C', '1 V pushes 1 J for each C'], { w: 52 })] }
     ),
     hints: [
       'Read both electrodes on the board and type the energy in kJ in the field.',
@@ -344,7 +344,7 @@ export const STAGES = [
     entry: { id: 'logk', label: 'log K', unit: '' },
     table: boardTable(
       [electrodePiece('e-zn', 'zn', { x: 118, y: 10 }), electrodePiece('e-ag', 'ag', { x: 118, y: 28 })],
-      { w: 176, h: 66, fixtures: [plaqueFixture('plate', 'For reference', { x: 144, y: 53 }, ['log K = n × E° ÷ 0.0592'], { w: 52 })] }
+      { w: 176, h: 70, fixtures: [plaqueFixture('plate', 'For reference', { x: 144, y: 57 }, ['log K = n × E° ÷ 0.0592'], { w: 52 })] }
     ),
     hints: [
       'Read both electrodes on the board and type log K in the field.',
@@ -381,7 +381,7 @@ export const STAGES = [
     entry: { id: 'e', label: 'Cell voltage', unit: 'V' },
     table: boardTable(
       [electrodePiece('e-a', S8.a, { x: 118, y: 12 }, { label: 'Metal A', sealed: true }), electrodePiece('e-b', S8.b, { x: 118, y: 32 }, { label: 'Metal B', sealed: true })],
-      { w: 150, h: 58 }
+      { w: 150, h: 64 }
     ),
     hints: [
       'Read both sealed electrodes on the board and type the voltage in the field.',
