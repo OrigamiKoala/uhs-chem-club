@@ -320,3 +320,8 @@ Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 
 
 
 Unit 8 topics 8.1 to 8.11 now have benches (`unit09`, built 2026-11-05): 8.1 `q1-handover`, `q2-scale`; 8.2 `q2-scale`; 8.3 `q3-weak`; 8.4 `q5-salts`, `q7-buffer`; 8.5 `q6-titrate`; 8.6 `q4-structure`; 8.7 `q6-titrate` s5, `q8-capacity`; 8.8, 8.9 `q7-buffer`; 8.10 `q8-capacity`; 8.11 `q8-capacity` s7 (qualitative only, as the CED excludes computing solubility as a function of pH). The pH change on adding acid or base to a buffer is not computed (q7 s7 is a direction verdict); polyprotic species concentrations are not computed (q6 s6 is qualitative); weak acid plus weak base (8.4.A.4) is a bank problem only. See `docs/verdigris-audit.md`.
+
+
+## Brinewire built (2026-11-05)
+
+4.9 redox: `q1-halves`, `q2-activity`. 9.7: `q6` stage 1 and 6 (external energy; a galvanic cell driving electrolysis); 9.7.A.2 (a shared intermediate) is a bank problem only. 9.8: `q3`, `q6` stages 1 and 2. 9.9: `q4` (typed E°cell, energy and log K). 9.10: `q5` (the run-down, concentration cells, a typed Nernst voltage, no Le Châtelier language). 9.11: `q6` (typed grams plated, typed current). Past the exam and labelled: oxidizing and reducing agent (`q1` s5), cell notation (`q3` s7). Gap: ATP-style coupling needs no bench.

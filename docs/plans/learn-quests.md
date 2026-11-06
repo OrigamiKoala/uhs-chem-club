@@ -1182,7 +1182,7 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 ---
 
-### World 10 — Brinewire (`unit10`, electrochemistry): 6 quests (charted)
+### World 10 — Brinewire (`unit10`, electrochemistry): 6 quests (**built 2026-11-05**; built differently: see `docs/plans/brinewire-world.md` and the notes files `docs/plans/brinewire-notes-*.md`. q1 s2/s3 are a predict pair, q2 s3/s4 and q3 s1/s2 likewise, base-solution balancing and the descriptive battery comparison moved to the bank, q5's click is the tin–lead cell)
 
 #### `q1-halves` · Half-Reactions · CED 4.9 · cell bench, pot
 1. Drop zinc into copper solution and read the oxidation numbers before and after.
