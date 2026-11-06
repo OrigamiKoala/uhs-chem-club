@@ -32,7 +32,7 @@ const DIM = PLATE_COLORS.dim;
 const STEEL = PLATE_COLORS.steel;
 const TEXT = PLATE_COLORS.text;
 
-const RECT_BAR = { hw: 7.6, hh: 3.5 };
+const RECT_BAR = { hw: 9.2, hh: 3.5 };
 
 /** The layout, in the fixture's own units: a column for each beaker. */
 export const DIP_UNIT = Object.freeze({
@@ -342,7 +342,7 @@ function pieceStrip3d(p, state, c) {
 }
 
 registerPiece('celldipstrip', {
-  kind: { r: 7.6, rect: RECT_BAR, nojoin: true },
+  kind: { r: 9.6, rect: RECT_BAR, nojoin: true },
   paint: paintStrip,
   faceKey: p => `celldipstrip|${p.label}|${p.props.metal}|${p.props.sealed ? 1 : 0}`,
   piece3d: pieceStrip3d,

@@ -155,7 +155,7 @@ export const STAGES = [
       const d = rack(S2_METALS, { x: 64, y: 33 });
       return cellTable({
         pieces: [
-          ...strips(S2_METALS, { x: 148, y: 14 }, 18),
+          ...strips(S2_METALS, { x: 148, y: 14 }, 22),
           ...S2_METALS.map((m, i) => tag(`r-${m}`, Nm(m), { x: 20 + i * 32, y: 88 }))
         ],
         fixtures: [d.fixture],
@@ -420,7 +420,7 @@ export const STAGES = [
     table: (() => {
       const d = rack(S8_STRIPS.map(() => 'mix'), { x: 64, y: 33 });
       return cellTable({
-        pieces: strips(S8_STRIPS, { x: 148, y: 14 }, 18),
+        pieces: strips(S8_STRIPS, { x: 148, y: 14 }, 22),
         fixtures: [
           d.fixture,
           selectorFixture('pick', 'Strip', { x: 64, y: 94 }, { options: [...S8_STRIPS.map(Nm), ' '], start: 5, w: 52, list: true })
