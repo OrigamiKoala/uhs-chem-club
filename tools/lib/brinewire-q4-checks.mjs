@@ -68,9 +68,9 @@ export async function checkBrinewireQ4({ ok, fail }) {
   ok('q4-potential typed stages: right figures pass, every slip is refused with a reason');
 
   /* ---- stage 1: the rank, and a refusal that names a reading ---- */
-  const rankBad = run(0, [...['mg', 'zn', 'cu', 'ag'].map(m => put(`e-${m}`, seat)), ...['mg', 'cu', 'zn', 'ag'].map((m, i) => put(`r-${m}`, `rail:${i}`))]);
+  const rankBad = run(0, [...['mg', 'zn', 'cu', 'ag'].map(m => put(`e-${m}`, seat)), ...['mg', 'cu', 'zn', 'ag'].map((m, i) => put(`e-${m}`, `rail:${i}`))]);
   holds(!rankBad.ok && /V/.test(rankBad.msg), 'stage 1 wrong rank is not refused with a reading');
-  holds(run(0, ['mg', 'zn', 'cu', 'ag'].map((m, i) => put(`r-${m}`, `rail:${i}`))).ok, 'stage 1: a correct rank must be accepted without every electrode read');
+  holds(run(0, ['mg', 'zn', 'cu', 'ag'].map((m, i) => put(`e-${m}`, `rail:${i}`))).ok, 'stage 1: a correct rank must be accepted without every electrode read');
   ok('q4-potential stage 1: a right rank needs no readings, a wrong one is refused with the strip\'s numbers');
 
   /* ---- no refusal carries the rule its stage asks for ---- */

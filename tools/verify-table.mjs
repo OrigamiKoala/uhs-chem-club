@@ -51,6 +51,7 @@ const LAYOUT = await import('../src/learn/table/layout.js');
 const REG = await import('../src/learn/table/kits/registry.js');
 const RUNNER = await import('../src/learn/engine/stagerunner.js');
 const { Table2D, drawTable, fixtureLayout } = await import('../src/learn/engine/table2d.js');
+const { getKit: getKitForPick } = await import('../src/learn/table/kits/index.js');
 const RAILVIEW = await import('../src/learn/engine/railview.js');
 const CATALOGUE = await import('../src/learn/engine/catalogue.js');
 const FIX = await import('./lib/table-fixture.mjs');
@@ -430,6 +431,22 @@ function driveView(table, script, mode) {
       tap({ ...state.fetch[arg].at });
     } else if (verb === 'setDial') {
       const lay = Object.values(state.fixtures).find(f => f.id === arg.fixture);
+      // An answer kept by tapping the thing (`props.pick`, no track): a person taps the vessel itself.
+      const spots = pickSpot(state, arg);
+      if (spots) { for (const sp of spots) { view.pointerDown(sp); view.pointerUp(sp); } continue; }
+      // An answer given to the particles themselves (`kit.hotspots`, a resting particle in a mechanism view): a person taps the particle that
+      // sets this dial to this value, or, on a cycling particle, taps it until it reads so.
+      if (kit.hotspots) {
+        const spots = () => Object.values(state.fixtures).flatMap(g => (kit.hotspots(g, state) || []).filter(h => h.action.setDial?.fixture === arg.fixture && h.action.setDial.dial === arg.dial));
+        if (spots().length) {
+          for (let n = 0; n < 8 && Math.round(state.fixtures[arg.fixture].dials[arg.dial].value) !== arg.value; n++) {
+            const hs = spots();
+            const h = hs.find(q => q.action.setDial.value === arg.value) || hs[0];
+            tap({ x: h.x, y: h.y });
+          }
+          continue;
+        }
+      }
       const d = dialTrack(lay, arg.dial);
       const frac = (arg.value - d.def.min) / (d.def.max - d.def.min);
       const x = d.track.x0 + frac * (d.track.x1 - d.track.x0);
@@ -445,6 +462,32 @@ function driveView(table, script, mode) {
     }
   }
   return state;
+}
+
+/**
+ * The touches that set `arg.dial` of `arg.fixture` to `arg.value` when it is answered by touching the thing, as a list of points to tap
+ * (`down` first for a drag), or null when the dial has a track of its own: a fixture tapped as a whole (`props.pick`), a zone with a value,
+ * a zone that steps the dial (tapped as often as it takes), or a zone that follows a drag (a piston).
+ */
+function pickSpot(state, arg) {
+  const kit = getKitForPick(state.kit);
+  const cur = state.fixtures[arg.fixture]?.dials?.[arg.dial]?.value;
+  for (const f of Object.values(state.fixtures)) {
+    const box = fixtureLayout(f).box;
+    const pk = f.props?.pick;
+    if (pk && pk.fixture === arg.fixture && (pk.dial || 'value') === arg.dial) {
+      if (pk.cols) { const c = pk.cols.find(k => k.value === arg.value); if (c) return [{ x: box.x0 + (c.x0 + c.x1) / 2, y: box.y0 + 14 }]; }
+      else if (pk.value === arg.value) return [{ x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2 + 1 }];
+    }
+    for (const z of [...(f.props?.taps || []), ...(kit?.tapZones?.(f, state) || [])]) {
+      if ((z.fixture || f.id) !== arg.fixture || z.dial !== arg.dial) continue;
+      const mid = { x: box.x0 + (z.x0 + z.x1) / 2, y: box.y0 + (z.y0 + z.y1) / 2 };
+      if (z.value != null) { if (z.value === arg.value) return [mid]; continue; }
+      if (z.drag) { const y = box.y0 + z.drag.y1 - (arg.value / z.drag.scale) * (z.drag.y1 - z.drag.y0); return [{ x: mid.x, y, drag: true }]; }
+      if (z.step > 0 && arg.value > cur) return Array.from({ length: Math.round((arg.value - cur) / z.step) }, () => mid);
+    }
+  }
+  return null;
 }
 
 function dialTrack(fixture, name) {

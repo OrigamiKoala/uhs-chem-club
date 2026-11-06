@@ -20,11 +20,14 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import {
-  cellTable, selectorFixture, plaqueFixture, tag, pieceIn, dialValue, voltText
+  cellTable, selectorFixture, plaqueFixture, tag, pieceIn, dialValue, voltText, hideDials
 } from '../../table/kits/cell.js';
 import { supplyFixture, supplyRead, packPiece, platePiece, weighGrams } from '../../table/kits/cell-supply.js';
 import { METALS, FARADAY, WATER_BACK_VOLTAGE, cellE0, cellsToExceed, charge, molesElectrons, faradayMass, fmt } from '../../engine/celldata.js';
 import { driveZnCu, platingRun, currentFor, waterRun, compareRun, RUN_SECONDS } from '../../engine/celldata-electrolysis.js';
+
+import { gasPiece } from '../../table/kits/cell-dip.js';
+import { attachScenes } from '../../table/kits/cell-attach.js';
 
 export const meta = { stageCount: 8 };
 
@@ -85,7 +88,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     id: 's1-reverse',
-    title: 'Pushing the Cell',
+    title: 'Reversing the Cell',
     prompt: 'Make zinc plate out of the solution in the zinc–copper cell.',
     widget,
     table: cellTable({ fixtures: [supplyFixture('sup', { x: 64, y: 40 }, 'zncu').fixture] }, { w: 128, h: 82 }),
@@ -100,14 +103,14 @@ export const STAGES = [
       if (r.now.zincPlates) return { ok: true };
       const into = r.now.dir === 'zn' ? 'zinc' : 'copper';
       const word = r.now.zn < 0 ? `lost ${fmt(-r.now.zn * 1000, 1)} mg` : `gained ${fmt(r.now.zn * 1000, 1)} mg`;
-      return { ok: false, msg: `At ${fmt(r.now.Vs, 1)} V with electrons pushed into the ${into} strip, the zinc strip ${word}.` };
+      return { ok: false, msg: `At ${fmt(r.now.Vs, 1)} V with electrons sent into the ${into} strip, the zinc strip ${word}.` };
     },
     get reward() {
       const win = driveZnCu(1.5, 'zn'); const lose = driveZnCu(0.5, 'zn');
       return {
         log: 'A supply stronger than the cell turned zinc ions back into zinc.',
         title: 'Electrolysis',
-        body: `Pushing electrons into the zinc strip at 1.5 V, more than the cell's own ${voltText(cellE0('cu', 'zn'))} V, made the strip gain ${fmt(win.zn * 1000, 1)} mg: zinc ions turned back into zinc. At 0.5 V the cell's own push still won and the strip lost ${fmt(-lose.zn * 1000, 1)} mg. A cell driven backwards by a supply is an electrolytic cell, and the process is electrolysis.`
+        body: `At 1.5 V the zinc strip gained ${fmt(win.zn * 1000, 1)} mg; at 0.5 V it lost ${fmt(-lose.zn * 1000, 1)} mg. Driving a cell backwards with a supply makes an electrolytic cell: electrolysis.`
       };
     }
   },
@@ -116,33 +119,33 @@ export const STAGES = [
   {
     id: 's2-melt',
     title: 'Molten Salt',
-    prompt: 'Say which electrode makes sodium in molten sodium chloride.',
+    prompt: 'Tap the electrode that makes sodium in molten sodium chloride.',
     widget,
     table: cellTable({
       fixtures: [
         supplyFixture('sup', { x: 54, y: 38 }, 'melt').fixture,
-        selectorFixture('pick', 'Sodium forms where electrons are', { x: 136, y: 38 }, { options: ['pushed into it', 'drawn out of it', ' '], start: 3, w: 60, list: true })
+        hideDials(selectorFixture('pick', 'Sodium forms at', { x: 136, y: 38 }, { options: ['the left electrode', 'the right electrode', ' '], start: 3, w: 60, list: true }))
       ]
     }, { w: 172, h: 76 }),
     hints: [
-      'Set the "Electrons pushed into" dial, press "Run", and use the answer dial.',
-      'Compare where the silvery liquid forms with the electrode the electrons were pushed into.',
-      'Run it with the dial on each electrode and match the one that forms the liquid metal to the dial.'
+      'Set the "Electrons sent into" dial, press "Run", and tap the electrode you choose.',
+      'Compare where the silvery liquid forms with the electrode the electrons were sent into.',
+      'Run it with the dial on each electrode and see which one forms the liquid metal.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
-      if (v === 1) return { ok: true };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode.' };
       const r = bench(state.table);
       if (!r.now) return { ok: false, msg: 'The melt has not been run yet.' };
+      if (v === (r.now.into === 'left' ? 1 : 2)) return { ok: true };
       const other = r.now.into === 'left' ? 'right' : 'left';
       return { ok: false, msg: `The silvery liquid formed at the ${r.now.into} electrode and the pale green gas at the ${other} electrode.` };
     },
     get reward() {
       return {
-        log: 'Sodium came out at the electrode the electrons were pushed into.',
+        log: 'Sodium came out at the electrode the electrons were sent into.',
         title: 'Cathode and Anode',
-        body: 'Sodium ions took electrons and became sodium metal; chloride ions gave up electrons and became chlorine gas. Gaining electrons is reduction and it happens at the cathode, losing them is oxidation and it happens at the anode, in every cell, galvanic or electrolytic.'
+        body: 'Sodium ions gained electrons at the cathode and chloride ions lost them at the anode. Reduction is at the cathode and oxidation at the anode in every cell.'
       };
     }
   },
@@ -182,7 +185,7 @@ export const STAGES = [
       return {
         log: 'The mass of silver followed the current and the time together.',
         title: 'The Coulomb',
-        body: `${rows.join(', ')}. Charge, in coulombs, is the current in amperes times the time in seconds, and the silver plated rose with it, not with the current alone.`
+        body: `${rows.join(', ')}. Charge in coulombs is current in amperes times seconds, and more charge plated more silver.`
       };
     }
   },
@@ -283,7 +286,7 @@ export const STAGES = [
       return {
         log: 'A silver ion takes one electron, so the same charge plates more atoms than copper would.',
         title: 'One Electron Each',
-        body: `${fmt(S5.I, 2)} A × ${t} s = ${fmt(q, 0)} C, or ${fmt(mol, 4)} mol of electrons. Each Ag⁺ takes one electron, so ${fmt(mol, 4)} mol of silver is ${fmt(faradayMass(S5.I, t, 'ag'), 2)} g. The law is the same, with a different charge on the ion and a different molar mass.`
+        body: `${fmt(S5.I, 2)} A × ${t} s = ${fmt(q, 0)} C = ${fmt(mol, 4)} mol of electrons, and each Ag⁺ takes one, so ${fmt(faradayMass(S5.I, t, 'ag'), 2)} g of silver plated.`
       };
     }
   },
@@ -319,7 +322,7 @@ export const STAGES = [
       return {
         log: 'Cells in a chain added their voltages until the water cell gave gas.',
         title: 'Coupled Reactions',
-        body: `One cell gives ${voltText(cellE0('cu', 'zn'))} V, less than the ${voltText(WATER_BACK_VOLTAGE)} V that splitting water needs, but ${k} cells give ${voltText(w.V)} V and gas forms. A reaction that runs by itself can drive one that does not. Real electrodes need more than ${voltText(WATER_BACK_VOLTAGE)} V; this bench has no overpotential.`
+        body: `One cell gives ${voltText(cellE0('cu', 'zn'))} V, below the ${voltText(WATER_BACK_VOLTAGE)} V water needs, but ${k} cells give ${voltText(w.V)} V and gas forms: a reaction that runs by itself can drive one that does not.`
       };
     }
   },
@@ -334,20 +337,20 @@ export const STAGES = [
       const s = supplyFixture('sup', { x: 68, y: 40 }, 'compare', S7);
       const cards = [['h1', 'H₂'], ['h2', 'H₂'], ['o1', 'O₂'], ['o2', 'O₂'], ['cl', 'Cl₂']];
       return cellTable({
-        pieces: cards.map(([id, label], i) => tag(id, label, { x: 18 + i * 26, y: 96 })),
+        pieces: cards.map(([id, label], i) => gasPiece(id, label, { x: 18 + i * 26, y: 96 })),
         fixtures: [s.fixture],
         zones: { slots: s.slots }
       }, { w: 140, h: 108 });
     })(),
     hints: [
-      'Press "Run", then drag one gas card onto the seat under each tube.',
+      'Press "Run", then drag one gas bubble to the seat under each tube.',
       'Compare each tube\'s volume and what its gas does with the other three tubes.',
       'Match each gas to the cell and the electrode it came from, using its volume and how it behaved.'
     ],
     check(state) {
       const t = state.table;
       const label = i => pieceIn(t, `sup.t${i}`)?.label;
-      if ([1, 2, 3, 4].some(i => !label(i))) return { ok: false, notYet: true, msg: 'Put a card in the seat under every tube.' };
+      if ([1, 2, 3, 4].some(i => !label(i))) return { ok: false, notYet: true, msg: 'Put a bubble in the seat under every tube.' };
       const want = ['H₂', 'O₂', 'H₂', 'Cl₂'];
       const bad = want.findIndex((g, i) => label(i + 1) !== g);
       if (bad < 0) return { ok: true };
@@ -356,14 +359,14 @@ export const STAGES = [
       const where = ['water, left tube', 'water, right tube', 'brine, left tube', 'brine, right tube'][bad];
       const g = [r.now.water.cathode, r.now.water.anode, r.now.brine.cathode, r.now.brine.anode][bad];
       const look = { 'H₂': 'burned with a pop', 'O₂': 'relit a glowing splint', 'Cl₂': 'was pale green and bleached litmus' }[g.gas];
-      return { ok: false, msg: `The ${where} gathered ${fmt(g.mL, 1)} mL of a gas that ${look}; the card in its seat does not fit that.` };
+      return { ok: false, msg: `The ${where} gathered ${fmt(g.mL, 1)} mL of a gas that ${look}; the bubble in its seat does not fit that.` };
     },
     get reward() {
       const c = compareRun(S7.I, S7.t);
       return {
         log: 'The gas at the anode depended on what was in the cell.',
         title: 'What Forms',
-        body: `Water gave ${fmt(c.water.cathode.mL, 1)} mL of hydrogen and ${fmt(c.water.anode.mL, 1)} mL of oxygen; brine gave ${fmt(c.brine.cathode.mL, 1)} mL each of hydrogen and chlorine. Chloride is oxidised in brine because oxygen forms slowly at real electrodes (an overpotential effect), although standard potentials favour oxygen. Hydroxide ions are left in the cell.`
+        body: `Water gave ${fmt(c.water.cathode.mL, 1)} mL of hydrogen and ${fmt(c.water.anode.mL, 1)} mL of oxygen; brine gave ${fmt(c.brine.cathode.mL, 1)} mL each of hydrogen and chlorine, because oxygen forms slowly at real electrodes (overpotential).`
       };
     }
   },
@@ -416,6 +419,9 @@ export const STAGES = [
   }
 ];
 
+/** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
+attachScenes(STAGES, { compact: [2, 6], demos: {}, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteX: [0.36, 0.64] } } } });
+
 export const DEBRIEF = {
   title: 'Electrolysis',
   body: 'A supply stronger than a cell drives its reaction backwards. The charge passed, current times time, counts the electrons, and the electrons count the atoms plated.'
@@ -434,7 +440,7 @@ export const SOLUTIONS = [
 
 export const MISSES = [
   [dial('sup', 'v', 1), dial('sup', 'dir', 1), run('sup')],
-  [dial('sup', 'dir', 2), run('sup'), dial('pick', 'value', 2)],
+  [dial('sup', 'dir', 2), run('sup'), dial('pick', 'value', 1)],
   [dial('sup', 'sel', 1), run('sup'), dial('sup', 'sel', 2), run('sup'), dial('sup', 'sel', 3), run('sup'), ...['r1', 'r2', 'r3'].map((id, i) => put(id, `rail:${i}`))],
   [typed('g', fmt(faradayMass(S4.I, S4.minutes, 'cu'), 4))],
   [typed('g', fmt(faradayMass(S5.I, S5.minutes * 60, 'ag') / 2, 2))],

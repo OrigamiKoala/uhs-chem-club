@@ -9,7 +9,7 @@ import './heat-tour.js';
 
 const FIXTURES = {
   'pans:pan': {
-    title: 'Pan', dials: false,
+    title: 'Vessel', dials: false,
     text: 'A shallow dish seen from above, with a window of small orange and blue spheres and a graph beside it. The graph counts the orange spheres and the blue ones against time. Press "Run" to let ten more ticks of time go by. Under the graph, the two counts say how many spheres turned from orange to blue, and from blue to orange, in the last fifty ticks. Where some spheres wear a white ring, a strip under the graph keeps the colour of each ringed sphere, one cell for every tick.'
   },
   'pans:plaque': {
@@ -18,7 +18,7 @@ const FIXTURES = {
   },
   'pans:marker': {
     title: 'Number marker', dials: false,
-    text: 'The marker holds a number. Drag its knob along the groove, or tap the groove, to set the number you read off the pan. Whatever it reads when you press Submit is your answer.'
+    text: 'The marker holds a number. Drag its knob along the groove, or tap the groove, to set the number you read off the vessel. Whatever it reads when you press Submit is your answer.'
   },
   'pans:selector': {
     title: 'Answer dial', dials: false,
@@ -27,7 +27,7 @@ const FIXTURES = {
 };
 
 const PIECES = {
-  arw: ['Reaction cards', 'Each card writes the reaction of a pan with an arrow. Drag the card you choose into the slot under a pan; the card in a slot is your answer when you press Submit.'],
+  arw: ['Reaction cards', 'Each card writes the reaction of a vessel with an arrow. Drag the card you choose into the slot under a vessel; the card in a slot is your answer when you press Submit.'],
   dgm: ['Diagram cards', 'Each card draws a dish of orange and blue spheres, frozen. Drag the card you choose into the slot; it is your answer when you press Submit.']
 };
 

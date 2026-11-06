@@ -227,6 +227,13 @@ export class Table3D extends BenchViewer3D {
       }
     }
 
+    if (ray === this.raycaster.ray && this.fixtureRoot?.children?.length) {
+      for (const hit of this.raycaster.intersectObjects(this.fixtureRoot.children, true)) {
+        const u = hit.object.userData?.hotUnits;
+        if (u && hit.object.visible) return { ...u };
+      }
+    }
+
     this.root.updateMatrixWorld(true);
     const inv = (this._invRoot || (this._invRoot = new THREE.Matrix4())).copy(this.root.matrixWorld).invert();
     const o = ray.origin.clone().applyMatrix4(inv);
@@ -245,6 +252,11 @@ export class Table3D extends BenchViewer3D {
   /* ---------------- the state ---------------- */
 
   /** Take a new state: pieces ease to where it puts them, the board follows it. */
+  /** A miss replays the cause: a kit's moving models start their run again (`kit.replay`). */
+  replay() {
+    if (this.state) getKit(this.state.kit)?.replay?.(this.state);
+  }
+
   setState(state, opts = {}) {
     if (this.disposed) return;
     const first = !this.state;

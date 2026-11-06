@@ -90,7 +90,7 @@ export async function checkBrinewireQ6({ ok, fail }) {
   }
   holds(run(0, []).notYet, 'stage 1 without a run is not an answer');
   holds(run(1, [go('sup'), dial('pick', 'value', 1)]).ok && !run(1, [go('sup'), dial('pick', 'value', 2)]).ok, 'stage 2 grading');
-  holds(/silvery liquid/.test(run(1, [dial('sup', 'dir', 2), go('sup'), dial('pick', 'value', 2)]).msg), 'stage 2 refusal names the product and the electrode');
+  holds(/silvery liquid/.test(run(1, [dial('sup', 'dir', 2), go('sup'), dial('pick', 'value', 1)]).msg), 'stage 2 refusal names the product and the electrode');
   const rank = (a) => a.map((id, i) => put(id, `rail:${i}`));
   const three = [dial('sup', 'sel', 1), go('sup'), dial('sup', 'sel', 2), go('sup'), dial('sup', 'sel', 3), go('sup')];
   holds(run(2, rank(['r2', 'r1', 'r3'])).ok, 'stage 3: a correct rank must be accepted without every run made');

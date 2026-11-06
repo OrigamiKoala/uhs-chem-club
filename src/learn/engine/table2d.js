@@ -282,7 +282,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     if (f.label && !f.props?.hideLabel) words(f.label, lay.box.x0 + (f.kind === 'slate' ? 5 : 1.5), lay.box.y0 + (f.kind === 'slate' ? 5.2 : 3.6), { size: 2.6, color: ink.label });
     // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
     // the built table paints it into the plate's own picture, so the two cannot differ.
-    kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false });
+    kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false, clock: view.clock || 0, scope: view.scope || "" });
     // A dial's name and where it stands are printed on the plate in both views; only its track and
     // knob are the drawn table's own (the built table stands a real knob on it).
     for (const d of lay.dials) {
@@ -501,7 +501,7 @@ export class Table2D extends PlateBench {
   }
 
   draw(ctx, w, h) {
-    return drawTable(ctx, w, h, this.state, { shown: this.shown, drag: this.drag, railGap: this.railGap, pourFrom: this.gestures.pourFrom });
+    return drawTable(ctx, w, h, this.state, { shown: this.shown, drag: this.drag, railGap: this.railGap, pourFrom: this.gestures.pourFrom, clock: this.clock || 0 });
   }
 
   /** Pieces ease toward their places, and the rail's others slide from a held-open gap. */
@@ -509,6 +509,11 @@ export class Table2D extends PlateBench {
     if (!this.state) return false;
     const k = 1 - Math.exp(-dt * 16);
     let moving = false;
+    // A mechanism view (a kit's `live(state)` is true) keeps the loop running and gets a clock; reduced motion freezes it.
+    if (getKit(this.state.kit)?.live?.(this.state) && !globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      this.clock = (this.clock || 0) + dt;
+      moving = true;
+    }
     const targets = this.targets();
     for (const [id, to] of Object.entries(targets)) {
       const cur = this.shown[id] || (this.shown[id] = { ...to });
@@ -520,6 +525,13 @@ export class Table2D extends PlateBench {
       moving = true;
     }
     return moving || Boolean(this.drag);
+  }
+
+  /** A miss replays the cause: a kit's moving models start their run again (`kit.replay`). */
+  replay() {
+    if (!this.state) return;
+    getKit(this.state.kit)?.replay?.(this.state);
+    this.startAnim();
   }
 
   /** Put every piece where it is heading at once (no easing): for a test, or reduced motion. */

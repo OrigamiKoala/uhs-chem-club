@@ -168,6 +168,17 @@ export class TableGestures {
   }
 
   fixtureHit(u) {
+    // A resting particle in a mechanism view (`kit.hotspots`): the nearest one under the press, tapped to change the answer it carries.
+    if (this.kit.hotspots && !this.state.carry.held) {
+      let best = null;
+      for (const f of Object.values(this.state.fixtures)) {
+        for (const h of this.kit.hotspots(f, this.state) || []) {
+          const d = Math.hypot(u.x - h.x, u.y - h.y);
+          if (d <= Math.max(h.r, this.view.pxToUnits(16)) && (!best || d < best.d)) best = { d, kind: 'hot', fixture: f.id, action: h.action };
+        }
+      }
+      if (best) return best;
+    }
     for (const f of Object.values(this.state.fixtures)) {
       const lay = fixtureLayout(f);
       const pad = this.view.pxToUnits(10);
@@ -196,6 +207,30 @@ export class TableGestures {
       }
       const r = lay.run;
       if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
+    }
+    // TAP ZONES: places on a fixture that are particles or apparatus to touch (`props.taps`, and the kit's `tapZones(f, state)` for places that
+    // follow the picture): a supply that adds a step of gas, a burner that adds a step of heat, a piston to drag, a band of the graph that is
+    // the answer. A zone sets a dial (`dial`, on `fixture` or the fixture itself) to a `value`, or moves it a `step` (wrapping to the start
+    // when `wrap`), or follows a drag (`drag: {y0, y1, scale}`). Before the answer picks so a vessel's own zones win over tapping the vessel.
+    if (!this.state.carry.held) {
+      for (const f of Object.values(this.state.fixtures)) {
+        const zones = [...(f.props?.taps || []), ...(this.kit.tapZones?.(f, this.state) || [])];
+        if (!zones.length) continue;
+        const box = fixtureLayout(f).box;
+        const z = zones.find(q => u.x >= box.x0 + q.x0 && u.x <= box.x0 + q.x1 && u.y >= box.y0 + q.y0 && u.y <= box.y0 + q.y1);
+        if (z) return { kind: 'tap', fixture: f.id, z, box };
+      }
+    }
+    // A fixture the student answers BY TAPPING (`props.pick`): the object itself is the answer, so a tap on it (or on one of its columns,
+    // `pick.cols`) sets the answer dial of the choice fixture it names. Last, so a key or a knob on the same fixture still wins.
+    if (this.state.carry.held) return null;
+    for (const f of Object.values(this.state.fixtures)) {
+      const pk = f.props?.pick;
+      if (!pk) continue;
+      const box = fixtureLayout(f).box;
+      if (u.x < box.x0 || u.x > box.x1 || u.y < box.y0 || u.y > box.y1) continue;
+      const col = pk.cols ? pk.cols.find(c => u.x >= box.x0 + c.x0 && u.x <= box.x0 + c.x1) : { value: pk.value };
+      if (col) return { kind: 'pick', fixture: f.id, target: pk.fixture, dial: pk.dial || 'value', value: col.value };
     }
     return null;
   }
@@ -268,6 +303,7 @@ export class TableGestures {
   pointerDown(u) {
     if (!this.state) return;
     const fh = this.fixtureHit(u);
+    if (fh?.kind === 'hot') { this.view.dispatch(fh.action); this.view.changed?.(); return; }
     if (fh?.kind === 'viewSlice') {
       const f = this.state.fixtures[fh.fixture];
       if (f?.dials?.slice) {
@@ -280,6 +316,8 @@ export class TableGestures {
     if (fh?.kind === 'joystick') { this.gesture = { kind: 'joystick', ...fh }; this.joystickTo(fh, u); return; }
     if (fh?.kind === 'dial') { this.gesture = { kind: 'dial', ...fh }; this.dialTo(fh, u); return; }
     if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
+    if (fh?.kind === 'pick') { this.gesture = { ...fh }; return; }
+    if (fh?.kind === 'tap') { this.gesture = { ...fh }; if (fh.z.drag) this.tapDrag(fh, u); return; }
     const ch = this.cloudHit(u);
     if (ch) {
       if (ch.kind === 'cloudImage') {
@@ -319,6 +357,7 @@ export class TableGestures {
     if (!g || !this.state) return;
     if (g.kind === 'joystick') { this.joystickTo(g, u); return; }
     if (g.kind === 'dial') { this.dialTo(g, u); return; }
+    if (g.kind === 'tap') { if (g.z.drag) this.tapDrag(g, u); return; }
     if (g.kind === 'cloudRotate') {
       const dx = u.x - g.start.x;
       const dy = u.y - g.start.y;
@@ -375,6 +414,17 @@ export class TableGestures {
           this.view.dispatch({ setDial: { fixture: g.view, dial: 'slice', value: cur ? 0 : 1 } });
         }
       }
+      return;
+    }
+    if (g.kind === 'tap') {
+      if (g.z.drag) return;
+      const hit = this.fixtureHit(u);
+      if (hit?.kind === 'tap' && hit.fixture === g.fixture && hit.z.x0 === g.z.x0 && hit.z.y0 === g.z.y0) this.tapZone(g);
+      return;
+    }
+    if (g.kind === 'pick') {
+      const hit = this.fixtureHit(u);
+      if (hit?.kind === 'pick' && hit.fixture === g.fixture && hit.value === g.value) this.view.dispatch({ setDial: { fixture: g.target, dial: g.dial, value: g.value } });
       return;
     }
     if (g.kind === 'run') {
@@ -473,6 +523,35 @@ export class TableGestures {
     } else if (this.state.recorder.tool && a === null) {
       this.view.dispatch({ lay: null });
     }
+  }
+
+  /** A tap on a zone: set its dial to `value`, or move it one `step` (back to the start past the end when `wrap`). */
+  tapZone(g) {
+    const z = g.z;
+    const id = z.fixture || g.fixture;
+    const d = this.state.fixtures[id]?.dials?.[z.dial];
+    if (!d) return;
+    let value;
+    if (z.value != null) value = z.value;
+    else {
+      value = d.value + z.step;
+      if (value > d.max + 1e-9) value = z.wrap ? d.min : d.max;
+      if (value < d.min - 1e-9) value = d.min;
+      value = snapDial(d, value);
+    }
+    if (value !== d.value) this.view.dispatch({ setDial: { fixture: id, dial: z.dial, value } });
+  }
+
+  /** A zone followed by a drag: the pointer's height in the zone sets the dial (a piston: high is a large volume). */
+  tapDrag(g, u) {
+    const z = g.z; const dr = z.drag;
+    const id = z.fixture || g.fixture;
+    const d = this.state.fixtures[id]?.dials?.[z.dial];
+    if (!d) return;
+    const y0 = g.box.y0 + dr.y0; const y1 = g.box.y0 + dr.y1;
+    const frac = Math.max(0, Math.min(1, (y1 - u.y) / (y1 - y0)));
+    const value = snapDial(d, Math.max(d.min, Math.min(d.max, dr.scale * frac)));
+    if (value !== d.value) this.view.dispatch({ setDial: { fixture: id, dial: z.dial, value } });
   }
 
   dialTo(h, u) {

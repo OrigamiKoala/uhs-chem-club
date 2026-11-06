@@ -9,6 +9,8 @@
  */
 
 import { PLATE_COLORS } from '../../engine/plates.js';
+import { wobble } from '../../engine/phmotion.js';
+import { withDial } from './ph-replay.js';
 import { registerFixture } from './ph-registry.js';
 import { frameOf } from './matter-draw.js';
 import { put, ball, ionText } from './ph-flask.js';
@@ -35,7 +37,7 @@ function paintMix(ctx, f, state, b) {
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(s)), Math.round(F.len(s)));
   const cells = cellGrid(100, 10, x + 0.6, y + 0.6, s - 1.2, s - 1.2);
   const gone = ionizedCells(100, r.used, 17);
-  cells.forEach((c, i) => ball(ctx, F.x(c.x), F.y(c.y), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.42)), gone.has(i) ? BASE_INK : ACID_INK));
+  cells.forEach((c, i) => { const m = wobble(i, b.clock || 0); ball(ctx, F.x(c.x + m.wx * c.cw * 0.5), F.y(c.y + m.wy * c.ch * 0.5), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.42)), gone.has(i) ? BASE_INK : ACID_INK); });
   const what = p.kind === 'base' ? 'base' : 'acid';
   [[ACID_INK, `${what} left`, 40.5], [BASE_INK, `${what} used up`, 44.5]].forEach(([ink, t, yy]) => {
     ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(F.x(4), F.y(yy), F.len(0.9), 0, Math.PI * 2); ctx.fill();
@@ -66,7 +68,7 @@ function settle(state) {
   }
 }
 
-registerFixture('phneut', { paint: paintMix, run, settle });
+registerFixture('phneut', { replay: { count: f => Math.round(f.dials.poured.value), at: (f, i) => withDial(f, 'poured', i) }, demo: (f, t) => ({ dials: { poured: Math.floor(t / 0.8) % (Math.min(f.dials.poured.max, 8) + 1) } }), bodies3d: true, paint: paintMix, run, settle, live: () => true });
 
 /**
  * A mixing flask. `mix` is `{ type, id, c, V, ct, step, max }` (see `ph-read.js` `mixOf`); `poured` the pours already made; `name` what the

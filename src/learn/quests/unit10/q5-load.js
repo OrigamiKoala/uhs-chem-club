@@ -2,7 +2,7 @@
  * Unit 10 · Bench 5 — Under Load (q5-load)
  *
  * Brinewire's bench for cells away from standard conditions (CED 9.10), on the cell kit (`table/kits/cell.js`; the instruments are in
- * `cell-load.js`: a tin–lead cell driving a load with ion windows and a plot, two-beaker cells with set strengths, and a concentration cell
+ * `cell-load.js`: a tin–lead cell driving a load with ion windows and a plot, two-beaker cells with set concentrations, and a concentration cell
  * with an ammeter). Eight stages and ONE click: the belief that a cell holds its voltage until it is empty, and that a dead cell is an empty one.
  *
  *   1  PREDICT: a tin–lead cell is run until the voltmeter reads zero; what does each beaker hold?
@@ -24,10 +24,12 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { cellTable, selectorFixture, plaqueFixture, note, tag, pieceIn, dialValue, voltText } from '../../table/kits/cell.js';
+import { cellTable, selectorFixture, plaqueFixture, note, tag, pieceIn, dialValue, voltText, hideDials, canPiece } from '../../table/kits/cell.js';
 import { loadFixture, loadRead, readFixture, readRead, ccFixture, ccRead } from '../../table/kits/cell-load.js';
 import { cellE0, nernst, fmt } from '../../engine/celldata.js';
 import { LOAD, CONC_STEPS, loadAt, balanceOf, readAt, concCellRead, concLabel, milliText } from '../../engine/celldata-q5.js';
+
+import { attachScenes } from '../../table/kits/cell-attach.js';
 
 export const meta = { stageCount: 8 };
 
@@ -60,7 +62,7 @@ const TL = { anode: 'sn', cathode: 'pb' };
 const END = () => loadAt(TL.cathode, TL.anode, START, LOAD.maxTick);
 /** Stage 6: the zinc–copper cell with 1.0 M zinc ions and 0.0010 M copper ions. */
 const S6 = { aC: 1, cC: 0.001 };
-/** Stage 7: three prepared zinc–copper cells: [fixture, card, name, zinc strength, copper strength]. */
+/** Stage 7: three prepared zinc–copper cells: [fixture, card, name, zinc concentration, copper concentration]. */
 const S7_CELLS = [['fa', 'ta', 'Cell A', 1, 1], ['fb', 'tb', 'Cell B', 1, 0.01], ['fc', 'tc', 'Cell C', 0.01, 1]];
 const S7_V = c => readAt('cu', 'zn', c[3], c[4]);
 const S7_WANT = [...S7_CELLS].sort((p, q) => S7_V(q) - S7_V(p));
@@ -130,19 +132,19 @@ export const STAGES = [
     widget,
     table: cellTable({
       fixtures: [
-        loadFixture('load', { x: 84, y: 40 }, { ...TL }),
-        selectorFixture('pick', 'What each beaker holds', { x: 50, y: 100 }, { options: [GUESS.tin, GUESS.lead, GUESS.empty, GUESS.both, ' '], start: 5, w: 64, list: true })
+        loadFixture('load', { x: 84, y: 40 }, { ...TL })
       ]
-    }, { w: 176, h: 118 }),
+    }, { w: 176, h: 76 }),
     hints: [
-      'Press "Run" until the voltmeter stops falling, then use the answer dial.',
+      'Press "Run" until the voltmeter stops falling, then tap each kind of ion that is still in its beaker.',
       'Compare the two windows at the start and after each run, and the voltage on the plot.',
       'Check whether either window has emptied by the time the voltmeter reads zero.'
     ],
     check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 5) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v === 4) return { ok: true };
+      const d = state.table.fixtures.scene.dials;
+      const tin = Math.round(d.t0.value) === 1; const lead = Math.round(d.t1.value) === 1;
+      if (!tin && !lead) return { ok: false, notYet: true, msg: 'Tap each kind of ion that is still there.' };
+      if (tin && lead) return { ok: true };
       const r = loadRead({ fixtures: state.table.fixtures }, 'load');
       if (!r.ran) return { ok: false, msg: `The cell has not been run yet; the windows hold ${r.now.nAnode} tin and ${r.now.nCathode} lead dots.` };
       return { ok: false, msg: `At tick ${r.tick} the voltmeter read ${milliText(r.now.E)} V, the tin window held ${r.now.nAnode} dots and the lead window ${r.now.nCathode}.` };
@@ -154,7 +156,7 @@ export const STAGES = [
       return {
         log: 'The voltage fell to zero with both ions still in the beakers.',
         title: 'A Dead Cell Is Not Empty',
-        body: `${said}The voltage fell from ${milliText(loadAt(TL.cathode, TL.anode, START, 0).E)} V to ${milliText(e.E)} V as tin ions built up and lead ions thinned out, and neither window emptied: ${e.nAnode} tin dots and ${e.nCathode} lead dots were left. The cell stopped, but it was not used up.`
+        body: `${said}The voltage fell from ${milliText(loadAt(TL.cathode, TL.anode, START, 0).E)} V to ${milliText(e.E)} V, leaving ${e.nAnode} tin and ${e.nCathode} lead dots: the cell stopped without being used up.`
       };
     }
   },
@@ -163,7 +165,7 @@ export const STAGES = [
   {
     id: 's3-zinc',
     title: 'More Zinc Ions',
-    prompt: 'Raise the zinc ion strength in the zinc beaker, from 0.010 M to 1.0 M, and say what the voltmeter does.',
+    prompt: 'Raise the zinc ion concentration in the zinc beaker, from 0.010 M to 1.0 M, and say what the voltmeter does.',
     widget,
     table: cellTable({
       fixtures: [
@@ -172,16 +174,16 @@ export const STAGES = [
       ]
     }, { w: 150, h: 84 }),
     hints: [
-      'Press "Run" at one zinc strength, turn the dial to the other, press "Run" again, then use the answer dial.',
-      'Compare the two lines kept on the cell: the zinc strength and the voltage beside it.',
-      'See which way the voltage moved when the zinc strength went up.'
+      'Press "Run" at one zinc concentration, turn the dial to the other, press "Run" again, then use the answer dial.',
+      'Compare the two lines kept on the cell: the zinc concentration and the voltage beside it.',
+      'See which way the voltage moved when the zinc concentration went up.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === 2) return { ok: true };
       const r = readsOf(state.table);
-      if (r.rows.length < 2) return { ok: false, msg: `The cell has been read at ${r.rows.length ? 'one' : 'no'} zinc strength${r.rows.length ? '' : 's'}; two lines let you compare.` };
+      if (r.rows.length < 2) return { ok: false, msg: `The cell has been read at ${r.rows.length ? 'one' : 'no'} zinc concentration${r.rows.length ? '' : 's'}; two lines let you compare.` };
       const [lo, hi] = r.rows;
       return { ok: false, msg: `The cell read ${voltText(lo.V)} V with ${concLabel(lo.aC)} zinc ions and ${voltText(hi.V)} V with ${concLabel(hi.aC)}.` };
     },
@@ -229,7 +231,7 @@ export const STAGES = [
       return {
         log: 'The tin count over the lead count matched the cell\'s K.',
         title: 'Reaction Quotient',
-        body: `${e.nAnode} ÷ ${e.nCathode} = ${fmt(e.nAnode / e.nCathode, 1)}, close to this cell's K of ${fmt(b.K, 1)}. The tin ion strength over the lead ion strength is the reaction quotient, Q. It started at 1 and rose as the cell ran, and the cell reads 0 V when Q reaches K.`
+        body: `${e.nAnode} ÷ ${e.nCathode} = ${fmt(e.nAnode / e.nCathode, 1)}, close to K = ${fmt(b.K, 1)}: that ion ratio is the reaction quotient, Q, and the cell reads 0 V when Q reaches K.`
       };
     }
   },
@@ -243,17 +245,17 @@ export const STAGES = [
     table: cellTable({
       fixtures: [
         ccFixture('cc', { x: 50, y: 34 }, { ...S5, names: ['Left', 'Right'] }),
-        selectorFixture('pick', 'Electrons leave', { x: 128, y: 34 }, { options: ['the bar in the 1.0 M beaker', 'the bar in the 0.010 M beaker', ' '], start: 3, w: 64, list: true })
+        hideDials(selectorFixture('pick', 'Electrons leave', { x: 128, y: 34 }, { options: ['the bar in the 1.0 M beaker', 'the bar in the 0.010 M beaker', ' '], start: 3, w: 64, list: true }))
       ]
     }, { w: 176, h: 72 }),
     hints: [
-      'Press "Run", read the ammeter, then use the answer dial.',
-      'Compare the side the needle swings toward with the strength printed under each beaker.',
-      'Find the bar the electrons move away from and read the strength of its beaker.'
+      'Press "Run", read the ammeter, then tap the bar you choose.',
+      'Compare the side the needle swings toward with the concentration printed under each beaker.',
+      'Find the bar the electrons move away from and read the concentration of its beaker.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a bar.' };
       if (v === 2) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
       if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
@@ -264,7 +266,7 @@ export const STAGES = [
       return {
         log: 'The electrons left the bar in the dilute beaker.',
         title: 'Concentration Cell',
-        body: `Two beakers of the same metal at 1.0 M and 0.010 M made a cell that read ${fmt(c.E, 3)} V, a concentration cell. The electrons left the bar in the dilute beaker, the anode, where copper dissolves; the cell runs until the two strengths match.`
+        body: `The same metal at 1.0 M and 0.010 M read ${fmt(c.E, 3)} V: a concentration cell, which runs until the two concentrations match.`
       };
     }
   },
@@ -283,9 +285,9 @@ export const STAGES = [
       ]
     }, { w: 156, h: 66 }),
     hints: [
-      'Read the strengths under the beakers and type the voltage in the field.',
-      'Compare the charges on the two ions and the two strengths with the equation on the plate.',
-      'Find Q from the two strengths, take its base-ten log, multiply by 0.0592 over the electrons moved, and subtract from E°.'
+      'Read the concentrations under the beakers and type the voltage in the field.',
+      'Compare the charges on the two ions and the two concentrations with the equation on the plate.',
+      'Find Q from the two concentrations, take its base-ten log, multiply by 0.0592 over the electrons moved, and subtract from E°.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'v');
@@ -301,16 +303,16 @@ export const STAGES = [
       if (near(inverted)) return { ok: false, msg: `${fmt(v, 2)} V is above the 1.10 V on the plate, and this cell holds ${concLabel(S6.aC)} zinc ions against ${concLabel(S6.cC)} copper ions.` };
       if (near(noN)) return { ok: false, msg: `The ions under the beakers are Zn²⁺ and Cu²⁺; ${fmt(v, 2)} V counts one electron.` };
       if (near(lnForm)) return { ok: false, msg: 'The 0.0592 on the plate goes with the base-ten log of Q, not the natural log.' };
-      if (near(E0)) return { ok: false, msg: `1.10 V is the plate's figure for equal strengths; this cell holds ${concLabel(S6.aC)} zinc ions and ${concLabel(S6.cC)} copper ions.` };
+      if (near(E0)) return { ok: false, msg: `1.10 V is the plate's figure for equal concentrations; this cell holds ${concLabel(S6.aC)} zinc ions and ${concLabel(S6.cC)} copper ions.` };
       if (Math.abs(v - E0) > 0.5) return { ok: false, msg: `The plate gives 1.10 V, and the readings at stage 3 moved by hundredths of a volt; ${fmt(v, 2)} V is far from it.` };
-      return { ok: false, msg: `The plate gives 1.10 V for this cell with equal strengths; ${fmt(v, 2)} V does not follow from ${concLabel(S6.aC)} zinc ions and ${concLabel(S6.cC)} copper ions.` };
+      return { ok: false, msg: `The plate gives 1.10 V for this cell with equal concentrations; ${fmt(v, 2)} V does not follow from ${concLabel(S6.aC)} zinc ions and ${concLabel(S6.cC)} copper ions.` };
     },
     get reward() {
       const E0 = cellE0('cu', 'zn'); const Q = S6.aC / S6.cC;
       return {
         log: 'The voltage followed E° and the log of Q.',
         title: 'The Nernst Equation',
-        body: `E = E° − (0.0592 ÷ n) log Q = 1.10 − (0.0592 ÷ 2) × log ${Q.toLocaleString('en-US')} = ${fmt(nernst(E0, 2, Q), 2)} V, the Nernst equation. At Q = 1 a cell reads E°; below 1 it reads more, above 1 it reads less, and at Q = K it reads 0 V.`
+        body: `E = E° − (0.0592 ÷ 2) log Q = ${fmt(nernst(E0, 2, Q), 2)} V, the Nernst equation: the voltage is above E° when Q is below 1 and below E° when Q is above 1.`
       };
     }
   },
@@ -323,13 +325,13 @@ export const STAGES = [
     widget,
     table: cellTable({
       fixtures: S7_CELLS.map(([fid, , name, a, c], i) => readFixture(fid, { x: 32 + i * 56, y: 30 }, { left: 'zn', right: 'cu', aC: a, cC: c, w: 50, title: name })),
-      pieces: S7_CELLS.map(([, cid, name], i) => tag(cid, name, { x: 32 + i * 28, y: 70 })),
+      pieces: S7_CELLS.map(([, cid, name], i) => canPiece(cid, name, { x: 32 + i * 28, y: 70 })),
       zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Highest voltage', last: 'Lowest voltage', items: [], start: [] } }
     }, { w: 176, h: 106 }),
     hints: [
-      'Press "Run" on each cell, then drag the three cards onto the rail.',
-      'Compare the voltages the three voltmeters read, and the strengths printed under the beakers.',
-      'Put the card of the highest reading on the left and the lowest on the right.'
+      'Press "Run" on each cell, then drag the three cans onto the rail.',
+      'Compare the voltages the three voltmeters read, and the concentrations printed under the beakers.',
+      'Put the can of the highest reading on the left and the lowest on the right.'
     ],
     check(state) {
       const t = state.table;
@@ -349,7 +351,7 @@ export const STAGES = [
       return {
         log: 'The cell farthest from balance read the highest.',
         title: 'Distance from Balance',
-        body: `${rows.join(', ')}. With more reactant ions than product ions Q is small and the cell reads above E°; with more product ions Q is large and it reads below. The farther Q is from K, the higher the voltage.`
+        body: `${rows.join(', ')}. A cell with more reactant than product ions reads above E°, and one with more product ions reads below.`
       };
     }
   },
@@ -363,17 +365,17 @@ export const STAGES = [
     table: cellTable({
       fixtures: [
         ccFixture('cc', { x: 50, y: 34 }, { ...S8, sealed: true, names: ['Beaker A', 'Beaker B'], title: 'Sealed silver cell' }),
-        selectorFixture('pick', 'The dilute beaker', { x: 128, y: 34 }, { options: ['Beaker A', 'Beaker B', ' '], start: 3, w: 56, list: true })
+        hideDials(selectorFixture('pick', 'The dilute beaker', { x: 128, y: 34 }, { options: ['Beaker A', 'Beaker B', ' '], start: 3, w: 56, list: true }))
       ]
     }, { w: 176, h: 72 }),
     hints: [
-      'Press "Run", read both meters, then use the answer dial.',
+      'Press "Run", read both meters, then tap the dilute beaker.',
       'Compare the side the needle swings toward with the sign of the voltmeter.',
       'Find the bar the electrons leave; the dilute beaker is the one that bar stands in.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a beaker.' };
       const dilute = S8.cLeft < S8.cRight ? 1 : 2;
       if (v === dilute) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
@@ -391,6 +393,14 @@ export const STAGES = [
   }
 ];
 
+/** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
+attachScenes(STAGES, {
+  own: {
+    1: { sitesKey: 'ionsLeft', dials: { t0: { min: 0, max: 1, step: 1, value: 0, label: 'Tin ions' }, t1: { min: 0, max: 1, step: 1, value: 0, label: 'Lead ions' } } },
+    4: { sitesKey: 'sides', extra: { pickMap: [1, 2] } },
+    7: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }
+  }, compact: [6], demos: { 0: 'running' } });
+
 export const DEBRIEF = {
   title: 'Under Load',
   body: 'A cell does not run out; it runs down toward a balance. The voltage falls to zero where Q reaches K, with both ions still there, and it is higher the farther Q is from K.'
@@ -398,7 +408,7 @@ export const DEBRIEF = {
 
 export const SOLUTIONS = [
   [put('both', 'slot:guess')],
-  [...times(PRESSES, () => run('load')), dial('pick', 'value', 4)],
+  [...times(PRESSES, () => run('load')), dial('scene', 't0', 1), dial('scene', 't1', 1)],
   [run('rig'), dial('rig', 'a', 2), run('rig'), dial('pick', 'value', 2)],
   [typed('ratio', fmt(END().nAnode / END().nCathode, 1))],
   [run('cc'), dial('pick', 'value', 2)],
@@ -409,7 +419,7 @@ export const SOLUTIONS = [
 
 export const MISSES = [
   [],
-  [run('load'), run('load'), dial('pick', 'value', 2)],
+  [run('load'), run('load'), dial('scene', 't0', 1)],
   [run('rig'), dial('rig', 'a', 2), run('rig'), dial('pick', 'value', 1)],
   [typed('ratio', '0.39')],
   [run('cc'), dial('pick', 'value', 1)],

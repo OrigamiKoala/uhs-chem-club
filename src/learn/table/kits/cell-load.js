@@ -4,11 +4,11 @@
  *   CELLLOADRUN   two beakers with ion windows, a voltmeter, a load, and a plot of voltage against time. The "Run" key lets the cell
  *                 drive the load for a fixed number of ticks; the plot is painted only to the tick reached and the windows show the ions
  *                 counted at that tick (one dot is 0.02 mol/L). Tin in the left beaker, lead in the right.
- *   CELLLOADREAD  two beakers of a metal and its ions at a set strength, a voltmeter and a log. A beaker may carry a dial of two
- *                 strengths (1.0 M and 0.010 M); "Run" reads the cell as set and keeps a line for every setting that has been read.
+ *   CELLLOADREAD  two beakers of a metal and its ions at a set concentration, a voltmeter and a log. A beaker may carry a dial of two
+ *                 concentrations (1.0 M and 0.010 M); "Run" reads the cell as set and keeps a line for every setting that has been read.
  *                 `wired: false` leaves the voltmeter off (a cell nobody has connected).
- *   CELLLOADCC    a concentration cell: the same metal in two beakers of different strength, a voltmeter and an ammeter whose needle
- *                 swings toward the bar the electrons go to. Beaker strengths can be sealed ("?").
+ *   CELLLOADCC    a concentration cell: the same metal in two beakers of different concentration, a voltmeter and an ammeter whose needle
+ *                 swings toward the bar the electrons go to. Beaker concentrations can be sealed ("?").
  *
  * A THIN WRAPPER over `engine/celldata-q5.js` (and `celldata.js`): a painter decides nothing, every reading is a planner's answer.
  * Flat, like the rest of the kit; each beaker stands in a low glass dish at `3D On`.
@@ -198,11 +198,11 @@ export function loadFixture(id, at, { anode = 'sn', cathode = 'pb', cAnode0 = 1,
   };
 }
 
-/* ------------------------------------------------------------------ the read bench: set strengths, read the voltage, keep a line */
+/* ------------------------------------------------------------------ the read bench: set concentrations, read the voltage, keep a line */
 
 function settingConc(f, idx) { return f.props.aDial ? CONC_STEPS[idx - 1] : f.props.aC; }
 
-/** What a read bench shows: the strengths as set, the last reading and a line for each setting read. */
+/** What a read bench shows: the concentrations as set, the last reading and a line for each setting read. */
 export function readRead(state, fid) {
   const f = state.fixtures[fid];
   const p = f.props;
@@ -261,8 +261,8 @@ registerFixture('cellloadread', {
 });
 
 /**
- * A two-beaker cell, the `left` metal giving to the `right` metal's ions, read by a voltmeter. `aC` the left ion strength (mol/L, or a dial of
- * the two settings when `aDial`), `cC` the right ion strength. `wired: false` leaves it unconnected (no Run key). `w` is the width.
+ * A two-beaker cell, the `left` metal giving to the `right` metal's ions, read by a voltmeter. `aC` the left ion concentration (mol/L, or a dial of
+ * the two settings when `aDial`), `cC` the right ion concentration. `wired: false` leaves it unconnected (no Run key). `w` is the width.
  */
 export function readFixture(id, at, { left = 'zn', right = 'cu', aC = 1, cC = 1, aDial = false, aLabel = null, wired = true, w = 60, title = null } = {}) {
   const oy = aDial ? 11 : 0;
@@ -325,7 +325,7 @@ function paintCC(ctx, f, state, b) {
   ctx.strokeStyle = r.ran ? AMBER : DUST; ctx.lineWidth = Math.max(1.6, F.len(0.4));
   ctx.beginPath(); ctx.moveTo(F.x(ax), F.y(ay - 1)); ctx.lineTo(F.x(ax) + Math.cos(ang) * F.len(7.4), F.y(ay - 1) + Math.sin(ang) * F.len(7.4)); ctx.stroke(); ctx.lineWidth = 1;
   put(ctx, 'Ammeter', F.x(ax), F.y(a.y - 2.2), F.size(1.9, 5.6), { color: DUST });
-  // Names and strengths.
+  // Names and concentrations.
   const names = p.names;
   put(ctx, names[0], F.x(p.lx + CUP.w / 2), F.y(cy + CUP.h + 2.6), F.size(2.6, 7), { color: TEXT, weight: 700 });
   put(ctx, names[1], F.x(p.rx + CUP.w / 2), F.y(cy + CUP.h + 2.6), F.size(2.6, 7), { color: TEXT, weight: 700 });
@@ -346,7 +346,7 @@ registerFixture('cellloadcc', {
 });
 
 /**
- * A concentration cell of one metal (a key of `METALS`): `cLeft` and `cRight` in mol/L. `sealed` prints "?" for the strengths and `names`
+ * A concentration cell of one metal (a key of `METALS`): `cLeft` and `cRight` in mol/L. `sealed` prints "?" for the concentrations and `names`
  * labels the beakers ("Beaker A", "Beaker B" by default).
  */
 export function ccFixture(id, at, { metal = 'cu', cLeft = 1, cRight = 0.01, sealed = false, names = ['Left', 'Right'], title = 'Concentration cell' } = {}) {

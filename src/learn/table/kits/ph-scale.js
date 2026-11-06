@@ -16,9 +16,11 @@ import { PLATE_COLORS } from '../../engine/plates.js';
 import { roundedSlab } from '../../engine/table-props.js';
 import { registerFixture, registerPiece } from './ph-registry.js';
 import { frameOf } from './matter-draw.js';
-import { put, ball, H_INK, OH_INK, ACID_INK, BASE_INK, ionText } from './ph-flask.js';
+import { put, ball, dot, H_INK, OH_INK, ACID_INK, BASE_INK, ionText } from './ph-flask.js';
 import { pieceIn, cellGrid, ionizedCells, UNITS } from './ph-read.js';
 import { scaleSolution, STRONG_BASES, ACIDS, fmt, sci } from '../../engine/phdata.js';
+import { withDial } from './ph-replay.js';
+import { windowAt, shuffle, scratch, wobble } from '../../engine/phmotion.js';
 import { WATER_INK } from './ph-pour.js';
 import './ph-scale-tour.js';
 
@@ -37,7 +39,9 @@ export const strengthText = c => (c < 1e-3 ? `${sci(c, 2)} M` : `${Number(c).toP
 export function liveSolute(f) {
   const p = f.props;
   const T = p.temps ? p.temps[Math.round(f.dials.T.value) - 1] ?? p.temps[0] : p.solute.T ?? 25;
-  return { ...p.solute, T };
+  // A flask that can be diluted: each step adds water to make the concentration a tenth.
+  const steps = p.dilute ? Math.round(f.dials.steps.value) : 0;
+  return { ...p.solute, c: p.solute.c * Math.pow(0.1, steps), T };
 }
 export const scaleRead = f => scaleSolution(liveSolute(f));
 
@@ -128,27 +132,61 @@ export const scaleMeter = (id, at, scale = 'pH', extra = {}) => ({
 
 /* ------------------------------------------------------------------ the flask */
 
+const SAMPLE_H = 17;
+const SAMPLE_DOTS = 1000;
+
+/** H₃O⁺ in a fixed small sample of the flask: 1000 at the start, then in proportion to the hydronium the planner gives, so each tenfold dilution shows a tenth as many. */
+export function sampleCount(f) {
+  const h = solOf(f).h;
+  const h0 = scaleSolution({ ...f.props.solute, T: liveSolute(f).T }).h;
+  return Math.round((SAMPLE_DOTS * h) / h0);
+}
+
+function paintSample(ctx, F, f, x, y, w, clock) {
+  const n = sampleCount(f);
+  const hh = 12;
+  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(hh));
+  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(hh)));
+  ctx.fillStyle = H_INK;
+  const cols = 50; const rows = SAMPLE_DOTS / cols;
+  for (let i = 0; i < n; i++) {
+    // The dots occupy the grid by a fixed shuffle of its sites, so the same ones stay when the count falls.
+    const site = (i * 389) % SAMPLE_DOTS;
+    const m = wobble(site, clock);
+    const gx = x + 0.5 + ((site % cols) + 0.5 + m.wx) * ((w - 1) / cols); const gy = y + 0.5 + ((Math.floor(site / cols) + 0.5 + m.wy) * ((hh - 1) / rows));
+    dot(ctx, F.x(gx), F.y(gy), Math.max(0.7, F.len(0.28)), H_INK);
+  }
+  put(ctx, `H₃O⁺ in a fixed sample: ${n}`, F.x(x), F.y(y + hh + 2.4), F.size(1.9, 5.8), { align: 'left', color: DUST, weight: 700 });
+}
+
 function paintScale(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   const w = f.size.w;
-  put(ctx, p.sealed ? 'strength hidden' : strengthText(p.solute.c ?? 0), F.x(2), F.y(8.2), F.size(p.solute.id === 'water' ? 2.3 : 2.5, 6.4), { align: 'left', color: p.sealed ? DIM : TEXT, weight: 700, maxW: F.len(w - 4) });
+  put(ctx, p.sealed ? 'concentration hidden' : strengthText(liveSolute(f).c ?? 0), F.x(2), F.y(8.2), F.size(p.solute.id === 'water' ? 2.3 : 2.5, 6.4), { align: 'left', color: p.sealed ? DIM : TEXT, weight: 700, maxW: F.len(w - 4) });
   const win = scaleWindow(f);
   const sp = speciesOfScale(f);
   const x = 2; const y = WIN_TOP; const ww = w - 4; const wh = p.wh;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(ww), F.len(wh));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
   const cells = cellGrid(win.units, p.cols, x + 0.6, y + 0.6, ww - 1.2, wh - 1.2);
-  const gone = ionizedCells(win.units, win.ionized, 17 + Math.round((p.solute.c ?? 1) * 1000));
+  const seed = 17 + Math.round((p.solute.c ?? 1) * 1000);
+  const now = windowAt(win.units, win.ionized, seed, b.clock || 0, (scratch(f).order ||= shuffle(win.units, seed)));
   cells.forEach((c, i) => {
+    const m = now[i];
+    const cx = c.x + m.wx * c.cw * 0.5; const cy = c.y + m.wy * c.ch * 0.5;
     const R = Math.min(c.cw, c.ch) * 0.44;
-    if (!gone.has(i)) { ball(ctx, F.x(c.x), F.y(c.y), Math.max(1.4, F.len(R)), sp.whole.ink); return; }
-    const r = Math.max(1.2, F.len(R * (sp.n === 2 ? 0.46 : 0.62)));
-    ball(ctx, F.x(c.x) - r * (sp.n === 2 ? 1.9 : 0.95), F.y(c.y), r, sp.parts[0].ink);
-    for (let k = 0; k < sp.n; k++) ball(ctx, F.x(c.x) + r * (sp.n === 2 ? 0 + k * 1.9 : 0.95), F.y(c.y), r, sp.parts[1].ink);
+    const sep = m.dir === 1 ? m.p : m.dir === -1 ? 1 - m.p : (m.ion ? 1 : 0);
+    if (sep <= 0.001) { ball(ctx, F.x(cx), F.y(cy), Math.max(1.4, F.len(R)), sp.whole.ink); return; }
+    const full = sp.n === 2 ? 0.46 : 0.62;
+    const r = Math.max(1.2, F.len(R * (1 - (1 - full) * sep)));
+    const gap = r * (sp.n === 2 ? 1.9 : 0.95) * sep;
+    ball(ctx, F.x(cx) - gap, F.y(cy), r, sep > 0.5 ? sp.parts[0].ink : sp.whole.ink);
+    for (let k = 0; k < sp.n; k++) ball(ctx, F.x(cx) + (sp.n === 2 ? k * 1.9 * r * sep : gap), F.y(cy), r, sep > 0.5 ? sp.parts[1].ink : sp.whole.ink);
   });
   // The names of the colours under the window.
   let ly = WIN_TOP + wh + 3;
+  if (p.dilute) paintSample(ctx, F, f, 2, WIN_TOP + wh + 3 + (p.legend ? (w >= 40 ? 3.6 : 6.6) : 0), w - 4, b.clock || 0);
   if (p.legend) {
     const items = win.ionized > 0 ? [sp.parts[0], sp.parts[1]] : [];
     if (win.whole > 0) items.push(sp.whole);
@@ -165,6 +203,7 @@ function paintScale(ctx, f, state, b) {
     }
     ly += w >= 40 ? 3.6 : 6.6;
   }
+  if (p.dilute) ly += SAMPLE_H;
   if (p.lens) {
     const s = win.sol;
     put(ctx, `H₃O⁺ ${sci(s.h, 2)} M`, F.x(2), F.y(ly + 1.5), F.size(2.2, 6), { align: 'left', color: AMBER, weight: 700, maxW: F.len(ww) });
@@ -188,7 +227,18 @@ function settle(state) {
   }
 }
 
-registerFixture('phscale', { paint: paintScale, settle, dress3d: dressScale });
+/** Dilute: one press adds water, a tenth the concentration; the row it records is the pH now. */
+function run(state, fid) {
+  const f = state.fixtures[fid];
+  if (!f.props.dilute) return null;
+  const n = Math.round(f.dials.steps.value);
+  if (n >= f.dials.steps.max) return { noop: 'No more water can be added.' };
+  const next = { ...f, dials: { ...f.dials, steps: { ...f.dials.steps, value: n + 1 } } };
+  return { x: n + 1, y: Math.round(scaleSolution(liveSolute(next)).pH * 100) / 100, label: fid, dials: { [fid]: { steps: n + 1 } } };
+}
+
+const stepsReplay = { count: f => (f.props.dilute ? Math.round(f.dials.steps.value) : 0), at: (f, i) => withDial(f, 'steps', i) };
+registerFixture('phscale', { replay: stepsReplay, demo: (f, t) => (f.props.dilute ? { dials: { steps: Math.floor(t / 1.4) % (f.dials.steps.max + 1) } } : null), bodies3d: true, paint: paintScale, settle, run, dress3d: dressScale, live: () => true });
 
 function dressScale(f, state, c) {
   const { THREE: T, scale: s, toPlate, box } = c;
@@ -214,10 +264,10 @@ function dressScale(f, state, c) {
  * `legend: false`, `temps: [25, 50]` (a temperature dial of those settings), `lens` (print the measured H₃O⁺ and OH⁻), `sealed` (name and
  * strength not printed). Returns `{ fixture, slot, size }`.
  */
-export function scaleFlask(id, at, { solute, label, w = 44, window = 16, meter = true, legend = true, temps = null, lens = false, sealed = false, units = UNITS, cols = 20 } = {}) {
+export function scaleFlask(id, at, { solute, label, w = 44, window = 16, meter = true, legend = true, temps = null, lens = false, sealed = false, dilute = 0, units = UNITS, cols = 20 } = {}) {
   const wh = window;
   const legendRows = legend ? (w >= 40 ? 3.6 : 6.6) : 0;
-  const lensRows = lens ? 8.6 : 0;
+  const lensRows = (lens ? 8.6 : 0) + (dilute ? SAMPLE_H : 0);
   const dialTop = temps ? WIN_TOP + wh + 3 + legendRows + lensRows + 6 : null;
   const seatH = meter ? 12.5 : 0;
   const belowDial = temps ? dialTop + 3 : WIN_TOP + wh + 3 + legendRows + lensRows;
@@ -227,11 +277,11 @@ export function scaleFlask(id, at, { solute, label, w = 44, window = 16, meter =
   const slot = meter ? { id: `${id}.seat`, label: ' ', at: { x: x0 + seatRel.x, y: y0 + seatRel.y }, size: { w: seatRel.w, h: seatRel.h } } : null;
   const dials = temps
     ? { T: { min: 1, max: temps.length, step: 1, value: 1, label: 'Temperature', labels: temps.map(t => `${t} °C`) } }
-    : { x: { min: 0, max: 1, step: 1, value: 0, label: 'Flask' } };
+    : dilute ? { steps: { min: 0, max: dilute, step: 1, value: 0, label: 'Dilutions' } } : { x: { min: 0, max: 1, step: 1, value: 0, label: 'Flask' } };
   return {
     fixture: {
-      id, kind: 'phscale', label: sealed ? 'Sealed flask' : (label ?? solute.id), at: { ...at }, size: { w, h }, noRun: true, dials,
-      props: { ...(temps ? { top: dialTop } : { hidden: ['x'] }), backdrop: true, solute: { ...solute }, units, cols, wh, legend, lens, sealed, temps, seat: slot ? slot.id : null, seatRel, noted: null }
+      id, kind: 'phscale', label: sealed ? 'Sealed flask' : (label ?? solute.id), at: { ...at }, size: { w, h }, ...(dilute ? { runLabel: 'Dilute' } : { noRun: true }), dials,
+      props: { ...(temps ? { top: dialTop } : { hidden: [dilute ? 'steps' : 'x'] }), dilute: dilute || 0, backdrop: true, solute: { ...solute }, units, cols, wh, legend, lens, sealed, temps, seat: slot ? slot.id : null, seatRel, noted: null }
     },
     slot,
     size: { w, h }

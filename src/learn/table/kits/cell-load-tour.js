@@ -12,10 +12,10 @@ addTourText({
   },
   'cell:cellloadread': {
     title: 'Two beakers', dials: true,
-    text: 'Two beakers each hold a bar of one metal in a solution of its own ions, joined by a glass tube and a wire through a voltmeter. The strength of each solution is printed under its beaker. Where a beaker has a dial, turn it to one of its two strengths. Press "Run" to connect the wire and read the voltmeter, right bar against left bar; a line is kept for every strength that has been read.'
+    text: 'Two beakers each hold a bar of one metal in a solution of its own ions, joined by a glass tube and a wire through a voltmeter. The concentration of each solution is printed under its beaker. Where a beaker has a dial, turn it to one of its two concentrations. Press "Run" to connect the wire and read the voltmeter, right bar against left bar; a line is kept for every concentration that has been read.'
   },
   'cell:cellloadcc': {
     title: 'Two beakers and two meters', dials: false,
-    text: 'Two beakers each hold a bar of the same metal in a solution of its ions, joined by a glass tube and by a wire through a voltmeter and an ammeter. Press "Run" to connect the wire. The voltmeter reads the right bar against the left bar, and the ammeter needle swings toward the bar the electrons are moving to. A "?" under a beaker means its strength is sealed.'
+    text: 'Two beakers each hold a bar of the same metal in a solution of its ions, joined by a glass tube and by a wire through a voltmeter and an ammeter. Press "Run" to connect the wire. The voltmeter reads the right bar against the left bar, and the ammeter needle swings toward the bar the electrons are moving to. A "?" under a beaker means its concentration is sealed.'
   }
 }, {});

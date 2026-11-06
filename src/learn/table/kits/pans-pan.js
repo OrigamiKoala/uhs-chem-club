@@ -27,20 +27,61 @@ function frame(ctx, F, x, y, w, h) {
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
 }
 
-/** The window: 48 cells in a jittered grid, so no two particles overlap; the jitter is fixed by the tick so a still pan holds still. */
-function paintWindow(ctx, F, r, x, y, w, h, tracer) {
+/**
+ * The mechanism view. Each particle drifts about its own patch of the dish (a sum of two slow sines, fixed by its number), and its colour
+ * is the planner's colour at the tick being shown. After Run the shown tick climbs from the old tick to the new one over about a second, so
+ * a change of colour happens in time, one particle after another, and a particle that just changed wears a ring. Every colour and
+ * every count is `panRead`; only the drift is drawn. With the clock frozen (reduced motion) the dish shows the tick reached, standing still.
+ */
+const SHOWN = new Map();
+const TICKS_PER_SECOND = 14;
+const REPLAY_PER_SECOND = 36;
+let restarting = false;
+/** A miss replays the cause: every vessel plays its run again from the first tick, faster, with the changes ringed as they happen. */
+export function replayPans() {
+  SHOWN.clear();
+  restarting = true;
+  setTimeout(() => { restarting = false; }, 300);
+}
+function shownTick(f, r, clock, scope = "") {
+  const key = scope + f.id;
+  if (!clock) { SHOWN.delete(key); return r.t; }
+  let s = SHOWN.get(key);
+  if (!s || s.hist !== r.hist) s = { hist: r.hist, tick: restarting ? 0 : r.t, clock, fast: restarting };
+  const dt = Math.max(0, Math.min(0.1, clock - s.clock));
+  if (s.tick < r.t) s.tick = Math.min(r.t, s.tick + dt * (s.fast ? REPLAY_PER_SECOND : TICKS_PER_SECOND));
+  else if (s.tick > r.t) s.tick = r.t;
+  s.clock = clock;
+  SHOWN.set(key, s);
+  return Math.floor(s.tick);
+}
+
+/** Where particle i is at clock c inside its patch (fractions of the patch, -1 to 1 about its centre). */
+export function driftOf(i, c, speed = 1) {
+  const g = rng(i * 2654435761 + 99)();
+  const g2 = rng(i * 40503 + 7)();
+  const w1 = 0.7 + g * 0.9; const w2 = 0.6 + g2 * 1.0;
+  return { dx: Math.sin(c * speed * w1 + g * 6.28), dy: Math.sin(c * speed * w2 + g2 * 6.28 + 1.3) };
+}
+
+function paintWindow(ctx, F, r, x, y, w, h, tracer, clock, shown) {
   frame(ctx, F, x, y, w, h);
   const n = r.n;
   const cols = 8; const rows = Math.ceil(n / cols);
   const cw = w / cols; const ch = h / rows;
-  const rad = Math.min(cw, ch) * 0.3;
+  const rad = Math.min(cw, ch) * 0.26;
   for (let i = 0; i < n; i++) {
-    const g = rng(i * 7919 + r.t * 104729 + 17);
-    const cx = x + (i % cols + 0.5) * cw + (g() - 0.5) * cw * 0.34;
-    const cy = y + (Math.floor(i / cols) + 0.5) * ch + (g() - 0.5) * ch * 0.34;
-    const isB = stateOfParticle(r.hist, i, r.t);
+    const d = driftOf(i, clock);
+    const cx = x + (i % cols + 0.5) * cw + d.dx * cw * 0.2;
+    const cy = y + (Math.floor(i / cols) + 0.5) * ch + d.dy * ch * 0.2;
+    const isB = stateOfParticle(r.hist, i, shown);
     ctx.fillStyle = isB ? B_INK : A_INK;
     ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(2, F.len(rad)), 0, Math.PI * 2); ctx.fill();
+    const flipped = clock && shown > 0 && [0, 1, 2].some(k => shown - k > 0 && stateOfParticle(r.hist, i, shown - k) !== stateOfParticle(r.hist, i, shown - k - 1));
+    if (flipped) {
+      ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1, F.len(0.25));
+      ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(3, F.len(rad * 1.5)), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
+    }
     if (tracer && TRACERS.includes(i)) {
       ctx.strokeStyle = '#dcd6cc'; ctx.lineWidth = Math.max(1.2, F.len(0.35));
       ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(3, F.len(rad * 1.6)), 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
@@ -108,7 +149,7 @@ function paintPan(ctx, f, state, b) {
   const ww = hasWin ? 30 : 0;
   const px = hasWin ? ww + 7 : 3.5;
   const ph = p.tracer ? h - top - 30 : h - top - 11;
-  if (hasWin) paintWindow(ctx, F, r, 3.5, top, ww, p.tracer ? ph : Math.min(ph, ww * 0.75), p.tracer);
+  if (hasWin) paintWindow(ctx, F, r, 3.5, top, ww, p.tracer ? ph : Math.min(ph, ww * 0.75), p.tracer, b.clock || 0, shownTick(f, r, b.clock || 0, b.scope || ""));
   paintPlot(ctx, F, f, r, px, top, w - px - 3.5, ph);
   if (p.tracer) {
     paintStrip(ctx, F, r, px, top + ph + 5, w - px - 3.5, 13.5);
@@ -129,7 +170,7 @@ function paintPan(ctx, f, state, b) {
 function run(state, fid) {
   const f = state.fixtures[fid];
   const r = panRead(state, fid);
-  if (r.t >= PAN_TICKS) return { noop: 'The pan has run for its full time.' };
+  if (r.t >= PAN_TICKS) return { noop: 'The vessel has run for its full time.' };
   const t = r.t + PAN_STEP;
   const hist = r.hist;
   return { x: t, y: hist.b[t], label: fid, dials: { [fid]: { t } } };
@@ -137,6 +178,7 @@ function run(state, fid) {
 
 registerFixture('pan', {
   paint: paintPan,
+  live: f => f.props.window !== false,
   run
 });
 
@@ -144,7 +186,7 @@ registerFixture('pan', {
  * A pan. `kf` is the chance per tick that a particle of A turns to B and `kr` that a particle of B turns back; `b0` the particles of B at the
  * start; `start` the tick the pan has already been run to. Options: `tracer`, `window: false`, `tallies: false`, `ghost: {b0, seed}`.
  */
-export function panFixture(id, at, { kf, kr, b0 = 0, n = 48, seed = 1, start = 0, tracer = false, window = true, tallies = true, ghost = null, title = 'Pan', w = null, h = null } = {}) {
+export function panFixture(id, at, { kf, kr, b0 = 0, n = 48, seed = 1, start = 0, tracer = false, window = true, tallies = true, ghost = null, title = 'Vessel', w = null, h = null } = {}) {
   const size = { w: w ?? (window ? 100 : 50), h: h ?? (tracer ? 60 : window ? 44 : 44) };
   return {
     id, kind: 'pan', label: title, at: { ...at }, size, runLabel: 'Run',

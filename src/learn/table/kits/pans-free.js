@@ -12,6 +12,8 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture } from './pans-registry.js';
+import { driftOf, A_INK, B_INK } from './pans-pan.js';
+import { settleProgress } from './pans-ice.js';
 import { say, frameOf } from './matter-draw.js';
 import { columnRead, dGOf, pulls, coldPack, T_BENCH } from '../../engine/eqdata-free.js';
 import { addTourText } from '../tour.js';
@@ -65,13 +67,25 @@ function paintKbars(ctx, f, state, b) {
     frame(ctx, F, x0 + 0.5, yTop - 1.2, colW - 1, h - 6.4 - (yTop - 1.2));
     const pitch = (colW - 3) / ns; const bw = pitch * 0.58;
     r.order.forEach((s, i) => {
-      const v = r.shown ? col.amounts[s] : r.start[i];
+      // After Run the bars glide from the starting amount to the settled one, and the bar is a crowd of particles drifting about.
+      const e = settleProgress(`${b.scope || ""}${f.id}:${c}`, r.shown, b.clock || 0);
+      const v = r.shown ? r.start[i] + (col.amounts[s] - r.start[i]) * e : r.start[i];
       const hgt = (v / r.max) * room;
       const bx = x0 + 1.5 + i * pitch + (pitch - bw) / 2;
       ctx.globalAlpha = r.shown ? 1 : 0.4;
       ctx.fillStyle = p.sys.species[s] < 0 ? R_INK : P_INK;
       ctx.fillRect(F.x(bx), F.y(yBase) - F.len(hgt), F.len(bw), F.len(hgt));
       ctx.globalAlpha = 1;
+      if (b.clock) {
+        ctx.fillStyle = 'rgba(16,15,12,0.78)';
+        const nd = Math.max(0, Math.round((v / r.max) * 14));
+        for (let k = 0; k < nd; k++) {
+          const d = driftOf(c * 97 + i * 13 + k, b.clock, 2.2);
+          const px = bx + bw * ((k % 2 + 0.5) / 2) + d.dx * bw * 0.14;
+          const py = yBase - (hgt / Math.ceil(nd / 2)) * (Math.floor(k / 2) + 0.5) + d.dy * 0.8;
+          ctx.beginPath(); ctx.arc(F.x(px), F.y(py), Math.max(1.2, F.len(0.55)), 0, Math.PI * 2); ctx.fill();
+        }
+      }
       say(ctx, amt(v), F.x(bx + bw / 2), F.y(yBase) - F.len(hgt) - F.len(1.9), sz, { color: r.shown ? DUST : DIM, align: 'center', weight: 700, maxW: F.len(pitch - 0.3) });
       say(ctx, p.sys.names[s], F.x(bx + bw / 2), F.y(yBase + 3.1), sz, { color: DIM, align: 'center', maxW: F.len(pitch - 0.4) });
     });
@@ -83,13 +97,13 @@ function paintKbars(ctx, f, state, b) {
 
 function runKbars(state, fid) {
   const r = kbarsRead(state, fid);
-  if (r.shown) return { noop: 'The pan has settled.' };
+  if (r.shown) return { noop: 'The vessel has settled.' };
   const last = r.cols[r.cols.length - 1];
   const prod = r.order[r.order.length - 1];
   return { x: 1, y: Math.round(last.amounts[prod] * 1000) / 1000, label: fid, dials: { [fid]: { shown: 1 } } };
 }
 
-registerFixture('kbars', { paint: paintKbars, run: runKbars });
+registerFixture('kbars', { paint: paintKbars, run: runKbars, live: () => true });
 
 /**
  * A settling pan. `sys` is `{species, start, names, order, unit}` (`eqdata-free.js`); `cols` is a list of `{dG}` or `{dH, dS, T}` (K and the
@@ -140,9 +154,26 @@ function paintPulls(ctx, f, state, b) {
     // The beaker: 500 g of water with a thermometer; the thermometer reads the water's start until Run is pressed.
     const bx = w * 0.5 + 1; const bwid = w * 0.5 - 4;
     frame(ctx, F, bx, 10, bwid, 19);
-    const T = r.shown ? r.pack.T1 : r.pack.T0;
+    const T = r.pack.T0 + (r.shown ? (r.pack.T1 - r.pack.T0) * settleProgress(`${b.scope || ""}${f.id}:T`, true, b.clock || 0) : 0);
     say(ctx, `water ${T.toFixed(1)} °C`, F.x(bx + 2), F.y(13.6), sz, { color: r.shown ? AMBER : DUST, weight: 700, maxW: F.len(bwid - 9) });
     say(ctx, r.shown ? `salt left ${r.pack.left.toFixed(2)} mol` : `salt ${r.pack.mol.toFixed(2)} mol, ${p.water.waterG} g water`, F.x(bx + 2), F.y(21.2), sz, { color: DUST, maxW: F.len(bwid - 9) });
+    // The salt dissolving: crystals at the foot go into the water as ions, and the ions slow as the water cools (the speed follows the reading).
+    {
+      const prog = r.shown ? settleProgress(`${b.scope || ""}${f.id}:T`, true, b.clock || 0) : 0;
+      const nIon = Math.round(prog * 14); const nSolid = 14 - nIon;
+      const wx = bx + 1.6; const ww2 = bwid - 9; const wy = 24; const wh = 4.2;
+      if (b.clock) {
+        for (let k = 0; k < 14; k++) {
+          const d = driftOf(300 + k, b.clock, 0.6 + Math.max(0, T) / 25);
+          if (k < nSolid) { ctx.fillStyle = '#d6cfb8'; ctx.fillRect(F.x(wx + (k % 7) * (ww2 / 7) + d.dx * 0.25), F.y(wy + 1.6 + Math.floor(k / 7) * 1.4 + d.dy * 0.15), Math.max(2, F.len(ww2 / 7 - 0.4)), Math.max(1.5, F.len(1.1))); }
+          else {
+            ctx.fillStyle = k % 2 ? B_INK : A_INK;
+            ctx.beginPath(); ctx.arc(F.x(wx + ww2 * ((k * 0.137) % 1) + d.dx * 1.3), F.y(wy - 1.8 + d.dy * 1.6), Math.max(1.6, F.len(0.6)), 0, Math.PI * 2); ctx.fill();
+          }
+        }
+      }
+      void wh;
+    }
     // The thermometer tube: 0 to 40 °C, the mercury as high as the reading.
     const tx = bx + bwid - 4.5; const ty0 = 15.5; const ty1 = 27.5;
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(tx)) + 0.5, F.y(ty0), F.len(1.6), F.len(ty1 - ty0));
@@ -159,7 +190,7 @@ function runPulls(state, fid) {
   return { x: 1, y: Math.round(r.pack.T1 * 10) / 10, label: fid, dials: { [fid]: { shown: 1 } } };
 }
 
-registerFixture('pulls', { paint: paintPulls, run: runPulls });
+registerFixture('pulls', { paint: paintPulls, run: runPulls, live: f => Boolean(f.props.water) });
 
 /**
  * The two pulls of a change: `change` is `{dH, dS, T}` (kJ/mol, J/(mol·K), K). `range` is the shared scale in kJ/mol, `[lo, hi]`, so
@@ -179,8 +210,8 @@ export { dGOf };
 
 addTourText({
   'pans:kbars': {
-    title: 'Settling pan', dials: false,
-    text: 'A pan of one reaction, drawn as bars. The orange bars are what the reaction starts from and the blue bars are what it makes, in the unit printed under the pan. Faint bars show the start. Press "Run" to let the pan settle, and the bars become solid at the amounts it holds once they stop changing.'
+    title: 'Settling vessel', dials: false,
+    text: 'A vessel of one reaction, drawn as bars. The orange bars are what the reaction starts from and the blue bars are what it makes, in the unit printed under the vessel. Faint bars show the start. Press "Run" to let the vessel settle, and the bars become solid at the amounts it holds once they stop changing.'
   },
   'pans:pulls': {
     title: 'Two pulls', dials: false,

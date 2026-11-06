@@ -16,6 +16,8 @@ import { registerKit } from './registry.js';
 import { HEAT_KIT, HEAT_BOUNDS, HEAT_RECORDER } from './heat.js';
 import { paintPiece as heatPiece, paintFixture as heatFixture, faceKey as heatFaceKey } from './heat-draw.js';
 import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './ph-registry.js';
+import { bodiesDress } from './ph-3d.js';
+import { markReplay, replayView, replayMark, demoView } from './ph-replay.js';
 import './ph-tour.js';
 
 /* One import per instrument: each file registers its own fixtures and pieces. (marker: ph instruments) */
@@ -30,6 +32,7 @@ import './ph-mix.js';
 import './ph-buffer.js';
 import './ph-strip.js';
 import './ph-solid.js';
+import './ph-transfer.js';
 
 export const PH_KIT_ID = 'ph';
 export const PH_BOUNDS = HEAT_BOUNDS;
@@ -48,9 +51,22 @@ const paintPiece = (ctx, p, state, o) => {
   return heatPiece(ctx, p, state, o);
 };
 const faceKey = (p, state) => (pieceDef(p.kind)?.faceKey ? pieceDef(p.kind).faceKey(p, state) : heatFaceKey(p, state));
+const hasBodies = (h, f) => Boolean(h?.bodies3d && (typeof h.bodies3d !== 'function' || h.bodies3d(f)));
+/** A handler's painter, drawing the replay of a miss instead of the table while one plays. */
+const paintHandler = (h, key) => (ctx, f, state, b) => {
+  const rv = replayView(f, b.clock || 0, key);
+  const out = h.paint(ctx, rv.f, state, b);
+  if (rv.replaying) replayMark(ctx, b, rv.step, f.props.replay.n);
+  return out;
+};
 const paintFixture = (ctx, f, state, b) => {
-  const h = fixtureHandler(f.kind);
-  if (h?.paint) return h.paint(ctx, f, state, b);
+  const h0 = fixtureHandler(f.kind);
+  const h = h0 && { ...h0, paint: h0.paint && paintHandler(h0, b.sk || 'flat') };
+  if (h?.paint) {
+    // At 3D On the particles stand up as spheres (`ph-3d.js`); the plate keeps the frame, the names and the numbers.
+    if (b.bodies && hasBodies(h, f)) { ctx.__skip = true; try { return h.paint(ctx, f, state, b); } finally { ctx.__skip = false; } }
+    return h.paint(ctx, f, state, b);
+  }
   return heatFixture(ctx, f, state, b);
 };
 const piece3d = (p, state, c) => {
@@ -60,8 +76,14 @@ const piece3d = (p, state, c) => {
 };
 const dress3d = (f, state, c) => {
   const h = fixtureHandler(f.kind);
-  if (h?.dress3d) return h.dress3d(f, state, c);
-  return HEAT_KIT.dress3d(f, state, c);
+  const base = h?.dress3d ? h.dress3d(f, state, c) : HEAT_KIT.dress3d(f, state, c);
+  if (!hasBodies(h, f)) return base;
+  const bodies = bodiesDress(f, state, c, paintHandler(h, '3d'));
+  if (!base) return bodies;
+  const g = new c.THREE.Group();
+  g.add(base, bodies);
+  g.userData.sync = bodies.userData.sync; g.userData.tick = bodies.userData.tick;
+  return g;
 };
 const settle = state => {
   HEAT_KIT.settle(state);
@@ -75,6 +97,12 @@ export const PH_KIT = {
   // 28 px across on a phone-width table (`verify:table`).
   kinds: { ...HEAT_KIT.kinds, tag: { ...HEAT_KIT.kinds.tag, r: 8.4 }, ...pieceKinds() },
   run,
+  // A miss replays the cause on the instruments that can (`ph-replay.js`).
+  onMiss: table => markReplay(table),
+  // A short demonstration of an instrument being used, for the Tour: the fixture t seconds into it.
+  demoOf: (f, t) => demoView(f, t),
+  // A mechanism view (a window of moving particles) keeps the table's loop running and gives its painters a clock.
+  live: state => Object.values(state.fixtures || {}).some(f => fixtureHandler(f.kind)?.live?.(f, state)),
   paintPiece,
   paintFixture,
   faceKey,
@@ -108,4 +136,5 @@ export { raceParts, acidCard, raceRead, nameAcid, nameBase } from './ph-race.js'
 export { neutParts } from './ph-mix.js';
 export { mixFixture, mixRead, U as MIX_UNIT } from './ph-buffer.js';
 export { stripFixture, stripRead } from './ph-strip.js';
+export { transferParts, transferRead, takeSlot } from './ph-transfer.js';
 export { solidFixture, solidRead, solidAfter, saturatedSpheres } from './ph-solid.js';

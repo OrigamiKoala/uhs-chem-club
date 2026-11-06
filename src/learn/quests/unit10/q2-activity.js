@@ -25,9 +25,11 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { cellTable, selectorFixture, note, tag, pieceIn, dialValue } from '../../table/kits/cell.js';
-import { dipFixture, nailsFixture, stripPiece, triedIn, dipRead, nailsAged } from '../../table/kits/cell-dip.js';
+import { dipFixture, nailsFixture, stripPiece, hydrogenPiece, triedIn, dipRead, nailsAged } from '../../table/kits/cell-dip.js';
 import { METALS, activityOrder, givesHydrogen, protectsIron } from '../../engine/celldata.js';
 import { dipResult, dipWords, coated, stripsTakingOnly } from '../../engine/celldata-q2-activity.js';
+
+import { attachScenes } from '../../table/kits/cell-attach.js';
 
 export const meta = { stageCount: 8 };
 
@@ -85,6 +87,11 @@ const rack = (ions, at) => dipFixture('dip', at, { beakers: ions.map((ion, i) =>
 const strips = (metals, at, step, { row = false, caption = true } = {}) => metals.map((m, i) =>
   stripPiece(`s-${m}`, m, row ? { x: at.x + i * step, y: at.y } : { x: at.x, y: at.y + i * step }, caption === true || i === 0 ? {} : { caption: null }));
 
+/** The dip rack answered by tapping the beaker itself (`props.pick`, read by `gestures.js`): column i sets the hidden answer dial to i + 1. */
+const tapBeakers = (fx, n, target = 'pick') => ({ ...fx, props: { ...fx.props, pick: { fixture: target, dial: 'value', cols: Array.from({ length: n }, (_, i) => ({ x0: 2 + i * 30, x1: 32 + i * 30, value: i + 1 })) } } });
+/** An answer dial that is only a readout: nothing can turn it, the tap on the thing sets it. */
+const readout = fx => ({ ...fx, props: { ...fx.props, hidden: Object.keys(fx.dials) } });
+
 /** The dips a strip has been given anywhere on the rack: `{ beaker id, result }` for the first beaker that holds a mark for it. */
 function triedAny(t, id) {
   const r = dipRead({ fixtures: t.fixtures, pieces: t.pieces }, 'dip').find(x => x.tried.some(y => y.id === id));
@@ -112,21 +119,21 @@ export const STAGES = [
       return cellTable({
         pieces: strips(S1_METALS, { x: 20, y: 76 }, 36, { row: true, caption: false }),
         fixtures: [
-          d.fixture,
-          selectorFixture('pick', 'Answer', { x: 140, y: 36 }, { options: [...S1_METALS.map(solutionOf), ' '], start: 4, w: 54, list: true })
+          tapBeakers(d.fixture, S1_METALS.length),
+          readout(selectorFixture('pick', 'Answer', { x: 140, y: 36 }, { options: [...S1_METALS.map(solutionOf), ' '], start: 4, w: 54, list: true }))
         ],
         zones: { slots: d.slots }
       }, { w: 176, h: 92 });
     })(),
     hints: [
-      'Drag a strip over a beaker to dip it, or tap the strip and then the beaker, and set the answer dial when you have seen enough.',
+      'Drag a strip over a beaker to dip it, then tap the beaker you choose.',
       'Compare how each strip looks after it is dipped in each solution.',
       'Check each solution for a coating on both strips that are not its own metal.'
     ],
     check(state) {
       const t = state.table;
       const v = dialValue(t, 'pick');
-      if (v === S1_METALS.length + 1) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === S1_METALS.length + 1) return { ok: false, notYet: true, msg: 'Tap a beaker.' };
       const ion = S1_METALS[v - 1];
       if (ion === S1_ANSWER) return { ok: true };
       const other = S1_METALS.filter(m => m !== ion).find(m => !coated(m, ion));
@@ -140,7 +147,7 @@ export const STAGES = [
       return {
         log: 'One solution coated both of the other strips.',
         title: 'Displacement',
-        body: `${Nm(most.got[0])} and ${nm(most.got[1])} were coated in the ${solutionOf(most.ion)}, ${list(rest)}. A coating means one metal has taken the place of another, which is displacement: the strip's metal goes into the solution as ions.`
+        body: `${Nm(most.got[0])} and ${nm(most.got[1])} were coated in the ${solutionOf(most.ion)}. A coating means displacement: the strip's metal went into the solution as ions.`
       };
     }
   },
@@ -154,27 +161,24 @@ export const STAGES = [
     table: (() => {
       const d = rack(S2_METALS, { x: 64, y: 33 });
       return cellTable({
-        pieces: [
-          ...strips(S2_METALS, { x: 148, y: 14 }, 22),
-          ...S2_METALS.map((m, i) => tag(`r-${m}`, Nm(m), { x: 20 + i * 32, y: 88 }))
-        ],
+        pieces: strips(S2_METALS, { x: 19, y: 71 }, 30, { row: true }),
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
           rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [] }
         }
-      }, { w: 176, h: 122 });
+      }, { w: 200, h: 122 });
     })(),
     hints: [
-      'Dip the strips in the beakers, then drag the four name cards onto the rail.',
+      'Dip the strips in the beakers, then drag the four strips onto the rail.',
       'Each beaker keeps a mark for every strip dipped in it; compare which strips were coated in which solutions.',
       'A strip that is coated has given electrons to the ions in the solution, so rank the metals by how many of the other solutions each one coated in.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < S2_METALS.length) return { ok: false, notYet: true, msg: `Put all ${S2_METALS.length} cards on the rail.` };
-      if (order.join() === S2_WANT.map(m => `r-${m}`).join()) return { ok: true };
+      if (order.length < S2_METALS.length) return { ok: false, notYet: true, msg: `Put all ${S2_METALS.length} strips on the rail.` };
+      if (order.join() === S2_WANT.map(m => `s-${m}`).join()) return { ok: true };
       const E = id => METALS[id.slice(2)].E0;
       const k = order.findIndex((id, i) => i > 0 && E(id) < E(order[i - 1]));
       const a = order[k - 1].slice(2); const b = order[k].slice(2);
@@ -186,7 +190,7 @@ export const STAGES = [
       return {
         log: 'The strips fell into an order.',
         title: 'Activity Series',
-        body: `${Nm(o[0])} ${parts[0].slice(nm(o[0]).length + 1)}, ${parts.slice(1).join(', ')}; ${nm(o[o.length - 1])} displaced none. A metal that displaces another gives its electrons more readily, and the list from the most to the least ready is the activity series.`
+        body: `From most to least ready to give electrons the order is ${o.map(nm).join(', ')}: the activity series.`
       };
     }
   },
@@ -284,24 +288,24 @@ export const STAGES = [
       return cellTable({
         pieces: [
           ...strips(S5_METALS, { x: 18, y: 72 }, 34, { row: true, caption: false }),
-          ...[...S5_METALS, 'h'].map((m, i) => tag(`r-${m}`, m === 'h' ? 'Hydrogen' : Nm(m), { x: 16 + i * 28, y: 94 }))
+          hydrogenPiece('r-h', { x: 177, y: 72 })
         ],
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
           rail: { at: { x: 88, y: 114 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [] }
         }
-      }, { w: 176, h: 128 });
+      }, { w: 192, h: 128 });
     })(),
     hints: [
-      'Dip a strip in each acid beaker, then drag the six name cards onto the rail.',
+      'Dip a strip in each acid beaker, then drag the five strips and the hydrogen onto the rail.',
       'Look at which strips give bubbles in the acid and which stay clean.',
       'Hydrogen belongs between the metals that bubbled and the metals that did not, with the metals that give most readily on the left.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < S5_METALS.length + 1) return { ok: false, notYet: true, msg: `Put all ${S5_METALS.length + 1} cards on the rail.` };
+      if (order.length < S5_METALS.length + 1) return { ok: false, notYet: true, msg: `Put all ${S5_METALS.length + 1} pieces on the rail.` };
       const h = order.indexOf('r-h');
       for (let i = 0; i < order.length; i++) {
         if (i === h) continue;
@@ -333,20 +337,19 @@ export const STAGES = [
     table: (() => {
       const n = nailsFixture('nails', { x: 64, y: 31 }, { partners: S6_PARTNERS });
       return cellTable({
-        pieces: S6_PARTNERS.map((m, i) => tag(`p-${m}`, Nm(m), { x: 26 + i * 32, y: 72 })),
-        fixtures: [n],
-        zones: { trays: [{ id: 'clean', label: 'Nail with no blue spots', at: { x: 75, y: 98 }, size: { w: 110, h: 22 }, cell: 25, cellH: 12 }] }
-      }, { w: 150, h: 114 });
+        fixtures: [n]
+      }, { w: 204, h: 114 });
     })(),
     hints: [
-      'Press "Leave a Week", then drag the cards of the beakers into the tray.',
+      'Press "Leave a Week", then tap each nail that has no blue spots.',
       'Compare the nails after the week: the blue spots show where iron is dissolving.',
-      'Put in the tray the card of every beaker whose nail has no blue spots.'
+      'Tap the nail of every beaker that shows no blue spots.'
     ],
     check(state) {
       const t = state.table;
-      const inTray = S6_PARTNERS.filter(m => t.pieces[`p-${m}`].zone === 'tray:clean');
-      if (!inTray.length) return { ok: false, notYet: true, msg: 'Drag the cards of the beakers into the tray.' };
+      const marks = t.fixtures.scene.dials;
+      const inTray = S6_PARTNERS.filter((m, i) => Math.round(marks[`n${i}`].value) === 1);
+      if (!inTray.length) return { ok: false, notYet: true, msg: 'Tap the nails with no blue spots.' };
       const want = S6_PARTNERS.filter(protectsIron);
       const wrong = inTray.find(m => !want.includes(m)) ?? want.find(m => !inTray.includes(m));
       if (wrong == null) return { ok: true };
@@ -358,7 +361,7 @@ export const STAGES = [
       return {
         log: 'The nails wired to some metals stayed free of spots.',
         title: 'Sacrificial Anode',
-        body: `The nails wired to ${list(p.map(nm))} showed no blue spots, and the nails wired to ${list(q.map(nm))} did. The more active partner gives its electrons in place of the iron and is used up first, so it is called a sacrificial anode.`
+        body: `The nails wired to ${list(p.map(nm))} showed no blue spots: a more active partner gives its electrons in place of the iron, as a sacrificial anode.`
       };
     }
   },
@@ -374,28 +377,29 @@ export const STAGES = [
       return cellTable({
         pieces: [
           stripPiece('s-x', S7_X, { x: 148, y: 22 }, { sealed: true }),
-          ...S7_KNOWN.map((m, i) => tag(`r-${m}`, Nm(m), { x: 30 + i * 36, y: 70 })),
-          tag(`r-${S7_X}`, 'X', { x: 150, y: 70 })
+          ...S7_KNOWN.map((m, i) => stripPiece(`s-${m}`, m, { x: 30 + i * 36, y: 70 }, { caption: null }))
         ],
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [...S7_KNOWN, S7_X].map(m => `r-${m}`), start: [...S7_KNOWN, S7_X].map(m => `r-${m}`) }
+          rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: S7_KNOWN.map(m => `s-${m}`), start: S7_KNOWN.map(m => `s-${m}`) }
         }
       }, { w: 176, h: 108 });
     })(),
     hints: [
-      'Dip the X strip in each beaker, then drag the X card to its place on the rail.',
+      'Dip the X strip in each beaker, then drag it to its place on the rail.',
       'Compare which solutions coated the X strip with the order of the four known metals on the rail.',
       'X belongs after the metals whose solutions left it clean and before the metals whose solutions coated it.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.join() === S7_WANT.map(m => `r-${m}`).join()) return { ok: true };
-      const E = id => METALS[id.slice(2)].E0;
+      const metalOf = id => (id === 's-x' ? S7_X : id.slice(2));
+      if (order.length < S7_KNOWN.length + 1) return { ok: false, notYet: true, msg: 'Put the X strip on the rail.' };
+      if (order.map(metalOf).join() === S7_WANT.join()) return { ok: true };
+      const E = id => METALS[metalOf(id)].E0;
       const k = order.findIndex((id, i) => i > 0 && E(id) < E(order[i - 1]));
-      const a = order[k - 1].slice(2); const b = order[k].slice(2);
+      const a = metalOf(order[k - 1]); const b = metalOf(order[k]);
       if (b === S7_X) return { ok: false, msg: `X sits right of ${nm(a)}. ${dipLine(t, S7_KNOWN, 'ni', a).replace('The nickel strip', 'The X strip')}` };
       if (a === S7_X) return { ok: false, msg: `X sits left of ${nm(b)}. ${dipLine(t, S7_KNOWN, 'ni', b).replace('The nickel strip', 'The X strip')}` };
       return { ok: false, msg: `${Nm(a)} sits left of ${nm(b)}, which is not the order the earlier dips gave.` };
@@ -406,7 +410,7 @@ export const STAGES = [
       return {
         log: 'The sealed strip found its place.',
         title: 'Between Two Metals',
-        body: `Strip X was coated in the ${list(got.map(nm))} solutions and stayed clean in the ${list(clean.map(nm))} solutions, so it sits between ${nm(o[at - 1])} and ${nm(o[at + 1])}. It was ${nm(S7_X)}. A metal ranks above every one it displaces and below every one that displaces it.`
+        body: `Strip X was coated in the ${list(got.map(nm))} solutions but not the ${list(clean.map(nm))} solutions, so it sits between ${nm(o[at - 1])} and ${nm(o[at + 1])}: it was ${nm(S7_X)}.`
       };
     }
   },
@@ -420,24 +424,21 @@ export const STAGES = [
     table: (() => {
       const d = rack(S8_STRIPS.map(() => 'mix'), { x: 64, y: 33 });
       return cellTable({
-        pieces: strips(S8_STRIPS, { x: 148, y: 14 }, 22),
-        fixtures: [
-          d.fixture,
-          selectorFixture('pick', 'Strip', { x: 64, y: 94 }, { options: [...S8_STRIPS.map(Nm), ' '], start: 5, w: 52, list: true })
-        ],
-        zones: { slots: d.slots }
+        pieces: strips(S8_STRIPS, { x: 19, y: 71 }, 30, { row: true, caption: false }),
+        fixtures: [d.fixture],
+        zones: { slots: [...d.slots, { id: 'answer', label: 'Chosen strip', at: { x: 64, y: 96 }, size: { w: 30, h: 12 } }] }
       }, { w: 176, h: 112 });
     })(),
     hints: [
-      'Dip each strip in a beaker, then set the answer dial to the strip you choose.',
+      'Dip each strip in a beaker, then lay the strip you choose in the answer seat.',
       'Compare the coating on each strip, and the ions left in its beaker, with the copper and iron ions at the start.',
       'Choose the strip that is coated with copper alone while the beaker still holds iron ions.'
     ],
     check(state) {
       const t = state.table;
-      const v = dialValue(t, 'pick');
-      if (v === S8_STRIPS.length + 1) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
-      const m = S8_STRIPS[v - 1];
+      const chosen = pieceIn(t, 'answer');
+      if (!chosen) return { ok: false, notYet: true, msg: 'Lay a strip in the answer seat.' };
+      const m = chosen.props.metal;
       if (m === S8_ANSWER) return { ok: true };
       const res = triedAny(t, m);
       if (!res) return { ok: false, msg: `The ${nm(m)} strip has not been dipped in a beaker yet.` };
@@ -448,11 +449,17 @@ export const STAGES = [
       return {
         log: 'One strip took out the copper alone.',
         title: 'A New Case',
-        body: `${Nm(S8_ANSWER)} took out the copper and left iron ions in the beaker, ${list(both.map(nm))} took out the iron too, and ${list(none.map(nm))} took out neither. A strip between the two metals in the activity series displaces only the less active one.`
+        body: `${Nm(S8_ANSWER)} took out the copper only; ${list(both.map(nm))} took out the iron too, and ${list(none.map(nm))} neither. A strip displaces only the less active metals.`
       };
     }
   }
 ];
+
+/** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
+attachScenes(STAGES, {
+  compact: [6], inside: [1, 4, 5, 7], demos: { 2: 'zn-in-cu' },
+  own: { 5: { sitesKey: 'nails', dials: Object.fromEntries(S6_PARTNERS.map((m, i) => [`n${i}`, { min: 0, max: 1, step: 1, value: 0, label: `Nail ${i + 1}` }])) } }
+});
 
 export const DEBRIEF = {
   title: 'Which Metal Gives',
@@ -466,28 +473,28 @@ export const SOLUTIONS = [
   [dip(S1_METALS, 'zn', 'ag'), dip(S1_METALS, 'cu', 'ag'), dip(S1_METALS, 'ag', 'cu'), dial('pick', 'value', S1_METALS.indexOf(S1_ANSWER) + 1)],
   [
     ...S2_METALS.flatMap(ion => S2_METALS.filter(m => m !== ion).map(m => dip(S2_METALS, m, ion))),
-    ...S2_WANT.map((m, i) => put(`r-${m}`, `rail:${i}`))
+    ...S2_WANT.map((m, i) => put(`s-${m}`, `rail:${i}`))
   ],
   [put('clean', 'slot:guess')],
   [dip(S4_METALS, 'cu', 'zn'), dial('pick', 'value', 2)],
   [
     ...S5_METALS.map(m => put(`s-${m}`, `slot:dip.b${S5_METALS.indexOf(m)}`)),
-    ...[...S5_METALS.filter(givesHydrogen), 'h', ...S5_METALS.filter(m => !givesHydrogen(m))].map((m, i) => put(`r-${m}`, `rail:${i}`))
+    ...[...S5_METALS.filter(givesHydrogen), 'h', ...S5_METALS.filter(m => !givesHydrogen(m))].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))
   ],
-  [run('nails'), ...S6_PARTNERS.filter(protectsIron).map(m => put(`p-${m}`, 'tray:clean'))],
-  [...S7_KNOWN.map(m => dip(S7_KNOWN, 'x', m)), put(`r-${S7_X}`, `rail:${S7_WANT.indexOf(S7_X)}`)],
-  [...S8_STRIPS.map((m, i) => put(`s-${m}`, `slot:dip.b${i}`)), dial('pick', 'value', S8_STRIPS.indexOf(S8_ANSWER) + 1)]
+  [run('nails'), ...S6_PARTNERS.map((m, i) => (protectsIron(m) ? dial('scene', `n${i}`, 1) : null)).filter(Boolean)],
+  [...S7_KNOWN.map(m => dip(S7_KNOWN, 'x', m)), put('s-x', `rail:${S7_WANT.indexOf(S7_X)}`)],
+  [...S8_STRIPS.map((m, i) => put(`s-${m}`, `slot:dip.b${i}`)), put(`s-${S8_ANSWER}`, 'slot:answer')]
 ];
 
 export const MISSES = [
   [dip(S1_METALS, 'cu', 'zn'), dial('pick', 'value', 1)],
-  [dip(S2_METALS, 'fe', 'zn'), put('r-fe', 'rail:0'), put('r-zn', 'rail:1'), put('r-pb', 'rail:2'), put('r-cu', 'rail:3')],
+  [dip(S2_METALS, 'fe', 'zn'), put('s-fe', 'rail:0'), put('s-zn', 'rail:1'), put('s-pb', 'rail:2'), put('s-cu', 'rail:3')],
   [],
   [dip(S4_METALS, 'cu', 'zn'), dial('pick', 'value', 1)],
-  [put('s-cu', 'slot:dip.b3'), ...['mg', 'zn', 'fe', 'cu', 'ag', 'h'].map((m, i) => put(`r-${m}`, `rail:${i}`))],
-  [run('nails'), put('p-cu', 'tray:clean'), put('p-zn', 'tray:clean')],
-  [put('s-x', seat(S7_KNOWN, 'fe')), put('r-ni', 'rail:1')],
-  [put('s-zn', 'slot:dip.b0'), dial('pick', 'value', 1)]
+  [put('s-cu', 'slot:dip.b3'), ...['mg', 'zn', 'fe', 'cu', 'ag', 'h'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))],
+  [run('nails'), dial('scene', `n${S6_PARTNERS.indexOf('cu')}`, 1), dial('scene', `n${S6_PARTNERS.indexOf('zn')}`, 1)],
+  [put('s-x', seat(S7_KNOWN, 'fe')), put('s-x', 'rail:1')],
+  [put('s-zn', 'slot:dip.b0'), put('s-zn', 'slot:answer')]
 ];
 
 function blankState() { return {}; }

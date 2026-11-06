@@ -13,6 +13,7 @@
  */
 
 import { PLATE_COLORS } from '../../engine/plates.js';
+import { driftOf } from './pans-pan.js';
 import { registerFixture } from './pans-registry.js';
 import { say, frameOf } from './matter-draw.js';
 import { LEAN_RXNS, leanStress, leanAt, leanSettle, leanSettleTick, leanK, leanYield, fmtK, rng } from '../../engine/eqdata.js';
@@ -124,7 +125,7 @@ export function spheres(r) {
 }
 
 /** The window: a box with a piston; the spheres of each gas (and of the gas that does not react) packed in the room under it. */
-function paintWindow(ctx, F, r, x, y, w, h) {
+function paintWindow(ctx, F, r, x, y, w, h, clock = 0) {
   const p = r.f.props;
   frame(ctx, F, x, y, w, h);
   const frac = Math.min(1, r.res.post.V / p.Vmax);
@@ -147,8 +148,9 @@ function paintWindow(ctx, F, r, x, y, w, h) {
       ctx.fillStyle = GAS_INK[sp];
       for (let c = 0; c < count; c++, k++) {
         const g = rng(k * 7919 + 17); const cell0 = order[k];
-        const cx = x + ((cell0 % cols) + 0.5) * cw + (g() - 0.5) * cw * 0.34;
-        const cy = gy + (Math.floor(cell0 / cols) + 0.5) * ch + (g() - 0.5) * ch * 0.34;
+        const d = driftOf(k, clock, 2.4);
+        const cx = x + ((cell0 % cols) + 0.5) * cw + (g() - 0.5) * cw * 0.34 + d.dx * cw * 0.3;
+        const cy = gy + (Math.floor(cell0 / cols) + 0.5) * ch + (g() - 0.5) * ch * 0.34 + d.dy * ch * 0.3;
         ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(1.6, F.len(rad)), 0, Math.PI * 2); ctx.fill();
       }
     }
@@ -242,14 +244,138 @@ function paintScale(ctx, F, r, x0, x1) {
   ctx.beginPath(); ctx.moveTo(nx, F.y(AXIS_Y - 0.2)); ctx.lineTo(nx - half, F.y(AXIS_Y - 3.6)); ctx.lineTo(nx + half, F.y(AXIS_Y - 3.6)); ctx.closePath(); ctx.fill();
 }
 
+
+/* ------------------------------------------------------------------ touching the particles (`touch: true`) */
+
+const STRIP_Y = 44.6; const STRIP_H = 9.4; const SLOT_W = 29;
+const WIN = { x: 3.5, y: PLOT_Y, w: 24, h: 17 };
+
+/** The controls a touch vessel offers, in the order they stand along the strip under the graph. */
+function controlsOf(f) {
+  const p = f.props; const rxn = LEAN_RXNS[p.rxn];
+  const out = [];
+  if (f.dials.add) out.push({ kind: 'gas', dial: 'add', sp: p.addSp, name: rxn.names[p.addSp] });
+  if (f.dials.inert) out.push({ kind: 'gas', dial: 'inert', sp: 'Ar', name: 'argon' });
+  if (f.dials.take) out.push({ kind: 'trap', dial: 'take', sp: p.takeSp, name: rxn.names[p.takeSp] });
+  if (f.dials.temp) out.push({ kind: 'heat', dial: 'temp' });
+  return out;
+}
+
+/** Where the graph draws a number of moles, in the vessel's own units (the same scale `paintGraph` uses). */
+function graphScale(r) {
+  const sp = speciesOf(r);
+  let top = 0;
+  for (const s of sp) top = Math.max(top, r.base.n[s], r.res.post.n[s], r.res.eq.n[s]);
+  const ymax = r.f.props.ymax || niceMax(top);
+  return v => PLOT_Y + PLOT_H - 1.2 - (Math.max(0, v) / ymax) * (PLOT_H - 3.4);
+}
+
+const BAND = 1.7;
+/** Everything on a touch vessel that answers a touch: supplies, drains, burner and ice, the piston, and the bands of the graph. */
+function tapZones(f, state) {
+  const p = f.props;
+  if (!p.touch) return [];
+  const zones = [];
+  controlsOf(f).forEach((c, i) => {
+    const x = 3.5 + i * SLOT_W; const d = f.dials[c.dial];
+    if (c.kind === 'heat') {
+      zones.push({ x0: x, x1: x + 12, y0: STRIP_Y, y1: STRIP_Y + STRIP_H, dial: c.dial, step: d.step });
+      zones.push({ x0: x + 13, x1: x + 25, y0: STRIP_Y, y1: STRIP_Y + STRIP_H, dial: c.dial, step: -d.step });
+    } else {
+      zones.push({ x0: x, x1: x + 18, y0: STRIP_Y, y1: STRIP_Y + STRIP_H, dial: c.dial, step: d.step, wrap: true });
+      zones.push({ x0: x + 19, x1: x + 26, y0: STRIP_Y, y1: STRIP_Y + STRIP_H, dial: c.dial, value: d.min });
+    }
+  });
+  if (f.dials.vol && p.window !== false) zones.push({ x0: WIN.x, x1: WIN.x + WIN.w, y0: WIN.y, y1: WIN.y + WIN.h, dial: 'vol', drag: { y0: WIN.y, y1: WIN.y + WIN.h, scale: p.Vmax } });
+  if (p.answer) {
+    const r = vesselRead(state, f.id);
+    const Y = graphScale(r);
+    const yb = Y(r.base.n[p.answer.watch]);
+    const px = p.window !== false ? 31 : 3.5;
+    const x0 = px + (BEFORE / (VESSEL_TICKS + BEFORE)) * (f.size.w - px - 3.5 - 15.5) + 0.5;
+    const x1 = f.size.w - 19;
+    const a = p.answer;
+    zones.push({ x0, x1, y0: PLOT_Y, y1: yb - BAND, fixture: a.target, dial: 'value', value: a.higher });
+    zones.push({ x0, x1, y0: yb - BAND, y1: yb + BAND, fixture: a.target, dial: 'value', value: a.same });
+    zones.push({ x0, x1, y0: yb + BAND, y1: PLOT_Y + PLOT_H, fixture: a.target, dial: 'value', value: a.lower });
+  }
+  return zones;
+}
+
+/** The strip of apparatus under the graph, the piston's grip, and the bands the answer is tapped in. */
+function paintTouch(ctx, F, f, r, state) {
+  const p = f.props;
+  const sz = F.size(2.2, 5.6);
+  const slab = (x, w, ink) => { ctx.fillStyle = '#16140f'; ctx.fillRect(F.x(x), F.y(STRIP_Y), F.len(w), F.len(STRIP_H)); ctx.strokeStyle = ink; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(STRIP_Y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(STRIP_H))); };
+  controlsOf(f).forEach((c, i) => {
+    const x = 3.5 + i * SLOT_W; const d = f.dials[c.dial];
+    if (c.kind === 'heat') {
+      slab(x, 12, AMBER); slab(x + 13, 12, '#6f8fb0');
+      ctx.fillStyle = AMBER; ctx.beginPath(); ctx.moveTo(F.x(x + 6), F.y(STRIP_Y + 1.4)); ctx.lineTo(F.x(x + 2.6), F.y(STRIP_Y + 6)); ctx.lineTo(F.x(x + 9.4), F.y(STRIP_Y + 6)); ctx.closePath(); ctx.fill();
+      say(ctx, 'heat', F.x(x + 6), F.y(STRIP_Y + 8.1), F.size(1.9, 5.2), { align: 'center', color: DUST });
+      ctx.fillStyle = '#6f8fb0'; ctx.fillRect(F.x(x + 16), F.y(STRIP_Y + 2), F.len(6), F.len(4));
+      say(ctx, 'cool', F.x(x + 19), F.y(STRIP_Y + 8.1), F.size(1.9, 5.2), { align: 'center', color: DUST });
+      say(ctx, `${Math.round(d.value)} K`, F.x(x + 12.5), F.y(STRIP_Y - 1.4), sz, { align: 'center', color: AMBER, weight: 700 });
+    } else {
+      slab(x, 18, GAS_INK[c.sp]); slab(x + 19, 7, DIM);
+      const ink = GAS_INK[c.sp];
+      for (let k = 0; k < 3; k++) { ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(F.x(x + 3 + k * 3.4), F.y(STRIP_Y + 3), Math.max(2, F.len(1.1)), 0, Math.PI * 2); ctx.fill(); }
+      say(ctx, `${c.kind === 'trap' ? 'take out' : 'add'} ${c.name}`, F.x(x + 9), F.y(STRIP_Y + 7.3), F.size(1.9, 5.2), { align: 'center', color: DUST, maxW: F.len(17) });
+      say(ctx, 'empty', F.x(x + 22.5), F.y(STRIP_Y + 4.7), F.size(1.9, 5.2), { align: 'center', color: DIM });
+      say(ctx, `${amt(d.value)} mol`, F.x(x + 9), F.y(STRIP_Y - 1.4), sz, { align: 'center', color: AMBER, weight: 700 });
+    }
+  });
+  if (f.dials.vol && p.window !== false) {
+    // The piston's grip, at the top of the window, so there is something to take hold of.
+    const frac = Math.min(1, r.res.post.V / p.Vmax);
+    const gy = WIN.y + WIN.h * (1 - frac);
+    ctx.fillStyle = DUST; ctx.fillRect(F.x(WIN.x + WIN.w / 2 - 3), F.y(gy - 1.2), F.len(6), F.len(1.2));
+    say(ctx, `${amt(f.dials.vol.value)} L`, F.x(WIN.x + WIN.w - 0.8), F.y(WIN.y + WIN.h - 1.6), F.size(2, 5.4), { align: 'right', color: DUST });
+  }
+  if (p.answer) {
+    const Y = graphScale(r); const yb = Y(r.base.n[p.answer.watch]);
+    const px = p.window !== false ? 31 : 3.5;
+    const x0 = px + 1; const x1 = f.size.w - 19;
+    ctx.strokeStyle = DIM; ctx.setLineDash([1, 3]);
+    for (const y of [yb - BAND, yb + BAND]) { ctx.beginPath(); ctx.moveTo(F.x(x1 - 22), F.y(y)); ctx.lineTo(F.x(x1), F.y(y)); ctx.stroke(); }
+    ctx.setLineDash([]);
+    const tz = F.size(1.9, 5.2);
+    say(ctx, 'higher', F.x(x1 - 1), F.y(Math.max(PLOT_Y + 2, yb - BAND - 1.6)), tz, { align: 'right', color: DIM });
+    say(ctx, 'same', F.x(x1 - 1), F.y(yb), tz, { align: 'right', color: DIM });
+    say(ctx, 'lower', F.x(x1 - 1), F.y(Math.min(PLOT_Y + PLOT_H - 1.8, yb + BAND + 1.6)), tz, { align: 'right', color: DIM });
+    void x0;
+  }
+  void state;
+}
+
+/**
+ * A miss replays the cause: the vessel plays its run again from the moment of the change, the lines drawing themselves and the spheres
+ * moving to their new numbers. Between replays the shown time is the time reached.
+ */
+const SHOWN_T = new Map();
+let replaying = false;
+export function replayVessels() { SHOWN_T.clear(); replaying = true; setTimeout(() => { replaying = false; }, 300); }
+function shownTime(key, t, clock) {
+  if (!clock) { SHOWN_T.delete(key); return t; }
+  let s = SHOWN_T.get(key);
+  if (!s) s = { v: replaying ? 0 : t, clock };
+  const dt = Math.max(0, Math.min(0.1, clock - s.clock));
+  if (s.v < t) s.v = Math.min(t, s.v + dt * 14); else if (s.v > t) s.v = t;
+  s.clock = clock;
+  SHOWN_T.set(key, s);
+  return Math.floor(s.v);
+}
+
 function paintVessel(ctx, f, state, b) {
   const F = frameOf(b);
-  const r = vesselRead(state, f.id);
+  const r0 = vesselRead(state, f.id);
+  const ts = shownTime((b.scope || '') + f.id, r0.t, b.clock || 0);
+  const r = ts === r0.t ? r0 : { ...r0, t: ts, now: leanAt(r0.rxn, r0.res, ts), settled: ts >= r0.tick };
   const p = f.props;
   const w = f.size.w;
   const hasWin = p.window !== false;
   const px = hasWin ? 31 : 3.5;
-  if (hasWin) paintWindow(ctx, F, r, 3.5, PLOT_Y, 24, 17);
+  if (hasWin) paintWindow(ctx, F, r, 3.5, PLOT_Y, 24, 17, b.clock || 0);
   paintGraph(ctx, F, r, px, PLOT_Y, w - px - 3.5, PLOT_H);
   const sz = F.size(2.3, 5.8);
   if (p.yield) {
@@ -259,6 +385,7 @@ function paintVessel(ctx, f, state, b) {
     say(ctx, r.settled ? `settled by tick ${r.tick}` : `tick ${r.t}, still changing`, F.x(px), F.y(ROW_Y), sz, { color: DUST, maxW: F.len(w - px - 3.5) });
   }
   paintScale(ctx, F, r, 3.5, w - 3.5);
+  if (p.touch) paintTouch(ctx, F, f, r, state);
 }
 
 function run(state, fid) {
@@ -279,7 +406,7 @@ function settle(state) {
   }
 }
 
-registerFixture('vessel', { paint: paintVessel, run, settle });
+registerFixture('vessel', { paint: paintVessel, run, settle, tapZones, live: f => f.props.window !== false });
 
 /* ------------------------------------------------------------------ the fixture a stage declares */
 
@@ -314,7 +441,7 @@ export function vesselFixture(id, at, o) {
   return {
     id, kind: 'vessel', label: o.title, at: { ...at }, size: { w, h: vesselHeight(nd) }, runLabel: 'Run', dials,
     props: {
-      hidden: ['t'], top: DIALS_TOP, rxn: o.rxn, mix: o.mix, V0: o.V0, T0: o.T0, settled: o.settled !== false, unit: o.unit ?? 0.05, window,
+      hidden: ['t', ...(o.touch ? ['add', 'take', 'vol', 'temp', 'inert'].filter(k => dials[k]) : [])], touch: Boolean(o.touch), ...(o.answer ? { answer: o.answer } : {}), top: DIALS_TOP, rxn: o.rxn, mix: o.mix, V0: o.V0, T0: o.T0, settled: o.settled !== false, unit: o.unit ?? 0.05, window,
       Vmax: o.Vmax ?? Math.max(...Vs), axis: o.axis, cap2: o.cap2 ?? 'before', addSp: o.addSp, takeSp: o.takeSp,
       picks: o.picks || [], yield: Boolean(o.yield), catalyst: Boolean(o.catalyst), ...(o.ymax ? { ymax: o.ymax } : {})
     }
@@ -326,7 +453,7 @@ export function vesselFixture(id, at, o) {
 addTourText({
   'pans:vessel': {
     title: 'Vessel', dials: false,
-    text: 'A sealed vessel of gas, drawn flat. In the window, each sphere stands for a set amount of gas, and a piston shows the room it has. The graph counts the moles of each gas against time, with the time before a change left of the dotted line and the time after it right of the line. Under the graph a needle marks Q and a line marks K, both written with the pressure of each gas, on a scale that goes up by tens: 1e−4 means 1 × 10 to the power −4. Move a dial to change the vessel, then press "Run" to let ten more ticks of time go by.'
+    text: 'A sealed vessel of gas, drawn flat. In the window, each sphere stands for a set amount of gas, and a piston shows the volume it has. The graph counts the moles of each gas against time, with the time before a change left of the dotted line and the time after it right of the line. Under the graph a needle marks Q and a line marks K, both written with the pressure of each gas, on a scale that goes up by tens: 1e−4 means 1 × 10 to the power −4. Move a dial to change the vessel, then press "Run" to let ten more ticks of time go by.'
   }
 }, {});
 

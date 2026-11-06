@@ -33,6 +33,7 @@ import {
   K_SYSTEMS, Q5, kSlips, fmtNum, runMixture, spName, systemRatio, iceAmounts, iceColumns
 } from '../../engine/eqdata.js';
 
+import { choiceFixture, pickable, pickColumns } from '../../table/kits/pans-choice.js';
 export const meta = { stageCount: 5 };
 
 export const BUILDS_ON = [
@@ -62,9 +63,9 @@ const runs = (fid, n) => Array.from({ length: n }, () => ({ run: fid }));
 // Phase 1: three pans of A ⇌ B, each already run to tick 60. One has finished (B never turns back), one is still creeping toward its
 // level, and one has settled with three times as much B as A and both counts running.
 const P1_PANS = [
-  { id: 'p1', title: 'Pan 1', kf: 0.12, kr: 0, seed: 81 },
-  { id: 'p2', title: 'Pan 2', kf: 0.09, kr: 0.03, seed: 94 },
-  { id: 'p3', title: 'Pan 3', kf: 0.005, kr: 0.0025, seed: 86 }
+  { id: 'p1', title: 'Vessel 1', kf: 0.12, kr: 0, seed: 81 },
+  { id: 'p2', title: 'Vessel 2', kf: 0.09, kr: 0.03, seed: 94 },
+  { id: 'p3', title: 'Vessel 3', kf: 0.005, kr: 0.0025, seed: 86 }
 ];
 const P1_RUN = 60;
 const P1_PICK = 2;
@@ -119,42 +120,42 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     id: 'p1-pans',
-    title: 'Phase 1 · The Pans',
-    prompt: 'Set the dial to the pan that has reached equilibrium.',
+    title: 'Phase 1 · The Vessels',
+    prompt: 'Tap the vessel that has reached equilibrium.',
     widget,
     table: pansTable({
       fixtures: [
-        ...P1_PANS.map((p, i) => panFixture(p.id, { x: 24 + i * 50, y: 46 }, { kf: p.kf, kr: p.kr, b0: 0, seed: p.seed, start: P1_RUN, title: p.title, window: false, w: 44, h: 40 })),
-        selectorFixture('pick', 'Reached equilibrium', { x: 40, y: 11 }, { options: ['Pan 1', 'Pan 2', 'Pan 3', ' '], start: 4, w: 56 })
+        ...P1_PANS.map((p, i) => pickable(panFixture(p.id, { x: 24 + i * 50, y: 46 }, { kf: p.kf, kr: p.kr, b0: 0, seed: p.seed, start: P1_RUN, title: p.title, window: false, w: 44, h: 40 }), i + 1)),
+        choiceFixture('pick', 'Reached equilibrium', { x: 40, y: 11 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', ' '], start: 4, w: 56 })
       ]
     }, { h: 74 }),
     foes: TIPPER_FOE,
     encounter: {
       species: 'the tipper',
-      act: 'Commit Pan',
-      intent: 'The Tipper rocks three pans on its beam, each on a run of changes of its own.'
+      act: 'Commit Vessel',
+      intent: 'The Tipper rocks three vessels on its beam, each on a run of changes of its own.'
     },
     hints: [
-      'Use the "Run" key on each pan and the answer dial.',
-      'Compare each pan\'s graph with the two counts under it.',
-      'A pan in equilibrium has a graph that has stopped moving and changes still counted in both directions.'
+      'Use the "Run" key on each vessel, then tap the vessel you choose.',
+      'Compare each vessel\'s graph with the two counts under it.',
+      'A vessel in equilibrium has a graph that has stopped moving and changes still counted in both directions.'
     ],
     check(state) {
       const t = state.table;
       const v = dialValue(t, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === P1_PICK) return { ok: true };
       if (v === 1) {
         const r = panRead(t, 'p1');
-        return { ok: false, msg: `Pan 1's "B to A" count reads ${r.rev}, and its blue line has reached the top of the graph.` };
+        return { ok: false, msg: `Vessel 1's "B to A" count reads ${r.rev}, and its blue line has reached the top of the graph.` };
       }
       const r = panRead(t, 'p3');
-      return { ok: false, msg: `Pan 3's orange line is still falling at tick ${r.t}, and its blue line is still rising.` };
+      return { ok: false, msg: `Vessel 3's orange line is still falling at tick ${r.t}, and its blue line is still rising.` };
     },
     reward: {
-      log: 'Pan 2 held steady with changes counted both ways.',
+      log: 'Vessel 2 held steady with changes counted both ways.',
       title: 'Level, Not Finished',
-      body: 'Pan 2 held steady at about three times as much B as A while both counts kept running, which is equilibrium. Pan 1 had stopped because nothing turned back, and Pan 3 had not settled.'
+      body: 'Vessel 2 held steady at about three times as much B as A while both counts kept running, which is equilibrium. Vessel 1 had stopped because nothing turned back, and Vessel 3 had not settled.'
     }
   },
 
@@ -162,11 +163,11 @@ export const STAGES = [
   {
     id: 'p2-burner',
     title: 'Phase 2 · The Burner',
-    prompt: 'Find K for this pan, to two significant figures.',
+    prompt: 'Find K for this vessel, to two significant figures.',
     widget,
     entry: { id: 'k', label: 'K', unit: '' },
     table: pansTable({
-      fixtures: [ratioVessel('pans', { x: 38, y: 22 }, { system: 'so3', pans: P2_PAN, settled: true, w: 70, titles: ['The pan at equilibrium'] })]
+      fixtures: [ratioVessel('pans', { x: 38, y: 22 }, { system: 'so3', pans: P2_PAN, settled: true, w: 70, titles: ['The vessel at equilibrium'] })]
     }, { h: 46 }),
     foes: TIPPER_FOE,
     encounter: {
@@ -177,7 +178,7 @@ export const STAGES = [
     hints: [
       'Type the figure in the field.',
       'Read the amount of each substance from the bars and take the reaction from the equation printed beside them.',
-      'Write the ratio the way you found it on the rig, put the bar amounts in, and round to two figures.'
+      'Write the ratio the way you found it on the ratio board, put the bar amounts in, and round to two figures.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
@@ -186,14 +187,14 @@ export const STAGES = [
       if (within(v, pan.K, P2_TOL)) return { ok: true };
       const sl = kSlips(SO, pan.eq);
       const bars = `SO₂ at ${fmtNum(pan.eq.SO2, 3)}, O₂ at ${fmtNum(pan.eq.O2, 3)} and SO₃ at ${fmtNum(pan.eq.SO3, 3)} mol/L`;
-      if (within(v, sl.inverted, 0.05)) return { ok: false, msg: `That figure is below 1, and on this pan (${bars}) the SO₃ bar stands tallest.` };
-      if (within(v, sl.noPower, 0.05)) return { ok: false, msg: 'That figure counts each substance once; the equation printed on the pan has a 2 in front of SO₂ and SO₃.' };
-      return { ok: false, msg: `With ${bars}, that is not the figure the ratio of this pan comes to.` };
+      if (within(v, sl.inverted, 0.05)) return { ok: false, msg: `That figure is below 1, and on this vessel (${bars}) the SO₃ bar stands tallest.` };
+      if (within(v, sl.noPower, 0.05)) return { ok: false, msg: 'That figure counts each substance once; the equation printed on the vessel has a 2 in front of SO₂ and SO₃.' };
+      return { ok: false, msg: `With ${bars}, that is not the figure the ratio of this vessel comes to.` };
     },
     reward: {
       log: 'K for 2 SO₂ + O₂ ⇌ 2 SO₃ came from the bars.',
-      title: 'K From a Pan',
-      body: `The 2 in front of SO₂ and SO₃ became powers: SO₃² over SO₂² times O₂ came to ${fmtNum(SO.K, 2)} at 1000 K. Any pan of this reaction at this temperature settles to the same figure.`
+      title: 'K From a Vessel',
+      body: `The 2 in front of SO₂ and SO₃ became powers: SO₃² over SO₂² times O₂ came to ${fmtNum(SO.K, 2)} at 1000 K. Any vessel of this reaction at this temperature settles to the same figure.`
     }
   },
 
@@ -212,7 +213,7 @@ export const STAGES = [
     encounter: {
       species: 'the tipper',
       act: 'Commit Mixture',
-      intent: 'The Tipper draws a mixture from each of three pans into its test vessel.'
+      intent: 'The Tipper draws a mixture from each of three vessels into its test vessel.'
     },
     hints: [
       'Use the cards, the slot in the vessel and the "Run" key.',
@@ -237,12 +238,12 @@ export const STAGES = [
   {
     id: 'p4-squeeze',
     title: 'Phase 4 · The Squeeze',
-    prompt: 'Squeeze the vessel, then set the dial to what happens to the NO₂ amount.',
+    prompt: 'Lower the piston, then tap the graph where the NO₂ amount will settle.',
     widget,
     table: pansTable({
       fixtures: [
-        stressVessel('v', { x: 52, y: 30 }, { ...P4, dials: { vol: { ...P4_VOL, value: P4_VOL.max } } }),
-        selectorFixture('ans', 'NO₂ amount', { x: 127, y: 40 }, { options: P4_OPTIONS, start: 4, list: true })
+        stressVessel('v', { x: 52, y: 30 }, { ...P4, touch: true, answer: { target: 'ans', watch: 'NO2', higher: 1, same: 3, lower: 2 }, dials: { vol: { ...P4_VOL, value: P4_VOL.max } } }),
+        choiceFixture('ans', 'NO₂ amount', { x: 127, y: 40 }, { options: P4_OPTIONS, start: 4, w: 40 })
       ]
     }),
     foes: TIPPER_FOE,
@@ -252,14 +253,14 @@ export const STAGES = [
       intent: 'The Tipper presses on a sealed vessel of brown gas.'
     },
     hints: [
-      'Use the "Volume" dial, the "Run" key and the answer dial.',
-      'Watch the NO₂ line against its level from before the squeeze, and the Q needle against the K line.',
-      'Follow Q against K just after the squeeze and once the lines are flat, and see which gas the amounts moved toward.'
+      'Drag the piston down, press "Run", then tap the graph.',
+      'Watch the NO₂ line against its level from before the compression, and the Q needle against the K line.',
+      'Follow Q against K just after the compression and once the lines are flat, and see which gas the amounts moved toward.'
     ],
     check(state) {
       const t = state.table;
       const v = Math.round(dialValue(t, 'ans'));
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Tap the graph where the NO₂ amount will settle.' };
       if (v === P4_ANSWER) return { ok: true };
       const r = vesselRead(t, 'v');
       if (!r.changed) return { ok: false, msg: 'The piston has not moved: the vessel is still 1 L.' };
@@ -267,9 +268,9 @@ export const STAGES = [
       return { ok: false, msg: `With the piston at ${r.res.post.V} L, the NO₂ line reads ${r.now.n.NO2.toFixed(4)} mol now and stood at ${r.base.n.NO2.toFixed(4)} mol before.` };
     },
     reward: {
-      log: 'Squeezing the vessel left less NO₂.',
+      log: 'Compressing the vessel left less NO₂.',
       title: 'Which Side Has Fewer Molecules',
-      body: 'Squeezing the vessel raised the pressure of both gases and put Q above K, so the vessel moved toward N₂O₄, which has fewer molecules than the NO₂ it comes from. The NO₂ amount fell.'
+      body: 'Compressing the vessel raised the pressure of both gases and put Q above K, so the vessel moved toward N₂O₄, which has fewer molecules than the NO₂ it comes from. The NO₂ amount fell.'
     }
   },
 
@@ -277,23 +278,23 @@ export const STAGES = [
   {
     id: 'p5-feed',
     title: 'Phase 5 · The Feed',
-    prompt: 'Type the concentration of HI when this pan has settled, in moles per litre.',
+    prompt: 'Type the concentration of HI when this vessel has settled, in moles per litre.',
     widget,
     entry: { id: 'hi', label: 'HI at equilibrium', unit: 'M' },
     table: pansTable({
       fixtures: [
-        barsFixture('bars', { x: 42, y: 28 }, { species: iceColumns(HI.species, P5_START), K: HI.K, max: 1.2, title: 'Pan', w: 62, h: 42 }),
-        plaqueFixture('plate', 'Pan', { x: 116, y: 40 }, [HI.eq, `K = ${HI.K} at ${HI.T} K`, `start: ${conc(P5_START['H₂'])} M H₂, ${conc(P5_START['I₂'])} M I₂`], { w: 62 })
+        barsFixture('bars', { x: 42, y: 28 }, { species: iceColumns(HI.species, P5_START), K: HI.K, max: 1.2, title: 'Vessel', w: 62, h: 42 }),
+        plaqueFixture('plate', 'Vessel', { x: 116, y: 40 }, [HI.eq, `K = ${HI.K} at ${HI.T} K`, `start: ${conc(P5_START['H₂'])} M H₂, ${conc(P5_START['I₂'])} M I₂`], { w: 62 })
       ]
     }),
     foes: TIPPER_FOE,
     encounter: {
       species: 'the tipper',
       act: 'Commit Amount',
-      intent: 'The Tipper feeds a pan with two gases in unequal amounts.'
+      intent: 'The Tipper feeds a vessel with two gases in unequal amounts.'
     },
     hints: [
-      'Use the "Settle" key on the pan and the number field.',
+      'Use the "Settle" key on the vessel and the number field.',
       'Compare the settled bars with the dashed start marks, and read the K on the plate.',
       'The starts differ, so write K with 2x for HI and each start less x, then solve the quadratic for x.'
     ],
@@ -338,15 +339,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The Tipper stops rocking and settles level. Behind it is a sealed pan the Fifth filed as finished, and its particles are still changing.'
+      body: 'The Tipper stops rocking and settles level. Behind it is a sealed vessel the Fifth filed as finished, and its particles are still changing.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase asked a pan the same kind of question: has it settled, what is its K, which way will it go, how does it answer a push, how much is left. That was enough to read the machine.'
+      body: 'Every phase asked a vessel the same kind of question: has it settled, what is its K, which way will it go, how does it answer a change, how much is left. That was enough to read the machine.'
     },
     {
       heading: 'Next',
-      body: 'The last pan goes into the Case File. It was never finished; someone stopped measuring it.'
+      body: 'The last vessel goes into the Case File. It was never finished; someone stopped measuring it.'
     }
   ]
 };

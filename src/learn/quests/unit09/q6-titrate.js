@@ -296,18 +296,18 @@ export const STAGES = [
   {
     id: 's7-strength',
     title: 'How Strong Is the Acid',
-    prompt: 'Find the strength of the hydrochloric acid in the flask, in mol/L.',
+    prompt: 'Find the concentration of the hydrochloric acid in the flask, in mol/L.',
     widget,
-    entry: { id: 'c', label: 'Strength', unit: 'M' },
+    entry: { id: 'c', label: 'Concentration', unit: 'M' },
     table: phTable({
       fixtures: [
-        buretteFixture('bur', { x: 22, y: 46 }, { samples: [{ title: 'Hydrochloric acid', sub: ['25.00 mL', 'strength unknown'], ...UNKNOWN_STRONG, meter: false, tint: 'bromothymol' }], cap: 40 })
+        buretteFixture('bur', { x: 22, y: 46 }, { samples: [{ title: 'Hydrochloric acid', sub: ['25.00 mL', 'concentration unknown'], ...UNKNOWN_STRONG, meter: false, tint: 'bromothymol' }], cap: 40 })
       ]
     }, { w: 44, h: 96 }),
     hints: [
-      'Use "Pour size" and "Pour", and type the strength in the field.',
+      'Use "Pour size" and "Pour", and type the concentration in the field.',
       'Watch the colour of the liquid in the flask as the volume nears the change.',
-      'Turn the volume poured into an amount of base, and use it to find the amount and then the strength of the acid.'
+      'Turn the volume poured into an amount of base, and use it to find the amount and then the concentration of the acid.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'c');
@@ -318,15 +318,15 @@ export const STAGES = [
       const near = x => Math.abs(v / x - 1) <= 0.03;
       if (near(CT * e)) return { ok: false, msg: `${fmt(v, 2)} is 0.100 times the volume at which the colour changed; the flask holds 25.00 mL.` };
       if (near(e / 25)) return { ok: false, msg: `${fmt(v, 3)} comes from the volume at which the colour changed and the 25.00 mL; the base in the burette is 0.100 M.` };
-      if (near(CT)) return { ok: false, msg: 'That is the strength of the base in the burette.' };
+      if (near(CT)) return { ok: false, msg: 'That is the concentration of the base in the burette.' };
       return { ok: false, msg: `${fmt(v, 3)} M does not match what the flask showed.` };
     },
     get reward() {
       const e = eq(UNKNOWN_STRONG);
       return {
         log: 'The colour changed at 31.4 mL.',
-        title: 'From Volume to Strength',
-        body: `The colour changed at ${mL1(e)} mL of 0.100 M base, which is ${fmt(e * CT, 2)} mmol. The 25.00 mL of acid held that amount, so its strength was ${fmt(TITRATION_UNKNOWN_C, 3)} M.`
+        title: 'From Volume to Concentration',
+        body: `The colour changed at ${mL1(e)} mL of 0.100 M base, which is ${fmt(e * CT, 2)} mmol. The 25.00 mL of acid held that amount, so its concentration was ${fmt(TITRATION_UNKNOWN_C, 3)} M.`
       };
     }
   },
@@ -340,7 +340,7 @@ export const STAGES = [
     entry: { id: 'ka', label: 'Ka (write 0.0005 as 5e-4)', unit: '' },
     table: phTable({
       fixtures: [
-        buretteAt({ samples: [{ title: 'Unknown acid', sub: ['25.0 mL', 'strength unknown'], ...UNKNOWN_WEAK, meter: true }], cap: 40 }, 24),
+        buretteAt({ samples: [{ title: 'Unknown acid', sub: ['25.0 mL', 'concentration unknown'], ...UNKNOWN_WEAK, meter: true }], cap: 40 }, 24),
         curveFixture('curve', { x: 112, y: 40 }, { burette: 'bur', series: [{ sample: 0, name: 'Unknown acid', short: 'pH' }], xMax: 40, log: true, w: 124, h: 70 })
       ]
     }, { w: 178, h: 96 }),

@@ -21,7 +21,8 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import {
-  phTable, selectorFixture, plaqueFixture, note, pieceIn, dialValue, mixFixture, mixRead
+  phTable, selectorFixture, plaqueFixture, note, pieceIn, dialValue, mixFixture, mixRead,
+  transferParts, transferRead, H_INK, ACID_INK, BASE_INK
 } from '../../table/kits/ph.js';
 import { ACIDS, bufferState, fmt, pOf } from '../../engine/phdata.js';
 
@@ -61,6 +62,11 @@ function read(ha, a, na = 0, nb = 0, { per = PER, Kax = Ka, v = V } = {}) {
 }
 const ph = (...x) => read(...x).pH;
 const MIX = { ha: 100, a: 100 };
+/** Stage 4's proton bench: the acid poured in carries a proton; two particles of the buffer could take it. */
+const BENCH_BUFFER = { goal: { from: 'h3o', to: 'a' }, mols: [
+  { key: 'h3o', label: 'H₃O⁺', ink: H_INK, ink2: '#7d8b97', hs: 3, gives: true, lost: 'H₂O', gained: 'H₃O⁺' },
+  { key: 'ha', label: 'CH₃COOH', ink: ACID_INK, ink2: ACID_INK, hs: 4, gives: false, lost: 'CH₃COOH', gained: 'CH₃COOH₂⁺' },
+  { key: 'a', label: 'CH₃COO⁻', ink: BASE_INK, ink2: ACID_INK, hs: 3, gives: false, lost: 'CH₃COO⁻', gained: 'CH₃COOH' }] };
 const HF = { Ka: ACIDS.hf.Ka };
 /** Stage 5 and 6: two reference flasks (1 : 1 and 10 : 1) and, on stage 5, a flask of 3 : 1 that has no meter. */
 const REF1 = { ha: 100, a: 100 };
@@ -191,25 +197,29 @@ export const STAGES = [
   {
     id: 's4-acid',
     title: 'Who Takes the Acid',
-    prompt: 'Pour acid into the mixture and say which of acetic acid and acetate takes it up.',
+    prompt: 'Carry the proton of the added acid to the particle of the mixture that takes it up.',
     widget,
+    // The graded answer is where the proton is carried on the bench; the flask shows what the pour did.
     table: (() => {
       const f = flaskAt('fm', 26, 1, { title: 'Acetic acid with sodium acetate', ...MIX });
+      const b = transferParts('bench', { x: 150, y: 28 }, BENCH_BUFFER);
       return phTable({
-        fixtures: [f.fixture, selectorFixture('pick', 'Takes up the acid', { x: 88, y: 20 }, { options: ['Acetic acid', 'Acetate', 'Neither', ' '], start: 4, w: 46 })]
-      }, { w: 120, h: 52 });
+        pieces: b.pieces,
+        fixtures: [f.fixture, b.fixture],
+        zones: { slots: b.slots }
+      }, { w: 196, h: 56 });
     })(),
     hints: [
-      'Press "Pour", then set the answer dial.',
+      'Press "Pour" and watch which spheres change in number, then carry the proton on the bench.',
       'Compare the counts of acetic acid and of acetate in the window before and after the pour.',
       'Match the spheres that were added to the spheres that changed in number.'
     ],
     check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v === 2) return { ok: true };
+      const r = transferRead(state.table, 'bench');
+      if (!r.moved) return { ok: false, notYet: true, msg: 'Carry the proton to a seat.' };
+      if (r.right) return { ok: true };
       const m = read(MIX.ha, MIX.a, 1);
-      return { ok: false, msg: `After one pour the window holds ${Math.round(m.A / U)} acetate spheres and ${Math.round(m.HA / U)} acetic acid spheres, from ${MIX.a} and ${MIX.ha}.` };
+      return { ok: false, msg: `After one pour the window holds ${Math.round(m.A / U)} acetate spheres and ${Math.round(m.HA / U)} acetic acid spheres, from ${MIX.a} and ${MIX.ha}; the proton you carried comes straight back.` };
     },
     get reward() {
       const m = read(MIX.ha, MIX.a, 1);
@@ -379,7 +389,7 @@ export const SOLUTIONS = [
   [put('same', 'slot:guess')],
   [pour('fw'), pour('fm'), dial('pick', 'value', 1)],
   [dial('fb', 'ha', 3), dial('fb', 'a', 3), pour('fb')],
-  [pour('fm'), dial('pick', 'value', 2)],
+  [pour('fm'), put('bench.h.h3o', 'slot:bench.take.a')],
   [{ type: { entry: 'ph', value: '5.22' } }],
   [{ type: { entry: 'ratio', value: '0.45' } }],
   [pour('fm'), dial('pick', 'value', 2)],
@@ -390,7 +400,7 @@ export const MISSES = [
   [],
   [pour('fm'), dial('pick', 'value', 2)],
   [dial('fb', 'ha', 4), pour('fb')],
-  [pour('fm'), dial('pick', 'value', 1)],
+  [pour('fm'), put('bench.h.h3o', 'slot:bench.take.ha')],
   [{ type: { entry: 'ph', value: '4.27' } }],
   [{ type: { entry: 'ratio', value: '2.2' } }],
   [pour('fm'), dial('pick', 'value', 4)],

@@ -82,28 +82,31 @@ function pourStage({ id, title, spec, prompt, hints, wantKind, reward }) {
     id, title, prompt, widget,
     table: phTable({
       pieces: [meterPiece('meter', { x: 132, y: 12 })],
-      fixtures: [m.fixture, selectorFixture('pick', 'The flask is', { x: 138, y: 50 }, { options: [...KINDS, ' '], start: 4, w: 56 })],
+      fixtures: [m.fixture],
       zones: { slots: [m.slot] }
     }, { w: 184, h: 72 }),
     hints,
+    // The graded answer is the flask itself: poured to the first pour at which the window shows none of the analyte left.
     check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v - 1 === wantKind) return { ok: true };
-      return { ok: false, msg: `With ${eq.mL} mL poured the window shows no ${what} left, and the meter reads ${fmt(eq.pH, 2)}.` };
+      const k = Math.round(dialValue(state.table, 'mix', 'poured'));
+      if (k === 0) return { ok: false, notYet: true, msg: 'Pour first.' };
+      if (k === EQUAL_K) return { ok: true };
+      const now = mixAfter(spec, k);
+      if (k < EQUAL_K) return { ok: false, msg: `After ${now.mL} mL the window still shows ${now.left} ${what} units that are not used up.` };
+      return { ok: false, msg: `The window already showed no ${what} left at ${eq.mL} mL; the extra ${now.mL - eq.mL} mL is more ${spec.reagent} than the ${what} needs.` };
     },
     ...(reward ? { reward } : {})
   };
 }
 
-const POUR_HINT = 'Use "Pour", the pH meter on its seat, and the answer dial.';
+const POUR_HINT = 'Use "Pour" and the pH meter on its seat.';
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   pourStage({
     id: 's1-strong', title: 'Acid Used Up', spec: S1, wantKind: 1,
-    prompt: 'Pour in sodium hydroxide until no hydrochloric acid is left, then say whether the flask is acidic, neutral or basic.',
-    hints: [POUR_HINT, 'Compare the window and the meter after each pour.', 'Read the flask at the pour where the window shows no acid left.'],
+    prompt: 'Pour in sodium hydroxide until no hydrochloric acid is left, and stop there.',
+    hints: [POUR_HINT, 'Compare the window and the meter after each pour.', 'Stop at the first pour where the window shows no acid left.'],
     reward: {
       log: 'The flask read 7.00 with the acid used up.',
       title: 'Strong Acid, Strong Base',
@@ -148,10 +151,10 @@ export const STAGES = [
   (() => {
     const st = pourStage({
       id: 's3-weak-acid', title: 'Acetic Acid Used Up', spec: S3, wantKind: 2,
-      prompt: 'Pour in sodium hydroxide until no acetic acid is left, then say whether the flask is acidic, neutral or basic.',
+      prompt: 'Pour in sodium hydroxide until no acetic acid is left, and stop there.',
       hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no acid left with the 7 you expected.', 'Ask what the acid left behind does when it meets water.']
     });
-    Object.defineProperty(st, 'prompt', { get() { return guessLine('Pour in sodium hydroxide until no acetic acid is left, then say whether the flask is acidic, neutral or basic.', recall(QUEST_KEY)); }, enumerable: true });
+    Object.defineProperty(st, 'prompt', { get() { return guessLine('Pour in sodium hydroxide until no acetic acid is left, and stop there.', recall(QUEST_KEY)); }, enumerable: true });
     Object.defineProperty(st, 'reward', {
       enumerable: true,
       get() {
@@ -170,7 +173,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   pourStage({
     id: 's4-weak-base', title: 'Ammonia Used Up', spec: S4, wantKind: 0,
-    prompt: 'Pour in hydrochloric acid until no ammonia is left, then say whether the flask is acidic, neutral or basic.',
+    prompt: 'Pour in hydrochloric acid until no ammonia is left, and stop there.',
     hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no base left with 7.', 'Ask what the base left behind by ammonia does when it meets water.'],
     reward: {
       log: 'The flask read 5.28 with the base used up.',
@@ -343,10 +346,10 @@ const pours = n => Array.from({ length: n }, () => ({ run: 'mix' }));
 const seat = 'slot:mix.seat';
 
 export const SOLUTIONS = [
-  [put('meter', seat), ...pours(EQUAL_K), dial('pick', 2)],
+  [put('meter', seat), ...pours(EQUAL_K)],
   [put('seven', 'slot:guess')],
-  [put('meter', seat), ...pours(EQUAL_K), dial('pick', 3)],
-  [put('meter', seat), ...pours(EQUAL_K), dial('pick', 1)],
+  [put('meter', seat), ...pours(EQUAL_K)],
+  [put('meter', seat), ...pours(EQUAL_K)],
   [put('c-nacl', 'tray:neutral'), put('c-naf', 'tray:basic'), put('c-nh4cl', 'tray:acidic'), put('c-kno3', 'tray:neutral')],
   [{ type: { entry: 'ph', value: '1.70' } }],
   [{ type: { entry: 'ph', value: '8.87' } }],
@@ -354,10 +357,10 @@ export const SOLUTIONS = [
 ];
 
 export const MISSES = [
-  [...pours(EQUAL_K), dial('pick', 1)],
+  [...pours(EQUAL_K + 1)],
   [],
-  [...pours(EQUAL_K), dial('pick', 2)],
-  [...pours(EQUAL_K), dial('pick', 2)],
+  [...pours(EQUAL_K - 1)],
+  [...pours(EQUAL_K + 1)],
   [put('c-nacl', 'tray:neutral'), put('c-naf', 'tray:neutral'), put('c-nh4cl', 'tray:acidic'), put('c-kno3', 'tray:neutral')],
   [{ type: { entry: 'ph', value: '7' } }],
   [{ type: { entry: 'ph', value: '5.13' } }],

@@ -11,9 +11,11 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture, registerPiece } from './pans-registry.js';
+import { driftOf } from './pans-pan.js';
 import { say, slab, frameOf } from './matter-draw.js';
 import { iceAmounts, iceExpression, iceChipLabel } from '../../engine/eqdata.js';
 import { pieceIn } from './pans-read.js';
+import { paintPuck, buildPuck } from './pans-puck.js';
 import './pans-ice-tour.js';
 
 const DUST = PLATE_COLORS.dust;
@@ -28,14 +30,15 @@ const fmtM = v => (v === 0 ? '0' : Number((v + 1e-12).toPrecision(3)).toString()
 
 const RECT_CHIP = { hw: 7.5, hh: 4.4 };
 
+const chipInk = p => (p.props.nu < 0 ? '#c0652b' : '#6f8fb0');
 function paintChip(ctx, p, state, o) {
-  const box = slab(ctx, o, RECT_CHIP, '#1d1a16');
-  say(ctx, String(p.label), o.x, box.y0 + box.h / 2, Math.max(7, 3.2 * o.sc), { align: 'center', weight: 700, color: AMBER, maxW: box.w - 1.6 * o.sc });
+  paintPuck(ctx, o, RECT_CHIP, String(p.label), chipInk(p), 1);
 }
 
 registerPiece('ichip', {
   kind: { r: 6.3, rect: RECT_CHIP, nojoin: true },
   paint: paintChip,
+  piece3d: (p, state, c) => buildPuck(c, chipInk(p), 1, String(p.label)),
   faceKey: p => `ichip|${p.label}`,
   printed: p => String(p.label)
 });
@@ -98,8 +101,22 @@ export function barsRead(state, fid) {
   return { settled: f.dials.s.value >= 1, x, amounts, init, nu };
 }
 
+/** The settled bars glide from the starting amount to the settled one over about two seconds after Run, with a crowd drifting in each. */
+const SETTLE_AT = new Map();
+/** A miss replays the cause: every settling starts again from the starting amounts. */
+export function replaySettle() { SETTLE_AT.clear(); }
+
+export function settleProgress(fid, settled, clock) {
+  if (!clock) return settled ? 1 : 0;
+  if (!settled) { SETTLE_AT.delete(fid); return 0; }
+  if (!SETTLE_AT.has(fid)) SETTLE_AT.set(fid, clock);
+  const k = Math.max(0, Math.min(1, (clock - SETTLE_AT.get(fid)) / 2.2));
+  return k * k * (3 - 2 * k);
+}
+
 function paintBars(ctx, f, state, b) {
   const F = frameOf(b);
+  const clock = b.clock || 0;
   const p = f.props;
   const r = barsRead(state, f.id);
   const n = p.species.length;
@@ -122,8 +139,20 @@ function paintBars(ctx, f, state, b) {
     say(ctx, fmtM(s.init), F.x(sx + bw / 2), F.y(Y(s.init) - 1.9), sz, { align: 'center', color: DUST });
     if (r.settled) {
       const v = r.amounts[s.name];
+      const e = settleProgress((b.scope || "") + f.id, true, clock);
+      const vd = s.init + (v - s.init) * e;
       ctx.fillStyle = INKS[i % 3];
-      ctx.fillRect(F.x(ex), F.y(Y(v)), F.len(bw), F.len(base - Y(v)));
+      ctx.fillRect(F.x(ex), F.y(Y(vd)), F.len(bw), F.len(base - Y(vd)));
+      if (clock) {
+        ctx.fillStyle = 'rgba(16,15,12,0.78)';
+        const nDots = Math.max(0, Math.round((vd / p.max) * 16)); const hh = base - Y(vd);
+        for (let k = 0; k < nDots; k++) {
+          const d = driftOf(i * 17 + k, clock, 2.2);
+          const dx = ex + bw * ((k % 2 + 0.5) / 2) + d.dx * bw * 0.14;
+          const dy = base - hh * ((Math.floor(k / 2) + 0.5) / Math.ceil(nDots / 2)) + d.dy * 0.8;
+          ctx.beginPath(); ctx.arc(F.x(dx), F.y(dy), Math.max(1.2, F.len(0.55)), 0, Math.PI * 2); ctx.fill();
+        }
+      }
       if (p.reads?.includes(s.name)) say(ctx, fmtM(v), F.x(ex + bw / 2), F.y(Y(v) - 1.9), sz, { align: 'center', color: AMBER, weight: 700 });
     }
     if (p.mark95 === s.name) {
@@ -140,18 +169,18 @@ function paintBars(ctx, f, state, b) {
 
 function runBars(state, fid) {
   const f = state.fixtures[fid];
-  if (f.dials.s.value >= 1) return { noop: 'The pan has already settled.' };
+  if (f.dials.s.value >= 1) return { noop: 'The vessel has already settled.' };
   const n = state.recorder.rows.length + 1;
   return { x: n, y: 100 + n, label: fid, dials: { [fid]: { s: 1 } } };
 }
 
-registerFixture('icebars', { paint: paintBars, run: runBars });
+registerFixture('icebars', { paint: paintBars, run: runBars, live: () => true });
 
 /**
  * Bars for a sealed pan. `species` is `[{name, nu, init}]`; `K` its equilibrium constant; `max` the amount a full bar stands for;
  * `reads` the names whose settled amount is printed; `mark95` the name of the reactant that gets a dashed line 5 % below its start.
  */
-export function barsFixture(id, at, { species, K, max, reads = [], mark95 = null, info = '', title = 'Pan', w = 62, h = 42 }) {
+export function barsFixture(id, at, { species, K, max, reads = [], mark95 = null, info = '', title = 'Vessel', w = 62, h = 42 }) {
   return {
     id, kind: 'icebars', label: title, at: { ...at }, size: { w, h }, runLabel: 'Settle',
     dials: { s: { min: 0, max: 1, step: 1, value: 0, label: 'Settled' } },

@@ -24,7 +24,7 @@ Avalon is a year-long RPG competition and molecular simulator for the UHS Chemis
 
 One list. Where an older rule and a newer one disagreed, the newer is stated here and the other is gone.
 
-1. **Real terms, earned, never code words.** Use plain observable labels until the stage that earns the word, then the real term (atom, bond, isotope, orbital). Never an invented word that is later swapped for the real one ("light pieces", "grains"). Analogies to real life are welcome. Each term is defined where it is first met (a briefing, an earlier reward card, an inline gloss); `VOCABULARY` and `WITHHELD_VOCAB` enforce the promise.
+1. **Real terms, glossed where first used.** Say the real term the first time it is needed, with a one-clause gloss, then use only that term (pressure, not "push"; volume, not "room"). Only answers are hidden, never the names of quantities, instruments or ideas. Never an invented word that is later swapped for the real one. Analogies to real life are welcome. Each world keeps a glossary (`src/learn/glossary/`, the Glossary key); `VOCABULARY`, `WITHHELD_VOCAB` (answers only) and `verify:teaching` enforce it.
 2. **Never give away answers.** The bench holds the evidence and the player deduces the answer. Two kinds of information are kept apart:
    - *How a tool works and how to answer* (what a key does, how to place a piece, what "Submit" grades): always given, on the object (captions, notes, legends), never behind a hint.
    - *Which move solves the stage*: never given. Prompts state the objective, never the route; hints spend all three rungs on the science.

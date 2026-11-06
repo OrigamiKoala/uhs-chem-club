@@ -17,6 +17,8 @@ import { HEAT_KIT, HEAT_BOUNDS, HEAT_RECORDER } from './heat.js';
 import { paintPiece as heatPiece, paintFixture as heatFixture, faceKey as heatFaceKey } from './heat-draw.js';
 import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './cell-registry.js';
 import './cell-tour.js';
+import { hotspots } from './cell-sites.js';
+import { noteMiss } from './cell-scene.js';
 
 /* One import per instrument: each file registers its own fixtures and pieces. (marker: cell instruments) */
 import './cell-board.js';
@@ -24,9 +26,13 @@ import './cell-rig.js';
 import './cell-galv.js';
 import './cell-redox.js';
 import './cell-ledger.js';
+import './cell-scene.js';
 import './cell-dip.js';
 import './cell-supply.js';
 import './cell-load.js';
+import './cell-cans.js';
+import './cell-tour-min.js';
+import './cell-tour-demos.js';
 
 export const CELL_KIT_ID = 'cell';
 export const CELL_BOUNDS = HEAT_BOUNDS;
@@ -72,6 +78,9 @@ export const CELL_KIT = {
   run,
   paintPiece,
   paintFixture,
+  hotspots,
+  onMiss: (table, msg) => noteMiss(msg),
+  live: state => Object.values(state.fixtures || {}).some(f => fixtureHandler(f.kind)?.live?.(f, state)),
   faceKey,
   piece3d,
   dress3d,
@@ -89,7 +98,11 @@ export function cellTable(spec, { w = CELL_BOUNDS.w, h = CELL_BOUNDS.h, recorder
 import { selectorFixture as heatSelector } from './heat.js';
 /** A selector with its options listed on the card, so text choices are readable before the dial moves. */
 export const selectorFixture = (id, label, at, o = {}) => heatSelector(id, label, at, { list: false, ...o });
+/** A fixture whose dials nothing can turn: it only shows the answer a tap on the model has set. */
+export const hideDials = fx => ({ ...fx, props: { ...fx.props, hidden: Object.keys(fx.dials) } });
 export * from './heat.js';
 export * from './cell-read.js';
+export { canPiece } from './cell-cans.js';
 export { boardFixture, electrodePiece, boardRead } from './cell-board.js';
+export { sceneFixture, withScene } from './cell-scene.js';
 export { rigFixture, rigRead, RIG_UNIT } from './cell-rig.js';

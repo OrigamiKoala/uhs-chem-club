@@ -349,6 +349,37 @@ registerPiece('celldipstrip', {
   printed: p => p.label
 });
 
+const GAS_MATS = new WeakMap();
+const gasMaterial = mats => {
+  if (!GAS_MATS.has(mats)) { const m = mats.labSteel.clone(); m.color = new THREE.Color(0xd6cfb8); GAS_MATS.set(mats, m); }
+  return GAS_MATS.get(mats);
+};
+function paintGas(ctx, p, state, o) {
+  const r = o.sc * 7.4;
+  ctx.fillStyle = '#d6cfb8'; ctx.beginPath(); ctx.arc(o.x, o.y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = o.lit ? PLATE_COLORS.amber : STEEL; ctx.lineWidth = o.lit ? 2 : 1; ctx.stroke(); ctx.lineWidth = 1;
+  put(ctx, p.label, o.x, o.y, Math.max(8, r * 0.95), { color: '#16140f', weight: 700 });
+}
+/** A bubble of gas as a piece (hydrogen in `q2-activity`): a pale sphere with its formula. */
+registerPiece('cellgas', {
+  kind: { r: 8, nojoin: true },
+  paint: paintGas,
+  faceKey: p => `cellgas|${p.label}`,
+  piece3d: (p, state, c) => {
+    const g = new THREE.Group();
+    const r = c.hw * 0.9;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), gasMaterial(c.mats));
+    m.position.y = r; m.castShadow = true; m.receiveShadow = true; g.add(m);
+    g.userData.height = r * 2;
+    return g;
+  },
+  printed: p => p.label
+});
+/** A bubble of hydrogen. */
+export const hydrogenPiece = (id, at) => ({ id, kind: 'cellgas', label: 'H₂', at, props: {}, caption: 'Hydrogen.' });
+/** A bubble of any gas, labelled with its formula. */
+export const gasPiece = (id, label, at) => ({ id, kind: 'cellgas', label, at, props: {}, caption: null });
+
 /** A strip of one metal (a key of `METALS`); its face says its symbol, or "X" when `sealed`. */
 export const stripPiece = (id, metal, at, { label = null, sealed = false, caption = 'Dip it in a beaker.' } = {}) => ({
   id, kind: 'celldipstrip', label: label ?? (sealed ? 'X' : METALS[metal].symbol), at, props: { metal, sealed }, caption

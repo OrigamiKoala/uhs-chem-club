@@ -16,6 +16,7 @@
 // LIGAR (unit03): the steps for Ligar's own instruments and pieces live in their own file, asked first.
 import { ligarFixture, ligarPiece, ligarSkip, LIGAR_KITS } from './tour-ligar.js';
 import { LANTERNFALL_TOUR } from './tour-lanternfall.js';
+import { demoFor } from './tour-demo.js';
 
 /** What a dial does, by its label. */
 const DIAL = {
@@ -162,12 +163,13 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
   if (!table) return [];
   const kit = table.kit;
   const steps = [];
-  const add = (key, name, desc) => steps.push({ flag: `tour_${kit}_${key}`, name, desc });
+  const demoOf = key => demoFor(kit, key) || demoFor(kit, key.replace(/^(fx_[^_]+)_.+$/, '$1'));
+  const add = (key, name, desc) => steps.push({ flag: `tour_${kit}_${key}`, name, desc, ...(demoOf(key) ? { demo: demoOf(key) } : {}) });
   // What is true on every table is said once in the whole game, never per kit and never again when the Tour is replayed.
-  const addGeneral = (key, name, desc, once = false) => steps.push({ flag: `tour_${key}`, name, desc, ...(once ? { once: true } : {}) });
+  const addGeneral = (key, name, desc, once = false) => steps.push({ flag: `tour_${key}`, name, desc, ...(once ? { once: true } : {}), ...(demoFor('*', key) ? { demo: demoFor('*', key) } : {}) });
 
   if (intro) steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro });
-  addGeneral('table', 'Moving pieces', 'Drag a piece to pick it up and put it down somewhere else, or tap it once and then tap the place you want it to go. The Undo key takes back your last move, and Start Over puts everything back where it began. When your answer is on the table, press Submit.', true);
+  addGeneral('table', 'Moving pieces', 'Drag a piece, or tap it and then its place. Keys: Undo, Start Over, Submit.', true);
 
   // The instruments, in the order they stand on the plate (top to bottom, left to right).
   const fixtures = Object.values(table.fixtures || {}).sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x);
@@ -178,7 +180,11 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
     if (f.kind === 'plaque' || f.kind === 'plate') continue;
     const { title, text } = fixtureStep(f, kit, table);
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
+    // Teeter's benches hold several of one instrument (three vessels, two beakers): one step explains them all.
+    if (twin && kit === 'pans') continue;
     add(twin ? `fx_${f.kind}_${f.id}` : `fx_${f.kind}`, title, text);
+    // Which instrument the step is about, so the Tour can play it (`frame.js` `tourClipMarkup`).
+    steps[steps.length - 1].fx = f.id;
   }
 
   const hasFixture = kind => Object.values(table.fixtures || {}).some(f => f.kind === kind);
@@ -212,13 +218,13 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
 
   // Where answers go.
   const trays = Object.keys(table.zones?.trays || {}).filter(id => !id.startsWith('scr-'));
-  if (trays.length) addGeneral('trays', 'Trays', 'Drag pieces into the trays. When you press Submit, your answer is whatever is in the trays.');
-  if (table.zones?.rail) addGeneral('rail', 'The strip', 'Drag cards onto the strip. They stay in the order you put them, and dropping a card between two others makes them slide apart to make room.');
+  if (trays.length) addGeneral('trays', 'Trays', 'Drag pieces into the trays. The trays are your answer.');
+  if (table.zones?.rail) addGeneral('rail', 'The strip', 'Drag cards onto the strip, in order.');
   const drum = Object.values(table.zones?.containers || {}).find(z => z.id === 'drum');
   if (drum) add('drum', drum.label || 'Drum', 'The drum holds the material to pour. Drag from the drum onto the Pour pan, or tap the drum and then the pan. Each pour moves one fixed amount.');
   if (!LIGAR_KITS.has(kit) && Object.keys(table.zones?.containers || {}).filter(id => id !== 'drum').length && !hasFixture('balance') && !hasFixture('scale')) add('containers', 'Pans', 'Drag a piece onto a pan to put it there. Whatever is on a pan is what gets weighed.');
-  if (table.prediction) addGeneral('prediction', 'Prediction', 'Drag the token that says what you expect into the slot. It is only your guess: nothing is marked right or wrong, and the next part tests it.');
-  if (!LIGAR_KITS.has(kit) && table.recorder && table.recorder.box && table.recorder.box.size.w > 2 && Object.values(table.fixtures || {}).some(f => !f.noRun)) addGeneral('strip', 'Paper strip', 'Each time you take a reading, it is added to the strip as a point, so you can compare your readings.');
+  if (table.prediction) addGeneral('prediction', 'Prediction', 'Drag your guess into the slot. It is not graded.');
+  if (!LIGAR_KITS.has(kit) && table.recorder && table.recorder.box && table.recorder.box.size.w > 2 && Object.values(table.fixtures || {}).some(f => !f.noRun)) addGeneral('strip', 'Paper strip', 'Each reading adds a point.');
 
   for (const t of table.tools || []) {
     const entry = TOOL[t];

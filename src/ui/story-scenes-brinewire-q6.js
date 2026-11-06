@@ -20,7 +20,7 @@ function rect(ctx, x, y, w, h, fill, edge = null) {
 
 /** Beat one: the supply against the cell. */
 function push(ctx, w, h, t) {
-  text(ctx, 'A supply stronger than the cell pushes it backwards', w / 2, 36, { size: 24, color: C.dust });
+  text(ctx, 'A supply stronger than the cell drives it backwards', w / 2, 36, { size: 24, color: C.dust });
   const p = ease(win(t, 0.02, 0.18));
   const PX = 300; const x0 = 150;
   const cellV = cellE0('cu', 'zn'); const supV = 1.5;

@@ -17,6 +17,8 @@ import { PLATE_COLORS, mulberry32 } from '../../engine/plates.js';
 import { registerFixture } from './ph-registry.js';
 import { frameOf } from './matter-draw.js';
 import { ACIDS, bufferState, fmt } from '../../engine/phdata.js';
+import { wobble } from '../../engine/phmotion.js';
+import { withDial } from './ph-replay.js';
 import { cellGrid, H_INK, OH_INK, ACID_INK, BASE_INK, ionText } from './ph-read.js';
 import { put, ball } from './ph-flask.js';
 import './ph-buffer-tour.js';
@@ -77,9 +79,9 @@ function paintMix(ctx, f, state, b) {
     show.forEach((s, i) => {
       const c = cells[i];
       const R = Math.min(c.cw, c.ch) * 0.44;
-      const jx = (g() - 0.5) * c.cw * 0.12; const jy = (g() - 0.5) * c.ch * 0.12;
+      const wb = wobble(i, b.clock || 0); const jx = (g() - 0.5) * c.cw * 0.12 + wb.wx * c.cw * 0.5; const jy = (g() - 0.5) * c.ch * 0.12 + wb.wy * c.ch * 0.5;
       ball(ctx, F.x(c.x + jx), F.y(c.y + jy), Math.max(1.4, F.len(R)), s.ink);
-      if (s.ring) { ctx.strokeStyle = s.ring; ctx.lineWidth = Math.max(1.4, F.len(0.32)); ctx.beginPath(); ctx.arc(F.x(c.x + jx), F.y(c.y + jy), Math.max(1.4, F.len(R)) + 0.8, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
+      if (s.ring && !ctx.__ball && !ctx.__skip) { ctx.strokeStyle = s.ring; ctx.lineWidth = Math.max(1.4, F.len(0.32)); ctx.beginPath(); ctx.arc(F.x(c.x + jx), F.y(c.y + jy), Math.max(1.4, F.len(R)) + 0.8, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
     });
     // The legend: a swatch and a name for every species drawn.
     const items = [];
@@ -140,7 +142,11 @@ function dressMix(f, state, c) {
   return group;
 }
 
-registerFixture('phmix', { paint: paintMix, run, dress3d: dressMix });
+registerFixture('phmix', {
+  // The pours in the order they were made: all the acid, then the base.
+  replay: { count: f => Math.round(f.dials.na.value + f.dials.nb.value), at: (f, i) => withDial(withDial(f, 'na', Math.min(i, Math.round(f.dials.na.value))), 'nb', Math.max(0, i - Math.round(f.dials.na.value))) },
+  demo: (f, t) => ({ dials: { na: Math.floor(t / 0.9) % (Math.min(f.dials.na.max, 5) + 1) } }),
+  bodies3d: true, paint: paintMix, run, dress3d: dressMix, live: () => true });
 void THREE;
 
 /**

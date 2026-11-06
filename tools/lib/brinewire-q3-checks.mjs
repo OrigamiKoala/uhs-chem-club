@@ -97,7 +97,7 @@ export async function checkBrinewireQ3({ ok, fail }) {
   holds(!run(2, s3(1, 1, 1)).ok && run(2, s3(1, 1, 1)).msg.includes('Cell A'), 'stage 3 wrong side is not refused naming Cell A');
   holds(!run(2, s3(2, 2, 1)).ok && /swung to the left/.test(run(2, s3(2, 2, 1)).msg), 'stage 3 refusal does not name the needle');
   holds(run(2, [go('ra'), dial('ra', 'says', 2)]).notYet, 'stage 3 accepts unset cells');
-  const m4 = (a, b) => [go('rig'), put(a, 'slot:rig.mL'), put(b, 'slot:rig.mR')];
+  const m4 = (a, b) => [go('rig'), { setDial: { fixture: 'scene', dial: 'm0', value: a === 'leave' ? 1 : 2 } }, { setDial: { fixture: 'scene', dial: 'm1', value: b === 'leave' ? 1 : 2 } }];
   holds(run(3, m4('leave', 'join')).ok && !run(3, m4('join', 'leave')).ok, 'stage 4 grading');
   holds(/10 Zn²⁺ ions.*8.*4 atoms.*6/.test(run(3, m4('join', 'leave')).msg), `stage 4 refusal does not name the counts (${run(3, m4('join', 'leave')).msg})`);
   holds(run(4, [go('rig'), dial('pick', 'value', 1)]).ok && !run(4, [go('rig'), dial('pick', 'value', 2)]).ok, 'stage 5 grading');

@@ -37,7 +37,7 @@ export async function checkBrinewireBoss({ ok, fail }) {
   const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
   const typed = (entry, value) => ({ type: { entry, value: String(value) } });
   const seat = (strip, beaker) => put(`s-${strip}`, `slot:dip.b${B.CHECKS.P1_METALS.indexOf(beaker)}`);
-  const rail = ids => ids.map((id, i) => put(`r-${id}`, `rail:${i}`));
+  const rail = ids => ids.map((id, i) => put(`s-${id}`, `rail:${i}`));
 
   /* ---- phase 1 ---- */
   near(C.METALS.fe.E0, -0.44, 1e-9, 'Fe E°'); near(C.METALS.ni.E0, -0.26, 1e-9, 'Ni E°'); near(C.METALS.sn.E0, -0.138, 1e-9, 'Sn E°'); near(C.METALS.ag.E0, 0.80, 1e-9, 'Ag E°');

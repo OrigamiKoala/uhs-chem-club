@@ -15,7 +15,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture } from './pans-registry.js';
 import { say, frameOf } from './matter-draw.js';
-import { A_INK, B_INK } from './pans-pan.js';
+import { A_INK, B_INK, driftOf } from './pans-pan.js';
 import { KSP, rng, molarSolubility, dissolveState, simulatePan, tallyWindow } from '../../engine/eqdata.js';
 import './pans-beaker-tour.js';
 
@@ -113,7 +113,7 @@ export function beakerLayout(p, w) {
 /** Dots to draw for a concentration `c` against the reference `ref`: a sample, more as the figure is larger, never more than 12. */
 const extraDots = (c, ref) => (c > 0 ? Math.min(12, Math.max(1, Math.round((c / ref) * 3))) : 0);
 
-function paintJar(ctx, F, r, f, L, tallyKey) {
+function paintJar(ctx, F, r, f, L, tallyKey, clock = 0) {
   const { x, y, w, h } = L.pict;
   const p = f.props;
   const ref = p.ref ?? r.s0;
@@ -145,8 +145,10 @@ function paintJar(ctx, F, r, f, L, tallyKey) {
   const g = rng(41 + nCat * 7 + nAn * 13);
   const top = surface + 1.4; const bot = Math.max(top + 2, heapTop - 1.2);
   const dot = (ink, k) => {
-    const cx = x + 1.2 + g() * (w - 2.4);
-    const cy = top + g() * (bot - top);
+    // Each ion wanders about its own spot; the spot is fixed by its number, so a still beaker holds still.
+    const d = driftOf(k + (ink === B_INK ? 40 : 0), clock, 1.6);
+    const cx = Math.min(x + w - 1.2, Math.max(x + 1.2, x + 1.2 + g() * (w - 2.4) + d.dx * 1.1));
+    const cy = Math.min(bot, Math.max(top, top + g() * (bot - top) + d.dy * 1.1));
     ctx.fillStyle = ink;
     ctx.beginPath(); ctx.arc(F.x(cx), F.y(cy), Math.max(1.8, F.len(p.compact ? 0.6 : 0.8)), 0, Math.PI * 2); ctx.fill();
     void k;
@@ -181,7 +183,7 @@ function paintBeaker(ctx, f, state, b) {
   const L = beakerLayout(p, f.size.w);
   const [m, n] = r.S.ions;
   if (p.eq !== false && !p.compact) say(ctx, dissolveEquation(p.salt), F.x(3.5), F.y(7.4), F.size(2.3, 5.8), { color: DUST, maxW: F.len(f.size.w - 7) });
-  paintJar(ctx, F, r, f, L, f.id);
+  paintJar(ctx, F, r, f, L, f.id, b.clock || 0);
   const ref = p.ref ?? r.s0;
   const barMax = p.barMax || [m * ref * 1.15, n * ref * 1.15];
   const rowOf = id => L.rows.find(q => q.id === id);
@@ -214,7 +216,7 @@ function run(state, fid) {
   return { x: next, y: Math.round((after.dissolved / r.s0) * 1000) / 1000, label: fid, dials: { [fid]: { n: next } } };
 }
 
-registerFixture('beaker', { paint: paintBeaker, run });
+registerFixture('beaker', { paint: paintBeaker, run, live: () => true });
 
 /**
  * A beaker of `salt` (a key of `KSP`). Options:

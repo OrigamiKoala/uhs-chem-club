@@ -14,8 +14,9 @@ import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture } from './ph-registry.js';
 import { frameOf } from './matter-draw.js';
 import { fractions, fmt } from '../../engine/phdata.js';
+import { windowAt, shuffle, scratch } from '../../engine/phmotion.js';
 import { ACID_INK, BASE_INK, ionText } from './ph-read.js';
-import { put } from './ph-flask.js';
+import { put, ball } from './ph-flask.js';
 import './ph-strip-tour.js';
 
 const DUST = PLATE_COLORS.dust;
@@ -89,6 +90,16 @@ function paintStrip(ctx, f, state, b) {
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(2)) + 0.5, Math.round(F.y(by + 3)) + 0.5, Math.round(F.len(9)), Math.round(F.len(4)));
     put(ctx, 'colour of the solution', F.x(12.5), F.y(by + 5), F.size(2.1, 6), { align: 'left', color: DUST });
   }
+  // Below the curves: 40 molecules of the acid in a row. The share in the second form is the curve's at the dial's pH; the molecules trade a proton
+  // while that share holds, so the row keeps changing and the count of each form stays.
+  const rowY = f.size.h - 4.2;
+  const nA = Math.round(r.fr.A * 40);
+  const now = windowAt(40, nA, 5 + r.ai, b.clock || 0, (scratch(f).order ||= shuffle(40, 5 + r.ai)));
+  const pitch = (w - 4) / 40;
+  now.forEach((m, i) => {
+    const asA = m.dir === 0 ? m.ion : (m.p > 0.5 ? m.dir === 1 : m.dir === -1);
+    ball(ctx, F.x(2 + (i + 0.5) * pitch + m.wx * pitch * 0.4), F.y(rowY + m.wy * 1.2), Math.max(1.3, F.len(Math.min(pitch * 0.4, 1.1))), asA ? inkA : inkHA);
+  });
   void fmt;
 }
 
@@ -101,7 +112,7 @@ function dialed(state, f) {
   return { props: { reach } };
 }
 
-registerFixture('phstrip', { paint: paintStrip, dialed });
+registerFixture('phstrip', { bodies3d: true, paint: paintStrip, dialed, live: () => true });
 
 /**
  * A fraction strip. `acids`: `[{ name, pKa, HA, A }]` (one for a plain strip; several add an "Acid" dial); `indicator` draws the two forms as
@@ -113,7 +124,7 @@ export function stripFixture(id, at, { acids, indicator = false, start = 5, w = 
   const nd = Object.keys(dials).length;
   const plotTop = Math.round((10.5 + (nd - 1) * 5 + 3.6 + 3) * 10) / 10;
   const plotH = 22;
-  const h = Math.round((plotTop + plotH + 9.4 + 4 + (indicator ? 6 : 0)) * 10) / 10;
+  const h = Math.round((plotTop + plotH + 9.4 + 4 + (indicator ? 6 : 0) + 5) * 10) / 10;
   return {
     fixture: {
       id, kind: 'phstrip', label: title, at: { ...at }, size: { w, h }, noRun: true, dials,

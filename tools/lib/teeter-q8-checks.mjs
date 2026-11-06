@@ -111,7 +111,7 @@ export async function checkTeeterQ8(ok, bad) {
     const r = s3.check(typed(v));
     if (r.ok) bad(`q8-free typed K ${v} (${why}) is accepted`);
     else if (!r.msg || /56\.?[56]|57\.|846/.test(r.msg)) bad(`q8-free typed K ${v} (${why}): refusal missing or carries the answer: ${r.msg}`);
-    else if (!/pan/i.test(r.msg)) bad(`q8-free typed K ${v} (${why}): refusal does not name what the pans show: ${r.msg}`);
+    else if (!/vessel/i.test(r.msg)) bad(`q8-free typed K ${v} (${why}): refusal does not name what the vessels show: ${r.msg}`);
     else ok(`q8-free typed K ${v} (${why}) refused: ${r.msg.slice(0, 70)}…`);
   }
   if (s3.check(q.stateFor(2, [])).notYet) ok('q8-free a blank answer box is not yet'); else bad('q8-free a blank answer box is judged');

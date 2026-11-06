@@ -292,7 +292,7 @@ export const STAGES = [
     ],
     check: rankCheck(8),
     reward: {
-      log: 'Bond size, electronegativity, extra oxygen and resonance each changed the strength.',
+      log: 'Bond size, electronegativity, extra oxygen and resonance each changed how strong the acid is.',
       title: 'What Sets Strength',
       body: 'An acid is strong when its conjugate base holds the charge well: by a larger atom, a more electronegative atom, electron-pulling neighbours or resonance. Each factor you raced works through the conjugate base.'
     }

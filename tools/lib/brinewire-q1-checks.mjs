@@ -113,9 +113,16 @@ export async function checkBrinewireQ1({ ok, fail }) {
   const t4 = half(3, Q.SOLUTIONS[3]);
   same([L.halfOf(t4.fixtures.ha).eRight, L.halfOf(t4.fixtures.hb).eLeft, L.tallyRead(t4, 'tl').given, L.tallyRead(t4, 'tl').taken], [6, 6, 6, 6], 'stage 4 tally');
   // the probe reads what the planner says
-  const t1 = half(0, [put('k-zinc', seat)]);
-  same(P.probeRead(t1, 'probe').rows, [{ name: 'Zn', before: 0, after: 2 }], 'probe on the zinc card');
-  const t8 = half(7, [put('r-b', seat)]);
+  // (the probe is no longer on a stage's table, so it is read on a table of its own)
+  const M = await import('../../src/learn/table/model.js');
+  const C = await import('../../src/learn/table/kits/cell.js');
+  const probeTable = (id, card, script) => {
+    const pr = P.probeFixture('probe', { x: 60, y: 30 }, { rows: 5, strip: false });
+    return M.runScript(M.createTable(C.cellTable({ pieces: [P.probeCard(id, card, { x: 20, y: 90 })], fixtures: [pr.fixture], zones: { slots: [pr.slot] } }, { w: 140, h: 110 }), 'probe'), script);
+  };
+  const t1 = probeTable('k-cu', 'cu', [put('k-cu', seat)]);
+  same(P.probeRead(t1, 'probe').rows, [{ name: 'Cu', before: 0, after: 2 }], 'probe on the copper card');
+  const t8 = probeTable('r-b', 'b', [put('r-b', seat)]);
   same(P.probeRead(t8, 'probe').rows.map(r => `${r.name}${r.before}/${r.after}`), ['Ag1/1', 'N5/5', 'O-2/-2', 'Na1/1', 'Cl-1/-1'], 'probe on reaction B');
   ok('q1-halves instruments: the ledger rows, tally and probe read what the planners say through the real action path');
 
@@ -141,10 +148,10 @@ export async function checkBrinewireQ1({ ok, fail }) {
     const t = paint(s.fixtures[fid], s);
     holds(t.text.includes('Before') && t.text.includes('After') && t.nan === 0, `${fid} does not paint both windows`);
   }
-  const pb = half(0, [put('k-copper', seat)]);
+  const pb = probeTable('k-cu', 'cu', [put('k-cu', seat)]);
   const pt = paint(pb.fixtures.probe, pb);
   holds(pt.text.includes('+2') && pt.text.includes('0') && pt.text.includes('Cu'), 'the probe does not print copper +2 and 0');
-  const none = paint(half(0, []).fixtures.probe, half(0, []));
+  const none = paint(probeTable('k-cu', 'cu', []).fixtures.probe, probeTable('k-cu', 'cu', []));
   holds(none.text.includes('Nothing on the seat'), 'an empty probe does not say so');
   ok('q1-halves painters: every option reaches the picture, no target count and no verdict is printed');
 
@@ -153,11 +160,9 @@ export async function checkBrinewireQ1({ ok, fail }) {
   holds(run(0, solve1).ok, 'stage 1 refuses its own solution');
   const blank1 = run(0, []);
   holds(!blank1.ok && blank1.notYet, 'stage 1 accepts a blank table');
-  const noProbe = run(0, Q.CHECKS.S1_CARDS.map(c => put(`k-${c}`, X.cardChanged(c) ? 'tray:same' : 'tray:changed')));
-  holds(!noProbe.ok && /has not read/.test(noProbe.msg), `stage 1 wrong sort without a reading is not told to read (${noProbe.msg})`);
   const wrong1 = run(0, Q.MISSES[0]);
   holds(!wrong1.ok && /\+6 before and \+6 after/.test(wrong1.msg), `stage 1 slip on sulfate does not name the probe's reading (${wrong1.msg})`);
-  ok('q1-halves stage 1: a right sort needs no extra pull, a wrong one names the probe\'s two numbers');
+  ok('q1-halves stage 1: tapping the right particles passes, a wrong mark names the two oxidation numbers');
 
   /* ---- stages 3, 4, 6, 7: slips named by a reading ---- */
   holds(run(2, Q.SOLUTIONS[2]).ok, 'stage 3 refuses 2 electrons on the right of Zn and 2 on the left of Cu');
@@ -189,23 +194,20 @@ export async function checkBrinewireQ1({ ok, fail }) {
   holds(run(4, Q.SOLUTIONS[4]).ok, 'stage 5 refuses its own solution');
   const s5a = run(4, Q.MISSES[4]);
   holds(!s5a.ok && /Ag⁺ ions became Ag atoms/.test(s5a.msg), `stage 5 marks the ion (${s5a.msg})`);
-  const s5b = run(4, [put('k-mg', 'slot:s5a'), put('k-cu', 'slot:s5b')]);
-  holds(!s5b.ok && /not in the first beaker/.test(s5b.msg), `stage 5 wrong beaker (${s5b.msg})`);
   holds(run(4, []).notYet, 'stage 5 accepts an empty table');
   holds(run(7, Q.SOLUTIONS[7]).ok && !run(7, Q.MISSES[7]).ok, 'stage 8 grading');
-  const s8a = run(7, [put('r-a', seat), put('r-a', 'tray:not'), put('r-b', 'tray:not'), put('r-c', 'tray:redox'), put('r-d', 'tray:not')]);
-  holds(!s8a.ok && /read Zn as 0 before and \+2 after in Reaction A/.test(s8a.msg), `stage 8 redox in the wrong tray (${s8a.msg})`);
-  const s8b = run(7, [put('r-b', seat), put('r-b', 'tray:redox'), put('r-a', 'tray:redox'), put('r-c', 'tray:redox'), put('r-d', 'tray:not')]);
-  holds(!s8b.ok && /same number before and after on every element of Reaction B/.test(s8b.msg), `stage 8 not-redox in the redox tray (${s8b.msg})`);
-  const s8c = run(7, [put('r-a', 'tray:redox'), put('r-b', 'tray:not'), put('r-c', 'tray:redox'), put('r-d', 'tray:redox')]);
-  holds(!s8c.ok && /has not been laid on the probe/.test(s8c.msg), `stage 8 unread card (${s8c.msg})`);
+  const s8a = run(7, [dial('scene', 'r2', 1)]);
+  holds(!s8a.ok && /In Reaction A, Zn goes from 0 to \+2/.test(s8a.msg), `stage 8 a redox reaction left unmarked (${s8a.msg})`);
+  const s8b = run(7, [dial('scene', 'r0', 1), dial('scene', 'r1', 1), dial('scene', 'r2', 1)]);
+  holds(!s8b.ok && /every element keeps the same number/.test(s8b.msg), `stage 8 a not-redox reaction marked (${s8b.msg})`);
+  holds(run(7, []).notYet, 'stage 8 accepts an empty table');
   ok('q1-halves stages 5 and 8: right answers pass, wrong ones are refused with the window or the probe\'s reading');
 
   /* ---- no refusal carries the rule its stage asks for ---- */
   const rule = /must be equal|should be equal|has to equal|to balance (the )?charge|rises?|goes up|number that changes|differs? is redox|lowest common|scale (the )?halves/i;
   const msgs = [];
   Q.MISSES.forEach((m, i) => { const r = run(i, m); if (r.msg) msgs.push(r.msg); });
-  for (const m of [s3a, s3b, s3c, s4, s5a, s5b, s6a, s6b, s6c, s7, s8a, s8b, s8c, wrong1, noProbe].map(r => r.msg)) msgs.push(m);
+  for (const m of [s3a, s3b, s3c, s4, s5a, s6a, s6b, s6c, s7, s8a, s8b, wrong1].map(r => r.msg)) msgs.push(m);
   for (const m of msgs) holds(!rule.test(m), `a refusal carries the rule: "${m}"`);
   // a refusal never carries its stage's answer (the balanced coefficients)
   holds(!/\b8 H|4 H₂O|5 e/.test(s6a.msg + s6b.msg + s6c.msg), 'a stage 6 refusal carries the balanced half');

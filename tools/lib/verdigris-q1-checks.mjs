@@ -70,9 +70,21 @@ export async function checkVerdigrisQ1({ ok, fail }) {
   /* ---- stages 1, 3, 5, 7 ---- */
 
   const chip = f => `c-${f.replace(/[^A-Za-z0-9]/g, m => `u${m.charCodeAt(0)}`)}`;
-  holds(run(0, [put(chip('H₃O⁺'), 'slot:holds')]).ok, 'stage 1 refuses H₃O⁺');
-  for (const f of ['HCl', 'Cl⁻', 'H₂O', 'OH⁻']) { const r = run(0, [put(chip(f), 'slot:holds')]); holds(!r.ok && r.msg, `stage 1 accepts or gives no reason for ${f}`); }
-  holds(run(2, [{ setDial: { fixture: 'verdict', dial: 'value', value: 2 } }]).ok && !run(2, [{ setDial: { fixture: 'verdict', dial: 'value', value: 1 } }]).ok && !run(2, [{ setDial: { fixture: 'verdict', dial: 'value', value: 3 } }]).ok, 'stage 3 verdicts');
+  // Stages 1 and 3 are graded on where the proton is carried on the bench, never on a card or a dial.
+  const carry = (from, to) => put(`bench.h.${from}`, `slot:bench.take.${to}`);
+  holds(run(0, [carry('hcl', 'h2o')]).ok, 'stage 1 refuses the proton carried from HCl to water');
+  for (const [a, b] of [['h2o', 'hcl'], ['hcl', 'hcl'], ['h2o', 'h2o']]) { const r = run(0, [carry(a, b)]); holds(!r.ok && r.msg, `stage 1 accepts or gives no reason for ${a} to ${b}`); }
+  holds(run(0, []).notYet && run(2, []).notYet, 'stages 1 and 3 wait for a proton to be carried');
+  holds(run(2, [carry('h2o', 'nh3')]).ok && !run(2, [carry('nh3', 'h2o')]).ok && run(2, [carry('nh3', 'h2o')]).msg, 'stage 3: the water gives to the ammonia, the other way is refused with a reading');
+  holds(!run(0, [carry('hcl', 'h2o'), carry('h2o', 'hcl')]).ok, 'stage 1 accepts two protons moved at once');
+  { // the wrong move is replayed: the bench marks itself, and the proton flies back at the replay's last step
+    const t = Q.stateFor(0, [carry('h2o', 'hcl')]).table;
+    const K = (await import('../../src/learn/table/kits/ph.js')).PH_KIT;
+    K.settle(t); K.onMiss(t);
+    holds(t.fixtures.bench.props.wrong === true && t.fixtures.bench.props.replay?.n === 1, 'a wrong proton is not marked for replay');
+    const ok2 = Q.stateFor(0, [carry('hcl', 'h2o')]).table; K.settle(ok2);
+    holds(ok2.fixtures.bench.props.wrong === false, 'the right proton is marked wrong');
+  }
   holds(run(4, [put(chip('H₂O'), 'slot:both')]).ok, 'stage 5 refuses water');
   for (const f of ['HNO₃', 'NH₃', 'NO₃⁻', 'NH₄⁺']) holds(!run(4, [put(chip(f), 'slot:both')]).ok, `stage 5 accepts ${f}`);
   holds(run(6, [{ setDial: { fixture: 'verdict', dial: 'value', value: 2 } }]).ok && !run(6, [{ setDial: { fixture: 'verdict', dial: 'value', value: 1 } }]).ok, 'stage 7 verdicts');

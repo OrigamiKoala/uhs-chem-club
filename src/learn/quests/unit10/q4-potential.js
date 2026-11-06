@@ -28,6 +28,8 @@ import {
 } from '../../table/kits/cell.js';
 import { METALS, cellE0, electronsMoved, deltaG0, logK, activityOrder, fmt, sci } from '../../engine/celldata.js';
 
+import { attachScenes } from '../../table/kits/cell-attach.js';
+
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
@@ -98,20 +100,19 @@ export const STAGES = [
       S1_METALS.map((m, i) => electrodePiece(`e-${m}`, m, { x: 112 + (i % 2) * 34, y: 10 + Math.floor(i / 2) * 20 })),
       {
         w: 176, h: 108,
-        pieces: S1_METALS.map((m, i) => tag(`r-${m}`, METALS[m].symbol, { x: 30 + i * 36, y: 72 })),
         zones: { rail: { at: { x: 88, y: 98 }, size: { w: 150, h: 12 }, first: 'Lowest reading', last: 'Highest reading', items: [], start: [] } }
       }
     ),
     hints: [
-      'Drag an electrode into the seat to read it, lift it out, and drag the four name cards onto the rail.',
+      'Drag an electrode into the seat to read it, then drag the four electrodes onto the rail.',
       'Compare the signed readings on the strip, each taken against the same reference.',
       'Line the cards up from the lowest reading to the highest, negative readings first.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < S1_METALS.length) return { ok: false, notYet: true, msg: `Put all ${S1_METALS.length} cards on the rail.` };
-      const want = S1_WANT.map(m => `r-${m}`);
+      if (order.length < S1_METALS.length) return { ok: false, notYet: true, msg: `Put all ${S1_METALS.length} electrodes on the rail.` };
+      const want = S1_WANT.map(m => `e-${m}`);
       if (order.join() === want.join()) return { ok: true };
       const k = order.findIndex((id, i) => i > 0 && E(id.slice(2)) < E(order[i - 1].slice(2)));
       const a = t.pieces[order[k - 1]]; const b = t.pieces[order[k]];
@@ -160,7 +161,7 @@ export const STAGES = [
       return {
         log: 'The cell voltage came from the gap between two readings.',
         title: 'Cell Voltage',
-        body: `The cell's standard voltage, E°cell, is the higher reading minus the lower one: ${fmt(E('ag'), 2)} − (${fmt(E('mg'), 2)}) = ${fmt(want, 2)} V. The metal with the higher reading takes the electrons and is the cathode; the lower one gives them and is the anode.`
+        body: `E°cell = ${fmt(E('ag'), 2)} − (${fmt(E('mg'), 2)}) = ${fmt(want, 2)} V: the metal with the higher reading is the cathode and the lower one the anode.`
       };
     }
   },
@@ -169,33 +170,24 @@ export const STAGES = [
   {
     id: 's3-lamp',
     title: 'Which Cells Run',
-    prompt: 'Run the four cells and sort them by whether the lamp lights.',
+    prompt: 'Run the four cells and mark the ones whose lamp lights.',
     widget,
     table: (() => {
-      const rigs = S3_CELLS.map(([id, l, r, name], i) => rigFixture(id, { x: 26 + (i % 2) * 52, y: 26 + Math.floor(i / 2) * 50 }, { left: l, right: r, title: name }));
-      return cellTable({
-        pieces: S3_CELLS.map(([id,,, name], i) => tag(`c${id.slice(1)}`, name, { x: 22 + i * 36, y: 108 })),
-        fixtures: rigs,
-        zones: {
-          trays: [
-            { id: 'lit', label: 'Lamp lit', at: { x: 134, y: 24 }, size: { w: 52, h: 36 }, cell: 25, cellH: 12 },
-            { id: 'dark', label: 'Lamp dark', at: { x: 134, y: 70 }, size: { w: 52, h: 36 }, cell: 25, cellH: 12 }
-          ]
-        }
-      }, { w: 176, h: 120 });
+      const rigs = S3_CELLS.map(([id, l, r, name], i) => rigFixture(id, { x: 26 + (i % 2) * 52, y: 26 + Math.floor(i / 2) * 50 }, { left: l, right: r, title: name, markable: true }));
+      return cellTable({ fixtures: rigs }, { w: 104, h: 104 });
     })(),
     hints: [
-      'Press "Run" on each cell, then drag the four cards into the two trays.',
+      'Press "Run" on each cell, then tap the lamp of each cell that lights.',
       'Compare each cell\'s voltmeter reading with its lamp, and look at which metal stands on which side.',
       'Look at the sign of each reading: the lamp follows it.'
     ],
     check(state) {
       const t = state.table;
-      const where = Object.fromEntries(S3_CELLS.map(([id]) => [id, t.pieces[`c${id.slice(1)}`].zone]));
-      if (Object.values(where).some(z => !z || !z.startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Drag every card into a tray.' };
+      const marked = id => Math.round(t.fixtures[id].dials.mark.value) === 1;
+      if (!S3_CELLS.some(([id]) => marked(id)) && !S3_CELLS.every(([id]) => rigRead({ fixtures: t.fixtures }, id).now)) return { ok: false, notYet: true, msg: 'Run every cell, then tap the lamps that light.' };
       for (const [id, l, r, name] of S3_CELLS) {
         const lit = cellE0(r, l) > 1e-9;
-        if (where[id] === (lit ? 'tray:lit' : 'tray:dark')) continue;
+        if (marked(id) === lit) continue;
         const read = rigRead({ fixtures: t.fixtures }, id);
         if (!read.now) return { ok: false, msg: `${name} has not been run yet.` };
         return { ok: false, msg: `${name} read ${voltText(read.now.V)} V and its lamp ${read.now.lit ? 'lit' : 'stayed dark'}.` };
@@ -207,7 +199,7 @@ export const STAGES = [
       return {
         log: 'The cells that lit the lamp read above zero.',
         title: 'A Positive Voltage',
-        body: `${rows.join(', ')}. A cell whose standard voltage is positive runs by itself; the same pair the other way round reads the same size with the opposite sign and does not.`
+        body: `${rows.join(', ')}. A positive standard voltage runs by itself; reversed, the sign flips and it does not.`
       };
     }
   },
@@ -234,7 +226,7 @@ export const STAGES = [
     hints: [
       'Use the four cards and the slot.',
       'Picture what each voltage counts, and what changes when twice as much reacts.',
-      'Ask whether the push on each electron depends on how many electrons there are.'
+      'Ask whether the voltage depends on how many electrons there are.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -290,7 +282,7 @@ export const STAGES = [
       return {
         log: 'The voltage stayed put while the energy doubled.',
         title: 'Volts Are Per Electron',
-        body: `${verdict}Written twice over, the cell still read ${voltText(b.V)} V, but it released ${fmt(b.kJ, 0)} kJ instead of ${fmt(a.kJ, 0)} kJ. A voltage is the energy for each electron pushed through, so it does not change with the amount of reaction; the energy does.`
+        body: `${verdict}Written twice, the cell still read ${voltText(b.V)} V but released ${fmt(b.kJ, 0)} kJ instead of ${fmt(a.kJ, 0)} kJ, since voltage is energy per electron.`
       };
     }
   },
@@ -305,7 +297,7 @@ export const STAGES = [
     table: cellTable({
       fixtures: [
         rigFixture('rig', { x: 48, y: 42 }, { left: S6.anode, right: S6.cathode, equation: true, w: 70, title: 'Magnesium with copper' }),
-        plaqueFixture('plate', 'For reference', { x: 126, y: 42 }, ['1 mol of electrons carries 96,485 C', '1 V pushes 1 J for each C'], { w: 52 })
+        plaqueFixture('plate', 'For reference', { x: 126, y: 42 }, ['1 mol of electrons carries 96,485 C', '1 V is 1 J of energy for each C'], { w: 52 })
       ]
     }, { w: 164, h: 84 }),
     hints: [
@@ -414,6 +406,9 @@ export const STAGES = [
   }
 ];
 
+/** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
+attachScenes(STAGES, { compact: [1, 2, 7], skip: [0], demos: { 3: 'running' } });
+
 /** The zinc–copper cell at a setting, from the rig's own planner (stage 5 reward). */
 function rigAtZnCu(scale) {
   const V = cellE0('cu', 'zn'); const n = electronsMoved('zn', 'cu') * scale;
@@ -427,9 +422,9 @@ export const DEBRIEF = {
 };
 
 export const SOLUTIONS = [
-  [...S1_METALS.map(m => put(`e-${m}`, SEAT)), ...S1_WANT.map((m, i) => put(`r-${m}`, `rail:${i}`))],
+  [...S1_METALS.map(m => put(`e-${m}`, SEAT)), ...S1_WANT.map((m, i) => put(`e-${m}`, `rail:${i}`))],
   [put('e-mg', SEAT), put('e-ag', SEAT), typed('e', fmt(cellE0('ag', 'mg'), 2))],
-  [...S3_CELLS.map(([id]) => run(id)), ...S3_CELLS.map(([id, l, r]) => put(`c${id.slice(1)}`, cellE0(r, l) > 0 ? 'tray:lit' : 'tray:dark'))],
+  [...S3_CELLS.map(([id]) => run(id)), ...S3_CELLS.filter(([, l, r]) => cellE0(r, l) > 0).map(([id]) => dial(id, 'mark', 1))],
   [put('same', 'slot:guess')],
   [run('rig'), dial('rig', 'scale', 2), run('rig'), dial('pick', 'value', 1)],
   [run('rig'), typed('kj', fmt(-deltaG0(cellE0('cu', 'mg'), 2), 0))],
@@ -438,9 +433,9 @@ export const SOLUTIONS = [
 ];
 
 export const MISSES = [
-  [put('e-mg', SEAT), put('e-zn', SEAT), ...['mg', 'zn', 'ag', 'cu'].map((m, i) => put(`r-${m}`, `rail:${i}`))],
+  [put('e-mg', SEAT), put('e-zn', SEAT), ...['mg', 'zn', 'ag', 'cu'].map((m, i) => put(`e-${m}`, `rail:${i}`))],
   [put('e-mg', SEAT), put('e-ag', SEAT), typed('e', '-1.57')],
-  [run('ra'), run('rb'), run('rc'), run('rd'), put('ca', 'tray:dark'), put('cb', 'tray:lit'), put('cc', 'tray:lit'), put('cd', 'tray:dark')],
+  [run('ra'), run('rb'), run('rc'), run('rd'), dial('rb', 'mark', 1), dial('rc', 'mark', 1)],
   [],
   [run('rig'), dial('rig', 'scale', 2), run('rig'), dial('pick', 'value', 2)],
   [typed('kj', '261')],

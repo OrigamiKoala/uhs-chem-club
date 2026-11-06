@@ -96,6 +96,11 @@ function paintRig(ctx, f, state, b) {
   ctx.beginPath(); ctx.arc(F.x(lamp.x), F.y(lamp.y), Math.max(3, F.len(1.9)), 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = STEEL; ctx.stroke();
   put(ctx, 'Lamp', F.x(lamp.x), F.y(lamp.y + 4), F.size(1.9, 5.6), { color: DUST });
+  if (p.markable) {
+    const on = Math.round(f.dials.mark?.value ?? 0) === 1;
+    ctx.strokeStyle = on ? PLATE_COLORS.amber : STEEL; ctx.lineWidth = Math.max(1.4, F.len(on ? 0.6 : 0.3)); ctx.setLineDash?.(on ? [] : [2, 2]);
+    ctx.beginPath(); ctx.arc(F.x(lamp.x), F.y(lamp.y), Math.max(5, F.len(3.4)), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash?.([]); ctx.lineWidth = 1;
+  }
   // The names under the beakers.
   put(ctx, L.symbol, F.x(lx + cup.w / 2), F.y(cy + cup.h + 2.6), F.size(2.8, 7), { color: TEXT, weight: 700 });
   put(ctx, R.symbol, F.x(rx + cup.w / 2), F.y(cy + cup.h + 2.6), F.size(2.8, 7), { color: TEXT, weight: 700 });
@@ -155,7 +160,7 @@ registerFixture('cellrig', { paint: paintRig, run, dress3d: dressRig });
  * A ready-built cell with metal ids `left` and `right` (keys of `METALS`). Options: `energy` (count the energy released), `equation` (print the
  * equation as arranged), `scalable` (a dial writes it once or twice over), `w`, `title`. Layout is fixed; `w` 44 is the smallest.
  */
-export function rigFixture(id, at, { left, right, energy = false, equation = false, scalable = false, w = null, title = null } = {}) {
+export function rigFixture(id, at, { left, right, energy = false, equation = false, scalable = false, w = null, title = null, markable = false } = {}) {
   const { cup } = RIG_UNIT;
   const width = w ?? (energy ? 70 : 46);
   const oy = scalable ? 11 : 0;
@@ -169,11 +174,12 @@ export function rigFixture(id, at, { left, right, energy = false, equation = fal
     last: { min: 0, max: 2, step: 1, value: 0, label: 'Last run' },
     r1: { min: 0, max: 1, step: 1, value: 0, label: 'Run at 1' },
     r2: { min: 0, max: 1, step: 1, value: 0, label: 'Run at 2' },
+    ...(markable ? { mark: { min: 0, max: 1, step: 1, value: 0, label: 'Lamp lit' } } : {}),
     ...(scalable ? { scale: { min: 1, max: 2, step: 1, value: 1, label: 'Equation written', labels: ['once', 'twice over'] } } : {})
   };
   return {
     id, kind: 'cellrig', label: title ?? `${METALS[left].symbol} and ${METALS[right].symbol}`, at: { ...at }, size: { w: width, h }, runLabel: 'Run',
     dials,
-    props: { hidden: ['last', 'r1', 'r2'], backdrop: true, left, right, lx, rx, cy, meter, equation, energy, eqY: cy + cup.h + 11, logY: cy + cup.h + 16, scalable }
+    props: { hidden: ['last', 'r1', 'r2', ...(markable ? ['mark'] : [])], markable, backdrop: true, left, right, lx, rx, cy, meter, equation, energy, eqY: cy + cup.h + 11, logY: cy + cup.h + 16, scalable }
   };
 }

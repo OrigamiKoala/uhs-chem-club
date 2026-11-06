@@ -322,12 +322,13 @@ function checkStageTable(q, mod) {
    * from the schedule stays withheld for the whole quest, which is how
    * `q1-grain` keeps "atom" and "molecule" for its debrief.
    */
+  // 2026-11-06: the entries that only withheld the NAME of a quantity or idea (atoms, nucleus, bond, pressure, and every Brinewire term) were
+  // removed. Only an answer stays hidden; a term is glossed where it is first used (CLAUDE.md, 'Say the real term'). The removed lines are
+  // kept in docs/teaching-pass/withheld-vocab-removed.txt. The remaining entries are other worlds' and are due for the same pass.
   const WITHHELD_VOCAB = {
-    'unit01/q1-grain': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?)\b/i,
     // `q1-grain` teaches atom, element, molecule, compound and mixture on its
     // own cards, so by the time a player is standing here those are plain words
     // and using them is the rule rather than a leak.
-    'unit01/q2-core': /\b(nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i,
     // From here on the list is only what the quest itself has yet to earn. The
     // first two benches taught proton, electron, shell, valence, element,
     // isotope and ion, so those are plain words now and using them is the rule
@@ -335,7 +336,6 @@ function checkStageTable(q, mod) {
     'unit01/q3-catalogue': /\b(atomic number|periodic|periods?|groups?|noble|metals?|nonmetals?|non-metals?|alkali|halogens?)\b/i,
     'unit01/q4-ledger': /\b(mass number|cations?|anions?)\b/i,
     'unit01/q5-assay': /\b(abundances?|weighted average|average atomic mass|relative atomic mass|mass spectrum|mass spectrometry)\b/i,
-    'unit03/q1-joins': /\b(bonds?|bonded|bonding|ionic|covalent|shares? a pair|lone pairs?|double bonds?|triple bonds?|formula unit)\b/i,
     'unit03/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
     // Ligar's later benches. Each holds out only what it has yet to earn.
     'unit03/q4-dots': /\b(lewis structures?|lone pairs?|octets?|incomplete octets?|expanded octets?|central atoms?|polyatomic ions?|free radicals?)\b/i,
@@ -353,7 +353,6 @@ function checkStageTable(q, mod) {
     'unit04/q4-mixtures': /\b(partial pressures?|dalton.?s law|mole fractions?)\b/i,
     'unit04/q3-ideal': /\b(molar volume|gas constant|ideal gas law|avogadro.?s law)\b/i,
     'unit04/q2-laws': /\b(absolute zero|kelvin|charles.?s law|gay.lussac.?s law)\b/i,
-    'unit04/q1-knocks': /\b(pressure|kinetic energy|maxwell.boltzmann|kpa|kilopascals?|boyle.?s law|kinetic molecular theory)\b/i,
     // Lanternfall. Longer phrases first, so "visible spectrum" is read as the
     // phrase and not as a stray word.
     'unit02/q8-trends': /\b(electron affinity|electronegativity|successive ionization energies|ionization energ(?:y|ies)|ionic radi(?:us|i)|atomic radi(?:us|i)|effective nuclear charge|shielding|coulomb.?s law)\b/i,
@@ -370,15 +369,10 @@ function checkStageTable(q, mod) {
     'unit09/q1-handover': /\b(Br[øo]nsted|hydronium|conjugate|amphoteric|autoionization|Kw|Lewis)\b/i,
     'unit09/q7-buffer': /\b(buffers?|Henderson.Hasselbalch)\b/i,
     'unit09/q8-capacity': /\b(protonation state|indicators?|buffer capacity|solubility)\b/i,
-    'unit10/q5-load': /\b(Nernst|[Cc]oncentration cells?|[Rr]eaction quotients?|Q)\b/,
     'unit09/q3-weak': /\b(weak acids?|strong acids?|ioniz\w*|percent ionization|Ka|pKa|Kb)\b/,
     'unit09/q4-structure': /\b(conjugate bases?|inductive effect)\b/i,
     'unit09/q5-salts': /\b(salt hydrolysis|hydrolys\w*|buffers?|titrat\w*|equivalence)\b/i,
-    'unit10/q2-activity': /\b(galvanic cells?|salt bridges?|cathodes?|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
-    'unit10/q3-galvanic': /\b(galvanic cells?|salt bridges?|anodes?|cathodes?|oxidation|reduction|cell notation|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
-    'unit10/q1-halves': /\b(oxidation numbers?|half-reactions?|oxidation|reduction|redox|oxidi[sz]ing agents?|reducing agents?|oxidi[sz]ed|activity series|sacrificial|displacement|galvanic cells?|salt bridges?|anodes?|cathodes?|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
     'unit09/q6-titrate': /\b(titration curves?|equivalence points?|half-equivalence points?|indicators?|polyprotic)\b/i,
-    'unit10/q6-electrolysis': /\b(electrolytic cells?|electrolysis|cathodes?|anodes?|oxidation|reduction|coulombs?|faraday.?s law|overpotential)\b/i,
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 

@@ -18,6 +18,7 @@ import { seatedIn } from './heat-read.js';
 import { put, ball, ionText } from './ph-flask.js';
 import { ionizedCells, cellGrid, ACID_INK, BASE_INK } from './ph-read.js';
 import { RACE, raceCount } from '../../engine/phdata.js';
+import { wobble, scratch } from '../../engine/phmotion.js';
 import './ph-race-tour.js';
 
 const DUST = PLATE_COLORS.dust;
@@ -77,16 +78,28 @@ export function raceRead(state, fid) {
   return { a, b, crossed: now ? now.n : null, log };
 }
 
+const ease = u => u * u * (3 - 2 * u);
+const STAGGER = 1.6; const FLIGHT = 0.55;
+
 function paintRace(ctx, f, state, bx) {
   const F = frameOf(bx);
   const r = raceRead(state, f.id);
+  // A race is timed from the first frame its result is shown: the protons cross one after another, and the counts follow the ones that have landed.
+  const clock = bx.clock || 0;
+  const key = r.a && r.b && r.crossed != null ? `${r.a.id}|${r.b.id}|${r.crossed}` : null;
+  const sc = scratch(f, bx.sk);
+  if (sc.key !== key) { sc.key = key; sc.t0 = clock; }
+  const total = r.crossed ?? 0;
+  const el = key ? clock - sc.t0 : 0;
+  const landedAt = k => (k / Math.max(1, total)) * STAGGER + FLIGHT;
+  let landed = 0; for (let k = 0; k < total; k++) if (el >= landedAt(k)) landed++;
   const sz = (k, m = 6) => F.size(k, m);
   put(ctx, 'Acid', F.x(COL.a), F.y(7), sz(2.4), { color: DUST, weight: 700 });
   put(ctx, 'Base it leaves', F.x(COL.b), F.y(7), sz(2.4), { color: DUST, weight: 700, maxW: F.len(40) });
   if (r.a) put(ctx, ionText(nameAcid(r.a)), F.x(COL.a), F.y(31), sz(2.8), { color: TEXT, weight: 700, maxW: F.len(40) });
   if (r.b) put(ctx, ionText(nameBase(r.b)), F.x(COL.b), F.y(31), sz(2.8), { color: TEXT, weight: 700, maxW: F.len(40) });
   const ready = r.a && r.b;
-  const n = r.crossed ?? 0;
+  const n = key ? landed : 0;
   const seeds = [3, 11];
   [[COL.a, SITES - n, 'On the acid'], [COL.b, n, 'On the base']].forEach(([cx, held, cap], k) => {
     const x = cx - WIN.s / 2;
@@ -94,9 +107,19 @@ function paintRace(ctx, f, state, bx) {
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(WIN.y)) + 0.5, Math.round(F.len(WIN.s)), Math.round(F.len(WIN.s)));
     const cells = cellGrid(SITES, 10, x + 0.6, WIN.y + 0.6, WIN.s - 1.2, WIN.s - 1.2);
     const without = ionizedCells(SITES, SITES - held, seeds[k]);
-    cells.forEach((c, i) => ball(ctx, F.x(c.x), F.y(c.y), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.42)), without.has(i) ? BASE_INK : ACID_INK));
+    cells.forEach((c, i) => { const wb = wobble(i + k * 100, clock); ball(ctx, F.x(c.x + wb.wx * c.cw * 0.5), F.y(c.y + wb.wy * c.ch * 0.5), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.42)), without.has(i) ? BASE_INK : ACID_INK); });
     put(ctx, ready || k === 0 ? `${cap}: ${held}` : `${cap}: 0`, F.x(cx), F.y(WIN.y + WIN.s + 3.4), sz(2.6), { color: ready && r.crossed != null ? AMBER : DIM, weight: 700, maxW: F.len(WIN.s + 12) });
   });
+  // Protons in flight: from a cell of the acid's window to a cell of the base's, in an arc.
+  if (key) {
+    const wa = cellGrid(SITES, 10, COL.a - WIN.s / 2 + 0.6, WIN.y + 0.6, WIN.s - 1.2, WIN.s - 1.2); const wb2 = cellGrid(SITES, 10, COL.b - WIN.s / 2 + 0.6, WIN.y + 0.6, WIN.s - 1.2, WIN.s - 1.2);
+    for (let k = 0; k < total; k++) {
+      const u = (el - (landedAt(k) - FLIGHT)) / FLIGHT;
+      if (u <= 0 || u >= 1) continue;
+      const A = wa[(k * 7) % wa.length]; const B = wb2[k % wb2.length]; const e = ease(u);
+      ball(ctx, F.x(A.x + (B.x - A.x) * e), F.y(A.y + (B.y - A.y) * e - Math.sin(e * Math.PI) * 5), Math.max(1.5, F.len(0.9)), '#f4f0e6');
+    }
+  }
   // The list of races run, and what the colours mean.
   put(ctx, 'Races run', F.x(100), F.y(7), sz(2.4), { align: 'left', color: DUST, weight: 700 });
   put(ctx, 'Protons on the base, of 100', F.x(100), F.y(11), sz(1.9, 5.6), { align: 'left', color: DIM, maxW: F.len(64) });
@@ -121,7 +144,7 @@ function run(state, fid) {
   return { x: (state.recorder?.rows || []).length + 1, y: n, label };
 }
 
-registerFixture('phrace', { paint: paintRace, run });
+registerFixture('phrace', { bodies3d: true, paint: paintRace, run, live: () => true });
 
 /** The proton race: returns `{ fixture, slots, size }`; add the slots to the stage's `zones.slots`. */
 export function raceParts(id, at, { title = 'Proton race' } = {}) {

@@ -26,6 +26,7 @@ import { pansTable, selectorFixture, note, tag, pieceIn, dialValue } from '../..
 import { testVessel, mixCard, qkRead } from '../../table/kits/pans-ratio.js';
 import { K_SYSTEMS, runMixture, fmtNum, spName } from '../../engine/eqdata.js';
 
+import { clipFixture } from '../../table/kits/pans-clips.js';
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
@@ -181,11 +182,12 @@ export const STAGES = [
         note('back', GUESS_CLICK.back, { x: 30, y: 58 }),
         note('all', GUESS_CLICK.all, { x: 78, y: 58 })
       ],
+      fixtures: [clipFixture('clip', { x: 126, y: 17 }, 'react', { title: 'Starting with mostly B', b0: 40, kf: 0.1, kr: 0.05, seed: 3, span: 30 , h: 24, w: 40 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 48 }, size: { w: 36, h: 14 } }] }
     }, { h: TABLE_H }),
     hints: [
       'Use the four cards and the slot.',
-      'Compare how much B this mixture holds with how much B a settled pan of A ⇌ B holds.',
+      'Compare how much B this mixture holds with how much B a settled vessel of A ⇌ B holds.',
       'Set the amounts on the mixture card against the K printed beside it.'
     ],
     check(state) {
@@ -273,6 +275,7 @@ export const STAGES = [
         note('back', GUESS_NEW.back, { x: 78, y: 40 }),
         note('stay', GUESS_NEW.stay, { x: 30, y: 60 })
       ],
+      fixtures: [clipFixture('clip', { x: 126, y: 17 }, 'react', { title: 'Starting with mostly B', b0: 30, kf: 0.06, kr: 0.1, seed: 4, span: 30 , h: 24, w: 40 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 50 }, size: { w: 36, h: 14 } }] }
     }, { h: TABLE_H }),
     hints: [

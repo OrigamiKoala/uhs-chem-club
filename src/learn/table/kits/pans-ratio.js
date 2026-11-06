@@ -16,8 +16,9 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture, registerPiece } from './pans-registry.js';
 import { slab, frameOf } from './matter-draw.js';
-import { A_INK, B_INK } from './pans-pan.js';
+import { A_INK, B_INK, driftOf } from './pans-pan.js';
 import { pieceIn } from './pans-read.js';
+import { paintPuck, buildPuck, inkOfIndex } from './pans-puck.js';
 import {
   K_SYSTEMS, spName, settleAmounts, systemRatio, rigReading, gaugePos, fmtNum, sciParts
 } from '../../engine/eqdata.js';
@@ -77,7 +78,48 @@ const ROW = { title: 8.6, k: 11.4, base: 26.5, hmax: 11.3, names: 30.2 };
  * The bars of one vessel: a bar for each substance at `now`, a line across it at `start` once `ticks`, the amount printed over the bar,
  * the name under it. `scale` is the amount a full-height bar stands for; every vessel of a fixture shares it.
  */
-function paintBars(ctx, F, sys, now, start, ticks, x, y0, w, scale, { names = true, sf = 3 } = {}) {
+/**
+ * The mechanism view of a bar: the amounts glide from the old figure to the new one over about two seconds when they change (the Settle or
+ * Run key), and each bar is a crowd of particles drifting about inside it, more of them the larger the amount. The printed figures stay
+ * the planner's own; only the bar and the crowd move. With the clock frozen the bars stand at the planner's amounts.
+ */
+const GLIDE = new Map();
+const GLIDE_SECONDS = 2.2;
+/** A miss replays the cause: every bar glides again from the starting amounts. */
+export function replayGlide() { GLIDE.clear(); }
+function glided(key, now, clock) {
+  if (!clock || !key) return now;
+  const sig = JSON.stringify(now);
+  let g = GLIDE.get(key);
+  if (!g) g = { sig, from: { ...now }, to: { ...now }, t0: clock - GLIDE_SECONDS };
+  if (g.sig !== sig) {
+    const cur = glideAt(g, clock);
+    g = { sig, from: cur, to: { ...now }, t0: clock };
+  }
+  GLIDE.set(key, g);
+  return glideAt(g, clock);
+}
+function glideAt(g, clock) {
+  const k = Math.max(0, Math.min(1, (clock - g.t0) / GLIDE_SECONDS));
+  const e = k * k * (3 - 2 * k);
+  return Object.fromEntries(Object.keys(g.to).map(s => [s, g.from[s] + (g.to[s] - g.from[s]) * e]));
+}
+/** Drifting dots inside a bar's rectangle: `count` of them, each about its own spot. */
+function crowd(ctx, F, cx, bw, base, hgt, count, clock, seed) {
+  if (hgt <= 0 || count <= 0) return;
+  ctx.fillStyle = 'rgba(16,15,12,0.78)';
+  const cols = 2; const rows = Math.ceil(count / cols);
+  const cw = bw / cols; const ch = hgt / rows;
+  for (let k = 0; k < count; k++) {
+    const d = driftOf(seed * 31 + k, clock, 2.2);
+    const px = cx - bw / 2 + (k % cols + 0.5) * cw + d.dx * cw * 0.28;
+    const py = base - (Math.floor(k / cols) + 0.5) * ch + d.dy * ch * 0.28;
+    ctx.beginPath(); ctx.arc(F.x(px), F.y(py), Math.max(1.2, F.len(Math.min(cw, ch) * 0.2)), 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function paintBars(ctx, F, sys, now, start, ticks, x, y0, w, scale, { names = true, sf = 3, key = null, clock = 0 } = {}) {
+  const shown = glided(key, now, clock);
   const sp = Object.keys(sys.species);
   const gw = w / sp.length;
   const bw = Math.min(7, gw * 0.62);
@@ -85,10 +127,11 @@ function paintBars(ctx, F, sys, now, start, ticks, x, y0, w, scale, { names = tr
   for (let i = 0; i < sp.length; i++) {
     const s = sp[i];
     const cx = x + (i + 0.5) * gw;
-    const hgt = (now[s] / scale) * ROW.hmax;
+    const hgt = (shown[s] / scale) * ROW.hmax;
     ctx.fillStyle = roleInk(sys, s);
     const top = y0 + ROW.base - hgt;
     ctx.fillRect(F.x(cx - bw / 2), F.y(top), F.len(bw), Math.max(0, F.len(hgt)));
+    if (clock) crowd(ctx, F, cx, bw, y0 + ROW.base, hgt, Math.round((shown[s] / scale) * 14), clock, i + 1);
     ctx.strokeStyle = DUST; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(F.x(cx - bw / 2 - 0.8), F.y(y0 + ROW.base) + 0.5); ctx.lineTo(F.x(cx + bw / 2 + 0.8), F.y(y0 + ROW.base) + 0.5); ctx.stroke();
     if (ticks) {
@@ -187,27 +230,27 @@ function paintVessels(ctx, f, state, b) {
     const pan = r.pans[j];
     const x = lw + j * cw;
     column(ctx, F, x + 0.4, 6.4, cw - 0.8, 30.8);
-    put(ctx, p.titles?.[j] ?? `Pan ${j + 1}`, F.x(x + cw / 2), F.y(ROW.title), F.size(2.1, 5.8), { color: DUST, weight: 700 });
+    put(ctx, p.titles?.[j] ?? `Vessel ${j + 1}`, F.x(x + cw / 2), F.y(ROW.title), F.size(2.1, 5.8), { color: DUST, weight: 700 });
     if (p.showK) putNum(ctx, pan.K, 2, F.x(x + cw / 2), F.y(ROW.k), sz, { color: AMBER, weight: 700, prefix: 'K = ' });
     else if (p.showEq) put(ctx, pan.sys.eq, F.x(x + cw / 2), F.y(ROW.k), sz, { color: AMBER, weight: 700, maxW: F.len(cw - 1.6) });
-    paintBars(ctx, F, pan.sys, pan.now, pan.start, r.settled && !p.settledAtStart, x + 0.9, 0, cw - 1.8, scale, { sf: 3 });
+    paintBars(ctx, F, pan.sys, pan.now, pan.start, r.settled && !p.settledAtStart, x + 0.9, 0, cw - 1.8, scale, { sf: 3, key: `${b.scope || ""}${f.id}:${j}`, clock: b.clock || 0 });
   }
 }
 
 function runVessels(state, fid) {
   const f = state.fixtures[fid];
-  if (f.dials.s.value >= 1) return { noop: 'The pans have settled already.' };
+  if (f.dials.s.value >= 1) return { noop: 'The vessels have settled already.' };
   return { x: 1, y: f.props.pans.length, label: fid, dials: { [fid]: { s: 1 } } };
 }
 
-registerFixture('vsl', { paint: paintVessels, run: runVessels });
+registerFixture('vsl', { paint: paintVessels, run: runVessels, live: () => true });
 
 /**
  * A row of pans. `pans`: `[{start: {species: amount}, K?, system?}]`; `system` the default reaction (`K_SYSTEMS` id). With `settled` the
  * pans open already settled (no key); otherwise "Settle" lets them settle. Options: `showK` (each pan's K), `showEq` (each pan's reaction),
  * `lw` (the left column the legend and the rig's places stand in), `legend: false`.
  */
-export function vesselFixture(id, at, { system, pans, settled = false, showK = false, showEq = false, lw = 34, legend = true, w = RATIO_W, h = VESSEL_H, title = 'Pans', key = 'Settle', titles = null } = {}) {
+export function vesselFixture(id, at, { system, pans, settled = false, showK = false, showEq = false, lw = 34, legend = true, w = RATIO_W, h = VESSEL_H, title = 'Vessels', key = 'Settle', titles = null } = {}) {
   return {
     id, kind: 'vsl', label: title, at: { ...at }, size: { w, h }, ...(settled ? { noRun: true } : { runLabel: key }),
     dials: { s: { min: 0, max: 1, step: 1, value: settled ? 1 : 0, label: 'Settled' } },
@@ -232,7 +275,7 @@ function paintRig(ctx, f, state, b) {
   for (let j = 0; j < n; j++) {
     const cx = lw + (j + 0.5) * cw;
     column(ctx, F, lw + j * cw + 0.4, 6.4, cw - 0.8, 20.6);
-    put(ctx, p.titles?.[j] ?? `Pan ${j + 1}`, F.x(cx), F.y(9.4), F.size(2.1, 5.8), { color: DUST, weight: 700 });
+    put(ctx, p.titles?.[j] ?? `Vessel ${j + 1}`, F.x(cx), F.y(9.4), F.size(2.1, 5.8), { color: DUST, weight: 700 });
     const ok = r.settled && r.laid;
     if (ok) putNum(ctx, r.readings[j], 3, F.x(cx), F.y(18), F.size(4.4, 10), { color: AMBER, weight: 700 });
     else put(ctx, '—', F.x(cx), F.y(18), F.size(4.4, 10), { color: DIM, weight: 700 });
@@ -246,7 +289,7 @@ registerFixture('rig', { paint: paintRig });
  * A ratio rig and its places. `top` and `bottom` are how many places each row has. Returns the fixture and the slots (add the slots to the
  * stage's `zones.slots`); `vsl` is the id of the vessels it reads. A rig stands under the vessels and shares their left column.
  */
-export function rigParts(id, at, { vsl, top = 1, bottom = 1, lw = 34, w = RATIO_W, h = RIG_H, title = 'Ratio rig', titles = null } = {}) {
+export function rigParts(id, at, { vsl, top = 1, bottom = 1, lw = 34, w = RATIO_W, h = RIG_H, title = 'Ratio ratio board', titles = null } = {}) {
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
   const slot = (row, i) => ({ id: `${id}.${row}${i + 1}`, label: ' ', at: { x: x0 + 9.5 + i * 16.5, y: y0 + (row === 't' ? 10.5 : 22) }, size: { w: 15, h: 10 } });
@@ -255,7 +298,7 @@ export function rigParts(id, at, { vsl, top = 1, bottom = 1, lw = 34, w = RATIO_
   return {
     fixture: {
       id, kind: 'rig', label: title, at: { ...at }, size: { w, h }, noRun: true,
-      dials: { x: { min: 0, max: 1, step: 1, value: 0, label: 'Rig' } },
+      dials: { x: { min: 0, max: 1, step: 1, value: 0, label: 'Ratio board' } },
       props: { hidden: ['x'], backdrop: true, vsl, lw, top: t.map(s => s.id), bottom: bt.map(s => s.id), ...(titles ? { titles } : {}) }
     },
     slots: [...t, ...bt]
@@ -267,16 +310,18 @@ export function rigParts(id, at, { vsl, top = 1, bottom = 1, lw = 34, w = RATIO_
 const RECT_TILE = { hw: 6.5, hh: 4.6 };
 const SUP = { 1: '', 2: '²', 3: '³' };
 
+function tileInk(p) {
+  const sp = Object.keys(K_SYSTEMS[p.props.sys]?.species || {});
+  return inkOfIndex(Math.max(0, sp.indexOf(p.props.sp)));
+}
 function paintTile(ctx, p, state, o) {
-  const box = slab(ctx, o, RECT_TILE, '#2a2620');
-  const label = String(p.label);
-  const size = Math.min(4.4 * o.sc, (box.w - 1.6 * o.sc) / (Math.max(2, label.length) * 0.6));
-  put(ctx, label, o.x, o.y, Math.max(8, size), { weight: 700, maxW: box.w - 1.2 * o.sc });
+  paintPuck(ctx, o, RECT_TILE, String(p.label), tileInk(p), p.props.p || 1);
 }
 
 registerPiece('rtile', {
   kind: { r: 6.4, rect: RECT_TILE, nojoin: true },
   paint: paintTile,
+  piece3d: (p, state, c) => buildPuck(c, tileInk(p), p.props.p || 1, String(p.label)),
   faceKey: p => `rtile|${p.label}`,
   printed: p => String(p.label)
 });
@@ -328,7 +373,7 @@ function paintQK(ctx, f, state, b) {
   if (r.card) {
     let scale = 0;
     for (const s of Object.keys(sys.species)) scale = Math.max(scale, r.start[s], settleCached(sys, r.start, sys.K)[s]);
-    paintBars(ctx, F, sys, r.now, r.start, r.ran, 29.2, 0, 38.6, scale, { sf: 3 });
+    paintBars(ctx, F, sys, r.now, r.start, r.ran, 29.2, 0, 38.6, scale, { sf: 3, key: (b.scope || "") + f.id, clock: b.clock || 0 });
   }
   put(ctx, sys.unit, F.x(48.5), F.y(ROW.title), sz, { color: DUST });
   // The gauge: a scale, K at its middle, a tick for every tenfold step, and the marker.
@@ -365,7 +410,7 @@ function runQK(state, fid) {
   return { x: r.idx, y: Number(fmtNum(r.Q0, 3)), label: r.card.label, dials: { [fid]: { ran: r.idx } } };
 }
 
-registerFixture('qk', { paint: paintQK, run: runQK });
+registerFixture('qk', { paint: paintQK, run: runQK, live: () => true });
 
 /**
  * The test vessel for `system`, with the slot (`<id>.seat`) its mixture card goes in. `q` prints the marker as Q (once the bench has earned

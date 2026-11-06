@@ -20,6 +20,8 @@ import { roundedSlab } from '../../engine/table-props.js';
 import { registerFixture, registerPiece } from './ph-registry.js';
 import { frameOf } from './matter-draw.js';
 import { fmt } from '../../engine/phdata.js';
+import { withDial } from './ph-replay.js';
+import { windowAt, shuffle, scratch } from '../../engine/phmotion.js';
 import {
   flaskSol, flaskPH, windowOf, meterRead, concText, UNITS, H_INK, OH_INK, ACID_INK, BASE_INK, ionText, windowSpecies, ionizedCells, cellGrid, seedOf
 } from './ph-read.js';
@@ -45,6 +47,9 @@ export function put(ctx, s, x, y, size, { color = TEXT, align = 'center', weight
 
 /** A sphere: a disc with a lighter spot, so it reads as a solid ball on the plate. */
 export function ball(ctx, x, y, r, ink) {
+  // The 3D dress runs a painter against a recording canvas (`__ball`) to learn where every sphere is; at 3D On the flat plate leaves the spheres to it (`__skip`).
+  if (ctx.__ball) { ctx.__ball(x, y, r, ink); return; }
+  if (ctx.__skip) return;
   ctx.fillStyle = ink;
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.28)';
@@ -53,24 +58,36 @@ export function ball(ctx, x, y, r, ink) {
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
 }
 
+/** A small flat dot (a sample's particle, a molecule in a row): recorded like a sphere, or a filled square on the flat plate. */
+export function dot(ctx, x, y, r, ink) {
+  if (ctx.__ball) { ctx.__ball(x, y, r, ink); return; }
+  if (ctx.__skip) return;
+  ctx.fillStyle = ink; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
 /* ------------------------------------------------------------------ the window */
 
-function paintWindow(ctx, F, f, x, y, w, h) {
+function paintWindow(ctx, F, f, x, y, w, h, clock = 0) {
   const p = f.props;
   const win = windowOf(p);
   const sp = windowSpecies(win);
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
   const cells = cellGrid(win.units, p.cols, x + 0.6, y + 0.6, w - 1.2, h - 1.2);
-  const gone = ionizedCells(win.units, win.ionized, seedOf(p));
-  const g = mulberry32(seedOf(p) + 99);
+  // Every unit wobbles, and in a weak solution units hand a proton over and take it back while their count stays the planner's.
+  const seed = seedOf(p);
+  const now = windowAt(win.units, win.ionized, seed, clock, (scratch(f).order ||= shuffle(win.units, seed)));
   cells.forEach((c, i) => {
-    const jx = (g() - 0.5) * c.cw * 0.14; const jy = (g() - 0.5) * c.ch * 0.14;
+    const m = now[i];
+    const cx = c.x + m.wx * c.cw * 0.5; const cy = c.y + m.wy * c.ch * 0.5;
     const R = Math.min(c.cw, c.ch) * 0.44;
-    if (!gone.has(i)) { ball(ctx, F.x(c.x + jx), F.y(c.y + jy), Math.max(1.6, F.len(R)), sp.whole.ink); return; }
-    const r = Math.max(1.4, F.len(R * 0.62));
-    ball(ctx, F.x(c.x + jx) - r * 0.95, F.y(c.y + jy), r, sp.parts[0].ink);
-    ball(ctx, F.x(c.x + jx) + r * 0.95, F.y(c.y + jy), r, sp.parts[1].ink);
+    // A hand-over in progress: the two particles part (or come together) over the move; before it lands the cell keeps its old look.
+    const sep = m.dir === 1 ? m.p : m.dir === -1 ? 1 - m.p : (m.ion ? 1 : 0);
+    if (sep <= 0.001) { ball(ctx, F.x(cx), F.y(cy), Math.max(1.6, F.len(R)), sp.whole.ink); return; }
+    const r = Math.max(1.4, F.len(R * (1 - 0.38 * sep)));
+    const gap = r * 0.95 * sep;
+    ball(ctx, F.x(cx) - gap, F.y(cy), r, sep > 0.5 ? sp.parts[0].ink : sp.whole.ink);
+    ball(ctx, F.x(cx) + gap, F.y(cy), r, sep > 0.5 ? sp.parts[1].ink : sp.whole.ink);
   });
   return { win, sp };
 }
@@ -100,7 +117,7 @@ function paintFlask(ctx, f, state, b) {
   const w = f.size.w;
   // The strength of the solution, under the name the frame prints at the top left.
   put(ctx, concText(p.solute.c), F.x(2), F.y(8.2), F.size(2.7, 6.6), { align: 'left', color: TEXT, weight: 700 });
-  const { win, sp } = paintWindow(ctx, F, f, 2, WIN_TOP, w - 4, p.wh);
+  const { win, sp } = paintWindow(ctx, F, f, 2, WIN_TOP, w - 4, p.wh, b.clock || 0);
   if (p.waterNote) put(ctx, 'water not drawn', F.x(w - 2), F.y(8.2), F.size(1.8, 5.6), { align: 'right', color: DIM });
   if (p.legend) paintLegend(ctx, F, f, sp, win, 2, WIN_TOP + p.wh + 3.2, w - 4);
   // The seat: the last reading the flask was given, until the meter is laid there.
@@ -114,13 +131,33 @@ function paintFlask(ctx, f, state, b) {
 /** The flask keeps the pH it was last read at (the planner's, to two places). Run after every action, from the table as it stands. */
 function settle(state) {
   for (const f of Object.values(state.fixtures)) {
+    // A flask that can be diluted: each step adds water, a tenth the concentration.
+    if (f.kind === 'phflask' && f.props.dilute) f.props.solute = { ...f.props.solute, c: f.props.c0 * Math.pow(0.1, Math.round(f.dials.steps.value)) };
     if (f.kind !== 'phflask' || !f.props.seat) continue;
     const m = meterRead(state, f.id);
     if (m.meter) f.props.noted = Math.round(flaskPH(f) * 100) / 100;
   }
 }
 
-registerFixture('phflask', { paint: paintFlask, settle, dress3d: dressFlask });
+/** Dilute: one press adds water; the row it records is the pH now. */
+function run(state, fid) {
+  const f = state.fixtures[fid];
+  if (!f.props.dilute) return null;
+  const n = Math.round(f.dials.steps.value);
+  if (n >= f.dials.steps.max) return { noop: 'No more water can be added.' };
+  const solute = { ...f.props.solute, c: f.props.c0 * Math.pow(0.1, n + 1) };
+  return { x: n + 1, y: Math.round(flaskPH({ props: { ...f.props, solute } }) * 100) / 100, label: fid, dials: { [fid]: { steps: n + 1 } } };
+}
+
+const flaskReplay = {
+  count: f => (f.props.dilute ? Math.round(f.dials.steps.value) : 0),
+  at: (f, i) => ({ ...withDial(f, 'steps', i), props: { ...f.props, solute: { ...f.props.solute, c: f.props.c0 * Math.pow(0.1, i) } } })
+};
+registerFixture('phflask', { run, replay: flaskReplay, demo: (f, t) => {
+  if (!f.props.dilute) return null;
+  const i = Math.floor(t / 1.4) % (f.dials.steps.max + 1);
+  return { dials: { steps: i }, props: { solute: { ...f.props.solute, c: f.props.c0 * Math.pow(0.1, i) } } };
+}, bodies3d: true, paint: paintFlask, settle, dress3d: dressFlask, live: () => true });
 
 /** A low glass dish round the window at `3D On`: four thin walls, the particles seen through the open top. */
 function dressFlask(f, state, c) {
@@ -149,7 +186,7 @@ function dressFlask(f, state, c) {
  * `w`, `window` (the window's height in units), `meter: false` (no seat, no meter: the stage asks the player to work the pH out),
  * `legend: false`, `waterNote: false`. Returns `{ fixture, slot, size }`; add the slot (null without a meter) to the stage's slots.
  */
-export function flaskFixture(id, at, { solute, label, w = 38, window = 14, meter = true, legend = true, waterNote = true, units = UNITS, cols = 20 } = {}) {
+export function flaskFixture(id, at, { solute, label, w = 38, window = 14, meter = true, legend = true, waterNote = true, units = UNITS, cols = 20, dilute = 0 } = {}) {
   const wh = window;
   // The legend takes one row on a flask wide enough for its three names, two on a narrow one.
   const legendRows = legend ? (w >= 40 ? 3.6 : 6.6) : 0;
@@ -160,9 +197,9 @@ export function flaskFixture(id, at, { solute, label, w = 38, window = 14, meter
   const slot = meter ? { id: `${id}.seat`, label: ' ', at: { x: x0 + seatRel.x, y: y0 + seatRel.y }, size: { w: seatRel.w, h: seatRel.h } } : null;
   return {
     fixture: {
-      id, kind: 'phflask', label: label ?? `${solute.id}`, at: { ...at }, size: { w, h }, noRun: true,
-      dials: { x: { min: 0, max: 1, step: 1, value: 0, label: 'Flask' } },
-      props: { hidden: ['x'], backdrop: true, solute: { ...solute }, units, cols, wh, legend, waterNote, seat: slot ? slot.id : null, seatRel, noted: null }
+      id, kind: 'phflask', label: label ?? `${solute.id}`, at: { ...at }, size: { w, h }, ...(dilute ? { runLabel: 'Dilute' } : { noRun: true }),
+      dials: dilute ? { steps: { min: 0, max: dilute, step: 1, value: 0, label: 'Dilutions' } } : { x: { min: 0, max: 1, step: 1, value: 0, label: 'Flask' } },
+      props: { hidden: [dilute ? 'steps' : 'x'], dilute, c0: solute.c, backdrop: true, solute: { ...solute }, units, cols, wh, legend, waterNote, seat: slot ? slot.id : null, seatRel, noted: null }
     },
     slot,
     size: { w, h }

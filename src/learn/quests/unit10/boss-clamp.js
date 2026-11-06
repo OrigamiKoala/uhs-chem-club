@@ -25,7 +25,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { session } from '../../../session.js';
 import {
-  cellTable, selectorFixture, plaqueFixture, tag, pieceIn, dialValue, voltText, boardFixture, electrodePiece
+  cellTable, selectorFixture, plaqueFixture, tag, pieceIn, dialValue, voltText, boardFixture, electrodePiece, hideDials
 } from '../../table/kits/cell.js';
 import { dipFixture, stripPiece, triedIn } from '../../table/kits/cell-dip.js';
 import { galvFixture, galvRead } from '../../table/kits/cell-galv.js';
@@ -37,6 +37,8 @@ import {
 import { dipResult, dipWords } from '../../engine/celldata-q2-activity.js';
 import { electronsToward, loopCurrent } from '../../engine/celldata-galvanic.js';
 import { concCellRead, concLabel } from '../../engine/celldata-q5.js';
+
+import { attachScenes } from '../../table/kits/cell-attach.js';
 
 export const meta = { stageCount: 5 };
 
@@ -126,16 +128,13 @@ export const STAGES = [
     table: (() => {
       const d = dipFixture('dip', { x: 64, y: 33 }, { beakers: P1_METALS.map((ion, i) => ({ id: `b${i}`, ion })) });
       return cellTable({
-        pieces: [
-          ...P1_METALS.map((m, i) => stripPiece(`s-${m}`, m, { x: 144, y: 14 + i * 22 }, i === 0 ? {} : { caption: null })),
-          ...P1_CARDS.map((m, i) => tag(`r-${m}`, Nm(m), { x: 20 + i * 32, y: 88 }))
-        ],
+        pieces: P1_METALS.map((m, i) => stripPiece(`s-${m}`, m, { x: 19 + i * 30, y: 71 }, i === 0 ? {} : { caption: null })),
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
           rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [] }
         }
-      }, { w: 184, h: 122 });
+      }, { w: 204, h: 122 });
     })(),
     foes: CLAMP_FOE,
     encounter: {
@@ -144,15 +143,15 @@ export const STAGES = [
       intent: 'The Clamp holds four strips of metal over four beakers and does not know which gives.'
     },
     hints: [
-      'Dip the strips in the beakers, then drag the four name cards onto the rail.',
+      'Dip the strips in the beakers, then drag the four strips onto the rail.',
       'Each beaker keeps a mark for every strip dipped in it; compare which strips were coated in which solutions.',
       'A strip that is coated has given electrons to the ions in the solution, so rank the metals by how many of the other solutions each one coated in.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
-      if (order.length < P1_METALS.length) return { ok: false, notYet: true, msg: `Put all ${P1_METALS.length} cards on the rail.` };
-      if (order.join() === P1_WANT.map(m => `r-${m}`).join()) return { ok: true };
+      if (order.length < P1_METALS.length) return { ok: false, notYet: true, msg: `Put all ${P1_METALS.length} strips on the rail.` };
+      if (order.join() === P1_WANT.map(m => `s-${m}`).join()) return { ok: true };
       const E = id => METALS[id.slice(2)].E0;
       const k = order.findIndex((id, i) => i > 0 && E(id) < E(order[i - 1]));
       const a = order[k - 1].slice(2); const b = order[k].slice(2);
@@ -181,7 +180,7 @@ export const STAGES = [
       return cellTable({
         fixtures: [
           g.fixture,
-          selectorFixture('pick', 'The anode is', { x: 120, y: 52 }, { options: ['The left strip', 'The right strip', ' '], start: 3, w: 52, list: true })
+          hideDials(selectorFixture('pick', 'The anode is', { x: 120, y: 52 }, { options: ['The left strip', 'The right strip', ' '], start: 3, w: 52, list: true }))
         ],
         zones: { slots: g.slots }
       }, { w: 184, h: 100 });
@@ -193,13 +192,13 @@ export const STAGES = [
       intent: 'The Clamp clips a magnesium strip and a silver strip into a pair of beakers.'
     },
     hints: [
-      'Press "Run", read the ammeter, then use the answer dial.',
+      'Press "Run", read the ammeter, then tap the strip you choose.',
       'Look at which way the needle swings, and what the ammeter\'s own dial says that direction means.',
       'The ammeter tells which beaker the electrons move toward, so they left through the other strip.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Set the answer dial.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a strip.' };
       const want = P2_ANODE === P2.left ? 1 : 2;
       if (v === want) return { ok: true };
       const r = galvRead(state.table, 'rig');
@@ -274,23 +273,23 @@ export const STAGES = [
     table: cellTable({
       fixtures: [
         ccFixture('cc', { x: 50, y: 34 }, { ...P4, names: ['Left', 'Right'], title: 'Zinc cell' }),
-        selectorFixture('pick', 'Electrons leave', { x: 120, y: 56 }, { options: ['the left bar', 'the right bar', ' '], start: 3, w: 52, list: true })
+        hideDials(selectorFixture('pick', 'Electrons leave', { x: 120, y: 56 }, { options: ['the left bar', 'the right bar', ' '], start: 3, w: 52, list: true }))
       ]
     }, { w: 176, h: 80 }),
     foes: CLAMP_FOE,
     encounter: {
       species: 'the clamp',
       act: 'Commit Bar',
-      intent: 'The Clamp stands two beakers of zinc salt at different strengths and joins them with a wire.'
+      intent: 'The Clamp stands two beakers of zinc salt at different concentrations and joins them with a wire.'
     },
     hints: [
-      'Press "Run", read the ammeter, then use the answer dial.',
-      'Compare the side the needle swings toward with the strength printed under each beaker.',
+      'Press "Run", read the ammeter, then tap the bar you choose.',
+      'Compare the side the needle swings toward with the concentration printed under each beaker.',
       'Find the bar the electrons move away from, and say whether it stands on the left or the right.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a bar.' };
       const want = concCellRead(P4.metal, P4.cLeft, P4.cRight).leaves === 'left' ? 1 : 2;
       if (v === want) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
@@ -302,7 +301,7 @@ export const STAGES = [
       return {
         log: 'The electrons left the bar in the dilute beaker.',
         title: 'The Dilute Side Gives',
-        body: `The cell read ${fmt(c.E, 3)} V and the electrons left the ${c.leaves} bar, which stood in the ${concLabel(Math.min(P4.cLeft, P4.cRight))} beaker. The dilute side is the anode, where zinc dissolves, and the cell runs until the two strengths match.`
+        body: `The cell read ${fmt(c.E, 3)} V and the electrons left the ${c.leaves} bar, which stood in the ${concLabel(Math.min(P4.cLeft, P4.cRight))} beaker. The dilute side is the anode, where zinc dissolves, and the cell runs until the two concentrations match.`
       };
     }
   },
@@ -362,6 +361,9 @@ export const STAGES = [
   }
 ];
 
+/** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
+attachScenes(STAGES, { demos: {}, placement: 'below', inside: [0], foe: true, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }, 3: { sitesKey: 'sides', extra: { pickMap: [1, 2] } } } });
+
 /* ------------------------------------------------------------------
    THE DEBRIEF
    ------------------------------------------------------------------ */
@@ -393,7 +395,7 @@ const dip = (strip, ion) => put(`s-${strip}`, seat(P1_METALS, ion));
 const dipAll = P1_METALS.flatMap(ion => P1_METALS.filter(m => m !== ion).map(m => dip(m, ion)));
 
 export const SOLUTIONS = [
-  [...dipAll, ...P1_WANT.map((m, i) => put(`r-${m}`, `rail:${i}`))],
+  [...dipAll, ...P1_WANT.map((m, i) => put(`s-${m}`, `rail:${i}`))],
   [run('rig'), dial('pick', 'value', P2_ANODE === P2.left ? 1 : 2)],
   [put('e-ag', 'slot:board.seat'), put('e-fe', 'slot:board.seat'), typed('e', fmt(P3_WANT, 2))],
   [run('cc'), dial('pick', 'value', concCellRead(P4.metal, P4.cLeft, P4.cRight).leaves === 'left' ? 1 : 2)],
@@ -402,7 +404,7 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per phase. Each must be refused, and must say why. */
 export const MISSES = [
-  [dip('fe', 'ni'), ...['ni', 'fe', 'sn', 'ag'].map((m, i) => put(`r-${m}`, `rail:${i}`))],
+  [dip('fe', 'ni'), ...['ni', 'fe', 'sn', 'ag'].map((m, i) => put(`s-${m}`, `rail:${i}`))],
   [run('rig'), dial('pick', 'value', P2_ANODE === P2.left ? 2 : 1)],
   [typed('e', '-1.24')],
   [run('cc'), dial('pick', 'value', concCellRead(P4.metal, P4.cLeft, P4.cRight).leaves === 'left' ? 2 : 1)],

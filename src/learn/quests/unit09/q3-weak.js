@@ -126,10 +126,10 @@ function rigTable(solutes, tiles, { top = 2, bottom = 2 } = {}) {
 /** The rig stages' check: something laid, and the readings the same on every flask without the number being 1 whatever the flask. */
 function rigCheck(state) {
   const r = rigRead(state.table, 'rig');
-  if (!r.laid) return { ok: false, notYet: true, msg: 'Lay a tile on the rig.' };
+  if (!r.laid) return { ok: false, notYet: true, msg: 'Lay a card on the board.' };
   if (steady(r.readings) && Math.abs(r.readings[0] - 1) > 0.02) return { ok: true };
-  if (steady(r.readings)) return { ok: false, msg: `The rig reads ${readingsText(r.readings)} on every column, because the tiles above and below the line stand for equal amounts.` };
-  return { ok: false, msg: `The rig reads ${readingsText(r.readings)} on the three columns.` };
+  if (steady(r.readings)) return { ok: false, msg: `The board reads ${readingsText(r.readings)} on every column, because the cards above and below the line stand for equal amounts.` };
+  return { ok: false, msg: `The board reads ${readingsText(r.readings)} on the three columns.` };
 }
 
 export const STAGES = [
@@ -155,7 +155,7 @@ export const STAGES = [
     hints: [
       'Use the four cards and the slot.',
       'Picture what each flask holds, and what the pH reading counts.',
-      'Ask whether two acids at the same strength must give the same share of their protons to water.'
+      'Ask whether two acids at the same concentration must give the same share of their protons to water.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -169,7 +169,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, three acids at the same strength are read.'
+      body: 'Next, three acids at the same concentration are read.'
     }
   },
 
@@ -217,7 +217,7 @@ export const STAGES = [
       return {
         log: 'Hydrochloric acid gave up nearly all of its protons; acetic acid and hydrofluoric acid gave up some.',
         title: 'Weak and Strong Acids',
-        body: `${verdict}At the same strength hydrochloric acid gave all of its protons to water and acetic acid only a few. An acid that ionizes only in part is a weak acid, and one that ionizes fully is a strong acid.`
+        body: `${verdict}At the same concentration hydrochloric acid gave all of its protons to water and acetic acid only a few. An acid that ionizes only in part is a weak acid, and one that ionizes fully is a strong acid.`
       };
     }
   },
@@ -267,13 +267,13 @@ export const STAGES = [
   {
     id: 's4-ka',
     title: 'The Steady Ratio',
-    prompt: 'Arrange tiles on the rig into a ratio that reads the same number for all three acetic acid flasks.',
+    prompt: 'Arrange cards on the board into a ratio that reads the same number for all three acetic acid flasks.',
     widget,
     table: rigTable(ACETIC_C, [['H', 'H₃O⁺'], ['A', 'CH₃COO⁻'], ['HA', 'CH₃COOH']]),
     hints: [
-      'Drag the three tiles into the places above and below the line.',
-      'Compare the three numbers the rig prints for each arrangement you try.',
-      'Try one tile, then two, then three, and keep an arrangement whose three numbers agree.'
+      'Drag the three cards into the places above and below the line.',
+      'Compare the three numbers the board prints for each arrangement you try.',
+      'Try one card, then two, then three, and keep an arrangement whose three numbers agree.'
     ],
     check: rigCheck,
     get reward() {
@@ -289,7 +289,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-hard',
-    title: 'A Strength Between the Flasks',
+    title: 'A Concentration Between the Flasks',
     prompt: 'Find the pH of 0.15 M acetic acid, to two decimal places.',
     widget,
     entry: { id: 'ph', label: 'pH', unit: '' },
@@ -301,8 +301,8 @@ export const STAGES = [
     })(),
     hints: [
       'Type the pH in the field; the constant is printed on the plate.',
-      'Compare this flask with the 0.10 M flasks: the strength differs, and the plate does not.',
-      'Write the ratio you found on the rig with x for each ion and the amount put in less x for the acid, set it equal to the constant, and solve for x.'
+      'Compare this flask with the 0.10 M flasks: the concentration differs, and the plate does not.',
+      'Write the ratio you found on the board with x for each ion and the amount put in less x for the acid, set it equal to the constant, and solve for x.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ph');
@@ -321,9 +321,9 @@ export const STAGES = [
     get reward() {
       const s = flaskSol({ solute: HARD });
       return {
-        log: 'The constant gave the pH of a strength no flask showed.',
-        title: 'A New Strength',
-        body: `The constant held at a strength no flask showed: with the two ions equal, Ka gives ${sci(s.h, 2)} mol/L of H₃O⁺ and a pH of ${fmt(s.pH, 2)} for 0.15 M acetic acid.`
+        log: 'The constant gave the pH of a concentration no flask showed.',
+        title: 'A New Concentration',
+        body: `The constant held at a concentration no flask showed: with the two ions equal, Ka gives ${sci(s.h, 2)} mol/L of H₃O⁺ and a pH of ${fmt(s.pH, 2)} for 0.15 M acetic acid.`
       };
     }
   },
@@ -332,27 +332,28 @@ export const STAGES = [
   {
     id: 's6-dilute',
     title: 'Diluting the Acid',
-    prompt: 'Say what happens to the share of the acetic acid that has ionized as the flask is made more dilute.',
+    prompt: 'Dilute the acetic acid until 25 of the 200 units have come apart.',
     widget,
     table: (() => {
-      const t = threeFlasks(ACETIC_C);
+      const f = flaskAt('f1', 36, 1, { solute: ACETIC_C[0], label: NAMES.acetic, w: 64, window: 20, dilute: 2 });
       return phTable({
-        pieces: [meterPiece('meter', { x: 160, y: 9 })],
-        fixtures: [...t.fixtures, selectorFixture('pick', 'Share ionized when diluted', { x: 88, y: 66 }, { options: ['Rises', 'Falls', 'Stays the same', ' '], start: 4, w: 64 })],
-        zones: { slots: t.slots }
-      }, { w: 184, h: 76 });
+        pieces: [meterPiece('meter', { x: 100, y: 9 })],
+        fixtures: [f.fixture],
+        zones: { slots: [f.slot] }
+      }, { w: 184, h: 80 });
     })(),
     hints: [
-      'Use the answer dial, and the meter if you want the pH of each flask.',
-      'Compare how many units have handed over a proton in the window of each flask.',
-      'Each window holds the same 200 units, so compare the three windows in order of strength.'
+      'Press "Dilute" and watch the window.',
+      'Count the units that have come apart in the window after each dilution.',
+      'The window always holds the same 200 units, so a count that rises is a share that rises.'
     ],
+    // The graded answer is the flask: diluted until the window shows the planner's 25 of 200.
     check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v === 1) return { ok: true };
-      const a = windowOf({ solute: ACETIC_C[0] }); const z = windowOf({ solute: ACETIC_C[2] });
-      return { ok: false, msg: `The window of the ${concText(ACETIC_C[2].c)} flask shows ${z.ionized} of ${z.units} units handed over; the ${concText(ACETIC_C[0].c)} flask shows ${a.ionized}.` };
+      const n = Math.round(dialValue(state.table, 'f1', 'steps'));
+      if (n === 0) return { ok: false, notYet: true, msg: 'Dilute the acid.' };
+      const w = windowOf({ solute: { ...ACETIC_C[0], c: ACETIC_C[0].c * Math.pow(0.1, n) } });
+      if (w.ionized === 25) return { ok: true };
+      return { ok: false, msg: `After ${n} ${n === 1 ? 'dilution' : 'dilutions'} the window shows ${w.ionized} of ${w.units} units come apart.` };
     },
     get reward() {
       const p = ACETIC_C.map(s => fmt(flaskSol({ solute: s }).percent, 1));
@@ -368,13 +369,13 @@ export const STAGES = [
   {
     id: 's7-kb',
     title: 'The Base Constant',
-    prompt: 'Arrange tiles on the rig into a ratio that reads the same number for all three ammonia flasks.',
+    prompt: 'Arrange cards on the board into a ratio that reads the same number for all three ammonia flasks.',
     widget,
     table: rigTable(NH3_C, [['OH', 'OH⁻'], ['BH', 'NH₄⁺'], ['B', 'NH₃']]),
     hints: [
-      'Drag the three tiles into the places above and below the line.',
-      'Compare the three numbers the rig prints for each arrangement you try.',
-      'Try one tile, then two, then three, and keep an arrangement whose three numbers agree.'
+      'Drag the three cards into the places above and below the line.',
+      'Compare the three numbers the board prints for each arrangement you try.',
+      'Try one card, then two, then three, and keep an arrangement whose three numbers agree.'
     ],
     check: rigCheck,
     get reward() {
@@ -390,7 +391,7 @@ export const STAGES = [
   {
     id: 's8-pairs',
     title: 'Acid and Base Together',
-    prompt: 'Arrange tiles so the rig reads one number for all three pairs of an acid and its base.',
+    prompt: 'Arrange cards so the board reads one number for all three pairs of an acid and its base.',
     widget,
     table: (() => {
       const rig = rigParts('rig', { x: 75, y: 24 }, {
@@ -403,9 +404,9 @@ export const STAGES = [
       }, { w: 176, h: 46 });
     })(),
     hints: [
-      'Drag the two tiles into the places above and below the line.',
-      'Compare the three numbers the rig prints for each arrangement; each column is a different acid with its own base.',
-      'Try each tile alone, then both on one side of the line, then one on each side.'
+      'Drag the two cards into the places above and below the line.',
+      'Compare the three numbers the board prints for each arrangement; each column is a different acid with its own base.',
+      'Try each card alone, then both on one side of the line, then one on each side.'
     ],
     check: rigCheck,
     reward: {
@@ -419,7 +420,7 @@ export const STAGES = [
 /** The quest's closing card, shown only where a quest has no story animation yet. */
 export const DEBRIEF = {
   title: 'Weak Acids and Bases',
-  body: 'Acids at the same strength can read different pH, because a weak acid ionizes only in part. Ka and Kb are the steady ratios that say how far.'
+  body: 'Acids at the same concentration can read different pH, because a weak acid ionizes only in part. Ka and Kb are the steady ratios that say how far.'
 };
 
 const slotT = i => `slot:rig.t${i}`;
@@ -432,7 +433,7 @@ export const SOLUTIONS = [
   [put('meter', seat(1)), { type: { entry: 'pct', value: '1.3' } }],
   [put('t-H', slotT(1)), put('t-A', slotT(2)), put('t-HA', slotB(1))],
   [{ type: { entry: 'ph', value: '2.79' } }],
-  [dial('pick', 'value', 1)],
+  [{ run: 'f1' }, { run: 'f1' }],
   [put('t-OH', slotT(1)), put('t-BH', slotT(2)), put('t-B', slotB(1))],
   [put('t-Ka', slotT(1)), put('t-Kb', slotT(2))]
 ];
@@ -443,7 +444,7 @@ export const MISSES = [
   [{ type: { entry: 'pct', value: '2.88' } }],
   [put('t-H', slotT(1))],
   [{ type: { entry: 'ph', value: '5.57' } }],
-  [dial('pick', 'value', 3)],
+  [{ run: 'f1' }],
   [put('t-OH', slotT(1))],
   [put('t-Ka', slotT(1))]
 ];

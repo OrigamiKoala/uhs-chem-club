@@ -136,8 +136,8 @@ export async function checkVerdigrisQ3({ ok, fail }) {
   ok('q3-weak stage 2: the sort is accepted only as the windows and the meter show it');
 
   /* ---- stage 6: the dial ---- */
-  holds(run(5, [{ setDial: { fixture: 'pick', dial: 'value', value: 1 } }]).ok, 'stage 6 refuses "rises"');
-  for (const v of [2, 3]) { const r = run(5, [{ setDial: { fixture: 'pick', dial: 'value', value: v } }]); holds(!r.ok && /25 of 200/.test(r.msg) && /3\b/.test(r.msg), `stage 6: dial ${v} is accepted or refused without the windows`); }
+  { const D2 = [{ run: 'f1' }, { run: 'f1' }]; const one = run(5, [{ run: 'f1' }]);
+    holds(run(5, D2).ok && !one.ok && /\d+ of 200/.test(one.msg) && run(5, []).notYet, 'stage 6: 25 of 200 is reached at two dilutions only, and a miss reads the window'); }
   holds(run(5, []).notYet, 'stage 6 does not wait for the dial');
   ok('q3-weak stage 6: rises is right, the others are refused for the windows');
 

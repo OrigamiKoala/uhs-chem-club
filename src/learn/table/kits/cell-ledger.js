@@ -98,7 +98,7 @@ registerFixture('celltally', { paint: paintTally });
  * its dials add: `{ dial, kind: 'e' | 'sp', species?, side: 'left' | 'right', max }`. `mult` (a number) adds a "Times" dial of 1 up to it. `rows` is
  * the list of row labels to print (element symbols and 'charge'), or null for no rows. Returns the fixture; its height follows from the dials.
  */
-export function ledgerFixture(id, at, { title, base, free = [], mult = null, rows = null, w = 70 } = {}) {
+export function ledgerFixture(id, at, { title, base, free = [], mult = null, rows = null, w = 70, hide = false } = {}) {
   const dials = {};
   for (const c of free) {
     const name = c.kind === 'e' ? 'Electrons' : SPECIES[c.species].text;
@@ -110,7 +110,7 @@ export function ledgerFixture(id, at, { title, base, free = [], mult = null, row
   const h = Math.round((top + 8 + (rows ? 4 + 3.6 * rows.length + 1 : 0) + 3) * 10) / 10;
   return {
     id, kind: 'cellledger', label: title, at: { ...at }, size: { w, h }, noRun: true, dials,
-    props: { backdrop: true, base, free, mult: Boolean(mult), rows }
+    props: { backdrop: true, base, free, mult: Boolean(mult), rows, ...(hide ? { hidden: Object.keys(dials) } : {}) }
   };
 }
 

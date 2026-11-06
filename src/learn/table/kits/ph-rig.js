@@ -60,7 +60,7 @@ registerFixture('phrig', { paint: paintRig });
  * many places each row has. Returns the fixture and the slots (add the slots to the stage's `zones.slots`). Stand it under the flasks:
  * its columns share their pitch (`pitch`) and its left column (`lw`) holds the places.
  */
-export function rigParts(id, at, { cols, top = 2, bottom = 2, pitch = 35, lw = null, h = 28, title = 'Ratio rig' } = {}) {
+export function rigParts(id, at, { cols, top = 2, bottom = 2, pitch = 35, lw = null, h = 28, title = 'Expression board' } = {}) {
   const left = lw ?? Math.max(top, bottom) * TILE_PITCH + 3;
   const w = Math.round((left + cols.length * pitch + 1.5) * 10) / 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
@@ -71,7 +71,7 @@ export function rigParts(id, at, { cols, top = 2, bottom = 2, pitch = 35, lw = n
   return {
     fixture: {
       id, kind: 'phrig', label: title, at: { ...at }, size: { w, h }, noRun: true,
-      dials: { x: { min: 0, max: 1, step: 1, value: 0, label: 'Rig' } },
+      dials: { x: { min: 0, max: 1, step: 1, value: 0, label: 'Board' } },
       props: { hidden: ['x'], backdrop: true, lw: left, cols, top: t.map(s => s.id), bottom: bt.map(s => s.id) }
     },
     slots: [...t, ...bt],

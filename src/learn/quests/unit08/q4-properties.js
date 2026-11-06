@@ -29,6 +29,7 @@ import { pansTable, note, pieceIn, plaqueFixture } from '../../table/kits/pans.j
 import { rxnCard, kTile, checkFixture, stackFixture, stackMatches, stackCards, checkLog, fmtRxn } from '../../table/kits/pans-cards.js';
 import { Q4, fmtK, kReverse, kScale, kAdd, kOfCardByRule, netOfCards, kpFromKc, R_ATM } from '../../engine/eqdata.js';
 
+import { clipFixture, pgasFixture } from '../../table/kits/pans-clips.js';
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
@@ -95,7 +96,7 @@ const readOf = (t, eq) => checkLog(t, 'check').find(e => e.eq === eq)?.k ?? null
 function tileCheck(state, want, why) {
   const t = state.table;
   const tile = pieceIn(t, 'ans');
-  if (!tile) return { ok: false, notYet: true, msg: 'Lay a tile in the slot.' };
+  if (!tile) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
   if (tile.label === want) return { ok: true };
   return { ok: false, msg: why(t, tile) };
 }
@@ -115,7 +116,7 @@ export const STAGES = [
   {
     id: 's1-reverse',
     title: 'The Other Way Round',
-    prompt: 'Lay the K tile for E ⇌ 2 D, which is the card 2 D ⇌ E written in the reverse direction.',
+    prompt: 'Lay the K card for E ⇌ 2 D, which is the card 2 D ⇌ E written in the reverse direction.',
     widget,
     table: pansTable({
       pieces: [
@@ -127,7 +128,7 @@ export const STAGES = [
       zones: { trays: [CHK_TRAY], slots: [answerSlot('K of E ⇌ 2 D')] }
     }, TALL),
     hints: [
-      'Use the pan check with "Read K", the "Flip" key while you hold a card, and the tiles.',
+      'Use the vessel check with "Read K", the "Flip" key while you hold a card, and the cards.',
       'Compare the K the check reads for A + B ⇌ C as it is written with the K it reads when the card is flipped.',
       'Find how the K changed when the card was flipped, then make that same change to the K printed on the other card.'
     ],
@@ -135,7 +136,7 @@ export const STAGES = [
       return tileCheck(state, T1.right, t => {
         const eq = eqOf(Q4.P, { flipped: true });
         const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k} when A + B ⇌ C, printed with K ${fmtK(Q4.P.K)}, was flipped; that tile does not make the same change to the K on 2 D ⇌ E.` : 'The check has not read a flipped card yet.';
+        return k ? `The check read ${eq} at K ${k} when A + B ⇌ C, printed with K ${fmtK(Q4.P.K)}, was flipped; that card does not make the same change to the K on 2 D ⇌ E.` : 'The check has not read a flipped card yet.';
       });
     },
     reward: {
@@ -155,8 +156,9 @@ export const STAGES = [
     widget,
     table: pansTable({
       pieces: [note('doubles', GUESS.doubles, { x: 30, y: 14 }), note('same', GUESS.same, { x: 78, y: 14 }), note('squares', GUESS.squares, { x: 30, y: 36 }), note('halves', GUESS.halves, { x: 78, y: 36 })],
+      fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'react', { title: 'A settled vessel', from: 110, kf: 0.1, kr: 0.05, seed: 6, span: 36 , h: 32 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
-    }),
+    }, { h: 78 }),
     hints: [
       'Use the four cards and the slot.',
       'Think about whether doubling every amount in the same reaction changes the mixture or only the way it is written.',
@@ -173,7 +175,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the pan check reads the K of a card with every amount doubled.'
+      body: 'Next, the vessel check reads the K of a card with every amount doubled.'
     }
   },
 
@@ -183,7 +185,7 @@ export const STAGES = [
     title: 'Every Amount Doubled',
     get prompt() {
       const g = guessLine();
-      return g ? `You predicted "${GUESS[g]}". Lay the tile for the K of F + G ⇌ H when every amount in it is doubled.` : 'Lay the tile for the K of F + G ⇌ H when every amount in it is doubled.';
+      return g ? `You predicted "${GUESS[g]}". Lay the card for the K of F + G ⇌ H when every amount in it is doubled.` : 'Lay the card for the K of F + G ⇌ H when every amount in it is doubled.';
     },
     widget,
     table: pansTable({
@@ -196,7 +198,7 @@ export const STAGES = [
       zones: { trays: [CHK_TRAY], slots: [answerSlot('K of F + G ⇌ H')] }
     }, TALL),
     hints: [
-      'Use the pan check with "Read K", the "Larger" key while you hold a card, and the tiles.',
+      'Use the vessel check with "Read K", the "Larger" key while you hold a card, and the cards.',
       'Compare the K the check reads for A + B ⇌ C as it is written with the K it reads when every amount in the card is doubled.',
       'Find how the K changed when every amount was doubled, then make that same change to the K printed on the other card.'
     ],
@@ -204,7 +206,7 @@ export const STAGES = [
       return tileCheck(state, T3.right, t => {
         const eq = eqOf(Q4.P, { scale: 2 });
         const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that tile does not make the same change to the K on F + G ⇌ H.` : 'The check has not read a card made larger yet.';
+        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that card does not make the same change to the K on F + G ⇌ H.` : 'The check has not read a card made larger yet.';
       });
     },
     get reward() {
@@ -222,7 +224,7 @@ export const STAGES = [
   {
     id: 's4-half',
     title: 'Every Amount Halved',
-    prompt: 'Lay the K tile for M + N ⇌ W, which is 2 M + 2 N ⇌ 2 W with every amount halved.',
+    prompt: 'Lay the K card for M + N ⇌ W, which is 2 M + 2 N ⇌ 2 W with every amount halved.',
     widget,
     table: pansTable({
       pieces: [
@@ -234,7 +236,7 @@ export const STAGES = [
       zones: { trays: [CHK_TRAY], slots: [answerSlot('K of M + N ⇌ W')] }
     }, TALL),
     hints: [
-      'Use the pan check with "Read K", the "Larger" key while you hold a card, and the tiles.',
+      'Use the vessel check with "Read K", the "Larger" key while you hold a card, and the cards.',
       'Read the check for A + B ⇌ C as written and with every amount doubled, and compare the two K values.',
       'Doubling every amount changed K by a rule on the check; the card on the table is already doubled, so undo that change on its printed K.'
     ],
@@ -242,7 +244,7 @@ export const STAGES = [
       return tileCheck(state, T4.right, t => {
         const eq = eqOf(Q4.P, { scale: 2 });
         const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that tile does not undo that change on the K of 2 M + 2 N ⇌ 2 W.` : 'The check has not read a card made larger yet.';
+        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that card does not undo that change on the K of 2 M + 2 N ⇌ 2 W.` : 'The check has not read a card made larger yet.';
       });
     },
     reward: {
@@ -256,7 +258,7 @@ export const STAGES = [
   {
     id: 's5-add',
     title: 'Two Reactions in a Row',
-    prompt: 'Lay the tile for the K of the reaction X ⇌ Z.',
+    prompt: 'Lay the card for the K of the reaction X ⇌ Z.',
     widget,
     table: pansTable({
       pieces: [
@@ -270,14 +272,14 @@ export const STAGES = [
       zones: { trays: [{ ...CHK_TRAY, at: { x: 82, y: 21 }, size: { w: 58, h: 28 } }], slots: [answerSlot('K of X ⇌ Z')] }
     }, TALL),
     hints: [
-      'Use the pan check with "Read K", the four cards, and the tiles.',
+      'Use the vessel check with "Read K", the four cards, and the cards.',
       'Compare the K the check reads for each of A ⇌ B and B ⇌ C alone with the K it reads for both lying on it.',
       'Find how the two single K values combine into the K of the pair, then combine the two cards in the question the same way.'
     ],
     check(state) {
       return tileCheck(state, T5.right, t => {
         const k = readOf(t, 'A ⇌ C');
-        return k ? `The check read A ⇌ C at K ${k}, with A ⇌ B printed at K ${fmtK(Q4.chain1.K)} and B ⇌ C at K ${fmtK(Q4.chain2.K)}; that tile does not combine the K values of X ⇌ Y and Y ⇌ Z the same way.` : 'The check has not read two cards lying together yet.';
+        return k ? `The check read A ⇌ C at K ${k}, with A ⇌ B printed at K ${fmtK(Q4.chain1.K)} and B ⇌ C at K ${fmtK(Q4.chain2.K)}; that card does not combine the K values of X ⇌ Y and Y ⇌ Z the same way.` : 'The check has not read two cards lying together yet.';
       });
     },
     reward: {
@@ -299,7 +301,7 @@ export const STAGES = [
         rxnCard('b', { x: CARD_X, y: 28 }, Q4.buildB),
         rxnCard('c', { x: CARD_X, y: 44 }, Q4.buildC)
       ],
-      fixtures: [stackFixture('stack', { x: 130, y: 24 }, { tray: 'stack', wanted: WANT6, w: 40, h: 32 })],
+      fixtures: [stackFixture('stack', { x: 130, y: 31 }, { tray: 'stack', wanted: WANT6, w: 40, h: 54 })],
       zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 80, y: 30 }, size: { w: 56, h: 42 }, cell: 50, cellH: 13 }] }
     }),
     hints: [
@@ -325,7 +327,7 @@ export const STAGES = [
   {
     id: 's7-kp',
     title: 'K From Pressures',
-    prompt: 'Lay the tile for Kp of N₂O₄ ⇌ 2 NO₂ at 298 K, which has Kc 0.0059.',
+    prompt: 'Lay the card for Kp of N₂O₄ ⇌ 2 NO₂ at 298 K, which has Kc 0.0059.',
     widget,
     table: pansTable({
       pieces: [...tiles([T7K.b, T7K.a, T7K.c, T7K.right])],
@@ -334,12 +336,13 @@ export const STAGES = [
           `A ⇌ B: Kc ${fmtK(KP.zero.kc)}, Kp ${fmtK(kpFromKc(KP.zero.kc, KP.zero.dn, KPT))}`,
           `2 C ⇌ D: Kc ${fmtK(KP.minus.kc)}, Kp ${fmtK(kpFromKc(KP.minus.kc, KP.minus.dn, KPT))}`,
           `RT at 298 K: ${fmtK(KP.RT)} L·atm/mol`
-        ], { w: 80 })
+        ], { w: 80 }),
+        pgasFixture('gas', { x: 30, y: 51 }, { c: 0.05, T: KPT, title: 'Gas in a 1 L box', w: 50, h: 34 })
       ],
       zones: { slots: [answerSlot('Kp of N₂O₄ ⇌ 2 NO₂')] }
     }, TALL),
     hints: [
-      'Use the plate and the tiles.',
+      'Use the plate, the gas box and the cards.',
       'Compare Kc with Kp for each reaction on the plate, and count the gas molecules on each side of each.',
       'Where the gas count changes, Kp differs from Kc by RT once for each molecule gained or lost; find which way for 2 C ⇌ D, then apply it to N₂O₄ ⇌ 2 NO₂.'
     ],
@@ -348,7 +351,7 @@ export const STAGES = [
         const l = tile.label;
         if (l === T7K.a) return 'That is Kc itself. On the plate, Kp equals Kc only for A ⇌ B, where the gas count does not change.';
         if (l === T7K.b) return 'That divides Kc by RT. On the plate, 2 C ⇌ D loses a gas molecule and Kp comes out below Kc; N₂O₄ ⇌ 2 NO₂ gains one.';
-        return `Kc is 0.0059 and RT is ${fmtK(KP.RT)}; that tile changes Kc by more than one RT.`;
+        return `Kc is 0.0059 and RT is ${fmtK(KP.RT)}; that card changes Kc by more than one RT.`;
       });
     },
     reward: {
@@ -370,7 +373,7 @@ export const STAGES = [
         rxnCard('a', { x: CARD_X, y: 12 }, Q4.typedA),
         rxnCard('b', { x: CARD_X, y: 28 }, Q4.typedB)
       ],
-      fixtures: [stackFixture('stack', { x: 130, y: 24 }, { tray: 'stack', wanted: WANT8, w: 40, h: 32 })],
+      fixtures: [stackFixture('stack', { x: 130, y: 31 }, { tray: 'stack', wanted: WANT8, w: 40, h: 54 })],
       zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 80, y: 24 }, size: { w: 56, h: 28 }, cell: 50, cellH: 13 }] }
     }),
     hints: [

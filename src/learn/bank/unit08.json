@@ -94,7 +94,7 @@
       },
       {
        "id": "b",
-       "label": "It falls, because extra Cl⁻ pushes more AgCl out as solid until [Ag⁺][Cl⁻] is back at Ksp"
+       "label": "It falls, because extra Cl⁻ drives more AgCl out as solid until [Ag⁺][Cl⁻] is back at Ksp"
       },
       {
        "id": "c",
@@ -341,7 +341,7 @@
       ],
       "answer": "a",
       "hint": "Compare the sign of ΔG° at the two temperatures.",
-      "explain": "ΔG° fell from +4.8 to −4.33 kJ/mol, so K went from below 1 to above 1 and the pan holds more product."
+      "explain": "ΔG° fell from +4.8 to −4.33 kJ/mol, so K went from below 1 to above 1 and the vessel holds more product."
      }
     ],
     "finish": "TΔS° and ΔH° give ΔG°, and ΔG° in joules over RT, with its sign flipped, is the power of e that gives K."
@@ -522,7 +522,7 @@
     "id": "q5-ice#w",
     "quest": "q5-ice",
     "title": "N₂O₄ From a Small Start",
-    "setup": "N₂O₄ ⇌ 2 NO₂ has K = 0.0059. A pan starts with 0.40 M N₂O₄ and no NO₂. Find [NO₂] when it settles.",
+    "setup": "N₂O₄ ⇌ 2 NO₂ has K = 0.0059. A vessel starts with 0.40 M N₂O₄ and no NO₂. Find [NO₂] when it settles.",
     "steps": [
      {
       "say": "What change goes in the NO₂ column of the ICE table?",
@@ -605,7 +605,7 @@
       "explain": "x = 0.0236 M."
      },
      {
-      "say": "What is [NO₂] when the pan settles?",
+      "say": "What is [NO₂] when the vessel settles?",
       "kind": "number",
       "answer": 0.047134,
       "calc": "2*(-0.0059+Math.sqrt(0.0059**2+16*0.0059*0.40))/8",
@@ -643,7 +643,7 @@
       }
      ],
      "answer": "a",
-     "explanation": "Adding N₂ pushes Q below K, so the vessel makes more NH₃ until Q is back on the same K. Only a change of temperature changes K."
+     "explanation": "Adding N₂ lowers Q below K, so the vessel makes more NH₃ until Q is back on the same K. Only a change of temperature changes K."
     },
     {
      "id": "q6-lean#b2",
@@ -762,7 +762,7 @@
       "explain": "2.16 / 0.0400 = 54."
      },
      {
-      "say": "A pan of this reaction has a Kc far above 1. What does that say about it at equilibrium?",
+      "say": "A vessel of this reaction has a Kc far above 1. What does that say about it at equilibrium?",
       "kind": "choice",
       "options": [
        {
@@ -874,7 +874,7 @@
     {
      "id": "boss-tipper#b2",
      "quest": "boss-tipper",
-     "question": "N₂O₄ ⇌ 2 NO₂ is at equilibrium in a sealed vessel. The vessel is squeezed to half its volume at the same temperature. What happens to K and to the amount of NO₂?",
+     "question": "N₂O₄ ⇌ 2 NO₂ is at equilibrium in a sealed vessel. The vessel is compressed to half its volume at the same temperature. What happens to K and to the amount of NO₂?",
      "options": [
       {
        "id": "a",
@@ -894,7 +894,7 @@
       }
      ],
      "answer": "a",
-     "explanation": "Squeezing doubles the pressure of both gases, which puts Q at twice K. The vessel moves toward N₂O₄, the side with fewer molecules, so NO₂ falls. Only a change of temperature changes K."
+     "explanation": "Compressing doubles the pressure of both gases, which puts Q at twice K. The vessel moves toward N₂O₄, the side with fewer molecules, so NO₂ falls. Only a change of temperature changes K."
     }
    ],
    "worked": {

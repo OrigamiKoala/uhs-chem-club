@@ -14,17 +14,19 @@ import './heat-tour.js';
 const FIXTURES = {
   'ph:phflask': {
     title: 'Flask', dials: false,
-    text: 'A flask holds one solution, named at the top with its strength in mol/L. The window is a magnified square holding 200 pieces of what was put in, one piece to a cell. A whole piece is one sphere, and a piece that has handed over a proton, or taken one, shows as the two spheres it made. The colours are named under the window, and the water is not drawn. Where the flask has a seat, the box under the window, lay the pH meter there to read the flask; the seat keeps the last reading it was given.'
+    text: 'The spheres are 200 units of the solution. Lay the pH meter on the seat.'
   },
   'ph:phrig': {
-    title: 'Ratio rig', dials: false,
-    text: 'The rig has two rows of places with a line between them, and one column for each flask or pair. Drag tiles into the places. Each column then prints one number: the values of the tiles above the line multiplied together, divided by the values of the tiles below, taken at that column. A dash means nothing is laid yet. The rig does not say which arrangement to look for.'
+    title: 'Expression board', dials: false,
+    text: 'Put cards above and below the line. Each column prints a number.'
   }
 };
 
 const PIECES = {
-  phmeter: ['pH meter', 'A meter with a probe and a display. Drag it onto a flask\'s seat, or tap it and then tap the seat. The display then shows the pH of that flask, and it shows a dash when the meter is not on a flask.'],
-  phtile: ['Tiles', 'Each tile names one number. Drag it into a place on the rig, or tap it and then tap the place. The rig uses each column\'s value of that number, and moving the tile to another place changes what the columns print.']
+  phmeter: ['pH meter', 'Drag it onto a flask to read it.'],
+  phtile: ['Cards', 'Drag a card onto the board.'],
+  'ph:tag': ['Name cards', 'Drag a card to its place.'],
+  'ph:note': ['Cards', 'Drag a card to its place.']
 };
 
 addTourText(FIXTURES, PIECES);

@@ -28,6 +28,10 @@ import { mirrorBenchKeys } from './bench-keys.js';
 import { mirrorBenchReadings } from './bench-readings.js';
 import { Encounter } from './encounter.js';
 import { storyFor } from './stage-story.js';
+import { glossaryFor, needsFor } from '../glossary/index.js';
+import { getKit } from '../table/kits/index.js';
+import { fixtureLayout } from '../table/layout.js';
+import { PRIMERS } from './primers.js';
 import { BenchLog } from './benchlog.js';
 import { FormulaSlate } from './slate.js';
 import { TrendPlot, pairedReadoutMarkup } from './trendplot.js';
@@ -383,6 +387,8 @@ export class LearnFrame {
       else if (act === 'objective' || act === 'guide') this.showBriefing(true);
       else if (act === 'exit') this.opts.onExit?.();
       else if (act === 'reward') this.showFindings();
+      else if (act === 'glossary') this.showGlossary(e.target.closest('[data-act]')?.dataset.term);
+      else if (act === 'primer') this.showPrimers();
       else if (act === 'close-panel') this.setPanelClosed(true);
       else if (act === 'open-panel') this.setPanelClosed(false);
       else if (act === 'stand') this.tableCbs?.onStand?.();
@@ -914,6 +920,8 @@ export class LearnFrame {
     this.el.stageActions.innerHTML = `
       <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Replay the instrument tour">Tour</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
+      ${this.stage && needsFor(this.currentQuestId(), this.stage.index + 1).length ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="primer" title="A short hands-on refresher for this stage">Primer</button>' : ''}
+      ${glossaryFor(this.currentQuestId()) ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="glossary" title="Words used on this bench">Glossary</button>' : ''}
       ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
   }
@@ -1090,8 +1098,15 @@ export class LearnFrame {
     this.rung++;
     soundscape.playCrtTick?.();
     this.el.hints.insertAdjacentHTML('beforeend',
-      `<p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}</p>`);
+      `<p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}${this.hintTermButton(hints[this.rung - 1])}</p>`);
     this.reveal(this.el.hints.lastElementChild);
+  }
+
+  /** A "What is this?" key on a hint that uses a glossary term: it opens the Glossary at that term. */
+  hintTermButton(text) {
+    const g = glossaryFor(this.currentQuestId());
+    const t = g?.terms.find(x => x.re.test(text));
+    return t ? ` <button type="button" class="btn-chip" data-act="glossary" data-term="${esc(t.id)}">What is this?</button>` : '';
   }
 
   /**
@@ -1139,8 +1154,44 @@ export class LearnFrame {
    * replays all of it.
    */
   /** The steps the Tour gives for the table on this stage (`table/tour.js`), or null when the stage is not a table. */
-  setTourSteps(steps) {
+  setTourSteps(steps, table = null) {
     this.tourSteps = steps && steps.length ? steps : null;
+    this.tourTable = table;
+  }
+
+  /**
+   * An animated clip for a Tour step: the instrument's own painter run on a small canvas while the kit's demonstration (`kit.demoOf`) uses it.
+   * Returns the markup, and `startTourClip` brings it to life once it is in the page. A step with no instrument, or a kit with no demonstration, has none.
+   */
+  tourClipMarkup(st) {
+    const kit = this.tourTable && st.fx ? getKit(this.tourTable.kit) : null;
+    const f = kit && this.tourTable.fixtures?.[st.fx];
+    if (!f || !kit.demoOf || !kit.paintFixture) return '';
+    return '<canvas class="lq-tour-clip" data-clip="1" width="320" height="180" style="display:block;width:100%;max-width:320px;margin:0 auto 10px;background:#100f0c;border:1px solid #3a352e"></canvas>';
+  }
+
+  startTourClip(st) {
+    const cv = document.querySelector('canvas[data-clip]');
+    const kit = this.tourTable && st.fx ? getKit(this.tourTable.kit) : null;
+    const f = kit && this.tourTable.fixtures?.[st.fx];
+    if (!cv || !f || !cv.getContext) return;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    const lay = fixtureLayout(f);
+    const sc = Math.min(cv.width / f.size.w, cv.height / f.size.h);
+    const ox = (cv.width - f.size.w * sc) / 2; const oy = (cv.height - f.size.h * sc) / 2;
+    const b = { sc, X: v => ox + (v - lay.box.x0) * sc, Y: v => oy + (v - lay.box.y0) * sc, lay, clock: 0, sk: 'tour' };
+    const still = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const t0 = performance.now();
+    const frame = () => {
+      if (!cv.isConnected) return;
+      const t = still ? 2.4 : (performance.now() - t0) / 1000;
+      b.clock = t;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      try { kit.paintFixture(ctx, kit.demoOf(f, t), this.tourTable, b); } catch { /* a clip that cannot draw is just not shown */ }
+      if (!still) requestAnimationFrame(frame);
+    };
+    frame();
   }
 
   showBriefing(force = false) {
@@ -1199,11 +1250,14 @@ export class LearnFrame {
   runTour(steps) {
     let i = 0;
     const leave = () => {
+      stopDemo?.();
       activeBenchViewer()?.hideInstrumentHalos();
       closeModal();
       soundscape.playNavRelayClick?.();
     };
+    let stopDemo = null;
     const render = () => {
+      stopDemo?.(); stopDemo = null;
       const st = steps[i];
       const last = i === steps.length - 1;
       if (st.kind) activeBenchViewer()?.showInstrumentHalos(st.kind, st.id);
@@ -1213,6 +1267,8 @@ export class LearnFrame {
             <span class="eyebrow lit" id="lq-briefing-title">${esc(st.name)}</span>
             <span class="tag live">${i + 1} / ${steps.length}</span>
           </div>
+          ${this.tourClipMarkup(st)}
+          ${st.demo ? '<canvas class="lq-tour-demo" width="480" height="210" aria-hidden="true"></canvas>' : ''}
           <p class="lq-brief-text">${esc(clampSentences(st.desc, 4))}</p>
           <div class="debrief-controls-left lq-modal-keys">
             <button type="button" class="btn-secondary" data-tour="back" ${i === 0 ? 'disabled' : ''}>Back</button>
@@ -1222,8 +1278,14 @@ export class LearnFrame {
         </div>
       `, {
         labelledBy: 'lq-briefing-title',
-        onClose: () => activeBenchViewer()?.hideInstrumentHalos()
+        onClose: () => { stopDemo?.(); activeBenchViewer()?.hideInstrumentHalos(); }
       });
+      this.startTourClip(st);
+      const cv = document.querySelector('#modal-container canvas.lq-tour-demo');
+      if (cv && st.demo) {
+        const mine = i;
+        import('../table/tour-demo.js').then(m => m.playTourDemo(cv, st.demo)).then(stop => { if (mine === i && document.body.contains(cv)) stopDemo = stop; else stop(); }).catch(() => {});
+      }
       document.querySelectorAll('[data-tour]').forEach(btn => {
         btn.addEventListener('click', () => {
           const act = btn.dataset.tour;
@@ -1254,6 +1316,39 @@ export class LearnFrame {
    * bench so far, in the order they earned them, so the words each stage
    * named can be read together rather than one at a time.
    */
+  /** The Glossary key: every term of this world met so far, with its one-clause gloss. */
+  showGlossary(focusId = null) {
+    const g0 = glossaryFor(this.currentQuestId());
+    if (!g0) return;
+    const g = focusId ? { ...g0, terms: [...g0.terms.filter(t => t.id === focusId), ...g0.terms.filter(t => t.id !== focusId)] } : g0;
+    showModal(`
+      <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="lq-glossary-title" class="section-title">Glossary</h2>
+        <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
+      </div>
+      <dl class="lq-glossary">
+        ${g.terms.map(t => `<dt>${esc(t.term)}</dt><dd>${esc(t.gloss)}</dd>`).join('')}
+      </dl>
+    `, { labelledBy: 'lq-glossary-title' });
+    document.querySelectorAll('[data-lq-close]').forEach(btn => btn.addEventListener('click', () => closeModal()));
+  }
+
+  /** The Primer key: the hands-on refreshers this stage assumes (maths, earlier ideas). */
+  showPrimers() {
+    const ids = this.stage ? needsFor(this.currentQuestId(), this.stage.index + 1) : [];
+    const list = ids.map(i => PRIMERS[i]).filter(Boolean);
+    if (!list.length) return;
+    showModal(`
+      <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="lq-primer-title" class="section-title">Primer</h2>
+        <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
+      </div>
+      <div class="lq-primers">${list.map((p, k) => `<section data-primer="${k}"><h3>${esc(p.title)}</h3>${p.html}</section>`).join('')}</div>
+    `, { labelledBy: 'lq-primer-title' });
+    list.forEach((p, k) => { const root = document.querySelector(`[data-primer="${k}"]`); if (root) p.wire(root); });
+    document.querySelectorAll('[data-lq-close]').forEach(btn => btn.addEventListener('click', () => closeModal()));
+  }
+
   showFindings() {
     const list = this.clearedFindings();
     if (!list.length) {

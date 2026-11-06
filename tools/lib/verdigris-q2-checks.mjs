@@ -22,6 +22,7 @@ export async function checkVerdigrisQ2({ ok, fail }) {
   const P = await import('../../src/learn/engine/phdata.js');
   const { scaleFlask, scaleMeter, scaleWindow } = await import('../../src/learn/table/kits/ph.js');
   const { PH_KIT } = await import('../../src/learn/table/kits/ph.js');
+  const { scaleRead, sampleCount } = await import('../../src/learn/table/kits/ph-scale.js');
   const { fixtureLayout } = await import('../../src/learn/table/layout.js');
   const Q = await import('../../src/learn/quests/unit09/q2-scale.js');
   const { QUEST_STORY } = await import('../../src/story/quest-story.js');
@@ -83,10 +84,15 @@ export async function checkVerdigrisQ2({ ok, fail }) {
   ok('q2-scale typed stages: right figures accepted, every slip refused with its own reason');
 
   /* ---- the dials ---- */
-  holds(run(0, [dial('pick', 'value', 1)]).ok && !run(0, [dial('pick', 'value', 2)]).ok && /1\.00 to 10\.00/.test(run(0, [dial('pick', 'value', 2)]).msg), 'stage 1 dial');
-  holds(run(4, [dial('pick', 'value', 2)]).ok && /7\.00/.test(run(4, [dial('pick', 'value', 1)]).msg) && !run(4, [dial('pick', 'value', 3)]).ok, 'stage 5 dial');
+  const D3 = [{ run: 'f1' }, { run: 'f1' }, { run: 'f1' }];
+  { const r1 = run(0, [{ run: 'f1' }]); const r3 = run(0, D3);
+    holds(run(0, D3.slice(0, 2)).ok && !r1.ok && /2\.00/.test(r1.msg) && !r3.ok && /4\.00/.test(r3.msg), 'stage 1: pH 3 is accepted at two dilutions only, and a miss reads the flask'); }
+  { const a = run(4, [{ run: 'f1' }]); const b = run(4, D3);
+    holds(run(4, D3.slice(0, 2)).ok && !a.ok && /0\.19/.test(a.msg) && !b.ok && /0\.02/.test(b.msg), 'stage 5: the dilution after which one more would change the pH by under 0.1 is the answer'); }
   holds(run(6, [dial('pick', 'value', 2)]).ok && /2\.3 × 10⁻⁷/.test(run(6, [dial('pick', 'value', 1)]).msg) && !run(6, [dial('pick', 'value', 3)]).ok, 'stage 7 dial');
   holds(run(0, []).notYet && run(4, []).notYet && run(6, []).notYet, 'a dial stage does not wait');
+  holds(run(0, []).notYet && run(4, []).notYet, 'a dilution stage waits for the first dilution');
+  { const t = Q.stateFor(0, D3).table; const f = t.fixtures.f1; holds(Math.round(f.dials.steps.value) === 3 && Math.abs(scaleRead(f).pH - 4) < 1e-6 && sampleCount(f) === 1, 'three dilutions of 0.10 M acid read pH 4 and 1 of 1000 sample dots'); }
   ok('q2-scale dials: the one right setting is accepted, the others refused with a reading');
 
   /* ---- builders reach the fixture ---- */
@@ -111,7 +117,7 @@ export async function checkVerdigrisQ2({ ok, fail }) {
 
   /* ---- no refusal carries the rule ---- */
   const LEAK = /log\b|logarithm|tenfold|factor of ten|power|Kw|floor|equal amounts|neutral/i;
-  for (const r of [run(0, [dial('pick', 'value', 2)]), run(1, [typed('ph', '4')]), run(1, [typed('ph', '3.7')]), run(2, [typed('sum', '7')]), run(3, [typed('ph', '12.40')]), run(4, [dial('pick', 'value', 1)]), run(6, [dial('pick', 'value', 1)]), run(7, [typed('h', '2.62')])]) {
+  for (const r of [run(0, [...D3, dial('pick', 'value', 2)]), run(1, [typed('ph', '4')]), run(1, [typed('ph', '3.7')]), run(2, [typed('sum', '7')]), run(3, [typed('ph', '12.40')]), run(4, [...D3, dial('pick', 'value', 1)]), run(6, [dial('pick', 'value', 1)]), run(7, [typed('h', '2.62')])]) {
     if (!r.msg) no('a refusal has no reason'); else if (LEAK.test(r.msg)) no(`a refusal carries the rule: "${r.msg}"`);
   }
   ok('q2-scale refusals: none carries the rule its stage asks for');

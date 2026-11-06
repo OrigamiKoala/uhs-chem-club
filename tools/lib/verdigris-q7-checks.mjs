@@ -72,8 +72,9 @@ export async function checkVerdigrisQ7({ ok, fail }) {
   holds(run(1, [dial('pick', 'value', 1)]).ok, 'stage 2 refuses the water flask');
   for (const v of [2, 3]) { const r = run(1, [dial('pick', 'value', v)]); holds(!r.ok && /2\.04/.test(r.msg) && /4\.66/.test(r.msg) && /7\.00/.test(r.msg), `stage 2: dial ${v} is accepted or refused without the readings`); }
   holds(run(1, []).notYet, 'stage 2 does not wait for the dial');
-  holds(run(3, [dial('pick', 'value', 2)]).ok && !run(3, [dial('pick', 'value', 1)]).ok && !run(3, [dial('pick', 'value', 3)]).ok, 'stage 4 accepts acetate only');
-  holds(/90 acetate/.test(run(3, [dial('pick', 'value', 1)]).msg) && /110 acetic/.test(run(3, [dial('pick', 'value', 1)]).msg), 'stage 4: the refusal does not give the counts');
+  { const carry = to => ({ place: { piece: 'bench.h.h3o', to: `slot:bench.take.${to}` } });
+    holds(run(3, [carry('a')]).ok && !run(3, [carry('ha')]).ok && !run(3, [carry('h3o')]).ok && run(3, []).notYet, 'stage 4 accepts the proton carried to the acetate only');
+    holds(/90 acetate/.test(run(3, [carry('ha')]).msg) && /110 acetic/.test(run(3, [carry('ha')]).msg), 'stage 4: the refusal does not give the counts'); }
   holds(run(6, [dial('pick', 'value', 2)]).ok && [1, 3, 4].every(v => !run(6, [dial('pick', 'value', v)]).ok), 'stage 7 accepts "rises a little" only');
   holds(/4\.74/.test(run(6, [dial('pick', 'value', 4)]).msg) && /4\.83/.test(run(6, [dial('pick', 'value', 4)]).msg), 'stage 7: the refusal does not give the readings');
   ok('q7-buffer verdicts: only the right setting is accepted, each refusal names the readings');

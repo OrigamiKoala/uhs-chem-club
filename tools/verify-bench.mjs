@@ -1054,6 +1054,8 @@ console.log('The foes — spoil standing in the wells\n');
             const p = SNAP.pointFor(state, kit, to, piece);
             if (mode === 'drag') { down(c); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p); up(p); }
             else { tap(c); tap(p); }
+          } else if (verb === 'setDial' && touchSpots(LAYOUT, kit, state, arg)) {
+            for (const sp of touchSpots(LAYOUT, kit, state, arg)) tap(sp);
           } else if (verb === 'setDial') {
             const lay = LAYOUT.fixtureLayout(state.fixtures[arg.fixture]);
             const t = lay.dials.find(x => x.name === arg.dial);
@@ -1380,6 +1382,9 @@ console.log('The foes — spoil standing in the wells\n');
               if (mode === 'drag') { down(c, piece); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p, onTo); up(p, onTo); }
               else { tap(c, piece); tap(onTo ? { ...st.pieces[onTo].at } : p, onTo); }
             } else if (verb === 'setDial') {
+              // An answer kept by touching the thing (`props.pick`, or a tap zone): touch it as a person would.
+              const spots = touchSpots(LAYOUT, REG.getKit(st.kit), st, arg);
+              if (spots) { for (const sp of spots) tap(sp); continue; }
               const lay = LAYOUT.fixtureLayout(st.fixtures[arg.fixture]);
               const t = lay.dials.find(x => x.name === arg.dial);
               const d = st.fixtures[arg.fixture].dials[arg.dial];
@@ -1822,3 +1827,38 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);
+
+/**
+ * The touches that set `arg.dial` of `arg.fixture` to `arg.value` when the dial has no track because it is answered by touching the thing:
+ * a fixture tapped as a whole (`props.pick`), a tap zone with a value, a zone that steps the dial (tapped as often as it takes), or a zone
+ * that follows a drag (a piston). Null when the dial has a track of its own.
+ */
+function touchSpots(LAYOUT, kit, st, arg) {
+  const cur = st.fixtures[arg.fixture]?.dials?.[arg.dial]?.value;
+  for (const f of Object.values(st.fixtures)) {
+    const box = LAYOUT.fixtureLayout(f).box;
+    const pk = f.props?.pick;
+    if (pk && pk.fixture === arg.fixture && (pk.dial || 'value') === arg.dial) {
+      if (pk.cols) { const c = pk.cols.find(k => k.value === arg.value); if (c) return [{ x: box.x0 + (c.x0 + c.x1) / 2, y: box.y0 + 14 }]; }
+      else if (pk.value === arg.value) return [{ x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2 + 1 }];
+    }
+    for (const z of [...(f.props?.taps || []), ...(kit?.tapZones?.(f, st) || [])]) {
+      if ((z.fixture || f.id) !== arg.fixture || z.dial !== arg.dial) continue;
+      const mid = { x: box.x0 + (z.x0 + z.x1) / 2, y: box.y0 + (z.y0 + z.y1) / 2 };
+      if (z.value != null) { if (z.value === arg.value) return [mid]; continue; }
+      if (z.drag) return [{ x: mid.x, y: box.y0 + z.drag.y1 - (arg.value / z.drag.scale) * (z.drag.y1 - z.drag.y0) }];
+      if (z.step > 0 && arg.value > cur) return Array.from({ length: Math.round((arg.value - cur) / z.step) }, () => mid);
+    }
+  }
+  // A resting particle in a mechanism view (`kit.hotspots`): the one that sets this value, or a cycling one tapped as often as it takes.
+  if (kit?.hotspots) {
+    const hs = Object.values(st.fixtures).flatMap(g => (kit.hotspots(g, st) || []).filter(h => h.action.setDial?.fixture === arg.fixture && h.action.setDial.dial === arg.dial));
+    if (hs.length) {
+      const exact = hs.find(h => h.action.setDial.value === arg.value);
+      if (exact) return [{ x: exact.x, y: exact.y }];
+      const m = st.fixtures[arg.fixture].dials[arg.dial].max + 1;
+      return Array.from({ length: ((arg.value - cur) % m + m) % m }, () => ({ x: hs[0].x, y: hs[0].y }));
+    }
+  }
+  return null;
+}

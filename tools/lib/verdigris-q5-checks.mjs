@@ -47,12 +47,12 @@ export async function checkVerdigrisQ5({ ok, fail }) {
     holds(!m.ok && m.msg, `stage ${i + 1}: the scripted miss is accepted or has no reason`);
     if (m.msg && LEAK.test(m.msg)) no(`stage ${i + 1}: a refusal carries the rule: "${m.msg}"`);
   }
-  const dial = v => ({ setDial: { fixture: 'pick', dial: 'value', value: v } });
   const polls = n => Array.from({ length: n }, () => ({ run: 'mix' }));
-  for (const [i, right] of [[0, 2], [2, 3], [3, 1]]) {
-    holds(run(i, [dial(right)]).ok, `stage ${i + 1}: the right verdict is refused without pouring`);
-    for (const v of [1, 2, 3].filter(x => x !== right)) holds(!run(i, [...polls(5), dial(v)]).ok, `stage ${i + 1}: verdict ${v} is accepted`);
-    holds(run(i, []).notYet, `stage ${i + 1} does not wait for the dial`);
+  for (const i of [0, 2, 3]) {
+    holds(run(i, polls(5)).ok, `stage ${i + 1}: the first pour with none left is refused`);
+    holds(!run(i, polls(4)).ok && /\d/.test(run(i, polls(4)).msg || ''), `stage ${i + 1}: stopping early is accepted or has no reading`);
+    holds(!run(i, polls(6)).ok && run(i, polls(6)).msg, `stage ${i + 1}: pouring past the point is accepted or has no reason`);
+    holds(run(i, []).notYet, `stage ${i + 1} does not wait for a pour`);
   }
   holds(run(1, []).notYet, 'stage 2 does not wait for a guess');
   // The jug runs dry after six pours and the seventh says so.

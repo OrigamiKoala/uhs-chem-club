@@ -195,7 +195,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     id: 's4-amount',
-    title: 'Two Strengths',
+    title: 'Two Concentrations',
     prompt: 'Pour the same acid into both flasks and say which one holds its pH better.',
     widget,
     table: (() => {

@@ -630,8 +630,8 @@
       "worked": {
         "id": "q6-titrate#w",
         "quest": "q6-titrate",
-        "title": "Strength From a Titration",
-        "setup": "A 20.00 mL sample of hydrochloric acid needs 16.0 mL of 0.150 M sodium hydroxide to reach its equivalence point. What is the strength of the acid?",
+        "title": "Concentration From a Titration",
+        "setup": "A 20.00 mL sample of hydrochloric acid needs 16.0 mL of 0.150 M sodium hydroxide to reach its equivalence point. What is the concentration of the acid?",
         "steps": [
           {
             "say": "How many moles of sodium hydroxide were poured? Use litres for the volume.",
@@ -640,7 +640,7 @@
             "calc": "0.150*0.0160",
             "unit": "mol",
             "tol": 0.01,
-            "hint": "Multiply the strength by the volume in litres.",
+            "hint": "Multiply the concentration by the volume in litres.",
             "explain": "0.150 mol/L times 0.0160 L is 0.00240 mol."
           },
           {
@@ -675,7 +675,7 @@
             "explain": "20.00 mL is 0.02000 L."
           },
           {
-            "say": "What is the strength of the acid, in mol/L?",
+            "say": "What is the concentration of the acid, in mol/L?",
             "kind": "number",
             "answer": 0.12,
             "calc": "0.0024/0.02000",

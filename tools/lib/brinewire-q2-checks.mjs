@@ -106,30 +106,32 @@ export async function checkBrinewireQ2({ ok, fail }) {
   holds(run(0, [dial('pick', 'value', 3)]).ok, 'stage 1 refuses the right solution for want of dips');
   for (const v of [1, 2]) { const r = run(0, [dial('pick', 'value', v)]); holds(!r.ok && !!r.msg, `stage 1 wrong dial ${v} is not refused with a reason`); }
   holds(/clean/.test(run(0, [dip('cu', 'zn', Q.CHECKS.S1_METALS), dial('pick', 'value', 1)]).msg), 'stage 1 wrong pick after the dip does not name the clean strip');
-  holds(run(1, Q.CHECKS.S2_WANT.map((m, i) => put(`r-${m}`, `rail:${i}`))).ok, 'stage 2 refuses a right rank for want of dips');
-  const bad2 = run(1, [dip('zn', 'fe'), ...['fe', 'zn', 'pb', 'cu'].map((m, i) => put(`r-${m}`, `rail:${i}`))]);
+  holds(run(1, Q.CHECKS.S2_WANT.map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))).ok, 'stage 2 refuses a right rank for want of dips');
+  const bad2 = run(1, [dip('zn', 'fe'), ...['fe', 'zn', 'pb', 'cu'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))]);
   holds(!bad2.ok && /coating in the Fe²⁺ solution/.test(bad2.msg), `stage 2 wrong rank is not refused with the dip (${bad2.msg})`);
   holds(run(3, [dial('pick', 'value', 2)]).ok, 'stage 4 refuses the right verdict for want of a dip');
   for (const v of [1, 3, 4]) holds(!run(3, [dip('cu', 'zn', Q.CHECKS.S4_METALS), dial('pick', 'value', v)]).ok, `stage 4 accepts verdict ${v}`);
-  holds(run(4, ['mg', 'zn', 'fe', 'h', 'cu', 'ag'].map((m, i) => put(`r-${m}`, `rail:${i}`))).ok, 'stage 5 refuses a right place for hydrogen for want of dips');
-  holds(run(4, ['fe', 'mg', 'zn', 'h', 'ag', 'cu'].map((m, i) => put(`r-${m}`, `rail:${i}`))).ok, 'stage 5 grades the order inside each side of hydrogen');
+  holds(run(4, ['mg', 'zn', 'fe', 'h', 'cu', 'ag'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))).ok, 'stage 5 refuses a right place for hydrogen for want of dips');
+  holds(run(4, ['fe', 'mg', 'zn', 'h', 'ag', 'cu'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))).ok, 'stage 5 grades the order inside each side of hydrogen');
   for (const order of [['h', 'mg', 'zn', 'fe', 'cu', 'ag'], ['mg', 'zn', 'h', 'fe', 'cu', 'ag'], ['mg', 'zn', 'fe', 'cu', 'h', 'ag']]) {
-    const r = run(4, order.map((m, i) => put(`r-${m}`, `rail:${i}`)));
+    const r = run(4, order.map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`)));
     holds(!r.ok && !!r.msg, `stage 5 accepts hydrogen at ${order.indexOf('h')}`);
   }
-  holds(run(5, ['zn', 'mg'].map(m => put(`p-${m}`, 'tray:clean'))).ok, 'stage 6 refuses the right cards for want of a week');
-  const w6 = run(5, ['zn', 'mg', 'sn'].map(m => put(`p-${m}`, 'tray:clean')));
+  const nail = ms => ms.map(m => dial('scene', `n${Q.CHECKS.S6_PARTNERS.indexOf(m)}`, 1));
+  holds(run(5, nail(['zn', 'mg'])).ok, 'stage 6 refuses the right cards for want of a week');
+  const w6 = run(5, nail(['zn', 'mg', 'sn']));
   holds(!w6.ok && /week/.test(w6.msg), 'stage 6 wrong set before the week does not say the nails have not been left');
-  const w6b = run(5, [{ run: 'nails' }, ...['zn', 'mg', 'sn'].map(m => put(`p-${m}`, 'tray:clean'))]);
+  const w6b = run(5, [{ run: 'nails' }, ...nail(['zn', 'mg', 'sn'])]);
   holds(!w6b.ok && /tin showed blue spots/.test(w6b.msg), `stage 6 wrong set after the week is not refused with the nail (${w6b.msg})`);
-  const w6c = run(5, [{ run: 'nails' }, put('p-zn', 'tray:clean')]);
+  const w6c = run(5, [{ run: 'nails' }, ...nail(['zn'])]);
   holds(!w6c.ok && /magnesium showed no blue spots/.test(w6c.msg), `stage 6 a missing card is not refused with its nail (${w6c.msg})`);
-  holds(run(6, [put('r-ni', 'rail:2')]).ok, 'stage 7 refuses the right place for want of dips');
-  for (const at of [0, 1, 3, 4]) holds(!run(6, [put('r-ni', `rail:${at}`)]).ok, `stage 7 accepts X at ${at}`);
-  for (const v of [1, 3, 4]) holds(!run(7, [dial('pick', 'value', v)]).ok, `stage 8 accepts strip ${v}`);
-  holds(run(7, [dial('pick', 'value', 2)]).ok, 'stage 8 refuses the iron strip for want of a dip');
-  holds(/red-brown and dark grey/.test(run(7, [put('s-zn', 'slot:dip.b0'), dial('pick', 'value', 1)]).msg), 'stage 8 zinc refusal does not name both coatings');
-  holds(/clean/.test(run(7, [put('s-ag', 'slot:dip.b3'), dial('pick', 'value', 4)]).msg), 'stage 8 silver refusal does not say clean');
+  holds(run(6, [put('s-x', 'rail:2')]).ok, 'stage 7 refuses the right place for want of dips');
+  for (const at of [0, 1, 3, 4]) holds(!run(6, [put('s-x', `rail:${at}`)]).ok, `stage 7 accepts X at ${at}`);
+  const S8 = Q.CHECKS.S8_STRIPS; const ans = v => put(`s-${S8[v - 1]}`, 'slot:answer');
+  for (const v of [1, 3, 4]) holds(!run(7, [ans(v)]).ok, `stage 8 accepts strip ${v}`);
+  holds(run(7, [ans(2)]).ok, 'stage 8 refuses the iron strip for want of a dip');
+  holds(/red-brown and dark grey/.test(run(7, [put('s-zn', 'slot:dip.b0'), put('s-zn', 'slot:answer')]).msg), 'stage 8 zinc refusal does not name both coatings');
+  holds(/clean/.test(run(7, [put('s-ag', 'slot:dip.b3'), put('s-ag', 'slot:answer')]).msg), 'stage 8 silver refusal does not say clean');
   ok('q2-activity grading: right answers pass at once, every wrong one is refused with a reading the table shows');
 
   /* ---- no refusal carries the rule its stage asks for ---- */

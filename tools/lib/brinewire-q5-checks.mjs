@@ -92,17 +92,17 @@ export async function checkBrinewireQ5({ ok, fail }) {
     holds(!r.ok && r.msg && r.msg.includes(w) && r.msg.includes('72') && r.msg.includes('28'), `stage 4 slip ${bad} is not refused with the windows' counts naming "${w}" (${r.msg})`);
   }
   holds(run(5, [typed('v', '1.01')]).ok && !run(5, [typed('v', '1.10')]).ok, 'stage 6 grading');
-  for (const [bad, w] of [['1.19', 'above the 1.10 V'], ['0.92', 'one electron'], ['0.90', 'natural log'], ['1.10', 'equal strengths'], ['-28.5', 'far from']]) {
+  for (const [bad, w] of [['1.19', 'above the 1.10 V'], ['0.92', 'one electron'], ['0.90', 'natural log'], ['1.10', 'equal concentrations'], ['-28.5', 'far from']]) {
     const r = run(5, [typed('v', bad)]);
     holds(!r.ok && r.msg && r.msg.includes(w), `stage 6 slip ${bad} is not refused naming "${w}" (${r.msg})`);
   }
-  holds(run(1, [{ run: 'load' }, { setDial: { fixture: 'pick', dial: 'value', value: 2 } }]).msg.includes('tin window held'), 'stage 2 miss names the windows');
+  holds(run(1, [{ run: 'load' }, { setDial: { fixture: 'scene', dial: 't0', value: 1 } }]).msg.includes('tin window held'), 'stage 2 miss names the windows');
   holds(run(2, [{ run: 'rig' }, { setDial: { fixture: 'rig', dial: 'a', value: 2 } }, { run: 'rig' }, { setDial: { fixture: 'pick', dial: 'value', value: 3 } }]).msg.includes('1.16 V'), 'stage 3 miss names both readings');
   holds(/ammeter needle is at rest/.test(run(4, [{ setDial: { fixture: 'pick', dial: 'value', value: 1 } }]).msg), 'stage 5 unrun miss names the needle');
   ok('q5-load stages: every right answer passes and every slip or miss is refused with a reading from the table');
 
   /* ---- a correct answer is accepted at once, with no run needed ---- */
-  holds(run(1, [{ setDial: { fixture: 'pick', dial: 'value', value: 4 } }]).ok, 'stage 2: the right answer must be accepted without a run');
+  holds(run(1, [{ setDial: { fixture: 'scene', dial: 't0', value: 1 } }, { setDial: { fixture: 'scene', dial: 't1', value: 1 } }]).ok, 'stage 2: the right answer must be accepted without a run');
   holds(run(6, ['tc', 'ta', 'tb'].map((c, i) => ({ place: { piece: c, to: `rail:${i}` } }))).ok, 'stage 7: a right rank must be accepted without every cell read');
 
   /* ---- no Le Châtelier language, no Q before stage 4, no arrows in keys, and no refusal that carries the rule ---- */

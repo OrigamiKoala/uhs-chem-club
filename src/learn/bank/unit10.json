@@ -224,11 +224,11 @@
             },
             {
               "id": "d",
-              "label": "The voltage rises as the two strengths approach each other"
+              "label": "The voltage rises as the two concentrations approach each other"
             }
           ],
           "answer": "b",
-          "explanation": "The dilute side is the anode, so the electrons leave the bar in the 0.010 M beaker. The cell runs until the two strengths match, and its voltage falls to zero there."
+          "explanation": "The dilute side is the anode, so the electrons leave the bar in the 0.010 M beaker. The cell runs until the two concentrations match, and its voltage falls to zero there."
         }
       ]
     }

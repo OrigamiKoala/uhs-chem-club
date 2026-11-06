@@ -318,13 +318,13 @@ export function supplyFixture(id, at, scene, o = {}) {
   const label = o.title ?? 'Supply bench';
   if (scene === 'zncu') {
     w = 104; h = 70;
-    dials = { v: dial('Supply voltage', ['0.5 V', '1.5 V']), dir: dial('Electrons pushed into', ['zinc strip', 'copper strip']) };
+    dials = { v: dial('Supply voltage', ['0.5 V', '1.5 V']), dir: dial('Electrons sent into', ['zinc strip', 'copper strip']) };
     combos = [{ Vs: 0.5, dir: 'zn' }, { Vs: 0.5, dir: 'cu' }, { Vs: 1.5, dir: 'zn' }, { Vs: 1.5, dir: 'cu' }];
     const cy = 18.2 + 14;
     cups = [{ x: 6, y: cy, w: 12, h: 12 }, { x: w - 18, y: cy, w: 12, h: 12 }];
   } else if (scene === 'melt') {
     w = 100; h = 66;
-    dials = { dir: dial('Electrons pushed into', ['left electrode', 'right electrode']) };
+    dials = { dir: dial('Electrons sent into', ['left electrode', 'right electrode']) };
     combos = [{ into: 'left' }, { into: 'right' }];
     props = { Vs: o.Vs ?? 6 };
     cups = [{ x: w / 2 - 22, y: 13.2 + 22, w: 44, h: 14 }];

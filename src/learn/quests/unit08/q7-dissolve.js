@@ -28,6 +28,8 @@ import { KSP, molarSolubility, dissolveState, solubilityWithCommon } from '../..
 import { pansTable, selectorFixture, plaqueFixture, note, pieceIn, dialValue } from '../../table/kits/pans.js';
 import { beakerFixture, kspFormFixture, beakerRead, formExpression, formSpecies, sci, ionText, SCOOP } from '../../table/kits/pans-beaker.js';
 
+import { clipFixture } from '../../table/kits/pans-clips.js';
+import { choiceFixture, pickable, pickColumns } from '../../table/kits/pans-choice.js';
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
@@ -204,6 +206,7 @@ export const STAGES = [
         note('same', GUESS.same, { x: 126, y: 14 })
       ],
       fixtures: [
+        clipFixture('clip', { x: 82, y: 45 }, 'dissolve', { title: 'A solid in water', w: 34 }),
         plaqueFixture('ksp', 'Ksp at 25 °C', { x: 36, y: 42 }, [`${name('AgCl')}   ${sci(ksp('AgCl'))}`, `${name('Ag2CrO4')}   ${sci(ksp('Ag2CrO4'))}`], { w: 56 })
       ],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 42 }, size: { w: 36, h: 14 } }] }
@@ -238,24 +241,24 @@ export const STAGES = [
       title: 'Two Beakers',
       get prompt() {
         const g = recall(QUEST_KEY);
-        return g && GUESS[g] ? `You predicted "${GUESS[g]}". Set the dial to the salt that has more dissolved in its beaker.` : 'Set the dial to the salt that has more dissolved in its beaker.';
+        return g && GUESS[g] ? `You predicted "${GUESS[g]}". Tap the salt that has more dissolved in its beaker.` : 'Tap the salt that has more dissolved in its beaker.';
       },
       widget,
       table: pansTable({
         fixtures: [
-          beakerFixture('agcl', { x: 40, y: 25 }, { salt: 'AgCl', total: t, ref, showDissolved: true, title: 'AgCl in water' }),
-          beakerFixture('ag2', { x: 112, y: 25 }, { salt: 'Ag2CrO4', total: t, ref, showDissolved: true, title: 'Ag₂CrO₄ in water' }),
-          selectorFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { options: ['AgCl', 'Ag₂CrO₄', 'The same', ' '], start: 4 })
+          pickable(beakerFixture('agcl', { x: 40, y: 25 }, { salt: 'AgCl', total: t, ref, showDissolved: true, title: 'AgCl in water' }), 1),
+          pickable(beakerFixture('ag2', { x: 112, y: 25 }, { salt: 'Ag2CrO4', total: t, ref, showDissolved: true, title: 'Ag₂CrO₄ in water' }), 2),
+          choiceFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { same: 3, options: ['AgCl', 'Ag₂CrO₄', 'The same', ' '], start: 4 })
         ]
       }, { h: 70 }),
       hints: [
-        'Use the answer dial; both beakers are already read.',
+        'Tap a beaker to choose it; both are already read.',
         'Compare how much of each salt is dissolved in each beaker, in moles per litre.',
         'Count dissolved salt in whole formula units, which is the line marked "Dissolved salt", not one ion at a time.'
       ],
       check(state) {
         const v = dialValue(state.table, 'pick');
-        if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+        if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
         if (v === 2) return { ok: true };
         const a = read('AgCl', t); const b = read('Ag2CrO4', t);
         return { ok: false, msg: `The beakers read ${sci(b.dissolved)} mol/L of Ag₂CrO₄ dissolved and ${sci(a.dissolved)} mol/L of AgCl.` };
@@ -278,23 +281,23 @@ export const STAGES = [
     return {
       id: 's6-common',
       title: 'Salt Already in the Water',
-      prompt: 'Set the dial to the beaker that holds more dissolved BaSO₄.',
+      prompt: 'Tap the beaker that holds more dissolved BaSO₄.',
       widget,
       table: pansTable({
         fixtures: [
-          beakerFixture('b1', { x: 40, y: 25 }, { salt: 'BaSO4', total: t, showDissolved: true, title: 'Beaker 1: water' }),
-          beakerFixture('b2', { x: 112, y: 25 }, { salt: 'BaSO4', total: t, an0: S6_SULFATE, showDissolved: true, title: 'Beaker 2: 0.10 mol/L Na₂SO₄' }),
-          selectorFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { options: ['Beaker 1', 'Beaker 2', 'The same', ' '], start: 4 })
+          pickable(beakerFixture('b1', { x: 40, y: 25 }, { salt: 'BaSO4', total: t, showDissolved: true, title: 'Beaker 1: water' }), 1),
+          pickable(beakerFixture('b2', { x: 112, y: 25 }, { salt: 'BaSO4', total: t, an0: S6_SULFATE, showDissolved: true, title: 'Beaker 2: 0.10 mol/L Na₂SO₄' }), 2),
+          choiceFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { same: 3, options: ['Beaker 1', 'Beaker 2', 'The same', ' '], start: 4 })
         ]
       }, { h: 70 }),
       hints: [
-        'Use the answer dial; both beakers are already read.',
+        'Tap a beaker to choose it; both are already read.',
         'Compare the "Dissolved salt" lines of the two beakers, and what each beaker\'s water held before any BaSO₄ went in.',
         'Sulfate that came from the sodium salt is not BaSO₄ that has dissolved; only the Ba²⁺ meter counts BaSO₄ in the water.'
       ],
       check(state) {
         const v = dialValue(state.table, 'pick');
-        if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+        if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
         if (v === 1) return { ok: true };
         const a = read('BaSO4', t); const b = read('BaSO4', t, 0, S6_SULFATE);
         return { ok: false, msg: `Beaker 2 reads ${sci(b.dissolved)} mol/L of dissolved salt and Beaker 1 reads ${sci(a.dissolved)} mol/L.` };
@@ -302,7 +305,7 @@ export const STAGES = [
       reward: {
         log: 'Sulfate already in the water cut how much BaSO₄ dissolved.',
         title: 'Common-Ion Effect',
-        body: 'A salt dissolves less in water that already holds one of its ions. The extra sulfate pushes BaSO₄ back out as solid, a precipitate; this is the common-ion effect, and [Ba²⁺][SO₄²⁻] still equals Ksp.'
+        body: 'A salt dissolves less in water that already holds one of its ions. The extra sulfate drives BaSO₄ back out as solid, a precipitate; this is the common-ion effect, and [Ba²⁺][SO₄²⁻] still equals Ksp.'
       }
     };
   })(),
@@ -317,22 +320,22 @@ export const STAGES = [
     return {
       id: 's7-mix',
       title: 'Mixing Two Solutions',
-      prompt: 'Set the dial to the mixture in which a precipitate forms.',
+      prompt: 'Tap the mixture in which a precipitate forms.',
       widget,
       table: pansTable({
         fixtures: [
-          jar(0, 26), jar(1, 75), jar(2, 124),
-          selectorFixture('pick', 'Forms a precipitate', { x: 75, y: 60 }, { options: ['Mix 1', 'Mix 2', 'Mix 3', ' '], start: 4 })
+          pickable(jar(0, 26), 1), pickable(jar(1, 75), 2), pickable(jar(2, 124), 3),
+          choiceFixture('pick', 'Forms a precipitate', { x: 75, y: 60 }, { options: ['Mix 1', 'Mix 2', 'Mix 3', ' '], start: 4 })
         ]
       }, { h: 70 }),
       hints: [
-        'Use the answer dial; each mixture has a gauge.',
+        'Tap a mixture to choose it; each has a gauge.',
         'Compare Q with Ksp on each gauge.',
-        'Use what Q above K and Q below K meant for a pan on an earlier bench.'
+        'Use what Q above K and Q below K meant for a vessel on an earlier bench.'
       ],
       check(state) {
         const v = dialValue(state.table, 'pick');
-        if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+        if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
         if (v === 2) return { ok: true };
         return { ok: false, msg: `Mix ${v} has Q = ${sci(Q(v - 1))} against a Ksp of ${sci(ksp('PbI2'))}.` };
       },
@@ -348,23 +351,23 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'Two Salts, One Added Ion',
-    prompt: 'Set the dial to the salt whose solubility drops by the larger factor when 0.10 mol/L of a common ion is added.',
+    prompt: 'Tap the salt whose solubility drops by the larger factor when 0.10 mol/L of a common ion is added.',
     widget,
     table: pansTable({
       fixtures: [
-        beakerFixture('agcl', { x: 40, y: 28 }, { salt: 'AgCl', total: S8.AgCl.total, showDissolved: true, showPure: true, tallies: false, common: { ion: S8.AgCl.ion, list: S8_LIST, label: 'Cl− added', labels: S8_LABELS }, title: 'AgCl' }),
-        beakerFixture('pbi2', { x: 112, y: 28 }, { salt: 'PbI2', total: S8.PbI2.total, showDissolved: true, showPure: true, tallies: false, common: { ion: S8.PbI2.ion, list: S8_LIST, label: 'I− added', labels: S8_LABELS }, title: 'PbI₂' }),
-        selectorFixture('pick', 'Drops by the larger factor', { x: 75, y: 62 }, { options: ['AgCl', 'PbI₂', 'The same', ' '], start: 4 })
+        pickable(beakerFixture('agcl', { x: 40, y: 28 }, { salt: 'AgCl', total: S8.AgCl.total, showDissolved: true, showPure: true, tallies: false, common: { ion: S8.AgCl.ion, list: S8_LIST, label: 'Cl− added', labels: S8_LABELS }, title: 'AgCl' }), 1),
+        pickable(beakerFixture('pbi2', { x: 112, y: 28 }, { salt: 'PbI2', total: S8.PbI2.total, showDissolved: true, showPure: true, tallies: false, common: { ion: S8.PbI2.ion, list: S8_LIST, label: 'I− added', labels: S8_LABELS }, title: 'PbI₂' }), 2),
+        choiceFixture('pick', 'Drops by the larger factor', { x: 75, y: 62 }, { same: 3, options: ['AgCl', 'PbI₂', 'The same', ' '], start: 4 })
       ]
     }, { h: 72 }),
     hints: [
-      'Use the "added" dial on each beaker and the answer dial.',
+      'Use the "added" dial on each beaker then tap the beaker you choose.',
       'Compare each salt\'s "Dissolved salt" with and without the added ion, next to its "In pure water" line.',
       'A factor is how many times smaller the dissolved amount becomes, the old figure divided by the new one.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
       if (v === 1) return { ok: true };
       const a = read('AgCl', S8.AgCl.total, 0, S8_ADDED); const b = read('PbI2', S8.PbI2.total, 0, S8_ADDED);
       return { ok: false, msg: `AgCl goes from ${sci(s0('AgCl'))} to ${sci(a.dissolved)} mol/L and PbI₂ from ${sci(s0('PbI2'))} to ${sci(b.dissolved)} mol/L.` };

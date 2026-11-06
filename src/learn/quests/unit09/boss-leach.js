@@ -137,7 +137,7 @@ export const STAGES = [
     },
     hints: [
       'Use the pH meter on each flask and the answer dial.',
-      'Compare the amounts of H₃O⁺ and OH⁻ that each flask\'s lens counts with each other.',
+      'Compare the amounts of H₃O⁺ and OH⁻ that each flask\'s counter counts with each other.',
       'Set the flask where the two counts are equal, whatever its meter reads.'
     ],
     check(state) {
@@ -145,7 +145,7 @@ export const STAGES = [
       if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
       if (v === P1_PICK) return { ok: true };
       const f = P1_FLASKS[v - 1]; const s = p1Sol(f);
-      return { ok: false, msg: `The ${f.name} flask reads ${fmt(s.pH, 2)}, and its lens counts ${sci(s.h, 2)} M of H₃O⁺ against ${sci(s.oh, 2)} M of OH⁻.` };
+      return { ok: false, msg: `The ${f.name} flask reads ${fmt(s.pH, 2)}, and its counter counts ${sci(s.h, 2)} M of H₃O⁺ against ${sci(s.oh, 2)} M of OH⁻.` };
     },
     get reward() {
       const w = p1Sol(P1_FLASKS[1]); const a = p1Sol(P1_FLASKS[0]); const b = p1Sol(P1_FLASKS[2]);
@@ -178,12 +178,12 @@ export const STAGES = [
     encounter: {
       species: 'the leach',
       act: 'Commit Order',
-      intent: 'The Leach draws three acids from three vats, each at a strength of its own.'
+      intent: 'The Leach draws three acids from three vats, each at a concentration of its own.'
     },
     hints: [
       'Use the pH meter on the one flask with a seat, then drag the three cards onto the rail.',
-      'Compare the strength printed on each flask with the number of its units that have handed over a proton.',
-      'Multiply the share of units that have handed over a proton by the flask\'s strength to find its H₃O⁺ in mol/L, and put the largest first.'
+      'Compare the concentration printed on each flask with the number of its units that have handed over a proton.',
+      'Multiply the share of units that have handed over a proton by the flask\'s concentration to find its H₃O⁺ in mol/L, and put the largest first.'
     ],
     check(state) {
       const order = state.table.zones.rail.order.map(id => id.slice(2));
@@ -199,7 +199,7 @@ export const STAGES = [
       const p = Object.fromEntries(P2_FLASKS.map(x => [x.key, fmt(p2PH(x), 2)]));
       return {
         log: 'The most dilute acid was the one with the largest share ionized and not the lowest pH.',
-        title: 'Strength Is Not Share',
+        title: 'Concentration Is Not Share',
         body: `Formic acid read ${p.formic}, acetic acid ${p.acetic} and hydrofluoric acid ${p.hf}. Hydrofluoric acid had the largest share ionized, but it was the most dilute flask, so its H₃O⁺ in mol/L was the smallest.`
       };
     }

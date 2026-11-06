@@ -24,6 +24,16 @@ import './pans-beaker.js';
 import './pans-free.js';
 import './pans-cards.js';
 import './pans-ice.js';
+import './pans-clips.js';
+import './pans-tour-min.js';
+import './pans-choice.js';
+import { paintPickFrame, paintPickHint } from './pans-choice.js';
+import { replayPans } from './pans-pan.js';
+import { replayGlide } from './pans-ratio.js';
+import { replaySettle } from './pans-ice.js';
+import { replayVessels } from './pans-stress.js';
+import { installDresses } from './pans-3d.js';
+installDresses();
 
 export const PANS_KIT_ID = 'pans';
 export const PANS_BOUNDS = HEAT_BOUNDS;
@@ -44,8 +54,10 @@ const paintPiece = (ctx, p, state, o) => {
 const faceKey = (p, state) => (pieceDef(p.kind)?.faceKey ? pieceDef(p.kind).faceKey(p, state) : heatFaceKey(p, state));
 const paintFixture = (ctx, f, state, b) => {
   const h = fixtureHandler(f.kind);
-  if (h?.paint) return h.paint(ctx, f, state, b);
-  return heatFixture(ctx, f, state, b);
+  const out = h?.paint ? h.paint(ctx, f, state, b) : heatFixture(ctx, f, state, b);
+  // A fixture answered by tapping it shows where to tap, and which one is chosen.
+  if (f.props?.pick) { paintPickHint(ctx, f, state, b); paintPickFrame(ctx, f, state, b); }
+  return out;
 };
 const piece3d = (p, state, c) => {
   const def = pieceDef(p.kind);
@@ -67,6 +79,9 @@ export const PANS_KIT = {
   id: PANS_KIT_ID,
   kinds: { ...HEAT_KIT.kinds, ...pieceKinds() },
   run,
+  tapZones: (f, state) => fixtureHandler(f.kind)?.tapZones?.(f, state) || [],
+  replay: () => { replayPans(); replayGlide(); replaySettle(); replayVessels(); },
+  live: state => Object.values(state.fixtures || {}).some(f => fixtureHandler(f.kind)?.live?.(f, state)),
   paintPiece,
   paintFixture,
   faceKey,

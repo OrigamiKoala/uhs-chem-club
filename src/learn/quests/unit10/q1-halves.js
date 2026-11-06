@@ -31,12 +31,14 @@ import {
 } from '../../engine/celldata-q1.js';
 import { oxNumber } from '../../engine/celldata.js';
 
+import { attachScenes } from '../../table/kits/cell-attach.js';
+
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\boxidation numbers?\b/i, introducedAt: 1 },
   { term: /\bhalf-reactions?\b/i, introducedAt: 3 },
-  { term: /\boxidation\b/i, introducedAt: 3 },
+  { term: /\boxidation\b(?! numbers?)/i, introducedAt: 3 },
   { term: /\breduction\b/i, introducedAt: 3 },
   { term: /\bredox\b/i, introducedAt: 3 },
   { term: /\boxidi[sz]ing agents?\b/i, introducedAt: 5 },
@@ -80,37 +82,27 @@ export const STAGES = [
   {
     id: 's1-number',
     title: 'Before and After',
-    prompt: 'Sort the four cards by whether the probe reads the same number before and after.',
+    prompt: 'Mark the particles whose oxidation number changes.',
     widget,
-    table: (() => {
-      const pr = probeFixture('probe', { x: 143, y: 35 }, { rows: 1, strip: true, stripLines: 4 });
-      return cellTable({
-        pieces: S1_CARDS.map((c, i) => probeCard(`k-${c}`, c, { x: 18 + i * 32, y: 80 })),
-        fixtures: [beakerFixture('beaker', { x: 57, y: 31 }, 'zncu', { title: 'Zinc in copper(II) sulfate' }), pr.fixture],
-        zones: {
-          slots: [pr.slot],
-          trays: [
-            { id: 'changed', label: 'Number different', at: { x: 48, y: 108 }, size: { w: 60, h: 30 }, cell: 28, cellH: 13 },
-            { id: 'same', label: 'Number the same', at: { x: 124, y: 108 }, size: { w: 60, h: 30 }, cell: 28, cellH: 13 }
-          ]
-        }
-      }, { w: 178, h: 132 });
-    })(),
+    // The answer is given to the particles: each of the four kinds in the beaker is tapped to read its oxidation number before and after
+    // (a grey sphere), and tapped again to mark a change (amber). The marks are hidden dials of the model (`own`, below).
+    table: cellTable({
+      fixtures: [beakerFixture('beaker', { x: 57, y: 31 }, 'zncu', { title: 'Zinc in copper(II) sulfate' })]
+    }, { w: 114, h: 60 }),
     hints: [
-      'Drag a card onto the probe seat to read it, then drag each of the four cards into a tray.',
-      'Compare the "Before" number with the "After" number the probe prints for each card.',
-      'Put a card in the first tray when its two numbers are not equal and in the second when they are.'
+      'Tap a particle once to read its oxidation number before and after.',
+      'Compare the two numbers of each particle you read.',
+      'Tap a particle a second time to mark it when its two numbers are not equal.'
     ],
     check(state) {
-      const t = state.table;
-      const where = Object.fromEntries(S1_CARDS.map(c => [c, t.pieces[`k-${c}`].zone]));
-      if (Object.values(where).some(z => !z || !z.startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Drag every card into a tray.' };
-      const noted = t.fixtures.probe.props.noted || [];
-      for (const c of S1_CARDS) {
-        if (where[c] === (cardChanged(c) ? 'tray:changed' : 'tray:same')) continue;
-        if (!noted.includes(c)) return { ok: false, msg: `The probe has not read the ${CARDS[c].short.toLowerCase()} card yet.` };
+      const f = state.table.fixtures.scene;
+      const vals = S1_CARDS.map((c, i) => Math.round(f.dials[`m${i}`].value));
+      if (vals.some(v => !v)) return { ok: false, notYet: true, msg: 'Tap every particle to read it.' };
+      for (let i = 0; i < S1_CARDS.length; i++) {
+        const c = S1_CARDS[i];
+        if (vals[i] === (cardChanged(c) ? 2 : 1)) continue;
         const r = cardReading(c);
-        return { ok: false, msg: `The probe read ${CARDS[c].short.toLowerCase()} as ${oxText(r.before)} before and ${oxText(r.after)} after.` };
+        return { ok: false, msg: `${CARDS[c].short} reads ${oxText(r.before)} before and ${oxText(r.after)} after.` };
       }
       return { ok: true };
     },
@@ -119,7 +111,7 @@ export const STAGES = [
       return {
         log: 'Zinc and copper changed their numbers; the sulfate did not.',
         title: 'Oxidation Number',
-        body: `Zinc read ${oxText(z.before)} then ${oxText(z.after)} and copper ${oxText(c.before)} then ${oxText(c.after)}, while sulfur stayed ${oxText(s.before)} and oxygen ${oxText(o.before)}. An atom's oxidation number is its electron bookkeeping: plus for each electron it has lost, minus for each it has gained, compared with the bare atom.`
+        body: `Zinc went from ${oxText(z.before)} to ${oxText(z.after)} and copper from ${oxText(c.before)} to ${oxText(c.after)}; sulfur stayed ${oxText(s.before)} and oxygen ${oxText(o.before)}. An oxidation number counts electrons lost (plus) or gained (minus).`
       };
     }
   },
@@ -158,7 +150,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the zinc half and the copper half are written out on a ledger that counts charge.'
+      body: 'Next, the zinc half and the copper half are written out on two cards that count charge.'
     }
   },
 
@@ -171,17 +163,17 @@ export const STAGES = [
     table: cellTable({
       fixtures: [
         ledgerFixture('hz', { x: 44, y: 24 }, {
-          title: 'Zinc half', base: bare(HALF.zn()), rows: ['charge'], w: 70,
+          title: 'Zinc half', base: bare(HALF.zn()), rows: ['charge'], w: 70, hide: true,
           free: [{ dial: 'eL', kind: 'e', side: 'left', max: 4 }, { dial: 'eR', kind: 'e', side: 'right', max: 4 }]
         }),
         ledgerFixture('hc', { x: 128, y: 24 }, {
-          title: 'Copper half', base: bare(HALF.cu()), rows: ['charge'], w: 70,
+          title: 'Copper half', base: bare(HALF.cu()), rows: ['charge'], w: 70, hide: true,
           free: [{ dial: 'eL', kind: 'e', side: 'left', max: 4 }, { dial: 'eR', kind: 'e', side: 'right', max: 4 }]
         })
       ]
     }, { w: 172, h: 50 }),
     hints: [
-      'Turn the electron dials on each card until the charge row has the same count on both sides.',
+      'Tap the rings beside each strip to put electrons on it, and watch the charge row.',
       'Compare the charge on the left and on the right of the arrow for the zinc card and for the copper card.',
       'An electron carries one unit of negative charge, so place electrons on the side that has too much positive charge to cancel it.'
     ],
@@ -201,11 +193,11 @@ export const STAGES = [
     get reward() {
       const zn = HALF.zn(); const cu = HALF.cu();
       const g = recall(QUEST_KEY);
-      const verdict = g === 'same' ? 'The electrons did land on the copper ions, as you predicted. ' : g ? 'The electrons landed on the copper ions, not where you predicted. ' : '';
+      const verdict = g === 'same' ? 'As you predicted, the' : g ? 'Not as you predicted, the' : 'The';
       return {
         log: 'The zinc half lost two electrons and the copper half gained two.',
         title: 'Half-Reactions',
-        body: `${verdict}Each half-reaction shows its own electrons: ${equationText(zn.left, zn.right, zn.eLeft, zn.eRight)} loses them, which is oxidation, and ${equationText(cu.left, cu.right, cu.eLeft, cu.eRight)} gains them, which is reduction. The two halves together are a redox reaction, and the electrons lost equal the electrons gained.`
+        body: `${verdict} electrons landed on the copper ions: ${equationText(zn.left, zn.right, zn.eLeft, zn.eRight)} is oxidation and ${equationText(cu.left, cu.right, cu.eLeft, cu.eRight)} is reduction, together a redox reaction.`
       };
     }
   },
@@ -218,13 +210,13 @@ export const STAGES = [
     widget,
     table: cellTable({
       fixtures: [
-        ledgerFixture('ha', { x: 40, y: 22 }, { title: 'Aluminium half', base: HALF.al(), mult: 4, w: 70 }),
-        ledgerFixture('hb', { x: 122, y: 22 }, { title: 'Copper half', base: HALF.cu(), mult: 4, w: 70 }),
+        ledgerFixture('ha', { x: 40, y: 22 }, { title: 'Aluminium half', base: HALF.al(), mult: 4, w: 70, hide: true }),
+        ledgerFixture('hb', { x: 122, y: 22 }, { title: 'Copper half', base: HALF.cu(), mult: 4, w: 70, hide: true }),
         tallyFixture('tl', { x: 81, y: 56 }, ['ha', 'hb'])
       ]
     }, { w: 162, h: 72 }),
     hints: [
-      'Turn the "Written this many times" dial on each card and watch the tally.',
+      'Tap the atoms or ions over each strip to change how many are written, and watch the tally.',
       'Compare the electrons given with the electrons taken for each pair of settings.',
       'Write each half enough times that both halves handle the same number of electrons.'
     ],
@@ -241,7 +233,7 @@ export const STAGES = [
       return {
         log: 'Aluminium and copper balanced when each half was written enough times.',
         title: 'Matching Electrons',
-        body: `Written ${m.a} and ${m.b} times, the halves hand over ${m.electrons} electrons and take ${m.electrons}, so none are left: ${equationText(o.left, o.right)}. A redox equation is built by scaling the halves until the electrons given equal the electrons taken.`
+        body: `Written ${m.a} and ${m.b} times, the halves give and take ${m.electrons} electrons each: ${equationText(o.left, o.right)}.`
       };
     }
   },
@@ -250,46 +242,31 @@ export const STAGES = [
   {
     id: 's5-agents',
     title: 'Who Gives (Beyond the Exam)',
-    prompt: 'Lay the species that gives up its electrons in each beaker on its slot.',
+    prompt: 'Tap the particle that gives up its electrons in each beaker.',
     widget,
-    table: (() => {
-      const pr = probeFixture('probe', { x: 150, y: 64 }, { rows: 1, strip: false });
-      return cellTable({
-        pieces: S5_CARDS.map((c, i) => probeCard(`k-${c}`, c, { x: 18 + i * 32, y: 128 })),
-        fixtures: [
-          beakerFixture('b1', { x: 57, y: 31 }, 'cuag', { title: 'Copper in silver nitrate' }),
-          beakerFixture('b2', { x: 57, y: 91 }, 'mgfe', { title: 'Magnesium in iron(II) sulfate' }),
-          pr.fixture
-        ],
-        zones: {
-          slots: [
-            pr.slot,
-            { id: 's5a', label: 'First beaker', at: { x: 150, y: 20 }, size: { w: 32, h: 14 } },
-            { id: 's5b', label: 'Second beaker', at: { x: 150, y: 102 }, size: { w: 32, h: 14 } }
-          ]
-        }
-      }, { w: 186, h: 142 });
-    })(),
+    // The answer is given to the particles: in each beaker, the metal or its ion is tapped (hidden dials `g1`, `g2` of the model: 1 metal, 2 ion).
+    table: cellTable({
+      fixtures: [
+        beakerFixture('b1', { x: 57, y: 31 }, 'cuag', { title: 'Copper in silver nitrate' }),
+        beakerFixture('b2', { x: 57, y: 91 }, 'mgfe', { title: 'Magnesium in iron(II) sulfate' })
+      ]
+    }, { w: 114, h: 122 }),
     hints: [
-      'Drag a card onto the probe seat to read it, then lay one card on each beaker\'s slot.',
-      'Compare the "Before" and "After" numbers of the two species in each beaker.',
-      'The species that gives up electrons is the one whose number rises.'
+      'Tap the metal or the ion in each beaker.',
+      'Compare the \"Before\" and \"After\" counts of each beaker\'s windows with what the model shows.',
+      'The particle that gives up electrons is the one whose oxidation number rises.'
     ],
     check(state) {
-      const t = state.table;
-      const held = id => pieceIn(t, id);
-      const a = held('s5a'); const b = held('s5b');
-      if (!a || !b) return { ok: false, notYet: true, msg: 'Lay a card on each slot.' };
-      for (const [slot, want] of Object.entries(S5_SLOT)) {
-        const p = held(slot);
-        const id = p.id.slice(2);
-        if (id === want) continue;
+      const d = state.table.fixtures.scene.dials;
+      const g = [Math.round(d.g1.value), Math.round(d.g2.value)];
+      if (g.some(v => !v)) return { ok: false, notYet: true, msg: 'Tap a particle in each beaker.' };
+      for (let n = 0; n < 2; n++) {
+        if (g[n] === 1) continue;
+        const id = n === 0 ? 'ag' : 'fe';
         const c = CARDS[id];
-        const n = slot === 's5a' ? 1 : 2;
-        if (c.beaker !== n) return { ok: false, msg: `${c.short} is not in the ${FIRST(n)} beaker's windows.` };
-        const w = WINDOWS[n === 1 ? 'cuag' : 'mgfe'];
+        const w = WINDOWS[n === 0 ? 'cuag' : 'mgfe'];
         const r = cardReading(id);
-        return { ok: false, msg: `In the windows the ${c.short} ions became ${w.coat} atoms, and the probe read ${oxText(r.before)} before and ${oxText(r.after)} after.` };
+        return { ok: false, msg: `In the windows the ${c.short} ions became ${w.coat} atoms: their oxidation number went from ${oxText(r.before)} to ${oxText(r.after)}.` };
       }
       return { ok: true };
     },
@@ -298,7 +275,7 @@ export const STAGES = [
       return {
         log: 'The species whose number rose gave up the electrons.',
         title: 'Beyond the Exam: Agents',
-        body: `Copper went from ${oxText(cu.before)} to ${oxText(cu.after)} and silver from ${oxText(ag.before)} to ${oxText(ag.after)}; magnesium went from ${oxText(mg.before)} to ${oxText(mg.after)} and iron(II) from ${oxText(fe.before)} to ${oxText(fe.after)}. The species that gives up the electrons is the reducing agent and the one that takes them is the oxidizing agent. The AP exam does not assess these two names.`
+        body: `Copper and magnesium gave electrons; silver and iron(II) took them. The giver is the reducing agent and the taker the oxidizing agent, which the AP exam does not assess.`
       };
     }
   },
@@ -327,7 +304,7 @@ export const STAGES = [
     }, { w: 150, h: 84 }),
     hints: [
       'Turn the dials for hydrogen ions, water and electrons on the left and the right of the arrow.',
-      'Compare the left count with the right count in each row of the ledger, one row at a time.',
+      'Compare the left count with the right count in each row of the card, one row at a time.',
       'Settle the oxygen row with water, then the hydrogen row with hydrogen ions, then the charge row with electrons.'
     ],
     check(state) {
@@ -356,13 +333,13 @@ export const STAGES = [
     widget,
     table: cellTable({
       fixtures: [
-        ledgerFixture('hm', { x: 46, y: 22 }, { title: 'Permanganate half', base: HALF.mn(), mult: 3, w: 80 }),
-        ledgerFixture('hf', { x: 140, y: 22 }, { title: 'Iron(II) half', base: HALF.fe(), mult: 6, w: 80 }),
+        ledgerFixture('hm', { x: 46, y: 22 }, { title: 'Permanganate half', base: HALF.mn(), mult: 3, w: 80, hide: true }),
+        ledgerFixture('hf', { x: 140, y: 22 }, { title: 'Iron(II) half', base: HALF.fe(), mult: 6, w: 80, hide: true }),
         tallyFixture('tl', { x: 93, y: 56 }, ['hm', 'hf'])
       ]
     }, { w: 186, h: 72 }),
     hints: [
-      'Turn the "Written this many times" dial on each card and watch the tally.',
+      'Tap the atoms or ions over each strip to change how many are written, and watch the tally.',
       'Compare how many electrons one copy of each half handles with the tally at each setting.',
       'Write the halves enough times that the electrons given equal the electrons taken.'
     ],
@@ -388,42 +365,29 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'Four Sealed Reactions',
-    prompt: 'Sort the four sealed reactions into redox and not redox.',
+    prompt: 'Tap the reactions that are redox.',
     widget,
-    table: (() => {
-      const pr = probeFixture('probe', { x: 154, y: 36 }, { rows: 5, strip: false });
-      return cellTable({
-        pieces: S8_CARDS.map((c, i) => probeCard(`r-${c}`, c, { x: 18 + i * 32, y: 22 })),
-        fixtures: [pr.fixture],
-        zones: {
-          slots: [pr.slot],
-          trays: [
-            { id: 'redox', label: 'Redox', at: { x: 48, y: 62 }, size: { w: 60, h: 30 }, cell: 28, cellH: 13 },
-            { id: 'not', label: 'Not redox', at: { x: 122, y: 62 }, size: { w: 60, h: 30 }, cell: 28, cellH: 13 }
-          ]
-        }
-      }, { w: 190, h: 82 });
-    })(),
+    // Four sealed beakers side by side in the model; tapping one marks its reaction as redox (hidden dials `r0` to `r3`).
+    table: cellTable({ fixtures: [] }, { w: 150, h: 6 }),
     hints: [
-      'Drag a reaction card onto the probe seat to read it, then drag each card into a tray.',
-      'Compare the "Before" and "After" numbers the probe prints for every element in a reaction.',
-      'A reaction is redox when the numbers of at least one of its elements are not equal.'
+      'Tap each beaker whose reaction is redox.',
+      'Watch what the particles do in each beaker.',
+      'A reaction is redox when some atom gains or loses electrons.'
     ],
     check(state) {
-      const t = state.table;
-      const where = Object.fromEntries(S8_CARDS.map(c => [c, t.pieces[`r-${c}`].zone]));
-      if (Object.values(where).some(z => !z || !z.startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Drag every card into a tray.' };
-      const noted = t.fixtures.probe.props.noted || [];
-      for (const c of S8_CARDS) {
+      const d = state.table.fixtures.scene.dials;
+      const marks = S8_CARDS.map((c, i) => Math.round(d[`r${i}`].value) === 1);
+      if (!marks.some(Boolean)) return { ok: false, notYet: true, msg: 'Tap the beakers whose reaction is redox.' };
+      for (let i = 0; i < S8_CARDS.length; i++) {
+        const c = S8_CARDS[i];
         const redox = isRedox(c);
-        if (where[c] === (redox ? 'tray:redox' : 'tray:not')) continue;
-        if (!noted.includes(c)) return { ok: false, msg: `${SORT[c].label} has not been laid on the probe yet.` };
+        if (marks[i] === redox) continue;
         if (redox) {
           const m = movers(c)[0];
-          return { ok: false, msg: `The probe read ${m.el} as ${oxText(m.before)} before and ${oxText(m.after)} after in ${SORT[c].label}.` };
+          return { ok: false, msg: `In ${SORT[c].label}, ${m.el} goes from ${oxText(m.before)} to ${oxText(m.after)}.` };
         }
         const r = reactionStates(c)[0];
-        return { ok: false, msg: `The probe read the same number before and after on every element of ${SORT[c].label}, ${r.el} at ${oxText(r.before)} among them.` };
+        return { ok: false, msg: `In ${SORT[c].label} every element keeps the same number, ${r.el} at ${oxText(r.before)} among them.` };
       }
       return { ok: true };
     },
@@ -433,11 +397,22 @@ export const STAGES = [
       return {
         log: 'Only the reactions whose numbers moved were redox.',
         title: 'Redox or Not',
-        body: `The sealed reactions were ${rx('a')}, ${rx('b')}, ${rx('c')} and ${rx('d')}. Reactions A and C moved the numbers of ${mv('a')} and of ${mv('c')}; a precipitate forming and an acid and base neutralising changed no number. A reaction is redox only when some number changes.`
+        body: `Reactions A and C changed a number (${mv('a')} and ${mv('c')}); B and D changed none. A reaction is redox only when some number changes.`
       };
     }
   }
 ];
+
+/** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
+attachScenes(STAGES, {
+  compact: [], inside: [], demos: { 1: 'zn-in-cu' },
+  own: {
+    0: { sitesKey: 'q1marks', dials: Object.fromEntries(S1_CARDS.map((c, i) => [`m${i}`, { min: 0, max: 2, step: 1, value: 0, label: `Mark ${i + 1}` }])) },
+    2: { sitesKey: 'ledger' }, 3: { sitesKey: 'ledger' }, 6: { sitesKey: 'ledger' },
+    4: { sitesKey: 'q1gives', extra: { specName: 'two-displace' }, dials: { g1: { min: 0, max: 2, step: 1, value: 0, label: 'First beaker' }, g2: { min: 0, max: 2, step: 1, value: 0, label: 'Second beaker' } } },
+    7: { sitesKey: 'q1redox', extra: { specName: 'four-reactions' }, dials: Object.fromEntries(S8_CARDS.map((c, i) => [`r${i}`, { min: 0, max: 1, step: 1, value: 0, label: `Reaction ${'ABCD'[i]}` }])) }
+  }
+});
 
 export const DEBRIEF = {
   title: 'Half-Reactions',
@@ -445,28 +420,28 @@ export const DEBRIEF = {
 };
 
 export const SOLUTIONS = [
-  S1_CARDS.flatMap(c => [put(`k-${c}`, SEAT), put(`k-${c}`, cardChanged(c) ? 'tray:changed' : 'tray:same')]),
+  S1_CARDS.map((c, i) => dial('scene', `m${i}`, cardChanged(c) ? 2 : 1)),
   [put('same', 'slot:guess')],
   [dial('hz', 'eR', 2), dial('hc', 'eL', 2)],
   [dial('ha', 'k', matchedHalves(HALF.al(), HALF.cu()).a), dial('hb', 'k', matchedHalves(HALF.al(), HALF.cu()).b)],
-  [put('k-cu', SEAT), put('k-cu', 'slot:s5a'), put('k-mg', SEAT), put('k-mg', 'slot:s5b')],
+  [dial('scene', 'g1', 1), dial('scene', 'g2', 1)],
   (() => {
     const h = HALF.mn();
     return [dial('hm', 'hL', h.left['H+']), dial('hm', 'wR', h.right.H2O), dial('hm', 'eL', h.eLeft)];
   })(),
   [dial('hf', 'k', matchedHalves(HALF.mn(), HALF.fe()).b)],
-  S8_CARDS.flatMap(c => [put(`r-${c}`, SEAT), put(`r-${c}`, isRedox(c) ? 'tray:redox' : 'tray:not')])
+  S8_CARDS.map((c, i) => (isRedox(c) ? dial('scene', `r${i}`, 1) : null)).filter(Boolean)
 ];
 
 export const MISSES = [
-  S1_CARDS.flatMap(c => [put(`k-${c}`, SEAT), put(`k-${c}`, c === 'sulfur' || cardChanged(c) ? 'tray:changed' : 'tray:same')]),
+  S1_CARDS.map((c, i) => dial('scene', `m${i}`, c === 'sulfur' || cardChanged(c) ? 2 : 1)),
   [],
   [dial('hz', 'eR', 1), dial('hc', 'eL', 2)],
   [],
-  [put('k-ag', SEAT), put('k-ag', 'slot:s5a'), put('k-mg', 'slot:s5b')],
+  [dial('scene', 'g1', 2), dial('scene', 'g2', 1)],
   [dial('hm', 'eL', 5)],
   [],
-  [put('r-a', SEAT), put('r-a', 'tray:not'), put('r-b', 'tray:redox'), put('r-c', 'tray:not'), put('r-d', 'tray:not')]
+  [dial('scene', 'r1', 1)]
 ];
 
 function blankState() { return {}; }

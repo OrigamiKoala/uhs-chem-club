@@ -13,8 +13,9 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture, registerPiece } from './pans-registry.js';
 import { say, slab, frameOf } from './matter-draw.js';
-import { piecesInTray } from './heat-read.js';
+import { piecesInTray, stackRead } from './heat-read.js';
 import { fmtK, rewriteCard, netOfCards, netSides, kOfNet } from '../../engine/eqdata.js';
+import { driftOf } from './pans-pan.js';
 import './pans-cards-tour.js';
 
 const DUST = PLATE_COLORS.dust;
@@ -36,6 +37,64 @@ export function rxnTerms(card) {
   return { ...rewriteCard({ lhs: card.props.lhs, rhs: card.props.rhs, flipped, scale }), flipped, scale };
 }
 const asCard = p => ({ lhs: p.props.lhs, rhs: p.props.rhs, flipped: Boolean(p.props.flipped), scale: p.props.scale || 1 });
+
+
+/* ------------------------------------------------------------------ the reaction machine (a moving model of adding reactions) */
+
+const SPECIES_INK = ['#c0652b', '#6f8fb0', '#8a9a5b', '#b88a3a', '#9a7fb0', '#5e9a94', '#b06a7a', '#a39a86'];
+
+/**
+ * The mechanism view of cards that are added into one reaction. Each card is a row: the particles it uses on the left, the particles it
+ * makes on the right (one particle per unit of coefficient, drifting). A particle that one card makes and another uses is shown fading in
+ * and out as the two cancel; the bottom row holds what is left, the net reaction. Counts are the cards' own terms (`rows`) and the
+ * planner's net (`net`), so what is drawn is what is graded. With a frozen clock nothing fades or drifts.
+ */
+export function paintMachine(ctx, F, x, y, w, h, rows, net, clock) {
+  const order = [];
+  for (const r of rows) for (const [, sp] of [...r.lhs, ...r.rhs]) if (!order.includes(sp)) order.push(sp);
+  for (const sp of Object.keys(net)) if (!order.includes(sp)) order.push(sp);
+  const ink = sp => SPECIES_INK[order.indexOf(sp) % SPECIES_INK.length];
+  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(x), F.y(y), F.len(w), F.len(h));
+  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
+  const made = {}; const used = {};
+  for (const r of rows) { for (const [n, sp] of r.rhs) made[sp] = (made[sp] || 0) + n; for (const [n, sp] of r.lhs) used[sp] = (used[sp] || 0) + n; }
+  const cancel = {}; for (const sp of order) cancel[sp] = Math.min(made[sp] || 0, used[sp] || 0);
+  const cap = 6;
+  const nRows = rows.length + 1;
+  const rh = h / Math.max(nRows, 3);
+  const rad = Math.min(0.9, rh * 0.22);
+  const seenMade = {}; const seenUsed = {};
+  const dot = (sp, cx, cy, k, fade) => {
+    const d = driftOf(k, clock, 1.8);
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = ink(sp);
+    ctx.beginPath(); ctx.arc(F.x(cx + d.dx * 0.35), F.y(cy + d.dy * 0.25), Math.max(1.8, F.len(rad)), 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  };
+  const pulse = clock ? 0.55 + 0.45 * Math.cos(clock * 2.2) : 1;
+  let k = 0;
+  const half = w / 2;
+  rows.forEach((r, i) => {
+    const cy = y + (i + 0.5) * rh;
+    let cx = x + 1.6;
+    for (const [n, sp] of r.lhs) for (let j = 0; j < Math.min(cap, Math.round(n)); j++) { seenUsed[sp] = (seenUsed[sp] || 0) + 1; dot(sp, cx, cy, k++, seenUsed[sp] <= cancel[sp] ? pulse : 1); cx += rad * 2.8; }
+    ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(F.x(x + half - 1.2), F.y(cy)); ctx.lineTo(F.x(x + half + 1.2), F.y(cy)); ctx.stroke();
+    cx = x + half + 2.4;
+    for (const [n, sp] of r.rhs) for (let j = 0; j < Math.min(cap, Math.round(n)); j++) { seenMade[sp] = (seenMade[sp] || 0) + 1; dot(sp, cx, cy, k++, seenMade[sp] <= cancel[sp] ? pulse : 1); cx += rad * 2.8; }
+  });
+  const ny = y + (rows.length + 0.5) * rh;
+  ctx.strokeStyle = AMBER; ctx.beginPath(); ctx.moveTo(F.x(x + 1), F.y(ny - rh / 2)); ctx.lineTo(F.x(x + w - 1), F.y(ny - rh / 2)); ctx.stroke();
+  let ux = x + 1.6; let mx = x + half + 2.4;
+  for (const sp of order) {
+    const c = net[sp] || 0;
+    for (let j = 0; j < Math.min(cap, Math.round(Math.abs(c))); j++) {
+      if (c < 0) { dot(sp, ux, ny, k++, 1); ux += rad * 2.8; } else { dot(sp, mx, ny, k++, 1); mx += rad * 2.8; }
+    }
+  }
+}
+
+/** The rows and net a stack of reaction cards (this kit's `rxn`) adds up to. */
+export const machineOf = cards => ({ rows: cards.map(c => { const t = rxnTerms(c); return { lhs: t.lhs, rhs: t.rhs }; }), net: netOfCards(cards.map(asCard)) });
 
 /* ------------------------------------------------------------------ the reaction card */
 
@@ -126,6 +185,18 @@ function paintCheck(ctx, f, state, b) {
     const x = 4 + i * colW;
     ctx.fillStyle = ['#c0652b', '#6f8fb0', '#8a9a5b'][i % 3];
     ctx.fillRect(F.x(x), F.y(base - h), F.len(colW - 3), F.len(h));
+    if (b.clock) {
+      // The bar is a crowd of particles; the species in the cards on the check ring in amber while the reading is taken.
+      const inNet = checkRead(state, f.id).net[n];
+      const nd = Math.round((p.mix[n] / full) * 14);
+      for (let k = 0; k < nd; k++) {
+        const d = driftOf(i * 29 + k, b.clock, 2.2);
+        const px = x + (colW - 3) * ((k % 2 + 0.5) / 2) + d.dx * 0.5;
+        const py = base - (h / Math.ceil(nd / 2)) * (Math.floor(k / 2) + 0.5) + d.dy * 0.8;
+        ctx.fillStyle = 'rgba(16,15,12,0.78)'; ctx.beginPath(); ctx.arc(F.x(px), F.y(py), Math.max(1.2, F.len(0.55)), 0, Math.PI * 2); ctx.fill();
+      }
+      if (inNet) { ctx.strokeStyle = AMBER; ctx.globalAlpha = 0.5 + 0.5 * Math.cos(b.clock * 3); ctx.strokeRect(F.x(x) - 1, F.y(base - h) - 1, F.len(colW - 3) + 2, F.len(h) + 2); ctx.globalAlpha = 1; }
+    }
     say(ctx, (p.mix[n] + 1e-9).toFixed(3), F.x(x + (colW - 3) / 2), F.y(base - h - 1.9), sz, { align: 'center', color: DUST, weight: 700 });
     say(ctx, n, F.x(x + (colW - 3) / 2), F.y(f.size.h - 3.4), F.size(2.6, 6.4), { align: 'center', weight: 700 });
   });
@@ -147,13 +218,13 @@ function runCheck(state, fid) {
   return { x: n, y: 100 + n, label: `${fid}|${r.eq}|${fmtK(r.K)}` };
 }
 
-registerFixture('kcheck', { paint: paintCheck, run: runCheck });
+registerFixture('kcheck', { paint: paintCheck, run: runCheck, live: () => true });
 
 /**
  * The pan check. `mix` is the sealed mixture's amounts at equilibrium (species -> mol/L); `order` the species left to right; the cards in
  * `tray` are the reaction to read.
  */
-export function checkFixture(id, at, { tray, mix, order, title = 'Pan check', w = 62, h = 36 }) {
+export function checkFixture(id, at, { tray, mix, order, title = 'Vessel check', w = 62, h = 36 }) {
   return { id, kind: 'kcheck', label: title, at: { ...at }, size: { w, h }, runLabel: 'Read K', dials: {}, props: { tray, mix, order } };
 }
 
@@ -181,12 +252,18 @@ function paintStack(ctx, f, state, b) {
   say(ctx, 'the stack adds up to', F.x(2), F.y(y0), sz, { color: DIM });
   if (r.empty) say(ctx, 'nothing stacked', F.x(2), F.y(y0 + 4.4), F.size(2.7, 6.4), { color: DIM, maxW });
   else say(ctx, r.eq || '—', F.x(2), F.y(y0 + 4.4), F.size(2.7, 6.4), { color: PHOS, weight: 700, maxW });
+  const my = y0 + 8;
+  if (f.size.h - my > 8) {
+    const m = machineOf(r.cards);
+    if (r.empty) { ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(2), F.y(my), F.len(f.size.w - 4), F.len(f.size.h - my - 1.5)); }
+    else paintMachine(ctx, F, 2, my, f.size.w - 4, f.size.h - my - 1.5, m.rows, m.net, b.clock || 0);
+  }
 }
 
-registerFixture('kstack', { paint: paintStack });
+registerFixture('kstack', { paint: paintStack, live: () => true });
 
 /** A stack: the cards in `tray` are added into one reaction, printed under `wanted` (a string). It prints no K. */
-export function stackFixture(id, at, { tray, wanted, title = 'Stack', w = 56, h = 32 }) {
+export function stackFixture(id, at, { tray, wanted, title = 'Stack', w = 56, h = 54 }) {
   return { id, kind: 'kstack', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { tray, wanted } };
 }
 
@@ -200,3 +277,21 @@ export function stackMatches(state, fid, want) {
 
 /** The stack's cards, each as `{ K, flipped, scale }`, for the stage that checks them. */
 export const stackCards = (state, fid) => piecesInTray(state, state.fixtures[fid].props.tray).map(c => ({ id: c.id, ...asCard(c), K: c.props.K }));
+
+/* ------------------------------------------------------------------ the heat kit's stack, with the same machine under it (q8-free stage 7) */
+
+import { paintFixture as heatPaint } from './heat-draw.js';
+import { cardTerms } from './heat-read.js';
+registerFixture('stack', {
+  paint(ctx, f, state, b) {
+    heatPaint(ctx, f, state, b);
+    const F = frameOf(b);
+    const r = stackRead(state, f.id);
+    const my = 24.5;
+    if (f.size.h - my < 8) return;
+    const rows = r.cards.map(c => { const t = cardTerms(c); return { lhs: t.lhs, rhs: t.rhs }; });
+    if (r.empty) { ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(2), F.y(my), F.len(f.size.w - 4), F.len(f.size.h - my - 1.5)); return; }
+    paintMachine(ctx, F, 2, my, f.size.w - 4, f.size.h - my - 1.5, rows, r.net, b.clock || 0);
+  },
+  live: () => true
+});

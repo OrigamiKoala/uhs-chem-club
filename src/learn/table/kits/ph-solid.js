@@ -15,6 +15,8 @@ import { frameOf } from './matter-draw.js';
 import { KSP } from '../../engine/eqdata.js';
 import { cellGrid, ionText } from './ph-read.js';
 import { put, ball } from './ph-flask.js';
+import { wobble } from '../../engine/phmotion.js';
+import { withDial } from './ph-replay.js';
 import { U } from './ph-buffer.js';
 import './ph-solid-tour.js';
 
@@ -64,7 +66,7 @@ function paintSolid(ctx, f, state, b) {
   const ionH = wh * 0.5;
   const ions = cellGrid(20 * 3, 20, x + 0.6, y + 0.6, ww - 1.2, ionH - 0.8);
   const ionList = [...Array(r.cations).fill([CAT_INK]), ...Array(r.anions).fill([AN_INK])];
-  ionList.slice(0, ions.length).forEach(([ink], i) => { const c = ions[i]; ball(ctx, F.x(c.x), F.y(c.y), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.44)), ink); });
+  ionList.slice(0, ions.length).forEach(([ink], i) => { const c = ions[i]; const wb = wobble(i, b.clock || 0); ball(ctx, F.x(c.x + wb.wx * c.cw * 0.5), F.y(c.y + wb.wy * c.ch * 0.5), Math.max(1.4, F.len(Math.min(c.cw, c.ch) * 0.44)), ink); });
   ctx.strokeStyle = '#2a2622'; ctx.beginPath(); ctx.moveTo(F.x(x + 0.6), F.y(y + ionH)); ctx.lineTo(F.x(x + ww - 0.6), F.y(y + ionH)); ctx.stroke();
   const pel = cellGrid(p.solid, 20, x + 0.6, y + ionH + 0.4, ww - 1.2, wh - ionH - 1);
   for (let i = 0; i < r.left && i < pel.length; i++) {
@@ -94,7 +96,7 @@ function run(state, fid) {
   return { x: r.n + 1, y: r.dissolved, label: fid, dials: { [fid]: { n: r.n + 1 } } };
 }
 
-registerFixture('phsolid', { paint: paintSolid, run });
+registerFixture('phsolid', { replay: { count: f => Math.round(f.dials.n.value), at: (f, i) => withDial(f, 'n', i) }, demo: (f, t) => ({ dials: { n: Math.floor(t / 0.9) % (Math.min(f.dials.n.max, 6) + 1) } }), bodies3d: true, paint: paintSolid, run, live: () => true });
 
 /** A beaker of `salt` (a key of `KSP`) over `solid` spheres of its solid; `basic` says whether its anion takes acid. */
 export function solidFixture(id, at, { salt, solid = 40, basic = false, acidSph = 10, maxPour = 8, V = 0.1, w = 44, title = 'Beaker' } = {}) {

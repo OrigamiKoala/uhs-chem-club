@@ -55,7 +55,7 @@ const FIXTURES = {
   },
   'heat:selector': {
     title: 'Answer dial', dials: false,
-    text: 'The dial has named positions. Drag its knob along the groove, or tap the groove, to point it at the answer you worked out. The position it shows when you press Submit is your answer.'
+    text: 'Drag the knob to your answer.'
   }
 };
 

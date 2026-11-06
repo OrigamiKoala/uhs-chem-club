@@ -14,7 +14,9 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture } from './ph-registry.js';
 import { frameOf } from './matter-draw.js';
-import { put, ionText } from './ph-flask.js';
+import { put, ball, ionText } from './ph-flask.js';
+import { withDial } from './ph-replay.js';
+import { ionDots, dropAt, wobble, scratch } from '../../engine/phmotion.js';
 import { titrationML, indicatorShare, INDICATORS, fmt } from '../../engine/phdata.js';
 import './ph-burette-tour.js';
 
@@ -94,6 +96,18 @@ function paintBurette(ctx, f, state, b) {
     const hue = s.tint ? indicatorColour(s.tint, s.pH) : '#2f3d4a';
     if (r.mL > 0) { ctx.fillStyle = '#7f95aa'; ctx.fillRect(F.x(tx + 2.2), F.y(ty + th + 3.4), Math.max(1.5, F.len(0.6)), F.len(3.2)); }
     flaskShape(ctx, F, cx, 47, 52, hue);
+    // Inside the flask: the hydronium (amber) and hydroxide (blue) there are, in the ratio the pH gives, moving about.
+    const clock = b.clock || 0; const dots = ionDots(s.pH, 24);
+    for (let i = 0; i < 24; i++) {
+      const wb = wobble(i + k * 40, clock);
+      const gx = cx - 7 + (i % 6) * 2.8 + wb.wx * 1.6; const gy = 56 + Math.floor(i / 6) * 2.9 + wb.wy * 1.2;
+      ball(ctx, F.x(gx), F.y(gy), Math.max(1.2, F.len(0.85)), i < dots.h ? '#d99423' : '#6f8fb0');
+    }
+    // A pour sends a drop down from the tip.
+    const sc = scratch(f, b.sk);
+    if (sc.tenths !== r.tenths) { sc.tenths = r.tenths; sc.pourAt = clock; }
+    const dp = dropAt(clock - (sc.pourAt ?? -9));
+    if (dp != null) ball(ctx, F.x(tx + 2.5), F.y(ty + th + 3.4 + dp * (47 - (ty + th + 3.4))), Math.max(1.3, F.len(0.8)), '#9fb4c8');
     let y = 68.6;
     if (s.meter) {
       ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(cx - 10), F.y(y - 2.6), F.len(20), F.len(5.2));
@@ -127,7 +141,11 @@ function run(state, fid) {
   return { x: rows[0].x, y: rows[0].y, label: fid, rows, dials: { [fid]: { v: next } } };
 }
 
-registerFixture('phburette', { paint: paintBurette, run });
+registerFixture('phburette', {
+  // Eight frames of the pouring so far, from nothing to the volume the student stopped at.
+  replay: { count: f => (Math.round(f.dials.v.value) > 0 ? 8 : 0), at: (f, i) => withDial(f, 'v', Math.round((f.dials.v.value * i) / 8)) },
+  demo: (f, t) => ({ dials: { v: Math.min(f.props.cap * 10, (Math.floor(t / 0.6) % 9) * 50) } }),
+  bodies3d: true, paint: paintBurette, run, live: () => true });
 
 /**
  * The burette over its flasks. `samples`: [{ title, sub, analyte, c0, V0, ct, meter?, tint?, rack? }] (`analyte` as `titrationPH`, volumes

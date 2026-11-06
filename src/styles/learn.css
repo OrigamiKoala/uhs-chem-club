@@ -4333,3 +4333,4 @@ body.bench-leaning .boss-hud {
 .bp-input-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .bp-input { width: 9rem; font-family: var(--font-mono); }
 .bp-unit { font-family: var(--font-mono); color: var(--text-muted); }
+.lq-tour-demo { display: block; width: 100%; height: auto; margin: 0 0 0.6rem; background: #100f0c; border: 1px solid var(--plate-400, #3a3a3a); }

@@ -41,6 +41,7 @@ import { railMarkup, bindRail } from './railview.js';
 import { startArrangement } from '../table/rail.js';
 import { createTable, apply as applyTable } from '../table/model.js';
 import { tourSteps } from '../table/tour.js';
+import { getKit } from '../table/kits/index.js';
 import { Tabletop, benchesAre3D } from './instruments.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
@@ -216,7 +217,11 @@ export function createRunner(container, ctx, cfg) {
     const result = stage.check(state);
     if (!result.ok) {
       if (result.notYet) frame.note(result.msg);
-      else frame.miss(result.msg);
+      else {
+        frame.miss(result.msg);
+        // A kit may replay the cause on its instruments (the steps that led to this table), so the reason is seen as well as read.
+        try { getKit(state.table?.kit)?.onMiss?.(state.table, result.msg); tabletop?.changed?.(); } catch (err) { /* a replay is never worth a failed submit */ }
+      }
       return;
     }
     frame.clearBanner();
@@ -590,7 +595,7 @@ export function createRunner(container, ctx, cfg) {
       }, 500);
     }
     // The Tour explains each instrument and kind of piece on this stage's table, and the opening line of its briefing.
-    frame.setTourSteps(tourSteps(state.table, stage.encounter ? { intro: stage.briefing?.body || '', speaker: stage.briefing?.speaker || 'Vess' } : {}));
+    frame.setTourSteps(tourSteps(state.table, stage.encounter ? { intro: stage.briefing?.body || '', speaker: stage.briefing?.speaker || 'Vess' } : {}), state.table);
   }
 
   // Ctrl+Z (or Cmd+Z) is Undo on a table, wherever the focus is except a field being typed in.
