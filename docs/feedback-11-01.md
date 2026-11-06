@@ -92,3 +92,5 @@ Expand the Molecular Orbitals quest so it shows the user visually how the atomic
 
 ![alt text](image-39.png) For this bench (and ALL the other stages in Bellows as well), stop using weird language like "Gauge" and "Room" and "push". Just call it pressure and volume.
 
+![alt text](image-40.png) For this bench (and in general), have the user sort from lowest pressure on the left to highest pressure on the right. This is more intuitive.
+
