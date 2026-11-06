@@ -204,3 +204,9 @@ Evidence labels: `Code` (read in the source), `Scripted` (a Node script run in t
 | Shared-engine changes are opt-in | One species entry in `BOSS_LOOK`, `BOSS_ARENA_SPOTS` and `BUILDERS`; no existing path altered | Code |
 | Look of the ground, sky, hosts and the Clamp; walk feel; cable sag in the sky | Not judged | none: needs a hand |
 
+
+## Weak areas pass (2026-11-06)
+
+- `q4` stages 6 and 7: the board and electrodes are replaced by a ready-built cell with its balanced equation printed and the energy counter absent, so n comes from the equation. `verify:learn`, `verify:table` and `verify:bench` are green; not played.
+- `q5` stage 2: one press now advances 20 ticks, so the run takes two presses (was five). Scripted only.
+- Not fixed: `q6` stages 4, 5, 8 are still plate-and-type (the balance already shows a short plating run); the Run-after-dial miss is unreproduced; phone-landscape legibility is unchecked because the shared panel covers the bench at 667 × 375 until folded and a fold click did not register.
