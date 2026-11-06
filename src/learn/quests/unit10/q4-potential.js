@@ -98,7 +98,7 @@ export const STAGES = [
       S1_METALS.map((m, i) => electrodePiece(`e-${m}`, m, { x: 112 + (i % 2) * 34, y: 10 + Math.floor(i / 2) * 20 })),
       {
         w: 176, h: 108,
-        pieces: S1_METALS.map((m, i) => tag(`r-${m}`, METALS[m].name[0].toUpperCase() + METALS[m].name.slice(1), { x: 30 + i * 36, y: 72 })),
+        pieces: S1_METALS.map((m, i) => tag(`r-${m}`, METALS[m].symbol, { x: 30 + i * 36, y: 72 })),
         zones: { rail: { at: { x: 88, y: 98 }, size: { w: 150, h: 12 }, first: 'Lowest reading', last: 'Highest reading', items: [], start: [] } }
       }
     ),
@@ -172,17 +172,17 @@ export const STAGES = [
     prompt: 'Run the four cells and sort them by whether the lamp lights.',
     widget,
     table: (() => {
-      const rigs = S3_CELLS.map(([id, l, r, name], i) => rigFixture(id, { x: 26 + (i % 2) * 52, y: 24 + Math.floor(i / 2) * 44 }, { left: l, right: r, title: name }));
+      const rigs = S3_CELLS.map(([id, l, r, name], i) => rigFixture(id, { x: 26 + (i % 2) * 52, y: 26 + Math.floor(i / 2) * 50 }, { left: l, right: r, title: name }));
       return cellTable({
-        pieces: S3_CELLS.map(([id,,, name], i) => tag(`c${id.slice(1)}`, name, { x: 22 + i * 36, y: 96 })),
+        pieces: S3_CELLS.map(([id,,, name], i) => tag(`c${id.slice(1)}`, name, { x: 22 + i * 36, y: 108 })),
         fixtures: rigs,
         zones: {
           trays: [
             { id: 'lit', label: 'Lamp lit', at: { x: 134, y: 24 }, size: { w: 52, h: 36 }, cell: 25, cellH: 12 },
-            { id: 'dark', label: 'Lamp dark', at: { x: 134, y: 68 }, size: { w: 52, h: 36 }, cell: 25, cellH: 12 }
+            { id: 'dark', label: 'Lamp dark', at: { x: 134, y: 70 }, size: { w: 52, h: 36 }, cell: 25, cellH: 12 }
           ]
         }
-      }, { w: 176, h: 108 });
+      }, { w: 176, h: 120 });
     })(),
     hints: [
       'Press "Run" on each cell, then drag the four cards into the two trays.',
@@ -259,15 +259,15 @@ export const STAGES = [
     get prompt() { return guessLine('Run the zinc–copper cell with its equation written once and then twice over, and say what changes.', recall(QUEST_KEY)); },
     widget,
     table: (() => {
-      const r = rigFixture('rig', { x: 40, y: 40 }, { left: 'zn', right: 'cu', energy: true, equation: true, scalable: true, w: 76 });
+      const r = rigFixture('rig', { x: 40, y: 49 }, { left: 'zn', right: 'cu', energy: true, equation: true, scalable: true, w: 76 });
       return cellTable({
         fixtures: [
           r,
-          selectorFixture('pick', 'What changes', { x: 122, y: 38 }, {
+          selectorFixture('pick', 'What changes', { x: 122, y: 49 }, {
             options: ['Voltage the same, energy doubles', 'Voltage and energy both double', 'Voltage doubles, energy the same', 'Neither changes', ' '], start: 5, w: 64, list: true
           })
         ]
-      }, { w: 164, h: 78 });
+      }, { w: 164, h: 98 });
     })(),
     hints: [
       'Press "Run" with the equation dial on "once", turn it to "twice over", press "Run" again, and use the answer dial.',

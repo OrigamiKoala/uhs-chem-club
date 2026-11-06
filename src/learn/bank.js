@@ -40,7 +40,11 @@ import unit06 from './bank/unit06.json' with { type: 'json' };
 import unit07 from './bank/unit07.json' with { type: 'json' };
 import unit08 from './bank/unit08.json' with { type: 'json' };
 import unit09 from './bank/unit09.json' with { type: 'json' };
-import unit10 from './bank/unit10.json' with { type: 'json' };
+import unit10Base from './bank/unit10.json' with { type: 'json' };
+/* Brinewire's bench problems live one file per bench (`bank/unit10/<quest>.json`: { problems, worked }) so builders never edit the same file.
+   Add one import line and one entry to `unit10.bench` below for each bench. (marker: brinewire bench banks) */
+import b10q4 from './bank/unit10/q4-potential.json' with { type: 'json' };
+const unit10 = { ...unit10Base, bench: { ...unit10Base.bench, 'q4-potential': b10q4 } };
 
 export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09, unit10 };
 

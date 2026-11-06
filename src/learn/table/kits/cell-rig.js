@@ -158,12 +158,13 @@ registerFixture('cellrig', { paint: paintRig, run, dress3d: dressRig });
 export function rigFixture(id, at, { left, right, energy = false, equation = false, scalable = false, w = null, title = null } = {}) {
   const { cup } = RIG_UNIT;
   const width = w ?? (energy ? 70 : 46);
-  const cy = equation ? 24 : 20;
+  const oy = scalable ? 11 : 0;
+  const cy = (equation ? 24 : 20) + oy;
   const extra = (equation ? 6 : 0) + (energy ? 13 : 0);
-  const h = Math.round((cy + cup.h + 9 + extra) * 10) / 10;
+  const h = Math.round((cy + cup.h + 9 + extra + 8) * 10) / 10;
   const lx = 4; const rx = width - 4 - cup.w;
   const mw = Math.min(22, width - 2 * 4 - 2 * 8);
-  const meter = { x: (width - mw) / 2 - 3, y: 4, w: mw, h: 7.4 };
+  const meter = { x: (width - mw) / 2 - 3, y: 4 + oy, w: mw, h: 7.4 };
   const dials = {
     last: { min: 0, max: 2, step: 1, value: 0, label: 'Last run' },
     r1: { min: 0, max: 1, step: 1, value: 0, label: 'Run at 1' },
