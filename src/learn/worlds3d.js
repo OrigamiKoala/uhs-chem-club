@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts fourteen worlds. Nine of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter and Verdigris — are built
+ * The Learn road charts fourteen worlds. Ten of them — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter, Verdigris and Brinewire — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -20,6 +20,7 @@ import mirrowenData from '../three/world-data/mirrowen.json' with { type: 'json'
 import kettleData from '../three/world-data/kettle.json' with { type: 'json' };
 import teeterData from '../three/world-data/teeter.json' with { type: 'json' };
 import verdigrisData from '../three/world-data/verdigris.json' with { type: 'json' };
+import brinewireData from '../three/world-data/brinewire.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -177,6 +178,26 @@ const WORLDS_3D = {
       for (const site of verdigrisData.sites) {
         if (!site.built) continue;
         stage.setVerdigrisSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit10: {
+    id: 'unit10',
+    key: 'brinewire',
+    worldName: 'Brinewire',
+    data: brinewireData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterBrinewireScene(siteId, playerPos, lookAtPos);
+    },
+    /** The site for a quest, or null. Every bench of the plan has a host already, live or not; the boss and unknown ids have none. */
+    siteForQuest(questId) {
+      return brinewireData.sites.find(s => s.questId === questId) || null;
+    },
+    /** Light the site indicator for every quest the player has finished. */
+    syncProgress(stage, isComplete) {
+      for (const site of brinewireData.sites) {
+        if (!site.built) continue;
+        stage.setBrinewireSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

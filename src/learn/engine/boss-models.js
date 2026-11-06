@@ -14,6 +14,7 @@
  *   the recipe golem   Kettle          a furnace vessel on four pipe legs with valve knees, a hopper head, pipe arms and valve-wheel fists
  *   the tipper         Teeter          a beam pump grown huge: a lattice beam on a pivot, a salt pan hung from each end, a dial over the pivot
  *   the leach          Verdigris       a sump pump: a volute casing on braced legs, five intake vats, two jointed intake hoses for arms
+ *   the clamp          Brinewire       a drain clamp on a pylon: a lattice mast on a sled, five cells ringed round its back, two jointed arms ending in clamp jaws
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1585,6 +1586,135 @@ function buildLeach(monster) {
   };
 }
 
+/* ====================================================================== the Clamp */
+
+/**
+ * THE CLAMP (Brinewire). A drain clamp on a pylon: a lattice mast on a concrete sled, braced at three levels, carrying a patina
+ * housing with two lenses and a crossarm, five glass-sided copper-capped cells ringed round its back (one for each sample it holds,
+ * each on a cable up to the mast) and two heavy arms jointed at the shoulder, elbow and wrist, each ending in a pair of clamp jaws.
+ * At idle the arms sway and the jaws work; the arms rise to gather, swing down on the blow, and a wound leaves it listing with its
+ * jaws slack and its cells low.
+ */
+function buildClamp(monster) {
+  const k = new Kit(monster);
+  const steel = k.plate(0x7d8a92);
+  const steelDark = k.plate(0x3a4147);
+  const patina = k.plate(0x5d8f7c);
+  const rust = k.plate(0x8a5a36);
+  const concrete = k.std(0x8d8a80, { rough: 0.95, metal: 0.02 });
+  const copper = k.std(0xb0713f, { rough: 0.42, metal: 0.92 });
+  const bright = k.std(0xd7dad4, { rough: 0.25, metal: 0.92 });
+  const rubber = k.std(0x1d1f1c, { rough: 0.9, metal: 0.05 });
+  const brine = k.std(0x3f7f86, { rough: 0.3, metal: 0.05, opacity: 0.9 });
+  const glass = k.std(0xcfe0e0, { rough: 0.1, metal: 0, opacity: 0.35 });
+  const cable = k.std(0x24282a, { rough: 0.8, metal: 0.1 });
+  const lens = k.glow(AMBER, 2.2);
+
+  const body = k.node(monster.group, 0, 0, 0);
+
+  /* --- the sled: a deep concrete footing with an iron lip --- */
+  k.box(body, 5.8, 0.45, 3.8, concrete, 0, 0.22, 0, 0, 0, 0, 0.06);
+  k.box(body, 5.2, 0.12, 3.2, rubber, 0, 0.5, 0, 0, 0, 0, 0.03);
+  k.bolts(body, [-2.4, -1.6, -0.8, 0, 0.8, 1.6, 2.4].map(x => [x, 0.46, 1.91]), 0.05, bright, [0, 0, 1]);
+
+  /* --- the mast: four legs drawn in toward the waist, braced at three levels --- */
+  const levels = [[0.5, 1.5, 1.05], [1.9, 1.15, 0.85], [3.3, 0.85, 0.65], [4.6, 0.6, 0.5]];
+  const corner = (lv, sx, sz) => [sx * lv[1], lv[0], sz * lv[2]];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    for (let i = 0; i < levels.length - 1; i++) k.strut(body, corner(levels[i], sx, sz), corner(levels[i + 1], sx, sz), 0.1, steel, 8, 0.12);
+    k.cyl(body, 0.26, 0.3, 0.14, 10, steelDark, corner(levels[0], sx, sz)[0], 0.55, corner(levels[0], sx, sz)[2]);
+  }
+  for (let i = 0; i < levels.length - 1; i++) {
+    const a = levels[i], b = levels[i + 1];
+    for (const [sx, sz, tx, tz] of [[1, 1, -1, 1], [-1, 1, -1, -1], [-1, -1, 1, -1], [1, -1, 1, 1]]) {
+      k.strut(body, corner(a, sx, sz), corner(b, tx, tz), 0.04, steelDark, 5);
+    }
+    for (const [sx, sz, tx, tz] of [[1, 1, -1, 1], [-1, 1, -1, -1], [-1, -1, 1, -1], [1, -1, 1, 1]]) k.strut(body, corner(b, sx, sz), corner(b, tx, tz), 0.05, steelDark, 5);
+  }
+
+  /* --- the housing and the crossarm --- */
+  const head = k.node(body, 0, 5.2, 0);
+  k.box(head, 1.7, 1.0, 1.3, patina, 0, 0.1, 0, 0, 0, 0, 0.06);
+  k.beam(head, [-3.0, -0.6, 0], [3.0, -0.6, 0], 0.22, 0.22, steel);
+  for (const sx of [-1, 1]) {
+    k.cyl(head, 0.2, 0.2, 0.16, 16, steelDark, sx * 0.4, 0.2, 0.68, Math.PI / 2);
+    k.cyl(head, 0.14, 0.14, 0.05, 16, lens, sx * 0.4, 0.2, 0.78, Math.PI / 2);
+    k.torus(head, 0.2, 0.03, copper, sx * 0.4, 0.2, 0.77, 0, 0, 0, 8, 20);
+  }
+  for (let i = 0; i < 4; i++) k.cyl(head, 0.2 - i * 0.02, 0.2 - i * 0.02, 0.1, 12, bright, 0, 0.72 + i * 0.16, 0);   // the insulator stack
+  k.cyl(head, 0.06, 0.06, 0.4, 8, copper, 0, 1.45, 0);
+
+  /* --- five cells ringed round the back, each on a cable up to the arm --- */
+  const cellLevels = [];
+  for (let i = 0; i < 5; i++) {
+    const a = Math.PI * (0.62 + i * 0.19);
+    const x = Math.cos(a) * 2.3, z = -Math.abs(Math.sin(a)) * 1.7 - 0.2;
+    k.cyl(body, 0.56, 0.6, 1.0, 20, glass, x, 1.0, z);
+    const level = k.cyl(body, 0.5, 0.5, 0.7, 20, brine, x, 0.85, z);
+    cellLevels.push(level);
+    k.cyl(body, 0.6, 0.6, 0.1, 20, copper, x, 1.55, z);                                   // the cap
+    k.box(body, 0.5, 0.2, 0.3, steelDark, x, 1.7, z);                                      // the jaw that grips the rod
+    k.strut(body, [x, 1.8, z], [x * 0.28, 4.5, z * 0.25], 0.045, cable, 6);
+  }
+
+  /* --- two arms: heavy clamp arms jointed at the shoulder, elbow and wrist, ending in a pair of jaws --- */
+  const arms = [];
+  for (const sx of [-1, 1]) {
+    const shoulder = k.node(body, sx * 1.15, 4.1, 0.25);
+    k.sph(shoulder, 0.32, copper, 0, 0, 0);
+    k.cyl(shoulder, 0.28, 0.28, 0.3, 14, steelDark, sx * 0.1, 0, 0, 0, 0, Math.PI / 2);
+    k.beam(shoulder, [0, 0, 0], [0, -1.5, 0], 0.3, 0.26, steel);
+    for (let r = 0; r < 3; r++) k.torus(shoulder, 0.22, 0.035, bright, 0, -0.35 - r * 0.38, 0, Math.PI / 2, 0, 0, 6, 16);
+    const elbow = k.node(shoulder, 0, -1.5, 0);
+    k.sph(elbow, 0.28, copper, 0, 0, 0);
+    k.beam(elbow, [0, 0, 0], [0, -1.3, 0], 0.24, 0.22, steelDark);
+    const wrist = k.node(elbow, 0, -1.3, 0);
+    k.sph(wrist, 0.22, copper, 0, 0, 0);
+    k.box(wrist, 0.5, 0.3, 0.4, rust, 0, -0.2, 0, 0, 0, 0, 0.03);
+    const jaws = [-1, 1].map(js => {
+      const jaw = k.node(wrist, js * 0.18, -0.35, 0);
+      k.box(jaw, 0.12, 0.7, 0.34, steel, js * 0.04, -0.3, 0, 0, 0, 0, 0.02);
+      k.box(jaw, 0.1, 0.12, 0.34, bright, -js * 0.02, -0.62, 0, 0, 0, 0, 0.02);          // the serrated tip
+      return { jaw, js };
+    });
+    arms.push({ sx, shoulder, elbow, wrist, jaws });
+  }
+  monster.muzzle = k.node(arms[1].wrist, 0, -1.2, 0);
+
+  /* --- armour on the front of the mast, struck off as it is wounded --- */
+  for (const sx of [-1, 1]) {
+    const plate = k.box(body, 0.9, 0.9, 0.08, rust, sx * 0.55, 2.6, 0.95, 0.1, sx * 0.25, 0, 0.015);
+    monster.armour(plate, sx < 0 ? 0.3 : 0.55);
+    const flank = k.box(body, 0.08, 0.9, 1.0, rust, sx * 1.12, 3.5, 0.0, 0, 0, sx * 0.18, 0.015);
+    monster.armour(flank, sx < 0 ? 0.75 : 0.9);
+  }
+
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t;
+      for (const a of arms) {
+        const ph = a.sx * 0.9;
+        a.shoulder.rotation.x = -0.6 - 1.7 * up + 0.5 * down + idle * Math.sin(t * 0.8 + ph) * 0.07 + 0.18 * s.wound + s.roar * Math.sin(t * 6 + ph) * 0.1;
+        a.shoulder.rotation.z = a.sx * (0.16 + 0.2 * s.roar) + idle * Math.sin(t * 0.55 + ph) * 0.05;
+        a.elbow.rotation.x = -0.45 + 0.7 * up - 0.9 * down + idle * Math.sin(t * 1.1 + ph) * 0.1 + 0.3 * s.wound;
+        a.wrist.rotation.x = 0.35 * up - 0.3 * down + idle * Math.sin(t * 1.7 + ph) * 0.08;
+        // The jaws work at idle, snap shut on the blow, and hang slack when it is hurt.
+        const open = clamp01(0.45 + 0.4 * up - 0.45 * down - 0.25 * s.wound + idle * Math.sin(t * 1.3 + ph) * 0.15);
+        for (const { jaw, js } of a.jaws) jaw.rotation.z = -js * (0.05 + open * 0.5);
+      }
+      head.rotation.y = idle * Math.sin(t * 0.45) * 0.14;
+      head.rotation.x = -0.12 * s.roar + 0.1 * down;
+      head.position.y = 5.2 - 0.05 * s.hurt - 0.16 * down - clamp01(s.throes) * 0.35;
+      // The mast hums; a wound leaves it listing; the cells slop and run low.
+      body.rotation.z = -0.07 * s.wound + Math.sin(t * 34) * 0.01 * (idle + s.hurt) + Math.sin(t * 36) * 0.012 * s.hurt;
+      body.position.y = -clamp01(s.throes) * 0.3;
+      cellLevels.forEach((v, i) => { v.scale.y = 1 - 0.45 * s.wound + Math.sin(t * 2.2 + i) * 0.02 * idle; });
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1596,7 +1726,8 @@ const BUILDERS = {
   'the lantern-eater': buildLanternEater,
   'recipe golem': buildGolem,
   'the tipper': buildTipper,
-  'the leach': buildLeach
+  'the leach': buildLeach,
+  'the clamp': buildClamp
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */

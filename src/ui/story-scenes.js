@@ -22,6 +22,11 @@ import { LANTERNFALL_SCENES } from './story-scenes-lanternfall.js';
 import { TEETER_SCENES } from './story-scenes-teeter.js';
 import { VERDIGRIS_SCENES } from './story-scenes-verdigris.js';
 import { BRINEWIRE_SCENES } from './story-scenes-brinewire.js';
+import { BRINEWIRE_Q3_SCENES } from './story-scenes-brinewire-q3.js';
+import { BRINEWIRE_Q1_SCENES } from './story-scenes-brinewire-q1.js';
+import { BRINEWIRE_Q2_SCENES } from './story-scenes-brinewire-q2-activity.js';
+import { BRINEWIRE_Q6_SCENES } from './story-scenes-brinewire-q6.js';
+import { BRINEWIRE_Q5_SCENES } from './story-scenes-brinewire-q5.js';
 import { VERDIGRIS_Q4Q5_SCENES } from './story-scenes-verdigris-q4q5.js';
 import { VERDIGRIS_TITRATE_SCENES } from './story-scenes-verdigris-titrate.js';
 import { VERDIGRIS_Q1Q2_SCENES } from './story-scenes-verdigris-q1q2.js';
@@ -1310,6 +1315,11 @@ export const SCENES = {
   ...legacy(TEETER_SCENES),
   ...legacy(VERDIGRIS_SCENES),
   ...legacy(BRINEWIRE_SCENES),
+  ...legacy(BRINEWIRE_Q3_SCENES),
+  ...legacy(BRINEWIRE_Q1_SCENES),
+  ...legacy(BRINEWIRE_Q2_SCENES),
+  ...legacy(BRINEWIRE_Q6_SCENES),
+  ...legacy(BRINEWIRE_Q5_SCENES),
   ...legacy(VERDIGRIS_Q4Q5_SCENES),
   ...legacy(VERDIGRIS_TITRATE_SCENES),
   ...legacy(VERDIGRIS_Q1Q2_SCENES),

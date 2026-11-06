@@ -370,10 +370,15 @@ function checkStageTable(q, mod) {
     'unit09/q1-handover': /\b(Br[øo]nsted|hydronium|conjugate|amphoteric|autoionization|Kw|Lewis)\b/i,
     'unit09/q7-buffer': /\b(buffers?|Henderson.Hasselbalch)\b/i,
     'unit09/q8-capacity': /\b(protonation state|indicators?|buffer capacity|solubility)\b/i,
+    'unit10/q5-load': /\b(Nernst|[Cc]oncentration cells?|[Rr]eaction quotients?|Q)\b/,
     'unit09/q3-weak': /\b(weak acids?|strong acids?|ioniz\w*|percent ionization|Ka|pKa|Kb)\b/,
     'unit09/q4-structure': /\b(conjugate bases?|inductive effect)\b/i,
     'unit09/q5-salts': /\b(salt hydrolysis|hydrolys\w*|buffers?|titrat\w*|equivalence)\b/i,
-    'unit09/q6-titrate': /\b(titration curves?|equivalence points?|half-equivalence points?|indicators?|polyprotic)\b/i
+    'unit10/q2-activity': /\b(galvanic cells?|salt bridges?|cathodes?|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
+    'unit10/q3-galvanic': /\b(galvanic cells?|salt bridges?|anodes?|cathodes?|oxidation|reduction|cell notation|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
+    'unit10/q1-halves': /\b(oxidation numbers?|half-reactions?|oxidation|reduction|redox|oxidi[sz]ing agents?|reducing agents?|oxidi[sz]ed|activity series|sacrificial|displacement|galvanic cells?|salt bridges?|anodes?|cathodes?|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
+    'unit09/q6-titrate': /\b(titration curves?|equivalence points?|half-equivalence points?|indicators?|polyprotic)\b/i,
+    'unit10/q6-electrolysis': /\b(electrolytic cells?|electrolysis|cathodes?|anodes?|oxidation|reduction|coulombs?|faraday.?s law|overpotential)\b/i,
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 
@@ -2979,6 +2984,16 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   if (!dataFails.length) ok('Brinewire planners (celldata.js): every potential, voltage, free energy, K, Nernst, Faraday and ledger value agrees with the independent values');
   const { checkBrinewireQ4 } = await import('./lib/brinewire-q4-checks.mjs');
   await checkBrinewireQ4({ ok, fail });
+  const { checkBrinewireQ6 } = await import('./lib/brinewire-q6-checks.mjs');
+  await checkBrinewireQ6({ ok, fail });
+  const { checkBrinewireQ1 } = await import('./lib/brinewire-q1-checks.mjs');
+  await checkBrinewireQ1({ ok, fail });
+  const { checkBrinewireQ2 } = await import('./lib/brinewire-q2-checks.mjs');
+  await checkBrinewireQ2({ ok, fail });
+  const { checkBrinewireQ5 } = await import('./lib/brinewire-q5-checks.mjs');
+  await checkBrinewireQ5({ ok, fail });
+  const { checkBrinewireQ3 } = await import('./lib/brinewire-q3-checks.mjs');
+  await checkBrinewireQ3({ ok, fail });
 }
 
 /* ------------------------------------------------------------------

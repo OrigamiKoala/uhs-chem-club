@@ -20,6 +20,56 @@
 
 export const QUEST_STORY = {
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
+  'unit10/q5-load': {
+    scene: 'load-down',
+    beats: [
+      { to: 0.26, say: 'Run under a load, the tin and lead cell fell from 0.012 V to 0 V as tin ions built up and lead ions thinned out.' },
+      { to: 0.5, say: 'It stopped with 72 tin dots and 28 lead dots. Both ions were still there: the cell was dead, but not empty.' },
+      { to: 0.74, say: 'Tin over lead was 2.6, close to this cell\'s K of 2.5. Q rises from 1 as the cell runs, and the voltage reaches 0 V when Q reaches K.' },
+      { to: 0.94, say: 'Zinc at 1.0 M with copper at 0.0010 M has Q = 1000 and reads 1.01 V. Copper at 0.010 M against 1.0 M has Q = 0.01 and reads 0.059 V.' }
+    ],
+    filed: 'Filed: a cell does not run out, it runs down toward a balance; the Fifth\'s dead cells had reached it.'
+  },
+  'unit10/q6-electrolysis': {
+    scene: 'electrolysis-push',
+    beats: [
+      { to: 0.24, say: 'Pushed at 1.50 V against the cell\'s own 1.10 V, the zinc–copper cell ran backwards and the zinc strip gained 4.1 mg. Electrolysis is a cell driven the wrong way by a supply.' },
+      { to: 0.48, say: 'In molten sodium chloride, 6 sodium ions took 6 electrons at the cathode and became sodium, while chloride ions gave electrons at the anode and became chlorine. Reduction and oxidation each happen at one electrode.' },
+      { to: 0.72, say: 'One ampere for 30 s passed 30 C and 2 A for 10 s passed 20 C, yet 0.5 A for 100 s passed 50 C and plated the most silver. A coulomb is an ampere-second.' },
+      { to: 0.94, say: '2.00 A for 1800 s passed 3600 C, which is 0.0373 mol of electrons. Two for each copper atom gives 0.0187 mol, 1.19 g of copper: Faraday\'s law.' }
+    ],
+    filed: 'Filed: the drain clamps are electrolysis; the copper they plate comes from the marsh, grams for every coulomb.'
+  },
+  'unit10/q2-activity': {
+    scene: 'dip-order',
+    beats: [
+      { to: 0.26, say: 'Both zinc and copper were coated in the silver solution, only zinc in the copper solution, and neither in the zinc solution. A coating means one metal took the place of another: displacement.' },
+      { to: 0.52, say: 'Zinc coated in 3 of the other solutions, iron in 2, lead in 1 and copper in none. That order, most readily giving to least, is the activity series.' },
+      { to: 0.76, say: 'Magnesium, zinc and iron bubbled in acid and copper and silver did not, so hydrogen sits after iron. A copper strip in zinc stayed clean: the swap runs one way only.' },
+      { to: 0.94, say: 'Nails wired to zinc or magnesium had no blue spots, and nails wired to copper or tin had 5. The more active partner gives its electrons first, so it is the one used up.' }
+    ],
+    filed: 'Filed: the bolt that rotted first was the more active metal; the Fifth bolted a copper clamp to an iron pylon.'
+  },
+  'unit10/q1-halves': {
+    scene: 'half-join',
+    beats: [
+      { to: 0.26, say: 'In the zinc and copper beaker, zinc went from 0 to +2 and copper from +2 to 0. An atom\'s oxidation number counts the electrons it has lost or gained.' },
+      { to: 0.5, say: 'Written as half-reactions, zinc loses 2 electrons in oxidation and copper gains 2 in reduction. The electrons lost are the electrons gained, so none vanish.' },
+      { to: 0.76, say: 'Aluminium gives 3 electrons and copper takes 2, so the halves are written 2 and 3 times: 6 electrons given and 6 taken.' },
+      { to: 0.94, say: 'Permanganate in acid takes 5 electrons from 5 iron(II) ions, with charge 17 on each side. A redox reaction is one where some oxidation number changes.' }
+    ],
+    filed: 'Filed: a rotting pylon passes electrons to something else; the Fifth\'s word named the loss and missed the gain.'
+  },
+  'unit10/q3-galvanic': {
+    scene: 'cell-open',
+    beats: [
+      { to: 0.24, say: 'With a wire alone the current fell from 0.50 A to zero at 3 s. A salt bridge held it at 0.50 A for the whole 10 s.' },
+      { to: 0.48, say: 'In the zinc and copper cell, 4 electrons crossed the wire as Zn²⁺ rose from 8 to 10 and Cu²⁺ fell from 8 to 6. Oxidation happens at the anode and reduction at the cathode.' },
+      { to: 0.72, say: 'Each electron through the wire sends one charge through the bridge: 4 negative ions moved toward the anode and 4 positive ions toward the cathode. The electrons never enter the bridge.' },
+      { to: 0.94, say: 'After an hour the iron anode had lost 0.37 g and the copper cathode had gained 0.42 g. The mass follows the atoms.' }
+    ],
+    filed: 'Filed: the Fifth cut the bridges, not the wires; a cell with no bridge stops almost at once.'
+  },
   'unit10/q4-potential': {
     scene: 'cell-gap',
     beats: [

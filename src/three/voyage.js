@@ -131,6 +131,14 @@ export const DESTINATIONS = {
       atmo: '#a8b8a6', atmoStrength: 0.55, seed: [5.1, 2.7, 6.3]
     }
   },
+  brinewire: {
+    key: 'brinewire', name: 'Brinewire', hash: '#/learn/unit10',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'desert', colors: ['#b79a6e', '#8a7a62', '#d6cdb6', '#7e8e92'],
+      atmo: '#cdbf9f', atmoStrength: 0.5, seed: [2.9, 7.4, 4.2]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

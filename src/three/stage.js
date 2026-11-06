@@ -21,6 +21,7 @@ import { MirrowenWorld } from "./mirrowen.js";
 import { KettleWorld } from "./kettle.js";
 import { TeeterWorld } from "./teeter.js";
 import { VerdigrisWorld } from "./verdigris.js";
+import { BrinewireWorld } from "./brinewire.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -63,6 +64,8 @@ const KETTLE_EXPOSURE = 0.94;
 const TEETER_EXPOSURE = 0.88;
 // Verdigris is dark green water and olive peat under a low grey-green haze: mid-bright ground, so it sits between Teeter and Mirrowen.
 const VERDIGRIS_EXPOSURE = 0.96;
+// Brinewire is pale salt flat under a dry straw-coloured haze: bright ground, so it sits near Teeter.
+const BRINEWIRE_EXPOSURE = 0.9;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -104,6 +107,7 @@ class Stage {
     this.kettleWorld = null;
     this.teeterWorld = null;
     this.verdigrisWorld = null;
+    this.brinewireWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -823,6 +827,10 @@ class Stage {
       if (!this.verdigrisWorld) this.verdigrisWorld = this.warmWorld(new VerdigrisWorld(this.renderer));
       return this.verdigrisWorld;
     }
+    if (key === "brinewire") {
+      if (!this.brinewireWorld) this.brinewireWorld = this.warmWorld(new BrinewireWorld(this.renderer));
+      return this.brinewireWorld;
+    }
     return null;
   }
 
@@ -856,6 +864,7 @@ class Stage {
     if (key === "kettle") return KETTLE_EXPOSURE;
     if (key === "teeter") return TEETER_EXPOSURE;
     if (key === "verdigris") return VERDIGRIS_EXPOSURE;
+    if (key === "brinewire") return BRINEWIRE_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1060,10 +1069,17 @@ class Stage {
     this.enterLearnWorld(this.verdigrisWorld, VERDIGRIS_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter or Verdigris. */
+  /** Walk out onto Brinewire, the copper marsh (Learn world 10). */
+  enterBrinewireScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("brinewire");
+    this.enterLearnWorld(this.brinewireWorld, BRINEWIRE_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter, Verdigris or Brinewire. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1311,6 +1327,11 @@ class Stage {
   /** Light a Teeter site's indicator when its quest is finished. */
   setTeeterSiteComplete(questId, complete) {
     if (this.teeterWorld) this.teeterWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Brinewire site's indicator when its quest is finished. */
+  setBrinewireSiteComplete(questId, complete) {
+    if (this.brinewireWorld) this.brinewireWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Verdigris site's indicator when its quest is finished. */

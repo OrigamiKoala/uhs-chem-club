@@ -23,6 +23,21 @@
  */
 export const STAGE_STORY = {
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
+  'q5-load': {
+    1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'
+  },
+  'q6-electrolysis': {
+    1: 'Someone is pushing current into the pools, and Vess wants to find what a pushed current does to the water.'
+  },
+  'q2-activity': {
+    1: 'Two bolts on one pylon rot at different speeds, and Vess wants to find which metal gives.'
+  },
+  'q1-halves': {
+    1: 'The Fifth says the pylons are rotting, and Vess wants to find out what moves when a metal rots.'
+  },
+  'q3-galvanic': {
+    1: 'Every marsh cell stopped when a bridge was cut, and Vess wants to find what keeps one running.'
+  },
   'q4-potential': {
     1: 'Every cell in the marsh reads a different voltage, and Vess wants to measure what sets the number.'
   },

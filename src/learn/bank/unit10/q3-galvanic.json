@@ -1,0 +1,134 @@
+{
+  "problems": [
+    {
+      "id": "q3-galvanic#b1",
+      "quest": "q3-galvanic",
+      "question": "A zinc strip in zinc sulfate and a copper strip in copper sulfate are joined by a wire and a salt bridge. Which statement is correct while the cell runs?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Electrons move from zinc to copper through the wire, and negative ions in the bridge move toward the zinc beaker."
+        },
+        {
+          "id": "b",
+          "label": "Electrons move from copper to zinc through the wire, and negative ions in the bridge move toward the zinc beaker."
+        },
+        {
+          "id": "c",
+          "label": "Electrons move from zinc to copper through the wire, and negative ions in the bridge move toward the copper beaker."
+        },
+        {
+          "id": "d",
+          "label": "Electrons move from zinc to copper through the bridge, and ions move through the wire."
+        }
+      ],
+      "answer": "a",
+      "explanation": "Zinc is the anode: its atoms give up electrons, which travel through the wire to the copper cathode. The zinc beaker gains positive Zn²⁺ ions, so negative ions in the bridge move toward it to keep it balanced."
+    },
+    {
+      "id": "q3-galvanic#b2",
+      "quest": "q3-galvanic",
+      "question": "A student lifts the salt bridge out of a running galvanic cell and leaves the wire in place. What happens to the current, and why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It falls almost to zero, because with no path for ions each beaker builds up charge that stops more electrons moving."
+        },
+        {
+          "id": "b",
+          "label": "It stays the same, because the electrons only travel through the wire."
+        },
+        {
+          "id": "c",
+          "label": "It doubles, because the wire now carries all of the charge."
+        },
+        {
+          "id": "d",
+          "label": "It reverses, because the electrons now go through the solutions."
+        }
+      ],
+      "answer": "a",
+      "explanation": "Electrons leaving the anode beaker leave it with extra positive charge, and the cathode beaker is left with extra negative charge. Without ions moving through the bridge the charge builds up and the current stops almost at once."
+    }
+  ],
+  "worked": {
+    "id": "q3-galvanic#w",
+    "quest": "q3-galvanic",
+    "title": "Balancing Charge in a Running Cell",
+    "setup": "A zinc strip in Zn²⁺ and a nickel strip in Ni²⁺ are joined by a wire and a salt bridge filled with K₂SO₄. Zinc is the anode. While the cell runs, 12 electrons move through the wire.",
+    "steps": [
+      {
+        "say": "Each zinc atom gives up 2 electrons. How many Zn²⁺ ions form at the anode?",
+        "kind": "number",
+        "answer": 6,
+        "calc": "12/2",
+        "unit": "ions",
+        "tol": 0.01,
+        "hint": "Divide the electrons that left by the electrons each atom gives.",
+        "explain": "12 electrons ÷ 2 electrons for each atom = 6 Zn²⁺ ions."
+      },
+      {
+        "say": "Each Ni²⁺ ion takes 2 electrons at the cathode. How many Ni²⁺ ions are used up?",
+        "kind": "number",
+        "answer": 6,
+        "calc": "12/2",
+        "unit": "ions",
+        "tol": 0.01,
+        "hint": "The same 12 electrons arrive at the cathode.",
+        "explain": "12 electrons ÷ 2 electrons for each ion = 6 Ni²⁺ ions."
+      },
+      {
+        "say": "Each Zn²⁺ carries 2 units of positive charge. How many units of positive charge does the zinc beaker gain?",
+        "kind": "number",
+        "answer": 12,
+        "calc": "6*2",
+        "unit": "units",
+        "tol": 0.01,
+        "hint": "Multiply the ions that formed by the charge on each.",
+        "explain": "6 ions × 2 units = 12 units of positive charge."
+      },
+      {
+        "say": "Which way do the SO₄²⁻ ions in the bridge move?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "Toward the zinc beaker"
+          },
+          {
+            "id": "b",
+            "label": "Toward the nickel beaker"
+          },
+          {
+            "id": "c",
+            "label": "Through the wire with the electrons"
+          }
+        ],
+        "answer": "a",
+        "hint": "Negative ions go to the beaker that is gaining positive charge.",
+        "explain": "The zinc beaker gains positive charge, so negative ions move toward it."
+      },
+      {
+        "say": "Each SO₄²⁻ carries 2 units of negative charge. How many SO₄²⁻ ions reach the zinc beaker?",
+        "kind": "number",
+        "answer": 6,
+        "calc": "12/2",
+        "unit": "ions",
+        "tol": 0.01,
+        "hint": "Divide the positive charge to cancel by the charge on each ion.",
+        "explain": "12 units ÷ 2 units for each ion = 6 SO₄²⁻ ions."
+      },
+      {
+        "say": "The nickel beaker lost 6 Ni²⁺ ions. Each K⁺ carries 1 unit. How many K⁺ ions reach the nickel beaker?",
+        "kind": "number",
+        "answer": 12,
+        "calc": "6*2/1",
+        "unit": "ions",
+        "tol": 0.01,
+        "hint": "Find the positive charge that left, then divide by the charge on each K⁺.",
+        "explain": "6 ions × 2 units = 12 units lost, so 12 K⁺ ions arrive."
+      }
+    ],
+    "finish": "Every electron that leaves through the wire is matched by one unit of charge moving through the bridge: negative ions toward the anode beaker, positive ions toward the cathode beaker."
+  }
+}

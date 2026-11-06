@@ -258,6 +258,15 @@ export const COMMENDATIONS = [
     earnedBy: (s) => Boolean(s.learn && s.learn['unit09/q1-handover']?.completedAt)
   },
   {
+    id: 'learn_q7_halves',
+    name: 'Both Halves',
+    line: 'Followed an electron off a rotting pylon base in Brinewire.',
+    tier: 'brass',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit10/q1-halves']?.completedAt)
+  },
+  {
     id: 'learn_q4_weigh',
     name: 'Molar Scale',
     line: 'Counted by weighing on the salt flats of Tallow.',

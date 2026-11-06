@@ -28,7 +28,8 @@ const BOSS_LOOK = {
   'the undertow':      { name: 'The Undertow',      attack: 0xd8ecf2, ember: 0xa9d4e0 },
   'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a },
   'the tipper':        { name: 'The Tipper',        attack: 0xe9eee8, ember: 0xa9c4c2 },
-  'the leach':         { name: 'The Leach',         attack: 0xb7d8c4, ember: 0x8fc2a4 }
+  'the leach':         { name: 'The Leach',         attack: 0xb7d8c4, ember: 0x8fc2a4 },
+  'the clamp':         { name: 'The Clamp',         attack: 0xe0b98a, ember: 0xc98a52 }
 };
 
 /** Health is cosmetic: each phase takes an equal share, and the last takes the rest. */
@@ -136,6 +137,17 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -54],
     scale: 1.4,
     species: 'the leach'
+  },
+  // On the switch-house court at the south end of the spine, on the shore of the lagoon, the largest pool (`world-data/brinewire.json` keeps this
+  // ground open; `verify:brinewire` holds the two together). The Clamp's arena body is in `boss-models.js`; its quest `boss-clamp`, its table
+  // foe body (`foebody.js`, `foes.js`) and its finale are built apart, and hook in under the species name 'the clamp'.
+  'boss-clamp': {
+    worldId: 'unit10',
+    playerPos: [0, 1.6, -38],
+    lookAtPos: [0, 1.6, -54],
+    bossPos: [0, 0, -54],
+    scale: 1.4,
+    species: 'the clamp'
   }
 };
 

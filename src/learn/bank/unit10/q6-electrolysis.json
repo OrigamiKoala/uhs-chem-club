@@ -1,0 +1,124 @@
+{
+  "problems": [
+    {
+      "id": "q6-electrolysis#b1",
+      "quest": "q6-electrolysis",
+      "question": "Cell X passes 0.50 A for 200 s and cell Y passes 2.0 A for 40 s. Both plate silver from silver nitrate solution. Which plates more silver?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cell X, because it passed 100 C and cell Y passed 80 C"
+        },
+        {
+          "id": "b",
+          "label": "Cell Y, because its current is larger"
+        },
+        {
+          "id": "c",
+          "label": "Both plate the same mass"
+        },
+        {
+          "id": "d",
+          "label": "Neither, because silver needs a larger voltage"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Charge is current times time: 0.50 × 200 = 100 C and 2.0 × 40 = 80 C. Each Ag⁺ takes one electron, so the mass plated follows the charge, not the current alone."
+    },
+    {
+      "id": "q6-electrolysis#b2",
+      "quest": "q6-electrolysis",
+      "question": "The same charge passes through a silver nitrate cell and a copper(II) sulfate cell. How do the moles of metal plated compare?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Twice as many moles of silver as of copper"
+        },
+        {
+          "id": "b",
+          "label": "The same number of moles of each"
+        },
+        {
+          "id": "c",
+          "label": "Twice as many moles of copper as of silver"
+        },
+        {
+          "id": "d",
+          "label": "It depends on the molar masses of the metals"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each Ag⁺ takes one electron and each Cu²⁺ takes two, so a given number of electrons plates twice as many moles of silver as of copper. Molar mass only changes the grams."
+    }
+  ],
+  "worked": {
+    "id": "q6-electrolysis#w",
+    "quest": "q6-electrolysis",
+    "title": "Mass Plated from Current and Time",
+    "setup": "A current of 1.50 A runs for 40.0 minutes through a nickel(II) sulfate cell and plates nickel: Ni²⁺ + 2 e⁻ → Ni. The molar mass of nickel is 58.69 g/mol and F = 96,485 C/mol of electrons.",
+    "steps": [
+      {
+        "say": "How much charge passed, in coulombs? The time must be in seconds.",
+        "kind": "number",
+        "answer": 3600,
+        "calc": "1.5*40*60",
+        "unit": "C",
+        "tol": 1,
+        "hint": "Change 40.0 minutes to seconds before you multiply by the current.",
+        "explain": "1.50 A × 2400 s = 3600 C."
+      },
+      {
+        "say": "How many moles of electrons is that charge?",
+        "kind": "number",
+        "answer": 0.0373,
+        "calc": "3600/96485",
+        "unit": "mol",
+        "tol": 0.0005,
+        "hint": "Divide the charge by the charge carried by one mole of electrons.",
+        "explain": "3600 C ÷ 96,485 C/mol = 0.0373 mol of electrons."
+      },
+      {
+        "say": "How many electrons does each nickel ion take?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "1"
+          },
+          {
+            "id": "b",
+            "label": "2"
+          },
+          {
+            "id": "c",
+            "label": "3"
+          }
+        ],
+        "answer": "b",
+        "hint": "Read the half-reaction in the setup.",
+        "explain": "Ni²⁺ + 2 e⁻ → Ni: two electrons for each nickel atom."
+      },
+      {
+        "say": "How many moles of nickel were plated?",
+        "kind": "number",
+        "answer": 0.01866,
+        "calc": "3600/96485/2",
+        "unit": "mol",
+        "tol": 0.0005,
+        "hint": "Share the moles of electrons between the electrons each atom needs.",
+        "explain": "0.0373 mol of electrons ÷ 2 = 0.0187 mol of nickel."
+      },
+      {
+        "say": "What mass of nickel was plated, in grams?",
+        "kind": "number",
+        "answer": 1.095,
+        "calc": "3600/96485/2*58.69",
+        "unit": "g",
+        "tol": 0.01,
+        "hint": "Multiply the moles of nickel by its molar mass.",
+        "explain": "0.01866 mol × 58.69 g/mol = 1.095 g."
+      }
+    ],
+    "finish": "Current times time gives the charge, the charge gives the moles of electrons, the half-reaction gives the moles of metal, and the molar mass gives the grams."
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "problems": [
+    {
+      "id": "q2-activity#b1",
+      "quest": "q2-activity",
+      "question": "A strip of metal M comes out of a copper(II) solution coated with copper. A copper strip dipped in a solution of M's ions stays clean. Where does M stand compared with copper in the activity series?",
+      "options": [
+        {
+          "id": "a",
+          "label": "M is more active than copper"
+        },
+        {
+          "id": "b",
+          "label": "M is less active than copper"
+        },
+        {
+          "id": "c",
+          "label": "M and copper are equally active"
+        },
+        {
+          "id": "d",
+          "label": "The dips do not say"
+        }
+      ],
+      "answer": "a",
+      "explanation": "M displaced copper, so M gives electrons more readily than copper. Copper did not displace M, which agrees: a displacement runs only from the more active metal to the less active one."
+    },
+    {
+      "id": "q2-activity#b2",
+      "quest": "q2-activity",
+      "question": "Zinc displaces iron from solution, and iron displaces copper from solution. Wired to an iron nail in brine, which metal keeps the nail from rusting?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Zinc"
+        },
+        {
+          "id": "b",
+          "label": "Copper"
+        },
+        {
+          "id": "c",
+          "label": "Both zinc and copper"
+        },
+        {
+          "id": "d",
+          "label": "Neither"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Zinc is more active than iron, so it gives its electrons in place of the iron and is used up first. Copper is less active than iron, so the iron gives its electrons and rusts."
+    }
+  ],
+  "worked": {
+    "id": "q2-activity#w",
+    "quest": "q2-activity",
+    "title": "Zinc in Copper Solution",
+    "setup": "A zinc strip of mass 6.54 g is left in copper(II) sulfate solution until it has all reacted: Zn + Cu²⁺ → Zn²⁺ + Cu. E° is −0.76 V for Zn²⁺/Zn and +0.34 V for Cu²⁺/Cu. Molar masses: Zn 65.4 g/mol, Cu 63.5 g/mol.",
+    "steps": [
+      {
+        "say": "Which metal gives electrons more readily?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "Zinc"
+          },
+          {
+            "id": "b",
+            "label": "Copper"
+          },
+          {
+            "id": "c",
+            "label": "They give equally readily"
+          }
+        ],
+        "answer": "a",
+        "hint": "The metal with the lower E° gives electrons more readily.",
+        "explain": "Zinc's E° of −0.76 V is lower than copper's +0.34 V, so zinc gives electrons more readily."
+      },
+      {
+        "say": "What does the zinc strip show?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "A coating of copper"
+          },
+          {
+            "id": "b",
+            "label": "A coating of zinc"
+          },
+          {
+            "id": "c",
+            "label": "Nothing, it stays clean"
+          }
+        ],
+        "answer": "a",
+        "hint": "The more active metal takes the place of the less active one.",
+        "explain": "Zinc displaces copper, so copper plates onto the strip while zinc goes into solution as Zn²⁺."
+      },
+      {
+        "say": "How many moles of zinc are in the 6.54 g strip?",
+        "kind": "number",
+        "answer": 0.1,
+        "calc": "6.54/65.4",
+        "unit": "mol",
+        "tol": 0.002,
+        "hint": "Divide the mass by the molar mass.",
+        "explain": "6.54 g ÷ 65.4 g/mol = 0.100 mol."
+      },
+      {
+        "say": "How many moles of copper are deposited for each mole of zinc that dissolves?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "1"
+          },
+          {
+            "id": "b",
+            "label": "2"
+          },
+          {
+            "id": "c",
+            "label": "0.5"
+          }
+        ],
+        "answer": "a",
+        "hint": "Read the coefficients in Zn + Cu²⁺ → Zn²⁺ + Cu.",
+        "explain": "Each Zn atom gives 2 electrons and each Cu²⁺ takes 2, so one Cu is deposited for each Zn."
+      },
+      {
+        "say": "What mass of copper is deposited, in grams?",
+        "kind": "number",
+        "answer": 6.35,
+        "calc": "0.100*63.5",
+        "unit": "g",
+        "tol": 0.03,
+        "hint": "Multiply the moles of copper by its molar mass.",
+        "explain": "0.100 mol × 63.5 g/mol = 6.35 g."
+      },
+      {
+        "say": "By how many grams does the strip's mass change, counting the zinc lost and the copper gained?",
+        "kind": "number",
+        "answer": -0.19,
+        "calc": "6.35-6.54",
+        "unit": "g",
+        "tol": 0.02,
+        "hint": "Subtract the mass of zinc lost from the mass of copper gained.",
+        "explain": "6.35 − 6.54 = −0.19 g, so the strip ends slightly lighter."
+      }
+    ],
+    "finish": "Find which metal has the lower E°, write the one-for-one swap, then follow the moles through it: the mass lost and the mass gained differ because the molar masses differ."
+  }
+}

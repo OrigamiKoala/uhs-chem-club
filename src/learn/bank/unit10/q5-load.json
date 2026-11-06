@@ -1,0 +1,135 @@
+{
+  "problems": [
+    {
+      "id": "q5-load#b1",
+      "quest": "q5-load",
+      "question": "A cell is run under a load until its voltmeter reads 0 V. Which statement about the cell is correct?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Every reactant has been used up"
+        },
+        {
+          "id": "b",
+          "label": "Q equals K, and reactants and products are both still present"
+        },
+        {
+          "id": "c",
+          "label": "Q equals 1, as it did at the start"
+        },
+        {
+          "id": "d",
+          "label": "E° has fallen to 0 V"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The cell stops driving the load when Q has risen to K. Reactant ions are still in the solution then, so a dead cell is not an empty one. E° belongs to the cell's two metals and does not change as it runs."
+    },
+    {
+      "id": "q5-load#b2",
+      "quest": "q5-load",
+      "question": "A copper bar stands in 0.10 M Cu²⁺ in one beaker and a copper bar stands in 2.0 M Cu²⁺ in another, joined by a salt bridge and a wire. Which bar do the electrons leave?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The bar in the 0.10 M beaker"
+        },
+        {
+          "id": "b",
+          "label": "The bar in the 2.0 M beaker"
+        },
+        {
+          "id": "c",
+          "label": "Neither, because both bars are copper and E° is 0 V"
+        },
+        {
+          "id": "d",
+          "label": "Neither, because the two beakers hold the same ion"
+        }
+      ],
+      "answer": "a",
+      "explanation": "E° is 0 V for a concentration cell, but Q is not 1, so the cell reads a voltage. Copper dissolves from the dilute side, which is the anode, and the electrons leave its bar."
+    }
+  ],
+  "worked": {
+    "id": "q5-load#w",
+    "quest": "q5-load",
+    "title": "Voltage Away from Standard",
+    "setup": "Iron reacts with copper(II) ions: Fe + Cu²⁺ → Fe²⁺ + Cu. E° of the cell is 0.78 V. The beakers hold 0.010 M Fe²⁺ and 0.50 M Cu²⁺. Use E = E° − (0.0592 ÷ n) log Q.",
+    "steps": [
+      {
+        "say": "How many moles of electrons does the equation move?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "1"
+          },
+          {
+            "id": "b",
+            "label": "2"
+          },
+          {
+            "id": "c",
+            "label": "3"
+          }
+        ],
+        "answer": "b",
+        "hint": "Look at the charge on the iron ion that forms.",
+        "explain": "Each Fe atom gives 2 electrons and each Cu²⁺ takes 2, so n = 2."
+      },
+      {
+        "say": "What is Q, the Fe²⁺ strength divided by the Cu²⁺ strength?",
+        "kind": "number",
+        "answer": 0.02,
+        "calc": "0.010/0.50",
+        "unit": "",
+        "tol": 0.001,
+        "hint": "Divide 0.010 by 0.50; the metals are left out of Q.",
+        "explain": "Q = 0.010 ÷ 0.50 = 0.020."
+      },
+      {
+        "say": "What is log Q, to two decimal places?",
+        "kind": "number",
+        "answer": -1.7,
+        "calc": "Math.log10(0.02)",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Use the base-ten log key on 0.020; the answer is negative because Q is below 1.",
+        "explain": "log 0.020 = −1.70."
+      },
+      {
+        "say": "What is the cell voltage, in volts?",
+        "kind": "number",
+        "answer": 0.83,
+        "calc": "0.78-(0.0592/2)*Math.log10(0.02)",
+        "unit": "V",
+        "tol": 0.005,
+        "hint": "Subtract (0.0592 ÷ 2) × log Q from 0.78; log Q is negative.",
+        "explain": "0.78 − 0.0296 × (−1.70) = 0.83 V."
+      },
+      {
+        "say": "Compared with 0.78 V, does the cell read higher, lower or the same?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "Higher"
+          },
+          {
+            "id": "b",
+            "label": "Lower"
+          },
+          {
+            "id": "c",
+            "label": "The same"
+          }
+        ],
+        "answer": "a",
+        "hint": "Compare Q with 1.",
+        "explain": "Q is below 1, so the cell is farther from balance than at standard conditions and reads above E°."
+      }
+    ],
+    "finish": "Count the electrons moved, write Q from the ion strengths, take its base-ten log, and subtract (0.0592 ÷ n) log Q from E°."
+  }
+}

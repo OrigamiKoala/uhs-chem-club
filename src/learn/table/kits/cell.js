@@ -21,6 +21,12 @@ import './cell-tour.js';
 /* One import per instrument: each file registers its own fixtures and pieces. (marker: cell instruments) */
 import './cell-board.js';
 import './cell-rig.js';
+import './cell-galv.js';
+import './cell-redox.js';
+import './cell-ledger.js';
+import './cell-dip.js';
+import './cell-supply.js';
+import './cell-load.js';
 
 export const CELL_KIT_ID = 'cell';
 export const CELL_BOUNDS = HEAT_BOUNDS;

@@ -1,0 +1,134 @@
+{
+  "problems": [
+    {
+      "id": "q1-halves#b1",
+      "quest": "q1-halves",
+      "question": "Magnesium reacts with iron(II) ions: Mg + Fe²⁺ → Mg²⁺ + Fe. Which statement about the two halves is correct?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Mg loses 2 electrons (oxidation) and Fe²⁺ gains 2 electrons (reduction)"
+        },
+        {
+          "id": "b",
+          "label": "Mg gains 2 electrons (reduction) and Fe²⁺ loses 2 electrons (oxidation)"
+        },
+        {
+          "id": "c",
+          "label": "Mg loses 2 electrons and they disappear; Fe²⁺ is unchanged"
+        },
+        {
+          "id": "d",
+          "label": "Mg loses 2 electrons and Fe²⁺ gains 1, with 1 electron left over"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Mg goes from 0 to +2, so it loses 2 electrons. Fe²⁺ goes from +2 to 0, so it gains 2. The electrons lost equal the electrons gained."
+    },
+    {
+      "id": "q1-halves#b2",
+      "quest": "q1-halves",
+      "question": "What is the oxidation number of manganese in MnO₄⁻?",
+      "options": [
+        {
+          "id": "a",
+          "label": "+7"
+        },
+        {
+          "id": "b",
+          "label": "+4"
+        },
+        {
+          "id": "c",
+          "label": "+3"
+        },
+        {
+          "id": "d",
+          "label": "−1"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Four oxygens at −2 add to −8, and the ion's charge is −1, so manganese is +7: x + (−8) = −1."
+    }
+  ],
+  "worked": {
+    "id": "q1-halves#w",
+    "quest": "q1-halves",
+    "title": "Balancing Dichromate in Acid",
+    "setup": "In acid, dichromate is reduced to chromium(III): Cr₂O₇²⁻ → 2 Cr³⁺. Balance oxygen with H₂O, hydrogen with H⁺, then charge with electrons.",
+    "steps": [
+      {
+        "say": "How many H₂O are needed on the right to balance the 7 oxygen atoms on the left?",
+        "kind": "number",
+        "answer": 7,
+        "calc": "7-0",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Each water holds one oxygen.",
+        "explain": "7 oxygen atoms on the left need 7 H₂O on the right."
+      },
+      {
+        "say": "How many H⁺ are needed on the left to balance the hydrogen in that water?",
+        "kind": "number",
+        "answer": 14,
+        "calc": "7*2",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Each water holds two hydrogen atoms.",
+        "explain": "7 H₂O hold 14 hydrogen atoms, so 14 H⁺ go on the left."
+      },
+      {
+        "say": "What is the total charge on the left, with Cr₂O₇²⁻ and 14 H⁺?",
+        "kind": "number",
+        "answer": 12,
+        "calc": "-2+14",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Add the charge of the ion to the charge of the hydrogen ions.",
+        "explain": "−2 + 14 = +12."
+      },
+      {
+        "say": "What is the total charge on the right, with 2 Cr³⁺ and 7 H₂O?",
+        "kind": "number",
+        "answer": 6,
+        "calc": "2*3",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Water is neutral.",
+        "explain": "2 × (+3) = +6."
+      },
+      {
+        "say": "How many electrons are needed to bring the left charge down to the right charge?",
+        "kind": "number",
+        "answer": 6,
+        "calc": "12-6",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Each electron removes one unit of positive charge.",
+        "explain": "12 − 6 = 6 electrons."
+      },
+      {
+        "say": "On which side of the arrow do the electrons go?",
+        "kind": "choice",
+        "options": [
+          {
+            "id": "a",
+            "label": "Left"
+          },
+          {
+            "id": "b",
+            "label": "Right"
+          },
+          {
+            "id": "c",
+            "label": "Some on each side"
+          }
+        ],
+        "answer": "a",
+        "hint": "The left has more positive charge.",
+        "explain": "Dichromate is reduced, so it gains electrons, which stand on the left."
+      }
+    ],
+    "finish": "Balance oxygen with water, hydrogen with hydrogen ions, then add electrons to the side with too much positive charge: Cr₂O₇²⁻ + 14 H⁺ + 6 e⁻ → 2 Cr³⁺ + 7 H₂O."
+  }
+}
