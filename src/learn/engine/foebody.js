@@ -1154,8 +1154,116 @@ export function buildLeach(foe) {
   return body;
 }
 
+/* ------------------------------------------------------------------
+   THE CLAMP
+   A drain clamp: a lattice mast on a sled, five small cells ringed behind it and two arms ending in jaws. It hums when idle; the arms and
+   the cells stand high on `live`, the jaws hang open and the arms level on `flat`, and the arms drop with the cells low on `reversed`
+   (`foes.js` `the clamp`).
+   ------------------------------------------------------------------ */
+
+export function buildClamp(foe) {
+  const group = new THREE.Group();
+  group.name = `clamp:${foe.id}`;
+  group.scale.setScalar(0.6);
+  const shadow = contactShadow(0.16);
+  group.add(shadow);
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+  const iron = boilerMaterial();
+  const brass = brassMaterial();
+
+  const sledGeo = own(new THREE.BoxGeometry(0.15, 0.012, 0.09));
+  const sled = new THREE.Mesh(sledGeo, iron); sled.position.set(0, 0.006, 0); rig.add(sled);
+  const legGeo = own(new THREE.CylinderGeometry(0.003, 0.004, 0.11, 6));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const leg = new THREE.Mesh(legGeo, iron); leg.position.set(sx * 0.014, 0.06, sz * 0.01); leg.rotation.z = -sx * 0.06; rig.add(leg);
+  }
+  const headGeo = own(new THREE.BoxGeometry(0.045, 0.022, 0.03));
+  const head = new THREE.Mesh(headGeo, brass); head.position.set(0, 0.125, 0); rig.add(head);
+
+  const cellGeo = own(new THREE.CylinderGeometry(0.012, 0.013, 0.03, 10));
+  const levelGeo = own(new THREE.CylinderGeometry(0.0105, 0.0105, 0.004, 10));
+  const levels = [];
+  for (let i = 0; i < 5; i++) {
+    const a = Math.PI * (0.15 + i * 0.175);
+    const cell = new THREE.Mesh(cellGeo, iron);
+    cell.position.set(Math.cos(a) * 0.058, 0.027, -0.02 - Math.sin(a) * 0.022);
+    rig.add(cell);
+    const lv = new THREE.Mesh(levelGeo, brass);
+    lv.position.set(cell.position.x, 0.04, cell.position.z);
+    rig.add(lv); levels.push(lv);
+  }
+  const armGeo = own(new THREE.CylinderGeometry(0.005, 0.005, 0.07, 8));
+  const jawGeo = own(new THREE.BoxGeometry(0.004, 0.018, 0.01));
+  const arms = [-1, 1].map(sx => {
+    const piv = new THREE.Group(); piv.position.set(sx * 0.024, 0.115, 0.012); rig.add(piv);
+    const a = new THREE.Mesh(armGeo, iron); a.position.set(0, -0.035, 0); piv.add(a);
+    const jaws = [-1, 1].map(js => {
+      const j = new THREE.Mesh(jawGeo, brass); j.position.set(js * 0.005, -0.075, 0); piv.add(j);
+      return { j, js };
+    });
+    return { piv, sx, jaws };
+  });
+
+  const hit = hitTarget(0.14, 0.14);
+  hit.position.y = 0.07;
+  group.add(hit);
+
+  const body = {
+    species: 'the clamp',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.14, look: 0, baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose; body.since = 0; body.gone = false; group.visible = true;
+      if (instant) body.snap();
+    },
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+    update(dt, reduced, bearing = 0) {
+      body.t += dt; body.since += dt; body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed') {
+        const f = Math.min(1, body.since / 2.2);
+        rig.scale.set(1 + f * 0.25, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.25);
+        if (f >= 0.99) { body.gone = true; group.visible = false; }
+      } else rig.scale.set(1, 1, 1);
+      body.write(reduced ? 0 : body.t);
+    },
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      group.rotation.y = body.look * 0.3;
+      const idle = !body.still && (body.pose === 'idle' || body.pose === 'unmoved');
+      const lift = body.pose === 'live' ? 1 : body.pose === 'reversed' ? -1 : 0;
+      const open = body.pose === 'flat' ? 0.5 : 0.18;
+      arms.forEach((a, i) => {
+        a.piv.rotation.z = a.sx * (0.35 + 0.35 * lift) + (idle ? Math.sin(t * 0.8 + i) * 0.05 : 0);
+        a.jaws.forEach(({ j, js }) => { j.position.x = js * (0.004 + open * 0.008) + (idle ? Math.sin(t * 1.3 + i) * 0.0012 : 0); });
+      });
+      levels.forEach((l, i) => { l.position.y = 0.04 + lift * 0.008 + (idle ? Math.sin(t * 2 + i) * 0.0015 : 0); });
+      head.position.x = idle ? Math.sin(t * 34) * 0.0004 : 0;
+      rig.rotation.z = body.pose === 'reversed' ? -0.06 : 0;
+    },
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -1173,6 +1281,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the undertow') return buildUndertow(foe);
   if (species === 'the tipper') return buildTipper(foe);
   if (species === 'the leach') return buildLeach(foe);
+  if (species === 'the clamp') return buildClamp(foe);
   return null;
 }
 

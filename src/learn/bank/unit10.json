@@ -1,5 +1,236 @@
 {
   "world": "unit10",
-  "end": [],
-  "bench": {}
+  "end": [
+    {
+      "id": "q1-halves#e1",
+      "quest": "q1-halves",
+      "question": "In Zn + Cu²⁺ → Zn²⁺ + Cu, what happens to the electrons zinc gives up?",
+      "options": [
+        {
+          "id": "a",
+          "label": "They are taken by the copper ions, exactly as many as zinc gives"
+        },
+        {
+          "id": "b",
+          "label": "They stay free in the solution"
+        },
+        {
+          "id": "c",
+          "label": "They are destroyed as the zinc dissolves"
+        },
+        {
+          "id": "d",
+          "label": "Fewer are taken, and the rest are carried off by the sulfate ions"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The two half-reactions are joined by the electrons: every electron zinc loses is gained by a copper ion, and the sulfate ions do not change. Electrons are neither made nor lost."
+    },
+    {
+      "id": "q2-activity#e1",
+      "quest": "q2-activity",
+      "question": "Metal X is coated when dipped in a solution of Y²⁺ ions, but metal Y stays clean in a solution of X²⁺ ions. Which statement is correct?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Y gives electrons more readily than X"
+        },
+        {
+          "id": "b",
+          "label": "X gives electrons more readily than Y"
+        },
+        {
+          "id": "c",
+          "label": "X and Y give electrons equally readily"
+        },
+        {
+          "id": "d",
+          "label": "Neither can be compared without an acid"
+        }
+      ],
+      "answer": "b",
+      "explanation": "X put electrons onto the Y²⁺ ions and Y did not do the same to X²⁺, so X sits above Y in the activity series. The swap runs one way."
+    },
+    {
+      "id": "q3-galvanic#e1",
+      "quest": "q3-galvanic",
+      "question": "A galvanic cell is running. Which ions in its salt bridge move toward the anode beaker?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Negative ions"
+        },
+        {
+          "id": "b",
+          "label": "Positive ions"
+        },
+        {
+          "id": "c",
+          "label": "Both kinds, equally"
+        },
+        {
+          "id": "d",
+          "label": "None, because only electrons move"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The anode beaker gains positive ions as its metal dissolves, so negative ions move in from the bridge to keep it balanced. The electrons stay in the wire."
+    },
+    {
+      "id": "q4-potential#e1",
+      "quest": "q4-potential",
+      "question": "Reaction 1, X → Y, has ΔG° = +20 kJ/mol. Reaction 2, Y → Z, has ΔG° = −50 kJ/mol. Y is made by the first reaction and used by the second. What can be said about X → Z?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It cannot happen, because reaction 1 is unfavourable on its own"
+        },
+        {
+          "id": "b",
+          "label": "It is favoured, with ΔG° = −30 kJ/mol"
+        },
+        {
+          "id": "c",
+          "label": "It is favoured, with ΔG° = +70 kJ/mol"
+        },
+        {
+          "id": "d",
+          "label": "It is favoured only if Y is removed from the mixture first"
+        }
+      ],
+      "answer": "b",
+      "explanation": "When two reactions share an intermediate, their free energy changes add: +20 + (−50) = −30 kJ/mol. The favourable reaction drives the unfavourable one, so the coupled process can proceed."
+    },
+    {
+      "id": "q4-potential#e2",
+      "quest": "q4-potential",
+      "question": "A cell has a positive E°cell. What does that say about ΔG° and K for its reaction?",
+      "options": [
+        {
+          "id": "a",
+          "label": "ΔG° is negative and K is greater than 1"
+        },
+        {
+          "id": "b",
+          "label": "ΔG° is positive and K is greater than 1"
+        },
+        {
+          "id": "c",
+          "label": "ΔG° is negative and K is less than 1"
+        },
+        {
+          "id": "d",
+          "label": "ΔG° is zero and K is 1"
+        }
+      ],
+      "answer": "a",
+      "explanation": "ΔG° = −nFE°, so a positive E°cell gives a negative ΔG°. A negative ΔG° means the products are favoured at equilibrium, so K is greater than 1."
+    },
+    {
+      "id": "q5-load#e1",
+      "quest": "q5-load",
+      "question": "Raising the Cu²⁺ concentration in a zinc–copper cell raises its voltage. What explains the change?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The reaction quotient Q falls, which raises E in the Nernst equation"
+        },
+        {
+          "id": "b",
+          "label": "The cell is at equilibrium and shifts right to oppose the change"
+        },
+        {
+          "id": "c",
+          "label": "E° of the cell rises"
+        },
+        {
+          "id": "d",
+          "label": "More zinc dissolves, so each electron carries more energy"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A running cell is not at equilibrium, so Le Châtelier's principle does not apply to it. More Cu²⁺ makes Q smaller, and E = E° − (0.0592/n) log Q rises. E° does not change."
+    },
+    {
+      "id": "q6-electrolysis#e1",
+      "quest": "q6-electrolysis",
+      "question": "A current of 0.500 A runs for 965 s through a silver nitrate solution. How much silver is plated? (Ag = 107.9 g/mol)",
+      "options": [
+        {
+          "id": "a",
+          "label": "0.270 g"
+        },
+        {
+          "id": "b",
+          "label": "0.540 g"
+        },
+        {
+          "id": "c",
+          "label": "1.08 g"
+        },
+        {
+          "id": "d",
+          "label": "5.40 g"
+        }
+      ],
+      "answer": "b",
+      "explanation": "The charge is 0.500 A × 965 s = 482.5 C, which is 0.00500 mol of electrons. One electron plates each silver ion, so 0.00500 mol × 107.9 g/mol = 0.540 g."
+    }
+  ],
+  "bench": {
+    "boss-clamp": {
+      "problems": [
+        {
+          "id": "boss-clamp#b1",
+          "quest": "boss-clamp",
+          "question": "A cell is built from iron (−0.44 V) and silver (+0.80 V). Which metal is the anode, and what is E°cell?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Silver, 1.24 V"
+            },
+            {
+              "id": "b",
+              "label": "Iron, 1.24 V"
+            },
+            {
+              "id": "c",
+              "label": "Iron, 0.36 V"
+            },
+            {
+              "id": "d",
+              "label": "Silver, 0.36 V"
+            }
+          ],
+          "answer": "b",
+          "explanation": "The metal with the lower reading gives up electrons, so iron is the anode. E°cell is the higher reading minus the lower one: 0.80 − (−0.44) = 1.24 V."
+        },
+        {
+          "id": "boss-clamp#b2",
+          "quest": "boss-clamp",
+          "question": "A zinc cell has one beaker at 0.010 M and the other at 1.0 M. Which statement is correct?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The electrons leave the bar in the 1.0 M beaker"
+            },
+            {
+              "id": "b",
+              "label": "The electrons leave the bar in the 0.010 M beaker"
+            },
+            {
+              "id": "c",
+              "label": "No current flows, because both beakers hold zinc"
+            },
+            {
+              "id": "d",
+              "label": "The voltage rises as the two strengths approach each other"
+            }
+          ],
+          "answer": "b",
+          "explanation": "The dilute side is the anode, so the electrons leave the bar in the 0.010 M beaker. The cell runs until the two strengths match, and its voltage falls to zero there."
+        }
+      ]
+    }
+  }
 }

@@ -241,4 +241,8 @@ Stage anti-patterns (section 4): a rank that ends in a lookup (q4 s1 ranks from 
 
 ## 7. Build record
 
-*Not built yet.* Filled in as phases land.
+Built 2026-11-05 on branch `world/unit10` by the integrator (spec, planners, the `q4-potential` slice, docs) and seven builders (q1, q2, q3, q5, q6, the world, the Clamp), each from `docs/plans/brinewire-builder-brief.md`. Per-bench notes, hints and prompts as built: `docs/plans/brinewire-notes-*.md`. Audit: `docs/brinewire-audit.md`.
+
+Built: 6 benches of 8 stages and the Clamp of 5 phases (53 stages), the cell kit (`cell-*.js`), planners `engine/celldata*.js` checked in `tools/lib/brinewire-*-checks.mjs`, six story animations plus the Clamp's finale, the bank (two problems per bench, a worked problem on each bench but the boss, a seven-problem end set), the walkable copper marsh (six hosts, the Clamp's arena) with `verify:brinewire`.
+
+Where it differs from the spec: lead lines are one sentence (a `verify:learn` rule); hints are in the quest files; q1 s1 sorts four atom cards with a probe fixture (a seat, not a laid piece); q5's click is the tin–lead cell and stage 4 is typed; q6 stage 2's dial reads "pushed into it / drawn out of it" until the reward earns cathode and anode; q6 has no predict stage; the boss's phase 1 uses Fe, Ni, Sn, Ag (Sn and Pb differ by 12 mV) and phase 5 plates zinc. 9.7.A.2 is a bank problem. Open items are in `PRODUCT.md` section 8.

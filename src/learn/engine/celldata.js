@@ -136,7 +136,8 @@ export function balanceExtent(cathodeId, anodeId, { cAnode0 = 1, cCathode0 = 1 }
 /** Does a strip of `metalId` get a coating of `ionOfId`'s metal in that metal's solution? True when the ion's E° is above the strip's. */
 export function displaces(metalId, ionOfId) {
   if (metalId === ionOfId) return false;
-  return METALS[ionOfId].E0 > METALS[metalId].E0 + 1e-9;
+  // A gap under 0.05 V (tin and lead: 12 mV) is a partial swap at balance, not a clean coating, so no bench asks about it.
+  return METALS[ionOfId].E0 > METALS[metalId].E0 + 0.05;
 }
 
 /** Metal ids in activity order: the metal that gives electrons most readily (lowest E°) first. */

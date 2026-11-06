@@ -114,6 +114,14 @@ export const CLUES = {
     summary: 'A sealed vat from the pump house, labelled only "acid" in the Fifth\'s hand.',
     note: 'Read with a meter, a lens and a dye, the water is not simply acid. The Fifth gave it one word and never measured it.'
   },
+  clue_brinewire_clamp: {
+    id: 'clue_brinewire_clamp',
+    act: 'act3',
+    source: 'Brinewire Boss · The Clamp',
+    name: 'The Marsh Copper',
+    summary: 'A bar of plated copper from the last cell of the drain clamp, weighed by nobody on the Fifth\'s crew.',
+    note: 'The cell around the bar reads like every cell on the road. Its copper came out of the marsh itself.'
+  },
   clue_teeter_pan: {
     id: 'clue_teeter_pan',
     act: 'act3',
@@ -388,17 +396,19 @@ export const EPISODES = {
     worldId: 'unit10',
     worldName: 'Brinewire',
     act: 'act3',
-    arrival: 'The power grid across the salt flats of Brinewire is dead. Raiders attached parasitic battery drain devices to the main cables, stealing all electrical current.',
-    closing: 'The electrical grid has been repolarized and the drain devices are destroyed. Decrypted signals show the stolen power was beamed to an off-world fleet.',
+    arrival: 'The copper marsh on Brinewire has gone dark. The Fifth\'s drain clamps sit on every pylon, and its notices say only that the cells have failed.',
+    closing: 'The marsh cells have been read one by one, and the drain clamp is still. What the Fifth reported as a failure was chemistry that nobody had measured.',
     spoilFamily: 'Galvanic ticks',
+    bossId: 'boss-clamp',
+    clueId: 'clue_brinewire_clamp',
     paragraphs: [
-      'Brinewire is a shallow saltwater marsh where natural chemical pools are connected to generate electricity for homes and hospital wards across the continent.',
-      'The raiders clamped heavy metal drain nodes onto the power cables under the water. These clamps act like reverse batteries, pulling every amp of electricity out of the wires and leaving the towns completely dark.',
-      'Electricity flows when electrons move between two different metals in a salty liquid. You need to assemble the correct metal electrodes to reverse the current, burn out the parasite nodes, and get the lights back on.'
+      'Brinewire is a shallow copper marsh. Pools of salt water, strung with metal bars and cables, feed the grid for the towns around it.',
+      'The Fifth Guild clamped drain units onto the pylons and put notices on the pools saying the cells had failed. The notices give no readings, and they do not say where the copper in the water went.',
+      'A cell is two metals, a wire and a salt bridge, and a few readings tell you what it will do. Read the metals, the voltages and the currents yourself, and find what the clamps are taking.'
     ],
-    incident: 'Heavy electrical siphon clamps have drained the regional power grid, plunging towns into complete darkness.',
-    objective: 'Connect the right metal plates and salt solutions to build opposing electrical cells that fry the enemy siphon nodes.',
-    caseFileNote: 'The stolen power was being transmitted into deep space by a high-powered beam antenna. The raiders are charging the weapons of a hidden battle armada.'
+    incident: 'The Fifth fixed drain clamps to the pylons and reported the marsh cells as failed, without a single reading.',
+    objective: 'Read the marsh\'s metals, cells and currents bench by bench, and find what the drain clamps are taking.',
+    caseFileNote: 'The clamps run on the same chemistry as every cell on the road, and their copper came out of the marsh itself. The Fifth reported a failure and never measured what the cells were doing.'
   },
   unit11: {
     worldId: 'unit11',

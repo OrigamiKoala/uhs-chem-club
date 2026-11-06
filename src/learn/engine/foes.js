@@ -258,6 +258,31 @@ export const SPECIES = {
     }
   },
 
+  'the clamp': {
+    name: 'The Clamp',
+    counter: 'Trial missed: the reading does not match what that cell of the drain clamp shows.',
+    knockback: 'Knocked back. The Clamp opens its jaws, but every reading on your cells remains.',
+    hit: 'The Clamp lets go of its strips and its five cells run low.',
+    lines: {
+      idle: () => 'The mast hums and the jaws work.',
+      unmoved: () => 'The Clamp holds its jaws over the five cells.',
+      live: () => 'The Clamp draws its arms up; the cells stand high.',
+      flat: () => 'The Clamp lets its jaws hang open over the cells.',
+      reversed: () => 'The Clamp lists to one side; the cells stand low.'
+    },
+    /**
+     * @param {object} probe `{ pose }` (a table: the Clamp only watches), or `{ kind: 'cell', E }` as a voltmeter reads a cell: the cells
+     *   stand high while the cell drives a current (E above zero), the jaws hang open at zero and the mast lists when it is pushed back.
+     */
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'cell') {
+        const E = probe.E;
+        return { pose: Math.abs(E) < 0.0005 ? 'flat' : E > 0 ? 'live' : 'reversed', E };
+      }
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
   'the lantern-eater': {
     name: 'The Lantern-Eater',
     counter: 'The aurora pulses and drains the glow from your lamp.',
@@ -551,8 +576,19 @@ function leachArt(pose, plan = {}) {
   return svg(vats + casing + hoses + lens, 'The Leach');
 }
 
+function clampArt(pose, plan = {}) {
+  const lift = pose === 'live' ? -5 : pose === 'reversed' ? 5 : 0;
+  const mast = `<path d="M26 48 L30 14 M38 48 L34 14 M27 38 L37 38 M28 26 L36 26" stroke="${EDGE}" stroke-width="2" fill="none"/><rect x="26" y="8" width="12" height="7" fill="${BODY}" stroke="${EDGE}" stroke-width="1.3"/>`;
+  const cells = [5, 14, 32, 50, 59].map(x => `<rect x="${x - 3}" y="${36 + lift / 2}" width="6" height="10" fill="${BODY}" stroke="${EDGE}" stroke-width="1"/>`).join('');
+  const arms = `<path d="M26 16 L14 ${24 + lift} L12 ${34 + lift} M38 16 L50 ${24 + lift} L52 ${34 + lift}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
+  const lens = `<circle cx="32" cy="11.5" r="1.8" fill="${pose === 'live' ? LIT : BODY}" stroke="${EDGE}" stroke-width="0.8"/>`;
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${mast}${cells}${arms}</g>`, 'The Clamp, let go');
+  return svg(cells + mast + arms + lens, 'The Clamp');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the clamp') return clampArt(pose, plan);
   if (species === 'the leach') return leachArt(pose, plan);
   if (species === 'the tipper') return tipperArt(pose, plan);
   if (species === 'the crucible') return crucibleArt(pose, plan);

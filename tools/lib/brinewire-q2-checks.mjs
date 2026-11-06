@@ -68,9 +68,9 @@ export async function checkBrinewireQ2({ ok, fail }) {
   const dip = (stripId, ion, ions = Q.CHECKS.S2_METALS) => put(`s-${stripId}`, `slot:dip.b${ions.indexOf(ion)}`);
   const s2 = script => Q.stateFor(1, script).table;
   const t1 = s2([dip('zn', 'cu'), dip('cu', 'cu'), dip('fe', 'zn')]);
-  holds(Dip.triedIn(t1, 'dip', 'b3', 'zn')?.coats.join() === 'cu', 'a lifted zinc strip leaves its mark on the copper beaker');
-  holds(Dip.triedIn(t1, 'dip', 'b3', 'cu')?.coats.length === 0, 'the copper strip in its own solution is marked clean');
-  holds(Dip.triedIn(t1, 'dip', 'b0', 'fe')?.coats.length === 0, 'iron in the zinc solution is marked clean');
+  holds(Dip.triedIn(t1, 'dip', `b${Q.CHECKS.S2_METALS.indexOf('cu')}`, 'zn')?.coats.join() === 'cu', 'a lifted zinc strip leaves its mark on the copper beaker');
+  holds(Dip.triedIn(t1, 'dip', `b${Q.CHECKS.S2_METALS.indexOf('cu')}`, 'cu')?.coats.length === 0, 'the copper strip in its own solution is marked clean');
+  holds(Dip.triedIn(t1, 'dip', `b${Q.CHECKS.S2_METALS.indexOf('zn')}`, 'fe')?.coats.length === 0, 'iron in the zinc solution is marked clean');
   holds(Dip.triedIn(t1, 'dip', 'b1', 'zn') === null, 'a dip never made leaves no mark');
   // The window paints what the planner says: a recording context sees the coating colour only when the strip is coated.
   const record = (state, fid = 'dip') => {

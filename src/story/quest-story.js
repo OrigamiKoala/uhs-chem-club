@@ -80,6 +80,18 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: a cell\'s voltage comes from its two metals, not its size; the Fifth\'s big cell was no stronger.'
   },
+  /* ---- Brinewire: the Clamp's five cells, read the way every cell on the road was ---- */
+  'unit10/boss-clamp': {
+    scene: 'clamp-open',
+    beats: [
+      { to: 0.2, say: 'Iron coated in 3 of the other 3 solutions, nickel in 2, tin in 1 and silver in none. The more solutions a strip coats in, the more readily it gives electrons.' },
+      { to: 0.4, say: 'The ammeter read 1.44 A and the electrons moved toward the silver beaker, so they left through magnesium. Magnesium is the anode.' },
+      { to: 0.6, say: 'Iron read −0.44 V and silver +0.80 V, and the gap between them is 1.24 V. A voltage is energy for each electron, so balancing the equation does not change it.' },
+      { to: 0.78, say: 'Beakers of 0.010 M and 1.0 M zinc read 0.059 V, and the electrons left the bar in the dilute beaker. The dilute side is the anode.' },
+      { to: 0.94, say: '1.50 A for 1200 s passed 1800 C, which is 0.0187 mol of electrons, and two electrons plate each zinc atom. That plated 0.61 g of zinc.' }
+    ],
+    filed: 'Filed: the Clamp\'s last cell reads like every cell on the road, and its power was the marsh\'s own copper.'
+  },
   /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
   'unit09/q2-scale': {
     scene: 'scale',

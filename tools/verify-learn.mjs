@@ -2994,6 +2994,12 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   await checkBrinewireQ5({ ok, fail });
   const { checkBrinewireQ3 } = await import('./lib/brinewire-q3-checks.mjs');
   await checkBrinewireQ3({ ok, fail });
+  const { checkBrinewireBoss } = await import('./lib/brinewire-boss-checks.mjs');
+  {
+    const before = failures;
+    await checkBrinewireBoss({ ok, fail });
+    if (failures === before) ok('Brinewire boss-clamp: every phase figure, slip refusal, corner, planner pose and story number agrees with the values worked by hand');
+  }
 }
 
 /* ------------------------------------------------------------------

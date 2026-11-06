@@ -54,7 +54,7 @@ const GUESS = {
 /* ---------------------------------------------------------------- what each stage puts on the table (inputs; every picture is the planner's) */
 
 const S1_METALS = ['zn', 'cu', 'ag'];
-const S2_METALS = ['zn', 'fe', 'pb', 'cu'];
+const S2_METALS = ['cu', 'zn', 'pb', 'fe'];
 const S4_METALS = ['zn', 'cu'];
 const S5_METALS = ['mg', 'zn', 'fe', 'cu', 'ag'];
 const S6_PARTNERS = ['zn', 'cu', 'mg', 'sn'];
