@@ -210,3 +210,12 @@ Evidence labels: `Code` (read in the source), `Scripted` (a Node script run in t
 - `q4` stages 6 and 7: the board and electrodes are replaced by a ready-built cell with its balanced equation printed and the energy counter absent, so n comes from the equation. `verify:learn`, `verify:table` and `verify:bench` are green; not played.
 - `q5` stage 2: one press now advances 20 ticks, so the run takes two presses (was five). Scripted only.
 - Not fixed: `q6` stages 4, 5, 8 are still plate-and-type (the balance already shows a short plating run); the Run-after-dial miss is unreproduced; phone-landscape legibility is unchecked because the shared panel covers the bench at 667 × 375 until folded and a fold click did not register.
+
+## Second weak-areas pass (2026-11-06)
+
+- `q3` stage 3: Cell A is now Fe|Cu so Zn|Cu is not repeated from stage 2 (checks green).
+- `q1` windows: the Before and After headings sat under the 3D glass rim at 3D On (seen at 3D On in the q1 stage 5 view, which also showed the beakers, probe and four cards legibly); the windows were moved 4 units down. The fix passes `verify:learn`, `table` and `bench`; it was not looked at again.
+- `q6` stages 4, 5, 8: reviewed; each has a runnable plating bench with a coulomb counter or balance and the typed figure is past its dials, so they follow the quantity ramp and are kept.
+- Run after the equation dial: the dial value is set on pointer move and a scripted run, dial, run records both settings, so the missed press is not reproduced.
+- The Brinewire world briefing (three Vess panels) was seen in the browser and reads cleanly.
+- Still not checked: phone landscape past the shared panel, every stage not named above.

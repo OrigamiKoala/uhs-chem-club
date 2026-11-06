@@ -63,7 +63,7 @@ const GUESS = {
 /* ---------------------------------------------------------------- what each stage puts on the table (inputs; every figure shown is the planner's) */
 
 /** Stage 3's three cells: [id, left metal, right metal, name]. The electrons' side differs from cell to cell. */
-const S3_CELLS = [['ra', 'zn', 'cu', 'Cell A'], ['rb', 'cu', 'mg', 'Cell B'], ['rc', 'ag', 'zn', 'Cell C']];
+const S3_CELLS = [['ra', 'fe', 'cu', 'Cell A'], ['rb', 'cu', 'mg', 'Cell B'], ['rc', 'ag', 'zn', 'Cell C']];
 /** Stage 4 and 7: zinc on the left, copper on the right. Stage 5: copper on the left, zinc on the right (the anode changes sides). */
 const S4 = { left: 'zn', right: 'cu' };
 const S5 = { left: 'cu', right: 'zn' };

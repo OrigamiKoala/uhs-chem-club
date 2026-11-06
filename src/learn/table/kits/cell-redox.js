@@ -28,7 +28,7 @@ const AMBER = PLATE_COLORS.amber;
 const TEXT = PLATE_COLORS.text;
 
 /** Window geometry in units from the beaker fixture's top left. */
-export const WIN = Object.freeze({ w: 48, h: 32, y: 8, gap: 4, x: 3, pitch: 6.2, r: 2.75 });
+export const WIN = Object.freeze({ w: 48, h: 32, y: 12, gap: 4, x: 3, pitch: 6.2, r: 2.75 });
 /** Ion slots: 4 columns by 4 rows right of the strip, filled in this fixed order. */
 const SLOT_ORDER = [5, 10, 1, 14, 7, 2, 12, 9, 0, 15, 4, 11, 6, 13, 3, 8];
 /** Strip atoms leave from the right-hand column first. */
@@ -72,7 +72,7 @@ function paintBeaker(ctx, f, state, b) {
   for (const [idx, side] of ['before', 'after'].entries()) {
     const x0 = WIN.x + idx * (WIN.w + WIN.gap);
     const y0 = WIN.y;
-    put(ctx, idx ? 'After' : 'Before', F.x(x0 + WIN.w / 2), F.y(5), F.size(2.6, 7), { color: DUST, weight: 700 });
+    put(ctx, idx ? 'After' : 'Before', F.x(x0 + WIN.w / 2), F.y(7.4), F.size(2.6, 7), { color: DUST, weight: 700 });
     ctx.fillStyle = '#2f4a47'; ctx.fillRect(F.x(x0 + 0.5), F.y(y0 + 3), F.len(WIN.w - 1), F.len(WIN.h - 3.5));
     ctx.strokeStyle = STEEL; ctx.lineWidth = Math.max(1.4, F.len(0.35));
     ctx.beginPath(); ctx.moveTo(F.x(x0), F.y(y0)); ctx.lineTo(F.x(x0), F.y(y0 + WIN.h)); ctx.lineTo(F.x(x0 + WIN.w), F.y(y0 + WIN.h)); ctx.lineTo(F.x(x0 + WIN.w), F.y(y0)); ctx.stroke();
