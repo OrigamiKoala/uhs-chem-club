@@ -22,6 +22,11 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
+  'q4-potential': {
+    1: 'Every cell in the marsh reads a different voltage, and Vess wants to measure what sets the number.'
+  },
+
   'q5-salts': {
     1: 'The Fifth neutralised a tank and called it safe, and Vess wants to measure what was left.'
   },

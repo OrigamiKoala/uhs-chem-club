@@ -29,3 +29,4 @@ import './matter.js';
 import './pot.js';
 import './pans.js';
 import './ph.js';
+import './cell.js';

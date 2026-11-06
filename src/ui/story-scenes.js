@@ -21,6 +21,7 @@ import { MIRROWEN_SCENES } from './story-scenes-mirrowen.js';
 import { LANTERNFALL_SCENES } from './story-scenes-lanternfall.js';
 import { TEETER_SCENES } from './story-scenes-teeter.js';
 import { VERDIGRIS_SCENES } from './story-scenes-verdigris.js';
+import { BRINEWIRE_SCENES } from './story-scenes-brinewire.js';
 import { VERDIGRIS_Q4Q5_SCENES } from './story-scenes-verdigris-q4q5.js';
 import { VERDIGRIS_TITRATE_SCENES } from './story-scenes-verdigris-titrate.js';
 import { VERDIGRIS_Q1Q2_SCENES } from './story-scenes-verdigris-q1q2.js';
@@ -1308,6 +1309,7 @@ export const SCENES = {
   ...legacy(LANTERNFALL_SCENES),
   ...legacy(TEETER_SCENES),
   ...legacy(VERDIGRIS_SCENES),
+  ...legacy(BRINEWIRE_SCENES),
   ...legacy(VERDIGRIS_Q4Q5_SCENES),
   ...legacy(VERDIGRIS_TITRATE_SCENES),
   ...legacy(VERDIGRIS_Q1Q2_SCENES),

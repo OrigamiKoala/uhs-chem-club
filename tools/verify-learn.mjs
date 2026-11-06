@@ -2968,6 +2968,20 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 }
 
 /* ------------------------------------------------------------------
+   BRINEWIRE (unit10): the planners, board, rig, typed slips and story numbers of each built bench against values worked by hand. One check
+   file per bench (`tools/lib/brinewire-<quest>-checks.mjs`); add a line here when a bench is built. (marker: brinewire bench checks)
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const { checkBrinewireData } = await import('./lib/brinewire-data-checks.mjs');
+  const dataFails = checkBrinewireData();
+  for (const f of dataFails) fail(`Brinewire data: ${f}`);
+  if (!dataFails.length) ok('Brinewire planners (celldata.js): every potential, voltage, free energy, K, Nernst, Faraday and ledger value agrees with the independent values');
+  const { checkBrinewireQ4 } = await import('./lib/brinewire-q4-checks.mjs');
+  await checkBrinewireQ4({ ok, fail });
+}
+
+/* ------------------------------------------------------------------
    TALLOW'S TABLES ARE REAL (plan `bench-tabletop.md`, T1). A table stage declares pieces, and a
    declaration can say a thing the instruments never would: a ring of nine electrons, a particle
    kind the scope has never weighed. Everything declared is held to the real tables (`atoms.js`,

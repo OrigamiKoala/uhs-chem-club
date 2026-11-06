@@ -1,0 +1,120 @@
+{
+  "world": "unit10",
+  "end": [],
+  "bench": {
+    "q4-potential": {
+      "problems": [
+        {
+          "id": "q4-potential#b1",
+          "quest": "q4-potential",
+          "question": "A cell reads 0.90 V. Its equation is written again with every coefficient doubled. What does the cell read, and what happens to the energy released?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.90 V, and the energy released doubles"
+            },
+            {
+              "id": "b",
+              "label": "1.80 V, and the energy released doubles"
+            },
+            {
+              "id": "c",
+              "label": "0.90 V, and the energy released stays the same"
+            },
+            {
+              "id": "d",
+              "label": "1.80 V, and the energy released stays the same"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A voltage is energy for each electron pushed through, so it does not depend on how much reacts. Twice the reaction moves twice the electrons and releases twice the energy."
+        },
+        {
+          "id": "q4-potential#b2",
+          "quest": "q4-potential",
+          "question": "Zn²⁺ + 2 e⁻ → Zn has E° = −0.76 V and Ag⁺ + e⁻ → Ag has E° = +0.80 V. What is E°cell for a cell made from zinc and silver?",
+          "options": [
+            {
+              "id": "a",
+              "label": "+1.56 V"
+            },
+            {
+              "id": "b",
+              "label": "+0.04 V"
+            },
+            {
+              "id": "c",
+              "label": "−1.56 V"
+            },
+            {
+              "id": "d",
+              "label": "+3.12 V"
+            }
+          ],
+          "answer": "a",
+          "explanation": "E°cell is the higher reading minus the lower one: 0.80 − (−0.76) = 1.56 V. Doubling the silver half-reaction to balance the electrons does not change its E°."
+        }
+      ],
+      "worked": {
+        "id": "q4-potential#w",
+        "quest": "q4-potential",
+        "title": "Energy and K from a Voltage",
+        "setup": "Iron reacts with copper(II) ions: Fe + Cu²⁺ → Fe²⁺ + Cu. E° is −0.44 V for Fe²⁺/Fe and +0.34 V for Cu²⁺/Cu. F = 96,485 C/mol.",
+        "steps": [
+          {
+            "say": "What is E°cell, in volts?",
+            "kind": "number",
+            "answer": 0.78,
+            "calc": "0.34-(-0.44)",
+            "unit": "V",
+            "tol": 0.01,
+            "hint": "Take the lower reading away from the higher one.",
+            "explain": "0.34 − (−0.44) = 0.78 V."
+          },
+          {
+            "say": "How many moles of electrons does the equation move?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "1"
+              },
+              {
+                "id": "b",
+                "label": "2"
+              },
+              {
+                "id": "c",
+                "label": "3"
+              }
+            ],
+            "answer": "b",
+            "hint": "Look at the charge on the iron ion that forms.",
+            "explain": "Each Fe atom gives 2 electrons and each Cu²⁺ takes 2."
+          },
+          {
+            "say": "What is ΔG°, in kJ? Use ΔG° = −nFE°.",
+            "kind": "number",
+            "answer": -150.5,
+            "calc": "-2*96485*0.78/1000",
+            "unit": "kJ",
+            "tol": 0.01,
+            "hint": "Multiply 2, 96,485 and 0.78, make it negative, then divide by 1000.",
+            "explain": "−2 × 96,485 × 0.78 = −150,500 J, which is −150.5 kJ."
+          },
+          {
+            "say": "What is log K, using log K = nE° ÷ 0.0592?",
+            "kind": "number",
+            "answer": 26.35,
+            "calc": "2*0.78/0.0592",
+            "unit": "",
+            "tol": 0.02,
+            "hint": "Multiply 2 by 0.78 and divide by 0.0592.",
+            "explain": "2 × 0.78 ÷ 0.0592 = 26.4, so K is near 10²⁶."
+          }
+        ],
+        "finish": "Take the lower reading from the higher one for E°cell, count the electrons the balanced equation moves, then use that voltage for both the energy and K."
+      }
+    }
+  }
+}

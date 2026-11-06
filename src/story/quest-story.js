@@ -19,6 +19,17 @@
  */
 
 export const QUEST_STORY = {
+  /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
+  'unit10/q4-potential': {
+    scene: 'cell-gap',
+    beats: [
+      { to: 0.26, say: 'Against one reference, magnesium read −2.37 V, zinc −0.76 V, copper +0.34 V and silver +0.80 V. Each reading is that metal\'s E°.' },
+      { to: 0.52, say: 'A cell takes its voltage from the gap between two readings: silver minus magnesium is 3.17 V. A positive gap lights the lamp.' },
+      { to: 0.76, say: 'Written twice over, the zinc and copper cell moved twice the electrons and gave out twice the energy, yet the voltmeter still read 1.10 V.' },
+      { to: 0.94, say: 'The energy follows ΔG° = −nFE°, and log K = nE° ÷ 0.0592. For zinc with silver, n = 2 and E° = 1.56 V.' }
+    ],
+    filed: 'Filed: a cell\'s voltage comes from its two metals, not its size; the Fifth\'s big cell was no stronger.'
+  },
   /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
   'unit09/q2-scale': {
     scene: 'scale',
