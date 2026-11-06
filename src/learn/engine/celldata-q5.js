@@ -14,7 +14,7 @@
 import { runCell, balanceExtent, logK, cellE0, electronsMoved, concentrationCell, cellVoltage, METALS, RT_F, fmt } from './celldata.js';
 
 /** Constants of the load bench. `rate` mol/L per volt per tick; `perPress` ticks one press of Run advances; `maxTick` ticks the bench allows. */
-export const LOAD = Object.freeze({ rate: 4, perPress: 8, maxTick: 40, dotM: 0.02, dotsCap: 100 });
+export const LOAD = Object.freeze({ rate: 4, perPress: 20, maxTick: 40, dotM: 0.02, dotsCap: 100 });
 
 /** The two concentration settings of every dial in this bench (mol/L). */
 export const CONC_STEPS = Object.freeze([0.010, 1.0]);

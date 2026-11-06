@@ -302,13 +302,15 @@ export const STAGES = [
     prompt: 'Find the energy, in kJ, released when one mole of magnesium reacts with copper(II) ions.',
     widget,
     entry: { id: 'kj', label: 'Energy released', unit: 'kJ' },
-    table: boardTable(
-      [electrodePiece('e-mg', 'mg', { x: 118, y: 10 }), electrodePiece('e-cu', 'cu', { x: 118, y: 28 })],
-      { w: 176, h: 70, fixtures: [plaqueFixture('plate', 'For reference', { x: 144, y: 57 }, ['1 mol of electrons carries 96,485 C', '1 V pushes 1 J for each C'], { w: 52 })] }
-    ),
+    table: cellTable({
+      fixtures: [
+        rigFixture('rig', { x: 48, y: 42 }, { left: S6.anode, right: S6.cathode, equation: true, w: 70, title: 'Magnesium with copper' }),
+        plaqueFixture('plate', 'For reference', { x: 126, y: 42 }, ['1 mol of electrons carries 96,485 C', '1 V pushes 1 J for each C'], { w: 52 })
+      ]
+    }, { w: 164, h: 84 }),
     hints: [
-      'Read both electrodes on the board and type the energy in kJ in the field.',
-      'Compare the electrons each half-reaction on the board carries with the voltage the cell gets from the two readings.',
+      'Press "Run" on the cell and type the energy in kJ in the field.',
+      'Compare the equation printed under the cell with the voltage on its meter.',
       'Multiply the moles of electrons by the charge on a mole and by the cell voltage, then change joules to kilojoules.'
     ],
     check(state) {
@@ -323,7 +325,7 @@ export const STAGES = [
       if (near(-want)) return { ok: false, msg: 'The cell releases energy, so the figure is a size, not a negative number.' };
       const znCu = -deltaG0(cellE0('cu', 'zn'), 2);
       if (near(znCu)) return { ok: false, msg: 'That is the energy of the zinc–copper cell; this cell uses magnesium.' };
-      return { ok: false, msg: `The board reads ${voltText(E(S6.anode))} V for magnesium and ${voltText(E(S6.cathode))} V for copper; that does not give ${fmt(v, 0)} kJ.` };
+      return { ok: false, msg: `The cell reads ${voltText(cellE0(S6.cathode, S6.anode))} V and its equation moves ${electronsMoved(S6.cathode, S6.anode)} electrons; that does not give ${fmt(v, 0)} kJ.` };
     },
     get reward() {
       const E0 = cellE0(S6.cathode, S6.anode); const n = electronsMoved(S6.cathode, S6.anode);
@@ -342,14 +344,16 @@ export const STAGES = [
     prompt: 'Find log K, to the nearest whole number, for zinc reacting with silver ions.',
     widget,
     entry: { id: 'logk', label: 'log K', unit: '' },
-    table: boardTable(
-      [electrodePiece('e-zn', 'zn', { x: 118, y: 10 }), electrodePiece('e-ag', 'ag', { x: 118, y: 28 })],
-      { w: 176, h: 70, fixtures: [plaqueFixture('plate', 'For reference', { x: 144, y: 57 }, ['log K = n × E° ÷ 0.0592'], { w: 52 })] }
-    ),
+    table: cellTable({
+      fixtures: [
+        rigFixture('rig', { x: 48, y: 42 }, { left: S7.anode, right: S7.cathode, equation: true, w: 70, title: 'Zinc with silver' }),
+        plaqueFixture('plate', 'For reference', { x: 126, y: 42 }, ['log K = n × E° ÷ 0.0592'], { w: 52 })
+      ]
+    }, { w: 164, h: 84 }),
     hints: [
-      'Read both electrodes on the board and type log K in the field.',
-      'Compare the electrons the two half-reactions carry, and decide how many the whole equation moves.',
-      'Find E°cell, take n as the electrons moved when the equation balances, and use the plate.'
+      'Press "Run" on the cell and type log K in the field.',
+      'Compare the charges on the ions in the printed equation to see how many electrons it moves.',
+      'Take n as the electrons moved by the equation as printed, E° from the meter, and use the plate.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'logk');
@@ -360,7 +364,7 @@ export const STAGES = [
       const near = x => Math.abs(v - x) <= 0.03 * Math.abs(x);
       if (near(logK(E0, 1))) return { ok: false, msg: 'That counts one electron; the balanced equation has zinc giving two.' };
       if (near(lnKof(E0, n))) return { ok: false, msg: 'That is the natural log; the plate divides by 0.0592 to give the base-ten log.' };
-      return { ok: false, msg: `The board reads ${voltText(E(S7.anode))} V for zinc and ${voltText(E(S7.cathode))} V for silver; that does not give a log K of ${fmt(v, 0)}.` };
+      return { ok: false, msg: `The cell reads ${voltText(cellE0(S7.cathode, S7.anode))} V and its equation moves ${electronsMoved(S7.cathode, S7.anode)} electrons; that does not give a log K of ${fmt(v, 0)}.` };
     },
     get reward() {
       const E0 = cellE0(S7.cathode, S7.anode); const n = electronsMoved(S7.cathode, S7.anode);
@@ -428,8 +432,8 @@ export const SOLUTIONS = [
   [...S3_CELLS.map(([id]) => run(id)), ...S3_CELLS.map(([id, l, r]) => put(`c${id.slice(1)}`, cellE0(r, l) > 0 ? 'tray:lit' : 'tray:dark'))],
   [put('same', 'slot:guess')],
   [run('rig'), dial('rig', 'scale', 2), run('rig'), dial('pick', 'value', 1)],
-  [put('e-mg', SEAT), put('e-cu', SEAT), typed('kj', fmt(-deltaG0(cellE0('cu', 'mg'), 2), 0))],
-  [put('e-zn', SEAT), put('e-ag', SEAT), typed('logk', fmt(logK(cellE0('ag', 'zn'), 2), 0))],
+  [run('rig'), typed('kj', fmt(-deltaG0(cellE0('cu', 'mg'), 2), 0))],
+  [run('rig'), typed('logk', fmt(logK(cellE0('ag', 'zn'), 2), 0))],
   [put('e-a', SEAT), put('e-b', SEAT), typed('e', fmt(cellE0(S8.b, S8.a), 2))]
 ];
 
