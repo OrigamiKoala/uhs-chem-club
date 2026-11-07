@@ -5,7 +5,7 @@
 const { installDomShim } = await import('./lib/dom-shim.mjs');
 installDomShim();
 
-const { evaluateExpression, formatResult } = await import('../src/ui/calculator.js');
+const { evaluateExpression, formatResult, CONSTANTS } = await import('../src/ui/calculator.js');
 
 let passed = 0;
 let failed = 0;
@@ -87,13 +87,19 @@ test('(2 + 3)(4 + 5)', 45);
 test('2log(100)', 4);
 test('log(100', 2); // auto-close parens
 
-// 7. Ans Chaining
+// 7. Ans Chaining (e.g. 5+3=8 then Ans*2=16)
+test('5 + 3', 8);
+test('Ans * 2', 16, { ans: 8 });
 test('Ans + 5', 15, { ans: 10 });
-test('Ans * 2', 20, { ans: 10 });
+test('Ans / 2', 8, { ans: 16 });
 
-// 8. Chemistry Constants Calculations
-test('8.314 * 298.15', 2478.8191);
+// 8. Direct Chemistry Constants in Expressions
+test('R * 298.15', 2478.8191);
 test('96485 * 1.1', 106133.5);
+test('F * 2', 192970);
+test('Na / 2', 3.011e23);
+test('atm / 2', 50662.5);
+test('Kw', 1e-14);
 
 // 9. Error Handling
 testError('1 / 0');
@@ -106,6 +112,9 @@ testError('asin(2)');
 assert(formatResult(0.1 + 0.2) === '0.3', 'Float rounding for 0.1 + 0.2');
 assert(formatResult(2478.8190999999997) === '2478.8191', 'Float jitter reduction');
 assert(formatResult(0) === '0', 'Zero formatting');
+
+// 11. Constants Registry
+assert(CONSTANTS.length === 9, 'All 9 chemistry constants defined');
 
 console.log(`\nTests completed: ${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);

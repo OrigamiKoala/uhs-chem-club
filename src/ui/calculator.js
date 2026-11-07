@@ -1,22 +1,23 @@
 /**
- * calculator.js — Digital Scientific Calculator for Avalon.
+ * calculator.js — Digital Scientific Entry Calculator for Avalon.
  *
  * "The Scoured Plate" — machined hardware for chemical calculations.
  * Features:
- *   - Arithmetic, logarithms (log10, ln), powers, roots, trigonometry (DEG/RAD)
- *   - Scientific notation (EE / exponential)
- *   - Quick Chemistry Constants drawer (R, N_A, F, h, c, k_B, atm, Kw)
- *   - Two-line display with formula tape and precision result formatting
+ *   - Command/entry-line interface: type math expressions and press Enter to evaluate
+ *   - Chaining with Ans: typing e.g. "5+3 [enter]" then "*2" displays "Ans * 2 = 16"
+ *   - Direct support for chemistry constants in expressions and quick constant chips:
+ *     R, N_A, F, h, c, k_B, atm, K_w, pi, e
+ *   - Full scientific math: arithmetic, logs (log10, ln), powers, roots, trig (DEG/RAD)
+ *   - History tape of recent calculations (with Up/Down arrow recall)
  *   - Moveable (drag by header), closeable (X button, Esc, or toggle)
- *   - "Copy" to clipboard and "Use" to auto-fill stage input fields
- *   - Full physical keyboard support
+ *   - "Copy" to clipboard and "Use Value" to auto-fill stage input fields
  *   - Native sound effects via soundscape
  */
 
 import { soundscape } from '../audio/soundscape.js';
 
 /** Essential constants in chemistry */
-const CONSTANTS = [
+export const CONSTANTS = [
   { sym: 'R (J)', val: '8.314', desc: '8.314 J/(mol·K)' },
   { sym: 'R (atm)', val: '0.08206', desc: '0.08206 L·atm/(mol·K)' },
   { sym: 'N_A', val: '6.022e23', desc: '6.022 × 10²³ mol⁻¹' },
@@ -52,7 +53,6 @@ export function evaluateExpression(rawExpr, { isDegree = true, ans = 0 } = {}) {
     .replace(/×/g, '*')
     .replace(/÷/g, '/')
     .replace(/π/g, 'pi')
-    .replace(/Ans/gi, String(ans))
     .trim();
 
   // Tokenize
@@ -95,6 +95,24 @@ export function evaluateExpression(rawExpr, { isDegree = true, ans = 0 } = {}) {
         tokens.push({ type: 'NUM', value: Math.PI });
       } else if (lower === 'e') {
         tokens.push({ type: 'NUM', value: Math.E });
+      } else if (lower === 'ans') {
+        tokens.push({ type: 'NUM', value: ans });
+      } else if (lower === 'r') {
+        tokens.push({ type: 'NUM', value: 8.314 });
+      } else if (lower === 'na' || lower === 'n_a') {
+        tokens.push({ type: 'NUM', value: 6.022e23 });
+      } else if (lower === 'f') {
+        tokens.push({ type: 'NUM', value: 96485 });
+      } else if (lower === 'h') {
+        tokens.push({ type: 'NUM', value: 6.626e-34 });
+      } else if (lower === 'c') {
+        tokens.push({ type: 'NUM', value: 2.998e8 });
+      } else if (lower === 'kb' || lower === 'k_b') {
+        tokens.push({ type: 'NUM', value: 1.381e-23 });
+      } else if (lower === 'atm') {
+        tokens.push({ type: 'NUM', value: 101325 });
+      } else if (lower === 'kw' || lower === 'k_w') {
+        tokens.push({ type: 'NUM', value: 1.0e-14 });
       } else {
         tokens.push({ type: 'FUNC', value: lower });
       }
@@ -271,14 +289,14 @@ export function evaluateExpression(rawExpr, { isDegree = true, ans = 0 } = {}) {
 class DigitalCalculator {
   constructor() {
     this.el = null;
+    this.inputEl = null;
+    this.tapeEl = null;
     this.isOpen = false;
-    this.expression = '';
-    this.tape = '';
-    this.displayValue = '0';
-    this.isDegree = true;
-    this.showConstants = false;
+    this.history = []; // Array of { expr, result }
+    this.historyIdx = -1;
     this.ans = 0;
     this.justEvaluated = false;
+    this.isDegree = true;
     this.targetInput = null;
 
     // Dragging state
@@ -289,7 +307,8 @@ class DigitalCalculator {
     this.initialTop = 0;
     this.hasMoved = false;
 
-    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onInputKeyDown = this.onInputKeyDown.bind(this);
+    this.onGlobalKeyDown = this.onGlobalKeyDown.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
   }
@@ -313,127 +332,81 @@ class DigitalCalculator {
           <button type="button" class="scoured-calc-mode-btn ${this.isDegree ? 'active' : ''}" data-act="toggle-mode" title="Toggle Degrees / Radians">
             ${this.isDegree ? 'DEG' : 'RAD'}
           </button>
-          <button type="button" class="scoured-calc-const-btn ${this.showConstants ? 'active' : ''}" data-act="toggle-const" title="Chemistry Constants">
-            CONST
-          </button>
           <button type="button" class="scoured-calc-close-btn" data-act="close" title="Close Calculator (Esc)" aria-label="Close Calculator">
             ✕
           </button>
         </div>
       </div>
 
-      <div class="scoured-calc-screen">
-        <div class="scoured-calc-tape" id="calc-tape">&nbsp;</div>
-        <div class="scoured-calc-main-line" id="calc-display">0</div>
-        <div class="scoured-calc-screen-bar">
-          <span class="scoured-calc-screen-status" id="calc-status">RAD: OFF · DEG: ON</span>
-          <div class="scoured-calc-screen-actions">
-            <button type="button" class="scoured-calc-util-btn" data-act="copy" title="Copy to clipboard">Copy</button>
-            <button type="button" class="scoured-calc-util-btn" data-act="use" title="Insert into stage input">Use Value</button>
-          </div>
+      <!-- Chemistry Constants Strip -->
+      <div class="scoured-calc-const-bar" role="toolbar" aria-label="Chemistry Constants">
+        <span class="scoured-calc-const-tag">CONST</span>
+        <div class="scoured-calc-const-scroll">
+          ${CONSTANTS.map(c => `
+            <button type="button" class="scoured-const-chip" data-const-val="${c.val}" data-const-sym="${c.sym}" title="${c.desc}">
+              <span class="scoured-const-sym">${c.sym}</span>
+            </button>
+          `).join('')}
         </div>
       </div>
 
-      <div class="scoured-calc-constants ${this.showConstants ? '' : 'hidden'}" id="calc-const-panel">
-        ${CONSTANTS.map(c => `
-          <button type="button" class="scoured-const-chip" data-const-val="${c.val}" title="${c.desc}">
-            <span class="scoured-const-sym">${c.sym}</span>
-            <span class="scoured-const-val">${c.val}</span>
-          </button>
-        `).join('')}
-      </div>
+      <!-- History Tape -->
+      <div class="scoured-calc-screen">
+        <div class="scoured-calc-tape" id="calc-tape" role="log" aria-live="polite">
+          <div class="scoured-calc-tape-empty">Ready. Type an expression and press Enter.</div>
+        </div>
 
-      <div class="scoured-calc-body">
-        <div class="scoured-calc-grid">
-          <!-- Row 1: Primary powers & logs -->
-          <button type="button" class="scoured-calc-btn k-fn" data-token="log(">log</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="ln(">ln</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="sqrt(">√</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="^2">x²</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="^">xʸ</button>
+        <!-- Entry Line -->
+        <div class="scoured-calc-entry-row">
+          <span class="scoured-calc-prompt" aria-hidden="true">&gt;</span>
+          <input
+            type="text"
+            id="calc-input"
+            class="scoured-calc-input"
+            placeholder="Type expression… (e.g. 5+3, -log(1e-7), R*298)"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Calculator expression input"
+          />
+        </div>
 
-          <!-- Row 2: Trig & constants -->
-          <button type="button" class="scoured-calc-btn k-fn" data-token="sin(">sin</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="cos(">cos</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="tan(">tan</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="π">π</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="e">e</button>
-
-          <!-- Row 3: Utility & Parentheses -->
-          <button type="button" class="scoured-calc-btn k-fn" data-token="1/(">1/x</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="e">EE</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="(">(</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token=")">)</button>
-          <button type="button" class="scoured-calc-btn k-danger" data-act="clear">AC</button>
-
-          <!-- Row 4: 7, 8, 9, backspace, divide -->
-          <button type="button" class="scoured-calc-btn k-num" data-token="7">7</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token="8">8</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token="9">9</button>
-          <button type="button" class="scoured-calc-btn k-danger" data-act="backspace" title="Backspace">⌫</button>
-          <button type="button" class="scoured-calc-btn k-op" data-token=" ÷ ">÷</button>
-
-          <!-- Row 5: 4, 5, 6, negate, multiply -->
-          <button type="button" class="scoured-calc-btn k-num" data-token="4">4</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token="5">5</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token="6">6</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-act="negate">±</button>
-          <button type="button" class="scoured-calc-btn k-op" data-token=" × ">×</button>
-
-          <!-- Row 6: 1, 2, 3, Ans, subtract -->
-          <button type="button" class="scoured-calc-btn k-num" data-token="1">1</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token="2">2</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token="3">3</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="Ans">Ans</button>
-          <button type="button" class="scoured-calc-btn k-op" data-token=" - ">-</button>
-
-          <!-- Row 7: 0, decimal, percent, add, equals -->
-          <button type="button" class="scoured-calc-btn k-num" data-token="0">0</button>
-          <button type="button" class="scoured-calc-btn k-num" data-token=".">.</button>
-          <button type="button" class="scoured-calc-btn k-fn" data-token="%">%</button>
-          <button type="button" class="scoured-calc-btn k-op" data-token=" + ">+</button>
-          <button type="button" class="scoured-calc-btn k-eq" data-act="equals" title="Calculate (=)">=</button>
+        <!-- Status & Utility Bar -->
+        <div class="scoured-calc-screen-bar">
+          <span class="scoured-calc-screen-status" id="calc-status">Ans = 0</span>
+          <div class="scoured-calc-screen-actions">
+            <button type="button" class="scoured-calc-util-btn" data-act="clear" title="Clear history">Clear</button>
+            <button type="button" class="scoured-calc-util-btn" data-act="copy" title="Copy last result">Copy</button>
+            <button type="button" class="scoured-calc-util-btn" data-act="use" title="Insert into stage input">Use Value</button>
+          </div>
         </div>
       </div>
     `;
 
     document.body.appendChild(this.el);
+    this.inputEl = this.el.querySelector('#calc-input');
+    this.tapeEl = this.el.querySelector('#calc-tape');
     this.bindEvents();
   }
 
   bindEvents() {
+    this.inputEl.addEventListener('keydown', this.onInputKeyDown);
+
     this.el.addEventListener('click', e => {
       const btn = e.target.closest('button');
       if (!btn) return;
 
       const act = btn.dataset.act;
-      const token = btn.dataset.token;
       const constVal = btn.dataset.constVal;
 
-      if (token) {
+      if (constVal) {
         soundscape?.playKeyCapThunk?.();
-        this.appendToken(token);
-      } else if (constVal) {
-        soundscape?.playKeyCapThunk?.();
-        this.appendToken(constVal);
+        this.insertConstant(constVal);
       } else if (act === 'clear') {
         soundscape?.playKeyCapThunk?.();
         this.clearAll();
-      } else if (act === 'backspace') {
-        soundscape?.playKeyCapThunk?.();
-        this.backspace();
-      } else if (act === 'negate') {
-        soundscape?.playKeyCapThunk?.();
-        this.toggleNegate();
-      } else if (act === 'equals') {
-        soundscape?.playToggleClack?.();
-        this.compute();
       } else if (act === 'toggle-mode') {
         soundscape?.playCrtTick?.();
         this.toggleAngleMode();
-      } else if (act === 'toggle-const') {
-        soundscape?.playCrtTick?.();
-        this.toggleConstants();
       } else if (act === 'copy') {
         this.copyResult(btn);
       } else if (act === 'use') {
@@ -450,7 +423,7 @@ class DigitalCalculator {
   }
 
   startDrag(e) {
-    if (e.target.closest('button')) return;
+    if (e.target.closest('button') || e.target.closest('input')) return;
     e.preventDefault();
 
     this.isDragging = true;
@@ -483,8 +456,8 @@ class DigitalCalculator {
     let newTop = this.initialTop + dy;
 
     // Viewport clamping
-    const w = this.el.offsetWidth || 360;
-    const h = this.el.offsetHeight || 440;
+    const w = this.el.offsetWidth || 380;
+    const h = this.el.offsetHeight || 220;
     const maxLeft = Math.max(10, window.innerWidth - w - 10);
     const maxTop = Math.max(10, window.innerHeight - h - 10);
 
@@ -506,149 +479,173 @@ class DigitalCalculator {
     window.removeEventListener('touchend', this.onPointerUp);
   }
 
-  onKeyDown(e) {
-    if (!this.isOpen) return;
-
-    // If typing in another input element outside calculator, only handle Escape
-    const activeEl = document.activeElement;
-    const isExternalInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && !this.el.contains(activeEl);
-
+  onInputKeyDown(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
       this.close();
       return;
     }
 
-    if (isExternalInput) return;
-
-    // Numbers & Basic Keys
-    if (/\d/.test(e.key)) {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken(e.key);
-    } else if (e.key === '.') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken('.');
-    } else if (e.key === '+') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken(' + ');
-    } else if (e.key === '-') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken(' - ');
-    } else if (e.key === '*' || e.key === 'x') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken(' × ');
-    } else if (e.key === '/') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken(' ÷ ');
-    } else if (e.key === '^') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken('^');
-    } else if (e.key === '(' || e.key === ')') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken(e.key);
-    } else if (e.key === '%') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken('%');
-    } else if (e.key === 'Enter' || e.key === '=') {
-      e.preventDefault();
-      soundscape?.playToggleClack?.();
-      this.compute();
-    } else if (e.key === 'Backspace') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.backspace();
-    } else if (e.key.toLowerCase() === 'c') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.clearAll();
-    } else if (e.key.toLowerCase() === 'l') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken('log(');
-    } else if (e.key.toLowerCase() === 'n') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken('ln(');
-    } else if (e.key.toLowerCase() === 'p') {
-      e.preventDefault();
-      soundscape?.playKeyCapThunk?.();
-      this.appendToken('π');
-    }
-  }
-
-  appendToken(token) {
-    if (this.justEvaluated) {
-      // If operator follows evaluated answer, chain with Ans
-      if (/^[+\-×÷^%]/.test(token.trim())) {
-        this.expression = `Ans${token}`;
-      } else {
-        this.expression = token;
-      }
-      this.justEvaluated = false;
-    } else {
-      this.expression += token;
-    }
-    this.renderDisplay();
-  }
-
-  backspace() {
-    if (this.justEvaluated) {
-      this.clearAll();
+      this.evaluateCurrentInput();
       return;
     }
-    if (!this.expression) return;
 
-    // Check for multi-character tokens at the end
-    const multiTokens = ['log(', 'ln(', 'sin(', 'cos(', 'tan(', 'sqrt(', '1/(', 'Ans', ' + ', ' - ', ' × ', ' ÷ '];
-    for (const mt of multiTokens) {
-      if (this.expression.endsWith(mt)) {
-        this.expression = this.expression.slice(0, -mt.length);
-        this.renderDisplay();
-        return;
+    // Up / Down arrow history navigation
+    if (e.key === 'ArrowUp') {
+      if (this.history.length > 0) {
+        e.preventDefault();
+        if (this.historyIdx < this.history.length - 1) {
+          this.historyIdx++;
+        }
+        const item = this.history[this.history.length - 1 - this.historyIdx];
+        if (item) {
+          this.inputEl.value = item.expr;
+          this.justEvaluated = false;
+        }
       }
+      return;
     }
 
-    this.expression = this.expression.slice(0, -1);
-    this.renderDisplay();
+    if (e.key === 'ArrowDown') {
+      if (this.history.length > 0) {
+        e.preventDefault();
+        if (this.historyIdx > 0) {
+          this.historyIdx--;
+          const item = this.history[this.history.length - 1 - this.historyIdx];
+          this.inputEl.value = item.expr;
+        } else {
+          this.historyIdx = -1;
+          this.inputEl.value = '';
+        }
+        this.justEvaluated = false;
+      }
+      return;
+    }
+
+    // Chaining: if an evaluation just completed, typing an operator starts "Ans <op>"
+    if (this.justEvaluated) {
+      const isOperator = ['*', '/', '+', '-', '^', '%', 'x'].includes(e.key);
+      if (isOperator) {
+        e.preventDefault();
+        const op = (e.key === 'x') ? '*' : e.key;
+        this.inputEl.value = `Ans ${op} `;
+        this.justEvaluated = false;
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // Typing a digit or letter starts fresh
+        this.inputEl.value = '';
+        this.justEvaluated = false;
+      }
+    }
+  }
+
+  onGlobalKeyDown(e) {
+    if (!this.isOpen) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this.close();
+    }
+  }
+
+  evaluateCurrentInput() {
+    const raw = this.inputEl.value.trim();
+    if (!raw) return;
+
+    soundscape?.playToggleClack?.();
+
+    try {
+      const res = evaluateExpression(raw, {
+        isDegree: this.isDegree,
+        ans: this.ans
+      });
+
+      if (res.ok) {
+        const formatted = formatResult(res.value);
+        this.ans = res.value;
+        this.justEvaluated = true;
+        this.history.push({ expr: raw, result: formatted });
+        this.historyIdx = -1;
+
+        this.addTapeLine(raw, formatted);
+        this.updateStatus();
+
+        // Clear input for next entry while showing placeholder of result
+        this.inputEl.value = '';
+        this.inputEl.placeholder = `Ans = ${formatted}`;
+      }
+    } catch (err) {
+      soundscape?.playMissBuzzer?.();
+      this.addTapeError(raw, err.message || 'Error');
+    }
+  }
+
+  addTapeLine(expr, result) {
+    if (!this.tapeEl) return;
+    // Remove initial empty placeholder if present
+    this.tapeEl.querySelector('.scoured-calc-tape-empty')?.remove();
+
+    const line = document.createElement('div');
+    line.className = 'scoured-calc-tape-row';
+    line.innerHTML = `
+      <span class="scoured-calc-tape-expr">${this.escapeHtml(expr)}</span>
+      <span class="scoured-calc-tape-eq">=</span>
+      <span class="scoured-calc-tape-res">${this.escapeHtml(result)}</span>
+    `;
+    this.tapeEl.appendChild(line);
+    this.tapeEl.scrollTop = this.tapeEl.scrollHeight;
+  }
+
+  addTapeError(expr, msg) {
+    if (!this.tapeEl) return;
+    this.tapeEl.querySelector('.scoured-calc-tape-empty')?.remove();
+
+    const line = document.createElement('div');
+    line.className = 'scoured-calc-tape-row error';
+    line.innerHTML = `
+      <span class="scoured-calc-tape-expr">${this.escapeHtml(expr)}</span>
+      <span class="scoured-calc-tape-eq">=</span>
+      <span class="scoured-calc-tape-res">${this.escapeHtml(msg)}</span>
+    `;
+    this.tapeEl.appendChild(line);
+    this.tapeEl.scrollTop = this.tapeEl.scrollHeight;
+  }
+
+  updateStatus() {
+    const status = this.el.querySelector('#calc-status');
+    if (status) {
+      status.textContent = `Ans = ${formatResult(this.ans)}`;
+    }
+  }
+
+  insertConstant(val) {
+    if (this.justEvaluated) {
+      this.inputEl.value = val;
+      this.justEvaluated = false;
+    } else {
+      const start = this.inputEl.selectionStart || this.inputEl.value.length;
+      const end = this.inputEl.selectionEnd || this.inputEl.value.length;
+      const text = this.inputEl.value;
+      this.inputEl.value = text.slice(0, start) + val + text.slice(end);
+      const nextPos = start + val.length;
+      this.inputEl.setSelectionRange(nextPos, nextPos);
+    }
+    this.inputEl.focus();
   }
 
   clearAll() {
-    this.expression = '';
-    this.displayValue = '0';
+    this.history = [];
+    this.historyIdx = -1;
+    this.ans = 0;
     this.justEvaluated = false;
-    this.renderDisplay();
-  }
-
-  toggleNegate() {
-    if (!this.expression) {
-      this.expression = '-';
-      this.renderDisplay();
-      return;
+    this.inputEl.value = '';
+    this.inputEl.placeholder = 'Type expression… (e.g. 5+3, -log(1e-7), R*298)';
+    if (this.tapeEl) {
+      this.tapeEl.innerHTML = '<div class="scoured-calc-tape-empty">Ready. Type an expression and press Enter.</div>';
     }
-
-    // If ends in a number, toggle negative sign
-    const match = this.expression.match(/(-?\d+(\.\d+)?([eE][+-]?\d+)?)$/);
-    if (match) {
-      const numStr = match[1];
-      const startIdx = match.index;
-      if (numStr.startsWith('-')) {
-        this.expression = this.expression.slice(0, startIdx) + numStr.slice(1);
-      } else {
-        this.expression = this.expression.slice(0, startIdx) + '-' + numStr;
-      }
-    } else {
-      this.expression += '-';
-    }
-    this.renderDisplay();
+    this.updateStatus();
+    this.inputEl.focus();
   }
 
   toggleAngleMode() {
@@ -658,65 +655,11 @@ class DigitalCalculator {
       btn.textContent = this.isDegree ? 'DEG' : 'RAD';
       btn.classList.toggle('active', this.isDegree);
     }
-    const status = this.el.querySelector('#calc-status');
-    if (status) {
-      status.textContent = this.isDegree ? 'RAD: OFF · DEG: ON' : 'RAD: ON · DEG: OFF';
-    }
-  }
-
-  toggleConstants() {
-    this.showConstants = !this.showConstants;
-    const panel = this.el.querySelector('#calc-const-panel');
-    const btn = this.el.querySelector('[data-act="toggle-const"]');
-    if (panel) panel.classList.toggle('hidden', !this.showConstants);
-    if (btn) btn.classList.toggle('active', this.showConstants);
-  }
-
-  compute() {
-    if (!this.expression.trim()) return;
-
-    try {
-      const res = evaluateExpression(this.expression, {
-        isDegree: this.isDegree,
-        ans: this.ans
-      });
-
-      if (res.ok) {
-        this.tape = `${this.expression} =`;
-        this.ans = res.value;
-        this.displayValue = formatResult(res.value);
-        this.expression = this.displayValue;
-        this.justEvaluated = true;
-        this.renderDisplay();
-      }
-    } catch (err) {
-      this.displayValue = err.message || 'Error';
-      const dispEl = this.el.querySelector('#calc-display');
-      if (dispEl) {
-        dispEl.textContent = this.displayValue;
-        dispEl.classList.add('error');
-      }
-      soundscape?.playMissBuzzer?.();
-    }
-  }
-
-  renderDisplay() {
-    if (!this.el) return;
-    const dispEl = this.el.querySelector('#calc-display');
-    const tapeEl = this.el.querySelector('#calc-tape');
-
-    if (tapeEl) {
-      tapeEl.textContent = this.tape || (this.ans ? `Ans = ${formatResult(this.ans)}` : ' ');
-    }
-
-    if (dispEl) {
-      dispEl.classList.remove('error');
-      dispEl.textContent = this.expression || this.displayValue || '0';
-    }
+    this.inputEl.focus();
   }
 
   copyResult(btn) {
-    const val = this.displayValue || this.expression || '0';
+    const val = formatResult(this.ans);
     try {
       navigator.clipboard.writeText(val);
       const prevText = btn.textContent;
@@ -730,15 +673,11 @@ class DigitalCalculator {
     } catch (err) {
       console.warn('Clipboard write failed:', err);
     }
+    this.inputEl.focus();
   }
 
   useResult(btn) {
-    const val = this.displayValue || this.expression || '0';
-    // Find target input on stage:
-    // 1. Explicitly provided target
-    // 2. .lq-entry-input (LearnFrame numeric stage entry)
-    // 3. #bp-num (worked problem practice input)
-    // 4. Any input inside interactive stage area
+    const val = formatResult(this.ans);
     let target = this.targetInput;
     if (!target || !target.isConnected) {
       target = document.querySelector('.lq-entry-input') ||
@@ -761,18 +700,13 @@ class DigitalCalculator {
         btn.classList.remove('applied');
       }, 1200);
     } else {
-      // Fallback: copy to clipboard
       this.copyResult(btn);
     }
   }
 
-  /**
-   * Set bottom-left default position.
-   * If the user hasn't dragged it manually, always pop up on the bottom left side of the screen.
-   */
   applyBottomLeftPosition() {
     if (!this.el) return;
-    if (this.hasMoved) return; // Keep user's custom dragged position
+    if (this.hasMoved) return;
 
     this.el.style.left = '20px';
     this.el.style.bottom = '20px';
@@ -787,17 +721,21 @@ class DigitalCalculator {
 
     this.applyBottomLeftPosition();
     this.el.classList.remove('hidden');
-    this.renderDisplay();
 
-    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keydown', this.onGlobalKeyDown);
     soundscape?.playNavRelayClick?.();
+
+    // Auto-focus input entry line
+    setTimeout(() => {
+      this.inputEl?.focus();
+    }, 50);
   }
 
   close() {
     if (!this.el || !this.isOpen) return;
     this.isOpen = false;
     this.el.classList.add('hidden');
-    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keydown', this.onGlobalKeyDown);
     soundscape?.playNavRelayClick?.();
   }
 
@@ -807,6 +745,14 @@ class DigitalCalculator {
     } else {
       this.open(options);
     }
+  }
+
+  escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 }
 
@@ -828,4 +774,3 @@ export function toggleCalculator(options) {
 export function isCalculatorOpen() {
   return calc.isOpen;
 }
-
