@@ -265,6 +265,7 @@ export class LearnFrame {
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
           <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn stage-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">Stage Panel</button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">Calc</button>
           <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Submit answer">Submit</button>
         </div>
 
@@ -299,6 +300,7 @@ export class LearnFrame {
               <div class="lq-banner" role="status" aria-live="polite"></div>
               <div class="lq-actions">
                 <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
+                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">Calc</button>
                 <button type="button" class="btn-primary lq-commit" data-act="submit">Submit</button>
               </div>
             </div>
@@ -384,6 +386,7 @@ export class LearnFrame {
       if (act === 'submit') this.opts.onSubmit();
       else if (act === 'next') this.opts.onNext();
       else if (act === 'hint') this.takeHint();
+      else if (act === 'calc') this.toggleCalculator();
       else if (act === 'objective' || act === 'guide') this.showBriefing(true);
       else if (act === 'exit') this.opts.onExit?.();
       else if (act === 'reward') this.showFindings();
@@ -801,6 +804,7 @@ export class LearnFrame {
     this.el.actions.innerHTML = `
       ${entryHtml}
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
+      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">Calc</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
@@ -1100,6 +1104,12 @@ export class LearnFrame {
     this.el.hints.insertAdjacentHTML('beforeend',
       `<p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}${this.hintTermButton(hints[this.rung - 1])}</p>`);
     this.reveal(this.el.hints.lastElementChild);
+  }
+
+  toggleCalculator() {
+    import('../../ui/calculator.js').then(m => {
+      m.toggleCalculator({ targetInput: this.el.entry });
+    }).catch(err => console.error('Calculator failed to open:', err));
   }
 
   /** A "What is this?" key on a hint that uses a glossary term: it opens the Glossary at that term. */
@@ -1537,6 +1547,7 @@ export class LearnFrame {
     guard(() => window.removeEventListener('resize', this.onFit));
     guard(() => window.removeEventListener('scroll', this.onFit, { capture: true }));
     guard(() => closeModal());
+    guard(() => { import('../../ui/calculator.js').then(m => m.closeCalculator()).catch(() => {}); });
     guard(() => this.retirePanels());
     guard(() => { this.el.tableStrip?.remove(); this.el.tableDock?.remove(); });
     this.container.innerHTML = '';

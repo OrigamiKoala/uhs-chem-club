@@ -6,6 +6,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 This file holds the engineering doctrine, hard rules, and commands.
 - **Product truth & scope:** `PRODUCT.md` wins any dispute regarding scope, target audience, and the pitfall ledger.
 - **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
+- **World plans & specifications:** `docs/plans/world-plans.md` consolidates all 14 world plans, CED maps, tabletop kits, and build records.
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
 - **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment.
 
@@ -16,6 +17,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 - `src/quest3d/`: Charge Gardens chamber (Quest 1 / competition campaign).
 - `src/three/`: Persistent WebGL stage (`stage.js`) and 3D worlds.
 - `src/screens/`: DOM screen renders and route views.
+- `src/ui/calculator.js`: Digital scientific calculator with Scoured Plate aesthetic, chemistry constants palette, and auto-fill integration next to stage submit keys.
 - `api/[...route].js`: Vercel serverless proxy with rate limiting and local mocks.
 - `apps-script/`: Google Sheets backend (authoritative persistence for non-guest users).
 
@@ -45,6 +47,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 - **XP & scoring:** Server XP is authoritative; points are flat and idempotent per stage. Guild score is a mean (`mean(xp>0) * (0.75 + 0.5*active/roster)`), never labeled "XP". Telemetry never fabricates readings.
 - **Physical honesty:** Flat representations (spectra, graphs) are drawn flat; spatial concepts (orbitals, lattices, molecules) are 3D objects. What is drawn is what is graded.
 - **Simplicity & focus:** Exactly one decision per stage. The bench holds only what that decision requires; remove clutter instead of explaining it.
+- **Scientific Calculator:** Every stage provides a `Calc` button next to the Submit button. It opens a digital scientific calculator in the bottom left, styled to Scoured Plate hardware tokens, moveable via header dragging, dismissible via close key or Escape, with quick chemistry constants and stage input insertion.
 - **Spatial layout & collisions:** No physical overlaps in 3D worlds (`tools/lib/overlap.mjs`, tolerance 0.06 m). Pointer is never locked (`requestPointerLock` is a no-op). Single window listener for `X` key.
 - **Dedicated views:** Full-screen dark backdrop for practice and worked problems; full-screen dedicated console layout for 3D Off (`.learn-quest-2d`).
 - **UI lifecycle:** `mountConsole` must be the final statement in Charge Gardens stage render. The comms panel is the only fixed screen bolted to the bench.
@@ -75,3 +78,4 @@ Hardware that has endured forty years in the dust and still functions.
 ## Code & Docs Hygiene
 
 - **Retire by archiving:** Never delete functional code, docs, or checks. Move them under `archive/<date>/` or `docs/archive/<date>/` and disconnect live wiring. Code in `archive/` is never built or verified.
+- **World plans consolidation:** Live world specifications reside in `docs/plans/world-plans.md` and their respective `<world>-world.md` files; per-bench notes and retired passes are preserved under `docs/archive/<date>/`. User prompts and audit records are preserved in `docs/`.

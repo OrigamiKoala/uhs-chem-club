@@ -44,8 +44,8 @@ Lanternfall (9 + `boss-eater`), Ligar (9 + `boss-warden`), Bellows (6 + `boss-co
 (7 + `boss-crucible`), Kettle (`q1-recipe` + `boss-golem`; no walkable world, so at T4 its bench builds its
 own room). Tallow, Lanternfall, Ligar, Bellows and Ember Reach are walkable at T4 (`learn/worlds3d.js`). **Every built world is open from the start**; inside a world quest N opens
 when N−1 is complete; charted (unbuilt) quests don't hold anything shut. World `status` is derived (`live`
-iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`, and per-world records.
-`docs/plans/bench-integration.md` (benches fold into each world's equipment, Ligar gets a mine) is complete across all five walkable worlds: P0 (shared groundwork), P1 (Tallow re-laid, six hosts), P2/P3 (Ligar: four surface hosts, two hills, a mine of five chambers), P4 (Lanternfall: nine hosts in an aurora expedition's camp), P5 (Bellows: six hosts on the plant, the ring gantries gone), P6 (Ember Reach: seven hosts in the geothermal field, the shelters gone), and P7/T7 (records and retirement of all legacy 3D instruments). `docs/plans/bench-tabletop.md` is complete: every quest across all units is an open tabletop (drag, snap, pour, arrange, predict-then-test, T4 field fetches) graded on what is on the table, leaning in over the plate in 3D.
+iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`, `docs/plans/world-plans.md`, and per-world records.
+`docs/archive/2026-11-06/passes/bench-integration.md` (benches fold into each world's equipment, Ligar gets a mine) is complete across all five walkable worlds: P0 (shared groundwork), P1 (Tallow re-laid, six hosts), P2/P3 (Ligar: four surface hosts, two hills, a mine of five chambers), P4 (Lanternfall: nine hosts in an aurora expedition's camp), P5 (Bellows: six hosts on the plant, the ring gantries gone), P6 (Ember Reach: seven hosts in the geothermal field, the shelters gone), and P7/T7 (records and retirement of all legacy 3D instruments). `docs/archive/2026-11-06/passes/bench-tabletop.md` is complete: every quest across all units is an open tabletop (drag, snap, pour, arrange, predict-then-test, T4 field fetches) graded on what is on the table, leaning in over the plate in 3D.
 
 - **Registry** `learn/curriculum.js` (pure data/functions, no DOM), `progress.js`, `worlds/unitNN-*.js`,
   `quests/<world>/<quest>.js`. **Quest contract** (`quests/_template.js`): export `mount(container, ctx)`
@@ -334,7 +334,7 @@ Opening a briefing files it in the Case File notebook (`recordNotebook`, ids onl
 ## World-by-world rollout (2026-10-23)
 
 Lanternfall, Ligar, Bellows and Ember Reach were reworked to the Tallow pattern (T1 to T8, U1 to U5 of `docs/archive/2026-10-29/Avalon problems and clashing rules.md`).
-Each world's build record is in its plan file (`docs/plans/lanternfall-world.md`, `ligar-complete.md`, `bellows-world.md`, `ember-reach-world.md`).
+Each world's build record is in its plan file (`docs/plans/lanternfall-world.md`, `docs/plans/tallow-ligar-world.md`, `docs/plans/bellows-world.md`, `docs/plans/ember-reach-world.md`).
 Registry after the pass: 44 quest modules, 38 benches, 6 bosses, 223 stages. Every reworked bench is cut to 3 to 5 stages, has one
 `predict: true` click stage whose guess the next stage quotes, a lead line (never on a boss), Tour steps for every tool and no briefing; bosses
 keep five distinct phases. Lanternfall 50 stages, Ligar 45, Bellows 33, Ember Reach 33. Field points that only carried a copy of the bench

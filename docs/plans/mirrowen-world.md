@@ -132,78 +132,329 @@ s5 **ion–dipole forces**; s6 *shape sets how much of one molecule touches its 
 
 ### 3.3 `q3-boil` — Liquids and Vapour (CED 3.1, 3.2.A.1, 3.3)
 
-Instrument: the **vapour flask**: a liquid sealed with a gauge (kPa) and a **Heater** dial in °C, an **Outside** dial for the pressure
-of the room around an open flask. Real data: Antoine fits in `matterdata.js` `ANTOINE` (water, ethanol, acetone, diethyl ether).
+# Mirrowen · `q3-boil` — Liquids and Vapour (CED 3.1, 3.2.A.1, 3.3)
 
-| # | Objective | Notes |
-| - | --- | --- |
-| 1 | Seal a liquid at 25 °C and set a marker to where the gauge settles (two liquids first, then a third on the plate). | Ether 70.6 kPa, acetone 30.8, ethanol 7.9, water 3.2; the gauge rises and stops, earns **vapor pressure** |
-| 2 | Order the four liquids by vapour pressure and by pull-apart heat; mark whether the two orders agree. | Weak grip = high vapour pressure. The click on "stronger smell/ lighter ⇒ …" is avoided: compares two real orders |
-| 3 | PREDICT: At 70 kPa (a mountain), what temperature does water boil at? | Cards: 100 °C always; lower; higher |
-| 4 | Open the flask at the Outside pressure of the mountain and raise the heater until the liquid boils; type the boiling point. | The plot of vapour pressure against temperature is drawn from the flask's own readings; the heater has 10 °C steps and the answer lies between two of them; typed (T) |
-| 5 | Rank four molecules by boiling point from the pictures of their grips. | Ranks C₄H₁₀, acetone, ethanol, water; the player sets the order before the flask confirms |
-| 6 | Order water, ethanol and hexane drops by how tall a bead each stands on the surface, and by how slowly each pours. | Surface tension and viscosity with real values (73, 22, 18 mN/m) |
-| 7 | Cool ice and water in the flask; say which is denser. | Why ice floats; the open lattice from the hydrogen-bond model |
-| 8 | Collect a gas over water at 25 °C and type its own pressure when the total is 101.3 kPa. | Dalton + 3.17 kPa; T (past the dial) |
+Eight stages, one click ("water boils at 100 °C, always"), built on the matter kit's vapour part (`table/kits/matter-vapour.js`), data in
+`engine/matterdata-vapour.js` (and `matterdata.js` `ANTOINE`, `vaporPressure`, `boilingPoint`, `LIQUID_PROPS`, `WATER_DENSITY`). Quest module
+`quests/unit06/q3-boil.js`, verifier `tools/lib/mirrowen/q3-boil.mjs`, painter `ui/story-scenes-mirrowen-q3.js` (`boil-flask`).
+BUILDS_ON: `unit06/q2-grip`, `unit04/q1-knocks` (pressure, kPa), `unit04/q4-mixtures` (gas over water), `unit03/q2-lattice`.
+VOCABULARY: vapor pressure (s1), boiling point (s4), surface tension and viscosity (s6). The copy spells "vapor" (the CED's spelling);
+the chart title keeps "Vapour".
 
-### 3.4 `q4-solids` — Kinds of Solid (CED 3.2, 3.3.A.1) — 6 stages
+## Instruments and pieces
 
-| # | Objective |
-| - | --- |
-| 1 | Test iodine, ice and wax for melting, and say what holds each solid's particles (molecules held by the grips of `q2`). |
-| 2 | Predict then test: heat glass and quartz; the glass softens over a range, quartz holds then melts at one temperature. |
-| 3 | Pick the picture of a crystal and of an amorphous solid from the window. |
-| 4 | Test four sealed solids with melting, current and strike; file each under metallic, ionic, network or molecular. |
-| 5 | Choose the solid for each job from four property cards (needs tested properties). |
-| 6 | Sealed: five unknowns, all four kinds, one amorphous. |
+| Kind | What it does | Reads |
+| --- | --- | --- |
+| `vapour` (flask) | A liquid card in a slot, a gauge that rises and levels off when "Settle" is pressed (a trace, or a plot of pressure against temperature built from the readings taken), dots above the liquid counted as P over T. Optional Heater dial (20 to 100 °C in tens) and Outside dial (sealed, 101, 65, 45 kPa). Boils (bubbles, "BOILS") when the Settle reading's pressure is at or above the Outside setting. | `vaporPressure(substance, T)`; T is the card's own temperature, else the Heater dial, else 25 °C |
+| `surface` (plate) | "Test" lifts a ring off the liquid (the pull is the surface tension, mN/m) and times 5 mL through a narrow tube. A table keeps one row per liquid tested. | `LIQUID_PROPS`, densities (`matterdata-vapour.js`) |
+| `cell` (equal boxes) | "Weigh" prints the mass of a 1 cm³ cube of ice or of water at 0 °C. | `WATER_DENSITY` |
+| `jar` | A gas collected over water: printed gauge (101.3 kPa) and temperature (35 °C), molecules mixed (not counted by kind). Fixed. | the stage's own numbers |
+| `liquid` card | Molecule glyph, name, a second line, and the pressure (or mass) it kept. | the flask / cell stamp |
+| `pack` card | A box of molecules at one scale: an open lattice of 11 or a packed liquid of 12 (the ratio of the densities). | `PICTURE_COUNT` |
+
+Reused: `probe` and `mol` cards (q2) in stage 5, the heat kit's `note` cards and `selector`. Flat only; no `dress3d` / `piece3d`, so `3D On`
+shows the flat pictures on the plate with the default card slabs.
+
+## The stages
+
+| # | Prompt | Evidence on the bench | Prints (and why it is not the answer) | Ramp / form |
+| - | --- | --- | --- | --- |
+| 1 | Order ether, ethanol and water by the pressure the gauge settles at in a sealed flask. | Flask at 25 °C, three liquid cards on a rail | Each card prints its q2 grip (26.5, 38.6, 40.7 kJ). The pressures print only after Settle; the grip is a different quantity, so the order must be read from the flask. Earns **vapor pressure** | Picture; flat |
+| 2 | Order the four samples by the pressure the gauge settles at. | Same flask; cards carry their own temperature (water 80 °C, ether 0 °C, ethanol 40 °C, acetone 25 °C) | The temperature on each card. Not the readings (17.8, 24.8, 30.7, 47.3 kPa). The strongest grip settles highest because it is hot | Proportional picture; flat |
+| 3 | Where the outside air pressure is only 65 kPa, as on a high mountain, at what temperature will water boil? | None (predict stage): cards "It still boils at 100 °C", "It boils below 100 °C", "It boils above 100 °C" and a slot | The guess cards only | Guess (the click) |
+| 4 | (Quotes the guess) Type the temperature at which water boils when the outside pressure is 65 kPa. | Flask with Heater (20 to 100 °C) and Outside dials, the plot of readings, an amber line at the outside pressure, bubbles at a step where the liquid boils | The plot axes and the outside value from the dial. No boiling point is printed. The answer (88.06 °C) lies between the 80 and 90 °C steps (flask 47.3 and 70.1 kPa) | Typed figure past the dial's steps, tolerance ±3 °C; earns **boiling point** |
+| 5 | Order butane, n-pentane, acetone and water by boiling point. | The q2 probe (kJ per mole read per card), cards with masses and partial charges, a rail | Masses and partial charges. The probe reading is the grip, not the boiling point; the order follows from stages 1 to 4 | New case; flat |
+| 6 | Which reading follows the grip across the three liquids: surface pull, pour time, both or neither? | Surface and pour plate (table of results), cards printing the grip, an answer dial | Grips on the cards. The two columns print after Test | Reading of two orders; earns **surface tension**, **viscosity** |
+| 7 | File each picture box under the sample it shows. | Equal boxes (0.917 g, 1.000 g per cm³), two picture boxes of 11 and 12 molecules, trays Ice and Water at 0 °C | Box labels A and B; counts are drawn, not printed | Counted evidence; flat |
+| 8 | Type the pressure of the gas alone in the jar, whose gauge reads 101.3 kPa. | Flask with Heater (20 to 50 °C) and plot; jar picture (35 °C) | Gauge and temperature of the jar. The water's pressure at 35 °C lies between the 30 and 40 °C steps (4.2 and 7.4 kPa on the cards of the flask) | Typed figure past the dial; ±0.4 kPa |
+
+## Wrong answers, hints and rewards
+
+1. Reversed rail → "ether sits left of ethanol, and the flask read 71.2 kPa for the one and 7.8 kPa for the other." Hints: Use the flask, its "Settle" key and the rail. / Compare what the gauge settled at for each card with the number printed on the card. / Rank the cards by the pressure each one settled at, from the lowest to the highest. Reward "Vapor Pressure": molecules leave and return; the gauge stops when the flows match; the weaker the grip, the higher it settles.
+2. The 25 °C order (the click's cousin: strong grip means low pressure always) → "water sits left of ethanol, and the flask read 47.3 kPa for the one and 17.8 kPa for the other." Hints: flask and rail / compare the reading with the temperature on each card / rank by what the flask settled at, whatever the liquid. Reward "Heat Raises It".
+3. Predict: no wrong answer; the guess is stored (`remember`) and quoted by stage 4. Hints: the cards and the slot / the last two stages / commit to the card you believe. Reward "Now Test It".
+4. 100 → "At 100 °C the flask's pressure is 101.3 kPa, and the outside pressure is 65 kPa." Any wrong figure gets the same sentence with its own pressure. 80 or 85 (the middle of the bracket) are refused the same way; 86 to 90 pass. Hints: dials, "Settle" and the number field / compare the plotted line with the amber line and see which step the flask boils at / read where the line meets the amber line between two steps. Reward "Boiling Point" with a verdict line on the guess.
+5. Rank by mass (water, acetone, butane, n-pentane) → "water sits left of acetone, and the probe read 40.7 kJ for the one and 29.1 kJ for the other." Hints: probe, key, rail / compare each reading with the mass and the + and − marks / rank by boiling point from the probe and what the flask showed. Reward "The Grip Sets the Boiling Point".
+6. "Both" (or any wrong position) → the whole table read back: "water 72.8 mN/m and 10.0 s on grip 40.7 kJ; ethanol 22.3 mN/m and 15.2 s on grip 38.6 kJ; hexane 18.4 mN/m and 4.7 s on grip 28.9 kJ." Hints: plate, "Test", answer dial / compare each column with the grips on the cards / line up by grip, see which column keeps the order. Reward "Surface Tension and Viscosity" (ethanol grips less than water yet pours slower).
+7. Boxes swapped → "Box B holds 11 molecules and box A holds 12, and box B sits in the "Water at 0 °C" tray." Hints: boxes and trays / compare the two masses and count molecules / the box with fewer molecules in the same space goes under the lighter sample. Reward "Why Ice Floats".
+8. 101.3 → "The jar's gauge reads 101.3 kPa, and the gauge counts everything inside the jar." The 30 °C and 40 °C steps (97.1, 93.9), a sum (106.9) or the vapor alone get "The gas and the water vapor make up the gauge's 101.3 kPa between them, and … kPa of gas leaves a different share for the vapor than the plot shows at 35 °C." Hints: card, Heater, "Settle", number field / compare the jar's temperature with the steps either side / read the water's pressure between them, then work out what is left of the gauge. Reward "Gas Over Water".
+
+Bank: `bench.q3-boil` has two problems and one worked problem (gas over water at 40 °C, five steps), plus three end problems (`q3-boil#0` to `#2`).
+
+## What is weak
+
+* Stage 1 and 2 are both ranks on one instrument. Stage 1 makes the discovery that every liquid has a plateau and prints the grips beside it, but
+  it does not force the grip pattern: a student who notices the printed grips can rank without the flask. Stage 5 is where the pattern is needed.
+* Stage 4 has nine heater steps and a plot built from the readings; a student who knows the bracket (80 to 90 °C) can type 88 without taking every
+  reading. That is allowed (never block a correct answer). The "bubbles at this step" cue is a bracket, not a lamp to hunt for.
+* Stage 6's surface and pour readings are model readings of CRC values (a ring without a correction factor, a tube whose water time is a convention of
+  10.0 s); the Tour says what each does. Viscosity is not explained beyond "the grip is not all that sets it".
+* Stage 7 asks for a match of two pictures to two samples. The lattice picture is drawn as an ordered network and the liquid as a packing, so a student
+  who knows ice is ordered can match without weighing; the counts (11 and 12) and the masses agree with each other.
+* Stage 8 is not a sealed sample of the whole bench. It does use stages 1 to 4 (the plot, the temperature rise) and Bellows' Dalton.
+* The grip beside each liquid on the cards is the enthalpy of vaporization at that liquid's own boiling point, so "weaker grip, higher pressure at 25 °C" is
+  a pattern among these three or four liquids, not a law (hexane and acetone would swap), and the reward says only what the bench measured.
+* Nothing here was viewed in a browser or at `3D On`; the flat painters were run in Node against a stub context (no NaN, no exceptions) and laid out by
+  `verify:table`.
+
+
+### 3.4 `q4-solids` — Kinds of Solid (CED 3.2, 3.3.A.1)
+
+# Mirrowen `q4-solids` — Kinds of Solid (CED 3.2, 3.3.A.1) — stage table
+
+Six stages (a recap). Ligar's `unit03/q2-lattice` already teaches ionic, metallic and network solids, alloys, conduction and brittleness, so
+this bench adds only **molecular solids** (the grips of `q2-grip`) and **crystalline against amorphous**, then uses all of it in two sealed
+sorts. `BUILDS_ON`: `unit03/q2-lattice`, `unit06/q2-grip`. Vocabulary earned here: *molecular solid* (stage 1), *crystalline* and
+*amorphous* (stage 3).
+
+**The click.** "A solid is a solid: the same arrangement, only harder or softer." Stage 2 offers it as a card; stage 3 overturns it with
+quartz and fused silica glass, which are the same atoms and give way differently.
+
+**Instrument: the tester** (`kits/matter-tester.js`, fixture kind `solidtest`, piece kind `solid`). A slot for a sample card, a "Test" dial
+(Melt, Strike, Current; a stage may offer one test, which has no dial and a key named for it) and a key. The panel shows the dial's test:
+Melt, a trace of how rigid the sample stays from `T0` to `maxT` °C; Strike, one hammer blow and what is left; Current, two lamps (cold,
+molten). A stage may swap the panel for a **window** that draws the particles of the sample (no dial, no key). A card keeps what each
+test showed (`props.melt`, `strike`, `cur`), so readings can be compared in trays.
+All figures: `engine/matterdata-tester.js` (sources and rounding in its header). Flat only: a trace, a hammer picture, two lamps and a
+particle picture are flat things, and the window is a labelled cartoon, so `3D On` draws the same panel on the plate (no `dress3d`).
+
+**Substitutions from the seeds.** Paraffin wax is a mixture and melts over 47 to 64 °C, which would blur the very click this bench is about
+(a range means glass); **naphthalene** (CRC 80 °C, a pure molecular solid) stands in for it. Iodine sits in a sealed tester so it melts at
+114 °C and does not sublime. The "job" stage is dropped: Ligar's `q2-lattice` stage 5 already picks a liner from tested properties.
+
+## Stages
+
+| # | Prompt | Evidence | Prints (and why it is not the answer) |
+| - | --- | --- | --- |
+| 1 | Sort the solids by whether melting each one only has to overcome grips between molecules. | Melt only, heater −40 to 200 °C; ice, iodine, naphthalene, salt, copper | Axis ticks and the trace; the card keeps `0 °C`, `114 °C`, `80 °C`, `> 200 °C`. No picture, no formula |
+| 2 | (predict) Quartz and fused silica glass are both made only of silicon and oxygen: how will each give way as it is heated? | none (three cards and a slot) | Cards: both melt at one temperature (the held belief); quartz at one, glass gradually; glass holds longer |
+| 3 | `You guessed …: heat each solid and file it by how it gives way.` | Melt only, 0 to 2000 °C; quartz, fused silica, salt, copper | The trace, the card (`1713 °C` against `1040–1585 °C`). Tray names state two observations, not the explanation |
+| 4 | File each sample as crystalline or amorphous. | The window only, no heater; samples A to E: window glass, copper, fused silica, ice, quartz | The window's picture of the sample in the slot; letters, no names |
+| 5 | Sort the four sealed solids into the tray for the kind of solid each is. | Melt, Strike, Current, 0 to 2000 °C; X1 quartz, X2 copper, X3 naphthalene, X4 salt | Traces, hammer pictures, lamps; letters only, no window |
+| 6 | Sort the five sealed solids into the tray for the kind of solid each is. | As 5; X1 window glass, X2 iodine, X3 iron, X4 quartz, X5 potassium chloride | As 5. The glass matches the salt on the hammer and on both lamps; only the trace differs |
+
+### Wrong answers and the message each gets (the reading the table shows, never the rule)
+
+1. Salt in "Only grips between molecules": *Salt's trace stayed rigid to the top of the heater's range, 200 °C, and it sits in the "…" tray.* (An untested sample: *X has not been in the tester yet.*)
+2. (A card in the slot passes; the guess is never graded.)
+3. Fused silica in "Gives way at one temperature": *Fused silica's trace fell a little at a time from 1040 °C to 1585 °C, and it sits in the "…" tray.* The same for quartz: *stood flat to 1713 °C and fell at once*.
+4. A crystal in "Amorphous": *The picture of sample B does not look like the picture of sample A, which is filed with it* (the mate is always of the other class; with none, *Look at the picture of sample B again beside the pictures of the other samples*).
+5. and 6. X filed wrongly: *X1 showed 1713 °C, shatters, lamp cold: no, lamp molten: no, and it sits in the "Ionic" tray.* (the whole record the card kept).
+
+`LEAKS` (`tools/lib/mirrowen/q4-solids.mjs`): no refusal may carry *amorphous, crystal, pattern, order, jumbled, glass* (3), *pattern, repeat, regular, rows, jumbled, glass* (4), *because, conduct, brittle, malleable, metal* (5 and 6).
+
+### Hints (control / what to look at / method) and rewards
+
+1. Use the tester, its "Heat" key and the two trays. / Compare how far up the heater's range each sample held its shape before it ran. / The weaker the hold between particles, the less heat it takes to loosen them, and the grips between molecules are weak holds. — *Molecular Solids*: whole molecules held by weak grips; melting moves them apart and leaves each whole.
+2. Use the three cards and the slot. / Think about what the two solids share and what could still be different. / Commit to the way you expect each to give way as the temperature climbs. — *Now Test It* (the guess comes back in stage 3's prompt and reward).
+3. Use the tester, its "Heat" key and the two trays. / Compare the shape of each trace as the temperature climbs. / Some samples lose their stiffness at a single temperature, and others a little at a time. — *Crystalline and Amorphous*.
+4. Use the window: drag a sample into the slot, then into a tray. / Compare whether the particles of each sample sit in a pattern that repeats. / A pattern that repeats in every direction is crystalline, and particles with no repeating pattern are amorphous. — *Reading the Picture* (metals, molecules and quartz are crystalline; glass has no pattern).
+5. Use the tester: drag a sample in, turn the "Test" dial, press "Test" for each test. / Compare the melt trace, the hammer result and the two lamps of each sample with the others. / Ask which solid lights the lamp cold, which only molten, which melts lowest and which holds out longest. — *Four Records*.
+6. As 5. / Two solids can agree on most tests, so compare every reading of every sample. / A trace that falls at one temperature and a trace that falls over a range mean different things about the particles. — *The Whole Record*.
+
+## What the data says
+
+Melting points (CRC, rounded): ice 0, naphthalene 80, iodine 114, potassium chloride 770, sodium chloride 801, copper 1085, iron 1538, SiO₂
+1713 °C. Glass has no melting point; the two ends given are the standard annealing and softening points: fused silica 1040 and 1585 °C
+(Corning 7980), soda-lime window glass 510 and 700 °C (Corning 0080). The trace between the two ends is a smoothstep: **a model**, not a
+measurement (the plate shows only the shape). Hammer outcomes and the two lamps are the textbook behaviour of each solid; molten
+soda-lime glass lights the lamp because its sodium ions move.
+
+## Form, flat or 3D
+
+Flat. A trace, a hammer picture, two lamps and a particle picture are flat things, and `3D Off` draws the same plate. The window is a 2D
+cartoon (a silicon with three bonds, an oxygen at the middle of each bond, so the network is a plane picture of SiO₂). The amorphous
+networks are the same number of silicons scattered at random, each joined to its nearest neighbours up to three, with arms at least 70°
+apart; the crystal is a honeycomb. Both come from seeded functions, so a picture never changes between visits.
+
+## Story
+
+Lead (stage 1): *The ice sheets shatter like glass, and Vess wants to know whether that is what they are.* The animation (`solid-order`):
+iodine heats in a lattice and its molecules loosen and stay whole (a count of whole molecules, from the drawn pairs); quartz and fused
+silica are heated together and each draws its own trace from `stiffness`; the angles at every silicon are counted from the drawn picture
+(one angle in the crystal, many in the glass). Filed: *ice melts at one temperature where glass softens over a range, so the ice sheets
+are crystals and not glass.* (The bench's ice melted at 0 °C in stage 1; the claim about the sheets is Vess's inference.)
+
+## What is weak (honest)
+
+- Stage 1 is nearly a lookup once the player has heated the five samples: the answer is "melted low or not". It is the on-ramp that teaches
+  the tester and earns *molecular solid*, and it is not trying to be deep.
+- Stage 4 reads a picture. It is the CED's own objective (represent the difference), but the picture is the answer once it is seen; the
+  discovery is in stage 3 and stage 6.
+- The stage 3 traces for glass are a model between two real fixed points (see above). A glass trace is not a measured heating curve.
+- Quartz is shown melting at 1713 °C without following its changes of crystal form on the way up (stated in the data header).
+- Stages 5 and 6 reuse quartz; there is no second network solid the tester can honestly melt (diamond graphitises, silicon carbide
+  sublimes, silicon is a semiconductor).
+- The bench tables are full, so only the prediction carries a printed how-to line; the tester's own plate and its Tour step say how it works.
+- Not looked at by eye: the window pictures were plotted flat in Node (`matterdata-tester.js`) and judged there, not at `3D On` on the table.
+
 
 ### 3.5 `q5-crossing` — The Crossing (CED 6.5)
 
-Instrument: the **curve**: a sample of water in a cup, a heater that feeds a fixed energy per setting, and a recorder that plots
-temperature against heat added, with data from `matterdata.js` `PHASE` (water: c(s) 2.09 J/(g·K), c(l) 4.184, c(g) 1.97 [steam at 1 atm],
-ΔHfus 6.01 kJ/mol, ΔHvap 40.7 kJ/mol).
+# `q5-crossing` — The Crossing (Mirrowen bench 5, CED 6.5)
 
-| # | Objective |
-| - | --- |
-| 1 | Heat ice at −20 °C steadily and let the recorder draw the curve; set a marker where the temperature stalls first. |
-| 2 | PREDICT: Where does the heat go while the temperature stands still? (cards: nothing, it is lost; into pulling the molecules apart; it warms something else) |
-| 3 | Type the heat to melt 36.0 g of ice (2.00 mol × 6.01 = 12.0 kJ). |
-| 4 | Type the total heat from ice at −10 °C to steam at 110 °C for 18.0 g, then the heat given out when it comes back (typed, two entries). |
-| 5 | Order 1 g of steam at 100 °C and 1 g of water at 100 °C by the heat they give a hand: which burns worse? |
-| 6 | Read a phase diagram: the phase at a given pressure and temperature (beyond the exam). |
-| 7 | Find the triple point and the critical point (beyond the exam). |
-| 8 | Why water's melting line leans back (beyond the exam). |
+Files: `src/learn/quests/unit06/q5-crossing.js`, `src/learn/table/kits/matter-curve.js`, `src/learn/engine/matterdata-curve.js`,
+`src/ui/story-scenes-mirrowen-q5.js`, `tools/lib/mirrowen/q5-crossing.mjs`. Eight stages (the chart says 8). BUILDS_ON `unit05/q2-calorimetry`,
+`unit05/q3-enthalpy`, `unit06/q2-grip`. The one click: **heat added always raises the temperature.**
+
+## The instruments (all flat; the picture is complete at `3D Off`, and `3D On` paints the same plate under real knobs)
+
+- **Heat recorder** (`heatcurve`, 98 x 49 units, plot 54 x 22.4). A cup (or, from stage 3, a window of twelve molecules), a thermometer column, and a pen.
+  The "Heat per press" dial sets a fixed heat (kJ, negative to cool) and the key adds it. The pen draws the whole line from the old total to the new
+  one (`traceOf`), flats included, so a coarse dial never hides a corner. The running total is the last row the recorder took; no new state.
+- **Cooler** (`cooler`): a slot for a sample card; one press cools it to 37 °C, draws the way down and stamps `gave` (kJ) on the card, as the q2 probe does.
+- **Phase map** (`phasemap`, beyond the exam): a "Pressure" dial of six settings and a key that warms ice from −40 to 400 °C at that pressure; draws the line
+  coloured by state and a square at each change; the list on the left names the states of the last sweep. Nothing is drawn but what sweeps found.
+- Piece `hsamp`: a 20 x 14 sample card (name, mass, "gave x kJ" once cooled).
+
+Data: `matterdata-curve.js`. One planner, `planThermal`, runs both directions along a single line of heat (`heatOf`/`stateAt`), agrees with `planHeating`
+(held in the verifier at ten heats), and `heatBetween` gives the signed total. Phase diagram: IAPWS-IF97 saturation, IAPWS R14-08 sublimation and ice-Ih melting
+(held to CRC/IAPWS values: 3.169 kPa at 25 °C, 101.42 kPa at 100 °C, 1.5549 MPa at 200 °C, 8.588 MPa at 300 °C, 0.260 kPa sublimation at −10 °C, ice melts
+near 110 MPa at −10 °C).
+
+## Stages
+
+Hint rungs are control / what to look at / method in the quest file (single source). Ramp: P picture, G guess, R proportional, F formula, N friendly, T typed.
+
+| # | Prompt (objective) | Evidence on the bench | Prints, and why it is not the answer | Wrong answers and messages | Reward / ramp |
+| - | --- | --- | --- | --- | --- |
+| 1 | Warm the ice until its temperature stands still, then set the marker at the heat where it rises again. | Recorder (cup, no window), Heat dial, marker whose line crosses the plot | Axes, the running heat and temperature. The end of the level stretch (6.76 kJ) is not printed anywhere; it is read where the pen turns. Marker starts at 0. | Marker inside the level stretch: "At 1 kJ the line there is level." Pen not drawn far enough: "The pen has drawn to x kJ, and the line has not yet stood still and climbed again." | *The Heating Curve* (heating curve). P |
+| 2 | PREDICT: The temperature stood still while the ice took in heat: where did that heat go? | Three cards and a slot, no instrument | Cards: leaks into the room / works against the pull between the molecules / warms the cup and the air. Never graded | – | *Now Test It*. G |
+| 3 | You guessed (x): heat the ice until the window shows all twelve molecules flying free. | Same recorder plus the window of twelve molecules, up to 70 kJ | The window shows molecules, never a word for the state; streak lengths follow the temperature only, so they do not change on a level stretch | Stopping early: "At 8.0 kJ the window shows 0 of the twelve molecules flying free." | *Heat Against the Pull*, quotes the guess. R |
+| 4 | Type the heat needed to melt 36.0 g of ice at 0 °C, in kilojoules. | A cup of 18.0 g at 0 °C with window, dial 1/2/4 kJ, plot to 10 kJ; plate "1 mol of water is 18.0 g" | The cup's own line shows 6.0 kJ for its 18.0 g; no ΔH is printed | 6.0 (one cup): "6.0 kJ melts about 18.0 g of ice at the rate the cup showed, not 36.0 g." Any other figure gets the same sentence with its own mass | *Heat of Fusion* (heat of fusion). F, N |
+| 5 | Type the heat needed to take 18.0 g of ice at −10 °C to steam at 110 °C, in kilojoules. | Recorder to 70 kJ, window, no running total; plate of the three c values, two ΔH values, molar mass | The plate is constants only; the total is neither printed nor reachable by pressing (dial 4/12/40 kJ cannot land on 54.9) | 48.9 (no melting): "48.9 kJ would leave the 18.0 g boiling at 100 °C with 86% of it turned to steam." Every wrong figure says where it leaves the sample | *Heat of Vaporization*. T |
+| 6 | Type the heat change when 18.0 g of steam at 110 °C is cooled to ice at −10 °C, in kilojoules. | Recorder in cooling (dial −4/−12/−40, key "Cool"), plot with heat added below zero, no total, no plate | The mirrored line; nothing is printed about sign | +54.9: "That figure puts heat into the sample, and the pen for this sample runs to the left of zero." Other wrong figures say where they leave the sample | *Condensing and Freezing* (condensation, freezing). T |
+| 7 | Order the four samples by the heat each gives a hand as it cools to body temperature. | Cooler, four 1.00 g cards (water 60 °C, water 100 °C, steam 100 °C, steam 120 °C), a rail; each card keeps what it gave | Card names and mass; readings only after the cooler | Steam left of water: "Steam 100 °C sits left of Water 100 °C, and the cooler read 2.52 kJ for the one and 0.26 kJ for the other." | *Why Steam Burns*. New case |
+| 8 | Beyond the exam: find a pressure at which warming ice never makes liquid water. | Phase map, six pressures (0.1 kPa to 100 MPa), plate "Phase diagrams are not on the AP exam." | Axes only; lines appear as sweeps are run | 101 kPa: "At 101 kPa the ice melted to liquid water before it went further." | *Phase Diagrams* (phase diagram, triple point, critical point). Beyond the exam |
+
+Sweeps at 30 MPa and 100 MPa also show the melting point falling below 0 °C and no boiling; the card names the triple and critical points.
+
+## Honest weaknesses
+
+- Stage 3 repeats the flat stretch of stage 1 on purpose (that is what a test is), but its task, "heat until all twelve molecules fly free", is nearly a
+  goal state; the learning is in watching the window. The molecules in the window are twelve, so shares are to the nearest twelfth (stated in the data header).
+- Stages 4, 5 and 6 are typed figures behind a picture, but a player who knows q = n ΔH can skip the picture. Stage 4's constant is measured off the cup; stage 5
+  prints its constants on a plate (the instrument cannot read 40.65 to the accuracy needed).
+- Stage 8 folds three phase-diagram ideas of the old plan (read a phase, triple and critical points, why the melting line leans back) into one experiment.
+  The lean back is in the data (`meltingAt`) and on the plot only as a few pixels; it is not stated on a card. Stage 7's burn is a rank by the cooler's
+  readings, so it is read off; the near tie of steam at 100 and 120 °C is the thing to think about.
+- Pressure dial positions are six; two are right (0.1 and 0.3 kPa). It is a small search, not a hunt for a green lamp.
+- Stage 1's marker is read off a plot (with a cursor line); it is the only stage that grades a plot reading.
+
 
 ### 3.6 `q6-solution` — Taken Into Solution (CED 3.7, 3.8, 3.10, 6.1, 6.4)
 
-Instrument: the **volumetric flask**: a balance pan, a flask with a graduation mark, a pipette; a window shows the dissolved salt as
-ions each wrapped in water (`particlesOf` with the real ion counts). Typed stages: molarity (`s2`), dilution (`s3`), mass percent (`s7`).
+# Mirrowen `q6-solution` — Taken Into Solution (stage table and build record)
 
-| # | Objective |
-| - | --- |
-| 1 | Put 5.85 g of salt in water: the window shows the ions; set the counter to the number of particles per formula unit that go into the water (for NaCl, two). |
-| 2 | Make a 0.100 M solution: type the molarity of 5.85 g of NaCl in a 250 mL flask (0.400 M) and then fill a flask to 0.100 M; typed past the dial. |
-| 3 | Dilute: type the volume of 2.00 M stock needed for 100 mL of 0.500 M (M₁V₁ = M₂V₂). |
-| 4 | Count the particles CaCl₂ gives per formula unit in the window (three). |
-| 5 | A salt, a wax and an alcohol in water and hexane: predict then file each. |
-| 6 | Dissolve ammonium nitrate and calcium chloride in the calorimeter cup: read ΔT and say which is endothermic. |
-| 7 | Mass percent of a solution (beyond the exam; typed). |
-| 8 | Sealed: prepare the solution to a specification from a stock. |
+CED 3.7 (3.7.A.1, 3.7.A.2), 3.8 (3.8.A.1), 3.10 (3.10.A.1), 6.1.A.4, 6.4.A.7. Eight stages, one click. Files: `src/learn/quests/unit06/q6-solution.js`,
+`src/learn/table/kits/matter-flask.js` (the flask bench and the `sample` card), `src/learn/engine/matterdata-flask.js` (window drop, particles per mole,
+solubility rows, bath change), `src/ui/story-scenes-mirrowen-q6.js` (`solution-drop`), `tools/lib/mirrowen/q6-solution.mjs`, plus the marked entries in the chart,
+`stage-story.js`, `quest-story.js` and the `q6-solution` keys of `bank/unit06.json`.
+
+## The instrument: the flask bench
+
+A balance pan (optional), a volumetric flask with a mark on its neck, and a window that draws a small drop of the flask, particle by particle. There is no key: a card
+seated in the flask's mouth, or a dial turned, answers at once. Dials (a stage uses at most one): `Flask` (100, 250, 500 mL, always filled to its mark), `Stock poured in`
+(10 to 50 mL, topped up to a fixed 100 mL), `Liquid` (water or oil). The drop is the same size every time and holds `BOX_PER_M = 20` formula units for every 1.00 mol/L, so a
+crowded window is a concentrated flask. An ion is drawn with three water molecules touching it; its cation carries a +, its anion a −. A card that has been on the pan keeps its
+grams (`weighed`); a dry card that has been in the flask keeps a line for what the window showed (`water: spreads`, `oil: lumps`).
+
+Chemistry simplifications (stated in `matterdata-flask.js`): the drop is a sample, not the flask; three waters per ion stand for a hydration shell of four to nine; the solution's
+volume is the mark; ion sizes are scaled but never drawn smaller than a readable disc.
+
+## Stages
+
+Ramp for the numeric stages: picture (stage 2's window thins as the flask grows), prediction (stage 4), proportional (stage 3's dial: 20 mL reads 0.400 M, 30 mL reads 0.600 M), formula
+as shorthand (reward of stage 3), friendly numbers (5.85 g is exactly 0.100 mol), a figure between and past the steps (25.0 mL; 1.81 × 10²³).
+
+| # | Prompt | Evidence on the bench | Everything it prints, and why none of it is the answer | Wrong answer and message | Form |
+| - | --- | --- | --- | --- | --- |
+| 1 | File each white powder by what it does when it goes into water. | Flask, window, four samples (A NaCl, B chalk, C sugar, D sand), trays "Spreads out" and "Stays in lumps". | Cards say "Sample A" and "white powder" only; the card learns its water line from the window. The tray names are what the window shows, not which powder is which. | A in "Stays in lumps": "Sample A sits in the 'Stays in lumps' tray, and in the window its particles sat apart from one another." An unseen card: "has not been in the flask yet." | flat |
+| 2 | Type the moles of salt in each litre of solution once the salt on the pan is made up to 400 mL. (0.250 mol/L; 400 mL is not a step of the Flask dial, which reads 0.400 M at 250 mL and 0.200 M at 500 mL) | Pan reads 5.85 g, plate gives 58.44 g per mole, flask dial 100/250/500 mL, window crowd. | Molar mass is a constant the stage needs. No molarity printed. The prompt defines the measure in plain words. | 0.100: "0.100 is the amount of salt on the pan alone, and the solution is 400 mL." Other: "{v} does not fit 5.85 g of salt made up to 400 mL." | flat |
+| 3 | Type how many mL of the 2.00 M stock make 100 mL of 0.500 M when topped up with water. (25.0 mL) | Stock card, dial 10 to 40/50 mL (steps, not 25), the molarity under the window, plate "Wanted: 100 mL of 0.500 M". | The molarity at each step. 25 is not a step; it lies between 20 (0.400 M) and 30 (0.600 M). | 50: "50 mL does not give 0.500 M: the dial reads 1.00 M at 50 mL." 400: "more than the 100 mL flask holds." | flat |
+| 4 | PREDICT: Which puts the most particles in the water: 0.100 mol of table salt, of calcium chloride, or of sugar? | Only four cards and a slot. | Cards: "All three put the same number in" (the held belief), "Table salt, NaCl", "Calcium chloride, CaCl₂", "Sugar, C₁₂H₂₂O₁₁". | Blank: "Lay a card in the slot." The guess is never graded. | flat |
+| 5 | You guessed {…}: type the particles that 0.100 mol of calcium chloride puts in the water, in units of 10²³. (1.81) | Flask (500 mL), three cards of 0.100 mol, window drop of 4 formula units each (8, 12 and 4 particles), plate "One mole: 6.022 × 10²³ particles". | No count printed; the player counts the kinds of particle. N_A is a constant the stage needs. | 0.602: "is one particle for each calcium chloride, and the window shows more than one in the water." Other: "does not follow from the 0.100 mol on the card and the particles the window shows." | flat |
+| 6 | File each sample under the solvent, or both solvents, that it dissolves in. | Flask with a Liquid dial (Water, Oil (hexane)), four samples (salt, wax, acetone, sugar), trays Water, Oil, Both. | Cards keep a `water:` and an `oil:` line from the window. Names are plain; nothing says "polar". | Salt in "Both": "Salt sits in the 'Both' tray, and its card reads water: spreads, oil: lumps." Unseen: "has not been in both liquids yet." | flat |
+| 7 | Order the four salts by the temperature the bath ends at after each dissolves in it. | The heat kit's cup (100 g, 22 °C), four tins of 0.100 mol, a strip "Coolest bath … Warmest bath". | The cup prints bath and rise; a tin keeps its change once it has been in. | By size of change: "Sodium chloride sits left of Potassium chloride, and the bath changed −0.9 °C for the one and −4.1 °C for the other." | flat |
+| 8 | Order the three sealed flasks by the molarity of what was dissolved in each, lowest first. | Flask with a particle count, three sealed flasks X (NaCl 0.300 M), Y (sugar 0.600 M), Z (CaCl₂ 0.200 M), a strip. | The window prints "12 PARTICLES" for every one; the cards say "sealed". The player must work back from the particles to the dissolved units. | Y first: "Y sits left of X, and the drop of Y shows 12 whole molecules against 6 positive and 6 negative particles for X." | flat |
+
+## Hints, rewards
+
+Each stage has the three rungs in the file (rung 1 names the control, rung 2 what to look at, rung 3 the method; none gives a number). Rewards: 1 "Solutions" (solution, solute, solvent), 2 "Molarity",
+3 "Dilution", 4 "Now Test It" (prediction), 5 "Dissolving Into Ions", 6 "Like Dissolves Like" (like dissolves like, miscible, soluble), 7 "Heat of Solution" (exothermic and endothermic dissolving, 6.1.A.4, 6.4.A.7),
+8 "Same Crowd, Different Molarity". No stage carries a reward model: the window is the picture and stage 5's rule is already shown there.
+
+## The click
+
+The belief is "a mole of anything dissolved puts a mole of particles in the water". Stage 4 offers it as a card; stage 5's window shows the same four units of each as 8, 12 and 4 particles; stage 8 uses
+the contradiction again (equal crowds, unequal molarities).
+
+## Logged gaps and what is weak
+
+- Mass percent (CED 3.8, excluded from the exam) has no stage. The spec asked for it as stage 7; with the click pair and the cup it did not fit in eight stages without padding.
+- Stage 2 is the weakest: the figure is a plain conversion, and every constant is on the bench. The window that thins with the flask and the prompt's plain-words definition are the only picture behind it; it is friendly numbers, not past the dial.
+- The like-dissolves-like stage (6) is a sort with no prediction pair, since the click is stage 4/5. Acetone is the stage's trap (it dissolves in both); a student with no prior idea can still get it from the card lines but must make eight looks.
+- Ion discs of Na⁺, K⁺ and Ca²⁺ are drawn larger than their radii to stay legible, so the picture's size ratios between a cation and an anion are only roughly honest.
+- Stage 7 is a rank of readings the cup produces (the accepted pattern of Ember Reach), not a calculation; the ΔH of solution is never shown to the player.
+- No `dress3d` or `piece3d`: the flask bench and cards are flat in both views.
+
+## Verification
+
+`node tools/verify-learn.mjs`, `verify-table.mjs`, `verify-story.mjs` pass for this bench; `tools/lib/mirrowen/q6-solution.mjs` re-derives molarity, dilution, N_A arithmetic, bath changes, the sealed flasks' molarities and each window's counts from hand-worked values and the CRC.
+
 
 ### 3.7 `q7-separate` — Pulling Apart (CED 3.9)
 
-Instrument: a **strip** (paper chromatography with a solvent dial and spots whose travel is computed from a polarity model in
-`matterdata.js` `CHROM`), a **still** (a flask, a column and a receiver) and a **filter**.
+# Mirrowen `q7-separate` — Pulling Apart (CED 3.9): stage table
 
-| # | Objective |
-| - | --- |
-| 1 | Run a dye: how many components? |
-| 2 | Type the Rf of one spot from the ruler (spot distance ÷ front distance; typed). |
-| 3 | Swap the solvent to nonpolar and say which spot now leads. |
-| 4 | Distil ethanol and water; say which comes over first. |
-| 5 | Choose filtering or evaporating for a dissolved solid. |
-| 6 | Salt in water: boiling point rises (beyond the exam). |
-| 7 | Plan the separation of a three-part mixture (sealed). |
+Seven stages, one click. **The click:** "filtering separates any mixture". Stage 1 predicts what salty water leaves in the cup; stage 2 tests it
+with a filter, a cup and a dried drop of the cup; stages 3 to 7 are the three other ways round it. Files: `quests/unit06/q7-separate.js`,
+`table/kits/matter-strip.js` (five instruments, one card), `engine/matterdata-strip.js`, `ui/story-scenes-mirrowen-q7.js`,
+`tools/lib/mirrowen/q7-separate.mjs`.
+
+Changes from the spec table in `mirrowen-world.md` section 3.7: the spec's s1 (count the components) is folded into s3 (running the ink is the
+count; the typed Rf needs the picture); s3 (swap solvent) became a rank and gained the strip's three-lane comparison; the predict+test pair on the
+click is new (stages 1 and 2) and takes the filter/evaporate decision with it; s6 (colligative) and s7 (plan) are kept. The chart says 7, so
+7 it stays.
+
+## Instruments (all pure readers of `matterdata-strip.js`)
+
+| Fixture | What the player does | What is drawn | Planner |
+| --- | --- | --- | --- |
+| `strip` | Ink card into the slot; a Solvent dial (stages with more than one liquid); "Run Strip" | Paper per liquid, a drawn ruler in cm (millimetre ticks when the picture is big enough, else half centimetres), the wet edge, spots; "A SIMULATION" | `spotCm`, `rfOf` over `retention()` (a model) |
+| `filter` | Mixture card into the slot; "Pour Through" | Funnel with grains caught on the paper, the cup, a slide with a dried drop of the cup | `pourThrough` (grain size against the paper's 11 µm pore) |
+| `still` | "Collect Cut" three times (a hidden dial counts the cuts) | A flask whose level falls by a third per cut, a column of three steps, three vials of ten counted cells, the temperature at the top for each cut; "SIMPLE MODEL" | `stillCuts` (Raoult's law, Antoine fits, three-step column, Rayleigh batch) |
+| `boiler` | Card into the slot; an Amount dial (0.50, 1.00, 2.00 mol in 1.00 kg); "Boil" | A pot, a thermometer 99.5 to 103.5 °C with a mark where water alone boils; "IDEAL SOLUTION" | `boilingRise` (i K_b m) |
+| `plan` | Nothing to press; reads the steps on the rail | Where sand, salt and water end: on the paper, in the flask, in the receiver | `planSeparation` |
+
+What a run leaves is written on the card (`ran`, `poured`, `boiled`) or in a hidden dial, so a table is plain data. The strip is a simulation
+and prints that; the still prints that it is a simple model (ideal mixture, three steps); stage 6 prints that it is beyond the exam.
+
+## Stages
+
+| # | Prompt | Evidence on the bench | Everything printed, and why it is not the answer | Wrong answers and the message each gets | Hints (control / look at / method) | Reward | Form and ramp |
+| - | --- | --- | --- | --- | --- | --- | --- |
+| 1 PREDICT | Salty water is poured through filter paper into a clean cup. What does the cup hold afterwards? | None (three cards and a slot; no instrument) | The three beliefs students hold: "Clean water, with the salt left on the paper", "Salty water, as it went in", "Water that is less salty than before" | None: never graded; the slot must not be empty ("Lay a card in the slot.") | the cards and slot / what the paper holds back and where the salt is / commit even if unsure | "Now Test It" | Predict, the click |
+| 2 | (quotes the guess) File each mixture under the method that separates its solid from the water. | Filter with four cards (sand, sawdust, salt, red dye, each "in water"); a card keeps "paper: grains/clean" and "cup drop: crust/stain/clean" after a pour | Card names only; two trays "Filter it" and "Boil the water off" (acceptable: the evidence is discovered on the card before a tray is chosen); the filter prints nothing it did not do | Salt filed under "Filter it": "Salt sits in the 'Filter it' tray, and the paper held nothing while the drop of the cup dried to a crust." An unpoured card: "X has not been poured through the filter yet." | filter and its key, then a tray / what the paper holds and what the dried drop shows / filter when the paper takes the solid, boil when it stays in the cup | "The Filtrate": the filtrate carries a dissolved solid | Flat. Discover, 4 cases, 2 of them fail the click. The salt cup looks as clear as water; only the dried drop shows the crust |
+| 3 | Type how far the red spot travelled as a fraction of how far the liquid travelled. | Strip in water, ink card, a ruler; front at 10.0 cm (friendly) | A ruler and "A SIMULATION"; nothing prints a distance. The typed figure is read off the ruler and divided | "5.1" (the distance): "5.1 is longer than the whole climb of the wet edge on the ruler." Above or below the red spot: "... puts the red spot farther from / nearer the start line than the ruler shows." Not run: "The strip has not been run yet." Accepts 0.51 +/- 0.03 (a half-division of the ruler) | strip, key, field / read the spot and the wet edge on the ruler from the start line / divide the spot's distance by the front's | "Chromatography": solvent front, retention factor (Rf); the ink held three dyes | Flat. Ramp: picture (a ruler), friendly numbers (front 10.0 cm), typed. The figure past the strip is stage 6 and the bank's worked problem (front 15.0 cm) |
+| 4 | Order the three dyes by how far each travelled in hexane and acetone. | Strip with three lanes and a Solvent dial; the ink arrives already run in water so the comparison is on the paper | Lane headers WATER, ETHANOL, HEXANE; coloured spots; no numbers | The water order: "Yellow sits left of Red on the rail, but on the hexane and acetone strip the yellow spot stands higher than the red one." Not run: "The ink has not run in hexane and acetone yet." | Solvent dial, "Run Strip", rail / compare each spot with where it ended in water / rank by travel, nearest the start first | "Reading Polarity": the order turns round; polar dyes lead in a polar liquid | Flat. The second belief (the liquid carries every dye alike, or in one order) is met here and reversed; no second prediction, to keep one decision per stage |
+| 5 | Order acetone, ethanol and water by when each comes over into the receiver. | Still; three cuts; each vial ten counted cells in the liquids' colours, with the top-of-column temperature; molecule cards for the three liquids | A legend (swatch and name) and "SIMPLE MODEL". No boiling points anywhere on the table | Rail wrong: "Water sits left of ethanol, but the vial richest in water is vial 3 and the one richest in ethanol is vial 2." Not all collected: "The receiver holds 1 of 3 vials so far." | "Collect Cut" then the rail / what each vial holds and the temperature at the top / rank each liquid by the vial that holds most of it | "Distillation": the least tightly held leaves first; vials richer, never pure | Flat. The cuts are honest: the best vial is 83 to 90 % of one liquid, never pure |
+| 6 BEYOND THE EXAM | Type how many degrees hotter than water alone boils with 3.00 mol of calcium chloride, CaCl₂, dissolved in 2.00 kg of water. | Boiling flask; sugar, NaCl and CaCl₂ cards with their particles drawn; the dial gives 0.50, 1.00, 2.00 mol per 1.00 kg, so 3.00 mol in 2.00 kg (1.50 mol/kg) lies between two steps | The mark for water alone (100.0 °C); the thermometer prints the boiling point reached (the rise is the player's subtraction); "IDEAL SOLUTION" | 1.54 (NaCl's count): "1.54 °C is what the bench reads for another card at this amount, not for CaCl₂." 4.61 (kilograms ignored): "4.61 °C is the rise for 3.00 mol in 1.00 kg, and the pot holds 2.00 kg." Accepts 2.30 +/- 0.05 | card, dial, key, field / compare sugar and salt at the same amount and count the particles drawn / moles per kilogram, particles per formula unit, scale | "Boiling Point Elevation": i K_b m, colligative property; says it is beyond the exam | Flat. Ramp: picture of particles, proportional readings, then a typed figure between the dial's steps (the reading for 1.50 mol/kg is not on the dial) |
+| 7 | Lay steps on the row until the sand, the salt and the water each end up alone. | Plan board and three step cards (filter, boil the water off, run a paper strip: the strip is a decoy) | The board prints where each part ends for the steps on the rail; it prints no plan | Boil then filter: "The flask holds sand and salt together." Filter alone: "The flask holds salt and water together." A wasted step: "The 'Run a paper strip' step changed nothing: the board is the same with it as without it." | cards onto the row / any place that holds more than one part, and any step that changes nothing / which step stops working once the water has gone | "Choosing a Method" | Flat. Sealed: the bench's ideas at once. Weak: only two steps are needed, so a student can solve it by trial against the board |
+
+## Honest simplifications and what is weak
+
+- The strip is a model (`retention()`); its values are design values, checked in the verifier against 0.26/0.51/0.74, 0.74/0.89/0.39 and 0.95/0.56/0.09 and
+  against the one property a polarity model must have (the order reverses). The bench says "A SIMULATION".
+- The still treats ethanol-water and acetone-water as ideal (they are not; ethanol-water cannot be pushed past about 96 % ethanol). Three steps of a column
+  give vials of 83 to 90 % of the leading liquid; the reward says "never pure". Acetone's Antoine fit is taken a little past 80 °C.
+- The boiling flask uses ideal i (real NaCl gives about 1.8 to 1.9). Labelled "IDEAL SOLUTION".
+- Stage 7 is a two-step plan with a decoy; dissolving the salt back, dyes, or a third method would make it richer.
+- The ruler's millimetre ticks are drawn only when the picture is large enough; on a phone the reading is to half a centimetre (the tolerance, 0.03, allows it).
+- No reward models, no `dress3d`/`piece3d`: the flat picture is complete (3D Off draws the same). Every drag is a card into a slot, tray or rail, so the two-tap
+  twin comes free.
+- `q6-solution` words (dissolved is used as plain English; the ion picture on the solute cards is the only link) are not relied on.
+
 
 ### 3.8 `boss-undertow` — The Undertow (five phases, new cases of earlier ideas)
 
@@ -307,7 +558,7 @@ ranking by the grips already measured and is dropped as a repeat if the audit fi
 **Built.** Seven benches and a boss, 53 stages: `q1-states` 8, `q2-grip` 8, `q3-boil` 8, `q4-solids` 6, `q5-crossing` 8, `q6-solution` 8, `q7-separate` 7, `boss-undertow` 5 (the registry counts the world's 52nd module and 351st stage with it). One new kit, `matter` (extends the heat kit; each bench's instruments register from their own file through `matter-registry.js`), one data module with sources (`engine/matterdata.js`) and one per bench (`matterdata-<name>.js`), 8 story scenes, a question-bank entry per bench (two problems each, worked problems on `q3`, `q6`, `q7`, end problems), a check file per bench in `tools/lib/mirrowen/`, a walkable world (`three/mirrowen*`, `tools/gen-mirrowen-layout.mjs`, `tools/verify-mirrowen.mjs`), the Undertow's arena, rig and corner body, and the player-facing lists.
 
 **Where the build differs from the spec above, and why.**
-- Stage tables for `q3` to `q7` and the boss were written by each bench's builder in `docs/plans/mirrowen-<quest>.md`, not in section 3; section 3 is the plan, those files are the record.
+- Stage tables for `q3` to `q7` and the boss, originally drafted in separate bench files, are fully consolidated here into Section 3; Section 8 preserves the builder brief.
 - `q1`: stages 6 and 7 are a weigh-and-rank and a typed ratio of molecules (1672, from CRC densities), because a picture cannot show ice and water differing by 9 %. The third belief card reads "each molecule itself melts".
 - `q2`: the rank of four ions replaces the brief's rank of four pairs; stage 7 asks for the ratio of every O–H bond in a mole of water to the pull-apart heat (23).
 - `q3`: stage 1 no longer prints each card's grip, so the flask is the only evidence; the typed boiling point is read between heater steps (88 °C at 65 kPa, ±3); the gas over water is at 35 °C and typed (95.7 kPa).
@@ -324,3 +575,96 @@ ranking by the grips already measured and is dropped as a repeat if the audit fi
 **Checks (2026-10-30).** `verify:learn`, `:table`, `:story`, `:docs`, `:drills`, `:sync`, `:run`, `:bench`, `:arena`, `:voyage`, `:tallow`, `:lanternfall`, `:ligar`, `:bellows`, `:ember`, `:mirrowen`, `:quest`, `:console`, `:galaxy`, `:progression` all pass. Not run: `npm run verify` itself (it ends in `npm run build`, which empties `dist/`), `:geometry`, `:media`, `:flows`, `:ship`, `:holo`, `:normals`.
 
 **What was and was not played.** See `docs/mirrowen-audit.md`. In short: every stage was solved by script and by a real pointer path at seven viewports; the first stages of `q2-grip` were played by hand; a few stages of `q1`, `q3`, `q5` and `q6` were viewed in the browser; the rest were not looked at.
+
+
+---
+
+## 8. Builder Brief & Parallel Build Specifications
+
+# Mirrowen: how to build one bench (brief for a builder)
+
+You are building ONE bench of Mirrowen (`unit06`, states of matter) in Avalon (`/Users/carlliu/chem-3d`, branch `world/unit06`). Other builders are
+building the other benches in the SAME working tree at the same time, each in their own files. The slice, `q2-grip`, is built, played and green: copy its
+pattern, do not reinvent it.
+
+## Ground rules for a parallel build
+
+- **Do not commit, stage, stash, reset, checkout or reformat anything.** The owner of the integration commits. Only touch the files listed under "Your files".
+- **Do not use the browser** (Browser pane, Chrome, Playwright). There is one pane and the integrator uses it. You verify with Node scripts only.
+- **Do not edit `PRODUCT.md`, `CLAUDE.md`, `package.json`, `tools/verify-*.mjs`, `matter.js`, `matter-draw.js`, `matter-registry.js` or another bench's files.** If you
+  need a change to shared code, make it opt-in inside your own file; if you truly cannot, say so in your report.
+- Run `node tools/verify-learn.mjs`, `node tools/verify-table.mjs` and `node tools/verify-story.mjs` often (each takes seconds to a minute); `node tools/verify-docs.mjs`
+  will fail on stage counts until integration: ignore that one. Output other builders' failures you did not cause is not yours; say so.
+- Never delete code. Chemistry must be accurate: simplify freely, say nothing false. Every number a player sees comes from a data row with a source.
+
+## Read first (in order; read big files in chunks)
+
+1. `PRODUCT.md`: "Building a Learn world" sections 3, 4 and 5 (the bench contract, how to design a stage, the pitfall ledger). Every row of 5 is a defect that was built.
+2. `docs/plans/mirrowen-world.md`: sections 0, 2, 3 (your bench), 4 (kit plan), 6 (pitfall review). It is the contract; where this file is thin, YOU write the stage table
+   (below). Your bench's design seeds are in the prompt that sent you here.
+3. `src/learn/quests/unit06/q2-grip.js` (the pattern: stages, `SOLUTIONS`, `MISSES`, notes, `CHECKS`), `src/learn/quests/unit05/q3-enthalpy.js` (typed worked figure,
+   rank on a rail, predict pair), `src/learn/quests/_template.js` (the contract).
+4. The matter kit: `src/learn/table/kits/matter.js`, `matter-registry.js`, `matter-draw.js` (`say`, `slab`, `frameOf`, `topOf`, `paintGlyph` are exported),
+   `matter-read.js`, `matter-parts.js`, `matter-tour.js`, and the heat kit it extends (`heat.js`, `heat-draw.js`, `heat-read.js`: cup, plaque, marker, selector, phase box,
+   rail, note, tag, stmt, num, chip, shift cards are yours to use). The pure data and planners: `src/learn/engine/matterdata.js` (read its header: sources).
+5. How a table is built and graded: `src/learn/table/model.js` (actions: `place`, `setDial`, `run`, `type`; zones: trays, rail, slots), `src/learn/engine/stagerunner.js`.
+6. The AP CED text for your topics is in `/private/tmp/claude-501/-Users-carlliu-chem-3d/36dbefac-af21-4c4a-9eb3-1a72e51ba45f/scratchpad/ced.txt` (search "TOPIC 3.x").
+
+## What a finished bench is (every item, no stubs)
+
+1. **The quest module** `src/learn/quests/unit06/<questId>.js` copied from the pattern: `meta.stageCount`, `STAGES`, `SOLUTIONS`, `MISSES` (one plausible wrong answer per
+   stage, each refused with a reason that names what the table shows and never the rule or the answer), `stateFor`, `mount` (pass `room: ROOM` with `export const ROOM = 'foundry'`
+   as q2-grip does: Mirrowen has no ground yet), `VOCABULARY` (term -> stage whose reward card defines it), `BUILDS_ON` (real built quest ids only), `DEBRIEF` (one section,
+   used only if the story animation is missing), `CHECKS` (exports for the verifier). No `PRACTICE`. No XP calls.
+2. **Stages**: the count in your prompt (6 to 8). Each stage: prompt (ONE sentence, at most 25 words, no "!", objective never route), exactly three hints (one sentence each:
+   control / what to look at / method, never the answer or the arithmetic), a reward card (1 to 3 sentences, about 45 words, real terms) and a `check` that returns
+   `{ ok }`, `{ ok:false, notYet:true, msg }` for a blank bench, or `{ ok:false, msg }` naming what the table shows. A predict stage (`predict: true`) shows ONLY the question and
+   the guess cards (no instrument, no runnable control) and its `onClear` calls `remember`; the next stage's `prompt` and `reward` getters call `recall` (see q2-grip).
+   Predict only on the bench's click and on a new case. One decision per stage. Stage 8 (or the last) is normally a sealed sample. Numeric stages follow the quantity ramp
+   (picture, prediction, proportional, formula as shorthand, friendly numbers, then a figure PAST the dial's range that is typed: `entry: { id, label, unit }`,
+   `entryNumber`); the slips a student makes (a factor of ten, a missing step) are kept as refused answers in `MISSES`. A typed stage needs a picture behind it.
+3. **Discover it, never read it off.** Nothing on the bench prints the answer, the capacity or the rule; if a student could answer by looking at the table, rebuild the stage
+   around an instrument. No sort of printed facts, no hunting a dial until a number goes green (a heater with steps has a typed or ranked answer BETWEEN its steps), no
+   plug-and-chug with every constant printed. Plain labels until the word is earned; every term defined by an earlier reward card (list it in `VOCABULARY`; nothing unearned
+   appears in a prompt, hint, plate or caption: `verify:learn` and `verify:story` check).
+4. **The kit part**: your instrument(s) and pieces live in your own file `src/learn/table/kits/matter-<name>.js` (a stub is waiting; it is already imported by `matter.js`).
+   Register with `registerFixture(kind, { paint, run, dress3d?, settle? })` and `registerPiece(kind, { kind: {r, rect, nojoin: true}, paint, faceKey, piece3d?, printed? })`.
+   A painter is a pure function of the table state: it prints what `matterdata.js` (or your own data file `src/learn/engine/matterdata-<name>.js`) says, never decides. Text on
+   a plate is 6 px or larger, nothing is painted under a knob, a rail post, a rim or glass; fixtures that carry dials leave the dial rows free (`topOf`/`contentTop`). A card is
+   at least as tall as a tray's cell. Pieces are `nojoin` unless physics says they join. Every drag has a two-tap twin (the engine gives it for free for pieces in
+   slots, trays and rails). Add Tour words for EVERY new fixture and piece kind with `addTourText({ 'matter:<kind>': { title, dials: false, text } }, { <pieceKind>: [title, text] })`
+   at the bottom of your kit file: three beats (what it is, what to do with it, what it tells you), plain words, no unearned term, never which move solves the stage.
+   Build a `dress3d`/`piece3d` solid only if cheap and clearly correct; the flat picture must be complete without it (`3D Off` draws the same picture).
+5. **Data**: new constants go in `src/learn/engine/matterdata-<name>.js` (pure, Node-importable, source in the header comment, rounding stated). Check every planner in Node
+   against values you work by hand or read from the CRC/NIST; never certify a value with the code that produced it.
+6. **The chart**: in `src/learn/worlds/unit06-states-of-matter.js` flip YOUR quest only: `status: 'live'`, `module: () => import('../quests/unit06/<id>.js')`, the right `stageCount`.
+7. **The bank**: `src/learn/bank/unit06.json` gains `bench.<questId>.problems` (exactly two multiple-choice problems after the debrief, ids `<questId>#b1`, `#b2`) and, for a
+   computational bench, `bench.<questId>.worked` (4 to 8 steps, number steps carry a `calc` expression the checker recomputes; id `<questId>#w`) plus 2 to 3 `end` problems
+   (ids `<questId>#0..`). Edit the JSON with a short Python script that loads, merges only YOUR keys and dumps with `ensure_ascii=False, indent=2` (other builders do the same: be quick).
+8. **Lead line**: replace the marker `  // @mirrowen <questId>` in `src/learn/engine/stage-story.js` with `  '<questId>': { 1: '...' },` (one sentence, at most 20 words, only earned words, a stake, not a task).
+9. **Story animation**: put your painter(s) in `src/ui/story-scenes-mirrowen-<q#>.js` (a stub is waiting; export the `Q#_SCENES` object `{ 'name': painter }`; painters take
+   `(ctx, w, h, t, clock)`, draw on a 960 x 540 plate, use `story-kit.js` and `story-sim.js` as `story-scenes-mirrowen.js` does, and every number on screen is counted or read from
+   the data, never typed). Replace the marker `  // @mirrowen <questId>` in `src/story/quest-story.js` with the entry
+   `'unit06/<questId>': { scene, beats: [{to, say}...3 to 5...], filed: 'Filed: ...' },`. A beat is at most 2 sentences and 36 words; `filed` is one sentence of at most 24 words that
+   moves the case on, using only what the bench measured; every word must be earned by the bench's last reward card and none introduced by a later bench (`verify:story`).
+10. **The verifier file** `tools/lib/mirrowen/<questId>.mjs` (pattern: `q2-grip.mjs`): `LEAKS` (words a refusal may not carry, 1-based stages) and `check(c)` that recomputes every
+   graded figure from an INDEPENDENT value (hand-worked or CRC), the rank orders, that each predict stage shows no instrument, that an untouched table never passes, and that each
+   stage's evidence is really on the bench.
+11. **The stage table**: write `docs/plans/mirrowen-<questId>.md`: per stage the prompt, the evidence on the bench, everything the bench prints and why none of it is the answer,
+   the wrong answers and the message each gets, the three hints, the reward, flat or 3D and why, the ramp rung for numeric stages. Be honest about what is weak.
+
+Verification you must run before reporting: `node tools/verify-learn.mjs`, `node tools/verify-table.mjs`, `node tools/verify-story.mjs` (your quest must appear in each and pass; the story check needs your
+entry; if it does not require unit06 yet, run the painter yourself against a stub 2D context at every beat with a Node script and say so). Read every refusal and every plate against its stage's answer.
+
+## Layout rules that cost the most (table units; a table is 150 x 64 by default, `bounds: { w: 150, h: 72 }` is allowed)
+
+A fixture box carries its dial rows at the top (`contentTop(nDials)`); a probe-like fixture is about 58 x 40, a cup 46 x 45. A card is 20 x 19 (`mol`) or 20 x 14 (heat cards).
+A tray's `cellH` must be at least a card tall and the tray tall enough for the label strip above the first card. Pieces that rest in a rail are laid by the rail (`items`, `start`:
+a start that is NOT the answer). Pieces resting at the table's lower edge need `y` at most `bounds.h - card half height`. `verify:table` fails any overlap of a zone, label, note, fixture or
+piece, and any how-to note line with no clear strip (drop a note rather than crowd a table). Words are paint: nothing under a knob, a post or glass.
+
+## Report (at most 300 words)
+
+Files created and changed; the stage list with each stage's one-line idea and the click; the planner values you checked and against what; the check results; what you know is weak or could
+not do; and the list of stages the integrator must view at `3D On` and play by hand (which fixtures are new, which gestures are unusual).
+

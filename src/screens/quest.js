@@ -377,6 +377,7 @@ export function renderQuest(container) {
   const cleanupPylon = () => {
     window.removeEventListener('pylon:interact', onPylonInteract);
     window.removeEventListener('hashchange', cleanupPylon);
+    import('../ui/calculator.js').then(m => m.closeCalculator()).catch(() => {});
     // Navigating away from the chamber has to put the deck's nodes back in the
     // page before the router empties it, or the next screen inherits a set of
     // orphaned panels standing in a scene nobody is rendering.
@@ -544,6 +545,9 @@ export function renderQuest(container) {
             <button type="button" id="stage-card-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn" title="Open stage panel" aria-label="Open stage panel">
               Stage Panel
             </button>
+            <button type="button" id="stage-dock-calc-btn" class="btn-secondary quest-btn-sm" title="Open scientific calculator" aria-label="Open scientific calculator">
+              Calc
+            </button>
             <button type="button" id="stage-dock-grade-btn" class="btn-primary quest-btn-sm" title="Submit answer">
               Submit
             </button>
@@ -587,6 +591,9 @@ export function renderQuest(container) {
                 <button type="button" id="tool-clear-btn" class="btn-secondary quest-btn-sm">
                   Clear
                 </button>
+                <button type="button" id="stage-calc-btn" class="btn-secondary quest-btn-sm" title="Open scientific calculator" aria-label="Open scientific calculator">
+                  Calc
+                </button>
                 <button type="button" id="grade-btn" class="btn-primary" style="padding: 7px 22px; min-height: 34px;">Submit</button>
               </div>
             </div>
@@ -612,6 +619,14 @@ export function renderQuest(container) {
     const openBtn = q('#stage-card-open-btn');
     const dockGradeBtn = q('#stage-dock-grade-btn');
     const gradeBtn = q('#grade-btn');
+    const stageCalcBtn = q('#stage-calc-btn');
+    const dockCalcBtn = q('#stage-dock-calc-btn');
+
+    const toggleCalc = () => {
+      import('../ui/calculator.js').then(m => m.toggleCalculator()).catch(() => {});
+    };
+    stageCalcBtn?.addEventListener('click', toggleCalc);
+    dockCalcBtn?.addEventListener('click', toggleCalc);
 
     function syncDockGradeBtn() {
       if (!dockGradeBtn || !gradeBtn) return;

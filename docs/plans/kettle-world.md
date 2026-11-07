@@ -278,3 +278,413 @@ Phase 1 planners + Node checks → Phase 2 `q6-stoich` end to end → Phase 3 re
 ## 9. Build record
 
 (Filled in as the build lands.)
+
+
+---
+
+## 10. Builder Brief & Bench Build Records
+
+### 10.0 Builder Brief
+# Kettle: how to build one bench (brief for a builder)
+
+You are building ONE bench of Kettle (`unit07`, stoichiometry and reactions) in Avalon, a browser chemistry game for students aged 12 to 17. The slice, `q6-stoich`, is built,
+played and green: copy its pattern, do not reinvent it. You work in your OWN git worktree (the directory and branch are in your prompt). The integrator merges your branch.
+
+## Ground rules
+
+- **Work only in your worktree directory** (use absolute paths). Commit on your branch with explicit paths (`git add <files>`, never `git add -A` or `git add .`). **Never push.**
+  End commit messages with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Untracked Mirrowen copies may sit in the tree: never add them.
+- **Do not use the browser** (Browser pane, Chrome, Playwright, a dev server). The integrator plays the benches by hand. You verify with Node scripts only.
+- **Do not edit** `PRODUCT.md`, `CLAUDE.md`, `package.json`, `docs/plans/kettle-world.md`, `src/learn/table/kits/pot.js`, `pot-draw.js`, `pot-registry.js`, `pot-reactor.js`, `pot-read.js`, another bench's files,
+  or `tools/verify-*.mjs` (except where this brief says). If you need a shared change, make it opt-in inside your own file; if you cannot, say so in your report.
+- Chemistry must be accurate: simplify freely, say nothing false. Every number a player sees comes from `src/learn/engine/reactdata.js` (add to it ONLY with a new exported function, never change an existing one;
+  prefer your own data file `src/learn/engine/reactdata-<name>.js`) and is held in Node to a value worked by hand (`tools/lib/kettle-data-checks.mjs` shows the style: literals worked on paper, never the code under test).
+- Never delete code. Run `node tools/verify-learn.mjs`, `node tools/verify-table.mjs`, `node tools/verify-story.mjs` often (seconds). `verify-docs` fails on counts until integration: ignore it.
+
+## Read first (in this order; read big files in chunks)
+
+1. `PRODUCT.md`: "Building a Learn world" sections 3, 4 and 5 (the bench contract, how to design a stage, the pitfall ledger: every row is a defect that was built) and principles 1 to 22.
+2. `docs/plans/kettle-world.md`: sections 0, 2 and 7, and the section of YOUR bench in 3 (it is thin for some benches: YOU write the full stage table, see item 11).
+3. The slice: `src/learn/quests/unit07/q6-stoich.js` (stages, `SOLUTIONS`, `MISSES`, `NOTES`, `CHECKS`, predict pair, typed figures), `src/learn/table/kits/pot-reactor.js` + `pot-read.js` + `pot-draw.js` + `pot.js` (pieces, fixtures, painters, Tour words),
+   `tools/lib/kettle-learn-checks.mjs` (the verifier pattern), `src/ui/story-scenes-kettle.js` and the entries in `src/story/quest-story.js` (the story pattern), `src/learn/quests/_template.js`.
+4. The heat kit your kit extends: `heat.js`, `heat-draw.js`, `heat-read.js` (plaque, marker, selector, rail, note, tag, stmt, num, chip, eqn and shift cards are yours to use). How a table is graded: `src/learn/table/model.js` (actions `place`, `setDial`, `run`, `type`), `engine/stagerunner.js`.
+5. `docs/plans/learn-quests.md` World 7 (your bench's brief) and, if you need CED wording, `docs/ap-chemistry-course-and-exam-description.pdf` (read by page range; the Unit 4 topics are 4.1 to 4.9).
+
+## What a finished bench is (every item, no stubs)
+
+1. **The quest module** `src/learn/quests/unit07/<questId>.js` copied from the pattern: `meta.stageCount` (8), `STAGES`, `SOLUTIONS`, `MISSES` (one plausible wrong answer per stage, each refused with a reason that names what the table shows and never the rule or the answer), `stateFor`,
+   `mount` (pass `room: ROOM` with `export const ROOM = 'foundry'`), `VOCABULARY` (term to the stage whose reward card defines it), `BUILDS_ON` (real built quest ids only; use `unit07/q1-recipe` and `unit07/q6-stoich` only if you truly use their words), `DEBRIEF`, `CHECKS`. No `PRACTICE`. No XP calls.
+2. **Stages**: 8 (stage 8 normally a sealed sample). Each: a prompt (ONE sentence, at most 25 words, no "!", objective never route), exactly three hints (one sentence each: which control / what to look at or compare / the method, never the answer or the arithmetic), a reward card (1 to 3 sentences, about 45 words, real terms), and a `check` returning
+   `{ ok }`, `{ ok:false, notYet:true, msg }` for a blank bench, or `{ ok:false, msg }` naming what the table shows. A predict stage (`predict: true`) shows ONLY the question and the guess cards (no instrument, no runnable control) and its `onClear` calls `remember`; the next stage's `prompt` and `reward` are getters that call `recall`. Predict only on the bench's click and on a new case.
+   One decision per stage. Numeric stages follow the quantity ramp (picture, prediction, proportional, formula as shorthand, friendly numbers, then a figure PAST the dial's range, typed: `entry: { id, label, unit }`, `entryNumber`); slips are kept as refused answers in `MISSES`. A typed stage needs a picture behind it.
+3. **Discover it, never read it off.** Nothing on the bench prints the answer, the capacity or the rule; if a student could answer by looking at the table, rebuild the stage around an instrument. No sort of printed facts, no hunting a dial until a readout goes green, no plug-and-chug with every constant printed. **Never print a number that equals the stage's answer** (q6 once printed a molar mass equal to its answer).
+   Plain labels until the word is earned; every term is defined by an earlier reward card (list it in `VOCABULARY`; nothing unearned appears in a prompt, hint, plate or caption: `verify:learn` and `verify:story` check). The Tour replaces briefings: do not add a `briefing`.
+4. **The kit part**: your instruments and pieces live in your own file `src/learn/table/kits/pot-<name>.js` (a stub is waiting, already imported by `pot.js`). Register with `registerFixture(kind, { paint, run, dress3d?, settle? })` and `registerPiece(kind, { kind: {r, rect, nojoin: true}, paint, faceKey, piece3d?, printed? })` from `pot-registry.js`.
+   Export builder functions (`xxxFixture(id, at, opts)` returning `{ fixture, slots, size }`) and piece constructors, and re-export them from your quest through `pot.js`-independent imports (import from your own kit file). A painter is a pure function of the table state: it prints what the planners say and never decides. Painted text is 6 px or larger; nothing is painted under a knob, rail post, rim, glass, or the Run key
+   (the engine puts the key at the fixture's bottom right: leave a 7-unit strip). Fixtures with dials leave the dial rows free (`topOf`/`contentTop`). A card is at least as tall as a tray's cell. **Option objects silently drop keys they do not list: pass every option through and check it reached the drawing.** Every drag has a two-tap twin (the engine gives it for free for pieces in slots, trays, rails).
+   Add Tour words for EVERY new fixture and piece kind with `addTourText({ 'pot:<kind>': { title, dials: false, text } }, { <pieceKind>: [title, text] })` at the bottom of your kit file: three beats (what it is, what to do with it, what it tells you), plain words, no unearned term, never which move solves the stage; a text must name a control exactly as it is labelled on the table.
+   Build a `dress3d`/`piece3d` solid only if cheap and clearly correct; the flat picture must be complete without it (`3D Off` draws the same picture).
+5. **Data**: planners are pure and Node-importable with the source in the header; check each in Node against values you work by hand. Add your checks to a new file `tools/lib/kettle-<questId>-checks.mjs` exporting `async function check({ near })` that returns a list of problem strings (it is loaded automatically by `kettle-learn-checks.mjs`): recompute every graded figure from an INDEPENDENT literal, replay the pot/instrument on the real table through `stateFor` scripts, assert no plate or jar prints a number equal to an answer, no dial stands at an asked amount, a blank table never passes, each predict stage shows no instrument, and no refusal carries the method (`METHOD` regex style in `kettle-learn-checks.mjs`).
+6. **The chart**: in `src/learn/worlds/unit07-stoichiometry.js` flip YOUR quest only: `status: 'live'`, `module: () => import('../quests/unit07/<id>.js')`.
+7. **The bank**: `src/learn/bank/unit07.json` gains `bench.<questId>.problems` (exactly two multiple-choice problems after the debrief, ids `<questId>#b1`, `#b2`), and, if the bench is computational, `bench.<questId>.worked` (4 to 8 steps, number steps carry a `calc` expression the checker recomputes; id `<questId>#w`). Edit the JSON with a short Python script that loads, adds only YOUR keys and dumps with `ensure_ascii=False, indent=2`.
+8. **Lead line**: add `'<questId>': { 1: '...' },` to `src/learn/engine/stage-story.js` under the Kettle block (one sentence, at most 20 words, only earned words, a stake rather than a task, none on a boss).
+9. **Story animation**: your painter(s) go in `src/ui/story-scenes-kettle-<q#>.js` (a stub is waiting and is already spread into `KETTLE_SCENES`; export the `Q#_SCENES` object). Painters take `(ctx, w, h, t, clock)`, draw on a 960 x 540 plate with `story-kit.js` as `story-scenes-kettle.js` does, and **every number on screen is counted or computed from what is drawn or from the planners, never typed**.
+   Add `'unit07/<questId>': { scene, beats: [{to, say} ...3 to 5], filed: 'Filed: ...' }` to `src/story/quest-story.js` (Kettle block). A beat is at most 2 sentences and 36 words; `filed` is one sentence of at most 24 words that moves the case against the Fifth on (the thread is the forged production ledger: fifty tons of metal from forty tons of ore); every word must be earned by your bench's last reward card and none introduced by a later bench.
+10. **Reward models**: only if the idea is spatial and the existing `reward.model` machinery shows it honestly; otherwise none.
+11. **The design file**: write `docs/plans/kettle-<questId>.md`: per stage the prompt, the evidence on the bench, everything the bench prints and why none of it is the answer, the wrong answers and the message each gets, the three hints, the reward, flat or 3D and why, the ramp rung for numeric stages; the click and the wrong model students hold; what is weak.
+12. **Layout**: the table is 150 x 64 units. A fixture is `at` its centre. Keep jars/cards on a grid at least 60 units from stranger pieces for drag-safety where they could join (nothing joins in the pot kit). `verify:table` fails any overlap, a how-to line (`applyNotes`) with no clear strip, a tool with no Tour step. After building run it and fix every failure.
+
+## Lessons from the slice (all of these were defects)
+
+A reactor panel too short so the Run key sat on it; a balance title hidden by its readout; a jar helper that silently dropped the `pure` option (caught by the independent weighing check); a typed answer that equalled a printed molar mass (copying a plate); a Tour sentence that named a dial by a label it did not carry;
+a refusal that would have named the method. Check each of these on your bench. A stage must be passable by someone who does not already know the answer and not passable by copying a number, matching a printed fact, or a 50 % guess.
+
+## Before you report
+
+Run `node tools/verify-learn.mjs`, `node tools/verify-table.mjs`, `node tools/verify-story.mjs` (your quest must appear in each and pass). Commit. Report: files changed, the stage list with each answer, what you verified in Node, what is weak, and every stage you want the owner to play. Be honest about anything you did not check.
+
+
+### 10.1 Bench 2 (`q2-names`) Build Notes
+# Kettle bench 2: `q2-names` (Names and Formulas)
+
+Status: design written before the code (2026-10-30, branch `world/unit07-q2`). The quest module, kit (`pot-names.js`), data (`reactdata-names.js`), checks and story hold the facts; this file holds the reasoning.
+
+**CED honesty.** Names and formulas are not a CED topic; every AP unit assumes them (the chart and `docs/AP-coverage-audit.md` say "assumed"). The bench says so in the chart line only; nothing on the bench claims exam coverage.
+
+**The setting.** The labelling shed of the foundry. Crates carry labels nobody can read; the player writes the labels. Lead line: *The foundry's crates carry labels nobody can read.* Filed: the manifest's ore is iron(III) oxide, Fe2O3 (so it is a compound with a fixed share of metal).
+
+**The clicks.** (1) "A formula is the symbols side by side, one of each" (MgCl, AlO). Predicted on stage 1, tested on stage 2 in a cell whose needle reads the charge. (2) "The Roman numeral is the subscript" (FeO would be iron(I), Fe2O3 iron(II)): the numeral is the charge of one iron ion, and the cell's needle shows what the oxide ions add to.
+
+**Deviations from the seed table (and why).** The seed's eight stages become: a predict/test pair on the click (stages 1 and 2, as the doctrine asks), naming with -ide (3), the numeral (4), the dissolving experiment merged with formula writing (5: the four-salt sort became a two-sample experiment whose answer is a written formula, so the polyatomic ion is discovered and used in one stage), prefixes (6), acid names (7) and a sealed crate (8). Stage count stays 8.
+
+## Kit (all in `pot-names.js`, names chosen not to collide with Tallow's `ion`/`needle` or Optics' `cell`)
+
+- piece `ionchip` (a square slab with a round ion drawn on it; a polyatomic ion is its atoms joined inside one outline). It may hide its charge.
+- fixture `ionneedle` (a charge needle reading one tray: the sum of the charges PRINTED on the pieces in it; a piece that hides its charge adds nothing). A cell is a plain tray plus this gauge.
+- fixture `labeler` (backdrop): a label strip with N slots; frame words printed round the slots (e.g. "iron ( ) oxide"). It reads what stands in the slots and prints the label it spells.
+- fixture `window` (backdrop, has a Run key "Dissolve" or "Look"): one seat for a crate; Run draws what is in the water (atoms labelled, a polyatomic ion joined) or the molecule's atoms. A crate is a piece `crate` (a box with a printed name or none).
+- Name tiles are the heat kit's `tag` cards; formula tokens are `chip` cards.
+
+All readings come from `reactdata.js` (`IONS`, `ionicFormula`, `netCharge`, `nameIonic`, `nameMolecular`, `nameAcid`, `parseFormula`) and `reactdata-names.js` (ion atom layouts, molecule atom layouts, salt and crate tables, token joining).
+
+## Stages
+
+Answers are in the quest's `SOLUTIONS`; every refusal names what the table shows and never the rule or the answer.
+
+1. **Predict** (`s1-predict`): choose the formula for Mg2+ and Cl-. Cards MgCl, MgCl2, Mg2Cl, Mg2Cl2, Mg3Cl2 and a slot; no instrument. Never graded; recalled by stage 2.
+2. **Build the group** (`s2-group`): a supply tray (3 Mg2+, 5 Cl-) and a cell with a needle. Answer: 1 Mg and 2 Cl in the cell. Prints: disc charges, the needle total; never a ratio. Slip: 1 Mg + 1 Cl ("The needle reads +1 with 1 Mg and 1 Cl in the cell"); 2 Mg + 4 Cl ("The needle reads 0, and the cell holds one group twice"). Earns *ionic formula*. Flat. Ramp: picture.
+3. **Name the compound** (`s3-ide`): a cell holds Mg2+ and O2-; labeler with two slots; tiles sodium, magnesium, chlorine, chloride, oxygen, oxide. Answer: magnesium oxide. Plate: an example (K+ with Br- is potassium bromide), the convention. Slip: "magnesium oxygen" ("The label has the element name oxygen; the cell holds an O disc that carries 2-"). Earns *naming ionic compounds* (-ide).
+4. **The numeral** (`s4-numeral`): two cells, FeO and Fe2O3, the Fe chips hide their charge, each needle adds the printed charges (-2, -6); a labeler per cell with one slot in "iron ( ) oxide"; tiles (I)-(IV). Answer: (II) and (III). Slip: (I) and (II) (the count of iron in the cell). Earns *Roman numeral*.
+5. **Write the formula** (`s5-dissolve`): two crates (A holds NaCl, B holds Ca(NO3)2) go in the window, Dissolve shows what is in the water; the formula of crate B is written with chip tokens in a row of slots. Answer: Ca ( NO3 ) 2. Slips: CaNO32 (no brackets), CaN2O6 (atoms apart). Earns *polyatomic ion*.
+6. **Name the molecule** (`s6-prefix`): crate A (printed "carbon dioxide" = CO2) and crate B (N2O4) in a window that draws the molecules' atoms; a labeler with four slots (prefix, element, prefix, ending); plate of prefixes. Answer: dinitrogen tetroxide. Slips: "nitrogen tetroxide" (no first prefix), "dinitrogen dioxide" (counted the wrong atom). Earns *molecular prefixes*.
+7. **Acid names** (`s7-acid`): two cells (H+ with Cl-, H+ with NO3-), a labeler each with one slot in "( ) acid"; plate with two examples (hydrobromic, sulfuric). Answer: hydrochloric, nitric. Earns *acid names*.
+8. **The unmarked crate** (`s8-sealed`): a crate with no label in the window (Dissolve): 2 Fe with hidden charge and 3 SO4 groups carrying 2-; plate of polyatomic names; labeler with three slots (metal, numeral, ion). Answer: iron(III) sulfate.
+
+## Weak points
+
+Naming is convention, so the rule is printed on the object (an example or a prefix plate); the discovery is only in what to apply it to (the charge arithmetic, the atom counts, which ions are joined). Stage 6 is the weakest: counting atoms in a picture is reading, kept because the prefix IS the count. The numeral stage hides the iron charge but the oxide charge is printed, so the arithmetic is two steps.
+
+## Build record (as built)
+
+- Files: `src/learn/quests/unit07/q2-names.js`, `src/learn/table/kits/pot-names.js`, `src/learn/engine/reactdata-names.js`, `src/ui/story-scenes-kettle-q2.js` (scene `crate-labels`), `tools/lib/kettle-q2-names-checks.mjs`; edits to `unit07-stoichiometry.js` (live), `stage-story.js`, `quest-story.js`, `bank/unit07.json` (`bench.q2-names.problems`, two items; no worked problem: the bench is not computational).
+- Layout as built: stage 2 has a supply tray and a cell with a needle; stages 3 and 7 need no needle (the chips print their charges and the ions are the evidence); stage 4 carries the convention ("the number in brackets is the charge of one iron ion") as a printed how-to line, because it is how to answer, not which move solves; stage 5's formula strip has five slots with six cards (one spare); the cards for stages 5, 6 and 8 start in a tray so the 150 x 64 table stays clear.
+- Piece and fixture kinds are `ionchip`, `crate`, `ionneedle`, `labeler`, `window`; the names `ion`, `needle` and `cell` are not used because Tallow's atom kit, Tallow's tour and the optics kit already own them. Every piece is a rectangular slab so it builds as a card at `3D On`; there is no `piece3d`/`dress3d`, so `3D Off` and `3D On` show the same picture.
+- Tour: pieces `pot:ionchip`, `pot:crate`; fixtures `pot:ionneedle`, `pot:window`. The `labeler` is a backdrop with no key, so the Tour skips it (as it skips the slice's balance: `tour.js` passes over a backdrop fixture with no key and no dial); the slots are explained by the how-to lines and by the card and chip steps.
+- Graded by: stage 1 a card in the slot (never graded); 2 chips in the `cell` tray; 3 to 8 the words in the label's slots read in order (`labelWords`), compared with `nameIonic` / `nameMolecular` / `acidWord` / `ionicFormula` and the `spell` of the formula cards.
+- Checks (Node, independent literals): the graded names and formula, the roman numerals, the needle on every table the stages build (stage 2 four ways, stage 4 -2 and -6, hidden iron adds nothing), the atoms each window draws, the predict stage holds no instrument, a blank table never passes, no plaque prints an answer, no refusal carries the method or the answer.
+- Words printed that are, strictly, answer material and why they stay: the cards and chips carry the candidate words (a naming bench has to offer words); stage 6's plaque pairs each count word with its number and stage 8's plaque lists ion names (SO4 is sulfate), because both are conventions that cannot be discovered; the discovery left is which tile fits (the charge arithmetic, the atoms drawn, which atoms are joined).
+
+
+### 10.2 Bench 3 (`q3-change`) Build Notes
+# Kettle `q3-change` — Physical or Chemical (CED 4.1, 4.4)
+
+Status: built on branch `world/unit07-q3`. Files: `src/learn/quests/unit07/q3-change.js`, `src/learn/table/kits/pot-change.js`, `src/learn/engine/reactdata-change.js`,
+`src/ui/story-scenes-kettle-q3.js`, `tools/lib/kettle-q3-change-checks.mjs`, plus the chart flip, the bank (`bench.q3-change`), the lead line and the story entry.
+
+## The click and the bench
+
+Students hold "burning loses mass". The bench shows three things the belief misses: an OPEN pot of burning steel wool GAINS mass (iron takes oxygen from the air,
+4 Fe + 3 O₂ → 2 Fe₂O₃: 55.8 g becomes 79.8 g, +24.0 g), an open pot of burning wood loses mass (carbon dioxide and water vapour leave), and a SEALED pot weighs the same
+before and after in both. Words earned: **physical change**, **chemical change** (stage 1), **evidence of reaction** (stage 2). `conservation of mass` is q1-recipe's (`BUILDS_ON`); stage 6
+uses it on a whole pot. Lead line: *The forged ledger says metal came from nowhere, and Vess wants to know whether anything can.* Filed: a sealed pot weighs the same before and after, so the ledger's extra
+metal came from somewhere.
+
+## Instruments (`pot-change.js`, all numbers from `reactdata-change.js` `planChange`)
+
+- **Pot** (`changepot`): a seat for a sample jar (or one change fixed on the pot), an optional "Lid" dial (Open / Sealed), an optional amount dial, a "Run" key and a window:
+  one disc for each `unit` moles, what stands in the pot BEFORE on the left, AFTER on the right (a gas an open pot loses is drawn in grey, marked "out"; oxygen the open air supplies is drawn after the run
+  as "+O₂"). The foot prints SEALED or OPEN TO AIR, IN WATER, and the disc size. Run is a set-up lookup: a different jar, lid or amount is a new set-up and reads "press Run" again.
+- **Balance** (`potscale`): weighs the WHOLE pot (its own weight left out, jar weights never counted): a BEFORE line and an AFTER line (after only once the pot is run). A sealed pot counts the oxygen sealed in with it.
+- **Lamps** (`evidence`): gas given off, new colour, solid forms, temperature change. Dark until a run; then lit only by the planner. No lamp says "chemical".
+- **Sample jar** (`cjar`): names what it holds and what is done to it ("Steel wool / burned"); in stage 8 it is "Sample A/B/C" and prints nothing else.
+
+## The planner (`planChange(id, { sealed, scale })`)
+
+Eight changes. Physical: ice melts (18.0 g), sugar in water (17.1 g in 90 g), salt in water (11.7 g in 90 g, drawn as its two ions held in the crystal and then in the water), dry ice warming (44.0 g). Chemical: sugar heated
+(C₁₂H₂₂O₁₁ → 12 C + 11 H₂O(g), 34.2 g), steel wool burned (4 Fe + 3 O₂ → 2 Fe₂O₃, 55.8 g), magnesium burned (2 Mg + O₂ → 2 MgO, 24.3 g), wood chips burned (C₆H₁₀O₅ + 6 O₂ → 6 CO₂ + 5 H₂O, 16.2 g).
+Products are `reactPlan`; a gas leaves an open pot and stays in a sealed one; an open pot takes its air reactants (O₂) in plenty, a sealed pot holds the amount sealed in with the sample.
+Lamps: gas = a gas stands in the pot (or has left it) that was not a gas before; colour = a colour stands in it that was not there; solid = a solid stands in it that was not there; temperature = the change gives out or takes in at
+least 2 kJ for the amount in the pot (a change the pot's heater drives, heated sugar, reads no temperature lamp). Heats of change are listed in the planner's header with their sources. A new substance = a species (by formula,
+a salt's ions counting as the salt) in the pot after that was not before.
+
+**Simplifications, said honestly:** wood is drawn as cellulose C₆H₁₀O₅ burning completely (real wood leaves ash; the open pot reads 0.0 g after); rust and the iron oxide of burning wool are Fe₂O₃; heated sugar is C₁₂H₂₂O₁₁ → 12 C + 11 H₂O
+(a real caramel also loses volatile oils); a sealed pot is large enough to hold the oxygen the burn takes (the foundry's charging pot); the pot's heater is not modelled.
+
+## Stages
+
+Mode: **flat** everywhere (a window of discs, a balance and lamps are flat pictures; there is no spatial idea to stand up, so no `dress3d`/`piece3d` was built; `3D Off` draws the same thing). Ramp rung marked R.
+Every stage: reward 1 to 3 sentences, hints three rungs (rung 1 names the control, 2 what to compare, 3 the method), refusals name what the table shows.
+
+| n | Prompt | Evidence on the bench | Printed, and why none of it is the answer | Slip → refusal | Reward (idea) |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Sort the four changes by whether a new substance is in the pot afterwards. | pot, window, jars Ice (melts), Sugar (in water), Sugar (heated), Steel wool (burned), trays "Same substance after" / "New substance after" | jar names and what is done to them; nothing about the result. The window is read after a run. | a physical change filed "new" → "Ice: the window shows H₂O before and H₂O after; lit: Temperature change." (the facts, not the rule) | **physical change**, **chemical change** |
+| 2 | Pick the change that lit a lamp without making a new substance. | pot, window, four lamps, jars Dry ice, Wood chips, Steel wool, Sugar (in water); slot | Dry ice and wood chips light the SAME two lamps (gas, temperature); only the window tells them apart. | wood chips or sugar → their window and lit lamps | **evidence of reaction** (a lamp is evidence, not proof) |
+| 3 | PREDICT: Choose how an open pot of steel wool weighs after the wool burns, compared with before. | only a plaque (open pot, steel wool 55.8 g), three chips, a slot | no instrument, no runnable control | — (a guess is never graded) | the guess is locked (`remember`) |
+| 4 | (getter) Lay the chip for what the balance shows after the steel wool burns in the open pot. **The click.** | pot, window, balance, wool jar, three chips, slot | balance prints BEFORE only until run | "Lighter" or "The same" → "The balance read 55.8 g before and 79.8 g after." | an open pot gains: iron took oxygen from the air |
+| 5 | Sort the three burns by whether the open pot weighs more or less afterwards. | pot, window (grey "out" rows for gas that left), balance, jars Steel wool, Magnesium, Wood chips, trays | no verdict printed | wood filed "more" → "Wood chips: the balance read 16.2 g before and 0.0 g after." | what crosses the lid decides |
+| 6 | Type what a sealed pot weighs after 83.7 g of steel wool burns in it, with 36.0 g of oxygen sealed in. (R: picture, friendly numbers, then a figure PAST the dial) | pot with Lid and "Steel wool" dial (11.2, 22.3, 33.5 g), window, balance; typed figure | the prompt's 83.7 and 36.0 are inputs; 119.7 is printed nowhere; no dial stands at 83.7 | 83.7 → "83.7 g is the steel wool alone; 36.0 g of oxygen was sealed in with it."; other → the sealed pot's own before/after readings | **conservation of mass** applied to a whole pot (119.7 g) |
+| 7 | Pick the change after which the pot holds the same particles it began with. | pot, window, jars Salt (in water), Wood chips, Steel wool, Magnesium; slot | the window shows Na⁺ and Cl⁻ in the crystal and again in the water | a burn → its window and lit lamps | dissolving a salt is classed as physical; the AP course notes a case can be made the other way because ionic bonds break |
+| 8 | Sort samples A, B and C by whether a new substance forms in the sealed pot. | sealed pot, window, lamps, jars Sample A (wood chips), B (dry ice), C (ice); trays | jars hide what they hold; A and B light the same gas and temperature lamps | any wrong tray → the sample's window and lit lamps | a lit lamp is evidence; a new substance is proof |
+
+Hints, prompts and rewards are in the module. No stage's check requires a run (a player who knows the answer is never blocked); a refusal before a run says the pot has not been run.
+
+## Weak points, honestly
+
+- Stages 2 and 7 are one-of-four picks (25 % blind). Stages 1, 5 and 8 are sorts (1/16 and 1/8 blind). All of them are decided by running the jars and reading the window.
+- Stage 7 is the easiest stage: three decoys are plainly burning. The nuance (the AP course accepts an argument either way) is in the reward, not in a decision the table could grade.
+- Stage 5 leaves an open wood pot reading 0.0 g after (complete combustion); it may read as "matter destroyed" until the grey "out" rows are noticed. Stage 6's typed figure is an addition, honest as a conservation check but not hard.
+- The temperature lamp is a rule on the size of the heat (2 kJ), with heats from the formation table or the CRC; the lit/dark outcome for each change is checked, the exact kJ is not shown.
+- The sealed pot for steel wool holds 24.0 g of oxygen (about 18 L): it is a big pot, which the bench never says.
+- Window labels use formulas with state letters, (s) (l) (g) (aq), not explained anywhere on the table; the Tour text does not define them (the term "state symbol" belongs to q4-balance).
+- Untested by hand: the 2D window's panel widths at 70 units, tray overflow when three or more jars go in one tray, the jar names at 6.2 px. Please play it.
+
+## Verified in Node
+
+`verify:learn`, `verify:table` (including "Predict first" and the Tour step per fixture and piece kind), `verify:story`, and `verify:quest-run` pass. `tools/lib/kettle-q3-change-checks.mjs` holds: the planner's weights, open and
+sealed, for all eight changes against figures worked on paper; each change's four lamps and whether it made a new substance; dry ice and wood chips light the same lamps and differ in the window; the asked figure (83.7 + 36.0 = 119.7);
+the pot, balance and lamps replayed through the real table (an after reading only after a run, a changed lid is a new set-up); blank benches never pass; the predict stage has no instrument; the hidden samples print nothing;
+no plate or dial prints 119.7 and no dial stands at 83.7; every miss is refused with a reason that carries no method word and not the answer.
+
+
+### 10.3 Bench 4 (`q4-balance`) Build Notes
+# Kettle `q4-balance` — Balancing Equations (design and build record)
+
+CED 4.3 (representations of reactions). Module `src/learn/quests/unit07/q4-balance.js`; kit `src/learn/table/kits/pot-balance.js`; planners `src/learn/engine/reactdata-balance.js` (over `reactdata.js` `parseEquation`, `atomLedger`, `balance`, `equationText`); checks `tools/lib/kettle-q4-balance-checks.mjs`; scene `recipe-board` in `src/ui/story-scenes-kettle-q4.js`.
+
+## The bench
+
+The furnace control room. One **board** (a line of formulas with a dial under it for each number the player sets), a **particle window** that draws exactly what the board says (small clusters of atoms, before the change left and after it right), an **atom ledger** (rows per kind of atom: count left, count right; no tick, no lamp, the player compares), and per stage a **tally** (stage 1), **state tiles** (stage 5) or a **formula builder** (stage 8). Dials are integers 1 to 6 (0 to 6 on the tally and the builder).
+
+- Words earned: *chemical equation, reactant, product* (stage 1), *coefficient* (stage 3), *state symbol* (stage 5). Before a word is earned the board, ledger and Tour use plain labels (`lex` 0, 1, 2 on the board fixture); a dial is labelled by the term it sets (`2 H₂`), never by the word.
+- Builds on `unit07/q1-recipe` (atoms are not destroyed) and `unit06/q1-states` (solid, liquid, gas pictures).
+- Lead line: the furnace recipe card on the control-room wall has no numbers, and Vess cannot tell whether it is right. Filed: the furnace recipe, Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, is balanced.
+
+## The click and the wrong model
+
+Students hold **"to balance it, change the little numbers"** (the small numbers inside a formula). Stage 2 asks them to commit to a way (a card for each: change a small number / put a number in front / add the missing atom). Stage 3 offers both on the board: a dial for each coefficient and a dial that turns the small number after the O of H₂O. Turning it gives H₂ + O₂ → H₂O₂, which **agrees in atoms** (2 H and 2 O each side) and is refused because the window now draws a different molecule. The refusal names what the window shows ("The window now shows H₂O₂ after the change, a different molecule from the one you started with") and never the rule. The reward then states it.
+
+## Stages
+
+Quantity ramp: counting a picture (1), then a prediction (2), then a first balance (3), a diagram read for what changed (4), notation (5), a larger balance (6), a balance by pieces (7), a formula deduced from a picture (8). No arithmetic past counting and sharing; the typed-figure rung does not apply (stage 8 is a built formula, see "weak").
+
+| n | Prompt | Evidence on the bench | Prints (and why none is the answer) | Wrong answer → message | Hints (1 control · 2 compare · 3 structure) | Answer |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Count the oxygen atoms the window shows before the change and after it, and set the tally to match. | board `H₂ + O₂ → H₂O` (no dials), window, tally (two dials from 0) | the equation line and the picture; the tally starts at 0 and prints no count; the ledger is off | before 2 / after 2 → "The right half of the window does not show that many oxygen atoms." (no number in any refusal) | tally dials · count each half · add the oxygen of every cluster | before 2, after 1 |
+| 2 | PREDICT. Choose how you would make the oxygen atoms agree on both sides of H₂ + O₂ → H₂O. | cards only (plaque with the line) | none | never graded | cards · what each change does to atoms and substances · commit, test next | any card (recalled by stage 3) |
+| 3 | (Your guess,) make the atoms on the left of the arrow agree with the atoms on the right. | board with three coefficient dials and the small-number dial, ledger, window | the ledger prints the starting counts (H 2 / 2, O 2 / 1); nothing says which dial | small number turned → "different molecule" (see above); counts disagree → "The ledger counts O: 2 on the left and 1 on the right." | dials and ledger · compare columns after each turn, watch the window · one dial changes how many, the other changes which | any whole-number set that agrees with the small number left alone (2 : 1 : 2 and its multiples) |
+| 4 | Set the board so the equation describes the change in the window. | locked pot diagram (1 Fe₂O₃ + 4 CO before; 1 CO, 2 Fe, 3 CO₂ after, from `reactPlan`), four dials, no ledger | the diagram only (it is a pot, not the equation); the lead-line stake is the furnace recipe | CO set to 4 (the number before the change) → "The window shows 1 CO still there after the change."; other mismatch → "The board does not match the number of X in the window." | dials · compare before with after, one substance at a time · only molecules that changed belong in the equation | 1 : 3 : 2 : 3 |
+| 5 | Write the state of each substance after it on the board. | `2 Na + 2 H₂O → 2 NaOH + H₂`, four tiles with their words ((s) solid, (l) liquid, (g) gas, (aq) in water), a slot under each substance, window drawing each substance in its own state | how the particles sit; the tiles say what each symbol means (how to answer), not which belongs where | a tile on the wrong substance → "Na is marked (g), but the window does not draw its particles far apart." (uses the player's choice, never the real state) | drag a tile · how each substance is drawn · match each way of sitting to a tile | Na (s), H₂O (l), NaOH (aq), H₂ (g) |
+| 6 | Make the atom counts agree on both sides for propane burning in oxygen. | C₃H₈ + O₂ → CO₂ + H₂O, four dials, ledger, window | ledger counts only | O₂ set to 2 → "The ledger counts O: 4 on the left and 10 on the right." | dials and ledger · compare one atom at a time · fix the atoms found in one substance each side first, oxygen last | 1 : 5 : 3 : 4 (the only set in range 1 to 6) |
+| 7 | Make the pieces on the left of the arrow agree with the pieces on the right. | Ca(OH)₂ + H₃PO₄ → Ca₃(PO₄)₂ + H₂O; the ledger counts Ca, H, OH and PO₄ once each; the window rings OH and PO₄ where they stay whole (the water's OH is ringed) | the ledger of pieces | mismatch on OH → "The ledger counts OH: 6 on the left and 3 on the right." | dials · look at the rings · pieces that appear once each side first | 3 : 2 : 1 : 6 (the only set in range) |
+| 8 | Build the formula of the substance in the sealed bags. | `P₄ + 5 O₂ → 2 ?`, window (1 P₄ and 5 O₂ before, two sealed bags after), formula builder (P atoms, O atoms dials from 0) | the bags print `?`, the formula is nowhere on the table; the ledger is off so the player counts | P₄O₅ → "P₄O₅ has 4 P and 5 O, and the window shows 2 sealed bags after the change." | builder dials · count the left half, see how many bags · the atoms in the bags are the atoms that went in, shared equally | P₂O₅ (order of dials immaterial) |
+
+Rewards: 1 reactants and products (the line shows 2 O before, 1 after); 3 the coefficient (and what a small number is; the verdict on the guess comes first); 4 the furnace recipe; 5 state symbols; 6 propane; 7 groups that stay whole; 8 an unknown formula from the atoms. Predict stage 2's card says only "Now Test It".
+
+## Flat or 3D
+
+Flat. The window is a counted picture (clusters of atoms drawn from `shapeOf`, whose atom counts are held to each formula in Node); `3D Off` and `3D On` draw the same picture. No `dress3d` solids: the particle window would be the natural candidate (spheres on a base), and is left for the integrator's play to judge.
+
+## What is weak
+
+- The window's atoms are small on a 375 px phone (an atom is 3 to 7 px across at the plate scale; hydrogen is the smallest). Counting oxygen on stage 1 is possible but not generous; the lean-in view helps. Raise `K` in `pot-balance.js` or enlarge the window if play says so.
+- Stage 1 asks the player to read a picture (rung P of the ramp). It is a count, not a copy of a printed label, but it is the nearest thing to "report what is visible".
+- Stage 3 accepts any set that agrees (2 : 1 : 2 and 4 : 2 : 4 and 6 : 3 : 6); the "smallest numbers" convention is not taught, since dials cap at 6 and stages 6 and 7 have one answer in range.
+- Stage 4 grades the coefficients against the diagram's change, so a set that balances but doubles the diagram (2 : 6 : 4 : 6) is refused with a message about the number of Fe₂O₃ in the window.
+- Stage 8 is a built formula (two dials, 0 to 6), not a typed one: the frame's number field opens a numeric keypad on a phone, which cannot type letters. No shared file was changed.
+- State symbols: the real state of each substance is a datum (`STATE_OF`) for the one equation used; other equations would need entries.
+- The molecule drawings are clusters of touching atoms, not bond-accurate shapes (water is bent, carbon dioxide linear, the rest are plausible clusters). Nothing says more than the formula does.
+
+
+### 10.4 Bench 5 (`q5-ionic`) Build Notes
+# Kettle `q5-ionic` — Net Ionic Equations (CED 4.2) — design
+
+Files: `src/learn/quests/unit07/q5-ionic.js`, kit `src/learn/table/kits/pot-ionic.js`, planner `src/learn/engine/reactdata-ionic.js` (on `reactdata.js` `planMix`, `solubility`; nothing there changed),
+story painter `src/ui/story-scenes-kettle-q5.js` (`cloudy-pond`), checks `tools/lib/kettle-q5-ionic-checks.mjs`, bank `bench.q5-ionic` (two problems, no worked problem: not computational).
+
+**The click.** Students hold "when two solutions are mixed, everything in them reacts" (and, extended, "no cloud means no reaction"). Stage 2 puts that model on the table as cards
+("No ions are left in the water"), stage 7 attacks the extension (clear solutions that still react).
+
+**The kit.** The pot (`ionpot`) pours two solution jars together with just enough of each that neither is left over (`mixUnits`), so the water afterwards holds exactly the spectators.
+Its WINDOW draws BEFORE (jar 1's ions on the left half, jar 2's on the right) and AFTER (ions still dissolved, loose; ions that left the water packed together at the bottom), one disc per ion with its charge printed
+and a key under BEFORE. Its LAMP has two bulbs whose brightness is the number of dissolved ions / 8 (no number printed). The FILTER lifts the solid onto a paper. All of it is `mixOutcome`; painters decide nothing.
+Equations are built from **counted ion pucks** (one puck per ion, so a coefficient is a count of pucks) and **formula chips** (`PbI₂(s)`). Pucks are 12.6 units across (the 28 px finger floor at 340 px).
+Flat only: the picture is complete and no `dress3d`/`piece3d` was built (3D On falls back to the kit's default pieces and the flat fixture picture).
+
+Words earned: precipitate (1), spectator ions (3), net ionic equation (4), solubility rules (6), complete ionic equation (8). `BUILDS_ON`: `unit01/q4-ledger` (ion, cation, anion).
+Deviations from the seeds: the FILTER is on stage 1 only (on stage 3 the window already separates dissolved from packed ions, so a filter key would be a control the answer does not use);
+stage 5/6 became predict then test of the four always-soluble ions (the seed's "predict three mixtures" would need a third predict/test pair and drop the acid-base stage); stage 8 asks for the
+complete ionic equation only (the net ionic equation is stage 4's skill and the molecular equation is balancing's, `q4-balance`, so three slots would be three decisions).
+
+## Stages
+
+| n | Prompt | Evidence on the bench | Printed (and why not the answer) | Wrong answer and its refusal | Idea · mode |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Pour the two solutions together and collect on the paper what forms. | Pb(NO₃)₂ and KI jars, pot (glass goes cloudy), filter paper | jar formulas and names; the glass says CLOUDY/CLEAR | mixed, not filtered → "The glass of the pot is cloudy and the paper is still empty." (blank: not yet) | precipitate · flat |
+| 2 | PREDICT: Choose which ions are still in the water after the lead nitrate and potassium iodide solutions are mixed and the cloud settles. | none: five cards and a slot | cards only | none (never graded; held model = "No ions are left", "All four ions") | the click |
+| 3 | Put in the tray each ion that is still dissolved in the water (the prompt quotes the player's guess). | pot, window, lamp (7 → 4 ions), four ion pucks | window discs and key; bulbs without numbers | all four in the tray → "There are no Pb²⁺ discs loose in the water of AFTER."; short → "AFTER still shows K⁺ discs loose in the water, and the tray has none." | spectator ions · flat |
+| 4 | Build the equation for only the ions that reacted. | pot + window, seven counted pucks, three formula chips, tray + "Solid formed" slot | window; nothing of the equation | K⁺ in the tray → "K⁺ is in the window both before and after."; one I⁻ → "2 I⁻ discs left the water, and the tray holds 1."; wrong chip → "The packed discs at the bottom of AFTER do not match the chip in the slot." | net ionic equation (counts: 1 Pb²⁺, 2 I⁻) |
+| 5 | PREDICT: Choose the ions you think stay in the water, whatever solution they are mixed with. | eight pucks (Na⁺ K⁺ NH₄⁺ NO₃⁻ Ag⁺ Pb²⁺ Cl⁻ SO₄²⁻) and a tray | pucks | none | new case |
+| 6 | Put in the tray the ions that stayed in the water in every mixture (quotes the guess). | pot with a "Mixture" dial of four ready mixtures (AgNO₃+NaCl, Pb(NO₃)₂+K₂SO₄, NH₄Cl+KNO₃, (NH₄)₂SO₄+NaCl), window, eight pucks | formulas of the two jars | Cl⁻ in the tray → "Cl⁻ was packed into a solid in mixture 1."; a mixture not run → "Mixture 3 has not been poured together yet." Cl⁻ and SO₄²⁻ stay dissolved in two mixtures each, so a halide/sulfate shortcut fails | solubility rules |
+| 7 | Build the equation for only what reacted when these two clear solutions were mixed. | HCl + NaOH jars, window (H₂O drawn as a new particle), lamp 4 → 2 (dimmer, not dark), pucks H⁺ OH⁻ Na⁺ Cl⁻, chips H₂O(l) and NaCl(aq) | window | Na⁺ and Cl⁻ in the tray → "Na⁺ is in the window both before and after." | H⁺ + OH⁻ → H₂O; clear is not "no reaction" |
+| 8 | Build the equation for the sealed jars with every dissolved ion shown, before and after the mixing. | Jar A, Jar B (AgNO₃, KBr, names hidden), window, six pucks, chips AgBr(s), KNO₃(aq), AgNO₃(aq), trays Before / After / Solid formed | window | Ag⁺ in the After tray → "Ag⁺ discs are packed together at the bottom of AFTER, not loose in the water."; counts → "BEFORE shows 4 discs, and the first tray holds 3." | complete ionic equation |
+
+## Hints (three each, in the module) and rewards
+Rung 1 names controls (`"Mix"`, `"Filter"`, `"Mixture"`), rung 2 says what to compare (BEFORE with AFTER, the bulbs), rung 3 the structure (an ion belongs in the tray only if…); none gives the answer.
+Rewards: Precipitate; Spectator Ions (quotes the guess verdict); Net Ionic Equation; Solubility Rules; Clear Does Not Mean Nothing Happened; Complete Ionic Equation. Stages 2 and 5 are "Now Test It" prediction cards.
+No ramp (nothing numeric is typed); the counts are the quantity ramp: pictures (window), prediction, counted pucks, new cases.
+
+## What is weak (for the owner to judge)
+- Stage 1 is an operating stage (mix and filter), easy by design; it earns a word.
+- Stage 6 has a hunt of four dial settings, bounded, and the rule is induced from four mixtures (the reward states the AP rule).
+- The window keeps discs of a jar to six per half; every case in the bench fits (checked in Node).
+- Stage 4's solid chip choice (3 chips) is a 1-in-3 guess on its own, but passes only together with the exact puck counts.
+- The lamp compares ion counts, not conductivities (charge and size ignored): fine for this bench, said nowhere.
+- Pucks/chips at 3D On use the kit's default piece bodies; not looked at in the browser.
+
+
+### 10.5 Bench 7 (`q7-titrate`) Build Notes
+# Kettle `q7-titrate` — Titration (CED 4.6): design record
+
+Built on branch `world/unit07-q7`. Files: `src/learn/quests/unit07/q7-titrate.js`, kit `src/learn/table/kits/pot-titrate.js`, planners
+`src/learn/engine/reactdata-titrate.js` (on `titrate` and `indicatorColour` in `reactdata.js`, which are unchanged), checks
+`tools/lib/kettle-q7-titrate-checks.mjs`, story painter `src/ui/story-scenes-kettle-q7.js` (`burette-count`), entries in `quest-story.js`,
+`stage-story.js`, `bank/unit07.json`, and the chart. No pH value is shown anywhere; a plot is not drawn.
+
+## The click
+
+Students hold "an acid takes an equal volume of base". Stage 1 offers it as a card (25.0 mL) beside 5.0, 10.0 and 62.5 mL; the case
+(25.0 mL of 0.100 mol/L acid, 0.250 mol/L base) needs 10.0 mL. The H2SO4 stage (5) contradicts "one for one" a second time.
+Prediction pair: stage 1 (no instrument) then stage 2 (the burette). The guess comes back in stage 2's prompt and reward.
+
+## The kit
+
+`titrator` fixture: a burette (tube, 0 to 50 mL scale, level, strength printed, "reading" = total let out), a "Per press" dial (mL one press
+lets out; settings differ by stage), a key "Open Tap", a flask under the tip drawn in the planner's colour with its colour word, a slot for a
+dye card beside it, and an optional window of discs (H+ and OH- still free, one disc a printed number of mol, a half-filled disc for a half).
+The burette only gives out (each press is a recorder row, `x` = the total); Undo is the way back; it holds 50 mL. `perm` mode is the
+permanganate flask (no dye slot). `indicator` piece: a card with the dye's name and swatches of the colours it can show (no volume on it).
+Flat only; no `dress3d`/`piece3d` (the picture is complete and honest; a solid burette was not cheap enough to be sure of).
+Tour: `pot:titrator` and `indicator` (printed "Dye cards" because "indicator" is earned in stage 2; the fixture title is "Tube and flask" until
+stage 3, "Burette and flask" after: option `named`).
+
+## Planners (`reactdata-titrate.js`) and hand-worked values
+
+`flaskAt(sys, v, indicator)`, `equivalenceMl`, `endpointMl(sys, indicator, step)` (first grid volume at which the dye differs from its colour at
+0 mL), `acidMolarity`, `permanganateAt`, `permanganateEndMl`, `ironMolarity`. Paper values are in the header of the checks file
+(eq 10.0 / 20.0 / 22.5 / 36.0 / 25.0 / 22.5 / 45.0 mL; first colour 10.5 / 23.0 / 36.5 / 23.5 (methyl orange) / 23.0 (purple) / 45.5 mL).
+
+## Stages
+
+Ramp: P picture, G prediction, R proportional, F formula as shorthand, N friendly numbers, T typed. "Prints" lists everything the bench shows
+and why none of it is the answer. Every refusal names the burette's own reading (what the table shows), never the rule.
+
+| n | Prompt | Evidence · prints | Slip → message | Hints (1 / 2 / 3) | Reward | Ramp · mode |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 predict | Choose how much of the base it takes to use up all the acid. | four cards (5.0, 10.0, 25.0, 62.5 mL), slot; plate: 25.0 mL of 0.100 mol/L acid, base 0.250 mol/L, what mol/L means, one base particle uses up one acid particle. No instrument. Constants only. | none: never graded (blank → "Lay a card in the slot") | the cards and slot / compare particles in a litre of each / work out the acid's particles then the base that holds that many | "Now Test It" | G · F |
+| 2 | (You guessed X.) Add base until the dye in the flask first changes colour. | tube and flask, dye card, press dial 0.5 / 1 / 2 / 5 mL. Prints strength of base, volume of acid, the reading. The answer is a state (pink within 1.0 mL of the first change), not a number, and no setting equals 10.0 or 10.5. | 5 mL presses to 15.0 → "The flask had already changed colour before the reading reached 15.0 mL."; no dye → "has no dye in it"; colourless → "still colourless at X mL" | the card, slot, dial, key / watch flask and reading together / big presses then small | Titration (titration, burette, indicator earned); quotes the guess and 10.5 mL | P · 3 (flat) |
+| 3 | Stop the burette where the base has exactly used up the acid in the flask. | window of discs (H+ 20 at the start, one disc 0.00025 mol = 1 mL of base), no dye; plate: 25.0 mL of acid, 0.200 mol/L. Discs, not numbers; the volume is never printed. Presses 0.5 / 1 / 2 / 5. | 20.5 mL → "The window shows 0.5 discs of OH- left over at 20.5 mL."; early → discs of H+ still shown | dial and key, watch window / compare H+ and OH- discs / count what is left, press that much | Equivalence Point | R · F |
+| 4 | Type the concentration of the acid in the flask in mol/L. | burette (0.200 mol/L), flask 25.0 mL HCl, dye card; no window (the window would show the acid's amount). Acid 0.180 (hidden); eq 22.5, colour 23.0 gives 0.184: accepted 0.174 to 0.186. | 0.2 (equal strengths) → "0.200 mol/L does not follow from the burette: the flask first changed colour at 23.0 mL." | card, dial, key, then type / compare the reading at the change with the 25.0 mL / the base run in holds as many particles as the acid, find the acid's share of each litre | Counting Acid by Base | F · T |
+| 5 | Type the concentration of the sulfuric acid in the flask in mol/L. | as 4; plate: each H2SO4 particle gives 2 H+. Acid 0.072; eq 36.0, colour 36.5 gives 0.0730 (one-for-one 0.146). Accepted 0.0695 to 0.0745. | 0.146 → same form, names 36.5 mL | card, dial, key / compare H+ per sulfuric particle with HCl's one / count base particles then share among the H+ of each acid particle | Two H+ for One Acid | F · T |
+| 6 | Type how many mL the burette gives between the first colour change and the equivalence point. | window (25 discs, 0.00002 mol each), methyl orange card (red, orange, yellow swatches), acid 0.0200 mol/L, base 0.0200 mol/L. Dye goes red to orange at 23.5; discs match at 25.0; the answer is 1.5 (±0.3). Dilute on purpose: in 0.1 mol/L solutions the two coincide within a drop. | 0 ("the colour change is the match") → "0.0 mL does not match the readings: the flask first changed colour at 23.5 mL." | card, dial, key, window / note the reading at the first change and at nothing left over / small presses near each, then how far apart | Endpoint | T |
+| 7 | Type the concentration of the Fe2+ ions in the flask in mol/L. | permanganate 0.0200 mol/L, 25.0 mL Fe2+ sample, no dye: pale to purple (purple means permanganate left over). Plate: the equation, "only the 5 to 1 count is used here", "purple needs no indicator" (the balancing is not asked; stated on the card). Fe 0.0900; first purple 23.0 gives 0.092: accepted 0.085 to 0.095. | 0.0184 (one-for-one) → same form | dial, key, type / first purple that stays / count permanganate, scale by the equation's count | A Dye of Its Own | T |
+| 8 sealed | Type the concentration of the acid from the pickling bath in the sealed flask in mol/L. | as 4 with sulfuric acid 0.450, base 0.500: eq 45.0, colour 45.5 gives 0.455; accepted 0.438 to 0.462. No legend of 2 H+ is printed (transfer from stage 5). | 0.91 (one-for-one) | as 4, plus think H+ per particle | The Bath Is Counted | T |
+
+The overshoot idea of the first draft is not a stage: it is the refusal form of stages 2, 3 and 4 (a reading past the change is named in the message).
+
+## Words and story
+
+Earned: titration, burette, indicator (2), equivalence point (3), endpoint (6). `BUILDS_ON`: `unit07/q6-stoich` (mole ratio, moles). Lead line: "Nobody at the foundry knows
+how strong the acid in the pickling tank is." Story animation `burette-count`: drops of 0.5 mL are counted into the flask; base discs
+(one per drop) and acid discs (planner) are counted against each other; the dye turns on the drop after they match; the strength is the printed
+arithmetic on the counted volume. Filed: the pickling bath is 0.450 mol/L sulfuric acid, so the foundry's acid use can be checked against its ledger.
+The bank has `q7-titrate#b1`, `#b2` and `#w` (5 steps with `calc`: sulfuric acid against sodium hydroxide, 30.0 mL).
+
+## What is weak
+
+- Stages 2 and 3 are, honestly, hunts: a titration is. Stage 2 is graded on a state and compared with the guess; stage 3 on the window. Neither has a number to copy.
+- Stage 6 needs a dilute pair to make the gap visible on a 0.5 mL grid; the reward says why. It is a second reading subtracted from the first.
+- Stage 5 states the 2 H+ on a plate (a fact about the acid, not the move); the discovery that the base doubles is by the typed figure being refused.
+- Permanganate is simplified: pale versus purple only (the yellow of Fe3+ is ignored), acid taken as plentiful, and a faint pink counted as soon as any permanganate is left over.
+- Flat burette; no solid at `3D On`. The stage-1 window of discs was kept off stage 4, 5 and 8 so it cannot show the unknown amount; those three rely on the colour alone.
+- Burette holds 50.0 mL; a coarse run past it is refused with the mL left and the player uses Undo.
+
+## For the owner to play
+
+Stage 2 (the press dial and dye slot, and whether the colour change is readable), 3 (the window discs against the reading), 6 (the three-colour methyl orange and the two readings),
+7 (the purple), 4/5/8 (typing from the first-colour reading), the Tour on stage 2 and 3, and the story animation.
+
+
+### 10.6 Bench 8 (`q8-kinds`) Build Notes
+# Kettle `q8-kinds` — Kinds of Reaction (CED 4.7, 4.8, 4.9)
+
+Branch `world/unit07-q8`. Quest `src/learn/quests/unit07/q8-kinds.js`; kit `src/learn/table/kits/pot-kinds.js`; planners `src/learn/engine/reactdata-kinds.js`
+(`reactdata.js` is untouched); story `src/ui/story-scenes-kettle-q8.js` (`furnace-log`); checks `tools/lib/kettle-q8-kinds-checks.mjs`.
+
+## The click
+
+Students hold **"a reaction is one kind only."** Stage 7 asks for the guess (four cards: three single kinds and "More than one kind", no instrument on the table);
+stage 8 gives eight reaction cards and a "Look for" dial over five kinds. The dial remembers the light of each card per kind, so the same card can be lit under
+several kinds. Magnesium burning is lit under synthesis, combustion and redox; the table refuses a card lit under one kind only by naming the reading it shows.
+
+The five kinds are synthesis, decomposition, combustion, acid-base, redox (`kindsFull`). `reactdata.js` `kindsOf` is not used: it misses a metal burning, an
+acid giving a proton to ammonia, and mis-reads a hydroxide's hydrogen. Combustion here is "a substance burning in oxygen": O₂ is a reactant and the reaction is redox,
+so Mg + O₂ counts. Hydrogen burning would count too and is not on the log.
+
+## Stage table
+
+Dependencies: `unit07/q1-recipe`, `unit07/q6-stoich` only. **No precipitation stage:** the seed's stage 3 (file the precipitation reactions from `q5-ionic`) waited, since
+`q5-ionic` is a separate build and this bench may not use a word earned only there. Its place became the prediction that opens the click (7 + 8). Precipitation is not one of
+the five kinds on the board. The integrator may add it back as a new case once `q5-ionic` is merged.
+
+| n | Prompt | Evidence on the bench | Printed, and why none of it is the answer | Slip → refusal | Ramp / idea |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Put each pot in the tray that matches what the window shows. | window (pieces): six pots, dial + Run; atoms before and after | pot names and formulas under the atoms; trays named by what is seen ("Several become one") | Pot F (burning methane) in "Several become one" → "Pot F showed 2 substances before and 2 after, and it is in the tray…" | synthesis, decomposition |
+| 2 | Burn the fuel, test the gas it leaves, and file what the burning made. | burner (methane jar, empty gas jar), gas rig with four tests (legend on the rig says what each test answers) | the legend says what a test does, never what the jar holds | Carbon filed with water, limewater never tried → "Carbon is in the tray, but none of the tests tried in the jar found it." | combustion |
+| 3 | Put each pot in the tray that matches what the window shows. | window (proton): five pots; an amber ring marks a hydrogen ion only if one passes (acid + base) | formulas; the ring appears only after Run | Pot E (Mg with HCl: electrons, no proton) in the ring tray → names what the window shows after Run | acid-base reaction |
+| 4 | Choose the particle that gave electrons and the one that took them. | window (electrons): Zn + CuSO₄; amber dots count the electrons from the oxidation-number change | the charges after each symbol; "2 electrons moved" is not the answer (the answer is who gave) | swapped → "Cu²⁺ has no dots before the reaction."; sulfate → "has no dots before the reaction or after it" | oxidation, reduction, redox |
+| 5 | Type the number manganese carries in MnO₄⁻. | window (numbers): CO₂, NO₃⁻, SO₄²⁻ worked out; typed answer +7 is past every worked case | the rules plate (lone atom 0, oxygen −2, hydrogen +1, all together the charge); worked rows | 8 (charge forgotten) → "With +8 on manganese and −2 on each of four oxygens, all together is 0, and the ion's charge is −1." | oxidation number; ramp: picture (worked species), proportional-free, typed past the worked range |
+| 6 | Name the gas in each sample jar. | gas rig + three sample jars (CO₂, H₂, O₂) + four names (nitrogen is the decoy) | the legend per test; samples named only A, B, C | CO₂ sample named hydrogen → lists what that sample's tests gave | gas tests applied |
+| 7 | Choose what kind of reaction magnesium burning in oxygen is. (PREDICT) | none: equation plate, four guess cards, a slot | the equation only | — | the held model |
+| 8 | Light each reaction card under every kind it belongs to. (prompt quotes the guess) | eight cards (equation + states only), "Look for" dial, a raw reading beside each card per kind | readings are raw: "2 in, 1 out"; "O₂ goes in"; "H⁺: HCl to NH₃" / "no H⁺ moves"; the oxidation numbers before→after. No card names a kind. | only Mg lit under synthesis → names the first reading it disagrees with | reactions overlap |
+
+Hints (three rungs, one sentence each) and rewards are in the module. Mode: all flat; the idea is pieces, readings and counts, not shape or position, so no reward model.
+
+## The eight cards of the log (hand-worked)
+
+Zn + CuSO₄ → redox. 2 Mg + O₂ → MgO: synthesis, combustion, redox. HCl + NaOH: acid-base. CaCO₃ → CaO + CO₂: decomposition. CH₄ + 2 O₂: combustion, redox.
+NH₃ + HCl → NH₄Cl: synthesis, acid-base. Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂: redox (the furnace log). 2 H₂O → 2 H₂ + O₂: decomposition, redox. Every kind lights on at least two cards.
+
+## Story
+
+Lead line: "Vess finds a furnace log that lists reactions nobody has named." Scene `furnace-log`: Fe₂O₃ + 3 CO, numbers from `oxNumbers`, six electron dots travelling from the
+three carbons to the two irons; each atom's number moves one step per dot. Filed: the ore gave up its oxygen to carbon, so it was reduced, not made from nothing.
+
+## What is weak
+
+- Stage 1 and 3 are two sorts of the same mechanics (chips into trays after reading a window). They differ in the idea; an owner who finds them alike could merge 3 into 8.
+- Stage 5 is arithmetic on rules; the worked cases are the picture, but it remains the closest thing to plate-and-type on the bench.
+- Stage 8 prints a per-kind reading beside every card. The readings are raw (counts, oxygen side, the numbers), but "H⁺: HCl to NaOH" is close to the definition of acid-base.
+- Combustion has no instrument of its own on the board beyond which side O₂ stands on; the heat and light are in the reward only.
+- Marks per kind are kept by a kit `settle` hook reconciling `flipped` with the dial; if undo/redo in play drops a light, that is the place to look.
+- Not played in a browser (by rule). The owner should play 1, 2, 4, 6 and 8.
+

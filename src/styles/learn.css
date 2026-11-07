@@ -2075,7 +2075,8 @@
   letter-spacing: 0.1em !important;
 }
 
-.learn-quest-2d .lq-actions .lq-hint-key {
+.learn-quest-2d .lq-actions .lq-hint-key,
+.learn-quest-2d .lq-actions .lq-calc-key {
   flex: 0 0 auto !important;
   min-height: 44px !important;
   padding: 0 1.25rem !important;
@@ -2558,7 +2559,8 @@
   min-height: 38px !important;
 }
 
-.learn-quest-overworld .lq-actions .lq-hint-key {
+.learn-quest-overworld .lq-actions .lq-hint-key,
+.learn-quest-overworld .lq-actions .lq-calc-key {
   min-height: 38px !important;
 }
 

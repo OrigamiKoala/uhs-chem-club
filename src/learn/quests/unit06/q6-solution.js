@@ -17,7 +17,7 @@
  * THE WRONG MODEL IS ON THE TABLE. The prediction's first card is "the same number from all three, 0.100 mol each". The window's drop
  * shows 4 formula units of each, and 8, 12 and 4 particles.
  *
- * Mass percent (CED 3.8, outside the exam) has no stage: it is logged as a gap in `docs/plans/mirrowen-q6-solution.md`.
+ * Mass percent (CED 3.8, outside the exam) has no stage: it is logged as a gap in `docs/plans/mirrowen-world.md`.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
