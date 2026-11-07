@@ -21,7 +21,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { heatTable, charge, note, cupFixture, shelvesFixture, plaqueFixture, markerFixture, markerRead, cupRead, shelvesRead, fixed, FUELS, SPECIFIC_HEAT_WATER } from '../../table/kits/heat.js';
+import { heatTable, charge, note, cupFixture, shelvesFixture, plaqueFixture, markerFixture, leadFixture, rxnFixture, markerRead, cupRead, shelvesRead, fixed, FUELS, SPECIFIC_HEAT_WATER } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 8 };
 
@@ -93,39 +93,39 @@ export const STAGES = [
     const c = cupFixture('cup', { x: 28, y: 31 }, { title: 'Bath · 200 g', water: 200, T0: 20, showHeat: true });
     return {
       id: 's1-chart',
-      title: 'The Chart for a Powder',
-      prompt: 'Set the chart to the energy change per mole of the powder.',
+      title: 'The Diagram for a Powder',
+      prompt: 'Set the diagram to the energy change per mole of the powder.',
       widget,
       table: heatTable({
         pieces: [charge('powder', 'Hot-pack powder', { x: 74, y: 20 }, POWDER)],
         fixtures: [
           c.fixture,
           shelvesFixture('chart', { x: 120, y: 30 }, {
-            reactants: 'Powder before', products: 'Powder after', dH: 0, scale: 320, hideValue: true, hideVerdict: true, title: 'Energy chart',
-            build: { afterList: AFTER, labels: ['−320 kJ/mol', '−160 kJ/mol', 'Level', '+160 kJ/mol', '+320 kJ/mol'], label: 'After shelf' }
+            reactants: 'Powder before', products: 'Powder after', dH: 0, scale: 320, hideValue: true, hideVerdict: true, title: 'Energy diagram',
+            build: { afterList: AFTER, labels: ['−320 kJ/mol', '−160 kJ/mol', 'Level', '+160 kJ/mol', '+320 kJ/mol'], label: 'Products level' }
           })
         ],
         zones: { slots: [c.slot] }
       }),
       hints: [
-        'Use the cup, the powder and the "After shelf" dial.',
+        'Use the cup, the powder and the "Products level" dial.',
         'Compare the energy the cup caught with how many moles the powder holds.',
-        'Divide the energy by the moles for one mole, then set the shelf to that size in the direction the bath shows.'
+        'Divide the energy by the moles for one mole, then set the level to that size in the direction the bath shows.'
       ],
       check(state) {
         const t = state.table;
         const r = shelvesRead(t, 'chart');
-        if (r.dH === 0) return { ok: false, notYet: true, msg: 'The two shelves are level: turn the dial under the chart.' };
+        if (r.dH === 0) return { ok: false, notYet: true, msg: 'The two levels are level: turn the dial under the diagram.' };
         if (r.dH === POWDER.dH) return { ok: true };
         const rise = t.pieces.powder.props.rise;
         if (rise == null) return { ok: false, msg: 'The powder has not been in the cup yet.' };
         const bath = `the bath ${rise > 0 ? 'warmed' : 'cooled'} ${fixed(Math.abs(rise), 1)} °C`;
         // A chart on the wrong side says only that; a chart on the right side with the wrong size says what it shows.
-        if (Math.sign(r.dH) !== Math.sign(POWDER.dH)) return { ok: false, msg: `The chart ${r.dH > 0 ? 'climbs' : 'drops'}, and ${bath}.` };
-        return { ok: false, msg: `The chart drops ${Math.abs(r.dH)} kJ per mole, and ${bath} from ${POWDER.moles} mol.` };
+        if (Math.sign(r.dH) !== Math.sign(POWDER.dH)) return { ok: false, msg: `The diagram ${r.dH > 0 ? 'climbs' : 'drops'}, and ${bath}.` };
+        return { ok: false, msg: `The diagram drops ${Math.abs(r.dH)} kJ per mole, and ${bath} from ${POWDER.moles} mol.` };
       },
       reward: {
-        log: 'The shelf dropped 160 kJ per mole.',
+        log: 'The level dropped 160 kJ per mole.',
         title: 'Enthalpy Change',
         body: 'Enthalpy change, ΔH, is the heat absorbed or released per mole of reaction. Dissolving 0.05 mol released 8,000 J to the bath, giving ΔH = −160 kJ/mol, where a negative sign indicates an exothermic change.'
       }
@@ -149,7 +149,7 @@ export const STAGES = [
         zones: { slots: [c.slot] }
       }),
       hints: [
-        'Use the cup, its "Moles reacted" dial, the powder and the marker.',
+        'Use the cup, its "Moles reacted" dial, the powder and the dial.',
         'Compare the heat the bath catches at each setting of the dial.',
         'Each extra mole of powder gives the same amount again, so the heat grows in step with the moles.'
       ],
@@ -185,7 +185,8 @@ export const STAGES = [
         note('methanol', perMole('methanol'), { x: 30, y: 34 }),
         note('carbon', perMole('carbon'), { x: 78, y: 34 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 122, y: 48 }, { scene: 'react', lhs: [[1, 'C₂H₅OH'], [3, 'O₂']], rhs: [[2, 'CO₂'], [3, 'H₂O']], dH: -1367, w: 40, h: 26 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 22 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the four cards and the slot.',
@@ -215,7 +216,7 @@ export const STAGES = [
     return {
       id: 's4-rank',
       title: 'Ten Grams Each',
-      prompt: 'Order the four tins by how far each warms the same tank.',
+      prompt: 'Order the four samples by how far each warms the same tank.',
       widget,
       table: heatTable({
         // A tin bumped out of the cup's mouth comes to rest on the strip below the rail.
@@ -227,17 +228,17 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Use the cup, the four tins and the rail.',
-        'Compare how far each tin warms the same tank, since every tin holds the same weight.',
-        'Rank the tins by the bath readings they kept, not by the figures you were shown for a mole.'
+        'Use the cup, the four samples and the rail.',
+        'Compare how far each sample warms the same tank, since every sample holds the same weight.',
+        'Rank the samples by the bath readings they kept, not by the figures you were shown for a mole.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four tins on the rail.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples on the rail.' };
         if (order.join() === BY_GRAM.join()) return { ok: true };
         const tins = order.map(id => t.pieces[id]);
-        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every tin has been in the cup yet.' };
+        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every sample has been in the cup yet.' };
         const k = tins.findIndex((p, i) => i > 0 && tins[i - 1].props.rise > p.props.rise);
         return { ok: false, msg: `${tins[k - 1].label} sits left of ${tins[k].label}, and the tank rose ${fixed(tins[k - 1].props.rise, 1)} °C for the one and ${fixed(tins[k].props.rise, 1)} °C for the other.` };
       },
@@ -263,10 +264,11 @@ export const STAGES = [
           `ΔH = ${EQN_DH} kJ`,
           'Molar mass of H₂ = 2.0 g/mol'
         ], { w: 76 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[2, 'H₂'], [1, 'O₂']], rhs: [[2, 'H₂O']], dH: EQN_DH, w: 54, h: 34 })
       ]
     }),
     hints: [
-      'Use the plate of facts and the marker.',
+      'Use the plate of facts and the dial.',
       'Compare the moles of hydrogen in 6.0 g with the moles of hydrogen the equation burns.',
       'Find how many times the equation as written is carried out, then multiply its ΔH by that.'
     ],
@@ -313,7 +315,7 @@ export const STAGES = [
       reward: {
         log: '0.25 mol of the powder took the 400 g bath to about 44 °C.',
         title: 'Predicting a Temperature',
-        body: 'Heat from the reaction is n × ΔH, and the bath warms by that heat divided by m × c: 40 kJ into 400 g of water is a rise of 23.9 °C, so the bath ends near 44 °C. The same steps, run forwards, predict what a thermometer will read.'
+        body: 'Heat is n × ΔH, and the water warms by that heat divided by m × c. Run forwards, the same steps predict a thermometer reading.'
       }
     };
   })(),
@@ -331,7 +333,8 @@ export const STAGES = [
           'ΔH = −56 kJ for each mole of reaction',
           'The cup holds 0.040 mol of HCl',
           'and 0.060 mol of NaOH.'
-        ], { w: 80 })
+        ], { w: 80 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[4, 'HCl'], [6, 'NaOH']], rhs: [[4, 'NaCl'], [4, 'H₂O'], [2, 'NaOH']], dH: NEUT_DH, w: 54, h: 34 })
       ]
     }),
     hints: [
@@ -348,7 +351,7 @@ export const STAGES = [
     reward: {
       log: 'The 0.040 mol of acid ran out first: 2.24 kJ.',
       title: 'The Limiting Reactant',
-      body: 'The reactant that runs out first, here the 0.040 mol of HCl, is the limiting reactant, and it sets how many moles of reaction happen. The heat is that many moles times ΔH: 0.040 × 56 = 2.24 kJ, and the extra NaOH stays unreacted.'
+      body: 'The limiting reactant runs out first and sets how many moles react. Here 0.040 mol of HCl gives 0.040 × 56 = 2.24 kJ.'
     }
   },
 
@@ -367,15 +370,15 @@ export const STAGES = [
     }),
     hints: [
       'Use the diagram and the plate of levels.',
-      'The reverse reaction starts on the products\' shelf and climbs to the top of the same hill.',
+      'The reverse reaction starts on the products\' level and climbs to the top of the same hill.',
       'Subtract the products\' level from the top of the hill.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ea');
       if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
       if (Math.abs(v - EA_REVERSE) <= 0.6) return { ok: true };
-      if (Math.abs(v - (BARRIER.peak - BARRIER.r)) <= 0.6) return { ok: false, msg: 'That is the climb from the reactants, and the reverse reaction starts on the other shelf.' };
-      return { ok: false, msg: `${fixed(v, 0)} kJ above the products\' shelf does not reach the top of the hill on the diagram.` };
+      if (Math.abs(v - (BARRIER.peak - BARRIER.r)) <= 0.6) return { ok: false, msg: 'That is the climb from the reactants, and the reverse reaction starts on the other level.' };
+      return { ok: false, msg: `${fixed(v, 0)} kJ above the products\' level does not reach the top of the hill on the diagram.` };
     },
     reward: {
       log: 'The reverse reaction climbs 100 kJ.',
@@ -390,7 +393,7 @@ const NOTES = {
   1: ['Drag the powder onto the cup, then turn the dial.'],
   2: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
   3: ['Drag the card you choose into the slot.'],
-  4: ['Drag a tin onto the cup, then back to the rail.'],
+  4: ['Drag a sample onto the cup, then back to the rail.'],
   5: ['Type your answer in the field at the bottom.'],
   6: ['Drag the powder onto the cup, turn the dial, then type your answer.'],
   7: ['Type your answer in the field at the bottom.'],

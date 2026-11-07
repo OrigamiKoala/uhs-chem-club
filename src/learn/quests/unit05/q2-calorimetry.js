@@ -24,7 +24,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, block, charge, note, tag, cupFixture, plaqueFixture, markerFixture, cupRead, markerRead, fixed,
+  heatTable, block, charge, note, tag, cupFixture, plaqueFixture, markerFixture, leadFixture, curveFixture, cupRead, markerRead, fixed,
   SPECIFIC_HEAT_WATER, heatTransfer, blockSpecificHeat
 } from '../../table/kits/heat.js';
 
@@ -94,7 +94,8 @@ export const STAGES = [
         note('iron', 'Iron pipe warms up more', { x: 70, y: 16 }),
         note('same', 'They warm up the same', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 70, y: 44 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'heater', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',
@@ -170,7 +171,7 @@ export const STAGES = [
         zones: { slots: [w.slot] }
       }),
       hints: [
-        'Use the cup, the plate of facts and the marker.',
+        'Use the cup, the plate of facts and the dial.',
         'Compare the bath\'s mass and its thermometer rise with the four symbols in the formula.',
         'Multiply mass by specific heat capacity and temperature rise to calculate heat in joules.'
       ],
@@ -185,7 +186,7 @@ export const STAGES = [
       reward: {
         log: 'The formula q = m c ΔT gave the bath\'s heat.',
         title: 'The Heat Equation',
-        body: 'Heat transferred is q = m × c × ΔT: q is heat in joules, m is mass in grams, c is specific heat capacity in J/(g·°C), and ΔT is temperature change. Each gram needs c joules for every degree it warms.'
+        body: 'Heat is q = m × c × ΔT, in joules: mass in grams, specific heat capacity c, and the temperature change.'
       }
     };
   })(),
@@ -213,7 +214,7 @@ export const STAGES = [
         zones: { slots: [a.slot] }
       }),
       hints: [
-        'Use the cup, the ice cube, the plate of facts and the marker.',
+        'Use the cup, the ice cube, the plate of facts and the dial.',
         'Compare how much heat the bath gave up with how much of it only warmed the water the ice became.',
         'The bath\'s heat went into melting the ice and then into warming the meltwater from 0 °C to the final reading.'
       ],
@@ -229,7 +230,7 @@ export const STAGES = [
       reward: {
         log: 'Melting 20 g of ice took about 6,700 J at 0 °C.',
         title: 'Heat of Fusion',
-        body: 'Melting takes heat without changing the temperature: the ice drew about 6,700 J from the bath, or 334 J per gram, called the heat of fusion. A change of state spends energy loosening the attractions between particles, so the bath cooled far more than mixing alone would predict.'
+        body: 'Melting takes heat without changing the temperature: 334 J for every gram, the heat of fusion. The energy loosens the attractions between particles.'
       }
     };
   })(),
@@ -306,7 +307,7 @@ export const STAGES = [
         zones: { slots: [a.slot] }
       }),
       hints: [
-        'Use the cup, the mix, the plate of facts and the marker.',
+        'Use the cup, the mix, the plate of facts and the dial.',
         'Compare the bath\'s weight and its rise with the numbers in the formula.',
         'Calculate the heat gained by the bath using q = m × c × ΔT, which equals the heat released by the reaction.'
       ],
@@ -336,13 +337,14 @@ export const STAGES = [
     widget,
     table: heatTable({
       fixtures: [
-        plaqueFixture('ref', 'What you may use', { x: 50, y: 28 }, [
+        plaqueFixture('ref', 'What you may use', { x: 46, y: 28 }, [
           FORMULA,
           'Melting ice: 334 J for every gram',
           'Boiling water: 2260 J for every gram',
           'Temperature stays fixed during melting and boiling.',
           'c of water = 4.184 J/(g·°C)'
         ], { w: 80 }),
+        curveFixture('heating', { x: 118, y: 28 }, { m: 10, from: 0, to: 100, w: 58, title: 'Heating 10.0 g of ice' })
       ]
     }),
     hints: [
@@ -359,7 +361,7 @@ export const STAGES = [
     reward: {
       log: 'Ice at 0 °C needed about 30 kJ to become steam at 100 °C.',
       title: 'Heat of Vaporization',
-      body: 'The path has three costs: 3.34 kJ to melt the ice, 4.18 kJ to warm the water to 100 °C, and 22.6 kJ to boil it, which is the heat of vaporization. Boiling costs most of the total because it pulls the particles completely apart.'
+      body: 'Boiling takes most of the heat: 22.6 kJ of the 30 kJ, the heat of vaporization. The particles are pulled completely apart.'
     }
   },
 
@@ -372,12 +374,13 @@ export const STAGES = [
     widget,
     table: heatTable({
       fixtures: [
-        plaqueFixture('ref', 'What you may use', { x: 50, y: 28 }, [
+        plaqueFixture('ref', 'What you may use', { x: 46, y: 28 }, [
           FORMULA,
           'Boiling water: 2260 J for every gram',
           'Condensing gives back the same heat.',
           'c of water = 4.184 J/(g·°C)'
         ], { w: 80 }),
+        curveFixture('heating', { x: 118, y: 28 }, { m: 10, from: 100, to: 25, w: 58, title: 'Cooling 10.0 g of steam' })
       ]
     }),
     hints: [

@@ -20,7 +20,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, eqn, note, stackFixture, selectorFixture, stackRead, dialAt, FORMATION_TABLE
+  heatTable, eqn, note, leadFixture, stackFixture, selectorFixture, stackRead, dialAt, FORMATION_TABLE
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 4 };
@@ -82,7 +82,8 @@ export const STAGES = [
         note('two', 'The two-step route', { x: 70, y: 16 }),
         note('same', 'Both give out the same', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 70, y: 44 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'react', w: 62, h: 30, lhs: [[1, 'C'], [1, 'O₂']], rhs: [[1, 'CO₂']] })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',

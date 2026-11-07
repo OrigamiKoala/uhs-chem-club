@@ -22,7 +22,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, note, gCard, plotFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
+  heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 6 };
@@ -77,11 +77,12 @@ export const STAGES = [
         note('off', 'It stays solid', { x: 70, y: 16 }),
         note('warm', 'Only if it is warmed', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 70, y: 44 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'salt', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',
-      'Picture a cold pack squeezed in a warm room, and what the water in it does.',
+      'Picture a cold pack at room temperature, and what the water in it does.',
       'Commit to the card you expect based on whether endothermic dissolution can occur spontaneously.'
     ],
     check(state) {
@@ -187,7 +188,8 @@ export const STAGES = [
           'ΔS = −199 J/(mol·K)',
           'T = 298 K',
           'ΔG = ΔH − TΔS'
-        ], { w: 70 })
+        ], { w: 70 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'N₂'], [3, 'H₂']], rhs: [[2, 'NH₃']], w: 54, h: 34 })
       ]
     }),
     hints: [
@@ -207,7 +209,7 @@ export const STAGES = [
     reward: {
       log: 'ΔG at 298 K came to −32.7 kJ.',
       title: 'ΔG From ΔH and ΔS',
-      body: 'ΔG = ΔH − TΔS with ΔS in J/(mol·K) turned into kJ/(mol·K): TΔS = 298 K × (−0.199 kJ/K) = −59.3 kJ, so ΔG = −92 − (−59.3) = −32.7 kJ. A negative ΔG means the reaction runs on its own at this temperature, though less strongly than ΔH alone suggests.'
+      body: 'ΔG = ΔH − TΔS = −92 − (−59.3) = −32.7 kJ. Negative means the reaction runs on its own at 298 K.'
     }
   },
 
@@ -257,7 +259,8 @@ export const STAGES = [
           'ΔGf° CaO = −604 kJ/mol',
           'ΔGf° CO₂ = −394 kJ/mol',
           'One mole of each'
-        ], { w: 70 })
+        ], { w: 70 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'CaCO₃']], rhs: [[1, 'CaO'], [1, 'CO₂']], w: 54, h: 34 })
       ]
     }),
     hints: [

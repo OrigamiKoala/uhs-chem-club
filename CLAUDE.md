@@ -1,293 +1,77 @@
 # Avalon — Engineering Reference
 
-Avalon is the UHS Chemistry Club's competition portal. Its audience is middle- and high-school students
-(12 to 17), so the design doctrine is: **teach chemistry clearly, intuitively and hands-on, without giving
-away answers.**
+Avalon is the UHS Chemistry Club's competition portal for middle- and high-school students (ages 12 to 17).
+The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, without giving away answers.**
 
-This file is the doctrine, the hard rules and the commands. **Building or auditing a Learn world: read
-`PRODUCT.md` "Building a Learn world" first** (targets, wiring, stage design, the pitfall ledger). How things are built is in
-`docs/engineering/engine-and-worlds.md`. `PRODUCT.md` is the durable product truth and wins any disagreement
-about what the product is (pre-launch, no real accounts/XP/play data, 375 px floor, no formal accessibility
-standard, competition = Quest 1 only at launch). `DESIGN.md` + `.impeccable/design.json` hold aesthetic tokens
-and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/story/bible.md`.
+This file holds the engineering doctrine, hard rules, and commands.
+- **Product truth & scope:** `PRODUCT.md` wins any dispute regarding scope, target audience, and the pitfall ledger.
+- **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
+- **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
+- **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment.
 
-## Teaching doctrine (applies to every Learn quest, stage, hint and boss)
+## Codebase Architecture
 
-**Under revision (2026-11-06).** `docs/general-problems.md` lists twelve teaching problems found across the built worlds
-(withheld real terms replaced by euphemisms such as "push" for pressure and "room" for volume, metaphor names for
-apparatus, maths and other-world knowledge assumed, benches that are static plates instead of moving models, and checks
-that enforce none of it). Where it conflicts with the bullets below, it wins for any world being fixed: the plain-labels
-bullet becomes "say the real term the first time with a one-clause gloss, then only that term", and every instrument gets
-a mechanism view that moves in time. The per-world fix is run from `docs/fix-world-teaching-prompt.md`; the old
-`WITHHELD_VOCAB` gate in `tools/verify-learn.mjs` is the mechanism that forced the euphemisms.
+- `src/main.js`: Application bootstrapper (stage, HUD, and hash router).
+- `src/learn/`: Learn track (curriculum registry, quest definitions, and the `Tabletop` engine over `table/kits/`).
+- `src/quest3d/`: Charge Gardens chamber (Quest 1 / competition campaign).
+- `src/three/`: Persistent WebGL stage (`stage.js`) and 3D worlds.
+- `src/screens/`: DOM screen renders and route views.
+- `api/[...route].js`: Vercel serverless proxy with rate limiting and local mocks.
+- `apps-script/`: Google Sheets backend (authoritative persistence for non-guest users).
 
-- **Table pieces are solid objects on a plate.** Cards are rounded slabs, tokens are pucks, particles and atoms are spheres on a base, and orbitals, molecules and lattices are real spatial models; `3D Off` draws the same parts flat. Where a piece sits in a socket, tray or holder it rests on top of it and never sinks in. The per-kit geometry, label and plaque rules are in `docs/engineering/engine-and-worlds.md` ("Per-bench build notes").
-- **The answer is the table where it can be built.** Every quest is an open tabletop graded on what is on the table, not on an authored multiple-choice question unless the stage is an unbuildable reading.
-- **Every drag has a two-tap twin.** Any piece or tool that can be dragged into place can also be picked up with a tap and put down with a second tap where it goes.
-- **Ordering is dragging into place on a rail, never clicking in sequence.** Rank, sequence and sorting stages are rails or slots arranged by dragging pieces into order.
-- **Snaps are physics, never a gatekeeper.** Snaps seat pieces into sockets, wells, clamps and rails by proximity and physical alignment; they do not reject or hide a move.
-- **A prediction is asked on each quest's click stage and on a new case of an idea already worked out, never on every stage.** A prediction stage commits a hypothesis that is immediately tested on the table (Run); the guess is the player's own, recorded and contrasted by the bench, never graded (the stage is graded on what the test showed).
-- **A field stage is evidence, never a lock, at most one per quest, never on a boss.** An in-world observation or measurement is supplementary evidence; never a prerequisite lock. A fetch must bring NEW evidence (a counted reference, a sample the bench lacks); one that carries a copy of what the bench already holds is cut.
-- **Say the real term the first time it is needed, with a one-clause gloss; afterwards use only that term.** Only answers stay
-  hidden, never the names of quantities, instruments or ideas (2026-11-06; `docs/general-problems.md`). No euphemisms ("push" for
-  pressure, "room" for volume) and no fiction names (pan, pot, rig, crate, drum, holder, ledger) for things the player operates
-  or reasons about; fiction belongs to bosses, the saga, the Case File and Vess. A world keeps one glossary
-  (`src/learn/glossary/<world>.js`, the Glossary key beside Tour; Brinewire built) with one term per concept, its gloss and its first
-  stage. `verify:teaching` holds it (banned words, a term used before its stage, reading load, mechanism views).
-  A quest's `VOCABULARY` maps each term to the stage that glosses it; `WITHHELD_VOCAB` in `tools/verify-learn.mjs` now holds only
-  words that are themselves the answer to a stage (the entries for other worlds still to be passed are listed in
-  `docs/teaching-pass/withheld-vocab-removed.txt` and the file's comment).
-- **Every instrument has a mechanism view that moves in time, in 3D wherever it can be** (hovering is fine; gravity is not the point; flat
-  only for graphs and printed tables, and as the `3D Off` twin). A kit fixture that declares `live(f, state)` keeps the 2D table's loop
-  running and is painted with `b.clock` (seconds; frozen under reduced motion); a `dress3d` with `userData.tick(dt, still)` is its 3D
-  form; both read one pure model, and its counts come from the planner functions that grade. Built: Brinewire's mechanism engine
-  (`engine/cellscene.js` pure model, `kits/cell-scenes.js` spec per instrument, `kits/cell-scene.js` 3D dress + flat painter,
-  `kits/cell-attach.js` adds it under every stage; `kits/cell-room.js` finds empty area inside a table for it; a table with none falls back to `props.hover`, the 3D model hanging over the plate).
-  `verify:teaching` holds it. A bench of dials and cards over a number readout is a defect, not a style.
-- **Never give away answers.** Two kinds of information are kept apart. *How a tool works and how to answer*
-  is always given, on the object (captions, notes, legends; never behind a hint). *Which move solves the
-  stage* is never given: prompt, briefing and hints never tell the player what to do or make the right
-  option obvious. **A prompt states the objective, never the route**: one plain question or
-  imperative, at most 25 words, no setting clause, no "!" (e.g. `q3-lines` asks to "Pick the element in the sealed tube", not mechanical strip/sample alignment). Setting and story live in the saga, world
-  briefings and Case File, plus at most one quiet `.lq-story` lead line (`stage-story.js`, ≤20 words, no
-  figure, never on a boss).
-- **Hint ladder:** exactly three distinct rungs, each ONE sentence. 1 = which control to use (how
-  it works is printed on the object), 2 = what to look at or compare, 3 = the method/structure, never the
-  answer or the arithmetic result. Rung 1 free, rung 2 after a miss or 45 s, rung 3 after two misses.
-  **The campaign differs on purpose:** Charge Gardens hints are `[nudge, narrow, solution]` so a stuck player
-  on the XP road is never locked out; the solution rung only resets the display-only CLEAN counter.
-- **Nothing is named without being explained, and every loose tool says what it does.** Every tool hangs in a
-  named place with one plain caption printed under it (≤ ~18 words, drawn on the table, never a tooltip). A
-  key whose label doesn't say what it does gets the same plain legend. A prompt/hint that names a control
-  quotes it: `Press "Fire Beam"`. (The audit showed even a "Cutter" was not self-evident.)
-- **The Tour explains every tool on the stage's table**, one step per instrument and kind of piece, in earned words
-  (`src/learn/table/tour.js`, fed to the frame by `stagerunner.js`; a bare call shows only steps the player has not
-  met, the Tour key replays all). Each step is written in three beats (what it is, what to do with it, what it
-  tells you) in everyday words, and names the tool the way the player sees it. It says how a tool works, never which move solves the stage. `verify:table` fails on
-  an instrument or tool with no step, and on an unearned word. A new kit kind gets its words in `tour.js`. Printed fact labels, plaques, and plates (`kind: 'plaque' | 'plate'`) carry no interactions and are excluded from Tour steps across all benches.
-- **Tools are introduced right before the stage that needs them.** Stage 1's briefing (one per quest, ≤2
-  sentences) names only the initial tools; `TOOL_TEXT` entries set `from:` to the exact stage.
-- **Nothing blocks a player who has the right answer.** A stage may refuse a blank answer, or a wrong one
-  with a reason; never a correct one for want of a key press.
-- **A stage must be solvable by someone who doesn't already know the answer.** The evidence is on the
-  bench, not in hint rung 3. Constants/formulas a stage needs are given on a plate, readout or rung 3.
-- **Every stage owes a reward card** (1–3 sentences) naming the idea just worked out. A misses message
-  must carry a reason and may not contain its stage's answer (`verify:learn` searches for it). Reward models (`ui/model-viewer.js`, `model-parts.js`, `model-parts-lanternfall.js`) stand the idea up in interactive 3D.
-- **Scientific investigation, not monster combat.** Misses are "missed trials"; progress is never lost.
-  Samples are SAMPLE A/B/C, restarting every stage. Stage controls (`.lq-stage-actions`, `.lq-controls`,
-  dialog buttons) must always have `pointer-events: auto`.
-- **Only bosses fight; ordinary stages are trials** (a wrong answer is a missed trial with a reason, never an attack) (`boss-hopper`, `boss-eater`, `boss-warden`, `boss-golem`, `boss-compressor`, `boss-crucible`).
-  A boss phase declares `encounter {species, act, intent, hit?, counter?, moves?}`; ordinary stages have
-  none. Foes come only from `planFoe()` in `engine/foes.js` (asks the instrument's own planner), map
-  one-to-one onto the stage's samples/rows, are "dispersed, never killed" (the one verb, everywhere), fit SCOURED PLATE. A foe
-  only observes: scouting is free, only a committed miss costs 1 of 3 Integrity, knock-back keeps
-  everything learned, a correct commit wins at any Integrity, the miss reason is on screen before the foe
-  answers, every foe line passes the vocabulary gate and answer-leak search. No modal precedes a stage.
-- **Boss = one health bar over its fight** (`boss-arena.js`, `boss-hud.js`); cosmetic only, never
-  refuses an answer. FPS combat layer was removed; `encounter3d.js` takes no part in Commit. The boss stands in the world
-  across the table (see Boss arenas); on a table with no arena (Kettle) its toy stands in the table's corner pad.
-- **World descriptors:** state what the stage/unit covers clearly and factually (e.g. Tallow: "Atomic structure, elements, and the periodic table."), never cheesy slogans or dramatic taglines. Used across the Learn tab, Star Map, world cards, and detail plates.
-- Quest descriptors: where it happens, title, one short line (story-flavoured, naming the mission).
+## Teaching Doctrine (Learn Quests & Stages)
 
-## Hard rules that outrank the rest
+- **Tabletop as the answer:** Pieces are physical objects on a plate (flat in 2D / 3D Off). Answers are constructed on the table, not through multiple-choice questions (unless reading-only).
+- **Controls & mechanics:** Every drag has a two-tap twin. Ordering is dragging into place on a rail. Snaps represent physical proximity, never arbitrary locks.
+- **Real scientific terminology:** Say the real term the first time with a one-clause gloss, then use only that term. Never use euphemisms ("push" for pressure, "room" for volume) or fiction names for apparatus or quantities. Glossaries reside in `src/learn/glossary/<world>.js`.
+- **Live mechanism views:** Every instrument has an active mechanism view moving in time (in 3D and 2D `live`), reflecting physical processes.
+  - Kits declare it as a pure painter of state and clock (`b.clock`); the 3D crowd is the same painter read through `pans-3d.js` `dressRecorded`. Ember Reach: `table/kits/heat-motion.js` (cup, `lattice`, `rxn`, `curve`, `lead`, energy diagram, plot, stack). A miss restarts the glides via `kit.onMiss`. Every predict stage carries a `lead` clip of a neighbouring case. `tools/verify-teaching-ember.mjs` (in `verify:teaching`) enforces it.
+- **Never give away answers:**
+  - A prompt states the objective, never the route (≤25 words, one plain imperative/question, no "!", no setting clause).
+  - How tools work is explained on the object or via Tour; which move solves the stage is never revealed.
+  - Hint ladder: exactly three one-sentence rungs (1: which control, 2: what to compare, 3: method/structure, never the answer).
+  - Briefings are ≤2 sentences, introducing tools immediately before the stage that requires them.
+  - The Tour explains tools in three beats (what it is, what to do, what it tells you) without revealing solutions.
+- **Predict first, test second:** Commit a hypothesis on a stripped table before revealing the instrument or running the trial. Predictions are never graded.
+- **Self-contained evidence:** Every stage is solvable from bench evidence without external lookup. Necessary formulas/constants are given on a plate, readout, or hint rung 3.
+- **Investigation, not combat:** Ordinary misses are "missed trials" with explanatory reasons. Foes are dispersed, never killed. Only bosses engage in combat (`encounter`, single cosmetic health bar).
+- **Rewards & debriefs:** Every stage awards a reward card (1–3 sentences) naming the concept. Quests conclude with Vess's debrief story animation (3–5 beats showing the mechanism, no purely decorative animations).
 
-- **The Learn track pays no XP and never reaches the leaderboard.** Nothing in `src/learn/` or the learn
-  screens may call `session.addXp`, `api.gradeStage`, `api.completeQuest` or `session.recordProgress`.
-  Drill Deck rewards are cosmetic. `verify:learn`/`verify:drills` fail the build otherwise.
-- **Nothing turns a backend failure into a sign-out.** `verifySessionToken` returns `null` only for a
-  genuinely bad token (transient failures throw `BACKEND_BUSY`); `doPost` answers `UNAUTHORIZED` only
-  for that; `callAppsScript` retries 3× and reports `BACKEND_UNAVAILABLE` (503); the `bootstrap` mock
-  fallback sets `degraded: true` and omits `player`. `api.js` clears the session only after two
-  consecutive `UNAUTHORIZED`. Rate limiting is per account, not per IP.
-- **The Sheet is master, localStorage is the cache** for everything non-XP (flags, notebook, practice,
-  loadout, marks, commendations, settings, learn copy, saga): one `PlayerState` doc per player, merged by
-  `src/shared/statemerge.js` (mirrored in `apps-script/PlayerState.gs`; `union` sections never lose
-  data, `latest` sections take the newer). The game plays from localStorage and never waits; sync never
-  surfaces errors or touches the session. `/HoloClosed$/` flags don't travel. Sign-out wipes per-player
-  state. XP, quest progress, inventory and roster are NOT in the doc.
-- **Guest mode (`session.startGuest()`, `session.isGuest`):** saves entirely to `localStorage` and
-  never writes or syncs to Google Sheets (`sync.js` ignores guests, and `guest.js` answers account APIs
-  locally). Whenever an agent is testing some part of the frontend and they need to pass the login screen,
-  they should use guest mode (click `#landing-guest-btn` / `#login-guest-btn` "Continue as Guest" or call `session.startGuest()`).
-- **XP:** paid once per stage; flat (no attempt multiplier); hints free; completion idempotent; progress
-  never regresses (`Math.max`); a finished quest replays free. Clean-solve streak pays nothing. Guild
-  score is a mean (`mean(xp>0) × (0.75 + 0.5×active/roster)`), never a sum, and is never labelled "XP".
-  Server XP is authoritative. Read Sheets flag columns through `isTrueFlag`, never `=== 'TRUE'`.
-- **Telemetry never invents a reading** (comms CRT shows `NO GUILD TELEMETRY ON THIS CHANNEL` when empty).
-- **Nothing occupies the same space as anything else.** Checked against the world actually built
-  (`tools/lib/overlap.mjs`), not a table. Parts inside one object are exempt; `phys: 'ground'|'ambient'`
-  and decals are exempt by kind; tolerance 0.06 m; elevated structures collide as their supports;
-  baked/instanced bodies are measured per part (`userData.partBoxes`).
-- **The cursor is never captured** (`requestPointerLock` is a documented no-op); look = drag.
-  **One owner for the `X` key** (the `stage.js` window listener).
-- **Flat things are drawn flat; spatial things are 3D objects.** A spectrum, graph or plot is a flat picture
-  (same `draw*Field` as the canvas bench, shown square-on or as a 2D panel). Where shape or position is the
-  idea (orbitals, molecular shape, lattices, scattering) the 3D object is the instrument: a kit stands it up
-  with `kit.dress3d` / `fixture3d` / `piece3d` (Tallow's beam bench: a foil frame with nuclei in a wide empty
-  pane, and a source block, `lab-props.js` `buildScatterFoil` / `buildBeamSource`). Either way **the
-  picture is honest**: what is drawn is what is graded. The 3D and drawn benches expose
-  the same API and plan through the same pure functions, so a stage grades identically on both.
-- **Atom and particle cards never clip or obscure their contents.** Particle packing (`packCore`) relaxes overlapping grains to enforce visible separation (min distance $\ge 1.76$). Canvas discs and pucks (`paintNucleus`, `paintSpecimen`, etc.) constrain labels, charges, and badges within disc rims (`maxW`, inner radius scaling, bottom capsule foot labels) so text and counts never occlude nucleons or clip circular edges. Concentric electron shells and orbits (`orbitAt`, `shellOrbit`) draw round rings on the mat without tray borders; multi-ring orbits (`q2-core` s4) auto-fill inner shells first; concentric shell zones (`q2-core` s5 `sh1`, `sh2`, `sh3`) resolve drops to the nearest ring radius, allowing free placement across shells while staggering slot phases. Loose electrons are sized at particle scale ($r = R/2 = 2.5$, min $\ge 14\text{ px}$ at phone scale) with hit targets expanded by `GRAB_MIN_PX` in gestures.
-- **NEVER have too many things going on.** One decision per stage; only what that decision needs is on the bench
-  (a few pieces, one instrument, its one key). No second task stacked on the first, no extra strip, readout, label or
-  angle the answer does not use. When a stage is crowded, remove; do not explain. (`q2-core` stage 1 once stacked a
-  prediction, a strip and a model choice and was cut back to one: lay a model, fire the beam; `q6-weigh` replaced the cluttered two-pan balance setup with direct massTable reasoning and explicit atomic masses: C=12.0, H=1.0).
-- **Tallow Bench 6 (`q6-weigh`): Counting by Weight.** 8 stages on `massTable`:
-  1. Predict formula mass of methane (CH₄) from atomic masses (C=12.0, H=1.0).
-  2. Confirm on scale (build CH₄ on pan, scale reads 16.0 u).
-  3. Introduce the mole by counting by weighing (72.0 g water drum / 18.0 g/mol = 4 moles).
-  4. Rank three drums by atom count (moles = mass / molar mass; lightest drum holds the most atoms).
-  5. Percent by mass (oxygen in water: 16.0 / 18.0 = 88.9%).
-  6. Atoms in a weighed sample (36 g water -> 2 mol × 2 H × 6.02 × 10²³ = 24.1 × 10²³ H atoms).
-  7. Empirical formula directly from element masses (24.0 g C and 6.0 g H -> 2.0 mol C and 6.0 mol H -> 3 H per C; clean massTable without two-pan balance).
-  8. Molecular formula (CH₃ unit in 30.0 g/mol molecule -> C₂H₆; atomic masses C=12.0, H=1.0 explicitly shown on plate).
-  Debrief beat: "If there are 72 grams of water and each mole weighs 18 grams, then there are 4 moles of water."
-- **Full-screen clean display for practice and worked problems.** Practice questions and worked problems at the end of each bench cut out the 3D world with an opaque dark backdrop (`body.bench-deployed .modal-container.modal-fullscreen-practice` and `:has(.lq-practice-options, .bp-worked)`), dedicating the whole screen to a spacious, clean, and minimalistic centered card instead of docking to a tiny side card over the 3D scene.
-- **Full-screen dedicated layout for 3D Off learn quests.** At `3D Off` (`.learn-quest-2d`), the bench and deck expand to take up the full screen width and viewport height instead of being constrained to a centered box with empty gutters. The interactive tabletop occupies the spacious left workbench, dynamically sizing to fill available space, while the learn portion (prompt, telemetry readouts, input widgets, hints, and commit controls) sits in a dedicated, ergonomic right console. The 3D in-world/overworld presentation remains completely untouched.
-- **Discover it, never read it off.** No stage asks the player to report what is visible on the table (printed +, labels).
-  The property under study starts hidden and an instrument reveals it (`q2-core` stage 3: identical specks, the
-  `field` fixture's charged plates, sort by bent or straight). The Tour replaces stage briefings on benches, every
-  sentence must earn its place, and a Tour step says what an action is for, not only how to do it.
-- **Predict first, in a separate part of the bench.** A prediction is a `predict: true` stage that shows only the
-  question and the guesses (cards, tokens, a slot) and NO instrument, tool or runnable control; it cannot be
-  submitted blank. The NEXT stage brings the instrument and the locked guess back in its prompt and reward
-  (`engine/predict.js`: `remember` in the predict stage's `onClear`, `recall` in getters on the test stage). The
-  guess is never graded and cannot be changed after the result. Tallow: `q2-core` stages 1+2 (predict the atom, then
-  fire the beam) and `q5-assay` stages 5+6; Lanternfall: `q1-wave` stages 2+3 (predict, then time either lamp, followed by stage 4 timing the other lamp); predict stage rewards are titled "Prediction". `verify:table` ("Predict first") holds it for `unit01`, `unit02` and `unit03`; Bellows and Ember Reach hold the same rule in `verify:learn` and `verify:ember`.
-- **What is discovered is held in 3D.** A reward about how something is built carries `reward.model` only where it visually demonstrates the concept (e.g. molecular geometry in `q6-shape`, net dipoles in `q7-polarity`, hybrid lobes in `q8-hybrid`). Non-explanatory 3D animations that merely spin an idle molecule without explaining anything (such as in covalent joins, lattice energetics, gas laws, or thermochemistry across Ligar, Bellows, and Ember Reach) are removed. Visual explainers (`ui/model-viewer.js`, `orbital-3d-viewer.js`, `shielding-explainer.js`, `cuvette-explainer.js`, `ionic-radius-animator.js`, `slice-explainer.js`) must contain NO feature advertisements, instructions ("Drag to turn it"), or narrative paragraph text—captions and readouts are strictly clean labels, formulas, and metric tags. Counts come from the spec; `verify:table` ("Models") checks them. Add models only when a bench or reward visually demonstrates shape, position, or mechanism.
-- **The story is the investigation.** One thread per bench: a lead line (`stage-story.js`, plain, on a first stage),
-  evidence the bench itself measured, and a `Filed:` line ending the quest's animation that the next bench picks up.
-  Only earned words, no jargon, no atmosphere, no invented numbers or events, nothing that restates the lesson.
-  `verify:story` fails a caption using a word a later bench introduces.
-- **A quest ends on one story animation, which is Vess's debrief** (`src/story/quest-story.js`, painters in
-  `src/ui/story-scenes*.js` over the kit `src/ui/story-kit.js`, player `src/ui/story-anim.js`, hooked in `stagerunner.js`
-  `next()` in place of the debrief card). 3 to 5 beats, each a line of Vess (at most 2 sentences, 36 words) that
-  reviews an idea the quest worked out, said over the part of the scene that shows it (a beat's `to` is where its picture
-  ends), then one `Filed:` line that moves the case against the Fifth on. The player steps at their own pace (Next, Back,
-  Enter/Space/arrows; Skip or Esc leaves, losing nothing); it plays on every completion, never before or between stages;
-  reduced motion and `3D Off` show each beat's last frame. Words: only what the quest has earned, none a later bench
-  introduces. A quest with no animation yet still ends on its `DEBRIEF` card. `verify:story` holds it. Built for Tallow (7),
-  Lanternfall (10), Ligar (10), Bellows (7), Ember Reach (8) and Mirrowen (8): every quest of those six worlds has one, and `verify:story`
-  fails a quest of `unit01`–`unit06` without it. **A scene shows the mechanism, never a decoration:** what the line says is what
-  moves, and every number on screen is counted or measured from the drawn thing (Bellows: particles bounce on a phase and each wall
-  knock is counted from it, `ui/story-sim.js` `wallHits`, so squeezing or heating raises the gauge for the reason it does on the
-  bench; Ligar `ui/story-scenes-ligar-mech.js`: valence dots move between atoms, atoms ride the H–Cl well, water turns in the field,
-  16 Lewis dots are placed, ozone's bonds average, domains push apart with the bond angle measured from the drawn arms, and the pi
-  overlap of a twisted double bond is the overlap of the drawn lobes; Ember `ui/story-scenes-ember-mech.js`: heat swapped between
-  block and water, bond sums as a running total, heat against moles and per mole against per gram, a gas spreading with the
-  count of ways drawn; Lanternfall `ui/story-scenes-lanternfall.js`: crests counted at a fixed point, electron drops that
-  each draw one spectral line, the four numbers of every electron placed, photoelectron peaks built from electrons leaving
-  their rings, nuclear-charge arrows on shrinking radii; Tallow's painters already work this way: atoms built nucleon by
-  nucleon, bins and a sliding pivot, a balance counted by atoms). New painters use `story-sim.js`, run on the 960-wide plate the registry scales up, and take `(ctx, w, h, t, clock)`.
-- **The comms panel is the only screen bolted to the bench** (`PANEL_LAYOUT`: comms only, fixed position; never animate a panel height).
-- **`mountConsole` is the last statement in the Charge Gardens stage render** (it moves the deck into
-  CSS3D; later `container.querySelector` calls return null). Use `q()`/`qa()` in `quest.js`.
+## Hard Engineering Rules
 
-## Testing
+- **Learn track pays no XP:** Nothing in `src/learn/` calls `session.addXp`, `api.gradeStage`, or `api.completeQuest`. Practice problems gate nothing and pay no XP.
+- **State persistence:** Google Sheets is master; `localStorage` is the cache (`PlayerState` merged via `src/shared/statemerge.js`). Sync never crashes or logs out the user; transient backend failures throw `BACKEND_BUSY`.
+- **Guest mode:** `session.startGuest()` (`#landing-guest-btn` / `#login-guest-btn`) operates entirely in `localStorage` without Sheet traffic. Use guest mode for all automated checks that require authentication bypass.
+- **XP & scoring:** Server XP is authoritative; points are flat and idempotent per stage. Guild score is a mean (`mean(xp>0) * (0.75 + 0.5*active/roster)`), never labeled "XP". Telemetry never fabricates readings.
+- **Physical honesty:** Flat representations (spectra, graphs) are drawn flat; spatial concepts (orbitals, lattices, molecules) are 3D objects. What is drawn is what is graded.
+- **Simplicity & focus:** Exactly one decision per stage. The bench holds only what that decision requires; remove clutter instead of explaining it.
+- **Spatial layout & collisions:** No physical overlaps in 3D worlds (`tools/lib/overlap.mjs`, tolerance 0.06 m). Pointer is never locked (`requestPointerLock` is a no-op). Single window listener for `X` key.
+- **Dedicated views:** Full-screen dark backdrop for practice and worked problems; full-screen dedicated console layout for 3D Off (`.learn-quest-2d`).
+- **UI lifecycle:** `mountConsole` must be the final statement in Charge Gardens stage render. The comms panel is the only fixed screen bolted to the bench.
 
-The owner play-tests in the browser; agents do not. Verify with `npm run verify` and its scripts, `npm run build`
-(mind `dist/`) and Node checks. An agent may write a Playwright or Node script to check something it is
-building, but browser testing is never a planning step, a gate or a definition of done.
+## Commands & Verification
 
-## Question bank
+- `npm run dev`: Start local Vite dev server (:3000) with API proxy.
+- `npm run build`: Production build into `dist/`.
+- `npm run verify`: Complete test and verification suite (`verify:learn`, `verify:table`, `verify:story`, `verify:docs`, per-world checks, etc.).
+- **Testing discipline:** The owner play-tests in the browser; agents do NOT test in the browser. Verify changes using `npm run verify`, `npm run build`, and Node scripts.
 
-All practice lives in `src/learn/bank/<worldId>.json` (shape and ids in `src/learn/bank.js`), never in a quest file.
-Each bench: exactly two problems after the debrief (`ui/bench-practice.js`) and, where the bench is computational, one
-guided worked problem (`ui/worked-problem.js`: 4 to 8 small steps, typed number or choice, hint, step shown after two
-misses). Number steps carry a `calc` expression that `verify:learn` recomputes (`tools/lib/bank-check.mjs`). The `end` set
-closes the world and may be thin or empty for a quest. Everything is skippable, gates nothing and pays no XP. Ids
-(`<quest>#<n>`, `#b1`/`#b2`, `#w`) are never reused: mastery is stored by id.
+## Question Bank
 
-## Retire by archiving
+All practice problems live in `src/learn/bank/<worldId>.json`, never in quest files.
+- Each bench has exactly two practice problems (`src/ui/bench-practice.js`).
+- Computational benches include one guided worked problem (`src/ui/worked-problem.js`).
+- Numerical steps include `calc` expressions verified by `verify:learn`.
+- Practice is skippable, gates no progress, and awards no XP.
 
-Never delete code, docs or checks that were once real. Move them under `archive/<date>/` (paths mirrored, with
-a README saying why) or `docs/archive/<date>/`, and cut their wiring out of the live tree. Nothing under
-`archive/` is built, imported or verified.
+## Aesthetic — "SCOURED PLATE" (Mandatory)
 
-## Build and verify
+Hardware that has endured forty years in the dust and still functions.
+- **Surfaces & Light:** Obsidian and titanium (`--plate-000...600`). Light is warm filament, not LED (nothing blooms; `box-shadow: 0 0 20px` is banned except true indicator lamps). Amber is a signal, never a surface.
+- **Banned aesthetics:** Neon/synthwave glow, cyan, glassmorphism, candy gradients, rounded corners (except `--radius-full`), emoji in markup, fake status indicators, feature-card grids.
+- **Typography & Geometry:** Quantico throughout (JetBrains Mono fallback for telemetry). Precision 1px durasteel bezel seams.
+- **Copy discipline:** The interface does not advertise itself. Remove all unnecessary, marketing, or promotional text. Retain only necessary labels, rules, errors, chemical instruction, and narrative debriefs.
 
-- `npm run dev` (Vite :3000 with API middleware) · `npm run build` (empties gitignored `dist/`; keep
-  source art in `public/`) · `npm run verify` before shipping.
-- `vercel.json` configures API proxy rewrites, SPA catch-all routing (`/(.*)` -> `/index.html`), and cache-control headers (`index.html` must-revalidate, `/assets/*` immutable).
-- Vercel Web Analytics is enabled via `@vercel/analytics` initialized in `src/analytics.js` and booted from `src/main.js`. Hash-based client route changes (`#/path`) are recorded with concrete paths and parameterized route patterns in `src/router.js`, with hash URLs normalized via `beforeSend`.
-- PWA manifest (`<link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">`) sets `crossorigin="use-credentials"` so Vercel Preview Deployment Protection (SSO) does not redirect uncredentialed manifest fetches to `vercel.com/sso-api` with CORS errors.
-- Chunk invalidation recovery: `vite:preloadError` in `index.html` and chunk error traps in `curriculum.js` / `learn-quest.js` automatically reload with a debounce timestamp when dynamic module imports fail due to mid-session deployments replacing chunk hashes.
-- `verify` = `verify:quest` (20 Charge Gardens stages, chem card ≤3 sentences, copy mirrors in
-  `api/[...route].js` + `Quests.gs`), `:console`, `:learn` (registry, no-XP, practice sets, grading
-  tables recomputed from real data, plates drawn in Node, hint/prompt/legend/leak rules, encounter layer),
-  `:table`, `:story`, `:sync`, `:drills`, `:docs` (PRODUCT.md counts vs the registry, retired wording, paths that must exist), `:galaxy`, `:run` (every quest mounts and every stage runs), `:geometry`
-  (all 20 reaction animations), `:media`, `:flows`, `:progression`, `:ship`, `:voyage`, `:tallow`,
-  `:ligar`, `:lanternfall`, `:bellows`, `:ember`, `:mirrowen` (each builds its real world in Node and checks overlap,
-  buried bodies, walkability flood-fill, lamps-only-lit, shader patches; `:ligar` also holds the mine:
-  doorways, grades, rock over every roof, bays inside chambers, hills unclimbed, the guide's route, walls
-  that hold, lamps in every working, the cover mask), `:arena` (the boss table's ground in all seven worlds, the seven boss bodies, the look up), `:bench` (every built instrument
-  on its real bench at six aspects, real pointer paths, foe bodies, and the bench bay in all seven worlds), `:kettle` (walkable foundry works, nine hosts, Golem arena), `:mirrowen` (walkable tidal shelf, seven hosts, Undertow arena), `:holo`, `:normals`, then `build`.
-- Other: `deploy:backend` (clasp), `bake:stills`, `bake:video`, `seed`, `test:load`.
-- Test hooks: `globalThis.__LQ_TEST__` is read in `stagerunner.js`/`plates.js` and inert without it.
+## Code & Docs Hygiene
 
-## Where the rest lives
-
-The cross-world AP check (built track and `docs/plans/learn-quests.md` against the current CED, with the corrected topic map, the AP topics with no quest yet, and the scope labels) is `docs/AP-coverage-audit.md`. The plan's own CED numbers are the old ones (the CED now ends Unit 7 at 7.12, Unit 8 at 8.11, Unit 9 at 9.11).
-
-How to build and audit a Learn world, the pitfall ledger and each world's open items are in `PRODUCT.md` ("Building a Learn world"). Per-world build records, per-bench decisions and layout traps (moved out of this file on 2026-10-29) are in `docs/engineering/engine-and-worlds.md`. The per-world audits are in `docs/archive/2026-10-29/`.
-
-Mirrowen (`unit06`) is on the **matter kit** (`table/kits/matter.js`, which extends the heat kit): each bench's instruments and pieces live in their own `matter-<name>.js` and register through `matter-registry.js`; its pure data is `engine/matterdata*.js`; each bench has its own check file in `tools/lib/mirrowen/` (found by name, run from `verify:learn`).
-
-Kettle (`unit07`) is on the **pot kit** (`table/kits/pot.js`): each bench's instruments and pieces live in their own `pot-<name>.js` and register through `pot-registry.js`; its pure data is `engine/reactdata*.js`; each bench has its own check file in `tools/lib/kettle-*.mjs` (run from `verify:learn` and `verify:kettle`). Walkable foundry works in `src/three/kettle.js` with nine hosts and the Recipe Golem arena. Quest 9 (`q9-hsab`) teaches Hard Soft Acid Base Theory (HSAB), polarizability, and selective precipitation using the firmness probe (`hsabprobe`), reaction wells (`hsabwells`), and bond comparator (`hsabbond`).
-
-Ligar (`unit03/q2-lattice` — "Stone and Wire"): material blocks on the bench (`bonds.js`, `ligar-props.js`, `ligar-materials-3d.js`) render physical 3D material models in refractory stone crucible basins with brass bezels:
-- **Ionic crystal lattice** (`SALT` / `grid`): alternating 3D array of small Na⁺ and large Cl⁻ spheres interconnected by dynamic bonds.
-- **Molecular solid** (`VENT` / `clusters`): discrete 3-atom bent molecules packed with weak intermolecular contacts.
-- **Metallic solid** (`COPPER`, `BRASS`, `IRON`, `STEEL` / `metallic`): close-packed metallic cation lattices with mobile delocalized electron sea; supports substitutional alloys (brass) and interstitial alloys (steel).
-- **Covalent network solid** (`ARCH` / `web`): cross-braced continuous 3D covalent framework.
-- **Thermal Shaking & Molten Transitions:** As hotplate heat increases below melting point ($T < T_{\text{melt}}$), atoms vibrate with frequency and amplitude scaling smoothly with normalized temperature $T / T_{\text{melt}}$, and bonds dynamically flex to track oscillating atom endpoints. When $T \ge T_{\text{melt}}$ (or `v.molten`), the solid structure collapses into a rippling molten liquid pool with traveling surface waves, material-specific incandescent emissive glow, free-swimming ions for molten salt, and live conduction indicator lamps.
-
-## Key Learn Features & World Benchmarks
-
-- **Lanternfall (Unit 02 — Quantum Mechanics):** 10 quests on Aurora ice.
-  - `q10-wavefunctions`: Wavefunctions ($\psi$), probability density ($|\psi|^2$), radial nodes in $s$ orbitals, angular planar nodes in $p$ and conical/planar nodes in $d$ orbitals, and total node accounting ($n - 1 = (n - l - 1) + l$). Located at Station 10 (`site-10`, Wavefunction Dome).
-  - Photoelectric Effect Explainer (`ui/photoelectric-explainer.js`): Interactive photon absorption model demonstrating intensity vs frequency, electron ejection thresholds, and kinetic energy scaling.
-  - Clean visualizations: Clean hydrogen emission ladder (rungs, drop, and wavepacket only), borderless/toolbar-less orbital slice explorer, and unencumbered 3D d-orbital viewer.
-- **Ligar (Unit 03 — Bonding & Molecular Geometry):** 9 quests in basalt cuttings and chambers.
-  - `q9-orbitals`: Expanded 6-stage Molecular Orbital (MO) quest covering magnetic field deflection (paramagnetism of $O_2, B_2$ vs diamagnetism of $N_2, F_2$), in-phase AO addition (bonding density between nuclei) vs out-of-phase subtraction (antibonding nodal plane), cylindrical $\sigma / \sigma^*$ vs planar $\pi / \pi^*$ symmetry, Hund's rule electron filling into degenerate $\pi^*_{2p}$ orbitals with liquid oxygen magnet pull, and bond order / diatomic stability.
-  - Compact MO gas cards with enlarged magnet trays; high-precision electron pouring with active drag ghost and box highlight wells.
-  - Enlarged hybrid orbital mixer on plinth with flat 2D canvas projections suppressed when 3D is active.
-- **Bellows (Unit 04 — Gas Laws):** 6 quests on the cloud deck.
-  - Straightedge slope badges rendered live along fitted lines in both 2D canvas and 3D space.
-  - Analogue circular pressure gauge with swinging needle responding dynamically to cylinder volume adjustments on the Boyle's law bench (`q1-knocks`).
-- **Teeter (Unit 08 — Equilibrium):** 8 benches on the pans kit (`table/kits/pans*.js`, planners in `engine/eqdata.js`) and `boss-tipper` (`unit08/boss-tipper.js`, species `the tipper`: a beam pump, table body in `engine/foebody.js`, arena body in `engine/boss-models.js`). Its 5 phases re-test q1 (which of three pans is in equilibrium), q2 (typed K of 2 SO₂ + O₂ ⇌ 2 SO₃), q3 (the 2 A ⇌ B mixture that makes more A), q6 (squeezing N₂O₄ ⇌ 2 NO₂) and q5 (typed [HI] from unequal starts); its checks are `tools/lib/teeter-boss-checks.mjs`, its finale is `tipper-open` (`ui/story-scenes-teeter-boss.js`) and it files `clue_teeter_pan`. Story painters switch scene on `t <= x` (a beat ends at `t = x`, so `<` shows the next scene's first frame). `selectorFixture(..., { list: true })` prints every option on the card; use it where options are words. Prompts name what to do with plain words ("with every amount halved"), never "made half as large". Teaching pass 2026-11-06 (partial, `docs/teaching-pass/Teeter.md`): the vessel is called a vessel (never "pan"), the ratio instrument a ratio board, pieces cards; glossary `src/learn/glossary/teeter.js`; twelve fixtures (`pan`, `vessel`, `beaker`, `vsl`, `qk`, `icebars`, `kbars`, `kcheck`, `kstack`, `stack`, `clip`, `pgas`) carry `live` mechanism views (drifting particles, bars that glide after Run, `driftOf` in `pans-pan.js`); `tools/verify-teaching-teeter.mjs` holds it; all 69 stages live in 2D and 3D (second round: `paintMachine` reaction machine, `clip` lead-ins on the nine predict stages, `pgas`, and `pans-3d.js`, which turns each live fixture's flat painter into a 3D crowd); object-choice stages are answered by tapping the vessel (`choice` + `pickable`, `pans-choice.js`), ratio substances and ICE changes are spheres (`pans-puck.js`), a miss replays the run (`kit.replay`), and the Tour is a short film per tool (`table/tour-demo.js`, `pans-tour-min.js`); `q6-lean` stages 1, 2, 4, 5, 8 and the Tipper's phase 4 have no knobs (tap zones: gas supply, trap, burner, piston, bands of the graph as the answer); stages 2, 6, 7, the other outcome dials and typed numbers remain.
-- **Verdigris (Unit 09 — Acids and Bases):** 8 benches on the **ph kit** (`table/kits/ph.js`, extends the heat kit; one file plus one `-tour.js` per instrument, registered through `ph-registry.js`; pure reads in `ph-read.js`; planners in `engine/phdata.js`, the chemistry source of truth, solved exactly with water included) and `boss-leach` (`unit09/boss-leach.js`, species `the leach`: a sump pump with five vats; table body in `engine/foebody.js`, arena body in `engine/boss-models.js`; its phases re-test q2, q3, q5, q6 and q7; files `clue_verdigris_leach`). Instruments: flask with a 200-unit particle window and a pH meter (`q3`), pour window and chips (`q1`), scale flask (`q2`), proton race (`q4`), neutralisation flask (`q5`), burette and curve plotter (`q6`), buffer flask, fraction strip and solid beaker (`q7`, `q8`). Walkable acid marsh in `src/three/verdigris*` (layout from `tools/gen-verdigris-layout.mjs`; rerun it whenever a bench module lands, `verify:verdigris` fails on a stale `built` flag). Checks per bench in `tools/lib/verdigris-q*-checks.mjs`, hand-worked data in `verdigris-data-checks.mjs`. Spec, build record and notes: `docs/plans/verdigris-world.md`; audit: `docs/verdigris-audit.md`. Teaching pass 2026-11-06 (partial; `docs/teaching-pass/Verdigris.md`): glossary `src/learn/glossary/verdigris.js`, primers on `NEEDS`, and every particle window moves in time (`engine/phmotion.js`: wobble, proton hand-over and take-back at the planner's ionized count, proton flight in the race, falling drops and an H₃O⁺/OH⁻ dot ratio in the burette). Fixtures declare `live`; painters keep memory in `phmotion.scratch`, never on the fixture. At `3D On` `kits/ph-3d.js` stands the same spheres up as an InstancedMesh by running the flat painter against a recording canvas (`ball()`/`dot()`; fixtures opt in with `bodies3d`). `q2-scale` 1, 5, `q3-weak` 6 and `q5-salts` 1, 3, 4 are graded on the particles' state (a Dilute or Pour key, no answer dial); `q1-handover` 1, 3 and `q7-buffer` 4 are answered on the proton bench (`ph-transfer.js`: carry a `phproton` piece to a particle's seat; `transferRead` grades where it went); a miss replays the steps that led to the table (`ph-replay.js`, kit `onMiss`); every Tour step opens with a live clip of the instrument (`handler.demo`, `frame.tourClipMarkup`) and is one short line; `q1` 2 and `q2` 6 open with a lead-in clip. Held by `tools/verify-teaching-verdigris.mjs` (in `verify:teaching`; 59 of 69 stages live, 6 predict stages without a lead-in).
-
-- **Brinewire (Unit 10 — Electrochemistry):** (teaching pass 2026-11-06: `docs/teaching-pass/Brinewire.md`; glossary and Primer needs in `src/learn/glossary/brinewire.js`; all 53 stages carry a live mechanism view; eight crowded tables were re-laid to make room; answers on particles in 48 of 53 stages (the five that remain are listed in the teaching-pass file): `kits/cell-sites.js`, `kit.hotspots`; a miss replays its cause: `kit.onMiss`) 6 benches on the **cell kit** (`table/kits/cell.js`, extends the heat kit; one file plus one `-tour.js` per instrument registered through `cell-registry.js`: `cell-board.js` potential board and electrodes, `cell-rig.js` ready-built cell, `cell-redox.js` and `cell-ledger.js` (q1), `cell-dip.js` (q2), `cell-galv.js` (q3), `cell-load.js` (q5), `cell-supply.js` (q6); pure planners `engine/celldata.js` plus `celldata-<bench>.js`, the electrochemistry source of truth, independent checks in `tools/lib/brinewire-data-checks.mjs`) and `boss-clamp`. The CED excludes labelling electrodes + or −, and says Le Châtelier does not apply to cells: no stage does either. Walkable copper marsh in `src/three/brinewire*` (layout from `tools/gen-brinewire-layout.mjs`; rerun it whenever a bench lands, `verify:brinewire` fails on a stale `built` flag). Spec and build record: `docs/plans/brinewire-world.md`; audit: `docs/brinewire-audit.md`; builder brief: `docs/plans/brinewire-builder-brief.md`.
-Architecture, the Learn engine, tabletop layout rules, per-world notes, the 3D worlds and ship, mobile, the player
-journey and progression are in `docs/engineering/engine-and-worlds.md`. Plans and per-world records are in
-`docs/plans/`. Retired code is kept, not deleted, under `archive/` (never built, imported or verified). Old
-versions of these docs are in `docs/archive/`. Orientation in one paragraph: `src/main.js` boots the stage, HUD and
-hash router; `src/screens/` holds DOM screens (`bridge.js` announcement); `src/learn/` holds the Learn track (curriculum registry, quests, the `Tabletop` engine over
-`table/kits/`); `src/quest3d/` is the Charge Gardens; `src/three/` is the persistent WebGL stage and the worlds (club meeting announcements and star map promo in `materials/textures.js` `createClubHoloTexture`);
-`api/[...route].js` is the Vercel proxy and `apps-script/` the backend.
-
-## Aesthetic — "SCOURED PLATE" (mandatory)
-
-Hardware that has been in the dust forty years and still works. Read `src/styles/tokens.css` first.
-1. Surfaces obsidian and titanium (`--plate-000…600`, faint cool cast). Warmth from text and filament.
-2. **Light is filament, not LED:** nothing blooms. `box-shadow: 0 0 20px <colour>` is banned except true
-   lamps (`.gfx-dot`, `.stage-dot.active/.completed`). 3. **Amber is a signal, not a surface.**
-- **Banned:** neon/synthwave glow, electric cyan, glossy blue glassmorphism, candy gradients, rounded
-  corners (`--radius-sm` is 0; `--radius-full` the only non-zero), emoji in markup, Tailwind-default hexes,
-  auto-fit "feature card" grids, arrow glyphs in keys, `//` decorative markers, fake status readouts.
-- Geometry: `.plate`/`.glass-panel`/`.holo-card`/`.stage-prompt-card` share one clean bezel treatment
-  (durasteel 1px border, inner highlight hairline, deep ambient shadow); seams `--seam-light/dark`.
-- Colour: text `--text-primary #dcd6cc`; `--text-muted #8c8376` must stay ≥4.5:1 on `--plate-200`;
-  signals `--accent-amber #e59b24`, green `#78a142`, danger `#b8382c`. Charge red `#ff1744` / blue
-  `#00b0ff` are reserved for the 3D chemistry; in chrome only as printed ink on a hairline. HUD badge
-  livery comes from `TEAM_LIVERY` in `main.js`, never sheet `accent_hex`.
-- Type: Quantico everywhere (JetBrains Mono fallback for telemetry), crisp, no blurry shadows.
-- Components: `.btn-primary` amber switch, `.btn-secondary` durasteel, `.quest-btn-sm` (labels 1–2
-  words, with `btn-secondary` or `btn-primary`), `.form-input` recessed well (no placeholder examples),
-  banners `.form-banner` / `.stage-error-banner` with a `!!`/`//` mark, `.scan-readout`.
-- **Copy discipline:** the interface does not advertise itself. Delete any string that isn't a label, a
-  rule, an error, something taught, or story. No "COMMS LIVE" claims. Screens carry no subtitle unless the
-  one-line quest descriptor. Teaching and story copy are exempt from trimming-for-length, not from rules.
-- **Layout:** `--hud-h` is the fixed header height; nothing slides under it. Screens outside a bench or a world must work in portrait at 375 px; benches and worlds may require landscape (game mode locks it).
-  Three.js scenes keep to the plate/glass rules enforced by `verify:bench`.
+- **Retire by archiving:** Never delete functional code, docs, or checks. Move them under `archive/<date>/` or `docs/archive/<date>/` and disconnect live wiring. Code in `archive/` is never built or verified.

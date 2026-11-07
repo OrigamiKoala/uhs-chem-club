@@ -548,6 +548,14 @@ export class TableGestures {
     const id = z.fixture || g.fixture;
     const d = this.state.fixtures[id]?.dials?.[z.dial];
     if (!d) return;
+    // A drag along the bench (`axis: 'x'`): the pointer's place across the zone sets the dial from its first setting to its last.
+    if (dr.axis === 'x') {
+      const xa = g.box.x0 + dr.x0; const xb = g.box.x0 + dr.x1;
+      const fx = Math.max(0, Math.min(1, (u.x - xa) / (xb - xa)));
+      const vx = snapDial(d, d.min + fx * (d.max - d.min));
+      if (vx !== d.value) this.view.dispatch({ setDial: { fixture: id, dial: z.dial, value: vx } });
+      return;
+    }
     const y0 = g.box.y0 + dr.y0; const y1 = g.box.y0 + dr.y1;
     const frac = Math.max(0, Math.min(1, (y1 - u.y) / (y1 - y0)));
     const value = snapDial(d, Math.max(d.min, Math.min(d.max, dr.scale * frac)));

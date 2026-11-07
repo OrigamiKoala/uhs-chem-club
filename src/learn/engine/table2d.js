@@ -361,7 +361,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     const lit = holding === p.id;
     // A kit paints its own pieces (an atom, a dish with the scope's picture on it) through the SAME
     // function the built table paints a piece's face with, so the two views cannot show different things.
-    if (kit.paintPiece?.(ctx, p, state, { x: X(c.x), y: Y(c.y), r, lit, sc })) continue;
+    if (kit.paintPiece?.(ctx, p, state, { x: X(c.x), y: Y(c.y), r, lit, sc, clock: view.clock || 0, scope: view.scope || '' })) continue;
     const square = p.kind === 'card' || p.token;
     const face = faceOf(kit, p, state);
     const label = face.badge ? `${face.text} ${face.badge}` : face.text;

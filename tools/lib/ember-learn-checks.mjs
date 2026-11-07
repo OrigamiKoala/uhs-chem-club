@@ -134,7 +134,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     }
     {
       const t = start(e1, 1);
-      holds(e1.STAGES[1].predict === true && !Object.values(t.fixtures).length, `${q} stage 2: the predict stage shows an instrument`);
+      holds(e1.STAGES[1].predict === true && !Object.values(t.fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 2: the predict stage shows an instrument`);
     }
     {
       // The spark is far the hotter body, the tank holds far the more energy, and the valve is warmed by the tank only.
@@ -168,7 +168,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       // The wrong model is on the table: the same heat in both cups raises the iron far further than the water.
       const s0 = start(e2, 1);
       holds(HK.cupRead(s0, 'iron').dT > 5 * HK.cupRead(s0, 'water').dT, `${q} stage 2: at the same heat the iron does not rise far further than the water`);
-      holds(Boolean(e2.STAGES[0].predict) && !Object.values(start(e2, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+      holds(Boolean(e2.STAGES[0].predict) && !Object.values(start(e2, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     }
     {
       const t = done(e2, 2);
@@ -243,7 +243,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       same(top(perGram), 'hydrogen', `${q} stage 4 (the biggest figure per gram)`);
       holds(e3.CHECKS.BY_GRAM.join() === [...ids].sort((x, y) => perGram(x) - perGram(y)).join(), `${q} stage 4 (the order by the gram)`);
       holds(e3.CHECKS.BY_GRAM.join() !== [...ids].sort((x, y) => perMole(x) - perMole(y)).join(), `${q} stage 4: the order by the gram is the order by the mole`);
-      holds(Boolean(e3.STAGES[2].predict) && !Object.values(start(e3, 2).fixtures).length, `${q} stage 4: the predict stage shows an instrument`);
+      holds(Boolean(e3.STAGES[2].predict) && !Object.values(start(e3, 2).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 4: the predict stage shows an instrument`);
       // Each tin's reading in the tank is the planner's, and the tank stays on the thermometer's scale.
       let t = start(e3, 3);
       for (const id of ids) {
@@ -300,7 +300,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(fall.fixtures.crank.props.forming !== true, `${q} stage 2: the crank is the falling one`);
       const back = TABLE.createTable({ ...e4.STAGES[1].table, fixtures: [{ ...e4.STAGES[1].table.fixtures[0], props: { ...e4.STAGES[1].table.fixtures[0].props, forming: true } }] }, 'x');
       near(HK.wellRead(run(back, [{ setDial: { fixture: 'crank', dial: 'pull', value: 7 } }]), 'crank').released, TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q}: falling back gives out what pulling took in`);
-      holds(Boolean(e4.STAGES[0].predict) && !Object.values(start(e4, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+      holds(Boolean(e4.STAGES[0].predict) && !Object.values(start(e4, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     }
     {
       const t = done(e4, 2);
@@ -314,7 +314,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(r.net, e4.CHECKS.NO_SUMS.net, 1e-9, `${q} stage 5 (the ledger as laid)`);
       holds(r.net > 0 && r.broken > r.formed, `${q} stage 5: the reaction in air does not climb`);
       same(e4.STAGES[4].check(e4.stateFor(4, e4.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
-      holds(Boolean(e4.STAGES[3].predict) && !Object.values(start(e4, 3).fixtures).length, `${q} stage 4: the predict stage shows an instrument`);
+      holds(Boolean(e4.STAGES[3].predict) && !Object.values(start(e4, 3).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 4: the predict stage shows an instrument`);
       // Stage 6: the ledger the player fills, and the estimate it gives for the formation of hydrogen chloride.
       const hc = done(e4, 5);
       near(HK.ledgerRead(hc, 'ledger').net, e4.CHECKS.HCL_SUMS.net, 1e-9, `${q} stage 6 (the ledger as laid)`);
@@ -329,7 +329,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     const q = 'unit05/q5-hess';
     const num = label => Number(String(label).replace('−', '-').replace('+', ''));
     const picked = t => num(t.fixtures.answer.props.options[Math.round(t.fixtures.answer.dials.value.value) - 1]);
-    holds(Boolean(e5.STAGES[0].predict) && !Object.values(start(e5, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    holds(Boolean(e5.STAGES[0].predict) && !Object.values(start(e5, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
       const t = done(e5, 1);
       const A = HK.stackRead(t, 'routeA'); const B = HK.stackRead(t, 'routeB');
@@ -360,7 +360,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   if (e6) {
     const q = 'unit05/q6-entropy';
     const P = await import('../../src/learn/table/kits/heat-parts.js');
-    holds(Boolean(e6.STAGES[0].predict) && !Object.values(start(e6, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    holds(Boolean(e6.STAGES[0].predict) && !Object.values(start(e6, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
       // After many shakes the particles are spread over both halves far more often than crowded into one.
       const t = run(start(e6, 1), Array.from({ length: 60 }, () => ({ run: 'chamber' })));
@@ -404,7 +404,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   if (e7) {
     const q = 'unit05/q7-gibbs';
     const { SALT, SALT_FIRST, ICE, T_ICE } = e7.CHECKS;
-    holds(Boolean(e7.STAGES[0].predict) && !Object.values(start(e7, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    holds(Boolean(e7.STAGES[0].predict) && !Object.values(start(e7, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
       // The salt takes heat in at every setting, and still its net goes below zero once it is warm enough.
       const t = start(e7, 1);

@@ -23,7 +23,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, eqn, bondChip, cupFixture, plotFixture, plaqueFixture, markerFixture, selectorFixture, ledgerFixture, stackFixture, markerRead, dialAt,
+  heatTable, eqn, bondChip, rxnFixture, cupFixture, plotFixture, plaqueFixture, markerFixture, selectorFixture, ledgerFixture, stackFixture, markerRead, dialAt,
   plotRead, ledgerRead, stackRead, cupRead, whereIs, fixed, gibbsFreeEnergy, SPECIFIC_HEAT_WATER, FORMATION_TABLE, bondEnthalpySum, heatTransfer, crossingTemperature
 } from '../../table/kits/heat.js';
 import { session } from '../../../session.js';
@@ -98,7 +98,7 @@ export const STAGES = [
         intent: 'The Crucible dumps its surplus heat into the water jacket around it.'
       },
       hints: [
-        'Use the cup, the plate of facts and the marker.',
+        'Use the cup, the plate of facts and the dial.',
         'Compare the jacket\'s weight and its rise with the numbers in the formula.',
         'Multiply the three together, then turn the joules into kilojoules.'
       ],
@@ -118,7 +118,7 @@ export const STAGES = [
     return {
       id: 'p2-bonds',
       title: 'Phase 2 · The Coil',
-      prompt: 'Read the ledger and set the estimated ΔH for N₂ + 3 H₂ → 2 NH₃, in kJ/mol.',
+      prompt: 'Read the bond table and set the estimated ΔH for N₂ + 3 H₂ → 2 NH₃, in kJ/mol.',
       widget,
       table: heatTable({
         pieces: [
@@ -144,7 +144,7 @@ export const STAGES = [
         intent: 'Nitrogen and hydrogen charge the Crucible\'s synthesis coil.'
       },
       hints: [
-        'Use the ledger and the answer dial.',
+        'Use the bond table and the answer dial.',
         'Compare the Broken total with the Formed total.',
         'Take the energy to break the bonds and subtract the energy released by forming the new ones.'
       ],
@@ -154,7 +154,7 @@ export const STAGES = [
         if (v === 1) return { ok: true };
         if (v === 4) return { ok: false, notYet: true, msg: 'Set the estimate you worked out.' };
         const r = ledgerRead(t, 'ledger');
-        return { ok: false, msg: `The ledger reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
+        return { ok: false, msg: `The bond table reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
       },
       ...STAGE_REWARDS[1]
     };
@@ -215,7 +215,8 @@ export const STAGES = [
       table: heatTable({
         fixtures: [
           plaqueFixture('s0', 'Entropy at 298 K, J/(mol·K)', { x: 46, y: 34 }, [`H₂O(g)    ${s0('H2O(g)')}`, `H₂(g)    ${s0('H2(g)')}`, `O₂(g)    ${s0('O2(g)')}`], { w: 70 }),
-          selectorFixture('answer', 'ΔS (J/(mol·K))', { x: 112, y: 40 }, { options: ['+89.0', '−89.0', '+277.8', '+466.6', '—'], start: 5, w: 46 })
+          selectorFixture('answer', 'ΔS (J/(mol·K))', { x: 112, y: 40 }, { options: ['+89.0', '−89.0', '+277.8', '+466.6', '—'], start: 5, w: 46 }),
+          rxnFixture('atoms', { x: 104, y: 14 }, { lhs: [[2, 'H₂O']], rhs: [[2, 'H₂'], [1, 'O₂']], w: 40, h: 26 })
         ]
       }),
       foes: CRUCIBLE_FOE,
@@ -233,7 +234,7 @@ export const STAGES = [
         const v = dialAt(state.table, 'answer', 'value');
         if (v === 1) return { ok: true };
         if (v === 5) return { ok: false, notYet: true, msg: 'Set the value you worked out.' };
-        if (v === 2) return { ok: false, msg: 'That sign says the vent loses room, and the equation turns two moles of gas into three.' };
+        if (v === 2) return { ok: false, msg: 'That sign says entropy falls, and the equation turns two moles of gas into three.' };
         if (v === 4) return { ok: false, msg: `That is the entropy of the products alone, ${(2 * s0('H2(g)') + s0('O2(g)')).toFixed(1)}, with nothing taken off.` };
         return { ok: false, msg: `That takes steam's ${s0('H2O(g)')} off once, and the equation uses two moles of it.` };
       },
@@ -264,7 +265,7 @@ export const STAGES = [
       hints: [
         'Use the plate of facts and the "Temperature" dial.',
         'Compare the net the plot prints at each setting, and look for where it changes sign.',
-        'The seal gives way where the net is zero, so set the marker at the temperature between the last positive reading and the first negative one.'
+        'The seal gives way where the net is zero, so set the dial at the temperature between the last positive reading and the first negative one.'
       ],
       check(state) {
         const t = state.table;
@@ -280,11 +281,11 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Set the marker.'],
+  1: ['Set the dial.'],
   2: ['Turn the dial to your answer.'],
   3: ['Drag cards into the stack; tap Flip to reverse.'],
   4: ['Turn the dial to your answer.'],
-  5: ['Turn the Temperature dial; set the marker.']
+  5: ['Turn the Temperature dial; set the dial.']
 };
 applyNotes(STAGES, NOTES);
 

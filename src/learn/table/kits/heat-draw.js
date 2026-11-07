@@ -16,6 +16,8 @@ import {
   cellsOpen, loggedArrangements, waysOf, shakesOf, occupiedCells, sig, WELL, LID_LOSS, whereIs, seededRng
 } from './heat-read.js';
 import { bondAtoms, inkOfElement, phaseDots } from './heat-parts.js';
+import { glide, bathShown, speedAt, tempInk, chamberFlight, replayHeat } from './heat-motion.js';
+void replayHeat;
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -104,6 +106,8 @@ export function blockFace(p, state) {
 
 function paintBlock(ctx, p, state, o) {
   const f = blockFace(p, state);
+  // The reading walks to its new value over a couple of seconds, as the energy crosses (flat table only: the built face has no clock).
+  if (o.clock > 0) f.T = glide(`${o.scope || ''}blk:${p.id}`, o.clock, blockRead(state, p.id).T0, f.T);
   const hot = f.T > 45;
   const cold = f.T < 15;
   const box = slab(ctx, o, RECTS.block, hot ? '#321f15' : cold ? '#1b232b' : '#2a2620');
@@ -143,17 +147,33 @@ function paintEqn(ctx, p, state, o) {
 }
 
 /** The picture of a bond: two atoms with the rod (or rods) between them, flat. The built table stands the same two atoms up as solids. */
-export function paintBondIcon(ctx, which, cx, cy, size) {
+/** Is this chip lying in a ledger's Broken tray? */
+function inBrokenTray(p, state) {
+  const lg = Object.values(state.fixtures).find(f => f.kind === 'ledger');
+  return Boolean(lg) && p.zone === `tray:${lg.props.broken}`;
+}
+
+/**
+ * `live` (flat table only) makes the bond move: its two atoms shake along the bond, and a bond lying in the Broken tray is pulled apart,
+ * the atoms drifting away from each other and back, while one in the Formed tray stays joined.
+ */
+export function paintBondIcon(ctx, which, cx, cy, size, live = null) {
   const { a, b, order } = bondAtoms(which);
   const r = size * 0.2;
-  const gap = size * 0.62;
+  let gap = size * 0.62;
+  let shake = 0;
+  if (live) {
+    const k = live.broken ? (0.5 + 0.5 * Math.sin(live.clock * 1.6)) : 0;
+    gap *= 1 + 0.5 * k;
+    shake = Math.sin(live.clock * 9 + live.id.length) * size * 0.03 * (live.broken ? 0.4 : 1);
+  }
   for (let k = 0; k < order; k++) {
     const off = (k - (order - 1) / 2) * r * 0.55;
     ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, r * 0.3);
     ctx.beginPath(); ctx.moveTo(cx - gap / 2, cy + off); ctx.lineTo(cx + gap / 2, cy + off); ctx.stroke();
   }
   ctx.lineWidth = 1;
-  for (const [x, el] of [[cx - gap / 2, a], [cx + gap / 2, b]]) {
+  for (const [x, el] of [[cx - gap / 2 - shake, a], [cx + gap / 2 + shake, b]]) {
     ctx.fillStyle = inkOfElement(el); ctx.strokeStyle = '#2e2a26';
     ctx.beginPath(); ctx.arc(x, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
@@ -163,7 +183,7 @@ function paintBond(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.bond, '#1d1a16');
   const sc = o.sc;
   // The left third holds the two atoms: drawn here on the drawn table, stood up as solids on the built one (`o.flat`).
-  if (!o.flat) paintBondIcon(ctx, p.props.which, box.x0 + box.w * 0.19, o.y, box.h * 0.9);
+  if (!o.flat) paintBondIcon(ctx, p.props.which, box.x0 + box.w * 0.19, o.y, box.h * 0.9, o.clock > 0 ? { clock: o.clock, id: p.id, broken: inBrokenTray(p, state) } : null);
   const cx = o.x + box.w * 0.15;
   const maxW = box.w * 0.66;
   say(ctx, `${p.label}${(p.props.scale || 1) > 1 ? ` ×${p.props.scale}` : ''}`, cx, box.y0 + 3.0 * sc, Math.max(6.2, 2.1 * sc), { align: 'center', weight: 700, maxW });
@@ -198,7 +218,7 @@ function paintShelfCard(ctx, p, state, o) {
 }
 
 /** The dozen particles of a phase (`heat-parts.js`), seen a little from the side, each with the streak of how fast it is moving. */
-function particles(ctx, p, x0, y0, w, h, sc) {
+function particles(ctx, p, x0, y0, w, h, sc, clock = 0) {
   const dots = phaseDots(p.props.phase, p.props.T ?? 20);
   const r = Math.max(1.2, sc * 0.55);
   ctx.fillStyle = PHOS;
@@ -206,8 +226,11 @@ function particles(ctx, p, x0, y0, w, h, sc) {
   ctx.lineWidth = Math.max(1, sc * 0.2);
   for (const d of dots) {
     // Deeper into the box is a little up and to the right.
-    const px = x0 + (d.u * 0.86 + d.w * 0.12) * w;
-    const py = y0 + (d.v * 0.86 + (1 - d.w) * 0.12) * h;
+    // Each particle shakes about its place, as far as its streak says it is moving.
+    const sh = clock > 0 ? Math.sin(clock * (4 + d.tail * 14) + d.u * 40 + d.v * 17) * d.tail * sc * 1.6 : 0;
+    const sv = clock > 0 ? Math.cos(clock * (5 + d.tail * 12) + d.w * 31) * d.tail * sc * 1.2 : 0;
+    const px = x0 + (d.u * 0.86 + d.w * 0.12) * w + sh;
+    const py = y0 + (d.v * 0.86 + (1 - d.w) * 0.12) * h + sv;
     ctx.globalAlpha = 0.5;
     ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - d.tail * sc * 4.2, py + d.tail * sc * 1.8); ctx.stroke();
     ctx.globalAlpha = 1;
@@ -219,7 +242,7 @@ function particles(ctx, p, x0, y0, w, h, sc) {
 function paintPhaseCard(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.phase, '#16140f');
   const sc = o.sc;
-  if (!o.flat) particles(ctx, p, box.x0 + 1.4 * sc, box.y0 + 1.4 * sc, box.w - 2.8 * sc, box.h - 8 * sc, sc);
+  if (!o.flat) particles(ctx, p, box.x0 + 1.4 * sc, box.y0 + 1.4 * sc, box.w - 2.8 * sc, box.h - 8 * sc, sc, o.clock || 0);
   say(ctx, p.label, box.x0 + box.w / 2, box.y0 + box.h - 3.2 * sc, Math.max(6, 1.9 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
 }
 
@@ -310,6 +333,14 @@ function paintGCard(ctx, p, state, o) {
   ctx.strokeStyle = PHOS; ctx.lineWidth = Math.max(1.3, sc * 0.3);
   ctx.beginPath(); ctx.moveTo(X(Tmin), Y(dG(Tmin))); ctx.lineTo(X(Tmax), Y(dG(Tmax))); ctx.stroke(); ctx.lineWidth = 1;
   say(ctx, 'ΔG against T', box.x0 + box.w / 2, box.y0 + box.h - 1.6 * sc, Math.max(5.5, 1.5 * sc), { align: 'center', color: DUST });
+  // A ball runs along the line from cold to hot and back: it is green where it is below zero (the change runs by itself) and orange above.
+  if (o.clock > 0) {
+    const t = o.clock * 0.18 + p.id.length * 0.13;
+    const u = 1 - Math.abs(((t % 2) + 2) % 2 - 1);
+    const T = Tmin + u * (Tmax - Tmin);
+    ctx.fillStyle = dG(T) < 0 ? PHOS : WARM;
+    ctx.beginPath(); ctx.arc(X(T), Y(dG(T)), Math.max(1.6, sc * 0.55), 0, Math.PI * 2); ctx.fill();
+  }
 }
 
 function paintNum(ctx, p, state, o) {
@@ -392,14 +423,15 @@ function paintCup(ctx, f, state, b) {
   const tx = 27; const ty0 = top + 1; const ty1 = top + 31;
   ctx.strokeStyle = DUST;
   ctx.strokeRect(Math.round(F.x(tx)) + 0.5, Math.round(F.y(ty0)) + 0.5, Math.round(F.len(3)), Math.round(F.len(ty1 - ty0)));
-  const frac = Math.max(0.02, Math.min(1, r.Tf / 100));
-  ctx.fillStyle = inkOf(r.Tf);
+  const shown = bathShown(f, state, b).T;
+  const frac = Math.max(0.02, Math.min(1, shown / 100));
+  ctx.fillStyle = inkOf(shown);
   ctx.fillRect(F.x(tx) + 1, F.y(ty1 - (ty1 - ty0) * frac), F.len(3) - 1, F.len((ty1 - ty0) * frac));
   // The readouts.
   let line = 0;
   const put = (k, v, color = PHOS) => { say(ctx, k, F.x(32), F.y(top + 3 + line * 6), F.size(1.9, 5.8), { color: DIM }); say(ctx, v, F.x(32), F.y(top + 5.7 + line * 6), F.size(2.7, 6.5), { color, weight: 700, maxW: F.len(f.size.w - 34) }); line++; };
-  put('BATH', `${fixed(r.Tf, 1)} °C`, inkOf(r.Tf));
-  put('RISE', `${fixed(r.dT, 1, true)} °C`, r.dT > 0.05 ? WARM : r.dT < -0.05 ? COLD : DUST);
+  put('BATH', `${fixed(shown, 1)} °C`, inkOf(shown));
+  put('RISE', `${fixed(shown - r.T0, 1, true)} °C`, shown - r.T0 > 0.05 ? WARM : shown - r.T0 < -0.05 ? COLD : DUST);
   if (p.showHeat) put('HEAT', `${Math.round(r.q).toLocaleString('en-US')} J`, AMBER);
   if (p.showVerdict) put('BATH', r.dT > 0.05 ? 'WARMED' : r.dT < -0.05 ? 'COOLED' : 'SAME', DUST);
   if (p.showLid && r.lidOff) say(ctx, 'LID OFF', F.x(32), F.y(top + 29), F.size(2.2, 6), { color: AMBER, weight: 700 });
@@ -452,7 +484,9 @@ function paintWell(ctx, f, state, b) {
   const ay = top + 6;
   const gap = 2 + r.frac * (f.size.w - 20);
   const cx = f.size.w / 2;
-  const x1 = cx - gap / 2; const x2 = cx + gap / 2;
+  // A bonded pair shakes along the bond; a free pair drifts a little. Not on the built table, whose solid atoms are its own.
+  const shk = b.clock > 0 && !b.bodies ? Math.sin(b.clock * 9) * (r.frac < 0.98 ? 0.5 * (1 - r.frac) + 0.15 : 0.1) : 0;
+  const x1 = cx - gap / 2 - shk; const x2 = cx + gap / 2 + shk;
   ctx.strokeStyle = r.frac < 0.98 ? AMBER : DIM;
   ctx.lineWidth = Math.max(1, F.len(1.4 * (1 - r.frac)));
   ctx.beginPath(); ctx.moveTo(F.x(x1), F.y(ay)); ctx.lineTo(F.x(x2), F.y(ay)); ctx.stroke();
@@ -553,7 +587,20 @@ function paintChamber(ctx, f, state, b) {
     ctx.fillRect(F.x(x0 + (i - 1) * cw), F.y(y0), F.len(cw - 0.8), F.len(9));
     ctx.strokeStyle = STEEL;
     ctx.strokeRect(Math.round(F.x(x0 + (i - 1) * cw)) + 0.5, Math.round(F.y(y0)) + 0.5, Math.round(F.len(cw - 0.8)), Math.round(F.len(9)));
-    if (last.includes(i)) { ctx.fillStyle = PHOS; ctx.beginPath(); ctx.arc(F.x(x0 + (i - 1) * cw + (cw - 0.8) / 2), F.y(y0 + 4.5), F.len(2.1), 0, Math.PI * 2); ctx.fill(); }
+    if (!(b.clock > 0) && last.includes(i)) { ctx.fillStyle = PHOS; ctx.beginPath(); ctx.arc(F.x(x0 + (i - 1) * cw + (cw - 0.8) / 2), F.y(y0 + 4.5), F.len(2.1), 0, Math.PI * 2); ctx.fill(); }
+  }
+  // Each bead flies from its old cell to its new one, then shakes in place until the next shake.
+  if (b.clock > 0 && last.length) {
+    const fl = chamberFlight(`${b.scope || ''}chamber:${f.id}`, b.clock, shakes, f);
+    const centre = c => [x0 + (c - 1) * cw + (cw - 0.8) / 2, y0 + 4.5];
+    last.forEach((c, k) => {
+      const a = centre(fl.from[k] ?? c); const z = centre(c);
+      const e = fl.u;
+      const lift = Math.sin(e * Math.PI) * 5 * (fl.settled ? 0 : 1);
+      const jx = fl.settled ? Math.sin(b.clock * 6 + k * 2) * 0.9 : 0; const jy = fl.settled ? Math.cos(b.clock * 7 + k) * 0.9 : 0;
+      ctx.fillStyle = PHOS; ctx.beginPath();
+      ctx.arc(F.x(a[0] + (z[0] - a[0]) * e + jx), F.y(a[1] + (z[1] - a[1]) * e - lift + jy), F.len(2.1), 0, Math.PI * 2); ctx.fill();
+    });
   }
   // Where the particles were, shake after shake: how many stood in the left half, 0 to all.
   const counts = Array.from({ length: p.particles + 1 }, () => 0);
@@ -614,11 +661,17 @@ function paintWarm(ctx, f, state, b) {
   ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(top + 1)) + 0.5, Math.round(F.len(f.size.w - 6)), Math.round(F.len(11)));
   const streak = F.len(0.8 + (r.T + 40) / 90 * 2.6);
   ctx.strokeStyle = PHOS; ctx.fillStyle = PHOS;
+  const tri = u => { const m = ((u % 2) + 2) % 2; return m < 1 ? m : 2 - m; };
+  const shownT = glide(`${b.scope || ''}warm:${f.id}`, b.clock, f.props.Ts[0], r.T);
+  const sp = speedAt(shownT);
   for (let i = 0; i < 6; i++) {
-    const x = F.x(8 + i * ((f.size.w - 16) / 5)); const y = F.y(top + 3.2 + (i % 2) * 5.2);
+    // Live: each particle bounces about the box at a speed that goes as the square root of the kelvin temperature. Still: the streak.
+    const x = b.clock > 0 ? F.x(5 + (f.size.w - 10) * tri(i * 0.37 + b.clock * 0.16 * sp * (0.8 + (i % 3) * 0.2))) : F.x(8 + i * ((f.size.w - 16) / 5));
+    const y = b.clock > 0 ? F.y(top + 2 + 9 * tri(i * 0.53 + b.clock * 0.13 * sp * (0.9 + (i % 2) * 0.3))) : F.y(top + 3.2 + (i % 2) * 5.2);
     ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, F.len(0.55)), 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - streak, y + streak * 0.35); ctx.stroke(); ctx.globalAlpha = 1;
+    if (!(b.clock > 0)) { ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - streak, y + streak * 0.35); ctx.stroke(); ctx.globalAlpha = 1; }
   }
+  void tempInk;
   say(ctx, `${Math.round(r.T)} °C`, F.x(3), F.y(top + 16), F.size(3, 7), { color: inkOf(r.T), weight: 700 });
   if (!f.props.hideS || state.recorder.rows.some(r => r.label === 'ΔS')) say(ctx, `ENTROPY GAINED ${fixed(r.dS, 1, true)} J/K`, F.x(f.size.w - 3), F.y(top + 16), F.size(2.4, 6), { color: AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w - 20) });
 }

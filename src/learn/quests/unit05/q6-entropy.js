@@ -21,7 +21,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, phaseCard, stmt, shiftCard, tag, note, chamberFixture, shakesOf, whereIs, waysOf, plaqueFixture, markerFixture, markerRead, FORMATION_TABLE, fixed
+  heatTable, phaseCard, stmt, shiftCard, tag, note, leadFixture, rxnFixture, chamberFixture, shakesOf, whereIs, waysOf, plaqueFixture, markerFixture, markerRead, FORMATION_TABLE, fixed
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 5 };
@@ -81,7 +81,8 @@ export const STAGES = [
         note('spread', 'Spread over both halves', { x: 70, y: 16 }),
         note('right', 'Pulled into the right half', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 70, y: 44 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'shut', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',
@@ -145,7 +146,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     id: 's3-room',
-    title: 'More Room or Less?',
+    title: 'More Ways or Fewer?',
     prompt: 'Sort each change by whether it gives the particles more ways to arrange or fewer.',
     widget,
     table: heatTable({
@@ -178,7 +179,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Gas decided the sign.',
-      title: 'Room and the Sign of ΔS',
+      title: 'Ways and the Sign of ΔS',
       body: 'Processes that increase particle dispersal or produce gas increase entropy, giving a positive entropy change (ΔS). Conversely, processes that constrain particles or consume gas result in a negative ΔS.'
     }
   },
@@ -186,7 +187,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     id: 's4-rank',
-    title: 'Room and Motion',
+    title: 'Volume and Motion',
     prompt: 'Order the four boxes from the fewest ways to arrange the particles to the most.',
     widget,
     table: heatTable({
@@ -200,7 +201,7 @@ export const STAGES = [
     }),
     hints: [
       'Use the four boxes and the rail.',
-      'Compare how much room each particle has and how long its streak is in each box.',
+      'Compare how much volume each particle moves in and how fast it moves in each box.',
       'Both spatial dispersion across phases and increased thermal motion increase the available microstates.'
     ],
     check(state) {
@@ -213,7 +214,7 @@ export const STAGES = [
       return { ok: false, msg: `"${t.pieces[order[j - 1]].label}" and "${t.pieces[order[j]].label}" are in the wrong order.` };
     },
     reward: {
-      log: 'Room and motion both added ways.',
+      log: 'Volume and motion both added ways.',
       title: 'Solid, Liquid, Gas, and Warming',
       body: 'For a substance, entropy increases from solid to liquid to gas as spatial microstates increase. Increasing temperature also increases entropy because thermal energy can be distributed across more accessible energy levels.'
     }
@@ -223,7 +224,7 @@ export const STAGES = [
   {
     id: 's5-table',
     title: 'Entropy From a Table',
-    prompt: 'Set the marker to the entropy change ΔS for CaCO₃(s) → CaO(s) + CO₂(g), in J/(mol·K).',
+    prompt: 'Set the dial to the entropy change ΔS for CaCO₃(s) → CaO(s) + CO₂(g), in J/(mol·K).',
     widget,
     table: heatTable({
       fixtures: [
@@ -232,25 +233,26 @@ export const STAGES = [
           `CaO(s)    ${S0('CaO(s)')}`,
           `CO₂(g)    ${S0('CO2(g)')}`
         ], { w: 72 }),
-        markerFixture('dS', 'Entropy change', { x: 118, y: 30 }, { min: 0, max: 400, step: 5, start: 0, unit: 'J/(mol·K)', w: 54 })
+        markerFixture('dS', 'Entropy change', { x: 116, y: 18 }, { min: 0, max: 400, step: 5, start: 0, unit: 'J/(mol·K)', w: 50 }),
+        rxnFixture('atoms', { x: 116, y: 47 }, { lhs: [[1, 'CaCO₃']], rhs: [[1, 'CaO'], [1, 'CO₂']], w: 50, h: 32 })
       ]
     }),
     hints: [
-      'Use the plate of entropies and the marker.',
+      'Use the plate of entropies and the dial.',
       'Compare what the reaction ends with and what it starts with, one mole of each substance.',
       'Add the entropies of the substances the reaction makes, then take away the entropy of the one it uses up.'
     ],
     check(state) {
       const v = markerRead(state.table, 'dS');
-      if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the entropy change.' };
+      if (v === 0) return { ok: false, notYet: true, msg: 'Set the dial to the entropy change.' };
       if (Math.abs(v - DS_LIME) <= 3) return { ok: true };
-      if (Math.abs(v - (S0('CaO(s)') + S0('CO2(g)'))) <= 3) return { ok: false, msg: `The marker reads ${v} J/(mol·K), which is the entropy of what the reaction makes, with nothing taken off.` };
-      return { ok: false, msg: `The marker reads ${v} J/(mol·K). The reaction turns a solid into a solid and a gas.` };
+      if (Math.abs(v - (S0('CaO(s)') + S0('CO2(g)'))) <= 3) return { ok: false, msg: `The dial reads ${v} J/(mol·K), which is the entropy of what the reaction makes, with nothing taken off.` };
+      return { ok: false, msg: `The dial reads ${v} J/(mol·K). The reaction turns a solid into a solid and a gas.` };
     },
     reward: {
       log: 'ΔS for the limestone reaction came to +160 J/(mol·K).',
       title: 'ΔS From the Table',
-      body: 'The entropy change is the entropies of the products less those of the reactants, each times its moles: (38.1 + 213.8) − 91.7 = +160.2 J/(mol·K). The positive sign matches what the sort showed: a solid became a solid and a gas.'
+      body: 'ΔS is the entropy of the products minus that of the reactants: (38.1 + 213.8) − 91.7 = +160.2 J/(mol·K). A solid made a gas, so it is positive.'
     }
   }
 ];
@@ -261,7 +263,7 @@ const NOTES = {
   2: ['Press "Shake" again and again;', 'drag a card into the slot.'],
   3: ['Drag each change into a tray.'],
   4: ['Drag the boxes along the rail into order.'],
-  5: ['Set the marker.']
+  5: ['Set the dial.']
 };
 applyNotes(STAGES, NOTES);
 

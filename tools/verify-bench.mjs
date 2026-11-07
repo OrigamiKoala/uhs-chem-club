@@ -1846,6 +1846,7 @@ function touchSpots(LAYOUT, kit, st, arg) {
       if ((z.fixture || f.id) !== arg.fixture || z.dial !== arg.dial) continue;
       const mid = { x: box.x0 + (z.x0 + z.x1) / 2, y: box.y0 + (z.y0 + z.y1) / 2 };
       if (z.value != null) { if (z.value === arg.value) return [mid]; continue; }
+      if (z.drag?.axis === 'x') { const dd = st.fixtures[arg.fixture].dials[arg.dial]; return [{ x: box.x0 + z.drag.x0 + ((arg.value - dd.min) / (dd.max - dd.min || 1)) * (z.drag.x1 - z.drag.x0), y: mid.y }]; }
       if (z.drag) return [{ x: mid.x, y: box.y0 + z.drag.y1 - (arg.value / z.drag.scale) * (z.drag.y1 - z.drag.y0) }];
       if (z.step > 0 && arg.value > cur) return Array.from({ length: Math.round((arg.value - cur) / z.step) }, () => mid);
     }

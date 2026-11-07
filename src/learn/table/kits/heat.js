@@ -23,7 +23,10 @@ import { paintPiece, paintFixture, faceKey, RECTS, contentTop, wrap, wrapN } fro
 import { buildIngot, buildTin, buildCupWall, buildThermometer } from '../../engine/heat-props.js';
 import { buildBathDress, buildPairDress, buildBondChip, buildPhaseCard, buildCellsDress, buildChamberDress, buildParticle } from '../../engine/heat-solids.js';
 import { cupRead, wellRead, plotRead, warmRead, cellsOpen, occupiedCells, loggedArrangements, shakesOf, shakeCells, targetMap, BOND_ENTHALPIES, cardTerms, fmtEqn, seatedIn } from './heat-read.js';
+import { paintMotion, isLive, replayHeat, contentTopOf } from './heat-motion.js';
+import { dressRecorded } from './pans-3d.js';
 import './heat-tour.js';
+import './heat-tour-min.js';
 
 export const HEAT_KIT_ID = 'heat';
 export const HEAT_BOUNDS = Object.freeze({ w: 150, h: 64 });
@@ -103,6 +106,23 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
  *   cells: a low wall round each cell and the gate across the row; a chamber: its walls and the beads of the last shake.
  */
 function dress3d(f, state, c) {
+  const solid = solidDress3d(f, state, c);
+  // The moving model of a fixture (`heat-motion.js`) stands up over the plate as a crowd of spheres, read from the same painter as the flat bench.
+  if (state.kit !== HEAT_KIT_ID || !isLive(f) || !MOTION_DRESS.has(f.kind)) return solid;
+  const crowd = (MOTION_CROWD ||= dressRecorded({ paint: paintMotion }))(f, state, c);
+  const g = new c.THREE.Group();
+  if (solid) g.add(solid);
+  g.add(crowd);
+  g.userData.update = (fx, st) => { solid?.userData?.update?.(fx, st); crowd.userData.sync(fx, st); };
+  g.userData.sync = (fx, st) => crowd.userData.sync(fx, st);
+  g.userData.tick = (dt, still) => { solid?.userData?.tick?.(dt, still); crowd.userData.tick(dt, still); };
+  g.userData.counts = crowd.userData.counts;
+  return g;
+}
+const MOTION_DRESS = new Set(['cup', 'lattice', 'rxn', 'curve', 'shelves', 'plot', 'stack', 'lead']);
+let MOTION_CROWD = null;
+
+function solidDress3d(f, state, c) {
   const { scale: s, toPlate, box } = c;
   const nd = Object.keys(f.dials).length;
   const top = contentTop(nd);
@@ -182,6 +202,29 @@ function settle(state) {
   }
 }
 
+/** The drawn fixture: the plate's own picture, then the moving model over it (the built table stands the moving model up as solids). */
+function paintFixtureLive(ctx, f, state, b) {
+  paintFixture(ctx, f, state, b);
+  if (!b.bodies) paintMotion(ctx, f, state, b);
+}
+
+/** A table moves when it holds a moving model, or a block, a phase or a change card (their particles shake on the flat bench). */
+const live = state => state.kit === HEAT_KIT_ID && (Object.values(state.fixtures || {}).some(isLive) || Object.values(state.pieces || {}).some(p => !p.hidden && ['block', 'phase', 'shift', 'bond', 'gcard'].includes(p.kind)));
+
+/**
+ * Places on an instrument that are the particles themselves, dragged or touched: the atoms of a bond (pull them apart), the shelf of the
+ * energy diagram (raise or lower it), the ball on the free-energy line (slide it along), the burner under the heating curve. Each sets
+ * the dial that is graded, so a scripted solution and the two-tap twin (the dial's own track) still work.
+ */
+function tapZones(f) {
+  const top = contentTopOf(f);
+  if (f.kind === 'well' && f.dials.pull) return [{ x0: 2, x1: f.size.w - 2, y0: top, y1: top + 12, dial: 'pull', drag: { axis: 'x', x0: 8, x1: f.size.w - 8 } }];
+  if (f.kind === 'shelves' && f.dials.after) return [{ x0: f.size.w * 0.5, x1: f.size.w, y0: top, y1: f.size.h - 8, dial: 'after', drag: { y0: top + 2, y1: f.size.h - 10, scale: f.dials.after.max } }];
+  if (f.kind === 'plot' && f.dials.temp) return [{ x0: 4, x1: f.size.w - 3, y0: top, y1: f.size.h - 8, dial: 'temp', drag: { axis: 'x', x0: 6, x1: f.size.w - 4 } }];
+  if (f.kind === 'curve' && f.dials.heat) return [{ x0: 2, x1: f.size.w - 2, y0: top, y1: f.size.h - 2, dial: 'heat', drag: { axis: 'x', x0: 30, x1: f.size.w - 4 } }];
+  return [];
+}
+
 export const HEAT_KIT = {
   id: HEAT_KIT_ID,
   kinds: {
@@ -205,7 +248,12 @@ export const HEAT_KIT = {
   pairable: (a, b) => a.kind === 'block' && b.kind === 'block',
   run,
   paintPiece,
-  paintFixture,
+  paintFixture: paintFixtureLive,
+  live,
+  replay: () => replayHeat(),
+  // A miss replays the cause: every glide (a thermometer, the atoms of a block, the burner) runs again from where it began.
+  onMiss: () => replayHeat(),
+  tapZones,
   piece3d,
   dress3d,
   settle,
@@ -323,13 +371,13 @@ export function shelvesFixture(id, at, o = {}) {
 
 /** A bond in its well, and the crank that pulls it (or lets it fall back, `forming`). */
 export function wellFixture(id, at, o = {}) {
-  const { bond, atoms = ['', ''], D = null, forming = false, hideCost = false, title = 'Bond crank', w = 46, bondLabel = '', record = false, runLabel = 'Let go' } = o;
+  const { bond, atoms = ['', ''], D = null, forming = false, hideCost = false, pullLabel = 'Crank', title = 'Bond crank', w = 46, bondLabel = '', record = false, runLabel = 'Let go' } = o;
   const names = forming
     ? ['Free atoms', 'Falling in', 'Closer', 'Closer still', 'Nearly bonded', 'Almost bonded', 'Bonded']
     : ['Bonded', 'Pulled a little', 'Pulled further', 'Further still', 'Nearly free', 'Almost free', 'Free atoms'];
   return {
     id, kind: 'well', label: title, at: { ...at }, size: { w, h: Math.round((contentTop(1) + 24) * 10) / 10 },
-    dials: { pull: { min: 1, max: 7, step: 1, value: 1, label: forming ? 'Fall' : 'Crank', labels: names } }, ...(record ? { runLabel } : { noRun: true }),
+    dials: { pull: { min: 1, max: 7, step: 1, value: 1, label: forming ? 'Fall' : pullLabel, labels: names } }, ...(record ? { runLabel } : { noRun: true }),
     props: { which: bond, atoms, ...(D != null ? { D } : {}), forming, hideCost, bondLabel }
   };
 }
@@ -396,6 +444,41 @@ export function warmFixture(id, at, { Ts, m = 100, c = 4.184, hideS = false, tit
     ...(record ? { runLabel } : { noRun: true }),
     props: { Ts, m, c, hideS }
   };
+}
+
+/**
+ * The atoms of the blocks listed: each block as a lattice that shakes harder the warmer it is, with packets of energy crossing between
+ * blocks that are joined. `blocks` are piece ids; the picture reads the same planner (`blockRead`) the thermometers do.
+ */
+export function latticeFixture(id, at, { blocks, w = 140, h = 22, title = 'Atoms in the blocks' } = {}) {
+  return { id, kind: 'lattice', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { blocks: blocks.slice() } };
+}
+
+/**
+ * A reaction as atoms: the reactant molecules on the left and the product molecules on the right, the atoms travelling between as the
+ * bonds break and form. `lhs` and `rhs` are `[[coefficient, species], ...]`; `dH` (kJ, the system's sign) adds packets of energy leaving or
+ * entering only where a stage already states the sign.
+ */
+export function rxnFixture(id, at, { lhs, rhs, dH = 0, w = 60, h = 30, title = 'Reaction, atom by atom' } = {}) {
+  return { id, kind: 'rxn', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { lhs, rhs, dH } };
+}
+
+/**
+ * A sample heated through its phases by a burner the student drags along: its particles change phase, and the trace of temperature against
+ * heat added climbs and flattens. The position along the dial is by heat, so the length of a flat stretch is the heat that phase change takes.
+ * Nothing printed gives the heat: the stage asks for it. `from` and `to` are the starting and ending temperatures in °C.
+ */
+export function curveFixture(id, at, { m, from, to, title = 'Heating the sample', w = 74, h = 36, steps = 40, cs = 2.09, cl = 4.184, cg = 2.01, Lf = 334, Lv = 2260 } = {}) {
+  return {
+    id, kind: 'curve', label: title, at: { ...at }, size: { w, h }, noRun: true,
+    dials: { heat: { min: 1, max: steps, step: 1, value: 1, label: 'Burner', labels: Array.from({ length: steps }, () => ' ') } },
+    props: { m, from, to, cs, cl, cg, Lf, Lv }
+  };
+}
+
+/** A clip that plays by itself before a prediction (see `heat-motion.js`, `paintLead`): a neighbouring case, with no control. */
+export function leadFixture(id, at, { scene, lhs = null, rhs = null, dH = 0, w = 66, h = 30, title = 'Watch first' } = {}) {
+  return { id, kind: 'lead', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { scene, ...(lhs ? { lhs, rhs, dH } : {}) } };
 }
 
 /** A printed reference: lines of text on a plate. */

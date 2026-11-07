@@ -53,7 +53,7 @@ export function readPainter(handler, f, state, box, clock, scope = '3d') {
   return out;
 }
 
-function dressRecorded(handler) {
+export function dressRecorded(handler) {
   return function dress3d(f, state, c) {
     const { THREE, scale: s, toPlate, own, box, ground } = c;
     const group = new THREE.Group();

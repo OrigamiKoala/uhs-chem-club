@@ -50,7 +50,7 @@
     {
       "id": "q1-flow#2",
       "quest": "q1-flow",
-      "question": "On an energy diagram for an exothermic reaction, how do the shelves of the products and the reactants compare?",
+      "question": "On an energy diagram for an exothermic reaction, how do the levels of the products and the reactants compare?",
       "options": [
         {
           "id": "a",
@@ -62,11 +62,11 @@
         },
         {
           "id": "c",
-          "label": "The two shelves sit at the same height"
+          "label": "The two levels sit at the same height"
         }
       ],
       "answer": "a",
-      "explanation": "The energy released to warm the bath comes from the system dropping to a lower shelf."
+      "explanation": "The energy released to warm the bath comes from the system dropping to a lower level."
     },
     {
       "id": "q1-flow#3",
@@ -1006,7 +1006,7 @@
         },
         {
           "id": "d",
-          "label": "The temperature of the room does not matter"
+          "label": "The temperature of the surroundings does not matter"
         }
       ],
       "answer": "a",

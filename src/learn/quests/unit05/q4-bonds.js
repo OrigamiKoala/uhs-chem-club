@@ -25,7 +25,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, bondChip, note, tag, wellFixture, ledgerFixture, markerFixture, markerRead, ledgerRead, wellRead,
+  heatTable, bondChip, note, tag, wellFixture, ledgerFixture, markerFixture, leadFixture, markerRead, ledgerRead, wellRead,
   whereIs, bondEnthalpySum, BOND_ENTHALPIES, signedKJ
 } from '../../table/kits/heat.js';
 
@@ -90,7 +90,8 @@ export const STAGES = [
         note('out', 'Gives energy out', { x: 70, y: 16 }),
         note('none', 'Needs no energy', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 70, y: 44 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'bond', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',
@@ -109,39 +110,39 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, pull the two bonded atoms apart with the crank and measure the energy change.'
+      body: 'Next, pull the two bonded atoms apart and measure the energy change.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     id: 's2-crank',
-    title: 'The Crank',
-    prompt: 'Pull the bond completely apart, then set the marker to the energy change of the two atoms.',
+    title: 'Pulling a Bond Apart',
+    prompt: 'Pull the bond completely apart, then set the dial to the energy change of the two atoms.',
     widget,
     table: heatTable({
       fixtures: [
-        wellFixture('crank', { x: 34, y: 30 }, { bond: 'H-H', atoms: ['H', 'H'], bondLabel: 'H–H', title: 'H–H crank' }),
+        wellFixture('crank', { x: 34, y: 30 }, { bond: 'H-H', atoms: ['H', 'H'], bondLabel: 'H–H', title: 'H–H bond', pullLabel: 'Pull' }),
         markerFixture('change', 'Energy change of the atoms', { x: 116, y: 32 }, { min: -480, max: 480, step: 4, start: 0, unit: 'kJ/mol', w: 56 })
       ]
     }),
     hints: [
-      'Use the "Crank" dial and the marker.',
-      'Compare the meter at each setting of the crank, and note which way the energy is going.',
-      'Energy that goes into the atoms raises their energy and energy that leaves them lowers it, so the marker takes the matching sign.'
+      'Drag one atom away from the other, or use the "Pull" dial, then set the number dial.',
+      'Compare the meter at each stretch of the bond, and note which way the energy is going.',
+      'Energy that goes into the atoms raises their energy and energy that leaves them lowers it, so the dial takes the matching sign.'
     ],
     check(state) {
       const t = state.table;
       const r = wellRead(t, 'crank');
       const v = markerRead(t, 'change');
-      if (!r.free) return { ok: false, notYet: true, msg: 'Pull the bond all the way apart with the crank.' };
-      if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the energy change of the two atoms.' };
+      if (!r.free) return { ok: false, notYet: true, msg: 'Drag the atoms all the way apart.' };
+      if (v === 0) return { ok: false, notYet: true, msg: 'Set the dial to the energy change of the two atoms.' };
       if (v === HH) return { ok: true };
-      if (v === -HH) return { ok: false, msg: 'The meter says ENERGY IN, and the marker sits below zero.' };
-      return { ok: false, msg: 'The marker and the meter show different figures.' };
+      if (v === -HH) return { ok: false, msg: 'The meter says ENERGY IN, and the dial sits below zero.' };
+      return { ok: false, msg: 'The dial and the meter show different figures.' };
     },
     reward: {
-      log: 'The crank took energy in.',
+      log: 'Pulling the atoms apart took energy in.',
       title: 'Bond Enthalpy',
       body: 'Breaking bonds requires energy: the energy needed to break one mole of a bond is its bond enthalpy (436 kJ/mol for H–H). Forming that bond releases the exact same amount of energy.'
     }
@@ -151,7 +152,7 @@ export const STAGES = [
   {
     id: 's3-methane',
     title: 'Burning Methane, Bond by Bond',
-    prompt: 'Fill the ledger for burning methane: put each bond in its tray and set how many of it there are.',
+    prompt: 'Fill the bond table for burning methane: put each bond in its tray and set how many of it there are.',
     widget,
     table: heatTable({
       pieces: CH4_CHIPS.map(([id, bond, count, noteText], i) => bondChip(id, bond, { x: 17, y: 14 + i * 13 }, { note: noteText })),
@@ -159,8 +160,8 @@ export const STAGES = [
       zones: { trays: trays(66) }
     }),
     hints: [
-      'Use the four bond chips, the two trays and the ledger, and pick a chip up for "Larger".',
-      'Compare each chip\'s molecule with the equation printed on the ledger, counting every molecule the equation uses.',
+      'Use the four bond cards, the two trays and the bond table, and pick a bond card up for "Larger".',
+      'Compare each bond card\'s molecule with the equation printed on the bond table, counting every molecule the equation uses.',
       'Bonds in the molecules left of the arrow come apart and bonds in the molecules right of it are built, and each molecule holds as many of a bond as its formula shows.'
     ],
     check(state) {
@@ -172,7 +173,7 @@ export const STAGES = [
         const off = CH4_CHIPS.find(([id, , n]) => (t.pieces[id].props.scale || 1) !== n);
         if (!off) return { ok: true };
         const k = t.pieces[off[0]].props.scale || 1;
-        return { ok: false, msg: `The ledger counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} from the ${off[3]} chip.` };
+        return { ok: false, msg: `The bond table counts ${k} ${off[1]} bond${k === 1 ? '' : 's'} from the ${off[3]} bond card.` };
       }
       const tray = t.zones.trays[whereIs(t, wrong[0])];
       return { ok: false, msg: `The "${tray.label}" tray holds a bond from a molecule on the ${wrong[1] === 'broken' ? 'left' : 'right'} of the arrow.` };
@@ -198,7 +199,8 @@ export const STAGES = [
         note('cool', 'Cools the bath', { x: 70, y: 16 }),
         note('same', 'Leaves the bath as it is', { x: 116, y: 16 })
       ],
-      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 70, y: 44 }, size: { w: 36, h: 14 } }] }
+      fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'air', w: 62, h: 30 })],
+      zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',
@@ -216,16 +218,16 @@ export const STAGES = [
     },
     reward: {
       log: 'Prediction locked in.',
-      title: 'Now Read the Ledger',
-      body: 'Next, inspect the bond ledger to see whether bond formation balances the cost of breaking bonds.'
+      title: 'Now Read the Bond table',
+      body: 'Next, inspect the bond bond table to see whether bond formation balances the cost of breaking bonds.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-air',
-    title: 'The Air Ledger',
-    prompt: 'Read the ledger and lay the card for what the bath will do.',
+    title: 'The Air Bond table',
+    prompt: 'Read the bond table and lay the card for what the bath will do.',
     widget,
     table: heatTable({
       pieces: [
@@ -242,11 +244,11 @@ export const STAGES = [
           { id: 'broken', label: 'Broken', at: { x: 40, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },
           { id: 'formed', label: 'Formed', at: { x: 40, y: 50 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 }
         ],
-        slots: [{ id: 'answer', label: 'The ledger says', at: { x: 96, y: 39 }, size: { w: 36, h: 14 } }]
+        slots: [{ id: 'answer', label: 'The bond table says', at: { x: 96, y: 39 }, size: { w: 36, h: 14 } }]
       }
     }),
     hints: [
-      'Use the ledger, the three cards and the slot.',
+      'Use the bond table, the three cards and the slot.',
       'Compare the energy of the bonds in the Broken tray with those in the Formed tray, counting every bond.',
       'Whichever total is larger decides which way the energy goes, so the bath follows it.'
     ],
@@ -256,7 +258,7 @@ export const STAGES = [
       if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
       if (card.id === 'cool') return { ok: true };
       const r = ledgerRead(t, 'ledger');
-      return { ok: false, msg: `The ledger reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
+      return { ok: false, msg: `The bond table reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
     },
     reward: {
       log: 'The bonds formed paid back less than the bonds broken cost.',
@@ -269,7 +271,7 @@ export const STAGES = [
   {
     id: 's6-estimate',
     title: 'Estimating a ΔH',
-    prompt: 'Set the marker to the estimated ΔH for H₂ + Cl₂ → 2 HCl, in kJ.',
+    prompt: 'Set the dial to the estimated ΔH for H₂ + Cl₂ → 2 HCl, in kJ.',
     widget,
     table: heatTable({
       pieces: [
@@ -289,8 +291,8 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Use the three bond chips, the two trays, the ledger and the marker.',
-      'Compare the energy of the bonds broken with the bonds formed, counting every bond on each chip.',
+      'Use the three bond cards, the two trays, the bond table and the dial.',
+      'Compare the energy of the bonds broken with the bonds formed, counting every bond on each bond card.',
       'Take the energy to break the bonds and subtract the energy released by forming the new ones.'
     ],
     check(state) {
@@ -298,14 +300,14 @@ export const STAGES = [
       const v = markerRead(t, 'dH');
       if (v === -400) return { ok: false, notYet: true, msg: 'Set the estimate you worked out.' };
       const r = ledgerRead(t, 'ledger');
-      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Put every bond chip in a tray first.' };
+      if (r.nBroken + r.nFormed < 4) return { ok: false, notYet: true, msg: 'Put every bond bond card in a tray first.' };
       if (Math.abs(v - HCL_SUMS.net) <= 2 && r.net === HCL_SUMS.net) return { ok: true };
-      return { ok: false, msg: `The ledger reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
+      return { ok: false, msg: `The bond table reads ${r.broken} kJ for the bonds broken and ${r.formed} kJ for the bonds formed.` };
     },
     reward: {
       log: 'Bond enthalpies gave ΔH = −184 kJ for two moles of HCl.',
       title: 'Estimating ΔH',
-      body: 'Add the energy of every bond broken (436 + 242 = 678 kJ), subtract the energy of every bond formed (2 × 431 = 862 kJ), and the estimate is −184 kJ. It is an estimate because bond enthalpies are averages over many molecules.'
+      body: 'ΔH is about the energy to break the bonds minus the energy released forming them: 678 − 862 = −184 kJ. It is an estimate because bond enthalpies are averages.'
     }
   }
 ];
@@ -313,11 +315,11 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
-  2: ['Turn the "Crank" dial, then set the marker.'],
-  3: ['Drag each chip into a tray.'],
+  2: ['Drag one atom away from the other, then set the dial.'],
+  3: ['Drag each bond card into a tray.'],
   4: ['Drag the card you choose into the slot.'],
   5: ['Drag a card into the slot.'],
-  6: ['Drag each chip into a tray, then set the marker.']
+  6: ['Drag each bond card into a tray, then set the dial.']
 };
 applyNotes(STAGES, NOTES);
 

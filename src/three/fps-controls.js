@@ -19,7 +19,11 @@
 import * as THREE from "three";
 
 /** Keys that only ever mean "move", so nothing on a panel can want them. */
-const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight"]);
+const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight", "KeyR", "KeyF", "PageUp", "PageDown"]);
+// Hover limits, metres relative to the standing eye height (deployed bench only).
+const HOVER_MIN = -0.8;
+const HOVER_MAX = 14;
+const HOVER_SPEED = 2.6;
 const _eulerTemp = new THREE.Euler(0, 0, 0, "YXZ");
 
 export class FpsControls {
@@ -88,6 +92,12 @@ export class FpsControls {
 
     // Height & environment
     this.eyeHeight = 1.6;
+    // Hovering at a deployed bench: the head's height above the standing eye
+    // height. Taken from the camera whenever it is synced, so a leaned-in view
+    // handed to the walk keeps its height instead of dropping to eye level.
+    this.hoverOffset = 0;
+    this.hoverUp = false;
+    this.hoverDown = false;
     this.terrainHeightFn = null;
     this.boundaryBounds = null; // { minX, maxX, minZ, maxZ }
     this.boxColliders = []; // [{ minX, maxX, minZ, maxZ }]
@@ -301,6 +311,8 @@ export class FpsControls {
     this.moveLeft = false;
     this.moveRight = false;
     this.isSprinting = false;
+    this.hoverUp = false;
+    this.hoverDown = false;
     this.isDragging = false;
     this.velocity.set(0, 0, 0);
   }
@@ -354,6 +366,14 @@ export class FpsControls {
       case "ShiftRight":
         this.isSprinting = true;
         break;
+      case "KeyR":
+      case "PageUp":
+        if (this.walkKeysAtBench) this.hoverUp = true;
+        break;
+      case "KeyF":
+      case "PageDown":
+        if (this.walkKeysAtBench) this.hoverDown = true;
+        break;
       case "Space":
         this.requestJump();
         break;
@@ -389,6 +409,14 @@ export class FpsControls {
       case "ShiftRight":
         this.isSprinting = false;
         break;
+      case "KeyR":
+      case "PageUp":
+        this.hoverUp = false;
+        break;
+      case "KeyF":
+      case "PageDown":
+        this.hoverDown = false;
+        break;
     }
   }
 
@@ -412,6 +440,10 @@ export class FpsControls {
     this.euler.setFromQuaternion(this.camera.quaternion, "YXZ");
     this.euler.z = 0;
     this.velocity.set(0, 0, 0);
+    if (this.walkKeysAtBench) {
+      const ground = this.terrainHeightFn ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z) : 0;
+      this.hoverOffset = Math.max(HOVER_MIN, Math.min(HOVER_MAX, this.basePosition.y - ground - this.eyeHeight));
+    }
   }
 
   setMode(mode, terrainFn = null, bounds = null, colliders = []) {
@@ -592,7 +624,19 @@ export class FpsControls {
     const baseGroundY = this.terrainHeightFn
       ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z)
       : 0;
-    const targetBaseEyeY = baseGroundY + this.eyeHeight;
+    // Hover keys move the head up and down smoothly; off a bench the offset
+    // eases back to standing height.
+    if (this.walkKeysAtBench) {
+      const dir = (this.hoverUp ? 1 : 0) - (this.hoverDown ? 1 : 0);
+      if (dir) {
+        const fast = this.isSprinting || this.analogSprint ? 2 : 1;
+        this.hoverOffset = Math.max(HOVER_MIN, Math.min(HOVER_MAX, this.hoverOffset + dir * HOVER_SPEED * fast * dt));
+      }
+    } else if (this.hoverOffset !== 0) {
+      this.hoverOffset -= this.hoverOffset * Math.min(1, dt * 5);
+      if (Math.abs(this.hoverOffset) < 0.002) this.hoverOffset = 0;
+    }
+    const targetBaseEyeY = baseGroundY + this.eyeHeight + this.hoverOffset;
 
     if (!this.isGrounded || this.verticalVelocity !== 0) {
       const prevVv = this.verticalVelocity;
