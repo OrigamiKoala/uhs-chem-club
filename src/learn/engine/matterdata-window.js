@@ -36,9 +36,9 @@ export function stateAt(sample, T) {
   return T < s.mp ? 'solid' : T < s.bp ? 'liquid' : 'gas';
 }
 
-/** The press: the pressure in atm at each of the Squeeze dial's four settings. The volume of an (ideal, isothermal) gas is its reciprocal. */
+/** The piston: the pressure in atm at each of the Piston dial's four settings. The volume of an (ideal, isothermal) gas is its reciprocal. */
 export const SQUEEZE_ATM = Object.freeze([1, 1.5, 2, 3]);
-export const SQUEEZE_NAMES = Object.freeze(['Off', 'Light', 'Firm', 'Hard']);
+export const SQUEEZE_NAMES = Object.freeze(['1 atm', '1.5 atm', '2 atm', '3 atm']);
 
 /** The fraction of its volume a sample keeps at Squeeze `level` (counted from 1): a gas follows the pressure, a solid and a liquid do not move. */
 export function squeezeRatio(state, level) {

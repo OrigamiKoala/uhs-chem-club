@@ -88,7 +88,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   holds(Math.abs((4.246 + 7.384) / 2 - 5.628) < 0.25, `${q} stage 8: the midpoint of the 30 and 40 °C readings strays from the CRC value by more than the plot can carry`);
 
   // The predict stage shows no instrument; no other stage passes untouched.
-  holds(!Object.keys(start(mod, 2).fixtures).length, `${q} stage 3: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 2).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 3: the predict stage shows an instrument`);
   for (const i of [0, 1, 3, 4, 5, 6, 7]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
 
   // Every stage's evidence is on the bench.

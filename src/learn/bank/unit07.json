@@ -1119,7 +1119,98 @@
           "answer": "c",
           "explanation": "Sodium, potassium and nitrate ions never leave the water, and chloride ions only do so with a few partners such as Ag⁺ and Pb²⁺. Swapping partners gives NaCl and KNO₃, which both stay dissolved."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q5-ionic#w",
+        "quest": "q5-ionic",
+        "title": "Purity of an Impure Salt by Gravimetric Analysis",
+        "setup": "A 1.500 g sample of impure sodium chloride containing inert water-soluble binder is dissolved in distilled water. Excess silver nitrate solution, AgNO₃(aq), is added to precipitate all chloride as silver chloride, AgCl(s). The precipitate is filtered, washed, dried, and weighs 2.866 g. Find the percent purity of NaCl in the sample. (Molar masses: AgCl 143.32 g/mol, NaCl 58.44 g/mol)",
+        "steps": [
+          {
+            "say": "Which net ionic equation describes the precipitate forming?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Ag⁺(aq) + Cl⁻(aq) → AgCl(s)"
+              },
+              {
+                "id": "b",
+                "label": "Na⁺(aq) + NO₃⁻(aq) → NaNO₃(s)"
+              },
+              {
+                "id": "c",
+                "label": "AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq)"
+              }
+            ],
+            "answer": "a",
+            "hint": "Spectator ions that remain dissolved in solution are omitted.",
+            "explain": "Silver ions and chloride ions join to form insoluble AgCl. Sodium and nitrate ions remain dissolved in the filtrate as spectator ions."
+          },
+          {
+            "say": "How many moles of dry AgCl precipitate were collected?",
+            "kind": "number",
+            "answer": 0.02,
+            "calc": "2.866 / 143.32",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "Divide the mass of the precipitate by the molar mass of AgCl (143.32 g/mol).",
+            "explain": "2.866 g ÷ 143.32 g/mol = 0.02000 mol of AgCl."
+          },
+          {
+            "say": "How many moles of chloride ions, Cl⁻, were in the original sample?",
+            "kind": "number",
+            "answer": 0.02,
+            "calc": "2.866 / 143.32",
+            "unit": "mol",
+            "tol": 0.005,
+            "hint": "Each mole of AgCl contains exactly one mole of chloride ions.",
+            "explain": "Because the mole ratio of Cl⁻ to AgCl is 1 : 1, the sample contained 0.02000 mol of Cl⁻."
+          },
+          {
+            "say": "Assuming all chloride came from sodium chloride, what mass of pure NaCl was in the original sample?",
+            "kind": "number",
+            "answer": 1.1688,
+            "calc": "(2.866 / 143.32) * 58.44",
+            "unit": "g",
+            "tol": 0.005,
+            "hint": "Multiply the moles of NaCl by its molar mass, 58.44 g/mol.",
+            "explain": "0.02000 mol × 58.44 g/mol = 1.169 g of pure NaCl."
+          },
+          {
+            "say": "What is the percent by mass of pure NaCl in the 1.500 g sample?",
+            "kind": "number",
+            "answer": 77.92,
+            "calc": "((2.866 / 143.32) * 58.44) / 1.500 * 100",
+            "unit": "%",
+            "tol": 0.005,
+            "hint": "Divide the mass of pure NaCl by the total sample mass and multiply by 100.",
+            "explain": "(1.1688 g ÷ 1.500 g) × 100 = 77.9% pure NaCl."
+          },
+          {
+            "say": "If the student did not dry the precipitate completely before weighing, how would the calculated percent purity be affected?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "It would be erroneously high"
+              },
+              {
+                "id": "b",
+                "label": "It would be erroneously low"
+              },
+              {
+                "id": "c",
+                "label": "It would remain unaffected"
+              }
+            ],
+            "answer": "a",
+            "hint": "Trapped water adds extra mass to the measured precipitate.",
+            "explain": "Trapped water makes the measured mass of AgCl too large, leading to an overestimation of moles of Cl⁻ and an erroneously high calculated percent purity."
+          }
+        ],
+        "finish": "In gravimetric analysis, convert the pure precipitate mass to moles, use the 1 : 1 ion ratio to find the analyte, convert to mass, and divide by the total sample mass."
+      }
     },
     "q8-kinds": {
       "problems": [

@@ -25,7 +25,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { matterTable, note, charge, cupFixture, cupRead, plaqueFixture, fixed, whereIs } from '../../table/kits/matter.js';
+import { matterTable, note, charge, cupFixture, cupRead, plaqueFixture, fixed, whereIs, leadFixture } from '../../table/kits/matter.js';
 import { flaskFixture, sample, flaskRead, dropFor } from '../../table/kits/matter-flask.js';
 import { SOLUTES, SOLUTION_ENTHALPY } from '../../engine/matterdata.js';
 import {
@@ -120,7 +120,7 @@ const describeDrop = s => {
    ------------------------------------------------------------------ */
 
 /** A sorting tray: two columns of the 16-wide cards. */
-const tray = (id, label, x, w = 34, cell = 17) => ({ id, label, at: { x, y: 27 }, size: { w, h: 42 }, cell, cellH: 19.5 });
+const tray = (id, label, x, w = 34, cell = 17, view = null) => ({ id, label, ...(view ? { view } : {}), at: { x, y: 27 }, size: { w, h: 42 }, cell, cellH: 19.5 });
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -136,7 +136,7 @@ export const STAGES = [
         bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [fl.fixture],
-        zones: { slots: [fl.mouth], trays: [tray('spread', 'Spreads out', 94), tray('lumps', 'Stays in lumps', 131)] }
+        zones: { slots: [fl.mouth], trays: [tray('spread', 'Spreads out', 94, 34, 17, 'apart'), tray('lumps', 'Stays in lumps', 131, 34, 17, 'together')] }
       }),
       hints: [
         'Use the flask: drag each sample onto its mouth, look at the window, then drag the sample into a tray.',
@@ -158,7 +158,7 @@ export const STAGES = [
       reward: {
         log: 'Salt and sugar spread out in the water; chalk and sand stayed in lumps.',
         title: 'Solutions',
-        body: 'A solution is a mixture that is the same all the way through. The solute, the part that dissolves, spreads out as separate particles through the solvent, the liquid. Dissolved salt is not gone; it is still there, in pieces.'
+        body: 'A solution is a mixture that is the same all the way through. The solute spreads out as separate particles through the solvent, so dissolved salt is not gone: it is still there, in pieces.'
       }
     };
   })(),
@@ -170,7 +170,7 @@ export const STAGES = [
     return {
       id: 's2-molarity',
       title: 'Salt in a Flask',
-      prompt: 'Type the moles of salt in each litre of solution once the salt on the pan is made up to 400 mL.',
+      prompt: 'Type the moles of salt in each litre of solution once the salt on the balance is made up to 400 mL.',
       entry: { id: 'm', label: 'Moles per litre', unit: 'mol/L' },
       widget,
       table: matterTable({
@@ -180,18 +180,18 @@ export const STAGES = [
         zones: { slots: [fl.mouth, fl.pan] }
       }),
       hints: [
-        'Use the pan, the flask and its "Flask" dial: weigh the salt, then drag it into the flask.',
+        'Use the balance, the flask and its "Flask" dial: weigh the salt, then drag it into the flask.',
         'Compare how crowded the window is at each flask size, and read the molar mass off the plate.',
-        'Turn the grams on the pan into moles with the plate, then share those moles over each litre of the flask.'
+        'Turn the grams on the balance into moles with the plate, then share those moles over each litre of the flask.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'm');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
         if (Math.abs(v - M_ASKED) <= 0.01) return { ok: true };
-        if (t.pieces.salt.props.weighed == null) return { ok: false, msg: 'The salt has not been on the pan yet.' };
+        if (t.pieces.salt.props.weighed == null) return { ok: false, msg: 'The salt has not been on the balance yet.' };
         const moles = SALT_G / SOLUTES.NaCl.M;
-        if (Math.abs(v - moles) <= 0.003) return { ok: false, msg: `${fixed(v, 3)} is the amount of salt on the pan alone, and the solution is ${ASKED_ML} mL.` };
+        if (Math.abs(v - moles) <= 0.003) return { ok: false, msg: `${fixed(v, 3)} is the amount of salt on the balance alone, and the solution is ${ASKED_ML} mL.` };
         return { ok: false, msg: `${v} does not fit ${fixed(SALT_G, 2)} g of salt made up to ${ASKED_ML} mL.` };
       },
       reward: {
@@ -258,6 +258,7 @@ export const STAGES = [
         note('cacl2', 'Calcium chloride, CaCl₂', { x: 30, y: 34 }),
         note('sugar', 'Sugar, C₁₂H₂₂O₁₁', { x: 78, y: 34 })
       ],
+      fixtures: [leadFixture('lead', { x: 123, y: 52 }, { scene: 'salt', w: 38, h: 24 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
@@ -393,24 +394,24 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Use the cup, the four tins and the strip.',
-        'Compare the bath change each tin kept, including whether it is above or below zero.',
-        'Rank from the tin that cooled the bath most on the left to the one that warmed it most on the right.'
+        'Use the cup, the four samples and the strip.',
+        'Compare the bath change each sample kept, including whether it is above or below zero.',
+        'Rank from the sample that cooled the bath most on the left to the one that warmed it most on the right.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four tins on the strip.' };
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples on the strip.' };
         if (order.join() === BY_BATH.map(s => s.toLowerCase()).join()) return { ok: true };
         const tins = order.map(id => t.pieces[id]);
-        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every tin has been in the cup yet.' };
+        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every sample has been in the cup yet.' };
         const k = tins.findIndex((p, i) => i > 0 && tins[i - 1].props.rise > p.props.rise);
         return { ok: false, msg: `${tins[k - 1].label} sits left of ${tins[k].label}, and the bath changed ${fixed(tins[k - 1].props.rise, 1, true)} °C for the one and ${fixed(tins[k].props.rise, 1, true)} °C for the other.` };
       },
       reward: {
         log: 'Calcium chloride warmed the bath; the other three cooled it.',
         title: 'Heat of Solution',
-        body: 'Dissolving breaks pulls between particles and makes new ones with water. If the new pulls are stronger, heat leaves them and the bath warms: exothermic. If weaker, heat enters and the bath cools: endothermic.'
+        body: 'Dissolving breaks attractions between particles and makes new ones with water. If the new ones are stronger, heat leaves and the bath warms (exothermic); if weaker, heat enters and the bath cools (endothermic).'
       }
     };
   })(),
@@ -463,12 +464,12 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag a sample onto the flask, then into a tray.'],
-  2: ['Drag the salt onto the pan, then into the flask, then type your answer.'],
+  2: ['Drag the salt onto the balance, then into the flask, then type your answer.'],
   3: ['Drag the stock into the flask, turn the dial, then type your answer.'],
   4: ['Drag the card you choose into the slot.'],
   5: ['Drag a sample into the flask, then type your answer.'],
   6: ['Drag a sample in, turn the dial, then file it.'],
-  7: ['Drag a tin onto the cup, then put the tin on the strip.'],
+  7: ['Drag a sample onto the cup, then put the sample on the strip.'],
   8: ['Drag a flask card onto the flask, then put it on the strip.']
 };
 applyNotes(STAGES, NOTES);

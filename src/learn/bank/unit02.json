@@ -1968,7 +1968,109 @@
           "answer": "c",
           "explanation": "Inner electrons are near the nucleus and unshielded. The outer 3s electron is screened by ten inner electrons, so the nucleus holds it far more weakly."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q7-pes#w",
+        "quest": "q7-pes",
+        "title": "Reading a Photoelectron Spectrum",
+        "setup": "A photoelectron spectrometer bombards a sample of pure phosphorus gas (atomic number 15) with high-energy radiation. The spectrum shows five sharp peaks at binding energies of 208, 18.7, 13.5, 1.95, and 1.01 MJ/mol, with relative heights of 2, 2, 6, 2, and 3.",
+        "steps": [
+          {
+            "say": "Which subshell does the peak with the highest binding energy, 208 MJ/mol, come from?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "1s"
+              },
+              {
+                "id": "b",
+                "label": "2s"
+              },
+              {
+                "id": "c",
+                "label": "3p"
+              }
+            ],
+            "answer": "a",
+            "hint": "The electrons held most tightly sit closest to the nucleus.",
+            "explain": "Electrons in the 1s subshell are closest to the nucleus, feel the full nuclear charge with no inner shielding, and need the most energy (208 MJ/mol) to eject."
+          },
+          {
+            "say": "What is the complete electron configuration of phosphorus from the peaks in order of decreasing binding energy?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "1s² 2s² 2p⁶ 3s² 3p³"
+              },
+              {
+                "id": "b",
+                "label": "1s² 2s² 2p³ 3s² 3p⁶"
+              },
+              {
+                "id": "c",
+                "label": "1s² 2s² 2p⁶ 3s² 3d³"
+              }
+            ],
+            "answer": "a",
+            "hint": "Follow the subshell capacities matching the peak heights: 2, 2, 6, 2, 3.",
+            "explain": "The heights give the electron counts directly: 1s² (208 MJ/mol), 2s² (18.7 MJ/mol), 2p⁶ (13.5 MJ/mol), 3s² (1.95 MJ/mol), and 3p³ (1.01 MJ/mol)."
+          },
+          {
+            "say": "How many valence electrons does phosphorus have, according to the two lowest-energy peaks?",
+            "kind": "number",
+            "answer": 5,
+            "calc": "2 + 3",
+            "unit": "electrons",
+            "tol": 0.01,
+            "hint": "Valence electrons sit in the outermost principal energy level (n = 3).",
+            "explain": "The n = 3 shell holds 2 electrons in 3s and 3 electrons in 3p, giving 2 + 3 = 5 valence electrons."
+          },
+          {
+            "say": "How many MJ/mol does it take to remove one mole of the least tightly held valence electrons?",
+            "kind": "number",
+            "answer": 1.01,
+            "calc": "1.01",
+            "unit": "MJ/mol",
+            "tol": 0.01,
+            "hint": "The least tightly held electrons correspond to the lowest binding energy peak.",
+            "explain": "The 3p electrons are farthest from the nucleus and heavily shielded by 10 core electrons, requiring only 1.01 MJ/mol to remove."
+          },
+          {
+            "say": "What is the ionization energy in joules to eject a single 3p electron from one phosphorus atom? (Avogadro's number = 6.022 × 10²³ mol⁻¹)",
+            "kind": "number",
+            "answer": 1.677e-18,
+            "calc": "1.01e6 / 6.022e23",
+            "unit": "J",
+            "tol": 0.02,
+            "hint": "Convert 1.01 MJ to joules (1 MJ = 10⁶ J), then divide by Avogadro's number.",
+            "explain": "1.01 × 10⁶ J/mol ÷ 6.022 × 10²³ atoms/mol = 1.68 × 10⁻¹⁸ J per atom."
+          },
+          {
+            "say": "In the spectrum of sulfur (Z = 16), where would the 1s peak appear compared to phosphorus (Z = 15)?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "At higher binding energy (above 208 MJ/mol)"
+              },
+              {
+                "id": "b",
+                "label": "At lower binding energy (below 208 MJ/mol)"
+              },
+              {
+                "id": "c",
+                "label": "At exactly 208 MJ/mol"
+              }
+            ],
+            "answer": "a",
+            "hint": "Sulfur has 16 protons in its nucleus, while phosphorus has only 15.",
+            "explain": "With 16 protons, sulfur exerts a stronger Coulombic attraction on its 1s electrons than phosphorus does, shifting the 1s peak to a higher binding energy (around 247 MJ/mol)."
+          }
+        ],
+        "finish": "Photoelectron spectroscopy reads subshells by distance and shielding: higher binding energy means closer to the nucleus, and peak height counts the electrons."
+      }
     },
     "q8-trends": {
       "problems": [

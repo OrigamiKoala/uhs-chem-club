@@ -22,7 +22,7 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { matterTable, note, whereIs } from '../../table/kits/matter.js';
+import { matterTable, note, whereIs, leadFixture } from '../../table/kits/matter.js';
 import { solidCard, solidTestFixture, cardRows } from '../../table/kits/matter-tester.js';
 import { SOLIDS, meltText } from '../../engine/matterdata-tester.js';
 
@@ -89,7 +89,7 @@ function trayRow(defs) {
   const w = n === 2 ? 70 : n === 4 ? 33 : 27;
   const pitch = n === 2 ? 74 : n === 4 ? 36 : 29;
   const x0 = n === 2 ? 3 : n === 4 ? 3 : 2.5;
-  return defs.map(([id, label], i) => ({ id, label, at: { x: x0 + i * pitch + w / 2, y: 61 }, size: { w, h: 21 }, cell: 23.2, cellH: 19 }));
+  return defs.map(([id, label, view], i) => ({ id, label, ...(view ? { view } : {}), at: { x: x0 + i * pitch + w / 2, y: 61 }, size: { w, h: 21 }, cell: 23.2, cellH: 19 }));
 }
 
 function benchTable(items, tester, trays) {
@@ -166,19 +166,19 @@ export const STAGES = [
     return {
       id: 's1-melt',
       title: 'Five Solids',
-      prompt: 'Sort the solids by whether melting each one only has to overcome grips between molecules.',
+      prompt: 'Sort the solids by whether melting each one only has to overcome attractions between molecules.',
       widget,
-      table: benchTable(S1, tester, [['grips', 'Only grips between molecules'], ['stronger', 'Something stronger']]),
+      table: benchTable(S1, tester, [['grips', 'Only attractions between molecules'], ['stronger', 'Something stronger']]),
       hints: [
         'Use the tester, its "Test" dial and key, and the two trays.',
         'Compare each sample\'s melting trace with whether the lamp lit, cold and molten.',
-        'A solid belongs with the molecular solids only if its trace and its lamp both fit whole molecules held by weak grips.'
+        'A solid belongs with the molecular solids only if its trace and its lamp both fit whole molecules held by weak attractions.'
       ],
       check: fileCheck(S1, meltSay),
       reward: {
         log: 'Ice, iodine and naphthalene melted low and carried no current; gallium melted low and did.',
         title: 'Molecular Solids',
-        body: 'Ice, iodine and naphthalene are whole molecules held by weak grips, so a little heat frees them and the lamp stays dark: molecular solids. Gallium melts low too, but its lamp lit, so a low melting point alone does not make a solid molecular.'
+        body: 'Ice, iodine and naphthalene are whole molecules held by weak attractions, so little heat frees them and the lamp stays dark. Gallium melts low but its lamp lit, so it is not molecular.'
       }
     };
   })(),
@@ -197,6 +197,7 @@ export const STAGES = [
         note('differ', 'Quartz melts at one temperature; the glass goes soft gradually', { x: 78, y: 14 }),
         note('higher', 'The glass holds its shape to a higher temperature than quartz', { x: 30, y: 34 })
       ],
+      fixtures: [leadFixture('lead', { x: 117, y: 52 }, { scene: 'heater', w: 44, h: 24 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
@@ -260,7 +261,7 @@ export const STAGES = [
       title: 'Inside the Solid',
       prompt: 'File each sample as crystalline or amorphous.',
       widget,
-      table: benchTable(S4, tester, [['crystalline', 'Crystalline'], ['amorphous', 'Amorphous']]),
+      table: benchTable(S4, tester, [['crystalline', 'Crystalline', 'crystal'], ['amorphous', 'Amorphous', 'glass']]),
       hints: [
         'Use the tester\'s window: drag a sample into the slot, then drag it into a tray.',
         'Compare whether the particles of each sample sit in a pattern that repeats.',
@@ -293,7 +294,7 @@ export const STAGES = [
       reward: {
         log: 'Each kind of solid left its own record.',
         title: 'Four Records',
-        body: 'Metals flatten and light the lamp cold. Ionic solids shatter and light it only when molten. Network solids shatter, never light it and melt highest, while molecular solids crumble and melt low.'
+        body: 'Metals flatten and light the lamp cold; ionic solids shatter and light it only molten. Network solids shatter, never light it and melt highest; molecular solids crumble and melt low.'
       }
     };
   })(),
@@ -336,7 +337,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A molecular solid melts low because only the grips between its molecules give way. A crystalline solid melts at one temperature because its particles repeat in a pattern, and an amorphous solid such as glass softens over a range because it has none.'
+      body: 'A molecular solid melts low because only the attractions between its molecules give way. A crystalline solid melts at one temperature because its particles repeat in a pattern, and an amorphous solid such as glass softens over a range because it has none.'
     }
   ]
 };

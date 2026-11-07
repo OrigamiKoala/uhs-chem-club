@@ -24,7 +24,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { matterTable, note, plaqueFixture, markerFixture, markerRead, fixed } from '../../table/kits/matter.js';
+import { matterTable, note, plaqueFixture, markerFixture, markerRead, fixed, mleadFixture } from '../../table/kits/matter.js';
 import {
   heatCurveFixture, coolerFixture, phaseMapFixture, sampleCard, heatRead, coolRead, mapRead, sweptWithoutLiquid, pressureText
 } from '../../table/kits/matter-curve.js';
@@ -55,7 +55,7 @@ export function toolNoteFor() { return null; }
 
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit06/q5-crossing';
-const GUESS_LABEL = { lost: 'that it leaks into the room', apart: 'that it fights the pull between molecules', other: 'that it warms the cup and the air' };
+const GUESS_LABEL = { lost: 'that it leaks into the air', apart: 'that it fights the pull between molecules', other: 'that it warms the cup and the air' };
 
 /* ---- the figures every stage grades against, from the planners ---- */
 const M = PHASE_WATER.M;
@@ -123,15 +123,15 @@ export const STAGES = [
     return {
       id: 's1-curve',
       title: 'Ice on the Heater',
-      prompt: 'Warm the ice until its temperature stands still, then set the marker at the heat where it rises again.',
+      prompt: 'Warm the ice until its temperature stands still, then set the number dial at the heat where it rises again.',
       widget,
       table: matterTable({
-        fixtures: [rec, markerFixture('mk', 'Marker', { x: 126, y: 14 }, { min: 0, max: 10, step: 0.5, start: 0, unit: 'kJ' })]
+        fixtures: [rec, markerFixture('mk', 'Number dial', { x: 126, y: 14 }, { min: 0, max: 10, step: 0.5, start: 0, unit: 'kJ' })]
       }),
       hints: [
-        'Use the "Heat per press" dial and the "Heat" key, then drag the marker along its groove.',
+        'Use the "Heat per press" dial and the "Heat" key, then drag the number dial along its groove.',
         'Watch the thermometer and the pen as the heat added grows.',
-        'Read the heat on the bottom axis where the line leaves its level stretch, and set the marker to it.'
+        'Read the heat on the bottom axis where the line leaves its level stretch, and set the number dial to it.'
       ],
       check(state) {
         const t = state.table;
@@ -142,12 +142,12 @@ export const STAGES = [
         const v = markerRead(t, 'mk');
         if (Math.abs(v - FLAT_END) <= 0.6) return { ok: true };
         const where = v < FLAT_START ? 'is still on its first climb' : v < FLAT_END ? 'is level' : 'is already climbing again';
-        return { ok: false, msg: `The marker stands at ${v} kJ, and the line there ${where}.` };
+        return { ok: false, msg: `The number dial stands at ${v} kJ, and the line there ${where}.` };
       },
       reward: {
         log: 'Ice at −20 °C stood at 0 °C while about 6 kJ went in.',
         title: 'The Heating Curve',
-        body: 'A heating curve plots temperature against the heat added. It climbs while heat warms a sample, yet for this ice it stood still at 0 °C while about 6 kJ went in. Heat added does not always raise the temperature.'
+        body: 'A heating curve is a graph of temperature against the heat added. This ice stood still at 0 °C while about 6 kJ went in, so heat added does not always raise the temperature.'
       }
     };
   })(),
@@ -162,10 +162,11 @@ export const STAGES = [
     widget,
     table: matterTable({
       pieces: [
-        note('lost', 'It leaks out of the cup into the room', { x: 30, y: 14 }),
+        note('lost', 'It leaks out of the cup into the air', { x: 30, y: 14 }),
         note('apart', 'It works against the pull between the molecules', { x: 78, y: 14 }),
         note('other', 'It warms the cup and the air, not the ice', { x: 30, y: 34 })
       ],
+      fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'pull', w: 44, h: 24 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
@@ -293,7 +294,7 @@ export const STAGES = [
       reward: {
         log: 'Ice at −10 °C to steam at 110 °C took about 54.9 kJ.',
         title: 'Heat of Vaporization',
-        body: 'Each slope costs m × c × ΔT and each level stretch n × ΔH: 0.4, 6.0, 7.5, 40.6 and 0.4 kJ add to 54.9 kJ. Boiling a mole takes 40.65 kJ, the heat of vaporization, almost seven times the heat of fusion.'
+        body: 'Each slope costs m × c × ΔT and each level stretch n × ΔH, adding to 54.9 kJ. Boiling a mole takes 40.65 kJ, the heat of vaporization, almost seven times the heat of fusion.'
       }
     };
   })(),
@@ -363,7 +364,7 @@ export const STAGES = [
       reward: {
         log: 'Steam at 100 °C gave a hand about ten times the heat of water at 100 °C.',
         title: 'Why Steam Burns',
-        body: 'Steam at 100 °C gave 2.52 kJ a gram and water at 100 °C only 0.26 kJ. Most of the steam\'s heat comes out as it condenses, before it cools at all, so a little more heat in the steam hardly matters.'
+        body: 'Steam at 100 °C gave 2.52 kJ a gram, water at 100 °C only 0.26 kJ. Most of the steam\'s heat comes out as it condenses, before it cools at all.'
       }
     };
   })(),
@@ -395,7 +396,7 @@ export const STAGES = [
       reward: {
         log: 'Below 0.611 kPa ice turned straight to vapour.',
         title: 'Phase Diagrams',
-        body: 'Beyond the exam. A phase diagram maps the state of water by pressure and temperature. Below the triple point (0.01 °C, 0.611 kPa) ice turns straight to vapour; above the critical point (373.95 °C, 22.06 MPa) liquid and vapour become one fluid.'
+        body: 'Beyond the exam. A phase diagram maps water\'s state by pressure and temperature: below the triple point (0.611 kPa) ice turns straight to vapor, and past the critical point (22.06 MPa, 373.95 °C) liquid and vapor become one fluid.'
       }
     };
   })()
@@ -403,7 +404,7 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Press "Heat" to draw the line, then set the marker.'],
+  1: ['Press "Heat" to draw the line, then set the number dial.'],
   2: ['Drag the card you choose into the slot.'],
   3: ['Set the dial, press "Heat" and watch the window.'],
   4: ['Heat the cup to see its line, then type your answer.'],

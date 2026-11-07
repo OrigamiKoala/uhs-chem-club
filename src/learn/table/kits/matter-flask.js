@@ -17,6 +17,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture, registerPiece } from './matter-registry.js';
 import { say, slab, frameOf, paintGlyph } from './matter-draw.js';
+import { slideAt, shakeAt, glide } from './matter-motion.js';
 import { seatedIn } from './matter-read.js';
 import { addTourText } from '../tour.js';
 import { SUBSTANCES } from '../../engine/matterdata.js';
@@ -173,7 +174,8 @@ function paintPart(ctx, part, x, y, rad, hpx) {
   void hpx;
 }
 
-function paintWindow(ctx, F, f, R, wx, wy) {
+function paintWindow(ctx, F, f, R, wx, wy, b = {}) {
+  const t = b.clock || 0;
   const p = f.props;
   const ww = WIN.w; const wh = WIN.h;
   ctx.fillStyle = '#0f0e0b'; ctx.fillRect(F.x(wx), F.y(wy), F.len(ww), F.len(wh));
@@ -189,14 +191,29 @@ function paintWindow(ctx, F, f, R, wx, wy) {
   // The liquid's own molecules, faint, behind everything.
   const solventUnit = Math.max(3.4, hpx * 0.035);
   const sol = drop ? drop.solvent : dropOf({ sub: 'NaCl', solvent: liquid, units: 0, spreads: true }).solvent;
-  for (const m of sol) {
-    if (liquid === 'water') waterGlyph(ctx, U(m.u), V(m.v), solventUnit, 0.32);
-    else paintGlyph(ctx, 'hexane', U(m.u), V(m.v), solventUnit * 0.62, { alpha: 0.32 });
-  }
+  // The solvent's molecules slide about all the time; the solute's particles leave their clump and wander through them.
+  const wob = Math.max(0.006, 0.012);
+  sol.forEach((m, i) => {
+    const [dx, dy] = slideAt(i + 40, t, hpx * wob * 3.2);
+    if (liquid === 'water') waterGlyph(ctx, U(m.u) + dx, V(m.v) + dy, solventUnit, 0.32);
+    else paintGlyph(ctx, 'hexane', U(m.u) + dx, V(m.v) + dy, solventUnit * 0.62, { alpha: 0.32 });
+  });
+  const spreadK = drop ? glide(`${b.scope || ''}flask:${f.id}:${R.item?.id ?? ''}:${liquid}`, 1, t, { dur: 2.6 }) : 1;
+  const home = q => {
+    const cu = ASPECT / 2;
+    const packed = [cu + (q.u - cu) * 0.16, 0.5 + (q.v - 0.5) * 0.16];
+    return [packed[0] + (q.u - packed[0]) * spreadK, packed[1] + (q.v - packed[1]) * spreadK];
+  };
+  const moved = drop ? drop.parts.map((q, i) => {
+    const [hu, hv] = home(q);
+    const free = q.k === 'cation' || q.k === 'anion' || q.k === 'molecule' || q.k === 'small';
+    const [dx, dy] = free && spreadK > 0.5 ? slideAt(i, t, hpx * 0.02, 1.3) : shakeAt(i, t, hpx * 0.006, 1);
+    return { ...q, u: hu + dx / F.len(pw) * ASPECT, v: hv + dy / hpx };
+  }) : [];
   if (drop) {
     // A wrapped ion: three waters touching it. (Drawn under the ion itself.)
     if (drop.shellOn) {
-      for (const q of drop.parts) {
+      for (const q of moved) {
         const rad = Math.max(q.rad * hpx, 4.2);
         for (let k = 0; k < 3; k++) {
           const a = (q.a || 0) + (k / 3) * Math.PI * 2;
@@ -205,7 +222,7 @@ function paintWindow(ctx, F, f, R, wx, wy) {
         }
       }
     }
-    for (const q of drop.parts) paintPart(ctx, q, U(q.u), V(q.v), Math.max(q.rad * hpx, q.k === 'cation' || q.k === 'anion' ? 5.2 : 3), hpx);
+    for (const q of moved) paintPart(ctx, q, U(q.u), V(q.v), Math.max(q.rad * hpx, q.k === 'cation' || q.k === 'anion' ? 5.2 : 3), hpx);
   }
   // The rows under the glass: what the drop is of, and what a stage chooses to print.
   const cap = `A DROP, IN ${LIQUIDS[liquid]?.caption ?? 'WATER'}`;
@@ -251,7 +268,7 @@ function paintFlaskFixture(ctx, f, state, b) {
   const top = p.top;
   if (p.pan) paintBalance(ctx, F, f, R, top);
   paintFlaskBlock(ctx, F, f, R, p.fx0, top);
-  paintWindow(ctx, F, f, R, p.fx0 + 22, top + 1);
+  paintWindow(ctx, F, f, R, p.fx0 + 22, top + 1, b);
 }
 
 /* ------------------------------------------------------------------
@@ -326,7 +343,7 @@ addTourText({
     text: (f) => {
       const p = f.props;
       const bits = [];
-      if (p.pan) bits.push('On the left is a balance pan. Drag a card onto the pan and it reads how many grams the card holds. The card keeps that weight.');
+      if (p.pan) bits.push('On the left is a balance. Drag a card onto the balance and it reads how many grams the card holds. The card keeps that weight.');
       bits.push(`${p.pan ? 'Next to it' : 'On the left'} is a flask with a mark round its neck. Drag a card onto the flask's mouth and the card goes into the water in the flask, filled up to the mark.`);
       bits.push('The window beside the flask shows a small drop of what is in the flask, close up. Water molecules are small and faint. Every other disc or blob is one particle, and a disc with a + or − on it carries that charge. The same size of drop is shown every time, so more particles in the window means more crowded.');
       if (f.dials.fill) bits.push('The "Flask" dial swaps in a bigger or smaller flask, always filled to its mark.');
@@ -338,7 +355,7 @@ addTourText({
     }
   }
 }, {
-  sample: ['Sample cards', 'Each card is one sample: a powder, a liquid, or a flask someone has already made up. Drag a card onto the balance pan or the flask\'s mouth, and then onto a tray or the strip if you want to file it. A card that has been on the pan keeps its weight, and a card that has been in the flask keeps what the window showed.']
+  sample: ['Sample cards', 'Each card is one sample: a powder, a liquid, or a flask someone has already made up. Drag a card onto the balance or the flask\'s mouth, and then onto a tray or the strip if you want to file it. A card that has been on the balance keeps its weight, and a card that has been in the flask keeps what the window showed.']
 });
 
 void SUBSTANCES;

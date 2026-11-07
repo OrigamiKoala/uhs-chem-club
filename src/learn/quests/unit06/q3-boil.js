@@ -23,7 +23,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { matterTable, molCard, probeFixture, selectorFixture, dialAt, whereIs, note, fixed, probeRead } from '../../table/kits/matter.js';
+import { matterTable, molCard, probeFixture, selectorFixture, dialAt, whereIs, note, fixed, probeRead, mleadFixture } from '../../table/kits/matter.js';
 import { flaskFixture, liquidCard, packCard, surfaceFixture, surfaceRows, cellFixture, jarFixture, fmtP } from '../../table/kits/matter-vapour.js';
 import { SUBSTANCES, vaporPressure, boilingPoint, LIQUID_PROPS } from '../../engine/matterdata.js';
 import {
@@ -56,7 +56,7 @@ const PROBE_WELL = 'slot:probe.well';
 const QUEST_KEY = 'unit06/q3-boil';
 const GUESS_LABEL = { always: 'that it still boils at 100 °C', lower: 'below 100 °C', higher: 'above 100 °C' };
 
-const gripText = id => `grip ${(SUBSTANCES[id].grip + 1e-9).toFixed(1)} kJ`;
+const gripText = id => `attraction ${(SUBSTANCES[id].grip + 1e-9).toFixed(1)} kJ`;
 const mass = id => `${SUBSTANCES[id].M.toFixed(SUBSTANCES[id].M < 100 ? 1 : 0)} g/mol`;
 /** A row of `n` cards along the bottom of the table. */
 const at = (n, y = 54, x0 = 24, pitch = 22) => Array.from({ length: n }, (_, i) => ({ x: x0 + i * pitch, y }));
@@ -152,7 +152,7 @@ export const STAGES = [
     return {
       id: 's1-sealed',
       title: 'Sealed Liquids',
-      prompt: 'Order ether, ethanol and water by the pressure the gauge settles at in a sealed flask.',
+      prompt: 'Order ether, ethanol and water by the pressure at which the pressure gauge settles in a sealed flask.',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
@@ -162,14 +162,14 @@ export const STAGES = [
       }),
       hints: [
         'Use the flask, its "Settle" key and the rail.',
-        'Compare the pressure the gauge settled at for each card, and with the grips you measured on the second bench.',
+        'Compare the pressure the pressure gauge settled at for each card, and with the attractions you measured on the second bench.',
         'Rank the cards by the pressure each one settled at, from the lowest to the highest.'
       ],
       check: railCheck(VP25_ORDER.map(idOf), vpOf, fmtP, 'kPa', 'flask'),
       reward: {
         log: 'Every liquid made a pressure and then stopped rising.',
         title: 'Vapor Pressure',
-        body: 'Molecules leave a liquid\'s surface and return to it, and the gauge stops rising when the two flows match. That steady pressure is the liquid\'s vapor pressure. Ether, whose grip is the weakest of the three, settled highest, and water, whose grip is the strongest, lowest.'
+        body: 'The pressure gauge stops rising when molecules leave the liquid as fast as they return: that steady pressure is the vapor pressure. The weaker the attraction between molecules, the higher it settles.'
       }
     };
   })(),
@@ -182,7 +182,7 @@ export const STAGES = [
     return {
       id: 's2-warm',
       title: 'Warm and Cold',
-      prompt: 'Order the four samples by the pressure the gauge settles at.',
+      prompt: 'Order the four samples by the pressure at which the pressure gauge settles.',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
@@ -192,14 +192,14 @@ export const STAGES = [
       }),
       hints: [
         'Use the flask, its "Settle" key and the rail.',
-        'Compare what the gauge settled at for each card with the temperature printed on it.',
+        'Compare where the pressure gauge settled for each card with the temperature printed on it.',
         'Rank the cards by the pressure each one settled at, from the lowest to the highest, whatever the liquid.'
       ],
       check: railCheck(WARM_ORDER, vpOf, fmtP, 'kPa', 'flask'),
       reward: {
-        log: 'Warm water out-pushed cold ether.',
+        log: 'Warm water had a higher vapor pressure than cold ether.',
         title: 'Heat Raises It',
-        body: 'Warming a liquid sends more of its molecules into the vapor, so its vapor pressure climbs steeply with temperature. Warm water settled above cold ether, though water\'s grip is far stronger.'
+        body: 'Warming a liquid sends more of its molecules into the vapor, so its vapor pressure climbs steeply with temperature. Warm water settled above cold ether, though water\'s attraction is far stronger.'
       }
     };
   })(),
@@ -218,11 +218,12 @@ export const STAGES = [
         note('lower', 'It boils below 100 °C', { x: 78, y: 14 }),
         note('higher', 'It boils above 100 °C', { x: 30, y: 34 })
       ],
+      fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'sealed', w: 44, h: 24 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the three cards and the slot.',
-      'Think about what the last two stages showed the gauge doing as a liquid was warmed.',
+      'Think about what the last two stages showed the pressure gauge doing as a liquid was warmed.',
       'Commit to the card you believe, and the next bench tests it.'
     ],
     check(state) {
@@ -317,7 +318,7 @@ export const STAGES = [
       },
       reward: {
         log: 'Light water boiled hotter than heavier butane.',
-        title: 'The Grip Sets the Boiling Point',
+        title: 'The Attraction Sets the Boiling Point',
         body: 'Boiling pulls molecules away from their neighbours, so the harder they hold on, the more heat it takes and the higher the boiling point. Light water boils far hotter than heavier butane.'
       }
     };
@@ -326,20 +327,20 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   (() => {
     const plate = surfaceFixture('plate', { x: 41, y: 23 });
-    const answer = selectorFixture('answer', 'The grip is followed by', { x: 122, y: 24 }, { options: S6_OPTIONS, start: S6_OPTIONS.length, w: 46 });
+    const answer = selectorFixture('answer', 'The attraction is followed by', { x: 122, y: 24 }, { options: S6_OPTIONS, start: S6_OPTIONS.length, w: 46 });
     const pos = at(3);
     const names = { H2O: 'water', ethanol: 'ethanol', hexane: 'hexane' };
     const cards = S6.map((s, i) => liquidCard(idOf(s), s, names[s], pos[i], { shown: gripText(s) }));
     return {
       id: 's6-surface',
       title: 'Surface and Pour',
-      prompt: 'Which reading follows the grip across the three liquids: surface pull, pour time, both or neither?',
+      prompt: 'Which reading follows the attraction across the three liquids: surface pull, pour time, both or neither?',
       widget,
       table: matterTable({ pieces: cards, fixtures: [plate.fixture, answer], zones: { slots: [plate.slot] } }),
       hints: [
         'Use the plate, its "Test" key and the answer dial.',
-        'Compare each column of the table with the grip printed on the cards.',
-        'Line the liquids up by grip, then see which column keeps that order.'
+        'Compare each column of the table with the attraction printed on the cards.',
+        'Line the liquids up by attraction, then see which column keeps that order.'
       ],
       check(state) {
         const t = state.table;
@@ -348,13 +349,13 @@ export const STAGES = [
         if (v === FOLLOWS) return { ok: true };
         const rows = surfaceRows(t, 'plate');
         if (rows.length < S6.length) return { ok: false, msg: `The table has a row for ${rows.length} of the 3 liquids.` };
-        const line = id => `${SUBSTANCES[id].name} ${fixed(surfacePull(id), 1)} mN/m and ${fixed(pourTime(id), 1)} s on grip ${(SUBSTANCES[id].grip + 1e-9).toFixed(1)} kJ`;
+        const line = id => `${SUBSTANCES[id].name} ${fixed(surfacePull(id), 1)} mN/m and ${fixed(pourTime(id), 1)} s on attraction ${(SUBSTANCES[id].grip + 1e-9).toFixed(1)} kJ`;
         return { ok: false, msg: `The table reads ${S6.map(line).join('; ')}.` };
       },
       reward: {
-        log: 'The surface pull followed the grip; the pour time did not.',
+        log: 'The surface pull followed the attraction; the pour time did not.',
         title: 'Surface Tension and Viscosity',
-        body: 'Molecules at a surface are pulled inward by their neighbours, which gives surface tension, and a stronger grip makes it higher. How slowly a liquid pours is its viscosity, and the grip is not all that sets it: ethanol grips less than water yet pours slower.'
+        body: 'A stronger attraction between molecules gives a liquid a higher surface tension. Viscosity, how slowly it pours, depends on more than that: ethanol attracts less than water yet pours slower.'
       }
     };
   })(),
@@ -397,7 +398,7 @@ export const STAGES = [
       reward: {
         log: 'Ice weighs less than water in the same space.',
         title: 'Why Ice Floats',
-        body: 'Hydrogen bonds hold the molecules of ice in an open lattice with more room between them than in liquid water. The same molecules take more space, so ice is less dense than water and floats.'
+        body: 'Hydrogen bonds hold the molecules of ice in an open lattice with more space between them than in liquid water. The same molecules take more space, so ice is less dense than water and floats.'
       }
     };
   })(),
@@ -410,27 +411,27 @@ export const STAGES = [
     return {
       id: 's8-jar',
       title: 'Gas Over Water',
-      prompt: `Type the pressure of the gas alone in the jar, whose gauge reads ${JAR.total} kPa.`,
+      prompt: `Type the pressure of the gas alone in the jar, whose pressure gauge reads ${JAR.total} kPa.`,
       entry: { id: 'gas', label: 'Gas alone', unit: 'kPa' },
       widget,
       table: matterTable({ pieces: [water], fixtures: [flask.fixture, jar], zones: { slots: [flask.slot] } }),
       hints: [
         'Use the water card, the Heater dial, the "Settle" key and the number field.',
         'Compare the jar\'s temperature with the heater steps either side of it on the plot.',
-        'Read the water\'s own pressure at the jar\'s temperature from between those steps, then work out how much of the gauge is left for the gas.'
+        'Read the water\'s own pressure at the jar\'s temperature from between those steps, then work out how much of the total is left for the gas.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'gas');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
         if (Math.abs(v - GAS_ALONE) <= GAS_TOL) return { ok: true };
-        if (Math.abs(v - JAR.total) <= 0.3) return { ok: false, msg: `The jar's gauge reads ${JAR.total} kPa, and the gauge counts everything inside the jar.` };
-        return { ok: false, msg: `The gas and the water vapor make up the gauge's ${JAR.total} kPa between them, and ${fixed(v, 1)} kPa of gas leaves a different share for the vapor than the plot shows at ${JAR.T} °C.` };
+        if (Math.abs(v - JAR.total) <= 0.3) return { ok: false, msg: `The jar's pressure gauge reads ${JAR.total} kPa, and that total counts everything inside the jar.` };
+        return { ok: false, msg: `The gas and the water vapor make up the total ${JAR.total} kPa between them, and ${fixed(v, 1)} kPa of gas leaves a different share for the vapor than the plot shows at ${JAR.T} °C.` };
       },
       reward: {
-        log: 'The gauge was the gas plus the water vapor.',
+        log: 'The total pressure was the gas plus the water vapor.',
         title: 'Gas Over Water',
-        body: 'A gas collected over water is mixed with water vapor, and each pushes with its own pressure. The gas alone is the gauge less the vapor pressure of water at the jar\'s temperature.'
+        body: 'A gas collected over water is mixed with water vapor, and each exerts its own pressure. The gas alone is the total pressure less the vapor pressure of water at the jar\'s temperature.'
       }
     };
   })()
@@ -457,7 +458,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A liquid in a sealed flask settles at its vapor pressure, which rises with temperature and falls with a stronger grip. It boils where its vapor pressure meets the pressure outside, so its boiling point is not fixed at 100 °C.'
+      body: 'A liquid in a sealed flask settles at its vapor pressure, which rises with temperature and falls with a stronger attraction. It boils where its vapor pressure meets the pressure outside, so its boiling point is not fixed at 100 °C.'
     }
   ]
 };

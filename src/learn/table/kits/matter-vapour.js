@@ -22,6 +22,7 @@ import { seatedIn } from './matter-read.js';
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { addTourText } from '../tour.js';
 import { SUBSTANCES, ANTOINE, vaporPressure, LIQUID_PROPS } from '../../engine/matterdata.js';
+import { gasAt, slideAt, speedAt, h01, glide } from './matter-motion.js';
 import { surfacePull, pourTime, BOX_MASS, PICTURE_COUNT, JAR, vaporDots } from '../../engine/matterdata-vapour.js';
 
 const AMBER = PLATE_COLORS.amber;
@@ -122,20 +123,34 @@ function paintFlask(ctx, f, state, b) {
     ctx.fillStyle = r.boiling ? 'rgba(192,101,43,0.30)' : 'rgba(111,143,176,0.32)';
     ctx.fillRect(F.x(cx - R), F.y(levelY), F.len(R * 2), F.len(cy + R - levelY));
     ctx.restore();
+    const t = b.clock || 0;
+    const sp = speedAt(r.T);
+    // The liquid: its molecules slide past one another, faster when warm.
+    ctx.fillStyle = '#cfe2f1';
+    for (let i = 0; i < 16; i++) {
+      const hx = cx - 6.6 + (i % 4) * 4.4 + (Math.floor(i / 4) % 2) * 1.6; const hy = levelY + 2 + Math.floor(i / 4) * 1.9;
+      const [dx, dy] = slideAt(i, t, 0.55 * sp, sp);
+      ctx.beginPath(); ctx.arc(F.x(hx + dx), F.y(hy + dy), Math.max(1.2, F.len(0.5)), 0, Math.PI * 2); ctx.fill();
+    }
     if (r.boiling) {
+      // Boiling: bubbles of vapor form in the liquid and rise to the surface.
       ctx.strokeStyle = DUST;
       for (let i = 0; i < 7; i++) {
-        const bx = cx - 6 + spread(i, 1) * 12; const by = levelY + 1.5 + spread(i, 2) * 5.5;
-        ctx.beginPath(); ctx.arc(F.x(bx), F.y(by), F.len(0.5 + spread(i, 3) * 0.8), 0, Math.PI * 2); ctx.stroke();
+        const rise = (t * (0.5 + 0.4 * h01(i, 4)) + h01(i, 5)) % 1;
+        const bx = cx - 6 + h01(i, 1) * 12; const by = levelY + 7.5 - rise * 6.5;
+        ctx.beginPath(); ctx.arc(F.x(bx), F.y(by), F.len(0.5 + rise * 0.9), 0, Math.PI * 2); ctx.stroke();
       }
     }
     if (r.valid) {
+      // The vapor: as many molecules as the planner gives for this liquid at this temperature, flying and bouncing above the surface.
       const n = vaporDots(r.sub, r.T);
       ctx.fillStyle = DUST;
+      const y0 = cy - 8.2; const y1 = levelY - 1.4;
       for (let i = 0; i < n; i++) {
-        const y = cy - 8.2 + spread(i, 2) * (levelY - 1.4 - (cy - 8.2));
+        const [u, v] = gasAt(i, t, sp * 2.4);
+        const y = y0 + v * (y1 - y0);
         const half = Math.sqrt(Math.max(0.5, (R - 1.1) ** 2 - (y - cy) ** 2));
-        const x = cx + (spread(i, 1) - 0.5) * 2 * half * 0.92;
+        const x = cx + (u - 0.5) * 2 * half * 0.92;
         ctx.beginPath(); ctx.arc(F.x(x), F.y(y), Math.max(1.3, F.len(0.62)), 0, Math.PI * 2); ctx.fill();
       }
     }
@@ -331,8 +346,11 @@ function paintJar(ctx, f, state, b) {
   ctx.beginPath(); ctx.moveTo(F.x(jx0), F.y(jy1 + 1.6)); ctx.lineTo(F.x(jx0), F.y(jy0)); ctx.lineTo(F.x(jx1), F.y(jy0)); ctx.lineTo(F.x(jx1), F.y(jy1 + 1.6)); ctx.stroke(); ctx.lineWidth = 1;
   ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(F.x(1), F.y(level)); ctx.lineTo(F.x(29), F.y(level)); ctx.stroke();
   ctx.fillStyle = DUST;
+  const t = b.clock || 0;
   for (let i = 0; i < 36; i++) {
-    const x = jx0 + 2 + spread(i, 1) * (jx1 - jx0 - 4); const y = jy0 + 2 + spread(i, 2) * (level - jy0 - 4);
+    // The gas and the water vapor fly about together and bounce off the walls and the water.
+    const [u, v] = gasAt(i, t, speedAt(p.T) * 2.2);
+    const x = jx0 + 2 + u * (jx1 - jx0 - 4); const y = jy0 + 2 + v * (level - jy0 - 4);
     ctx.beginPath(); ctx.arc(F.x(x), F.y(y), Math.max(1.3, F.len(0.6)), 0, Math.PI * 2); ctx.fill();
   }
   say(ctx, 'GAS AND WATER VAPOR', F.x(32), F.y(12), F.size(1.7, 5.8), { color: DIM });
@@ -444,7 +462,7 @@ registerPiece('pack', {
 addTourText({
   'matter:vapour': {
     title: 'Flask', dials: false,
-    text: 'A flask holds a liquid, with a gauge beside it. Drag a liquid card into the square on its left and press "Settle": the gauge rises, levels off, and the number is the pressure it stopped at, in kPa. The dots above the liquid are molecules that have left it. Where the flask has a "Heater" dial it sets the liquid\'s temperature, and where it has an "Outside" dial it opens the flask to a room at that pressure, shown as an amber line on the plot. A plot beside the flask adds one point for every reading you take. The card keeps the number it settled at.'
+    text: 'A flask holds a liquid, with a pressure gauge beside it. Drag a liquid card into the square on its left and press "Settle": the pressure gauge rises, levels off, and the number is the pressure it stopped at, in kPa. The dots above the liquid are molecules that have left it. Where the flask has a "Heater" dial it sets the liquid\'s temperature, and where it has an "Outside" dial it opens the flask to a volume at that pressure, shown as an amber line on the plot. A plot beside the flask adds one point for every reading you take. The card keeps the number it settled at.'
   },
   'matter:surface': {
     title: 'Surface and pour plate', dials: false,
@@ -456,7 +474,7 @@ addTourText({
   },
   'matter:jar': {
     title: 'Jar over water', dials: false,
-    text: 'An upturned jar stands in water and holds a gas that was collected over it, mixed with the molecules that came off the water. The plate prints the pressure the jar\'s gauge reads for everything inside, and the jar\'s temperature. It does not change.'
+    text: 'An upturned jar stands in water and holds a gas that was collected over it, mixed with the molecules that came off the water. The plate prints the pressure the jar\'s pressure gauge reads for everything inside, and the jar\'s temperature. It does not change.'
   }
 }, {
   liquid: ['Liquid cards', 'Each card names one liquid and draws its molecule. Drag a card into the flask, plate or box that tests it, then back to where it belongs. A card keeps the number its test read, so you can compare cards after they are out again.'],

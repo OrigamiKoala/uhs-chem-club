@@ -71,7 +71,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   }
 
   // The predict stage shows no instrument; every other stage's untouched table does not pass.
-  holds(!Object.keys(start(mod, 3).fixtures).length, `${q} stage 4: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 3).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 4: the predict stage shows an instrument`);
   for (const i of [0, 1, 2, 4, 5, 6, 7]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
   // Stage 1 evidence: the window shows spread for the two soluble powders and lumps for the others, at the time each is in the flask.
   for (const s of CK.POWDERS) {

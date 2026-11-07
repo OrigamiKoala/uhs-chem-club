@@ -16,6 +16,7 @@ import { contentTop } from './heat-draw.js';
 import { seatedIn } from './heat-read.js';
 import { say, slab, frameOf } from './matter-draw.js';
 import { registerFixture, registerPiece } from './matter-registry.js';
+import { glide, gasAt, slideAt, h01 } from './matter-motion.js';
 import { addTourText } from '../tour.js';
 import {
   FRONT_CM, SOLVENT_ORDER, SOLVENT_LABEL, SOLVENT_SHORT, DYE_COLOUR, DYE_NAME, INKS, spotCm,
@@ -106,8 +107,10 @@ function paintStrip(ctx, f, state, b) {
     word(ctx, F, SOLVENT_SHORT[s], xc, top + 2.2, 2.0, { align: 'center', color: lit ? AMBER : DUST, maxW: 11, weight: lit ? 700 : 500 });
     rect(ctx, F, xc - 4, cmY(11.2), 8, cmY(0) + 1 - cmY(11.2), '#1c1a16', STEEL);
     const did = r.item && r.ran[s] != null;
+    // The solvent climbs the paper after the key is pressed, and each dye is carried up behind it.
+    const rise = did ? glide(`${b.scope || ''}strip:${f.id}:${r.item.id}:${s}:${r.ran[s]}`, 1, b.clock || 0, { dur: 3 }) : 0;
     if (did) {
-      const fy = cmY(r.ran[s]);
+      const fy = cmY(r.ran[s] * rise);
       rect(ctx, F, xc - 3.6, fy, 7.2, cmY(0) + 0.8 - fy, 'rgba(111,143,176,0.18)');
       seg(ctx, F, xc - 4, fy, xc + 4, fy, DUST);
     }
@@ -116,9 +119,9 @@ function paintStrip(ctx, f, state, b) {
     const dyes = INKS[r.item.props.ink]?.dyes || [];
     if (!did) { disc(ctx, F, xc, cmY(0), 1.3, '#2a2620', STEEL); return; }
     for (const d of dyes) {
-      const y = cmY(spotCm(d, s, r.ran[s]));
+      const y = cmY(spotCm(d, s, r.ran[s]) * rise);
       ctx.fillStyle = DYE_COLOUR[d];
-      ctx.beginPath(); ctx.ellipse(F.x(xc), F.y(y), F.len(2.0), F.len(1.3), 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(F.x(xc), F.y(y), F.len(1.5), 0, Math.PI * 2); ctx.fill();
     }
   });
   word(ctx, F, 'A SIMULATION', 3, top + 25, 2.0, { maxW: 26 });
@@ -163,12 +166,21 @@ function paintFilter(ctx, f, state, b) {
   ctx.lineWidth = 1;
   seg(ctx, F, 35, top + 4, 45, top + 16, STEEL); seg(ctx, F, 55, top + 4, 45, top + 16, STEEL);
   seg(ctx, F, 36.5, top + 4.5, 45, top + 14.5, DUST); seg(ctx, F, 53.5, top + 4.5, 45, top + 14.5, DUST);
+  const clock = b.clock || 0;
+  // After the key, the mixture falls into the funnel: grains stop on the paper and the liquid drips through into the cup.
+  const fall = pr ? glide(`${b.scope || ''}filter:${f.id}:${r.item.id}`, 1, clock, { dur: 1.6 }) : 1;
   if (pr?.onPaper) {
     const col = MIXTURES[r.item.props.mix].id === 'sand' ? '#b79a5f' : '#8a6a3f';
     for (let i = 0; i < 9; i++) {
       const t = (i + 0.5) / 9; const side = i % 2 ? 1 : -1;
       const yy = top + 6 + t * 8; const xx = 45 + side * (8.5 - t * 7.5) * (1 - t * 0.1);
-      rect(ctx, F, xx - 0.6, yy - 0.6, 1.2, 1.2, col);
+      disc(ctx, F, xx, top + 0.5 + (yy - top - 0.5) * fall, 0.7, col);
+    }
+  }
+  if (pr) {
+    for (let i = 0; i < 4; i++) {
+      const k = (clock * 0.9 + i / 4) % 1;
+      disc(ctx, F, 45 + Math.sin(i * 2.1) * 0.6, top + 15.5 + k * 6.5, 0.5, '#7fb2d9');
     }
   }
   // The cup under it.
@@ -234,6 +246,23 @@ function paintStill(ctx, f, state, b) {
     word(ctx, F, STILL_NAME[id], 6.5, y, 2.0, { color: DUST, maxW: 20 });
   });
   word(ctx, F, 'SIMPLE MODEL', 3, top + 42.2, 2.0, { maxW: 26 });
+  // The flask boils while it has liquid: bubbles rise and vapour climbs the column; each new cut drips into its vial.
+  const clock = b.clock || 0;
+  if (level > 0 && r.cuts > 0) {
+    for (let i = 0; i < 5; i++) {
+      const k = (clock * 0.55 + h01(i, 1)) % 1;
+      disc(ctx, F, 10 + h01(i, 2) * 10, top + 25 - k * 8 * level, 0.5 + k * 0.5, 'rgba(220,214,200,0.8)');
+    }
+    for (let i = 0; i < 6; i++) {
+      const k = (clock * 0.35 + i / 6) % 1;
+      disc(ctx, F, 36.2 + (i % 2) * 3.6, top + 30 - k * 27, 0.6, '#d8cfbc');
+    }
+  }
+  if (r.cuts > 0 && r.cuts <= 3) {
+    const vi = r.cuts - 1; const xv = 52.5 + vi * 10;
+    const fall = glide(`${b.scope || ''}still:${f.id}:${r.cuts}`, 1, clock, { dur: 1.4 });
+    if (fall < 1) for (let i = 0; i < 4; i++) disc(ctx, F, xv + 3.5, top + 3 + ((fall * 5 + i * 0.25) % 1) * 22 * (1 - 0.2 * i), 0.5, '#7fb2d9');
+  }
   // The column: three steps in a tube, and the thermometer reading at its top.
   rect(ctx, F, 35, top + 3, 6, 27, '#100f0c', STEEL);
   for (let i = 1; i <= COLUMN_STAGES; i++) seg(ctx, F, 35, top + 3 + i * 6.75, 41, top + 3 + i * 6.75, DIM);
@@ -299,7 +328,10 @@ function paintBoiler(ctx, f, state, b) {
   // The pot: bubbles once it has boiled.
   seg(ctx, F, 33, top + 6, 33, top + 22, STEEL); seg(ctx, F, 51, top + 6, 51, top + 22, STEEL); seg(ctx, F, 33, top + 22, 51, top + 22, STEEL);
   rect(ctx, F, 33.6, top + 12, 16.8, 9.8, r.item ? GLASS : 'rgba(111,143,176,0.1)');
-  if (r.reading != null) for (let i = 0; i < 6; i++) disc(ctx, F, 36 + (i * 2.7) % 13, top + 19 - ((i * 5) % 7), 0.7, TEXT);
+  const clock = b.clock || 0;
+  // The water's molecules slide about; once boiled, bubbles rise from the bottom to the surface.
+  if (r.item) for (let i = 0; i < 12; i++) { const [dx, dy] = slideAt(i, clock, 0.8); disc(ctx, F, 35.4 + (i % 6) * 2.9 + dx, top + 15 + Math.floor(i / 6) * 3.4 + dy, 0.5, '#cfe2f1'); }
+  if (r.reading != null) for (let i = 0; i < 6; i++) { const k = (clock * (0.5 + 0.3 * h01(i, 3)) + h01(i, 4)) % 1; disc(ctx, F, 36 + (i * 2.7) % 13, top + 21 - k * 9, 0.5 + k * 0.5, TEXT); }
   // The thermometer: 99.5 to 103.5 °C, a mark at the boiling point of water alone, and a column that stands at the reading.
   const ty0 = top + 3; const ty1 = top + 30; const lo = 99.5; const hi = 103.5;
   const Y = T => ty1 - ((T - lo) / (hi - lo)) * (ty1 - ty0);
@@ -309,7 +341,9 @@ function paintBoiler(ctx, f, state, b) {
   word(ctx, F, 'WATER ALONE', 66.5, Y(WATER_BP) + 2.2, 2.0, { maxW: 14 });
   if (r.reading != null) {
     const T = WATER_BP + r.reading;
-    rect(ctx, F, 60.6, Y(T), 2.8, ty1 - Y(T) - 0.4, AMBER);
+    const rise = glide(`${b.scope || ''}boil:${f.id}:${r.idx}:${r.reading}`, 1, clock, { dur: 1.8 });
+    const Ts = WATER_BP + (T - WATER_BP) * rise;
+    rect(ctx, F, 60.6, Y(Ts), 2.8, ty1 - Y(Ts) - 0.4, AMBER);
     word(ctx, F, `${T.toFixed(2)} °C`, 66.5, Y(T) - 1.2, 2.4, { color: AMBER, weight: 700, maxW: 14 });
   }
 }
@@ -340,7 +374,13 @@ function paintPlan(ctx, f, state, b) {
     seg(ctx, F, 3, y - 3.2, 57, y - 3.2, DIM);
     word(ctx, F, label, 3, y, 2.0, { maxW: 24 });
     if (!r[key].length) { word(ctx, F, '—', 29, y, 2.0); return; }
-    r[key].forEach((k, j) => { rect(ctx, F, 29 + j * 10, y - 1, 2, 2, PLAN_INK[k]); word(ctx, F, k, 32 + j * 10, y, 2.0, { color: TEXT, maxW: 8 }); });
+    r[key].forEach((k, j) => {
+      // Each part travels from the start line to where the steps send it.
+      const g = glide(`${b.scope || ''}plan:${f.id}:${k}:${key}`, 1, b.clock || 0, { dur: 1.4 });
+      const sx = 3 + PLAN_PARTS.indexOf(k) * 14 + 1; const sy = top + 5.2;
+      disc(ctx, F, sx + (30 + j * 10 - sx) * g, sy + (y - sy) * g, 1, PLAN_INK[k]);
+      word(ctx, F, k, 32 + j * 10, y, 2.0, { color: TEXT, maxW: 8 });
+    });
   });
 }
 

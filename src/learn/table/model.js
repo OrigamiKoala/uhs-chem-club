@@ -173,6 +173,8 @@ export function createTable(spec, seedKey = '') {
       ...(t.cap != null ? { cap: t.cap } : {}),
       ...(t.cell ? { cell: t.cell } : {}),
       ...(t.cellH ? { cellH: t.cellH } : {}),
+      // A kit may draw a picture inside a tray (`view`): the matter kit draws the moving particles of a lump, a pool or a gas.
+      ...(t.view ? { view: t.view } : {}),
       ...(t.spot ? { spot: true } : {}),
       ...(t.nucleus ? { nucleus: true } : {}),
       ...(t.round ? { round: true } : {}),

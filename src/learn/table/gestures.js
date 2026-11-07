@@ -557,7 +557,9 @@ export class TableGestures {
       return;
     }
     const y0 = g.box.y0 + dr.y0; const y1 = g.box.y0 + dr.y1;
-    const frac = Math.max(0, Math.min(1, (y1 - u.y) / (y1 - y0)));
+    const frac0 = Math.max(0, Math.min(1, (y1 - u.y) / (y1 - y0)));
+    // `invert`: the pointer's depth sets the dial (a piston pushed down compresses: low is the largest setting).
+    const frac = dr.invert ? 1 - frac0 : frac0;
     const value = snapDial(d, Math.max(d.min, Math.min(d.max, dr.scale * frac)));
     if (value !== d.value) this.view.dispatch({ setDial: { fixture: id, dial: z.dial, value } });
   }

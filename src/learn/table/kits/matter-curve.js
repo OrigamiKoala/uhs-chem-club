@@ -21,6 +21,7 @@
 import { registerFixture, registerPiece } from './matter-registry.js';
 import { say, slab, frameOf, topOf } from './matter-draw.js';
 import { paintGlyph } from './matter-draw.js';
+import { placeIn, glide } from './matter-motion.js';
 import { seatedIn, markerRead, fixed } from './heat-read.js';
 import { addTourText } from '../tour.js';
 import { PLATE_COLORS, mulberry32 } from '../../engine/plates.js';
@@ -213,16 +214,29 @@ function axes(ctx, F, a) {
 const linTicks = (lo, hi, step) => tickList(lo, hi, step).map(v => ({ v, s: minus(round(v, 6)) }));
 
 /** The pen: a line through `pts` (pixel pairs), cut where it leaves the well, and its tip as a small amber square. */
-function pen(ctx, F, pts, color = PHOS, tip = true) {
+function pen(ctx, F, pts, color = PHOS, tip = true, frac = 1) {
   if (!pts.length) return;
+  // The pen draws the line over time: only the first `frac` of it (by length) is down.
+  let draw = pts;
+  if (frac < 1 && pts.length > 1) {
+    const len = pts.slice(1).map((q, i) => Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]));
+    let left = len.reduce((a, c) => a + c, 0) * Math.max(0, frac);
+    draw = [pts[0]];
+    for (let i = 0; i < len.length; i++) {
+      if (left >= len[i]) { draw.push(pts[i + 1]); left -= len[i]; continue; }
+      const k = len[i] ? left / len[i] : 0;
+      draw.push([pts[i][0] + (pts[i + 1][0] - pts[i][0]) * k, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * k]);
+      break;
+    }
+  }
   ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.6, F.len(0.45));
   ctx.beginPath();
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  draw.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
   ctx.stroke(); ctx.lineWidth = 1;
   if (tip) {
-    const [x, y] = pts[pts.length - 1];
+    const [x, y] = draw[draw.length - 1];
     ctx.fillStyle = AMBER;
-    ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 5, 5);
+    ctx.beginPath(); ctx.arc(x, y, Math.max(2, F.len(0.5)), 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -259,7 +273,7 @@ const heatAxes = p => ({
 /* ---- the left panel ---- */
 
 /** A well of twelve molecules, or a cup, with a thermometer column at its right. */
-function samplePanel(ctx, F, top, T, a, { crowd = null, cup = null }) {
+function samplePanel(ctx, F, top, T, a, { crowd = null, cup = null, clock = 0 }) {
   const wx = 3; const wy = top + 0.4; const ww = 21; const wh = 21;
   ctx.fillStyle = '#100f0c';
   ctx.fillRect(F.x(wx), F.y(wy), F.len(ww), F.len(wh));
@@ -268,8 +282,11 @@ function samplePanel(ctx, F, top, T, a, { crowd = null, cup = null }) {
     const tail = tailOf(T) * 3.4;
     for (let i = 0; i < 12; i++) {
       const m = placeOfMolecule(i, crowd);
-      const cx = F.x(wx + 1.5 + m.at[0] * (ww - 3)); const cy = F.y(wy + 1.5 + m.at[1] * (wh - 3));
-      const ang = 0.6 + i * 2.1;
+      // Each molecule moves as its own state does: shaking in the ice, sliding in the water, flying and bouncing in the steam. The
+      // sample's temperature sets how fast, so the molecules speed up on a slope and the state changes on a level stretch.
+      const [px, py] = placeIn(m.state, i, clock, T, [wx + 1.5 + m.at[0] * (ww - 3), wy + 1.5 + m.at[1] * (wh - 3)], { x0: wx + 1.5, y0: wy + 1.5, w: ww - 3, h: wh - 3 }, 0.9);
+      const cx = F.x(px); const cy = F.y(py);
+      const ang = 0.6 + i * 2.1 + (m.state === 'solid' ? 0 : clock * (0.5 + (i % 4) * 0.25));
       ctx.strokeStyle = DUST; ctx.globalAlpha = 0.5; ctx.lineWidth = Math.max(1, F.len(0.28));
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - Math.cos(ang) * F.len(tail), cy - Math.sin(ang) * F.len(tail)); ctx.stroke();
       ctx.globalAlpha = 1;
@@ -308,7 +325,12 @@ function paintHeatCurve(ctx, f, state, b) {
   const p = f.props;
   const top = topOf(f, b.lay);
   const a = heatAxes(p.plot);
-  samplePanel(ctx, F, top, r.plan.T, a, { crowd: p.window ? r.crowd : null, cup: p.window ? null : `${fixed(p.grams, 1)} g` });
+  // The heat goes in over about two seconds after each press: the sample warms, the molecules are freed, and the pen follows, all from the
+  // same planner as the printed numbers (the readouts below show where it ends).
+  const clock = b.clock || 0;
+  const qShown = Math.round(glide(`${b.scope || ''}hc:${f.id}`, r.q, clock, { dur: 1.9 }));
+  const planShown = planThermal(p.grams, r.start, qShown);
+  samplePanel(ctx, F, top, planShown.T, a, { crowd: p.window ? crowdOfTwelve(planShown) : null, cup: p.window ? null : `${fixed(p.grams, 1)} g`, clock });
   const rowsOut = [['TEMPERATURE', `${minus(fixed(r.plan.T, 1))} °C`, inkOf(r.plan.T)]];
   if (p.showHeat) rowsOut.push(['HEAT ADDED', `${minus(fixed(r.q / 1000, 2, true))} kJ`, AMBER]);
   readouts(ctx, F, top + 24.2, rowsOut);
@@ -322,7 +344,7 @@ function paintHeatCurve(ctx, f, state, b) {
       ctx.setLineDash([]);
     }
   }
-  const pts = tracePoints(r.trace, a, m);
+  const pts = tracePoints(traceOf(p.grams, r.start, 0, qShown), a, m);
   pen(ctx, F, pts);
 }
 
@@ -337,7 +359,7 @@ function paintCooler(ctx, f, state, b) {
   say(ctx, r.cooled ? `${round(r.gave, 2).toFixed(2)} kJ` : r.item ? '—' : '', F.x(3), F.y(31.6), F.size(3.4, 8), { color: r.cooled ? AMBER : DUST, weight: 700 });
   say(ctx, 'COOLED TO', F.x(3), F.y(37.2), F.size(1.9, 6), { color: DIM });
   say(ctx, `${BODY_T} °C`, F.x(3), F.y(40.6), F.size(2.8, 6.5), { color: COLD, weight: 700 });
-  pen(ctx, F, tracePoints(r.trace, a, m));
+  pen(ctx, F, tracePoints(r.trace, a, m), PHOS, true, glide(`${b.scope || ''}cool:${f.id}:${r.item?.id}:${r.cooled ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }));
 }
 
 /* ---- the phase map ---- */
@@ -359,18 +381,26 @@ function paintPhaseMap(ctx, f, state, b) {
   };
   const m = axes(ctx, F, a);
   // Every sweep so far: the line at its pressure, coloured by the state, then the places the state changed.
+  // The newest sweep is drawn from cold to hot over a couple of seconds, the sample changing state as the pen passes each temperature.
+  const lastP = r.swept[r.swept.length - 1];
+  const sweepFrac = glide(`${b.scope || ''}map:${f.id}:${r.swept.length}:${lastP}`, 1, b.clock || 0, { dur: 2.6 });
+  const xMax = SWEEP.lo + (SWEEP.hi - SWEEP.lo) * sweepFrac;
   for (const P of r.swept) {
     const s = sweepAt(P);
+    const reach = P === lastP ? xMax : SWEEP.hi;
     for (const st of s.stages) {
       const y = m.Y(P);
+      const x1 = Math.min(SWEEP.hi, st.to, reach);
+      if (x1 <= Math.max(SWEEP.lo, st.from)) continue;
       ctx.strokeStyle = PHASE_INK[st.phase]; ctx.lineWidth = Math.max(1.6, F.len(0.45));
-      ctx.beginPath(); ctx.moveTo(m.X(Math.max(SWEEP.lo, st.from)), y); ctx.lineTo(m.X(Math.min(SWEEP.hi, st.to)), y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(m.X(Math.max(SWEEP.lo, st.from)), y); ctx.lineTo(m.X(x1), y); ctx.stroke();
     }
   }
   ctx.lineWidth = 1;
   for (const c of r.changes) {
+    if (c.P === lastP && c.T > xMax) continue;
     ctx.fillStyle = '#dcd6cc';
-    ctx.fillRect(Math.round(m.X(c.T)) - 2, Math.round(m.Y(c.P)) - 2, 5, 5);
+    ctx.beginPath(); ctx.arc(m.X(c.T), m.Y(c.P), Math.max(2, F.len(0.5)), 0, Math.PI * 2); ctx.fill();
   }
   // The list at the left: the states the last sweep went through, and between which temperatures.
   say(ctx, 'LAST SWEEP', F.x(3), F.y(top + 1.6), F.size(1.9, 6), { color: DIM });

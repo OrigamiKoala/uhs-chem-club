@@ -59,7 +59,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   holds(S.silica.melt.hi < S.quartz.melt.lo && S.silica.melt.lo !== S.silica.melt.hi, `${q} stage 2: the prediction cards are not each wrong or right as written`);
 
   // The predict stage shows no instrument and no loose tool; no stage is solved by the untouched table.
-  holds(!Object.keys(start(mod, 1).fixtures).length, `${q} stage 2: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 1).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 2: the predict stage shows an instrument`);
   for (const i of [0, 2, 3, 4, 5]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
 
   // What the cards keep after the solution is played on the real table, against the values worked here.

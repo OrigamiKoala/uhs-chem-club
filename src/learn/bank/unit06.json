@@ -458,7 +458,7 @@
         {
           "id": "q1-states#b1",
           "quest": "q1-states",
-          "question": "A sealed jar of gas is squeezed into a third of its original volume. What happens to its molecules?",
+          "question": "A sealed jar of gas is compressed into a third of its original volume. What happens to its molecules?",
           "options": [
             {
               "id": "a",
@@ -478,7 +478,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "A gas is mostly empty space, so squeezing it only pushes the same molecules closer together. The molecules and their bonds are unchanged."
+          "explanation": "A gas is mostly empty space, so compressing it only moves the same molecules closer together. The molecules and their bonds are unchanged."
         },
         {
           "id": "q1-states#b2",
@@ -487,7 +487,7 @@
           "options": [
             {
               "id": "a",
-              "label": "Each molecule in the ice has a little more room"
+              "label": "Each molecule in the ice has a little more volume"
             },
             {
               "id": "b",
@@ -503,7 +503,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Both jars hold the same kind of molecule, so the lighter jar holds fewer of them in the same space. Each molecule in the ice has slightly more room."
+          "explanation": "Both jars hold the same kind of molecule, so the lighter jar holds fewer of them in the same space. Each molecule in the ice has slightly more volume."
         }
       ]
     },
@@ -611,7 +611,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Iodine is a molecular solid: whole molecules held by weak grips between them. Melting separates the molecules and leaves each I–I bond intact."
+          "explanation": "Iodine is a molecular solid: whole molecules held by weak attractions between them. Melting separates the molecules and leaves each I–I bond intact."
         }
       ]
     },
@@ -620,7 +620,7 @@
         {
           "id": "q3-boil#b1",
           "quest": "q3-boil",
-          "question": "Ethanol and water are each sealed in a flask at 25 °C. Ethanol's gauge settles at 7.9 kPa and water's at 3.2 kPa. What does this say about the forces between their molecules?",
+          "question": "Ethanol and water are each sealed in a flask at 25 °C. Ethanol's pressure gauge settles at 7.9 kPa and water's at 3.2 kPa. What does this say about the forces between their molecules?",
           "options": [
             {
               "id": "a",
@@ -672,10 +672,10 @@
         "id": "q3-boil#w",
         "quest": "q3-boil",
         "title": "Gas Over Water at 40 °C",
-        "setup": "A gas is collected over water at 40 °C. The jar's gauge reads 98.0 kPa, and the vapor pressure of water at 40 °C is 7.4 kPa.",
+        "setup": "A gas is collected over water at 40 °C. The jar's pressure gauge reads 98.0 kPa, and the vapor pressure of water at 40 °C is 7.4 kPa.",
         "steps": [
           {
-            "say": "What does the jar's gauge count?",
+            "say": "What does the jar's pressure gauge add up?",
             "kind": "choice",
             "options": [
               {
@@ -692,18 +692,18 @@
               }
             ],
             "answer": "b",
-            "hint": "Everything in the jar pushes on the gauge.",
-            "explain": "The gauge reads the pressure of everything in the jar: the gas and the water vapor mixed with it."
+            "hint": "Everything in the jar adds to the pressure gauge reading.",
+            "explain": "The pressure gauge reads the pressure of everything in the jar: the gas and the water vapor mixed with it."
           },
           {
-            "say": "How much of the gauge is the water vapor?",
+            "say": "How much of the total pressure is water vapor?",
             "kind": "number",
             "answer": 7.4,
             "calc": "7.4",
             "unit": "kPa",
             "tol": 0.01,
             "hint": "Water's own pressure at the jar's temperature is given.",
-            "explain": "The water vapor pushes with its own vapor pressure at 40 °C, 7.4 kPa."
+            "explain": "The water vapor exerts its own vapor pressure at 40 °C, 7.4 kPa."
           },
           {
             "say": "What is the pressure of the gas alone?",
@@ -712,21 +712,21 @@
             "calc": "98.0-7.4",
             "unit": "kPa",
             "tol": 0.005,
-            "hint": "The two pressures add up to the gauge.",
+            "hint": "The two pressures add up to the total pressure.",
             "explain": "98.0 - 7.4 = 90.6 kPa."
           },
           {
-            "say": "What percentage of the gauge is water vapor?",
+            "say": "What percentage of the total pressure is water vapor?",
             "kind": "number",
             "answer": 7.55,
             "calc": "7.4/98.0*100",
             "unit": "%",
             "tol": 0.01,
-            "hint": "Divide the vapor's pressure by the gauge and multiply by 100.",
+            "hint": "Divide the vapor's pressure by the total pressure and multiply by 100.",
             "explain": "7.4 / 98.0 x 100 = 7.6 %."
           },
           {
-            "say": "The water is warmed to 60 °C, where its vapor pressure is 19.9 kPa, and the gauge stays at 98.0 kPa. What happens to the gas alone?",
+            "say": "The water is warmed to 60 °C, where its vapor pressure is 19.9 kPa, and the total stays at 98.0 kPa. What happens to the gas alone?",
             "kind": "choice",
             "options": [
               {
@@ -743,11 +743,11 @@
               }
             ],
             "answer": "b",
-            "hint": "The vapor takes a bigger share of the same gauge.",
-            "explain": "More of the gauge is water vapor, so the gas alone is 98.0 - 19.9 = 78.1 kPa."
+            "hint": "The vapor takes a bigger share of the same total pressure.",
+            "explain": "More of the total pressure is water vapor, so the gas alone is 98.0 - 19.9 = 78.1 kPa."
           }
         ],
-        "finish": "The gauge is the gas plus the water vapor. Find the water's vapor pressure at the jar's temperature and take it from the gauge."
+        "finish": "The total pressure is the gas plus the water vapor. Find the water's vapor pressure at the jar's temperature and take it from the total."
       }
     },
     "q5-crossing": {
@@ -763,7 +763,7 @@
             },
             {
               "id": "b",
-              "label": "The heat is being lost to the room"
+              "label": "The heat is being lost to the surroundings"
             },
             {
               "id": "c",
@@ -1126,7 +1126,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "A liquid boils when its vapor pressure equals the pressure outside it; where the air pushes less, that happens at a lower temperature."
+          "explanation": "A liquid boils when its vapor pressure equals the pressure outside it; where the outside pressure is lower, that happens at a lower temperature."
         },
         {
           "id": "boss-undertow#b2",

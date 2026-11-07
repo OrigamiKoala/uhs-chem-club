@@ -21,7 +21,7 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { matterTable, molCard, fixed, whereIs, note, tag } from '../../table/kits/matter.js';
+import { matterTable, molCard, fixed, whereIs, note, tag, mleadFixture } from '../../table/kits/matter.js';
 import {
   stripFixture, filterFixture, stillFixture, boilerFixture, planFixture, inkCard, dyeCard, mixCard, soluteCard,
   stripRead, filterRead, stillRead, boilerRead, planRead, planSteps
@@ -87,6 +87,7 @@ export const STAGES = [
         note('same', 'Salty water, as it went in', { x: 30, y: 34 }),
         note('less', 'Water that is less salty than before', { x: 78, y: 14 })
       ],
+      fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'sieve', w: 44, h: 24 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
@@ -196,7 +197,7 @@ export const STAGES = [
       reward: {
         log: 'The black ink held three dyes, and the red one went about half as far as the liquid.',
         title: 'Chromatography',
-        body: 'Chromatography separates a mixture as a liquid climbs paper, because the paper holds each dye differently. The edge the liquid reaches is the solvent front, and a dye\'s retention factor, Rf, is its distance divided by the front\'s. Black ink held three dyes.'
+        body: 'Chromatography separates a mixture as a liquid climbs paper that holds each dye differently. A dye\'s retention factor, Rf, is its distance divided by the solvent front, how far the liquid reached; black ink held three dyes.'
       }
     };
   })(),
@@ -237,7 +238,7 @@ export const STAGES = [
       reward: {
         log: 'Blue led in water and trailed in hexane and acetone, and yellow did the opposite.',
         title: 'Reading Polarity',
-        body: 'The order turned round. Water carries polar dyes far and leaves nonpolar ones behind; hexane and acetone does the reverse. Which dye leads in which liquid tells you how polar each dye is.'
+        body: 'The order turned round: water carries polar dyes far, while hexane and acetone carry nonpolar dyes. How far a dye travels in each liquid tells you how polar it is.'
       }
     };
   })(),
@@ -288,7 +289,7 @@ export const STAGES = [
     const cards = [soluteCard('sugar', 'sugar', { x: 110, y: 12 }), soluteCard('nacl', 'NaCl', { x: 110, y: 32 }), soluteCard('cacl2', 'CaCl2', { x: 110, y: 52 })];
     return {
       id: 's6-colligative',
-      title: 'Beyond The Exam: A Salted Pot',
+      title: 'Beyond The Exam: A Salted Flask',
       prompt: 'Type how many degrees hotter than water alone boils with 3.00 mol of calcium chloride, CaCl₂, dissolved in 2.00 kg of water.',
       entry: { id: 'rise', label: 'Rise in boiling point', unit: '°C' },
       widget,
@@ -305,13 +306,13 @@ export const STAGES = [
         if (Math.abs(v - RISE_ANSWER) <= RISE_TOL) return { ok: true };
         const near = x => Math.abs(v - x) <= RISE_TOL;
         if (near(boilingRise('NaCl', 3, 2)) || near(boilingRise('sugar', 3, 2))) return { ok: false, msg: `${fixed(v, 2)} °C is what the bench reads for another card at this amount, not for CaCl₂.` };
-        if (near(boilingRise('CaCl2', 3, 1))) return { ok: false, msg: `${fixed(v, 2)} °C is the rise for 3.00 mol in 1.00 kg, and the pot holds 2.00 kg.` };
+        if (near(boilingRise('CaCl2', 3, 1))) return { ok: false, msg: `${fixed(v, 2)} °C is the rise for 3.00 mol in 1.00 kg, and the flask holds 2.00 kg.` };
         return { ok: false, msg: `${fixed(v, 2)} °C does not fit the rises the bench gives for CaCl₂ at ${BOIL_AMOUNTS.map(a => a.toFixed(2)).join(', ')} mol in 1.00 kg.` };
       },
       reward: {
-        log: 'A salted pot boils hotter, in step with the number of dissolved particles.',
+        log: 'A salted flask boils hotter, in step with the number of dissolved particles.',
         title: 'Boiling Point Elevation',
-        body: 'Beyond the exam: dissolved particles raise the boiling point of water by ΔT = i K_b m, where i is the particles one formula unit makes. It depends on how many particles and not what they are, so it is a colligative property.'
+        body: 'Beyond the exam: dissolved particles raise water\'s boiling point by ΔT = i K_b m, where i is the particles one formula unit makes. It counts particles, not what they are: a colligative property.'
       }
     };
   })(),
@@ -354,7 +355,7 @@ export const STAGES = [
       reward: {
         log: 'Filtering first, then boiling the water off, left each part alone.',
         title: 'Choosing a Method',
-        body: 'Filtering takes out what is too big for the paper. Boiling the water off takes out the liquid and leaves the salt. Choose each method by what differs between the parts.'
+        body: 'Filtering removes what is too big for the paper, and boiling the water off leaves the salt. Choose each method by what differs between the parts.'
       }
     };
   })()

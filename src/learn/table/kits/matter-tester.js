@@ -16,6 +16,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { addTourText } from '../tour.js';
 import { registerFixture, registerPiece } from './matter-registry.js';
+import { shakeAt, glide } from './matter-motion.js';
 import { frameOf, topOf, say, slab } from './matter-draw.js';
 import { seatedIn, dialAt } from './heat-read.js';
 import {
@@ -143,7 +144,7 @@ function runTester(state, fid) {
 
 const PANEL = { x: 29, w: 36, h: 21 };
 
-function paintPlot(ctx, F, py, r) {
+function paintPlot(ctx, F, py, r, prog = 1) {
   const px = PANEL.x; const { T0, maxT } = r.range;
   const L = px + 3.2; const R = px + PANEL.w - 2.2; const Tp = py + 2.2; const B = py + PANEL.h - 6.4;
   const X = T => F.x(L + ((T - T0) / (maxT - T0)) * (R - L));
@@ -161,19 +162,22 @@ function paintPlot(ctx, F, py, r) {
   if (!r.item || r.item.props.melt == null) return;
   ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1.6, F.len(0.45));
   ctx.beginPath();
-  meltTrace(r.solid, r.range).forEach(([T, s], i) => (i ? ctx.lineTo(X(T), Y(s)) : ctx.moveTo(X(T), Y(s))));
+  // The pen draws the trace as the heater warms the sample.
+  const pts = meltTrace(r.solid, r.range);
+  const upto = Math.max(1, Math.ceil(pts.length * prog));
+  pts.slice(0, upto).forEach(([T, s], i) => (i ? ctx.lineTo(X(T), Y(s)) : ctx.moveTo(X(T), Y(s))));
   ctx.stroke(); ctx.lineWidth = 1;
 }
 
 /** One hammer blow on the sample, and what is left. */
-function paintStrike(ctx, F, py, r) {
+function paintStrike(ctx, F, py, r, swing = 1) {
   const px = PANEL.x;
   const cx = F.x(px + PANEL.w / 2); const base = F.y(py + PANEL.h - 7.4);
   const u = F.len(1);
   ctx.strokeStyle = STEEL; ctx.beginPath(); ctx.moveTo(F.x(px + 3), base); ctx.lineTo(F.x(px + PANEL.w - 3), base); ctx.stroke();
-  const done = r.item && r.item.props.strike;
+  const done = r.item && r.item.props.strike && swing >= 0.85 ? r.item.props.strike : null;
   // The hammer: a head and a handle, raised before the blow and down after it.
-  const hx = cx + 7 * u; const hy = base - (done ? 4.2 : 9.5) * u;
+  const hx = cx + 7 * u; const hy = base - (9.5 - (r.item && r.item.props.strike ? 5.3 * swing : 0)) * u;
   ctx.fillStyle = '#5b544b'; ctx.fillRect(hx - 2.6 * u, hy - 1.6 * u, 5.2 * u, 3.2 * u);
   ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1.3, u * 0.5);
   ctx.beginPath(); ctx.moveTo(hx + 2.6 * u, hy); ctx.lineTo(hx + 9 * u, hy - 5 * u); ctx.stroke(); ctx.lineWidth = 1;
@@ -215,22 +219,25 @@ function paintCurrent(ctx, F, py, r) {
 }
 
 /** The window: the particles of the sample in the slot, from `arrangementOf`. */
-function paintWindow(ctx, F, py, r) {
+function paintWindow(ctx, F, py, r, t = 0) {
   if (!r.item) return;
   const a = arrangementOf(SOLIDS[r.item.props.solid].picture);
   const ox = PANEL.x + 2; const oy = py + 1.5;
   const k = Math.min((PANEL.w - 4) / PIC.w, (PANEL.h - 3) / PIC.h);
+  // Every particle shakes about its place (and the bonds follow), so the picture is the sample's own, alive.
+  const at = a.atoms.map((q, i) => { const [dx, dy] = shakeAt(i, t, 0.045, 1); return { ...q, x: q.x + dx, y: q.y + dy }; });
   const X = x => F.x(ox + x * k); const Y = y => F.y(oy + y * k);
   ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, F.len(0.32));
-  for (const [i, j] of a.bonds) { ctx.beginPath(); ctx.moveTo(X(a.atoms[i].x), Y(a.atoms[i].y)); ctx.lineTo(X(a.atoms[j].x), Y(a.atoms[j].y)); ctx.stroke(); }
+  for (const [i, j] of a.bonds) { ctx.beginPath(); ctx.moveTo(X(at[i].x), Y(at[i].y)); ctx.lineTo(X(at[j].x), Y(at[j].y)); ctx.stroke(); }
   ctx.lineWidth = 1;
-  for (const at of a.atoms) {
-    ctx.fillStyle = INK[at.k] || DUST;
-    ctx.beginPath(); ctx.arc(X(at.x), Y(at.y), Math.max(1.2, F.len(at.r * k)), 0, Math.PI * 2); ctx.fill();
+  for (const q of at) {
+    ctx.fillStyle = INK[q.k] || DUST;
+    ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), Math.max(1.2, F.len(q.r * k)), 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#1d1a16'; ctx.stroke();
   }
+  // The shared electrons of a metal drift between the atoms.
   ctx.fillStyle = AMBER;
-  for (const d of a.dots) { ctx.beginPath(); ctx.arc(X(d.x), Y(d.y), Math.max(1, F.len(0.38 * k)), 0, Math.PI * 2); ctx.fill(); }
+  a.dots.forEach((d, i) => { const [dx, dy] = shakeAt(i + 30, t, 0.28, 2.2); ctx.beginPath(); ctx.arc(X(d.x + dx), Y(d.y + dy), Math.max(1, F.len(0.38 * k)), 0, Math.PI * 2); ctx.fill(); });
 }
 
 function paintTester(ctx, f, state, b) {
@@ -240,9 +247,9 @@ function paintTester(ctx, f, state, b) {
   const py = top + 1;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(PANEL.x), F.y(py), F.len(PANEL.w), F.len(PANEL.h));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(PANEL.x)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(PANEL.w)), Math.round(F.len(PANEL.h)));
-  if (f.props.view === 'window') paintWindow(ctx, F, py, r);
-  else if (r.test === 'melt') paintPlot(ctx, F, py, r);
-  else if (r.test === 'strike') paintStrike(ctx, F, py, r);
+  if (f.props.view === 'window') paintWindow(ctx, F, py, r, b.clock || 0);
+  else if (r.test === 'melt') paintPlot(ctx, F, py, r, glide(`${b.scope || ''}melt:${f.id}:${r.item?.id}:${r.item?.props.melt != null ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }));
+  else if (r.test === 'strike') paintStrike(ctx, F, py, r, glide(`${b.scope || ''}hit:${f.id}:${r.item?.id}:${r.item?.props.strike || ''}`, 1, b.clock || 0, { dur: 0.7 }));
   else if (r.test === 'current') paintCurrent(ctx, F, py, r);
   // What the dial's test does, and nothing the reading says.
   const note = f.props.view === 'window' ? 'PARTICLES IN THE SAMPLE'

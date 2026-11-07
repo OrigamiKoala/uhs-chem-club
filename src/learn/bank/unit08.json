@@ -842,7 +842,98 @@
      "answer": "c",
      "explanation": "Q = 0.60 / 0.60 = 1.0, which is below K, so the mixture makes more B."
     }
-   ]
+   ],
+   "worked": {
+    "id": "q3-q#w",
+    "quest": "q3-q",
+    "title": "Predicting Precipitation with Qsp",
+    "setup": "A chemist mixes 50.0 mL of 0.0200 M lead(II) nitrate, Pb(NO₃)₂, with 50.0 mL of 0.0100 M sodium iodide, NaI, at 25 °C. The solubility product constant Ksp for PbI₂ is 9.80 × 10⁻⁹. Determine the ion quotient Qsp and predict whether a precipitate of PbI₂(s) forms.",
+    "steps": [
+     {
+      "say": "What is the total volume of the mixture in litres?",
+      "kind": "number",
+      "answer": 0.1,
+      "calc": "(50.0 + 50.0) / 1000",
+      "unit": "L",
+      "tol": 0.01,
+      "hint": "Add the two solution volumes in mL and convert to litres.",
+      "explain": "50.0 mL + 50.0 mL = 100.0 mL = 0.100 L."
+     },
+     {
+      "say": "What is the diluted concentration of Pb²⁺ ions immediately upon mixing, in mol/L?",
+      "kind": "number",
+      "answer": 0.01,
+      "calc": "0.0200 * 50.0 / 100.0",
+      "unit": "M",
+      "tol": 0.01,
+      "hint": "Use M₁V₁ = M₂V₂, where the volume doubles.",
+      "explain": "[Pb²⁺] = (0.0200 M × 50.0 mL) ÷ 100.0 mL = 0.0100 M."
+     },
+     {
+      "say": "What is the diluted concentration of I⁻ ions immediately upon mixing, in mol/L?",
+      "kind": "number",
+      "answer": 0.005,
+      "calc": "0.0100 * 50.0 / 100.0",
+      "unit": "M",
+      "tol": 0.01,
+      "hint": "Use M₁V₁ = M₂V₂, where the volume doubles.",
+      "explain": "[I⁻] = (0.0100 M × 50.0 mL) ÷ 100.0 mL = 0.00500 M."
+     },
+     {
+      "say": "Which expression gives the ion product quotient, Qsp, for PbI₂(s) ⇌ Pb²⁺(aq) + 2 I⁻(aq)?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "[Pb²⁺][I⁻]²"
+       },
+       {
+        "id": "b",
+        "label": "[Pb²⁺][I⁻]"
+       },
+       {
+        "id": "c",
+        "label": "[Pb²⁺]²[I⁻]"
+       }
+      ],
+      "answer": "a",
+      "hint": "Each ion concentration is raised to its stoichiometric coefficient in the dissolution equation.",
+      "explain": "Qsp = [Pb²⁺][I⁻]², because dissolving one formula unit of PbI₂ releases two iodide ions."
+     },
+     {
+      "say": "What is the numerical value of Qsp for this mixture?",
+      "kind": "number",
+      "answer": 2.5e-7,
+      "calc": "0.0100 * (0.00500 ** 2)",
+      "unit": "",
+      "tol": 0.01,
+      "hint": "Multiply [Pb²⁺] by [I⁻] squared: 0.0100 × (0.00500)².",
+      "explain": "Qsp = (0.0100)(0.00500)² = (0.0100)(2.50 × 10⁻⁵) = 2.50 × 10⁻⁷."
+     },
+     {
+      "say": "Comparing Qsp (2.50 × 10⁻⁷) with Ksp (9.80 × 10⁻⁹), what happens?",
+      "kind": "choice",
+      "options": [
+       {
+        "id": "a",
+        "label": "A precipitate forms because Qsp > Ksp"
+       },
+       {
+        "id": "b",
+        "label": "No precipitate forms because Qsp < Ksp"
+       },
+       {
+        "id": "c",
+        "label": "No precipitate forms because Qsp = Ksp"
+       }
+      ],
+      "answer": "a",
+      "hint": "When the ion product exceeds Ksp, the solution is supersaturated.",
+      "explain": "Because Qsp (2.50 × 10⁻⁷) is greater than Ksp (9.80 × 10⁻⁹), the solution cannot hold all the dissolved ions, so PbI₂(s) precipitates until Qsp equals Ksp."
+     }
+    ],
+    "finish": "When mixing solutions, calculate the diluted concentrations first, evaluate Qsp, and compare to Ksp: if Qsp exceeds Ksp, a precipitate will form."
+   }
   },
   "boss-tipper": {
    "problems": [

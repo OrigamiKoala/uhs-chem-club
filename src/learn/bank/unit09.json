@@ -1081,7 +1081,87 @@
           "answer": "d",
           "explanation": "The equivalence point of a weak base with a strong acid is acidic, because the ammonium that forms is a weak acid. Methyl red changes around pH 5, so it is the dye that turns near 25 mL."
         }
-      ]
+      ],
+      "worked": {
+        "id": "boss-leach#w",
+        "quest": "boss-leach",
+        "title": "pH of a Weak Base Solution",
+        "setup": "A bottle holds a 0.150 M aqueous solution of ammonia, NH₃, at 25 °C. Ammonia is a weak base with Kb = 1.80 × 10⁻⁵. Find the hydroxide concentration [OH⁻], pOH, pH, and percent ionization. (Kw = 1.00 × 10⁻¹⁴)",
+        "steps": [
+          {
+            "say": "Which equilibrium reaction and expression represent the base dissociation of ammonia in water?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "NH₃ + H₂O ⇌ NH₄⁺ + OH⁻, with Kb = [NH₄⁺][OH⁻] / [NH₃]"
+              },
+              {
+                "id": "b",
+                "label": "NH₃ + H₃O⁺ ⇌ NH₄⁺ + H₂O, with Kb = [NH₄⁺] / ([NH₃][H₃O⁺])"
+              },
+              {
+                "id": "c",
+                "label": "NH₄⁺ + H₂O ⇌ NH₃ + H₃O⁺, with Kb = [NH₃][H₃O⁺] / [NH₄⁺]"
+              }
+            ],
+            "answer": "a",
+            "hint": "A weak base accepts a proton from water, leaving hydroxide ions.",
+            "explain": "NH₃ acts as a Brønsted–Lowry base by accepting H⁺ from water, producing NH₄⁺ and OH⁻. Pure liquid water is omitted from the equilibrium expression."
+          },
+          {
+            "say": "Letting x = [OH⁻] = [NH₄⁺], and using the small-x approximation (0.150 − x ≈ 0.150), what is x² = Kb × [NH₃]₀?",
+            "kind": "number",
+            "answer": 2.7e-6,
+            "calc": "1.80e-5 * 0.150",
+            "unit": "M²",
+            "tol": 0.01,
+            "hint": "Multiply Kb (1.80 × 10⁻⁵) by the initial concentration 0.150 M.",
+            "explain": "x² = (1.80 × 10⁻⁵)(0.150) = 2.70 × 10⁻⁶ M²."
+          },
+          {
+            "say": "What is x, the hydroxide ion concentration [OH⁻] in mol/L?",
+            "kind": "number",
+            "answer": 0.001643,
+            "calc": "Math.sqrt(1.80e-5 * 0.150)",
+            "unit": "M",
+            "tol": 0.01,
+            "hint": "Take the square root of 2.70 × 10⁻⁶.",
+            "explain": "[OH⁻] = √(2.70 × 10⁻⁶) = 1.64 × 10⁻³ M."
+          },
+          {
+            "say": "What is the pOH of the solution?",
+            "kind": "number",
+            "answer": 2.784,
+            "calc": "-Math.log10(Math.sqrt(1.80e-5 * 0.150))",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "pOH = −log₁₀[OH⁻].",
+            "explain": "pOH = −log(1.643 × 10⁻³) = 2.78."
+          },
+          {
+            "say": "Using pH + pOH = 14.00, what is the pH of the ammonia solution?",
+            "kind": "number",
+            "answer": 11.216,
+            "calc": "14.00 - (-Math.log10(Math.sqrt(1.80e-5 * 0.150)))",
+            "unit": "",
+            "tol": 0.01,
+            "hint": "Subtract the pOH from 14.00.",
+            "explain": "pH = 14.00 − 2.784 = 11.22. As expected for a weak base, the pH is above 7."
+          },
+          {
+            "say": "What is the percent ionization of the 0.150 M ammonia solution?",
+            "kind": "number",
+            "answer": 1.095,
+            "calc": "(Math.sqrt(1.80e-5 * 0.150) / 0.150) * 100",
+            "unit": "%",
+            "tol": 0.01,
+            "hint": "Divide [OH⁻] by the initial base concentration (0.150 M) and multiply by 100.",
+            "explain": "(1.643 × 10⁻³ ÷ 0.150) × 100 = 1.10%. Because this is well below 5%, the small-x approximation was valid."
+          }
+        ],
+        "finish": "For a weak base, use Kb to find [OH⁻] = √(Kb × Cb), take the negative log for pOH, subtract from 14.00 for pH, and check the 5% rule with percent ionization."
+      }
     }
   }
 }

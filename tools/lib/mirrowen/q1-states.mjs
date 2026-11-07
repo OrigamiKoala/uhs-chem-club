@@ -75,7 +75,7 @@ export async function check({ q, mod, near, same, holds, start, done }) {
   holds(Math.abs(W.tailOf('solid', -10) - W.tailOf('liquid', 5)) < 0.05 && W.tailOf('gas', 110) > 3 * W.tailOf('liquid', 5), `${q}: the streaks`);
 
   // ---- the stages: what is on the bench, and what an untouched bench does ----
-  holds(!Object.keys(start(mod, 2).fixtures).length, `${q} stage 3: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 2).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 3: the predict stage shows an instrument`);
   mod.STAGES.forEach((s, i) => { if (i !== 2) holds(s.check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`); });
   // Stage 1/2/8: every jar is sorted by what the press and tank show.
   same(mod.CHECKS.S1_TRAY.solid + mod.CHECKS.S1_TRAY.liquid + mod.CHECKS.S1_TRAY.gas, 'lumppoolfill', `${q} stage 1 (the trays)`);

@@ -19,8 +19,8 @@ const FIXTURES = {
     text: 'A plate prints facts for the stage. Read it; it does not change.'
   },
   'matter:marker': {
-    title: 'Number marker', dials: false,
-    text: 'The marker holds a number. Drag its knob along the groove, or tap the groove, to set the number you worked out. Whatever it reads when you press Submit is your answer.'
+    title: 'Number dial', dials: false,
+    text: 'The number dial holds a number. Drag its knob along the groove, or tap the groove, to set the number you worked out. Whatever it reads when you press Submit is your answer.'
   },
   'matter:selector': {
     title: 'Answer dial', dials: false,

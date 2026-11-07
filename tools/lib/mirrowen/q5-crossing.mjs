@@ -81,7 +81,7 @@ export async function check({ q, mod, TABLE, MD, near, same, holds, start, done,
   holds(!C.sweepAt(30000).changes.some(c => c.to === 'gas'), `${q}: no boiling above the critical pressure`);
 
   /* ---- the stages: predict shows no instrument, untouched tables never pass, the evidence is on the bench ---- */
-  holds(!Object.keys(start(mod, 1).fixtures).length, `${q} stage 2: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 1).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 2: the predict stage shows an instrument`);
   for (const i of [0, 2, 3, 4, 5, 6, 7]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
   holds(Object.values(start(mod, 0).fixtures).some(f => f.kind === 'heatcurve' && !f.props.window), `${q} stage 1: the recorder should show no window (the window is the test)`);
   holds(Object.values(start(mod, 2).fixtures).some(f => f.kind === 'heatcurve' && f.props.window), `${q} stage 3: the test needs the window`);

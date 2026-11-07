@@ -34,7 +34,7 @@
     "verify:teeter": "node tools/verify-teeter.mjs",
     "verify:verdigris": "node tools/verify-verdigris.mjs",
     "verify:brinewire": "node tools/verify-brinewire.mjs",
-    "verify:teaching": "node tools/verify-teaching.mjs && node tools/verify-teaching-verdigris.mjs && node tools/verify-teaching-teeter.mjs && node tools/verify-teaching-ember.mjs",
+    "verify:teaching": "node tools/verify-teaching.mjs && node tools/verify-teaching-verdigris.mjs && node tools/verify-teaching-teeter.mjs && node tools/verify-teaching-ember.mjs && node tools/verify-teaching-mirrowen.mjs",
     "verify:ember": "node tools/verify-ember.mjs",
     "verify:mirrowen": "node tools/verify-mirrowen.mjs",
     "verify:kettle": "node tools/verify-kettle.mjs",

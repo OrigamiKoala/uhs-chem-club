@@ -24,7 +24,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  matterTable, molCard, ionCard, probeFixture, wellFixture, probeRead, whereIs, note, fixed
+  matterTable, molCard, ionCard, probeFixture, wellFixture, probeRead, whereIs, note, fixed, mleadFixture
 } from '../../table/kits/matter.js';
 import { SUBSTANCES, HYDRATION } from '../../engine/matterdata.js';
 import { BOND_ENTHALPIES } from '../../engine/thermodata.js';
@@ -142,7 +142,7 @@ export const STAGES = [
       reward: {
         log: 'Bigger clouds needed more heat to pull apart.',
         title: 'London Dispersion Forces',
-        body: 'Atoms attract their neighbours through brief, shifting uneven charges in their electron clouds: London dispersion forces. A bigger cloud is easier to distort, so it is more polarizable, and its grip is stronger.'
+        body: 'Atoms attract their neighbours through brief, shifting uneven charges in their electron clouds: London dispersion forces. A bigger cloud is easier to distort, so it is more polarizable, and its attraction is stronger.'
       }
     };
   })(),
@@ -190,6 +190,7 @@ export const STAGES = [
         note('lighter', 'Water, because it is the lighter molecule', { x: 78, y: 14 }),
         note('same', 'About the same heat', { x: 30, y: 34 })
       ],
+      fixtures: [mleadFixture('lead', { x: 117, y: 52 }, { scene: 'pull', w: 44, h: 24 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
@@ -242,7 +243,7 @@ export const STAGES = [
         return {
           log: 'Water and ammonia held on far harder than their mass says.',
           title: 'Hydrogen Bonding',
-          body: `${verdict}A hydrogen bonded to nitrogen, oxygen or fluorine is strongly positive, and it is drawn to a lone pair on the next molecule: a hydrogen bond. It is the strongest force between neutral molecules, so light water and ammonia beat the heavier sulfide and phosphine.`
+          body: `${verdict}A hydrogen bond is a hydrogen on nitrogen, oxygen or fluorine drawn to a lone pair on the next molecule. It is the strongest attraction between neutral molecules, so light water and ammonia beat heavier sulfide and phosphine.`
         };
       }
     };
@@ -298,7 +299,7 @@ export const STAGES = [
       reward: {
         log: 'The straight chain gripped harder than its compact twin.',
         title: 'Shape and Contact',
-        body: 'Two molecules with one formula can grip differently. A straight chain lies along its neighbours and touches them over its whole length, so it has more dispersion force than a compact, ball-shaped molecule of the same weight.'
+        body: 'Two molecules with one formula can attract each other differently. A straight chain lies along its neighbours and touches them over its whole length, so it has more dispersion force than a compact, ball-shaped molecule of the same weight.'
       }
     };
   })(),
@@ -306,10 +307,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   (() => {
     const probe = probeFixture('probe', { x: 86, y: 24 });
-    const crank = wellFixture('crank', { x: 28, y: 24 }, { bond: 'O-H', atoms: ['O', 'H'], bondLabel: 'O–H bond', title: 'Bond crank' });
+    const crank = wellFixture('crank', { x: 28, y: 24 }, { bond: 'O-H', atoms: ['O', 'H'], bondLabel: 'O–H bond', title: 'Bond pull dial', pullLabel: 'Pull' });
     return {
       id: 's7-bond',
-      title: 'A Grip and a Bond',
+      title: 'An Attraction and a Bond',
       prompt: 'Type how many times more heat it takes to break every O–H bond in a mole of water than to pull the molecules apart.',
       entry: { id: 'times', label: 'Times more heat', unit: '×' },
       widget,
@@ -319,8 +320,8 @@ export const STAGES = [
         zones: { slots: [probe.slot] }
       }),
       hints: [
-        'Use the crank for one O–H bond, and the probe with the water card.',
-        'Compare what the crank reads for a mole of O–H bonds with what the probe reads, and count the bonds in the molecule drawn on the card.',
+        'Use the pull dial for one O–H bond, and the probe with the water card.',
+        'Compare what the pull dial reads for a mole of O–H bonds with what the probe reads, and count the bonds in the molecule drawn on the card.',
         'Divide the heat for all the O–H bonds in a mole of molecules by the heat to pull a mole of molecules apart.'
       ],
       check(state) {
@@ -331,11 +332,11 @@ export const STAGES = [
         const r = probeRead(t, 'probe');
         if (!r.pulled) return { ok: false, msg: 'The probe has not pulled the water yet.' };
         if (Math.abs(v - OH / SUBSTANCES.H2O.grip) <= 1) return { ok: false, msg: `${fixed(v, 0)} counts one O–H bond for each molecule, and the water drawn on the card has two.` };
-        return { ok: false, msg: `The crank reads ${Math.round(OH)} kJ for a mole of O–H bonds and the probe ${kj(r.value)} kJ for a mole of molecules; ${fixed(v, 0)} times does not fit the two.` };
+        return { ok: false, msg: `The pull dial reads ${Math.round(OH)} kJ for a mole of O–H bonds and the probe ${kj(r.value)} kJ for a mole of molecules; ${fixed(v, 0)} times does not fit the two.` };
       },
       reward: {
         log: 'Breaking the bonds in water costs about twenty times more than pulling the molecules apart.',
-        title: 'A Grip Is Not a Bond',
+        title: 'An Attraction Is Not a Bond',
         body: 'Pulling molecules apart costs tens of kilojoules a mole; breaking the bonds inside them costs hundreds. When water boils, the molecules separate and stay whole.'
       }
     };
@@ -388,7 +389,7 @@ const NOTES = {
   4: ['Drag a card into the probe, press its key, then put the card on the rail.'],
   5: ['Drag a card into the probe, press its key, then put the card on the rail.'],
   6: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  7: ['Turn the crank, drag the water into the probe, press its key, then type your answer.']
+  7: ['Turn the pull dial, drag the water into the probe, press its key, then type your answer.']
 };
 applyNotes(STAGES, NOTES);
 

@@ -325,3 +325,14 @@ Unit 8 topics 8.1 to 8.11 now have benches (`unit09`, built 2026-11-05): 8.1 `q1
 ## Brinewire built (2026-11-05)
 
 4.9 redox: `q1-halves`, `q2-activity`. 9.7: `q6` stage 1 and 6 (external energy; a galvanic cell driving electrolysis); 9.7.A.2 (a shared intermediate) is a bank problem only. 9.8: `q3`, `q6` stages 1 and 2. 9.9: `q4` (typed E°cell, energy and log K). 9.10: `q5` (the run-down, concentration cells, a typed Nernst voltage, no Le Châtelier language). 9.11: `q6` (typed grams plated, typed current). Past the exam and labelled: oxidizing and reducing agent (`q1` s5), cell notation (`q3` s7). Gap: ATP-style coupling needs no bench.
+
+
+## Quantitative AP Coverage Audit & Worked Problems Pass (2026-11-06)
+
+Complete audit of quantitative question archetypes assessed by the AP Chemistry Exam (Course Framework Units 1–9) against the Learn worlds and question banks.
+
+### Worked problems added:
+1. **Photoelectron Spectroscopy (PES) Quantitative Analysis (CED 1.6)**: `unit02/q7-pes#w` ("Reading a Photoelectron Spectrum"). Binding energy interpretation, subshell assignment from peak positions, relative peak heights to electron configurations (1s² 2s² 2p⁶ 3s² 3p³), valence electron counting, single-atom ionization energy in J from MJ/mol, and periodic peak shift comparison (P vs S).
+2. **Gravimetric Analysis & Mixture Percent Purity (CED 1.4 & 4.5)**: `unit07/q5-ionic#w` ("Purity of an Impure Salt by Gravimetric Analysis"). Precipitation net ionic equation, precipitate moles (AgCl), chloride stoichiometry, mass of pure NaCl, percent purity calculation, and experimental error analysis of incomplete drying.
+3. **Predicting Precipitation with Reaction Quotient Qsp (CED 7.11)**: `unit08/q3-q#w` ("Predicting Precipitation with Qsp"). Solution mixing with dilution (M₁V₁ = M₂V₂), evaluating Qsp = [Pb²⁺][I⁻]², and comparing Qsp vs Ksp to predict supersaturation and precipitate formation.
+4. **Weak Base Dissociation & Hydrolysis (CED 8.3 & 8.4)**: `unit09/boss-leach#w` ("pH of a Weak Base Solution"). Base dissociation equilibrium expression for NH₃, ICE table with small-x approximation, [OH⁻], pOH, pH, and percent ionization verification.

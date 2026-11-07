@@ -97,7 +97,7 @@ const said = jar => {
   const did = jar.props.did || {};
   const bits = [];
   if (did.pour) bits.push(POUR[did.pour]);
-  if (did.sq != null) bits.push(did.sq < 1 ? `squeezed to ${Math.round(did.sq * 100)} % of its room` : 'did not squeeze smaller');
+  if (did.sq != null) bits.push(did.sq < 1 ? `compressed to ${Math.round(did.sq * 100)} % of its volume` : 'did not compress smaller');
   return bits.join(' and ');
 };
 
@@ -107,7 +107,7 @@ export const STAGES = [
     const press = pressFixture('press', { x: 47, y: 22 });
     const spots = [{ x: 106, y: 12 }, { x: 106, y: 34 }, { x: 128, y: 34 }];
     const jars = P1_JARS.map((j, i) => jarCard(j.id, j.label, spots[i], { sample: j.sample, T: j.T }));
-    const trays = ['solid', 'liquid', 'gas'].map((id, i) => ({ id, label: STATE_LABEL[id], at: { x: 27 + i * 48, y: 60 }, size: { w: 46, h: 24 }, cell: 23, cellH: 22 }));
+    const trays = ['solid', 'liquid', 'gas'].map((id, i) => ({ id, label: STATE_LABEL[id], at: { x: 27 + i * 48, y: 60 }, size: { w: 46, h: 24 }, cell: 23, cellH: 22, view: { solid: 'lump', liquid: 'pool', gas: 'spread' }[id] }));
     return {
       id: 'p1-hold',
       title: 'Phase 1 · The Hold',
@@ -121,7 +121,7 @@ export const STAGES = [
         intent: 'The Undertow drags the quay in three jars, each in a state of its own.'
       },
       hints: [
-        'Use the press and the "Pour" key on each jar, then drag it into a tray.',
+        'Use the piston and the "Pour" key on each jar, then drag it into a tray.',
         'Compare what each jar did with what the jars of water did on the first bench.',
         'A jar sorts by how its contents behave, whatever they are made of.'
       ],
@@ -132,7 +132,7 @@ export const STAGES = [
         const bad = P1_JARS.find(j => whereIs(t, j.id) !== j.tray);
         if (!bad) return { ok: true };
         const s = said(t.pieces[bad.id]);
-        return { ok: false, msg: `Jar ${bad.label} sits in the "${STATE_LABEL[whereIs(t, bad.id)]}" tray, and ${s ? `its contents ${s}` : 'it has not been poured or squeezed yet'}.` };
+        return { ok: false, msg: `Jar ${bad.label} sits in the "${STATE_LABEL[whereIs(t, bad.id)]}" tray, and ${s ? `its contents ${s}` : 'it has not been poured or compressed yet'}.` };
       },
       reward: {
         log: 'Dry ice stayed a lump, iodine pooled and argon spread.',
@@ -163,7 +163,7 @@ export const STAGES = [
       encounter: {
         species: 'the undertow',
         act: 'Commit Order',
-        intent: 'The Undertow draws on four siphons, each holding its liquid with a grip of its own.'
+        intent: 'The Undertow draws on four siphons, each holding its liquid with an attraction of its own.'
       },
       hints: [
         'Use the probe, its key and the rail.',
@@ -331,7 +331,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'The Freeze',
-      body: 'The Undertow held the harbour with the grips between molecules: states told by how a jar behaves, grips ranked by heat, boiling set by the pressure outside, heat counted stretch by stretch, and brine thinned by the litre.'
+      body: 'The Undertow held the harbour with the attractions between molecules: states told by how a jar behaves, attractions ranked by heat, boiling set by the pressure outside, heat counted stretch by stretch, and brine thinned by the litre.'
     }
   ]
 };

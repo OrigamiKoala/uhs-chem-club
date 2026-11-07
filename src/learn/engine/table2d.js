@@ -169,6 +169,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     if (!mat) outline(r, Boolean(holding));
     else if (holding) outline({ x0: r.x0 - 1, y0: r.y0 - 1, x1: r.x1 + 1, y1: r.y1 + 1, w: r.w + 2, h: r.h + 2 }, true);
     zoneWords('tray', t);
+    if (t.view) kit.paintTray?.(ctx, t, state, { X, Y, sc, r, clock: view.clock || 0, scope: view.scope || '' });
     if (t.cap != null) {
       const n = Object.values(state.pieces).filter(p => p.zone === `tray:${t.id}` && !p.hidden).length;
       words(`${n}/${t.cap}`, r.x1 - 1.2, r.y0 - LABEL.above, { align: 'right', color: n > t.cap ? AMBER : ink.dim });

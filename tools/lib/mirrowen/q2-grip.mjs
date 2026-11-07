@@ -41,7 +41,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
     same(force === 'dipole' ? 'dipole' : force, s.tray, `${q} stage 8 (${s.id}'s tray)`);
   }
   // The predict stage shows no instrument; a rank stage is not solved by its start order.
-  holds(!Object.keys(start(mod, 2).fixtures).length, `${q} stage 3: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 2).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 3: the predict stage shows an instrument`);
   for (const i of [0, 1, 3, 4, 5]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
   void done;
 }

@@ -12,6 +12,8 @@ import { probeRead } from './matter-read.js';
 import { fixtureHandler, pieceDef } from './matter-registry.js';
 import { glyphOf, inkOf, cloudRadius, fmtKJ, markOf } from './matter-parts.js';
 import { SUBSTANCES } from '../../engine/matterdata.js';
+import { glide, shakeAt, speedAt } from './matter-motion.js';
+import { paintMotion as heatMotion, isLive as heatLive } from './heat-motion.js';
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -143,14 +145,19 @@ function paintProbe(ctx, f, state, b) {
     const near = [[-1.5, -1.9], [1.5, -1.9], [-1.5, 1.9], [1.5, 1.9]];
     const far = [[-ww * 0.38, -wh * 0.3], [ww * 0.38, -wh * 0.3], [-ww * 0.38, wh * 0.3], [ww * 0.38, wh * 0.3]];
     const cx = F.x(wx + ww / 2); const cy = F.y(wy + wh / 2);
+    // Pulling takes a moment: the molecules glide from their places to the corners, shaking all the while.
+    const g = glide(`${b.scope || ''}probe:${f.id}:${r.item.id}`, r.pulled ? 1 : 0, b.clock || 0, { dur: 1.8 });
+    const t = b.clock || 0;
     for (let i = 0; i < 4; i++) {
-      const [dx, dy] = r.pulled ? far[i] : [near[i][0] * 3.2, near[i][1] * 3.2];
+      const nx = near[i][0] * 3.2; const ny = near[i][1] * 3.2;
+      const [sx, sy] = shakeAt(i, t, 0.35 * (1 - 0.6 * g), speedAt(20));
+      const dx = nx + (far[i][0] - nx) * g + sx; const dy = ny + (far[i][1] - ny) * g + sy;
       if (id) paintGlyph(ctx, id, cx + F.len(dx), cy + F.len(dy), unit * 0.62, { cloud: Boolean(r.item.props.cloud) });
       else { ctx.fillStyle = '#2f3d4a'; ctx.beginPath(); ctx.arc(cx + F.len(dx), cy + F.len(dy), F.len((r.item.props.r / 140) * 1.5), 0, Math.PI * 2); ctx.fill(); }
     }
     if (p.mode === 'ion') {
       // Water molecules close round the ion: two small bent glyphs that come in when it is dropped.
-      ctx.globalAlpha = r.pulled ? 1 : 0.35;
+      ctx.globalAlpha = 0.35 + 0.65 * g;
       for (const [dx, dy] of [[-0.8, -0.5], [0.8, -0.5], [0, 0.7]]) paintGlyph(ctx, 'H2O', cx + F.len(dx * 6), cy + F.len(dy * 5), unit * 0.4);
       ctx.globalAlpha = 1;
     }
@@ -164,7 +171,9 @@ export function paintFixture(ctx, f, state, b) {
   if (f.kind === 'probe') return paintProbe(ctx, f, state, b);
   const h = fixtureHandler(f.kind);
   if (h?.paint) return h.paint(ctx, f, state, b);
-  return heatFixture(ctx, f, state, b);
+  heatFixture(ctx, f, state, b);
+  // The heat kit's moving models (the cup's water, a bond's atoms, the watch-first clip) over the plate's own picture.
+  if (!b.bodies && heatLive(f)) heatMotion(ctx, f, state, b);
 }
 
 export { contentTop };

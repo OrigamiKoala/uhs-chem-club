@@ -61,7 +61,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   holds(P(['strip', 'filter', 'boil']).separated && P(['strip', 'filter', 'boil']).moved[0] === false, `${q} stage 7: a wasted step is visible`);
 
   /* ---- the predict stage shows no instrument; no untouched table passes; every solution passes; every miss is refused ---- */
-  holds(!Object.keys(start(mod, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+  holds(!Object.values(start(mod, 0).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 1: the predict stage shows an instrument`);
   for (let i = 1; i < 7; i++) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
   for (let i = 1; i < 7; i++) {
     const r = mod.STAGES[i].check(mod.stateFor(i, mod.SOLUTIONS[i]));
