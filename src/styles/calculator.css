@@ -22,10 +22,10 @@
   user-select: none;
   font-family: var(--font-display, 'Quantico', sans-serif);
   color: var(--text-primary);
-  left: 20px;
-  bottom: 20px;
+  right: 24px;
+  bottom: 90px;
   top: auto;
-  right: auto;
+  left: auto;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   touch-action: none;
@@ -217,13 +217,6 @@
   background: var(--plate-500);
 }
 
-.scoured-calc-tape-empty {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-style: italic;
-  margin-top: auto;
-}
-
 .scoured-calc-tape-row {
   display: flex;
   align-items: baseline;
@@ -300,16 +293,9 @@
 .scoured-calc-screen-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding-top: 4px;
   border-top: 1px solid rgba(214, 196, 168, 0.08);
-}
-
-.scoured-calc-screen-status {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.7rem;
-  color: var(--accent-gold);
-  letter-spacing: 0.04em;
 }
 
 .scoured-calc-screen-actions {

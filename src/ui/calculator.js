@@ -352,9 +352,7 @@ class DigitalCalculator {
 
       <!-- History Tape -->
       <div class="scoured-calc-screen">
-        <div class="scoured-calc-tape" id="calc-tape" role="log" aria-live="polite">
-          <div class="scoured-calc-tape-empty">Ready. Type an expression and press Enter.</div>
-        </div>
+        <div class="scoured-calc-tape" id="calc-tape" role="log" aria-live="polite"></div>
 
         <!-- Entry Line -->
         <div class="scoured-calc-entry-row">
@@ -370,9 +368,8 @@ class DigitalCalculator {
           />
         </div>
 
-        <!-- Status & Utility Bar -->
+        <!-- Action Bar -->
         <div class="scoured-calc-screen-bar">
-          <span class="scoured-calc-screen-status" id="calc-status">Ans = 0</span>
           <div class="scoured-calc-screen-actions">
             <button type="button" class="scoured-calc-util-btn" data-act="clear" title="Clear history">Clear</button>
             <button type="button" class="scoured-calc-util-btn" data-act="copy" title="Copy last result">Copy</button>
@@ -569,11 +566,9 @@ class DigitalCalculator {
         this.historyIdx = -1;
 
         this.addTapeLine(raw, formatted);
-        this.updateStatus();
 
-        // Clear input for next entry while showing placeholder of result
+        // Clear input for next entry
         this.inputEl.value = '';
-        this.inputEl.placeholder = `Ans = ${formatted}`;
       }
     } catch (err) {
       soundscape?.playMissBuzzer?.();
@@ -583,8 +578,6 @@ class DigitalCalculator {
 
   addTapeLine(expr, result) {
     if (!this.tapeEl) return;
-    // Remove initial empty placeholder if present
-    this.tapeEl.querySelector('.scoured-calc-tape-empty')?.remove();
 
     const line = document.createElement('div');
     line.className = 'scoured-calc-tape-row';
@@ -599,7 +592,6 @@ class DigitalCalculator {
 
   addTapeError(expr, msg) {
     if (!this.tapeEl) return;
-    this.tapeEl.querySelector('.scoured-calc-tape-empty')?.remove();
 
     const line = document.createElement('div');
     line.className = 'scoured-calc-tape-row error';
@@ -610,13 +602,6 @@ class DigitalCalculator {
     `;
     this.tapeEl.appendChild(line);
     this.tapeEl.scrollTop = this.tapeEl.scrollHeight;
-  }
-
-  updateStatus() {
-    const status = this.el.querySelector('#calc-status');
-    if (status) {
-      status.textContent = `Ans = ${formatResult(this.ans)}`;
-    }
   }
 
   insertConstant(val) {
@@ -642,9 +627,8 @@ class DigitalCalculator {
     this.inputEl.value = '';
     this.inputEl.placeholder = 'Type expression… (e.g. 5+3, -log(1e-7), R*298)';
     if (this.tapeEl) {
-      this.tapeEl.innerHTML = '<div class="scoured-calc-tape-empty">Ready. Type an expression and press Enter.</div>';
+      this.tapeEl.innerHTML = '';
     }
-    this.updateStatus();
     this.inputEl.focus();
   }
 
@@ -704,14 +688,14 @@ class DigitalCalculator {
     }
   }
 
-  applyBottomLeftPosition() {
+  applyDefaultPosition() {
     if (!this.el) return;
     if (this.hasMoved) return;
 
-    this.el.style.left = '20px';
-    this.el.style.bottom = '20px';
+    this.el.style.right = '24px';
+    this.el.style.bottom = '90px';
+    this.el.style.left = 'auto';
     this.el.style.top = 'auto';
-    this.el.style.right = 'auto';
   }
 
   open({ targetInput = null } = {}) {
@@ -719,7 +703,7 @@ class DigitalCalculator {
     this.targetInput = targetInput;
     this.isOpen = true;
 
-    this.applyBottomLeftPosition();
+    this.applyDefaultPosition();
     this.el.classList.remove('hidden');
 
     window.addEventListener('keydown', this.onGlobalKeyDown);

@@ -870,7 +870,10 @@ export class BenchViewer3D {
       if (this.leaning) {
         // Leaned in (standalone, or deployed in a world): a drag swings the view a little and it settles back on release. A slipped
         // grab on the plate must never walk the player off the bench (and a phone has no key to lean back in); Leave Bench and the walk keys do that.
-        if (this.movedWhileDown >= 6) this.leanLook(dx, dy);
+        if (this.movedWhileDown >= 6) {
+          if (this.lean?.released) this.turnCamera(dx * 0.0024, dy * 0.0024);
+          else this.leanLook(dx, dy);
+        }
         return;
       }
 
@@ -1131,6 +1134,7 @@ export class BenchViewer3D {
         look: { yaw: 0, pitch: 0, release: false }, ref: null, wrote: null
       };
       this.leaning = true;
+      this._syncedLeanToFps = false;
       this.playerControlled = false;
       if (!this.inWorld) {
         cam.clearViewOffset?.();
@@ -1142,8 +1146,9 @@ export class BenchViewer3D {
       // A re-solve (the chrome moved): fly on from wherever the camera is.
       Object.assign(this.lean, {
         pose, t: 0, tween: opts.instant ? 0 : Math.min(tween, 0.25), key: pose.key,
-        fromPos: cam.position.clone(), fromQuat: cam.quaternion.clone()
+        fromPos: cam.position.clone(), fromQuat: cam.quaternion.clone(), released: false
       });
+      this._syncedLeanToFps = false;
       this.playerControlled = false;
     }
     if (this.lean.tween === 0) this.settleLean();
@@ -1163,6 +1168,7 @@ export class BenchViewer3D {
       this.fpsControls.isGrounded = true;
       this.fpsControls.verticalVelocity = 0;
       this.fpsControls.velocity.set(0, 0, 0);
+      this.lean.released = true;
     }
   }
 
@@ -1225,6 +1231,17 @@ export class BenchViewer3D {
     const L = this.lean;
     const cam = this.camera;
     if (!L) return;
+    // In a world the lean only moves the camera to its pose; once it has arrived the camera is the player's again (look, walk, R/F height).
+    if (L.released) {
+      // The boss look and the arena's shake still ride on top of the player's own view.
+      if (this.gaze && this.gaze.w > 0.001) this.applyGaze(cam);
+      if (this.arenaFight) {
+        const sh = cameraShake();
+        if (sh) { cam.position.x += sh.posX; cam.position.y += sh.posY; cam.rotateZ(sh.roll); }
+      }
+      cam.updateMatrixWorld(true);
+      return;
+    }
     if (this.inWorld && this.playerControlled) {
       if (!this._syncedLeanToFps && this.fpsControls) {
         this._syncedLeanToFps = true;
@@ -1233,6 +1250,7 @@ export class BenchViewer3D {
         this.fpsControls.verticalVelocity = 0;
         this.fpsControls.velocity.set(0, 0, 0);
       }
+      L.released = true;
       return;
     }
     const toPos = this._leanP || (this._leanP = new THREE.Vector3());
@@ -1249,6 +1267,8 @@ export class BenchViewer3D {
       this.fpsControls.isGrounded = true;
       this.fpsControls.verticalVelocity = 0;
       this.fpsControls.velocity.set(0, 0, 0);
+      L.released = true;
+      return;
     }
     if (L.look.release) {
       const k = Math.min(1, delta * 6);
@@ -1363,7 +1383,7 @@ export class BenchViewer3D {
     const L = this.lean;
     if (!L) return;
     L.sinceFit += delta;
-    if (L.sinceFit > 0.2) {
+    if (!L.released && L.sinceFit > 0.2) {
       L.sinceFit = 0;
       this.refitLean();
     }
