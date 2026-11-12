@@ -21,42 +21,42 @@ export const UNIT_05 = {
   world: 'Ember Reach',
   place: 'Volcanic vent field',
   title: 'Thermodynamics',
-  line: 'Thermal energy transfer, reaction enthalpy, bond energies, entropy, and Gibbs free energy.',
+  line: 'Heat, the heat of reactions, bond energies, entropy and free energy.',
   brief:
-    'Thermodynamics governs energy transformations and spontaneity. In Ember Reach, explore heat transfer in calorimetry, multi-step reaction enthalpies, and the balance of enthalpy and entropy.',
+    'Where heat goes, how much a reaction gives out, and why some changes happen by themselves.',
 
   quests: [
     {
       id: 'q1-flow',
       title: 'Heat and Temperature',
-      line: 'Touch a hot block to a cold one, observe temperature equalization, and identify the direction of thermal energy transfer.',
+      line: 'Touch a hot block to a cold one, watch the two temperatures meet, and find which way the heat went.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q1-flow.js')
     },
     {
       id: 'q2-calorimetry',
       title: 'Calorimetry',
-      line: 'Measure heat in a water bath: specific heat capacity, melting ice and a reaction\'s energy.',
+      line: 'Measure heat with a water bath: specific heat capacity, the heat of a reaction, and melting and boiling.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },
     {
       id: 'q3-enthalpy',
       title: 'Enthalpy of Reaction',
-      line: 'Relate reaction heat to molar enthalpy, reaction stoichiometry, and fuel energy density.',
+      line: 'Find the heat of a reaction for each mole, scale it to any amount, and compare fuels gram for gram.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit05/q3-enthalpy.js')
     },
     {
       id: 'q4-bonds',
       title: 'Bond Enthalpies',
-      line: 'Estimate reaction enthalpy by balancing the energy required to break bonds with energy released forming bonds.',
+      line: 'Estimate the heat of a reaction from the bonds it breaks and the bonds it forms.',
       arena: 'bench',
       stageCount: 6,
       status: 'live',
@@ -65,7 +65,7 @@ export const UNIT_05 = {
     {
       id: 'q5-hess',
       title: "Hess's Law and Formation",
-      line: 'Combine multi-step reaction enthalpies using Hess\'s law and standard enthalpies of formation.',
+      line: 'Add measured steps to find the heat of a reaction nobody measured, with Hess\'s law and enthalpies of formation.',
       arena: 'bench',
       stageCount: 4,
       status: 'live',
@@ -74,7 +74,7 @@ export const UNIT_05 = {
     {
       id: 'q6-entropy',
       title: 'Entropy',
-      line: 'Model particle dispersal across microstates and evaluate entropy changes across phase transitions and reactions.',
+      line: 'See why particles spread out, and what entropy counts, in phase changes and reactions.',
       arena: 'bench',
       stageCount: 5,
       status: 'live',
@@ -83,9 +83,9 @@ export const UNIT_05 = {
     {
       id: 'q7-gibbs',
       title: 'Free Energy',
-      line: 'Evaluate spontaneity by balancing enthalpy and entropy across temperatures using Gibbs free energy.',
+      line: 'Find when a change happens by itself: heat and entropy together, as free energy.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q7-gibbs.js')
     },

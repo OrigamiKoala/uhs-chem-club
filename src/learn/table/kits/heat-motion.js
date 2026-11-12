@@ -373,16 +373,20 @@ export function curveAt(path, u) {
   return { T, phase, kind: q.kind, mix };
 }
 export function curveU(f) { const d = f.dials.heat; return (d.value - d.min) / (d.max - d.min || 1); }
+/** The room under the graph: its axis caption, and a line of readings when the stage asks for a `readout`. */
+export const curveFoot = f => (f.props.readout ? 9 : 5);
+/** Where the burner is shown at `clock`, 0 to 1 of the heat: it glides to the dial's setting. */
+export const curveShown = (f, b) => glide(`${b?.scope || ''}curve:${f.id}`, b?.clock, f.props._u0 ?? 0, curveU(f));
 
 function paintCurve(ctx, f, state, b) {
   const F = frameOf(b);
   const clock = b.clock || 0;
   const top = contentTopOf(f);
   const path = curvePath(f.props);
-  const u = glide(`${b.scope || ''}curve:${f.id}`, clock, f.props._u0 ?? 0, curveU(f));
+  const u = curveShown(f, b);
   const at = curveAt(path, u);
   // The box of particles, on the left: a lattice that shakes (solid), a heap that slides (liquid), a gas that flies.
-  const bx = 3; const by = top + 1; const bw = 22; const bh = f.size.h - top - 5;
+  const bx = 3; const by = top + 1; const bw = 22; const bh = f.size.h - top - curveFoot(f);
   ctx.strokeStyle = DIM; ctx.lineWidth = 1;
   ctx.strokeRect(Math.round(F.x(bx)) + 0.5, Math.round(F.y(by)) + 0.5, Math.round(F.len(bw)), Math.round(F.len(bh)));
   const N = 12; const ink = tempInk(at.T);

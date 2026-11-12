@@ -16,7 +16,7 @@ import {
   cellsOpen, loggedArrangements, waysOf, shakesOf, occupiedCells, sig, WELL, LID_LOSS, whereIs, seededRng
 } from './heat-read.js';
 import { bondAtoms, inkOfElement, phaseDots } from './heat-parts.js';
-import { glide, bathShown, speedAt, tempInk, chamberFlight, replayHeat } from './heat-motion.js';
+import { glide, bathShown, speedAt, tempInk, chamberFlight, replayHeat, curvePath, curveAt, curveShown, curveFoot, contentTopOf } from './heat-motion.js';
 void replayHeat;
 
 const AMBER = PLATE_COLORS.amber;
@@ -106,6 +106,8 @@ export function blockFace(p, state) {
 
 function paintBlock(ctx, p, state, o) {
   const f = blockFace(p, state);
+  // A block standing in a bath reads what the bath settled at (`settle` keeps how far it fell).
+  if (String(p.zone || '').startsWith('slot:') && p.props.trial) f.T = p.props.T - p.props.trial.fall;
   // The reading walks to its new value over a couple of seconds, as the energy crosses (flat table only: the built face has no clock).
   if (o.clock > 0) f.T = glide(`${o.scope || ''}blk:${p.id}`, o.clock, blockRead(state, p.id).T0, f.T);
   const hot = f.T > 45;
@@ -374,6 +376,7 @@ export function faceKey(p, state) {
   const pr = p.props;
   let extra = '';
   if (p.kind === 'block') { const r = blockRead(state, p.id); extra = `${r.T.toFixed(1)}|${r.joined ? 1 : 0}`; }
+  if (p.kind === 'block' && String(p.zone || '').startsWith('slot:') && pr.trial) extra += `|in${pr.trial.fall}`;
   return `${p.kind}|${p.label}|${pr.flipped ? 1 : 0}|${pr.scale || 1}|${pr.shown ?? ''}|${pr.rise ?? ''}|${pr.T ?? ''}|${extra}`;
 }
 
@@ -535,7 +538,7 @@ function paintStack(ctx, f, state, b) {
   const r = stackRead(state, f.id);
   const p = f.props;
   const size = F.size(2.4, 5.8);
-  const maxW = F.len(f.size.w - 4);
+  const maxW = F.len(f.size.w - 4 - (p.ladder ? 14 : 0));
   // What is wanted, in the dust colour, in two lines (before the arrow and after it); a rule; what the stack adds up to, in the phosphor.
   say(ctx, p.targetText[0], F.x(2), F.y(8.6), size, { color: DUST, weight: 600, maxW });
   say(ctx, `→ ${p.targetText[1]}`, F.x(2), F.y(12.2), size, { color: DUST, weight: 600, maxW });
@@ -547,6 +550,31 @@ function paintStack(ctx, f, state, b) {
     say(ctx, `→ ${fmtSide(r.rhs) || '—'}`, F.x(2), F.y(22), size, { color: PHOS, weight: 700, maxW });
   }
   if (!p.hideSum) say(ctx, `${p.symbol || 'ΔH'} ${r.empty ? '—' : signedKJ(r.dH)} kJ`, F.x(f.size.w - 2), F.y(f.size.h - 3.2), F.size(2.9, 6.5), { align: 'right', weight: 700, color: AMBER });
+  if (p.ladder) {
+    // The energy ladder: it starts at the reactants' level, and each card in the stack steps down (heat given out) or up (heat taken in)
+    // by its own ΔH as it stands. Where the last step ends is the stack's total.
+    const { lo, hi } = p.ladder;
+    const lx0 = f.size.w - 14; const lx1 = f.size.w - 2.5; const ly0 = 8.5; const ly1 = f.size.h - 7.5;
+    const yOf = v => ly0 + ((hi - Math.max(lo, Math.min(hi, v))) / (hi - lo)) * (ly1 - ly0);
+    say(ctx, 'ENERGY', F.x(lx0), F.y(ly0 - 2.2), F.size(1.7, 5.4), { color: DIM });
+    const n = r.cards.length;
+    const sw = (lx1 - lx0) / (n + 1);
+    ctx.strokeStyle = DIM; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(F.x(lx0), F.y(yOf(0))); ctx.lineTo(F.x(lx1), F.y(yOf(0))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = DUST; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(F.x(lx0), F.y(yOf(0))); ctx.lineTo(F.x(lx0 + sw), F.y(yOf(0))); ctx.stroke();
+    let acc = 0;
+    r.cards.forEach((c, i) => {
+      const from = acc; acc += cardTerms(c).dH;
+      const x = lx0 + sw * (i + 1);
+      ctx.strokeStyle = DIM; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(F.x(x), F.y(yOf(from))); ctx.lineTo(F.x(x), F.y(yOf(acc))); ctx.stroke();
+      ctx.strokeStyle = i === n - 1 ? AMBER : PHOS; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(F.x(x), F.y(yOf(acc))); ctx.lineTo(F.x(x + sw), F.y(yOf(acc))); ctx.stroke();
+    });
+    ctx.lineWidth = 1;
+  }
 }
 
 function paintCells(ctx, f, state, b) {
@@ -676,6 +704,22 @@ function paintWarm(ctx, f, state, b) {
   if (!f.props.hideS || state.recorder.rows.some(r => r.label === 'ΔS')) say(ctx, `ENTROPY GAINED ${fixed(r.dS, 1, true)} J/K`, F.x(f.size.w - 3), F.y(top + 16), F.size(2.4, 6), { color: AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w - 20) });
 }
 
+/** The words on a heating curve: what its two axes are, and (where the stage asks) the sample's temperature and the heat added so far. */
+function paintCurveFace(ctx, f, state, b) {
+  const F = frameOf(b);
+  const top = contentTopOf(f);
+  const gx = 29; const gw = f.size.w - gx - 4; const gy = top + 1; const gh = f.size.h - top - curveFoot(f);
+  const path = curvePath(f.props);
+  say(ctx, '°C', F.x(gx + 1.2), F.y(gy + 1.8), F.size(1.9, 5.8), { color: DIM });
+  say(ctx, path.rising ? 'HEAT ADDED →' : 'HEAT REMOVED →', F.x(gx + gw), F.y(gy + gh + 2.3), F.size(1.9, 5.8), { color: DIM, align: 'right' });
+  if (!f.props.readout) return;
+  const u = curveShown(f, b);
+  const at = curveAt(path, u);
+  const y = f.size.h - 2.6;
+  say(ctx, `${Math.round(at.T)} °C`, F.x(3), F.y(y), F.size(2.7, 6.5), { color: inkOf(at.T), weight: 700 });
+  if (f.props.readout === 'both') say(ctx, `HEAT ${path.rising ? 'ADDED' : 'REMOVED'} ${sig(u * path.total, 3).toLocaleString('en-US')} J`, F.x(f.size.w - 3), F.y(y), F.size(2.6, 6.4), { color: AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w - 20) });
+}
+
 function paintPlaque(ctx, f, state, b) {
   const F = frameOf(b);
   (f.props.lines || []).forEach((line, i) => say(ctx, line, F.x(2.2), F.y(8.4 + i * 3.8), F.size(2.7, 6.5), { color: DUST, maxW: F.len(f.size.w - 4) }));
@@ -714,6 +758,7 @@ export function paintFixture(ctx, f, state, b) {
   else if (f.kind === 'chamber') paintChamber(ctx, f, state, b);
   else if (f.kind === 'plot') paintPlot(ctx, f, state, b);
   else if (f.kind === 'warm') paintWarm(ctx, f, state, b);
+  else if (f.kind === 'curve') paintCurveFace(ctx, f, state, b);
   else if (f.kind === 'plaque') paintPlaque(ctx, f, state, b);
   else if (f.kind === 'marker') paintMarker(ctx, f, state, b);
   else if (f.kind === 'selector') paintSelector(ctx, f, state, b);

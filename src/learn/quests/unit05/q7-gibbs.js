@@ -25,7 +25,7 @@ import {
   heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
   { term: /\bspontaneous\b/i, introducedAt: 2 },
@@ -43,24 +43,21 @@ export function toolNoteFor() { return null; }
 const widget = { type: 'table', label: 'The bench' };
 
 const QUEST_KEY = 'unit05/q7-gibbs';
-const GUESS_LABEL = { on: '"It dissolves on its own"', off: '"It stays solid"', warm: '"Only if it is warmed"' };
+const GUESS_LABEL = { on: '"It dissolves by itself"', off: '"It stays solid"', warm: '"Only if it is warmed"' };
 
 // Stage 2: ammonium nitrate dissolving takes in 25.7 kJ per mole and gains 108 J/(mol·K) of spreading.
-const SALT = { dH: 25.7, dS: 108, Ts: [150, 200, 250, 298, 350] };
+// One setting of the dial, 238 K, is where ΔH and TΔS are equal: the student places the ball there.
+const SALT = { dH: 25.7, dS: 108, Ts: [150, 200, 238, 298, 350] };
 const T_SALT = crossingTemperature(25.7, 108);
-const SALT_FIRST = SALT.Ts.find(T => gibbsFreeEnergy(SALT.dH, SALT.dS, T) < 0);
 // Stage 4: ammonia synthesis gives out 92 kJ per mole of reaction and loses 199 J/(mol·K) of spreading; ΔG at 298 K is -32.7 kJ.
 const HABER = { dH: -92, dS: -199, T: 298 };
 const HABER_DG = gibbsFreeEnergy(HABER.dH, HABER.dS, HABER.T);
 // Stage 5: melting ice takes in 6.01 kJ per mole and gains 22.0 J/(mol·K).
-const ICE = { dH: 6.01, dS: 22.0, Ts: [250, 260, 273, 285, 300] };
+// The dial has no setting at the melting point: the plot shows which side each setting is on, and the temperature itself is worked out.
+const ICE = { dH: 6.01, dS: 22.0, Ts: [250, 260, 270, 280, 300] };
 const T_ICE = crossingTemperature(ICE.dH, ICE.dS);
-// Stage 6: CaCO3 -> CaO + CO2 from free energies of formation (kJ/mol).
-const GF = { reactant: { CaCO3: -1129 }, product: { CaO: -604, CO2: -394 } };
-const GF_DG = (GF.product.CaO + GF.product.CO2) - GF.reactant.CaCO3;
-
 /* ------------------------------------------------------------------
-   THE FOUR STAGES
+   THE FIVE STAGES (ΔG° from formation values was retired on 2026-11-11: `archive/2026-11-11/ember/`)
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -69,11 +66,11 @@ export const STAGES = [
     title: 'A Pack That Chills',
     // A PREDICT STAGE: the plot is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'A cold pack takes heat from the water as its salt dissolves: will the salt dissolve on its own at room temperature?',
+    prompt: 'The salt in a cold pack takes heat in as it dissolves: will it dissolve by itself at room temperature?',
     widget,
     table: heatTable({
       pieces: [
-        note('on', 'It dissolves on its own', { x: 24, y: 16 }),
+        note('on', 'It dissolves by itself', { x: 24, y: 16 }),
         note('off', 'It stays solid', { x: 70, y: 16 }),
         note('warm', 'Only if it is warmed', { x: 116, y: 16 })
       ],
@@ -81,9 +78,9 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
-      'Picture a cold pack at room temperature, and what the water in it does.',
-      'Commit to the card you expect based on whether endothermic dissolution can occur spontaneously.'
+      'Watch the clip: a crystal of the salt sitting in water.',
+      'Dissolving this salt takes heat in, but it also lets the particles of the salt move all through the water.',
+      'Think about what happens to the entropy of the salt when it dissolves, and whether taking heat in has to stop a change.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -97,37 +94,39 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, inspect the free energy balance across different temperatures on the plot.'
+      body: 'Next, the salt is on the bench at any temperature you choose.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     id: 's2-plot',
-    title: 'Heat Against Spreading',
-    prompt: 'Type the temperature in kelvin at which the salt starts to dissolve on its own.',
-    entry: { id: 'T', label: 'Starts to dissolve at', unit: 'K' },
+    title: 'Heat Against Entropy',
+    briefing: { speaker: SPEAKER, body: 'A change that happens by itself is called spontaneous. It is spontaneous when the free energy change, ΔG = ΔH − TΔS, is negative: ΔH is the heat taken in, and TΔS is the temperature in kelvin times the entropy gained.' },
+    prompt: 'At what temperature does the salt change from staying solid to dissolving by itself?',
     widget,
     table: heatTable({
       fixtures: [
-        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Cold-pack salt in water', w: 64 })
+        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, title: 'Cold-pack salt in water', w: 64 }),
+        plaqueFixture('key', 'Free energy change', { x: 114, y: 22 }, ['ΔG = ΔH − TΔS', 'ΔH: heat taken in', 'TΔS: kelvin temperature × entropy gained', 'Kelvin: K = °C + 273', 'ΔG negative: spontaneous'], { w: 62 })
       ]
     }),
     hints: [
-      'Use the "Temperature" dial and the line printed under the plot.',
-      'Compare the net at two neighbouring settings, one above zero and one below.',
-      'The net moves steadily between two settings, so the zero lies in proportion between them.'
+      'Drag the ball along the line and watch ΔH, TΔS and ΔG printed under the plot.',
+      'Notice which of ΔH and TΔS grows as the temperature rises, and which stays the same.',
+      'The salt changes over at the temperature where ΔG is neither positive nor negative.'
     ],
     check(state) {
-      const v = entryNumber(state.table, 'T');
-      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in kelvin.' };
-      if (Math.abs(v - T_SALT) <= 12) return { ok: true };
-      return { ok: false, msg: `At ${v} K the net reads ${fixed(gibbsFreeEnergy(SALT.dH, SALT.dS, v), 1, true)} kJ.` };
+      const t = state.table;
+      const r = plotRead(t, 'plot');
+      if (Math.round(t.fixtures.plot.dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Drag the ball along the line to change the temperature.' };
+      if (Math.abs(r.dG) < 0.05) return { ok: true };
+      return { ok: false, msg: `At ${r.T} K, ΔH is ${fixed(r.dH, 1, true)} kJ and TΔS is ${fixed(r.TdS, 1, true)} kJ, so ΔG is ${fixed(r.dG, 1, true)} kJ and the salt ${r.dG > 0 ? 'stays solid' : 'is already dissolving by itself'}.` };
     },
     reward: {
-      log: 'The net went below zero once it was warm enough.',
+      log: 'ΔG reached zero at 238 K.',
       title: 'Free Energy',
-      body: 'A process that occurs without sustained external energy input is spontaneous, determined by the Gibbs free energy change: ΔG = ΔH − TΔS. Even an endothermic process can be spontaneous at sufficiently high temperatures when positive entropy change outweighs enthalpy.'
+      body: 'Below 238 K, ΔH is larger than TΔS, so ΔG is positive and the salt stays solid. Above 238 K, TΔS is larger and ΔG is negative: dissolving is spontaneous, although it takes heat in.'
     }
   },
 
@@ -135,14 +134,14 @@ export const STAGES = [
   {
     id: 's3-four-signs',
     title: 'The Four Cases',
-    prompt: 'Sort the four kinds of change by the temperatures at which they run on their own.',
+    prompt: 'At which temperatures is each kind of change spontaneous?',
     widget,
     table: heatTable({
       pieces: [
-        gCard('both-help', 'Heat out, spreads out', { x: 20, y: 14 }, { dH: -40, dS: 100 }),
-        gCard('both-oppose', 'Heat in, crowds', { x: 54, y: 14 }, { dH: 40, dS: -100 }),
-        gCard('high-t', 'Heat in, spreads out', { x: 88, y: 14 }, { dH: 40, dS: 100 }),
-        gCard('low-t', 'Heat out, crowds', { x: 122, y: 14 }, { dH: -40, dS: -100 })
+        gCard('both-help', 'Heat out, entropy up', { x: 20, y: 14 }, { dH: -40, dS: 100 }),
+        gCard('both-oppose', 'Heat in, entropy down', { x: 54, y: 14 }, { dH: 40, dS: -100 }),
+        gCard('high-t', 'Heat in, entropy up', { x: 88, y: 14 }, { dH: 40, dS: 100 }),
+        gCard('low-t', 'Heat out, entropy down', { x: 122, y: 14 }, { dH: -40, dS: -100 })
       ],
       zones: {
         trays: [
@@ -154,9 +153,9 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Use the four cards and the four trays.',
-      'Follow each card\'s line from the cold end to the hot end and compare it with the shaded strip.',
-      'Examine the signs of ΔH and ΔS in ΔG = ΔH − TΔS to determine temperature dependence.'
+      'Look at the line on each card: it is ΔG against temperature, cold at the left and hot at the right.',
+      'Compare where each line lies in the shaded strip, which is where ΔG is negative and the change is spontaneous.',
+      'In ΔG = ΔH − TΔS the TΔS part grows with temperature, so think about which way the ΔS of each card tilts its line.'
     ],
     check(state) {
       const t = state.table;
@@ -169,8 +168,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Each case was sorted by its line.',
-      title: 'Temperature as a Lever',
-      body: 'When ΔH and ΔS have opposing thermodynamic effects, temperature determines spontaneity. High temperatures favor the entropy term (TΔS), whereas low temperatures make the enthalpy term (ΔH) dominant.'
+      title: 'When Temperature Decides',
+      body: 'A change that gives out heat and gains entropy is spontaneous at every temperature, and one that does the opposite never is. For the other two kinds the temperature decides, because TΔS grows as it gets hotter.'
     }
   },
 
@@ -178,7 +177,18 @@ export const STAGES = [
   {
     id: 's4-number',
     title: 'Free Energy at 298 K',
-    prompt: 'Type the free energy change ΔG of this reaction at 298 K, in kJ.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'To work out ΔG, the two parts must be in the same unit: ΔH is given in kJ and ΔS in J/K, so TΔS is divided by 1,000. Here is one change worked through; the reaction on your bench is a different one.',
+      worked: [
+        'A change with ΔH = +50 kJ and ΔS = +100 J/K, at 400 K.',
+        'TΔS = 400 × 100 = 40,000 J = 40 kJ',
+        'ΔG = ΔH − TΔS',
+        'ΔG = 50 − 40 = +10 kJ',
+        'ΔG is positive, so the change is not spontaneous at 400 K.'
+      ]
+    },
+    prompt: 'What is the free energy change, ΔG, of this reaction at 298 K?',
     entry: { id: 'dg', label: 'ΔG at 298 K', unit: 'kJ' },
     widget,
     table: heatTable({
@@ -187,21 +197,22 @@ export const STAGES = [
           'ΔH = −92 kJ',
           'ΔS = −199 J/(mol·K)',
           'T = 298 K',
-          'ΔG = ΔH − TΔS'
+          'ΔG = ΔH − TΔS',
+          '1 kJ = 1,000 J'
         ], { w: 70 }),
         rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'N₂'], [3, 'H₂']], rhs: [[2, 'NH₃']], w: 54, h: 34 })
       ]
     }),
     hints: [
-      'Use the plate of facts.',
-      'Compare the size of ΔH in kJ with the size of TΔS, which carries the units of ΔS.',
-      'Work out TΔS in kJ, then subtract it from ΔH, keeping the sign of ΔS.'
+      'Read ΔH, ΔS and the temperature on the plate, and the unit of each.',
+      'On this plate ΔS is negative, so TΔS is negative as well.',
+      'The worked case shows the order of the steps, and taking away a negative TΔS raises ΔG.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'dg');
       if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
       if (Math.abs(v - HABER_DG) <= 0.6) return { ok: true };
-      if (Math.abs(v - (HABER.dH + (HABER.T * HABER.dS) / 1000)) <= 2) return { ok: false, msg: 'The plate gives ΔS as a loss, and that figure makes the reaction run harder than its heat alone.' };
+      if (Math.abs(v - (HABER.dH + (HABER.T * HABER.dS) / 1000)) <= 2) return { ok: false, msg: 'That figure is lower than ΔH, but the plate gives a negative ΔS, and a loss of entropy cannot make ΔG lower.' };
       if (Math.abs(v - HABER.dH) <= 2) return { ok: false, msg: 'That is ΔH alone, and the plate also gives a ΔS and a temperature.' };
       if (Math.abs(v) > 5000) return { ok: false, msg: `That figure is about ${Math.round(Math.abs(v / HABER.dH))} times the ΔH on the plate: kJ and J are not the same size.` };
       return { ok: false, msg: `${fixed(v, 1)} kJ needs TΔS to be ${fixed(HABER.dH - v, 1)} kJ, and 298 K times the plate's ΔS gives a different figure.` };
@@ -209,7 +220,7 @@ export const STAGES = [
     reward: {
       log: 'ΔG at 298 K came to −32.7 kJ.',
       title: 'ΔG From ΔH and ΔS',
-      body: 'ΔG = ΔH − TΔS = −92 − (−59.3) = −32.7 kJ. Negative means the reaction runs on its own at 298 K.'
+      body: 'TΔS = 298 × (−199) J = −59.3 kJ, so ΔG = −92 − (−59.3) = −32.7 kJ. ΔG is negative, so the reaction is spontaneous at 298 K.'
     }
   },
 
@@ -217,68 +228,31 @@ export const STAGES = [
   {
     id: 's5-ice',
     title: 'Where Ice Starts to Melt',
-    prompt: 'Type the temperature in kelvin at which ice starts to melt.',
+    prompt: 'From its ΔH and ΔS, at what temperature in kelvin does ice start to melt?',
     entry: { id: 'T', label: 'Ice starts to melt at', unit: 'K' },
     widget,
     table: heatTable({
       fixtures: [
-        plotFixture('plot', { x: 44, y: 30 }, { dH: ICE.dH, dS: ICE.dS, Ts: ICE.Ts, tempStart: 1, hideCrossing: true, words: true, title: 'Melting ice', w: 64 }),
-        plaqueFixture('facts', 'Melting ice', { x: 118, y: 16 }, ['ΔH = +6.01 kJ', 'ΔS = +22.0 J/(mol·K)', 'ΔG = ΔH − TΔS'], { w: 52 })
+        plotFixture('plot', { x: 44, y: 30 }, { dH: ICE.dH, dS: ICE.dS, Ts: ICE.Ts, tempStart: 1, hideCrossing: true, title: 'Melting ice', w: 64 }),
+        plaqueFixture('facts', 'Melting ice', { x: 118, y: 16 }, ['ΔH = +6.01 kJ', 'ΔS = +22.0 J/(mol·K)', 'ΔG = ΔH − TΔS', '1 kJ = 1,000 J'], { w: 52 })
       ]
     }),
     hints: [
-      'Use the plate of facts and the "Temperature" dial.',
-      'Work out the temperature from the plate, then turn the dial to that setting to check the net there.',
-      'At the melting point ΔG is zero, so ΔH and TΔS are equal once ΔS is in kJ.'
+      'Drag the ball along the line and find the two settings between which ΔG changes from positive to negative.',
+      'Ice starts to melt at the temperature between those two settings where ΔG is neither positive nor negative.',
+      'At that temperature ΔH and TΔS are equal, once both are in the same unit.'
     ],
     check(state) {
       const t = state.table;
       const v = entryNumber(t, 'T');
       if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the temperature in kelvin.' };
       if (Math.abs(v - T_ICE) <= 2) return { ok: true };
-      return { ok: false, msg: `At ${v} K the net balance reads ${fixed(gibbsFreeEnergy(ICE.dH, ICE.dS, v), 2, true)} kJ.` };
+      return { ok: false, msg: `At ${v} K, TΔS is ${fixed((v * ICE.dS) / 1000, 2, true)} kJ and ΔH is +6.01 kJ, so ΔG is ${fixed(gibbsFreeEnergy(ICE.dH, ICE.dS, v), 2, true)} kJ.` };
     },
     reward: {
       log: 'The line crossed zero at the melting point.',
-      title: 'The Crossing',
-      body: 'The net free energy change for melting ice crosses zero at 273 K, where ΔH = TΔS. Below 273 K, ΔG > 0 and ice remains solid; above 273 K, ΔG < 0 and melting is spontaneous.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 6 */
-  {
-    id: 's6-formation',
-    title: 'Free Energy From Formation',
-    prompt: 'Type ΔG° of this reaction at 298 K, in kJ, from the formation free energies on the plate.',
-    entry: { id: 'dgf', label: 'ΔG° at 298 K', unit: 'kJ' },
-    widget,
-    table: heatTable({
-      fixtures: [
-        plaqueFixture('facts', 'CaCO₃ → CaO + CO₂', { x: 52, y: 26 }, [
-          'ΔGf° CaCO₃ = −1129 kJ/mol',
-          'ΔGf° CaO = −604 kJ/mol',
-          'ΔGf° CO₂ = −394 kJ/mol',
-          'One mole of each'
-        ], { w: 70 }),
-        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'CaCO₃']], rhs: [[1, 'CaO'], [1, 'CO₂']], w: 54, h: 34 })
-      ]
-    }),
-    hints: [
-      'Use the plate of facts.',
-      'Each substance in the equation has one formation free energy, and the equation has two sides.',
-      'Add the formation values for one side, add them for the other side, and combine the two totals.'
-    ],
-    check(state) {
-      const v = entryNumber(state.table, 'dgf');
-      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
-      if (Math.abs(v - GF_DG) <= 0.6) return { ok: true };
-      if (Math.abs(v + GF_DG) <= 0.6) return { ok: false, msg: 'The sign is reversed: the totals were combined in the opposite order.' };
-      return { ok: false, msg: `${fixed(v, 0)} kJ does not match the two totals on the plate once they are combined.` };
-    },
-    reward: {
-      log: 'ΔG° came to +131 kJ.',
-      title: 'ΔG° From Formation Values',
-      body: 'ΔG° = ΣΔGf°(products) − ΣΔGf°(reactants) = (−604 − 394) − (−1129) = +131 kJ. A positive ΔG° means this decomposition does not run on its own at 298 K.'
+      title: 'The Melting Point',
+      body: 'ΔG is zero where ΔH = TΔS, so T = 6,010 ÷ 22.0 = 273 K, which is 0 °C. Below 273 K ice stays solid, and above it melting is spontaneous.'
     }
   }
 ];
@@ -286,11 +260,10 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
-  2: ['Turn the "Temperature" dial, then type your answer in the field at the bottom.'],
+  2: ['Drag the ball along the line to change the temperature.'],
   3: ['Drag each card into a tray.'],
   4: ['Type your answer in the field at the bottom.'],
-  5: ['Work it out, then type your answer in the field at the bottom.'],
-  6: ['Type your answer in the field at the bottom.']
+  5: ['Drag the ball along the line, then type your answer in kelvin.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -302,7 +275,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Spontaneity is governed by Gibbs free energy: ΔG = ΔH − TΔS. Enthalpy and entropy can either cooperate or compete, with temperature scaling the entropy contribution to determine whether a process proceeds spontaneously.'
+      body: 'A change is spontaneous when its free energy change, ΔG = ΔH − TΔS, is negative. Giving out heat and gaining entropy both push ΔG down; when the two disagree, the temperature decides, because TΔS grows as it gets hotter.'
     }
   ]
 };
@@ -317,21 +290,19 @@ const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tr
 
 export const SOLUTIONS = [
   [put('on', 'slot:guess')],
-  [{ type: { entry: 'T', value: '240' } }],
+  [dial('plot', 'temp', 3)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
   [{ type: { entry: 'dg', value: '-32.7' } }],
-  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }],
-  [{ type: { entry: 'dgf', value: '131' } }]
+  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [{ type: { entry: 'T', value: '300' } }],
+  [dial('plot', 'temp', 4)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'low', 'low-t': 'high' })],
   [{ type: { entry: 'dg', value: '59210' } }],
-  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }],
-  [{ type: { entry: 'dgf', value: '-131' } }]
+  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }]
 ];
 
 function blankState() { return {}; }
@@ -355,5 +326,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { SALT, SALT_FIRST, T_SALT, ICE, T_ICE, HABER, HABER_DG, GF, GF_DG };
+export const CHECKS = { SALT, T_SALT, ICE, T_ICE, HABER, HABER_DG };
 export { plotRead, plotAt };

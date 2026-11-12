@@ -213,10 +213,10 @@ export const STAGE_STORY = {
   },
   'q2-calorimetry': {
     1: 'The cooling jackets can hold water or iron, and Vess must choose before the main valves open.',
-    3: 'A fitting from the siphon line carries no stamp, and Vess wants its metal named.'
+    5: 'A fitting from the siphon line carries no stamp, and Vess wants its metal named.'
   },
   'q3-enthalpy': {
-    2: 'The ascent skiff can lift only so much fuel, so Vess must pick its tank with care.'
+    5: 'The ascent skiff can lift only so much fuel, so Vess must pick its tank with care.'
   },
   'q4-bonds': {
     1: 'The Fifth\'s cracking coil pulls gas molecules apart over the vent, and Vess wants to know what that costs.'

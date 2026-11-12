@@ -27,7 +27,7 @@ import {
 export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bentropy\b/i, introducedAt: 2 },
+  { term: /\bentropy\b/i, introducedAt: 3 },
   { term: /ΔS/, introducedAt: 3 }
 ];
 
@@ -42,7 +42,7 @@ export function toolNoteFor() { return null; }
 const widget = { type: 'table', label: 'The bench' };
 
 const QUEST_KEY = 'unit05/q6-entropy';
-const GUESS_LABEL = { left: '"Back in the left half"', spread: '"Spread over both halves"', right: '"Pulled into the right half"' };
+const GUESS_LABEL = { left: '"All in the left half"', spread: '"Spread over both halves"', right: '"All in the right half"' };
 
 /** Arrangements of four particles in eight cells: 70 in all, 2 with every particle in one half. */
 const TOTAL_WAYS = waysOf(8, 4);
@@ -73,21 +73,21 @@ export const STAGES = [
     title: 'Where Will They Stand?',
     // A PREDICT STAGE: the chamber is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'A box of four particles opens onto an empty half, and is shaken again and again: where will they be most often?',
+    prompt: 'Four particles in the left half of a box are let into the whole box: where will they be found most often?',
     widget,
     table: heatTable({
       pieces: [
-        note('left', 'Back in the left half', { x: 24, y: 16 }),
+        note('left', 'All in the left half', { x: 24, y: 16 }),
         note('spread', 'Spread over both halves', { x: 70, y: 16 }),
-        note('right', 'Pulled into the right half', { x: 116, y: 16 })
+        note('right', 'All in the right half', { x: 116, y: 16 })
       ],
       fixtures: [leadFixture('lead', { x: 36, y: 44 }, { scene: 'shut', w: 62, h: 30 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
-      'Picture the particles starting in the left half with a shut wall, and the wall then opening.',
-      'Commit to the card you expect based on how particles distribute randomly.'
+      'Watch the clip: four particles moving at random in the left half, behind a wall.',
+      'When the wall is taken away, nothing pulls a particle towards either side.',
+      'Think about how many ways four particles can all be on the left, and how many ways they can be split between the two halves.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -101,7 +101,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, shake the chamber repeatedly to record where the particles distribute.'
+      body: 'Next, the wall is gone and the box can be shaken.'
     }
   },
 
@@ -109,37 +109,38 @@ export const STAGES = [
   {
     id: 's2-shake',
     title: 'Shake and Count',
-    prompt: 'Shake the chamber repeatedly, then place the card for where particles occur most often.',
+    briefing: { speaker: SPEAKER, body: 'Each shake puts the four particles in four of the eight cells at random. The bars count how many particles were in the left half after each shake.' },
+    prompt: 'After many shakes, where are the four particles found most often?',
     widget,
     table: heatTable({
       pieces: [
-        tag('left', 'Back in the left half', { x: 84, y: 57.4 }),
+        tag('left', 'All in the left half', { x: 84, y: 57.4 }),
         tag('spread', 'Spread over both halves', { x: 110, y: 57.4 }),
-        tag('right', 'Pulled into the right half', { x: 136, y: 57.4 })
+        tag('right', 'All in the right half', { x: 136, y: 57.4 })
       ],
-      fixtures: [chamberFixture('chamber', { x: 45, y: 27 }, { cells: 8, particles: 4, title: 'Open chamber of 8 cells' })],
+      fixtures: [chamberFixture('chamber', { x: 45, y: 27 }, { cells: 8, particles: 4, title: 'Open box of 8 cells' })],
       zones: { slots: [{ id: 'answer', label: 'Most often', at: { x: 118, y: 28 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the "Shake" key, the bars under the chamber and the slot.',
-      'Compare how tall each bar stands after many shakes.',
-      'Random distribution makes the most probable configurations occur with the highest frequency.'
+      'Press "Shake" at least twenty times and watch the bars under the box grow.',
+      'Compare the bar for all four on the left with the bars for one, two or three on the left.',
+      'Every single arrangement is as likely as any other, so a result that can be made in more ways turns up more often.'
     ],
     check(state) {
       const t = state.table;
       const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
       if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
-      if (card.id === 'spread') return { ok: true };
       const k = shakesOf(t, 'chamber').length;
-      if (k < 10) return { ok: false, msg: `The bars have counted only ${k} shakes so far.` };
+      if (k < 10) return { ok: false, notYet: true, msg: `The bars have counted only ${k} shakes so far: shake at least ten times.` };
+      if (card.id === 'spread') return { ok: true };
       return card.id === 'left'
         ? { ok: false, msg: `The bar for all four in the left half stands at ${tally(t, 4)} of ${k} shakes.` }
         : { ok: false, msg: `The bar for none in the left half stands at ${tally(t, 0)} of ${k} shakes.` };
     },
     reward: {
       log: 'Spread out turned up almost every time.',
-      title: 'Entropy',
-      body: `Spread-out arrangements outnumber concentrated ones, with ${TOTAL_WAYS - CROWDED_WAYS} of ${TOTAL_WAYS} possible configurations. The measure of the number of microstates available to a system is its entropy, which increases as particles disperse.`
+      title: 'More Ways to Be Spread Out',
+      body: `Four particles can be placed in eight cells in ${TOTAL_WAYS} ways, and only ${CROWDED_WAYS} of those have them all in one half. The particles end up spread out because there are far more spread-out arrangements.`
     }
   },
 
@@ -147,7 +148,8 @@ export const STAGES = [
   {
     id: 's3-room',
     title: 'More Ways or Fewer?',
-    prompt: 'Sort each change by whether it gives the particles more ways to arrange or fewer.',
+    briefing: { speaker: SPEAKER, body: 'Entropy, S, counts the ways the particles of a sample and their energy can be arranged: the more ways, the higher the entropy. A change in entropy is written ΔS, and it is positive when the entropy goes up.' },
+    prompt: 'Which changes raise the entropy, and which lower it?',
     widget,
     table: heatTable({
       pieces: [
@@ -158,15 +160,15 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          { id: 'more', label: 'More ways to arrange', at: { x: 40, y: 46 }, size: { w: 56, h: 22 }, cell: 36, cellH: 11 },
-          { id: 'fewer', label: 'Fewer ways to arrange', at: { x: 110, y: 46 }, size: { w: 56, h: 22 }, cell: 36, cellH: 11 }
+          { id: 'more', label: 'Entropy rises', at: { x: 40, y: 46 }, size: { w: 56, h: 22 }, cell: 36, cellH: 11 },
+          { id: 'fewer', label: 'Entropy falls', at: { x: 110, y: 46 }, size: { w: 56, h: 22 }, cell: 36, cellH: 11 }
         ]
       }
     }),
     hints: [
-      'Use the four cards and the two trays.',
-      'Compare the particles before and after on each card: how far apart they are and how many there are.',
-      'States with greater freedom of motion have higher entropy, with gases having significantly higher entropy than liquids or solids.'
+      'Look at the particles drawn on each card, before the change and after it.',
+      'Compare how freely the particles move before and after, and how many particles of gas there are.',
+      'The particles of a gas can be arranged in far more ways than the same particles packed together in a liquid or a solid.'
     ],
     check(state) {
       const t = state.table;
@@ -174,13 +176,12 @@ export const STAGES = [
       if (Object.keys(want).some(k => !['more', 'fewer'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every change needs a tray.' };
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
       if (!wrong) return { ok: true };
-      const [a, b] = SORT_S0[wrong[0]];
-      return { ok: false, msg: `The entropy table has "${t.pieces[wrong[0]].label}" going from ${fixed(a, 1)} to ${fixed(b, 1)} J/(mol·K).` };
+      return { ok: false, msg: `"${t.pieces[wrong[0]].label}" is in the "${t.zones.trays[whereIs(t, wrong[0])].label}" tray: look again at how its particles are packed before the change and after it.` };
     },
     reward: {
       log: 'Gas decided the sign.',
-      title: 'Ways and the Sign of ΔS',
-      body: 'Processes that increase particle dispersal or produce gas increase entropy, giving a positive entropy change (ΔS). Conversely, processes that constrain particles or consume gas result in a negative ΔS.'
+      title: 'Entropy and the Sign of ΔS',
+      body: 'Melting and making a gas let the particles be arranged in more ways, so the entropy rises and ΔS is positive. Condensing and using up gas do the opposite, so ΔS is negative.'
     }
   },
 
@@ -188,21 +189,21 @@ export const STAGES = [
   {
     id: 's4-rank',
     title: 'Volume and Motion',
-    prompt: 'Order the four boxes from the fewest ways to arrange the particles to the most.',
+    prompt: 'What is the order of the four boxes, from lowest entropy to highest?',
     widget,
     table: heatTable({
       pieces: [
-        phaseCard('ice', 'Ice, −10 °C', { x: 0, y: 0 }, 'solid', {}, -10),
-        phaseCard('cold', 'Water, 10 °C', { x: 0, y: 0 }, 'liquid', {}, 10),
-        phaseCard('hot', 'Water, 80 °C', { x: 0, y: 0 }, 'liquid', {}, 80),
-        phaseCard('steam', 'Steam, 110 °C', { x: 0, y: 0 }, 'gas', {}, 110)
+        phaseCard('ice', 'Ice', { x: 0, y: 0 }, 'solid', {}, -10),
+        phaseCard('cold', 'Cold water', { x: 0, y: 0 }, 'liquid', {}, 10),
+        phaseCard('hot', 'Hot water', { x: 0, y: 0 }, 'liquid', {}, 80),
+        phaseCard('steam', 'Steam', { x: 0, y: 0 }, 'gas', {}, 110)
       ],
-      zones: { rail: { at: { x: 75, y: 36 }, size: { w: 134, h: 26 }, first: 'Fewest ways', last: 'Most ways', items: ['ice', 'cold', 'hot', 'steam'], start: ['hot', 'steam', 'ice', 'cold'] } }
+      zones: { rail: { at: { x: 75, y: 36 }, size: { w: 134, h: 26 }, first: 'Lowest entropy', last: 'Highest entropy', items: ['ice', 'cold', 'hot', 'steam'], start: ['hot', 'steam', 'ice', 'cold'] } }
     }),
     hints: [
-      'Use the four boxes and the rail.',
-      'Compare how much volume each particle moves in and how fast it moves in each box.',
-      'Both spatial dispersion across phases and increased thermal motion increase the available microstates.'
+      'Look at how the particles in each box are packed and how fast they move.',
+      'Compare the two boxes of liquid water, which differ only in temperature.',
+      'Particles with more space can be placed in more ways, and faster particles can share out their energy in more ways.'
     ],
     check(state) {
       const order = state.table.zones.rail.order;
@@ -211,12 +212,12 @@ export const STAGES = [
       if (order.join() === want.join()) return { ok: true };
       const t = state.table;
       const j = order.findIndex((id, i) => i > 0 && want.indexOf(order[i - 1]) > want.indexOf(id));
-      return { ok: false, msg: `"${t.pieces[order[j - 1]].label}" and "${t.pieces[order[j]].label}" are in the wrong order.` };
+      return { ok: false, msg: `"${t.pieces[order[j - 1]].label}" stands to the left of "${t.pieces[order[j]].label}": compare the particles in those two boxes.` };
     },
     reward: {
       log: 'Volume and motion both added ways.',
       title: 'Solid, Liquid, Gas, and Warming',
-      body: 'For a substance, entropy increases from solid to liquid to gas as spatial microstates increase. Increasing temperature also increases entropy because thermal energy can be distributed across more accessible energy levels.'
+      body: 'Entropy rises from solid to liquid to gas, because the particles have more places to be. Warming a sample also raises its entropy, because faster particles can share out their energy in more ways.'
     }
   },
 
@@ -224,23 +225,35 @@ export const STAGES = [
   {
     id: 's5-table',
     title: 'Entropy From a Table',
-    prompt: 'Set the dial to the entropy change ΔS for CaCO₃(s) → CaO(s) + CO₂(g), in J/(mol·K).',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Tables list the entropy of one mole of each substance. The ΔS of a reaction is the entropy of everything it makes minus the entropy of everything it uses up.',
+      worked: [
+        'N₂(g) + 3 H₂(g) → 2 NH₃(g)',
+        `S of one mole, in J/(mol·K): N₂ ${S0('N2(g)')}, H₂ ${S0('H2(g)')}, NH₃ ${S0('NH3(g)')}`,
+        `Made: 2 × ${S0('NH3(g)')} = ${fixed(2 * S0('NH3(g)'), 1)}`,
+        `Used up: ${S0('N2(g)')} + 3 × ${S0('H2(g)')} = ${fixed(S0('N2(g)') + 3 * S0('H2(g)'), 1)}`,
+        `ΔS = ${fixed(2 * S0('NH3(g)'), 1)} − ${fixed(S0('N2(g)') + 3 * S0('H2(g)'), 1)} = ${fixed(2 * S0('NH3(g)') - S0('N2(g)') - 3 * S0('H2(g)'), 1)} J/(mol·K)`
+      ]
+    },
+    prompt: 'What is the entropy change, ΔS, for CaCO₃(s) → CaO(s) + CO₂(g)?',
     widget,
     table: heatTable({
       fixtures: [
         plaqueFixture('s0', 'Entropy of one mole at 298 K, J/(mol·K)', { x: 46, y: 30 }, [
           `CaCO₃(s)    ${S0('CaCO3(s)')}`,
           `CaO(s)    ${S0('CaO(s)')}`,
-          `CO₂(g)    ${S0('CO2(g)')}`
+          `CO₂(g)    ${S0('CO2(g)')}`,
+          '298 K is 25 °C: K = °C + 273'
         ], { w: 72 }),
         markerFixture('dS', 'Entropy change', { x: 116, y: 18 }, { min: 0, max: 400, step: 5, start: 0, unit: 'J/(mol·K)', w: 50 }),
         rxnFixture('atoms', { x: 116, y: 47 }, { lhs: [[1, 'CaCO₃']], rhs: [[1, 'CaO'], [1, 'CO₂']], w: 50, h: 32 })
       ]
     }),
     hints: [
-      'Use the plate of entropies and the dial.',
-      'Compare what the reaction ends with and what it starts with, one mole of each substance.',
-      'Add the entropies of the substances the reaction makes, then take away the entropy of the one it uses up.'
+      'Read the entropy of each of the three substances on the plate.',
+      'Sort the three into what the reaction makes and what it uses up.',
+      'The worked case shows the order of the steps, and in this reaction every substance has one mole.'
     ],
     check(state) {
       const v = markerRead(state.table, 'dS');
@@ -252,7 +265,7 @@ export const STAGES = [
     reward: {
       log: 'ΔS for the limestone reaction came to +160 J/(mol·K).',
       title: 'ΔS From the Table',
-      body: 'ΔS is the entropy of the products minus that of the reactants: (38.1 + 213.8) − 91.7 = +160.2 J/(mol·K). A solid made a gas, so it is positive.'
+      body: 'ΔS = (38.1 + 213.8) − 91.7 = +160.2 J/(mol·K). It is positive, as expected when a solid gives off a gas.'
     }
   }
 ];
@@ -275,7 +288,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Entropy quantifies the number of accessible microstates in a system. Dispersal occurs spontaneously because dispersed states are statistically far more numerous, and entropy increases with phase transitions (solid to liquid to gas) and temperature.'
+      body: 'Particles spread out because there are far more spread-out arrangements than crowded ones. Entropy counts the arrangements: it is higher for a gas than for a liquid or a solid, and higher when a sample is warmer. The ΔS of a reaction is the entropy of what it makes minus the entropy of what it uses up.'
     }
   ]
 };

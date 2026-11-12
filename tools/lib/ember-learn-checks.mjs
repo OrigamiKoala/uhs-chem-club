@@ -16,11 +16,10 @@ const LEAKS = {
     5: [/\b1100\b/, /zero/i]
   },
   'q7-gibbs': {
-    2: [/\b250\b/, /lowest/i, /spreading|spread/i, /sign/i],
+    2: [/\b238\b/, /zero/i, /equal/i],
     3: [/cross/i, /flips?/i],
     4: [/32\.7/, /\b59\.3\b/, /convert/i],
-    5: [/\b273\b/, /zero/i, /divid/i],
-    6: [/\b131\b/, /subtract|minus/i]
+    5: [/\b273\b/, /zero/i, /divid/i]
   },
   'q6-entropy': {
     2: [/outnumber/i, /\bmost\b/i, /\bspread\b/i, /\b70\b|\b68\b/],
@@ -34,7 +33,8 @@ const LEAKS = {
     4: [/products? (less|minus)/i, /\bsubtract/i, /elements/i]
   },
   'q4-bonds': {
-    2: [/\b436\b/, /positive/i, /\bplus\b/i, /\+/],
+    // The meter prints the 436 kJ/mol by design (2026-11-11): the stage asks what forming the bond does, so a refusal may not say that.
+    2: [/gives? (it )?(out|back)/i, /\bsame\b/i, /backwards|reverse/i],
     3: [/starting/i, /reactant/i, /product/i],
     5: [/larger|bigger|greater/i, /\bcool/i, /\bsubtract|minus/i],
     6: [/\b184\b/, /\bsubtract|minus/i]
@@ -42,22 +42,22 @@ const LEAKS = {
   'q3-enthalpy': {
     1: [/\b160\b/, /divid/i, /per mole.*8,?000/i],
     2: [/\b48\b/, /six|6 ?×|times/i, /proportion/i],
-    4: [/per gram/i, /weigh/i, /lightest/i, /\bmass\b/i],
-    5: [/\b858\b|\b860\b/, /1\.5/, /times/i, /coefficient/i],
-    8: [/\b100\b/, /\bsubtract|minus/i]
+    4: [/\b858\b|\b860\b/, /1\.5/, /times/i, /coefficient/i],
+    6: [/per gram/i, /weigh/i, /lightest/i, /\bmass\b/i]
   },
   'q2-calorimetry': {
-    2: [/tenth/i, /less energy/i, /\bsmaller\b/i, /needs? (a )?(smaller|lower)/i],
-    3: [/multipl/i, /4\.184/, /2092/i],
-    4: [/334/, /fusion/i, /\bmelting (takes|costs)/i],
+    2: [/tenth|ninth/i, /less energy/i, /\bsmaller\b/i, /needs? (a )?(smaller|lower)/i],
+    3: [/multipl/i, /4\.184/, /502\d/i],
+    4: [/multipl/i, /4\.184/, /\bmass\b/i],
     5: [/\bcopper\b/i, /\bc\b.*\b0\.\d/i, /\bmass\b/i],
-    6: [/multipl/i, /4\.184/, /\bmass\b/i],
-    8: [/25\.7/, /\badd\b/i, /2260/]
+    6: [/\b334\b/, /fusion/i, /\bmelting (takes|costs)/i],
+    7: [/30\.1/, /\badd\b/i, /2260/]
   },
   'q1-flow': {
     1: [/halfway/i, /\baverage\b/i, /\bmiddle\b/i],
     3: [/\bmass\b/i, /\bweight\b/i, /particles/i, /amount/i, /\btank\b.*\b(more|most)\b/i],
-    4: [/exothermic|endothermic/i, /\bgave\b|\btook\b/i, /fizz/i]
+    // The two terms are taught in the stage's briefing and printed on its trays (2026-11-11), so a refusal may name a tray; it may not say which way the heat went.
+    4: [/\bgave\b|\btook\b/i, /fizz/i]
   }
 };
 
@@ -104,20 +104,8 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e1 = mods['q1-flow'];
   if (e1) {
     const q = 'unit05/q1-flow';
-    holds(e1.STAGES.length === 5, `${q} should have five stages`);
-    {
-      // Unequal blocks: exactly one pair finishes at 27 degrees, and it is not the average of its two readings.
-      const t = start(e1, 4);
-      const ids4 = ['p', 'q', 'r', 's'];
-      const pairs = [];
-      for (let x = 0; x < 4; x++) for (let y = x + 1; y < 4; y++) {
-        const u = run(t, [{ place: { piece: ids4[x], to: `piece:${ids4[y]}` } }]);
-        if (Math.abs(HK.blockRead(u, ids4[x]).T - 27) < 0.6) pairs.push(ids4[x] + ids4[y]);
-      }
-      same(pairs.join(), 'pq', `${q} stage 5 (the pairs that finish at 27)`);
-      holds(Math.abs((t.pieces.p.props.T + t.pieces.q.props.T) / 2 - 27) > 20, `${q} stage 5: the average of the pair is near the answer`);
-      same(e1.STAGES[4].check(e1.stateFor(4, e1.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
-    }
+    // Four stages since 2026-11-11: Unequal Blocks needed specific heat capacity, which q2 teaches (archive/2026-11-11/ember).
+    holds(e1.STAGES.length === 4, `${q} should have four stages`);
     {
       // Exactly one pair of the four blocks finishes at 50 degrees, and it is the solution.
       const t = start(e1, 0);
@@ -160,7 +148,9 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e2 = mods['q2-calorimetry'];
   if (e2) {
     const q = 'unit05/q2-calorimetry';
-    holds(e2.STAGES.length === 8, `${q} should have eight stages`);
+    // Seven stages since 2026-11-11: the reaction in a bath comes straight after the heat equation, the heat of fusion is measured on the
+    // heating curve (Ice in the Bath retired), and Steam to Water is retired (archive/2026-11-11/ember).
+    holds(e2.STAGES.length === 7, `${q} should have seven stages`);
     {
       const t = done(e2, 1);
       near(HK.cupRead(t, 'iron').dT, HK.cupRead(t, 'water').dT, 0.1, `${q} stage 2 (equal rises)`);
@@ -171,19 +161,21 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(Boolean(e2.STAGES[0].predict) && !Object.values(start(e2, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     }
     {
+      // The first typed stage: its briefing works a different bath, and the figure graded is the bench's own.
       const t = done(e2, 2);
-      near(typed(t, 'joules'), e2.CHECKS.Q_WATER, 35, `${q} stage 3 (the heat absorbed)`);
+      const r = HK.cupRead(t, 'water');
+      near(e2.CHECKS.Q_BATH, TD.heatTransfer(r.mWater, TD.SPECIFIC_HEAT_WATER, r.dT), 1, `${q} stage 3 (the heat the bath took in)`);
+      near(typed(t, 'joules'), e2.CHECKS.Q_BATH, 50, `${q} stage 3 (the figure typed)`);
       same(e2.STAGES[2].check(e2.stateFor(2, e2.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
+      const w = e2.STAGES[2].briefing?.worked || [];
+      holds(w.length >= 3, `${q} stage 3: the first typed stage has no worked case in its briefing`);
+      holds(!w.some(l => /\b150\b|\b8(\.0)? °C|502\d/.test(l)), `${q} stage 3: the worked case is the bench's own bath`);
+      near(50 * 4.184 * 4, 837, 0.5, `${q} stage 3 (the worked case's own arithmetic)`);
     }
     {
-      // Ice in the bath: the bath's heat splits into the melting and the meltwater's warming, and mixing alone would end far warmer.
-      const t = run(start(e2, 3), [{ place: { piece: 'ice', to: 'slot:cup.mouth' } }]);
-      const r = HK.cupRead(t, 'cup'); const b = t.pieces.ice.props;
-      near(r.melted, b.m, 1e-9, `${q} stage 4 (all the ice melts)`);
-      near(-r.q - b.m * TD.SPECIFIC_HEAT_WATER * r.Tf, b.m * b.latent, 1e-6, `${q} stage 4 (the bath's heat is the melting plus the meltwater's warming)`);
-      near(e2.CHECKS.Q_MELT, b.m * b.latent, 1e-9, `${q} stage 4 (the graded heat)`);
-      holds(TD.equilibriumTemp(r.mWater, r.c, r.T0, b.m, TD.SPECIFIC_HEAT_WATER, 0) - r.Tf > 8, `${q} stage 4: the bath does not end far colder than mixing alone`);
-      same(e2.STAGES[3].check(e2.stateFor(3, e2.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
+      const t = run(start(e2, 3), [{ place: { piece: 'mix', to: 'slot:cup.mouth' } }]);
+      near(e2.CHECKS.Q_STAGE4, HK.cupRead(t, 'cup').q, 1, `${q} stage 4 (the heat the bath caught)`);
+      near(typed(done(e2, 3), 'joules'), HK.cupRead(t, 'cup').q, 35, `${q} stage 4 (the figure typed)`);
     }
     {
       // The fitting is copper: the c the bath's rise gives is the listed copper value, and no other metal on the plate is as near.
@@ -198,16 +190,23 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       same(e2.STAGES[4].check(e2.stateFor(4, e2.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
     }
     {
-      const t = run(start(e2, 5), [{ place: { piece: 'mix', to: 'slot:cup.mouth' } }]);
-      near(e2.CHECKS.Q_STAGE4, HK.cupRead(t, 'cup').q, 1, `${q} stage 6 (the heat the bath caught)`);
-      near(typed(done(e2, 5), 'joules'), HK.cupRead(t, 'cup').q, 25, `${q} stage 6 (the figure typed)`);
+      // The heat of fusion is measured on the curve: one burner setting stands where the last ice has gone, and the heat there is 334 J a gram.
+      const M = await import('../../src/learn/table/kits/heat-motion.js');
+      const { MELT, L_ICE } = e2.CHECKS;
+      const path = M.curvePath({ m: MELT.m, from: MELT.from, to: MELT.to });
+      const end = path.list.find(x => x.kind === 'melt').u1;
+      const k = 1 + Math.round(end * (MELT.steps - 1));
+      near((k - 1) / (MELT.steps - 1) * path.total / MELT.m, L_ICE, 1, `${q} stage 6 (the heat read where the ice has gone, for each gram)`);
+      holds(Math.abs(M.curveAt(path, (k - 1) / (MELT.steps - 1)).T) < 0.5 && M.curveAt(path, k / (MELT.steps - 1)).T > 2, `${q} stage 6: the temperature does not start to rise at that setting`);
+      const f = start(e2, 5).fixtures.heating;
+      holds(f.props.readout === 'both' && f.dials.heat.max === MELT.steps, `${q} stage 6: the curve does not print the heat added`);
+      same(e2.STAGES[5].check(e2.stateFor(5, e2.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
+      same(e2.STAGES[5].check(e2.stateFor(5, e2.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
     }
     {
-      // Ice at 0 degrees to steam at 100: melt, warm, boil.
+      // Ice at 0 degrees to steam at 100: melt, warm, boil. The curve prints the temperature only, never the heat.
       near(e2.CHECKS.Q_CURVE, (10 * 334 + 10 * 4.184 * 100 + 10 * 2260) / 1000, 1e-9, `${q} stage 7 (the heat for the whole path)`);
-      near(e2.CHECKS.Q_COND, (10 * 2260 + 10 * 4.184 * 75) / 1000, 1e-9, `${q} stage 8 (steam to 25 °C water)`);
-      same(e2.STAGES[7].check(e2.stateFor(7, e2.SOLUTIONS[7])).ok, true, `${q} stage 8 (the solution)`);
-      same(e2.STAGES[7].check(e2.stateFor(7, e2.MISSES[7])).ok, false, `${q} stage 8 (the miss)`);
+      holds(start(e2, 6).fixtures.heating.props.readout === 'temp', `${q} stage 7: the curve prints the heat it asks for`);
       same(e2.STAGES[6].check(e2.stateFor(6, e2.SOLUTIONS[6])).ok, true, `${q} stage 7 (the solution)`);
       same(e2.STAGES[6].check(e2.stateFor(6, e2.MISSES[6])).ok, false, `${q} stage 7 (the miss)`);
       same(e2.STAGES[6].check(e2.stateFor(6, {})).notYet, true, `${q} stage 7 (an empty field)`);
@@ -217,14 +216,10 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   /* ---- q3-enthalpy ---- */
   const e3 = mods['q3-enthalpy'];
   if (e3) {
-    {
-      const { BARRIER, EA_REVERSE } = e3.CHECKS;
-      near(EA_REVERSE, 100, 1e-9, 'unit05/q3-enthalpy stage 8 (the reverse barrier)');
-      same(e3.STAGES[7].check(e3.stateFor(7, e3.SOLUTIONS[7])).ok, true, 'unit05/q3-enthalpy stage 8 (the solution)');
-      same(e3.STAGES[7].check(e3.stateFor(7, e3.MISSES[7])).ok, false, 'unit05/q3-enthalpy stage 8 (the miss)');
-      holds(BARRIER.peak > BARRIER.r && BARRIER.peak > BARRIER.p, 'unit05/q3-enthalpy stage 8: the hill is not above both shelves');
-    }
     const q = 'unit05/q3-enthalpy';
+    // Six stages since 2026-11-11, in the order diagram, more powder, final temperature, per equation, predict fuel, ten grams. Limiting
+    // reactant (Kettle's) and activation energy (a unit not built) are retired (archive/2026-11-11/ember).
+    holds(e3.STAGES.length === 6, `${q} should have six stages`);
     {
       // The cup caught 8 kJ from 0.05 mol: 160 kJ for every mole, and the chart that is right drops by exactly that.
       const t = run(start(e3, 0), [{ place: { piece: 'powder', to: 'slot:cup.mouth' } }]);
@@ -239,23 +234,23 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const perGram = id => -TD.FUELS[id].dHc / TD.FUELS[id].molarMass;
       const ids = e3.CHECKS.FUEL_IDS;
       const top = f => [...ids].sort((x, y) => f(y) - f(x))[0];
-      same(top(perMole), 'methane', `${q} stage 4 (the biggest figure per mole)`);
-      same(top(perGram), 'hydrogen', `${q} stage 4 (the biggest figure per gram)`);
-      holds(e3.CHECKS.BY_GRAM.join() === [...ids].sort((x, y) => perGram(x) - perGram(y)).join(), `${q} stage 4 (the order by the gram)`);
-      holds(e3.CHECKS.BY_GRAM.join() !== [...ids].sort((x, y) => perMole(x) - perMole(y)).join(), `${q} stage 4: the order by the gram is the order by the mole`);
-      holds(Boolean(e3.STAGES[2].predict) && !Object.values(start(e3, 2).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 4: the predict stage shows an instrument`);
+      same(top(perMole), 'methane', `${q} stage 6 (the biggest figure per mole)`);
+      same(top(perGram), 'hydrogen', `${q} stage 6 (the biggest figure per gram)`);
+      holds(e3.CHECKS.BY_GRAM.join() === [...ids].sort((x, y) => perGram(x) - perGram(y)).join(), `${q} stage 6 (the order by the gram)`);
+      holds(e3.CHECKS.BY_GRAM.join() !== [...ids].sort((x, y) => perMole(x) - perMole(y)).join(), `${q} stage 6: the order by the gram is the order by the mole`);
+      holds(Boolean(e3.STAGES[4].predict) && !Object.values(start(e3, 4).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 5: the predict stage shows an instrument`);
       // Each tin's reading in the tank is the planner's, and the tank stays on the thermometer's scale.
-      let t = start(e3, 3);
+      let t = start(e3, 5);
       for (const id of ids) {
         t = run(t, [{ place: { piece: id, to: 'slot:cup.mouth' } }]);
         const r = HK.cupRead(t, 'cup');
-        near(t.pieces[id].props.rise, r.dT, 0.06, `${q} stage 4 (${id}'s reading kept on its tin)`);
-        near(r.dT, e3.CHECKS.riseOf(id), 0.01, `${q} stage 4 (${id}'s rise)`);
-        holds(r.Tf < 100, `${q} stage 4: ${id} takes the thermometer off its scale`);
+        near(t.pieces[id].props.rise, r.dT, 0.06, `${q} stage 6 (${id}'s reading kept on its tin)`);
+        near(r.dT, e3.CHECKS.riseOf(id), 0.01, `${q} stage 6 (${id}'s rise)`);
+        holds(r.Tf < 100, `${q} stage 6: ${id} takes the thermometer off its scale`);
       }
-      const hi = HK.cupRead(run(start(e3, 3), [{ place: { piece: 'hydrogen', to: 'slot:cup.mouth' } }]), 'cup').dT;
-      holds(hi > 2 * e3.CHECKS.riseOf('methanol'), `${q} stage 4: the readings are too close to rank by eye`);
-      same(done(e3, 3).zones.rail.order.join(), e3.CHECKS.BY_GRAM.join(), `${q} stage 4 (the rail)`);
+      const hi = HK.cupRead(run(start(e3, 5), [{ place: { piece: 'hydrogen', to: 'slot:cup.mouth' } }]), 'cup').dT;
+      holds(hi > 2 * e3.CHECKS.riseOf('methanol'), `${q} stage 6: the readings are too close to rank by eye`);
+      same(done(e3, 5).zones.rail.order.join(), e3.CHECKS.BY_GRAM.join(), `${q} stage 6 (the rail)`);
     }
     {
       // Heat scales with the moles: three settings of the dial, and the marker's answer is the same ΔH times 0.30 mol.
@@ -268,22 +263,19 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       same(e3.STAGES[1].check(e3.stateFor(1, e3.SOLUTIONS[1])).ok, true, `${q} stage 2 (the solution)`);
     }
     {
-      near(e3.CHECKS.Q_EQN, (6 / 2.0 / 2) * -e3.CHECKS.EQN_DH, 1e-9, `${q} stage 5 (the heat for the amount burned)`);
-      holds(Math.abs(e3.CHECKS.Q_EQN - 6 / 2.016 * -TD.FUELS.hydrogen.dHc) < 10, `${q} stage 5: the equation's ΔH is not twice hydrogen's heat of combustion`);
-      same(e3.STAGES[4].check(e3.stateFor(4, e3.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
+      near(e3.CHECKS.Q_EQN, (6 / 2.0 / 2) * -e3.CHECKS.EQN_DH, 1e-9, `${q} stage 4 (the heat for the amount burned)`);
+      holds(Math.abs(e3.CHECKS.Q_EQN - 6 / 2.016 * -TD.FUELS.hydrogen.dHc) < 10, `${q} stage 4: the equation's ΔH is not twice hydrogen's heat of combustion`);
+      same(e3.STAGES[3].check(e3.stateFor(3, e3.SOLUTIONS[3])).ok, true, `${q} stage 4 (the solution)`);
+      same(e3.STAGES[3].check(e3.stateFor(3, e3.MISSES[3])).ok, false, `${q} stage 4 (the miss)`);
     }
     {
       // A forward prediction: the bath's rise grows with the moles, and the answer sits past the dial.
-      const t = start(e3, 5);
+      const t = start(e3, 2);
       const rise = k => HK.cupRead(run(run(t, [{ place: { piece: 'powder', to: 'slot:cup.mouth' } }]), [{ setDial: { fixture: 'cup', dial: 'moles', value: k } }]), 'cup').dT;
-      near(rise(2) / rise(1), 2, 1e-9, `${q} stage 6 (twice the moles, twice the rise)`);
-      near(e3.CHECKS.T_FINAL, 20 + 5 * rise(1), 1e-6, `${q} stage 6 (the temperature asked for)`);
-      same(e3.STAGES[5].check(e3.stateFor(5, e3.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
-      same(e3.STAGES[5].check(e3.stateFor(5, e3.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
-      // Limiting reactant: the smaller amount of the one-to-one pair sets the heat.
-      near(e3.CHECKS.Q_NEUT, 0.04 * 56, 1e-9, `${q} stage 7 (the heat from the limiting reactant)`);
-      same(e3.STAGES[6].check(e3.stateFor(6, e3.SOLUTIONS[6])).ok, true, `${q} stage 7 (the solution)`);
-      same(e3.STAGES[6].check(e3.stateFor(6, e3.MISSES[6])).ok, false, `${q} stage 7 (the miss)`);
+      near(rise(2) / rise(1), 2, 1e-9, `${q} stage 3 (twice the moles, twice the rise)`);
+      near(e3.CHECKS.T_FINAL, 20 + 5 * rise(1), 1e-6, `${q} stage 3 (the temperature asked for)`);
+      same(e3.STAGES[2].check(e3.stateFor(2, e3.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
+      same(e3.STAGES[2].check(e3.stateFor(2, e3.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
     }
   }
 
@@ -295,7 +287,9 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     {
       const t = run(start(e4, 1), [{ setDial: { fixture: 'crank', dial: 'pull', value: 7 } }]);
       near(HK.wellRead(t, 'crank').E, TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 2 (the cost of H–H)`);
-      near(HK.markerRead(done(e4, 1), 'change'), TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 2 (the energy change set)`);
+      same(e4.CHECKS.FORM_OPTIONS[HK.dialAt(done(e4, 1), 'after', 'value') - 1], `Gives out ${TD.BOND_ENTHALPIES['H-H'].dH} kJ/mol`, `${q} stage 2 (what forming the bond does)`);
+      same(e4.STAGES[1].check(e4.stateFor(1, e4.MISSES[1])).ok, false, `${q} stage 2 (the miss)`);
+      same(e4.STAGES[1].check(e4.stateFor(1, [{ setDial: { fixture: 'after', dial: 'value', value: e4.CHECKS.FORM_RIGHT } }])).ok, false, `${q} stage 2: the answer passes before the bond has been pulled apart`);
       const fall = run(start(e4, 1), []);
       holds(fall.fixtures.crank.props.forming !== true, `${q} stage 2: the crank is the falling one`);
       const back = TABLE.createTable({ ...e4.STAGES[1].table, fixtures: [{ ...e4.STAGES[1].table.fixtures[0], props: { ...e4.STAGES[1].table.fixtures[0].props, forming: true } }] }, 'x');
@@ -327,8 +321,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e5 = mods['q5-hess'];
   if (e5) {
     const q = 'unit05/q5-hess';
-    const num = label => Number(String(label).replace('−', '-').replace('+', ''));
-    const picked = t => num(t.fixtures.answer.props.options[Math.round(t.fixtures.answer.dials.value.value) - 1]);
+    // Since 2026-11-11 the stack prints its own total and is the whole answer (the answer dial was a second decision).
     holds(Boolean(e5.STAGES[0].predict) && !Object.values(start(e5, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
       const t = done(e5, 1);
@@ -337,13 +330,15 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(A.dH, B.dH, 1e-9, `${q} stage 2: the two routes do not share a total`);
       near(A.dH, TD.FORMATION_TABLE['CO2(g)'].dHf, 0.05, `${q} stage 2 (the total is the formation of CO2)`);
       holds(A.cards.length !== B.cards.length, `${q} stage 2: the two routes use the same number of steps`);
+      holds(Boolean(t.fixtures.routeA.props.ladder) && JSON.stringify(t.fixtures.routeA.props.ladder) === JSON.stringify(t.fixtures.routeB.props.ladder), `${q} stage 2: the two energy ladders are not drawn to one scale`);
     }
     {
       const t = done(e5, 2);
       const r = HK.stackRead(t, 'wanted');
       holds(r.matches, `${q} stage 3: the solution's stack does not add up to the reaction wanted`);
       near(r.dH, TD.FORMATION_TABLE['CH4(g)'].dHf, 0.1, `${q} stage 3 (building methane)`);
-      near(picked(t), r.dH, 0.05, `${q} stage 3 (the number set)`);
+      holds(!t.fixtures.answer && t.fixtures.wanted.props.hideSum === false, `${q} stage 3: a second decision (an answer dial) is back on the bench`);
+      same(e5.STAGES[2].check(e5.stateFor(2, e5.MISSES[2])).ok, false, `${q} stage 3 (the miss)`);
       holds(t.pieces.c3.props.flipped && t.pieces.c2.props.scale === 2, `${q} stage 3: the solution does not turn one card and double another`);
     }
     {
@@ -351,7 +346,7 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const r = HK.stackRead(t, 'wanted');
       holds(r.matches, `${q} stage 4: the solution's stack does not add up to the reaction wanted`);
       near(r.dH, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'dHf'), 0.05, `${q} stage 4 (products less reactants)`);
-      near(picked(t), r.dH, 0.05, `${q} stage 4 (the number set)`);
+      same(e5.STAGES[3].check(e5.stateFor(3, e5.MISSES[3])).ok, false, `${q} stage 4 (the miss)`);
     }
   }
 
@@ -403,18 +398,20 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e7 = mods['q7-gibbs'];
   if (e7) {
     const q = 'unit05/q7-gibbs';
-    const { SALT, SALT_FIRST, ICE, T_ICE } = e7.CHECKS;
+    const { SALT, ICE, T_ICE } = e7.CHECKS;
+    // Five stages since 2026-11-11 (ΔG° from formation values retired). Stage 2 is no longer typed: the ball is placed where ΔG is zero.
+    holds(e7.STAGES.length === 5, `${q} should have five stages`);
     holds(Boolean(e7.STAGES[0].predict) && !Object.values(start(e7, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
-      // The salt takes heat in at every setting, and still its net goes below zero once it is warm enough.
+      // The salt takes heat in at every setting, and still ΔG goes below zero once it is warm enough; one setting stands where it is zero.
       const t = start(e7, 1);
       const dGs = SALT.Ts.map((T, k) => HK.plotAt(t, 'plot', k + 1));
       holds(dGs.every(r => r.dH > 0), `${q} stage 2: the salt does not take heat in at every setting`);
-      holds(dGs[0].dG > 0 && dGs[dGs.length - 1].dG < 0, `${q} stage 2: the net does not change sign across the dial`);
-      holds(dGs.filter(r => r.dG < 0).length >= 2, `${q} stage 2: only one setting reads below zero`);
-      same(SALT_FIRST, 250, `${q} stage 2 (the coldest setting below zero)`);
-      holds(TD.crossingTemperature(SALT.dH, SALT.dS) < SALT_FIRST && TD.crossingTemperature(SALT.dH, SALT.dS) > SALT.Ts[1], `${q} stage 2: the crossing is not between two settings`);
-      near(Number(done(e7, 1).entries.T), e7.CHECKS.T_SALT, 12, `${q} stage 2 (the figure typed)`);
+      holds(dGs[0].dG > 0 && dGs[dGs.length - 1].dG < 0, `${q} stage 2: ΔG does not change sign across the dial`);
+      holds(dGs.filter(r => Math.abs(r.dG) < 0.05).length === 1, `${q} stage 2: not exactly one setting reads zero`);
+      near(HK.plotRead(done(e7, 1), 'plot').T, TD.crossingTemperature(SALT.dH, SALT.dS), 0.5, `${q} stage 2 (the setting placed)`);
+      holds(Boolean(e7.STAGES[1].briefing?.body) && /ΔG = ΔH − TΔS/.test(e7.STAGES[1].briefing.body), `${q} stage 2: the equation is not taught before the stage`);
+      same(e7.STAGES[1].check(e7.stateFor(1, e7.MISSES[1])).ok, false, `${q} stage 2 (the miss)`);
     }
     {
       const t = start(e7, 2);
@@ -438,14 +435,8 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
     {
       near(T_ICE, 273, 1, `${q} stage 5 (the melting point)`);
       near(Number(done(e7, 4).entries.T), T_ICE, 2, `${q} stage 5 (the figure typed)`);
-      holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 4), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 5: the dial has no setting at the melting point`);
-    }
-    {
-      const { GF, GF_DG } = e7.CHECKS;
-      near(GF_DG, 131, 0.1, `${q} stage 6 (ΔG° from formation values)`);
-      near(Number(done(e7, 5).entries.dgf), GF_DG, 0.6, `${q} stage 6 (the figure typed)`);
-      same(e7.STAGES[5].check(e7.stateFor(5, e7.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
-      same(e7.STAGES[5].check(e7.stateFor(5, e7.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
+      holds(!ICE.Ts.includes(273) && ICE.Ts.some(T => T < 273) && ICE.Ts.some(T => T > 273), `${q} stage 5: the dial hands over the melting point, or does not straddle it`);
+      same(e7.STAGES[4].check(e7.stateFor(4, e7.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
     }
   }
 
@@ -463,10 +454,12 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const t = done(eb, 2);
       holds(HK.stackRead(t, 'wanted').matches, `${q} phase 3: the stack does not add up to the splitting`);
       near(HK.stackRead(t, 'wanted').dH, 824.2, 0.05, `${q} phase 3 (the slag)`);
-      near(picked(t), 824.2, 0.05, `${q} phase 3 (the number set)`);
+      holds(!t.fixtures.answer, `${q} phase 3: a second decision (an answer dial) is back on the bench`);
+      same(eb.STAGES[2].check(eb.stateFor(2, eb.MISSES[2])).ok, false, `${q} phase 3 (the miss)`);
     }
     near(picked(done(eb, 3)), 2 * TD.FORMATION_TABLE['H2(g)'].S0 + TD.FORMATION_TABLE['O2(g)'].S0 - 2 * TD.FORMATION_TABLE['H2O(g)'].S0, 0.05, `${q} phase 4 (the entropy change of splitting steam)`);
     near(Number(done(eb, 4).entries.T), TD.crossingTemperature(176, 160), 15, `${q} phase 5 (the seal)`);
+    holds(!start(eb, 4).fixtures.plot.props.Ts.includes(1100), `${q} phase 5: the dial hands over the temperature asked for`);
     for (let i = 0; i < 5; i++) same((eb.STAGES[i].foes || []).length, 1, `${q} phase ${i + 1} (its foes)`);
     // The five phases are five different tools, one decision each, and none asks for a prediction.
     const kinds = eb.STAGES.map((st, i) => Object.values(start(eb, i).fixtures).map(f => f.kind).filter(k => !['plaque', 'marker', 'selector'].includes(k)).sort().join('+'));

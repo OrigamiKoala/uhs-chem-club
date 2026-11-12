@@ -14,14 +14,14 @@ const T = (title, text) => ({ title, text, dials: false });
 
 addTourText({
   'heat:cup': T('Cup and thermometer', 'Water and a thermometer. Drop a sample in: the molecules speed up or slow.'),
-  'heat:lattice': T('Atoms in the blocks', 'Hot atoms shake harder. Join two blocks and energy crosses between them.'),
+  'heat:lattice': T('Particles in the blocks', 'Hot particles move faster. Join two blocks and energy crosses between them.'),
   'heat:rxn': T('Reaction, atom by atom', 'Bonds break, atoms move, new bonds form.'),
   'heat:curve': T('Heating the sample', 'Drag along the graph to add heat. The particles change phase.'),
   'heat:lead': T('Watch first', 'A similar case plays by itself.'),
   'heat:shelves': T('Energy diagram', 'Drag the products level up or down. Energy leaves or enters.'),
   'heat:well': T('Bond', 'Drag one atom away from the other. The meter shows the energy.'),
   'heat:ledger': T('Bond table', 'Totals the bonds in each tray. Move a card to change the totals.'),
-  'heat:stack': T('Stack of steps', 'Adds the cards in its tray. Matching substances cancel.'),
+  'heat:stack': T('Stack of steps', 'Adds the cards in its tray. Matching substances cancel. The ladder steps by each ΔH.'),
   'heat:cells': T('Cells and gate', 'Drag a particle into a cell, then press "Log".'),
   'heat:chamber': T('Shaking chamber', 'Press "Shake". The bars count particles in the left half.'),
   'heat:plot': T('Line plot', 'Drag along the line to change the temperature. The ball follows.'),
@@ -80,17 +80,17 @@ demo('fx_cup', 'q1-flow', 3, { max: 2 });
 demo('pc_tag', 'q2-calorimetry', 4, { max: 2 });
 addTourDemo('heat:fx_curve', () => dialDemo('q2-calorimetry', 6, 'heating', 'heat', [0, 0.35, 0.55, 0.8, 1]));
 addTourDemo('heat:fx_shelves', () => dialDemo('q3-enthalpy', 0, 'chart', 'after', [0.5, 1, 0, 0.25]));
-addTourDemo('heat:fx_rxn', () => idleDemo('q3-enthalpy', 4));
+addTourDemo('heat:fx_rxn', () => idleDemo('q3-enthalpy', 3));
 addTourDemo('heat:fx_well', () => dialDemo('q4-bonds', 1, 'crank', 'pull', [0.35, 0.7, 1]));
-addTourDemo('heat:fx_marker', () => dialDemo('q4-bonds', 1, 'change', 'value', [0.5, 0.9]));
+addTourDemo('heat:fx_marker', () => dialDemo('q4-bonds', 5, 'dH', 'value', [0.5, 0.9]));
 demo('fx_ledger', 'q4-bonds', 2, { max: 4 });
 demo('pc_bond', 'q4-bonds', 2, { max: 4 });
 demo('fx_stack', 'q5-hess', 2, { max: 4 });
 demo('pc_eqn', 'q5-hess', 2, { max: 4 });
-demo('fx_selector', 'q5-hess', 2, { max: 4 });
+addTourDemo('heat:fx_selector', () => dialDemo('q4-bonds', 1, 'after', 'value', [0.4, 1]));
 demo('fx_chamber', 'q6-entropy', 1, { max: 3 });
 demo('pc_shift', 'q6-entropy', 2, { max: 3 });
 demo('pc_phase', 'q6-entropy', 3, { max: 3 });
 addTourDemo('heat:fx_plot', () => dialDemo('q7-gibbs', 1, 'plot', 'temp', [0, 0.5, 1]));
 demo('pc_gcard', 'q7-gibbs', 2, { max: 3 });
-addTourDemo('*:rail', () => stageDemo(unit('q3-enthalpy'), 3, { max: 3 }));
+addTourDemo('*:rail', () => stageDemo(unit('q3-enthalpy'), 5, { max: 3 }));

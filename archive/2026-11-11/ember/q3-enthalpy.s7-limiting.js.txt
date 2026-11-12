@@ -1,0 +1,35 @@
+  {
+    id: 's7-limiting',
+    title: 'Which Runs Out?',
+    prompt: 'Type the heat given out when the acid and the base react completely, in kJ.',
+    entry: { id: 'q', label: 'Heat given out', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('facts', 'HCl + NaOH → NaCl + H₂O', { x: 52, y: 28 }, [
+          'ΔH = −56 kJ for each mole of reaction',
+          'The cup holds 0.040 mol of HCl',
+          'and 0.060 mol of NaOH.'
+        ], { w: 80 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[4, 'HCl'], [6, 'NaOH']], rhs: [[4, 'NaCl'], [4, 'H₂O'], [2, 'NaOH']], dH: NEUT_DH, w: 54, h: 34 })
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'Compare the moles of each reactant with the one-to-one ratio in the equation.',
+      'The reaction stops when the reactant there is less of is used up, so count the moles of reaction from that one.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'q');
+      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+      if (Math.abs(v - Q_NEUT) <= 0.06) return { ok: true };
+      return { ok: false, msg: `${fixed(v, 2)} kJ is the heat of ${fixed(v / -NEUT_DH, 3)} mol of reaction, and the cup holds ${NEUT.acid.toFixed(3)} mol of HCl and ${NEUT.base.toFixed(3)} mol of NaOH, one for one.` };
+    },
+    reward: {
+      log: 'The 0.040 mol of acid ran out first: 2.24 kJ.',
+      title: 'The Limiting Reactant',
+      body: 'The limiting reactant runs out first and sets how many moles react. Here 0.040 mol of HCl gives 0.040 × 56 = 2.24 kJ.'
+    }
+  }
+
+// solution: type q = 2.24; miss: 3.36

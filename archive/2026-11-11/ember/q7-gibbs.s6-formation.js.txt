@@ -1,0 +1,38 @@
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-formation',
+    title: 'Free Energy From Formation',
+    prompt: 'Type ΔG° of this reaction at 298 K, in kJ, from the formation free energies on the plate.',
+    entry: { id: 'dgf', label: 'ΔG° at 298 K', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('facts', 'CaCO₃ → CaO + CO₂', { x: 52, y: 26 }, [
+          'ΔGf° CaCO₃ = −1129 kJ/mol',
+          'ΔGf° CaO = −604 kJ/mol',
+          'ΔGf° CO₂ = −394 kJ/mol',
+          'One mole of each'
+        ], { w: 70 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'CaCO₃']], rhs: [[1, 'CaO'], [1, 'CO₂']], w: 54, h: 34 })
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'Each substance in the equation has one formation free energy, and the equation has two sides.',
+      'Add the formation values for one side, add them for the other side, and combine the two totals.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'dgf');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
+      if (Math.abs(v - GF_DG) <= 0.6) return { ok: true };
+      if (Math.abs(v + GF_DG) <= 0.6) return { ok: false, msg: 'The sign is reversed: the totals were combined in the opposite order.' };
+      return { ok: false, msg: `${fixed(v, 0)} kJ does not match the two totals on the plate once they are combined.` };
+    },
+    reward: {
+      log: 'ΔG° came to +131 kJ.',
+      title: 'ΔG° From Formation Values',
+      body: 'ΔG° = ΣΔGf°(products) − ΣΔGf°(reactants) = (−604 − 394) − (−1129) = +131 kJ. A positive ΔG° means this decomposition does not run on its own at 298 K.'
+    }
+  }
+
+// GF = { reactant: { CaCO3: -1129 }, product: { CaO: -604, CO2: -394 } }; GF_DG = +131; solution: type dgf = 131; miss: -131

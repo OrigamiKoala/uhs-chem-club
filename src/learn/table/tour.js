@@ -153,13 +153,14 @@ function fixtureStep(f, kitId, table) {
 }
 
 /**
- * The steps for a table. `intro` is the stage's briefing (what Vess says), kept as the first step when there is one.
+ * The steps for a table. `intro` is the stage's briefing (what Vess says), kept as the first step when there is one; `worked` are the
+ * lines of a worked case shown under it.
  *
  * @param {object} table  a `createTable` state
- * @param {{intro?: string, speaker?: string}} [opts]
+ * @param {{intro?: string, speaker?: string, worked?: string[]|null}} [opts]
  * @returns {Array<{flag: string, name: string, desc: string}>}
  */
-export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
+export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null } = {}) {
   if (!table) return [];
   const kit = table.kit;
   const steps = [];
@@ -168,7 +169,8 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
   // What is true on every table is said once in the whole game, never per kit and never again when the Tour is replayed.
   const addGeneral = (key, name, desc, once = false) => steps.push({ flag: `tour_${key}`, name, desc, ...(once ? { once: true } : {}), ...(demoFor('*', key) ? { demo: demoFor('*', key) } : {}) });
 
-  if (intro) steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro });
+  // `worked` is a worked case shown under the briefing: the steps of one calculation on a neighbouring case, one line each.
+  if (intro) steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, ...(worked?.length ? { lines: worked.slice() } : {}) });
   addGeneral('table', 'Moving pieces', 'Drag a piece, or tap it and then its place. Keys: Undo, Start Over, Submit.', true);
 
   // The instruments, in the order they stand on the plate (top to bottom, left to right).

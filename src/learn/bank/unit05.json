@@ -601,7 +601,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "A gas has the most freedom of position, so it has the most microstates and the greatest entropy."
+      "explanation": "The particles of a gas can be arranged in far more ways than those of a liquid or a solid, so the gas has the greatest entropy."
     },
     {
       "id": "q6-entropy#1",
@@ -668,7 +668,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "A larger range of possible motions means more microstates, and entropy counts microstates."
+      "explanation": "Faster particles can share out their energy in more ways, and entropy counts the ways."
     },
     {
       "id": "q6-entropy#4",
@@ -802,7 +802,7 @@
       "options": [
         {
           "id": "a",
-          "label": "The change is far too slow because of a large activation energy"
+          "label": "The change is far too slow: the atoms need a great deal of energy before they can rearrange"
         },
         {
           "id": "b",
@@ -814,7 +814,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "ΔG tells you whether a change can run, not how fast, and a large barrier can make a favourable change immeasurably slow."
+      "explanation": "ΔG tells you whether a change can happen by itself, not how fast. A change that needs a great deal of energy to get started can be too slow to see."
     },
     {
       "id": "boss-crucible#3",
@@ -869,7 +869,7 @@
       "options": [
         {
           "id": "a",
-          "label": "The reaction has a very large activation energy, so it is extremely slow"
+          "label": "The atoms need a great deal of energy before they can rearrange, so the change is extremely slow"
         },
         {
           "id": "b",
@@ -885,7 +885,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "ΔG° says whether a change can run on its own, not how fast. A tall activation barrier makes the change too slow to see, so kinetics, not thermodynamics, controls the outcome."
+      "explanation": "ΔG° says whether a change can happen by itself, not how fast. This one needs so much energy to get started that it is too slow to see."
     },
     {
       "id": "q7-gibbs#7",
@@ -965,27 +965,27 @@
     {
       "id": "q3-enthalpy#5",
       "quest": "q3-enthalpy",
-      "question": "On an energy diagram the reactants sit at 80 kJ, the peak at 120 kJ and the products at 30 kJ. What are ΔH and the activation energy?",
+      "question": "On an energy diagram the reactants sit at 80 kJ and the products at 30 kJ. What is ΔH?",
       "options": [
         {
           "id": "a",
-          "label": "ΔH = −50 kJ, Ea = 40 kJ"
+          "label": "−50 kJ"
         },
         {
           "id": "b",
-          "label": "ΔH = +50 kJ, Ea = 40 kJ"
+          "label": "+50 kJ"
         },
         {
           "id": "c",
-          "label": "ΔH = −50 kJ, Ea = 90 kJ"
+          "label": "−110 kJ"
         },
         {
           "id": "d",
-          "label": "ΔH = −90 kJ, Ea = 120 kJ"
+          "label": "+110 kJ"
         }
       ],
       "answer": "a",
-      "explanation": "ΔH is products minus reactants: 30 − 80 = −50 kJ. The activation energy is the climb from the reactants to the peak: 120 − 80 = 40 kJ."
+      "explanation": "ΔH is products minus reactants: 30 − 80 = −50 kJ. The products are lower, so the reaction gives out heat."
     },
     {
       "id": "q7-gibbs#8",
@@ -1023,48 +1023,48 @@
           "options": [
             {
               "id": "a",
-              "label": "Exothermic, with a positive ΔH"
+              "label": "Endothermic: it takes heat in from the surroundings"
             },
             {
               "id": "b",
-              "label": "Exothermic, with a negative ΔH"
+              "label": "Exothermic: it gives heat out to the surroundings"
             },
             {
               "id": "c",
-              "label": "Endothermic, with a negative ΔH"
+              "label": "Endothermic: it gives heat out to the surroundings"
             },
             {
               "id": "d",
-              "label": "Endothermic, with a positive ΔH"
+              "label": "Neither: no heat passes"
             }
           ],
           "answer": "b",
-          "explanation": "The chemicals give heat out to the surroundings, so the reaction is exothermic. The system loses energy, so ΔH is negative."
+          "explanation": "The chemicals give heat out to your hand, which is part of the surroundings. A change that gives heat out is exothermic."
         },
         {
           "id": "q1-flow#b2",
           "quest": "q1-flow",
-          "question": "On an energy diagram, the reactants sit at 100 kJ and the products at 60 kJ. What is ΔH?",
+          "question": "A 5 g iron nail at 300 °C and a 2,000 g tank of water at 40 °C are each pressed against a large block of ice. Which melts more ice?",
           "options": [
             {
               "id": "a",
-              "label": "+40 kJ"
+              "label": "The nail, because it is hotter"
             },
             {
               "id": "b",
-              "label": "-160 kJ"
+              "label": "The tank, because it can pass on far more energy"
             },
             {
               "id": "c",
-              "label": "+160 kJ"
+              "label": "They melt the same amount"
             },
             {
               "id": "d",
-              "label": "-40 kJ"
+              "label": "Neither melts any ice"
             }
           ],
-          "answer": "d",
-          "explanation": "ΔH = products - reactants = 60 - 100 = -40 kJ. The products are lower, so the reaction gives out energy."
+          "answer": "b",
+          "explanation": "Temperature tells how fast the particles move, not how much energy there is. The tank is cooler but holds far more material, so it passes on far more energy as heat before it has cooled to 0 °C."
         }
       ],
       "worked": {
@@ -1167,19 +1167,19 @@
         {
           "id": "q2-calorimetry#b2",
           "quest": "q2-calorimetry",
-          "question": "In a coffee-cup calorimeter the water warms during a reaction. What is the sign of ΔH for the reaction?",
+          "question": "In a calorimeter the water warms during a reaction. What does that say about the reaction?",
           "options": [
             {
               "id": "a",
-              "label": "Positive"
+              "label": "It is endothermic: it took heat in"
             },
             {
               "id": "b",
-              "label": "Zero"
+              "label": "No heat passed"
             },
             {
               "id": "c",
-              "label": "Negative"
+              "label": "It is exothermic: it gave heat out"
             },
             {
               "id": "d",
@@ -1187,7 +1187,7 @@
             }
           ],
           "answer": "c",
-          "explanation": "The water gained the heat that the reaction gave out, so the reaction lost energy and ΔH is negative."
+          "explanation": "The water took in the heat that the reaction gave out, so the reaction is exothermic."
         }
       ],
       "worked": {

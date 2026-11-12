@@ -1,0 +1,32 @@
+  {
+    id: 's8-barrier',
+    title: 'The Way Back Over the Hill',
+    prompt: 'Type the activation energy of the reverse reaction, in kJ.',
+    entry: { id: 'ea', label: 'Reverse activation energy', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        shelvesFixture('chart', { x: 40, y: 32 }, { reactants: 'Reactants', products: 'Products', dH: BARRIER.p - BARRIER.r, levels: BARRIER, hideValue: true, hideVerdict: true, title: 'Reaction progress', w: 70 }),
+        plaqueFixture('facts', 'Energy levels', { x: 112, y: 32 }, ['Reactants: 100 kJ', 'Top of the hill: 160 kJ', 'Products: 60 kJ'], { w: 36 })
+      ]
+    }),
+    hints: [
+      'Use the diagram and the plate of levels.',
+      'The reverse reaction starts on the products\' level and climbs to the top of the same hill.',
+      'Subtract the products\' level from the top of the hill.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'ea');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the figure you worked out, in kJ.' };
+      if (Math.abs(v - EA_REVERSE) <= 0.6) return { ok: true };
+      if (Math.abs(v - (BARRIER.peak - BARRIER.r)) <= 0.6) return { ok: false, msg: 'That is the climb from the reactants, and the reverse reaction starts on the other level.' };
+      return { ok: false, msg: `${fixed(v, 0)} kJ above the products\' level does not reach the top of the hill on the diagram.` };
+    },
+    reward: {
+      log: 'The reverse reaction climbs 100 kJ.',
+      title: 'Activation Energy',
+      body: 'The forward reaction climbs 60 kJ from reactants to the top of the hill and releases 40 kJ overall (ΔH = −40 kJ). The reverse reaction starts lower, so it climbs 60 + 40 = 100 kJ.'
+    }
+  }
+
+// BARRIER = { r: 100, p: 60, peak: 160 }; solution: type ea = 100; miss: 60

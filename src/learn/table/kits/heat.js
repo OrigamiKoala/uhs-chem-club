@@ -389,13 +389,15 @@ export function ledgerFixture(id, at, { broken, formed, hideNet = false, hideTot
 
 /**
  * The stack: the cards lying in `tray` are added, and the equation they leave is printed under the one wanted. `target` is
- * `{ lhs, rhs }` (lists of `[coefficient, species]`); `hideSum` leaves the stack's ΔH off the plate.
+ * `{ lhs, rhs }` (lists of `[coefficient, species]`); `hideSum` leaves the stack's ΔH off the plate. `ladder: { lo, hi }` (kJ) draws an energy
+ * ladder down the right edge: one step per card, each as tall as that card's ΔH as it stands, so two routes are seen to end level and a
+ * flipped card is seen to climb.
  */
-export function stackFixture(id, at, { tray, target, hideSum = false, w = 44, h = 30, title = 'Wanted, and the stack', symbol = 'ΔH' } = {}) {
+export function stackFixture(id, at, { tray, target, hideSum = false, w = 44, h = 30, title = 'Wanted, and the stack', symbol = 'ΔH', ladder = null } = {}) {
   const fmt = side => side.map(([n, s]) => `${n === 1 ? '' : n === 0.5 ? '½' : `${n} `}${s}`).join(' + ');
   return {
     id, kind: 'stack', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {},
-    props: { tray, target: targetMap(target.lhs, target.rhs), targetText: [fmt(target.lhs), fmt(target.rhs)], hideSum, symbol }
+    props: { tray, target: targetMap(target.lhs, target.rhs), targetText: [fmt(target.lhs), fmt(target.rhs)], hideSum, symbol, ...(ladder ? { ladder } : {}) }
   };
 }
 
@@ -450,7 +452,7 @@ export function warmFixture(id, at, { Ts, m = 100, c = 4.184, hideS = false, tit
  * The atoms of the blocks listed: each block as a lattice that shakes harder the warmer it is, with packets of energy crossing between
  * blocks that are joined. `blocks` are piece ids; the picture reads the same planner (`blockRead`) the thermometers do.
  */
-export function latticeFixture(id, at, { blocks, w = 140, h = 22, title = 'Atoms in the blocks' } = {}) {
+export function latticeFixture(id, at, { blocks, w = 140, h = 22, title = 'Particles in the blocks' } = {}) {
   return { id, kind: 'lattice', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { blocks: blocks.slice() } };
 }
 
@@ -466,13 +468,14 @@ export function rxnFixture(id, at, { lhs, rhs, dH = 0, w = 60, h = 30, title = '
 /**
  * A sample heated through its phases by a burner the student drags along: its particles change phase, and the trace of temperature against
  * heat added climbs and flattens. The position along the dial is by heat, so the length of a flat stretch is the heat that phase change takes.
- * Nothing printed gives the heat: the stage asks for it. `from` and `to` are the starting and ending temperatures in °C.
+ * Nothing printed gives the heat unless the stage asks for a `readout`: 'temp' prints the sample's temperature under the graph, 'both' the
+ * heat added so far as well (a stage that measures a heat of fusion reads it there). `from` and `to` are the starting and ending temperatures in °C.
  */
-export function curveFixture(id, at, { m, from, to, title = 'Heating the sample', w = 74, h = 36, steps = 40, cs = 2.09, cl = 4.184, cg = 2.01, Lf = 334, Lv = 2260 } = {}) {
+export function curveFixture(id, at, { m, from, to, title = 'Heating the sample', w = 74, h = 36, steps = 40, cs = 2.09, cl = 4.184, cg = 2.01, Lf = 334, Lv = 2260, readout = null } = {}) {
   return {
     id, kind: 'curve', label: title, at: { ...at }, size: { w, h }, noRun: true,
     dials: { heat: { min: 1, max: steps, step: 1, value: 1, label: 'Burner', labels: Array.from({ length: steps }, () => ' ') } },
-    props: { m, from, to, cs, cl, cg, Lf, Lv }
+    props: { m, from, to, cs, cl, cg, Lf, Lv, ...(readout ? { readout } : {}) }
   };
 }
 

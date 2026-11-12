@@ -1280,6 +1280,7 @@ export class LearnFrame {
           ${this.tourClipMarkup(st)}
           ${st.demo ? '<canvas class="lq-tour-demo" width="480" height="210" aria-hidden="true"></canvas>' : ''}
           <p class="lq-brief-text">${esc(clampSentences(st.desc, 4))}</p>
+          ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` : ''}
           <div class="debrief-controls-left lq-modal-keys">
             <button type="button" class="btn-secondary" data-tour="back" ${i === 0 ? 'disabled' : ''}>Back</button>
             ${last ? '' : '<button type="button" class="btn-secondary" data-tour="skip">Skip</button>'}

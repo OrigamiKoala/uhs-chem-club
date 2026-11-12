@@ -8,7 +8,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 - **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
 - **World plans & specifications:** `docs/plans/world-plans.md` consolidates all 14 world plans, CED maps, tabletop kits, and build records.
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
-- **Teaching pass (2026-11):** `docs/teaching-pass/README.md` is the owner's guide to the final pass on the ten live worlds; `BRIEF.md` is the standard and method every agent follows, `PATTERNS.md` the redesigns to copy, `worlds/` the per-world notes and records, `prompts/` the prompts, `PROGRESS.md` the state.
+- **Teaching pass (2026-11):** `docs/teaching-pass/README.md` is the owner's guide to the final pass on the ten live worlds; `BRIEF.md` is the standard and method every agent follows, `PATTERNS.md` the redesigns to copy, `worlds/` the per-world notes and records, `prompts/` the prompts, `PROGRESS.md` the state. As of 2026-11-12 Ember Reach is built and every other live world file under `worlds/` holds a per-stage plan (not yet built); `worlds/unit11-quicklight.md`, `unit12-lodestone.md`, `unit13-thornmere.md` and `unit14-cinder-halo.md` hold first-build plans for the four unbuilt worlds.
 - **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment.
 
 ## Codebase Architecture

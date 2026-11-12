@@ -1,0 +1,44 @@
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const a = cupFixture('cup', { x: 26, y: 33 }, { title: 'Bath · 100 g', water: 100, T0: 20 });
+    return {
+      id: 's4-ice',
+      title: 'Ice in the Bath',
+      prompt: 'Type the heat the ice absorbed while it melted, in joules.',
+      entry: { id: 'joules', label: 'Heat absorbed by melting', unit: 'J' },
+      widget,
+      table: heatTable({
+        pieces: [block('ice', 'Ice cube', { x: 62, y: 50 }, { ...ICE, mass: '20.0 g ice', mat: 'H₂O' })],
+        fixtures: [
+          a.fixture,
+          plaqueFixture('ref', 'What you may use', { x: 108, y: 18 }, [
+            FORMULA,
+            'Ice stays at 0 °C until all of it has melted.',
+            'Meltwater then warms like any water.',
+            'c of water = 4.184 J/(g·°C)'
+          ], { w: 64 }),
+        ],
+        zones: { slots: [a.slot] }
+      }),
+      hints: [
+        'Use the cup, the ice cube, the plate of facts and the dial.',
+        'Compare how much heat the bath gave up with how much of it only warmed the water the ice became.',
+        'The bath\'s heat went into melting the ice and then into warming the meltwater from 0 °C to the final reading.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = entryNumber(t, 'joules');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the heat in joules.' };
+        if (Math.abs(v - Q_MELT) <= 150) return { ok: true };
+        const r = cupRead(t, 'cup');
+        if (!r.item) return { ok: false, msg: 'The ice has not been in the cup yet.' };
+        return { ok: false, msg: `${v} J is not what the bath gave up: it fell ${fixed(-r.dT, 1)} °C and now reads ${fixed(r.Tf, 1)} °C.` };
+      },
+      reward: {
+        log: 'Melting 20 g of ice took about 6,700 J at 0 °C.',
+        title: 'Heat of Fusion',
+        body: 'Melting takes heat without changing the temperature: 334 J for every gram, the heat of fusion. The energy loosens the attractions between particles.'
+      }
+    };
+  })(),
+

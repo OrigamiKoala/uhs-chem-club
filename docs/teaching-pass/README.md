@@ -2,6 +2,8 @@
 
 This folder holds everything for the final teaching pass of the ten live Learn worlds: what each agent reads, the prompts you send, and where results are recorded. Nothing here was play-tested; it was written on 2026-11-11 from the stage text, the earlier records and your feedback files.
 
+> **2026-11-12:** a plan session has written per-stage plans into all nine remaining live world files (`worlds/unit01` to `unit10`, Ember Reach excepted, which is built), and first-build plans for the four unbuilt worlds (`worlds/unit11-quicklight.md`, `unit12-lodestone.md`, `unit13-thornmere.md`, `unit14-cinder-halo.md`). Steps 2 to 4 of the sequence below can therefore be run as build sessions from those plans; `PROGRESS.md` has the summary.
+
 ## What is in the folder
 
 | File | Who reads it | What it is |

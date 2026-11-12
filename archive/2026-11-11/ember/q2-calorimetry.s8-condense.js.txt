@@ -1,0 +1,36 @@
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-condense',
+    title: 'Steam to Water',
+    prompt: 'Type the heat given out when 10.0 g of steam at 100 °C turns into water at 25 °C, in kilojoules.',
+    entry: { id: 'kj', label: 'Heat given out', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('ref', 'What you may use', { x: 46, y: 28 }, [
+          FORMULA,
+          'Boiling water: 2260 J for every gram',
+          'Condensing gives back the same heat.',
+          'c of water = 4.184 J/(g·°C)'
+        ], { w: 80 }),
+        curveFixture('heating', { x: 118, y: 28 }, { m: 10, from: 100, to: 25, w: 58, title: 'Cooling 10.0 g of steam' })
+      ]
+    }),
+    hints: [
+      'Use the plate of facts.',
+      'The steam first turns to water at 100 °C, and then the water cools to 25 °C.',
+      'Find the heat for each of the two steps, add them, and turn the joules into kilojoules.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'kj');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the heat in kilojoules.' };
+      if (Math.abs(v - Q_COND) <= 0.3) return { ok: true };
+      if (v < 0) return { ok: false, msg: 'The question asks how much heat is given out, so type the amount as a positive figure.' };
+      return { ok: false, msg: `${fixed(v, 1)} kJ would not take the 10.0 g from steam at 100 °C all the way to water at 25 °C.` };
+    },
+    reward: {
+      log: 'Steam turning into 25 °C water gave out about 25.7 kJ.',
+      title: 'Condensing Gives Heat Back',
+      body: 'Condensing releases the same 22.6 kJ that boiling 10.0 g absorbed, and cooling the water from 100 °C to 25 °C releases 3.14 kJ more. Heat leaves the sample in both steps, so the total is 25.7 kJ given out.'
+    }
+  }
