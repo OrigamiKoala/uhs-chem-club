@@ -44,7 +44,7 @@ function paintLeadClip(ctx, f, state, b) {
     box(3, top, w - 6, h - top - 3);
     ctx.strokeStyle = AMBER; ctx.lineWidth = Math.max(1, F.len(0.5 * (1 - apart * 0.7)));
     ctx.beginPath(); ctx.moveTo(F.x(cx - gap + ax), F.y(cy + ay)); ctx.lineTo(F.x(cx + gap + bx), F.y(cy + by)); ctx.stroke(); ctx.lineWidth = 1;
-    dot(ctx, F, cx - gap + ax, cy + ay, 2.6, '#7a98b8'); dot(ctx, F, cx + gap + bx, cy + by, 2.6, '#7a98b8');
+    if (!b.bodies) { dot(ctx, F, cx - gap + ax, cy + ay, 2.6, '#7a98b8'); dot(ctx, F, cx + gap + bx, cy + by, 2.6, '#7a98b8'); }
     return;
   }
   if (scene === 'sealed') {
@@ -53,14 +53,16 @@ function paintLeadClip(ctx, f, state, b) {
     const fx = 12; const fw = w - 24; const levelY = top + (h - top) * 0.62;
     box(fx, top, fw, h - top - 3);
     ctx.fillStyle = 'rgba(111,143,176,0.28)'; ctx.fillRect(F.x(fx) + 1, F.y(levelY), F.len(fw) - 1, F.len(h - 3 - levelY));
-    for (let i = 0; i < 14; i++) {
-      const [dx, dy] = slideAt(i, t, 0.6 + warm * 0.5, 0.8 + warm);
-      dot(ctx, F, fx + 3 + (i % 7) * ((fw - 6) / 6) + dx, levelY + 3 + Math.floor(i / 7) * 3.2 + dy, 0.8, '#cfe2f1');
-    }
-    const n = Math.round(2 + warm * 14);
-    for (let i = 0; i < n; i++) {
-      const [pu, pv] = gasAt(i, t, 1 + warm * 1.4);
-      dot(ctx, F, fx + 2 + pu * (fw - 4), top + 2 + pv * (levelY - top - 4), 0.8, DUST);
+    if (!b.bodies) {
+      for (let i = 0; i < 14; i++) {
+        const [dx, dy] = slideAt(i, t, 0.6 + warm * 0.5, 0.8 + warm);
+        dot(ctx, F, fx + 3 + (i % 7) * ((fw - 6) / 6) + dx, levelY + 3 + Math.floor(i / 7) * 3.2 + dy, 0.8, '#cfe2f1');
+      }
+      const n = Math.round(2 + warm * 14);
+      for (let i = 0; i < n; i++) {
+        const [pu, pv] = gasAt(i, t, 1 + warm * 1.4);
+        dot(ctx, F, fx + 2 + pu * (fw - 4), top + 2 + pv * (levelY - top - 4), 0.8, DUST);
+      }
     }
     return;
   }
@@ -69,16 +71,18 @@ function paintLeadClip(ctx, f, state, b) {
     box(8, top, w - 16, h - top - 3);
     ctx.strokeStyle = DUST; ctx.setLineDash([2, 1.5]);
     ctx.beginPath(); ctx.moveTo(F.x(8), F.y(meshY)); ctx.lineTo(F.x(w - 8), F.y(meshY)); ctx.stroke(); ctx.setLineDash([]);
-    for (let i = 0; i < 16; i++) {
-      // Water molecules fall through the mesh and keep falling to the cup below.
-      const k = (t * (0.12 + 0.08 * h01(i, 1)) + h01(i, 2)) % 1;
-      dot(ctx, F, 10 + (w - 20) * h01(i, 3), top + 1.5 + k * (h - top - 5), 0.8, '#7fb2d9');
-    }
-    for (let i = 0; i < 6; i++) {
-      // Sand grains fall onto the mesh and lie there.
-      const k = Math.min(1, (t * 0.14 + h01(i, 4)) % 1.6);
-      const y = Math.min(meshY - 1.2, top + 1.5 + k * (meshY - top));
-      dot(ctx, F, 14 + (w - 28) * (i / 5) + Math.sin(i * 3) * 1.2, y, 1.4, '#a6896a');
+    if (!b.bodies) {
+      for (let i = 0; i < 16; i++) {
+        // Water molecules fall through the mesh and keep falling to the cup below.
+        const k = (t * (0.12 + 0.08 * h01(i, 1)) + h01(i, 2)) % 1;
+        dot(ctx, F, 10 + (w - 20) * h01(i, 3), top + 1.5 + k * (h - top - 5), 0.8, '#7fb2d9');
+      }
+      for (let i = 0; i < 6; i++) {
+        // Sand grains fall onto the mesh and lie there.
+        const k = Math.min(1, (t * 0.14 + h01(i, 4)) % 1.6);
+        const y = Math.min(meshY - 1.2, top + 1.5 + k * (meshY - top));
+        dot(ctx, F, 14 + (w - 28) * (i / 5) + Math.sin(i * 3) * 1.2, y, 1.4, '#a6896a');
+      }
     }
     return;
   }

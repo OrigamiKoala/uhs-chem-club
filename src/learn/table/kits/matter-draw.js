@@ -138,7 +138,7 @@ function paintProbe(ctx, f, state, b) {
   const wx = 28; const wy = top + 1; const ww = f.size.w - wx - 3; const wh = 17;
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(wx), F.y(wy), F.len(ww), F.len(wh));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(wy)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
-  if (r.item) {
+  if (r.item && !b.bodies) {
     const id = r.item.props.ion ? null : r.item.props.substance;
     const sub = id ? SUBSTANCES[id] : null;
     const force = sub?.force || 'dispersion';

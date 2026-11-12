@@ -253,12 +253,12 @@ function paintTester(ctx, f, state, b) {
       ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(pnl.x), F.y(py), F.len(pnl.w), F.len(pnl.h));
       ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(pnl.x)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(pnl.w)), Math.round(F.len(pnl.h)));
     }
-    paintWindow(ctx, F, py, r, b.clock || 0, BOTH_WIN);
+    if (!b.bodies) paintWindow(ctx, F, py, r, b.clock || 0, BOTH_WIN);
     paintPlot(ctx, F, py, r, glide(`${b.scope || ''}melt:${f.id}:${r.item?.id}:${r.item?.props.melt != null ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }), BOTH_PLOT);
   } else {
     ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(PANEL.x), F.y(py), F.len(PANEL.w), F.len(PANEL.h));
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(PANEL.x)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(PANEL.w)), Math.round(F.len(PANEL.h)));
-    if (f.props.view === 'window') paintWindow(ctx, F, py, r, b.clock || 0);
+    if (f.props.view === 'window') { if (!b.bodies) paintWindow(ctx, F, py, r, b.clock || 0); }
     else if (r.test === 'melt') paintPlot(ctx, F, py, r, glide(`${b.scope || ''}melt:${f.id}:${r.item?.id}:${r.item?.props.melt != null ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }));
     else if (r.test === 'strike') paintStrike(ctx, F, py, r, glide(`${b.scope || ''}hit:${f.id}:${r.item?.id}:${r.item?.props.strike || ''}`, 1, b.clock || 0, { dur: 0.7 }));
     else if (r.test === 'current') paintCurrent(ctx, F, py, r);

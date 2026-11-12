@@ -117,11 +117,13 @@ function paintStrip(ctx, f, state, b) {
     seg(ctx, F, xc - 4, cmY(0), xc + 4, cmY(0), DIM);
     if (!r.item) return;
     const dyes = INKS[r.item.props.ink]?.dyes || [];
-    if (!did) { disc(ctx, F, xc, cmY(0), 1.3, '#2a2620', STEEL); return; }
-    for (const d of dyes) {
-      const y = cmY(spotCm(d, s, r.ran[s]) * rise);
-      ctx.fillStyle = DYE_COLOUR[d];
-      ctx.beginPath(); ctx.arc(F.x(xc), F.y(y), F.len(1.5), 0, Math.PI * 2); ctx.fill();
+    if (!did) { if (!b.bodies) disc(ctx, F, xc, cmY(0), 1.3, '#2a2620', STEEL); return; }
+    if (!b.bodies) {
+      for (const d of dyes) {
+        const y = cmY(spotCm(d, s, r.ran[s]) * rise);
+        ctx.fillStyle = DYE_COLOUR[d];
+        ctx.beginPath(); ctx.arc(F.x(xc), F.y(y), F.len(1.5), 0, Math.PI * 2); ctx.fill();
+      }
     }
   });
   word(ctx, F, 'A SIMULATION', 3, top + 25, 2.0, { maxW: 26 });
@@ -169,18 +171,20 @@ function paintFilter(ctx, f, state, b) {
   const clock = b.clock || 0;
   // After the key, the mixture falls into the funnel: grains stop on the paper and the liquid drips through into the cup.
   const fall = pr ? glide(`${b.scope || ''}filter:${f.id}:${r.item.id}`, 1, clock, { dur: 1.6 }) : 1;
-  if (pr?.onPaper) {
-    const col = MIXTURES[r.item.props.mix].id === 'sand' ? '#b79a5f' : '#8a6a3f';
-    for (let i = 0; i < 9; i++) {
-      const t = (i + 0.5) / 9; const side = i % 2 ? 1 : -1;
-      const yy = top + 6 + t * 8; const xx = 45 + side * (8.5 - t * 7.5) * (1 - t * 0.1);
-      disc(ctx, F, xx, top + 0.5 + (yy - top - 0.5) * fall, 0.7, col);
+  if (!b.bodies) {
+    if (pr?.onPaper) {
+      const col = MIXTURES[r.item.props.mix].id === 'sand' ? '#b79a5f' : '#8a6a3f';
+      for (let i = 0; i < 9; i++) {
+        const t = (i + 0.5) / 9; const side = i % 2 ? 1 : -1;
+        const yy = top + 6 + t * 8; const xx = 45 + side * (8.5 - t * 7.5) * (1 - t * 0.1);
+        disc(ctx, F, xx, top + 0.5 + (yy - top - 0.5) * fall, 0.7, col);
+      }
     }
-  }
-  if (pr) {
-    for (let i = 0; i < 4; i++) {
-      const k = (clock * 0.9 + i / 4) % 1;
-      disc(ctx, F, 45 + Math.sin(i * 2.1) * 0.6, top + 15.5 + k * 6.5, 0.5, '#7fb2d9');
+    if (pr) {
+      for (let i = 0; i < 4; i++) {
+        const k = (clock * 0.9 + i / 4) % 1;
+        disc(ctx, F, 45 + Math.sin(i * 2.1) * 0.6, top + 15.5 + k * 6.5, 0.5, '#7fb2d9');
+      }
     }
   }
   // The cup under it.
@@ -188,7 +192,7 @@ function paintFilter(ctx, f, state, b) {
   rect(ctx, F, 36, top + 18, 18, 13, '#100f0c', STEEL);
   if (pr) {
     rect(ctx, F, 36.6, top + 22, 16.8, 8.4, pr.cup ? `${pr.cup}66` : GLASS);
-    for (let i = 0; i < 3; i++) disc(ctx, F, 45, top + 16.6 + i * 0.1, 0.35, TEXT);
+    if (!b.bodies) for (let i = 0; i < 3; i++) disc(ctx, F, 45, top + 16.6 + i * 0.1, 0.35, TEXT);
   }
   // The slide with a dried drop of the cup.
   rect(ctx, F, 3, top + 23, 24, 10, '#100f0c', STEEL);
@@ -248,20 +252,22 @@ function paintStill(ctx, f, state, b) {
   word(ctx, F, 'SIMPLE MODEL', 3, top + 42.2, 2.0, { maxW: 26 });
   // The flask boils while it has liquid: bubbles rise and vapour climbs the column; each new cut drips into its vial.
   const clock = b.clock || 0;
-  if (level > 0 && r.cuts > 0) {
-    for (let i = 0; i < 5; i++) {
-      const k = (clock * 0.55 + h01(i, 1)) % 1;
-      disc(ctx, F, 10 + h01(i, 2) * 10, top + 25 - k * 8 * level, 0.5 + k * 0.5, 'rgba(220,214,200,0.8)');
+  if (!b.bodies) {
+    if (level > 0 && r.cuts > 0) {
+      for (let i = 0; i < 5; i++) {
+        const k = (clock * 0.55 + h01(i, 1)) % 1;
+        disc(ctx, F, 10 + h01(i, 2) * 10, top + 25 - k * 8 * level, 0.5 + k * 0.5, 'rgba(220,214,200,0.8)');
+      }
+      for (let i = 0; i < 6; i++) {
+        const k = (clock * 0.35 + i / 6) % 1;
+        disc(ctx, F, 36.2 + (i % 2) * 3.6, top + 30 - k * 27, 0.6, '#d8cfbc');
+      }
     }
-    for (let i = 0; i < 6; i++) {
-      const k = (clock * 0.35 + i / 6) % 1;
-      disc(ctx, F, 36.2 + (i % 2) * 3.6, top + 30 - k * 27, 0.6, '#d8cfbc');
+    if (r.cuts > 0 && r.cuts <= 3) {
+      const vi = r.cuts - 1; const xv = 52.5 + vi * 10;
+      const fall = glide(`${b.scope || ''}still:${f.id}:${r.cuts}`, 1, clock, { dur: 1.4 });
+      if (fall < 1) for (let i = 0; i < 4; i++) disc(ctx, F, xv + 3.5, top + 3 + ((fall * 5 + i * 0.25) % 1) * 22 * (1 - 0.2 * i), 0.5, '#7fb2d9');
     }
-  }
-  if (r.cuts > 0 && r.cuts <= 3) {
-    const vi = r.cuts - 1; const xv = 52.5 + vi * 10;
-    const fall = glide(`${b.scope || ''}still:${f.id}:${r.cuts}`, 1, clock, { dur: 1.4 });
-    if (fall < 1) for (let i = 0; i < 4; i++) disc(ctx, F, xv + 3.5, top + 3 + ((fall * 5 + i * 0.25) % 1) * 22 * (1 - 0.2 * i), 0.5, '#7fb2d9');
   }
   // The column: three steps in a tube, and the thermometer reading at its top.
   rect(ctx, F, 35, top + 3, 6, 27, '#100f0c', STEEL);
@@ -330,8 +336,10 @@ function paintBoiler(ctx, f, state, b) {
   rect(ctx, F, 33.6, top + 12, 16.8, 9.8, r.item ? GLASS : 'rgba(111,143,176,0.1)');
   const clock = b.clock || 0;
   // The water's molecules slide about; once boiled, bubbles rise from the bottom to the surface.
-  if (r.item) for (let i = 0; i < 12; i++) { const [dx, dy] = slideAt(i, clock, 0.8); disc(ctx, F, 35.4 + (i % 6) * 2.9 + dx, top + 15 + Math.floor(i / 6) * 3.4 + dy, 0.5, '#cfe2f1'); }
-  if (r.reading != null) for (let i = 0; i < 6; i++) { const k = (clock * (0.5 + 0.3 * h01(i, 3)) + h01(i, 4)) % 1; disc(ctx, F, 36 + (i * 2.7) % 13, top + 21 - k * 9, 0.5 + k * 0.5, TEXT); }
+  if (!b.bodies) {
+    if (r.item) for (let i = 0; i < 12; i++) { const [dx, dy] = slideAt(i, clock, 0.8); disc(ctx, F, 35.4 + (i % 6) * 2.9 + dx, top + 15 + Math.floor(i / 6) * 3.4 + dy, 0.5, '#cfe2f1'); }
+    if (r.reading != null) for (let i = 0; i < 6; i++) { const k = (clock * (0.5 + 0.3 * h01(i, 3)) + h01(i, 4)) % 1; disc(ctx, F, 36 + (i * 2.7) % 13, top + 21 - k * 9, 0.5 + k * 0.5, TEXT); }
+  }
   // The thermometer: 99.5 to 103.5 °C, a mark at the boiling point of water alone, and a column that stands at the reading.
   const ty0 = top + 3; const ty1 = top + 30; const lo = 99.5; const hi = 103.5;
   const Y = T => ty1 - ((T - lo) / (hi - lo)) * (ty1 - ty0);
@@ -378,7 +386,7 @@ function paintPlan(ctx, f, state, b) {
       // Each part travels from the start line to where the steps send it.
       const g = glide(`${b.scope || ''}plan:${f.id}:${k}:${key}`, 1, b.clock || 0, { dur: 1.4 });
       const sx = 3 + PLAN_PARTS.indexOf(k) * 14 + 1; const sy = top + 5.2;
-      disc(ctx, F, sx + (30 + j * 10 - sx) * g, sy + (y - sy) * g, 1, PLAN_INK[k]);
+      if (!b.bodies) disc(ctx, F, sx + (30 + j * 10 - sx) * g, sy + (y - sy) * g, 1, PLAN_INK[k]);
       word(ctx, F, k, 32 + j * 10, y, 2.0, { color: TEXT, maxW: 8 });
     });
   });

@@ -205,15 +205,16 @@ function paintPress(ctx, f, state, b) {
     const top = r.st === 'gas' ? CYL.y1 - H * r.ratio : r.st === 'solid' ? CYL.y1 - BLOCK.h : CYL.y1 - sh;
     const free = CYL.y1 - H / (r.level === 1 ? 1 : [1, 1.5, 2, 3][r.level - 1]);
     pistonY = Math.min(free, top);
-    if (r.st === 'gas') jarDots(ctx, F, 'gas', { x0: CYL.x0, y0: pistonY + 1.4, w: cw, h: CYL.y1 - pistonY - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
-    else if (r.st === 'solid') {
+    if (r.st === 'gas') {
+      if (!b.bodies) jarDots(ctx, F, 'gas', { x0: CYL.x0, y0: pistonY + 1.4, w: cw, h: CYL.y1 - pistonY - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
+    } else if (r.st === 'solid') {
       ctx.fillStyle = SOLID_TONE; ctx.fillRect(F.x(CYL.x0 + (cw - BLOCK.w) / 2), F.y(CYL.y1 - BLOCK.h), F.len(BLOCK.w), F.len(BLOCK.h));
       ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(F.x(CYL.x0 + (cw - BLOCK.w) / 2), F.y(CYL.y1 - BLOCK.h), F.len(BLOCK.w), Math.max(1, F.len(0.8)));
-      jarDots(ctx, F, 'solid', { x0: CYL.x0 + (cw - BLOCK.w) / 2 + 0.6, y0: CYL.y1 - BLOCK.h + 1.4, w: BLOCK.w - 1.2, h: BLOCK.h - 2 }, b.clock || 0, r.jar.props.T ?? 20);
+      if (!b.bodies) jarDots(ctx, F, 'solid', { x0: CYL.x0 + (cw - BLOCK.w) / 2 + 0.6, y0: CYL.y1 - BLOCK.h + 1.4, w: BLOCK.w - 1.2, h: BLOCK.h - 2 }, b.clock || 0, r.jar.props.T ?? 20);
     } else {
       ctx.fillStyle = LIQUID_TONE; ctx.fillRect(F.x(CYL.x0), F.y(CYL.y1 - sh), F.len(cw), F.len(sh));
       ctx.fillStyle = 'rgba(200,225,245,0.5)'; ctx.fillRect(F.x(CYL.x0), F.y(CYL.y1 - sh), F.len(cw), Math.max(1, F.len(0.5)));
-      jarDots(ctx, F, 'liquid', { x0: CYL.x0 + 0.4, y0: CYL.y1 - sh + 1, w: cw - 0.8, h: sh - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
+      if (!b.bodies) jarDots(ctx, F, 'liquid', { x0: CYL.x0 + 0.4, y0: CYL.y1 - sh + 1, w: cw - 0.8, h: sh - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
     }
   }
   ctx.strokeStyle = DUST; ctx.lineWidth = Math.max(1, F.len(0.3));
@@ -228,13 +229,13 @@ function paintPress(ctx, f, state, b) {
     if (r.shape === 'lump') {
       ctx.fillStyle = SOLID_TONE; ctx.fillRect(F.x(TANK.x0 + 4), F.y(TANK.y1 - BLOCK.h), F.len(BLOCK.w), F.len(BLOCK.h));
       ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(F.x(TANK.x0 + 4), F.y(TANK.y1 - BLOCK.h), F.len(BLOCK.w), Math.max(1, F.len(0.8)));
-      jarDots(ctx, F, 'solid', { x0: TANK.x0 + 4.6, y0: TANK.y1 - BLOCK.h + 1.4, w: BLOCK.w - 1.2, h: BLOCK.h - 2 }, b.clock || 0, r.jar.props.T ?? 20);
+      if (!b.bodies) jarDots(ctx, F, 'solid', { x0: TANK.x0 + 4.6, y0: TANK.y1 - BLOCK.h + 1.4, w: BLOCK.w - 1.2, h: BLOCK.h - 2 }, b.clock || 0, r.jar.props.T ?? 20);
     } else if (r.shape === 'pool') {
       const lh = AREA / tw;
       ctx.fillStyle = LIQUID_TONE; ctx.fillRect(F.x(TANK.x0), F.y(TANK.y1 - lh), F.len(tw), F.len(lh));
       ctx.fillStyle = 'rgba(200,225,245,0.5)'; ctx.fillRect(F.x(TANK.x0), F.y(TANK.y1 - lh), F.len(tw), Math.max(1, F.len(0.5)));
-      jarDots(ctx, F, 'liquid', { x0: TANK.x0 + 0.4, y0: TANK.y1 - lh + 1, w: tw - 0.8, h: lh - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
-    } else jarDots(ctx, F, 'gas', { x0: TANK.x0, y0: TANK.y0, w: tw, h: th }, b.clock || 0, r.jar.props.T ?? 20);
+      if (!b.bodies) jarDots(ctx, F, 'liquid', { x0: TANK.x0 + 0.4, y0: TANK.y1 - lh + 1, w: tw - 0.8, h: lh - 1.4 }, b.clock || 0, r.jar.props.T ?? 20);
+    } else if (!b.bodies) jarDots(ctx, F, 'gas', { x0: TANK.x0, y0: TANK.y0, w: tw, h: th }, b.clock || 0, r.jar.props.T ?? 20);
   }
   ctx.strokeStyle = STEEL;
   ctx.strokeRect(Math.round(F.x(TANK.x0)) + 0.5, Math.round(F.y(TANK.y0)) + 0.5, Math.round(F.len(tw)), Math.round(F.len(th)));
@@ -308,7 +309,7 @@ function paintWindow(ctx, f, state, b) {
   const F = frameOf(b);
   const r = windowRead(state, f.id);
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(CELL.x0), F.y(CELL.y0), F.len(CELL.w), F.len(CELL.h));
-  if (r.jar) {
+  if (r.jar && !b.bodies) {
     const parts = arrange({ state: r.st, T: r.T, mols: r.mols, seed: `win${r.jar.id}` });
     paintCrowd(ctx, parts, F.x(CELL.x0), F.y(CELL.y0), F.len(CELL.w), F.len(CELL.h), 1, { state: r.st, T: r.T, clock: b.clock || 0, mark: Boolean(r.here) });
   }

@@ -125,33 +125,35 @@ function paintFlask(ctx, f, state, b) {
     ctx.restore();
     const t = b.clock || 0;
     const sp = speedAt(r.T);
-    // The liquid: its molecules slide past one another, faster when warm.
-    ctx.fillStyle = '#cfe2f1';
-    for (let i = 0; i < 16; i++) {
-      const hx = cx - 6.6 + (i % 4) * 4.4 + (Math.floor(i / 4) % 2) * 1.6; const hy = levelY + 2 + Math.floor(i / 4) * 1.9;
-      const [dx, dy] = slideAt(i, t, 0.55 * sp, sp);
-      ctx.beginPath(); ctx.arc(F.x(hx + dx), F.y(hy + dy), Math.max(1.2, F.len(0.5)), 0, Math.PI * 2); ctx.fill();
-    }
-    if (r.boiling) {
-      // Boiling: bubbles of vapor form in the liquid and rise to the surface.
-      ctx.strokeStyle = DUST;
-      for (let i = 0; i < 7; i++) {
-        const rise = (t * (0.5 + 0.4 * h01(i, 4)) + h01(i, 5)) % 1;
-        const bx = cx - 6 + h01(i, 1) * 12; const by = levelY + 7.5 - rise * 6.5;
-        ctx.beginPath(); ctx.arc(F.x(bx), F.y(by), F.len(0.5 + rise * 0.9), 0, Math.PI * 2); ctx.stroke();
+    if (!b.bodies) {
+      // The liquid: its molecules slide past one another, faster when warm.
+      ctx.fillStyle = '#cfe2f1';
+      for (let i = 0; i < 16; i++) {
+        const hx = cx - 6.6 + (i % 4) * 4.4 + (Math.floor(i / 4) % 2) * 1.6; const hy = levelY + 2 + Math.floor(i / 4) * 1.9;
+        const [dx, dy] = slideAt(i, t, 0.55 * sp, sp);
+        ctx.beginPath(); ctx.arc(F.x(hx + dx), F.y(hy + dy), Math.max(1.2, F.len(0.5)), 0, Math.PI * 2); ctx.fill();
       }
-    }
-    if (r.valid) {
-      // The vapor: as many molecules as the planner gives for this liquid at this temperature, flying and bouncing above the surface.
-      const n = vaporDots(r.sub, r.T);
-      ctx.fillStyle = DUST;
-      const y0 = cy - 8.2; const y1 = levelY - 1.4;
-      for (let i = 0; i < n; i++) {
-        const [u, v] = gasAt(i, t, sp * 2.4);
-        const y = y0 + v * (y1 - y0);
-        const half = Math.sqrt(Math.max(0.5, (R - 1.1) ** 2 - (y - cy) ** 2));
-        const x = cx + (u - 0.5) * 2 * half * 0.92;
-        ctx.beginPath(); ctx.arc(F.x(x), F.y(y), Math.max(1.3, F.len(0.62)), 0, Math.PI * 2); ctx.fill();
+      if (r.boiling) {
+        // Boiling: bubbles of vapor form in the liquid and rise to the surface.
+        ctx.strokeStyle = DUST;
+        for (let i = 0; i < 7; i++) {
+          const rise = (t * (0.5 + 0.4 * h01(i, 4)) + h01(i, 5)) % 1;
+          const bx = cx - 6 + h01(i, 1) * 12; const by = levelY + 7.5 - rise * 6.5;
+          ctx.beginPath(); ctx.arc(F.x(bx), F.y(by), F.len(0.5 + rise * 0.9), 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+      if (r.valid) {
+        // The vapor: as many molecules as the planner gives for this liquid at this temperature, flying and bouncing above the surface.
+        const n = vaporDots(r.sub, r.T);
+        ctx.fillStyle = DUST;
+        const y0 = cy - 8.2; const y1 = levelY - 1.4;
+        for (let i = 0; i < n; i++) {
+          const [u, v] = gasAt(i, t, sp * 2.4);
+          const y = y0 + v * (y1 - y0);
+          const half = Math.sqrt(Math.max(0.5, (R - 1.1) ** 2 - (y - cy) ** 2));
+          const x = cx + (u - 0.5) * 2 * half * 0.92;
+          ctx.beginPath(); ctx.arc(F.x(x), F.y(y), Math.max(1.3, F.len(0.62)), 0, Math.PI * 2); ctx.fill();
+        }
       }
     }
   }
@@ -353,11 +355,13 @@ function paintJar(ctx, f, state, b) {
   ctx.strokeStyle = DIM; ctx.beginPath(); ctx.moveTo(F.x(1), F.y(level)); ctx.lineTo(F.x(29), F.y(level)); ctx.stroke();
   ctx.fillStyle = DUST;
   const t = b.clock || 0;
-  for (let i = 0; i < 36; i++) {
-    // The gas and the water vapor fly about together and bounce off the walls and the water.
-    const [u, v] = gasAt(i, t, speedAt(p.T) * 2.2);
-    const x = jx0 + 2 + u * (jx1 - jx0 - 4); const y = jy0 + 2 + v * (level - jy0 - 4);
-    ctx.beginPath(); ctx.arc(F.x(x), F.y(y), Math.max(1.3, F.len(0.6)), 0, Math.PI * 2); ctx.fill();
+  if (!b.bodies) {
+    for (let i = 0; i < 36; i++) {
+      // The gas and the water vapor fly about together and bounce off the walls and the water.
+      const [u, v] = gasAt(i, t, speedAt(p.T) * 2.2);
+      const x = jx0 + 2 + u * (jx1 - jx0 - 4); const y = jy0 + 2 + v * (level - jy0 - 4);
+      ctx.beginPath(); ctx.arc(F.x(x), F.y(y), Math.max(1.3, F.len(0.6)), 0, Math.PI * 2); ctx.fill();
+    }
   }
   say(ctx, 'GAS AND WATER VAPOR', F.x(32), F.y(12), F.size(1.7, 5.8), { color: DIM });
   say(ctx, 'JAR GAUGE', F.x(32), F.y(18.4), F.size(1.9, 6), { color: DIM });

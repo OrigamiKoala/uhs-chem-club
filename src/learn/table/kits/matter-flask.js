@@ -188,41 +188,43 @@ function paintWindow(ctx, F, f, R, wx, wy, b = {}) {
   const V = v => oy + v * hpx;
   const drop = dropFor(R);
   const liquid = R.liquid;
-  // The liquid's own molecules, faint, behind everything.
-  const solventUnit = Math.max(3.4, hpx * 0.035);
-  const sol = drop ? drop.solvent : dropOf({ sub: 'NaCl', solvent: liquid, units: 0, spreads: true }).solvent;
-  // The solvent's molecules slide about all the time; the solute's particles leave their clump and wander through them.
-  const wob = Math.max(0.006, 0.012);
-  sol.forEach((m, i) => {
-    const [dx, dy] = slideAt(i + 40, t, hpx * wob * 3.2);
-    if (liquid === 'water') waterGlyph(ctx, U(m.u) + dx, V(m.v) + dy, solventUnit, 0.32);
-    else paintGlyph(ctx, 'hexane', U(m.u) + dx, V(m.v) + dy, solventUnit * 0.62, { alpha: 0.32 });
-  });
-  const spreadK = drop ? glide(`${b.scope || ''}flask:${f.id}:${R.item?.id ?? ''}:${liquid}`, 1, t, { dur: 2.6 }) : 1;
-  const home = q => {
-    const cu = ASPECT / 2;
-    const packed = [cu + (q.u - cu) * 0.16, 0.5 + (q.v - 0.5) * 0.16];
-    return [packed[0] + (q.u - packed[0]) * spreadK, packed[1] + (q.v - packed[1]) * spreadK];
-  };
-  const moved = drop ? drop.parts.map((q, i) => {
-    const [hu, hv] = home(q);
-    const free = q.k === 'cation' || q.k === 'anion' || q.k === 'molecule' || q.k === 'small';
-    const [dx, dy] = free && spreadK > 0.5 ? slideAt(i, t, hpx * 0.02, 1.3) : shakeAt(i, t, hpx * 0.006, 1);
-    return { ...q, u: hu + dx / F.len(pw) * ASPECT, v: hv + dy / hpx };
-  }) : [];
-  if (drop) {
-    // A wrapped ion: three waters touching it. (Drawn under the ion itself.)
-    if (drop.shellOn) {
-      for (const q of moved) {
-        const rad = Math.max(q.rad * hpx, 4.2);
-        for (let k = 0; k < 3; k++) {
-          const a = (q.a || 0) + (k / 3) * Math.PI * 2;
-          const d = rad * 1.7;
-          waterGlyph(ctx, U(q.u) + Math.cos(a) * d, V(q.v) + Math.sin(a) * d, Math.max(3.6, rad * 0.55), 0.9);
+  if (!b.bodies) {
+    // The liquid's own molecules, faint, behind everything.
+    const solventUnit = Math.max(3.4, hpx * 0.035);
+    const sol = drop ? drop.solvent : dropOf({ sub: 'NaCl', solvent: liquid, units: 0, spreads: true }).solvent;
+    // The solvent's molecules slide about all the time; the solute's particles leave their clump and wander through them.
+    const wob = Math.max(0.006, 0.012);
+    sol.forEach((m, i) => {
+      const [dx, dy] = slideAt(i + 40, t, hpx * wob * 3.2);
+      if (liquid === 'water') waterGlyph(ctx, U(m.u) + dx, V(m.v) + dy, solventUnit, 0.32);
+      else paintGlyph(ctx, 'hexane', U(m.u) + dx, V(m.v) + dy, solventUnit * 0.62, { alpha: 0.32 });
+    });
+    const spreadK = drop ? glide(`${b.scope || ''}flask:${f.id}:${R.item?.id ?? ''}:${liquid}`, 1, t, { dur: 2.6 }) : 1;
+    const home = q => {
+      const cu = ASPECT / 2;
+      const packed = [cu + (q.u - cu) * 0.16, 0.5 + (q.v - 0.5) * 0.16];
+      return [packed[0] + (q.u - packed[0]) * spreadK, packed[1] + (q.v - packed[1]) * spreadK];
+    };
+    const moved = drop ? drop.parts.map((q, i) => {
+      const [hu, hv] = home(q);
+      const free = q.k === 'cation' || q.k === 'anion' || q.k === 'molecule' || q.k === 'small';
+      const [dx, dy] = free && spreadK > 0.5 ? slideAt(i, t, hpx * 0.02, 1.3) : shakeAt(i, t, hpx * 0.006, 1);
+      return { ...q, u: hu + dx / F.len(pw) * ASPECT, v: hv + dy / hpx };
+    }) : [];
+    if (drop) {
+      // A wrapped ion: three waters touching it. (Drawn under the ion itself.)
+      if (drop.shellOn) {
+        for (const q of moved) {
+          const rad = Math.max(q.rad * hpx, 4.2);
+          for (let k = 0; k < 3; k++) {
+            const a = (q.a || 0) + (k / 3) * Math.PI * 2;
+            const d = rad * 1.7;
+            waterGlyph(ctx, U(q.u) + Math.cos(a) * d, V(q.v) + Math.sin(a) * d, Math.max(3.6, rad * 0.55), 0.9);
+          }
         }
       }
+      for (const q of moved) paintPart(ctx, q, U(q.u), V(q.v), Math.max(q.rad * hpx, q.k === 'cation' || q.k === 'anion' ? 5.2 : 3), hpx);
     }
-    for (const q of moved) paintPart(ctx, q, U(q.u), V(q.v), Math.max(q.rad * hpx, q.k === 'cation' || q.k === 'anion' ? 5.2 : 3), hpx);
   }
   // The rows under the glass: what the drop is of, and what a stage chooses to print.
   const cap = `A DROP, IN ${LIQUIDS[liquid]?.caption ?? 'WATER'}`;

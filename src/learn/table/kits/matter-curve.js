@@ -330,7 +330,7 @@ function paintHeatCurve(ctx, f, state, b) {
   const clock = b.clock || 0;
   const qShown = Math.round(glide(`${b.scope || ''}hc:${f.id}`, r.q, clock, { dur: 1.9 }));
   const planShown = planThermal(p.grams, r.start, qShown);
-  samplePanel(ctx, F, top, planShown.T, a, { crowd: p.window ? crowdOfTwelve(planShown) : null, cup: p.window ? null : `${fixed(p.grams, 1)} g`, clock });
+  samplePanel(ctx, F, top, planShown.T, a, { crowd: !b.bodies && p.window ? crowdOfTwelve(planShown) : null, cup: p.window ? null : `${fixed(p.grams, 1)} g`, clock });
   const rowsOut = [['TEMPERATURE', `${minus(fixed(r.plan.T, 1))} °C`, inkOf(r.plan.T)]];
   if (p.showHeat) rowsOut.push(['HEAT ADDED', `${minus(fixed(r.q / 1000, 2, true))} kJ`, AMBER]);
   readouts(ctx, F, top + 24.2, rowsOut);
