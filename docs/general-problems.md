@@ -2,7 +2,7 @@
 
 Written 2026-11-06 from a read of the quest sources (`src/learn/quests/unit01`–`unit10`), the kits (`src/learn/table/kits/`), the vocabulary gate in `tools/verify-learn.mjs`, `CLAUDE.md`, `PRODUCT.md` and the owner's feedback files (`docs/feedback.md`, `docs/feedback-11-01.md`). Nothing was played in a browser. Counts below come from `grep` over the source, so treat them as orders of magnitude; the fixing agent re-measures them for its own world.
 
-The fix for a whole world is in [`docs/fix-world-teaching-prompt.md`](fix-world-teaching-prompt.md).
+The current standard and method are in [`docs/teaching-pass/BRIEF.md`](teaching-pass/BRIEF.md); this file is background, kept for its "Lessons from ..." sections. The prompt it originally fed is archived at `docs/archive/2026-11-11/fix-world-teaching-prompt.md`.
 
 ## Summary
 
@@ -152,7 +152,7 @@ The "predict first" rule is good, but the predict stage often asks for a guess a
 
 ## 10. Stage order and level are uneven
 
-- **Concepts used before they are taught.** Ligar's `q1-joins` stage 3 sorts by charge on the atom faces; electronegativity (the reason) is taught in `q7`. (Both from `docs/ligar-teaching-pass-prompt.md`.)
+- **Concepts used before they are taught.** Ligar's `q1-joins` stage 3 sorts by charge on the atom faces; electronegativity (the reason) is taught in `q7`. (Both from `docs/archive/2026-11-11/ligar-teaching-pass-prompt.md`.)
 - **Sorting to a taxonomy.** Ligar `q2-lattice` stages 2–3 ask for lists (conducts cold / only molten / never; rank by melting point) with no step that asks *why*.
 - **Overloaded stages.** Ligar `q9-orbitals` stage 3 stacks twelve electron pieces, a ladder, jargon labels, counters and a magnet. The rule "one decision per stage" is stated in `CLAUDE.md` and still broken.
 - **Observing a refusal instead of predicting.** Ligar `q8` stage 5.

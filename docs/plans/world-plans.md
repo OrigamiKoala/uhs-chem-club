@@ -3,6 +3,8 @@
 This document is the authoritative master compilation of all world plans, curriculum designs, CED alignments,
 tabletop kit architectures, and build records for the 14 worlds of the Avalon Learn Track.
 
+> **2026-11-11:** the final teaching pass (`docs/teaching-pass/README.md`) may cut, merge and move stages and quests. The stage counts and bench lists below are from before the pass and are reconciled once, by its close-out session. `node tools/teaching-report.mjs all --totals` prints the current counts.
+
 ---
 
 ## 1. Curriculum Architecture & World Matrix

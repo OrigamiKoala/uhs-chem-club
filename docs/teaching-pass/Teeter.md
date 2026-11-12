@@ -1,6 +1,6 @@
 # Teeter teaching pass (2026-11-06)
 
-Run from `docs/fix-world-teaching-prompt.md` for WORLD = Teeter, UNIT = unit08. Nothing was played in a browser; the owner's rule is to play-test himself.
+Run from `docs/archive/2026-11-11/fix-world-teaching-prompt.md` for WORLD = Teeter, UNIT = unit08. Nothing was played in a browser; the owner's rule is to play-test himself.
 
 **This pass is partial, like Brinewire's.** It changed the words, added a glossary and a Teeter check, and put a moving mechanism view on every instrument that shows particles or amounts (seven fixture kinds). It did not rebuild the graded move of any stage: the student still turns dials, lays cards and types numbers. The second round (below) added moving models to q4, q8 stage 7 and the predict stages, and 3D dresses.
 

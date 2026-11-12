@@ -8,6 +8,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 - **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
 - **World plans & specifications:** `docs/plans/world-plans.md` consolidates all 14 world plans, CED maps, tabletop kits, and build records.
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
+- **Teaching pass (2026-11):** `docs/teaching-pass/README.md` is the owner's guide to the final pass on the ten live worlds; `BRIEF.md` is the standard and method every agent follows, `PATTERNS.md` the redesigns to copy, `worlds/` the per-world notes and records, `prompts/` the prompts, `PROGRESS.md` the state.
 - **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment.
 
 ## Codebase Architecture
@@ -23,21 +24,30 @@ This file holds the engineering doctrine, hard rules, and commands.
 
 ## Teaching Doctrine (Learn Quests & Stages)
 
+- **The standard of a stage that teaches:** Hold every stage to the seven criteria:
+  1. *Student knows the question before touching anything:* states what we are trying to find out in words a 13-year-old has, not an operational instruction ("Set marker to...").
+  2. *Cause is visible on the bench while acting:* particles, charges, energy, or bonds respond to actions. Moving models must directly connect action to result, never sitting as decorative wallpaper.
+  3. *Answer cannot be reached without the idea:* cannot pass by ranking black-box instrument readouts, dial matching, or copying hints.
+  4. *Every word known or glossed:* real terms in short plain sentences. Avoid both euphemisms/ciphers ("push", "room", "knocks", "chips", "needle") and college textbook jargon ("lateral overlap...", "non-negative probability density"). No anthropomorphic motives for atoms ("happy", "wants").
+  5. *As simple as the idea allows, and no simpler:* one decision; direct answer forms (no decoding entry puzzles like "degrees short of 109.5°"); honest clauses for scientific limits.
+  6. *Getting stuck leads to understanding, not the answer:* hint ladder (1: where to look/control, 2: what to notice/compare, 3: how to reason; never the answer, move, or arithmetic); misses name table evidence.
+  7. *Needs nothing the track has not taught:* respect prerequisites (`BUILDS_ON`).
+- **"Never give away answers" does not mean "never explain":** Teach the idea on one case (via brief stage briefing of ≤2 sentences or predict lead clip on a neighbouring case), then ask the student to solve a different case!
 - **Tabletop as the answer:** Pieces are physical objects on a plate (flat in 2D / 3D Off). Answers are constructed on the table, not through multiple-choice questions (unless reading-only).
-- **Controls & mechanics:** Every drag has a two-tap twin. Ordering is dragging into place on a rail. Snaps represent physical proximity, never arbitrary locks.
-- **Real scientific terminology:** Say the real term the first time with a one-clause gloss, then use only that term. Never use euphemisms ("push" for pressure, "room" for volume) or fiction names for apparatus or quantities. Glossaries reside in `src/learn/glossary/<world>.js`.
+- **Controls & mechanics:** Every drag has a two-tap twin. Ordering is dragging into place on a rail. Snaps represent physical proximity, never arbitrary locks. Direct answer forms only.
+- **Real scientific terminology:** Say the real term the first time with a one-clause gloss, then use only that term. Glossaries reside in `src/learn/glossary/<world>.js`.
 - **Live mechanism views:** Every instrument has an active mechanism view moving in time (in 3D and 2D `live`), reflecting physical processes.
   - Kits declare it as a pure painter of state and clock (`b.clock`); the 3D crowd is the same painter read through `pans-3d.js` `dressRecorded`. Ember Reach: `table/kits/heat-motion.js` (cup, `lattice`, `rxn`, `curve`, `lead`, energy diagram, plot, stack). Mirrowen: `table/kits/matter-motion.js` (state-by-state particle motion and `glide`), painters made time-aware in place across the `matter-*.js` files, `matter-lead.js` clips; the piston of the press is dragged (`tapZones`, `drag.invert`). A miss restarts the glides via `kit.onMiss`. Every predict stage carries a `lead` clip of a neighbouring case. `tools/verify-teaching-ember.mjs` (in `verify:teaching`) enforces it.
 - **Never give away answers:**
-  - A prompt states the objective, never the route (≤25 words, one plain imperative/question, no "!", no setting clause).
+  - A prompt states what to find out before touching anything, never the route (≤25 words, one plain imperative/question, no "!", no setting clause).
   - How tools work is explained on the object or via Tour; which move solves the stage is never revealed.
-  - Hint ladder: exactly three one-sentence rungs (1: which control, 2: what to compare, 3: method/structure, never the answer).
-  - Briefings are ≤2 sentences, introducing tools immediately before the stage that requires them.
+  - Hint ladder: exactly three one-sentence rungs (1: where to look / control, 2: what to compare / notice, 3: how to reason; never the answer or arithmetic).
+  - Briefings are ≤2 sentences, putting telling before doing immediately before the stage that requires it.
   - The Tour explains tools in three beats (what it is, what to do, what it tells you) without revealing solutions.
 - **Predict first, test second:** Commit a hypothesis on a stripped table before revealing the instrument or running the trial. Predictions are never graded.
-- **Self-contained evidence:** Every stage is solvable from bench evidence without external lookup. Necessary formulas/constants are given on a plate, readout, or hint rung 3.
+- **Self-contained evidence:** Every stage is solvable from bench evidence without external lookup. Necessary formulas/constants are given on a plate, readout, or hint rung 3. Pure plate-and-type worksheet stages are banned.
 - **Investigation, not combat:** Ordinary misses are "missed trials" with explanatory reasons. Foes are dispersed, never killed. Only bosses engage in combat (`encounter`, single cosmetic health bar).
-- **Rewards & debriefs:** Every stage awards a reward card (1–3 sentences) naming the concept. Quests conclude with Vess's debrief story animation (3–5 beats showing the mechanism, no purely decorative animations).
+- **Rewards & debriefs:** Every stage awards a reward card (1–2 short sentences, at most 40 words) confirming the concept seen; never introducing the concept or carrying the lesson after the fact. Quests conclude with Vess's debrief story animation (3–5 beats showing the mechanism, no purely decorative animations).
 
 ## Hard Engineering Rules
 
@@ -57,6 +67,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 - `npm run dev`: Start local Vite dev server (:3000) with API proxy.
 - `npm run build`: Production build into `dist/`.
 - `npm run verify`: Complete test and verification suite (`verify:learn`, `verify:table`, `verify:story`, `verify:docs`, per-world checks, etc.).
+- `node tools/teaching-report.mjs <unitNN> [quest] [--read|--totals]`: fault flags per stage, or a bench as plain text in play order. A reading aid for the teaching pass, not a check; word lists in `tools/teaching-words.json`.
 - **Testing discipline:** The owner play-tests in the browser; agents do NOT test in the browser. Verify changes using `npm run verify`, `npm run build`, and Node scripts.
 
 ## Question Bank

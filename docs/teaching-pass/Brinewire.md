@@ -1,6 +1,6 @@
 # Brinewire teaching pass (2026-11-06, second run)
 
-Run from `docs/fix-world-teaching-prompt.md` for WORLD = Brinewire, UNIT = unit10. Nothing was played in a browser; every claim below is from source, Node checks and the bench checks.
+Run from `docs/archive/2026-11-11/fix-world-teaching-prompt.md` for WORLD = Brinewire, UNIT = unit10. Nothing was played in a browser; every claim below is from source, Node checks and the bench checks.
 
 ## Tally
 
@@ -25,7 +25,7 @@ Eight crowded tables were re-laid so a full-size model fits inside them (`kits/c
 
 ## What was built
 
-- **Doctrine and rules.** `CLAUDE.md`, `PRODUCT.md`: real term with a gloss on first use, one term per concept; `WITHHELD_VOCAB` keeps only answers (removed lines in `withheld-vocab-removed.txt`). `docs/general-problems.md` and `docs/fix-world-teaching-prompt.md` now require 3D visualizations wherever possible (hovering is fine).
+- **Doctrine and rules.** `CLAUDE.md`, `PRODUCT.md`: real term with a gloss on first use, one term per concept; `WITHHELD_VOCAB` keeps only answers (removed lines in `withheld-vocab-removed.txt`). `docs/general-problems.md` and `docs/archive/2026-11-11/fix-world-teaching-prompt.md` now require 3D visualizations wherever possible (hovering is fine).
 - **Glossary** `src/learn/glossary/brinewire.js` (28 terms, banned synonyms, per-stage needs) and the Glossary key; hints that use a term get a "What is this?" key that opens the Glossary at that term.
 - **Primer key** (`engine/primers.js`, `NEEDS`): hands-on panels with sliders for powers of ten and the logarithm, a ratio, the ampere-to-gram ladder, and atoms becoming ions. Ten stages offer one (`q1` 1; `q4` 6, 7; `q5` 4, 6, 7; `q6` 3, 4, 5, 8).
 - **Mechanism engine.** `engine/cellscene.js` (pure): a spec of vessels, strips, a wire, a salt bridge, ions and bubbles becomes boxes, balls and lines at time `t`. `kits/cell-scenes.js` builds the spec for each instrument from its own read function: ledger cards (electron transfer), the redox beaker and probe, the dip rack and nails (displacement, bubbles, coating), the galvanic rig (the bridge decides whether electrons flow), the ready cell, the load run, the read bench and the concentration cell (ion counts follow the concentration), the potential board (electrons toward or away from the hydrogen reference), and every supply scene (reverse a cell, molten salt, plating, water, brine). `kits/cell-scene.js` shows it: a 3D dress (glass vessels, strips, ions and electrons as spheres in the host's own materials, ticking with `dt`) and a flat painter at the table clock; `kits/cell-attach.js` adds it under every stage. Shared engine change: `Table2D.tick` runs a kit's `live(state)` and passes a clock; reduced motion freezes it.

@@ -1,6 +1,6 @@
 # Verdigris teaching pass (2026-11-06)
 
-Run from `docs/fix-world-teaching-prompt.md` for WORLD = Verdigris, UNIT = unit09. Nothing was played in a browser (the owner play-tests).
+Run from `docs/archive/2026-11-11/fix-world-teaching-prompt.md` for WORLD = Verdigris, UNIT = unit09. Nothing was played in a browser (the owner play-tests).
 
 **This pass is partial, and says so.** It changed the words, added the glossary, the primers and the checks, and made every flask-like window a
 moving model. It did **not** rebuild the benches around the student acting on the particles themselves, and it added no predict lead-ins. The

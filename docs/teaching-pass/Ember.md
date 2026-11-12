@@ -1,6 +1,6 @@
 # Ember Reach teaching pass (2026-11-06)
 
-Run from `docs/fix-world-teaching-prompt.md` for WORLD = Ember Reach, UNIT = unit05. Nothing was played in a browser; the owner play-tests (`CLAUDE.md`). Checks: `npm run verify:teaching` (Ember is `tools/verify-teaching-ember.mjs`), `verify:table`, `verify:bench`, `verify:learn`, `verify:ember`, `verify:run`, `npm run build`.
+Run from `docs/archive/2026-11-11/fix-world-teaching-prompt.md` for WORLD = Ember Reach, UNIT = unit05. Nothing was played in a browser; the owner play-tests (`CLAUDE.md`). Checks: `npm run verify:teaching` (Ember is `tools/verify-teaching-ember.mjs`), `verify:table`, `verify:bench`, `verify:learn`, `verify:ember`, `verify:run`, `npm run build`.
 
 **This pass is partial in one respect, and says so.** Every stage now has a moving model; seven stages and the Crucible's last phase change what the student *does* to the particles. The rest still grade a typed number, a card in a slot or an answer dial, now with the cause moving beside the answer. The rebuilt-from-scratch bench the prompt asks for (every graded move is a hand on a particle) was not reached for the calculation stages.
 

@@ -1,6 +1,6 @@
 # Mirrowen teaching pass (2026-11-06)
 
-Run from `docs/fix-world-teaching-prompt.md` for WORLD = Mirrowen, UNIT = unit06 (7 benches 8+8+8+6+8+8+7, Undertow 5 = 58 stages). Nothing was played in a browser; the owner play-tests (`CLAUDE.md`). Checks: `npm run verify:teaching` (Mirrowen is `tools/verify-teaching-mirrowen.mjs`), `verify:table`, `verify:bench`, `verify:learn`, `verify:mirrowen`.
+Run from `docs/archive/2026-11-11/fix-world-teaching-prompt.md` for WORLD = Mirrowen, UNIT = unit06 (7 benches 8+8+8+6+8+8+7, Undertow 5 = 58 stages). Nothing was played in a browser; the owner play-tests (`CLAUDE.md`). Checks: `npm run verify:teaching` (Mirrowen is `tools/verify-teaching-mirrowen.mjs`), `verify:table`, `verify:bench`, `verify:learn`, `verify:mirrowen`.
 
 **This pass is partial in one respect, and says so.** Every stage now has a moving model, and one instrument (the piston) is operated by dragging the particles' container. The rest still grade a card in a tray or on a rail, a typed number or an answer dial, now with the cause moving beside the answer. The brief's bar ("the graded answer is the student's interaction with the particles") is met only for the piston; the other benches need a design for each (what the student drags to *be* the sorting or the sum), not a painter. See "Only the owner can judge these".
 

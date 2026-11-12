@@ -1,0 +1,6 @@
+{
+  "operationOpeners": ["set", "lay", "type", "put", "place", "drag", "turn", "slide", "tap", "press", "use", "add", "run", "stamp", "tray"],
+  "euphemism": ["gauge", "room", "rooms", "push", "pushes", "knocks", "squeeze", "holder", "needle", "bin", "bins", "pile", "piles", "heap", "pot", "recipe", "chips", "specks", "shots", "fulcrum", "arms", "balloon", "balloons", "hub", "slate", "stamp", "coder", "crests", "grip", "tug", "weight"],
+  "register": ["consequently", "exhibits", "exhibit", "possessing", "possesses", "thus", "hence", "whereby", "thereby", "regardless", "yields", "exclusively", "internuclear", "electrostatic", "lateral", "reorient", "thermodynamic", "microstates", "dependencies", "proportional", "inversely", "facilitates", "undergoes", "corresponds", "predominantly", "respectively"],
+  "motive": ["happy", "wants", "want", "prefers", "prefer", "likes", "tries", "trade", "trades", "reaching", "desire", "seeks", "greedy"]
+}
