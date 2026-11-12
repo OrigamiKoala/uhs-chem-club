@@ -127,7 +127,7 @@ const inked = (q, st, i, f0, scope) => {
 };
 const stagesWith = kind => { const out = []; quests.forEach(q => q.stages.forEach((st, i) => { const f = (st.table?.fixtures || []).find(x => x.kind === kind); if (f) out.push({ st, f, q, i }); })); return out; };
 
-const MODELS = ['press', 'window', 'probe', 'vapour', 'heatcurve', 'flask', 'solidtest', 'strip', 'jar', 'mlead'];
+const MODELS = ['press', 'window', 'probe', 'vapour', 'heatcurve', 'flask', 'solidtest', 'strip', 'mlead'];
 // The flask draws every water molecule of its window as three circles; the 3D crowd is capped at 220 spheres whatever the flat bench draws.
 const CAPS = { flask: 640 };
 for (const kind of MODELS) {
@@ -206,10 +206,9 @@ for (const kind of MODELS) {
   trays.every(t => draw(t, 1) && draw(t, 1) !== draw(t, 2.5)) ? ok('q1 stage 1: the particles in every tray move') : fail('q1 stage 1: a tray picture does not move');
 }
 
-/* The trays of q4 stage 4 and q6 stage 1 are pictures too, and the analyzer rings the molecule it read. */
+/* The trays of q6 stage 1 are pictures too, and the analyzer rings the molecule it read. */
 {
   const viewsOf = (id, no) => Object.values(MODEL.createTable(quests.find(q => q.id === id).stages[no].table, 't').zones.trays).map(t => t.view).sort().join(',');
-  viewsOf('q4-solids', 3) === 'crystal,glass' ? ok('q4 stage 4: the trays are a repeating pattern and an irregular one') : fail('q4 stage 4: tray views missing');
   viewsOf('q6-solution', 0) === 'apart,together' ? ok('q6 stage 1: the trays are particles apart and particles together') : fail('q6 stage 1: tray views missing');
   const hit = stagesWith('window')[0];
   const seq = inked(hit.q, hit.st, hit.i, hit.f, 'ring');

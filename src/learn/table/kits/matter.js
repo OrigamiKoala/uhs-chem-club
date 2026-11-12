@@ -40,6 +40,7 @@ function run(state, fid) {
   if (f.kind === 'probe') {
     const r = probeRead(state, fid);
     if (!r.item) return { noop: 'Put a card in the probe first.' };
+    if (f.props.accepts && !f.props.accepts.includes(r.item.id)) return { noop: 'This sample is for you to predict.' };
     return { stamp: { [r.item.id]: { grip: probeValue(r.item) } } };
   }
   const h = fixtureHandler(f.kind);
@@ -146,13 +147,13 @@ export const ionCard = (id, ion, symbol, r, at, extra = {}) => piece('mol', id, 
  * The probe: a slot for a card, a window of its molecules, and a key. `mode` 'grip' pulls a mole of a substance's molecules apart;
  * 'ion' drops a mole of gaseous ion in water and reads the heat given out. Returns the fixture and the slot (stand it where it says).
  */
-export function probeFixture(id, at, { mode = 'grip', title = 'Probe', runLabel = mode === 'ion' ? 'Drop In Water' : 'Pull Apart', w = 58 } = {}) {
+export function probeFixture(id, at, { mode = 'grip', title = 'Probe', runLabel = mode === 'ion' ? 'Drop In Water' : 'Separate', w = 58, accepts = null } = {}) {
   const top = contentTop(0);
   const h = Math.round((top + 30) * 10) / 10;
   const slotId = `${id}.well`;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   return {
-    fixture: { id, kind: 'probe', label: title, at: { ...at }, size: { w, h }, dials: {}, runLabel, props: { backdrop: true, slot: slotId, mode } },
+    fixture: { id, kind: 'probe', label: title, at: { ...at }, size: { w, h }, dials: {}, runLabel, props: { backdrop: true, slot: slotId, mode, ...(accepts ? { accepts } : {}) } },
     slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
     slotId,
     size: { w, h }

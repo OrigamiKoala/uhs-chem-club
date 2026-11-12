@@ -204,7 +204,7 @@
     {
       "id": "q5-crossing#2",
       "quest": "q5-crossing",
-      "question": "Beyond the exam: ice is warmed at a constant pressure of 0.3 kPa, which is below water's triple point pressure of 0.611 kPa. What happens?",
+      "question": "Ice is warmed at a constant pressure of 0.3 kPa, which is below water's triple point pressure of 0.611 kPa. What happens?",
       "options": [
         {
           "id": "a",
@@ -404,7 +404,7 @@
     {
       "id": "q7-separate#2",
       "quest": "q7-separate",
-      "question": "Beyond the exam: 1.0 mol of each of sugar, NaCl and CaCl₂ is dissolved in its own 1.0 kg of water. Treating each as ideal, which boils at the highest temperature?",
+      "question": "1.0 mol of each of sugar, NaCl and CaCl₂ is dissolved in its own 1.0 kg of water. Treating each as ideal, which boils at the highest temperature?",
       "options": [
         {
           "id": "a",
@@ -483,7 +483,7 @@
         {
           "id": "q1-states#b2",
           "quest": "q1-states",
-          "question": "A 1.00 L jar of liquid water weighs 1000 g and a 1.00 L jar of ice weighs 917 g. What does this say about the molecules?",
+          "question": "A 1.00 L jar of liquid water has a mass of 1000 g and a 1.00 L jar of ice has a mass of 917 g. What does this say about the molecules?",
           "options": [
             {
               "id": "a",
@@ -503,7 +503,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Both jars hold the same kind of molecule, so the lighter jar holds fewer of them in the same space. Each molecule in the ice has slightly more volume."
+          "explanation": "Both jars hold the same kind of molecule, so the jar with less mass holds fewer of them in the same space. Each molecule in the ice has slightly more volume."
         }
       ]
     },
@@ -586,7 +586,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "In a crystal every hold is alike, so all of them give way at one temperature. A glass is amorphous: its holds differ from place to place, so they give way a few at a time."
+          "explanation": "In a crystalline solid every bond is alike, so all of them break at one temperature. A glass is amorphous: its bonds differ from place to place, so they soften a few at a time."
         },
         {
           "id": "q4-solids#b2",

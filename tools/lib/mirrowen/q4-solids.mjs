@@ -6,9 +6,8 @@
 export const LEAKS = {
   1: [/\bweak/i, /\bionic\b/i, /\bions?\b/i, /\bbecause\b/i],
   3: [/\bamorphous\b/i, /\bcrystal/i, /\bpattern\b/i, /\border\b/i, /\bjumbled\b/i, /\bglass\b/i],
-  4: [/\bpattern\b/i, /\brepeat/i, /\bregular\b/i, /\brows?\b/i, /\bjumbled\b/i, /\bglass\b/i],
-  5: [/\bbecause\b/i, /\bconduct/i, /\bbrittle\b/i, /\bmalleable\b/i, /\bmetals?\b/i],
-  6: [/\bbecause\b/i, /\bconduct/i, /\bbrittle\b/i, /\bmalleable\b/i, /\bno pattern\b/i, /\bglass\b/i]
+  4: [/\bbecause\b/i, /\bconduct/i, /\bbrittle\b/i, /\bmalleable\b/i, /\bmetals?\b/i],
+  5: [/\bbecause\b/i, /\bconduct/i, /\bbrittle\b/i, /\bmalleable\b/i, /\bno pattern\b/i, /\bglass\b/i]
 };
 
 export async function check({ q, mod, MD, near, same, holds, start, done }) {
@@ -27,7 +26,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   // The kind of every sample is the CED's: metals flatten and light the lamp cold; salts shatter and light it only molten; the rest do not light it cold.
   for (const id of Object.keys(S)) {
     const s = S[id];
-    if (s.kind === 'metallic') holds((s.strike === 'flattens' || id === 'gallium') && s.current.cold && s.current.molten, // gallium fractures when struck, and no stage strikes it
+    if (s.kind === 'metallic') holds((s.strike === 'flattens' || id === 'gallium') && s.current.cold && s.current.molten,
        `${q}: ${id} is a metal`);
     if (s.kind === 'ionic') holds(s.strike === 'shatters' && !s.current.cold && s.current.molten, `${q}: ${id} is a salt`);
     if (s.kind === 'molecular') holds(!s.current.cold && !s.current.molten && S[id].melt.lo < 150, `${q}: ${id} is a molecular solid`);
@@ -39,20 +38,19 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   const C = mod.CHECKS;
   for (const s of C.S1) same(s.tray, S[s.solid].melt.lo < 150 && S[s.solid].kind === 'molecular' ? 'grips' : 'stronger', `${q} stage 1 (${s.id}'s tray)`);
   for (const s of C.S3) same(s.tray, S[s.solid].melt.lo === S[s.solid].melt.hi ? 'one' : 'range', `${q} stage 3 (${s.id}'s tray)`);
-  for (const s of C.S4) same(s.tray, S[s.solid].crystalline ? 'crystalline' : 'amorphous', `${q} stage 4 (${s.id}'s tray)`);
-  for (const s of [...C.S5, ...C.S6]) same(s.tray, S[s.solid].kind, `${q} sealed (${s.id}'s tray)`);
-  holds(new Set(C.S5.map(s => s.tray)).size === 4 && new Set(C.S6.map(s => s.tray)).size === 5, `${q}: a sealed stage has two samples of one kind`);
+  for (const s of [...C.S4, ...C.S5]) same(s.tray, S[s.solid].kind, `${q} sealed (${s.id}'s tray)`);
+  holds(new Set(C.S4.map(s => s.tray)).size === 4 && new Set(C.S5.map(s => s.tray)).size === 5, `${q}: a sealed stage has two samples of one kind`);
   // The heater: stage 1 stops at 200 °C, so only the low melters fall; every other stage heats past every sample's last fall.
   holds(C.S1.every(s => s.tray === 'grips' ? S[s.solid].melt.hi <= 200 && !S[s.solid].current.cold : S[s.solid].melt.hi > 200 || S[s.solid].current.cold), `${q} stage 1: the 200 °C heater and the lamp do not split the samples`);
   holds(C.S1.some(s => s.tray === 'stronger' && S[s.solid].melt.hi <= 200), `${q} stage 1: no sample melts low and is not molecular, so the melting trace alone answers it`);
-  for (const s of [...C.S3, ...C.S5, ...C.S6]) holds(S[s.solid].melt.hi <= 2000, `${q}: ${s.id} never runs inside the 2000 °C heater, so the molten lamp could not be tested`);
+  for (const s of [...C.S3, ...C.S4, ...C.S5]) holds(S[s.solid].melt.hi <= 2000, `${q}: ${s.id} never runs inside the 2000 °C heater, so the molten lamp could not be tested`);
 
   // A sealed sample is not read off its card; the tests are the evidence, and the window must not be on a sealed stage.
-  for (const i of [4, 5]) holds(!Object.values(start(mod, i).fixtures).some(f => f.props.view === 'window'), `${q} stage ${i + 1}: the window shows a sealed sample's picture`);
-  holds(Object.values(start(mod, 3).fixtures).every(f => f.noRun && f.props.view === 'window'), `${q} stage 4: the picture stage still has a test`);
-  // Stage 6's trap: the glass agrees with the salt on the hammer and on both lamps; only the melt trace tells them apart.
+  for (const i of [3, 4]) holds(!Object.values(start(mod, i).fixtures).some(f => f.props.view === 'window' || f.props.view === 'both'), `${q} stage ${i + 1}: the window shows a sealed sample's picture`);
+  holds(Object.values(start(mod, 2).fixtures).every(f => f.props.view === 'both'), `${q} stage 3: the merged stage shows both window and trace`);
+  // Stage 5's trap: the glass agrees with the salt on the hammer and on both lamps; only the melt trace tells them apart.
   const g = S.glass; const k = S.potassium;
-  holds(g.strike === k.strike && g.current.cold === k.current.cold && g.current.molten === k.current.molten && g.melt.lo !== g.melt.hi && k.melt.lo === k.melt.hi, `${q} stage 6: the glass and the salt do not differ only in the trace`);
+  holds(g.strike === k.strike && g.current.cold === k.current.cold && g.current.molten === k.current.molten && g.melt.lo !== g.melt.hi && k.melt.lo === k.melt.hi, `${q} stage 5: the glass and the salt do not differ only in the trace`);
   // ...and in stage 3 quartz and fused silica are the same atoms.
   same(S.quartz.formula, S.silica.formula, `${q} stage 3: quartz and fused silica are not the same atoms`);
   // The click: the glass is runny before the crystal of the same atoms starts to melt, so "higher" is false, and "alike" is false.
@@ -60,23 +58,23 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
 
   // The predict stage shows no instrument and no loose tool; no stage is solved by the untouched table.
   holds(!Object.values(start(mod, 1).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 2: the predict stage shows an instrument`);
-  for (const i of [0, 2, 3, 4, 5]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
+  for (const i of [0, 2, 3, 4]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
 
   // What the cards keep after the solution is played on the real table, against the values worked here.
   const want = {
     x1: { melt: [1713, 1713], strike: 'shatters', cold: false, molten: false }, x2: { melt: [1085, 1085], strike: 'flattens', cold: true, molten: true },
     x3: { melt: [80, 80], strike: 'crumbles', cold: false, molten: false }, x4: { melt: [801, 801], strike: 'shatters', cold: false, molten: true }
   };
-  const end5 = done(mod, 4);
+  const end4 = done(mod, 3);
   for (const [id, w] of Object.entries(want)) {
-    const p = end5.pieces[id].props;
-    same(`${p.melt.lo},${p.melt.hi}`, w.melt.join(), `${q} stage 5 (${id} melt)`); same(p.strike, w.strike, `${q} stage 5 (${id} strike)`);
-    same(`${p.cur.cold},${p.cur.molten}`, `${w.cold},${w.molten}`, `${q} stage 5 (${id} lamps)`);
+    const p = end4.pieces[id].props;
+    same(`${p.melt.lo},${p.melt.hi}`, w.melt.join(), `${q} stage 4 (${id} melt)`); same(p.strike, w.strike, `${q} stage 4 (${id} strike)`);
+    same(`${p.cur.cold},${p.cur.molten}`, `${w.cold},${w.molten}`, `${q} stage 4 (${id} lamps)`);
   }
-  const end6 = done(mod, 5);
-  const gl = end6.pieces.x1.props;
-  same(`${gl.melt.lo},${gl.melt.hi},${gl.strike},${gl.cur.cold},${gl.cur.molten}`, '510,700,shatters,false,true', `${q} stage 6 (the window glass record)`);
-  same(`${end6.pieces.x5.props.melt.lo},${end6.pieces.x5.props.strike},${end6.pieces.x5.props.cur.molten}`, '770,shatters,true', `${q} stage 6 (the potassium chloride record)`);
+  const end5 = done(mod, 4);
+  const gl = end5.pieces.x1.props;
+  same(`${gl.melt.lo},${gl.melt.hi},${gl.strike},${gl.cur.cold},${gl.cur.molten}`, '510,700,shatters,false,true', `${q} stage 5 (the window glass record)`);
+  same(`${end5.pieces.x5.props.melt.lo},${end5.pieces.x5.props.strike},${end5.pieces.x5.props.cur.molten}`, '770,shatters,true', `${q} stage 5 (the potassium chloride record)`);
   const end1 = done(mod, 0);
   same(JSON.stringify(end1.pieces.salt.props.melt), JSON.stringify({ held: true, maxT: 200 }), `${q} stage 1 (the salt holds to 200 °C)`);
   same(end1.pieces.ice.props.melt.lo, 0, `${q} stage 1 (ice)`);

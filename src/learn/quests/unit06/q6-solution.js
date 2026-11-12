@@ -2,17 +2,16 @@
  * Unit 6 · Bench 6 — Taken Into Solution (q6-solution)
  *
  * A dosing station on the matter kit (`table/kits/matter.js`, the flask bench in `matter-flask.js`): a balance pan, a volumetric flask with a
- * mark on its neck, and a window that draws a small drop of what is in the flask, particle by particle. Eight stages and ONE click: the
+ * mark on its neck, and a window that draws a small drop of what is in the flask, particle by particle. Seven stages and ONE click: the
  * belief that a mole of anything dissolved puts a mole of particles in the water.
  *
  *   1  four white powders into water, filed by what the window shows         -> solution, solute, solvent
- *   2  5.85 g of salt made up to 400 mL, a volume the dial lacks, typed                      -> molarity
- *   3  2.00 M stock poured in, topped up to 100 mL, typed between the steps   -> dilution
+ *   2  5.85 g of salt made up to 400 mL, a volume the dial lacks, typed      -> molarity
+ *   3  2.00 M stock poured in, topped up to 100 mL, typed between the steps  -> dilution
  *   4  PREDICT: 0.100 mol of salt, of calcium chloride, of sugar: which puts the most particles in the water?
- *   5  TEST: the window for each, then the particles in 0.100 mol of CaCl2, typed -> dissolving into ions
+ *   5  TEST: the window for each, then the moles of particles in 0.100 mol of CaCl2, typed -> dissolving into ions
  *   6  salt, sugar, wax and acetone into water and into oil                  -> like dissolves like, miscible
- *   7  four salts in a cup, ranked by the bath                                -> exothermic and endothermic dissolving
- *   8  three sealed flasks with the same crowd of particles, ranked by molarity
+ *   7  three sealed flasks with the same crowd of particles, ranked by molarity
  *
  * THE WRONG MODEL IS ON THE TABLE. The prediction's first card is "the same number from all three, 0.100 mol each". The window's drop
  * shows 4 formula units of each, and 8, 12 and 4 particles.
@@ -25,14 +24,14 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { matterTable, note, charge, cupFixture, cupRead, plaqueFixture, fixed, whereIs, leadFixture } from '../../table/kits/matter.js';
+import { matterTable, note, plaqueFixture, fixed, whereIs, leadFixture } from '../../table/kits/matter.js';
 import { flaskFixture, sample, flaskRead, dropFor } from '../../table/kits/matter-flask.js';
-import { SOLUTES, SOLUTION_ENTHALPY } from '../../engine/matterdata.js';
+import { SOLUTES } from '../../engine/matterdata.js';
 import {
-  STUFF, particlesIn, molarityOf, bathChange, countsOf, dropOf, unitsFor, AVOGADRO
+  STUFF, molarityOf, countsOf, dropOf, unitsFor
 } from '../../engine/matterdata-flask.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 
 export const VOCABULARY = [
@@ -46,8 +45,8 @@ export const VOCABULARY = [
   { term: /\bsolub/i, introducedAt: 6 }
 ];
 
-/** Moles and molar mass are Tallow's; the grip between molecules is bench 2's; the cup is Ember Reach's. */
-export const BUILDS_ON = ['unit01/q6-weigh', 'unit06/q2-grip', 'unit05/q2-calorimetry'];
+/** Moles and molar mass are Tallow's; the grip between molecules is bench 2's. */
+export const BUILDS_ON = ['unit01/q6-weigh', 'unit06/q2-grip'];
 
 const SPEAKER = 'Vess';
 
@@ -84,10 +83,10 @@ const FLASK_ML = 100;
 const STOCKS = [10, 20, 30, 40, 50];
 const V_ASKED = (WANT_M * FLASK_ML) / STOCK_M;
 const stockM = ml => (STOCK_M * ml) / FLASK_ML;
-// Stage 5: 0.100 mol of each in a 500 mL flask.
+// Stage 5: 0.100 mol of each in a 500 mL flask -> moles of particles in water.
 const MOLES = 0.1;
 const FIVE_ML = 500;
-const N_ASKED = particlesIn(MOLES, 'CaCl2');
+const N_ASKED = MOLES * 3;
 // Stage 6: four samples, two liquids.
 const LIKE = [
   { id: 'salt', sub: 'NaCl', label: 'Salt', tray: 'water' },
@@ -96,13 +95,7 @@ const LIKE = [
   { id: 'sugar', sub: 'sugar', label: 'Sugar', tray: 'water' }
 ];
 const LIKE_UNITS = 4;
-// Stage 7: 0.100 mol of each salt into 100 g of water at 22 degrees.
-const SALT_IDS = ['NaCl', 'KCl', 'CaCl2', 'NH4NO3'];
-const CUP_WATER = 100;
-const CUP_T0 = 22;
-const riseOf = id => bathChange(id, MOLES, CUP_WATER);
-const BY_BATH = [...SALT_IDS].sort((a, b) => riseOf(a) - riseOf(b));
-// Stage 8: three sealed flasks of 250 mL with the same crowd of particles.
+// Stage 7: three sealed flasks of 250 mL with the same crowd of particles.
 const SEALED = [
   { id: 'x', label: 'X', sub: 'NaCl', M: 0.3 },
   { id: 'y', label: 'Y', sub: 'sugar', M: 0.6 },
@@ -130,13 +123,14 @@ export const STAGES = [
     return {
       id: 's1-powders',
       title: 'Four White Powders',
-      prompt: 'File each white powder by what it does when it goes into water.',
+      briefing: 'A solution is a mixture that is the same all the way through: the solute is spread through the solvent.',
+      prompt: 'Which powders dissolve in water?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         pieces: cards,
         fixtures: [fl.fixture],
-        zones: { slots: [fl.mouth], trays: [tray('spread', 'Spreads out', 94, 34, 17, 'apart'), tray('lumps', 'Stays in lumps', 131, 34, 17, 'together')] }
+        zones: { slots: [fl.mouth], trays: [tray('spread', 'Dissolves', 94, 34, 17, 'apart'), tray('lumps', 'Does not dissolve', 131, 34, 17, 'together')] }
       }),
       hints: [
         'Use the flask: drag each sample onto its mouth, look at the window, then drag the sample into a tray.',
@@ -170,7 +164,11 @@ export const STAGES = [
     return {
       id: 's2-molarity',
       title: 'Salt in a Flask',
-      prompt: 'Type the moles of salt in each litre of solution once the salt on the balance is made up to 400 mL.',
+      briefing: {
+        body: 'Molarity, M, is the moles of solute in each litre of solution.',
+        worked: ['11.7 g ÷ 58.5 g/mol = 0.200 mol', 'in 0.500 L: 0.200 ÷ 0.500 = 0.400 M']
+      },
+      prompt: 'What is the molarity when this salt is made up to 400 mL?',
       entry: { id: 'm', label: 'Moles per litre', unit: 'mol/L' },
       widget,
       table: matterTable({
@@ -205,11 +203,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const fl = flaskFixture('flask', 2, 2, { stocks: STOCKS, volume: FLASK_ML, showM: true });
-    const plate = plaqueFixture('want', 'Wanted', { x: 110, y: 14 }, [`${FLASK_ML} mL of ${WANT_M.toFixed(3)} M`], { w: 44 });
+    const plate = plaqueFixture('target', 'Target', { x: 110, y: 14 }, [`${FLASK_ML} mL of ${WANT_M.toFixed(3)} M`], { w: 44 });
     return {
       id: 's3-dilute',
       title: 'Stock to a Flask',
-      prompt: 'Type how many mL of the 2.00 M stock make 100 mL of 0.500 M when topped up with water.',
+      prompt: 'How many mL of 2.00 M stock, topped up to 100 mL, make a 0.500 M solution?',
       entry: { id: 'ml', label: 'Stock needed', unit: 'mL' },
       widget,
       table: matterTable({
@@ -220,7 +218,7 @@ export const STAGES = [
       }),
       hints: [
         'Drag the stock into the flask and turn the "Stock poured in" dial, reading the molarity under the window.',
-        'Compare the molarity at the two steps of the dial either side of the 0.500 M you want.',
+        'Compare the molarity at the two steps of the dial either side of the 0.500 M target.',
         'The moles poured in from the stock are the moles that end up in the flask, so the molarity grows in step with the volume poured.'
       ],
       check(state) {
@@ -285,43 +283,42 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   (() => {
     const fl = flaskFixture('flask', 2, 2, { volume: FIVE_ML });
-    const plate = plaqueFixture('n', 'One mole', { x: 112, y: 14 }, [`${AVOGADRO} × 10²³ particles`], { w: 46 });
     const subs = [['nacl', 'NaCl', 'Table salt'], ['cacl2', 'CaCl2', 'Calcium chloride'], ['sugar', 'sugar', 'Sugar']];
     return {
       id: 's5-ions',
       title: 'Particles in the Water',
       get prompt() {
         const guess = recall(QUEST_KEY);
-        const ask = 'type the particles that 0.100 mol of calcium chloride puts in the water, in units of 10²³.';
-        return guess && GUESS_LABEL[guess] ? `You guessed ${GUESS_LABEL[guess]}: ${ask}` : `Type the particles that 0.100 mol of calcium chloride puts in the water, in units of 10²³.`;
+        const ask = 'how many moles of particles does 0.100 mol of calcium chloride put in the water?';
+        return guess && GUESS_LABEL[guess] ? `You guessed ${GUESS_LABEL[guess]}: ${ask}` : 'How many moles of particles does 0.100 mol of calcium chloride put in the water?';
       },
-      entry: { id: 'n', label: 'Particles', unit: '× 10²³' },
+      entry: { id: 'n', label: 'Moles of particles', unit: 'mol' },
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
         pieces: subs.map(([id, sub, label], i) => sample(id, sub, label, cardAt(i), { moles: MOLES, shown: '0.100 mol' })),
-        fixtures: [fl.fixture, plate],
+        fixtures: [fl.fixture],
         zones: { slots: [fl.mouth] }
       }),
       hints: [
-        'Drag each sample into the flask and look at the window; the plate gives the number in a mole.',
-        'Count the kinds of particle in the window and how many of each there are for each sample.',
-        'Find how many particles one calcium chloride becomes, then multiply by the moles and by the number in a mole.'
+        'Drag each sample into the flask and look at the window.',
+        'Count how many separate particles one formula unit of each sample becomes in the window.',
+        'Multiply the 0.100 mol of calcium chloride by the number of particles each unit becomes.'
       ],
       check(state) {
         const t = state.table;
         const v = entryNumber(t, 'n');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
-        if (Math.abs(v - N_ASKED) <= 0.03) return { ok: true };
-        if (Math.abs(v - MOLES * AVOGADRO) <= 0.01) return { ok: false, msg: `${v} × 10²³ is one particle for each calcium chloride, and the window shows more than one in the water.` };
-        return { ok: false, msg: `${v} × 10²³ does not follow from the 0.100 mol on the card and the particles the window shows.` };
+        if (Math.abs(v - N_ASKED) <= 0.01) return { ok: true };
+        if (Math.abs(v - MOLES) <= 0.01) return { ok: false, msg: `${v} mol is one particle for each calcium chloride, and the window shows more than one in the water.` };
+        return { ok: false, msg: `${v} mol does not follow from the 0.100 mol on the card and the particles the window shows.` };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
         const verdict = guess === 'cacl2' ? 'You expected calcium chloride to put the most in, and the window agreed. '
           : guess && GUESS_LABEL[guess] ? 'The window did not agree with your prediction, which is how a guess gets better. ' : '';
         return {
-          log: '0.100 mol of calcium chloride put 1.81 × 10²³ particles in the water.',
+          log: '0.100 mol of calcium chloride put 0.300 mol of particles in the water.',
           title: 'Dissolving Into Ions',
           body: `${verdict}A salt that dissolves in water separates into its ions, each wrapped in water. A mole of CaCl₂ puts three moles of particles in, a mole of NaCl two, and sugar one, since its molecules stay whole.`
         };
@@ -335,7 +332,7 @@ export const STAGES = [
     return {
       id: 's6-like',
       title: 'Water and Oil',
-      prompt: 'File each sample under the solvent, or both solvents, that it dissolves in.',
+      prompt: 'Which samples dissolve in water, which in oil, and which in both?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
@@ -370,60 +367,19 @@ export const STAGES = [
       reward: {
         log: 'Salt and sugar spread in water, wax in oil, and acetone in both.',
         title: 'Like Dissolves Like',
-        body: 'Substances whose particles pull on each other in similar ways tend to dissolve in each other: like dissolves like. Salt and sugar are soluble in water, wax in hexane, and acetone, which is miscible with both, in either.'
+        body: 'Substances whose particles pull on each other in similar ways tend to dissolve in each other: like dissolves like. Salt and sugar are soluble in water, wax in oil, and acetone, which is miscible with both, in either.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const c = cupFixture('cup', { x: 28, y: 31 }, { title: `Bath · ${CUP_WATER} g`, water: CUP_WATER, T0: CUP_T0 });
-    const tin = (id, at) => charge(id.toLowerCase(), SOLUTES[id].name.replace(/^./, ch => ch.toUpperCase()), at, { moles: MOLES, dH: SOLUTION_ENTHALPY[id], shown: '0.100 mol' });
-    const ids = SALT_IDS.map(s => s.toLowerCase());
-    return {
-      id: 's7-cup',
-      title: 'Four Salts in a Bath',
-      prompt: 'Order the four salts by the temperature the bath ends at after each dissolves in it.',
-      widget,
-      table: matterTable({
-        pieces: SALT_IDS.map((id, i) => tin(id, { x: 66 + i * 24, y: 54 })),
-        fixtures: [c.fixture],
-        zones: {
-          slots: [c.slot],
-          rail: { at: { x: 104, y: 34 }, size: { w: 88, h: 16 }, first: 'Coolest bath', last: 'Warmest bath', items: ids, start: ['cacl2', 'nacl', 'nh4no3', 'kcl'] }
-        }
-      }),
-      hints: [
-        'Use the cup, the four samples and the strip.',
-        'Compare the bath change each sample kept, including whether it is above or below zero.',
-        'Rank from the sample that cooled the bath most on the left to the one that warmed it most on the right.'
-      ],
-      check(state) {
-        const t = state.table;
-        const order = t.zones.rail.order;
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples on the strip.' };
-        if (order.join() === BY_BATH.map(s => s.toLowerCase()).join()) return { ok: true };
-        const tins = order.map(id => t.pieces[id]);
-        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every sample has been in the cup yet.' };
-        const k = tins.findIndex((p, i) => i > 0 && tins[i - 1].props.rise > p.props.rise);
-        return { ok: false, msg: `${tins[k - 1].label} sits left of ${tins[k].label}, and the bath changed ${fixed(tins[k - 1].props.rise, 1, true)} °C for the one and ${fixed(tins[k].props.rise, 1, true)} °C for the other.` };
-      },
-      reward: {
-        log: 'Calcium chloride warmed the bath; the other three cooled it.',
-        title: 'Heat of Solution',
-        body: 'Dissolving breaks attractions between particles and makes new ones with water. If the new ones are stronger, heat leaves and the bath warms (exothermic); if weaker, heat enters and the bath cools (endothermic).'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
     const fl = flaskFixture('flask', 2, 2, { volume: 250, count: true });
     const cards = SEALED.map((s, i) => sample(s.id, s.sub, s.label, cardAt(i), { made: true, grams: s.grams, mL: s.mL, shown: 'sealed' }));
     return {
       id: 's8-sealed',
       title: 'Three Sealed Flasks',
-      prompt: 'Order the three sealed flasks by the molarity of what was dissolved in each, lowest first.',
+      prompt: 'Which sealed flask has the lowest molarity and which the highest?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
@@ -469,8 +425,7 @@ const NOTES = {
   4: ['Drag the card you choose into the slot.'],
   5: ['Drag a sample into the flask, then type your answer.'],
   6: ['Drag a sample in, turn the dial, then file it.'],
-  7: ['Drag a sample onto the cup, then put the sample on the strip.'],
-  8: ['Drag a flask card onto the flask, then put it on the strip.']
+  7: ['Drag a flask card onto the flask, then put it on the strip.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -482,7 +437,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A solute spreads through a solvent as separate particles, and a salt breaks into its ions. Molarity is moles per litre of solution, and a dilution keeps the moles. Like dissolves like, and dissolving warms or cools the bath.'
+      body: 'A solute spreads through a solvent as separate particles, and a salt breaks into its ions. Molarity is moles per litre of solution, a dilution keeps the moles, and like dissolves like.'
     }
   ]
 };
@@ -494,7 +449,6 @@ export const DEBRIEF = {
 const put = (piece, to) => ({ place: { piece, to } });
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
 const typed = (entry, value) => ({ type: { entry, value: String(value) } });
-const tin = id => id.toLowerCase();
 
 const filePowders = tray => POWDERS.flatMap(s => [put(s.id, MOUTH), put(s.id, `tray:${tray(s)}`)]);
 
@@ -503,9 +457,8 @@ export const SOLUTIONS = [
   [put('salt', PAN), put('salt', MOUTH), dial('flask', 'fill', 2), typed('m', '0.250')],
   [put('stock', MOUTH), dial('flask', 'stock', 2), typed('ml', '25')],
   [put('same', 'slot:guess')],
-  [put('cacl2', MOUTH), typed('n', '1.81')],
+  [put('cacl2', MOUTH), typed('n', '0.300')],
   LIKE.flatMap(s => [dial('flask', 'solvent', 1), put(s.id, MOUTH), dial('flask', 'solvent', 2), put(s.id, `tray:${s.tray}`)]),
-  BY_BATH.flatMap((id, i) => [put(tin(id), 'slot:cup.mouth'), put(tin(id), `rail:${i}`)]),
   [...SEALED.map(s => put(s.id, MOUTH)), ...SEALED_BY_M.map((id, i) => put(id, `rail:${i}`))]
 ];
 
@@ -515,9 +468,8 @@ export const MISSES = [
   [put('salt', PAN), put('salt', MOUTH), typed('m', '0.100')],
   [put('stock', MOUTH), typed('ml', '50')],
   [],
-  [put('cacl2', MOUTH), typed('n', '0.602')],
+  [put('cacl2', MOUTH), typed('n', '0.100')],
   LIKE.flatMap(s => [dial('flask', 'solvent', 1), put(s.id, MOUTH), dial('flask', 'solvent', 2), put(s.id, `tray:${s.id === 'salt' ? 'both' : s.tray}`)]),
-  [...SALT_IDS].sort((a, b) => Math.abs(riseOf(a)) - Math.abs(riseOf(b))).flatMap((id, i) => [put(tin(id), 'slot:cup.mouth'), put(tin(id), `rail:${i}`)]),
   [...SEALED.map(s => put(s.id, MOUTH)), ...['y', 'x', 'z'].map((id, i) => put(id, `rail:${i}`))]
 ];
 
@@ -543,6 +495,6 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = {
-  POWDERS, SALT_G, M_ASKED, ASKED_ML, STOCK_M, WANT_M, FLASK_ML, V_ASKED, STOCKS, MOLES, N_ASKED, LIKE, BY_BATH, CUP_WATER, SEALED, SEALED_BY_M, FIVE_ML, POWDER_UNITS, LIKE_UNITS
+  POWDERS, SALT_G, M_ASKED, ASKED_ML, STOCK_M, WANT_M, FLASK_ML, V_ASKED, STOCKS, MOLES, N_ASKED, LIKE, SEALED, SEALED_BY_M, FIVE_ML, POWDER_UNITS, LIKE_UNITS
 };
-export { flaskRead, dropFor, cupRead };
+export { flaskRead, dropFor };

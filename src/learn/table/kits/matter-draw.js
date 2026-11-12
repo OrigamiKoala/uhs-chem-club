@@ -140,30 +140,82 @@ function paintProbe(ctx, f, state, b) {
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(wx)) + 0.5, Math.round(F.y(wy)) + 0.5, Math.round(F.len(ww)), Math.round(F.len(wh)));
   if (r.item) {
     const id = r.item.props.ion ? null : r.item.props.substance;
-    const unit = F.len(2.1);
-    // Four molecules in two rows; pulled, they stand at the corners of the window.
-    const near = [[-1.5, -1.9], [1.5, -1.9], [-1.5, 1.9], [1.5, 1.9]];
-    const far = [[-ww * 0.38, -wh * 0.3], [ww * 0.38, -wh * 0.3], [-ww * 0.38, wh * 0.3], [ww * 0.38, wh * 0.3]];
+    const sub = id ? SUBSTANCES[id] : null;
+    const force = sub?.force || 'dispersion';
+    const unit = F.len(2.2);
     const cx = F.x(wx + ww / 2); const cy = F.y(wy + wh / 2);
-    // Pulling takes a moment: the molecules glide from their places to the corners, shaking all the while.
     const g = glide(`${b.scope || ''}probe:${f.id}:${r.item.id}`, r.pulled ? 1 : 0, b.clock || 0, { dur: 1.8 });
     const t = b.clock || 0;
-    for (let i = 0; i < 4; i++) {
-      const nx = near[i][0] * 3.2; const ny = near[i][1] * 3.2;
-      const [sx, sy] = shakeAt(i, t, 0.35 * (1 - 0.6 * g), speedAt(20));
-      const dx = nx + (far[i][0] - nx) * g + sx; const dy = ny + (far[i][1] - ny) * g + sy;
-      if (id) paintGlyph(ctx, id, cx + F.len(dx), cy + F.len(dy), unit * 0.62, { cloud: Boolean(r.item.props.cloud) });
-      else { ctx.fillStyle = '#2f3d4a'; ctx.beginPath(); ctx.arc(cx + F.len(dx), cy + F.len(dy), F.len((r.item.props.r / 140) * 1.5), 0, Math.PI * 2); ctx.fill(); }
-    }
+    const nearX = 4.6;
+    const farX = ww * 0.34;
+    const sep = nearX + (farX - nearX) * g;
+    const linkAlpha = Math.max(0, 1 - g * 1.4);
+
     if (p.mode === 'ion') {
-      // Water molecules close round the ion: two small bent glyphs that come in when it is dropped.
-      ctx.globalAlpha = 0.35 + 0.65 * g;
-      for (const [dx, dy] of [[-0.8, -0.5], [0.8, -0.5], [0, 0.7]]) paintGlyph(ctx, 'H2O', cx + F.len(dx * 6), cy + F.len(dy * 5), unit * 0.4);
-      ctx.globalAlpha = 1;
+      // Ion in the centre; two water molecules turn their δ− (oxygen) ends toward it as it enters water.
+      const ionR = F.len((r.item.props.r / 140) * 1.8);
+      const [sx, sy] = shakeAt(0, t, 0.25, speedAt(20));
+      const ix = cx + F.len(sx); const iy = cy + F.len(sy);
+      ctx.fillStyle = '#2f3d4a'; ctx.beginPath(); ctx.arc(ix, iy, ionR, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = DUST; ctx.stroke();
+      const wOff = [[-sep * 1.15, -2.2], [sep * 1.15, 2.2]];
+      for (let i = 0; i < 2; i++) {
+        const [wx0, wy0] = wOff[i];
+        const [wsx, wsy] = shakeAt(i + 1, t, 0.25, speedAt(20));
+        const mx = cx + F.len(wx0 + wsx); const my = cy + F.len(wy0 + wsy);
+        if (linkAlpha > 0.05) {
+          ctx.save(); ctx.globalAlpha = linkAlpha; ctx.strokeStyle = AMBER; ctx.setLineDash([2, 2]);
+          ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(mx, my); ctx.stroke(); ctx.restore();
+        }
+        paintGlyph(ctx, 'H2O', mx, my, unit * 0.55, { marks: true });
+      }
+    } else {
+      // Two molecules approaching or pulled apart.
+      const [s0x, s0y] = shakeAt(0, t, 0.28 * (1 - 0.5 * g), speedAt(20));
+      const [s1x, s1y] = shakeAt(1, t, 0.28 * (1 - 0.5 * g), speedAt(20));
+      const x0 = cx - F.len(sep - s0x); const y0 = cy + F.len(s0y);
+      const x1 = cx + F.len(sep + s1x); const y1 = cy + F.len(s1y);
+
+      if (force === 'dispersion') {
+        // Clouds flicker lopsided in step; larger clouds lop further.
+        const cloudScale = sub?.r ? (sub.r / 216) : 0.7;
+        const lop = Math.sin(t * 3.0) * cloudScale * (1 - 0.7 * g);
+        const shift = F.len(lop * 1.1);
+        for (const [mx, my] of [[x0, y0], [x1, y1]]) {
+          if (r.item.props.cloud) {
+            const cr = F.len(cloudRadius(id) * 1.7);
+            ctx.save();
+            ctx.fillStyle = lop >= 0 ? 'rgba(224,168,75,0.18)' : 'rgba(130,170,210,0.18)';
+            ctx.beginPath(); ctx.arc(mx + shift, my, cr, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+          }
+          paintGlyph(ctx, id, mx, my, unit * 0.7, { cloud: Boolean(r.item.props.cloud) });
+          if (linkAlpha > 0.15 && Math.abs(lop) > 0.2) {
+            const sgn = lop > 0;
+            say(ctx, sgn ? 'δ−' : 'δ+', mx + F.len(1.8), my - F.len(2.8), F.size(1.6, 5.5), { align: 'center', color: sgn ? PLATE_COLORS.text : AMBER });
+            say(ctx, sgn ? 'δ+' : 'δ−', mx - F.len(1.8), my - F.len(2.8), F.size(1.6, 5.5), { align: 'center', color: sgn ? AMBER : PLATE_COLORS.text });
+          }
+        }
+      } else if (force === 'dipole') {
+        if (linkAlpha > 0.05) {
+          ctx.save(); ctx.globalAlpha = linkAlpha * 0.8; ctx.strokeStyle = DUST; ctx.setLineDash([1.5, 2]);
+          ctx.beginPath(); ctx.moveTo(x0 + F.len(1.5), y0); ctx.lineTo(x1 - F.len(1.5), y1); ctx.stroke(); ctx.restore();
+        }
+        paintGlyph(ctx, id, x0, y0, unit * 0.7, { marks: true });
+        paintGlyph(ctx, id, x1, y1, unit * 0.7, { marks: true });
+      } else {
+        // Hydrogen bond: dashed amber line from H on N/O/F to lone pair on the neighbour.
+        if (linkAlpha > 0.05) {
+          ctx.save(); ctx.globalAlpha = linkAlpha; ctx.strokeStyle = AMBER; ctx.lineWidth = 1.4; ctx.setLineDash([2.2, 2]);
+          ctx.beginPath(); ctx.moveTo(x0 + F.len(1.2), y0); ctx.lineTo(x1 - F.len(1.2), y1); ctx.stroke(); ctx.restore();
+        }
+        paintGlyph(ctx, id, x0, y0, unit * 0.7, { marks: true });
+        paintGlyph(ctx, id, x1, y1, unit * 0.7, { marks: true });
+      }
     }
   }
   const y = f.size.h - 3.6;
-  say(ctx, p.mode === 'ion' ? 'HEAT GIVEN OUT, PER MOLE' : 'HEAT TO PULL ONE MOLE APART', F.x(3), F.y(y - 4.2), F.size(1.9, 5.8), { color: DIM });
+  say(ctx, p.mode === 'ion' ? 'HEAT GIVEN OUT, PER MOLE' : 'HEAT TO SEPARATE ONE MOLE', F.x(3), F.y(y - 4.2), F.size(1.9, 5.8), { color: DIM });
   say(ctx, r.pulled ? `${fmtKJ(r.value)} kJ` : r.item ? '—' : '', F.x(3), F.y(y), F.size(3.4, 8), { color: r.pulled ? AMBER : DUST, weight: 700 });
 }
 

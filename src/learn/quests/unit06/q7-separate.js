@@ -11,11 +11,11 @@
  *   3  the black ink on the strip, the red spot's fraction of the wet edge, typed        -> chromatography, solvent front, Rf
  *   4  the same ink in a nonpolar liquid: the dyes in order of travel                    -> polarity read from a chromatogram
  *   5  three liquids in a still, ranked by when each comes over                           -> distillation
- *   6  BEYOND THE EXAM: a salted pot's boiling point, typed                               -> boiling point elevation, colligative property
+ *   6  a salted pot's boiling point, typed                                                -> boiling point elevation, colligative property
  *   7  sand, salt and water: lay steps on the plan board until each part is alone
  *
- * THE STRIP IS A SIMULATION and the bench says so. The still treats the liquids as an ideal mixture and says so. Stage 6 is past the exam
- * and says so. This quest pays no XP, writes no Submission and never reaches Standings.
+ * THE STRIP IS A SIMULATION and the bench says so. The still treats the liquids as an ideal mixture and says so. This quest pays no XP,
+ * writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
@@ -123,8 +123,8 @@ export const STAGES = [
       get prompt() {
         const g = recall(QUEST_KEY);
         return g && GUESS_LABEL[g]
-          ? `You guessed ${GUESS_LABEL[g]}: file each mixture under the method that separates its solid from the water.`
-          : 'File each mixture under the method that separates its solid from the water.';
+          ? `You guessed ${GUESS_LABEL[g]}: which mixtures can be separated by filtering, and which need the water boiled off?`
+          : 'Which mixtures can be separated by filtering, and which need the water boiled off?';
       },
       widget,
       table: matterTable({
@@ -171,7 +171,8 @@ export const STAGES = [
     return {
       id: 's3-rf',
       title: 'Black Ink',
-      prompt: 'Type how far the red spot travelled as a fraction of how far the liquid travelled.',
+      briefing: 'In chromatography a liquid climbs a strip of paper and carries each dye a different distance. A dye\'s retention factor, Rf, is its distance divided by the distance the liquid travelled.',
+      prompt: 'What is the Rf of the red dye?',
       entry: { id: 'rf', label: 'Fraction', unit: '' },
       widget,
       table: matterTable({
@@ -209,7 +210,7 @@ export const STAGES = [
     return {
       id: 's4-solvent',
       title: 'Another Liquid',
-      prompt: 'Order the three dyes by how far each travelled in hexane and acetone.',
+      prompt: 'In hexane and acetone, which dye travels least and which furthest?',
       widget,
       table: matterTable({
         pieces: [inkCard('ink', { ...strip.slot.at }, { ran: { water: FRONT_CM } }, { zone: `slot:${strip.slotId}` }), ...cards],
@@ -250,7 +251,7 @@ export const STAGES = [
     return {
       id: 's5-still',
       title: 'Three Liquids',
-      prompt: 'Order acetone, ethanol and water by when each comes over into the receiver.',
+      prompt: 'Which liquid comes over first and which last?',
       widget,
       table: matterTable({
         pieces: cards,
@@ -289,8 +290,9 @@ export const STAGES = [
     const cards = [soluteCard('sugar', 'sugar', { x: 110, y: 12 }), soluteCard('nacl', 'NaCl', { x: 110, y: 32 }), soluteCard('cacl2', 'CaCl2', { x: 110, y: 52 })];
     return {
       id: 's6-colligative',
-      title: 'Beyond The Exam: A Salted Flask',
-      prompt: 'Type how many degrees hotter than water alone boils with 3.00 mol of calcium chloride, CaCl₂, dissolved in 2.00 kg of water.',
+      title: 'A Salted Flask',
+      briefing: 'Dissolved particles raise the boiling point of water. Each mole of particles in a kilogram of water raises it by 0.51 °C, whatever the particles are.',
+      prompt: 'How many degrees above 100 °C does water boil with 3.00 mol of CaCl₂ in 2.00 kg?',
       entry: { id: 'rise', label: 'Rise in boiling point', unit: '°C' },
       widget,
       table: matterTable({ pieces: cards, fixtures: [boil.fixture], zones: { slots: [boil.slot] } }),
@@ -312,7 +314,7 @@ export const STAGES = [
       reward: {
         log: 'A salted flask boils hotter, in step with the number of dissolved particles.',
         title: 'Boiling Point Elevation',
-        body: 'Beyond the exam: dissolved particles raise water\'s boiling point by ΔT = i K_b m, where i is the particles one formula unit makes. It counts particles, not what they are: a colligative property.'
+        body: '1.50 mol of CaCl₂ per kilogram is 4.50 mol of particles, a boiling point elevation of 2.3 °C. A property that counts particles only is a colligative property.'
       }
     };
   })(),
@@ -325,7 +327,7 @@ export const STAGES = [
     return {
       id: 's7-plan',
       title: 'Sand, Salt and Water',
-      prompt: 'Lay steps on the row until the sand, the salt and the water each end up alone.',
+      prompt: 'Which steps, in which order, leave the sand, the salt and the water each alone?',
       widget,
       table: matterTable({
         pieces: cards,
@@ -367,7 +369,7 @@ const NOTES = {
   3: ['Drag the ink into the strip, press the key, then read the ruler and type.'],
   4: ['Set the dial to a liquid, press the key, then put the dyes on the rail.'],
   5: ['Press the key until the receiver is full, then put the cards on the rail.'],
-  6: ['Drag a card into the flask, set the dial, press the key, then type.', 'This stage is beyond the exam.'],
+  6: ['Drag a card into the flask, set the dial, press the key, then type.'],
   7: ['Drag step cards onto the row. The board shows what they do.']
 };
 for (const k of Object.keys(NOTES)) if (!NOTES[k].length) delete NOTES[k];

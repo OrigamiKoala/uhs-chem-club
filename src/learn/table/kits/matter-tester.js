@@ -98,7 +98,7 @@ registerPiece('solid', {
  * range in °C; `view` 'window' swaps the test panel for a picture of the particles and takes the dial and the key away. Returns the fixture
  * and the slot (stand it where it says).
  */
-export function solidTestFixture(id, at, { tests = TESTS, T0 = 0, maxT = 2000, view = 'tests', title = 'Tester', w = 68 } = {}) {
+export function solidTestFixture(id, at, { tests = TESTS, T0 = 0, maxT = 2000, view = 'tests', title = 'Tester', w = view === 'both' ? 96 : 68 } = {}) {
   const window = view === 'window';
   const list = window ? [] : [...tests];
   const dials = list.length > 1 ? { test: { min: 1, max: list.length, step: 1, value: 1, label: 'Test', labels: list.map(t => TEST_WORD[t]) } } : {};
@@ -144,9 +144,9 @@ function runTester(state, fid) {
 
 const PANEL = { x: 29, w: 36, h: 21 };
 
-function paintPlot(ctx, F, py, r, prog = 1) {
-  const px = PANEL.x; const { T0, maxT } = r.range;
-  const L = px + 3.2; const R = px + PANEL.w - 2.2; const Tp = py + 2.2; const B = py + PANEL.h - 6.4;
+function paintPlot(ctx, F, py, r, prog = 1, panel = PANEL) {
+  const px = panel.x; const { T0, maxT } = r.range;
+  const L = px + 3.2; const R = px + panel.w - 2.2; const Tp = py + 2.2; const B = py + panel.h - 6.4;
   const X = T => F.x(L + ((T - T0) / (maxT - T0)) * (R - L));
   const Y = s => F.y(B - s * (B - Tp));
   ctx.strokeStyle = DIM; ctx.lineWidth = 1;
@@ -219,11 +219,11 @@ function paintCurrent(ctx, F, py, r) {
 }
 
 /** The window: the particles of the sample in the slot, from `arrangementOf`. */
-function paintWindow(ctx, F, py, r, t = 0) {
+function paintWindow(ctx, F, py, r, t = 0, panel = PANEL) {
   if (!r.item) return;
   const a = arrangementOf(SOLIDS[r.item.props.solid].picture);
-  const ox = PANEL.x + 2; const oy = py + 1.5;
-  const k = Math.min((PANEL.w - 4) / PIC.w, (PANEL.h - 3) / PIC.h);
+  const ox = panel.x + 2; const oy = py + 1.5;
+  const k = Math.min((panel.w - 4) / PIC.w, (panel.h - 3) / PIC.h);
   // Every particle shakes about its place (and the bonds follow), so the picture is the sample's own, alive.
   const at = a.atoms.map((q, i) => { const [dx, dy] = shakeAt(i, t, 0.045, 1); return { ...q, x: q.x + dx, y: q.y + dy }; });
   const X = x => F.x(ox + x * k); const Y = y => F.y(oy + y * k);
@@ -240,17 +240,29 @@ function paintWindow(ctx, F, py, r, t = 0) {
   a.dots.forEach((d, i) => { const [dx, dy] = shakeAt(i + 30, t, 0.28, 2.2); ctx.beginPath(); ctx.arc(X(d.x + dx), Y(d.y + dy), Math.max(1, F.len(0.38 * k)), 0, Math.PI * 2); ctx.fill(); });
 }
 
+const BOTH_WIN = { x: 29, w: 30, h: 21 };
+const BOTH_PLOT = { x: 61, w: 32, h: 21 };
+
 function paintTester(ctx, f, state, b) {
   const F = frameOf(b);
   const top = topOf(f, b.lay);
   const r = testerRead(state, f.id);
   const py = top + 1;
-  ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(PANEL.x), F.y(py), F.len(PANEL.w), F.len(PANEL.h));
-  ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(PANEL.x)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(PANEL.w)), Math.round(F.len(PANEL.h)));
-  if (f.props.view === 'window') paintWindow(ctx, F, py, r, b.clock || 0);
-  else if (r.test === 'melt') paintPlot(ctx, F, py, r, glide(`${b.scope || ''}melt:${f.id}:${r.item?.id}:${r.item?.props.melt != null ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }));
-  else if (r.test === 'strike') paintStrike(ctx, F, py, r, glide(`${b.scope || ''}hit:${f.id}:${r.item?.id}:${r.item?.props.strike || ''}`, 1, b.clock || 0, { dur: 0.7 }));
-  else if (r.test === 'current') paintCurrent(ctx, F, py, r);
+  if (f.props.view === 'both') {
+    for (const pnl of [BOTH_WIN, BOTH_PLOT]) {
+      ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(pnl.x), F.y(py), F.len(pnl.w), F.len(pnl.h));
+      ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(pnl.x)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(pnl.w)), Math.round(F.len(pnl.h)));
+    }
+    paintWindow(ctx, F, py, r, b.clock || 0, BOTH_WIN);
+    paintPlot(ctx, F, py, r, glide(`${b.scope || ''}melt:${f.id}:${r.item?.id}:${r.item?.props.melt != null ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }), BOTH_PLOT);
+  } else {
+    ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(PANEL.x), F.y(py), F.len(PANEL.w), F.len(PANEL.h));
+    ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(PANEL.x)) + 0.5, Math.round(F.y(py)) + 0.5, Math.round(F.len(PANEL.w)), Math.round(F.len(PANEL.h)));
+    if (f.props.view === 'window') paintWindow(ctx, F, py, r, b.clock || 0);
+    else if (r.test === 'melt') paintPlot(ctx, F, py, r, glide(`${b.scope || ''}melt:${f.id}:${r.item?.id}:${r.item?.props.melt != null ? 1 : 0}`, 1, b.clock || 0, { dur: 2.2 }));
+    else if (r.test === 'strike') paintStrike(ctx, F, py, r, glide(`${b.scope || ''}hit:${f.id}:${r.item?.id}:${r.item?.props.strike || ''}`, 1, b.clock || 0, { dur: 0.7 }));
+    else if (r.test === 'current') paintCurrent(ctx, F, py, r);
+  }
   // What the dial's test does, and nothing the reading says.
   const note = f.props.view === 'window' ? 'PARTICLES IN THE SAMPLE'
     : r.test === 'melt' ? `HEATED ${fmtT(f.props.T0)} TO ${fmtT(f.props.maxT)} °C`

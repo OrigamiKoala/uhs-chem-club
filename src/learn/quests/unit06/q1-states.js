@@ -30,7 +30,7 @@ import {
   SAMPLES, HEATER_TEST, HEATER_LOOSE, SQUEEZE_ATM, jarMass, readerNames, WATER_G_PER_L
 } from '../../engine/matterdata-window.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 
 export const VOCABULARY = [
@@ -117,22 +117,15 @@ const S2_BOXES = [{ id: 'b1', label: '1', state: 'liquid', seed: 'p' }, { id: 'b
 const S4_CHANGES = { melt: 'same', boil: 'same', split: 'new' };
 const S5_CARDS = { inside: 'Bonds inside each molecule', between: 'Pulls between one molecule and the next', slow: 'The molecules are only moving slowly' };
 
-/** Stage 6: three equal jars of water, in the order of the room each molecule has (most first). */
+/** Stage 6: three equal jars of water, in the order of the space each molecule has (least first). */
 const S6_JARS = [{ id: 'a', label: 'A', state: 'liquid' }, { id: 'b', label: 'B', state: 'gas' }, { id: 'c', label: 'C', state: 'solid' }];
 const S6_STATE_AT = { liquid: 0, solid: 0, gas: 100 };
 const S6_MASS = Object.fromEntries(S6_JARS.map(j => [j.id, jarMass(j.state)]));
-const S6_ORDER = [...S6_JARS].sort((x, y) => S6_MASS[x.id] - S6_MASS[y.id]).map(j => j.id);
+const S6_ORDER = [...S6_JARS].sort((x, y) => S6_MASS[y.id] - S6_MASS[x.id]).map(j => j.id);
 const WATER_JAR = jarMass('liquid');
 const STEAM_JAR = jarMass('gas');
 /** Stage 7: a litre of water against a litre of steam, one kind of molecule in both. */
 export const TIMES = WATER_JAR / STEAM_JAR;
-
-const S8_JARS = [
-  { id: 'w', label: 'W', sample: 'Ar', T: -187, tray: 'liquid' },
-  { id: 'x', label: 'X', sample: 'I2', T: 20, tray: 'solid' },
-  { id: 'y', label: 'Y', sample: 'CO2', T: 20, tray: 'gas' },
-  { id: 'z', label: 'Z', sample: 'ethanol', T: 20, tray: 'liquid' }
-];
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -144,7 +137,7 @@ export const STAGES = [
     return {
       id: 's1-jars',
       title: 'Three Jars',
-      prompt: 'Sort the three jars by what their contents do when compressed and when poured.',
+      prompt: 'Which jar holds a solid, which a liquid and which a gas?',
       widget,
       table: matterTable({ bounds: BOUNDS, recorder: STRIP, pieces: jars, fixtures: [press.fixture], zones: { slots: [press.slot], trays } }),
       hints: [
@@ -170,25 +163,26 @@ export const STAGES = [
     return {
       id: 's2-boxes',
       title: 'Molecules in the Jars',
-      prompt: 'Put each box of molecules in the tray of the jar it shows.',
+      briefing: { speaker: SPEAKER, body: 'A molecule is a group of atoms joined by bonds, moving as one.' },
+      prompt: 'Which picture of molecules belongs to which jar?',
       widget,
       table: matterTable({ bounds: BOUNDS, recorder: STRIP, pieces: [...jars, ...boxes], fixtures: [press.fixture], zones: { slots: [press.slot], trays } }),
       hints: [
-        'Try each jar in the piston and the tank, then drag each box into the tray of the jar it shows.',
-        'Compare how far apart the molecules in each box are, and whether they stand in any order.',
-        'Match what a jar did when it was poured and compressed with how the molecules in a box are placed.'
+        'Try each jar in the piston and the tank, then drag each picture into the tray of the jar it shows.',
+        'Compare how far apart the molecules in each picture are, and whether they stand in any order.',
+        'Match what a jar did when it was poured and compressed with how the molecules in a picture are placed.'
       ],
       check(state) {
         const t = state.table;
         const put = S2_BOXES.filter(b => t.zones.trays[whereIs(t, b.id)]);
-        if (put.length < S2_BOXES.length) return { ok: false, notYet: true, msg: 'Put every box in a tray.' };
+        if (put.length < S2_BOXES.length) return { ok: false, notYet: true, msg: 'Put every picture in a tray.' };
         for (const j of S2_JARS) {
           const box = S2_BOXES.find(b => whereIs(t, b.id) === `j${j.id}`);
           if (box && box.state === j.state) continue;
           const jar = t.pieces[j.id];
           const said = saidOf(jar);
           const n = box ? box.label : '?';
-          return { ok: false, msg: said ? `${jarName(jar)} ${said}, and box ${n} is in its tray.` : `${jarName(jar)} has not been poured or compressed yet, and box ${n} is in its tray.` };
+          return { ok: false, msg: said ? `${jarName(jar)} ${said}, and picture ${n} is in its tray.` : `${jarName(jar)} has not been poured or compressed yet, and picture ${n} is in its tray.` };
         }
         return { ok: true };
       },
@@ -206,7 +200,7 @@ export const STAGES = [
     title: 'Melting and Boiling',
     // A PREDICT STAGE: no instrument. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'When ice melts and then boils, what happens to the molecules of water?',
+    prompt: 'When ice melts and boils, what happens to the molecules of water?',
     widget,
     table: matterTable({
       pieces: [
@@ -243,22 +237,23 @@ export const STAGES = [
     const win = windowFixture('window', { x: 38, y: 25 }, { Ts: HEATER_TEST });
     const jars = [jarCard('ja', 'Ice', { x: 12, y: 60 }, { sample: 'H2O' }), jarCard('jd', 'Split water', { x: 36, y: 60 }, { sample: 'H2O', split: true, T: 20 })];
     const changes = [tag('melt', 'Ice melts', { x: 90, y: 53 }), tag('boil', 'Water boils', { x: 120, y: 53 }), tag('split', 'Electricity splits water', { x: 105, y: 64.5 })];
-    const trays = [tray('same', 'Same molecule', 94, 27, 30, 36, 28, 12), tray('new', 'New molecule', 128, 27, 30, 36, 28, 12)];
+    const trays = [tray('same', 'Same molecule', 94, 27, 30, 36, 28, 12), tray('new', 'Different molecules', 128, 27, 30, 36, 28, 12)];
     return {
       id: 's4-reader',
       title: 'The Analyzer',
+      briefing: { speaker: SPEAKER, body: 'In a phase change, molecules stay whole and only rearrange. The analyzer names the molecules in a jar.' },
       get prompt() {
         const g = recall(QUEST_KEY);
         return g && GUESS_LABEL[g]
-          ? `You guessed ${GUESS_LABEL[g]}: sort the three changes by whether the analyzer names the same molecule afterward.`
-          : 'Sort the three changes by whether the analyzer names the same molecule afterward.';
+          ? `You guessed ${GUESS_LABEL[g]}: which of these changes leave the water molecule whole?`
+          : 'Which of these changes leave the water molecule whole?';
       },
       widget,
       table: matterTable({ bounds: BOUNDS, recorder: STRIP, pieces: [...jars, ...changes], fixtures: [win.fixture], zones: { slots: [win.slot], trays } }),
       hints: [
-        'Put a jar in the square, turn the "Heater" dial, and press "Read Molecule" at each temperature.',
+        'Put a jar in the window, turn the "Heater" dial, and press "Read Molecule" at each temperature.',
         'Compare what the analyzer names for the ice jar at each temperature with what it names for the jar of split water.',
-        'File each change by whether the analyzer still names the molecule the jar started with.'
+        'If the molecules stayed whole, the analyzer still names H₂O.'
       ],
       check(state) {
         const t = state.table;
@@ -276,11 +271,11 @@ export const STAGES = [
       },
       get reward() {
         const g = recall(QUEST_KEY);
-        const verdict = g === 'whole' ? 'The analyzer agreed with your guess. ' : g && GUESS_LABEL[g] ? 'The analyzer did not agree with your guess, which is how a guess gets better. ' : '';
+        const verdict = g === 'whole' ? 'The analyzer agreed with your guess. ' : g && GUESS_LABEL[g] ? 'The analyzer disagreed with your guess. ' : '';
         return {
           log: 'The analyzer named H₂O at every temperature of the ice jar.',
           title: 'Phase Change',
-          body: `${verdict}Melting and boiling are phase changes: the molecules stay whole and only take up a new arrangement. Splitting water is different, because it makes hydrogen and oxygen molecules.`
+          body: `${verdict}Melting and boiling are phase changes: the molecules stay whole and only rearrange. Splitting water makes new hydrogen and oxygen molecules.`
         };
       }
     };
@@ -294,14 +289,14 @@ export const STAGES = [
     return {
       id: 's5-forces',
       title: 'What Holds the Ice',
-      prompt: 'Pick what holds the molecules of the ice in place.',
+      prompt: 'What holds the molecules of ice in their places?',
       widget,
       table: matterTable({
         bounds: BOUNDS, recorder: STRIP, pieces: [...jars, ...cards], fixtures: [win.fixture],
         zones: { slots: [win.slot, { id: 'holds', label: 'Holds the ice', at: { x: 132, y: 24 }, size: { w: 34, h: 14 } }] }
       }),
       hints: [
-        'Turn the "Heater" dial through its three settings and press "Read Molecule" at each.',
+        'Heat the ice jar in the window and press "Read Molecule" at each setting.',
         'Compare how the molecules move at each setting, whether they stay together, and what the analyzer names.',
         'Rule out each card against what the window and the analyzer showed, and keep the one nothing contradicts.'
       ],
@@ -319,7 +314,7 @@ export const STAGES = [
       reward: {
         log: 'Whole molecules were held in place by something between them.',
         title: 'Intermolecular Forces',
-        body: 'Molecules hold on to one another through attractions between one molecule and the next: intermolecular forces. They are separate from the bonds inside a molecule, and melting and boiling only have to overcome them.'
+        body: 'Molecules attract one another through intermolecular forces: attractions between one molecule and the next. They are separate from the bonds inside a molecule, and melting and boiling only overcome them.'
       }
     };
   })(),
@@ -331,16 +326,17 @@ export const STAGES = [
     return {
       id: 's6-room',
       title: 'Equal Jars',
-      prompt: 'Order the three jars by the space each molecule has, from the most to the least.',
+      briefing: { speaker: SPEAKER, body: 'Each jar holds 1.00 L of water in a different state. Density is the mass in a given volume.' },
+      prompt: 'In which jar does each molecule have the least space and in which the most?',
       widget,
       table: matterTable({
         bounds: BOUNDS, recorder: STRIP, pieces: jars, fixtures: [sc.fixture],
-        zones: { slots: [sc.slot], rail: { at: { x: 107, y: 34 }, size: { w: 84, h: 16 }, first: 'Most space each', last: 'Least space each', items: jars.map(j => j.id), start: ['c', 'a', 'b'] } }
+        zones: { slots: [sc.slot], rail: { at: { x: 107, y: 34 }, size: { w: 84, h: 16 }, first: 'Least space each', last: 'Most space each', items: jars.map(j => j.id), start: ['c', 'a', 'b'] } }
       }),
       hints: [
-        'Weigh each jar with the balance and its "Weigh" key, then drag the jars onto the strip.',
-        'Every jar is the same size and holds the same kind of molecule.',
-        'In jars of equal size, more weight means more molecules in the same space.'
+        'Weigh each jar on the balance with its "Weigh" key, then drag the jars onto the strip.',
+        'Every jar has the same volume and holds the same kind of molecule.',
+        'In jars of equal volume, greater mass means more molecules in the same space.'
       ],
       check(state) {
         const t = state.table;
@@ -349,14 +345,14 @@ export const STAGES = [
         if (order.join() === S6_ORDER.join()) return { ok: true };
         const cards = order.map(id => t.pieces[id]);
         if (cards.some(p => p.props.mass == null)) return { ok: false, msg: 'Not every jar on the strip has been weighed yet.' };
-        const k = cards.findIndex((p, i) => i > 0 && cards[i - 1].props.mass > p.props.mass);
+        const k = cards.findIndex((p, i) => i > 0 && cards[i - 1].props.mass < p.props.mass);
         const a = cards[k - 1]; const b = cards[k];
         return { ok: false, msg: `${jarName(a)} sits left of ${jarName(b)}, and the balance read ${fmt(a.props.mass)} g for the one and ${fmt(b.props.mass)} g for the other.` };
       },
       reward: {
-        log: 'Ice weighed a little less than water, and steam almost nothing.',
+        log: 'Ice had a little less mass than water, and steam almost none.',
         title: 'Density',
-        body: 'In equal jars, more weight means more molecules, so the mass in a given volume, the density, tells how much volume each molecule has. Ice has a little more volume per molecule than liquid water, and steam has far more.'
+        body: 'In equal jars, greater mass means more molecules, so higher density means less space per molecule.'
       }
     };
   })(),
@@ -368,14 +364,14 @@ export const STAGES = [
     return {
       id: 's7-count',
       title: 'Water and Steam',
-      prompt: 'Type how many times as many molecules the water jar holds as the steam jar.',
+      prompt: 'How many times as many molecules does the water jar hold as the steam jar?',
       entry: { id: 'times', label: 'Times as many', unit: '×' },
       widget,
       table: matterTable({ bounds: BOUNDS, recorder: STRIP, pieces: jars, fixtures: [sc.fixture], zones: { slots: [sc.slot] } }),
       hints: [
-        'Weigh both jars with the balance and its "Weigh" key, then type your answer in the field at the bottom.',
-        'Both jars are the same size and hold the same kind of molecule, so compare what they weigh.',
-        'The weights of equal jars are in the same proportion as their numbers of molecules, so compare the two weights as a ratio.'
+        'Weigh both jars on the balance with its "Weigh" key, then type your answer in the field at the bottom.',
+        'Both jars have the same volume and hold the same kind of molecule, so compare their masses.',
+        'The masses of equal jars are in the same proportion as their numbers of molecules, so compare the two masses as a ratio.'
       ],
       check(state) {
         const t = state.table;
@@ -389,35 +385,7 @@ export const STAGES = [
       reward: {
         log: 'A litre of water holds about 1,700 times the molecules of a litre of steam.',
         title: 'A Gas Is Mostly Empty',
-        body: 'A jar of liquid water holds about 1,700 times as many molecules as an equal jar of steam, so steam molecules stand about 12 times farther apart. A gas is mostly empty space.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const press = pressFixture('press', PRESS_AT);
-    const spots = [{ x: 106, y: 12 }, { x: 132, y: 12 }, { x: 106, y: 34 }, { x: 132, y: 34 }];
-    const jars = S8_JARS.map((j, i) => jarCard(j.id, j.label, spots[i], { sample: j.sample, T: j.T }));
-    const labels = { solid: 'Solid', liquid: 'Liquid', gas: 'Gas' };
-    const trays = ['solid', 'liquid', 'gas'].map((id, i) => tray(id, labels[id], 27 + i * 48, 60, 46, 24, 23, 22, { solid: 'lump', liquid: 'pool', gas: 'spread' }[id]));
-    const want = Object.fromEntries(S8_JARS.map(j => [j.id, j.tray]));
-    return {
-      id: 's8-sealed',
-      title: 'Four Sealed Jars',
-      prompt: 'Sort the four sealed jars into solid, liquid and gas.',
-      widget,
-      table: matterTable({ bounds: BOUNDS, recorder: STRIP, pieces: jars, fixtures: [press.fixture], zones: { slots: [press.slot], trays } }),
-      hints: [
-        'Try each jar with the "Piston" dial and the "Pour" key, then drag it into a tray.',
-        'Compare what each jar did with what the jars of water did earlier.',
-        'A jar sorts by how its contents behave, whatever they are made of.'
-      ],
-      check: sortCheck(want, id => labels[id], 'Every jar needs a tray.'),
-      reward: {
-        log: 'Cold argon pooled and iodine stayed a lump.',
-        title: 'Reading the State',
-        body: 'Whatever the substance, a solid keeps its shape, a liquid keeps its volume and a gas fills its container. Argon is a liquid when cold enough, and iodine is a solid at room temperature.'
+        body: 'A jar of liquid water holds about 1,700 times as many molecules as an equal jar of steam. A gas is mostly empty space.'
       }
     };
   })()
@@ -458,8 +426,7 @@ export const SOLUTIONS = [
     put('melt', 'tray:same'), put('boil', 'tray:same'), put('split', 'tray:new')],
   [...readAt('ja', 1), ...readAt('ja', 2), ...readAt('ja', 3), put('between', 'slot:holds')],
   [...S6_JARS.flatMap(j => [put(j.id, PSLOT), { run: 'scale' }]), ...S6_ORDER.map((id, i) => put(id, `rail:${i}`))],
-  [put('jw', PSLOT), { run: 'scale' }, put('js', PSLOT), { run: 'scale' }, typed('times', Math.round(TIMES))],
-  [...tryAll(S8_JARS.map(j => j.id)), ...S8_JARS.map(j => put(j.id, `tray:${j.tray}`))]
+  [put('jw', PSLOT), { run: 'scale' }, put('js', PSLOT), { run: 'scale' }, typed('times', Math.round(TIMES))]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -471,8 +438,7 @@ export const MISSES = [
     put('melt', 'tray:same'), put('boil', 'tray:new'), put('split', 'tray:new')],
   [...readAt('ja', 1), ...readAt('ja', 2), ...readAt('ja', 3), put('inside', 'slot:holds')],
   [...S6_JARS.flatMap(j => [put(j.id, PSLOT), { run: 'scale' }]), ...['b', 'a', 'c'].map((id, i) => put(id, `rail:${i}`))],
-  [put('jw', PSLOT), { run: 'scale' }, put('js', PSLOT), { run: 'scale' }, typed('times', 1000)],
-  [...tryAll(S8_JARS.map(j => j.id)), ...S8_JARS.map(j => put(j.id, `tray:${j.id === 'w' ? 'gas' : j.tray}`))]
+  [put('jw', PSLOT), { run: 'scale' }, put('js', PSLOT), { run: 'scale' }, typed('times', 1000)]
 ];
 
 function blankState() { return {}; }
@@ -497,7 +463,7 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = {
-  S1_TRAY, S2_JARS, S2_BOXES, S4_CHANGES, S6_JARS, S6_MASS, S6_ORDER, WATER_JAR, STEAM_JAR, TIMES, S8_JARS,
+  S1_TRAY, S2_JARS, S2_BOXES, S4_CHANGES, S6_JARS, S6_MASS, S6_ORDER, WATER_JAR, STEAM_JAR, TIMES,
   SQUEEZE_ATM, HEATER_TEST, HEATER_LOOSE, SAMPLES, WATER_G_PER_L
 };
 export { windowRead, scaleRead, jarStateOf, readerNames };

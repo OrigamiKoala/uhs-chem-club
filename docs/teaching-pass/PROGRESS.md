@@ -41,8 +41,8 @@ Status values: not started, planned (plan rows written), in progress, done, play
 
 ### Mirrowen (`unit06`)
 
-- Status: planned 2026-11-11 (`worlds/unit06-mirrowen.md`; 58 → 54; `q2` redesigned)
-- Benches done:
+- Status: done (2026-11-12; not yet played by the owner)
+- Benches done: all eight (`q1-states` 7, `q2-grip` 8, `q3-boil` 8, `q4-solids` 5, `q5-crossing` 7, `q6-solution` 7, `q7-separate` 7, `boss-undertow` 5; 54 stages total). Cold-read review run after `q1-states` and on the finished world; findings fixed or listed under "Still weak" in `worlds/unit06-mirrowen.md`.
 - Stopped at:
 
 ### Brinewire (`unit10`)

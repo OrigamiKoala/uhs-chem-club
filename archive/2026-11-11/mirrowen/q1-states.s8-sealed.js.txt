@@ -1,0 +1,35 @@
+// Archived from src/learn/quests/unit06/q1-states.js (stage 8, s8-sealed)
+const S8_JARS = [
+  { id: 'w', label: 'W', sample: 'Ar', T: -187, tray: 'liquid' },
+  { id: 'x', label: 'X', sample: 'I2', T: 20, tray: 'solid' },
+  { id: 'y', label: 'Y', sample: 'CO2', T: 20, tray: 'gas' },
+  { id: 'z', label: 'Z', sample: 'ethanol', T: 20, tray: 'liquid' }
+];
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const press = pressFixture('press', PRESS_AT);
+    const spots = [{ x: 106, y: 12 }, { x: 132, y: 12 }, { x: 106, y: 34 }, { x: 132, y: 34 }];
+    const jars = S8_JARS.map((j, i) => jarCard(j.id, j.label, spots[i], { sample: j.sample, T: j.T }));
+    const labels = { solid: 'Solid', liquid: 'Liquid', gas: 'Gas' };
+    const trays = ['solid', 'liquid', 'gas'].map((id, i) => tray(id, labels[id], 27 + i * 48, 60, 46, 24, 23, 22, { solid: 'lump', liquid: 'pool', gas: 'spread' }[id]));
+    const want = Object.fromEntries(S8_JARS.map(j => [j.id, j.tray]));
+    return {
+      id: 's8-sealed',
+      title: 'Four Sealed Jars',
+      prompt: 'Sort the four sealed jars into solid, liquid and gas.',
+      widget,
+      table: matterTable({ bounds: BOUNDS, recorder: STRIP, pieces: jars, fixtures: [press.fixture], zones: { slots: [press.slot], trays } }),
+      hints: [
+        'Try each jar with the "Piston" dial and the "Pour" key, then drag it into a tray.',
+        'Compare what each jar did with what the jars of water did earlier.',
+        'A jar sorts by how its contents behave, whatever they are made of.'
+      ],
+      check: sortCheck(want, id => labels[id], 'Every jar needs a tray.'),
+      reward: {
+        log: 'Cold argon pooled and iodine stayed a lump.',
+        title: 'Reading the State',
+        body: 'Whatever the substance, a solid keeps its shape, a liquid keeps its volume and a gas fills its container. Argon is a liquid when cold enough, and iodine is a solid at room temperature.'
+      }
+    };
+  })()

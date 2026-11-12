@@ -6,13 +6,12 @@
 
 /** Refusals may not carry the rule a stage is asking for (1-based stages). */
 export const LEAKS = {
-  1: [/\bsolut/i, /\bsolvent\b/i, /\bhomogeneous\b/i, /\buniform/i, /\bdissolve/i],
+  1: [/\bsolut/i, /\bsolvent\b/i, /\bhomogeneous\b/i, /\buniform/i],
   2: [/\b0\.4\d*\b/, /\bdivide\b/i, /\bper litre\b/i],
   3: [/\b25(\.0)?\b/, /\bM1V1\b/i, /\bmultiply\b/i, /\bdivide\b/i],
-  5: [/\bthree\b/i, /\b3\b/, /\b1\.8\d?\b/, /\bions?\b/i],
+  5: [/\bthree\b/i, /\b3\b/, /\b0\.3\d?\b/, /\bions?\b/i],
   6: [/\blike\b/i, /\bpolar/i, /\bcharge/i, /\bmiscible\b/i],
-  7: [/\bexothermic\b/i, /\bendothermic\b/i, /\bstronger\b/i],
-  8: [/\bunits?\b/i, /\bformula\b/i, /\bper\b/i, /\bthree (particles|ions)\b/i]
+  7: [/\bunits?\b/i, /\bformula\b/i, /\bper\b/i, /\bthree (particles|ions)\b/i]
 };
 
 export async function check({ q, mod, MD, near, same, holds, start, done }) {
@@ -31,28 +30,19 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
   near(CK.V_ASKED, 0.5 * 100 / 2.0, 1e-9, `${q} stage 3 (dilution)`);
   holds(!CK.STOCKS.includes(CK.V_ASKED), `${q} stage 3: the answer is a step on the dial, so it could be found by hunting`);
   holds(CK.STOCKS.some(s => s < CK.V_ASKED) && CK.STOCKS.some(s => s > CK.V_ASKED), `${q} stage 3: the answer does not lie between two steps of the dial`);
-  // Stage 5: 0.100 mol x 3 particles x 6.022e23 = 1.8066e23.
-  near(CK.N_ASKED, 0.1 * 3 * 6.022, 1e-9, `${q} stage 5 (particles)`);
-  holds(Math.abs(CK.N_ASKED - 0.1 * 6.022) > 0.5, `${q} stage 5: counting formula units alone passes`);
+  // Stage 5: 0.100 mol x 3 particles = 0.300 mol of particles.
+  near(CK.N_ASKED, 0.1 * 3, 1e-9, `${q} stage 5 (moles of particles)`);
+  holds(Math.abs(CK.N_ASKED - 0.1) > 0.1, `${q} stage 5: counting formula units alone passes`);
   // Stage 6: solubility (CRC): salt and sugar mix with water and not hexane; wax the reverse; acetone mixes with both.
   const WANT = { salt: 'water', sugar: 'water', wax: 'hexane', acetone: 'both' };
   for (const s of CK.LIKE) same(s.tray, WANT[s.id], `${q} stage 6 (${s.id}'s tray)`);
-  // Stage 7: dT = -n dHsoln / (m c): NaCl -0.93, KCl -4.11, CaCl2 +19.43, NH4NO3 -6.14 (0.100 mol in 100 g, hand worked).
-  const DH = { NaCl: 3.9, KCl: 17.2, CaCl2: -81.3, NH4NO3: 25.7 };
-  const rise = id => (-DH[id] * 0.1 * 1000) / (100 * 4.184);
-  near(rise('NaCl'), -0.932, 0.002, `${q} stage 7 (NaCl)`);
-  near(rise('CaCl2'), 19.43, 0.01, `${q} stage 7 (CaCl2)`);
-  near(rise('NH4NO3'), -6.142, 0.002, `${q} stage 7 (NH4NO3)`);
-  same(CK.BY_BATH.join(), ['NH4NO3', 'KCl', 'NaCl', 'CaCl2'].join(), `${q} stage 7 (the rank)`);
-  // The wrong ranking by size of change alone must differ from the right one.
-  holds([...CK.BY_BATH].sort((a, b) => Math.abs(rise(a)) - Math.abs(rise(b))).join() !== CK.BY_BATH.join(), `${q} stage 7: ranking by size of change passes`);
-  // Stage 8: 12 particles in every drop, molarities 0.200 (CaCl2), 0.300 (NaCl), 0.600 (sugar).
+  // Stage 7: 12 particles in every drop, molarities 0.200 (CaCl2), 0.300 (NaCl), 0.600 (sugar).
   const parts = { NaCl: 2, sugar: 1, CaCl2: 3 };
   for (const s of CK.SEALED) {
-    near(s.grams / SOL[s.sub].M / 0.25, s.M, 1e-6, `${q} stage 8 (${s.id}'s molarity from its grams)`);
-    near(s.M * 20 * parts[s.sub], 12, 1e-9, `${q} stage 8 (${s.id}'s particles in the drop)`);
+    near(s.grams / SOL[s.sub].M / 0.25, s.M, 1e-6, `${q} stage 7 (${s.id}'s molarity from its grams)`);
+    near(s.M * 20 * parts[s.sub], 12, 1e-9, `${q} stage 7 (${s.id}'s particles in the drop)`);
   }
-  same(CK.SEALED_BY_M.join(), 'z,x,y', `${q} stage 8 (the rank)`);
+  same(CK.SEALED_BY_M.join(), 'z,x,y', `${q} stage 7 (the rank)`);
 
   // Every window at its stage is computed from the table it stands on, not authored: read the drop of each card in the mouth.
   const FL = await import('../../../src/learn/table/kits/matter-flask.js');
@@ -72,7 +62,7 @@ export async function check({ q, mod, MD, near, same, holds, start, done }) {
 
   // The predict stage shows no instrument; every other stage's untouched table does not pass.
   holds(!Object.values(start(mod, 3).fixtures).filter(f => f.kind !== 'lead' && f.kind !== 'mlead').length, `${q} stage 4: the predict stage shows an instrument`);
-  for (const i of [0, 1, 2, 4, 5, 6, 7]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
+  for (const i of [0, 1, 2, 4, 5, 6]) holds(mod.STAGES[i].check(mod.stateFor(i, {})).ok !== true, `${q} stage ${i + 1}: the untouched table passes`);
   // Stage 1 evidence: the window shows spread for the two soluble powders and lumps for the others, at the time each is in the flask.
   for (const s of CK.POWDERS) {
     const T1 = mod.stateFor(0, [{ place: { piece: s.id, to: 'slot:flask.mouth' } }]).table;

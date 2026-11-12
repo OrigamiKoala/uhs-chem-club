@@ -9,8 +9,7 @@ export const LEAKS = {
   4: [/\bphase change/i, /\bbonds?\b/i, /\bwhole\b/i],
   5: [/\bintermolecular\b/i, /\battract/i, /\bbonds?\b/i],
   6: [/\broom\b/i, /\bmore molecules\b/i, /\bheavier\b/i, /\bdensity\b/i],
-  7: [/\bdivid/i, /\bratio\b/i, /\b1,?6\d\d\b/, /\b1,?7\d\d\b/],
-  8: [/\bkeeps?\b/i, /\bfills?\b/i]
+  7: [/\bdivid/i, /\bratio\b/i, /\b1,?6\d\d\b/, /\b1,?7\d\d\b/]
 };
 
 export async function check({ q, mod, near, same, holds, start, done }) {
@@ -36,7 +35,7 @@ export async function check({ q, mod, near, same, holds, start, done }) {
 
   // ---- stage 6: ice weighs LESS than water (the click), steam least of all; the rank is the room per molecule ----
   holds(W.jarMass('solid') < W.jarMass('liquid') && W.jarMass('gas') < W.jarMass('solid'), `${q} stage 6: steam < ice < water`);
-  same(mod.CHECKS.S6_ORDER.map(id => mod.CHECKS.S6_JARS.find(j => j.id === id).state).join(), 'gas,solid,liquid', `${q} stage 6 (the order: most room first)`);
+  same(mod.CHECKS.S6_ORDER.map(id => mod.CHECKS.S6_JARS.find(j => j.id === id).state).join(), 'liquid,solid,gas', `${q} stage 6 (the order: least space first)`);
 
   // ---- states: melting and boiling points from the CRC, worked by hand ----
   const st = (s, T) => W.stateAt(s, T);
@@ -48,7 +47,6 @@ export async function check({ q, mod, near, same, holds, start, done }) {
   same(st('I2', 20), 'solid', `${q}: iodine melts at 113.7 degC`);
   same(st('CO2', 20), 'gas', `${q}: carbon dioxide sublimes at -78.5 degC`);
   same(st('ethanol', 20), 'liquid', `${q}: ethanol melts at -114.1 and boils at 78.4 degC`);
-  for (const j of mod.CHECKS.S8_JARS) same(st(j.sample, j.T), j.tray, `${q} stage 8 (${j.label}'s tray)`);
   // The squeeze may not turn a jar of steam to liquid: 3 atm is below the 476 kPa saturation pressure of water at 150 degC.
   holds(3 * 101.325 < 476, `${q}: steam at 150 degC squeezed to a third is still a gas`);
   near(W.squeezeRatio('gas', 4), 1 / 3, 1e-9, `${q}: the hardest squeeze takes a gas to a third`);

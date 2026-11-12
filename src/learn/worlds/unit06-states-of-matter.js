@@ -31,7 +31,7 @@ export const UNIT_06 = {
       title: 'Three States',
       line: 'Solid, liquid or gas: what the molecules are doing, and what they are not.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit06/q1-states.js')
     },
@@ -58,7 +58,7 @@ export const UNIT_06 = {
       title: 'Kinds of Solid',
       line: 'Glass shatters and quartz does not. Same silicon, different order.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit06/q4-solids.js')
     },
@@ -67,7 +67,7 @@ export const UNIT_06 = {
       title: 'The Crossing',
       line: 'Pour heat in and the temperature stops moving. Find out where it went.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit06/q5-crossing.js')
     },
@@ -76,7 +76,7 @@ export const UNIT_06 = {
       title: 'Taken Into Solution',
       line: 'A solid goes missing and is still in the jar.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit06/q6-solution.js')
     },

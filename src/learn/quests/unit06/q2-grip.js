@@ -24,7 +24,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  matterTable, molCard, ionCard, probeFixture, wellFixture, probeRead, whereIs, note, fixed, mleadFixture
+  matterTable, molCard, ionCard, probeFixture, wellFixture, probeRead, whereIs, note, stmt, fixed, mleadFixture
 } from '../../table/kits/matter.js';
 import { SUBSTANCES, HYDRATION } from '../../engine/matterdata.js';
 import { BOND_ENTHALPIES } from '../../engine/thermodata.js';
@@ -100,21 +100,28 @@ const heldReading = p => p.props.grip;
  * The refusal for a rank: the first neighbours that read the wrong way round, with what each read. Said only when every card on the rail
  * has been through the probe; otherwise it says which has not.
  */
-function rankMiss(t, order, name = id => t.pieces[id].label, unitText = 'kJ') {
+function rankMiss(t, order, name = id => t.pieces[id].label, unitText = 'kJ', required = null) {
   const cards = order.map(id => t.pieces[id]);
-  if (cards.some(p => heldReading(p) == null)) return { ok: false, msg: 'Not every card on the rail has been through the probe yet.' };
+  const checkCards = required ? required.map(id => t.pieces[id]) : cards;
+  if (checkCards.some(p => heldReading(p) == null)) {
+    return { ok: false, msg: required ? `Test ${required.map(id => name(id)).join(' and ')} in the probe first.` : 'Not every card on the rail has been through the probe yet.' };
+  }
+  if (required) {
+    const readings = required.map(id => `${name(id)} (${kj(heldReading(t.pieces[id]))} ${unitText})`).join(' and ');
+    return { ok: false, msg: `The probe read ${readings}; the order on the rail does not match the trend.` };
+  }
   const k = cards.findIndex((p, i) => i > 0 && heldReading(cards[i - 1]) > heldReading(p));
   const a = cards[k - 1]; const b = cards[k];
   return { ok: false, msg: `${name(a.id)} sits left of ${name(b.id)}, and the probe read ${kj(heldReading(a))} ${unitText} for the one and ${kj(heldReading(b))} ${unitText} for the other.` };
 }
 
-function railCheck(want, minCards = want.length) {
+function railCheck(want, minCards = want.length, required = null) {
   return state => {
     const t = state.table;
     const order = t.zones.rail.order;
     if (order.length < minCards) return { ok: false, notYet: true, msg: `Put all ${minCards} cards on the rail.` };
     if (order.join() === want.join()) return { ok: true };
-    return rankMiss(t, order);
+    return rankMiss(t, order, id => t.pieces[id].label, 'kJ', required);
   };
 }
 
@@ -124,25 +131,29 @@ function railCheck(want, minCards = want.length) {
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const probe = probeFixture('probe', PROBE_AT);
+    const probe = probeFixture('probe', PROBE_AT, { accepts: ['he', 'ne'] });
     const at = row(4);
     const cards = NOBLE.map((id, i) => molCard(id.toLowerCase(), id, id, at[i], { cloud: true }));
     return {
       id: 's1-noble',
       title: 'Four Atoms',
-      prompt: 'Order the four atoms by the heat needed to pull one mole of them away from their neighbours.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The electrons in an atom\'s cloud are always moving, so for an instant one side is slightly negative and the other slightly positive. That brief uneven charge attracts the atom next to it: a London dispersion force.'
+      },
+      prompt: 'Which of the four atoms attracts its neighbours most weakly and which most strongly?',
       widget,
       table: rankTable(cards, probe, ['Ar', 'He', 'Xe', 'Ne'].map(s => s.toLowerCase())),
       hints: [
-        'Use the probe, its "Pull Apart" key and the rail.',
-        'Compare each reading with the size of the cloud drawn on its card.',
-        'Rank the cards by what the probe read for each, from the smallest heat to the largest.'
+        'Test helium and neon in the probe, then order all four cards on the rail.',
+        'Compare the electron cloud drawn on each card with how much heat helium and neon needed.',
+        'A larger electron cloud is pulled out of shape more easily, making a stronger dispersion force.'
       ],
-      check: railCheck(NOBLE_BY_GRIP.map(s => s.toLowerCase())),
+      check: railCheck(NOBLE_BY_GRIP.map(s => s.toLowerCase()), 4, ['he', 'ne']),
       reward: {
-        log: 'Bigger clouds needed more heat to pull apart.',
+        log: 'Bigger clouds needed more heat to separate.',
         title: 'London Dispersion Forces',
-        body: 'Atoms attract their neighbours through brief, shifting uneven charges in their electron clouds: London dispersion forces. A bigger cloud is easier to distort, so it is more polarizable, and its attraction is stronger.'
+        body: 'A bigger cloud is pulled out of shape more easily: it is more polarizable, so its dispersion forces are stronger.'
       }
     };
   })(),
@@ -150,28 +161,51 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const probe = probeFixture('probe', PROBE_AT);
-    const at = row(3);
+    const at = row(3, 53, 13, 22);
     const cards = [
       molCard('ar', 'Ar', 'Ar', at[0], { cloud: true, shown: mass('Ar') }),
       molCard('kr', 'Kr', 'Kr', at[1], { cloud: true, shown: mass('Kr') }),
       molCard('hcl', 'HCl', 'HCl', at[2], { dipoles: true, shown: mass('HCl') })
     ];
+    const reasons = [
+      stmt('polar', 'It has a permanent + end and − end', { x: 85, y: 11 }),
+      stmt('cloud', 'It has the bigger electron cloud', { x: 85, y: 31 }),
+      stmt('heavier', 'It is the heavier molecule', { x: 128, y: 21 })
+    ];
     return {
       id: 's2-dipole',
       title: 'A Polar Molecule',
-      prompt: 'Order argon, krypton and hydrogen chloride by the heat needed to pull one mole of each apart.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A polar molecule has a permanent positive end and negative end, called a dipole. When two polar molecules meet, opposite ends attract: a dipole–dipole force.'
+      },
+      prompt: 'Why does hydrogen chloride attract its neighbours more strongly than krypton?',
       widget,
-      table: rankTable(cards, probe, ['hcl', 'ar', 'kr']),
+      table: matterTable({
+        pieces: [...cards, ...reasons],
+        fixtures: [probe.fixture],
+        zones: { slots: [probe.slot, { id: 'why', label: 'Reason', at: { x: 128, y: 51 }, size: { w: 36, h: 14 } }] }
+      }),
       hints: [
-        'Use the probe, its key and the rail.',
-        'Compare each reading with the mass on its card, and look at which card is drawn with + and − marks.',
-        'Rank the cards by what the probe read for each, from the smallest heat to the largest.'
+        'Separate hydrogen chloride and krypton in the probe, then lay one reason card in the slot.',
+        'Compare the masses on the cards and what the probe window shows for hydrogen chloride.',
+        'Krypton has more mass and a larger cloud, so look at what else hydrogen chloride has.'
       ],
-      check: railCheck(POLAR_BY_GRIP.map(s => s.toLowerCase())),
+      check(state) {
+        const t = state.table;
+        const card = reasons.find(c => t.pieces[c.id].zone === 'slot:why');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a reason card in the slot.' };
+        if (t.pieces.hcl.props.grip == null || t.pieces.kr.props.grip == null) {
+          return { ok: false, msg: 'Separate both HCl and Kr in the probe first.' };
+        }
+        if (card.id === 'polar') return { ok: true };
+        if (card.id === 'heavier') return { ok: false, msg: 'Krypton is 83.8 g/mol and hydrogen chloride is 36.5 g/mol, yet HCl needed more heat.' };
+        return { ok: false, msg: 'Krypton is the larger atom, yet hydrogen chloride needed more heat.' };
+      },
       reward: {
         log: 'Hydrogen chloride beat krypton, which is much heavier.',
         title: 'Dipole–Dipole Forces',
-        body: 'A polar molecule also attracts through its partial charges: the positive end of one pulls the negative end of the next. These dipole–dipole forces add to dispersion, so light hydrogen chloride holds on harder than much heavier krypton.'
+        body: 'A polar molecule attracts through its permanent + and − ends as well as dispersion. These dipole–dipole forces let light HCl beat heavier Kr.'
       }
     };
   })(),
@@ -179,10 +213,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     id: 's3-predict',
-    title: 'Which Holds On?',
+    title: 'Which Attracts More?',
     // A PREDICT STAGE: the probe is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Which needs more heat to be pulled apart, water at 18 g per mole or hydrogen sulfide at 34 g per mole?',
+    prompt: 'Which needs more heat to separate a mole: water, at 18 g, or hydrogen sulfide, at 34 g?',
     widget,
     table: matterTable({
       pieces: [
@@ -194,9 +228,9 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
-      'Think of what the last two stages showed about size and about uneven charge.',
-      'Commit to the molecule you expect to hold its neighbours harder.'
+      'Lay one of the three cards in the slot.',
+      'Think of what the last two stages showed about cloud size and permanent dipoles.',
+      'Commit to which molecule you expect to need more heat to separate.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -210,40 +244,57 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, pull water, hydrogen sulfide and two more molecules apart with the probe.'
+      body: 'Next, separate water, hydrogen sulfide and two more molecules with the probe.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
     const probe = probeFixture('probe', PROBE_AT);
-    const at = row(4);
+    const at = row(4, 53, 16, 23);
     const cards = HYDRIDES.map((id, i) => molCard(id.toLowerCase(), id, SUBSTANCES[id].formula, at[i], { dipoles: true, shown: mass(id) }));
+    const want = { h2o: 'hbond', nh3: 'hbond', h2s: 'none', ph3: 'none' };
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 24 }, size: { w: 36, h: 32 }, cell: 22, cellH: 15 });
     return {
       id: 's4-hydrogen',
       title: 'Four Hydrides',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A hydrogen atom bonded to nitrogen, oxygen or fluorine is strongly attracted to a lone pair on a neighbouring molecule. This attraction is a hydrogen bond.'
+      },
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You guessed ${GUESS_LABEL[guess]}: order the four molecules by the heat needed to pull one mole of each apart.`
-          : 'Order the four molecules by the heat needed to pull one mole of each apart.';
+          ? `You guessed ${GUESS_LABEL[guess]}: which of these molecules form hydrogen bonds with their own kind?`
+          : 'Which of these molecules form hydrogen bonds with their own kind?';
       },
       widget,
-      table: rankTable(cards, probe, ['nh3', 'h2s', 'h2o', 'ph3']),
+      table: matterTable({
+        pieces: cards,
+        fixtures: [probe.fixture],
+        zones: { slots: [probe.slot], trays: [tray('hbond', 'Forms hydrogen bonds', 88), tray('none', 'Does not', 128)] }
+      }),
       hints: [
-        'Use the probe, its key and the rail.',
-        'Compare each reading with the mass on its card, two of the cards weigh nearly the same.',
-        'Rank the cards by what the probe read for each, from the smallest heat to the largest.'
+        'Separate each molecule in the probe, then drag each card into a tray.',
+        'Compare the heat to separate each molecule with its molar mass, and watch for dashed lines in the probe.',
+        'Check which molecules have hydrogen bonded to nitrogen, oxygen or fluorine.'
       ],
-      check: railCheck(HYDRIDES_BY_GRIP.map(s => s.toLowerCase())),
+      check(state) {
+        const t = state.table;
+        const ids = Object.keys(want);
+        if (ids.some(id => !t.zones.trays[whereIs(t, id)])) return { ok: false, notYet: true, msg: 'Put all four molecules in a tray.' };
+        const bad = ids.find(id => whereIs(t, id) !== want[id]);
+        if (!bad) return { ok: true };
+        return { ok: false, msg: 'H₂O (40.7 kJ) and NH₃ (23.4 kJ) need far more heat to separate than H₂S (18.7 kJ) and PH₃ (14.6 kJ).' };
+      },
       get reward() {
         const guess = recall(QUEST_KEY);
-        const verdict = guess === 'lighter' ? 'You expected water to hold on harder, and the probe agreed. '
-          : guess && GUESS_LABEL[guess] ? 'The probe did not agree with your prediction, which is how a guess gets better. ' : '';
+        const verdict = guess === 'lighter' ? 'You expected water to attract more strongly, and the probe agreed. '
+          : guess && GUESS_LABEL[guess] ? 'The probe disagreed with your prediction. ' : '';
         return {
-          log: 'Water and ammonia held on far harder than their mass says.',
+          log: 'Water and ammonia needed far more heat than their mass says.',
           title: 'Hydrogen Bonding',
-          body: `${verdict}A hydrogen bond is a hydrogen on nitrogen, oxygen or fluorine drawn to a lone pair on the next molecule. It is the strongest attraction between neutral molecules, so light water and ammonia beat heavier sulfide and phosphine.`
+          body: `${verdict}Water and ammonia do, and need far more heat to separate than heavier H₂S and PH₃. A hydrogen bond is the strongest attraction between neutral molecules.`
         };
       }
     };
@@ -251,13 +302,17 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const probe = probeFixture('probe', PROBE_AT, { mode: 'ion', title: 'Probe: ion in water' });
+    const probe = probeFixture('probe', PROBE_AT, { mode: 'ion', title: 'Probe: ion in water', accepts: ['nap'] });
     const at = row(4);
     const cards = IONS.map((id, i) => ionCard(id.toLowerCase().replace('+', 'p'), id, HYDRATION[id].symbol, HYDRATION[id].r, at[i]));
     return {
       id: 's5-ion',
       title: 'Ions in Water',
-      prompt: 'Order the four ions by the heat given out when one mole of each is dropped in water.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Water molecules are polar, so an ion attracts the oppositely charged end of each: an ion–dipole force.'
+      },
+      prompt: 'Which ion gives out the least heat when it enters water and which the most?',
       widget,
       table: matterTable({
         pieces: cards,
@@ -265,79 +320,100 @@ export const STAGES = [
         zones: { slots: [probe.slot], rail: { ...RAIL, first: 'Gives out least heat', last: 'Gives out most heat', items: cards.map(c => c.id), start: ['lip', 'mg2p', 'kp', 'nap'] } }
       }),
       hints: [
-        'Use the probe, its key and the rail.',
-        'Compare each reading with the width of the disc drawn on its card, and with its charge.',
-        'Rank the cards by what the probe read for each, from the smallest heat to the largest.'
+        'Test Na⁺ in the probe, then order all four ions on the rail.',
+        'Compare the width and charge of each ion with Na⁺.',
+        'A smaller ion or one with a larger charge lets water get closer and attracts it more strongly.'
       ],
-      check: railCheck(IONS_BY_OUT.map(id => id.toLowerCase().replace('+', 'p'))),
+      check: railCheck(IONS_BY_OUT.map(id => id.toLowerCase().replace('+', 'p')), 4, ['nap']),
       reward: {
         log: 'Small, highly charged ions gave out the most heat.',
         title: 'Ion–Dipole Forces',
-        body: 'Water molecules are polar, so an ion pulls on their partial charges: an ion–dipole force. The smaller the ion and the larger its charge, the closer the water can come and the more heat is given out.'
+        body: 'The smaller the ion and the larger its charge, the closer the water can come and the more heat is given out.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const probe = probeFixture('probe', PROBE_AT);
-    const at = row(3);
+    const probe = probeFixture('probe', PROBE_AT, { accepts: ['c4h10', 'c5h12'] });
+    const at = row(3, 53, 13, 22);
     const names = { C4H10: 'butane', C5H12: 'n-pentane', neoC5: 'neopentane' };
     const cards = SHAPES.map((id, i) => molCard(id.toLowerCase(), id, names[id], at[i], { shown: `${SUBSTANCES[id].formula} · ${mass(id)}` }));
+    const choices = [
+      stmt('pent', 'n-pentane', { x: 85, y: 11 }),
+      stmt('neo', 'neopentane', { x: 85, y: 31 }),
+      stmt('same', 'The same', { x: 128, y: 21 })
+    ];
     return {
       id: 's6-shape',
       title: 'Same Formula',
-      prompt: 'Order butane, n-pentane and neopentane by the heat needed to pull one mole of each apart.',
+      prompt: 'Which needs more heat to separate a mole: n-pentane or neopentane, both C₅H₁₂?',
       widget,
-      table: rankTable(cards, probe, ['c5h12', 'neoc5', 'c4h10']),
+      table: matterTable({
+        pieces: [...cards, ...choices],
+        fixtures: [probe.fixture],
+        zones: { slots: [probe.slot, { id: 'ans', label: 'Needs more heat', at: { x: 128, y: 51 }, size: { w: 36, h: 14 } }] }
+      }),
       hints: [
-        'Use the probe, its key and the rail.',
-        'Compare the two cards with the same formula, and the way each is drawn.',
-        'Rank the cards by what the probe read for each, from the smallest heat to the largest.'
+        'Separate butane and n-pentane in the probe, then lay one answer card in the slot.',
+        'Compare the straight chain of n-pentane with the compact shape of neopentane.',
+        'A longer chain touches its neighbours over more of its surface than a compact ball.'
       ],
-      check: railCheck(SHAPES_BY_GRIP.map(s => s.toLowerCase())),
+      check(state) {
+        const t = state.table;
+        const card = choices.find(c => t.pieces[c.id].zone === 'slot:ans');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay an answer card in the slot.' };
+        if (t.pieces.c4h10.props.grip == null || t.pieces.c5h12.props.grip == null) {
+          return { ok: false, msg: 'Separate butane and n-pentane in the probe first.' };
+        }
+        if (card.id === 'pent') return { ok: true };
+        return { ok: false, msg: 'Butane needed 22.4 kJ and n-pentane 25.8 kJ; neopentane cannot lie flat along its neighbour like n-pentane.' };
+      },
       reward: {
-        log: 'The straight chain gripped harder than its compact twin.',
+        log: 'The straight chain needed more heat than its compact twin.',
         title: 'Shape and Contact',
-        body: 'Two molecules with one formula can attract each other differently. A straight chain lies along its neighbours and touches them over its whole length, so it has more dispersion force than a compact, ball-shaped molecule of the same weight.'
+        body: 'Two molecules with one formula can attract each other differently. A straight chain lies along its neighbours and touches them over its whole length, so it has more dispersion force than a compact molecule of the same formula.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const probe = probeFixture('probe', { x: 86, y: 24 });
-    const crank = wellFixture('crank', { x: 28, y: 24 }, { bond: 'O-H', atoms: ['O', 'H'], bondLabel: 'O–H bond', title: 'Bond pull dial', pullLabel: 'Pull' });
+    const probe = probeFixture('probe', { x: 86, y: 22 });
+    const crank = wellFixture('crank', { x: 28, y: 22 }, { bond: 'O-H', atoms: ['O', 'H'], bondLabel: 'O–H bond', title: 'Bond pull dial', pullLabel: 'Pull' });
+    const choices = [
+      note('same', 'About the same', { x: 24, y: 54 }),
+      note('twice', 'About twice as much', { x: 68, y: 54 }),
+      note('twenty', 'More than twenty times as much', { x: 112, y: 54 })
+    ];
     return {
       id: 's7-bond',
       title: 'An Attraction and a Bond',
-      prompt: 'Type how many times more heat it takes to break every O–H bond in a mole of water than to pull the molecules apart.',
-      entry: { id: 'times', label: 'Times more heat', unit: '×' },
+      prompt: 'How does the heat to break the O–H bonds in a mole of water compare with the heat to separate its molecules?',
       widget,
       table: matterTable({
-        pieces: [molCard('h2o', 'H2O', 'H₂O', { x: 136, y: 14 }, { dipoles: true })],
+        pieces: [molCard('h2o', 'H2O', 'H₂O', { x: 132, y: 12 }, { dipoles: true }), ...choices],
         fixtures: [crank, probe.fixture],
-        zones: { slots: [probe.slot] }
+        zones: { slots: [probe.slot, { id: 'cmp', label: 'Comparison', at: { x: 132, y: 31 }, size: { w: 32, h: 13 } }] }
       }),
       hints: [
-        'Use the pull dial for one O–H bond, and the probe with the water card.',
-        'Compare what the pull dial reads for a mole of O–H bonds with what the probe reads, and count the bonds in the molecule drawn on the card.',
-        'Divide the heat for all the O–H bonds in a mole of molecules by the heat to pull a mole of molecules apart.'
+        'Turn the bond pull dial for one O–H bond, separate water in the probe, then lay a card in the slot.',
+        'Compare the dial reading for a mole of O–H bonds with the probe reading for water, and count the O–H bonds in H₂O.',
+        'Each water molecule has two O–H bonds, so double the dial reading before comparing it with the probe.'
       ],
       check(state) {
         const t = state.table;
-        const v = entryNumber(t, 'times');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
-        if (Math.abs(v - BOND_VS_GRIP) <= 1.5) return { ok: true };
+        const card = choices.find(c => t.pieces[c.id].zone === 'slot:cmp');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a comparison card in the slot.' };
         const r = probeRead(t, 'probe');
-        if (!r.pulled) return { ok: false, msg: 'The probe has not pulled the water yet.' };
-        if (Math.abs(v - OH / SUBSTANCES.H2O.grip) <= 1) return { ok: false, msg: `${fixed(v, 0)} counts one O–H bond for each molecule, and the water drawn on the card has two.` };
-        return { ok: false, msg: `The pull dial reads ${Math.round(OH)} kJ for a mole of O–H bonds and the probe ${kj(r.value)} kJ for a mole of molecules; ${fixed(v, 0)} times does not fit the two.` };
+        if (!r.pulled) return { ok: false, msg: 'Separate water in the probe first.' };
+        if (card.id === 'twenty') return { ok: true };
+        return { ok: false, msg: `One mole of O–H bonds takes ${Math.round(OH)} kJ, and separating a mole of water takes ${kj(r.value)} kJ.` };
       },
       reward: {
-        log: 'Breaking the bonds in water costs about twenty times more than pulling the molecules apart.',
+        log: 'Breaking the bonds in water costs over twenty times more than separating the molecules.',
         title: 'An Attraction Is Not a Bond',
-        body: 'Pulling molecules apart costs tens of kilojoules a mole; breaking the bonds inside them costs hundreds. When water boils, the molecules separate and stay whole.'
+        body: 'Breaking the bonds inside water molecules costs over twenty times as much as separating them. When water boils, the molecules stay whole.'
       }
     };
   })(),
@@ -351,7 +427,7 @@ export const STAGES = [
     return {
       id: 's8-sealed',
       title: 'Five Sealed Samples',
-      prompt: 'File each sealed sample under the strongest force between its molecules.',
+      prompt: 'What is the strongest force between the molecules of each sample?',
       widget,
       table: matterTable({
         bounds: { w: 150, h: 72 },
@@ -360,9 +436,9 @@ export const STAGES = [
         zones: { slots: [probe.slot], trays: [tray('dispersion', 'Dispersion', 78), tray('dipole', 'Dipole–dipole', 106), tray('hydrogen', 'Hydrogen bond', 134)] }
       }),
       hints: [
-        'Use the probe and its key, and drag each sample into a tray.',
-        'Compare each sample\'s picture and its reading with the others in the tray you are choosing.',
-        'Look for which atoms carry a + or − mark, and for a hydrogen sitting on nitrogen, oxygen or fluorine.'
+        'Separate each sample in the probe, then drag it into a tray.',
+        'Watch what appears between the molecules in the probe and compare the heat readings.',
+        'Look for + and − marks, and for a hydrogen bonded to nitrogen, oxygen or fluorine.'
       ],
       check(state) {
         const t = state.table;
@@ -383,13 +459,12 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  2: ['Drag a card into the probe, press its key, then put the card on the rail.'],
+  1: ['Test He and Ne in the probe, then order all four cards on the rail.'],
+  2: ['Test HCl and Kr, then lay a reason.'],
   3: ['Drag the card you choose into the slot.'],
-  4: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  5: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  6: ['Drag a card into the probe, press its key, then put the card on the rail.'],
-  7: ['Turn the pull dial, drag the water into the probe, press its key, then type your answer.']
+  4: ['Separate each molecule, then file it.'],
+  5: ['Test Na⁺ in the probe, then order all four ions on the rail.'],
+  6: ['Test butane and n-pentane, then lay your answer.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -401,7 +476,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Molecules hold their neighbours through dispersion forces, dipole–dipole forces and hydrogen bonds, and ions hold water through ion–dipole forces. Each is far weaker than a bond inside a molecule.'
+      body: 'Molecules attract their neighbours through dispersion forces, dipole–dipole forces and hydrogen bonds, and ions attract water through ion–dipole forces. Each is far weaker than a bond inside a molecule.'
     }
   ]
 };
@@ -418,25 +493,25 @@ const low = ids => ids.map(s => s.toLowerCase());
 const ionId = id => id.toLowerCase().replace('+', 'p');
 
 export const SOLUTIONS = [
-  [...pullAll(low(NOBLE)), ...rail(low(NOBLE_BY_GRIP))],
-  [...pullAll(low(POLAR)), ...rail(low(POLAR_BY_GRIP))],
+  [...pullAll(['he', 'ne']), ...rail(low(NOBLE_BY_GRIP))],
+  [...pullAll(['hcl', 'kr']), put('polar', 'slot:why')],
   [put('lighter', 'slot:guess')],
-  [...pullAll(low(HYDRIDES)), ...rail(low(HYDRIDES_BY_GRIP))],
-  [...pullAll(IONS.map(ionId)), ...rail(IONS_BY_OUT.map(ionId))],
-  [...pullAll(low(SHAPES)), ...rail(low(SHAPES_BY_GRIP))],
-  [put('h2o', WELL), { run: 'probe' }, dial('crank', 'pull', 7), { type: { entry: 'times', value: String(Math.round(BOND_VS_GRIP)) } }],
+  [...pullAll(low(HYDRIDES)), put('h2o', 'tray:hbond'), put('nh3', 'tray:hbond'), put('h2s', 'tray:none'), put('ph3', 'tray:none')],
+  [...pullAll(['nap']), ...rail(IONS_BY_OUT.map(ionId))],
+  [...pullAll(['c4h10', 'c5h12']), put('pent', 'slot:ans')],
+  [put('h2o', WELL), { run: 'probe' }, dial('crank', 'pull', 7), put('twenty', 'slot:cmp')],
   [...SEALED.flatMap(s => [put(s.id, WELL), { run: 'probe' }, put(s.id, `tray:${s.tray}`)])]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [...pullAll(low(NOBLE)), ...rail(low([...NOBLE_BY_GRIP].reverse()))],
-  [...pullAll(low(POLAR)), ...rail(['hcl', 'ar', 'kr'])],
+  [...pullAll(['he', 'ne']), ...rail(low([...NOBLE_BY_GRIP].reverse()))],
+  [...pullAll(['hcl', 'kr']), put('heavier', 'slot:why')],
   [],
-  [...pullAll(low(HYDRIDES)), ...rail(['nh3', 'h2o', 'ph3', 'h2s'])],
-  [...pullAll(IONS.map(ionId)), ...rail(['lip', 'nap', 'kp', 'mg2p'])],
-  [...pullAll(low(SHAPES)), ...rail(['c4h10', 'c5h12', 'neoc5'])],
-  [put('h2o', WELL), { run: 'probe' }, { type: { entry: 'times', value: String(Math.round(OH / SUBSTANCES.H2O.grip)) } }],
+  [...pullAll(low(HYDRIDES)), put('h2o', 'tray:hbond'), put('nh3', 'tray:none'), put('h2s', 'tray:none'), put('ph3', 'tray:none')],
+  [...pullAll(['nap']), ...rail(['lip', 'nap', 'kp', 'mg2p'])],
+  [...pullAll(['c4h10', 'c5h12']), put('neo', 'slot:ans')],
+  [put('h2o', WELL), { run: 'probe' }, put('twice', 'slot:cmp')],
   [...SEALED.flatMap(s => [put(s.id, WELL), { run: 'probe' }, put(s.id, s.id === 'x4' ? 'tray:dipole' : `tray:${s.tray}`)])]
 ];
 

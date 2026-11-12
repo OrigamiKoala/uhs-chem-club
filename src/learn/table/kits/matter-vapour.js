@@ -84,7 +84,7 @@ function runFlask(state, fid) {
  * liquid is held at the card's own temperature, or at `T0`. `plot` replaces the gauge's trace with the plot of pressure against
  * temperature. Returns the fixture and the slot (stand it where it says).
  */
-export function flaskFixture(id, at, { temps = null, tempStart = 1, outsides = null, outsideStart = 1, T0 = 25, plot = false, title = 'Flask', w = plot ? 104 : 78 } = {}) {
+export function flaskFixture(id, at, { temps = null, tempStart = 1, outsides = null, outsideStart = 1, T0 = 25, plot = false, rates = false, title = 'Flask', w = plot ? 104 : rates ? 98 : 78 } = {}) {
   const dials = {};
   if (temps) dials.heat = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => `${t} °C`) };
   if (outsides) dials.outside = { min: 1, max: outsides.length, step: 1, value: outsideStart, label: 'Outside', labels: outsides.map(q => (q == null ? 'sealed' : `${Math.round(q)} kPa`)) };
@@ -95,7 +95,7 @@ export function flaskFixture(id, at, { temps = null, tempStart = 1, outsides = n
   return {
     fixture: {
       id, kind: 'vapour', label: title, at: { ...at }, size: { w, h }, dials, runLabel: 'Settle',
-      props: { backdrop: true, slot: slotId, T0, plot, ...(temps ? { temps } : {}), ...(outsides ? { outsides } : {}) }
+      props: { backdrop: true, slot: slotId, T0, plot, rates, ...(temps ? { temps } : {}), ...(outsides ? { outsides } : {}) }
     },
     slot: { id: slotId, label: ' ', at: { x: x0 + 15, y: y0 + top + 9.5 }, size: { w: 24, h: 17 } },
     slotId,
@@ -108,7 +108,7 @@ function paintFlask(ctx, f, state, b) {
   const r = flaskRead(state, f.id);
   const top = TOP(Object.keys(f.dials).length);
   const w = f.size.w; const h = f.size.h;
-  const px = f.props.plot ? 58 : 53; const pw = w - 4 - px;
+  const px = f.props.plot ? 58 : 53; const pw = f.props.rates ? 21 : w - 4 - px;
   const py = top + 2; const ph = 19;
 
   /* ---- the flask: a round body and a neck, the liquid in its lower part, the vapor above it ---- */
@@ -216,6 +216,15 @@ function paintFlask(ctx, f, state, b) {
       }
       ctx.stroke(); ctx.lineWidth = 1;
     }
+    if (f.props.rates) {
+      const rx = px + pw + 3;
+      const rate = r.valid ? Math.max(12, Math.round(r.value * 4)) : null;
+      const rateText = r.valid ? `${rate} /s` : r.item ? '—' : '';
+      say(ctx, 'LEAVING', F.x(rx), F.y(top + 4.5), F.size(1.7, 5.8), { color: DIM });
+      say(ctx, rateText, F.x(rx), F.y(top + 9.0), F.size(2.6, 7), { color: r.valid ? AMBER : DUST, weight: 700 });
+      say(ctx, 'RETURNING', F.x(rx), F.y(top + 15.5), F.size(1.7, 5.8), { color: DIM });
+      say(ctx, rateText, F.x(rx), F.y(top + 20.0), F.size(2.6, 7), { color: r.valid ? AMBER : DUST, weight: 700 });
+    }
   }
 }
 
@@ -241,7 +250,7 @@ function runSurface(state, fid) {
   return { x: surfacePull(sub), y: round(pourTime(sub), 2), label: `${fid}|${sub}`, stamp: { [item.id]: { tested: 1 } } };
 }
 
-export function surfaceFixture(id, at, { title = 'Surface and pour plate', w = 78 } = {}) {
+export function surfaceFixture(id, at, { title = 'Surface plate', w = 66 } = {}) {
   const top = TOP(0);
   const h = round(top + 31.5, 1);
   const slotId = `${id}.well`;
@@ -259,7 +268,7 @@ function paintSurface(ctx, f, state, b) {
   const top = TOP(0);
   const rows = surfaceRows(state, f.id);
   const item = seatedIn(state, f.props.slot);
-  // The ring lifted from a dish, and the tube the liquid runs through, drawn small under the slot.
+  // The ring lifted from a dish, drawn small under the slot.
   const rx = 15; const ry = top + 23;
   ctx.strokeStyle = STEEL;
   ctx.strokeRect(Math.round(F.x(rx - 8)) + 0.5, Math.round(F.y(ry + 1.4)) + 0.5, Math.round(F.len(16)), Math.round(F.len(3.2)));
@@ -268,18 +277,15 @@ function paintSurface(ctx, f, state, b) {
   ctx.beginPath(); ctx.ellipse(F.x(rx), F.y(ry - 0.6), F.len(3.6), F.len(0.9), 0, 0, Math.PI * 2); ctx.stroke();
   ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(F.x(rx - 3.6), F.y(ry - 0.6)); ctx.lineTo(F.x(rx - 4.4), F.y(ry + 1.4)); ctx.moveTo(F.x(rx + 3.6), F.y(ry - 0.6)); ctx.lineTo(F.x(rx + 4.4), F.y(ry + 1.4)); ctx.stroke(); ctx.setLineDash([]);
   // The table of what has been tested.
-  const c0 = 31; const cPull = 56; const cPour = 73;
+  const c0 = 31; const cPull = f.size.w - 4;
   say(ctx, 'SURFACE', F.x(cPull), F.y(top + 1.2), F.size(1.7, 5.8), { color: DIM, align: 'right' });
-  say(ctx, 'PULL mN/m', F.x(cPull), F.y(top + 3.4), F.size(1.7, 5.8), { color: DIM, align: 'right' });
-  say(ctx, 'POUR', F.x(cPour), F.y(top + 1.2), F.size(1.7, 5.8), { color: DIM, align: 'right' });
-  say(ctx, 'TIME s', F.x(cPour), F.y(top + 3.4), F.size(1.7, 5.8), { color: DIM, align: 'right' });
+  say(ctx, 'TENSION mN/m', F.x(cPull), F.y(top + 3.4), F.size(1.7, 5.8), { color: DIM, align: 'right' });
   ctx.strokeStyle = DIM;
   ctx.beginPath(); ctx.moveTo(F.x(c0 - 1), F.y(top + 5.2)); ctx.lineTo(F.x(f.size.w - 3), F.y(top + 5.2)); ctx.stroke();
   rows.slice(0, 4).forEach((q, i) => {
     const y = top + 8.6 + i * 4.6;
     say(ctx, nameOf(q.id), F.x(c0), F.y(y), F.size(2.4, 6.2), { weight: 600 });
     say(ctx, q.pull.toFixed(1), F.x(cPull), F.y(y), F.size(2.6, 6.4), { color: AMBER, weight: 700, align: 'right' });
-    say(ctx, q.pour.toFixed(1), F.x(cPour), F.y(y), F.size(2.6, 6.4), { color: AMBER, weight: 700, align: 'right' });
   });
 }
 
@@ -465,8 +471,8 @@ addTourText({
     text: 'A flask holds a liquid, with a pressure gauge beside it. Drag a liquid card into the square on its left and press "Settle": the pressure gauge rises, levels off, and the number is the pressure it stopped at, in kPa. The dots above the liquid are molecules that have left it. Where the flask has a "Heater" dial it sets the liquid\'s temperature, and where it has an "Outside" dial it opens the flask to a volume at that pressure, shown as an amber line on the plot. A plot beside the flask adds one point for every reading you take. The card keeps the number it settled at.'
   },
   'matter:surface': {
-    title: 'Surface and pour plate', dials: false,
-    text: 'The plate has a slot, a key and a table. Drag a liquid card into the slot and press "Test". A ring is lifted off the liquid\'s surface, and the table prints the pull on it in mN/m. Then 5 mL of the liquid runs through a narrow tube, and the table prints the seconds it took. Every liquid you test gets a row, so you can compare them.'
+    title: 'Surface plate', dials: false,
+    text: 'The plate has a slot, a key and a table. Drag a liquid card into the slot and press "Test". A ring is lifted off the liquid\'s surface, and the table prints the pull on it in mN/m. Every liquid you test gets a row, so you can compare them.'
   },
   'matter:cell': {
     title: 'Equal boxes', dials: false,

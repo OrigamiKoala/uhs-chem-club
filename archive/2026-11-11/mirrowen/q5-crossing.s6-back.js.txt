@@ -1,0 +1,33 @@
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const rec = REC({
+      title: 'Steam at 110 °C · 18.0 g', T0: 110, phase0: 'gas', pulses: [-4, -12, -40], pulseStart: 2, window: true, showHeat: false,
+      plot: { xMin: -70, xMax: 0, yMin: -20, yMax: 120, xStep: 10, yStep: 20 }
+    });
+    return {
+      id: 's6-back',
+      title: 'The Way Back',
+      prompt: 'Type the heat change when 18.0 g of steam at 110 °C is cooled to ice at −10 °C, in kilojoules.',
+      entry: { id: 'kj', label: 'Heat change', unit: 'kJ' },
+      widget,
+      table: matterTable({ fixtures: [rec] }),
+      hints: [
+        'Use the "Heat per press" dial and the "Cool" key to run the sample down, then type in the field.',
+        'Compare the line the pen draws on the way down with the way up you worked out.',
+        'Decide which way the heat moves in each stretch of the cooling, and give a figure that says so.'
+      ],
+      check(state) {
+        const v = typed(state.table, 'kj');
+        if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the heat change in kilojoules.' };
+        if (Math.abs(v - DOWN) <= 1.0) return { ok: true };
+        if (Math.abs(v + DOWN) <= 1.0) return { ok: false, msg: 'That figure puts heat into the sample, and the pen for this sample runs to the left of zero.' };
+        if (v > 0) return { ok: false, msg: `${fixed(v, 1)} kJ would put heat into the steam, and the pen for this sample runs to the left of zero.` };
+        return { ok: false, msg: `${fixed(v, 1).replace('-', '−')} kJ would leave the 18.0 g ${leftAs(18.0, STEAM_110, v)}.` };
+      },
+      reward: {
+        log: 'Cooling steam to ice at −10 °C changed its heat by −54.9 kJ.',
+        title: 'Condensing and Freezing',
+        body: 'Condensation and freezing are boiling and melting run backwards: they give out the same heat that was taken in. Cooling this sample from steam to ice changes its heat by −54.9 kJ, a negative amount of heat added.'
+      }
+    };
+  })()

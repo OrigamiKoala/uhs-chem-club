@@ -111,7 +111,7 @@ export const STAGES = [
     return {
       id: 'p1-hold',
       title: 'Phase 1 · The Hold',
-      prompt: 'Sort the three jars from the crawler\'s hold into solid, liquid and gas.',
+      prompt: 'Which jar holds a solid, which a liquid and which a gas?',
       widget,
       table: matterTable({ bounds: { w: 150, h: 72 }, recorder: { at: { x: 147.4, y: 45 }, size: { w: 5, h: 3.4 } }, pieces: jars, fixtures: [press.fixture], zones: { slots: [press.slot], trays } }),
       foes: UNDERTOW_FOE,
@@ -144,15 +144,17 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const probe = probeFixture('probe', { x: 34, y: 23 });
+    const probe = probeFixture('probe', { x: 34, y: 23 }, { accepts: ['ether'] });
     const names = { ether: 'diethyl ether', acetone: 'acetone', ethanol: 'ethanol', H2O: 'water' };
+    const struct = { ether: 'C₂H₅OC₂H₅', acetone: 'CH₃COCH₃', ethanol: 'C₂H₅OH', H2O: 'H₂O' };
     const mass = id => `${SUBSTANCES[id].M.toFixed(1)} g/mol`;
+    const subOf = id => (id === 'h2o' ? 'H2O' : id);
     const at = P2.map((_, i) => ({ x: 70 + i * 22, y: 54 }));
-    const cards = P2.map((s, i) => molCard(idOf(s), s, names[s], at[i], { dipoles: SUBSTANCES[s].polar, shown: mass(s) }));
+    const cards = P2.map((s, i) => molCard(idOf(s), s, names[s], at[i], { dipoles: SUBSTANCES[s].polar, shown: `${struct[s]} · ${mass(s)}` }));
     return {
       id: 'p2-siphons',
       title: 'Phase 2 · The Siphons',
-      prompt: 'Order ether, acetone, ethanol and water by the heat needed to pull one mole of each apart.',
+      prompt: 'Which liquid needs the least heat to separate a mole and which the most?',
       widget,
       table: matterTable({
         pieces: cards,
@@ -166,20 +168,18 @@ export const STAGES = [
         intent: 'The Undertow draws on four siphons, each holding its liquid with an attraction of its own.'
       },
       hints: [
-        'Use the probe, its key and the rail.',
-        'Compare each reading with the mass on its card.',
-        'Rank the cards by what the probe read for each, from the smallest heat to the largest.'
+        'Drag diethyl ether into the probe, press "Separate", then put all four cards on the rail.',
+        'Look at the structure on each card: which molecules have an O–H bond, and which do not?',
+        'Rank the liquids from the weakest intermolecular forces on the left to the strongest on the right.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
         if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all 4 cards on the rail.' };
         if (order.join() === P2_BY_GRIP.map(idOf).join()) return { ok: true };
-        const cards4 = order.map(id => t.pieces[id]);
-        if (cards4.some(p => p.props.grip == null)) return { ok: false, msg: 'Not every card on the rail has been through the probe yet.' };
-        const k = cards4.findIndex((p, i) => i > 0 && cards4[i - 1].props.grip > p.props.grip);
-        const a = cards4[k - 1]; const b = cards4[k];
-        return { ok: false, msg: `${a.label} sits left of ${b.label}, and the probe read ${kj(a.props.grip)} kJ for the one and ${kj(b.props.grip)} kJ for the other.` };
+        const k = order.findIndex((id, i) => i > 0 && SUBSTANCES[subOf(order[i - 1])].grip > SUBSTANCES[subOf(id)].grip);
+        const a = t.pieces[order[k - 1]]; const b = t.pieces[order[k]];
+        return { ok: false, msg: `${a.label} (${struct[subOf(a.id)]}) sits left of ${b.label} (${struct[subOf(b.id)]}), and ${a.label} holds its molecules more tightly than ${b.label}.` };
       },
       reward: {
         log: 'The lightest liquid held on hardest.',
@@ -196,7 +196,7 @@ export const STAGES = [
     return {
       id: 'p3-vent',
       title: 'Phase 3 · The Vent',
-      prompt: `Type the temperature at which ethanol boils when the outside pressure is ${MOUNTAIN_KPA} kPa.`,
+      prompt: `At what temperature does ethanol boil when the outside pressure is ${MOUNTAIN_KPA} kPa?`,
       entry: { id: 'bp', label: 'Ethanol boils at', unit: '°C' },
       widget,
       table: matterTable({ pieces: [card], fixtures: [flask.fixture], zones: { slots: [flask.slot] } }),
@@ -235,7 +235,7 @@ export const STAGES = [
     return {
       id: 'p4-melt',
       title: 'Phase 4 · The Melt',
-      prompt: 'Type the heat needed to melt 54.0 g of ice at 0 °C and warm the water to 100 °C, in kilojoules.',
+      prompt: 'How much heat melts 54.0 g of ice at 0 °C and warms the water to 100 °C, in kilojoules?',
       entry: { id: 'kj', label: 'Heat needed', unit: 'kJ' },
       widget,
       table: matterTable({
@@ -252,7 +252,7 @@ export const STAGES = [
       hints: [
         'Use the recorder to see the path, the plate for the figures, and the field for your answer.',
         'Follow the sample from ice at 0 °C to water at 100 °C and count every stretch the line has, level or sloping.',
-        'Find the heat for each stretch on its own, moles × ΔH for a level stretch and mass × c × ΔT for a slope, then add them.'
+        'Find the heat for the melting stretch and the warming stretch using the values on the plate, then add them.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'kj');
@@ -271,11 +271,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   (() => {
     const fl = solutionFlask('flask', 2, 2, { stocks: P5.stocks, volume: P5.flask, showM: true });
-    const plate = plaqueFixture('want', 'Wanted', { x: 118, y: 44 }, [`${P5.flask} mL of ${P5.wantM.toFixed(3)} M`], { w: 44 });
+    const plate = plaqueFixture('target', 'Target', { x: 118, y: 44 }, [`${P5.flask} mL of ${P5.wantM.toFixed(3)} M`], { w: 44 });
     return {
       id: 'p5-dose',
       title: 'Phase 5 · The Dose',
-      prompt: `Type how many mL of the ${P5.stockM.toFixed(2)} M stock make ${P5.flask} mL of ${P5.wantM.toFixed(3)} M when topped up with water.`,
+      prompt: `How many mL of ${P5.stockM.toFixed(2)} M stock, topped up to ${P5.flask} mL, make a ${P5.wantM.toFixed(3)} M solution?`,
       entry: { id: 'ml', label: 'Stock needed', unit: 'mL' },
       widget,
       table: matterTable({
@@ -292,7 +292,7 @@ export const STAGES = [
       },
       hints: [
         'Drag the stock into the flask and turn the "Stock poured in" dial, reading the molarity under the window.',
-        'Compare the molarity at the two steps of the dial either side of the molarity you want.',
+        'Compare the molarity at the two steps of the dial either side of the target molarity.',
         'The moles poured in from the stock are the moles that end up in the flask, so the molarity grows in step with the volume poured.'
       ],
       check(state) {
@@ -301,7 +301,7 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
         if (Math.abs(v - P5_ML) <= 0.5) return { ok: true };
         if (v > P5.flask) return { ok: false, msg: `${v} mL is more than the ${P5.flask} mL flask holds.` };
-        return { ok: false, msg: `${v} mL of ${P5.stockM.toFixed(2)} M stock in ${P5.flask} mL makes ${fixed(dilute(P5.stockM, v, P5.flask), 3)} M, and the plate wants ${P5.wantM.toFixed(3)} M.` };
+        return { ok: false, msg: `${v} mL of ${P5.stockM.toFixed(2)} M stock in ${P5.flask} mL makes ${fixed(dilute(P5.stockM, v, P5.flask), 3)} M, and the plate target is ${P5.wantM.toFixed(3)} M.` };
       },
       reward: {
         log: '50.0 mL of 1.50 M stock, topped up to 250 mL, is 0.300 M.',
@@ -347,7 +347,7 @@ const rail = order => order.map((id, i) => put(id, `rail:${i}`));
 
 export const SOLUTIONS = [
   [...P1_JARS.flatMap(j => [...tryJar(j.id), put(j.id, `tray:${j.tray}`)])],
-  [...pull(P2.map(idOf)), ...rail(P2_BY_GRIP.map(idOf))],
+  [...pull(['ether']), ...rail(P2_BY_GRIP.map(idOf))],
   [put('eth', 'slot:flask.well'), dial('flask', 'outside', OUTSIDE_STEPS.length), ...heatSteps(HEATER_STEPS, [30, 40, 50, 60, 70]), typed('bp', Math.round(P3_BP))],
   [typed('kj', Math.round(P4_KJ * 10) / 10)],
   [put('stock', 'slot:flask.mouth'), dial('flask', 'stock', 2), typed('ml', Math.round(P5_ML))]
@@ -356,7 +356,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [...P1_JARS.flatMap(j => [...tryJar(j.id), put(j.id, `tray:${j.tray === 'gas' ? 'liquid' : j.tray}`)])],
-  [...pull(P2.map(idOf)), ...rail(['h2o', 'ethanol', 'acetone', 'ether'])],
+  [...pull(['ether']), ...rail(['h2o', 'ethanol', 'acetone', 'ether'])],
   [typed('bp', 78)],
   [typed('kj', 22.6)],
   [typed('ml', 30)]

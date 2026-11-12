@@ -1,0 +1,22 @@
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const tester = solidTestFixture('tester', TESTER_AT, { view: 'window' });
+    return {
+      id: 's4-picture',
+      title: 'Inside the Solid',
+      prompt: 'File each sample as crystalline or amorphous.',
+      widget,
+      table: benchTable(S4, tester, [['crystalline', 'Crystalline', 'crystal'], ['amorphous', 'Amorphous', 'glass']]),
+      hints: [
+        'Use the tester\'s window: drag a sample into the slot, then drag it into a tray.',
+        'Compare whether the particles of each sample sit in a pattern that repeats.',
+        'A pattern that repeats in every direction is crystalline, and particles with no repeating pattern are amorphous.'
+      ],
+      check: fileCheck(S4, pictureSay),
+      reward: {
+        log: 'Metals, molecules and quartz repeat; the two glasses do not.',
+        title: 'Reading the Picture',
+        body: 'Metals, molecules and quartz can all be crystalline: what counts is a repeating pattern, whatever the particles are. Glass is made of the same silicon and oxygen as quartz, but its network has no pattern, so it is amorphous.'
+      }
+    };
+  })()

@@ -1,0 +1,32 @@
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const flask = flaskFixture('flask', { x: 51, y: 27 }, { temps: [20, 30, 40, 50], plot: true, w: 98 });
+    const jar = jarFixture('jar', { x: 126, y: 22 }, { w: 46 });
+    const water = liquidCard('h2o', 'H2O', 'water', { x: 126, y: 52 });
+    return {
+      id: 's8-jar',
+      title: 'Gas Over Water',
+      prompt: `Type the pressure of the gas alone in the jar, whose pressure gauge reads ${JAR.total} kPa.`,
+      entry: { id: 'gas', label: 'Gas alone', unit: 'kPa' },
+      widget,
+      table: matterTable({ pieces: [water], fixtures: [flask.fixture, jar], zones: { slots: [flask.slot] } }),
+      hints: [
+        'Use the water card, the Heater dial, the "Settle" key and the number field.',
+        'Compare the jar\'s temperature with the heater steps either side of it on the plot.',
+        'Read the water\'s own pressure at the jar\'s temperature from between those steps, then work out how much of the total is left for the gas.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = entryNumber(t, 'gas');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type your answer in the field at the bottom.' };
+        if (Math.abs(v - GAS_ALONE) <= GAS_TOL) return { ok: true };
+        if (Math.abs(v - JAR.total) <= 0.3) return { ok: false, msg: `The jar's pressure gauge reads ${JAR.total} kPa, and that total counts everything inside the jar.` };
+        return { ok: false, msg: `The gas and the water vapor make up the total ${JAR.total} kPa between them, and ${fixed(v, 1)} kPa of gas leaves a different share for the vapor than the plot shows at ${JAR.T} °C.` };
+      },
+      reward: {
+        log: 'The total pressure was the gas plus the water vapor.',
+        title: 'Gas Over Water',
+        body: 'A gas collected over water is mixed with water vapor, and each exerts its own pressure. The gas alone is the total pressure less the vapor pressure of water at the jar\'s temperature.'
+      }
+    };
+  })()

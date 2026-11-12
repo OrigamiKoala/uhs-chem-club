@@ -16,12 +16,11 @@ addTourText({
   'matter:press': T('Piston and tank', 'Drag the piston down on the sample. "Pour" tips it into the tank.'),
   'matter:window': T('Particle window', 'Turn the "Heater" dial. "Read Molecule" names the molecule in the window.'),
   'matter:jarscale': T('Balance', 'Put a jar on the pan and press "Weigh".'),
-  'matter:probe': T('Probe', 'Put a card in the slot. The key pulls the molecules apart and prints the heat.'),
+  'matter:probe': T('Probe', 'Put a card in the slot. "Separate" shows what attracts its molecules and prints the heat.'),
   'matter:well': T('Bond', 'Drag one atom away from the other. The meter shows the energy.'),
   'matter:vapour': T('Flask and pressure gauge', 'Put a liquid in the flask and press "Settle". The gauge shows where pressure levels off.'),
-  'matter:surface': T('Surface and pour plate', 'Put a liquid in the slot and press "Test".'),
+  'matter:surface': T('Surface plate', 'Put a liquid in the slot and press "Test".'),
   'matter:cell': T('Equal boxes', 'Put a sample in the box and press "Weigh".'),
-  'matter:jar': T('Jar over water', 'Gas and water vapor share the jar. The plate prints the total pressure.'),
   'matter:solidtest': T('Tester', 'Put a sample in. Turn the "Test" dial and press "Test".'),
   'matter:heatcurve': T('Heater and recorder', 'Press "Heat". The pen draws temperature against the heat added.'),
   'matter:cooler': T('Cooler', 'Put a sample in the slot and press "Cool".'),
@@ -36,11 +35,10 @@ addTourText({
   'matter:lead': T('Watch first', 'A similar case plays by itself.'),
   'matter:mlead': T('Watch first', 'A similar case plays by itself.'),
   'matter:marker': T('Number dial', 'Drag the knob to your number.'),
-  'matter:selector': T('Answer dial', 'Drag the knob to your answer.'),
-  'matter:cup': T('Cup and thermometer', 'Water and a thermometer. Drop a sample in: the molecules speed up or slow.')
+  'matter:selector': T('Answer dial', 'Drag the knob to your answer.')
 }, {
   'matter:jar': ['Jar', 'Drag it into an instrument, then into a tray.'],
-  'matter:pbox': ['Molecule box', 'The molecules in a jar. Drag it to where it belongs.'],
+  'matter:pbox': ['Molecule picture', 'The molecules in a jar. Drag it to where it belongs.'],
   'matter:mol': ['Molecule card', 'Drag it into the probe, onto the rail, or into a tray.'],
   'matter:liquid': ['Liquid card', 'Drag it into the flask or plate, then to where it belongs.'],
   'matter:pack': ['Picture box', 'Count the discs. Drag it to where it belongs.'],
@@ -48,7 +46,6 @@ addTourText({
   'matter:hsamp': ['Sample card', 'Drag it into the cooler, then onto the rail.'],
   'matter:sample': ['Sample card', 'Drag it onto the balance or the flask, then into a tray.'],
   'matter:smp': ['Sample card', 'Drag it into an instrument, onto the strip or into a tray.'],
-  'matter:charge': ['Sample', 'Chemicals that dissolve. Drag one onto the cup.'],
   'matter:note': ['Card', 'Drag it to the slot.'],
   'matter:tag': ['Name card', 'Drag it to where it belongs.'],
   'matter:stmt': ['Statement', 'Drag it to where it belongs.']
@@ -75,24 +72,21 @@ demo('fx_jarscale', 'q1-states', 5, { max: 3 });
 demo('fx_probe', 'q2-grip', 0, { max: 3 });
 demo('pc_matter_mol', 'q2-grip', 0, { max: 3 });
 demo('fx_well', 'q2-grip', 6, { max: 3 });
-demo('fx_vapour', 'q3-boil', 0, { max: 3 });
-demo('pc_matter_liquid', 'q3-boil', 0, { max: 3 });
-demo('fx_surface', 'q3-boil', 5, { max: 3 });
-demo('fx_selector', 'q3-boil', 5, { max: 4 });
-demo('fx_cell', 'q3-boil', 6, { max: 3 });
-demo('pc_matter_pack', 'q3-boil', 6, { max: 3 });
-addTourDemo('matter:fx_jar', () => idleDemo('q3-boil', 7));
+demo('fx_vapour', 'q3-boil', 1, { max: 3 });
+demo('pc_matter_liquid', 'q3-boil', 1, { max: 3 });
+demo('fx_surface', 'q3-boil', 6, { max: 3 });
+demo('fx_selector', 'q3-boil', 6, { max: 4 });
+demo('fx_cell', 'q3-boil', 7, { max: 3 });
+demo('pc_matter_pack', 'q3-boil', 7, { max: 3 });
 demo('fx_solidtest', 'q4-solids', 0, { max: 3 });
 demo('pc_matter_solid', 'q4-solids', 0, { max: 3 });
 demo('fx_marker', 'q5-crossing', 0, { max: 4 });
 demo('fx_heatcurve', 'q5-crossing', 0, { max: 4 });
-demo('fx_cooler', 'q5-crossing', 6, { max: 3 });
-demo('pc_matter_hsamp', 'q5-crossing', 6, { max: 3 });
-demo('fx_phasemap', 'q5-crossing', 7, { max: 3 });
+demo('fx_cooler', 'q5-crossing', 5, { max: 3 });
+demo('pc_matter_hsamp', 'q5-crossing', 5, { max: 3 });
+demo('fx_phasemap', 'q5-crossing', 6, { max: 3 });
 demo('fx_flask', 'q6-solution', 1, { max: 3 });
 demo('pc_matter_sample', 'q6-solution', 0, { max: 3 });
-demo('pc_matter_charge', 'q6-solution', 6, { max: 3 });
-demo('fx_cup', 'q6-solution', 6, { max: 3 });
 demo('fx_filter', 'q7-separate', 1, { max: 3 });
 demo('pc_matter_smp', 'q7-separate', 1, { max: 3 });
 demo('fx_strip', 'q7-separate', 2, { max: 3 });

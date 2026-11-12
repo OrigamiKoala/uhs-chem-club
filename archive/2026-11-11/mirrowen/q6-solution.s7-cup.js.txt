@@ -1,0 +1,40 @@
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const c = cupFixture('cup', { x: 28, y: 31 }, { title: `Bath · ${CUP_WATER} g`, water: CUP_WATER, T0: CUP_T0 });
+    const tin = (id, at) => charge(id.toLowerCase(), SOLUTES[id].name.replace(/^./, ch => ch.toUpperCase()), at, { moles: MOLES, dH: SOLUTION_ENTHALPY[id], shown: '0.100 mol' });
+    const ids = SALT_IDS.map(s => s.toLowerCase());
+    return {
+      id: 's7-cup',
+      title: 'Four Salts in a Bath',
+      prompt: 'Order the four salts by the temperature the bath ends at after each dissolves in it.',
+      widget,
+      table: matterTable({
+        pieces: SALT_IDS.map((id, i) => tin(id, { x: 66 + i * 24, y: 54 })),
+        fixtures: [c.fixture],
+        zones: {
+          slots: [c.slot],
+          rail: { at: { x: 104, y: 34 }, size: { w: 88, h: 16 }, first: 'Coolest bath', last: 'Warmest bath', items: ids, start: ['cacl2', 'nacl', 'nh4no3', 'kcl'] }
+        }
+      }),
+      hints: [
+        'Use the cup, the four samples and the strip.',
+        'Compare the bath change each sample kept, including whether it is above or below zero.',
+        'Rank from the sample that cooled the bath most on the left to the one that warmed it most on the right.'
+      ],
+      check(state) {
+        const t = state.table;
+        const order = t.zones.rail.order;
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples on the strip.' };
+        if (order.join() === BY_BATH.map(s => s.toLowerCase()).join()) return { ok: true };
+        const tins = order.map(id => t.pieces[id]);
+        if (tins.some(p => p.props.rise == null)) return { ok: false, msg: 'Not every sample has been in the cup yet.' };
+        const k = tins.findIndex((p, i) => i > 0 && tins[i - 1].props.rise > p.props.rise);
+        return { ok: false, msg: `${tins[k - 1].label} sits left of ${tins[k].label}, and the bath changed ${fixed(tins[k - 1].props.rise, 1, true)} °C for the one and ${fixed(tins[k].props.rise, 1, true)} °C for the other.` };
+      },
+      reward: {
+        log: 'Calcium chloride warmed the bath; the other three cooled it.',
+        title: 'Heat of Solution',
+        body: 'Dissolving breaks attractions between particles and makes new ones with water. If the new ones are stronger, heat leaves and the bath warms (exothermic); if weaker, heat enters and the bath cools (endothermic).'
+      }
+    };
+  })(),
