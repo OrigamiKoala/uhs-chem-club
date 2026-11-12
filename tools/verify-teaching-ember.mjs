@@ -144,7 +144,7 @@ for (const kind of MODELS) {
   r('shelves', (t, f) => { const d = f.dials.after; if (d) d.value = d.value > d.min ? d.min : d.max; else f.props.dH = -f.props.dH; }, 'moving the level');
   r('plot', (t, f) => { f.dials.temp.value = f.dials.temp.value === f.dials.temp.max ? f.dials.temp.min : f.dials.temp.max; }, 'moving the temperature');
   {
-    // The cup: a sample dropped in, or the heater turned up, moves the molecules and sends packets.
+    // The cup: a sample dropped in, or the heater turned up, changes how the molecules move.
     const hit = stagesWith('cup').find(h => h.f.dials.heat) || stagesWith('cup')[0];
     const state = RUNNER.stateFromScript(hit.st, []);
     const f = state.table.fixtures[hit.f.id];
@@ -159,8 +159,36 @@ for (const kind of MODELS) {
     const joined = RUNNER.stateFromScript(hit.st, hit.q.mod.SOLUTIONS[hit.i]);
     const a = picture(apart.table.fixtures[hit.f.id], apart.table, 4.0, 'lat0:');
     const b = picture(joined.table.fixtures[hit.f.id], joined.table, 4.0, 'lat1:');
-    a !== b ? ok('lattice: joining two blocks changes the atoms and sends energy across') : fail('lattice: joining two blocks does not change the model');
+    a !== b ? ok('lattice: joining two blocks changes the atoms') : fail('lattice: joining two blocks does not change the model');
   }
+}
+
+/* Whose particles are whose: every block has its own named box in the particle strip, under the block, and joined blocks share a wall. */
+{
+  let n = 0; let seen = 0;
+  for (const { st, f: f0, q, i } of stagesWith('lattice')) {
+    for (const script of [[], q.mod.SOLUTIONS[i], q.mod.MISSES?.[i] || []]) {
+      const state = RUNNER.stateFromScript(st, script);
+      const f = state.table.fixtures[f0.id];
+      const boxes = MOTION.latticeLayout(f, state.table);
+      seen++;
+      if (boxes.length !== f.props.blocks.length) { n++; fail(`${q.id}:${i + 1} particle strip draws ${boxes.length} boxes for ${f.props.blocks.length} blocks`); }
+      boxes.forEach((b, k) => {
+        if (!String(b.label || '').trim()) { n++; fail(`${q.id}:${i + 1} a box of particles has no name`); }
+        if (b.x < 1.5 || b.x + b.w > f.size.w - 1.5) { n++; fail(`${q.id}:${i + 1} the box of ${b.label} leaves the strip`); }
+        const next = boxes[k + 1];
+        if (next && next.x < b.x + b.w - 1e-6) { n++; fail(`${q.id}:${i + 1} the boxes of ${b.label} and ${next.label} overlap`); }
+        if (next && b.contact.right !== next.contact.left) { n++; fail(`${q.id}:${i + 1} ${b.label} and ${next.label} disagree about a shared wall`); }
+        if (next && b.contact.right && Math.abs(next.x - (b.x + b.w)) > 1e-6) { n++; fail(`${q.id}:${i + 1} joined blocks ${b.label} and ${next.label} do not stand wall to wall`); }
+        if (next && !b.contact.right && next.x - (b.x + b.w) < 2) { n++; fail(`${q.id}:${i + 1} separate blocks ${b.label} and ${next.label} stand too close to tell apart`); }
+        const joined = HEAT.blockRead(state.table, b.id).joined;
+        if (joined !== (b.contact.left || b.contact.right)) { n++; fail(`${q.id}:${i + 1} ${b.label}: the strip and the bench disagree about whether it is joined`); }
+      });
+    }
+  }
+  if (!n) ok(`particle strip: ${seen} tables, every block has its own named box and joined blocks share a wall`);
+  // Heat is not a particle: no moving model may carry a helper that flies energy from place to place.
+  /packets?\s*\(/.test(readFileSync(join(root, 'src/learn/table/kits/heat-motion.js'), 'utf8')) ? fail('heat-motion.js draws travelling packets of energy') : ok('no moving model draws heat as a travelling particle');
 }
 
 /* The 3D crowd of the same models. */

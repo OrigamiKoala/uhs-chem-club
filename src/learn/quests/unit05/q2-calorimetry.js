@@ -313,7 +313,7 @@ export const STAGES = [
   {
     id: 's6-melt',
     title: 'Heat With No Rise',
-    briefing: { speaker: SPEAKER, body: 'While a solid melts, the heat going in pulls its particles out of their fixed places, and the temperature does not rise. The heat needed to melt one gram of a solid is its heat of fusion.' },
+    briefing: { speaker: SPEAKER, body: 'While a solid melts, the heat going in frees its particles from their fixed places instead of speeding them up, so the temperature does not rise. The heat needed to melt one gram of a solid is its heat of fusion.' },
     prompt: 'What is the heat of fusion of ice, in joules for each gram?',
     entry: { id: 'jg', label: 'Heat of fusion', unit: 'J for each gram' },
     widget,
@@ -343,7 +343,7 @@ export const STAGES = [
   {
     id: 's7-curve',
     title: 'Ice to Steam',
-    briefing: { speaker: SPEAKER, body: 'Boiling is like melting: the temperature stays at 100 °C while the heat pulls the particles away from each other. The heat needed to boil one gram of a liquid is its heat of vaporization.' },
+    briefing: { speaker: SPEAKER, body: 'Boiling is like melting: the temperature stays at 100 °C while the heat separates the particles from each other. The heat needed to boil one gram of a liquid is its heat of vaporization.' },
     prompt: 'How much heat turns 10.0 g of ice at 0 °C into steam at 100 °C?',
     entry: { id: 'kj', label: 'Heat needed', unit: 'kJ' },
     widget,

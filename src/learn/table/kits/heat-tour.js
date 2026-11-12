@@ -43,7 +43,7 @@ const FIXTURES = {
   },
   'heat:plot': {
     title: 'Balance plot', dials: false,
-    text: 'The line shows the net balance of a change as the temperature rises, and the shaded strip marks where the balance is below zero. Turn the "Temperature" dial to slide the amber marker along the line. The readout under the plot shows the two pulls and the net at the temperature the marker stands at.'
+    text: 'The line shows the net balance of a change as the temperature rises, and the shaded strip marks where the balance is below zero. Turn the "Temperature" dial to slide the amber marker along the line. The readout under the plot shows ΔH, TΔS and ΔG at the temperature the marker stands at.'
   },
   'heat:warm': {
     title: 'Warmed sample', dials: false,

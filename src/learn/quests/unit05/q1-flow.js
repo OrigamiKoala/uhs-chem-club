@@ -72,8 +72,8 @@ export const STAGES = [
       fixtures: [latticeFixture('atoms', { x: 70, y: 48 }, { blocks: ['a', 'b', 'c', 'd'], w: 128, h: 20 })]
     }),
     hints: [
-      'Look at the thermometer printed on each block, and at its particles in the strip below.',
-      'Join a pair and compare where the two readings end with where each one began.',
+      'Look at the thermometer printed on each block, and at the box of particles under it with the same name.',
+      'Join a pair and watch which particles change first, then compare where the two readings end with where each began.',
       'The four blocks are the same metal and the same size, so compare the heat one block loses with the heat the other gains.'
     ],
     check(state) {
@@ -151,8 +151,8 @@ export const STAGES = [
       fixtures: [latticeFixture('atoms', { x: 70, y: 44 }, { blocks: ['spark', 'valve', 'tank'], w: 128, h: 20 })]
     }),
     hints: [
-      'Look at the thermometer on the frozen valve, and at the particles drawn for each block in the strip below.',
-      'Compare how many particles the strip draws for the welding spark and for the warm tank.',
+      'Look at the thermometer on the frozen valve, and at the named box of particles under each block.',
+      'Compare how many particles are in the box of the welding spark and in the box of the warm tank.',
       'A source stops passing heat on once it and the valve are at one temperature, so think about how much energy each source can lose before then.'
     ],
     check(state) {

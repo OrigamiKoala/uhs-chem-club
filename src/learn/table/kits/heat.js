@@ -449,8 +449,8 @@ export function warmFixture(id, at, { Ts, m = 100, c = 4.184, hideS = false, tit
 }
 
 /**
- * The atoms of the blocks listed: each block as a lattice that shakes harder the warmer it is, with packets of energy crossing between
- * blocks that are joined. `blocks` are piece ids; the picture reads the same planner (`blockRead`) the thermometers do.
+ * The atoms of the blocks listed: each block's particles in a named box under the block, shaking harder the warmer it is. Joined
+ * blocks stand wall to wall, and a change in motion starts at the shared wall and spreads. `blocks` are piece ids; the picture reads the same planner (`blockRead`) the thermometers do.
  */
 export function latticeFixture(id, at, { blocks, w = 140, h = 22, title = 'Particles in the blocks' } = {}) {
   return { id, kind: 'lattice', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { blocks: blocks.slice() } };
@@ -458,8 +458,8 @@ export function latticeFixture(id, at, { blocks, w = 140, h = 22, title = 'Parti
 
 /**
  * A reaction as atoms: the reactant molecules on the left and the product molecules on the right, the atoms travelling between as the
- * bonds break and form. `lhs` and `rhs` are `[[coefficient, species], ...]`; `dH` (kJ, the system's sign) adds packets of energy leaving or
- * entering only where a stage already states the sign.
+ * bonds break and form. `lhs` and `rhs` are `[[coefficient, species], ...]`; `dH` (kJ, the system's sign) leaves the products
+ * moving faster (heat given out) or slower (heat taken in), only where a stage already states the sign.
  */
 export function rxnFixture(id, at, { lhs, rhs, dH = 0, w = 60, h = 30, title = 'Reaction, atom by atom' } = {}) {
   return { id, kind: 'rxn', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { lhs, rhs, dH } };

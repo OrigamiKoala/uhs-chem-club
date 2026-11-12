@@ -25,6 +25,7 @@ Status values: not started, planned (plan rows written), in progress, done, play
 - Benches done: all eight. Cold-read review run after `q1-flow` and on the finished world; findings fixed or listed under "Still weak" in the world file.
 - Checks at the end (2026-11-11): `verify:learn`, `verify:table`, `verify:ember`, `verify:teaching`, `verify:bench`, `verify:docs` and `npm run build` pass. `verify:story` fails on `unit10/q1-halves` (baseline) and `unit02/q10-wavefunctions has no story animation` (not in the baseline table, not Ember Reach).
 - Not committed.
+- 2026-11-12, after the owner played it: particle views reworked (no energy packets, named box per block, sample and heater as rings, stretched motion scale). Record in `worlds/unit05-ember.md`, "Particle rework". `verify:learn`, `verify:table`, `verify:ember`, `verify:teaching`, `verify:bench`, `verify:docs`, `npm run build` pass; `verify:story` fails on the same two baseline items.
 
 ### Lanternfall (`unit02`), exemplar
 

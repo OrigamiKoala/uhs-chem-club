@@ -164,6 +164,20 @@ Written 2026-11-11 after reading the world as the student. 47 stages become 42. 
 - `q7`: the plot labelled TΔS as "SPREAD" and ΔG as "NET"; it now prints the symbols, which the briefing defines.
 - `q3` stage 6 reward: "Fuel energy density depends on mass rather than moles" was not a meaningful statement; replaced.
 
+### Particle rework (2026-11-12, owner report after playing)
+
+The owner found that the particle animations confused more than they taught: on `q1-flow` nobody could tell which particles belonged to which block, and small amber dots flew between things as if heat were a particle.
+
+- The `packets` painter is gone from every model (cup, particle strip, reaction, energy diagram, free-energy plot, the `meet` and `heater` clips).
+- Heat is drawn as it passes: particles next to the hotter thing change motion first and the change spreads away from the contact.
+- `q1-flow` stages 1 and 3: each block's particles are in a box under that block with the block's name over it. Joined blocks' boxes stand wall to wall with a broken amber line where they touch. Hints 1 and 2 reworded to point at the named boxes.
+- Cups: filled dots are the bath; rings are the sample (under the mouth, inside the dashed system line in `q1` stage 4) or the heater element (on the floor), with a printed key.
+- Motion was nearly identical at 20 °C and 80 °C (true speeds differ by 9%), so nothing visibly changed when a block warmed. Motion is now drawn on a stretched scale; the Tour says hotter particles are drawn moving more.
+- Particles used to jump while a reading was changing (position was `clock × speed`). Only the width of the swing now depends on temperature.
+- `q2` stages 6 and 7 briefings: "heat pulls its particles" reworded (heat frees or separates the particles instead of speeding them up).
+- Not changed: the items under "Still weak" below. The free-energy plot now shows only the ball, so `q7` stage 2 still lacks a picture of ΔH and TΔS competing (item 1).
+- Not seen on a screen by the agent. To look at: label fit over the 14-unit boxes on a phone ("WELDING SPARK"), the ring key at the bottom right of each cup, and the 3D crowd over the particle strip.
+
 ### Still weak
 
 1. `q7-gibbs` stage 4 and `q6-entropy` stage 5: a plate and a number, with a worked case before them but nothing on the bench that the number changes. A bench that showed the two parts of ΔG as bars the student fills would fix `q7` stage 4; not built.

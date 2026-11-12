@@ -13,12 +13,12 @@ import { addTourDemo, stageDemo } from '../tour-demo.js';
 const T = (title, text) => ({ title, text, dials: false });
 
 addTourText({
-  'heat:cup': T('Cup and thermometer', 'Water and a thermometer. Drop a sample in: the molecules speed up or slow.'),
-  'heat:lattice': T('Particles in the blocks', 'Hot particles move faster. Join two blocks and energy crosses between them.'),
+  'heat:cup': T('Cup and thermometer', 'Dots are water molecules; rings are the sample. Hotter particles are drawn moving more.'),
+  'heat:lattice': T('Particles in the blocks', 'Each box holds the particles of the block above it. Hotter particles shake harder.'),
   'heat:rxn': T('Reaction, atom by atom', 'Bonds break, atoms move, new bonds form.'),
   'heat:curve': T('Heating the sample', 'Drag along the graph to add heat. The particles change phase.'),
   'heat:lead': T('Watch first', 'A similar case plays by itself.'),
-  'heat:shelves': T('Energy diagram', 'Drag the products level up or down. Energy leaves or enters.'),
+  'heat:shelves': T('Energy diagram', 'Drag the products level up or down to set the energy change.'),
   'heat:well': T('Bond', 'Drag one atom away from the other. The meter shows the energy.'),
   'heat:ledger': T('Bond table', 'Totals the bonds in each tray. Move a card to change the totals.'),
   'heat:stack': T('Stack of steps', 'Adds the cards in its tray. Matching substances cancel. The ladder steps by each ΔH.'),

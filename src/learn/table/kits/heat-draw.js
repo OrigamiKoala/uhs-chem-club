@@ -16,7 +16,7 @@ import {
   cellsOpen, loggedArrangements, waysOf, shakesOf, occupiedCells, sig, WELL, LID_LOSS, whereIs, seededRng
 } from './heat-read.js';
 import { bondAtoms, inkOfElement, phaseDots } from './heat-parts.js';
-import { glide, bathShown, speedAt, tempInk, chamberFlight, replayHeat, curvePath, curveAt, curveShown, curveFoot, contentTopOf } from './heat-motion.js';
+import { glide, bathShown, speedAt, tempInk, chamberFlight, replayHeat, curvePath, curveAt, curveShown, curveFoot, contentTopOf, latticeLayout, cupParts, BLOCK_GLIDE_S, LEAD_MEET } from './heat-motion.js';
 void replayHeat;
 
 const AMBER = PLATE_COLORS.amber;
@@ -109,7 +109,7 @@ function paintBlock(ctx, p, state, o) {
   // A block standing in a bath reads what the bath settled at (`settle` keeps how far it fell).
   if (String(p.zone || '').startsWith('slot:') && p.props.trial) f.T = p.props.T - p.props.trial.fall;
   // The reading walks to its new value over a couple of seconds, as the energy crosses (flat table only: the built face has no clock).
-  if (o.clock > 0) f.T = glide(`${o.scope || ''}blk:${p.id}`, o.clock, blockRead(state, p.id).T0, f.T);
+  if (o.clock > 0) f.T = glide(`${o.scope || ''}blk:${p.id}`, o.clock, blockRead(state, p.id).T0, f.T, BLOCK_GLIDE_S);
   const hot = f.T > 45;
   const cold = f.T < 15;
   const box = slab(ctx, o, RECTS.block, hot ? '#321f15' : cold ? '#1b232b' : '#2a2620');
@@ -416,9 +416,9 @@ function paintCup(ctx, f, state, b) {
   ctx.strokeRect(Math.round(F.x(cx0)) + 0.5, Math.round(F.y(cy0)) + 0.5, Math.round(F.len(cx1 - cx0)), Math.round(F.len(cy1 - cy0)));
   ctx.lineWidth = 1;
   if (p.boundary) {
-    // The line round what is being studied: the mouth and the charge in it.
+    // The line round what is being studied: the mouth, and the band under it where the sample's particles are drawn.
     ctx.strokeStyle = AMBER; ctx.setLineDash([4, 3]);
-    ctx.strokeRect(F.x(1.5), F.y(top - 0.5), F.len(23), F.len(16.5));
+    ctx.strokeRect(F.x(1.5), F.y(top - 0.5), F.len(23), F.len(20.3));
     ctx.setLineDash([]);
   }
   say(ctx, `${sig(r.mWater, 4)} g`, F.x((cx0 + cx1) / 2), F.y(cy1 - 3), F.size(2.4, 6), { align: 'center', color: DUST });
@@ -438,6 +438,51 @@ function paintCup(ctx, f, state, b) {
   if (p.showHeat) put('HEAT', `${Math.round(r.q).toLocaleString('en-US')} J`, AMBER);
   if (p.showVerdict) put('BATH', r.dT > 0.05 ? 'WARMED' : r.dT < -0.05 ? 'COOLED' : 'SAME', DUST);
   if (p.showLid && r.lidOff) say(ctx, 'LID OFF', F.x(32), F.y(top + 29), F.size(2.2, 6), { color: AMBER, weight: 700 });
+  // Whose particles the rings are (the filled dots are the bath's own): a sample under the mouth, or the heater's element on the floor.
+  const g = cupParts(f, r);
+  if ((g.sample && !r.item.props.latent) || g.heater) {
+    ctx.strokeStyle = DUST; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(F.x(33), F.y(top + 31.6), Math.max(2, F.len(0.72)), 0, Math.PI * 2); ctx.stroke();
+    say(ctx, g.sample ? 'SAMPLE' : 'HEATER', F.x(34.8), F.y(top + 31.6), F.size(1.9, 5.8), { color: DIM, maxW: F.len(f.size.w - 36) });
+  }
+}
+
+/** The particle strip's own print: a box for each block, standing under that block, with the block's name over it. */
+function paintLatticeFace(ctx, f, state, b) {
+  const F = frameOf(b);
+  const boxes = latticeLayout(f, state);
+  ctx.lineWidth = 1;
+  for (const q of boxes) {
+    const x0 = Math.round(F.x(q.x)) + 0.5; const x1 = Math.round(F.x(q.x + q.w)) + 0.5;
+    const y0 = Math.round(F.y(q.y)) + 0.5; const y1 = Math.round(F.y(q.y + q.h)) + 0.5;
+    ctx.strokeStyle = DUST;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.moveTo(x0, y1); ctx.lineTo(x1, y1);
+    if (!q.contact.left) { ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); }
+    if (!q.contact.right) { ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); }
+    ctx.stroke();
+    // The wall two joined blocks share is where they touch: a broken line, so the particles each side of it are seen to be neighbours.
+    if (q.contact.right) {
+      ctx.strokeStyle = AMBER; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    say(ctx, q.label.toUpperCase(), F.x(q.x + q.w / 2), F.y(q.y - 1.9), F.size(1.9, 5.8), { color: DUST, align: 'center', maxW: F.len(q.w - 0.6) });
+  }
+}
+
+/** The names on a lead-in clip, where it shows more than one kind of thing. */
+function paintLeadFace(ctx, f, state, b) {
+  const F = frameOf(b);
+  const w = f.size.w; const h = f.size.h;
+  if (f.props.scene === 'meet') {
+    const cw = LEAD_MEET.cw(w);
+    say(ctx, 'HOT BLOCK', F.x(w / 2 - cw / 2), F.y(h - 2.6), F.size(1.9, 5.8), { color: WARM, align: 'center', maxW: F.len(cw) });
+    say(ctx, 'COLD BLOCK', F.x(w / 2 + cw / 2), F.y(h - 2.6), F.size(1.9, 5.8), { color: COLD, align: 'center', maxW: F.len(cw) });
+  } else if (f.props.scene === 'heater') {
+    say(ctx, 'WATER', F.x(4), F.y(h - 3.9), F.size(1.9, 5.8), { color: DIM });
+    say(ctx, 'HEATER', F.x(w - 4), F.y(h - 3.9), F.size(1.9, 5.8), { color: WARM, align: 'right' });
+  }
 }
 
 function paintShelves(ctx, f, state, b) {
@@ -759,6 +804,8 @@ export function paintFixture(ctx, f, state, b) {
   else if (f.kind === 'plot') paintPlot(ctx, f, state, b);
   else if (f.kind === 'warm') paintWarm(ctx, f, state, b);
   else if (f.kind === 'curve') paintCurveFace(ctx, f, state, b);
+  else if (f.kind === 'lattice') paintLatticeFace(ctx, f, state, b);
+  else if (f.kind === 'lead') paintLeadFace(ctx, f, state, b);
   else if (f.kind === 'plaque') paintPlaque(ctx, f, state, b);
   else if (f.kind === 'marker') paintMarker(ctx, f, state, b);
   else if (f.kind === 'selector') paintSelector(ctx, f, state, b);

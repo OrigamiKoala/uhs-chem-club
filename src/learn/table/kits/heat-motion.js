@@ -3,16 +3,24 @@
  *
  * EVERY INSTRUMENT SHOWS THE EVENT UNDER ITS READING, IN TIME. A painter here is a pure function of the table state and the clock
  * (`b.clock`): the same function draws the flat bench and, run against a recording context (`pans-3d.js`), the crowd of spheres that
- * floats over the plate at `3D On`. Nothing here decides a figure: how fast the water's molecules move comes from the temperature the
- * planner reads, how many packets of energy cross comes from the heat the planner reads, and which way they go from its sign.
+ * floats over the plate at `3D On`. Nothing here decides a figure: every temperature comes from the planner.
  *
- *   cup      water molecules that move faster as the bath warms (the temperature glides to its new reading), and packets of energy that
- *            cross between the sample (or heater) and the water
- *   lattice  the atoms of each metal block, shaking harder as the block warms; joined blocks hand packets from the hotter to the colder
- *   rxn      a reaction as atoms: bonds break, atoms travel, new bonds form
+ * HEAT IS NOT A PARTICLE. Nothing in this file draws energy as a thing that flies from one place to another. Heat is shown the way it
+ * passes: the particles that touch the hotter thing are knocked into faster motion first, and they knock their neighbours in turn, so a
+ * change in motion spreads away from the place of contact (`spreadT`). A viewer must always be able to say whose particles they are
+ * looking at: each block's particles stand in a box under that block with its name over it, water molecules are filled dots, and the
+ * particles of a sample or a heater in a cup are rings.
+ *
+ * THE MOTION IS DRAWN LARGER THAN LIFE. Between 20 °C and 80 °C real particle speeds differ by under a tenth, which no eye can see, so
+ * `vigour` stretches the difference. A solid's atoms shake about fixed places at one rate and a wider swing; a liquid's and a gas's also
+ * wander at a fixed pace. Because only the swing depends on temperature, a reading that is still changing never makes a particle jump.
+ *
+ *   cup      water molecules (dots) and the sample or heater (rings); the change in motion starts at the sample and spreads
+ *   lattice  each block's particles in a named box under the block; joined blocks stand wall to wall and the change spreads from the wall
+ *   rxn      a reaction as atoms: bonds break, atoms travel, new bonds form; the products move faster when the reaction gives out heat
  *   curve    a sample heated or cooled through its phases, traced as it goes
- *   shelves  a marble rolling over the energy diagram, and energy leaving or entering
- *   plot     a ball on the free-energy line and the two pulls on it
+ *   shelves  a marble rolling over the energy diagram
+ *   plot     a ball on the free-energy line
  *   stack    species that cancel when they stand on both sides
  *
  * The painters keep no state on the fixture. The little memory they need (a glide that starts when a reading changes) lives in a module
@@ -49,12 +57,20 @@ export function tempInk(T) {
 }
 /** How fast particles move at `T` °C, 1 at room temperature (speed goes as the square root of the kelvin temperature). */
 export const speedAt = T => Math.sqrt(Math.max(1, T + 273.15) / 295);
+/**
+ * How hard a particle is DRAWN moving at `T` °C: 0.15 at 0 °C, 1 at 100 °C, a little under 1.6 for a welding spark. Real speeds go as
+ * `speedAt`, which is too flat to see across a bench's range, so every moving model uses this stretched scale and says so in its Tour.
+ */
+export const vigour = T => (T <= 0 ? Math.max(0.06, 0.15 + T / 400) : T <= 100 ? 0.15 + 0.85 * (T / 100) : 1 + 0.52 * Math.log10(T / 100));
 
 /* ------------------------------------------------------------------
    THE GLIDE: a reading that changes takes about two seconds to arrive
    ------------------------------------------------------------------ */
 
 const GLIDE_S = 2.4;
+/** Two blocks, or a sample and its bath, take longer, so the change can be seen to start at the place of contact and spread. */
+export const BLOCK_GLIDE_S = 4.2;
+export const CUP_GLIDE_S = 3.8;
 const memory = new Map();
 let restart = false;
 
@@ -63,21 +79,36 @@ export function replayHeat() { for (const m of memory.values()) m.restart = true
 
 /**
  * The value to show for `key` at `clock`: `target` once it has arrived, on the way from `from` while a change is under way. With no clock
- * (the built table's printed face) it is the target.
+ * (the built table's printed face) it is the target. Every caller of one key passes the same `dur`.
  */
-export function glide(key, clock, from, target) {
+export function glide(key, clock, from, target, dur = GLIDE_S) {
   if (clock == null || !(clock > 0)) return target;
   let m = memory.get(key);
   if (!m) { m = { from: restart ? from : target, target, t0: restart ? clock : -1e9, restart: false }; memory.set(key, m); }
   if (m.restart) { m.restart = false; m.from = from; m.t0 = clock; m.target = target; }
   if (Math.abs(m.target - target) > 1e-9) {
-    const nowShown = lerp(m.from, m.target, ease((clock - m.t0) / GLIDE_S));
+    const nowShown = lerp(m.from, m.target, ease((clock - m.t0) / dur));
     m.from = nowShown; m.target = target; m.t0 = clock;
   }
-  return lerp(m.from, m.target, ease((clock - m.t0) / GLIDE_S));
+  return lerp(m.from, m.target, ease((clock - m.t0) / dur));
 }
 /** Seconds since this key's change began (large when it has settled). */
 export function sinceChange(key, clock) { const m = memory.get(key); return m ? clock - m.t0 : 1e9; }
+
+/**
+ * The temperature of ONE particle while its body's reading glides: a particle at the place of contact (`d` = 0) starts to change at once
+ * and one at the far side (`d` = 1) last, and all have arrived when the reading has. Call `glide` for the key first. `settled` is the
+ * reading to use when no change is under way.
+ */
+const SPREAD = 1.3;
+export function spreadT(key, clock, d, settled, dur = GLIDE_S) {
+  const m = memory.get(key);
+  if (!m || clock == null || !(clock > 0)) return settled;
+  const p = clamp((clock - m.t0) / dur, 0, 1);
+  return lerp(m.from, m.target, ease(clamp(p * (1 + SPREAD) - clamp(d, 0, 1) * SPREAD, 0, 1)));
+}
+/** How far along its change a key is, 0 to 1 (1 when settled or unknown). */
+export function progressOf(key, clock, dur = GLIDE_S) { const m = memory.get(key); return m && clock > 0 ? clamp((clock - m.t0) / dur, 0, 1) : 1; }
 
 /* ------------------------------------------------------------------
    SMALL DRAWING HELPERS
@@ -94,53 +125,65 @@ const ring = (ctx, x, y, r, color, alpha = 1) => {
   ctx.globalAlpha = 1;
 };
 
-/** Packets of energy travelling from (x0, y0) to (x1, y1) in table units: n of them, staggered, each fading at its ends. */
-function packets(ctx, F, clock, seed, x0, y0, x1, y1, n, rate = 0.55) {
-  for (let i = 0; i < n; i++) {
-    const u = ((clock * rate + i / n + hash(seed, i) * 0.15) % 1 + 1) % 1;
-    const x = lerp(x0, x1, u); const y = lerp(y0, y1, u) + Math.sin(u * 6.28 + i) * 0.5;
-    const a = Math.sin(u * Math.PI);
-    ring(ctx, F.x(x), F.y(y), F.len(0.85), AMBER, 0.25 + 0.75 * a);
-    dot(ctx, F.x(x), F.y(y), F.len(0.42), AMBER, 0.35 + 0.65 * a);
-  }
-}
-/** How many packets stand for a heat of |q| joules (a few at 10 J, six at 100 kJ). */
-const packetsFor = q => (Math.abs(q) < 1e-6 ? 0 : clamp(Math.round(Math.log10(1 + Math.abs(q))) , 1, 6));
-
 /* ------------------------------------------------------------------
-   THE CUP: water molecules at the bath's temperature
+   THE CUP: water molecules (dots), and the sample or the heater (rings)
    ------------------------------------------------------------------ */
 
 /** The temperature the bath shows at `clock`: it glides from its starting reading to the one the planner reads. */
 export function bathShown(f, state, b) {
   const r = cupRead(state, f.id);
-  return { r, T: glide(`${b?.scope || ''}cup:${f.id}`, b?.clock, r.T0, r.Tf) };
+  return { r, T: glide(`${b?.scope || ''}cup:${f.id}`, b?.clock, r.T0, r.Tf, CUP_GLIDE_S) };
+}
+
+/**
+ * Where the cup's own picture stands, in units from the fixture's corner: the body, the water's surface, the band under the mouth where a
+ * sample dropped in is drawn, and the floor where the heater's element lies.
+ */
+export function cupParts(f, r) {
+  const top = contentTopOf(f);
+  const cx0 = 3; const cx1 = 23; const cy0 = top + 15.5; const cy1 = top + 31.5;
+  const level = Math.min(1, 0.45 + (r.mWater / (f.props.vmax || 220)) * 0.5);
+  const surface = cy1 - (cy1 - cy0) * level;
+  const sample = Boolean(r.item);
+  const heater = !sample && Boolean(f.dials.heat || r.joules);
+  // The water's own room: under the sample when there is one, over the element when the heater is fitted.
+  const wy0 = sample ? Math.max(surface, cy0 + 4.6) : surface;
+  const wy1 = heater ? cy1 - 2.2 : cy1;
+  return { top, cx0, cx1, cy0, cy1, surface, sample, heater, wy0, wy1 };
 }
 
 function paintCupMotion(ctx, f, state, b) {
   const F = frameOf(b);
-  const top = contentTopOf(f);
   const { r, T } = bathShown(f, state, b);
-  const cx0 = 3; const cx1 = 23; const cy1 = top + 31.5; const cy0 = top + 15.5;
-  const level = Math.min(1, 0.45 + (r.mWater / (f.props.vmax || 220)) * 0.5);
-  const yTop = cy1 - (cy1 - cy0) * level;
+  const g = cupParts(f, r);
   const clock = b.clock || 0;
-  const sp = speedAt(T);
-  const ink = tempInk(T);
+  const key = `${b.scope || ''}cup:${f.id}`;
+  const p = progressOf(key, clock, CUP_GLIDE_S);
+  // The change starts where the bath touches what heats or cools it: the sample at the top, the heater's element on the floor.
+  const fromTop = g.sample;
+  const far = d => (fromTop ? d : 1 - d);
   const N = 18;
   const metal = Math.abs(r.c - 4.184) > 0.01;
+  const W = g.cx1 - g.cx0; const H = g.wy1 - g.wy0;
   for (let i = 0; i < N; i++) {
-    let px; let py;
+    let px; let py; let v;
     if (metal) {
-      // A cup of metal is a lattice: each atom shakes about its place, harder as it warms.
+      // A cup of metal is a lattice: each atom shakes about its own place, with a wider swing as it warms.
       const gx = i % 6; const gy = Math.floor(i / 6);
-      px = cx0 + 2.4 + gx * ((cx1 - cx0 - 4.8) / 5) + Math.sin(clock * (3 + 3 * sp) + i) * 0.35 * sp;
-      py = yTop + 2 + gy * ((cy1 - yTop - 4) / 2) + Math.cos(clock * (3.3 + 3 * sp) + i * 2) * 0.35 * sp;
+      const Ti = spreadT(key, clock, far((gy + 0.5) / 3), T, CUP_GLIDE_S);
+      v = vigour(Ti);
+      px = g.cx0 + 2.4 + gx * ((W - 4.8) / 5) + Math.sin(clock * 8 + i * 1.7) * 0.75 * v;
+      py = g.wy0 + 1.6 + gy * ((H - 3.2) / 2) + Math.cos(clock * 9.1 + i * 2.3) * 0.75 * v;
+      dot(ctx, F.x(px), F.y(py), F.len(0.9), tempInk(Ti), 0.95);
     } else {
-      px = cx0 + 1.4 + (cx1 - cx0 - 2.8) * tri(hash('cx', i) * 2 + clock * 0.21 * sp * (0.7 + hash('vx', i)));
-      py = yTop + 1.4 + (cy1 - yTop - 2.8) * tri(hash('cy', i) * 2 + clock * 0.17 * sp * (0.7 + hash('vy', i)));
+      // Water: each molecule wanders at a fixed pace and jostles harder the warmer the water round it is.
+      const u = tri(hash('cy', i) * 2 + clock * 0.045 * (0.7 + hash('vy', i)));
+      const Ti = spreadT(key, clock, far(u), T, CUP_GLIDE_S);
+      v = vigour(Ti);
+      px = g.cx0 + 1.8 + (W - 3.6) * tri(hash('cx', i) * 2 + clock * 0.05 * (0.7 + hash('vx', i))) + Math.sin(clock * 9 + i * 2.1) * (0.2 + 0.9 * v);
+      py = g.wy0 + 1.6 + (H - 3.2) * u + Math.cos(clock * 10.3 + i * 1.3) * (0.2 + 0.9 * v);
+      dot(ctx, F.x(clamp(px, g.cx0 + 0.9, g.cx1 - 0.9)), F.y(clamp(py, g.wy0 + 0.9, g.wy1 - 0.9)), F.len(0.8), tempInk(Ti), 0.9);
     }
-    dot(ctx, F.x(px), F.y(py), F.len(metal ? 0.9 : 0.8), ink, 0.9);
   }
   // Ice at the mouth: a small lattice that loses atoms as the ice melts, each leaving as a water molecule into the bath.
   if (r.item?.props?.latent) {
@@ -148,81 +191,117 @@ function paintCupMotion(ctx, f, state, b) {
     const left = Math.round(total * (1 - clamp(r.melted / Math.max(1e-9, r.item.props.m), 0, 1)));
     for (let i = 0; i < total; i++) {
       const gx = i % 3; const gy = Math.floor(i / 3);
-      if (i < left) dot(ctx, F.x(9 + gx * 2.6 + Math.sin(clock * 3 + i) * 0.12), F.y(top + 5 + gy * 2.6 + Math.cos(clock * 3.4 + i) * 0.12), F.len(0.85), '#a9c4d8', 1);
+      if (i < left) dot(ctx, F.x(9 + gx * 2.6 + Math.sin(clock * 3 + i) * 0.12), F.y(g.top + 5 + gy * 2.6 + Math.cos(clock * 3.4 + i) * 0.12), F.len(0.85), '#a9c4d8', 1);
+    }
+    return;
+  }
+  // The sample, as rings under the mouth. A hot block's atoms begin at the block's temperature and calm to the bath's. Chemicals that
+  // give out heat are drawn fast at first and ones that take heat in slow at first, because that is the only way they can warm or cool
+  // the water that touches them; both end at the bath's temperature.
+  if (g.sample) {
+    const isBlock = r.item.kind === 'block';
+    const began = isBlock ? r.item.props.T : r.q > 1e-6 ? r.T0 + 90 : r.q < -1e-6 ? r.T0 - 60 : r.T0;
+    const Ts = lerp(began, r.Tf, ease(p));
+    const v = vigour(Ts);
+    for (let i = 0; i < 10; i++) {
+      const gx = i % 5; const gy = Math.floor(i / 5);
+      const x = g.cx0 + 3 + gx * ((W - 6) / 4) + Math.sin(clock * 8 + i * 1.9) * 0.6 * v;
+      const y = g.cy0 + 1.3 + gy * 2 + Math.cos(clock * 9.3 + i * 2.7) * 0.6 * v;
+      ring(ctx, F.x(x), F.y(y), F.len(0.72), tempInk(Ts), 1);
     }
   }
-  // Packets of energy: between the sample (or the heater) and the water, in the direction the planner's sign says.
-  const water = { x: (cx0 + cx1) / 2, y: (yTop + cy1) / 2 };
-  const src = { x: (cx0 + cx1) / 2, y: top + 8.5 };
-  const arriving = sinceChange(`${b.scope || ''}cup:${f.id}`, clock) < GLIDE_S + 0.5;
-  const n = (r.item || r.joules) ? packetsFor(r.q) : 0;
-  if (n && (arriving || r.item?.kind === 'block' || r.joules)) {
-    if (r.q > 0) packets(ctx, F, clock, `cupin${f.id}`, src.x, src.y, water.x, water.y - 2, n);
-    else packets(ctx, F, clock, `cupout${f.id}`, water.x, water.y - 2, src.x, src.y, n);
+  // The heater's element, as a row of rings on the floor: hot while it is giving its heat, then at the bath's temperature.
+  if (g.heater) {
+    const Th = r.joules > 0 ? lerp(Math.max(T + 60, 100), r.Tf, ease(p)) : T;
+    const v = vigour(Th);
+    for (let i = 0; i < 6; i++) {
+      const x = g.cx0 + 2.5 + i * ((W - 5) / 5) + Math.sin(clock * 8 + i * 1.9) * 0.45 * v;
+      const y = g.cy1 - 1.1 + Math.cos(clock * 9.3 + i * 2.7) * 0.3 * v;
+      ring(ctx, F.x(x), F.y(y), F.len(0.62), tempInk(Th), 1);
+    }
   }
-  // A heater with no sample: a row of packets drops from the top of the cup.
-  void DIM;
 }
 
 /* ------------------------------------------------------------------
-   THE ATOM VIEW: what each block is made of
+   THE PARTICLE VIEW: each block's particles in a named box under the block
    ------------------------------------------------------------------ */
 
 /** How many atoms a block is drawn with: more material, more atoms (a logarithmic count, 2 for a speck and 16 for a kilogram and more). */
 export const atomsFor = m => clamp(Math.round(4 + 2 * Math.log10(Math.max(1e-4, m))), 2, 16);
 
+/**
+ * Where each block's box of particles stands in the strip, in units from the fixture's corner. A box stands under its own block (the
+ * strip mirrors the bench), blocks that are joined stand wall to wall in the order they lie on the bench, and separate blocks keep a gap.
+ * `contact` says which walls are shared, which is where a change in motion starts. The face painter (`heat-draw.js`) draws the boxes and
+ * the names from this; the particles below are placed from it too, so the two cannot disagree.
+ */
+export function latticeLayout(f, state) {
+  const ids = f.props.blocks.filter(id => state.pieces[id] && !state.pieces[id].hidden);
+  const localX = id => state.pieces[id].at.x - (f.at.x - f.size.w / 2);
+  const byX = ids.slice().sort((a, b) => localX(a) - localX(b) || (a < b ? -1 : 1));
+  const y = 9.6; const h = Math.max(6, f.size.h - y - 1.4);
+  const shape = id => {
+    const pc = state.pieces[id];
+    const count = atomsFor(pc.props.m);
+    const rows = count <= 2 ? 1 : count <= 6 ? 2 : 3;
+    const cols = Math.ceil(count / rows);
+    return { id, count, rows, cols, w: clamp(cols * 4.4, 14, 26), water: /H₂O|water/i.test(pc.props.mat || pc.label), label: pc.label };
+  };
+  const seen = new Set(); const groups = [];
+  for (const id of byX) {
+    if (seen.has(id)) continue;
+    const mates = blockRead(state, id).mates;
+    const members = byX.filter(x => x === id || mates.includes(x));
+    members.forEach(x => seen.add(x));
+    const boxes = members.map(shape);
+    const W = boxes.reduce((a, q) => a + q.w, 0);
+    groups.push({ boxes, W, x0: members.reduce((a, x) => a + localX(x), 0) / members.length - W / 2 });
+  }
+  groups.sort((a, b) => a.x0 + a.W / 2 - (b.x0 + b.W / 2));
+  const GAP = 3; const lo = 2; const hi = f.size.w - 2;
+  let end = lo - GAP;
+  for (const g of groups) { g.x0 = Math.max(g.x0, end + GAP); end = g.x0 + g.W; }
+  let start = hi + GAP;
+  for (const g of groups.slice().reverse()) { g.x0 = Math.min(g.x0, start - GAP - g.W); start = g.x0; }
+  const out = [];
+  for (const g of groups) {
+    let x = g.x0;
+    g.boxes.forEach((q, i) => { out.push({ ...q, x, y, h, contact: { left: i > 0, right: i < g.boxes.length - 1 } }); x += q.w; });
+  }
+  return out;
+}
+
 function paintLattice(ctx, f, state, b) {
   const F = frameOf(b);
-  const ids = f.props.blocks.filter(id => state.pieces[id]);
   const clock = b.clock || 0;
-  const n = ids.length;
-  if (!n) return;
-  const top = 6;
-  const gw = (f.size.w - 4) / n;
-  const gh = f.size.h - top - 1.5;
-  ids.forEach((id, k) => {
-    const p = state.pieces[id];
-    const r = blockRead(state, id);
-    const T = glide(`${b.scope || ''}blk:${id}`, clock, r.T0, r.T);
-    const x0 = 2 + k * gw + 0.6; const w = gw - 1.2;
-    const ink = tempInk(T);
-    const water = /H₂O|water/i.test(p.props.mat || p.label);
-    const count = atomsFor(p.props.m);
-    const cols = Math.ceil(Math.sqrt(count * (w / gh)));
-    const rows = Math.ceil(count / cols);
-    const amp = (0.12 + 0.34 * speedAt(T)) * Math.min(w / (cols + 0.5), gh / (rows + 0.5)) * 0.55;
-    const sx = w / (cols + 0.5); const sy = gh / (rows + 0.5);
-    ctx.strokeStyle = DIM; ctx.lineWidth = 1;
-    ctx.strokeRect(Math.round(F.x(x0)) + 0.5, Math.round(F.y(top)) + 0.5, Math.round(F.len(w)), Math.round(F.len(gh)));
-    for (let a = 0; a < count; a++) {
-      const gx = a % cols; const gy = Math.floor(a / cols);
-      const bx = x0 + sx * (gx + 0.75); const by = top + sy * (gy + 0.75);
-      const wob = 1.6 + 1.5 * speedAt(T);
-      const px = bx + Math.sin(clock * wob + hash(id, a) * 6.28) * amp;
-      const py = by + Math.cos(clock * wob * 1.13 + hash(id, a + 50) * 6.28) * amp;
-      if (water) {
-        dot(ctx, F.x(px), F.y(py), F.len(Math.min(sx, sy) * 0.3), '#a0522d', 0.95);
-        dot(ctx, F.x(px - sx * 0.2), F.y(py - sy * 0.18), F.len(Math.min(sx, sy) * 0.15), ink, 0.95);
-        dot(ctx, F.x(px + sx * 0.2), F.y(py - sy * 0.18), F.len(Math.min(sx, sy) * 0.15), ink, 0.95);
-      } else dot(ctx, F.x(px), F.y(py), F.len(Math.min(sx, sy) * 0.3), ink, 0.95);
+  for (const q of latticeLayout(f, state)) {
+    const r = blockRead(state, q.id);
+    const key = `${b.scope || ''}blk:${q.id}`;
+    const T = glide(key, clock, r.T0, r.T, BLOCK_GLIDE_S);
+    const sx = q.w / q.cols; const sy = q.h / q.rows;
+    const cell = Math.min(sx, sy);
+    const rad = Math.min(1.05, cell * 0.24);
+    for (let a = 0; a < q.count; a++) {
+      const gx = a % q.cols; const gy = Math.floor(a / q.cols);
+      const u = (gx + 0.5) / q.cols;
+      // How far this particle stands from a wall shared with a joined block, 0 at the wall and 1 at the far side.
+      const d = q.contact.left && q.contact.right ? Math.min(u, 1 - u) * 2 : q.contact.left ? u : q.contact.right ? 1 - u : 0;
+      const Ta = spreadT(key, clock, d, T, BLOCK_GLIDE_S);
+      const v = vigour(Ta);
+      const ink = tempInk(Ta);
+      const swing = Math.min(cell * 0.4, cell * (0.05 + 0.26 * v));
+      let px = q.x + sx * (gx + 0.5) + Math.sin(clock * 8 + hash(q.id, a) * 6.28) * swing;
+      let py = q.y + sy * (gy + 0.5) + Math.cos(clock * 9.1 + hash(q.id, a + 50) * 6.28) * swing;
+      if (q.water) {
+        // A liquid: the molecules also wander a little at a fixed pace, where a solid's atoms keep their places.
+        px += Math.sin(clock * 0.6 + hash(q.id, a + 7) * 6.28) * cell * 0.18;
+        py += Math.cos(clock * 0.5 + hash(q.id, a + 9) * 6.28) * cell * 0.18;
+        dot(ctx, F.x(px), F.y(py), F.len(rad), ink, 0.95);
+        dot(ctx, F.x(px - rad * 0.95), F.y(py - rad * 0.8), F.len(rad * 0.5), '#e6e0d2', 0.95);
+        dot(ctx, F.x(px + rad * 0.95), F.y(py - rad * 0.8), F.len(rad * 0.5), '#e6e0d2', 0.95);
+      } else dot(ctx, F.x(px), F.y(py), F.len(rad), ink, 0.95);
     }
-    // Joined: packets carry energy across from the hotter block to the colder, while their readings are still apart.
-    if (r.joined) {
-      r.mates.forEach(mid => {
-        const j = ids.indexOf(mid);
-        if (j < 0 || j < k) return;
-        const rm = blockRead(state, mid);
-        const Tm = glide(`${b.scope || ''}blk:${mid}`, clock, rm.T0, rm.T);
-        const gap = Math.abs(T - Tm);
-        const nn = gap < 0.4 ? 0 : clamp(Math.round(1 + gap / 25), 1, 5);
-        const xa = x0 + w / 2; const xb = 2 + j * gw + 0.6 + w / 2;
-        if (nn) {
-          if (T > Tm) packets(ctx, F, clock, `lat${id}${mid}`, xa, top + gh / 2, xb, top + gh / 2, nn, 0.7);
-          else packets(ctx, F, clock, `lat${mid}${id}`, xb, top + gh / 2, xa, top + gh / 2, nn, 0.7);
-        }
-      });
-    }
-  });
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -294,10 +373,13 @@ function paintRxn(ctx, f, state, b) {
   const k = ease((t - 2) / 2);
   ctx.strokeStyle = DIM; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(F.x(w / 2), F.y(top + 1)); ctx.lineTo(F.x(w / 2), F.y(top + h)); ctx.stroke();
+  // A reaction that gives out heat leaves its products moving faster, and one that takes heat in leaves them slower: that motion is what
+  // then warms or cools whatever the products touch.
+  const swing = 0.14 * (p.dH < 0 ? 1 + 2.4 * k : p.dH > 0 ? 1 - 0.7 * k : 1);
   const pos = lay.A.map((a, i) => {
     const to = a.to ? a.to.at : a.at;
-    const wx = Math.sin(clock * 7 + hash(`${a.el}${i}`, 1) * 6.28) * 0.14;
-    const wy = Math.cos(clock * 8.3 + hash(`${a.el}${i}`, 2) * 6.28) * 0.14;
+    const wx = Math.sin(clock * 7 + hash(`${a.el}${i}`, 1) * 6.28) * swing;
+    const wy = Math.cos(clock * 8.3 + hash(`${a.el}${i}`, 2) * 6.28) * swing;
     return { x: lerp(a.at[0], to[0], k) + wx, y: top + lerp(a.at[1], to[1], k) + wy };
   });
   const bonds = (groups, alpha) => {
@@ -317,12 +399,6 @@ function paintRxn(ctx, f, state, b) {
   bonds(before, k < 0.2 ? 1 : k < 0.5 ? 1 - (k - 0.2) / 0.3 : 0);
   bonds(after, k > 0.6 ? (k - 0.6) / 0.4 : 0);
   lay.A.forEach((a, i) => dot(ctx, F.x(pos[i].x), F.y(pos[i].y), F.len(RADIUS(a.el)), INK(a.el), 1));
-  // A stage that gives the sign of the heat shows packets leaving or entering while the bonds change.
-  if (p.dH && k > 0.15 && k < 0.95) {
-    const n = clamp(Math.round(Math.abs(p.dH) / 120) + 1, 1, 5);
-    if (p.dH < 0) packets(ctx, F, clock, `rxnout${f.id}`, w / 2, top + h / 2, w - 1, top + 2, n, 0.8);
-    else packets(ctx, F, clock, `rxnin${f.id}`, w - 1, top + 2, w / 2, top + h / 2, n, 0.8);
-  }
 }
 const rxnMemo = new Map();
 function rxnCache(f, w, h) {
@@ -393,10 +469,13 @@ function paintCurve(ctx, f, state, b) {
   for (let i = 0; i < N; i++) {
     const col = i % 4; const row = Math.floor(i / 4);
     const lx = bx + 3.5 + col * 5; const ly = by + bh - 3 - row * 4.2;
-    const solid = { x: lx + Math.sin(clock * 6 + i) * 0.35, y: ly + Math.cos(clock * 7 + i * 2) * 0.35 };
-    const spd = speedAt(at.T);
-    const liquid = { x: bx + 2 + (bw - 4) * tri(hash('lx', i) * 2 + clock * 0.35 * spd), y: by + bh - 2 - (bh * 0.45) * tri(hash('ly', i) * 2 + clock * 0.3 * spd) };
-    const gas = { x: bx + 1.5 + (bw - 3) * tri(hash('gx', i) * 2 + clock * 0.9 * spd), y: by + 1.5 + (bh - 3) * tri(hash('gy', i) * 2 + clock * 0.75 * spd) };
+    const v = vigour(at.T);
+    const jx = Math.sin(clock * 8 + i * 1.9); const jy = Math.cos(clock * 9.1 + i * 2.7);
+    // One rate of shaking and one pace of wandering whatever the temperature: only the width of the swing follows the reading, so a
+    // particle never jumps while the burner is being dragged.
+    const solid = { x: lx + jx * (0.12 + 0.7 * v), y: ly + jy * (0.12 + 0.7 * v) };
+    const liquid = { x: bx + 2.4 + (bw - 4.8) * tri(hash('lx', i) * 2 + clock * 0.11) + jx * (0.2 + 0.7 * v), y: by + bh - 2.4 - (bh * 0.45 - 1) * tri(hash('ly', i) * 2 + clock * 0.09) + jy * (0.2 + 0.7 * v) };
+    const gas = { x: bx + 1.6 + (bw - 3.2) * tri(hash('gx', i) * 2 + clock * 0.75), y: by + 1.6 + (bh - 3.2) * tri(hash('gy', i) * 2 + clock * 0.62) };
     // Each particle leaves the lattice at its own point along the melt and the boil, so a plateau is a crowd changing over, not a switch.
     const mine = hash('ph', i);
     let pos;
@@ -431,6 +510,9 @@ function paintCurve(ctx, f, state, b) {
  * mixed, nothing happening), shut (particles in half a box behind a wall), salt (a crystal in water, still), bond (a bonded pair quivering),
  * react (the reaction in `props.lhs` and `props.rhs`).
  */
+/** The meet clip's two boxes: how wide each is, how far apart they start, and the room kept under them for their names. */
+export const LEAD_MEET = Object.freeze({ cw: w => (w - 14) / 2, gap: 6, foot: 5.5 });
+
 function paintLead(ctx, f, state, b) {
   const F = frameOf(b);
   const clock = b.clock || 0;
@@ -439,30 +521,41 @@ function paintLead(ctx, f, state, b) {
   const box = (x, y, bw, bh) => { ctx.strokeStyle = DIM; ctx.lineWidth = 1; ctx.strokeRect(Math.round(F.x(x)) + 0.5, Math.round(F.y(y)) + 0.5, Math.round(F.len(bw)), Math.round(F.len(bh))); };
   if (scene === 'react') { paintRxn(ctx, { ...f, id: `${f.id}-r`, dials: {}, size: { w, h: h + 4 } }, state, b); return; }
   if (scene === 'meet') {
-    const period = 9; const t = clock % period;
+    // A hot block and a cold block come together. The atoms at the wall they share change first, and the change works its way in.
+    const period = 10; const t = clock % period;
     const k = ease((t - 2) / 1.2);                       // the two come together
-    const mix = ease((t - 3.2) / 3.5);                   // their readings meet
-    const Th = lerp(90, 45, mix); const Tc = lerp(5, 45, mix);
-    const cw = (w - 8) / 2 - 3;
-    for (const [side, T] of [[0, Th], [1, Tc]]) {
-      const x0 = side === 0 ? 3 + (cw + 2) * 0 + k * 2 : w - 3 - cw - k * 2;
-      box(x0, top, cw, h - top - 2);
+    const p = clamp((t - 3.2) / 4.2, 0, 1);              // their readings meet
+    const cw = LEAD_MEET.cw(w); const gap = LEAD_MEET.gap * (1 - k);
+    const bh = h - top - LEAD_MEET.foot;
+    for (const side of [0, 1]) {
+      const x0 = side === 0 ? w / 2 - gap / 2 - cw : w / 2 + gap / 2;
+      box(x0, top, cw, bh);
       for (let i = 0; i < 12; i++) {
         const gx = i % 4; const gy = Math.floor(i / 4);
-        const amp = (0.2 + 0.7 * speedAt(T)) * 0.5;
-        dot(ctx, F.x(x0 + 2 + gx * ((cw - 4) / 3) + Math.sin(clock * (2 + 3 * speedAt(T)) + i * 1.7) * amp), F.y(top + 2.5 + gy * ((h - top - 5) / 2) + Math.cos(clock * (2.2 + 3 * speedAt(T)) + i) * amp), F.len(1.0), tempInk(T), 1);
+        const u = (gx + 0.5) / 4;
+        const d = side === 0 ? 1 - u : u;
+        const T = lerp(side === 0 ? 90 : 5, 47.5, ease(clamp(p * (1 + SPREAD) - d * SPREAD, 0, 1)));
+        const swing = 0.15 + 0.85 * vigour(T);
+        dot(ctx, F.x(x0 + cw * u + Math.sin(clock * 8 + i * 1.7 + side) * swing), F.y(top + bh * ((gy + 0.5) / 3) + Math.cos(clock * 9.1 + i + side * 2) * swing), F.len(1.0), tempInk(T), 1);
       }
     }
-    if (t > 3 && t < 7.2) packets(ctx, F, clock, `leadmeet${f.id}`, 3 + cw / 2, top + (h - top) / 2, w - 3 - cw / 2, top + (h - top) / 2, 3, 0.8);
     return;
   }
   if (scene === 'heater') {
-    const period = 8; const t = clock % period;
-    const T = lerp(20, 80, ease(t / 7));
-    box(3, top, w - 6, h - top - 6);
-    for (let i = 0; i < 16; i++) dot(ctx, F.x(5 + (w - 10) * tri(hash('lx', i) * 2 + clock * 0.2 * speedAt(T) * (0.7 + hash('v', i)))), F.y(top + 2 + (h - top - 10) * tri(hash('ly', i) * 2 + clock * 0.17 * speedAt(T) * (0.7 + hash('w', i)))), F.len(0.9), tempInk(T), 1);
-    ctx.fillStyle = AMBER; ctx.fillRect(F.x(w / 2 - 8), F.y(h - 4.5), F.len(16), F.len(1.4));
-    packets(ctx, F, clock, `leadheat${f.id}`, w / 2, h - 5, w / 2, top + 4, 4, 0.6);
+    // A heater under a bath: the molecules that touch the element are knocked faster first, and they knock the ones above them.
+    const period = 9; const t = clock % period;
+    const p = clamp(t / 7, 0, 1);
+    const y0 = top; const y1 = h - 6;
+    box(3, y0, w - 6, y1 - y0);
+    for (let i = 0; i < 16; i++) {
+      const u = tri(hash('ly', i) * 2 + clock * 0.05 * (0.7 + hash('w', i)));
+      const T = lerp(15, 85, ease(clamp(p * (1 + SPREAD) - (1 - u) * SPREAD, 0, 1)));
+      const swing = 0.2 + 1.0 * vigour(T);
+      const x = clamp(5 + (w - 10) * tri(hash('lx', i) * 2 + clock * 0.06 * (0.7 + hash('v', i))) + Math.sin(clock * 9 + i * 2.1) * swing, 4, w - 4);
+      const y = clamp(y0 + 1.5 + (y1 - y0 - 3) * u + Math.cos(clock * 10.3 + i * 1.3) * swing, y0 + 1, y1 - 1);
+      dot(ctx, F.x(x), F.y(y), F.len(0.9), tempInk(T), 1);
+    }
+    for (let i = 0; i < 8; i++) ring(ctx, F.x(w / 2 - 8.4 + i * 2.4 + Math.sin(clock * 8 + i * 1.9) * 0.4), F.y(h - 3.9 + Math.cos(clock * 9.3 + i * 2.7) * 0.3), F.len(0.7), WARM, 1);
     return;
   }
   if (scene === 'air') {
@@ -532,12 +625,6 @@ function paintShelvesMotion(ctx, f, state, b) {
   const base = lerp(ya, yb, e);
   const yq = yp == null ? base : (1 - e) * (1 - e) * ya + 2 * (1 - e) * e * (2 * yp - (ya + yb) / 2) + e * e * yb;
   dot(ctx, F.x(xq), F.y(yq) - F.len(0.9), F.len(0.9), AMBER, 1);
-  // Energy leaving (down) or entering (up) across the diagram while the marble moves.
-  if (Math.abs(r.dH) > 1e-6 && u > 0 && u < 1) {
-    const n = clamp(Math.round(Math.abs(r.dH) / (scale || 1) * 3) + 1, 1, 4);
-    if (r.dH < 0) packets(ctx, F, clock, `shout${f.id}`, xb, yb, x0 + w, yb - 6, n, 0.9);
-    else packets(ctx, F, clock, `shin${f.id}`, x0 + w, yb - 6, xb, yb, n, 0.9);
-  }
 }
 
 function paintPlotMotion(ctx, f, state, b) {
@@ -559,16 +646,6 @@ function paintPlotMotion(ctx, f, state, b) {
   const side = dGat(T) < 0 ? PHOS : WARM;
   const rock = Math.sin(clock * 3) * 0.5;
   dot(ctx, F.x(ball.x + rock), F.y(ball.y) - F.len(1.0), F.len(1.1), side, 1);
-  // The two pulls as marching packets along the line: heat of reaction pulling up, spreading pulling down.
-  if (!p.hideTug) {
-    const zero = Yv(0);
-    const up = Yv(dGat(T)) - Yv(p.dH * 0 + 0);
-    void up;
-    const n1 = clamp(Math.round(Math.abs(p.dH) / 20), 1, 4);
-    const n2 = clamp(Math.round(Math.abs(r.TdS) / 20), 1, 4);
-    packets(ctx, F, clock, `pullH${f.id}`, ball.x, zero, ball.x, Yv(p.dH), n1, 0.6);
-    packets(ctx, F, clock, `pullS${f.id}`, ball.x, Yv(p.dH), ball.x, Yv(p.dH - r.TdS), n2, 0.6);
-  }
 }
 
 function paintStackMotion(ctx, f, state, b) {
