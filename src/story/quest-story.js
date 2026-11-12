@@ -334,10 +334,10 @@ export const QUEST_STORY = {
   'unit03/q1-joins': {
     scene: 'bond-pairs',
     beats: [
-      { to: 0.2, say: 'Atoms join to fill their outer shells, and there are only two ways to do it: hand electrons over, or hold pairs between you.' },
-      { to: 0.4, say: 'A metal with a nonmetal hands electrons over and makes an ionic bond; two nonmetals hold pairs and make a covalent bond.' },
-      { to: 0.6, say: 'How many electrons each outer shell has to move is a count, not a preference, which is why one compound only ever has one recipe.' },
-      { to: 0.8, say: 'The rubble round the tunnel mouth is made of joins like these. Next I hit, heat and charge a whole block of each kind.' }
+      { to: 0.2, say: 'Two atoms bond when being together lowers their energy: each nucleus attracts the other atom\'s electrons. There are two ways it happens.' },
+      { to: 0.4, say: 'Where the electronegativities differ greatly, one atom takes electrons and the ions attract: an ionic bond. Where they are close, the atoms share pairs: a covalent bond.' },
+      { to: 0.6, say: 'How many electrons each atom loses, gains or shares is a count, which is why a compound has one formula.' },
+      { to: 0.8, say: 'The rubble round the tunnel mouth is held by bonds like these. Next I hit, heat and wire a whole block of each kind.' }
     ],
     filed: 'Filed: the blast broke the rock apart, but every bond in the rubble is an ordinary one.'
   },
@@ -353,8 +353,8 @@ export const QUEST_STORY = {
   'unit03/q3-distance': {
     scene: 'well-depth',
     beats: [
-      { to: 0.4, say: 'Two atoms settle where the pull between them and the push between their nuclei balance. That sets how long the bond is and how much it costs to break.' },
-      { to: 0.65, say: 'A bond is a well: the deeper it is, the more energy it takes to pull the atoms apart. More shared pairs sit closer and hold harder.' },
+      { to: 0.4, say: 'Two atoms settle where attraction and repulsion balance, at the lowest point of their energy curve. That distance is the bond length.' },
+      { to: 0.65, say: 'The deeper the curve, the more energy it takes to pull the atoms apart: the bond energy. More shared pairs sit closer and hold more strongly.' },
       { to: 0.85, say: 'Every bond length and bond energy in a table is a point on one of these curves, so a breaker charge can be loaded for the bond it has to beat.' }
     ],
     filed: 'Filed: the breaker charges are sized to the strongest bond in the pass.'
@@ -383,7 +383,7 @@ export const QUEST_STORY = {
     scene: 'domain-shapes',
     beats: [
       { to: 0.27, say: 'Electron domains repel, so they settle as far apart as they can. Four of them point to the corners of a tetrahedron, 109.5° apart.' },
-      { to: 0.5, say: 'Swap one bonded atom for a lone pair and the shape is trigonal pyramidal. A lone pair pushes harder, so the bond angle closes to 107°.' },
+      { to: 0.5, say: 'Swap one bonded atom for a lone pair and the shape is trigonal pyramidal. A lone pair repels more strongly, so the bond angle closes to 107°.' },
       { to: 0.76, say: 'With two lone pairs the shape is bent and the angle closes to 104.5°. Count the domains, then the lone pairs, and the shape follows.' }
     ],
     filed: 'Filed: any molecule in the pass can be given a shape from its formula alone.'
@@ -394,25 +394,25 @@ export const QUEST_STORY = {
       { to: 0.26, say: 'A carbon atom has one s orbital and three p orbitals: four orbitals of two different shapes.' },
       { to: 0.5, say: 'Mixed, they become four equal sp³ hybrid orbitals, 109.5° apart. That is the angle carbon\'s bonds make in methane.' },
       { to: 0.76, say: 'In a double bond one overlap lies along the axis, a sigma bond, and a second lies above and below it, a pi bond.' },
-      { to: 0.92, say: 'Turn one end of the bond and the pi overlap shrinks to nothing, so a double bond has restricted rotation. The sigma bond is unchanged.' }
+      { to: 0.92, say: 'Turn one end of the bond and the pi overlap shrinks to nothing, so a double bond cannot turn without breaking. The sigma bond is unchanged.' }
     ],
     filed: 'Filed: sigma and pi overlap can be counted from a molecule\'s structure alone.'
   },
   'unit03/q7-polarity': {
     scene: 'field-swing',
     beats: [
-      { to: 0.25, say: 'A bond is polar when its atoms pull the pair unequally, and a molecule is polar when those pulls do not cancel.' },
-      { to: 0.8, say: 'Shape decides: water swung round in the field, while carbon dioxide stayed put, however polar its bonds.' },
-      { to: 0.9, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. A charged rod bent the stream of water too, so a whole liquid shows what its molecules do.' }
+      { to: 0.25, say: 'A bond is polar when its atoms share the pair unequally, and a molecule is polar when its bond dipoles do not balance.' },
+      { to: 0.8, say: 'Shape decides: water turned in the field, while carbon dioxide did not, however polar its bonds.' },
+      { to: 0.9, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. In hydrogen chloride the shared pair is shifted only about 18% of the way to chlorine.' }
     ],
-    filed: 'Filed: the gases that cling to the rescue gear are the polar ones, and a charged rod can pick them out.'
+    filed: 'Filed: the gases that cling to the rescue gear are the polar ones, and a charged plate can pick them out.'
   },
   'unit03/q9-orbitals': {
     scene: 'magnet-pull',
     beats: [
-      { to: 0.25, say: 'Atomic boxes combine into molecular orbitals, half of them bonding and half antibonding, and electrons fill them from the bottom up, one to a box before any pair up.' },
-      { to: 0.5, say: 'Oxygen\'s last two electrons stand alone, and that is why a magnet pulled on it. Nitrogen, with every electron paired, was left where it was.' },
-      { to: 0.75, say: 'Where a Lewis structure fails, as with oxygen\'s magnetism, the boxes still work, which is why chemists keep both models. Ligar\'s last guard stands at the end of the cut.' }
+      { to: 0.25, say: 'When two atoms meet, their orbitals combine into molecular orbitals. Like signs add between the nuclei and make a bonding orbital; unlike signs cancel there and make an antibonding one.' },
+      { to: 0.5, say: 'Electrons fill them from the lowest up. Oxygen\'s last two stand unpaired, which is why a magnet attracted it, while nitrogen, with every electron paired, was not attracted.' },
+      { to: 0.75, say: 'Where a Lewis structure fails, as with oxygen\'s magnetism, molecular orbitals still work, which is why chemists keep both models. Ligar\'s last guard stands at the end of the cut.' }
     ],
     filed: 'Filed: a magnet can find the oxygen in the pass, however it is hidden among the other gases.'
   },

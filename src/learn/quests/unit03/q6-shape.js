@@ -38,7 +38,6 @@ import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 export const meta = { stageCount: 10 };
 
 export const VOCABULARY = [
-  { term: /\bseesaw\b|\bt-shaped\b/i, introducedAt: 9 },
   { term: /\btrigonal bipyramidal\b/i, introducedAt: 8 },
   { term: /\bsquare planar\b/i, introducedAt: 7 },
   { term: /\boctahedral\b/i, introducedAt: 6 },
@@ -57,9 +56,9 @@ const SPEAKER = 'Vess';
 /** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
 const QUEST_KEY = 'unit03/q6-shape';
 const GUESSES = [
-  ['cross', 'the four arms lie flat, 90 degrees apart', ['Flat cross', 'the arms lie flat,', '90 degrees apart']],
-  ['solid', 'the four arms spread out in 3D, about 109 degrees apart', ['Spread in 3D', 'the arms leave the flat,', 'about 109 degrees']],
-  ['triangle', 'the four arms lie flat, 120 degrees apart', ['Flat spread', 'the arms lie flat,', '120 degrees apart']]
+  ['cross', 'the four domains lie flat, 90° apart', ['Flat cross', 'all four lie flat,', '90° apart']],
+  ['solid', 'the four domains point out in three dimensions', ['Not flat', 'they point out in', 'three dimensions']],
+  ['triangle', 'three domains lie flat and the fourth points straight up', ['Three flat, one up', 'three lie flat, one', 'points straight up']]
 ];
 
 /** Every piece says what it is (an arm, a balloon, a protractor, a dial named "Turn"), so no key needs a legend. */
@@ -72,14 +71,14 @@ export function toolNoteFor() { return null; }
 
 const HUB_AT = { x: 40, y: 32 };
 
-const binTray = (label = 'Arms') => ({ id: 'bin', label, at: { x: 106, y: 15 }, size: { w: 52, h: 15 }, cell: 13 });
+const binTray = (label = 'Electron domains') => ({ id: 'bin', label, at: { x: 106, y: 15 }, size: { w: 52, h: 15 }, cell: 13 });
 
 /** A hub table: the hub, the pieces in the tray, the protractor, the dial that turns the view, a marker to set. */
-function hubTable({ sym, arms, label = 'Hub', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
+function hubTable({ sym, arms, label = 'Central atom', marker: mk = null, gauge = false, protractor = true, roomy = false }) {
   const hs = hubSet('hub', sym, HUB_AT, { label, gauge, turner: roomy ? { x: 96, y: 31 } : { x: 108, y: 35 } });
   const inTray = arms.map(a => ({ ...a, zone: 'tray:bin' }));
   // Six or more pieces: a longer tray, and the protractor moves down beside the turn dial to make room for it.
-  const tray = roomy ? { ...binTray('Arms'), at: { x: 111.3, y: 14 }, size: { w: 76.5, h: 15 }, cell: 12.7 } : binTray('Arms');
+  const tray = roomy ? { ...binTray(), at: { x: 111.3, y: 14 }, size: { w: 76.5, h: 15 }, cell: 12.7 } : binTray();
   return domainTable({
     pieces: [hs.piece, ...inTray, ...(protractor ? [protractorPiece('pr', roomy ? { x: 136, y: 33 } : { x: 139.5, y: 15 }, 'Reads an angle')] : [])],
     zones: { trays: [tray] },
@@ -94,8 +93,6 @@ const L = id => balloonPiece(id, at0);
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
 const ANGLE_TOL = 1.5;
 
-/** The fewest arms that cannot all lie flat on the plate: the hub's depth first reads above zero here. `verify:learn` holds it to the planner. */
-const FIRST_UP = 4;
 
 /** The smallest angle the protractor can read between two of the hub's arms that pass `keep`. */
 function smallestAngle(read, keep) {
@@ -108,32 +105,43 @@ function smallestAngle(read, keep) {
 /* ------------------------------------------------------------------
    THE TEN STAGES
    ------------------------------------------------------------------ */
+/** A bond to an unnamed atom X on an unnamed central atom A, and the pieces of a stage. */
+const X = i => A(`a${i}`, 'X', 1, 'Bond');
+const bonds = n => Array.from({ length: n }, (_, i) => X(i + 1));
+const NOT_ALL = 'Not everything from the tray is attached to the central atom yet.';
+const unread = 'Set the dial to an angle.';
+const off = (v, real) => `The model's angle is not ${v}°: lay the protractor across the two bonds and read it again.`;
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Two Arms',
-    prompt: 'Set the angle marker to the bond angle between two electron domains pushing as far apart as possible.',
+    title: 'Two Domains',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An electron domain is a bond or a lone pair on the central atom of a molecule. Domains are all negative charge, so they repel each other and settle as far apart as they can.'
+    },
+    prompt: 'What is the angle between two electron domains?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'Hub', arms: [A('a1', 'Arm', 1, 'Arm'), A('a2', 'Arm', 1, 'Arm')], marker: { label: 'Angle' } }),
+    table: hubTable({ sym: 'A', arms: bonds(2), marker: { label: 'Angle' } }),
     hints: [
-      'Use the arms, the protractor and the angle marker.',
-      'Measure the angle between the two arms with the protractor.',
-      'Attach both arms to the hub, measure the angle with the protractor, and set the marker to 180 degrees.'
+      'Drag both bonds onto the central atom, then drag the protractor onto one bond and then the other.',
+      'Watch where the second bond settles when it is attached, and where the first one moves to.',
+      'Two things that repel each other move until neither can get further from the other.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      if (r.n !== 2) return { ok: false, msg: 'Both arms are not on the hub yet.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
+      if (r.n !== 2) return { ok: false, msg: 'Both bonds are not attached to the central atom yet.' };
       const real = angleBetween(r.plan, 0, 1);
       if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the angle the protractor reads between the two arms.' };
+      return { ok: false, msg: off(v, real) };
     },
     reward: {
-      log: 'Two arms settle opposite.',
-      title: 'Linear Geometry',
-      body: 'Each arm represents an electron domain around the central atom. Two electron domains orient in opposite directions at an angle of 180 degrees, producing a linear geometry.',
+      log: 'Two domains settle opposite.',
+      title: 'Linear',
+      body: '180°: the two domains point opposite ways, as far apart as they can be. This shape is called linear.',
       model: { type: 'shape', mol: 'CO2', caption: 'CO₂ · Linear (180°)' }
     }
   },
@@ -141,49 +149,49 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   predictStage({
     key: QUEST_KEY,
-    title: 'Four Arms',
-    prompt: 'What arrangement and bond angle do four electron domains adopt around a central atom?',
+    title: 'Four Domains',
+    prompt: 'How do four electron domains arrange themselves round a central atom?',
     cards: GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Consider three-dimensional space rather than just a two-dimensional plane.',
-      'Select the card matching your prediction.'
+      'Lay one of the three cards in the slot.',
+      'The domains repel each other, and a molecule is not confined to a flat sheet.',
+      'A prediction is never graded, so lay the card you think most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'Your prediction is recorded. Attach four arms to the hub on the bench and measure the angle between them.'
+      body: 'The next stage attaches four bonds to a central atom, one at a time.'
     }
   }),
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Leaving the Plate',
+    title: 'Leaving the Plane',
+    briefing: { speaker: SPEAKER, body: 'Three electron domains lie flat, 120° apart, in a shape called trigonal planar. Attach the bonds one at a time and watch what the fourth one does to the other three.' },
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'add arms one at a time and set the marker to the fewest arms that cannot all lie flat on the plate.');
+      return testPrompt(QUEST_KEY, GUESSES, 'what is the angle between any two of four electron domains?');
     },
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'Hub', arms: [1, 2, 3, 4, 5].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), marker: { label: 'Arms', max: 6 }, gauge: 'thick', protractor: false, roomy: true }),
+    table: hubTable({ sym: 'A', arms: bonds(4), marker: { label: 'Angle' }, roomy: true }),
     hints: [
-      'Use the arms, the turn dial and the marker; the plate reads the depth of the arms.',
-      'Add the arms one at a time and note the depth reading after each one.',
-      'The answer is the number of arms at which the depth first rises above zero.'
+      'Attach the bonds one at a time and turn the view after each; the protractor reads the angle between two bonds.',
+      'Compare the model with three bonds, which lies flat, with the model after the fourth is attached.',
+      'Four domains kept flat would be 90° apart, so ask whether leaving the flat lets them get further from each other.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of arms.' };
-      if (r.n < FIRST_UP) return { ok: false, msg: 'Add more arms and watch the depth reading before you answer.' };
-      if (v === FIRST_UP) return { ok: true };
-      return v < FIRST_UP
-        ? { ok: false, msg: 'With that many arms the depth still reads zero: they lie flat.' }
-        : { ok: false, msg: 'The depth already rose above zero with fewer arms than that.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
+      if (r.n !== 4) return { ok: false, msg: 'All four bonds are not attached to the central atom yet.' };
+      const real = angleBetween(r.plan, 0, 1);
+      if (near(v, real, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: off(v, real) };
     },
     get reward() {
       return {
-        log: 'Two and three arms lie flat; four leave the plate.',
-        title: 'Tetrahedral Geometry and VSEPR',
-        body: `${verdictLine(QUEST_KEY, 'solid')}Two arms lie opposite and three spread flat at 120 degrees, but four cannot: the arms leave the plane and reach the corners of a tetrahedron, 109.5 degrees apart. Laid flat they would crowd to 90 degrees. This is the idea behind VSEPR theory.`,
+        log: 'Two and three domains lie flat; four do not.',
+        title: 'Tetrahedral',
+        body: `${verdictLine(QUEST_KEY, 'solid')}109.5°, more than the 90° they would have if flat. This shape is tetrahedral, and the idea that domains settle as far apart as they can is called VSEPR (valence shell electron pair repulsion).`,
         model: { type: 'shape', mol: 'CH4', caption: 'CH₄ · Tetrahedral (109.5°)' }
       };
     }
@@ -191,173 +199,175 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'The Unseen Arm',
-    prompt: 'Construct the geometry of ammonia with nitrogen at the apex and three hydrogen atoms forming the base.',
+    title: 'A Lone Pair',
+    briefing: { speaker: SPEAKER, body: 'A molecule\'s shape is named from where its atoms are. A lone pair is an electron domain, but it has no atom on it.' },
+    prompt: 'Where do ammonia\'s three hydrogen atoms sit round a nitrogen atom that also has one lone pair?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'N', label: 'Hub N', arms: [A('h1', 'H'), A('h2', 'H'), A('h3', 'H'), L('l1')], gauge: true, protractor: false }),
+    table: hubTable({ sym: 'N', label: 'Nitrogen', arms: [A('h1', 'H'), A('h2', 'H'), A('h3', 'H'), L('l1')], gauge: true, protractor: false }),
     hints: [
-      'Use the hydrogen atoms, the balloon and the turn dial.',
-      'Attach the three hydrogen atoms and the lone pair balloon to the central nitrogen atom.',
-      'The lone pair occupies a domain, repelling the three bonding pairs into a trigonal pyramidal shape.'
+      'Build the molecule: drag the hydrogen atoms and the lone pair onto the nitrogen atom, and turn the view.',
+      'Compare where the three hydrogen atoms sit before the lone pair is attached and after.',
+      'A lone pair is an electron domain and repels the bonds, but the shape of a molecule is traced by its atoms only.'
     ],
     check(state) {
       const r = hubRead(state.table, 'hub');
-      if (r.atoms < 3) return { ok: false, notYet: true, msg: 'Not all three hydrogen atoms are on the hub.' };
+      if (r.atoms < 3) return { ok: false, notYet: true, msg: 'Not all three hydrogen atoms are attached to the nitrogen atom.' };
       if (r.height > 0.1) return { ok: true };
-      return { ok: false, msg: 'The three atoms lie flat round the nitrogen, and the height reads zero.' };
+      return { ok: false, msg: 'This model has only three electron domains, and its atoms lie flat: ammonia\'s nitrogen has four.' };
     },
     reward: {
-      log: 'A lone pair is an arm you cannot see in the shape.',
-      title: 'Trigonal Pyramidal Geometry',
-      body: 'A lone pair occupies an electron domain without contributing an atom to the molecular geometry. Three bonding domains and one lone pair form a trigonal pyramidal shape with the central atom at the apex of a pyramid.',
+      log: 'Three bonds and a lone pair.',
+      title: 'Trigonal Pyramidal',
+      body: 'The lone pair is one of four domains and repels the three bonds, so the atoms form a pyramid with nitrogen at the top. This shape is trigonal pyramidal.',
       model: { type: 'shape', mol: 'NH3', caption: 'NH₃ · Trigonal pyramidal (107°)' }
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'Two Unseen Arms',
-    prompt: 'Set the marker to how many degrees the H–O–H angle in water falls short of the tetrahedral angle, 109.5°.',
+    title: 'Two Lone Pairs',
+    prompt: 'What is the H–O–H bond angle in water?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'O', label: 'Hub O', arms: [A('h1', 'H'), A('h2', 'H'), L('l1'), L('l2')], marker: { label: 'Angle' } }),
+    table: hubTable({ sym: 'O', label: 'Oxygen', arms: [A('h1', 'H'), A('h2', 'H'), L('l1'), L('l2')], marker: { label: 'Angle' } }),
     hints: [
-      'Use the arms, the balloons, the protractor and the angle marker.',
-      'Attach two hydrogen arms and two lone pair balloons to oxygen, then measure the H-O-H angle with the protractor.',
-      'Subtract the angle the protractor reads from 109.5 and round to a whole number of degrees.'
+      'Water\'s oxygen has two bonds and two lone pairs: attach all four, then lay the protractor across the two hydrogen atoms.',
+      'Compare the angle you read with the 109.5° between four domains that are all bonds.',
+      'A lone pair is held by one nucleus only and spreads wider than a bond, so ask what that does to the bonds beside it.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of degrees.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
-      if (r.lone < 2 || hs.length < 2) return { ok: false, msg: 'Not everything from the tray is on the hub yet.' };
+      if (r.lone < 2 || hs.length < 2) return { ok: false, msg: NOT_ALL };
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
-      if (near(v, 109.5 - real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the gap between 109.5 and the angle the protractor reads between the two hydrogen atoms.' };
+      if (near(v, real, ANGLE_TOL)) return { ok: true };
+      return { ok: false, msg: off(v, real) };
     },
     reward: {
-      log: 'Lone pairs push harder.',
-      title: 'Bent Molecular Geometry',
-      body: 'Two bonding domains and two lone pairs produce a bent molecular geometry. Because lone pair electrons exert stronger electrostatic repulsion than bonding pairs, the bond angle compresses to 104.5 degrees in water.',
+      log: 'Lone pairs repel more strongly.',
+      title: 'Bent',
+      body: '104.5°: lone pairs repel more strongly than bonds do, so two of them close the angle between the bonds from 109.5°. The three atoms make a shape called bent.',
       model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Bent (104.5°)' }
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
-    title: 'Six on the Hub',
-    prompt: 'Set the angle marker to the smallest angle between two of six arms on the hub.',
+    title: 'Six Domains',
+    prompt: 'What is the angle between neighbouring electron domains when there are six?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'Hub', arms: [1, 2, 3, 4, 5, 6].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), marker: { label: 'Angle' }, roomy: true }),
+    table: hubTable({ sym: 'A', arms: bonds(6), marker: { label: 'Angle' }, roomy: true }),
     hints: [
-      'Use the arms, the protractor and the angle marker.',
-      'Read the angle between several different pairs of arms; the pairs do not all read the same.',
-      'Attach all six arms, then compare readings between neighbouring arms and between opposite ones.'
+      'Attach all six bonds, turn the view, and lay the protractor across two bonds that are next to each other.',
+      'Compare the reading for two neighbouring bonds with the reading for two that point opposite ways.',
+      'Each domain has settled as far from the other five as it can, so every bond has the same set of neighbours.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      if (r.n !== 6) return { ok: false, msg: 'All six arms are not on the hub yet.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
+      if (r.n !== 6) return { ok: false, msg: 'All six bonds are not attached to the central atom yet.' };
       const real = smallestAngle(r, a => a.kind === 'arm');
       if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the smallest angle the protractor reads between two of the six arms.' };
+      return { ok: false, msg: `Two neighbouring bonds on the model are not ${v}° apart: lay the protractor across two that are next to each other.` };
     },
     reward: {
-      log: 'Six arms settle on the corners of an octahedron.',
-      title: 'Octahedral Geometry',
-      body: 'Six electron domains push apart to the corners of an octahedron: every arm has four neighbours at 90° and one opposite at 180°. Sulfur hexafluoride, SF₆, has this shape and holds twelve electrons round sulfur, more than an octet.',
+      log: 'Six domains settle on the corners of an octahedron.',
+      title: 'Octahedral',
+      body: '90°: each domain has four neighbours at 90° and one opposite it at 180°. This shape is octahedral, as in sulfur hexafluoride, SF₆.',
       model: { type: 'shape', mol: 'SF6', caption: 'SF₆ · Octahedral (90°)' }
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Two Unseen Arms on Six',
-    prompt: 'Put four arms and two lone pairs on the hub, then set the marker to the smallest angle between two arms.',
+    title: 'Four Bonds, Two Lone Pairs',
+    prompt: 'With four bonds and two lone pairs round an atom, what is the angle between neighbouring bonds?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'Hub', arms: [...[1, 2, 3, 4].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), L('l1'), L('l2')], marker: { label: 'Angle' }, roomy: true }),
+    table: hubTable({ sym: 'A', arms: [...bonds(4), L('l1'), L('l2')], marker: { label: 'Angle' }, roomy: true }),
     hints: [
-      'Use the arms, the balloons, the protractor and the angle marker.',
-      'Turn the view to see which way the two balloons point, then read angles between pairs of arms.',
-      'Two balloons settle as far from each other as they can, which decides where the four arms sit.'
+      'Attach the four bonds and the two lone pairs, then turn the view to see where the lone pairs have settled.',
+      'Compare the places the two lone pairs took with the places left for the four bonds.',
+      'Lone pairs repel more strongly than bonds, so they settle as far from each other as six places allow.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      if (r.lone < 2 || r.atoms < 4) return { ok: false, msg: 'Not everything from the tray is on the hub yet.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
+      if (r.lone < 2 || r.atoms < 4) return { ok: false, msg: NOT_ALL };
       const real = smallestAngle(r, a => a.kind === 'arm');
       if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the smallest angle the protractor reads between two of the four arms.' };
+      return { ok: false, msg: `Two neighbouring bonds on the model are not ${v}° apart: turn the view until you look straight down on the four bonds.` };
     },
     reward: {
       log: 'Two lone pairs sit opposite, and the four atoms lie flat.',
-      title: 'Square Planar Geometry',
-      body: 'Of six domains, two lone pairs take opposite corners, leaving the four atoms in one flat square with 90° between neighbours. Xenon tetrafluoride, XeF₄, has this square planar shape.',
+      title: 'Square Planar',
+      body: '90°. The two lone pairs sit opposite each other, leaving the four atoms in a flat square round the central atom: square planar, as in xenon tetrafluoride, XeF₄.',
       model: { type: 'shape', mol: 'XeF4', caption: 'XeF₄ · Square planar (90°)' }
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
-    title: 'Five on the Hub',
-    prompt: 'Set the angle marker to the middle value of the three different angles between pairs of five arms.',
+    title: 'Five Domains',
+    prompt: 'Of five electron domains, three settle in one flat ring: what is the angle between two of those three?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'Hub', arms: [1, 2, 3, 4, 5].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), marker: { label: 'Angle' }, roomy: true }),
+    table: hubTable({ sym: 'A', arms: bonds(5), marker: { label: 'Angle' }, roomy: true }),
     hints: [
-      'Use the arms, the protractor and the angle marker.',
-      'Read several pairs of arms: some are neighbours, some are opposite, and the readings fall into three groups.',
-      'Attach all five arms, find the smallest and largest readings, and set the marker to the one between them.'
+      'Attach all five bonds and turn the view until you can pick out three that lie in one flat ring.',
+      'Compare the angle between two bonds in the ring with the angle between a ring bond and one of the other two.',
+      'Five places cannot all be alike, so sort the bonds into the three of the ring and the two that stand above and below it.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      if (r.n !== 5) return { ok: false, msg: 'All five arms are not on the hub yet.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
+      if (r.n !== 5) return { ok: false, msg: 'All five bonds are not attached to the central atom yet.' };
       const angles = bondAngles(r.plan);
       const middle = angles[Math.floor(angles.length / 2)];
       if (near(v, middle, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker is not the angle the protractor reads between the arms that are neither the closest pair nor the opposite pair.' };
+      if (angles.some(x => near(v, x, ANGLE_TOL))) return { ok: false, msg: `${v}° is an angle on this model, but not between two bonds that lie in the same flat ring.` };
+      return { ok: false, msg: `No two bonds on the model are ${v}° apart.` };
     },
     reward: {
-      log: 'Five arms make two kinds of position.',
-      title: 'Trigonal Bipyramidal Geometry',
-      body: 'Five electron domains settle as two arms on the axis (180° apart) and three in a flat ring round the middle (120° apart); axis and ring arms meet at 90°. This is the trigonal bipyramidal shape of phosphorus pentachloride, PCl₅.',
+      log: 'Five domains make two kinds of position.',
+      title: 'Trigonal Bipyramidal',
+      body: '120°, with the other two domains above and below the ring at 90° to it. This shape is trigonal bipyramidal, as in phosphorus pentachloride, PCl₅.',
       model: { type: 'shape', mol: 'PCl5', caption: 'PCl₅ · Trigonal bipyramidal (90°, 120°, 180°)' }
     }
   },
 
   /* ---------------------------------------------------------------- 9 */
   {
-    title: 'Three Unseen Arms on Five',
-    prompt: 'Put two arms and three lone pairs on the hub, then set the marker to the angle between the two arms.',
+    title: 'Two Bonds, Three Lone Pairs',
+    prompt: 'With two bonds and three lone pairs round an atom, what is the angle between the two bonds?',
     widget: { type: 'table', label: 'The bench' },
-    table: hubTable({ sym: 'Hub', arms: [...[1, 2].map(i => A(`a${i}`, 'Arm', 1, 'Arm')), L('l1'), L('l2'), L('l3')], marker: { label: 'Angle' }, roomy: true }),
+    table: hubTable({ sym: 'A', arms: [...bonds(2), L('l1'), L('l2'), L('l3')], marker: { label: 'Angle' }, protractor: false, roomy: true }),
     hints: [
-      'Use the arms, the balloons, the protractor and the angle marker.',
-      'Turn the view to see where the three balloons settle, then read the angle between the two arms.',
-      'Balloons take the most spacious places on the hub, which leaves the two arms their own places.'
+      'There is no protractor here: attach the two bonds and three lone pairs, and turn the view to see the model from the side.',
+      'Compare the places the three lone pairs took with the ring and the two other places of the last stage.',
+      'In the ring three lone pairs are 120° from each other, further apart than any other three places would put them.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
-      if (r.lone < 3 || r.atoms < 2) return { ok: false, msg: 'Not everything from the tray is on the hub yet.' };
+      if (!v) return { ok: false, notYet: true, msg: unread };
+      if (r.lone < 3 || r.atoms < 2) return { ok: false, msg: NOT_ALL };
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
       if (near(v, real, ANGLE_TOL)) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the angle the protractor reads between the two arms.' };
+      return { ok: false, msg: `The two bonds on the model are not ${v}° apart: turn the view until both are seen from the side.` };
     },
     reward: {
       log: 'Three lone pairs leave the two atoms opposite.',
       title: 'Linear, From Five Domains',
-      body: 'Lone pairs take the flat ring, where they are furthest from one another, so three of them leave the two atoms on the axis, 180° apart: xenon difluoride, XeF₂, is linear. One lone pair on five gives a seesaw (SF₄) and two give a T-shape (ClF₃).',
+      body: '180°. The three lone pairs take the ring, where they are furthest apart, so the two bonds point opposite ways and the atoms lie in a line, as in xenon difluoride, XeF₂.',
       model: { type: 'shape', mol: 'XeF2', caption: 'XeF₂ · Linear (180°)' }
     }
   },
@@ -365,29 +375,32 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 10 */
   {
     title: 'Count the Domains',
-    prompt: 'Set the marker to the number of electron domains on the sulfur atom in sulfur tetrafluoride.',
+    prompt: 'How many electron domains surround the sulfur atom in SF₄?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [molCard('sf', 'SF4', { x: 40, y: 32 })],
       fixtures: [marker('mark', { x: 104, y: 32 }, { label: 'Domains', max: 8 })]
     }),
     hints: [
-      'Use the molecule card and the marker.',
-      'Sulfur has six valence electrons, and each bond to a fluorine atom takes one of them into a shared pair.',
-      'Add the bonds to the lone pairs that the remaining electrons form.'
+      'The card shows sulfur bonded to four fluorine atoms; the dial sets your answer.',
+      'Compare sulfur\'s six valence electrons with the number its four bonds to fluorine use.',
+      'Electrons left on sulfur after bonding stay there in pairs, and every domain on the central atom counts, with an atom on it or not.'
     ],
     check(state) {
       const t = state.table;
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of domains.' };
-      if (v === planDomains(RIG_MOLECULES.SF4.arms).n) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the bonds and lone pairs on the sulfur atom.' };
+      if (!v) return { ok: false, notYet: true, msg: 'Set the dial to a number of domains.' };
+      const n = planDomains(RIG_MOLECULES.SF4.arms).n;
+      if (v === n) return { ok: true };
+      return v === 4
+        ? { ok: false, msg: 'Four counts the bonds only: two of sulfur\'s six valence electrons are not in a bond.' }
+        : { ok: false, msg: `${v} is not the number of bonds and lone pairs on the sulfur atom.` };
     },
     reward: {
       log: 'Four bonds and one lone pair make five domains.',
-      title: 'Counting Domains From a Formula',
-      body: 'Sulfur brings six electrons: four go into bonds with fluorine, and the other two form one lone pair. Four bonds and one lone pair are five domains, so sulfur tetrafluoride is a seesaw.',
-      model: { type: 'shape', mol: 'SF4', caption: 'SF₄ · Seesaw (5 domains)' },
+      title: 'Counting Domains',
+      body: 'Four bonds use four of sulfur\'s six valence electrons, and the other two are a lone pair: five domains.',
+      model: { type: 'shape', mol: 'SF4', caption: 'SF₄ · 5 domains' },
       last: true
     }
   }
@@ -400,16 +413,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'Summary',
-      body: 'VSEPR theory explains molecular geometry based on electron domain repulsion. Nonbonding lone pairs repel more strongly than bonding pairs, compressing adjacent bond angles.'
+      heading: 'What You Found',
+      body: 'Electron domains repel and settle as far apart as they can: 180° for two, 109.5° for four, 90° for six, and a ring of three with two above and below for five.'
     },
     {
-      heading: 'Geometry Determination',
-      body: 'Counting electron domains on the central atom gives the electron geometry, while the arrangement of bonded atoms determines the molecular geometry.'
+      heading: 'Lone Pairs',
+      body: 'A lone pair is a domain but not part of the shape, which is traced by the atoms. Lone pairs repel more strongly than bonds, closing bond angles and taking the places furthest apart.'
     },
     {
       heading: 'Next',
-      body: 'The next bench tests molecular polarity by observing how molecules behave in an electric field.'
+      body: 'The next bench asks which molecules have a positive end and a negative end.'
     }
   ]
 };
@@ -429,13 +442,13 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 export const SOLUTIONS = [
   [...on('a1', 'a2'), ...read('a1', 'a2'), set(180)],
   [guess('solid')],
-  [...on('a1', 'a2', 'a3', 'a4'), set(4)],
+  [...on('a1', 'a2', 'a3', 'a4'), ...read('a1', 'a2'), set(109)],
   [...on('h1', 'h2', 'h3', 'l1')],
-  [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(5)],
+  [...on('h1', 'h2', 'l1', 'l2'), ...read('h1', 'h2'), set(105)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), ...read('a1', 'a3'), set(90)],
   [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), ...read('a1', 'a3'), set(90)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5'), ...read('a3', 'a4'), set(120)],
-  [...on('a1', 'a2', 'l1', 'l2', 'l3'), { setDial: { fixture: 'hub-turn', dial: 'turn', value: 90 } }, ...read('a1', 'a2'), set(180)],
+  [...on('a1', 'a2', 'l1', 'l2', 'l3'), { setDial: { fixture: 'hub-turn', dial: 'turn', value: 90 } }, set(180)],
   [set(5)]
 ];
 
@@ -443,9 +456,9 @@ export const SOLUTIONS = [
 export const MISSES = [
   [...on('a1', 'a2'), set(120)],
   [],
-  [...on('a1', 'a2', 'a3', 'a4'), set(3)],
+  [...on('a1', 'a2', 'a3', 'a4'), set(90)],
   [...on('h1', 'h2', 'h3')],
-  [...on('h1', 'h2', 'l1', 'l2'), set(15)],
+  [...on('h1', 'h2', 'l1', 'l2'), set(109)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5', 'a6'), set(109)],
   [...on('a1', 'a2', 'a3', 'a4', 'l1', 'l2'), set(180)],
   [...on('a1', 'a2', 'a3', 'a4', 'a5'), set(90)],

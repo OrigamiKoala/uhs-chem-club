@@ -234,15 +234,33 @@ function paintCard(ctx, p, state, o) {
   fitted(ctx, read.label, x0 + 3, y0 + h * 0.92, w * 0.5, { size, weight: 700, align: 'left', color: PLATE_COLORS.text });
   const shows = p.props.show || [];
   const note = text => fitted(ctx, text, x0 + w - 3, y0 + h * 0.79, w * 0.9, { size: Math.max(6, Math.round(h * 0.13)), align: 'right', color: PLATE_COLORS.dust });
-  if (shows.includes('arms')) note(`ARMS ${read.domains}`);
+  if (shows.includes('arms')) note(`DOMAINS ${read.domains}`);
   if (shows.includes('pulls')) {
     const syms = [...new Set([read.hub, ...read.arms.filter(x => x.kind === 'atom').map(x => x.sym)])];
     note(syms.map(y => `${y} ${(EN[y] ?? 0).toFixed(1)}`).join('  '));
   }
   if (shows.includes('dipole') && BOND_DIPOLE[read.id]) {
     const b = BOND_DIPOLE[read.id];
-    note(`${b.mu.toFixed(2)} D   ${b.pm} pm`);
-    fitted(ctx, `FULL CHARGE ${E_DEBYE_PER_ANGSTROM.toFixed(2)} D PER Å`, x0 + w - 3, y0 + h * 0.93, w * 0.55, { size: Math.max(5, Math.round(h * 0.1)), align: 'right', color: PLATE_COLORS.dust });
+    const full = E_DEBYE_PER_ANGSTROM * b.pm / 100;
+    const small = Math.max(5, Math.round(h * 0.1));
+    note(`MEASURED ${b.mu.toFixed(2)} D`);
+    fitted(ctx, `FULL TRANSFER ${full.toFixed(2)} D`, x0 + w - 3, y0 + h * 0.93, w * 0.6, { size: small, align: 'right', color: PLATE_COLORS.dust });
+    // Where the shared pair sits: a bar from "shared equally" (left) to "fully transferred" (right), and a mark as far along it as
+    // the measured dipole is of the full one. The idea the percentage puts a number on.
+    const bx0 = x0 + w * 0.12;
+    const bx1 = x0 + w * 0.88;
+    const by = y0 + h * 0.64;
+    ctx.strokeStyle = PLATE_COLORS.dim;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(bx0, by); ctx.lineTo(bx1, by);
+    ctx.moveTo(bx0, by - 3); ctx.lineTo(bx0, by + 3);
+    ctx.moveTo(bx1, by - 3); ctx.lineTo(bx1, by + 3);
+    ctx.stroke();
+    ctx.fillStyle = AMBER;
+    ctx.fillRect(bx0 + (bx1 - bx0) * (b.mu / full) - 2, by - 4, 4, 8);
+    fitted(ctx, 'EQUAL', bx0, by - small * 0.9, w * 0.3, { size: small, align: 'left', color: PLATE_COLORS.dim });
+    fitted(ctx, 'TRANSFERRED', bx1, by - small * 0.9, w * 0.45, { size: small, align: 'right', color: PLATE_COLORS.dim });
   }
   if (shows.includes('angles') && read.angles.length) note(`ATOMS ${read.angles.join(' ')}°`);
   if (arrowsOn(state, p)) {
@@ -266,7 +284,6 @@ function paintCard(ctx, p, state, o) {
       arrow(ctx, o.x - ux * w * 0.14, by - uy * h * 0.04, o.x + ux * w * 0.14, by + uy * h * 0.04, 2.2, AMBER, Math.max(4, h * 0.09));
       void by;
     }
-    fitted(ctx, `NET ${read.net.toFixed(2)}`, x0 + w - 3, y0 + h * 0.79, w * 0.6, { size: Math.max(6, Math.round(h * 0.13)), weight: 700, align: 'right', color: read.polar ? AMBER : PLATE_COLORS.dust });
   }
   void star;
 }
@@ -410,7 +427,7 @@ export const molCard = (id, mol, at, { show = [], field = false, turn = false, e
 /** A stream of a liquid of one molecule. */
 export const streamPiece = (id, mol, at, extra = {}) => ({ id, kind: 'stream', label: RIG_MOLECULES[mol].label, at, props: { mol, ...extra } });
 
-export const arrowsTool = (id, at) => ({ id, kind: 'arrows', label: 'Arrows', at, props: {}, caption: 'Shows each pull' });
+export const arrowsTool = (id, at) => ({ id, kind: 'arrows', label: 'Dipole Arrows', at, props: {}, caption: 'Shows bond dipoles' });
 export const rodTool = (id, at) => ({ id, kind: 'rod', label: 'Charged Rod', at, props: {}, caption: 'Holds a charge' });
 export const swapTool = (id, sym, at) => ({ id, kind: 'swapper', label: `Swap ${sym}`, at, props: { sym }, caption: 'Swaps an atom' });
 

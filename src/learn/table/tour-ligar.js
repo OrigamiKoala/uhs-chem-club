@@ -25,94 +25,101 @@ const FIXTURE = {
   },
   // The needle of bench one reads the group joined to one atom, not a single atom's particles.
   'atoms:needle': {
-    title: 'Charge needle',
-    text: () => 'The needle shows the total charge of the group of atoms joined to the one it is attached to. It points to + if the group has given away more electrons than it took, to − if it took more, and rests on 0 when they balance.',
+    title: 'Charge meter',
+    text: () => 'The charge meter shows the total charge of the atoms joined to the magnesium atom. Drag an atom onto another to join it. The meter points to + if the joined atoms have lost more electrons than they gained, to − if they gained more, and rests on 0 when the two balance.',
     dials: false
   },
   'bonds:lattice': {
-    title: 'Grid',
-    text: () => 'The grid is a board of empty cells. Drag an ion into a cell, then press "Slide a Layer" to shift the top row one place along. The board counts how many ions touch one of the same charge, and marks each ion that does with a stencilled !.'
+    title: 'Salt crystal',
+    text: () => 'The crystal is twelve ions, sodium (+) and chloride (−), each touching only ions of the opposite charge. Press "Slide a Layer" to move the top row one place along; press it again to move it back. The plate counts the pairs of like charges that sit side by side after the slide, and arrows show which way those ions are forced.'
   },
   'bonds:wells': {
-    title: 'Pull the pair',
-    text: (f) => `Each pair is two atoms on a track, and the dial under it is your hand. Drag the dial to pull the atoms apart or push them together. The graph draws the energy of the pair at every separation your hand has been through, so the curve builds up as you pull.${f.props?.marker ? ' The "Depth" dial lays a level line across the graph, to measure down to.' : ''}`,
+    title: 'Energy curve',
+    text: (f) => `Each pair is two atoms on a track. Drag the pair's dial to move the atoms apart or together. The graph draws the energy of the pair at every distance you have moved it through, so the curve builds up as you drag.${f.props?.components ? ' The two dotted traces are the attraction and the repulsion that add up to the curve.' : ''}${f.props?.marker ? ` The "${f.dials[f.props.marker].label}" dial lays a level line across the graph, that far below zero.` : ''}`,
     dials: false
   },
   'atoms:slate': {
-    title: 'Slate',
-    text: () => 'The slate shows one molecule: its atoms, and a joint in the gap between each two that could share electrons. Drag a Pair onto a joint to share it between the two atoms beside it, or onto an atom to leave it there. Each atom has a lamp that lights when it has all the electrons it can hold round it, and the slate counts how many electrons are left to place.',
+    title: 'Structure board',
+    text: () => 'The board shows one molecule: its atoms, and a gap between each two atoms that could bond. Drag a Pair onto a gap to share it between the two atoms beside it, or onto an atom to leave it on that atom alone. Each atom has a light that comes on when it has all the electrons it can hold round it, and the board counts the electrons still to place.',
     dials: false
   },
   'atoms:tally': {
-    title: 'Length dial',
-    text: () => 'This dial is where you write down a length. Drag it to the number you read, in pm; the number it shows when you press Submit is your answer.',
+    title: 'Answer dial',
+    text: (f) => `This dial is where you give your answer, under "${Object.values(f.dials || {})[0]?.label || f.label}". Drag it to the setting you mean; whatever it shows when you press Submit is your answer.`,
     dials: false
   },
   'domain:turner': {
     title: 'Turn dial',
-    text: () => 'This dial turns your view round the hub, so you can look at the arms from the side. It changes how you look at the molecule, never the molecule.',
+    text: () => 'This dial turns your view round the central atom, so you can look at the model from the side. It changes how you look at the molecule, never the molecule.',
     dials: false
   },
   'domain:marker': {
-    title: 'Marker',
-    text: () => 'The marker is where you write down a number you have read. Drag its dial to the number you worked out; whatever it shows when you press Submit is your answer.',
+    title: 'Answer dial',
+    text: () => 'This dial is where you give your answer. Drag it to the number you mean; whatever it shows when you press Submit is your answer.',
     dials: false
   },
   'domain:plates': {
     title: 'Charged plates',
-    text: () => 'Two charged bars stand either side of a gap, the left one plus and the right one minus. Put a molecule in the gap and press "Switch Field". A molecule that is pulled round turns to line up with the bars; one that is not pulled stays just as it was.',
+    text: () => 'Two charged plates stand either side of a gap, the left one positive and the right one negative. Put a molecule in the gap and press "Switch Field". A molecule with a positive end and a negative end turns to line up with the plates; one without stays just as it was.',
     dials: false
   },
   'domain:twist': {
-    title: 'Bond to twist',
+    title: 'Bond to turn',
     text: () => 'Each picture is one bond with an end that could turn. Drag the "Far End" dial to turn that end. If the bond lets it turn, the end stays where you put it; if not, it springs back.',
     dials: false
   },
   'domain:mixbowl': {
-    title: 'Mixing bowl',
-    text: () => 'Drag orbitals into the bowl to blend them. The lobes that come out of the blend are drawn beside the bowl, and any orbital you did not use stands over as it was.',
+    title: 'Mixer',
+    text: () => 'Drag orbitals of the atom into the mixer. The orbitals they mix into are drawn beside it, and any orbital you did not use stays as it was. Drag an orbital out again to take it back.',
     dials: false
   },
   'mo:magnet': {
     title: 'Magnet',
-    text: (f) => `${f.props?.slot ? 'Drag a gas card into the "Gas to test" slot, then ' : ''}press "Test Sample". The magnet pulls on the real gas and shows how hard, from 0 for no pull upward.`,
+    text: (f) => `${f.props?.slot ? 'Drag a gas card into the "Gas to test" slot, then ' : ''}press "Test Sample". The magnet is held beside the real gas and shows whether the gas is attracted to it.`,
+    dials: false
+  },
+  'mo:overlap': {
+    title: 'Two atoms and their orbitals',
+    text: (f) => `The picture shows two atoms, each with one orbital, and the combined orbital the two make: the brighter a place, the more likely the electron is there, and the colour shows the sign of the wave. Drag the "Distance" dial to move the atoms apart or together.${f.dials?.sign ? ' The "Signs" dial turns one atom\'s orbital over, from + to −.' : ''} The marks at the right show the energy of the combined orbital, BOTH, against the energy of each atom on its own.`,
+    dials: false
+  },
+  'mo:marker': {
+    title: 'Answer dial',
+    text: () => 'This dial is where you give your answer. Drag it to the setting you mean; whatever it shows when you press Submit is your answer.',
     dials: false
   },
   'mo:rack': {
-    title: 'Ladder of boxes',
-    text: () => 'The ladder runs from low energy at the bottom to high energy at the top. The two atoms\' own boxes stand at the sides, and the boxes they make together stand in the middle, in rows. Drag an electron from the jar into a box (or tap the jar, then the box); a box takes two, one pointing each way. The ladder counts what you have placed and how many electrons are unpaired.',
+    title: 'Energy levels',
+    text: () => 'The diagram runs from low energy at the bottom to high energy at the top. Each atom\'s own orbitals stand at the sides, and the molecular orbitals the two atoms make together stand in the middle. Drag an electron from the jar into an orbital (or tap the jar, then the orbital); an orbital takes two, one pointing each way. The diagram counts the unpaired electrons.',
     dials: false
   }
 };
 
 /** A kind of piece, by `kit:kind`: `[title, text, optional (table) => extra sentence]`. */
 const PIECE = {
-  'bonds:slab': ['Blocks', 'Each block is a lump of material, with a picture of its atoms under the glass. Drag a block onto the hotplate to heat it.', t => (hasKind(t, 'leads') ? ' Lay the leads on a block to test it.' : '')],
-  'bonds:hammer': ['Hammer', 'Drag the hammer onto a block to strike it once. The block shows what the blow did to it, and the picture of its atoms shows how the rows moved.'],
-  'bonds:guess': ['Atom cards', 'Each card carries a few words. Drag a card to the slot or tray where it belongs.'],
-  'bonds:leads': ['Leads', 'The leads clip across the block they lie on, and they light a lamp on that block while a current passes through it. Drag the leads onto a block and watch the lamp; lift them off to test another block.'],
-  'bonds:salt': ['Salt cards', 'Each card is one salt, drawn as its two kinds of ion touching, with the charge on each and the distance between their centres. Drag a card onto the hotplate to melt it.'],
-  'bonds:pairtag': ['Pair cards', 'Each card names one pair of atoms and shows the rods held between them. Put the cards in order on the strip.'],
-  'bonds:ion': ['Ions', 'Each ion shows its element and its charge, + or −. Drag an ion into a cell of the grid; ions in cells that touch sit side by side.'],
-  'atoms:pairs': ['Pair', 'Drag the Pair tile onto a joint to share a pair of electrons between the two atoms beside it, or onto an atom to leave the pair on that atom. The lamps show what each placing did.'],
-  'atoms:single': ['Single', 'Drag the Single tile onto an atom to leave a single electron on it. The slate counts it as one electron, and the atom\'s lamp counts it round that atom.'],
-  'atoms:lift': ['Lift Out', 'Drag "Lift Out" onto a joint or an atom to take a pair back off it, so you can try it somewhere else.'],
-  'atoms:fcstamp': ['Stamp', 'Drag the Stamp onto an atom of the drawing. It prints the charge that atom carries, which changes when you change the drawing.'],
-  'atoms:mark': ['Mark', 'Drag the Mark onto an atom to leave a dashed ring on it. Your answer is the atom that wears the ring when you press Submit.'],
-  'atoms:gauge': ['Gauge', 'Drag the Gauge onto a joint. It clamps across that bond and prints how long the bond measures in the real molecule, in pm, which is not always what the drawing says.'],
-  'domain:hub': ['Hub', 'The hub is the atom in the middle. Drop arms and balloons on it and they push each other as far apart as they can get, in every direction, not only along the table.'],
-  'domain:arm': ['Arms', 'Each arm is an atom that clips onto the hub. Drag an arm from the tray onto the hub; drag it off again to take it away. A double or triple bond is still one arm.'],
-  'domain:balloon': ['Lone-pair balloon', 'A balloon stands for a lone pair of electrons that belongs to the hub alone. It takes room on the hub like an arm, but it has no atom on it.'],
-  'domain:protractor': ['Protractor', 'Lay the protractor on one arm and then on another. It reads the angle between the two arms, in degrees.'],
-  'domain:dmol': ['Molecule cards', 'Each card is one molecule. Drag it into the gap between the bars, then press "Switch Field" and watch what it does.', t => (hasKind(t, 'arrows') ? ' Lay the Arrows on a card to see the pull of each bond.' : '')],
-  'domain:tmol': ['Molecule card', 'This card is one molecule. Drag it into the gap between the bars, then press "Switch Field" and watch whether it swings round. Pick it up and press "Flip" to turn it half a turn.', t => (hasKind(t, 'arrows') ? ' Lay the Arrows on it to see the pull of each bond.' : '')],
-  'domain:mol': ['Molecule cards', 'Each card is one molecule, with the number of arms its centre holds.'],
-  'domain:arrows': ['Arrows', 'Lay the Arrows on a molecule card. It draws an arrow across each bond toward the atom that pulls the shared pair harder, and one amber arrow for the total pull. The size of the total is printed on the card.'],
-  'domain:rod': ['Charged rod', 'Lay the rod on a stream. A charged rod pulls on a stream whose molecules turn in a field and bends it toward the rod; any other stream runs straight on.'],
-  'domain:stream': ['Streams', 'Each stream is a thin flow of one liquid. The dashed line shows where it would fall if nothing pulled it.'],
-  'domain:orb': ['Orbitals', 'Each piece is one orbital of an atom, drawn with the electrons in it. Drop one in the bowl to blend it, or drop one on another orbital to try to bond the two. A bonded pair of atoms is drawn together.'],
-  'mo:mocard': ['Gas cards', 'Each card is one gas. Drag a card into the "Gas to test" slot and press "Test Sample"; the card keeps the reading the magnet gave.'],
-  'mo:card': ['Cards', 'Each card shows an orbital combination or diatomic molecule. Drag a card to sort it into the matching tray.']
+  'bonds:slab': ['Blocks', 'Each block is a lump of material, with a picture of its particles; a + or − marks a particle that carries a charge. Drag a block onto the hotplate to heat it.', t => (hasKind(t, 'leads') ? ' Drag the leads onto a block to test whether it conducts.' : '')],
+  'bonds:hammer': ['Hammer', 'Drag the hammer onto a block to strike it once. The block prints what the blow did to it, and its picture shows how the rows of atoms moved.'],
+  'bonds:guess': ['Cards', 'Each card carries a few words. Drag a card to the slot where it belongs.'],
+  'bonds:leads': ['Leads', 'The leads connect the block they lie on to a lamp, which lights on that block while a current passes. Drag the leads onto a block and watch the lamp; a streak behind a particle in the picture shows that it is moving.'],
+  'bonds:salt': ['Salt cards', 'Each card is one ionic solid, drawn as its two kinds of ion touching, with the charge on each and the distance between their centres. Drag a card onto the hotplate to melt it.'],
+  'bonds:pairtag': ['Pair cards', 'Each card stands for one of the pairs of atoms on the graph. Drag the cards into order on the rail.'],
+  'bonds:ion': ['Ions', 'Each ion shows its element and its charge, + or −. An ion ringed in amber sits beside an ion of the same charge.'],
+  'atoms:pairs': ['Pair', 'Drag the Pair piece onto a gap to share a pair of electrons between the two atoms beside it, or onto an atom to leave the pair on that atom. Each atom\'s light shows what the placing did.'],
+  'atoms:single': ['Single', 'Drag the Single piece onto an atom to leave one electron on it, with no partner.'],
+  'atoms:lift': ['Lift Out', 'Drag "Lift Out" onto a gap or an atom to take a pair back off it, so you can try it somewhere else.'],
+  'atoms:fcstamp': ['Charge reader', 'Drag the charge reader onto an atom of the structure. It prints that atom\'s formal charge, which changes when you change the structure.'],
+  'atoms:mark': ['Mark', 'Drag the Mark onto an atom to leave a dashed ring on it. Your answer is the atom that carries the ring when you press Submit.'],
+  'atoms:gauge': ['Length meter', 'Drag the length meter onto a bond. It prints how long that bond measures in the real molecule, in pm, which is not always what the drawing suggests.'],
+  'domain:hub': ['Central atom', 'The atom in the middle of the model. Bonds and lone pairs dropped on it repel each other and settle as far apart as they can, in every direction, not only along the table.'],
+  'domain:arm': ['Bonds', 'Each of these is a bond to another atom. Drag one from the tray onto the central atom; drag it off again to take it away. A double or triple bond still counts as one electron domain.'],
+  'domain:balloon': ['Lone pair', 'A lone pair of electrons that belongs to the central atom alone. It is an electron domain like a bond, but it has no atom on it.'],
+  'domain:protractor': ['Protractor', 'Drag the protractor onto one bond and then onto another. It reads the angle between the two, in degrees.'],
+  'domain:dmol': ['Molecule cards', 'Each card is one molecule. Drag it into the gap between the plates, then press "Switch Field" and watch what it does.', t => (hasKind(t, 'arrows') ? ' Drag the dipole arrows onto a card to see each bond\'s dipole.' : '')],
+  'domain:tmol': ['Molecule card', 'This card is one molecule. Drag it into the gap between the plates, then press "Switch Field" and watch whether it turns. Pick it up and press "Flip" to turn it end for end.', t => (hasKind(t, 'arrows') ? ' Drag the dipole arrows onto it to see the bond\'s dipole.' : '')],
+  'domain:mol': ['Molecule cards', 'Each card is one molecule, drawn with its bonds, and prints what the stage needs to know about it.'],
+  'domain:arrows': ['Dipole arrows', 'Drag the dipole arrows onto a molecule card. An arrow is drawn along each bond toward the atom that holds the shared pair closer, and one amber arrow shows which way they add up, if they do not balance.'],
+  'domain:orb': ['Orbitals', 'Each piece is one orbital of an atom, drawn with the electrons in it. Drag one into the mixer, or onto an orbital of another atom to try to bond the two.'],
+  'mo:mocard': ['Gas cards', 'Each card is one gas. Drag a card into the "Gas to test" slot and press "Test Sample"; the card keeps what the magnet did.'],
 };
 
 /** A piece the instrument's own step already explains (a slate's fixed atoms and joints), so the Tour leaves it out. */

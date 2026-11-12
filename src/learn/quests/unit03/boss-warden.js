@@ -59,7 +59,7 @@ const WARDEN_FOE = [{ id: 'warden', label: 'The Basalt Warden' }];
 const into = (id, zone, kind = 'slot') => ({ place: { piece: id, to: `${kind}:${zone}` } });
 
 /** The three plating blocks, as the salts of Ligar's third bench. */
-const PLATING = [['a', 'Plate A', 'NaCl'], ['b', 'Plate B', 'MgO'], ['c', 'Plate C', 'KCl']];
+const PLATING = [['a', 'NaCl', 'NaCl'], ['b', 'MgO', 'MgO'], ['c', 'KCl', 'KCl']];
 
 /** Phase 2's table: the tray's tiles down the left and the hydrogen cyanide slate beside them (the atom kit's, with its scratch corner). */
 function ventTable() {
@@ -76,7 +76,7 @@ function ventTable() {
 /** Phase 3's table: the nitrogen hub with its tray of three hydrogen atoms, a lone pair and the protractor, and the angle marker. */
 const HUB_AT = { x: 38, y: 32 };
 function hubTable() {
-  const hs = hubSet('hub', 'N', HUB_AT, { label: 'Hub N', turner: { x: 100, y: 10.5 } });
+  const hs = hubSet('hub', 'N', HUB_AT, { label: 'Nitrogen', turner: { x: 100, y: 10.5 } });
   const at0 = { x: 0, y: 0 };
   const inTray = [
     ...[1, 2, 3].map(i => armPiece(`h${i}`, 'H', at0, 1, 'H')),
@@ -85,7 +85,7 @@ function hubTable() {
   ].map(p => ({ ...p, zone: 'tray:bin' }));
   return domainTable({
     pieces: [hs.piece, ...inTray],
-    zones: { trays: [{ id: 'bin', label: 'Arms', at: { x: 112, y: 51 }, size: { w: 52, h: 26 }, cell: 13 }] },
+    zones: { trays: [{ id: 'bin', label: 'Electron domains', at: { x: 112, y: 51 }, size: { w: 52, h: 26 }, cell: 13 }] },
     fixtures: [hs.fixture, hs.turner, marker('mark', { x: 100, y: 25.5 }, { label: 'Angle', size: { w: 44, h: 14 } })]
   });
 }
@@ -105,13 +105,13 @@ export const STAGES = [
     title: 'Phase 1 · The Plating',
     briefing: {
       speaker: SPEAKER,
-      body: 'Apply the bonding and structural concepts learned across Ligar to analyze each property of the warden.'
+      body: 'The Basalt Warden has five phases, each on a bench you have already worked. Nothing new is needed.'
     },
-    prompt: 'Place the ionic block with the highest melting point into the marked slot.',
+    prompt: 'Which of these three ionic solids has the highest melting point?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: PLATING.map(([id, label, lat], i) => saltPiece(id, label, lat, { x: 22 + i * 34, y: 56 })),
-      zones: { slots: [{ id: 'most', label: 'Needs the most heat', at: { x: 122, y: 40 }, size: { w: 26, h: 20 } }] },
+      zones: { slots: [{ id: 'most', label: 'Melts highest', at: { x: 122, y: 40 }, size: { w: 26, h: 20 } }] },
       fixtures: [hotplate('hp', { x: 49, y: 19 }, { w: 92, h: 32, max: 3000, step: 25 })]
     }),
     foes: WARDEN_FOE,
@@ -121,21 +121,21 @@ export const STAGES = [
       intent: 'A basalt warden stands over three blocks of its own plating.'
     },
     hints: [
-      'Use the hotplate, its heat dial and the marked place.',
-      'Compare lattice energies based on ionic charges and internuclear distances.',
-      'Heat each ionic block to observe its melting point, then place the highest melting block into the slot.'
+      'Each card prints its ions\' charges and the distance between their centres; the hotplate can melt any of them.',
+      'Compare the charges on the three cards first, then the distances.',
+      'The more strongly the ions attract each other, the more heat it takes to pull them from their places.'
     ],
     check(state) {
       const t = state.table;
       const held = piecesIn(t, 'slot:most', 'salt')[0];
-      if (!held) return { ok: false, notYet: true, msg: 'Put a plate in the marked place.' };
+      if (!held) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
       const hot = byLatticeEnergy(PLATING.map(p => p[2]))[0];
       if (held.props.lattice === hot) return { ok: true };
-      return { ok: false, msg: 'A plate gives way on the hotplate at a higher setting than the one in the marked place.' };
+      return { ok: false, msg: 'Another of the three is still solid on the hotplate at the temperature where this one is molten.' };
     },
     reward: {
-      title: 'Lattice Energy and Melting Point',
-      body: 'The ionic solid with smaller, higher-charge ions exhibits the highest lattice energy and melting point. Magnesium oxide (Mg2+, O2-) is held hardest and requires the most heat to melt.',
+      title: 'Lattice Energy',
+      body: 'Magnesium oxide: its ions carry 2+ and 2− and sit close together, so they attract most strongly. It has the highest lattice energy and the highest melting point.',
       log: 'The most tightly held salt found.'
     }
   },
@@ -144,7 +144,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · The Vent',
-    prompt: 'Distribute all valence electrons for hydrogen cyanide until every atom has a full outer shell.',
+    prompt: 'Where do the ten valence electrons of hydrogen cyanide, HCN, go?',
     widget: { type: 'table', label: 'The bench' },
     table: ventTable(),
     foes: WARDEN_FOE,
@@ -154,20 +154,20 @@ export const STAGES = [
       intent: 'The warden vents a thin stream and its seams stand shut.'
     },
     hints: [
-      'Use the Pair tile and the slate.',
-      'Place a single bond between H and C, then share enough electron pairs between C and N to satisfy both octets.',
-      'Form a triple bond between carbon and nitrogen, leaving one lone pair on nitrogen.'
+      'Drag the Pair piece onto a gap between two atoms to share a pair, or onto an atom to leave a lone pair.',
+      'With one pair in each gap, compare the electrons round carbon and round nitrogen with an octet.',
+      'A shared pair counts toward both atoms, so sharing more pairs is how atoms reach octets when electrons are short.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
-      return { ok: false, msg: 'Every electron is placed, and a lamp is still dark.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
+      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
     },
     reward: {
-      title: 'Triple Covalent Bond',
-      body: 'Carbon and nitrogen share three electron pairs, forming a triple bond, while nitrogen retains one lone pair. This gives both carbon and nitrogen complete octets in hydrogen cyanide.',
+      title: 'Triple Bond',
+      body: 'One pair bonds hydrogen to carbon, three pairs bond carbon to nitrogen, and the last is a lone pair on nitrogen. Carbon and nitrogen each have an octet.',
       log: 'HCN drawn with a triple bond.'
     }
   },
@@ -176,7 +176,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · The Joints',
-    prompt: 'Set the marker to how many degrees the H–N–H angle in ammonia falls short of the tetrahedral angle, 109.5°.',
+    prompt: 'What is the H–N–H bond angle in ammonia, NH₃?',
     widget: { type: 'table', label: 'The bench' },
     table: hubTable(),
     foes: WARDEN_FOE,
@@ -186,24 +186,24 @@ export const STAGES = [
       intent: 'The warden stands with its columns held square.'
     },
     hints: [
-      'Use the hydrogen atoms, the balloon, the protractor and the angle marker.',
-      'Attach three hydrogen atoms and one lone pair to nitrogen, then measure an H-N-H angle with the protractor.',
-      'Subtract the angle the protractor reads from 109.5 and round to a whole number of degrees.'
+      'Build the molecule on the nitrogen atom from the tray, then lay the protractor across two hydrogen atoms.',
+      'Compare the pieces in the tray with the electron domains nitrogen has in ammonia.',
+      'A lone pair is a domain too, and it repels the bonds more strongly than they repel each other.'
     ],
     check(state) {
       const t = state.table;
       const r = hubRead(t, 'hub');
       const v = markerValue(t, 'mark');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of degrees.' };
+      if (!v) return { ok: false, notYet: true, msg: 'Set the dial to an angle.' };
       const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
-      if (r.lone < 1 || hs.length < 3) return { ok: false, msg: 'Not everything from the Arms tray is on the hub yet.' };
+      if (r.lone < 1 || hs.length < 3) return { ok: false, msg: 'This model does not have all of the electron domains that nitrogen has in ammonia.' };
       const real = angleBetween(r.plan, hs[0][1], hs[1][1]);
-      if (Math.abs(v - (109.5 - real)) <= 1.2) return { ok: true };
-      return { ok: false, msg: 'The marker does not match the gap between 109.5 and the angle the protractor reads between two hydrogen atoms on the finished hub.' };
+      if (Math.abs(v - real) <= 1.2) return { ok: true };
+      return { ok: false, msg: `The model's angle is not ${v}°: lay the protractor across two hydrogen atoms and read it again.` };
     },
     reward: {
-      title: 'Trigonal Pyramidal Angle',
-      body: 'Three bonding pairs and one nonbonding lone pair form a trigonal pyramidal molecular geometry. Repulsion from the lone pair compresses the H-N-H bond angles to 107 degrees.',
+      title: 'Ammonia\'s Angle',
+      body: '107°. Nitrogen has four electron domains, and the lone pair repels the three bonds a little closer together than 109.5°.',
       log: 'NH3 built as a pyramid.'
     }
   },
@@ -212,7 +212,7 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · The Coolant',
-    prompt: 'Place every molecule with a net dipole moment that aligns in the electric field into the tray.',
+    prompt: 'Which of these three molecules are polar?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
@@ -221,7 +221,7 @@ export const STAGES = [
         molCard('c', 'NH3', { x: 70, y: 53 }, { field: true }),
         arrowsTool('ar', { x: 100, y: 10 })
       ],
-      zones: { trays: [{ id: 'turns', label: 'Swings round', at: { x: 114, y: 44 }, size: { w: 58, h: 26 }, cell: 20 }] },
+      zones: { trays: [{ id: 'turns', label: 'Polar', at: { x: 114, y: 44 }, size: { w: 58, h: 26 }, cell: 20 }] },
       fixtures: [plates('pl', FIELD_AT, { size: { w: 70, h: 38 } })]
     }),
     foes: WARDEN_FOE,
@@ -231,23 +231,23 @@ export const STAGES = [
       intent: 'The warden stands between the plates, with a coolant line to each molecule.'
     },
     hints: [
-      'Use the molecules, the arrows, the plates and "Switch Field".',
-      'Evaluate molecular geometry to determine whether polar bond dipoles cancel out.',
-      'Ammonia has an asymmetrical trigonal pyramidal geometry that aligns in the field, while CO2 and BF3 cancel their dipoles.'
+      'Drag a molecule between the plates and press "Switch Field"; the dipole arrows show each bond\'s dipole.',
+      'Compare the directions of the bond dipole arrows in each molecule\'s shape.',
+      'A molecule is polar only if its bond dipoles do not balance, which depends on its shape.'
     ],
     check(state) {
       const t = state.table;
       const ids = ['a', 'b', 'c'];
       const got = ids.filter(id => t.pieces[id].zone === 'tray:turns');
-      if (!got.length) return { ok: false, notYet: true, msg: 'Put the molecules that swing round into the tray.' };
+      if (!got.length) return { ok: false, notYet: true, msg: 'Put the polar molecules into the tray.' };
       const want = ids.filter(id => molRead(t.pieces[id]).polar);
-      if (got.some(id => !want.includes(id))) return { ok: false, msg: 'The tray holds a molecule that did not swing round.' };
-      if (want.some(id => !got.includes(id))) return { ok: false, msg: 'A molecule that swung round is not in the tray.' };
+      if (got.some(id => !want.includes(id))) return { ok: false, msg: 'The tray holds a molecule that does not turn between the plates when the field is on.' };
+      if (want.some(id => !got.includes(id))) return { ok: false, msg: 'A molecule that turns between the plates when the field is on is not in the tray.' };
       return { ok: true };
     },
     reward: {
-      title: 'Dipole Cancellation and Polarity',
-      body: 'Ammonia has a net dipole moment due to its trigonal pyramidal shape and aligns in an electric field. Linear carbon dioxide and trigonal planar boron trifluoride are symmetrical, so their bond dipoles cancel.',
+      title: 'Polar and Nonpolar',
+      body: 'Only ammonia. Its three bond dipoles point to one side of the pyramid, while those of linear CO₂ and flat, triangular BF₃ balance.',
       log: 'One polar molecule and two nonpolar ones found.'
     }
   },
@@ -256,14 +256,14 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · The Core',
-    prompt: 'Place the paramagnetic gas attracted to the magnet into the marked slot.',
+    prompt: 'Which of these three gases is paramagnetic?',
     widget: { type: 'table', label: 'The bench' },
     table: moTable({
       pieces: GASES.map(([id, label, mol], i) => moCard(id, label, { x: 20 + i * 34, y: 52 }, { mol })),
       zones: {
         slots: [
           { id: 'test', label: 'Gas to test', at: { x: 36, y: 22 }, size: { w: 36, h: 22 } },
-          { id: 'drawn', label: 'Drawn in', at: { x: 124, y: 42 }, size: { w: 36, h: 22 } }
+          { id: 'drawn', label: 'Paramagnetic', at: { x: 124, y: 42 }, size: { w: 36, h: 22 } }
         ]
       },
       fixtures: [magnet('magnet', { x: 76, y: 22 }, { slot: 'test', size: { w: 34, h: 30 }, label: 'Magnet' })]
@@ -275,20 +275,20 @@ export const STAGES = [
       intent: 'The warden stands over three gas lines, none of them marked.'
     },
     hints: [
-      'Use the gas cards, the test slot and "Test Sample".',
-      'Test each gas with the magnet to identify which one exhibits paramagnetism.',
-      'Select oxygen, whose molecular orbital configuration contains two unpaired electrons.'
+      'Drag a gas card into the "Gas to test" slot and press "Test Sample".',
+      'Compare what the magnet does to each of the three gases.',
+      'A paramagnetic substance has unpaired electrons, and a magnet attracts it.'
     ],
     check(state) {
       const t = state.table;
       const held = piecesIn(t, 'slot:drawn', 'mocard')[0];
-      if (!held) return { ok: false, notYet: true, msg: 'Put a gas in the marked place.' };
+      if (!held) return { ok: false, notYet: true, msg: 'Put a gas card in the "Paramagnetic" slot.' };
       if (DIATOMICS[held.props.mol].unpaired > 0) return { ok: true };
-      return { ok: false, msg: 'The magnet did not pull the gas in the marked place.' };
+      return { ok: false, msg: 'The magnet does not attract that gas: test it in the slot beside the magnet.' };
     },
     reward: {
-      title: 'Paramagnetism and Unpaired Electrons',
-      body: 'Molecular orbital theory shows that oxygen has two unpaired electrons in degenerate antibonding pi-star orbitals, making it paramagnetic. Nitrogen and fluorine have all electrons paired and are diamagnetic.',
+      title: 'Paramagnetic Oxygen',
+      body: 'Oxygen. Its last two electrons stand unpaired, one in each of two antibonding orbitals of equal energy, so a magnet attracts it.',
       log: 'The magnetic gas found.'
     }
   }
@@ -315,7 +315,7 @@ const test = (id) => [into(id, 'test'), { run: 'magnet' }];
 export const SOLUTIONS = [
   [into('b', 'most')],
   [...deal('aj01'), ...deal('aj12', 3), ...deal('a2')],
-  [...on('h1', 'h2', 'h3', 'l1'), ...read('h1', 'h2'), set(3)],
+  [...on('h1', 'h2', 'h3', 'l1'), ...read('h1', 'h2'), set(107)],
   [between('a'), field, free('a', 14, 53), between('b'), free('b', 42, 53), between('c'), into('c', 'turns', 'tray')],
   [...test('n2'), ...test('o2'), ...test('f2'), into('o2', 'drawn')]
 ];

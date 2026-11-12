@@ -411,7 +411,7 @@ function sign(ctx, x, y, r, s) {
  * The picture of a block, from `planSlab`: its pieces and the joins between them, in a box. The same layout
  * the old bench drew, so what is drawn is what is graded. A case hides what is inside (a hatched mass).
  */
-export function paintSlabPicture(ctx, decl, phase, box, lifted = []) {
+export function paintSlabPicture(ctx, decl, phase, box, lifted = [], current = false) {
   const { x0, y0, w, h } = box;
   const lay = planSlab(decl, phase);
   ctx.fillStyle = '#0d0c0a';
@@ -463,6 +463,9 @@ export function paintSlabPicture(ctx, decl, phase, box, lifted = []) {
       ctx.stroke();
       return;
     }
+    // While a current passes through molten salt its ions are the charges that move: + ions one way, − ions the other, each with a
+    // short streak behind it. (In the cold solid nothing is streaked: the ions keep their places.)
+    if (current && decl.build === 'grid' && phase === 'molten' && c.sign) streak(ctx, x, y, r * 1.1, r * 1.5, c.sign > 0 ? -1 : 1, PLATE_COLORS.dust);
     disc(ctx, x, y, r * (c.size || 1), c.tint ? (TINTS[c.tint] || tint) : tint);
     if (c.sign) sign(ctx, x, y, r, c.sign);
   });
@@ -475,11 +478,23 @@ export function paintSlabPicture(ctx, decl, phase, box, lifted = []) {
       const d = r * 1.55;
       const ex = Math.min(x0 + w - 1, Math.max(x0 + 1, px(c) + Math.cos(a) * d));
       const ey = Math.min(y0 + h - 1, Math.max(y0 + 1, py(c) + Math.sin(a) * d));
+      // While a current passes, every loose electron moves the same way: a streak behind each.
+      if (current) streak(ctx, ex, ey, 0, r * 1.5, 1, PLATE_COLORS.phosphor);
       ctx.beginPath();
       ctx.arc(ex, ey, Math.max(1, r * 0.3), 0, Math.PI * 2);
       ctx.fill();
     });
   }
+}
+
+/** A short line trailing a particle that moves toward `dir` (+1 right, −1 left): the mark of motion in a still picture. */
+function streak(ctx, x, y, gap, len, dir, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x - dir * gap, y);
+  ctx.lineTo(x - dir * (gap + len), y);
+  ctx.stroke();
 }
 
 const BLOW_WORD = { cleaved: 'SPLIT', crumbled: 'CRUMBLED', bent: 'BENT', dented: 'DENTED', held: 'HELD' };
@@ -494,7 +509,7 @@ function paintSlab(ctx, p, state, o) {
   const h = hh * 2;
   frame(ctx, x0, y0, w, h, '#2a2620', o.lit);
   const picH = h * 0.72;
-  paintSlabPicture(ctx, v.d, v.phase, { x0: x0 + 1.5, y0: y0 + 1.5, w: w - 3, h: picH - 1.5 }, v.lifted);
+  paintSlabPicture(ctx, v.d, v.phase, { x0: x0 + 1.5, y0: y0 + 1.5, w: w - 3, h: picH - 1.5 }, v.lifted, Boolean(v.current));
   // The lamp the leads light: a ring in the corner, filled while a current passes. A mark, never a glow.
   if (v.leads) {
     const lr = Math.max(2.5, h * 0.09);
@@ -810,10 +825,6 @@ function paintLattice(ctx, f, state, b) {
     ctx.stroke();
     ctx.setLineDash?.([]);
 
-    plateText(ctx, 'CLEAVAGE PLANE', (X(xStart) + X(xEnd)) / 2, Y(yCleave) - 2.6 * sc, {
-      size: subSize, weight: 700, align: 'center', color: AMBER
-    });
-
     row0.forEach((id0, c) => {
       const p = ionIn(state, id0);
       const q = ionIn(state, row1[c + 1]);
@@ -846,8 +857,8 @@ function paintLattice(ctx, f, state, b) {
   let c2 = PLATE_COLORS.dim;
 
   if (g.slid) {
-    l1 = `${g.faced} like charges align and repel`;
-    l2 = 'Repulsion cleaves the crystal';
+    l1 = `${g.faced} pairs of like charges`;
+    l2 = 'now sit side by side';
     c1 = AMBER;
     c2 = AMBER;
   } else if (g.like > 0) {
@@ -856,8 +867,8 @@ function paintLattice(ctx, f, state, b) {
     c1 = AMBER;
     c2 = PLATE_COLORS.dust;
   } else if (g.filled === g.total) {
-    l1 = 'Lattice complete: all ions stable';
-    l2 = 'Press "Slide a Layer" to test cleavage';
+    l1 = 'Each ion touches only opposite charges';
+    l2 = 'Press "Slide a Layer"';
     c1 = AMBER;
     c2 = PLATE_COLORS.dust;
   } else if (g.filled > 0) {
@@ -946,11 +957,11 @@ function paintWells(ctx, f, state, b) {
     ctx.stroke();
     ctx.setLineDash?.([]);
     // `props.components`: the two things the curve is made of, drawn over the same stretch. The Morse curve is exactly their sum:
-    // the pull of the nuclei for the electrons (negative, long reach) plus the push of nucleus against nucleus and cloud against cloud (positive, short reach).
+    // the attraction of the nuclei for the electrons (negative, long reach) plus the repulsion of nucleus against nucleus and cloud against cloud (positive, short reach).
     if (f.props.components) {
       const parts = [
-        { name: 'pull', color: PLATE_COLORS.phosphor, at: z => -2 * pair.de * Math.exp(-pair.k * (z - pair.r0)) },
-        { name: 'push', color: PLATE_COLORS.dust, at: z => pair.de * Math.exp(-2 * pair.k * (z - pair.r0)) }
+        { name: 'attraction', color: PLATE_COLORS.phosphor, at: z => -2 * pair.de * Math.exp(-pair.k * (z - pair.r0)) },
+        { name: 'repulsion', color: PLATE_COLORS.dust, at: z => pair.de * Math.exp(-2 * pair.k * (z - pair.r0)) }
       ];
       for (const part of parts) {
         ctx.strokeStyle = part.color;
@@ -970,7 +981,11 @@ function paintWells(ctx, f, state, b) {
         }
         ctx.stroke();
         ctx.setLineDash?.([]);
-        if (lastX != null) plateText(ctx, part.name, lastX + 2, lastY + (part.name === 'pull' ? size * 0.9 : -size * 0.4), { size, color: part.color });
+        // The name stands at the trace's far end, turned back inside the plot when that end is near the right edge.
+        if (lastX != null) {
+          const inside = lastX > X(dmax * 0.72);
+          plateText(ctx, part.name, lastX + (inside ? -2 : 2), lastY + (part.name === 'attraction' ? size * 0.9 : -size * 0.4), { size, color: part.color, align: inside ? 'right' : 'left' });
+        }
       }
     }
     // Where the hand has the pair now: a small square on the curve, and the reading.

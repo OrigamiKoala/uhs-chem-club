@@ -506,18 +506,18 @@ function planDeal(a, b, state) {
   //            the real molecule's and not the drawing's
   if (a.kind === 'fcstamp') {
     if (b.kind !== 'atom') return refuse('The stamp goes on an atom.');
-    return { holds: true, once: true, set: { b: { stamped: true } }, reason: 'The atom shows the charge it carries.' };
+    return { holds: true, once: true, set: { b: { stamped: true } }, reason: 'The atom shows its formal charge.' };
   }
   if (a.kind === 'mark') {
     if (b.kind !== 'atom') return refuse('The mark goes on an atom.');
     return { holds: true, once: true, set: { b: { marked: !b.props.marked } }, reason: b.props.marked ? 'The mark came off.' : 'The mark is on the atom.' };
   }
   if (a.kind === 'gauge') {
-    if (b.kind !== 'joint') return refuse('The gauge goes across a bond.');
+    if (b.kind !== 'joint') return refuse('The length meter goes across a bond.');
     if (!(b.props.pairs > 0)) return refuse('There is no bond there to measure.');
     const len = gaugeLength(sl.mol, sl.placed, lewisKey(b.props.i, b.props.j));
-    if (len == null) return refuse('The gauge reads nothing there.');
-    return { holds: true, once: true, set: { b: { measured: true } }, reason: 'The gauge reads the bond.' };
+    if (len == null) return refuse('There is no bond there to measure.');
+    return { holds: true, once: true, set: { b: { measured: true } }, reason: 'The meter printed the measured length.' };
   }
   if (a.kind === 'three') {
     if (b.kind !== 'atom') return refuse('Lone pairs go on an atom.');

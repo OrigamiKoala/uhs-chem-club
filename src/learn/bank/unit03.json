@@ -24,7 +24,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "An ionic bond requires a metal and a nonmetal to transfer electrons. Sodium is a metal and chlorine is a nonmetal, so they form an ionic bond."
+      "explanation": "Sodium and chlorine differ greatly in electronegativity, so chlorine takes sodium's outer electron and the two ions attract: an ionic bond."
     },
     {
       "id": "q1-joins#1",
@@ -37,7 +37,7 @@
         },
         {
           "id": "b",
-          "label": "Its outer shell is already full, so a bond would gain it nothing"
+          "label": "Its outer shell is already full, with no place for another electron"
         },
         {
           "id": "c",
@@ -49,7 +49,7 @@
         }
       ],
       "answer": "b",
-      "explanation": "Neon has a complete valence shell of eight electrons. Because atoms bond to achieve full valence shells, neon is energetically stable and chemically inert."
+      "explanation": "Neon's outer shell holds eight electrons and is full, so it has no place for an electron to be shared or gained."
     },
     {
       "id": "q1-joins#2",
@@ -74,7 +74,7 @@
         }
       ],
       "answer": "b",
-      "explanation": "Magnesium loses two electrons and each chlorine accepts one. Therefore, two chloride ions balance one magnesium ion to produce neutral MgCl2."
+      "explanation": "Magnesium loses two electrons and each chlorine gains one, so two chloride ions balance one magnesium ion: MgCl₂, with no charge overall."
     },
     {
       "id": "q1-joins#3",
@@ -99,7 +99,7 @@
         }
       ],
       "answer": "c",
-      "explanation": "Both atoms are nonmetals, forming a covalent bond. Oxygen has six valence electrons and shares two pairs to complete its octet, forming a double bond."
+      "explanation": "The two atoms have the same electronegativity, so they share: a covalent bond. Oxygen has six valence electrons and shares two pairs to complete its octet, forming a double bond."
     },
     {
       "id": "q1-joins#4",
@@ -149,7 +149,7 @@
         }
       ],
       "answer": "b",
-      "explanation": "A current is charge on the move. Sodium chloride has charges either way, but in the solid lattice they are pinned in place; melting frees them, so the charge can travel."
+      "explanation": "A current is charge on the move. Sodium chloride has charges either way, but in the solid lattice they are held in place; melting frees them, so the charge can travel."
     },
     {
       "id": "q2-lattice#1",
@@ -174,7 +174,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Melting sugar only separates whole molecules from each other, and the pull between molecules is weak. Melting salt has to pull apart an ionic lattice, where every ion is gripped by the ions all round it."
+      "explanation": "Melting sugar only separates whole molecules from each other, and the pull between molecules is weak. Melting salt has to pull apart an ionic lattice, where every ion is attracted to the ions all round it."
     },
     {
       "id": "q2-lattice#2",
@@ -199,7 +199,7 @@
         }
       ],
       "answer": "b",
-      "explanation": "In the lattice every ion is surrounded by ions of opposite charge, which is a strong grip. Shift one plane by one ion and all those attractions become repulsions at once, and the crystal splits along that plane."
+      "explanation": "In the lattice every ion is surrounded by ions of opposite charge, which is a strong attraction. Shift one plane by one ion and all those attractions become repulsions at once, and the crystal splits along that plane."
     },
     {
       "id": "q2-lattice#3",
@@ -224,7 +224,7 @@
         }
       ],
       "answer": "c",
-      "explanation": "Both are covalent, but they are built differently. Every carbon in diamond is bonded on to its neighbours right through the crystal, so melting it means breaking those bonds; melting iodine only separates I2 molecules that were barely holding on to each other."
+      "explanation": "Both are covalent, but they are built differently. Every carbon in diamond is bonded on to its neighbours right through the crystal, so melting it means breaking those bonds; melting iodine only separates I₂ molecules that were weakly attracted to each other."
     },
     {
       "id": "q2-lattice#4",
@@ -274,7 +274,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "The atoms are most stable at the separation where attraction and repulsion balance. That separation is the bond length, and the depth of the well there is the bond energy."
+      "explanation": "The atoms are most stable at the separation where attraction and repulsion balance. That separation is the bond length, and the depth of the curve there is the bond energy."
     },
     {
       "id": "q3-distance#1",
@@ -324,7 +324,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Each extra shared pair draws the atoms closer and holds them harder. C≡C is about 120 pm and 839 kJ/mol, against 154 pm and 348 kJ/mol for C–C."
+      "explanation": "Each extra shared pair draws the atoms closer and holds them more strongly. C≡C is about 120 pm and 839 kJ/mol, against 154 pm and 348 kJ/mol for C–C."
     },
     {
       "id": "q3-distance#3",
@@ -504,7 +504,7 @@
     {
       "id": "q5-resonance#0",
       "quest": "q5-resonance",
-      "question": "Ozone is drawn with one double bond and one single bond, but the gauge reads the same length for both. What does that tell you?",
+      "question": "Ozone is drawn with one double bond and one single bond, but both bonds measure the same length. What does that tell you?",
       "options": [
         {
           "id": "a",
@@ -554,7 +554,7 @@
     {
       "id": "q5-resonance#2",
       "quest": "q5-resonance",
-      "question": "An atom brings 6 valence electrons. In a drawing it has two lone pairs and one double bond. What is its formal charge?",
+      "question": "An atom brings 6 valence electrons. In a structure it has two lone pairs and one double bond. What is its formal charge?",
       "options": [
         {
           "id": "a",
@@ -649,7 +649,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Four domains push to the corners of a tetrahedron, with ideal angles of 109.5 degrees."
+      "explanation": "Four domains settle at the corners of a tetrahedron, with ideal angles of 109.5 degrees."
     },
     {
       "id": "q6-shape#1",
@@ -699,7 +699,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "The two lone pairs on oxygen take more room than bonding pairs, squeezing the bond angle below 109.5 degrees."
+      "explanation": "The two lone pairs on oxygen repel more strongly than the bonds do, closing the bond angle below 109.5°."
     },
     {
       "id": "q6-shape#3",
@@ -774,7 +774,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Chlorine (3.16) pulls the shared pair harder than hydrogen (2.20), so chlorine ends up partially negative."
+      "explanation": "Chlorine (3.16) is more electronegative than hydrogen (2.20), so the shared pair sits closer to chlorine, which is δ−."
     },
     {
       "id": "q7-polarity#1",
@@ -899,7 +899,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Carbon has four domains, so it blends one s and three p orbitals into four sp³ orbitals."
+      "explanation": "Carbon has four domains, so it mixes one s and three p orbitals into four sp³ hybrid orbitals."
     },
     {
       "id": "q8-hybrid#1",
@@ -979,7 +979,7 @@
     {
       "id": "q8-hybrid#4",
       "quest": "q8-hybrid",
-      "question": "A carbon atom has three arms: two bonds to hydrogen and one double bond to another carbon. How many hybrid orbitals does it blend?",
+      "question": "A carbon atom has three electron domains: two bonds to hydrogen and one double bond to another carbon. How many hybrid orbitals does it form?",
       "options": [
         {
           "id": "a",
@@ -999,7 +999,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "A double bond is one arm, so carbon has three arms and blends one s and two p orbitals into three hybrid orbitals, leaving one p orbital for the second bond."
+      "explanation": "A double bond is one domain, so carbon has three domains and mixes one s and two p orbitals into three hybrid orbitals, leaving one p orbital for the pi bond."
     },
     {
       "id": "q9-orbitals#0",
@@ -1074,7 +1074,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "The last two electrons go one each into two degenerate π* orbitals, so O₂ is paramagnetic."
+      "explanation": "The last two electrons go one each into two π* orbitals of equal energy, so O₂ is paramagnetic."
     },
     {
       "id": "q9-orbitals#3",
@@ -1149,7 +1149,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Lattice energy rises with ion charge and falls with ion size. MgO has 2+ and 2− ions that are small, so it is held hardest and melts highest."
+      "explanation": "Lattice energy rises with ion charge and falls with ion size. MgO has 2+ and 2− ions that are small, so its ions attract most strongly and it melts highest."
     },
     {
       "id": "boss-warden#2",
@@ -1174,7 +1174,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "The lone pair on nitrogen takes more room than a bonding pair, squeezing the angle between the three hydrogen atoms to about 107 degrees."
+      "explanation": "The lone pair on nitrogen repels more strongly than a bond does, closing the angle between the hydrogen atoms to about 107°."
     },
     {
       "id": "boss-warden#3",
@@ -1341,7 +1341,7 @@
         {
           "id": "q3-distance#b1",
           "quest": "q3-distance",
-          "question": "Two atoms are pushed closer than their bond length. Why does the energy rise steeply?",
+          "question": "Two atoms are brought closer than their bond length. Why does the energy rise steeply?",
           "options": [
             {
               "id": "a",
@@ -1693,7 +1693,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Five domains form a trigonal bipyramid. The two lone pairs take the roomier equatorial positions, leaving the three fluorines in a T."
+          "explanation": "Five domains form a trigonal bipyramid. The two lone pairs take places in the ring of three, where they are furthest apart, leaving the three fluorines in a T."
         }
       ]
     },
@@ -1906,7 +1906,7 @@
         {
           "id": "q9-orbitals#b2",
           "quest": "q9-orbitals",
-          "question": "Which of these is diamagnetic, meaning all its electrons are paired?",
+          "question": "Which of these is not attracted to a magnet, because all its electrons are paired?",
           "options": [
             {
               "id": "a",

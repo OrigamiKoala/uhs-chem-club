@@ -11,13 +11,15 @@
  * quest asks for that prediction (the wrong idea is a card) once the player can read a well, then has them pull a single, a double and a
  * triple carbon pair and rail them by where each bottoms out: the more pairs, the shorter the bond.
  *
- *   1  pull a hydrogen pair apart and let go at the bottom of its well     -> potential energy curve, bond length
- *   2  set a marker to the depth of a well                                 -> bond energy
- *   3  PREDICT: do more shared pairs sit further apart or closer?          (no instrument; the wrong idea is a card)
- *   4  pull three carbon pairs and rail them from the longest bond         -> bond order (and deeper, so stronger)
- *   5  melt three salts and rail them by the heat each takes               -> charge and size set the hold
- *   6  rail four salts, one never heated, by charges and centre distance   -> Coulomb's law as charge product over distance
+ *   1  drag an H-Cl pair along its curve and set a line at the bond energy   -> bond length, bond energy
+ *   2  PREDICT: do more shared pairs sit further apart or closer?          (no instrument; the wrong idea is a card)
+ *   3  drag three carbon pairs and rail them from the shortest bond        -> bond order (and lower, so stronger)
+ *   4  melt three salts and rail them by melting point                     -> lattice energy
+ *   5  rail four salts, never heated, by charges and centre distance       -> Coulomb's law
  *   -- debrief: what sets a bond's length and its strength.
+ *
+ * Teaching pass 2026-11-12: the hydrogen pair left at the lowest point of its curve moved to `q1-joins` stage 2 (why atoms bond);
+ * stage 1 asks for the bond energy of one mole, not two; rails run from the smallest value on the left.
  *
  * Cut as repeats (2026-10-23): "squeezed" (the trace of stage 1 already climbs on the squeezed side, and the card says so), "two sizes"
  * (a prediction on bond length by atom size: a second prediction on the same plot), "deeper too" (the wells of stage 4 are the evidence
@@ -35,9 +37,9 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { PAIRS, LATTICES, planCurve, byLatticeEnergy, coulombIndex, IONS } from '../../engine/bonddata.js';
 import { bondsTable, hotplate, pairTag, saltPiece, wellRead, piecesIn } from '../../table/kits/bonds.js';
-import { predictStage, testPrompt, verdictLine } from './_ligar.js';
+import { predictStage, testPrompt, verdictLine, wells, wellRow } from './_ligar.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 5 };
 
 export const BUILDS_ON = ['unit03/q1-joins', 'unit03/q2-lattice', 'unit02/q8-trends'];
 
@@ -52,26 +54,11 @@ export function toolNoteFor() { return null; }
    that plot over the table, and a stage that files things has its rail under it (150 x 72 units).
    ------------------------------------------------------------------ */
 
-/** A well fixture's declaration: `rows` are `{id, pair, label, start}`, one hand each; `box` its place and size. */
-function wells(id, rows, { at, size, dmax = 300, top = 9, pitch = 7, margin = 4, discs = false, marker = null, release = null, plot, runLabel, min = 0, grab = 0, icon, discK = 0, components = false }) {
-  const dials = {};
-  for (const r of rows) dials[r.id] = { min, max: dmax, step: 2, value: r.start, label: r.label };
-  if (marker) dials[marker.id] = { min: 0, max: marker.max, step: marker.step, value: 0, label: marker.label };
-  return {
-    id, kind: 'wells', label: 'Pull the pair', at, size, ...(runLabel ? { runLabel } : { noRun: true }), dials,
-    props: {
-      rows, top, rowPitch: pitch, margin, discs, plot, ...(components ? { components } : {}), ...(discK ? { discK } : {}), ...(marker ? { marker: marker.id } : {}), ...(release ? { release } : {}),
-      ...(grab ? { grab: { [rows[0].id]: grab } } : {}), ...(icon ? { icon } : {})
-    }
-  };
-}
-const row = (id, pair, label, start) => ({ id, pair, label, start });
+const row = wellRow;
 
 const tagAt = (id, label, pair, x) => pairTag(id, label, pair, { x, y: 61 });
 
 /** Is the hand within `tol` pm of a pair's bottom? */
-const nearBottom = (row, tol) => Math.abs(row.gap - row.r0) <= tol;
-const tolFor = pair => Math.max(6, Math.round(PAIRS[pair].r0 * 0.1));
 const moved = row => row.lo !== row.hi;
 
 const RAIL = (items, start, first, last) => ({ id: 'rail', at: { x: 49, y: 64 }, size: { w: 90, h: 12 }, first, last, items, start });
@@ -91,121 +78,99 @@ const GUESSES = [
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'The Bottom',
-    prompt: 'Leave the hand where the two hydrogen atoms would stay put if you let go.',
+    title: 'Pulling Apart',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The distance between two bonded atoms, at the lowest point of their energy curve, is the bond length. The energy needed to pull the atoms fully apart from there is the bond energy.'
+    },
+    prompt: 'What is the bond energy of the H–Cl bond, for one mole of bonds?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
-      fixtures: [wells('w', [row('a', 'H-H', 'Pair A', 200)], { at: { x: 67, y: 34 }, size: { w: 130, h: 62 }, top: 14, margin: 10, discs: true, grab: 7, discK: 0.17, components: true, plot: { y0: 26, foot: 9 } })]
+      fixtures: [wells('w', [row('a', 'H-Cl', 'Pair', 250)], {
+        at: { x: 67, y: 35 }, size: { w: 130, h: 64 }, dmax: 330, top: 12, pitch: 9, margin: 10, discs: true, grab: 6,
+        marker: { id: 'depth', label: 'Bond energy', max: 1000, step: 10 }, plot: { y0: 29, foot: 9 }
+      })]
     }),
     hints: [
-      'Use the hand on the track.',
-      'Watch the dotted pull and push traces as well as the energy trace while you move the hand.',
-      'A pair left alone moves toward lower energy, so it stays put where no move would lower it.'
+      'Drag the right-hand atom along the track to draw the curve; the "Bond energy" dial lays a level line across the plot.',
+      'Compare the energy of the pair at its lowest point with the zero line, where the atoms are far apart.',
+      'Pulling the atoms apart takes the pair from its lowest energy up to zero, so the bond energy is the size of that climb.'
     ],
     check(state) {
-      const r = wellRead(state.table, 'w').rows[0];
-      if (!moved(r)) return { ok: false, notYet: true, msg: 'Drag the hand along the track to draw the trace.' };
-      if (nearBottom(r, tolFor('H-H'))) return { ok: true };
-      return r.gap < r.r0
-        ? { ok: false, msg: 'Squeezed in that far the trace has already started to climb again.' }
-        : { ok: false, msg: 'Wound out that far the trace is higher than it is closer in.' };
+      const r = wellRead(state.table, 'w');
+      if (!moved(r.rows[0])) return { ok: false, notYet: true, msg: 'Drag the atom along the track to draw the curve.' };
+      if (!r.marker) return { ok: false, notYet: true, msg: 'Set the "Bond energy" dial.' };
+      const want = r.rows[0].de;
+      if (Math.abs(r.marker - want) <= 12) return { ok: true };
+      return r.marker < want
+        ? { ok: false, msg: `A line ${r.marker} kJ/mol below zero is above the lowest point of the curve: the bonded pair has less energy than that.` }
+        : { ok: false, msg: `A line ${r.marker} kJ/mol below zero is under the lowest point of the curve: the pair never has energy that low.` };
     },
     reward: {
-      log: 'The lowest point of the trace.',
-      title: 'Potential Energy Curve',
-      body: 'The energy curve is the sum of two dotted traces: the pull of each nucleus on the other atom\'s electron, which reaches far, and the push of the atoms against each other, which only counts up close. The minimum is the equilibrium bond length, where the two balance.'
+      log: 'The depth of the curve.',
+      title: 'Bond Energy',
+      body: 'The lowest point of the curve is about 431 kJ/mol below zero, so that much energy pulls apart one mole of H–Cl bonds. The atoms sit 127 pm apart there: the bond length.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'Pulling Apart',
-    prompt: 'Set the depth marker to the energy needed to break the bonds in 2 mol of hydrogen chloride.',
-    widget: { type: 'table', label: 'The bench' },
-    table: bondsTable({
-      fixtures: [wells('w', [row('a', 'H-Cl', 'Pair A', 250)], {
-        at: { x: 67, y: 35 }, size: { w: 130, h: 64 }, dmax: 330, top: 12, pitch: 9, margin: 10, discs: true, grab: 6,
-        marker: { id: 'depth', label: 'Depth', max: 1000, step: 10 }, plot: { y0: 29, foot: 9 }
-      })]
-    }),
-    hints: [
-      'Use the hand on the track and the depth marker.',
-      'Read how deep the well is below the zero line; the plot is for 1 mol of bonds.',
-      'Twice as many bonds need twice the energy, so scale the depth of the well to 2 mol.'
-    ],
-    check(state) {
-      const r = wellRead(state.table, 'w');
-      if (!r.marker) return { ok: false, notYet: true, msg: 'Set the depth marker against the trace.' };
-      const want = 2 * r.rows[0].de;
-      if (Math.abs(r.marker - want) <= 25) return { ok: true };
-      return r.marker < want
-        ? { ok: false, msg: 'The marker\'s line sits above the energy that 2 mol of these bonds need.' }
-        : { ok: false, msg: 'The marker\'s line sits below the energy that 2 mol of these bonds need.' };
-    },
-    reward: {
-      log: 'The depth of the well.',
-      title: 'Bond Energy',
-      body: 'The depth of the well is the bond energy, the energy to break 1 mol of the bonds: about 431 kJ/mol for H–Cl. Twice the bonds take twice the energy, so 2 mol take about 862 kJ.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 3 */
   predictStage({
     key: QUEST_KEY,
-    title: 'More Pairs, More Room?',
-    prompt: 'How does carbon-carbon bond length change when sharing three electron pairs versus one pair?',
+    title: 'More Pairs',
+    prompt: 'Two carbon atoms share three pairs of electrons, not one: are they closer together, further apart, or the same?',
     cards: GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Consider how increasing shared electron density affects attraction between nuclei.',
-      'Select the card matching your prediction.'
+      'Lay one of the three cards in the slot.',
+      'Shared electrons sit between the two nuclei, and both nuclei attract them.',
+      'A prediction is never graded, so lay the card you think most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'Your prediction is recorded. Test the potential energy curves for single, double, and triple bonds on the bench.'
+      body: 'The next stage has a single, a double and a triple carbon–carbon bond to measure.'
     }
   }),
 
-  /* ---------------------------------------------------------------- 4 */
+  /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Three Wells',
+    title: 'Three Curves',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'order the three carbon-carbon pairs from longest to shortest bond length.');
+      return testPrompt(QUEST_KEY, GUESSES, 'which carbon–carbon bond is shortest and which longest?');
     },
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [tagAt('a', 'Pair A', 'C#C', 20), tagAt('b', 'Pair B', 'C-C', 50), tagAt('c', 'Pair C', 'C=C', 80)],
-      zones: { rail: RAIL(['a', 'b', 'c'], ['c', 'a', 'b'], 'Longest bond', 'Shortest bond') },
+      zones: { rail: RAIL(['a', 'b', 'c'], ['c', 'b', 'a'], 'Shortest bond', 'Longest bond') },
       fixtures: [wells('w', [row('a', 'C#C', 'Pair A', 180), row('b', 'C-C', 'Pair B', 180), row('c', 'C=C', 'Pair C', 180)], {
         at: { x: 66, y: 28 }, size: { w: 126, h: 50 }, dmax: 200, top: 9, pitch: 7, margin: 6, plot: { y0: 29, foot: 8 }
       })]
     }),
     hints: [
-      'Use the three hands and the rail.',
-      'Identify the equilibrium internuclear distance for each carbon-carbon bond.',
-      'Arrange the pairs on the rail from longest to shortest equilibrium bond length.'
+      'Drag each of the three pairs along its track to draw its curve, then drag the pair cards onto the rail.',
+      'Compare where the lowest point of each curve falls along the distance axis, and how far below zero it is.',
+      'The bond length is the distance at the lowest point of a curve, so read it from each curve before ordering the cards.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
       if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three pairs on the rail in order.' };
-      const want = order.slice().sort((x, y) => PAIRS[t.pieces[y].props.pair].r0 - PAIRS[t.pieces[x].props.pair].r0);
+      const want = order.slice().sort((x, y) => PAIRS[t.pieces[x].props.pair].r0 - PAIRS[t.pieces[y].props.pair].r0);
       if (order.join() === want.join()) return { ok: true };
-      return { ok: false, msg: 'Two neighbouring pairs on the rail are in the wrong order.' };
+      const k = order.findIndex((id, i) => id !== want[i]);
+      return { ok: false, msg: `${t.pieces[order[k]].label} is out of place: compare the distance at the lowest point of its curve with its neighbour's.` };
     },
     get reward() {
       return {
         log: 'The more pairs shared, the shorter the bond.',
         title: 'Bond Order',
-        body: `${verdictLine(QUEST_KEY, 'closer')}Bond order represents the number of shared electron pairs. Higher bond order pulls nuclei closer together into a deeper well, producing a shorter and stronger bond.`
+        body: `${verdictLine(QUEST_KEY, 'closer')}The triple bond is shortest and its curve is lowest. The number of shared pairs is the bond order: the higher it is, the shorter and stronger the bond.`
       };
     }
   },
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 4 */
   {
     title: 'Salt Strength',
-    prompt: 'Rank the three ionic compounds from highest to lowest melting point.',
+    prompt: 'Which of these ionic solids melts at the lowest temperature and which at the highest?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -213,33 +178,38 @@ export const STAGES = [
         saltPiece('b', 'KCl', 'KCl', { x: 56, y: 56 }),
         saltPiece('c', 'MgO', 'MgO', { x: 88, y: 56 })
       ],
-      zones: { rail: { id: 'rail', at: { x: 56, y: 56 }, size: { w: 104, h: 16 }, first: 'Highest', last: 'Lowest', items: ['a', 'b', 'c'], start: ['b', 'a', 'c'] } },
+      zones: { rail: { id: 'rail', at: { x: 56, y: 56 }, size: { w: 104, h: 16 }, first: 'Melts lowest', last: 'Melts highest', items: ['a', 'b', 'c'], start: ['a', 'c', 'b'] } },
       fixtures: [hotplate('hp', { x: 49, y: 19 }, { w: 92, h: 32, max: 3000 })]
     }),
     hints: [
-      'Use the hotplate and its heat dial.',
-      'Compare melting temperatures with ionic charges and ionic radii on each card.',
-      'Place each compound on the hotplate, record when it melts, and order them from highest to lowest melting point.'
+      'Drag each salt onto the hotplate and raise the heat dial until it melts.',
+      'Compare the ion charges and the distance between ion centres printed on the salt that melted last with those on the other two.',
+      'Melting pulls ions away from their neighbours, so ask which card\'s ions attract each other most strongly.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
       if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three salts on the rail in order.' };
-      const want = order.slice().sort((x, y) => LATTICES[t.pieces[y].props.lattice].melts - LATTICES[t.pieces[x].props.lattice].melts);
+      const want = order.slice().sort((x, y) => LATTICES[t.pieces[x].props.lattice].melts - LATTICES[t.pieces[y].props.lattice].melts);
       if (order.join() === want.join()) return { ok: true };
-      return { ok: false, msg: 'Two neighbouring salts on the rail are in the wrong order.' };
+      const k = order.findIndex((id, i) => id !== want[i]);
+      return { ok: false, msg: `${t.pieces[order[k]].label} is out of place: heat it beside its neighbour on the rail and see which melts first.` };
     },
     reward: {
       log: 'Magnesium oxide took the most heat. Potassium chloride took the least.',
-      title: 'Lattice Energy and Ion Properties',
-      body: 'Lattice energy increases with higher ionic charges and smaller ionic radii. Magnesium oxide contains divalent ions with small radii, producing a stronger lattice than compounds with singly charged ions.'
+      title: 'Lattice Energy',
+      body: 'MgO, with 2+ and 2− ions close together, melts far higher than the salts of 1+ and 1− ions. The energy needed to pull the ions of an ionic solid apart is its lattice energy.'
     }
   },
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Salt Not Yet Heated',
-    prompt: 'Without heating, rank NaF, NaCl, KCl and MgO by how hard their ions are held.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The attraction between two ions grows with the product of their charges and shrinks as their centres get further apart. This is Coulomb\'s law.'
+    },
+    prompt: 'Which ionic solid has the weakest attraction between its ions and which the strongest?',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -248,25 +218,26 @@ export const STAGES = [
         saltPiece('c', 'MgO', 'MgO', { x: 82, y: 56 }),
         saltPiece('d', 'NaF', 'NaF', { x: 112, y: 56 })
       ],
-      zones: { rail: { id: 'rail', at: { x: 67, y: 56 }, size: { w: 130, h: 16 }, first: 'Held hardest', last: 'Held least', items: ['a', 'b', 'c', 'd'], start: ['b', 'a', 'd', 'c'] } }
+      zones: { rail: { id: 'rail', at: { x: 67, y: 56 }, size: { w: 130, h: 16 }, first: 'Weakest attraction', last: 'Strongest attraction', items: ['a', 'b', 'c', 'd'], start: ['a', 'c', 'b', 'd'] } }
     }),
     hints: [
-      'Drag the four salts into order on the rail.',
-      'Compare the charges and the centre-to-centre distance printed on each card.',
-      'A larger product of the two charges held at a shorter distance means a harder hold.'
+      'Each card prints its ions\' charges and the distance between their centres; drag the cards into order on the rail.',
+      'Compare the three salts whose charges are the same by distance, then look at the salt whose charges are larger.',
+      'Multiply the two charges on a card and weigh that against its distance, as Coulomb\'s law says.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
       if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four salts on the rail in order.' };
-      const want = order.slice().sort((x, y) => LATTICES[t.pieces[y].props.lattice].energy - LATTICES[t.pieces[x].props.lattice].energy);
+      const want = order.slice().sort((x, y) => LATTICES[t.pieces[x].props.lattice].energy - LATTICES[t.pieces[y].props.lattice].energy);
       if (order.join() === want.join()) return { ok: true };
-      return { ok: false, msg: 'Two neighbouring salts are in the wrong order. Check the charges and the centre distances on those two cards.' };
+      const k = order.findIndex((id, i) => id !== want[i]);
+      return { ok: false, msg: `${t.pieces[order[k]].label} is out of place: compare its charges and its distance between centres with its neighbour's on the rail.` };
     },
     reward: {
-      log: 'Charge product over distance ranked all four salts.',
+      log: 'Charges and distance ranked all four salts.',
       title: 'Coulomb\'s Law',
-      body: 'Lattice energy rises with the product of the ion charges and falls with the distance between their centres (Coulomb\'s law). Charge product over distance is 1/235 for NaF, 1/283 for NaCl, 1/319 for KCl and 4/212 for MgO. MgO scores about five times NaCl, close to the measured 3795 against 787 kJ/mol.',
+      body: 'KCl\'s ions are furthest apart and NaF\'s are closest of the three salts with 1+ and 1− ions; MgO\'s charges are doubled. Coulomb\'s law gives the order KCl, NaCl, NaF, MgO.',
       last: true
     }
   }
@@ -274,8 +245,7 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag the hand along its track.'],
-  2: ['The plot is for 1 mol of H–Cl bonds.']
+  1: ['Energy is in kilojoules for each mole of bonds (kJ/mol);', 'distance is in picometres (pm).']
 };
 applyNotes(STAGES, NOTES);
 
@@ -286,16 +256,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'Summary',
-      body: 'Covalent bond length reflects the balance between nuclear attraction and electrostatic repulsion. Higher bond orders result in shorter, stronger bonds. In ionic solids, lattice energy increases with higher ionic charge and smaller interionic distance.'
+      heading: 'What You Found',
+      body: 'The lowest point of a pair\'s energy curve gives the bond length, and its depth below zero is the bond energy. More shared pairs make a bond shorter and stronger.'
     },
     {
-      heading: 'Bond Curves',
-      body: 'Potential energy curves quantify the equilibrium bond distance at their minimum and bond dissociation energy at their well depth.'
+      heading: 'Ionic Solids',
+      body: 'Ions attract more strongly when their charges are larger and their centres closer, so such a solid has a higher lattice energy and melts at a higher temperature.'
     },
     {
       heading: 'Next',
-      body: 'The next bench uses Lewis dot diagrams to track valence electron sharing and octet fulfillment across molecules.'
+      body: 'The next bench places the valence electrons of a molecule into bonds and lone pairs.'
     }
   ]
 };
@@ -315,22 +285,20 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [hand('a', 90), hand('a', 40), hand('a', 74)],
-  [hand('a', 200), hand('a', 127), hand('a', 300), hand('depth', 860)],
+  [hand('a', 200), hand('a', 127), hand('a', 300), hand('depth', 430)],
   [guess('closer')],
-  [hand('a', 120), hand('b', 154), hand('c', 134), to('b', 0), to('c', 1), to('a', 2)],
-  [onPlate('a', 0), onPlate('b', 1), onPlate('c', 2), heat(775), heat(825), heat(2875), to('c', 0), to('a', 1), to('b', 2)],
-  [to('c', 0), to('d', 1), to('a', 2), to('b', 3)]
+  [hand('a', 120), hand('b', 154), hand('c', 134), to('a', 0), to('c', 1), to('b', 2)],
+  [onPlate('a', 0), onPlate('b', 1), onPlate('c', 2), heat(775), heat(825), heat(2875), to('b', 0), to('a', 1), to('c', 2)],
+  [to('b', 0), to('a', 1), to('d', 2), to('c', 3)]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [hand('a', 120)],
-  [hand('a', 127), hand('depth', 430)],
+  [hand('a', 127), hand('depth', 860)],
   [],
+  [to('b', 0), to('c', 1), to('a', 2)],
   [to('a', 0), to('b', 1), to('c', 2)],
-  [to('b', 0), to('a', 1), to('c', 2)],
-  [to('b', 0), to('a', 1), to('d', 2), to('c', 3)]
+  [to('b', 0), to('a', 1), to('c', 2), to('d', 3)]
 ];
 
 function blankState() { return {}; }

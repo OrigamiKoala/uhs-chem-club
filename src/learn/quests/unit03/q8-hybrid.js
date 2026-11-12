@@ -41,7 +41,6 @@ import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
-  { term: /\brestricted rotation\b/i, introducedAt: 6 },
   { term: /\bsigma\b|\bpi bonds?\b|\bpi\b/i, introducedAt: 4 },
   { term: /\bsp[3³](?!\w)/i, introducedAt: 3 },
   { term: /\bhybrid(?:s|i[sz]ation|i[sz]ed)?\b/i, introducedAt: 3 }
@@ -104,7 +103,7 @@ function ethene() {
     const lobes = [[c.toward, c.to], [c.toward + (2 * Math.PI) / 3, 'h'], [c.toward - (2 * Math.PI) / 3, 'h']];
     lobes.forEach(([dir, to], i) => {
       const seat = { dx: Math.cos(dir) * SEAT_R, dy: Math.sin(dir) * SEAT_R };
-      out.push(orb(`${c.k}${i + 1}`, 'sp2', c.id, { x: c.at.x + seat.dx, y: c.at.y + seat.dy }, { e: 1, to, dir, label: 'lobe', seat, apart: APART }));
+      out.push(orb(`${c.k}${i + 1}`, 'sp2', c.id, { x: c.at.x + seat.dx, y: c.at.y + seat.dy }, { e: 1, to, dir, label: 'hybrid', seat, apart: APART }));
     });
     out.push(orb(`${c.k}p`, 'p', c.id, { ...c.at }, { e: 1, axis: 'z', to: c.to, label: 'p', seat: { dx: 0, dy: 0 }, apart: APART, nucleus: true, atomLabel: c.name }));
   }
@@ -119,16 +118,17 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Carbon as It Stands',
-    prompt: 'How many hydrogen atoms can carbon bond to using its ground-state valence orbitals without hybridization?',
+    briefing: { speaker: SPEAKER, body: 'Carbon\'s four valence electrons sit as a pair in its 2s orbital and one each in two of its three 2p orbitals. A covalent bond forms when an orbital holding one electron overlaps an orbital of another atom that also holds one.' },
+    prompt: 'How many hydrogen atoms could a carbon atom bond to with its orbitals as they stand?',
     cards: GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Recall the electron configuration of ground-state carbon and how many unpaired electrons it has.',
-      'Select the card matching your prediction.'
+      'Lay one of the three cards in the slot.',
+      'Count carbon\'s orbitals that hold exactly one electron.',
+      'A prediction is never graded, so lay the card you think most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'Your prediction is recorded. Attempt to form bonds between hydrogen atoms and ground-state carbon orbitals on the bench.'
+      body: 'The next stage bonds hydrogen atoms to a carbon atom\'s orbitals, one at a time.'
     }
   }),
 
@@ -136,7 +136,7 @@ export const STAGES = [
   {
     title: 'The Puzzle',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'bond hydrogen atoms to carbon\'s ground-state orbitals, using as many as available unpaired electrons permit.');
+      return testPrompt(QUEST_KEY, GUESSES, 'how many bonds can carbon\'s orbitals form as they stand?');
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
@@ -148,9 +148,9 @@ export const STAGES = [
       fixtures: [plate('carbon', 'Carbon', { x: 36, y: 32 }, { w: 64, h: 56 })]
     }),
     hints: [
-      'Use the hydrogen atoms and carbon\'s four orbitals.',
-      'Only orbitals with a single unpaired electron can overlap to form a covalent bond.',
-      'Bond a hydrogen atom to each carbon orbital that contains an unpaired electron.'
+      'Drag a hydrogen atom onto one of carbon\'s orbitals; each orbital shows the electrons it holds.',
+      'Compare the orbitals that accept a hydrogen atom with those that do not, then compare your carbon with the methane card.',
+      'An orbital that already holds two electrons, or none, has no single electron to pair with hydrogen\'s.'
     ],
     check(state) {
       const t = state.table;
@@ -163,8 +163,8 @@ export const STAGES = [
     get reward() {
       return {
         log: 'The orbitals as they stand fall short.',
-        title: 'Ground-State Orbital Limitations',
-        body: `${verdictLine(QUEST_KEY, 'two')}Ground-state carbon has only two unpaired electrons, permitting only two covalent bonds, whereas methane forms four identical bonds. Consequently, atomic orbitals must hybridize to form equivalent bonding orbitals.`
+        title: 'The Puzzle of Methane',
+        body: `${verdictLine(QUEST_KEY, 'two')}Two, at 90° to each other. But methane has four identical bonds 109.5° apart, so a bonded carbon atom cannot be using its plain s and p orbitals.`
       };
     }
   },
@@ -173,8 +173,9 @@ export const STAGES = [
   (() => {
     const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'C' });
     return {
-      title: 'Four Lobes',
-      prompt: 'Mix carbon\'s valence orbitals in the mixing bowl to produce four hybrid orbitals for methane.',
+      title: 'Four Hybrids',
+      briefing: { speaker: SPEAKER, body: 'The orbitals of one atom can mix into the same number of new orbitals that are identical to each other, called hybrid orbitals. The mixer shows what any set of carbon\'s orbitals mixes into.' },
+      prompt: 'Which of carbon\'s orbitals mix to give methane\'s four identical orbitals?',
       widget: { type: 'table', label: 'The bench' },
       table: domainTable({
         pieces: [
@@ -186,21 +187,21 @@ export const STAGES = [
         fixtures: [mx.fixture]
       }),
       hints: [
-        'Use the four orbitals and the mixing bowl.',
-        'Methane has four electron domains and requires four equivalent hybrid orbitals.',
-        'Place one s orbital and three p orbitals into the bowl to generate four sp3 hybrid orbitals.'
+        'Drag orbitals into the mixer and look at the hybrid orbitals it draws; drag one out to take it back.',
+        'Compare the number of orbitals you put in with the number of hybrid orbitals that come out.',
+        'Methane has four electron domains, and each needs one orbital, so decide how many orbitals must go in.'
       ],
       check(state) {
         const r = bowlRead(state.table, 'mx');
         if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the bowl.' };
         const want = molRead(state.table.pieces.ref).domains;
         if (r.lobes === want) return { ok: true };
-        return { ok: false, msg: 'The lobes that come out are not as many as the arms on the methane card.' };
+        return { ok: false, msg: `The mixer gives ${r.lobes} orbitals, and the methane card has ${want} electron domains to fill.` };
       },
       reward: {
         log: 'An s orbital and three p orbitals make four.',
-        title: 'Hybrid Orbitals, sp³',
-        body: 'Mixing one 2s orbital and three 2p orbitals generates four degenerate sp³ hybrid orbitals directed toward the corners of a tetrahedron at 109.5 degrees. Each hybrid orbital accommodates a bonding pair or lone pair.',
+        title: 'Hybrid Orbitals: sp³',
+        body: 'One s and three p orbitals mix into four hybrid orbitals called sp³, identical and 109.5° apart. Carbon\'s four electrons go one into each, ready for four equal bonds.',
         model: { type: 'lobes', n: 4, caption: 'sp³ Hybrid Orbitals' }
       }
     };
@@ -209,16 +210,17 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Second Bond',
-    prompt: 'Form both covalent bonds between the two carbon atoms in ethene from their orbitals.',
+    briefing: { speaker: SPEAKER, body: 'Two orbitals that meet end to end, along the line between the nuclei, make a sigma bond. Two p orbitals that meet side by side, above and below that line, make a pi bond.' },
+    prompt: 'Which orbitals make the two bonds between the carbon atoms in ethene, C₂H₄?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: ethene(),
       fixtures: [plate('bench', 'C₂H₄', { x: 76, y: 32 }, { w: 146, h: 60 })]
     }),
     hints: [
-      'Use the orbitals of both carbon atoms.',
-      'Form an end-to-end sigma bond along the internuclear axis, followed by a side-by-side pi bond.',
-      'Overlap the two sp2 hybrid lobes to form a sigma bond, then overlap the unhybridized p orbitals to form a pi bond.'
+      'Each carbon has three hybrid orbitals in a flat triangle and one p orbital standing upright; drag an orbital of one carbon onto one of the other.',
+      'Compare which orbitals point at the other carbon atom with which stand at right angles to the line between them.',
+      'A double bond is two shared pairs, and two pairs cannot both sit in the same place between the nuclei.'
     ],
     check(state) {
       const b = bondsBuilt(state.table);
@@ -227,13 +229,13 @@ export const STAGES = [
       const side = between.some(p => p.type === 'pi');
       if (!between.length) return { ok: false, notYet: true, msg: 'Overlap an orbital of one carbon with an orbital of the other.' };
       if (end && side) return { ok: true };
-      if (side) return { ok: false, msg: 'There is no bond along the line between the two atoms yet.' };
-      return { ok: false, msg: 'The two atoms are joined end to end, and the orbital each carbon has left over has no partner.' };
+      if (side) return { ok: false, msg: 'The p orbitals overlap, but no orbitals meet along the line between the two nuclei yet.' };
+      return { ok: false, msg: 'The atoms are bonded end to end, but each carbon still has a p orbital with one electron and no partner.' };
     },
     reward: {
       log: 'End to end, then side to side.',
       title: 'Sigma and Pi Bonds',
-      body: 'Head-on overlap of hybrid orbitals along the internuclear axis forms a sigma bond. Lateral overlap of unhybridized parallel p orbitals above and below the axis forms a pi bond, making a double bond one sigma and one pi bond.',
+      body: 'Two hybrid orbitals meet end to end in a sigma bond, and the two p orbitals meet side by side in a pi bond. A double bond is one sigma bond and one pi bond.',
       model: { type: 'sigma-pi', mode: 'both' }
     }
   },
@@ -242,16 +244,16 @@ export const STAGES = [
   predictStage({
     key: TWIST_KEY,
     title: 'Which Bond Turns',
-    prompt: 'Which of ethane\'s C–C single bond and ethene\'s C=C double bond lets the far end of the molecule turn?',
+    prompt: 'Which lets one end of the molecule turn: ethane\'s single bond, ethene\'s double bond, both or neither?',
     cards: TWIST_GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Think about whether the side-by-side overlap of a double bond survives a turn.',
-      'Pick the card that matches your prediction.'
+      'Lay one of the three cards in the slot.',
+      'Picture what a turn does to an end-to-end overlap, and what it does to two p orbitals standing side by side.',
+      'A prediction is never graded, so lay the card you think most likely.'
     ],
     reward: {
       title: 'Prediction',
-      body: 'Your prediction is recorded. Turn the far end of each bond on the bench.'
+      body: 'The next stage turns one end of each molecule.'
     }
   }),
 
@@ -259,63 +261,62 @@ export const STAGES = [
   {
     title: 'Twisting',
     get prompt() {
-      return testPrompt(TWIST_KEY, TWIST_GUESSES, 'find out which of these two bonds lets its far end turn a quarter turn.');
+      return testPrompt(TWIST_KEY, TWIST_GUESSES, 'which bond lets one end turn a quarter turn without breaking?');
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       fixtures: [twist('tw1', { x: 37, y: 32 }, 'single', { label: 'C₂H₆', size: { w: 62, h: 50 } }), twist('tw2', { x: 105, y: 32 }, 'double', { label: 'C₂H₄', size: { w: 62, h: 50 } })]
     }),
     hints: [
-      'Use the "Far End" dial of each bond.',
-      'Observe how rotation affects orbital overlap in a single bond versus a double bond.',
-      'Turn each dial by 90 degrees to test rotation around sigma and pi bonds.'
+      'Drag the "Far End" dial of each molecule to turn the far carbon atom and everything on it.',
+      'Compare what the turn does to the end-to-end overlap in ethane and to the two p orbitals in ethene.',
+      'A bond lasts only while its two orbitals overlap, so ask which overlap a turn leaves unchanged.'
     ],
     check(state) {
       const t = state.table;
       const single = twistRead(t, 'tw1');
       const double = twistRead(t, 'tw2');
       if (!single.angle && !double.tried) return { ok: false, notYet: true, msg: 'Turn the far end of a bond.' };
-      if (single.angle !== 90) return { ok: false, msg: 'One far end is not a quarter turn round, though its bond would let it go there.' };
+      if (single.angle !== 90) return { ok: false, msg: 'Ethane\'s far end is not a quarter turn round yet, though nothing has stopped it.' };
       if (!double.tried) return { ok: false, notYet: true, msg: 'Try turning the other bond\'s far end as well.' };
       return { ok: true };
     },
     get reward() {
       return {
       log: 'A single bond turns; a double bond holds.',
-      title: 'Restricted Rotation',
-      body: verdictLine(TWIST_KEY, 'single') + 'A single bond consists of a cylindrically symmetrical sigma bond that permits free rotation. In contrast, rotating a double bond breaks the parallel overlap of pi orbitals, resulting in restricted rotation.'
+      title: 'Turning About a Bond',
+      body: verdictLine(TWIST_KEY, 'single') + 'The single bond: a sigma bond overlaps the same way at every angle. A quarter turn of the double bond would pull the two p orbitals out of line and break the pi bond.'
       };
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Counting Sigma and Pi',
-    prompt: 'Set the markers to the number of sigma bonds and the number of pi bonds in hydrogen cyanide, HCN.',
+    title: 'Counting Pi Bonds',
+    prompt: 'How many pi bonds are in hydrogen cyanide, H–C≡N?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [molCard('hcn', 'HCN', { x: 34, y: 34 })],
-      fixtures: [marker('sig', { x: 100, y: 20 }, { label: 'Sigma', max: 12 }), marker('pi', { x: 100, y: 44 }, { label: 'Pi', max: 12 })]
+      fixtures: [marker('pi', { x: 100, y: 32 }, { label: 'Pi bonds', max: 12 })]
     }),
     hints: [
-      'Use the molecule card and the two markers.',
-      'Count the lines between each pair of atoms in the formula on the card.',
-      'Every bond holds exactly one sigma bond, and each line beyond the first in a bond is a pi bond.'
+      'The card shows the bonds as lines between the atoms; the dial sets your answer.',
+      'Compare the single line between hydrogen and carbon with the three lines between carbon and nitrogen.',
+      'Only one pair can sit on the line between two nuclei, so ask what kind of bond every further pair must be.'
     ],
     check(state) {
-      const t = state.table;
-      const sig = markerValue(t, 'sig');
-      const pi = markerValue(t, 'pi');
-      if (!sig && !pi) return { ok: false, notYet: true, msg: 'Set the markers to numbers of bonds.' };
+      const pi = markerValue(state.table, 'pi');
+      if (!pi) return { ok: false, notYet: true, msg: 'Set the dial to a number of bonds.' };
       const want = countSigmaPi('HCN');
-      if (sig !== want.sigma) return { ok: false, msg: 'The first marker is not the number of that kind of bond the molecule holds.' };
-      if (pi !== want.pi) return { ok: false, msg: 'The second marker is not the number of that kind of bond the molecule holds.' };
-      return { ok: true };
+      if (pi === want.pi) return { ok: true };
+      return pi === want.pi + want.sigma
+        ? { ok: false, msg: 'That counts every shared pair in the molecule: some of them lie on the line between two nuclei.' }
+        : { ok: false, msg: `${pi} is not the number of shared pairs here that lie off the line between two nuclei.` };
     },
     reward: {
       log: 'Two sigma bonds and two pi bonds.',
-      title: 'Counting Sigma and Pi',
-      body: 'Every single, double or triple bond holds one sigma bond; each further shared pair is a pi bond. HCN has a single C–H bond and a C≡N triple bond: 1 + 1 = 2 sigma bonds, and 2 pi bonds in the triple bond.',
+      title: 'Counting Pi Bonds',
+      body: 'Two. Every bond has one sigma bond, and each further shared pair is a pi bond, so the triple bond is one sigma and two pi bonds.',
     }
   },
 
@@ -323,8 +324,8 @@ export const STAGES = [
   (() => {
     const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'B' });
     return {
-      title: 'Three Lobes',
-      prompt: 'Mix boron\'s orbitals in the bowl to make one lobe for each fluorine atom on the card.',
+      title: 'Three Hybrids',
+      prompt: 'Which of boron\'s orbitals mix to give one hybrid orbital for each bond in BF₃?',
       widget: { type: 'table', label: 'The bench' },
       table: domainTable({
         pieces: [
@@ -336,21 +337,21 @@ export const STAGES = [
         fixtures: [mx.fixture]
       }),
       hints: [
-        'Use the four orbitals and the mixing bowl.',
-        'Count the arms on the card, then count the lobes the bowl makes.',
-        'The bowl makes as many lobes as the orbitals put into it; an orbital left out stays as it is.'
+        'Drag orbitals into the mixer and look at the hybrid orbitals it draws; the card shows BF₃.',
+        'Compare the number of hybrid orbitals the mixer draws with the number of electron domains on the card.',
+        'The mixer gives back as many orbitals as go in, and an orbital left out stays as it was.'
       ],
       check(state) {
         const r = bowlRead(state.table, 'mx');
         if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the bowl.' };
         const want = molRead(state.table.pieces.ref).domains;
         if (r.lobes === want) return { ok: true };
-        return { ok: false, msg: 'The lobes that come out are not as many as the arms on the card.' };
+        return { ok: false, msg: `The mixer gives ${r.lobes} orbitals, and the card shows ${want} electron domains on the central atom.` };
       },
       reward: {
         log: 'An s orbital and two p orbitals make three.',
-        title: 'sp² Hybrid Orbitals',
-        body: 'Mixing one s and two p orbitals gives three sp² lobes, 120° apart in one plane, which is the shape of BF₃. The p orbital left out stands upright over the plane and is empty here.',
+        title: 'Hybrid Orbitals: sp²',
+        body: 'One s and two p orbitals mix into three sp² hybrid orbitals, 120° apart in a plane. The p orbital left out stands at right angles to that plane.',
         model: { type: 'lobes', n: 3, caption: 'sp² Hybrid Orbitals' }
       }
     };
@@ -360,8 +361,8 @@ export const STAGES = [
   (() => {
     const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'C' });
     return {
-      title: 'Two Lobes',
-      prompt: 'Mix carbon\'s orbitals in the bowl to make one lobe for each oxygen atom on the card.',
+      title: 'Two Hybrids',
+      prompt: 'Which of carbon\'s orbitals mix to give one hybrid orbital for each oxygen in CO₂?',
       widget: { type: 'table', label: 'The bench' },
       table: domainTable({
         pieces: [
@@ -372,21 +373,21 @@ export const STAGES = [
         fixtures: [mx.fixture]
       }),
       hints: [
-        'Use the four orbitals and the mixing bowl.',
-        'A double bond is one arm, so count the arms on the card, not the lines.',
-        'Put in as many orbitals as there are arms, one of them the s orbital.'
+        'Drag orbitals into the mixer and look at the hybrid orbitals it draws; the card shows O=C=O.',
+        'Compare the number of electron domains on carbon with the number of lines drawn to each oxygen.',
+        'A double bond is one domain and needs one hybrid orbital for its sigma bond, so ask what is left to make its pi bond.'
       ],
       check(state) {
         const r = bowlRead(state.table, 'mx');
         if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the bowl.' };
         const want = molRead(state.table.pieces.ref).domains;
         if (r.lobes === want) return { ok: true };
-        return { ok: false, msg: 'The lobes that come out are not as many as the arms on the card.' };
+        return { ok: false, msg: `The mixer gives ${r.lobes} orbitals, and the card shows ${want} electron domains on the central atom.` };
       },
       reward: {
         log: 'An s orbital and one p orbital make two.',
-        title: 'sp Hybrid Orbitals',
-        body: 'Mixing one s and one p orbital gives two sp lobes pointing opposite ways, 180° apart, which is the shape of CO₂. Carbon keeps two p orbitals out of the bowl, and each forms one pi bond with an oxygen.',
+        title: 'Hybrid Orbitals: sp',
+        body: 'One s and one p orbital mix into two sp hybrid orbitals, 180° apart. The two p orbitals left out each make a pi bond with one oxygen.',
         model: { type: 'lobes', n: 2, caption: 'sp Hybrid Orbitals' },
         last: true
       }
@@ -405,16 +406,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'Summary',
-      body: 'Atomic orbitals hybridize to form equivalent directional bonding orbitals corresponding to electron domain geometries. Unhybridized p orbitals form pi bonds through lateral overlap.'
+      heading: 'What You Found',
+      body: 'Carbon\'s plain s and p orbitals cannot give four equal bonds. An atom\'s orbitals mix into hybrid orbitals, one for each electron domain: sp³ for four, sp² for three, sp for two.'
     },
     {
-      heading: 'Sigma and Pi Bonding',
-      body: 'Sigma bonds have electron density along the internuclear axis and permit free rotation. Pi bonds have electron density above and below the internuclear axis and restrict rotation.'
+      heading: 'Sigma and Pi',
+      body: 'Orbitals meeting end to end make a sigma bond, which can turn. P orbitals left out of the mixing meet side by side in pi bonds, which break if one end is turned.'
     },
     {
       heading: 'Next',
-      body: 'The final bench introduces molecular orbital theory to describe electron delocalization and magnetic properties.'
+      body: 'The last bench looks at what happens to two atoms\' orbitals when the atoms meet.'
     }
   ]
 };
@@ -439,7 +440,7 @@ export const SOLUTIONS = [
   [bond('a1', 'b1'), bond('ap', 'bp')],
   [guess('single')],
   [turn('tw1', 90), turn('tw2', 90)],
-  [{ setDial: { fixture: 'sig', dial: 'value', value: 2 } }, { setDial: { fixture: 'pi', dial: 'value', value: 2 } }],
+  [{ setDial: { fixture: 'pi', dial: 'value', value: 2 } }],
   ['os', 'opx', 'opy'].map(id => mix(id, 'mx')),
   ['os', 'opx'].map(id => mix(id, 'mx'))
 ];
@@ -452,7 +453,7 @@ export const MISSES = [
   [bond('a1', 'b1')],
   [],
   [turn('tw1', 60), turn('tw2', 90)],
-  [{ setDial: { fixture: 'sig', dial: 'value', value: 3 } }, { setDial: { fixture: 'pi', dial: 'value', value: 1 } }],
+  [{ setDial: { fixture: 'pi', dial: 'value', value: 4 } }],
   [mix('os', 'mx'), mix('opx', 'mx')],
   [mix('os', 'mx'), mix('opx', 'mx'), mix('opy', 'mx')]
 ];

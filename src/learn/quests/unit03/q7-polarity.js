@@ -31,13 +31,13 @@
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { RIG_MOLECULES, planDipole, bondKind, EN, ionicPercent } from '../../engine/vsepr.js';
+import { RIG_MOLECULES, planDipole, bondKind, EN, ionicPercent, BOND_DIPOLE, E_DEBYE_PER_ANGSTROM } from '../../engine/vsepr.js';
 import {
-  domainTable, plates, marker, markerValue, molCard, molOf, molRead, streamPiece, arrowsTool, rodTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
+  domainTable, plates, marker, markerValue, molCard, molOf, molRead, arrowsTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
 } from '../../table/kits/domain.js';
 import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
   { term: /\belectronegativ\w*/i, introducedAt: 1 },
@@ -45,7 +45,7 @@ export const VOCABULARY = [
   { term: /\bnonpolar\b/i, introducedAt: 4 },
   { term: /\bpolar\b/i, introducedAt: 2 },
   { term: /\bpartial charges?\b/i, introducedAt: 2 },
-  { term: /\bpercent ionic character\b/i, introducedAt: 7 }
+  { term: /\bpercent ionic character\b/i, introducedAt: 5 }
 ];
 
 export const BUILDS_ON = ['unit03/q6-shape', 'unit03/q1-joins', 'unit02/q8-trends'];
@@ -55,8 +55,8 @@ const SPEAKER = 'Vess';
 /** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
 const QUEST_KEY = 'unit03/q7-polarity';
 const GUESSES = [
-  ['turns', 'carbon dioxide swings round', ['CO₂ swings round', 'Both its bonds', 'are strongly polar']],
-  ['stays', 'carbon dioxide stays put', ['CO₂ stays put', 'whatever its', 'bonds are like'] ]
+  ['turns', 'carbon dioxide turns in the field', ['CO₂ turns', 'Both its bonds', 'are polar']],
+  ['stays', 'carbon dioxide does not turn', ['CO₂ does not turn', 'whatever its', 'bonds are like']]
 ];
 
 /** Every piece says what it is ("Arrows", "Charged Rod") and the field key is named by what it does, so no key needs a legend. */
@@ -80,96 +80,111 @@ const grid = labels => labels.map(([id, label], i) => ({ id, label, at: { ...TRA
 /* ------------------------------------------------------------------
    THE FOUR STAGES
    ------------------------------------------------------------------ */
+const TRAY_NAME = { none: 'Shared equally', part: 'Shared unequally', taken: 'One atom takes it', turns: 'Turns: polar', stays: 'Does not turn: nonpolar' };
+/** The dipole a full transfer of one electron would give across a bond of this length, in debye (stage 5 prints it on the card). */
+const fullDipole = mol => E_DEBYE_PER_ANGSTROM * BOND_DIPOLE[mol].pm / 100;
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'How Hard Each Atom Pulls',
-    prompt: 'Sort each molecule by how unevenly its two atoms share the bond pair: not at all, partly, or one atom takes it.',
+    title: 'How Evenly Is It Shared',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Electronegativity is how strongly an atom pulls on electrons it shares; each card prints it for both of its atoms. Atoms with equal values share a pair equally, and a very large difference lets one atom take the pair altogether.'
+    },
+    prompt: 'How evenly does each pair of atoms share its bonding electrons?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
-        molCard('a', 'H2', pullRow(0), { field: true }), molCard('b', 'HBr', pullRow(1), { field: true }), molCard('c', 'KF', pullRow(2), { field: true }),
-        molCard('d', 'HCl', pullRow(3), { field: true }),
-        arrowsTool('ar', { x: 128, y: 49 })
+        molCard('a', 'H2', pullRow(0), { show: ['pulls'] }), molCard('b', 'HBr', pullRow(1), { show: ['pulls'] }), molCard('c', 'KF', pullRow(2), { show: ['pulls'] }),
+        molCard('d', 'HCl', pullRow(3), { show: ['pulls'] })
       ],
       zones: { trays: [
-        { id: 'none', label: 'Shared evenly', at: { x: 26, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
-        { id: 'part', label: 'Pulled toward one', at: { x: 75, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
-        { id: 'taken', label: 'Taken by one', at: { x: 124, y: 20 }, size: { w: 46, h: 24 }, cell: 22 }
+        { id: 'none', label: TRAY_NAME.none, at: { x: 26, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
+        { id: 'part', label: TRAY_NAME.part, at: { x: 75, y: 20 }, size: { w: 46, h: 24 }, cell: 22 },
+        { id: 'taken', label: TRAY_NAME.taken, at: { x: 124, y: 20 }, size: { w: 46, h: 24 }, cell: 22 }
       ] }
     }),
     hints: [
-      'Use the arrows, the molecules and the three trays.',
-      'Lay the arrows on a molecule and read the number printed on its card, then do the same for the others.',
-      'A reading of zero means the bond pair is shared evenly; the larger the reading, the more one atom pulls the pair its way.'
+      'Each card prints the electronegativity of its two atoms; drag each card into a tray.',
+      'Compare the two values on one card with each other, then compare that difference with the other cards\'.',
+      'The atom with the higher value pulls the shared pair toward itself, and the larger the difference, the further the pair shifts.'
     ],
     check(state) {
       const t = state.table;
       const ids = ['a', 'b', 'c', 'd'];
       const where = Object.fromEntries(ids.map(id => [id, ['none', 'part', 'taken'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
-      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all four molecules into trays.' };
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all four cards into trays.' };
       const band = id => { const d = molRead(t.pieces[id]).net; return d < 0.4 ? 'none' : d < 1.7 ? 'part' : 'taken'; };
       const wrong = ids.find(id => where[id] !== band(id));
-      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that its printed reading does not fit.` };
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in "${TRAY_NAME[where[wrong]]}", but the two electronegativities on its card differ by ${molRead(t.pieces[wrong]).net.toFixed(1)}.` };
       return { ok: true };
     },
     reward: {
-      log: 'The bigger the difference in pull, the more one-sided the bond.',
-      title: 'Electronegativity',
-      body: 'Electronegativity is how strongly an atom pulls shared electrons toward itself. The number on each card is the difference between its two atoms: 0 for H₂, 0.96 for HCl, 3.16 for KF. Above about 1.7 the bond is counted as ionic.'
+      log: 'The bigger the difference, the less evenly the pair is shared.',
+      title: 'Electronegativity Difference',
+      body: 'H₂ shares equally, HBr and HCl unequally, and in KF fluorine takes the electron. The larger the difference in electronegativity, the more unequal the sharing.'
     }
   },
 
-  /* ---------------------------------------------------------------- 1 */
+  /* ---------------------------------------------------------------- 2 */
   {
     title: 'Which End',
-    prompt: 'Orient the hydrogen chloride molecule between the plates so that it remains aligned when the field is switched on.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'When a pair is shared unequally, the atom it sits closer to is slightly negative, written δ−, and the other slightly positive, δ+: these are partial charges. A bond with partial charges is a polar covalent bond, and its two charged ends are called a dipole.'
+    },
+    prompt: 'Which end of a hydrogen chloride molecule faces the positive plate when the field is on?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
-      pieces: [molCard('a', 'HCl', rowAt(0), { turn: true }), arrowsTool('ar', { x: 130, y: 14 })],
+      pieces: [molCard('a', 'HCl', rowAt(0), { turn: true, show: ['pulls'] }), arrowsTool('ar', { x: 130, y: 14 })],
       fixtures: [plates('pl', PLATES_BIG.at, { size: PLATES_BIG.size })]
     }),
     hints: [
-      'Use the molecule, the arrows, the plates and "Switch Field".',
-      'Identify which atom is more electronegative and bears a partial negative charge.',
-      'Align the partially negative chlorine atom toward the positive plate so the molecule does not rotate.'
+      'Drag the molecule between the plates and turn it end for end; "Switch Field" turns the field on and off.',
+      'Compare the electronegativities of hydrogen and chlorine printed on the card, and which way the dipole arrow points.',
+      'Opposite charges attract, so decide which atom is δ− and which plate that end is drawn to.'
     ],
     check(state) {
       const b = dmolBehaviour(state.table.pieces.a, state.table);
       if (!b.around) return { ok: false, notYet: true, msg: 'Put the molecule between the plates.' };
       if (b.aligned) return { ok: true };
-      return { ok: false, msg: 'The molecule would swing round when the field comes on.' };
+      return { ok: false, msg: 'Set this way the molecule swings round when the field is on: the end facing the positive plate is not its δ− end.' };
     },
     reward: {
-      log: 'The harder puller takes the minus.',
-      title: 'Polar Covalent Bonds',
-      body: 'Unequal sharing of electrons produces partial charges: the more electronegative chlorine atom becomes partially negative while hydrogen becomes partially positive. This creates a polar covalent bond that aligns in an electric field.',
+      log: 'The chlorine end faces the positive plate.',
+      title: 'Polar Covalent Bond',
+      body: 'The chlorine end. Chlorine is more electronegative, so the shared pair sits closer to it and the partial charges are δ− on chlorine and δ+ on hydrogen: a polar covalent bond.',
       model: { type: 'shape', mol: 'HCl', caption: 'HCl · Polar' }
     }
   },
 
-  /* ---------------------------------------------------------------- 2 */
+  /* ---------------------------------------------------------------- 3 */
   predictStage({
     key: QUEST_KEY,
-    title: 'Two Pulls',
-    prompt: 'Does carbon dioxide align in an external electric field despite possessing polar bonds?',
+    title: 'Two Bond Dipoles',
+    prompt: 'Both bonds in carbon dioxide, O=C=O, are polar: does the whole molecule turn in an electric field?',
     cards: GUESSES,
     hints: [
-      'Use the two cards and the slot.',
-      'Consider whether the two opposing C=O bond dipoles cancel out.',
-      'Select the card matching your prediction.'
+      'Lay one of the two cards in the slot.',
+      'Carbon dioxide is linear, so its two bonds point in opposite directions from the carbon atom.',
+      'A prediction is never graded, so lay the card you think most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'Your prediction is recorded. Test each molecule between the electric field plates on the bench.'
+      body: 'The next stage puts carbon dioxide and four other molecules between the plates.'
     }
   }),
 
-  /* ---------------------------------------------------------------- 3 */
+  /* ---------------------------------------------------------------- 4 */
   {
     title: 'Five Molecules',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A molecule that has a δ− side and a δ+ side turns in an electric field and is called polar. One whose bond dipoles pull equally in opposite directions has no such sides and is called nonpolar.'
+    },
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'sort each molecule by whether it aligns in the electric field.');
+      return testPrompt(QUEST_KEY, GUESSES, 'which of these five molecules are polar?');
     },
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
@@ -178,13 +193,13 @@ export const STAGES = [
         molCard('d', 'NH3', rowAt(3), { field: true }), molCard('e', 'CHCl3', rowAt(4), { field: true }),
         arrowsTool('ar', { x: 69, y: 22 })
       ],
-      zones: { trays: [{ id: 'turns', label: 'Swings round', at: { x: 100, y: 18 }, size: { w: 32, h: 22 }, cell: 22 }, { id: 'stays', label: 'Stays put', at: { x: 133, y: 18 }, size: { w: 32, h: 22 }, cell: 22 }] },
+      zones: { trays: [{ id: 'turns', label: 'Polar', at: { x: 100, y: 18 }, size: { w: 32, h: 22 }, cell: 22 }, { id: 'stays', label: 'Nonpolar', at: { x: 133, y: 18 }, size: { w: 32, h: 22 }, cell: 22 }] },
       fixtures: [plates('pl', { x: 27, y: 21 }, { size: { w: 52, h: 40 } })]
     }),
     hints: [
-      'Use the molecules, the arrows, the plates, "Switch Field" and the two trays.',
-      'Use the arrows tool to determine whether individual bond dipoles cancel out.',
-      'Place each molecule between the plates, activate the field, and sort it based on its dipole alignment.'
+      'Drag a molecule between the plates and press "Switch Field"; drag the dipole arrows onto a molecule to see each bond\'s dipole.',
+      'Compare the directions of the bond dipole arrows in a molecule that turned with those in one that did not.',
+      'Equal arrows spread evenly round the central atom leave no side of the molecule more negative than another.'
     ],
     check(state) {
       const t = state.table;
@@ -192,107 +207,53 @@ export const STAGES = [
       const where = Object.fromEntries(ids.map(id => [id, ['turns', 'stays'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
       if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all five molecules into trays.' };
       const wrong = ids.find(id => where[id] !== (molRead(t.pieces[id]).polar ? 'turns' : 'stays'));
-      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is under a heading the plates did not show.` };
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that does not match what it did between the plates: test it again with the field on.` };
       return { ok: true };
     },
     get reward() {
       return {
-        log: 'Water, ammonia and chloroform swung round. Carbon dioxide and carbon tetrachloride stayed put.',
-        title: 'Molecular Polarity and Symmetry',
-        body: `${verdictLine(QUEST_KEY, 'stays')}A polar molecule has bond dipole moments that sum to a net dipole moment, aligning in an electric field. In symmetrical molecules like carbon dioxide and carbon tetrachloride, individual bond dipoles cancel, making them nonpolar.`,
-        model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Net dipole' }
+        log: 'Water, ammonia and chloroform turned. Carbon dioxide and carbon tetrachloride did not.',
+        title: 'Polar and Nonpolar Molecules',
+        body: `${verdictLine(QUEST_KEY, 'stays')}In CO₂ and CCl₄ equal bond dipoles are spread evenly round the central atom and balance, so the molecules are nonpolar. In H₂O, NH₃ and CHCl₃ they do not balance, so those molecules are polar.`,
+        model: { type: 'shape', mol: 'H2O', caption: 'H₂O · Polar' }
       };
     }
   },
 
-  /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'The Charged Rod',
-    prompt: 'Sort the liquid streams that are deflected by a charged rod into the tray.',
-    widget: { type: 'table', label: 'The bench' },
-    table: domainTable({
-      pieces: [
-        streamPiece('s1', 'CCl4', { x: 24, y: 21 }), streamPiece('s2', 'CHCl3', { x: 56, y: 21 }), streamPiece('s3', 'H2O', { x: 88, y: 21 }),
-        rodTool('rod', { x: 130, y: 14 })
-      ],
-      zones: { trays: [{ id: 'bent', label: 'Bent by the rod', at: { x: 62, y: 51 }, size: { w: 90, h: 24 }, cell: 20 }] }
-    }),
-    hints: [
-      'Use the charged rod, the streams and the tray.',
-      'Observe which liquid streams are deflected toward the charged rod.',
-      'Test each stream with the charged rod and place polar liquids that deflect into the tray.'
-    ],
-    check(state) {
-      const t = state.table;
-      const ids = ['s1', 's2', 's3'];
-      const bent = ids.filter(id => t.pieces[id].zone === 'tray:bent');
-      const want = ids.filter(id => molRead(t.pieces[id]).polar);
-      if (!bent.length) return { ok: false, notYet: true, msg: 'Put the streams the rod bends into the tray.' };
-      if (bent.some(id => !want.includes(id))) return { ok: false, msg: 'The tray holds a stream the rod did not bend.' };
-      if (want.some(id => !bent.includes(id))) return { ok: false, msg: 'A stream the rod bent is not in the tray.' };
-      return { ok: true };
-    },
-    reward: {
-      log: 'Polar liquids bend; nonpolar ones do not.',
-      title: 'Deflection of Polar Liquids',
-      body: 'Molecules with permanent dipole moments reorient in the presence of an electric field and are attracted to an electrostatic charge. Consequently, streams of polar liquids deflect toward a charged rod, whereas nonpolar liquids do not.',
-    }
-  },
-
-  /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'The Gap in Numbers',
-    prompt: 'Set the marker to how much harder nitrogen pulls than hydrogen on a shared pair in ammonia, in tenths.',
-    widget: { type: 'table', label: 'The bench' },
-    table: domainTable({
-      pieces: [molCard('nh', 'NH3', { x: 40, y: 32 }, { show: ['pulls'] })],
-      fixtures: [marker('gapn', { x: 104, y: 32 }, { label: 'Tenths', max: 30 })]
-    }),
-    hints: [
-      'Use the molecule card and the marker.',
-      'The card prints how hard each kind of atom in the molecule pulls.',
-      'Subtract the smaller pull from the larger and give the answer in tenths, so 0.5 is 5.'
-    ],
-    check(state) {
-      const t = state.table;
-      const v = markerValue(t, 'gapn');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a number of tenths.' };
-      const want = Math.round((EN.N - EN.H) * 10);
-      if (Math.abs(v - want) <= 1) return { ok: true };
-      return { ok: false, msg: v > want ? 'The marker is larger than the gap between the two printed pulls.' : 'The marker is smaller than the gap between the two printed pulls.' };
-    },
-    reward: {
-      log: 'Nitrogen pulls 0.8 harder than hydrogen.',
-      title: 'A Gap You Can Calculate',
-      body: 'Nitrogen pulls at 3.0 and hydrogen at 2.2, so each N–H bond pair is pulled toward nitrogen with a difference of 0.8. A gap of 0.4 to 1.7 makes a polar covalent bond, and each bond in ammonia is polar.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Ionic Is It',
-    prompt: 'Set the marker to the percent of a full charge that hydrogen chloride\'s measured dipole shows is pulled across its bond.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The size of a dipole is measured in debye, D. If one atom took the shared pair completely the dipole would be as large as it can be, and percent ionic character is the measured dipole as a percent of that.',
+      worked: [
+        'Hydrogen fluoride: measured dipole 1.82 D.',
+        `Full transfer would give ${fullDipole('HF').toFixed(2)} D.`,
+        `1.82 ÷ ${fullDipole('HF').toFixed(2)} = 0.41, so 41%.`
+      ]
+    },
+    prompt: 'What is the percent ionic character of the H–Cl bond?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [molCard('hcl', 'HCl', { x: 40, y: 32 }, { show: ['dipole'] })],
       fixtures: [marker('ionic', { x: 104, y: 32 }, { label: 'Percent', max: 100 })]
     }),
     hints: [
-      'Use the molecule card and the marker.',
-      'Find the dipole a full charge would give across that bond length, then compare the measured dipole with it.',
-      'Multiply the full-charge figure by the bond length in angstroms (10 pm is 0.1 Å), then divide the measured dipole by that and give the share as a percent.'
+      'The card prints the measured dipole of H–Cl and the dipole a full transfer would give; the dial sets your answer.',
+      'Compare the measured dipole with the full-transfer dipole: the bar on the card shows how far the shared pair has shifted.',
+      'The worked case for hydrogen fluoride shows where the two dipoles go in the division.'
     ],
     check(state) {
       const v = markerValue(state.table, 'ionic');
-      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to a percent.' };
+      if (!v) return { ok: false, notYet: true, msg: 'Set the dial to a percent.' };
       const want = Math.round(ionicPercent('HCl'));
       if (Math.abs(v - want) <= 2) return { ok: true };
-      return { ok: false, msg: v > want ? 'The marker is higher than the measured dipole reaches as a share of the full-charge dipole.' : 'The marker is lower than the measured dipole reaches as a share of the full-charge dipole.' };
+      return { ok: false, msg: `${v}% of the full-transfer dipole would be ${(v / 100 * fullDipole('HCl')).toFixed(2)} D, which is not the dipole measured.` };
     },
     reward: {
-      log: 'The measured dipole is about 18% of a full charge.',
+      log: 'The measured dipole is about 18% of a full transfer.',
       title: 'Percent Ionic Character',
-      body: 'Percent ionic character is the measured dipole divided by the dipole of a full charge across the same bond length. Hydrogen chloride reaches about 18%, hydrogen fluoride about 41%, and no bond reaches 100%, so the 1.7 gap is a rule of thumb.',
+      body: 'About 18%: the shared pair is shifted toward chlorine but far from transferred. Percent ionic character puts a number on how unequal the sharing is, and no bond reaches 100%.',
       last: true
     }
   }
@@ -309,16 +270,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'Summary',
-      body: 'A covalent bond is polar when electrons are shared unequally due to electronegativity differences. A molecule is polar only when its bond dipoles do not cancel out due to molecular geometry.'
+      heading: 'What You Found',
+      body: 'The more two atoms differ in electronegativity, the less equally they share a pair. Unequal sharing gives a bond a δ− end and a δ+ end: a polar covalent bond.'
     },
     {
-      heading: 'Symmetry and Dipoles',
-      body: 'Symmetrical molecular geometries cancel equal bond dipoles, resulting in nonpolar molecules despite containing polar bonds.'
+      heading: 'Whole Molecules',
+      body: 'A molecule is polar only if its bond dipoles do not balance. Shape decides: linear CO₂ is nonpolar although its bonds are polar, and bent H₂O is polar.'
     },
     {
       heading: 'Next',
-      body: 'The next bench investigates orbital hybridization and how atomic orbitals mix to form sigma and pi bonds.'
+      body: 'The next bench asks which orbitals an atom uses to make its bonds.'
     }
   ]
 };
@@ -338,15 +299,13 @@ const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [lay('ar', 'b'), lay('ar', 'd'), lay('ar', 'a'), lay('ar', 'c'), into('b', 'part'), into('d', 'part'), into('a', 'none'), into('c', 'taken')],
+  [into('b', 'part'), into('d', 'part'), into('a', 'none'), into('c', 'taken')],
   [gap('a'), { flip: 'a' }],
   [guess('stays')],
   [
     gap('a'), lay('ar', 'a'), field, into('a', 'stays'),
     gap('b'), into('b', 'turns'), gap('c'), into('c', 'stays'), gap('d'), into('d', 'turns'), gap('e'), into('e', 'turns')
   ],
-  [lay('rod', 's1'), lay('rod', 's2'), lay('rod', 's3'), into('s2', 'bent'), into('s3', 'bent')],
-  [{ setDial: { fixture: 'gapn', dial: 'value', value: 8 } }],
   [{ setDial: { fixture: 'ionic', dial: 'value', value: 18 } }]
 ];
 
@@ -356,8 +315,6 @@ export const MISSES = [
   [gap('a')],
   [],
   [into('a', 'turns'), into('b', 'turns'), into('c', 'stays'), into('d', 'turns'), into('e', 'turns')],
-  [into('s1', 'bent'), into('s3', 'bent')],
-  [{ setDial: { fixture: 'gapn', dial: 'value', value: 3 } }],
   [{ setDial: { fixture: 'ionic', dial: 'value', value: 100 } }]
 ];
 

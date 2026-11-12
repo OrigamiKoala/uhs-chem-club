@@ -1,0 +1,2112 @@
+{
+  "world": "unit03",
+  "end": [
+    {
+      "id": "q1-joins#0",
+      "quest": "q1-joins",
+      "question": "Which pair of atoms forms an ionic bond?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sodium and chlorine"
+        },
+        {
+          "id": "b",
+          "label": "Chlorine and chlorine"
+        },
+        {
+          "id": "c",
+          "label": "Neon and neon"
+        },
+        {
+          "id": "d",
+          "label": "Hydrogen and hydrogen"
+        }
+      ],
+      "answer": "a",
+      "explanation": "An ionic bond requires a metal and a nonmetal to transfer electrons. Sodium is a metal and chlorine is a nonmetal, so they form an ionic bond."
+    },
+    {
+      "id": "q1-joins#1",
+      "quest": "q1-joins",
+      "question": "Neon will not bond to anything. Why not?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It is too light"
+        },
+        {
+          "id": "b",
+          "label": "Its outer shell is already full, so a bond would gain it nothing"
+        },
+        {
+          "id": "c",
+          "label": "It has no electrons at all"
+        },
+        {
+          "id": "d",
+          "label": "It is a metal"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Neon has a complete valence shell of eight electrons. Because atoms bond to achieve full valence shells, neon is energetically stable and chemically inert."
+    },
+    {
+      "id": "q1-joins#2",
+      "quest": "q1-joins",
+      "question": "Magnesium has two electrons on its outer shell and chlorine needs one. How many chlorine atoms does one magnesium atom bond to?",
+      "options": [
+        {
+          "id": "a",
+          "label": "One"
+        },
+        {
+          "id": "b",
+          "label": "Two"
+        },
+        {
+          "id": "c",
+          "label": "Three"
+        },
+        {
+          "id": "d",
+          "label": "Four"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Magnesium loses two electrons and each chlorine accepts one. Therefore, two chloride ions balance one magnesium ion to produce neutral MgCl2."
+    },
+    {
+      "id": "q1-joins#3",
+      "quest": "q1-joins",
+      "question": "Two oxygen atoms bond together. What kind of bond is it, and how many pairs of electrons does it hold?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ionic, holding one pair"
+        },
+        {
+          "id": "b",
+          "label": "Covalent, holding one pair"
+        },
+        {
+          "id": "c",
+          "label": "Covalent, holding two pairs"
+        },
+        {
+          "id": "d",
+          "label": "Covalent, holding three pairs"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Both atoms are nonmetals, forming a covalent bond. Oxygen has six valence electrons and shares two pairs to complete its octet, forming a double bond."
+    },
+    {
+      "id": "q1-joins#4",
+      "quest": "q1-joins",
+      "question": "Aluminium has three electrons on its outer shell and chlorine needs one. What is the ratio of aluminium to chlorine in the compound they make?",
+      "options": [
+        {
+          "id": "a",
+          "label": "1 to 1"
+        },
+        {
+          "id": "b",
+          "label": "1 to 2"
+        },
+        {
+          "id": "c",
+          "label": "1 to 3"
+        },
+        {
+          "id": "d",
+          "label": "3 to 1"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Aluminium forms an Al3+ cation and each chlorine forms a Cl- anion. Three chloride ions balance one aluminium ion, yielding AlCl3."
+    },
+    {
+      "id": "q2-lattice#0",
+      "quest": "q2-lattice",
+      "question": "Solid sodium chloride does not conduct electricity, but molten sodium chloride does. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Melting turns the ions into metal atoms"
+        },
+        {
+          "id": "b",
+          "label": "Its ions are locked in the lattice when solid and free to move when molten"
+        },
+        {
+          "id": "c",
+          "label": "Heat itself carries the current"
+        },
+        {
+          "id": "d",
+          "label": "Melting adds electrons to the sample"
+        }
+      ],
+      "answer": "b",
+      "explanation": "A current is charge on the move. Sodium chloride has charges either way, but in the solid lattice they are pinned in place; melting frees them, so the charge can travel."
+    },
+    {
+      "id": "q2-lattice#1",
+      "quest": "q2-lattice",
+      "question": "Sugar melts at about 186 degrees and salt at 801. What does that difference tell you?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sugar molecules are held to each other by a much weaker pull than the one between ions"
+        },
+        {
+          "id": "b",
+          "label": "The bonds inside a sugar molecule are weaker than the bonds inside salt"
+        },
+        {
+          "id": "c",
+          "label": "Sugar is a smaller molecule than salt"
+        },
+        {
+          "id": "d",
+          "label": "Salt has more electrons"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Melting sugar only separates whole molecules from each other, and the pull between molecules is weak. Melting salt has to pull apart an ionic lattice, where every ion is gripped by the ions all round it."
+    },
+    {
+      "id": "q2-lattice#2",
+      "quest": "q2-lattice",
+      "question": "Why is an ionic solid hard but brittle — strong to press on, yet it shatters when struck?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its bonds are weak in one direction only"
+        },
+        {
+          "id": "b",
+          "label": "Striking it slides one layer by a step, so like charges meet and repel"
+        },
+        {
+          "id": "c",
+          "label": "It is full of trapped air"
+        },
+        {
+          "id": "d",
+          "label": "The hammer adds charge to it"
+        }
+      ],
+      "answer": "b",
+      "explanation": "In the lattice every ion is surrounded by ions of opposite charge, which is a strong grip. Shift one plane by one ion and all those attractions become repulsions at once, and the crystal splits along that plane."
+    },
+    {
+      "id": "q2-lattice#3",
+      "quest": "q2-lattice",
+      "question": "Diamond melts above 3500 degrees; iodine melts at 114. Both are made only of nonmetals. Why the enormous difference?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Diamond is ionic and iodine is covalent"
+        },
+        {
+          "id": "b",
+          "label": "Iodine atoms are heavier, so they need less heat"
+        },
+        {
+          "id": "c",
+          "label": "Diamond is one covalent network, so melting it breaks covalent bonds; iodine is separate molecules held by a weak pull"
+        },
+        {
+          "id": "d",
+          "label": "Diamond conducts heat away faster"
+        }
+      ],
+      "answer": "c",
+      "explanation": "Both are covalent, but they are built differently. Every carbon in diamond is bonded on to its neighbours right through the crystal, so melting it means breaking those bonds; melting iodine only separates I2 molecules that were barely holding on to each other."
+    },
+    {
+      "id": "q2-lattice#4",
+      "quest": "q2-lattice",
+      "question": "An unknown solid melts at 60 degrees, does not conduct as a solid, and still does not conduct once it is molten. How is it built?",
+      "options": [
+        {
+          "id": "a",
+          "label": "An ionic lattice"
+        },
+        {
+          "id": "b",
+          "label": "A covalent network"
+        },
+        {
+          "id": "c",
+          "label": "Separate molecules"
+        },
+        {
+          "id": "d",
+          "label": "A metal"
+        }
+      ],
+      "answer": "c",
+      "explanation": "A low melting point rules out both a lattice and a network, which need hundreds or thousands of degrees. Failing to conduct even when molten rules out ions, so what melted was the weak pull between separate molecules."
+    },
+    {
+      "id": "q3-distance#0",
+      "quest": "q3-distance",
+      "question": "On a potential energy curve for two bonded atoms, what does the lowest point represent?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The bond length, where the energy is a minimum"
+        },
+        {
+          "id": "b",
+          "label": "The separation at which the atoms are fully parted"
+        },
+        {
+          "id": "c",
+          "label": "The point of greatest repulsion"
+        },
+        {
+          "id": "d",
+          "label": "The point where the atoms have no energy"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The atoms are most stable at the separation where attraction and repulsion balance. That separation is the bond length, and the depth of the well there is the bond energy."
+    },
+    {
+      "id": "q3-distance#1",
+      "quest": "q3-distance",
+      "question": "Why is the H–H bond shorter than the Cl–Cl bond?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Hydrogen atoms are smaller, so their outer shells meet closer together"
+        },
+        {
+          "id": "b",
+          "label": "Hydrogen atoms are lighter"
+        },
+        {
+          "id": "c",
+          "label": "The H–H bond is weaker"
+        },
+        {
+          "id": "d",
+          "label": "Hydrogen atoms carry a charge"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Atomic size sets how close two atoms can get. A hydrogen atom has one small shell, a chlorine atom three, so the chlorine pair sits further apart."
+    },
+    {
+      "id": "q3-distance#2",
+      "quest": "q3-distance",
+      "question": "Which carbon–carbon bond is the shortest and the strongest?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The triple bond"
+        },
+        {
+          "id": "b",
+          "label": "The double bond"
+        },
+        {
+          "id": "c",
+          "label": "The single bond"
+        },
+        {
+          "id": "d",
+          "label": "All three are the same"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each extra shared pair draws the atoms closer and holds them harder. C≡C is about 120 pm and 839 kJ/mol, against 154 pm and 348 kJ/mol for C–C."
+    },
+    {
+      "id": "q3-distance#3",
+      "quest": "q3-distance",
+      "question": "Which has the largest lattice energy?",
+      "options": [
+        {
+          "id": "a",
+          "label": "MgO"
+        },
+        {
+          "id": "b",
+          "label": "NaCl"
+        },
+        {
+          "id": "c",
+          "label": "KCl"
+        },
+        {
+          "id": "d",
+          "label": "NaF"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Lattice energy grows with the product of the ion charges and shrinks with the distance between them. MgO has 2+ and 2− ions that are also small."
+    },
+    {
+      "id": "q3-distance#4",
+      "quest": "q3-distance",
+      "question": "Sodium fluoride melts at a higher temperature than sodium chloride. What is the best explanation?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Fluoride ions are smaller, so the ions sit closer and are held more strongly"
+        },
+        {
+          "id": "b",
+          "label": "Fluoride has a larger charge than chloride"
+        },
+        {
+          "id": "c",
+          "label": "Sodium fluoride is made of molecules"
+        },
+        {
+          "id": "d",
+          "label": "Sodium fluoride has covalent bonds"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Both ions carry one unit of charge, but fluoride is smaller, so the centres are closer and the lattice energy is larger. More heat is needed to free the ions."
+    },
+    {
+      "id": "q4-dots#0",
+      "quest": "q4-dots",
+      "question": "How many lone pairs are on the oxygen atom in a Lewis structure of H₂O?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Two"
+        },
+        {
+          "id": "b",
+          "label": "One"
+        },
+        {
+          "id": "c",
+          "label": "Three"
+        },
+        {
+          "id": "d",
+          "label": "None"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Water has eight valence electrons. Two bonds use four, and the remaining four sit on oxygen as two lone pairs."
+    },
+    {
+      "id": "q4-dots#1",
+      "quest": "q4-dots",
+      "question": "What is the best Lewis structure for CO₂?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Two double bonds, with two lone pairs on each oxygen"
+        },
+        {
+          "id": "b",
+          "label": "Two single bonds, with three lone pairs on each oxygen"
+        },
+        {
+          "id": "c",
+          "label": "One triple and one single bond"
+        },
+        {
+          "id": "d",
+          "label": "Two double bonds, with no lone pairs"
+        }
+      ],
+      "answer": "a",
+      "explanation": "With 16 valence electrons, two double bonds give carbon and both oxygens eight electrons each."
+    },
+    {
+      "id": "q4-dots#2",
+      "quest": "q4-dots",
+      "question": "How many electrons does the Lewis structure of the NH₄⁺ ion contain?",
+      "options": [
+        {
+          "id": "a",
+          "label": "8"
+        },
+        {
+          "id": "b",
+          "label": "9"
+        },
+        {
+          "id": "c",
+          "label": "10"
+        },
+        {
+          "id": "d",
+          "label": "5"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Nitrogen brings 5 and four hydrogens bring 4, which is 9. The positive charge removes one electron, leaving 8."
+    },
+    {
+      "id": "q4-dots#3",
+      "quest": "q4-dots",
+      "question": "Why does boron in BF₃ have only six electrons round it?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Boron has only three valence electrons to share, and fluorine does not form a second bond to it"
+        },
+        {
+          "id": "b",
+          "label": "Boron cannot bond to fluorine"
+        },
+        {
+          "id": "c",
+          "label": "Fluorine has an expanded octet"
+        },
+        {
+          "id": "d",
+          "label": "The molecule has an unpaired electron"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Boron brings three electrons, so three single bonds give it six. Fluorine is too electronegative to share more, so the octet stays incomplete."
+    },
+    {
+      "id": "q4-dots#4",
+      "quest": "q4-dots",
+      "question": "Which of these can have an expanded octet?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sulfur in SF₆"
+        },
+        {
+          "id": "b",
+          "label": "Nitrogen in NH₃"
+        },
+        {
+          "id": "c",
+          "label": "Oxygen in H₂O"
+        },
+        {
+          "id": "d",
+          "label": "Carbon in CH₄"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Only atoms on the third period or below have room for more than eight electrons, so sulfur holds twelve in SF₆."
+    },
+    {
+      "id": "q5-resonance#0",
+      "quest": "q5-resonance",
+      "question": "Ozone is drawn with one double bond and one single bond, but the gauge reads the same length for both. What does that tell you?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The real molecule is a blend of two drawings, so both bonds are alike"
+        },
+        {
+          "id": "b",
+          "label": "The gauge is broken"
+        },
+        {
+          "id": "c",
+          "label": "Ozone has two double bonds"
+        },
+        {
+          "id": "d",
+          "label": "Ozone has two single bonds"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Either drawing alone predicts one short bond and one long one. The measured equal lengths show the electrons are shared across both, which resonance describes."
+    },
+    {
+      "id": "q5-resonance#1",
+      "quest": "q5-resonance",
+      "question": "Two Lewis structures of the same molecule differ only in their formal charges. Which is usually the better?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The one whose formal charges are closest to zero"
+        },
+        {
+          "id": "b",
+          "label": "The one with the most charges"
+        },
+        {
+          "id": "c",
+          "label": "The one with a positive charge on the most electronegative atom"
+        },
+        {
+          "id": "d",
+          "label": "The one with the most lone pairs"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Structures with formal charges near zero are more stable, and a negative charge belongs on the more electronegative atom."
+    },
+    {
+      "id": "q5-resonance#2",
+      "quest": "q5-resonance",
+      "question": "An atom brings 6 valence electrons. In a drawing it has two lone pairs and one double bond. What is its formal charge?",
+      "options": [
+        {
+          "id": "a",
+          "label": "0"
+        },
+        {
+          "id": "b",
+          "label": "+1"
+        },
+        {
+          "id": "c",
+          "label": "−1"
+        },
+        {
+          "id": "d",
+          "label": "+2"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Formal charge is 6 − (4 lone-pair electrons + 2 bonds) = 0."
+    },
+    {
+      "id": "q5-resonance#3",
+      "quest": "q5-resonance",
+      "question": "What is the bond order of each N–O bond in the nitrate ion, NO₃⁻?",
+      "options": [
+        {
+          "id": "a",
+          "label": "1⅓"
+        },
+        {
+          "id": "b",
+          "label": "1"
+        },
+        {
+          "id": "c",
+          "label": "2"
+        },
+        {
+          "id": "d",
+          "label": "1½"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Nitrate has four shared pairs spread over three equivalent bonds, so each has a bond order of 4/3."
+    },
+    {
+      "id": "q5-resonance#4",
+      "quest": "q5-resonance",
+      "question": "How many resonance structures does the carbonate ion have?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Three"
+        },
+        {
+          "id": "b",
+          "label": "Two"
+        },
+        {
+          "id": "c",
+          "label": "One"
+        },
+        {
+          "id": "d",
+          "label": "Four"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The double bond can sit on any of the three oxygens, giving three equivalent structures."
+    },
+    {
+      "id": "q6-shape#0",
+      "quest": "q6-shape",
+      "question": "What is the electron geometry of a central atom with four electron domains?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tetrahedral"
+        },
+        {
+          "id": "b",
+          "label": "Trigonal planar"
+        },
+        {
+          "id": "c",
+          "label": "Linear"
+        },
+        {
+          "id": "d",
+          "label": "Octahedral"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Four domains push to the corners of a tetrahedron, with ideal angles of 109.5 degrees."
+    },
+    {
+      "id": "q6-shape#1",
+      "quest": "q6-shape",
+      "question": "What is the molecular geometry of NH₃?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Trigonal pyramidal"
+        },
+        {
+          "id": "b",
+          "label": "Trigonal planar"
+        },
+        {
+          "id": "c",
+          "label": "Tetrahedral"
+        },
+        {
+          "id": "d",
+          "label": "Bent"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Nitrogen has four domains, one of them a lone pair. With three atoms only, the shape is trigonal pyramidal."
+    },
+    {
+      "id": "q6-shape#2",
+      "quest": "q6-shape",
+      "question": "Why is the H–O–H angle in water (104.5°) smaller than the tetrahedral angle?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lone pairs repel bonding pairs more strongly than bonding pairs repel each other"
+        },
+        {
+          "id": "b",
+          "label": "Oxygen is larger than hydrogen"
+        },
+        {
+          "id": "c",
+          "label": "The O–H bonds are double bonds"
+        },
+        {
+          "id": "d",
+          "label": "Water has no lone pairs"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The two lone pairs on oxygen take more room than bonding pairs, squeezing the bond angle below 109.5 degrees."
+    },
+    {
+      "id": "q6-shape#3",
+      "quest": "q6-shape",
+      "question": "How many electron domains does the carbon atom in CO₂ have?",
+      "options": [
+        {
+          "id": "a",
+          "label": "2"
+        },
+        {
+          "id": "b",
+          "label": "4"
+        },
+        {
+          "id": "c",
+          "label": "3"
+        },
+        {
+          "id": "d",
+          "label": "1"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each double bond is one region of electron density, so carbon has two domains and CO₂ is linear."
+    },
+    {
+      "id": "q6-shape#4",
+      "quest": "q6-shape",
+      "question": "What is the molecular geometry of XeF₄?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Square planar"
+        },
+        {
+          "id": "b",
+          "label": "Tetrahedral"
+        },
+        {
+          "id": "c",
+          "label": "Octahedral"
+        },
+        {
+          "id": "d",
+          "label": "Seesaw"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Xenon has six domains, two of them lone pairs placed opposite each other. The four fluorine atoms lie in a plane."
+    },
+    {
+      "id": "q7-polarity#0",
+      "quest": "q7-polarity",
+      "question": "In an H–Cl bond, which atom carries the partial negative charge?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Chlorine, because it is more electronegative"
+        },
+        {
+          "id": "b",
+          "label": "Hydrogen, because it is smaller"
+        },
+        {
+          "id": "c",
+          "label": "Neither, because the bond is nonpolar"
+        },
+        {
+          "id": "d",
+          "label": "Hydrogen, because it has fewer electrons"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Chlorine (3.16) pulls the shared pair harder than hydrogen (2.20), so chlorine ends up partially negative."
+    },
+    {
+      "id": "q7-polarity#1",
+      "quest": "q7-polarity",
+      "question": "Why is CO₂ nonpolar although each C=O bond is polar?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The molecule is linear, so the two bond dipoles cancel"
+        },
+        {
+          "id": "b",
+          "label": "Carbon and oxygen have the same electronegativity"
+        },
+        {
+          "id": "c",
+          "label": "The molecule is bent"
+        },
+        {
+          "id": "d",
+          "label": "The bonds are triple bonds"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The two equal bond dipoles point in opposite directions along a straight line and cancel."
+    },
+    {
+      "id": "q7-polarity#2",
+      "quest": "q7-polarity",
+      "question": "Which molecule is polar?",
+      "options": [
+        {
+          "id": "a",
+          "label": "H₂O"
+        },
+        {
+          "id": "b",
+          "label": "CCl₄"
+        },
+        {
+          "id": "c",
+          "label": "BF₃"
+        },
+        {
+          "id": "d",
+          "label": "CO₂"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Water is bent, so its two O–H bond dipoles add. The other three are symmetrical and their dipoles cancel."
+    },
+    {
+      "id": "q7-polarity#3",
+      "quest": "q7-polarity",
+      "question": "BF₃ has three very polar B–F bonds. Why is the molecule nonpolar?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It is trigonal planar, so the three dipoles cancel"
+        },
+        {
+          "id": "b",
+          "label": "It has a lone pair on boron"
+        },
+        {
+          "id": "c",
+          "label": "The bonds are not polar"
+        },
+        {
+          "id": "d",
+          "label": "Fluorine is less electronegative than boron"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Three equal dipoles at 120 degrees to one another add to zero."
+    },
+    {
+      "id": "q7-polarity#4",
+      "quest": "q7-polarity",
+      "question": "Which pair of atoms forms the most polar bond?",
+      "options": [
+        {
+          "id": "a",
+          "label": "H and F"
+        },
+        {
+          "id": "b",
+          "label": "H and C"
+        },
+        {
+          "id": "c",
+          "label": "C and C"
+        },
+        {
+          "id": "d",
+          "label": "H and H"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The larger the electronegativity difference, the more polar the bond. H (2.20) and F (3.98) differ most."
+    },
+    {
+      "id": "q8-hybrid#0",
+      "quest": "q8-hybrid",
+      "question": "What is the hybridization of carbon in CH₄?",
+      "options": [
+        {
+          "id": "a",
+          "label": "sp³"
+        },
+        {
+          "id": "b",
+          "label": "sp²"
+        },
+        {
+          "id": "c",
+          "label": "sp"
+        },
+        {
+          "id": "d",
+          "label": "sp³d"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Carbon has four domains, so it blends one s and three p orbitals into four sp³ orbitals."
+    },
+    {
+      "id": "q8-hybrid#1",
+      "quest": "q8-hybrid",
+      "question": "What is the hybridization of the carbon atoms in ethene, C₂H₄?",
+      "options": [
+        {
+          "id": "a",
+          "label": "sp²"
+        },
+        {
+          "id": "b",
+          "label": "sp³"
+        },
+        {
+          "id": "c",
+          "label": "sp"
+        },
+        {
+          "id": "d",
+          "label": "None"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Each carbon has three domains (two C–H and one C=C), so it is sp², with one unhybridized p orbital left for the pi bond."
+    },
+    {
+      "id": "q8-hybrid#2",
+      "quest": "q8-hybrid",
+      "question": "How many sigma bonds and pi bonds are in a molecule of HCN?",
+      "options": [
+        {
+          "id": "a",
+          "label": "2 sigma and 2 pi"
+        },
+        {
+          "id": "b",
+          "label": "3 sigma and 1 pi"
+        },
+        {
+          "id": "c",
+          "label": "1 sigma and 3 pi"
+        },
+        {
+          "id": "d",
+          "label": "2 sigma and 1 pi"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The H–C single bond is one sigma. The C≡N triple bond is one sigma and two pi."
+    },
+    {
+      "id": "q8-hybrid#3",
+      "quest": "q8-hybrid",
+      "question": "Why do the ends turn about a C–C single bond but not about a C=C double bond?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Rotating about the double bond would break its pi overlap"
+        },
+        {
+          "id": "b",
+          "label": "A single bond has no electrons"
+        },
+        {
+          "id": "c",
+          "label": "The double bond is longer"
+        },
+        {
+          "id": "d",
+          "label": "Double bonds are ionic"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The pi bond comes from side-to-side overlap of p orbitals, which is lost as one end turns."
+    },
+    {
+      "id": "q8-hybrid#4",
+      "quest": "q8-hybrid",
+      "question": "A carbon atom has three arms: two bonds to hydrogen and one double bond to another carbon. How many hybrid orbitals does it blend?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Three, one for each arm"
+        },
+        {
+          "id": "b",
+          "label": "Four, one for each pair of electrons"
+        },
+        {
+          "id": "c",
+          "label": "Two, one for each atom it bonds to"
+        },
+        {
+          "id": "d",
+          "label": "Five"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A double bond is one arm, so carbon has three arms and blends one s and two p orbitals into three hybrid orbitals, leaving one p orbital for the second bond."
+    },
+    {
+      "id": "q9-orbitals#0",
+      "quest": "q9-orbitals",
+      "question": "What is the bond order of N₂?",
+      "options": [
+        {
+          "id": "a",
+          "label": "3"
+        },
+        {
+          "id": "b",
+          "label": "2"
+        },
+        {
+          "id": "c",
+          "label": "1"
+        },
+        {
+          "id": "d",
+          "label": "2.5"
+        }
+      ],
+      "answer": "a",
+      "explanation": "N₂ has 8 electrons in bonding orbitals and 2 in antibonding orbitals: (8 − 2)/2 = 3."
+    },
+    {
+      "id": "q9-orbitals#1",
+      "quest": "q9-orbitals",
+      "question": "Why does He₂ not exist as a stable molecule?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its bonding and antibonding orbitals are both filled, so its bond order is zero"
+        },
+        {
+          "id": "b",
+          "label": "Helium atoms repel each other electrically"
+        },
+        {
+          "id": "c",
+          "label": "Helium has no electrons"
+        },
+        {
+          "id": "d",
+          "label": "Helium atoms are too big"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Two electrons in the bonding orbital and two in the antibonding orbital cancel: (2 − 2)/2 = 0."
+    },
+    {
+      "id": "q9-orbitals#2",
+      "quest": "q9-orbitals",
+      "question": "Which statement about O₂ does a molecular orbital diagram explain, but a Lewis structure does not?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It is attracted to a magnet because it has two unpaired electrons"
+        },
+        {
+          "id": "b",
+          "label": "It has a double bond"
+        },
+        {
+          "id": "c",
+          "label": "It is a gas at room temperature"
+        },
+        {
+          "id": "d",
+          "label": "It has 12 valence electrons"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The last two electrons go one each into two degenerate π* orbitals, so O₂ is paramagnetic."
+    },
+    {
+      "id": "q9-orbitals#3",
+      "quest": "q9-orbitals",
+      "question": "Put O₂⁺, O₂ and O₂⁻ in order of increasing bond length.",
+      "options": [
+        {
+          "id": "a",
+          "label": "O₂⁺ < O₂ < O₂⁻"
+        },
+        {
+          "id": "b",
+          "label": "O₂⁻ < O₂ < O₂⁺"
+        },
+        {
+          "id": "c",
+          "label": "O₂ < O₂⁺ < O₂⁻"
+        },
+        {
+          "id": "d",
+          "label": "All the same"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Bond orders are 2.5, 2 and 1.5. The higher the bond order, the shorter the bond."
+    },
+    {
+      "id": "q9-orbitals#4",
+      "quest": "q9-orbitals",
+      "question": "Why is B₂ paramagnetic?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its last two electrons occupy separate π orbitals, since π lies below σ in B₂"
+        },
+        {
+          "id": "b",
+          "label": "It has an odd number of electrons"
+        },
+        {
+          "id": "c",
+          "label": "Its bond order is zero"
+        },
+        {
+          "id": "d",
+          "label": "It has a triple bond"
+        }
+      ],
+      "answer": "a",
+      "explanation": "For B₂ the two π2p orbitals are filled before σ2p, so the last two electrons enter them singly."
+    },
+    {
+      "id": "boss-warden#0",
+      "quest": "boss-warden",
+      "question": "Which of these ionic solids would you expect to have the highest melting point?",
+      "options": [
+        {
+          "id": "a",
+          "label": "MgO"
+        },
+        {
+          "id": "b",
+          "label": "NaCl"
+        },
+        {
+          "id": "c",
+          "label": "KCl"
+        },
+        {
+          "id": "d",
+          "label": "NaI"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Lattice energy rises with ion charge and falls with ion size. MgO has 2+ and 2− ions that are small, so it is held hardest and melts highest."
+    },
+    {
+      "id": "boss-warden#2",
+      "quest": "boss-warden",
+      "question": "Why is the angle between the hydrogen atoms in ammonia a little less than 109.5°?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Its lone pair pushes the bonding pairs closer together"
+        },
+        {
+          "id": "b",
+          "label": "Nitrogen is larger than hydrogen"
+        },
+        {
+          "id": "c",
+          "label": "The N–H bonds are double bonds"
+        },
+        {
+          "id": "d",
+          "label": "Ammonia has no lone pair"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The lone pair on nitrogen takes more room than a bonding pair, squeezing the angle between the three hydrogen atoms to about 107 degrees."
+    },
+    {
+      "id": "boss-warden#3",
+      "quest": "boss-warden",
+      "question": "Which molecule is polar?",
+      "options": [
+        {
+          "id": "a",
+          "label": "NH₃"
+        },
+        {
+          "id": "b",
+          "label": "CO₂"
+        },
+        {
+          "id": "c",
+          "label": "BF₃"
+        },
+        {
+          "id": "d",
+          "label": "CCl₄"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Ammonia is a pyramid, so its bond dipoles add. The other three are symmetrical and their dipoles cancel."
+    },
+    {
+      "id": "q8-hybrid#5",
+      "quest": "q8-hybrid",
+      "question": "1,2-dichloroethene has cis and trans forms but 1,2-dichloroethane does not. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "The C=C double bond cannot rotate because of its π bond"
+        },
+        {
+          "id": "b",
+          "label": "The C–C single bond is stronger"
+        },
+        {
+          "id": "c",
+          "label": "Ethene has no σ bond"
+        },
+        {
+          "id": "d",
+          "label": "Chlorine atoms are too large to rotate"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A π bond holds the two carbons in one plane, so the groups on each end stay on the same side or opposite sides. A single bond turns freely, so the forms interconvert."
+    }
+  ],
+  "bench": {
+    "q1-joins": {
+      "problems": [
+        {
+          "id": "q1-joins#b1",
+          "quest": "q1-joins",
+          "question": "Which compound holds its atoms together by sharing electrons?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Sodium chloride, NaCl"
+            },
+            {
+              "id": "b",
+              "label": "Magnesium oxide, MgO"
+            },
+            {
+              "id": "c",
+              "label": "Carbon dioxide, CO₂"
+            },
+            {
+              "id": "d",
+              "label": "Potassium bromide, KBr"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Carbon and oxygen are both nonmetals, and neither gives up electrons outright, so they share. The other three pair a metal that gives up electrons with a nonmetal that takes them."
+        },
+        {
+          "id": "q1-joins#b2",
+          "quest": "q1-joins",
+          "question": "Calcium has two outer electrons and oxygen needs two. What is the formula of the compound they form?",
+          "options": [
+            {
+              "id": "a",
+              "label": "CaO"
+            },
+            {
+              "id": "b",
+              "label": "Ca₂O"
+            },
+            {
+              "id": "c",
+              "label": "Ca₂O₃"
+            },
+            {
+              "id": "d",
+              "label": "Ca₃O"
+            }
+          ],
+          "answer": "a",
+          "explanation": "One calcium gives up two electrons and one oxygen takes two, so they pair one to one."
+        }
+      ]
+    },
+    "q2-lattice": {
+      "problems": [
+        {
+          "id": "q2-lattice#b1",
+          "quest": "q2-lattice",
+          "question": "A metal wire bends when you pull it into shape, while a salt crystal shatters. Why can the metal bend?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Its layers of atoms slide past each other and the shared electrons keep holding them together"
+            },
+            {
+              "id": "b",
+              "label": "Its atoms are not bonded to each other"
+            },
+            {
+              "id": "c",
+              "label": "It has no electrons holding the atoms in place"
+            },
+            {
+              "id": "d",
+              "label": "Its layers are held by weaker covalent bonds"
+            }
+          ],
+          "answer": "a",
+          "explanation": "In a metal the electrons are shared across the whole lattice, so sliding a layer never puts like charges against each other. In salt, a slide lines up like ions, which repel."
+        },
+        {
+          "id": "q2-lattice#b2",
+          "quest": "q2-lattice",
+          "question": "Which solid conducts electricity when it is solid?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Sodium chloride"
+            },
+            {
+              "id": "b",
+              "label": "Diamond"
+            },
+            {
+              "id": "c",
+              "label": "Copper"
+            },
+            {
+              "id": "d",
+              "label": "Iodine"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Copper has electrons free to move through the whole lattice. The ions in sodium chloride are locked in place, and diamond and iodine have no free charges."
+        }
+      ]
+    },
+    "q3-distance": {
+      "problems": [
+        {
+          "id": "q3-distance#b1",
+          "quest": "q3-distance",
+          "question": "Two atoms are pushed closer than their bond length. Why does the energy rise steeply?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The bond becomes stronger without limit"
+            },
+            {
+              "id": "b",
+              "label": "The nuclei and the electron clouds repel each other"
+            },
+            {
+              "id": "c",
+              "label": "The atoms lose their electrons"
+            },
+            {
+              "id": "d",
+              "label": "Attraction between the nuclei increases"
+            }
+          ],
+          "answer": "b",
+          "explanation": "At the bond length attraction and repulsion balance. Closer than that, repulsion between the two nuclei and between the electron clouds grows faster than attraction."
+        },
+        {
+          "id": "q3-distance#b2",
+          "quest": "q3-distance",
+          "question": "The ions in one crystal carry charges of 1+ and 1-. In another, at the same spacing, they carry 2+ and 2-. How do the attractions between neighbouring ions compare?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The second is 2 times stronger"
+            },
+            {
+              "id": "b",
+              "label": "They are the same"
+            },
+            {
+              "id": "c",
+              "label": "The second is 8 times stronger"
+            },
+            {
+              "id": "d",
+              "label": "The second is 4 times stronger"
+            }
+          ],
+          "answer": "d",
+          "explanation": "By Coulomb's law the force goes with the product of the charges. (2 x 2) / (1 x 1) = 4."
+        }
+      ],
+      "worked": {
+        "id": "q3-distance#w",
+        "quest": "q3-distance",
+        "title": "Why Magnesium Oxide Outlasts Sodium Fluoride",
+        "setup": "Sodium fluoride (Na⁺, F⁻) and magnesium oxide (Mg²⁺, O²⁻) are both lattices of alternating ions. The ion radii are Na⁺ 102 pm, F⁻ 133 pm, Mg²⁺ 72 pm and O²⁻ 140 pm. Compare the attraction between neighbouring ions in the two crystals.",
+        "steps": [
+          {
+            "say": "What is the distance between the centres of a Na⁺ and an F⁻ that touch?",
+            "kind": "number",
+            "answer": 235,
+            "calc": "102+133",
+            "unit": "pm",
+            "hint": "Touching ions are one radius of each apart.",
+            "explain": "Distance = sum of the radii = 102 + 133 = 235 pm."
+          },
+          {
+            "say": "What is the distance between the centres of an Mg²⁺ and an O²⁻ that touch?",
+            "kind": "number",
+            "answer": 212,
+            "calc": "72+140",
+            "unit": "pm",
+            "hint": "Same method.",
+            "explain": "Distance = 72 + 140 = 212 pm."
+          },
+          {
+            "say": "What is the product of the charges, ignoring signs, in MgO?",
+            "kind": "number",
+            "answer": 4,
+            "calc": "2*2",
+            "hint": "Multiply the size of the two charges. In NaF it is 1 x 1 = 1.",
+            "explain": "MgO is 2 x 2 = 4, compared with 1 for NaF."
+          },
+          {
+            "say": "Attraction goes as (charge product) / distance. How many times larger is it in MgO than in NaF?",
+            "kind": "number",
+            "answer": 4.435,
+            "calc": "(4/212)/(1/235)",
+            "unit": "times",
+            "tol": 0.01,
+            "hint": "Work out charge product / distance for each, then divide MgO by NaF.",
+            "explain": "NaF: 1/235 = 0.00426. MgO: 4/212 = 0.0189. The ratio is 4.4."
+          },
+          {
+            "say": "What does this say about their melting points?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "MgO melts at a much higher temperature"
+              },
+              {
+                "id": "b",
+                "label": "NaF melts at a much higher temperature"
+              },
+              {
+                "id": "c",
+                "label": "They melt at about the same temperature"
+              },
+              {
+                "id": "d",
+                "label": "It cannot be told from the charges"
+              }
+            ],
+            "answer": "a",
+            "hint": "Melting means pulling the ions out of their positions.",
+            "explain": "Stronger attraction takes more energy to overcome. MgO melts near 2850 °C, NaF near 993 °C."
+          }
+        ],
+        "finish": "Larger charges and shorter distances both raise the attraction. Here the charge product alone gives a factor of four, and the smaller spacing adds more."
+      }
+    },
+    "q4-dots": {
+      "problems": [
+        {
+          "id": "q4-dots#b1",
+          "quest": "q4-dots",
+          "question": "How many valence electrons must the Lewis structure of the sulfate ion, SO₄²⁻, show?",
+          "options": [
+            {
+              "id": "a",
+              "label": "30"
+            },
+            {
+              "id": "b",
+              "label": "32"
+            },
+            {
+              "id": "c",
+              "label": "24"
+            },
+            {
+              "id": "d",
+              "label": "34"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Sulfur brings 6 and each of four oxygens brings 6: 6 + 24 = 30. The 2- charge adds two more, giving 32."
+        },
+        {
+          "id": "q4-dots#b2",
+          "quest": "q4-dots",
+          "question": "Which molecule has a lone pair on its central atom?",
+          "options": [
+            {
+              "id": "a",
+              "label": "CH₄"
+            },
+            {
+              "id": "b",
+              "label": "BF₃"
+            },
+            {
+              "id": "c",
+              "label": "CO₂"
+            },
+            {
+              "id": "d",
+              "label": "NH₃"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Nitrogen has 5 valence electrons: three form bonds and two are left as a lone pair. Carbon in CH₄ and CO₂ and boron in BF₃ use all their electrons in bonds."
+        }
+      ]
+    },
+    "q5-resonance": {
+      "problems": [
+        {
+          "id": "q5-resonance#b1",
+          "quest": "q5-resonance",
+          "question": "What is the formal charge on nitrogen in the ammonium ion, NH₄⁺, which has four N–H bonds and no lone pairs?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0"
+            },
+            {
+              "id": "b",
+              "label": "-1"
+            },
+            {
+              "id": "c",
+              "label": "+1"
+            },
+            {
+              "id": "d",
+              "label": "+4"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Formal charge = valence electrons - lone-pair electrons - bonds = 5 - 0 - 4 = +1."
+        },
+        {
+          "id": "q5-resonance#b2",
+          "quest": "q5-resonance",
+          "question": "Which has the longest carbon–oxygen bond: CO, CO₂ or the carbonate ion, CO₃²⁻?",
+          "options": [
+            {
+              "id": "a",
+              "label": "CO₃²⁻"
+            },
+            {
+              "id": "b",
+              "label": "CO₂"
+            },
+            {
+              "id": "c",
+              "label": "CO"
+            },
+            {
+              "id": "d",
+              "label": "All are the same length"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Bond order falls from 3 in CO to 2 in CO₂ to 1⅓ in carbonate. A lower bond order means a longer, weaker bond."
+        }
+      ],
+      "worked": {
+        "id": "q5-resonance#w",
+        "quest": "q5-resonance",
+        "title": "Drawing the Nitrate Ion",
+        "setup": "Build a Lewis structure of the nitrate ion, NO₃⁻, with nitrogen in the centre, and work out its formal charges and bond order.",
+        "steps": [
+          {
+            "say": "How many valence electrons must be placed?",
+            "kind": "number",
+            "answer": 24,
+            "calc": "5+3*6+1",
+            "hint": "N brings 5, each O brings 6, and the 1- charge adds one.",
+            "explain": "5 + 3(6) + 1 = 24 electrons."
+          },
+          {
+            "say": "Three single N–O bonds use up some electrons. If each oxygen then gets three lone pairs, how many electrons remain for nitrogen?",
+            "kind": "number",
+            "answer": 0,
+            "calc": "24-6-18",
+            "hint": "Bonds use 6, and three oxygens with three lone pairs take 18.",
+            "explain": "24 - 6 - 18 = 0. Nitrogen has only six electrons from its three bonds, so it is short of an octet."
+          },
+          {
+            "say": "How is nitrogen given an octet?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Nitrogen takes a lone pair from the outside"
+              },
+              {
+                "id": "b",
+                "label": "One oxygen shares a lone pair to make a double bond"
+              },
+              {
+                "id": "c",
+                "label": "An extra electron is added to nitrogen"
+              },
+              {
+                "id": "d",
+                "label": "A fourth oxygen is added"
+              }
+            ],
+            "answer": "b",
+            "hint": "The oxygens have the electrons to spare, and nothing else may be added.",
+            "explain": "A lone pair on one oxygen becomes a second N–O bond. Nitrogen now has four pairs."
+          },
+          {
+            "say": "What is the formal charge on nitrogen (one double bond, two single, no lone pairs)?",
+            "kind": "number",
+            "answer": 1,
+            "calc": "5-0-4",
+            "hint": "Valence electrons - lone-pair electrons - bonds. Nitrogen has 4 bonds.",
+            "explain": "5 - 0 - 4 = +1."
+          },
+          {
+            "say": "What is the formal charge on each single-bonded oxygen (three lone pairs, one bond)?",
+            "kind": "number",
+            "answer": -1,
+            "calc": "6-6-1",
+            "hint": "Same formula with 6 lone-pair electrons and 1 bond.",
+            "explain": "6 - 6 - 1 = -1. With +1 on N and -1 on two O the total is -1, the charge of the ion."
+          },
+          {
+            "say": "The double bond can sit on any of the three oxygens. What is the bond order of each N–O bond?",
+            "kind": "number",
+            "answer": 1.333,
+            "calc": "(2+1+1)/3",
+            "tol": 0.01,
+            "hint": "Four bonding pairs shared among three positions.",
+            "explain": "(2 + 1 + 1) / 3 = 1.33. All three bonds are the same length, between single and double."
+          }
+        ],
+        "finish": "Counting electrons, completing octets and checking formal charges gives the structure. Resonance spreads the double bond evenly, so all three N–O bonds match."
+      }
+    },
+    "q6-shape": {
+      "problems": [
+        {
+          "id": "q6-shape#b1",
+          "quest": "q6-shape",
+          "question": "What is the molecular geometry of SF₆?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Trigonal bipyramidal"
+            },
+            {
+              "id": "b",
+              "label": "Square planar"
+            },
+            {
+              "id": "c",
+              "label": "Octahedral"
+            },
+            {
+              "id": "d",
+              "label": "Tetrahedral"
+            }
+          ],
+          "answer": "c",
+          "explanation": "Sulfur has six bonding pairs and no lone pairs. Six domains spread to the corners of an octahedron, 90° apart."
+        },
+        {
+          "id": "q6-shape#b2",
+          "quest": "q6-shape",
+          "question": "ClF₃ has five electron domains on chlorine, two of them lone pairs. What is its molecular geometry?",
+          "options": [
+            {
+              "id": "a",
+              "label": "T-shaped"
+            },
+            {
+              "id": "b",
+              "label": "Trigonal planar"
+            },
+            {
+              "id": "c",
+              "label": "Trigonal pyramidal"
+            },
+            {
+              "id": "d",
+              "label": "See-saw"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Five domains form a trigonal bipyramid. The two lone pairs take the roomier equatorial positions, leaving the three fluorines in a T."
+        }
+      ]
+    },
+    "q7-polarity": {
+      "problems": [
+        {
+          "id": "q7-polarity#b1",
+          "quest": "q7-polarity",
+          "question": "Electronegativities: H 2.1, C 2.5, O 3.5. Which bond in methanol, CH₃OH, is the most polar?",
+          "options": [
+            {
+              "id": "a",
+              "label": "C–H"
+            },
+            {
+              "id": "b",
+              "label": "O–H"
+            },
+            {
+              "id": "c",
+              "label": "C–O"
+            },
+            {
+              "id": "d",
+              "label": "All are equally polar"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Polarity follows the difference in electronegativity: O–H is 1.4, C–O is 1.0 and C–H is 0.4."
+        },
+        {
+          "id": "q7-polarity#b2",
+          "quest": "q7-polarity",
+          "question": "CCl₄ is nonpolar but CHCl₃ is polar. Why?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Hydrogen is larger than chlorine"
+            },
+            {
+              "id": "b",
+              "label": "CHCl₃ has a lone pair on carbon"
+            },
+            {
+              "id": "c",
+              "label": "The C–H bond is stronger than C–Cl"
+            },
+            {
+              "id": "d",
+              "label": "Replacing one Cl with H leaves the bond dipoles unbalanced"
+            }
+          ],
+          "answer": "d",
+          "explanation": "In CCl₄ the four equal dipoles cancel by symmetry. Swapping one Cl for H breaks that symmetry, so a net dipole remains."
+        }
+      ],
+      "worked": {
+        "id": "q7-polarity#w",
+        "quest": "q7-polarity",
+        "title": "How Ionic Is the H–Cl Bond?",
+        "setup": "Hydrogen chloride has a measured dipole moment of 1.08 D and a bond length of 127.4 pm. Estimate its percent ionic character by comparing with a full charge of one electron separated by that distance. (e = 1.602 x 10⁻¹⁹ C, 1 D = 3.336 x 10⁻³⁰ C m)",
+        "steps": [
+          {
+            "say": "Write the bond length in metres.",
+            "kind": "number",
+            "answer": 1.274e-10,
+            "calc": "127.4e-12",
+            "unit": "m",
+            "hint": "One picometre is 10⁻¹² m.",
+            "explain": "127.4 pm = 1.274 x 10⁻¹⁰ m."
+          },
+          {
+            "say": "If H and Cl were fully charged ions, the dipole would be e x d. What is that in C m?",
+            "kind": "number",
+            "answer": 2.041e-29,
+            "calc": "1.602e-19*1.274e-10",
+            "unit": "C m",
+            "hint": "Multiply the charge of one electron by the bond length.",
+            "explain": "(1.602 x 10⁻¹⁹)(1.274 x 10⁻¹⁰) = 2.04 x 10⁻²⁹ C m."
+          },
+          {
+            "say": "Convert that to debye.",
+            "kind": "number",
+            "answer": 6.118,
+            "calc": "2.041e-29/3.336e-30",
+            "unit": "D",
+            "hint": "Divide by 3.336 x 10⁻³⁰ C m per debye.",
+            "explain": "2.041 x 10⁻²⁹ / 3.336 x 10⁻³⁰ = 6.12 D."
+          },
+          {
+            "say": "What percent of that full-charge dipole does HCl actually show?",
+            "kind": "number",
+            "answer": 17.65,
+            "calc": "1.08/6.118*100",
+            "unit": "%",
+            "tol": 0.01,
+            "hint": "Measured dipole / full-charge dipole x 100.",
+            "explain": "1.08 / 6.12 x 100 = 17.6%."
+          },
+          {
+            "say": "Which description fits H–Cl best?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Polar covalent"
+              },
+              {
+                "id": "b",
+                "label": "Ionic"
+              },
+              {
+                "id": "c",
+                "label": "Nonpolar covalent"
+              },
+              {
+                "id": "d",
+                "label": "Metallic"
+              }
+            ],
+            "answer": "a",
+            "hint": "Compare 17.6% with 0% (equal sharing) and 100% (full transfer).",
+            "explain": "The electrons are shared but pulled toward chlorine. That is a polar covalent bond."
+          }
+        ],
+        "finish": "Measured dipole divided by the full-charge dipole gives a percent. Most bonds fall between 0% and 100%."
+      }
+    },
+    "q8-hybrid": {
+      "problems": [
+        {
+          "id": "q8-hybrid#b1",
+          "quest": "q8-hybrid",
+          "question": "What is the hybridization of boron in BF₃?",
+          "options": [
+            {
+              "id": "a",
+              "label": "sp"
+            },
+            {
+              "id": "b",
+              "label": "sp³"
+            },
+            {
+              "id": "c",
+              "label": "sp³d"
+            },
+            {
+              "id": "d",
+              "label": "sp²"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Boron has three bonding domains and no lone pair. Three domains need three hybrid orbitals: one s and two p, so sp²."
+        },
+        {
+          "id": "q8-hybrid#b2",
+          "quest": "q8-hybrid",
+          "question": "What is the hybridization of nitrogen in NH₃?",
+          "options": [
+            {
+              "id": "a",
+              "label": "sp²"
+            },
+            {
+              "id": "b",
+              "label": "sp³"
+            },
+            {
+              "id": "c",
+              "label": "sp"
+            },
+            {
+              "id": "d",
+              "label": "None, since NH₃ has only three bonds"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Hybrids are counted from electron domains, and the lone pair is a domain. Nitrogen has 3 + 1 = 4, so sp³."
+        }
+      ]
+    },
+    "q9-orbitals": {
+      "problems": [
+        {
+          "id": "q9-orbitals#b1",
+          "quest": "q9-orbitals",
+          "question": "The superoxide ion O₂⁻ has 13 valence electrons. Its molecular orbitals hold 8 bonding electrons and 5 antibonding electrons. What is its bond order?",
+          "options": [
+            {
+              "id": "a",
+              "label": "3"
+            },
+            {
+              "id": "b",
+              "label": "1.5"
+            },
+            {
+              "id": "c",
+              "label": "2"
+            },
+            {
+              "id": "d",
+              "label": "1"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Bond order = (bonding - antibonding) / 2 = (8 - 5) / 2 = 1.5."
+        },
+        {
+          "id": "q9-orbitals#b2",
+          "quest": "q9-orbitals",
+          "question": "Which of these is diamagnetic, meaning all its electrons are paired?",
+          "options": [
+            {
+              "id": "a",
+              "label": "O₂"
+            },
+            {
+              "id": "b",
+              "label": "B₂"
+            },
+            {
+              "id": "c",
+              "label": "O₂⁻"
+            },
+            {
+              "id": "d",
+              "label": "N₂"
+            }
+          ],
+          "answer": "d",
+          "explanation": "N₂ fills every molecular orbital with pairs. O₂ and B₂ each have two unpaired electrons, and O₂⁻ has one."
+        }
+      ]
+    },
+    "boss-warden": {
+      "problems": [
+        {
+          "id": "boss-warden#b1",
+          "quest": "boss-warden",
+          "question": "Which species has a tetrahedral molecular geometry?",
+          "options": [
+            {
+              "id": "a",
+              "label": "NH₃"
+            },
+            {
+              "id": "b",
+              "label": "NH₄⁺"
+            },
+            {
+              "id": "c",
+              "label": "H₂O"
+            },
+            {
+              "id": "d",
+              "label": "XeF₄"
+            }
+          ],
+          "answer": "b",
+          "explanation": "Ammonium has four bonding pairs and no lone pairs. NH₃ and H₂O have the same four domains, but their lone pairs make them pyramidal and bent."
+        },
+        {
+          "id": "boss-warden#b2",
+          "quest": "boss-warden",
+          "question": "How many sigma bonds and pi bonds are in acetylene, H–C≡C–H?",
+          "options": [
+            {
+              "id": "a",
+              "label": "5 sigma and none pi"
+            },
+            {
+              "id": "b",
+              "label": "2 sigma and 3 pi"
+            },
+            {
+              "id": "c",
+              "label": "4 sigma and 1 pi"
+            },
+            {
+              "id": "d",
+              "label": "3 sigma and 2 pi"
+            }
+          ],
+          "answer": "d",
+          "explanation": "Each single link is one sigma. The triple bond is one sigma plus two pi, so the molecule has 2 C–H sigma + 1 C–C sigma = 3 sigma, and 2 pi."
+        }
+      ],
+      "worked": {
+        "id": "boss-warden#w",
+        "quest": "boss-warden",
+        "title": "Everything About Sulfur Dioxide",
+        "setup": "Work out the Lewis structure, formal charges, bond order, shape, polarity and hybridization of SO₂, with sulfur in the centre.",
+        "steps": [
+          {
+            "say": "How many valence electrons does SO₂ have?",
+            "kind": "number",
+            "answer": 18,
+            "calc": "6+2*6",
+            "hint": "Sulfur and each oxygen bring 6.",
+            "explain": "6 + 6 + 6 = 18 electrons."
+          },
+          {
+            "say": "Give sulfur one double bond, one single bond and one lone pair. How many electrons are around sulfur?",
+            "kind": "number",
+            "answer": 8,
+            "calc": "4+2+2",
+            "hint": "Count the electrons in its bonds and its lone pair.",
+            "explain": "The double bond gives 4, the single bond 2 and the lone pair 2: 8, an octet."
+          },
+          {
+            "say": "What is the formal charge on sulfur in that drawing?",
+            "kind": "number",
+            "answer": 1,
+            "calc": "6-2-3",
+            "hint": "Valence electrons - lone-pair electrons - bonds (3 bonds here).",
+            "explain": "6 - 2 - 3 = +1."
+          },
+          {
+            "say": "What is the formal charge on the single-bonded oxygen (three lone pairs)?",
+            "kind": "number",
+            "answer": -1,
+            "calc": "6-6-1",
+            "hint": "Same formula for oxygen.",
+            "explain": "6 - 6 - 1 = -1. The double-bonded oxygen is 6 - 4 - 2 = 0."
+          },
+          {
+            "say": "The double bond can sit on either oxygen. What is the bond order of each S–O bond?",
+            "kind": "number",
+            "answer": 1.5,
+            "calc": "(2+1)/2",
+            "hint": "Three bonding pairs shared over two positions.",
+            "explain": "(2 + 1) / 2 = 1.5."
+          },
+          {
+            "say": "Sulfur has three domains (two bonds and a lone pair). What is the molecular geometry?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Bent"
+              },
+              {
+                "id": "b",
+                "label": "Linear"
+              },
+              {
+                "id": "c",
+                "label": "Trigonal planar"
+              },
+              {
+                "id": "d",
+                "label": "Tetrahedral"
+              }
+            ],
+            "answer": "a",
+            "hint": "The lone pair is a domain but is not an atom.",
+            "explain": "Three domains point toward the corners of a triangle. Only two have atoms, so the shape is bent at about 119°."
+          },
+          {
+            "say": "Is SO₂ polar?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Yes: the bond dipoles do not cancel in a bent shape"
+              },
+              {
+                "id": "b",
+                "label": "No: each bond is nonpolar"
+              },
+              {
+                "id": "c",
+                "label": "No: the dipoles cancel"
+              },
+              {
+                "id": "d",
+                "label": "Yes: because sulfur has a +1 formal charge"
+              }
+            ],
+            "answer": "a",
+            "hint": "Picture the two S–O dipoles on a bent molecule.",
+            "explain": "Bond dipoles in a bent shape add rather than cancel, giving a net dipole."
+          },
+          {
+            "say": "What is the hybridization of sulfur?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "sp²"
+              },
+              {
+                "id": "b",
+                "label": "sp"
+              },
+              {
+                "id": "c",
+                "label": "sp³"
+              },
+              {
+                "id": "d",
+                "label": "sp³d"
+              }
+            ],
+            "answer": "a",
+            "hint": "Count electron domains: three here.",
+            "explain": "Three domains need three hybrid orbitals: one s and two p, so sp². The leftover p orbital forms the pi bond."
+          }
+        ],
+        "finish": "Electron count gave the structure, formal charges chose it, resonance set the bond order, and domain count gave the shape, polarity and hybridization."
+      }
+    }
+  }
+}

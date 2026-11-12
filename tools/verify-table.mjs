@@ -1260,7 +1260,8 @@ console.log('\nTour — every tool on a table has a step that says what it is an
       }
       // The Tour speaks in words the quest has earned by this stage, like every other line the player reads.
       for (const v of mod.VOCABULARY || []) {
-        if (v.introducedAt > i) for (const s of steps) if (!s.flag.startsWith(`tour_${t.kit}_`) || s.flag.includes('_bench_') ? false : v.term.test(`${s.name} ${s.desc}`)) fail(`${label}: Tour step "${s.name}" uses a word the quest has not earned yet (${v.term})`);
+        // A term this stage's own briefing teaches is earned on this stage (teaching pass 2026-11-12: briefings put telling before doing).
+        if (v.introducedAt > i && !v.term.test(mod.STAGES[i]?.briefing?.body || '')) for (const s of steps) if (!s.flag.startsWith(`tour_${t.kit}_`) || s.flag.includes('_bench_') ? false : v.term.test(`${s.name} ${s.desc}`)) fail(`${label}: Tour step "${s.name}" uses a word the quest has not earned yet (${v.term})`);
       }
       if (new Set(steps.map(s => s.flag)).size !== steps.length) fail(`${label}: two Tour steps share a once-only flag`);
       // Ligar's tools all have words of their own (`table/tour-ligar.js`): none is left to the generic "drag it to move it" step.

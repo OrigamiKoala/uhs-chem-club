@@ -28,10 +28,11 @@ const ROW = { 2: [52, 98], 3: [30, 75, 120], 4: [21, 57, 93, 129] };
  * @param {string[]} o.hints    three one-sentence rungs
  * @param {{title:string, body:string}} o.reward
  */
-export function predictStage({ key, title, prompt, cards, hints, reward }) {
+export function predictStage({ key, title, prompt, cards, hints, reward, briefing = null }) {
   const xs = ROW[cards.length];
   return {
     title,
+    ...(briefing ? { briefing } : {}),
     predict: true,
     prompt,
     widget: { type: 'table', label: 'The bench' },
@@ -71,3 +72,24 @@ export function verdictLine(key, rightId) {
   if (!id) return '';
   return id === rightId ? 'Your prediction was confirmed. ' : 'Your prediction was not confirmed. ';
 }
+
+/* ------------------------------------------------------------------
+   THE ENERGY CURVE (`kits/bonds.js`, the `wells` fixture)
+   A plot of energy against the distance between two atoms, and a track on which the pair is dragged. Used by `q1-joins`
+   (why two atoms bond) and `q3-distance` (bond length and bond energy), so its declaration lives here.
+   ------------------------------------------------------------------ */
+
+/** A curve fixture's declaration: `rows` are `{id, pair, label, start}`, one dragged pair each; `at` and `size` its place. */
+export function wells(id, rows, { at, size, dmax = 300, top = 9, pitch = 7, margin = 4, discs = false, marker = null, release = null, plot, runLabel, min = 0, grab = 0, icon, discK = 0, components = false, label = 'Energy of the pair' }) {
+  const dials = {};
+  for (const r of rows) dials[r.id] = { min, max: dmax, step: 2, value: r.start, label: r.label };
+  if (marker) dials[marker.id] = { min: 0, max: marker.max, step: marker.step, value: 0, label: marker.label };
+  return {
+    id, kind: 'wells', label, at, size, ...(runLabel ? { runLabel } : { noRun: true }), dials,
+    props: {
+      rows, top, rowPitch: pitch, margin, discs, plot, ...(components ? { components } : {}), ...(discK ? { discK } : {}), ...(marker ? { marker: marker.id } : {}), ...(release ? { release } : {}),
+      ...(grab ? { grab: { [rows[0].id]: grab } } : {}), ...(icon ? { icon } : {})
+    }
+  };
+}
+export const wellRow = (id, pair, label, start) => ({ id, pair, label, start });

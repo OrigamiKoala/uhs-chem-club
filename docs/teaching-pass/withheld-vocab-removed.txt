@@ -7,3 +7,13 @@
     'unit10/q3-galvanic': /\b(galvanic cells?|salt bridges?|anodes?|cathodes?|oxidation|reduction|cell notation|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
     'unit10/q1-halves': /\b(oxidation numbers?|half-reactions?|oxidation|reduction|redox|oxidi[sz]ing agents?|reducing agents?|oxidi[sz]ed|activity series|sacrificial|displacement|galvanic cells?|salt bridges?|anodes?|cathodes?|standard reduction potential|E°|Nernst|Faraday|electrolysis|electrolytic|coulombs?)\b/i,
     'unit10/q6-electrolysis': /\b(electrolytic cells?|electrolysis|cathodes?|anodes?|oxidation|reduction|coulombs?|faraday.?s law|overpotential)\b/i,
+
+# Ligar (unit03), removed 2026-11-12 by the teaching pass: terms are now glossed in a briefing at first use.
+    'unit03/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
+    'unit03/q4-dots': /\b(lewis structures?|lone pairs?|octets?|incomplete octets?|expanded octets?|central atoms?|polyatomic ions?|free radicals?)\b/i,
+    'unit03/q5-resonance': /\b(formal charges?|resonance structures?|resonance|fractional bond orders?|delocali[sz]ed)\b/i,
+    'unit03/q6-shape': /\b(electron domains?|domains?|linear|trigonal planar|tetrahedral|vsepr|trigonal pyramidal|bent|trigonal bipyramidal|seesaw|octahedral|square planar|electron geometry|electron geometries|molecular geometry|molecular geometries)\b/i,
+    'unit03/q7-polarity': /\b(partial charges?|polar covalent|nonpolar|polar|molecular dipoles?|bond dipoles?|dipoles?)\b/i,
+    'unit03/q8-hybrid': /\b(restricted rotation|sigma|pi bonds?|pi|hybrid(?:s|i[sz]ation|i[sz]ed)?|sp[3\u00b3]d[2\u00b2]?(?!\w)|sp[2\u00b2](?!\w)|sp[3\u00b3](?!\w)|sp(?![\w\u00b2\u00b3]))/i,
+    'unit03/q9-orbitals': /\b(antibonding|bonding orbitals?|molecular orbitals?|paramagnetic|diamagnetic)\b/i,
+    'unit03/q3-distance': /\b(potential energy curves?|bond lengths?|bond energ(?:y|ies)|bond orders?|lattice energ(?:y|ies))\b/i,

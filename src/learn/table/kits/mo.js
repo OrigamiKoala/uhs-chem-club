@@ -342,7 +342,7 @@ function paintRack(ctx, f, state, b) {
   if (f.props.live && merged) {
     const read = readOf(state, f.props.rack, order);
     const lines = f.props.plain ? [`UNPAIRED ${read.unpaired}`] : [`PLACED ${read.total}`, `UNPAIRED ${read.unpaired}`];
-    if (f.props.counts) lines.push(`LOWER ${read.bonding}  UPPER ${read.anti}`);
+    if (f.props.counts) lines.push(`BONDING ${read.bonding}`, `ANTIBONDING ${read.anti}`);
     lines.forEach((t, i) => plateText(ctx, t, b.x1 - 12, b.y0 + size * (2 + i * 1.5), { size, align: 'right', weight: 700, color: PHOS }));
   }
 }
@@ -371,10 +371,7 @@ function paintMagnet(ctx, f, state, b) {
   const read = f.props.slot ? null : magnetRead(state, f.id);
   let l1 = f.props.slot ? 'TEST THE GAS IN THE SLOT' : 'NOT TESTED';
   let l2 = '';
-  if (read?.tested) {
-    l1 = read.pull > 0 ? 'ATTRACTED' : 'REPELLED';
-    l2 = read.pull > 0 ? `STRENGTH ${read.pull}` : 'SLIGHTLY';
-  }
+  if (read?.tested) l1 = read.pull > 0 ? 'ATTRACTED' : 'NOT ATTRACTED';
   fitted(ctx, l1, cx, top + r * 3.2, w - 4, { size: size * 0.95, weight: 700, color: read?.tested ? AMBER : PLATE_COLORS.dim });
   if (l2) fitted(ctx, l2, cx, top + r * 3.2 + size * 1.5, w - 4, { size: size * 0.95, weight: 700, color: AMBER });
 }
@@ -393,8 +390,126 @@ function paintBondTest(ctx, f, state, b) {
   });
 }
 
+/* ------------------------------------------------------------------
+   THE OVERLAP TRACK (teaching pass 2026-11-12)
+   Two atoms on a line, each with one orbital. The `gap` dial is the distance between the nuclei; the `sign` dial (where a
+   stage gives one) turns one orbital over. The picture is the combined orbital, the sum of the two with their signs: its
+   density (the square of the sum) is drawn cell by cell, so where the signs agree the cloud thickens between the nuclei
+   and where they differ a gap opens there. A level at the side shows the combined orbital's energy against the two
+   separate atoms': it falls as like signs overlap and rises as unlike signs do. A pure painter of the dials.
+   The shapes are a sketch (a hydrogen-like 1s, or a p orbital standing across the line), not a calculation of a molecule.
+   ------------------------------------------------------------------ */
+
+const REACH = 53;                 // pm: how far a hydrogen 1s orbital reaches (the Bohr radius)
+export const OVERLAP_CLOSE = 110; // pm: the atoms count as brought together at or inside this distance
+const overlapOf = gap => Math.exp(-(gap - 70) / 90);
+
+/** One atom's orbital at a point (pm from its nucleus): a 1s cloud, or a p orbital whose two lobes stand above and below the line. */
+function orbitalAt(type, x, y) {
+  const r = Math.hypot(x, y);
+  return type === 'p' ? 2.4 * (y / REACH) * Math.exp(-r / (REACH * 0.85)) : Math.exp(-r / REACH);
+}
+
+/** The combined orbital at a point (pm from the midpoint of the two nuclei). */
+export function combinedAt(type, gap, opposite, x, y) {
+  return orbitalAt(type, x + gap / 2, y) + (opposite ? -1 : 1) * orbitalAt(type, x - gap / 2, y);
+}
+
+/** What an overlap track shows: the distance, whether the signs differ, whether the atoms are together, and the level's shift (− is lower). */
+export function overlapRead(state, fid) {
+  const f = state.fixtures[fid];
+  const gap = f.dials.gap.value;
+  const opposite = f.dials.sign ? f.dials.sign.value === 1 : Boolean(f.props.opposite);
+  return { gap, opposite, type: f.props.type, close: gap <= OVERLAP_CLOSE, moved: gap < f.dials.gap.max, shift: (opposite ? 1 : -1) * overlapOf(gap) };
+}
+
+function paintOverlap(ctx, f, state, b) {
+  const r = overlapRead(state, f.id);
+  const { sc } = b;
+  const size = Math.max(7, 2.1 * sc);
+  const nDials = Object.keys(f.dials).length;
+  const top = b.y0 + (9.6 + (nDials - 1) * 5 + 4.5) * sc;
+  const px0 = b.x0 + 2 * sc;
+  const px1 = b.x0 + (b.x1 - b.x0) * 0.7;
+  const py0 = top;
+  const py1 = b.y1 - 2 * sc;
+  const cx = (px0 + px1) / 2;
+  const cy = (py0 + py1) / 2;
+  const k = (px1 - px0) / 560;            // the picture is 560 pm wide
+  ctx.fillStyle = '#0d0c0a';
+  ctx.fillRect(px0, py0, px1 - px0, py1 - py0);
+  // The combined orbital's density, cell by cell: light where the sum is positive, green where it is negative.
+  const cell = Math.max(3, Math.round((px1 - px0) / 60));
+  for (let x = px0; x + cell <= px1 + 0.5; x += cell) {
+    for (let y = py0; y + cell <= py1 + 0.5; y += cell) {
+      const psi = combinedAt(r.type, r.gap, r.opposite, (x + cell / 2 - cx) / k, (y + cell / 2 - cy) / k);
+      const dens = psi * psi;
+      if (dens < 0.006) continue;
+      ctx.globalAlpha = Math.min(0.92, dens * 1.5);
+      ctx.fillStyle = psi > 0 ? PLATE_COLORS.text : PHOS;
+      ctx.fillRect(x, y, cell - 0.6, cell - 0.6);
+    }
+  }
+  ctx.globalAlpha = 1;
+  // The line between the nuclei, the nuclei, and the sign of each atom's orbital (two signs on a p orbital: one for each lobe).
+  const ax = cx - (r.gap / 2) * k;
+  const bx = cx + (r.gap / 2) * k;
+  ctx.strokeStyle = PLATE_COLORS.dim;
+  ctx.lineWidth = 1;
+  ctx.setLineDash?.([2, 3]);
+  ctx.beginPath();
+  ctx.moveTo(px0 + 2, cy); ctx.lineTo(px1 - 2, cy);
+  ctx.stroke();
+  ctx.setLineDash?.([]);
+  const lift = 62 * k;
+  [[ax, 1], [bx, r.opposite ? -1 : 1]].forEach(([x, s]) => {
+    ctx.fillStyle = AMBER;
+    ctx.beginPath();
+    ctx.arc(x, cy, Math.max(1.6, 0.7 * sc), 0, Math.PI * 2);
+    ctx.fill();
+    if (r.type === 'p') {
+      plateText(ctx, s > 0 ? '+' : '−', x, cy - lift, { size: size * 1.2, weight: 700, align: 'center', base: 'middle', color: '#0d0c0a' });
+      plateText(ctx, s > 0 ? '−' : '+', x, cy + lift, { size: size * 1.2, weight: 700, align: 'center', base: 'middle', color: '#0d0c0a' });
+    } else {
+      plateText(ctx, s > 0 ? '+' : '−', x, cy - Math.max(size, 30 * k), { size: size * 1.2, weight: 700, align: 'center', base: 'middle', color: '#0d0c0a' });
+    }
+  });
+  plateText(ctx, 'NUCLEUS', ax, py1 - size * 0.5, { size: size * 0.75, align: 'center', color: PLATE_COLORS.dim });
+  plateText(ctx, 'NUCLEUS', bx, py1 - size * 0.5, { size: size * 0.75, align: 'center', color: PLATE_COLORS.dim });
+  // The energy of the combined orbital against the two separate atoms'.
+  const lx0 = px1 + 3 * sc;
+  const lx1 = b.x1 - 2 * sc;
+  const lw = (lx1 - lx0) / 3;
+  const amp = (py1 - py0) * 0.3;
+  const yc = cy - r.shift * amp;
+  ctx.strokeStyle = PLATE_COLORS.dust;
+  ctx.lineWidth = Math.max(1.5, 0.4 * sc);
+  ctx.beginPath();
+  ctx.moveTo(lx0, cy); ctx.lineTo(lx0 + lw * 0.8, cy);
+  ctx.moveTo(lx1 - lw * 0.8, cy); ctx.lineTo(lx1, cy);
+  ctx.stroke();
+  ctx.strokeStyle = AMBER;
+  ctx.beginPath();
+  ctx.moveTo(lx0 + lw * 1.1, yc); ctx.lineTo(lx1 - lw * 1.1, yc);
+  ctx.stroke();
+  ctx.strokeStyle = PLATE_COLORS.dim;
+  ctx.lineWidth = 1;
+  ctx.setLineDash?.([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(lx0 + lw * 0.8, cy); ctx.lineTo(lx0 + lw * 1.1, yc);
+  ctx.moveTo(lx1 - lw * 0.8, cy); ctx.lineTo(lx1 - lw * 1.1, yc);
+  ctx.stroke();
+  ctx.setLineDash?.([]);
+  fitted(ctx, 'HIGHER ENERGY', (lx0 + lx1) / 2, py0 + size * 0.7, lx1 - lx0, { size: size * 0.75, color: PLATE_COLORS.dim });
+  fitted(ctx, 'LOWER ENERGY', (lx0 + lx1) / 2, py1 - size * 0.5, lx1 - lx0, { size: size * 0.75, color: PLATE_COLORS.dim });
+  fitted(ctx, 'ATOM', lx0 + lw * 0.4, cy - size * 0.8, lw, { size: size * 0.7, color: PLATE_COLORS.dim });
+  fitted(ctx, 'ATOM', lx1 - lw * 0.4, cy - size * 0.8, lw, { size: size * 0.7, color: PLATE_COLORS.dim });
+  fitted(ctx, 'BOTH', (lx0 + lx1) / 2, yc + (r.shift > 0 ? -size * 0.8 : size * 0.9), lw * 1.4, { size: size * 0.7, weight: 700, color: AMBER });
+}
+
 function paintFixture(ctx, f, state, b) {
-  if (f.kind === 'rack') paintRack(ctx, f, state, b);
+  if (f.kind === 'overlap') paintOverlap(ctx, f, state, b);
+  else if (f.kind === 'rack') paintRack(ctx, f, state, b);
   else if (f.kind === 'magnet') paintMagnet(ctx, f, state, b);
   else if (f.kind === 'bondtest') paintBondTest(ctx, f, state, b);
 }
@@ -433,7 +548,7 @@ function paintCard(ctx, p, state, o) {
   fitted(ctx, p.label, o.x, y0 + hh * 0.65, hw * 1.8, { size: size * 1.15, weight: 700 });
   if (p.props.counts) fitted(ctx, cardCounts(mol).text, o.x, y0 + hh * 1.42, hw * 1.86, { size: Math.max(6, size * 0.75), color: PLATE_COLORS.dust });
   if (pull !== null) {
-    fitted(ctx, pull > 0 ? `ATTRACTED ${pull}` : 'REPELLED', o.x, y0 + hh * 1.42, hw * 1.86, { size: Math.max(6, size * 0.78), weight: 700, color: AMBER });
+    fitted(ctx, pull > 0 ? 'ATTRACTED' : 'NOT ATTRACTED', o.x, y0 + hh * 1.42, hw * 1.86, { size: Math.max(6, size * 0.78), weight: 700, color: AMBER });
   }
 }
 
@@ -540,6 +655,26 @@ export function bondTester(id, at, mols, size = { w: 30, h: 26 }) {
     dials: { read: { min: 0, max: 1, step: 1, value: 0 } },
     props: { hidden: ['read'], mols }
   };
+}
+
+/**
+ * An overlap track: two atoms, each with one orbital (`type` 's', or 'p' standing across the line between them), brought together
+ * on the `gap` dial. `flip` adds a dial that turns one orbital's sign over; `opposite` fixes the signs as unlike.
+ */
+export function overlapTrack(id, at, { type = 's', flip = false, opposite = false, size = { w: 104, h: 56 }, label = 'Two atoms' } = {}) {
+  return {
+    id, kind: 'overlap', label, at, size, noRun: true,
+    dials: {
+      gap: { min: 70, max: 310, step: 10, value: 310, label: 'Distance (pm)' },
+      ...(flip ? { sign: { min: 0, max: 1, step: 1, value: 0, label: 'Signs', labels: ['Same', 'Opposite'] } } : {})
+    },
+    props: { type, ...(opposite ? { opposite: true } : {}) }
+  };
+}
+
+/** An answer dial that chooses one of a few short phrases; its first setting is no answer. */
+export function chooser(id, label, at, options, size = { w: 38, h: 16 }) {
+  return { id, kind: 'marker', label: 'Your answer', at, size, noRun: true, dials: { n: { min: 0, max: options.length, step: 1, value: 0, label, labels: ['?', ...options] } }, props: {} };
 }
 
 /** A plain dial a player sets to a number they have read off the rack (the bond order). */

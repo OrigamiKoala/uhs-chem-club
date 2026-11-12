@@ -113,7 +113,8 @@ export const STAGES = [
     const part = slateParts('a', 'H2O', slateLayout('H2O', 46, 32, 44, undefined), { hideTotal: true });
     return {
       title: 'Count the Electrons',
-      prompt: 'Set the dial to the total number of valence electrons the three atoms of water bring.',
+      briefing: { speaker: SPEAKER, body: 'Valence electrons are the electrons in an atom\'s outermost shell, drawn here as dots round each atom.' },
+      prompt: 'How many valence electrons do the three atoms of water bring in all?',
       widget: { type: 'table', label: 'The bench' },
       table: atomTable({
         opts: OPTS,
@@ -124,20 +125,20 @@ export const STAGES = [
         }]
       }),
       hints: [
-        'Set the dial to the total you counted.',
-        'Each atom brings the electrons in its outermost shell: count them for hydrogen, then for oxygen.',
-        'Add the valence electrons of every atom in the molecule: two hydrogens and one oxygen.'
+        'The dial sets your answer; each atom is drawn with its valence electrons round it.',
+        'Compare what a hydrogen atom brings with what the oxygen atom brings.',
+        'A molecule has every valence electron of every one of its atoms, so nothing is left out and nothing counted twice.'
       ],
       check(state) {
         const v = state.table.fixtures.count.dials.count.value;
         if (!v) return { ok: false, notYet: true, msg: 'Set the dial to a number of electrons.' };
         if (v === trayFor(MOLECULES.H2O)) return { ok: true };
-        return { ok: false, msg: 'The dial does not match the sum of the valence electrons the atoms bring.' };
+        return { ok: false, msg: 'That is not the number of dots drawn round the three atoms.' };
       },
       reward: {
         log: 'Two hydrogens at 1 and an oxygen at 6.',
-        title: 'The Electron Budget',
-        body: 'Every atom brings its valence electrons: 1 from each hydrogen and 6 from oxygen, 8 in all. Those eight are the whole budget a drawing of water can place.'
+        title: 'Electrons to Place',
+        body: 'One from each hydrogen and six from oxygen: eight valence electrons to place.'
       }
     };
   })(),
@@ -145,25 +146,26 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Water\'s Electrons',
-    prompt: 'Place all valence electrons on the slate so that every atom has a full outer shell.',
+    briefing: { speaker: SPEAKER, body: 'A Lewis structure shows every valence electron either in a pair shared between two atoms, which is a bond, or in a lone pair on one atom. Most atoms end with eight electrons round them, an octet; hydrogen ends with two.' },
+    prompt: 'Where do water\'s eight valence electrons go?',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'H2O', 82, 28, 62]]),
     hints: [
-      'Use the Pair tile and the slate.',
-      'Place electron pairs in bonds and as lone pairs to satisfy hydrogen\'s duet and oxygen\'s octet.',
-      'Form single bonds to both hydrogens, then add remaining electrons as lone pairs on oxygen.'
+      'Drag the Pair piece onto the gap between two atoms to share a pair, or onto one atom to leave a pair there.',
+      'Compare the atoms whose lights are on with the one whose light is still off, and count the electrons round it.',
+      'A shared pair counts toward both atoms it sits between, so place those first and see what each atom still lacks.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
-      return { ok: false, msg: 'Every electron is placed, and a lamp is still dark.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
+      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
     },
     reward: {
       log: 'Every electron placed, every lamp lit.',
-      title: 'Lewis Structure and Octet Rule',
-      body: 'A Lewis structure represents all valence electrons distributed into covalent bonds or lone pairs. Most main group atoms attain stability with an octet of eight valence electrons, or a duet of two for hydrogen.'
+      title: 'Lewis Structure',
+      body: 'Two shared pairs bond the hydrogens to oxygen, and two lone pairs stay on oxygen. Oxygen has its octet and each hydrogen has two: this drawing is the Lewis structure of water.'
     }
   },
 
@@ -171,16 +173,16 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Carbon Dioxide',
-    prompt: 'How many electron pairs join carbon to each oxygen atom in carbon dioxide?',
+    prompt: 'How many electron pairs does carbon share with each oxygen in carbon dioxide?',
     cards: GUESSES,
     hints: [
-      'Use the three cards and the slot.',
-      'Count the total valence electrons available and consider how to fulfill each octet.',
-      'Select the card matching your prediction.'
+      'Lay one of the three cards in the slot.',
+      'Carbon brings four valence electrons and each oxygen six, and every atom should end with an octet.',
+      'A prediction is never graded, so lay the card you think most likely.'
     ],
     reward: {
       title: 'Prediction Recorded',
-      body: 'Your prediction is recorded. Distribute the valence electrons of carbon dioxide on the slate to verify octets.'
+      body: 'The next stage places carbon dioxide\'s sixteen valence electrons.'
     }
   }),
 
@@ -188,27 +190,27 @@ export const STAGES = [
   {
     title: 'Two Pairs Short',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'distribute all valence electrons on the slate to give every atom a complete octet.');
+      return testPrompt(QUEST_KEY, GUESSES, 'how can every atom in carbon dioxide have an octet with only sixteen electrons?');
     },
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'CO2', 80, 28, 68]]),
     hints: [
-      'Use the Pair tile, "Lift Out" and the slate.',
-      'Check whether carbon has a full octet when single bonds are used.',
-      'Convert lone pairs from adjacent oxygen atoms into shared pairs to complete carbon\'s octet.'
+      'The Pair piece adds a pair and "Lift Out" takes one back; a gap between two atoms can hold more than one pair.',
+      'With one shared pair in each gap, compare the electrons round carbon with the electrons round each oxygen.',
+      'A pair on one atom counts for that atom only, while a shared pair counts for two atoms, so ask which placing gives more octets.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
-      return { ok: false, msg: 'Every electron is placed, and a lamp is still dark.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
+      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
     },
     get reward() {
       return {
         log: 'Neighbours share a second pair.',
-        title: 'Double Bonds and Octets',
-        body: `${verdictLine(QUEST_KEY, 'two')}When single bonds leave an atom short of an octet, lone pairs become shared pairs. Carbon dioxide achieves a complete octet on every atom by forming a double bond to each oxygen.`
+        title: 'Double Bonds',
+        body: `${verdictLine(QUEST_KEY, 'two')}With single bonds carbon is four electrons short and none are left. Sharing a second pair with each oxygen gives every atom an octet: carbon forms a double bond to each.`
       };
     }
   },
@@ -216,98 +218,100 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Middle',
-    prompt: 'Construct hypofluorous acid, HOF, so that every atom has a full outer shell.',
+    briefing: { speaker: SPEAKER, body: 'An atom bonded to two or more other atoms is a central atom.' },
+    prompt: 'Which atom in HOF is bonded to both of the others?',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'HOF', 82, 35, 62, HOF_POS]]),
     hints: [
-      'Use the Pair tile and the slate.',
-      'Identify which atom can form more than one covalent bond.',
-      'Hydrogen and fluorine only form single bonds, so oxygen must be the central atom.'
+      'Any two of the three atoms can share a pair here; complete the structure with the atom you choose in the middle.',
+      'Compare how many more electrons hydrogen, oxygen and fluorine each need to fill their outer shells.',
+      'An atom forms about as many bonds as it is electrons short of a full outer shell.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
-      return { ok: false, msg: 'Every electron is placed, and a lamp is still dark.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and an atom\'s light is still off.' };
+      return { ok: false, msg: 'Every electron is placed, and an atom\'s light is still off: count the electrons round that atom.' };
     },
     reward: {
       log: 'The atom that joins the others.',
       title: 'Central Atom',
-      body: 'The atom that links multiple terminal atoms is the central atom. Terminal atoms like hydrogen and fluorine can only form a single covalent bond and cannot serve as the central atom.'
+      body: 'Hydrogen and fluorine are each one electron short and form one bond. Oxygen is two short and forms two, so oxygen is the central atom.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'The Amber Lamp',
-    prompt: 'Distribute all valence electrons in boron trifluoride so no atom exceeds an octet.',
+    title: 'Fewer Than Eight',
+    briefing: { speaker: SPEAKER, body: 'Fluorine is the most electronegative element and forms only single bonds: it never shares a second pair.' },
+    prompt: 'Where do the 24 valence electrons of BF₃ go, given that fluorine forms only single bonds?',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'BF3', 82, 36, 62]]),
     hints: [
-      'Use the Pair tile and the slate.',
-      'Distribute single bonds to each fluorine atom, then add lone pairs to complete fluorine octets.',
-      'Boron contributes three valence electrons and is stable with six valence electrons in BF3.'
+      'Place pairs until none are left; boron\'s light turns amber, not lit, if it ends with fewer than eight.',
+      'Compare how many electrons each fluorine needs with how many are left for boron afterwards.',
+      'Fluorine is more electronegative than boron, so ask which atoms keep the electrons when there are not enough for every octet.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       const lamps = sl.read.atoms.map(a => a.lamp);
-      if (lamps.includes('over')) return { ok: false, msg: 'An atom has more round it than it can hold.' };
+      if (lamps.includes('over')) return { ok: false, msg: 'An atom has more electrons round it than it can hold.' };
       if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
-      if (sl.read.atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine lamp is still dark.' };
+      if (sl.read.atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine atom\'s light is still off.' };
       if (lamps[0] === 'amber') return { ok: true };
-      return { ok: false, msg: 'Every electron is placed, and boron\'s lamp is not amber.' };
+      return { ok: false, msg: 'Every electron is placed, and boron\'s light is not amber.' };
     },
     reward: {
       log: 'Boron stops at six.',
       title: 'Incomplete Octet',
-      body: 'An atom that remains stable with fewer than eight valence electrons has an incomplete octet. Boron trifluoride contains three single bonds, giving boron six valence electrons without completing an octet.'
+      body: 'Every fluorine has its octet and boron is left with six: an incomplete octet. A few atoms, boron among them, form compounds this way.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'More Than Eight',
-    prompt: 'Distribute all valence electrons in sulfur tetrafluoride so every fluorine atom has a full outer shell.',
+    prompt: 'Where do the electrons go that are left once every fluorine in SF₄ has its octet?',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'SF4', 82, 32, 46]]),
     hints: [
-      'Use the Pair tile and the slate.',
-      'Fluorine takes one shared pair only, so count what is left once each fluorine is full.',
-      'Every fluorine needs a bond and three lone pairs; place the electrons that remain on sulfur.'
+      'Place pairs until none are left to place, and watch which atom has to take the last pair.',
+      'Compare the electrons round sulfur with eight once the last pair is placed.',
+      'Fluorine is in the second period and never has more than eight, so ask which atom is left to take the extra pair.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       const atoms = sl.read.atoms;
-      if (atoms.some(a => a.lamp === 'over')) return { ok: false, msg: 'An atom has more round it than it can hold.' };
+      if (atoms.some(a => a.lamp === 'over')) return { ok: false, msg: 'An atom has more electrons round it than it can hold.' };
       if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
-      if (atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine lamp is still dark.' };
+      if (atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, and a fluorine atom\'s light is still off.' };
       if (atoms[0].lamp === 'expanded') return { ok: true };
       return { ok: false, msg: 'Every electron is placed, and sulfur is not joined to all four fluorine atoms.' };
     },
     reward: {
       log: 'Sulfur holds ten.',
       title: 'Expanded Octet',
-      body: 'An atom in the third period or below can hold more than eight valence electrons, which is an expanded octet. Sulfur in SF₄ has four bonds and a lone pair, ten electrons in all, while fluorine and the other second-period atoms never exceed eight.'
+      body: 'The last pair is a lone pair on sulfur, which then has ten electrons round it: an expanded octet. Only atoms in the third period or below can have more than eight.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'One Left Over',
-    prompt: 'Distribute all eleven valence electrons in nitric oxide so oxygen has a full outer shell.',
+    prompt: 'Nitric oxide, NO, has eleven valence electrons: where does the odd one go?',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'NO', 82, 36, 62]], { single: true }),
     hints: [
-      'Use the Pair tile, the Single tile and the slate.',
-      'Give oxygen its eight first and see how many electrons nitrogen is left with.',
-      'Eleven is odd, so one electron cannot be paired; put it on nitrogen as a single electron.'
+      'The Single piece places one electron on an atom; the Pair piece places two.',
+      'Compare the electrons round each atom with eight once all eleven are placed.',
+      'Oxygen pulls electrons more strongly than nitrogen, so ask which atom is left one short.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the structure.' };
       if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
       const [n, o] = sl.read.atoms;
       if (o.lamp !== 'full') return { ok: false, msg: 'Every electron is placed, and oxygen does not have eight round it.' };
@@ -316,8 +320,8 @@ export const STAGES = [
     },
     reward: {
       log: 'One electron stays unpaired.',
-      title: 'Odd-Electron Molecules',
-      body: 'A molecule with an odd number of valence electrons cannot give every atom an octet, because one electron has no partner. That unpaired electron makes nitric oxide a free radical, and it sits on nitrogen with seven round it.',
+      title: 'Free Radical',
+      body: 'One electron has no partner and sits on nitrogen, which has seven round it. A molecule with an unpaired electron is a free radical.',
       last: true
     }
   }
@@ -336,16 +340,16 @@ export const DEBRIEF = {
   speaker: SPEAKER,
   sections: [
     {
-      heading: 'Summary',
-      body: 'Lewis structures show the distribution of valence electrons into covalent bonds and lone pairs. Most elements form bonds to achieve an octet of electrons, though some elements like boron form stable molecules with an incomplete octet.'
+      heading: 'What You Found',
+      body: 'A Lewis structure places every valence electron in a bond or a lone pair. Most atoms end with an octet, and where single bonds leave an atom short, a second or third pair is shared.'
     },
     {
-      heading: 'Structure and Bonding',
-      body: 'Multiple bonds form when single bonds leave atoms without a complete octet. The least electronegative non-hydrogen atom typically serves as the central atom.'
+      heading: 'Exceptions',
+      body: 'Boron can stop at six electrons, atoms from the third period down can hold more than eight, and a molecule with an odd number of electrons leaves one unpaired.'
     },
     {
       heading: 'Next',
-      body: 'The next bench investigates molecules whose electronic structures require resonance hybrids to represent accurately.'
+      body: 'The next bench looks at molecules that one Lewis structure cannot describe.'
     }
   ]
 };

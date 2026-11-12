@@ -208,19 +208,19 @@ const hubCount = (state, hub, except) => armsOn(state, hub.id).filter(a => a.id 
 /** The planner for the hub's pieces; undefined for any pair that is not this module's. */
 export function planHubJoin(a, b, state) {
   if (isArm(a)) {
-    if (b.kind !== 'hub') return { holds: false, home: true, reason: 'An arm clips to the hub.' };
-    if (hubCount(state, b, a.id) >= 6) return { holds: false, home: true, reason: 'The hub has room for six arms and no more.' };
+    if (b.kind !== 'hub') return { holds: false, home: true, reason: 'A bond or a lone pair attaches to the central atom.' };
+    if (hubCount(state, b, a.id) >= 6) return { holds: false, home: true, reason: 'This central atom holds six electron domains and no more.' };
     return {
       holds: true, link: { hub: true, lone: a.kind === 'balloon', mult: a.props.mult || 1 },
-      rest: { x: 0, y: 0 }, reason: 'The arm clips onto the hub and the arms settle.'
+      rest: { x: 0, y: 0 }, reason: 'It attaches, and the electron domains settle as far apart as they can.'
     };
   }
   if (a.kind === 'protractor') {
-    if (!isArm(b)) return { holds: false, home: true, reason: 'The protractor reads the angle between two arms.' };
-    if (!b.joinedTo.some(id => state.pieces[id]?.kind === 'hub')) return { holds: false, home: true, reason: 'Lay it on an arm that is clipped to a hub.' };
+    if (!isArm(b)) return { holds: false, home: true, reason: 'The protractor reads the angle between two bonds.' };
+    if (!b.joinedTo.some(id => state.pieces[id]?.kind === 'hub')) return { holds: false, home: true, reason: 'Lay it on a bond that is attached to the central atom.' };
     const prev = a.props.touched || [];
     const next = prev[prev.length - 1] === b.id ? prev : [...prev, b.id].slice(-2);
-    return { holds: true, once: true, set: { a: { touched: next } }, reason: next.length < 2 ? 'The protractor rests on the first arm.' : 'The protractor lies across the two arms.' };
+    return { holds: true, once: true, set: { a: { touched: next } }, reason: next.length < 2 ? 'The protractor rests on the first bond.' : 'The protractor lies across the two bonds.' };
   }
   return undefined;
 }
@@ -336,7 +336,7 @@ function paintHubPlate(ctx, f, state, b) {
   const x = b.x1 - 1.5 * b.sc;
   let row = b.y0 + 3.6 * b.sc;
   const line = (text, color = PLATE_COLORS.dust) => { plateText(ctx, text, x, row, { size, weight: 700, align: 'right', base: 'middle', color }); row += 2.9 * b.sc; };
-  line(`ARMS ${r ? r.n : 0}`, PLATE_COLORS.phosphor);
+  line(`DOMAINS ${r ? r.n : 0}`, PLATE_COLORS.phosphor);
   const read = protractorReadings(state).find(q => q.hub === f.props.hub);
   line(read ? `ANGLE ${read.angle}°` : 'ANGLE', read ? AMBER : PLATE_COLORS.dim);
   if (f.props.gauge === 'thick' && r) line(`DEPTH ${r.thick.toFixed(2)}`, r.thick > 0.01 ? AMBER : PLATE_COLORS.dim);
@@ -400,7 +400,7 @@ export const protractorPiece = (id, at, caption) => ({ id, kind: 'protractor', l
 
 /** An angle marker: one dial the player sets to a number they read off the protractor. */
 export function marker(id, at, { label = 'Angle', max = 180, step = 1, size = { w: 44, h: 16 } } = {}) {
-  return { id, kind: 'marker', label: 'Marker', at, size, noRun: true, dials: { value: { min: 0, max, step, value: 0, label } }, props: { margin: 4, top: 9 } };
+  return { id, kind: 'marker', label: 'Your answer', at, size, noRun: true, dials: { value: { min: 0, max, step, value: 0, label } }, props: { margin: 4, top: 9 } };
 }
 
 export const markerValue = (state, id) => state.fixtures[id].dials.value.value;

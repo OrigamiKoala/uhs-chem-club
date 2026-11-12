@@ -31,7 +31,7 @@ export const UNIT_03 = {
       title: 'What Holds',
       line: 'Distinguish ionic, covalent, and metallic bonding.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit03/q1-joins.js')
     },
@@ -40,7 +40,7 @@ export const UNIT_03 = {
       title: 'Stone and Wire',
       line: 'Relate macroscopic properties to crystal lattices and networks.',
       arena: 'bench',
-      stageCount: 10,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit03/q2-lattice.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_03 = {
       title: 'Bond Energy',
       line: 'Examine potential energy curves and bond energies.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q3-distance.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_03 = {
       title: 'Polarity',
       line: 'Determine molecular polarity from bond dipoles and symmetry.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q7-polarity.js')
     },
@@ -101,9 +101,9 @@ export const UNIT_03 = {
     {
       id: 'q9-orbitals',
       title: 'Molecular Orbitals',
-      line: 'Optional, beyond AP: fill molecular orbitals and explain paramagnetism.',
+      line: 'See atomic orbitals combine, fill molecular orbitals and explain paramagnetism.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 7,
       status: 'live',
       optional: true,
       module: () => import('../quests/unit03/q9-orbitals.js')

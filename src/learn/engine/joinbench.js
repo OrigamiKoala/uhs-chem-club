@@ -550,7 +550,7 @@ export function planSlab(slab, state = 'intact') {
           py = 0.10 + rand() * 0.80;
         }
         const foreign = slab.alloy === 'sub' && (x + y * 2) % 5 === 0;
-        cells.push({ x: px, y: py, sign: 1, group: 0, ...(foreign ? { size: 1.3, tint: 'sand' } : {}) });
+        cells.push({ x: px, y: py, sign: 1, group: 0, ...(foreign ? { size: 1.15, tint: 'sand' } : {}) });
       }
     }
     // An interstitial alloy: much smaller atoms sit in the gaps between the metal atoms, bonded to nothing drawn.
