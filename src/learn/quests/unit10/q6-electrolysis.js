@@ -29,22 +29,20 @@ import { driveZnCu, platingRun, currentFor, waterRun, compareRun, RUN_SECONDS } 
 import { gasPiece } from '../../table/kits/cell-dip.js';
 import { attachScenes } from '../../table/kits/cell-attach.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\belectrolytic cells?\b/i, introducedAt: 1 },
   { term: /\belectrolysis\b/i, introducedAt: 1 },
-  { term: /\bcathode\b/i, introducedAt: 2 },
-  { term: /\banode\b/i, introducedAt: 2 },
-  { term: /\breduction\b/i, introducedAt: 2 },
-  { term: /\boxidation\b/i, introducedAt: 2 },
   { term: /\bcoulombs?\b/i, introducedAt: 3 },
   { term: /\bFaraday's law\b/i, introducedAt: 4 },
-  { term: /\boverpotential\b/i, introducedAt: 7 }
+  { term: /\boverpotential\b/i, introducedAt: 6 }
 ];
 
-/** Built quests whose words this bench uses (the voltage of a cell, the energy a cell releases). */
-export const BUILDS_ON = ['unit10/q4-potential'];
+/** Built quests whose words this bench uses (oxidation/reduction, anode/cathode, cell voltage). */
+export const BUILDS_ON = ['unit10/q1-halves', 'unit10/q3-galvanic', 'unit10/q4-potential'];
+
+const SPEAKER = 'Vess';
 
 export function toolNoteFor() { return null; }
 
@@ -55,7 +53,6 @@ const widget = { type: 'table', label: 'The bench' };
 const S3_RUNS = [{ I: 1, t: 30 }, { I: 2, t: 10 }, { I: 0.5, t: 100 }];
 const S3_WANT = [1, 0, 2].map(i => `r${i + 1}`);
 const S4 = { metal: 'cu', I: 2.00, minutes: 30.0 };
-const S5 = { metal: 'ag', I: 3.00, minutes: 10.0 };
 const S8 = { metal: 'ni', I: 0.800, t: 1500 };
 const S7 = { I: 0.5, t: 60 };
 const TOL_G = 0.02 + 1e-9;
@@ -89,13 +86,13 @@ export const STAGES = [
   {
     id: 's1-reverse',
     title: 'Reversing the Cell',
-    prompt: 'Make zinc plate out of the solution in the zinc–copper cell.',
+    prompt: 'What does a supply need to do to make zinc plate out of the solution?',
     widget,
     table: cellTable({ fixtures: [supplyFixture('sup', { x: 64, y: 40 }, 'zncu').fixture] }, { w: 128, h: 82 }),
     hints: [
       'Set the two dials, press "Run", and read what the zinc strip did.',
       'Compare the zinc strip across runs at each setting of both dials.',
-      'Try the four settings of the two dials and keep the one where the zinc strip gains mass.'
+      'Compare the supply\'s voltage with the 1.10 V the cell gives by itself.'
     ],
     check(state) {
       const r = bench(state.table);
@@ -119,7 +116,7 @@ export const STAGES = [
   {
     id: 's2-melt',
     title: 'Molten Salt',
-    prompt: 'Tap the electrode that makes sodium in molten sodium chloride.',
+    prompt: 'At which electrode does sodium form in molten sodium chloride?',
     widget,
     table: cellTable({
       fixtures: [
@@ -130,7 +127,7 @@ export const STAGES = [
     hints: [
       'Set the "Electrons sent into" dial, press "Run", and tap the electrode you choose.',
       'Compare where the silvery liquid forms with the electrode the electrons were sent into.',
-      'Run it with the dial on each electrode and see which one forms the liquid metal.'
+      'Compare where the metal forms with the direction of the electrons, and remember which side reduction happens at.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -154,7 +151,8 @@ export const STAGES = [
   {
     id: 's3-charge',
     title: 'How Much Passed',
-    prompt: 'Rank the three silver-plating runs by the electric charge each passed, least first.',
+    briefing: { speaker: SPEAKER, body: 'Electric charge is counted in coulombs. A current of one ampere carries one coulomb each second.' },
+    prompt: 'Which run passed the least charge and which the most?',
     widget,
     table: cellTable({
       pieces: S3_RUNS.map((r, i) => tag(`r${i + 1}`, `${r.I} A, ${r.t} s`, { x: 24 + i * 35, y: 70 })),
@@ -181,11 +179,11 @@ export const STAGES = [
       return { ok: false, msg: `${a.label} sits left of ${b.label}, but the plate gained ${fmt(ra.g * 1000, 1)} mg for ${a.label} and ${fmt(rb.g * 1000, 1)} mg for ${b.label}.` };
     },
     get reward() {
-      const rows = S3_RUNS.map(r => `${r.I} A for ${r.t} s passed ${fmt(charge(r.I, r.t), 0)} C`);
+      const rows = S3_RUNS.map(r => `${fmt(charge(r.I, r.t), 0)} C`);
       return {
         log: 'The mass of silver followed the current and the time together.',
         title: 'The Coulomb',
-        body: `${rows.join(', ')}. Charge in coulombs is current in amperes times seconds, and more charge plated more silver.`
+        body: `${rows[0]}, ${rows[1]} and ${rows[2]}: charge in coulombs is amperes × seconds, and the silver plated grew in step with it.`
       };
     }
   },
@@ -194,7 +192,17 @@ export const STAGES = [
   {
     id: 's4-copper',
     title: 'Plating Copper',
-    prompt: 'Find the mass of copper, in grams, plated by 2.00 A running for 30.0 minutes.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A current and a time give a charge in coulombs, and one mole of electrons carries 96,485 C.',
+      worked: [
+        'Al³⁺ + 3 e⁻ → Al',
+        '1.00 A × 965 s = 965 C',
+        '965 ÷ 96,485 = 0.0100 mol e⁻',
+        '÷ 3 = 0.00333 mol Al = 0.090 g'
+      ]
+    },
+    prompt: 'What mass of copper, in grams, is plated by 2.00 A running for 30.0 minutes?',
     widget,
     entry: { id: 'g', label: 'Copper plated', unit: 'g' },
     table: cellTable({
@@ -235,67 +243,16 @@ export const STAGES = [
       return {
         log: 'The plated mass followed the charge, the electrons per atom and the molar mass.',
         title: "Faraday's Law",
-        body: `${fmt(S4.I, 2)} A × ${t} s = ${fmt(q, 0)} C, which is ${fmt(mol, 4)} mol of electrons, and two electrons plate each copper atom: ${fmt(mol / 2, 4)} mol × 63.5 g/mol = ${fmt(faradayMass(S4.I, t, 'cu'), 2)} g. Faraday's law: mass plated = (I t ÷ nF) × M.`
+        body: `${fmt(q, 0)} C is ${fmt(mol, 4)} mol of electrons; two for each copper atom gives ${fmt(mol / 2, 4)} mol, ${fmt(faradayMass(S4.I, t, 'cu'), 2)} g. This is Faraday's law.`
       };
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    id: 's5-silver',
-    title: 'Plating Silver',
-    prompt: 'Find the mass of silver, in grams, plated by 3.00 A running for 10.0 minutes.',
-    widget,
-    entry: { id: 'g', label: 'Silver plated', unit: 'g' },
-    table: cellTable({
-      fixtures: [
-        supplyFixture('sup', { x: 52, y: 36 }, 'plate', { metal: 'ag', solution: 'Silver nitrate solution', half: 'Ag⁺ + e⁻ → Ag', currents: [1, 3], times: [30, 60], counter: true }).fixture,
-        ref([FARADAY_LINE, ...MOLAR_LINES])
-      ]
-    }, { w: 172, h: 72 }),
-    hints: [
-      'Choose a current and a time with the two dials, press "Run", and type the grams in the field.',
-      'Compare the half-reaction line here with the one for copper, and see what changes in the run.',
-      'Turn the charge into moles of electrons with the plate, then use this half-reaction line to turn those into moles and grams of silver.'
-    ],
-    check(state) {
-      const v = entryNumber(state.table, 'g');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
-      const t = S5.minutes * 60;
-      const want = faradayMass(S5.I, t, S5.metal);
-      if (Math.abs(v - want) <= TOL_G) return { ok: true };
-      const wrongM = id => want * METALS[id].M / METALS.ag.M;
-      const hit = slipOf(v, {
-        want,
-        unitNote: true,
-        cases: [
-          [faradayMass(S5.I, S5.minutes, S5.metal), 'That treats 10.0 minutes as 10.0 s; the time in the question is in minutes.'],
-          [want / 2, 'The cell\'s half-reaction line reads Ag⁺ + e⁻ → Ag; that figure counts two electrons for each silver atom.'],
-          [wrongM('cu'), 'That uses 63.5 g/mol, the molar mass of copper; this cell holds silver.'],
-          [wrongM('zn'), 'That uses 65.4 g/mol, the molar mass of zinc; this cell holds silver.'],
-          [charge(S5.I, t), 'That figure is a charge in coulombs; the field is in grams.']
-        ]
-      });
-      if (hit) return hit;
-      if (v < 0) return { ok: false, msg: 'A mass plated is a size, not a negative number.' };
-      const r = bench(state.table).rows.find(x => x.I === 3 && x.t === 60);
-      return { ok: false, msg: r ? `The bench plated ${fmt(r.g * 1000, 1)} mg of silver in a 60 s run at 3.00 A; that does not lead to ${fmt(v, 2)} g for 10.0 minutes.` : 'Run the bench at 3.00 A to see what a short run plates.' };
-    },
-    get reward() {
-      const t = S5.minutes * 60; const q = charge(S5.I, t); const mol = molesElectrons(q);
-      return {
-        log: 'A silver ion takes one electron, so the same charge plates more atoms than copper would.',
-        title: 'One Electron Each',
-        body: `${fmt(S5.I, 2)} A × ${t} s = ${fmt(q, 0)} C = ${fmt(mol, 4)} mol of electrons, and each Ag⁺ takes one, so ${fmt(faradayMass(S5.I, t, 'ag'), 2)} g of silver plated.`
-      };
-    }
-  },
-
-  /* ---------------------------------------------------------------- 6 */
-  {
     id: 's6-chain',
     title: 'Cells Driving Cells',
-    prompt: 'Make zinc–copper cells drive the electrolysis of water.',
+    prompt: 'How many zinc–copper cells does it take to split water?',
     widget,
     table: (() => {
       const s = supplyFixture('sup', { x: 62, y: 28 }, 'water', { cells: 3 });
@@ -327,11 +284,11 @@ export const STAGES = [
     }
   },
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 6 */
   {
     id: 's7-gases',
     title: 'Water and Brine',
-    prompt: 'Compare electrolysing water and electrolysing brine: say what each gas tube collects.',
+    prompt: 'Which gas does each tube collect?',
     widget,
     table: (() => {
       const s = supplyFixture('sup', { x: 68, y: 40 }, 'compare', S7);
@@ -371,11 +328,11 @@ export const STAGES = [
     }
   },
 
-  /* ---------------------------------------------------------------- 8 */
+  /* ---------------------------------------------------------------- 7 */
   {
     id: 's8-sealed',
     title: 'The Sealed Plate',
-    prompt: 'Find the current, in amperes, that plated the sealed plate in the time shown.',
+    prompt: 'What current, in amperes, plated the sealed plate in the time shown?',
     widget,
     entry: { id: 'i', label: 'Current', unit: 'A' },
     table: (() => {
@@ -389,7 +346,7 @@ export const STAGES = [
     hints: [
       'Lay the plate on the balance to read its mass, then type the current in the field.',
       'Compare the mass on the balance with the time shown and the half-reaction line.',
-      'Turn the mass into moles of nickel, then moles of electrons, then charge, and divide by the time in seconds.'
+      'Run stage 4\'s chain backwards, from grams to coulombs.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'i');
@@ -420,7 +377,7 @@ export const STAGES = [
 ];
 
 /** Every stage gets its mechanism view (3D at 3D On, flat otherwise); predict stages get a lead-in. */
-attachScenes(STAGES, { compact: [2, 6], demos: {}, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteX: [0.36, 0.64] } } } });
+attachScenes(STAGES, { compact: [2, 5], demos: {}, own: { 1: { sitesKey: 'sides', extra: { pickMap: [1, 2], siteX: [0.36, 0.64] } } } });
 
 export const DEBRIEF = {
   title: 'Electrolysis',
@@ -432,7 +389,6 @@ export const SOLUTIONS = [
   [dial('sup', 'dir', 1), run('sup'), dial('pick', 'value', 1)],
   [dial('sup', 'sel', 1), run('sup'), dial('sup', 'sel', 2), run('sup'), dial('sup', 'sel', 3), run('sup'), ...S3_WANT.map((id, i) => put(id, `rail:${i}`))],
   [dial('sup', 'cur', 2), dial('sup', 'time', 2), run('sup'), typed('g', fmt(faradayMass(S4.I, S4.minutes * 60, 'cu'), 2))],
-  [dial('sup', 'cur', 2), dial('sup', 'time', 2), run('sup'), typed('g', fmt(faradayMass(S5.I, S5.minutes * 60, 'ag'), 2))],
   [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), run('sup')],
   [run('sup'), put('h1', 'slot:sup.t1'), put('o1', 'slot:sup.t2'), put('h2', 'slot:sup.t3'), put('cl', 'slot:sup.t4')],
   [put('plate-x', 'slot:sup.pan'), typed('i', fmt(S8.I, 3))]
@@ -443,7 +399,6 @@ export const MISSES = [
   [dial('sup', 'dir', 2), run('sup'), dial('pick', 'value', 1)],
   [dial('sup', 'sel', 1), run('sup'), dial('sup', 'sel', 2), run('sup'), dial('sup', 'sel', 3), run('sup'), ...['r1', 'r2', 'r3'].map((id, i) => put(id, `rail:${i}`))],
   [typed('g', fmt(faradayMass(S4.I, S4.minutes, 'cu'), 4))],
-  [typed('g', fmt(faradayMass(S5.I, S5.minutes * 60, 'ag') / 2, 2))],
   [put('p1', 'slot:sup.k1'), run('sup')],
   [run('sup'), put('h1', 'slot:sup.t1'), put('o1', 'slot:sup.t2'), put('h2', 'slot:sup.t3'), put('o2', 'slot:sup.t4')],
   [put('plate-x', 'slot:sup.pan'), typed('i', '0.4')]
@@ -464,4 +419,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { S3_RUNS, S3_WANT, S4, S5, S7, S8, TOL_G, TOL_A, RUN_SECONDS, PLATE_TIME };
+export const CHECKS = { S3_RUNS, S3_WANT, S4, S7, S8, TOL_G, TOL_A, RUN_SECONDS, PLATE_TIME };

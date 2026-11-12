@@ -87,7 +87,7 @@ export async function checkBrinewireBoss({ ok, fail }) {
   near(Q5.concCellSigned('zn', 0.010, 1.0), 0.05916, 2e-5, 'the voltmeter reads the right bar against the left, positive');
   holds(run(3, [dial('pick', 'value', 1)]).ok, 'phase 4 accepts the left bar');
   const m4 = run(3, [{ run: 'cc' }, dial('pick', 'value', 2)]);
-  holds(!m4.ok && /read 0\.059 V/.test(m4.msg) && /swung toward the right bar/.test(m4.msg), `phase 4 refuses the right bar naming the meter: "${m4.msg}"`);
+  holds(!m4.ok && /read 0\.059 V/.test(m4.msg) && /swung toward the right electrode/.test(m4.msg), `phase 4 refuses the right electrode naming the meter: "${m4.msg}"`);
   holds(!run(3, [dial('pick', 'value', 2)]).ok && /not been run/.test(run(3, [dial('pick', 'value', 2)]).msg), 'phase 4 says when the cell has not been run');
   holds(run(3, []).notYet, 'phase 4 waits for the dial');
 

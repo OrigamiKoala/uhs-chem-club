@@ -23,7 +23,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "M displaced copper, so M gives electrons more readily than copper. Copper did not displace M, which agrees: a displacement runs only from the more active metal to the less active one."
+      "explanation": "M displaced copper, so M loses electrons more readily than copper. Copper did not displace M, which agrees: a displacement runs only from the more active metal to the less active one."
     },
     {
       "id": "q2-activity#b2",
@@ -48,7 +48,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Zinc is more active than iron, so it gives its electrons in place of the iron and is used up first. Copper is less active than iron, so the iron gives its electrons and rusts."
+      "explanation": "Zinc is more active than iron, so it loses its electrons in place of the iron and is used up first. Copper is less active than iron, so the iron loses its electrons and rusts."
     }
   ],
   "worked": {
@@ -58,7 +58,7 @@
     "setup": "A zinc strip of mass 6.54 g is left in copper(II) sulfate solution until it has all reacted: Zn + Cu²⁺ → Zn²⁺ + Cu. E° is −0.76 V for Zn²⁺/Zn and +0.34 V for Cu²⁺/Cu. Molar masses: Zn 65.4 g/mol, Cu 63.5 g/mol.",
     "steps": [
       {
-        "say": "Which metal gives electrons more readily?",
+        "say": "Which metal loses electrons more readily?",
         "kind": "choice",
         "options": [
           {
@@ -75,8 +75,8 @@
           }
         ],
         "answer": "a",
-        "hint": "The metal with the lower E° gives electrons more readily.",
-        "explain": "Zinc's E° of −0.76 V is lower than copper's +0.34 V, so zinc gives electrons more readily."
+        "hint": "The metal with the lower E° loses electrons more readily.",
+        "explain": "Zinc's E° of −0.76 V is lower than copper's +0.34 V, so zinc loses electrons more readily."
       },
       {
         "say": "What does the zinc strip show?",
@@ -128,7 +128,7 @@
         ],
         "answer": "a",
         "hint": "Read the coefficients in Zn + Cu²⁺ → Zn²⁺ + Cu.",
-        "explain": "Each Zn atom gives 2 electrons and each Cu²⁺ takes 2, so one Cu is deposited for each Zn."
+        "explain": "Each Zn atom loses 2 electrons and each Cu²⁺ gains 2, so one Cu is deposited for each Zn."
       },
       {
         "say": "What mass of copper is deposited, in grams?",

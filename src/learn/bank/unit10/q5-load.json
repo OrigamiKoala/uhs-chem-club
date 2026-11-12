@@ -28,15 +28,15 @@
     {
       "id": "q5-load#b2",
       "quest": "q5-load",
-      "question": "A copper bar stands in 0.10 M Cu²⁺ in one beaker and a copper bar stands in 2.0 M Cu²⁺ in another, joined by a salt bridge and a wire. Which bar do the electrons leave?",
+      "question": "A copper electrode stands in 0.10 M Cu²⁺ in one beaker and a copper electrode stands in 2.0 M Cu²⁺ in another, joined by a salt bridge and a wire. Which electrode do the electrons leave?",
       "options": [
         {
           "id": "a",
-          "label": "The bar in the 0.10 M beaker"
+          "label": "The electrode in the 0.10 M beaker"
         },
         {
           "id": "b",
-          "label": "The bar in the 2.0 M beaker"
+          "label": "The electrode in the 2.0 M beaker"
         },
         {
           "id": "c",
@@ -48,7 +48,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "E° is 0 V for a concentration cell, but Q is not 1, so the cell reads a voltage. Copper dissolves from the dilute side, which is the anode, and the electrons leave its bar."
+      "explanation": "E° is 0 V for a concentration cell, but Q is not 1, so the cell reads a voltage. Copper dissolves from the dilute side, which is the anode, and the electrons leave its electrode."
     }
   ],
   "worked": {
@@ -76,7 +76,7 @@
         ],
         "answer": "b",
         "hint": "Look at the charge on the iron ion that forms.",
-        "explain": "Each Fe atom gives 2 electrons and each Cu²⁺ takes 2, so n = 2."
+        "explain": "Each Fe atom loses 2 electrons and each Cu²⁺ gains 2, so n = 2."
       },
       {
         "say": "What is Q, the Fe²⁺ strength divided by the Cu²⁺ strength?",

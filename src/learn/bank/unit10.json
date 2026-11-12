@@ -8,7 +8,7 @@
       "options": [
         {
           "id": "a",
-          "label": "They are taken by the copper ions, exactly as many as zinc gives"
+          "label": "They are gained by the copper ions, exactly as many as zinc loses"
         },
         {
           "id": "b",
@@ -33,11 +33,11 @@
       "options": [
         {
           "id": "a",
-          "label": "Y gives electrons more readily than X"
+          "label": "Y loses electrons more readily than X"
         },
         {
           "id": "b",
-          "label": "X gives electrons more readily than Y"
+          "label": "X loses electrons more readily than Y"
         },
         {
           "id": "c",
@@ -212,11 +212,11 @@
           "options": [
             {
               "id": "a",
-              "label": "The electrons leave the bar in the 1.0 M beaker"
+              "label": "The electrons leave the electrode in the 1.0 M beaker"
             },
             {
               "id": "b",
-              "label": "The electrons leave the bar in the 0.010 M beaker"
+              "label": "The electrons leave the electrode in the 0.010 M beaker"
             },
             {
               "id": "c",
@@ -228,7 +228,7 @@
             }
           ],
           "answer": "b",
-          "explanation": "The dilute side is the anode, so the electrons leave the bar in the 0.010 M beaker. The cell runs until the two concentrations match, and its voltage falls to zero there."
+          "explanation": "The dilute side is the anode, so the electrons leave the electrode in the 0.010 M beaker. The cell runs until the two concentrations match, and its voltage falls to zero there."
         }
       ]
     }

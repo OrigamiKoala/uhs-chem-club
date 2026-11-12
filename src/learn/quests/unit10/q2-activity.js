@@ -112,7 +112,7 @@ export const STAGES = [
   {
     id: 's1-coat',
     title: 'Coated or Clean',
-    prompt: 'Find the solution that put a coating on both of the other metals.',
+    prompt: 'Which solution\'s ions gain electrons from both of the other metals?',
     widget,
     table: (() => {
       const d = rack(S1_METALS, { x: 49, y: 33 });
@@ -128,7 +128,7 @@ export const STAGES = [
     hints: [
       'Drag a strip over a beaker to dip it, then tap the beaker you choose.',
       'Compare how each strip looks after it is dipped in each solution.',
-      'Check each solution for a coating on both strips that are not its own metal.'
+      'A strip is coated when its atoms lose electrons to the ions in the solution.'
     ],
     check(state) {
       const t = state.table;
@@ -142,12 +142,10 @@ export const STAGES = [
     get reward() {
       const lines = S1_METALS.map(ion => ({ ion, got: S1_METALS.filter(m => m !== ion && coated(m, ion)) }));
       const most = lines.find(l => l.ion === S1_ANSWER);
-      const rest = lines.filter(l => l.ion !== S1_ANSWER).sort((p, q) => q.got.length - p.got.length)
-        .map(l => (l.got.length ? `only ${list(l.got.map(nm))} in the ${solutionOf(l.ion)}` : `no strip in the ${solutionOf(l.ion)}`));
       return {
         log: 'One solution coated both of the other strips.',
         title: 'Displacement',
-        body: `${Nm(most.got[0])} and ${nm(most.got[1])} were coated in the ${solutionOf(most.ion)}. A coating means displacement: the strip's metal went into the solution as ions.`
+        body: `${Nm(most.got[0])} and ${nm(most.got[1])} were both coated in the ${solutionOf(most.ion)}. The strip's atoms went into solution as ions and silver took their place: a displacement.`
       };
     }
   },
@@ -156,7 +154,7 @@ export const STAGES = [
   {
     id: 's2-rank',
     title: 'Ranking Four Metals',
-    prompt: 'Rank zinc, iron, lead and copper from the metal that gives electrons most readily to the one that gives least.',
+    prompt: 'Which of zinc, iron, lead and copper loses electrons most readily and which least?',
     widget,
     table: (() => {
       const d = rack(S2_METALS, { x: 64, y: 33 });
@@ -165,14 +163,14 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [] }
+          rail: { at: { x: 88, y: 108 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: [], start: [] }
         }
       }, { w: 200, h: 122 });
     })(),
     hints: [
       'Dip the strips in the beakers, then drag the four strips onto the rail.',
       'Each beaker keeps a mark for every strip dipped in it; compare which strips were coated in which solutions.',
-      'A strip that is coated has given electrons to the ions in the solution, so rank the metals by how many of the other solutions each one coated in.'
+      'A strip that is coated has lost electrons to the ions in the solution, so order the metals by how many solutions coated them.'
     ],
     check(state) {
       const t = state.table;
@@ -186,11 +184,10 @@ export const STAGES = [
     },
     get reward() {
       const o = S2_WANT;
-      const parts = o.slice(0, -1).map((m, i) => `${nm(m)} displaced ${list(o.slice(i + 1).map(nm))}`);
       return {
         log: 'The strips fell into an order.',
         title: 'Activity Series',
-        body: `From most to least ready to give electrons the order is ${o.map(nm).join(', ')}: the activity series.`
+        body: `From most to least ready to lose electrons the order is ${o.map(nm).join(', ')}: the activity series.`
       };
     }
   },
@@ -239,7 +236,7 @@ export const STAGES = [
   {
     id: 's4-test',
     title: 'Copper in Zinc',
-    get prompt() { return guessLine('Dip a copper strip in the zinc solution and say what happens to it.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('What happens to a copper strip in a zinc solution?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const d = rack(S4_METALS, { x: 34, y: 33 });
@@ -255,7 +252,7 @@ export const STAGES = [
     hints: [
       'Dip the copper strip in the zinc solution, then set the answer dial.',
       'Compare the copper strip in the zinc solution with the zinc strip in the copper solution.',
-      'Choose the answer that matches what the copper strip looks like in its window.'
+      'If copper cannot lose electrons to zinc ions, the strip will stay as it started.'
     ],
     check(state) {
       const t = state.table;
@@ -281,7 +278,7 @@ export const STAGES = [
   {
     id: 's5-hydrogen',
     title: 'Hydrogen in the List',
-    prompt: 'Place hydrogen in the list of the five metals, from most readily giving electrons to least.',
+    prompt: 'Where does hydrogen belong in the activity series of these five metals?',
     widget,
     table: (() => {
       const d = rack(S5_METALS.map(() => 'acid'), { x: 79, y: 33 });
@@ -293,14 +290,14 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 114 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: [], start: [] }
+          rail: { at: { x: 88, y: 114 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: [], start: [] }
         }
       }, { w: 192, h: 128 });
     })(),
     hints: [
       'Dip a strip in each acid beaker, then drag the five strips and the hydrogen onto the rail.',
-      'Look at which strips give bubbles in the acid and which stay clean.',
-      'Hydrogen belongs between the metals that bubbled and the metals that did not, with the metals that give most readily on the left.'
+      'Look at which strips make bubbles of hydrogen in the acid and which stay clean.',
+      'A metal that bubbles in acid loses electrons to H⁺ ions more readily than hydrogen holds them.'
     ],
     check(state) {
       const t = state.table;
@@ -314,7 +311,7 @@ export const STAGES = [
         if (before === givesHydrogen(m)) continue;
         const res = triedAny(t, m);
         if (!res) return { ok: false, msg: `The ${nm(m)} strip has not been dipped in an acid beaker yet.` };
-        return { ok: false, msg: `${Nm(m)} sits ${before ? 'left' : 'right'} of hydrogen, but its strip ${res.gas ? 'gave bubbles' : 'stayed clean'} in the acid.` };
+        return { ok: false, msg: `${Nm(m)} sits ${before ? 'left' : 'right'} of hydrogen, but its strip ${res.gas ? 'made bubbles' : 'stayed clean'} in the acid.` };
       }
       return { ok: true };
     },
@@ -323,7 +320,7 @@ export const STAGES = [
       return {
         log: 'Some strips bubbled in acid and some did not.',
         title: 'Hydrogen in the List',
-        body: `${Nm(up[0])}, ${list(up.slice(1).map(nm))} gave bubbles of hydrogen in the acid, and ${list(down.map(nm))} did not. Hydrogen sits in the activity series too: the metals above it give hydrogen from an acid, and the metals below it do not.`
+        body: `${Nm(up[0])}, ${list(up.slice(1).map(nm))} made hydrogen bubbles in the acid, and ${list(down.map(nm))} did not. Metals above hydrogen in the activity series release it from acid; those below do not.`
       };
     }
   },
@@ -332,7 +329,7 @@ export const STAGES = [
   {
     id: 's6-nails',
     title: 'Iron and a Partner',
-    prompt: 'Find which metals, wired to an iron nail, keep it from rusting in brine.',
+    prompt: 'Which metals, wired to an iron nail, keep it from rusting in brine?',
     widget,
     table: (() => {
       const n = nailsFixture('nails', { x: 64, y: 31 }, { partners: S6_PARTNERS });
@@ -341,9 +338,9 @@ export const STAGES = [
       }, { w: 204, h: 114 });
     })(),
     hints: [
-      'Press "Leave a Week", then tap each nail that has no blue spots.',
+      'Press "Leave a Week", then watch which nails stay free of blue spots.',
       'Compare the nails after the week: the blue spots show where iron is dissolving.',
-      'Tap the nail of every beaker that shows no blue spots.'
+      'Compare the partners that kept iron from dissolving with their place in the activity series.'
     ],
     check(state) {
       const t = state.table;
@@ -357,11 +354,11 @@ export const STAGES = [
       return { ok: false, msg: `The nail wired to ${nm(wrong)} ${protectsIron(wrong) ? 'showed no blue spots' : 'showed blue spots'}.` };
     },
     get reward() {
-      const p = S6_PARTNERS.filter(protectsIron); const q = S6_PARTNERS.filter(m => !protectsIron(m));
+      const p = S6_PARTNERS.filter(protectsIron);
       return {
         log: 'The nails wired to some metals stayed free of spots.',
         title: 'Sacrificial Anode',
-        body: `The nails wired to ${list(p.map(nm))} showed no blue spots: a more active partner gives its electrons in place of the iron, as a sacrificial anode.`
+        body: `The nails wired to ${list(p.map(nm))} showed no blue spots: a more active partner loses its electrons in place of the iron, as a sacrificial anode.`
       };
     }
   },
@@ -370,7 +367,7 @@ export const STAGES = [
   {
     id: 's7-sealed',
     title: 'The Sealed Strip',
-    prompt: 'Place the sealed metal X in the list of zinc, iron, lead and copper.',
+    prompt: 'Where does metal X belong among zinc, iron, lead and copper?',
     widget,
     table: (() => {
       const d = rack(S7_KNOWN, { x: 64, y: 33 });
@@ -382,14 +379,14 @@ export const STAGES = [
         fixtures: [d.fixture],
         zones: {
           slots: d.slots,
-          rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Gives most readily', last: 'Gives least readily', items: S7_KNOWN.map(m => `s-${m}`), start: S7_KNOWN.map(m => `s-${m}`) }
+          rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Loses most readily', last: 'Loses least readily', items: S7_KNOWN.map(m => `s-${m}`), start: S7_KNOWN.map(m => `s-${m}`) }
         }
       }, { w: 176, h: 108 });
     })(),
     hints: [
       'Dip the X strip in each beaker, then drag it to its place on the rail.',
       'Compare which solutions coated the X strip with the order of the four known metals on the rail.',
-      'X belongs after the metals whose solutions left it clean and before the metals whose solutions coated it.'
+      'X loses electrons more readily than any metal whose solution coated it, and less readily than any whose solution left it clean.'
     ],
     check(state) {
       const t = state.table;
@@ -419,7 +416,7 @@ export const STAGES = [
   {
     id: 's8-mix',
     title: 'Take Out the Copper',
-    prompt: 'Choose a strip that takes the copper out of a solution of copper(II) and iron(II) ions and leaves the iron ions.',
+    prompt: 'Which metal removes copper(II) ions from the solution and leaves the iron(II) ions?',
     widget,
     table: (() => {
       const d = rack(S8_STRIPS.map(() => 'mix'), { x: 64, y: 33 });
@@ -432,7 +429,7 @@ export const STAGES = [
     hints: [
       'Dip each strip in a beaker, then lay the strip you choose in the answer seat.',
       'Compare the coating on each strip, and the ions left in its beaker, with the copper and iron ions at the start.',
-      'Choose the strip that is coated with copper alone while the beaker still holds iron ions.'
+      'A metal displaces only ions of metals less active than itself in the activity series.'
     ],
     check(state) {
       const t = state.table;
@@ -462,8 +459,8 @@ attachScenes(STAGES, {
 });
 
 export const DEBRIEF = {
-  title: 'Which Metal Gives',
-  body: 'A metal displaces the ions of any metal below it in the activity series, and the swap never runs the other way. The same order tells which metals give hydrogen from an acid and which protect iron.'
+  title: 'Which Metal Loses',
+  body: 'A metal displaces the ions of any metal below it in the activity series, and the swap never runs the other way. The same order tells which metals release hydrogen from an acid and which protect iron.'
 };
 
 /** Dips for the scripts: lay a strip in the seat of one beaker. */

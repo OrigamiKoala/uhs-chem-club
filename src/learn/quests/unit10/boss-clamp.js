@@ -268,40 +268,40 @@ export const STAGES = [
   {
     id: 'p4-bar',
     title: 'Phase 4 · The Zinc Beakers',
-    prompt: 'Run the zinc cell and say which bar the electrons leave.',
+    prompt: 'Which electrode do the electrons leave in the zinc cell?',
     widget,
     table: cellTable({
       fixtures: [
         ccFixture('cc', { x: 50, y: 34 }, { ...P4, names: ['Left', 'Right'], title: 'Zinc cell' }),
-        hideDials(selectorFixture('pick', 'Electrons leave', { x: 120, y: 56 }, { options: ['the left bar', 'the right bar', ' '], start: 3, w: 52, list: true }))
+        hideDials(selectorFixture('pick', 'Electrons leave', { x: 120, y: 56 }, { options: ['the left electrode', 'the right electrode', ' '], start: 3, w: 56, list: true }))
       ]
     }, { w: 176, h: 80 }),
     foes: CLAMP_FOE,
     encounter: {
       species: 'the clamp',
-      act: 'Commit Bar',
+      act: 'Commit Electrode',
       intent: 'The Clamp stands two beakers of zinc salt at different concentrations and joins them with a wire.'
     },
     hints: [
-      'Press "Run", read the ammeter, then tap the bar you choose.',
-      'Compare the side the needle swings toward with the concentration printed under each beaker.',
-      'Find the bar the electrons move away from, and say whether it stands on the left or the right.'
+      'Press "Run", read the ammeter, then tap the electrode you choose.',
+      'Compare the side the ammeter pointer swings toward with the concentration printed under each beaker.',
+      'Find the electrode the electrons move away from, and say whether it stands on the left or the right.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a bar.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode.' };
       const want = concCellRead(P4.metal, P4.cLeft, P4.cRight).leaves === 'left' ? 1 : 2;
       if (v === want) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
       if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
-      return { ok: false, msg: `The voltmeter read ${fmt(r.V, 3)} V, right bar against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} bar.` };
+      return { ok: false, msg: `The voltmeter read ${fmt(r.V, 3)} V, right electrode against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} electrode.` };
     },
     get reward() {
       const c = concCellRead(P4.metal, P4.cLeft, P4.cRight);
       return {
-        log: 'The electrons left the bar in the dilute beaker.',
-        title: 'The Dilute Side Gives',
-        body: `The cell read ${fmt(c.E, 3)} V and the electrons left the ${c.leaves} bar, which stood in the ${concLabel(Math.min(P4.cLeft, P4.cRight))} beaker. The dilute side is the anode, where zinc dissolves, and the cell runs until the two concentrations match.`
+        log: 'The electrons left the electrode in the dilute beaker.',
+        title: 'The Dilute Side Loses',
+        body: `The cell read ${fmt(c.E, 3)} V and the electrons left the ${c.leaves} electrode, which stood in the ${concLabel(Math.min(P4.cLeft, P4.cRight))} beaker. The dilute side is the anode, where zinc dissolves, and the cell runs until the two concentrations match.`
       };
     }
   },
@@ -310,7 +310,7 @@ export const STAGES = [
   {
     id: 'p5-plate',
     title: 'Phase 5 · The Plating Run',
-    prompt: 'Find the mass of zinc, in grams, plated by 1.50 A running for 20.0 minutes.',
+    prompt: 'What mass of zinc, in grams, is plated by 1.50 A running for 20.0 minutes?',
     widget,
     entry: { id: 'g', label: 'Zinc plated', unit: 'g' },
     table: (() => {
@@ -328,7 +328,7 @@ export const STAGES = [
     hints: [
       'Choose a current and a time with the two dials, press "Run", and type the grams in the field.',
       'Compare how the plated mass changes with the current and with the time across the runs.',
-      'Turn the charge into moles of electrons with the plate, then use the half-reaction line to turn those into moles and grams of zinc.'
+      'Connect the charge passed in that time to moles of electrons and the half-reaction line on the bench.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'g');
@@ -374,11 +374,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The Clamp lets go of its strips and stands still. In its last cell is a bar of marsh copper, with a coating on it that nobody on the Fifth\'s crew had weighed.'
+      body: 'The Clamp lets go of its strips and stands still. In its last cell is an electrode of marsh copper, with a coating on it that nobody on the Fifth\'s crew had weighed.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase put a cell in front of you that the Clamp never read: which metal gives, where the electrons leave, what the voltage is, which side is dilute, how much plates. Each one has an answer that a meter or a balance can show.'
+      body: 'Every phase put a cell in front of you that the Clamp never read: which metal loses, where the electrons leave, what the voltage is, which side is dilute, how much plates. Each one has an answer that a meter or a balance can show.'
     },
     {
       heading: 'Next',

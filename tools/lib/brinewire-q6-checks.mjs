@@ -68,18 +68,13 @@ export async function checkBrinewireQ6({ ok, fail }) {
     const r = run(3, [typed('g', v)]);
     holds(!r.ok && r.msg && r.msg.includes(w), `stage 4 slip ${v} is not refused naming "${w}" (${r.msg})`);
   }
-  holds(run(4, [typed('g', '2.01')]).ok && run(4, [typed('g', '2.0')]).ok, 'stage 5 refuses 2.01 or 2.0');
-  for (const [v, w] of [['0.0335', 'minutes'], ['1.01', 'half-reaction'], ['1.19', 'copper'], ['1.22', 'zinc'], ['1800', 'coulombs'], ['2012', 'milligrams']]) {
-    const r = run(4, [typed('g', v)]);
-    holds(!r.ok && r.msg && r.msg.includes(w), `stage 5 slip ${v} is not refused naming "${w}" (${r.msg})`);
-  }
-  const seat8 = put('plate-x', 'slot:sup.pan');
-  holds(run(7, [typed('i', '0.8')]).ok && run(7, [typed('i', '0.80')]).ok && run(7, [typed('i', '0.79')]).ok, 'stage 8 refuses 0.800 A');
+  const seat7 = put('plate-x', 'slot:sup.pan');
+  holds(run(6, [typed('i', '0.8')]).ok && run(6, [typed('i', '0.80')]).ok && run(6, [typed('i', '0.79')]).ok, 'stage 7 refuses 0.800 A');
   for (const [v, w] of [['48', 'minutes'], ['0.4', 'half-reaction'], ['0.74', 'copper'], ['0.72', 'zinc']]) {
-    const r = run(7, [seat8, typed('i', v)]);
-    holds(!r.ok && r.msg && r.msg.includes(w), `stage 8 slip ${v} is not refused naming "${w}" (${r.msg})`);
+    const r = run(6, [seat7, typed('i', v)]);
+    holds(!r.ok && r.msg && r.msg.includes(w), `stage 7 slip ${v} is not refused naming "${w}" (${r.msg})`);
   }
-  holds(run(7, [typed('i', '0.4')]).msg.includes('balance'), 'stage 8 with no plate on the balance names the balance');
+  holds(run(6, [typed('i', '0.4')]).msg.includes('balance'), 'stage 7 with no plate on the balance names the balance');
   ok('q6-electrolysis typed stages: right figures pass, every slip is refused with a reason that names a reading');
 
   /* ---- the other stages ---- */
@@ -96,15 +91,15 @@ export async function checkBrinewireQ6({ ok, fail }) {
   holds(run(2, rank(['r2', 'r1', 'r3'])).ok, 'stage 3: a correct rank must be accepted without every run made');
   const badRank = run(2, [...three, ...rank(['r1', 'r2', 'r3'])]);
   holds(!badRank.ok && /mg/.test(badRank.msg), `stage 3 wrong rank is not refused with the plate's readings (${badRank.msg})`);
-  holds(run(5, [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), go('sup')]).ok, 'stage 6: two cells give gas');
-  holds(run(5, [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), put('p3', 'slot:sup.k3'), go('sup')]).ok, 'stage 6: three cells give gas');
-  const one = run(5, [put('p1', 'slot:sup.k1'), go('sup')]);
-  holds(!one.ok && /1\.10 V/.test(one.msg), `stage 6 one cell is not refused with the chain's voltage (${one.msg})`);
+  holds(run(4, [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), go('sup')]).ok, 'stage 5: two cells give gas');
+  holds(run(4, [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), put('p3', 'slot:sup.k3'), go('sup')]).ok, 'stage 5: three cells give gas');
+  const one = run(4, [put('p1', 'slot:sup.k1'), go('sup')]);
+  holds(!one.ok && /1\.10 V/.test(one.msg), `stage 5 one cell is not refused with the chain's voltage (${one.msg})`);
   const gases = ['h1', 'o1', 'h2', 'cl'].map((id, i) => put(id, `slot:sup.t${i + 1}`));
-  holds(run(6, [go('sup'), ...gases]).ok, 'stage 7 right cards');
-  holds(run(6, gases).ok, 'stage 7: right cards need no run');
-  const swapped = run(6, [go('sup'), put('h1', 'slot:sup.t1'), put('o1', 'slot:sup.t2'), put('h2', 'slot:sup.t3'), put('o2', 'slot:sup.t4')]);
-  holds(!swapped.ok && /brine, right tube/.test(swapped.msg) && /pale green/.test(swapped.msg), `stage 7 oxygen in the brine tube is refused with the tube's reading (${swapped.msg})`);
+  holds(run(5, [go('sup'), ...gases]).ok, 'stage 6 right cards');
+  holds(run(5, gases).ok, 'stage 6: right cards need no run');
+  const swapped = run(5, [go('sup'), put('h1', 'slot:sup.t1'), put('o1', 'slot:sup.t2'), put('h2', 'slot:sup.t3'), put('o2', 'slot:sup.t4')]);
+  holds(!swapped.ok && /brine, right tube/.test(swapped.msg) && /pale green/.test(swapped.msg), `stage 6 oxygen in the brine tube is refused with the tube's reading (${swapped.msg})`);
   ok('q6-electrolysis stages: right answers pass, every wrong one is refused with a reading from the table');
 
   /* ---- what the bench prints: the planner's numbers, no pole label, no answer before the run ---- */
@@ -126,17 +121,16 @@ export async function checkBrinewireQ6({ ok, fail }) {
   shows(2, three, ['33.5 mg', '22.4 mg', '55.9 mg'], 'stage 3 after three runs');
   holds(!paintTexts(2, three).includes(' C'), 'stage 3 prints a charge though the coulomb is not earned yet');
   shows(3, [dial('sup', 'cur', 2), dial('sup', 'time', 2), go('sup')], ['39.5 mg', '120 C', 'Cu²⁺ + 2 e⁻ → Cu'], 'stage 4 after a run');
-  shows(4, [dial('sup', 'cur', 2), dial('sup', 'time', 2), go('sup')], ['201.2 mg', '180 C', 'Ag⁺ + e⁻ → Ag'], 'stage 5 after a run');
-  shows(5, [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), go('sup')], ['Chain 2.20 V', '3.7 mL', '1.9 mL'], 'stage 6 after a run');
-  shows(6, [go('sup')], ['3.9 mL', '1.9 mL', 'pale green, bleaches'], 'stage 7 after a run');
-  shows(7, [seat8], ['0.365 g', 'Plated for 25.0 min'], 'stage 8 with the plate on the balance');
-  for (const i of [0, 1, 2, 3, 4, 5, 6, 7]) {
+  shows(4, [put('p1', 'slot:sup.k1'), put('p2', 'slot:sup.k2'), go('sup')], ['Chain 2.20 V', '3.7 mL', '1.9 mL'], 'stage 5 after a run');
+  shows(5, [go('sup')], ['3.9 mL', '1.9 mL', 'pale green, bleaches'], 'stage 6 after a run');
+  shows(6, [seat7], ['0.365 g', 'Plated for 25.0 min'], 'stage 7 with the plate on the balance');
+  for (const i of [0, 1, 2, 3, 4, 5, 6]) {
     for (const t of [paintTexts(i, []), paintTexts(i, Q.SOLUTIONS[i])]) {
       holds(!t.split(' | ').some(it => /^\(?[+−-]\)?$/.test(it.trim())) && !/positive|negative/i.test(t), `stage ${i + 1} prints a pole label: ${t}`);
     }
   }
   for (const a of ['1.19', '1.185', '2.01', '2.012', '0.800', '0.80 A']) {
-    holds(!paintTexts(3, []).includes(a) && !paintTexts(4, []).includes(a) && !paintTexts(7, []).includes(a), `a typed stage prints "${a}" before anything is done`);
+    holds(!paintTexts(3, []).includes(a) && !paintTexts(6, []).includes(a), `a typed stage prints "${a}" before anything is done`);
   }
   ok('q6-electrolysis bench: the painted numbers match the planner, no stage prints a pole label or an answer before the work');
 

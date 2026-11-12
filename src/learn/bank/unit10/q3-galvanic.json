@@ -64,11 +64,11 @@
         "calc": "12/2",
         "unit": "ions",
         "tol": 0.01,
-        "hint": "Divide the electrons that left by the electrons each atom gives.",
+        "hint": "Divide the electrons that left by the electrons each atom loses.",
         "explain": "12 electrons ÷ 2 electrons for each atom = 6 Zn²⁺ ions."
       },
       {
-        "say": "Each Ni²⁺ ion takes 2 electrons at the cathode. How many Ni²⁺ ions are used up?",
+        "say": "Each Ni²⁺ ion gains 2 electrons at the cathode. How many Ni²⁺ ions are used up?",
         "kind": "number",
         "answer": 6,
         "calc": "12/2",

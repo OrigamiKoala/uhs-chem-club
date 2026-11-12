@@ -21,4 +21,4 @@ reg('fx_cellgalvplot', Q3, 1); reg('fx_cellgalvbal', Q3, 5); reg('pc_cellgalvstr
 reg('fx_cellboard', Q4, 0); reg('pc_cellelectrode', Q4, 0); reg('fx_cellrig', Q4, 4);
 reg('fx_cellloadrun', Q5, 1); reg('fx_cellloadread', Q5, 2); reg('fx_cellloadcc', Q5, 4);
 reg('fx_selector', Q2, 3); reg('pc_cellgas', Q2, 4); reg('pc_cellcan', Q5, 6);
-reg('fx_cellsupply', Q6, 0); reg('pc_cellsupplypack', Q6, 5); reg('pc_cellsupplyplate', Q6, 7);
+reg('fx_cellsupply', Q6, 0); reg('pc_cellsupplypack', Q6, 4); reg('pc_cellsupplyplate', Q6, 6);

@@ -203,7 +203,7 @@ measured.static = total - dynamic;
     if ((t.pieces || []).some(p => p.kind === 'tag' && (t.zones?.rail || (t.zones?.trays || []).length || (t.zones?.slots || []).length))) return true;
     return false;
   };
-  const converted = ['q1-halves:1', 'q1-halves:3', 'q1-halves:4', 'q1-halves:7', 'q2-activity:1', 'q2-activity:2', 'q2-activity:5', 'q2-activity:6', 'q2-activity:7', 'q2-activity:8', 'boss-clamp:1', 'q1-halves:5', 'q1-halves:8', 'q3-galvanic:4', 'q3-galvanic:5', 'q3-galvanic:6', 'q4-potential:1', 'q4-potential:3', 'q5-load:2', 'q5-load:5', 'q5-load:7', 'q5-load:8', 'q6-electrolysis:2', 'q6-electrolysis:7', 'boss-clamp:2', 'boss-clamp:4'];
+  const converted = ['q1-halves:1', 'q1-halves:3', 'q1-halves:4', 'q1-halves:7', 'q2-activity:1', 'q2-activity:2', 'q2-activity:5', 'q2-activity:6', 'q2-activity:7', 'q2-activity:8', 'boss-clamp:1', 'q1-halves:5', 'q1-halves:8', 'q3-galvanic:4', 'q3-galvanic:5', 'q3-galvanic:6', 'q4-potential:1', 'q4-potential:3', 'q5-load:2', 'q5-load:5', 'q5-load:7', 'q6-electrolysis:2', 'q6-electrolysis:6', 'boss-clamp:2', 'boss-clamp:4'];
   let n = 0; let left = 0; const leftList = [];
   for (const q of quests) q.stages.forEach((st, i) => {
     const key = `${q.id}:${i + 1}`;
@@ -254,7 +254,7 @@ measured.static = total - dynamic;
 
 /* ---------------------------------------------------------------- 14 a sealed bench stays sealed in the model */
 {
-  const sealedStages = [['q2-activity', 6], ['q3-galvanic', 7], ['q4-potential', 7], ['q6-electrolysis', 7]];
+  const sealedStages = [['q2-activity', 6], ['q3-galvanic', 7], ['q6-electrolysis', 6]];
   let n = 0;
   for (const [id, i] of sealedStages) {
     const q = quests.find(x => x.id === id);
@@ -268,12 +268,6 @@ measured.static = total - dynamic;
     if (id !== 'q2-activity' && metals.length) { n++; fail(`${id}:${i + 1} the model names a sealed metal: ${metals.join(', ')}`); }
     if (id === 'q2-activity' && (spec.strips || []).some(x => /^(Mg|Al|Zn|Fe|Ni|Sn|Pb|Cu|Ag|Au)/.test(x.label || ''))) { n++; fail('q2-activity:7 the model names the sealed strip'); }
   }
-  // a sealed concentration cell draws equal crowds in both beakers
-  const q5 = quests.find(x => x.id === 'q5-load');
-  const st5 = q5.mod.stateFor(7, q5.mod.SOLUTIONS[7]);
-  const sp5 = SCENES.specFor(st5.table, st5.table.fixtures.scene);
-  const counts = (sp5.ions || []).map(g => g.n);
-  if (new Set(counts).size > 1) { n++; fail(`q5-load:8 the sealed cell draws unequal crowds: ${counts.join(', ')}`); }
   if (!n) ok('sealed benches: the model names no sealed metal and shows no sealed concentration');
 }
 

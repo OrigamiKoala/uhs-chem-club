@@ -43,16 +43,15 @@ export const VOCABULARY = [
   { term: /\banode\b/i, introducedAt: 4 },
   { term: /\bcathode\b/i, introducedAt: 4 },
   { term: /\bgalvanic cells?\b/i, introducedAt: 4 },
-  { term: /\boxidation\b/i, introducedAt: 4 },
-  { term: /\breduction\b/i, introducedAt: 4 },
   { term: /\bcell notation\b/i, introducedAt: 7 }
 ];
 
-/** Built quests whose words this bench uses: none yet (the redox words are earned again here, on stage 4). */
-export const BUILDS_ON = [];
+/** Built quests whose words this bench uses: q1-halves introduces oxidation and reduction. */
+export const BUILDS_ON = ['unit10/q1-halves'];
 
 export function toolNoteFor() { return null; }
 
+const SPEAKER = 'Vess';
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit10/q3-galvanic';
 const GUESS = {
@@ -128,7 +127,7 @@ export const STAGES = [
   {
     id: 's2-link',
     title: 'Keep It Running',
-    get prompt() { return guessLine('Make the ammeter keep a current for the whole run.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which piece between the beakers keeps the current flowing?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 46 }, { left: 'zn', right: 'cu', link: 'seat', wire2: true, plot: true });
@@ -159,7 +158,7 @@ export const STAGES = [
       return {
         log: 'Only the tube of salt solution kept the current going.',
         title: 'Salt Bridge',
-        body: `${verdict}Only the salt bridge kept the current steady: its ions complete the circuit that the wire cannot.`
+        body: `${verdict}Only the salt tube did. Its ions move into the beakers and complete the circuit; it is called a salt bridge.`
       };
     }
   },
@@ -168,7 +167,7 @@ export const STAGES = [
   {
     id: 's3-direction',
     title: 'Which Way the Electrons Go',
-    prompt: 'Say which beaker the electrons move toward in each cell, from its ammeter.',
+    prompt: 'Toward which beaker do the electrons move in each cell?',
     widget,
     table: (() => {
       const rigs = S3_CELLS.map(([id, l, r, name], i) => galvFixture(id, { x: 31 + i * 61, y: 48 }, { left: l, right: r, compact: true, says: true, title: name }));
@@ -176,8 +175,8 @@ export const STAGES = [
     })(),
     hints: [
       'Press "Run" on each cell, then set the "Electrons move toward" dial on it.',
-      'Look at which way each needle swings and which metal stands in each beaker.',
-      'Read the ammeter\'s own dial for what a needle on the left or on the right means, then match each cell.'
+      'Look at which way each ammeter pointer swings and which metal stands in each beaker.',
+      'Read the ammeter\'s own dial for what a pointer on the left or on the right means, then match each cell.'
     ],
     check(state) {
       const t = state.table;
@@ -206,7 +205,8 @@ export const STAGES = [
   {
     id: 's4-roles',
     title: 'Atoms Leave, Atoms Join',
-    prompt: 'Mark the strip where atoms leave it and the strip where atoms join it, in the zinc–copper cell.',
+    briefing: { speaker: SPEAKER, body: 'The electrode where oxidation happens is the anode. The electrode where reduction happens is the cathode.' },
+    prompt: 'Which strip is the anode and which the cathode?',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 52 }, { ...S4, link: 'fixed', ammeter: false, windows: 'metal' });
@@ -218,7 +218,7 @@ export const STAGES = [
     hints: [
       'Press "Run", then tap each strip until it says whether atoms leave or join it.',
       'Compare each beaker\'s counts after the run with the counts it began with.',
-      'Mark "leave" on the strip whose atoms went down, and "join" on the other strip.'
+      'At the anode, atoms lose electrons and enter the solution as ions; at the cathode, ions gain electrons and join the strip.'
     ],
     check(state) {
       const t = state.table;
@@ -240,7 +240,7 @@ export const STAGES = [
       return {
         log: 'Atoms left one strip as ions and ions joined the other as atoms.',
         title: 'Anode and Cathode',
-        body: `${A.name[0].toUpperCase()}${A.name.slice(1)} atoms left as ${A.ion} ions (oxidation, the anode) and ${C.ion} ions became atoms (reduction, the cathode). A cell that runs by itself is a galvanic cell.`
+        body: `${A.name[0].toUpperCase()}${A.name.slice(1)} atoms left as ${A.ion} ions at the anode, and ${C.ion} ions became atoms at the cathode. A cell that runs by itself like this is a galvanic cell.`
       };
     }
   },
@@ -249,7 +249,7 @@ export const STAGES = [
   {
     id: 's5-ions',
     title: 'What the Bridge Carries',
-    prompt: 'Show which way the negative ions in the bridge move while the cell runs.',
+    prompt: 'Toward which beaker do the negative ions in the salt bridge move?',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 54 }, { ...S5, link: 'fixed', ammeter: false, windows: 'full', bridgeWindow: true });
@@ -293,7 +293,7 @@ export const STAGES = [
   {
     id: 's6-weigh',
     title: 'Weighing the Strips',
-    prompt: 'Weigh each strip before and after the run, and say which one gained mass.',
+    prompt: 'Which strip gains mass as the cell runs?',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 46 }, { left: S6.left, right: S6.right, link: 'fixed', ammeter: false, strips: true, minutes: true });
@@ -311,9 +311,9 @@ export const STAGES = [
       }, { w: 176, h: 112 });
     })(),
     hints: [
-      'Lay a strip on the pan to read it, drag each strip into the beaker above its ions, press "Run", then weigh them again and tap the strip that gained mass.',
+      'Weigh each strip on the balance, drag both into their beakers, press "Run", then weigh them again.',
       'Compare each strip\'s two readings on the list under the balance.',
-      'Subtract each strip\'s first reading from its second; a positive change is a gain.'
+      'Atoms leave the anode as ions and join the cathode, so ask which strip is gaining atoms.'
     ],
     check(state) {
       const t = state.table;
@@ -330,7 +330,7 @@ export const STAGES = [
       const dl = stripChange(S6.left, S6.right, S6.left, WEIGH_RUN_SECONDS);
       const dr = stripChange(S6.left, S6.right, S6.right, WEIGH_RUN_SECONDS);
       return {
-        log: 'The strip that gave ions lost mass and the strip that took them gained it.',
+        log: 'The strip that lost ions lost mass and the strip that gained atoms gained it.',
         title: 'Mass Follows the Atoms',
         body: `The ${METALS[S6.right].symbol} strip gained ${fmt(dr, 2)} g and the ${METALS[S6.left].symbol} strip lost ${fmt(-dl, 2)} g. Atoms leave the anode as ions and join the cathode as atoms, so the anode loses mass and the cathode gains it.`
       };
@@ -340,8 +340,9 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     id: 's7-notation',
-    title: 'Shorthand (Beyond the Exam)',
-    prompt: 'Write the zinc–copper cell in shorthand.',
+    title: 'Shorthand',
+    briefing: { speaker: SPEAKER, body: 'Cell notation lists a cell from anode to cathode. A single bar separates a solid from its solution and a double bar stands for the salt bridge.' },
+    prompt: 'How is the zinc–copper cell written in cell notation?',
     widget,
     table: (() => {
       const chips = notationChips('zn', 'cu');
@@ -370,9 +371,9 @@ export const STAGES = [
     },
     get reward() {
       return {
-        log: 'The cell was written in shorthand.',
+        log: 'The cell was written in cell notation.',
         title: 'Cell Notation',
-        body: `${notationText('zn', 'cu')} is cell notation: anode half left, cathode half right, a double bar for the salt bridge. It is beyond the exam.`
+        body: `${notationText('zn', 'cu')} is cell notation: anode half on the left, cathode half on the right, and a double bar for the salt bridge.`
       };
     }
   },
@@ -381,7 +382,7 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'The Sealed Cell',
-    prompt: 'Find the anode of the sealed cell.',
+    prompt: 'Which strip is the anode of the sealed cell?',
     widget,
     table: (() => {
       const g = galvFixture('rig', { x: 44, y: 52 }, { left: S8.left, right: S8.right, link: 'fixed', ammeter: true, strips: true, sealed: true, minutes: true });
@@ -399,8 +400,8 @@ export const STAGES = [
     })(),
     hints: [
       'Drag each strip into the beaker with its letter, press "Run", weigh the strips, and lay a card in the slot.',
-      'Compare which way the needle swings with how each strip\'s mass changed.',
-      'The ammeter\'s dial says which beaker the electrons move toward, so they left through the other one.'
+      'Compare which way the ammeter pointer swings with how each strip\'s mass changed.',
+      'The ammeter shows which beaker receives the electrons, and the balance shows which strip lost atoms.'
     ],
     check(state) {
       const t = state.table;

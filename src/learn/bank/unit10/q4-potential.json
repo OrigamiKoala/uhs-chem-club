@@ -86,7 +86,7 @@
         ],
         "answer": "b",
         "hint": "Look at the charge on the iron ion that forms.",
-        "explain": "Each Fe atom gives 2 electrons and each Cu²⁺ takes 2."
+        "explain": "Each Fe atom loses 2 electrons and each Cu²⁺ gains 2."
       },
       {
         "say": "What is ΔG°, in kJ? Use ΔG° = −nFE°.",

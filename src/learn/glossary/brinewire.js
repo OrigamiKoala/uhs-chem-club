@@ -16,8 +16,8 @@ export const TERMS = [
   { id: 'oxidation', term: 'oxidation', gloss: 'losing electrons', quest: 'q1-halves', stage: 3, re: /\boxidation\b(?! numbers?)/i },
   { id: 'reduction', term: 'reduction', gloss: 'gaining electrons', quest: 'q1-halves', stage: 3, re: /\breduction\b/i },
   { id: 'redox', term: 'redox', gloss: 'a reaction in which one thing loses electrons and another gains them', quest: 'q1-halves', stage: 3, re: /\bredox\b/i },
-  { id: 'reducing-agent', term: 'reducing agent', gloss: 'the substance that gives up the electrons', quest: 'q1-halves', stage: 5, re: /\breducing agents?\b/i },
-  { id: 'oxidizing-agent', term: 'oxidizing agent', gloss: 'the substance that takes the electrons', quest: 'q1-halves', stage: 5, re: /\boxidi[sz]ing agents?\b/i },
+  { id: 'reducing-agent', term: 'reducing agent', gloss: 'the substance that loses electrons', quest: 'q1-halves', stage: 5, re: /\breducing agents?\b/i },
+  { id: 'oxidizing-agent', term: 'oxidizing agent', gloss: 'the substance that gains electrons', quest: 'q1-halves', stage: 5, re: /\boxidi[sz]ing agents?\b/i },
   { id: 'displacement', term: 'displacement', gloss: 'a metal pushing another metal out of its solution and taking its place', quest: 'q2-activity', stage: 1, re: /\bdisplacement\b/i },
   { id: 'activity-series', term: 'activity series', gloss: 'metals listed from most to least ready to give up electrons', quest: 'q2-activity', stage: 2, re: /\bactivity series\b/i },
   { id: 'sacrificial-anode', term: 'sacrificial anode', gloss: 'a metal that corrodes in place of the one it protects', quest: 'q2-activity', stage: 6, re: /\bsacrificial anode\b/i },
@@ -36,7 +36,7 @@ export const TERMS = [
   { id: 'electrolysis', term: 'electrolysis', gloss: 'using an outside source of electricity to force a reaction that would not run by itself', quest: 'q6-electrolysis', stage: 1, re: /\belectroly(sis|tic)\b/i },
   { id: 'coulomb', term: 'coulomb', gloss: 'the unit of charge: the charge that 1 ampere carries in 1 second', quest: 'q6-electrolysis', stage: 3, re: /\bcoulombs?\b/i },
   { id: 'faraday-law', term: 'Faraday\'s law', gloss: 'the mass deposited is proportional to the charge passed', quest: 'q6-electrolysis', stage: 4, re: /\bFaraday's law\b/i },
-  { id: 'overpotential', term: 'overpotential', gloss: 'extra voltage a reaction needs beyond the textbook value', quest: 'q6-electrolysis', stage: 7, re: /\boverpotential\b/i }
+  { id: 'overpotential', term: 'overpotential', gloss: 'extra voltage a reaction needs beyond the textbook value', quest: 'q6-electrolysis', stage: 6, re: /\boverpotential\b/i }
 ];
 
 /**
@@ -68,6 +68,5 @@ export const NEEDS = {
   'q5-load:7': ['log'],
   'q6-electrolysis:3': ['ladder'],
   'q6-electrolysis:4': ['ladder'],
-  'q6-electrolysis:5': ['ladder'],
-  'q6-electrolysis:8': ['ladder']
+  'q6-electrolysis:7': ['ladder']
 };

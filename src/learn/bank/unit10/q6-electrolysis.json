@@ -23,7 +23,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Charge is current times time: 0.50 × 200 = 100 C and 2.0 × 40 = 80 C. Each Ag⁺ takes one electron, so the mass plated follows the charge, not the current alone."
+      "explanation": "Charge is current times time: 0.50 × 200 = 100 C and 2.0 × 40 = 80 C. Each Ag⁺ gains one electron, so the mass plated follows the charge, not the current alone."
     },
     {
       "id": "q6-electrolysis#b2",
@@ -48,7 +48,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Each Ag⁺ takes one electron and each Cu²⁺ takes two, so a given number of electrons plates twice as many moles of silver as of copper. Molar mass only changes the grams."
+      "explanation": "Each Ag⁺ gains one electron and each Cu²⁺ gains two, so a given number of electrons plates twice as many moles of silver as of copper. Molar mass only changes the grams."
     }
   ],
   "worked": {

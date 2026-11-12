@@ -47,8 +47,8 @@ Status values: not started, planned (plan rows written), in progress, done, play
 
 ### Brinewire (`unit10`)
 
-- Status: planned 2026-11-11 (`worlds/unit10-brinewire.md`; 53 → 50)
-- Benches done:
+- Status: done (2026-11-12; not yet played by the owner)
+- Benches done: all seven (`q1-halves` 8, `q2-activity` 8, `q3-galvanic` 8, `q4-potential` 7, `q5-load` 7, `q6-electrolysis` 7, `boss-clamp` 5; 50 stages total). Cold-read review run after `q1-halves` and on the finished world; findings fixed or listed under "Still weak" in `worlds/unit10-brinewire.md`.
 - Stopped at:
 
 ### Verdigris (`unit09`)

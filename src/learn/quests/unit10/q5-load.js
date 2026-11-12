@@ -31,7 +31,7 @@ import { LOAD, CONC_STEPS, loadAt, balanceOf, readAt, concCellRead, concLabel, m
 
 import { attachScenes } from '../../table/kits/cell-attach.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\breaction quotient\b/i, introducedAt: 4 },
@@ -45,6 +45,7 @@ export const BUILDS_ON = ['unit10/q4-potential'];
 
 export function toolNoteFor() { return null; }
 
+const SPEAKER = 'Vess';
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit10/q5-load';
 const GUESS = {
@@ -65,12 +66,10 @@ const S6 = { aC: 1, cC: 0.001 };
 /** Stage 7: three prepared zinc–copper cells: [fixture, card, name, zinc concentration, copper concentration]. */
 const S7_CELLS = [['fa', 'ta', 'Cell A', 1, 1], ['fb', 'tb', 'Cell B', 1, 0.01], ['fc', 'tc', 'Cell C', 0.01, 1]];
 const S7_V = c => readAt('cu', 'zn', c[3], c[4]);
-const S7_WANT = [...S7_CELLS].sort((p, q) => S7_V(q) - S7_V(p));
-/** Stage 5 and 8: the concentration cells. */
+const S7_WANT = [...S7_CELLS].sort((p, q) => S7_V(p) - S7_V(q));
+/** Stage 5: the concentration cell. */
 const S5 = { metal: 'cu', cLeft: 1, cRight: 0.01 };
-const S8 = { metal: 'ag', cLeft: 0.01, cRight: 1 };
 const TOL_V = 0.012 + 1e-9;
-const TOL_RATIO = 0.22 + 1e-9;
 
 const guessLine = (sentence, g) => (g && GUESS[g] ? `You predicted "${GUESS[g]}". ${sentence}` : sentence);
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
@@ -128,7 +127,7 @@ export const STAGES = [
   {
     id: 's2-run',
     title: 'The Cell Runs Down',
-    get prompt() { return guessLine('Run the tin and lead cell and say what each beaker holds when the voltmeter reads zero.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which ions are still present when the cell\'s voltage reaches zero?', recall(QUEST_KEY)); },
     widget,
     table: cellTable({
       fixtures: [
@@ -146,8 +145,8 @@ export const STAGES = [
       if (!tin && !lead) return { ok: false, notYet: true, msg: 'Tap each kind of ion that is still there.' };
       if (tin && lead) return { ok: true };
       const r = loadRead({ fixtures: state.table.fixtures }, 'load');
-      if (!r.ran) return { ok: false, msg: `The cell has not been run yet; the windows hold ${r.now.nAnode} tin and ${r.now.nCathode} lead dots.` };
-      return { ok: false, msg: `At tick ${r.tick} the voltmeter read ${milliText(r.now.E)} V, the tin window held ${r.now.nAnode} dots and the lead window ${r.now.nCathode}.` };
+      if (!r.ran) return { ok: false, msg: `The cell has not been run yet; the windows hold ${r.now.nAnode} tin and ${r.now.nCathode} lead ions.` };
+      return { ok: false, msg: `At tick ${r.tick} the voltmeter read ${milliText(r.now.E)} V, the tin window held ${r.now.nAnode} ions and the lead window ${r.now.nCathode}.` };
     },
     get reward() {
       const e = END();
@@ -156,7 +155,7 @@ export const STAGES = [
       return {
         log: 'The voltage fell to zero with both ions still in the beakers.',
         title: 'A Dead Cell Is Not Empty',
-        body: `${said}The voltage fell from ${milliText(loadAt(TL.cathode, TL.anode, START, 0).E)} V to ${milliText(e.E)} V, leaving ${e.nAnode} tin and ${e.nCathode} lead dots: the cell stopped without being used up.`
+        body: `${said}The voltage fell from ${milliText(loadAt(TL.cathode, TL.anode, START, 0).E)} V to ${milliText(e.E)} V, leaving ${e.nAnode} tin and ${e.nCathode} lead ions: the cell stopped without being used up.`
       };
     }
   },
@@ -165,7 +164,7 @@ export const STAGES = [
   {
     id: 's3-zinc',
     title: 'More Zinc Ions',
-    prompt: 'Raise the zinc ion concentration in the zinc beaker, from 0.010 M to 1.0 M, and say what the voltmeter does.',
+    prompt: 'What happens to the cell\'s voltage when the zinc ion concentration is raised from 0.010 M to 1.0 M?',
     widget,
     table: cellTable({
       fixtures: [
@@ -199,39 +198,42 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   {
-    id: 's4-ratio',
+    id: 's4-balance',
     title: 'The Balance Point',
-    prompt: 'Find the tin count divided by the lead count in the cell that reads zero.',
+    briefing: { speaker: SPEAKER, body: 'The ratio of product ions to reactant ions at any moment is the reaction quotient, Q.' },
+    prompt: 'Why does the cell\'s voltage reach zero?',
     widget,
-    entry: { id: 'ratio', label: 'Tin count ÷ lead count', unit: '' },
     table: cellTable({
-      fixtures: [loadFixture('load', { x: 82, y: 40 }, { ...TL, counts: true, tick: LOAD.maxTick })]
-    }, { w: 164, h: 80 }),
+      fixtures: [
+        loadFixture('load', { x: 77, y: 38 }, { ...TL, counts: true, tick: LOAD.maxTick }),
+        plaqueFixture('plate', 'At equilibrium', { x: 176, y: 18 }, [`K = ${fmt(balanceOf(TL.cathode, TL.anode, START).K, 1)}`], { w: 42 })
+      ],
+      pieces: [
+        note('out', 'The reactant ions ran out', { x: 34, y: 86 }),
+        note('equal', 'The two kinds of ion became equal', { x: 99, y: 86 }),
+        note('eq', 'The ratio of ions, Q, reached K', { x: 164, y: 86 })
+      ],
+      zones: { slots: [{ id: 'reason', label: 'Why it stopped', at: { x: 176, y: 49 }, size: { w: 42, h: 14 } }] }
+    }, { w: 198, h: 95 }),
     hints: [
-      'Read the two counts printed under the windows and type the answer in the field.',
-      'Compare the tin count with the lead count: they are the dots drawn in each beaker.',
-      'Divide the count under the tin window by the count under the lead window, to one decimal place.'
+      'Compare the tin and lead ion counts under the windows with the K value on the plate.',
+      'Compare the ratio of tin ions to lead ions under the windows with the K value on the plate.',
+      'Ask what happens to the cell\'s voltage when Q reaches K.'
     ],
     check(state) {
-      const v = entryNumber(state.table, 'ratio');
-      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a number in the field.' };
+      const card = pieceIn(state.table, 'reason');
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      if (card.id === 'eq') return { ok: true };
       const e = END();
-      const want = e.nAnode / e.nCathode;
-      if (Math.abs(v - want) <= TOL_RATIO) return { ok: true };
-      const near = (x, tol = 0.03 * Math.abs(x) + 0.02) => Math.abs(v - x) <= tol;
-      const both = `${e.nAnode} dots in the tin window and ${e.nCathode} in the lead window`;
-      if (near(1 / want)) return { ok: false, msg: `That divides the lead count by the tin count; the windows hold ${both}.` };
-      if (near(e.nAnode - e.nCathode)) return { ok: false, msg: `That is the difference between the two counts; the windows hold ${both}.` };
-      if (near(e.nAnode) || near(e.nCathode)) return { ok: false, msg: `That is one window's count by itself; the windows hold ${both}.` };
-      if (near(1)) return { ok: false, msg: `The two windows are not equal: ${both}.` };
-      return { ok: false, msg: `The windows hold ${both}; that does not make ${fmt(v, 2)}.` };
+      if (card.id === 'out') return { ok: false, msg: `Both windows still hold ions: ${e.nAnode} tin and ${e.nCathode} lead.` };
+      return { ok: false, msg: `The two windows are not equal: ${e.nAnode} tin and ${e.nCathode} lead.` };
     },
     get reward() {
       const e = END(); const b = balanceOf(TL.cathode, TL.anode, START);
       return {
-        log: 'The tin count over the lead count matched the cell\'s K.',
+        log: 'The ratio of ions matched K when the cell reached zero.',
         title: 'Reaction Quotient',
-        body: `${e.nAnode} ÷ ${e.nCathode} = ${fmt(e.nAnode / e.nCathode, 1)}, close to K = ${fmt(b.K, 1)}: that ion ratio is the reaction quotient, Q, and the cell reads 0 V when Q reaches K.`
+        body: `${e.nAnode} ÷ ${e.nCathode} = ${fmt(e.nAnode / e.nCathode, 1)}, close to K = ${fmt(b.K, 1)}. A cell is at equilibrium, and reads 0 V, when Q reaches K.`
       };
     }
   },
@@ -240,31 +242,31 @@ export const STAGES = [
   {
     id: 's5-copper',
     title: 'Two Copper Beakers',
-    prompt: 'Run a copper cell with a 1.0 M beaker and a 0.010 M beaker, and say which bar the electrons leave.',
+    prompt: 'In a copper cell with a 1.0 M beaker and a 0.010 M beaker, which electrode do the electrons leave?',
     widget,
     table: cellTable({
       fixtures: [
         ccFixture('cc', { x: 50, y: 34 }, { ...S5, names: ['Left', 'Right'] }),
-        hideDials(selectorFixture('pick', 'Electrons leave', { x: 128, y: 34 }, { options: ['the bar in the 1.0 M beaker', 'the bar in the 0.010 M beaker', ' '], start: 3, w: 64, list: true }))
+        hideDials(selectorFixture('pick', 'Electrons leave', { x: 128, y: 34 }, { options: ['the electrode in the 1.0 M beaker', 'the electrode in the 0.010 M beaker', ' '], start: 3, w: 68, list: true }))
       ]
     }, { w: 176, h: 72 }),
     hints: [
-      'Press "Run", read the ammeter, then tap the bar you choose.',
-      'Compare the side the needle swings toward with the concentration printed under each beaker.',
-      'Find the bar the electrons move away from and read the concentration of its beaker.'
+      'Press "Run", read the ammeter, then tap the electrode you choose.',
+      'Compare the side the ammeter pointer swings toward with the concentration printed under each beaker.',
+      'Find the electrode the electrons move away from and read the concentration of its beaker.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a bar.' };
+      if (v === 3) return { ok: false, notYet: true, msg: 'Tap an electrode.' };
       if (v === 2) return { ok: true };
       const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
       if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
-      return { ok: false, msg: `The voltmeter read ${fmt(r.V, 3)} V, right bar against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} bar.` };
+      return { ok: false, msg: `The voltmeter read ${fmt(r.V, 3)} V, right electrode against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} electrode.` };
     },
     get reward() {
       const c = concCellRead(S5.metal, S5.cLeft, S5.cRight);
       return {
-        log: 'The electrons left the bar in the dilute beaker.',
+        log: 'The electrons left the electrode in the dilute beaker.',
         title: 'Concentration Cell',
         body: `The same metal at 1.0 M and 0.010 M read ${fmt(c.E, 3)} V: a concentration cell, which runs until the two concentrations match.`
       };
@@ -275,7 +277,12 @@ export const STAGES = [
   {
     id: 's6-nernst',
     title: 'A Cell Nobody Wired',
-    prompt: 'Find the voltage, in volts, of the zinc and copper cell with 1.0 M zinc ions and 0.0010 M copper ions.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The Nernst equation corrects E° for concentration: E = E° − (0.0592 ÷ n) × log Q.',
+      worked: ['0.010 M Zn²⁺, 1.0 M Cu²⁺ (E° = 1.10 V, n = 2):', 'Q = 0.010 ÷ 1.0 = 0.010, log Q = −2', '(0.0592 ÷ 2) × (−2) = −0.059', 'E = 1.10 + 0.059 = 1.16 V']
+    },
+    prompt: 'What is the voltage, in volts, of the zinc and copper cell with 1.0 M zinc ions and 0.0010 M copper ions?',
     widget,
     entry: { id: 'v', label: 'Cell voltage', unit: 'V' },
     table: cellTable({
@@ -287,7 +294,7 @@ export const STAGES = [
     hints: [
       'Read the concentrations under the beakers and type the voltage in the field.',
       'Compare the charges on the two ions and the two concentrations with the equation on the plate.',
-      'Find Q from the two concentrations, take its base-ten log, multiply by 0.0592 over the electrons moved, and subtract from E°.'
+      'Follow the worked case in the briefing using this cell\'s concentrations and n = 2.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'v');
@@ -321,17 +328,17 @@ export const STAGES = [
   {
     id: 's7-rank',
     title: 'Three Prepared Cells',
-    prompt: 'Rank the three zinc and copper cells by voltage, highest first.',
+    prompt: 'Which cell has the lowest voltage and which the highest?',
     widget,
     table: cellTable({
       fixtures: S7_CELLS.map(([fid, , name, a, c], i) => readFixture(fid, { x: 32 + i * 56, y: 30 }, { left: 'zn', right: 'cu', aC: a, cC: c, w: 50, title: name })),
       pieces: S7_CELLS.map(([, cid, name], i) => canPiece(cid, name, { x: 32 + i * 28, y: 70 })),
-      zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Highest voltage', last: 'Lowest voltage', items: [], start: [] } }
+      zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Lowest voltage', last: 'Highest voltage', items: [], start: [] } }
     }, { w: 176, h: 106 }),
     hints: [
       'Press "Run" on each cell, then drag the three cans onto the rail.',
       'Compare the voltages the three voltmeters read, and the concentrations printed under the beakers.',
-      'Put the can of the highest reading on the left and the lowest on the right.'
+      'Compare product ions with reactant ions in each cell before you run it.'
     ],
     check(state) {
       const t = state.table;
@@ -340,7 +347,7 @@ export const STAGES = [
       const want = S7_WANT.map(c => c[1]);
       if (order.join() === want.join()) return { ok: true };
       const byCard = id => S7_CELLS.find(c => c[1] === id);
-      const k = order.findIndex((id, i) => i > 0 && S7_V(byCard(id)) > S7_V(byCard(order[i - 1])));
+      const k = order.findIndex((id, i) => i > 0 && S7_V(byCard(id)) < S7_V(byCard(order[i - 1])));
       const a = byCard(order[k - 1]); const b = byCard(order[k]);
       const ra = readRead({ fixtures: t.fixtures }, a[0]).now; const rb = readRead({ fixtures: t.fixtures }, b[0]).now;
       if (!ra || !rb) return { ok: false, msg: `${a[2]} sits left of ${b[2]}, and ${!ra ? a[2] : b[2]} has not been read yet.` };
@@ -354,42 +361,6 @@ export const STAGES = [
         body: `${rows.join(', ')}. A cell with more reactant than product ions reads above E°, and one with more product ions reads below.`
       };
     }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-sealed',
-    title: 'Sealed Beakers',
-    prompt: 'Say which beaker of the sealed silver cell holds the more dilute solution.',
-    widget,
-    table: cellTable({
-      fixtures: [
-        ccFixture('cc', { x: 50, y: 34 }, { ...S8, sealed: true, names: ['Beaker A', 'Beaker B'], title: 'Sealed silver cell' }),
-        hideDials(selectorFixture('pick', 'The dilute beaker', { x: 128, y: 34 }, { options: ['Beaker A', 'Beaker B', ' '], start: 3, w: 56, list: true }))
-      ]
-    }, { w: 176, h: 72 }),
-    hints: [
-      'Press "Run", read both meters, then tap the dilute beaker.',
-      'Compare the side the needle swings toward with the sign of the voltmeter.',
-      'Find the bar the electrons leave; the dilute beaker is the one that bar stands in.'
-    ],
-    check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 3) return { ok: false, notYet: true, msg: 'Tap a beaker.' };
-      const dilute = S8.cLeft < S8.cRight ? 1 : 2;
-      if (v === dilute) return { ok: true };
-      const r = ccRead({ fixtures: state.table.fixtures }, 'cc');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
-      return { ok: false, msg: `The voltmeter read ${r.V > 0 ? '+' : ''}${fmt(r.V, 3)} V, right bar against left, and the needle swung toward the ${r.needle > 0 ? 'right' : 'left'} bar.` };
-    },
-    get reward() {
-      const c = concCellRead(S8.metal, S8.cLeft, S8.cRight);
-      return {
-        log: 'The electrons left the dilute beaker\'s bar.',
-        title: 'Sealed Cell',
-        body: `The cell read ${fmt(c.E, 3)} V and the electrons left the ${c.leaves === 'left' ? 'left' : 'right'} bar, so Beaker ${c.leaves === 'left' ? 'A' : 'B'} was the dilute one: ${concLabel(Math.min(S8.cLeft, S8.cRight))} against ${concLabel(Math.max(S8.cLeft, S8.cRight))}.`
-      };
-    }
   }
 ];
 
@@ -397,8 +368,7 @@ export const STAGES = [
 attachScenes(STAGES, {
   own: {
     1: { sitesKey: 'ionsLeft', dials: { t0: { min: 0, max: 1, step: 1, value: 0, label: 'Tin ions' }, t1: { min: 0, max: 1, step: 1, value: 0, label: 'Lead ions' } } },
-    4: { sitesKey: 'sides', extra: { pickMap: [1, 2] } },
-    7: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }
+    4: { sitesKey: 'sides', extra: { pickMap: [1, 2] } }
   }, compact: [6], demos: { 0: 'running' } });
 
 export const DEBRIEF = {
@@ -410,22 +380,20 @@ export const SOLUTIONS = [
   [put('both', 'slot:guess')],
   [...times(PRESSES, () => run('load')), dial('scene', 't0', 1), dial('scene', 't1', 1)],
   [run('rig'), dial('rig', 'a', 2), run('rig'), dial('pick', 'value', 2)],
-  [typed('ratio', fmt(END().nAnode / END().nCathode, 1))],
+  [put('eq', 'slot:reason')],
   [run('cc'), dial('pick', 'value', 2)],
   [typed('v', fmt(readAt('cu', 'zn', S6.aC, S6.cC), 2))],
-  [...S7_CELLS.map(c => run(c[0])), ...S7_WANT.map((c, i) => put(c[1], `rail:${i}`))],
-  [run('cc'), dial('pick', 'value', S8.cLeft < S8.cRight ? 1 : 2)]
+  [...S7_CELLS.map(c => run(c[0])), ...S7_WANT.map((c, i) => put(c[1], `rail:${i}`))]
 ];
 
 export const MISSES = [
   [],
   [run('load'), run('load'), dial('scene', 't0', 1)],
   [run('rig'), dial('rig', 'a', 2), run('rig'), dial('pick', 'value', 1)],
-  [typed('ratio', '0.39')],
+  [put('equal', 'slot:reason')],
   [run('cc'), dial('pick', 'value', 1)],
   [typed('v', '1.19')],
-  [...S7_CELLS.map(c => run(c[0])), ...['fa', 'fb', 'fc'].map((f, i) => put(`t${f[1]}`, `rail:${i}`))],
-  [run('cc'), dial('pick', 'value', S8.cLeft < S8.cRight ? 2 : 1)]
+  [...S7_CELLS.map(c => run(c[0])), ...['fa', 'fb', 'fc'].map((f, i) => put(`t${f[1]}`, `rail:${i}`))]
 ];
 
 function blankState() { return {}; }
@@ -443,4 +411,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { TL, START, S5, S6, S7_CELLS, S7_WANT, S8, TOL_V, TOL_RATIO, GUESS };
+export const CHECKS = { TL, START, S5, S6, S7_CELLS, S7_WANT, TOL_V, GUESS };

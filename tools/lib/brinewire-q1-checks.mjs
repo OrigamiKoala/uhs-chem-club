@@ -174,7 +174,7 @@ export async function checkBrinewireQ1({ ok, fail }) {
   holds(!s3c.ok && /electrons? on its left side/.test(s3c.msg), `stage 3 electrons on both sides (${s3c.msg})`);
   holds(run(2, []).notYet, 'stage 3 accepts or scores an untouched ledger');
   const s4 = run(3, []);
-  holds(!s4.ok && /Aluminium gives 3 electrons and copper takes 2/.test(s4.msg), `stage 4 slip (${s4.msg})`);
+  holds(!s4.ok && /Aluminium loses 3 electrons and copper gains 2/.test(s4.msg), `stage 4 slip (${s4.msg})`);
   holds(!run(3, [dial('ha', 'k', 4), dial('hb', 'k', 4)]).ok && run(3, Q.SOLUTIONS[3]).ok, 'stage 4 grading');
   holds(run(5, Q.SOLUTIONS[5]).ok, 'stage 6 refuses the balanced half');
   const s6a = run(5, [dial('hm', 'eL', 5)]);
@@ -186,7 +186,7 @@ export async function checkBrinewireQ1({ ok, fail }) {
   const s6d = run(5, [dial('hm', 'wR', 4), dial('hm', 'hL', 8), dial('hm', 'eR', 5)]);
   holds(!s6d.ok && /charge row reads \+7 on the left and \+7 on the right/.test(s6d.msg) === false && /charge row/.test(s6d.msg), `stage 6 electrons on the wrong side (${s6d.msg})`);
   const s7 = run(6, []);
-  holds(!s7.ok && /take 5 electrons and give 1/.test(s7.msg), `stage 7 slip (${s7.msg})`);
+  holds(!s7.ok && /gain 5 electrons and lose 1/.test(s7.msg), `stage 7 slip (${s7.msg})`);
   holds(run(6, Q.SOLUTIONS[6]).ok && !run(6, [dial('hm', 'k', 2), dial('hf', 'k', 5)]).ok, 'stage 7 grading');
   ok('q1-halves stages 3 to 7: right settings pass, every slip is refused with a reading');
 

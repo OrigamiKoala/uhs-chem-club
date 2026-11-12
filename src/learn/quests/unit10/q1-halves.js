@@ -77,12 +77,15 @@ const S6_ROWS = ['Mn', 'O', 'H', 'charge'];
 
 /* ---------------------------------------------------------------- stages */
 
+const SPEAKER = 'Vess';
+
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     id: 's1-number',
     title: 'Before and After',
-    prompt: 'Mark the particles whose oxidation number changes.',
+    briefing: { speaker: SPEAKER, body: 'An oxidation number is the charge an atom has, or would have if its shared electrons went to the atom that pulls them harder. An uncombined element is 0; a lone ion is its charge.' },
+    prompt: 'Which particles change oxidation number when zinc meets copper(II) sulfate?',
     widget,
     // The answer is given to the particles: each of the four kinds in the beaker is tapped to read its oxidation number before and after
     // (a grey sphere), and tapped again to mark a change (amber). The marks are hidden dials of the model (`own`, below).
@@ -158,7 +161,8 @@ export const STAGES = [
   {
     id: 's3-halves',
     title: 'Writing the Halves',
-    get prompt() { return guessLine('Write each half of the zinc and copper reaction so that its charge balances.', recall(QUEST_KEY)); },
+    briefing: { speaker: SPEAKER, body: 'Losing electrons is oxidation, gaining electrons is reduction, and together they make a redox reaction. Each is written as a half-reaction that shows the electrons.' },
+    get prompt() { return guessLine('How many electrons does each half-reaction need, and on which side?', recall(QUEST_KEY)); },
     widget,
     table: cellTable({
       fixtures: [
@@ -206,7 +210,7 @@ export const STAGES = [
   {
     id: 's4-scale',
     title: 'Matching the Electrons',
-    prompt: 'Balance aluminium with copper(II) ions so no electrons are left over.',
+    prompt: 'How many aluminium atoms react with how many copper(II) ions?',
     widget,
     table: cellTable({
       fixtures: [
@@ -217,14 +221,14 @@ export const STAGES = [
     }, { w: 162, h: 72 }),
     hints: [
       'Tap the atoms or ions over each strip to change how many are written, and watch the tally.',
-      'Compare the electrons given with the electrons taken for each pair of settings.',
-      'Write each half enough times that both halves handle the same number of electrons.'
+      'Compare the electrons lost with the electrons gained for each pair of settings.',
+      'Scale each half-reaction until both halves handle the same number of electrons.'
     ],
     check(state) {
       const t = state.table;
       const a = halfOf(t.fixtures.ha); const b = halfOf(t.fixtures.hb);
       if (a.eRight === b.eLeft) return { ok: true };
-      return { ok: false, msg: `Aluminium gives ${a.eRight} electrons and copper takes ${b.eLeft} in this setting.` };
+      return { ok: false, msg: `Aluminium loses ${a.eRight} electrons and copper gains ${b.eLeft} in this setting.` };
     },
     get reward() {
       const al = HALF.al(); const cu = HALF.cu();
@@ -233,7 +237,7 @@ export const STAGES = [
       return {
         log: 'Aluminium and copper balanced when each half was written enough times.',
         title: 'Matching Electrons',
-        body: `Written ${m.a} and ${m.b} times, the halves give and take ${m.electrons} electrons each: ${equationText(o.left, o.right)}.`
+        body: `Written ${m.a} and ${m.b} times, the halves lose and gain ${m.electrons} electrons each: ${equationText(o.left, o.right)}.`
       };
     }
   },
@@ -241,8 +245,9 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-agents',
-    title: 'Who Gives (Beyond the Exam)',
-    prompt: 'Tap the particle that gives up its electrons in each beaker.',
+    title: 'Who Loses',
+    briefing: { speaker: SPEAKER, body: 'The particle that loses electrons makes the other one gain them, so it is called the reducing agent. The particle that gains them is the oxidizing agent.' },
+    prompt: 'Which particle is the reducing agent in each beaker?',
     widget,
     // The answer is given to the particles: in each beaker, the metal or its ion is tapped (hidden dials `g1`, `g2` of the model: 1 metal, 2 ion).
     table: cellTable({
@@ -253,8 +258,8 @@ export const STAGES = [
     }, { w: 114, h: 122 }),
     hints: [
       'Tap the metal or the ion in each beaker.',
-      'Compare the \"Before\" and \"After\" counts of each beaker\'s windows with what the model shows.',
-      'The particle that gives up electrons is the one whose oxidation number rises.'
+      'Compare the "Before" and "After" counts of each beaker\'s windows with what the model shows.',
+      'The reducing agent is the particle that loses electrons to the other particle.'
     ],
     check(state) {
       const d = state.table.fixtures.scene.dials;
@@ -271,11 +276,10 @@ export const STAGES = [
       return { ok: true };
     },
     get reward() {
-      const cu = cardReading('cu'); const ag = cardReading('ag'); const mg = cardReading('mg'); const fe = cardReading('fe');
       return {
-        log: 'The species whose number rose gave up the electrons.',
-        title: 'Beyond the Exam: Agents',
-        body: `Copper and magnesium gave electrons; silver and iron(II) took them. The giver is the reducing agent and the taker the oxidizing agent, which the AP exam does not assess.`
+        log: 'The species whose oxidation number rose lost the electrons.',
+        title: 'Reducing and Oxidizing Agents',
+        body: 'Copper and magnesium lost electrons: they are the reducing agents. Silver and iron(II) ions gained them: the oxidizing agents.'
       };
     }
   },
@@ -284,7 +288,8 @@ export const STAGES = [
   {
     id: 's6-permanganate',
     title: 'Permanganate in Acid',
-    prompt: 'Balance the permanganate half in acid by placing electrons, hydrogen ions and water.',
+    briefing: { speaker: SPEAKER, body: 'In acid solution there is plenty of H⁺ and H₂O, and a half-reaction may use them to balance its oxygen, hydrogen, and charge.' },
+    prompt: 'What balances the permanganate half-reaction in acid?',
     widget,
     table: cellTable({
       fixtures: [
@@ -316,11 +321,10 @@ export const STAGES = [
     },
     get reward() {
       const h = HALF.mn();
-      const mn = oxNumber('MnO4', 'Mn'); const mn2 = oxNumber('Mn2+', 'Mn');
       return {
-        log: 'Water, hydrogen ions and electrons balanced the permanganate half.',
+        log: 'Water, hydrogen ions and electrons balanced the permanganate half-reaction.',
         title: 'Balancing in Acid',
-        body: `${equationText(h.left, h.right, h.eLeft, h.eRight)}. In acid, oxygen is balanced with H₂O, hydrogen with H⁺, and charge with electrons; manganese goes from ${oxText(mn)} to ${oxText(mn2)}, so it takes ${h.eLeft} electrons.`
+        body: `${equationText(h.left, h.right, h.eLeft, h.eRight)}. In acid, oxygen is balanced with H₂O, hydrogen with H⁺, and charge with electrons.`
       };
     }
   },
@@ -329,7 +333,7 @@ export const STAGES = [
   {
     id: 's7-join',
     title: 'Joining Two Halves',
-    prompt: 'Join the permanganate half and the iron(II) half so that no electrons are left over.',
+    prompt: 'How many iron(II) ions react with one permanganate ion?',
     widget,
     table: cellTable({
       fixtures: [
@@ -340,14 +344,14 @@ export const STAGES = [
     }, { w: 186, h: 72 }),
     hints: [
       'Tap the atoms or ions over each strip to change how many are written, and watch the tally.',
-      'Compare how many electrons one copy of each half handles with the tally at each setting.',
-      'Write the halves enough times that the electrons given equal the electrons taken.'
+      'Compare how many electrons one copy of each half-reaction handles with the tally at each setting.',
+      'Scale the halves until the electrons lost equal the electrons gained.'
     ],
     check(state) {
       const t = state.table;
       const m = halfOf(t.fixtures.hm); const f = halfOf(t.fixtures.hf);
       if (m.eLeft === f.eRight) return { ok: true };
-      return { ok: false, msg: `The two halves take ${m.eLeft} electrons and give ${f.eRight} in this setting.` };
+      return { ok: false, msg: `The two halves gain ${m.eLeft} electrons and lose ${f.eRight} in this setting.` };
     },
     get reward() {
       const mn = HALF.mn(); const fe = HALF.fe();
@@ -365,14 +369,14 @@ export const STAGES = [
   {
     id: 's8-sealed',
     title: 'Four Sealed Reactions',
-    prompt: 'Tap the reactions that are redox.',
+    prompt: 'Which of the four reactions are redox?',
     widget,
     // Four sealed beakers side by side in the model; tapping one marks its reaction as redox (hidden dials `r0` to `r3`).
     table: cellTable({ fixtures: [] }, { w: 150, h: 6 }),
     hints: [
       'Tap each beaker whose reaction is redox.',
       'Watch what the particles do in each beaker.',
-      'A reaction is redox when some atom gains or loses electrons.'
+      'In these reactions, look for an atom that goes from a lone element to an ion, or back.'
     ],
     check(state) {
       const d = state.table.fixtures.scene.dials;
@@ -395,9 +399,9 @@ export const STAGES = [
       const rx = id => SORT[id].text;
       const mv = id => movers(id).map(m => m.el).join(' and ');
       return {
-        log: 'Only the reactions whose numbers moved were redox.',
+        log: 'Only the reactions whose oxidation numbers changed were redox.',
         title: 'Redox or Not',
-        body: `Reactions A and C changed a number (${mv('a')} and ${mv('c')}); B and D changed none. A reaction is redox only when some number changes.`
+        body: `Reactions A and C changed an oxidation number (${mv('a')} in A; ${mv('c')} in C); B and D changed none. A reaction is redox only when an oxidation number changes.`
       };
     }
   }

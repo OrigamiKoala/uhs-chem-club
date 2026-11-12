@@ -64,7 +64,6 @@ export async function checkBrinewireQ4({ ok, fail }) {
     const r = run(6, [typed('logk', bad)]);
     holds(!r.ok && r.msg && r.msg.includes(w), `stage 7 slip ${bad} is not refused naming "${w}" (${r.msg})`);
   }
-  holds(run(7, [typed('e', '1.94')]).ok && !run(7, [typed('e', '1.06')]).ok, 'stage 8 grading');
   ok('q4-potential typed stages: right figures pass, every slip is refused with a reason');
 
   /* ---- stage 1: the rank, and a refusal that names a reading ---- */

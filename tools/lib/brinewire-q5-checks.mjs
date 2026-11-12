@@ -82,13 +82,14 @@ export async function checkBrinewireQ5({ ok, fail }) {
   holds(L.ccRead({ fixtures: { x: cc } }, 'x').needle === -1, 'the needle swings toward the bar the electrons go to (left, from the dilute right beaker)');
   ok('q5-load instruments: the plot reaches only the tick run, the meters read the planner and the needle swings the right way');
 
-  /* ---- stage 3 to 8: right answers pass, every slip is refused with a reading ---- */
-  for (const [i, k] of [[1, 'both ions'], [2, 'falls'], [3, 'ratio 72/28'], [4, 'right bar'], [5, 'Nernst'], [6, 'rank'], [7, 'sealed']]) {
+  /* ---- stage 2 to 7: right answers pass, every slip is refused with a reading ---- */
+  const put = (piece, to) => ({ place: { piece, to } });
+  for (const [i, k] of [[1, 'both ions'], [2, 'falls'], [3, 'Q = K'], [4, 'right bar'], [5, 'Nernst'], [6, 'rank']]) {
     holds(Q.STAGES[i].check(Q.stateFor(i, Q.SOLUTIONS[i])).ok, `stage ${i + 1} refuses its own solution (${k})`);
   }
-  holds(run(3, [typed('ratio', '2.6')]).ok && run(3, [typed('ratio', '2.5')]).ok && !run(3, [typed('ratio', '2.9')]).ok, 'stage 4 accepts 2.5 and 2.6, refuses 2.9');
-  for (const [bad, w] of [['0.39', 'lead count by the tin'], ['44', 'difference'], ['72', 'one window'], ['1', 'not equal']]) {
-    const r = run(3, [typed('ratio', bad)]);
+  holds(run(3, [put('eq', 'slot:reason')]).ok && !run(3, [put('out', 'slot:reason')]).ok && !run(3, [put('equal', 'slot:reason')]).ok, 'stage 4 accepts eq, refuses out and equal');
+  for (const [bad, w] of [['out', 'Both windows still hold ions'], ['equal', 'not equal']]) {
+    const r = run(3, [put(bad, 'slot:reason')]);
     holds(!r.ok && r.msg && r.msg.includes(w) && r.msg.includes('72') && r.msg.includes('28'), `stage 4 slip ${bad} is not refused with the windows' counts naming "${w}" (${r.msg})`);
   }
   holds(run(5, [typed('v', '1.01')]).ok && !run(5, [typed('v', '1.10')]).ok, 'stage 6 grading');
@@ -103,7 +104,7 @@ export async function checkBrinewireQ5({ ok, fail }) {
 
   /* ---- a correct answer is accepted at once, with no run needed ---- */
   holds(run(1, [{ setDial: { fixture: 'scene', dial: 't0', value: 1 } }, { setDial: { fixture: 'scene', dial: 't1', value: 1 } }]).ok, 'stage 2: the right answer must be accepted without a run');
-  holds(run(6, ['tc', 'ta', 'tb'].map((c, i) => ({ place: { piece: c, to: `rail:${i}` } }))).ok, 'stage 7: a right rank must be accepted without every cell read');
+  holds(run(6, ['tb', 'ta', 'tc'].map((c, i) => ({ place: { piece: c, to: `rail:${i}` } }))).ok, 'stage 7: a right rank must be accepted without every cell read');
 
   /* ---- no Le Châtelier language, no Q before stage 4, no arrows in keys, and no refusal that carries the rule ---- */
   const all = [];
