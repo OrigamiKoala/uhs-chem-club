@@ -47,8 +47,8 @@ export const UNIT_11 = {
       line: 'Fuel vapour sits in the cold tank without burning, even though burning releases energy.',
       arena: 'bench',
       stageCount: 7,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit11/q4-collide.js')
     },
     {
       id: 'q5-steps',

@@ -32,6 +32,9 @@ export const STAGE_STORY = {
   'q3-time': {
     1: 'Half the peroxide broke down in twenty seconds, and Vess wants to time the next halving.'
   },
+  'q4-collide': {
+    1: 'Cold fuel sits quietly in the tank even though burning it releases heat.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'q5-load': {
     1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'

@@ -47,6 +47,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: first-order decay halves in equal intervals; a straight ln[A] line gives k.'
   },
+  'unit11/q4-collide': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'Particles only react when they collide with at least the activation energy and with their reactive ends aligned.' },
+      { to: 0.70, say: 'Raising temperature leaves the activation energy barrier fixed, yet pushes a larger fraction of particles past it.' },
+      { to: 0.95, say: 'The transition state sits at the energy peak, and the lower barrier sets which competing path forms product faster.' }
+    ],
+    filed: 'Filed: cold fuel waits because few collisions clear the activation energy hill until the heater warms the spread.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

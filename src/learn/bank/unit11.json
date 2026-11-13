@@ -75,6 +75,31 @@
       ],
       "answer": "a",
       "explanation": "60 s is 3 half-lives (60 \u00f7 20 = 3), so 0.80 \u00f7 2\u00b3 = 0.80 \u00f7 8 = 0.10 mol/L remains."
+    },
+    {
+      "id": "q4-collide#e1",
+      "quest": "q4-collide",
+      "question": "A reaction has reactants at 25 kJ/mol, a transition state at 90 kJ/mol, and products at 10 kJ/mol. What is the reverse activation energy?",
+      "options": [
+        {
+          "id": "a",
+          "label": "80 kJ/mol"
+        },
+        {
+          "id": "b",
+          "label": "65 kJ/mol"
+        },
+        {
+          "id": "c",
+          "label": "15 kJ/mol"
+        },
+        {
+          "id": "d",
+          "label": "90 kJ/mol"
+        }
+      ],
+      "answer": "a",
+      "explanation": "The reverse reaction climbs from products (10 kJ/mol) to the transition state (90 kJ/mol): 90 \u2212 10 = 80 kJ/mol."
     }
   ],
   "bench": {
@@ -385,6 +410,105 @@
           }
         ],
         "finish": "First-order half-life is constant, so n half-lives always leave (1/2)^n of the starting concentration."
+      }
+    },
+    "q4-collide": {
+      "problems": [
+        {
+          "id": "q4-collide#b1",
+          "quest": "q4-collide",
+          "question": "Why does increasing temperature sharply increase the rate of a reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "A larger fraction of collisions have kinetic energy at or above Ea"
+            },
+            {
+              "id": "b",
+              "label": "The activation energy Ea decreases as temperature rises"
+            },
+            {
+              "id": "c",
+              "label": "Reactant molecules change into different isomers"
+            },
+            {
+              "id": "d",
+              "label": "Products become lower in potential energy"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Ea is unchanged by temperature, but the Maxwell-Boltzmann distribution shifts right so more collisions exceed Ea."
+        },
+        {
+          "id": "q4-collide#b2",
+          "quest": "q4-collide",
+          "question": "Which two conditions must a collision satisfy to form products?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Energy at least equal to Ea and proper collision orientation"
+            },
+            {
+              "id": "b",
+              "label": "High pressure and a solid surface"
+            },
+            {
+              "id": "c",
+              "label": "Zero activation energy and equal molar masses"
+            },
+            {
+              "id": "d",
+              "label": "Exothermic overall change and high concentration only"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Collision theory requires both sufficient kinetic energy (≥ Ea) to break bonds and proper orientation so reactive atoms meet."
+        }
+      ],
+      "worked": {
+        "id": "q4-collide#w",
+        "quest": "q4-collide",
+        "title": "Forward and reverse activation energies on a profile",
+        "setup": "Reactants sit at 35 kJ/mol, the transition state peak sits at 105 kJ/mol, and products sit at 15 kJ/mol.",
+        "steps": [
+          {
+            "say": "What is the forward activation energy (TS − R)?",
+            "kind": "number",
+            "answer": 70,
+            "unit": "kJ/mol",
+            "calc": "105 - 35",
+            "hint": "Subtract the reactants level (35) from the transition state peak (105).",
+            "explain": "105 − 35 = 70 kJ/mol."
+          },
+          {
+            "say": "What is the reverse activation energy (TS − P)?",
+            "kind": "number",
+            "answer": 90,
+            "unit": "kJ/mol",
+            "calc": "105 - 15",
+            "hint": "Subtract the products level (15) from the transition state peak (105).",
+            "explain": "105 − 15 = 90 kJ/mol."
+          },
+          {
+            "say": "What is ΔH for the forward reaction (P − R)?",
+            "kind": "number",
+            "answer": -20,
+            "unit": "kJ/mol",
+            "calc": "15 - 35",
+            "hint": "Subtract reactants (35) from products (15).",
+            "explain": "15 − 35 = −20 kJ/mol (exothermic)."
+          },
+          {
+            "say": "Check: what is Ea(fwd) − Ea(rev)?",
+            "kind": "number",
+            "answer": -20,
+            "unit": "kJ/mol",
+            "calc": "70 - 90",
+            "hint": "Subtract reverse Ea (90) from forward Ea (70).",
+            "explain": "70 − 90 = −20 kJ/mol, which equals ΔH."
+          }
+        ],
+        "finish": "Forward Ea climbs from R to TS, reverse Ea climbs from P to TS, and their difference equals ΔH."
       }
     }
   }
