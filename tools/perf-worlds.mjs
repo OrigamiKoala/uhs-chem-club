@@ -24,7 +24,9 @@ const WORLDS = {
   kettle: ['../src/three/kettle.js', 'KettleWorld'],
   teeter: ['../src/three/teeter.js', 'TeeterWorld'],
   verdigris: ['../src/three/verdigris.js', 'VerdigrisWorld'],
-  brinewire: ['../src/three/brinewire.js', 'BrinewireWorld']
+  brinewire: ['../src/three/brinewire.js', 'BrinewireWorld'],
+  quicklight: ['../src/three/quicklight.js', 'QuicklightWorld'],
+  lodestone: ['../src/three/lodestone.js', 'LodestoneWorld']
 };
 
 const pick = process.argv.slice(2).filter(a => !a.startsWith('-'));

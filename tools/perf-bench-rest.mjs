@@ -22,7 +22,7 @@ const WORLD_OF = {
   unit01: ['tallow', 'TallowWorld'], unit02: ['lanternfall', 'LanternfallWorld'], unit03: ['ligar', 'LigarWorld'],
   unit04: ['bellows', 'BellowsWorld'], unit05: ['ember', 'EmberReachWorld'], unit06: ['mirrowen', 'MirrowenWorld'],
   unit07: ['kettle', 'KettleWorld'], unit08: ['teeter', 'TeeterWorld'], unit09: ['verdigris', 'VerdigrisWorld'],
-  unit10: ['brinewire', 'BrinewireWorld']
+  unit10: ['brinewire', 'BrinewireWorld'], unit11: ['quicklight', 'QuicklightWorld'], unit12: ['lodestone', 'LodestoneWorld']
 };
 const verbose = process.argv.includes('-v');
 const worlds = new Map();

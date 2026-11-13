@@ -95,6 +95,15 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 
 ---
 
+## 2a. Site Rebuilds (2026-11-13)
+
+The "Setting" lines above describe the sites as first built. Eleven of the twelve walkable sites are being rebuilt so that each
+is a different landform with its benches housed inside it, as Ligar's are. The measurements, the standard, the per-world brief
+(the signature table) and progress are in `docs/plans/world-distinction-plan.md`; the prompt for one world's rebuild is
+`docs/world-rebuild-prompt.md`. A rebuilt world's "Setting" line is rewritten by its run.
+
+---
+
 ## 3. Teaching Doctrine Across All Worlds
 
 1. **Tabletop as the Answer:** Every stage is solved by arranging pieces, operating instruments, setting dials, or typing calculated numbers from physical measurements.

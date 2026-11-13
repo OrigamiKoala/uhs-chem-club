@@ -7,7 +7,9 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 - **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
 - **World plans & specifications:** `docs/plans/world-plans.md` consolidates world plans, CED maps, tabletop kits, and build records.
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
+- **World distinction (site rebuilds):** `docs/plans/world-distinction-plan.md` is the plan to make every walkable world its own landform with benches housed inside it, as Ligar's are (measurements, standard, signature table, progress); `docs/world-rebuild-prompt.md` is the prompt that rebuilds one world's site. Measure with `node tools/world-shape.mjs`.
 - **Teaching pass:** `docs/teaching-pass/README.md` and `docs/teaching-pass/PROGRESS.md` track the teaching pass standard and status.
+- **Side quests (Contracts):** `.agents/skills/quest-builder/SKILL.md` is the skill for designing and building a paid side quest like Quest 1 (own puzzle mechanic, own walkable world, no chemistry assumed). Any agent follows it; `.claude/skills/quest-builder` is a local link to it. Specs live in `docs/quests/`.
 - **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment (all 91 topics and 28 `EQN:` lines covered), and `docs/plans/ap-gap-implementation-plan.md` records the completed gap implementation plan.
 
 ## Codebase Architecture
@@ -56,7 +58,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 - `npm run dev`: Start local Vite dev server (:3000) with API proxy.
 - `npm run build`: Production build into `dist/`.
 - `npm run verify`: Complete test and verification suite (`verify:learn`, `verify:table`, `verify:story`, `verify:docs`, per-world checks, etc.).
-- Reading aids (not checks): `node tools/teaching-report.mjs <unitNN> [quest] [--read|--totals]`, `node tools/perf-worlds.mjs`.
+- Reading aids (not checks): `node tools/teaching-report.mjs <unitNN> [quest] [--read|--totals]`, `node tools/perf-worlds.mjs`, `node tools/world-shape.mjs [world ...]` (ground levels, benches housed, cloned layouts).
 - **Testing discipline:** The owner play-tests in the browser; agents do NOT test in the browser. Verify changes using `npm run verify`, `npm run build`, and Node scripts.
 
 ## Question Bank
