@@ -37,6 +37,11 @@ const FIXTURES = {
     dials: false,
     text: 'A graph that redraws the same concentration readings as [A], ln[A], or 1/[A] against time. Tap each key and check which points lie on the straightedge.'
   },
+  'rate:arrplot': {
+    title: 'ln k against 1/T',
+    dials: false,
+    text: 'A graph of two measurements, ln k against 1/T, joined by a straight line. Read both points off the graph and work out the slope of the line.'
+  },
   'rate:collview': {
     title: 'Collision view',
     dials: false,

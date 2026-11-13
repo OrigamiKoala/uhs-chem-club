@@ -97,11 +97,17 @@ export function planKineticsRun({
       });
     }
   } else if (order === 0 && k > 0) {
-    const tHalf = a0 / (2 * k);
-    if (tHalf <= tMax) halfLives.push({ n: 1, t: tHalf, A: a0 * 0.5 });
+    // Each halving of a zero-order reaction takes half as long as the one before: A falls by a fixed amount each second.
+    for (let n = 1; n <= 6; n++) {
+      const t = (a0 * (1 - Math.pow(0.5, n))) / k;
+      if (t <= tMax + 1e-6) halfLives.push({ n, t, A: a0 * Math.pow(0.5, n) });
+    }
   } else if (order === 2 && k > 0 && a0 > 0) {
-    const tHalf = 1 / (k * a0);
-    if (tHalf <= tMax) halfLives.push({ n: 1, t: tHalf, A: a0 * 0.5 });
+    // Each halving of a second-order reaction takes twice as long as the one before: t(n) = (2^n - 1) / (k [A]0).
+    for (let n = 1; n <= 6; n++) {
+      const t = (Math.pow(2, n) - 1) / (k * a0);
+      if (t <= tMax + 1e-6) halfLives.push({ n, t, A: a0 * Math.pow(0.5, n) });
+    }
   }
 
   const last = points[points.length - 1];

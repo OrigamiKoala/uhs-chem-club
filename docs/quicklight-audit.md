@@ -49,11 +49,26 @@ Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds
 5.1 rate (qualitative + stoichiometric typed, new); 5.2 initial rates/rate law (q2); 5.3 concentration over time (half-life, plots, new integrated-law stage); 5.4 elementary reactions; 5.5 collision model; 5.6 energy profile; 5.7–5.8 mechanisms and rate law; 5.9 steady-state/pre-equilibrium (only fast pre-equilibrium); 5.10 multistep profile; 5.11 catalysis.
 **Missing:** Arrhenius equation / ln k vs 1/T and two-temperature calculation (5.6, quantitative); half-life of zero and second order; steady-state approximation; units of k for other orders as a played stage; reading ΔH sign on a profile as a quantity.
 
+## Pass 2 (2026-11-13, later) — found and fixed
+| Finding | Evidence | Fix |
+| --- | --- | --- |
+| Ghosted titles on every table | table2d paints `f.label` and the rate painters print the same title | `hideLabel` for rate fixtures that print their own title (`rateTable`) |
+| Concentration dial hidden under the 3D tank | q2 s1 zoom with the dress hidden: knob stands where the glass box leans | dialled vessels start their window lower (16.5), tank lower (`tankK`); knob and groove visible, tap on the track moved the dial 1→2 |
+| Tap-zone and surface labels hidden by an opaque slab | q6 s5 screenshot | bands are transparent films; real tap on "Catalyst surface" set the zone |
+| Second-order halving markers missing | planner returned only the first halving for order 0 and 2 | planner returns successive halvings (second order doubles, zero order halves) |
+| H₂/NH₃ counts not in the equation's ratio (25 : 16) | q1 s7 screenshot | counts are whole reactions (24 : 16) |
+| Arrhenius picture contradicted the answer (a 12 kJ/mol spread beside a 75 kJ/mol question) | q4 s9 screenshot | new `arrplot` fixture (ln k against 1/T, two points, line) with a Tour step |
+| Boss hints named methods and numbers | text | rewritten to the ladder |
+
+Added: q3 s7 second-order half-life (halvings 20 s then 40 s); q4 s9 Arrhenius slope (typed Ea ≈ 75 kJ/mol). World is now 597 stages.
+
+Played by hand this pass (browser, 3D On): q1 s1 (real two-tap card, real Submit), q1 s7, q2 s1 (real tap on the dial track), q3 s3, s7, q4 s8–s9 render, q5 s6 board, q6 s2, s5 (real tap on a zone), boss phase 2 (board renders). Still only scripted: q1 s4–s6, q2 s2–s5, q3 s1–s2, s4–s6, q4 s1, s3, s6–s7, q5 s1–s5, s7, q6 s3–s4, boss phases 1, 3–5. No full third pass.
+
 ## Left weak / recommended next
-- Add a true Arrhenius stage (ln k vs 1/T, typed Ea) and a zero/second-order half-life stage; q4 s8 only covers the share-of-collisions idea.
-- Hand-play every unplayed stage above, especially card drops and the rates log.
-- The flat painter's title text looks doubled (ghosted) at the default camera on every Quicklight table; not diagnosed.
-- Tank height/size and sphere scale are judgement calls only the owner can judge by playing.
+- Hand-play the scripted-only stages, and a real drag (not tap) of a card; the browser tool's drag ends short.
+- Steady-state approximation (AP 5.9) is not covered beyond fast pre-equilibrium.
+- Tank size, sphere scale and the Arrhenius stage's difficulty are owner judgements.
+- Zero-order half-life is shown by the planner but no stage asks about it.
 
 ## Work log
 1. Set-up as guest (guild/oath passes needed a hold; team patched into the stored guest session).
@@ -61,3 +76,4 @@ Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds
 3. Built `rate-3d.js`; owner asked 2D graphs stay flat → removed standing graphs, hill and columns.
 4. Text/leak fixes across q1–q6; q4 s1, q6 s1 made predict-first; q4 s5 rewritten; two quantitative stages added (counts 592→595, PRODUCT.md and CLAUDE.md updated).
 5. Checks run green: `verify:learn`, `verify:table`, `verify:story`, `verify:docs`, `verify:quicklight`, `verify:bench`, `verify:teaching`. Other worlds' scripts not re-run (only the rate kit and Quicklight files changed).
+6. Pass 2: ghost titles, hidden knob, slab labels, halving markers, counts ratio, Arrhenius picture, boss hints; two stages added (595→597). All verify scripts listed above re-run green, plus lanternfall, bellows, ember, tallow.

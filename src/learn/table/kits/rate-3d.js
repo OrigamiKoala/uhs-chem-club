@@ -26,7 +26,7 @@ const hash = i => { let x = (i + 1) * 2654435761 % 4294967296; x = ((x ^ (x >>> 
 const KINDS = {
   kvessel: { tank: true, tankOnly: true },
   lead: { tank: true, tankOnly: true },
-  collview: { tank: true, rest: true, big: 1.5, lines: true }
+  collview: { tank: true, rest: true, big: 1.5, lines: true, tankK: 0.28 }
 };
 
 function recorder() {
@@ -117,6 +117,9 @@ export function rateDress(handler, kindName) {
     const rings = inst(new THREE.TorusGeometry(1, 0.14, 6, 20), CAP_RING);
     const beads = inst(new THREE.SphereGeometry(1, 7, 5), CAP_BEAD, 0.5, 0.1);
     const cols = inst(new THREE.BoxGeometry(1, 1, 1), CAP_COL, 0.5, 0.1);
+    // Highlight bands (a surface, a tap zone) are films: the words painted on the plate under them stay readable.
+    const films = inst(new THREE.BoxGeometry(1, 1, 1), 30, 0.6, 0.05);
+    films.material.transparent = true; films.material.opacity = 0.3; films.material.depthWrite = false;
 
     const glassMat = own(new THREE.MeshStandardMaterial({ color: 0xbfd2e0, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.16, depthWrite: false }));
     const edgeMat = own(new THREE.LineBasicMaterial({ color: 0x9fb4c4, transparent: true, opacity: 0.7 }));
@@ -138,6 +141,7 @@ export function rateDress(handler, kindName) {
     hill.visible = false; hill.frustumCulled = false; group.add(hill);
     let hillSig = '';
 
+    const K = opt.tankK ?? 0.5;
     const live = { f, state, clock: 0.001 };
     const where = (x, y) => toPlate({ x, y });
     const setM = (mesh, i, px, py, pz, sx, sy, sz) => { p.set(px, py, pz); sc.set(sx, sy, sz); m4.compose(p, q, sc); mesh.setMatrixAt(i, m4); };
@@ -156,7 +160,7 @@ export function rateDress(handler, kindName) {
       const H = y => Math.max(0, (baseY - y) * s);
 
       // Glass tanks and bars from the filled rectangles.
-      const tankRects = []; let ci = 0;
+      const tankRects = []; let ci = 0; let fi = 0;
       for (const r of out.rects) {
         const a = alphaOf(r.color, r.alpha);
         const dark = isDark(r.color);
@@ -166,19 +170,19 @@ export function rateDress(handler, kindName) {
           const hh = Math.max(0.004, r.h * s);
           setM(cols, ci, pl.x, ground + 0.004 + hh / 2, pl.z - 0.8 * s, Math.max(0.003, r.w * s * 0.92), hh, 1.6 * s);
           cols.setColorAt(ci, colorOf(r.color, 1)); ci++;
-        } else if (!dark && a > 0 && ci < CAP_COL && r.w * r.h > 12) {
+        } else if (!dark && a > 0 && r.w * r.h > 12) {
           // A highlight region (a tap zone, a surface band): a thin slab on the plate.
           const pl = where(r.x + r.w / 2, r.y + r.h / 2);
-          setM(cols, ci, pl.x, ground + 0.006, pl.z, r.w * s, 0.004 + Math.min(0.01, a * 0.02), r.h * s);
-          cols.setColorAt(ci, colorOf(r.color, Math.max(0.4, a * 2))); ci++;
+          if (fi < 30) { setM(films, fi, pl.x, ground + 0.005, pl.z, r.w * s, 0.003, r.h * s); films.setColorAt(fi, colorOf(r.color, 1)); fi++; }
         }
       }
       done(cols, ci);
+      done(films, fi);
       tanks.forEach((g, i) => {
         const r = tankRects[i];
         g.visible = Boolean(r);
         if (!r) return;
-        const th = Math.min(r.w, r.h) * 0.85 * s;
+        const th = Math.min(r.w, r.h) * K * s;
         const pl = where(r.x + r.w / 2, r.y + r.h / 2);
         g.position.set(pl.x, ground + 0.004 + th / 2, pl.z);
         g.scale.set(r.w * s, th, r.h * s);
@@ -195,7 +199,7 @@ export function rateDress(handler, kindName) {
         const tank = tankRects.find(r => d.x >= r.x && d.x <= r.x + r.w && d.y >= r.y && d.y <= r.y + r.h);
         if (opt.tankOnly && !tank) continue;
         if (tank) {
-          const th = Math.min(tank.w, tank.h) * 0.85 * s;
+          const th = Math.min(tank.w, tank.h) * K * s;
           const pl = where(d.x, d.y);
           const ph = 0.5 + 0.5 * Math.sin(t * (0.45 + hash(i + 3) * 0.7) + i * 2.1);
           px = pl.x; pz = pl.z; py = ground + 0.004 + rad + (opt.rest ? 0 : ph * Math.max(0, th - rad * 2));
@@ -218,7 +222,7 @@ export function rateDress(handler, kindName) {
         if (opt.tankOnly && !tank) continue;
         const pl = where(r.x, r.y);
         let py = ground + 0.008;
-        if (tank) { const th = Math.min(tank.w, tank.h) * 0.85 * s; py = ground + 0.006 + (0.5 + 0.5 * Math.sin(t * (0.5 + hash(i + 5)) + i * 1.7)) * th; }
+        if (tank) { const th = Math.min(tank.w, tank.h) * K * s; py = ground + 0.006 + (0.5 + 0.5 * Math.sin(t * (0.5 + hash(i + 5)) + i * 1.7)) * th; }
         p.set(pl.x, py, pl.z); sc.setScalar(Math.max(0.004, r.r * s));
         q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2); m4.compose(p, q, sc); rings.setMatrixAt(ri, m4);
         rings.setColorAt(ri, colorOf(r.color, r.alpha)); ri++; q.identity();

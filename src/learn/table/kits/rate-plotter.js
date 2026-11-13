@@ -128,3 +128,42 @@ function paintPlotter(ctx, f, state, b) {
 }
 
 registerFixture('plotter', { paint: paintPlotter });
+
+/** Two measurements on a ln k against 1/T graph, joined by their straight line (the Arrhenius plot). */
+export function arrplotFixture(id, at, {
+  title = 'ln k against 1/T',
+  pts = [],
+  xLabel = '1/T (10⁻³ per K)',
+  yLabel = 'ln k',
+  w = 70,
+  h = 44
+} = {}) {
+  return { id, kind: 'arrplot', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { title, pts, xLabel, yLabel } };
+}
+
+function paintArrplot(ctx, f, state, b) {
+  const F = frameOf(b);
+  const p = f.props;
+  say(ctx, p.title, F.x(2), F.y(2.5), F.size(2.1, 5.4), { color: TEXT, weight: 700, maxW: F.len(f.size.w - 4) });
+  if (!p.pts.length) return;
+  const gx = 11; const gy = 8; const gw = f.size.w - 17; const gh = f.size.h - 15;
+  const xs = p.pts.map(q => q.x); const ys = p.pts.map(q => q.y);
+  const xMin = Math.min(...xs); const xMax = Math.max(...xs); const yMin = Math.min(...ys); const yMax = Math.max(...ys);
+  const toX = x => gx + 0.12 * gw + ((x - xMin) / (xMax - xMin || 1)) * gw * 0.76;
+  const toY = y => gy + gh - 0.12 * gh - ((y - yMin) / (yMax - yMin || 1)) * gh * 0.76;
+  ctx.strokeStyle = DUST;
+  ctx.beginPath(); ctx.moveTo(F.x(gx), F.y(gy)); ctx.lineTo(F.x(gx), F.y(gy + gh)); ctx.lineTo(F.x(gx + gw), F.y(gy + gh)); ctx.stroke();
+  const a = p.pts[0]; const c = p.pts[p.pts.length - 1];
+  ctx.strokeStyle = AMBER; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(F.x(toX(a.x) - (toX(c.x) - toX(a.x)) * 0.25), F.y(toY(a.y) - (toY(c.y) - toY(a.y)) * 0.25));
+  ctx.lineTo(F.x(toX(c.x) + (toX(c.x) - toX(a.x)) * 0.25), F.y(toY(c.y) + (toY(c.y) - toY(a.y)) * 0.25)); ctx.stroke();
+  ctx.setLineDash([]);
+  p.pts.forEach(q => {
+    ctx.fillStyle = TEXT; ctx.beginPath(); ctx.arc(F.x(toX(q.x)), F.y(toY(q.y)), Math.max(3, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
+    say(ctx, q.label, F.x(toX(q.x) + 1.5), F.y(toY(q.y) - 3.2), F.size(1.6, 4.4), { color: AMBER, weight: 700 });
+  });
+  say(ctx, p.xLabel, F.x(gx + gw / 2), F.y(gy + gh + 3), F.size(1.6, 4.2), { align: 'center', color: DIM });
+  say(ctx, p.yLabel, F.x(gx - 1), F.y(gy + 1.5), F.size(1.6, 4.2), { align: 'right', color: DIM });
+}
+
+registerFixture('arrplot', { paint: paintArrplot });

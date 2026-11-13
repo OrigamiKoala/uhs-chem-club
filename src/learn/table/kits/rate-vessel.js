@@ -211,7 +211,7 @@ function paintKvessel(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   const hasDials = Object.keys(f.dials || {}).filter(d => !(p.hidden || []).includes(d)).length > 0;
-  const topY = hasDials ? 10.5 : 4.2;
+  const topY = hasDials ? 16.5 : 4.2;
 
   // Title & equation
   say(ctx, p.title, F.x(2), F.y(2.5), F.size(2.3, 5.8), { color: TEXT, weight: 700, maxW: F.len(f.size.w * 0.55) });
@@ -279,8 +279,11 @@ function paintKvessel(ctx, f, state, b) {
   }
 
   if (p.showCounts) {
-    const aUsed = Math.round((p.a0 - curPt.A) * 30);
-    const bMade = Math.round(curPt.P * 30);
+    // Whole reactions: A is used in lots of its coefficient, so the counts keep the equation's ratio exactly.
+    const sa = p.stoich?.a || 1; const sb = p.stoich?.b || 1;
+    const events = Math.round(((p.a0 - curPt.A) * 30) / sa);
+    const aUsed = events * sa;
+    const bMade = events * sb;
     say(ctx, `A used: ${aUsed}  B: ${bMade}`, F.x(winX), F.y(winY + winH + 2.8), F.size(1.8, 4.8), { color: AMBER, maxW: F.len(winW + 10) });
   } else if (p.catalystCount > 0) {
     say(ctx, `Catalyst: ${p.catalystCount} -> ${p.catalystCount}`, F.x(winX), F.y(winY + winH + 2.8), F.size(1.8, 4.8), { color: CAT_COL, maxW: F.len(winW + 10) });
@@ -412,7 +415,7 @@ function kvesselTapZones(f) {
   const p = f.props;
   if (!p.tapZones) return [];
   const hasDials = Object.keys(f.dials || {}).filter(d => !(p.hidden || []).includes(d)).length > 0;
-  const topY = hasDials ? 10.5 : 4.2;
+  const topY = hasDials ? 16.5 : 4.2;
   const winW = Math.min(20, f.size.w * 0.31);
   const gx = 2 + winW + 4.5;
   const gy = topY + 0.5;

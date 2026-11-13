@@ -15,7 +15,7 @@ import {
   rateTable, kvesselFixture, plotterFixture, plaqueFixture, stmt
 } from '../../table/kits/rate.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bhalf-li(fe|ves)\b/i, introducedAt: 1 },
@@ -376,6 +376,57 @@ export const STAGES = [
       title: 'Integrated Rate Law',
       body: 'About 0.13 mol/L is left, between the 0.20 after two half-lives and the 0.10 after three. The relation gives amounts at times the graph does not show.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    id: 's7-second-order-halves',
+    title: 'A Second-Order Reaction',
+    prompt: 'How does the time for the second halving compare with the first in this second-order reaction?',
+    widget,
+    table: rateTable({
+      pieces: [
+        stmt('longer', 'Longer', { x: 22, y: 53 }),
+        stmt('same', 'The same', { x: 56, y: 53 }),
+        stmt('shorter', 'Shorter', { x: 90, y: 53 })
+      ],
+      fixtures: [
+        kvesselFixture('v1', { x: 52, y: 23 }, {
+          title: '2 NO₂ → 2 NO + O₂',
+          order: 2,
+          k: 0.0625,
+          a0: 0.80,
+          tMax: 70,
+          mode: 'reactant',
+          halfLives: true,
+          w: 90,
+          h: 34
+        })
+      ],
+      zones: {
+        slots: [{ id: 'ans', label: 'Second halving', at: { x: 126, y: 23 }, size: { w: 32, h: 14 } }]
+      }
+    }),
+    hints: [
+      'Press "Run" and read the time marked for each halving.',
+      'Compare with the first-order reaction you tested earlier, where the halvings took equal times.',
+      'In this reaction the rate depends on the square of the concentration; ask what a lower concentration does to the rate.'
+    ],
+    check(state) {
+      if (!state.table.fixtures.v1.props.ran) {
+        return { ok: false, notYet: true, msg: 'Press "Run" to trace the curve and its halving markers first.' };
+      }
+      const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
+      if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Second halving".' };
+      if (card.id === 'same') return { ok: false, msg: 'The markers show 20 s for the first halving and a different time for the second.' };
+      if (card.id === 'shorter') return { ok: false, msg: 'The second marker is further from the first marker than the first marker is from the start.' };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Second-order halvings: 20 s, then 40 s.',
+      title: 'Second-Order Half-Life',
+      body: 'The second halving took twice as long as the first, because less reactant means far fewer collisions. A constant half-life belongs to first-order reactions only.'
+    }
   }
 ];
 
@@ -385,7 +436,8 @@ applyNotes(STAGES, {
   3: ['Cycle the "Plot" dial to test each graph against the straightedge, then place one card.'],
   4: ['Check each reaction across all three plots, then sort R1, R2, and R3.'],
   5: ['Read t½ from the curve, then type k.'],
-  6: ['Type the concentration left after 40 s; use Calc for ln and e.']
+  6: ['Type the concentration left after 40 s; use Calc for ln and e.'],
+  7: ['Press "Run", then place one card in the slot.']
 });
 
 export const DEBRIEF = {
@@ -403,7 +455,8 @@ export const SOLUTIONS = [
   [dial('plot', 'plot', 2), put('lnA', 'slot:ans')],
   [put('R1', 'tray:zero'), put('R2', 'tray:first'), put('R3', 'tray:second')],
   [{ type: { entry: 'k', value: '0.0462' } }],
-  [{ type: { entry: 'left', value: '0.126' } }]
+  [{ type: { entry: 'left', value: '0.126' } }],
+  [runFx('v1'), put('longer', 'slot:ans')]
 ];
 
 export const MISSES = [
@@ -412,7 +465,8 @@ export const MISSES = [
   [put('A', 'slot:ans')],
   [put('R1', 'tray:first'), put('R2', 'tray:first'), put('R3', 'tray:second')],
   [{ type: { entry: 'k', value: '10.4' } }],
-  [{ type: { entry: 'left', value: '0.30' } }]
+  [{ type: { entry: 'left', value: '0.30' } }],
+  [runFx('v1'), put('same', 'slot:ans')]
 ];
 
 function blankState() { return {}; }

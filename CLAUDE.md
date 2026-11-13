@@ -8,7 +8,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 - **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
 - **World plans & specifications:** `docs/plans/world-plans.md` consolidates all 14 world plans, CED maps, tabletop kits, and build records.
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
-- **Teaching pass (2026-11):** `docs/teaching-pass/README.md` is the owner's guide to the final pass on the live worlds; `BRIEF.md` is the standard and method every agent follows, `PATTERNS.md` the redesigns to copy, `worlds/` the per-world notes and records, `prompts/` the prompts, `PROGRESS.md` the state. As of 2026-11-12, eleven worlds (`unit01`–`unit11`, 92 quest modules: 81 benches and 11 bosses, 595 stages) are live; `unit12-lodestone.md`, `unit13-thornmere.md` and `unit14-cinder-halo.md` hold first-build plans for the three unbuilt worlds.
+- **Teaching pass (2026-11):** `docs/teaching-pass/README.md` is the owner's guide to the final pass on the live worlds; `BRIEF.md` is the standard and method every agent follows, `PATTERNS.md` the redesigns to copy, `worlds/` the per-world notes and records, `prompts/` the prompts, `PROGRESS.md` the state. As of 2026-11-12, eleven worlds (`unit01`–`unit11`, 92 quest modules: 81 benches and 11 bosses, 597 stages) are live; `unit12-lodestone.md`, `unit13-thornmere.md` and `unit14-cinder-halo.md` hold first-build plans for the three unbuilt worlds.
 - **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment.
 
 ## Codebase Architecture
@@ -52,7 +52,7 @@ This file holds the engineering doctrine, hard rules, and commands.
 
 ## Quicklight notes
 
-- `src/learn/table/kits/rate-3d.js` dresses `kvessel`, `lead` and `collview` at 3D On (glass tanks, swimming spheres, collision spheres). Graphs, plots and energy profiles stay flat on the plate by owner decision; do not stand them up. `q1-watch` has 7 stages, `q3-time` 6, `q4-collide` 8. At 3D On the flat window and particles are skipped (`b.bodies`) so only the 3D tank shows.
+- `src/learn/table/kits/rate-3d.js` dresses `kvessel`, `lead` and `collview` at 3D On (glass tanks, swimming spheres, collision spheres). Graphs, plots and energy profiles stay flat on the plate by owner decision; do not stand them up. `q1-watch` has 7 stages, `q3-time` 7, `q4-collide` 9. New fixture `arrplot` (ln k against 1/T). Dialled vessels keep the window below the dial row (`topY` 16.5) or the knob hides under the glass. At 3D On the flat window and particles are skipped (`b.bodies`) so only the 3D tank shows.
 - Traps: `src/three/materials/quicklight-textures.js` must return the `{albedo,height,roughness,ao}` contract (a wrong shape blanks the whole world); world-data roads use `w`, not `width`; the flat run clocks are keyed per scope (`b.scope === '3d'`).
 
 ## Hard Engineering Rules

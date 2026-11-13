@@ -87,9 +87,9 @@ export const STAGES = [
       intent: 'The Flare vents fuel from 0.50 mol/L at 5 s to 0.20 mol/L at 15 s.'
     },
     hints: [
-      'Read the two marked concentrations at 5 s (0.50 mol/L) and 15 s (0.20 mol/L).',
-      'Find how much concentration dropped and how many seconds elapsed.',
-      'Average rate is change in concentration divided by elapsed time.'
+      'Find the two marked points on the curve.',
+      'Compare the concentrations and the times of the two points.',
+      'A rate is an amount of change for each unit of time.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'rate');
@@ -137,9 +137,9 @@ export const STAGES = [
       intent: 'The Flare mixes feeds A and B across three initial-rate runs.'
     },
     hints: [
-      'Compare Run 1 and Run 2 on the log where [B] stays constant at 0.10 mol/L.',
-      'Compare Run 1 and Run 3 where [A] stays constant at 0.10 mol/L.',
-      'If doubling a concentration makes the rate quadruple, the order is 2; if it doubles, the order is 1.'
+      'Find two runs in the log where only one concentration changes.',
+      'Compare what happens to the rate in each pair of runs.',
+      'Doubling that changes the rate by a whole-number factor, and the factor tells the order.'
     ],
     check(state) {
       const oA = Math.round(state.table.fixtures.board?.dials?.o0?.value ?? 0);
@@ -179,9 +179,9 @@ export const STAGES = [
       intent: 'The Flare peroxide core decays by first-order kinetics with a 12 s half-life.'
     },
     hints: [
-      'Find how many 12 s half-lives fit into 48 s.',
-      'Each first-order half-life multiplies the remaining fraction by 0.5.',
-      'Raise 0.5 to the number of elapsed half-lives.'
+      'Find the half-life marked on the curve.',
+      'Compare the time asked about with the half-life.',
+      'Each half-life leaves the same fraction of what was there before it.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'frac');
@@ -224,9 +224,9 @@ export const STAGES = [
       intent: 'The Flare holds reactants at 35 kJ/mol behind a 115 kJ/mol peak.'
     },
     hints: [
-      'Read the reactants level R and the transition state peak TS on the profile.',
-      'Forward activation energy is the climb from reactants up to the peak.',
-      'Find the energy difference between R and TS.'
+      'Find the levels of the reactants and of the peak on the profile.',
+      'The activation energy is a climb, not a height measured from zero.',
+      'Reason about where the climb starts and where it ends.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'ea');
@@ -272,9 +272,9 @@ export const STAGES = [
       intent: 'The Flare additive follows rate = k[X]²[Y].'
     },
     hints: [
-      'Check which reactants appear in the measured rate law: two X and one Y.',
-      'A slow Step 1 with only X + X would leave [Y] out of the rate law.',
-      'A fast reversible 2 X ⇌ X₂ followed by slow X₂ + Y → Z puts both [X]² and [Y] into the rate law.'
+      'Read the measured rate law on the plate.',
+      'Find the slow step in each candidate mechanism.',
+      'A fast reversible first step keeps its product in step with its reactants.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');

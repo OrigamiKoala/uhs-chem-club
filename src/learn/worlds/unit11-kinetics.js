@@ -37,7 +37,7 @@ export const UNIT_11 = {
       title: 'Concentration Over Time',
       line: 'Half the peroxide broke down in twenty seconds; how long until half of what remains is gone?',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit11/q3-time.js')
     },
@@ -46,7 +46,7 @@ export const UNIT_11 = {
       title: 'Collisions and the Hill',
       line: 'Fuel vapour sits in the cold tank without burning, even though burning releases energy.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit11/q4-collide.js')
     },

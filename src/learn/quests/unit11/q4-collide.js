@@ -16,10 +16,11 @@ import {
   collviewFixture,
   mbhistFixture,
   kprofileFixture,
+  arrplotFixture,
   stmt
 } from '../../table/kits/rate.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
   { term: /\bactivation energy\b/i, introducedAt: 2 },
@@ -430,6 +431,54 @@ export const STAGES = [
       title: 'Temperature and Rate',
       body: 'The share of collisions with enough energy rose from 2.20% to 4.56%, so the rate roughly doubled. A modest warming has a large effect on the rate.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 9 */
+  {
+    id: 's9-arrhenius',
+    title: 'Activation Energy From Two Temperatures',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Plotting ln k against 1/T gives a straight line whose slope is −Ea ÷ R, with R = 8.314 J/(mol·K).',
+      worked: [
+        'Another reaction: slope = −6000 K',
+        'Ea = 6000 × 8.314 = 49 900 J/mol = 49.9 kJ/mol'
+      ]
+    },
+    prompt: 'What is the activation energy of this reaction, in kJ/mol?',
+    entry: { id: 'ea_arr', label: 'Activation energy', unit: 'kJ/mol' },
+    widget,
+    table: rateTable({
+      fixtures: [
+        arrplotFixture('arr', { x: 75, y: 28 }, {
+          pts: [
+            { x: 3.33, y: -6.0, label: '(3.33, −6.0)' },
+            { x: 3.23, y: -5.1, label: '(3.23, −5.1)' }
+          ],
+          w: 104,
+          h: 44
+        })
+      ]
+    }),
+    hints: [
+      'Read the coordinates of the two points on the graph; the axis for 1/T is in units of 10⁻³ per K.',
+      'A slope is the change in the vertical value divided by the change in the horizontal value; mind its sign.',
+      'Check that your answer is a sensible size for an activation energy: tens of kJ/mol.'
+    ],
+    check(state) {
+      const val = entryNumber(state.table, 'ea_arr');
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the activation energy in kJ/mol.' };
+      if (Math.abs(val - 74.8) <= 3) return { ok: true };
+      if (Math.abs(val - 74800) <= 3000) return { ok: false, msg: 'That is in J/mol; the field is in kJ/mol.' };
+      if (Math.abs(val - 9) <= 0.5) return { ok: false, msg: 'That is the change in ln k; the slope divides it by the change in 1/T, then R converts it to energy.' };
+      if (val < 0) return { ok: false, msg: 'An activation energy is a climb, so it is positive.' };
+      return { ok: false, msg: 'Check the slope: the change in ln k over the change in 1/T, then multiply by R.' };
+    },
+    reward: {
+      log: 'Ea = 9000 K × 8.314 = 75 kJ/mol.',
+      title: 'Arrhenius Slope',
+      body: 'ln k rose 0.9 while 1/T fell 0.10 × 10⁻³, a slope of −9000 K, so Ea = 9000 × 8.314 ≈ 75 kJ/mol.'
+    }
   }
 ];
 
@@ -445,7 +494,8 @@ export const SOLUTIONS = [
   [{ type: { entry: 'ea_fwd', value: '70' } }],
   [{ type: { entry: 'ea_rev', value: '80' } }],
   [put('pathA', 'slot:ans')],
-  [{ type: { entry: 'factor', value: '2.07' } }]
+  [{ type: { entry: 'factor', value: '2.07' } }],
+  [{ type: { entry: 'ea_arr', value: '75' } }]
 ];
 
 export const MISSES = [
@@ -456,7 +506,8 @@ export const MISSES = [
   [{ type: { entry: 'ea_fwd', value: '110' } }],
   [{ type: { entry: 'ea_rev', value: '65' } }],
   [put('pathB', 'slot:ans')],
-  [{ type: { entry: 'factor', value: '2.36' } }]
+  [{ type: { entry: 'factor', value: '2.36' } }],
+  [{ type: { entry: 'ea_arr', value: '9' } }]
 ];
 
 function blankState() { return {}; }

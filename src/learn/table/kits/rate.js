@@ -81,16 +81,20 @@ export const RATE_KIT = {
 installRateDresses(allFixtureEntries());
 registerKit(RATE_KIT);
 
+const OWN_TITLE = new Set(['kvessel', 'lead', 'collview', 'kprofile', 'rateslog', 'rateboard', 'choice', 'mbhist', 'plotter', 'arrplot']);
+
 export function rateTable(spec, { w = RATE_BOUNDS.w, h = RATE_BOUNDS.h, recorder = null } = {}) {
   // A knob at the low end of a dial stands over the first letter of its own name: Quicklight's dial names start clear of it.
   for (const f of spec.fixtures || []) if (f.dials && Object.keys(f.dials).length && f.props && f.props.dialIndent == null) f.props.dialIndent = 3.6;
+  // These painters print their own title in the box; the plate's label over it showed the words twice.
+  for (const f of spec.fixtures || []) if (f.props && OWN_TITLE.has(f.kind) && f.props.hideLabel == null) f.props.hideLabel = true;
   return { kit: RATE_KIT_ID, bounds: { w, h }, tools: [], recorder: recorder || { ...HEAT_RECORDER, at: { x: w - 2.6, y: h - 2.4 } }, ...spec };
 }
 
 export * from './heat.js';
 export { kvesselFixture, rateLeadFixture, choiceFixture, pickable } from './rate-vessel.js';
 export { rateslogFixture, rateboardFixture } from './rate-log.js';
-export { plotterFixture } from './rate-plotter.js';
+export { plotterFixture, arrplotFixture } from './rate-plotter.js';
 export { collviewFixture } from './rate-collide.js';
 export { mbhistFixture } from './rate-mb.js';
 export { kprofileFixture } from './rate-profile.js';
