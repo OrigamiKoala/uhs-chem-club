@@ -373,6 +373,23 @@ export const SPECIES = {
     plan(enc, foe, probe) {
       return { pose: probe?.pose || 'unmoved' };
     }
+  },
+
+  'the coil': {
+    name: 'The Coil',
+    counter: 'Trial missed: the reading does not match what the sorting magnet shows.',
+    knockback: 'Knocked back. The Coil hums louder, but your bench readings remain.',
+    hit: 'The Coil\'s field drops as another complex is accounted for.',
+    lines: {
+      idle: () => 'Copper windings hum round an iron core.',
+      unmoved: () => 'The Coil pulls at every unpaired electron on the bench.',
+      live: () => 'The Coil\'s windings surge with a stronger pull.',
+      flat: () => 'The Coil\'s hum drops to a low buzz.',
+      reversed: () => 'The Coil recoils as the pull falls.'
+    },
+    plan(enc, foe, probe) {
+      return { pose: probe?.pose || 'unmoved' };
+    }
   }
 };
 
@@ -611,8 +628,16 @@ function flareArt(pose) {
   return svg(tower + flame, 'The Flare');
 }
 
+function coilArt(pose) {
+  const core = `<rect x="26" y="18" width="12" height="30" rx="2" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`;
+  const rings = [23, 29, 35, 41].map(y => `<ellipse cx="32" cy="${y}" rx="12" ry="3" fill="none" stroke="${pose === 'live' ? LIT : EDGE}" stroke-width="1.6"/>`).join('');
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${core}${rings}</g>`, 'The Coil, silenced');
+  return svg(core + rings, 'The Coil');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the coil') return coilArt(pose);
   if (species === 'the flare') return flareArt(pose);
   if (species === 'the clamp') return clampArt(pose, plan);
   if (species === 'the leach') return leachArt(pose, plan);

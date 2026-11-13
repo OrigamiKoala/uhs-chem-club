@@ -56,6 +56,33 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: one formula can be two arrangements, and the manifest cannot tell them apart.'
   },
+  'unit12/q5-colour': {
+    scene: 'lode-colour',
+    beats: [
+      { to: 0.3, say: 'The blue copper solution took the orange and red out of white light; blue was what got through.' },
+      { to: 0.62, say: 'Six ligands lifted the two d orbitals that point at them, and only a photon matching that gap was taken out.' },
+      { to: 0.95, say: 'With ammonia round the same copper the gap widened to 199 kJ/mol, and the dark band moved from red to orange.' }
+    ],
+    filed: 'Filed: a drum\'s colour reads the gap, so it names the ligands round the metal.'
+  },
+  'unit12/q6-spin': {
+    scene: 'lode-spin',
+    beats: [
+      { to: 0.32, say: 'Water left iron(II) with four unpaired electrons, pulled toward the poles; cyanide paired all six, leaving no pull.' },
+      { to: 0.65, say: 'When the gap is wider than the pairing cost, six d electrons pair up in the lower three orbitals: low spin.' },
+      { to: 0.95, say: 'Magnetic pull grows with the number of unpaired electrons, and both colour and pull read the same gap.' }
+    ],
+    filed: 'Filed: unpaired electrons answer the magnet, and the ligand\'s gap decides how many stay unpaired.'
+  },
+  'unit12/boss-coil': {
+    scene: 'lode-coil',
+    beats: [
+      { to: 0.35, say: 'We unlocked the first coil with Mn²⁺ losing its 4s electrons, and read vanadium\'s +5 jump on the strip.' },
+      { to: 0.70, say: 'We balanced [Co(NH₃)₅Cl]²⁺ at +2 and matched [Co(NH₃)₆]³⁺\'s absorbed blue light to orange on the wheel.' },
+      { to: 0.95, say: 'High-spin [Fe(H₂O)₆]³⁺ outpulled low-spin [Fe(CN)₆]³−, shutting down the Coil and revealing the relay to Cinder Halo.' }
+    ],
+    filed: 'Filed: the Coil is silenced, and its relay log points straight to Cinder Halo.'
+  },
   'unit11/q1-watch': {
     scene: 'rate-watch',
     beats: [

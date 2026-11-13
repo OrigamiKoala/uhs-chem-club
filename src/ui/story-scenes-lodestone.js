@@ -4,7 +4,7 @@
  */
 
 import { C, text, ground, win, ease } from './story-kit.js';
-import { fillLevel, shellLevels, IE, removalOrder } from '../learn/engine/lodedata.js';
+import { fillLevel, shellLevels, IE, removalOrder, BANDS, COMPLEXES, photonKJ } from '../learn/engine/lodedata.js';
 
 const S4 = '#c9a35a'; const D3 = '#6f8fb0';
 
@@ -184,7 +184,96 @@ function shapes(ctx, w, h, t) {
   if (t > 0.45 && t < 0.64) text(ctx, 'no turn or flip lays B on A', 480, 470, { size: 22, color: C.amber, weight: 700 });
 }
 
+/** A spectrum strip at (x0, y0) with the bands of `cx` dark. */
+function spectrum(ctx, x0, y0, w, h, cx, p = 1) {
+  const bw = w / 6;
+  BANDS.forEach((b, i) => {
+    const dark = COMPLEXES[cx].absorb.includes(b.id);
+    ctx.fillStyle = b.css; ctx.globalAlpha = dark ? 1 - 0.85 * p : 1; ctx.fillRect(x0 + i * bw, y0, bw, h); ctx.globalAlpha = 1;
+    text(ctx, b.name, x0 + (i + 0.5) * bw, y0 + h + 20, { size: 16, color: C.dust });
+  });
+}
+
+/** q5-colour: the blue solution's strip; the split levels and a matching photon; ammonia widens the gap and the dark band moves. */
+function colour(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.32) {
+    spectrum(ctx, 200, 200, 560, 60, 'cu-aq', ease(win(t, 0.05, 0.25)));
+    text(ctx, 'copper(II) in water: orange and red taken out', 480, 330, { size: 22, color: C.text });
+    return;
+  }
+  if (t < 0.64) {
+    const g = ease(win(t, 0.34, 0.5));
+    const base = 380; const gap = photonKJ(500) * 0.9 * g;
+    for (let i = 0; i < 3; i++) { ctx.strokeStyle = D3; ctx.lineWidth = 3; ctx.strokeRect(300 + i * 60, base - 10 * g, 48, 40); }
+    for (let i = 0; i < 2; i++) { ctx.strokeStyle = D3; ctx.lineWidth = 3; ctx.strokeRect(330 + i * 60, base - 40 - gap, 48, 40); }
+    ctx.lineWidth = 1;
+    if (t > 0.5) { ctx.strokeStyle = '#4f9a52'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(620, base); ctx.lineTo(620, base - gap); ctx.stroke(); ctx.lineWidth = 1; text(ctx, 'a green photon fits the gap', 700, base - gap / 2, { size: 20, color: C.text, align: 'left' }); }
+    return;
+  }
+  const p = ease(win(t, 0.66, 0.86));
+  spectrum(ctx, 120, 180, 420, 50, p < 0.5 ? 'cu-aq' : 'cu-nh3');
+  const g0 = photonKJ(800) * 0.8; const g1 = photonKJ(600) * 0.8; const gp = g0 + (g1 - g0) * p;
+  ctx.strokeStyle = D3; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(640, 400); ctx.lineTo(760, 400); ctx.moveTo(640, 400 - gp); ctx.lineTo(760, 400 - gp); ctx.stroke(); ctx.lineWidth = 1;
+  text(ctx, `${Math.round(photonKJ(800) + (photonKJ(600) - photonKJ(800)) * p)} kJ/mol`, 700, 430, { size: 20, color: C.amber, weight: 700 });
+  text(ctx, p < 0.5 ? 'water' : 'ammonia', 330, 300, { size: 22, color: C.text, weight: 700 });
+}
+
+/** q6-spin: two vials in the magnet; pairing against a wide gap; pull growing with unpaired electrons. */
+function spin(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.34) {
+    const p = ease(win(t, 0.06, 0.28));
+    // Two poles and a pulled vial vs an unpulled vial.
+    ctx.fillStyle = '#534f49'; ctx.fillRect(240, 200, 60, 90); ctx.fillRect(420, 200, 60, 90);
+    text(ctx, 'N', 270, 245, { size: 22, color: C.text, weight: 700 });
+    text(ctx, 'S', 450, 245, { size: 22, color: C.text, weight: 700 });
+    ctx.fillStyle = COMPLEXES['fe2-aq'].tint; ctx.fillRect(348, 210 + 36 * p, 24, 56);
+    text(ctx, 'Fe(H₂O)₆²⁺: pulled', 360, 350, { size: 20, color: C.amber, weight: 700 });
+    ctx.fillStyle = COMPLEXES['fe2-cn'].tint; ctx.fillRect(688, 210, 24, 56);
+    text(ctx, 'Fe(CN)₆⁴−: no pull', 700, 350, { size: 20, color: C.dim });
+    return;
+  }
+  if (t < 0.68) {
+    const g = ease(win(t, 0.36, 0.56));
+    const base = 360; const gap = 140;
+    for (let i = 0; i < 3; i++) box(ctx, 300 + i * 76, base, 2, D3);
+    for (let i = 0; i < 2; i++) box(ctx, 338 + i * 76, base - gap, 0, D3);
+    ctx.fillStyle = C.dust; ctx.fillRect(580, base - 95 * g, 24, 95 * g);
+    text(ctx, 'low spin: paired below', 480, 440, { size: 22, color: C.text, weight: 700 });
+    return;
+  }
+  const bars = [['Ni²⁺ (2)', 8], ['Cr³⁺ (3)', 15], ['Mn²⁺ (5)', 35]];
+  bars.forEach(([lbl, v], i) => {
+    const bh = v * 5.2; const x = 260 + i * 180;
+    ctx.fillStyle = C.amber; ctx.fillRect(x, 380 - bh, 64, bh);
+    text(ctx, lbl, x + 32, 415, { size: 20, color: C.text, weight: 700 });
+  });
+}
+
+/** boss-coil: the five phases silencing the Coil. */
+function coil(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const phase = Math.min(5, Math.floor(t * 5) + 1);
+  // Central coil ring pulsing down as phases clear.
+  const pulse = (1 - t) * 0.8;
+  ctx.strokeStyle = t > 0.85 ? C.phosphor : C.amber;
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(480, 230, 95 + 12 * Math.sin(t * 18) * pulse, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1;
+  text(ctx, t > 0.85 ? 'The Coil: silenced' : `The Coil · Phase ${phase}`, 480, 230, { size: 24, color: C.text, weight: 700 });
+  const labels = ['Mn²⁺ (3d⁵)', 'V (+5)', '[Co(NH₃)₅Cl]²⁺', 'orange', '[Fe(H₂O)₆]³⁺'];
+  labels.forEach((lbl, i) => {
+    const on = i < phase;
+    text(ctx, lbl, 140 + i * 170, 410, { size: 17, color: on ? C.amber : C.dim, weight: on ? 700 : 400 });
+  });
+}
+
 export const LODESTONE_SCENES = {
+  'lode-coil': coil,
+  'lode-spin': spin,
+  'lode-colour': colour,
   'lode-shapes': shapes,
   'lode-complex': complexScene,
   'lode-charges': charges,

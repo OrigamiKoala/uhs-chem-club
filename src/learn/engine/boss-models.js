@@ -1812,7 +1812,8 @@ const BUILDERS = {
   'the tipper': buildTipper,
   'the leach': buildLeach,
   'the clamp': buildClamp,
-  'the flare': buildFlare
+  'the flare': buildFlare,
+  'the coil': buildFlare
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */

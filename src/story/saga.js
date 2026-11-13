@@ -137,6 +137,14 @@ export const CLUES = {
     name: 'The Vent Powder',
     summary: 'A trace of catalyst powder scraped from the cracking tower vent, unchanged after every burn cycle.',
     note: 'The powder opened a lower-barrier pathway through a slow intermediate step without being consumed. The Fifth called it a secret accelerant and never timed the steps.'
+  },
+  clue_lodestone_coil: {
+    id: 'clue_lodestone_coil',
+    act: 'act4',
+    source: 'Lodestone Boss · The Coil',
+    name: 'The Relay Chip',
+    summary: 'A decoded relay chip pulled from the Fifth\'s sorting coil at the end of Lodestone\'s iron canyon.',
+    note: 'The Coil sorted metal drums by their unpaired d electrons—and its dispatch log routes straight to Cinder Halo.'
   }
 };
 
@@ -440,6 +448,8 @@ export const EPISODES = {
     worldId: 'unit12',
     worldName: 'Lodestone',
     act: 'act4',
+    bossId: 'boss-coil',
+    clueId: 'clue_lodestone_coil',
     arrival: 'Our navigation instruments are failing as we approach Lodestone. The raiders built a giant magnetic cannon in the canyon, pulling supply ships out of the sky.',
     closing: 'The magnetic cannon is disabled and allied ships can fly safely again. Decoded flight coordinates show the raider fleet is based at Cinder Halo.',
     spoilFamily: 'Coordination sentinels',

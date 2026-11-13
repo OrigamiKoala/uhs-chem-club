@@ -13,7 +13,28 @@ export function lodeLeadFixture(id, at, { scene, title: ttl = 'Watch first', w =
 
 const bar = (ctx, F, x, base, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(F.x(x), F.y(base - h), F.len(w), F.len(h)); };
 
+const tube = (ctx, F, x, y, w, h, col, label) => {
+  ctx.fillStyle = col; ctx.globalAlpha = 0.9; ctx.fillRect(F.x(x), F.y(y + h * 0.3), F.len(w), F.len(h * 0.7)); ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#cfd8de'; ctx.lineWidth = 1.5; ctx.strokeRect(F.x(x), F.y(y), F.len(w), F.len(h)); ctx.lineWidth = 1;
+  say(ctx, label, F.x(x + w / 2), F.y(y + h + 2.6), F.size(1.7, 6), { align: 'center', color: C.text, sans: true });
+};
+
 const SCENES = {
+  /** Two metals in water: copper(II) is blue, nickel(II) green. */
+  'metal-colours'(ctx, f, F, t) {
+    say(ctx, 'Two metal ions in water', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    const p = Math.min(1, (t % 6) / 2);
+    tube(ctx, F, f.size.w * 0.25, 11, 8, 12, p > 0.3 ? '#8fb4d8' : '#2a2620', 'Cu²⁺ in water');
+    tube(ctx, F, f.size.w * 0.62, 11, 8, 12, p > 0.7 ? '#5fa36a' : '#2a2620', 'Ni²⁺ in water');
+  },
+  /** Six d electrons with no gap: one in each of the five orbitals, then one pair. */
+  'spread-d6'(ctx, f, F, t) {
+    say(ctx, 'Six d electrons, five orbitals, no gap', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    const n = Math.min(6, Math.floor((t % 9) / 1.2));
+    const occ = fillLevel(5, n);
+    occ.forEach((v, i) => orbital(ctx, F, 8 + i * 9, 14, 7, 6, v, { colour: C.d3 }));
+    say(ctx, `${n} of 6 placed`, F.x(f.size.w - 2.2), F.y(f.size.h - 3), F.size(1.9, 6), { align: 'right', color: C.amber, weight: 600 });
+  },
   /** A flat square of four identical ammonia ligands, turned and flipped: every turn looks the same. */
   'sq-turn'(ctx, f, F, t) {
     say(ctx, 'Four identical ligands, turned', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
@@ -66,6 +87,16 @@ const SCENES = {
     for (let i = 0; i < 5; i++) orbital(ctx, F, 10 + i * 7.3, 11, 6, 5, occ[i + 1], { colour: C.d3 });
     say(ctx, '3d', F.x(8.5), F.y(13.5), F.size(2, 6.5), { align: 'right', color: C.d3, weight: 700 });
     say(ctx, `${n} of 8 in`, F.x(f.size.w - 2.2), F.y(f.size.h - 3), F.size(1.9, 6), { align: 'right', color: C.amber, weight: 600 });
+  },
+
+  /** Six electrons filling five equal d orbitals (no gap): one per box before any pair, leaving four alone. */
+  'd6-equal'(ctx, f, F, t) {
+    const n = Math.min(6, Math.floor((t % 9) / 1.1));
+    say(ctx, 'Six electrons in five equal d orbitals', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    const occ = fillLevel(5, n);
+    for (let i = 0; i < 5; i++) orbital(ctx, F, 9 + i * 7.6, 15, 6, 5.5, occ[i], { colour: C.d3 });
+    if (n === 6) say(ctx, '4 alone, 1 pair', F.x(f.size.w - 2.2), F.y(f.size.h - 3), F.size(1.9, 6), { align: 'right', color: C.amber, weight: 600 });
+    else say(ctx, `${n} of 6 in`, F.x(f.size.w - 2.2), F.y(f.size.h - 3), F.size(1.9, 6), { align: 'right', color: C.dim });
   }
 };
 

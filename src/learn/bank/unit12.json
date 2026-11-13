@@ -217,6 +217,225 @@
           "explanation": "In a tetrahedron each place is 109.5° from every other place, so no pair is 'side by side' rather than 'opposite': all placements are one model turned."
         }
       ]
+    },
+    "q5-colour": {
+      "problems": [
+        {
+          "id": "q5-colour#b1",
+          "quest": "q5-colour",
+          "question": "A solution of a nickel(II) complex takes out red light. What colour does the solution look?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Green"
+            },
+            {
+              "id": "b",
+              "label": "Red"
+            },
+            {
+              "id": "c",
+              "label": "Orange"
+            },
+            {
+              "id": "d",
+              "label": "Violet"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The colour seen is what is left of white light. Green sits opposite red on the colour wheel, so a solution that takes out red looks green."
+        },
+        {
+          "id": "q5-colour#b2",
+          "quest": "q5-colour",
+          "question": "Ligand X gives a metal ion a wider gap than ligand Y. Which complex takes out light of shorter wavelength?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The complex with X"
+            },
+            {
+              "id": "b",
+              "label": "The complex with Y"
+            },
+            {
+              "id": "c",
+              "label": "Both the same"
+            },
+            {
+              "id": "d",
+              "label": "Neither takes out light"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A wider gap is matched by photons of more energy, and photons of more energy have a shorter wavelength."
+        }
+      ],
+      "worked": {
+        "id": "q5-colour#w",
+        "quest": "q5-colour",
+        "title": "The gap from a wavelength",
+        "setup": "A chromium(III) complex takes out light of 575 nm. Find its gap in kJ for each mole of photons. Use h = 6.63 × 10⁻³⁴ J s, c = 3.00 × 10⁸ m/s and Nₐ = 6.02 × 10²³ /mol.",
+        "steps": [
+          {
+            "say": "What is the energy of one photon of 575 nm, in units of 10⁻¹⁹ J?",
+            "kind": "number",
+            "answer": 3.459,
+            "unit": "× 10⁻¹⁹ J",
+            "calc": "6.63e-34 * 3.00e8 / 575e-9 / 1e-19",
+            "hint": "E = hc ÷ λ, with λ in metres: 575 nm is 575 × 10⁻⁹ m.",
+            "explain": "(6.63 × 10⁻³⁴ × 3.00 × 10⁸) ÷ (575 × 10⁻⁹) = 3.46 × 10⁻¹⁹ J."
+          },
+          {
+            "say": "What is the energy of a mole of these photons, in joules?",
+            "kind": "number",
+            "answer": 208240,
+            "unit": "J/mol",
+            "calc": "6.63e-34 * 3.00e8 / 575e-9 * 6.02e23",
+            "hint": "Multiply one photon's energy by Avogadro's number.",
+            "explain": "3.46 × 10⁻¹⁹ × 6.02 × 10²³ = 208,000 J."
+          },
+          {
+            "say": "What is that in kJ for each mole?",
+            "kind": "number",
+            "answer": 208.2,
+            "unit": "kJ/mol",
+            "calc": "6.63e-34 * 3.00e8 / 575e-9 * 6.02e23 / 1000",
+            "hint": "There are 1000 J in 1 kJ.",
+            "explain": "208,000 J ÷ 1000 = 208 kJ for each mole."
+          },
+          {
+            "say": "Titanium's gap is 239 kJ/mol. How does this chromium complex's gap compare?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Narrower"
+              },
+              {
+                "id": "b",
+                "label": "Wider"
+              },
+              {
+                "id": "c",
+                "label": "The same"
+              }
+            ],
+            "answer": "a",
+            "hint": "Compare 208 with 239.",
+            "explain": "208 kJ/mol is less than 239, so the gap is narrower and the light taken out has a longer wavelength."
+          }
+        ],
+        "finish": "A gap is the energy of the photon it takes out: hc ÷ λ for one photon, times Avogadro's number for a mole."
+      }
+    },
+    "q6-spin": {
+      "problems": [
+        {
+          "id": "q6-spin#b1",
+          "quest": "q6-spin",
+          "question": "When the crystal field gap between the lower three and upper two d orbitals is wider than the pairing cost, how do six d electrons arrange themselves?",
+          "options": [
+            {
+              "id": "a",
+              "label": "All six pair up in the lower three orbitals, leaving none unpaired (low spin)."
+            },
+            {
+              "id": "b",
+              "label": "Five spread singly across all five orbitals and the sixth pairs below (four unpaired)."
+            },
+            {
+              "id": "c",
+              "label": "Four fill the upper two orbitals first, leaving two below."
+            },
+            {
+              "id": "d",
+              "label": "All six leave the ion, since the gap is too wide to hold them."
+            }
+          ],
+          "answer": "a",
+          "explanation": "Each electron takes the arrangement that costs less energy: when crossing the gap costs more than pairing, all six pair in the lower three orbitals."
+        },
+        {
+          "id": "q6-spin#b2",
+          "quest": "q6-spin",
+          "question": "A manganese(II) complex with water has five unpaired d electrons, while a nickel(II) complex with water has two. How do their magnetic pulls compare?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The manganese(II) complex is pulled more strongly toward a magnet."
+            },
+            {
+              "id": "b",
+              "label": "The nickel(II) complex is pulled more strongly toward a magnet."
+            },
+            {
+              "id": "c",
+              "label": "Both are pulled by the same amount because both are +2 ions."
+            },
+            {
+              "id": "d",
+              "label": "Neither is pulled because water ligands cancel unpaired electrons."
+            }
+          ],
+          "answer": "a",
+          "explanation": "Magnetic pull grows with the number of unpaired electrons, so five unpaired electrons give a stronger pull than two."
+        }
+      ]
+    },
+    "boss-coil": {
+      "problems": [
+        {
+          "id": "boss-coil#b1",
+          "quest": "boss-coil",
+          "question": "What is the overall charge of the complex ion formed by a Co³⁺ ion, five neutral NH₃ molecules, and one Cl− ion?",
+          "options": [
+            {
+              "id": "a",
+              "label": "+2"
+            },
+            {
+              "id": "b",
+              "label": "+3"
+            },
+            {
+              "id": "c",
+              "label": "+4"
+            },
+            {
+              "id": "d",
+              "label": "−1"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Co³⁺ (+3) plus five neutral NH₃ (0) and one Cl− (−1) gives an overall charge of +2."
+        },
+        {
+          "id": "boss-coil#b2",
+          "quest": "boss-coil",
+          "question": "Both [Fe(H₂O)₆]³⁺ and [Fe(CN)₆]³− hold Fe³⁺ (five d electrons). Why is [Fe(H₂O)₆]³⁺ pulled harder by a magnet?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Water makes a narrower gap, leaving all five d electrons unpaired, whereas cyanide's wide gap pairs four of them."
+            },
+            {
+              "id": "b",
+              "label": "Water adds extra electrons to iron(III), increasing the count to six."
+            },
+            {
+              "id": "c",
+              "label": "Cyanide removes all d electrons from iron(III)."
+            },
+            {
+              "id": "d",
+              "label": "Water ligands are themselves paramagnetic."
+            }
+          ],
+          "answer": "a",
+          "explanation": "High-spin Fe³⁺ with water has five unpaired electrons, while low-spin Fe³⁺ with cyanide has only one."
+        }
+      ]
     }
   }
 }

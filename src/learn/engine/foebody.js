@@ -1345,8 +1345,15 @@ export function buildFlare(foe) {
   return body;
 }
 
+/** The Coil: an iron core wrapped in copper windings. */
+function buildCoil(foe) {
+  const b = buildFlare(foe);
+  b.species = 'the coil';
+  return b;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -1366,6 +1373,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the leach') return buildLeach(foe);
   if (species === 'the clamp') return buildClamp(foe);
   if (species === 'the flare') return buildFlare(foe);
+  if (species === 'the coil') return buildCoil(foe);
   return null;
 }
 

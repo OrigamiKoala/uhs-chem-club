@@ -262,7 +262,7 @@
       ],
       "label": "Bench 5 - Colour Booth",
       "structure": "colour-booth",
-      "built": false,
+      "built": true,
       "flat": {
         "x": -25.45,
         "z": -8,
@@ -285,7 +285,7 @@
       ],
       "label": "Bench 6 - Magnetism",
       "structure": "coil-shed",
-      "built": false,
+      "built": true,
       "flat": {
         "x": 25.45,
         "z": -26,

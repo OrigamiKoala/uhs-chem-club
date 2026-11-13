@@ -176,4 +176,4 @@ Wiring: card rows, tray cell heights, rail labels — laid out and checked by `v
 
 ## Build record
 
-(appended as phases finish)
+- 2026-11-13: Completed `q5-colour` layout fixes (`lode-light.js` `dsplitFixture` slot label, `q5-colour.js` stage 7/8 positions), added `lode-magnet.js` (`magnetFixture`, `magnetRead`), `d6-equal` lead clip, `q6-spin` (7 stages), `boss-coil` (5 phases), `the coil` foe/model/arena spot, `clue_lodestone_coil`, bank items in `unit12.json`, story entries/scenes (`lode-spin`, `lode-coil`), and marked `site-6` (`q6-spin`) `built: true` in `lodestone.json`. All 6 benches + boss (44 stages) pass `verify:learn`, `verify:table`, `verify:story`, `verify:lodestone`, and `verify:docs`.

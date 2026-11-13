@@ -156,6 +156,14 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -54],
     scale: 1.5,
     species: 'the flare'
+  },
+  'boss-coil': {
+    worldId: 'unit12',
+    playerPos: [0, 1.6, -42],
+    lookAtPos: [0, 1.6, -58],
+    bossPos: [0, 0, -58],
+    scale: 1.5,
+    species: 'the coil'
   }
 };
 

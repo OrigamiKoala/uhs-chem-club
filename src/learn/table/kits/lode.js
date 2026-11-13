@@ -12,6 +12,8 @@ import './lode-tour.js';
 import './lode-shell.js';
 import './lode-lead.js';
 import './lode-cplx.js';
+import './lode-light.js';
+import './lode-magnet.js';
 
 export const LODE_KIT_ID = 'lode';
 export const LODE_BOUNDS = HEAT_BOUNDS;
@@ -59,7 +61,7 @@ export const LODE_KIT = {
 installLodeDresses(allFixtureEntries());
 registerKit(LODE_KIT);
 
-const OWN_TITLE = new Set(['dshell', 'iestrip', 'lodelead', 'lchoice', 'beaker', 'cplx', 'match']);
+const OWN_TITLE = new Set(['dshell', 'iestrip', 'lodelead', 'lchoice', 'beaker', 'cplx', 'match', 'spec', 'wheel', 'cfield', 'dsplit', 'magnet']);
 
 export function lodeTable(spec, { w = LODE_BOUNDS.w, h = LODE_BOUNDS.h, recorder = null } = {}) {
   for (const f of spec.fixtures || []) if (f.dials && Object.keys(f.dials).length && f.props && f.props.dialIndent == null) f.props.dialIndent = 3.6;
@@ -71,4 +73,6 @@ export function lodeTable(spec, { w = LODE_BOUNDS.w, h = LODE_BOUNDS.h, recorder
 export * from './heat.js';
 export { dshellFixture, dshellRead, atomOcc, iestripFixture, iestripRead, lchoiceFixture, chosen, pickOf, elemCard } from './lode-shell.js';
 export { lodeLeadFixture } from './lode-lead.js';
+export { vial, specFixture, specRead, wheelFixture, wheelRead, cfieldFixture, cfieldRead, dsplitFixture, dsplitRead, CF_ORBITALS } from './lode-light.js';
 export { beakerFixture, beakerRead, cplxFixture, cplxRead, matchFixture, matchRead } from './lode-cplx.js';
+export { magnetFixture, magnetRead } from './lode-magnet.js';
