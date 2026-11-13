@@ -29,6 +29,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the overheated tower makes the same product, just faster in the first seconds.'
   },
+  'unit11/q2-law': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'Doubling A doubled the initial rate, doubling B made it four times as large, and doubling C changed nothing.' },
+      { to: 0.70, say: 'Those measured powers give rate = k[A][B]², showing that stoichiometric coefficients never determine the rate law.' },
+      { to: 0.95, say: 'With k = 2.0 from runs 1 and 2, the rate law predicted 0.036 mol/(L·s) for run 3.' }
+    ],
+    filed: 'Filed: changing one feed left the rate flat; the equation alone never tells the orders.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

@@ -29,8 +29,8 @@ export const UNIT_11 = {
       line: 'Three feeds enter the manifold, yet only two change how fast the tank heats.',
       arena: 'bench',
       stageCount: 5,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit11/q2-law.js')
     },
     {
       id: 'q3-time',

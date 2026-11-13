@@ -4,15 +4,52 @@
     {
       "id": "q1-watch#e1",
       "quest": "q1-watch",
-      "question": "For the reaction 2 A → B, if A is consumed at 0.060 mol/(L·s), at what rate does B form?",
+      "question": "For the reaction 2 A \u2192 B, if A is consumed at 0.060 mol/(L\u00b7s), at what rate does B form?",
       "options": [
-        { "id": "a", "label": "0.030 mol/(L·s)" },
-        { "id": "b", "label": "0.060 mol/(L·s)" },
-        { "id": "c", "label": "0.120 mol/(L·s)" },
-        { "id": "d", "label": "0.015 mol/(L·s)" }
+        {
+          "id": "a",
+          "label": "0.030 mol/(L\u00b7s)"
+        },
+        {
+          "id": "b",
+          "label": "0.060 mol/(L\u00b7s)"
+        },
+        {
+          "id": "c",
+          "label": "0.120 mol/(L\u00b7s)"
+        },
+        {
+          "id": "d",
+          "label": "0.015 mol/(L\u00b7s)"
+        }
       ],
       "answer": "a",
-      "explanation": "Two moles of A are consumed for every one mole of B formed, so B forms at half the rate A disappears: 0.060 ÷ 2 = 0.030 mol/(L·s)."
+      "explanation": "Two moles of A are consumed for every one mole of B formed, so B forms at half the rate A disappears: 0.060 \u00f7 2 = 0.030 mol/(L\u00b7s)."
+    },
+    {
+      "id": "q2-law#e1",
+      "quest": "q2-law",
+      "question": "For a reaction with rate = k[X]\u00b2[Y]\u2070, what happens to the rate if [X] triples and [Y] doubles?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It becomes 9 times as fast"
+        },
+        {
+          "id": "b",
+          "label": "It becomes 6 times as fast"
+        },
+        {
+          "id": "c",
+          "label": "It becomes 18 times as fast"
+        },
+        {
+          "id": "d",
+          "label": "It becomes 3 times as fast"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Since the reaction is second order in X and zero order in Y, the rate multiplies by 3\u00b2 \u00d7 2\u2070 = 9 \u00d7 1 = 9."
     }
   ],
   "bench": {
@@ -23,23 +60,47 @@
           "quest": "q1-watch",
           "question": "A reactant drops from 0.80 mol/L at 0 s to 0.20 mol/L at 15 s. What is the average reaction rate over those 15 s?",
           "options": [
-            { "id": "a", "label": "0.040 mol/(L·s)" },
-            { "id": "b", "label": "0.053 mol/(L·s)" },
-            { "id": "c", "label": "0.013 mol/(L·s)" },
-            { "id": "d", "label": "0.60 mol/(L·s)" }
+            {
+              "id": "a",
+              "label": "0.040 mol/(L\u00b7s)"
+            },
+            {
+              "id": "b",
+              "label": "0.053 mol/(L\u00b7s)"
+            },
+            {
+              "id": "c",
+              "label": "0.013 mol/(L\u00b7s)"
+            },
+            {
+              "id": "d",
+              "label": "0.60 mol/(L\u00b7s)"
+            }
           ],
           "answer": "a",
-          "explanation": "The concentration drops by 0.80 − 0.20 = 0.60 mol/L over 15 s, so the average rate is 0.60 ÷ 15 = 0.040 mol/(L·s)."
+          "explanation": "The concentration drops by 0.80 \u2212 0.20 = 0.60 mol/L over 15 s, so the average rate is 0.60 \u00f7 15 = 0.040 mol/(L\u00b7s)."
         },
         {
           "id": "q1-watch#b2",
           "quest": "q1-watch",
           "question": "Which change slows down a reaction between a solid chunk and a gas?",
           "options": [
-            { "id": "a", "label": "Moving the gas into a larger vessel at the same temperature" },
-            { "id": "b", "label": "Grinding the solid chunk into a fine powder" },
-            { "id": "c", "label": "Raising the temperature" },
-            { "id": "d", "label": "Adding more gas into the same vessel" }
+            {
+              "id": "a",
+              "label": "Moving the gas into a larger vessel at the same temperature"
+            },
+            {
+              "id": "b",
+              "label": "Grinding the solid chunk into a fine powder"
+            },
+            {
+              "id": "c",
+              "label": "Raising the temperature"
+            },
+            {
+              "id": "d",
+              "label": "Adding more gas into the same vessel"
+            }
           ],
           "answer": "a",
           "explanation": "A larger vessel spreads the gas molecules out, lowering concentration and collision frequency, which slows the reaction."
@@ -49,49 +110,157 @@
         "id": "q1-watch#w",
         "quest": "q1-watch",
         "title": "Average rate and stoichiometry",
-        "setup": "For 2 A → B, [A] falls from 0.90 mol/L at 0 s to 0.30 mol/L at 12 s.",
+        "setup": "For 2 A \u2192 B, [A] falls from 0.90 mol/L at 0 s to 0.30 mol/L at 12 s.",
         "steps": [
           {
             "say": "How much did [A] change over the 12 s interval (in mol/L)?",
             "kind": "number",
-            "answer": 0.60,
+            "answer": 0.6,
             "unit": "mol/L",
             "calc": "0.90 - 0.30",
             "hint": "Subtract the final concentration from the initial concentration.",
-            "explain": "0.90 − 0.30 = 0.60 mol/L."
+            "explain": "0.90 \u2212 0.30 = 0.60 mol/L."
           },
           {
-            "say": "What is the average rate of consumption of A (in mol/(L·s))?",
+            "say": "What is the average rate of consumption of A (in mol/(L\u00b7s))?",
             "kind": "number",
             "answer": 0.05,
-            "unit": "mol/(L·s)",
+            "unit": "mol/(L\u00b7s)",
             "calc": "(0.90 - 0.30) / 12",
             "hint": "Divide the change in [A] by 12 s.",
-            "explain": "0.60 ÷ 12 = 0.050 mol/(L·s)."
+            "explain": "0.60 \u00f7 12 = 0.050 mol/(L\u00b7s)."
           },
           {
-            "say": "Since 2 A → B, at what rate does B form (in mol/(L·s))?",
+            "say": "Since 2 A \u2192 B, at what rate does B form (in mol/(L\u00b7s))?",
             "kind": "number",
             "answer": 0.025,
-            "unit": "mol/(L·s)",
+            "unit": "mol/(L\u00b7s)",
             "calc": "((0.90 - 0.30) / 12) / 2",
             "hint": "One B forms for every two A used.",
-            "explain": "0.050 ÷ 2 = 0.025 mol/(L·s)."
+            "explain": "0.050 \u00f7 2 = 0.025 mol/(L\u00b7s)."
           },
           {
             "say": "During which part of the run is the instantaneous rate greatest?",
             "kind": "choice",
             "options": [
-              { "id": "a", "label": "At the start (0 s), when [A] is highest" },
-              { "id": "b", "label": "At the end (12 s), when most B is present" },
-              { "id": "c", "label": "Constant throughout" }
+              {
+                "id": "a",
+                "label": "At the start (0 s), when [A] is highest"
+              },
+              {
+                "id": "b",
+                "label": "At the end (12 s), when most B is present"
+              },
+              {
+                "id": "c",
+                "label": "Constant throughout"
+              }
             ],
             "answer": "a",
             "hint": "Reactant concentration is highest at the start.",
             "explain": "Most reactant is present at 0 s, so collisions are most frequent and the curve is steepest."
           }
         ],
-        "finish": "Average rate is Δ[A]/Δt, and stoichiometry ties the rates of A and B."
+        "finish": "Average rate is \u0394[A]/\u0394t, and stoichiometry ties the rates of A and B."
+      }
+    },
+    "q2-law": {
+      "problems": [
+        {
+          "id": "q2-law#b1",
+          "quest": "q2-law",
+          "question": "Doubling [A] with [B] fixed quadruples the initial rate. What is the reaction order with respect to A?",
+          "options": [
+            {
+              "id": "a",
+              "label": "2 (second order)"
+            },
+            {
+              "id": "b",
+              "label": "1 (first order)"
+            },
+            {
+              "id": "c",
+              "label": "0 (zero order)"
+            },
+            {
+              "id": "d",
+              "label": "4 (fourth order)"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Because 2^m = 4, the order m with respect to A is 2."
+        },
+        {
+          "id": "q2-law#b2",
+          "quest": "q2-law",
+          "question": "A reaction has rate = k[A][B]\u00b2. If [A] = 0.20 mol/L, [B] = 0.10 mol/L, and rate = 0.0080 mol/(L\u00b7s), what is k?",
+          "options": [
+            {
+              "id": "a",
+              "label": "4.0 L\u00b2/(mol\u00b2\u00b7s)"
+            },
+            {
+              "id": "b",
+              "label": "0.40 L\u00b2/(mol\u00b2\u00b7s)"
+            },
+            {
+              "id": "c",
+              "label": "0.0020 L\u00b2/(mol\u00b2\u00b7s)"
+            },
+            {
+              "id": "d",
+              "label": "8.0 L\u00b2/(mol\u00b2\u00b7s)"
+            }
+          ],
+          "answer": "a",
+          "explanation": "k = 0.0080 \u00f7 (0.20 \u00d7 0.10\u00b2) = 0.0080 \u00f7 0.0020 = 4.0 L\u00b2/(mol\u00b2\u00b7s)."
+        }
+      ],
+      "worked": {
+        "id": "q2-law#w",
+        "quest": "q2-law",
+        "title": "Finding orders and k from initial rates",
+        "setup": "In Run 1, [A]=0.10, [B]=0.10, rate=0.0030. In Run 2, [A]=0.20, [B]=0.10, rate=0.0060. In Run 3, [A]=0.10, [B]=0.20, rate=0.0120.",
+        "steps": [
+          {
+            "say": "Comparing Runs 1 and 2, what is the order in A?",
+            "kind": "number",
+            "answer": 1,
+            "unit": "",
+            "calc": "1",
+            "hint": "Doubling [A] doubled the rate (0.0030 to 0.0060).",
+            "explain": "2\u00b9 = 2, so the reaction is first order in A."
+          },
+          {
+            "say": "Comparing Runs 1 and 3, what is the order in B?",
+            "kind": "number",
+            "answer": 2,
+            "unit": "",
+            "calc": "2",
+            "hint": "Doubling [B] made the rate 4 times as fast (0.0030 to 0.0120).",
+            "explain": "2\u00b2 = 4, so the reaction is second order in B."
+          },
+          {
+            "say": "Using Run 1, what is the denominator [A]\u00b9[B]\u00b2?",
+            "kind": "number",
+            "answer": 0.001,
+            "unit": "mol\u00b3/L\u00b3",
+            "calc": "0.10 * (0.10 ** 2)",
+            "hint": "Multiply 0.10 by 0.10\u00b2.",
+            "explain": "0.10 \u00d7 0.010 = 0.0010."
+          },
+          {
+            "say": "What is the rate constant k?",
+            "kind": "number",
+            "answer": 3.0,
+            "unit": "L\u00b2/(mol\u00b2\u00b7s)",
+            "calc": "0.0030 / (0.10 * (0.10 ** 2))",
+            "hint": "Divide Run 1 rate (0.0030) by 0.0010.",
+            "explain": "k = 0.0030 \u00f7 0.0010 = 3.0 L\u00b2/(mol\u00b2\u00b7s)."
+          }
+        ],
+        "finish": "Orders come from comparing runs, and k comes from plugging one run into the rate law."
       }
     }
   }
