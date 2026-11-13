@@ -1,61 +1,58 @@
 /**
  * kettle.js — Kettle, Learn world 07, as a place you walk (T4).
  *
- * An automated foundry works on a soda flat: a white crust under an amber haze, flat to a ring of low mesas,
- * and the works standing on it in a row. Eight hosts stand in two columns either side of a slag road that
- * runs from the landing pad north to the blast furnace: the assay yard, the labelling shed, the sealed
- * charging pot on its weighbridge, the furnace control room, the effluent sump, the charge floor, the
- * pickling line and the tapping floor. A silo row and two conveyors stand behind the furnace's open ground,
- * and the Recipe Golem is fought on that ground, in front of the furnace.
+ * Kettle is ONE IRONWORKS BUILDING. The Avalon sets down in the yard at its charge end; one tall door stands in the end
+ * wall, the furnace top and its stoves over the roof at the far end, a slag tip to the west. Inside, a crane aisle (the
+ * nave) runs the length of the works to the cast house in front of the furnace, and the bays open off it on five
+ * levels: the stores, the scale bay, the control cabin on its plinth, the sump cellar down a ramp, the charge bank up a
+ * ramp, the pickling bay, the tapping pit and the refining bay. Each bay is the host of one bench. The Recipe Golem is
+ * fought on the cast house floor (`docs/plans/kettle-world.md` section 11).
  *
- * It is built behind the SAME contract as every walkable Learn world, so the stage, the voyage, the walk HUD
- * and the bench dispatcher treat it as just another place:
+ * It is built behind the SAME contract as every walkable Learn world, so the stage, the voyage, the walk HUD and the
+ * bench dispatcher treat it as just another place:
  *
  *   scene, data, colliders, terrainMesh, hasFarTerrain, lampPool,
  *   getTerrainHeight(x, z), benchAnchor(questId), setBenchDeployed(questId, on),
- *   setSiteComplete(questId, complete), update(delta, cameraPos), dispose()
+ *   setSiteComplete(questId, complete), routeTo(siteId, from, to), update(delta, cameraPos), dispose()
  *
  * WHERE EVERYTHING LIVES
- *   kettle/atmosphere.js   the sky, the sun, the environment
- *   kettle/terrain.js      the flat, the mesas; roads and the boss's plaza
- *   kettle/plant.js        the furnace, chimneys, silos, tanks, conveyors, heaps, ingots, crates
- *   kettle/stations.js     the eight hosts the benches are built into (host-plan.js is their footprints)
- *   materials/kettle-textures.js   the surfaces
+ *   kettle/works-plan.js   the rooms, the doors between them and the heaps outside: pure data, on `lib/workings.js`
+ *   kettle/terrain.js      the one height field: a room's floor inside, the soda flat and the heaps outside
+ *   kettle/works.js        the building built from the plan: floors, walls, roofs, the halls' steel, the crane
+ *   kettle/stations.js     the eight hosts, each the machinery of one bay (host-plan.js says which, and where)
+ *   kettle/plant.js        the furnace and stoves, the yard, the far country
+ *   kettle/atmosphere.js   the sky, the sun, the environment (kept from the first build)
+ *   kettle/kit.js          the parts kit; materials/kettle-textures.js the surfaces
  * laid out by `tools/gen-kettle-layout.mjs`.
  *
- * THE RULES IT KEEPS, as the other worlds do: nothing occupies the same space as anything else; a site faces
- * the ground the player walks in from; ONLY LAMPS ARE LIT (a work lamp is a `lampMark` pooled into three real
- * lights; nothing owns a PointLight); what never moves is baked.
+ * THE RULES IT KEEPS, as the other worlds do: nothing occupies the same space as anything else; a site faces the ground
+ * the player walks in from; there is one floor; ONLY LAMPS ARE LIT (a lamp is a `lampMark` pooled into three real
+ * lights; nothing owns a PointLight; the furnace's tap hole is one declared source in that pool); what never moves is
+ * baked. INSIDE IS DARK: the cover mask (`lib/cover.js`) takes the sun and the sky out of every room, on a phone too,
+ * and lets the sun in only through the charge door and the louvred bands high in the west walls.
  */
 
 import * as THREE from 'three';
 import kettleData from './world-data/kettle.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d } from './materials/pbr-kit.js';
-import { sodaCrust, slagRoad, slabConcrete } from './materials/kettle-textures.js';
+import { sodaCrust, slagRoad, slabConcrete, brickwork, ribbedSheet } from './materials/kettle-textures.js';
 import {
-  createKtSkyDome, createKtLights, followKtShadow, createKtEnvironment, ktSkyUniforms, followCamera, KTSKY
+  createKtSkyDome, createKtLights, followKtShadow, createKtEnvironment, ktSkyUniforms, followCamera, KTSKY, KETTLE_SUN
 } from './kettle/atmosphere.js';
-import { makeKettleField, buildKettleTerrainGeometry, buildRibbon, buildDisc } from './kettle/terrain.js';
-import {
-  buildFurnace, buildChimney, buildSilo, buildTank, buildSlagHeap, buildIngotStack, buildCrateStack, buildConveyor,
-  buildLampPost, buildLandingPad
-} from './kettle/plant.js';
+import { makeKettleField, buildKettleTerrainGeometry, buildRibbon } from './kettle/terrain.js';
+import { makeWorksPlan } from './kettle/works-plan.js';
+import { buildWorks, buildShafts } from './kettle/works.js';
+import * as PLANT from './kettle/plant.js';
+import { FILAMENT } from './kettle/kit.js';
+import { makeCover } from './lib/cover.js';
 import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './kettle/stations.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
-/** The amber filament every work lamp in the world burns. A lamp is a lamp. */
-const FILAMENT = 0xd99423;
-
 /** Landmarks that are round, or turn themselves: their group is never turned. */
-const SELF_TURNED = new Set(['lamp-post', 'silo', 'tank', 'chimney', 'slag-heap']);
-
-const BUILDERS = {
-  furnace: buildFurnace, chimney: buildChimney, silo: buildSilo, tank: buildTank, conveyor: buildConveyor,
-  'slag-heap': buildSlagHeap, 'ingot-stack': buildIngotStack, 'crate-stack': buildCrateStack
-};
+const SELF_TURNED = new Set(['lamp-post']);
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
@@ -80,19 +77,24 @@ export class KettleWorld {
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
 
-    this.field = makeKettleField(this.data);
+    // THE WORKS, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
+    this.plan = makeWorksPlan(this.data);
+    this.field = makeKettleField(this.data, this.plan);
 
     this.initMaterials();
     this.initLighting();
     this.sky = createKtSkyDome(900);
     this.scene.add(this.sky);
     this.initTerrain();
+    this.initWorks();
+    this.initPlant();
     this.initLandmarks();
     this.initHosts();
     this.initLampPool();
     this.bakeStatics();
     this.buildColliders();
     this.enableAmbientOcclusion();
+    this.initCover();
   }
 
   own(...objs) {
@@ -102,7 +104,7 @@ export class KettleWorld {
 
   /** What the builders are handed: materials, `own`, the lamp list and the tier. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan };
   }
 
   /** `aoMap` samples the SECOND uv set, which a primitive geometry does not have: reuse the first. */
@@ -139,6 +141,16 @@ export class KettleWorld {
     M.roofSheet = metal('#7a6e62', '#6a6157', '#7d5236', 95, 0.7, 5);
     M.crate = metal('#6e7a5c', '#5f6a52', '#7a5a40', 101, 0.5, 2);
     M.crateB = metal('#8a6d45', '#75603f', '#6a4a30', 103, 0.55, 2);
+    // The building: brick to the dado and ribbed sheet over it, firebrick in the cast house and the pit, paved floors there.
+    const surf = (surface, repeat = 1) => { const m = buildMaterial(surface, { repeat, roughness: 1.0 }); m.aoMapIntensity = 0.9; return m; };
+    M.brick = surf(brickwork({ size: texSize(512), seed: 31 }));
+    M.firebrickWall = surf(brickwork({ size: texSize(512), seed: 33, brick: '#8a5a44', dark: '#3f2a24', mortar: '#7c7468', soot: 0.6 }));
+    M.paver = surf(brickwork({ size: texSize(512), seed: 35, brick: '#6c5548', dark: '#3a3029', mortar: '#585149', soot: 0.5, across: 6, courses: 12, paving: true }));
+    M.sheet = surf(ribbedSheet({ size: texSize(512), seed: 41 }));
+    M.sheet.metalness = 0.35;
+    M.wallConcrete = surf(slabConcrete({ size: texSize(512), seed: 11 }));
+    M.panel = M.clad;
+    M.deckPlate = metal('#4d4f4a', '#5d605a', '#6b5442', 109, 0.4, 6);
     // The works' own: the bench is cast iron with blackened rims, its trays firebrick.
     M.castIron = metal('#5a544b', '#4a453e', '#6a4a30', 105, 0.55, 3);
     M.darkIron = metal('#2e2a26', '#3a3530', '#5a4030', 107, 0.5, 4);
@@ -166,6 +178,8 @@ export class KettleWorld {
     M.caseDark = std({ color: 0x2f333a, roughness: 0.55, metalness: 0.4 });
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
+    // THE ONE FIRE: iron running from the furnace's tap hole. It is hot metal, so it is lit; it does not bloom.
+    M.iron = std({ color: 0x3a1a0c, emissive: PLANT.FURNACE_FIRE, emissiveIntensity: 1.5, roughness: 0.7 });
 
     // The roads: slag, feathered into the crust at both edges.
     M.slag = buildMaterial(slagRoad({ size: texSize(512), seed: 3 }), { repeat: 1, roughness: 1.0 });
@@ -234,7 +248,7 @@ export class KettleWorld {
     for (const t of crust.userData.surfaceMaps || []) { t.anisotropy = aniso; this.own(t); }
     this.own(crust);
 
-    const geo = this.own(buildKettleTerrainGeometry(this.field, this.data));
+    const geo = this.own(buildKettleTerrainGeometry(this.field, this.data, this.plan));
     this.terrainMesh = new THREE.Mesh(geo, crust);
     this.terrainMesh.name = 'kettle-ground';
     this.terrainMesh.frustumCulled = false;
@@ -243,9 +257,8 @@ export class KettleWorld {
     this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
 
-    // The slag roads: the works road, a spur to every approach, the pad's spur, and the boss's plaza.
-    const ribbons = this.data.roads.map(r => buildRibbon(this.field, r.pts, r.width));
-    ribbons.push(buildDisc(this.field, this.data.arena.boss[0], this.data.arena.boss[2], 10.5));
+    // The slag ways of the yard: from the spawn's ground to the charge door, and the pad's spur.
+    const ribbons = this.data.roads.map(r => buildRibbon({ height: this.field.outside }, r.pts, r.width));
     const g = new THREE.Group();
     g.name = 'kettle-roads';
     g.userData.phys = 'ground';
@@ -259,19 +272,39 @@ export class KettleWorld {
     this.scene.add(g);
   }
 
-  /* ------------------------------------------------------------ the plant */
+  /* ------------------------------------------------------------ the works */
 
+  /** The building, from the plan: its shell is ground (everything stands in it), its fittings are bodies. */
+  initWorks() {
+    const built = buildWorks(this);
+    this.worksShell = built.shell;
+    this.worksColliders = built.colliders;
+    this.scene.add(built.shell, built.fittings);
+    this.shafts = buildShafts(this, KETTLE_SUN);
+    this.scene.add(this.shafts);
+  }
+
+  /** The furnace and its stoves behind the cast house, and the far country. */
+  initPlant() {
+    this.plantColliders = [];
+    for (const build of PLANT.PLANT_BUILDERS || []) {
+      const node = build(this);
+      if (!node) continue;
+      this.scene.add(node);
+      for (const c of node.userData.colliders || []) this.plantColliders.push({ x: node.position.x + c.x, z: node.position.z + c.z, radius: c.r });
+    }
+  }
+
+  /** The yard: the pad and the lamps on the way to the charge door. */
   initLandmarks() {
     const ctx = this.ctx;
-    let seed = 1;
     let posts = 0;
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
       const y = this.getTerrainHeight(lm.pos[0], lm.pos[2]);
       let node = null;
-      if (lm.asset === 'lamp-post') node = buildLampPost(ctx, posts++);
-      else if (lm.asset === 'landing-pad') node = buildLandingPad(ctx, this.field);
-      else if (BUILDERS[lm.asset]) node = BUILDERS[lm.asset](ctx, lm, seed++);
+      if (lm.asset === 'lamp-post') node = PLANT.buildLampPost(ctx, posts++);
+      else if (lm.asset === 'landing-pad') node = PLANT.buildLandingPad(ctx, this.field);
       if (!node) continue;
       node.position.set(lm.pos[0], lm.asset === 'landing-pad' ? 0 : y, lm.pos[2]);
       if (!SELF_TURNED.has(lm.asset)) node.rotation.y = lm.rotY || 0;
@@ -280,6 +313,18 @@ export class KettleWorld {
       this.scene.add(node);
       this.landmarkNodes.push({ lm, node });
     }
+  }
+
+  /**
+   * The way on foot from where the player stands to a site's approach mark, as a list of [x, z]: across the yard to the
+   * charge door, then doorway by doorway through the works. The guide arrow follows it (`three/guide-arrow.js`).
+   */
+  routeTo(siteId, fromPos, toPos = null) {
+    const site = this.data.sites.find(s => s.id === siteId);
+    if (!site) return null;
+    const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.z];
+    const to = toPos ? [toPos[0], 0, toPos[1]] : site.approachPos;
+    return this.plan.routeTo(from[0], from[1], to[0], to[2]);
   }
 
   /* ------------------------------------------------------------ the sites */
@@ -393,6 +438,9 @@ export class KettleWorld {
       if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge || node.userData.phys) continue;
       bake(node);
     }
+    // The building's shell is ground, and it is baked too: one mesh per material, each still tagged as ground.
+    mergeStatic(this.worksShell);
+    this.worksShell.traverse(o => { if (o.isMesh) o.userData.phys = 'ground'; });
     // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
     // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
     this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
@@ -403,7 +451,10 @@ export class KettleWorld {
     });
   }
 
-  /** Every prop collides as the part of it a body can actually touch. */
+  /**
+   * The colliders the walk is held against: every wall and railing of the works (boxes, from the plan), the rings round
+   * the two heaps, the halls' stanchions, the furnace and its stoves, the yard's lamp posts, and every host's machinery.
+   */
   buildColliders() {
     for (const { lm, node } of this.landmarkNodes) {
       const rot = node.rotation.y;
@@ -412,7 +463,21 @@ export class KettleWorld {
         this.colliders.push({ x: lm.pos[0] + dx, z: lm.pos[2] + dz, radius: c.r });
       }
     }
+    for (const c of this.plan.wallColliders()) this.colliders.push(c);
+    for (const c of this.plan.ringColliders()) this.colliders.push(c);
+    for (const c of this.worksColliders) this.colliders.push(c);
+    for (const c of this.plantColliders) this.colliders.push(c);
     for (const c of this.siteColliders) this.colliders.push(c);
+  }
+
+  /**
+   * INSIDE IS DARK. The mask takes the sun and the sky out of every room and lets the sun through the charge door and
+   * the louvred bands. A deployed instrument is built after the world with materials of its own, so `update` puts the
+   * mask on whatever has arrived since (as Ligar's `coverNewMaterials`).
+   */
+  initCover() {
+    this.cover = makeCover({ sun: KETTLE_SUN, ...this.plan.coverSpec() });
+    this.cover.applyTo(this.scene);
   }
 
   /* ------------------------------------------------------------ frame */
@@ -426,6 +491,7 @@ export class KettleWorld {
       paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       this.lampPool?.update(cameraPos);
     }
+    if ((this._coverTick = ((this._coverTick ?? 0) + 1) % 10) === 0) this.cover.applyTo(this.scene);
     // Work lamps are old, not alarming: a slow filament drift.
     this.lanternMat.emissiveIntensity = 1.35 + Math.sin(this.elapsed * 1.3) * 0.1;
   }

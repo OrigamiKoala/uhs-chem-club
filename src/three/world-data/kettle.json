@@ -5,12 +5,12 @@
   "oneLine": "Chemical equations, reaction types, and stoichiometry.",
   "sky": "kettle-sky",
   "terrain": {
-    "heightmap": "kettle-flat",
+    "heightmap": "kettle-works",
     "size": [
       240,
       240
     ],
-    "maxHeight": 1,
+    "maxHeight": 11,
     "material": "soda-crust"
   },
   "ambience": {
@@ -28,18 +28,18 @@
     "boss": [
       0,
       0,
-      -60
+      -56
     ],
     "player": [
       0,
       1.6,
-      -44
+      -42
     ]
   },
   "roads": [
     {
       "id": "works-road",
-      "width": 3.4,
+      "width": 5,
       "pts": [
         [
           0,
@@ -47,119 +47,7 @@
         ],
         [
           0,
-          -43
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-2",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
           46
-        ],
-        [
-          37.4,
-          46
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-3",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          30
-        ],
-        [
-          -37.4,
-          30
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-4",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          14
-        ],
-        [
-          37.4,
-          14
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-5",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          0
-        ],
-        [
-          -37.4,
-          0
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-6",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          -16
-        ],
-        [
-          37.4,
-          -16
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-7",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          -32
-        ],
-        [
-          -37.4,
-          -32
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-8",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          -40
-        ],
-        [
-          37.4,
-          -40
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-9",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          -48
-        ],
-        [
-          -37.4,
-          -48
         ]
       ]
     },
@@ -169,7 +57,7 @@
       "pts": [
         [
           0,
-          84
+          82
         ],
         [
           47,
@@ -190,451 +78,9 @@
       "minTier": "T3"
     },
     {
-      "asset": "furnace",
-      "pos": [
-        0,
-        0,
-        -92
-      ],
-      "radius": 13,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        -60,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        -48,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        -36,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        -24,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        24,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        36,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        48,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "silo",
-      "pos": [
-        60,
-        0,
-        -76
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "conveyor",
-      "pos": [
-        -32,
-        0,
-        -90
-      ],
-      "radius": 10,
-      "minTier": "T3"
-    },
-    {
-      "asset": "conveyor",
-      "pos": [
-        32,
-        0,
-        -90
-      ],
-      "radius": 10,
-      "minTier": "T3"
-    },
-    {
-      "asset": "chimney",
-      "pos": [
-        -58,
-        0,
-        -94
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "chimney",
-      "pos": [
-        58,
-        0,
-        -94
-      ],
-      "radius": 3.2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "tank",
-      "pos": [
-        -72,
-        0,
-        -24
-      ],
-      "radius": 5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "tank",
-      "pos": [
-        -72,
-        0,
-        4
-      ],
-      "radius": 5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "tank",
-      "pos": [
-        -72,
-        0,
-        30
-      ],
-      "radius": 5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "tank",
-      "pos": [
-        72,
-        0,
-        -24
-      ],
-      "radius": 5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "tank",
-      "pos": [
-        72,
-        0,
-        4
-      ],
-      "radius": 5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "tank",
-      "pos": [
-        72,
-        0,
-        30
-      ],
-      "radius": 5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        19.51,
-        0,
-        67.58
-      ],
-      "radius": 4.44,
-      "scale": 0.96,
-      "rotY": 5.08,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        -59.97,
-        0,
-        13.03
-      ],
-      "radius": 5.2,
-      "scale": 1.15,
-      "rotY": 2.19,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        -73.17,
-        0,
-        81.73
-      ],
-      "radius": 5.32,
-      "scale": 1.18,
-      "rotY": 1.15,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        -70.73,
-        0,
-        -53.47
-      ],
-      "radius": 4.32,
-      "scale": 0.93,
-      "rotY": 5.1,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        -79.76,
-        0,
-        50.52
-      ],
-      "radius": 4.16,
-      "scale": 0.89,
-      "rotY": 5.25,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        60.12,
-        0,
-        38.98
-      ],
-      "radius": 3.84,
-      "scale": 0.81,
-      "rotY": 1.61,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        57.81,
-        0,
-        13.95
-      ],
-      "radius": 4.44,
-      "scale": 0.96,
-      "rotY": 5.44,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        81.4,
-        0,
-        50.35
-      ],
-      "radius": 5.04,
-      "scale": 1.11,
-      "rotY": 0.78,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        -34.21,
-        0,
-        -66.42
-      ],
-      "radius": 5.12,
-      "scale": 1.13,
-      "rotY": 2.24,
-      "minTier": "T3"
-    },
-    {
-      "asset": "slag-heap",
-      "pos": [
-        -12.03,
-        0,
-        75.46
-      ],
-      "radius": 4.48,
-      "scale": 0.97,
-      "rotY": 5.74,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ingot-stack",
-      "pos": [
-        -24.91,
-        0,
-        -69.49
-      ],
-      "radius": 2,
-      "rotY": 4.07,
-      "minTier": "T4"
-    },
-    {
-      "asset": "ingot-stack",
-      "pos": [
-        91.03,
-        0,
-        25.76
-      ],
-      "radius": 2,
-      "rotY": 1.44,
-      "minTier": "T4"
-    },
-    {
-      "asset": "ingot-stack",
-      "pos": [
-        77.98,
-        0,
-        -37.96
-      ],
-      "radius": 2,
-      "rotY": 0.61,
-      "minTier": "T4"
-    },
-    {
-      "asset": "ingot-stack",
-      "pos": [
-        -86.16,
-        0,
-        -79.9
-      ],
-      "radius": 2,
-      "rotY": 4.24,
-      "minTier": "T4"
-    },
-    {
-      "asset": "ingot-stack",
-      "pos": [
-        -89.84,
-        0,
-        67.48
-      ],
-      "radius": 2,
-      "rotY": 6.18,
-      "minTier": "T4"
-    },
-    {
-      "asset": "ingot-stack",
-      "pos": [
-        -88.93,
-        0,
-        51.77
-      ],
-      "radius": 2,
-      "rotY": 2.49,
-      "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -31.07,
-        0,
-        71.09
-      ],
-      "radius": 2,
-      "rotY": 1.88,
-      "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -72.46,
-        0,
-        40.9
-      ],
-      "radius": 2,
-      "rotY": 4.53,
-      "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        80.21,
-        0,
-        -3.83
-      ],
-      "radius": 2,
-      "rotY": 3.11,
-      "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -42.12,
-        0,
-        72.18
-      ],
-      "radius": 2,
-      "rotY": 1.09,
-      "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        87.85,
-        0,
-        2.87
-      ],
-      "radius": 2,
-      "rotY": 3.84,
-      "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        82.95,
-        0,
-        -90.41
-      ],
-      "radius": 2,
-      "rotY": 2.41,
-      "minTier": "T4"
-    },
-    {
       "asset": "lamp-post",
       "pos": [
-        -2.8,
+        -5.2,
         0,
         72
       ],
@@ -644,9 +90,9 @@
     {
       "asset": "lamp-post",
       "pos": [
-        2.8,
+        5.2,
         0,
-        62
+        64
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -654,349 +100,9 @@
     {
       "asset": "lamp-post",
       "pos": [
-        -2.8,
+        -5.2,
         0,
-        52
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        2.8,
-        0,
-        42
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -2.8,
-        0,
-        32
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        2.8,
-        0,
-        22
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -2.8,
-        0,
-        12
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        2.8,
-        0,
-        2
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -2.8,
-        0,
-        -8
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        2.8,
-        0,
-        -18
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -2.8,
-        0,
-        -28
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        2.8,
-        0,
-        -38
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -2.8,
-        0,
-        -48
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        12,
-        0,
-        44.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        23,
-        0,
-        47.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        34,
-        0,
-        44.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -12,
-        0,
-        28.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -23,
-        0,
-        31.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -34,
-        0,
-        28.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        12,
-        0,
-        12.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        23,
-        0,
-        15.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        34,
-        0,
-        12.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -12,
-        0,
-        -1.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -23,
-        0,
-        1.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -34,
-        0,
-        -1.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        12,
-        0,
-        -17.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        23,
-        0,
-        -14.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        34,
-        0,
-        -17.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -12,
-        0,
-        -33.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -23,
-        0,
-        -30.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -34,
-        0,
-        -33.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        12,
-        0,
-        -41.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        23,
-        0,
-        -38.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        34,
-        0,
-        -41.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -12,
-        0,
-        -49.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -23,
-        0,
-        -46.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -34,
-        0,
-        -49.9
+        56
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -1006,7 +112,7 @@
       "pos": [
         14,
         0,
-        84.41
+        80.5
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -1016,7 +122,7 @@
       "pos": [
         26,
         0,
-        82.88
+        80.5
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -1026,196 +132,902 @@
       "pos": [
         38,
         0,
-        81.35
+        80.5
       ],
       "radius": 0.6,
       "minTier": "T3"
     }
   ],
+  "works": {
+    "volumes": [
+      {
+        "id": "nave",
+        "kind": "hall",
+        "rect": {
+          "minX": -6,
+          "maxX": 6,
+          "minZ": -36,
+          "maxZ": 46
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 13,
+        "skin": "hall",
+        "sky": 0.24,
+        "roof": 13,
+        "openings": [
+          {
+            "side": "maxZ",
+            "to": null,
+            "lo": -4,
+            "hi": 4,
+            "h": 6,
+            "kind": "gate"
+          },
+          {
+            "side": "minZ",
+            "to": "cast",
+            "lo": -6,
+            "hi": 6
+          },
+          {
+            "side": "maxX",
+            "to": "stores",
+            "lo": 32,
+            "hi": 36,
+            "h": 3.6
+          },
+          {
+            "side": "maxX",
+            "to": "foot",
+            "lo": 22,
+            "hi": 26
+          },
+          {
+            "side": "maxX",
+            "to": "charge-ramp",
+            "lo": 2,
+            "hi": 22,
+            "pass": false,
+            "kind": "rail"
+          },
+          {
+            "side": "maxX",
+            "to": "charge",
+            "lo": -28,
+            "hi": 2,
+            "pass": false,
+            "kind": "rail"
+          },
+          {
+            "side": "minX",
+            "to": "scale",
+            "lo": 24,
+            "hi": 30,
+            "h": 5
+          },
+          {
+            "side": "minX",
+            "to": "lobby",
+            "lo": 9,
+            "hi": 15,
+            "h": 4.2
+          },
+          {
+            "side": "minX",
+            "to": "cabin",
+            "lo": -20,
+            "hi": -10,
+            "pass": false,
+            "kind": "window",
+            "sill": 2.2,
+            "head": 4
+          }
+        ]
+      },
+      {
+        "id": "cast",
+        "kind": "hall",
+        "rect": {
+          "minX": -12,
+          "maxX": 12,
+          "minZ": -64,
+          "maxZ": -36
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 14,
+        "skin": "cast",
+        "sky": 0.2,
+        "roof": 14,
+        "openings": [
+          {
+            "side": "maxZ",
+            "to": "nave",
+            "lo": -6,
+            "hi": 6
+          },
+          {
+            "side": "maxX",
+            "to": "pit-ramp",
+            "lo": -42,
+            "hi": -38,
+            "h": 4
+          },
+          {
+            "side": "maxX",
+            "to": "pit",
+            "lo": -62,
+            "hi": -44,
+            "pass": false,
+            "kind": "rail"
+          },
+          {
+            "side": "minX",
+            "to": "refining",
+            "lo": -52,
+            "hi": -46,
+            "h": 4
+          }
+        ]
+      },
+      {
+        "id": "stores",
+        "kind": "bay",
+        "rect": {
+          "minX": 6,
+          "maxX": 28,
+          "minZ": 28,
+          "maxZ": 44
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 5.2,
+        "skin": "brick",
+        "sky": 0.07,
+        "roof": 5.2,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "nave",
+            "lo": 32,
+            "hi": 36,
+            "h": 3.6
+          }
+        ]
+      },
+      {
+        "id": "scale",
+        "kind": "bay",
+        "rect": {
+          "minX": -30,
+          "maxX": -6,
+          "minZ": 18,
+          "maxZ": 40
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 7.5,
+        "skin": "brick",
+        "sky": 0.09,
+        "roof": 7.5,
+        "openings": [
+          {
+            "side": "maxX",
+            "to": "nave",
+            "lo": 24,
+            "hi": 30,
+            "h": 5
+          },
+          {
+            "side": "minZ",
+            "to": "lobby",
+            "lo": -16,
+            "hi": -10,
+            "h": 3.6
+          }
+        ]
+      },
+      {
+        "id": "lobby",
+        "kind": "aisle",
+        "rect": {
+          "minX": -30,
+          "maxX": -6,
+          "minZ": 6,
+          "maxZ": 18
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 6,
+        "skin": "brick",
+        "sky": 0.09,
+        "roof": 6,
+        "openings": [
+          {
+            "side": "maxX",
+            "to": "nave",
+            "lo": 9,
+            "hi": 15,
+            "h": 4.2
+          },
+          {
+            "side": "maxZ",
+            "to": "scale",
+            "lo": -16,
+            "hi": -10,
+            "h": 3.6
+          },
+          {
+            "side": "minZ",
+            "to": "cabin-ramp",
+            "lo": -20,
+            "hi": -14,
+            "h": 4.2
+          },
+          {
+            "side": "minZ",
+            "to": "sump-ramp",
+            "lo": -30,
+            "hi": -26,
+            "h": 4.2
+          }
+        ]
+      },
+      {
+        "id": "cabin-ramp",
+        "kind": "ramp",
+        "rect": {
+          "minX": -20,
+          "maxX": -14,
+          "minZ": -8,
+          "maxZ": 6
+        },
+        "floor": {
+          "y0": 0,
+          "y1": 1.2,
+          "axis": "z",
+          "from": 6,
+          "to": -8
+        },
+        "top": 6,
+        "skin": "brick",
+        "sky": 0.07,
+        "roof": 4.8,
+        "openings": [
+          {
+            "side": "maxZ",
+            "to": "lobby",
+            "lo": -20,
+            "hi": -14,
+            "h": 4.2
+          },
+          {
+            "side": "minZ",
+            "to": "cabin",
+            "lo": -20,
+            "hi": -14,
+            "h": 3.4
+          }
+        ]
+      },
+      {
+        "id": "cabin",
+        "kind": "bay",
+        "rect": {
+          "minX": -20,
+          "maxX": -6,
+          "minZ": -22,
+          "maxZ": -8
+        },
+        "floor": {
+          "y0": 1.2
+        },
+        "top": 6,
+        "skin": "panel",
+        "sky": 0.07,
+        "roof": 4.8,
+        "openings": [
+          {
+            "side": "maxX",
+            "to": "nave",
+            "lo": -20,
+            "hi": -10,
+            "pass": false,
+            "kind": "window",
+            "sill": 2.2,
+            "head": 4
+          },
+          {
+            "side": "maxZ",
+            "to": "cabin-ramp",
+            "lo": -20,
+            "hi": -14,
+            "h": 3.4
+          }
+        ]
+      },
+      {
+        "id": "sump-ramp",
+        "kind": "ramp",
+        "rect": {
+          "minX": -30,
+          "maxX": -26,
+          "minZ": -8,
+          "maxZ": 6
+        },
+        "floor": {
+          "y0": 0,
+          "y1": -2.4,
+          "axis": "z",
+          "from": 6,
+          "to": -8
+        },
+        "top": 5,
+        "skin": "concrete",
+        "sky": 0.05,
+        "roof": 5,
+        "openings": [
+          {
+            "side": "maxZ",
+            "to": "lobby",
+            "lo": -30,
+            "hi": -26,
+            "h": 4.2
+          },
+          {
+            "side": "minZ",
+            "to": "sump",
+            "lo": -30,
+            "hi": -26,
+            "h": 3.6
+          }
+        ]
+      },
+      {
+        "id": "sump",
+        "kind": "bay",
+        "rect": {
+          "minX": -40,
+          "maxX": -20,
+          "minZ": -28,
+          "maxZ": -8
+        },
+        "floor": {
+          "y0": -2.4
+        },
+        "top": 2.4,
+        "skin": "concrete",
+        "sky": 0.03,
+        "roof": 4.8,
+        "openings": [
+          {
+            "side": "maxZ",
+            "to": "sump-ramp",
+            "lo": -30,
+            "hi": -26,
+            "h": 3.6
+          }
+        ]
+      },
+      {
+        "id": "foot",
+        "kind": "aisle",
+        "rect": {
+          "minX": 6,
+          "maxX": 12,
+          "minZ": 22,
+          "maxZ": 26
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 6,
+        "skin": "brick",
+        "sky": 0.12,
+        "roof": 6,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "nave",
+            "lo": 22,
+            "hi": 26
+          },
+          {
+            "side": "minZ",
+            "to": "charge-ramp",
+            "lo": 6,
+            "hi": 12
+          },
+          {
+            "side": "maxX",
+            "to": "pickling",
+            "lo": 22,
+            "hi": 26,
+            "h": 3.8
+          }
+        ]
+      },
+      {
+        "id": "charge-ramp",
+        "kind": "ramp",
+        "rect": {
+          "minX": 6,
+          "maxX": 12,
+          "minZ": 2,
+          "maxZ": 22
+        },
+        "floor": {
+          "y0": 0,
+          "y1": 3.2,
+          "axis": "z",
+          "from": 22,
+          "to": 2
+        },
+        "top": 13,
+        "skin": "hall",
+        "sky": 0.24,
+        "roof": 9.8,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "nave",
+            "lo": 2,
+            "hi": 22,
+            "pass": false,
+            "kind": "rail"
+          },
+          {
+            "side": "maxZ",
+            "to": "foot",
+            "lo": 6,
+            "hi": 12
+          },
+          {
+            "side": "minZ",
+            "to": "charge",
+            "lo": 6,
+            "hi": 12
+          }
+        ]
+      },
+      {
+        "id": "charge",
+        "kind": "bay",
+        "rect": {
+          "minX": 6,
+          "maxX": 32,
+          "minZ": -28,
+          "maxZ": 2
+        },
+        "floor": {
+          "y0": 3.2
+        },
+        "top": 13,
+        "skin": "hall",
+        "sky": 0.22,
+        "roof": 9.8,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "nave",
+            "lo": -28,
+            "hi": 2,
+            "pass": false,
+            "kind": "rail"
+          },
+          {
+            "side": "maxZ",
+            "to": "charge-ramp",
+            "lo": 6,
+            "hi": 12
+          }
+        ]
+      },
+      {
+        "id": "pickling",
+        "kind": "bay",
+        "rect": {
+          "minX": 12,
+          "maxX": 34,
+          "minZ": 6,
+          "maxZ": 26
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 6.5,
+        "skin": "brick",
+        "sky": 0.07,
+        "roof": 6.5,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "foot",
+            "lo": 22,
+            "hi": 26,
+            "h": 3.8
+          }
+        ]
+      },
+      {
+        "id": "pit-ramp",
+        "kind": "ramp",
+        "rect": {
+          "minX": 12,
+          "maxX": 26,
+          "minZ": -42,
+          "maxZ": -38
+        },
+        "floor": {
+          "y0": 0,
+          "y1": -2.2,
+          "axis": "x",
+          "from": 12,
+          "to": 26
+        },
+        "top": 6,
+        "skin": "concrete",
+        "sky": 0.07,
+        "roof": 6,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "cast",
+            "lo": -42,
+            "hi": -38,
+            "h": 4
+          },
+          {
+            "side": "maxX",
+            "to": "pit-landing",
+            "lo": -42,
+            "hi": -38
+          }
+        ]
+      },
+      {
+        "id": "pit-landing",
+        "kind": "aisle",
+        "rect": {
+          "minX": 26,
+          "maxX": 30,
+          "minZ": -44,
+          "maxZ": -38
+        },
+        "floor": {
+          "y0": -2.2
+        },
+        "top": 6,
+        "skin": "concrete",
+        "sky": 0.07,
+        "roof": 8.2,
+        "openings": [
+          {
+            "side": "minX",
+            "to": "pit-ramp",
+            "lo": -42,
+            "hi": -38
+          },
+          {
+            "side": "minZ",
+            "to": "pit",
+            "lo": 26,
+            "hi": 30
+          }
+        ]
+      },
+      {
+        "id": "pit",
+        "kind": "bay",
+        "rect": {
+          "minX": 12,
+          "maxX": 30,
+          "minZ": -62,
+          "maxZ": -44
+        },
+        "floor": {
+          "y0": -2.2
+        },
+        "top": 4.8,
+        "skin": "firebrick",
+        "sky": 0.1,
+        "roof": 7,
+        "openings": [
+          {
+            "side": "maxZ",
+            "to": "pit-landing",
+            "lo": 26,
+            "hi": 30
+          },
+          {
+            "side": "minX",
+            "to": "cast",
+            "lo": -62,
+            "hi": -44,
+            "pass": false,
+            "kind": "rail"
+          }
+        ]
+      },
+      {
+        "id": "refining",
+        "kind": "bay",
+        "rect": {
+          "minX": -36,
+          "maxX": -12,
+          "minZ": -62,
+          "maxZ": -40
+        },
+        "floor": {
+          "y0": 0
+        },
+        "top": 7,
+        "skin": "brick",
+        "sky": 0.07,
+        "roof": 7,
+        "openings": [
+          {
+            "side": "maxX",
+            "to": "cast",
+            "lo": -52,
+            "hi": -46,
+            "h": 4
+          }
+        ]
+      }
+    ],
+    "hills": [
+      {
+        "id": "slag-tip",
+        "kind": "slag",
+        "rect": {
+          "minX": -98,
+          "maxX": -54,
+          "minZ": 30,
+          "maxZ": 98
+        },
+        "H": 11,
+        "run": 15
+      },
+      {
+        "id": "ore-stock",
+        "kind": "ore",
+        "rect": {
+          "minX": 50,
+          "maxX": 96,
+          "minZ": -64,
+          "maxZ": 8
+        },
+        "H": 8,
+        "run": 11
+      }
+    ],
+    "clerestory": [
+      {
+        "room": "nave",
+        "side": "minX",
+        "y0": 9,
+        "y1": 12,
+        "lo": -32,
+        "hi": -2,
+        "reach": {
+          "min": [
+            -6,
+            -0.5,
+            -36
+          ],
+          "max": [
+            32,
+            13,
+            2
+          ]
+        }
+      },
+      {
+        "room": "nave",
+        "side": "minX",
+        "y0": 9.5,
+        "y1": 12,
+        "lo": 20,
+        "hi": 38,
+        "reach": {
+          "min": [
+            -6,
+            -0.5,
+            4
+          ],
+          "max": [
+            6,
+            13,
+            46
+          ]
+        }
+      },
+      {
+        "room": "cast",
+        "side": "minX",
+        "y0": 8.5,
+        "y1": 12.5,
+        "lo": -60,
+        "hi": -40,
+        "reach": {
+          "min": [
+            -12,
+            -2.5,
+            -64
+          ],
+          "max": [
+            30,
+            14,
+            -36
+          ]
+        }
+      }
+    ],
+    "furnace": {
+      "x": 0,
+      "z": -72,
+      "r": 6.4
+    }
+  },
   "sites": [
     {
       "id": "site-2",
       "questId": "q2-names",
       "stage": 1,
       "pos": [
-        42,
+        19,
         0,
-        46
+        31.6
       ],
       "approachPos": [
-        37.4,
+        19,
         1.6,
-        46
+        36.2
       ],
       "label": "Bench 1 - Names and Formulas",
       "structure": "labelling-shed",
       "built": true,
-      "flat": {
-        "x": 43,
-        "z": 46,
-        "r": 10.35
-      }
+      "room": "stores"
     },
     {
       "id": "site-3",
       "questId": "q3-change",
       "stage": 2,
       "pos": [
-        -42,
+        -21,
         0,
-        30
+        29
       ],
       "approachPos": [
-        -37.4,
+        -16.4,
         1.6,
-        30
+        29
       ],
       "label": "Bench 2 - Physical or Chemical",
       "structure": "charging-pot",
       "built": true,
-      "flat": {
-        "x": -43.5,
-        "z": 30,
-        "r": 10.43
-      }
+      "room": "scale"
     },
     {
       "id": "site-4",
       "questId": "q4-balance",
       "stage": 3,
       "pos": [
-        42,
-        0,
-        14
+        -12,
+        1.2,
+        -18.4
       ],
       "approachPos": [
-        37.4,
-        1.6,
-        14
+        -12,
+        2.8,
+        -13.8
       ],
       "label": "Bench 3 - Balancing Equations",
       "structure": "control-room",
       "built": true,
-      "flat": {
-        "x": 43.2,
-        "z": 13.8,
-        "r": 10.42
-      }
+      "room": "cabin"
     },
     {
       "id": "site-5",
       "questId": "q5-ionic",
       "stage": 4,
       "pos": [
-        -42,
-        0,
-        0
+        -34,
+        -2.4,
+        -19
       ],
       "approachPos": [
-        -37.4,
-        1.6,
-        0
+        -29.4,
+        -0.8,
+        -19
       ],
       "label": "Bench 4 - Net Ionic Equations",
       "structure": "effluent-sump",
       "built": true,
-      "flat": {
-        "x": -43.9,
-        "z": 0,
-        "r": 11.34
-      }
+      "room": "sump"
     },
     {
       "id": "site-6",
       "questId": "q6-stoich",
       "stage": 5,
       "pos": [
-        42,
-        0,
-        -16
+        22,
+        3.2,
+        -20
       ],
       "approachPos": [
-        37.4,
-        1.6,
-        -16
+        22,
+        4.8,
+        -15.4
       ],
       "label": "Bench 5 - What Is Made",
       "structure": "charge-floor",
       "built": true,
-      "flat": {
-        "x": 44.3,
-        "z": -16.2,
-        "r": 11.62
-      }
+      "room": "charge"
     },
     {
       "id": "site-7",
       "questId": "q7-titrate",
       "stage": 6,
       "pos": [
-        -42,
+        28.6,
         0,
-        -32
+        15
       ],
       "approachPos": [
-        -37.4,
+        24,
         1.6,
-        -32
+        15
       ],
       "label": "Bench 6 - Titration",
       "structure": "pickling-line",
       "built": true,
-      "flat": {
-        "x": -43.7,
-        "z": -32,
-        "r": 11.05
-      }
+      "room": "pickling"
     },
     {
       "id": "site-8",
       "questId": "q8-kinds",
       "stage": 7,
       "pos": [
-        42,
-        0,
-        -40
+        21,
+        -2.2,
+        -57.4
       ],
       "approachPos": [
-        37.4,
-        1.6,
-        -40
+        21,
+        -0.6,
+        -52.8
       ],
       "label": "Bench 7 - Kinds of Reaction",
       "structure": "tapping-floor",
       "built": true,
-      "flat": {
-        "x": 43.9,
-        "z": -40,
-        "r": 11.06
-      }
+      "room": "pit"
     },
     {
       "id": "site-9",
       "questId": "q9-hsab",
       "stage": 8,
       "pos": [
-        -42,
+        -25,
         0,
-        -48
+        -46
       ],
       "approachPos": [
-        -37.4,
+        -25,
         1.6,
-        -48
+        -50.6
       ],
       "label": "Bench 8 - Hard and Soft",
       "structure": "refining-vat",
       "built": true,
-      "flat": {
-        "x": -43.5,
-        "z": -48,
-        "r": 10.77
-      }
+      "room": "refining"
     }
   ],
   "spawn": {
@@ -1234,98 +1046,98 @@
     "stillCamera": {
       "site-2": {
         "pos": [
-          37.4,
+          19,
           1.6,
-          46
+          36.2
         ],
         "lookAt": [
-          42,
+          19,
           1.2,
-          46
+          31.6
         ]
       },
       "site-3": {
         "pos": [
-          -37.4,
+          -16.4,
           1.6,
-          30
+          29
         ],
         "lookAt": [
-          -42,
+          -21,
           1.2,
-          30
+          29
         ]
       },
       "site-4": {
         "pos": [
-          37.4,
-          1.6,
-          14
+          -12,
+          2.8,
+          -13.8
         ],
         "lookAt": [
-          42,
-          1.2,
-          14
+          -12,
+          2.4,
+          -18.4
         ]
       },
       "site-5": {
         "pos": [
-          -37.4,
-          1.6,
-          0
+          -29.4,
+          -0.8,
+          -19
         ],
         "lookAt": [
-          -42,
-          1.2,
-          0
+          -34,
+          -1.2,
+          -19
         ]
       },
       "site-6": {
         "pos": [
-          37.4,
-          1.6,
-          -16
+          22,
+          4.8,
+          -15.4
         ],
         "lookAt": [
-          42,
-          1.2,
-          -16
+          22,
+          4.4,
+          -20
         ]
       },
       "site-7": {
         "pos": [
-          -37.4,
+          24,
           1.6,
-          -32
+          15
         ],
         "lookAt": [
-          -42,
+          28.6,
           1.2,
-          -32
+          15
         ]
       },
       "site-8": {
         "pos": [
-          37.4,
-          1.6,
-          -40
+          21,
+          -0.6,
+          -52.8
         ],
         "lookAt": [
-          42,
-          1.2,
-          -40
+          21,
+          -1,
+          -57.4
         ]
       },
       "site-9": {
         "pos": [
-          -37.4,
+          -25,
           1.6,
-          -48
+          -50.6
         ],
         "lookAt": [
-          -42,
+          -25,
           1.2,
-          -48
+          -46
         ]
       }
     }
