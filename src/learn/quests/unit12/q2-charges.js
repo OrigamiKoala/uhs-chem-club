@@ -164,7 +164,7 @@ export const STAGES = [
         return {
           log: 'Mn²⁺ 3,248 kJ/mol, Fe²⁺ 2,957 kJ/mol.',
           title: 'The Paired Electron',
-          body: `Mn²⁺. Fe²⁺'s sixth 3d electron shares an orbital and is repelled by its partner, so it leaves for less energy despite the extra proton.${g ? ` You predicted ${g}.` : ''}`
+          body: `Mn²⁺${g ? `, where you predicted ${g}` : ''}. Fe²⁺'s sixth 3d electron shares an orbital and is repelled by its partner, so it leaves for less energy despite the extra proton.`
         };
       }
     };

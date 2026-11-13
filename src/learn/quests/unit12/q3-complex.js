@@ -156,7 +156,7 @@ export const STAGES = [
         return {
           log: 'Both bond electrons came from nitrogen.',
           title: 'Coordinate Bond',
-          body: `Both electrons came from nitrogen's lone pair, and copper kept all nine of its own. A bond made from one particle's pair is a coordinate bond.${g ? ` You predicted ${g}.` : ''}`
+          body: `Both electrons came from nitrogen's lone pair${g ? ` (you predicted ${g})` : ''}, and copper kept all nine of its own. A bond made from one particle's pair is a coordinate bond.`
         };
       }
     };
@@ -190,7 +190,7 @@ export const STAGES = [
     widget,
     table: lodeTable({ pieces: [], fixtures: [cplxFixture('cx', { x: 75, y: 31 }, { metal: 'Cu', q: 2, mode: 'supply', lig: 'cl', geom: 'tet', title: 'Cu²⁺ in strong salt solution', w: 92, h: 54 })] }),
     hints: [
-      'Press "Add Cl⁻" until no more bond.',
+      'Press "Add Cl−" until no more bond.',
       'Compare the size of a chloride ion with the water molecules round iron.',
       'Bigger ligands use up the space round the ion sooner.'
     ],
@@ -198,7 +198,7 @@ export const STAGES = [
     reward: {
       log: 'Four chloride ions bond to Cu²⁺.',
       title: 'Size Sets the Count',
-      body: 'Four: [CuCl₄]²⁻. Chloride ions are larger than water molecules, so fewer fit, and the coordination number depends on the ligand as well as the metal.'
+      body: 'Four: [CuCl₄]²−. Chloride ions are larger than water molecules, so fewer fit, and the coordination number depends on the ligand as well as the metal.'
     }
   },
 
@@ -211,7 +211,7 @@ export const STAGES = [
     table: lodeTable({ pieces: [], fixtures: [cplxFixture('cx', { x: 75, y: 31 }, { metal: 'Fe', q: 3, mode: 'cycle', palette: ['h2o', 'cl'], meter: true, title: 'Fe³⁺ with water and chloride', w: 92, h: 54 })] }),
     hints: [
       'Tap a ring round the ion to choose what bonds there, and watch the meter.',
-      'Compare what one H₂O and one Cl⁻ each do to the meter.',
+      'Compare what one H₂O and one Cl− each do to the meter.',
       'The charge of the whole is the metal ion\'s charge plus the charge of each ligand.'
     ],
     check(state) {
@@ -221,9 +221,9 @@ export const STAGES = [
       return { ok: false, msg: `The meter reads ${signed(r.charge)}.` };
     },
     reward: {
-      log: 'Three Cl⁻ cancel Fe³⁺: no charge.',
+      log: 'Three Cl− cancel Fe³⁺: no charge.',
       title: 'Adding Charges',
-      body: 'Three Cl⁻ cancel the +3: [Fe(H₂O)₃Cl₃] has no overall charge. A complex\'s charge is the metal ion\'s plus each ligand\'s, and water adds nothing.'
+      body: 'Three Cl− cancel the +3: [Fe(H₂O)₃Cl₃] has no overall charge. A complex\'s charge is the metal ion\'s plus each ligand\'s, and water adds nothing.'
     }
   },
 
@@ -258,7 +258,7 @@ export const STAGES = [
       pieces: [],
       fixtures: [
         cplxFixture('cx', { x: 60, y: 31 }, { metal: 'Cr', q: 3, mode: 'cycle', palette: ['h2o', 'cl'], title: 'Cr³⁺ with water and chloride', w: 88, h: 54 }),
-        plaqueFixture('drum', 'The sealed drum', { x: 126, y: 22 }, ['Cr³⁺ and six ligands', 'only H₂O and Cl⁻', 'measured charge +1'], { w: 42 })
+        plaqueFixture('drum', 'The sealed drum', { x: 126, y: 22 }, ['Cr³⁺ and six ligands', 'only H₂O and Cl−', 'measured charge +1'], { w: 42 })
       ]
     }),
     hints: [
@@ -275,7 +275,7 @@ export const STAGES = [
     reward: {
       log: 'The drum holds [Cr(H₂O)₄Cl₂]⁺.',
       title: 'Read From the Charge',
-      body: 'Two Cl⁻ and four H₂O: +3 − 2 = +1, so the drum holds [Cr(H₂O)₄Cl₂]⁺. The charge alone told you how many chloride ions it carries.'
+      body: 'Two Cl− and four H₂O: +3 − 2 = +1, so the drum holds [Cr(H₂O)₄Cl₂]⁺. The charge alone told you how many chloride ions it carries.'
     }
   }
 ];

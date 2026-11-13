@@ -16,7 +16,9 @@ export function liveDress(handler) {
   return function dress3d(f, state, c) {
     const { THREE, scale: s, toPlate, own, ground } = c;
     const lay = fixtureLayout(f);
-    const bw = lay.box.x1 - lay.box.x0; const bh = lay.box.y1 - lay.box.y0;
+    // A fixture's dial rows (their names and end words) are painted on the plate: the screen starts below the last of them.
+    const yTop = lay.dials.length ? Math.min(lay.box.y1 - 4, Math.max(...lay.dials.map(d => d.y)) + 2.6) : lay.box.y0;
+    const bw = lay.box.x1 - lay.box.x0; const bh = lay.box.y1 - yTop;
     const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
     const group = new THREE.Group();
     group.name = 'lode-live';
@@ -30,7 +32,7 @@ export function liveDress(handler) {
     const mat = own(new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
     const mesh = new THREE.Mesh(own(new THREE.PlaneGeometry(bw * s * 0.985, bh * s * 0.985)), mat);
     mesh.rotation.x = -Math.PI / 2;
-    const mid = toPlate({ x: (lay.box.x0 + lay.box.x1) / 2, y: (lay.box.y0 + lay.box.y1) / 2 });
+    const mid = toPlate({ x: (lay.box.x0 + lay.box.x1) / 2, y: (yTop + lay.box.y1) / 2 });
     mesh.position.set(mid.x, ground + 0.0012, mid.z);
     mesh.renderOrder = 2;
     mesh.castShadow = false; mesh.receiveShadow = false;
@@ -39,7 +41,7 @@ export function liveDress(handler) {
     const paint = () => {
       ctx.fillStyle = '#14120e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const b = { X: u => (u - lay.box.x0) * PX, Y: u => (u - lay.box.y0) * PX, sc: PX, lay: fixtureLayout(fx), clock, bodies: false, scope: '3d-live' };
+      const b = { X: u => (u - lay.box.x0) * PX, Y: u => (u - yTop) * PX, sc: PX, lay: fixtureLayout(fx), clock, bodies: false, scope: '3d-live' };
       try { handler.paint(ctx, fx, latest, b); } catch (err) { /* a painter that fails leaves the plate's own picture */ }
       tex.needsUpdate = true;
     };

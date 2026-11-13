@@ -121,19 +121,20 @@ registerFixture('beaker', { paint: paintBeaker, run: runBeaker, live: () => true
  * key adds; `palette` the ligands a tap cycles through; `start` a fixed arrangement (array of ligand ids or ''); `meter` prints the
  * charge of the whole; `turn` adds the "Turn" dial (tilts the model from seen from above to seen edge-on).
  */
-export function cplxFixture(id, at, { metal, q, geom = 'oct', mode = 'cycle', lig = 'h2o', palette = ['h2o', 'cl'], start = null, meter = false, turn = false, title: ttl = null, w = 56, h = 46, label = null, tilt = 25 } = {}) {
+export function cplxFixture(id, at, { metal, q, geom = 'oct', mode = 'cycle', lig = 'h2o', palette = ['h2o', 'cl'], start = null, meter = false, turn = false, title: ttl = null, w = 56, h = 46, label = null, tilt = 25, yaw = 28, mark = false, turnStart = 1 } = {}) {
   const n = geom === 'oct' ? 6 : 4;
   const dials = {};
-  if (turn) dials.turn = { min: 0, max: 6, step: 1, value: 1, label: 'Turn', labels: ['Above', '', '', '', '', '', 'Edge-on'] };
+  if (turn) dials.turn = { min: 0, max: 6, step: 1, value: turnStart, label: 'Turn', labels: ['Above', '', '', '', '', '', 'Edge-on'] };
   const hidden = [];
   if (mode === 'cycle') {
     for (let i = 0; i < n; i++) { const v = start ? Math.max(0, palette.indexOf(start[i]) + 1) : 0; dials[`s${i}`] = { min: 0, max: palette.length, step: 1, value: v, label: `Place ${i + 1}` }; hidden.push(`s${i}`); }
   }
   if (mode === 'supply') { dials.add = { min: 0, max: 8, step: 1, value: 0, label: 'Added' }; hidden.push('add'); }
+  if (mark) { dials.mark = { min: 0, max: 1, step: 1, value: 0, label: 'Marked' }; hidden.push('mark'); }
   const run = mode === 'ring6' ? { runLabel: 'Release' } : mode === 'bond' ? { runLabel: 'Bond' } : { noRun: true };
   return {
     id, kind: 'cplx', label: ttl || `${label || metal}`, at: { ...at }, size: { w, h }, dials, ...run,
-    props: { metal, q, geom, mode, lig, palette, start, meter, turn, hidden, released: false, bonded: false, label, tilt }
+    props: { metal, q, geom, mode, lig, palette, start, meter, turn, hidden, released: false, bonded: false, label, tilt, yaw, mark }
   };
 }
 
@@ -162,8 +163,29 @@ export function cplxRead(state, id) {
   return { arr, ligands: molecules, bonded: p.mode === 'supply' ? bonded : ligs.length, extra, added, atoms: arr.filter(Boolean).length, charge: complexCharge(p.q, molecules), released: p.released, bonded2: p.bonded };
 }
 
+/** The turn a comparison is playing on model `f` right now: a quaternion, or null. It turns to fit, holds, and turns back. */
+function playingTurn(f, b, state) {
+  if (!b || !state) return null;
+  for (const m of Object.values(state.fixtures)) {
+    if (m.kind !== 'match' || m.props.b !== f.id) continue;
+    const res = m.props.tried;
+    glide(`${m.id}:turn`, b, res?.seq || 0, res?.seq || 0, 4);
+    if (!res) continue;
+    const A = cplxRead(state, m.props.a).arr; const B = cplxRead(state, f.id).arr;
+    if (res.key !== `${A.join()}|${B.join()}`) continue;
+    const t = since(`${m.id}:turn`, b);
+    if (t > 4.2) continue;
+    const g = t < 1.4 ? t / 1.4 : t < 2.8 ? 1 : Math.max(0, 1 - (t - 2.8) / 1.4);
+    if (res.m) return slerpId(quat(res.m), g);
+    // No turn fits: B is turned right round and flipped, to show that every turn was tried, then comes back.
+    const a = g * Math.PI * 2;
+    return [Math.cos(a / 2), Math.sin(a / 2) * 0.5, 0, Math.sin(a / 2) * 0.866];
+  }
+  return null;
+}
+
 /** Where the places stand on the drawing (pixels from the centre, unit radius), for the current turn. */
-function placesOf(f, b) {
+function placesOf(f, b, state = null) {
   const p = f.props;
   const turn = f.dials.turn ? f.dials.turn.value : null;
   const tTarget = turn == null ? p.tilt : 90 - turn * 15;
@@ -176,13 +198,18 @@ function placesOf(f, b) {
     const target = [OCT_DIRS[0], OCT_DIRS[2], OCT_DIRS[4], OCT_DIRS[1], OCT_DIRS[3], OCT_DIRS[5]];
     dirs = ring.map((r, i) => { const t = target[i]; const v = r.map((x, k) => x + (t[k] - x) * g); const m = Math.hypot(...v) || 1; return v.map(x => x / m); });
   }
-  return dirs.map(d => project(d, tilt, 28));
+  const q = playingTurn(f, b, state);
+  if (q) dirs = dirs.map(d => rotBy(q, d));
+  return dirs.map(d => project(d, tilt, p.yaw ?? 28));
 }
 
 function geomOf(f) {
+  const p = f.props;
   const top = f.dials.turn ? 13 : 6;
-  const cx = f.size.w / 2; const cy = top + (f.size.h - top - 8) / 2;
-  const R = Math.min(f.size.w * 0.34, (f.size.h - top - 10) * 0.42);
+  // A line of words under the model (a supply key, the meter, a mark) takes the bottom 8 units; otherwise only a margin.
+  const foot = (p.mode === 'supply' || p.meter || p.mark || p.mode === 'ring6') ? 8 : 3;
+  const cx = f.size.w / 2; const cy = top + (f.size.h - top - foot) / 2;
+  const R = Math.min(f.size.w * 0.34, (f.size.h - top - foot) * 0.4);
   return { cx, cy, R, top };
 }
 
@@ -195,7 +222,7 @@ function paintCplx(ctx, f, state, b) {
   const cx = F.x(G.cx); const cy = F.y(G.cy); const R = F.len(G.R);
   const metalText = p.label || `${p.metal}${p.q === 1 ? '⁺' : p.q === 2 ? '²⁺' : p.q === 3 ? '³⁺' : ''}`;
   if (p.mode === 'bond') { paintBond(ctx, f, F, b, G); return; }
-  const P = placesOf(f, b);
+  const P = placesOf(f, b, state);
   const order = P.map((q, i) => ({ q, i })).sort((u, v) => u.q.depth - v.q.depth);
   const lr = F.len(Math.max(2.2, G.R * 0.17)); const ls = F.size(1.8, 6.5);
   const drawAt = (i, front) => {
@@ -242,6 +269,12 @@ function paintCplx(ctx, f, state, b) {
     ctx.fillStyle = '#2a2620'; ctx.fillRect(F.x(k.x0), F.y(k.y0), F.len(k.x1 - k.x0), F.len(k.y1 - k.y0));
     ctx.strokeStyle = C.amber; ctx.strokeRect(Math.round(F.x(k.x0)) + 0.5, Math.round(F.y(k.y0)) + 0.5, Math.round(F.len(k.x1 - k.x0)), Math.round(F.len(k.y1 - k.y0)));
     say(ctx, `Add ${LIGANDS[p.lig].sym}`, F.x((k.x0 + k.x1) / 2), F.y((k.y0 + k.y1) / 2), F.size(2.1, 7), { align: 'center', color: C.amber, weight: 700, sans: true });
+  }
+  if (p.mark) {
+    const on = Math.round(f.dials.mark.value) === 1;
+    ctx.strokeStyle = on ? C.amber : C.dim; ctx.lineWidth = on ? 2.5 : 1; if (!on) ctx.setLineDash([2, 3]);
+    ctx.strokeRect(F.x(0.6), F.y(0.6), F.len(f.size.w - 1.2), F.len(f.size.h - 1.2)); ctx.setLineDash([]); ctx.lineWidth = 1;
+    say(ctx, on ? 'Marked' : 'Tap to mark', F.x(f.size.w - 2.2), F.y(f.size.h - 3.2), F.size(1.9, 6.2), { align: 'right', color: on ? C.amber : C.dim, weight: 700 });
   }
   if (p.meter) {
     say(ctx, `Charge of the whole: ${signed(r.charge)}`, F.x(f.size.w - 2.2), F.y(f.size.h - 3.4), F.size(2.2, 7), { align: 'right', color: C.amber, weight: 700 });
@@ -291,6 +324,7 @@ function paintBond(ctx, f, F, b, G) {
 function cplxTaps(f, state) {
   const p = f.props;
   if (p.mode === 'supply') { const k = supplyKey(f); return [{ x0: k.x0, x1: k.x1, y0: k.y0, y1: k.y1, dial: 'add', step: 1 }]; }
+  if (p.mark) { const top = f.dials.turn ? 13 : 5; return [{ x0: 1, x1: f.size.w - 1, y0: top, y1: f.size.h - 1, dial: 'mark', step: 1, wrap: true }]; }
   if (p.mode !== 'cycle') return [];
   const G = geomOf(f);
   const P = placesOf(f, null);
@@ -312,9 +346,9 @@ registerFixture('cplx', { paint: paintCplx, run: runCplx, tapZones: cplxTaps, li
 /* ================================================================== match */
 
 export function matchFixture(id, at, { a, b: bId, geom = 'sq', w = 44, h = 30, title: ttl = null } = {}) {
-  return { id, kind: 'match', label: ttl || `Turn ${bId.toUpperCase()} to fit ${a.toUpperCase()}`, at: { ...at }, size: { w, h }, dials: {}, runLabel: `Turn ${bId.toUpperCase()} to Fit ${a.toUpperCase()}`, props: { a, b: bId, geom, result: null } };
+  return { id, kind: 'match', label: ttl || `Turn ${bId} to fit ${a}`, at: { ...at }, size: { w, h }, dials: {}, runLabel: `Turn ${bId} to Fit ${a}`, props: { a, b: bId, geom, tried: null } };
 }
-export const matchRead = (state, id) => state.fixtures[id].props.result;
+export const matchRead = (state, id) => state.fixtures[id].props.tried;
 
 const quat = m => {
   const tr = m[0][0] + m[1][1] + m[2][2];
@@ -331,36 +365,19 @@ const slerpId = (q, t) => { const th = Math.acos(Math.max(-1, Math.min(1, q[0]))
 function paintMatch(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
-  say(ctx, f.label, F.x(2.2), F.y(3.2), F.size(2.2, 7), { color: C.dust, weight: 600, maxW: F.len(f.size.w - 4) });
-  const res = p.result;
+  const res = p.tried;
   const A = state.fixtures[p.a] ? cplxRead(state, p.a).arr : [];
   const B = state.fixtures[p.b] ? cplxRead(state, p.b).arr : [];
   const key = `${A.join()}|${B.join()}`;
+  glide(`${f.id}:turn`, b, res?.seq || 0, res?.seq || 0, 4);
+  say(ctx, `Model ${p.b} against model ${p.a}`, F.x(2.2), F.y(3.2), F.size(2.1, 7), { color: C.dust, weight: 600, maxW: F.len(f.size.w - 4) });
   if (!res || res.key !== key) {
-    say(ctx, res ? 'A or B has changed: press again' : 'Press the key to try every turn and flip', F.x(2.2), F.y(f.size.h / 2), F.size(1.8, 6), { color: C.dim, maxW: F.len(f.size.w - 4) });
+    say(ctx, res ? 'A model has changed: press again' : 'Press the key below', F.x(2.2), F.y(7.4), F.size(2, 6.5), { color: C.dim, maxW: F.len(f.size.w - 4) });
     return;
   }
-  // B drawn small, turning toward A's orientation; A's places as rings where B's ligands must land.
-  const dirs = p.geom === 'sq' ? SQ_DIRS : OCT_DIRS;
-  const cx = F.x(f.size.w * 0.3); const cy = F.y(f.size.h * 0.52); const R = F.len(Math.min(f.size.h * 0.3, 9));
-  const g = Math.min(1, since(`${f.id}:seq${res.seq}`, b) / 1.6);
-  glide(`${f.id}:seq${res.seq}`, b, 1, 1, 1.6);
-  const q = res.m ? quat(res.m) : [1, 0, 0, 0];
-  const qt = slerpId(q, res.m ? g : 0);
-  dirs.forEach((d, i) => {
-    const pa = project(d, 35, 28);
-    if (A[i]) { ctx.strokeStyle = C.dim; ctx.beginPath(); ctx.arc(cx + pa.x * R, cy + pa.y * R, F.len(1.8), 0, Math.PI * 2); ctx.stroke(); }
-  });
-  dirs.forEach((d, i) => {
-    if (!B[i]) return;
-    const v = rotBy(qt, d);
-    const pb = project(v, 35, 28);
-    bondLine(ctx, { x: cx, y: cy }, { x: cx + pb.x * R, y: cy + pb.y * R }, 2);
-    drawLigand(ctx, cx + pb.x * R, cy + pb.y * R, F.len(1.4), B[i], { label: false });
-  });
-  ctx.fillStyle = METAL_INK; ctx.beginPath(); ctx.arc(cx, cy, F.len(1.6), 0, Math.PI * 2); ctx.fill();
-  const words = res.m ? (g >= 1 ? `B turns to fit A: the same` : 'Turning B…') : 'No turn or flip lays B on A: different';
-  say(ctx, words, F.x(f.size.w * 0.56), F.y(f.size.h * 0.5), F.size(2, 6.5), { color: res.m ? C.phosphor : C.amber, weight: 700, maxW: F.len(f.size.w * 0.42) });
+  const playing = since(`${f.id}:turn`, b) < 1.4;
+  const words = playing ? `Turning model ${p.b}…` : res.m ? `The same: a turn lays ${p.b} on ${p.a}` : `Different: no turn or flip fits`;
+  say(ctx, words, F.x(2.2), F.y(7.4), F.size(2.1, 7), { color: playing ? C.dust : res.m ? C.phosphor : C.amber, weight: 700, maxW: F.len(f.size.w - 4) });
 }
 
 function runMatch(state, fid) {
@@ -370,7 +387,7 @@ function runMatch(state, fid) {
   if (A.some(x => !x) || B.some(x => !x)) return { noop: 'Fill every place on both models first.' };
   const m = fitTurn(p.geom, A, B);
   // fitTurn answers the turn that carries each of B's places onto the place of A that holds the same ligand: B is turned by it.
-  p.result = { key: `${A.join()}|${B.join()}`, same: Boolean(m), m, seq: (p.result?.seq || 0) + 1 };
+  p.tried = { key: `${A.join()}|${B.join()}`, same: Boolean(m), m, seq: (p.tried?.seq || 0) + 1 };
   return { stamp: {} };
 }
 

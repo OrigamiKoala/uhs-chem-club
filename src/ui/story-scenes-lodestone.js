@@ -150,7 +150,42 @@ function complexScene(ctx, w, h, t) {
   }
 }
 
+const SQ = [[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]];
+/** A flat square complex seen from above, Pt²⁺ with its four ligands. */
+function square(ctx, cx, cy, R, ligs, label) {
+  SQ.forEach(([x, y], i) => {
+    const px = cx + x * R; const py = cy - y * R;
+    ctx.strokeStyle = C.steel; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = INK[ligs[i]]; ctx.beginPath(); ctx.arc(px, py, ligs[i] === 'cl' ? 20 : 15, 0, Math.PI * 2); ctx.fill();
+    text(ctx, SYM[ligs[i]], px, py + 34, { size: 16, color: C.text, weight: 700 });
+  });
+  ctx.fillStyle = '#b88a5a'; ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.fill();
+  text(ctx, 'Pt²⁺', cx, cy, { size: 16, color: '#14100c', weight: 700 });
+  text(ctx, label, cx, cy + R + 64, { size: 24, color: C.text, weight: 700 });
+}
+
+/** q4-shapes: the ring that settles into an octahedron; cis and trans; the two names. */
+function shapes(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.32) {
+    const g = ease(win(t, 0.06, 0.26));
+    const ring = Array.from({ length: 6 }, (_, i) => [Math.cos(i * Math.PI / 3), Math.sin(i * Math.PI / 3), 0]);
+    const tgt = [OCT[0], OCT[2], OCT[4], OCT[1], OCT[3], OCT[5]];
+    const ligs = ['nh3', 'nh3', 'nh3', 'nh3', 'nh3', 'nh3'];
+    const cx = 480; const cy = 250; const R = 140;
+    const pts = ring.map((r, i) => { const v = r.map((x, k) => x + (tgt[i][k] - x) * g); const m = Math.hypot(...v) || 1; return { ...proj(v.map(x => x / m)), i }; }).sort((a, b) => a.d - b.d);
+    for (const q of pts) { const x = cx + q.x * R; const y = cy + q.y * R; ctx.strokeStyle = C.steel; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke(); ctx.lineWidth = 1; ctx.fillStyle = INK[ligs[q.i]]; ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#b88a5a'; ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.fill();
+    text(ctx, g < 1 ? 'released from a flat ring' : 'an octahedron: 90° between neighbours', cx, 470, { size: 22, color: C.text });
+    return;
+  }
+  square(ctx, 300, 240, 110, ['cl', 'cl', 'nh3', 'nh3'], t > 0.64 ? 'cis' : 'model A');
+  square(ctx, 660, 240, 110, ['cl', 'nh3', 'cl', 'nh3'], t > 0.64 ? 'trans' : 'model B');
+  if (t > 0.45 && t < 0.64) text(ctx, 'no turn or flip lays B on A', 480, 470, { size: 22, color: C.amber, weight: 700 });
+}
+
 export const LODESTONE_SCENES = {
+  'lode-shapes': shapes,
   'lode-complex': complexScene,
   'lode-charges': charges,
   'lode-dblock': dblock

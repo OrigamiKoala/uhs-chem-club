@@ -178,7 +178,7 @@ export const STAGES = [
         return {
           log: 'Fe²⁺ is 3d⁶: the 4s pair left.',
           title: '4s Leaves First',
-          body: `The two 4s electrons left. Once iron carries a charge its 3d level lies below 4s, so Fe²⁺ is 3d⁶.${g ? ` You predicted ${g}.` : ''}`
+          body: `The two 4s electrons left: once iron carries a charge its 3d level lies below 4s. Fe²⁺ is 3d⁶${g ? `, and you predicted ${g}` : ''}.`
         };
       }
     };

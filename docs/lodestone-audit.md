@@ -60,3 +60,23 @@ water); empty rings were too dim to find.
 | 6 | The Charge of the Whole | Played (+2 first) | Ring taps cycle; meter live | Yes | Meter-led build, the see step | Each Cl⁻ moves the meter by −1 | Yes | beyond |
 | 7 | Two Grips | Played (four added) | Yes | Briefing draws en's formula | As 4 | Each en's two nitrogens joined by a backbone arc | Yes ([Ni(en)₃]²⁺) | beyond |
 | 8 | The Sealed Drum | Played | Yes | Plate gives the evidence only | None | Build to a measured charge with no meter | Yes | beyond |
+
+## `q4-shapes` Shapes and Isomers
+
+Pass 1 (3D On, 800 × 600): every stage played; wrong answers on stages 1 (before Release), 2 (Zn), 4 (six), 5 (fifteen), 6 (A marked).
+Found and fixed: **the live screen at 3D On covered the "Turn" dial's printed name and end words** (the screen now starts below a fixture's
+dial rows); the three square models were drawn tiny (radius now from the free height); the comparison said "B turns to fit A" for model C
+and drew its own small picture nobody could read (the turn now plays on the real model, which turns to fit, holds and turns back; the box
+only gives the verdict); **test-stage rewards that appended "You predicted …" ran to three sentences and the frame clipped them** (the guess
+is folded into a sentence on all four test stages); **"Cl⁻" printed as "Cl " in the prompt strip** (the face has no superscript minus: every
+Lodestone string the page prints as HTML uses a true minus, "Cl−"). The synthetic drag of the Turn knob stops short (a known limit of the
+browser tool); taps on the track set it.
+
+| # | Stage | Evidence | Operable | Intuitive | Busywork | Builds intuition | Accurate | AP |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Six Round One | Played | Release key, Turn dial (drag and tap) | Briefing names the repulsion | None | Ring settles into an octahedron; edge-on shows one above, one below | Yes | beyond (2.7 recap) |
+| 2 | Four Round One | Played (Zn first) | Turn dials, tap to choose | Yes | None | Edge-on, Pt²⁺ is a line, Zn²⁺ is not | Yes; "some ions, such as Pt²⁺" is the honest limit | beyond |
+| 3 | How Many Ways (predict) | Played | Yes | Cards hold the counting model and the all-same model | — | Clip: four alike, every turn the same | — | beyond |
+| 4 | Turn to Fit | Played (six first) | Ring taps, two Turn keys, number row | Prompt quotes the guess | Building three models is the experiment | The real model turns onto A, or spins and fails | Yes (2 of 6 placements) | beyond |
+| 5 | Round an Octahedron | Played (fifteen first) | Yes | Yes | As 4 | B spins and fails to fit A | Yes (2 of 15) | beyond |
+| 6 | Which Are Trans | Played (A marked first) | Tap to mark, Turn dials | Yes | Recognition | The models are turned and tilted differently | Yes | beyond |

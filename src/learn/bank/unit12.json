@@ -115,7 +115,7 @@
         {
           "id": "q3-complex#b1",
           "quest": "q3-complex",
-          "question": "What is the charge of the complex ion made of one Co³⁺ ion, four NH₃ molecules and two Cl⁻ ions?",
+          "question": "What is the charge of the complex ion made of one Co³⁺ ion, four NH₃ molecules and two Cl− ions?",
           "options": [
             {
               "id": "a",
@@ -140,7 +140,7 @@
         {
           "id": "q3-complex#b2",
           "quest": "q3-complex",
-          "question": "Oxalate, C₂O₄²⁻, bonds to a metal ion through two oxygen atoms. How many oxalate ions fill all six places round Fe³⁺, and what is the charge of the whole?",
+          "question": "Oxalate, C₂O₄²−, bonds to a metal ion through two oxygen atoms. How many oxalate ions fill all six places round Fe³⁺, and what is the charge of the whole?",
           "options": [
             {
               "id": "a",
@@ -160,7 +160,61 @@
             }
           ],
           "answer": "a",
-          "explanation": "Each oxalate takes two places, so three fill six. Three ions of −2 bring +3 to +3 − 6 = −3: [Fe(C₂O₄)₃]³⁻."
+          "explanation": "Each oxalate takes two places, so three fill six. Three ions of −2 bring +3 to +3 − 6 = −3: [Fe(C₂O₄)₃]³−."
+        }
+      ]
+    },
+    "q4-shapes": {
+      "problems": [
+        {
+          "id": "q4-shapes#b1",
+          "quest": "q4-shapes",
+          "question": "Round an octahedron, how many different arrangements are there of five NH₃ and one Cl−?",
+          "options": [
+            {
+              "id": "a",
+              "label": "One"
+            },
+            {
+              "id": "b",
+              "label": "Two"
+            },
+            {
+              "id": "c",
+              "label": "Six"
+            },
+            {
+              "id": "d",
+              "label": "Five"
+            }
+          ],
+          "answer": "a",
+          "explanation": "All six places of an octahedron are alike: any one can be turned into any other, so a single Cl− can sit in only one distinct place."
+        },
+        {
+          "id": "q4-shapes#b2",
+          "quest": "q4-shapes",
+          "question": "Why is there no cis and trans form of a tetrahedral complex with two NH₃ and two Cl−?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Every pair of places in a tetrahedron is the same distance apart"
+            },
+            {
+              "id": "b",
+              "label": "A tetrahedron has only two places"
+            },
+            {
+              "id": "c",
+              "label": "Chloride cannot bond to a tetrahedral ion"
+            },
+            {
+              "id": "d",
+              "label": "Its ligands are all in one plane"
+            }
+          ],
+          "answer": "a",
+          "explanation": "In a tetrahedron each place is 109.5° from every other place, so no pair is 'side by side' rather than 'opposite': all placements are one model turned."
         }
       ]
     }

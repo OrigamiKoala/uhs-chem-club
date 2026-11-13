@@ -213,11 +213,11 @@ export const COMPLEXES = Object.freeze({
   'zn-aq': { formula: '[Zn(H₂O)₆]²⁺', metal: 'Zn', q: 2, d: 10, nm: null, absorb: [], seen: 'colourless', tint: '#d9dde0', unpaired: 0, spin: null },
   'ni-aq': { formula: '[Ni(H₂O)₆]²⁺', metal: 'Ni', q: 2, d: 8, nm: 720, absorb: ['red'], seen: 'green', tint: '#5fa36a', unpaired: 2, spin: null },
   'co-nh3': { formula: '[Co(NH₃)₆]³⁺', metal: 'Co', q: 3, d: 6, nm: 475, absorb: ['blue'], seen: 'yellow-orange', tint: '#d9a03a', unpaired: 0, spin: 'low' },
-  'co-f': { formula: '[CoF₆]³⁻', metal: 'Co', q: 3, d: 6, nm: 700, absorb: ['red'], seen: 'green', tint: '#5f9e86', unpaired: 4, spin: 'high' },
+  'co-f': { formula: '[CoF₆]³−', metal: 'Co', q: 3, d: 6, nm: 700, absorb: ['red'], seen: 'green', tint: '#5f9e86', unpaired: 4, spin: 'high' },
   'fe2-aq': { formula: '[Fe(H₂O)₆]²⁺', metal: 'Fe', q: 2, d: 6, nm: null, absorb: [], seen: 'pale green', tint: '#b9d3a8', unpaired: 4, spin: 'high' },
-  'fe2-cn': { formula: '[Fe(CN)₆]⁴⁻', metal: 'Fe', q: 2, d: 6, nm: null, absorb: [], seen: 'pale yellow', tint: '#e2d58c', unpaired: 0, spin: 'low' },
+  'fe2-cn': { formula: '[Fe(CN)₆]⁴−', metal: 'Fe', q: 2, d: 6, nm: null, absorb: [], seen: 'pale yellow', tint: '#e2d58c', unpaired: 0, spin: 'low' },
   'fe3-aq': { formula: '[Fe(H₂O)₆]³⁺', metal: 'Fe', q: 3, d: 5, nm: null, absorb: [], seen: 'pale violet', tint: '#c9b6d6', unpaired: 5, spin: 'high' },
-  'fe3-cn': { formula: '[Fe(CN)₆]³⁻', metal: 'Fe', q: 3, d: 5, nm: null, absorb: [], seen: 'red-orange', tint: '#c8642e', unpaired: 1, spin: 'low' },
+  'fe3-cn': { formula: '[Fe(CN)₆]³−', metal: 'Fe', q: 3, d: 5, nm: null, absorb: [], seen: 'red-orange', tint: '#c8642e', unpaired: 1, spin: 'low' },
   'mn-aq': { formula: '[Mn(H₂O)₆]²⁺', metal: 'Mn', q: 2, d: 5, nm: null, absorb: [], seen: 'pale pink', tint: '#e2bcc6', unpaired: 5, spin: 'high' },
   'cr-aq': { formula: '[Cr(H₂O)₆]³⁺', metal: 'Cr', q: 3, d: 3, nm: null, absorb: [], seen: 'violet', tint: '#7b6a9c', unpaired: 3, spin: null }
 });
@@ -231,9 +231,9 @@ export const pull = n => n * (n + 2);
 export const LIGANDS = Object.freeze({
   h2o: { sym: 'H₂O', q: 0, places: 1, fit: 6, donor: 'O' },
   nh3: { sym: 'NH₃', q: 0, places: 1, fit: 6, donor: 'N' },
-  cl: { sym: 'Cl⁻', q: -1, places: 1, fit: 4, donor: 'Cl' },
-  cn: { sym: 'CN⁻', q: -1, places: 1, fit: 6, donor: 'C' },
-  f: { sym: 'F⁻', q: -1, places: 1, fit: 6, donor: 'F' },
+  cl: { sym: 'Cl−', q: -1, places: 1, fit: 4, donor: 'Cl' },
+  cn: { sym: 'CN−', q: -1, places: 1, fit: 6, donor: 'C' },
+  f: { sym: 'F−', q: -1, places: 1, fit: 6, donor: 'F' },
   en: { sym: 'en', q: 0, places: 2, fit: 6, donor: 'N' }
 });
 

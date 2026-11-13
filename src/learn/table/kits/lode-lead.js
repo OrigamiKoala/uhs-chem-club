@@ -5,7 +5,7 @@
 
 import { registerFixture } from './lode-registry.js';
 import { C, frameOf, say, title, orbital } from './lode-draw.js';
-import { fillLevel } from '../../engine/lodedata.js';
+import { fillLevel, SQ_DIRS } from '../../engine/lodedata.js';
 
 export function lodeLeadFixture(id, at, { scene, title: ttl = 'Watch first', w = 60, h = 30 } = {}) {
   return { id, kind: 'lodelead', label: ttl, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { scene } };
@@ -14,6 +14,19 @@ export function lodeLeadFixture(id, at, { scene, title: ttl = 'Watch first', w =
 const bar = (ctx, F, x, base, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(F.x(x), F.y(base - h), F.len(w), F.len(h)); };
 
 const SCENES = {
+  /** A flat square of four identical ammonia ligands, turned and flipped: every turn looks the same. */
+  'sq-turn'(ctx, f, F, t) {
+    say(ctx, 'Four identical ligands, turned', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    const a = (t * 0.9) % (Math.PI * 2);
+    const cx = F.x(f.size.w / 2); const cy = F.y(f.size.h / 2 + 2); const R = F.len(Math.min(f.size.h * 0.3, 10));
+    SQ_DIRS.forEach(([x, y]) => {
+      const px = cx + (x * Math.cos(a) - y * Math.sin(a)) * R; const py = cy + (x * Math.sin(a) + y * Math.cos(a)) * R * 0.55;
+      ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = '#6f8fb0'; ctx.beginPath(); ctx.arc(px, py, F.len(2), 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.fillStyle = '#b88a5a'; ctx.beginPath(); ctx.arc(cx, cy, F.len(2.4), 0, Math.PI * 2); ctx.fill();
+    say(ctx, 'every turn looks the same', F.x(f.size.w / 2), F.y(f.size.h - 3), F.size(1.8, 6), { align: 'center', color: C.amber });
+  },
   /** Two hydrogen atoms meet: each brings one electron, in its own colour, and the pair between them is the bond. */
   'h2-bond'(ctx, f, F, t) {
     say(ctx, 'Two hydrogen atoms bonding', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });

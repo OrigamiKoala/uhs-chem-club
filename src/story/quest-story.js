@@ -43,9 +43,18 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.3, say: 'Ammonia took the places of four water molecules round each copper ion, and the solution turned deep blue.' },
       { to: 0.62, say: 'Copper kept its nine 3d electrons; both electrons of each new bond came from a nitrogen lone pair.' },
-      { to: 0.95, say: 'Six water molecules fit round Fe³⁺ but only four chloride ions round Cu²⁺, and the drum\'s +1 meant two Cl⁻ round Cr³⁺.' }
+      { to: 0.95, say: 'Six water molecules fit round Fe³⁺ but only four chloride ions round Cu²⁺, and the drum\'s +1 meant two Cl− round Cr³⁺.' }
     ],
     filed: 'Filed: the drums hold complex ions, so a drum\'s charge is not its metal\'s charge.'
+  },
+  'unit12/q4-shapes': {
+    scene: 'lode-shapes',
+    beats: [
+      { to: 0.3, say: 'Released from a flat ring, six ammonia ligands settled 90° apart: four in a square, one above and one below.' },
+      { to: 0.62, say: 'Round Pt²⁺, two NH₃ and two Cl− made only two models that no turn could lay on each other.' },
+      { to: 0.95, say: 'With the Cl− side by side the model is cis; opposite, it is trans. One formula, two substances.' }
+    ],
+    filed: 'Filed: one formula can be two arrangements, and the manifest cannot tell them apart.'
   },
   'unit11/q1-watch': {
     scene: 'rate-watch',

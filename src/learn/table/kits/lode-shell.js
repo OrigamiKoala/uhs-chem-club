@@ -315,14 +315,16 @@ registerFixture('iestrip', { paint: paintStrip, run: runStrip, tapZones: stripTa
 /* ================================================================== lchoice */
 
 /** The answer given by tapping an instrument: a hidden dial (`value`), its options' words, and a blank start. */
-export function lchoiceFixture(id, label, at, { options, w = 44, list = false } = {}) {
-  const h = list ? 7 + options.length * 7 : 9;
-  // A list is tapped where it stands: each option is a row that sets the answer.
-  const taps = list ? options.map((_, i) => ({ x0: 1, x1: w - 1, y0: 5.5 + i * 7, y1: 11.5 + i * 7, dial: 'value', value: i + 1 })) : undefined;
+export function lchoiceFixture(id, label, at, { options, w = 44, list = false, row = false } = {}) {
+  const h = list ? 7 + options.length * 7 : row ? 13 : 9;
+  // A list (or a row) is tapped where it stands: each option is a box that sets the answer.
+  const cw = (w - 2) / options.length;
+  const taps = list ? options.map((_, i) => ({ x0: 1, x1: w - 1, y0: 5.5 + i * 7, y1: 11.5 + i * 7, dial: 'value', value: i + 1 }))
+    : row ? options.map((_, i) => ({ x0: 1 + i * cw, x1: 1 + (i + 1) * cw, y0: 5, y1: 12.5, dial: 'value', value: i + 1 })) : undefined;
   return {
     id, kind: 'lchoice', label, at: { ...at }, size: { w, h }, noRun: true,
     dials: { value: { min: 0, max: options.length, step: 1, value: 0, label: 'Chosen' } },
-    props: { options, hidden: ['value'], list, ...(taps ? { taps } : {}) }
+    props: { options, hidden: ['value'], list, row, ...(taps ? { taps } : {}) }
   };
 }
 export const chosen = (state, id) => { const v = Math.round(state.fixtures[id]?.dials?.value?.value ?? 0); return v ? state.fixtures[id].props.options[v - 1] : null; };
@@ -331,6 +333,18 @@ export const pickOf = (fx, value, target = 'pick') => ({ ...fx, props: { ...fx.p
 function paintChoice(ctx, f, state, b) {
   const F = frameOf(b);
   const text = chosen(state, f.id);
+  if (f.props.row) {
+    say(ctx, f.label, F.x(2), F.y(2.8), F.size(2.1, 6.5), { color: C.dust, weight: 600, maxW: F.len(f.size.w - 4) });
+    const cw = (f.size.w - 2) / f.props.options.length;
+    f.props.options.forEach((o, i) => {
+      const on = o === text;
+      ctx.strokeStyle = on ? C.amber : C.steel; ctx.lineWidth = on ? 2 : 1;
+      ctx.strokeRect(Math.round(F.x(1.4 + i * cw)) + 0.5, Math.round(F.y(5.4)) + 0.5, Math.round(F.len(cw - 0.8)), Math.round(F.len(6.8)));
+      ctx.lineWidth = 1;
+      say(ctx, o, F.x(1 + (i + 0.5) * cw), F.y(8.8), F.size(2.6, 8), { align: 'center', color: on ? C.amber : C.text, weight: 700, maxW: F.len(cw - 1.5) });
+    });
+    return;
+  }
   if (f.props.list) {
     say(ctx, f.label, F.x(2), F.y(3), F.size(2.1, 6.5), { color: C.dust, weight: 600, maxW: F.len(f.size.w - 4) });
     f.props.options.forEach((o, i) => {
