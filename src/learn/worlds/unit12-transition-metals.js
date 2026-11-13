@@ -15,7 +15,7 @@ export const UNIT_12 = {
 
   quests: [
     { id: 'q1-dblock', title: 'The d-Block', line: 'The Fifth\'s manifest calls every drum iron salt.', arena: 'bench', stageCount: 6, status: 'live', module: () => import('../quests/unit12/q1-dblock.js') },
-    { id: 'q2-charges', title: 'Many Charges', line: 'The manifest gives every metal a single charge.', arena: 'bench', stageCount: 6, status: 'draft', module: null },
+    { id: 'q2-charges', title: 'Many Charges', line: 'The manifest gives every metal a single charge.', arena: 'bench', stageCount: 6, status: 'live', module: () => import('../quests/unit12/q2-charges.js') },
     { id: 'q3-complex', title: 'Complex Ions', line: 'Drums went deep blue where ammonia was spilled.', arena: 'bench', stageCount: 8, status: 'draft', module: null },
     { id: 'q4-shapes', title: 'Shapes and Isomers', line: 'Two drums list one formula and behave differently.', arena: 'bench', stageCount: 6, status: 'draft', module: null },
     { id: 'q5-colour', title: 'Colour', line: 'Colour is the only label left on the drums.', arena: 'bench', stageCount: 8, status: 'draft', module: null },

@@ -193,7 +193,7 @@
       ],
       "label": "Bench 2 - Many Charges",
       "structure": "ore-crusher",
-      "built": false,
+      "built": true,
       "flat": {
         "x": 25.45,
         "z": 46,

@@ -55,6 +55,60 @@
           "explanation": "Once the atom carries a charge its 3d level lies below 4s, so the two 4s electrons leave first and Ni²⁺ keeps all eight 3d electrons."
         }
       ]
+    },
+    "q2-charges": {
+      "problems": [
+        {
+          "id": "q2-charges#b1",
+          "quest": "q2-charges",
+          "question": "Magnesium's first three ionization energies are 738, 1451 and 7733 kJ/mol. Which ion does magnesium form?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Mg²⁺"
+            },
+            {
+              "id": "b",
+              "label": "Mg⁺"
+            },
+            {
+              "id": "c",
+              "label": "Mg³⁺"
+            },
+            {
+              "id": "d",
+              "label": "Several, from Mg⁺ to Mg³⁺"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The cost jumps more than fivefold at the third electron, which would come from the full inner shell, so magnesium loses two electrons and forms Mg²⁺."
+        },
+        {
+          "id": "q2-charges#b2",
+          "quest": "q2-charges",
+          "question": "Scandium forms only the Sc³⁺ ion, and its outer electrons are 4s² 3d¹. Is scandium a transition metal by the definition used on this bench?",
+          "options": [
+            {
+              "id": "a",
+              "label": "No: Sc³⁺ has no 3d electrons left"
+            },
+            {
+              "id": "b",
+              "label": "Yes: its atom has a 3d electron"
+            },
+            {
+              "id": "c",
+              "label": "Yes: it forms an ion with a charge of 3+"
+            },
+            {
+              "id": "d",
+              "label": "No: it is not in the fourth row"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Sc³⁺ has lost all three outer electrons, so its 3d subshell is empty. On this bench a transition metal must form an ion with a partly filled 3d subshell. Some books also count elements whose atoms have a partly filled d subshell, and by that rule scandium counts."
+        }
+      ]
     }
   }
 }

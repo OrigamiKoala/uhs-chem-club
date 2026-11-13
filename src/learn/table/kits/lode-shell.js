@@ -31,7 +31,7 @@ export const atomOcc = el => { const e = ELEMENTS[el]; return [e.s, ...fillLevel
  * "Test Energy" key; `ions` (show mode) lists the element's common ions beside it; `hideCount` hides the count line.
  * Returns `{ fixture, slot }` (`slot` only with `load`: a card laid in it loads that atom).
  */
-export function dshellFixture(id, at, { mode = 'build', el = null, start = null, test = false, load = false, ions = false, title: ttl = 'Energy ladder', w = null, h = 52, hideCount = false } = {}) {
+export function dshellFixture(id, at, { mode = 'build', el = null, start = null, test = false, load = false, ions = false, title: ttl = 'Energy ladder', w = null, h = 52, hideCount = false, slotAt = null } = {}) {
   const width = w ?? (100 + (ions ? 40 : 0));
   const occ = start || (el && mode !== 'build' ? atomOcc(el) : new Array(BOXES).fill(0));
   const dials = {};
@@ -43,7 +43,7 @@ export function dshellFixture(id, at, { mode = 'build', el = null, start = null,
     ...(test ? { runLabel: 'Test Energy' } : { noRun: true }),
     props: { mode, el, hidden: Object.keys(dials), load: load ? slotId : null, ions, hideCount, test: null, loadedFrom: null, startOcc: occ.slice() }
   };
-  return { fixture, slot: load ? { id: slotId, label: 'Load an atom', at: { x: x0 - 11, y: y0 + h / 2 + 2 }, size: { w: 18, h: 13 } } : null, slotId: load ? slotId : null };
+  return { fixture, slot: load ? { id: slotId, label: 'Load an atom', at: slotAt ? { ...slotAt } : { x: x0 - 11, y: y0 + h / 2 + 2 }, size: { w: 18, h: 13 } } : null, slotId: load ? slotId : null };
 }
 
 const occOf = f => Array.from({ length: BOXES }, (_, i) => Math.round(f.dials[`b${i}`]?.value ?? 0));
@@ -134,12 +134,14 @@ function paintIons(ctx, f, F, el) {
   say(ctx, 'Its ions', F.x(x0), F.y(8), F.size(1.9, 6.2), { color: C.dust, weight: 600 });
   qs.forEach((q, k) => {
     const io = ionOf(el, q);
-    const y = 11.5 + k * 9;
+    const y = 11.5 + k * 10.5;
     say(ctx, ionName(el, q), F.x(x0), F.y(y + 2.2), F.size(2.2, 7), { color: C.text, weight: 700, sans: true });
     orbital(ctx, F, x0 + 8, y, 4, 4.4, io.s, { colour: C.s4 });
     fillLevel(5, io.d).forEach((n, i) => orbital(ctx, F, x0 + 13.5 + i * 4.6, y, 4, 4.4, n, { colour: C.d3 }));
-    say(ctx, '4s', F.x(x0 + 10), F.y(y + 6.2), F.size(1.5, 5.5), { align: 'center', color: C.s4 });
-    say(ctx, '3d', F.x(x0 + 24.5), F.y(y + 6.2), F.size(1.5, 5.5), { align: 'center', color: C.d3 });
+    if (k === qs.length - 1) {
+      say(ctx, '4s', F.x(x0 + 10), F.y(y + 6.6), F.size(1.7, 5.5), { align: 'center', color: C.s4 });
+      say(ctx, '3d', F.x(x0 + 24.5), F.y(y + 6.6), F.size(1.7, 5.5), { align: 'center', color: C.d3 });
+    }
   });
 }
 
@@ -206,10 +208,11 @@ export function iestripRead(state, id) {
 }
 
 const stripGeom = f => {
-  const top = 7; const bottom = f.size.h - 9;
-  const bx0 = 25; const bx1 = f.size.w - 2.5;
+  const lk = Math.min(1.5, Math.max(1, f.size.h / 36));
+  const top = 8; const bottom = f.size.h - 9;
+  const bx0 = 6 + 22 * lk; const bx1 = f.size.w - 2.5;
   const bw = (bx1 - bx0) / f.props.n;
-  return { top, bottom, bx0, bx1, bw };
+  return { lk, top, bottom, bx0, bx1, bw };
 };
 
 /** The small ladder: 3p (three boxes, inner), 4s, 3d, with the electrons left after `removed`. Pairs go first from 3d. */
@@ -235,41 +238,48 @@ function paintStrip(ctx, f, state, b) {
   title(ctx, f, F, b);
   // The small ladder: what is left in the atom or ion.
   const left = ladderLeft(p.el, p.q0, p.removed);
-  const lx = 2.5;
-  say(ctx, '3d', F.x(lx), F.y(10.5), F.size(1.7, 6), { color: C.d3, weight: 700 });
-  left.d.forEach((v, i) => orbital(ctx, F, lx + 3.8 + i * 3.6, 8.6, 3.1, 3.8, v, { colour: C.d3 }));
-  say(ctx, '4s', F.x(lx), F.y(16.5), F.size(1.7, 6), { color: C.s4, weight: 700 });
-  orbital(ctx, F, lx + 3.8, 14.6, 3.1, 3.8, left.s, { colour: C.s4 });
-  say(ctx, '3p', F.x(lx), F.y(f.size.h - 13), F.size(1.7, 6), { color: C.p3, weight: 700 });
-  left.p.forEach((v, i) => orbital(ctx, F, lx + 3.8 + i * 3.6, f.size.h - 15, 3.1, 3.8, v, { colour: C.p3 }));
-  say(ctx, 'inner shell', F.x(lx), F.y(f.size.h - 9.4), F.size(1.5, 5.5), { color: C.p3 });
+  const lx = 2.5; const lk = g.lk; const bs = 3.1 * lk; const pitch = 3.6 * lk; const bhh = 3.8 * lk;
+  const yD = 9 * lk; const yS = yD + 7 * lk; const yP = f.size.h - 15;
+  // A sealed strip shows no ladder: the atom's own electrons would name it.
+  if (p.sealed) {
+    say(ctx, 'The atom is sealed:', F.x(lx), F.y(yS - 2), F.size(1.9, 6), { color: C.dim });
+    say(ctx, 'only the costs are shown', F.x(lx), F.y(yS + 2), F.size(1.9, 6), { color: C.dim });
+  } else {
+    say(ctx, '3d', F.x(lx), F.y(yD + bhh / 2), F.size(2.1 * lk, 6.5), { color: C.d3, weight: 700 });
+    left.d.forEach((v, i) => orbital(ctx, F, lx + 4.2 * lk + i * pitch, yD, bs, bhh, v, { colour: C.d3 }));
+    say(ctx, '4s', F.x(lx), F.y(yS + bhh / 2), F.size(2.1 * lk, 6.5), { color: C.s4, weight: 700 });
+    orbital(ctx, F, lx + 4.2 * lk, yS, bs, bhh, left.s, { colour: C.s4 });
+    say(ctx, '3p', F.x(lx), F.y(yP + bhh / 2), F.size(2.1 * lk, 6.5), { color: C.p3, weight: 700 });
+    left.p.forEach((v, i) => orbital(ctx, F, lx + 4.2 * lk + i * pitch, yP, bs, bhh, v, { colour: C.p3 }));
+    say(ctx, 'inner shell', F.x(lx), F.y(yP + bhh + 2.2), F.size(1.8, 6), { color: C.p3 });
+  }
   // The electron just removed, rising out of the ladder.
   glide(`${f.id}:rm`, b, 0, p.removed, 0.8);
   const k = since(`${f.id}:rm`, b);
-  if (p.removed && k < 1.2) {
+  if (p.removed && k < 1.2 && !p.sealed) {
     const sub = r.from[p.removed - 1];
-    const y0 = sub === '3d' ? 10.5 : sub === '4s' ? 16.5 : f.size.h - 13;
+    const y0 = sub === '3d' ? yD : sub === '4s' ? yS : yP;
     const t = Math.min(1, k / 1.2);
     ctx.globalAlpha = 1 - t;
-    ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(F.x(lx + 12 + t * 8), F.y(y0 - t * 6), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(F.x(lx + 12 * lk + t * 8), F.y(y0 - t * 6), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
   }
   // The axis and the bars.
   ctx.strokeStyle = C.steel;
   ctx.beginPath(); ctx.moveTo(F.x(g.bx0 - 1), F.y(g.top)); ctx.lineTo(F.x(g.bx0 - 1), F.y(g.bottom)); ctx.lineTo(F.x(g.bx1), F.y(g.bottom)); ctx.stroke();
-  say(ctx, 'kJ/mol', F.x(g.bx0 - 1.5), F.y(g.top - 2.2), F.size(1.5, 5.5), { color: C.steel });
+  say(ctx, 'kJ/mol', F.x(g.bx0 - 1.5), F.y(g.top - 2.4), F.size(1.9, 6), { color: C.steel });
   const H = g.bottom - g.top - 3;
   r.costs.forEach((v, i) => {
     const sub = r.from[i];
     const hh = Math.max(0.6, (v / p.scale) * H);
     const x = g.bx0 + i * g.bw + g.bw * 0.15;
     const grow = i === p.removed - 1 ? Math.min(1, k / 0.6) : 1;
-    ctx.fillStyle = sub === '3p' ? C.p3 : sub === '4s' ? C.s4 : C.d3;
+    ctx.fillStyle = p.sealed ? C.dust : sub === '3p' ? C.p3 : sub === '4s' ? C.s4 : C.d3;
     ctx.fillRect(F.x(x), F.y(g.bottom - hh * grow), F.len(g.bw * 0.7), F.len(hh * grow));
-    if (grow >= 1) say(ctx, Math.round(v).toLocaleString('en-US'), F.x(x + g.bw * 0.35), F.y(g.bottom - hh - 1.4), F.size(1.45, 5.5), { align: 'center', color: C.text, maxW: F.len(g.bw * 1.0) });
-    say(ctx, String(i + 1), F.x(x + g.bw * 0.35), F.y(g.bottom + 1.8), F.size(1.6, 6), { align: 'center', color: C.dust });
+    if (grow >= 1) say(ctx, Math.round(v).toLocaleString('en-US'), F.x(x + g.bw * 0.35), F.y(g.bottom - hh - 1.6), F.size(Math.min(2.2, g.bw * 0.24), 5.5), { align: 'center', color: C.text, maxW: F.len(g.bw * 1.0) });
+    say(ctx, String(i + 1), F.x(x + g.bw * 0.35), F.y(g.bottom + 2), F.size(2, 6), { align: 'center', color: C.dust });
   });
-  say(ctx, 'electron removed', F.x(g.bx0), F.y(g.bottom + 4.4), F.size(1.5, 5.5), { color: C.dust });
+  say(ctx, 'electron removed', F.x(g.bx0), F.y(g.bottom + 5), F.size(1.9, 6), { color: C.dust });
   if (!r.removed) say(ctx, 'Press "Remove an Electron"', F.x((g.bx0 + g.bx1) / 2), F.y((g.top + g.bottom) / 2), F.size(1.9, 6.2), { align: 'center', color: C.dim });
   // The mark: where the player says the cost jumps.
   if (r.mark > 0) {

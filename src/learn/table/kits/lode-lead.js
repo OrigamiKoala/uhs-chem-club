@@ -11,7 +11,23 @@ export function lodeLeadFixture(id, at, { scene, title: ttl = 'Watch first', w =
   return { id, kind: 'lodelead', label: ttl, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { scene } };
 }
 
+const bar = (ctx, F, x, base, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(F.x(x), F.y(base - h), F.len(w), F.len(h)); };
+
 const SCENES = {
+  /** Two neighbours in the row lose their third electron: one more proton, a higher cost. */
+  'ie-ti-v'(ctx, f, F, t) {
+    say(ctx, 'The third electron of two neighbours', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    const p = Math.min(1, (t % 6) / 2.5);
+    const base = f.size.h - 7; const H = f.size.h - 18;
+    const rows = [['Ti²⁺', 22, 2652.5, 12], ['V²⁺', 23, 2830, 36]];
+    for (const [name, z, v, x] of rows) {
+      const h = (v / 3200) * H * p;
+      bar(ctx, F, x, base, 10, h, C.d3);
+      if (p >= 1) say(ctx, `${Math.round(v)} kJ/mol`, F.x(x + 5), F.y(base - h - 1.6), F.size(1.6, 6), { align: 'center', color: C.text });
+      say(ctx, `${name}, ${z} protons`, F.x(x + 5), F.y(base + 2.6), F.size(1.7, 6), { align: 'center', color: C.dust });
+    }
+  },
+
   /** Iron's eight outer electrons going in, one by one: 4s first, then 3d. */
   'fill-fe'(ctx, f, F, t) {
     const n = Math.min(8, Math.floor((t % 11) / 1.1));

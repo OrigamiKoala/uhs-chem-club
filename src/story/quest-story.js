@@ -29,6 +29,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the drum is iron(III), so the manifest is right about one drum; every other drum must be read too.'
   },
+  'unit12/q2-charges': {
+    scene: 'lode-charges',
+    beats: [
+      { to: 0.32, say: 'Calcium gave up two electrons cheaply; the third came from the inner shell and cost four times as much.' },
+      { to: 0.64, say: 'Manganese climbed in even steps through seven electrons, so it can carry any charge from +2 to +7.' },
+      { to: 0.95, say: 'Fe²⁺ lost its third electron for 2,957 kJ/mol, less than Mn²⁺\'s 3,248, because that electron shared an orbital.' }
+    ],
+    filed: 'Filed: manganese and iron carry several charges, so a manifest with one charge per metal is wrong.'
+  },
   'unit11/q1-watch': {
     scene: 'rate-watch',
     beats: [

@@ -4,7 +4,7 @@
  */
 
 import { C, text, ground, win, ease } from './story-kit.js';
-import { fillLevel, shellLevels } from '../learn/engine/lodedata.js';
+import { fillLevel, shellLevels, IE, removalOrder } from '../learn/engine/lodedata.js';
 
 const S4 = '#c9a35a'; const D3 = '#6f8fb0';
 
@@ -57,6 +57,43 @@ function dblock(ctx, w, h, t) {
   }
 }
 
+const SUB = { '4s': S4, '3d': D3, '3p': '#8f6a8a' };
+
+/** A strip of successive ionization energies for `el`, the first `n` bars grown by `p`, coloured by the level each electron left. */
+function strip(ctx, x0, y0, w, h, el, n, p, label, q0 = 0) {
+  const from = removalOrder(el, q0, n); const bw = w / n;
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y0 + h); ctx.lineTo(x0 + w, y0 + h); ctx.stroke(); ctx.lineWidth = 1;
+  for (let i = 0; i < n; i++) {
+    const g = Math.max(0, Math.min(1, p * n - i));
+    if (!g) continue;
+    const v = IE[el][q0 + i]; const hh = (v / 20000) * h * g;
+    ctx.fillStyle = SUB[from[i]]; ctx.fillRect(x0 + i * bw + bw * 0.15, y0 + h - hh, bw * 0.7, hh);
+    if (g >= 1) text(ctx, Math.round(v).toLocaleString('en-US'), x0 + i * bw + bw * 0.5, y0 + h - hh - 12, { size: 13, color: C.text });
+  }
+  text(ctx, label, x0 + w / 2, y0 + h + 26, { size: 22, color: C.text, weight: 700 });
+}
+
+/** q2-charges: calcium's jump after two, manganese's after seven, then the third electron of Mn²⁺ and Fe²⁺. */
+function charges(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.66) {
+    strip(ctx, 90, 90, 340, 260, 'Ca', 8, ease(win(t, 0.02, 0.28)), 'Calcium');
+    if (t > 0.33) strip(ctx, 530, 90, 340, 260, 'Mn', 8, ease(win(t, 0.34, 0.6)), 'Manganese');
+    return;
+  }
+  const p = ease(win(t, 0.68, 0.9));
+  const bars = [['Mn²⁺', IE.Mn[2], 300], ['Fe²⁺', IE.Fe[2], 560]];
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(220, 400); ctx.lineTo(740, 400); ctx.stroke(); ctx.lineWidth = 1;
+  for (const [name, v, x] of bars) {
+    const hh = (v / 4000) * 280 * p;
+    ctx.fillStyle = D3; ctx.fillRect(x, 400 - hh, 100, hh);
+    if (p >= 1) text(ctx, `${Math.round(v).toLocaleString('en-US')} kJ/mol`, x + 50, 400 - hh - 18, { size: 20, color: C.text, weight: 700 });
+    text(ctx, `${name}: third electron`, x + 50, 432, { size: 20, color: C.text });
+  }
+}
+
 export const LODESTONE_SCENES = {
+  'lode-charges': charges,
   'lode-dblock': dblock
 };
