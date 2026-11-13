@@ -5,7 +5,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 
 - **Product truth & scope:** `PRODUCT.md` wins any dispute regarding scope, target audience, and the pitfall ledger.
 - **Engine, worlds & layout details:** `docs/engineering/engine-and-worlds.md` holds how things are built, per-world notes, and layout details.
-- **World plans & specifications:** `docs/plans/world-plans.md` consolidates world plans, CED maps, tabletop kits, and build records.
+- **World plans & specifications:** `docs/plans/world-plans.md` consolidates world plans, CED maps, tabletop kits, and build records; `docs/world-build-prompt.md` is the prompt for building an entire Learn world from scratch (teaching standards, table kits, bosses, and distinct 3D site).
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
 - **World distinction (site rebuilds):** `docs/plans/world-distinction-plan.md` is the plan to make every walkable world its own landform with benches housed inside it, as Ligar's are (measurements, standard, signature table, progress); `docs/world-rebuild-prompt.md` is the prompt that rebuilds one world's site. Measure with `node tools/world-shape.mjs`.
 - **Teaching pass:** `docs/teaching-pass/README.md` and `docs/teaching-pass/PROGRESS.md` track the teaching pass standard and status.
