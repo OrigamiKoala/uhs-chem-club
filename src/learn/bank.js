@@ -50,8 +50,9 @@ import b10q4 from './bank/unit10/q4-potential.json' with { type: 'json' };
 import b10q6 from './bank/unit10/q6-electrolysis.json' with { type: 'json' };
 import b10q5 from './bank/unit10/q5-load.json' with { type: 'json' };
 const unit10 = { ...unit10Base, bench: { ...unit10Base.bench, 'q1-halves': b10q1, 'q2-activity': b10q2, 'q3-galvanic': b10q3, 'q4-potential': b10q4, 'q5-load': b10q5, 'q6-electrolysis': b10q6 } };
+import unit11 from './bank/unit11.json' with { type: 'json' };
 
-export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09, unit10 };
+export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09, unit10, unit11 };
 
 const EMPTY = { world: null, end: [], bench: {} };
 

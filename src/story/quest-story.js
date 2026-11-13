@@ -19,6 +19,16 @@
  */
 
 export const QUEST_STORY = {
+  /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
+  'unit11/q1-watch': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'Both vessels ended at 0.40 mol/L of product, yet Vessel 2 climbed more steeply and finished sooner.' },
+      { to: 0.70, say: 'Every run starts steepest and flattens as reactant is used up; for 2 A → B, A falls twice as fast as B rises.' },
+      { to: 0.95, say: 'Higher concentration, higher temperature, and powdered solids all gave steeper lines; a larger vessel slowed the rate.' }
+    ],
+    filed: 'Filed: the overheated tower makes the same product, just faster in the first seconds.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

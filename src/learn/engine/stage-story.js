@@ -22,6 +22,10 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
+  'q1-watch': {
+    1: 'Two feed lines yield the same fuel, yet Vess found one tower overheating.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'q5-load': {
     1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'

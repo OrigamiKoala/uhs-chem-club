@@ -1,7 +1,5 @@
 /**
- * unit11-kinetics.js — Learn world 11: Kinetics.
- *
- * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
+ * unit11-kinetics.js — Learn world 11: Quicklight (Kinetics).
  */
 
 export const UNIT_11 = {
@@ -12,43 +10,70 @@ export const UNIT_11 = {
   world: 'Quicklight',
   place: 'Storm belt',
   title: 'Kinetics',
-  line: 'Reaction rates, rate laws, activation energy, and catalysis.',
-  brief: 'Examine reaction rates, experimental rate laws, collision theory, activation energy, and catalysts across four benches.',
+  line: 'Reaction rates, rate laws, mechanisms, activation energy, and catalysis.',
+  brief: 'Investigate reaction rates, experimental rate laws, integrated plots, collision theory, mechanisms, and catalysts across six refinery benches.',
 
   quests: [
     {
-      id: 'q1-stopwatch',
-      title: 'On the Stopwatch',
-      line: 'Two changes, both certain, a century apart.',
+      id: 'q1-watch',
+      title: 'How Fast',
+      line: 'Two feed lines yield the same fuel, yet one tower is already overheating.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
+      status: 'live',
+      module: () => import('../quests/unit11/q1-watch.js')
+    },
+    {
+      id: 'q2-law',
+      title: 'The Rate Law',
+      line: 'Three feeds enter the manifold, yet only two change how fast the tank heats.',
+      arena: 'bench',
+      stageCount: 5,
       status: 'draft',
       module: null
     },
     {
-      id: 'q2-crowding',
-      title: 'Crowding the Floor',
-      line: 'More of it in the same room, and more of it meets.',
-      arena: 'chamber',
-      stageCount: 8,
+      id: 'q3-time',
+      title: 'Concentration Over Time',
+      line: 'Half the peroxide broke down in twenty seconds; how long until half of what remains is gone?',
+      arena: 'bench',
+      stageCount: 5,
       status: 'draft',
       module: null
     },
     {
-      id: 'q3-the-hill',
-      title: 'Over the Hill',
-      line: 'A knock that is too soft does nothing at all.',
-      arena: 'chamber',
-      stageCount: 8,
+      id: 'q4-collide',
+      title: 'Collisions and the Hill',
+      line: 'Fuel vapour sits in the cold tank without burning, even though burning releases energy.',
+      arena: 'bench',
+      stageCount: 7,
       status: 'draft',
       module: null
     },
     {
-      id: 'q4-shortcut',
-      title: 'The Shortcut',
-      line: 'Something helps, and comes back out untouched.',
-      arena: 'chamber',
-      stageCount: 8,
+      id: 'q5-steps',
+      title: 'Steps',
+      line: 'The additive runs in two steps, and only one of them controls how fast the tank burns.',
+      arena: 'bench',
+      stageCount: 7,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q6-shortcut',
+      title: 'Catalysts',
+      line: 'A trace of powder in the vent speeds the burn tenfold and never runs out.',
+      arena: 'bench',
+      stageCount: 5,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'boss-flare',
+      title: 'The Flare',
+      line: 'Stabilize the runaway cracking tower.',
+      arena: 'boss',
+      stageCount: 5,
       status: 'draft',
       module: null
     }

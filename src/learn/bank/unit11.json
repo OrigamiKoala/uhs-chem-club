@@ -1,0 +1,98 @@
+{
+  "world": "unit11",
+  "end": [
+    {
+      "id": "q1-watch#e1",
+      "quest": "q1-watch",
+      "question": "For the reaction 2 A → B, if A is consumed at 0.060 mol/(L·s), at what rate does B form?",
+      "options": [
+        { "id": "a", "label": "0.030 mol/(L·s)" },
+        { "id": "b", "label": "0.060 mol/(L·s)" },
+        { "id": "c", "label": "0.120 mol/(L·s)" },
+        { "id": "d", "label": "0.015 mol/(L·s)" }
+      ],
+      "answer": "a",
+      "explanation": "Two moles of A are consumed for every one mole of B formed, so B forms at half the rate A disappears: 0.060 ÷ 2 = 0.030 mol/(L·s)."
+    }
+  ],
+  "bench": {
+    "q1-watch": {
+      "problems": [
+        {
+          "id": "q1-watch#b1",
+          "quest": "q1-watch",
+          "question": "A reactant drops from 0.80 mol/L at 0 s to 0.20 mol/L at 15 s. What is the average reaction rate over those 15 s?",
+          "options": [
+            { "id": "a", "label": "0.040 mol/(L·s)" },
+            { "id": "b", "label": "0.053 mol/(L·s)" },
+            { "id": "c", "label": "0.013 mol/(L·s)" },
+            { "id": "d", "label": "0.60 mol/(L·s)" }
+          ],
+          "answer": "a",
+          "explanation": "The concentration drops by 0.80 − 0.20 = 0.60 mol/L over 15 s, so the average rate is 0.60 ÷ 15 = 0.040 mol/(L·s)."
+        },
+        {
+          "id": "q1-watch#b2",
+          "quest": "q1-watch",
+          "question": "Which change slows down a reaction between a solid chunk and a gas?",
+          "options": [
+            { "id": "a", "label": "Moving the gas into a larger vessel at the same temperature" },
+            { "id": "b", "label": "Grinding the solid chunk into a fine powder" },
+            { "id": "c", "label": "Raising the temperature" },
+            { "id": "d", "label": "Adding more gas into the same vessel" }
+          ],
+          "answer": "a",
+          "explanation": "A larger vessel spreads the gas molecules out, lowering concentration and collision frequency, which slows the reaction."
+        }
+      ],
+      "worked": {
+        "id": "q1-watch#w",
+        "quest": "q1-watch",
+        "title": "Average rate and stoichiometry",
+        "setup": "For 2 A → B, [A] falls from 0.90 mol/L at 0 s to 0.30 mol/L at 12 s.",
+        "steps": [
+          {
+            "say": "How much did [A] change over the 12 s interval (in mol/L)?",
+            "kind": "number",
+            "answer": 0.60,
+            "unit": "mol/L",
+            "calc": "0.90 - 0.30",
+            "hint": "Subtract the final concentration from the initial concentration.",
+            "explain": "0.90 − 0.30 = 0.60 mol/L."
+          },
+          {
+            "say": "What is the average rate of consumption of A (in mol/(L·s))?",
+            "kind": "number",
+            "answer": 0.05,
+            "unit": "mol/(L·s)",
+            "calc": "(0.90 - 0.30) / 12",
+            "hint": "Divide the change in [A] by 12 s.",
+            "explain": "0.60 ÷ 12 = 0.050 mol/(L·s)."
+          },
+          {
+            "say": "Since 2 A → B, at what rate does B form (in mol/(L·s))?",
+            "kind": "number",
+            "answer": 0.025,
+            "unit": "mol/(L·s)",
+            "calc": "((0.90 - 0.30) / 12) / 2",
+            "hint": "One B forms for every two A used.",
+            "explain": "0.050 ÷ 2 = 0.025 mol/(L·s)."
+          },
+          {
+            "say": "During which part of the run is the instantaneous rate greatest?",
+            "kind": "choice",
+            "options": [
+              { "id": "a", "label": "At the start (0 s), when [A] is highest" },
+              { "id": "b", "label": "At the end (12 s), when most B is present" },
+              { "id": "c", "label": "Constant throughout" }
+            ],
+            "answer": "a",
+            "hint": "Reactant concentration is highest at the start.",
+            "explain": "Most reactant is present at 0 s, so collisions are most frequent and the curve is steepest."
+          }
+        ],
+        "finish": "Average rate is Δ[A]/Δt, and stoichiometry ties the rates of A and B."
+      }
+    }
+  }
+}

@@ -30,3 +30,4 @@ import './pot.js';
 import './pans.js';
 import './ph.js';
 import './cell.js';
+import './rate.js';

@@ -28,6 +28,7 @@ import { BRINEWIRE_Q2_SCENES } from './story-scenes-brinewire-q2-activity.js';
 import { BRINEWIRE_Q6_SCENES } from './story-scenes-brinewire-q6.js';
 import { BRINEWIRE_Q5_SCENES } from './story-scenes-brinewire-q5.js';
 import { BRINEWIRE_BOSS_SCENES } from './story-scenes-brinewire-boss.js';
+import { QUICKLIGHT_SCENES } from './story-scenes-quicklight.js';
 import { VERDIGRIS_Q4Q5_SCENES } from './story-scenes-verdigris-q4q5.js';
 import { VERDIGRIS_TITRATE_SCENES } from './story-scenes-verdigris-titrate.js';
 import { VERDIGRIS_Q1Q2_SCENES } from './story-scenes-verdigris-q1q2.js';
@@ -1322,6 +1323,7 @@ export const SCENES = {
   ...legacy(BRINEWIRE_Q6_SCENES),
   ...legacy(BRINEWIRE_Q5_SCENES),
   ...legacy(BRINEWIRE_BOSS_SCENES),
+  ...legacy(QUICKLIGHT_SCENES),
   ...legacy(VERDIGRIS_Q4Q5_SCENES),
   ...legacy(VERDIGRIS_TITRATE_SCENES),
   ...legacy(VERDIGRIS_Q1Q2_SCENES),
