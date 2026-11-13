@@ -29,6 +29,9 @@ export const STAGE_STORY = {
   'q2-law': {
     1: 'Three feeds enter the manifold, yet only two change how fast the tank heats.'
   },
+  'q3-time': {
+    1: 'Half the peroxide broke down in twenty seconds, and Vess wants to time the next halving.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'q5-load': {
     1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'

@@ -38,8 +38,8 @@ export const UNIT_11 = {
       line: 'Half the peroxide broke down in twenty seconds; how long until half of what remains is gone?',
       arena: 'bench',
       stageCount: 5,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit11/q3-time.js')
     },
     {
       id: 'q4-collide',

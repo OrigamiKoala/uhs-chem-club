@@ -38,6 +38,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: changing one feed left the rate flat; the equation alone never tells the orders.'
   },
+  'unit11/q3-time': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'In the first-order tank, the first halving took 20 s and the second halving also took 20 s.' },
+      { to: 0.70, say: 'Replotting the readings as ln[A] against time put every point on the straightedge, while 1/[A] straightened second-order data.' },
+      { to: 0.95, say: 'From t½ = 15 s, the relation k = 0.693 ÷ t½ gave k = 0.0462 each second.' }
+    ],
+    filed: 'Filed: first-order decay halves in equal intervals; a straight ln[A] line gives k.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

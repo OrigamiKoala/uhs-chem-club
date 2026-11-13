@@ -50,6 +50,31 @@
       ],
       "answer": "a",
       "explanation": "Since the reaction is second order in X and zero order in Y, the rate multiplies by 3\u00b2 \u00d7 2\u2070 = 9 \u00d7 1 = 9."
+    },
+    {
+      "id": "q3-time#e1",
+      "quest": "q3-time",
+      "question": "A first-order reaction has a half-life of 20 s. Starting at 0.80 mol/L, what concentration remains after 60 s?",
+      "options": [
+        {
+          "id": "a",
+          "label": "0.10 mol/L"
+        },
+        {
+          "id": "b",
+          "label": "0.20 mol/L"
+        },
+        {
+          "id": "c",
+          "label": "0.050 mol/L"
+        },
+        {
+          "id": "d",
+          "label": "0.40 mol/L"
+        }
+      ],
+      "answer": "a",
+      "explanation": "60 s is 3 half-lives (60 \u00f7 20 = 3), so 0.80 \u00f7 2\u00b3 = 0.80 \u00f7 8 = 0.10 mol/L remains."
     }
   ],
   "bench": {
@@ -261,6 +286,105 @@
           }
         ],
         "finish": "Orders come from comparing runs, and k comes from plugging one run into the rate law."
+      }
+    },
+    "q3-time": {
+      "problems": [
+        {
+          "id": "q3-time#b1",
+          "quest": "q3-time",
+          "question": "Which plot gives a straight line for a second-order reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "1/[A] versus time (positive slope k)"
+            },
+            {
+              "id": "b",
+              "label": "ln[A] versus time (negative slope \u2212k)"
+            },
+            {
+              "id": "c",
+              "label": "[A] versus time (negative slope \u2212k)"
+            },
+            {
+              "id": "d",
+              "label": "1/[A]\u00b2 versus time (positive slope k)"
+            }
+          ],
+          "answer": "a",
+          "explanation": "For a second-order reaction, the integrated rate law is 1/[A]_t \u2212 1/[A]\u2080 = kt, so 1/[A] plotted against t is linear with slope +k."
+        },
+        {
+          "id": "q3-time#b2",
+          "quest": "q3-time",
+          "question": "A first-order reaction has k = 0.03465 s\u207b\u00b9 (using ln 2 = 0.693). What is its half-life?",
+          "options": [
+            {
+              "id": "a",
+              "label": "20 s"
+            },
+            {
+              "id": "b",
+              "label": "10 s"
+            },
+            {
+              "id": "c",
+              "label": "40 s"
+            },
+            {
+              "id": "d",
+              "label": "0.050 s"
+            }
+          ],
+          "answer": "a",
+          "explanation": "For a first-order reaction, t_{1/2} = ln(2)/k = 0.693 / 0.03465 = 20 s, independent of initial concentration."
+        }
+      ],
+      "worked": {
+        "id": "q3-time#w",
+        "quest": "q3-time",
+        "title": "First-order decay over multiple half-lives",
+        "setup": "A first-order reaction starts at [A]\u2080 = 1.60 mol/L with t_{1/2} = 15 s. Find [A] at t = 45 s.",
+        "steps": [
+          {
+            "say": "How many half-lives pass in 45 s?",
+            "kind": "number",
+            "answer": 3,
+            "unit": "",
+            "calc": "45 / 15",
+            "hint": "Divide total time 45 s by the half-life 15 s.",
+            "explain": "45 \u00f7 15 = 3 half-lives."
+          },
+          {
+            "say": "What is [A] after the first half-life (15 s)?",
+            "kind": "number",
+            "answer": 0.8,
+            "unit": "mol/L",
+            "calc": "1.60 / 2",
+            "hint": "One half-life cuts 1.60 mol/L in half.",
+            "explain": "1.60 \u00f7 2 = 0.80 mol/L."
+          },
+          {
+            "say": "What fraction of the initial reactant remains after 3 half-lives (as a decimal)?",
+            "kind": "number",
+            "answer": 0.125,
+            "unit": "",
+            "calc": "1 / (2 ** 3)",
+            "hint": "Each half-life multiplies the remaining fraction by 0.5: 0.5\u00b3.",
+            "explain": "(1/2)\u00b3 = 1/8 = 0.125."
+          },
+          {
+            "say": "What is [A] at t = 45 s?",
+            "kind": "number",
+            "answer": 0.2,
+            "unit": "mol/L",
+            "calc": "1.60 * 0.125",
+            "hint": "Multiply 1.60 mol/L by 0.125.",
+            "explain": "1.60 \u00d7 0.125 = 0.20 mol/L."
+          }
+        ],
+        "finish": "First-order half-life is constant, so n half-lives always leave (1/2)^n of the starting concentration."
       }
     }
   }
