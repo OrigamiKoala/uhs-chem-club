@@ -38,6 +38,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: manganese and iron carry several charges, so a manifest with one charge per metal is wrong.'
   },
+  'unit12/q3-complex': {
+    scene: 'lode-complex',
+    beats: [
+      { to: 0.3, say: 'Ammonia took the places of four water molecules round each copper ion, and the solution turned deep blue.' },
+      { to: 0.62, say: 'Copper kept its nine 3d electrons; both electrons of each new bond came from a nitrogen lone pair.' },
+      { to: 0.95, say: 'Six water molecules fit round Fe³⁺ but only four chloride ions round Cu²⁺, and the drum\'s +1 meant two Cl⁻ round Cr³⁺.' }
+    ],
+    filed: 'Filed: the drums hold complex ions, so a drum\'s charge is not its metal\'s charge.'
+  },
   'unit11/q1-watch': {
     scene: 'rate-watch',
     beats: [

@@ -19,6 +19,18 @@ const FIXTURES = {
     title: 'Your choice', dials: false,
     text: 'Tap the instrument you choose. Its frame turns amber and its name appears here; that is your answer when you press Submit.'
   },
+  'lode:beaker': {
+    title: 'Flask and window', dials: false,
+    text: 'A flask of copper(II) solution, and beside it a window that magnifies one copper ion and the molecules bonded round it. Press "Add Ammonia" to add ammonia: the flask shows the colour, and the window shows what happens round the ion.'
+  },
+  'lode:cplx': {
+    title: 'Metal ion and its neighbours', dials: false,
+    text: 'One metal ion in the middle, and the molecules or ions bonded round it, drawn in three dimensions; where there is a "Turn" dial it tilts the model so you can see it from above or edge-on. Where there is an "Add" key, press it to add one more molecule; where there are empty rings, tap a ring to choose what bonds there, tapping again to change it. A key such as "Release" or "Bond" plays what happens next.'
+  },
+  'lode:match': {
+    title: 'Turn to fit', dials: false,
+    text: 'Press the key to try every way of turning and flipping model B. If one lays every ligand of B on the same kind of ligand in A, it plays that turn and says they are the same; if none does, it says they are different.'
+  },
   'lode:lodelead': {
     title: 'Watch first', dials: false,
     text: 'A short clip of a neighbouring case that plays by itself. Watch it, then make your prediction.'

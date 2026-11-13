@@ -14,6 +14,20 @@ export function lodeLeadFixture(id, at, { scene, title: ttl = 'Watch first', w =
 const bar = (ctx, F, x, base, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(F.x(x), F.y(base - h), F.len(w), F.len(h)); };
 
 const SCENES = {
+  /** Two hydrogen atoms meet: each brings one electron, in its own colour, and the pair between them is the bond. */
+  'h2-bond'(ctx, f, F, t) {
+    say(ctx, 'Two hydrogen atoms bonding', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });
+    const p = Math.min(1, (t % 6) / 3);
+    const cy = F.y(f.size.h / 2 + 2); const gap = 16 - 9 * p;
+    const ax = F.x(f.size.w / 2 - gap); const bx = F.x(f.size.w / 2 + gap);
+    for (const [x, col, dir] of [[ax, '#c98f4a', 1], [bx, '#6f8fb0', -1]]) {
+      ctx.fillStyle = '#d6cebd'; ctx.beginPath(); ctx.arc(x, cy, F.len(3), 0, Math.PI * 2); ctx.fill();
+      say(ctx, 'H', x, cy, F.size(1.9, 7), { align: 'center', color: '#14100c', weight: 800, sans: true });
+      const ex = x + dir * F.len(3 + 1.6) * (1 - p) + dir * F.len(p * (gap - 0.6));
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ex, cy, Math.max(2.4, F.len(0.75)), 0, Math.PI * 2); ctx.fill();
+    }
+    if (p >= 1) say(ctx, 'one electron from each atom', F.x(f.size.w / 2), F.y(f.size.h - 3), F.size(1.8, 6), { align: 'center', color: C.amber });
+  },
   /** Two neighbours in the row lose their third electron: one more proton, a higher cost. */
   'ie-ti-v'(ctx, f, F, t) {
     say(ctx, 'The third electron of two neighbours', F.x(2.2), F.y(7), F.size(1.8, 6), { color: C.dust });

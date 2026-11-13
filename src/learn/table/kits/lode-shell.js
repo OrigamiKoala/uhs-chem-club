@@ -315,11 +315,14 @@ registerFixture('iestrip', { paint: paintStrip, run: runStrip, tapZones: stripTa
 /* ================================================================== lchoice */
 
 /** The answer given by tapping an instrument: a hidden dial (`value`), its options' words, and a blank start. */
-export function lchoiceFixture(id, label, at, { options, w = 44 } = {}) {
+export function lchoiceFixture(id, label, at, { options, w = 44, list = false } = {}) {
+  const h = list ? 7 + options.length * 7 : 9;
+  // A list is tapped where it stands: each option is a row that sets the answer.
+  const taps = list ? options.map((_, i) => ({ x0: 1, x1: w - 1, y0: 5.5 + i * 7, y1: 11.5 + i * 7, dial: 'value', value: i + 1 })) : undefined;
   return {
-    id, kind: 'lchoice', label, at: { ...at }, size: { w, h: 9 }, noRun: true,
+    id, kind: 'lchoice', label, at: { ...at }, size: { w, h }, noRun: true,
     dials: { value: { min: 0, max: options.length, step: 1, value: 0, label: 'Chosen' } },
-    props: { options, hidden: ['value'] }
+    props: { options, hidden: ['value'], list, ...(taps ? { taps } : {}) }
   };
 }
 export const chosen = (state, id) => { const v = Math.round(state.fixtures[id]?.dials?.value?.value ?? 0); return v ? state.fixtures[id].props.options[v - 1] : null; };
@@ -328,6 +331,17 @@ export const pickOf = (fx, value, target = 'pick') => ({ ...fx, props: { ...fx.p
 function paintChoice(ctx, f, state, b) {
   const F = frameOf(b);
   const text = chosen(state, f.id);
+  if (f.props.list) {
+    say(ctx, f.label, F.x(2), F.y(3), F.size(2.1, 6.5), { color: C.dust, weight: 600, maxW: F.len(f.size.w - 4) });
+    f.props.options.forEach((o, i) => {
+      const on = o === text;
+      ctx.strokeStyle = on ? C.amber : C.steel; ctx.lineWidth = on ? 2 : 1;
+      ctx.strokeRect(Math.round(F.x(1.2)) + 0.5, Math.round(F.y(5.8 + i * 7)) + 0.5, Math.round(F.len(f.size.w - 2.4)), Math.round(F.len(5.6)));
+      ctx.lineWidth = 1;
+      say(ctx, o, F.x(2.6), F.y(8.6 + i * 7), F.size(2.2, 7), { color: on ? C.amber : C.text, weight: on ? 700 : 500, maxW: F.len(f.size.w - 5) });
+    });
+    return;
+  }
   say(ctx, f.label, F.x(2), F.y(2.8), F.size(1.9, 6.2), { color: C.dust, maxW: F.len(f.size.w - 4) });
   say(ctx, text || 'Tap your choice', F.x(2), F.y(6.4), F.size(2.3, 7), { color: text ? C.amber : C.dim, weight: 700, maxW: F.len(f.size.w - 4) });
 }

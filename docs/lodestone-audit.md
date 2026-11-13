@@ -41,3 +41,22 @@ variable in the strip painter blanked the whole app (a check run whose output I 
 | 4 | Mn²⁺ and Fe²⁺ | Played (chose Fe²⁺ first) | Remove keys and tap-to-choose work | Prompt quotes the guess | None | Fe²⁺'s electron leaves the paired orbital, and costs less | 3248 / 2957 kJ/mol | 1.5.A.4 |
 | 5 | Transition Metals | Played (Cu in the wrong tray first) | Two-tap card moves; load square swaps | Briefing defines the term; Cu exception said | A sort, but each card is read on the ladder first | Ion rows show empty, partly filled and full 3d | Definition stated as used ("some books also count…" in the bank) | 1.7.A.1 |
 | 6 | The Sealed Strip | Played (V first) | Yes | Yes | 25 % guess among four cards | Jump after four matched to Ti's four outer electrons | Yes | 1.5.A.4 |
+
+## `q3-complex` Complex Ions
+
+Pass 1 (3D On, 800 × 600): every stage played; wrong answers on stages 1, 3 (before Bond, after a reload), 5 (three Cl⁻), 6 (meter +2).
+Found and fixed: the magnified complex and the option text were small (enlarged); in the bond picture one of copper's own electrons sat in
+the gap the lone pair moves into (copper's electrons now spread on the side away from ammonia); the count stages refused a seventh ligand
+with no visible reason (the space round the ion is drawn as a shell, and each ligand at its relative size: Cl⁻ half as wide again as
+water); empty rings were too dim to find.
+
+| # | Stage | Evidence | Operable | Intuitive | Busywork | Builds intuition | Accurate | AP |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Ammonia on Copper | Played | Add key and option list | Briefing says six waters are already bonded | Read of the window, the see step | Window shows NH₃ replacing H₂O as the colour deepens | [Cu(NH₃)₄(H₂O)₂]²⁺; the excess-ammonia clause is on the plate | beyond (2.1 recap) |
+| 2 | Whose Electrons (predict) | Played | Yes | "One from each, as in H₂" is the held model | — | H₂ clip | — | 2.1 |
+| 3 | Counting Electrons | Played | Bond key, option list | Prompt quotes the guess | None | Electrons coloured by owner; copper's count stays 9 | Yes | beyond |
+| 4 | Water Round Iron | Played (seven added) | Add key; extra drawn pushed off | Yes | Tap until no more bond: a count, but the shell shows why | Space round the ion drawn | Yes ([Fe(H₂O)₆]³⁺) | beyond |
+| 5 | Chloride Round Copper | Played (three submitted first) | Yes | Yes | As 4 | Cl⁻ drawn larger; four fill the shell | [CuCl₄]²⁻ (tetrahedral; the distortion is not drawn) | beyond |
+| 6 | The Charge of the Whole | Played (+2 first) | Ring taps cycle; meter live | Yes | Meter-led build, the see step | Each Cl⁻ moves the meter by −1 | Yes | beyond |
+| 7 | Two Grips | Played (four added) | Yes | Briefing draws en's formula | As 4 | Each en's two nitrogens joined by a backbone arc | Yes ([Ni(en)₃]²⁺) | beyond |
+| 8 | The Sealed Drum | Played | Yes | Plate gives the evidence only | None | Build to a measured charge with no meter | Yes | beyond |

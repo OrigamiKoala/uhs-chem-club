@@ -93,7 +93,65 @@ function charges(ctx, w, h, t) {
   }
 }
 
+const OCT = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const proj = ([x, y, z]) => { const a = 0.5; const t = 0.4; const x1 = x * Math.cos(a) - y * Math.sin(a); const y1 = x * Math.sin(a) + y * Math.cos(a); return { x: x1, y: -(z * Math.cos(t) + y1 * Math.sin(t)), d: y1 }; };
+const INK = { h2o: '#b5573a', nh3: '#6f8fb0', cl: '#7fa04a' };
+const SYM = { h2o: 'H₂O', nh3: 'NH₃', cl: 'Cl⁻' };
+
+/** A complex drawn round (cx, cy): the metal and the ligands at its places (ids, '' for empty). */
+function complex(ctx, cx, cy, R, metal, ligs) {
+  const pts = OCT.map((d, i) => ({ ...proj(d), i })).sort((a, b) => a.d - b.d);
+  const one = (q) => {
+    const id = ligs[q.i]; if (!id) return;
+    const x = cx + q.x * R; const y = cy + q.y * R;
+    ctx.strokeStyle = C.steel; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = INK[id]; ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+    text(ctx, SYM[id], x, y + 30, { size: 16, color: C.text, weight: 700 });
+  };
+  pts.filter(q => q.d < 0).forEach(one);
+  ctx.fillStyle = '#b88a5a'; ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.fill();
+  text(ctx, metal, cx, cy, { size: 18, color: '#14100c', weight: 700 });
+  pts.filter(q => q.d >= 0).forEach(one);
+}
+
+/** q3-complex: copper's waters swapped for ammonia; the bond's two electrons, both nitrogen's; six round iron, four round copper, the drum. */
+function complexScene(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.32) {
+    const k = Math.min(4, Math.floor(ease(win(t, 0.04, 0.28)) * 4.999));
+    const order = [0, 2, 1, 3];
+    const ligs = OCT.map((_, i) => (order.indexOf(i) >= 0 && order.indexOf(i) < k ? 'nh3' : 'h2o'));
+    complex(ctx, 480, 260, 130, 'Cu²⁺', ligs);
+    text(ctx, `${k} of 4 water molecules in the plane replaced by ammonia`, 480, 470, { size: 20, color: C.text });
+    return;
+  }
+  if (t < 0.64) {
+    const p = ease(win(t, 0.34, 0.55));
+    ctx.fillStyle = '#b88a5a'; ctx.beginPath(); ctx.arc(330, 260, 40, 0, Math.PI * 2); ctx.fill();
+    text(ctx, 'Cu²⁺', 330, 260, { size: 20, color: '#14100c', weight: 700 });
+    for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; ctx.fillStyle = '#c98f4a'; ctx.beginPath(); ctx.arc(330 + Math.cos(a) * 62, 260 + Math.sin(a) * 62, 7, 0, Math.PI * 2); ctx.fill(); }
+    const nx = 700 - 230 * p;
+    ctx.fillStyle = '#6f8fb0'; ctx.beginPath(); ctx.arc(nx, 260, 26, 0, Math.PI * 2); ctx.fill();
+    text(ctx, 'N', nx, 260, { size: 20, color: '#0e1218', weight: 700 });
+    for (const dy of [-9, 9]) { ctx.fillStyle = '#6f8fb0'; ctx.beginPath(); ctx.arc(nx - 40 - 10 * p, 260 + dy, 7, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#d8e4f0'; ctx.stroke(); }
+    text(ctx, 'copper\'s 3d electrons: 9', 330, 360, { size: 20, color: C.text });
+    text(ctx, 'two from nitrogen\'s lone pair', 620, 360, { size: 20, color: C.text });
+    return;
+  }
+  complex(ctx, 220, 250, 100, 'Fe³⁺', ['h2o', 'h2o', 'h2o', 'h2o', 'h2o', 'h2o']);
+  text(ctx, '6 bonded', 220, 420, { size: 20, color: C.text, weight: 700 });
+  if (t > 0.72) {
+    complex(ctx, 480, 250, 100, 'Cu²⁺', ['cl', 'cl', 'cl', 'cl', '', '']);
+    text(ctx, '4 bonded', 480, 420, { size: 20, color: C.text, weight: 700 });
+  }
+  if (t > 0.84) {
+    complex(ctx, 740, 250, 100, 'Cr³⁺', ['cl', 'cl', 'h2o', 'h2o', 'h2o', 'h2o']);
+    text(ctx, '+3 − 2 = +1', 740, 420, { size: 20, color: C.text, weight: 700 });
+  }
+}
+
 export const LODESTONE_SCENES = {
+  'lode-complex': complexScene,
   'lode-charges': charges,
   'lode-dblock': dblock
 };

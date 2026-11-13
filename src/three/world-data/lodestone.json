@@ -216,7 +216,7 @@
       ],
       "label": "Bench 3 - Complex Ions",
       "structure": "leach-vats",
-      "built": false,
+      "built": true,
       "flat": {
         "x": -25.45,
         "z": 28,

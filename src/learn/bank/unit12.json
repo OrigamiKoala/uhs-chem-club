@@ -109,6 +109,60 @@
           "explanation": "Sc³⁺ has lost all three outer electrons, so its 3d subshell is empty. On this bench a transition metal must form an ion with a partly filled 3d subshell. Some books also count elements whose atoms have a partly filled d subshell, and by that rule scandium counts."
         }
       ]
+    },
+    "q3-complex": {
+      "problems": [
+        {
+          "id": "q3-complex#b1",
+          "quest": "q3-complex",
+          "question": "What is the charge of the complex ion made of one Co³⁺ ion, four NH₃ molecules and two Cl⁻ ions?",
+          "options": [
+            {
+              "id": "a",
+              "label": "+1"
+            },
+            {
+              "id": "b",
+              "label": "+3"
+            },
+            {
+              "id": "c",
+              "label": "−1"
+            },
+            {
+              "id": "d",
+              "label": "+5"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Ammonia carries no charge, so the charge of the whole is the metal's +3 plus two −1 chloride ions: +3 − 2 = +1, [Co(NH₃)₄Cl₂]⁺."
+        },
+        {
+          "id": "q3-complex#b2",
+          "quest": "q3-complex",
+          "question": "Oxalate, C₂O₄²⁻, bonds to a metal ion through two oxygen atoms. How many oxalate ions fill all six places round Fe³⁺, and what is the charge of the whole?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Three; −3"
+            },
+            {
+              "id": "b",
+              "label": "Six; −9"
+            },
+            {
+              "id": "c",
+              "label": "Three; +3"
+            },
+            {
+              "id": "d",
+              "label": "Two; −1"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Each oxalate takes two places, so three fill six. Three ions of −2 bring +3 to +3 − 6 = −3: [Fe(C₂O₄)₃]³⁻."
+        }
+      ]
     }
   }
 }
