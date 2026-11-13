@@ -56,6 +56,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: cold fuel waits because few collisions clear the activation energy hill until the heater warms the spread.'
   },
+  'unit11/q5-steps': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'Elementary steps add to the overall equation, with intermediates like NO3 cancelling out between steps.' },
+      { to: 0.70, say: 'The slowest step sets the pace, and only a slow step matching the measured rate law fits experiment.' },
+      { to: 0.95, say: 'On a two-step energy profile, the highest climb marks the rate-determining step and the valley holds the intermediate.' }
+    ],
+    filed: 'Filed: the additive runs in two elementary steps, and the slow first step governs the rate law.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

@@ -35,6 +35,9 @@ export const STAGE_STORY = {
   'q4-collide': {
     1: 'Cold fuel sits quietly in the tank even though burning it releases heat.'
   },
+  'q5-steps': {
+    1: 'The additive burns in two fast-or-slow steps, and only one controls the tower spike.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'q5-load': {
     1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'

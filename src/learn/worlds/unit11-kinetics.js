@@ -56,8 +56,8 @@ export const UNIT_11 = {
       line: 'The additive runs in two steps, and only one of them controls how fast the tank burns.',
       arena: 'bench',
       stageCount: 7,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit11/q5-steps.js')
     },
     {
       id: 'q6-shortcut',

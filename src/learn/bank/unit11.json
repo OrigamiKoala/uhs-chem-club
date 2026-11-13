@@ -100,6 +100,31 @@
       ],
       "answer": "a",
       "explanation": "The reverse reaction climbs from products (10 kJ/mol) to the transition state (90 kJ/mol): 90 \u2212 10 = 80 kJ/mol."
+    },
+    {
+      "id": "q5-steps#e1",
+      "quest": "q5-steps",
+      "question": "A mechanism has Step 1 (slow): NO\u2082 + NO\u2082 \u2192 NO\u2083 + NO and Step 2 (fast): NO\u2083 + CO \u2192 NO\u2082 + CO\u2082. What is the rate law?",
+      "options": [
+        {
+          "id": "a",
+          "label": "rate = k[NO\u2082]\u00b2"
+        },
+        {
+          "id": "b",
+          "label": "rate = k[NO\u2082][CO]"
+        },
+        {
+          "id": "c",
+          "label": "rate = k[NO\u2083][CO]"
+        },
+        {
+          "id": "d",
+          "label": "rate = k[NO\u2082]\u00b2[CO]"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Step 1 is the slow rate-determining step and involves two NO\u2082 molecules, so rate = k[NO\u2082]\u00b2."
     }
   ],
   "bench": {
@@ -509,6 +534,105 @@
           }
         ],
         "finish": "Forward Ea climbs from R to TS, reverse Ea climbs from P to TS, and their difference equals ΔH."
+      }
+    },
+    "q5-steps": {
+      "problems": [
+        {
+          "id": "q5-steps#b1",
+          "quest": "q5-steps",
+          "question": "In Step 1: X + Y \u2192 Z and Step 2: Z + Y \u2192 W, what role does Z play?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Reaction intermediate"
+            },
+            {
+              "id": "b",
+              "label": "Reactant"
+            },
+            {
+              "id": "c",
+              "label": "Catalyst"
+            },
+            {
+              "id": "d",
+              "label": "Final product"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Z is formed in Step 1 and consumed in Step 2, so it is a reaction intermediate."
+        },
+        {
+          "id": "q5-steps#b2",
+          "quest": "q5-steps",
+          "question": "A two-step mechanism has a fast reversible Step 1 (2 A \u21cc A\u2082) followed by a slow Step 2 (A\u2082 + B \u2192 C). What is the rate law?",
+          "options": [
+            {
+              "id": "a",
+              "label": "rate = k[A]\u00b2[B]"
+            },
+            {
+              "id": "b",
+              "label": "rate = k[A][B]"
+            },
+            {
+              "id": "c",
+              "label": "rate = k[A]\u00b2"
+            },
+            {
+              "id": "d",
+              "label": "rate = k[A\u2082]"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Step 2 gives rate = k\u2082[A\u2082][B]; substituting [A\u2082] = K[A]\u00b2 from Step 1 gives rate = k[A]\u00b2[B]."
+        }
+      ],
+      "worked": {
+        "id": "q5-steps#w",
+        "quest": "q5-steps",
+        "title": "Two-step energy profile barriers",
+        "setup": "A two-step reaction starts at R = 20 kJ/mol, climbs to TS1 = 85 kJ/mol, drops to intermediate I = 45 kJ/mol, climbs to TS2 = 70 kJ/mol, and ends at P = 10 kJ/mol.",
+        "steps": [
+          {
+            "say": "What is the activation energy of Step 1 (TS1 \u2212 R)?",
+            "kind": "number",
+            "answer": 65,
+            "unit": "kJ/mol",
+            "calc": "85 - 20",
+            "hint": "Subtract R (20) from TS1 (85).",
+            "explain": "85 \u2212 20 = 65 kJ/mol."
+          },
+          {
+            "say": "What is the activation energy of Step 2 (TS2 \u2212 I)?",
+            "kind": "number",
+            "answer": 25,
+            "unit": "kJ/mol",
+            "calc": "70 - 45",
+            "hint": "Step 2 starts from the intermediate valley I = 45 and climbs to TS2 = 70.",
+            "explain": "70 \u2212 45 = 25 kJ/mol."
+          },
+          {
+            "say": "Which step is the rate-determining step (1 or 2)?",
+            "kind": "number",
+            "answer": 1,
+            "unit": "",
+            "calc": "1",
+            "hint": "The step with the larger activation energy barrier is slower.",
+            "explain": "Step 1 has Ea = 65 kJ/mol vs 25 kJ/mol for Step 2, so Step 1 is slower."
+          },
+          {
+            "say": "What is the overall enthalpy change \u0394H (P \u2212 R)?",
+            "kind": "number",
+            "answer": -10,
+            "unit": "kJ/mol",
+            "calc": "10 - 20",
+            "hint": "Subtract starting reactants R (20) from final products P (10).",
+            "explain": "10 \u2212 20 = \u221210 kJ/mol."
+          }
+        ],
+        "finish": "Each step's barrier is measured from its own starting valley to its peak, and the highest barrier is the rate-determining step."
       }
     }
   }
