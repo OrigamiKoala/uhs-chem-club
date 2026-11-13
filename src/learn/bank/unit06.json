@@ -505,7 +505,67 @@
           "answer": "a",
           "explanation": "Both jars hold the same kind of molecule, so the jar with less mass holds fewer of them in the same space. Each molecule in the ice has slightly more volume."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q1-states#w",
+        "quest": "q1-states",
+        "title": "Space Per Molecule in Liquid Water vs Steam",
+        "setup": "Compare 18.0 g (1.00 mol) of liquid water at 100 °C (density 0.958 g/mL) with 18.0 g (1.00 mol) of steam at 100 °C (373 K) and 101.3 kPa. (R = 8.314 kPa·L/(mol·K))",
+        "steps": [
+          {
+            "say": "What volume does 18.0 g of liquid water occupy, in mL?",
+            "kind": "number",
+            "answer": 18.79,
+            "calc": "18.0 / 0.958",
+            "unit": "mL",
+            "hint": "Volume = mass / density.",
+            "explain": "18.0 g / 0.958 g/mL = 18.79 mL (0.01879 L)."
+          },
+          {
+            "say": "Using PV = nRT, what volume does 1.00 mol of steam occupy at 373 K and 101.3 kPa, in litres?",
+            "kind": "number",
+            "answer": 30.61,
+            "calc": "1.00 * 8.314 * 373 / 101.3",
+            "unit": "L",
+            "hint": "Calculate V = nRT / P.",
+            "explain": "V = (1.00 × 8.314 × 373) / 101.3 = 30.61 L."
+          },
+          {
+            "say": "How many times larger is the volume of steam (30.61 L) than the volume of the same 1.00 mol of liquid water (0.01879 L)?",
+            "kind": "number",
+            "answer": 1629,
+            "calc": "30.61 / 0.01879",
+            "hint": "Divide 30.61 L by 0.01879 L.",
+            "explain": "30.61 / 0.01879 ≈ 1630 times larger volume for the exact same number of molecules."
+          },
+          {
+            "say": "What does that factor of ~1600 tell you about the molecules in steam?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The molecules are separated by large empty spaces compared with their own size"
+              },
+              {
+                "id": "b",
+                "label": "Each water molecule expands to 1600 times its own diameter"
+              },
+              {
+                "id": "c",
+                "label": "The covalent O–H bonds break when water boils"
+              },
+              {
+                "id": "d",
+                "label": "Liquid water has 1600 times as many atoms per molecule"
+              }
+            ],
+            "answer": "a",
+            "hint": "Boiling separates intact molecules from each other without enlarging the molecules themselves.",
+            "explain": "In a liquid, molecules touch their neighbours; in a gas at 1 atm, they are far apart with mostly empty space between them."
+          }
+        ],
+        "finish": "Solid and liquid molar volumes are similar because particles touch, while a gas fills over a thousand times more space at 1 atm."
+      }
     },
     "q2-grip": {
       "problems": [
@@ -1080,7 +1140,7 @@
           {
             "say": "How far from the start line is the second dye's spot, in cm?",
             "kind": "number",
-            "answer": 3.0,
+            "answer": 3,
             "calc": "0.24*12.5",
             "unit": "cm",
             "tol": 0.01,
@@ -1153,7 +1213,77 @@
           "answer": "c",
           "explanation": "Water's hydrogen bonds hold its molecules harder than the dipole–dipole and dispersion forces of the others, though water is the lightest of them."
         }
-      ]
+      ],
+      "worked": {
+        "id": "boss-undertow#w",
+        "quest": "boss-undertow",
+        "title": "Preparing a Solution and Boiling Off the Solvent",
+        "setup": "A student dilutes 25.0 mL of 0.800 M NaCl(aq) with water to a total volume of 100.0 mL, then boils away 54.0 g of water at 100 °C. (H₂O 18.0 g/mol, ΔHvap = 40.65 kJ/mol)",
+        "steps": [
+          {
+            "say": "How many moles of NaCl are in the 25.0 mL of 0.800 M stock solution?",
+            "kind": "number",
+            "answer": 0.02,
+            "calc": "0.800 * 0.0250",
+            "unit": "mol",
+            "hint": "Convert 25.0 mL to litres (0.0250 L) and multiply by molarity.",
+            "explain": "0.800 mol/L × 0.0250 L = 0.0200 mol NaCl."
+          },
+          {
+            "say": "What is the molarity of the 100.0 mL diluted solution?",
+            "kind": "number",
+            "answer": 0.2,
+            "calc": "0.0200 / 0.1000",
+            "unit": "M",
+            "hint": "Divide the moles of NaCl by 0.1000 L.",
+            "explain": "0.0200 mol / 0.1000 L = 0.200 M."
+          },
+          {
+            "say": "How many moles of water are in 54.0 g of water?",
+            "kind": "number",
+            "answer": 3,
+            "calc": "54.0 / 18.0",
+            "unit": "mol",
+            "hint": "Divide 54.0 g by 18.0 g/mol.",
+            "explain": "54.0 / 18.0 = 3.00 mol H₂O."
+          },
+          {
+            "say": "How much heat is absorbed to vaporize that 3.00 mol of water at 100 °C?",
+            "kind": "number",
+            "answer": 121.95,
+            "calc": "3.00 * 40.65",
+            "unit": "kJ",
+            "hint": "Multiply moles of water by ΔHvap = 40.65 kJ/mol.",
+            "explain": "3.00 mol × 40.65 kJ/mol = 122.0 kJ."
+          },
+          {
+            "say": "If the remaining solution now has a volume of 40.0 mL, what happens to the moles of dissolved NaCl?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The moles of NaCl stay 0.0200 mol, so the molarity rises to 0.500 M"
+              },
+              {
+                "id": "b",
+                "label": "NaCl evaporates with the steam, keeping molarity at 0.200 M"
+              },
+              {
+                "id": "c",
+                "label": "The moles of NaCl drop by half"
+              },
+              {
+                "id": "d",
+                "label": "The molarity drops to 0.080 M"
+              }
+            ],
+            "answer": "a",
+            "hint": "Water evaporates, but ionic NaCl stays behind in the flask.",
+            "explain": "Only water vaporizes; 0.0200 mol NaCl remains in 0.0400 L, raising molarity to 0.500 M."
+          }
+        ],
+        "finish": "Solute moles stay conserved during both dilution and solvent evaporation, while ΔHvap scales with moles of solvent boiled."
+      }
     }
   }
 }

@@ -905,7 +905,84 @@
           "answer": "b",
           "explanation": "Heating raises the average kinetic energy. Faster particles strike the walls more often and with more force, so the pressure rises. The number of particles has not changed."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q1-knocks#w",
+        "quest": "q1-knocks",
+        "title": "Compressing Helium and Neon at Constant Temperature",
+        "setup": "A cylinder holds 6.00 L of helium (4.00 g/mol) at 120 kPa and 300 K. A piston compresses it to 2.00 L while the temperature stays at 300 K.",
+        "steps": [
+          {
+            "say": "What is the product P₁V₁ before compression?",
+            "kind": "number",
+            "answer": 720,
+            "calc": "120 * 6.00",
+            "unit": "kPa·L",
+            "hint": "Multiply the starting pressure by the starting volume.",
+            "explain": "120 kPa × 6.00 L = 720 kPa·L."
+          },
+          {
+            "say": "What is the new pressure P₂ at 2.00 L and 300 K?",
+            "kind": "number",
+            "answer": 360,
+            "calc": "120 * 6.00 / 2.00",
+            "unit": "kPa",
+            "hint": "At constant T and n, P₁V₁ = P₂V₂.",
+            "explain": "P₂ = 720 / 2.00 = 360 kPa (three times the pressure for one-third the volume)."
+          },
+          {
+            "say": "Why did the pressure triple when the temperature stayed at 300 K?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Particles hit the walls three times as often in one-third the volume"
+              },
+              {
+                "id": "b",
+                "label": "Each particle moves three times faster"
+              },
+              {
+                "id": "c",
+                "label": "The mass of each helium atom tripled"
+              },
+              {
+                "id": "d",
+                "label": "The average kinetic energy tripled"
+              }
+            ],
+            "answer": "a",
+            "hint": "Speed and average kinetic energy depend only on temperature.",
+            "explain": "At constant temperature, particle speed is unchanged, but squeezing the gas into one-third the volume triples the collision frequency against the walls."
+          },
+          {
+            "say": "A second cylinder holds neon (20.2 g/mol) at 300 K. How does the average kinetic energy of neon compare with helium at 300 K?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "They have the same average kinetic energy, because temperature is the same"
+              },
+              {
+                "id": "b",
+                "label": "Neon has higher average kinetic energy because it is heavier"
+              },
+              {
+                "id": "c",
+                "label": "Helium has higher average kinetic energy because it moves faster"
+              },
+              {
+                "id": "d",
+                "label": "Neon has five times the average kinetic energy"
+              }
+            ],
+            "answer": "a",
+            "hint": "In KMT, average kinetic energy is proportional to Kelvin temperature alone.",
+            "explain": "At the same temperature (300 K), both gases have the same average kinetic energy; helium simply moves faster because its mass is smaller."
+          }
+        ],
+        "finish": "At constant temperature, pressure rises inversely with volume through collision frequency, while average kinetic energy stays fixed."
+      }
     },
     "q2-laws": {
       "problems": [

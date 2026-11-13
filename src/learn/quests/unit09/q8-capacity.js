@@ -20,11 +20,11 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import {
-  phTable, selectorFixture, pieceIn, dialValue, note, mixFixture, mixRead, stripFixture, stripRead
+  phTable, selectorFixture, pieceIn, dialValue, note, mixFixture, mixRead, stripFixture, stripRead, solidFixture, solidRead
 } from '../../table/kits/ph.js';
 import { ACIDS, INDICATORS, bufferState, fractions, fmt, pOf } from '../../engine/phdata.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bindicator\b/i, introducedAt: 3 },
@@ -326,6 +326,45 @@ export const STAGES = [
         body: `Acid Y: at pH ${fmt(WANTED_PH, 1)} it is ${y1} percent acid form and ${y2} percent base form. Choose the acid whose pKa is closest to the pH wanted.`
       };
     }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-solubility',
+    title: 'pH and Solubility',
+    prompt: 'Pour acid into both beakers: which solid dissolves more?',
+    widget,
+    table: (() => {
+      const b1 = solidFixture('mg', { x: 28, y: 23 }, { salt: 'Mg_OH_2', basic: true, w: 44, title: 'Mg(OH)₂' });
+      const b2 = solidFixture('ag', { x: 78, y: 23 }, { salt: 'AgCl', basic: false, w: 44, title: 'AgCl' });
+      return phTable({
+        fixtures: [
+          b1.fixture,
+          b2.fixture,
+          selectorFixture('pick', 'Dissolves more', { x: 128, y: 23 }, { options: ['Mg(OH)₂', 'AgCl', 'Both equally', ' '], start: 4, w: 46 })
+        ]
+      }, { w: 156, h: 46 });
+    })(),
+    hints: [
+      'Press "Pour acid" on both beakers and watch the solid at the bottom.',
+      'Compare how much solid remains in Mg(OH)₂ and in AgCl after adding acid.',
+      'Acid reacts with the basic OH⁻ ions from Mg(OH)₂, pulling more solid into solution; Cl⁻ is too weak a base to react.'
+    ],
+    check(state) {
+      const m = solidRead(state.table, 'mg');
+      const a = solidRead(state.table, 'ag');
+      if (m.n === 0 || a.n === 0) return { ok: false, notYet: true, msg: 'Pour acid into both beakers first.' };
+      const v = dialValue(state.table, 'pick');
+      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
+      if (v === 1) return { ok: true };
+      return { ok: false, msg: `After pouring acid, Mg(OH)₂ has ${m.left} units of solid left and AgCl has ${a.left} units left.` };
+    },
+    reward: {
+      log: 'Acid dissolves Mg(OH)₂ more, while AgCl stays unchanged.',
+      title: 'pH and Solubility',
+      body: 'Adding acid removes basic anions like OH⁻ by forming water, pulling more Mg(OH)₂ into solution. Because Cl⁻ is the conjugate base of a strong acid, AgCl does not dissolve more in acid.',
+      last: true
+    }
   }
 ];
 
@@ -341,7 +380,8 @@ export const SOLUTIONS = [
   [pour('fd'), pour('fc'), dial('pick', 'value', 2)],
   [pour('f1'), { type: { entry: 'n', value: '24' } }],
   [pour('r1'), pour('r2'), pour('r3'), dial('pick', 'value', 1)],
-  [dial('st', 'ph', 4.5), dial('st', 'acid', 2), dial('pick', 'value', 2)]
+  [dial('st', 'ph', 4.5), dial('st', 'acid', 2), dial('pick', 'value', 2)],
+  [pour('mg'), pour('ag'), dial('pick', 'value', 1)]
 ];
 
 export const MISSES = [
@@ -351,7 +391,8 @@ export const MISSES = [
   [pour('fd'), dial('pick', 'value', 1)],
   [{ type: { entry: 'n', value: '8' } }],
   [pour('r2'), dial('pick', 'value', 2)],
-  [dial('st', 'ph', 4.5), dial('pick', 'value', 1)]
+  [dial('st', 'ph', 4.5), dial('pick', 'value', 1)],
+  [pour('mg'), pour('ag'), dial('pick', 'value', 2)]
 ];
 
 function blankState() { return {}; }

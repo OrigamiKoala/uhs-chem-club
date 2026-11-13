@@ -1512,7 +1512,56 @@
           "answer": "d",
           "explanation": "Nitrogen has 5 valence electrons: three form bonds and two are left as a lone pair. Carbon in CH₄ and CO₂ and boron in BF₃ use all their electrons in bonds."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q4-dots#w",
+        "quest": "q4-dots",
+        "title": "Valence Electron Budget of the Sulfate Ion",
+        "setup": "Draw a single-bonded Lewis structure of the sulfate ion, SO₄²⁻, with sulfur in the centre and four single S–O bonds.",
+        "steps": [
+          {
+            "say": "How many valence electrons do one sulfur atom (6) and four oxygen atoms (6 each) bring, plus the 2− charge?",
+            "kind": "number",
+            "answer": 32,
+            "calc": "6 + 4 * 6 + 2",
+            "hint": "Add 6 for S, 4 × 6 for the four O atoms, and 2 for the 2− charge.",
+            "explain": "6 + 24 + 2 = 32 valence electrons in total."
+          },
+          {
+            "say": "How many electrons are used to draw four single S–O bonds?",
+            "kind": "number",
+            "answer": 8,
+            "calc": "4 * 2",
+            "hint": "Each single bond uses 2 electrons.",
+            "explain": "Four single bonds use 4 × 2 = 8 electrons."
+          },
+          {
+            "say": "How many electrons remain to be placed as lone pairs?",
+            "kind": "number",
+            "answer": 24,
+            "calc": "32 - 8",
+            "hint": "Subtract the bonding electrons from the total.",
+            "explain": "32 − 8 = 24 electrons remain."
+          },
+          {
+            "say": "If each of the four oxygen atoms receives enough lone-pair electrons to complete its octet, how many lone pairs sit on each oxygen?",
+            "kind": "number",
+            "answer": 3,
+            "calc": "(8 - 2) / 2",
+            "hint": "Each oxygen already has 2 electrons from its single bond.",
+            "explain": "Each oxygen needs 6 more electrons (3 lone pairs), using 4 × 6 = 24 electrons and leaving 0 for sulfur."
+          },
+          {
+            "say": "In this all-single-bond structure, what is the formal charge on sulfur?",
+            "kind": "number",
+            "answer": 2,
+            "calc": "6 - 4",
+            "hint": "Formal charge = valence electrons − (nonbonding electrons + bonds).",
+            "explain": "Sulfur has 6 valence electrons, 0 nonbonding electrons, and 4 bonds: 6 − 4 = +2 (which can be lowered by forming S=O double bonds in expanded-octet resonance)."
+          }
+        ],
+        "finish": "Counting total valence electrons first, placing bonds, and filling outer octets keeps every Lewis structure accounted for."
+      }
     },
     "q5-resonance": {
       "problems": [
@@ -1695,7 +1744,90 @@
           "answer": "a",
           "explanation": "Five domains form a trigonal bipyramid. The two lone pairs take places in the ring of three, where they are furthest apart, leaving the three fluorines in a T."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q6-shape#w",
+        "quest": "q6-shape",
+        "title": "Molecular Geometry of Bromine Pentafluoride",
+        "setup": "Determine the electron geometry, molecular geometry, and bond angles of bromine pentafluoride, BrF₅. Both Br and F are halogens with 7 valence electrons.",
+        "steps": [
+          {
+            "say": "How many total valence electrons are in BrF₅?",
+            "kind": "number",
+            "answer": 42,
+            "calc": "7 + 5 * 7",
+            "hint": "Add 7 valence electrons for Br and 5 × 7 for the five F atoms.",
+            "explain": "7 + 35 = 42 valence electrons."
+          },
+          {
+            "say": "Five Br–F single bonds and 3 lone pairs on each fluorine use 40 electrons. How many lone pairs remain on the central bromine atom?",
+            "kind": "number",
+            "answer": 1,
+            "calc": "(42 - 5 * 8) / 2",
+            "hint": "Each fluorine takes 8 electrons (1 bond + 3 lone pairs); divide the leftover electrons by 2.",
+            "explain": "42 − 40 = 2 leftover electrons, which form 1 lone pair on bromine."
+          },
+          {
+            "say": "How many electron domains surround the central bromine atom?",
+            "kind": "number",
+            "answer": 6,
+            "calc": "5 + 1",
+            "hint": "Add the bonding domains (5) and lone pairs (1) on bromine.",
+            "explain": "5 bonding pairs + 1 lone pair = 6 electron domains (octahedral electron geometry)."
+          },
+          {
+            "say": "With 5 bonds and 1 lone pair around the central atom, what is the molecular geometry of BrF₅?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Trigonal bipyramidal"
+              },
+              {
+                "id": "b",
+                "label": "Square pyramidal"
+              },
+              {
+                "id": "c",
+                "label": "Square planar"
+              },
+              {
+                "id": "d",
+                "label": "Octahedral"
+              }
+            ],
+            "answer": "b",
+            "hint": "Remove one vertex from an octahedron for the lone pair.",
+            "explain": "Six domains with one lone pair leave five bonded atoms in a square pyramidal arrangement."
+          },
+          {
+            "say": "How does the axial-to-basal F–Br–F bond angle compare with 90°?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Slightly less than 90°, because the lone pair repels bonding pairs more strongly"
+              },
+              {
+                "id": "b",
+                "label": "Exactly 90°, by symmetry"
+              },
+              {
+                "id": "c",
+                "label": "Slightly greater than 90°"
+              },
+              {
+                "id": "d",
+                "label": "109.5°"
+              }
+            ],
+            "answer": "a",
+            "hint": "A lone pair takes up more angular space than a bonding pair.",
+            "explain": "Lone-pair–bonding-pair repulsion is stronger than bonding-pair–bonding-pair repulsion, pushing the four basal fluorines slightly away from the lone pair (< 90°)."
+          }
+        ],
+        "finish": "Lewis electron counting gives the domains on the central atom, and VSEPR turns those domains into geometry and bond angles."
+      }
     },
     "q7-polarity": {
       "problems": [

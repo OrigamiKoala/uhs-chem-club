@@ -1,338 +1,170 @@
-# AP coverage audit
+# AP Chemistry Coverage Audit
 
-Oct 29, 2026. Two questions: (A) does the built Learn track cover the AP Chemistry content for atomic
-structure, molecules, gases and thermochemistry, and (B) once every quest in `docs/plans/learn-quests.md`
-is built, is ALL AP content covered, quantitative content included.
+Audited Nov 13, 2026 against `docs/ap-chemistry-course-and-exam-description.pdf` (Course Framework V.1 — 91 topics across Units 1–9, 28 `EQN:` lines, and CED exclusions).
 
-## Method and limits
+## Method & Scope
 
-- Source of truth: `docs/ap-chemistry-course-and-exam-description.pdf` (CED, Course Framework V.1). I extracted
-  every learning objective (92), essential knowledge statement, equation line (`EQN:`) and exclusion statement.
-- Built track: loaded every quest module in Node and read each stage's prompt and reward title, the 5 `PRACTICE`
-  items per quest, and the quest header comments. I also grepped quest source for specific terms.
-- Read the existing `docs/archive/2026-10-29/Bellows-audit.md`, `docs/archive/2026-10-29/Ember-audit.md` and `docs/archive/2026-10-29/Ligar-audit.md` coverage tables and
-  checked them against the CED instead of repeating them.
-- **Not done:** no stage was played (CLAUDE.md: agents do not browser-test). "Covered" means a stage or practice
-  item exists for it, not that it teaches well. A grep that finds nothing is reported as "not found", not proof of
-  absence in every phrasing.
-
-## Status
-
-`docs/plans/learn-quests.md` was updated from this audit on 2026-10-29. **Done in the plan:** CED numbering and quest tags,
-the "AP coverage" table (now with built / planned / **FIX** marks and a list of CED exclusions), the scope labels (B3),
-the stages that give the missing topics a home (B2), the overlap note on Mirrowen `q4` (B6), and a note under
-Ember Reach listing what was cut when it was built. **Still open:** the built-quest fixes marked **FIX** (Avogadro
-arithmetic, ion configurations, electron affinity and the electronegativity trend, a reaction-progress diagram, ΔG°
-from ΔGf°), a typed worked-figure stage for each unbuilt world (B4), the free-response skills (B5), a per-LO coverage
-table, and the `verify:learn` rule about deferred vocabulary.
-
-One correction to the first version of this document: the plan's *drafts* did contain several of the stages named
-as missing in B2 (Bellows `q3` s7 gas volume, Ember Reach `q1` s6 and `q3` s5 energy diagrams, `q7` s5 to s7 ΔGf°,
-kinetic control and coupled reactions, Lanternfall `q6` s7 ions and `q8` s7 to s8 successive ionization and
-electronegativity). They were **cut when the quests were built**, so the plan's coverage claim was wrong rather than
-the drafts. The updated plan records them as owed or rehoused.
-
-## Headline findings (as found; resolution is in the Status above and in B1 to B7)
-
-1. **The plan is written against the old CED numbering.** The current CED has 12 topics in Unit 7 (no 7.13, 7.14),
-   11 in Unit 8 (the plan stops at 8.10) and 11 in Unit 9 (the plan's 9.7 to 9.10 are one slot too low). Three
-   topics fall through as a result (see B1).
-2. **AP content the plan has no quest for:** gas stoichiometry (4.5.A.3), pH and solubility (8.11), coupled
-   reactions (9.7), thermodynamic vs kinetic control (9.4, dropped when Ember Reach was built), ΔG° from ΔGf°
-   (9.3.A.3), purity from elemental analysis (1.4).
-3. **Wrongly labelled "beyond the exam":** the Nernst equation (9.10 is a full CED topic with `E = E° − (RT/nF) ln Q`).
-4. **Labelled in scope but excluded by the CED:** the pH after adding acid or base to a buffer (Verdigris `q7` s7),
-   and "oxidizing/reducing agent" as assessed terms (Brinewire `q1` s4).
-5. **Built content that is not on the AP exam and is not labelled as such:** Bellows `q5` (effusion, diffusion,
-   Graham's law, rms speed). The CED has only `KE = ½mv²` and the Maxwell–Boltzmann picture.
-6. **Built gaps in atomic structure:** electron affinity and the electronegativity trend are taught nowhere
-   (`q8-trends` header says "the words go to the Drill Deck"; its five practice items do not contain them).
-   Ion electron configurations and group reactivity trends are thin.
-7. **Quantitative skill is mostly one multiple-choice practice item per formula** in Tallow, Lanternfall and Ligar.
-   Bellows and Ember Reach are the only built worlds where the player types a computed number on the bench. The
-   plan's own rule ("numeric practice goes to `PRACTICE`") leaves `E = hν`, `c = λν`, `A = εbc` and the moles
-   arithmetic as single MCQs. This matters because the AP free-response section is quantitative.
+- **Source of truth:** `docs/ap-chemistry-course-and-exam-description.pdf` (all 91 topics, learning objectives, essential knowledge statements, `EQN:` lines, and exclusion statements).
+- **Built track:** All 12 live Learn worlds (`unit01`–`unit12`, 107 charted quests, all `src/learn/quests/` modules and `src/learn/bank/*.json` practice + worked problems).
+- **Content beyond AP:** Worlds/benches beyond the AP CED (`unit02/q5-numbers`, `unit02/q10-wavefunctions`, `unit03/q9-orbitals`, `unit04/q5-speed` Graham's law/effusion, `unit06/q5-crossing` phase diagrams, `unit06/q7-separate` boiling-point elevation, `unit07/q9-hsab`, `unit12` Lodestone, and draft `unit13`/`unit14`) are preserved as-is.
+- **Boundary of this pass:** Where a quantitative or qualitative AP gap could be patched on an existing bench without modifying quest/stage code, a guided `worked` problem was added to `src/learn/bank/<unit>.json` and verified with `npm run verify:learn`. Where a missing topic is best covered by a new stage or bench, it is **flagged below** and scheduled in [ap-gap-implementation-plan.md](file:///Users/carlliu/chem-3d/docs/plans/ap-gap-implementation-plan.md) with no quest code written.
 
 ---
 
-# Part A. Built track against the CED
+## Executive Summary
 
-Verdicts: **Covered**, **Partial** (a real hole, named), **Gap** (nothing found), **Unbuilt** (planned, so see Part B).
+With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absorb` s6–s7 for CED 3.11; `unit09/q8-capacity` s8 for CED 8.11), **88 of 91 AP CED topics are covered** qualitatively and quantitatively across stages, bench problems, and guided worked problems, and **all 28 CED `EQN:` equations** are represented.
 
-## Atomic structure (CED Unit 1)
+### Patched in this pass (11 new `worked` problems in `src/learn/bank/`)
+- **`unit01/boss-hopper#w`** (CED 1.3): *Empirical and Molecular Formula of Succinic Acid* — mass % → moles → non-integer ratio scaling (1 : 1.5 : 1 → `C₂H₃O₂`) → molecular formula (`C₄H₆O₄`) from molar mass.
+- **`unit02/boss-eater#w`** (CED 1.5, 1.6, 1.7): *Identifying an Element from Successive Ionization Energies* — IE₃ → IE₄ core jump, valence electron count, electron configuration, and PES peak count.
+- **`unit03/q4-dots#w`** (CED 2.5): *Valence Electron Budget of the Sulfate Ion* — valence electron sum with charge, single bonds, outer octets, and formal charge.
+- **`unit03/q6-shape#w`** (CED 2.7): *Molecular Geometry of Bromine Pentafluoride* — valence electrons → 6 domains (5 bonds + 1 lone pair) → square pyramidal geometry and `< 90°` angles.
+- **`unit04/q1-knocks#w`** (CED 3.4, 3.5): *Compressing Helium and Neon at Constant Temperature* — `P₁V₁ = P₂V₂`, collision frequency, and equal average kinetic energy at equal `T`.
+- **`unit06/q1-states#w`** (CED 3.3): *Space Per Molecule in Liquid Water vs Steam* — molar volume of liquid water vs steam via `PV = nRT` (~1630× ratio).
+- **`unit06/boss-undertow#w`** (CED 3.7, 6.5): *Preparing a Solution and Boiling Off the Solvent* — dilution, mole conservation, and `q = nΔHvap`.
+- **`unit07/q2-names#w`** (CED 1.8 / stoichiometry prerequisite): *Formula and Mass of Aluminium Sulfate* — charge balance (`Al₂(SO₄)₃`), atom counting, molar mass, and moles of O atoms.
+- **`unit09/q1-handover#w`** (CED 4.8, 8.1): *Autoionization of Water and Conjugate Pairs* — Brønsted–Lowry conjugate pairs, `Kw = [H₃O⁺][OH⁻]`, `pH`, and `pOH`.
+- **`unit10/boss-clamp#w`** (CED 9.8, 9.9, 9.11): *From Cell Potential to Electrolysis Mass* — `E°cell`, `ΔG° = −nFE°cell`, `q = It`, and Faraday's law mass plated.
+- **`unit11/boss-flare#w`** (CED 5.2, 5.3, 5.6): *First-Order Decay and Activation Energy* — `k = 0.693 / t½`, non-integer-half-life `ln[A]t = ln[A]₀ − kt`, and `Ea(rev) = Ea(fwd) − ΔH`.
 
-| CED | Where built | Verdict | Notes |
+### Remaining AP Gaps (Flagged — Require New Stages/Benches, No Quest Code Written)
+
+| Priority | CED Topic | Missing Content | Best Home (Stage / Bench) |
 | --- | --- | --- | --- |
-| 1.1 Moles and molar mass | Tallow `q6-weigh` s1 to 8; `boss-hopper` p5 | **Partial** | The mole, molar mass and grams to moles (s6) are worked on the bench. Avogadro's number is only a printed count on a counter. No stage and no practice item converts grams or moles to a number of particles (`PRACTICE` P1 to P5 are moles from grams, molar mass, which holds more atoms, moles of H in 2 mol H₂O, meaning of "a mole"). 1.1.A asks for exactly that dimensional analysis. |
-| 1.2 Mass spectra | Tallow `q5-assay` s1 to 8 | **Covered** | Weighted average from abundances, predicting a spectrum, deducing the mix from the average. Quantitative. |
-| 1.3 Elemental composition | Kettle `q1-recipe` s5 (percent composition), s6 (empirical formula) | **Covered** | Built. Only a 3 g C : 8 g O case turns up in the practice; no case that needs a multiplier to reach whole numbers was found. |
-| 1.4 Composition of mixtures | none built | **Gap** | `q1-recipe` s8 ("matches its label") is the nearest. Purity from elemental analysis is not taught. |
-| 1.5 Electron configuration | Lanternfall `q6-filling` s1 to 5; Tallow `q2-core` s5, `q4-ledger` | **Partial** | Aufbau, Hund, 4s before 3d, scandium all covered. Configurations of ions (Fe³⁺, Cl⁻, O²⁻), which 1.5.A names, are not asked; `q4-ledger` builds ions in the shell model only. Coulomb's law: qualitative in `q8-trends`, ranked in Ligar `q3` s6. |
-| 1.6 Photoelectron spectroscopy | Lanternfall `q7-pes` s1 to 5 | **Covered** | Peak position and relative height to configuration, both directions. |
-| 1.7 Periodic trends | Lanternfall `q8-trends` s1 to 5 | **Partial** | Radius, shielding and Zeff, ionization energy, ionic radius: covered. **Electron affinity: not taught anywhere** (the string occurs only in a header comment of `q8-trends` and in the plan). **Electronegativity trend:** Ligar `q7` s1 teaches electronegativity as a number printed on a card, never as a trend across a period or down a group. Successive ionization energies appear only as a cut idea in `q8`'s header. 1.7.A.3 (estimate an unknown property from position) is exercised for proton number only (`q3-catalogue` s7). |
-| 1.8 Valence electrons, ionic compounds | Tallow `q3-catalogue` s4 to 6, `q4-ledger` s5 to 7; Ligar `q1` s4 | **Partial** | Charges from valence electrons, whole-number cancellation, alkali/halogen/noble words: covered. Reactivity trends down a group (1.8.A.1) not found. |
-
-## Molecules (CED Unit 2, plus the intermolecular topics of Unit 3)
-
-| CED | Where built | Verdict | Notes |
-| --- | --- | --- | --- |
-| 2.1 Types of bonds | Ligar `q1` s2 to 5, `q2` s2, `q7` s1 to 2, s7 | **Covered** | Ionic, polar and nonpolar covalent, metallic. |
-| 2.2 Potential energy vs distance | Ligar `q3` s1 to 4 | **Covered** | Bond length and energy from the curve, bond order. Quantitative (s2: energy to break 2 mol HCl). |
-| 2.3 Ionic solids | Ligar `q2` s2 to 4, `q3` s5 to 6 | **Covered** | Coulomb's law as a ranking (charge, ion size). |
-| 2.4 Metals and alloys | Ligar `q2` s6 to 10 | **Covered** | Interstitial and substitutional by atomic radius. |
-| 2.5 Lewis diagrams | Ligar `q4` s1 to 8 | **Covered** | Electron budget, octet, incomplete, expanded, odd-electron. |
-| 2.6 Resonance, formal charge | Ligar `q5` s1 to 8 | **Covered** | Hand-counted formal charge, fractional bond order. |
-| 2.7 VSEPR, hybridization | Ligar `q6` s1 to 10, `q7` s1 to 7, `q8` s1 to 9 | **Covered** | Shapes from two to six domains with lone pairs; sp, sp², sp³; σ and π. "Geometric isomer" is never named in the quest text (restricted rotation, s5 to 6, is taught). |
-| Beyond the exam, taught | Ligar `q9-orbitals`; hybrid mixing `q8` s3, s8, s9 | n/a | Molecular orbital diagrams and the derivation of hybrid orbitals are excluded by the CED. The track marks `q9` optional. |
-| 3.1 Intermolecular forces | Mirrowen `q2` s1 to 8, `q3` s1, 2, 5, 6 | **Covered** (built 2026-10-30, hand-played only in part) | Dispersion and polarizability, dipole–dipole, hydrogen bonding (the click), ion–dipole, shape, a grip against a bond; vapor pressure, boiling, surface tension and viscosity against grip. 3.1.A.5 (biomolecules) is a bank problem only. |
-| 3.2 Properties of solids | Ligar `q2`; Mirrowen `q4` s1 to 6, `q3` s7 | **Covered** | Ligar: ionic, metallic, network, alloys. Mirrowen `q4` adds molecular solids and crystalline against amorphous (glass against quartz) and a four-way sealed sort; `q3` s7 is why ice floats. 3.2.A.7 (polymers) is a bank problem only. |
-| 3.3 Solids, liquids, gases | Mirrowen `q1` s1 to 8, `q4` s3 to 4 | **Covered** | States told from squeeze and pour, a window of whole molecules (melting and boiling break no bond), the room per molecule, a typed ratio of molecules in a litre of water and of steam. Phase diagrams (excluded) are `q5` s8, labelled. |
-| 3.7, 3.8, 3.10 Solutions | Mirrowen `q6` s1 to 8 | **Covered, mass percent missing** | Molarity (typed), dilution M₁V₁ = M₂V₂ (typed), particles per formula unit (typed), like dissolves like, particulate pictures of solutions. Mass percent (excluded) has no stage. |
-| 3.9 Separations | Mirrowen `q7` s1 to 7 | **Covered** | Filtering against evaporating, paper chromatography with Rf (typed) and a reversing order, distillation; boiling-point elevation (excluded) is s6. |
-| 6.5 Energy of phase changes | Mirrowen `q5` s1 to 7 | **Covered** | The whole heating curve, q = nΔH (typed), the total from ice to steam and the way back (typed, signed), steam against water as a burn. |
-| 6.1.A.4, 6.4.A.7 Dissolving | Mirrowen `q6` s7 | **Covered** | Four salts in the calorimeter cup ranked by where the bath ends. |
-
-## Gases (CED 3.4 to 3.6)
-
-| CED | Where built | Verdict | Notes |
-| --- | --- | --- | --- |
-| 3.4 Ideal gas law | Bellows `q1` to `q4`, `boss-compressor` p1 to p3 | **Covered** | Boyle, Charles, Gay-Lussac, combined, Avogadro, `PV = nRT`, molar mass, density, Dalton and mole fraction, gas over water (vapour correction), STP, graphs and slopes, manometers. Typed numeric answers throughout. Strongest quantitative world in the track. |
-| 3.4 / 4.5.A.3 Gas stoichiometry | none | **Gap** | The CED names it ("stoichiometric calculations combined with the ideal gas law"). Bellows hands it to Kettle (`Bellows-audit.md`), and Kettle `q6` as planned does not include gases (see B2). |
-| 3.5 Kinetic molecular theory | Bellows `q1` s5, s6; `q5` s7, s8 | **Covered** | KE and temperature, Maxwell–Boltzmann by temperature and by mass. |
-| 3.5 extras: effusion, diffusion, Graham's law, rms speed | Bellows `q5`, `boss-compressor` p5 | **Not on the exam** | None of these appear in the CED. Keep, but label as beyond the exam on the cards and practice, as the plan does for other extras. |
-| 3.6 Deviation from ideal | Bellows `q6` s1 to 4 | **Covered** | High pressure and low temperature; molecular volume and attractions. Qualitative, which is what the CED asks. |
-
-## Thermochemistry (CED Unit 6, plus the thermodynamic half of Unit 9)
-
-| CED | Where built | Verdict | Notes |
-| --- | --- | --- | --- |
-| 6.1 Endothermic and exothermic | Ember Reach `q1` s4 | **Partial** | Chemical changes covered. 6.1.A.4 (dissolving as exo- or endothermic from the strength of interactions) is only touched by `q7` s1's cold pack; the interaction-strength argument is missing. |
-| 6.2 Energy diagrams | `q3` s1 ("the shelves") | **Partial** | `Ember-audit.md` already says qualitative only. No reaction-progress diagram with reactants, products and ΔH drawn or read. The kinetic version is planned for Quicklight `q5`. |
-| 6.3 Heat transfer, thermal equilibrium | `q1` s1, s3, s5 | **Covered** | |
-| 6.4 Heat capacity, calorimetry | `q2` s1 to 3, s5, s6 | **Covered** | Typed `q = mcΔT`, metal identification. Molar heat capacity (6.4.A.5) and a calorimeter's own heat capacity not found. |
-| 6.5 Energy of phase changes | `q2` s4, s7 | **Partial** | Fusion and vaporization worked, ice at 0 °C to steam at 100 °C in kJ. No heating curve drawn or read; the sign flip for condensation and freezing (6.5.A.2) not found. `Ember-audit.md` still says vaporization is missing, which is out of date. |
-| 6.6 Enthalpy of reaction | `q3` s1 to 7 | **Covered** | Per mole, scaling, per equation, limiting reactant, predicted temperature. |
-| 6.7 Bond enthalpies | `q4` s1 to 6 | **Covered** | Ledger the player fills. |
-| 6.8 Enthalpy of formation | `q5` s4, `boss-crucible` p3 | **Covered** | Products minus reactants. |
-| 6.9 Hess's law | `q5` s1 to 3 | **Covered** | Reverse, scale, add. |
-| 9.1, 9.2 Entropy | `q6` s1 to 5 | **Covered** | Includes ΔS° from a table. |
-| 9.3 Gibbs free energy | `q7` s2 to 5 | **Partial** | `ΔG° = ΔH° − TΔS°` and the crossing temperature, typed. `ΔG° = ΣΔGf°(products) − ΣΔGf°(reactants)` (9.3.A.3) is absent. |
-| 9.4 Thermodynamic vs kinetic control | `q7` practice only | **Gap** | Mentioned as one answer option in practice; no stage. `Ember-audit.md` agrees. |
-| 9.5 Free energy and equilibrium | none | **Unbuilt** | Teeter `q8`. |
-| 9.6 Free energy of dissolution | `q7` s1 | **Partial** | The cold-pack salt that dissolves while cooling the water is the observation; the ΔH/ΔS argument for solubility is not drawn out. |
-| 9.7 Coupled reactions | none | **Gap** | Not planned either. |
-
-## Verdict on Part A
-
-Strong: gases, Hess/bond/formation enthalpy, Lewis/VSEPR, PES. Needs work before the track can claim the
-four named areas: **Avogadro arithmetic, ion configurations, electron affinity and electronegativity trends,
-the heating curve, energy diagrams, ΔGf° sums, thermodynamic vs kinetic control, coupled reactions, gas
-stoichiometry.** Each is a single-stage fix except 9.4 and 9.7, which need a home (see B3).
+| **Medium** | **9.3** (`9.3.A.3`) | Calculating `ΔG°rxn = ΣΔGf°(products) − ΣΔGf°(reactants)` from a `ΔGf°` table (currently only 1 MCQ `q7-gibbs#5`, no stage or worked problem). | New stage in `unit05/q7-gibbs.js` (mirroring `q5-hess` s4 / `q6-entropy` s5). |
+| **Medium** | **8.4** (`8.4.A.2`, `8.4.A.4`) | Quantitative **weak acid + strong base** reaction regimes (excess weak acid → buffer, equivalence → conjugate base hydrolysis, excess strong base) and weak acid + weak base equilibrium. | New stage in `unit09/q5-salts.js` or `unit09/q7-buffer.js`. |
+| **Medium** | **3.1.A.5, 3.2.A.7** | Noncovalent interactions in **biomolecules** (H-bonding in DNA/proteins, hydrophobic/hydrophilic regions) and **polymers** (chain length, cross-linking). | New stage in `unit06/q2-grip.js` and/or `unit06/q4-solids.js` + practice in `unit06.json`. |
+| **Low** | **1.7** (`1.7.A.1`, `1.7.A.3`) | **Successive ionization energy** jumps in Unit 1/2 (currently only in `unit12/q2-charges` + patched via `unit02/boss-eater#w`), and estimating a numeric property from periodic neighbours. | New stage in `unit02/q8-trends.js` (and/or `unit01/q3-catalogue.js`). |
+| **Low** | **1.4** (`1.4.A.2`) | Purity of a mixture from **elemental analysis** mass % (gravimetric precipitation purity is already covered in `unit07/q5-ionic#w`). | New stage or bench variant in `unit07/q6-stoich.js` or `unit01/q6-weigh.js`. |
 
 ---
 
-# Part B. `docs/plans/learn-quests.md` against the CED
+## Full Unit-by-Unit CED Matrix
 
-## B1. The CED numbering the plan used was stale (fixed in the plan)
+### Unit 1: Atomic Structure and Properties (1.1–1.8)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 1.1 | Moles, molar mass, `NA`, `n = m/M` | `unit01/q6-weigh` (s1–s5), `q6-weigh#w` | Covered | Covered | **Covered** |
+| 1.2 | Mass spectra, average atomic mass | `unit01/q5-assay` (s1–s5), `q5-assay#w` | Covered | Covered | **Covered** |
+| 1.3 | Elemental composition, empirical/molecular formula | `unit01/q6-weigh` (s6–s8), `boss-hopper#w` (added) | Covered | Covered | **Covered** |
+| 1.4 | Composition of mixtures (purity) | `unit07/q5-ionic#w` (gravimetric purity); elemental-analysis purity missing | Partial | Partial | **Flagged** (elemental % purity) |
+| 1.5 | Electron configuration, shells, Coulomb's law | `unit02/q6-filling` (s1–s6 incl. `Cl⁻`), `q6-filling#w` (`Fe³⁺`), `q8-trends` | Covered | Covered | **Covered** |
+| 1.6 | Photoelectron spectroscopy (PES) | `unit02/q7-pes` (s1–s5), `q7-pes#w` | Covered | Covered | **Covered** |
+| 1.7 | Periodic trends (radius, IE, EA, EN, ionic radius, successive IE) | `unit02/q8-trends` (s1–s8), `q8-trends#w`, `boss-eater#w` (added), `unit12/q2-charges` | Partial | Covered | **Flagged** (stage in `unit02/q8-trends`) |
+| 1.8 | Valence electrons, ionic compounds, group reactivity | `unit01/q3-catalogue`, `q4-ledger`, `unit07/q2-names#w` (added) | Covered | Covered | **Covered** |
 
-The plan said its numbers came from "the 2019/2020 CED, so check them against the current CED". Checked, and the
-plan now says its numbers are the current CED's. Where they differed:
+### Unit 2: Compound Structure and Properties (2.1–2.7)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 2.1 | Types of chemical bonds | `unit03/q1-joins` (s1–s5), `q7-polarity` | Covered | n/a | **Covered** |
+| 2.2 | Intramolecular force & potential energy | `unit03/q3-distance` (s1–s4), `q3-distance#w` | Covered | Covered | **Covered** |
+| 2.3 | Structure of ionic solids | `unit03/q2-lattice` (s1, s3, s7), `q3-distance` | Covered | Covered | **Covered** |
+| 2.4 | Structure of metals & alloys | `unit03/q2-lattice` (s5–s6) | Covered | n/a | **Covered** |
+| 2.5 | Lewis diagrams | `unit03/q4-dots` (s1–s7), `q4-dots#w` (added) | Covered | Covered | **Covered** |
+| 2.6 | Resonance & formal charge | `unit03/q5-resonance` (s1–s7), `q5-resonance#w` | Covered | Covered | **Covered** |
+| 2.7 | VSEPR & bond hybridization | `unit03/q6-shape` (s1–s9), `q6-shape#w` (added), `q7-polarity#w`, `q8-hybrid`, `boss-warden#w` | Covered | Covered | **Covered** |
 
-| Unit | Plan | Current CED | Effect |
-| --- | --- | --- | --- |
-| 7 | 7.11 to 7.13 → Teeter `q7`; 7.14 → `q8` | Topics end at **7.12**. 7.11 solubility equilibria, 7.12 common-ion effect. Free energy and K is only **9.5**. | Plan's 7.13 (pH and solubility) is now **8.11** and has no quest in the plan's coverage table. |
-| 8 | 8.1 to 8.10 | **8.1 to 8.11** (8.11 pH and solubility) | 8.11 missing. Teeter `q7` s7 teaches it informally; give it a number and a Verdigris home. |
-| 9 | 9.7 → Brinewire `q3`, `q4`; 9.8 → `q4`; 9.9 → `q5`; 9.10 → `q6` | 9.7 **coupled reactions**, 9.8 galvanic and electrolytic cells, 9.9 cell potential and free energy, 9.10 **nonstandard conditions (Nernst)**, 9.11 **electrolysis and Faraday's law** | Every Brinewire mapping is one slot low. 9.7 (coupled reactions) has no quest. Nernst and Faraday are now core, not extras. |
-| 5, 6 | as in plan | Unchanged (5.1 to 5.11, 6.1 to 6.9) | ok |
-| 3, 4 | as in plan | Unchanged | ok |
+### Unit 3: Properties of Substances and Mixtures (3.1–3.13)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 3.1 | Intermolecular forces | `unit06/q2-grip` (s1–s7), `q3-boil`; `3.1.A.5` biomolecules missing | Partial | n/a | **Flagged** (biomolecules) |
+| 3.2 | Properties of solids | `unit03/q2-lattice`, `unit06/q4-solids` (s1–s4); `3.2.A.7` polymers missing | Partial | n/a | **Flagged** (polymers) |
+| 3.3 | Solids, liquids, and gases | `unit06/q1-states` (s1–s6), `q1-states#w` (added) | Covered | Covered | **Covered** |
+| 3.4 | Ideal gas law, Dalton's law, mole fraction | `unit04/q1`–`q4`, `q1-knocks#w` (added), `q2-laws#w`, `q3-ideal#w`, `q4-mixtures#w`, `boss-compressor#w` | Covered | Covered | **Covered** |
+| 3.5 | Kinetic molecular theory, Maxwell–Boltzmann | `unit04/q1-knocks` (s6–s7), `q5-speed` (s5) | Covered | Covered | **Covered** |
+| 3.6 | Deviation from ideal gas law | `unit04/q6-real` (s1–s3) | Covered | n/a | **Covered** |
+| 3.7 | Solutions and mixtures (`M = n/L`, dilution) | `unit06/q6-solution` (s2–s3, s6), `q6-solution#w`, `boss-undertow#w` (added) | Covered | Covered | **Covered** |
+| 3.8 | Representations of solutions | `unit06/q6-solution` (s4, `q6-solution#0`) | Covered | n/a | **Covered** |
+| 3.9 | Separation of solutions & mixtures | `unit06/q7-separate` (s1–s6), `q7-separate#w` | Covered | Covered | **Covered** |
+| 3.10 | Solubility (like dissolves like) | `unit06/q6-solution` (s1, s5) | Covered | n/a | **Covered** |
+| 3.11 | Spectroscopy & EM spectrum (MW/IR/UV-Vis) | `unit02/q9-absorb` (s6–s7 restored) | Covered | n/a | **Covered** |
+| 3.12 | Photoelectric effect (`c = λν`, `E = hν`) | `unit02/q1-wave`, `q2-photon`, `q3-lines`, `#w` | Covered | Covered | **Covered** |
+| 3.13 | Beer–Lambert law (`A = εbc`) | `unit02/q9-absorb` (s1–s4), `q9-absorb#w` | Covered | Covered | **Covered** |
 
-## B2. Topics with no quest (or too thin a quest)
+### Unit 4: Chemical Reactions (4.1–4.9)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 4.1 | Introduction for reactions | `unit07/q3-change` (s1–s6) | Covered | n/a | **Covered** |
+| 4.2 | Net ionic equations | `unit07/q4-balance`, `q5-ionic` (s1–s6) | Covered | n/a | **Covered** |
+| 4.3 | Representations of reactions | `unit07/q4-balance` (s3), `q6-stoich` (s4) | Covered | n/a | **Covered** |
+| 4.4 | Physical and chemical changes | `unit07/q3-change`, `unit06/q1-states`, `q2-grip` (s6) | Covered | n/a | **Covered** |
+| 4.5 | Stoichiometry (mass, limiting, yield, gas) | `unit07/q6-stoich` (s1–s7), `q6-stoich#w`, `boss-golem#w`, `unit04/q3-ideal#5` | Covered | Covered | **Covered** |
+| 4.6 | Introduction to titration | `unit07/q7-titrate` (s1–s5), `q7-titrate#w` | Covered | Covered | **Covered** |
+| 4.7 | Types of chemical reactions | `unit07/q8-kinds` (s1–s7), `q5-ionic` | Covered | n/a | **Covered** |
+| 4.8 | Introduction to acid-base reactions | `unit07/q8-kinds` (s4), `unit09/q1-handover` (s1–s4), `q1-handover#w` (added) | Covered | Covered | **Covered** |
+| 4.9 | Oxidation-reduction reactions | `unit07/q8-kinds` (s5–s6, `#w`), `unit10/q1-halves` (s1–s7, `#w`) | Covered | Covered | **Covered** |
 
-"Plan now" is what `learn-quests.md` says after the 2026-10-29 update.
+### Unit 5: Kinetics (5.1–5.11)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 5.1 | Reaction rates | `unit11/q1-watch` (s1–s6), `q1-watch#w` | Covered | Covered | **Covered** |
+| 5.2 | Introduction to rate law | `unit11/q2-law` (s1–s5), `q2-law#w` | Covered | Covered | **Covered** |
+| 5.3 | Concentration changes over time (0th/1st/2nd, `t½`) | `unit11/q3-time` (s1–s7), `q3-time#w`, `boss-flare#w` (added) | Covered | Covered | **Covered** |
+| 5.4 | Elementary reactions | `unit11/q5-steps` (s4) | Covered | n/a | **Covered** |
+| 5.5 | Collision model | `unit11/q4-collide` (s1–s4) | Covered | n/a | **Covered** |
+| 5.6 | Reaction energy profile | `unit11/q4-collide` (s5–s9), `q4-collide#w`, `boss-flare#w` (added) | Covered | Covered | **Covered** |
+| 5.7 | Introduction to reaction mechanisms | `unit11/q5-steps` (s1–s2) | Covered | n/a | **Covered** |
+| 5.8 | Reaction mechanism and rate law | `unit11/q5-steps` (s3–s5) | Covered | n/a | **Covered** |
+| 5.9 | Pre-equilibrium / steady-state approximation | `unit11/q5-steps` (s6, `#b2`) | Covered | n/a | **Covered** |
+| 5.10 | Multistep reaction energy profile | `unit11/q5-steps` (s7), `q5-steps#w` | Covered | Covered | **Covered** |
+| 5.11 | Catalysis | `unit11/q6-shortcut` (s1–s5), `q6-shortcut#w` | Covered | Covered | **Covered** |
 
-| CED | What was missing | Plan now |
-| --- | --- | --- |
-| 4.5.A.3 gas stoichiometry | The CED says stoichiometry combines with the ideal gas law and molarity. Bellows left it to Kettle; Kettle `q6` had no gas stage. | **Added:** Kettle `q6` stage 5 (heat CaCO₃, collect CO₂, type the volume at 25 °C and 1.00 atm; over water, subtract the vapour pressure). Stages 4 and 5 (limiting reactant, excess) were merged to make room. Bellows `q3` s7 is noted as cut. |
-| 8.11 pH and solubility | No number, no quest; Teeter `q7` s7 taught it before acids are earned. | **Moved:** Verdigris `q8` stage 7, qualitative only (the amino-acid stage moves to practice). Teeter `q7` s7 is now a common-ion comparison for 1:1 and 1:2 salts. |
-| 9.3.A.3 ΔG° from ΔGf° | Absent from plan and from built `q7`. | **Owed (FIX):** noted under Ember Reach as a typed stage with a ΔGf° table. Not yet in the built quest. |
-| 9.4 thermodynamic vs kinetic control | Drafted in Ember Reach `q7`, cut in the build. | **Rehoused:** Quicklight `q5` stage 3 (a downhill reaction on a tall hill); header tag now includes 9.4. |
-| 9.7 coupled reactions | Drafted in Ember Reach `q7`, cut in the build. | **Rehoused:** Teeter `q8` stage 7 (replaces the ΔG vs ΔG° stage, which becomes a practice item labelled beyond the exam). |
-| 1.4 composition of mixtures | Mirrowen `q6` s7 gave a mass percent only. | **Added:** Kettle `q6` stage 8 now ends with the percent purity of the salt; Mirrowen `q6` stage 7 points there. |
-| 1.7 electron affinity, electronegativity trend | Drafted in Lanternfall `q8` s7 to s8, cut in the build; the header's Drill Deck promise is not kept. | **Owed (FIX):** a note under Lanternfall `q8` says to restore stage 8 or add three practice items. |
-| 1.5 ion configurations | Drafted in `q6-filling` s7, cut in the build. | **Owed (FIX):** note under Lanternfall `q6`. |
-| 6.2 energy diagrams | Drafted in Ember Reach `q1` s6 and `q3` s5, cut in the build. | **Owed (FIX):** Ember Reach note asks for one reaction-progress diagram stage in `q3`. |
-| 6.5 heating curve, condensation | Mirrowen `q5` covered the upward trip only. | **Added:** Mirrowen `q5` stage 4 now also asks for the heat released on condensing and freezing. Stages 6 to 8 (phase diagrams) stay labelled beyond the exam. |
-| 6.1.A.4, 6.4.A.7 dissolving as exo or endo | Planned nowhere. | **Added:** Mirrowen `q6` stage 6 (calorimeter cup, read ΔT, explain by interaction strengths); header tag now 6.1, 6.4. |
-| 1.1 Avogadro arithmetic | Not in the plan. | **Owed (FIX):** listed in the coverage table; no stage written yet. |
+### Unit 6: Thermochemistry (6.1–6.9)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 6.1 | Endothermic and exothermic processes | `unit05/q1-flow` (s4), `q3-enthalpy` (s1), `unit06/q6-solution` | Covered | n/a | **Covered** |
+| 6.2 | Energy diagrams | `unit05/q1-flow#2`, `q3-enthalpy#5`, `unit11/q4-collide` | Covered | Covered | **Covered** |
+| 6.3 | Heat transfer & thermal equilibrium | `unit05/q1-flow` (s1–s3), `q1-flow#w` | Covered | Covered | **Covered** |
+| 6.4 | Heat capacity & calorimetry (`q = mcΔT`) | `unit05/q2-calorimetry` (s1–s5, `#w`, `#6`) | Covered | Covered | **Covered** |
+| 6.5 | Energy of phase changes | `unit05/q2-calorimetry` (s6–s7), `unit06/q5-crossing` (s1–s5, `#w`) | Covered | Covered | **Covered** |
+| 6.6 | Introduction to enthalpy of reaction | `unit05/q3-enthalpy` (s1–s6), `q3-enthalpy#w` | Covered | Covered | **Covered** |
+| 6.7 | Bond enthalpies | `unit05/q4-bonds` (s1–s6), `q4-bonds#w` | Covered | Covered | **Covered** |
+| 6.8 | Enthalpy of formation (`ΣΔHf°`) | `unit05/q5-hess` (s4, `#b2`, `#3`) | Covered | Covered | **Covered** |
+| 6.9 | Hess's law | `unit05/q5-hess` (s1–s3), `q5-hess#w` | Covered | Covered | **Covered** |
 
-## B3. Mislabelled scope (all fixed in the plan except Bellows `q5`'s built cards)
+### Unit 7: Equilibrium (7.1–7.12)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 7.1 | Introduction to equilibrium | `unit08/q1-both` (s1–s5) | Covered | n/a | **Covered** |
+| 7.2 | Direction of reversible reactions | `unit08/q1-both` (s3, s5) | Covered | n/a | **Covered** |
+| 7.3 | Reaction quotient & equilibrium constant (`Kc`, `Kp`) | `unit08/q2-k` (s2–s3), `q3-q` (s1–s5) | Covered | n/a | **Covered** |
+| 7.4 | Calculating the equilibrium constant | `unit08/q2-k` (s4, `#w`), `q5-ice` (s5) | Covered | Covered | **Covered** |
+| 7.5 | Magnitude of the equilibrium constant | `unit08/q2-k` (s5–s6) | Covered | n/a | **Covered** |
+| 7.6 | Properties of the equilibrium constant | `unit08/q4-properties` (s1–s3, `#w`) | Covered | Covered | **Covered** |
+| 7.7 | Calculating equilibrium concentrations (ICE, small-x) | `unit08/q5-ice` (s1–s5, `#w`) | Covered | Covered | **Covered** |
+| 7.8 | Representations of equilibrium | `unit08/q1-both`, `q6-lean` (particle views) | Covered | n/a | **Covered** |
+| 7.9 | Le Châtelier's principle | `unit08/q6-lean` (s1–s7), `boss-tipper` (s4) | Covered | n/a | **Covered** |
+| 7.10 | Reaction quotient & Le Châtelier's principle | `unit08/q6-lean` (Q vs K) | Covered | n/a | **Covered** |
+| 7.11 | Introduction to solubility equilibria (`Ksp`) | `unit08/q7-dissolve` (s1–s4, s6, `#w`), `q3-q#w` | Covered | Covered | **Covered** |
+| 7.12 | Common-ion effect | `unit08/q7-dissolve` (s5, `#w`, `#b2`) | Covered | Covered | **Covered** |
 
-| Plan item | Plan said | CED says | Action (done in the plan) |
-| --- | --- | --- | --- |
-| Brinewire `q5` s5, Nernst | "(beyond the exam)" | 9.10 is a topic; `E = E° − (RT/nF) ln Q` is on the equation list | Label removed; it is in scope, with a typed-answer stage suggested. |
-| Brinewire `q6` Faraday's law, `I = q/t` | present, mapped to 9.10 | 9.11 | Remapped to 9.8 and 9.11. |
-| Verdigris `q7` s7 "Add base and find the new pH" | in scope | Excluded ("computation of the change in pH resulting from the addition of an acid or a base to a buffer") | Labelled beyond the exam in the plan. |
-| Brinewire `q1` s4 oxidizing and reducing agent | taught | "Meaning of the terms reducing agent and oxidizing agent will not be assessed" | Labelled beyond the exam in the plan. |
-| Quicklight `q5` s7 Arrhenius | beyond the exam | Excluded | Correct. |
-| Teeter `q4` s7 Kp/Kc | beyond the exam | Built at the owner's request | Kept; marked beyond the exam. |
-| Mirrowen `q7` s6 to 7 colligative | beyond the exam | Excluded | Correct. |
-| Bellows `q5` (built) | not labelled | Not in the CED | Plan labels all of stages 4 to 8. **The built cards and practice are not yet labelled.** |
+### Unit 8: Acids and Bases (8.1–8.11)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 8.1 | Intro to acids/bases (`pH`, `pOH`, `Kw`, `T` dependence) | `unit09/q1-handover` (`#w` added), `q2-scale` (s1–s4, s7) | Covered | Covered | **Covered** |
+| 8.2 | pH & pOH of strong acids and bases | `unit09/q2-scale` (s2–s6, s8, `#w`) | Covered | Covered | **Covered** |
+| 8.3 | Weak acid & base equilibria (`Ka`, `Kb`, `%` ionization) | `unit09/q3-weak` (s1–s7, `#w`), `boss-leach#w` | Covered | Covered | **Covered** |
+| 8.4 | Acid-base reactions & buffers | `unit09/q5-salts` (strong+strong `#w`, salt hydrolysis) | Partial | Partial | **Flagged** (weak acid + strong base stages) |
+| 8.5 | Acid-base titrations (curves, half-equiv, polyprotic) | `unit09/q6-titrate` (s1–s7, `#w`) | Covered | Covered | **Covered** |
+| 8.6 | Molecular structure of acids & bases | `unit09/q4-structure` (s1–s6) | Covered | n/a | **Covered** |
+| 8.7 | pH and `pKa` (predominant species, indicators) | `unit09/q8-capacity` (s1–s2), `q6-titrate` (s4) | Covered | Covered | **Covered** |
+| 8.8 | Properties of buffers | `unit09/q7-buffer` (s1–s3, s6) | Covered | n/a | **Covered** |
+| 8.9 | Henderson–Hasselbalch equation | `unit09/q7-buffer` (s4–s5, `#w`) | Covered | Covered | **Covered** |
+| 8.10 | Buffer capacity | `unit09/q8-capacity` (s3–s6, `#w`) | Covered | Covered | **Covered** |
+| 8.11 | pH and solubility | `unit09/q8-capacity` (s8 restored) | Covered | n/a | **Covered** |
 
-## B4. Quantitative coverage against the CED equation list
-
-Every `EQN:` line in the CED, with its planned or built home.
-
-| Equation | CED | Home | Quantitative depth |
-| --- | --- | --- | --- |
-| `n = m/M`; Avogadro | 1.1 | Tallow `q6` | Moles worked; particle count not (Part A). |
-| average atomic mass | 1.2 | Tallow `q5` | Worked on a balance beam on the bench (s3 to 7), plus two MCQ. |
-| `F ∝ q₁q₂/r²` | 1.5, 2.2 | Lanternfall `q8`, Ligar `q3` | Ranking only. Matches the CED ("proportional"). |
-| `c = λν`, `E = hν` | 3.11, 3.12 | Lanternfall `q1`, `q2` | One MCQ each in practice; no typed calculation. |
-| Photoelectric `KE = hν − Φ` | 3.12 | `boss-eater` p2 | Bench. |
-| `A = εbc` | 3.13 | Lanternfall `q9` | Bench (calibration), two MCQ. |
-| `PV = nRT`, Dalton, `KE = ½mv²` | 3.4, 3.5 | Bellows | Bench, typed. |
-| `M = n/L`, dilution | 3.7 | Mirrowen `q6` | Planned (stage 2, 3). |
-| gas and solution stoichiometry, limiting reactant, yield, titration | 4.5, 4.6 | Kettle `q6`, `q7` | Planned; gas piece missing (B2). |
-| `q = mcΔT`, `q = nΔH`, `ΔH = Σ(bonds) …`, `ΔHf` sums, Hess | 6.4 to 6.9 | Ember Reach | Bench, typed. |
-| rate law, order, `k`, units | 5.2 | Quicklight `q2` | Planned. |
-| integrated laws, `t½` | 5.3 | Quicklight `q3` | Planned (zero, first, second). |
-| `Kc`, `Kp`, `Q`, ICE | 7.3 to 7.10 | Teeter `q2`, `q3`, `q5`, `q6` | Planned. Small-x approximation planned (`q5` s3 to 4). |
-| `Ksp`, molar solubility, common ion | 7.11, 7.12 | Teeter `q7` | Planned. |
-| `pH`, `pOH`, `Kw` | 8.1, 8.2 | Verdigris `q1`, `q2` | Planned. |
-| `Ka`, `Kb`, `pKa`, `Ka·Kb = Kw` | 8.3, 8.7 | Verdigris `q3`, `q8` | Planned. |
-| Henderson–Hasselbalch | 8.9 | Verdigris `q7` | Planned (s4 to 6). |
-| `ΔS° = ΣS°` | 9.2 | Ember Reach `q6` | Built, typed. |
-| `ΔG° = ΔH° − TΔS°` | 9.3 | Ember Reach `q7` | Built, typed. |
-| `ΔG° = ΣΔGf°` | 9.3 | none | **Missing.** |
-| `K = e^(−ΔG°/RT)` | 9.5 | Teeter `q8` | Planned. |
-| `ΔG° = −nFE°` | 9.9 | Brinewire `q4` | Planned. |
-| `E = E° − (RT/nF) ln Q` | 9.10 | Brinewire `q5` | Planned, mislabelled (B3). |
-| `I = q/t`, Faraday | 9.11 | Brinewire `q6` | Planned. |
-
-**The rule that weakens the quantitative side.** The plan says numeric practice "is the place for photon energy,
-Beer–Lambert, formal charge" and the quests teach each once. On the built evidence this means Lanternfall and
-Tallow have one MCQ per formula. A student who understands the idea can still fail a free-response item that
-asks for the arithmetic. Where the plan has an ordinary typed-answer stage (Bellows and Ember Reach pattern:
-`answerCards`, typed numeric fields, slip options with a reason), use it for the worked-figure stages in the
-unbuilt worlds. Specifically worth a typed stage in every planned world: `n = m/M` with Avogadro (Tallow), `c = λν`
-and `E = hν` (Lanternfall), `M₁V₁ = M₂V₂` (Mirrowen), a mass-to-mass stoichiometry and a titration concentration
-(Kettle), `k` from a table (Quicklight), an ICE solve (Teeter, planned), a `pH` of a weak acid (Verdigris, planned),
-`E°cell` and `ΔG°` (Brinewire).
-
-## B5. Free-response skills
-
-The CED weights experimental design, data analysis and justification (Science Practices 2, 4, 6) heavily on the free
-response. The plan's stage 8 "sealed sample" pattern covers claim-and-evidence in principle. Bellows adds percentage
-error and the direction of a systematic slip. Nothing plans: choosing which plot is linear (Quicklight `q3` does),
-random error and significant figures, or designing a procedure. Not content, but part of "all AP content" if the goal
-is the exam. Suggest one cross-world set of stages or a short, optional "Lab Notebook" quest per unit rather than
-more benches.
-
-## B6. Overlap and sequencing
-
-- **Mirrowen `q4` duplicates Ligar `q2`** (note added to the plan; stages 1 to 4 should still be cut or shortened).
-   Ligar `q2-lattice` already covers kinds of solid, alloys and the
-  property sorts (CED 2.4 and most of 3.2). Reduce `q4` to molecular solids, amorphous vs crystalline, and the
-  four-way sealed sort, or move 3.2 to "Ligar `q2`, Mirrowen `q4` s5 to 8".
-- **Teeter `q8-free` before Brinewire `q4`.** ΔG° and K (9.5) comes from Teeter; ΔG° and E° (9.9) from Brinewire.
-  Already noted in the plan; the coupled-reaction stage (9.7) belongs next to the first one.
-- **Gas over water** is split across Bellows `q4` s7 and Mirrowen `q3` s8; the moles-of-product step now has a home
-  in the plan (Kettle `q6` stage 5), which is not yet built.
-- **Ember Reach before Kettle.** The plan's workaround is sound. Ember Reach `q3` s5 already uses a balanced
-  equation (6.0 g H₂ burning), so the plan note "Ember Reach supplies every equation already balanced" holds.
-- **The Drill Deck cannot carry deferred vocabulary.** `q8-trends` defers two terms to it that its practice items
-  do not contain; `verify:learn` should fail a header that promises a term the `PRACTICE` set lacks.
-
-## B7. The plan's own status was stale (partly fixed)
-
-- The status line and the AP table are now current. "Size of the road" and "Build order" still say Bellows and Ember Reach are proposals and that
-  Ligar `q3` to `q9` is "still to build". All of them are built: Ligar 9 quests plus the Warden, Bellows 6 plus
-  the Compressor, Ember Reach 7 plus the Crucible, Kettle `q1-recipe` and the Golem. The plan's quest counts for
-  Bellows (6) and Ember Reach (7) match; I did not compare stage counts.
-- Built Bellows and Ember Reach have typed worked-figure stages the plan does not describe. Rewriting both sections
-  from the built quests (and `Bellows-audit.md`, `Ember-audit.md`) would make the coverage table honest.
-- **Still open.** The "AP coverage" table lists topics but not learning objectives. 92 LOs exist; several topics hold two (6.9.A
-  and 6.9.B). A per-LO table is more robust to renumbering.
-
----
-
-# Corrected coverage map
-
-This is now the table in `docs/plans/learn-quests.md` ("AP coverage"), copied here on 2026-10-29. **B** = built,
-**P** = planned, **FIX** = a stage owed that is not yet in the built quest.
-
-| Unit | Topic → quest |
-| --- | --- |
-| 1 | 1.1 Tallow q6 (B; **FIX**: grams or moles to particle count with Avogadro's number is never asked, add a stage or practice) · 1.2 Tallow q5 (B) · 1.3 Kettle q1 (B) · 1.4 Kettle q6 stage 8 purity (P) · 1.5 Lanternfall q6 (B; **FIX**: configurations of ions) · 1.6 Lanternfall q7 (B) · 1.7 Lanternfall q8 (B; **FIX**: electron affinity and the electronegativity trend) · 1.8 Tallow q3, q4, Ligar q1 (B; group reactivity trends not found) |
-| 2 | 2.1 Ligar q1, q7 · 2.2 q3 · 2.3 q2, q3 · 2.4 q2 · 2.5 q4 · 2.6 q5 · 2.7 q6, q7, q8 (all B) |
-| 3 | 3.1 Mirrowen q2, q3 · 3.2 Ligar q2 (B) and Mirrowen q4, reduced · 3.3 Mirrowen q1 · 3.4 Bellows q1 to q4 (B) · 3.5 Bellows q1, q5 (B) · 3.6 Bellows q6 (B) · 3.7, 3.8, 3.10 Mirrowen q6 · 3.9 Mirrowen q7 · 3.11 to 3.13 Lanternfall q1, q2, q9 (B) |
-| 4 | 4.1, 4.4 Kettle q3 · 4.2 q5 · 4.3 q4 · 4.5 q6 including the gas stage 5 · 4.6 q7 · 4.7 q8 · 4.8 q8, Verdigris q1 · 4.9 q8, Brinewire q1 (all P) |
-| 5 | 5.1 Quicklight q1 · 5.2 q2 · 5.3 q3 · 5.4, 5.5 q4 · 5.6, 5.10 q5 · 5.7 to 5.9 q6 · 5.11 q7 (all P) |
-| 6 | 6.1 Ember Reach q1 (B) and Mirrowen q6 stage 6 (dissolving) · 6.2 Ember Reach q3 (B; **FIX**: reaction-progress diagram) · 6.3 q1 (B) · 6.4 q2 (B), Mirrowen q6 stage 6 · 6.5 q2 stages 4, 7 (B) and Mirrowen q5 (P) · 6.6 q3 (B) · 6.7 q4 (B) · 6.8 q5 (B) · 6.9 q5 (B) |
-| 7 | 7.1, 7.8 Teeter q1 · 7.2 q3 · 7.3 q2, q3 · 7.4, 7.5 q2 · 7.6 q4 · 7.7 q5 · 7.9, 7.10 q6 · 7.11, 7.12 q7 (all P) |
-| 8 | 8.1 Verdigris q1, q2 · 8.2 q2 · 8.3 q3 · 8.4 q5, q7 · 8.5 q6 · 8.6 q4 · 8.7 q8 · 8.8, 8.9 q7 · 8.10 q8 · 8.11 q8 stage 7 (all P) |
-| 9 | 9.1, 9.2 Ember Reach q6 (B) · 9.3 Ember Reach q7 (B; **FIX**: ΔG° from ΔGf°) · 9.4 Quicklight q5 stage 3 (P) · 9.5 Teeter q8 (P) · 9.6 Ember Reach q7 stage 1 (B) and Teeter q8 (P) · 9.7 Teeter q8 stage 7 (P) · 9.8 Brinewire q3, q6 (P) · 9.9 q4 · 9.10 q5 (Nernst, in scope) · 9.11 q6 (all P) |
-
----
-
-# Recommended actions
-
-Done (plan, 2026-10-29):
-
-1. Numbering and coverage table fixed to the corrected map.
-2. Homes found for gas stoichiometry, 8.11, 9.4, 9.7 and purity as stages in existing quests; ΔG° from ΔGf° recorded
-   as owed.
-3. Relabels: Nernst in scope; buffer-addition pH, oxidizing/reducing agent, Bellows `q5` beyond the exam (in the plan).
-
-Open:
-
-4. **Close the built atomic-structure gaps**: electron affinity and electronegativity trend (Lanternfall `q8`), ion
-   configurations (`q6-filling`), Avogadro arithmetic (`q6-weigh` or practice), group reactivity (Tallow `q3`).
-5. **Close the built thermochemistry gaps**: a reaction-progress diagram (Ember Reach `q3`), ΔG° from ΔGf° (`q7`),
-   a heating curve stage (Mirrowen `q5` is planned; Ember Reach `q2` has only the numbers).
-6. **Label Bellows `q5`'s built cards and practice** "beyond the exam".
-7. **Add a typed worked-figure stage** to each unbuilt world for its headline equation (B4).
-8. **Make `verify:learn` fail a header comment or reward that defers a term to the Drill Deck** unless a `PRACTICE`
-   item contains it.
-
----
-
-# Update, 2026-10-29 (second pass)
-
-After the Tallow and Lanternfall updates, already closed in the built track: Avogadro arithmetic (`q6-weigh` stages 9 to 12 and its worked glucose problem), electron affinity and electronegativity (`q8-trends` stages 6, 7), Cl⁻ configuration (`q6-filling` stage 6), typed `c = λν` and `E = hν` (`q1-wave` s6, `q2-photon` s6).
-
-Closed in this pass:
-
-- **ΔG° from ΔGf°** (9.3.A.3): Ember Reach `q7-gibbs` stage 6, typed (CaCO₃ decomposition).
-- **Bank (end sets):** coupled reactions (9.7), thermodynamic vs kinetic control (9.4), dissolving as endothermic with positive entropy (6.1, 9.6), condensation heat and molar heat capacity (6.4, 6.5), reaction-progress diagram ΔH and Ea (6.2), ΔGf sum, Fe³⁺ and O²⁻ configurations (1.5), electron affinity and electronegativity trends (1.7), group reactivity (1.8), particles from moles (1.1), cis/trans from restricted rotation (2.7), gas stoichiometry with the ideal gas law (4.5.A.3, in `unit04`), purity from elemental analysis (1.4, `unit07`).
-- **Worked problems added:** `q1-flow` (heat balance), `q6-filling` (Fe³⁺), `q8-trends` (Zeff across a period).
-
-Still open: Bellows `q5` is not labelled beyond the exam (the project rule strips such tags from cards, so this needs a decision); a heating-curve and a reaction-progress-diagram bench stage (Ember benches are at the 7-stage cap for `q2` and `q3`); everything in Part B for unbuilt worlds (Mirrowen, Kettle `q2`+, Teeter, Verdigris, Brinewire, Quicklight); the free-response skills (B5).
-
-Third pass: Ember `q2-calorimetry` stage 8 (condensation and cooling, heat given out, typed; 6.5.A.2) and `q3-enthalpy` stage 8 (reaction-progress diagram with an activation barrier, reverse Ea typed; 6.2). The Ember stage cap is now 8. Both gaps are removed from the open list above.
-
-Fourth pass: `docs/plans/learn-quests.md` now marks a typed headline stage in every unbuilt world (B4), plans the Lab Notebook set for the free-response skills (B5), resolves the FIX marks, and adds the Drill Deck verifier rule (B6/B7 item 8) as planned work. Still open: the per-LO table, and the verifier rule itself is not implemented.
-
-
-## Teeter built (2026-11-04)
-
-Unit 7 topics 7.1 to 7.12 and 9.5, 9.7 now have benches (`unit08`): 7.1/7.2/7.8 `q1-both`; 7.3 to 7.5 `q2-k`; 7.2/7.3/7.7 direction `q3-q`; 7.6 `q4-properties` (K of a reversed, doubled, halved and added reaction; stage 7 Kp from Kc); 7.7 `q5-ice`; 7.9/7.10 `q6-lean`; 7.11/7.12 `q7-dissolve`; 9.5/9.7 `q8-free`. 8.11 stays with Verdigris. See `docs/teeter-audit.md`.
-
-
-Unit 8 topics 8.1 to 8.11 now have benches (`unit09`, built 2026-11-05): 8.1 `q1-handover`, `q2-scale`; 8.2 `q2-scale`; 8.3 `q3-weak`; 8.4 `q5-salts`, `q7-buffer`; 8.5 `q6-titrate`; 8.6 `q4-structure`; 8.7 `q6-titrate` s5, `q8-capacity`; 8.8, 8.9 `q7-buffer`; 8.10 `q8-capacity`; 8.11 `q8-capacity` s7 (qualitative only, as the CED excludes computing solubility as a function of pH). The pH change on adding acid or base to a buffer is not computed (q7 s7 is a direction verdict); polyprotic species concentrations are not computed (q6 s6 is qualitative); weak acid plus weak base (8.4.A.4) is a bank problem only. See `docs/verdigris-audit.md`.
-
-
-## Brinewire built (2026-11-05)
-
-4.9 redox: `q1-halves`, `q2-activity`. 9.7: `q6` stage 1 and 6 (external energy; a galvanic cell driving electrolysis); 9.7.A.2 (a shared intermediate) is a bank problem only. 9.8: `q3`, `q6` stages 1 and 2. 9.9: `q4` (typed E°cell, energy and log K). 9.10: `q5` (the run-down, concentration cells, a typed Nernst voltage, no Le Châtelier language). 9.11: `q6` (typed grams plated, typed current). Past the exam and labelled: oxidizing and reducing agent (`q1` s5), cell notation (`q3` s7). Gap: ATP-style coupling needs no bench.
-
-
-## Quantitative AP Coverage Audit & Worked Problems Pass (2026-11-06)
-
-Complete audit of quantitative question archetypes assessed by the AP Chemistry Exam (Course Framework Units 1–9) against the Learn worlds and question banks.
-
-### Worked problems added:
-1. **Photoelectron Spectroscopy (PES) Quantitative Analysis (CED 1.6)**: `unit02/q7-pes#w` ("Reading a Photoelectron Spectrum"). Binding energy interpretation, subshell assignment from peak positions, relative peak heights to electron configurations (1s² 2s² 2p⁶ 3s² 3p³), valence electron counting, single-atom ionization energy in J from MJ/mol, and periodic peak shift comparison (P vs S).
-2. **Gravimetric Analysis & Mixture Percent Purity (CED 1.4 & 4.5)**: `unit07/q5-ionic#w` ("Purity of an Impure Salt by Gravimetric Analysis"). Precipitation net ionic equation, precipitate moles (AgCl), chloride stoichiometry, mass of pure NaCl, percent purity calculation, and experimental error analysis of incomplete drying.
-3. **Predicting Precipitation with Reaction Quotient Qsp (CED 7.11)**: `unit08/q3-q#w` ("Predicting Precipitation with Qsp"). Solution mixing with dilution (M₁V₁ = M₂V₂), evaluating Qsp = [Pb²⁺][I⁻]², and comparing Qsp vs Ksp to predict supersaturation and precipitate formation.
-4. **Weak Base Dissociation & Hydrolysis (CED 8.3 & 8.4)**: `unit09/boss-leach#w` ("pH of a Weak Base Solution"). Base dissociation equilibrium expression for NH₃, ICE table with small-x approximation, [OH⁻], pOH, pH, and percent ionization verification.
+### Unit 9: Thermodynamics and Electrochemistry (9.1–9.11)
+| CED | Topic | Built Home | Qual | Quant | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 9.1 | Introduction to entropy | `unit05/q6-entropy` (s1–s4) | Covered | n/a | **Covered** |
+| 9.2 | Absolute entropy & `ΔS°rxn = ΣS°` | `unit05/q6-entropy` (s5, `#w`) | Covered | Covered | **Covered** |
+| 9.3 | Gibbs free energy (`ΔH − TΔS`, `ΣΔGf°`) | `unit05/q7-gibbs` (s2–s5, `#w`, `#5`), `boss-crucible#w` | Covered | Partial | **Flagged** (`ΔGf°` stage in `unit05/q7-gibbs`) |
+| 9.4 | Thermodynamic and kinetic control | `unit05/q7-gibbs#4, #6`, `unit11/q4-collide` (s7) | Covered | n/a | **Covered** |
+| 9.5 | Free energy and equilibrium (`K = e^(−ΔG°/RT)`) | `unit08/q8-free` (s1–s2, s6, `#w`) | Covered | Covered | **Covered** |
+| 9.6 | Free energy of dissolution | `unit05/q7-gibbs` (s1), `boss-crucible#w`, `unit08/q8-free` (s3–s4) | Covered | Covered | **Covered** |
+| 9.7 | Coupled reactions | `unit08/q8-free` (s5, `#b2`), `unit05/q7-gibbs#3, #7`, `unit10/q4-potential#e1` | Covered | Covered | **Covered** |
+| 9.8 | Galvanic (voltaic) and electrolytic cells | `unit10/q3-galvanic` (`#w`), `q6-electrolysis` | Covered | Covered | **Covered** |
+| 9.9 | Cell potential & free energy (`ΔG° = −nFE°`) | `unit10/q4-potential` (s1–s6, `#w`), `boss-clamp#w` (added) | Covered | Covered | **Covered** |
+| 9.10 | Cell potential under nonstandard conditions (Nernst) | `unit10/q5-load` (s1–s6, `#w`) | Covered | Covered | **Covered** |
+| 9.11 | Electrolysis and Faraday's law (`I = q/t`) | `unit10/q6-electrolysis` (s3–s4, s7, `#w`), `boss-clamp#w` (added) | Covered | Covered | **Covered** |

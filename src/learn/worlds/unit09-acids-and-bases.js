@@ -94,7 +94,7 @@ export const UNIT_09 = {
       title: 'pKa, Protonation and Capacity',
       line: 'The sluice held, then failed; find how much it could take.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit09/q8-capacity.js')
     },

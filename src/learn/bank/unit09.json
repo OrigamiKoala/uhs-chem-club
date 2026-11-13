@@ -394,7 +394,66 @@
           "answer": "b",
           "explanation": "A conjugate base is the acid less one proton: HCO₃⁻ loses an H⁺ and becomes CO₃²⁻, with one more negative charge than before."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q1-handover#w",
+        "quest": "q1-handover",
+        "title": "Autoionization of Water and Conjugate Pairs",
+        "setup": "At 25 °C, Kw = [H₃O⁺][OH⁻] = 1.0 × 10⁻¹⁴. An aqueous solution of ammonium chloride has [H₃O⁺] = 2.5 × 10⁻⁵ M.",
+        "steps": [
+          {
+            "say": "Which equation shows the ammonium ion, NH₄⁺, acting as a Brønsted–Lowry acid in water?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "NH₄⁺ + H₂O ⇌ NH₃ + H₃O⁺"
+              },
+              {
+                "id": "b",
+                "label": "NH₄⁺ + H₂O ⇌ NH₅²⁺ + OH⁻"
+              },
+              {
+                "id": "c",
+                "label": "NH₃ + H₂O ⇌ NH₄⁺ + OH⁻"
+              },
+              {
+                "id": "d",
+                "label": "2 H₂O ⇌ H₃O⁺ + OH⁻"
+              }
+            ],
+            "answer": "a",
+            "hint": "A Brønsted–Lowry acid donates a proton (H⁺) to water.",
+            "explain": "NH₄⁺ donates a proton to H₂O, forming its conjugate base NH₃ and H₃O⁺."
+          },
+          {
+            "say": "Using Kw = 1.0 × 10⁻¹⁴, what is [OH⁻] in this solution when [H₃O⁺] = 2.5 × 10⁻⁵ M?",
+            "kind": "number",
+            "answer": 4e-10,
+            "calc": "1.0e-14 / 2.5e-5",
+            "unit": "M",
+            "hint": "Divide Kw by [H₃O⁺].",
+            "explain": "[OH⁻] = (1.0 × 10⁻¹⁴) / (2.5 × 10⁻⁵) = 4.0 × 10⁻¹⁰ M."
+          },
+          {
+            "say": "What is the pH of this solution?",
+            "kind": "number",
+            "answer": 4.602,
+            "calc": "-Math.log10(2.5e-5)",
+            "hint": "Calculate pH = −log₁₀[H₃O⁺].",
+            "explain": "pH = −log₁₀(2.5 × 10⁻⁵) = 4.60."
+          },
+          {
+            "say": "What is the pOH of this solution at 25 °C?",
+            "kind": "number",
+            "answer": 9.398,
+            "calc": "14 - (-Math.log10(2.5e-5))",
+            "hint": "At 25 °C, pH + pOH = 14.00.",
+            "explain": "pOH = 14.00 − 4.60 = 9.40 (which also equals −log₁₀(4.0 × 10⁻¹⁰))."
+          }
+        ],
+        "finish": "In any aqueous solution at 25 °C, [H₃O⁺] and [OH⁻] are locked together by Kw = 1.0 × 10⁻¹⁴."
+      }
     },
     "q3-weak": {
       "problems": [
@@ -479,7 +538,7 @@
           {
             "say": "Ka is tiny, so 0.20 − x is about 0.20. What is Ka × 0.20, the value of x²?",
             "kind": "number",
-            "answer": 6e-09,
+            "answer": 6e-9,
             "calc": "3.0e-8*0.20",
             "unit": "M²",
             "tol": 0.01,
@@ -489,7 +548,7 @@
           {
             "say": "What is x, the hydronium concentration in mol/L?",
             "kind": "number",
-            "answer": 7.746e-05,
+            "answer": 0.00007746,
             "calc": "Math.sqrt(3.0e-8*0.20)",
             "unit": "M",
             "tol": 0.01,
@@ -1112,7 +1171,7 @@
           {
             "say": "Letting x = [OH⁻] = [NH₄⁺], and using the small-x approximation (0.150 − x ≈ 0.150), what is x² = Kb × [NH₃]₀?",
             "kind": "number",
-            "answer": 2.7e-6,
+            "answer": 0.0000027,
             "calc": "1.80e-5 * 0.150",
             "unit": "M²",
             "tol": 0.01,

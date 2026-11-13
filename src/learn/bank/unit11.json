@@ -4,32 +4,32 @@
     {
       "id": "q1-watch#e1",
       "quest": "q1-watch",
-      "question": "For the reaction 2 A \u2192 B, if A is consumed at 0.060 mol/(L\u00b7s), at what rate does B form?",
+      "question": "For the reaction 2 A → B, if A is consumed at 0.060 mol/(L·s), at what rate does B form?",
       "options": [
         {
           "id": "a",
-          "label": "0.030 mol/(L\u00b7s)"
+          "label": "0.030 mol/(L·s)"
         },
         {
           "id": "b",
-          "label": "0.060 mol/(L\u00b7s)"
+          "label": "0.060 mol/(L·s)"
         },
         {
           "id": "c",
-          "label": "0.120 mol/(L\u00b7s)"
+          "label": "0.120 mol/(L·s)"
         },
         {
           "id": "d",
-          "label": "0.015 mol/(L\u00b7s)"
+          "label": "0.015 mol/(L·s)"
         }
       ],
       "answer": "a",
-      "explanation": "Two moles of A are consumed for every one mole of B formed, so B forms at half the rate A disappears: 0.060 \u00f7 2 = 0.030 mol/(L\u00b7s)."
+      "explanation": "Two moles of A are consumed for every one mole of B formed, so B forms at half the rate A disappears: 0.060 ÷ 2 = 0.030 mol/(L·s)."
     },
     {
       "id": "q2-law#e1",
       "quest": "q2-law",
-      "question": "For a reaction with rate = k[X]\u00b2[Y]\u2070, what happens to the rate if [X] triples and [Y] doubles?",
+      "question": "For a reaction with rate = k[X]²[Y]⁰, what happens to the rate if [X] triples and [Y] doubles?",
       "options": [
         {
           "id": "a",
@@ -49,7 +49,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Since the reaction is second order in X and zero order in Y, the rate multiplies by 3\u00b2 \u00d7 2\u2070 = 9 \u00d7 1 = 9."
+      "explanation": "Since the reaction is second order in X and zero order in Y, the rate multiplies by 3² × 2⁰ = 9 × 1 = 9."
     },
     {
       "id": "q3-time#e1",
@@ -74,7 +74,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "60 s is 3 half-lives (60 \u00f7 20 = 3), so 0.80 \u00f7 2\u00b3 = 0.80 \u00f7 8 = 0.10 mol/L remains."
+      "explanation": "60 s is 3 half-lives (60 ÷ 20 = 3), so 0.80 ÷ 2³ = 0.80 ÷ 8 = 0.10 mol/L remains."
     },
     {
       "id": "q4-collide#e1",
@@ -99,32 +99,32 @@
         }
       ],
       "answer": "a",
-      "explanation": "The reverse reaction climbs from products (10 kJ/mol) to the transition state (90 kJ/mol): 90 \u2212 10 = 80 kJ/mol."
+      "explanation": "The reverse reaction climbs from products (10 kJ/mol) to the transition state (90 kJ/mol): 90 − 10 = 80 kJ/mol."
     },
     {
       "id": "q5-steps#e1",
       "quest": "q5-steps",
-      "question": "A mechanism has Step 1 (slow): NO\u2082 + NO\u2082 \u2192 NO\u2083 + NO and Step 2 (fast): NO\u2083 + CO \u2192 NO\u2082 + CO\u2082. What is the rate law?",
+      "question": "A mechanism has Step 1 (slow): NO₂ + NO₂ → NO₃ + NO and Step 2 (fast): NO₃ + CO → NO₂ + CO₂. What is the rate law?",
       "options": [
         {
           "id": "a",
-          "label": "rate = k[NO\u2082]\u00b2"
+          "label": "rate = k[NO₂]²"
         },
         {
           "id": "b",
-          "label": "rate = k[NO\u2082][CO]"
+          "label": "rate = k[NO₂][CO]"
         },
         {
           "id": "c",
-          "label": "rate = k[NO\u2083][CO]"
+          "label": "rate = k[NO₃][CO]"
         },
         {
           "id": "d",
-          "label": "rate = k[NO\u2082]\u00b2[CO]"
+          "label": "rate = k[NO₂]²[CO]"
         }
       ],
       "answer": "a",
-      "explanation": "Step 1 is the slow rate-determining step and involves two NO\u2082 molecules, so rate = k[NO\u2082]\u00b2."
+      "explanation": "Step 1 is the slow rate-determining step and involves two NO₂ molecules, so rate = k[NO₂]²."
     },
     {
       "id": "q6-shortcut#e1",
@@ -137,7 +137,7 @@
         },
         {
           "id": "b",
-          "label": "It increases the enthalpy change \u0394H of the reaction"
+          "label": "It increases the enthalpy change ΔH of the reaction"
         },
         {
           "id": "c",
@@ -149,7 +149,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "A catalyst lowers Ea by opening a different mechanism while leaving reactant energies, product energies, and \u0394H unchanged."
+      "explanation": "A catalyst lowers Ea by opening a different mechanism while leaving reactant energies, product energies, and ΔH unchanged."
     }
   ],
   "bench": {
@@ -162,23 +162,23 @@
           "options": [
             {
               "id": "a",
-              "label": "0.040 mol/(L\u00b7s)"
+              "label": "0.040 mol/(L·s)"
             },
             {
               "id": "b",
-              "label": "0.053 mol/(L\u00b7s)"
+              "label": "0.053 mol/(L·s)"
             },
             {
               "id": "c",
-              "label": "0.013 mol/(L\u00b7s)"
+              "label": "0.013 mol/(L·s)"
             },
             {
               "id": "d",
-              "label": "0.60 mol/(L\u00b7s)"
+              "label": "0.60 mol/(L·s)"
             }
           ],
           "answer": "a",
-          "explanation": "The concentration drops by 0.80 \u2212 0.20 = 0.60 mol/L over 15 s, so the average rate is 0.60 \u00f7 15 = 0.040 mol/(L\u00b7s)."
+          "explanation": "The concentration drops by 0.80 − 0.20 = 0.60 mol/L over 15 s, so the average rate is 0.60 ÷ 15 = 0.040 mol/(L·s)."
         },
         {
           "id": "q1-watch#b2",
@@ -210,7 +210,7 @@
         "id": "q1-watch#w",
         "quest": "q1-watch",
         "title": "Average rate and stoichiometry",
-        "setup": "For 2 A \u2192 B, [A] falls from 0.90 mol/L at 0 s to 0.30 mol/L at 12 s.",
+        "setup": "For 2 A → B, [A] falls from 0.90 mol/L at 0 s to 0.30 mol/L at 12 s.",
         "steps": [
           {
             "say": "How much did [A] change over the 12 s interval (in mol/L)?",
@@ -219,25 +219,25 @@
             "unit": "mol/L",
             "calc": "0.90 - 0.30",
             "hint": "Subtract the final concentration from the initial concentration.",
-            "explain": "0.90 \u2212 0.30 = 0.60 mol/L."
+            "explain": "0.90 − 0.30 = 0.60 mol/L."
           },
           {
-            "say": "What is the average rate of consumption of A (in mol/(L\u00b7s))?",
+            "say": "What is the average rate of consumption of A (in mol/(L·s))?",
             "kind": "number",
             "answer": 0.05,
-            "unit": "mol/(L\u00b7s)",
+            "unit": "mol/(L·s)",
             "calc": "(0.90 - 0.30) / 12",
             "hint": "Divide the change in [A] by 12 s.",
-            "explain": "0.60 \u00f7 12 = 0.050 mol/(L\u00b7s)."
+            "explain": "0.60 ÷ 12 = 0.050 mol/(L·s)."
           },
           {
-            "say": "Since 2 A \u2192 B, at what rate does B form (in mol/(L\u00b7s))?",
+            "say": "Since 2 A → B, at what rate does B form (in mol/(L·s))?",
             "kind": "number",
             "answer": 0.025,
-            "unit": "mol/(L\u00b7s)",
+            "unit": "mol/(L·s)",
             "calc": "((0.90 - 0.30) / 12) / 2",
             "hint": "One B forms for every two A used.",
-            "explain": "0.050 \u00f7 2 = 0.025 mol/(L\u00b7s)."
+            "explain": "0.050 ÷ 2 = 0.025 mol/(L·s)."
           },
           {
             "say": "During which part of the run is the instantaneous rate greatest?",
@@ -261,7 +261,7 @@
             "explain": "Most reactant is present at 0 s, so collisions are most frequent and the curve is steepest."
           }
         ],
-        "finish": "Average rate is \u0394[A]/\u0394t, and stoichiometry ties the rates of A and B."
+        "finish": "Average rate is Δ[A]/Δt, and stoichiometry ties the rates of A and B."
       }
     },
     "q2-law": {
@@ -294,27 +294,27 @@
         {
           "id": "q2-law#b2",
           "quest": "q2-law",
-          "question": "A reaction has rate = k[A][B]\u00b2. If [A] = 0.20 mol/L, [B] = 0.10 mol/L, and rate = 0.0080 mol/(L\u00b7s), what is k?",
+          "question": "A reaction has rate = k[A][B]². If [A] = 0.20 mol/L, [B] = 0.10 mol/L, and rate = 0.0080 mol/(L·s), what is k?",
           "options": [
             {
               "id": "a",
-              "label": "4.0 L\u00b2/(mol\u00b2\u00b7s)"
+              "label": "4.0 L²/(mol²·s)"
             },
             {
               "id": "b",
-              "label": "0.40 L\u00b2/(mol\u00b2\u00b7s)"
+              "label": "0.40 L²/(mol²·s)"
             },
             {
               "id": "c",
-              "label": "0.0020 L\u00b2/(mol\u00b2\u00b7s)"
+              "label": "0.0020 L²/(mol²·s)"
             },
             {
               "id": "d",
-              "label": "8.0 L\u00b2/(mol\u00b2\u00b7s)"
+              "label": "8.0 L²/(mol²·s)"
             }
           ],
           "answer": "a",
-          "explanation": "k = 0.0080 \u00f7 (0.20 \u00d7 0.10\u00b2) = 0.0080 \u00f7 0.0020 = 4.0 L\u00b2/(mol\u00b2\u00b7s)."
+          "explanation": "k = 0.0080 ÷ (0.20 × 0.10²) = 0.0080 ÷ 0.0020 = 4.0 L²/(mol²·s)."
         }
       ],
       "worked": {
@@ -330,7 +330,7 @@
             "unit": "",
             "calc": "1",
             "hint": "Doubling [A] doubled the rate (0.0030 to 0.0060).",
-            "explain": "2\u00b9 = 2, so the reaction is first order in A."
+            "explain": "2¹ = 2, so the reaction is first order in A."
           },
           {
             "say": "Comparing Runs 1 and 3, what is the order in B?",
@@ -339,25 +339,25 @@
             "unit": "",
             "calc": "2",
             "hint": "Doubling [B] made the rate 4 times as fast (0.0030 to 0.0120).",
-            "explain": "2\u00b2 = 4, so the reaction is second order in B."
+            "explain": "2² = 4, so the reaction is second order in B."
           },
           {
-            "say": "Using Run 1, what is the denominator [A]\u00b9[B]\u00b2?",
+            "say": "Using Run 1, what is the denominator [A]¹[B]²?",
             "kind": "number",
             "answer": 0.001,
-            "unit": "mol\u00b3/L\u00b3",
+            "unit": "mol³/L³",
             "calc": "0.10 * (0.10 ** 2)",
-            "hint": "Multiply 0.10 by 0.10\u00b2.",
-            "explain": "0.10 \u00d7 0.010 = 0.0010."
+            "hint": "Multiply 0.10 by 0.10².",
+            "explain": "0.10 × 0.010 = 0.0010."
           },
           {
             "say": "What is the rate constant k?",
             "kind": "number",
-            "answer": 3.0,
-            "unit": "L\u00b2/(mol\u00b2\u00b7s)",
+            "answer": 3,
+            "unit": "L²/(mol²·s)",
             "calc": "0.0030 / (0.10 * (0.10 ** 2))",
             "hint": "Divide Run 1 rate (0.0030) by 0.0010.",
-            "explain": "k = 0.0030 \u00f7 0.0010 = 3.0 L\u00b2/(mol\u00b2\u00b7s)."
+            "explain": "k = 0.0030 ÷ 0.0010 = 3.0 L²/(mol²·s)."
           }
         ],
         "finish": "Orders come from comparing runs, and k comes from plugging one run into the rate law."
@@ -376,24 +376,24 @@
             },
             {
               "id": "b",
-              "label": "ln[A] versus time (negative slope \u2212k)"
+              "label": "ln[A] versus time (negative slope −k)"
             },
             {
               "id": "c",
-              "label": "[A] versus time (negative slope \u2212k)"
+              "label": "[A] versus time (negative slope −k)"
             },
             {
               "id": "d",
-              "label": "1/[A]\u00b2 versus time (positive slope k)"
+              "label": "1/[A]² versus time (positive slope k)"
             }
           ],
           "answer": "a",
-          "explanation": "For a second-order reaction, the integrated rate law is 1/[A]_t \u2212 1/[A]\u2080 = kt, so 1/[A] plotted against t is linear with slope +k."
+          "explanation": "For a second-order reaction, the integrated rate law is 1/[A]_t − 1/[A]₀ = kt, so 1/[A] plotted against t is linear with slope +k."
         },
         {
           "id": "q3-time#b2",
           "quest": "q3-time",
-          "question": "A first-order reaction has k = 0.03465 s\u207b\u00b9 (using ln 2 = 0.693). What is its half-life?",
+          "question": "A first-order reaction has k = 0.03465 s⁻¹ (using ln 2 = 0.693). What is its half-life?",
           "options": [
             {
               "id": "a",
@@ -420,7 +420,7 @@
         "id": "q3-time#w",
         "quest": "q3-time",
         "title": "First-order decay over multiple half-lives",
-        "setup": "A first-order reaction starts at [A]\u2080 = 1.60 mol/L with t_{1/2} = 15 s. Find [A] at t = 45 s.",
+        "setup": "A first-order reaction starts at [A]₀ = 1.60 mol/L with t_{1/2} = 15 s. Find [A] at t = 45 s.",
         "steps": [
           {
             "say": "How many half-lives pass in 45 s?",
@@ -429,7 +429,7 @@
             "unit": "",
             "calc": "45 / 15",
             "hint": "Divide total time 45 s by the half-life 15 s.",
-            "explain": "45 \u00f7 15 = 3 half-lives."
+            "explain": "45 ÷ 15 = 3 half-lives."
           },
           {
             "say": "What is [A] after the first half-life (15 s)?",
@@ -438,7 +438,7 @@
             "unit": "mol/L",
             "calc": "1.60 / 2",
             "hint": "One half-life cuts 1.60 mol/L in half.",
-            "explain": "1.60 \u00f7 2 = 0.80 mol/L."
+            "explain": "1.60 ÷ 2 = 0.80 mol/L."
           },
           {
             "say": "What fraction of the initial reactant remains after 3 half-lives (as a decimal)?",
@@ -446,8 +446,8 @@
             "answer": 0.125,
             "unit": "",
             "calc": "1 / (2 ** 3)",
-            "hint": "Each half-life multiplies the remaining fraction by 0.5: 0.5\u00b3.",
-            "explain": "(1/2)\u00b3 = 1/8 = 0.125."
+            "hint": "Each half-life multiplies the remaining fraction by 0.5: 0.5³.",
+            "explain": "(1/2)³ = 1/8 = 0.125."
           },
           {
             "say": "What is [A] at t = 45 s?",
@@ -456,7 +456,7 @@
             "unit": "mol/L",
             "calc": "1.60 * 0.125",
             "hint": "Multiply 1.60 mol/L by 0.125.",
-            "explain": "1.60 \u00d7 0.125 = 0.20 mol/L."
+            "explain": "1.60 × 0.125 = 0.20 mol/L."
           }
         ],
         "finish": "First-order half-life is constant, so n half-lives always leave (1/2)^n of the starting concentration."
@@ -566,7 +566,7 @@
         {
           "id": "q5-steps#b1",
           "quest": "q5-steps",
-          "question": "In Step 1: X + Y \u2192 Z and Step 2: Z + Y \u2192 W, what role does Z play?",
+          "question": "In Step 1: X + Y → Z and Step 2: Z + Y → W, what role does Z play?",
           "options": [
             {
               "id": "a",
@@ -591,11 +591,11 @@
         {
           "id": "q5-steps#b2",
           "quest": "q5-steps",
-          "question": "A two-step mechanism has a fast reversible Step 1 (2 A \u21cc A\u2082) followed by a slow Step 2 (A\u2082 + B \u2192 C). What is the rate law?",
+          "question": "A two-step mechanism has a fast reversible Step 1 (2 A ⇌ A₂) followed by a slow Step 2 (A₂ + B → C). What is the rate law?",
           "options": [
             {
               "id": "a",
-              "label": "rate = k[A]\u00b2[B]"
+              "label": "rate = k[A]²[B]"
             },
             {
               "id": "b",
@@ -603,15 +603,15 @@
             },
             {
               "id": "c",
-              "label": "rate = k[A]\u00b2"
+              "label": "rate = k[A]²"
             },
             {
               "id": "d",
-              "label": "rate = k[A\u2082]"
+              "label": "rate = k[A₂]"
             }
           ],
           "answer": "a",
-          "explanation": "Step 2 gives rate = k\u2082[A\u2082][B]; substituting [A\u2082] = K[A]\u00b2 from Step 1 gives rate = k[A]\u00b2[B]."
+          "explanation": "Step 2 gives rate = k₂[A₂][B]; substituting [A₂] = K[A]² from Step 1 gives rate = k[A]²[B]."
         }
       ],
       "worked": {
@@ -621,22 +621,22 @@
         "setup": "A two-step reaction starts at R = 20 kJ/mol, climbs to TS1 = 85 kJ/mol, drops to intermediate I = 45 kJ/mol, climbs to TS2 = 70 kJ/mol, and ends at P = 10 kJ/mol.",
         "steps": [
           {
-            "say": "What is the activation energy of Step 1 (TS1 \u2212 R)?",
+            "say": "What is the activation energy of Step 1 (TS1 − R)?",
             "kind": "number",
             "answer": 65,
             "unit": "kJ/mol",
             "calc": "85 - 20",
             "hint": "Subtract R (20) from TS1 (85).",
-            "explain": "85 \u2212 20 = 65 kJ/mol."
+            "explain": "85 − 20 = 65 kJ/mol."
           },
           {
-            "say": "What is the activation energy of Step 2 (TS2 \u2212 I)?",
+            "say": "What is the activation energy of Step 2 (TS2 − I)?",
             "kind": "number",
             "answer": 25,
             "unit": "kJ/mol",
             "calc": "70 - 45",
             "hint": "Step 2 starts from the intermediate valley I = 45 and climbs to TS2 = 70.",
-            "explain": "70 \u2212 45 = 25 kJ/mol."
+            "explain": "70 − 45 = 25 kJ/mol."
           },
           {
             "say": "Which step is the rate-determining step (1 or 2)?",
@@ -648,13 +648,13 @@
             "explain": "Step 1 has Ea = 65 kJ/mol vs 25 kJ/mol for Step 2, so Step 1 is slower."
           },
           {
-            "say": "What is the overall enthalpy change \u0394H (P \u2212 R)?",
+            "say": "What is the overall enthalpy change ΔH (P − R)?",
             "kind": "number",
             "answer": -10,
             "unit": "kJ/mol",
             "calc": "10 - 20",
             "hint": "Subtract starting reactants R (20) from final products P (10).",
-            "explain": "10 \u2212 20 = \u221210 kJ/mol."
+            "explain": "10 − 20 = −10 kJ/mol."
           }
         ],
         "finish": "Each step's barrier is measured from its own starting valley to its peak, and the highest barrier is the rate-determining step."
@@ -665,7 +665,7 @@
         {
           "id": "q6-shortcut#b1",
           "quest": "q6-shortcut",
-          "question": "In Step 1: Br + O\u2083 \u2192 BrO + O\u2082 and Step 2: BrO + O \u2192 Br + O\u2082, which species is the catalyst?",
+          "question": "In Step 1: Br + O₃ → BrO + O₂ and Step 2: BrO + O → Br + O₂, which species is the catalyst?",
           "options": [
             {
               "id": "a",
@@ -677,11 +677,11 @@
             },
             {
               "id": "c",
-              "label": "O\u2083"
+              "label": "O₃"
             },
             {
               "id": "d",
-              "label": "O\u2082"
+              "label": "O₂"
             }
           ],
           "answer": "a",
@@ -690,7 +690,7 @@
         {
           "id": "q6-shortcut#b2",
           "quest": "q6-shortcut",
-          "question": "A reaction has Ea(fwd) = 80 kJ/mol and \u0394H = \u221230 kJ/mol. A catalyst lowers Ea(fwd) by 25 kJ/mol. What is the new reverse activation energy?",
+          "question": "A reaction has Ea(fwd) = 80 kJ/mol and ΔH = −30 kJ/mol. A catalyst lowers Ea(fwd) by 25 kJ/mol. What is the new reverse activation energy?",
           "options": [
             {
               "id": "a",
@@ -710,7 +710,7 @@
             }
           ],
           "answer": "a",
-          "explanation": "Originally Ea(rev) = 80 + 30 = 110 kJ/mol. Lowering the transition state by 25 kJ/mol lowers both forward and reverse barriers by 25 kJ/mol: 110 \u2212 25 = 85 kJ/mol."
+          "explanation": "Originally Ea(rev) = 80 + 30 = 110 kJ/mol. Lowering the transition state by 25 kJ/mol lowers both forward and reverse barriers by 25 kJ/mol: 110 − 25 = 85 kJ/mol."
         }
       ],
       "worked": {
@@ -726,7 +726,7 @@
             "unit": "kJ/mol",
             "calc": "120 - 50",
             "hint": "Subtract R (50) from uncatalysed TS (120).",
-            "explain": "120 \u2212 50 = 70 kJ/mol."
+            "explain": "120 − 50 = 70 kJ/mol."
           },
           {
             "say": "What is the catalysed forward activation energy?",
@@ -735,7 +735,7 @@
             "unit": "kJ/mol",
             "calc": "85 - 50",
             "hint": "Subtract R (50) from catalysed TS (85).",
-            "explain": "85 \u2212 50 = 35 kJ/mol."
+            "explain": "85 − 50 = 35 kJ/mol."
           },
           {
             "say": "By how much did the catalyst lower Ea?",
@@ -744,19 +744,19 @@
             "unit": "kJ/mol",
             "calc": "70 - 35",
             "hint": "Subtract catalysed Ea (35) from uncatalysed Ea (70).",
-            "explain": "70 \u2212 35 = 35 kJ/mol."
+            "explain": "70 − 35 = 35 kJ/mol."
           },
           {
-            "say": "What is \u0394H with the catalyst (P \u2212 R)?",
+            "say": "What is ΔH with the catalyst (P − R)?",
             "kind": "number",
             "answer": -30,
             "unit": "kJ/mol",
             "calc": "20 - 50",
-            "hint": "A catalyst does not change R or P, so \u0394H = P \u2212 R.",
-            "explain": "20 \u2212 50 = \u221230 kJ/mol, unchanged."
+            "hint": "A catalyst does not change R or P, so ΔH = P − R.",
+            "explain": "20 − 50 = −30 kJ/mol, unchanged."
           }
         ],
-        "finish": "A catalyst lowers the barrier for both forward and reverse paths by the same amount while leaving \u0394H unchanged."
+        "finish": "A catalyst lowers the barrier for both forward and reverse paths by the same amount while leaving ΔH unchanged."
       }
     },
     "boss-flare": {
@@ -784,12 +784,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "60 s is 4 half-lives (60 \u00f7 15 = 4), so (1/2)\u2074 = 1/16 = 0.0625 remains."
+          "explanation": "60 s is 4 half-lives (60 ÷ 15 = 4), so (1/2)⁴ = 1/16 = 0.0625 remains."
         },
         {
           "id": "boss-flare#b2",
           "quest": "boss-flare",
-          "question": "A catalyst lowers the forward activation energy of a reaction by 20 kJ/mol. By how much does it change \u0394H?",
+          "question": "A catalyst lowers the forward activation energy of a reaction by 20 kJ/mol. By how much does it change ΔH?",
           "options": [
             {
               "id": "a",
@@ -805,13 +805,57 @@
             },
             {
               "id": "d",
-              "label": "It halves \u0394H"
+              "label": "It halves ΔH"
             }
           ],
           "answer": "a",
-          "explanation": "A catalyst lowers the transition state barrier without changing the energies of reactants or products, so \u0394H stays the same."
+          "explanation": "A catalyst lowers the transition state barrier without changing the energies of reactants or products, so ΔH stays the same."
         }
-      ]
+      ],
+      "worked": {
+        "id": "boss-flare#w",
+        "quest": "boss-flare",
+        "title": "First-Order Decay and Activation Energy",
+        "setup": "A first-order reaction A → B has a half-life of 24.0 s and starts at [A]₀ = 0.800 mol/L. Its forward activation energy is 65 kJ/mol and ΔH = −25 kJ/mol.",
+        "steps": [
+          {
+            "say": "What is the first-order rate constant k, using t½ = 0.693 / k?",
+            "kind": "number",
+            "answer": 0.02888,
+            "calc": "0.693 / 24.0",
+            "unit": "s⁻¹",
+            "hint": "Rearrange t½ = 0.693 / k to k = 0.693 / t½.",
+            "explain": "k = 0.693 / 24.0 s = 0.02888 s⁻¹."
+          },
+          {
+            "say": "Using ln[A]t = ln[A]₀ − kt, what is ln[A]t at t = 35.0 s?",
+            "kind": "number",
+            "answer": -1.234,
+            "calc": "Math.log(0.800) - (0.693 / 24.0) * 35.0",
+            "hint": "Compute ln(0.800) − k × 35.0.",
+            "explain": "ln(0.800) − (0.02888 × 35.0) = −0.2231 − 1.0106 = −1.234."
+          },
+          {
+            "say": "What is [A] at t = 35.0 s?",
+            "kind": "number",
+            "answer": 0.2912,
+            "calc": "0.800 * Math.exp(-(0.693 / 24.0) * 35.0)",
+            "unit": "mol/L",
+            "hint": "Take e^(ln[A]t).",
+            "explain": "e^(−1.234) = 0.291 mol/L (between one half-life 0.400 M at 24 s and two half-lives 0.200 M at 48 s)."
+          },
+          {
+            "say": "What is the reverse activation energy Ea(rev) if Ea(fwd) = 65 kJ/mol and ΔH = −25 kJ/mol?",
+            "kind": "number",
+            "answer": 90,
+            "calc": "65 - (-25)",
+            "unit": "kJ/mol",
+            "hint": "For an exothermic reaction, products sit 25 kJ/mol below reactants, so climbing back to the transition state is higher.",
+            "explain": "Ea(rev) = Ea(fwd) − ΔH = 65 − (−25) = 90 kJ/mol."
+          }
+        ],
+        "finish": "The integrated rate law ln[A]t = ln[A]₀ − kt works at any time t, not only at whole multiples of the half-life."
+      }
     }
   }
 }

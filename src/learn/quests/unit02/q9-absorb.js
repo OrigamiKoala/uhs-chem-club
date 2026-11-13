@@ -38,17 +38,18 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  cuvetteTable, cuvette, dropper, rinser, chip, spectro, plaqueFixture, markerFixture,
+  cuvetteTable, cuvette, dropper, rinser, chip, motionCard, readingCard, spectro, plaqueFixture, markerFixture,
   spectroRead, regionRead, absorbOf, concOf, missingColour, colourOfNm, chipIn, lightOf, fmtWave, markerRead, planAbsorb, planRegion, regionOf,
   COLOURS, COPPER_SWEEP, PATHS, REGIONS, DROP, MAX_DROPS, SOLUTES, gotThrough
 } from '../../table/kits/cuvette.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bcomplementary colou?rs?\b/i, introducedAt: 2 },
   { term: /\babsorbance\b/i, introducedAt: 3 },
-  { term: /\bcalibration (?:curves?|lines?)\b/i, introducedAt: 5 }
+  { term: /\bcalibration (?:curves?|lines?)\b/i, introducedAt: 5 },
+  { term: /\bmolecular spectroscopy\b/i, introducedAt: 6 }
 ];
 
 export const BUILDS_ON = ['unit02/q1-wave', 'unit02/q3-lines'];
@@ -283,7 +284,87 @@ export const STAGES = [
         log: 'Calibration line gave the unknown concentration.',
         title: 'Calibration Line',
         body: 'The standards make a straight line of absorbance against concentration. The sealed sample\'s absorbance sits on that line at its concentration.',
-        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'Unknown sample: concentration is determined directly from its absorbance on the calibration line.' },
+        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'Unknown sample: concentration is determined directly from its absorbance on the calibration line.' }
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { region: true, label: 'Light and a molecule' });
+    const slot = (id, label, y) => ({ id, label, at: { x: 124, y }, size: { w: 11, h: 11 } });
+    return {
+      title: 'What Each Light Does',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'This bench shines radiation through a cuvette to see how each band affects a molecule; turn the Light dial to choose the radiation and watch the molecule.'
+      },
+      prompt: 'Put each kind of light beside the motion it makes in the molecule.',
+      widget,
+      table: cuvetteTable({
+        pieces: [
+          motionCard('stretches', 'Stretches and bends its bonds', { x: 18, y: 53 }),
+          motionCard('jumps', 'Moves an electron up a level', { x: 54, y: 53 }),
+          motionCard('spins', 'Spins the molecule', { x: 90, y: 53 })
+        ],
+        fixtures: [sp.fixture],
+        zones: { slots: [slot('microwave', 'Microwave', 10), slot('infrared', 'Infrared', 27), slot('uv', 'UV and visible', 44)] }
+      }),
+      hints: [
+        'Turn the light dial through its three settings and watch what the molecule does.',
+        'Compare how the molecule moves under each setting, and note which movement belongs to which kind of light.',
+        'Match the whole molecule turning to the longest waves, the bond changing length to the middle ones, and the electron to the shortest.'
+      ],
+      check(state) {
+        const t = state.table;
+        const want = { microwave: 'spins', infrared: 'stretches', uv: 'jumps' };
+        const seat = k => Object.values(t.pieces).find(p => p.zone === `slot:${k}`)?.id || null;
+        if (Object.keys(want).some(k => !seat(k))) return { ok: false, notYet: true, msg: 'Match all three kinds of light.' };
+        for (const k of Object.keys(want)) {
+          if (seat(k) !== want[k]) return { ok: false, msg: 'Turn the light dial to that kind of light and watch what the molecule does before you match it.' };
+        }
+        return { ok: true };
+      },
+      reward: {
+        log: 'Three lights, three movements.',
+        title: 'Molecular Spectroscopy',
+        body: 'Microwaves make a molecule spin (rotational transitions), infrared makes its bonds stretch and bend (vibrational transitions), and ultraviolet or visible light lifts an electron to a higher energy level. Reading which light a substance takes in is molecular spectroscopy.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 30 }, size: { w: 36, h: 22 }, cell: 25 });
+    return {
+      title: 'Three Readings',
+      prompt: 'Put each recorded wavelength in the tray for the kind of light that caused it.',
+      widget,
+      table: cuvetteTable({
+        pieces: [readingCard('r1', 'READING 1', 3e7, { x: 16, y: 53 }), readingCard('r2', 'READING 2', 3e4, { x: 44, y: 53 }), readingCard('r3', 'READING 3', 300, { x: 72, y: 53 })],
+        fixtures: [plaqueFixture('visible', 'Visible light', { x: 36, y: 8 }, ['380 to 750 nm'], { w: 62 })],
+        zones: { trays: [tray('microwave', 'Microwave', 32), tray('infrared', 'Infrared', 76), tray('ultraviolet', 'Ultraviolet', 120)] }
+      }),
+      hints: [
+        'Read the wavelength printed on each card.',
+        'Compare each wavelength with the band of visible light on the plate, and with the order of the spectrum from the first bench.',
+        'The longest wavelength belongs to the lowest-energy light and the shortest to the highest.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = ['r1', 'r2', 'r3'];
+        if (!ids.every(id => (t.pieces[id].zone || '').startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
+        for (const id of ids) {
+          const want = lightOf(t.pieces[id].props.nm);
+          if (where(t, id) !== (want === 'uv' ? 'ultraviolet' : want)) return { ok: false, msg: 'Read each wavelength against the band of visible light and the order of the electromagnetic spectrum.' };
+        }
+        return { ok: true };
+      },
+      reward: {
+        log: 'Longer waves, smaller movements.',
+        title: 'Bigger Change, Shorter Wave',
+        body: 'The longer the wavelength a molecule takes in, the smaller the change it makes: rotation takes the least energy, vibration more, and lifting an electron the most.',
         last: true
       }
     };
@@ -335,7 +416,9 @@ export const SOLUTIONS = [
   [
     ...drops('s1', 1), ...drops('s2', 2), ...drops('s3', 3), ...read('s1'), ...read('s2'), ...read('s3'),
     { lay: { kind: 'straightedge', through: [0, 2] } }, ...read('sealed'), dial('conc', 'value', 5)
-  ]
+  ],
+  [dial(SP, 'region', 2), put('spins', 'slot:microwave'), put('stretches', 'slot:infrared'), put('jumps', 'slot:uv')],
+  [put('r1', 'tray:microwave'), put('r2', 'tray:infrared'), put('r3', 'tray:ultraviolet')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -344,7 +427,9 @@ export const MISSES = [
   [put('c-blue', 'slot:taken')],
   [dial(SP, 'nm', 3), { run: SP }, dial(SP, 'nm', 4), { run: SP }],
   [...read('a'), ...drops('b', 2), ...read('b')],
-  [...drops('s1', 1), ...drops('s2', 2), ...drops('s3', 3), ...read('s1'), ...read('s2'), ...read('s3'), { lay: { kind: 'straightedge', through: [0, 2] } }, ...read('sealed'), dial('conc', 'value', 4)]
+  [...drops('s1', 1), ...drops('s2', 2), ...drops('s3', 3), ...read('s1'), ...read('s2'), ...read('s3'), { lay: { kind: 'straightedge', through: [0, 2] } }, ...read('sealed'), dial('conc', 'value', 4)],
+  [put('stretches', 'slot:microwave'), put('spins', 'slot:infrared'), put('jumps', 'slot:uv')],
+  [put('r1', 'tray:ultraviolet'), put('r2', 'tray:infrared'), put('r3', 'tray:microwave')]
 ];
 
 function blankState() { return {}; }

@@ -530,7 +530,76 @@
           "answer": "c",
           "explanation": "The single O²⁻ is 2−, so the copper ion is 2+. The Roman numeral is that charge, and the second ion takes -ide: copper(II) oxide."
         }
-      ]
+      ],
+      "worked": {
+        "id": "q2-names#w",
+        "quest": "q2-names",
+        "title": "Formula and Mass of Aluminium Sulfate",
+        "setup": "Build the neutral ionic compound formed by aluminium ions (Al³⁺) and sulfate ions (SO₄²⁻), and find the moles of oxygen atoms in 34.2 g of it. (Al 27.0, S 32.1, O 16.0 g/mol)",
+        "steps": [
+          {
+            "say": "What is the smallest neutral ratio of Al³⁺ and SO₄²⁻ ions?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "Al₂(SO₄)₃"
+              },
+              {
+                "id": "b",
+                "label": "Al₃(SO₄)₂"
+              },
+              {
+                "id": "c",
+                "label": "AlSO₄"
+              },
+              {
+                "id": "d",
+                "label": "Al₂SO₄"
+              }
+            ],
+            "answer": "a",
+            "hint": "Balance +3 and −2 charges so the total positive and negative charges are +6 and −6.",
+            "explain": "Two Al³⁺ (+6) balance three SO₄²⁻ (−6), giving Al₂(SO₄)₃."
+          },
+          {
+            "say": "How many oxygen atoms are in one formula unit of Al₂(SO₄)₃?",
+            "kind": "number",
+            "answer": 12,
+            "calc": "3 * 4",
+            "hint": "Each sulfate ion holds 4 oxygen atoms, and there are 3 sulfate ions.",
+            "explain": "3 × 4 = 12 oxygen atoms per formula unit."
+          },
+          {
+            "say": "What is the molar mass of Al₂(SO₄)₃?",
+            "kind": "number",
+            "answer": 342.3,
+            "calc": "2 * 27.0 + 3 * 32.1 + 12 * 16.0",
+            "unit": "g/mol",
+            "hint": "Add 2 Al + 3 S + 12 O.",
+            "explain": "2(27.0) + 3(32.1) + 12(16.0) = 54.0 + 96.3 + 192.0 = 342.3 g/mol."
+          },
+          {
+            "say": "How many moles of Al₂(SO₄)₃ are in 34.2 g?",
+            "kind": "number",
+            "answer": 0.1,
+            "calc": "34.2 / 342.3",
+            "unit": "mol",
+            "hint": "Divide 34.2 g by the molar mass.",
+            "explain": "34.2 / 342.3 = 0.100 mol Al₂(SO₄)₃."
+          },
+          {
+            "say": "How many moles of oxygen atoms are in that 0.100 mol sample?",
+            "kind": "number",
+            "answer": 1.2,
+            "calc": "0.100 * 12",
+            "unit": "mol",
+            "hint": "Multiply moles of Al₂(SO₄)₃ by 12.",
+            "explain": "0.100 mol × 12 = 1.20 mol O atoms."
+          }
+        ],
+        "finish": "Charge balance fixes the ionic formula, and subscripts inside and outside parentheses multiply to give atom counts."
+      }
     },
     "q3-change": {
       "problems": [

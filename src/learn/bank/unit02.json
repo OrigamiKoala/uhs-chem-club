@@ -2402,7 +2402,73 @@
           "answer": "c",
           "explanation": "Sulfur is 1s² 2s² 2p⁶ 3s² 3p⁴. The six outer electrons are 3s² 3p⁴. In 3p, three orbitals take one electron each first, and the fourth pairs up, leaving two unpaired."
         }
-      ]
+      ],
+      "worked": {
+        "id": "boss-eater#w",
+        "quest": "boss-eater",
+        "title": "Identifying an Element from Successive Ionization Energies",
+        "setup": "A Period 3 element has successive ionization energies (in kJ/mol): IE₁ = 578, IE₂ = 1817, IE₃ = 2745, IE₄ = 11577, IE₅ = 14842. Identify the element and its electron configuration.",
+        "steps": [
+          {
+            "say": "What is the ratio IE₄ / IE₃ across the largest jump in the table?",
+            "kind": "number",
+            "answer": 4.217,
+            "calc": "11577 / 2745",
+            "hint": "Divide the fourth ionization energy by the third.",
+            "explain": "11577 / 2745 = 4.22, a huge jump compared with IE₃ / IE₂ = 1.51."
+          },
+          {
+            "say": "Why does the energy jump so sharply when removing the fourth electron?",
+            "kind": "choice",
+            "options": [
+              {
+                "id": "a",
+                "label": "The fourth electron is in an inner core shell much closer to the nucleus"
+              },
+              {
+                "id": "b",
+                "label": "The fourth electron is farther from the nucleus"
+              },
+              {
+                "id": "c",
+                "label": "The nucleus gains protons after three electrons leave"
+              },
+              {
+                "id": "d",
+                "label": "Valence electrons always cost more than core electrons"
+              }
+            ],
+            "answer": "a",
+            "hint": "After all valence electrons are removed, the next electron comes from a filled inner shell.",
+            "explain": "Removing the fourth electron breaks into the n = 2 core shell, where attraction to the nucleus is much stronger."
+          },
+          {
+            "say": "How many valence electrons does a neutral atom of this Period 3 element have?",
+            "kind": "number",
+            "answer": 3,
+            "calc": "3",
+            "hint": "Count how many electrons come off before the huge jump.",
+            "explain": "Three electrons come off before the jump, so the atom has 3 valence electrons (Group 13, aluminium, Z = 13)."
+          },
+          {
+            "say": "What is the total number of electrons in a neutral atom of this Period 3 element?",
+            "kind": "number",
+            "answer": 13,
+            "calc": "2 + 8 + 3",
+            "hint": "Period 3 has 2 electrons in n = 1, 8 in n = 2, plus its valence electrons in n = 3.",
+            "explain": "2 + 8 + 3 = 13 electrons (1s² 2s² 2p⁶ 3s² 3p¹), which is aluminium."
+          },
+          {
+            "say": "How many peaks appear in the complete photoelectron spectrum (PES) of this atom?",
+            "kind": "number",
+            "answer": 5,
+            "calc": "5",
+            "hint": "Count the occupied subshells in 1s² 2s² 2p⁶ 3s² 3p¹.",
+            "explain": "Five occupied subshells (1s, 2s, 2p, 3s, 3p) produce 5 PES peaks, with relative heights 2, 2, 6, 2, 1."
+          }
+        ],
+        "finish": "A sharp jump between successive ionization energies marks the boundary between valence electrons and the inner core."
+      }
     }
   }
 }

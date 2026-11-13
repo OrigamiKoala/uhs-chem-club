@@ -230,7 +230,61 @@
           "answer": "b",
           "explanation": "The dilute side is the anode, so the electrons leave the electrode in the 0.010 M beaker. The cell runs until the two concentrations match, and its voltage falls to zero there."
         }
-      ]
+      ],
+      "worked": {
+        "id": "boss-clamp#w",
+        "quest": "boss-clamp",
+        "title": "From Cell Potential to Electrolysis Mass",
+        "setup": "A galvanic cell runs on Zn(s) + Cu²⁺(aq) → Zn²⁺(aq) + Cu(s) with E°(Zn²⁺/Zn) = −0.76 V and E°(Cu²⁺/Cu) = +0.34 V. A steady current of 2.50 A from the battery runs for 16.0 minutes to plate copper onto a cathode. (Cu 63.55 g/mol, F = 96,485 C/mol)",
+        "steps": [
+          {
+            "say": "What is the standard cell potential E°cell of the zinc–copper cell?",
+            "kind": "number",
+            "answer": 1.1,
+            "calc": "0.34 - (-0.76)",
+            "unit": "V",
+            "hint": "E°cell = E°(cathode) − E°(anode).",
+            "explain": "Copper is reduced (+0.34 V) and zinc is oxidized (−0.76 V), so E°cell = 0.34 − (−0.76) = 1.10 V."
+          },
+          {
+            "say": "With n = 2 mol of electrons, what is ΔG° for the cell reaction in kJ/mol?",
+            "kind": "number",
+            "answer": -212.3,
+            "calc": "-2 * 96485 * 1.10 / 1000",
+            "unit": "kJ/mol",
+            "hint": "Use ΔG° = −nFE°cell and divide by 1000 to convert J to kJ.",
+            "explain": "ΔG° = −2 × 96,485 × 1.10 / 1000 = −212.3 kJ/mol."
+          },
+          {
+            "say": "How much total charge passes when 2.50 A runs for 16.0 minutes?",
+            "kind": "number",
+            "answer": 2400,
+            "calc": "2.50 * 16.0 * 60",
+            "unit": "C",
+            "hint": "Convert 16.0 minutes to seconds, then multiply by 2.50 A (q = I t).",
+            "explain": "q = 2.50 A × (16.0 × 60 s) = 2400 C."
+          },
+          {
+            "say": "How many moles of electrons is 2400 C?",
+            "kind": "number",
+            "answer": 0.02487,
+            "calc": "2400 / 96485",
+            "unit": "mol e⁻",
+            "hint": "Divide charge in coulombs by Faraday’s constant, 96,485 C/mol.",
+            "explain": "2400 / 96,485 = 0.02487 mol e⁻."
+          },
+          {
+            "say": "Since Cu²⁺ + 2 e⁻ → Cu, what mass of copper is plated?",
+            "kind": "number",
+            "answer": 0.7904,
+            "calc": "(2400 / 96485) / 2 * 63.55",
+            "unit": "g",
+            "hint": "Divide moles of electrons by 2 to get moles of Cu, then multiply by 63.55 g/mol.",
+            "explain": "(0.02487 / 2) mol × 63.55 g/mol = 0.790 g Cu."
+          }
+        ],
+        "finish": "Cell potential links directly to ΔG° through nF, and current × time links to mass plated through Faraday’s constant."
+      }
     }
   }
 }
