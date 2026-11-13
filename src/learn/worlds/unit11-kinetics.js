@@ -65,8 +65,8 @@ export const UNIT_11 = {
       line: 'A trace of powder in the vent speeds the burn tenfold and never runs out.',
       arena: 'bench',
       stageCount: 5,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit11/q6-shortcut.js')
     },
     {
       id: 'boss-flare',

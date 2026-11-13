@@ -38,6 +38,9 @@ export const STAGE_STORY = {
   'q5-steps': {
     1: 'The additive burns in two fast-or-slow steps, and only one controls the tower spike.'
   },
+  'q6-shortcut': {
+    1: 'A trace of dust in the vent speeds the burn tenfold without ever running out.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'q5-load': {
     1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'

@@ -65,6 +65,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the additive runs in two elementary steps, and the slow first step governs the rate law.'
   },
+  'unit11/q6-shortcut': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'A catalyst speeds up a reaction by opening an alternate pathway with a lower activation energy.' },
+      { to: 0.70, say: 'All six catalyst particles remained at the end, and the reactant and product energies did not move.' },
+      { to: 0.95, say: 'A catalyst is consumed first and regenerated later, and solid catalysts work at their exposed surface.' }
+    ],
+    filed: 'Filed: the vent powder is a catalyst that lowers the barrier without being used up.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

@@ -125,6 +125,31 @@
       ],
       "answer": "a",
       "explanation": "Step 1 is the slow rate-determining step and involves two NO\u2082 molecules, so rate = k[NO\u2082]\u00b2."
+    },
+    {
+      "id": "q6-shortcut#e1",
+      "quest": "q6-shortcut",
+      "question": "How does adding a catalyst increase the rate of a chemical reaction?",
+      "options": [
+        {
+          "id": "a",
+          "label": "It provides an alternate pathway with a lower activation energy"
+        },
+        {
+          "id": "b",
+          "label": "It increases the enthalpy change \u0394H of the reaction"
+        },
+        {
+          "id": "c",
+          "label": "It raises the average kinetic energy of the reactants"
+        },
+        {
+          "id": "d",
+          "label": "It shifts the energy of the products lower"
+        }
+      ],
+      "answer": "a",
+      "explanation": "A catalyst lowers Ea by opening a different mechanism while leaving reactant energies, product energies, and \u0394H unchanged."
     }
   ],
   "bench": {
@@ -633,6 +658,105 @@
           }
         ],
         "finish": "Each step's barrier is measured from its own starting valley to its peak, and the highest barrier is the rate-determining step."
+      }
+    },
+    "q6-shortcut": {
+      "problems": [
+        {
+          "id": "q6-shortcut#b1",
+          "quest": "q6-shortcut",
+          "question": "In Step 1: Br + O\u2083 \u2192 BrO + O\u2082 and Step 2: BrO + O \u2192 Br + O\u2082, which species is the catalyst?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Br"
+            },
+            {
+              "id": "b",
+              "label": "BrO"
+            },
+            {
+              "id": "c",
+              "label": "O\u2083"
+            },
+            {
+              "id": "d",
+              "label": "O\u2082"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Br is consumed in Step 1 and regenerated in Step 2, so it is a catalyst; BrO is made in Step 1 and used in Step 2 (an intermediate)."
+        },
+        {
+          "id": "q6-shortcut#b2",
+          "quest": "q6-shortcut",
+          "question": "A reaction has Ea(fwd) = 80 kJ/mol and \u0394H = \u221230 kJ/mol. A catalyst lowers Ea(fwd) by 25 kJ/mol. What is the new reverse activation energy?",
+          "options": [
+            {
+              "id": "a",
+              "label": "85 kJ/mol"
+            },
+            {
+              "id": "b",
+              "label": "55 kJ/mol"
+            },
+            {
+              "id": "c",
+              "label": "110 kJ/mol"
+            },
+            {
+              "id": "d",
+              "label": "30 kJ/mol"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Originally Ea(rev) = 80 + 30 = 110 kJ/mol. Lowering the transition state by 25 kJ/mol lowers both forward and reverse barriers by 25 kJ/mol: 110 \u2212 25 = 85 kJ/mol."
+        }
+      ],
+      "worked": {
+        "id": "q6-shortcut#w",
+        "quest": "q6-shortcut",
+        "title": "Catalysed vs uncatalysed energy profile",
+        "setup": "Reactants sit at 50 kJ/mol, the uncatalysed transition state is at 120 kJ/mol, the catalysed transition state is at 85 kJ/mol, and products sit at 20 kJ/mol.",
+        "steps": [
+          {
+            "say": "What is the uncatalysed forward activation energy?",
+            "kind": "number",
+            "answer": 70,
+            "unit": "kJ/mol",
+            "calc": "120 - 50",
+            "hint": "Subtract R (50) from uncatalysed TS (120).",
+            "explain": "120 \u2212 50 = 70 kJ/mol."
+          },
+          {
+            "say": "What is the catalysed forward activation energy?",
+            "kind": "number",
+            "answer": 35,
+            "unit": "kJ/mol",
+            "calc": "85 - 50",
+            "hint": "Subtract R (50) from catalysed TS (85).",
+            "explain": "85 \u2212 50 = 35 kJ/mol."
+          },
+          {
+            "say": "By how much did the catalyst lower Ea?",
+            "kind": "number",
+            "answer": 35,
+            "unit": "kJ/mol",
+            "calc": "70 - 35",
+            "hint": "Subtract catalysed Ea (35) from uncatalysed Ea (70).",
+            "explain": "70 \u2212 35 = 35 kJ/mol."
+          },
+          {
+            "say": "What is \u0394H with the catalyst (P \u2212 R)?",
+            "kind": "number",
+            "answer": -30,
+            "unit": "kJ/mol",
+            "calc": "20 - 50",
+            "hint": "A catalyst does not change R or P, so \u0394H = P \u2212 R.",
+            "explain": "20 \u2212 50 = \u221230 kJ/mol, unchanged."
+          }
+        ],
+        "finish": "A catalyst lowers the barrier for both forward and reverse paths by the same amount while leaving \u0394H unchanged."
       }
     }
   }
