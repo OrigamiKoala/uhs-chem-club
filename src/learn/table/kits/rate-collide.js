@@ -17,7 +17,8 @@ const DUST = PLATE_COLORS.dust;
 const AMBER = PLATE_COLORS.amber;
 const TEXT = PLATE_COLORS.text;
 
-const playStart = new WeakMap();
+const playStartFlat = new WeakMap();
+const playStart3d = new WeakMap();
 
 export function collviewFixture(id, at, {
   title = 'Collision view',
@@ -123,6 +124,7 @@ function paintCollview(ctx, f, state, b) {
   let prog = 0;
   if (p.ran) {
     const key = `${f.id}:${p.runSeq}`;
+    const playStart = b.scope === '3d' ? playStart3d : playStartFlat;
     if (!playStart.has(f)) playStart.set(f, { key, t0: b.clock });
     const rec = playStart.get(f);
     if (rec.key !== key) { rec.key = key; rec.t0 = b.clock; }

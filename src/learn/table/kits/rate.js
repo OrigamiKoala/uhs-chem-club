@@ -6,7 +6,8 @@
 import { registerKit } from './registry.js';
 import { HEAT_KIT, HEAT_BOUNDS, HEAT_RECORDER } from './heat.js';
 import { paintPiece as heatPiece, paintFixture as heatFixture, faceKey as heatFaceKey } from './heat-draw.js';
-import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './rate-registry.js';
+import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers, allFixtureEntries } from './rate-registry.js';
+import { installRateDresses } from './rate-3d.js';
 import './rate-tour.js';
 import './rate-vessel.js';
 import './rate-log.js';
@@ -77,6 +78,7 @@ export const RATE_KIT = {
   printed: p => (pieceDef(p.kind)?.printed ? pieceDef(p.kind).printed(p) : HEAT_KIT.printed(p))
 };
 
+installRateDresses(allFixtureEntries());
 registerKit(RATE_KIT);
 
 export function rateTable(spec, { w = RATE_BOUNDS.w, h = RATE_BOUNDS.h, recorder = null } = {}) {

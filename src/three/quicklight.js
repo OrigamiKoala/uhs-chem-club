@@ -168,7 +168,7 @@ export class QuicklightWorld {
     this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
 
-    const ribbons = this.data.roads.map(r => buildRibbon(this.field, r.pts, r.width));
+    const ribbons = this.data.roads.map(r => buildRibbon(this.field, r.pts, r.width ?? r.w));
     ribbons.push(buildDisc(this.field, this.data.arena.boss[0], this.data.arena.boss[2], 12.0));
     const g = new THREE.Group();
     g.name = 'quicklight-roads';

@@ -17,7 +17,8 @@ const DUST = PLATE_COLORS.dust;
 const AMBER = PLATE_COLORS.amber;
 const TEXT = PLATE_COLORS.text;
 
-const runStart = new WeakMap();
+const runStartFlat = new WeakMap();
+const runStart3d = new WeakMap();
 
 export function replayVessels() {
   // WeakMap entries clear naturally when fixtures are replaced; kept for kit.replay/onMiss parity.
@@ -224,6 +225,7 @@ function paintKvessel(ctx, f, state, b) {
     frac = p.freezeAt;
   } else if (p.ran) {
     const key = `${f.id}:${p.runSeq}`;
+    const runStart = b.scope === '3d' ? runStart3d : runStartFlat;
     if (!runStart.has(f)) runStart.set(f, { key, t0: b.clock });
     const rec = runStart.get(f);
     if (rec.key !== key) { rec.key = key; rec.t0 = b.clock; }
@@ -401,7 +403,7 @@ function paintKvessel(ctx, f, state, b) {
       });
     }
   } else {
-    say(ctx, `Press "${p.runLabel}"`, F.x(gx + gw / 2), F.y(gy + gh / 2), F.size(1.9, 4.8), { align: 'center', color: DIM });
+    say(ctx, `Press "${f.runLabel || 'Run'}"`, F.x(gx + gw / 2), F.y(gy + gh / 2), F.size(1.9, 4.8), { align: 'center', color: DIM });
   }
 }
 

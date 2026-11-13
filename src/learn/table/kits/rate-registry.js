@@ -12,3 +12,4 @@ export const pieceDef = kind => PIECES.get(kind) || null;
 export const allFixtureHandlers = () => [...FIXTURES.values()];
 export const pieceKinds = () => Object.fromEntries([...PIECES.entries()].filter(([, d]) => d.kind).map(([k, d]) => [k, d.kind]));
 export const allKinds = () => [...FIXTURES.keys()];
+export const allFixtureEntries = () => [...FIXTURES.entries()];
