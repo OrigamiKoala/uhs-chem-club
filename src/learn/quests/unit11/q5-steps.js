@@ -7,7 +7,7 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import {
   rateTable,
   kvesselFixture,
@@ -149,7 +149,7 @@ export const STAGES = [
     title: 'The Bottleneck',
     briefing: {
       speaker: SPEAKER,
-      body: 'Switch between "Slow 1, Fast 2" and "Fast 1, Slow 2" and watch how fast intermediate I builds up and product P forms.'
+      body: 'In a two-step mechanism the first step makes an intermediate, I, and the second turns I into the product, P.'
     },
     prompt: 'Which step controls how fast the final product P forms?',
     widget,
@@ -183,14 +183,14 @@ export const STAGES = [
     }),
     hints: [
       'Run the vessel under both presets on the "Step speeds" dial.',
-      'Notice that product P climbs slowly whenever one step is slow, even when the other step is 25 times faster.',
-      'A multi-step chain cannot finish faster than its slowest step.'
+      'Compare how quickly P forms under the two settings, and how much I builds up in each.',
+      'Think of the steps as a line of people passing a bucket: what limits how fast buckets arrive?'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
       if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Controls rate".' };
       if (card.id === 'fast') return { ok: false, msg: 'Making one step fast still leaves product P waiting on the slow step.' };
-      if (card.id === 'equal') return { ok: false, msg: 'Intermediate I piles up behind a slow Step 2 or drains at once behind a slow Step 1 — the slow step sets the pace.' };
+      if (card.id === 'equal') return { ok: false, msg: 'The product line is not the same under both settings, so the two steps are not equally important.' };
       return { ok: true };
     },
     reward: {
@@ -232,8 +232,8 @@ export const STAGES = [
     }),
     hints: [
       'Watch how many A molecules must meet in this single elementary collision.',
-      'Doubling [A] doubles the chance for each of the two colliding A molecules, making collisions 4 times as frequent.',
-      'For an elementary step, the number of colliding reactants gives its exponent on the Rate law board.'
+      'Ask how doubling [A] changes the chance of meeting for each of the particles that must collide.',
+      'Each colliding particle contributes its own factor of [A] to how often the collision happens.'
     ],
     check(state) {
       const ordA = Math.round(state.table.fixtures.board?.dials?.o0?.value ?? 0);
@@ -271,9 +271,9 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Check which reactants collide in the slow step of each candidate.',
-      'The measured rate law depends on [NO₂]² and not on [CO].',
-      'Only a slow step of NO₂ + NO₂ gives rate = k[NO₂]².'
+      'Find the slow step in each candidate mechanism.',
+      'Read the plate: which concentration matters, and to what power?',
+      'A slow step is an elementary step, so its colliding particles give its rate law; compare that with the plate.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -294,46 +294,48 @@ export const STAGES = [
     title: 'Fast Pre-Equilibrium',
     briefing: {
       speaker: SPEAKER,
-      body: 'Step 1 (2 NO ⇌ N₂O₂) is fast and reversible; Step 2 (N₂O₂ + O₂ → 2 NO₂) is slow. Substituting [N₂O₂] = K[NO]² gives rate = k[NO]²[O₂].'
+      body: 'Step 1, 2 NO ⇌ N₂O₂, runs fast in both directions, so the amount of N₂O₂ stays in step with the NO. Step 2, N₂O₂ + O₂ → 2 NO₂, is slow.'
     },
-    prompt: 'What happens to the rate if you double [O₂] at fixed [NO]?',
+    prompt: 'What is the rate law of the overall reaction, in terms of NO and O₂?',
     widget,
     table: rateTable({
-      pieces: [
-        stmt('doubles', 'Rate doubles', { x: 116, y: 9 }),
-        stmt('quadruples', 'Rate quadruples', { x: 116, y: 24 }),
-        stmt('same', 'Rate stays the same', { x: 116, y: 39 })
-      ],
       fixtures: [
-        kvesselFixture('v1', { x: 48, y: 28 }, {
+        kvesselFixture('v1', { x: 44, y: 28 }, {
           title: 'Pre-equilibrium run',
           mode: 'twostep',
           twoStep: { mode: 'preeq', k1f: 0.4, k1r: 0.3, k2: 0.04, a0: 1.0, b0: 0 },
           tMax: 60,
-          w: 84,
+          w: 76,
           h: 42
+        }),
+        rateboardFixture('board', { x: 118, y: 28 }, {
+          title: 'Overall rate law',
+          species: ['NO', 'O₂'],
+          maxOrder: 2,
+          w: 54,
+          h: 30
         })
-      ],
-      zones: {
-        slots: [{ id: 'ans', label: 'Effect of 2× [O₂]', at: { x: 116, y: 52 }, size: { w: 44, h: 8 } }]
-      }
+      ]
     }),
     hints: [
-      'Run the vessel and check the rate law written in the briefing: rate = k[NO]²[O₂].',
-      'O₂ enters in the slow second step with exponent 1.',
-      'Doubling [O₂] multiplies [NO]²[O₂] by 2¹.'
+      'Run the vessel and watch how much N₂O₂ there is while the product forms.',
+      'The slow step sets the rate, but the intermediate it uses cannot appear in the answer.',
+      'Replace the intermediate by what it stays in step with, then count how many NO and how many O₂ remain.'
     ],
     check(state) {
-      const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Effect of 2× [O₂]".' };
-      if (card.id === 'quadruples') return { ok: false, msg: 'The exponent on [O₂] in rate = k[NO]²[O₂] is 1, not 2.' };
-      if (card.id === 'same') return { ok: false, msg: 'O₂ collides in the slow second step, so [O₂] is in the rate law.' };
+      const d = state.table.fixtures.board?.dials || {};
+      const o0 = Math.round(d.o0?.value ?? 0); const o1 = Math.round(d.o1?.value ?? 0);
+      if (o0 === 0 && o1 === 0) return { ok: false, notYet: true, msg: 'Set the order of NO and of O₂ on the board.' };
+      if (o0 === 1 && o1 === 1) return { ok: false, msg: 'That counts the NO once; the intermediate N₂O₂ is made from two NO.' };
+      if (o0 === 0) return { ok: false, msg: 'The NO is in the rate law: the slow step uses N₂O₂, and N₂O₂ is made from NO.' };
+      if (o1 === 0) return { ok: false, msg: 'O₂ collides in the slow step, so its concentration is in the rate law.' };
+      if (o0 !== 2 || o1 !== 1) return { ok: false, msg: 'Count the particles in the slow step: how many NO and how many O₂ make up its reactants?' };
       return { ok: true };
     },
     reward: {
-      log: 'Doubling [O2] doubles the rate in rate = k[NO]^2[O2].',
+      log: 'Overall rate = k[NO]²[O₂].',
       title: 'Pre-Equilibrium Rate Law',
-      body: 'When a fast reversible step precedes a slow step, substituting the intermediate gives a rate law with both NO and O₂.'
+      body: 'The slow step uses N₂O₂ and O₂, and N₂O₂ stays proportional to [NO]², so rate = k[NO]²[O₂]. An intermediate never appears in the overall rate law.'
     }
   },
 
@@ -341,7 +343,8 @@ export const STAGES = [
   {
     id: 's7-two-hump-profile',
     title: 'Two Hills, One Slow Step',
-    prompt: 'Which step is the rate-determining step on this profile?',
+    prompt: 'What is the activation energy of the step that sets the overall rate?',
+    entry: { id: 'ea_rds', label: 'Ea of slow step', unit: 'kJ/mol' },
     widget,
     table: rateTable({
       fixtures: [
@@ -352,32 +355,28 @@ export const STAGES = [
           valley: 55,
           ts2: 75,
           products: 15,
-          tapZones: [
-            { id: 'step1', label: 'Step 1 peak (TS1)', x0: 0.16, x1: 0.40 },
-            { id: 'int', label: 'Intermediate (I)', x0: 0.44, x1: 0.62 },
-            { id: 'step2', label: 'Step 2 peak (TS2)', x0: 0.66, x1: 0.90 }
-          ],
           w: 104,
           h: 44
         })
       ]
     }),
     hints: [
-      'Compare the climb for Step 1 (from R = 30 to TS1 = 95) with Step 2 (from I = 55 to TS2 = 75).',
-      'Step 1 has Ea = 65 kJ/mol while Step 2 has Ea = 20 kJ/mol.',
-      'Tap the highest activation barrier on the profile.'
+      'Find the level of each peak and of the valley between them on the profile.',
+      'Each step starts from the level just before it and climbs to its own peak.',
+      'The step that sets the rate is the one that is hardest to get over.'
     ],
     check(state) {
-      const z = Math.round(state.table.fixtures.prof?.dials?.zone?.value ?? 4);
-      if (z === 4) return { ok: false, notYet: true, msg: 'Tap the rate-determining step peak on the profile.' };
-      if (z === 2) return { ok: false, msg: 'The valley I at 55 is the intermediate, not a transition state peak.' };
-      if (z === 3) return { ok: false, msg: 'Step 2 climbs only 20 kJ/mol (55 to 75), much smaller than Step 1 (30 to 95).' };
-      return { ok: true };
+      const val = entryNumber(state.table, 'ea_rds');
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the activation energy in kJ/mol.' };
+      if (Math.abs(val - 65) <= 0.5) return { ok: true };
+      if (Math.abs(val - 20) <= 0.5) return { ok: false, msg: 'That is the climb of the second step; compare it with the climb of the first.' };
+      if (Math.abs(val - 95) <= 0.5) return { ok: false, msg: 'The first peak is at 95, but the climb starts at the reactants level, not at zero.' };
+      return { ok: false, msg: 'Check the climb of each step: from where it starts to where its own peak is.' };
     },
     reward: {
-      log: 'TS1 (65 kJ/mol climb) is the rate-determining step.',
+      log: 'Slow step Ea = 95 - 30 = 65 kJ/mol.',
       title: 'Two-Step Profile',
-      body: 'On a multi-step energy profile, the highest barrier belongs to the rate-determining step, and the valley holds the intermediate.'
+      body: 'The first step climbs 65 kJ/mol and the second only 20, so the first is the rate-determining step. The valley between the hills holds the intermediate.'
     }
   }
 ];
@@ -392,8 +391,8 @@ export const SOLUTIONS = [
   [runFx('v1'), dial('v1', 'stepSpeed', 2), runFx('v1'), put('slow', 'slot:ans')],
   [dial('board', 'o0', 2)],
   [put('m1', 'slot:ans')],
-  [runFx('v1'), put('doubles', 'slot:ans')],
-  [dial('prof', 'zone', 1)]
+  [dial('board', 'o0', 2), dial('board', 'o1', 1)],
+  [{ type: { entry: 'ea_rds', value: '65' } }]
 ];
 
 export const MISSES = [
@@ -402,8 +401,8 @@ export const MISSES = [
   [put('fast', 'slot:ans')],
   [dial('board', 'o0', 1)],
   [put('m2', 'slot:ans')],
-  [put('quadruples', 'slot:ans')],
-  [dial('prof', 'zone', 3)]
+  [dial('board', 'o0', 1), dial('board', 'o1', 1)],
+  [{ type: { entry: 'ea_rds', value: '20' } }]
 ];
 
 function blankState() { return {}; }

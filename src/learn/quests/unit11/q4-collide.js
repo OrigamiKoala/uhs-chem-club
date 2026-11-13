@@ -19,7 +19,7 @@ import {
   stmt
 } from '../../table/kits/rate.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bactivation energy\b/i, introducedAt: 2 },
@@ -383,6 +383,53 @@ export const STAGES = [
       title: 'Kinetic Control',
       body: 'Rate is governed by the activation barrier, not by how stable the final product is.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-temperature-factor',
+    title: 'How Much Faster When Warmer',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The rate of a reaction follows the share of collisions that carry at least Ea. Doubling that share doubles the rate.',
+      worked: [
+        'Another reaction: 1.5% of collisions at 300 K, 3.0% at 330 K',
+        'The share doubled, so the rate doubled: a factor of 3.0 ÷ 1.5 = 2'
+      ]
+    },
+    prompt: 'By what factor does the rate rise when the reactor warms from 300 K to 360 K?',
+    entry: { id: 'factor', label: 'Rate factor', unit: '×' },
+    widget,
+    table: rateTable({
+      fixtures: [
+        mbhistFixture('mb', { x: 75, y: 28 }, {
+          title: 'Energy spread',
+          Ts: [300, 360],
+          Ea: 12,
+          eMax: 24,
+          w: 104,
+          h: 44
+        })
+      ]
+    }),
+    hints: [
+      'Turn the "Temperature" dial between its two settings and read the share at each.',
+      'The rate follows the share of collisions with at least Ea.',
+      'To compare two amounts as a factor, ask how many times the smaller fits into the larger.'
+    ],
+    check(state) {
+      const val = entryNumber(state.table, 'factor');
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the factor the rate rises by.' };
+      if (Math.abs(val - 2.07) <= 0.12) return { ok: true };
+      if (Math.abs(val - 2.36) <= 0.05) return { ok: false, msg: 'That is the difference between the two shares, not how many times larger one is than the other.' };
+      if (val < 1) return { ok: false, msg: 'Warming raises the share of collisions that react, so the rate rises; a factor below 1 would be a slowdown.' };
+      return { ok: false, msg: `A factor of ${val} would make the 360 K share ${(2.2 * val).toFixed(1)}%, but the dial shows a different value.` };
+    },
+    reward: {
+      log: 'Rate factor 4.56 ÷ 2.20 ≈ 2.1.',
+      title: 'Temperature and Rate',
+      body: 'The share of collisions with enough energy rose from 2.20% to 4.56%, so the rate roughly doubled. A modest warming has a large effect on the rate.'
+    }
   }
 ];
 
@@ -397,7 +444,8 @@ export const SOLUTIONS = [
   [dial('mb', 'T', 3), put('more', 'slot:ans')],
   [{ type: { entry: 'ea_fwd', value: '70' } }],
   [{ type: { entry: 'ea_rev', value: '80' } }],
-  [put('pathA', 'slot:ans')]
+  [put('pathA', 'slot:ans')],
+  [{ type: { entry: 'factor', value: '2.07' } }]
 ];
 
 export const MISSES = [
@@ -407,7 +455,8 @@ export const MISSES = [
   [put('eaDrops', 'slot:ans')],
   [{ type: { entry: 'ea_fwd', value: '110' } }],
   [{ type: { entry: 'ea_rev', value: '65' } }],
-  [put('pathB', 'slot:ans')]
+  [put('pathB', 'slot:ans')],
+  [{ type: { entry: 'factor', value: '2.36' } }]
 ];
 
 function blankState() { return {}; }

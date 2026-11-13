@@ -46,7 +46,7 @@ export const UNIT_11 = {
       title: 'Collisions and the Hill',
       line: 'Fuel vapour sits in the cold tank without burning, even though burning releases energy.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit11/q4-collide.js')
     },

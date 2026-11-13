@@ -11,7 +11,7 @@
 | Benches were flat paintings | user report; rate kit had no `dress3d` | new `table/kits/rate-3d.js` (below) |
 
 ## 3D work
-`rate-3d.js` runs each flat painter against a recording context and builds solids from what it drew: a vessel's or collision track's glass window becomes a **glass tank**; its particles swim through depth and height (not on a sheet); catalyst rings are tori; speed arrows are beads laid on the track; collision spheres are enlarged. Per the owner: **graphs, plots and energy profiles stay flat on the plate** (a first build stood them up; removed). Verified on q1 s2, q4 s2. Not 3D: log, plotter, profile, spread, choice plates (they are 2D graphs/tables).
+`rate-3d.js` runs each flat painter against a recording context and builds solids from what it drew: a vessel's or collision track's glass window becomes a **glass tank**; its particles swim through depth and height (not on a sheet); catalyst rings are tori; speed arrows are beads laid on the track; collision spheres are enlarged. Per the owner: **graphs, plots and energy profiles stay flat on the plate** (a first build stood them up; removed). Verified on q1 s2, q4 s2. At 3D On the flat window and its particles are no longer drawn on the plate (`b.bodies`, `shapesOff`), so there is no doubled picture. Dial names now start clear of the knob (`props.dialIndent`, set by `rateTable`). Not 3D: log, plotter, profile, spread, choice plates (they are 2D graphs/tables).
 
 ## Per-stage table
 Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds intuition, Acc = accurate. "P" = played; "T" = text/scripts only.
@@ -37,7 +37,10 @@ Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds
 | q4 s7 | T | cards said "(lower barrier)" | plain Path A/B |
 | q5 s1 | T | briefing was a route | now defines elementary step |
 | q5 s2 | T | card text "(made in 1, used in 2)" was the answer | plain species |
-| q5 s3–s7 | T | s6 briefing states the substitution, s7 taps highest barrier | **weak, not yet reworked** (see below) |
+| q5 s3–s5 | T | hints named the answer | reworded |
+| q5 s6 pre-equilibrium | P (board) | briefing printed the final law and the question was a doubling | **rewritten**: student sets the orders on the overall rate-law board |
+| q5 s7 two hills | T | tap of the highest labelled peak, hints gave both Ea | **rewritten**: typed Ea of the slow step |
+| q4 s8 temperature factor (new) | T | typed ratio of two shares read from the spread dial | **added** (AP 5.5/5.6 quantitative) |
 | q6 s1 | T | hints described a two-path picture the scene did not draw; distractors silly | now predict-first, hints match the preview |
 | q6 s2–s5 | T | card parentheticals and hint 3s gave answers | reworded |
 | boss p1–p5 | T | re-tests; hint 3s name the method | unchanged |
@@ -47,8 +50,7 @@ Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds
 **Missing:** Arrhenius equation / ln k vs 1/T and two-temperature calculation (5.6, quantitative); half-life of zero and second order; steady-state approximation; units of k for other orders as a played stage; reading ΔH sign on a profile as a quantity.
 
 ## Left weak / recommended next
-- q5 s3–s7 need the same pass as the others (s6 briefing carries the answer; s7 is a tap of the highest hump).
-- Add an Arrhenius bench stage (two temperatures, typed Ea) and a zero/second-order half-life stage.
+- Add a true Arrhenius stage (ln k vs 1/T, typed Ea) and a zero/second-order half-life stage; q4 s8 only covers the share-of-collisions idea.
 - Hand-play every unplayed stage above, especially card drops and the rates log.
 - The flat painter's title text looks doubled (ghosted) at the default camera on every Quicklight table; not diagnosed.
 - Tank height/size and sphere scale are judgement calls only the owner can judge by playing.
@@ -57,5 +59,5 @@ Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds
 1. Set-up as guest (guild/oath passes needed a hold; team patched into the stored guest session).
 2. Found white world → fixed roads and textures.
 3. Built `rate-3d.js`; owner asked 2D graphs stay flat → removed standing graphs, hill and columns.
-4. Text/leak fixes across q1–q6; q4 s1, q6 s1 made predict-first; q4 s5 rewritten; two quantitative stages added (counts 592→594, PRODUCT.md and CLAUDE.md updated).
+4. Text/leak fixes across q1–q6; q4 s1, q6 s1 made predict-first; q4 s5 rewritten; two quantitative stages added (counts 592→595, PRODUCT.md and CLAUDE.md updated).
 5. Checks run green: `verify:learn`, `verify:table`, `verify:story`, `verify:docs`, `verify:quicklight`, `verify:bench`, `verify:teaching`. Other worlds' scripts not re-run (only the rate kit and Quicklight files changed).

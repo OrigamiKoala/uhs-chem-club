@@ -5,7 +5,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { planKineticsRun, planTwoStepRun, planInitialRate } from '../../engine/ratedata.js';
-import { registerFixture } from './rate-registry.js';
+import { registerFixture, shapesOff } from './rate-registry.js';
 import { say, frameOf } from './matter-draw.js';
 
 const A_COL = '#d89236';
@@ -238,16 +238,17 @@ function paintKvessel(ctx, f, state, b) {
   const curIdx = Math.min(pts.length - 1, Math.round(frac * (pts.length - 1)));
   const curPt = pts[curIdx];
 
+  const W = b.bodies ? shapesOff(ctx) : ctx;
   // Left particle window
   const winX = 2;
   const winY = topY;
   const winW = Math.min(20, f.size.w * 0.31);
   const winH = f.size.h - topY - (p.showCounts || p.catalystCount ? 5.6 : 2.6);
 
-  ctx.fillStyle = '#0e1116';
-  ctx.fillRect(F.x(winX), F.y(winY), F.len(winW), F.len(winH));
-  ctx.strokeStyle = DUST;
-  ctx.strokeRect(Math.round(F.x(winX)) + 0.5, Math.round(F.y(winY)) + 0.5, Math.round(F.len(winW)), Math.round(F.len(winH)));
+  W.fillStyle = '#0e1116';
+  W.fillRect(F.x(winX), F.y(winY), F.len(winW), F.len(winH));
+  W.strokeStyle = DUST;
+  W.strokeRect(Math.round(F.x(winX)) + 0.5, Math.round(F.y(winY)) + 0.5, Math.round(F.len(winW)), Math.round(F.len(winH)));
 
   const nParticles = 24;
   const aFrac = curPt.A / Math.max(1e-6, p.a0);
@@ -259,22 +260,22 @@ function paintKvessel(ctx, f, state, b) {
     const py = winY + 1.4 + ((hash01(i, 2) * (winH - 2.8) + b.clock * speedScale * (hash01(i, 4) - 0.5) * 4) % (winH - 2.8) + (winH - 2.8)) % (winH - 2.8);
     let col = i < nA ? A_COL : B_COL;
     if (isTwoStep && curPt.I > 0.02 && i === nParticles - 1) col = I_COL;
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.arc(F.x(px), F.y(py), Math.max(2, F.len(0.65)), 0, Math.PI * 2);
-    ctx.fill();
+    W.fillStyle = col;
+    W.beginPath();
+    W.arc(F.x(px), F.y(py), Math.max(2, F.len(0.65)), 0, Math.PI * 2);
+    W.fill();
   }
 
   // Catalyst particles (unchanged count)
   for (let c = 0; c < (p.catalystCount || 0); c++) {
     const px = winX + 1.8 + ((hash01(c + 50, 5) * (winW - 3.6) + b.clock * 0.9 * (hash01(c + 50, 6) - 0.5) * 3) % (winW - 3.6) + (winW - 3.6)) % (winW - 3.6);
     const py = winY + 1.8 + ((hash01(c + 50, 7) * (winH - 3.6) + b.clock * 0.9 * (hash01(c + 50, 8) - 0.5) * 3) % (winH - 3.6) + (winH - 3.6)) % (winH - 3.6);
-    ctx.strokeStyle = CAT_COL;
-    ctx.lineWidth = Math.max(1.5, F.len(0.28));
-    ctx.beginPath();
-    ctx.arc(F.x(px), F.y(py), Math.max(2.5, F.len(0.8)), 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.lineWidth = 1;
+    W.strokeStyle = CAT_COL;
+    W.lineWidth = Math.max(1.5, F.len(0.28));
+    W.beginPath();
+    W.arc(F.x(px), F.y(py), Math.max(2.5, F.len(0.8)), 0, Math.PI * 2);
+    W.stroke();
+    W.lineWidth = 1;
   }
 
   if (p.showCounts) {
@@ -451,6 +452,7 @@ export function rateLeadFixture(id, at, { scene = 'rates', title = 'Watch first'
 }
 
 function paintRateLead(ctx, f, state, b) {
+  const W = b.bodies ? shapesOff(ctx) : ctx;
   const F = frameOf(b);
   const p = f.props;
   say(ctx, p.title, F.x(2), F.y(2.5), F.size(2.1, 5.4), { color: TEXT, weight: 700 });
@@ -489,41 +491,41 @@ function paintRateLead(ctx, f, state, b) {
     say(ctx, 'Time', F.x(gx + gw), F.y(gy + gh + 2.2), F.size(1.6, 4.2), { align: 'right', color: DIM });
   } else if (p.scene === 'collide') {
     // Bouncing particles with occasional reaction flash
-    ctx.fillStyle = '#0e1116';
-    ctx.fillRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
-    ctx.strokeStyle = DUST;
-    ctx.strokeRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
+    W.fillStyle = '#0e1116';
+    W.fillRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
+    W.strokeStyle = DUST;
+    W.strokeRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
     for (let i = 0; i < 14; i++) {
       const px = gx + 2 + ((hash01(i, 11) * (gw - 4) + b.clock * 6 * (hash01(i, 12) - 0.5)) % (gw - 4) + (gw - 4)) % (gw - 4);
       const py = gy + 2 + ((hash01(i, 13) * (gh - 4) + b.clock * 6 * (hash01(i, 14) - 0.5)) % (gh - 4) + (gh - 4)) % (gh - 4);
-      ctx.fillStyle = i < 2 ? B_COL : A_COL;
-      ctx.beginPath();
-      ctx.arc(F.x(px), F.y(py), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2);
-      ctx.fill();
+      W.fillStyle = i < 2 ? B_COL : A_COL;
+      W.beginPath();
+      W.arc(F.x(px), F.y(py), Math.max(2.2, F.len(0.7)), 0, Math.PI * 2);
+      W.fill();
     }
   } else if (p.scene === 'catalyst') {
     // Vessel with glowing catalyst particles staying bright
-    ctx.fillStyle = '#0e1116';
-    ctx.fillRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
-    ctx.strokeStyle = DUST;
-    ctx.strokeRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
+    W.fillStyle = '#0e1116';
+    W.fillRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
+    W.strokeStyle = DUST;
+    W.strokeRect(F.x(gx), F.y(gy), F.len(gw), F.len(gh));
     for (let i = 0; i < 12; i++) {
       const px = gx + 2 + ((hash01(i, 21) * (gw - 4) + b.clock * 4 * (hash01(i, 22) - 0.5)) % (gw - 4) + (gw - 4)) % (gw - 4);
       const py = gy + 2 + ((hash01(i, 23) * (gh - 4) + b.clock * 4 * (hash01(i, 24) - 0.5)) % (gh - 4) + (gh - 4)) % (gh - 4);
-      ctx.fillStyle = i % 3 === 0 ? B_COL : A_COL;
-      ctx.beginPath();
-      ctx.arc(F.x(px), F.y(py), Math.max(2, F.len(0.65)), 0, Math.PI * 2);
-      ctx.fill();
+      W.fillStyle = i % 3 === 0 ? B_COL : A_COL;
+      W.beginPath();
+      W.arc(F.x(px), F.y(py), Math.max(2, F.len(0.65)), 0, Math.PI * 2);
+      W.fill();
     }
     for (let c = 0; c < 4; c++) {
       const px = gx + 3 + ((hash01(c, 31) * (gw - 6) + b.clock * 2 * (hash01(c, 32) - 0.5)) % (gw - 6) + (gw - 6)) % (gw - 6);
       const py = gy + 3 + ((hash01(c, 33) * (gh - 6) + b.clock * 2 * (hash01(c, 34) - 0.5)) % (gh - 6) + (gh - 6)) % (gh - 6);
-      ctx.strokeStyle = CAT_COL;
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.arc(F.x(px), F.y(py), Math.max(2.6, F.len(0.85)), 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.lineWidth = 1;
+      W.strokeStyle = CAT_COL;
+      W.lineWidth = 1.8;
+      W.beginPath();
+      W.arc(F.x(px), F.y(py), Math.max(2.6, F.len(0.85)), 0, Math.PI * 2);
+      W.stroke();
+      W.lineWidth = 1;
     }
   }
 }

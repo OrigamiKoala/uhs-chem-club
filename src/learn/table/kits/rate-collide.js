@@ -5,7 +5,7 @@
  */
 
 import { PLATE_COLORS } from '../../engine/plates.js';
-import { registerFixture } from './rate-registry.js';
+import { registerFixture, shapesOff } from './rate-registry.js';
 import { say, frameOf } from './matter-draw.js';
 
 const A_COL = '#d89236';
@@ -103,7 +103,8 @@ function drawArrow(ctx, F, x1, y1, x2, y2, col) {
   ctx.lineWidth = 1;
 }
 
-function paintCollview(ctx, f, state, b) {
+function paintCollview(ctx0, f, state, b) {
+  const ctx = b.bodies ? shapesOff(ctx0) : ctx0;
   const F = frameOf(b);
   const p = f.props;
   const hasDials = Object.keys(f.dials || {}).filter(d => !(p.hidden || []).includes(d)).length > 0;

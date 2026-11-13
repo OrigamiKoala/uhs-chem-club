@@ -82,6 +82,8 @@ installRateDresses(allFixtureEntries());
 registerKit(RATE_KIT);
 
 export function rateTable(spec, { w = RATE_BOUNDS.w, h = RATE_BOUNDS.h, recorder = null } = {}) {
+  // A knob at the low end of a dial stands over the first letter of its own name: Quicklight's dial names start clear of it.
+  for (const f of spec.fixtures || []) if (f.dials && Object.keys(f.dials).length && f.props && f.props.dialIndent == null) f.props.dialIndent = 3.6;
   return { kit: RATE_KIT_ID, bounds: { w, h }, tools: [], recorder: recorder || { ...HEAT_RECORDER, at: { x: w - 2.6, y: h - 2.4 } }, ...spec };
 }
 
