@@ -15,6 +15,7 @@
  */
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { part, put, between, rockGeometry, roughLathe, rng } from './kit.js';
 
 /* ------------------------------------------------------------- fumarole */
@@ -242,12 +243,19 @@ export function buildSpringLip(ctx, spring, seed = 3) {
   g.add(part(ctx, lip, ctx.M.sinterWarm));
   const r = rng(0x5b1);
   const n = Math.round(R * 2 * Math.PI * 2.2);
+  // The beads never move and share one material, so they are one mesh: two hundred draw calls were spent on them.
+  const beads = [];
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 + r() * 0.05;
     const d = R + 0.15 + r() * 0.2;
-    const b = part(ctx, new THREE.SphereGeometry(0.06 + r() * 0.07, 6, 4), ctx.M.sinter, Math.sin(a) * d, 0.12, Math.cos(a) * d);
-    b.scale.y = 0.5;
-    g.add(b);
+    const b = new THREE.SphereGeometry(0.06 + r() * 0.07, 6, 4);
+    b.scale(1, 0.5, 1);
+    b.translate(Math.sin(a) * d, 0.12, Math.cos(a) * d);
+    beads.push(b);
+  }
+  if (beads.length) {
+    g.add(part(ctx, mergeGeometries(beads, false), ctx.M.sinter));
+    for (const b of beads) b.dispose();
   }
   return g;
 }

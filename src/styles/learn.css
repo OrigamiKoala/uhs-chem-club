@@ -1494,8 +1494,6 @@
   pointer-events: auto;
   position: relative;
   background: rgba(14, 12, 10, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-durasteel);
   border-left: 2px solid var(--accent-amber);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -1548,8 +1546,6 @@
   padding: 6px 12px;
   min-height: 32px;
   background: rgba(14, 12, 10, 0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-durasteel);
   border-left: 2px solid var(--accent-amber);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -2224,8 +2220,6 @@
   padding: 0.45rem 0.85rem !important;
   margin-bottom: 0.35rem !important;
   background: var(--bg-surface) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid var(--border-durasteel) !important;
   border-radius: 4px !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
@@ -2238,8 +2232,6 @@
   max-width: 380px !important;
   padding: 5px 8px !important;
   background: var(--bg-surface) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid var(--border-durasteel) !important;
   border-radius: 4px !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
@@ -2260,8 +2252,6 @@
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
   background: var(--bg-surface) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid var(--border-durasteel) !important;
   border-radius: 4px !important;
   padding: 1.15rem 1.4rem !important;

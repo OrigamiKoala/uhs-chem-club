@@ -41,7 +41,7 @@ import * as THREE from 'three';
 import mirrowenData from './world-data/mirrowen.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, canvas2d
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d
 } from './materials/pbr-kit.js';
 import { frostShingle, quayPaving, crystalIce, canalRipple } from './materials/mirrowen-textures.js';
 import {
@@ -630,6 +630,9 @@ export class MirrowenWorld {
       if (node === this.effects?.group) continue;
       bake(node);
     }
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -671,7 +674,7 @@ export class MirrowenWorld {
     if (cameraPos) {
       followCamera(this.sky, cameraPos);
       const moved = followMwShadow(this.keyLight, cameraPos, SHADOW_FOLLOW_STEP);
-      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0, every: 30 });
+      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);

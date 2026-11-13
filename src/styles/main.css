@@ -70,8 +70,6 @@ body::after {
 .glass-panel {
   position: relative;
   background: var(--bg-surface);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border-durasteel);
   box-shadow:
     inset 0 1px 0 var(--seam-light),
@@ -93,6 +91,11 @@ body::after {
 /* ===================================================================
    HUD — Flight telemetry header with glassmorphism depth
    =================================================================== */
+/* NOTHING THAT STAYS OVER THE LIVE CANVAS BLURS IT. A backdrop blur makes the
+   compositor read back and blur the WebGL frame under the panel on every frame
+   the world draws; under panels this opaque it bought nothing that could be
+   seen. This holds for the HUD, the plates and every card a world or a bench
+   keeps on screen. */
 .hud {
   position: fixed;
   top: 0;
@@ -106,8 +109,6 @@ body::after {
   padding: 0 1.25rem;
   gap: 0.75rem;
   background: rgba(14, 13, 17, 0.86);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-durasteel);
   box-shadow:
     inset 0 1px 0 var(--seam-light),
@@ -1028,8 +1029,6 @@ body::after {
   max-height: calc(100vh - var(--hud-h) - 3rem);
   overflow-y: auto;
   background: rgba(14, 12, 10, 0.90);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-durasteel);
   border-top: 2px solid var(--accent-amber);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
@@ -1082,8 +1081,6 @@ body::after {
 .erebus-hud-card {
   pointer-events: auto;
   background: rgba(14, 12, 10, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-durasteel);
   border-left: 2px solid var(--accent-amber);
   padding: 0.75rem 1rem;
@@ -1097,8 +1094,6 @@ body::after {
   max-width: 900px;
   margin: 0 auto;
   background: rgba(10, 9, 8, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-durasteel);
   border-top: 2px solid var(--accent-amber);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);

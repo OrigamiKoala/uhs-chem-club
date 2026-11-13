@@ -37,7 +37,7 @@ import * as THREE from 'three';
 import bellowsData from './world-data/bellows.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, treadPlate, buildMaterial, enableAO, texSize, mergeStatic
+  platedMetal, treadPlate, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
 } from './materials/pbr-kit.js';
 import {
   createBwSkyDome, createCloudSea, createBwLights, followBwShadow, createBwEnvironment,
@@ -460,6 +460,9 @@ export class BellowsWorld {
       if (node === this.effects?.group) continue;
       bake(node);
     }
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -529,7 +532,7 @@ export class BellowsWorld {
       this.sea.material.uniforms.uBwEye.value.copy(cameraPos);
       const moved = followBwShadow(this.keyLight, cameraPos, SHADOW_FOLLOW_STEP);
       // The Compressor moves, so its shadow is re-drawn a little more often than a still world's.
-      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0, every: 6 });
+      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 6 });
       this.effects?.update(delta, this.elapsed, cameraPos);
       this.lampPool?.update(cameraPos);
     }

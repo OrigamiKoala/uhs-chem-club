@@ -1492,6 +1492,109 @@ export function mergeStatic(group) {
   return group;
 }
 
+/**
+ * Bake a whole world's baked props together: one mesh per material per patch of ground.
+ *
+ * `mergeStatic` leaves one mesh per material PER PROP, and a world stands the
+ * same dozen materials in a hundred props, so the same steel was still being
+ * bound and drawn a hundred times. This is the second pass, run once when the
+ * world has finished baking: every baked mesh that can never move, hide or be
+ * addressed again is moved into the scene's own frame and merged with the
+ * others of its material whose centres fall in the same `cell`-metre square.
+ * The squares are what keep the frustum (and the shadow box) culling: a world
+ * merged into one mesh per material would be drawn whole from every view.
+ *
+ * WHAT IS LEFT ALONE: anything under `noMerge`, a `mover` or a hidden node
+ * (a cased instrument is hidden when its bench opens); transparent, instanced
+ * and multi-material meshes; a geometry carrying more than position, normal
+ * and uv (a shader reads the rest); a mirrored prop (its faces would turn
+ * inside out). The props' groups stay where they are, with their `partBoxes`,
+ * colliders and names: only their baked meshes are lifted out.
+ *
+ * @param {THREE.Scene} scene the built, baked world
+ * @param {{ cell?: number }} [opts]
+ * @returns {{ before: number, after: number }} meshes taken and meshes left in their place
+ */
+export function consolidateStatic(scene, { cell = 40 } = {}) {
+  scene.updateMatrixWorld(true);
+  const KEPT = new Set(['position', 'normal', 'uv', 'uv1']);
+  const buckets = new Map();
+  const centre = new THREE.Vector3();
+
+  scene.traverse(o => {
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.userData.ownGeometry) return;
+    if (o.userData.ownGeometry !== o.geometry) return;
+    const mat = o.material;
+    if (!mat || Array.isArray(mat) || mat.transparent) return;
+    const g = o.geometry;
+    if (!g.attributes.position || !g.attributes.normal || !g.attributes.uv) return;
+    if (Object.keys(g.attributes).some(name => !KEPT.has(name))) return;
+    if (g.morphAttributes && Object.keys(g.morphAttributes).length) return;
+    if (o.children.length || o.frustumCulled === false || o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return;
+    for (let n = o; n && n !== scene; n = n.parent) {
+      if (!n.visible || n.userData.noMerge || n.userData.mover) return;
+      if (n !== o && n.matrixAutoUpdate === false) return;
+    }
+    if (o.matrixWorld.determinant() <= 0) return;
+
+    if (!g.boundingSphere) g.computeBoundingSphere();
+    centre.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
+    const key = [
+      mat.uuid, Math.floor(centre.x / cell), Math.floor(centre.z / cell),
+      o.castShadow ? 1 : 0, o.receiveShadow ? 1 : 0, o.renderOrder, o.layers.mask,
+      o.userData.phys || '', o.customDepthMaterial?.uuid || '', o.customDistanceMaterial?.uuid || ''
+    ].join('|');
+    let b = buckets.get(key);
+    if (!b) buckets.set(key, b = []);
+    b.push(o);
+  });
+
+  let before = 0;
+  let after = 0;
+  for (const meshes of buckets.values()) {
+    if (meshes.length < 2) continue;
+    let geos = meshes.map(o => {
+      const g = o.geometry.clone();
+      // `uv1` is the same numbers as `uv` (see `mergeStatic`); it is put back on the result rather than merged twice.
+      g.deleteAttribute('uv1');
+      g.applyMatrix4(o.matrixWorld);
+      return g;
+    });
+    if (geos.some(g => g.index) && geos.some(g => !g.index)) {
+      geos = geos.map(g => {
+        if (!g.index) return g;
+        const flat = g.toNonIndexed();
+        g.dispose();
+        return flat;
+      });
+    }
+    const merged = BufferGeometryUtils.mergeGeometries(geos, false);
+    for (const g of geos) g.dispose();
+    if (!merged) continue;   // left exactly as they were
+    merged.setAttribute('uv1', merged.attributes.uv);
+    const first = meshes[0];
+    const mesh = new THREE.Mesh(merged, first.material);
+    mesh.name = `static:${first.material.name || first.material.uuid.slice(0, 8)}`;
+    mesh.castShadow = first.castShadow;
+    mesh.receiveShadow = first.receiveShadow;
+    mesh.renderOrder = first.renderOrder;
+    mesh.layers.mask = first.layers.mask;
+    if (first.customDepthMaterial) mesh.customDepthMaterial = first.customDepthMaterial;
+    if (first.customDistanceMaterial) mesh.customDistanceMaterial = first.customDistanceMaterial;
+    if (first.userData.phys) mesh.userData.phys = first.userData.phys;
+    mesh.userData.ownGeometry = merged;
+    mesh.userData.consolidated = meshes.length;
+    for (const o of meshes) {
+      o.parent?.remove(o);
+      o.geometry.dispose();
+    }
+    scene.add(mesh);
+    before += meshes.length;
+    after++;
+  }
+  return { before, after };
+}
+
 /* ==========================================================================
    8. MAPS FROM AN EXISTING ALBEDO
    ========================================================================== */

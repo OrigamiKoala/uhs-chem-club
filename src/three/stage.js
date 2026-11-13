@@ -31,6 +31,7 @@ import { ShipLightPool } from "./ship-lighting.js";
 import { soundscape } from "../audio/soundscape.js";
 import { gameMode } from "../game-mode.js";
 import { worldUI } from "./world-ui.js";
+import { markWorldOwn, visitorsMoving } from "./shadow-pace.js";
 import { Voyage, DESTINATIONS } from "./voyage.js";
 import { api } from "../api.js";
 
@@ -848,6 +849,8 @@ class Stage {
    */
   warmWorld(world) {
     const r = this.renderer;
+    // What is in the scene now is the world's; a bench's own bodies come later (shadow-pace.js).
+    if (world?.scene) markWorldOwn(world.scene);
     if (world?.scene && r?.compileAsync) {
       r.compileAsync(world.scene, this.camera).catch(() => {});
     }
@@ -1585,6 +1588,9 @@ class Stage {
       // still turns while the player works. Without this the flat would freeze
       // solid the moment a bench was opened.
       if (this.activeQuestViewer.inWorld && this.activeWorld) {
+        // The sun's shadow is re-drawn every frame only while something the
+        // bench stands in the world is moving (shadow-pace.js).
+        this.activeWorld.benchMoving = visitorsMoving(this.activeWorld.scene, delta);
         this.activeWorld.update(delta, this.camera.position);
       }
       // A chamber that brings its own room (the Charge Gardens) was lit for

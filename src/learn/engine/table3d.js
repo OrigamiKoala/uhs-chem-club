@@ -179,7 +179,8 @@ export class Table3D extends BenchViewer3D {
   posOf(id) { return this.shown[id]; }
   dispatch(action) { this.onAction?.(action); }
   dragAt() { return this.drag?.at || null; }
-  setDrag(drag, gap) { this.drag = drag; this.railGap = gap; this.repaintGround(); }
+  // A drag reports every pointer move, which can be several a frame; the plate is repainted once, on the next frame (`update`).
+  setDrag(drag, gap) { this.drag = drag; this.railGap = gap; this.groundStale = true; }
   changed() { this.repaintGround(); }
   /** Where the world has a field point the player walks to it, so no plate is drawn or tapped. */
   showsSite(id) { return !fieldPointById(this.worldObject, id); }
@@ -626,6 +627,7 @@ export class Table3D extends BenchViewer3D {
   /** Repaint the flat picture from the state (zones, labels, jar levels, the held-piece highlight). */
   repaintGround() {
     const g = this.ground;
+    this.groundStale = false;
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
       look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom, drag: this.drag, screens: Boolean(this.skin),
@@ -1351,13 +1353,20 @@ export class Table3D extends BenchViewer3D {
     }
     const m = this._swarmM || (this._swarmM = new THREE.Matrix4());
     for (const sw of this.swarms?.values() || []) {
+      // Uploaded only when a puck has moved: a swarm at rest costs nothing, and its shadow can rest too (shadow-pace.js).
+      const arr = sw.mesh.instanceMatrix.array;
+      let moved = false;
       sw.ids.forEach((id, i) => {
         const at = this.drag?.id === id ? this.drag.at : (this.shown[id] || this.state.pieces[id].at);
         const pl = this.map.toPlate(at);
-        m.makeTranslation(pl.x, GROUND_Y + PUCK_T * 0.4 + (this.lifts[id] || 0), pl.z);
+        const y = GROUND_Y + PUCK_T * 0.4 + (this.lifts[id] || 0);
+        const o = i * 16;
+        if (arr[o + 12] === Math.fround(pl.x) && arr[o + 13] === Math.fround(y) && arr[o + 14] === Math.fround(pl.z) && arr[o] === 1) return;
+        m.makeTranslation(pl.x, y, pl.z);
         sw.mesh.setMatrixAt(i, m);
+        moved = true;
       });
-      sw.mesh.instanceMatrix.needsUpdate = true;
+      if (moved) sw.mesh.instanceMatrix.needsUpdate = true;
     }
     this.layJoins();
   }
@@ -1392,6 +1401,7 @@ export class Table3D extends BenchViewer3D {
 
   update(delta) {
     super.update(delta);
+    if (this.groundStale) this.repaintGround();
     this.tickPieces(delta);
     for (const rec of this.fixtures?.values() || []) rec.dress?.userData?.tick?.(delta, this.reduced);
     for (const e of this.entries.values()) e.group?.userData?.tick?.(delta, this.reduced);

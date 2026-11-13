@@ -68,7 +68,7 @@ import {
   buildMaterial, enableAO,
   texSize, heightField, heightToNormal, asDataTexture, fbm,
   boltLine, weldBead, cableRun, pipeFlange, placard,
-  hazardStripe, mergeStatic
+  hazardStripe, mergeStatic, consolidateStatic
 } from './materials/pbr-kit.js';
 import { createSalvageCrateTexture } from './materials/tallow-textures.js';
 import { roundedSlab, boxUVs } from '../learn/engine/table-props.js';
@@ -833,6 +833,9 @@ export class TallowWorld {
     }
     // Every baked geometry is the world's to free, including the ones the
     // refinery, the pad and the hauler baked for themselves.
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -1962,7 +1965,7 @@ export class TallowWorld {
       // A deployed instrument moves (jaws close, pieces fall), so its
       // shadow is drawn every frame; otherwise only when the box moves.
       const moved = followTallowShadow(this.sunLight, cameraPos, SHADOW_FOLLOW_STEP);
-      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 });
+      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);

@@ -21,6 +21,7 @@
  */
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 function rng(seed) {
   let a = seed >>> 0;
@@ -378,20 +379,26 @@ export function buildCloudHeads(ctx, seaLevel, count = 22) {
   g.name = 'bellows-cloud-heads';
   g.userData.phys = 'ambient';
   const r = rng(0xc10dd);
-  const geo = ctx.own(new THREE.IcosahedronGeometry(1, 2));
+  const geo = new THREE.IcosahedronGeometry(1, 2);
+  const m4 = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
   for (let k = 0; k < count; k++) {
     const a = r() * Math.PI * 2;
     const d = 140 + r() * 400;
     const cx = Math.sin(a) * d, cz = Math.cos(a) * d;
     const size = 26 + r() * 56;
     const puffs = 5 + Math.floor(r() * 5);
+    // One mesh per head, not per puff: a head is culled as a whole and its puffs never move apart.
+    const parts = [];
     for (let i = 0; i < puffs; i++) {
       const s = size * (0.45 + r() * 0.6);
-      const m = new THREE.Mesh(geo, ctx.M.cloud);
-      m.position.set(cx + (r() - 0.5) * size * 1.5, seaLevel + s * 0.35 + r() * size * 0.5, cz + (r() - 0.5) * size * 1.5);
-      m.scale.set(s, s * (0.55 + r() * 0.3), s);
-      g.add(m);
+      const pos = new THREE.Vector3(cx + (r() - 0.5) * size * 1.5, seaLevel + s * 0.35 + r() * size * 0.5, cz + (r() - 0.5) * size * 1.5);
+      const scale = new THREE.Vector3(s, s * (0.55 + r() * 0.3), s);
+      parts.push(geo.clone().applyMatrix4(m4.compose(pos, q, scale)));
     }
+    g.add(new THREE.Mesh(ctx.own(mergeGeometries(parts, false)), ctx.M.cloud));
+    for (const p of parts) p.dispose();
   }
+  geo.dispose();
   return g;
 }

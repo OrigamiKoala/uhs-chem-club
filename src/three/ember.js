@@ -54,7 +54,7 @@ import * as THREE from 'three';
 import emberData from './world-data/ember.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, asColorTexture, canvas2d
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, asColorTexture, canvas2d
 } from './materials/pbr-kit.js';
 import {
   sinterCrust, cinderRoad, blackGlass, sulphurCrust, ventConcrete, lavaCrust, springRipple
@@ -675,6 +675,9 @@ export class EmberReachWorld {
       if (node === this.effects?.group) continue;
       bake(node);
     }
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -731,7 +734,7 @@ export class EmberReachWorld {
     if (cameraPos) {
       followCamera(this.sky, cameraPos);
       const moved = followErShadow(this.keyLight, cameraPos, SHADOW_FOLLOW_STEP);
-      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0, every: 30 });
+      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);

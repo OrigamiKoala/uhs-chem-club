@@ -233,8 +233,6 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--bg-surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-durasteel);
   border-radius: 4px;
   padding: 1.15rem 1.4rem;

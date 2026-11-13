@@ -244,6 +244,16 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   (`isT4Capable`); DPR capped 1.5 and no shadow map on handsets. **A measured tier is never written down,
   only a chosen one** (`gfxTierPref`); the tier is decided once at page open. Resolution is paced on
   planets only (`paceResolution`). Shaders compile when a world is built (`warmWorld`). Loop capped at 60 fps.
+  The sun's shadow map is re-drawn only when its box moves, on a slow safety tick, or while an open bench is
+  moving: `warmWorld` marks the scene's children as the world's own (`markWorldOwn`), and each frame at a bench
+  `visitorsMoving` fingerprints everything else in the scene (the pose of each node over a visible shadow caster,
+  the caster's geometry and instance buffer) and answers true while it changes and for 0.3 s after
+  (`world.benchMoving`). Nothing that stays over the live canvas carries a `backdrop-filter`.
+  After `mergeStatic` has baked each prop, a world that has a renderer runs `consolidateStatic(scene)` (pbr-kit.js):
+  baked meshes with no `noMerge`, `mover` or hidden ancestor are moved into the scene's frame and merged per material
+  per 40 m square (the squares keep frustum and shadow-box culling), as top-level meshes named `static:<material>`.
+  The props' groups, `partBoxes` and colliders stay. Node checks build worlds with no renderer and see them unmerged.
+  `tools/perf-worlds.mjs` and `tools/perf-bench-rest.mjs` report the cost headlessly.
 - **Worlds** (Erebus `world.js`+`erebus/`, Tallow `tallow.js`+`tallow/`, Lanternfall, Ligar, Bellows,
   Ember Reach `ember.js`+`ember/`, Mirrowen `mirrowen.js`+`mirrowen/`, each laid out by `tools/gen-<world>-layout.*` into `world-data/*.json`):
   each is one analytic height field + one grid to the horizon, ONE sky function that is also its fog and

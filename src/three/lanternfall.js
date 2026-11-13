@@ -40,7 +40,7 @@ import * as THREE from 'three';
 import lanternfallData from './world-data/lanternfall.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
 } from './materials/pbr-kit.js';
 import { iceCrust, lakeIce, carvedIce } from './materials/lanternfall-textures.js';
 import {
@@ -450,6 +450,9 @@ export class LanternfallWorld {
       if (node === this.effects?.group) continue;
       bake(node);
     }
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -510,7 +513,7 @@ export class LanternfallWorld {
     if (cameraPos) {
       followCamera(this.sky, cameraPos);
       const moved = followLfShadow(this.keyLight, cameraPos, SHADOW_FOLLOW_STEP);
-      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0, every: 30 });
+      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       this.effects?.update(delta, this.elapsed, cameraPos);
       this.lampPool?.update(cameraPos);
     }

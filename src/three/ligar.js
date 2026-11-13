@@ -63,6 +63,7 @@
  */
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import ligarData from './world-data/ligar.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import { buildBayBench } from './bench-bay.js';
@@ -71,7 +72,7 @@ import {
   buildMaterial, enableAO,
   texSize, heightField, heightToNormal, asDataTexture, fbm,
   boltRing, boltLine, weldBead, cableRun,
-  hazardStripe, mergeStatic
+  hazardStripe, mergeStatic, consolidateStatic
 } from './materials/pbr-kit.js';
 import {
   basaltColumn, scoriaGrit, lavaTubeWall, conveyorBelt, basaltTop
@@ -1667,9 +1668,20 @@ export class LigarWorld {
   buildLuminaire(x, y, z, { intensity = 6.5, distance = 11 } = {}) {
     const g = new THREE.Group();
     g.userData.noMerge = true;
-    const housing = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.18, 0.26, 0.2, 14)), this.darkSteelMat
-    );
+    // The housing and its four cage bars are one shape in one material, shared
+    // by every luminaire: one draw call each, where there were five.
+    if (!this._luminaireGeo) {
+      const parts = [new THREE.CylinderGeometry(0.18, 0.26, 0.2, 14).toNonIndexed()];
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const bar = new THREE.BoxGeometry(0.014, 0.14, 0.014).toNonIndexed();
+        bar.translate(Math.cos(a) * 0.23, -0.17, Math.sin(a) * 0.23);
+        parts.push(bar);
+      }
+      this._luminaireGeo = this.own(mergeGeometries(parts, false));
+      for (const p of parts) p.dispose();
+    }
+    const housing = new THREE.Mesh(this._luminaireGeo, this.darkSteelMat);
     g.add(housing);
     const diffuser = new THREE.Mesh(
       this.own(new THREE.CylinderGeometry(0.22, 0.22, 0.04, 14)),
@@ -1680,14 +1692,6 @@ export class LigarWorld {
     diffuser.position.y = -0.11;
     g.add(diffuser);
     this.lamps.push(diffuser);
-    for (let i = 0; i < 4; i++) {
-      const bar = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.014, 0.14, 0.014)), this.darkSteelMat
-      );
-      const a = (i / 4) * Math.PI * 2;
-      bar.position.set(Math.cos(a) * 0.23, -0.17, Math.sin(a) * 0.23);
-      g.add(bar);
-    }
     const mark = new THREE.Object3D();
     mark.position.y = -0.3;
     mark.userData.lamp = { color: 0xffc98a, intensity, distance, decay: 1.4 };
@@ -1949,6 +1953,9 @@ export class LigarWorld {
       if (node.userData.phys && node.userData.phys !== 'ground') continue;
       bake(node);
     }
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -2172,7 +2179,7 @@ export class LigarWorld {
       // and an instrument being worked, the map is re-drawn twice a second as
       // a safety net rather than every third frame.
       const moved = followLigarShadow(this.sunLight, cameraPos, SHADOW_FOLLOW_STEP);
-      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0, every: 30 });
+      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);
@@ -2191,7 +2198,8 @@ export class LigarWorld {
           this.forgeLight.updateWorldMatrix(true, false);
           this._forgePos = this.forgeLight.getWorldPosition(new THREE.Vector3());
         }
-        this._forgeTick = ((this._forgeTick || 0) + 1) % 3;
+        // With the bench at rest it is a safety net, twice a second.
+        this._forgeTick = ((this._forgeTick || 0) + 1) % (this.benchMoving === false ? 30 : 3);
         if (this._forgeTick === 0 && cameraPos.distanceTo(this._forgePos) < this.forgeLight.distance + 10) {
           this.forgeLight.shadow.needsUpdate = true;
         }

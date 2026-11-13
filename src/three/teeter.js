@@ -33,7 +33,7 @@
 import * as THREE from 'three';
 import teeterData from './world-data/teeter.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, canvas2d } from './materials/pbr-kit.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d } from './materials/pbr-kit.js';
 import { panCrust, causeway, saltSlab, brineRipple } from './materials/teeter-textures.js';
 import {
   createTtSkyDome, createTtLights, followTtShadow, createTtEnvironment, ttSkyUniforms, followCamera, TTSKY
@@ -412,6 +412,9 @@ export class TeeterWorld {
       if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge || node.userData.phys) continue;
       bake(node);
     }
+    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
+    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
       const g = o.userData.ownGeometry;
@@ -450,7 +453,7 @@ export class TeeterWorld {
     if (cameraPos) {
       followCamera(this.sky, cameraPos);
       const moved = followTtShadow(this.keyLight, cameraPos, SHADOW_FOLLOW_STEP);
-      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0, every: 30 });
+      paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       this.lampPool?.update(cameraPos);
     }
     // Work lamps are old, not alarming: a slow filament drift.

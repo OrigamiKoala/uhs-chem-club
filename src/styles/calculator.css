@@ -26,8 +26,6 @@
   bottom: 90px;
   top: auto;
   left: auto;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   touch-action: none;
 }
 
