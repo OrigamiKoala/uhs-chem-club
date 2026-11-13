@@ -4,11 +4,11 @@
  * ONE PICTURE, TWO FORMS (as `pans-3d.js`, `ph-3d.js`). The flat painters of the rate kit are pure functions of the table state and the clock.
  * This file runs the SAME painter against a recording context every frame and builds solid objects from what it drew:
  *
- *   a dark window (the reaction vessel's glass)    a glass tank: the particles in it swim through its depth and height, not on a flat sheet;
- *   a filled circle                                 a sphere (a particle, a molecule, the energy ball), ringed circles are catalyst rings;
- *   a polyline (a curve, an axis, a threshold)      a standing line of beads on a glass graph wall (or, for a collision track, laid along the plate);
- *   the curve of an energy profile                  a solid hill the ball rides on;
- *   a filled bar (the energy spread)                a solid column.
+ *   a dark window (a vessel's or a collision track's glass)   a glass tank: the particles in it swim through its depth and height;
+ *   a filled circle inside it                                   a sphere (a particle or molecule); ringed circles are catalyst rings;
+ *   a polyline on a collision track (a speed arrow)             beads laid along the track.
+ *
+ * Graphs, plots and energy profiles are flat pictures and stay on the plate: they are NOT stood up (a standing graph reads as wrong).
  *
  * Nothing is graded from this dress; the flat picture under it keeps every figure and every word. `userData.sync(f, state)` takes the table's
  * state, `userData.tick(dt, still)` advances the clock (`still` holds it for reduced motion).
@@ -24,12 +24,9 @@ const hash = i => { let x = (i + 1) * 2654435761 % 4294967296; x = ((x ^ (x >>> 
 
 /** How each instrument is stood up. `wall`: curves stand upright on a glass wall; `tank`: a dark window is a glass tank; `hill`: the profile curve is a solid. */
 const KINDS = {
-  kvessel: { wall: true, tank: true },
-  lead: { wall: true, tank: false },
-  kprofile: { wall: true, hill: true },
-  plotter: { wall: true },
-  mbhist: { wall: true, columns: true },
-  collview: { wall: false, tank: true, rest: true, big: 1.5 }
+  kvessel: { tank: true, tankOnly: true },
+  lead: { tank: true, tankOnly: true },
+  collview: { tank: true, rest: true, big: 1.5, lines: true }
 };
 
 function recorder() {
@@ -149,7 +146,7 @@ export function rateDress(handler, kindName) {
     const rebuild = () => {
       const out = readRate(handler, live.f, live.state, box, live.clock);
       const t = live.clock;
-      const lines = out.lines;
+      const lines = opt.lines ? out.lines : [];
       // The baseline the standing graph rests on: the lowest line drawn (the horizontal axis).
       let baseY = box.y0 + live.f.size.h - 4; let minX = 1e9; let maxX = -1e9; let topY = 1e9;
       if (opt.wall && lines.length) {
@@ -196,6 +193,7 @@ export function rateDress(handler, kindName) {
         const rad = Math.max(0.0035, d.r * s * 0.85 * (opt.big || 1));
         let px; let py; let pz;
         const tank = tankRects.find(r => d.x >= r.x && d.x <= r.x + r.w && d.y >= r.y && d.y <= r.y + r.h);
+        if (opt.tankOnly && !tank) continue;
         if (tank) {
           const th = Math.min(tank.w, tank.h) * 0.85 * s;
           const pl = where(d.x, d.y);
@@ -217,6 +215,7 @@ export function rateDress(handler, kindName) {
       for (let i = 0; i < out.rings.length && ri < CAP_RING; i++) {
         const r = out.rings[i];
         const tank = tankRects.find(k => r.x >= k.x && r.x <= k.x + k.w && r.y >= k.y && r.y <= k.y + k.h);
+        if (opt.tankOnly && !tank) continue;
         const pl = where(r.x, r.y);
         let py = ground + 0.008;
         if (tank) { const th = Math.min(tank.w, tank.h) * 0.85 * s; py = ground + 0.006 + (0.5 + 0.5 * Math.sin(t * (0.5 + hash(i + 5)) + i * 1.7)) * th; }

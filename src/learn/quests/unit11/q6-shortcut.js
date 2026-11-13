@@ -9,6 +9,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { remember } from '../../engine/predict.js';
 import {
   rateTable,
   rateLeadFixture,
@@ -48,17 +49,14 @@ export const STAGES = [
   {
     id: 's1-lead',
     title: 'The Shortcut Path',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Compare the uncatalysed path and the catalysed path on the bench.'
-    },
-    prompt: 'How does the catalyst speed up the reaction?',
+    predict: true,
+    prompt: 'How can an added powder speed up a reaction without being one of the reactants?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('shortcut', 'Opens a lower-Ea path', { x: 112, y: 9 }),
-        stmt('usedUp', 'Burns as extra fuel', { x: 112, y: 24 }),
-        stmt('warms', 'Heats up the reactants', { x: 112, y: 39 })
+        stmt('shortcut', 'It lowers the energy hill', { x: 112, y: 9 }),
+        stmt('usedUp', 'It adds energy to the reactants', { x: 112, y: 24 }),
+        stmt('warms', 'It makes the products lower in energy', { x: 112, y: 39 })
       ],
       fixtures: [
         rateLeadFixture('lead', { x: 46, y: 28 }, {
@@ -73,21 +71,23 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Watch the two paths on the left fixture: one climbs high, one takes a lower curve.',
-      'Both paths start at the same reactants and end at the same products.',
-      'A catalyst lowers the activation energy barrier by opening a different path.'
+      'Watch the particles in the preview; the ringed ones are the added powder.',
+      'Notice whether the ringed particles are changed by the reaction going on around them.',
+      'Think about what a reaction needs before it can start, and what could make that need smaller.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Place a card in "How it works".' };
-      if (card.id === 'usedUp') return { ok: false, msg: 'A catalyst is not a reactant fuel; it is still there at the end.' };
-      if (card.id === 'warms') return { ok: false, msg: 'Both paths run at the same temperature; the hill height itself is lower.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place one prediction card in "How it works".' };
       return { ok: true };
     },
+    onClear(state) {
+      const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
+      if (card) remember('unit11/q6-shortcut', card.id);
+    },
     reward: {
-      log: 'A catalyst opens a lower-Ea alternate pathway.',
-      title: 'Catalyst Pathway',
-      body: 'A catalyst speeds a reaction by providing a different pathway with a lower activation energy.'
+      log: 'Prediction locked for the catalyst tests.',
+      title: 'Prediction Locked',
+      body: 'You locked in your prediction. The next stages test what a catalyst changes and what it leaves alone.'
     }
   },
 
@@ -99,9 +99,9 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('unchanged', 'Unchanged (6 before, 6 after)', { x: 116, y: 9 }),
-        stmt('usedUp', 'Consumed with reactant', { x: 116, y: 24 }),
-        stmt('doubled', 'Doubled as product forms', { x: 116, y: 39 })
+        stmt('unchanged', 'Unchanged', { x: 116, y: 9 }),
+        stmt('usedUp', 'Used up', { x: 116, y: 24 }),
+        stmt('doubled', 'Doubled', { x: 116, y: 39 })
       ],
       fixtures: [
         kvesselFixture('v1', { x: 28, y: 28 }, {
@@ -134,7 +134,7 @@ export const STAGES = [
     hints: [
       'Run both vessels and watch the catalyst dots inside "With 6 catalyst".',
       'Count how many catalyst particles remain after the reactant drops.',
-      'A catalyst participates in one step and is regenerated in a later step, so its total amount stays unchanged.'
+      'Follow one catalyst particle through the run and ask whether anything permanently removes it.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -176,8 +176,8 @@ export const STAGES = [
     }),
     hints: [
       'Compare the solid curve and the dashed green catalysed curve.',
-      'R stays at 40 and P stays at 15, so ΔH does not change.',
-      'Tap the peak where the catalysed curve drops below the uncatalysed peak.'
+      'Compare the start level, the end level and the height of the peak on the two curves.',
+      'Both routes join the same start and the same end; ask which levels they share and which they do not.'
     ],
     check(state) {
       const z = Math.round(state.table.fixtures.prof?.dials?.zone?.value ?? 4);
@@ -201,9 +201,9 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('Cl', 'Cl (used in 1, returned in 2)', { x: 112, y: 9 }),
-        stmt('ClO', 'ClO (made in 1, used in 2)', { x: 112, y: 24 }),
-        stmt('O3', 'O₃ (starting reactant)', { x: 112, y: 39 })
+        stmt('Cl', 'Cl', { x: 112, y: 9 }),
+        stmt('ClO', 'ClO', { x: 112, y: 24 }),
+        stmt('O3', 'O₃', { x: 112, y: 39 })
       ],
       fixtures: [
         plaqueFixture('mech', 'Ozone breakdown', { x: 46, y: 28 }, [
@@ -217,9 +217,9 @@ export const STAGES = [
       }
     }),
     hints: [
-      'A catalyst is present at the start, consumed in an early step, and regenerated in a later step.',
-      'An intermediate (like ClO) is made first and used up later; a catalyst is used first and returned later.',
-      'Find the species on the left of Step 1 that reappears on the right of Step 2.'
+      'List which species each step uses up and which it makes.',
+      'A species that is made and then used up is not left over; a species that is used up and then made again is back where it started.',
+      'Check which species is absent from the overall equation yet is used in the first step.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -259,7 +259,7 @@ export const STAGES = [
     hints: [
       'Press Play on the Solid catalyst view and watch where the gas molecule lands and stretches.',
       'Gas molecules cannot reach deep inside the solid metal lattice.',
-      'Tap the exposed top layer where the gas molecule lands.'
+      'Think about where a gas molecule can actually reach the solid and be held.'
     ],
     check(state) {
       const z = Math.round(state.table.fixtures.view?.dials?.zone?.value ?? 4);
@@ -289,7 +289,7 @@ export const SOLUTIONS = [
 ];
 
 export const MISSES = [
-  [put('usedUp', 'slot:ans')],
+  [],
   [put('usedUp', 'slot:ans')],
   [dial('prof', 'zone', 3)],
   [put('ClO', 'slot:ans')],

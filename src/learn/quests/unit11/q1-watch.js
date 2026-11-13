@@ -15,7 +15,7 @@ import {
   rateTable, kvesselFixture, rateLeadFixture, choiceFixture, pickable, stmt
 } from '../../table/kits/rate.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\breaction rates?\b/i, introducedAt: 2 }
@@ -122,7 +122,7 @@ export const STAGES = [
     hints: [
       'Press "Run" on both vessels and tap the one that finishes sooner.',
       'Compare how steeply the two product lines climb.',
-      'Both end at 0.40 mol/L, so the steeper line made product faster.'
+      'Both end at the same concentration, so what differs is how long each took to get there.'
     ],
     check(state) {
       const t = state.table;
@@ -292,7 +292,7 @@ export const STAGES = [
     hints: [
       'Press "Run" and watch the counts of A used and B formed.',
       'Compare the number of A particles lost with the number of B particles gained.',
-      'Two A must react for every one B made, so A changes faster by that ratio.'
+      'Each B that forms takes some number of A with it, as the equation says; use that to compare the two changes.'
     ],
     check(state) {
       if (!state.table.fixtures.v1.props.ran) {
@@ -300,8 +300,8 @@ export const STAGES = [
       }
       const p = Object.values(state.table.pieces).find(x => x.zone === 'slot:ans');
       if (!p) return { ok: false, notYet: true, msg: 'Place a card in "Rate of A vs B".' };
-      if (p.id === 'same') return { ok: false, msg: 'The counter shows twice as many A particles used as B particles formed.' };
-      if (p.id === 'half') return { ok: false, msg: 'The counter shows more A used than B formed in the same time.' };
+      if (p.id === 'same') return { ok: false, msg: 'Compare the two counts: the number of A used is not the number of B formed.' };
+      if (p.id === 'half') return { ok: false, msg: 'The counts show more A used than B formed in the same time, not fewer.' };
       return { ok: true };
     },
     reward: {
@@ -377,6 +377,63 @@ export const STAGES = [
       title: 'Factors Affecting Rate',
       body: 'More particles in the same volume, higher temperature, and more exposed surface all gave steeper lines. A larger vessel spread particles out and slowed it.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    id: 's7-stoich-rate',
+    title: 'Rate of Each Substance',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'One reaction has one rate, but each substance changes by its own amount. A substance with a bigger coefficient changes faster.',
+      worked: [
+        'Other reaction: 2 A → B, A used at 0.040 mol/(L·s)',
+        'Two A go for each B, so B forms at half that: 0.020 mol/(L·s)'
+      ]
+    },
+    prompt: 'How fast does NH₃ form in N₂ + 3 H₂ → 2 NH₃ while H₂ is used at 0.060 mol/(L·s)?',
+    entry: { id: 'rate_b', label: 'Rate NH₃ forms', unit: 'mol/(L·s)' },
+    widget,
+    table: rateTable({
+      pieces: [],
+      fixtures: [
+        kvesselFixture('v1', { x: 75, y: 28 }, {
+          title: 'H₂ and NH₃',
+          equation: '3 H₂ → 2 NH₃',
+          order: 1,
+          k: 0.08,
+          a0: 0.90,
+          tMax: 30,
+          stoich: { a: 3, b: 2 },
+          mode: 'both',
+          showCounts: true,
+          w: 112,
+          h: 40
+        })
+      ],
+      zones: {}
+    }),
+    hints: [
+      'Press "Run" and compare how many H₂ are used with how many NH₃ form.',
+      'In the same time, the counts differ by the ratio in the equation.',
+      'Scale the given rate by the same ratio, and check that the answer is smaller or larger as the counts show.'
+    ],
+    check(state) {
+      if (!state.table.fixtures.v1.props.ran) {
+        return { ok: false, notYet: true, msg: 'Press "Run" to see the counts first.' };
+      }
+      const val = entryNumber(state.table, 'rate_b');
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the rate in mol/(L·s).' };
+      if (Math.abs(val - 0.04) <= 0.0015) return { ok: true };
+      if (Math.abs(val - 0.06) <= 0.0015) return { ok: false, msg: 'The counts show fewer NH₃ formed than H₂ used, so the two rates are not equal.' };
+      if (val > 0.06) return { ok: false, msg: 'The counts show NH₃ forming more slowly than H₂ is used, but that value is faster.' };
+      return { ok: false, msg: 'Compare that value with the counts: how many NH₃ form for each H₂ used?' };
+    },
+    reward: {
+      log: 'NH₃ forms at 0.060 × 2/3 = 0.040 mol/(L·s).',
+      title: 'Rates and Coefficients',
+      body: 'For every 3 H₂ used, 2 NH₃ form, so NH₃ forms at two thirds of the rate H₂ is used: 0.040 mol/(L·s).'
+    }
   }
 ];
 
@@ -404,7 +461,8 @@ export const SOLUTIONS = [
   [runFx('v1'), { type: { entry: 'rate', value: '0.04' } }],
   [runFx('v1'), dial('v1', 'zone', 1)],
   [runFx('v1'), put('twice', 'slot:ans')],
-  [runFx('v1'), put('moreA', 'tray:faster'), put('hotter', 'tray:faster'), put('powder', 'tray:faster'), put('bigger', 'tray:slower')]
+  [runFx('v1'), put('moreA', 'tray:faster'), put('hotter', 'tray:faster'), put('powder', 'tray:faster'), put('bigger', 'tray:slower')],
+  [runFx('v1'), { type: { entry: 'rate_b', value: '0.04' } }]
 ];
 
 export const MISSES = [
@@ -413,7 +471,8 @@ export const MISSES = [
   [runFx('v1'), { type: { entry: 'rate', value: '0.40' } }],
   [runFx('v1'), dial('v1', 'zone', 3)],
   [runFx('v1'), put('same', 'slot:ans')],
-  [runFx('v1'), put('moreA', 'tray:faster'), put('hotter', 'tray:faster'), put('powder', 'tray:faster'), put('bigger', 'tray:faster')]
+  [runFx('v1'), put('moreA', 'tray:faster'), put('hotter', 'tray:faster'), put('powder', 'tray:faster'), put('bigger', 'tray:faster')],
+  [runFx('v1'), { type: { entry: 'rate_b', value: '0.06' } }]
 ];
 
 function blankState() { return {}; }

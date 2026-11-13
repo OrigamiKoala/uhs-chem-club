@@ -15,7 +15,7 @@ import {
   rateTable, kvesselFixture, plotterFixture, plaqueFixture, stmt
 } from '../../table/kits/rate.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bhalf-li(fe|ves)\b/i, introducedAt: 1 },
@@ -51,6 +51,7 @@ const R3_PTS = planKineticsRun({ order: 2, k: 0.12, a0: 0.80, tMax: 40, nSteps: 
 // Stage 5: t1/2 = 15 s => k = 0.693 / 15 = 0.0462 s^-1
 const T_HALF_5 = 15;
 const K_5 = 0.693 / T_HALF_5;
+const A_40 = 0.8 * Math.exp(-K_5 * 40);
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -301,7 +302,7 @@ export const STAGES = [
     hints: [
       'Read the half-life from the curve markers, then type k.',
       'Use the relation on the plate: k = 0.693 ÷ half-life.',
-      'Divide 0.693 by 15 s.'
+      'A shorter half-life means a faster reaction, so check that your k gets larger as the half-life gets shorter.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'k');
@@ -320,6 +321,61 @@ export const STAGES = [
       title: 'Half-Life and k',
       body: 'A half-life of 15 s gives k = 0.693 ÷ 15 = 0.0462 each second. Shorter half-lives mean larger k.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-integrated',
+    title: 'How Much Is Left',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The straight ln[A] line has a slope of −k, so ln[A] = ln[A]₀ − kt, where [A]₀ is the starting concentration.',
+      worked: [
+        'Another run: [A]₀ = 0.50 mol/L, k = 0.10 per second, t = 10 s',
+        'ln[A] = ln 0.50 − 0.10 × 10 = −0.693 − 1.0 = −1.693',
+        '[A] = e^(−1.693) = 0.18 mol/L'
+      ]
+    },
+    prompt: 'How much reactant is left after 40 s, in mol/L?',
+    entry: { id: 'left', label: 'Reactant left', unit: 'mol/L' },
+    widget,
+    table: rateTable({
+      pieces: [],
+      fixtures: [
+        kvesselFixture('v1', { x: 48, y: 28 }, {
+          title: 'First-order decay',
+          order: 1,
+          k: K_5,
+          a0: 0.80,
+          tMax: 30,
+          mode: 'reactant',
+          freezeAt: 1,
+          noRun: true,
+          w: 80,
+          h: 40
+        }),
+        plaqueFixture('eq', 'The run', { x: 118, y: 28 }, ['[A]₀ = 0.80 mol/L', 'k = 0.0462 per second'], { w: 46 })
+      ],
+      zones: {}
+    }),
+    hints: [
+      'The curve stops at 30 s, so the answer is beyond the drawn graph.',
+      'Estimate first: find how many half-lives 40 s is, and between which two amounts the answer must lie.',
+      'Put your estimate and the relation together; a result outside your estimate means a slip in the calculator.'
+    ],
+    check(state) {
+      const val = entryNumber(state.table, 'left');
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the concentration left in mol/L.' };
+      if (Math.abs(val - A_40) <= 0.006) return { ok: true };
+      if (val >= 0.2) return { ok: false, msg: 'After 30 s (two half-lives) 0.20 mol/L is left, and more time has passed since then.' };
+      if (val < 0.1) return { ok: false, msg: 'After 45 s (three half-lives) 0.10 mol/L is left, and 40 s is sooner than that.' };
+      return { ok: false, msg: 'That lies between the amounts left after two and three half-lives, but the relation gives a different value.' };
+    },
+    reward: {
+      log: '[A] after 40 s = 0.80 × e^(−0.0462 × 40) = 0.126 mol/L.',
+      title: 'Integrated Rate Law',
+      body: 'About 0.13 mol/L is left, between the 0.20 after two half-lives and the 0.10 after three. The relation gives amounts at times the graph does not show.'
+    }
   }
 ];
 
@@ -328,7 +384,8 @@ applyNotes(STAGES, {
   2: ['Read the half-life markers, then type the fraction remaining after 3 half-lives.'],
   3: ['Cycle the "Plot" dial to test each graph against the straightedge, then place one card.'],
   4: ['Check each reaction across all three plots, then sort R1, R2, and R3.'],
-  5: ['Read t½ from the curve, then type k.']
+  5: ['Read t½ from the curve, then type k.'],
+  6: ['Type the concentration left after 40 s; use Calc for ln and e.']
 });
 
 export const DEBRIEF = {
@@ -345,7 +402,8 @@ export const SOLUTIONS = [
   [{ type: { entry: 'frac', value: '0.125' } }],
   [dial('plot', 'plot', 2), put('lnA', 'slot:ans')],
   [put('R1', 'tray:zero'), put('R2', 'tray:first'), put('R3', 'tray:second')],
-  [{ type: { entry: 'k', value: '0.0462' } }]
+  [{ type: { entry: 'k', value: '0.0462' } }],
+  [{ type: { entry: 'left', value: '0.126' } }]
 ];
 
 export const MISSES = [
@@ -353,7 +411,8 @@ export const MISSES = [
   [{ type: { entry: 'frac', value: '0.25' } }],
   [put('A', 'slot:ans')],
   [put('R1', 'tray:first'), put('R2', 'tray:first'), put('R3', 'tray:second')],
-  [{ type: { entry: 'k', value: '10.4' } }]
+  [{ type: { entry: 'k', value: '10.4' } }],
+  [{ type: { entry: 'left', value: '0.30' } }]
 ];
 
 function blankState() { return {}; }
@@ -371,4 +430,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { K_20, T_HALF_5, K_5 };
+export const CHECKS = { K_20, T_HALF_5, K_5, A_40 };

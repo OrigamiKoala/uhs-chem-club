@@ -9,6 +9,7 @@
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
+import { remember } from '../../engine/predict.js';
 import {
   rateTable,
   rateLeadFixture,
@@ -47,18 +48,15 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     id: 's1-lead',
-    title: 'Three Collisions',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Watch the three collisions in slow motion and see which one actually forms product.'
-    },
-    prompt: 'What two things must a collision have to react?',
+    title: 'Every Collision?',
+    predict: true,
+    prompt: 'Of all the collisions between reactant particles, how many lead to a reaction?',
     widget,
     table: rateTable({
       pieces: [
-        stmt('both', 'Energy ≥ Ea and right angle', { x: 108, y: 9 }),
-        stmt('energyOnly', 'High energy only', { x: 108, y: 24 }),
-        stmt('angleOnly', 'Right angle only', { x: 108, y: 39 })
+        stmt('all', 'All of them', { x: 108, y: 9 }),
+        stmt('half', 'About half', { x: 108, y: 24 }),
+        stmt('few', 'A small share', { x: 108, y: 39 })
       ],
       fixtures: [
         rateLeadFixture('lead', { x: 46, y: 28 }, {
@@ -69,25 +67,27 @@ export const STAGES = [
         })
       ],
       zones: {
-        slots: [{ id: 'ans', label: 'Needed to react', at: { x: 108, y: 52 }, size: { w: 46, h: 8 } }]
+        slots: [{ id: 'ans', label: 'My prediction', at: { x: 108, y: 52 }, size: { w: 46, h: 8 } }]
       }
     }),
     hints: [
-      'Watch all three collision pairs on the Collision bench.',
-      'Notice why both the slow pair and the sideways pair bounce apart.',
-      'Only the collision with enough energy and the right angle reacts.'
+      'Watch the particles in the preview as they meet one another.',
+      'Count how many meetings end with the particles bouncing apart unchanged.',
+      'Think about how many collisions a gas has each second compared with how fast reactions usually go.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
-      if (!card) return { ok: false, notYet: true, msg: 'Place a card in "Needed to react".' };
-      if (card.id === 'energyOnly') return { ok: false, msg: 'The sideways fast pair still bounced off unchanged.' };
-      if (card.id === 'angleOnly') return { ok: false, msg: 'The slow head-on pair also bounced off unchanged.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Place one prediction card in "My prediction".' };
       return { ok: true };
     },
+    onClear(state) {
+      const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
+      if (card) remember('unit11/q4-collide', card.id);
+    },
     reward: {
-      log: 'Reactions require enough energy and proper orientation.',
-      title: 'Effective Collisions',
-      body: 'Only collisions with at least the activation energy and the right orientation rearrange bonds.'
+      log: 'Prediction locked for the collision tests.',
+      title: 'Prediction Locked',
+      body: 'You locked in your prediction. The next stages slow collisions down to see which ones react.'
     }
   },
 
@@ -95,6 +95,10 @@ export const STAGES = [
   {
     id: 's2-energy',
     title: 'Energy Threshold',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Reactions need bonds to break. The least energy a collision must bring to do that is the activation energy, Ea.'
+    },
     prompt: 'Why did the slow pair bounce back unchanged?',
     widget,
     table: rateTable({
@@ -122,7 +126,7 @@ export const STAGES = [
     hints: [
       'Turn the "Pair" dial between Slow and Fast and press Play.',
       'Both pairs hit head-on, so only their speed differs.',
-      'The slow pair lacks the minimum energy (activation energy) to break bonds.'
+      'Ask what the particles bring to the collision, and what breaking a bond demands.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -169,7 +173,7 @@ export const STAGES = [
     hints: [
       'Test both Sideways and Head-on with the "Pair" dial and Play.',
       'Watch which atoms touch at the moment of impact.',
-      'Even fast molecules bounce off if the reactive ends miss each other.'
+      'The two pairs have the same speed and the same energy; ask what else could differ.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -191,7 +195,7 @@ export const STAGES = [
     title: 'Warming the Spread',
     briefing: {
       speaker: SPEAKER,
-      body: 'Turn Temperature from 300 K to 360 K and watch the amber tail past Ea.'
+      body: 'The tall bars show how many particles have each energy; the amber bars are those with at least Ea.'
     },
     prompt: 'Why does warming from 300 K to 360 K speed up the reaction?',
     widget,
@@ -218,7 +222,7 @@ export const STAGES = [
     hints: [
       'Turn the "Temperature" dial from 300 K to 330 K to 360 K.',
       'Watch the Ea = 12 kJ/mol bar and the amber bars to its right.',
-      'Ea stays fixed at 12 kJ/mol while the fraction of particles above Ea doubles from 2.20% to 4.56%.'
+      'Compare the amber share at each temperature, and ask whether the Ea bar moves at all.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:ans');
@@ -238,7 +242,12 @@ export const STAGES = [
   {
     id: 's5-profile-tap',
     title: 'Top of the Hill',
-    prompt: 'Where is the transition state on the energy profile?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An energy profile plots the energy of the reacting particles as they go from reactants to products. The top is the transition state, and the energy the reactants must gain to reach it is the activation energy.'
+    },
+    prompt: 'How much energy must the reactants gain to get over the top of the hill?',
+    entry: { id: 'ea_fwd', label: 'Forward Ea', unit: 'kJ/mol' },
     widget,
     table: rateTable({
       fixtures: [
@@ -247,32 +256,29 @@ export const STAGES = [
           reactants: 40,
           ts: 110,
           products: 10,
-          tapZones: [
-            { id: 'react', label: 'Reactants', x0: 0, x1: 0.22 },
-            { id: 'ts', label: 'Transition state', x0: 0.34, x1: 0.58 },
-            { id: 'prod', label: 'Products', x0: 0.78, x1: 1.0 }
-          ],
+          showLevels: false,
           w: 104,
           h: 44
         })
       ]
     }),
     hints: [
-      'Slide "Progress" from Start to End to trace the energy hill.',
-      'The transition state is the highest-energy, unstable arrangement between reactants and products.',
-      'Tap the peak of the curve labeled TS.'
+      'Slide "Progress" and watch the energy reading as the ball moves along the hill.',
+      'Compare the reading at the start with the reading at the very top.',
+      'The energy gained is how much higher the top is than where the reactants begin.'
     ],
     check(state) {
-      const z = Math.round(state.table.fixtures.prof?.dials?.zone?.value ?? 4);
-      if (z === 4) return { ok: false, notYet: true, msg: 'Tap the transition state region on the energy profile.' };
-      if (z === 1) return { ok: false, msg: 'That is the starting reactants level (R: 40).' };
-      if (z === 3) return { ok: false, msg: 'That is the final products level (P: 10).' };
-      return { ok: true };
+      const val = entryNumber(state.table, 'ea_fwd');
+      if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Type the activation energy in kJ/mol.' };
+      if (Math.abs(val - 70) <= 0.5) return { ok: true };
+      if (Math.abs(val - 110) <= 0.5) return { ok: false, msg: 'The ball reads 110 kJ/mol at the top, but it began at the reactants level, not at zero.' };
+      if (Math.abs(val - 40) <= 0.5) return { ok: false, msg: 'The reactants already have 40 kJ/mol before the climb; that is where the ball starts, not how far it climbs.' };
+      return { ok: false, msg: 'Compare the ball\'s reading at the start and at the top of the hill.' };
     },
     reward: {
-      log: 'The transition state sits at the peak of the profile.',
-      title: 'Transition State',
-      body: 'The activated complex (transition state) is the unstable high-energy peak between reactants and products.'
+      log: 'Forward Ea = 110 - 40 = 70 kJ/mol.',
+      title: 'Activation Energy',
+      body: 'The transition state sits at 110 kJ/mol and the reactants at 40, so they must gain 70 kJ/mol. That climb is the activation energy.'
     }
   },
 
@@ -282,10 +288,10 @@ export const STAGES = [
     title: 'Climbing Back',
     briefing: {
       speaker: SPEAKER,
-      body: 'Activation energy is the climb from start to peak. Forward Ea = TS − R = 95 − 30 = 65 kJ/mol.',
+      body: 'The reverse reaction starts from the products and has to climb to the same top.',
       worked: [
-        'Forward climb: from R (30) up to TS (95) = 65 kJ/mol',
-        'Reverse climb: from P up to TS'
+        'Another reaction: reactants 20, top 70, products 5 (kJ/mol)',
+        'Forward climb: 70 − 20 = 50 kJ/mol'
       ]
     },
     prompt: 'What is the activation energy for the reverse reaction?',
@@ -304,17 +310,17 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Read the products level P and the peak TS on the profile.',
-      'Going in reverse means starting at P = 15 and climbing up to TS = 95.',
-      'Reverse activation energy is the energy climb from products P up to the peak TS.'
+      'Find the levels of the products and of the top on the profile.',
+      'The reverse reaction starts where the forward reaction ended.',
+      'Its activation energy is the climb from where it starts to the top.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'ea_rev');
       if (Number.isNaN(val)) return { ok: false, notYet: true, msg: 'Enter the reverse activation energy in kJ/mol.' };
-      if (Math.abs(val - 65) < 0.5) return { ok: false, msg: '65 kJ/mol is the forward climb (95 − 30); reverse starts at P = 15.' };
+      if (Math.abs(val - 65) < 0.5) return { ok: false, msg: '65 kJ/mol is the climb that starts at the reactants; the reverse reaction starts elsewhere.' };
       if (Math.abs(val - 15) < 0.5) return { ok: false, msg: '15 kJ/mol is the products height (and |ΔH|), not the climb up to TS = 95.' };
       if (Math.abs(val - 95) < 0.5) return { ok: false, msg: '95 kJ/mol is the peak height from zero, not from P = 15.' };
-      if (Math.abs(val - 80) > 0.5) return { ok: false, msg: 'Subtract the products level (15) from the transition state peak (95).' };
+      if (Math.abs(val - 80) > 0.5) return { ok: false, msg: 'The reverse climb starts at the products level and ends at the top; check both on the profile.' };
       return { ok: true };
     },
     reward: {
@@ -336,8 +342,8 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('pathA', 'Path A (lower barrier)', { x: 28, y: 49 }),
-        stmt('pathB', 'Path B (lower product)', { x: 122, y: 49 })
+        stmt('pathA', 'Path A', { x: 28, y: 49 }),
+        stmt('pathB', 'Path B', { x: 122, y: 49 })
       ],
       fixtures: [
         kprofileFixture('profA', { x: 40, y: 20 }, {
@@ -385,21 +391,21 @@ const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value 
 const runFx = fixture => ({ run: { fixture } });
 
 export const SOLUTIONS = [
-  [put('both', 'slot:ans')],
+  [put('few', 'slot:ans')],
   [runFx('view'), put('below', 'slot:ans')],
   [dial('view', 'pair', 2), runFx('view'), put('orient', 'slot:ans')],
   [dial('mb', 'T', 3), put('more', 'slot:ans')],
-  [dial('prof', 'zone', 2)],
+  [{ type: { entry: 'ea_fwd', value: '70' } }],
   [{ type: { entry: 'ea_rev', value: '80' } }],
   [put('pathA', 'slot:ans')]
 ];
 
 export const MISSES = [
-  [put('energyOnly', 'slot:ans')],
+  [],
   [put('angle', 'slot:ans')],
   [put('lowerEa', 'slot:ans')],
   [put('eaDrops', 'slot:ans')],
-  [dial('prof', 'zone', 1)],
+  [{ type: { entry: 'ea_fwd', value: '110' } }],
   [{ type: { entry: 'ea_rev', value: '65' } }],
   [put('pathB', 'slot:ans')]
 ];

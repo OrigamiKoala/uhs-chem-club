@@ -265,7 +265,7 @@ export const STAGES = [
     hints: [
       'Read row 1\'s concentrations and initial rate from the log, then type k.',
       'Square [NO] before multiplying by [O₂].',
-      'Divide the measured rate by [NO]² × [O₂] to isolate k.'
+      'The law says rate = k times the concentrations to their powers, so one row holds everything except k.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'k');
@@ -309,7 +309,7 @@ export const STAGES = [
     hints: [
       'Use the rate law and k from runs 1-2 with run 3\'s concentrations, then type the rate.',
       'Remember [NO] is squared while [O₂] is to the first power.',
-      'Plug k, [NO], and [O₂] into rate = k[NO]²[O₂], squaring [NO] before multiplying.'
+      'Run 3 has its own concentrations; the law and the constant from runs 1 and 2 still hold.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'rate');

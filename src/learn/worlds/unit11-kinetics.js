@@ -19,7 +19,7 @@ export const UNIT_11 = {
       title: 'How Fast',
       line: 'Two feed lines yield the same fuel, yet one tower is already overheating.',
       arena: 'bench',
-      stageCount: 6,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit11/q1-watch.js')
     },
@@ -37,7 +37,7 @@ export const UNIT_11 = {
       title: 'Concentration Over Time',
       line: 'Half the peroxide broke down in twenty seconds; how long until half of what remains is gone?',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit11/q3-time.js')
     },

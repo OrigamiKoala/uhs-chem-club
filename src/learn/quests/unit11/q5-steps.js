@@ -59,7 +59,7 @@ export const STAGES = [
     title: 'Adding Elementary Steps',
     briefing: {
       speaker: SPEAKER,
-      body: 'Stack the two elementary step cards so species on both sides cancel.'
+      body: 'Most reactions happen as a series of single collisions called elementary steps. Added together, the steps must give the overall reaction.'
     },
     prompt: 'What overall reaction do these two elementary steps produce?',
     widget,
@@ -86,7 +86,7 @@ export const STAGES = [
     hints: [
       'Move both elementary step cards into "The stack" tray.',
       'NO₃ appears once on the right of Step 1 and once on the left of Step 2, so it cancels.',
-      'One NO₂ also cancels between the two steps, leaving NO₂ + CO → NO + CO₂.'
+      'Add the left sides of the two steps and the right sides, then remove whatever appears on both.'
     ],
     check(state) {
       const r = stackRead(state.table, 'wanted');
@@ -109,9 +109,9 @@ export const STAGES = [
     widget,
     table: rateTable({
       pieces: [
-        stmt('NO3', 'NO₃ (made in 1, used in 2)', { x: 112, y: 9 }),
-        stmt('NO2', 'NO₂ (reactant left over)', { x: 112, y: 24 }),
-        stmt('CO', 'CO (used in step 2)', { x: 112, y: 39 })
+        stmt('NO3', 'NO₃', { x: 112, y: 9 }),
+        stmt('NO2', 'NO₂', { x: 112, y: 24 }),
+        stmt('CO', 'CO', { x: 112, y: 39 })
       ],
       fixtures: [
         plaqueFixture('steps', 'Two-step path', { x: 46, y: 28 }, [
