@@ -751,7 +751,7 @@ of the works. The building is a set of rooms (volumes) that meet at doorways; `s
   the lobby, up the cabin ramp. Bench 4: back to the lobby, down the sump ramp. Bench 5: lobby east door to the nave, across to the ramp
   foot (z 22 to 26), up the charge ramp. Bench 6: back down to the foot, east into the pickling bay. Bench 7: up the nave into the cast
   house, east door at z -42 to -38, down the pit ramp, round the landing. Bench 8: back up, across the cast house, west door (z -52 to -46).
-- **The Golem's ground.** Player (0, -42), boss (0, -56), on the cast house floor (level, 0.00), the furnace's front 8 m behind the boss.
+- **The Golem's ground.** Player (0, -40.5), boss (0, -54.5), on the cast house floor (level, 0.00), the furnace's breast 9.5 m behind the boss.
   `BOSS_ARENA_SPOTS['boss-golem']` moves from (0, -44)/(0, -60) to these.
 
 ### 11.4 Section along the route

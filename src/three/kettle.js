@@ -292,6 +292,7 @@ export class KettleWorld {
       if (!node) continue;
       this.scene.add(node);
       for (const c of node.userData.colliders || []) this.plantColliders.push({ x: node.position.x + c.x, z: node.position.z + c.z, radius: c.r });
+      if (node.userData.advance) this.smoke = node;
     }
   }
 
@@ -441,6 +442,12 @@ export class KettleWorld {
     // The building's shell is ground, and it is baked too: one mesh per material, each still tagged as ground.
     mergeStatic(this.worksShell);
     this.worksShell.traverse(o => { if (o.isMesh) o.userData.phys = 'ground'; });
+    // The far country is the horizon's own, and it is baked the same way.
+    for (const node of this.scene.children) {
+      if (node.name !== 'far-country') continue;
+      mergeStatic(node);
+      node.traverse(o => { if (o.isMesh) o.userData.phys = 'ambient'; });
+    }
     // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
     // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
     this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
@@ -492,6 +499,9 @@ export class KettleWorld {
       this.lampPool?.update(cameraPos);
     }
     if ((this._coverTick = ((this._coverTick ?? 0) + 1) % 10) === 0) this.cover.applyTo(this.scene);
+    this.smoke?.userData.advance(this.elapsed);
+    // The iron in the runner is alive: it wavers, slowly, as a melt does. (It does not bloom; it is one colour.)
+    this.M.iron.emissiveIntensity = 1.5 + Math.sin(this.elapsed * 0.9) * 0.12 + Math.sin(this.elapsed * 2.3) * 0.05;
     // Work lamps are old, not alarming: a slow filament drift.
     this.lanternMat.emissiveIntensity = 1.35 + Math.sin(this.elapsed * 1.3) * 0.1;
   }

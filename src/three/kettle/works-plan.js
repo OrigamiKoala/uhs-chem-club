@@ -32,7 +32,7 @@ export const WALK = 100;
 export const SPAWN = [0, 1.6, 76];
 export const PAD = [56, 78];
 /** Where the Recipe Golem is fought: the cast house floor, the furnace's front behind it. */
-export const ARENA = { boss: [0, 0, -56], player: [0, 1.6, -42] };
+export const ARENA = { boss: [0, 0, -54.5], player: [0, 1.6, -40.5] };
 /** A wall's thickness, standing inside its own room from the room's plane. */
 export const WALL_T = 0.25;
 /** The furnace: its centre and the radius of its hearth, north of the cast house's end wall. */
@@ -88,7 +88,9 @@ export const DOORS = [
   { a: 'pit-ramp', side: 'maxX', lo: -42, hi: -38, b: 'pit-landing' },
   { a: 'pit-landing', side: 'minZ', lo: 26, hi: 30, b: 'pit' },
   { a: 'cast', side: 'maxX', lo: -62, hi: -44, b: 'pit', pass: false, kind: 'rail' },
-  { a: 'cast', side: 'minX', lo: -52, hi: -46, b: 'refining', h: 4 }
+  { a: 'cast', side: 'minX', lo: -52, hi: -46, b: 'refining', h: 4 },
+  // The furnace's breast stands in the cast house's end wall: a hole in the wall that the furnace itself fills.
+  { a: 'cast', side: 'minZ', lo: -4, hi: 4, b: null, pass: false, kind: 'window', sill: 0, head: 5.2 }
 ];
 
 /**
