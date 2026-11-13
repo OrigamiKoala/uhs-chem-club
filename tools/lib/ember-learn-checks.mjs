@@ -398,9 +398,9 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
   const e7 = mods['q7-gibbs'];
   if (e7) {
     const q = 'unit05/q7-gibbs';
-    const { SALT, ICE, T_ICE } = e7.CHECKS;
-    // Five stages since 2026-11-11 (ΔG° from formation values retired). Stage 2 is no longer typed: the ball is placed where ΔG is zero.
-    holds(e7.STAGES.length === 5, `${q} should have five stages`);
+    const { SALT, ICE, T_ICE, GF_DG } = e7.CHECKS;
+    // Six stages: Stage 6 computes ΔG°rxn from ΔGf° values (CED 9.3.A.3).
+    holds(e7.STAGES.length === 6, `${q} should have six stages`);
     holds(Boolean(e7.STAGES[0].predict) && !Object.values(start(e7, 0).fixtures).filter(f => f.kind !== 'lead').length, `${q} stage 1: the predict stage shows an instrument`);
     {
       // The salt takes heat in at every setting, and still ΔG goes below zero once it is warm enough; one setting stands where it is zero.
@@ -437,6 +437,13 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       near(Number(done(e7, 4).entries.T), T_ICE, 2, `${q} stage 5 (the figure typed)`);
       holds(!ICE.Ts.includes(273) && ICE.Ts.some(T => T < 273) && ICE.Ts.some(T => T > 273), `${q} stage 5: the dial hands over the melting point, or does not straddle it`);
       same(e7.STAGES[4].check(e7.stateFor(4, e7.MISSES[4])).ok, false, `${q} stage 5 (the miss)`);
+    }
+    {
+      const want = TD.FORMATION_TABLE['CO2(g)'].dGf + 2 * TD.FORMATION_TABLE['H2O(l)'].dGf - (TD.FORMATION_TABLE['CH4(g)'].dGf + 2 * TD.FORMATION_TABLE['O2(g)'].dGf);
+      near(GF_DG, want, 0.1, `${q} stage 6 (ΔG° from ΔGf°)`);
+      near(Number(done(e7, 5).entries.dgf), want, 0.1, `${q} stage 6 (the figure typed)`);
+      same(e7.STAGES[5].check(e7.stateFor(5, e7.SOLUTIONS[5])).ok, true, `${q} stage 6 (the solution)`);
+      same(e7.STAGES[5].check(e7.stateFor(5, e7.MISSES[5])).ok, false, `${q} stage 6 (the miss)`);
     }
   }
 

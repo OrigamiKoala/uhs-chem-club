@@ -26,7 +26,7 @@ import {
 } from '../../table/kits/ph.js';
 import { ACIDS, bufferState, fmt, pOf } from '../../engine/phdata.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bbuffer\b/i, introducedAt: 2 },
@@ -345,6 +345,51 @@ export const STAGES = [
         body: `Acetic acid donated protons to the added base, falling from ${MIX.ha} to ${Math.round(m.HA / U)} while acetate rose to ${Math.round(m.A / U)}. The pH rose only from ${fmt(read(MIX.ha, MIX.a).pH, 2)} to ${fmt(m.pH, 2)}.`
       };
     }
+  },
+
+  /* ---------------------------------------------------------------- 8 */
+  {
+    id: 's8-half-equiv',
+    title: 'Halfway to Equivalence',
+    briefing: 'When a weak acid (HA) meets half as many moles of strong base (OH⁻), half the HA becomes its conjugate base A⁻, forming a buffer with [HA] = [A⁻] and pH = pKa. At equal moles (1:1 equivalence), all HA becomes A⁻, so pH > 7.',
+    prompt: 'What is the pH after pouring 50 spheres of NaOH into 100 spheres of CH₃COOH (2:1 mole ratio)?',
+    widget,
+    entry: { id: 'ph', label: 'pH at 2:1 ratio', unit: '' },
+    table: (() => {
+      const f = flaskAt('fm', 26, 1, { title: 'CH₃COOH (100 spheres)', ha: 100, a: 0, reagent: 'base', meter: false });
+      return phTable({
+        fixtures: [
+          f.fixture,
+          plaqueFixture('plate', 'Acetic acid', { x: 86, y: 14 }, [`pKa ${fmt(PLATE_PKA, 2)}`, 'Equivalence (10 pours): pH 8.72'], { w: 54 })
+        ]
+      }, { w: 124, h: 52 });
+    })(),
+    hints: [
+      'Press "Pour" five times (10 spheres per pour) and read the sphere counts in the window.',
+      'Compare the acetic acid and acetate counts in the window with the pKa on the plate.',
+      'When [HA] = [A⁻], log([A⁻]/[HA]) = 0, so Henderson–Hasselbalch gives pH = pKa.'
+    ],
+    check(state) {
+      const r = mixRead(state.table, 'fm');
+      if (r.nb === 0) return { ok: false, notYet: true, msg: 'Pour 50 spheres of NaOH (5 pours) first.' };
+      if (r.nb === 10) return { ok: false, msg: '10 pours is a 1:1 mole ratio (equivalence), where all CH₃COOH becomes CH₃COO⁻ (pH 8.72); the prompt asks for 2:1.' };
+      if (r.nb !== 5) return { ok: false, msg: `You poured ${r.nb * PER} spheres of NaOH (${r.nb} pours); 50 spheres (5 pours) gives a 2:1 mole ratio with 100 spheres of CH₃COOH.` };
+      const v = entryNumber(state.table, 'ph');
+      if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the pH in the field.' };
+      const want = ph(50, 50);
+      if (Math.abs(v - want) <= TOL_PH) return { ok: true };
+      if (Math.abs(v - 7) <= 0.1) return { ok: false, msg: 'At 2:1, equal moles of CH₃COOH and CH₃COO⁻ form a buffer; the pH is set by pKa, not 7.00.' };
+      if (Math.abs(v - 8.72) <= 0.1) return { ok: false, msg: '8.72 is the pH at equivalence (1:1, all CH₃COO⁻), not at the 2:1 buffer.' };
+      return { ok: false, msg: `${fmt(v, 2)} does not match a 50:50 buffer of CH₃COOH and CH₃COO⁻ with pKa ${fmt(PLATE_PKA, 2)}.` };
+    },
+    get reward() {
+      const m = read(50, 50);
+      return {
+        log: 'A 2:1 weak-acid to strong-base mixture formed a buffer at pH = pKa (4.74).',
+        title: 'Weak Acid + Strong Base Regimes',
+        body: `With 2:1 CH₃COOH to NaOH, half the acid became CH₃COO⁻, giving [HA] = [A⁻] and pH = pKa = ${fmt(m.pH, 2)}. At 1:1 equivalence, only CH₃COO⁻ remains and pH > 7.`
+      };
+    }
   }
 ];
 
@@ -360,7 +405,8 @@ export const SOLUTIONS = [
   [pour('fm'), put('bench.h.h3o', 'slot:bench.take.a')],
   [{ type: { entry: 'ph', value: '5.22' } }],
   [{ type: { entry: 'ratio', value: '0.45' } }],
-  [pour('fm'), dial('pick', 'value', 2)]
+  [pour('fm'), dial('pick', 'value', 2)],
+  [pour('fm'), pour('fm'), pour('fm'), pour('fm'), pour('fm'), { type: { entry: 'ph', value: '4.74' } }]
 ];
 
 export const MISSES = [
@@ -370,7 +416,8 @@ export const MISSES = [
   [pour('fm'), put('bench.h.h3o', 'slot:bench.take.ha')],
   [{ type: { entry: 'ph', value: '4.27' } }],
   [{ type: { entry: 'ratio', value: '2.2' } }],
-  [pour('fm'), dial('pick', 'value', 4)]
+  [pour('fm'), dial('pick', 'value', 4)],
+  [pour('fm'), pour('fm'), pour('fm'), pour('fm'), pour('fm'), { type: { entry: 'ph', value: '7.00' } }]
 ];
 
 function blankState() { return {}; }

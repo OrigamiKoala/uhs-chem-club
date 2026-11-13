@@ -62,7 +62,7 @@ export const UNIT_07 = {
       title: 'How Much Is Made',
       line: 'Forty tons of ore: how much iron can it give?',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit07/q6-stoich.js')
     },

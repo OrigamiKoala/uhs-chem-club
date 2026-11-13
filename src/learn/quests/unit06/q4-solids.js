@@ -25,7 +25,7 @@ import { matterTable, note, whereIs, leadFixture } from '../../table/kits/matter
 import { solidCard, solidTestFixture, cardRows } from '../../table/kits/matter-tester.js';
 import { SOLIDS, meltText, currentReading } from '../../engine/matterdata-tester.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 
 export const VOCABULARY = [
@@ -68,6 +68,11 @@ const S5 = [
   { id: 'x1', solid: 'glass', label: 'X1', tray: 'amorphous' }, { id: 'x2', solid: 'iodine', label: 'X2', tray: 'molecular' },
   { id: 'x3', solid: 'iron', label: 'X3', tray: 'metallic' }, { id: 'x4', solid: 'quartz', label: 'X4', tray: 'network' },
   { id: 'x5', solid: 'potassium', label: 'X5', tray: 'ionic' }
+];
+const S6 = [
+  { id: 'naphthalene', solid: 'naphthalene', label: 'naphthalene', tray: 'chains' },
+  { id: 'polyethylene', solid: 'polyethylene', label: 'polyethylene', tray: 'chains' },
+  { id: 'crosslinked', solid: 'crosslinked', label: 'cross-linked resin', tray: 'crosslink' }
 ];
 
 /* ------------------------------------------------------------------
@@ -304,6 +309,34 @@ export const STAGES = [
         body: 'The window glass shattered, stayed dark cold and lit the lamp molten, just as the ionic solid did. Only its trace told them apart: no single melting temperature means no repeating pattern, so it is amorphous.'
       }
     };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const tester = solidTestFixture('tester', TESTER_AT, { tests: ['melt', 'strike'], view: 'trace', w: 66, maxT: 500, title: 'Polymer Tester' });
+    const polySay = (card, tray) => `${cap(card.label)} sits in "${tray}": its melt trace (${meltText(card.props.melt)}) and hammer test (${card.props.strike}) show how its chains are held.`;
+    return {
+      id: 's6-polymers',
+      title: 'Long Chains and Cross-Links',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Long polymer chains attract one another by dispersion forces that grow with chain length, yet soften when warmed; covalent cross-links between chains lock them into a rigid network.'
+      },
+      prompt: 'Which solids are held only by dispersion between molecules or chains, and which by covalent cross-links?',
+      widget,
+      table: benchTable(S6, tester, [['chains', 'Dispersion between chains'], ['crosslink', 'Covalent cross-links']]),
+      hints: [
+        'Heat and strike each sample in the tester, then sort them into trays.',
+        'Compare the softening temperature of polyethylene with naphthalene and with the cross-linked resin.',
+        'Unlinked chains soften over a low range and flatten; covalent cross-links keep the solid rigid and brittle.'
+      ],
+      check: fileCheck(S6, polySay),
+      reward: {
+        log: 'Long chains softened over a range above naphthalene; cross-linked resin stayed rigid.',
+        title: 'Polymers and Cross-Linking',
+        body: 'Polyethylene softens higher than small naphthalene molecules because longer chains have stronger dispersion forces. Covalent cross-links lock chains together so the resin stays rigid until high heat.'
+      }
+    };
   })()
 ];
 
@@ -345,7 +378,8 @@ export const SOLUTIONS = [
   [put('differ', 'slot:guess')],
   fileAll(S3),
   fileAll(S4, [1, 2, 3]),
-  fileAll(S5)
+  fileAll(S5),
+  fileAll(S6, [1, 2])
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -354,7 +388,8 @@ export const MISSES = [
   [],
   fileAll(S3, [null], { silica: 'one' }),
   fileAll(S4, [1, 2, 3], { x1: 'ionic', x4: 'network' }),
-  fileAll(S5, [null], { x1: 'ionic', x5: 'amorphous' })
+  fileAll(S5, [null], { x1: 'ionic', x5: 'amorphous' }),
+  fileAll(S6, [1, 2], { polyethylene: 'crosslink' })
 ];
 
 function blankState() { return {}; }
@@ -378,4 +413,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { S1, S3, S4, S5, SOLIDS };
+export const CHECKS = { S1, S3, S4, S5, S6, SOLIDS };

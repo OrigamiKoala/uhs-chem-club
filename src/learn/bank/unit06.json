@@ -450,6 +450,56 @@
       ],
       "answer": "a",
       "explanation": "Mass percent is the mass of solute over the mass of the whole solution: 12.0 g / (12.0 g + 188 g) = 0.060, or 6.0 %."
+    },
+    {
+      "id": "q2-grip#e1",
+      "quest": "q2-grip",
+      "question": "In a folded protein in water, nonpolar hydrocarbon side chains pack into the interior while –OH and –NH₂ groups face the water. Why?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Polar groups form hydrogen bonds with water; nonpolar chains interact only by dispersion"
+        },
+        {
+          "id": "b",
+          "label": "Nonpolar chains form covalent bonds with one another"
+        },
+        {
+          "id": "c",
+          "label": "Polar groups repel water molecules"
+        },
+        {
+          "id": "d",
+          "label": "Nonpolar chains carry permanent ionic charges"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Polar –OH and –NH₂ groups hydrogen-bond with surrounding water molecules, whereas nonpolar hydrocarbon regions cannot hydrogen-bond with water and cluster together through dispersion forces."
+    },
+    {
+      "id": "q4-solids#e1",
+      "quest": "q4-solids",
+      "question": "Why does cross-linked rubber stay rigid and resist flowing when heated compared with unlinked polyethylene?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Covalent cross-links lock the polymer chains together so they cannot slide past one another"
+        },
+        {
+          "id": "b",
+          "label": "Cross-linked rubber is a metallic solid with delocalized electrons"
+        },
+        {
+          "id": "c",
+          "label": "Unlinked polyethylene has stronger covalent bonds between separate chains"
+        },
+        {
+          "id": "d",
+          "label": "Cross-linked rubber has no dispersion forces"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Unlinked polymer chains are held together only by dispersion forces and can slide when warmed; covalent cross-links tie the chains into a rigid network."
     }
   ],
   "bench": {

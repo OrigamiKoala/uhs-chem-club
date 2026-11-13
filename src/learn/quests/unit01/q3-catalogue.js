@@ -45,7 +45,7 @@ import {
   cardTable, cardSlot, cardTray, elementCard, tradeOf, piecesIn, slotCard, railOrder
 } from '../../table/kits/cards.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 /**
  * When each withheld word is earned. `introducedAt` is the stage whose REWARD
@@ -417,7 +417,37 @@ export const STAGES = [
     reward: {
       log: 'Missing card worked out: 14.',
       title: 'A Chart That Predicts',
-      body: 'The missing element sits between 13 and 15, so its atomic number is 14: silicon. The table predicted it from its neighbours.',
+      body: 'The missing element sits between 13 and 15, so its atomic number is 14: silicon. The table predicted it from its neighbours.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 7 */
+  {
+    title: 'Estimating From Neighbours',
+    prompt: 'Lithium (152 pm) and sodium (186 pm) sit above potassium in Group 1: what is a reasonable atomic radius for potassium?',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: [
+        ...chartCards({ skip: [] })
+      ],
+      fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Radius (pm)', at: { x: 75, y: 8 }, size: { w: 66, h: 12 }, noRun: true, dials: { radius: { min: 0, max: 300, step: 1, value: 0, label: 'Estimated radius (pm)' } } }]
+    }),
+    hints: [
+      'Use the Estimated radius dial.',
+      'Compare the step from lithium (152 pm) to sodium (186 pm).',
+      'Going down Group 1 adds another electron shell, so potassium is larger than sodium by roughly a similar step.'
+    ],
+    check(state) {
+      const claim = state.table.fixtures.stamp.dials.radius.value;
+      if (claim === 0) return { ok: false, notYet: true, msg: 'The dial is still on zero — set an estimated radius for potassium.' };
+      if (claim <= 186) return { ok: false, msg: 'Potassium has one more electron shell than sodium (186 pm), so its radius must be larger than 186 pm.' };
+      if (claim > 245) return { ok: false, msg: `${claim} pm is too large a jump for adding one shell below sodium (186 pm).` };
+      return { ok: true };
+    },
+    reward: {
+      log: 'Estimated potassium radius from Group 1 neighbours.',
+      title: 'Periodic Estimation',
+      body: 'Potassium\'s measured atomic radius is 227 pm, right in line with the step from lithium (152 pm) to sodium (186 pm). Group neighbours let you estimate unknown properties.',
       last: true
     }
   }
@@ -453,7 +483,8 @@ export const SOLUTIONS = [
   [to('c14', 'slot:s14'), to('c16', 'slot:s16'), to('c17', 'slot:s17')],
   [to('c10', 'slot:tester'), run('tester'), to('c02', 'tray:inert'), to('c10', 'tray:inert'), to('c18', 'tray:inert')],
   [to('c03', 'tray:gives'), to('c12', 'tray:gives'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')],
-  [{ setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }]
+  [{ setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }],
+  [{ setDial: { fixture: 'stamp', dial: 'radius', value: 227 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -463,7 +494,8 @@ export const MISSES = [
   [to('c16', 'slot:s14'), to('c14', 'slot:s16'), to('c17', 'slot:s17')],
   [to('c09', 'tray:inert'), to('c17', 'tray:inert'), to('c02', 'tray:inert')],
   [to('c03', 'tray:gives'), to('c12', 'tray:takes'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')],
-  [{ setDial: { fixture: 'stamp', dial: 'protons', value: 13 } }]
+  [{ setDial: { fixture: 'stamp', dial: 'protons', value: 13 } }],
+  [{ setDial: { fixture: 'stamp', dial: 'radius', value: 170 } }]
 ];
 
 function blankState() { return {}; }

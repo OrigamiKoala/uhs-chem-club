@@ -32,7 +32,7 @@ export async function checkKettle({ fail, ok }) {
   //   12.0 g H2 = 6.0 mol and 64.0 g O2 = 2.0 mol: O2 gives out, 4.0 mol H2 used, 2.0 mol left = 4.0 g.
   //   CaCO3 -> CaO + CO2: 50.0 g / 100.1 = 0.4995 mol; V = 0.4995 x 0.08206 x 298.15 = 12.22 L.
   //   79.8 g Fe2O3 = 0.5 mol makes 1.0 mol Fe = 55.8 g; the furnace keeps 62 %: 34.6 g; yield 62.0 %.
-  const want = [['water', 45.0, 0.01], ['nh3', 8, 1e-6], ['nacl', 35.1, 0.01], ['h2Left', 4.0, 0.01], ['co2', 12.22, 0.01], ['feAllowed', 55.8, 0.01], ['feMade', 34.6, 0.01], ['yieldPct', 62.0, 0.05]];
+  const want = [['water', 45.0, 0.01], ['nh3', 8, 1e-6], ['nacl', 35.1, 0.01], ['h2Left', 4.0, 0.01], ['co2', 12.22, 0.01], ['feAllowed', 55.8, 0.01], ['feMade', 34.6, 0.01], ['yieldPct', 62.0, 0.05], ['purityPct', 79.93, 0.1]];
   for (const [k, v, tol] of want) if (!near(A[k], v, tol)) bad(`q6-stoich: ${k} is ${A[k]}, worked by hand ${v}`);
 
   // No dial stands at an asked amount, and no trial amount is the asked one.
@@ -43,7 +43,7 @@ export async function checkKettle({ fail, ok }) {
   if (C.LIME_TRIAL === C.LIME_ASKED) bad('q6-stoich stage 7: the trial is the asked amount');
 
   // No plate prints a stage's answer (a figure to be copied), and no jar's printed amount is one.
-  const answers = { 1: null, 2: ['45'], 3: ['8'], 4: ['35.1'], 5: null, 6: ['4.0', '4'], 7: ['12.2', '12'], 8: ['62'] };
+  const answers = { 1: null, 2: ['45'], 3: ['8'], 4: ['35.1'], 5: null, 6: ['4.0', '4'], 7: ['12.2', '12'], 8: ['62'], 9: ['79.9', '80', '80.0'] };
   q6.STAGES.forEach((st, i) => {
     const printed = [];
     for (const f of st.table.fixtures || []) if (f.kind === 'plaque') printed.push(...f.props.lines);

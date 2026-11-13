@@ -14,48 +14,45 @@ This plan implements the remaining flagged gaps from [AP-coverage-audit.md](file
 
 ---
 
-## Workstream 2 — Medium Priority (Partial Quantitative & Conceptual Depth)
+## Workstream 2 — Medium Priority (Completed)
 
-### 2.1 CED 9.3 (`9.3.A.3`): Standard Free Energy from `ΔG°f` (`unit05/q7-gibbs.js`)
+### 2.1 CED 9.3 (`9.3.A.3`): Standard Free Energy from `ΔG°f` (`unit05/q7-gibbs.js`) — **Done**
 - **Gap:** `ΔG°rxn = ΣΔGf°(products) − ΣΔGf°(reactants)` has only one MCQ (`q7-gibbs#5`) and no bench stage.
 - **Target files:**
-  - `src/learn/quests/unit05/q7-gibbs.js`
-- **Stage design:**
-  - Add a typed numeric stage on the Ember Reach bench with a `ΔGf°` table card (including an element in its standard state with `ΔGf° = 0`), mirroring `q5-hess` s4 (`ΔHf°`) and `q6-entropy` s5 (`S°`).
+  - `src/learn/quests/unit05/q7-gibbs.js` (added Stage 6 `s6-formation` with `FORMATION_TABLE` including `O₂(g)` standard state `ΔGf° = 0`)
 - **Verification:** `npm run verify:ember && npm run verify:teaching && npm run verify:learn`
 
-### 2.2 CED 8.4 (`8.4.A.2`, `8.4.A.4`): Weak Acid + Strong Base Reaction Regimes (`unit09/q5-salts.js` or `unit09/q7-buffer.js`)
+### 2.2 CED 8.4 (`8.4.A.2`, `8.4.A.4`): Weak Acid + Strong Base Reaction Regimes (`unit09/q7-buffer.js`) — **Done**
 - **Gap:** `q5-salts#w` and `q6-titrate#w` only work strong acid + strong base (`HCl + NaOH`). There is no stage calculating post-reaction species/pH when mixing a weak acid with a limiting amount of strong base (buffer formation) vs excess strong base.
 - **Target files:**
-  - `src/learn/quests/unit09/q5-salts.js` (or `q7-buffer.js`)
-  - `src/learn/bank/unit09.json` (add `end` practice item)
-- **Stage design:**
-  - Add a stage where the student mixes `CH₃COOH` and `NaOH` in a 2:1 mole ratio (weak acid in excess → buffer with `[HA] = [A⁻]` → `pH = pKa`), and compares it with stoichiometric equivalence (`pH > 7`).
+  - `src/learn/quests/unit09/q7-buffer.js` (added Stage 8 `s8-half-equiv` mixing `CH₃COOH` + `NaOH` in 2:1 mole ratio)
+  - `src/learn/bank/unit09.json` (added `q7-buffer#e2` `end` practice item)
 - **Verification:** `npm run verify:verdigris && npm run verify:teaching && npm run verify:learn`
 
-### 2.3 CED 3.1.A.5 & 3.2.A.7: Biomolecules and Polymers (`unit06/q2-grip.js`, `unit06/q4-solids.js`)
+### 2.3 CED 3.1.A.5 & 3.2.A.7: Biomolecules and Polymers (`unit06/q2-grip.js`, `unit06/q4-solids.js`) — **Done**
 - **Gap:** Noncovalent interactions in large biomolecules (DNA base-pair H-bonding, protein folding, hydrophobic/hydrophilic domains) and polymers (chain-length dispersion, cross-linking) are not represented.
 - **Target files:**
-  - `src/learn/quests/unit06/q2-grip.js` (biomolecule IMF stage)
-  - `src/learn/quests/unit06/q4-solids.js` (polymer solid/softening stage)
-  - `src/learn/bank/unit06.json` (add `end` practice items)
+  - `src/learn/quests/unit06/q2-grip.js` (added Stage 9 `s9-biomolecules`)
+  - `src/learn/quests/unit06/q4-solids.js` (added Stage 6 `s6-polymers`)
+  - `src/learn/bank/unit06.json` (added `q2-grip#e1`, `q4-solids#e1` `end` practice items)
 - **Verification:** `npm run verify:mirrowen && npm run verify:teaching && npm run verify:learn`
 
 ---
 
-## Workstream 3 — Low Priority (Reinforcement in Early Units)
+## Workstream 3 — Low Priority (Completed)
 
-### 3.1 CED 1.7 (`1.7.A.1`, `1.7.A.3`): Successive Ionization Energies & Periodic Estimation (`unit02/q8-trends.js`, `unit01/q3-catalogue.js`)
-- **Gap:** Successive IE jumps are now patched in `unit02/boss-eater#w` and taught in `unit12/q2-charges`, but `unit02/q8-trends.js` lacks a dedicated bench stage. Property estimation from periodic neighbours (`1.7.A.3`) is only exercised for atomic number.
+### 3.1 CED 1.7 (`1.7.A.1`, `1.7.A.3`): Successive Ionization Energies & Periodic Estimation (`unit02/q7-pes.js`, `unit01/q3-catalogue.js`) — **Done**
+- **Gap:** Successive IE jumps are now patched in `unit02/boss-eater#w` and taught in `unit12/q2-charges`, but `unit02/q8-trends.js` is already at the 9-stage bench limit.
 - **Target files:**
-  - `src/learn/quests/unit02/q8-trends.js` (add 1 stage reading an IE₁–IE₄ table to identify valence count / group)
-  - `src/learn/quests/unit01/q3-catalogue.js` (optional stage estimating boiling point/density/radius from group neighbours)
+  - `src/learn/quests/unit02/q7-pes.js` (added Stage 7 `s7-ie-group` reading an `IE₁–IE₄` table to identify Group 13)
+  - `src/learn/quests/unit01/q3-catalogue.js` (added Stage 7 estimating potassium atomic radius from group neighbours `Li` and `Na`)
 - **Verification:** `npm run verify:lanternfall && npm run verify:tallow && npm run verify:learn`
 
-### 3.2 CED 1.4 (`1.4.A.2`): Purity from Elemental Analysis (`unit07/q6-stoich.js` or `unit01/q6-weigh.js`)
+### 3.2 CED 1.4 (`1.4.A.2`): Purity from Elemental Analysis (`unit07/q6-stoich.js`) — **Done**
 - **Gap:** Gravimetric precipitation purity is covered (`unit07/q5-ionic#w`), but purity from elemental mass % (comparing measured % C or % Ca of an impure sample against the pure compound's % composition) has no stage.
 - **Target files:**
-  - `src/learn/quests/unit07/q6-stoich.js` (or `src/learn/bank/unit07.json` `end` item)
+  - `src/learn/quests/unit07/q6-stoich.js` (added Stage 9 `s9-purity` for `% Ca` in impure `CaCO₃`)
+  - `src/learn/bank/unit07.json` (added `q6-stoich#e1` `end` practice item)
 - **Verification:** `npm run verify:kettle && npm run verify:learn`
 
 ---

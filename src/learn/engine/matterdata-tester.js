@@ -48,7 +48,9 @@ export const SOLIDS = Object.freeze({
   iron:        { id: 'iron',        name: 'iron',                 formula: 'Fe',       kind: 'metallic',   crystalline: true,  melt: { lo: 1538, hi: 1538 }, strike: 'flattens', current: { cold: true,  molten: true },  picture: 'copper' },
   quartz:      { id: 'quartz',      name: 'quartz',               formula: 'SiO₂',     kind: 'network',    crystalline: true,  melt: { lo: 1713, hi: 1713 }, strike: 'shatters', current: { cold: false, molten: false }, picture: 'quartz' },
   silica:      { id: 'silica',      name: 'fused silica glass',   formula: 'SiO₂',     kind: 'amorphous',  crystalline: false, melt: { lo: 1040, hi: 1585 }, strike: 'shatters', current: { cold: false, molten: false }, picture: 'silica' },
-  glass:       { id: 'glass',       name: 'window glass',         formula: 'soda-lime', kind: 'amorphous', crystalline: false, melt: { lo: 510,  hi: 700 },  strike: 'shatters', current: { cold: false, molten: true },  picture: 'glass' }
+  glass:       { id: 'glass',       name: 'window glass',         formula: 'soda-lime', kind: 'amorphous', crystalline: false, melt: { lo: 510,  hi: 700 },  strike: 'shatters', current: { cold: false, molten: true },  picture: 'glass' },
+  polyethylene:{ id: 'polyethylene',name: 'polyethylene',         formula: '(C₂H₄)ₙ',  kind: 'amorphous',  crystalline: false, melt: { lo: 110,  hi: 135 },  strike: 'flattens', current: { cold: false, molten: false }, picture: 'silica' },
+  crosslinked: { id: 'crosslinked', name: 'cross-linked resin',   formula: 'network polymer', kind: 'network', crystalline: false, melt: { lo: 380, hi: 450 }, strike: 'shatters', current: { cold: false, molten: false }, picture: 'quartz' }
 });
 
 export const solid = id => SOLIDS[id];

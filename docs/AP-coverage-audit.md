@@ -13,7 +13,7 @@ Audited Nov 13, 2026 against `docs/ap-chemistry-course-and-exam-description.pdf`
 
 ## Executive Summary
 
-With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absorb` s6–s7 for CED 3.11; `unit09/q8-capacity` s8 for CED 8.11), **88 of 91 AP CED topics are covered** qualitatively and quantitatively across stages, bench problems, and guided worked problems, and **all 28 CED `EQN:` equations** are represented.
+With `unit01`–`unit11` built, the two cut stages restored (`unit02/q9-absorb` s6–s7 for CED 3.11; `unit09/q8-capacity` s8 for CED 8.11), and all six workstreams in [ap-gap-implementation-plan.md](file:///home/antigravity/OrigamiKoala/uhs-chem-club/docs/plans/ap-gap-implementation-plan.md) completed, **91 of 91 AP CED topics are covered** qualitatively and quantitatively across stages, bench problems, and guided worked problems, and **all 28 CED `EQN:` equations** are represented.
 
 ### Patched in this pass (11 new `worked` problems in `src/learn/bank/`)
 - **`unit01/boss-hopper#w`** (CED 1.3): *Empirical and Molecular Formula of Succinic Acid* — mass % → moles → non-integer ratio scaling (1 : 1.5 : 1 → `C₂H₃O₂`) → molecular formula (`C₄H₆O₄`) from molar mass.
@@ -28,15 +28,15 @@ With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absor
 - **`unit10/boss-clamp#w`** (CED 9.8, 9.9, 9.11): *From Cell Potential to Electrolysis Mass* — `E°cell`, `ΔG° = −nFE°cell`, `q = It`, and Faraday's law mass plated.
 - **`unit11/boss-flare#w`** (CED 5.2, 5.3, 5.6): *First-Order Decay and Activation Energy* — `k = 0.693 / t½`, non-integer-half-life `ln[A]t = ln[A]₀ − kt`, and `Ea(rev) = Ea(fwd) − ΔH`.
 
-### Remaining AP Gaps (Flagged — Require New Stages/Benches, No Quest Code Written)
+### New Stages & Bank Items Added (Gap Implementation Pass)
 
-| Priority | CED Topic | Missing Content | Best Home (Stage / Bench) |
+| Priority | CED Topic | Implemented Content | Built Home |
 | --- | --- | --- | --- |
-| **Medium** | **9.3** (`9.3.A.3`) | Calculating `ΔG°rxn = ΣΔGf°(products) − ΣΔGf°(reactants)` from a `ΔGf°` table (currently only 1 MCQ `q7-gibbs#5`, no stage or worked problem). | New stage in `unit05/q7-gibbs.js` (mirroring `q5-hess` s4 / `q6-entropy` s5). |
-| **Medium** | **8.4** (`8.4.A.2`, `8.4.A.4`) | Quantitative **weak acid + strong base** reaction regimes (excess weak acid → buffer, equivalence → conjugate base hydrolysis, excess strong base) and weak acid + weak base equilibrium. | New stage in `unit09/q5-salts.js` or `unit09/q7-buffer.js`. |
-| **Medium** | **3.1.A.5, 3.2.A.7** | Noncovalent interactions in **biomolecules** (H-bonding in DNA/proteins, hydrophobic/hydrophilic regions) and **polymers** (chain length, cross-linking). | New stage in `unit06/q2-grip.js` and/or `unit06/q4-solids.js` + practice in `unit06.json`. |
-| **Low** | **1.7** (`1.7.A.1`, `1.7.A.3`) | **Successive ionization energy** jumps in Unit 1/2 (currently only in `unit12/q2-charges` + patched via `unit02/boss-eater#w`), and estimating a numeric property from periodic neighbours. | New stage in `unit02/q8-trends.js` (and/or `unit01/q3-catalogue.js`). |
-| **Low** | **1.4** (`1.4.A.2`) | Purity of a mixture from **elemental analysis** mass % (gravimetric precipitation purity is already covered in `unit07/q5-ionic#w`). | New stage or bench variant in `unit07/q6-stoich.js` or `unit01/q6-weigh.js`. |
+| **Medium** | **9.3** (`9.3.A.3`) | Calculating `ΔG°rxn = ΣΔGf°(products) − ΣΔGf°(reactants)` from a `ΔGf°` table including standard-state `O₂(g)` (`ΔGf° = 0`). | `unit05/q7-gibbs.js` s6 (`s6-formation`) |
+| **Medium** | **8.4** (`8.4.A.2`, `8.4.A.4`) | Quantitative **weak acid + strong base** reaction regimes (`CH₃COOH` + `NaOH` in 2:1 mole ratio → buffer `pH = pKa` vs 1:1 equivalence). | `unit09/q7-buffer.js` s8 (`s8-half-equiv`) + `unit09.json` (`q7-buffer#e2`) |
+| **Medium** | **3.1.A.5, 3.2.A.7** | Noncovalent interactions in **biomolecules** (H-bonding vs hydrophobic dispersion) and **polymers** (chain-length dispersion, cross-linking). | `unit06/q2-grip.js` s9 (`s9-biomolecules`), `unit06/q4-solids.js` s6 (`s6-polymers`), `unit06.json` (`q2-grip#e1`, `q4-solids#e1`) |
+| **Low** | **1.7** (`1.7.A.1`, `1.7.A.3`) | **Successive ionization energy** group identification (`IE₁–IE₄`) and estimating a numeric property from periodic neighbours. | `unit02/q7-pes.js` s7 (`s7-ie-group`), `unit01/q3-catalogue.js` s7 |
+| **Low** | **1.4** (`1.4.A.2`) | Purity of an impure sample from **elemental analysis** mass % (`% Ca` in impure `CaCO₃`). | `unit07/q6-stoich.js` s9 (`s9-purity`) + `unit07.json` (`q6-stoich#e1`) |
 
 ---
 
@@ -48,10 +48,10 @@ With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absor
 | 1.1 | Moles, molar mass, `NA`, `n = m/M` | `unit01/q6-weigh` (s1–s5), `q6-weigh#w` | Covered | Covered | **Covered** |
 | 1.2 | Mass spectra, average atomic mass | `unit01/q5-assay` (s1–s5), `q5-assay#w` | Covered | Covered | **Covered** |
 | 1.3 | Elemental composition, empirical/molecular formula | `unit01/q6-weigh` (s6–s8), `boss-hopper#w` (added) | Covered | Covered | **Covered** |
-| 1.4 | Composition of mixtures (purity) | `unit07/q5-ionic#w` (gravimetric purity); elemental-analysis purity missing | Partial | Partial | **Flagged** (elemental % purity) |
+| 1.4 | Composition of mixtures (purity) | `unit07/q5-ionic#w` (gravimetric), `unit07/q6-stoich` (s9 `s9-purity`), `q6-stoich#e1` | Covered | Covered | **Covered** |
 | 1.5 | Electron configuration, shells, Coulomb's law | `unit02/q6-filling` (s1–s6 incl. `Cl⁻`), `q6-filling#w` (`Fe³⁺`), `q8-trends` | Covered | Covered | **Covered** |
 | 1.6 | Photoelectron spectroscopy (PES) | `unit02/q7-pes` (s1–s5), `q7-pes#w` | Covered | Covered | **Covered** |
-| 1.7 | Periodic trends (radius, IE, EA, EN, ionic radius, successive IE) | `unit02/q8-trends` (s1–s8), `q8-trends#w`, `boss-eater#w` (added), `unit12/q2-charges` | Partial | Covered | **Flagged** (stage in `unit02/q8-trends`) |
+| 1.7 | Periodic trends (radius, IE, EA, EN, ionic radius, successive IE) | `unit02/q8-trends` (s1–s9), `unit02/q7-pes` (s6–s7), `unit01/q3-catalogue` (s7), `boss-eater#w`, `unit12/q2-charges` | Covered | Covered | **Covered** |
 | 1.8 | Valence electrons, ionic compounds, group reactivity | `unit01/q3-catalogue`, `q4-ledger`, `unit07/q2-names#w` (added) | Covered | Covered | **Covered** |
 
 ### Unit 2: Compound Structure and Properties (2.1–2.7)
@@ -68,8 +68,8 @@ With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absor
 ### Unit 3: Properties of Substances and Mixtures (3.1–3.13)
 | CED | Topic | Built Home | Qual | Quant | Verdict |
 | --- | --- | --- | --- | --- | --- |
-| 3.1 | Intermolecular forces | `unit06/q2-grip` (s1–s7), `q3-boil`; `3.1.A.5` biomolecules missing | Partial | n/a | **Flagged** (biomolecules) |
-| 3.2 | Properties of solids | `unit03/q2-lattice`, `unit06/q4-solids` (s1–s4); `3.2.A.7` polymers missing | Partial | n/a | **Flagged** (polymers) |
+| 3.1 | Intermolecular forces | `unit06/q2-grip` (s1–s9 incl. `s9-biomolecules`), `q2-grip#e1`, `q3-boil` | Covered | n/a | **Covered** |
+| 3.2 | Properties of solids | `unit03/q2-lattice`, `unit06/q4-solids` (s1–s6 incl. `s6-polymers`), `q4-solids#e1` | Covered | n/a | **Covered** |
 | 3.3 | Solids, liquids, and gases | `unit06/q1-states` (s1–s6), `q1-states#w` (added) | Covered | Covered | **Covered** |
 | 3.4 | Ideal gas law, Dalton's law, mole fraction | `unit04/q1`–`q4`, `q1-knocks#w` (added), `q2-laws#w`, `q3-ideal#w`, `q4-mixtures#w`, `boss-compressor#w` | Covered | Covered | **Covered** |
 | 3.5 | Kinetic molecular theory, Maxwell–Boltzmann | `unit04/q1-knocks` (s6–s7), `q5-speed` (s5) | Covered | Covered | **Covered** |
@@ -145,7 +145,7 @@ With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absor
 | 8.1 | Intro to acids/bases (`pH`, `pOH`, `Kw`, `T` dependence) | `unit09/q1-handover` (`#w` added), `q2-scale` (s1–s4, s7) | Covered | Covered | **Covered** |
 | 8.2 | pH & pOH of strong acids and bases | `unit09/q2-scale` (s2–s6, s8, `#w`) | Covered | Covered | **Covered** |
 | 8.3 | Weak acid & base equilibria (`Ka`, `Kb`, `%` ionization) | `unit09/q3-weak` (s1–s7, `#w`), `boss-leach#w` | Covered | Covered | **Covered** |
-| 8.4 | Acid-base reactions & buffers | `unit09/q5-salts` (strong+strong `#w`, salt hydrolysis) | Partial | Partial | **Flagged** (weak acid + strong base stages) |
+| 8.4 | Acid-base reactions & buffers | `unit09/q5-salts` (strong+strong `#w`, salt hydrolysis), `unit09/q7-buffer` (s8 `s8-half-equiv`), `q7-buffer#e2` | Covered | Covered | **Covered** |
 | 8.5 | Acid-base titrations (curves, half-equiv, polyprotic) | `unit09/q6-titrate` (s1–s7, `#w`) | Covered | Covered | **Covered** |
 | 8.6 | Molecular structure of acids & bases | `unit09/q4-structure` (s1–s6) | Covered | n/a | **Covered** |
 | 8.7 | pH and `pKa` (predominant species, indicators) | `unit09/q8-capacity` (s1–s2), `q6-titrate` (s4) | Covered | Covered | **Covered** |
@@ -159,7 +159,7 @@ With `unit01`–`unit11` built and the two cut stages restored (`unit02/q9-absor
 | --- | --- | --- | --- | --- | --- |
 | 9.1 | Introduction to entropy | `unit05/q6-entropy` (s1–s4) | Covered | n/a | **Covered** |
 | 9.2 | Absolute entropy & `ΔS°rxn = ΣS°` | `unit05/q6-entropy` (s5, `#w`) | Covered | Covered | **Covered** |
-| 9.3 | Gibbs free energy (`ΔH − TΔS`, `ΣΔGf°`) | `unit05/q7-gibbs` (s2–s5, `#w`, `#5`), `boss-crucible#w` | Covered | Partial | **Flagged** (`ΔGf°` stage in `unit05/q7-gibbs`) |
+| 9.3 | Gibbs free energy (`ΔH − TΔS`, `ΣΔGf°`) | `unit05/q7-gibbs` (s2–s6 incl. `s6-formation`, `#w`, `#5`), `boss-crucible#w` | Covered | Covered | **Covered** |
 | 9.4 | Thermodynamic and kinetic control | `unit05/q7-gibbs#4, #6`, `unit11/q4-collide` (s7) | Covered | n/a | **Covered** |
 | 9.5 | Free energy and equilibrium (`K = e^(−ΔG°/RT)`) | `unit08/q8-free` (s1–s2, s6, `#w`) | Covered | Covered | **Covered** |
 | 9.6 | Free energy of dissolution | `unit05/q7-gibbs` (s1), `boss-crucible#w`, `unit08/q8-free` (s3–s4) | Covered | Covered | **Covered** |

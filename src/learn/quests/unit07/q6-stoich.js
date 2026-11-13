@@ -24,7 +24,7 @@ import { potTable, jar, reactorFixture, weighFixture, plaqueFixture, stmt, react
 import { heapTable, heap, dock, product, limitOf, tallyOf } from '../../table/kits/heap.js';
 import { molarMass, reactPlan, parseEquation, gasVolume, percentYield } from '../../engine/reactdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
   { term: /\bmole ratio\b/i, introducedAt: 3 },
@@ -96,6 +96,11 @@ const FURNACE = 0.62;
 const FE_POSSIBLE = made(EQ_ORE, { Fe2O3: gOf('Fe2O3', ORE_G) }).Fe * molarMass('Fe');
 const FE_MADE = Math.round(FE_POSSIBLE * FURNACE * 10) / 10;
 const YIELD_PCT = percentYield(FE_MADE, FE_POSSIBLE);
+
+// Stage 9: purity from elemental analysis (impure limestone measuring 32.0 % Ca).
+const SAMPLE_CA_PCT = 32.0;
+const PURE_CA_PCT = (molarMass('Ca') / molarMass('CaCO3')) * 100;
+const PURITY_PCT = (SAMPLE_CA_PCT / PURE_CA_PCT) * 100;
 
 /* ------------------------------------------------------------------
    HELPERS
@@ -470,6 +475,48 @@ export const STAGES = [
         body: 'The equation allows 55.8 g (the theoretical yield) and the furnace made 34.6 g: a 62 % yield.'
       }
     };
+  })(),
+
+  /* ---------------------------------------------------------------- 9 */
+  (() => {
+    return {
+      id: 's9-purity',
+      title: 'Purity From Elemental Mass',
+      briefing: {
+        title: 'Sample Purity From Elemental Analysis',
+        body: 'A pure compound always has the same mass percent of each element. Inert impurities dilute that percentage in proportion to the pure compound present.\n\npurity = (measured % element / pure % element) × 100%'
+      },
+      prompt: 'What percent of the limestone sample is pure CaCO₃ if elemental analysis measures 32.0% Ca?',
+      entry: { id: 'pct', label: 'Sample purity', unit: '%' },
+      widget,
+      table: potTable({
+        pieces: [],
+        fixtures: [
+          plaqueFixture('eq', 'Elemental analysis and molar masses', { x: 88, y: 18 }, [
+            'Sample: 32.0% Ca (inert impurity)',
+            'CaCO₃: 100.09 g/mol',
+            'Ca: 40.08 g/mol'
+          ], { w: 68 })
+        ],
+        zones: { slots: [] }
+      }),
+      hints: [
+        'Use the molar masses on the plaque to find the mass percent of calcium in pure CaCO₃.',
+        'Pure CaCO₃ is 40.04% calcium by mass, while this sample measures only 32.0% calcium.',
+        'Compare the measured 32.0% calcium against the 40.04% in pure CaCO₃ to find the percent purity.'
+      ],
+      check(state) {
+        const v = typedValue(state.table, 'pct');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the percent.' };
+        if (within(v, PURITY_PCT, 1)) return { ok: true };
+        return { ok: false, msg: `${fixed(v, 1)}% does not match 32.0% Ca in impure CaCO₃.` };
+      },
+      reward: {
+        log: '32.0% Ca vs 40.04% Ca in pure CaCO₃ gives 79.9% purity.',
+        title: 'Elemental Purity',
+        body: 'Pure CaCO₃ is 40.04% calcium, so a sample measuring 32.0% calcium is 79.9% pure CaCO₃.'
+      }
+    };
   })()
 ];
 
@@ -482,7 +529,8 @@ const NOTES = {
   5: ['Join water, put it in the dock,', 'Make Molecule until empty, set tally.'],
   6: ['Seat the jars, run the vessel, weigh the catch jar.'],
   7: ['Drag the jar into the vessel, press Heat, then type your answer.'],
-  8: ['Seat the jar, run the furnace, weigh the catch jar.']
+  8: ['Seat the jar, run the furnace, weigh the catch jar.'],
+  9: ['Use the molar masses on the plate, then type the percent purity.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -518,7 +566,8 @@ export const SOLUTIONS = [
   [joinTo('h1', 'o1'), joinTo('h2', 'o1'), put('o1', 'container:dock'), ...makes(9), dial('tally', 'n', 9)],
   [put('h2', 'slot:pot.in1'), put('o2', 'slot:pot.in2'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '4.0')],
   [put('lime', 'slot:pot.in1'), run('pot'), typed('L', '12.2')],
-  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '62')]
+  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '62')],
+  [typed('pct', '79.9')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -530,7 +579,8 @@ export const MISSES = [
   [joinTo('h1', 'o1'), joinTo('h2', 'o1'), put('o1', 'container:dock'), ...makes(9), dial('tally', 'n', 11)],
   [put('h2', 'slot:pot.in1'), put('o2', 'slot:pot.in2'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '0')],
   [put('lime', 'slot:pot.in1'), run('pot'), typed('L', '22.4')],
-  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '100')]
+  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '100')],
+  [typed('pct', '32')]
 ];
 
 function blankState() { return {}; }
@@ -556,6 +606,6 @@ export function mount(container, ctx) {
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = {
   EQ_WATER, EQ_AMMONIA, EQ_SALT, EQ_LIME, EQ_ORE, H2_DIAL, H2_ASKED, PREDICT_ASKED, H2_MOLES, H2_ASKED_MOL, CL2_TRIAL, CL2_ASKED, S6, GAS,
-  LIME_TRIAL, LIME_ASKED, ORE_G, FURNACE, answers: { water: waterFrom(H2_ASKED), nh3: NH3_ASKED, nacl: NACL_ASKED, h2Left: H2_LEFT, co2: CO2_ASKED, feMade: FE_MADE, feAllowed: FE_POSSIBLE, yieldPct: YIELD_PCT }
+  LIME_TRIAL, LIME_ASKED, ORE_G, FURNACE, PURITY_PCT, answers: { water: waterFrom(H2_ASKED), nh3: NH3_ASKED, nacl: NACL_ASKED, h2Left: H2_LEFT, co2: CO2_ASKED, feMade: FE_MADE, feAllowed: FE_POSSIBLE, yieldPct: YIELD_PCT, purityPct: PURITY_PCT }
 };
 export { reactorRead, seatedIn };

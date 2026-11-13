@@ -40,7 +40,7 @@ export const UNIT_06 = {
       title: 'The Grip Between',
       line: 'What one molecule does to the molecule beside it.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit06/q2-grip.js')
     },
@@ -58,7 +58,7 @@ export const UNIT_06 = {
       title: 'Kinds of Solid',
       line: 'Glass shatters and quartz does not. Same silicon, different order.',
       arena: 'bench',
-      stageCount: 5,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit06/q4-solids.js')
     },

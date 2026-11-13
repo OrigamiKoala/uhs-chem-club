@@ -29,7 +29,7 @@ import {
 import { SUBSTANCES, HYDRATION } from '../../engine/matterdata.js';
 import { BOND_ENTHALPIES } from '../../engine/thermodata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 9 };
 
 
 export const VOCABULARY = [
@@ -454,6 +454,64 @@ export const STAGES = [
         body: 'Every molecule has dispersion forces. A polar one adds dipole–dipole forces, and one with hydrogen on nitrogen, oxygen or fluorine adds hydrogen bonds, the strongest of the three.'
       }
     };
+  })(),
+
+  /* ---------------------------------------------------------------- 9 */
+  (() => {
+    const probe = probeFixture('probe', PROBE_AT);
+    const DOMAINS = [
+      { id: 'dna', label: 'DNA base pairs (N–H···O, N–H···N)', tray: 'hbond' },
+      { id: 'shell', label: 'Polar protein surface (–OH, –NH₂)', tray: 'hbond' },
+      { id: 'core', label: 'Nonpolar protein core (–CH₃, –CH₂–)', tray: 'hydrophobic' }
+    ];
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 22 }, size: { w: 36, h: 28 }, cell: 34, cellH: 11 });
+    return {
+      id: 's9-biomolecules',
+      title: 'Attractions in Biomolecules',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Large biomolecules fold and pair using the same attractions: polar groups with N–H or O–H form hydrogen bonds with water or partner strands, while nonpolar hydrocarbon chains cluster together away from water by dispersion.'
+      },
+      prompt: 'Which attraction holds each biomolecule region together?',
+      widget,
+      table: matterTable({
+        bounds: { w: 170, h: 86 },
+        pieces: [
+          molCard('h2o', 'H2O', 'Water (reference)', { x: 18, y: 54 }, { dipoles: true }),
+          molCard('hex', 'hexane', 'Hexane (reference)', { x: 42, y: 54 }, { dipoles: true }),
+          note(DOMAINS[0].id, DOMAINS[0].label, { x: 82, y: 52 }, { w: 34 }),
+          note(DOMAINS[1].id, DOMAINS[1].label, { x: 126, y: 52 }, { w: 34 }),
+          note(DOMAINS[2].id, DOMAINS[2].label, { x: 104, y: 70 }, { w: 34 })
+        ],
+        fixtures: [probe.fixture],
+        zones: {
+          slots: [probe.slot],
+          trays: [
+            tray('hbond', 'Hydrogen bonding', 92),
+            tray('hydrophobic', 'Dispersion (hydrophobic)', 136)
+          ]
+        }
+      }),
+      hints: [
+        'Test water and hexane in the probe to compare polar and nonpolar attractions, then sort the three biomolecule cards.',
+        'Look at the atoms in each card: N–H and O–H groups can form hydrogen bonds, whereas –CH₃ and –CH₂– chains are nonpolar.',
+        'Nonpolar hydrocarbon side chains avoid water and pack inside a protein core by dispersion.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (DOMAINS.some(d => !t.zones.trays[whereIs(t, d.id)])) {
+          return { ok: false, notYet: true, msg: 'Sort all three biomolecule cards into trays.' };
+        }
+        const wrong = DOMAINS.find(d => whereIs(t, d.id) !== d.tray);
+        if (!wrong) return { ok: true };
+        return { ok: false, msg: `"${wrong.label}" is in "${t.zones.trays[whereIs(t, wrong.id)].label}", which does not match its functional groups.` };
+      },
+      reward: {
+        log: 'Polar groups and DNA base pairs hydrogen-bond; nonpolar chains cluster by dispersion.',
+        title: 'Biomolecule Interactions',
+        body: 'DNA base pairs and polar protein surfaces use hydrogen bonds (N–H···O, N–H···N, O–H), while nonpolar –CH₂– and –CH₃ groups fold inward by dispersion forces.'
+      }
+    };
   })()
 ];
 
@@ -500,7 +558,8 @@ export const SOLUTIONS = [
   [...pullAll(['nap']), ...rail(IONS_BY_OUT.map(ionId))],
   [...pullAll(['c4h10', 'c5h12']), put('pent', 'slot:ans')],
   [put('h2o', WELL), { run: 'probe' }, dial('crank', 'pull', 7), put('twenty', 'slot:cmp')],
-  [...SEALED.flatMap(s => [put(s.id, WELL), { run: 'probe' }, put(s.id, `tray:${s.tray}`)])]
+  [...SEALED.flatMap(s => [put(s.id, WELL), { run: 'probe' }, put(s.id, `tray:${s.tray}`)])],
+  [put('h2o', WELL), { run: 'probe' }, put('dna', 'tray:hbond'), put('shell', 'tray:hbond'), put('core', 'tray:hydrophobic')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -512,7 +571,8 @@ export const MISSES = [
   [...pullAll(['nap']), ...rail(['lip', 'nap', 'kp', 'mg2p'])],
   [...pullAll(['c4h10', 'c5h12']), put('neo', 'slot:ans')],
   [put('h2o', WELL), { run: 'probe' }, put('twice', 'slot:cmp')],
-  [...SEALED.flatMap(s => [put(s.id, WELL), { run: 'probe' }, put(s.id, s.id === 'x4' ? 'tray:dipole' : `tray:${s.tray}`)])]
+  [...SEALED.flatMap(s => [put(s.id, WELL), { run: 'probe' }, put(s.id, s.id === 'x4' ? 'tray:dipole' : `tray:${s.tray}`)])],
+  [put('dna', 'tray:hbond'), put('shell', 'tray:hydrophobic'), put('core', 'tray:hydrophobic')]
 ];
 
 function blankState() { return {}; }

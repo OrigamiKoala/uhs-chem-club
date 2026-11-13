@@ -225,6 +225,31 @@
       ],
       "answer": "c",
       "explanation": "Below the pKa the acid is mostly protonated. At pH 2 the ratio of acetate to acetic acid is about 10⁻²·⁷⁴, so acetic acid dominates."
+    },
+    {
+      "id": "q7-buffer#e2",
+      "quest": "q7-buffer",
+      "question": "50.0 mL of 0.20 M CH₃COOH (pKa = 4.74) is mixed with 25.0 mL of 0.20 M NaOH. What are the major species and pH?",
+      "options": [
+        {
+          "id": "a",
+          "label": "CH₃COOH and CH₃COO⁻ in equal moles; pH = 4.74"
+        },
+        {
+          "id": "b",
+          "label": "Only CH₃COO⁻ remains; pH > 7"
+        },
+        {
+          "id": "c",
+          "label": "Excess OH⁻ remains; pH > 12"
+        },
+        {
+          "id": "d",
+          "label": "Neutral salt solution; pH = 7.00"
+        }
+      ],
+      "answer": "a",
+      "explanation": "10.0 mmol CH₃COOH reacts with 5.0 mmol OH⁻ to form 5.0 mmol CH₃COO⁻ with 5.0 mmol CH₃COOH left over. Equal moles of weak acid and conjugate base form a buffer at pH = pKa = 4.74."
     }
   ],
   "bench": {

@@ -22,10 +22,10 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, gibbsBarsFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
+  heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, gibbsBarsFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed, FORMATION_TABLE
 } from '../../table/kits/heat.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\bspontaneous\b/i, introducedAt: 2 },
@@ -56,8 +56,11 @@ const HABER_DG = gibbsFreeEnergy(HABER.dH, HABER.dS, HABER.T);
 // The dial has no setting at the melting point: the plot shows which side each setting is on, and the temperature itself is worked out.
 const ICE = { dH: 6.01, dS: 22.0, Ts: [250, 260, 270, 280, 300] };
 const T_ICE = crossingTemperature(ICE.dH, ICE.dS);
+// Stage 6: CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l), ΔG°rxn = ΣΔGf°(products) - ΣΔGf°(reactants).
+const DGF = id => FORMATION_TABLE[id].dGf;
+const GF_DG = DGF('CO2(g)') + 2 * DGF('H2O(l)') - (DGF('CH4(g)') + 2 * DGF('O2(g)'));
 /* ------------------------------------------------------------------
-   THE FIVE STAGES (ΔG° from formation values was retired on 2026-11-11: `archive/2026-11-11/ember/`)
+   THE SIX STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -254,6 +257,56 @@ export const STAGES = [
       title: 'The Melting Point',
       body: 'ΔG is zero where ΔH = TΔS, so T = 6,010 ÷ 22.0 = 273 K, which is 0 °C. Below 273 K ice stays solid, and above it melting is spontaneous.'
     }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
+    id: 's6-formation',
+    title: 'Free Energy From Formation',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Just like enthalpy of formation, the standard free energy of reaction is the sum of ΔGf° of products minus reactants. An element in its standard state has ΔGf° = 0.',
+      worked: [
+        `2 CO(g) + O₂(g) → 2 CO₂(g) at 298 K`,
+        `ΔGf° in kJ/mol: CO(g) ${DGF('CO(g)')}, O₂(g) ${DGF('O2(g)')}, CO₂(g) ${DGF('CO2(g)')}`,
+        `Products: 2 × (${DGF('CO2(g)')}) = ${fixed(2 * DGF('CO2(g)'), 1)} kJ`,
+        `Reactants: 2 × (${DGF('CO(g)')}) + 0 = ${fixed(2 * DGF('CO(g)'), 1)} kJ`,
+        `ΔG° = ${fixed(2 * DGF('CO2(g)'), 1)} − (${fixed(2 * DGF('CO(g)'), 1)}) = ${fixed(2 * DGF('CO2(g)') - 2 * DGF('CO(g)'), 1)} kJ`
+      ]
+    },
+    prompt: 'What is ΔG° at 298 K for CH₄(g) + 2 O₂(g) → CO₂(g) + 2 H₂O(l)?',
+    entry: { id: 'dgf', label: 'ΔG° at 298 K', unit: 'kJ' },
+    widget,
+    table: heatTable({
+      fixtures: [
+        plaqueFixture('facts', 'Standard free energy of formation, ΔGf° (298 K)', { x: 48, y: 27 }, [
+          `CH₄(g): ${DGF('CH4(g)')} kJ/mol`,
+          `O₂(g): ${DGF('O2(g)')} kJ/mol (standard state)`,
+          `CO₂(g): ${DGF('CO2(g)')} kJ/mol`,
+          `H₂O(l): ${DGF('H2O(l)')} kJ/mol`,
+          'ΔG°rxn = ΣΔGf°(products) − ΣΔGf°(reactants)'
+        ], { w: 86 }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'CH₄'], [2, 'O₂']], rhs: [[1, 'CO₂'], [2, 'H₂O']], w: 50, h: 34 })
+      ]
+    }),
+    hints: [
+      'Read the standard free energy of formation, ΔGf°, for each substance on the plate.',
+      'Multiply each ΔGf° by its coefficient in the equation, and note that O₂(g) is an element in its standard state.',
+      'Subtract the reactant total from the product total, keeping track of the negative signs.'
+    ],
+    check(state) {
+      const v = entryNumber(state.table, 'dgf');
+      if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type ΔG° at 298 K, in kJ.' };
+      if (Math.abs(v - GF_DG) <= 1.0) return { ok: true };
+      if (Math.abs(v + GF_DG) <= 1.0) return { ok: false, msg: 'The sign is reversed: reactants were subtracted in the opposite order from products.' };
+      if (Math.abs(v - (DGF('CO2(g)') + DGF('H2O(l)') - DGF('CH4(g)'))) <= 1.0) return { ok: false, msg: 'That figure uses one mole of H₂O(l), but the equation makes two moles.' };
+      return { ok: false, msg: `${fixed(v, 1)} kJ does not match ΣΔGf°(products) − ΣΔGf°(reactants) for this equation.` };
+    },
+    reward: {
+      log: 'ΔG° came to −818.1 kJ.',
+      title: 'ΔG° From Formation Values',
+      body: 'ΔG° = (−394.4 + 2 × (−237.1)) − (−50.5 + 0) = −818.1 kJ. Elements in their standard state, like O₂(g), have ΔGf° = 0.'
+    }
   }
 ];
 
@@ -263,7 +316,8 @@ const NOTES = {
   2: ['Drag the ball along the line to change the temperature.'],
   3: ['Drag each card into a tray.'],
   4: ['Type your answer in the field at the bottom.'],
-  5: ['Drag the ball along the line, then type your answer in kelvin.']
+  5: ['Drag the ball along the line, then type your answer in kelvin.'],
+  6: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -293,7 +347,8 @@ export const SOLUTIONS = [
   [dial('plot', 'temp', 3)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })],
   [{ type: { entry: 'dg', value: '-32.7' } }],
-  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }]
+  [dial('plot', 'temp', 3), { type: { entry: 'T', value: '273' } }],
+  [{ type: { entry: 'dgf', value: '-818.1' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -302,7 +357,8 @@ export const MISSES = [
   [dial('plot', 'temp', 4)],
   [...sort({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'low', 'low-t': 'high' })],
   [{ type: { entry: 'dg', value: '59210' } }],
-  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }]
+  [dial('plot', 'temp', 5), { type: { entry: 'T', value: '303' } }],
+  [{ type: { entry: 'dgf', value: '818.1' } }]
 ];
 
 function blankState() { return {}; }
@@ -326,5 +382,5 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { SALT, T_SALT, ICE, T_ICE, HABER, HABER_DG };
+export const CHECKS = { SALT, T_SALT, ICE, T_ICE, HABER, HABER_DG, GF_DG };
 export { plotRead, plotAt };

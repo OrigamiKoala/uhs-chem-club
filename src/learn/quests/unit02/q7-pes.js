@@ -42,7 +42,7 @@ import {
   ENERGY_STEPS, TOP_STEP, WRITER_ROWS, BINS, binOf, pilesOf, energyAt, LADDER, groundConfig, zOf
 } from '../../table/kits/pes.js';
 
-export const meta = { stageCount: 6 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bphotoelectron spectr(?:um|a)\b/i, introducedAt: 3 },
@@ -325,7 +325,47 @@ export const STAGES = [
       reward: {
         log: 'The jump marks the first electron from an inner shell.',
         title: 'Successive Ionization Energies',
-        body: 'The energy jumps more than five times after the second electron, so the third came from a shell nearer the nucleus. The atom has two outer electrons: it is magnesium.',
+        body: 'The energy jumps more than five times after the second electron, so the third came from a shell nearer the nucleus. The atom has two outer electrons: it is magnesium.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Element X: successive ionization energies', { x: 42, y: 26 }, [
+      'IE₁: 578 kJ/mol',
+      'IE₂: 1817 kJ/mol',
+      'IE₃: 2745 kJ/mol',
+      'IE₄: 11,577 kJ/mol'
+    ], { w: 66 });
+    const chart = ieBarsFixture('bars', 'Energy per Electron', { x: 112, y: 26 }, [
+      { label: '1st', value: 578 },
+      { label: '2nd', value: 1817 },
+      { label: '3rd', value: 2745 },
+      { label: '4th', value: 11577 }
+    ], { w: 56, h: 38 });
+    return {
+      id: 's7-ie-group',
+      title: 'Group From Ionization Energies',
+      prompt: 'Which periodic table group (1, 2, 13, or 14) does element X belong to?',
+      entry: { id: 'grp', label: 'Group', unit: '' },
+      widget,
+      table: pesTable({ pieces: [], fixtures: [plate, chart], zones: {} }),
+      hints: [
+        'Find where the largest jump in ionization energy occurs on the plate and bar chart.',
+        'Count how many outer-shell electrons are removed before that core jump.',
+        'An element with 3 valence electrons sits in Group 13.'
+      ],
+      check(state) {
+        const v = entryNumber(state.table, 'grp');
+        if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type a group number (1, 2, 13, or 14).' };
+        if (v === 13) return { ok: true };
+        return { ok: false, msg: `Group ${v} does not match the jump between IE₃ (2745 kJ/mol) and IE₄ (11,577 kJ/mol).` };
+      },
+      reward: {
+        log: 'Jump after IE₃: 3 valence electrons, Group 13.',
+        title: 'Valence Count and Group',
+        body: 'The huge jump from IE₃ to IE₄ shows 3 valence electrons before the core shell, placing element X in Group 13 (like aluminium).',
         last: true
       }
     };
@@ -377,7 +417,8 @@ export const SOLUTIONS = [
   [{ run: CHAMBER }, dial('build', 'protons', 8), dial('build', 'electrons', 8)],
   [put('o', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('f', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('n', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('o', 'rail:0'), put('f', 'rail:1'), put('n', 'rail:2')],
   [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 2, '2p': 3 })],
-  [{ type: { entry: 'ans', value: '2' } }]
+  [{ type: { entry: 'ans', value: '2' } }],
+  [{ type: { entry: 'grp', value: '13' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -387,7 +428,8 @@ export const MISSES = [
   [{ run: CHAMBER }, dial('build', 'protons', 9), dial('build', 'electrons', 9)],
   [put('n', 'rail:0')],
   [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 3, '2p': 2 })],
-  [{ type: { entry: 'ans', value: '3' } }]
+  [{ type: { entry: 'ans', value: '3' } }],
+  [{ type: { entry: 'grp', value: '14' } }]
 ];
 
 function blankState() { return {}; }

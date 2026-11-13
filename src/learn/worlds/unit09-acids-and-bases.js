@@ -85,7 +85,7 @@ export const UNIT_09 = {
       title: 'Buffers',
       line: 'One sluice resists acid and one does not; find what in the water does.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit09/q7-buffer.js')
     },

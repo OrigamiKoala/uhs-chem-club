@@ -63,6 +63,27 @@
       ],
       "answer": "a",
       "explanation": "By conservation of mass, 4.0 g of hydrogen combines completely with 32.0 g of oxygen to yield 36.0 g of water."
+    },
+    {
+      "id": "q6-stoich#e1",
+      "quest": "q6-stoich",
+      "question": "Pure CaCO₃ is 40.0% calcium by mass. An impure limestone sample with inert impurities measures 32.0% calcium by mass. What is the percent purity of CaCO₃ in the sample?",
+      "options": [
+        {
+          "id": "a",
+          "label": "80.0%"
+        },
+        {
+          "id": "b",
+          "label": "32.0%"
+        },
+        {
+          "id": "c",
+          "label": "68.0%"
+        }
+      ],
+      "answer": "a",
+      "explanation": "Because the impurities contain no calcium, purity equals (32.0% / 40.0%) × 100% = 80.0%."
     }
   ],
   "bench": {

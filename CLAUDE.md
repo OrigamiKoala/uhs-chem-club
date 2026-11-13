@@ -8,7 +8,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 - **World plans & specifications:** `docs/plans/world-plans.md` consolidates world plans, CED maps, tabletop kits, and build records.
 - **Aesthetic tokens:** `DESIGN.md` and `src/styles/tokens.css` hold visual tokens (SCOURED PLATE doctrine below is authoritative).
 - **Teaching pass:** `docs/teaching-pass/README.md` and `docs/teaching-pass/PROGRESS.md` track the teaching pass standard and status.
-- **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment, and `docs/plans/ap-gap-implementation-plan.md` holds the implementation plan for remaining stage/bench gaps.
+- **Narrative & AP audit:** `docs/story/bible.md` holds lore; `docs/AP-coverage-audit.md` tracks AP Chemistry CED alignment (all 91 topics and 28 `EQN:` lines covered), and `docs/plans/ap-gap-implementation-plan.md` records the completed gap implementation plan.
 
 ## Codebase Architecture
 
