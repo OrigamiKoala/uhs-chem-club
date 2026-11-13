@@ -416,3 +416,15 @@ Second round (2026-11-06): `pans-3d.js` gives every live pans fixture a `dress3d
 Third round (2026-11-06): `table/gestures.js` `fixtureHit` returns `{kind:'pick'}` for a fixture with `props.pick` (a tap sets the named choice dial; verify:table and verify:bench tap it in `pickSpot`); `Table2D/Table3D.replay()` call `kit.replay(state)`, which `stagerunner.js` triggers on a miss; Tour steps may carry `demo` (`table/tour-demo.js`: `addTourDemo`, `stageDemo`, `playTourDemo`), rendered by `frame.js runTour` into a canvas. `drawTable` passes `view.scope` to painters so a film and the bench behind it keep separate motion state.
 
 Fourth round (2026-11-06): `gestures.js` has a `tap` hit for TAP ZONES (`props.taps` and `kit.tapZones(f, state)`): a zone sets a dial to a `value`, moves it a `step` (wrapping with `wrap`), or follows a drag (`drag: {y0, y1, scale}`). The stress vessel's `touch: true` mode builds its zones in `pans-stress.js` (`controlsOf`, `tapZones`, `paintTouch`). Test harnesses play such dials with `pickSpot` / `touchSpots`.
+
+## Quicklight notes
+
+- `src/learn/table/kits/rate-3d.js` dresses `kvessel`, `lead` and `collview` at 3D On (glass tanks, swimming spheres, collision spheres). Graphs, plots and energy profiles stay flat on the plate by owner decision; do not stand them up. `q1-watch` has 7 stages, `q3-time` 7, `q4-collide` 9. New fixture `arrplot` (ln k against 1/T). Dialled vessels keep the window below the dial row (`topY` 16.5) or the knob hides under the glass. At 3D On the flat window and particles are skipped (`b.bodies`) so only the 3D tank shows.
+- Traps: `src/three/materials/quicklight-textures.js` must return the `{albedo,height,roughness,ao}` contract (a wrong shape blanks the whole world); world-data roads use `w`, not `width`; the flat run clocks are keyed per scope (`b.scope === '3d'`).
+
+## Lodestone notes
+
+- `unit12` (Transition Metals, 6 benches + `boss-coil`, 44 stages) runs on the `lode` kit (`src/learn/table/kits/lode.js`, `lode-shell.js`, `lode-cplx.js`, `lode-light.js`, `lode-magnet.js`, `lode-lead.js`, `lode-tour.js`, `lode-3d.js`) backed by `src/learn/engine/lodedata.js`.
+- Every live Lodestone fixture uses `live: () => true` and receives a `liveDress` screen in `lode-3d.js` starting below its dial rows so animated clips, gliding levels, and magnet pulls stay live at `3D On`.
+- Traps: `dsplitRead` / `dshellRead` / `wheelRead` take `state.table` inside `check(state)`; `iestripFixture` returns the fixture directly (not `{ fixture, slot }`); `q6-spin` stage 5 reads rail order from `state.table.zones.rail.order`; `boss-coil` uses `the coil` in `foes.js`, `foebody.js`, `boss-models.js`, and `boss-arena.js` (`clue_lodestone_coil` in `saga.js`).
+
