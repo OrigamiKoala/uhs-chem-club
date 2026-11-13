@@ -486,6 +486,8 @@ function pickSpot(state, arg) {
       if (z.drag?.axis === 'x') { const dd = state.fixtures[arg.fixture].dials[arg.dial]; return [{ x: box.x0 + z.drag.x0 + ((arg.value - dd.min) / (dd.max - dd.min || 1)) * (z.drag.x1 - z.drag.x0), y: mid.y, drag: true }]; }
       if (z.drag) { const fr = arg.value / z.drag.scale; const y = box.y0 + z.drag.y1 - (z.drag.invert ? 1 - fr : fr) * (z.drag.y1 - z.drag.y0); return [{ x: mid.x, y, drag: true }]; }
       if (z.step > 0 && arg.value > cur) return Array.from({ length: Math.round((arg.value - cur) / z.step) }, () => mid);
+      // A zone that takes away a step at each tap (Lodestone's ladder in `remove` mode): tapped as often as it takes to come down.
+      if (z.step < 0 && arg.value < cur) return Array.from({ length: Math.round((cur - arg.value) / -z.step) }, () => mid);
     }
   }
   return null;

@@ -298,6 +298,8 @@ ok('spine beat prerequisite unlock logic validated');
   for (const q of WORLDS.find(w => w.id === 'unit09').quests) if (q.module && !QUEST_STORY[`unit09/${q.id}`]) fail(`unit09/${q.id} has no story animation`);
   // Brinewire is built bench by bench in the same way.
   for (const q of WORLDS.find(w => w.id === 'unit10').quests) if (q.module && !QUEST_STORY[`unit10/${q.id}`]) fail(`unit10/${q.id} has no story animation`);
+  // Lodestone too: every built quest of unit12 has its one animation.
+  for (const q of WORLDS.find(w => w.id === 'unit12').quests) if (q.module && !QUEST_STORY[`unit12/${q.id}`]) fail(`unit12/${q.id} has no story animation`);
   if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, 3 to 5 lines of Vess, a filed line, and every scene paints at every line`);
 }
 

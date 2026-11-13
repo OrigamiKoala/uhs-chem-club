@@ -1,0 +1,60 @@
+{
+  "world": "unit12",
+  "end": [],
+  "bench": {
+    "q1-dblock": {
+      "problems": [
+        {
+          "id": "q1-dblock#b1",
+          "quest": "q1-dblock",
+          "question": "Manganese has seven electrons outside its argon core. How are they arranged at the lowest energy?",
+          "options": [
+            {
+              "id": "a",
+              "label": "4s² 3d⁵, each 3d electron alone in its own orbital"
+            },
+            {
+              "id": "b",
+              "label": "4s² 3d⁵, with two pairs in 3d"
+            },
+            {
+              "id": "c",
+              "label": "3d⁷, with 4s empty"
+            },
+            {
+              "id": "d",
+              "label": "4s¹ 3d⁶"
+            }
+          ],
+          "answer": "a",
+          "explanation": "4s fills first in the neutral atom, then 3d takes one electron per orbital: five 3d electrons fill all five orbitals singly, with no pair."
+        },
+        {
+          "id": "q1-dblock#b2",
+          "quest": "q1-dblock",
+          "question": "Nickel's outer electrons are 4s² 3d⁸. Which arrangement does the Ni²⁺ ion have?",
+          "options": [
+            {
+              "id": "a",
+              "label": "3d⁸"
+            },
+            {
+              "id": "b",
+              "label": "4s² 3d⁶"
+            },
+            {
+              "id": "c",
+              "label": "4s¹ 3d⁷"
+            },
+            {
+              "id": "d",
+              "label": "3d¹⁰"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Once the atom carries a charge its 3d level lies below 4s, so the two 4s electrons leave first and Ni²⁺ keeps all eight 3d electrons."
+        }
+      ]
+    }
+  }
+}

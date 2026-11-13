@@ -1,0 +1,678 @@
+{
+  "id": "lodestone",
+  "name": "Lodestone",
+  "sky": "lodestone-sky",
+  "canyon": {
+    "wallX": 46,
+    "north": 100,
+    "south": -78,
+    "floorW": 40
+  },
+  "spawn": [
+    0,
+    1.6,
+    90
+  ],
+  "pad": {
+    "pos": [
+      24,
+      0,
+      84
+    ],
+    "r": 10
+  },
+  "arena": {
+    "boss": [
+      0,
+      0,
+      -58
+    ],
+    "player": [
+      0,
+      1.6,
+      -42
+    ]
+  },
+  "plaza": {
+    "minX": -14,
+    "maxX": 14,
+    "minZ": -68,
+    "maxZ": -34
+  },
+  "roads": [
+    {
+      "id": "haul-road",
+      "w": 6.4,
+      "pts": [
+        [
+          0,
+          94
+        ],
+        [
+          0,
+          -40
+        ]
+      ]
+    },
+    {
+      "id": "pad-spur",
+      "w": 5,
+      "pts": [
+        [
+          0,
+          84
+        ],
+        [
+          15,
+          84
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-1",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          64
+        ],
+        [
+          -19.4,
+          64
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-2",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          46
+        ],
+        [
+          19.4,
+          46
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-3",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          28
+        ],
+        [
+          -19.4,
+          28
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-4",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          10
+        ],
+        [
+          19.4,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-5",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          -8
+        ],
+        [
+          -19.4,
+          -8
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-6",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          -26
+        ],
+        [
+          19.4,
+          -26
+        ]
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-dblock",
+      "stage": 1,
+      "pos": [
+        -24,
+        0,
+        64
+      ],
+      "approachPos": [
+        -19.4,
+        1.6,
+        64
+      ],
+      "label": "Bench 1 - The d-Block Assay",
+      "structure": "assay-hut",
+      "built": true,
+      "flat": {
+        "x": -25.45,
+        "z": 64,
+        "r": 10.26
+      }
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-charges",
+      "stage": 2,
+      "pos": [
+        24,
+        0,
+        46
+      ],
+      "approachPos": [
+        19.4,
+        1.6,
+        46
+      ],
+      "label": "Bench 2 - Many Charges",
+      "structure": "ore-crusher",
+      "built": false,
+      "flat": {
+        "x": 25.45,
+        "z": 46,
+        "r": 10.26
+      }
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-complex",
+      "stage": 3,
+      "pos": [
+        -24,
+        0,
+        28
+      ],
+      "approachPos": [
+        -19.4,
+        1.6,
+        28
+      ],
+      "label": "Bench 3 - Complex Ions",
+      "structure": "leach-vats",
+      "built": false,
+      "flat": {
+        "x": -25.45,
+        "z": 28,
+        "r": 10.26
+      }
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-shapes",
+      "stage": 4,
+      "pos": [
+        24,
+        0,
+        10
+      ],
+      "approachPos": [
+        19.4,
+        1.6,
+        10
+      ],
+      "label": "Bench 4 - Shapes and Isomers",
+      "structure": "drum-gantry",
+      "built": false,
+      "flat": {
+        "x": 25.45,
+        "z": 10,
+        "r": 10.26
+      }
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-colour",
+      "stage": 5,
+      "pos": [
+        -24,
+        0,
+        -8
+      ],
+      "approachPos": [
+        -19.4,
+        1.6,
+        -8
+      ],
+      "label": "Bench 5 - Colour Booth",
+      "structure": "colour-booth",
+      "built": false,
+      "flat": {
+        "x": -25.45,
+        "z": -8,
+        "r": 10.26
+      }
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-spin",
+      "stage": 6,
+      "pos": [
+        24,
+        0,
+        -26
+      ],
+      "approachPos": [
+        19.4,
+        1.6,
+        -26
+      ],
+      "label": "Bench 6 - Magnetism",
+      "structure": "coil-shed",
+      "built": false,
+      "flat": {
+        "x": 25.45,
+        "z": -26,
+        "r": 10.26
+      }
+    }
+  ],
+  "landmarks": [
+    {
+      "asset": "landing-pad",
+      "pos": [
+        24,
+        0,
+        84
+      ],
+      "rotY": 0,
+      "radius": 10
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -8.6,
+        0,
+        80
+      ],
+      "rotY": 6.09,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -8.6,
+        0,
+        56
+      ],
+      "rotY": 3.84,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        8.6,
+        0,
+        56
+      ],
+      "rotY": 4.13,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -8.6,
+        0,
+        38
+      ],
+      "rotY": 5.84,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        8.6,
+        0,
+        38
+      ],
+      "rotY": 0.09,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -8.6,
+        0,
+        20
+      ],
+      "rotY": 0.45,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        8.6,
+        0,
+        20
+      ],
+      "rotY": 1.57,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -8.6,
+        0,
+        2
+      ],
+      "rotY": 3.88,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        8.6,
+        0,
+        2
+      ],
+      "rotY": 0.42,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        -8.6,
+        0,
+        -16
+      ],
+      "rotY": 5.72,
+      "radius": 0.6
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        8.6,
+        0,
+        -16
+      ],
+      "rotY": 1.08,
+      "radius": 0.6
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        -14,
+        0,
+        76
+      ],
+      "rotY": 2.77,
+      "radius": 2
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        14,
+        0,
+        58
+      ],
+      "rotY": 0.66,
+      "radius": 2
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        -14,
+        0,
+        40
+      ],
+      "rotY": 6.26,
+      "radius": 2
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        14,
+        0,
+        22
+      ],
+      "rotY": 4.5,
+      "radius": 2
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        -14,
+        0,
+        4
+      ],
+      "rotY": 0.2,
+      "radius": 2
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        14,
+        0,
+        -12
+      ],
+      "rotY": 3.44,
+      "radius": 2
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        -14,
+        0,
+        -24
+      ],
+      "rotY": 0.66,
+      "radius": 2
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        -38,
+        0,
+        82
+      ],
+      "rotY": 0.39,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        38,
+        0,
+        64
+      ],
+      "rotY": 5.27,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        -38,
+        0,
+        46
+      ],
+      "rotY": 1.95,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        38,
+        0,
+        28
+      ],
+      "rotY": 3.51,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        -38,
+        0,
+        10
+      ],
+      "rotY": 4.34,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        38,
+        0,
+        -8
+      ],
+      "rotY": 1.58,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        -38,
+        0,
+        -26
+      ],
+      "rotY": 0.17,
+      "radius": 2.6
+    },
+    {
+      "asset": "ore-heap",
+      "pos": [
+        38,
+        0,
+        -44
+      ],
+      "rotY": 3.17,
+      "radius": 2.6
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        -36,
+        0,
+        64
+      ],
+      "rotY": 3.01,
+      "radius": 1.7
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        36,
+        0,
+        46
+      ],
+      "rotY": 2.32,
+      "radius": 1.7
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        -36,
+        0,
+        28
+      ],
+      "rotY": 0.55,
+      "radius": 1.7
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        36,
+        0,
+        10
+      ],
+      "rotY": 5.53,
+      "radius": 1.7
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        -36,
+        0,
+        -8
+      ],
+      "rotY": 4.84,
+      "radius": 1.7
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        -30,
+        0,
+        -52
+      ],
+      "rotY": 1.24,
+      "radius": 1.7
+    },
+    {
+      "asset": "lode-boulder",
+      "pos": [
+        30,
+        0,
+        -64
+      ],
+      "rotY": 2.72,
+      "radius": 1.7
+    },
+    {
+      "asset": "coil-mast",
+      "pos": [
+        -18,
+        0,
+        -50
+      ],
+      "rotY": 0.02,
+      "radius": 1.2
+    },
+    {
+      "asset": "coil-mast",
+      "pos": [
+        18,
+        0,
+        -50
+      ],
+      "rotY": 2.35,
+      "radius": 1.2
+    },
+    {
+      "asset": "coil-mast",
+      "pos": [
+        -18,
+        0,
+        -66
+      ],
+      "rotY": 3.39,
+      "radius": 1.2
+    },
+    {
+      "asset": "coil-mast",
+      "pos": [
+        18,
+        0,
+        -66
+      ],
+      "rotY": 3.31,
+      "radius": 1.2
+    }
+  ]
+}

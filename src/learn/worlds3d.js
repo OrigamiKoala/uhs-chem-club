@@ -22,6 +22,7 @@ import teeterData from '../three/world-data/teeter.json' with { type: 'json' };
 import verdigrisData from '../three/world-data/verdigris.json' with { type: 'json' };
 import brinewireData from '../three/world-data/brinewire.json' with { type: 'json' };
 import quicklightData from '../three/world-data/quicklight.json' with { type: 'json' };
+import lodestoneData from '../three/world-data/lodestone.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -217,6 +218,24 @@ const WORLDS_3D = {
       for (const site of quicklightData.sites) {
         if (!site.built) continue;
         stage.setQuicklightSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit12: {
+    id: 'unit12',
+    key: 'lodestone',
+    worldName: 'Lodestone',
+    data: lodestoneData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterLodestoneScene(siteId, playerPos, lookAtPos);
+    },
+    siteForQuest(questId) {
+      return lodestoneData.sites.find(s => s.questId === questId) || null;
+    },
+    syncProgress(stage, isComplete) {
+      for (const site of lodestoneData.sites) {
+        if (!site.built) continue;
+        stage.setLodestoneSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

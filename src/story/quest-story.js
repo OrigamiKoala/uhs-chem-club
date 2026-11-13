@@ -20,6 +20,15 @@
 
 export const QUEST_STORY = {
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
+  'unit12/q1-dblock': {
+    scene: 'lode-dblock',
+    beats: [
+      { to: 0.34, say: 'Iron took two electrons into 4s, then six into 3d: five alone, then one pair.' },
+      { to: 0.7, say: 'With a charge on the atom, 3d dropped below 4s, so the two 4s electrons were the ones to leave Fe²⁺.' },
+      { to: 0.97, say: 'One more 3d electron gone left Fe³⁺ with five, the ion in the sealed drum.' }
+    ],
+    filed: 'Filed: the drum is iron(III), so the manifest is right about one drum; every other drum must be read too.'
+  },
   'unit11/q1-watch': {
     scene: 'rate-watch',
     beats: [

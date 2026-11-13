@@ -31,3 +31,4 @@ import './pans.js';
 import './ph.js';
 import './cell.js';
 import './rate.js';
+import './lode.js';

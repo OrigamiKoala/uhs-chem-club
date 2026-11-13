@@ -23,6 +23,7 @@ import { TeeterWorld } from "./teeter.js";
 import { VerdigrisWorld } from "./verdigris.js";
 import { BrinewireWorld } from "./brinewire.js";
 import { QuicklightWorld } from "./quicklight.js";
+import { LodestoneWorld } from "./lodestone.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -70,6 +71,7 @@ const VERDIGRIS_EXPOSURE = 0.96;
 const BRINEWIRE_EXPOSURE = 0.9;
 // Quicklight is dark storm-belt basalt under an electric indigo sky: dim ground, so it sits near Lanternfall.
 const QUICKLIGHT_EXPOSURE = 1.12;
+const LODESTONE_EXPOSURE = 1.1;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -113,6 +115,7 @@ class Stage {
     this.verdigrisWorld = null;
     this.brinewireWorld = null;
     this.quicklightWorld = null;
+    this.lodestoneWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -840,6 +843,10 @@ class Stage {
       if (!this.quicklightWorld) this.quicklightWorld = this.warmWorld(new QuicklightWorld(this.renderer));
       return this.quicklightWorld;
     }
+    if (key === "lodestone") {
+      if (!this.lodestoneWorld) this.lodestoneWorld = this.warmWorld(new LodestoneWorld(this.renderer));
+      return this.lodestoneWorld;
+    }
     return null;
   }
 
@@ -877,6 +884,7 @@ class Stage {
     if (key === "verdigris") return VERDIGRIS_EXPOSURE;
     if (key === "brinewire") return BRINEWIRE_EXPOSURE;
     if (key === "quicklight") return QUICKLIGHT_EXPOSURE;
+    if (key === "lodestone") return LODESTONE_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1095,10 +1103,17 @@ class Stage {
     this.enterLearnWorld(this.quicklightWorld, QUICKLIGHT_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
+  /** Walk out onto Lodestone, the iron canyon (Learn world 12). */
+  enterLodestoneScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("lodestone");
+    this.enterLearnWorld(this.lodestoneWorld, LODESTONE_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
   /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter, Verdigris, Brinewire or Quicklight. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld || w === this.quicklightWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld || w === this.quicklightWorld || w === this.lodestoneWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1356,6 +1371,11 @@ class Stage {
   /** Light a Quicklight site's indicator when its quest is finished. */
   setQuicklightSiteComplete(questId, complete) {
     if (this.quicklightWorld) this.quicklightWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Lodestone site's indicator when its quest is finished. */
+  setLodestoneSiteComplete(questId, complete) {
+    if (this.lodestoneWorld) this.lodestoneWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Verdigris site's indicator when its quest is finished. */

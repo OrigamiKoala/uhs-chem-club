@@ -22,6 +22,13 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Lodestone: what is really in the Fifth's drums? ---- */
+  'q1-dblock': { 1: 'The Fifth\'s manifest calls every drum iron salt; read iron\'s own electrons first.' },
+  'q2-charges': { 1: 'The manifest gives each metal one charge; measure how many electrons these metals can lose.' },
+  'q3-complex': { 1: 'Drums went deep blue where ammonia was spilled on them; find out what happened.' },
+  'q4-shapes': { 1: 'Two drums list the same formula but behave differently; check how each one is put together.' },
+  'q5-colour': { 1: 'Colour is the only label left on most drums; find what a colour can tell you.' },
+  'q6-spin': { 1: 'The Coil pulls some drums toward it and leaves others; find what its magnet is sorting.' },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'q1-watch': {
     1: 'Two feed lines yield the same fuel, yet Vess found one tower overheating.'

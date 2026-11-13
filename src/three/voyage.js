@@ -147,6 +147,14 @@ export const DESTINATIONS = {
       atmo: '#6f7ca8', atmoStrength: 0.55, seed: [6.4, 1.9, 5.5]
     }
   },
+  lodestone: {
+    key: 'lodestone', name: 'Lodestone', hash: '#/learn/unit12',
+    descent: 'Descending into the canyon',
+    planet: {
+      kind: 'volcanic', colors: ['#2c1810', '#5a3424', '#84503d', '#2a2622'],
+      atmo: '#b0705a', atmoStrength: 0.5, seed: [3.7, 6.1, 1.4]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',
