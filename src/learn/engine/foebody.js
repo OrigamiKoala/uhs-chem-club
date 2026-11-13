@@ -1262,8 +1262,60 @@ export function buildClamp(foe) {
   return body;
 }
 
+export function buildFlare(foe) {
+  const group = new THREE.Group();
+  group.name = `flare:${foe.id}`;
+  const dark = new THREE.MeshStandardMaterial({ color: 0x262930, roughness: 0.72, metalness: 0.55 });
+  const copper = new THREE.MeshStandardMaterial({ color: 0x9b5a2e, roughness: 0.48, metalness: 0.65 });
+  const glow = new THREE.MeshStandardMaterial({ color: 0xff9b38, emissive: 0xff6a1a, emissiveIntensity: 1.5, roughness: 0.3 });
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.025, 10), dark);
+  base.position.y = 0.0125;
+  group.add(base);
+
+  const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.036, 0.11, 10), dark);
+  stack.position.y = 0.075;
+  group.add(stack);
+
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.004, 6, 18), copper);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.08;
+  group.add(ring);
+
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.042, 8), glow);
+  flame.position.y = 0.145;
+  group.add(flame);
+
+  const hit = hitTarget(0.14, 0.14);
+  hit.position.y = 0.07;
+  group.add(hit);
+
+  const body = {
+    species: 'the flare',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.14, look: 0, baseX: 0, baseY: 0, baseZ: 0,
+    snap() {
+      const s = this.pose === 'live' ? 1.25 : this.pose === 'flat' ? 0.6 : 1.0;
+      flame.scale.set(s, s, s);
+      group.visible = !this.gone;
+    },
+    tick(dt) {
+      this.t += dt;
+      ring.rotation.z = this.t * 0.8;
+      const p = this.pose === 'live' ? 1.25 : this.pose === 'flat' ? 0.6 : 1.0;
+      const pulse = p + 0.12 * Math.sin(this.t * 4.5 + this.phase);
+      flame.scale.set(pulse, pulse, pulse);
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -1282,6 +1334,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the tipper') return buildTipper(foe);
   if (species === 'the leach') return buildLeach(foe);
   if (species === 'the clamp') return buildClamp(foe);
+  if (species === 'the flare') return buildFlare(foe);
   return null;
 }
 

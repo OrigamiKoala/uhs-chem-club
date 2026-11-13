@@ -74,6 +74,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the vent powder is a catalyst that lowers the barrier without being used up.'
   },
+  'unit11/boss-flare': {
+    scene: 'rate-watch',
+    beats: [
+      { to: 0.35, say: 'Between 5 s and 15 s the tower fell 0.30 mol/L at 0.030 mol/(L·s), following rate = k[A]²[B].' },
+      { to: 0.70, say: 'Four 12 s half-lives left 0.0625 of the peroxide core, behind an 80 kJ/mol ignition barrier.' },
+      { to: 0.95, say: 'The pre-equilibrium mechanism 2 X ⇌ X₂ followed by slow X₂ + Y → Z matched rate = k[X]²[Y] and shut the flare down.' }
+    ],
+    filed: 'Filed: the runaway tower was driven by a catalytic lower-barrier path whose slow intermediate step obeys ordinary kinetics.'
+  },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
     scene: 'load-down',

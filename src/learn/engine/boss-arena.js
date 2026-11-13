@@ -148,6 +148,14 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -54],
     scale: 1.4,
     species: 'the clamp'
+  },
+  'boss-flare': {
+    worldId: 'unit11',
+    playerPos: [0, 1.6, -38],
+    lookAtPos: [0, 1.6, -54],
+    bossPos: [0, 0, -54],
+    scale: 1.5,
+    species: 'the flare'
   }
 };
 

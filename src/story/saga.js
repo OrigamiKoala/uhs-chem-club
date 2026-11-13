@@ -129,6 +129,14 @@ export const CLUES = {
     name: 'The Last Pan',
     summary: 'A sealed salt pan the Fifth filed as finished, still turning over inside.',
     note: 'Filled from either end it settles on the same ratio, and its particles keep changing in both directions. The Fifth did not finish this pan; they stopped measuring it.'
+  },
+  clue_quicklight_flare: {
+    id: 'clue_quicklight_flare',
+    act: 'act3',
+    source: 'Quicklight Boss · The Flare',
+    name: 'The Vent Powder',
+    summary: 'A trace of catalyst powder scraped from the cracking tower vent, unchanged after every burn cycle.',
+    note: 'The powder opened a lower-barrier pathway through a slow intermediate step without being consumed. The Fifth called it a secret accelerant and never timed the steps.'
   }
 };
 
@@ -414,6 +422,8 @@ export const EPISODES = {
     worldId: 'unit11',
     worldName: 'Quicklight',
     act: 'act3',
+    bossId: 'boss-flare',
+    clueId: 'clue_quicklight_flare',
     arrival: 'Explosions are rocking the fuel cracking towers on Quicklight. The raiders dropped chemical accelerators into the storage tanks, speeding up combustion to explosive levels.',
     closing: 'The runaway reactions are halted and the fuel depot is safe. We intercepted an enemy transmission from their supreme leader, who calls themselves \'The Catalyst\'.',
     spoilFamily: 'Kinetic flares',

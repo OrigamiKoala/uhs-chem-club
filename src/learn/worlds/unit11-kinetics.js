@@ -74,8 +74,8 @@ export const UNIT_11 = {
       line: 'Stabilize the runaway cracking tower.',
       arena: 'boss',
       stageCount: 5,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit11/boss-flare.js')
     }
   ]
 };

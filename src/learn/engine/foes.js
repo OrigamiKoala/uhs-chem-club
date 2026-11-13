@@ -356,6 +356,23 @@ export const SPECIES = {
       }
       return { pose: probe?.pose || 'unmoved' };
     }
+  },
+
+  'the flare': {
+    name: 'The Flare',
+    counter: 'Trial missed: the reading does not match what the cracking tower shows.',
+    knockback: 'Knocked back. The Flare vents another surge, but your bench readings remain.',
+    hit: 'The Flare throttles down and its vent flame drops.',
+    lines: {
+      idle: () => 'The stack pulses with a bright orange plume.',
+      unmoved: () => 'The Flare roars over the cracking manifold.',
+      live: () => 'The Flare draws fuel faster through the vent.',
+      flat: () => 'The Flare sputters low above the manifold.',
+      reversed: () => 'The Flare recoils as the feed slows.'
+    },
+    pose(probe) {
+      return { pose: probe?.pose || 'unmoved' };
+    }
   }
 };
 
@@ -586,8 +603,17 @@ function clampArt(pose, plan = {}) {
   return svg(cells + mast + arms + lens, 'The Clamp');
 }
 
+function flareArt(pose) {
+  const flameH = pose === 'live' ? 14 : pose === 'flat' ? 5 : 9;
+  const tower = `<path d="M24 50 L28 18 L36 18 L40 50 Z" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/><line x1="22" y1="36" x2="42" y2="36" stroke="${EDGE}" stroke-width="1.3"/>`;
+  const flame = `<path d="M28 18 Q32 ${18 - flameH} 36 18 Z" fill="${LIT}" stroke="${EDGE}" stroke-width="1"/>`;
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${tower}</g>`, 'The Flare, cooled');
+  return svg(tower + flame, 'The Flare');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the flare') return flareArt(pose);
   if (species === 'the clamp') return clampArt(pose, plan);
   if (species === 'the leach') return leachArt(pose, plan);
   if (species === 'the tipper') return tipperArt(pose, plan);

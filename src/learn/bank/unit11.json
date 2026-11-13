@@ -758,6 +758,60 @@
         ],
         "finish": "A catalyst lowers the barrier for both forward and reverse paths by the same amount while leaving \u0394H unchanged."
       }
+    },
+    "boss-flare": {
+      "problems": [
+        {
+          "id": "boss-flare#b1",
+          "quest": "boss-flare",
+          "question": "A first-order reaction has t_{1/2} = 15 s. What fraction of reactant remains after 60 s?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0.0625 (1/16)"
+            },
+            {
+              "id": "b",
+              "label": "0.125 (1/8)"
+            },
+            {
+              "id": "c",
+              "label": "0.25 (1/4)"
+            },
+            {
+              "id": "d",
+              "label": "0.03125 (1/32)"
+            }
+          ],
+          "answer": "a",
+          "explanation": "60 s is 4 half-lives (60 \u00f7 15 = 4), so (1/2)\u2074 = 1/16 = 0.0625 remains."
+        },
+        {
+          "id": "boss-flare#b2",
+          "quest": "boss-flare",
+          "question": "A catalyst lowers the forward activation energy of a reaction by 20 kJ/mol. By how much does it change \u0394H?",
+          "options": [
+            {
+              "id": "a",
+              "label": "0 kJ/mol (no change)"
+            },
+            {
+              "id": "b",
+              "label": "20 kJ/mol more exothermic"
+            },
+            {
+              "id": "c",
+              "label": "20 kJ/mol more endothermic"
+            },
+            {
+              "id": "d",
+              "label": "It halves \u0394H"
+            }
+          ],
+          "answer": "a",
+          "explanation": "A catalyst lowers the transition state barrier without changing the energies of reactants or products, so \u0394H stays the same."
+        }
+      ]
     }
   }
 }

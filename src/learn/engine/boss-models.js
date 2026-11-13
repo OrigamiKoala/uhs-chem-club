@@ -1715,6 +1715,83 @@ function buildClamp(monster) {
   };
 }
 
+function buildFlare(monster) {
+  const { group, body } = rootOf(monster);
+  const darkIron = new THREE.MeshStandardMaterial({ color: 0x262930, roughness: 0.72, metalness: 0.55 });
+  const copper = new THREE.MeshStandardMaterial({ color: 0x9b5a2e, roughness: 0.48, metalness: 0.65 });
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0xff9b38,
+    emissive: 0xff6a1a,
+    emissiveIntensity: 1.8,
+    roughness: 0.3
+  });
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.7, 0.9, 12), darkIron);
+  base.position.y = 0.45;
+  body.add(base);
+
+  const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.35, 4.4, 12), darkIron);
+  stack.position.y = 3.0;
+  body.add(stack);
+
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.14, 8, 24), copper);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 3.2;
+  body.add(ring);
+
+  const crown = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.6, 10), glowMat);
+  crown.position.y = 5.8;
+  body.add(crown);
+
+  const head = new THREE.Group();
+  head.position.set(0, 4.8, 0.8);
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 10), glowMat);
+  head.add(eye);
+  body.add(head);
+
+  const arms = [-1, 1].map(sx => {
+    const g = new THREE.Group();
+    g.position.set(sx * 1.4, 3.4, 0);
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 2.2, 8), copper);
+    pipe.rotation.z = sx * 0.65;
+    pipe.position.set(sx * 0.8, -0.4, 0);
+    g.add(pipe);
+    body.add(g);
+    return { g, sx };
+  });
+
+  const muzzle = new THREE.Object3D();
+  muzzle.position.set(0, 5.8, 0.9);
+  body.add(muzzle);
+  monster.muzzle = muzzle;
+
+  for (const [idx, sx] of [-1, 1].entries()) {
+    const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.95, 0.1), copper);
+    p1.position.set(sx * 0.6, 2.2, 1.15);
+    body.add(p1);
+    monster.armour(p1, idx === 0 ? 0.25 : 0.5);
+
+    const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.95, 0.1), copper);
+    p2.position.set(sx * 0.6, 3.6, 1.0);
+    body.add(p2);
+    monster.armour(p2, idx === 0 ? 0.72 : 0.9);
+  }
+
+  return {
+    update(s) {
+      const t = s.t || 0;
+      const idle = 1 - clamp01((s.hurt || 0) + (s.roar || 0) + (s.strike || 0));
+      const pulse = 1 + 0.25 * Math.sin(t * 4.5) * (1 - 0.5 * (s.wound || 0));
+      crown.scale.set(pulse, 1 + 0.35 * (s.roar || 0) - 0.3 * (s.wound || 0), pulse);
+      ring.rotation.z = t * 0.8;
+      for (const a of arms) {
+        a.g.rotation.z = a.sx * (0.12 * Math.sin(t * 1.4) + 0.25 * (s.roar || 0) * idle);
+      }
+      body.position.y = -clamp01(s.throes || 0) * 0.35;
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1727,7 +1804,8 @@ const BUILDERS = {
   'recipe golem': buildGolem,
   'the tipper': buildTipper,
   'the leach': buildLeach,
-  'the clamp': buildClamp
+  'the clamp': buildClamp,
+  'the flare': buildFlare
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */
