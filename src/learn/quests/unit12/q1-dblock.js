@@ -64,7 +64,7 @@ const result = m => (typeof m === 'string' ? { ok: false, msg: m } : { ok: false
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const L = dshellFixture('ladder', { x: 60, y: 31 }, { mode: 'build', el: 'V', test: true, title: 'Vanadium' });
+    const L = dshellFixture('ladder', { x: 75, y: 31 }, { mode: 'build', el: 'V', test: true, title: 'Vanadium' });
     return {
       id: 's1-vanadium',
       title: 'Vanadium',
@@ -93,7 +93,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const L = dshellFixture('ladder', { x: 60, y: 31 }, { mode: 'build', el: 'Fe', title: 'Iron' });
+    const L = dshellFixture('ladder', { x: 75, y: 31 }, { mode: 'build', el: 'Fe', title: 'Iron' });
     return {
       id: 's2-iron',
       title: 'Iron',
@@ -154,7 +154,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const L = dshellFixture('ladder', { x: 60, y: 31 }, { mode: 'remove', el: 'Fe', test: true, title: 'Iron, losing electrons' });
+    const L = dshellFixture('ladder', { x: 75, y: 31 }, { mode: 'remove', el: 'Fe', test: true, title: 'Iron, losing electrons' });
     const guess = () => GUESS[recall(QUEST_KEY)];
     return {
       id: 's4-fe2',
@@ -186,7 +186,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const L = dshellFixture('ladder', { x: 60, y: 31 }, { mode: 'remove', el: 'Co', title: 'Cobalt, losing electrons' });
+    const L = dshellFixture('ladder', { x: 75, y: 31 }, { mode: 'remove', el: 'Co', title: 'Cobalt, losing electrons' });
     return {
       id: 's5-co3',
       title: 'Cobalt(III)',
@@ -215,7 +215,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const L = dshellFixture('ladder', { x: 104, y: 29 }, { mode: 'remove', load: true, title: 'Ladder', h: 42 });
+    const L = dshellFixture('ladder', { x: 106, y: 29 }, { mode: 'remove', load: true, title: 'Ladder', w: 80, h: 44 });
     return {
       id: 's6-drum',
       title: 'The Sealed Drum',

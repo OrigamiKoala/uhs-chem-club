@@ -23,6 +23,7 @@ const BOXES = 6; // b0 = 4s, b1..b5 = 3d
 const LEVELS_OF = [0, 1, 1, 1, 1, 1];
 
 /** The occupation of a fourth-row atom as measured (4s, then the 3d boxes filled one each, then pairs). */
+const cap = t => `${t[0].toUpperCase()}${t.slice(1)}`;
 export const atomOcc = el => { const e = ELEMENTS[el]; return [e.s, ...fillLevel(5, e.d)]; };
 
 /**
@@ -30,8 +31,8 @@ export const atomOcc = el => { const e = ELEMENTS[el]; return [e.s, ...fillLevel
  * "Test Energy" key; `ions` (show mode) lists the element's common ions beside it; `hideCount` hides the count line.
  * Returns `{ fixture, slot }` (`slot` only with `load`: a card laid in it loads that atom).
  */
-export function dshellFixture(id, at, { mode = 'build', el = null, start = null, test = false, load = false, ions = false, title: ttl = 'Energy ladder', w = null, h = 40, hideCount = false } = {}) {
-  const width = w ?? (60 + (ions ? 40 : 0));
+export function dshellFixture(id, at, { mode = 'build', el = null, start = null, test = false, load = false, ions = false, title: ttl = 'Energy ladder', w = null, h = 52, hideCount = false } = {}) {
+  const width = w ?? (100 + (ions ? 40 : 0));
   const occ = start || (el && mode !== 'build' ? atomOcc(el) : new Array(BOXES).fill(0));
   const dials = {};
   for (let i = 0; i < BOXES; i++) dials[`b${i}`] = { min: 0, max: 2, step: 1, value: occ[i], label: i ? `3d ${i}` : '4s' };
@@ -62,11 +63,12 @@ const levelsAt = (f, charge) => (f.props.mode === 'remove' ? shellLevels(charge)
 
 function geometry(f) {
   const lx = 2;
-  const top = 6.5;
+  const k = Math.min(1.45, Math.max(1, (f.size.w - (f.props.ions ? 40 : 0)) / 76));
+  const top = 6.5 * k;
   const bottom = f.size.h - (f.props.test || f.props.mode === 'remove' ? 10 : 7);
-  const bx = lx + 9; const bw = 6; const gap = 1.3; const bh = 5;
+  const bx = lx + 9 * k; const bw = 8 * k; const gap = 1.6 * k; const bh = 6.5 * k;
   const eY = e => bottom - bh - ((e + 0.8) / 2.0) * (bottom - bh - top);
-  return { lx, top, bottom, bx, bw, gap, bh, eY, boxX: i => (i === 0 ? bx : bx + 11 + (i - 1) * (bw + gap)) };
+  return { k, lx, top, bottom, bx, bw, gap, bh, eY, boxX: i => (i === 0 ? bx : bx + 14 * k + (i - 1) * (bw + gap)) };
 }
 
 function paintDshell(ctx, f, state, b) {
@@ -86,7 +88,7 @@ function paintDshell(ctx, f, state, b) {
   const ax = F.x(g.lx + 1.4);
   ctx.beginPath(); ctx.moveTo(ax, F.y(g.bottom)); ctx.lineTo(ax, F.y(g.top)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ax, F.y(g.top) - 3); ctx.lineTo(ax - 3, F.y(g.top) + 3); ctx.lineTo(ax + 3, F.y(g.top) + 3); ctx.closePath(); ctx.fill();
-  say(ctx, 'Energy', F.x(g.lx + 2.4), F.y(g.top + 0.6), F.size(1.6, 6), { color: C.steel });
+  say(ctx, 'Energy', F.x(g.lx + 2.6), F.y(g.top + 0.8), F.size(1.9 * g.k, 6.5), { color: C.steel, weight: 600 });
   const test = f.props.test && f.props.test.key === r.occ.join() ? f.props.test : null;
   for (let i = 0; i < BOXES; i++) {
     const lv = L[LEVELS_OF[i]];
@@ -94,8 +96,8 @@ function paintDshell(ctx, f, state, b) {
     orbital(ctx, F, g.boxX(i), y, g.bw, g.bh, r.occ[i], { colour: i ? C.d3 : C.s4, lit: Boolean(test && test.moves.some(m => m.from === i || m.to === i)) });
   }
   // Level names, left of their first box.
-  say(ctx, '4s', F.x(g.bx - 1), F.y(g.eY(L[0].e) + g.bh / 2), F.size(2.2, 7), { align: 'right', color: C.s4, weight: 700 });
-  say(ctx, '3d', F.x(g.boxX(1) - 1), F.y(g.eY(L[1].e) + g.bh / 2), F.size(2.2, 7), { align: 'right', color: C.d3, weight: 700 });
+  say(ctx, '4s', F.x(g.bx - 1), F.y(g.eY(L[0].e) + g.bh / 2), F.size(2.4 * g.k, 7), { align: 'right', color: C.s4, weight: 700 });
+  say(ctx, '3d', F.x(g.boxX(1) - 1), F.y(g.eY(L[1].e) + g.bh / 2), F.size(2.4 * g.k, 7), { align: 'right', color: C.d3, weight: 700 });
   // The moves Test Energy found: an electron that could sit lower, drawn travelling from its box to where it would go.
   if (test && !test.lowest) {
     const ph = ((b.clock || 0) % 1.6) / 1.6;
@@ -113,13 +115,15 @@ function paintDshell(ctx, f, state, b) {
   // The count line (top right): what the player has made.
   const right = F.x(f.size.w - 2.2);
   if (!f.props.hideCount) {
-    const line = f.props.mode === 'remove' ? `${r.el}  charge ${signed(charge)}` : f.props.mode === 'build' ? `${ELEMENTS[r.el].name}: ${r.n} of ${ELEMENTS[r.el].s + ELEMENTS[r.el].d}` : `${ELEMENTS[r.el].name}${ELEMENTS[r.el].exception ? ' (an exception)' : ''}`;
-    say(ctx, line, right, F.y(3), F.size(2.1, 6.5), { align: 'right', color: C.text, weight: 600, maxW: F.len(f.size.w * 0.55) });
+    const nm = cap(ELEMENTS[r.el].name);
+    const line = f.props.mode === 'remove' ? `${nm}: charge ${signed(charge)}` : f.props.mode === 'build' ? `Electrons: ${r.n} of ${ELEMENTS[r.el].s + ELEMENTS[r.el].d}` : `${nm}${ELEMENTS[r.el].exception ? ' (an exception)' : ''}`;
+    say(ctx, line, right, F.y(3.2), F.size(2.6, 8), { align: 'right', color: C.text, weight: 600, maxW: F.len(f.size.w * 0.45) });
   }
   // The result of the last test, while the boxes are as they were tested.
   if (test) {
-    const words = test.lowest ? 'Lowest energy: nothing could sit lower' : `${test.moves.length} electron${test.moves.length > 1 ? 's' : ''} could sit lower`;
-    say(ctx, words, F.x(g.lx + 1), F.y(f.size.h - 3.4), F.size(1.9, 6.2), { color: test.lowest ? C.phosphor : C.amber, weight: 600, maxW: F.len(f.size.w - (g.lx + 16)) });
+    const words = test.lowest ? 'Lowest energy' : `${test.moves.length} electron${test.moves.length > 1 ? 's' : ''} can move lower`;
+    const runW = Math.max(9, 'Test Energy'.length * 1.9 + 3);
+    say(ctx, words, F.x(g.lx + 1), F.y(f.size.h - 3.6), F.size(2.0, 6.5), { color: test.lowest ? C.phosphor : C.amber, weight: 600, maxW: F.len(f.size.w - runW - 6 - g.lx) });
   }
   if (f.props.ions && r.el) paintIons(ctx, f, F, r.el);
 }

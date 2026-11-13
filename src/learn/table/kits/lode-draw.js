@@ -42,7 +42,7 @@ export function say(ctx, text, x, y, size, o = {}) {
 export const topOf = (f, lay) => (lay.dials.length ? lay.dials.reduce((a, d) => Math.max(a, d.y), 0) - lay.box.y0 + 4.2 : 4.4);
 
 export function title(ctx, f, F, b, text) {
-  say(ctx, text ?? f.label, F.x(2.2), F.y(3), F.size(2.3, 7), { color: C.dust, weight: 600, maxW: F.len(f.size.w - 4) });
+  say(ctx, text ?? f.label, F.x(2.2), F.y(3.2), F.size(2.8, 8), { color: C.dust, weight: 600, maxW: F.len(f.size.w * 0.5) });
 }
 
 /** An orbital box at (x, y) units, w × h, holding `n` electrons (↑, then ↑↓). `lit` rings it amber. */

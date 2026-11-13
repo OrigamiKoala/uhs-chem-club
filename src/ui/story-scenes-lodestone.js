@@ -3,7 +3,7 @@
  * through `legacy()`. Every number on screen is counted from what is drawn or read from `lodedata.js`.
  */
 
-import { C, text, ground, win, ease, line } from './story-kit.js';
+import { C, text, ground, win, ease } from './story-kit.js';
 import { fillLevel, shellLevels } from '../learn/engine/lodedata.js';
 
 const S4 = '#c9a35a'; const D3 = '#6f8fb0';
@@ -32,7 +32,7 @@ function ladder(ctx, x0, yBase, charge, s, d, label) {
   text(ctx, '4s', x0 - 12, y4s + 19, { size: 22, color: S4, align: 'right', weight: 700 });
   fillLevel(5, d).forEach((n, i) => box(ctx, x0 + 80 + i * 52, y3d, n, D3));
   text(ctx, '3d', x0 + 68, y3d + 19, { size: 22, color: D3, align: 'right', weight: 700 });
-  text(ctx, label, x0 + 170, yBase + 40, { size: 24, color: C.text, weight: 700 });
+  text(ctx, label, x0 + 170, yBase + 78, { size: 24, color: C.text, weight: 700 });
 }
 
 /** q1-dblock: iron fills 4s then 3d; as Fe²⁺ the 3d level drops below 4s and the 4s pair leaves; Fe³⁺ keeps five 3d electrons. */
@@ -55,7 +55,6 @@ function dblock(ctx, w, h, t) {
     ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(282, 140 - p * 90, 9, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
   }
-  if (t > 0.45) line(ctx, 230, 360, 640, 360, C.dim, 1);
 }
 
 export const LODESTONE_SCENES = {

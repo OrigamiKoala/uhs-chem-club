@@ -4,9 +4,10 @@
  */
 
 import { registerKit } from './registry.js';
-import { HEAT_KIT, HEAT_BOUNDS, HEAT_RECORDER } from './heat.js';
+import { HEAT_KIT, HEAT_BOUNDS } from './heat.js';
 import { paintPiece as heatPiece, paintFixture as heatFixture, faceKey as heatFaceKey } from './heat-draw.js';
-import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './lode-registry.js';
+import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers, allFixtureEntries } from './lode-registry.js';
+import { installLodeDresses } from './lode-3d.js';
 import './lode-tour.js';
 import './lode-shell.js';
 import './lode-lead.js';
@@ -54,6 +55,7 @@ export const LODE_KIT = {
   printed: p => (pieceDef(p.kind)?.printed ? pieceDef(p.kind).printed(p) : HEAT_KIT.printed(p))
 };
 
+installLodeDresses(allFixtureEntries());
 registerKit(LODE_KIT);
 
 const OWN_TITLE = new Set(['dshell', 'iestrip', 'lodelead', 'lchoice']);
@@ -61,7 +63,8 @@ const OWN_TITLE = new Set(['dshell', 'iestrip', 'lodelead', 'lchoice']);
 export function lodeTable(spec, { w = LODE_BOUNDS.w, h = LODE_BOUNDS.h, recorder = null } = {}) {
   for (const f of spec.fixtures || []) if (f.dials && Object.keys(f.dials).length && f.props && f.props.dialIndent == null) f.props.dialIndent = 3.6;
   for (const f of spec.fixtures || []) if (f.props && OWN_TITLE.has(f.kind) && f.props.hideLabel == null) f.props.hideLabel = true;
-  return { kit: LODE_KIT_ID, bounds: { w, h }, tools: [], recorder: recorder || { ...HEAT_RECORDER, at: { x: w - 2.6, y: h - 2.4 } }, ...spec };
+  // The kit's instruments keep their readings on their own faces: the recorder is parked, two units square, where the Tour leaves it out.
+  return { kit: LODE_KIT_ID, bounds: { w, h }, tools: [], recorder: recorder || { at: { x: w - 1.6, y: h - 1.6 }, size: { w: 2, h: 2 } }, ...spec };
 }
 
 export * from './heat.js';
