@@ -53,7 +53,7 @@ export function coverLightChunks({ declare, sun, sky }) {
 }
 
 /** How many boxes and openings one mask holds. Fixed: they size the shader's arrays. */
-export const COVER_BOXES = 24;
+export const COVER_BOXES = 20;
 export const COVER_OPENINGS = 8;
 
 const AXIS = { x: 0, y: 1, z: 2 };
@@ -68,9 +68,8 @@ export function makeCover({ sun, boxes = [], openings = [], fall = 0.5, push = 0
   const v3 = n => Array.from({ length: n }, () => new THREE.Vector3());
   const v4 = n => Array.from({ length: n }, () => new THREE.Vector4());
   const uniforms = {
-    uCvLo: { value: v3(COVER_BOXES) },
+    uCvLo: { value: v4(COVER_BOXES) },           // a box's low corner, and in .w the fraction of the sky it keeps
     uCvHi: { value: v3(COVER_BOXES) },
-    uCvSky: { value: new Array(COVER_BOXES).fill(0) },
     uCvBoundLo: { value: new THREE.Vector3() },
     uCvBoundHi: { value: new THREE.Vector3() },
     uCvFall: { value: fall },
@@ -91,9 +90,8 @@ export function makeCover({ sun, boxes = [], openings = [], fall = 0.5, push = 0
     U.uCvBoundHi.value.setScalar(-1e6);
     for (let i = 0; i < COVER_BOXES; i++) {
       const b = nextBoxes[i];
-      if (b) { U.uCvLo.value[i].set(...b.min); U.uCvHi.value[i].set(...b.max); } else { U.uCvLo.value[i].setScalar(1e6); U.uCvHi.value[i].setScalar(-1e6); }
-      U.uCvSky.value[i] = b?.sky ?? 0;
-      if (b) { U.uCvBoundLo.value.min(U.uCvLo.value[i]); U.uCvBoundHi.value.max(U.uCvHi.value[i]); }
+      if (b) { U.uCvLo.value[i].set(b.min[0], b.min[1], b.min[2], b.sky ?? 0); U.uCvHi.value[i].set(...b.max); } else { U.uCvLo.value[i].set(1e6, 1e6, 1e6, 0); U.uCvHi.value[i].setScalar(-1e6); }
+      if (b) { U.uCvBoundLo.value.min(new THREE.Vector3(...b.min)); U.uCvBoundHi.value.max(U.uCvHi.value[i]); }
     }
     if (nextBoxes.length) {
       U.uCvBoundLo.value.subScalar(U.uCvFall.value + U.uCvPush.value);
@@ -111,10 +109,10 @@ export function makeCover({ sun, boxes = [], openings = [], fall = 0.5, push = 0
     state.openings = nextOpenings;
   }
 
+  // Kept small on purpose: a handset's fragment shader has few uniform vectors to spare (this adds about 80).
   const PARS = /* glsl */ `
-    uniform vec3 uCvLo[${COVER_BOXES}];
+    uniform vec4 uCvLo[${COVER_BOXES}];
     uniform vec3 uCvHi[${COVER_BOXES}];
-    uniform float uCvSky[${COVER_BOXES}];
     uniform vec3 uCvBoundLo;
     uniform vec3 uCvBoundHi;
     uniform float uCvFall;
@@ -127,32 +125,32 @@ export function makeCover({ sun, boxes = [], openings = [], fall = 0.5, push = 0
     uniform vec3 uCvOpenHi[${COVER_OPENINGS}];
     varying vec3 vCoverWorld;
     // x: how much of the sun to take away, y: how much of the sky. 0 in the open.
-    vec2 worldCover(vec3 p) {
-      if (any(lessThan(p, uCvBoundLo)) || any(greaterThan(p, uCvBoundHi))) return vec2(0.0);
-      float c = 0.0;
-      float keep = 0.0;
+    vec2 worldCover(vec3 cvP) {
+      if (any(lessThan(cvP, uCvBoundLo)) || any(greaterThan(cvP, uCvBoundHi))) return vec2(0.0);
+      float cvC = 0.0;
+      float cvKeep = 0.0;
       for (int i = 0; i < ${COVER_BOXES}; i++) {
-        vec3 d = max(max(uCvLo[i] - p, p - uCvHi[i]), 0.0);
-        float k = 1.0 - smoothstep(0.0, uCvFall, length(d));
-        if (k > c) { c = k; keep = uCvSky[i]; }
+        vec3 cvD = max(max(uCvLo[i].xyz - cvP, cvP - uCvHi[i]), 0.0);
+        float cvIn = 1.0 - smoothstep(0.0, uCvFall, length(cvD));
+        if (cvIn > cvC) { cvC = cvIn; cvKeep = uCvLo[i].w; }
       }
-      if (c <= 0.0) return vec2(0.0);
-      float shaft = 0.0;
+      if (cvC <= 0.0) return vec2(0.0);
+      float cvShaft = 0.0;
       for (int j = 0; j < ${COVER_OPENINGS}; j++) {
         if (uCvOpenA[j].w < 0.5) continue;
-        if (any(lessThan(p, uCvOpenLo[j])) || any(greaterThan(p, uCvOpenHi[j]))) continue;
-        int ax = int(uCvOpenA[j].x + 0.5);
-        float along = ax == 0 ? uCvSun.x : (ax == 1 ? uCvSun.y : uCvSun.z);
-        float from = ax == 0 ? p.x : (ax == 1 ? p.y : p.z);
-        if (abs(along) < 1e-4) continue;
-        float t = (uCvOpenA[j].y - from) / along;
-        if (t <= 0.0) continue;
-        vec3 q = p + uCvSun * t;
-        vec2 uv = ax == 0 ? q.yz : (ax == 1 ? q.xz : q.xy);
-        vec2 e = min(uv - uCvOpenR[j].xy, uCvOpenR[j].zw - uv);
-        shaft = max(shaft, smoothstep(0.0, uCvSoft, min(e.x, e.y)));
+        if (any(lessThan(cvP, uCvOpenLo[j])) || any(greaterThan(cvP, uCvOpenHi[j]))) continue;
+        int cvAx = int(uCvOpenA[j].x + 0.5);
+        float cvAlong = (cvAx == 0) ? uCvSun.x : ((cvAx == 1) ? uCvSun.y : uCvSun.z);
+        float cvFrom = (cvAx == 0) ? cvP.x : ((cvAx == 1) ? cvP.y : cvP.z);
+        if (abs(cvAlong) < 0.0001) continue;
+        float cvT = (uCvOpenA[j].y - cvFrom) / cvAlong;
+        if (cvT <= 0.0) continue;
+        vec3 cvQ = cvP + uCvSun * cvT;
+        vec2 cvUV = (cvAx == 0) ? cvQ.yz : ((cvAx == 1) ? cvQ.xz : cvQ.xy);
+        vec2 cvE = min(cvUV - uCvOpenR[j].xy, uCvOpenR[j].zw - cvUV);
+        cvShaft = max(cvShaft, smoothstep(0.0, uCvSoft, min(cvE.x, cvE.y)));
       }
-      return vec2(c * (1.0 - shaft), c * (1.0 - keep));
+      return vec2(cvC * (1.0 - cvShaft), cvC * (1.0 - cvKeep));
     }
   `;
 

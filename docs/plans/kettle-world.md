@@ -836,3 +836,107 @@ across the flat to the mesas. West: the slag tip (closed) with the tipping trest
 | `src/three/world-data/kettle.json` | regenerated; old file archived |
 | `src/learn/engine/boss-arena.js` | the `boss-golem` spot only |
 | Archive | `archive/2026-11-13/site-kettle/` |
+
+### 11.10 Build record (2026-11-13)
+
+**Nothing here was seen in a browser.** Every figure below is a Node measurement of the world as built headlessly.
+
+What was built: the plan (`kettle/works-plan.js`, 17 rooms, 23 doors of which 5 are railings or windows, 2 heaps); the height field and
+the yard's mesh cut away under every room (`terrain.js`); the building (`works.js`: floors, walls, door headers, kerbs and railings, roofs,
+the halls' stanchions and trusses, the crane, the louvred bands, the cabin's glazed window, 21 aisle and ramp lamps); eight hosts
+(`stations.js`), each handed its room in its own frame; the furnace with its breast in the cast house's end wall, two stoves, the stack,
+the iron runner to the pit's lip, the works' track, the trestle on the slag tip, the ore bridge, the far country and the stack's smoke
+(`plant.js`); the cover mask from the plan (17 boxes, 4 openings); the guide's route squared to the doorways; `verify-kettle.mjs` rewritten.
+
+| `world-shape.mjs` | Benches | Bench ground | Relief | Housed | Housing per bench |
+| :--- | :---: | :--- | :---: | :---: | :--- |
+| Kettle before | 8 | 0.00 to 0.00 | 0.22 m | 0/8 | -1 -1 -1 -1 -1 -1 -1 -1 |
+| Kettle after | 8 | -2.40 to 3.20 | 5.60 m | 8/8 | R7 R7 R8 R7 R6 R8 R7 R5 |
+| Ligar (unchanged) | 9 | -2.60 to 0.89 | 21.55 m | 7/9 | -2 R6 R4 R4 -2 R7 R6 R5 R7 |
+
+| `perf-worlds.mjs` | Draws | k tris | Materials | Casters | Transparent | Update ms | Lights |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| Kettle before | 285 | 93 | 61 | 130 | 43 | 0.016 | Directional*:1 Hemisphere:1 Point:3 |
+| Kettle after | 233 | 113 | 59 | 109 | 30 | 0.033 | Directional*:1 Hemisphere:1 Point:3 |
+| Ligar before and after | 566 | 867 | 200 | 198 | 64 | about 0.5 | Directional*:1 Hemisphere:1 Point*:1 Point:3 |
+
+`perf-bench-rest.mjs`: 588 of 593 deployed table stages come to rest; the five that do not are all `unit03/q2-lattice` (Ligar's, not
+touched by this work). Other numbers held: 0 plates in view from the spawn and 0 from just inside the charge door; 6 separate x and
+5 separate z among the plates; 54 lamps and one fire on three real lights; every room's lamps within 12 m of the guide's way.
+
+Checks (each run as its own script): `verify:kettle`, `verify:bench`, `verify:voyage`, `verify:learn`, `verify:table`, `verify:docs`,
+`verify:story` and all eleven other worlds' scripts are green. `verify:arena` fails once, on a line that is not Kettle's
+("boss-models.js builds ... the coil"); on the parent branch it failed three times, two of them Kettle's old lamp post on the Golem's
+ground, which the rebuild removed.
+
+Where the build parted from the spec, and why:
+
+1. **The Golem's ground** is player (0, -40.5), boss (0, -54.5), not (0, -42) and (0, -56): the spout under the tap hole needs a
+   collider, and the old check that seven metres round the Golem are open had to clear it.
+2. **A 23rd door**: the plan gained a `window` in the cast house's end wall that the furnace's breast fills, so the furnace is the end
+   of the room and not a thing behind a wall.
+3. **The nave's frames are not evenly spaced** (z = -33, -24, -8, 0, 7.5, 18, 31, 39): an even eight-metre step put a stanchion in
+   three doorways.
+4. **Lamps**: the charge bank got two hall lamps of its own (the guide's way across it was dark), and each host hangs one lamp over
+   its plate and one or two more, fewer than the "two over the racks" style counts in 11.5.
+5. **Bench 5's label** still reads "What Is Made" (unchanged, as required); its room is the charge bank.
+6. **The far country** has the ore bridge standing over the ore stock inside the walk (on closed ground) and a gasholder past it,
+   where the spec put the bridge past the walk.
+
+Archived: `archive/2026-11-13/site-kettle/` (the old `kettle.js`, `kettle/terrain.js`, `plant.js`, `stations.js`, `host-plan.js`,
+`world-data/kettle.json`, `tools/gen-kettle-layout.mjs`, `tools/verify-kettle.mjs`), with a README naming what replaced each.
+
+### 11.11 What is weak
+
+- **The cover mask's shader has never been compiled.** `lib/cover.js` patches stock materials with new GLSL; no Node check can compile
+  it and no validator was available. Its patch points are checked to land and its logic is mirrored in JS (`cover.at`) and checked, but a
+  typo in the GLSL would show as a world that fails to draw at `3D On`. This is the first thing to look at.
+- **Brightness is a guess.** Lamp intensities, the per-room sky residual (0.03 to 0.24) and the furnace's source were set by
+  reasoning. The halls may be too dark or the bays too flat. The numbers are in `works-plan.js` (`sky`), `works.js` (`HALL_LAMP`,
+  `AISLE_LAMP`), `stations.js` (`BAY_LAMP`) and `plant.js`.
+- **The shafts are faint prisms** (opacity 0.045) from each opening to where the mask says the light lands; whether they read as
+  dusty light or as a film is not known.
+- **Walls are plain slabs.** Brick and ribbed sheet are textures on boxes: no piers, no window reveals, no gutters. The roofs are flat
+  slabs with a ridge ventilator on the nave, not pitched.
+- **The yard is bare** on purpose (pad, lamps, the track, the two heaps), and the works' north and east sides outside are walkable and
+  empty.
+- **The refining bay reads R5** and the charge bank R6: both are open toward a door or the nave's railing. They pass; they are the
+  least enclosed.
+- **Machinery is blocky** next to Ligar's plant: tanks, vessels, racks and frames are boxes and cylinders, with one I-section kit.
+- **The ramps have no handrails** except where they run beside a drop, and no surface of their own.
+
+### 11.12 The owner's viewing list
+
+1. **The landing, at the spawn (0, 76), facing north.** In view: the end wall of the works with one tall door in it, the stores'
+   lower roof to its right and the scale bay's to its left, the furnace top, two stoves and the stack standing over the roof behind,
+   the slag tip with its trestle to the left, the ore bridge far right. No bench. Failed if: a plate is in view, the works reads as
+   a shed on a plain rather than the thing the site is, or the door is hard to find.
+2. **In the charge door (0, 46), looking up the nave.** In view: the crane aisle 82 m long, the crane across it, lamps down its
+   middle, the charge bank's railing high on the right, light across the upper air from the left, and the tap hole's fire at the far
+   end. Failed if: it is as bright as the yard, pitch black, or a bench is in view.
+3. **First sight of Bench 1: in the stores door (6, 34), facing east.** In view: racks the length of the wall on the left with the
+   plate in front of them under its lamp, pallets, the sorting counter on the right. Failed if: the plate looks like furniture in an
+   empty room, or the roof presses on the lean-in view.
+4. **At Bench 2's plate (-16.4, 29), facing the plate.** In view: the sealed pot on the weighbridge behind the plate under its hoist
+   frame, the indicator column to the left. Then turn round: the door to the nave. Failed if: the frame's legs cross the plate's view.
+5. **At the top of the cabin ramp (-17, -8), then at Bench 3's plate.** In view: the recipe board behind the plate, relay cabinets
+   left, the gauge desk under a long window on the right, and through the window the nave and the charge bank beyond. Failed if: the
+   window shows only a wall, or the cabin does not read as higher than the works floor.
+6. **The lowest ground: at the foot of the sump ramp (-28, -8), then at Bench 4's plate.** In view: a cellar, tank bottoms coming
+   through the ceiling over a walled basin behind the plate, the thickener and dosing tank in the back corners. Failed if: it is not
+   plainly below the works, or it is lit like the rooms above.
+7. **The highest ground: at the top of the charge ramp (9, 2), facing north, then at the railing looking down into the nave.**
+   In view: the bank's floor, three bunkers on the far wall with the plate under the middle one, stock bays along the right, the skip
+   rails climbing away; from the railing, the nave 3.2 m below. Failed if: the drop is not felt, or the player can step off it.
+8. **At Bench 6's plate (24.4, 15), facing the plate.** In view: the long acid tank and the rinse tank along the wall under a gantry
+   with three burettes hanging over the acid, fume risers either side. Failed if: it reads as the refining bay again.
+9. **In the cast house at the pit's railing (11, -53), looking east and down.** In view: the tapping pit under its hood, the runner
+   coming over the lip to the ladle on its car, the pig bed, the plate against the far-left wall. Then walk down the ramp to
+   Bench 7. Failed if: the pit cannot be seen into from above, or the ramp's turn is confusing.
+10. **In the refining bay's door (-12, -49), facing west.** In view: two vats under the manifold on the left wall with the plate in
+    front of them, the settling cone, the stack of bars. Failed if: the plate faces a wall with nothing on it.
+11. **The Golem's ground: at (0, -40.5), facing north.** In view: the cast house floor, open, the furnace's brick breast filling the
+    end wall with the tap hole and its fire low in the middle, the runner turning away to the right. Failed if: a stanchion, lamp or
+    truss stands between the player and where the Golem will stand, or the roof feels low.
+12. **Outside, at (-45, 50), facing north-west.** In view: the slag tip's slope close by, closed; the works' west side with the
+    louvred bands high in the nave's wall. Failed if: the player can walk onto the tip, or the works' wall here is black in daylight.

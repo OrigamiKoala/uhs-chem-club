@@ -157,6 +157,18 @@ export function buildWorks(w) {
       if (o.kind === 'window') {
         wall(v, o.side, o.lo, o.hi, yBot, o.sill);
         wall(v, o.side, o.lo, o.hi, o.head, v.top);
+        // Glazed once, on the plane itself, by the room that names the window: a pane in a steel frame, a mullion every 2 m.
+        if (other && v.id < other.id) {
+          const alongZ = SIDE[o.side].along === 'z';
+          const [x, z] = onSide(v, o.side, (o.lo + o.hi) / 2, 0);
+          const hgt = o.head - o.sill, yc = (o.sill + o.head) / 2, len = o.hi - o.lo;
+          k.box(fittings, alongZ ? [0.03, hgt, len] : [len, hgt, 0.03], M.glass, [x, yc, z], null, false);
+          for (let m = o.lo; m <= o.hi + 0.01; m += 2) {
+            const [mx, mz] = onSide(v, o.side, Math.min(o.hi - 0.04, Math.max(o.lo + 0.04, m)), 0);
+            k.box(fittings, alongZ ? [0.1, hgt, 0.08] : [0.08, hgt, 0.1], M.darkSteel, [mx, yc, mz], null, false);
+          }
+          for (const y of [o.sill + 0.04, o.head - 0.04]) k.box(fittings, alongZ ? [0.12, 0.08, len] : [len, 0.08, 0.12], M.darkSteel, [x, y, z], null, false);
+        }
         continue;
       }
       if (v.top - top > 0.05) wall(v, o.side, o.lo, o.hi, top, v.top);
@@ -293,6 +305,8 @@ export function buildWorks(w) {
   hang('sump-ramp', -28, -3, 1.3);
   hang('foot', 9, 24, 1.6);
   hang('charge-ramp', 9, 12, 5.6, HALL_LAMP);
+  hang('charge', 11, -4, 5.4, HALL_LAMP);
+  hang('charge', 12, -19, 5.4, HALL_LAMP);
   hang('pit-ramp', 19, -40, 1.6);
   hang('pit-landing', 28, -41, 1.6);
 

@@ -25,7 +25,7 @@
  * THE HEAPS. The slag tip and the ore stock are in the height field and closed by a ring of colliders: they are walls.
  */
 
-import { makeWorkings } from '../lib/workings.js';
+import { makeWorkings, SIDE } from '../lib/workings.js';
 
 /** The walk is this square about the origin (the stage's bound for every Learn world). */
 export const WALK = 100;
@@ -201,10 +201,33 @@ export function makeWorksPlan(data) {
     return { boxes, openings };
   }
 
+  /**
+   * The guide's way, squared up to the doors: the shared layer's route goes from the middle of one doorway to the
+   * middle of the next, which cuts a doorway's corner when the last leg came at it from the side. Here every doorway is
+   * crossed along its own axis: a point a stride before it and a stride after.
+   */
+  function routeTo(fx, fz, tx, tz) {
+    const pts = work.routeTo(fx, fz, tx, tz);
+    const doors = [];
+    for (const v of work.volumes) for (const o of v.openings) if (o.pass !== false) doors.push({ p: work.doorPoint(v, o), n: SIDE[o.side].dir });
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const [x, z] = pts[i];
+      const d = doors.find(q => Math.abs(q.p[0] - x) < 1e-6 && Math.abs(q.p[1] - z) < 1e-6);
+      if (!d) { out.push(pts[i]); continue; }
+      const a = [x + d.n[0] * 1.6, z + d.n[1] * 1.6], b = [x - d.n[0] * 1.6, z - d.n[1] * 1.6];
+      const prev = out[out.length - 1];
+      const aFirst = Math.hypot(a[0] - prev[0], a[1] - prev[1]) < Math.hypot(b[0] - prev[0], b[1] - prev[1]);
+      out.push(aFirst ? a : b, [x, z], aFirst ? b : a);
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+
   /** The bounding rectangle of the whole works. */
   const bounds = work.volumes.reduce((b, v) => ({
     minX: Math.min(b.minX, v.rect.minX), maxX: Math.max(b.maxX, v.rect.maxX), minZ: Math.min(b.minZ, v.rect.minZ), maxZ: Math.max(b.maxZ, v.rect.maxZ)
   }), { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity });
 
-  return { ...work, hills, hillsHeight, ringColliders, topOf, doorTop, coverSpec, bounds };
+  return { ...work, routeTo, hills, hillsHeight, ringColliders, topOf, doorTop, coverSpec, bounds };
 }

@@ -280,7 +280,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `three/lib/cover.js`: `coverLightChunks` is Ligar's sun-and-sky removal, lifted (Ligar's shader text is unchanged); `makeCover({ sun, boxes, openings })` is the same mask for stock
   materials and `THREE.Fog`, with a per-box `sky` residual, a normal `push` so the outside face of a wall on a box's own plane stays lit, and `openings` (roof slots, windows, doorways)
   through which the sun still reaches a covered fragment: a light shaft with no shadow map. Call `cover.applyTo(scene)` after the build and again for late materials (a deployed
-  instrument). The mask holds 24 boxes and 8 openings; the counts size shader arrays, so they are fixed.
+  instrument). The mask holds 20 boxes and 8 openings; the counts size shader arrays, so they are fixed (about 80 uniform vectors: a handset's fragment shader has few to spare). **Its GLSL has not been compiled by any check: no Node test can, so the first run at `3D On` is its test.**
   `tools/lib/world-shape-checks.mjs`: bench ground span, housing, shared layouts, one circle, two columns, plates in view, the flood fill, and low bodies over walkable cells
   (single floor). `tools/world-shape.mjs` prints through it; a rebuilt world's `verify-<world>.mjs` calls it as checks. Traps: the cover test at a wall's own plane reads covered
   without `push`; a shaft needs a real hole in the roof or wall as well, or a desktop's shadow map closes it.
@@ -290,6 +290,15 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   and `ice-wall` landmarks on both banks and across the end; the Undertow is fought on the east bank with that ice behind it (`BOSS_ARENA_SPOTS['boss-undertow']`, species `the undertow`, rig in
   `boss-models.js`). Seven hosts on a 44 m ring, keyed `site-N` = Bench N (`host-plan.js`): chart house, tank bay, pump house, cutting yard, boiler house, dosing station, distillery. No field points.
   A quest with a world under it ignores a leftover `ROOM` export (the engine deploys onto the host's bench; `verify:bench` ignores it for walkable units).
+- **Kettle** (`unit07`, `three/kettle.js` + `kettle/`, `tools/gen-kettle-layout.mjs`, `tools/verify-kettle.mjs`; site rebuilt 2026-11-13, `docs/plans/kettle-world.md` section 11): ONE IRONWORKS BUILDING.
+  `kettle/works-plan.js` (pure data on `lib/workings.js`) declares 17 rooms on a 2 m grid, the doors between them and two heaps outside; `terrain.js` is the one height field (a room's floor inside, the soda
+  flat and the heaps outside; the terrain mesh is cut away under every room); `works.js` builds the shell (floors, walls `WALL_T` thick standing inside their own room, door headers, kerbs and railings, roofs;
+  `phys: 'ground'`) and the fittings (stanchions, trusses, the crane, aisle lamps); `stations.js` furnishes one bay per bench (`host-plan.js` names the room, the plate and its facing; a builder is handed its room
+  in the host frame); `plant.js` is the furnace behind the cast house, the track, the heaps' plant, the far country and the stack's smoke. Floors: charge bank +3.2 m, control cabin +1.2, works floor 0, tapping
+  pit -2.2, sump cellar -2.4. A door with `pass: false` is a railing over a drop (`rail`) or a window. The Golem is fought on the cast house floor (`BOSS_ARENA_SPOTS['boss-golem']`). Light: the cover mask
+  (`lib/cover.js`) covers every room with a per-room sky residual; the sun comes in through the charge door and three louvred bands (`CLERESTORY`), which are real holes in the walls too; the iron in the runner
+  (`M.iron`) is the one fire, a source in the three-light pool. Traps met: a ramp is entered only at its ends (a side door onto a graded floor is a ledge); a stanchion must not stand in a doorway (the frames'
+  positions are listed, not stepped); the arena's 7 m ring must clear the spout's collider under the tap hole; the bench's own parts read as bay intrusions unless `bakeStatics` is stubbed as `verify:bench` does.
 - **Avalon ship** (`three/ship.js` over `three/ship/`, `ship-rooms.js`, `ship-graph.js`): built from a
   shared kit; doors open as you approach, portals are arches; `SHIP_ANCHORS` derived from the graph and
   must stand on clear deck; every doorway names its destination on both faces; lighting rooms declare
@@ -313,8 +322,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   bolts leave a boss's own `muzzle`, armour plates are struck off at wound thresholds (`monster.armour(mesh, at)`, sparks on
   `'plate'`), it rears now and then with no bolt and no cost. The five bodies (hopper, lantern-eater, warden, compressor,
   crucible) are articulated rigs in `learn/engine/boss-models.js` (`buildBossRig`, `attackPose`; weathered plate maps, filament
-  lenses only, no point lights), posed by `CombatMonster3D.update` from the fight state. **Kettle's golem has no arena yet** (no
-  walkable world): it still uses its old model and the corner toy in the foundry room. `verify:arena` holds the table's ground in
+  lenses only, no point lights), posed by `CombatMonster3D.update` from the fight state. Kettle's golem is fought on the cast house floor of the works (`verify:arena`). `verify:arena` holds the table's ground in
   all five worlds, the bodies, the gaze and the shake.
 - **Mobile:** twin sticks (`three/touch-controls.js`, `syncTouchControls` in `stage.js`) show whenever the
   walk is the foreground — on planets and at a built bench (`bench-deployed`) — and hide for modals,

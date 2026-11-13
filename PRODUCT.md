@@ -152,7 +152,7 @@ A world is not only quests. The wiring for a new one is about fifty files; the r
 
 - **Prefer stages over benches once a world exists.** A new bench inside a built world needs a site in the layout generator, its JSON, a host, and about ten wiring files, and cannot be checked without walking to it. Ligar chose to add alloys, five-domain shapes and formal charge as stages on the benches they belonged to, and every one of those landed safely.
 - **Every bench is part of its world's machinery** and is checked from the lean-in view: the bay envelope stays clear, hills are never climbed, only lamps are lit. These rules are in `engine-and-worlds.md`; the world's verify script measures them.
-- **A world without ground yet (Kettle)** builds its bench in its own room at `3D On`. Ship it that way rather than blocking the quests on terrain.
+- **A world without ground yet** builds its bench in its own room at `3D On` (as Kettle did before its site was built). Ship it that way rather than blocking the quests on terrain.
 
 ## 3. What a bench module has to be
 
@@ -267,6 +267,10 @@ Each row is a defect that was built, found and fixed. Do not build it again.
 | Generic ball faces | The hub and arm read "X" and "A" | Name pieces in earned words ("Hub", "Arm") |
 | An option object silently drops keys | `wells(...)` ignored the disc scale | Check that every option actually reaches the drawing |
 | Disposal recursion | `Table3D.dispose()` called back into the stage and froze the router | Flag the table disposed before unmounting the scene |
+| A roofed room lit like the yard | A world on stock materials has no cover mask, so on a phone (no shadow map) the sun and sky light the inside of a building | Put every roofed room in the world's cover mask (`three/lib/cover.js`) and check, in the world's verify script, that the sun and sky are taken away at each bench |
+| A building's outside wall gone dark | The outside face of a wall lies on the covered room's own plane, so the cover mask read it as indoors | Test cover a little in front of the surface along its normal (`makeCover` `push`); keep the boxes just inside the wall planes |
+| The guide cutting a door's corner | A route from door middle to door middle clipped the jamb when the last leg came from the side | Cross every doorway along its own axis: a point a stride before it and a stride after (`kettle/works-plan.js` `routeTo`) |
+| A leaning member over walkable floor | A hoist frame's raking legs and a runner's spout stood over floor the walk could reach, at shin height | A host's collider covers the plan of everything under 2.4 m, not only its base; `lowBodies` in `tools/lib/world-shape-checks.mjs` finds the rest |
 
 ### Teeter (equilibrium) additions
 
