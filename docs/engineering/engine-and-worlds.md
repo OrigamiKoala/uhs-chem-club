@@ -272,6 +272,18 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques
   (`SKY_RENDER_ORDER`; a world's opaque material must not set `depthWrite:false`).
+- **Shared site layers (world-distinction groundwork, 2026-11-13):** three modules a rebuilt world's site stands on; every option is opt-in and the defaults are Ligar's.
+  `three/lib/workings.js` (`makeWorkings(volumes, opts)`, pure data, no THREE): rooms as axis-aligned volumes with flat or graded floors that meet at doorways; it derives wall
+  segments, wall colliders, terrain holes, cover boxes and the guide's door-by-door route. It is the world-neutral half of `ligar/mine-plan.js`, which now builds from it and keeps
+  the hills, the ring colliders and the basalt constants. Opt-ins: a per-volume `roof`, `openKinds`, `outdoorDoors` (a door in a building's wall is a way in from open ground), and an
+  opening with `pass: false` (a railing over a drop or a window: no wall drawn, the walk still held out, never routed through).
+  `three/lib/cover.js`: `coverLightChunks` is Ligar's sun-and-sky removal, lifted (Ligar's shader text is unchanged); `makeCover({ sun, boxes, openings })` is the same mask for stock
+  materials and `THREE.Fog`, with a per-box `sky` residual, a normal `push` so the outside face of a wall on a box's own plane stays lit, and `openings` (roof slots, windows, doorways)
+  through which the sun still reaches a covered fragment: a light shaft with no shadow map. Call `cover.applyTo(scene)` after the build and again for late materials (a deployed
+  instrument). The mask holds 24 boxes and 8 openings; the counts size shader arrays, so they are fixed.
+  `tools/lib/world-shape-checks.mjs`: bench ground span, housing, shared layouts, one circle, two columns, plates in view, the flood fill, and low bodies over walkable cells
+  (single floor). `tools/world-shape.mjs` prints through it; a rebuilt world's `verify-<world>.mjs` calls it as checks. Traps: the cover test at a wall's own plane reads covered
+  without `push`; a shaft needs a real hole in the roof or wall as well, or a desktop's shadow map closes it.
 - **Mirrowen** (`unit06`, `three/mirrowen.js` + `mirrowen/`, `tools/gen-mirrowen-layout.mjs`, `tools/verify-mirrowen.mjs`): a tidal shelf. A round basin (15 m) at the middle and a canal 16 m wide
   running north out of it are ONE signed distance (`terrain.js` `waterSD`); a closed ring of colliders (`mirrowen.js` `waterRing`) keeps the walk out, and the sea is a ring laid over the shelf's
   drowned edge beyond the walk. The canal's far end (north of `water.frozenZ`) is the Fifth's ice: a sheet (`buildWaterGeometry(.., 'ice')`), two hulls (`plant.js` `buildHull`, listed in the JSON's `hulls`)

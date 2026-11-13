@@ -233,7 +233,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 | World | Spec | Ground | Hosts | Plant and vista | Checks | Owner has seen it |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Groundwork G1 to G5 | | | | | | |
+| Groundwork G1 to G5 | n/a | n/a | n/a | n/a | 2026-11-13 (G1 to G5 built; see below) | n/a |
 | Kettle | | | | | | |
 | Lodestone | | | | | | |
 | Teeter | | | | | | |
@@ -248,6 +248,15 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Groundwork, 2026-11-13 (branch `site/kettle`).** G1 `src/three/lib/workings.js`, G2 `src/three/lib/cover.js`,
+G3 `tools/lib/world-shape-checks.mjs` are built; G4 was already done; G5 is the "Shared site layers" entry in
+`docs/engineering/engine-and-worlds.md`. Ligar is unchanged: its plan outputs (walls, colliders, holes, cover
+boxes, ring, routes) compare identical before and after, its cover shader text hashes the same,
+`verify:ligar` is green and `perf-worlds.mjs ligar` prints 566 draws and 867k triangles as before.
+The run was stopped by the owner after this phase: **no world is rebuilt yet, and `makeCover` and the
+workings opt-ins (`roof`, `outdoorDoors`, `pass: false`) have no world using them**, so they are checked only by
+reading and by Ligar's defaults. The first rebuild should expect to adjust them.
 
 ---
 
