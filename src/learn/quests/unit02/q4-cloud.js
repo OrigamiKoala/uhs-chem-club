@@ -45,9 +45,8 @@ export const meta = { stageCount: 5 };
 export const VOCABULARY = [
   { term: /\bd orbitals?\b/i, introducedAt: 5 },
   { term: /\bp orbitals?\b/i, introducedAt: 4 },
-  { term: /\bs orbitals?\b/i, introducedAt: 4 },
+  { term: /\bs orbitals?\b/i, introducedAt: 2 },
   { term: /\bnodes?\b/i, introducedAt: 4 },
-  { term: /\bwave.particle duality\b/i, introducedAt: 3 },
   { term: /\bstanding waves?\b/i, introducedAt: 3 },
   { term: /\borbitals?\b/i, introducedAt: 2 },
   { term: /\bprobabilit(?:y|ies)\b/i, introducedAt: 2 }
@@ -58,7 +57,7 @@ export const BUILDS_ON = ['unit02/q2-photon', 'unit02/q3-lines'];
 const SPEAKER = 'Vess';
 
 const QUEST_KEY = 'unit02/q4-cloud';
-const GUESS_LABEL = { ring: 'On a ring', ball: 'In a ball', lobes: 'In two lobes' };
+const GUESS_LABEL = { ring: 'On a ring', ball: 'In a ball', lobes: 'Two lobes' };
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -87,10 +86,14 @@ const EMPTY_SLICE = 0.06;
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Electron Location',
-    // A PREDICT STAGE: the probe is not on the table yet. The guess is made first, here, and comes back with the test.
+    title: 'Where Is the Electron?',
+    // A PREDICT STAGE: the plate is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'A probe finds hydrogen\'s electron five hundred times: where do you think the dots land?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A measurement can find where an atom\'s electron is at one moment, and a dot marks the place. Older pictures of the atom drew the electron circling the nucleus on a fixed ring.'
+    },
+    prompt: 'Hydrogen\'s electron is located five hundred times: where do the dots land?',
     widget,
     table: cloudTable({
       pieces: [],
@@ -106,12 +109,12 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Drag one of the three guesses into the slot.',
-      'Picture the electron as you first met it, on the ladder and in the pictures of atoms, and ask where a camera left open would catch it.',
-      'There is no wrong guess yet; commit to the one you would bet on.'
+      'Drag one of the three cards into the slot.',
+      'Think where the dots would land if the electron circled on a ring, and where they would land if it did not.',
+      'A prediction is not graded, so choose the one you think is most likely.'
     ],
     check(state) {
-      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -119,9 +122,9 @@ export const STAGES = [
       if (token) remember(QUEST_KEY, token);
     },
     reward: {
-      log: 'Prediction locked in.',
+      log: 'Prediction made.',
       title: 'Prediction',
-      body: 'Early atomic models placed electrons on circular tracks. Next, repeated measurements test whether electrons follow fixed orbits or form probability clouds.'
+      body: 'Next, a plate marks where hydrogen\'s electron is found, measurement after measurement.'
     }
   },
 
@@ -135,8 +138,8 @@ export const STAGES = [
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": which film catches the most of the atom's electron dots?`
-          : 'Which film catches the most of the atom\'s electron dots?';
+          ? `You predicted "${GUESS_LABEL[guess]}": in which region round the nucleus is hydrogen's electron found most often?`
+          : 'In which region round the nucleus is hydrogen\'s electron found most often?';
       },
       widget,
       table: cloudTable({
@@ -145,29 +148,29 @@ export const STAGES = [
         zones: { slots: a.slots }
       }),
       hints: [
-        'Use "Fire" with Number of shots at 500, then lay a film on the plate.',
-        'Compare the count each film catches, and look at where on the plate the dots lie thickest.',
-        'Lay each of the four films in turn, note its count, and keep the film that catches the most.'
+        'Press "Measure" until the plate holds a few hundred dots, then lay a film on it.',
+        'Each film covers a region of the same area, so compare how many dots each one counts.',
+        'The region where the dots lie thickest is where the electron is most likely to be found.'
       ],
       check(state) {
         const t = state.table;
         const f = filmRead(t, 'a');
-        if (f.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Fire more shots first: a film cannot be judged from a few dots.' };
+        if (f.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Take more measurements first: a few dots do not show where most of them fall.' };
         if (!f.shape) return { ok: false, notYet: true, msg: 'Lay a film on the plate.' };
         const best = Math.max(...Object.keys(FILMS).map(k => catchOf(t, 'a', k)));
         if (f.caught === best) return { ok: true };
-        return { ok: false, msg: 'Another film catches more of the dots than this one.' };
+        return { ok: false, msg: `This film counts ${f.caught} of the ${f.fired} dots, and the dots lie thicker in another region.` };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'ball'
-          ? 'You predicted a ball, and the dots agreed. '
-          : 'The dots did not agree with your prediction, which is how a guess gets better. ';
+          ? 'Your prediction held. '
+          : 'The dots did not agree with your prediction. ';
         return {
-          log: 'A fuzzy ball, densest in the middle.',
+          log: 'A ball of dots, thickest in the middle.',
           title: 'Orbital',
-          body: `${verdict}One shot finds the electron in one place and the next finds it somewhere else, so all that can be said is the probability of finding it in each place. A region like this one, round and densest at the middle, is called an orbital.`,
-          model: { type: 'orbital', orbital: '1s', dots: 220, caption: 'Hydrogen\'s electron after many shots: a ball of dots, thickest in the middle. No path can be drawn through it.' }
+          body: `${verdict}Each measurement finds the electron somewhere else, so only the probability of finding it in each place can be given. The region where it is likely to be found is called an orbital (this round one is an s orbital).`,
+          model: { type: 'orbital', orbital: '1s', dots: 220, caption: 'Hydrogen\'s electron after many measurements: a ball of dots, thickest in the middle. No path can be drawn through it.' }
         };
       }
     };
@@ -179,36 +182,40 @@ export const STAGES = [
     const tiles = RING_STRINGS.map((pm, i) => ringTile(`s${pm}`, { x: 20 + i * 22, y: 9 }, pm));
     return {
       title: 'Waves That Fit',
-      prompt: 'Sort the six strings by whether they close into one clean ring on the track.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An electron in an atom behaves as a wave, with wavelengths measured in picometres (pm, a trillionth of a metre). A wave running round a ring lasts only if, after each lap, its crests land on its own crests; otherwise crests land on troughs (the lows of the wave) and the wave cancels itself.'
+      },
+      prompt: 'Which wavelengths make a wave that lasts on this ring?',
       widget,
       table: cloudTable({
         pieces: tiles,
         fixtures: [track.fixture],
         zones: {
           slots: track.slots,
-          trays: [tray('closes', 'Closes into one ring', { x: 110, y: 31 }, { w: 66, h: 18 }, 20), tray('smears', 'Smears into a band', { x: 110, y: 55 }, { w: 66, h: 18 }, 20)]
+          trays: [tray('closes', 'Lasts', { x: 110, y: 31 }, { w: 66, h: 18 }, 20), tray('smears', 'Cancels itself', { x: 110, y: 55 }, { w: 66, h: 18 }, 20)]
         }
       }),
       hints: [
-        'Use the track: drag a string onto it and look at what the laps do.',
-        'Compare a string whose laps draw one clean ring with one whose laps smear into a band.',
-        'A string closes only if a whole number of its wavelengths go round the track, so divide the track length by each wavelength.'
+        'Drag a wave onto the ring track and watch what its laps do.',
+        'Compare a wave whose laps all draw the same line with one whose laps spread into a band.',
+        'Work out how many wavelengths of each wave go round the track, and see what the waves that last have in common.'
       ],
       check(state) {
         const t = state.table;
         const ids = RING_STRINGS.map(pm => `s${pm}`);
-        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every string in a tray.' };
+        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every wave in a tray.' };
         const wrong = RING_STRINGS.find(pm => where(t, `s${pm}`) !== (ringFits(pm, RING_CIRCUMFERENCE_PM).fits ? 'closes' : 'smears'));
         if (wrong === undefined) return { ok: true };
-        return { ok: false, msg: `The ${wrong} pm string is in a tray that disagrees with how its laps meet on the track.` };
+        return { ok: false, msg: `The ${wrong} pm wave is in a tray that disagrees with how its laps meet on the track.` };
       },
       reward: {
-        log: 'Only whole numbers of waves survive the lap.',
+        log: 'Only whole numbers of wavelengths last.',
         title: 'Standing Wave',
-        body: 'A wave on a ring survives only if a whole number of wavelengths fits, because non-integer laps meet out of phase and crests cancel troughs to zero. Whole numbers meet peak to peak, reinforcing into a permanent standing wave. Electrons follow this same rule: wave-particle duality.',
+        body: 'Only a whole number of wavelengths fits the ring; any other wave cancels itself. A wave that lasts like this is a standing wave.',
         model: {
           type: 'standing-wave',
-          caption: 'Why non-integers cancel: Lap 1 meets Lap 2 out of phase (crest cancels trough → zero). Whole numbers meet peak to peak, reinforcing into a permanent standing wave.'
+          caption: 'A wave that does not fit: the second lap\'s crests land on the first lap\'s troughs and cancel. A wave that fits: crests land on crests, lap after lap.'
         }
       }
     };
@@ -220,27 +227,31 @@ export const STAGES = [
     const v = viewFixture('view', { x: 104, y: 22 }, { slice: true });
     return {
       title: 'Two Lobes',
-      prompt: 'Find the view in which a slice through the middle of Sample C shows almost no dots.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Sample C holds another electron cloud. Measure dots, then turn the view with the joystick and switch on Slice to look through a thin slab.'
+      },
+      prompt: 'Where round the nucleus is this electron never found?',
       widget,
       table: cloudTable({ pieces: [], fixtures: [c.fixture, v] }),
       hints: [
-        'Use "Fire" at 500 shots, then move the joystick and use the Slice switch.',
-        'Compare the sides you look from, noting the direction in which the dots gather and the flat plane they never cross.',
-        'Move the joystick to turn and tilt the cloud until you look along the gap between its lobes, then switch Slice on and see whether the middle goes empty.'
+        'Press "Measure" until the plate holds a few hundred dots, then turn the cloud with the joystick; the Slice switch keeps only a thin slab through the nucleus.',
+        'Compare the cloud from several sides, and notice where the dots gather and where there are none.',
+        'A slab through the nucleus that holds no dots is a place the electron is never found, so look for the view whose slice is empty.'
       ],
       check(state) {
         const t = state.table;
         const r = plateRead(t, 'c');
-        if (r.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Fire more shots first: an empty slice cannot be found among a few dots.' };
+        if (r.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Take more measurements first: a few dots do not show where none fall.' };
         if (!r.slice) return { ok: false, msg: 'The slice is off, so every dot is showing.' };
         if (r.shown.length <= EMPTY_SLICE * r.fired) return { ok: true };
-        return { ok: false, msg: 'That slice still holds dots.' };
+        return { ok: false, msg: `This slice through the nucleus still holds ${r.shown.length} dots, so the electron is found there.` };
       },
       reward: {
         log: 'Two lobes, and a flat plane with nothing in it.',
         title: 'p Orbital',
-        body: 'A p orbital has two lobes with a node between them, a flat plane through the nucleus where the electron is never found. The round orbitals met so far are s orbitals, and the two-lobed ones are p orbitals.',
-        model: { type: 'orbital', orbital: '2pz', dots: 260, slice: true, caption: 'A p cloud: two lobes of dots with an empty nodal plane between them.' }
+        body: 'The cloud has two lobes with a flat plane between them where the electron is never found: a node. This two-lobed orbital is a p orbital.',
+        model: { type: 'orbital', orbital: '2pz', dots: 260, slice: true, caption: 'A p orbital: two lobes of dots with an empty plane, the node, between them.' }
       }
     };
   })(),
@@ -252,7 +263,7 @@ export const STAGES = [
     const v = viewFixture('view', { x: 128, y: 15 });
     return {
       title: 'Five Clouds',
-      prompt: 'Put each cloud in the tray that names its shape.',
+      prompt: 'What shape is each of the five orbitals?',
       widget,
       table: cloudTable({
         pieces: cards,
@@ -266,9 +277,9 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Move the joystick to view the clouds from different sides, then drag each cloud into a tray.',
-        'Compare each cloud with the two-lobed shape you already know, and look for extra lobes or a ring.',
-        'Count the lobes from the clearest side of each cloud, and look for a ring round the middle of the two-lobed one.'
+        'Turn all five clouds with the joystick, then drag each one into a tray.',
+        'Compare each cloud with the two-lobed p orbital, and look for extra lobes or a ring.',
+        'One side can hide a lobe behind another, so decide from the view in which each cloud shows the most separate parts.'
       ],
       check(state) {
         const t = state.table;
@@ -277,15 +288,15 @@ export const STAGES = [
         const name = { 'two lobes': 'two', 'four lobes': 'four', 'two lobes and a ring': 'ring' };
         const wrong = ids.find(id => where(t, id) !== name[shapeOf(t.pieces[id].props.orbital)]);
         if (!wrong) return { ok: true };
-        return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that does not match the lobes it shows from its clearest side.` };
+        return { ok: false, msg: `${t.pieces[wrong].label} shows a different number of lobes from another side than its tray names.` };
       },
       reward: {
         log: 'Four lobes, four lobes, and one with a ring.',
         title: 'd Orbitals',
-        body: 'From the third shell up there are five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. They matter most in the transition metals, which this world will reach before it ends.',
+        body: 'The two-lobed cloud is a p orbital. The other four—three with four lobes here, and one with two lobes and a ring round its middle—are d orbitals.',
         model: {
           type: 'd-orbitals',
-          caption: 'The five d orbitals: four have four lobes, and one has two lobes with a center ring.'
+          caption: 'The five d orbitals: four have four lobes, and one has two lobes with a ring round the middle.'
         },
         last: true
       }
@@ -295,8 +306,8 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  2: ['Lay a film on the plate to count the dots it catches.'],
-  3: ['Try a string on the track.'],
+  2: ['Lay a film on the plate to count the dots inside it.'],
+  3: ['Try a wave on the track.'],
   4: ['Move the joystick to view the cloud from another side.'],
   5: ['Move the joystick to view the clouds from different sides, then drag each cloud into a tray.']
 };
@@ -310,19 +321,19 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An electron has no fixed orbit. It occupies an orbital, a probability cloud whose shape depends on energy: spherical for s, two-lobed for p, and multi-lobed or ringed for d. Each orbital represents a standing electron wave.',
+      body: 'An electron has no fixed path. It is found in an orbital, a region whose shape is round for s, two-lobed for p, and four-lobed or ringed for d. Each orbital is a standing wave of the electron.',
       orbitals: {
         types: ['s', 'p', 'd'],
-        caption: 'Fundamental orbital boundary surfaces: spherical s, two-lobed p, and multi-lobed d orbitals.'
+        caption: 'The shapes of s, p and d orbitals.'
       }
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Chemical bonds form when these atomic orbitals overlap, and molecular geometry follows directly from how the orbitals point in space.'
+      body: 'Atoms bond where their orbitals overlap, so the directions the orbitals point in set the shapes of molecules.'
     },
     {
       heading: 'Next',
-      body: 'Each orbital has a specific size, shape, and orientation. The next bench assigns each electron four quantum numbers that define its state and spin.'
+      body: 'Next: three numbers that pick out each orbital, and how many electrons one orbital can hold.'
     }
   ]
 };

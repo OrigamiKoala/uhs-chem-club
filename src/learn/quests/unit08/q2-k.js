@@ -1,22 +1,18 @@
 /**
  * Unit 8 · Bench 2 — The Number That Holds (q2-k)
  *
- * Teeter's salt pans, on the pans kit (`table/kits/pans.js`, the ratio instruments in `pans-ratio.js`). A pan is a vessel with a bar for
- * every substance; "Settle" lets it reach equilibrium. Eight stages and ONE click: the belief that equilibrium means equal amounts.
+ * Teeter's equilibrium vessels, on the pans kit (`table/kits/pans.js`, the ratio instruments in `pans-ratio.js`). A vessel has a bar
+ * for every substance; "Settle" lets it reach equilibrium. Seven stages:
  *
- *   1  PREDICT: where do three pans that began differently settle?
- *   2  TEST: lay tiles on the ratio rig so it reads the same on all three pans   -> the ratio holds; K (A and B)
- *   3  the same, for H₂ + I₂ ⇌ 2 HI, where a coefficient becomes a power         -> Kc
- *   4  the same, for CaCO₃(s) ⇌ CaO(s) + CO₂(g), where the amount of solid varies -> solids are left out; Kp
- *   5  typed: K to two significant figures for 2 NO₂ ⇌ N₂O₄ from its bars
- *   6  pick the pan that goes nearly to completion                                -> large K
- *   7  pick the pan that will make the least product (K is printed on each pan)   -> small K
- *   8  lay the K card that belongs to each of three pans (two cards are slips)
+ *   1  PREDICT: where do three vessels that began differently settle?
+ *   2  TEST: lay particles on the ratio board so it reads the same on all three vessels -> K (butane ⇌ isobutane)
+ *   3  the same, for H₂ + I₂ ⇌ 2 HI, where a coefficient becomes a power               -> Kc
+ *   4  the same, for CaCO₃(s) ⇌ CaO(s) + CO₂(g), where the amount of solid varies      -> solids are left out; Kp
+ *   5  typed: K to two significant figures for 2 NO₂ ⇌ N₂O₄ (with worked case in briefing)
+ *   6  pick the vessel whose reaction goes nearly to completion                        -> large K
+ *   7  predict which vessel will make the least product from its K (before settling)   -> small K
  *
- * THE WRONG MODEL IS ON THE TABLE. Pan 3 begins with equal amounts of A and B and settles with twice as much B; no arrangement of tiles that
- * says "equal amounts" ever reads the same on the three pans.
- *
- * The rig prints a reading for whatever is laid on it and never says which arrangement is the one to look for; the planner is
+ * The ratio board prints a reading for whatever is laid on it and never says which arrangement is right; the planner is
  * `engine/eqdata.js` (`rigReading`, `settleAmounts`). Both arrangements that give a steady number are accepted (a ratio and its inverse).
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
@@ -24,13 +20,13 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { pansTable, selectorFixture, note, tag, pieceIn, dialValue } from '../../table/kits/pans.js';
+import { pansTable, note, tag, pieceIn, dialValue } from '../../table/kits/pans.js';
 import { vesselFixture, rigParts, tile, rigRead, vslRead } from '../../table/kits/pans-ratio.js';
-import { K_SYSTEMS, readingsAgree, fmtNum, kSlips, settleAmounts } from '../../engine/eqdata.js';
-
+import { K_SYSTEMS, readingsAgree, fmtNum, kSlips } from '../../engine/eqdata.js';
 import { clipFixture } from '../../table/kits/pans-clips.js';
-import { choiceFixture, pickable, pickColumns } from '../../table/kits/pans-choice.js';
-export const meta = { stageCount: 8 };
+import { choiceFixture, pickColumns } from '../../table/kits/pans-choice.js';
+
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bK\b/, introducedAt: 2 },
@@ -41,7 +37,6 @@ export const VOCABULARY = [
   { term: /\bsmall K\b/i, introducedAt: 7 }
 ];
 
-/** The pans' words are q1's: equilibrium, reversible reaction, double arrow. */
 export const BUILDS_ON = ['unit08/q1-both'];
 
 export function toolNoteFor() { return null; }
@@ -49,37 +44,29 @@ export function toolNoteFor() { return null; }
 const widget = { type: 'table', label: 'The bench' };
 const QUEST_KEY = 'unit08/q2-k';
 const GUESS = {
-  equal: 'In every vessel, A and B settle at equal amounts',
-  same: 'All three vessels settle with the same amount of A and the same of B',
+  equal: 'In every vessel, butane and isobutane settle at equal amounts',
+  same: 'All three vessels settle with the same amount of butane and the same of isobutane',
   diff: 'Every vessel settles somewhere different, with nothing in common',
-  gone: 'In every vessel, all the A is used up'
+  gone: 'In every vessel, all the butane is used up'
 };
 
-const AB = K_SYSTEMS.ab;
+const BUT = K_SYSTEMS.butane;
 const HI = K_SYSTEMS.hi;
 const CA = K_SYSTEMS.caco3;
 const NO = K_SYSTEMS.n2o4;
 
-/* ---------------------------------------------------------------- the data each stage's pans start from (inputs; every figure shown is the planner's) */
+/* ---------------------------------------------------------------- the data each stage's vessels start from */
 
-const AB_PANS = [{ start: { A: 1.2 } }, { start: { B: 1.8 } }, { start: { A: 0.3, B: 0.3 } }];
+const BUT_PANS = [{ start: { butane: 1.2 } }, { start: { isobutane: 1.8 } }, { start: { butane: 0.3, isobutane: 0.3 } }];
 const HI_PANS = [{ start: { H2: 1, I2: 1 } }, { start: { HI: 1 } }, { start: { H2: 0.6, I2: 1.4, HI: 0.5 } }];
 const CA_PANS = [{ start: { CaCO3: 1, CaO: 0 } }, { start: { CaCO3: 0.6, CaO: 0.4 } }, { start: { CaCO3: 0.2, CaO: 0.8 } }];
 const NO_PAN = [{ start: { NO2: 0.736 } }];
-/** Four pans of A ⇌ B that begin with 1.00 mol/L of A alone; only K differs. */
+/** Four vessels of Reactant ⇌ Product that begin with 1.00 mol/L of Reactant alone; only K differs. */
 const K_BIG = [0.7, 2e5, 6e-4, 5];
 const K_SMALL = [7e4, 0.3, 3e-6, 4];
 const BIG_PICK = 2;
 const SMALL_PICK = 3;
-const levelPans = Ks => Ks.map(K => ({ start: { A: 1 }, K }));
-
-/** Sealed pans: three different reactions, already settled, each with its K card. */
-const SEALED = [
-  { system: 'ab', start: { A: 1 } },
-  { system: 'a2b', start: { A: 1.1 } },
-  { system: 'abc', start: { A: 0.5, B: 0.8 } }
-];
-const sealedEq = i => settleAmounts(K_SYSTEMS[SEALED[i].system], Object.fromEntries(Object.keys(K_SYSTEMS[SEALED[i].system].species).map(s => [s, SEALED[i].start[s] ?? 0])));
+const levelPans = Ks => Ks.map(K => ({ start: { R: 1 }, K }));
 
 /* ---------------------------------------------------------------- shared pieces of a stage */
 
@@ -89,7 +76,7 @@ const TABLE_H = 72;
 const PANS_AT = { x: 62, y: 22 };
 const RIG_AT = { x: 62, y: 57 };
 
-/** The vessels, the rig and its tiles for a stage that reads the rig on three pans. */
+/** The vessels, the ratio board and its particle tiles. */
 function rigTable(system, pans, tiles, { top = 1, bottom = 1 } = {}) {
   const rig = rigParts('rig', RIG_AT, { vsl: 'pans', top, bottom });
   return pansTable({
@@ -99,16 +86,16 @@ function rigTable(system, pans, tiles, { top = 1, bottom = 1 } = {}) {
   }, { h: TABLE_H });
 }
 
-/** What the rig reads on the three pans, as a sentence. */
+/** What the ratio board reads on the three vessels, as a sentence. */
 const readingsText = r => {
   const v = r.readings.map(x => fmtNum(x, 3));
   return `${v.slice(0, -1).join(', ')} and ${v[v.length - 1]}`;
 };
 
-/** The check of the three rig stages: the pans must have settled, something laid, and the three readings must agree. */
+/** The check of the three ratio-board stages: settled, something laid, and the three readings agree. */
 function rigCheck(state) {
   const r = rigRead(state.table, 'rig');
-  if (!r.laid) return { ok: false, notYet: true, msg: 'Lay a card on the ratio board.' };
+  if (!r.laid) return { ok: false, notYet: true, msg: 'Lay a particle card on the ratio board.' };
   if (!r.settled) return { ok: false, notYet: true, msg: 'The ratio board prints nothing until the vessels have settled.' };
   if (readingsAgree(r.readings)) return { ok: true };
   return { ok: false, msg: `The ratio board reads ${readingsText(r)} on the three vessels.` };
@@ -124,27 +111,26 @@ export const STAGES = [
   {
     id: 's1-predict',
     title: 'Where Do They End?',
-    // A PREDICT STAGE: the pans are not on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'Which best describes the three vessels once each has settled?',
+    prompt: 'Three vessels start with different amounts: what do they have in common once settled?',
     widget,
     table: pansTable({
       pieces: [
-        tag('st1', 'Vessel 1 begins with only A', { x: 30, y: 12 }),
-        tag('st2', 'Vessel 2 begins with only B', { x: 76, y: 12 }),
-        tag('st3', 'Vessel 3 begins with equal amounts of A and B', { x: 122, y: 12 }),
+        tag('st1', 'Vessel 1 begins with only butane', { x: 30, y: 12 }),
+        tag('st2', 'Vessel 2 begins with only isobutane', { x: 76, y: 12 }),
+        tag('st3', 'Vessel 3 begins with equal amounts of butane and isobutane', { x: 122, y: 12 }),
         note('equal', GUESS.equal, { x: 30, y: 36 }),
         note('same', GUESS.same, { x: 78, y: 36 }),
         note('diff', GUESS.diff, { x: 30, y: 58 }),
         note('gone', GUESS.gone, { x: 78, y: 58 })
       ],
-      fixtures: [clipFixture('clip', { x: 126, y: 30 }, 'react', { title: 'A reaction starting', kf: 0.12, kr: 0.03, seed: 9, span: 36 , h: 22, w: 40 })],
+      fixtures: [clipFixture('clip', { x: 126, y: 30 }, 'react', { title: 'A reaction starting', kf: 0.12, kr: 0.03, seed: 9, span: 36, h: 22, w: 40 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 126, y: 57 }, size: { w: 36, h: 14 } }] }
     }, { h: TABLE_H }),
     hints: [
-      'Use the four cards and the slot.',
-      'Picture each vessel from its card, and ask what it would look like once it has settled.',
-      'Compare what the three vessels began with, and ask whether where they end should depend on that.'
+      'Drag one of the four prediction cards into the slot.',
+      'Picture each vessel from its starting card, and think about what it looks like once settled.',
+      'Compare what the three vessels began with, and ask whether where they end depends on that.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -166,22 +152,22 @@ export const STAGES = [
   {
     id: 's2-ratio',
     title: 'The Ratio Board',
-    get prompt() { return guessLine('Arrange cards on the ratio board into a ratio that comes out the same for all three settled vessels.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which ratio of amounts comes out the same for all three settled vessels?', recall(QUEST_KEY)); },
     widget,
-    table: rigTable('ab', AB_PANS, [['A', 1], ['B', 1]]),
+    table: rigTable('butane', BUT_PANS, [['butane', 1], ['isobutane', 1]]),
     hints: [
-      'Use the "Settle" key and the two cards.',
+      'Press "Settle", then place the particle cards above and below the line on the ratio board.',
       'Compare the three numbers the ratio board prints under the vessels for each arrangement you try.',
       'Try each card alone, then both together, and keep the arrangement whose three numbers match.'
     ],
     check: rigCheck,
     get reward() {
       const g = recall(QUEST_KEY);
-      const verdict = g === 'equal' ? 'Vessel 3 began with equal amounts and moved away from them. ' : g === 'same' ? 'The amounts differed from vessel to vessel, but the ratio did not. ' : g === 'gone' ? 'Some A was left in every vessel. ' : '';
+      const verdict = g === 'equal' ? 'Vessel 3 began with equal amounts and moved away from them. ' : g === 'same' ? 'The amounts differed from vessel to vessel, but the ratio did not. ' : g === 'gone' ? 'Some butane was left in every vessel. ' : '';
       return {
-        log: 'B over A held at the same number on every vessel.',
+        log: 'Isobutane over butane held at the same number on every vessel.',
         title: 'The Equilibrium Constant',
-        body: `${verdict}B over A came out at ${fmtNum(AB.K, 2)} on every vessel, and A over B at ${fmtNum(1 / AB.K, 2)}, whatever the vessel began with. The ratio of products over reactants at equilibrium is the equilibrium constant, K.`
+        body: `${verdict}Isobutane ÷ butane is ${fmtNum(BUT.K, 2)} in every vessel, whatever it began with. Products over reactants at equilibrium is the equilibrium constant, K.`
       };
     }
   },
@@ -190,19 +176,19 @@ export const STAGES = [
   {
     id: 's3-powers',
     title: 'Two of the Same',
-    prompt: 'Arrange cards on the ratio board into a ratio that comes out the same for all three settled vessels of this reaction.',
+    prompt: 'Which ratio is the same for all three settled vessels of H₂ + I₂ ⇌ 2 HI?',
     widget,
     table: rigTable('hi', HI_PANS, [['H2', 1], ['I2', 1], ['HI', 1], ['HI', 2]], { top: 2, bottom: 2 }),
     hints: [
-      'Use the "Settle" key and the four cards.',
-      'Compare the three readings for each arrangement; a card with a small 2 counts its amount multiplied by itself.',
-      'Check the readings for each arrangement you try; the equation printed on the vessels says how many of each substance take part.'
+      'Press "Settle", then place particle cards on the ratio board.',
+      'Compare the three readings for each arrangement; HI² counts the HI concentration squared.',
+      'Look at the coefficient 2 in front of HI in the equation printed on the vessels.'
     ],
     check: rigCheck,
     reward: {
       log: 'HI squared over H₂ times I₂ held at one number.',
       title: 'Coefficients Become Powers',
-      body: `The 2 in front of HI in the equation became a power: HI² over H₂ times I₂ came out at ${fmtNum(HI.K, 2)} on every vessel. With amounts in mol/L, the constant is written Kc.`
+      body: `HI² ÷ (H₂ × I₂) is ${fmtNum(HI.K, 2)} in every vessel: the 2 in front of HI became a power. With concentrations in mol/L, the constant is written Kc.`
     }
   },
 
@@ -210,19 +196,19 @@ export const STAGES = [
   {
     id: 's4-solids',
     title: 'A Vessel With Solids',
-    prompt: 'Arrange cards on the ratio board into a ratio that comes out the same for all three settled vessels of this reaction.',
+    prompt: 'Which ratio is the same for all three settled vessels of CaCO₃ ⇌ CaO + CO₂?',
     widget,
     table: rigTable('caco3', CA_PANS, [['CaCO3', 1], ['CaO', 1], ['CO2', 1]], { top: 2, bottom: 2 }),
     hints: [
-      'Use the "Settle" key and the three cards.',
-      'Compare the readings for an arrangement that includes the solids with one that leaves them off.',
-      'Test arrangements one card at a time, and add a card only while the three numbers still agree.'
+      'Press "Settle", then place particle cards on the ratio board.',
+      'Compare the readings when solids are included with when they are left off.',
+      'Test arrangements one card at a time, and keep only what leaves the three numbers matching.'
     ],
     check: rigCheck,
     reward: {
       log: 'Only the gas stayed the same from vessel to vessel.',
       title: 'Solids Are Left Out',
-      body: 'The amounts of CaCO₃ and CaO changed from vessel to vessel, but the pressure of CO₂ did not, so only the gas is in the ratio. A pure solid\'s concentration is set by what it is, not by how much there is. With pressures the constant is written Kp.'
+      body: 'Only the CO₂ pressure is the same in every vessel, because a pure solid\'s concentration does not depend on how much is there. With pressures the constant is written Kp.'
     }
   },
 
@@ -230,16 +216,24 @@ export const STAGES = [
   {
     id: 's5-typed',
     title: 'Find K',
-    prompt: 'Find K for this vessel, to two significant figures.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'K is products over reactants, each raised to its coefficient in the equation.',
+      worked: [
+        'For H₂ + I₂ ⇌ 2 HI with H₂ = 0.21 M, I₂ = 0.21 M, HI = 1.54 M:',
+        'K = HI² ÷ (H₂ × I₂) = 1.54² ÷ (0.21 × 0.21) = 54'
+      ]
+    },
+    prompt: 'What is K for this vessel, to two significant figures?',
     widget,
     entry: { id: 'k', label: 'K', unit: '' },
     table: pansTable({
       fixtures: [vesselFixture('pans', { x: 38, y: 22 }, { system: 'n2o4', pans: NO_PAN, settled: true, w: 70, titles: ['The vessel at equilibrium'] })]
     }, { h: 46 }),
     hints: [
-      'Type the figure in the field.',
-      'Read the amount of each substance from the bars and take the reaction from the equation printed beside them.',
-      'Write the ratio the way you found it on the ratio board, put the bar amounts in, and round to two figures.'
+      'Read the pressure of each gas from the bars and the equation beside them.',
+      'Put the product pressure on top and the reactant pressure on the bottom, raised to its coefficient.',
+      'Follow the worked example in the briefing: divide N₂O₄ by NO₂ squared, then round to two figures.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
@@ -257,7 +251,7 @@ export const STAGES = [
     reward: {
       log: 'K for 2 NO₂ ⇌ N₂O₄ came from the bars.',
       title: 'K From a Vessel',
-      body: `Putting the settled pressures into products over reactants, with the 2 as a power, gave K = ${fmtNum(NO.K, 2)}. Any vessel of this reaction at this temperature settles to the same figure.`
+      body: `The settled pressures, with the 2 as a power, give K = ${fmtNum(NO.K, 2)}. Any vessel of this reaction at this temperature gives the same.`
     }
   },
 
@@ -265,30 +259,30 @@ export const STAGES = [
   {
     id: 's6-large',
     title: 'Nearly All the Way',
-    prompt: 'Tap the vessel whose reaction goes nearly to completion.',
+    prompt: 'Which reaction goes nearly to completion?',
     widget,
     table: pansTable({
       fixtures: [
-        pickColumns(vesselFixture('pans', PANS_AT, { system: 'ab', pans: levelPans(K_BIG), lw: 12, legend: false })),
+        pickColumns(vesselFixture('pans', PANS_AT, { system: 'rp', pans: levelPans(K_BIG), lw: 12, legend: false })),
         choiceFixture('pick', 'Goes nearly to completion', { x: 62, y: 55 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', 'Vessel 4', ' '], start: 5, w: 60 })
       ]
     }, { h: 66 }),
     hints: [
-      'Use the "Settle" key, then tap the vessel you choose.',
-      'Compare how much A is left in each vessel after it settles.',
-      'A vessel that goes nearly to completion has almost none of the substance it began with left.'
+      'Press "Settle", then tap the vessel you choose.',
+      'Compare how much Reactant is left in each vessel after it settles.',
+      'A reaction that goes nearly to completion leaves almost no Reactant.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 5) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === BIG_PICK) return { ok: true };
       const eq = vslRead(state.table, 'pans').pans[v - 1].eq;
-      return { ok: false, msg: `On Vessel ${v}, ${fmtNum(eq.A, 3)} mol/L of A is still left once it has settled.` };
+      return { ok: false, msg: `On Vessel ${v}, ${fmtNum(eq.R, 3)} mol/L of Reactant is still left once it has settled.` };
     },
     reward: {
       log: 'Vessel 2 went nearly to completion.',
       title: 'Large K',
-      body: `Vessel 2 settled with almost no A left; its K is ${fmtNum(K_BIG[BIG_PICK - 1], 2)}. A K far above 1 means the reaction goes nearly to completion, with almost no reactant left. This is a large K.`
+      body: `Vessel 2 settled with almost no Reactant; its K is ${fmtNum(K_BIG[BIG_PICK - 1], 2)}. A K far above 1 means the vessel settles as nearly all product (a large K).`
     }
   },
 
@@ -296,81 +290,32 @@ export const STAGES = [
   {
     id: 's7-small',
     title: 'Hardly Started',
-    prompt: 'Tap the vessel that will have made the least B once it has settled.',
+    prompt: 'Which reaction will have made the least product once it settles?',
     widget,
     table: pansTable({
       fixtures: [
-        pickColumns(vesselFixture('pans', PANS_AT, { system: 'ab', pans: levelPans(K_SMALL), lw: 12, legend: false, showK: true })),
-        choiceFixture('pick', 'Makes the least B', { x: 62, y: 55 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', 'Vessel 4', ' '], start: 5, w: 60 })
+        pickColumns(vesselFixture('pans', PANS_AT, { system: 'rp', pans: levelPans(K_SMALL), lw: 12, legend: false, showK: true, noRun: true })),
+        choiceFixture('pick', 'Makes the least Product', { x: 62, y: 55 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', 'Vessel 4', ' '], start: 5, w: 60 })
       ]
     }, { h: 66 }),
     hints: [
-      'Tap a vessel; the "Settle" key lets you check.',
-      'Compare the K printed on each vessel.',
-      'Think back to the vessel that went nearly all the way, and the K it had.'
+      'Compare the K printed on each vessel, then tap your choice.',
+      'Look for the K that is smallest compared with 1.',
+      'A large K meant nearly all product; a K far below 1 means the opposite.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 5) return { ok: false, notYet: true, msg: 'Tap a vessel.' };
       if (v === SMALL_PICK) return { ok: true };
       const eq = vslRead(state.table, 'pans').pans[v - 1].eq;
-      return { ok: false, msg: `On Vessel ${v}, ${fmtNum(eq.B, 3)} mol/L of B forms from the 1.00 mol/L of A once it has settled.` };
+      return { ok: false, msg: `Vessel ${v} has K = ${fmtNum(K_SMALL[v - 1], 2)}, which makes ${fmtNum(eq.P, 3)} mol/L of Product.` };
     },
     reward: {
       log: 'Vessel 3 barely started.',
       title: 'Small K',
-      body: `Vessel 3, with K = ${fmtNum(K_SMALL[SMALL_PICK - 1], 2)}, settled with almost no B. A K far below 1 means the reaction barely starts, with almost no product formed. This is a small K.`
+      body: `Vessel 3, with K = ${fmtNum(K_SMALL[SMALL_PICK - 1], 2)}, makes almost no product. A K far below 1 means the vessel settles as nearly all reactant (a small K).`
     }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const eqs = [0, 1, 2].map(sealedEq);
-    const Ks = [0, 1, 2].map(i => K_SYSTEMS[SEALED[i].system].K);
-    const sl = [0, 1, 2].map(i => kSlips(K_SYSTEMS[SEALED[i].system], eqs[i]));
-    // Three right cards and two slips (the figure with no powers for pans 2 and 3).
-    const cards = [
-      ['k-a', Ks[0]], ['k-b', Ks[1]], ['k-c', Ks[2]], ['k-x', sl[1].noPower], ['k-y', sl[2].noPower]
-    ];
-    return {
-      id: 's8-sealed',
-      title: 'Three Sealed Vessels',
-      prompt: 'Lay on each vessel the card with the K that belongs to it.',
-      widget,
-      table: pansTable({
-        pieces: cards.map(([id, v], i) => tag(id, `K = ${fmtNum(v, 2)}`, { x: 136.5, y: 8 + i * 13 }, { props: { value: v } })),
-        fixtures: [vesselFixture('pans', PANS_AT, { system: 'ab', pans: SEALED.map(s => ({ system: s.system, start: s.start })), settled: true, showEq: true, lw: 10, legend: false })],
-        zones: {
-          slots: [0, 1, 2].map(i => ({ id: `s${i + 1}`, label: `K of Vessel ${i + 1}`, at: { x: 10 + (118 - 10 - 1.5) / 3 * (i + 0.5), y: 52 }, size: { w: 27, h: 12 } }))
-        }
-      }, { h: 70 }),
-      hints: [
-        'Use the cards and the slots under the vessels.',
-        'Compare each card with what the bars of one vessel give for the reaction printed on it.',
-        'For each vessel, work out the ratio for its own equation from its bars, and match the card.'
-      ],
-      check(state) {
-        const t = state.table;
-        const got = [1, 2, 3].map(i => pieceIn(t, `s${i}`));
-        if (got.some(c => !c)) return { ok: false, notYet: true, msg: 'Lay a card on each vessel.' };
-        for (let i = 0; i < 3; i++) {
-          const v = got[i].props.value;
-          if (Math.abs(v - Ks[i]) / Ks[i] <= 0.015) continue;
-          const sys = K_SYSTEMS[SEALED[i].system];
-          const bars = Object.keys(sys.species).map(s => `${s === 'A' || s === 'B' || s === 'C' ? s : s} ${fmtNum(eqs[i][s], 3)}`).join(', ');
-          if (Math.abs(v - sl[i].noPower) / sl[i].noPower <= 0.015) return { ok: false, msg: `Vessel ${i + 1} (${bars}): that figure counts every substance once, and the equation on this vessel does not.` };
-          if (Math.abs(v - sl[i].inverted) / sl[i].inverted <= 0.015) return { ok: false, msg: `Vessel ${i + 1} (${bars}): that figure is the ratio the other way up.` };
-          return { ok: false, msg: `Vessel ${i + 1} has ${bars}, and its ratio does not come to that figure.` };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'Each K matched its vessel.',
-        title: 'Reading K Anywhere',
-        body: 'Whatever the reaction, K is products over reactants at equilibrium, each amount raised to its coefficient and the solids left out. A card that ignored the coefficients matched no vessel.'
-      }
-    };
-  })()
+  }
 ];
 
 /** The quest's closing card, shown only where a quest has no story animation yet. */
@@ -379,31 +324,29 @@ export const DEBRIEF = {
   body: 'From any start, a vessel settles at amounts whose ratio, products over reactants, is the same number. That number is K.'
 };
 
-/** Every settled-pan stage presses "Settle" on its own pans. */
+/** Every settled-vessel stage presses "Settle" on its own vessels. */
 const settle = [{ run: 'pans' }];
 const slotT = i => `slot:rig.t${i}`;
 const slotB = i => `slot:rig.b${i}`;
 
 export const SOLUTIONS = [
   [put('same', 'slot:guess')],
-  [...settle, put('t-B1', slotT(1)), put('t-A1', slotB(1))],
+  [...settle, put('t-isobutane1', slotT(1)), put('t-butane1', slotB(1))],
   [...settle, put('t-HI2', slotT(1)), put('t-H21', slotB(1)), put('t-I21', slotB(2))],
   [...settle, put('t-CO21', slotT(1))],
   [{ type: { entry: 'k', value: '6.7' } }],
   [dial('pick', 'value', BIG_PICK)],
-  [dial('pick', 'value', SMALL_PICK)],
-  [put('k-a', 'slot:s1'), put('k-b', 'slot:s2'), put('k-c', 'slot:s3')]
+  [dial('pick', 'value', SMALL_PICK)]
 ];
 
 export const MISSES = [
   [],
-  [...settle, put('t-A1', slotT(1))],
+  [...settle, put('t-butane1', slotT(1))],
   [...settle, put('t-HI1', slotT(1)), put('t-H21', slotB(1)), put('t-I21', slotB(2))],
   [...settle, put('t-CaO1', slotT(1)), put('t-CO21', slotT(2)), put('t-CaCO31', slotB(1))],
   [{ type: { entry: 'k', value: '1.3' } }],
   [dial('pick', 'value', 4)],
-  [dial('pick', 'value', 1)],
-  [put('k-a', 'slot:s1'), put('k-x', 'slot:s2'), put('k-c', 'slot:s3')]
+  [dial('pick', 'value', 1)]
 ];
 
 function blankState() { return {}; }
@@ -421,4 +364,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { AB_PANS, HI_PANS, CA_PANS, NO_PAN, K_BIG, K_SMALL, BIG_PICK, SMALL_PICK, SEALED };
+export const CHECKS = { BUT_PANS, HI_PANS, CA_PANS, NO_PAN, K_BIG, K_SMALL, BIG_PICK, SMALL_PICK };

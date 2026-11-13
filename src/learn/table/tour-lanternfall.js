@@ -42,7 +42,9 @@ export const LANTERNFALL_TOUR = {
     'trends:strip': { title: 'Electron Remover', text: 'Put an atom in the holder and press "{run}". The electron remover takes off the outermost electron and prints what that required in energy. Press again to take off the next.', dials: false },
     'cuvette:spectro': { title: 'Spectrometer', text: 'Slide a cuvette into the optical beam. The spectrometer shines light through it and prints the reading.', dials: false },
     'cuvette:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out.', dials: false },
-    'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a string onto it and the string is drawn round the ring, lap after lap, so you can see whether the laps land on each other or pile up in a band.' }
+    'trends:levels': { title: 'Subshell ladder', text: 'Shows the 1s, 2s and 2p subshells of two atoms side by side, with each outermost electron marked in amber.', dials: false },
+    'cloud:wavestrip': { title: 'Wavefunction strip', text: 'Draws ψ above the axis and the ψ² dot band below it. Drag the Probe dial to read ψ and the dot count along the line.', dials: false },
+    'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a wave onto it and the wave is drawn round the ring, lap after lap, so you can see whether the laps stay in step or cancel.' }
   },
   pieces: {
     /* ---- optics ---- */

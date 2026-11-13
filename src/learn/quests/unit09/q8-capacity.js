@@ -20,17 +20,15 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import {
-  phTable, selectorFixture, pieceIn, dialValue, note, mixFixture, mixRead, stripFixture, stripRead, solidFixture, solidRead
+  phTable, selectorFixture, pieceIn, dialValue, note, mixFixture, mixRead, stripFixture, stripRead
 } from '../../table/kits/ph.js';
 import { ACIDS, INDICATORS, bufferState, fractions, fmt, pOf } from '../../engine/phdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
-  { term: /\bprotonation state\b/i, introducedAt: 2 },
   { term: /\bindicator\b/i, introducedAt: 3 },
-  { term: /\bbuffer capacity\b/i, introducedAt: 4 },
-  { term: /\bsolubility\b/i, introducedAt: 7 }
+  { term: /\bbuffer capacity\b/i, introducedAt: 4 }
 ];
 
 /** The words of earlier benches this bench uses: pKa and acetic acid (q3-weak), buffer, acetate and conjugate base (q7-buffer). */
@@ -127,7 +125,7 @@ export const STAGES = [
   {
     id: 's2-form',
     title: 'Reading the Strip',
-    get prompt() { return guessLine('Read the strip at pH 3 and at pH 6 and say which form of acetic acid there is more of at each.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which form of acetic acid is there more of at pH 3, and which at pH 6?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const s = flaskAt('st', 46, 1, { acids: [ACETIC], start: 5, w: 84, title: 'Acetic acid' }, stripFixture);
@@ -153,8 +151,8 @@ export const STAGES = [
       const verdict = g === 'right' ? 'It did, as you predicted. ' : g ? 'It did not match your prediction. ' : '';
       return {
         log: 'Acetic acid was the main form below its pKa and acetate above it.',
-        title: 'Protonation State',
-        body: `${verdict}The strip read ${a3} percent acetic acid at pH 3 and ${b6} percent acetate at pH 6. Whether an acid holds its proton, its protonation state, depends on the pH: the acid form is the larger below the pKa of ${fmt(PKA, 2)}, and the base form above it.`
+        title: 'Acid and Base Forms',
+        body: `${verdict}${a3} percent acetic acid at pH 3 and ${b6} percent acetate at pH 6. The acid form is the larger below the pKa, ${fmt(PKA, 2)}, and the base form above it.`
       };
     }
   },
@@ -163,17 +161,18 @@ export const STAGES = [
   {
     id: 's3-indicator',
     title: 'An Indicator',
+    briefing: 'An indicator is a weak acid whose acid form and base form have different colours.',
     prompt: 'Find the pH at which methyl red is half in its red form and half in its yellow form.',
     widget,
     entry: { id: 'pka', label: 'pH', unit: '' },
     table: (() => {
-      const s = flaskAt('st', 46, 1, { acids: [METHYL_RED], indicator: true, start: 4, w: 84, title: 'Methyl red' }, stripFixture);
+      const s = flaskAt('st', 46, 1, { acids: [METHYL_RED], indicator: true, hidePct: true, start: 4, w: 84, title: 'Methyl red' }, stripFixture);
       return phTable({ fixtures: [s.fixture] }, { w: 94, h: s.size.h + 4 });
     })(),
     hints: [
       'Drag the "pH" dial across the strip and type the pH in the field.',
-      'Compare the percentages of the red form and the yellow form at the amber line, and the colour of the solution.',
-      'Find the pH where the two percentages cross, and use the steps either side of it to place it.'
+      'Compare the heights of the red-form and yellow-form curves at the amber line, and the colour of the solution.',
+      'Find the pH where the two curves cross, and use the steps either side of it to place it.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'pka');
@@ -187,7 +186,7 @@ export const STAGES = [
       return {
         log: 'The two forms were equal at the indicator\'s pKa.',
         title: 'An Indicator',
-        body: `The red and yellow forms were equal at pH ${fmt(RED.pKa, 1)}, with red below, yellow above and orange between. An indicator is a weak acid whose acid and base forms have different colours, so it changes colour around its pKa.`
+        body: `The two forms are equal at pH ${fmt(RED.pKa, 1)}, methyl red's pKa: red below, yellow above.`
       };
     }
   },
@@ -196,7 +195,8 @@ export const STAGES = [
   {
     id: 's4-amount',
     title: 'Two Concentrations',
-    prompt: 'Pour the same acid into both flasks and say which one holds its pH better.',
+    briefing: 'Buffer capacity is how much acid or base a buffer can take before its pH changes much.',
+    prompt: 'Which buffer has the larger capacity?',
     widget,
     table: (() => {
       const a = flaskAt('fd', 26, 1, { title: 'Each 0.010 M', ...DILUTE, acidSph: POUR5 });
@@ -220,7 +220,7 @@ export const STAGES = [
       return {
         log: 'The stronger buffer took the same pour with far less change.',
         title: 'Buffer Capacity',
-        body: `Both flasks began at the same ratio, yet one pour moved the 0.010 M flask to ${fmt(phOf(DILUTE.ha, DILUTE.a, 1, 0, POUR5), 2)} and the 0.10 M flask only to ${fmt(phOf(STRONG.ha, STRONG.a, 1, 0, POUR5), 2)}. Buffer capacity, the acid or base a buffer can take before its pH changes much, grows with the amount of each member.`
+        body: `The same pour moved the dilute buffer to ${fmt(phOf(DILUTE.ha, DILUTE.a, 1, 0, POUR5), 2)} and the concentrated one only to ${fmt(phOf(STRONG.ha, STRONG.a, 1, 0, POUR5), 2)}. More of each member means more capacity.`
       };
     }
   },
@@ -229,7 +229,7 @@ export const STAGES = [
   {
     id: 's5-limit',
     title: 'The Limit',
-    prompt: 'Find how many pours of acid the second flask can take before its acetate is used up.',
+    prompt: 'How many pours of acid can the second flask take before its acetate is used up?',
     widget,
     entry: { id: 'n', label: 'Pours', unit: '' },
     table: (() => {
@@ -240,7 +240,7 @@ export const STAGES = [
     hints: [
       'Press "Pour" on flask 1 until its acetate is gone, and type the pours in the field for flask 2.',
       'Compare the acetate in the window of flask 1 after each pour, and compare the two flasks\' windows.',
-      'Flask 2 holds a number of times the acetate of flask 1, so it takes that number of times the pours.'
+      'Buffer capacity grows in step with how much acetate is in the flask to soak up the acid.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'n');
@@ -254,7 +254,7 @@ export const STAGES = [
       return {
         log: 'A buffer is spent when the member that takes the pour is gone.',
         title: 'The Limit',
-        body: `Flask 1 used up its ${SMALL.a} spheres of acetate in ${k} pours of ${POUR5}, so flask 2, holding ${LARGE.a}, takes ${LARGE.a / POUR5}. A buffer runs out when the member that takes the added acid is used up, and its capacity is set by how much of that member it holds.`
+        body: `Flask 1's ${SMALL.a} spheres of acetate lasted ${k} pours, so flask 2's ${LARGE.a} takes ${LARGE.a / POUR5}. A buffer is spent when one member is used up.`
       };
     }
   },
@@ -263,7 +263,7 @@ export const STAGES = [
   {
     id: 's6-ratio',
     title: 'Three Ratios',
-    prompt: 'Pour the same base into each flask and say which one holds its pH best.',
+    prompt: 'Which ratio of acetic acid to acetate holds its pH best?',
     widget,
     table: (() => {
       const fl = RATIOS.map((r, i) => flaskAt(r.id, 24 + i * 46, 1, { title: r.title, ha: r.ha, a: r.a, reagent: 'base' }));
@@ -288,51 +288,16 @@ export const STAGES = [
       return {
         log: 'The flask with the two members near equal held best.',
         title: 'The Best Ratio',
-        body: `The same pour of base moved the 1 : 1 flask by ${fmt(mv(RATIOS[0]), 2)}, the 10 : 1 flask by ${fmt(mv(RATIOS[1]), 2)} and the 100 : 1 flask by ${fmt(mv(RATIOS[2]), 2)}. A buffer holds best when its two members are near equal, within a factor of ten of each other.`
+        body: `The 1 : 1 flask moved least (${fmt(mv(RATIOS[0]), 2)} vs ${fmt(mv(RATIOS[1]), 2)} and ${fmt(mv(RATIOS[2]), 2)}). A buffer works well only while its members are within about a factor of ten of each other.`
       };
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    id: 's7-solid',
-    title: 'Acid on a Solid',
-    prompt: 'Pour acid into each beaker and say which solid dissolves more.',
-    widget,
-    table: (() => {
-      const a = flaskAt('sm', 26, 1, { salt: 'Mg_OH_2', solid: SOLID, basic: true, title: 'Magnesium hydroxide' }, solidFixture);
-      const b = flaskAt('sa', 74, 1, { salt: 'AgCl', solid: SOLID, basic: false, title: 'Silver chloride' }, solidFixture);
-      return phTable({
-        fixtures: [a.fixture, b.fixture, selectorFixture('pick', 'Dissolves more', { x: 130, y: 18 }, { options: ['Magnesium hydroxide', 'Silver chloride', 'Both the same', ' '], start: 4, w: 56 })]
-      }, { w: 164, h: a.size.h + 4 });
-    })(),
-    hints: [
-      'Press "Pour acid" on each beaker a few times, then set the answer dial.',
-      'Compare the dissolved ions and the squares of solid left in the two windows.',
-      'Ask which ion of each salt the added acid could use up, and what that does to the solid.'
-    ],
-    check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v === 1) return { ok: true };
-      const m = solidAfterPour('Mg_OH_2', true, 1); const s = solidAfterPour('AgCl', false, 1);
-      return { ok: false, msg: `After one pour the magnesium hydroxide beaker shows ${m.cations} dissolved spheres and ${m.left} squares of solid, and the silver chloride beaker shows ${s.cations} and ${s.left}.` };
-    },
-    get reward() {
-      const m = solidAfterPour('Mg_OH_2', true, 1);
-      return {
-        log: 'Acid dissolved the solid with a basic anion and left the other alone.',
-        title: 'pH and Solubility',
-        body: `Each pour of acid dissolved ${m.cations} more spheres of magnesium hydroxide, because hydroxide is a base and the acid takes it, while silver chloride was unchanged. The solubility of a salt with a basic anion rises as the pH falls; one with the anion of a strong acid does not. The size of the effect is not worked out here.`
-      };
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-choose',
+    id: 's7-choose',
     title: 'Choosing an Acid',
-    prompt: `Find which sealed acid would make the best buffer at pH ${fmt(WANTED_PH, 1)}.`,
+    prompt: `Which sealed acid makes the best buffer at pH ${fmt(WANTED_PH, 1)}?`,
     widget,
     table: (() => {
       const s = flaskAt('st', 46, 1, { acids: SEALED, start: 5, w: 84, title: 'Sealed acids' }, stripFixture);
@@ -358,18 +323,11 @@ export const STAGES = [
       return {
         log: 'The best buffer came from the acid whose pKa was nearest the wanted pH.',
         title: 'Choosing an Acid',
-        body: `At pH ${fmt(WANTED_PH, 1)} acid Y was ${y1} percent acid form and ${y2} percent base form, close to equal, while X and Z were nearly all one form. A buffer works best near its acid's pKa, so choose the acid whose pKa is closest to the pH wanted.`
+        body: `Acid Y: at pH ${fmt(WANTED_PH, 1)} it is ${y1} percent acid form and ${y2} percent base form. Choose the acid whose pKa is closest to the pH wanted.`
       };
     }
   }
 ];
-
-/** Stage 7's reading: the beaker after `n` pours. */
-function solidAfterPour(salt, basic, n) {
-  const probe = solidFixture('x', { x: 0, y: 0 }, { salt, solid: SOLID, basic });
-  const state = { fixtures: { x: { props: probe.fixture.props, dials: { n: { value: n } } } } };
-  return solidRead(state, 'x');
-}
 
 export const DEBRIEF = {
   title: 'pKa, Protonation and Capacity',
@@ -383,7 +341,6 @@ export const SOLUTIONS = [
   [pour('fd'), pour('fc'), dial('pick', 'value', 2)],
   [pour('f1'), { type: { entry: 'n', value: '24' } }],
   [pour('r1'), pour('r2'), pour('r3'), dial('pick', 'value', 1)],
-  [pour('sm'), pour('sa'), dial('pick', 'value', 1)],
   [dial('st', 'ph', 4.5), dial('st', 'acid', 2), dial('pick', 'value', 2)]
 ];
 
@@ -394,7 +351,6 @@ export const MISSES = [
   [pour('fd'), dial('pick', 'value', 1)],
   [{ type: { entry: 'n', value: '8' } }],
   [pour('r2'), dial('pick', 'value', 2)],
-  [pour('sa'), dial('pick', 'value', 2)],
   [dial('st', 'ph', 4.5), dial('pick', 'value', 1)]
 ];
 
@@ -414,5 +370,5 @@ export function mount(container, ctx) {
 }
 
 export const CHECKS = {
-  read, phOf, pct, ACETIC, METHYL_RED, SEALED, WANTED_PH, DILUTE, STRONG, SMALL, LARGE, POUR5, RATIOS, SOLID, TOL_PKA, GUESS, S2_OPTIONS, solidAfterPour, mixRead, stripRead
+  read, phOf, pct, ACETIC, METHYL_RED, SEALED, WANTED_PH, DILUTE, STRONG, SMALL, LARGE, POUR5, RATIOS, TOL_PKA, GUESS, S2_OPTIONS, mixRead, stripRead
 };

@@ -48,7 +48,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { atomTable, piecesIn, needleReading, behaviourOf } from '../../table/kits/atoms.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 /**
  * When each withheld word is earned.
@@ -61,18 +61,16 @@ export const VOCABULARY = [
   { term: /\bnucle(us|i|ar)\b/i, introducedAt: 2 },
   { term: /\bprotons?\b/i, introducedAt: 3 },
   { term: /\bneutrons?\b/i, introducedAt: 3 },
-  { term: /\belectrons?\b/i, introducedAt: 3 },
+  { term: /\belectrons?\b/i, introducedAt: 4 },
   { term: /\bshells?\b/i, introducedAt: 5 },
-  { term: /\bvalence\b/i, introducedAt: 6 },
-  { term: /\bisotopes?\b/i, introducedAt: 7 },
-  { term: /\bions?\b/i, introducedAt: 8 }
+  { term: /\bvalence\b/i, introducedAt: 6 }
 ];
 
 const SPEAKER = 'Vess';
 
 /** The key the player's guess is kept under (`engine/predict.js`), and what each model card is called in the prompt. */
 const QUEST_KEY = 'unit01/q2-core';
-const MODEL_LABEL = { solid: 'Solid all through', even: 'Soft and even', core: 'Tiny dense center' };
+const MODEL_LABEL = { solid: 'Solid ball', even: 'Mass spread thinly through it', core: 'Small heavy center, mostly empty' };
 
 /**
  * The legend lines. The keys of this table are pieces dragged and two keys pressed ("Fire Beam",
@@ -119,10 +117,10 @@ export { behaviourOf };
    ------------------------------------------------------------------ */
 
 const NAMES = { proton: 'Proton', neutron: 'Neutron', electron: 'Electron' };
-const SPECK = { proton: 'Marked', neutron: 'Blank', electron: 'Outer' };
+const SPECK = { proton: 'Particle', neutron: 'Particle', electron: 'Outer' };
 
-/** The nine specks of stage 3, in the order they lie: the charge each carries (+1 or none). */
-const SPECK_ORDER = [1, 0, 0, 1, 0, 1, 0, 0, 1];
+/** The six particles of stage 3, in the order they lie: the charge each carries (+1 or none). */
+const SPECK_ORDER = [1, 0, 0, 1, 0, 1];
 
 const part = (id, kind, x, y, named = true, zone = null, props = null) => ({
   id, kind, label: (named ? NAMES : SPECK)[kind], at: { x, y }, ...(zone ? { zone } : {}), ...(props ? { props } : {})
@@ -170,30 +168,34 @@ const BEAM_DETECTORS = { detAhead: 0, detSide: 35, detBack: 180 };
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Predict the Atom',
+    title: 'What Is Inside?',
     // A PREDICT STAGE: the instrument is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Which model of the atom do you think is right?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'To find out what is inside an atom, fast particles are fired at a very thin metal foil. A particle that meets something heavy bounces off; one that meets nothing goes straight on.'
+    },
+    prompt: 'Which picture of the atom do you expect the experiment to support?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
         // The wrong model most players arrive with is a soft atom with its + spread evenly through it, so it is a card.
-        { id: 'solid', kind: 'model', label: 'Solid all through', at: { x: 22, y: 20 }, props: { model: 'solid' } },
-        { id: 'even', kind: 'model', label: 'Soft and even', at: { x: 52, y: 20 }, props: { model: 'spread' } },
-        { id: 'core', kind: 'model', label: 'Tiny dense center', at: { x: 82, y: 20 }, props: { model: 'core' } }
+        { id: 'solid', kind: 'model', label: 'Solid ball', at: { x: 22, y: 20 }, props: { model: 'solid' } },
+        { id: 'even', kind: 'model', label: 'Mass spread thinly through it', at: { x: 52, y: 20 }, props: { model: 'spread' } },
+        { id: 'core', kind: 'model', label: 'Small heavy center, mostly empty', at: { x: 82, y: 20 }, props: { model: 'core' } }
       ],
       zones: {
         slots: [{ id: 'model', label: 'My prediction', at: { x: 52, y: 44 }, size: { w: 28, h: 18 } }]
       }
     }),
     hints: [
-      'Use the three model cards and the slot.',
-      'Picture a stream of small shots fired at each model, and what each would do to them.',
-      'There is no wrong guess yet; commit to the model you would bet on.'
+      'Drag one of the three picture cards into the slot.',
+      'Think about how fast particles would behave if an atom were solid, spread thinly, or mostly empty with a heavy center.',
+      'There is no wrong guess yet; pick the picture you expect the experiment to match.'
     ],
     check(state) {
       const model = piecesIn(state.table, 'slot:model')[0];
-      if (!model) return { ok: false, notYet: true, msg: 'Lay a model card in the slot.' };
+      if (!model) return { ok: false, notYet: true, msg: 'Lay a picture card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -203,7 +205,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'A Model Is a Guess',
-      body: 'A model is a picture of how something might be built, and a good one says what an experiment will show. Next, a beam of shots will test yours.'
+      body: 'Each picture predicts where the particles go. Next, fire the beam and count.'
     }
   },
 
@@ -214,8 +216,8 @@ export const STAGES = [
     get prompt() {
       const guess = recall(QUEST_KEY);
       return guess && MODEL_LABEL[guess]
-        ? `You predicted "${MODEL_LABEL[guess]}": which model fits where the shots go?`
-        : 'Which model of the atom fits where the shots go?';
+        ? `You predicted "${MODEL_LABEL[guess]}": which picture fits where the particles went?`
+        : 'Which picture of the atom fits where the particles went?';
     },
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
@@ -224,12 +226,12 @@ export const STAGES = [
         { id: 'detBack', kind: 'detector', label: 'Back', at: { x: 28, y: 36 }, fixed: true },
         { id: 'detSide', kind: 'detector', label: 'Side', at: { x: 62, y: 15 }, fixed: true },
         { id: 'detAhead', kind: 'detector', label: 'Ahead', at: { x: 64, y: 29 }, fixed: true },
-        { id: 'solid', kind: 'model', label: 'Solid all through', at: { x: 16, y: 54 }, props: { model: 'solid' } },
-        { id: 'even', kind: 'model', label: 'Soft and even', at: { x: 40, y: 54 }, props: { model: 'spread' } },
-        { id: 'core', kind: 'model', label: 'Tiny dense center', at: { x: 64, y: 54 }, props: { model: 'core' } }
+        { id: 'solid', kind: 'model', label: 'Solid ball', at: { x: 16, y: 54 }, props: { model: 'solid' } },
+        { id: 'even', kind: 'model', label: 'Mass spread thinly through it', at: { x: 40, y: 54 }, props: { model: 'spread' } },
+        { id: 'core', kind: 'model', label: 'Small heavy center, mostly empty', at: { x: 64, y: 54 }, props: { model: 'core' } }
       ],
       zones: {
-        slots: [{ id: 'model', label: 'Fits the shots', at: { x: 98, y: 40 }, size: { w: 28, h: 20 } }]
+        slots: [{ id: 'model', label: 'Fits the particles', at: { x: 98, y: 40 }, size: { w: 28, h: 20 } }]
       },
       fixtures: [{
         id: 'beam', kind: 'beam', label: 'Beam and foil', runLabel: 'Fire Beam', at: { x: 38, y: 26 }, size: { w: 68, h: 38 },
@@ -237,28 +239,28 @@ export const STAGES = [
       }]
     }),
     hints: [
-      'Use "Fire Beam", and fire it more than once.',
-      'After each firing, compare the Ahead and Side counts with the Back count.',
-      'Ask which build of an atom lets nearly every shot pass yet sends a rare shot straight back, then lay that card in the slot.'
+      'Press "Fire Beam" more than once.',
+      'Compare the Ahead and Side counts with the Back count.',
+      'Ask which picture lets almost every particle pass straight through yet sends a rare one straight back.'
     ],
     check(state) {
       const t = state.table;
       const model = piecesIn(t, 'slot:model')[0];
-      if (!model) return { ok: false, notYet: true, msg: 'Lay a model card in the slot.' };
+      if (!model) return { ok: false, notYet: true, msg: 'Lay a picture card in the slot.' };
       if (model.id === 'core') return { ok: true };
-      if (model.id === 'solid') return { ok: false, msg: 'A solid atom would have stopped the shots. Most of them went straight on.' };
-      return { ok: false, msg: 'A soft, even atom would have nudged every shot a little and sent none back. One shot came straight back.' };
+      if (model.id === 'solid') return { ok: false, msg: 'A solid atom would have stopped the particles. Most of them went straight on.' };
+      return { ok: false, msg: 'Mass spread thinly would have nudged particles slightly and sent none straight back. One came straight back.' };
     },
     // The verdict on the guess opens the card; the card never says the guess was wrong in a way that costs anything.
     get reward() {
       const guess = recall(QUEST_KEY);
       const verdict = !guess || !MODEL_LABEL[guess] ? '' : guess === 'core'
-        ? 'You predicted this one, and the beam agreed. '
-        : 'The beam did not agree with your prediction, which is how a model gets better. ';
+        ? 'You predicted this one. '
+        : 'Your prediction differed, which is how a model improves. ';
       return {
-        log: 'Per 40 shots: most through, 2 turned aside, 1 straight back.',
+        log: 'Per 40 particles: most through, 2 turned aside, 1 straight back.',
         title: 'The Nucleus',
-        body: `${verdict}An atom is almost entirely empty space, with nearly everything it weighs packed into a tiny lump at its center called the nucleus. So when a beam of particles is fired, most pass through, but a few bounce off the center.`,
+        body: `${verdict}Nearly every particle went straight through a mostly empty atom, while the few that came back hit a small, heavy center: the nucleus.`,
         model: { type: 'atom', p: 6, n: 6, caption: 'A carbon atom, not to scale: the real nucleus is far smaller than the space round it.' }
       };
     }
@@ -266,16 +268,20 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Which Ones Bend?',
-    prompt: 'Sort the specks by what the charged plates do to them.',
+    title: 'What the Nucleus Holds',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A particle with an electric charge is pulled sideways between charged plates; one with no charge goes straight. A + charge is pulled toward the − plate.'
+    },
+    prompt: 'Which particles from the nucleus are protons and which are neutrons?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
-      pieces: SPECK_ORDER.map((charge, i) => ({ id: `sp${i + 1}`, kind: 'speck', label: 'Speck', at: { x: 14 + i * 11, y: 7 }, props: { charge } })),
+      pieces: SPECK_ORDER.map((charge, i) => ({ id: `sp${i + 1}`, kind: 'speck', label: 'Particle', at: { x: 18 + i * 15, y: 7 }, props: { charge } })),
       zones: {
         trays: [
           trayAt('bed', 'Bed', 60, 29, 50, 10),
-          trayAt('bends', 'Bends', 29, 57, 50, 12),
-          trayAt('straight', 'Goes straight', 91, 57, 50, 12)
+          trayAt('bends', 'Proton (charge +1)', 29, 57, 50, 12),
+          trayAt('straight', 'Neutron (no charge)', 91, 57, 50, 12)
         ]
       },
       fixtures: [{
@@ -284,35 +290,39 @@ export const STAGES = [
       }]
     }),
     hints: [
-      'Use the bed, "Switch On" and the two trays.',
-      'Put the specks in the bed, switch the plates on, and compare what happens to each one.',
-      'Sort the specks by what the plates did to them, not by how they look: they all look the same.'
+      'Put the particles on the Bed, press "Switch On", then sort them into the trays.',
+      'Watch which particles curve toward the − plate and which go straight.',
+      'Charged protons curve between the plates; uncharged neutrons go straight.'
     ],
     check(state) {
       const t = state.table;
       const specks = Object.values(t.pieces).filter(p => p.kind === 'speck');
-      if (specks.some(p => !p.props.deflect)) return { ok: false, notYet: true, msg: 'A speck has not been through the plates yet.' };
+      if (specks.some(p => !p.props.deflect)) return { ok: false, notYet: true, msg: 'A particle has not been through the plates yet.' };
       const where = id => (t.pieces[id].zone || '').replace('tray:', '');
-      if (specks.some(p => !['bends', 'straight'].includes(where(p.id)))) return { ok: false, notYet: true, msg: 'Every speck needs a tray.' };
-      if (specks.some(p => p.props.deflect === 'straight' && where(p.id) === 'bends')) return { ok: false, msg: 'The "Bends" tray holds a speck that went straight.' };
-      if (specks.some(p => p.props.deflect === 'bent' && where(p.id) === 'straight')) return { ok: false, msg: 'The "Goes straight" tray holds a speck that bent.' };
+      if (specks.some(p => !['bends', 'straight'].includes(where(p.id)))) return { ok: false, notYet: true, msg: 'Every particle needs a tray.' };
+      if (specks.some(p => p.props.deflect === 'straight' && where(p.id) === 'bends')) return { ok: false, msg: 'The "Proton (charge +1)" tray holds a particle that went straight.' };
+      if (specks.some(p => p.props.deflect === 'bent' && where(p.id) === 'straight')) return { ok: false, msg: 'The "Neutron (no charge)" tray holds a particle that bent.' };
       return { ok: true };
     },
     reward: {
-      log: 'Four specks bent, five went straight.',
-      model: { type: 'atom', p: 4, n: 5, focus: 'nucleus', caption: 'The middle of a beryllium atom: 4 protons (amber) and 5 neutrons (grey).' },
-      title: 'Protons, Neutrons and Electrons',
-      body: 'The specks that bent carry a + charge: they are protons, each +1, and the ones that went straight are neutrons, with no charge at all. Much further out, so light they barely weigh anything, sit the electrons, each with a charge of −1.'
+      log: 'Three particles bent, three went straight.',
+      model: { type: 'atom', p: 3, n: 3, focus: 'nucleus', caption: 'The nucleus of a lithium atom: 3 protons (amber) and 3 neutrons (grey).' },
+      title: 'Protons and Neutrons',
+      body: 'The particles that bent toward the − plate are protons. The ones that went straight are neutrons.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Charge Balance',
-    prompt: 'Make Sample D electrically neutral.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Round the nucleus are electrons. Each has a charge of −1 and almost no mass, and the charge meter adds up every charge on the atom.'
+    },
+    prompt: 'Add electrons to Sample D until its charge reads zero.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
-      // Sample D stands in the middle of the bench, the electrons wait along the top, and the needle reads from the
+      // Sample D stands in the middle of the bench, the electrons wait along the top, and the charge meter reads from the
       // bottom left. Electrons are dragged straight onto the atom and come to rest on rings round its middle; the
       // rings are not named here (that is stage 5's discovery), they are only where an electron comes to rest.
       pieces: [
@@ -328,27 +338,31 @@ export const STAGES = [
       fixtures: [needleFixture(['tray:atom'], 'nuc', { x: 18, y: 50 }, 10, { w: 30, h: 18 })]
     }),
     hints: [
-      'Drag electrons from the tray onto Sample D, and watch the needle.',
-      'Each electron you add moves the needle one step, and neutral means the needle rests at zero.',
-      'Keep adding electrons until the needle sits on zero, then count what you have placed against what the middle holds.'
+      'Drag electrons from the tray onto Sample D and watch the charge meter.',
+      'Each electron adds −1, and a neutral atom has a total charge of zero.',
+      'Match the −1 charges of the electrons to the +1 charges of the protons in the nucleus.'
     ],
     check(state) {
       const q = needleReading(state.table, 'needle');
       if (q === 0) return { ok: true };
-      if (q > 0) return { ok: false, msg: 'The needle still leans plus.' };
-      return { ok: false, msg: 'The needle leans minus.' };
+      if (q > 0) return { ok: false, msg: 'The charge meter still reads positive.' };
+      return { ok: false, msg: 'The charge meter reads negative.' };
     },
     reward: {
       log: 'Sample D carries 8 electrons.',
       title: 'Neutral Atoms Balance',
-      body: 'The needle reads the total charge on the atom: a neutral atom has a charge of 0, with equal numbers of protons and electrons.'
+      body: 'Eight electrons cancel eight protons. A neutral atom has equal numbers of each.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Where the Electrons Sit',
-    prompt: 'Place all 11 electrons of Sample D into their shells.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Electrons sit in shells, layers round the nucleus at set distances. Samples A, B and C show how three other atoms fill theirs.'
+    },
+    prompt: 'How are the 11 electrons of Sample D arranged in its shells?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -369,8 +383,8 @@ export const STAGES = [
     }),
     hints: [
       'Drag electrons from the tray onto the shells around Sample D.',
-      'No sample here holds more than 2 on the first shell or more than 8 on the second, and none of them starts a new shell while a closer one still has room.',
-      'Put electrons on the first shell until it holds as many as the first shell does on the open samples, fill the second shell the same way, and only then put what is left on the third shell.'
+      'Compare the first and second shells of Samples A, B and C.',
+      'Find what the open samples have in common in their inner shells before any electron sits further out.'
     ],
     check(state) {
       const t = state.table;
@@ -394,14 +408,18 @@ export const STAGES = [
       log: 'Sample D loaded 2 / 8 / 1.',
       model: { type: 'atom', p: 11, n: 12, caption: 'A sodium atom: 11 electrons on shells of 2, 8 and 1. Not to scale.' },
       title: 'Electron Shells',
-      body: 'Each shell holds a fixed number: 2 in the first, 8 in the second and third. A shell fills up before the next one starts, which is why 11 electrons come out as 2, 8 and 1.'
+      body: 'The first shell holds 2 and the next two hold 8 each, for the first 18 elements. A shell fills before the next begins, so 11 electrons sit 2, 8, 1.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'The Outer Shell Decides',
-    prompt: 'Sort the two cased samples by whether they give, take, or keep their electrons.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Electrons in the outermost shell are valence electrons. Test the open samples and watch what each does with them.'
+    },
+    prompt: 'What will each cased sample do in the partner test?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -412,19 +430,19 @@ export const STAGES = [
         specimen('s5', 'SAMPLE E', 92, 12, { p: 9, n: 10, rings: [2, 7], casing: true })
       ],
       zones: {
-        slots: [{ id: 'tester', label: 'Sample', at: { x: 66, y: 53 } }],
+        slots: [{ id: 'tester', label: 'Test slot', at: { x: 66, y: 53 } }],
         trays: [
-          specimenTray('gives', 'Gives one away', 21, 38, 38, 14),
-          specimenTray('takes', 'Takes one on', 60, 38, 38, 14),
-          specimenTray('inert', 'Will not trade', 99, 38, 38, 14)
+          specimenTray('gives', 'Loses an electron', 21, 38, 38, 14),
+          specimenTray('takes', 'Gains an electron', 60, 38, 38, 14),
+          specimenTray('inert', 'No change', 99, 38, 38, 14)
         ]
       },
-      fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Run Tester', at: { x: 96, y: 54 }, size: { w: 40, h: 16 }, props: { slot: 'tester' } }]
+      fixtures: [{ id: 'tester', kind: 'tester', label: 'Partner test', runLabel: 'Run Test', at: { x: 96, y: 54 }, size: { w: 40, h: 16 }, props: { slot: 'tester' } }]
     }),
     hints: [
-      'Use the tester slot and "Run Tester".',
-      'Test the open samples first and compare what each one does with its outer ring.',
-      'Compare what each cased sample does with the open samples to work out how its outer shell behaves.'
+      'Drop the open samples into the Partner test slot and press "Run Test".',
+      'Compare how many valence electrons each open sample has with what it does in the test.',
+      'Match each cased sample\'s outer shell to the open sample with the same number of valence electrons.'
     ],
     check(state) {
       const t = state.table;
@@ -434,26 +452,27 @@ export const STAGES = [
       if (!['gives', 'takes', 'inert'].includes(d) || !['gives', 'takes', 'inert'].includes(e)) {
         return { ok: false, notYet: true, msg: 'Both cased samples need a tray.' };
       }
-      if (!t.pieces.s4.props.tested || !t.pieces.s5.props.tested) {
-        return { ok: false, msg: 'Only one cased sample has been tested. Run the tester on both cased samples first.' };
-      }
       if (d === 'inert' || e === 'inert') {
-        return { ok: false, msg: 'A cased sample\'s tester result does not match the "Will not trade" tray.' };
+        return { ok: false, msg: 'A cased sample with an incomplete outer shell will not stay unchanged.' };
       }
-      if (d !== 'gives') return { ok: false, msg: 'Sample D\'s tester result does not match its tray.' };
-      if (e !== 'takes') return { ok: false, msg: 'Sample E\'s tester result does not match its tray.' };
+      if (d !== 'gives') return { ok: false, msg: 'Sample D has 1 valence electron, like Sample A.' };
+      if (e !== 'takes') return { ok: false, msg: 'Sample E has 7 valence electrons, like Sample B.' };
       return { ok: true };
     },
     reward: {
-      log: 'Both cased samples tested and filed.',
+      log: 'Both cased samples sorted by valence electrons.',
       title: 'Valence Electrons',
-      body: 'Electrons in the outermost shell are valence electrons, which determine how an atom reacts: one valence electron is given away, seven takes one to fill the shell, and a full shell of eight trades nothing.'
+      body: 'An atom with one valence electron loses it, and one a single electron short of a full shell gains one. Either way it ends with a full outer shell, as a rule for these light elements.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Same Weight, Different Atom',
+    title: 'Which Are the Same Element?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The number of protons in the nucleus is the atomic number. It alone decides which element an atom is.'
+    },
     prompt: 'Which samples are the same element as Sample A?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
@@ -461,7 +480,7 @@ export const STAGES = [
         { ...specimen('sa', 'SAMPLE A', 12, 12, { p: 6, n: 6, rings: [2, 4], counts: true }), fixed: true },
         specimen('sb', 'SAMPLE B', 34, 12, { p: 6, n: 7, rings: [2, 4], counts: true }),
         specimen('sc', 'SAMPLE C', 56, 12, { p: 7, n: 6, rings: [2, 5], counts: true }),
-        // The same total as Sample C, and a different element: weight cannot sort these.
+        // The same total as Sample C, and a different element: mass cannot sort these.
         specimen('sd', 'SAMPLE D', 78, 12, { p: 5, n: 8, rings: [2, 3], counts: true }),
         // Heavier than Sample A and still its element.
         specimen('se', 'SAMPLE E', 100, 12, { p: 6, n: 8, rings: [2, 4], counts: true })
@@ -474,9 +493,9 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Set each suspect beside Sample A, count for count.',
-      'The total number of particles will not separate them, but their proton counts and outer shells can.',
-      'Set each suspect beside the reference sample and compare two things, the proton count and the outer shell: the one that matches on both is the same element, whatever it weighs.'
+      'Compare each sample\'s particle counts with Sample A.',
+      'Check whether proton count or total particle count separates the samples.',
+      'Only one count decides the element; neutrons can vary without changing it.'
     ],
     check(state) {
       const t = state.table;
@@ -486,64 +505,16 @@ export const STAGES = [
       if (Object.keys(want).some(id => !['same', 'other'].includes(where(id)))) return { ok: false, notYet: true, msg: 'All four samples need a tray.' };
       const wrong = Object.keys(want).filter(id => where(id) !== want[id]);
       if (wrong.length) {
-        return { ok: false, msg: `${names[wrong[0]]}'s proton count and outer shell do not agree with its tray${wrong.length > 1 ? ', and neither do another sample\'s' : ''}.` };
+        return { ok: false, msg: `${names[wrong[0]]}'s atomic number does not agree with its tray${wrong.length > 1 ? ', and neither does another sample\'s' : ''}.` };
       }
       return { ok: true };
     },
     reward: {
       log: 'Samples B and E match Sample A. Samples C and D do not.',
       model: { type: 'atoms', items: [{ p: 6, n: 6, label: 'Sample A' }, { p: 6, n: 7, label: 'Sample B' }], caption: 'Sample A and Sample B: the same 6 protons and 6 electrons, one more neutron in B. Not to scale.' },
-      title: 'Elements and Isotopes',
-      body: 'An element is identified solely by its proton count, the atomic number. Atoms with the same number of protons but different numbers of neutrons are isotopes.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Tell Them Apart',
-    prompt: 'Sort each sample as an isotope, a charged atom or a different element from reference Sample D.',
-    widget: { type: 'table', label: 'The bench' },
-    table: atomTable({
-      pieces: [
-        { ...specimen('sd', 'SAMPLE D', 12, 12, { p: 7, n: 7, rings: [2, 5], counts: true, needle: true }), fixed: true },
-        specimen('n1', 'SAMPLE A', 34, 12, { p: 7, n: 8, rings: [2, 5], counts: true, needle: true }),
-        specimen('n2', 'SAMPLE B', 56, 12, { p: 7, n: 7, rings: [2, 4], counts: true, needle: true }),
-        specimen('n3', 'SAMPLE C', 78, 12, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true }),
-        // An ion that GAINED an electron: losing is not the only way to get a charge.
-        specimen('n4', 'SAMPLE E', 100, 12, { p: 7, n: 7, rings: [2, 6], counts: true, needle: true })
-      ],
-      zones: {
-        trays: [
-          specimenTray('heavy', 'Isotope', 21, 38),
-          specimenTray('charged', 'Charged', 60, 38),
-          specimenTray('other', 'Different element', 99, 38)
-        ]
-      }
-    }),
-    hints: [
-      'Set each sample beside Sample D and read its protons, neutrons and needle.',
-      'Line each sample up against the reference\'s protons, neutrons and needle, and find the one of those three it does not match.',
-      'A different proton count is a different element; the same protons with a different neutron count is an extra neutron; the same protons and neutrons with the needle off zero is a spare or a missing electron.'
-    ],
-    check(state) {
-      const t = state.table;
-      const where = id => (t.pieces[id].zone || '').replace('tray:', '');
-      const want = { n1: 'heavy', n2: 'charged', n3: 'other', n4: 'charged' };
-      const labels = { n1: 'Sample A', n2: 'Sample B', n3: 'Sample C', n4: 'Sample E' };
-      for (const id of Object.keys(want)) {
-        if (!['heavy', 'charged', 'other'].includes(where(id))) return { ok: false, notYet: true, msg: `${labels[id]} has no tray yet.` };
-      }
-      const wrong = Object.keys(want).filter(id => where(id) !== want[id]);
-      if (wrong.length) {
-        return { ok: false, msg: `${labels[wrong[0]]}'s tray does not match the one count that differs from the reference${wrong.length > 1 ? ', and neither does another sample\'s' : ''}.` };
-      }
-      return { ok: true };
-    },
-    reward: {
-      log: 'All four identified.',
-      title: 'Three Ways to Differ',
-      body: 'Change the neutrons and you get an isotope. Change the electrons and the atom carries a charge, which makes it an ion. Change the protons and you get a different element altogether.',
-      last: true
+      title: 'Atomic Number',
+      last: true,
+      body: 'The samples with Sample A\'s atomic number are the same element, even with more or fewer neutrons.'
     }
   }
 ];
@@ -587,11 +558,9 @@ export const SOLUTIONS = [
   [...moveAll(ids('e', 1, 2), 'tray:sh1'), ...moveAll(ids('e', 3, 10), 'tray:sh2'), to('e11', 'tray:sh3')],
   [
     to('s1', 'slot:tester'), run('tester'), to('s2', 'slot:tester'), run('tester'), to('s3', 'slot:tester'), run('tester'),
-    to('s4', 'slot:tester'), run('tester'), to('s5', 'slot:tester'), run('tester'),
     to('s4', 'tray:gives'), to('s5', 'tray:takes')
   ],
-  [to('sb', 'tray:same'), to('sc', 'tray:other'), to('sd', 'tray:other'), to('se', 'tray:same')],
-  [to('n1', 'tray:heavy'), to('n2', 'tray:charged'), to('n3', 'tray:other'), to('n4', 'tray:charged')]
+  [to('sb', 'tray:same'), to('sc', 'tray:other'), to('sd', 'tray:other'), to('se', 'tray:same')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -601,9 +570,8 @@ export const MISSES = [
   [...SPECK_ORDER.map((c, i) => to(`sp${i + 1}`, 'tray:bed')), run('field'), ...SPECK_ORDER.map((c, i) => to(`sp${i + 1}`, 'tray:bends'))],
   moveAll(ids('e', 1, 5), 'tray:atom'),
   [...moveAll(ids('e', 1, 3), 'tray:sh1'), ...moveAll(ids('e', 4, 11), 'tray:sh2')],
-  [to('s4', 'slot:tester'), run('tester'), to('s5', 'slot:tester'), run('tester'), to('s4', 'tray:inert'), to('s5', 'tray:takes')],
-  [to('sb', 'tray:other'), to('sc', 'tray:other'), to('sd', 'tray:other'), to('se', 'tray:same')],
-  [to('n1', 'tray:heavy'), to('n2', 'tray:other'), to('n3', 'tray:other'), to('n4', 'tray:charged')]
+  [to('s4', 'tray:inert'), to('s5', 'tray:takes')],
+  [to('sb', 'tray:other'), to('sc', 'tray:other'), to('sd', 'tray:other'), to('se', 'tray:same')]
 ];
 
 function blankState() { return {}; }

@@ -350,13 +350,13 @@ export const STAGES = [
       const at = [[24, 33], [50, 33], [76, 33], [102, 33], [37, 45], [63, 45], [89, 45]];
       return cellTable({
         pieces: order.map((k, i) => chip(`k${k}`, chips[k], { x: at[i][0], y: at[i][1] })),
-        fixtures: [plaqueFixture('plate', 'The cell, left to right', { x: 70, y: 14 }, ['zinc strip in zinc ions, salt bridge, copper ions with copper strip', 'one bar | between a solid and its ions', 'two bars || for the bridge'], { w: 130 })],
+        fixtures: [plaqueFixture('plate', 'The two half-cells', { x: 70, y: 14 }, ['cathode: copper ions with copper strip', 'anode: zinc strip in zinc ions', 'one bar | between a solid and its ions; two bars || for the bridge'], { w: 130 })],
         zones: { rail: { at: { x: 68, y: 88 }, size: { w: 128, h: 12 }, first: 'Left end', last: 'Right end', items: [], start: [] } }
       }, { w: 140, h: 96 });
     })(),
     hints: [
       'Drag the seven symbols onto the strip and put them in order.',
-      'Compare the plaque\'s list of the cell with the order you read it, left to right.',
+      'Identify which half-cell is the anode and which is the cathode, then order from anode to cathode.',
       'Each solid is written next to its own ions, and the two halves are joined by the bridge.'
     ],
     check(state) {

@@ -237,7 +237,7 @@ export const COMMENDATIONS = [
     tier: 'brass',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.learn && s.learn['unit07/q1-recipe']?.completedAt)
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit07/q3-change']?.completedAt)
   },
   {
     id: 'learn_q5_both',

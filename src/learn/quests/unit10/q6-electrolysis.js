@@ -152,7 +152,7 @@ export const STAGES = [
     id: 's3-charge',
     title: 'How Much Passed',
     briefing: { speaker: SPEAKER, body: 'Electric charge is counted in coulombs. A current of one ampere carries one coulomb each second.' },
-    prompt: 'Which run passed the least charge and which the most?',
+    prompt: 'Order these runs from least charge passed to most charge passed.',
     widget,
     table: cellTable({
       pieces: S3_RUNS.map((r, i) => tag(`r${i + 1}`, `${r.I} A, ${r.t} s`, { x: 24 + i * 35, y: 70 })),
@@ -288,6 +288,10 @@ export const STAGES = [
   {
     id: 's7-gases',
     title: 'Water and Brine',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Oxygen forms slowly at real electrodes and needs extra voltage (overpotential) to start. In salty brine, chloride ions can react instead when oxygen lags.'
+    },
     prompt: 'Which gas does each tube collect?',
     widget,
     table: (() => {

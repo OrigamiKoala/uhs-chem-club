@@ -47,9 +47,9 @@ export async function checkTeeterQ6(ok, bad) {
   const a = leanYield(H, mix, { V: 1, T: 673, cycles: 0 }).made; const b = leanYield(H, mix, { V: 0.5, T: 573, cycles: 3 }).made;
   near(a, 0.972, 3e-3, 'NH3 made at the start dials');
   if (b > a && b <= 2 + 1e-9) ok(`q6 the best dials make ${b.toFixed(3)} mol, under the 2 mol the N2 allows`); else bad('q6 yield');
-  // Slips the stages refuse are read from the table: the stage-7 sort must put argon and the catalyst on K.
+  // Slips the stages refuse are read from the table: the stage-8 sort must put helium on K.
   const Q = await import('../../src/learn/quests/unit08/q6-lean.js');
-  const hand = ['forward', 'forward', 'reverse', 'reverse', 'none', 'none'];
-  const got = Q.LEAN.PICKS.slice(1).map(p => leanStress(H, base, { add: p.st.add, V: p.st.V, inert: p.st.inert, catalyst: p.st.catalyst }).dir);
-  if (JSON.stringify(got) === JSON.stringify(hand)) ok('q6 the six changes of the sort point the way the hand reading says'); else bad(`q6 sort directions ${got}`);
+  const hand = ['forward', 'reverse', 'reverse', 'none'];
+  const got = Q.LEAN.PICKS.map(p => leanStress(H, base, { add: p.st.add, V: p.st.V, inert: p.st.inert, catalyst: p.st.catalyst }).dir);
+  if (JSON.stringify(got) === JSON.stringify(hand)) ok('q6 the four changes of the sort point the way the hand reading says'); else bad(`q6 sort directions ${got}`);
 }

@@ -82,7 +82,8 @@ export const STAGES = [
   {
     id: 's1-curve',
     title: 'Using Up the Acid',
-    prompt: 'Mark the volume of sodium hydroxide that has just used up all the hydrochloric acid in the flask.',
+    briefing: 'A titration curve plots the pH in the flask against the volume of base poured in.',
+    prompt: 'What volume of sodium hydroxide exactly uses up the hydrochloric acid?',
     widget,
     table: phTable({
       fixtures: [
@@ -146,7 +147,7 @@ export const STAGES = [
   {
     id: 's3-compare',
     title: 'Two Acids, One Burette',
-    get prompt() { return guessLine('Find how the pH at the equivalence point of acetic acid compares with 7.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Is the pH at acetic acid\'s equivalence point below, at or above 7?', recall(QUEST_KEY)); },
     widget,
     table: phTable({
       fixtures: [
@@ -172,10 +173,11 @@ export const STAGES = [
       const e = eq(ACETIC);
       const ph = fmt(titrationML(ACETIC, e), 2);
       const verdict = g === 'above' ? `Above 7, as you predicted: ` : g ? `Not what you predicted: ` : '';
+      const lead = verdict ? `${verdict}hydrochloric` : 'Hydrochloric';
       return {
         log: 'Acetic acid reached its equivalence point above pH 7.',
         title: 'Not Always 7',
-        body: `${verdict}hydrochloric acid read ${fmt(titrationML(HCL, e), 2)} at ${mL1(e)} mL and acetic acid ${ph}. The acetate left when the acid is used up is a weak base, so the equivalence point of a weak acid is above 7.`
+        body: `${lead} acid read ${fmt(titrationML(HCL, e), 2)} at ${mL1(e)} mL and acetic acid ${ph}. The acetate left when the acid is used up is a weak base, so the equivalence point of a weak acid is above 7.`
       };
     }
   },
@@ -184,7 +186,8 @@ export const STAGES = [
   {
     id: 's4-half',
     title: 'Half Way',
-    prompt: 'Read each flask when half the sodium hydroxide needed to use up its acid has been poured, and say what that reading equals.',
+    briefing: 'The negative log of Ka is written pKa (pKa = −log Ka).',
+    prompt: 'Half way to the equivalence point, what does the pH equal?',
     widget,
     table: phTable({
       fixtures: [
@@ -223,15 +226,16 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     id: 's5-dye',
-    title: 'The Right Dye',
-    prompt: 'Pick the dye that changes colour at the equivalence point of this titration.',
+    title: 'The Right Indicator',
+    briefing: 'An indicator is a substance whose colour depends on the pH.',
+    prompt: 'Which indicator changes colour at the equivalence point of this titration?',
     widget,
     table: phTable({
       pieces: DYES.map((id, i) => tag(`c-${id}`, INDICATORS[id].name[0].toUpperCase() + INDICATORS[id].name.slice(1), { x: 112, y: 12 + i * 17 })),
       fixtures: [
         buretteFixture('bur', { x: 48, y: 46 }, { samples: [{ title: 'Acetic acid', sub: sub(ACETIC_DYES), ...ACETIC_DYES, meter: false }], cap: 40, rack: DYES })
       ],
-      zones: { slots: [{ id: 'dye', label: 'My dye', at: { x: 158, y: 38 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'dye', label: 'My indicator', at: { x: 158, y: 38 }, size: { w: 36, h: 14 } }] }
     }, { w: 180, h: 96 }),
     hints: [
       'Use "Pour size" and "Pour" and watch the four tubes, then lay a card in the slot.',
@@ -252,7 +256,7 @@ export const STAGES = [
       return {
         log: 'Only phenolphthalein turned over at the steep rise.',
         title: 'Indicators',
-        body: `A dye whose colour depends on the pH is an indicator. Phenolphthalein changed between ${fmt(pp.from, 2)} and ${fmt(pp.to, 2)} mL, inside the steep rise; bromothymol blue took from ${mL1(bt.from)} to ${mL1(bt.to)} mL. The right indicator changes colour near the equivalence pH.`
+        body: `Phenolphthalein changed between ${fmt(pp.from, 2)} and ${fmt(pp.to, 2)} mL, inside the steep rise; bromothymol blue took ${mL1(bt.from)} to ${mL1(bt.to)} mL. An indicator must change colour near the equivalence pH.`
       };
     }
   },
@@ -261,7 +265,7 @@ export const STAGES = [
   {
     id: 's6-two',
     title: 'More Than One Rise',
-    prompt: 'Titrate the sulfurous acid and say how many protons one molecule of it gives up.',
+    prompt: 'How many protons does one molecule of sulfurous acid donate?',
     widget,
     table: phTable({
       fixtures: [
@@ -287,7 +291,7 @@ export const STAGES = [
       return {
         log: 'Sulfurous acid showed two steep rises.',
         title: 'Polyprotic Acids',
-        body: `The curve rose steeply at ${mL1(e)} mL and again at ${mL1(2 * e)} mL: the second proton needed as much base as the first. An acid that can give up more than one proton is a polyprotic acid, and each proton is used up in its own step.`
+        body: `The curve rose steeply at ${mL1(e)} mL and again at ${mL1(2 * e)} mL: two protons, each needing the same amount of base. Such an acid is polyprotic.`
       };
     }
   },
@@ -295,8 +299,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     id: 's7-strength',
-    title: 'How Strong Is the Acid',
-    prompt: 'Find the concentration of the hydrochloric acid in the flask, in mol/L.',
+    title: 'How Concentrated Is the Acid',
+    prompt: 'What is the concentration of the hydrochloric acid in the flask, in mol/L?',
     widget,
     entry: { id: 'c', label: 'Concentration', unit: 'M' },
     table: phTable({
@@ -335,7 +339,7 @@ export const STAGES = [
   {
     id: 's8-unknown',
     title: 'A Sealed Weak Acid',
-    prompt: 'Find the Ka of the weak acid in the flask.',
+    prompt: 'What is the Ka of the weak acid in the flask?',
     widget,
     entry: { id: 'ka', label: 'Ka (write 0.0005 as 5e-4)', unit: '' },
     table: phTable({
@@ -347,7 +351,7 @@ export const STAGES = [
     hints: [
       'Use "Pour size" and "Pour", read the display and the list, and type Ka in the field.',
       'Compare the curve with the volumes poured, and look for the volume where the steep rise is.',
-      'Use the half-equivalence reading: find the equivalence volume, halve it, and turn the pH read there into the constant.'
+      'One point on this curve was shown, two stages back, to equal the pKa.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ka');
@@ -365,7 +369,7 @@ export const STAGES = [
       return {
         log: 'The pH half way gave the pKa.',
         title: 'Reading Ka',
-        body: `The steep rise was at ${mL1(eq(UNKNOWN_WEAK))} mL, so half way is ${mL1(half)} mL, where the pH read ${fmt(r, 2)}. That is the pKa, so Ka is about ${sci(10 ** -r, 2)}, for an acid whose strength was never given.`
+        body: `The steep rise was at ${mL1(eq(UNKNOWN_WEAK))} mL, so half way is ${mL1(half)} mL, where the pH read ${fmt(r, 2)}. That is the pKa, so Ka is about ${sci(10 ** -r, 2)}, for an acid whose concentration was never given.`
       };
     }
   }

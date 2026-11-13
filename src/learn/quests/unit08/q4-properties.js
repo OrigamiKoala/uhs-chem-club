@@ -1,43 +1,28 @@
 /**
  * Unit 8 · Bench 4 — Combining K (q4-properties)
  *
- * Teeter's card-sorting house, on the pans kit (`table/kits/pans.js`, `pans-cards.js`). A reaction can be written in many ways; the K of
- * each way is a different number. The pan check holds a sealed mixture at equilibrium, and its "Read K" key gives the K of whatever
- * reaction the cards on it make, as the ratio of the amounts in the bars. Eight stages and ONE click: the belief that writing a reaction
- * twice as large doubles its K.
+ * Teeter's K-rule bench, on the pans kit (`table/kits/pans.js`, `pans-ratio.js`, `pans-cards.js`). Four stages on real reactions:
  *
- *   1  flip a card on the check, then give the K of a card the check cannot read     -> 1/K for the reverse reaction
- *   2  PREDICT: what does writing the reaction twice as large do to K?
- *   3  TEST: double a card on the check, then a card it cannot read                  -> K raised to a power
- *   4  a card written half as large (K given for the doubled card)                  -> the square root
- *   5  two cards on the check, then two it cannot read                                -> the K of two added reactions is the product
- *   6  stack three cards into a wanted reaction                                       -> flip, enlarge, cancel
- *   7  Kp from Kc at 298 K, two worked reactions on a plate                           -> Kp = Kc (RT)^dn (beyond the exam)
- *   8  typed: the K of a wanted reaction from two printed K values
- *
- * THE WRONG MODEL IS ON THE TABLE. The prediction offers "K doubles"; the check reads the doubled card at K squared.
- *
- * Substances are letters (A, B, C ...): the rules of K do not depend on the chemistry. The K printed on a card is a given; the K of a
- * rewritten card is never printed, it is read from the mixture. Stage 7 is Kp from Kc (beyond the exam, built at the owner's request); it replaced "a stack already built".
+ *   1  The Same Vessel, Written Backwards (N₂O₄ ⇌ 2 NO₂ vs 2 NO₂ ⇌ N₂O₄ on the ratio board) -> 1/K
+ *   2  PREDICT: what happens to K when every coefficient in H₂ + I₂ ⇌ 2 HI is doubled?
+ *   3  Every Coefficient Doubled (observe HI on K reader, answer 2 SO₂ + O₂ ⇌ 2 SO₃ doubled)  -> K²
+ *   4  Two Reactions in a Row (observe N₂ + O₂ ⇌ 2 NO and 2 NO + O₂ ⇌ 2 NO₂, answer water-gas) -> K₁ × K₂
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
-import { pansTable, note, pieceIn, plaqueFixture } from '../../table/kits/pans.js';
-import { rxnCard, kTile, checkFixture, stackFixture, stackMatches, stackCards, checkLog, fmtRxn } from '../../table/kits/pans-cards.js';
-import { Q4, fmtK, kReverse, kScale, kAdd, kOfCardByRule, netOfCards, kpFromKc, R_ATM } from '../../engine/eqdata.js';
+import { pansTable, note, pieceIn } from '../../table/kits/pans.js';
+import { vesselFixture, rigParts, tile, rigRead } from '../../table/kits/pans-ratio.js';
+import { rxnCard, kTile, checkFixture, checkLog, fmtRxn } from '../../table/kits/pans-cards.js';
+import { Q4, fmtK, kScale, kAdd, netOfCards } from '../../engine/eqdata.js';
+import { clipFixture } from '../../table/kits/pans-clips.js';
 
-import { clipFixture, pgasFixture } from '../../table/kits/pans-clips.js';
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 4 };
 
-export const VOCABULARY = [
-  { term: /\bKp\b/, introducedAt: 7 },
-  { term: /\bKc\b/, introducedAt: 7 }
-];
+export const VOCABULARY = [];
 
-/** K itself is q2's; this bench only rewrites it. */
 export const BUILDS_ON = ['unit08/q2-k'];
 
 export function toolNoteFor() { return null; }
@@ -50,49 +35,26 @@ const GUESS = {
   squares: 'K is multiplied by itself',
   halves: 'K is halved'
 };
-const TALL = { h: 70 };
+const TALL = { h: 74 };
 
-/* ------------------------------------------------------------------ the numbers (all from engine/eqdata.js) */
+/* ------------------------------------------------------------------ the numbers */
 
-const neg = k => `−${fmtK(k)}`;
-const T1 = { right: fmtK(kReverse(Q4.flipOne.K)), a: neg(Q4.flipOne.K), b: fmtK(1 - Q4.flipOne.K), c: fmtK(Q4.flipOne.K * Q4.flipOne.K) };
-const T3 = { right: fmtK(kScale(Q4.doubleOne.K, 2)), a: fmtK(2 * Q4.doubleOne.K), b: fmtK(Q4.doubleOne.K), c: fmtK(Q4.doubleOne.K / 2) };
-const K4 = kScale(Q4.halfOne.K, 0.5);
-const T4 = { right: fmtK(K4), a: fmtK(Q4.halfOne.K / 2), b: fmtK(2 * Q4.halfOne.K), c: fmtK(kScale(Q4.halfOne.K, 2)) };
-const K5 = kAdd(Q4.addX.K, Q4.addY.K);
-const T5 = { right: fmtK(K5), a: fmtK(Q4.addX.K + Q4.addY.K), b: fmtK(Q4.addX.K / Q4.addY.K), c: fmtK(Q4.addX.K - Q4.addY.K) };
-const K7 = kAdd(kOfCardByRule(Q4.readA, { scale: Q4.readA.scale }), kOfCardByRule(Q4.readB, { flipped: true }));
-const T7 = {
-  right: fmtK(K7),
-  a: fmtK(kAdd(kScale(Q4.readA.K, 2), Q4.readB.K)),
-  b: fmtK(kAdd(Q4.readA.K, kReverse(Q4.readB.K))),
-  c: fmtK(kScale(Q4.readA.K, 2) + kReverse(Q4.readB.K))
-};
-const K8 = kAdd(kScale(Q4.typedA.K, 2), kReverse(Q4.typedB.K));
-
-/** Stage 7: Kp from Kc at 298 K (RT = 24.5 L·atm/mol). Two worked reactions carry both numbers; the asked one carries Kc only. */
-const KPT = 298;
-const KP = { RT: R_ATM * KPT, zero: { kc: 4.0, dn: 0 }, minus: { kc: 100, dn: -1 }, ask: { kc: 0.0059, dn: 1 } };
-const KP_RIGHT = kpFromKc(KP.ask.kc, KP.ask.dn, KPT);
-const T7K = { right: fmtK(KP_RIGHT), a: fmtK(KP.ask.kc), b: fmtK(KP.ask.kc / KP.RT), c: fmtK(KP.ask.kc * KP.RT * KP.RT) };
-
-const TARGET6 = { A: -2, B: -2, D: 2 };
-const WANT6 = '2 A + 2 B ⇌ 2 D';
-const WANT8 = '2 A ⇌ C';
+const T1 = { right: '6.70', a: '−0.150', b: '0.850', c: '0.0225' };
+const T3 = { right: fmtK(kScale(Q4.so3.K, 2)), a: fmtK(2 * Q4.so3.K), b: fmtK(Q4.so3.K), c: fmtK(Q4.so3.K / 2) };
+const K4 = kAdd(Q4.wg1.K, Q4.wg2.K);
+const T4 = { right: fmtK(K4), a: fmtK(Q4.wg1.K + Q4.wg2.K), b: fmtK(Q4.wg1.K / Q4.wg2.K), c: fmtK(Q4.wg1.K - Q4.wg2.K) };
 
 /* ------------------------------------------------------------------ layout */
 
 const CARD_X = 26;
 const TILE_AT = [{ x: 121, y: 34 }, { x: 139, y: 34 }, { x: 121, y: 48 }, { x: 139, y: 48 }];
 const tiles = (labels) => labels.map((l, i) => kTile(`t${i + 1}`, l, TILE_AT[i]));
-const CHK_TRAY = { id: 'chk', label: 'On the check', at: { x: 82, y: 14 }, size: { w: 58, h: 14 }, cell: 50, cellH: 13 };
+const CHK_TRAY = { id: 'chk', label: 'On the K reader', at: { x: 82, y: 14 }, size: { w: 58, h: 14 }, cell: 50, cellH: 13 };
 const answerSlot = label => ({ id: 'ans', label, at: { x: 130, y: 14 }, size: { w: 34, h: 11 } });
-const checkAt = (mix, order, y = 44, h = 36) => checkFixture('check', { x: 82, y }, { tray: 'chk', mix, order, w: 58, h });
+const checkAt = (mix, order, y = 44, h = 36) => checkFixture('check', { x: 82, y }, { tray: 'chk', mix, order, w: 58, h, title: 'K reader' });
 
-/** What the check has read for an equation: its K as printed, or null. */
 const readOf = (t, eq) => checkLog(t, 'check').find(e => e.eq === eq)?.k ?? null;
 
-/** A tile stage: a tile in the slot, the right one passes, a wrong one is refused with what the check has shown. */
 function tileCheck(state, want, why) {
   const t = state.table;
   const tile = pieceIn(t, 'ans');
@@ -113,56 +75,63 @@ const guessLine = () => { const g = recall(QUEST_KEY); return g && GUESS[g] ? g 
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    id: 's1-reverse',
-    title: 'The Other Way Round',
-    prompt: 'Lay the K card for E ⇌ 2 D, which is the card 2 D ⇌ E written in the reverse direction.',
-    widget,
-    table: pansTable({
-      pieces: [
-        rxnCard('p', { x: CARD_X, y: 12 }, Q4.P),
-        rxnCard('q', { x: CARD_X, y: 28 }, Q4.flipOne),
-        ...tiles([T1.b, T1.right, T1.a, T1.c])
+  (() => {
+    const rig = rigParts('rig', { x: 56, y: 62 }, { vsl: 'pans', top: 2, bottom: 2, w: 104 });
+    return {
+      id: 's1-reverse',
+      title: 'The Same Vessel, Written Backwards',
+      prompt: 'What is K for 2 NO₂ ⇌ N₂O₄ in this same settled vessel?',
+      widget,
+      table: pansTable({
+        pieces: [
+          tile('t-NO21', 'n2o4_rev', 'NO2', 1, { x: 118, y: 31 }),
+          tile('t-NO22', 'n2o4_rev', 'NO2', 2, { x: 138, y: 31 }),
+          tile('t-N2O41', 'n2o4_rev', 'N2O4', 1, { x: 118, y: 45 }),
+          ...[T1.a, T1.right, T1.b, T1.c].map((l, i) => kTile(`t${i + 1}`, l, [{ x: 118, y: 59 }, { x: 138, y: 59 }, { x: 118, y: 73 }, { x: 138, y: 73 }][i]))
+        ],
+        fixtures: [
+          vesselFixture('pans', { x: 56, y: 21 }, { system: 'n2o4_rev', pans: [{ start: { N2O4: 0.3 } }], settled: true, showEq: true, showK: true, w: 104, titles: ['Settled vessel (298 K)'] }),
+          rig.fixture
+        ],
+        zones: { slots: [...rig.slots, answerSlot('K of 2 NO₂ ⇌ N₂O₄')] }
+      }, { h: 86 }),
+      hints: [
+        'Place the particle cards on the ratio board for 2 NO₂ ⇌ N₂O₄, then lay the matching K card in the slot.',
+        'For 2 NO₂ ⇌ N₂O₄, N₂O₄ is the product and NO₂ is the reactant.',
+        'Compare the ratio board reading for N₂O₄ ÷ NO₂² with the reading for NO₂² ÷ N₂O₄.'
       ],
-      fixtures: [checkAt(Q4.mixP, ['A', 'B', 'C'])],
-      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of E ⇌ 2 D')] }
-    }, TALL),
-    hints: [
-      'Use the vessel check with "Read K", the "Flip" key while you hold a card, and the cards.',
-      'Compare the K the check reads for A + B ⇌ C as it is written with the K it reads when the card is flipped.',
-      'Find how the K changed when the card was flipped, then make that same change to the K printed on the other card.'
-    ],
-    check(state) {
-      return tileCheck(state, T1.right, t => {
-        const eq = eqOf(Q4.P, { flipped: true });
-        const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k} when A + B ⇌ C, printed with K ${fmtK(Q4.P.K)}, was flipped; that card does not make the same change to the K on 2 D ⇌ E.` : 'The check has not read a flipped card yet.';
-      });
-    },
-    reward: {
-      log: 'A flipped card read at one over its K.',
-      title: 'K of the Reverse Reaction',
-      body: 'Writing a reaction the other way round swaps its products and reactants in the ratio, so the new K is 1 divided by the old K. The mixture is the same; only the way the reaction is written changed.'
-    }
-  },
+      check(state) {
+        return tileCheck(state, T1.right, t => {
+          const r = rigRead(t, 'rig');
+          return r.laid
+            ? `The ratio board reads ${fmtK(r.readings[0])} for that arrangement; N₂O₄ ÷ NO₂² gives K for 2 NO₂ ⇌ N₂O₄.`
+            : 'Place N₂O₄ and NO₂² on the ratio board to read the reversed K.';
+        });
+      },
+      reward: {
+        log: 'The reversed reaction had K = 1 ÷ 0.15 = 6.7.',
+        title: 'K of the Reverse Reaction',
+        body: 'The vessel is the same; only the ratio is written the other way up, so the new K is 1 ÷ 0.15 = 6.7.'
+      }
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
   {
     id: 's2-predict',
     title: 'Doubling a Reaction',
-    // A PREDICT STAGE: no check, no card, no tile. The guess comes back with the test.
     predict: true,
-    prompt: 'What happens to the K of A + B ⇌ C when every amount in it is doubled?',
+    prompt: 'What happens to K when every coefficient in H₂ + I₂ ⇌ 2 HI is doubled?',
     widget,
     table: pansTable({
       pieces: [note('doubles', GUESS.doubles, { x: 30, y: 14 }), note('same', GUESS.same, { x: 78, y: 14 }), note('squares', GUESS.squares, { x: 30, y: 36 }), note('halves', GUESS.halves, { x: 78, y: 36 })],
-      fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'react', { title: 'A settled vessel', from: 110, kf: 0.1, kr: 0.05, seed: 6, span: 36 , h: 32 })],
+      fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'react', { title: 'A settled vessel', from: 110, kf: 0.1, kr: 0.05, seed: 6, span: 36, h: 32 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }, { h: 78 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Think about whether doubling every amount in the same reaction changes the mixture or only the way it is written.',
-      'K is a ratio of amounts, so work out what that ratio becomes when every amount in it is doubled.'
+      'Drag one of the four prediction cards into the slot.',
+      'Think about what doubling every coefficient does to the powers in K.',
+      'K is a ratio of powers; decide what doubling every power does to that ratio.'
     ],
     check(state) {
       if (!pieceIn(state.table, 'guess')) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
@@ -175,266 +144,109 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, the vessel check reads the K of a card with every amount doubled.'
+      body: 'Next, the K reader measures a reaction with every coefficient doubled.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     id: 's3-double',
-    title: 'Every Amount Doubled',
+    title: 'Every Coefficient Doubled',
     get prompt() {
       const g = guessLine();
-      return g ? `You predicted "${GUESS[g]}". Lay the card for the K of F + G ⇌ H when every amount in it is doubled.` : 'Lay the card for the K of F + G ⇌ H when every amount in it is doubled.';
+      const q = 'What is K for 4 SO₂ + 2 O₂ ⇌ 4 SO₃ when K is 280 for 2 SO₂ + O₂ ⇌ 2 SO₃?';
+      return g ? `You predicted "${GUESS[g]}". ${q}` : q;
     },
     widget,
     table: pansTable({
       pieces: [
-        rxnCard('p', { x: CARD_X, y: 12 }, Q4.P),
-        rxnCard('r', { x: CARD_X, y: 28 }, Q4.doubleOne),
+        rxnCard('p', { x: CARD_X, y: 12 }, Q4.hi),
+        rxnCard('r', { x: CARD_X, y: 28 }, Q4.so3),
         ...tiles([T3.a, T3.b, T3.right, T3.c])
       ],
-      fixtures: [checkAt(Q4.mixP, ['A', 'B', 'C'])],
-      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of F + G ⇌ H')] }
+      fixtures: [checkAt(Q4.mixHI, ['H₂', 'I₂', 'HI'])],
+      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of 4 SO₂ + 2 O₂ ⇌ 4 SO₃')] }
     }, TALL),
     hints: [
-      'Use the vessel check with "Read K", the "Larger" key while you hold a card, and the cards.',
-      'Compare the K the check reads for A + B ⇌ C as it is written with the K it reads when every amount in the card is doubled.',
-      'Find how the K changed when every amount was doubled, then make that same change to the K printed on the other card.'
+      'Lay H₂ + I₂ ⇌ 2 HI on the K reader, press "Larger" while holding it, and press "Read K".',
+      'Compare the K the reader gives for H₂ + I₂ ⇌ 2 HI with the K for 2 H₂ + 2 I₂ ⇌ 4 HI.',
+      'See how 54 changed when doubled, then apply that same change to 280.'
     ],
     check(state) {
       return tileCheck(state, T3.right, t => {
-        const eq = eqOf(Q4.P, { scale: 2 });
+        const eq = eqOf(Q4.hi, { scale: 2 });
         const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that card does not make the same change to the K on F + G ⇌ H.` : 'The check has not read a card made larger yet.';
+        return k ? `The K reader gave ${k} for ${eq} (from 54); that card does not apply the same change to 280.` : 'The K reader has not read a doubled card yet.';
       });
     },
     get reward() {
       const g = guessLine();
-      const said = !g ? '' : g === 'squares' ? 'You predicted the K would be multiplied by itself, and the check agreed. ' : g === 'doubles' ? 'You predicted K would double; the check read the doubled card at a very different number. ' : 'The check did not agree with your prediction, which is how a guess gets better. ';
+      const said = !g ? '' : g === 'squares' ? 'You predicted K would be multiplied by itself, and the reader agreed. ' : g === 'doubles' ? 'You predicted K would double; the reader gave 54 × 54 instead. ' : 'The reader did not agree with your prediction, which is how a guess gets better. ';
       return {
-        log: 'A card with every amount doubled read at K squared.',
+        log: 'Doubling every coefficient squared K.',
         title: 'K to a Power',
-        body: `${said}Multiplying every amount in a reaction by c raises its K to the power c. Doubling every amount squares K; it does not double it.`
+        body: `${said}Doubling every coefficient doubles every power in the ratio, so K is squared: 280 × 280 = 78,400. The mixture itself is no different.`
       };
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    id: 's4-half',
-    title: 'Every Amount Halved',
-    prompt: 'Lay the K card for M + N ⇌ W, which is 2 M + 2 N ⇌ 2 W with every amount halved.',
+    id: 's5-add',
+    title: 'Two Reactions in a Row',
+    prompt: 'What is K for C(s) + 2 H₂O ⇌ CO₂ + 2 H₂?',
     widget,
     table: pansTable({
       pieces: [
-        rxnCard('p', { x: CARD_X, y: 12 }, Q4.P),
-        rxnCard('m', { x: CARD_X, y: 28 }, Q4.halfOne),
-        ...tiles([T4.b, T4.c, T4.a, T4.right])
+        rxnCard('c1', { x: CARD_X, y: 8 }, Q4.no1),
+        rxnCard('c2', { x: CARD_X, y: 22 }, Q4.no2),
+        rxnCard('x', { x: CARD_X, y: 38 }, Q4.wg1),
+        rxnCard('y', { x: CARD_X, y: 52 }, Q4.wg2),
+        ...tiles([T4.a, T4.c, T4.right, T4.b])
       ],
-      fixtures: [checkAt(Q4.mixP, ['A', 'B', 'C'])],
-      zones: { trays: [CHK_TRAY], slots: [answerSlot('K of M + N ⇌ W')] }
+      fixtures: [checkAt(Q4.mixNO, ['N₂', 'O₂', 'NO', 'NO₂'], 52, 32)],
+      zones: { trays: [{ ...CHK_TRAY, at: { x: 82, y: 19 }, size: { w: 58, h: 24 } }], slots: [answerSlot('K of net reaction')] }
     }, TALL),
     hints: [
-      'Use the vessel check with "Read K", the "Larger" key while you hold a card, and the cards.',
-      'Read the check for A + B ⇌ C as written and with every amount doubled, and compare the two K values.',
-      'Doubling every amount changed K by a rule on the check; the card on the table is already doubled, so undo that change on its printed K.'
+      'Lay both N₂ + O₂ ⇌ 2 NO and 2 NO + O₂ ⇌ 2 NO₂ on the K reader and press "Read K".',
+      'Compare the K of the pair (1.00) with the two printed K values (4.00 and 0.250).',
+      'Combine 2.50 and 1.40 the same way the K reader combined 4.00 and 0.250.'
     ],
     check(state) {
       return tileCheck(state, T4.right, t => {
-        const eq = eqOf(Q4.P, { scale: 2 });
-        const k = readOf(t, eq);
-        return k ? `The check read ${eq} at K ${k}, and A + B ⇌ C is printed with K ${fmtK(Q4.P.K)}; that card does not undo that change on the K of 2 M + 2 N ⇌ 2 W.` : 'The check has not read a card made larger yet.';
+        const k = readOf(t, 'N₂ + 2 O₂ ⇌ 2 NO₂');
+        return k ? `The K reader gave ${k} for the pair (4.00 and 0.250); that card does not combine 2.50 and 1.40 the same way.` : 'The K reader has not read the two cards together yet.';
       });
     },
     reward: {
-      log: 'A card with every amount halved read at the square root of its K.',
-      title: 'K to a Fraction',
-      body: 'Halving every amount in a reaction takes the square root of its K, which undoes the squaring that doubling does. Multiplying every amount by c raises K to the power c.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 5 */
-  {
-    id: 's5-add',
-    title: 'Two Reactions in a Row',
-    prompt: 'Lay the card for the K of the reaction X ⇌ Z.',
-    widget,
-    table: pansTable({
-      pieces: [
-        rxnCard('c1', { x: CARD_X, y: 8 }, Q4.chain1),
-        rxnCard('c2', { x: CARD_X, y: 22 }, Q4.chain2),
-        rxnCard('x', { x: CARD_X, y: 38 }, Q4.addX),
-        rxnCard('y', { x: CARD_X, y: 52 }, Q4.addY),
-        ...tiles([T5.a, T5.c, T5.right, T5.b])
-      ],
-      fixtures: [checkFixtureTwo()],
-      zones: { trays: [{ ...CHK_TRAY, at: { x: 82, y: 21 }, size: { w: 58, h: 28 } }], slots: [answerSlot('K of X ⇌ Z')] }
-    }, TALL),
-    hints: [
-      'Use the vessel check with "Read K", the four cards, and the cards.',
-      'Compare the K the check reads for each of A ⇌ B and B ⇌ C alone with the K it reads for both lying on it.',
-      'Find how the two single K values combine into the K of the pair, then combine the two cards in the question the same way.'
-    ],
-    check(state) {
-      return tileCheck(state, T5.right, t => {
-        const k = readOf(t, 'A ⇌ C');
-        return k ? `The check read A ⇌ C at K ${k}, with A ⇌ B printed at K ${fmtK(Q4.chain1.K)} and B ⇌ C at K ${fmtK(Q4.chain2.K)}; that card does not combine the K values of X ⇌ Y and Y ⇌ Z the same way.` : 'The check has not read two cards lying together yet.';
-      });
-    },
-    reward: {
-      log: 'Two added reactions read at the product of their K values.',
+      log: 'Two added reactions multiplied their K values.',
       title: 'Adding Reactions',
-      body: 'When two reactions add up to a third, the K of the third is the K of one times the K of the other. The substance in the middle cancels from the reaction, and its amount cancels from the ratio.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 6 */
-  {
-    id: 's6-stack',
-    title: 'Reach the Reaction',
-    prompt: `Stack the cards so that they add up to ${WANT6}.`,
-    widget,
-    table: pansTable({
-      pieces: [
-        rxnCard('a', { x: CARD_X, y: 12 }, Q4.buildA),
-        rxnCard('b', { x: CARD_X, y: 28 }, Q4.buildB),
-        rxnCard('c', { x: CARD_X, y: 44 }, Q4.buildC)
-      ],
-      fixtures: [stackFixture('stack', { x: 130, y: 31 }, { tray: 'stack', wanted: WANT6, w: 40, h: 54 })],
-      zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 80, y: 30 }, size: { w: 56, h: 42 }, cell: 50, cellH: 13 }] }
-    }),
-    hints: [
-      'Use the three cards, the "Flip" and "Larger" keys while you hold a card, and the stack.',
-      'Compare what the stack adds up to with the wanted reaction, substance by substance.',
-      'A substance must appear once on each side to cancel, so flip a card that has it on the wrong side and multiply cards with "Larger" until the amounts match.'
-    ],
-    check(state) {
-      const t = state.table;
-      const cards = stackCards(t, 'stack');
-      if (!cards.length) return { ok: false, notYet: true, msg: 'Stack the cards first.' };
-      if (stackMatches(t, 'stack', TARGET6)) return { ok: true };
-      return { ok: false, msg: 'The stack adds up to a different reaction from the one wanted.' };
-    },
-    reward: {
-      log: 'The stack added up to the wanted reaction.',
-      title: 'Cancelling to a Wanted Reaction',
-      body: 'To reach a wanted reaction, flip a card to put a substance on the side it is needed, multiply cards with "Larger" until the amounts match, and let what is left over cancel.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 7 */
-  {
-    id: 's7-kp',
-    title: 'K From Pressures',
-    prompt: 'Lay the card for Kp of N₂O₄ ⇌ 2 NO₂ at 298 K, which has Kc 0.0059.',
-    widget,
-    table: pansTable({
-      pieces: [...tiles([T7K.b, T7K.a, T7K.c, T7K.right])],
-      fixtures: [
-        plaqueFixture('given', 'Kc is K from mol/L, Kp is K from atm', { x: 58, y: 24 }, [
-          `A ⇌ B: Kc ${fmtK(KP.zero.kc)}, Kp ${fmtK(kpFromKc(KP.zero.kc, KP.zero.dn, KPT))}`,
-          `2 C ⇌ D: Kc ${fmtK(KP.minus.kc)}, Kp ${fmtK(kpFromKc(KP.minus.kc, KP.minus.dn, KPT))}`,
-          `RT at 298 K: ${fmtK(KP.RT)} L·atm/mol`
-        ], { w: 80 }),
-        pgasFixture('gas', { x: 30, y: 51 }, { c: 0.05, T: KPT, title: 'Gas in a 1 L box', w: 50, h: 34 })
-      ],
-      zones: { slots: [answerSlot('Kp of N₂O₄ ⇌ 2 NO₂')] }
-    }, TALL),
-    hints: [
-      'Use the plate, the gas box and the cards.',
-      'Compare Kc with Kp for each reaction on the plate, and count the gas molecules on each side of each.',
-      'Where the gas count changes, Kp differs from Kc by RT once for each molecule gained or lost; find which way for 2 C ⇌ D, then apply it to N₂O₄ ⇌ 2 NO₂.'
-    ],
-    check(state) {
-      return tileCheck(state, T7K.right, (t, tile) => {
-        const l = tile.label;
-        if (l === T7K.a) return 'That is Kc itself. On the plate, Kp equals Kc only for A ⇌ B, where the gas count does not change.';
-        if (l === T7K.b) return 'That divides Kc by RT. On the plate, 2 C ⇌ D loses a gas molecule and Kp comes out below Kc; N₂O₄ ⇌ 2 NO₂ gains one.';
-        return `Kc is 0.0059 and RT is ${fmtK(KP.RT)}; that card changes Kc by more than one RT.`;
-      });
-    },
-    reward: {
-      log: 'Kp followed Kc by one factor of RT per gas molecule gained.',
-      title: 'Kp and Kc',
-      body: 'Kc is K from concentrations in mol/L and Kp is K from pressures in atm. They are equal when the gas count does not change, and otherwise differ by RT for every molecule gained or lost: Kp = Kc × (RT) raised to the change in gas molecules.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-typed',
-    title: 'The Wanted K',
-    prompt: `Type the K of the reaction ${WANT8}.`,
-    entry: { id: 'k', label: 'K (write 0.0005 as 5e-4)', unit: '' },
-    widget,
-    table: pansTable({
-      pieces: [
-        rxnCard('a', { x: CARD_X, y: 12 }, Q4.typedA),
-        rxnCard('b', { x: CARD_X, y: 28 }, Q4.typedB)
-      ],
-      fixtures: [stackFixture('stack', { x: 130, y: 31 }, { tray: 'stack', wanted: WANT8, w: 40, h: 54 })],
-      zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 80, y: 24 }, size: { w: 56, h: 28 }, cell: 50, cellH: 13 }] }
-    }),
-    hints: [
-      'Use the two cards, the "Flip" and "Larger" keys, the stack and the number field.',
-      'Compare what the stack adds up to with the wanted reaction to see how each card must be changed.',
-      'Change each printed K as its card was changed, then combine the changed values the way the cards are combined.'
-    ],
-    check(state) {
-      const v = entryNumber(state.table, 'k');
-      if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the K in the field.' };
-      if (Math.abs(v - K8) <= 0.03 * K8) return { ok: true };
-      const near = x => Math.abs(v - x) <= 0.03 * x;
-      const shown = fmtK(v);
-      if (near(kAdd(kScale(Q4.typedA.K, 2), Q4.typedB.K))) return { ok: false, msg: `${shown} uses the K printed on C ⇌ 2 B as it stands, and the wanted reaction has C on the other side.` };
-      if (near(kAdd(Q4.typedA.K, kReverse(Q4.typedB.K)))) return { ok: false, msg: `${shown} uses the K printed on A ⇌ B as it stands, and the wanted reaction has 2 A.` };
-      if (near(kScale(Q4.typedA.K, 2) + kReverse(Q4.typedB.K))) return { ok: false, msg: `${shown} is the changed K values added together.` };
-      return { ok: false, msg: `${shown} is not the K of ${WANT8} from these two cards.` };
-    },
-    reward: {
-      log: 'The K of the wanted reaction came from two printed K values.',
-      title: 'K Without a Measurement',
-      body: 'The K of a reaction made from other reactions needs no new measurement: flip, enlarge and add the cards, and change the K values by the same rules.'
+      body: 'The CO made by the first step is used by the second, so it cancels from the reaction and from the ratio: K is K₁ × K₂.'
     }
   }
 ];
 
-function checkFixtureTwo() {
-  return checkFixture('check', { x: 82, y: 53 }, { tray: 'chk', mix: Q4.mixChain, order: ['A', 'B', 'C'], w: 58, h: 34 });
-}
-
 /** The quest's closing card, shown only where a quest has no story animation yet. */
 export const DEBRIEF = {
   title: 'Combining K',
-  body: 'The K of a rewritten reaction follows from the K of the first by rule: 1 over K when flipped, a power when scaled, a product when added.'
+  body: 'Flip a reaction and K becomes 1 ÷ K; double it and K is squared; add two reactions and their K values multiply.'
 };
 
 const put = (piece, to) => ({ place: { piece, to } });
-const flip = piece => ({ flip: piece });
-const larger = (piece, factor) => ({ scale: { piece, factor } });
-const read = { run: 'check' };
+const scale = (piece, factor = 2) => ({ scale: { piece, factor } });
 
 export const SOLUTIONS = [
-  [put('p', 'tray:chk'), read, flip('p'), read, put('t2', 'slot:ans')],
+  [put('t-N2O41', 'slot:rig.t1'), put('t-NO22', 'slot:rig.b1'), put('t2', 'slot:ans')],
   [put('squares', 'slot:guess')],
-  [put('p', 'tray:chk'), read, larger('p', 2), read, put('t3', 'slot:ans')],
-  [put('p', 'tray:chk'), larger('p', 2), read, put('t4', 'slot:ans')],
-  [put('c1', 'tray:chk'), read, put('c2', 'tray:chk'), read, put('t3', 'slot:ans')],
-  [put('a', 'tray:stack'), larger('a', 2), put('b', 'tray:stack'), flip('b'), larger('b', 2)],
-  [put('t4', 'slot:ans')],
-  [put('a', 'tray:stack'), larger('a', 2), put('b', 'tray:stack'), flip('b'), { type: { entry: 'k', value: fmtK(K8) } }]
+  [put('p', 'tray:chk'), scale('p', 2), { run: 'check' }, put('t3', 'slot:ans')],
+  [put('c1', 'tray:chk'), put('c2', 'tray:chk'), { run: 'check' }, put('t3', 'slot:ans')]
 ];
 
 export const MISSES = [
-  [put('p', 'tray:chk'), flip('p'), read, put('t1', 'slot:ans')],
-  [],
-  [put('p', 'tray:chk'), larger('p', 2), read, put('t1', 'slot:ans')],
-  [put('p', 'tray:chk'), larger('p', 2), read, put('t1', 'slot:ans')],
-  [put('c1', 'tray:chk'), put('c2', 'tray:chk'), read, put('t1', 'slot:ans')],
-  [put('a', 'tray:stack'), put('b', 'tray:stack')],
   [put('t1', 'slot:ans')],
-  [put('a', 'tray:stack'), larger('a', 2), put('b', 'tray:stack'), { type: { entry: 'k', value: '0.128' } }]
+  [],
+  [put('p', 'tray:chk'), scale('p', 2), { run: 'check' }, put('t1', 'slot:ans')],
+  [put('c1', 'tray:chk'), put('c2', 'tray:chk'), { run: 'check' }, put('t1', 'slot:ans')]
 ];
 
 function blankState() { return {}; }
@@ -452,4 +264,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { K8, K7, K5, K4: K4, T1, T3, T4, T5, T7, WANT6, WANT8, TARGET6 };
+export const CHECKS = { T1, T3, T4, K4 };

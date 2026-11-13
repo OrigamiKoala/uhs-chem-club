@@ -281,7 +281,7 @@ function faceKey(p, state) {
    ------------------------------------------------------------------ */
 
 /** The frequency, as the screen prints it. */
-const e14Text = e14 => `${e14.toFixed(2)} x 10^14 /s`;
+const e14Text = e14 => `${e14.toFixed(2)} × 10¹⁴ /s`;
 
 /** A readout: a small recessed box with its name over its figure. */
 function readout(ctx, F, x, y, w, h, name, value, o = {}) {
@@ -298,6 +298,9 @@ function holderWord(ctx, F, state, f, slotId, text) {
   const top = s.at.y - f.at.y + f.size.h / 2 - (s.size?.h ?? 14) / 2;
   say(ctx, text, F.x(cx), F.y(top - 2.2), F.size(2.3, 6), { align: 'center', color: DIM, weight: 700 });
 }
+
+/** How much of a screen's width a drawn wave crosses each second. One figure for every lamp: light of every colour has one speed. */
+export const WAVE_DRIFT = 0.22;
 
 function paintWave(ctx, f, state, b) {
   const F = frameOf(b);
@@ -341,13 +344,15 @@ function paintWave(ctx, f, state, b) {
   if (read) {
     const per = read.kind === 'water' ? read.metres : read.nm;
     const lenPx = (per / span) * F.len(rw);
+    // Every wave crosses the screen at the same drawn speed, whatever its wavelength: closer crests are then seen to pass more often.
+    const shift = (b.clock || 0) * F.len(rw) * WAVE_DRIFT;
     ctx.strokeStyle = read.kind === 'water' ? DUST : colourOf(read.nm);
     ctx.lineWidth = Math.max(1.5, F.sc * 0.5);
     ctx.beginPath();
     const steps = 160;
     for (let i = 0; i <= steps; i++) {
       const px = (i / steps) * F.len(rw);
-      const py = F.y(mid) - Math.cos((2 * Math.PI * px) / lenPx) * F.len(amp);
+      const py = F.y(mid) - Math.cos((2 * Math.PI * (px - shift)) / lenPx) * F.len(amp);
       if (i === 0) ctx.moveTo(F.x(x0) + px, py); else ctx.lineTo(F.x(x0) + px, py);
     }
     ctx.stroke();
@@ -565,6 +570,9 @@ function paintCup(ctx, F, x, y, w, h, count) {
   }
 }
 
+/** Seconds between photons at brightness 1 on the photocell's picture; brightness n sends n times as many. */
+export const PHOTON_EVERY = 1.2;
+
 function paintCellFixture(ctx, f, state, b) {
   const F = frameOf(b);
   holderWord(ctx, F, state, f, f.props.holder, 'HOLDER');
@@ -579,27 +587,48 @@ function paintCellFixture(ctx, f, state, b) {
   const tx0 = f.props.tx0 ?? 20;
   const tx1 = w - 24;
   const mid = tubeY + tubeH / 2;
-  // The lamp's beam, from the left, as wide as the brightness and as coloured as the wavelength.
+  // The lamp's light, drawn as what it is: separate photons crossing to the plate. Brightness sets how many arrive each second and
+  // nothing else; the colour is the wavelength's. An electron leaves the plate for each photon that carries enough energy, and it
+  // crosses to the collector at a drawn speed that follows the speed meter. Positions are a function of the clock alone.
   well(ctx, F.x(tx0), F.y(tubeY), F.len(tx1 - tx0), F.len(tubeH), { stroke: STEEL });
-  say(ctx, read.nm != null ? `LAMP ${fmtSig(read.nm)} nm` : 'LAMP OFF', F.x(2), F.y(tubeY - 2.4), F.size(2.3, 6), { color: read.nm != null ? colourOf(read.nm) : DIM, weight: 700 });
-  if (read.nm != null) {
-    ctx.fillStyle = rgbCss(wavelengthRgb(read.nm) || [184, 175, 160], 0.45 + read.brightness * 0.1);
-    const bt = 0.8 + read.brightness * 0.7;
-    const from = f.props.lamp ? tx0 - 4 : 2;
-    ctx.fillRect(F.x(from), F.y(mid - bt / 2), F.len(tx0 + 6 - from), F.len(bt));
-  }
-  // The collector at the far end, and the electrons crossing the tube from the plate to it.
+  const lampText = read.nm != null ? `LAMP ${fmtSig(read.nm)} nm${f.props.showHz && read.f14 != null ? `, ${read.f14.toFixed(2)} × 10¹⁴ /s` : ''}` : 'LAMP OFF';
+  say(ctx, lampText, F.x(2), F.y(tubeY - 2.4), F.size(2.3, 6), { color: read.nm != null ? colourOf(read.nm) : DIM, weight: 700 });
   ctx.fillStyle = '#2d2924';
   ctx.fillRect(F.x(tx1 - 4), F.y(tubeY + 2), F.len(2.4), F.len(tubeH - 4));
-  if (read.freed) {
-    const n = Math.max(1, Math.round(read.count / 20));
-    for (let i = 0; i < n * 2; i++) {
-      const lane = tubeY + 2.5 + ((i * 5) % (tubeH - 5));
-      const px = tx0 + 14 + ((i * 7.3) % (tx1 - tx0 - 20));
-      ctx.fillStyle = DUST;
-      ctx.beginPath();
-      ctx.arc(F.x(px), F.y(lane), Math.max(1.2, F.sc * 0.55), 0, Math.PI * 2);
-      ctx.fill();
+  if (read.nm != null) {
+    const hold = state.zones.slots[f.props.holder];
+    const plateX = hold ? hold.at.x - f.at.x + w / 2 : tx0 + 8;
+    const from = f.props.lamp ? tx0 - 4 : 2;
+    const hitX = read.plate ? plateX - 7 : tx1 - 4;
+    const t = b.clock || 0;
+    const every = PHOTON_EVERY / read.brightness;
+    const flight = 0.9;
+    const lanes = [-0.3, 0.15, -0.1, 0.3, 0];
+    const newest = Math.floor(t / every);
+    const rgb = wavelengthRgb(read.nm) || [184, 175, 160];
+    for (let i = newest; i > newest - 40 && i >= 0; i--) {
+      const age = t - i * every;
+      const lane = mid + lanes[i % lanes.length] * (tubeH - 5);
+      if (age < flight) {
+        // A photon on its way: a short bar of the lamp's colour.
+        const px = from + (hitX - from) * (age / flight);
+        ctx.fillStyle = rgbCss(rgb, 0.95);
+        ctx.fillRect(F.x(px - 1.3), F.y(lane) - Math.max(1, F.sc * 0.35), F.len(2.6), Math.max(2, F.sc * 0.7));
+      } else if (read.plate && read.freed) {
+        // The electron that photon removed, crossing to the collector.
+        const v = (tx1 - plateX) * (0.25 + 0.11 * read.speed);
+        const ex = plateX + 7.5 + (age - flight) * v;
+        if (ex < tx1 - 4.5) {
+          ctx.fillStyle = DUST;
+          ctx.beginPath();
+          ctx.arc(F.x(ex), F.y(lane), Math.max(1.4, F.sc * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (read.plate && age < flight + 0.25) {
+        // A photon with too little energy: it reaches the plate and nothing leaves.
+        ctx.fillStyle = rgbCss(rgb, 0.6 * (1 - (age - flight) / 0.25));
+        ctx.fillRect(F.x(hitX - 1.3), F.y(lane) - Math.max(1, F.sc * 0.35), F.len(2.6), Math.max(2, F.sc * 0.7));
+      }
     }
   }
   // The collector the freed electrons gather at.
@@ -609,7 +638,7 @@ function paintCellFixture(ctx, f, state, b) {
   const my = tubeY + tubeH + 3;
   const mw = (w - 6 - (f.noRun ? 0 : 18)) / 2;
   readout(ctx, F, 3, my, mw - 1, mh, 'ELECTRONS PER SECOND', String(read.count), { color: read.count ? PHOS : DIM });
-  readout(ctx, F, 3 + mw + 1, my, mw - 1, mh, 'FASTEST ELECTRON', read.freed ? `${read.speed.toFixed(1)} x 10^5 m/s` : '0.0 x 10^5 m/s', { color: read.freed ? PHOS : DIM });
+  readout(ctx, F, 3 + mw + 1, my, mw - 1, mh, 'FASTEST ELECTRON', read.freed ? `${read.speed.toFixed(1)} × 10⁵ m/s` : 'NONE LEAVE', { color: read.freed ? PHOS : DIM });
 }
 
 /** The rungs of the ladder, the open top, the move the electron last made and the jump a probe line asks for. */
@@ -654,7 +683,7 @@ function paintLadder(ctx, f, state, b) {
   ctx.setLineDash?.([]);
   say(ctx, f.props.topLabel || 'top', F.x(sx - half - 4.5), F.y(ty), F.size(2.5, 6.5), { align: 'right', color: DIM });
   say(ctx, '0', F.x(sx + half + 5), F.y(ty), F.size(1.9, 5.5), { align: 'left', color: DIM });
-  say(ctx, '10^-18 J, NOT TO SCALE', F.x(w - 1.5), F.y(3.6), F.size(2.1, 6), { align: 'right', color: DIM });
+  say(ctx, 'ENERGY, × 10⁻¹⁸ J (NOT TO SCALE)', F.x(w - 1.5), F.y(3.6), F.size(2.1, 6), { align: 'right', color: DIM });
   // The move the electron last made, as an arrow between its two rungs.
   const arrow = (hi, lo, up) => {
     const ya = centre(hi);
@@ -715,14 +744,14 @@ function paintLines(ctx, f, state, b) {
   const probe = read.probe;
   if (probe) {
     const js = probeJumps(probe);
-    line = js.length ? `A DROP FROM RUNG ${js[0].hi} TO RUNG ${js[0].lo} MAKES IT` : 'NO PAIR OF RUNGS MAKES THIS LINE';
+    line = js.length ? `A DROP FROM LEVEL ${js[0].hi} TO LEVEL ${js[0].lo} MAKES IT` : 'NO PAIR OF LEVELS MAKES THIS LINE';
     color = js.length ? AMBER : DUST;
   } else if (read.last && read.last.nm != null) {
     const l = read.last;
-    line = l.up ? `CLIMB TO RUNG ${l.hi}: GIVES OUT NOTHING` : `LAST DROP GAVE OUT ${fmtSig(l.nm)} nm`;
+    line = l.up ? `CLIMB TO LEVEL ${l.hi}: GIVES OUT NOTHING` : `DROP FROM LEVEL ${l.hi} TO ${l.lo}: ${fmtSig(l.nm)} nm`;
     color = l.up ? DIM : AMBER;
   } else if (read.last && read.last.to === 'top') {
-    line = 'CLIMBED PAST THE TOP RUNG';
+    line = 'CLIMBED PAST THE TOP LEVEL';
     color = AMBER;
   }
   say(ctx, line, F.x(bx), F.y(by + bh + 8), F.size(2.3, 6.5), { color, maxW: F.len(bw), weight: 700 });

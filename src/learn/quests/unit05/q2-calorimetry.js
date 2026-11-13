@@ -124,9 +124,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, the same heater is put under each one.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for water and iron is recorded. Test it on the bench.'
     }
   },
 
@@ -289,8 +289,8 @@ export const STAGES = [
       }),
       hints: [
         'Drop the fitting in the cup, then read how far the bath rose and what the fitting now reads.',
-        'Work out the heat the water took in from the mass and the rise of the water.',
-        'The fitting gave out that same heat, so use it with the mass of the fitting and the fall in temperature of the fitting.'
+        'Compare the heat the water took in with the temperature fall of the fitting.',
+        'Find the heat capacity per gram of the fitting from the heat it passed to the bath.'
       ],
       check(state) {
         const t = state.table;

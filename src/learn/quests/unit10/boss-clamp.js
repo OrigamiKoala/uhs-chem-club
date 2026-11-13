@@ -193,7 +193,7 @@ export const STAGES = [
     },
     hints: [
       'Press "Run", read the ammeter, then tap the strip you choose.',
-      'Look at which way the needle swings, and what the ammeter\'s own dial says that direction means.',
+      'Look at which way the ammeter points, and what its label says that direction means.',
       'The ammeter tells which beaker the electrons move toward, so they left through the other strip.'
     ],
     check(state) {
@@ -202,8 +202,8 @@ export const STAGES = [
       const want = P2_ANODE === P2.left ? 1 : 2;
       if (v === want) return { ok: true };
       const r = galvRead(state.table, 'rig');
-      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter needle is at rest.' };
-      return { ok: false, msg: `The needle swung to the ${r.I > 0 ? 'right' : 'left'} and read ${fmt(Math.abs(r.I), 2)} A.` };
+      if (!r.ran) return { ok: false, msg: 'The cell has not been run yet; the ammeter reads zero.' };
+      return { ok: false, msg: `The ammeter pointed ${r.I > 0 ? 'right' : 'left'} and read ${fmt(Math.abs(r.I), 2)} A.` };
     },
     get reward() {
       const to = electronsToward(P2.left, P2.right);

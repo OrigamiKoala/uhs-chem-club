@@ -21,7 +21,7 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { heatTable, block, charge, note, cupFixture, latticeFixture, leadFixture, blockRead, cupRead, shelvesRead, whereIs, fixed } from '../../table/kits/heat.js';
+import { heatTable, block, charge, note, tag, cupFixture, latticeFixture, leadFixture, blockRead, cupRead, shelvesRead, whereIs, fixed } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 4 };
 
@@ -130,9 +130,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, join the frozen valve to each source and see how far it warms.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for the spark and the tank is recorded. Test it on the bench.'
     }
   },
 
@@ -144,21 +144,27 @@ export const STAGES = [
     widget,
     table: heatTable({
       pieces: [
-        block('spark', 'Welding spark', { x: 24, y: 16 }, { m: 0.001, c: FE, T: 1200, mat: 'Fe', mass: '0.001 g iron' }),
-        block('tank', 'Warm tank', { x: 126, y: 16 }, { m: 2000, c: WATER, T: 40, mat: 'H₂O', mass: '2000 g water' }),
-        block('valve', 'Frozen valve', { x: 75, y: 16 }, { m: 500, c: FE, T: 0, mat: 'Fe', mass: '500 g iron' })
+        block('spark', 'Welding spark', { x: 24, y: 14 }, { m: 0.001, c: FE, T: 1200, mat: 'Fe', mass: '0.001 g iron' }),
+        block('tank', 'Warm tank', { x: 126, y: 14 }, { m: 2000, c: WATER, T: 40, mat: 'H₂O', mass: '2000 g water' }),
+        block('valve', 'Frozen valve', { x: 75, y: 14 }, { m: 500, c: FE, T: 0, mat: 'Fe', mass: '500 g iron' }),
+        tag('pick-spark', 'Welding spark', { x: 24, y: 55 }),
+        tag('pick-tank', 'Warm tank', { x: 54, y: 55 })
       ],
-      fixtures: [latticeFixture('atoms', { x: 70, y: 44 }, { blocks: ['spark', 'valve', 'tank'], w: 128, h: 20 })]
+      fixtures: [latticeFixture('atoms', { x: 75, y: 36 }, { blocks: ['spark', 'valve', 'tank'], w: 122, h: 16, gate: { slot: 'answer' }, gateMsg: 'Place your answer in the slot before joining the blocks.' })],
+      zones: { slots: [{ id: 'answer', label: 'My answer', at: { x: 118, y: 51 }, size: { w: 34, h: 10 } }] }
     }),
     hints: [
-      'Look at the thermometer on the frozen valve, and at the named box of particles under each block.',
+      'Place your answer in the slot first, then join the frozen valve to a source.',
       'Compare how many particles are in the box of the welding spark and in the box of the warm tank.',
       'A source stops passing heat on once it and the valve are at one temperature, so think about how much energy each source can lose before then.'
     ],
     check(state) {
+      const pick = Object.values(state.table.pieces).find(p => p.zone === 'slot:answer');
+      if (!pick) return { ok: false, notYet: true, msg: 'Place your answer in the slot first.' };
       const r = blockRead(state.table, 'valve');
-      if (!r.joined) return { ok: false, notYet: true, msg: 'Join the frozen valve to a source, then read its thermometer.' };
-      if (r.T >= 30) return { ok: true };
+      if (!r.joined) return { ok: false, notYet: true, msg: 'Now join the frozen valve to a source and read its thermometer.' };
+      if (pick.id === 'pick-tank' && r.T >= 30) return { ok: true };
+      if (pick.id === 'pick-spark' && r.T >= 30) return { ok: false, msg: `The frozen valve warmed to ${fixed(r.T, 1)} °C against the warm tank, so check which tag sits in your answer slot.` };
       return { ok: false, msg: `Joined to the welding spark, the frozen valve reads ${fixed(r.T, 1)} °C: the spark fell to that reading almost at once.` };
     },
     reward: {
@@ -254,7 +260,7 @@ const trials = ['warmer', 'cold', 'fizz', 'lime'].map(id => put(id, MOUTH));
 export const SOLUTIONS = [
   [join('a', 'b')],
   [put('tank', 'slot:guess')],
-  [join('valve', 'tank')],
+  [put('pick-tank', 'slot:answer'), join('valve', 'tank')],
   [...trials, ...sort({ warmer: 'out', lime: 'out', cold: 'in', fizz: 'in' })]
 ];
 
@@ -262,7 +268,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [join('a', 'c')],
   [],
-  [join('valve', 'spark')],
+  [put('pick-spark', 'slot:answer'), join('valve', 'spark')],
   [...trials, ...sort({ warmer: 'out', lime: 'in', cold: 'in', fizz: 'out' })]
 ];
 

@@ -10,20 +10,20 @@ tabletop kit architectures, and build records for the 14 worlds of the Avalon Le
 ## 1. Curriculum Architecture & World Matrix
 
 The Learn track is structured into 14 worlds in road order (`unit01` to `unit14`). Ten worlds are fully built and live,
-comprising 86 quest modules, 76 benches, 10 bosses, and 610 tabletop stages. Every built world is unlocked from the start.
+comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Every built world is unlocked from the start.
 
 | Unit | World | Chemistry Domain | CED Focus | Quests | Stages | Tabletop Kit | Status | Primary Doc |
 | :--- | :--- | :--- | :--- | :---: | :---: | :--- | :--- | :--- |
-| **01** | **Tallow** | Atoms, Elements, Mole | Unit 1 (1.1–1.4) | 6 + Boss | 53 | Atom kit (`atom.js`) | Live | `docs/plans/tallow-ligar-world.md` |
-| **02** | **Lanternfall** | Light, Orbitals, Trends | Unit 1 (1.5–1.8), Unit 3 | 10 + Boss | 60 | Optics kit (`optics.js`) | Live | `docs/plans/lanternfall-world.md` |
-| **03** | **Ligar** | Chemical Bonds, Lattices | Unit 2 (2.1–2.7) | 9 + Boss | 54 | Bond kit (`bond.js`) | Live | `docs/plans/tallow-ligar-world.md` |
-| **04** | **Bellows** | Gases & Gas Laws | Unit 3 (3.4–3.6) | 6 + Boss | 39 | Gas kit (`gas.js`) | Live | `docs/plans/bellows-world.md` |
-| **05** | **Ember Reach** | Thermochemistry | Unit 6 (6.1–6.9) | 7 + Boss | 41 | Heat kit (`heat.js`) | Live | `docs/plans/ember-reach-world.md` |
-| **06** | **Mirrowen** | IMF, States, Solutions | Unit 3 (3.1–3.3, 3.7–3.10) | 7 + Boss | 53 | Matter kit (`matter.js`) | Live | `docs/plans/mirrowen-world.md` |
-| **07** | **Kettle** | Chemical Reactions | Unit 4 (4.1–4.9) | 8 + Boss | 57 | Pot kit (`pot.js`) | Live | `docs/plans/kettle-world.md` |
-| **08** | **Teeter** | Chemical Equilibrium | Unit 7 (7.1–7.13), 9.5 | 8 + Boss | 57 | Pans kit (`pans.js`) | Live | `docs/plans/teeter-world.md` |
-| **09** | **Verdigris** | Acids & Bases | Unit 8 (8.1–8.11) | 8 + Boss | 57 | pH kit (`ph.js`) | Live | `docs/plans/verdigris-world.md` |
-| **10** | **Brinewire** | Electrochemistry | Unit 9 (9.7–9.11), 4.9 | 6 + Boss | 53 | Cell kit (`cell.js`) | Live | `docs/plans/brinewire-world.md` |
+| **01** | **Tallow** | Atoms, Elements, Mole | Unit 1 (1.1–1.4) | 6 + Boss | 47 | Atom kit (`atom.js`) | Live | `docs/plans/tallow-ligar-world.md` |
+| **02** | **Lanternfall** | Light, Orbitals, Trends | Unit 1 (1.5–1.8), Unit 3 | 10 + Boss | 63 | Optics kit (`optics.js`) | Live | `docs/plans/lanternfall-world.md` |
+| **03** | **Ligar** | Chemical Bonds, Lattices | Unit 2 (2.1–2.7) | 9 + Boss | 71 | Bond kit (`bond.js`) | Live | `docs/plans/tallow-ligar-world.md` |
+| **04** | **Bellows** | Gases & Gas Laws | Unit 3 (3.4–3.6) | 6 + Boss | 40 | Gas kit (`gas.js`) | Live | `docs/plans/bellows-world.md` |
+| **05** | **Ember Reach** | Thermochemistry | Unit 6 (6.1–6.9) | 7 + Boss | 42 | Heat kit (`heat.js`) | Live | `docs/plans/ember-reach-world.md` |
+| **06** | **Mirrowen** | IMF, States, Solutions | Unit 3 (3.1–3.3, 3.7–3.10) | 7 + Boss | 54 | Matter kit (`matter.js`) | Live | `docs/plans/mirrowen-world.md` |
+| **07** | **Kettle** | Chemical Reactions | Unit 4 (4.1–4.9) | 8 + Boss | 64 | Pot kit (`pot.js`) | Live | `docs/plans/kettle-world.md` |
+| **08** | **Teeter** | Chemical Equilibrium | Unit 7 (7.1–7.13), 9.5 | 8 + Boss | 56 | Pans kit (`pans.js`) | Live | `docs/plans/teeter-world.md` |
+| **09** | **Verdigris** | Acids & Bases | Unit 8 (8.1–8.11) | 8 + Boss | 65 | pH kit (`ph.js`) | Live | `docs/plans/verdigris-world.md` |
+| **10** | **Brinewire** | Electrochemistry | Unit 9 (9.7–9.11), 4.9 | 6 + Boss | 50 | Cell kit (`cell.js`) | Live | `docs/plans/brinewire-world.md` |
 | **11** | **Quicklight** | Kinetics & Rate Laws | Unit 5 (5.1–5.11) | Charted | — | Kinetic kit | Planned | `docs/plans/learn-quests.md` |
 | **12** | **Lodestone** | Thermodynamics & Entropy | Unit 9 (9.1–9.6) | Charted | — | Thermo kit | Planned | `docs/plans/learn-quests.md` |
 | **13** | **Thornmere** | Organic & Polymers | Organic / Bio | Charted | — | Bio/Polymer kit | Planned | `docs/plans/learn-quests.md` |

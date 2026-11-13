@@ -468,16 +468,16 @@ export { KINDS, KIND_LABEL };
    ------------------------------------------------------------------ */
 
 const WINDOW_TEXT = {
-  pieces: 'The "{dial}" dial picks which pot to look at. Press "{run}" and the atoms are shown as they stand before the reaction on the left and after it on the right. A name under each group says which substance it is, and a number in front says how many of them there are.',
-  proton: 'The "{dial}" dial picks which pot to look at. Press "{run}" and the atoms are shown before the reaction on the left and after it on the right. A hydrogen ion is a hydrogen atom that has lost its electron: when one passes from a molecule to another, the window rings it in amber.',
-  electrons: 'The "{dial}" dial picks which pot to look at. Press "{run}" and the atoms are shown before the reaction on the left and after it on the right. Amber dots are electrons, and a charge printed after a symbol is what that atom holds.',
-  numbers: 'The "{dial}" dial picks a species that has already been worked out. The window draws its atoms, shows the number each kind of atom carries, and adds them up beside the charge of the species.'
+  pieces: 'The "{dial}" dial picks which reaction to look at. Press "{run}" and the atoms are shown as they stand before the reaction on the left and after it on the right. A name under each group says which substance it is, and a number in front says how many of them there are.',
+  proton: 'The "{dial}" dial picks which reaction to look at. Press "{run}" and the atoms are shown before the reaction on the left and after it on the right. A hydrogen ion is a hydrogen atom that has lost its electron: when one passes from a molecule to another, the particle view rings it in amber.',
+  electrons: 'The "{dial}" dial picks which reaction to look at. Press "{run}" and the atoms are shown before the reaction on the left and after it on the right. Amber dots are electrons, and a charge printed after a symbol is what that atom holds.',
+  numbers: 'The "{dial}" dial picks a species that has already been worked out. The particle view draws its atoms, shows the oxidation number on each atom, and adds them up beside the charge of the species.'
 };
 
 addTourText({
   'pot:kwindow': {
-    title: 'Window', dials: false,
-    text: f => (f.dials.pot ? WINDOW_TEXT[f.props.mode] : WINDOW_TEXT[f.props.mode].replace(/^The "\{dial\}" dial picks which pot to look at\. /, '')).replace('{dial}', f.dials.pot?.label || '').replace('{run}', f.runLabel || 'Run')
+    title: 'Particle view', dials: false,
+    text: f => (f.dials.pot ? WINDOW_TEXT[f.props.mode] : WINDOW_TEXT[f.props.mode].replace(/^The "\{dial\}" dial picks which reaction to look at\. /, '')).replace('{dial}', f.dials.pot?.label || '').replace('{run}', f.runLabel || 'Run')
   },
   'pot:burner': { title: 'Burner', dials: false, text: 'Put the fuel jar on the left seat and an empty gas jar on the right seat. Press "Burn" to burn the fuel in oxygen that the burner supplies. The gas jar fills with whatever the burning leaves.' },
   'pot:gasrig': {

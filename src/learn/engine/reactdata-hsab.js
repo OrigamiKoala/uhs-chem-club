@@ -48,6 +48,7 @@ export function probeIon(ionId) {
     ion: ionId,
     hard: d.hard,
     role: d.role,
+    radius: d.radius,
     cloud: d.cloud,
     polarizability: d.polarizability,
     deformation: d.hard ? 0.08 : 0.65

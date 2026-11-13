@@ -81,7 +81,7 @@ export const STAGES = [
     title: 'Pulling Apart',
     briefing: {
       speaker: SPEAKER,
-      body: 'The distance between two bonded atoms, at the lowest point of their energy curve, is the bond length. The energy needed to pull the atoms fully apart from there is the bond energy.'
+      body: 'The distance between two bonded atoms, at the lowest point of their energy curve, is the bond length (in picometres, pm). The energy needed to pull one mole (a fixed chemist\'s count) of pairs apart from there is the bond energy.'
     },
     prompt: 'What is the bond energy of the H–Cl bond, for one mole of bonds?',
     widget: { type: 'table', label: 'The bench' },
@@ -162,7 +162,7 @@ export const STAGES = [
       return {
         log: 'The more pairs shared, the shorter the bond.',
         title: 'Bond Order',
-        body: `${verdictLine(QUEST_KEY, 'closer')}The triple bond is shortest and its curve is lowest. The number of shared pairs is the bond order: the higher it is, the shorter and stronger the bond.`
+        body: `${verdictLine(QUEST_KEY, 'closer')}More shared pairs pull the two carbon atoms closer and hold them more tightly, making the triple bond shortest and its curve deepest.`
       };
     }
   },
@@ -198,7 +198,7 @@ export const STAGES = [
     reward: {
       log: 'Magnesium oxide took the most heat. Potassium chloride took the least.',
       title: 'Lattice Energy',
-      body: 'MgO, with 2+ and 2− ions close together, melts far higher than the salts of 1+ and 1− ions. The energy needed to pull the ions of an ionic solid apart is its lattice energy.'
+      body: 'MgO, with 2+ and 2− ions close together, melts far higher than the salts of 1+ and 1− ions because stronger attraction holds its ions together.'
     }
   },
 
@@ -223,7 +223,7 @@ export const STAGES = [
     hints: [
       'Each card prints its ions\' charges and the distance between their centres; drag the cards into order on the rail.',
       'Compare the three salts whose charges are the same by distance, then look at the salt whose charges are larger.',
-      'Multiply the two charges on a card and weigh that against its distance, as Coulomb\'s law says.'
+      'Larger ion charges and a shorter distance between centres both pull ions together more strongly, as Coulomb\'s law says.'
     ],
     check(state) {
       const t = state.table;

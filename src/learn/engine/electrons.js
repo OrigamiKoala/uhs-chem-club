@@ -226,7 +226,7 @@ export function placeElectron(rack, rowId, idx, spin) {
   const key = boxKey(rowId, idx);
   const here = rack[key] || '';
   if (here.includes(spin)) {
-    return { refused: `This box already holds an electron pointing ${spin === 'u' ? 'up' : 'down'}.` };
+    return { refused: `This orbital already holds an electron with spin ${spin === 'u' ? '↑' : '↓'}.` };
   }
   const next = { ...rack };
   next[key] = (here + spin).split('').sort().reverse().join('');
@@ -237,7 +237,7 @@ export function placeElectron(rack, rowId, idx, spin) {
 export function removeElectron(rack, rowId, idx, spin = null) {
   const key = boxKey(rowId, idx);
   const here = rack[key] || '';
-  if (!here) return { refused: 'That box is empty.' };
+  if (!here) return { refused: 'That orbital is empty.' };
   const take = spin && here.includes(spin) ? spin : here[here.length - 1];
   const left = here.replace(take, '');
   const next = { ...rack };

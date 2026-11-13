@@ -26,16 +26,17 @@ import { cjar, changePotFixture, potScaleFixture, evidenceFixture, changeRead, s
 import { planChange, CASES } from '../../engine/reactdata-change.js';
 import { pretty } from '../../engine/reactdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
-  { term: /\bphysical change\b/i, introducedAt: 1 },
-  { term: /\bchemical change\b/i, introducedAt: 1 },
-  { term: /\bevidence of reaction\b/i, introducedAt: 2 }
+  { term: /\bphysical changes?\b/i, introducedAt: 1 },
+  { term: /\bchemical changes?\b/i, introducedAt: 1 },
+  { term: /\bevidence of reaction\b/i, introducedAt: 2 },
+  { term: /\bconservation of mass\b/i, introducedAt: 6 }
 ];
 
 /** The conservation of mass is bench 1's: this bench uses it on a whole pot. */
-export const BUILDS_ON = ['unit07/q1-recipe'];
+export const BUILDS_ON = [];
 
 export const ROOM = 'foundry';
 
@@ -51,8 +52,8 @@ const QUEST_KEY = 'unit07/q3-change';
 
 const plan = (id, o) => planChange(id, o);
 
-// Stage 3 and 4: the guess cards.
-const GUESS = { more: 'Heavier', same: 'The same', less: 'Lighter' };
+// Stage 3: the guess cards.
+const GUESS = { more: 'Greater', same: 'The same', less: 'Less' };
 const WOOL_OPEN = plan('wool');
 
 // Stage 6: steel wool at three settings, and 83.7 g (1.5 mol of iron) past the dial with the oxygen that goes with it.
@@ -79,8 +80,8 @@ const jarOf = (t, id) => t.pieces[id];
 function shown(id, sealed = false) {
   const p = plan(id, { sealed });
   const lamps = litNames(p);
-  return `${nameOf(id)}: the window shows ${formulas(p.before)} before and ${formulas([...p.after, ...p.escaped])} after`
-    + `${lamps.length ? `; lit: ${lamps.join(', ')}` : '; no lamp lit'}`;
+  return `${nameOf(id)}: the particle view shows ${formulas(p.before)} before and ${formulas([...p.after, ...p.escaped])} after`
+    + `${lamps.length ? `; lit: ${lamps.join(', ')}` : '; no sign lit'}`;
 }
 
 /** The first jar of `ids` filed in the wrong tray, or null; or 'open' when one is still not filed. */
@@ -100,8 +101,8 @@ const POT_W = 70;
 const TRAY_CELL = { cell: 21, cellH: 14 };
 
 const NEW_TRAYS = [
-  { id: 'same', label: 'Same substance after', at: { x: 92.5, y: 23.5 }, size: { w: 36, h: 30 }, cell: 17, cellH: 13.4 },
-  { id: 'new', label: 'New substance after', at: { x: 130, y: 23.5 }, size: { w: 36, h: 30 }, cell: 17, cellH: 13.4 }
+  { id: 'same', label: 'Physical change', at: { x: 92.5, y: 23.5 }, size: { w: 36, h: 30 }, cell: 17, cellH: 13.4 },
+  { id: 'new', label: 'Chemical change', at: { x: 130, y: 23.5 }, size: { w: 36, h: 30 }, cell: 17, cellH: 13.4 }
 ];
 
 const J = (id, at, caseId, name, shownLine, extra) => cjar(id, name, at, caseId, { shown: shownLine }, extra);
@@ -128,7 +129,11 @@ export const STAGES = [
     return {
       id: 's1-new',
       title: 'Same or New',
-      prompt: 'Sort the four changes by whether a new substance is in the pot afterwards.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'In a physical change the substance is the same afterwards. In a chemical change a new substance has formed.'
+      },
+      prompt: 'Which of these changes are physical and which are chemical?',
       widget,
       table: potTable({
         pieces: [JARS.ice({ x: 82, y: 47 }), JARS.sugarwater({ x: 101, y: 47 }), JARS.sugarheat({ x: 120, y: 47 }), JARS.wool({ x: 139, y: 47 })],
@@ -136,9 +141,9 @@ export const STAGES = [
         zones: { slots: [...pot.slots], trays: NEW_TRAYS }
       }),
       hints: [
-        'Use the pot, its "Run" key and the two trays.',
-        'Compare the particles in the window before the change with the particles after it.',
-        'A change that leaves the same particles in the pot has made nothing new, and one that leaves different particles has.'
+        'Run each jar in the reaction vessel, then sort it into a tray.',
+        'Compare the particles in the particle view before the change with the particles after it.',
+        'Think about whether the particles after the change are the same substance or a new one.'
       ],
       check(state) {
         const r = sortCheck(state.table, truth);
@@ -149,7 +154,7 @@ export const STAGES = [
       reward: {
         log: 'Ice and dissolved sugar stayed the same substance; heated sugar and burned steel wool did not.',
         title: 'Physical or Chemical Change',
-        body: 'In a physical change the same substance is still there afterwards, only its state or place has changed: ice and water are both H₂O. A chemical change makes a new substance, as heated sugar and burned steel wool did.'
+        body: 'Melted ice is still H₂O and dissolved sugar is still sugar, so those are physical changes. Heated sugar and burned steel wool left new particles, so those are chemical changes.'
       }
     };
   })(),
@@ -160,8 +165,8 @@ export const STAGES = [
     const lamps = evidenceFixture('lamps', 'pot', { x: 108, y: 12 }, { grid: true });
     return {
       id: 's2-lamp',
-      title: 'A Lamp Is Lit',
-      prompt: 'Pick the change that lit a lamp without making a new substance.',
+      title: 'A Sign Is Not Proof',
+      prompt: 'Which change gives a sign of a reaction without making a new substance?',
       widget,
       table: potTable({
         pieces: [JARS.dryice({ x: 82, y: 31.5 }), JARS.wood({ x: 101, y: 31.5 }), JARS.wool({ x: 82, y: 45.5 }), JARS.sugarwater({ x: 101, y: 45.5 })],
@@ -169,9 +174,9 @@ export const STAGES = [
         zones: { slots: [...pot.slots, { id: 'pick', label: 'My pick', at: { x: 130, y: 40 }, size: { w: 24, h: 16 } }] }
       }),
       hints: [
-        'Use the pot, its "Run" key and the four lamps.',
-        'Compare which lamps lit with whether the window shows a new substance, for each jar.',
-        'A lamp reports what the pot did, but only the particles in the window show whether a new substance was made.'
+        'Run each jar in the reaction vessel and watch the four signs.',
+        'Compare which signs light up with whether the particle view shows a new substance.',
+        'A sign tells you something happened, but only the particles show whether a new substance formed.'
       ],
       check(state) {
         const jar = cardIn(state.table, 'pick');
@@ -182,9 +187,9 @@ export const STAGES = [
         return { ok: true };
       },
       reward: {
-        log: 'Dry ice lit the gas lamp and is still carbon dioxide.',
+        log: 'Dry ice lit the gas sign and is still carbon dioxide.',
         title: 'Evidence of Reaction',
-        body: 'A gas, a new colour, a solid or a change of temperature is evidence of reaction, but only evidence: dry ice gives off a gas and is still carbon dioxide. A new substance in the window is what shows a chemical change.'
+        body: 'Dry ice gives off a gas and is still carbon dioxide. A sign is only evidence of reaction; only a new substance shows a chemical change.'
       }
     };
   })(),
@@ -192,24 +197,24 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     id: 's3-predict',
-    title: 'Steel Wool in an Open Pot',
-    // A PREDICT STAGE: the pot is not on the table yet. The guess is made first and comes back with the test.
+    title: 'Steel Wool in an Open Vessel',
+    // A PREDICT STAGE: the vessel is not on the table yet. The guess is made first and comes back with the test.
     predict: true,
-    prompt: 'Choose how an open pot of steel wool weighs after the wool burns, compared with before.',
+    prompt: 'After steel wool burns in an open vessel, is the mass greater, the same or less?',
     widget,
     table: potTable({
       pieces: [chip('more', GUESS.more, { x: 40, y: 50 }), chip('same', GUESS.same, { x: 62, y: 50 }), chip('less', GUESS.less, { x: 84, y: 50 })],
-      fixtures: [plaqueFixture('what', 'The pot', { x: 62, y: 14 }, ['Open to the air', 'Steel wool, 55.8 g'], { w: 50 })],
+      fixtures: [plaqueFixture('what', 'The vessel', { x: 62, y: 14 }, ['Open to the air', 'Steel wool, 55.8 g'], { w: 50 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 62, y: 32 }, size: { w: 38, h: 14 } }] }
     }),
     hints: [
-      'Use the three chips and the slot.',
-      'Think about what burning does to the wool and what the open lid lets in or out.',
-      'Commit to how the weight will change, then burn the wool in the next part and read the balance.'
+      'Look at the three cards and the prediction slot.',
+      'Think about what burning does to the steel wool and what an open lid lets in or out.',
+      'Decide whether burning in open air adds mass, leaves it unchanged or takes mass away.'
     ],
     check(state) {
       const card = cardIn(state.table, 'guess');
-      if (!card) return { ok: false, notYet: true, msg: 'Lay a chip in the slot.' };
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -219,7 +224,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Prediction',
-      body: 'Next, burn the steel wool in an open pot and read the balance.'
+      body: 'Next, burn the steel wool in an open vessel and read the balance.'
     }
   },
 
@@ -233,30 +238,33 @@ export const STAGES = [
       get prompt() {
         const g = recall(QUEST_KEY);
         const guess = g && GUESS[g] ? `You guessed "${GUESS[g].toLowerCase()}". ` : '';
-        return `${guess}Lay the chip for what the balance shows after the steel wool burns in the open pot.`;
+        return `${guess}Where did the extra mass come from when the steel wool burned?`;
       },
       widget,
       table: potTable({
         pieces: [
           JARS.wool({ x: 128, y: 13 }),
-          chip('more', GUESS.more, { x: 84, y: 47 }), chip('same', GUESS.same, { x: 106, y: 47 }), chip('less', GUESS.less, { x: 128, y: 47 })
+          chip('air', 'O₂ from air', { x: 84, y: 48 }),
+          chip('heat', 'Heat added', { x: 106, y: 48 }),
+          chip('none', 'Nothing added', { x: 128, y: 48 })
         ],
         fixtures: [pot.fixture, bal],
-        zones: { slots: [...pot.slots, { id: 'ans', label: 'What the balance showed', at: { x: 106, y: 31 }, size: { w: 38, h: 14 } }] }
+        zones: { slots: [...pot.slots, { id: 'ans', label: 'Cause', at: { x: 106, y: 31 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Use the wool jar, the pot, its "Run" key and the balance.',
-        'Compare the balance before the burn with the balance after it, and the rows of the window.',
-        'Whatever stands in the pot after the burn is what the balance weighs, so ask what joined the iron and where it came from.'
+        'Burn the steel wool in the reaction vessel and watch the balance and particle view.',
+        'Compare the balance before and after the burn, and look at the rows of the particle view.',
+        'Look at which particles were not in the jar at the start but appear in the iron oxide afterwards.'
       ],
       check(state) {
         const card = cardIn(state.table, 'ans');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a chip in the slot.' };
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
         const t = state.table;
-        if (card.id === 'more') return { ok: true };
+        if (card.id === 'air') return { ok: true };
         const r = changeRead(t, 'pot');
-        if (!r.ran) return { ok: false, msg: 'The pot has not been run: the balance only has its reading from before.' };
-        return { ok: false, msg: `The balance read ${GRAMS(r.plan.massBefore)} before and ${GRAMS(r.plan.massAfter)} after.` };
+        if (!r.ran) return { ok: false, msg: 'The reaction vessel has not been run: the balance only has its reading from before.' };
+        if (card.id === 'heat') return { ok: false, msg: `Heat adds no particles; the balance read ${GRAMS(r.plan.massBefore)} before and ${GRAMS(r.plan.massAfter)} after.` };
+        return { ok: false, msg: `The balance rose from ${GRAMS(r.plan.massBefore)} to ${GRAMS(r.plan.massAfter)}, so something was added.` };
       },
       get reward() {
         const g = recall(QUEST_KEY);
@@ -264,9 +272,9 @@ export const STAGES = [
           ? (g === 'more' ? 'The balance agreed with your guess. ' : 'The balance did not agree with your guess, which is how a guess gets better. ')
           : '';
         return {
-          log: 'The open pot read 55.8 g before and 79.8 g after.',
-          title: 'An Open Pot Can Gain',
-          body: `${verdict}Burning joined the iron to oxygen from the air, 4 Fe + 3 O₂ → 2 Fe₂O₃, so the pot gained 24.0 g.`
+          log: 'The open vessel read 55.8 g before and 79.8 g after.',
+          title: 'An Open Vessel Can Gain',
+          body: `${verdict}The iron bonded to oxygen from the air, 4 Fe + 3 O₂ → 2 Fe₂O₃, so the vessel gained the mass of that oxygen: 24.0 g.`
         };
       }
     };
@@ -280,7 +288,7 @@ export const STAGES = [
     return {
       id: 's5-lighter',
       title: 'Heavier or Lighter',
-      prompt: 'Sort the three burns by whether the open pot weighs more or less afterwards.',
+      prompt: 'Which burns make an open vessel gain mass and which make it lose mass?',
       widget,
       table: potTable({
         pieces: [JARS.wool({ x: 122, y: 11 }), JARS.magnesium({ x: 140, y: 11 }), JARS.wood({ x: 122, y: 26 })],
@@ -288,15 +296,15 @@ export const STAGES = [
         zones: {
           slots: [...pot.slots],
           trays: [
-            { id: 'heavier', label: 'Weighs more after', at: { x: 92.5, y: 45.5 }, size: { w: 36, h: 14 }, cell: 17, cellH: 13.4 },
-            { id: 'lighter', label: 'Weighs less after', at: { x: 130, y: 45.5 }, size: { w: 36, h: 14 }, cell: 17, cellH: 13.4 }
+            { id: 'heavier', label: 'Gains mass: gas in', at: { x: 92.5, y: 45.5 }, size: { w: 36, h: 14 }, cell: 17, cellH: 13.4 },
+            { id: 'lighter', label: 'Loses mass: gas out', at: { x: 130, y: 45.5 }, size: { w: 36, h: 14 }, cell: 17, cellH: 13.4 }
           ]
         }
       }),
       hints: [
-        'Use the pot, its "Run" key, the balance and the two trays.',
-        'Compare the balance before and after, and look at which rows of the window are grey.',
-        'A burn that takes a gas in from the air makes the pot heavier, and a burn that lets a gas out makes it lighter.'
+        'Run each jar in the reaction vessel and watch the balance and particle view.',
+        'Compare the balance before and after, and look at which rows of the particle view are grey.',
+        'A burn that takes a gas in from the air gains mass, and one that lets a gas out loses mass.'
       ],
       check(state) {
         const r = sortCheck(state.table, truth);
@@ -306,9 +314,9 @@ export const STAGES = [
         return { ok: false, msg: `${nameOf(r.wrong)}: the balance read ${GRAMS(p.massBefore)} before and ${GRAMS(p.massAfter)} after.` };
       },
       reward: {
-        log: 'Steel wool and magnesium gained weight in the open pot; wood chips lost it.',
+        log: 'Steel wool and magnesium gained mass in the open vessel; wood chips lost it.',
         title: 'What Crosses the Lid',
-        body: 'Iron and magnesium take in oxygen from the air, so an open pot gains weight when they burn. Wood sends carbon dioxide and water vapour out of the open pot, so it loses weight.'
+        body: 'Iron and magnesium take in oxygen and gain mass. Wood gives off carbon dioxide and water vapour and loses mass.'
       }
     };
   })(),
@@ -319,18 +327,18 @@ export const STAGES = [
     const bal = potScaleFixture('bal', 'pot', { x: 90, y: 13 });
     return {
       id: 's6-sealed',
-      title: 'A Sealed Pot',
-      prompt: `Type what a sealed pot weighs after ${ASKED_IRON.toFixed(1)} g of steel wool burns in it, with ${ASKED_OXYGEN.toFixed(1)} g of oxygen sealed in.`,
-      entry: { id: 'g', label: 'Pot after', unit: 'g' },
+      title: 'A Sealed Vessel',
+      prompt: `What is the mass of the contents of a sealed vessel after ${ASKED_IRON.toFixed(1)} g of steel wool burns with the ${ASKED_OXYGEN.toFixed(1)} g of oxygen inside?`,
+      entry: { id: 'g', label: 'Vessel after', unit: 'g' },
       widget,
       table: potTable({
         fixtures: [pot.fixture, bal],
         zones: { slots: [] }
       }),
       hints: [
-        'Use the "Lid" and "Steel wool" dials, the "Run" key and the balance.',
-        'Seal the lid and compare the balance before and after the burn at each amount.',
-        'Nothing enters or leaves a sealed pot, so what it weighs after is what it weighed with everything loaded in.'
+        'Set the "Lid" dial to sealed and run the "Steel wool" dial at different amounts.',
+        'Compare the balance before and after each burn when the lid is sealed.',
+        'Nothing enters or leaves a sealed vessel, so the mass after equals the total mass loaded in.'
       ],
       check(state) {
         const t = state.table;
@@ -339,14 +347,14 @@ export const STAGES = [
         if (Math.abs(v - ASKED_TOTAL) <= 0.15) return { ok: true };
         if (Math.abs(v - ASKED_IRON) <= 0.15) return { ok: false, msg: `${fixed(v, 1)} g is the steel wool alone; ${ASKED_OXYGEN.toFixed(1)} g of oxygen was sealed in with it.` };
         const sealedRuns = t.recorder.rows.filter(r => r.label.includes('|1|'));
-        if (!sealedRuns.length) return { ok: false, msg: 'The pot has not been run sealed yet.' };
+        if (!sealedRuns.length) return { ok: false, msg: 'The reaction vessel has not been run sealed yet.' };
         const last = sealedRuns[sealedRuns.length - 1];
-        return { ok: false, msg: `${fixed(v, 1)} g does not carry on from the sealed pot, which read ${GRAMS(last.x)} before and ${GRAMS(last.y)} after.` };
+        return { ok: false, msg: `${fixed(v, 1)} g does not carry on from the sealed vessel, which read ${GRAMS(last.x)} before and ${GRAMS(last.y)} after.` };
       },
       reward: {
-        log: `${ASKED_IRON.toFixed(1)} g of iron and ${ASKED_OXYGEN.toFixed(1)} g of oxygen weigh ${ASKED_TOTAL.toFixed(1)} g as iron oxide.`,
-        title: 'A Sealed Pot Keeps Its Mass',
-        body: `Nothing enters or leaves a sealed pot, so it weighs the same after a reaction as before: ${ASKED_IRON.toFixed(1)} g of iron and ${ASKED_OXYGEN.toFixed(1)} g of oxygen make ${ASKED_TOTAL.toFixed(1)} g of iron oxide. This is the conservation of mass for a whole pot.`
+        log: `${ASKED_IRON.toFixed(1)} g of iron and ${ASKED_OXYGEN.toFixed(1)} g of oxygen have a mass of ${ASKED_TOTAL.toFixed(1)} g as iron oxide.`,
+        title: 'A Sealed Vessel Keeps Its Mass',
+        body: `${ASKED_IRON.toFixed(1)} g of iron and ${ASKED_OXYGEN.toFixed(1)} g of oxygen make ${ASKED_TOTAL.toFixed(1)} g of iron oxide. This is conservation of mass: mass is conserved when nothing enters or leaves.`
       }
     };
   })(),
@@ -357,7 +365,7 @@ export const STAGES = [
     return {
       id: 's7-same',
       title: 'The Same Particles',
-      prompt: 'Pick the change after which the pot holds the same particles it began with.',
+      prompt: 'After which change does the vessel hold the same particles it began with?',
       widget,
       table: potTable({
         pieces: [JARS.saltwater({ x: 82, y: 14 }), JARS.wood({ x: 101, y: 14 }), JARS.wool({ x: 82, y: 30 }), JARS.magnesium({ x: 101, y: 30 })],
@@ -365,9 +373,9 @@ export const STAGES = [
         zones: { slots: [...pot.slots, { id: 'pick', label: 'My pick', at: { x: 130, y: 24 }, size: { w: 24, h: 16 } }] }
       }),
       hints: [
-        'Use the pot, its "Run" key and the slot.',
-        'Compare the particles in the window before and after, row by row, for each jar.',
-        'The same particles before and after means no new substance, however the rows are arranged.'
+        'Run each jar in the reaction vessel and look at the particle view.',
+        'Compare the particles before and after, row by row, for each jar.',
+        'The same particles before and after means no new substance formed, even if they spread out.'
       ],
       check(state) {
         const jar = cardIn(state.table, 'pick');
@@ -379,51 +387,7 @@ export const STAGES = [
       reward: {
         log: 'Salt in water: the same ions before and after.',
         title: 'Dissolving Is Physical',
-        body: 'The window shows the same Na⁺ and Cl⁻ ions in the crystal and in the water, so no new substance forms and dissolving salt is classed as a physical change. Some chemists argue otherwise, because the bonds between the ions do break.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const pot = changePotFixture('pot', POT_AT, { lid: 'sealed', w: POT_W });
-    const lamps = evidenceFixture('lamps', 'pot', { x: 108, y: 12 }, { grid: true });
-    const truth = { a: 'new', b: 'same', c: 'same' };
-    return {
-      id: 's8-sealed',
-      title: 'Three Samples',
-      prompt: 'Sort samples A, B and C by whether a new substance forms in the sealed pot.',
-      widget,
-      table: potTable({
-        pieces: [hidden('a', { x: 82, y: 52 }, 'wood', 'A'), hidden('b', { x: 101, y: 52 }, 'dryice', 'B'), hidden('c', { x: 120, y: 52 }, 'ice', 'C')],
-        fixtures: [pot.fixture, lamps],
-        zones: {
-          slots: [...pot.slots],
-          trays: [
-            { id: 'same', label: 'Same substance after', at: { x: 92.5, y: 37 }, size: { w: 36, h: 15 }, cell: 17, cellH: 13.4 },
-            { id: 'new', label: 'New substance after', at: { x: 130, y: 37 }, size: { w: 36, h: 15 }, cell: 17, cellH: 13.4 }
-          ]
-        }
-      }),
-      hints: [
-        'Use the pot, its "Run" key and the two trays.',
-        'Two samples may light the same lamps, so compare the particles in the window as well.',
-        'A lit lamp only reports what the pot did; a sample made something new only if different particles stand in the pot afterwards.'
-      ],
-      check(state) {
-        const r = sortCheck(state.table, truth);
-        if (r.open) return { ok: false, notYet: true, msg: 'Put every sample in one of the two trays.' };
-        if (r.ok) return { ok: true };
-        const t = state.table;
-        const id = t.pieces[r.wrong].props.case;
-        const p = plan(id, { sealed: true });
-        const lamps = litNames(p);
-        return { ok: false, msg: `Sample ${r.wrong.toUpperCase()}: the window shows ${formulas(p.before)} before and ${formulas(p.after)} after${lamps.length ? `; lit: ${lamps.join(', ')}` : '; no lamp lit'}.` };
-      },
-      reward: {
-        log: 'Only sample A made a new substance.',
-        title: 'Evidence, Then Proof',
-        body: 'Samples A and B lit the same lamps, yet only A made new particles. A lit lamp is evidence of reaction; a chemical change is shown by a new substance in the pot, and a physical change by the same substance still being there.'
+        body: 'The Na⁺ and Cl⁻ ions are the same before and after, so dissolving salt is classed as a physical change, though the ions do separate.'
       }
     };
   })()
@@ -431,14 +395,13 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Seat a jar, press Run, file it.'],
+  1: ['Seat a jar, press Run, sort it.'],
   2: ['Run each jar; slot your pick.'],
-  3: ['Drag your chip into the slot.'],
-  4: ['Run the pot, then pick a chip.'],
-  5: ['Seat each jar, Run, file it.'],
+  3: ['Drag your card into the slot.'],
+  4: ['Run the vessel, then pick a card.'],
+  5: ['Seat each jar, Run, sort it.'],
   6: ['Set the dials, Run, then type.'],
-  7: ['Run each jar; slot your pick.'],
-  8: ['Run each sample, then file it.']
+  7: ['Run each jar; slot your pick.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -450,7 +413,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A chemical change makes a new substance and a physical change does not, and a lamp lit in the pot is only evidence of reaction. A sealed pot weighs the same before and after, so metal in a ledger cannot appear from nowhere.'
+      body: 'A chemical change makes a new substance and a physical change does not, and a sign lit on the vessel is only evidence of reaction. A sealed vessel has the same mass before and after, so metal in a ledger cannot appear from nowhere.'
     }
   ]
 };
@@ -470,11 +433,10 @@ export const SOLUTIONS = [
   [seat('ice'), run('pot'), file('ice', 'same'), seat('sugarwater'), run('pot'), file('sugarwater', 'same'), seat('sugarheat'), run('pot'), file('sugarheat', 'new'), seat('wool'), run('pot'), file('wool', 'new')],
   [seat('dryice'), run('pot'), put('dryice', 'slot:pick')],
   [put('less', 'slot:guess')],
-  [seat('wool'), run('pot'), put('more', 'slot:ans')],
+  [seat('wool'), run('pot'), put('air', 'slot:ans')],
   [seat('wool'), run('pot'), file('wool', 'heavier'), seat('magnesium'), run('pot'), file('magnesium', 'heavier'), seat('wood'), run('pot'), file('wood', 'lighter')],
   [dial('pot', 'lid', 2), dial('pot', 'amount', 3), run('pot'), typed('g', ASKED_TOTAL.toFixed(1))],
-  [seat('saltwater'), run('pot'), put('saltwater', 'slot:pick')],
-  [seat('a'), run('pot'), file('a', 'new'), seat('b'), run('pot'), file('b', 'same'), seat('c'), run('pot'), file('c', 'same')]
+  [seat('saltwater'), run('pot'), put('saltwater', 'slot:pick')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -482,11 +444,10 @@ export const MISSES = [
   [seat('ice'), run('pot'), file('ice', 'new'), file('sugarwater', 'same'), file('sugarheat', 'new'), file('wool', 'new')],
   [seat('wood'), run('pot'), put('wood', 'slot:pick')],
   [],
-  [seat('wool'), run('pot'), put('less', 'slot:ans')],
+  [seat('wool'), run('pot'), put('heat', 'slot:ans')],
   [file('wool', 'heavier'), file('magnesium', 'heavier'), file('wood', 'heavier')],
   [dial('pot', 'lid', 2), run('pot'), typed('g', ASKED_IRON.toFixed(1))],
-  [seat('wood'), run('pot'), put('wood', 'slot:pick')],
-  [file('a', 'same'), file('b', 'same'), file('c', 'same')]
+  [seat('wood'), run('pot'), put('wood', 'slot:pick')]
 ];
 
 function blankState() { return {}; }

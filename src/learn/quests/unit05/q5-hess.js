@@ -98,9 +98,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, both routes are built from steps that have been measured.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for the two routes is recorded. Test it on the bench.'
     }
   },
 
@@ -108,7 +108,7 @@ export const STAGES = [
   {
     id: 's2-routes',
     title: 'Two Routes, One Total',
-    briefing: { speaker: SPEAKER, body: 'Each card is one measured step with its ΔH. A stack adds its cards: a substance made by one card and used up by another cancels, and the energy ladder beside the stack steps down or up by the ΔH of each card.' },
+    briefing: { speaker: SPEAKER, body: 'Each card is one measured step with its ΔH, where (s) marks a solid and (g) a gas. A stack adds its cards: a substance made by one card and used up by another cancels, and the energy ladder beside the stack steps down or up by the ΔH of each card.' },
     prompt: 'Does burning carbon in two steps give out the same heat as burning it in one?',
     widget,
     table: (() => {

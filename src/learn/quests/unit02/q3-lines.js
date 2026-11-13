@@ -58,7 +58,7 @@ export const BUILDS_ON = ['unit02/q1-wave', 'unit02/q2-photon'];
 const SPEAKER = 'Vess';
 
 const QUEST_KEY = 'unit02/q3-lines';
-const GUESS_LABEL = { rainbow: 'A smooth rainbow', exact: 'A few exact colours', one: 'One colour only' };
+const GUESS_LABEL = { rainbow: 'Every colour', exact: 'A few colours', one: 'One colour' };
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -95,7 +95,11 @@ export const STAGES = [
     title: 'A Glowing Tube',
     // A PREDICT STAGE: the prism is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'A tube of glowing hydrogen sends its light through a prism: what do you think the band looks like?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A prism spreads light out into a band, with each wavelength at its own place along it. White light from a hot lamp filament fills the band with every colour.'
+    },
+    prompt: 'Light from glowing hydrogen gas passes through a prism: which colours appear in its band?',
     widget,
     table: opticsTable({
       pieces: [],
@@ -104,19 +108,19 @@ export const STAGES = [
       prediction: {
         slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 30, h: 14 } },
         tokens: [
-          { id: 'rainbow', label: 'Rainbow', at: { x: 38, y: 48 }, r: 7 },
+          { id: 'rainbow', label: 'Every colour', at: { x: 38, y: 48 }, r: 7 },
           { id: 'exact', label: 'A few colours', at: { x: 75, y: 48 }, r: 7 },
           { id: 'one', label: 'One colour', at: { x: 112, y: 48 }, r: 7 }
         ]
       }
     }),
     hints: [
-      'Drag one of the three guesses into the slot.',
-      'Think of a hot wire in a lamp, which glows with every colour, and ask whether a glowing gas would do the same.',
-      'There is no wrong guess yet; commit to the one you would bet on.'
+      'Drag one of the three cards into the slot.',
+      'Think of the hot filament, which glows with every colour, and ask whether a glowing gas would do the same.',
+      'A prediction is not graded, so choose the one you think is most likely.'
     ],
     check(state) {
-      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -124,9 +128,9 @@ export const STAGES = [
       if (token) remember(QUEST_KEY, token);
     },
     reward: {
-      log: 'Prediction locked in.',
+      log: 'Prediction made.',
       title: 'Prediction',
-      body: 'A glowing gas is hot and bright like a glowing wire, so a rainbow is a fair guess. Next, a prism will spread the light of each source across a scale.'
+      body: 'Next, a prism spreads out the light of a hot filament and of three glowing gases.'
     }
   },
 
@@ -135,11 +139,15 @@ export const STAGES = [
     const sp = spectrograph('sp', 'Band', { x: 56, y: 21 });
     return {
       title: 'Filament and Tubes',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The band a source makes is called its spectrum. A band with every colour in it is a continuous spectrum, and a band with only separate bright lines is a line spectrum.'
+      },
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": put each light source under the kind of band it makes.`
-          : 'Put each light source under the kind of band it makes.';
+          ? `You predicted "${GUESS_LABEL[guess]}": which sources give a continuous spectrum and which give a line spectrum?`
+          : 'Which sources give a continuous spectrum and which give a line spectrum?';
       },
       widget,
       table: opticsTable({
@@ -150,30 +158,30 @@ export const STAGES = [
           gasTube('na', 'Sodium tube', { x: 138, y: 30 }, 'Na')
         ],
         fixtures: [sp.fixture],
-        zones: { slots: sp.slots, trays: [tray('band', 'Lit from end to end', 17, 55, 30, 25, 18), tray('lines', 'Lit in a few places', 72, 55, 78, 25, 18)] }
+        zones: { slots: sp.slots, trays: [tray('band', 'Continuous spectrum', 23, 55, 42, 25, 18), tray('lines', 'Line spectrum', 85, 55, 78, 25, 18)] }
       }),
       hints: [
-        'Use the socket: drag a source into it and look at the band.',
-        'Compare whether each band is filled from one end to the other or only lit in a few places.',
-        'Sort the sources by the band each one makes when it is in the socket, not by how it looks on the table.'
+        'Drag each source into the socket and look at the band the prism makes.',
+        'Compare whether each band is lit from one end to the other or only in a few places.',
+        'Go by the band each source makes in the socket, since a tube and a filament can look alike on the table.'
       ],
       check(state) {
         const t = state.table;
         const ids = Object.keys(SOURCES);
-        if (!trayed(t, ids)) return { ok: false, notYet: true, msg: 'Put every source under a band.' };
+        if (!trayed(t, ids)) return { ok: false, notYet: true, msg: 'Put every source in a tray.' };
         const wrong = ids.find(id => where(t, id) !== SOURCES[id]);
         if (!wrong) return { ok: true };
-        return { ok: false, msg: `The ${t.pieces[wrong].label} makes a different band from the one it is under.` };
+        return { ok: false, msg: `In the socket, the ${t.pieces[wrong].label.toLowerCase()} does not make the kind of spectrum its tray names.` };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'exact'
-          ? 'You predicted a few exact colours, and the prism agreed. '
-          : 'The prism did not agree with your prediction, which is how a guess gets better. ';
+          ? 'Your prediction held. '
+          : 'The prism did not agree with your prediction. ';
         return {
-          log: 'A hot wire: every colour. A glowing gas: a few.',
-          title: 'Line Spectrum',
-          body: `${verdict}A hot solid gives off an unbroken band of every colour, a continuous spectrum, while a glowing gas gives off only a few bright lines, a line spectrum.`
+          log: 'A hot filament: every colour. A glowing gas: a few lines.',
+          title: 'Continuous Spectrum and Line Spectrum',
+          body: `${verdict}The hot filament gives a continuous spectrum. Each glowing gas gives a line spectrum: a few bright lines with darkness between them.`
         };
       }
     };
@@ -184,7 +192,7 @@ export const STAGES = [
     const sp = spectrograph('sp', 'Band', { x: 44, y: 27 }, { ref: true, size: { w: 84, h: 52 } });
     return {
       title: 'Name the Gas',
-      prompt: 'Pick the element in the sealed tube.',
+      prompt: 'Which element is in the sealed tube?',
       widget,
       table: opticsTable({
         pieces: [
@@ -195,13 +203,13 @@ export const STAGES = [
         zones: { slots: sp.slots }
       }),
       hints: [
-        'Use the socket for the sealed tube and the alongside slot for the strips.',
-        'Compare the strip\'s lines with the sealed tube\'s lines, position by position, and watch which of them light.',
-        'Try each element in turn and keep the one whose every line falls exactly on a line of the sealed tube\'s band.'
+        'Put the sealed tube in the socket and slide an element\'s strip into the alongside slot.',
+        'Compare the strip\'s lines with the lines in the band, position by position.',
+        'One line without a partner, on the strip or in the band, is enough to rule an element out.'
       ],
       check(state) {
         const r = bandRead(state.table, 'sp');
-        if (!r.src || r.src.id !== 'x') return { ok: false, notYet: true, msg: 'Plug the sealed tube into the socket to read its lines.' };
+        if (!r.src || r.src.id !== 'x') return { ok: false, notYet: true, msg: 'Put the sealed tube in the socket to see its lines.' };
         if (!r.ref) return { ok: false, notYet: true, msg: 'Slide an element\'s strip alongside the band.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
         return { ok: false, msg: `The ${r.ref.label} strip has lines where the sealed tube's band is dark, or the tube has lines the strip lacks.` };
@@ -209,7 +217,7 @@ export const STAGES = [
       reward: {
         log: 'The sealed tube\'s lines matched one reference exactly.',
         title: 'Emission Spectrum',
-        body: 'Every gas gives its own set of bright lines, so the lines work as a fingerprint that no other gas shares. The light a glowing gas gives out, read this way, is its emission spectrum.'
+        body: 'Every line matched helium\'s strip and no other. The lines a glowing gas gives out are its emission spectrum, and each element has its own.'
       }
     };
   })(),
@@ -218,8 +226,12 @@ export const STAGES = [
   (() => {
     const lad = energyLadder('lad', 'Hydrogen', LADDER_AT);
     return {
-      title: 'Hydrogen Red Line',
-      prompt: 'Make the hydrogen atom give out its red line.',
+      title: 'Hydrogen\'s Red Line',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An electron in an atom can have only certain energies, called energy levels. When it drops to a lower level, the atom gives out one photon carrying the energy of the drop.'
+      },
+      prompt: 'Which drop between energy levels gives hydrogen\'s red line?',
       widget,
       table: opticsTable({
         pieces: [lad.electron],
@@ -227,22 +239,22 @@ export const STAGES = [
         zones: { slots: lad.slots }
       }),
       hints: [
-        'Use the electron: drag it up the ladder, then drop it onto a lower rung.',
-        'Compare the colour and the wavelength of the line each drop gives out on the strip.',
-        'Drop the electron from each higher rung in turn, and read each line until you meet the red one.'
+        'Drag the electron up to a higher energy level, then down to a lower one.',
+        'Compare the wavelength of the line each drop writes on the strip with the size of the drop.',
+        'A photon of red light carries less energy than one of any other visible colour, so compare the sizes of the drops that give visible lines.'
       ],
       check(state) {
         const read = ladderRead(state.table, 'lad');
         const l = read.last;
-        if (!l) return { ok: false, notYet: true, msg: 'Move the electron to another rung.' };
-        if (l.up || l.nm == null) return { ok: false, msg: 'That move gave out no light.' };
+        if (!l) return { ok: false, notYet: true, msg: 'Move the electron to another energy level.' };
+        if (l.up || l.nm == null) return { ok: false, msg: 'The electron climbed, and a climb gives out no light.' };
         if (isRed(l.nm)) return { ok: true };
-        return { ok: false, msg: 'The last line made is not the red one.' };
+        return { ok: false, msg: l.nm < 380 || l.nm > 750 ? `That drop gave out light of ${Math.round(l.nm)} nm, which the eye cannot see.` : `That drop gave out a line at ${Math.round(l.nm)} nm, and the strip does not draw it red.` };
       },
       reward: {
-        log: 'The red line: down from the third rung to the second.',
+        log: 'The red line: down from level 3 to level 2.',
         title: 'Energy Levels',
-        body: 'An electron in hydrogen can only sit on certain rungs, called energy levels, and each line in the spectrum is a jump down between two of them. The lowest rung is the ground state, and any higher one is an excited state.',
+        body: 'The drop from level 3 to level 2 gives the red line; each line in the spectrum is one drop. The lowest level is the ground state, and any higher one is an excited state.',
         model: { type: 'ladder', hi: 3, lo: 2, caption: 'An electron dropping from the third energy level to the second emits the difference in energy as a photon of red light.' }
       }
     };
@@ -253,7 +265,11 @@ export const STAGES = [
     const sp = spectrograph('sp', 'Band', { x: 44, y: 27 }, { cell: true, ref: true, size: { w: 84, h: 52 } });
     return {
       title: 'Light Through Cool Gas',
-      prompt: 'Pick the element in the cool cell.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An electron can also climb to a higher energy level, by taking in a photon that carries exactly the energy of the climb. Photons of any other energy pass straight through the atom.'
+      },
+      prompt: 'Which element is in the cool cell?',
       widget,
       table: opticsTable({
         pieces: [
@@ -268,13 +284,13 @@ export const STAGES = [
         zones: { slots: sp.slots }
       }),
       hints: [
-        'Use the socket for the filament, the cell holder for the cool cell and the alongside slot for the strips.',
-        'Compare the dark places in the band with the lines on each strip, position by position.',
-        'Keep the element whose every line falls exactly on a dark place in the band behind the cool cell.'
+        'Put the filament in the socket, the cool cell in the cell holder and a strip in the alongside slot.',
+        'Compare the dark lines in the band with the lines on each strip, position by position.',
+        'A climb between two levels needs the same energy as the drop between them gives out, so think which wavelengths a cool gas can take in.'
       ],
       check(state) {
         const r = bandRead(state.table, 'sp');
-        if (!r.src || r.src.kind !== 'filament' || !r.cell) return { ok: false, notYet: true, msg: 'Plug the filament into the socket and put the cool cell in front of it.' };
+        if (!r.src || r.src.kind !== 'filament' || !r.cell) return { ok: false, notYet: true, msg: 'Put the filament in the socket and the cool cell in front of it.' };
         if (!r.ref) return { ok: false, notYet: true, msg: 'Slide an element\'s strip alongside the band.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
         return { ok: false, msg: `The ${r.ref.label} strip has lines where the band behind the cell is bright.` };
@@ -282,7 +298,7 @@ export const STAGES = [
       reward: {
         log: 'Cool hydrogen takes out exactly what hot hydrogen gives.',
         title: 'Absorption Spectrum',
-        body: 'Cool hydrogen takes out of the filament\'s light exactly the colours that hot hydrogen gives out, leaving dark lines in the band. That pattern of missing colours is the absorption spectrum, and its lines sit where the emission lines do.',
+        body: 'The dark lines sit exactly where hydrogen\'s bright lines do: cool hydrogen takes in the same wavelengths that glowing hydrogen gives out. The wavelengths a cool gas takes in are its absorption spectrum.',
         last: true
       }
     };
@@ -293,8 +309,8 @@ export const STAGES = [
 const NOTES = {
   2: ['Drag a source into the socket.'],
   3: ['Put the tube in the socket, then slide an element\'s', 'strip into the alongside slot.'],
-  4: ['Drag the electron to another rung.', 'Any light that leaves is written on the strip.'],
-  5: ['Put the filament in the socket, the cool cell in front of it,', 'then find which element is in the cell.']
+  4: ['Drag the electron to another level.', 'Any light that leaves is written on the strip.'],
+  5: ['Put the filament in the socket and the cool cell in front of it,', 'then slide a strip into the alongside slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -306,15 +322,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An atom\'s electrons sit only on certain energy levels, and light is given out or taken in exactly when an electron moves between two of them. Each gas therefore has a line spectrum no other gas shares.'
+      body: 'An electron in an atom can have only certain energy levels. The atom gives out a photon when the electron drops between two levels and takes one in when it climbs, so each element has its own lines.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Line spectra identify elements across chemistry and astronomy. Emission lines reveal which atoms are present, while dark absorption lines show which cool gases lie in front of a light source.'
+      body: 'Bright lines show which atoms are glowing, and dark lines show which cool gas lies in front of a light. Chemists and astronomers identify elements this way.'
     },
     {
       heading: 'Next',
-      body: 'The simple ladder model only fits single-electron atoms like hydrogen. The next bench examines where electrons actually reside in three dimensions.'
+      body: 'The energy levels say how much energy the electron has. Next: where round the nucleus it is found.'
     }
   ]
 };

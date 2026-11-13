@@ -159,13 +159,17 @@ export const STAGES = [
     reward: {
       log: 'Like signs add between the nuclei.',
       title: 'Bonding Orbital',
-      body: 'Between the two nuclei, where the electron is attracted to both. That lowers the energy, as the level showed, so this molecular orbital is called a bonding orbital.'
+      body: 'Between the two nuclei: the two waves add there, lowering the energy, so this molecular orbital is called a bonding orbital.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Orbitals Cancel',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'When two orbitals of opposite sign overlap they cancel; such an antibonding orbital is marked with a star (*).'
+    },
     prompt: 'When two 1s orbitals of opposite sign overlap, where is the electron never found?',
     widget: { type: 'table', label: 'The bench' },
     table: moTable({

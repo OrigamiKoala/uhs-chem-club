@@ -169,7 +169,7 @@ const LAMP_W = 22;
  * slots and its size.
  */
 export function ionPotFixture(id, at, o = {}) {
-  const { mixes = null, window = false, lamp = false, title = 'Pot', runLabel = 'Mix' } = o;
+  const { mixes = null, window = false, lamp = false, title = 'Reaction vessel', runLabel = 'Mix' } = o;
   const dials = {};
   if (mixes) dials.mix = { min: 1, max: mixes.length, step: 1, value: 1, label: 'Mixture', labels: mixes.map((_, i) => String(i + 1)) };
   const top = contentTop(mixes ? 1 : 0);
@@ -390,17 +390,17 @@ const POT_TEXT = f => {
   if (p.mixes) bits.push('The "Mixture" dial picks which two solutions are poured in; their formulas are printed at the left.');
   else bits.push('Drag a jar into each of the two seats at the left.');
   bits.push('Press "Mix" to pour them together. Each jar pours in just the amount that is used up.');
-  if (p.window) bits.push('The window shows the ions before pouring, one half for each jar, and after: the ions still dissolved, with any ions that left the water packed together at the bottom. Each disc is one ion with its charge on it, and the key under BEFORE says which ink is which.');
-  else bits.push('The glass shows what the pot looks like afterwards.');
-  if (p.lamp) bits.push('The two bulbs shine brighter the more ions are dissolved in the water.');
+  if (p.window) bits.push('The particle view shows the ions before pouring, one half for each jar, and after: the ions still dissolved, with any ions that left the water packed together at the bottom. Each circle is one ion with its charge on it, and the key under BEFORE says which colour is which.');
+  else bits.push('The glass shows what the reaction vessel looks like afterwards.');
+  if (p.lamp) bits.push('The two conductivity bulbs shine brighter when more ions are dissolved in the water.');
   return bits.join(' ');
 };
 
 addTourText({
-  'pot:ionpot': { title: 'Pot', dials: false, text: POT_TEXT },
-  'pot:ionfilter': { title: 'Filter', text: 'Press "Filter" after mixing to lift any solid out of the pot onto the paper. The paper shows what was caught.' }
+  'pot:ionpot': { title: 'Reaction vessel', dials: false, text: POT_TEXT },
+  'pot:ionfilter': { title: 'Filter', text: 'Press "Filter" after mixing to lift any solid out of the vessel onto the paper. The paper shows what was caught.' }
 }, {
-  sol: ['Solution jars', 'Each jar holds a salt dissolved in water: its formula is printed, with its name under it. A jar called Jar 1 or Jar 2 is sealed. Drag a jar into a seat of the pot.'],
-  ion: ['Ion pucks', 'Each puck is one ion. The charge is on the puck and its ink matches the discs in the window. Drag a puck into a place on the table to count it there.'],
-  formula: ['Formula chips', 'Each chip is one substance written as a formula, with (s) for a solid, (aq) for dissolved and (l) for a liquid. Drag a chip into a place on the table to count it there.']
+  sol: ['Solution jars', 'Each jar holds a salt dissolved in water: its formula is printed, with its name under it. A jar called Jar 1 or Jar 2 is sealed. Drag a jar into a seat of the vessel.'],
+  ion: ['Ions', 'Each piece is one ion. Its charge is printed on it and its colour matches the circles in the particle view. Drag an ion into a tray to count it there.'],
+  formula: ['Formula cards', 'Each card is one substance written as a formula, with (s) for a solid, (aq) for dissolved and (l) for a liquid. Drag a card into a slot to place it there.']
 });

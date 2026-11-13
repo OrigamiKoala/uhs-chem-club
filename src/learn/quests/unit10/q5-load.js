@@ -328,15 +328,19 @@ export const STAGES = [
   {
     id: 's7-rank',
     title: 'Three Prepared Cells',
-    prompt: 'Which cell has the lowest voltage and which the highest?',
+    prompt: 'Order these three cells from lowest voltage to highest voltage.',
     widget,
-    table: cellTable({
-      fixtures: S7_CELLS.map(([fid, , name, a, c], i) => readFixture(fid, { x: 32 + i * 56, y: 30 }, { left: 'zn', right: 'cu', aC: a, cC: c, w: 50, title: name })),
-      pieces: S7_CELLS.map(([, cid, name], i) => canPiece(cid, name, { x: 32 + i * 28, y: 70 })),
-      zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Lowest voltage', last: 'Highest voltage', items: [], start: [] } }
-    }, { w: 176, h: 106 }),
+    table: (() => {
+      const fixtures = S7_CELLS.map(([fid, , name, a, c], i) => readFixture(fid, { x: 32 + i * 56, y: 30 }, { left: 'zn', right: 'cu', aC: a, cC: c, w: 50, title: name }));
+      for (const f of fixtures) { f.props.gate = { railFull: S7_CELLS.length }; f.props.gateMsg = 'Order all three cans on the rail first, then press "Run".'; }
+      return cellTable({
+        fixtures,
+        pieces: S7_CELLS.map(([, cid, name], i) => canPiece(cid, name, { x: 32 + i * 28, y: 70 })),
+        zones: { rail: { at: { x: 88, y: 92 }, size: { w: 150, h: 12 }, first: 'Lowest voltage', last: 'Highest voltage', items: [], start: [] } }
+      }, { w: 176, h: 106 });
+    })(),
     hints: [
-      'Press "Run" on each cell, then drag the three cans onto the rail.',
+      'Drag the three cans onto the rail first, then press "Run" on each cell.',
       'Compare the voltages the three voltmeters read, and the concentrations printed under the beakers.',
       'Compare product ions with reactant ions in each cell before you run it.'
     ],
@@ -383,7 +387,7 @@ export const SOLUTIONS = [
   [put('eq', 'slot:reason')],
   [run('cc'), dial('pick', 'value', 2)],
   [typed('v', fmt(readAt('cu', 'zn', S6.aC, S6.cC), 2))],
-  [...S7_CELLS.map(c => run(c[0])), ...S7_WANT.map((c, i) => put(c[1], `rail:${i}`))]
+  [...S7_WANT.map((c, i) => put(c[1], `rail:${i}`)), ...S7_CELLS.map(c => run(c[0]))]
 ];
 
 export const MISSES = [
@@ -393,7 +397,7 @@ export const MISSES = [
   [put('equal', 'slot:reason')],
   [run('cc'), dial('pick', 'value', 1)],
   [typed('v', '1.19')],
-  [...S7_CELLS.map(c => run(c[0])), ...['fa', 'fb', 'fc'].map((f, i) => put(`t${f[1]}`, `rail:${i}`))]
+  [...['fa', 'fb', 'fc'].map((f, i) => put(`t${f[1]}`, `rail:${i}`)), ...S7_CELLS.map(c => run(c[0]))]
 ];
 
 function blankState() { return {}; }

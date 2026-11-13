@@ -26,7 +26,7 @@ import {
 } from '../../table/kits/ph.js';
 import { ACIDS, bufferState, fmt, pOf } from '../../engine/phdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bbuffer\b/i, introducedAt: 2 },
@@ -67,14 +67,11 @@ const BENCH_BUFFER = { goal: { from: 'h3o', to: 'a' }, mols: [
   { key: 'h3o', label: 'H₃O⁺', ink: H_INK, ink2: '#7d8b97', hs: 3, gives: true, lost: 'H₂O', gained: 'H₃O⁺' },
   { key: 'ha', label: 'CH₃COOH', ink: ACID_INK, ink2: ACID_INK, hs: 4, gives: false, lost: 'CH₃COOH', gained: 'CH₃COOH₂⁺' },
   { key: 'a', label: 'CH₃COO⁻', ink: BASE_INK, ink2: ACID_INK, hs: 3, gives: false, lost: 'CH₃COO⁻', gained: 'CH₃COOH' }] };
-const HF = { Ka: ACIDS.hf.Ka };
 /** Stage 5 and 6: two reference flasks (1 : 1 and 10 : 1) and, on stage 5, a flask of 3 : 1 that has no meter. */
 const REF1 = { ha: 100, a: 100 };
 const REF2 = { ha: 10, a: 100 };
 const TYPED = { ha: 50, a: 150 };
 const TARGET = 4.40;
-/** Stage 8: two buffers and acetic acid alone. */
-const SEALED = [{ id: 'fx', name: 'Flask X', ha: 100, a: 100 }, { id: 'fy', name: 'Flask Y', ha: 60, a: 60, ...HF }, { id: 'fz', name: 'Flask Z', ha: 100, a: 0 }];
 const LEVELS = [0, 25, 50, 100];
 const MOVE_OK = 0.5;
 const TOL_PH = 0.03;
@@ -130,7 +127,7 @@ export const STAGES = [
   {
     id: 's2-pour',
     title: 'The Same Acid, Two Flasks',
-    get prompt() { return guessLine('Add the same acid to both flasks and say which flask\'s pH moves more.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which flask\'s pH moves more when the same acid is poured into each?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const w = flaskAt('fw', 26, 1, { title: 'Water', ha: 0, a: 0 });
@@ -167,7 +164,7 @@ export const STAGES = [
   {
     id: 's3-build',
     title: 'Making a Flask That Holds',
-    prompt: 'Make a flask that holds its pH when acid is poured in and when base is poured in.',
+    prompt: 'What must a flask contain to hold its pH against both added acid and added base?',
     widget,
     table: (() => {
       const f = flaskAt('fb', 46, 1, { title: 'Your flask', build: true, levels: LEVELS, reagent: 'dial', rows: 14 });
@@ -196,8 +193,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     id: 's4-acid',
-    title: 'Who Takes the Acid',
-    prompt: 'Carry the proton of the added acid to the particle of the mixture that takes it up.',
+    title: 'Who Accepts the Acid',
+    prompt: 'Which particle in the buffer accepts the protons of the added acid?',
     widget,
     // The graded answer is where the proton is carried on the bench; the flask shows what the pour did.
     table: (() => {
@@ -235,6 +232,7 @@ export const STAGES = [
   {
     id: 's5-hh',
     title: 'The pH of a Mixture',
+    briefing: 'A buffer\'s pH sits at the pKa when its two members are equal, and one unit above for each tenfold excess of the base. In full: pH = pKa + log(base ÷ acid), the Henderson–Hasselbalch equation.',
     prompt: 'Find the pH of the flask with no meter, to two decimal places.',
     widget,
     entry: { id: 'ph', label: 'pH', unit: '' },
@@ -249,7 +247,7 @@ export const STAGES = [
     hints: [
       'Type the pH in the field; the two meters read the flasks beside it.',
       'Compare each flask\'s number of acetate spheres per acetic acid sphere with the pH it reads.',
-      'The pH sits above the pKa by the log of that number of acetate spheres per acetic acid sphere.'
+      'Use the equation from the briefing with the counts of acetate and acetic acid spheres in the third flask.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'ph');
@@ -266,7 +264,7 @@ export const STAGES = [
       return {
         log: 'The pH is the pKa plus the log of acetate over acetic acid.',
         title: 'Henderson–Hasselbalch',
-        body: `Three acetate to one acetic acid puts the pH ${fmt(lg, 2)} above the pKa of ${fmt(PLATE_PKA, 2)}, at ${fmt(ph(TYPED.ha, TYPED.a), 2)}. That rule, pH = pKa + log([A⁻]/[HA]), is the Henderson–Hasselbalch equation.`
+        body: `Three acetate to one acetic acid puts the pH ${fmt(lg, 2)} above the pKa of ${fmt(PLATE_PKA, 2)}, at ${fmt(ph(TYPED.ha, TYPED.a), 2)}. That rule, pH = pKa + log(base ÷ acid), is the Henderson–Hasselbalch equation.`
       };
     }
   },
@@ -275,6 +273,13 @@ export const STAGES = [
   {
     id: 's6-target',
     title: 'Making a Target pH',
+    briefing: {
+      intro: 'For a target pH of 5.04:',
+      worked: [
+        '5.04 − 4.74 = 0.30',
+        'ratio = 10^0.30 = 2.0'
+      ]
+    },
     prompt: `Find the ratio of acetate to acetic acid that gives a pH of ${fmt(TARGET, 2)}.`,
     widget,
     entry: { id: 'ratio', label: 'Acetate per acetic acid', unit: '' },
@@ -312,7 +317,7 @@ export const STAGES = [
   {
     id: 's7-base',
     title: 'Base Into the Mixture',
-    prompt: 'Pour base into the mixture and say how its pH changes.',
+    prompt: 'What happens to the buffer\'s pH when base is poured in?',
     widget,
     table: (() => {
       const f = flaskAt('fm', 26, 1, { title: 'Acetic acid with sodium acetate', ...MIX, reagent: 'base' });
@@ -337,44 +342,7 @@ export const STAGES = [
       return {
         log: 'The acetic acid took up the added base and the pH rose a little.',
         title: 'Base Taken Up',
-        body: `The acid member takes up added base: acetic acid fell from ${MIX.ha} to ${Math.round(m.HA / U)} spheres and acetate rose to ${Math.round(m.A / U)}. The pH rose from ${fmt(read(MIX.ha, MIX.a).pH, 2)} to ${fmt(m.pH, 2)}, a small change and not none. The exam does not ask for its size.`
-      };
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-sealed',
-    title: 'Sealed Flasks',
-    prompt: 'Pour acid and base into each sealed flask and name the one that is not a buffer.',
-    widget,
-    table: (() => {
-      const fl = SEALED.map((s, i) => flaskAt(s.id, 24 + i * 46, 1, { title: s.name, ha: s.ha, a: s.a, ...(s.Ka ? { Ka: s.Ka } : {}), reagent: 'dial', sealed: true, rows: 4 }));
-      return phTable({
-        fixtures: [...fl.map(f => f.fixture), selectorFixture('pick', 'Not a buffer', { x: 166, y: 20 }, { options: ['Flask X', 'Flask Y', 'Flask Z', ' '], start: 4, w: 40 })]
-      }, { w: 190, h: fl[0].size.h + 4 });
-    })(),
-    hints: [
-      'For each flask set the "Pour in" dial, press "Pour", then set the answer dial.',
-      'Compare how far each flask\'s pH moves for acid and for base.',
-      'A flask that holds its pH against both pours moves by about the same small step for each.'
-    ],
-    check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v === 3) return { ok: true };
-      const s = SEALED[v - 1];
-      const o = { Kax: s.Ka ?? Ka };
-      const z = SEALED[2];
-      return { ok: false, msg: `${s.name} reads ${fmt(read(s.ha, s.a, 0, 0, o).pH, 2)}, then ${fmt(read(s.ha, s.a, 1, 0, o).pH, 2)} after acid and ${fmt(read(s.ha, s.a, 0, 1, o).pH, 2)} after base; ${z.name} reads ${fmt(read(z.ha, z.a).pH, 2)}, then ${fmt(read(z.ha, z.a, 1).pH, 2)} and ${fmt(read(z.ha, z.a, 0, 1).pH, 2)}.` };
-    },
-    get reward() {
-      const mv = s => { const o = { Kax: s.Ka ?? Ka }; return [read(s.ha, s.a, 1, 0, o).pH - read(s.ha, s.a, 0, 0, o).pH, read(s.ha, s.a, 0, 1, o).pH - read(s.ha, s.a, 0, 0, o).pH]; };
-      const [xa, xb] = mv(SEALED[0]); const [za, zb] = mv(SEALED[2]);
-      return {
-        log: 'Acetic acid alone is not a buffer.',
-        title: 'Telling Buffers Apart',
-        body: `Flasks X and Y moved by ${fmt(Math.abs(xa), 2)} for acid and ${fmt(Math.abs(xb), 2)} for base. Flask Z held acetic acid alone and moved by ${fmt(Math.abs(za), 2)} and ${fmt(Math.abs(zb), 2)}, because a buffer needs both members of a pair and Z held only one.`
+        body: `Acetic acid donated protons to the added base, falling from ${MIX.ha} to ${Math.round(m.HA / U)} while acetate rose to ${Math.round(m.A / U)}. The pH rose only from ${fmt(read(MIX.ha, MIX.a).pH, 2)} to ${fmt(m.pH, 2)}.`
       };
     }
   }
@@ -392,8 +360,7 @@ export const SOLUTIONS = [
   [pour('fm'), put('bench.h.h3o', 'slot:bench.take.a')],
   [{ type: { entry: 'ph', value: '5.22' } }],
   [{ type: { entry: 'ratio', value: '0.45' } }],
-  [pour('fm'), dial('pick', 'value', 2)],
-  [pour('fx'), pour('fy'), pour('fz'), dial('pick', 'value', 3)]
+  [pour('fm'), dial('pick', 'value', 2)]
 ];
 
 export const MISSES = [
@@ -403,8 +370,7 @@ export const MISSES = [
   [pour('fm'), put('bench.h.h3o', 'slot:bench.take.ha')],
   [{ type: { entry: 'ph', value: '4.27' } }],
   [{ type: { entry: 'ratio', value: '2.2' } }],
-  [pour('fm'), dial('pick', 'value', 4)],
-  [pour('fx'), dial('pick', 'value', 1)]
+  [pour('fm'), dial('pick', 'value', 4)]
 ];
 
 function blankState() { return {}; }
@@ -422,4 +388,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { read, ph, MIX, REF1, REF2, TYPED, SEALED, TARGET, LEVELS, MOVE_OK, TOL_PH, PER, U, GUESS, S2_OPTIONS };
+export const CHECKS = { read, ph, MIX, REF1, REF2, TYPED, TARGET, LEVELS, MOVE_OK, TOL_PH, PER, U, GUESS, S2_OPTIONS };

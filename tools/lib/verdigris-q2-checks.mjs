@@ -47,20 +47,20 @@ export async function checkVerdigrisQ2({ ok, fail }) {
   ok('q2-scale flasks: pH, pOH and window counts agree with the logs worked by hand');
 
   /* ---- the two meters and the sealed flask ---- */
-  const a = Q.stateFor(2, [put('meter', 'slot:f1.seat'), put('meterOH', 'slot:f1.seat'), put('meterOH', 'slot:f2.seat')]).table;
+  const a = Q.stateFor(3, [put('meter', 'slot:f1.seat'), put('meterOH', 'slot:f1.seat'), put('meterOH', 'slot:f2.seat')]).table;
   holds(a.fixtures.f1.props.noted.pH === 13 && a.fixtures.f1.props.noted.pOH === 1 && a.fixtures.f2.props.noted.pOH === 2, 'a flask does not keep both readings');
-  const b = Q.stateFor(1, []).table;
-  holds(!b.fixtures.f3.props.seat, 'stage 2 gives the unknown flask a seat');
-  holds(!Q.stateFor(3, []).table.fixtures.f3.props.seat, 'stage 4 gives the barium hydroxide flask a seat');
-  const sealed = Q.stateFor(7, []).table.fixtures.f1;
-  holds(sealed.label === 'Sealed flask' && sealed.props.sealed, 'stage 8 flask is not sealed');
+  const b = Q.stateFor(2, []).table;
+  holds(!b.fixtures.f3.props.seat, 'stage 3 gives the unknown flask a seat');
+  holds(!Q.stateFor(4, []).table.fixtures.f3.props.seat, 'stage 5 gives the barium hydroxide flask a seat');
+  const sealed = Q.stateFor(8, []).table.fixtures.f1;
+  holds(sealed.label === 'Sealed flask' && sealed.props.sealed, 'stage 9 flask is not sealed');
   const texts = [];
   const rec = new Proxy({}, { get: (_, k) => (k === 'fillText' ? t => texts.push(String(t)) : k === 'measureText' ? t => ({ width: String(t).length * 6 }) : () => rec), set: () => true });
   const bx = f => ({ sc: 4, X: v => v * 4, Y: v => v * 4, lay: fixtureLayout(f) });
-  PH_KIT.paintFixture(rec, sealed, Q.stateFor(7, []).table, bx(sealed));
+  PH_KIT.paintFixture(rec, sealed, Q.stateFor(8, []).table, bx(sealed));
   holds(!texts.some(t => /2\.4|0\.0024/.test(t)), 'the sealed flask prints its strength');
   texts.length = 0;
-  const w = Q.stateFor(6, [dial('f1', 'T', 2), put('meter', 'slot:f1.seat')]).table;
+  const w = Q.stateFor(7, [dial('f1', 'T', 2), put('meter', 'slot:f1.seat')]).table;
   PH_KIT.paintFixture(rec, w.fixtures.f1, w, bx(w.fixtures.f1));
   holds(texts.includes('H₃O⁺ 2.3 × 10⁻⁷ M') && texts.includes('OH⁻ 2.3 × 10⁻⁷ M'), 'the lens does not print 2.3 × 10⁻⁷ at 50 °C');
   texts.length = 0;
@@ -69,29 +69,32 @@ export async function checkVerdigrisQ2({ ok, fail }) {
   ok('q2-scale instruments: both meters keep their readings, the unknown flasks have no seat, the sealed flask hides its strength, the lens and meter follow the dial');
 
   /* ---- typed stages: right figures pass, each slip is refused for its own reason ---- */
-  for (const v of ['3.49', '3.5', '3.48']) holds(run(1, [typed('ph', v)]).ok, `stage 2 refused ${v}`);
-  for (const v of ['4', '-3.49', '3.6', '3.2', '4.51']) { const r = run(1, [typed('ph', v)]); holds(!r.ok && r.msg, `stage 2 accepted or gave no reason for ${v}`); }
-  for (const v of ['14', '14.0', '14.04']) holds(run(2, [typed('sum', v)]).ok, `stage 3 refused ${v}`);
-  for (const v of ['7', '13', '1', '10']) { const r = run(2, [typed('sum', v)]); holds(!r.ok && r.msg && !/14/.test(r.msg), `stage 3 accepted, gave no reason, or leaked for ${v}`); }
-  for (const v of ['12.70', '12.7', '12.68']) holds(run(3, [typed('ph', v)]).ok, `stage 4 refused ${v}`);
-  for (const v of ['1.30', '12.40', '13', '12']) holds(!run(3, [typed('ph', v)]).ok, `stage 4 accepted ${v}`);
-  holds(/two OH/.test(run(3, [typed('ph', '12.40')]).msg) && /acid/.test(run(3, [typed('ph', '1.30')]).msg), 'stage 4 slips have no reason of their own');
-  for (const v of ['2.4e-3', '0.0024', '2.3e-3', '2.5e-3']) holds(run(7, [typed('h', v)]).ok, `stage 8 refused ${v}`);
-  for (const v of ['2.62', '416.9', '2.4e-2', '0', '-0.002']) { const r = run(7, [typed('h', v)]); holds(!r.ok && r.msg, `stage 8 accepted or gave no reason for ${v}`); }
-  holds(/the number the meter shows/.test(run(7, [typed('h', '2.62')]).msg), 'stage 8: the pH slip has no reason of its own');
-  holds(run(1, [typed('ph', '')]).notYet && run(7, [typed('h', '')]).notYet, 'a typed stage does not wait for a figure');
+  for (const v of ['5.00', '5']) holds(run(1, [typed('ph', v)]).ok, `stage 2 refused ${v}`);
+  for (const v of ['3', '-5', '2']) { const r = run(1, [typed('ph', v)]); holds(!r.ok && r.msg, `stage 2 accepted or gave no reason for ${v}`); }
+  for (const v of ['3.49', '3.5', '3.48']) holds(run(2, [typed('ph', v)]).ok, `stage 3 refused ${v}`);
+  for (const v of ['4', '-3.49', '3.6', '3.2', '4.51']) { const r = run(2, [typed('ph', v)]); holds(!r.ok && r.msg, `stage 3 accepted or gave no reason for ${v}`); }
+  for (const v of ['14', '14.0', '14.04']) holds(run(3, [put('meter', 'slot:f1.seat'), put('meter', 'slot:f2.seat'), typed('sum', v)]).ok, `stage 4 refused ${v}`);
+  for (const v of ['7', '13', '1', '10']) { const r = run(3, [typed('sum', v)]); holds(!r.ok && r.msg && !/14/.test(r.msg), `stage 4 accepted, gave no reason, or leaked for ${v}`); }
+  for (const v of ['12.70', '12.7', '12.68']) holds(run(4, [typed('ph', v)]).ok, `stage 5 refused ${v}`);
+  for (const v of ['1.30', '12.40', '13', '12']) holds(!run(4, [typed('ph', v)]).ok, `stage 5 accepted ${v}`);
+  holds(/two OH/.test(run(4, [typed('ph', '12.40')]).msg) && /acid/.test(run(4, [typed('ph', '1.30')]).msg), 'stage 5 slips have no reason of their own');
+  for (const v of ['2.4e-3', '0.0024', '2.3e-3', '2.5e-3']) holds(run(8, [typed('h', v)]).ok, `stage 9 refused ${v}`);
+  for (const v of ['2.62', '416.9', '2.4e-2', '0', '-0.002']) { const r = run(8, [typed('h', v)]); holds(!r.ok && r.msg, `stage 9 accepted or gave no reason for ${v}`); }
+  holds(/the number the meter shows/.test(run(8, [typed('h', '2.62')]).msg), 'stage 9: the pH slip has no reason of its own');
+  holds(run(2, [typed('ph', '')]).notYet && run(8, [typed('h', '')]).notYet, 'a typed stage does not wait for a figure');
   near(-Math.log10(3.2e-4 * 1e4), -0.50515, 5e-4, 'the exponent-only slip is 4');
   ok('q2-scale typed stages: right figures accepted, every slip refused with its own reason');
 
-  /* ---- the dials ---- */
+  /* ---- the dials and cards ---- */
   const D3 = [{ run: 'f1' }, { run: 'f1' }, { run: 'f1' }];
-  { const r1 = run(0, [{ run: 'f1' }]); const r3 = run(0, D3);
-    holds(run(0, D3.slice(0, 2)).ok && !r1.ok && /2\.00/.test(r1.msg) && !r3.ok && /4\.00/.test(r3.msg), 'stage 1: pH 3 is accepted at two dilutions only, and a miss reads the flask'); }
-  { const a = run(4, [{ run: 'f1' }]); const b = run(4, D3);
-    holds(run(4, D3.slice(0, 2)).ok && !a.ok && /0\.19/.test(a.msg) && !b.ok && /0\.02/.test(b.msg), 'stage 5: the dilution after which one more would change the pH by under 0.1 is the answer'); }
-  holds(run(6, [dial('pick', 'value', 2)]).ok && /2\.3 × 10⁻⁷/.test(run(6, [dial('pick', 'value', 1)]).msg) && !run(6, [dial('pick', 'value', 3)]).ok, 'stage 7 dial');
-  holds(run(0, []).notYet && run(4, []).notYet && run(6, []).notYet, 'a dial stage does not wait');
-  holds(run(0, []).notYet && run(4, []).notYet, 'a dilution stage waits for the first dilution');
+  { const r0 = run(0, [{ run: 'f1' }, put('rises1', 'slot:ans')]);
+    const rBad = run(0, [{ run: 'f1' }, { run: 'f1' }, put('falls1', 'slot:ans')]);
+    holds(r0.notYet && run(0, [{ run: 'f1' }, { run: 'f1' }, put('rises1', 'slot:ans')]).ok && !rBad.ok && /3\.00/.test(rBad.msg), 'stage 1: requires two dilutions and the right card'); }
+  { const r0 = run(5, [{ run: 'f1' }, put('near7', 'slot:ans')]);
+    const rBad = run(5, [{ run: 'f1' }, { run: 'f1' }, put('past7', 'slot:ans')]);
+    holds(r0.notYet && run(5, [{ run: 'f1' }, { run: 'f1' }, put('near7', 'slot:ans')]).ok && !rBad.ok && /7\.00/.test(rBad.msg), 'stage 6: requires dilution below 1e-7 M and the right card'); }
+  holds(run(7, [dial('pick', 'value', 2)]).ok && /2\.3 × 10⁻⁷/.test(run(7, [dial('pick', 'value', 1)]).msg) && !run(7, [dial('pick', 'value', 3)]).ok, 'stage 8 dial');
+  holds(run(0, []).notYet && run(5, []).notYet && run(7, []).notYet, 'a dial/card stage does not wait');
   { const t = Q.stateFor(0, D3).table; const f = t.fixtures.f1; holds(Math.round(f.dials.steps.value) === 3 && Math.abs(scaleRead(f).pH - 4) < 1e-6 && sampleCount(f) === 1, 'three dilutions of 0.10 M acid read pH 4 and 1 of 1000 sample dots'); }
   ok('q2-scale dials: the one right setting is accepted, the others refused with a reading');
 
@@ -105,7 +108,7 @@ export async function checkVerdigrisQ2({ ok, fail }) {
 
   /* ---- rewards and story ---- */
   const body = i => Q.STAGES[i].reward.body;
-  holds(/3\.49/.test(body(1)) && /12\.70/.test(body(3)) && /1\.30/.test(body(3)) && /7\.00/.test(body(4)) && /2\.4 × 10⁻³/.test(body(7)), 'a reward misses its figure');
+  holds(/5\.00/.test(body(1)) && /3\.49/.test(body(2)) && /12\.70/.test(body(4)) && /1\.30/.test(body(4)) && /7\.00/.test(body(5)) && /2\.4 × 10⁻³/.test(body(8)), 'a reward misses its figure');
   const st = QUEST_STORY['unit09/q2-scale'];
   const grab = t => { const out = []; const ctx = new Proxy({}, { get: (_, k) => (k === 'fillText' ? s => out.push(String(s)) : k === 'measureText' ? s => ({ width: String(s).length * 6 }) : () => ctx), set: () => true }); paintScene('scale', ctx, 1280, 720, t, 0); return out; };
   holds(['pH 1.00', 'pH 2.00', 'pH 3.00'].every(s => grab(0.25).includes(s)), 'story beat 1 does not draw pH 1.00, 2.00 and 3.00');
@@ -117,7 +120,7 @@ export async function checkVerdigrisQ2({ ok, fail }) {
 
   /* ---- no refusal carries the rule ---- */
   const LEAK = /log\b|logarithm|tenfold|factor of ten|power|Kw|floor|equal amounts|neutral/i;
-  for (const r of [run(0, [...D3, dial('pick', 'value', 2)]), run(1, [typed('ph', '4')]), run(1, [typed('ph', '3.7')]), run(2, [typed('sum', '7')]), run(3, [typed('ph', '12.40')]), run(4, [...D3, dial('pick', 'value', 1)]), run(6, [dial('pick', 'value', 1)]), run(7, [typed('h', '2.62')])]) {
+  for (const r of [run(0, [{ run: 'f1' }, { run: 'f1' }, put('falls1', 'slot:ans')]), run(1, [typed('ph', '3')]), run(2, [typed('ph', '4')]), run(2, [typed('ph', '3.7')]), run(3, [typed('sum', '7')]), run(4, [typed('ph', '12.40')]), run(5, [{ run: 'f1' }, { run: 'f1' }, put('past7', 'slot:ans')]), run(7, [dial('pick', 'value', 1)]), run(8, [typed('h', '2.62')])]) {
     if (!r.msg) no('a refusal has no reason'); else if (LEAK.test(r.msg)) no(`a refusal carries the rule: "${r.msg}"`);
   }
   ok('q2-scale refusals: none carries the rule its stage asks for');

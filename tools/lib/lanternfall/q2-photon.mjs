@@ -21,7 +21,10 @@ export default async function check(q2, { D, near, same, holds, rig }) {
     holds(!D.planPhotocell('Na', f.props.settings[f.dials.colour.value - 1], f.dials.brightness.value).freed, 'unit02/q2-photon stage 2: the lamp already frees electrons where it starts');
     const r = OPT.cellRead(end(1), 'cell');
     holds(r.freed && r.metal === 'Na', 'unit02/q2-photon stage 2: the solution does not free electrons from sodium');
-    holds(r.brightness < f.dials.brightness.value && r.nm < f.props.settings[0], 'unit02/q2-photon stage 2: the solution is not dimmer and bluer than the start');
+    holds(r.brightness === 1 && r.nm < f.props.settings[0], 'unit02/q2-photon stage 2: the solution is not the lowest brightness at a bluer colour');
+    // any colour that removes electrons at a higher brightness is refused: the answer is which dial decides it
+    const bright = rig(q2).run(1, [q2.SOLUTIONS[1][0], q2.SOLUTIONS[1][1]]);
+    holds(OPT.cellRead(bright, 'cell').freed && q2.STAGES[1].check({ table: bright }).ok === false, 'unit02/q2-photon stage 2: passes at full brightness');
   }
   // 3. exactly one first setting frees an electron, and the dial finds it
   {
@@ -30,14 +33,19 @@ export default async function check(q2, { D, near, same, holds, rig }) {
     same(end(2).fixtures.cell.dials.colour.value, first, 'unit02/q2-photon stage 3 (the first freeing setting)');
     holds(p.slice(0, first - 1).every(x => x.count === 0) && p.slice(first).every(x => x.count > 0), 'unit02/q2-photon stage 3: electrons do not leave at every setting from the threshold on');
   }
-  // 4. brightness sets the number and not the speed
+  // 4. brightness sets the number and not the speed; the answer needs two recorded settings and the card that says so
   {
     const f = start(3).fixtures.cell;
     const lo = D.planPhotocell('Na', 400, f.dials.brightness.value);
-    const e = OPT.cellRead(end(3), 'cell');
-    same(e.count, lo.count * 2, 'unit02/q2-photon stage 4 (twice the count)');
-    same(e.speed, lo.speed, 'unit02/q2-photon stage 4 (the same speed)');
-    holds(lo.count > 0, 'unit02/q2-photon stage 4: the lamp frees nothing at the start');
+    const e = end(3);
+    const rows = e.recorder.rows;
+    holds(rows.length === 2 && rows[0].x !== rows[1].x, 'unit02/q2-photon stage 4: the solution does not record two brightness settings');
+    holds(rows[1].y > rows[0].y && rows[0].label === rows[1].label, 'unit02/q2-photon stage 4: a brighter lamp does not give more electrons at the same speed');
+    same(rows[0].y, lo.count, 'unit02/q2-photon stage 4 (the count is the planner\'s)');
+    holds(lo.count > 0, 'unit02/q2-photon stage 4: the lamp removes nothing at the start');
+    same(e.pieces.more.zone, 'slot:answer', 'unit02/q2-photon stage 4 (the card laid)');
+    const blind = rig(q2).run(3, [{ place: { piece: 'more', to: 'slot:answer' } }]);
+    holds(q2.STAGES[3].check({ table: blind }).ok === false, 'unit02/q2-photon stage 4: passes with nothing recorded');
   }
   // 5. the plate that wakes at the lowest frequency has the loosest grip, and the rail runs that way
   {
@@ -50,5 +58,17 @@ export default async function check(q2, { D, near, same, holds, rig }) {
     holds(new Set(['Cs', 'Na', 'Zn'].map(first)).size === 3, 'unit02/q2-photon stage 5: two plates wake at the same setting');
     same(end(4).recorder.rows.map(r => r.label), ['Cs', 'Na', 'Zn'], 'unit02/q2-photon stage 5 (a reading for each plate)');
     holds(t.zones.rail.order.join() !== order.join(), 'unit02/q2-photon stage 5: the rail starts in the answer\'s order');
+  }
+  // 6. the typed kinetic energy is the photon's energy less sodium's work function, and the worked case is another lamp on another metal
+  {
+    const photon = q2.H * q2.ASKED.hz14 * 1e14 / 1e-19;
+    near(photon, D.photonJoules(q2.ASKED.nm) / 1e-19, 0.1, 'unit02/q2-photon stage 6 (the photon\'s energy)');
+    near(q2.ASKED.work, D.METALS.Na.work * D.EV / 1e-19, 0.05, 'unit02/q2-photon stage 6 (sodium\'s work function)');
+    near(q2.WORKED.work, D.METALS.Cs.work * D.EV / 1e-19, 0.05, 'unit02/q2-photon stage 6 (cesium\'s work function)');
+    near(Number(q2.SOLUTIONS[5][0].type.value), photon - q2.ASKED.work, 0.1, 'unit02/q2-photon stage 6 (the typed energy)');
+    const r = OPT.cellRead(start(5), 'cell');
+    holds(r.freed && r.metal === 'Na' && r.nm === q2.ASKED.nm, 'unit02/q2-photon stage 6: the photocell is not drawing the case the plate describes');
+    const worked = q2.STAGES[5].briefing.worked.join(' ');
+    holds(!worked.includes('7.5') && !worked.includes('3.7') && !worked.includes('1.3'), 'unit02/q2-photon stage 6: the worked case carries this bench\'s own numbers');
   }
 }

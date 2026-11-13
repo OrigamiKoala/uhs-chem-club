@@ -122,39 +122,25 @@ export async function checkTeeterQ7(ok, bad) {
   rejects(4, [{ setDial: { fixture: 'pick', dial: 'value', value: 1 } }], 'AgCl (the ranking by Ksp)');
   rejects(4, [{ setDial: { fixture: 'pick', dial: 'value', value: 3 } }], 'the same');
 
-  // Stage 6: BaSO4 in water and in 0.10 mol/L sulfate.
-  const t6 = run(5, []).table;
-  const w1 = K.beakerRead(t6, 'b1'); const w2 = K.beakerRead(t6, 'b2');
-  near(w1.dissolved, 1.049e-5, 2e-3, 'stage 6 beaker 1');
-  near(w2.dissolved, 1.1e-9, 1e-3, 'stage 6 beaker 2');
-  near(w2.an, 0.10, 1e-3, 'stage 6 beaker 2 sulfate meter');
-  is(w2.solid > w1.solid, 'stage 6: more solid lies on the floor of the sulfate beaker');
-  accepts(5, [{ setDial: { fixture: 'pick', dial: 'value', value: 1 } }], 'Beaker 1');
-  rejects(5, [{ setDial: { fixture: 'pick', dial: 'value', value: 2 } }], 'Beaker 2');
+  // Stage 6: BaSO4 with a sulfate-added dial and three cards.
+  const t6 = run(5, [{ setDial: { fixture: 'b', dial: 'c', value: 3 } }]).table;
+  const w2 = K.beakerRead(t6, 'b');
+  near(w2.dissolved, 1.1e-9, 1e-3, 'stage 6 beaker with 0.10 mol/L sulfate');
+  near(w2.an, 0.10, 1e-3, 'stage 6 beaker sulfate meter');
+  rejects(5, [{ place: { piece: 'solid', to: 'slot:ans' } }], 'without turning the sulfate dial');
+  accepts(5, [{ setDial: { fixture: 'b', dial: 'c', value: 3 } }, { place: { piece: 'solid', to: 'slot:ans' } }], 'some BaSO₄ comes out as solid');
+  rejects(5, [{ setDial: { fixture: 'b', dial: 'c', value: 3 } }, { place: { piece: 'more', to: 'slot:ans' } }], 'more BaSO₄ dissolves');
 
   // Stage 7: three mixtures.
   const t7 = run(6, []).table;
   const q7 = [1, 2, 3].map(i => K.beakerRead(t7, `m${i}`));
-  near(q7[0].Q, 5.0e-9, 1e-6, 'stage 7 Mix 1 gauge');
-  near(q7[1].Q, 3.2e-8, 1e-6, 'stage 7 Mix 2 gauge');
-  near(q7[2].Q, 9.0e-9, 1e-6, 'stage 7 Mix 3 gauge');
+  near(q7[0].Q, 5.0e-9, 1e-6, 'stage 7 Mix 1 Q');
+  near(q7[1].Q, 3.2e-8, 1e-6, 'stage 7 Mix 2 Q');
+  near(q7[2].Q, 9.0e-9, 1e-6, 'stage 7 Mix 3 Q');
   is(q7.every(r => r.solid === 0), 'stage 7: no mixture starts with solid');
   accepts(6, [{ setDial: { fixture: 'pick', dial: 'value', value: 2 } }], 'Mix 2');
   rejects(6, [{ setDial: { fixture: 'pick', dial: 'value', value: 1 } }], 'Mix 1 (the biggest [Pb²⁺])');
   rejects(6, [{ setDial: { fixture: 'pick', dial: 'value', value: 3 } }], 'Mix 3 (just under Ksp)');
-
-  // Stage 8: the same added ion, two salts. The dial lists are 'none', 0.01 and 0.10 mol/L.
-  const set8 = v => [{ setDial: { fixture: 'agcl', dial: 'c', value: 3 } }, { setDial: { fixture: 'pbi2', dial: 'c', value: 3 } }, { setDial: { fixture: 'pick', dial: 'value', value: v } }];
-  const t8 = run(7, set8(1)).table;
-  const a8 = K.beakerRead(t8, 'agcl'); const p8 = K.beakerRead(t8, 'pbi2');
-  near(a8.dissolved, 1.8e-9, 1e-3, 'stage 8 AgCl with 0.10 mol/L chloride');
-  near(p8.dissolved, 9.8e-7, 1e-3, 'stage 8 PbI2 with 0.10 mol/L iodide');
-  near(a8.s0 / a8.dissolved, 7.46e3, 5e-3, 'stage 8 AgCl factor');
-  near(p8.s0 / p8.dissolved, 1.376e3, 5e-3, 'stage 8 PbI2 factor');
-  is(a8.s0 / a8.dissolved > p8.s0 / p8.dissolved, 'stage 8: AgCl falls by the larger factor');
-  accepts(7, set8(1), 'AgCl');
-  rejects(7, set8(2), 'PbI₂ (the larger solubility)');
-  rejects(7, set8(3), 'the same');
 
   // Every scripted solution passes its own check and every scripted miss is refused, with a reason.
   Q7.STAGES.forEach((st, i) => {

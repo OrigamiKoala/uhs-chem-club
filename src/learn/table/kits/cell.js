@@ -19,6 +19,7 @@ import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './cell
 import './cell-tour.js';
 import { hotspots } from './cell-sites.js';
 import { noteMiss } from './cell-scene.js';
+import { revealTable, gateRun } from './commit-gate.js';
 
 /* One import per instrument: each file registers its own fixtures and pieces. (marker: cell instruments) */
 import './cell-board.js';
@@ -40,6 +41,8 @@ export const CELL_BOUNDS = HEAT_BOUNDS;
 function run(state, fid) {
   const f = state.fixtures[fid];
   if (!f || f.noRun) return null;
+  const blocked = gateRun(state, f);
+  if (blocked) return blocked;
   const h = fixtureHandler(f.kind);
   if (h?.run) return h.run(state, fid);
   return HEAT_KIT.run(state, fid);
@@ -79,7 +82,7 @@ export const CELL_KIT = {
   paintPiece,
   paintFixture,
   hotspots,
-  onMiss: (table, msg) => noteMiss(msg),
+  onMiss: (table, msg) => { revealTable(table); noteMiss(msg); },
   live: state => Object.values(state.fixtures || {}).some(f => fixtureHandler(f.kind)?.live?.(f, state)),
   faceKey,
   piece3d,

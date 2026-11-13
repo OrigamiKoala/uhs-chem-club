@@ -250,9 +250,9 @@ registerFixture('vsl', { paint: paintVessels, run: runVessels, live: () => true 
  * pans open already settled (no key); otherwise "Settle" lets them settle. Options: `showK` (each pan's K), `showEq` (each pan's reaction),
  * `lw` (the left column the legend and the rig's places stand in), `legend: false`.
  */
-export function vesselFixture(id, at, { system, pans, settled = false, showK = false, showEq = false, lw = 34, legend = true, w = RATIO_W, h = VESSEL_H, title = 'Vessels', key = 'Settle', titles = null } = {}) {
+export function vesselFixture(id, at, { system, pans, settled = false, noRun = false, showK = false, showEq = false, lw = 34, legend = true, w = RATIO_W, h = VESSEL_H, title = 'Vessels', key = 'Settle', titles = null } = {}) {
   return {
-    id, kind: 'vsl', label: title, at: { ...at }, size: { w, h }, ...(settled ? { noRun: true } : { runLabel: key }),
+    id, kind: 'vsl', label: title, at: { ...at }, size: { w, h }, ...(settled || noRun ? { noRun: true } : { runLabel: key }),
     dials: { s: { min: 0, max: 1, step: 1, value: settled ? 1 : 0, label: 'Settled' } },
     props: { hidden: ['s'], system, pans, lw, showK, showEq, legend, settledAtStart: settled, ...(titles ? { titles } : {}) }
   };
@@ -289,7 +289,7 @@ registerFixture('rig', { paint: paintRig });
  * A ratio rig and its places. `top` and `bottom` are how many places each row has. Returns the fixture and the slots (add the slots to the
  * stage's `zones.slots`); `vsl` is the id of the vessels it reads. A rig stands under the vessels and shares their left column.
  */
-export function rigParts(id, at, { vsl, top = 1, bottom = 1, lw = 34, w = RATIO_W, h = RIG_H, title = 'Ratio ratio board', titles = null } = {}) {
+export function rigParts(id, at, { vsl, top = 1, bottom = 1, lw = 34, w = RATIO_W, h = RIG_H, title = 'Ratio board', titles = null } = {}) {
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
   const slot = (row, i) => ({ id: `${id}.${row}${i + 1}`, label: ' ', at: { x: x0 + 9.5 + i * 16.5, y: y0 + (row === 't' ? 10.5 : 22) }, size: { w: 15, h: 10 } });
@@ -416,13 +416,13 @@ registerFixture('qk', { paint: paintQK, run: runQK, live: () => true });
  * The test vessel for `system`, with the slot (`<id>.seat`) its mixture card goes in. `q` prints the marker as Q (once the bench has earned
  * it) and not as "ratio now". Returns the fixture and the slot.
  */
-export function testVessel(id, at, { system, q = false, w = RATIO_W, h = VESSEL_H, title = 'Test vessel', key = 'Run' } = {}) {
+export function testVessel(id, at, { system, q = false, noRun = false, w = RATIO_W, h = VESSEL_H, title = 'Test vessel', key = 'Run' } = {}) {
   const x0 = at.x - w / 2;
   const y0 = at.y - h / 2;
   const seat = { id: `${id}.seat`, label: ' ', at: { x: x0 + 14.5, y: y0 + 22 }, size: { w: 25, h: 18 } };
   return {
     fixture: {
-      id, kind: 'qk', label: title, at: { ...at }, size: { w, h }, runLabel: key,
+      id, kind: 'qk', label: title, at: { ...at }, size: { w, h }, ...(noRun ? { noRun: true } : { runLabel: key }),
       dials: { ran: { min: 0, max: 9, step: 1, value: 0, label: 'Ran' } },
       props: { hidden: ['ran'], backdrop: true, system, seat: seat.id, q }
     },

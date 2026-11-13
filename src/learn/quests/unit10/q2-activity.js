@@ -278,10 +278,10 @@ export const STAGES = [
   {
     id: 's5-hydrogen',
     title: 'Hydrogen in the List',
-    prompt: 'Where does hydrogen belong in the activity series of these five metals?',
+    prompt: 'Order these five metals and hydrogen from loses electrons most readily to least readily.',
     widget,
     table: (() => {
-      const d = rack(S5_METALS.map(() => 'acid'), { x: 79, y: 33 });
+      const d = rack(['acid', 'zn', 'fe', 'cu', 'ag'], { x: 79, y: 33 });
       return cellTable({
         pieces: [
           ...strips(S5_METALS, { x: 18, y: 72 }, 34, { row: true, caption: false }),
@@ -295,25 +295,26 @@ export const STAGES = [
       }, { w: 192, h: 128 });
     })(),
     hints: [
-      'Dip a strip in each acid beaker, then drag the five strips and the hydrogen onto the rail.',
-      'Look at which strips make bubbles of hydrogen in the acid and which stay clean.',
-      'A metal that bubbles in acid loses electrons to H⁺ ions more readily than hydrogen holds them.'
+      'Dip each metal in the acid beaker to place hydrogen, and in the metal-ion beakers to order the metals.',
+      'A metal that coats itself in a metal-ion beaker loses electrons more readily than that ion\'s metal.',
+      'Metals that bubble in acid sit left of hydrogen; those that stay clean in acid sit right of it.'
     ],
     check(state) {
       const t = state.table;
       const order = t.zones.rail.order;
       if (order.length < S5_METALS.length + 1) return { ok: false, notYet: true, msg: `Put all ${S5_METALS.length + 1} pieces on the rail.` };
+      const want = [...activityOrder(S5_METALS.filter(givesHydrogen)), 'h', ...activityOrder(S5_METALS.filter(m => !givesHydrogen(m)))].map(m => (m === 'h' ? 'r-h' : `s-${m}`));
+      const bad = order.findIndex((id, i) => id !== want[i]);
+      if (bad === -1) return { ok: true };
+      const piece = order[bad];
+      if (piece === 'r-h') return { ok: false, msg: 'Hydrogen belongs between the metals that bubble in acid and those that stay clean.' };
+      const m = piece.slice(2);
       const h = order.indexOf('r-h');
-      for (let i = 0; i < order.length; i++) {
-        if (i === h) continue;
-        const m = order[i].slice(2);
-        const before = i < h;
-        if (before === givesHydrogen(m)) continue;
-        const res = triedAny(t, m);
-        if (!res) return { ok: false, msg: `The ${nm(m)} strip has not been dipped in an acid beaker yet.` };
-        return { ok: false, msg: `${Nm(m)} sits ${before ? 'left' : 'right'} of hydrogen, but its strip ${res.gas ? 'made bubbles' : 'stayed clean'} in the acid.` };
+      const beforeH = bad < h;
+      if (beforeH !== givesHydrogen(m)) {
+        return { ok: false, msg: `${Nm(m)} sits ${beforeH ? 'left' : 'right'} of hydrogen, but it ${givesHydrogen(m) ? 'bubbles' : 'stays clean'} in acid.` };
       }
-      return { ok: true };
+      return { ok: false, msg: `${Nm(m)} is out of order against the other metals; dip it in the metal-ion beakers to check.` };
     },
     get reward() {
       const up = activityOrder(S5_METALS.filter(givesHydrogen)); const down = activityOrder(S5_METALS.filter(m => !givesHydrogen(m)));

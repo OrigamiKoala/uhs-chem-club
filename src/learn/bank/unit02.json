@@ -429,7 +429,7 @@
     {
       "id": "q4-cloud#3",
       "quest": "q4-cloud",
-      "question": "Five hundred shots find hydrogen's electron. Which outline of the same area would catch the most dots?",
+      "question": "Five hundred measurements find hydrogen's electron. Which outline of the same area would catch the most dots?",
       "options": [
         {
           "id": "a",
@@ -1697,7 +1697,7 @@
         {
           "id": "q4-cloud#b1",
           "quest": "q4-cloud",
-          "question": "In a picture built from 500 shots at hydrogen's electron, the dots are densest near the nucleus and thin out farther away. What does that show?",
+          "question": "In a picture built from 500 measurements at hydrogen's electron, the dots are densest near the nucleus and thin out farther away. What does that show?",
           "options": [
             {
               "id": "a",

@@ -26,20 +26,16 @@ export async function check({ near }) {
   const A = q.CHECKS.answers;
 
   const want = [['eq2', 10.0, 1e-9], ['end2', 10.5, 1e-9], ['eq3', 20.0, 1e-9], ['conc4', 0.18, 1e-9], ['fromReading4', 0.184, 1e-9], ['conc5', 0.072, 1e-9],
-    ['eq6', 25.0, 1e-9], ['end6', 23.5, 1e-9], ['gap6', 1.5, 1e-9], ['conc7', 0.09, 1e-9], ['perm7End', 23.0, 1e-9], ['fromReading7', 0.092, 1e-9], ['conc8', 0.45, 1e-9]];
+    ['eq6', 25.0, 1e-9], ['end6', 23.5, 1e-9]];
   for (const [k, v, tol] of want) if (!near(A[k], v, tol)) bad.push(`${k} is ${A[k]}, worked by hand ${v}`);
 
   // Planner spot checks against the paper values above.
   const S = q.CHECKS;
   if (!near(T.equivalenceMl(S.SYS5), 36.0, 1e-9)) bad.push('H2SO4 equivalence is not 36.0 mL');
-  if (!near(T.equivalenceMl(S.SYS8), 45.0, 1e-9)) bad.push('stage 8 equivalence is not 45.0 mL');
   if (T.endpointMl(S.SYS5, 'phenolphthalein', 0.5) !== 36.5) bad.push('stage 5 first pink is not 36.5 mL');
-  if (T.endpointMl(S.SYS8, 'phenolphthalein', 0.5) !== 45.5) bad.push('stage 8 first pink is not 45.5 mL');
   if (T.flaskAt(S.SYS2, 10.0, 'phenolphthalein').colour !== 'colourless') bad.push('at the equivalence point the dye should still be colourless');
   if (T.flaskAt(S.SYS2, 10.5, 'phenolphthalein').colour !== 'pink') bad.push('half a mL past the equivalence point the dye should be pink');
   if (T.flaskAt(S.SYS6, 23.0, 'methyl orange').colour !== 'red' || T.flaskAt(S.SYS6, 23.5, 'methyl orange').colour !== 'orange') bad.push('methyl orange should be red at 23.0 mL and orange at 23.5 mL');
-  if (T.permanganateAt(S.PERM7.fe, S.PERM7.mn, 22.5).colour !== 'pale' || T.permanganateAt(S.PERM7.fe, S.PERM7.mn, 23.0).colour !== 'purple') bad.push('permanganate should be pale at 22.5 mL and purple at 23.0 mL');
-  if (!near(T.permanganateAt(S.PERM7.fe, S.PERM7.mn, 22.5).equivalenceMl, 22.5, 1e-9)) bad.push('permanganate equivalence is not 22.5 mL');
 
   const put = (piece, to) => ({ place: { piece, to } });
   const dial = (name, value) => ({ setDial: { fixture: 'tit', dial: name, value } });
@@ -59,22 +55,19 @@ export async function check({ near }) {
   if (!near(w3b.flask.acidLeft / S.UNIT3, 15, 1e-6)) bad.push(`stage 3: after 5 mL the window should hold 15 discs of H+, has ${w3b.flask.acidLeft / S.UNIT3}`);
   const w6 = read(5, []);
   if (!near(w6.flask.acidLeft / S.UNIT6, 25, 1e-6)) bad.push(`stage 6: the window should start at 25 discs of H+, has ${w6.flask.acidLeft / S.UNIT6}`);
-  // The burette only gives out and holds 50 mL: ten 5 mL presses and then one more is refused.
-  const over = q.stateFor(7, [dial('press', 5), ...Array.from({ length: 5 }, run), dial('press', 4), ...Array.from({ length: 12 }, run)]);
+  // The burette only gives out and holds 50 mL: five 10 mL presses and then one more is refused.
+  const over = q.stateFor(4, [dial('press', 5), ...Array.from({ length: 6 }, run)]);
   const rr = K.titratorRead(over.table, 'tit');
   if (rr.vMl > 50 + 1e-9) bad.push(`the burette let out ${rr.vMl} mL, more than it holds`);
 
   // The beginning of a stage: no dial stands at an asked amount, and no single press reaches the equivalence point.
-  const dialLists = { 3: S.SYS3, 2: S.SYS2, 6: S.SYS6 };
   q.STAGES.forEach((st, i) => {
     const f = (st.table.fixtures || []).find(x => x.kind === 'titrator');
     if (!f) return;
     const list = f.props.presses;
-    const eq = f.props.mode === 'perm' ? T.permanganateAt(f.props.perm.fe, f.props.perm.mn, 0).equivalenceMl : T.equivalenceMl(f.props.sys);
+    const eq = T.equivalenceMl(f.props.sys);
     if (list.some(v => v >= eq)) bad.push(`stage ${i + 1}: a single press can reach the equivalence point (${eq} mL)`);
-    if (i === 5 && list.includes(A.gap6)) bad.push('stage 6: the dial has a setting at the asked gap');
   });
-  void dialLists;
 
   // A blank bench never passes, and the predict stage shows no instrument.
   q.STAGES.forEach((st, i) => {
@@ -86,12 +79,12 @@ export async function check({ near }) {
   if ((p1.table.fixtures || []).some(f => f.kind !== 'plaque') || (p1.table.pieces || []).some(p => p.kind !== 'stmt')) bad.push('stage 1 (predict) shows an instrument');
 
   // No plate, card or burette prints an answer.
-  const answers = { 3: ['20.0', '20'], 4: ['0.18', '0.180'], 5: ['0.072', '0.0720'], 6: ['1.5'], 7: ['0.09', '0.0900'], 8: ['0.45', '0.450'] };
+  const answers = { 3: ['20.0', '20'], 4: ['0.18', '0.180'], 5: ['0.072', '0.0720'] };
   q.STAGES.forEach((st, i) => {
     const printed = [];
     for (const f of st.table.fixtures || []) {
       if (f.kind === 'plaque') printed.push(...f.props.lines);
-      if (f.kind === 'titrator') printed.push(`${f.props.mode === 'perm' ? f.props.perm.mn.M : f.props.sys.base.M} mol/L`, `${(f.props.mode === 'perm' ? f.props.perm.fe.mL : f.props.sys.acid.mL).toFixed(1)} mL`);
+      if (f.kind === 'titrator') printed.push(`${f.props.sys.base.M} mol/L`, `${f.props.sys.acid.mL.toFixed(1)} mL`);
     }
     for (const p of st.table.pieces || []) printed.push(p.label);
     for (const a of answers[i + 1] || []) {
@@ -102,7 +95,7 @@ export async function check({ near }) {
   // The acid's strength never prints on a stage that asks for it.
   q.STAGES.forEach((st, i) => {
     const f = (st.table.fixtures || []).find(x => x.kind === 'titrator');
-    if (f && [3, 4, 6, 7].includes(i) && JSON.stringify(f).includes(String(f.props.mode === 'perm' ? f.props.perm.fe.M : f.props.sys.acid.M)) && f.props.window) bad.push(`stage ${i + 1}: the window of an unknown acid would show its amount`);
+    if (f && [3, 4].includes(i) && JSON.stringify(f).includes(String(f.props.sys.acid.M)) && f.props.window) bad.push(`stage ${i + 1}: the window of an unknown acid would show its amount`);
   });
 
   // No refusal gives the method, and none carries an answer.

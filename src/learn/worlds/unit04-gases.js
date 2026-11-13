@@ -27,19 +27,19 @@ export const UNIT_04 = {
   quests: [
     {
       id: 'q1-knocks',
-      title: 'Pressure and Temperature',
-      line: 'Learn what the pressure gauge is really counting.',
+      title: 'What Pressure Is',
+      line: 'Learn what a pressure gauge measures and what temperature does.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit04/q1-knocks.js')
     },
     {
       id: 'q2-laws',
       title: 'The Gas Laws',
-      line: 'Squeeze, heat, and feed gas to find its laws.',
+      line: 'Compress, heat, and add gas to find its laws.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q2-laws.js')
     },
@@ -48,16 +48,16 @@ export const UNIT_04 = {
       title: 'The Ideal Gas Law',
       line: 'Count sealed tanks with one equation.',
       arena: 'bench',
-      stageCount: 9,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit04/q3-ideal.js')
     },
     {
       id: 'q4-mixtures',
       title: 'Partial Pressures',
-      line: "Split a tank's push gas by gas.",
+      line: "Split a tank's pressure gas by gas.",
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit04/q4-mixtures.js')
     },
@@ -66,7 +66,7 @@ export const UNIT_04 = {
       title: 'Speed and Escape',
       line: 'Race gases through holes and tubes.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit04/q5-speed.js')
     },

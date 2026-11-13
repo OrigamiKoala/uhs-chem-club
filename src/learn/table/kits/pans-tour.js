@@ -10,7 +10,7 @@ import './heat-tour.js';
 const FIXTURES = {
   'pans:pan': {
     title: 'Vessel', dials: false,
-    text: 'A shallow dish seen from above, with a window of small orange and blue spheres and a graph beside it. The graph counts the orange spheres and the blue ones against time. Press "Run" to let ten more ticks of time go by. Under the graph, the two counts say how many spheres turned from orange to blue, and from blue to orange, in the last fifty ticks. Where some spheres wear a white ring, a strip under the graph keeps the colour of each ringed sphere, one cell for every tick.'
+    text: 'A shallow dish seen from above, with a window of small orange and blue particles and a graph beside it. The graph counts the orange particles and the blue ones against time. Press "Run" to let ten more seconds go by. Under the graph, the count of each change says how many particles turned each way in the last fifty seconds. Where some particles wear a white ring, a strip under the graph keeps the colour of each ringed particle, one cell for every second.'
   },
   'pans:plaque': {
     title: 'Plate', dials: false,

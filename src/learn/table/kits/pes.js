@@ -129,5 +129,10 @@ export function plaqueFixture(id, label, at, lines, { w = 44 } = {}) {
   return { id, kind: 'plaque', label, at: { ...at }, size: { w, h: 8.4 + lines.length * 3.8 }, noRun: true, dials: {}, props: { lines: lines.slice() } };
 }
 
+/** Vertical bars showing successive ionization energies side by side so a shell jump stands out visually. */
+export function ieBarsFixture(id, label, at, values, { w = 56, h = 40 } = {}) {
+  return { id, kind: 'iebars', label, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { values } };
+}
+
 export * from './pes-read.js';
 export { BINS };

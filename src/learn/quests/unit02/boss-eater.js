@@ -88,7 +88,7 @@ export const STAGES = [
         speaker: SPEAKER,
         body: 'Each phase presents a measurement from a previous bench. Three incorrect attempts will reset the phase, but your data is preserved.'
       },
-      prompt: 'Make the eater lamp\'s hydrogen give out its 486 nm line.',
+      prompt: 'Which drop between energy levels gives the 486 nm line?',
       widget,
       table: opticsTable({
         pieces: [lad.electron],
@@ -104,8 +104,8 @@ export const STAGES = [
       },
       hints: [
         'Use the electron: drag it up the ladder, then drop it onto a lower rung.',
-        'Compare the wavelength of the line each drop gives out with the one the eater lamp gives out.',
-        'Drop the electron from each higher rung in turn, and keep the drop whose line the strip prints as 486 nm.'
+        'Compare the wavelength of the line each drop gives out with the 486 nm line.',
+        'Compare how the wavelength changes with the size of the drop.'
       ],
       check(state) {
         const l = ladderRead(state.table, 'lad').last;
@@ -129,7 +129,7 @@ export const STAGES = [
     return {
       id: 'phase2',
       title: 'Phase 2 · The Cesium Shell',
-      prompt: 'Put the lamp that frees electrons from the eater\'s cesium plate at the lowest speed in the marked place.',
+      prompt: 'Which lamp removes electrons from the cesium plate with the least kinetic energy?',
       widget,
       table: opticsTable({
         pieces: [
@@ -137,7 +137,7 @@ export const STAGES = [
           ...LAMPS.map(([id, label, nm], i) => lamp(id, label, { x: 22 + i * 28, y: 55 }, nm))
         ],
         fixtures: [cell.fixture],
-        zones: { slots: [...cell.slots, { id: 'slowest', label: 'Frees them slowest', at: { x: 124, y: 40 }, size: { w: 30, h: 14 } }] }
+        zones: { slots: [...cell.slots, { id: 'slowest', label: 'Least kinetic energy', at: { x: 124, y: 40 }, size: { w: 32, h: 14 } }] }
       }),
       foes: EATER_FOE,
       encounter: {
@@ -149,7 +149,7 @@ export const STAGES = [
       hints: [
         'Use the lamp slot and the speed meter under the tube.',
         'Compare the speed readings across the three lamps rather than the counter.',
-        'Look for the lamp whose speed reading is the smallest one above zero.'
+        'Compare how close each lamp\'s energy is to the threshold that just frees an electron.'
       ],
       check(state) {
         const t = state.table;
@@ -157,12 +157,12 @@ export const STAGES = [
         if (!held) return { ok: false, notYet: true, msg: 'Put a lamp in the marked place.' };
         const lowest = LAMPS.map(l => l[2]).filter(nm => planPhotocell('Cs', nm, CELL_BRIGHT).freed).sort((p, q) => speedOf(p) - speedOf(q))[0];
         if (held.props.nm === lowest) return { ok: true };
-        return { ok: false, msg: 'Another lamp frees electrons more slowly than that one.' };
+        return { ok: false, msg: 'Another lamp removes electrons with less kinetic energy than that one.' };
       },
       reward: {
         title: 'Spare Energy Becomes Speed',
-        body: 'A photon pays the plate\'s work function to free an electron, and whatever energy is left over becomes the electron\'s speed. Light only just above the threshold frees electrons slowly.',
-        log: 'Photons close to the threshold free the slowest electrons.'
+        body: 'A photon pays the plate\'s work function to remove an electron, and whatever energy is left over becomes the electron\'s kinetic energy. Light just above the threshold removes slow electrons.',
+        log: 'Photons close to the threshold remove the slowest electrons.'
       }
     };
   })(),
@@ -172,40 +172,40 @@ export const STAGES = [
     const rack = shelf('rack', ['1s', '2s', '2p'], { x: 34, y: 32 }, { pre: rackFor(4), locked: true });
     return {
       id: 'phase3',
-      title: 'Phase 3 · The Magnet Shield',
-      prompt: 'Set the marker to how many electrons in an oxygen atom are unpaired.',
+      title: 'Phase 3 · The Unpaired Electrons',
+      prompt: 'How many of oxygen\'s electrons sit unpaired (alone in an orbital)?',
       widget,
       table: shellsTable({
-        pieces: [...rack.boxes, hand('up', 'up', { x: 76, y: 8 }), hand('down', 'down', { x: 92, y: 8 }), hand('lift', 'lift', { x: 108, y: 8 })],
+        pieces: [...rack.boxes, hand('up', 'up', { x: 76, y: 12 }), hand('down', 'down', { x: 92, y: 12 }), hand('lift', 'lift', { x: 108, y: 12 })],
         fixtures: [
           rack.fixture,
-          magnet('msample', { x: 88, y: 46 }, { sample: 'O' }),
-          magnet('mrack', { x: 123, y: 46 }, { rack: 'rack' }),
-          shellsMarker('alone', 'Unpaired', { x: 96, y: 21 }, { min: 0, max: 8, step: 1, value: 0, size: { w: 40, h: 12 }, title: 'Oxygen' })
+          shellsMarker('alone', 'Unpaired', { x: 96, y: 34 }, { min: 0, max: 8, step: 1, value: 0, size: { w: 40, h: 12 }, title: 'Oxygen' })
         ]
       }),
       foes: EATER_FOE,
       encounter: {
         species: 'the lantern-eater',
-        act: 'Test Pull',
-        intent: 'The eater hides behind a field that tugs at lone electrons.',
-        hit: 'The field fails and the eater is left bare in the dark.'
+        act: 'Count Spins',
+        intent: 'The eater hides behind oxygen\'s outer shell.',
+        hit: 'The shell opens and the eater is left bare in the dark.'
       },
       hints: [
-        'Use "Up", "Down", "Test Sample" and "Test Rack".',
-        'Compare the rack\'s pull with the sample\'s, and read how many electrons the board says are unpaired.',
-        'Count the unpaired electrons on the rack that pulls exactly as hard as the sample.'
+        'Use ↑ and ↓ to place oxygen\'s remaining four electrons in the 2p orbitals.',
+        'Remember how electrons fill orbitals of the same energy before pairing.',
+        'Count the electrons that sit alone in their orbital.'
       ],
       check(state) {
+        const total = readOf(state.table, 'rack').total;
+        if (total < 8) return { ok: false, notYet: true, msg: 'Place all eight of oxygen\'s electrons on the shelf first.' };
         const v = state.table.fixtures.alone.dials.n.value;
         if (!v) return { ok: false, notYet: true, msg: 'Set the marker to the number you found.' };
         if (v === MEASURED.O) return { ok: true };
-        return { ok: false, msg: 'The marker is not the number of unpaired electrons on the rack that pulls as the sample does.' };
+        return { ok: false, msg: 'Check how many electrons sit alone in 2p when orbitals fill singly before pairing.' };
       },
       reward: {
-        title: 'Unpaired Electrons Feel the Magnet',
-        body: 'Unpaired electrons are pulled by a magnetic field, while paired electrons cancel each other out. Electrons occupy degenerate orbitals singly with parallel spins before pairing, which is Hund\'s rule.',
-        log: 'The sample\'s pull matches a rack with the right number of lone electrons.'
+        title: 'Unpaired Electrons in 2p',
+        body: 'In 2p, three electrons sit singly with parallel spins before the fourth pairs up, leaving two unpaired electrons.',
+        log: 'Oxygen has two unpaired electrons in 2p.'
       }
     };
   })(),
@@ -216,7 +216,7 @@ export const STAGES = [
     return {
       id: 'phase4',
       title: 'Phase 4 · The Sealed Core',
-      prompt: 'Build the atom whose peaks match the eater\'s sealed core.',
+      prompt: 'Which atom gives the sealed core\'s spectrum?',
       widget,
       table: pesTable({
         pieces: [specimen('x', 'SEALED CORE', CORE, { x: 0, y: 0 }, { zone: `slot:${CHAMBER}.spec` })],
@@ -232,15 +232,15 @@ export const STAGES = [
       },
       hints: [
         'Use "Fire Light" on the sealed core, then the Protons and Electrons dials of the build.',
-        'Compare the outlines the build makes with the piles on the strip, and what the heights add up to.',
-        'A whole atom has as many electrons as protons, so build the one whose outlines cover every pile.'
+        'Compare the outlines the build makes with the peaks on the strip, and what the heights add up to.',
+        'Use the heights of the peaks to count the electrons in each subshell, then build the neutral atom.'
       ],
       check(state) {
         const b = buildRead(state.table, 'build');
         if (!b.protons && !b.electrons) return { ok: false, notYet: true, msg: 'Build an atom with the dials.' };
         if (b.whole && b.sym === CORE) return { ok: true };
         if (!b.whole) return { ok: false, msg: 'The build has a different number of protons and electrons.' };
-        return { ok: false, msg: 'The outlines of that atom do not cover the sealed core\'s piles.' };
+        return { ok: false, msg: 'The outlines of that atom do not cover the sealed core\'s peaks.' };
       },
       reward: {
         title: 'Peaks Add Up to the Atom',
@@ -256,7 +256,7 @@ export const STAGES = [
     return {
       id: 'phase5',
       title: 'Phase 5 · The Absorbing Cell',
-      prompt: 'Set the marker to the concentration of the eater\'s sealed copper solution, in mmol/L.',
+      prompt: 'What is the concentration of the sealed copper solution, in mmol/L?',
       widget,
       table: cuvetteTable({
         pieces: [
@@ -282,7 +282,7 @@ export const STAGES = [
       hints: [
         'Use the dropper on the standards, "Record" for each, the straightedge, and the marker.',
         'Lay the straightedge across the standards\' points and find where the sealed sample\'s reading falls along the line.',
-        'Read across from the sealed reading to the line, then straight down to the concentration scale, and set the marker there.'
+        'Use the line of standards to find the concentration (in mmol/L) whose reading matches the sealed sample.'
       ],
       check(state) {
         const v = markerRead(state.table, 'conc');
@@ -292,7 +292,7 @@ export const STAGES = [
       },
       reward: {
         title: 'Absorbance Measures Concentration',
-        body: 'Standards of known concentration make a line of absorbance against concentration, and an unknown solution is read back off that line. Higher solute concentration yields greater absorbance.',
+        body: 'Standards of known concentration make a line of absorbance against concentration, and an unknown solution is read back off that line. Higher concentration gives greater absorbance.',
         log: 'The sealed solution\'s absorbance sat on the standards\' line.'
       }
     };
@@ -319,7 +319,7 @@ const read = id => [put(id, BEAM), { run: SP }];
 export const SOLUTIONS = [
   [rung(4), rung(2)],
   [tryLamp('a'), tryLamp('b'), tryLamp('c'), put('a', 'slot:slowest')],
-  [{ run: 'msample' }, on('up', '2p', 0), on('up', '2p', 1), on('up', '2p', 2), on('down', '2p', 0), { run: 'mrack' }, dial('alone', 'n', 2)],
+  [on('up', '2p', 0), on('up', '2p', 1), on('up', '2p', 2), on('down', '2p', 0), dial('alone', 'n', 2)],
   [{ run: CHAMBER }, dial('build', 'protons', 10), dial('build', 'electrons', 10)],
   [
     ...drops('s1', 2), ...drops('s2', 3), ...drops('s3', 4), ...read('s1'), ...read('s2'), ...read('s3'),

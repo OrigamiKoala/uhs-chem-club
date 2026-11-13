@@ -90,7 +90,7 @@ export function elementCard(id, sym, at, props = {}) {
 }
 
 /** What a tested card reads, as the face prints it. */
-const TESTED_TEXT = { gives: 'gives one', takes: 'takes one', shares: 'holds on', inert: 'no trade' };
+const TESTED_TEXT = { gives: 'loses 1', takes: 'gains 1', shares: 'shares', inert: 'no change' };
 
 /* ------------------------------------------------------------------
    EQUATION CARDS AND STACKS

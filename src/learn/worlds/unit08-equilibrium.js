@@ -29,27 +29,27 @@ export const UNIT_08 = {
     {
       id: 'q1-both',
       title: 'Running Both Ways',
-      line: 'A pan stops changing; find out whether its particles do.',
+      line: 'A vessel stops changing; find out whether its particles do.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit08/q1-both.js')
     },
     {
       id: 'q2-k',
       title: 'The Number That Holds',
-      line: 'Pans that begin differently settle at different amounts; find what they share.',
+      line: 'Vessels that begin differently settle at different amounts; find what they share.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit08/q2-k.js')
     },
     {
       id: 'q3-q',
       title: 'Which Way It Goes',
-      line: 'A pan is mixed to a recipe; say which way it will move before it does.',
+      line: 'A vessel is mixed to a recipe; say which way it will move before it does.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit08/q3-q.js')
     },
@@ -58,16 +58,16 @@ export const UNIT_08 = {
       title: 'Combining K',
       line: 'Rewrite a reaction and its K changes by rule; find how.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit08/q4-properties.js')
     },
     {
       id: 'q5-ice',
       title: 'Equilibrium Concentrations',
-      line: 'The ledger gives a pan\u2019s start and K; work out what is left.',
+      line: 'The ledger gives a vessel\u2019s start and K; work out what is left.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit08/q5-ice.js')
     },
@@ -85,16 +85,16 @@ export const UNIT_08 = {
       title: 'Solubility Equilibria',
       line: 'Salt dissolves and comes back out; find how much a beaker can hold.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit08/q7-dissolve.js')
     },
     {
       id: 'q8-free',
       title: 'Free Energy and K',
-      line: 'The lower the free energy, the more product a pan holds when it settles.',
+      line: 'The lower the free energy, the more product a vessel holds when it settles.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit08/q8-free.js')
     },

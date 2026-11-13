@@ -9,14 +9,15 @@ export const QUESTS = ['q1-both', 'q2-k', 'q3-q', 'q4-properties', 'q5-ice', 'q6
 
 export const TERMS = [
   { id: 'reaction', term: 'reaction', gloss: 'particles of one kind turning into particles of another kind', quest: 'q1-both', stage: 1, re: /\breactions?\b/i },
-  { id: 'reactant-product', term: 'reactant and product', gloss: 'a reactant is what a reaction starts with, a product is what it makes', quest: 'q1-both', stage: 1, re: /\b(reactants?|products?)\b/i },
+  { id: 'reactant-product', term: 'reactant and product', gloss: 'a reactant is what a reaction starts with, a product is what it makes', quest: 'q1-both', stage: 5, re: /\b(reactants?|products?)\b/i },
   { id: 'equilibrium', term: 'equilibrium', gloss: 'the state in which the amounts of every substance have stopped changing', quest: 'q1-both', stage: 3, re: /\bequilibrium\b/i },
   { id: 'dynamic-equilibrium', term: 'dynamic equilibrium', gloss: 'equilibrium in which the forward and reverse changes both carry on at the same rate', quest: 'q1-both', stage: 3, re: /\bdynamic equilibrium\b/i },
-  { id: 'reversible', term: 'reversible reaction', gloss: 'a reaction that runs both ways, drawn with a double arrow', quest: 'q1-both', stage: 7, re: /\breversible reaction\b/i },
+  { id: 'rate', term: 'rate', gloss: 'how many particles change each second', quest: 'q1-both', stage: 3, re: /\brates?\b/i },
+  { id: 'reversible', term: 'reversible reaction', gloss: 'a reaction that runs both ways, drawn with a double arrow', quest: 'q1-both', stage: 6, re: /\breversible reaction\b/i },
   { id: 'concentration', term: 'concentration', gloss: 'moles of a substance in each litre, in mol/L', quest: 'q2-k', stage: 2, recap: 'Tallow', re: /\bconcentrations?\b/i },
   { id: 'k', term: 'equilibrium constant, K', gloss: 'a ratio of product amounts to reactant amounts that is the same for every vessel of one reaction at one temperature', quest: 'q2-k', stage: 2, re: /\bK\b|\bequilibrium constant\b/ },
   { id: 'q', term: 'reaction quotient, Q', gloss: 'the same ratio as K, worked out with the amounts present right now', quest: 'q3-q', stage: 1, re: /\bQ\b|\breaction quotient\b/ },
-  { id: 'kp', term: 'Kp', gloss: 'K written with partial pressures of gases in place of concentrations', quest: 'q4-properties', stage: 7, re: /\bKp\b/ },
+  { id: 'kp', term: 'Kp', gloss: 'K written with partial pressures of gases in place of concentrations', quest: 'q2-k', stage: 4, re: /\bKp\b/ },
   { id: 'ice', term: 'ICE table', gloss: 'a table of Initial amounts, Change and Equilibrium amounts for each substance', quest: 'q5-ice', stage: 1, re: /\bICE table\b|\bICE board\b/i },
   { id: 'le-chatelier', term: 'Le Chatelier\'s principle', gloss: 'a vessel at equilibrium that is disturbed moves to undo the disturbance', quest: 'q6-lean', stage: 7, re: /\bLe Chatelier/i },
   { id: 'catalyst', term: 'catalyst', gloss: 'a substance that speeds a reaction up and is not used up', quest: 'q6-lean', stage: 6, re: /\bcatalysts?\b/i },

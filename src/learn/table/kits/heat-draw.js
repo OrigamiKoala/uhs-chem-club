@@ -17,6 +17,7 @@ import {
 } from './heat-read.js';
 import { bondAtoms, inkOfElement, phaseDots } from './heat-parts.js';
 import { glide, bathShown, speedAt, tempInk, chamberFlight, replayHeat, curvePath, curveAt, curveShown, curveFoot, contentTopOf, latticeLayout, cupParts, BLOCK_GLIDE_S, LEAD_MEET } from './heat-motion.js';
+import { isCommitted, isRevealed } from './commit-gate.js';
 void replayHeat;
 
 const AMBER = PLATE_COLORS.amber;
@@ -128,7 +129,11 @@ function paintBlock(ctx, p, state, o) {
 function paintCharge(ctx, p, state, o) {
   const box = slab(ctx, o, RECTS.charge, '#1d1a16');
   const sc = o.sc;
-  const tried = p.props.rise != null;
+  const cup = Object.values(state.fixtures || {}).find(f => f.kind === 'cup');
+  const hideRise = Boolean(p.props.hideRiseUntilCommit || cup?.props?.hideRiseUntilCommit)
+    && !isCommitted(state, p.props.gate ?? cup?.props?.gate)
+    && !isRevealed(state);
+  const tried = p.props.rise != null && !hideRise;
   say(ctx, p.label, o.x, box.y0 + (tried ? 2.5 : 3.0) * sc, Math.max(6.2, 2.0 * sc), { align: 'center', weight: 700, maxW: box.w - 2 * sc });
   say(ctx, p.props.shown ?? `${sig(p.props.moles, 3)} mol`, o.x, box.y0 + (tried ? 6.1 : 8.4) * sc, Math.max(6, 1.8 * sc), { align: 'center', color: DUST, maxW: box.w - 2 * sc });
   // A tin that has been in the cup keeps what the bath did, so the readings can be compared once the tins are out again.
@@ -291,6 +296,13 @@ function paintShift(ctx, p, state, o) {
   side(box.x0 + box.w * 0.05, p.props.before || [], 'b');
   side(box.x0 + box.w * 0.57, p.props.after || [], 'a');
   say(ctx, '→', o.x, by + bh / 2, Math.max(7, 2.4 * sc), { align: 'center', color: DIM });
+  if (isRevealed(state) && p.zone?.startsWith('tray:')) {
+    const gasOf = g => g.filter(([ph]) => ph === 'gas').reduce((s, [, n]) => s + n, 0);
+    const gb = gasOf(p.props.before || []);
+    const ga = gasOf(p.props.after || []);
+    const tag = gb !== ga ? `gas ${gb}→${ga}` : `${p.props.before?.[0]?.[0] || ''}→${p.props.after?.[0]?.[0] || ''}`;
+    say(ctx, tag, o.x, box.y0 + box.h - 0.8 * sc, Math.max(5.2, 1.45 * sc), { align: 'center', color: AMBER, weight: 700 });
+  }
 }
 
 function paintTag(ctx, p, state, o) {
@@ -342,6 +354,11 @@ function paintGCard(ctx, p, state, o) {
     const T = Tmin + u * (Tmax - Tmin);
     ctx.fillStyle = dG(T) < 0 ? PHOS : WARM;
     ctx.beginPath(); ctx.arc(X(T), Y(dG(T)), Math.max(1.6, sc * 0.55), 0, Math.PI * 2); ctx.fill();
+  }
+  if (isRevealed(state) && p.zone?.startsWith('tray:')) {
+    const g0 = dG(Tmin); const g1 = dG(Tmax);
+    say(ctx, `${g0 < 0 ? '−' : '+'}@${Tmin}K`, px, py + 1.4 * sc, Math.max(5, 1.35 * sc), { color: g0 < 0 ? PHOS : WARM, weight: 700 });
+    say(ctx, `${g1 < 0 ? '−' : '+'}@${Tmax}K`, px + pw, py + 1.4 * sc, Math.max(5, 1.35 * sc), { align: 'right', color: g1 < 0 ? PHOS : WARM, weight: 700 });
   }
 }
 
@@ -427,14 +444,15 @@ function paintCup(ctx, f, state, b) {
   ctx.strokeStyle = DUST;
   ctx.strokeRect(Math.round(F.x(tx)) + 0.5, Math.round(F.y(ty0)) + 0.5, Math.round(F.len(3)), Math.round(F.len(ty1 - ty0)));
   const shown = bathShown(f, state, b).T;
-  const frac = Math.max(0.02, Math.min(1, shown / 100));
-  ctx.fillStyle = inkOf(shown);
+  const hideReadings = Boolean(p.hideUntilCommit) && !isCommitted(state, p.gate) && !isRevealed(state, f.id);
+  const frac = hideReadings ? 0.2 : Math.max(0.02, Math.min(1, shown / 100));
+  ctx.fillStyle = hideReadings ? DIM : inkOf(shown);
   ctx.fillRect(F.x(tx) + 1, F.y(ty1 - (ty1 - ty0) * frac), F.len(3) - 1, F.len((ty1 - ty0) * frac));
   // The readouts.
   let line = 0;
   const put = (k, v, color = PHOS) => { say(ctx, k, F.x(32), F.y(top + 3 + line * 6), F.size(1.9, 5.8), { color: DIM }); say(ctx, v, F.x(32), F.y(top + 5.7 + line * 6), F.size(2.7, 6.5), { color, weight: 700, maxW: F.len(f.size.w - 34) }); line++; };
-  put('BATH', `${fixed(shown, 1)} °C`, inkOf(shown));
-  put('RISE', `${fixed(shown - r.T0, 1, true)} °C`, shown - r.T0 > 0.05 ? WARM : shown - r.T0 < -0.05 ? COLD : DUST);
+  put('BATH', hideReadings ? '— °C' : `${fixed(shown, 1)} °C`, hideReadings ? DIM : inkOf(shown));
+  put('RISE', hideReadings ? '— °C' : `${fixed(shown - r.T0, 1, true)} °C`, hideReadings ? DIM : shown - r.T0 > 0.05 ? WARM : shown - r.T0 < -0.05 ? COLD : DUST);
   if (p.showHeat) put('HEAT', `${Math.round(r.q).toLocaleString('en-US')} J`, AMBER);
   if (p.showVerdict) put('BATH', r.dT > 0.05 ? 'WARMED' : r.dT < -0.05 ? 'COOLED' : 'SAME', DUST);
   if (p.showLid && r.lidOff) say(ctx, 'LID OFF', F.x(32), F.y(top + 29), F.size(2.2, 6), { color: AMBER, weight: 700 });
@@ -568,14 +586,17 @@ function paintWell(ctx, f, state, b) {
 function paintLedger(ctx, f, state, b) {
   const F = frameOf(b);
   const r = ledgerRead(state, f.id);
+  const committed = isCommitted(state, f.props.gate) || isRevealed(state, f.id);
+  const hideTotals = f.props.hideTotals || (f.props.hideTotalsUntilCommit && !committed);
+  const hideNet = f.props.hideNet || (f.props.hideNetUntilCommit && !committed);
   const col = (x, name, n, total, color) => {
     say(ctx, name, F.x(x), F.y(5.5), F.size(2.2, 6), { color: DIM });
-    if (!f.props.hideTotals) say(ctx, `${total} kJ`, F.x(x), F.y(10), F.size(3.4, 7.5), { color, weight: 700 });
+    if (!hideTotals) say(ctx, `${total} kJ`, F.x(x), F.y(10), F.size(3.4, 7.5), { color, weight: 700 });
     say(ctx, `${n} bond${n === 1 ? '' : 's'}`, F.x(x), F.y(14.4), F.size(2.2, 6), { color: DUST });
   };
   col(3, 'BROKEN', r.nBroken, r.broken, WARM);
   col(f.size.w / 2 + 2, 'FORMED', r.nFormed, r.formed, COLD);
-  if (!f.props.hideNet) say(ctx, `BROKEN − FORMED = ${signedKJ(r.net)} kJ`, F.x(3), F.y(f.size.h - 3.2), F.size(2.7, 6.5), { color: AMBER, weight: 700, maxW: F.len(f.size.w - 6) });
+  if (!hideNet) say(ctx, `BROKEN − FORMED = ${signedKJ(r.net)} kJ`, F.x(3), F.y(f.size.h - 3.2), F.size(2.7, 6.5), { color: AMBER, weight: 700, maxW: F.len(f.size.w - 6) });
 }
 
 function paintStack(ctx, f, state, b) {
@@ -691,12 +712,33 @@ function paintChamber(ctx, f, state, b) {
   say(ctx, 'PARTICLES IN THE LEFT HALF', F.x(f.size.w - 2.5), F.y(top + 12.4), F.size(2.1, 5.8), { color: DIM, align: 'right' });
 }
 
+function drawCompBars(ctx, F, b, bx, by, bw, bh, dH, TdS, { words = false } = {}) {
+  const maxMag = Math.max(Math.abs(dH), Math.abs(TdS), 1) * 1.15;
+  const zeroY = by + bh * 0.5;
+  const scale = (bh * 0.44) / maxMag;
+  ctx.strokeStyle = DIM;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath(); ctx.moveTo(F.x(bx), F.y(zeroY)); ctx.lineTo(F.x(bx + bw), F.y(zeroY)); ctx.stroke();
+  ctx.setLineDash([]);
+  const barW = Math.max(4, (bw - 6) / 2);
+  const drawBar = (x, val, col, lbl) => {
+    const h = Math.abs(val) * scale;
+    const topY = val >= 0 ? zeroY - h : zeroY;
+    ctx.fillStyle = col;
+    ctx.fillRect(F.x(x), F.y(topY), F.len(barW), Math.max(1.5, F.len(h)));
+    say(ctx, lbl, F.x(x + barW / 2), F.y(by + bh + 2.6), F.size(1.9, 5.2), { align: 'center', color: DUST });
+  };
+  drawBar(bx + 1.5, dH, AMBER, words ? 'HEAT' : 'ΔH');
+  drawBar(bx + 3.5 + barW, TdS, PHOS, words ? 'SPREAD' : 'TΔS');
+}
+
 function paintPlot(ctx, f, state, b) {
   const F = frameOf(b);
   const p = f.props;
   const r = plotRead(state, f.id);
   const { top } = cupGeometry(f, b.lay);
-  const px = 6; const pw = f.size.w - 10; const py = top + 1; const ph = f.size.h - top - 12;
+  const totalW = f.size.w - 10;
+  const px = 6; const pw = p.bars ? totalW * 0.62 : totalW; const py = top + 1; const ph = f.size.h - top - 12;
   const Tmin = p.Ts[0]; const Tmax = p.Ts[p.Ts.length - 1];
   const dGat = T => p.dH - (T * p.dS) / 1000;
   const lo = Math.min(dGat(Tmin), dGat(Tmax), 0) ; const hi = Math.max(dGat(Tmin), dGat(Tmax), 0);
@@ -716,11 +758,23 @@ function paintPlot(ctx, f, state, b) {
   }
   ctx.strokeStyle = AMBER;
   ctx.beginPath(); ctx.moveTo(F.x(X(r.T)), F.y(py)); ctx.lineTo(F.x(X(r.T)), F.y(py + ph)); ctx.stroke();
+  if (p.bars) {
+    drawCompBars(ctx, F, b, px + pw + 3, py, totalW - pw - 3, ph - 2, r.dH, r.TdS, { words: p.words });
+  }
   const y = f.size.h - 3.6;
   say(ctx, `${Math.round(r.T)} K`, F.x(2.5), F.y(y), F.size(2.6, 6.4), { color: DUST, weight: 700 });
   // `words` prints the two pulls and their net in plain words, until the bench has earned the symbols.
   if (!p.hideTug) say(ctx, p.words ? `HEAT ${signedKJ(r.dH)}   SPREAD ${signedKJ(r.TdS)}` : `ΔH ${signedKJ(r.dH)}   TΔS ${signedKJ(r.TdS)}`, F.x(f.size.w / 2), F.y(y), F.size(2.2, 6), { color: DUST, align: 'center', maxW: F.len(f.size.w * 0.5) });
   if (!p.hideDG) say(ctx, `${p.words ? 'NET' : 'ΔG'} ${signedKJ(r.dG)} kJ`, F.x(f.size.w - 2.5), F.y(y), F.size(2.7, 6.5), { color: AMBER, weight: 700, align: 'right' });
+}
+
+function paintGibbsBars(ctx, f, state, b) {
+  const F = frameOf(b);
+  const { dH, dS, T } = f.props;
+  const TdS = (T * dS) / 1000;
+  const top = contentTopOf(f);
+  drawCompBars(ctx, F, b, 5, top + 2, f.size.w - 10, f.size.h - top - 11, dH, TdS);
+  say(ctx, `ΔH ${signedKJ(dH)} kJ   T = ${Math.round(T)} K`, F.x(f.size.w / 2), F.y(f.size.h - 3.2), F.size(2.1, 5.8), { align: 'center', color: DUST, maxW: F.len(f.size.w - 6) });
 }
 
 function paintWarm(ctx, f, state, b) {
@@ -767,7 +821,13 @@ function paintCurveFace(ctx, f, state, b) {
 
 function paintPlaque(ctx, f, state, b) {
   const F = frameOf(b);
-  (f.props.lines || []).forEach((line, i) => say(ctx, line, F.x(2.2), F.y(8.4 + i * 3.8), F.size(2.7, 6.5), { color: DUST, maxW: F.len(f.size.w - 4) }));
+  const bars = f.props.bars;
+  const textW = bars ? f.size.w * 0.56 : f.size.w - 4;
+  (f.props.lines || []).forEach((line, i) => say(ctx, line, F.x(2.2), F.y(8.4 + i * 3.8), F.size(2.7, 6.5), { color: DUST, maxW: F.len(textW) }));
+  if (bars) {
+    const TdS = (bars.T * bars.dS) / 1000;
+    drawCompBars(ctx, F, b, f.size.w * 0.6, 7.5, f.size.w * 0.36, f.size.h - 12, bars.dH, TdS);
+  }
 }
 
 function paintMarker(ctx, f, state, b) {
@@ -802,6 +862,7 @@ export function paintFixture(ctx, f, state, b) {
   else if (f.kind === 'cells') paintCells(ctx, f, state, b);
   else if (f.kind === 'chamber') paintChamber(ctx, f, state, b);
   else if (f.kind === 'plot') paintPlot(ctx, f, state, b);
+  else if (f.kind === 'gibbsbars') paintGibbsBars(ctx, f, state, b);
   else if (f.kind === 'warm') paintWarm(ctx, f, state, b);
   else if (f.kind === 'curve') paintCurveFace(ctx, f, state, b);
   else if (f.kind === 'lattice') paintLatticeFace(ctx, f, state, b);

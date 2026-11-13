@@ -215,6 +215,6 @@ addTourText({
   },
   'pans:pulls': {
     title: 'Two pulls', dials: false,
-    text: 'Two bars for one change, drawn from a zero line to one scale. The amber bar is ΔH, the heat the change takes in, and the green bar is TΔS, the spreading it gains, both in kJ per mole. A bar to the right is positive and a bar to the left is negative. Where a beaker stands beside the bars, press "Run" to dissolve the salt in the water and read the thermometer and the salt that is left.'
+    text: 'Two bars for one change, drawn from a zero line to one scale. The amber bar is ΔH, the heat the change takes in, and the green bar is TΔS, the entropy term, both in kJ per mole. A bar to the right is positive and a bar to the left is negative. Where a beaker stands beside the bars, press "Run" to dissolve the salt in the water and read the thermometer and the salt that is left.'
   }
 }, {});

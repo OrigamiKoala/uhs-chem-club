@@ -382,7 +382,7 @@ function paintVessel(ctx, f, state, b) {
     const y = vesselYield(f, r.res.post.V, r.res.post.T, Math.round(f.dials.cycles.value));
     if (r.t > 0) say(ctx, `NH₃ made ${amt(y.made)} mol, taken out ${amt(y.out)} mol`, F.x(px), F.y(ROW_Y), sz, { color: AMBER, weight: 700, maxW: F.len(w - px - 3.5) });
   } else if (r.t > 0) {
-    say(ctx, r.settled ? `settled by tick ${r.tick}` : `tick ${r.t}, still changing`, F.x(px), F.y(ROW_Y), sz, { color: DUST, maxW: F.len(w - px - 3.5) });
+    say(ctx, r.settled ? `settled in ${r.tick} s` : `${r.t} s, still changing`, F.x(px), F.y(ROW_Y), sz, { color: DUST, maxW: F.len(w - px - 3.5) });
   }
   paintScale(ctx, F, r, 3.5, w - 3.5);
   if (p.touch) paintTouch(ctx, F, f, r, state);

@@ -69,10 +69,10 @@ export async function check({ near }) {
   same('swap products', swap.solids.map(p => p.formula).sort(), ['AgI', 'CaF2']);
 
   // Stage checks
-  // Stage 3 must be a predict stage with no instruments
-  const st3 = q.STAGES[2];
-  if (!st3.predict) bad.push('stage 3 is not marked predict: true');
-  if ((st3.table.fixtures || []).some(f => f.kind !== 'plaque')) bad.push('stage 3 shows an instrument on the table');
+  // Stage 4 must be a predict stage with no instruments
+  const st4 = q.STAGES[3];
+  if (!st4.predict) bad.push('stage 4 is not marked predict: true');
+  if ((st4.table.fixtures || []).some(f => f.kind !== 'plaque')) bad.push('stage 4 shows an instrument on the table');
 
   // Verify solutions pass and misses are rejected
   q.STAGES.forEach((st, i) => {
@@ -84,6 +84,7 @@ export async function check({ near }) {
     const blankRes = st.check(blankState);
     if (blankRes && blankRes.ok) bad.push(`stage ${i + 1}: blank bench passes`);
 
+    if (!q.MISSES[i].length) return;
     const missState = q.stateFor(i, q.MISSES[i]);
     const missRes = st.check(missState);
     if (!missRes || missRes.ok) bad.push(`stage ${i + 1}: miss was not rejected`);

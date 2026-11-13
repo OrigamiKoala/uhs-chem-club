@@ -2,22 +2,15 @@
  * Unit 7 · Bench 7 — Titration (q7-titrate)
  *
  * The pickling line, on the pot kit: a burette of base over a flask of acid (`table/kits/pot-titrate.js`), an indicator card for the
- * flask, and where a stage asks for it a window of the ions still free in the flask. Every reading is `reactdata-titrate.js` /
- * `reactdata.js` `titrate`; nothing on the table is authored. Eight stages and ONE click: the belief that an acid takes an EQUAL
- * VOLUME of base.
+ * flask, and where a stage asks for it a particle view of the ions still free in the flask. Every reading is `reactdata-titrate.js` /
+ * `reactdata.js` `titrate`; nothing on the table is authored.
  *
- *   1  PREDICT: how much 0.250 mol/L base does 25.0 mL of 0.100 mol/L acid take?   (the held model: the same volume, 25.0 mL)
+ *   1  PREDICT: how much 0.250 mol/L base does 25.0 mL of 0.100 mol/L acid take?
  *   2  TEST: titrate until the indicator changes colour                              -> titration, burette, indicator
- *   3  stop where the window shows nothing left over of either                       -> equivalence point
- *   4  an unknown acid: titrate, then type its concentration                          -> moles of base = moles of acid (typed)
- *   5  sulfuric acid: type its concentration                                          -> two H+ for each acid particle
- *   6  an indicator that changes early: type the gap to the equivalence point        -> endpoint
- *   7  permanganate against iron(II), purple needs no indicator: type the iron        -> a mole ratio of 5 to 1
- *   8  sealed: the bath's sulfuric acid, type its concentration
- *
- * THE TEACHING STANCE. The base's strength is printed on the burette (a constant is given), the acid's strength never is when it is
- * the answer. A flask's colour and its window are the planners' answers at the burette's reading. Nothing is read off: the figure
- * typed is worked from the reading the player took. No pH value is shown anywhere.
+ *   3  stop where the particle view shows nothing left over of either                -> equivalence point
+ *   4  an unknown acid: titrate, then type its concentration (worked case in brief)  -> moles of base = moles of acid
+ *   5  sulfuric acid: type its concentration                                         -> two H+ for each H2SO4
+ *   6  an indicator that changes early: before, at, or after the equivalence point   -> endpoint
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -25,13 +18,13 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
-import { potTable, stmt, plaqueFixture, fixed } from '../../table/kits/pot.js';
+import { potTable, stmt, chip, plaqueFixture, fixed } from '../../table/kits/pot.js';
 import { titratorFixture, titratorRead, indicatorCard } from '../../table/kits/pot-titrate.js';
 import {
-  flaskAt, equivalenceMl, endpointMl, acidMolarity, acidMoles, permanganateAt, permanganateEndMl, ironMolarity
+  flaskAt, equivalenceMl, endpointMl, acidMolarity, acidMoles
 } from '../../engine/reactdata-titrate.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
   { term: /\btitration\b/i, introducedAt: 2 },
@@ -58,11 +51,9 @@ const QUEST_KEY = 'unit07/q7-titrate';
 
 const SYS2 = { acid: { M: 0.1, mL: 25, nH: 1 }, base: { M: 0.25, nOH: 1 } };      // stage 1 and 2: 10.0 mL to equal, 10.5 mL to the colour
 const SYS3 = { acid: { M: 0.2, mL: 25, nH: 1 }, base: { M: 0.25, nOH: 1 } };      // stage 3: 20.0 mL
-const SYS4 = { acid: { M: 0.18, mL: 25, nH: 1 }, base: { M: 0.2, nOH: 1 } };      // stage 4: hydrochloric acid of an unknown strength
+const SYS4 = { acid: { M: 0.18, mL: 25, nH: 1 }, base: { M: 0.2, nOH: 1 } };      // stage 4: hydrochloric acid of an unknown concentration
 const SYS5 = { acid: { M: 0.072, mL: 25, nH: 2 }, base: { M: 0.1, nOH: 1 } };     // stage 5: sulfuric acid
 const SYS6 = { acid: { M: 0.02, mL: 25, nH: 1 }, base: { M: 0.02, nOH: 1 } };     // stage 6: a dilute pair, methyl orange
-const PERM7 = { fe: { M: 0.09, mL: 25 }, mn: { M: 0.02 } };                       // stage 7: iron(II) against permanganate
-const SYS8 = { acid: { M: 0.45, mL: 25, nH: 2 }, base: { M: 0.5, nOH: 1 } };      // stage 8: the bath's sulfuric acid
 
 const STEP = 0.5;
 const PH = 'phenolphthalein';
@@ -76,17 +67,13 @@ const END2 = endpointMl(SYS2, PH, STEP);
 // Stage 3.
 const EQ3 = equivalenceMl(SYS3);
 const UNIT3 = 0.00025;
-// Stage 4 and 5 and 8: the acid's strength, and the burette reading that the colour change gives.
+// Stage 4 and 5: the acid's concentration.
 const ANS4 = SYS4.acid.M;
 const ANS5 = SYS5.acid.M;
-const ANS8 = SYS8.acid.M;
 // Stage 6.
 const EQ6 = equivalenceMl(SYS6);
 const END6 = endpointMl(SYS6, MO, STEP);
-const GAP6 = EQ6 - END6;
 const UNIT6 = 0.00002;
-// Stage 7.
-const ANS7 = PERM7.fe.M;
 
 /* ------------------------------------------------------------------
    HELPERS
@@ -99,10 +86,6 @@ const within = (v, want, tol) => Math.abs(v - want) <= tol;
 function firstChange(t, fid) {
   const r = titratorRead(t, fid);
   const p = r.f.props;
-  if (p.mode === 'perm') {
-    for (const row of r.rows) if (permanganateAt(p.perm.fe, p.perm.mn, row.x).colour !== 'pale') return row.x;
-    return null;
-  }
   const start = flaskAt(p.sys, 0, r.indicator).colour;
   for (const row of r.rows) if (flaskAt(p.sys, row.x, r.indicator).colour !== start) return row.x;
   return null;
@@ -118,28 +101,31 @@ function missMsg(t, fid, shown, unit) {
 }
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE SIX STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     id: 's1-predict',
     title: 'How Much Base',
-    // A PREDICT STAGE: the burette is not on the table yet. The guess is made first and comes back with the test.
     predict: true,
-    prompt: 'Choose how much of the base it takes to use up all the acid.',
+    briefing: {
+      title: 'Concentration in mol/L',
+      body: 'A base releases OH⁻ ions to cancel an acid\'s H⁺ ions. Concentration in mol/L tells how many moles are dissolved in each litre.'
+    },
+    prompt: 'How much of the base do you expect it takes to use up all the acid?',
     widget,
     table: potTable({
       pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 38, y: 12 + Math.floor(i / 2) * 16 })),
       fixtures: [plaqueFixture('facts', 'Acid and base', { x: 118, y: 18 }, [
-        '25.0 mL of 0.100 mol/L acid', 'Base: 0.250 mol/L', 'mol/L is the mol in every litre.', 'One base particle uses up one acid particle.'
+        '25.0 mL of 0.100 mol/L acid', 'Base: 0.250 mol/L', 'One mole of base uses up one mole of acid.'
       ], { w: 58 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 46 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
       'Use the four cards and the slot.',
-      'Compare how many particles are in a litre of the acid with how many are in a litre of the base.',
-      'Work out how many acid particles the flask holds, then how much of the base holds that many.'
+      'Compare how many moles are in a litre of the acid with how many are in a litre of the base.',
+      'Decide whether a more concentrated base is needed in a larger or a smaller volume.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -153,7 +139,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, run the base into a flask of the acid and see where it takes.'
+      body: 'Next, run the base into a flask of the acid and see what volume it takes.'
     }
   },
 
@@ -163,10 +149,14 @@ export const STAGES = [
     return {
       id: 's2-colour',
       title: 'Watch the Colour',
+      briefing: {
+        title: 'Titration and Indicators',
+        body: 'A titration adds one solution from a burette, a tube marked in millilitres, to another until they have exactly reacted. An indicator is a dye that changes colour when that happens.'
+      },
       get prompt() {
         const g = recall(QUEST_KEY);
         const guess = g && GUESS[g] ? `You guessed ${GUESS[g]}. ` : '';
-        return `${guess}Add base until the dye in the flask first changes colour.`;
+        return `${guess}What volume of base changes the indicator's colour?`;
       },
       widget,
       table: potTable({
@@ -182,7 +172,7 @@ export const STAGES = [
       check(state) {
         const r = titratorRead(state.table, 'tit');
         if (!r.rows.length) return { ok: false, notYet: true, msg: 'Nothing has run into the flask yet.' };
-        if (!r.indicator) return { ok: false, msg: `The flask has no dye in it, and it reads ${fixed(r.vMl, 1)} mL.` };
+        if (!r.indicator) return { ok: false, msg: `The flask has no indicator in it, and it reads ${fixed(r.vMl, 1)} mL.` };
         if (r.colour === 'colourless') return { ok: false, msg: `The flask is still colourless at ${fixed(r.vMl, 1)} mL.` };
         if (r.vMl > END2 + 1.0) return { ok: false, msg: `The flask had already changed colour before the reading reached ${fixed(r.vMl, 1)} mL.` };
         return { ok: true };
@@ -195,7 +185,7 @@ export const STAGES = [
         return {
           log: `The flask changed colour at ${fixed(END2, 1)} mL.`,
           title: 'Titration',
-          body: `${verdict}A titration runs a measured volume of one solution from a burette into a known volume of another until they have just met. An indicator is a dye that changes colour there, and 25.0 mL of this acid took only ${fixed(END2, 1)} mL of base.`
+          body: `${verdict}The indicator changed at about ${fixed(END2, 1)} mL on the burette: that titration used up the acid in 25.0 mL.`
         };
       }
     };
@@ -207,16 +197,16 @@ export const STAGES = [
     return {
       id: 's3-equal',
       title: 'Nothing Left Over',
-      prompt: 'Stop the burette where the base has exactly used up the acid in the flask.',
+      prompt: 'At what burette reading has the base exactly used up the acid?',
       widget,
       table: potTable({
         fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 127, y: 12 }, ['25.0 mL of acid', '0.200 mol/L'], { w: 40 })],
         zones: { slots: [...t.slots] }
       }),
       hints: [
-        'Use the "Per press" dial and "Open Tap", and watch the window.',
-        'Compare the discs of H+ with the discs of OH- as the reading grows.',
-        'Each press of the same size changes the discs by the same amount, so count what is left and press that much.'
+        'Use the "Per press" dial and "Open Tap", and watch the particle view.',
+        'Compare the circles of H⁺ with the circles of OH⁻ as the reading grows.',
+        'Each press removes the same number of H⁺; see how many are left.'
       ],
       check(state) {
         const r = titratorRead(state.table, 'tit');
@@ -224,13 +214,13 @@ export const STAGES = [
         if (within(r.vMl, EQ3, 0.01)) return { ok: true };
         const n = (r.flask.acidLeft || r.flask.baseLeft) / UNIT3;
         return r.flask.acidLeft > 0
-          ? { ok: false, msg: `The window still shows ${fixed(n, 1)} discs of H+ at ${fixed(r.vMl, 1)} mL.` }
-          : { ok: false, msg: `The window shows ${fixed(n, 1)} discs of OH- left over at ${fixed(r.vMl, 1)} mL.` };
+          ? { ok: false, msg: `The particle view still shows ${fixed(n, 1)} circles of H⁺ at ${fixed(r.vMl, 1)} mL.` }
+          : { ok: false, msg: `The particle view shows ${fixed(n, 1)} circles of OH⁻ left over at ${fixed(r.vMl, 1)} mL.` };
       },
       reward: {
         log: `${fixed(EQ3, 1)} mL of base used up the acid.`,
         title: 'Equivalence Point',
-        body: 'The equivalence point is where the moles of base added equal the moles of acid in the flask, so nothing is left of either. Here it took 20.0 mL of 0.250 mol/L base to meet the acid in 25.0 mL.'
+        body: 'At 20.0 mL no H⁺ and no OH⁻ are left over. That is the equivalence point: all the acid has reacted with the base added (1:1 here, so moles of base equal moles of acid).'
       }
     };
   })(),
@@ -241,8 +231,12 @@ export const STAGES = [
     return {
       id: 's4-unknown',
       title: 'The Acid in the Flask',
-      prompt: 'Type the concentration of the acid in the flask in mol/L.',
-      entry: { id: 'M', label: 'Acid strength', unit: 'mol/L' },
+      briefing: {
+        title: 'Finding the Acid Concentration',
+        body: 'At the equivalence point, all the acid has reacted with the base (1:1 here, so moles of base equal moles of acid).\n\n0.0200 L × 0.250 mol/L = 0.00500 mol base\n0.00500 mol acid in 0.0250 L\n0.00500 ÷ 0.0250 = 0.200 mol/L'
+      },
+      prompt: 'What is the concentration of the acid in the flask, in mol/L?',
+      entry: { id: 'M', label: 'Concentration', unit: 'mol/L' },
       widget,
       table: potTable({
         pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
@@ -250,21 +244,21 @@ export const STAGES = [
         zones: { slots: [...t.slots] }
       }),
       hints: [
-        'Use the card, the "Per press" dial and "Open Tap", then type the strength.',
+        'Use the card, the "Per press" dial and "Open Tap", then type the concentration.',
         'Compare the burette reading at the colour change with the 25.0 mL of acid in the flask.',
-        'The base that has run in at the colour change holds as many particles as the acid, so find the acid\'s share of each litre.'
+        'Follow the worked lines from Stage 3 in the briefing: find the moles of base added, then divide by the acid volume in litres.'
       ],
       check(state) {
         const t2 = state.table;
         const v = typedValue(t2, 'M');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the strength in mol/L.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in mol/L.' };
         if (within(v, ANS4, 0.006)) return { ok: true };
         return missMsg(t2, 'tit', fixed(v, 3), 'mol/L');
       },
       reward: {
         log: 'The acid is 0.180 mol/L.',
         title: 'Counting Acid by Base',
-        body: 'At the colour change the moles of base run in equal the moles of acid, and the moles of acid divided by 0.0250 L is its concentration. About 23 mL of 0.200 mol/L base met 25.0 mL of the acid, so the acid is the weaker of the two, 0.180 mol/L.'
+        body: '22.5 mL of 0.200 mol/L base is 0.00450 mol, so the acid is 0.00450 mol in 0.0250 L: 0.180 mol/L.'
       }
     };
   })(),
@@ -275,137 +269,72 @@ export const STAGES = [
     return {
       id: 's5-sulfuric',
       title: 'Sulfuric Acid',
-      prompt: 'Type the concentration of the sulfuric acid in the flask in mol/L.',
-      entry: { id: 'M', label: 'Acid strength', unit: 'mol/L' },
+      prompt: 'What is the concentration of the sulfuric acid in the flask, in mol/L?',
+      entry: { id: 'M', label: 'Concentration', unit: 'mol/L' },
       widget,
       table: potTable({
         pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
-        fixtures: [t.fixture, plaqueFixture('facts', 'Sulfuric acid', { x: 118, y: 8 }, ['Each H₂SO₄ particle gives 2 H+.'], { w: 56 })],
+        fixtures: [t.fixture, plaqueFixture('facts', 'Sulfuric acid', { x: 118, y: 8 }, ['Each H₂SO₄ gives 2 H⁺.'], { w: 56 })],
         zones: { slots: [...t.slots] }
       }),
       hints: [
-        'Use the card, the "Per press" dial and "Open Tap", then type the strength.',
-        'Compare how many H+ one acid particle gives here with how many one HCl gave before.',
-        'Count the base particles that run in, then share them out among the H+ of each acid particle.'
+        'Use the card, the "Per press" dial and "Open Tap", then type the concentration.',
+        'Compare how many H⁺ one H₂SO₄ gives here with how many one HCl gave before.',
+        'The base counts H⁺, and each acid molecule gave two.'
       ],
       check(state) {
         const t2 = state.table;
         const v = typedValue(t2, 'M');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the strength in mol/L.' };
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the concentration in mol/L.' };
         if (within(v, ANS5, 0.0025)) return { ok: true };
         return missMsg(t2, 'tit', fixed(v, 3), 'mol/L');
       },
       reward: {
         log: 'The sulfuric acid is 0.0720 mol/L.',
-        title: 'Two H+ for One Acid',
-        body: 'Each sulfuric acid particle gives two H+, so it takes two OH- to use it up. About 36 mL of 0.100 mol/L base held twice as many particles as the acid, which puts the acid at 0.0720 mol/L.'
+        title: 'Two H⁺ for One Acid',
+        body: '36.0 mL of 0.100 mol/L base is 0.00360 mol, which meets half as many moles of H₂SO₄: 0.0720 mol/L.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const t = titratorFixture('tit', { x: 55, y: 32 }, { sys: SYS6, window: true, unit: UNIT6, acidName: 'acid' });
+    const t = titratorFixture('tit', { x: 54, y: 32 }, { sys: SYS6, window: true, unit: UNIT6, acidName: 'acid' });
     return {
       id: 's6-endpoint',
-      title: 'An Early Dye',
-      prompt: 'Type how many mL the burette gives between the first colour change and the equivalence point.',
-      entry: { id: 'gap', label: 'Between them', unit: 'mL' },
+      title: 'An Early Indicator',
+      prompt: 'Does methyl orange change colour before, at or after the equivalence point?',
       widget,
       table: potTable({
-        pieces: [indicatorCard('mo', MO, { x: 127, y: 26 })],
-        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 127, y: 12 }, ['25.0 mL of acid', '0.0200 mol/L'], { w: 40 })],
-        zones: { slots: [...t.slots] }
+        pieces: [
+          indicatorCard('mo', MO, { x: 114, y: 23 }),
+          chip('before', 'Before', { x: 115, y: 38 }),
+          chip('at', 'At', { x: 136, y: 38 }),
+          chip('after', 'After', { x: 125, y: 50 })
+        ],
+        fixtures: [t.fixture, plaqueFixture('facts', 'Acid', { x: 126, y: 8 }, ['25.0 mL of acid', '0.0200 mol/L'], { w: 38 })],
+        zones: { slots: [...t.slots, { id: 'when', label: 'Colour change', at: { x: 136, y: 23 }, size: { w: 22, h: 10 } }] }
       }),
       hints: [
-        'Use the card, the "Per press" dial and "Open Tap", and watch the flask and the window.',
-        'Note the reading when the flask first changes colour, and the reading when the window shows nothing left over of either.',
-        'Take small presses near each of the two readings, then find how far apart they are.'
+        'Use the card, the "Per press" dial and "Open Tap", and watch the flask and the particle view.',
+        'Compare the burette reading when the flask changes colour with what the particle view still shows.',
+        'When the indicator changes colour, look at whether any H⁺ is still left in the particle view.'
       ],
       check(state) {
         const t2 = state.table;
-        const v = typedValue(t2, 'gap');
-        if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the number of mL.' };
-        if (within(v, GAP6, 0.3)) return { ok: true };
         const r = titratorRead(t2, 'tit');
-        if (!r.rows.length) return { ok: false, msg: 'The burette has not been used yet.' };
-        const seen = firstChange(t2, 'tit');
-        const tail = seen == null ? 'the flask has not changed colour yet.' : `the flask first changed colour at ${fixed(seen, 1)} mL.`;
-        return { ok: false, msg: `${fixed(v, 1)} mL does not match the readings: ${tail}` };
+        if (!r.rows.length) return { ok: false, notYet: true, msg: 'Run base into the flask first.' };
+        if (!r.indicator) return { ok: false, msg: 'Put the methyl orange card in the slot beside the flask.' };
+        if (r.vMl < END6) return { ok: false, notYet: true, msg: `Keep adding base until the indicator changes colour (at ${fixed(r.vMl, 1)} mL it has not changed yet).` };
+        const card = Object.values(t2.pieces).find(p => p.zone === 'slot:when');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a statement card in the slot.' };
+        if (card.id !== 'before') return { ok: false, msg: 'Look at the particle view when the colour changed: H⁺ was still left in the flask.' };
+        return { ok: true };
       },
       reward: {
-        log: `The colour changed ${fixed(GAP6, 1)} mL before the equivalence point.`,
+        log: 'Methyl orange changed colour before the equivalence point.',
         title: 'Endpoint',
-        body: 'The endpoint is where the indicator changes colour, and the equivalence point is where the moles match. Methyl orange changed 1.5 mL early in this dilute solution; a good titration uses a dye whose endpoint lies close to the equivalence point.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    const t = titratorFixture('tit', { x: 47, y: 32 }, { named: true, perm: PERM7, indicator: false, baseName: 'Permanganate', acidName: 'Fe²⁺ sample' });
-    return {
-      id: 's7-permanganate',
-      title: 'Purple Base',
-      prompt: 'Type the concentration of the Fe²⁺ ions in the flask in mol/L.',
-      entry: { id: 'M', label: 'Iron strength', unit: 'mol/L' },
-      widget,
-      table: potTable({
-        fixtures: [t.fixture, plaqueFixture('facts', 'Permanganate and iron', { x: 118, y: 18 }, [
-          '5 Fe²⁺ + MnO₄⁻ + 8 H+ →', '5 Fe³⁺ + Mn²⁺ + 4 H₂O', 'Only the 5 to 1 count is used here.', 'Purple needs no indicator.'
-        ], { w: 56 })],
-        zones: { slots: [] }
-      }),
-      hints: [
-        'Use the "Per press" dial and "Open Tap", then type the strength.',
-        'Watch for the first purple that stays in the flask, and read the burette there.',
-        'Count the permanganate particles that ran in, then scale them up by the count in the equation to the iron they met.'
-      ],
-      check(state) {
-        const t2 = state.table;
-        const v = typedValue(t2, 'M');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the strength in mol/L.' };
-        if (within(v, ANS7, 0.005)) return { ok: true };
-        return missMsg(t2, 'tit', fixed(v, 4), 'mol/L');
-      },
-      reward: {
-        log: 'The iron is 0.0900 mol/L.',
-        title: 'A Dye of Its Own',
-        body: 'Permanganate is purple, so the first purple that stays is the endpoint with no indicator at all. Each permanganate particle met five Fe²⁺, so about 22.5 mL of 0.0200 mol/L run in showed 0.0900 mol/L of iron in the sample.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const t = titratorFixture('tit', { x: 47, y: 32 }, { sys: SYS8, acidName: 'H₂SO₄' });
-    return {
-      id: 's8-bath',
-      title: 'The Pickling Bath',
-      prompt: 'Type the concentration of the acid from the pickling bath in the sealed flask in mol/L.',
-      entry: { id: 'M', label: 'Acid strength', unit: 'mol/L' },
-      widget,
-      table: potTable({
-        pieces: [indicatorCard('ph', PH, { x: 100, y: 24 })],
-        fixtures: [t.fixture],
-        zones: { slots: [...t.slots] }
-      }),
-      hints: [
-        'Use the card, the "Per press" dial and "Open Tap", then type the strength.',
-        'Compare the base run in at the colour change with the acid in the flask, and think about how many H+ each acid particle gives.',
-        'Share the base particles out among the H+ of each acid particle, then divide by the flask\'s volume in litres.'
-      ],
-      check(state) {
-        const t2 = state.table;
-        const v = typedValue(t2, 'M');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the strength in mol/L.' };
-        if (within(v, ANS8, 0.012)) return { ok: true };
-        return missMsg(t2, 'tit', fixed(v, 3), 'mol/L');
-      },
-      reward: {
-        log: 'The pickling bath acid is 0.450 mol/L.',
-        title: 'The Bath Is Counted',
-        body: 'The bath\'s sulfuric acid is 0.450 mol/L: about 45 mL of 0.500 mol/L base met 25.0 mL of it, with two H+ for each acid particle. A titration counts an acid by the base that meets it.'
+        body: 'The colour changed while H⁺ was still left. Where the indicator changes is the endpoint; a good indicator has its endpoint close to the equivalence point.'
       }
     };
   })()
@@ -415,12 +344,10 @@ export const STAGES = [
 const NOTES = {
   1: ['Drag the card you choose', 'into the slot.'],
   2: ['Drag the card into the slot,', 'set the dial, press the key.'],
-  3: ['Set the dial, press the key,', 'then watch the window.'],
+  3: ['Set the dial, press the key,', 'then watch the particle view.'],
   4: ['Drag the card into the slot,', 'run the base in, then type.'],
   5: ['Drag the card into the slot,', 'run the base in, then type.'],
-  6: ['Drag the card into the slot,', 'run the base in, then type.'],
-  7: ['Run the base in,', 'then type your answer.'],
-  8: ['Drag the card into the slot,', 'run the base in, then type.']
+  6: ['Add the indicator, run the base,', 'lay a chip in the slot.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -432,7 +359,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A titration counts an acid by the base that meets it. The base used at the equivalence point holds as many particles as the acid, and an indicator only shows that point nearly. The pickling bath is 0.450 mol/L.'
+      body: 'A titration counts an acid by the base that meets it. At the equivalence point, moles of base added equal moles of acid, and an indicator shows that point only nearly.'
     }
   ]
 };
@@ -445,7 +372,6 @@ const put = (piece, to) => ({ place: { piece, to } });
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
 const run = id => ({ run: id });
 const typed = (entry, value) => ({ type: { entry, value: String(value) } });
-/** A press setting by the mL it lets out (a dial position is its place in the stage's list). */
 const press = (list, ml) => dial('tit', 'press', list.indexOf(ml) + 1);
 const times = (n, a) => Array.from({ length: n }, () => a);
 const L4 = [0.5, 1, 2, 5];
@@ -457,9 +383,7 @@ export const SOLUTIONS = [
   [press(L4, 5), ...times(4, run('tit'))],
   [put('ph', 'slot:tit.mouth'), press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), typed('M', '0.18')],
   [put('ph', 'slot:tit.mouth'), press(L5, 10), ...times(3, run('tit')), press(L5, 5), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), typed('M', '0.072')],
-  [put('mo', 'slot:tit.mouth'), press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), typed('gap', '1.5')],
-  [press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), typed('M', '0.09')],
-  [put('ph', 'slot:tit.mouth'), press(L5, 10), ...times(4, run('tit')), press(L5, 5), run('tit'), press(L5, 0.5), run('tit'), typed('M', '0.45')]
+  [put('mo', 'slot:tit.mouth'), press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), put('before', 'slot:when')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -469,9 +393,7 @@ export const MISSES = [
   [press(L4, 5), ...times(4, run('tit')), press(L4, 0.5), run('tit')],
   [put('ph', 'slot:tit.mouth'), press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), typed('M', '0.2')],
   [put('ph', 'slot:tit.mouth'), press(L5, 10), ...times(3, run('tit')), press(L5, 5), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), typed('M', '0.146')],
-  [put('mo', 'slot:tit.mouth'), press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), typed('gap', '0')],
-  [press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), typed('M', '0.0184')],
-  [put('ph', 'slot:tit.mouth'), press(L5, 10), ...times(4, run('tit')), press(L5, 5), run('tit'), press(L5, 0.5), run('tit'), typed('M', '0.91')]
+  [put('mo', 'slot:tit.mouth'), press(L5, 10), ...times(2, run('tit')), press(L5, 2), run('tit'), press(L5, 1), run('tit'), press(L5, 0.5), run('tit'), put('at', 'slot:when')]
 ];
 
 function blankState() { return {}; }
@@ -496,13 +418,10 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = {
-  SYS2, SYS3, SYS4, SYS5, SYS6, SYS8, PERM7, GUESS_VALUE, UNIT3, UNIT6, STEP,
+  SYS2, SYS3, SYS4, SYS5, SYS6, GUESS_VALUE, UNIT3, UNIT6, STEP,
   answers: {
-    eq2: EQ2, end2: END2, eq3: EQ3, conc4: ANS4, conc5: ANS5, eq6: EQ6, end6: END6, gap6: GAP6, conc7: ANS7, conc8: ANS8,
-    perm7End: permanganateEndMl(PERM7.fe, PERM7.mn, STEP),
-    // What the player's own reading gives (one step past the equivalence point), for the checks to compare with.
-    fromReading4: acidMolarity(SYS4.base, endpointMl(SYS4, PH, STEP), SYS4.acid.mL, 1),
-    fromReading7: ironMolarity(PERM7.mn, permanganateEndMl(PERM7.fe, PERM7.mn, STEP), PERM7.fe.mL)
+    eq2: EQ2, end2: END2, eq3: EQ3, conc4: ANS4, conc5: ANS5, eq6: EQ6, end6: END6,
+    fromReading4: acidMolarity(SYS4.base, endpointMl(SYS4, PH, STEP), SYS4.acid.mL, 1)
   },
   moles: { acid3: acidMoles(SYS3), acid5: acidMoles(SYS5) }
 };

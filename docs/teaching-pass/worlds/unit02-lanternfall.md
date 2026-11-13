@@ -210,16 +210,44 @@ Archive the five old stages under `archive/2026-11-11/lanternfall/`. The bench h
 
 ### Structural changes
 
+- `q1-wave` (6 → 5): merged the two pulse-timing stages into one comparison stage (no arithmetic in nanoseconds); added a briefing on wavelength and frequency before stage 1, and a worked case in stage 5's briefing.
+- `q2-photon` (6 → 6): added a wave-prediction briefing before stage 1; stages 2 and 4 now grade on the control/observation (dimmest light that removes electrons; comparing two brightness settings) rather than dialing a count; added a worked case in stage 6's briefing.
+- `q3-lines` (5 → 5): energy level defined in stage 4's briefing; trays and prompts reworded to remove operation prompts and stand-in words.
+- `q4-cloud` (5 → 5): stage 3's briefing ties standing waves on a ring to electrons in an atom; removed "shots" and "strings"; removed the promise of a non-existent later bench.
+- `q5-numbers` (5 → 5): stage 1 rings the target orbital on the shelf instead of naming its numbers in the prompt; stage 3 grades on filling the orbital after a refusal (marker removed); stage 5 no longer requires eighteen placements.
+- `q6-filling` (6 → 7): split old stage 1 into `Five for Boron` (aufbau) and `Six for Carbon` (Hund's rule); stage 3 (`Writing Oxygen`) pre-fills the shelf; removed the `Fe³⁺` extension from stage 7's reward.
+- `q7-pes` (6 → 6): moved stage 3's 59-word reward into its briefing; replaced "piles" and "rows"; added briefings for binding energy and ionization energy.
+- `q8-trends` (7 → 9): redesigned around one model (`paintAtom`: nuclear charge, inner-shell band, outer electron). Atom cards are unscaled (`plain: true`) on stages asking which atom is bigger and scaled afterwards; fixtures measure only one reference atom (`seatedAtom`) and no longer print the ranked property. Added stage 4 (`Down a Group`) and stage 6 (`Boron's Dip`, with `levelsFixture`).
+- `q9-absorb` (5 → 5): moved absorbance definition into stage 3's briefing; removed operation prompt on stage 3, arithmetic hint on stage 4, and "proportional" / "establish the linear relationship" register.
+- `q10-wavefunctions` (5 → 5): rebuilt from five card sorts into five stages on `cloudPlate` and the new `waveStrip` fixture (`cloud.js` `waveStrip`, `cloud-draw.js` `paintWaveStrip`, `orbitals.js` `psiAt`). Added story animation `'unit02/q10-wavefunctions'` in `src/story/quest-story.js`.
+- `boss-eater` (5 → 5): dropped the untaught magnet fixtures from phase 3 (now tests oxygen's unpaired electrons on `shelf` alone); replaced "frees" and "piles"; removed operation prompts.
+- Created `src/learn/glossary/lanternfall.js` and registered it in `src/learn/glossary/index.js`. Updated `src/learn/table/tour-lanternfall.js` (`trends:levels`, `cloud:wavestrip`, `cloud:wavering`) and `src/learn/bank/unit02.json` ("shots" → "measurements").
+
 ### Chemistry corrections
+
+- `q6-filling` stage 7: removed the unverified `Fe³⁺` transition-metal ionization extension from the chloride reward.
+- `q8-trends` stage 2: added the limit clause that effective nuclear charge (`Z − inner`) is a rough count because outer electrons also shield one another a little.
+- `q8-trends` stage 8: noted that electron affinity mostly rises across a period, but unevenly (nitrogen's half-full 2p subshell releases almost none).
+- `q10-wavefunctions` stage 2: explicitly clarified that `+` and `−` on ψ are wave crests and troughs, not electric charges.
 
 ### Still weak
 
-(Ordered by how likely a student is to get lost. For each: the stage, what is weak, why it was not fixed.)
+1. `q10-wavefunctions` stage 4 (`Nodes That Are Planes`): `viewFixture` with `slice` was omitted so `waveStrip` and the three trays fit on `150 × 64`; students read the empty planes from the `cloudCard` projections and the `2p` `waveStrip`.
+2. `q1-wave` stage 5, `q2-photon` stage 6, `q7-pes` stage 6: typed-number stages on data plates (`q1` and `q2` carry worked cases in their briefings; `q7` reads a 4-value successive ionization energy table).
+3. Cold-read review: `q1-wave` and `q2-photon` were cold-read and applied; the end-of-world `q3–boss` cold-read subagents timed out in `thinking`, so `q3–boss` is verified by `teaching-report.mjs unit02` (0 reward-long, 0 operation-prompt, 0 hint-3-move/arithmetic, 0 register flags across 63 stages) rather than a subagent cold read.
 
 ### For the owner to look at
 
-(Stages whose table was rebuilt or added. Nobody has seen these on a screen.)
+- `q8-trends` stages 2–9: new unscaled/scaled `paintAtom` cards, `seatedAtom` single-reference fixtures, `levelsFixture` on stage 6 (`Boron's Dip`), and `feels` trays on stage 2.
+- `q10-wavefunctions` stages 1–5: new `waveStrip` fixture (stage 2 and stage 4), `orbitals` dial on `cloudPlate` (stage 3), and `cloudPlate` `ring: 'band'` on `2s` and `3d`.
+- `boss-eater` phase 3: magnet fixtures removed; now `shelf` + `shellsMarker` alone.
 
 ### For close-out
 
-(Stage and quest counts that changed; shared code changed; doctrine or engine lessons.)
+- Stage count in `unit02` (`Lanternfall`): 61 → 63 (11 modules). Update `PRODUCT.md` and `CLAUDE.md` stage counts at close-out.
+- Shared engine/kit additions:
+  - `src/learn/engine/orbitals.js`: added `angularPsi(id, x, y, z)` and `psiAt(id, x, y, z)` for signed wavefunction values.
+  - `src/learn/table/kits/cloud.js`, `cloud-read.js`, `cloud-draw.js`: added `waveStrip` fixture (`waveStripRead`, `paintWaveStrip`) and `orbitals` dial support on `cloudPlate`.
+  - `src/learn/table/kits/trends.js`, `trends-draw.js`: added `plain` (unscaled) mode on `atomCard`, `seatedAtom`, `levelsFixture`, and widened fixture atom slots from `{ w: 11, h: 11 }` to `{ w: 20, h: 19 }` to match `RECTS.atom`.
+  - `src/story/quest-story.js`: added `'unit02/q10-wavefunctions'` story animation.
+  - `src/learn/glossary/lanternfall.js` & `src/learn/glossary/index.js`: added Lanternfall glossary.

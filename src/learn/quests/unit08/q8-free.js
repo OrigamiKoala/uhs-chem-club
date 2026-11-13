@@ -1,22 +1,21 @@
 /**
  * Unit 8 · Bench 8 — Free Energy and K (q8-free)
  *
- * Teeter's plotting hut, on the pans kit (`table/kits/pans.js`, the favourability plotter in `pans-free.js`). A settling pan draws a
- * reaction as bars: faint at the start, solid where it settles. Eight stages and ONE click: the belief that a positive ΔG° means a
+ * Teeter's plotting hut, on the pans kit (`table/kits/pans.js`, the favourability plotter in `pans-free.js`). A settling vessel draws a
+ * reaction as bars: faint at the start, solid where it settles. Seven stages and ONE click: the belief that a positive ΔG° means a
  * reaction never happens. ΔG° and its sign are Ember Reach's (`unit05/q7-gibbs`); K is the bench before.
  *
- *   1  PREDICT: what does a pan of a reaction with ΔG° = +8 kJ/mol hold once it settles?
- *   2  TEST: three pans, three ΔG° cards                      -> sign of ΔG° against K above or below 1, and the order
- *   3  TYPED: K for ΔG° = −10 kJ/mol at 298 K, past the pans  -> ΔG° = −RT ln K
- *   4  two pans warmed, each at two temperatures              -> K changes with temperature through ΔG° = ΔH° − TΔS°
- *   5  three salts, the two pulls of each                     -> dissolving is a ΔG question
- *   6  a cold pack in a beaker                                -> a change can cool its water and still run (entropy wins)
- *   7  cards on a stack: ATP with glucose + Pi                -> coupled reactions (ΔG° values add)
- *   8  three reactions, sealed                                -> the lowest ΔG settles with the most product
+ *   1  PREDICT: what does a vessel of a reaction with ΔG° = +8 kJ/mol hold once it settles?
+ *   2  TEST: three vessels, three ΔG° cards                   -> sign of ΔG° against K above or below 1, and the order
+ *   3  TYPED: K for ΔG° = −10 kJ/mol at 298 K                 -> ΔG° = −RT ln K
+ *   4  three salts, ΔH and TΔS of each                        -> dissolving is a ΔG question
+ *   5  a cold pack in a beaker                                -> a change can cool its water and still run (entropy wins)
+ *   6  cards on a stack: ATP with glucose + Pi                -> coupled reactions (ΔG° values add)
+ *   7  three reactions, sealed                                -> the lowest ΔG settles with the most product
  *
- * THE WRONG MODEL IS ON THE TABLE. Card 1 of the prediction says no product forms. The pan with ΔG° = +8 kJ/mol settles holding some.
+ * THE WRONG MODEL IS ON THE TABLE. Card 1 of the prediction says no product forms. The vessel with ΔG° = +8 kJ/mol settles holding some.
  *
- * SIMPLIFICATIONS, stated on the bench or in a reward: ΔH° and ΔS° are held constant over a stage's temperatures; K is dimensionless
+ * SIMPLIFICATIONS, stated on the bench or in a reward: ΔH° and ΔS° are held constant; K is dimensionless
  * (amounts in mol/L or bar over their standard values); the ATP values are for the biochemical standard state at pH 7; spontaneous
  * says nothing about speed. ΔG = ΔG° + RT ln Q is beyond the exam's equation list and is not a stage here.
  *
@@ -26,22 +25,21 @@
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import {
-  pansTable, note, tag, selectorFixture, plaqueFixture, stackFixture, stackRead, stackGap, eqn, pieceIn, dialValue
+  pansTable, note, tag, plaqueFixture, stackFixture, stackRead, stackGap, eqn, pieceIn, dialValue
 } from '../../table/kits/pans.js';
 import { kbarsFixture, pullsFixture } from '../../table/kits/pans-free.js';
-import { MODEL_PAN, WARM, DISSOLVE, pulls, coldPack, COUPLE, coupledPair, settledAt, columnRead, T_BENCH } from '../../engine/eqdata-free.js';
+import { MODEL_PAN, DISSOLVE, pulls, coldPack, COUPLE, coupledPair, settledAt, T_BENCH } from '../../engine/eqdata-free.js';
 import { kFromDeltaG } from '../../engine/eqdata.js';
 
 import { clipFixture } from '../../table/kits/pans-clips.js';
-import { choiceFixture, pickable, pickColumns } from '../../table/kits/pans-choice.js';
-export const meta = { stageCount: 8 };
+import { choiceFixture, pickable } from '../../table/kits/pans-choice.js';
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
-  { term: /\bcoupled reaction\b/i, introducedAt: 7 }
+  { term: /\bcoupled reaction\b/i, introducedAt: 6 }
 ];
 
-/** ΔG° and its sign are Ember Reach's, and the pans and K are the bench before. (`unit08/q2-k` is added when that bench is built.) */
-export const BUILDS_ON = ['unit05/q7-gibbs', 'unit08/q1-both'];
+export const BUILDS_ON = ['unit05/q7-gibbs', 'unit08/q2-k'];
 
 export function toolNoteFor() { return null; }
 
@@ -63,7 +61,7 @@ const CARD_OF = { p1: 'tm3', p2: 't8', p3: 't2' };
 const CARD_LABEL = { tm3: 'ΔG° −3 kJ/mol', t8: 'ΔG° +8 kJ/mol', t2: 'ΔG° +2 kJ/mol' };
 const read2 = dG => settledAt(MODEL_PAN, dG, T_BENCH);
 
-// Stage 3: two pans to read K from, then the figure past them.
+// Stage 3: two vessels to read K from, then the figure past them.
 const K_PANS = [-2, -4];
 const DG_TYPED = -10;
 const K_TYPED = kFromDeltaG(DG_TYPED, T_BENCH);
@@ -75,15 +73,7 @@ const GUESS = {
   most: 'Mostly product forms'
 };
 
-// Stage 4: two real reactions, each at two temperatures.
-const warmCols = r => r.Ts.map(T => ({ dH: r.dH, dS: r.dS, T }));
-const subOf = r => `ΔH° ${fmt1(r.dH)} kJ  ΔS° ${fmt1(r.dS)} J/K`;
-const warmProduct = (r, i) => {
-  const last = r.sys.order[r.sys.order.length - 1];
-  return columnRead(r.sys, warmCols(r)[i]).amounts[last];
-};
-
-// Stage 5 and 6: salts dissolving, 1 mol to aqueous ions at 298 K.
+// Stage 4 and 5: salts dissolving, 1 mol to aqueous ions at 298 K.
 const SALT_ORDER = ['agcl', 'nacl', 'baso4'];
 const SALT_RANGE = [-40, 70];
 const SALT_ANSWER = SALT_ORDER.indexOf('nacl') + 1;
@@ -91,12 +81,12 @@ const PACK = { waterG: 500, T0: 25, mol: 1 };
 const PACK_READ = coldPack(DISSOLVE.nh4cl, PACK);
 const NH4 = pulls({ ...DISSOLVE.nh4cl, T: T_BENCH });
 
-// Stage 8: three reactions at 298 K, ΔH in kJ/mol and ΔS in J/(mol·K).
+// Stage 7: three reactions at 298 K, ΔH in kJ/mol and ΔS in J/(mol·K).
 const REACTIONS8 = [{ dH: -35, dS: -90 }, { dH: 40, dS: 200 }, { dH: -30, dS: -120 }];
 const ANSWER8 = 2;
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE SEVEN STAGES
    ------------------------------------------------------------------ */
 
 export const STAGES = [
@@ -104,9 +94,13 @@ export const STAGES = [
   {
     id: 's1-predict',
     title: 'A Positive ΔG°',
-    // A PREDICT STAGE: the pans are not on the table. The guess is made here and comes back with the test.
+    // A PREDICT STAGE: the vessels are not on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: `Predict what a vessel of a reaction with ΔG° = +${DG_PREDICT} kJ/mol holds once it has settled, starting from reactant alone.`,
+    briefing: {
+      speaker: 'Vess',
+      body: 'ΔG° = ΔH − TΔS combines reaction heat (ΔH) and temperature in kelvin times entropy change (TΔS). When ΔG° is negative, the reaction runs toward products from standard amounts.'
+    },
+    prompt: `Starting from reactant alone in a reaction with ΔG° = +${DG_PREDICT} kJ/mol, what does the vessel hold once settled?`,
     widget,
     table: pansTable({
       pieces: [
@@ -115,13 +109,13 @@ export const STAGES = [
         note('even', GUESS.even, { x: 30, y: 36 }),
         note('most', GUESS.most, { x: 78, y: 36 })
       ],
-      fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'hill', { title: 'ΔG° and the wells', dG: -4 , h: 32 })],
+      fixtures: [clipFixture('clip', { x: 124, y: 55 }, 'hill', { title: 'ΔG° and the wells', dG: -4, h: 32 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 124, y: 24 }, size: { w: 36, h: 14 } }] }
     }, { h: 78 }),
     hints: [
-      'Use the four cards and the slot.',
-      'Think about what a positive ΔG° has meant for whether a change runs.',
-      'Commit to the card closest to what you expect the settled vessel to hold; the vessels come next.'
+      'Lay one of the four cards in the slot.',
+      'Think about what a positive ΔG° means for how far a reaction runs.',
+      'Commit to the card closest to what you expect the settled vessel to hold.'
     ],
     check(state) {
       const card = pieceIn(state.table, 'guess');
@@ -145,7 +139,7 @@ export const STAGES = [
     title: 'ΔG° and Where a Vessel Settles',
     get prompt() {
       const g = recall(QUEST_KEY);
-      return g && GUESS[g] ? `You predicted "${GUESS[g]}". Lay each ΔG° card on the vessel it belongs to.` : 'Lay each ΔG° card on the vessel it belongs to.';
+      return g && GUESS[g] ? `You predicted "${GUESS[g]}". Which ΔG° belongs to which vessel?` : 'Which ΔG° belongs to which vessel?';
     },
     widget,
     table: pansTable({
@@ -160,9 +154,9 @@ export const STAGES = [
       }
     }, { h: 74 }),
     hints: [
-      'Use the "Run" key on each vessel and the three ΔG° cards.',
+      'Press "Run" on each vessel, then lay a ΔG° card in each slot.',
       'Compare how much product each vessel holds with the ΔG° on the cards.',
-      'Put the vessels in order by the product they hold, put the cards in order by ΔG°, and pair them off.'
+      'A more negative ΔG° means more product when settled.'
     ],
     check(state) {
       const t = state.table;
@@ -180,7 +174,7 @@ export const STAGES = [
       return {
         log: 'The lower the ΔG°, the more product the vessel held.',
         title: 'ΔG° Sets K',
-        body: `${verdict}The more negative the ΔG°, the more product a vessel holds when it settles. A negative ΔG° settles with more product than reactant, so K is above 1; a positive ΔG° settles with less, so K is below 1, but never none.`
+        body: `${verdict}The more negative the ΔG°, the more product the vessel holds. A positive ΔG° gives less product than reactant, but never none.`
       };
     }
   },
@@ -189,7 +183,18 @@ export const STAGES = [
   {
     id: 's3-typed-k',
     title: 'K From ΔG°',
-    prompt: `Type the K of a reaction with a ΔG° of ${fmt1(DG_TYPED).replace('+', '')} kJ/mol at ${T_BENCH} K.`,
+    briefing: {
+      speaker: 'Vess',
+      body: 'ΔG° and K are tied by K = e^(−ΔG° ÷ RT), where R is 8.314 J/(mol·K), T is kelvin (298 K = 25 °C), and ΔG° is in joules. Use exp(x) on the calculator.',
+      worked: [
+        'For ΔG° = −5.0 kJ/mol at 298 K:',
+        '−ΔG° = 5000 J/mol',
+        'RT = 8.314 × 298 = 2478 J/mol',
+        '5000 ÷ 2478 = 2.02',
+        'K = exp(2.02) = 7.5'
+      ]
+    },
+    prompt: `What is K for a reaction with ΔG° = ${fmt1(DG_TYPED).replace('+', '')} kJ/mol at ${T_BENCH} K?`,
     entry: { id: 'k', label: 'K', unit: '' },
     widget,
     table: pansTable({
@@ -200,16 +205,16 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Use the "Run" key on both vessels, the plate and the answer box.',
-      'Divide the product bar by the reactant bar on each vessel and set that against the ΔG° printed over it.',
-      'Turn the ΔG° into joules to match R, divide by RT, and put the opposite sign on the power of e.'
+      'Use the calculator and the answer box.',
+      'Turn −10.0 kJ/mol into joules first to match R = 8.314 J/(mol·K).',
+      'Divide −ΔG° in J/mol by RT, then take exp of that number.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
       if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type K as a number above zero.' };
       if (Math.abs(v - K_TYPED) / K_TYPED <= 0.02) return { ok: true };
       const ks = K_PANS.map(d => settledAt(MODEL_PAN, d, T_BENCH).K);
-      const reads = `Vessel A at ${fmt1(K_PANS[0])} kJ/mol and Pan B at ${fmt1(K_PANS[1])} kJ/mol settle with K ${sigK(ks[0])} and ${sigK(ks[1])}.`;
+      const reads = `Vessel A at ${fmt1(K_PANS[0])} kJ/mol and Vessel B at ${fmt1(K_PANS[1])} kJ/mol settle with K ${sigK(ks[0])} and ${sigK(ks[1])}.`;
       if (Math.abs(Math.log(v)) < 0.05) return { ok: false, msg: `A K of ${v} would leave a vessel with about equal amounts of reactant and product, and both vessels on the bench hold far more product than reactant.` };
       if (v < 1) return { ok: false, msg: `A K of ${v} would leave a vessel with more reactant than product, and both vessels on the bench hold more product than reactant.` };
       return { ok: false, msg: `${reads} A K of ${v} does not follow the same pattern at ${fmt1(DG_TYPED)} kJ/mol.` };
@@ -217,92 +222,54 @@ export const STAGES = [
     reward: {
       log: 'K came from ΔG° with ΔG° = −RT ln K.',
       title: 'ΔG° and K',
-      body: 'ΔG° = −RT ln K connects the free energy to where a reaction settles: the more negative the ΔG°, the larger the K, and ΔG° = 0 gives K = 1. R is in joules, so a ΔG° in kJ/mol is turned into J/mol first.'
+      body: 'K is 57. A ΔG° of zero would give K = 1, and each step more negative multiplies K.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    id: 's4-warm',
-    title: 'Warming a Vessel',
-    prompt: 'Set each dial to what warming does to the amount of product the vessel holds.',
-    widget,
-    table: pansTable({
-      fixtures: [
-        kbarsFixture('r1', { x: 37, y: 26 }, { title: WARM.n2o4.eq, sys: WARM.n2o4.sys, cols: warmCols(WARM.n2o4), showDG: true, showT: true, w: 70, h: 46, sub: subOf(WARM.n2o4) }),
-        kbarsFixture('r2', { x: 113, y: 26 }, { title: WARM.wgs.eq, sys: WARM.wgs.sys, cols: warmCols(WARM.wgs), showDG: true, showT: true, w: 70, h: 46, sub: subOf(WARM.wgs) }),
-        selectorFixture('d1', 'Product, N₂O₄ vessel', { x: 37, y: 58 }, { options: ['More product', 'Less product', ' '], start: 3, w: 46 }),
-        selectorFixture('d2', 'Product, CO + H₂O vessel', { x: 113, y: 58 }, { options: ['More product', 'Less product', ' '], start: 3, w: 46 })
-      ]
-    }, { h: 72 }),
-    hints: [
-      'Use the "Run" key on both vessels and the two answer dials.',
-      'Compare the blue bars in the two columns of each vessel.',
-      'Read each vessel from its cooler column to its warmer one and set the dial to what the product bars did.'
-    ],
-    check(state) {
-      const t = state.table;
-      const a = dialValue(t, 'd1'); const b = dialValue(t, 'd2');
-      if (a === 3 || b === 3) return { ok: false, notYet: true, msg: 'Set both dials.' };
-      const want = r => (warmProduct(r, 1) > warmProduct(r, 0) ? 1 : 2);
-      const one = a === want(WARM.n2o4);
-      const two = b === want(WARM.wgs);
-      if (one && two) return { ok: true };
-      const r = one ? WARM.wgs : WARM.n2o4;
-      const prod = r.sys.names[r.sys.order[r.sys.order.length - 1]];
-      return { ok: false, msg: `On the ${r.eq} vessel the ${prod} bar reads ${amt(warmProduct(r, 0))} ${r.sys.unit} at ${r.Ts[0]} K and ${amt(warmProduct(r, 1))} ${r.sys.unit} at ${r.Ts[1]} K.` };
-    },
-    reward: {
-      log: 'Warming raised the product of one vessel and lowered it on the other.',
-      title: 'Temperature Moves K',
-      body: `K changes with temperature because ΔG° = ΔH° − TΔS° does. Warming the N₂O₄ vessel, which takes in heat, raised the product from ${amt(warmProduct(WARM.n2o4, 0))} to ${amt(warmProduct(WARM.n2o4, 1))} bar, and warming the vessel that gives out heat lowered it.`
-    }
-  },
-
-  /* ---------------------------------------------------------------- 5 */
-  {
-    id: 's5-salts',
+    id: 's4-salts',
     title: 'Salts in Water',
-    prompt: `Tap the salt that dissolves on its own at ${T_BENCH} K.`,
+    prompt: `Which salt has a negative ΔG of dissolving at ${T_BENCH} K?`,
     widget,
     table: pansTable({
       fixtures: [
         ...SALT_ORDER.map((id, i) => pickable(pullsFixture(`s${i + 1}`, { x: 24 + i * 50, y: 21 }, { title: `Salt ${i + 1}`, change: { dH: DISSOLVE[id].dH, dS: DISSOLVE[id].dS }, range: SALT_RANGE }), i + 1)),
-        choiceFixture('pick', 'Dissolves on its own', { x: 75, y: 52 }, { options: ['Salt 1', 'Salt 2', 'Salt 3', ' '], start: 4, w: 56 })
+        choiceFixture('pick', 'Negative ΔG', { x: 75, y: 52 }, { options: ['Salt 1', 'Salt 2', 'Salt 3', ' '], start: 4, w: 56 })
       ]
     }),
     hints: [
-      'Use the three sets of bars then tap the one you choose.',
-      'Compare the amber bar and the green bar of each salt.',
-      'A change runs on its own when ΔH − TΔS is below zero, so work out the net for each salt.'
+      'Compare the ΔH and TΔS bars of each salt, then tap the salt you choose.',
+      'Remember ΔG = ΔH − TΔS.',
+      'Look for the salt whose TΔS bar reaches past its ΔH bar.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
       if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
       if (v === SALT_ANSWER) return { ok: true };
       const s = pulls({ ...DISSOLVE[SALT_ORDER[v - 1]], T: T_BENCH });
-      return { ok: false, msg: `Salt ${v} takes in ${fmt1(s.dH)} kJ/mol and its spreading is worth ${fmt1(s.TdS)} kJ/mol.` };
+      return { ok: false, msg: `Salt ${v} has ΔH ${fmt1(s.dH)} kJ/mol and TΔS ${fmt1(s.TdS)} kJ/mol.` };
     },
     get reward() {
       const g = id => pulls({ ...DISSOLVE[id], T: T_BENCH });
       return {
-        log: 'Salt 2 dissolved because its spreading outweighed its heat.',
+        log: 'Salt 2 had a negative ΔG because TΔS outweighed ΔH.',
         title: 'Dissolving Is a ΔG Question',
-        body: `Salt 2 was sodium chloride: it takes in heat, yet its ΔG of dissolving is ${fmt1(g('nacl').dG)} kJ/mol, so it dissolves. Salts 1 and 3, silver chloride and barium sulfate, have ΔG of ${fmt1(g('agcl').dG)} and ${fmt1(g('baso4').dG)} kJ/mol, so very little dissolves.`
+        body: `Salt 2, sodium chloride, takes in heat but its TΔS is larger, so ΔG is ${fmt1(g('nacl').dG)} kJ/mol and it dissolves. For the other two ΔG is large and positive, and very little dissolves.`
       };
     }
   },
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 5 */
   {
-    id: 's6-cold',
+    id: 's5-cold',
     title: 'A Cold Pack',
-    prompt: 'Lay the card that explains what happens in the beaker.',
+    prompt: 'Why does this salt dissolve although it cools the water?',
     widget,
     table: pansTable({
       pieces: [
-        note('cw2', 'Dissolving only runs when it gives out heat', { x: 26, y: 60 }),
-        note('cw1', 'The spreading is worth more than the heat taken in', { x: 76, y: 60 }),
+        note('cw2', 'Dissolving only happens when it gives out heat', { x: 26, y: 60 }),
+        note('cw1', 'TΔS is larger than the heat taken in', { x: 76, y: 60 }),
         note('cw3', 'The salt dissolved without taking in any heat', { x: 126, y: 60 })
       ],
       fixtures: [
@@ -311,9 +278,9 @@ export const STAGES = [
       zones: { slots: [{ id: 'why', label: 'What the beaker shows', at: { x: 122, y: 22 }, size: { w: 36, h: 14 } }] }
     }, { h: 72 }),
     hints: [
-      'Use the "Run" key on the beaker and the three cards.',
-      'Compare the amber bar and the green bar, and what the thermometer and the salt left report.',
-      'Choose the card that agrees with every reading: the bars, the thermometer and the salt left.'
+      'Press "Run" on the beaker, then lay a card in the slot.',
+      'Compare the ΔH and TΔS bars with what the thermometer and the salt left report.',
+      'The salt only dissolves if ΔH − TΔS is negative, even though heat is taken in.'
     ],
     check(state) {
       const c = pieceIn(state.table, 'why');
@@ -327,16 +294,17 @@ export const STAGES = [
       return {
         log: 'The salt dissolved while its water cooled.',
         title: 'Entropy Can Win',
-        body: `The salt took in ${NH4.dH.toFixed(1)} kJ/mol of heat, so its water cooled, and it still dissolved because its spreading TΔS is worth ${NH4.TdS.toFixed(1)} kJ/mol. A change can cool its water and run on its own when the spreading is larger.`
+        body: `The salt took in ${NH4.dH.toFixed(1)} kJ/mol, so the water cooled, but TΔS was ${NH4.TdS.toFixed(1)} kJ/mol, so ΔG was negative.`
       };
     }
   },
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 6 */
   {
-    id: 's7-couple',
+    id: 's6-couple',
     title: 'Two Reactions Together',
-    prompt: 'Make the stack add up to glucose + ATP → glucose-6-phosphate + ADP, then set its net ΔG°.',
+    briefing: 'ATP is the molecule cells use to carry energy. Splitting it into ADP and phosphate has a ΔG° of −30.5 kJ/mol.',
+    prompt: 'Which reactions add up to glucose + ATP → glucose-6-phosphate + ADP?',
     widget,
     table: pansTable({
       pieces: [
@@ -345,43 +313,38 @@ export const STAGES = [
         eqn('atp', { x: 25.5, y: 36 }, COUPLE.atp.lhs, COUPLE.atp.rhs, COUPLE.atp.dG, { symbol: 'ΔG°' })
       ],
       fixtures: [
-        stackFixture('wanted', { x: 128, y: 22 }, { tray: 'stack', target: { lhs: [[1, 'glucose'], [1, 'ATP']], rhs: [[1, 'glucose-6-phosphate'], [1, 'ADP']] }, hideSum: true, w: 44, h: 40, symbol: 'ΔG°' }),
-        selectorFixture('answer', 'Net ΔG° (kJ/mol)', { x: 128, y: 62 }, { options: ['−16.7', '+44.3', '+16.7', '−44.3'], start: 4, w: 44, list: true }),
+        stackFixture('wanted', { x: 126, y: 32 }, { tray: 'stack', target: { lhs: [[1, 'glucose'], [1, 'ATP']], rhs: [[1, 'glucose-6-phosphate'], [1, 'ADP']] }, w: 48, h: 48, symbol: 'ΔG°', ladder: { lo: -35, hi: 20 } }),
         plaqueFixture('ph', 'Given', { x: 26, y: 58 }, ['ΔG° at pH 7 and 298 K', 'Pi is phosphate'], { w: 44 })
       ],
-      zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 78, y: 33 }, size: { w: 52, h: 52 }, cell: 50, cellH: 13 }] }
-    }, { h: 84 }),
+      zones: { trays: [{ id: 'stack', label: 'The stack', at: { x: 76, y: 33 }, size: { w: 50, h: 52 }, cell: 48, cellH: 13 }] }
+    }, { h: 78 }),
     hints: [
-      'Use the three cards, the stack and the answer dial.',
-      'Compare the substances on each card with the reaction wanted, and look for one that stands on both sides.',
-      'Stack the cards whose shared substances cancel to leave the reaction wanted, and add their ΔG° values for the net.'
+      'Drag two reaction cards into the stack tray.',
+      'Look for a substance that stands on opposite sides of the two cards so it cancels.',
+      'Stack the cards whose remaining reactants and products match glucose + ATP → glucose-6-phosphate + ADP.'
     ],
     check(state) {
       const t = state.table;
       const r = stackRead(t, 'wanted');
       if (r.empty) return { ok: false, notYet: true, msg: 'Stack the cards first.' };
       if (!r.matches) return { ok: false, msg: `The stack adds up to a different reaction from the one wanted: ${stackGap(t, 'wanted')}.` };
-      const v = dialValue(t, 'answer');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Set the dial.' };
-      if (v === 1) return { ok: true };
-      const opts = ['−16.7', '+44.3', '+16.7', '−44.3'];
-      return { ok: false, msg: `The two cards in the stack read ${fmt1(COUPLE.atp.dG)} and ${fmt1(COUPLE.g6p.dG)} kJ/mol, and the net you set is ${opts[v - 1]} kJ/mol.` };
+      return { ok: true };
     },
     get reward() {
       const pair = coupledPair(COUPLE.atp.dG, COUPLE.g6p.dG);
       return {
         log: 'Pairing the two reactions made a net ΔG° below zero.',
         title: 'Coupled Reactions',
-        body: `Two reactions that share a substance can be added, and their ΔG° values add. ATP hydrolysis (${fmt1(COUPLE.atp.dG)} kJ/mol) paired with glucose + Pi → glucose-6-phosphate (${fmt1(COUPLE.g6p.dG)}) nets ${fmt1(pair.dG)}, so the pair runs: a coupled reaction.`
+        body: `Adding phosphate to glucose has ΔG° of ${fmt1(COUPLE.g6p.dG)} kJ/mol; added to ATP splitting at ${fmt1(COUPLE.atp.dG)}, the pair nets ${fmt1(pair.dG)} and runs. This is a coupled reaction.`
       };
     }
   },
 
-  /* ---------------------------------------------------------------- 8 */
+  /* ---------------------------------------------------------------- 7 */
   {
-    id: 's8-sealed',
+    id: 's7-sealed',
     title: 'Three Reactions',
-    prompt: `Tap the reaction whose vessel would settle with the most product at ${T_BENCH} K.`,
+    prompt: `Which reaction settles with the most product at ${T_BENCH} K?`,
     widget,
     table: pansTable({
       fixtures: [
@@ -390,9 +353,9 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Use the three sets of bars then tap the one you choose.',
-      'Compare the amber bar and the green bar of each reaction, not the amber bar alone.',
-      'The reaction with the lowest ΔH − TΔS has the largest K and settles with the most product.'
+      'Compare the ΔH and TΔS bars of each reaction, then tap the reaction you choose.',
+      'Compare both bars together, not ΔH alone.',
+      'ΔG° decides where a vessel settles, and it is made of both bars.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -404,7 +367,7 @@ export const STAGES = [
     reward: {
       log: 'The lowest ΔG settled with the most product.',
       title: 'Free Energy Decides',
-      body: 'A vessel settles with the most product where ΔH − TΔS is lowest, even when that reaction takes in heat. ΔG° says where a reaction settles, not how fast it gets there; a negative ΔG° can still take years.'
+      body: 'The reaction with the most negative ΔH − TΔS has the largest K, even though it takes in heat. ΔG° says where a vessel settles, not how fast.'
     }
   }
 ];
@@ -430,10 +393,9 @@ export const SOLUTIONS = [
   [put('little', 'slot:guess')],
   [...runAll('p1', 'p2', 'p3'), put('tm3', 'slot:s1'), put('t8', 'slot:s2'), put('t2', 'slot:s3')],
   [...runAll('a', 'b'), typed('k', '56.6')],
-  [...runAll('r1', 'r2'), dial('d1', 'value', 1), dial('d2', 'value', 2)],
   [dial('pick', 'value', SALT_ANSWER)],
   [run('cup'), put('cw1', 'slot:why')],
-  [...stack('atp', 'g6p'), dial('answer', 'value', 1)],
+  [...stack('atp', 'g6p')],
   [dial('pick', 'value', ANSWER8)]
 ];
 
@@ -441,10 +403,9 @@ export const MISSES = [
   [],
   [...runAll('p1', 'p2', 'p3'), put('t8', 'slot:s1'), put('tm3', 'slot:s2'), put('t2', 'slot:s3')],
   [...runAll('a', 'b'), typed('k', '1')],
-  [...runAll('r1', 'r2'), dial('d1', 'value', 2), dial('d2', 'value', 2)],
   [dial('pick', 'value', 1)],
   [run('cup'), put('cw2', 'slot:why')],
-  [...stack('atp', 'g6p'), dial('answer', 'value', 2)],
+  [...stack('pcr', 'g6p')],
   [dial('pick', 'value', 1)]
 ];
 

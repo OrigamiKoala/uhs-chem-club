@@ -127,8 +127,16 @@ The fault types to cover, so that every kind of weak stage in the other seven wo
 - Cost: one briefing.
 
 ### 5. Card sort with no instrument
-- Not solved in Ember Reach. `q6-entropy` stage 3 and `q7-gibbs` stage 3 remain sorts; the definitions moved into briefings and the trays took the real terms (pattern 6 above), and a miss that printed the answer's numbers was changed. A later exemplar should cover this type.
+- Before: Lanternfall `q10-wavefunctions` (5 stages) sorted cards with formula hints and no instrument.
+- After: replaced by five stages on `cloudPlate(..., { ring: 'band' })` and a new `waveStrip` fixture (`cloud.js` `waveStrip`, `cloud-draw.js` `paintWaveStrip`, `cloud-read.js` `waveStripRead`) reading signed `psiAt` from `orbitals.js`. Stage 2 grades on dragging the probe into the negative lobe before answering on ψ²; stages 3–5 switch orbitals on a dial (`orbitals` option on `cloudPlate`) and count radial/angular nodes on the cloud itself.
+- How: expose the signed quantity from the physics planner (`orbitals.js` `psiAt`), draw both the signed wave and its squared dot band on one fixture with a draggable `probe` dial.
+- Use it when: a concept was taught as a card sort because the existing kit only exposed the unsigned/integrated result.
+- Cost: one planner helper (`psiAt`), one fixture + painter (`waveStrip`), five rebuilt stages.
 
 ### 10. World with no glossary
-- Not applicable to Ember Reach, which had one. What was done here: terms were moved in `glossary/ember.js` to the stage whose briefing now teaches them, and two terms that left the world were removed.
+- Before: Lanternfall (`unit02`) had no glossary file and used stand-in words (*piles*, *shots*, *knocks loose*, *grip*, *strings*, *stripper*).
+- After: created `src/learn/glossary/lanternfall.js` (`QUESTS`, `TERMS` with 1-based `quest`/`stage` and one-clause `gloss`, `BANNED` regexes, `STORY_ALLOW`) and registered it in `src/learn/glossary/index.js` (`WORLDS`).
+- How: copy an existing glossary (`glossary/bellows.js`), list every world term at the stage its briefing or reward introduces it, and add the world's stand-in words to `BANNED`.
+- Use it when: any of the five worlds without a glossary.
+- Cost: one new glossary file, one import line in `glossary/index.js`.
 

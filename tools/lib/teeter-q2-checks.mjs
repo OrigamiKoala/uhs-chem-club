@@ -51,9 +51,9 @@ export async function checkTeeterQ2(ok, bad) {
   const run = (i, script) => Q.STAGES[i].check(Q.stateFor(i, script));
   const put = (piece, to) => ({ place: { piece, to } });
   const st = [{ run: 'pans' }];
-  const inverse = run(1, [...st, put('t-A1', 'slot:rig.t1'), put('t-B1', 'slot:rig.b1')]);
-  if (inverse.ok) ok('q2 s2 accepts A over B too (it is a steady ratio)'); else bad(`q2 s2 refused A over B: ${inverse.msg}`);
-  const unsettled = run(1, [put('t-B1', 'slot:rig.t1'), put('t-A1', 'slot:rig.b1')]);
+  const inverse = run(1, [...st, put('t-butane1', 'slot:rig.t1'), put('t-isobutane1', 'slot:rig.b1')]);
+  if (inverse.ok) ok('q2 s2 accepts butane over isobutane too (it is a steady ratio)'); else bad(`q2 s2 refused butane over isobutane: ${inverse.msg}`);
+  const unsettled = run(1, [put('t-isobutane1', 'slot:rig.t1'), put('t-butane1', 'slot:rig.b1')]);
   if (!unsettled.ok && unsettled.notYet) ok('q2 s2 waits for Settle'); else bad('q2 s2 did not wait for Settle');
   const bareHi = run(2, [...st, put('t-HI1', 'slot:rig.t1'), put('t-H21', 'slot:rig.b1'), put('t-I21', 'slot:rig.b2')]);
   if (!bareHi.ok && /reads/.test(bareHi.msg)) ok(`q2 s3 refuses HI without the square: "${bareHi.msg}"`); else bad('q2 s3 HI without the square');
@@ -65,6 +65,4 @@ export async function checkTeeterQ2(ok, bad) {
     if (Boolean(r.ok) === want && (want || r.msg)) ok(`q2 s5 typed "${v}" ${want ? 'accepted' : `refused: "${r.msg}"`}`); else bad(`q2 s5 typed "${v}"`);
   }
   if (/upside down/.test(typed('0.15')[0].msg) && /once/.test(typed('1.3')[0].msg) && /multiplies/.test(typed('0.67')[0].msg)) ok('q2 s5 each slip has its own reason'); else bad('q2 s5 slip reasons');
-  const sealedWrong = run(7, [put('k-a', 'slot:s1'), put('k-x', 'slot:s2'), put('k-c', 'slot:s3')]);
-  if (!sealedWrong.ok && /every substance once/.test(sealedWrong.msg)) ok('q2 s8 the no-power card is refused for its reason'); else bad(`q2 s8: ${sealedWrong.msg}`);
 }

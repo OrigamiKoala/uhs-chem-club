@@ -24,7 +24,7 @@ import {
 } from '../../table/kits/ph.js';
 import { ACIDS, fmt, sci, titrationPH } from '../../engine/phdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bsalt hydrolysis\b/i, introducedAt: 3 }
@@ -47,7 +47,7 @@ const MIX = (type, id, c) => ({ type, id, c, V: 50, ct: 0.10, step: 10, max: 6 }
 const S1 = { mix: MIX('strongAcid', 'hcl', 0.10), name: 'Hydrochloric acid', reagent: 'sodium hydroxide', kind: 'acid' };
 const S3 = { mix: MIX('weakAcid', 'acetic', 0.10), name: 'Acetic acid', reagent: 'sodium hydroxide', kind: 'acid' };
 const S4 = { mix: MIX('weakBase', 'nh3', 0.10), name: 'Ammonia', reagent: 'hydrochloric acid', kind: 'base' };
-const S6 = { mix: { type: 'strongAcid', id: 'hcl', c: 0.10, V: 30, ct: 0.10, step: 20, max: 1 }, name: 'Hydrochloric acid', reagent: 'sodium hydroxide', kind: 'acid' };
+const S6 = { mix: { type: 'strongAcid', id: 'hcl', c: 0.10, V: 30, ct: 0.10, step: 20, max: 1 }, name: '30.0 mL of 0.10 M HCl', reagent: 'sodium hydroxide', kind: 'acid' };
 const EQUAL_K = 5;
 const SALTS = [
   { key: 'nacl', solute: { id: 'nacl', c: 0.10 }, name: 'Sodium chloride' },
@@ -56,12 +56,6 @@ const SALTS = [
   { key: 'kno3', solute: { id: 'kno3', c: 0.10 }, name: 'Potassium nitrate' }
 ];
 const ACETATE = { id: 'acetate', c: 0.10 };
-const SEALED = [
-  { id: 'fx', letter: 'X', solute: { id: 'fluoride', c: 0.10 }, answer: 1 },
-  { id: 'fy', letter: 'Y', solute: { id: 'nh4', c: 0.10 }, answer: 2 },
-  { id: 'fz', letter: 'Z', solute: { id: 'kno3', c: 0.10 }, answer: 0 }
-];
-const PARENTS = ['Both strong', 'Weak acid', 'Weak base', ' '];
 
 const flaskPHOf = solute => flaskSol({ solute }).pH;
 const kindOf = pH => (pH < 6.995 ? 0 : pH > 7.005 ? 2 : 1);
@@ -105,12 +99,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   pourStage({
     id: 's1-strong', title: 'Acid Used Up', spec: S1, wantKind: 1,
-    prompt: 'Pour in sodium hydroxide until no hydrochloric acid is left, and stop there.',
+    prompt: 'What is the pH when sodium hydroxide has exactly used up the hydrochloric acid?',
     hints: [POUR_HINT, 'Compare the window and the meter after each pour.', 'Stop at the first pour where the window shows no acid left.'],
     reward: {
       log: 'The flask read 7.00 with the acid used up.',
       title: 'Strong Acid, Strong Base',
-      get body() { return `With the acid used up the flask read ${fmt(mixAfter(S1, EQUAL_K).pH, 2)}. Sodium and chloride ions leave the water alone, so a strong acid and a strong base used up exactly give a pH of 7.`; }
+      get body() { return `${fmt(mixAfter(S1, EQUAL_K).pH, 2)}. Na⁺ and Cl⁻ do not react with water. An acid and a base using each other up is neutralization.`; }
     }
   }),
 
@@ -151,10 +145,10 @@ export const STAGES = [
   (() => {
     const st = pourStage({
       id: 's3-weak-acid', title: 'Acetic Acid Used Up', spec: S3, wantKind: 2,
-      prompt: 'Pour in sodium hydroxide until no acetic acid is left, and stop there.',
-      hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no acid left with the 7 you expected.', 'Ask what the acid left behind does when it meets water.']
+      prompt: 'What is the pH when sodium hydroxide has exactly used up the acetic acid?',
+      hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no acid left with the 7 you expected.', 'Ask what the acetate left behind by acetic acid does when it meets water.']
     });
-    Object.defineProperty(st, 'prompt', { get() { return guessLine('Pour in sodium hydroxide until no acetic acid is left, and stop there.', recall(QUEST_KEY)); }, enumerable: true });
+    Object.defineProperty(st, 'prompt', { get() { return guessLine('What is the pH when sodium hydroxide has exactly used up the acetic acid?', recall(QUEST_KEY)); }, enumerable: true });
     Object.defineProperty(st, 'reward', {
       enumerable: true,
       get() {
@@ -163,7 +157,7 @@ export const STAGES = [
         return {
           log: 'The flask read 8.72 with the acid used up.',
           title: 'Salt Hydrolysis',
-          body: `${v}Acetate, the base left behind by acetic acid, takes protons from water and leaves hydroxide, so the flask is basic. A salt's ion reacting with water like this is salt hydrolysis.`
+          body: `${v}Acetate takes protons from water, leaving OH⁻. An ionic compound left when an acid and a base react is a salt; its ion reacting with water is salt hydrolysis.`
         };
       }
     });
@@ -173,7 +167,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   pourStage({
     id: 's4-weak-base', title: 'Ammonia Used Up', spec: S4, wantKind: 0,
-    prompt: 'Pour in hydrochloric acid until no ammonia is left, and stop there.',
+    prompt: 'What is the pH when hydrochloric acid has exactly used up the ammonia?',
     hints: [POUR_HINT, 'Compare the meter at the pour where the window shows no base left with 7.', 'Ask what the base left behind by ammonia does when it meets water.'],
     reward: {
       log: 'The flask read 5.28 with the base used up.',
@@ -186,22 +180,22 @@ export const STAGES = [
   (() => {
     const X = [20, 58, 96, 134];
     const probe = flaskFixture('f0', { x: 0, y: 0 }, { solute: SALTS[0].solute, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12 });
-    const fl = SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: X[i], y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12 }));
-    const trays = [['acidic', 'Acidic', 24], ['neutral', 'Neutral', 72], ['basic', 'Basic', 120]].map(([id, label, x]) => ({ id, label, at: { x, y: 76 }, size: { w: 44, h: 26 }, cell: 22, cellH: 12 }));
+    const fl = SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: X[i], y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12, meter: i < 2 }));
+    const trays = [['acidic', 'Acidic', 24], ['neutral', 'Neutral', 72], ['basic', 'Basic', 120]].map(([id, label, x]) => ({ id, label, at: { x, y: 82 }, size: { w: 44, h: 26 }, cell: 22, cellH: 12 }));
     return {
       id: 's5-sort',
       title: 'Four Salts',
-      prompt: 'Sort the four salt solutions into acidic, neutral and basic.',
+      prompt: 'Which salt solutions are acidic, which neutral and which basic?',
       widget,
       table: phTable({
-        pieces: [meterPiece('meter', { x: 156, y: 12 }), ...SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 160, y: 30 + i * 20 }))],
-        fixtures: fl.map(f => f.fixture),
-        zones: { trays, slots: fl.map(f => f.slot) }
+        pieces: [meterPiece('meter', { x: 158, y: 10 }), ...SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 160, y: 28 + i * 20 }))],
+        fixtures: [...fl.map(f => f.fixture), plaqueFixture('parents', 'Strong parents', { x: 72, y: 55 }, ['HCl, HNO₃ · NaOH, KOH'], { w: 98 })],
+        zones: { trays, slots: fl.filter(f => f.slot).map(f => f.slot) }
       }, { w: 184, h: 104 }),
       hints: [
-        'Use the pH meter on each flask, then drag the cards into the trays.',
-        'Compare the readings of the four flasks with 7.',
-        'Place each card by whether its flask reads below, at or above 7.'
+        'Put the pH meter on sodium chloride and sodium fluoride, and read the strong-parents plate.',
+        'Compare the two flasks you measured with the other two using the ions on the plate.',
+        'Ions from strong parents leave water neutral; an ion from a weak parent shifts the pH.'
       ],
       check(state) {
         const t = state.table;
@@ -231,7 +225,7 @@ export const STAGES = [
     return {
       id: 's6-excess',
       title: 'Acid Left Over',
-      prompt: 'Find the pH of the flask after 20.0 mL of 0.10 M sodium hydroxide has been poured into 30.0 mL of 0.10 M hydrochloric acid.',
+      prompt: 'What is the pH of the flask after the pour?',
       widget,
       entry: { id: 'ph', label: 'pH', unit: '' },
       table: phTable({ fixtures: [m.fixture] }, { w: 130, h: 68 }),
@@ -268,7 +262,15 @@ export const STAGES = [
     return {
       id: 's7-acetate',
       title: 'A Salt Between the Flasks',
-      prompt: 'Find the pH of 0.10 M sodium acetate, to two decimal places.',
+      briefing: {
+        intro: 'For 0.050 M sodium acetate from stage 3:',
+        worked: [
+          'Kb = 1.0 × 10⁻¹⁴ ÷ 1.8 × 10⁻⁵ = 5.6 × 10⁻¹⁰',
+          'x² ÷ 0.050 = 5.6 × 10⁻¹⁰, x = 5.3 × 10⁻⁶ = [OH⁻]',
+          'pOH = 5.28, pH = 8.72'
+        ]
+      },
+      prompt: 'What is the pH of 0.10 M sodium acetate, to two decimal places?',
       widget,
       entry: { id: 'ph', label: 'pH', unit: '' },
       table: phTable({ fixtures: [f2.fixture, plaqueFixture('plate', 'Acetic acid', { x: 108, y: 16 }, ['Ka', sci(ACIDS.acetic.Ka, 2)], { w: 44 })] }, { w: 140, h: 50 }),
@@ -295,43 +297,6 @@ export const STAGES = [
         };
       }
     };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const probe = flaskFixture('p', { x: 0, y: 0 }, { solute: SEALED[0].solute, w: 44, window: 12, legend: false, waterNote: false, units: 120, cols: 12 });
-    const fl = SEALED.map((s, i) => flaskFixture(s.id, { x: 24 + i * 46, y: 1 + probe.size.h / 2 }, { solute: s.solute, label: `Flask ${s.letter}`, w: 44, window: 12, legend: false, waterNote: false, units: 120, cols: 12 }));
-    return {
-      id: 's8-sealed',
-      title: 'Three Unlabelled Salts',
-      prompt: 'For each unlabelled salt flask, say which of its parent acid and parent base is weak.',
-      widget,
-      table: phTable({
-        pieces: [meterPiece('meter', { x: 160, y: 10 })],
-        fixtures: [...fl.map(f => f.fixture), ...SEALED.map((s, i) => selectorFixture(`d${s.id}`, `Flask ${s.letter}`, { x: 24 + i * 46, y: 62 }, { options: PARENTS, start: 4, w: 44 }))],
-        zones: { slots: fl.map(f => f.slot) }
-      }, { w: 184, h: 76 }),
-      hints: [
-        'Use the pH meter on each flask and set each dial.',
-        'Compare each reading with 7.',
-        'A reading at 7 means neither parent is weak; above or below 7 points to the weak one.'
-      ],
-      check(state) {
-        const t = state.table;
-        const vals = SEALED.map(s => dialValue(t, `d${s.id}`));
-        if (vals.some(v => v === 4)) return { ok: false, notYet: true, msg: 'Set all three dials.' };
-        for (const [i, s] of SEALED.entries()) {
-          if (vals[i] - 1 === s.answer) continue;
-          return { ok: false, msg: `Flask ${s.letter} reads ${fmt(flaskPHOf(s.solute), 2)} on the meter.` };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'A salt reads as its weak parent does.',
-        title: 'Reading a Salt',
-        body: 'A salt of a weak acid and a strong base reads basic, a salt of a strong acid and a weak base reads acidic, and a salt of two strong parents reads 7. The weak parent\'s ion is the one that reacts with water.'
-      }
-    };
   })()
 ];
 
@@ -341,7 +306,6 @@ export const DEBRIEF = {
 };
 
 const put = (piece, to) => ({ place: { piece, to } });
-const dial = (fixture, value) => ({ setDial: { fixture, dial: 'value', value } });
 const pours = n => Array.from({ length: n }, () => ({ run: 'mix' }));
 const seat = 'slot:mix.seat';
 
@@ -352,8 +316,7 @@ export const SOLUTIONS = [
   [put('meter', seat), ...pours(EQUAL_K)],
   [put('c-nacl', 'tray:neutral'), put('c-naf', 'tray:basic'), put('c-nh4cl', 'tray:acidic'), put('c-kno3', 'tray:neutral')],
   [{ type: { entry: 'ph', value: '1.70' } }],
-  [{ type: { entry: 'ph', value: '8.87' } }],
-  [dial('dfx', 2), dial('dfy', 3), dial('dfz', 1)]
+  [{ type: { entry: 'ph', value: '8.87' } }]
 ];
 
 export const MISSES = [
@@ -363,8 +326,7 @@ export const MISSES = [
   [...pours(EQUAL_K + 1)],
   [put('c-nacl', 'tray:neutral'), put('c-naf', 'tray:neutral'), put('c-nh4cl', 'tray:acidic'), put('c-kno3', 'tray:neutral')],
   [{ type: { entry: 'ph', value: '7' } }],
-  [{ type: { entry: 'ph', value: '5.13' } }],
-  [dial('dfx', 1), dial('dfy', 3), dial('dfz', 1)]
+  [{ type: { entry: 'ph', value: '5.13' } }]
 ];
 
 function blankState() { return {}; }
@@ -382,4 +344,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { S1, S3, S4, S6, SALTS, ACETATE, SEALED, EQUAL_K, mixAfter, TOL_PH, titrationPH, concText };
+export const CHECKS = { S1, S3, S4, S6, SALTS, ACETATE, EQUAL_K, mixAfter, TOL_PH, titrationPH, concText };

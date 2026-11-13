@@ -30,12 +30,11 @@ import { romanOf, metalChargeFrom, printedCharge, spell, atomsOfSpelled, squashN
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
+  { term: /\bionic compounds?\b/i, introducedAt: 1 },
   { term: /\bionic formulas?\b/i, introducedAt: 2 },
-  { term: /\bnaming ionic compounds?\b/i, introducedAt: 3 },
   { term: /\broman numerals?\b/i, introducedAt: 4 },
-  { term: /\bpolyatomic\b/i, introducedAt: 5 },
-  { term: /\bmolecular prefix(es)?\b/i, introducedAt: 6 },
-  { term: /\bacid names?\b/i, introducedAt: 7 }
+  { term: /\bpolyatomic ions?\b/i, introducedAt: 5 },
+  { term: /\bmolecular prefix(es)?\b/i, introducedAt: 6 }
 ];
 
 /** The charge needle is Tallow's; the rest is new to this bench. */
@@ -97,7 +96,11 @@ export const STAGES = [
     id: 's1-predict',
     title: 'What Magnesium and Chlorine Make',
     predict: true,
-    prompt: 'Choose the formula you expect for the compound that Mg²⁺ and Cl⁻ ions make.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An ionic compound is made of positive and negative ions held together. Taken as a whole it has no charge, and a small number in a formula counts how many of that ion are in one group.'
+    },
+    prompt: 'Which formula do you expect for the compound of Mg²⁺ and Cl⁻?',
     widget,
     table: potTable({
       pieces: Object.entries(GUESS).map(([id, label], i) => tagAt(id, label, 20 + (i % 3) * 30, 14 + Math.floor(i / 3) * 16)),
@@ -105,9 +108,9 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 116, y: 40 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the five cards and the slot.',
-      'Compare the charge on one magnesium ion with the charge on one chlorine ion.',
-      'A compound has no charge overall, so the ions have to be counted until their charges cancel.'
+      'Look at the five formula cards and the prediction slot.',
+      'Compare the 2+ charge on one magnesium ion with the 1− charge on one chlorine ion.',
+      'Think about how many 1− charges balance one 2+ charge.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -118,7 +121,7 @@ export const STAGES = [
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
       if (card) remember(QUEST_KEY, card.id);
     },
-    reward: { log: 'Prediction locked in.', title: 'Now Test It', body: 'Next, build the compound out of ion chips in a cell and read the charge needle.' }
+    reward: { log: 'Prediction locked in.', title: 'Now Test It', body: 'Next, build the ionic compound from its ions and read the charge meter.' }
   },
 
   /* ---------------------------------------------------------------- 2 */
@@ -133,37 +136,37 @@ export const STAGES = [
       get prompt() {
         const g = recall(QUEST_KEY);
         const guess = g && GUESS[g] ? `You guessed ${GUESS[g]}. ` : '';
-        return `${guess}Build the smallest group of Mg²⁺ and Cl⁻ chips in the cell that has no charge.`;
+        return `${guess}What is the smallest group of Mg²⁺ and Cl⁻ ions that has no charge?`;
       },
       widget,
       table: potTable({
         pieces: chips,
         fixtures: [needleFixture('needle', { x: 138, y: 36 }, { tray: 'cell' })],
-        zones: { trays: [trayOf('bin', 'Ions', 32, 36, 4, 2), trayOf('cell', 'Cell', 94, 36, 4, 2)] }
+        zones: { trays: [trayOf('bin', 'Ions', 32, 36, 4, 2), trayOf('cell', 'Tray', 94, 36, 4, 2)] }
       }),
       hints: [
-        'Use the supply tray, the cell and the charge needle.',
-        'Compare the needle reading after you add each kind of chip to the cell.',
-        'Add chips until the charges cancel, then check that the cell does not hold a smaller group that would also cancel.'
+        'Look at the ions tray, the sample tray and the charge meter.',
+        'Compare the charge meter reading after you add each ion to the tray.',
+        'The charges must add to zero, with no extra copy of the whole group.'
       ],
       check(state) {
         const t = state.table;
         const chips = inCell(t, 'cell');
-        if (!chips.length) return { ok: false, notYet: true, msg: 'Move chips into the cell.' };
+        if (!chips.length) return { ok: false, notYet: true, msg: 'Move ions into the tray.' };
         const c = countsOf(chips);
         const q = needleRead(t, 'needle').charge;
         const mg = c.Mg || 0; const cl = c.Cl || 0;
         if (mg === MG_CL.nCat && cl === MG_CL.nAn && Object.keys(c).length === 2) return { ok: true };
-        if (q !== 0) return { ok: false, msg: `The needle reads ${signed(q)} with ${mg} Mg and ${cl} Cl in the cell.` };
-        return { ok: false, msg: `The needle reads 0, and the cell holds one group twice over: ${mg} Mg and ${cl} Cl.` };
+        if (q !== 0) return { ok: false, msg: `The charge meter reads ${signed(q)} with ${mg} Mg and ${cl} Cl in the tray.` };
+        return { ok: false, msg: `The charge meter reads 0, and the tray holds one group twice over: ${mg} Mg and ${cl} Cl.` };
       },
       get reward() {
         const g = recall(QUEST_KEY);
-        const verdict = g && GUESS[g] ? (g === GUESS_RIGHT ? 'The needle agreed with your guess. ' : 'The needle did not agree with your guess, which is how a guess gets better. ') : '';
+        const verdict = g && GUESS[g] ? (g === GUESS_RIGHT ? 'The charge meter agreed with your guess. ' : 'The charge meter did not agree with your guess, which is how a guess gets better. ') : '';
         return {
-          log: 'The needle rests on 0 for 1 Mg and 2 Cl.',
+          log: 'The charge meter rests on 0 for 1 Mg and 2 Cl.',
           title: 'The Ionic Formula',
-          body: `${verdict}The needle rests on 0 when the charges cancel: Mg²⁺ with two Cl⁻. The ionic formula MgCl₂ counts the ions of the smallest group that has no charge.`
+          body: `${verdict}One Mg²⁺ and two Cl⁻ add up to zero, so the ionic formula is MgCl₂.`
         };
       }
     };
@@ -176,7 +179,11 @@ export const STAGES = [
     return {
       id: 's3-ide',
       title: 'Name the Compound',
-      prompt: 'Write the name of the compound in the cell on the label.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'To name a two-element ionic compound, write the metal ion first and change the nonmetal ion\'s ending to -ide.'
+      },
+      prompt: 'What is the compound of Mg²⁺ and O²⁻ called?',
       widget,
       table: potTable({
         pieces: [
@@ -185,24 +192,24 @@ export const STAGES = [
           ...names.map((n, i) => tagAt(`w_${n}`, n, 15 + (i % 3) * 27, 40 + Math.floor(i / 3) * 14))
         ],
         fixtures: [lab.fixture, plaqueFixture('example', 'Example', { x: 120, y: 13 }, ['K⁺ with Br⁻ is called', 'potassium bromide'], { w: 52 })],
-        zones: { trays: [trayOf('cell', 'Cell', 28, 18, 2, 1)], slots: lab.slots }
+        zones: { trays: [trayOf('cell', 'Tray', 28, 18, 2, 1)], slots: lab.slots }
       }),
       hints: [
-        'Use the name cards and the two slots on the label.',
-        'Compare each chip in the cell with the example on the plate.',
-        'Name the metal first, then the other ion the way the example names its second ion.'
+        'Look at the name cards, the example plate and the label slots.',
+        'Compare the ions in the tray with the example on the plate.',
+        'Name the metal first, then change the nonmetal\'s ending the way the example does.'
       ],
       check(state) {
         const w = labelWords(state.table, 'lab');
         if (!w[0] && !w[1]) return { ok: false, notYet: true, msg: 'Lay a name card in each slot of the label.' };
         if (!w[0] || !w[1]) return { ok: false, notYet: true, msg: 'Lay a name card in each slot of the label.' };
         if (wordsText(w) === NAME_MGO) return { ok: true };
-        return { ok: false, msg: `The label reads "${wordsText(w)}". The cell holds a Mg chip printing 2+ and an O chip printing 2−.` };
+        return { ok: false, msg: `The label reads "${wordsText(w)}". The tray holds Mg²⁺ and O²⁻.` };
       },
       reward: {
         log: 'Mg²⁺ with O²⁻ is magnesium oxide.',
         title: 'Naming Ionic Compounds',
-        body: 'Naming ionic compounds follows one pattern: the metal keeps its name, and the other ion takes the ending -ide. Mg²⁺ with O²⁻ is magnesium oxide; oxygen is the name of the element, oxide the name of its ion.'
+        body: 'The metal keeps its name and the nonmetal ion ends in -ide: magnesium oxide.'
       }
     };
   })(),
@@ -217,7 +224,11 @@ export const STAGES = [
     return {
       id: 's4-numeral',
       title: 'Name the Iron Oxides',
-      prompt: 'Write the name of the compound in each cell on its label.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Some metals form ions with more than one charge. The name then gives the charge of one metal ion as a Roman numeral in brackets.'
+      },
+      prompt: 'What is the iron oxide in each tray called?',
       widget,
       table: potTable({
         pieces: [
@@ -228,12 +239,12 @@ export const STAGES = [
           needleFixture('na', { x: 47, y: 13 }, { tray: 'ca' }), needleFixture('nb', { x: 62, y: 46 }, { tray: 'cb' }),
           la.fixture, lb.fixture
         ],
-        zones: { trays: [trayOf('ca', 'Cell A', 20, 14, 2, 1), trayOf('cb', 'Cell B', 27, 46, 3, 2)], slots: [...la.slots, ...lb.slots] }
+        zones: { trays: [trayOf('ca', 'Tray A', 20, 14, 2, 1), trayOf('cb', 'Tray B', 27, 46, 3, 2)], slots: [...la.slots, ...lb.slots] }
       }),
       hints: [
-        'Use the numeral cards and the slot in each label.',
-        'Compare each needle reading with the number of iron chips in its cell, which print no charge.',
-        'A cell has no charge overall, so its irons must cancel the needle, and the numeral is the charge of one iron.'
+        'Look at the numeral cards and the slot in each label.',
+        'Each iron ion prints no charge, so the charge meter shows only the oxide ions\' total.',
+        'Each tray has no charge overall, so its iron ions must cancel that negative total.'
       ],
       check(state) {
         const t = state.table;
@@ -250,12 +261,12 @@ export const STAGES = [
         const tray = bad === 'A' ? 'ca' : 'cb';
         const chips = inCell(t, tray);
         const nFe = chips.filter(p => p.props.hide).length;
-        return { ok: false, msg: `Cell ${bad} holds ${nFe} Fe, and its needle reads ${signed(needleRead(t, bad === 'A' ? 'na' : 'nb').charge)}; its label says ${bad === 'A' ? wa : wb}.` };
+        return { ok: false, msg: `Tray ${bad} holds ${nFe} Fe, and its charge meter reads ${signed(needleRead(t, bad === 'A' ? 'na' : 'nb').charge)}; its label says ${bad === 'A' ? wa : wb}.` };
       },
       reward: {
         log: 'FeO is iron(II) oxide; Fe₂O₃ is iron(III) oxide.',
         title: 'The Roman Numeral',
-        body: 'A Roman numeral in a name is the charge of one metal ion, not a count of atoms. The needle read −2 over one iron in FeO and −6 over two in Fe₂O₃, so the irons are 2+ and 3+: iron(II) oxide and iron(III) oxide.'
+        body: 'One iron cancels −2 in FeO and two irons cancel −6 in Fe₂O₃, so they are iron(II) oxide and iron(III) oxide.'
       }
     };
   })(),
@@ -268,7 +279,11 @@ export const STAGES = [
     return {
       id: 's5-dissolve',
       title: 'Write the Formula',
-      prompt: 'Write the formula of the compound in Sample B on the formula strip.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A polyatomic ion is a group of atoms that stays together and carries one charge. Put brackets around it when there is more than one.'
+      },
+      prompt: 'What is the formula of the compound in Sample B?',
       widget,
       table: potTable({
         pieces: [
@@ -280,9 +295,9 @@ export const STAGES = [
         zones: { trays: [cardsTray()], slots: [win.slot, ...fm.slots] }
       }),
       hints: [
-        'Use the window with its "Dissolve" key on each crate, then the formula cards and the six slots.',
-        'Compare what is in the water for Sample A with what is in the water for Sample B, and look at which atoms stay joined.',
-        'Write each kind of piece once, put a group of atoms in brackets when it appears more than once, and write how many after it.'
+        'Dissolve each sample in the particle view, then look at the formula cards.',
+        'Compare what is in the water for Sample A with Sample B, and notice which atoms stay joined.',
+        'Count how many Ca and NO₃ pieces are in Sample B, then write each kind of ion once with its count.'
       ],
       check(state) {
         const t = state.table;
@@ -293,12 +308,12 @@ export const STAGES = [
         const atoms = atomsOfSpelled(text);
         const want = saltInWater(SALT_B.cat, SALT_B.an).atoms;
         if (!atoms) return { ok: false, msg: `The strip reads "${row.join('')}", which does not read as a formula.` };
-        return { ok: false, msg: `The strip holds ${atomsText(atoms)}; the window drew ${atomsText(want)} in Sample B.` };
+        return { ok: false, msg: `The strip holds ${atomsText(atoms)}; the particle view drew ${atomsText(want)} in Sample B.` };
       },
       reward: {
         log: 'Sample B is calcium nitrate, Ca(NO₃)₂.',
         title: 'Polyatomic Ions',
-        body: 'A polyatomic ion is a group of atoms that stays together and carries one charge, like NO₃⁻. When there is more than one in a formula it goes in brackets, so calcium nitrate is Ca(NO₃)₂ and not CaNO₃₂.'
+        body: 'Each NO₃⁻ ion stays whole, and one Ca²⁺ needs two of them: Ca(NO₃)₂.'
       }
     };
   })(),
@@ -311,7 +326,11 @@ export const STAGES = [
     return {
       id: 's6-prefix',
       title: 'Name the Molecule',
-      prompt: 'Write the name of the compound in Sample B on the label.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Two nonmetals form molecules, not ions, so there are no charges to cancel. The name counts the atoms of each element with a prefix.'
+      },
+      prompt: 'What is the compound in Sample B called?',
       widget,
       table: potTable({
         pieces: [
@@ -319,13 +338,13 @@ export const STAGES = [
           crate('crb', 'Sample B', { x: 14, y: 55 }, { content: { type: 'molecule', formula: MOL_B } }),
           ...nums.map((n, i) => inTray(chipAt(`p_${n}`, n, 0, 0), 'cards'))
         ],
-        fixtures: [win.fixture, lab.fixture, plaqueFixture('counts', 'Words for a count', { x: 128, y: 41 }, ['mono 1 · di 2 · tri 3', 'tetra 4 · penta 5'], { w: 40 })],
+        fixtures: [win.fixture, lab.fixture, plaqueFixture('counts', 'Prefixes', { x: 128, y: 41 }, ['mono 1 · di 2 · tri 3', 'tetra 4 · penta 5'], { w: 40 })],
         zones: { trays: [cardsTray()], slots: [win.slot, ...lab.slots] }
       }),
       hints: [
-        'Use the window with its "Look" key on each crate, then the cards and the two slots on the label.',
-        'Compare the atoms drawn in the window with the words for a count on the plate.',
-        'Each word for a count says how many atoms of that element the molecule holds.'
+        'Look at each sample in the particle view, then at the prefix cards.',
+        'Compare the atoms drawn in the particle view with the prefix plate.',
+        'Each molecular prefix says how many atoms of that element are in one molecule.'
       ],
       check(state) {
         const t = state.table;
@@ -335,12 +354,12 @@ export const STAGES = [
         const text = `${w[0]}nitrogen ${w[1]}oxide`;
         if (squashName(text) === squashName(nameMolecular(MOL_B))) return { ok: true };
         const drawn = countDrawn(moleculeAtoms(MOL_B));
-        return { ok: false, msg: `The label reads "${text}"; the window draws ${atomsText(drawn)} in Sample B.` };
+        return { ok: false, msg: `The label reads "${text}"; the particle view draws ${atomsText(drawn)} in Sample B.` };
       },
       reward: {
         log: 'N₂O₄ is dinitrogen tetroxide.',
         title: 'Molecular Prefixes',
-        body: 'Molecular prefixes count atoms: di is 2 and tetra is 4, so N₂O₄ is dinitrogen tetroxide. A molecule has no ions and no charges to cancel, so its name counts the atoms instead.'
+        body: 'Two nitrogens and four oxygens: dinitrogen tetroxide (dropping the a before oxide).'
       }
     };
   })(),
@@ -353,7 +372,11 @@ export const STAGES = [
     return {
       id: 's7-acid',
       title: 'Name the Acids',
-      prompt: 'Write the name of the acid made of the ions in each cell on its label.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An acid releases H⁺ in water. When the negative ion ends in -ide, the acid name starts with hydro- and ends in -ic; when it ends in -ate, there is no hydro-.'
+      },
+      prompt: 'What is the acid made of the ions in each tray called?',
       widget,
       table: potTable({
         pieces: [
@@ -362,12 +385,12 @@ export const STAGES = [
           ...names.map((n, i) => tagAt(`a_${n}`, n, 112, 9 + i * 13))
         ],
         fixtures: [la.fixture, lb.fixture, plaqueFixture('ex', 'Examples', { x: 50, y: 55.7 }, ['HBr: hydrobromic acid', 'H₂SO₄: sulfuric acid'], { w: 56 })],
-        zones: { trays: [trayOf('ca', 'Cell A', 26, 12.5, 2, 1), trayOf('cb', 'Cell B', 74, 12.5, 2, 1)], slots: [...la.slots, ...lb.slots] }
+        zones: { trays: [trayOf('ca', 'Tray A', 26, 12.5, 2, 1), trayOf('cb', 'Tray B', 74, 12.5, 2, 1)], slots: [...la.slots, ...lb.slots] }
       }),
       hints: [
-        'Use the acid cards and the slot in each label.',
-        'Compare the negative ion in each cell with the examples on the plate.',
-        'The first word comes from the name of the negative ion, changed the way the examples change theirs.'
+        'Look at the acid cards and the slot in each label.',
+        'Compare the negative ion in each tray with the examples on the plate.',
+        'The first word comes from the negative ion\'s name, changed the way the examples change theirs.'
       ],
       check(state) {
         const t = state.table;
@@ -377,12 +400,12 @@ export const STAGES = [
         const want = [acidWord('HCl'), acidWord('HNO3')];
         if (wa === want[0] && wb === want[1]) return { ok: true };
         const bad = wa !== want[0] ? 'A' : 'B';
-        return { ok: false, msg: `Cell ${bad} holds H and ${bad === 'A' ? 'Cl' : 'NO₃'} chips; its label starts with ${bad === 'A' ? wa : wb}.` };
+        return { ok: false, msg: `Tray ${bad} holds H⁺ and ${bad === 'A' ? 'Cl⁻' : 'NO₃⁻'}; its label starts with ${bad === 'A' ? wa : wb}.` };
       },
       reward: {
         log: 'HCl is hydrochloric acid; HNO₃ is nitric acid.',
         title: 'Acid Names',
-        body: 'Acid names come from the negative ion that goes with H⁺: Cl⁻ gives hydrochloric acid, and NO₃⁻ (nitrate) gives nitric acid. In water each of these acids releases H⁺.'
+        body: 'H⁺ with Cl⁻ is hydrochloric acid, and H⁺ with nitrate, NO₃⁻, is nitric acid.'
       }
     };
   })(),
@@ -394,21 +417,21 @@ export const STAGES = [
     const toks = ['iron', 'copper', '(II)', '(III)', 'sulfate', 'nitrate'];
     return {
       id: 's8-sealed',
-      title: 'The Unmarked Crate',
-      prompt: 'Write the name of the compound in the unmarked crate on its label.',
+      title: 'The Unmarked Drum',
+      prompt: 'What is the compound in the unmarked drum called?',
       widget,
       table: potTable({
         pieces: [
-          crate('crx', 'Crate', { x: 14, y: 46 }, { content: { type: 'salt', ...SEALED, hide: [SEALED.cat] } }),
+          crate('crx', 'Drum', { x: 14, y: 46 }, { content: { type: 'salt', ...SEALED, hide: [SEALED.cat] } }),
           ...toks.map((n, i) => inTray(chipAt(`k_${i}`, n, 0, 0), 'cards'))
         ],
         fixtures: [win.fixture, lab.fixture, plaqueFixture('names', 'Ion names', { x: 135, y: 47 }, ['NO₃⁻ nitrate', 'SO₄²⁻ sulfate'], { w: 28 })],
         zones: { trays: [cardsTray()], slots: [win.slot, ...lab.slots] }
       }),
       hints: [
-        'Use the window with its "Dissolve" key on the crate, then the cards and the three slots.',
-        'Compare the pieces in the water with the ion names on the plate, and count the pieces of each kind.',
-        'The pieces have no charge together, so the metal ions must cancel the printed charges, and the numeral is the charge of one metal ion.'
+        'Dissolve the drum in the particle view, then look at the ion-name plate and the label.',
+        'Compare the pieces in the water with the ion names on the plate, and count each kind.',
+        'The ions together have no charge, and only the sulfate\'s charge is printed.'
       ],
       check(state) {
         const t = state.table;
@@ -419,12 +442,12 @@ export const STAGES = [
         if (text === nameIonic(SEALED.cat, SEALED.an)) return { ok: true };
         const water = saltInWater(SEALED.cat, SEALED.an);
         const metal = water.pieces[0]; const anion = water.pieces[1];
-        return { ok: false, msg: `The label reads "${text}"; the window drew ${metal.count} Fe with no charge printed and ${anion.count} joined groups printing ${IONS[anion.ion].q < 0 ? '' : '+'}${String(IONS[anion.ion].q).replace('-', '−')}.` };
+        return { ok: false, msg: `The label reads "${text}"; the particle view drew ${metal.count} Fe with no charge printed and ${anion.count} joined groups printing ${IONS[anion.ion].q < 0 ? '' : '+'}${String(IONS[anion.ion].q).replace('-', '−')}.` };
       },
       reward: {
-        log: 'The unmarked crate is iron(III) sulfate.',
-        title: 'The Unmarked Crate',
-        body: 'The window drew 2 Fe and 3 SO₄ groups of 2−. Six units of negative charge need 6 positive, so each iron is 3+: iron(III) sulfate, Fe₂(SO₄)₃.'
+        log: 'The unmarked drum is iron(III) sulfate.',
+        title: 'The Unmarked Drum',
+        body: 'Three SO₄²⁻ carry −6, so each of the two irons is 3+: iron(III) sulfate, Fe₂(SO₄)₃.'
       }
     };
   })()
@@ -433,13 +456,13 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
-  2: ['Drag chips from the supply tray into the cell.'],
+  2: ['Drag ions from the supply tray into the tray.'],
   3: ['Drag a name card into each slot of the label.'],
-  4: ['The number in brackets is the charge of one iron ion.', 'Drag a numeral card into the slot of each label.'],
-  5: ['Seat a crate in the window, press Dissolve, then fill the formula strip.'],
-  6: ['Seat a crate in the window, press Look, then fill the label.'],
+  4: ['The Roman numeral in brackets is the charge of one iron ion.', 'Drag a numeral card into the slot of each label.'],
+  5: ['Seat a sample in the particle view, press Dissolve, then fill the formula strip.'],
+  6: ['Seat a sample in the particle view, press Look, then fill the label.'],
   7: ['Drag an acid card into the slot of each label.'],
-  8: ['Seat the crate in the window, press Dissolve, then fill the label.']
+  8: ['Seat the drum in the particle view, press Dissolve, then fill the label.']
 };
 applyNotes(STAGES, NOTES);
 

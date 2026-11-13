@@ -215,16 +215,27 @@ Archive old stages 4 to 6. Owner request (2026-11-01): the story animation for t
 
 ### Structural changes
 
+- Built all 10 modules (71 stages total: `q1-joins` 6, `q2-lattice` 8, `q3-distance` 5, `q4-dots` 8, `q5-resonance` 8, `q6-shape` 10, `q7-polarity` 5, `q8-hybrid` 9, `q9-orbitals` 7, `boss-warden` 5), matching the 74 → 71 plan.
+- Rebuilt `q9-orbitals` stages 3–5 onto the overlap track (`mo.js`) and thinned stage 7 (`Oxygen's Last Two`); removed the formal-charge stamp from `q5-resonance` stage 4.
+- Cold-read review completed across `q1-joins` through `boss-warden`; fixed unglossed terms (`pm`, `mole`, `period`, `electronegative`, `ethane`, `*` antibonding notation), clarified `q4-dots:4` and `q5-resonance:2,6,7` prompts, added `q8-hybrid:7` sigma/pi briefing, and corrected `q7-polarity:4` symmetry phrasing for tetrahedral nonpolar molecules.
+
 ### Chemistry corrections
+
+- `q7-polarity:4`: updated nonpolar explanation from "pull equally in opposite directions" to "balance symmetrically around the centre" (covering tetrahedral CCl₄).
+- `q7-polarity:5`: removed unshown "and no bond reaches 100%" claim from reward.
+- `q2-lattice:2,7` and `q3-distance:3,4`: kept rewards grounded in the particles/values actually shown on each bench.
 
 ### Still weak
 
-(Ordered by how likely a student is to get lost. For each: the stage, what is weak, why it was not fixed.)
+- `q6-shape` stages 1, 3, 5–8 still allow measuring the snapped VSEPR angle directly with the protractor once domains are attached; left as-is to preserve the 3D VSEPR construction loop.
+- `boss-warden` phases 1, 4, 5 allow testing the three samples on the instrument before answering; left as-is as boss diagnostic checks.
 
 ### For the owner to look at
 
-(Stages whose table was rebuilt or added. Nobody has seen these on a screen.)
+- `q9-orbitals` stages 3–5 (new overlap track) and stage 7 (thinned `O₂` rack).
+- `q5-resonance` stage 4 (lone pairs and bonds counted directly without the formal-charge stamp).
 
 ### For close-out
 
-(Stage and quest counts that changed; shared code changed; doctrine or engine lessons.)
+- Counts: 10 modules (9 benches + 1 boss), 71 stages (`verify:ligar` and `verify:table` pass).
+- Created `src/learn/glossary/ligar.js` and updated `src/learn/table/tour-ligar.js`.

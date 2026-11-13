@@ -34,7 +34,8 @@ export async function checkTeeterQ3(ok, bad) {
   const m2 = run(0, [put('c2', 'slot:tv.seat'), { run: 'tv' }]);
   if (!m2.ok && /moved when it was run/.test(m2.msg)) ok('q3 s1 after Run says what moved'); else bad(`q3 s1 after run: ${m2.msg}`);
   const m4 = run(3, [put('m3', 'slot:tv.seat')]);
-  if (!m4.ok && /When run/.test(m4.msg)) ok(`q3 s4 refuses the mixture at rest: "${m4.msg}"`); else bad('q3 s4 refusal');
-  if (run(3, [put('m1', 'slot:tv.seat')]).ok && run(6, [put('n1', 'slot:tv.seat')]).ok && !run(6, [put('n3', 'slot:tv.seat')]).ok) ok('q3 s4 and s7 accept only the mixture that goes the asked way'); else bad('q3 s4/s7 answers');
-  if (!run(7, [put('q1', 'slot:go-p'), put('q2', 'slot:stay')]).ok && run(7, [put('q1', 'slot:go-p')]).notYet) ok('q3 s8 waits for all three'); else bad('q3 s8 partial');
+  if (!m4.ok && /Q =/.test(m4.msg)) ok(`q3 s4 refuses the mixture at rest: "${m4.msg}"`); else bad('q3 s4 refusal');
+  const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+  if (run(3, [put('m1', 'slot:tv.seat')]).ok && run(4, [dial('ans', 'value', 1), put('n1', 'slot:tv.seat'), { run: 'tv' }]).ok && !run(4, [dial('ans', 'value', 3), put('n3', 'slot:tv.seat'), { run: 'tv' }]).ok) ok('q3 s4 and s5 accept only the mixture that goes the asked way'); else bad('q3 s4/s5 answers');
+  if (!run(5, [put('q1', 'slot:go-p'), put('q2', 'slot:stay')]).ok && run(5, [put('q1', 'slot:go-p')]).notYet) ok('q3 s6 waits for all three'); else bad('q3 s6 partial');
 }

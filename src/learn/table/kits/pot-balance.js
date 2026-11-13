@@ -268,7 +268,7 @@ function paintWindow(ctx, f, state, b) {
 }
 
 /** The window. `board` is the board it draws; or `pot` is `{ eq, feed }` for a locked diagram of a pot; `phases` draws each substance's state; `rings` rings the groups that stay whole. */
-export function windowFixture(id, at, { board = null, pot = null, phases = false, rings = false, w = 68, h = 30, title = 'Window' } = {}) {
+export function windowFixture(id, at, { board = null, pot = null, phases = false, rings = false, w = 68, h = 30, title = 'Particle view' } = {}) {
   return { id, kind: 'eqwindow', label: title, at: { ...at }, size: { w, h }, dials: {}, noRun: true, props: { backdrop: true, hideLabel: true, board, pot, phases, rings } };
 }
 
@@ -416,10 +416,10 @@ const BOARD_TEXT = f => {
 addTourText({
   'pot:eqboard': { title: 'Board', dials: false, text: BOARD_TEXT },
   'pot:eqwindow': {
-    title: 'Window', dials: false,
+    title: 'Particle view', dials: false,
     text: f => (f.props.pot
-      ? 'The window shows a pot before a change on the left and after it on the right. Each small ball is an atom, coloured by the key along the bottom, and a cluster is one molecule. This picture is fixed: no dial changes it.'
-      : 'The window draws what the board says. Each small ball is an atom, coloured by the key along the bottom, and a cluster is one molecule. The left half is before the change and the right half is after it, so turning a board dial redraws it.')
+      ? 'The particle view shows a reaction vessel before a change on the left and after it on the right. Each small circle is an atom, coloured by the key along the bottom, and a cluster is one molecule. This picture is fixed: no dial changes it.'
+      : 'The particle view draws what the board says. Each small circle is an atom, coloured by the key along the bottom, and a cluster is one molecule. The left half is before the change and the right half is after it, so turning a board dial redraws it.')
   },
   'pot:eqledger': {
     title: 'Atom ledger', dials: false,
@@ -433,8 +433,8 @@ addTourText({
   },
   'pot:eqtally': {
     title: 'Tally', dials: false,
-    text: 'Two dials for one kind of atom. Set the dial named "before" to the number of those atoms you count in the left half of the window, and the dial named "after" to the number in the right half. They only hold your count.'
+    text: 'Two dials for one kind of atom. Set the dial named "before" to the number of those atoms you count in the left half of the particle view, and the dial named "after" to the number in the right half. They only hold your count.'
   }
 }, {
-  statetile: ['State tiles', 'Each tile has a symbol in brackets and a word for what it means. Drag a tile into the slot under a substance to write it after that substance on the board. The window shows how the particles of each substance sit.']
+  statetile: ['State tiles', 'Each tile has a symbol in brackets and a word for what it means. Drag a tile into the slot under a substance to write it after that substance on the board. The particle view shows how the particles of each substance sit.']
 });

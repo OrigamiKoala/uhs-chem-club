@@ -113,9 +113,13 @@ function paintPlot(ctx, F, f, r, x, y, w, h) {
   if (p.ghost) {
     const gh = historyOf({ ...r.sys, b0: p.ghost.b0, seed: p.ghost.seed });
     ctx.globalAlpha = 0.35;
-    ctx.strokeStyle = B_INK; ctx.setLineDash([3, 3]); ctx.beginPath();
-    for (let t = 0; t <= r.t; t++) { const px = F.x(X(t)); const py = F.y(Y(gh.b[t])); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
-    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.setLineDash([3, 3]);
+    for (const [pick, ink] of [[t => n - gh.b[t], A_INK], [t => gh.b[t], B_INK]]) {
+      ctx.strokeStyle = ink; ctx.beginPath();
+      for (let t = 0; t <= r.t; t++) { const px = F.x(X(t)); const py = F.y(Y(pick(t))); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   draw(t => n - r.hist.b[t], A_INK);
   draw(t => r.hist.b[t], B_INK);
@@ -153,16 +157,18 @@ function paintPan(ctx, f, state, b) {
   paintPlot(ctx, F, f, r, px, top, w - px - 3.5, ph);
   if (p.tracer) {
     paintStrip(ctx, F, r, px, top + ph + 5, w - px - 3.5, 13.5);
-    say(ctx, 'ringed spheres, last 40 ticks', F.x(px), F.y(top + ph + 2.6), F.size(1.9, 5.6), { color: DIM, maxW: F.len(w - px - 3.5) });
+    say(ctx, 'ringed particles, last 40 s', F.x(px), F.y(top + ph + 2.6), F.size(1.9, 5.6), { color: DIM, maxW: F.len(w - px - 3.5) });
   }
   const y = h - 3.6;
   const sz = F.size(2.3, 6);
-  say(ctx, `time ${r.t}`, F.x(2.5), F.y(y - (hasWin ? 0 : 4.3)), sz, { color: DUST, weight: 700 });
+  const aName = p.aName ?? 'A';
+  const bName = p.bName ?? 'B';
+  say(ctx, `time ${r.t} s`, F.x(2.5), F.y(y - (hasWin ? 0 : 4.3)), sz, { color: DUST, weight: 700 });
   if (p.tallies !== false) {
-    if (hasWin) say(ctx, `last 50 ticks: A to B ${r.fwd}, B to A ${r.rev}`, F.x(18), F.y(y), sz, { color: AMBER, weight: 700, maxW: F.len(w - 18 - 14) });
+    if (hasWin) say(ctx, `last 50 s: ${aName}→${bName} ${r.fwd}, ${bName}→${aName} ${r.rev}`, F.x(18), F.y(y), sz, { color: AMBER, weight: 700, maxW: F.len(w - 18 - 14) });
     else {
-      say(ctx, `A to B ${r.fwd}`, F.x(2.5), F.y(y - 0.2), sz, { color: AMBER, weight: 700 });
-      say(ctx, `B to A ${r.rev}`, F.x(2.5 + 17), F.y(y - 0.2), sz, { color: AMBER, weight: 700 });
+      say(ctx, `${aName}→${bName} ${r.fwd}`, F.x(2.5), F.y(y - 0.2), sz, { color: AMBER, weight: 700 });
+      say(ctx, `${bName}→${aName} ${r.rev}`, F.x(2.5 + 17), F.y(y - 0.2), sz, { color: AMBER, weight: 700 });
     }
   }
 }
@@ -186,12 +192,12 @@ registerFixture('pan', {
  * A pan. `kf` is the chance per tick that a particle of A turns to B and `kr` that a particle of B turns back; `b0` the particles of B at the
  * start; `start` the tick the pan has already been run to. Options: `tracer`, `window: false`, `tallies: false`, `ghost: {b0, seed}`.
  */
-export function panFixture(id, at, { kf, kr, b0 = 0, n = 48, seed = 1, start = 0, tracer = false, window = true, tallies = true, ghost = null, title = 'Vessel', w = null, h = null } = {}) {
+export function panFixture(id, at, { kf, kr, b0 = 0, n = 48, seed = 1, start = 0, tracer = false, window = true, tallies = true, ghost = null, title = 'Vessel', aName = 'A', bName = 'B', w = null, h = null } = {}) {
   const size = { w: w ?? (window ? 100 : 50), h: h ?? (tracer ? 60 : window ? 44 : 44) };
   return {
     id, kind: 'pan', label: title, at: { ...at }, size, runLabel: 'Run',
     dials: { t: { min: 0, max: PAN_TICKS, step: PAN_STEP, value: start, label: 'Time' } },
-    props: { hidden: ['t'], kf, kr, b0, n, seed, tracer, window, tallies, ...(ghost ? { ghost } : {}) }
+    props: { hidden: ['t'], kf, kr, b0, n, seed, tracer, window, tallies, aName, bName, ...(ghost ? { ghost } : {}) }
   };
 }
 
@@ -234,7 +240,7 @@ export const diagramCard = (id, label, at, a, b, extra = {}) => ({ id, kind: 'dg
    THE ARROW CARD: a reaction written with one arrow or two
    ------------------------------------------------------------------ */
 
-const RECT_ARW = { hw: 12, hh: 6.5 };
+const RECT_ARW = { hw: 15, hh: 6.5 };
 
 function paintArrow(ctx, p, state, o) {
   const box = slab(ctx, o, RECT_ARW, '#2a2620');

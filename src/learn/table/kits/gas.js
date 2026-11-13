@@ -27,6 +27,7 @@ import {
 import { gasDress } from './gas-3d.js';
 import { buildTank, buildPelletDish } from '../../engine/gas-props.js';
 import { registerGasTour } from '../tour-bellows.js';
+import { revealTable, gateRun } from './commit-gate.js';
 
 export const GAS_KIT_ID = 'gas';
 export const GAS_BOUNDS = Object.freeze({ w: 150, h: 64 });
@@ -40,6 +41,8 @@ export const GAS_RECORDER = Object.freeze({ at: { x: 147.4, y: 61.6 }, size: { w
 function run(state, fixtureId) {
   const f = state.fixtures[fixtureId];
   if (!f || f.noRun) return null;
+  const blocked = gateRun(state, f);
+  if (blocked) return blocked;
   if (f.kind === 'rig') return rigRun(state, fixtureId);
   if (f.kind === 'box') {
     const plot = f.props.plot;
@@ -110,6 +113,16 @@ function slotRole(zone, state) {
     : Object.values(state.fixtures).some(f => f.kind === 'rig' && f.props.pellet === zone.id) ? 'cradle' : null;
 }
 
+function dialed(state, f, dialName) {
+  const d = f.dials[dialName];
+  if (!d) return null;
+  const seen = { ...(f.props.seen || {}) };
+  const prev = Array.isArray(seen[dialName]) ? seen[dialName] : [];
+  if (prev.includes(d.value)) return null;
+  seen[dialName] = [...prev, d.value];
+  return { props: { seen } };
+}
+
 export const GAS_KIT = {
   id: GAS_KIT_ID,
   kinds: {
@@ -123,8 +136,10 @@ export const GAS_KIT = {
     trap: rect(7, 'chip', { tool: true })
   },
   planJoin,
+  dialed,
   pairable: (a, b) => a.kind === 'trap' && b.kind === 'tank',
   run,
+  onMiss: table => revealTable(table),
   paintPiece,
   paintFixture,
   piece3d,
@@ -221,7 +236,11 @@ export function rig(id, at, o = {}) {
     show, vmax, units, compact, speedScreen, speedMax, rowH: pitch, cols,
     ...(plot ? { plot } : {}), ...(bar != null ? { bar } : {}), ...(target != null ? { target } : {}), ...(words ? { words } : {}),
     ...(pellet ? { pellet } : {}), ...(screenH ? { screenH } : {}), ...(screenRef != null ? { screenRef } : {}), ...(T != null ? { T } : {}),
-    ...(trueSize ? { trueSize: true } : {}), ...(titled ? { titled: true } : {})
+    ...(trueSize ? { trueSize: true } : {}), ...(titled ? { titled: true } : {}),
+    ...(o.hideUntilCommit ? { hideUntilCommit: o.hideUntilCommit } : {}),
+    ...(o.gate ? { gate: o.gate } : {}),
+    ...(o.gateMsg ? { gateMsg: o.gateMsg } : {}),
+    seen: { ...(volumes ? { volume: [volumeStart] } : {}), ...(temps ? { temp: [tempStart] } : {}), ...(amounts ? { amount: [amountStart] } : {}) }
   };
   return {
     id, kind: 'rig', label: o.title || (titled ? titleOf : compact ? ' ' : 'Cylinder and piston'), at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
@@ -241,7 +260,7 @@ export function box(id, at, { gas = 'N2', n = 1, V = 10, T = 300, temps = null, 
   const h = Math.round((lastDial + 18 + side + 6.4 + (plot ? 6.4 : 0)) * 10) / 10;
   return {
     id, kind: 'box', label, at: { ...at }, size: { w, h }, dials, ...(plot ? { runLabel } : { noRun: true }),
-    props: { gas, n, V, T, ...(temps ? { temps, tempList } : {}), gaugeMax, units, side, ...(plot ? { plot } : {}) }
+    props: { gas, n, V, T, ...(temps ? { temps, tempList } : {}), gaugeMax, units, side, ...(plot ? { plot } : {}), seen: { ...(temps ? { temp: [tempStart] } : {}) } }
   };
 }
 
@@ -264,7 +283,7 @@ export function scaleFixture(id, at, { w = 42, h = 34 } = {}) {
  * The common tank: a room (`V` litres, `T` kelvin, or dials for them) that every tank standing in its place has opened into. Returns the
  * fixture and the place (`tray`) to put the tanks in. `show.partials` prints each gas's own push, `show.fraction` its share of the particles.
  */
-export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volumes = null, volumeStart = 1, volumeNames = null, volumeLabel = 'Room', temps = null, tempList = 'C', tempStart = 1, show = {}, w = 64, cap = null, label = 'Common tank', words = 3, record = false, runLabel = 'Record' } = {}) {
+export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volumes = null, volumeStart = 1, volumeNames = null, volumeLabel = 'Room', temps = null, tempList = 'C', tempStart = 1, show = {}, w = 64, cap = null, label = 'Common tank', words = 3, record = false, runLabel = 'Record', units = 'kpa', hideUntilCommit = null, gate = null, gateMsg = null } = {}) {
   const dials = {};
   if (volumes) dials.volume = { min: 1, max: volumes.length, step: 1, value: volumeStart, label: volumeLabel, labels: volumeNames || volumes.map(v => `${v} L`) };
   if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
@@ -279,7 +298,10 @@ export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volum
   return {
     fixture: {
       id, kind: 'common', label, at: { ...at }, size: { w, h }, ...(record ? { runLabel } : { noRun: true }), dials,
-      props: { backdrop: true, of, V, T, ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), show, tankH, top }
+      props: {
+        backdrop: true, of, V, T, ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), show, tankH, top, units,
+        ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {})
+      }
     },
     tray: { id: of, label: 'Valves open into the tank', at: { x: x0 + w / 2, y: y0 + trayY + trayH / 2 }, size: { w: w - 4, h: trayH }, cell: 15, ...(cap ? { cap } : {}) },
     size: { w, h }
@@ -290,7 +312,7 @@ export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volum
  * A pinhole: chambers of gas, each with a hole in its wall, and a stopwatch dial. `chambers` are `{id, gas, label, sealed}`; `times` the
  * seconds the dial steps through. `showHalf` prints the time each takes to half-empty. Record writes the share left of chamber `recordIndex`.
  */
-export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = false, w = null, h = null, recordIndex = 0, record = true, runLabel = 'Record', chamberH = 12, picks = null, T = 300 } = {}) {
+export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = false, w = null, h = null, recordIndex = 0, record = true, runLabel = 'Record', chamberH = 12, picks = null, T = 300, hideUntilCommit = null, gate = null, gateMsg = null } = {}) {
   const dials = { time: { min: 1, max: times.length, step: 1, value: timeStart, label: 'Stopwatch', labels: times.map(t => `${t} s`) } };
   // A gas dial (`picks: { ref: { gases, label, start } }`): a chamber that names it (`pick: 'ref'`) holds whichever gas the dial stands at.
   for (const [name, p] of Object.entries(picks || {})) {
@@ -304,18 +326,19 @@ export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = fal
     ...(record ? { runLabel } : { noRun: true }),
     props: {
       chambers: chambers.map(c => (typeof c.pick === 'string' ? { ...c, pick: { dial: c.pick, gases: picks[c.pick].gases.slice() } } : c)),
-      times, showHalf, recordIndex, chamberH, T
+      times, showHalf, recordIndex, chamberH, T,
+      ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {})
     }
   };
 }
 
 /** A tube of still air with a gas let in at each end and a stopwatch dial; a white ring forms where the two meet. */
-export function tube(id, at, { ends, times, timeStart = 1, length = 100, w = 66, record = true, runLabel = 'Check' } = {}) {
+export function tube(id, at, { ends, times, timeStart = 1, length = 100, w = 66, record = true, runLabel = 'Check', hideUntilCommit = null, gate = null, gateMsg = null } = {}) {
   const dials = { time: { min: 1, max: times.length, step: 1, value: timeStart, label: 'Stopwatch', labels: times.map(t => `${t} s`) } };
   return {
     id, kind: 'tube', label: 'Tube', at: { ...at }, size: { w, h: 8 + 3.6 + 5 + 5.4 + 8 + (record ? 6.4 : 2.4) }, dials,
     ...(record ? { runLabel } : { noRun: true }),
-    props: { ends, times, length }
+    props: { ends, times, length, ...(hideUntilCommit ? { hideUntilCommit } : {}), ...(gate ? { gate } : {}), ...(gateMsg ? { gateMsg } : {}) }
   };
 }
 

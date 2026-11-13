@@ -28,7 +28,9 @@ export const TERMS = [
   { id: 'entropy', term: 'entropy (S)', gloss: 'how many ways the particles and their energy can be arranged', quest: 'q6-entropy', stage: 3, re: /\bentropy\b|ΔS/i },
   { id: 'kelvin', term: 'kelvin (K)', gloss: 'the temperature scale that starts at absolute zero: K = °C + 273', quest: 'q6-entropy', stage: 5, recap: 'Bellows', re: /\bkelvin\b|\d\s?K\b/ },
   { id: 'spontaneous', term: 'spontaneous', gloss: 'happening on its own, without anything keeping it going', quest: 'q7-gibbs', stage: 2, re: /\bspontaneous\b/i },
-  { id: 'free-energy', term: 'free energy change (ΔG)', gloss: 'ΔH − TΔS: negative means the change happens on its own', quest: 'q7-gibbs', stage: 2, re: /\bfree energy\b|ΔG/i }
+  { id: 'free-energy', term: 'free energy change (ΔG)', gloss: 'ΔH − TΔS: negative means the change happens on its own', quest: 'q7-gibbs', stage: 2, re: /\bfree energy\b|ΔG/i },
+  { id: 'reactant', term: 'reactant', gloss: 'a starting substance on the left of the arrow', quest: 'q3-enthalpy', stage: 1, re: /\breactants?\b/i },
+  { id: 'product', term: 'product', gloss: 'a substance formed on the right of the arrow', quest: 'q3-enthalpy', stage: 1, re: /\bproducts?\b/i }
 ];
 
 /** Words that are not glossary terms and must not stand in for one inside Ember Reach's play text (the Crucible and the story keep their fiction). */

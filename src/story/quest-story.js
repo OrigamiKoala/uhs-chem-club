@@ -503,16 +503,6 @@ export const QUEST_STORY = {
   },
   /* ---- Ember Reach: the Fifth's manifold is frosted over, so what runs inside it takes heat in ---- */
   /* ---- Kettle: the forged ledger ---- */
-  'unit07/q1-recipe': {
-    scene: 'three-scoops',
-    beats: [
-      { to: 0.22, say: 'Three scoops from three floors, and every molecule in them is the same: two hydrogens joined to one oxygen.' },
-      { to: 0.5, say: 'Loose atoms stirred in beside them do not change the molecule. A compound keeps its recipe, and the extras just sit there.' },
-      { to: 0.74, say: 'Joining only rearranges atoms, so the atoms weigh the same loose or joined.' },
-      { to: 0.94, say: 'The recipe fixes the shares too: oxygen is 16.0 of every 18.0, the same in every scoop.' }
-    ],
-    filed: 'Filed: a compound holds the same share of each element every time, so ore\'s share of metal can be worked out.'
-  },
   'unit07/q5-ionic': {
     scene: 'cloudy-pond',
     beats: [
@@ -526,8 +516,8 @@ export const QUEST_STORY = {
   'unit07/boss-golem': {
     scene: 'golem-vault',
     beats: [
-      { to: 0.22, say: 'Every phase was a bench you had already worked: a heap, a recipe board, a pot, a furnace and a ledger. That was enough to read the golem.' },
-      { to: 0.5, say: 'Its valves close and the steam stops. A recipe with nothing left to run on has nothing left to make.' },
+      { to: 0.22, say: 'Every phase was a bench you had already worked: two supplies, an unmarked drum, an equation board, a furnace and a ledger. That was enough to read the golem.' },
+      { to: 0.5, say: 'Its valves close and the steam stops. A reaction with nothing left to run on has nothing left to make.' },
       { to: 0.7, say: 'Behind it is a vault, and in the vault is the ledger: ore in, metal out.' },
       { to: 0.92, say: 'The ore in the ledger can give at most 27.9 tons of iron. The ledger claims 50.0, so 22.1 tons of it came from nowhere the ore could supply.' }
     ],
@@ -536,11 +526,11 @@ export const QUEST_STORY = {
   'unit07/q4-balance': {
     scene: 'recipe-board',
     beats: [
-      { to: 0.26, say: 'The furnace recipe lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
+      { to: 0.26, say: 'The furnace equation lists the reactants, Fe₂O₃ and CO, and the products, Fe and CO₂. Count the atoms and the sides disagree: oxygen is 4 on the left and 2 on the right.' },
       { to: 0.6, say: 'A coefficient in front of a formula counts molecules, so it changes the atom counts and leaves each substance alone. Raise them one at a time and the rows come closer.' },
       { to: 0.94, say: 'At 1, 3, 2 and 3 every row agrees: 2 iron, 3 carbon and 6 oxygen on each side.' }
     ],
-    filed: 'Filed: the furnace recipe, Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, is balanced: every atom of the ore is accounted for.'
+    filed: 'Filed: the furnace equation, Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂, is balanced: every atom of the ore is accounted for.'
   },
   'unit07/q2-names': {
     scene: 'crate-labels',
@@ -554,19 +544,19 @@ export const QUEST_STORY = {
   'unit07/q3-change': {
     scene: 'sealed-pot',
     beats: [
-      { to: 0.27, say: 'In an open pot, burning iron takes oxygen from the air, so the balance counts more atoms and reads more.' },
-      { to: 0.52, say: 'The gases a burn makes float out of an open pot, so the balance counts fewer atoms and reads less.' },
+      { to: 0.27, say: 'In an open vessel, burning iron takes oxygen from the air, so the balance counts more atoms and reads more.' },
+      { to: 0.52, say: 'The gases a burn makes float out of an open vessel, so the balance counts fewer atoms and reads less.' },
       { to: 0.77, say: 'Seal the lid and nothing gets in or out. The atoms only join up differently, so the balance reads the same before and after.' },
-      { to: 0.94, say: 'The balance changes only when atoms cross the lid. A sealed pot makes nothing and loses nothing.' }
+      { to: 0.94, say: 'The balance changes only when atoms cross the lid. A sealed vessel makes nothing and loses nothing.' }
     ],
-    filed: 'Filed: a sealed pot weighs the same before and after, so the ledger\'s extra metal came from somewhere.'
+    filed: 'Filed: a sealed vessel weighs the same before and after, so the ledger\'s extra metal came from somewhere.'
   },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
     beats: [
-      { to: 0.24, say: 'An equation counts molecules, not grams. Two hydrogens and one oxygen make two waters, and the weights still add to 36.0 on both sides.' },
+      { to: 0.24, say: 'An equation counts molecules, not grams. Two hydrogens and one oxygen make two waters, and the masses still add to 36.0 on both sides.' },
       { to: 0.5, say: 'So grams reach grams through moles. Three hydrogens to two ammonias is a ratio of moles, whatever they weigh.' },
-      { to: 0.72, say: 'Feed two reactants and the pot stops when one runs out. What is left of the other is the excess.' },
+      { to: 0.72, say: 'Feed two reactants and the reaction stops when one runs out. What is left of the other is the excess.' },
       { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron. A real furnace keeps only a part of that.' }
     ],
     filed: 'Filed: forty tons of ore can give at most 28 tons of iron, so a ledger that shows fifty is forged.'
@@ -575,8 +565,8 @@ export const QUEST_STORY = {
     scene: 'burette-count',
     beats: [
       { to: 0.24, say: 'A burette lets base into the acid in measured drops, and its reading is the drops counted. Here each drop is half a millilitre.' },
-      { to: 0.5, say: 'Every drop holds the same moles of base, and each mole of base uses up a mole of acid. The flask is counted against the drops, disc for disc.' },
-      { to: 0.74, say: 'When the discs match, that is the equivalence point. The dye turns on the very next drop, which is the endpoint.' },
+      { to: 0.5, say: 'Every drop holds the same moles of base, and each mole of base uses up a mole of acid. The flask is counted against the drops, particle for particle.' },
+      { to: 0.74, say: 'When the particles match, that is the equivalence point. The indicator turns on the very next drop, which is the endpoint.' },
       { to: 0.95, say: 'So the acid\'s strength is the base\'s strength times the volume counted, over the volume in the flask.' }
     ],
     filed: 'Filed: the pickling bath is 0.450 mol/L sulfuric acid, so the foundry\'s acid use can be checked against its ledger.'
@@ -594,7 +584,7 @@ export const QUEST_STORY = {
   'unit07/q9-hsab': {
     scene: 'hsab-vat',
     beats: [
-      { to: 0.25, say: 'Ions are not all equally firm. Hard ions are small and compact with rigid clouds, while soft ions are large and squishy.' },
+      { to: 0.25, say: 'Hard ions are small and compact with tightly held electron clouds, while soft ions are large with clouds easily pulled out of shape.' },
       { to: 0.5, say: 'Hard cations like calcium lock to hard fluoride with strong ionic attraction. Mismatched pairs stay dissolved in the water.' },
       { to: 0.75, say: 'Soft silver ions share electrons with soft sulfide through covalent overlap, forming an insoluble black precipitate.' },
       { to: 0.95, say: 'Hard soft acid base theory explains how the foundry selectively separates precious metals from furnace waste.' }
@@ -756,6 +746,15 @@ export const QUEST_STORY = {
       { to: 0.9, say: 'One feeder still haunts the ice: the Lantern-Eater, made of everything you have measured here.' }
     ],
     filed: 'Filed: the sealed tank water holds copper at 5 millimoles a litre, read from the calibration line.'
+  },
+  'unit02/q10-wavefunctions': {
+    scene: 'cloud-ball',
+    beats: [
+      { to: 0.3, say: 'An orbital comes from a wavefunction, ψ, with + crests and − troughs.' },
+      { to: 0.65, say: 'The chance of finding the electron goes as ψ², so + and − lobes hold dots alike, while zero crossings leave empty nodes.' },
+      { to: 0.9, say: 'Radial nodes are empty shells and angular nodes are empty planes; every orbital in shell n has n − 1 nodes in all.' }
+    ],
+    filed: 'Filed: an orbital\'s cloud is ψ², and every node is a place where its wavefunction passes through zero.'
   },
   'unit02/boss-eater': {
     scene: 'eater-lens',

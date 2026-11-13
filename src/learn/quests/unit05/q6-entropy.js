@@ -99,9 +99,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, the wall is gone and the box can be shaken.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for the four particles is recorded. Test it on the bench.'
     }
   },
 
@@ -176,7 +176,14 @@ export const STAGES = [
       if (Object.keys(want).some(k => !['more', 'fewer'].includes(whereIs(t, k)))) return { ok: false, notYet: true, msg: 'Every change needs a tray.' };
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
       if (!wrong) return { ok: true };
-      return { ok: false, msg: `"${t.pieces[wrong[0]].label}" is in the "${t.zones.trays[whereIs(t, wrong[0])].label}" tray: look again at how its particles are packed before the change and after it.` };
+      const card = t.pieces[wrong[0]];
+      const gasOf = g => g.filter(([ph]) => ph === 'gas').reduce((s, [, n]) => s + n, 0);
+      const gb = gasOf(card.props.before || []);
+      const ga = gasOf(card.props.after || []);
+      const detail = gb !== ga
+        ? `it goes from ${gb} spread-out particle${gb === 1 ? '' : 's'} to ${ga}`
+        : `it goes from ${card.props.before?.[0]?.[0]} to ${card.props.after?.[0]?.[0]}`;
+      return { ok: false, msg: `"${card.label}" is in the "${t.zones.trays[whereIs(t, wrong[0])].label}" tray, yet ${detail}.` };
     },
     reward: {
       log: 'Gas decided the sign.',
@@ -212,7 +219,9 @@ export const STAGES = [
       if (order.join() === want.join()) return { ok: true };
       const t = state.table;
       const j = order.findIndex((id, i) => i > 0 && want.indexOf(order[i - 1]) > want.indexOf(id));
-      return { ok: false, msg: `"${t.pieces[order[j - 1]].label}" stands to the left of "${t.pieces[order[j]].label}": compare the particles in those two boxes.` };
+      const left = t.pieces[order[j - 1]];
+      const right = t.pieces[order[j]];
+      return { ok: false, msg: `"${left.label}" (${left.props.phase}, ${left.props.T} °C) stands to the left of "${right.label}" (${right.props.phase}, ${right.props.T} °C): compare how spread out and how fast their particles are.` };
     },
     reward: {
       log: 'Volume and motion both added ways.',

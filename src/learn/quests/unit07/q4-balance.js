@@ -37,11 +37,12 @@ export const VOCABULARY = [
   { term: /\breactants?\b/i, introducedAt: 1 },
   { term: /\bproducts?\b/i, introducedAt: 1 },
   { term: /\bcoefficients?\b/i, introducedAt: 3 },
+  { term: /\bsubscripts?\b/i, introducedAt: 3 },
   { term: /\bstate symbols?\b/i, introducedAt: 5 }
 ];
 
 /** Conservation of mass is the first bench's; solid, liquid and gas pictures are Mirrowen's. */
-export const BUILDS_ON = ['unit07/q1-recipe', 'unit06/q1-states'];
+export const BUILDS_ON = ['unit06/q1-states'];
 
 /** The room this quest's table stands in at T4: Kettle has no world to stand in yet (`rooms.js`). */
 export const ROOM = 'foundry';
@@ -73,7 +74,7 @@ const PROPANE_COEFS = smallestCoefs(EQ_PROPANE);
 const WATER_COEFS = smallestCoefs(EQ_WATER);
 const O_ROW = atomLedger(parseEquation(EQ_WATER)).rows.find(r => r.el === 'O');
 
-const GUESS = { chg: 'Change a small number', front: 'Put a number in front', add: 'Add the missing atom' };
+const GUESS = { chg: 'Change the small 2 in H₂O', front: 'Put a number in front of a formula', add: 'Add an O atom on the right' };
 
 /* ------------------------------------------------------------------
    HELPERS
@@ -101,25 +102,29 @@ export const STAGES = [
     return {
       id: 's1-count',
       title: 'Count the Atoms',
-      prompt: 'Count the oxygen atoms the window shows before the change and after it, and set the tally to match.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A chemical equation writes a change: the reactants before the arrow, the products after it. The particle view draws the molecules the equation names.'
+      },
+      prompt: 'How many oxygen atoms does this equation show before the change, and how many after?',
       widget,
       table: potTable({ fixtures: [...b.fixtures, tallyFixture('tally', { x: 39, y: 37 })], zones: { slots: [] } }),
       hints: [
-        'Use the "Oxygen before" and "Oxygen after" dials on the tally.',
-        'Count the oxygen balls in the left half of the window, then in the right half.',
-        'Each cluster is one molecule, so add up the oxygen atoms of every cluster in a half.'
+        'Look at the particle view and the two dials on the tally.',
+        'Count the oxygen circles in the left half of the particle view, then in the right half.',
+        'Each cluster is one molecule, so add up the oxygen atoms across every cluster on a side.'
       ],
       check(state) {
         const v = tallyRead(state.table, 'tally');
         if (v.before === 0 && v.after === 0) return { ok: false, notYet: true, msg: 'Set the tally dials to your count.' };
-        if (v.before !== O_ROW.left) return { ok: false, msg: 'The left half of the window does not show that many oxygen atoms.' };
-        if (v.after !== O_ROW.right) return { ok: false, msg: 'The right half of the window does not show that many oxygen atoms.' };
+        if (v.before !== O_ROW.left) return { ok: false, msg: 'The left half of the particle view does not show that many oxygen atoms.' };
+        if (v.after !== O_ROW.right) return { ok: false, msg: 'The right half of the particle view does not show that many oxygen atoms.' };
         return { ok: true };
       },
       reward: {
         log: 'H₂ + O₂ → H₂O shows 2 oxygen atoms before and 1 after.',
         title: 'Reactants and Products',
-        body: 'A chemical equation writes a change with the reactants, the substances before the arrow, and the products, the substances after it. This one shows 2 oxygen atoms before the change and 1 after it, and atoms are not destroyed.'
+        body: 'Two oxygen atoms in the reactants and one in the product. Atoms are not destroyed in a reaction, so the chemical equation is not yet right.'
       }
     };
   })(),
@@ -129,17 +134,17 @@ export const STAGES = [
     id: 's2-predict',
     title: 'A Way to Agree',
     predict: true,
-    prompt: 'Choose how you would make the oxygen atoms agree on both sides of H₂ + O₂ → H₂O.',
+    prompt: 'How would you make the oxygen atoms agree on both sides of H₂ + O₂ → H₂O?',
     widget,
     table: potTable({
-      pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 38, y: 10 + Math.floor(i / 2) * 16 })),
+      pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 44, y: 10 + Math.floor(i / 2) * 16 })),
       fixtures: [plaqueFixture('eq', 'Equation', { x: 116, y: 12 }, ['H₂ + O₂ → H₂O'], { w: 50 })],
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 116, y: 38 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
+      'Look at the three cards and the prediction slot.',
       'Think about what each change does to the atoms on the board and to the substances themselves.',
-      'Commit to the way you expect to work, then test it on the board in the next part.'
+      'Decide whether you should change a formula or change how many molecules are present.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -153,7 +158,7 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, try it on the board and watch the ledger and the window.'
+      body: 'Next, try it on the board and watch the ledger and the particle view.'
     }
   },
 
@@ -163,35 +168,39 @@ export const STAGES = [
     return {
       id: 's3-agree',
       title: 'Make Them Agree',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The number in front of a formula is a coefficient. The small number inside a formula is a subscript.'
+      },
       get prompt() {
         const g = recall(QUEST_KEY);
         const pre = g && GUESS[g] ? `You chose "${GUESS[g]}". ` : '';
-        return `${pre}Make the atoms on the left of the arrow agree with the atoms on the right.`;
+        return `${pre}Which numbers can change to balance the equation without changing the substances?`;
       },
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Use the dials on the board and read the ledger.',
-        'After each turn of a dial, compare the two columns of the ledger and look at what the window redraws.',
-        'One kind of dial changes how many molecules there are and the other changes which molecule it is.'
+        'Turn the dials on the board and watch the atom ledger and particle view.',
+        'After each turn of a dial, compare the two columns of the ledger and look at what the particle view redraws.',
+        'One kind of dial changes how many molecules there are, and the other changes which molecule it is.'
       ],
       check(state) {
         const t = state.table;
         const r = board(t);
         if (untouched(r)) return { ok: false, notYet: true, msg: 'Turn a dial on the board.' };
         const changed = Object.keys(r.subs).map(i => r.plan.species[i].f);
-        if (changed.length) return { ok: false, msg: `The window now shows ${pretty(changed[0])} after the change, a different molecule from the one you started with.` };
+        if (changed.length) return { ok: false, msg: `The particle view now shows ${pretty(changed[0])} after the change, a different molecule from the one you started with.` };
         const miss = ledgerMiss(t);
         if (miss) return { ok: false, msg: miss };
         return { ok: true };
       },
       get reward() {
         const g = recall(QUEST_KEY);
-        const verdict = g === 'chg' ? 'Changing the small number made the counts agree, but for a different molecule. ' : g === 'front' ? 'Your guess held. ' : '';
+        const verdict = g === 'chg' ? 'Changing the subscript made the counts agree, but for a different molecule. ' : g === 'front' ? 'Your guess held. ' : '';
         return {
           log: '2 H₂ + O₂ → 2 H₂O agrees; H₂ + O₂ → H₂O₂ is a different molecule.',
           title: 'The Coefficient',
-          body: `${verdict}A coefficient is the number in front of a formula: it counts molecules, so the atoms change and the substance does not. A small number inside a formula is part of what the substance is.`
+          body: `${verdict}Coefficients count molecules, so changing them keeps the substances. Changing a subscript made a different substance.`
         };
       }
     };
@@ -202,13 +211,13 @@ export const STAGES = [
     const b = eqBench({ eq: EQ_FURNACE, dialed: 'all', lex: 2, ledger: false, pot: { eq: EQ_FURNACE, feed: FURNACE_POT }, boardTitle: 'Equation' });
     return {
       id: 's4-furnace',
-      title: 'The Furnace Recipe',
-      prompt: 'Set the board so the equation describes the change in the window.',
+      title: 'The Furnace Equation',
+      prompt: 'Which balanced equation describes the change in the particle view?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Use the four dials on the board.',
-        'Compare what the window shows before the change with what it shows after, one substance at a time.',
+        'Look at the particle view and turn the four dials on the board.',
+        'Compare what the particle view shows before the change with what it shows after, one substance at a time.',
         'Only molecules that changed belong in the equation: a substance still there afterwards was not all used.'
       ],
       check(state) {
@@ -220,15 +229,15 @@ export const STAGES = [
         for (let i = 0; i < sp.length; i++) {
           if (r.coefs[i] === want[i]) continue;
           const left = FURNACE.after.find(([f]) => f === sp[i].f);
-          if (i < r.nl && left) return { ok: false, msg: `The window shows ${left[1]} ${pretty(sp[i].f)} still there after the change.` };
-          return { ok: false, msg: `The board does not match the number of ${pretty(sp[i].f)} in the window.` };
+          if (i < r.nl && left) return { ok: false, msg: `The particle view shows ${left[1]} ${pretty(sp[i].f)} still there after the change.` };
+          return { ok: false, msg: `The board does not match the number of ${pretty(sp[i].f)} in the particle view.` };
         }
         return { ok: true };
       },
       reward: {
-        log: 'The furnace recipe: Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.',
-        title: 'The Furnace Recipe',
-        body: 'The furnace recipe is Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂. Only the molecules that changed belong in an equation, so the carbon monoxide left over afterwards is not counted.'
+        log: 'The furnace equation: Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.',
+        title: 'The Furnace Equation',
+        body: 'Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂. The carbon monoxide still there afterwards did not react, so it is not in the equation.'
       }
     };
   })(),
@@ -240,7 +249,7 @@ export const STAGES = [
     return {
       id: 's5-states',
       title: 'Which State',
-      prompt: 'Write the state of each substance after it on the board.',
+      prompt: 'What state is each substance in?',
       widget,
       table: potTable({
         pieces: order.map((s, i) => stateTile(`t_${s}`, s, { x: 12 + i * 19, y: 54 })),
@@ -248,9 +257,9 @@ export const STAGES = [
         zones: { slots: b.slots }
       }),
       hints: [
-        'Drag a tile into the slot under each substance.',
-        'Look at how the particles of each substance are drawn in the window: locked in rows, jumbled, far apart or among water.',
-        'Match each way of sitting to the word printed on a tile.'
+        'Look at the particle view and drag a state tile under each substance.',
+        'Look at how the particles of each substance sit in the particle view: locked in rows, jumbled, far apart or among water.',
+        'Use how the particles are arranged to decide whether each substance is solid, liquid, gas or in water.'
       ],
       check(state) {
         const t = state.table;
@@ -260,7 +269,7 @@ export const STAGES = [
         for (let i = 0; i < sp.length; i++) {
           const have = r.states[i];
           if (!have) { missing = true; continue; }
-          if (have !== STATE_OF[sp[i].f]) return { ok: false, msg: `${pretty(sp[i].f)} is marked (${have}), but the window does not draw its particles ${STATE_PICTURE[have]}.` };
+          if (have !== STATE_OF[sp[i].f]) return { ok: false, msg: `${pretty(sp[i].f)} is marked (${have}), but the particle view does not draw its particles ${STATE_PICTURE[have]}.` };
         }
         if (missing) return { ok: false, notYet: true, msg: 'Every substance needs a tile.' };
         return { ok: true };
@@ -268,7 +277,7 @@ export const STAGES = [
       reward: {
         log: '2 Na(s) + 2 H₂O(l) → 2 NaOH(aq) + H₂(g).',
         title: 'State Symbols',
-        body: 'A state symbol in brackets after a formula says what state the substance is in: (s) solid, (l) liquid, (g) gas, (aq) dissolved in water. The equation now says what the window shows.'
+        body: 'A state symbol in brackets says each state: (s) solid, (l) liquid, (g) gas, (aq) dissolved in water. Those match what the particle view shows.'
       }
     };
   })(),
@@ -279,13 +288,13 @@ export const STAGES = [
     return {
       id: 's6-propane',
       title: 'Propane',
-      prompt: 'Make the atom counts agree on both sides for propane burning in oxygen.',
+      prompt: 'What coefficients balance propane burning in oxygen?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Use the four dials on the board and read the ledger.',
-        'Compare the two columns of the ledger one atom at a time, and turn a dial to see which rows move.',
-        'Set the atoms that appear in only one substance on each side first, and leave oxygen, which appears in two, for last.'
+        'Turn the four dials on the board and read the atom ledger.',
+        'Compare the two columns of the ledger one atom at a time, and see which rows move when each dial turns.',
+        'Balance the atoms that appear in only one substance on each side first, leaving oxygen for last.'
       ],
       check(state) {
         const t = state.table;
@@ -297,7 +306,7 @@ export const STAGES = [
       reward: {
         log: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O.',
         title: 'Burning Propane',
-        body: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O. Oxygen is in both products, so its count depends on the other two coefficients, and every row of the ledger has to agree at once.'
+        body: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O. Oxygen is in both products, so it is set last.'
       }
     };
   })(),
@@ -308,12 +317,12 @@ export const STAGES = [
     return {
       id: 's7-groups',
       title: 'Groups That Stay Whole',
-      prompt: 'Make the pieces on the left of the arrow agree with the pieces on the right.',
+      prompt: 'What coefficients balance this equation, counting each ringed group as one piece?',
       widget,
       table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }),
       hints: [
-        'Use the four dials on the board and read the ledger of pieces.',
-        'Look at the rings in the window: what is inside a ring stays whole, so compare how many of each ring stand on each side.',
+        'Turn the four dials on the board and read the ledger of pieces.',
+        'Look at the rings in the particle view: what is inside a ring stays whole, so compare how many of each ring stand on each side.',
         'Balance the pieces that appear in only one substance on each side first, then the one that appears in two.'
       ],
       check(state) {
@@ -326,7 +335,7 @@ export const STAGES = [
       reward: {
         log: '3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O.',
         title: 'Groups That Stay Whole',
-        body: 'A group of atoms that stays together through the change, like PO₄ or OH, can be counted as one piece. In 3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O the two PO₄ groups on the right are the two from H₃PO₄.'
+        body: 'PO₄ stays whole, so it is balanced as a single piece: 3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O.'
       }
     };
   })(),
@@ -337,12 +346,12 @@ export const STAGES = [
     return {
       id: 's8-sealed',
       title: 'Sealed Bags',
-      prompt: 'Build the formula of the substance in the sealed bags.',
+      prompt: 'What is the formula of the substance in each sealed bag?',
       widget,
       table: potTable({ fixtures: [...b.fixtures, formulaFixture('fm', { x: 39, y: 40 }, { elements: ['P', 'O'] })], zones: { slots: [] } }),
       hints: [
-        'Use the "P atoms" and "O atoms" dials to build the formula of one bag.',
-        'Count the atoms of each kind in the left half of the window, then see how many sealed bags the right half holds.',
+        'Count the atoms in the particle view and set the "P atoms" and "O atoms" dials.',
+        'Count each kind of atom on the left of the particle view, then count how many sealed bags are on the right.',
         'The atoms in the bags are the atoms that went in, shared equally among the bags.'
       ],
       check(state) {
@@ -351,12 +360,12 @@ export const STAGES = [
         const want = parseFormula(SEALED_FORMULA);
         const same = Object.keys(want).length === Object.keys(r.counts).length && Object.entries(want).every(([el, n]) => r.counts[el] === n);
         if (same) return { ok: true };
-        return { ok: false, msg: `${r.text} has ${r.counts.P || 0} P and ${r.counts.O || 0} O, and the window shows 2 sealed bags after the change.` };
+        return { ok: false, msg: `${r.text} has ${r.counts.P || 0} P and ${r.counts.O || 0} O, and the particle view shows 2 sealed bags after the change.` };
       },
       reward: {
         log: 'P₄ + 5 O₂ → 2 P₂O₅.',
         title: 'An Unknown Formula',
-        body: 'The 4 phosphorus and 10 oxygen atoms that went in are the atoms in the 2 bags, so each bag holds P₂O₅. A balanced equation lets you work out a formula from the atoms that have to be there.'
+        body: 'Four phosphorus and ten oxygen atoms went in and two bags came out, so each holds P₂O₅.'
       }
     };
   })()
@@ -367,7 +376,7 @@ const NOTES = {
   1: ['Set both tally dials to your count.'],
   2: ['Drag the card you choose into the slot.'],
   3: ['Turn the board dials and read the ledger.'],
-  4: ['Turn the board dials. The window cannot be changed.'],
+  4: ['Turn the board dials. The particle view cannot be changed.'],
   5: ['Drag a tile into the slot under each substance.'],
   6: ['Turn the board dials and read the ledger.'],
   7: ['Turn the board dials and read the ledger.'],
@@ -383,7 +392,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A balanced equation has the same atoms on both sides, and the only way to get there is with the numbers in front. The furnace recipe is Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
+      body: 'A balanced equation has the same atoms on both sides, and the only way to get there is with the coefficients in front. The furnace equation is Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
     }
   ]
 };

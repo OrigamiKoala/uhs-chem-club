@@ -9,12 +9,12 @@
  */
 
 import {
-  sampleOrbital, ORBITALS, nodeRadii, shapeOf, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM
+  sampleOrbital, ORBITALS, nodeRadii, shapeOf, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM, psiAt
 } from '../../engine/orbitals.js';
 import { projectDots, blurAt, trackRefusal, DEFAULT_VIEW, TURN_STEP, SLICE_HALF, MAX_SHOTS } from '../../engine/cloudplate.js';
 
 export {
-  ORBITALS, shapeOf, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM, blurAt, trackRefusal, DEFAULT_VIEW, TURN_STEP, SLICE_HALF, MAX_SHOTS, projectDots
+  ORBITALS, shapeOf, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM, blurAt, trackRefusal, DEFAULT_VIEW, TURN_STEP, SLICE_HALF, MAX_SHOTS, projectDots, psiAt
 };
 
 /** Shots a press of the probe takes, by the exposure dial's setting (1 to 3). */
@@ -74,7 +74,9 @@ export function viewRead(state, viewId) {
  */
 export function plateRead(state, id) {
   const f = state.fixtures[id];
-  const orbital = f.props.orbital;
+  const orbital = f.dials.orbital && f.props.orbitals
+    ? f.props.orbitals[Math.round(f.dials.orbital.value) - 1]
+    : f.props.orbital;
   const fired = Math.round(f.dials.fired?.value ?? 0);
   const points = pointsOf(orbital, f.props.seed ?? 1);
   const turning = Boolean(f.props.view);
@@ -192,3 +194,33 @@ export function blurRead(state, id) {
 
 /** What the Track Electron key says when it is pressed. */
 export const trackReason = () => trackRefusal().reason;
+
+/* ------------------------------------------------------------------
+   THE WAVEFUNCTION STRIP
+   ------------------------------------------------------------------ */
+
+/** Sample ψ(x) along the x-axis through the nucleus and read the probe position. */
+export function waveStripRead(state, id) {
+  const f = state.fixtures[id];
+  const orbital = f.props.orbital;
+  const extentPm = f.props.extentPm ?? 200;
+  const probePm = f.dials.probe.value;
+  const steps = 80;
+  const curve = [];
+  let maxAbs = 0;
+  for (let i = 0; i <= steps; i++) {
+    const pm = -extentPm + (2 * extentPm * i) / steps;
+    const v = psiAt(orbital, pm / BOHR_PM, 0, 0);
+    curve.push({ pm, psi: v });
+    maxAbs = Math.max(maxAbs, Math.abs(v));
+  }
+  const psi = psiAt(orbital, probePm / BOHR_PM, 0, 0);
+  const rel = maxAbs > 0 ? psi / maxAbs : 0;
+  const label = Math.abs(rel) < 0.04 ? '0'
+    : rel >= 0.35 ? '+ large'
+    : rel > 0 ? '+ small'
+    : rel <= -0.35 ? '\u2212 large'
+    : '\u2212 small';
+  const dotsNear = Math.round(rel * rel * 48);
+  return { orbital, extentPm, probePm, psi, rel, maxAbs, label, dotsNear, curve };
+}

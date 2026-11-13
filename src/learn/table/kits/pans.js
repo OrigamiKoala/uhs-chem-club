@@ -33,6 +33,7 @@ import { replayGlide } from './pans-ratio.js';
 import { replaySettle } from './pans-ice.js';
 import { replayVessels } from './pans-stress.js';
 import { installDresses } from './pans-3d.js';
+import { revealTable, gateRun } from './commit-gate.js';
 installDresses();
 
 export const PANS_KIT_ID = 'pans';
@@ -41,6 +42,8 @@ export const PANS_BOUNDS = HEAT_BOUNDS;
 function run(state, fid) {
   const f = state.fixtures[fid];
   if (!f || f.noRun) return null;
+  const blocked = gateRun(state, f);
+  if (blocked) return blocked;
   const h = fixtureHandler(f.kind);
   if (h?.run) return h.run(state, fid);
   return HEAT_KIT.run(state, fid);
@@ -81,6 +84,7 @@ export const PANS_KIT = {
   run,
   tapZones: (f, state) => fixtureHandler(f.kind)?.tapZones?.(f, state) || [],
   replay: () => { replayPans(); replayGlide(); replaySettle(); replayVessels(); },
+  onMiss: table => { revealTable(table); replayPans(); replayGlide(); replaySettle(); replayVessels(); },
   live: state => Object.values(state.fixtures || {}).some(f => fixtureHandler(f.kind)?.live?.(f, state)),
   paintPiece,
   paintFixture,

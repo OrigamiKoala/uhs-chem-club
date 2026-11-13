@@ -200,7 +200,7 @@ function paintBeaker(ctx, f, state, b) {
   }
   if (L.tallyY != null) {
     const t = tallyOf(r, f.id);
-    say(ctx, `at the solid, last 50 ticks: leaving ${t.fwd}, returning ${t.rev}`, F.x(3.5), F.y(L.tallyY), F.size(2.2, 5.8), { color: AMBER, weight: 700, maxW: F.len(f.size.w - 7) });
+    say(ctx, `at the solid, last 50 s: leaving ${t.fwd}, returning ${t.rev}`, F.x(3.5), F.y(L.tallyY), F.size(2.2, 5.8), { color: AMBER, weight: 700, maxW: F.len(f.size.w - 7) });
   }
   const noteW = f.size.w - 7;
   say(ctx, p.note ?? (p.compact ? 'mol/L, 25 °C, ideal' : 'mol/L, 25 °C, ideal solution, dots not to scale'), F.x(3.5), F.y(L.noteY), F.size(2.0, 5.8), { color: DIM, maxW: F.len(noteW) });

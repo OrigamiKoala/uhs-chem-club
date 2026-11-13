@@ -107,6 +107,7 @@ const stagesWith = kind => { const out = []; for (const q of quests) for (const 
 /** A stage's state with its scripted solution played (so a settled vessel, a laid card, a run bench), falling back to the blank table. */
 const solved = (q, st, i) => { try { return RUNNER.stateFromScript(st, q.mod.SOLUTIONS?.[i] ?? []); } catch { return RUNNER.stateFromScript(st, []); } };
 for (const kind of ['pan', 'vessel', 'beaker', 'vsl', 'qk', 'icebars', 'kbars', 'kcheck', 'kstack', 'stack', 'clip', 'pgas']) {
+  if (!stagesWith(kind).length) continue;
   const h = REG.fixtureHandler(kind);
   if (!h?.live) { fail(`${kind}: no live() — the window would stand still`); continue; }
   let done = false;
@@ -141,6 +142,7 @@ for (const kind of ['pan', 'vessel', 'beaker', 'vsl', 'qk', 'icebars', 'kbars', 
   const c = { THREE, scale: 0.01, mats: {}, toPlate: p => ({ x: p.x * 0.01, z: p.y * 0.01 }), own: m => m, box: { x0: 10, y0: 10, x1: 120, y1: 70 }, ground: 0 };
   const sig = g => { let h = 0; for (const ch of g.children) if (ch.isInstancedMesh) for (let i = 0; i < ch.count * 16; i++) h += ch.instanceMatrix.array[i] * (i % 7 + 1); return h.toFixed(6); };
   for (const kind of REG.allKinds()) {
+    if (!stagesWith(kind).length) continue;
     const handler = REG.fixtureHandler(kind);
     if (!handler?.live) continue;
     if (!handler.dress3d) { fail(`${kind}: live in 2D but has no 3D dress`); continue; }

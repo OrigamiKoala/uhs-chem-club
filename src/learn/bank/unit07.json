@@ -2,131 +2,6 @@
   "world": "unit07",
   "end": [
     {
-      "id": "q1-recipe#0",
-      "quest": "q1-recipe",
-      "question": "Water from a comet and water from a tap are both analysed. What is true of the hydrogen-to-oxygen ratio?",
-      "options": [
-        {
-          "id": "a",
-          "label": "It is 2 to 1 in both, because a compound has a fixed composition"
-        },
-        {
-          "id": "b",
-          "label": "It depends on where the water came from"
-        },
-        {
-          "id": "c",
-          "label": "It depends on how much of each sample was taken"
-        },
-        {
-          "id": "d",
-          "label": "Only the comet sample has a fixed ratio"
-        }
-      ],
-      "answer": "a",
-      "explanation": "A compound is defined by its ratio of atoms, and that ratio comes from how many bonds each atom can make. Water is H2O wherever it is found, which is why a formula is worth writing at all."
-    },
-    {
-      "id": "q1-recipe#1",
-      "quest": "q1-recipe",
-      "question": "A joiner bonds 2 hydrogen atoms and 1 oxygen atom into each water molecule. How many molecules can 6 hydrogen atoms and 5 oxygen atoms make?",
-      "options": [
-        {
-          "id": "a",
-          "label": "3 molecules, and the hydrogen is the limiting reactant"
-        },
-        {
-          "id": "b",
-          "label": "5 molecules, and the oxygen is the limiting reactant"
-        },
-        {
-          "id": "c",
-          "label": "6 molecules, because the hydrogen sets the count"
-        },
-        {
-          "id": "d",
-          "label": "11 molecules, because every atom is used"
-        }
-      ],
-      "answer": "a",
-      "explanation": "Six hydrogens make three molecules at two apiece, and three molecules need only 3 of the 5 oxygens. The hydrogen gives out first, so it limits the count and 2 oxygens are left over."
-    },
-    {
-      "id": "q1-recipe#2",
-      "quest": "q1-recipe",
-      "question": "Water is H2O. Hydrogen weighs 1.0 and oxygen 16.0. What percent of water's mass is oxygen?",
-      "options": [
-        {
-          "id": "a",
-          "label": "About 33 percent"
-        },
-        {
-          "id": "b",
-          "label": "About 50 percent"
-        },
-        {
-          "id": "c",
-          "label": "About 67 percent"
-        },
-        {
-          "id": "d",
-          "label": "About 89 percent"
-        }
-      ],
-      "answer": "d",
-      "explanation": "One molecule weighs 16.0 + 1.0 + 1.0 = 18.0, of which oxygen is 16.0. 16.0 / 18.0 = 0.889, so 89 percent. Two thirds of the atoms are hydrogen, but they carry almost none of the mass."
-    },
-    {
-      "id": "q1-recipe#3",
-      "quest": "q1-recipe",
-      "question": "A compound is 3 g of carbon to 8 g of oxygen. Carbon weighs 12.0 and oxygen 16.0. What is its empirical formula?",
-      "options": [
-        {
-          "id": "a",
-          "label": "CO"
-        },
-        {
-          "id": "b",
-          "label": "CO2"
-        },
-        {
-          "id": "c",
-          "label": "C3O8"
-        },
-        {
-          "id": "d",
-          "label": "C2O"
-        }
-      ],
-      "answer": "b",
-      "explanation": "Divide each mass by that element's atomic mass to get counts: 3 / 12.0 = 0.25 and 8 / 16.0 = 0.5. The ratio 0.25 to 0.5 reduces to 1 to 2, so the formula is CO2. C3O8 is the mass ratio read as if it were a count."
-    },
-    {
-      "id": "q1-recipe#4",
-      "quest": "q1-recipe",
-      "question": "Extra hydrogen gas is bubbled into a flask of water. What is in the flask afterwards?",
-      "options": [
-        {
-          "id": "a",
-          "label": "A new compound with more hydrogen in it"
-        },
-        {
-          "id": "b",
-          "label": "Water, plus hydrogen sitting alongside it as a mixture"
-        },
-        {
-          "id": "c",
-          "label": "Nothing has changed, because the hydrogen is absorbed"
-        },
-        {
-          "id": "d",
-          "label": "Hydrogen peroxide"
-        }
-      ],
-      "answer": "b",
-      "explanation": "A water molecule has no room for a third hydrogen: oxygen makes two bonds and both are taken. The extra hydrogen cannot join, so it stays as a separate substance mixed in with the water."
-    },
-    {
       "id": "boss-golem#0",
       "quest": "boss-golem",
       "question": "What is a limiting reagent in a chemical reaction?",
@@ -188,193 +63,9 @@
       ],
       "answer": "a",
       "explanation": "By conservation of mass, 4.0 g of hydrogen combines completely with 32.0 g of oxygen to yield 36.0 g of water."
-    },
-    {
-      "id": "q1-recipe#5",
-      "quest": "q1-recipe",
-      "question": "A 2.00 g sample of salt mixed with sand contains 0.46 g of sodium. What is the percent of NaCl in the sample? (Na 23.0, Cl 35.5)",
-      "options": [
-        {
-          "id": "a",
-          "label": "58.5%"
-        },
-        {
-          "id": "b",
-          "label": "23.0%"
-        },
-        {
-          "id": "c",
-          "label": "39.3%"
-        },
-        {
-          "id": "d",
-          "label": "85.0%"
-        }
-      ],
-      "answer": "a",
-      "explanation": "NaCl is 23.0 / 58.5 sodium by mass, so 0.46 g of Na comes from 0.46 × 58.5 / 23.0 = 1.17 g NaCl. 1.17 / 2.00 = 58.5%."
     }
   ],
   "bench": {
-    "q1-recipe": {
-      "problems": [
-        {
-          "id": "q1-recipe#b1",
-          "quest": "q1-recipe",
-          "question": "What percent of the mass of carbon dioxide, CO₂, is carbon? (C 12.0, O 16.0)",
-          "options": [
-            {
-              "id": "a",
-              "label": "12.0%"
-            },
-            {
-              "id": "b",
-              "label": "37.5%"
-            },
-            {
-              "id": "c",
-              "label": "72.7%"
-            },
-            {
-              "id": "d",
-              "label": "27.3%"
-            }
-          ],
-          "answer": "d",
-          "explanation": "Molar mass = 12.0 + 2(16.0) = 44.0. Carbon's share is 12.0 / 44.0 = 0.273, or 27.3%."
-        },
-        {
-          "id": "q1-recipe#b2",
-          "quest": "q1-recipe",
-          "question": "A compound is 40.0% carbon, 6.7% hydrogen and 53.3% oxygen by mass. What is its empirical formula? (C 12.0, H 1.0, O 16.0)",
-          "options": [
-            {
-              "id": "a",
-              "label": "CHO"
-            },
-            {
-              "id": "b",
-              "label": "CH₂O"
-            },
-            {
-              "id": "c",
-              "label": "C₂H₂O"
-            },
-            {
-              "id": "d",
-              "label": "CH₄O"
-            }
-          ],
-          "answer": "b",
-          "explanation": "In 100 g: C 3.33 mol, H 6.7 mol, O 3.33 mol. Dividing by 3.33 gives 1 : 2 : 1."
-        }
-      ],
-      "worked": {
-        "id": "q1-recipe#w",
-        "quest": "q1-recipe",
-        "title": "From Percentages to a Molecular Formula",
-        "setup": "A hydrocarbon is 85.7% carbon and 14.3% hydrogen by mass. Its molar mass is 56.1 g/mol. Find its empirical and molecular formulas. (C 12.0, H 1.0)",
-        "steps": [
-          {
-            "say": "In a 100 g sample, how many moles of carbon are there?",
-            "kind": "number",
-            "answer": 7.142,
-            "calc": "85.7/12.0",
-            "unit": "mol",
-            "tol": 0.005,
-            "hint": "Treat the percentages as grams in 100 g, then divide by the molar mass.",
-            "explain": "85.7 g / 12.0 g/mol = 7.14 mol."
-          },
-          {
-            "say": "How many moles of hydrogen are there?",
-            "kind": "number",
-            "answer": 14.3,
-            "calc": "14.3/1.0",
-            "unit": "mol",
-            "hint": "Same method.",
-            "explain": "14.3 g / 1.0 g/mol = 14.3 mol."
-          },
-          {
-            "say": "What is the ratio of moles of hydrogen to moles of carbon?",
-            "kind": "number",
-            "answer": 2.002,
-            "calc": "14.3/7.142",
-            "tol": 0.01,
-            "hint": "Divide the larger by the smaller.",
-            "explain": "14.3 / 7.14 = 2.00."
-          },
-          {
-            "say": "What is the empirical formula?",
-            "kind": "choice",
-            "options": [
-              {
-                "id": "a",
-                "label": "CH₂"
-              },
-              {
-                "id": "b",
-                "label": "CH"
-              },
-              {
-                "id": "c",
-                "label": "C₂H"
-              },
-              {
-                "id": "d",
-                "label": "CH₄"
-              }
-            ],
-            "answer": "a",
-            "hint": "Two hydrogens for each carbon.",
-            "explain": "The simplest whole-number ratio is 1 carbon to 2 hydrogens."
-          },
-          {
-            "say": "What is the mass of one CH₂ unit?",
-            "kind": "number",
-            "answer": 14,
-            "calc": "12.0+2*1.0",
-            "unit": "g/mol",
-            "hint": "Add one carbon and two hydrogens.",
-            "explain": "12.0 + 2(1.0) = 14.0 g/mol."
-          },
-          {
-            "say": "How many CH₂ units fit in the molar mass of 56.1 g/mol?",
-            "kind": "number",
-            "answer": 4.007,
-            "calc": "56.1/14.0",
-            "tol": 0.01,
-            "hint": "Divide the molar mass by the empirical mass.",
-            "explain": "56.1 / 14.0 = 4.0."
-          },
-          {
-            "say": "What is the molecular formula?",
-            "kind": "choice",
-            "options": [
-              {
-                "id": "a",
-                "label": "C₄H₈"
-              },
-              {
-                "id": "b",
-                "label": "CH₂"
-              },
-              {
-                "id": "c",
-                "label": "C₂H₄"
-              },
-              {
-                "id": "d",
-                "label": "C₄H₁₀"
-              }
-            ],
-            "answer": "a",
-            "hint": "Multiply the empirical formula by the whole number.",
-            "explain": "4 x CH₂ = C₄H₈."
-          }
-        ],
-        "finish": "Percentages give moles, moles give the simplest ratio, and the molar mass scales that ratio up to the real formula."
-      }
-    },
     "boss-golem": {
       "problems": [
         {
@@ -574,7 +265,7 @@
         "id": "q6-stoich#w",
         "quest": "q6-stoich",
         "title": "Aluminium Burning in Oxygen",
-        "setup": "4 Al + 3 O₂ → 2 Al₂O₃. A pot is fed 5.4 g of aluminium and 9.6 g of oxygen. Find the mass of Al₂O₃ made and the oxygen left over. (Al 27.0, O 16.0)",
+        "setup": "4 Al + 3 O₂ → 2 Al₂O₃. A reaction vessel is fed 5.4 g of aluminium and 9.6 g of oxygen. Find the mass of Al₂O₃ made and the oxygen left over. (Al 27.0, O 16.0)",
         "steps": [
           {
             "say": "How many moles of aluminium are fed?",
@@ -871,7 +562,7 @@
         {
           "id": "q3-change#b2",
           "quest": "q3-change",
-          "question": "A sealed pot holds 10.0 g of wood chips and 12.0 g of oxygen. The wood burns completely. What does the sealed pot weigh afterwards?",
+          "question": "A sealed vessel holds 10.0 g of wood chips and 12.0 g of oxygen. The wood burns completely. What is the mass of the sealed vessel afterwards?",
           "options": [
             {
               "id": "a",
@@ -891,17 +582,17 @@
             }
           ],
           "answer": "c",
-          "explanation": "Nothing enters or leaves a sealed pot, so its mass is conserved: the carbon dioxide and water vapour made weigh 10.0 + 12.0 = 22.0 g in all."
+          "explanation": "Nothing enters or leaves a sealed vessel, so its mass is conserved: the carbon dioxide and water vapour made have a total mass of 10.0 + 12.0 = 22.0 g."
         }
       ],
       "worked": {
         "id": "q3-change#w",
         "quest": "q3-change",
-        "title": "Steel Wool in a Sealed Pot",
-        "setup": "4 Fe + 3 O₂ → 2 Fe₂O₃. A sealed pot holds 22.3 g of steel wool, Fe, and enough oxygen. The wool burns completely. (Fe 55.8, O 16.0)",
+        "title": "Steel Wool in a Sealed Vessel",
+        "setup": "4 Fe + 3 O₂ → 2 Fe₂O₃. A sealed vessel holds 22.3 g of steel wool, Fe, and enough oxygen. The wool burns completely. (Fe 55.8, O 16.0)",
         "steps": [
           {
-            "say": "How many moles of iron are in the pot?",
+            "say": "How many moles of iron are in the vessel?",
             "kind": "number",
             "answer": 0.4,
             "calc": "22.3/55.8",
@@ -941,17 +632,17 @@
             "explain": "31.9 g of oxide minus 22.3 g of iron leaves 9.6 g of oxygen."
           },
           {
-            "say": "What does the sealed pot weigh afterwards, if it weighed 31.9 g before?",
+            "say": "What is the mass of the sealed vessel afterwards, if its mass was 31.9 g before?",
             "kind": "number",
             "answer": 31.9,
             "calc": "31.9",
             "unit": "g",
             "tol": 0.1,
-            "hint": "Nothing enters or leaves a sealed pot.",
-            "explain": "The sealed pot weighs the same afterwards: 31.9 g."
+            "hint": "Nothing enters or leaves a sealed vessel.",
+            "explain": "The sealed vessel has the same mass afterwards: 31.9 g."
           }
         ],
-        "finish": "The extra weight of an open pot would be the 9.6 g of oxygen from the air; in a sealed pot it was already inside, so the weight does not change."
+        "finish": "The extra mass of an open vessel would be the 9.6 g of oxygen from the air; in a sealed vessel it was already inside, so the mass does not change."
       }
     },
     "q7-titrate": {
@@ -1019,7 +710,7 @@
             "answer": 0.003,
             "calc": "0.150*0.0200",
             "unit": "mol",
-            "tol": 5e-05,
+            "tol": 0.00005,
             "hint": "Moles = concentration × volume in litres.",
             "explain": "0.150 mol/L × 0.0200 L = 0.00300 mol."
           },
@@ -1029,7 +720,7 @@
             "answer": 0.006,
             "calc": "2*0.150*0.0200",
             "unit": "mol",
-            "tol": 5e-05,
+            "tol": 0.00005,
             "hint": "Each H₂SO₄ particle gives two H⁺.",
             "explain": "2 × 0.00300 mol = 0.00600 mol of H⁺."
           },
@@ -1039,7 +730,7 @@
             "answer": 0.006,
             "calc": "2*0.150*0.0200",
             "unit": "mol",
-            "tol": 5e-05,
+            "tol": 0.00005,
             "hint": "One OH⁻ uses up one H⁺.",
             "explain": "The moles of OH⁻ equal the moles of H⁺: 0.00600 mol."
           },

@@ -13,6 +13,19 @@ const bind = (root, ids, update) => {
 };
 
 export const PRIMERS = {
+  tens: {
+    title: 'Powers of ten',
+    html: `<p>Very large and very small numbers are written as a number times a power of ten. 10<sup>3</sup> is 1000; 10<sup>−3</sup> is one thousandth. Slide the power and the first digit.</p>
+      ${slider('tn-p', 'Power of ten', -9, 9, 1, 3)}${slider('tn-m', 'First digit', 1, 9, 1, 3)}
+      <p id="tn-n"></p><p id="tn-r"></p>`,
+    wire(root) {
+      bind(root, ['tn-p', 'tn-m'], (v, set) => {
+        const p = v('tn-p'); const m = v('tn-m'); const x = m * 10 ** p;
+        set('tn-n', `${m} × 10<sup>${p}</sup> = <strong>${p >= 0 ? x.toLocaleString('en-US') : x.toFixed(-p)}</strong>`);
+        set('tn-r', 'To multiply two such numbers, multiply the first digits and add the powers; to divide, divide the digits and subtract the powers.');
+      });
+    }
+  },
   log: {
     title: 'Powers of ten and the logarithm',
     html: `<p>A logarithm (log) answers: "10 to what power gives this number?" Slide the power and the first digit.</p>

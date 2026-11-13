@@ -119,7 +119,7 @@ export const STAGES = [
   {
     id: 'p1-neutral',
     title: 'Phase 1 · The Warm Flasks',
-    prompt: 'Set the dial to the flask that is neutral.',
+    prompt: 'Which flask is neutral?',
     widget,
     table: (() => {
       const f = P1_FLASKS.map((x, i) => flaskAt(scaleFlask, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.label, w: 42, window: 14, legend: false, lens: true }));
@@ -138,7 +138,7 @@ export const STAGES = [
     hints: [
       'Use the pH meter on each flask and the answer dial.',
       'Compare the amounts of H₃O⁺ and OH⁻ that each flask\'s counter counts with each other.',
-      'Set the flask where the two counts are equal, whatever its meter reads.'
+      'Look at what each flask\'s counter shows for H₃O⁺ and OH⁻ beside its pH reading.'
     ],
     check(state) {
       const v = dialValue(state.table, 'pick');
@@ -161,7 +161,7 @@ export const STAGES = [
   {
     id: 'p2-acids',
     title: 'Phase 2 · The Three Acids',
-    prompt: 'Drag the three acids onto the rail from the lowest pH to the highest.',
+    prompt: 'Which acid solution has the lowest pH and which the highest?',
     widget,
     table: (() => {
       const f = P2_FLASKS.map((x, i) => flaskAt(flaskFixture, `f${i + 1}`, 24 + i * 46, 1, { solute: x.solute, label: x.name, w: 44, window: 16, meter: x.meter }));
@@ -183,7 +183,7 @@ export const STAGES = [
     hints: [
       'Use the pH meter on the one flask with a seat, then drag the three cards onto the rail.',
       'Compare the concentration printed on each flask with the number of its units that have handed over a proton.',
-      'Multiply the share of units that have handed over a proton by the flask\'s concentration to find its H₃O⁺ in mol/L, and put the largest first.'
+      'Compare both the concentration on each flask and the share ionized in its window against the one flask the meter reads.'
     ],
     check(state) {
       const order = state.table.zones.rail.order.map(id => id.slice(2));
@@ -209,17 +209,17 @@ export const STAGES = [
   {
     id: 'p3-salts',
     title: 'Phase 3 · The Salt Vats',
-    prompt: 'Sort the three salt solutions into acidic, neutral and basic.',
+    prompt: 'Which salt solutions are acidic, which neutral and which basic?',
     widget,
     table: (() => {
       const probe = flaskFixture('p', { x: 0, y: 0 }, { solute: P3_SALTS[0].solute, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12 });
-      const fl = P3_SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: 24 + i * 46, y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12 }));
+      const fl = P3_SALTS.map((s, i) => flaskFixture(`f${i + 1}`, { x: 24 + i * 46, y: 1 + probe.size.h / 2 }, { solute: s.solute, label: s.name, w: 36, window: 8, legend: false, waterNote: false, units: 120, cols: 12, meter: i === 0 }));
       const trays = [['acidic', 'Acidic', 24], ['neutral', 'Neutral', 72], ['basic', 'Basic', 120]].map(([id, label, x]) => ({ id, label, at: { x, y: 76 }, size: { w: 44, h: 26 }, cell: 22, cellH: 12 }));
       return phTable({
-        pieces: [meterPiece('meter', { x: 160, y: 40 }), ...P3_SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 20 + i * 40, y: 52 }))],
-        fixtures: fl.map(f => f.fixture),
-        zones: { trays, slots: fl.map(f => f.slot) }
-      }, { w: 184, h: 100 });
+        pieces: [meterPiece('meter', { x: 162, y: 40 }), ...P3_SALTS.map((s, i) => tag(`c-${s.key}`, s.name, { x: 20 + i * 40, y: 52 }))],
+        fixtures: [...fl.map(f => f.fixture), plaqueFixture('parents', 'Strong parents', { x: 166, y: 78 }, ['Acids: HCl, HNO₃', 'Bases: NaOH, KOH'], { w: 44 })],
+        zones: { trays, slots: fl.filter(f => f.slot).map(f => f.slot) }
+      }, { w: 192, h: 100 });
     })(),
     foes: LEACH_FOE,
     encounter: {
@@ -228,9 +228,9 @@ export const STAGES = [
       intent: 'The Leach pours three salts into its vats and calls them all safe.'
     },
     hints: [
-      'Use the pH meter on each flask, then drag the cards into the trays.',
-      'Compare the readings of the three flasks with 7.',
-      'Place each card by whether its flask reads below, at or above 7.'
+      'Put the pH meter on ammonium nitrate, read the strong-parents plate, then drag the cards into the trays.',
+      'Compare the flask you measured with the other two using the ions on the plate.',
+      'Ions from strong parents leave water neutral; an ion from a weak parent shifts the pH.'
     ],
     check(state) {
       const t = state.table;
@@ -257,7 +257,7 @@ export const STAGES = [
   {
     id: 'p4-dye',
     title: 'Phase 4 · The Dosing Run',
-    prompt: 'Pick the dye that changes colour at the equivalence point of this titration.',
+    prompt: 'Which indicator changes colour at the equivalence point of this titration?',
     widget,
     table: phTable({
       pieces: DYES.map((id, i) => tag(`c-${id}`, INDICATORS[id].name[0].toUpperCase() + INDICATORS[id].name.slice(1), { x: 112, y: 12 + i * 17 })),
@@ -266,12 +266,12 @@ export const STAGES = [
           samples: [{ title: 'Ammonia', sub: ['25.0 mL, 0.10 M', 'tube: hydrochloric acid'], ...P4_SPEC, meter: false }], cap: 40, rack: DYES
         })
       ],
-      zones: { slots: [{ id: 'dye', label: 'My dye', at: { x: 150, y: 40 }, size: { w: 36, h: 14 } }] }
+      zones: { slots: [{ id: 'dye', label: 'My indicator', at: { x: 150, y: 40 }, size: { w: 36, h: 14 } }] }
     }, { w: 180, h: 96 }),
     foes: LEACH_FOE,
     encounter: {
       species: 'the leach',
-      act: 'Commit Dye',
+      act: 'Commit Indicator',
       intent: 'The Leach doses a vat of ammonia from a tube of acid.'
     },
     hints: [
@@ -290,11 +290,10 @@ export const STAGES = [
     get reward() {
       const eq = equivalenceML(P4_SPEC);
       const pH = titrationML(P4_SPEC, eq);
-      const w = indicatorWindowML(P4_SPEC, INDICATORS.methylRed);
       return {
         log: 'Methyl red turned over at the steep fall.',
-        title: 'A Dye for a Base',
-        body: `Ammonia needed ${mL1(eq)} mL of acid and the pH there read ${fmt(pH, 2)}, below 7. Methyl red changed between ${mL1(w.from)} and ${mL1(w.to)} mL, so the right dye depends on where the equivalence point sits.`
+        title: 'An Indicator for a Base',
+        body: `Ammonia needed ${mL1(eq)} mL of acid and the pH there was ${fmt(pH, 2)}. Methyl red changes colour at about that pH, so it is the indicator for this titration.`
       };
     }
   },
@@ -303,7 +302,7 @@ export const STAGES = [
   {
     id: 'p5-ratio',
     title: 'Phase 5 · The Mixing Flask',
-    prompt: `Find the ratio of acetate to acetic acid that gives a pH of ${fmt(P5_TARGET, 2)}.`,
+    prompt: `What ratio of acetate to acetic acid gives a pH of ${fmt(P5_TARGET, 2)}?`,
     widget,
     entry: { id: 'ratio', label: 'Acetate per acetic acid', unit: '' },
     table: (() => {

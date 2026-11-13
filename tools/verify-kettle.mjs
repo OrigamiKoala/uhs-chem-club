@@ -82,7 +82,7 @@ const chart = readFileSync(join(root, 'src/learn/worlds/unit07-stoichiometry.js'
 const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:\s*["']([^"']+)["'][\s\S]*?status:\s*'(\w+)'/g)].map(m => ({ id: m[1], title: m[2], status: m[3] }));
 {
   const benches = chartQuests.filter(q => !q.id.startsWith('boss'));
-  check(benches.length === 9, `unit07 charts ${benches.length} benches`, `the unit07 chart lists ${benches.length} benches, not nine`);
+  check(benches.length === 8, `unit07 charts ${benches.length} benches`, `the unit07 chart lists ${benches.length} benches, not eight`);
   const siteQuests = world.sites.map(s => s.questId);
   const missing = benches.filter(q => !siteQuests.includes(q.id));
   check(missing.length === 0, 'every charted bench has a host on the ground, live or not', `charted benches with no site: ${missing.map(q => q.id).join(', ')}`);

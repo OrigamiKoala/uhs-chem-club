@@ -293,6 +293,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Counting Pi Bonds',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Every covalent bond has one sigma bond; any second or third shared pair in a double or triple bond is a pi bond.'
+    },
     prompt: 'How many pi bonds are in hydrogen cyanide, H–C≡N?',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({

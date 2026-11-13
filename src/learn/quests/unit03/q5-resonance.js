@@ -125,6 +125,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Same Length',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Measure both bonds on ozone\'s structure, then set the tally to what the meter shows.'
+    },
     get prompt() {
       return testPrompt(QUEST_KEY, GUESSES, 'how do ozone\'s two measured bond lengths compare?');
     },
@@ -271,7 +275,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'Carbon dioxide can be completed in more than one way that gives every atom an octet. Of two valid structures, the better description is the one whose formal charges are closest to zero.'
     },
-    prompt: 'Which structure of carbon dioxide is the better one?',
+    prompt: 'Build both structures of carbon dioxide, test them, and leave the better one on the slate.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'CO2', 84, 26, 52]], { pieces: [PAIR([12, 10]), LIFT([12, 28]), STAMP([12, 46])] }),
     hints: [
@@ -298,9 +302,9 @@ export const STAGES = [
     title: 'Where the Minus Goes',
     briefing: {
       speaker: SPEAKER,
-      body: 'An ion\'s formal charges add up to its charge, so thiocyanate, SCN⁻, must have a −1 somewhere. Where two structures have formal charges equally close to zero, the better one puts the negative formal charge on the more electronegative atom.'
+      body: 'An ion\'s formal charges add up to its charge, so thiocyanate, SCN⁻, must have a −1 somewhere. Where two structures have formal charges equally close to zero, the better one puts the negative formal charge on the more electronegative atom (the one that pulls electrons more strongly).'
     },
-    prompt: 'Which structure of thiocyanate, SCN⁻, is the better one?',
+    prompt: 'Build both structures of thiocyanate, SCN⁻, test them, and leave the better one on the slate.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'SCN', 84, 26, 52]], { pieces: [PAIR([12, 10]), LIFT([12, 28]), STAMP([12, 46])] }),
     hints: [

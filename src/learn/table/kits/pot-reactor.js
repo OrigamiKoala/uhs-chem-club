@@ -223,7 +223,7 @@ function paintWeigh(ctx, f, state, b) {
   ctx.fillStyle = '#100f0c'; ctx.fillRect(F.x(3), F.y(5.4), F.len(w - 6), F.len(6.4));
   ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(3)) + 0.5, Math.round(F.y(5.4)) + 0.5, Math.round(F.len(w - 6)), Math.round(F.len(6.4)));
   say(ctx, r.item ? `${r.grams.toFixed(f.props.digits ?? 1)} g` : '— g', F.x(w - 4.5), F.y(8.7), F.size(3.4, 8), { align: 'right', color: r.item ? AMBER : DIM, weight: 700 });
-  say(ctx, 'jar weight left out', F.x(w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
+  say(ctx, 'jar mass left out', F.x(w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
 }
 
 registerFixture('weigh', { paint: paintWeigh });
@@ -235,21 +235,21 @@ registerFixture('weigh', { paint: paintWeigh });
 const REACTOR_TEXT = f => {
   const p = f.props;
   const bits = [];
-  if (p.ins?.length) bits.push('Drag a jar into a seat at the top left. What is in the jar is what the pot is fed.');
+  if (p.ins?.length) bits.push('Drag a jar into a seat at the top left. What is in the jar is what the vessel is fed.');
   if (p.pour) bits.push(`The "${p.pour.label || 'Fed'}" dial sets how much of the ${nameOfSpecies(p.pour.species).toLowerCase()} is poured in.`);
-  if (p.plenty?.length) bits.push(`The pot supplies ${p.plenty.map(s => nameOfSpecies(s).toLowerCase()).join(' and ')} on its own, as much as is needed.`);
+  if (p.plenty?.length) bits.push(`The vessel supplies ${p.plenty.map(s => nameOfSpecies(s).toLowerCase()).join(' and ')} on its own, as much as is needed.`);
   if (p.out) bits.push('Put an empty jar in the seat at the top right to catch what is made.');
   bits.push('Press "Run" to start the reaction.');
   if (p.gas) bits.push('The syringe fills with the gas that is made, and its top scale reads in litres.');
-  else if (p.window) bits.push('The window shows the particles before the reaction on the left and after it on the right, one disc for each unit it says.');
+  else if (p.window) bits.push('The particle view shows the particles before the reaction on the left and after it on the right, one circle for each unit it says.');
   return bits.join(' ');
 };
 
 addTourText({
-  'pot:reactor': { title: 'Pot', dials: false, text: REACTOR_TEXT },
-  'pot:weigh': { title: 'Balance', text: 'Drag a jar onto the pan to read how much is in it, in grams. The weight of the jar itself is left out.' }
+  'pot:reactor': { title: 'Reaction vessel', dials: false, text: REACTOR_TEXT },
+  'pot:weigh': { title: 'Balance', text: 'Drag a jar onto the pan to read how much is in it, in grams. The mass of the jar itself is left out.' }
 }, {
-  jar: ['Jars', 'Each jar holds one substance. A jar that says an amount holds that much. An empty jar starts with nothing, and fills when the pot makes something. Drag a jar into a seat; to find out how much a filled jar holds, put it on the balance.']
+  jar: ['Jars', 'Each jar holds one substance. A jar that says an amount holds that much. An empty jar starts with nothing, and fills when the vessel makes something. Drag a jar into a seat; to find out how much a filled jar holds, put it on the balance.']
 });
 
 export { molarMass };

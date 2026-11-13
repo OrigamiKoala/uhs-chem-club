@@ -37,7 +37,7 @@ export async function checkTeeterBoss(ok, bad) {
   yes(a3.b[60] < 24 && a3.b[200] - a3.b[60] >= 8, `pan 3 is still rising (B ${a3.b[60]} at tick 60, ${a3.b[200]} at tick 200)`);
   yes(run(0, [dial('pick', 'value', 2)]).ok, 'phase 1 accepts Pan 2');
   const m1 = run(0, [dial('pick', 'value', 1)]); const m3 = run(0, [dial('pick', 'value', 3)]);
-  yes(!m1.ok && /B to A/.test(m1.msg) && /count reads 0/.test(m1.msg), `phase 1 refuses Pan 1 naming its count: "${m1.msg}"`);
+  yes(!m1.ok && /Isobutane to Butane/.test(m1.msg) && /count reads 0/.test(m1.msg), `phase 1 refuses Pan 1 naming its count: "${m1.msg}"`);
   yes(!m3.ok && /still falling/.test(m3.msg), `phase 1 refuses Pan 3 naming its graph: "${m3.msg}"`);
   yes(run(0, []).notYet, 'phase 1 waits for the dial');
 
@@ -59,18 +59,16 @@ export async function checkTeeterBoss(ok, bad) {
   yes(!s0.ok && /below 1/.test(s0.msg) && /SO₃ bar/.test(s0.msg), `phase 2 refuses the figure turned over, naming the bars: "${s0.msg}"`);
   yes(run(1, []).notYet, 'phase 2 waits for a number');
 
-  /* ---- phase 3: 2 A ⇌ B, K = 1.2 ---- */
-  // Q = [B] / [A]²: (0.5, 0.5) → 0.5 / 0.25 = 2.0 → reverse; (1.0, 0.5) → 0.5 / 1 = 0.5 → forward; (0.7, 0.588) → 0.588 / 0.49 = 1.2 → none.
-  const a2b = K_SYSTEMS.a2b;
-  near(systemRatio(a2b, { A: 0.5, B: 0.5 }), 2, 1e-9, 'Q of mixture 1'); near(systemRatio(a2b, { A: 1, B: 0.5 }), 0.5, 1e-9, 'Q of mixture 2');
-  near(systemRatio(a2b, { A: 0.7, B: 0.588 }), 1.2, 1e-9, 'Q of mixture 3');
-  yes(['reverse', 'forward', 'none'].every((d, i) => runMixture(a2b, T.CHECKS.P3_MIX[i].amounts).dir === d), 'the three mixtures go reverse, forward and not at all');
-  // Mixture 1 settles on A + 2B = 1.5 held fixed with B / A² = 1.2: 1.2 A² + 2 A − 1.5 = 0 → A = (−2 + √(4 + 7.2)) / 2.4 = 0.60922, B = 0.44539.
-  near(runMixture(a2b, { A: 0.5, B: 0.5 }).after.A, 0.60922, 1e-3, 'A after mixture 1 is run'); near(runMixture(a2b, { A: 0.5, B: 0.5 }).after.B, 0.44539, 1e-3, 'B after mixture 1 is run');
+  /* ---- phase 3: butane ⇌ isobutane, K = 2.0 ---- */
+  const butane = K_SYSTEMS.butane;
+  near(systemRatio(butane, { butane: 0.4, isobutane: 1.2 }), 3.0, 1e-9, 'Q of mixture 1');
+  near(systemRatio(butane, { butane: 0.6, isobutane: 0.6 }), 1.0, 1e-9, 'Q of mixture 2');
+  near(systemRatio(butane, { butane: 0.4, isobutane: 0.8 }), 2.0, 1e-9, 'Q of mixture 3');
+  yes(['reverse', 'forward', 'none'].every((d, i) => runMixture(butane, T.CHECKS.P3_MIX[i].amounts).dir === d), 'the three mixtures go reverse, forward and not at all');
   yes(run(2, [put('m1', 'slot:tv.seat')]).ok, 'phase 3 accepts mixture 1');
   const r2 = run(2, [put('m2', 'slot:tv.seat')]); const r3 = run(2, [put('m3', 'slot:tv.seat')]);
-  yes(!r2.ok && /When run, Mixture 2 goes A 1\.00 to 0\.728/.test(r2.msg), `phase 3 refuses mixture 2 with what it does: "${r2.msg}"`);
-  yes(!r3.ok && /Mixture 3 goes A 0\.700 to 0\.700/.test(r3.msg), `phase 3 refuses mixture 3 with what it does: "${r3.msg}"`);
+  yes(!r2.ok && /Q = 1/.test(r2.msg) && /isobutane/.test(r2.msg), `phase 3 refuses mixture 2 with Q vs K: "${r2.msg}"`);
+  yes(!r3.ok && /Q = 2/.test(r3.msg) && /does not change/.test(r3.msg), `phase 3 refuses mixture 3 with Q vs K: "${r3.msg}"`);
   yes(run(2, []).notYet, 'phase 3 waits for a card in the vessel');
 
   /* ---- phase 4: N₂O₄ ⇌ 2 NO₂, squeezed from 1 L to 0.5 L ---- */
@@ -92,16 +90,15 @@ export async function checkTeeterBoss(ok, bad) {
   yes(!run(3, [dial('ans', 'value', 1)]).ok && /piston has not moved/.test(run(3, [dial('ans', 'value', 1)]).msg), 'phase 4 says the piston has not moved when it has not');
   yes(run(3, []).notYet, 'phase 4 waits for the dial');
 
-  /* ---- phase 5: H₂ + I₂ ⇌ 2 HI, K = 54, from 0.50 M H₂ and 1.00 M I₂ ---- */
-  // (2x)² = 54 (0.5 − x)(1 − x) → 4x² = 27 − 81 x + 54 x² → 50 x² − 81 x + 27 = 0; disc = 6561 − 5400 = 1161, √ = 34.0735;
-  // x = (81 − 34.0735) / 100 = 0.469265 (the other root, 1.15, would use more H₂ than there is). HI = 0.93853, H₂ = 0.030735, I₂ = 0.530735.
-  const ice = iceAmounts(Q5.hi.species, { 'H₂': 0.5, 'I₂': 1.0 }, 54);
-  near(ice.x, 0.469265, 1e-5, 'x'); near(ice.amounts.HI, 0.93853, 1e-4, '[HI]'); near(ice.amounts['H₂'], 0.030735, 1e-3, '[H₂] left'); near(ice.amounts['I₂'], 0.530735, 1e-4, '[I₂] left');
+  /* ---- phase 5: H₂ + I₂ ⇌ 2 HI, K = 54, from equal 0.80 M H₂ and 0.80 M I₂ ---- */
+  // 2x / (0.80 − x) = √54 = 7.34847 → x = 0.62885, HI = 1.2577, H₂ = I₂ = 0.17115.
+  const ice = iceAmounts(Q5.hi.species, { 'H₂': 0.8, 'I₂': 0.8 }, 54);
+  near(ice.x, 0.62885, 1e-4, 'x'); near(ice.amounts.HI, 1.2577, 1e-4, '[HI]'); near(ice.amounts['H₂'], 0.17115, 1e-3, '[H₂] left'); near(ice.amounts['I₂'], 0.17115, 1e-3, '[I₂] left');
   near(ice.amounts.HI ** 2 / (ice.amounts['H₂'] * ice.amounts['I₂']), 54, 2e-3, 'K from the settled amounts');
-  yes(run(4, [{ run: 'bars' }, typed('hi', '0.94')]).ok && run(4, [typed('hi', '0.92')]).ok, 'phase 5 accepts 0.94 and 0.92 (2 % low)');
-  yes(!run(4, [typed('hi', '0.91')]).ok && !run(4, [typed('hi', '0.97')]).ok, 'phase 5 refuses 0.91 and 0.97');
-  const x = run(4, [typed('hi', '0.469')]); const full = run(4, [typed('hi', '1.0')]); const lo = run(4, [typed('hi', '0.6')]);
-  yes(!x.ok && /twice 0\.469/.test(x.msg), `phase 5 refuses x: "${x.msg}"`);
+  yes(run(4, [{ run: 'bars' }, typed('hi', '1.26')]).ok && run(4, [typed('hi', '1.24')]).ok, 'phase 5 accepts 1.26 and 1.24');
+  yes(!run(4, [typed('hi', '1.20')]).ok && !run(4, [typed('hi', '1.31')]).ok, 'phase 5 refuses 1.20 and 1.31');
+  const x = run(4, [typed('hi', '0.629')]); const full = run(4, [typed('hi', '1.6')]); const lo = run(4, [typed('hi', '0.9')]);
+  yes(!x.ok && /twice 0\.629/.test(x.msg), `phase 5 refuses x: "${x.msg}"`);
   yes(!full.ok && /H₂ as used up/.test(full.msg), `phase 5 refuses a pan that went to completion: "${full.msg}"`);
   yes(!lo.ok && /settles higher/.test(lo.msg), `phase 5 says which way a low figure is off: "${lo.msg}"`);
   yes(run(4, []).notYet, 'phase 5 waits for a number');

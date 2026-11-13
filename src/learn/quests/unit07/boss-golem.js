@@ -18,13 +18,16 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { heapTable, heap, dock, product, limitOf, tallyOf } from '../../table/kits/heap.js';
-import { potTable, jar, reactorFixture, weighFixture, weighRead, plaqueFixture, fixed } from '../../table/kits/pot.js';
-import { molarMass, parseEquation, reactPlan } from '../../engine/reactdata.js';
+import { potTable, jar, reactorFixture, weighFixture, weighRead, plaqueFixture, fixed, chip } from '../../table/kits/pot.js';
+import { crate, labelerFixture, labelWords, windowFixture as saltWindowFixture } from '../../table/kits/pot-names.js';
+import { eqBench, boardRead, ledgerRead } from '../../table/kits/pot-balance.js';
+import { molarMass, parseEquation, reactPlan, nameIonic, pretty, IONS } from '../../engine/reactdata.js';
+import { saltInWater } from '../../engine/reactdata-names.js';
 import { session } from '../../../session.js';
 
-export const meta = { stageCount: 3 };
+export const meta = { stageCount: 5 };
 
-export const BUILDS_ON = ['unit07/q1-recipe', 'unit07/q6-stoich'];
+export const BUILDS_ON = ['unit07/q2-names', 'unit07/q4-balance', 'unit07/q6-stoich'];
 
 /** The room this boss's tables stand in until the walkable world carries them (`rooms.js`). */
 export const ROOM = 'foundry';
@@ -49,6 +52,22 @@ const UNIT_NEED = { Na: 1, Cl: 1 };
 
 const widget = { type: 'table', label: 'The bench' };
 
+/* Phase 2: copper(II) nitrate drum. */
+const GOLEM_DRUM = { cat: 'Cu2', an: 'NO3' };
+const DRUM_TOKS = ['iron', 'copper', '(II)', '(III)', 'sulfate', 'nitrate'];
+const trayOf = (id, label, x, y, cols, rows, cell = 14, cellH = cell) => ({ id, label, at: { x, y }, size: { w: cols * cell, h: rows * cellH }, cell, cellH });
+const inTray = (c, tray) => ({ ...c, zone: `tray:${tray}` });
+const cardsTray = (n = 'Cards') => trayOf('cards', n, 98, 16, 3, 2, 19, 12.6);
+
+/* Phase 3: ethane burning (2 C2H6 + 7 O2 -> 4 CO2 + 6 H2O). */
+const EQ_ETHANE = 'C2H6 + O2 -> CO2 + H2O';
+const board = t => boardRead(t, 'bd');
+const untouched = r => r.coefs.every(n => n === 1) && !Object.keys(r.subs).length;
+function ledgerMiss(t, lid = 'led') {
+  const row = ledgerRead(t, lid).rows.find(r => r.left !== r.right);
+  return row ? `The ledger counts ${pretty(row.el)}: ${row.left} on the left and ${row.right} on the right.` : null;
+}
+
 /* Phase 4: aluminium frees iron from its ore (Fe2O3 + 2 Al -> Al2O3 + 2 Fe); the furnace keeps 80 % of the iron its limit allows. */
 const EQ_THERMITE = 'Fe2O3 + 2 Al -> Al2O3 + 2 Fe';
 const ORE_G = 79.8;
@@ -66,12 +85,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- Phase 1 */
   {
     id: 'phase1',
-    title: 'Phase 1 · Limiting Feed',
+    title: 'Limiting Feed',
     briefing: {
       speaker: 'Vess',
       body: 'This golem builds each unit of sodium chloride from one sodium atom and one chlorine atom, using whatever its two hoppers hold.'
     },
-    prompt: 'How many sodium chloride units can the golem build from these two heaps?',
+    prompt: 'How many sodium chloride units can the golem build from these two supplies?',
     widget: { type: 'table', label: 'The bench' },
     table: heapTable({
       pieces: [
@@ -79,10 +98,10 @@ export const STAGES = [
       ],
       zones: {
         containers: [
-          heap('heap-na', 'Sodium heap', 'Na', 9, { x: 17, y: 14 }),
-          heap('heap-cl', 'Chlorine heap', 'Cl', 14, { x: 49, y: 14 }),
+          heap('heap-na', 'Sodium supply', 'Na', 9, { x: 17, y: 14 }),
+          heap('heap-cl', 'Chlorine supply', 'Cl', 14, { x: 49, y: 14 }),
           product('made', 'Built', { x: 80, y: 14 }, 16, { w: 28, h: 20 }),
-          dock('dock', 'Recipe', { x: 17, y: 51 })
+          dock('dock', 'Unit pattern', { x: 17, y: 51 })
         ]
       },
       fixtures: [
@@ -104,20 +123,92 @@ export const STAGES = [
       const n = tallyOf(t, 'tally');
       const want = limitOf({ Na: t.zones.containers['heap-na'].capacity, Cl: t.zones.containers['heap-cl'].capacity }, UNIT_NEED).made;
       if (n === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to a count of units.' };
-      if (n !== want) return { ok: false, msg: 'Count the atoms in each heap: the recipe stops as soon as one of them is used up.' };
+      if (n !== want) return { ok: false, msg: 'Count the atoms in each supply: the unit stops building as soon as one of them is used up.' };
       return { ok: true };
     },
     hints: [
-      'Build one unit by joining a sodium atom to a chlorine atom, put it in the dock, and press "Make Unit" to copy it from the heaps.',
-      'Count the atoms in each heap, or watch them shrink as the maker draws on them.',
-      'Every unit takes one atom from each heap, so ask which heap runs out first.'
+      'Build one unit by joining a sodium atom to a chlorine atom, put it in the unit pattern, and press "Make Unit" to copy it from the supplies.',
+      'Count the atoms in each supply, or watch them shrink as the maker draws on them.',
+      'Every unit takes one atom from each supply, so ask which supply runs out first.'
     ],
     reward: {
       title: 'First Ingredient Runs Out',
-      body: 'The recipe stops when its first ingredient runs out, and that ingredient is the limiting reactant. Whatever is left of the other ingredient is the excess.',
-      log: 'Intake metered by the smaller heap.'
+      body: 'The supply that ran out first set the count: it was the limiting reactant. Whatever is left of the other supply is the excess.',
+      log: 'Intake metered by the smaller supply.'
     }
   },
+
+  /* ---------------------------------------------------------------- Phase 2 */
+  (() => {
+    const win = saltWindowFixture('win', { x: 35, y: 16 }, { mode: 'salt', w: 66, h: 30 });
+    const lab = labelerFixture('lab', { x: 58, y: 49 }, { parts: [null, null, null], slotW: 22, slotH: 10.5, pad: 3, title: 'Label' });
+    return {
+      id: 'phase2',
+      title: "The Golem's Label",
+      prompt: "What is the compound in the golem's drum called?",
+      widget,
+      table: potTable({
+        pieces: [
+          crate('crx', 'Drum', { x: 10, y: 49 }, { content: { type: 'salt', ...GOLEM_DRUM, hide: [GOLEM_DRUM.cat] } }),
+          ...DRUM_TOKS.map((n, i) => inTray(chip(`k_${i}`, n, { x: 0, y: 0 }), 'cards'))
+        ],
+        fixtures: [win.fixture, lab.fixture, plaqueFixture('names', 'Ion names', { x: 135, y: 44 }, ['NO₃⁻ nitrate', 'SO₄²⁻ sulfate'], { w: 28 })],
+        zones: { trays: [cardsTray()], slots: [win.slot, ...lab.slots] }
+      }),
+      foes: GOLEM_FOE,
+      encounter: { species: 'recipe golem', act: 'Seal Drum', intent: 'The golem stamps a blank drum and sets it on the belt.' },
+      hints: [
+        'Dissolve the drum in the particle view, then look at the ion-name plate and the label.',
+        'Compare the pieces in the water with the ion names on the plate, and count each kind.',
+        'The ions together have no charge, and only the nitrate\'s charge is printed.'
+      ],
+      check(state) {
+        const w = labelWords(state.table, 'lab');
+        if (w.some(x => !x)) return { ok: false, notYet: true, msg: 'Lay a card in each slot of the label.' };
+        const text = `${w[0]}${w[1]} ${w[2]}`;
+        if (text === nameIonic(GOLEM_DRUM.cat, GOLEM_DRUM.an)) return { ok: true };
+        const water = saltInWater(GOLEM_DRUM.cat, GOLEM_DRUM.an);
+        const metal = water.pieces[0]; const anion = water.pieces[1];
+        return { ok: false, msg: `The label reads "${text}"; the particle view drew ${metal.count} Cu with no charge printed and ${anion.count} joined groups printing ${IONS[anion.ion].q < 0 ? '' : '+'}${String(IONS[anion.ion].q).replace('-', '−')}.` };
+      },
+      reward: {
+        title: "The Golem's Label",
+        body: 'Two NO₃⁻ carry −2, so the single copper ion is 2+: copper(II) nitrate, Cu(NO₃)₂.',
+        log: 'The golem\'s drum is copper(II) nitrate.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- Phase 3 */
+  (() => {
+    const b = eqBench({ eq: EQ_ETHANE, dialed: 'all', lex: 2, ledger: 'atoms', boardTitle: 'Equation', coefMax: 8 });
+    return {
+      id: 'phase3',
+      title: "The Golem's Board",
+      prompt: "What coefficients balance the equation on the golem's board?",
+      widget,
+      table: potTable({ fixtures: b.fixtures, zones: { slots: [] } }, { w: 175 }),
+      foes: GOLEM_FOE,
+      encounter: { species: 'recipe golem', act: 'Set Dials', intent: 'The golem resets the equation dials on its furnace.' },
+      hints: [
+        'Turn the four dials on the board and read the atom ledger.',
+        'Compare the two columns of the ledger one atom at a time, and see which rows move when each dial turns.',
+        'Balance the atoms that appear in only one substance on each side first, leaving oxygen for last.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = board(t);
+        if (untouched(r)) return { ok: false, notYet: true, msg: 'Turn a dial on the board.' };
+        const miss = ledgerMiss(t);
+        return miss ? { ok: false, msg: miss } : { ok: true };
+      },
+      reward: {
+        title: 'Balanced Equation',
+        body: '2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O. Carbon and hydrogen are each in one product, so oxygen is set last.',
+        log: '2 C₂H₆ + 7 O₂ → 4 CO₂ + 6 H₂O.'
+      }
+    };
+  })(),
 
   /* ---------------------------------------------------------------- Phase 4 */
   (() => {
@@ -125,8 +216,8 @@ export const STAGES = [
     const b = weighFixture('bal', { x: 108, y: 32 });
     return {
       id: 'phase4',
-      title: 'Phase 4 · What the Furnace Kept',
-      prompt: 'Type the percent of its possible iron that this furnace made.',
+      title: 'What the Furnace Kept',
+      prompt: 'What is the percent yield of iron from this furnace?',
       entry: { id: 'pct', label: 'Percent made', unit: '%' },
       widget,
       table: potTable({
@@ -146,7 +237,7 @@ export const STAGES = [
       hints: [
         'Use the furnace, the two jars, the catch jar and the balance.',
         'Compare the iron on the balance with the iron the equation allows from the reactant that runs out first.',
-        'Find which jar gives out first, work out the iron it allows, then divide what was made by that and multiply by 100.'
+        'Find which jar runs out first, work out the iron it allows, then compare the iron on the balance as a percent of that.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'pct');
@@ -170,8 +261,8 @@ export const STAGES = [
     const b = weighFixture('bal', { x: 108, y: 32 });
     return {
       id: 'phase5',
-      title: 'Phase 5 · The Ledger',
-      prompt: `Type the most iron, in tons, that ${LEDGER.oreTons.toFixed(1)} tons of ore can give.`,
+      title: 'The Ledger',
+      prompt: `What is the most iron, in tons, that ${LEDGER.oreTons.toFixed(1)} tons of ore can give?`,
       entry: { id: 't', label: 'Iron possible', unit: 't' },
       widget,
       table: potTable({
@@ -190,7 +281,7 @@ export const STAGES = [
       hints: [
         'Use the furnace, the ore jar, the catch jar and the balance.',
         'Compare the grams of ore fed with the grams of iron on the balance, and the ledger with what a furnace can make.',
-        'The furnace turns each gram of ore into the same mass of iron, so scale that by the tons of ore in the ledger.'
+        'Weigh what the furnace makes from the ore jar, then scale that ratio of iron to ore up to the tons of ore in the ledger.'
       ],
       check(state) {
         const v = entryNumber(state.table, 't');
@@ -220,12 +311,16 @@ const weighed = [put('catch', 'slot:pot.out'), { run: 'pot' }, put('catch', 'slo
 
 export const SOLUTIONS = [
   [joinTo('na1', 'cl1'), to('na1', 'container:dock'), ...makes(9), { setDial: { fixture: 'tally', dial: 'n', value: 9 } }],
+  [put('crx', 'slot:win.seat'), { run: 'win' }, put('k_1', 'slot:lab.s1'), put('k_2', 'slot:lab.s2'), put('k_5', 'slot:lab.s3')],
+  [{ setDial: { fixture: 'bd', dial: 'c0', value: 2 } }, { setDial: { fixture: 'bd', dial: 'c1', value: 7 } }, { setDial: { fixture: 'bd', dial: 'c2', value: 4 } }, { setDial: { fixture: 'bd', dial: 'c3', value: 6 } }],
   [put('ore', 'slot:pot.in1'), put('al', 'slot:pot.in2'), ...weighed, typed('pct', '80')],
   [put('ore', 'slot:pot.in1'), ...weighed, typed('t', '27.9')]
 ];
 
 export const MISSES = [
   [joinTo('na1', 'cl1'), to('na1', 'container:dock'), ...makes(9), { setDial: { fixture: 'tally', dial: 'n', value: 14 } }],
+  [put('crx', 'slot:win.seat'), { run: 'win' }, put('k_1', 'slot:lab.s1'), put('k_3', 'slot:lab.s2'), put('k_5', 'slot:lab.s3')],
+  [{ setDial: { fixture: 'bd', dial: 'c0', value: 1 } }, { setDial: { fixture: 'bd', dial: 'c1', value: 3 } }, { setDial: { fixture: 'bd', dial: 'c2', value: 2 } }, { setDial: { fixture: 'bd', dial: 'c3', value: 3 } }],
   [put('ore', 'slot:pot.in1'), put('al', 'slot:pot.in2'), ...weighed, typed('pct', '100')],
   [put('ore', 'slot:pot.in1'), ...weighed, typed('t', '50')]
 ];
@@ -246,7 +341,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase asked what a recipe allows: which ingredient runs out, how much of it can be made, and how much was. That was enough to freeze the golem.'
+      body: 'Every phase asked what an equation allows: which ingredient runs out, what compound sits in the drum, how the atoms balance, and how much metal can be made. That was enough to freeze the golem.'
     },
     {
       heading: 'Next',

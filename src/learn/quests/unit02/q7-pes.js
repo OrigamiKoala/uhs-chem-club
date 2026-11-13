@@ -37,7 +37,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  pesTable, plaqueFixture, specimen, chamber, buildFixture, writerFixture,
+  pesTable, plaqueFixture, ieBarsFixture, specimen, chamber, buildFixture, writerFixture,
   chamberRead, buildRead, writtenRead, writerTarget, freedBy, holdOf, electronsIn, spectrumOf, shellsOf,
   ENERGY_STEPS, TOP_STEP, WRITER_ROWS, BINS, binOf, pilesOf, energyAt, LADDER, groundConfig, zOf
 } from '../../table/kits/pes.js';
@@ -54,7 +54,7 @@ export const BUILDS_ON = ['unit02/q6-filling', 'unit02/q2-photon'];
 const SPEAKER = 'Vess';
 
 const QUEST_KEY = 'unit02/q7-pes';
-const GUESS_LABEL = { all: 'All three together', one: 'Just one', two: 'Two of them' };
+const GUESS_LABEL = { all: 'All three', one: 'Just one', two: 'Two' };
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -85,7 +85,11 @@ export const STAGES = [
     title: 'Lithium\'s Three',
     // A PREDICT STAGE: the chamber is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'Lithium has three electrons: when the weakest light that frees any of them shines, how many come off?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Light with enough energy removes an electron from any atom, not only from a metal. Lithium has three electrons: two in its first shell and one in its second.'
+    },
+    prompt: 'Light just strong enough to remove an electron shines on lithium: how many of its three electrons leave?',
     widget,
     table: pesTable({
       pieces: [],
@@ -101,12 +105,12 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Drag one of the three guesses into the slot.',
-      'Think about whether the three electrons of an atom are all held the same way, or whether some sit closer in.',
-      'There is no wrong guess yet; commit to the one you would bet on.'
+      'Drag one of the three cards into the slot.',
+      'Think whether the nucleus holds all three electrons equally tightly, given where each one is.',
+      'A prediction is not graded, so choose the one you think is most likely.'
     ],
     check(state) {
-      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -114,9 +118,9 @@ export const STAGES = [
       if (token) remember(QUEST_KEY, token);
     },
     reward: {
-      log: 'Prediction locked in.',
+      log: 'Prediction made.',
       title: 'Prediction',
-      body: 'If every electron were held the same way, a light would take all of them or none. Next, a chamber will fire light of any strength at lithium.'
+      body: 'Next, a chamber shines light of a chosen energy on lithium and collects the electrons that leave.'
     }
   },
 
@@ -125,11 +129,15 @@ export const STAGES = [
     const ch = chamber(CHAMBER, CH, ['a'], { energyDial: true, rings: true });
     return {
       title: 'The Weakest Light',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The energy needed to remove one electron from an atom is that electron\'s binding energy. Light removes an electron only if its energy is at least that much.'
+      },
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": set the light to the weakest energy that frees any of lithium's electrons.`
-          : 'Set the light to the weakest energy that frees any of lithium\'s electrons.';
+          ? `You predicted "${GUESS_LABEL[guess]}": what is the least energy of light that removes an electron from lithium?`
+          : 'What is the least energy of light that removes an electron from lithium?';
       },
       widget,
       table: pesTable({
@@ -138,9 +146,9 @@ export const STAGES = [
         zones: { slots: ch.slots }
       }),
       hints: [
-        'Use the Light energy dial and "Fire Light", and watch the strip.',
-        'Compare the ring picture beside the holder with the piles that appear at each setting.',
-        'Step the energy down from the top until nothing is left on the strip, and stop on the setting just above that.'
+        'Turn the Light energy dial and press "Fire Light"; each electron removed lands on the strip at its binding energy.',
+        'Compare how many electrons leave at each setting with where they sit in the picture of the atom.',
+        'Below some energy the light removes nothing, so find the lowest setting at which the strip is not empty.'
       ],
       check(state) {
         const t = state.table;
@@ -148,19 +156,19 @@ export const STAGES = [
         const want = weakestStep('Li');
         const v = Math.round(t.fixtures[CHAMBER].dials.energy.value);
         if (v === want) return { ok: true };
-        if (r.electronsNow === 0) return { ok: false, msg: 'That light frees no electron at all.' };
-        return { ok: false, msg: 'A weaker light than this one already frees an electron.' };
+        if (r.electronsNow === 0) return { ok: false, msg: 'Light of that energy removes no electron.' };
+        return { ok: false, msg: 'Light of a lower energy than this already removes an electron.' };
       },
       get reward() {
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'one'
-          ? 'You predicted just one, and the strip agreed. '
-          : 'The strip did not agree with your prediction, which is how a guess gets better. ';
+          ? 'Your prediction held. '
+          : 'The strip did not agree with your prediction. ';
         return {
-          log: 'The outer electron is the loosely held one.',
+          log: 'The outer electron has the lowest binding energy.',
           title: 'Binding Energy',
-          body: `${verdict}The energy needed to remove an electron is its binding energy, and the closer an electron sits to the nucleus the more tightly it is bound. Lithium's outer electron comes off with far less than the two beside the nucleus.`,
-          model: { type: 'atom', p: 3, n: 4, eject: true, caption: 'Lithium: two electrons on the shell close to the middle, held tightly, and one on the shell outside, held loosely. Not to scale.' }
+          body: `${verdict}The outer electron leaves at a far lower energy than the two in the first shell. The closer an electron is to the nucleus, the higher its binding energy.`,
+          model: { type: 'atom', p: 3, n: 4, eject: true, caption: 'Lithium: two electrons in the first shell, tightly held, and one in the second shell, held far less tightly. Not to scale.' }
         };
       }
     };
@@ -168,10 +176,14 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const ch = chamber(CHAMBER, CH, ['x'], { model: 'build', axisLabel: 'BINDING ENERGY, MJ/mol' });
+    const ch = chamber(CHAMBER, CH, ['x'], { axisLabel: 'BINDING ENERGY, MJ/mol' });
     return {
       title: 'Name the Specimen',
-      prompt: 'Build the atom whose peaks match the sealed specimen\'s.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A photoelectron spectrum counts the electrons removed at each binding energy. A peak\'s position says how tightly those electrons are held, and its height says how many of them there are.'
+      },
+      prompt: 'Which atom gives the sealed specimen\'s spectrum?',
       widget,
       table: pesTable({
         pieces: [specimen('x', 'SEALED SPECIMEN', 'O', { x: 0, y: 0 }, { zone: SLOT })],
@@ -179,23 +191,25 @@ export const STAGES = [
         zones: { slots: ch.slots }
       }),
       hints: [
-        'Use "Fire Light" on the sealed specimen, then the Protons and Electrons dials of the build.',
-        'Compare the outlines the build makes with the piles on the strip, and what the heights add up to.',
-        'A whole atom has as many electrons as protons, so build the one whose outlines cover every pile.'
+        'Press "Fire Light" to record the spectrum, then set the Protons and Electrons dials of "Build an atom".',
+        'Count the electrons in each peak on the strip.',
+        'Every electron of the atom is in one of the peaks, and a neutral atom has as many protons as electrons.'
       ],
       check(state) {
         const t = state.table;
         const b = buildRead(t, 'build');
+        const r = chamberRead(t, CHAMBER);
+        if (!r.fired) return { ok: false, notYet: true, msg: 'Press Fire Light to record the specimen\'s spectrum first.' };
         if (!b.protons && !b.electrons) return { ok: false, notYet: true, msg: 'Build an atom with the dials.' };
         if (b.whole && b.sym === 'O') return { ok: true };
-        if (!b.whole) return { ok: false, msg: 'The build has a different number of protons and electrons.' };
-        return { ok: false, msg: 'The outlines of that atom do not cover the sealed specimen\'s piles.' };
+        if (!b.whole) return { ok: false, msg: `The built atom has ${b.protons} protons and ${b.electrons} electrons, so it is an ion and not a neutral atom.` };
+        return { ok: false, msg: `The built atom has ${b.electrons} electrons, and the peaks on the strip hold ${r.electrons}.` };
       },
       reward: {
-        log: 'The heights summed to the atomic number.',
+        log: 'The peak heights add up to the number of electrons.',
         title: 'The Photoelectron Spectrum',
-        body: 'Counting how many electrons come off at each energy gives a photoelectron spectrum: a peak\'s position says how tightly those electrons were held, and its height says how many there are. The heights add up to all the electrons, and in a neutral atom that equals its atomic number, so peaks of 2, 2 and 4 belong to oxygen.',
-        model: { type: 'rack', z: 8, caption: 'Oxygen\'s three peaks as three rows: 2 electrons, 2 electrons and 4 electrons.' }
+        body: 'Peaks of 2, 2 and 4 electrons add up to 8. An atom with 8 electrons has 8 protons, so the specimen is oxygen.',
+        model: { type: 'rack', z: 8, caption: 'Oxygen\'s three peaks as three subshells: 2 electrons, 2 electrons and 4 electrons.' }
       }
     };
   })(),
@@ -205,35 +219,36 @@ export const STAGES = [
     const ch = chamber(CHAMBER, { x: CH.x, y: CH.y - 1 }, ['o', 'f', 'n'], { axisLabel: 'BINDING ENERGY, MJ/mol', h: 38 });
     return {
       title: 'Oxygen, Fluorine, Neon',
-      prompt: 'Rank the three specimens by how tightly they hold their innermost electrons, loosest first.',
+      prompt: 'What is the order of the three atoms from the lowest binding energy of their innermost electrons to the highest?',
       widget,
       table: pesTable({
         pieces: [specimen('o', 'OXYGEN', 'O', { x: 0, y: 0 }, { note: '8 protons' }), specimen('f', 'FLUORINE', 'F', { x: 0, y: 0 }, { note: '9 protons' }), specimen('n', 'NEON', 'Ne', { x: 0, y: 0 }, { note: '10 protons' })],
         fixtures: [ch.fixture],
-        zones: { slots: ch.slots, rail: { id: 'rail', at: { x: 62, y: 54 }, size: { w: 84, h: 12 }, first: 'Held loosest', last: 'Held tightest', items: ['o', 'f', 'n'], start: ['n', 'o', 'f'] } }
+        zones: { slots: ch.slots, rail: { id: 'rail', at: { x: 62, y: 54 }, size: { w: 84, h: 12 }, first: 'Lowest binding energy', last: 'Highest binding energy', items: ['o', 'f', 'n'], start: ['n', 'o', 'f'] } }
       }),
       hints: [
-        'Use "Fire Light" with each specimen in the holder.',
-        'Compare the position of the pile that stands furthest toward the high-energy end with the number of protons on each card.',
-        'Lay the specimens on the rail in the order of their innermost piles, the one nearest the low-energy end first.'
+        'Put each specimen in the holder in turn and press "Fire Light".',
+        'Compare where the peak of highest binding energy stands for each atom with the number of protons on its card.',
+        'The innermost electrons are the same two in all three atoms, so think what differs in the nucleus that attracts them.'
       ],
       check(state) {
         const t = state.table;
         const order = railOf(t);
         if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three specimens on the rail.' };
+        if (!['o', 'f', 'n'].every(id => t.pieces[id].props.printed)) return { ok: false, notYet: true, msg: 'Record the spectrum of all three specimens first.' };
         const want = ['o', 'f', 'n'].slice().sort((p, q) => holdOf(t.pieces[p].props.sym) - holdOf(t.pieces[q].props.sym));
         if (order.join() === want.join()) return { ok: true };
         for (let k = 0; k < order.length - 1; k++) {
           if (holdOf(t.pieces[order[k]].props.sym) > holdOf(t.pieces[order[k + 1]].props.sym)) {
-            return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and its innermost pile stands further toward the high-energy end.` };
+            return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and its innermost peak stands at the higher binding energy of the two.` };
           }
         }
-        return { ok: false, msg: 'The rail does not run the way the innermost piles stand.' };
+        return { ok: false, msg: 'The rail does not agree with where the innermost peaks stand.' };
       },
       reward: {
-        log: 'A bigger nuclear charge holds the same shell harder.',
-        title: 'More Charge, Tighter Hold',
-        body: 'Neon\'s first-shell electrons feel ten protons and fluorine\'s feel nine, and the extra proton holds them noticeably tighter. The same two electrons in the same shell need more energy to remove from the atom with the bigger nuclear charge.'
+        log: 'More protons: higher binding energy for the same shell.',
+        title: 'More Protons, Higher Binding Energy',
+        body: 'Neon\'s ten protons hold its two first-shell electrons more tightly than fluorine\'s nine or oxygen\'s eight. For the same shell, more protons mean a higher binding energy.'
       }
     };
   })(),
@@ -242,54 +257,64 @@ export const STAGES = [
   (() => {
     const ch = chamber(CHAMBER, CH, ['c'], { axisLabel: 'BINDING ENERGY, MJ/mol' });
     return {
-      title: 'The Sealed Specimen\'s Rows',
-      prompt: 'Write down the ground-state electron configuration this sealed specimen\'s spectrum shows.',
+      title: 'The Sealed Specimen\'s Subshells',
+      prompt: 'What electron configuration does this sealed specimen\'s spectrum show?',
       widget,
       table: pesTable({
         pieces: [specimen('c', 'SEALED SPECIMEN', 'N', { x: 0, y: 0 }, { zone: SLOT })],
-        fixtures: [ch.fixture, writerFixture('write', { x: 130.5, y: 26 }, { label: 'Electrons in each row' })],
+        fixtures: [ch.fixture, writerFixture('write', { x: 130.5, y: 26 }, { label: 'Electrons in each subshell' })],
         zones: { slots: ch.slots }
       }),
       hints: [
-        'Use "Fire Light" and the dial of each row on the page.',
-        'Order the piles from the one held most tightly to the one held least, which is the order the rows fill in.',
-        'Set each row of the page to the height of the next pile along, starting with the most tightly held.'
+        'Press "Fire Light", then set the dial for each subshell on the page.',
+        'Compare the peaks in order of binding energy with the order in which the subshells fill.',
+        'The subshell that fills first lies nearest the nucleus, so think which peak its electrons make.'
       ],
       check(state) {
         const t = state.table;
         const w = writtenRead(t, 'write');
-        if (w.total === 0) return { ok: false, notYet: true, msg: 'Write the electrons in each row.' };
+        if (w.total === 0) return { ok: false, notYet: true, msg: 'Set the number of electrons in each subshell.' };
         const want = writerTarget('N');
         if (WRITER_ROWS.every(r => w.counts[r] === want[r])) return { ok: true };
-        return { ok: false, msg: 'The page and the strip do not agree, row by row.' };
+        return { ok: false, msg: 'A dial on the page does not match the height of the peak for that subshell.' };
       },
       reward: {
-        log: 'Peak by peak, the spectrum is the arrangement.',
+        log: 'Peak by peak, the spectrum is the configuration.',
         title: 'The Spectrum Is the Configuration',
-        body: 'A photoelectron spectrum is the electron configuration drawn out: each peak is a row, and its height is how many electrons the row holds. Read from the most tightly held peak to the least, it spells the configuration row by row.',
-        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s rows, lowest at the bottom: 2, 2 and 3 electrons, the three in the top row standing alone.' }
+        body: 'Read from the highest binding energy to the lowest, the peak heights give the configuration subshell by subshell: 1s² 2s² 2p³, which is nitrogen.',
+        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s subshells, lowest at the bottom: 2, 2 and 3 electrons, the three 2p electrons each in an orbital of its own.' }
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const plate = plaqueFixture('plate', 'Energy to remove each electron in turn', { x: 52, y: 26 }, [
+    const plate = plaqueFixture('plate', 'Energy to remove each electron in turn', { x: 42, y: 26 }, [
       'First: 738 kJ/mol',
       'Second: 1451 kJ/mol',
       'Third: 7733 kJ/mol',
       'Fourth: 10543 kJ/mol'
-    ], { w: 70 });
+    ], { w: 66 });
+    const chart = ieBarsFixture('bars', 'Energy per Electron', { x: 112, y: 26 }, [
+      { label: '1st', value: 738 },
+      { label: '2nd', value: 1451 },
+      { label: '3rd', value: 7733 },
+      { label: '4th', value: 10543 }
+    ], { w: 56, h: 38 });
     return {
       title: 'Counting Outer Electrons',
-      prompt: 'Type how many outer-shell electrons the sealed atom has.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The energy needed to remove the outermost electron from an atom is its ionization energy. Removing a second electron, then a third, takes more energy each time.'
+      },
+      prompt: 'How many electrons are in this atom\'s outer shell?',
       entry: { id: 'ans', label: 'Outer-shell electrons', unit: '' },
       widget,
-      table: pesTable({ pieces: [], fixtures: [plate], zones: {} }),
+      table: pesTable({ pieces: [], fixtures: [plate, chart], zones: {} }),
       hints: [
-        'Read the four energies on the plate, then type the figure in the field.',
-        'Compare each energy with the one before it and find the step that jumps the most.',
-        'Electrons removed before the big jump come from the outer shell; the jump marks the first electron from a shell closer in.'
+        'The plate lists the energy needed to remove the first four electrons, one after another.',
+        'Compare each energy with the one before it.',
+        'An electron in a shell nearer the nucleus has a far higher binding energy, so look for where the list shows that.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
@@ -298,9 +323,9 @@ export const STAGES = [
         return { ok: false, msg: 'After that many electrons, the next energy on the plate is not much bigger than the one before it.' };
       },
       reward: {
-        log: 'The big jump marks the first electron from a closer shell.',
+        log: 'The jump marks the first electron from an inner shell.',
         title: 'Successive Ionization Energies',
-        body: 'Each electron is harder to remove than the last, but the cost jumps when the next electron sits in a shell closer to the nucleus. Here it jumps after the second, so the atom has two outer-shell electrons: magnesium.',
+        body: 'The energy jumps more than five times after the second electron, so the third came from a shell nearer the nucleus. The atom has two outer electrons: it is magnesium.',
         last: true
       }
     };
@@ -310,7 +335,7 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   2: ['Turn the Light energy dial, then press Fire Light.'],
-  3: ['Set the Protons and Electrons dials: your atom\'s peaks', 'appear on the strip as outlines.']
+  3: ['Press Fire Light, then set the Protons and Electrons dials.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -322,15 +347,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A photoelectron spectrum has one peak for every row of electrons: its height is how many electrons the row holds and its position is how tightly they are held. It is the configuration measured instead of written.'
+      body: 'A photoelectron spectrum has one peak for each subshell that holds electrons. The peak\'s position is the binding energy of those electrons and its height is how many there are, so the spectrum is the configuration, measured.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'PES provides direct experimental evidence for subshell energy levels and electron configurations. The spectrum directly reflects the underlying electronic structure.'
+      body: 'The spectrum is the evidence for shells and subshells: electrons in an atom are held at a few separate energies, and more protons hold the same shell more tightly.'
     },
     {
       heading: 'Next',
-      body: 'Binding energy follows predictable periodic trends across rows and down columns. The next bench measures atomic radii and ionization energies across the periodic table.'
+      body: 'Next: how the size of an atom and the energy to remove its outer electron change across the periodic table.'
     }
   ]
 };

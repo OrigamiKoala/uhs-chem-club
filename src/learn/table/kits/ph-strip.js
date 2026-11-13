@@ -12,6 +12,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { registerFixture } from './ph-registry.js';
+import { isRevealed } from './commit-gate.js';
 import { frameOf } from './matter-draw.js';
 import { fractions, fmt } from '../../engine/phdata.js';
 import { windowAt, shuffle, scratch } from '../../engine/phmotion.js';
@@ -83,8 +84,9 @@ function paintStrip(ctx, f, state, b) {
   }
   const nameHA = ionText(p.indicator ? 'red form' : r.acid.HA); const nameA = ionText(p.indicator ? 'yellow form' : r.acid.A);
   const by = y0 + ph + 9.4;
-  put(ctx, `${nameHA} ${r.pctHA} %`, F.x(2), F.y(by), F.size(2.7, 7), { align: 'left', color: inkHA, weight: 700 });
-  put(ctx, `${nameA} ${r.pctA} %`, F.x(w - 2), F.y(by), F.size(2.7, 7), { align: 'right', color: inkA, weight: 700 });
+  const hidePct = p.hidePct && !isRevealed(state, f.id);
+  put(ctx, hidePct ? nameHA : `${nameHA} ${r.pctHA} %`, F.x(2), F.y(by), F.size(2.7, 7), { align: 'left', color: inkHA, weight: 700 });
+  put(ctx, hidePct ? nameA : `${nameA} ${r.pctA} %`, F.x(w - 2), F.y(by), F.size(2.7, 7), { align: 'right', color: inkA, weight: 700 });
   if (p.indicator) {
     ctx.fillStyle = mix(RED, YELLOW, r.fr.A); ctx.fillRect(F.x(2), F.y(by + 3), F.len(9), F.len(4));
     ctx.strokeStyle = STEEL; ctx.strokeRect(Math.round(F.x(2)) + 0.5, Math.round(F.y(by + 3)) + 0.5, Math.round(F.len(9)), Math.round(F.len(4)));
@@ -118,7 +120,7 @@ registerFixture('phstrip', { bodies3d: true, paint: paintStrip, dialed, live: ()
  * A fraction strip. `acids`: `[{ name, pKa, HA, A }]` (one for a plain strip; several add an "Acid" dial); `indicator` draws the two forms as
  * two colours with a swatch; `start` is the pH the dial begins at (and the first point painted).
  */
-export function stripFixture(id, at, { acids, indicator = false, start = 5, w = 84, title = 'Fraction strip', acidDial = null } = {}) {
+export function stripFixture(id, at, { acids, indicator = false, start = 5, w = 84, title = 'Fraction strip', acidDial = null, hidePct = false } = {}) {
   const dials = { ph: { min: PH_MIN, max: PH_MAX, step: 0.5, value: start, label: 'pH' } };
   if (acids.length > 1) dials.acid = { min: 1, max: acids.length, step: 1, value: 1, label: acidDial || 'Acid', labels: acids.map(a => a.name) };
   const nd = Object.keys(dials).length;
@@ -128,7 +130,7 @@ export function stripFixture(id, at, { acids, indicator = false, start = 5, w = 
   return {
     fixture: {
       id, kind: 'phstrip', label: title, at: { ...at }, size: { w, h }, noRun: true, dials,
-      props: { backdrop: true, top: 10.5, acids, indicator, plotTop, plotH, reach: { 0: { lo: start, hi: start } } }
+      props: { backdrop: true, top: 10.5, acids, indicator, plotTop, plotH, reach: { 0: { lo: start, hi: start } }, ...(hidePct ? { hidePct: true } : {}) }
     },
     size: { w, h }
   };

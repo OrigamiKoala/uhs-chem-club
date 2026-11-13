@@ -4,30 +4,25 @@
  * The tile store. Bench seven showed that rows exist; this one measures what holds an electron in one and follows the answer across the table.
  * The whole bench is one law applied three ways: charge pulls, distance weakens it, and other electrons in the way cancel some of it.
  *
- * The eighth of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4c), on the trends kit (`table/kits/trends.js`), reworked on
- * 2026-10-23 around ONE CLICK. Atoms are scale-model cards (a bigger atom is a bigger circle); a SPRING GAUGE tugs the electron its
- * dial names and reads the pull; a SIZE GAUGE reads a radius; a STRIPPER takes the outermost electron off and reads what it cost; an
- * electron laid on a card puts one on. Ions are made by hand and sized the same way, and cards are ranked on the rail.
+ * Rebuilt in the teaching pass of 2026-11-12 (the bench before it is `archive/2026-11-11/lanternfall/q8-trends.before.js`). Before, each
+ * instrument printed the property being ranked for every card, and the cause arrived in the reward. Now:
  *
- * THE CLICK. A player expects an atom with more protons and more electrons to be bigger: more stuff, more size. So the guess
- * (lithium or carbon, the first with three protons and the second with six) is asked with no gauge on the table, and then the size
- * gauge puts four atoms of one row in order, the biggest being the one with the fewest protons.
+ * ONE MODEL ON EVERY CARD (`trends-draw.js` `paintAtom`): the nucleus and its charge, the inner shells as a dim band with their electron
+ * count, the outermost electrons bright. Cards are drawn at one size (`plain`) while a stage asks which atom is bigger, and to scale after.
+ * AN INSTRUMENT MEASURES ONE REFERENCE CASE, fixed in its holder (`seatedAtom`), or shows only the cause (the charge instrument prints the
+ * nucleus's charge, the electrons between and the charge felt, never a size or an energy). The cards the stage asks about are reasoned.
  *
- * THE ORDER IS THE WHOLE DESIGN:
+ *   1  PREDICT: lithium or carbon, which is bigger
+ *   2  briefing: shielding. Lithium on the charge instrument; four other atoms sorted by charge felt   -> effective nuclear charge
+ *   3  four atoms of one period, same shell, ordered by size from the charge felt                     -> atomic radius across a period
+ *   4  three atoms of one group, same charge felt, ordered by size from their shells                  -> atomic radius down a group
+ *   5  lithium's ionization energy measured; sodium, carbon and fluorine ordered from charge felt and distance
+ *   6  beryllium and boron both measured; why boron's is lower, with both atoms' subshells drawn       -> the dip
+ *   7  sodium loses an electron and is seen to shrink; chloride's size is reasoned                    -> ionic radius
+ *   8  carbon's electron affinity measured; which of N, O, F releases the most
+ *   9  four atoms ordered by electronegativity from charge felt and distance
  *
- *   1  PREDICT: which of lithium and carbon is the bigger atom (no gauge)           -> a guess before the evidence
- *   2  TEST: four atoms of one row, largest to smallest                              -> atomic radius
- *   3  four atoms, by the charge their outermost electron actually feels            -> shielding, effective nuclear charge, Coulomb's law
- *   4  three atoms, by what it costs to strip one electron                           -> ionization energy
- *   5  Na+, Na and Cl-, by size                                                      -> ionic radius
- *
- * EVERY FIGURE IS REAL. The radii (pm) and the first ionization energies (kJ/mol) come from `electrons.js`; the pull is Coulomb's law over
- * the declared nuclear charge, the electrons in the shells below and the real radius (`planPull`), so the bench shows the trend without
- * being told it.
- *
- * Cut on 2026-10-23 (problems doc T6, T7): the electron held hardest of all (stage 3 asks the same question about the outer one), the
- * group trend predicted (stage 2 again with a ring more), magnesium's three costs (successive ionization energies, AP depth) and
- * the closing pull ranking (electronegativity and electron affinity; the words go to the Drill Deck).
+ * EVERY FIGURE IS REAL: radii, ionization energies, electron affinities and electronegativities come from `electrons.js`.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -36,22 +31,21 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  trendsTable, gainFixture, gainOf, atomCard, electronPiece, springFixture, sizerFixture, stripFixture,
-  springRead, sizeRead, stripRead, pullOf, hardestPull, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell,
+  trendsTable, gainFixture, gainOf, atomCard, seatedAtom, springFixture, stripFixture, levelsFixture,
+  springRead, stripRead, pullOf, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell,
   RADIUS, ION_RADIUS, IONIZATION, zOf, nameOf
 } from '../../table/kits/trends.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 9 };
 
+/** The stage whose card confirms each term; each is defined in a briefing before it is needed. */
 export const VOCABULARY = [
-  { term: /\bionization energ(?:y|ies)\b/i, introducedAt: 4 },
-  { term: /\bionic radi(?:us|i)\b/i, introducedAt: 5 },
-  { term: /\belectron affinity\b/i, introducedAt: 6 },
-  { term: /\belectronegativity\b/i, introducedAt: 7 },
-  { term: /\beffective nuclear charge\b/i, introducedAt: 3 },
-  { term: /\bshielding\b/i, introducedAt: 3 },
-  { term: /\bcoulomb.?s law\b/i, introducedAt: 3 },
-  { term: /\batomic radi(?:us|i)\b/i, introducedAt: 2 }
+  { term: /\beffective nuclear charge\b/i, introducedAt: 2 },
+  { term: /\batomic radi(?:us|i)\b/i, introducedAt: 3 },
+  { term: /\bionization energ(?:y|ies)\b/i, introducedAt: 5 },
+  { term: /\bionic radi(?:us|i)\b/i, introducedAt: 7 },
+  { term: /\belectron affinity\b/i, introducedAt: 8 },
+  { term: /\belectronegativity\b/i, introducedAt: 9 }
 ];
 
 export const BUILDS_ON = ['unit02/q7-pes', 'unit02/q6-filling'];
@@ -59,7 +53,7 @@ export const BUILDS_ON = ['unit02/q7-pes', 'unit02/q6-filling'];
 const SPEAKER = 'Vess';
 
 const QUEST_KEY = 'unit02/q8-trends';
-const GUESS_LABEL = { li: 'Lithium is bigger', c: 'Carbon is bigger', same: 'The same size' };
+const GUESS_LABEL = { li: 'Lithium', c: 'Carbon', same: 'The same' };
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -70,26 +64,45 @@ export function toolNoteFor() { return null; }
 
 const widget = { type: 'table', label: 'The bench' };
 const SPRING = 'sp';
-const SIZER = 'sz';
 const STRIP = 'st';
 const GAIN = 'ga';
 
 const ROW_Y = 53;
 const rowAt = i => ({ x: 14 + i * 24, y: ROW_Y });
 const NAMES = { Li: 'LITHIUM', Na: 'SODIUM', Be: 'BERYLLIUM', Mg: 'MAGNESIUM', B: 'BORON', C: 'CARBON', N: 'NITROGEN', F: 'FLUORINE', K: 'POTASSIUM', Cl: 'CHLORINE', O: 'OXYGEN' };
-/** Cards in a row along the bottom: `[id, sym]` each, labelled with the element's name. */
-const row = list => list.map(([id, sym, label], i) => atomCard(id, label || NAMES[sym], sym, rowAt(i)));
+/** Atom cards in a row along the bottom: `[id, sym]` each. `plain` draws every card at one size (a stage that asks which is bigger). */
+const row = (list, opts = {}) => list.map(([id, sym], i) => atomCard(id, NAMES[sym], sym, rowAt(i), opts));
 
 const railAt = (first, last) => ({ id: 'rail', at: { x: 108, y: 35 }, size: { w: 80, h: 17 }, first, last, items: [], labelLift: 1.6 });
 const railOf = t => t.zones.rail.order.slice();
 const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
 const sym = (t, id) => t.pieces[id].props.sym;
+const name = (t, id) => nameOf(sym(t, id));
+const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
 
-/** The tray that holds `n` cards across, one row. */
+/** A tray that holds cards across, one row. */
 const tray = (id, label, at, w) => ({ id, label, at, size: { w, h: 22 }, cell: 21 });
 
-/** The size of a card as it stands now, ions included. */
-const sizeOfCard = (t, id) => sizeNow(t.pieces[id]);
+/** Answer cards along the bottom right, and the slot one of them goes in. */
+const answers = list => list.map(([id, label], i) => ({ id, kind: 'card', label, at: { x: 72 + i * 32, y: ROW_Y }, r: 7, props: {} }));
+const answerSlot = { id: 'answer', label: '', at: { x: 128, y: 16 }, size: { w: 40, h: 13 } };
+const answered = t => Object.values(t.pieces).find(p => p.zone === 'slot:answer') || null;
+
+/** A rail check: the cards in the order of `value`, lowest first; a miss names the first pair out of order by what the cards show. */
+function ranked(t, ids, value, wrong) {
+  const order = railOf(t);
+  if (order.length < ids.length) return { ok: false, notYet: true, msg: `Put all ${ids.length} atoms on the rail.` };
+  const want = ids.slice().sort((p, q) => value(sym(t, p)) - value(sym(t, q)));
+  if (order.join() === want.join()) return { ok: true };
+  for (let k = 0; k < order.length - 1; k++) {
+    if (value(sym(t, order[k])) > value(sym(t, order[k + 1]))) return { ok: false, msg: wrong(order[k], order[k + 1]) };
+  }
+  return { ok: false, msg: 'The rail is not in order.' };
+}
+
+/** What a card shows about an atom: the charge its outermost electron feels, and how many shells it has. */
+const felt = s => feelsOf(s);
+const shellCount = s => shellsOf(s).length;
 
 /* ------------------------------------------------------------------
    THE STAGES
@@ -98,9 +111,9 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Bigger Atoms',
-    // A PREDICT STAGE: the gauges are not on the table yet. The guess is made first, here, and comes back with the test.
+    // A PREDICT STAGE: no instrument yet. The guess is made first and comes back in stage 3, which tests it.
     predict: true,
-    prompt: 'Carbon has six protons and lithium has three: which atom do you think is bigger?',
+    prompt: 'Carbon has six protons and six electrons, lithium has three of each: which atom is bigger?',
     widget,
     table: trendsTable({
       pieces: [],
@@ -116,12 +129,12 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Drag one of the three guesses into the slot.',
-      'Think about what carbon has more of, and whether more of it should make the atom bigger.',
-      'There is no wrong guess yet; commit to the one you would bet on.'
+      'Drag one of the three cards into the slot.',
+      'Think what carbon has more of, and what each of those things does to the size of the atom.',
+      'A prediction is not graded, so choose the one you think is most likely.'
     ],
     check(state) {
-      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
       return { ok: true };
     },
     onClear(state) {
@@ -129,132 +142,124 @@ export const STAGES = [
       if (token) remember(QUEST_KEY, token);
     },
     reward: {
-      log: 'Prediction locked in.',
+      log: 'Prediction made.',
       title: 'Prediction',
-      body: 'More protons and electrons might seem like they should make an atom larger, but added positive charge pulls electrons closer.'
+      body: 'Before testing it, find out what an atom\'s outermost electron is attracted by.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const sz = sizerFixture(SIZER, { x: 30, y: 15 });
+    const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { feel: true } });
+    const WANT = { na: 'one', mg: 'two', be: 'two', b: 'three' };
     return {
-      title: 'Four in a Row',
-      get prompt() {
-        const guess = recall(QUEST_KEY);
-        return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": order lithium, beryllium, boron and carbon from largest atom to smallest.`
-          : 'Order lithium, beryllium, boron and carbon from largest atom to smallest.';
+      title: 'What the Outer Electron Feels',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The nucleus attracts every electron in an atom. The electrons in the inner shells lie between the nucleus and the outermost electrons and cancel part of its charge: this is called shielding.'
       },
+      prompt: 'What charge does the outermost electron feel in sodium, magnesium, beryllium and boron?',
       widget,
       table: trendsTable({
-        pieces: row([['c', 'C'], ['li', 'Li'], ['b', 'B'], ['be', 'Be']]),
-        fixtures: [sz.fixture],
-        zones: { slots: sz.slots, rail: railAt('Largest atom', 'Smallest atom') }
+        pieces: [seatedAtom('li', NAMES.Li, 'Li', sp, { plain: true }), ...row([['na', 'Na'], ['mg', 'Mg'], ['be', 'Be'], ['b', 'B']], { plain: true })],
+        fixtures: [sp.fixture],
+        zones: { slots: sp.slots, trays: [tray('one', 'Feels +1', { x: 86, y: 17 }, 40), tray('two', 'Feels +2', { x: 128, y: 17 }, 40), tray('three', 'Feels +3', { x: 128, y: 46 }, 40)] }
       }),
       hints: [
-        'Place an atom in the size gauge to read its radius.',
-        'Compare the radii across the row as the number of protons increases.',
-        'Place the largest radius at the left of the rail and the smallest at the right.'
+        'The instrument holds a lithium atom: read its three lines, and turn the Electron dial to compare an inner electron.',
+        'Compare lithium\'s three lines with the two numbers printed on each card.',
+        'Work out how the instrument gets lithium\'s third line from its first two, then do the same for each card.'
       ],
       check(state) {
         const t = state.table;
-        const order = railOf(t);
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms on the rail.' };
-        const want = order.slice().sort((a, b) => sizeOfCard(t, b) - sizeOfCard(t, a));
-        if (order.join() === want.join()) return { ok: true };
-        for (let k = 0; k < order.length - 1; k++) {
-          if (sizeOfCard(t, order[k]) < sizeOfCard(t, order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and its radius is the smaller.` };
-        }
-        return { ok: false, msg: 'The rail does not run the way the radii do.' };
+        const ids = Object.keys(WANT);
+        if (!ids.every(id => where(t, id) in { one: 1, two: 1, three: 1 })) return { ok: false, notYet: true, msg: 'Put all four atoms in a tray.' };
+        const wrong = ids.find(id => where(t, id) !== WANT[id]);
+        if (!wrong) return { ok: true };
+        const item = itemOf(t.pieces[wrong]);
+        return { ok: false, msg: `${cap(name(t, wrong))} has a nucleus of +${item.z} and ${item.z - felt(item.sym)} inner electrons, and its tray does not agree with those two numbers.` };
       },
-      get reward() {
-        const guess = recall(QUEST_KEY);
-        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'li'
-          ? 'Lithium is indeed the larger atom. '
-          : 'Carbon is smaller than lithium despite having more particles. ';
-        return {
-          log: 'Across the row, the atoms shrink.',
-          title: 'Atomic Radius',
-          body: `${verdict}Atomic radius decreases across a row because additional protons pull the valence electron shell closer to the nucleus.`,
-          model: { type: 'radii', shrink: true, items: [{ sym: 'Li', pm: 152 }, { sym: 'Be', pm: 112 }, { sym: 'B', pm: 85 }, { sym: 'C', pm: 77 }], caption: 'Lithium, beryllium, boron and carbon: atoms shrink across the row as nuclear charge increases.' }
-        };
+      reward: {
+        log: 'Charge felt = nucleus charge less the inner electrons.',
+        title: 'Effective Nuclear Charge',
+        body: 'Sodium\'s nucleus of +11 is shielded by 10 inner electrons, leaving about +1. The charge left over is the effective nuclear charge.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { between: true, feel: true } });
+    const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { feel: true } });
+    const ids = ['li', 'be', 'b', 'c'];
     return {
-      title: 'Effective Nuclear Charge',
-      prompt: 'Sort the atoms by the charge their outermost electron actually feels.',
+      title: 'Across a Period',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An atom\'s size is given as its atomic radius, the distance from the nucleus to its outermost electrons. A period is a row of the periodic table: lithium, beryllium, boron and carbon are neighbours in one.'
+      },
+      get prompt() {
+        const guess = recall(QUEST_KEY);
+        return guess && GUESS_LABEL[guess]
+          ? `You predicted "${GUESS_LABEL[guess]}" is bigger: what is the order of these four atoms from smallest to largest?`
+          : 'What is the order of these four atoms from the smallest to the largest?';
+      },
       widget,
       table: trendsTable({
-        pieces: row([['li', 'Li'], ['na', 'Na'], ['be', 'Be'], ['mg', 'Mg']]),
+        pieces: row([['c', 'C'], ['li', 'Li'], ['b', 'B'], ['be', 'Be']], { plain: true }),
         fixtures: [sp.fixture],
-        zones: { slots: sp.slots, trays: [tray('one', 'Feels +1', { x: 125, y: 16 }, 44), tray('two', 'Feels +2', { x: 125, y: 43 }, 44)] }
+        zones: { slots: sp.slots, rail: railAt('Smallest', 'Largest') }
       }),
       hints: [
-        'Place an atom in the holder and press "Tug Electron" to measure the pull.',
-        'Compare the nuclear charge with the number of inner electrons between it and the outer electron.',
-        'Subtract inner electrons from nuclear charge to find the net charge.'
+        'The cards are all drawn the same size; put any atom in the holder to see the charge its outermost electron feels.',
+        'Compare the charge felt in the four atoms, and notice that all four have the same number of shells.',
+        'The outermost electrons are in the same shell in all four, so think what a stronger attraction does to that shell.'
       ],
       check(state) {
         const t = state.table;
-        const ids = ['li', 'na', 'be', 'mg'];
-        if (!ids.every(id => where(t, id) === 'one' || where(t, id) === 'two')) return { ok: false, notYet: true, msg: 'Put every atom in a tray.' };
-        const wrong = ids.find(id => where(t, id) !== (feelsOf(sym(t, id)) === 1 ? 'one' : 'two'));
-        if (!wrong) return { ok: true };
-        return { ok: false, msg: `${t.pieces[wrong].label} is in a tray that does not match the charge its outermost electron feels in the holder.` };
+        return ranked(t, ids, s => RADIUS[s], (p, q) => `${cap(name(t, p))} stands left of ${name(t, q)}, and ${name(t, p)}'s outermost electrons feel +${felt(sym(t, p))} against +${felt(sym(t, q))} in the same shell.`);
       },
-      reward: {
-        log: 'Eleven protons, ten electrons in the way.',
-        title: 'Shielding and Effective Nuclear Charge',
-        body: 'Inner electrons provide shielding by cancelling part of the positive charge from the nucleus. The remaining net attraction is the effective nuclear charge. By Coulomb\'s law, this determines the pull on the outer electron: sodium has 11 protons and 10 shielding electrons, leaving an effective charge of +1.',
-        model: {
-          type: 'shielding',
-          sym: 'Na',
-          p: 11,
-          n: 12,
-          caption: '10 inner electrons cancel 10 positive charges from the nucleus, leaving a net +1 pull on the outer electron.'
-        }
+      get reward() {
+        const guess = recall(QUEST_KEY);
+        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'li' ? 'Your prediction held. ' : 'This did not agree with your prediction. ';
+        return {
+          log: 'Across a period: more charge felt, same shell, smaller atom.',
+          title: 'Atomic Radius Across a Period',
+          body: `${verdict}Each step across adds a proton but no inner electrons, so the same shell is pulled closer. Atomic radius falls across a period: lithium 152 pm (picometres), carbon 77 pm.`
+        };
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const st = stripFixture(STRIP, { x: 27, y: 18 });
+    const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { feel: true } });
+    const ids = ['li', 'na', 'k'];
     return {
-      title: 'Ionization Energy',
-      prompt: 'Order lithium, beryllium and boron by the energy it costs to strip one electron, cheapest first.',
+      title: 'Down a Group',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A group is a column of the periodic table. Lithium, sodium and potassium stand one below another in the first group.'
+      },
+      prompt: 'What is the order of lithium, sodium and potassium from the smallest atom to the largest?',
       widget,
       table: trendsTable({
-        pieces: row([['b', 'B'], ['li', 'Li'], ['be', 'Be']]),
-        fixtures: [st.fixture],
-        zones: { slots: st.slots, rail: railAt('Requires least energy', 'Requires most energy') }
+        pieces: row([['na', 'Na'], ['k', 'K'], ['li', 'Li']], { plain: true }),
+        fixtures: [sp.fixture],
+        zones: { slots: sp.slots, rail: railAt('Smallest', 'Largest') }
       }),
       hints: [
-        'Use the electron remover: put an atom in the holder and press "Remove Electron".',
-        'Compare the three costs, and compare their order with the order of the atoms across the row.',
-        'Put the atom with the smallest cost at the left of the rail and the largest at the right.'
+        'Put each atom in the holder to see the charge its outermost electron feels.',
+        'Compare the charge felt in the three atoms, then count the shells drawn on each card.',
+        'The charge felt does not tell these three apart, so think what one more shell of electrons does to the size of an atom.'
       ],
       check(state) {
         const t = state.table;
-        const order = railOf(t);
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three atoms on the rail.' };
-        const want = order.slice().sort((a, b) => costOf(sym(t, a), 0) - costOf(sym(t, b), 0));
-        if (order.join() === want.join()) return { ok: true };
-        for (let k = 0; k < order.length - 1; k++) {
-          if (costOf(sym(t, order[k]), 0) > costOf(sym(t, order[k + 1]), 0)) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and it costs more to strip.` };
-        }
-        return { ok: false, msg: 'The rail does not run the way the costs do.' };
+        return ranked(t, ids, s => RADIUS[s], (p, q) => `${cap(name(t, p))} stands left of ${name(t, q)}; both outermost electrons feel +${felt(sym(t, p))}, and ${name(t, p)} has ${shellCount(sym(t, p))} shells against ${shellCount(sym(t, q))}.`);
       },
       reward: {
-        log: 'Li 520, B 801, Be 899.',
-        title: 'Ionization Energy',
-        body: 'The energy required to remove the outermost electron from an atom is its ionization energy, which generally rises across a row. Boron dips below beryllium because its outer electron is in a 2p subshell, which is higher in energy and shielded by the 2s electrons.'
+        log: 'Down a group: same charge felt, one more shell each time, larger atom.',
+        title: 'Atomic Radius Down a Group',
+        body: 'All three outermost electrons feel about +1, but each atom has one more shell than the one above it. Atomic radius rises down a group.'
       }
     };
   })(),
@@ -262,113 +267,176 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   (() => {
     const st = stripFixture(STRIP, { x: 27, y: 18 });
-    const sz = sizerFixture(SIZER, { x: 76, y: 15 });
+    const ids = ['na', 'c', 'f'];
     return {
-      title: 'Ionic Radii',
-      prompt: 'Make a sodium ion and a chlorine ion, then order them with a sodium atom, smallest first.',
+      title: 'Removing an Electron',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The energy needed to remove the outermost electron from an atom is its ionization energy. The more strongly the nucleus attracts that electron, the more energy it takes.'
+      },
+      prompt: 'What is the order of sodium, carbon and fluorine from the lowest ionization energy to the highest?',
       widget,
       table: trendsTable({
-        pieces: [
-          atomCard('na1', 'SODIUM A', 'Na', rowAt(0)), atomCard('na2', 'SODIUM B', 'Na', rowAt(1)), atomCard('cl', 'CHLORINE', 'Cl', rowAt(2)),
-          electronPiece('e', { x: 96, y: ROW_Y - 2 })
-        ],
-        fixtures: [st.fixture, sz.fixture],
-        zones: { slots: [...st.slots, ...sz.slots], rail: { ...railAt('Smallest size', 'Largest size'), at: { x: 116, y: 38 }, size: { w: 64, h: 12 } } }
+        pieces: [seatedAtom('li', NAMES.Li, 'Li', st), ...row([['c', 'C'], ['f', 'F'], ['na', 'Na']])],
+        fixtures: [st.fixture],
+        zones: { slots: st.slots, rail: railAt('Lowest ionization energy', 'Highest ionization energy') }
       }),
       hints: [
-        'Use "Remove Electron" with a sodium atom in the electron remover, "Add Electron" on the chlorine card, and the size gauge.',
-        'Lay each of the three in the size gauge and compare the radii with the charge on each card.',
-        'Put the smallest of the three at the left of the rail and the largest at the right.'
+        'Press "Remove Electron" to measure lithium\'s ionization energy; the cards are now drawn to scale.',
+        'Compare each card with lithium: the charge its outermost electron feels, and how far that electron is from the nucleus.',
+        'An electron is attracted more strongly when it feels a larger charge and when it is closer to the nucleus.'
       ],
       check(state) {
         const t = state.table;
-        const order = railOf(t);
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three on the rail.' };
-        const states = order.map(id => `${sym(t, id)}${itemOf(t.pieces[id]).charge}`).sort().join();
-        if (states !== ['Cl-1', 'Na0', 'Na1'].sort().join()) return { ok: false, msg: 'The rail does not hold a sodium atom, a sodium ion and a chlorine ion.' };
-        const want = order.slice().sort((a, b) => sizeOfCard(t, a) - sizeOfCard(t, b));
-        if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'The rail does not run the way the radii do.' };
+        if (t.pieces.li.props.lastCost == null) return { ok: false, notYet: true, msg: 'Measure lithium\'s ionization energy first.' };
+        return ranked(t, ids, s => IONIZATION[s], (p, q) => `${cap(name(t, p))} stands left of ${name(t, q)}, but its outermost electron feels +${felt(sym(t, p))} at ${RADIUS[sym(t, p)] ?? 99} pm against +${felt(sym(t, q))} at ${RADIUS[sym(t, q)] ?? 99} pm.`);
       },
       reward: {
-        log: 'Strip one electron and the atom shrinks; add one and it swells.',
-        title: 'Ionic Radius',
-        body: 'A positive ion is much smaller than its atom, because losing the outer shell leaves the remaining electrons pulled in by the same nucleus. A negative ion is bigger, since an extra electron adds repulsion without any extra pull. These sizes are the ionic radius.',
-        model: { type: 'radii', items: [{ sym: 'Na+', pm: 102 }, { sym: 'Cl-', pm: 181 }, { sym: 'Na', pm: 186 }], caption: 'The sodium ion, the chlorine ion and the sodium atom as spheres to scale: losing the outer shell shrinks sodium a great deal.' },
+        log: 'Ionization energy: up across a period, down a group.',
+        title: 'Ionization Energy',
+        body: 'Sodium\'s outer electron feels +1 from far out; fluorine\'s feels +7 from close in. Ionization energy rises across a period and falls down a group.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const g = gainFixture(GAIN, { x: 27, y: 18 }, { mode: 'affinity' });
+    const st = stripFixture(STRIP, { x: 27, y: 18 });
     return {
-      title: 'Electron Affinity',
-      prompt: 'Order carbon, nitrogen, oxygen and fluorine by the energy released when each gains an electron, most first.',
+      title: 'Boron\'s Dip',
+      prompt: 'Why does boron\'s outermost electron take less energy to remove than beryllium\'s?',
       widget,
       table: trendsTable({
-        pieces: row([['c', 'C'], ['n', 'N'], ['o', 'O'], ['f', 'F']]),
-        fixtures: [g.fixture],
-        zones: { slots: g.slots, rail: railAt('Releases most energy', 'Releases least energy') }
+        pieces: [...row([['be', 'Be'], ['b', 'B']]), ...answers([['p', '2p lies above 2s'], ['z', 'Fewer protons'], ['r', 'A larger atom']])],
+        fixtures: [st.fixture, levelsFixture('lv', { x: 80, y: 18 }, ['Be', 'B'])],
+        zones: { slots: [...st.slots, answerSlot] }
       }),
       hints: [
-        'Put an atom in the holder and press "Add Electron".',
-        'Compare the four readings, and compare their order with the order of the atoms across the row.',
-        'Put the atom that releases the most energy at the left of the rail and the one that releases the least at the right.'
+        'Remove an electron from each atom in turn, then drag one of the three answer cards into the slot.',
+        'Compare the two cards and the subshell diagram: the nucleus, the size, and where each outermost electron is.',
+        'Two of the three answers are not true of boron, so check each one against what the cards and the diagram show.'
       ],
       check(state) {
         const t = state.table;
-        const order = railOf(t);
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms on the rail.' };
-        const val = id => gainOf(sym(t, id), 'affinity');
-        const want = order.slice().sort((a, b) => val(b) - val(a));
-        if (order.join() === want.join()) return { ok: true };
-        for (let k = 0; k < order.length - 1; k++) {
-          if (val(order[k]) < val(order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and it releases less energy.` };
-        }
-        return { ok: false, msg: 'The rail does not run the way the readings do.' };
+        if (t.pieces.be.props.lastCost == null || t.pieces.b.props.lastCost == null) return { ok: false, notYet: true, msg: 'Remove an electron from both atoms first.' };
+        const pick = answered(t);
+        if (!pick) return { ok: false, notYet: true, msg: 'Put an answer card in the slot.' };
+        if (pick.id === 'p') return { ok: true };
+        if (pick.id === 'z') return { ok: false, msg: `Boron's nucleus is +${zOf('B')} and beryllium's is +${zOf('Be')}.` };
+        return { ok: false, msg: `Boron's radius is ${RADIUS.B} pm and beryllium's is ${RADIUS.Be} pm.` };
       },
       reward: {
-        log: 'F 328, O 141, C 122, N -7.',
-        title: 'Electron Affinity',
-        body: 'The energy released when a gaseous atom gains an electron is its electron affinity. It generally rises across a period, so fluorine releases the most; nitrogen releases almost none, because its extra electron must pair up in a half-filled 2p subshell.'
+        log: 'Boron: outer electron in 2p, above 2s.',
+        title: 'A Dip in the Trend',
+        body: 'Boron\'s outermost electron is in a 2p orbital, which lies above 2s in energy, so it is easier to remove. The rise across a period has small dips like this one.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const g = gainFixture(GAIN, { x: 27, y: 18 }, { mode: 'pauling', label: 'Bond Gauge', runLabel: 'Measure Pull' });
+    const st = stripFixture(STRIP, { x: 27, y: 18 });
     return {
-      title: 'Pull in a Bond',
-      prompt: 'Order sodium, carbon, oxygen and fluorine by how hard each pulls on the electrons it shares in a bond, strongest first.',
+      title: 'Ions',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An atom that has lost or gained electrons is an ion. Its size is its ionic radius.'
+      },
+      prompt: 'A chlorine atom gains one electron to form a chloride ion: is the chloride ion larger or smaller than the atom?',
       widget,
       table: trendsTable({
-        pieces: row([['na', 'Na'], ['c', 'C'], ['o', 'O'], ['f', 'F']]),
-        fixtures: [g.fixture],
-        zones: { slots: g.slots, rail: railAt('Pulls hardest', 'Pulls least') }
+        pieces: [...row([['na', 'Na'], ['cl', 'Cl']]), ...answers([['larger', 'Larger'], ['same', 'The same size'], ['smaller', 'Smaller']])],
+        fixtures: [st.fixture],
+        zones: { slots: [...st.slots, answerSlot] }
       }),
       hints: [
-        'Put an atom in the holder and press "Measure Pull".',
-        'Compare the four readings with where each atom sits in the table, left to right and top to bottom.',
-        'Put the atom with the largest reading at the left of the rail and the smallest at the right.'
+        'Remove an electron from the sodium atom and watch its card, then drag an answer card into the slot.',
+        'Notice which shell sodium\'s lost electron came from, and which shell chlorine\'s new electron would join.',
+        'Chlorine\'s nucleus stays the same while its outer shell gains an electron, and electrons repel one another.'
       ],
       check(state) {
         const t = state.table;
-        const order = railOf(t);
-        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms on the rail.' };
-        const val = id => gainOf(sym(t, id), 'pauling');
-        const want = order.slice().sort((a, b) => val(b) - val(a));
-        if (order.join() === want.join()) return { ok: true };
-        for (let k = 0; k < order.length - 1; k++) {
-          if (val(order[k]) < val(order[k + 1])) return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and it pulls less.` };
-        }
-        return { ok: false, msg: 'The rail does not run the way the readings do.' };
+        if ((t.pieces.na.props.charge || 0) < 1) return { ok: false, notYet: true, msg: 'Remove an electron from the sodium atom first.' };
+        const pick = answered(t);
+        if (!pick) return { ok: false, notYet: true, msg: 'Put an answer card in the slot.' };
+        if (pick.id === 'larger') return { ok: true };
+        return { ok: false, msg: 'Chloride has 18 electrons round the same nucleus of +17 that held 17, and the added one is in the outer shell.' };
       },
       reward: {
-        log: 'F 3.98, O 3.44, C 2.55, Na 0.93.',
+        log: 'Positive ions are smaller than their atoms; negative ions are larger.',
+        title: 'Ionic Radius',
+        body: 'Sodium lost its whole outer shell and shrank from 186 pm to 102 pm. Chloride\'s extra electron adds repulsion with no extra protons, so its ionic radius, 181 pm, is larger than the atom\'s 99 pm.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const g = gainFixture(GAIN, { x: 27, y: 18 }, { mode: 'affinity' });
+    return {
+      title: 'Gaining an Electron',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'An atom usually releases energy when it gains an electron, and the energy released is its electron affinity. The more strongly the nucleus attracts the added electron, the more is released.'
+      },
+      prompt: 'Which of nitrogen, oxygen and fluorine releases the most energy when it gains an electron?',
+      widget,
+      table: trendsTable({
+        pieces: [seatedAtom('c', NAMES.C, 'C', g), ...row([['o', 'O'], ['f', 'F'], ['n', 'N']])],
+        fixtures: [g.fixture],
+        zones: { slots: [...g.slots, { id: 'most', label: 'Releases the most', at: { x: 112, y: 20 }, size: { w: 22, h: 21 } }] }
+      }),
+      hints: [
+        'Press "Add Electron" to measure carbon, then drag one atom card into the slot.',
+        'Compare the charge the outermost electrons feel in each atom, and each atom\'s size.',
+        'The added electron joins the outer shell, so think in which atom it would feel the largest charge from the shortest distance.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (t.pieces.c.props.lastGain == null) return { ok: false, notYet: true, msg: 'Measure carbon first.' };
+        const pick = Object.values(t.pieces).find(p => p.zone === 'slot:most');
+        if (!pick) return { ok: false, notYet: true, msg: 'Put an atom card in the slot.' };
+        if (pick.id === 'f') return { ok: true };
+        return { ok: false, msg: `An electron added to ${name(t, pick.id)} would feel about +${felt(sym(t, pick.id))}, and another atom here offers a larger charge at a shorter distance.` };
+      },
+      reward: {
+        log: 'Fluorine releases the most.',
+        title: 'Electron Affinity',
+        body: 'Fluorine: an added electron feels the largest charge from the shortest distance.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 9 */
+  (() => {
+    const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { feel: true, dist: true } });
+    const ids = ['na', 'c', 'o', 'f'];
+    return {
+      title: 'Pull in a Bond',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'When two atoms join in a chemical bond, they share electrons at the edge of each atom. Electronegativity is how strongly an atom attracts the electrons it shares.'
+      },
+      prompt: 'What is the order of sodium, carbon, oxygen and fluorine from the lowest electronegativity to the highest?',
+      widget,
+      table: trendsTable({
+        pieces: row([['o', 'O'], ['na', 'Na'], ['f', 'F'], ['c', 'C']]),
+        fixtures: [sp.fixture],
+        zones: { slots: sp.slots, rail: railAt('Lowest electronegativity', 'Highest electronegativity') }
+      }),
+      hints: [
+        'Put each atom in the holder to see the charge its outermost electron feels and its distance from the nucleus.',
+        'Compare the charge felt and the distance for the four atoms.',
+        'A shared electron is attracted like an outermost one: most strongly by a large charge felt at a short distance.'
+      ],
+      check(state) {
+        const t = state.table;
+        return ranked(t, ids, s => gainOf(s, 'pauling'), (p, q) => `${cap(name(t, p))} stands left of ${name(t, q)}, but an electron at its edge feels +${felt(sym(t, p))} at ${RADIUS[sym(t, p)]} pm against +${felt(sym(t, q))} at ${RADIUS[sym(t, q)]} pm.`);
+      },
+      reward: {
+        log: 'Electronegativity: up across a period, down a group.',
         title: 'Electronegativity',
-        body: 'An atom\'s pull on the electrons it shares in a bond is its electronegativity. It rises across a period and falls down a group, so fluorine pulls hardest and a metal such as sodium pulls least. The atom with the larger value takes the bigger share of a shared pair.',
+        body: 'Across this row, electronegativity rises from sodium to fluorine as the outer charge felt rises and the atom gets smaller; a metal such as sodium is low.',
         last: true
       }
     };
@@ -377,10 +445,7 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  2: ['Lay an atom in the size gauge to read its size.'],
-  3: ['Drag an atom into the holder, then press Tug Electron.'],
-  6: ['Drag an atom into the holder, then press Add Electron.'],
-  7: ['Drag an atom into the holder, then press Measure Pull.']
+  3: ['Drag an atom into the holder, and onto the rail to order it.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -392,50 +457,52 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Nuclear charge pulls electrons inward, inner electrons shield outer electrons, and greater distance reduces attraction.'
+      body: 'An outermost electron is attracted by the effective nuclear charge, the nucleus\'s charge less the shielding of the inner electrons, from a distance set by its shell. Atomic radius, ionization energy, electron affinity and electronegativity all follow from those two things.'
     },
     {
-      heading: 'Why It Matters',
-      body: 'Effective nuclear charge and atomic radius determine how strongly an atom holds its electrons and how it reacts.'
+      heading: 'Why It Is Worth It',
+      body: 'Across a period the charge felt rises and atoms shrink and hold their electrons harder. Down a group a shell is added and they grow and hold them less. That is most of the pattern of the periodic table.'
+    },
+    {
+      heading: 'Next',
+      body: 'Next: what a coloured solution does to the light that passes through it.'
     }
   ]
 };
 
 /* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
-   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
-   direct actions, by drag and by two taps. Atoms are put in a holder, a key is pressed, electrons are laid on cards, cards
-   go on a rail or in trays. Nothing here says what a gauge reads.
    ------------------------------------------------------------------ */
 
 const put = (piece, to) => ({ place: { piece, to } });
 const SPRING_SLOT = `slot:${SPRING}.atom`;
 const STRIP_SLOT = `slot:${STRIP}.atom`;
-const SIZER_SLOT = `slot:${SIZER}.atom`;
-const tug = id => [put(id, SPRING_SLOT), { run: SPRING }];
-const strip = (id, times = 1) => [put(id, STRIP_SLOT), ...Array.from({ length: times }, () => ({ run: STRIP }))];
-const size = id => [put(id, SIZER_SLOT)];
-const gain = id => [put(id, `slot:${GAIN}.atom`), { run: GAIN }];
+const strip = id => [put(id, STRIP_SLOT), { run: STRIP }];
+const onRail = ids => ids.map((id, i) => put(id, `rail:${i}`));
 
 export const SOLUTIONS = [
   [{ predict: 'li' }],
-  [...['li', 'be', 'b', 'c'].flatMap(size), put('li', 'rail:0'), put('be', 'rail:1'), put('b', 'rail:2'), put('c', 'rail:3')],
-  [...['li', 'na', 'be', 'mg'].flatMap(id => [put(id, SPRING_SLOT)]), put('li', 'tray:one'), put('na', 'tray:one'), put('be', 'tray:two'), put('mg', 'tray:two')],
-  [...strip('li'), ...strip('be'), ...strip('b'), put('li', 'rail:0'), put('b', 'rail:1'), put('be', 'rail:2')],
-  [...strip('na2'), { join: ['e', 'cl'] }, put('na2', 'rail:0'), put('cl', 'rail:1'), put('na1', 'rail:2')],
-  [...['c', 'n', 'o', 'f'].flatMap(gain), put('f', 'rail:0'), put('o', 'rail:1'), put('c', 'rail:2'), put('n', 'rail:3')],
-  [...['na', 'c', 'o', 'f'].flatMap(gain), put('f', 'rail:0'), put('o', 'rail:1'), put('c', 'rail:2'), put('na', 'rail:3')]
+  [put('na', 'tray:one'), put('mg', 'tray:two'), put('be', 'tray:two'), put('b', 'tray:three')],
+  [put('li', SPRING_SLOT), put('c', SPRING_SLOT), ...onRail(['c', 'b', 'be', 'li'])],
+  [put('na', SPRING_SLOT), put('k', SPRING_SLOT), ...onRail(['li', 'na', 'k'])],
+  [{ run: STRIP }, ...onRail(['na', 'c', 'f'])],
+  [...strip('be'), ...strip('b'), put('p', 'slot:answer')],
+  [...strip('na'), put('larger', 'slot:answer')],
+  [{ run: GAIN }, put('f', 'slot:most')],
+  [put('f', SPRING_SLOT), ...onRail(['na', 'c', 'o', 'f'])]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [put('c', 'rail:0'), put('b', 'rail:1'), put('be', 'rail:2'), put('li', 'rail:3')],
-  [put('li', 'tray:two'), put('na', 'tray:two'), put('be', 'tray:one'), put('mg', 'tray:one')],
-  [...strip('li'), ...strip('be'), ...strip('b'), put('li', 'rail:0'), put('be', 'rail:1'), put('b', 'rail:2')],
-  [...strip('na2'), { join: ['e', 'cl'] }, put('na2', 'rail:0'), put('na1', 'rail:1'), put('cl', 'rail:2')],
-  [...['c', 'n', 'o', 'f'].flatMap(gain), put('o', 'rail:0'), put('f', 'rail:1'), put('c', 'rail:2'), put('n', 'rail:3')],
-  [...['na', 'c', 'o', 'f'].flatMap(gain), put('na', 'rail:0'), put('c', 'rail:1'), put('o', 'rail:2'), put('f', 'rail:3')]
+  [put('na', 'tray:one'), put('mg', 'tray:two'), put('be', 'tray:one'), put('b', 'tray:two')],
+  [...onRail(['li', 'be', 'b', 'c'])],
+  [...onRail(['k', 'na', 'li'])],
+  [{ run: STRIP }, ...onRail(['c', 'na', 'f'])],
+  [...strip('be'), ...strip('b'), put('z', 'slot:answer')],
+  [...strip('na'), put('smaller', 'slot:answer')],
+  [{ run: GAIN }, put('n', 'slot:most')],
+  [...onRail(['f', 'o', 'c', 'na'])]
 ];
 
 function blankState() { return {}; }
@@ -459,4 +526,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { springRead, sizeRead, stripRead, pullOf, hardestPull, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell, RADIUS, ION_RADIUS, IONIZATION, zOf, nameOf, QUEST_KEY };
+export { springRead, stripRead, pullOf, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell, gainOf, RADIUS, ION_RADIUS, IONIZATION, zOf, nameOf, QUEST_KEY };

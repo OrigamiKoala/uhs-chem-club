@@ -200,7 +200,7 @@ export const STAGES = [
       return {
         log: 'Salt conducted only when molten. Copper conducted cold and molten. The other two never conducted.',
         title: 'What Conducts',
-        body: `${verdictLine(QUEST_KEY, 'dark')}The metal's outer electrons move freely, so it conducts cold, while salt's ions are held in place until it melts. The other two blocks have no charged particles free to move, so they never conduct.`
+        body: `${verdictLine(QUEST_KEY, 'dark')}Block A has mobile − charges so it conducts cold; Block B's ions are held in place until it melts. The other two blocks have no charged particles free to move, so they never conduct.`
       };
     }
   },
@@ -242,7 +242,7 @@ export const STAGES = [
     reward: {
       log: 'Block B 115 C. Block A 801 C. Block C 1085 C. Block D 1710 C.',
       title: 'Melting Point',
-      body: 'Separate molecules part easily, so the molecular solid has the lowest melting point. The ionic solid and the metal need far more heat (metals vary widely), and the covalent network solid, bonded throughout, needs the most.'
+      body: 'Separate molecules part easily, so the molecular solid has the lowest melting point. The ionic solid and the metal need far more heat, and the covalent network solid, bonded throughout, needs the most.'
     }
   },
 
@@ -300,7 +300,7 @@ export const STAGES = [
     }),
     hints: [
       'The blocks are sealed, so test them: heat them on the hotplate and drag the leads onto them.',
-      'Compare the blocks still solid at 900 °C by what the lamp does on each.',
+      'Look at both the particle pictures and what happens on the hotplate and leads.',
       'Go through the four kinds of solid and ask which one neither melts at that temperature nor has charged particles free to move.'
     ],
     check(state) {
@@ -395,7 +395,7 @@ export const STAGES = [
     reward: {
       log: 'Brass and bronze: in the rows. Steel: in the gaps.',
       title: 'Substitutional and Interstitial Alloys',
-      body: 'Zinc and tin atoms are close to copper\'s size and take copper\'s places: brass and bronze are substitutional alloys. Carbon atoms are far smaller than iron\'s and sit in the gaps: steel is an interstitial alloy.'
+      body: 'In brass and bronze the added atoms are close in size to the host metal atoms and take their places: substitutional alloys. In steel the added atoms are far smaller and sit in the gaps: an interstitial alloy.'
     }
   },
 

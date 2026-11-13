@@ -32,11 +32,11 @@ const FIXTURES = {
   },
   box: {
     title: 'Sealed box',
-    text: 'A sealed glass box holds a gas, shown as moving particles. A gauge is fitted to its roof, to its side wall and to its floor, and each gauge shows how hard the gas pushes on its own wall. {runSentence}'
+    text: 'A sealed glass box holds a gas, shown as moving particles. A pressure sensor is fitted to its roof, to its side wall and to its floor, and each sensor shows the pressure on its own wall. {runSentence}'
   },
   common: {
     title: 'Common tank',
-    text: 'A big empty tank with a list under it. Drag a tank into the place below it to open that tank\'s valve into it, and drag the tank out again to shut it. The gauge shows how hard everything inside pushes, and the list shows how hard each gas pushes by itself, each marked by its own shape. {runSentence}'
+    text: 'A big empty tank with a list under it. Drag a tank into the place below it to open that tank\'s valve into it, and drag the tank out again to shut it. The readout shows the total pressure, and the list shows each gas\'s partial pressure, each marked by its own shape. {runSentence}'
   },
   pinhole: {
     title: 'Chambers with a pinhole',
@@ -58,7 +58,7 @@ const FIXTURES = {
 };
 
 const PIECES = {
-  tank: ['Gas tanks', 'Each tank is a steel bottle of gas with its own gauge and its name on the lid.', t => {
+  tank: ['Gas tanks', 'Each tank is a steel bottle of gas with its own pressure readout and its name on the lid.', t => {
     const bits = [];
     if (hasFixture(t, 'scale')) bits.push('Drag a tank onto the scale pan to weigh it.');
     if (hasFixture(t, 'common')) bits.push('Drag a tank into the place under the common tank to open it.');
@@ -71,16 +71,17 @@ const PIECES = {
   hist: ['Speed snapshots', 'Each card is a snapshot of a gas: its bars show how many of its particles are moving at each speed, from slow on the left to fast on the right.', placeSentence],
   curve: ['Record cards', 'Each card is a line plotted from an earlier set of readings.', placeSentence],
   chip: ['Chips', 'Each chip is a name tag.', placeSentence],
-  pellet: ['Pellet', 'A pellet of chalk in a dish. Drag the dish into the acid dish to drop the pellet in; the gas it gives off pushes the piston up.'],
-  trap: ['Trap', 'A trap takes one kind of gas out of a tank. Drag it onto a tank of mixed gas and watch the tank\'s gauge.']
+  pellet: ['Pellet', 'A pellet of chalk in a dish. Drag the dish into the acid dish to drop the pellet in; the gas it gives off raises the piston.'],
+  trap: ['Trap', 'A trap takes one kind of gas out of a tank. Drag it onto a tank of mixed gas and watch the tank\'s pressure.']
 };
 
 const DIALS = {
-  Piston: 'The "Piston" dial slides the piston in or out: a smaller room squeezes the particles together, and a bigger room lets them spread out.',
+  Piston: 'The "Piston" dial slides the piston in or out: a smaller volume compresses the particles together, and a larger volume lets them spread out.',
   Heater: 'The "Heater" dial warms or cools the gas: warmer particles move faster.',
   'Gas in': 'The "Gas in" dial adds gas to the cylinder or takes it out.',
   Stopwatch: 'The "Stopwatch" dial sets how many seconds have gone by.',
-  Room: 'The "Room" dial sets how much room the common tank has.',
+  Room: 'The "Room" dial sets the volume of the common tank.',
+  Volume: 'The "Volume" dial sets the volume of the common tank.',
   Height: 'The "Height" dial sets how high above the ground the air is taken from.',
   Gas: 'The "Gas" dial picks which gas the chamber holds.',
   Set: 'The "Set" dial is the knob of the marker.'

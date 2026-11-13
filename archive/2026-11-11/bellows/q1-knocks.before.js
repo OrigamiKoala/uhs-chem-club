@@ -1,0 +1,452 @@
+/**
+ * q1-knocks.js — Bellows, bench one: PRESSURE AND TEMPERATURE.
+ *
+ * The gauge gallery on a gasholder's flank, on the gas kit (`table/kits/gas.js`). The Fifth jammed gas into the station's holders and the
+ * needles will not come down; before anyone can let it out, the crew has to know what a gauge is actually measuring.
+ *
+ * THE CLICK. Most players arrive believing a gas pushes the way a weight does: down, so a gauge in the floor of a box of air must read
+ * more than one in the roof. Stage 1 asks for that guess (a predict stage: the question and four cards, no instrument) and stage 2 puts
+ * the same gauge on a box's roof, side wall and floor. The three read alike, and warming the box raises all three together. The wrong
+ * model is a card on the bench, the box contradicts it, and only then is the word given: pressure, particles knocking every wall.
+ *
+ *   1  PREDICT: which of a box's three gauges reads highest        (no instrument)
+ *   2  TEST: a gauge on the roof, the side wall and the floor      -> Pressure
+ *   3  squeeze the gas until the gauge reads six times as much    -> Boyle's law
+ *   4  the piston stops at 3 L: what does the gauge read at 1.5 L  -> Using Boyle's law (a figure worked out from the bench)
+ *   5  heat the gas, rank four snapshots of its speeds             -> A Spread of Speeds
+ *   6  a light and a heavy gas at one temperature                  -> Kinetic Energy, Kinetic Molecular Theory
+ *   7  a mercury U-tube: the gas pressure in atmospheres             -> Reading a Manometer (a figure worked out from a picture)
+ *
+ * (Cut as repeats: the three-scale unit conversion, the line carried to absolute zero (now earned on bench two, where the same line is
+ * drawn for room against heat), the heat-until-fast target, and the closing statement-marking.)
+ *
+ * THE EVIDENCE IS ON THE BENCH. In stage 3 only the piston moves, so the particles' speed, number and warmth stay put while the gauge and
+ * the knock counter rise and fall together. In stage 4 the 3D crowd is the speed screen: every particle at its own speed, from the same
+ * distribution the screen draws. A word is plain until its card has earned it, on the dials too: the gauges print bare figures until
+ * stage 2 names the unit.
+ *
+ * This quest pays no XP, writes no Submission and never reaches Standings.
+ */
+
+import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
+import {
+  gasTable, rig, box, chip, histCard, plaqueFixture, boxRead, rigAt, cylRead, whereIs, speedBins, toKelvin
+} from '../../table/kits/gas.js';
+import { widget, put, dial, sort, cardIn, cardColumn, predictStage, youPredicted, guessOf, typed } from './_shared.js';
+
+export const meta = { stageCount: 8 };
+
+export const VOCABULARY = [
+  { term: /\bpressure\b/i, introducedAt: 2 },
+  { term: /\b(?:kpa|kilopascals?)\b/i, introducedAt: 2 },
+  { term: /\bboyle.?s law\b/i, introducedAt: 3 },
+  { term: /\bmaxwell.boltzmann\b/i, introducedAt: 5 },
+  { term: /\bkinetic energy\b/i, introducedAt: 6 },
+  { term: /\bkinetic molecular theory\b/i, introducedAt: 6 }
+];
+
+/** Stage 7: a gas on a mercury U-tube open to the air. The cards: the answer, the column taken off the air, the column alone and the unconverted mmHg. */
+export const MANO = { air: 760, h: 190 };
+export const MANO_CARDS = [['a', '1.25 atm', 1.25], ['b', '0.75 atm', 0.75], ['c', '0.25 atm', 0.25], ['d', '950 atm', 950]];
+/** The gas pressure of stage 7 in atmospheres: the air plus the extra height of mercury on the open side, over 760 mmHg to the atmosphere. */
+export const manoAtm = (m = MANO) => (m.air + m.h) / 760;
+
+/** Mole, particle and the other words Tallow earned are plain here. */
+export const BUILDS_ON = ['unit01/q6-weigh'];
+
+/** The key the player's guess is kept under (`engine/predict.js`). */
+export const QUEST_KEY = 'unit04/q1-knocks';
+
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
+export function toolNoteFor() { return null; }
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   ------------------------------------------------------------------ */
+
+const RIG = 'rig';
+const BOX = 'box';
+const T0 = 298.15;
+
+/** The guesses of stage 1 and the verdicts of stage 2: one statement per wall, and the one that says they are alike. */
+export const GUESSES = [
+  ['roof', 'The roof gauge reads most'],
+  ['side', 'The side gauge reads most'],
+  ['floor', 'The floor gauge reads most'],
+  ['same', 'All three read the same']
+];
+
+/** The heater of stage 2, in degrees C: the box is warmed and every gauge is read again. */
+const BOX_TEMPS = [20, 60, 100, 150, 200];
+/** The piston's settings in stages 3 and 4, in litres: 24 and its halving, then the room that gives three, four, six and eight times the gauge. */
+const SQUEEZE = [24, 12, 8, 6, 4, 3];
+/** Stage 3 asks for this many times the starting gauge. */
+const TIMES_AS_MUCH = 6;
+/** Stage 4's room beyond the dial (litres), and the figures to lay: the gauge there, the slip of halving once, the squeeze that lowers it, and double the answer. */
+const BEYOND = 1.5;
+export const BEYOND_CARDS = [['a', '1660 kPa', 1660], ['b', '830 kPa', 830], ['c', '6.5 kPa', 6.5], ['d', '3320 kPa', 3320]];
+/** Stage 4's heater, in degrees C, and the shared scale of its screen and snapshots. */
+const SPREAD = [-73, 27, 127, 227, 327, 427, 527];
+const REF_SPEEDS = Math.max(...speedBins('N2', toKelvin(SPREAD[0], 'C'), 24, 2400));
+
+/** Which wall a box reads highest, or 'same' when no wall reads more than the others (the gas knocks every wall alike). */
+export function wallMost(q) {
+  const ps = q.walls.map(w => w.P);
+  const hi = Math.max(...ps);
+  const lo = Math.min(...ps);
+  if (hi - lo <= hi * 0.005) return 'same';
+  return q.walls.find(w => w.P === hi).id;
+}
+
+/* ------------------------------------------------------------------
+   THE FIVE STAGES
+   ------------------------------------------------------------------ */
+export const STAGES = [
+  /* ---------------------------------------------------------------- 1 */
+  predictStage({
+    key: QUEST_KEY,
+    title: 'Gauge Comparison',
+    prompt: 'Which of a sealed box\'s three gauges, on its roof, side wall and floor, will read the highest?',
+    items: GUESSES,
+    hints: [
+      'Lay one card in the slot.',
+      'Picture one particle of the gas flying about inside the box and ask which walls it reaches.',
+      'Ask what a gauge fixed to a wall can feel: the weight of the gas above it, or something else.'
+    ],
+    reward: {
+      log: 'Prediction recorded.',
+      title: 'Prediction Recorded',
+      body: 'Locked in. The next bench fits one gauge to each of the box\'s three walls.'
+    }
+  }),
+
+  /* ---------------------------------------------------------------- 2 */
+  (() => {
+    const b = box(BOX, { x: 34, y: 33 }, {
+      gas: 'N2', n: 1, V: 10, T: 300, temps: BOX_TEMPS, tempList: 'C', tempStart: 1, units: 'plain', gaugeMax: 600, label: 'Holder 4, sealed'
+    });
+    return {
+      title: 'Pressure on Container Walls',
+      // The guess comes back here, locked in: it is the first thing the player reads about the test.
+      get prompt() {
+        return youPredicted(QUEST_KEY, GUESSES, 'which statement do the three gauges back up?', 'Which statement do the three gauges back up?');
+      },
+      widget,
+      table: gasTable({
+        pieces: cardColumn(GUESSES, { x: 0 }).map((c, i) => ({ ...c, at: { x: 90 + (i % 2) * 38, y: 44.5 + Math.floor(i / 2) * 13 } })),
+        fixtures: [b],
+        zones: { slots: [{ id: 'show', label: 'What the gauges show', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
+      }),
+      hints: [
+        'Use the "Heater" dial, then place a card in the slot.',
+        'Compare the three gauges with each other as temperature changes.',
+        'Read the three figures at one setting, then again at a hotter one, and see which of them ever differ.'
+      ],
+      check(state) {
+        const t = state.table;
+        const card = cardIn(t, 'show');
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        const want = wallMost(boxRead(t, BOX));
+        if (card.id === want) return { ok: true };
+        const names = { roof: 'roof', side: 'side wall', floor: 'floor' };
+        return { ok: false, msg: `The ${names[card.id] || 'side wall'} gauge does not read more than the other two.` };
+      },
+      get reward() {
+        return {
+          log: 'All three gauges read alike.',
+          title: 'Pressure',
+          body: 'The gas pushes on every wall alike because its particles fly in all directions and collide with all walls. That push is pressure, measured in kilopascals (kPa).'
+        };
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 3 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Holder 2', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+      show: { knocks: true, speed: true }, words: { speed: 'SPEED' }, label: 'Holder'
+    });
+    return {
+      title: 'Volume and Pressure',
+      prompt: `Set the piston so the gauge reads ${TIMES_AS_MUCH} times its starting figure.`,
+      widget,
+      table: gasTable({ fixtures: [r] }),
+      hints: [
+        'Turn the "Piston" dial and watch the gauge.',
+        'Compare the gauge with the room at each setting, and with the knocks.',
+        'Find what happens to the gauge each time the room is halved, then work out the room that gives six times.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (Math.round(t.fixtures[RIG].dials.volume.value) === 1) return { ok: false, notYet: true, msg: 'The piston is where it started: turn it and watch the gauge.' };
+        const ratio = cylRead(t, RIG, 0).P / rigAt(t, RIG, { volume: 1 })[0].P;
+        if (Math.abs(ratio - TIMES_AS_MUCH) < 0.02) return { ok: true };
+        return { ok: false, msg: ratio < TIMES_AS_MUCH ? `The gauge reads less than ${TIMES_AS_MUCH} times its starting figure.` : `The gauge reads more than ${TIMES_AS_MUCH} times its starting figure.` };
+      },
+      reward: {
+        log: 'Gauge times room stayed the same.',
+        title: 'Boyle\'s Law',
+        body: 'Squeezing a gas into less room makes the same particles knock more often, and the gauge rises as the room falls: 24 L and 104 give about 2500, and so do 4 L and 623. At one temperature, pressure times volume is constant (Boyle\'s law).'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Holder 2', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+      show: { speed: false }, label: 'Holder'
+    });
+    return {
+      title: 'Using Boyle\'s Law',
+      prompt: `Type what the gauge would read at ${BEYOND} L, beyond the piston dial's last setting.`,
+      entry: { id: 'ans', label: 'Gauge reading', unit: 'kPa' },
+      widget,
+      table: gasTable({
+        fixtures: [r],
+      }),
+      hints: [
+        'Turn the "Piston" dial to read the gauge at each setting.',
+        'Multiply the gauge by the room at several settings and compare the products.',
+        'Divide that product by the new room.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = entryNumber(t, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in kPa.' };
+        const a = rigAt(t, RIG, { volume: 1 })[0];
+        const want = (a.P * a.V) / BEYOND;
+        if (Math.abs(v - want) / want < 0.02) return { ok: true };
+        return { ok: false, msg: v < a.P ? 'That reading is lower than the gauge at 24 L, and squeezing the gas cannot lower it.' : 'That reading does not fit the gauge-times-room figure of the other settings.' };
+      },
+      reward: {
+        log: 'Gauge times room, divided by the new room.',
+        title: 'Using Boyle\'s Law',
+        body: 'Because pressure times volume stays about 2500, the gauge at 1.5 L is 2500 ÷ 1.5, close to 1660 kPa. Write it P₁V₁ = P₂V₂ and check the result: squeezing a gas can only raise its gauge.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
+  (() => {
+    const r = rig(RIG, { x: 31, y: 27 }, {
+      cyls: [{ id: 'a', label: 'Holder 3', gas: 'N2', n: 1, hold: 'V', V: 20, T: T0 }], temps: SPREAD, tempList: 'C', tempStart: 2, vmax: 20,
+      speedScreen: true, screenRef: REF_SPEEDS, show: { amount: false }, w: 54, label: 'Holder'
+    });
+    // Four snapshots of nitrogen's speeds, taken at four temperatures the player is never told.
+    const snap = (id, label, C) => histCard(id, label, { x: 0, y: 0 }, 'N2', toKelvin(C, 'C'), REF_SPEEDS);
+    return {
+      title: 'Speed Distribution',
+      prompt: 'Put the four speed snapshots in order from the coldest gas to the hottest.',
+      widget,
+      table: gasTable({
+        pieces: [snap('a', 'SNAPSHOT A', 527), snap('b', 'SNAPSHOT B', 27), snap('c', 'SNAPSHOT C', 227), snap('d', 'SNAPSHOT D', -73)],
+        fixtures: [r],
+        zones: { rail: { id: 'rail', at: { x: 103, y: 42 }, size: { w: 88, h: 22 }, first: 'Coldest', last: 'Hottest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
+      }),
+      hints: [
+        'Use the "Heater" dial, and drag the snapshots along the strip.',
+        'Compare the speed screen at each setting with the snapshots.',
+        'Match each snapshot to the heater setting whose screen looks like it, then order the settings.'
+      ],
+      check(state) {
+        const t = state.table;
+        const order = t.zones.rail.order;
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four snapshots on the strip.' };
+        const temp = id => t.pieces[id].props.T;
+        const want = ['a', 'b', 'c', 'd'].sort((x, y) => temp(x) - temp(y));
+        if (order.join() === want.join()) return { ok: true };
+        return { ok: false, msg: 'Two neighbouring snapshots on the strip are the wrong way round.' };
+      },
+      reward: {
+        log: 'Every gas is a spread of speeds.',
+        title: 'A Spread of Speeds',
+        body: 'Particles in a gas do not move at a single speed; they form a distribution described by the Maxwell–Boltzmann distribution. Heating shifts the peak to higher speeds and broadens the spread.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const HE_C = 100;
+    const rg = (id, at, label, gas, n, extra) => rig(id, at, {
+      cyls: [{ id: 'a', label, gas, n, hold: 'V', V: 20, T: T0, ...(extra.T ? { T: extra.T } : {}) }], ...(extra.temps ? { temps: extra.temps, tempList: 'C', tempStart: 1 } : {}), vmax: 20, compact: true, w: 34,
+      show: { gauge: false, volume: false, speed: true, energy: true }, words: { speed: 'SPEED', energy: 'ENERGY' }
+    });
+    return {
+      title: 'Mass and Kinetic Energy',
+      prompt: 'Set Holder 6\'s heater so its particles carry the same energy of motion as Holder 5\'s.',
+      widget,
+      table: gasTable({
+        fixtures: [rg('ra', { x: 20, y: 25 }, 'Holder 5', 'He', 1, { T: toKelvin(HE_C, 'C') }), rg('rb', { x: 58, y: 25 }, 'Holder 6', 'CO2', 2, { temps: [0, 50, 100, 150, 200] })]
+      }),
+      hints: [
+        'Turn Holder 6\'s "Heater" dial and watch its ENERGY reading.',
+        'Compare the ENERGY readings of the two cylinders, and then their SPEED readings.',
+        'Stop where the two ENERGY readings agree, then look at what else the two cylinders print alike and what they print differently.'
+      ],
+      check(state) {
+        const t = state.table;
+        const a = cylRead(t, 'ra', 0);
+        const b = cylRead(t, 'rb', 0);
+        if (Math.round(t.fixtures.rb.dials.temp.value) === 1 && Math.abs(a.energy - b.energy) > 1e-9) return { ok: false, notYet: true, msg: 'Holder 6\'s heater is where it started: turn it and watch its ENERGY reading.' };
+        if (Math.abs(a.energy - b.energy) <= 1e-9) return { ok: true };
+        return { ok: false, msg: a.energy > b.energy ? 'Holder 6\'s particles carry less energy than Holder 5\'s.' : 'Holder 6\'s particles carry more energy than Holder 5\'s.' };
+      },
+      reward: {
+        log: 'The same energy, a different speed.',
+        title: 'Kinetic Energy',
+        body: 'The two gases carry the same average kinetic energy when they share a temperature, though helium\'s particles move about three times faster. Kinetic molecular theory takes temperature as the average kinetic energy of the particles, whatever their mass.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 7 */
+  (() => {
+    const plate = plaqueFixture('plate', 'Mercury gauge', { x: 36, y: 32 }, [`Air: ${MANO.air} mmHg`, `1 atm = 760 mmHg`], { w: 70, manometer: { h: MANO.h } });
+    return {
+      title: 'Reading a Manometer',
+      prompt: 'Type the gas pressure, in atmospheres, from the mercury levels on the plate.',
+      entry: { id: 'ans', label: 'Gas pressure', unit: 'atm' },
+      widget,
+      table: gasTable({
+        fixtures: [plate],
+      }),
+      hints: [
+        'Read the two levels and the air pressure from the plate, then type the result.',
+        'Ask which side of the tube the mercury is pushed up on, and what that says about the gas against the air.',
+        'Add or subtract the height difference in mmHg from the air pressure, then divide by 760 mmHg per atmosphere.'
+      ],
+      check(state) {
+        const v = entryNumber(state.table, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in atm.' };
+        const want = manoAtm();
+        if (Math.abs(v - want) / want < 0.03) return { ok: true };
+        return { ok: false, msg: v > want ? 'The gas pushes less hard than that.' : 'The gas pushes harder than that.' };
+      },
+      reward: {
+        log: 'The column is the gas against the air.',
+        title: 'Reading a Manometer',
+        body: 'The mercury stands 190 mm higher on the open side, so the gas pushes 190 mmHg harder than the air: 760 + 190 = 950 mmHg, which is 950 ÷ 760 = 1.25 atm. A pressure in mmHg is the height of mercury it holds up.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const r = rig(RIG, { x: 36, y: 28 }, {
+      cyls: [{ id: 'a', label: 'Holder 13', gas: 'He', n: 1, hold: 'dial', V: 24, T: 300 }], volumes: SQUEEZE, volumeStart: 1, vmax: 24,
+      show: { speed: false }, label: 'Holder', plot: { x: 'invV', y: 'P' }
+    });
+    return {
+      title: 'Boyle\'s Law & The Straight Line',
+      prompt: 'Adjust the cylinder volume to watch the gauge swing, lay the straightedge along the points, and enter the slope.',
+      entry: { id: 'ans', label: 'Slope', unit: 'kPa·L' },
+      widget,
+      table: gasTable({
+        fixtures: [r],
+        tools: ['straightedge']
+      }, { recorder: { at: { x: 111, y: 17 }, size: { w: 40, h: 28 }, xLabel: '1 ÷ room', xUnit: '1/L', yLabel: 'Gauge', yUnit: 'kPa' } }),
+      hints: [
+        'Move the "Piston" volume slider to squeeze the gas: observe how the analogue pressure gauge needle swings up.',
+        'Press "Record" at several volume settings, then drag across the points on the plot to lay the straightedge.',
+        'The plot displays the slope on the line — enter that slope value.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = entryNumber(t, 'ans');
+        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the slope in kPa·L.' };
+        const a = rigAt(t, RIG, { volume: 1 })[0];
+        const want = a.P * a.V;
+        if (Math.abs(v - want) / want < 0.04) return { ok: true };
+        return { ok: false, msg: v < want ? 'The line rises faster than that for each step along the bottom.' : 'The line rises more slowly than that for each step along the bottom.' };
+      },
+      reward: {
+        log: 'Gauge against one over room is a straight line.',
+        title: 'Reading a Graph',
+        body: 'Pressure against volume bends into a curve, but pressure against 1 ÷ volume is a straight line through the origin, because P = (nRT) × (1/V). Its slope is nRT, about 2500 kPa·L for this gas, and the line is flat only if the temperature and the moles stay fixed.',
+        last: true
+      }
+    };
+  })()
+];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Place a card in the slot.'],
+  2: ['Turn the Heater dial,', 'then place a card in the slot.'],
+  3: ['Turn the Piston dial.'],
+  4: ['Turn the Piston dial,', 'then type your answer in the field at the bottom.'],
+  5: ['Turn the Heater dial,', 'then arrange snapshots on the strip.'],
+  6: ['Turn Holder 6\'s Heater dial.'],
+  7: ['Type your answer in the field at the bottom.'],
+  8: ['Record each setting, lay the straightedge,', 'then type your answer in the field at the bottom.']
+};
+applyNotes(STAGES, NOTES);
+
+/* ------------------------------------------------------------------
+   THE DEBRIEF
+   ------------------------------------------------------------------ */
+export const DEBRIEF = {
+  speaker: 'Vess',
+  sections: [
+    {
+      heading: 'Summary',
+      body: 'Gas pressure results from particles colliding with container walls, distributed equally across all surfaces. Temperature reflects average kinetic energy, so heating increases collision force and frequency, while compression increases collision frequency.'
+    }
+  ]
+};
+
+/* ------------------------------------------------------------------
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
+   by drag and by two taps. Nothing here says what a reading is.
+   ------------------------------------------------------------------ */
+
+export const SOLUTIONS = [
+  [put('floor', 'slot:predict')],
+  [dial(BOX, 'temp', 3), dial(BOX, 'temp', 5), put('same', 'slot:show')],
+  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 5)],
+  [dial(RIG, 'volume', 3), dial(RIG, 'volume', 6), typed('ans', "1660")],
+  [dial(RIG, 'temp', 1), dial(RIG, 'temp', 7), put('d', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('a', 'rail:3')],
+  [dial('rb', 'temp', 3)],
+  [typed('ans', "1.25")],
+  [dial(RIG, 'volume', 1), { run: RIG }, dial(RIG, 'volume', 3), { run: RIG }, dial(RIG, 'volume', 6), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 2] } }, typed('ans', '2494')]
+];
+
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
+export const MISSES = [
+  [],
+  [dial(BOX, 'temp', 3), put('floor', 'slot:show')],
+  [dial(RIG, 'volume', 3)],
+  [dial(RIG, 'volume', 6), typed('ans', "830")],
+  [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
+  [dial('rb', 'temp', 4)],
+  [typed('ans', "0.75")],
+  [dial(RIG, 'volume', 1), { run: RIG }, typed('ans', '104')]
+];
+
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
+}
+
+/* ==================================================================
+   THE GAME
+   ================================================================== */
+
+export function mount(container, ctx) {
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
+}
+
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { rigAt, cylRead, boxRead };

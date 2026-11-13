@@ -223,11 +223,29 @@ function paintMarker(ctx, f, state, b) {
   say(ctx, String(markerRead(state, f.id)), F.x(f.size.w - 3), F.y(f.size.h - 3.4), F.size(4.2, 9), { align: 'right', weight: 700, color: AMBER });
 }
 
+function paintIeBars(ctx, f, state, b) {
+  const F = frameOf(b);
+  const vals = f.props.values || [];
+  const max = Math.max(1, ...vals.map(v => v.value));
+  const gx = 5; const gw = f.size.w - 10; const gy = 10; const gh = f.size.h - 17;
+  const slot = gw / Math.max(1, vals.length);
+  const barW = Math.max(4, slot * 0.56);
+  vals.forEach((v, i) => {
+    const bh = Math.max(1.5, (v.value / max) * gh);
+    const bx = gx + i * slot + (slot - barW) / 2;
+    const by = gy + gh - bh;
+    ctx.fillStyle = i >= 1 && v.value / vals[i - 1].value > 2.5 ? AMBER : PHOS;
+    ctx.fillRect(F.x(bx), F.y(by), F.len(barW), F.len(bh));
+    say(ctx, v.label, F.x(bx + barW / 2), F.y(gy + gh + 3.2), F.size(2.0, 5.4), { align: 'center', color: DUST });
+  });
+}
+
 export function paintFixture(ctx, f, state, b) {
   if (f.kind === 'pes') paintChamber(ctx, f, state, b);
   else if (f.kind === 'build') paintBuild(ctx, f, state, b);
   else if (f.kind === 'writer') paintWriter(ctx, f, state, b);
   else if (f.kind === 'plaque') paintPlaque(ctx, f, state, b);
+  else if (f.kind === 'iebars') paintIeBars(ctx, f, state, b);
   else if (f.kind === 'tally') paintMarker(ctx, f, state, b);
 }
 

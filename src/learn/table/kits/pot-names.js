@@ -131,7 +131,7 @@ export function needleRead(state, fid) {
 }
 
 /** A gauge for the tray `tray`. Returns the fixture; stand it beside the tray. */
-export function needleFixture(id, at, { tray, title = 'Charge needle', range = 6, w = 24, h = 22 } = {}) {
+export function needleFixture(id, at, { tray, title = 'Charge meter', range = 6, w = 24, h = 22 } = {}) {
   return { id, kind: 'ionneedle', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {}, props: { tray, range } };
 }
 
@@ -216,7 +216,7 @@ export function labelWords(state, fid) {
    ------------------------------------------------------------------ */
 
 /** A window with one seat and a key. `mode` is `'salt'` (Dissolve) or `'molecule'` (Look). Returns the fixture, its seat and its size. */
-export function windowFixture(id, at, { mode = 'salt', title = 'Window', runLabel = mode === 'salt' ? 'Dissolve' : 'Look', w = 84, h = 46 } = {}) {
+export function windowFixture(id, at, { mode = 'salt', title = 'Particle view', runLabel = mode === 'salt' ? 'Dissolve' : 'Look', w = 84, h = 46 } = {}) {
   const top = 10;
   const x0 = at.x - w / 2; const y0 = at.y - h / 2;
   const slotId = `${id}.seat`;
@@ -299,14 +299,14 @@ registerFixture('window', { paint: paintWindow, run: runWindow });
 
 addTourText({
   'pot:ionneedle': {
-    title: 'Charge needle', dials: false,
-    text: 'The needle belongs to the tray named beside it. It adds up the charges printed on the chips lying in that tray: it swings toward + for a positive total, toward − for a negative one, and rests on 0 when they cancel. A chip that prints no charge adds nothing.'
+    title: 'Charge meter', dials: false,
+    text: 'The charge meter belongs to the tray named beside it. It adds up the charges printed on the ions lying in that tray: it swings toward + for a positive total, toward − for a negative one, and rests on 0 when they cancel. An ion that prints no charge adds nothing.'
   },
   'pot:window': {
-    title: 'Window', dials: false,
-    text: 'Drag a crate onto the seat at the left. Press the key on the window and the panel draws what is inside the crate, one small disc for each atom with its symbol on it. Atoms drawn joined inside one outline are held together as one piece.'
+    title: 'Particle view', dials: false,
+    text: 'Drag a sample onto the seat at the left. Press the key on the particle view and the panel draws what is inside the sample, one circle for each atom with its symbol on it. Atoms drawn joined inside one outline are held together as one piece.'
   }
 }, {
-  'pot:ionchip': ['Ion chips', 'Each chip is one ion with its symbol, and its charge in the corner when the chip prints one. Drag a chip into a tray, or tap it and then tap the tray. An ion made of several atoms is drawn with its atoms joined inside one outline.'],
-  'pot:crate': ['Crates', 'Each crate holds a sample. A name printed on the crate says what is inside it. Drag a crate onto the seat of the window to look into it.']
+  'pot:ionchip': ['Ions', 'Each piece is one ion with its symbol, and its charge in the corner when it prints one. Drag an ion into a tray, or tap it and then tap the tray. An ion made of several atoms is drawn with its atoms joined inside one outline.'],
+  'pot:crate': ['Samples', 'Each sample holds one substance. A name printed on it says what is inside. Drag a sample onto the seat of the particle view to look into it.']
 });

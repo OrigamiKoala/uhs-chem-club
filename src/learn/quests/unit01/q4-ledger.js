@@ -39,6 +39,8 @@ export const meta = { stageCount: 8 };
  */
 export const VOCABULARY = [
   { term: /\bmass number\b/i, introducedAt: 1 },
+  { term: /\bisotopes?\b/i, introducedAt: 3 },
+  { term: /\bions?\b/i, introducedAt: 4 },
   { term: /\bcations?\b/i, introducedAt: 5 },
   { term: /\banions?\b/i, introducedAt: 6 }
 ];
@@ -136,7 +138,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Three Numbers Off One Atom',
-    prompt: 'Build an atom that matches Sample A, particle for particle.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The mass meter counts 1 for each proton and each neutron. The protons and neutrons together are the atom\'s mass number.'
+    },
+    prompt: 'Which particles, and how many of each, make up Sample A?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -148,9 +154,9 @@ export const STAGES = [
       fixtures: [BUILD.needle, BUILD.mass]
     }),
     hints: [
-      'Use the heap, the two trays and the needle.',
-      'In the middle of Sample A a disc with a + is a proton and a blank disc is a neutron, and each dot on a ring outside is an electron.',
-      'Tally the + discs, then the blank ones, then the electrons on the rings, and check that the electrons equal the protons, since the needle reads zero.'
+      'Drag protons and neutrons into the middle, and electrons onto the rings outside.',
+      'On Sample A, + is a proton, a blank disc is a neutron, and each outer dot is an electron.',
+      'Check both meters: electrons equal protons when the charge meter reads zero.'
     ],
     check(state) {
       const t = state.table;
@@ -166,14 +172,14 @@ export const STAGES = [
     reward: {
       log: 'Sample A: 3 protons, 4 neutrons, 3 electrons.',
       title: 'Mass Number',
-      body: 'Electrons weigh almost nothing, so everything an atom weighs is in its nucleus. Add the protons to the neutrons and you get 7, which is called the mass number. This atom is written lithium-7.'
+      body: 'Three protons and four neutrons give mass number 7; the three electrons add almost nothing. This atom is lithium-7.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Read the Label',
-    prompt: 'Build sealed Sample B from its label.',
+    prompt: 'What is inside sealed Sample B, going by its label?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -183,16 +189,16 @@ export const STAGES = [
       ],
       zones: { trays: BUILD.trays },
       fixtures: [
-        plate('la', 'Label A', 44, ['lithium (Li)', 'atomic number 3', 'mass number 7', 'needle 0']),
-        plate('lb', 'Label B', 99, ['lithium (Li)', 'atomic number 3', 'mass number 6', 'needle 0']),
+        plate('la', 'Label A', 44, ['lithium (Li)', 'atomic number 3', 'mass number 7', 'charge 0']),
+        plate('lb', 'Label B', 99, ['lithium (Li)', 'atomic number 3', 'mass number 6', 'charge 0']),
         BUILD.needle,
         BUILD.mass
       ]
     }),
     hints: [
-      'Use the two labels, the heap and the two trays.',
-      'On the open sample the atomic number is the proton count, and the mass number is the protons and neutrons together.',
-      'Take the atomic number from the mass number to find the neutrons, and match the electrons to the protons for a needle on zero.'
+      'Compare Label A with open Sample A, then build Sample B from Label B.',
+      'Atomic number is the number of protons; charge is zero when electrons equal protons.',
+      'The label gives the protons directly and the protons and neutrons together.'
     ],
     check(state) {
       const t = state.table;
@@ -202,21 +208,25 @@ export const STAGES = [
       if (p + n + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Work the three counts out from the label.' };
       if (p !== 3) return { ok: false, msg: 'Your protons do not match the atomic number on Label B.' };
       if (n !== 3) return { ok: false, msg: `Your ${p} protons and ${n} neutrons make mass number ${p + n}, and Label B reads 6.` };
-      if (e !== 3) return { ok: false, msg: 'Your needle does not match the needle on Label B.' };
+      if (e !== 3) return { ok: false, msg: 'Your charge meter does not match the charge on Label B.' };
       return { ok: true };
     },
     reward: {
       log: 'Sample B: 3 protons, 3 neutrons, 3 electrons.',
       model: { type: 'atoms', items: [{ p: 3, n: 4, label: 'Lithium-7' }, { p: 3, n: 3, label: 'Lithium-6' }], caption: 'Lithium-7 and lithium-6: 3 protons and 3 electrons each, 4 neutrons against 3. Not to scale.' },
       title: 'Isotope Notation',
-      body: 'Two numbers define an atom: the atomic number identifies the element, and the mass number gives its total protons and neutrons. Together they identify specific isotopes like lithium-6.'
+      body: 'Atomic number 3 and mass number 6 mean three protons and three neutrons: lithium-6.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Which Ones Behave Alike',
-    prompt: 'Sort each sample by whether it reacts the same way as Sample A.',
+    title: 'Which Ones React Alike',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Atoms of one element with different numbers of neutrons are isotopes. Reactions involve only electrons, and a neutral atom has as many electrons as protons.'
+    },
+    prompt: 'Which samples react the same way as Sample A?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -227,15 +237,15 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('same', 'Reacts the same way', 30, 40, 44),
+          specimenTray('same', 'Reacts like Sample A', 30, 40, 44),
           specimenTray('other', 'Reacts differently', 82, 40, 44)
         ]
       }
     }),
     hints: [
-      'Use the two trays and the printed counts.',
-      'Compare the protons and the outer-shell dots on each sample with Sample A.',
-      'Put a sample with Sample A only when its protons match, whatever its neutrons add up to.'
+      'Compare the particle counts on each sample with Sample A.',
+      'Look at whether two samples with different neutron counts still have the same outer shell.',
+      'In neutral atoms, the number of protons sets the number of electrons.'
     ],
     check(state) {
       const t = state.table;
@@ -244,10 +254,14 @@ export const STAGES = [
       const labels = { k: 'Sample B', l: 'Sample C', m: 'Sample D' };
       for (const id of ids) if (!['same', 'other'].includes(where(id))) return { ok: false, notYet: true, msg: `${labels[id]} has no tray yet.` };
       const ref = spec(t.pieces.ref);
+      const outer = id => {
+        const r = spec(t.pieces[id]).rings;
+        return r ? r[r.length - 1] : spec(t.pieces[id]).p;
+      };
       for (const id of ids) {
         const alike = spec(t.pieces[id]).p === ref.p;
         if ((where(id) === 'same') !== alike) {
-          return { ok: false, msg: `${labels[id]}'s tray does not agree with how its proton count compares with Sample A's.` };
+          return { ok: false, msg: `${labels[id]} has ${spec(t.pieces[id]).p} protons (${outer(id)} outer electrons); Sample A has ${ref.p} protons (${outer('ref')} outer electrons).` };
         }
       }
       return { ok: true };
@@ -255,14 +269,18 @@ export const STAGES = [
     reward: {
       log: 'Sample B matches. Samples C and D do not.',
       title: 'Isotopes React Alike',
-      body: 'Isotopes of an element differ only in neutrons, and neutrons take no part in chemistry. The same proton count means the same electrons, the same outer shell and the same behaviour. That is why chlorine-35 and chlorine-37 are interchangeable in a reaction.'
+      body: 'The isotopes of chlorine have the same electrons, so they react alike. The sample with a different proton count does not.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'The Needle Is Not on Zero',
-    prompt: 'Build the protons and electrons of the sealed ion.',
+    title: 'The Meter Is Not on Zero',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An atom whose electrons do not equal its protons has a charge and is called an ion.'
+    },
+    prompt: 'How many protons and electrons does the sealed ion hold?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -279,9 +297,9 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Use the heap, the two trays and the needle.',
-      'On the open sample the needle equals its protons minus its electrons, and its proton count equals its atomic number.',
-      'Take the protons from the sealed label\'s atomic number, read its needle, and take the needle reading away from the protons to get the electrons.'
+      'Drag protons into the middle and electrons onto the rings, watching the charge meter.',
+      'Compare open Sample A\'s counts with its charge meter.',
+      'Each proton adds +1 and each electron adds −1 to the charge meter.'
     ],
     check(state) {
       const t = state.table;
@@ -289,22 +307,22 @@ export const STAGES = [
       const e = count(t, 'tray:out', 'electron');
       if (p === 0 && e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Work out the protons and the electrons.' };
       if (p !== 3) return { ok: false, msg: 'Your protons do not match the atomic number on Label B.' };
-      if (e === p) return { ok: false, msg: 'Your needle reads 0, and Sample B\'s needle does not.' };
-      if (e > p) return { ok: false, msg: 'Your needle reads below 0, and Sample B\'s does not.' };
-      if (e !== 2) return { ok: false, msg: 'Your needle does not match Sample B\'s needle.' };
+      if (e === p) return { ok: false, msg: 'Your charge meter reads 0, and Sample B\'s does not.' };
+      if (e > p) return { ok: false, msg: 'Your charge meter reads below 0, and Sample B\'s does not.' };
+      if (e !== 2) return { ok: false, msg: 'Your charge meter does not match Sample B\'s.' };
       return { ok: true };
     },
     reward: {
-      log: 'Sample B: 3 protons, 2 electrons, needle plus one.',
+      log: 'Sample B: 3 protons, 2 electrons, charge +1.',
       title: 'Net Charge',
-      body: 'The needle does one subtraction: protons count up, electrons count down, and what is left over is the net charge. Nothing in the lithium nucleus has changed, so it is still atomic number 3 and still mass number 7. It is simply one electron short.'
+      body: 'This charged atom is an ion: three protons and two electrons leave a charge of +1. It is still lithium-7.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lose the Outer Shell',
-    prompt: 'Take every electron off magnesium\'s outermost shell.',
+    prompt: 'Remove magnesium\'s valence electrons to form its ion.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -327,9 +345,9 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Use the shells, the tray beside them and the needle.',
-      'Magnesium starts with two electrons on its outermost shell, and each tray prints how many it holds against how many it can.',
-      'Take electrons off one at a time and watch the needle after each, and stop when the outer shell is empty and the shell beneath it is still full.'
+      'Drag the valence electrons off magnesium\'s outer shell into the Taken off tray.',
+      'Watch the charge meter and the shell lamp as the outer shell empties.',
+      'Removing negatively charged electrons leaves the remaining ion positively charged.'
     ],
     check(state) {
       const [s1, s2, s3] = shells(state.table);
@@ -340,17 +358,17 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'Magnesium outer shell gone at plus two.',
+      log: 'Magnesium outer shell gone at +2.',
       model: { type: 'atom', p: 12, n: 12, charge: 2, caption: 'A magnesium ion with a charge of +2: 12 protons and 10 electrons, on shells of 2 and 8. Not to scale.' },
       title: 'Cations and Full Shells',
-      body: 'Magnesium has two valence electrons. When it loses both, its remaining outermost shell has a full octet of eight, lighting the full-shell lamp at a +2 charge. Removing a third electron requires breaking into a full inner shell.'
+      body: 'Without its two valence electrons magnesium has a charge of +2 and a full shell outermost. A positive ion is a cation.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Fill It Past Neutral',
-    prompt: 'Fill the outer shell of Sample A completely.',
+    prompt: 'Add electrons to fill chlorine\'s outer shell and form its ion.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -374,9 +392,9 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Use the spare electrons, the shells and the needle.',
-      'Each tray prints how many electrons it holds against how many it can hold, and an atom can take on more electrons than it has protons.',
-      'Add electrons one at a time and stop when the outermost shell is full, whatever the needle says.'
+      'Drag spare electrons onto chlorine\'s outer shell.',
+      'Watch the charge meter and the shell lamp as the outer shell fills.',
+      'Adding negatively charged electrons beyond neutral gives the ion a negative charge.'
     ],
     check(state) {
       const [s1, s2, s3] = shells(state.table);
@@ -387,53 +405,53 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'Sample A loaded 2 / 8 / 8. Needle on minus one.',
+      log: 'Chlorine loaded 2 / 8 / 8. Charge -1.',
       title: 'Anions',
-      body: 'An atom with a negative charge is an anion. It holds 18 electrons against 17 protons to complete its outer shell, forming a chloride ion.'
+      body: 'One more electron fills chlorine\'s outer shell and leaves a charge of −1. A negative ion is an anion.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Cancel The Charges',
-    prompt: 'Put the fewest Sample A and Sample B ions on the pad that balance it to zero charge.',
+    prompt: 'How many magnesium ions and chloride ions make a group with no charge?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        ...[10, 20, 30].map((x, i) => ({ id: `a${i + 1}`, kind: 'ion', label: 'SAMPLE A', at: { x, y: 11 }, props: { el: 'Mg', charge: 2 } })),
-        ...[56, 66, 76, 86, 96, 106].map((x, i) => ({ id: `b${i + 1}`, kind: 'ion', label: 'SAMPLE B', at: { x, y: 11 }, props: { el: 'Cl', charge: -1 } }))
+        ...[10, 20, 30].map((x, i) => ({ id: `a${i + 1}`, kind: 'ion', label: 'Mg²⁺', at: { x, y: 11 }, props: { el: 'Mg', charge: 2 } })),
+        ...[56, 66, 76, 86, 96, 106].map((x, i) => ({ id: `b${i + 1}`, kind: 'ion', label: 'Cl⁻', at: { x, y: 11 }, props: { el: 'Cl', charge: -1 } }))
       ],
       zones: { trays: [trayAt('pad', 'Pad', 88, 35, 50, 22)] },
       fixtures: [{ id: 'needle', kind: 'needle', label: 'Pad charge', at: { x: 30, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:pad'], range: 4 } }],
       opts: { atom3d: false }
     }),
     hints: [
-      'Use the ions and the pad with its needle.',
-      'Every ion of Sample A adds its charge and every ion of Sample B adds its charge, and the pad needle shows the running total.',
-      'Keep adding ions until the needle reads zero, using the fewest you can.'
+      'Drag Mg²⁺ and Cl⁻ ions onto the pad and watch the Pad charge meter.',
+      'Each Mg²⁺ adds +2 and each Cl⁻ adds −1 to the pad\'s total charge.',
+      'Use the smallest whole-number combination whose charges add up to zero.'
     ],
     check(state) {
       const t = state.table;
       const s = piecesIn(t, 'tray:pad').filter(p => p.props.el === 'Mg').length;
       const u = piecesIn(t, 'tray:pad').filter(p => p.props.el === 'Cl').length;
       if (s === 0 && u === 0) return { ok: false, notYet: true, msg: 'The pad is still empty. Drag ions onto it.' };
-      if (s === 0 || u === 0) return { ok: false, msg: 'The pad holds one sort of ion, and its needle cannot reach 0 with that.' };
+      if (s === 0 || u === 0) return { ok: false, msg: 'The pad holds one kind of ion, and its charge meter cannot reach 0 with that.' };
       const net = needleReading(t, 'needle');
       if (net !== 0) return { ok: false, msg: `The pad reads ${net > 0 ? '+' : '-'}${Math.abs(net)}.` };
       if (s !== 1 || u !== 2) return { ok: false, msg: 'That combination balances, and a smaller one does too.' };
       return { ok: true };
     },
     reward: {
-      log: 'One Sample A to two Sample B. Charge zero.',
+      log: 'One Mg²⁺ to two Cl⁻. Charge zero.',
       title: 'Charges Cancel In Whole Numbers',
-      body: 'A neutral combination has to come out to zero charge, and you cannot use half an atom. So one atom at plus two needs two atoms at minus one. That ratio is why magnesium and chlorine combine one to two and never any other way.'
+      body: 'One Mg²⁺ needs two Cl⁻ to reach zero, so the compound is MgCl₂.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'File Them All',
-    prompt: 'Sort each sample by how it differs from reference Sample A.',
+    prompt: 'How does each sample differ from Sample A?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -445,17 +463,17 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('match', 'No difference', 17, 37, 27),
-          specimenTray('heavy', 'More neutrons', 46, 37, 27),
-          specimenTray('charged', 'Has a charge', 75, 37, 27),
-          specimenTray('other', 'Other element', 104, 37, 27)
+          specimenTray('match', 'Identical', 17, 37, 27),
+          specimenTray('heavy', 'Isotope', 46, 37, 27),
+          specimenTray('charged', 'Ion', 75, 37, 27),
+          specimenTray('other', 'Different element', 104, 37, 27)
         ]
       }
     }),
     hints: [
-      'Use the four trays and the printed counts.',
-      'Compare each sample with the reference one count at a time: protons, then neutrons, then the needle.',
-      'A different proton count is a different element, the same protons with more neutrons is extra neutrons, and the same counts with the needle off zero is a charge.'
+      'Compare each sample\'s protons, neutrons and charge meter with Sample A.',
+      'Find the one count that differs from Sample A for each sample.',
+      'Only one of the three counts differs for each sample; name what that count decides.'
     ],
     check(state) {
       const t = state.table;
@@ -482,7 +500,7 @@ export const STAGES = [
     reward: {
       log: 'All four filed.',
       title: 'Three Numbers Describe Any Atom',
-      body: 'Atomic number says what the atom is, mass number says how heavy this one is, and net charge says what it is carrying. Each of the three can change without touching the other two. Get all three and you have described the atom completely.',
+      body: 'A different neutron count is an isotope, a different electron count is an ion, and a different proton count is another element.',
       last: true
     }
   }

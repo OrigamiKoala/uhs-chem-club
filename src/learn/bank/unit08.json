@@ -352,7 +352,7 @@
     {
      "id": "q4-properties#b1",
      "quest": "q4-properties",
-     "question": "For A ⇌ B, K = 0.50. What is K for 2 B ⇌ 2 A?",
+     "question": "For N₂O₄ ⇌ 2 NO₂, K = 0.50 at 335 K. What is K for 4 NO₂ ⇌ 2 N₂O₄ at the same temperature?",
      "options": [
       {
        "id": "a",
@@ -372,57 +372,57 @@
       }
      ],
      "answer": "a",
-     "explanation": "Flipping gives 1/0.50 = 2.0, and doubling every amount squares that: 4.0."
+     "explanation": "Flipping gives 1/0.50 = 2.0, and doubling every coefficient squares that: 4.0."
     },
     {
      "id": "q4-properties#b2",
      "quest": "q4-properties",
-     "question": "A ⇌ B has K = 2.0 and B ⇌ C has K = 5.0. What is K for A ⇌ C?",
+     "question": "C(s) + H₂O(g) ⇌ CO(g) + H₂(g) has K = 2.0, and CO(g) + H₂O(g) ⇌ CO₂(g) + H₂(g) has K = 1.5. What is K for C(s) + 2 H₂O(g) ⇌ CO₂(g) + 2 H₂(g)?",
      "options": [
       {
        "id": "a",
-       "label": "10"
+       "label": "3.0"
       },
       {
        "id": "b",
-       "label": "7.0"
+       "label": "3.5"
       },
       {
        "id": "c",
-       "label": "2.5"
+       "label": "1.3"
       },
       {
        "id": "d",
-       "label": "0.40"
+       "label": "0.75"
       }
      ],
      "answer": "a",
-     "explanation": "The two reactions add up to A ⇌ C, so their K values multiply: 2.0 × 5.0 = 10."
+     "explanation": "The two reactions add up to C(s) + 2 H₂O(g) ⇌ CO₂(g) + 2 H₂(g), so their K values multiply: 2.0 × 1.5 = 3.0."
     }
    ],
    "worked": {
     "id": "q4-properties#w",
     "quest": "q4-properties",
     "title": "A Reaction Made From Two Others",
-    "setup": "X ⇌ Y has K = 0.10, and 2 Y ⇌ Z has K = 50. Find K for 2 X ⇌ Z, and then for the reaction written the other way round.",
+    "setup": "½ N₂ + ½ O₂ ⇌ NO has K = 0.10, and 2 NO + O₂ ⇌ 2 NO₂ has K = 50. Find K for N₂ + 2 O₂ ⇌ 2 NO₂, and then for the reaction written the other way round.",
     "steps": [
      {
-      "say": "What is K for 2 X ⇌ 2 Y, the first reaction with every amount doubled?",
+      "say": "What is K for N₂ + O₂ ⇌ 2 NO, the first reaction with every coefficient doubled?",
       "kind": "number",
       "answer": 0.01,
       "calc": "0.10**2",
       "unit": "",
       "tol": 0.01,
-      "hint": "Multiplying every amount by c raises K to the power c.",
+      "hint": "Multiplying every coefficient by c raises K to the power c.",
       "explain": "0.10 squared is 0.010."
      },
      {
-      "say": "To make 2 X ⇌ Z from 2 X ⇌ 2 Y, how must 2 Y ⇌ Z be used?",
+      "say": "To make N₂ + 2 O₂ ⇌ 2 NO₂ from N₂ + O₂ ⇌ 2 NO, how must 2 NO + O₂ ⇌ 2 NO₂ be used?",
       "kind": "choice",
       "options": [
        {
         "id": "a",
-        "label": "As written, so the 2 Y cancels"
+        "label": "As written, so the 2 NO cancels"
        },
        {
         "id": "b",
@@ -430,7 +430,7 @@
        },
        {
         "id": "c",
-        "label": "Every amount doubled"
+        "label": "Every coefficient doubled"
        },
        {
         "id": "d",
@@ -438,11 +438,11 @@
        }
       ],
       "answer": "a",
-      "hint": "The 2 Y made by the first reaction must be used up by the second.",
-      "explain": "2 Y is made on the right of the first and used on the left of the second, so the second stays as written."
+      "hint": "The 2 NO made by the first reaction must be used up by the second.",
+      "explain": "2 NO is made on the right of the first and used on the left of the second, so the second stays as written."
      },
      {
-      "say": "What is K for 2 X ⇌ Z?",
+      "say": "What is K for N₂ + 2 O₂ ⇌ 2 NO₂?",
       "kind": "number",
       "answer": 0.5,
       "calc": "0.010*50",
@@ -452,7 +452,7 @@
       "explain": "0.010 times 50 is 0.50."
      },
      {
-      "say": "What is K for Z ⇌ 2 X?",
+      "say": "What is K for 2 NO₂ ⇌ N₂ + 2 O₂?",
       "kind": "number",
       "answer": 2.0,
       "calc": "1/0.50",
@@ -495,7 +495,7 @@
     {
      "id": "q5-ice#b2",
      "quest": "q5-ice",
-     "question": "A ⇌ B + C has K = 1.0 × 10⁻⁸ and starts with 1.0 M A. How does [A] at equilibrium compare with 1.0 M?",
+     "question": "N₂O₄ ⇌ 2 NO₂ has K = 1.0 × 10⁻⁸ at low temperature and starts with 1.0 M N₂O₄. How does [N₂O₄] at equilibrium compare with 1.0 M?",
      "options": [
       {
        "id": "a",
@@ -521,8 +521,8 @@
    "worked": {
     "id": "q5-ice#w",
     "quest": "q5-ice",
-    "title": "N₂O₄ From a Small Start",
-    "setup": "N₂O₄ ⇌ 2 NO₂ has K = 0.0059. A vessel starts with 0.40 M N₂O₄ and no NO₂. Find [NO₂] when it settles.",
+    "title": "N₂O₄ With a Small K",
+    "setup": "N₂O₄ ⇌ 2 NO₂ has K = 0.0059. A vessel starts with 1.0 M N₂O₄ and no NO₂. Find [NO₂] when it settles.",
     "steps": [
      {
       "say": "What change goes in the NO₂ column of the ICE table?",
@@ -550,24 +550,24 @@
       "explain": "NO₂ has coefficient 2 and is made, so its change is +2x."
      },
      {
-      "say": "Treat 0.40 − x as 0.40. What is x?",
+      "say": "Treat 1.0 − x as 1.0. What is x?",
       "kind": "number",
-      "answer": 0.02429,
-      "calc": "Math.sqrt(0.0059*0.40/4)",
+      "answer": 0.0384,
+      "calc": "Math.sqrt(0.0059/4)",
       "unit": "M",
       "tol": 0.02,
-      "hint": "K = (2x)² / 0.40, so x² = K × 0.40 / 4.",
-      "explain": "x = √(0.0059 × 0.40 / 4) = 0.0243 M."
+      "hint": "K = (2x)² / 1.0, so x² = K / 4.",
+      "explain": "x = √(0.0059 / 4) = 0.0384 M."
      },
      {
-      "say": "What percent of the 0.40 M N₂O₄ is that x?",
+      "say": "What percent of the 1.0 M N₂O₄ is that x?",
       "kind": "number",
-      "answer": 6.07,
-      "calc": "0.02429/0.40*100",
+      "answer": 3.84,
+      "calc": "0.0384/1.0*100",
       "unit": "%",
       "tol": 0.02,
       "hint": "Divide x by the start and multiply by 100.",
-      "explain": "0.0243 / 0.40 is 6.1 %."
+      "explain": "0.0384 / 1.0 is 3.8 %."
      },
      {
       "say": "Is the approximation fair?",
@@ -575,47 +575,37 @@
       "options": [
        {
         "id": "a",
-        "label": "No, more than 5 % reacted"
+        "label": "Yes, less than 5 % reacted"
        },
        {
         "id": "b",
-        "label": "Yes, x is small"
+        "label": "No, more than 5 % reacted"
        },
        {
         "id": "c",
-        "label": "Yes, K is small"
+        "label": "No, K is too large"
        },
        {
         "id": "d",
-        "label": "No, K is too large"
+        "label": "Yes, because [NO₂] is zero"
        }
       ],
       "answer": "a",
       "hint": "Compare the percent with 5 %.",
-      "explain": "6.1 % is over 5 %, so 0.40 − x cannot be treated as 0.40."
-     },
-     {
-      "say": "Solve 4x² + 0.0059x − 0.00236 = 0 for x.",
-      "kind": "number",
-      "answer": 0.023567,
-      "calc": "(-0.0059+Math.sqrt(0.0059**2+16*0.0059*0.40))/8",
-      "unit": "M",
-      "tol": 0.02,
-      "hint": "Use the quadratic formula and take the positive root.",
-      "explain": "x = 0.0236 M."
+      "explain": "3.8 % is under 5 %, so treating 1.0 − x as 1.0 is fair."
      },
      {
       "say": "What is [NO₂] when the vessel settles?",
       "kind": "number",
-      "answer": 0.047134,
-      "calc": "2*(-0.0059+Math.sqrt(0.0059**2+16*0.0059*0.40))/8",
+      "answer": 0.0768,
+      "calc": "2*Math.sqrt(0.0059/4)",
       "unit": "M",
       "tol": 0.02,
       "hint": "NO₂ is 2x.",
-      "explain": "2 × 0.0236 = 0.0471 M."
+      "explain": "2 × 0.0384 = 0.077 M."
      }
     ],
-    "finish": "Check the approximation against 5 % of the start; if it fails, solve the quadratic."
+    "finish": "Check the small-x approximation against 5 % of the starting amount."
    }
   },
   "q6-lean": {
@@ -820,7 +810,7 @@
     {
      "id": "q3-q#b2",
      "quest": "q3-q",
-     "question": "For A ⇌ B with K = 2.0, a mixture holds 0.60 mol/L of A and 0.60 mol/L of B. Which way does it go?",
+     "question": "For butane ⇌ isobutane with K = 2.0 at 47 °C, a mixture holds 0.60 mol/L of butane and 0.60 mol/L of isobutane. Which way does it go?",
      "options": [
       {
        "id": "a",
@@ -828,11 +818,11 @@
       },
       {
        "id": "b",
-       "label": "It makes more A"
+       "label": "It makes more butane"
       },
       {
        "id": "c",
-       "label": "It makes more B"
+       "label": "It makes more isobutane"
       },
       {
        "id": "d",
@@ -840,7 +830,7 @@
       }
      ],
      "answer": "c",
-     "explanation": "Q = 0.60 / 0.60 = 1.0, which is below K, so the mixture makes more B."
+     "explanation": "Q = 0.60 / 0.60 = 1.0, which is below K, so the mixture makes more isobutane."
     }
    ],
    "worked": {
@@ -940,27 +930,27 @@
     {
      "id": "boss-tipper#b1",
      "quest": "boss-tipper",
-     "question": "2 A ⇌ B has K = 1.2. A mixture holds 0.50 mol/L of A and 0.50 mol/L of B. Which way does it go?",
+     "question": "Butane ⇌ isobutane has K = 2.0 at 47 °C. A mixture holds 0.40 mol/L of butane and 1.20 mol/L of isobutane. Which way does it go?",
      "options": [
       {
        "id": "a",
-       "label": "Toward B, because the amounts are equal"
+       "label": "Toward isobutane, because K is above 1"
       },
       {
        "id": "b",
-       "label": "Toward A, because Q is 2.0 and K is 1.2"
+       "label": "Toward butane, because Q is 3.0 and K is 2.0"
       },
       {
        "id": "c",
-       "label": "It does not change, because the amounts are equal"
+       "label": "It does not change, because there is already more isobutane"
       },
       {
        "id": "d",
-       "label": "Toward B, because Q is 0.5"
+       "label": "Toward isobutane, because Q is 0.33"
       }
      ],
      "answer": "b",
-     "explanation": "Q = [B] / [A]² = 0.50 / 0.25 = 2.0, which is above K = 1.2, so the mixture makes A until Q falls to K. Equal amounts do not mean equilibrium."
+     "explanation": "Q = [isobutane] / [butane] = 1.20 / 0.40 = 3.0, which is above K = 2.0, so the mixture makes more butane until Q falls to K."
     },
     {
      "id": "boss-tipper#b2",

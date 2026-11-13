@@ -13,10 +13,19 @@
  */
 
 import { PLATE_COLORS } from '../../engine/plates.js';
+import { isRevealed, isCommitted } from './commit-gate.js';
 import {
   rigRead, valueOf, speedScreen, tallestBar, shareAbove, tankRead, commonRead, partialOf, scaleRead, pinholeRead, tubeRead, walkRead,
   markerRead, seatedIn, GASES, sig, litres, speeds, speedBins, recordCurve, kPaToAtm, kPaToMmHg, ATM_KPA, secondsOf, boxRead
 } from './gas-read.js';
+
+function hiddenKeys(f, state) {
+  const keys = f?.props?.hideUntilCommit;
+  if (!Array.isArray(keys) || !keys.length) return null;
+  if (isRevealed(state, f.id)) return null;
+  if (f.props.gate && isCommitted(state, f.props.gate, f)) return null;
+  return new Set(keys);
+}
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -261,12 +270,13 @@ export function rigGeometry(f, lay) {
   };
 }
 
-export const KEYS = ['gauge', 'ideal', 'off', 'volume', 'temperature', 'kelvin', 'amount', 'knocks', 'speed', 'energy', 'z', 'mass', 'room', 'pull', 'pullShare'];
+export const KEYS = ['gauge', 'ideal', 'off', 'volume', 'kelvin', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'z', 'mass', 'room', 'pull', 'pullShare'];
 
 /** The readouts a cylinder prints, in order, as `[label, value, tone]`. A stage turns each on with `show` (gauge, volume, temperature, amount are on). */
-export function rigLines(q, f) {
+export function rigLines(q, f, state = null) {
   const show = f.props.show || {};
-  const w = { gauge: 'GAUGE', ideal: 'GAS LAW SAYS', off: 'OFF THE LAW', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'KNOCKS', speed: 'SPEED', energy: 'ENERGY OF MOTION', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
+  const hide = hiddenKeys(f, state);
+  const w = { gauge: 'PRESSURE', ideal: 'IDEAL LAW', off: 'DIFFERENCE', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'COLLISIONS', speed: 'SPEED', energy: 'KINETIC ENERGY', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
   const on = k => (k === 'gauge' || k === 'volume' || k === 'temperature' || k === 'amount' ? show[k] !== false : Boolean(show[k]));
   const units = f.props.units || 'kpa';
   const out = [];
@@ -274,8 +284,12 @@ export function rigLines(q, f) {
     if (!on(k)) continue;
     let v;
     let tone = PHOS;
+    if (hide?.has(k)) {
+      out.push([w[k], '—', DIM]);
+      continue;
+    }
     if (k === 'gauge') {
-      v = units === 'atm' ? `${sig(q.atm, 3)} atm` : units === 'both' ? `${sig(q.P, 3)} kPa` : `${sig(q.P, 3)} kPa`;
+      v = units === 'atm' ? `${sig(q.atm, 3)} atm` : units === 'mmHg' ? `${Math.round(kPaToMmHg(q.P))} mmHg` : `${sig(q.P, 3)} kPa`;
       if (units === 'rings') v = `${sig(q.atm, 3)} atm`;
       // Until a card has named the unit, a gauge prints its figure and nothing else.
       if (units === 'plain') v = `${sig(q.P, 3)}`;
@@ -497,7 +511,7 @@ function paintRig(ctx, f, state, b) {
   reads.forEach((q, j) => {
     const cj = g.cyls[j];
     paintBarrel(ctx, F, g, cj, q, f, { ...b, X: b.X, Y: b.Y });
-    const lines = rigLines(q, f);
+    const lines = rigLines(q, f, state);
     const cols = f.props.cols ?? (g.compact || g.screenW ? 1 : 2);
     const colW = (b.lay.box.x1 - b.lay.box.x0 - 4 - (g.screenW ? g.screenW + 2.5 : 0)) / cols;
     const y0 = cj.barrel.y1 + 3.4;
@@ -543,6 +557,9 @@ function paintCommon(ctx, f, state, b) {
   const F = frameOf(b);
   const rd = commonRead(state, f.id);
   const show = f.props.show || {};
+  const hide = hiddenKeys(f, state);
+  const mmhg = f.props.units === 'mmHg';
+  const fmtP = p => (mmhg ? `${Math.round(kPaToMmHg(p))} mmHg` : `${sig(p, 3)} kPa`);
   const box = b.lay.box;
   const top = f.props.top ?? 8.5;
   const x0 = box.x0 + f.size.w * 0.52;
@@ -562,10 +579,10 @@ function paintCommon(ctx, f, state, b) {
     const dots = b.bodies ? 0 : Math.max(1, Math.round(k.n * 12));
     for (let i = 0; i < dots; i++) shape(ctx, k.shape, b.X(x0 + 1.5 + rnd() * (w - 3)), b.Y(y0 + 1.5 + rnd() * (h - 3)), Math.max(1.4, F.len(0.55)));
   });
-  const lines = [['GAUGE', `${sig(rd.P, 3)} kPa`], ['ROOM', `${litres(rd.V)} L`], ['TEMPERATURE', `${Math.round(rd.T - 273.15)} °C`]];
+  const lines = [['PRESSURE', hide?.has('gauge') ? '—' : fmtP(rd.P)], ['VOLUME', `${litres(rd.V)} L`], ['TEMPERATURE', `${Math.round(rd.T - 273.15)} °C`]];
   lines.forEach(([l, v], i) => {
     say(ctx, l, F.x(2), F.y(top + 2.2 + i * 3.4), F.size(2.3, 6), { color: DIM, maxW: F.len(f.size.w * 0.24) });
-    say(ctx, v, F.x(f.size.w * 0.5), F.y(top + 2.2 + i * 3.4), F.size(2.6, 6.5), { color: PHOS, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.26) });
+    say(ctx, v, F.x(f.size.w * 0.5), F.y(top + 2.2 + i * 3.4), F.size(2.6, 6.5), { color: hide?.has('gauge') && i === 0 ? DIM : PHOS, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.26) });
   });
   if (show.partials) {
     say(ctx, 'EACH GAS PUSHES', F.x(2), F.y(top + 12.6), F.size(2.1, 6), { color: DIM, maxW: F.len(f.size.w * 0.3) });
@@ -575,8 +592,8 @@ function paintCommon(ctx, f, state, b) {
       ctx.fillStyle = DUST;
       shape(ctx, k.shape, F.x(3), F.y(y), Math.max(1.4, F.len(0.7)));
       say(ctx, GASES[k.gas].sym, F.x(5.2), F.y(y), F.size(2.4, 6), { color: DUST, maxW: F.len(10) });
-      say(ctx, `${sig(partialOf(rd, k.gas), 3)} kPa`, F.x(f.size.w * (show.share ? 0.38 : 0.5)), F.y(y), F.size(2.6, 6.5), { color: PHOS, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.26) });
-      if (show.share) say(ctx, `${Math.round((rd.rows.find(r => r.gas === k.gas)?.P ?? 0) / (rd.P || 1) * 100)} %`, F.x(f.size.w * 0.5), F.y(y), F.size(2.5, 6.5), { color: AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.12) });
+      say(ctx, hide?.has('partials') ? '—' : fmtP(partialOf(rd, k.gas)), F.x(f.size.w * (show.share ? 0.38 : 0.5)), F.y(y), F.size(2.6, 6.5), { color: hide?.has('partials') ? DIM : PHOS, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.26) });
+      if (show.share) say(ctx, hide?.has('partials') ? '—' : `${Math.round((rd.rows.find(r => r.gas === k.gas)?.P ?? 0) / (rd.P || 1) * 100)} %`, F.x(f.size.w * 0.5), F.y(y), F.size(2.5, 6.5), { color: hide?.has('partials') ? DIM : AMBER, weight: 700, align: 'right', maxW: F.len(f.size.w * 0.12) });
     });
   } else if (kinds.length) {
     // The legend of shapes without the figures: which shape is which gas.
@@ -604,6 +621,7 @@ function paintScale(ctx, f, state, b) {
 function paintPinhole(ctx, f, state, b) {
   const F = frameOf(b);
   const r = pinholeRead(state, f.id);
+  const hide = hiddenKeys(f, state);
   const n = r.chambers.length;
   const lastDial = b.lay.dials.length ? Math.max(...b.lay.dials.map(d => d.y)) : 8;
   const top = lastDial - b.lay.box.y0 + 7;
@@ -630,10 +648,10 @@ function paintPinhole(ctx, f, state, b) {
     }
     say(ctx, `${c.label}${c.sealed ? '' : `  ${c.sym}`}`, F.x(x0), F.y(top - 1.3), F.size(2.3, 6), { color: DUST, weight: 700, maxW: F.len(w) });
     say(ctx, 'LEFT', F.x(x0), F.y(top + h + 2.6), F.size(2.3, 6), { color: DIM });
-    say(ctx, `${Math.round(c.left * 100)} %`, F.x(x0 + w), F.y(top + h + 2.6), F.size(2.7, 6.5), { color: PHOS, weight: 700, align: 'right' });
+    say(ctx, hide?.has('left') ? '— %' : `${Math.round(c.left * 100)} %`, F.x(x0 + w), F.y(top + h + 2.6), F.size(2.7, 6.5), { color: hide?.has('left') ? DIM : PHOS, weight: 700, align: 'right' });
     if (f.props.showHalf) {
       say(ctx, 'HALF EMPTY AFTER', F.x(x0), F.y(top + h + 5.8), F.size(2.2, 6), { color: DIM, maxW: F.len(w * 0.62) });
-      say(ctx, `${sig(c.half, 3)} s`, F.x(x0 + w), F.y(top + h + 5.8), F.size(2.6, 6.5), { color: AMBER, weight: 700, align: 'right' });
+      say(ctx, hide?.has('half') && i === 0 ? '— s' : `${sig(c.half, 3)} s`, F.x(x0 + w), F.y(top + h + 5.8), F.size(2.6, 6.5), { color: hide?.has('half') && i === 0 ? DIM : AMBER, weight: 700, align: 'right' });
     }
   });
 }
@@ -642,6 +660,8 @@ function paintPinhole(ctx, f, state, b) {
 function paintTube(ctx, f, state, b) {
   const F = frameOf(b);
   const r = tubeRead(state, f.id);
+  const hide = hiddenKeys(f, state);
+  const gated = hide?.has('ring') || (f.props.gate && !isRevealed(state, f.id) && !isCommitted(state, f.props.gate, f));
   const lastDial = b.lay.dials.length ? Math.max(...b.lay.dials.map(d => d.y)) : 8;
   const top = lastDial - b.lay.box.y0 + 5;
   const x0 = 4; const w = f.size.w - 8; const h = 5.4;
@@ -660,12 +680,12 @@ function paintTube(ctx, f, state, b) {
   ctx.lineWidth = 1.5;
   ctx.strokeRect(Math.round(F.x(x0)) + 0.5, Math.round(F.y(top)) + 0.5, Math.round(F.len(w)), Math.round(F.len(h)));
   ctx.lineWidth = 1;
-  if (r.met) {
+  if (r.met && !gated) {
     ctx.fillStyle = '#e8e2d4';
     ctx.fillRect(px(r.ringFromLeft) - F.len(0.5), F.y(top), Math.max(2, F.len(1)), F.len(h));
     say(ctx, `RING AT ${Math.round(r.ringFromLeft)} cm`, F.x(x0 + w / 2), F.y(top + h + 3.3), F.size(2.6, 6.5), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w) });
   } else {
-    say(ctx, 'NO RING YET', F.x(x0 + w / 2), F.y(top + h + 3.3), F.size(2.4, 6), { align: 'center', color: DIM });
+    say(ctx, gated ? 'PLACE PREDICTION FIRST' : 'NO RING YET', F.x(x0 + w / 2), F.y(top + h + 3.3), F.size(2.4, 6), { align: 'center', color: DIM });
   }
   for (let d = 0; d <= r.length; d += 10) {
     ctx.strokeStyle = RIM;

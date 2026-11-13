@@ -1,42 +1,28 @@
 /**
  * q3-ideal.js — Bellows, bench three: THE IDEAL GAS LAW.
  *
- * The metering skid, where gas is counted out of a holder, on the gas kit (`table/kits/gas.js`). Bench two found gases follow the kelvin
- * temperature. This one lets nothing be held fixed and asks how many particles a gas holds, which is where chemistry starts counting.
- *
- * THE CLICK. Most players believe a heavier gas, with its bigger, heavier particles, must take up more room than a light one. Stage 1
- * asks for that guess about a mole of helium against a mole of carbon dioxide (a predict stage, no instrument). Stage 2 puts the two in
- * cylinders under the same weight and asks for the amount of carbon dioxide that fills the same room as the helium: the same number of
- * moles, though one weighs eleven times the other. The idea is named only then: equal numbers of particles fill equal rooms, whatever
- * the gas. Stage 3 uses it to count sealed tanks from their plates, and stage 4 finds the one number that ties the readings together.
- *
- *   1  PREDICT: a mole of a light gas and a mole of a heavy gas, which fills more room
- *   2  TEST: add gas until the two cylinders fill the same room         -> Molar Volume, Avogadro's law
- *   3  tanks against a reference: fewer, the same number, or more       -> Counting From a Gauge, the ideal gas law
- *   4  the number that pressure x room / amount x kelvin comes to       -> The Gas Constant
- *   5  how many moles a tank's plate says it holds                       -> Using the Ideal Gas Law (a figure worked out)
- *   6  which gas fills a sealed tank, from its plate and its mass        -> Molar Mass From a Tank
- *   7  a plate in atmospheres and degrees C: the moles, with units checked -> Units in the Gas Law
- *   8  the density of a gas from its gauge, kelvin and molar mass         -> Gas Density (d = PM / RT)
- *
- * (Cut as repeats or as arithmetic past the idea: the second gas constant for a gauge in atmospheres, naming a gas from its weight, the
- * density ranking, and the pellet of limestone, which were the same counting at AP depth.)
+ * 1  PREDICT: one mole of helium vs one mole of carbon dioxide, which fills more volume
+ * 2  TEST: how many moles of carbon dioxide fill the same volume as one mole of helium  -> Avogadro's law
+ * 3  what does P × V ÷ (n × T) come to for this gas                                     -> Gas constant R, PV = nRT
+ * 4  how many moles of gas are in Tank X (worked case first)                            -> Using the ideal gas law
+ * 5  weigh a sealed tank and name the gas                                               -> Molar mass from a tank
+ * 6  moles in Tank Y with atmospheres and Celsius                                       -> Units in the gas law
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, rig, tank, numCard, cylRead, whereIs, tankMoles, plaqueFixture, GASES, R } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, sort, answerCards, answerSlot, typed, entrySigned } from './_shared.js';
+import { gasTable, rig, tank, numCard, cylRead, scaleFixture, scaleRead, plaqueFixture, GASES, R } from '../../table/kits/gas.js';
+import { widget, put, dial, cardIn, predictStage, answerCards, answerSlot, typed } from './_shared.js';
 
-export const meta = { stageCount: 9 };
+export const meta = { stageCount: 6 };
 
 export const VOCABULARY = [
-  { term: /\bmolar volume\b/i, introducedAt: 2 },
   { term: /\bavogadro.?s law\b/i, introducedAt: 2 },
+  { term: /\bgas constant\b/i, introducedAt: 3 },
   { term: /\bideal gas law\b/i, introducedAt: 3 },
-  { term: /\bgas constant\b/i, introducedAt: 4 }
+  { term: /\batmospheres?\b|\batm\b/i, introducedAt: 6 }
 ];
 
 /** Pressure, kelvin, the laws of bench two and the mole are plain words from here on. */
@@ -55,355 +41,254 @@ const RIG = 'rig';
 const STP = 273.15;
 const P_ATM = 101.325;
 
-export const GUESSES = [['he', 'Helium fills more'], ['co2', 'Carbon dioxide fills more'], ['same', 'They fill the same room']];
+export const GUESSES = [['he', 'Helium fills more'], ['co2', 'Carbon dioxide fills more'], ['same', 'They fill the same volume']];
 
-/** Stage 2's amounts of carbon dioxide, in moles; the one that fills helium's room is not the first. */
+/** Stage 2's amounts of carbon dioxide, in moles; the one that fills helium's volume is not the first. */
 export const CO2_AMOUNTS = [0.5, 1, 1.5, 2];
 
-/** Stage 3's tanks: the reference, and four that differ from it in one reading each. */
-export const TANKS = [
-  { id: 'a', gas: 'He', P: 100, V: 10, T: 300 },
-  { id: 'b', gas: 'Xe', P: 100, V: 10, T: 300 },
-  { id: 'c', gas: 'N2', P: 100, V: 20, T: 300 },
-  { id: 'd', gas: 'Ar', P: 50, V: 10, T: 300 },
-  { id: 'e', gas: 'He', P: 100, V: 10, T: 600 }
-];
-
-/** Stage 4's cards: the right one has its decimal point in the right place, and the others do not. */
+/** Stage 3's cards for R in kPa·L/(mol·K). */
 export const R_CARDS = [['n831', '8.31', 8.31], ['n0831', '0.0831', 0.0831], ['n83', '83.1', 83.1], ['n101', '101.3', 101.3]];
 
-/** Stage 5: the tank's plate, and the figures to lay: the moles, a decimal slip, a factor-of-ten slip and the gas constant itself. */
-export const PLATE = { gas: 'N2', P: 250, V: 10, T: 300 };
-export const MOLE_CARDS = [['a', '1.0 mol', 1.0], ['b', '0.10 mol', 0.1], ['c', '10 mol', 10], ['d', '8.3 mol', 8.3]];
-/** Stage 6: the sealed tank (the plate and its mass say what gas it is), and a card for each gas it could be. */
+/** Stage 4: Tank X (distinct from the worked case). */
+export const PLATE = { gas: 'N2', P: 400, V: 10, T: 300 };
+
+/** Stage 5: the sealed tank on the scale. */
 export const SEALED = { gas: 'CO2', P: 250, V: 10, T: 300 };
 export const GAS_CARDS = [['n2', 'Nitrogen, 28 g/mol', 'N2'], ['o2', 'Oxygen, 32 g/mol', 'O2'], ['ar', 'Argon, 40 g/mol', 'Ar'], ['co2', 'Carbon dioxide, 44 g/mol', 'CO2']];
 
-/** Stage 7: a plate in atmospheres and degrees C, R in atmospheres, and the figures to lay: the moles, the Celsius-as-kelvin slip, the kilopascal R slip, and a mixed-up product. */
+/** Stage 6: Tank Y in atmospheres and degrees C, with R in atmospheres. */
 export const ATM_PLATE = { P: 2.5, V: 5, TC: 27 };
 export const R_ATM = 0.0821;
-/** Stage 8: the density of a gas from its plate. The cards: the answer, moles per litre (the unit slip), a factor of ten and the upside-down quotient. */
-export const DENSE = { gas: 'CO2', P: 100, T: 300 };
-export const DENSE_CARDS = [['a', '1.8 g/L', 1.8], ['b', '0.040 g/L', 0.04], ['c', '18 g/L', 18], ['d', '0.57 g/L', 0.57]];
-export const UNIT_CARDS = [['a', '0.51 mol', 0.51], ['b', '5.6 mol', 5.6], ['c', '0.0050 mol', 0.005], ['d', '1.5 mol', 1.5]];
 
 /* ------------------------------------------------------------------
-   THE SEVEN STAGES
+   THE SIX STAGES
    ------------------------------------------------------------------ */
-/** Stage 9: a thermometer that reads low. The moles worked out from it, against the true ones, as a percentage. */
-export const THERMO = { P: 100, V: 10, read: 295, truth: 300 };
-export const thermoErrorPct = (g = THERMO) => (g.truth / g.read - 1) * 100;
-
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  predictStage({
-    key: QUEST_KEY,
-    title: 'Molar Mass and Volume',
-    prompt: 'One mole each of helium and carbon dioxide sit at one temperature under the same weight: which fills more room?',
-    items: GUESSES,
-    hints: [
-      'Lay one card in the slot.',
-      'Ask what fixes the room a gas fills: how many particles are in it, or how heavy each one is.',
-      'Picture the same push on a piston from a few heavy particles and from the same number of light ones.'
-    ],
-    reward: {
-      log: 'Prediction recorded.',
-      title: 'Prediction Recorded',
-      body: 'Two cylinders will now test whether different gases occupy different volumes at equal temperature and pressure.'
+  {
+    ...predictStage({
+      key: QUEST_KEY,
+      title: 'Heavy Gas, Light Gas',
+      prompt: 'One mole of helium and one mole of carbon dioxide are at the same temperature and pressure: which fills more volume?',
+      items: GUESSES,
+      hints: [
+        'Lay one card in the slot.',
+        'Ask what fixes the volume a gas fills: how many particles are in it, or how heavy each one is.',
+        'Picture the same pressure on a piston from a few heavy particles and from the same number of light ones.'
+      ],
+      reward: {
+        log: 'Prediction recorded.',
+        title: 'Prediction Recorded',
+        body: 'Your guess is locked in. Next, two cylinders will test whether different gases fill different volumes at the same temperature and pressure.'
+      }
+    }),
+    briefing: {
+      speaker: 'Vess',
+      body: 'A mole is a fixed, very large number of particles.'
     }
-  }),
+  },
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const a = rig('ra', { x: 20, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Holder 10', gas: 'He', n: 1, hold: 'P', V: 20, T: STP, P0: P_ATM }], vmax: 70, compact: true, w: 34,
-      show: { gauge: false, mass: true }
+      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', n: 1, hold: 'P', V: 20, T: STP, P0: P_ATM }], vmax: 70, compact: true, w: 34,
+      show: { gauge: false, mass: true, kelvin: true }
     });
     const b = rig('rb', { x: 58, y: 25 }, {
-      cyls: [{ id: 'a', label: 'Holder 11', gas: 'CO2', hold: 'P', V: 20, T: STP, P0: P_ATM }], amounts: CO2_AMOUNTS, amountStart: 1, vmax: 70, compact: true, w: 34,
-      show: { gauge: false, mass: true }
+      cyls: [{ id: 'a', label: 'Cylinder B', gas: 'CO2', hold: 'P', V: 20, T: STP, P0: P_ATM }], amounts: CO2_AMOUNTS, amountStart: 1, vmax: 70, compact: true, w: 34,
+      show: { gauge: false, mass: true, kelvin: true }, hideUntilCommit: ['volume']
     });
     return {
-      title: 'Molar Volume',
-      get prompt() {
-        return youPredicted(QUEST_KEY, GUESSES, 'add gas to Holder 11 until it fills the same room as Holder 10.', 'Add gas to Holder 11 until it fills the same room as Holder 10.');
-      },
+      title: 'Equal Moles, Equal Volumes',
+      prompt: 'How many moles of carbon dioxide fill the same volume as one mole of helium?',
       widget,
       table: gasTable({ fixtures: [a, b] }),
       hints: [
-        'Use the "Gas in" dial of Holder 11.',
-        'Compare the volumes of both cylinders at each setting.',
-        'Where the rooms match, read the amount of gas in each holder.'
+        'Turn Cylinder B\'s Gas in dial and watch its volume.',
+        'Compare the volumes of Cylinder A and Cylinder B at each setting.',
+        'Stop where the two volumes match, and read the amount of gas in Cylinder B.'
       ],
       check(state) {
         const t = state.table;
-        if (Math.round(t.fixtures.rb.dials.amount.value) === 1) return { ok: false, notYet: true, msg: 'Holder 11\'s dial is where it started: add gas and watch its room.' };
+        if (Math.round(t.fixtures.rb.dials.amount.value) === 1) return { ok: false, notYet: true, msg: 'Cylinder B\'s dial is where it started: add gas and watch its volume.' };
         const va = cylRead(t, 'ra', 0).V;
         const vb = cylRead(t, 'rb', 0).V;
         if (Math.abs(vb - va) < 0.05) return { ok: true };
-        return { ok: false, msg: vb < va ? 'Holder 11 fills less room than Holder 10.' : 'Holder 11 fills more room than Holder 10.' };
+        return { ok: false, msg: vb < va ? 'Cylinder B fills less volume than Cylinder A.' : 'Cylinder B fills more volume than Cylinder A.' };
       },
-      get reward() {
-        return {
-          log: 'A mole of either gas fills the same room.',
-          title: 'Molar Volume',
-          body: 'One mole of any ideal gas fills about 22.4 litres at 0 °C and ordinary air pressure (molar volume), regardless of particle mass. Equal numbers of particles fill equal volumes: this is Avogadro\'s law.'
-        };
+      reward: {
+        log: 'A mole of either gas fills the same volume.',
+        title: 'Avogadro\'s Law',
+        body: 'One mole of each fills the same volume, however heavy its particles. This is Avogadro\'s law.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const mk = ({ id, gas, P, V, T }, at, extra = {}) => tank(id, `TANK ${id.toUpperCase()}`, at, { gas, P, V, T, plate: true, gaugeMax: 300, ...extra });
-    const tray = (id, label, x) => ({ id, label, at: { x, y: 24 }, size: { w: 46, h: 24 }, cell: 15 });
-    const xs = { a: 14, b: 44, c: 68, d: 92, e: 116 };
-    return {
-      title: 'Counting Moles from Pressure',
-      prompt: 'Put each tank in the tray for how many particles it holds compared with Tank A.',
-      widget,
-      table: gasTable({
-        pieces: TANKS.map(t => mk(t, { x: xs[t.id], y: 52 }, t.id === 'a' ? { fixed: true } : {})),
-        zones: { trays: [tray('fewer', 'Fewer particles', 25), tray('same', 'The same number', 75), tray('more', 'More particles', 125)] }
-      }),
-      hints: [
-        'Sort each tank into one of the three trays.',
-        'Compare each tank\'s gauge, room and temperature with Tank A\'s.',
-        'Work out each tank\'s gauge times room, divided by its temperature, and compare it with Tank A\'s.'
-      ],
-      check(state) {
-        const t = state.table;
-        const ids = ['b', 'c', 'd', 'e'];
-        if (!ids.every(id => ['fewer', 'same', 'more'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every tank in a tray.' };
-        const nA = tankMoles(t.pieces.a);
-        for (const id of ids) {
-          const ratio = tankMoles(t.pieces[id]) / nA;
-          const want = Math.abs(ratio - 1) < 1e-6 ? 'same' : ratio > 1 ? 'more' : 'fewer';
-          if (whereIs(t, id) !== want) return { ok: false, msg: `Tank ${id.toUpperCase()}'s gauge, room and temperature do not fit the tray it is in.` };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'A gauge, a room and a temperature count the gas.',
-        title: 'Counting From a Gauge',
-        body: 'Mole quantity in a gas is directly proportional to pressure and volume, and inversely proportional to absolute temperature. Combining these dependencies yields the ideal gas law.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 4 */
-  (() => {
     const r = rig(RIG, { x: 36, y: 28 }, {
-      cyls: [{ id: 'a', label: 'Holder 12', gas: 'N2', n: 1, hold: 'dial', V: 22.4, T: STP }],
-      temps: [0, 27, 127], tempList: 'C', tempStart: 1, amounts: [1, 2], amountStart: 1, vmax: 22.4, show: { kelvin: true, volume: false }, plot: { x: 'nT', y: 'PV' }
+      cyls: [{ id: 'a', label: 'Cylinder', gas: 'N2', n: 1, hold: 'dial', V: 22.4, T: STP }],
+      temps: [273, 300, 400], tempList: 'K', tempStart: 1, amounts: [1, 2], amountStart: 1, vmax: 22.4,
+      show: { kelvin: true, volume: true }, plot: { x: 'nT', y: 'PV' }, label: 'Cylinder'
     });
     return {
-      title: 'The Ideal Gas Constant',
-      prompt: 'Find what pressure times room, divided by amount times kelvin, comes to, and put its card in the slot.',
+      title: 'The Gas Constant',
+      briefing: {
+        speaker: 'Vess',
+        body: 'Pressure rises with the moles (n) and kelvin temperature (T), and falls as volume (V) grows. Put together, P × V ÷ (n × T) comes to the same number for any gas.'
+      },
+      prompt: 'What does P × V ÷ (n × T) come to for this gas, in kPa, litres, moles and kelvin?',
       widget,
       table: gasTable({
         pieces: R_CARDS.map(([id, label, v], i) => numCard(id, label, { x: 84 + i * 18, y: 38 }, v)),
         fixtures: [r],
-        zones: { slots: [{ id: 'answer', label: 'It comes to', at: { x: 111, y: 52 }, size: { w: 22, h: 11 } }] },
-        tools: ['straightedge']
-      }, { recorder: { at: { x: 111, y: 17 }, size: { w: 40, h: 24 }, xLabel: 'n x K', xUnit: 'mol K', yLabel: 'P x room', yUnit: 'kPa L' } }),
+        zones: { slots: [{ id: 'answer', label: 'It comes to', at: { x: 111, y: 52 }, size: { w: 22, h: 11 } }] }
+      }, { recorder: { at: { x: 111, y: 17 }, size: { w: 40, h: 24 }, xLabel: 'n × K', xUnit: 'mol K', yLabel: 'P × V', yUnit: 'kPa L' } }),
       hints: [
-        'Use both dials, "Record" and the straightedge.',
-        'Record readings at several settings and lay the straightedge across the points.',
-        'Divide pressure times room by amount times kelvin for any point.'
+        'Turn both dials, read P, V, n and T, and place a card in the slot.',
+        'Compute P × V ÷ (n × T) at one setting, then check another setting.',
+        'Check where the decimal point sits for kPa, litres, moles and kelvin.'
       ],
       check(state) {
         const t = state.table;
         const card = cardIn(t, 'answer');
         if (!card) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
         if (Math.abs(card.props.value - R) < 0.01) return { ok: true };
-        return { ok: false, msg: 'The recorded readings do not come to the number on that card.' };
+        return { ok: false, msg: 'The cylinder readings do not come to the number on that card.' };
       },
       reward: {
         log: 'One number ties every reading together.',
-        title: 'The Gas Constant',
-        body: 'Pressure times room, divided by amount times kelvin, equals 8.31 for every reading in these units. That number is the gas constant, written R, and the whole relation PV = nRT is the ideal gas law.'
+        title: 'The Ideal Gas Law',
+        body: 'It is 8.31 at every setting. That number is the gas constant, R, and the relation PV = nRT is the ideal gas law.'
       }
     };
-  })()  ,
+  })(),
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 4 */
   (() => {
-    const plate = plaqueFixture('plate', 'Tank X', { x: 32, y: 33 }, ['Gas: nitrogen', `Gauge: ${PLATE.P} kPa`, `Room: ${PLATE.V} L`, `Temperature: ${PLATE.T} K`], { w: 52 });
+    const nX = (PLATE.P * PLATE.V) / (R * PLATE.T);
+    const rx = rig('rx', { x: 36, y: 29 }, {
+      cyls: [{ id: 'a', label: 'Tank X', gas: PLATE.gas, n: nX, hold: 'V', V: PLATE.V, T: PLATE.T, sealed: true }],
+      volumes: [5, 10, 15, 20], volumeStart: 2, vmax: 20, w: 62,
+      title: 'Tank X', show: { amount: false, temperature: false, kelvin: true }
+    });
     return {
-      title: 'Using the Ideal Gas Law',
-      prompt: 'Type how many moles of gas Tank X holds.',
+      title: 'Moles in a Tank',
+      briefing: {
+        speaker: 'Vess',
+        body: 'From PV = nRT, the moles in a tank are n = PV ÷ RT.',
+        worked: ['P × V = 500 × 5.0 = 2500', 'R × T = 8.31 × 301 = 2500', 'n = 2500 ÷ 2500 = 1.0 mol']
+      },
+      prompt: 'How many moles of gas are in Tank X?',
       entry: { id: 'ans', label: 'Moles in Tank X', unit: 'mol' },
       widget,
-      table: gasTable({
-        fixtures: [plate],
-      }),
+      table: gasTable({ fixtures: [rx] }),
       hints: [
-        'Read the gauge, room and temperature from the tank\'s plate.',
-        'Put the figures into pressure times room, divided by the gas constant times kelvin.',
-        'Check the units: the gas constant is in kPa and litres, so use the gauge in kPa and the room in litres.'
+        'Read the pressure, volume and temperature on Tank X.',
+        'Rearrange PV = nRT to solve for moles: n = PV ÷ RT.',
+        'Follow the worked example with Tank X\'s pressure, volume and temperature.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mol.' };
         const want = (PLATE.P * PLATE.V) / (R * PLATE.T);
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        return { ok: false, msg: v > want ? 'That is more gas than the plate allows.' : 'That is less gas than the plate allows.' };
+        const pAtV = (v * R * PLATE.T) / PLATE.V;
+        return { ok: false, msg: `In this ${PLATE.V} L tank at ${PLATE.T} K, ${v} mol would give ${pAtV.toFixed(0)} kPa, not ${PLATE.P} kPa.` };
       },
       reward: {
-        log: 'Pressure times room over R times kelvin.',
-        title: 'Using the Ideal Gas Law',
-        body: 'Rearranged, PV = nRT gives n = PV ÷ RT = (250 × 10) ÷ (8.31 × 300), about 1.0 mol. Check the answer by size: a 10 L tank near room temperature holds roughly a mole at 250 kPa, not ten.'
+        log: 'PV ÷ RT gives the moles in Tank X.',
+        title: 'Moles in a Tank',
+        body: 'For Tank X, n = (400 × 10) ÷ (8.31 × 300), about 1.60 mol.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
+  (() => {
+    const sc = scaleFixture('scale', { x: 32, y: 33 });
+    const sealed = tank('sealed', 'Sealed tank', { x: 64, y: 33 }, {
+      gas: SEALED.gas, P: SEALED.P, V: SEALED.V, T: SEALED.T, sealed: true, plate: true, gaugeMax: 600
+    });
+    return {
+      title: 'Naming a Gas',
+      prompt: 'Which gas is in the sealed tank?',
+      widget,
+      table: gasTable({
+        pieces: [sealed, ...answerCards(GAS_CARDS)],
+        fixtures: [sc.fixture],
+        zones: { slots: [...sc.slots, answerSlot('Gas in the tank')] }
+      }),
+      hints: [
+        'Drag the sealed tank onto the scale to weigh its gas, then place a card in the slot.',
+        'Use the tank\'s pressure, volume and temperature to find how many moles it holds.',
+        'Divide the gas mass on the scale by the moles to find the mass of one mole.'
+      ],
+      check(state) {
+        const t2 = state.table;
+        if (!scaleRead(t2, 'scale').tank) return { ok: false, notYet: true, msg: 'Put the sealed tank on the scale to weigh its gas.' };
+        const card = cardIn(t2, 'answer');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+        const hit = GAS_CARDS.find(c => c[0] === card.id);
+        if (hit && hit[2] === SEALED.gas) return { ok: true };
+        return { ok: false, msg: 'That gas does not fit the sealed tank.' };
+      },
+      reward: {
+        log: 'Mass over moles named the gas.',
+        title: 'Naming a Gas',
+        body: 'The tank holds about 1.0 mol and 44 g of gas, so one mole is 44 g: carbon dioxide.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const grams = ((SEALED.P * SEALED.V) / (R * SEALED.T)) * GASES[SEALED.gas].M;
-    const plate = plaqueFixture('plate', 'Sealed tank', { x: 32, y: 33 }, ['Gas: not labelled', `Gauge: ${SEALED.P} kPa`, `Room: ${SEALED.V} L`, `Temperature: ${SEALED.T} K`, `Mass of gas: ${grams.toFixed(1)} g`], { w: 52 });
+    const nY = (ATM_PLATE.P * P_ATM * ATM_PLATE.V) / (R * (ATM_PLATE.TC + 273.15));
+    const ry = rig('ry', { x: 36, y: 29 }, {
+      cyls: [{ id: 'a', label: 'Tank Y', gas: 'Ar', n: nY, hold: 'V', V: ATM_PLATE.V, T: ATM_PLATE.TC + 273.15, sealed: true }],
+      volumes: [2.5, 5, 10], volumeStart: 2, vmax: 10, w: 62, units: 'atm',
+      title: 'Tank Y · Ar', show: { amount: false, temperature: true, gauge: true, volume: true }
+    });
     return {
-      title: 'Molar Mass From a Tank',
-      prompt: 'Lay the card for the gas in the sealed tank.',
-      widget,
-      table: gasTable({
-        pieces: answerCards(GAS_CARDS),
-        fixtures: [plate],
-        zones: { slots: [answerSlot('Gas in the tank')] }
-      }),
-      hints: [
-        'Read the gauge, room, temperature and mass from the sealed tank\'s plate.',
-        'Find how many moles the tank holds, then compare that with the mass.',
-        'The mass divided by the moles is the mass of one mole, which each card prints.'
-      ],
-      check(state) {
-        const t2 = state.table;
-        const card = cardIn(t2, 'answer');
-        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
-        const hit = GAS_CARDS.find(c => c[0] === card.id);
-        if (hit && hit[2] === SEALED.gas) return { ok: true };
-        return { ok: false, msg: 'That gas does not fit the sealed tank\'s plate.' };
+      title: 'Atmospheres and Celsius',
+      briefing: {
+        speaker: 'Vess',
+        body: 'Pressure is also measured in atmospheres: 1 atm is 101.3 kPa. With atm and litres the gas constant is 0.0821.'
       },
-      reward: {
-        log: 'Mass over moles named the gas.',
-        title: 'Molar Mass From a Tank',
-        body: 'The tank holds about 1.0 mol and weighs 44 g, so one mole weighs 44 g: carbon dioxide. A gauge, a room, a temperature and a mass are enough to name an unlabelled gas.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    const plate = plaqueFixture('plate', 'Tank Y', { x: 32, y: 33 }, ['Gas: argon', `Gauge: ${ATM_PLATE.P} atm`, `Room: ${ATM_PLATE.V} L`, `Temperature: ${ATM_PLATE.TC} °C`], { w: 52 });
-    return {
-      title: 'Units in the Gas Law',
-      prompt: 'Type how many moles of gas Tank Y holds.',
+      prompt: 'How many moles of gas are in Tank Y?',
       entry: { id: 'ans', label: 'Moles in Tank Y', unit: 'mol' },
       widget,
-      table: gasTable({
-        fixtures: [plate],
-      }),
+      table: gasTable({ fixtures: [ry] }),
       hints: [
-        'Read the gauge, room and temperature from the plate, and the gas constant printed beside it.',
-        'Check that every figure is in the unit the gas constant uses: atmospheres, litres and kelvin.',
-        'Add 273 to the Celsius figure, then put the three figures into pressure times room, divided by the gas constant times kelvin.'
+        'Read the pressure, volume and temperature on Tank Y (R = 0.0821 L·atm/(mol·K)).',
+        'Convert the temperature from °C to kelvin before using PV = nRT.',
+        'Each number must be in the unit that this R uses, and temperature is always in kelvin.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in mol.' };
         const want = (ATM_PLATE.P * ATM_PLATE.V) / (R_ATM * (ATM_PLATE.TC + 273.15));
         if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        return { ok: false, msg: v > want ? 'That is more gas than the plate allows.' : 'That is less gas than the plate allows.' };
+        return { ok: false, msg: v > want ? 'That is more gas than Tank Y holds.' : 'That is less gas than Tank Y holds.' };
       },
       reward: {
-        log: 'Every figure in the gas constant\'s units.',
-        title: 'Units in the Gas Law',
-        body: 'With R = 0.0821 L·atm per mol·K, the gauge must be in atm, the room in L and the temperature in kelvin: n = (2.5 × 5) ÷ (0.0821 × 300) = 0.51 mol. Using 27 instead of 300, or the kilopascal R, gives an answer ten times too large or a hundred times too small.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const M = GASES[DENSE.gas].M;
-    const plate = plaqueFixture('plate', 'Tank Z', { x: 32, y: 33 }, [`Gas: carbon dioxide, ${M.toFixed(1)} g/mol`, `Gauge: ${DENSE.P} kPa`, `Temperature: ${DENSE.T} K`], { w: 52 });
-    return {
-      title: 'Gas Density',
-      prompt: 'Type how many grams of gas fill each litre of Tank Z.',
-      entry: { id: 'ans', label: 'Density', unit: 'g/L' },
-      widget,
-      table: gasTable({
-        fixtures: [plate],
-      }),
-      hints: [
-        'Read the figures from the plate, then type the result.',
-        'Find the moles in each litre first, then the mass those moles weigh.',
-        'Multiply the gauge by the molar mass, then divide by the gas constant times the kelvin temperature.'
-      ],
-      check(state) {
-        const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in g/L.' };
-        const want = densityOf();
-        if (Math.abs(v - want) / want < 0.03) return { ok: true };
-        return { ok: false, msg: v > want ? 'A litre of this gas weighs less than that.' : 'A litre of this gas weighs more than that.' };
-      },
-      reward: {
-        log: 'A litre weighs its moles times the molar mass.',
-        title: 'Gas Density',
-        body: 'Each litre holds P ÷ RT moles, so it weighs d = PM ÷ RT: (100 × 44.0) ÷ (8.31 × 300) = 1.8 g/L. At the same gauge and temperature, a heavier gas is denser.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 9 */
-  (() => {
-    const plate = plaqueFixture('plate', 'Tank W', { x: 32, y: 33 }, [`Gauge: ${THERMO.P} kPa`, `Room: ${THERMO.V} L`, `Thermometer reads: ${THERMO.read} K`, `True temperature: ${THERMO.truth} K`], { w: 52 });
-    return {
-      title: 'A Thermometer That Reads Low',
-      prompt: 'Type the percentage error in the moles worked out from the thermometer\'s reading, with a minus sign if they come out too low.',
-      entry: { id: 'ans', label: 'Error in moles', unit: '%' },
-      widget,
-      table: gasTable({
-        fixtures: [plate],
-      }),
-      hints: [
-        'Read the figures from the plate, then type the result.',
-        'Work out the moles twice, once with each temperature, and compare the two.',
-        'Percentage error is the difference between the worked figure and the true figure, divided by the true figure, times 100.'
-      ],
-      check(state) {
-        const v = entrySigned(state.table, 'ans');
-        if (!Number.isFinite(v)) return { ok: false, notYet: true, msg: 'Type the error as a percentage.' };
-        const want = thermoErrorPct();
-        if (Math.abs(v - want) <= 0.02) return { ok: true };
-        if (Math.abs(v + want) <= 0.05) return { ok: false, msg: 'The size is close, but the worked figure lies on the other side of the true one.' };
-        return { ok: false, msg: 'Compare the two worked figures, and divide the difference by the true one.' };
-      },
-      reward: {
-        log: 'A temperature that reads low overstates the moles.',
-        title: 'Percentage Error',
-        body: 'The temperature divides in n = PV ÷ RT, so reading 295 K for 300 K makes the moles come out (300 ÷ 295 − 1) × 100 = 1.7% too high. A small error in a divisor shows up as nearly the same percentage in the result.',
+        log: 'Same law, matched units.',
+        title: 'Atmospheres and Celsius',
+        body: '2.5 atm, 5.0 L and 300 K give 0.51 mol. Using 27 for the temperature would have given a number eleven times too large.',
         last: true
       }
     };
   })()
 ];
 
-/** The density of stage 8's gas in grams per litre: moles per litre, P over RT, times the molar mass. */
-export function densityOf(d = DENSE) {
-  return ((d.P / (R * d.T)) * GASES[d.gas].M);
-}
-
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Place a card in the slot.'],
-  2: ['Turn Holder 11\'s Gas in dial.'],
-  4: ['Record readings, lay the straightedge,', 'then place a card in the slot.'],
-  5: ['R = 8.31 kPa·L per mol·K.', 'Type your answer in the field at the bottom.'],
-  6: ['R = 8.31 kPa·L per mol·K.', 'Place a card in the slot.'],
-  7: ['R = 0.0821 L·atm per mol·K.', 'Type your answer in the field at the bottom.'],
-  8: ['R = 8.31 kPa·L per mol·K.', 'Type your answer in the field at the bottom.'],
-  9: ['Type your answer in the field at the bottom.']
+  2: ['Turn Cylinder B\'s Gas in dial.'],
+  3: ['Turn the dials, then place a card in the slot.'],
+  4: ['Read Tank X, then type your answer at the bottom.'],
+  5: ['Weigh the tank on the scale,', 'then place a card in the slot.'],
+  6: ['Type your answer in the field at the bottom.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -415,7 +300,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'Summary',
-      body: 'Equal volumes of all gases at identical temperature and pressure contain identical particle counts (Avogadro\'s law). Combining pressure, volume, temperature, and mole count produces the ideal gas law: PV = nRT, where R = 8.31 kPa·L/(mol·K).'
+      body: 'Equal moles of any gas fill equal volumes at the same temperature and pressure (Avogadro\'s law). Combining all gas relations gives the ideal gas law, PV = nRT, with R = 8.31 L·kPa/(mol·K) or 0.0821 L·atm/(mol·K) and temperature always in kelvin.'
     }
   ]
 };
@@ -425,28 +310,22 @@ export const DEBRIEF = {
    ------------------------------------------------------------------ */
 
 export const SOLUTIONS = [
-  [put('he', 'slot:predict')],
+  [put('co2', 'slot:predict')],
   [dial('rb', 'amount', 2)],
-  [...sort({ b: 'same', c: 'more', d: 'fewer', e: 'fewer' })],
-  [dial(RIG, 'temp', 1), dial(RIG, 'amount', 1), { run: RIG }, dial(RIG, 'temp', 3), dial(RIG, 'amount', 2), { run: RIG }, { lay: { kind: 'straightedge', through: [0, 1] } }, put('n831', 'slot:answer')],
-  [typed('ans', "1")],
-  [put('co2', 'slot:answer')],
-  [typed('ans', "0.51")],
-  [typed('ans', "1.8")],
-  [typed('ans', '1.7')]
+  [dial(RIG, 'temp', 2), { run: RIG }, dial(RIG, 'amount', 2), { run: RIG }, put('n831', 'slot:answer')],
+  [typed('ans', '1.60')],
+  [put('sealed', 'slot:scale.pan'), put('co2', 'slot:answer')],
+  [typed('ans', '0.51')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [dial('rb', 'amount', 3)],
-  [...sort({ b: 'more', c: 'more', d: 'fewer', e: 'fewer' })],
-  [dial(RIG, 'temp', 1), { run: RIG }, put('n83', 'slot:answer')],
-  [typed('ans', "10")],
-  [put('ar', 'slot:answer')],
-  [typed('ans', "5.6")],
-  [typed('ans', "0.04")],
-  [typed('ans', '-1.7')]
+  [dial(RIG, 'temp', 2), put('n0831', 'slot:answer')],
+  [typed('ans', '16')],
+  [put('sealed', 'slot:scale.pan'), put('n2', 'slot:answer')],
+  [typed('ans', '5.6')]
 ];
 
 function blankState() { return {}; }
@@ -470,4 +349,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { cylRead, tankMoles, R };
+export { cylRead };

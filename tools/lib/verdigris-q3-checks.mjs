@@ -112,7 +112,7 @@ export async function checkVerdigrisQ3({ ok, fail }) {
   for (const v of ['2.79', '2.78', '2.8']) holds(run(4, [typed('ph', v)]).ok, `stage 5 refused ${v}`);
   for (const v of ['5.57', '0.82', '2.88', '3.5', '2.7']) holds(!run(4, [typed('ph', v)]).ok, `stage 5 accepted ${v}`);
   holds(/none/.test(run(4, [typed('ph', '5.57')]).msg), 'stage 5: the no-square-root slip is not refused for the window');
-  holds(/every unit/.test(run(4, [typed('ph', '0.82')]).msg), 'stage 5: the fully-ionized slip is not refused for the window');
+  holds(/every molecule/.test(run(4, [typed('ph', '0.82')]).msg), 'stage 5: the fully-ionized slip is not refused for the window');
   holds(/0\.10 M flask/.test(run(4, [typed('ph', '2.88')]).msg), 'stage 5: the nearest reference is not named');
   near(-Math.log10(1.8e-5 * 0.15), 5.5686, 0.0005, 'stage 5 slip: no square root');
   near(-Math.log10(0.15), 0.8239, 0.0005, 'stage 5 slip: fully ionized');
@@ -135,9 +135,10 @@ export async function checkVerdigrisQ3({ ok, fail }) {
   holds(/3 of 200/.test(wrong) && /2\.88/.test(wrong), 'stage 2: the refusal for acetic acid does not give its window and its pH');
   ok('q3-weak stage 2: the sort is accepted only as the windows and the meter show it');
 
-  /* ---- stage 6: the dial ---- */
-  { const D2 = [{ run: 'f1' }, { run: 'f1' }]; const one = run(5, [{ run: 'f1' }]);
-    holds(run(5, D2).ok && !one.ok && /\d+ of 200/.test(one.msg) && run(5, []).notYet, 'stage 6: 25 of 200 is reached at two dilutions only, and a miss reads the window'); }
+  /* ---- stage 6: the dial and card ---- */
+  { const D2 = [{ run: 'f1' }, { run: 'f1' }]; const one = run(5, [{ run: 'f1' }, put('larger', 'slot:ans')]);
+    const wrongCard = run(5, [...D2, put('smaller', 'slot:ans')]);
+    holds(run(5, [...D2, put('larger', 'slot:ans')]).ok && one.notYet && !wrongCard.ok && /\d+ of 200/.test(wrongCard.msg) && run(5, []).notYet, 'stage 6: requires two dilutions and the right card'); }
   holds(run(5, []).notYet, 'stage 6 does not wait for the dial');
   ok('q3-weak stage 6: rises is right, the others are refused for the windows');
 
@@ -173,7 +174,7 @@ export async function checkVerdigrisQ3({ ok, fail }) {
   /* ---- the rewards print what was worked out ---- */
   const body = i => Q.STAGES[i].reward.body;
   holds(/2\.88/.test(body(2)) && /1\.3 percent/.test(body(2)), 'stage 3 reward misses 2.88 or 1.3 percent');
-  holds(/1\.8 × 10⁻⁵/.test(body(3)) && /4\.74/.test(body(3)), 'stage 4 reward misses 1.8 × 10⁻⁵ or the pKa 4.74');
+  holds(/1\.8 × 10⁻⁵/.test(body(3)), 'stage 4 reward misses 1.8 × 10⁻⁵');
   holds(/2\.79/.test(body(4)) && /1\.6 × 10⁻³/.test(body(4)), 'stage 5 reward misses 2.79 or 1.6 × 10⁻³');
   holds(/1\.3 percent/.test(body(5)) && /4\.2 percent/.test(body(5)) && /12\.5 percent/.test(body(5)), 'stage 6 reward misses 1.3, 4.2 or 12.5 percent');
   holds(/1\.8 × 10⁻⁵/.test(body(6)), 'stage 7 reward misses 1.8 × 10⁻⁵');

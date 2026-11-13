@@ -112,7 +112,7 @@ export async function checkBrinewireQ2({ ok, fail }) {
   holds(run(3, [dial('pick', 'value', 2)]).ok, 'stage 4 refuses the right verdict for want of a dip');
   for (const v of [1, 3, 4]) holds(!run(3, [dip('cu', 'zn', Q.CHECKS.S4_METALS), dial('pick', 'value', v)]).ok, `stage 4 accepts verdict ${v}`);
   holds(run(4, ['mg', 'zn', 'fe', 'h', 'cu', 'ag'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))).ok, 'stage 5 refuses a right place for hydrogen for want of dips');
-  holds(run(4, ['fe', 'mg', 'zn', 'h', 'ag', 'cu'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))).ok, 'stage 5 grades the order inside each side of hydrogen');
+  holds(!run(4, ['fe', 'mg', 'zn', 'h', 'ag', 'cu'].map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`))).ok, 'stage 5 refuses out-of-order metals on the same side of hydrogen');
   for (const order of [['h', 'mg', 'zn', 'fe', 'cu', 'ag'], ['mg', 'zn', 'h', 'fe', 'cu', 'ag'], ['mg', 'zn', 'fe', 'cu', 'h', 'ag']]) {
     const r = run(4, order.map((m, i) => put(m === 'h' ? 'r-h' : `s-${m}`, `rail:${i}`)));
     holds(!r.ok && !!r.msg, `stage 5 accepts hydrogen at ${order.indexOf('h')}`);

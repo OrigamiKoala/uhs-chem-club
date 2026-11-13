@@ -180,6 +180,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const flask = flaskFixture('flask', { x: 41, y: 22 });
+    flask.fixture.props.gate = { railChanged: ['ethanol', 'ether', 'h2o'] };
+    flask.fixture.props.gateMsg = 'Rank the liquids on the rail first, then settle each in the flask.';
     const pos = shelf(3);
     const cards = S2_LIQ.map((s, i) => liquidCard(idOf(s), s, SUBSTANCES[s].name.replace('diethyl ', ''), pos[i]));
     return {
@@ -194,7 +196,7 @@ export const STAGES = [
         zones: { slots: [flask.slot], rail: { ...RAIL(3, 'Lowest vapor pressure', 'Highest vapor pressure'), items: cards.map(c => c.id), start: ['ethanol', 'ether', 'h2o'] } }
       }),
       hints: [
-        'Use the flask, its "Settle" key and the rail.',
+        'Rank the liquids on the rail first, then use the flask and its "Settle" key.',
         'Compare the vapor pressure each card settled at with the attractions you measured on the second bench.',
         'Think which liquid\'s molecules leave the surface most easily.'
       ],
@@ -210,6 +212,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const flask = flaskFixture('flask', { x: 41, y: 22 });
+    flask.fixture.props.gate = { railChanged: ['ether', 'acetone', 'h2o', 'ethanol'] };
+    flask.fixture.props.gateMsg = 'Rank the samples on the rail first, then settle each in the flask.';
     const pos = shelf(4);
     const cards = S3.map((s, i) => liquidCard(s.id, s.sub, s.label, pos[i], { shown: `${s.T} °C`, T: s.T }));
     return {
@@ -224,7 +228,7 @@ export const STAGES = [
         zones: { slots: [flask.slot], rail: { ...RAIL(4, 'Lowest vapor pressure', 'Highest vapor pressure'), items: cards.map(c => c.id), start: ['ether', 'acetone', 'h2o', 'ethanol'] } }
       }),
       hints: [
-        'Use the flask, its "Settle" key and the rail.',
+        'Rank the samples on the rail first, then use the flask and its "Settle" key.',
         'Compare the vapor pressure each card settled at with the temperature printed on it.',
         'Rank the cards by the vapor pressure each one settled at, from the lowest to the highest, whatever the liquid.'
       ],
@@ -479,8 +483,8 @@ const SEALED_ALL = ['ether', 'ethanol', 'h2o'];
 
 export const SOLUTIONS = [
   [put('ether', FLASK_WELL), settle, put('equal', 'slot:answer')],
-  [...settleAll(SEALED_ALL), ...rail(VP25_ORDER.map(idOf))],
-  [...settleAll(S3.map(s => s.id)), ...rail(WARM_ORDER)],
+  [...rail(VP25_ORDER.map(idOf)), ...settleAll(SEALED_ALL), ...rail(VP25_ORDER.map(idOf))],
+  [...rail(WARM_ORDER), ...settleAll(S3.map(s => s.id)), ...rail(WARM_ORDER)],
   [put('lower', 'slot:guess')],
   [put('h2o', FLASK_WELL), dial('flask', 'outside', 3), ...heatSteps(HEATER_STEPS, [60, 70, 80, 90, 100]), typed('bp', '88')],
   [...S6.flatMap(s => [put(idOf(s), PROBE_WELL), { run: 'probe' }]), ...rail(BP_ORDER.map(idOf))],
@@ -491,8 +495,8 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [put('ether', FLASK_WELL), settle, put('more', 'slot:answer')],
-  [...settleAll(SEALED_ALL), ...rail([...VP25_ORDER].reverse().map(idOf))],
-  [...settleAll(S3.map(s => s.id)), ...rail(WARM_SLIP)],
+  [...rail([...VP25_ORDER].reverse().map(idOf)), ...settleAll(SEALED_ALL), ...rail([...VP25_ORDER].reverse().map(idOf))],
+  [...rail(WARM_SLIP), ...settleAll(S3.map(s => s.id)), ...rail(WARM_SLIP)],
   [],
   [put('h2o', FLASK_WELL), dial('flask', 'outside', 3), ...heatSteps(HEATER_STEPS, [60, 80, 100]), typed('bp', '100')],
   [...S6.flatMap(s => [put(idOf(s), PROBE_WELL), { run: 'probe' }]), ...rail(MASS_ORDER.map(idOf))],

@@ -38,6 +38,7 @@
 
 import { registerKit } from './registry.js';
 import { ATOMS_KIT, SCOPE_KINDS, symOfKind } from './atoms.js';
+import { CARDS_KIT } from './cards.js';
 import { planPour, packBin } from '../../engine/assay.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { BUILTIN_TOOLS } from '../tools.js';
@@ -309,17 +310,20 @@ const PAINTERS = { sample: paintSample, crate: paintCrate };
 function paintPiece(ctx, p, state, o) {
   const fn = PAINTERS[p.kind];
   if (fn) { fn(ctx, p, state, o); return true; }
+  if (p.kind === 'element') return CARDS_KIT.paintPiece(ctx, p, state, o);
   return ATOMS_KIT.paintPiece(ctx, p, state, o);
 }
 
 function printed(p, state) {
   if (PAINTERS[p.kind]) return String(p.label);
+  if (p.kind === 'element') return CARDS_KIT.printed(p, state);
   return ATOMS_KIT.printed(p, state);
 }
 
 function faceKey(p, state) {
   if (p.kind === 'sample') return `${p.label}|${p.props.note || ''}|${p.props.sealed ? 1 : 0}|${p.props.poured ? 1 : 0}|${(p.props.landed || []).join()}`;
   if (p.kind === 'crate') return `${p.label}|${p.props.note || ''}`;
+  if (p.kind === 'element') return CARDS_KIT.faceKey(p, state);
   return ATOMS_KIT.faceKey(p, state);
 }
 
@@ -399,6 +403,11 @@ function paintAssay(ctx, f, state, b) {
     plateText(ctx, String(bn.mass), x, beamY + 8.4 * sc + (i % 2) * 0, { size, align: 'center', weight: 700, color: PLATE_COLORS.dust });
     if (read.poured) plateText(ctx, String(read.piles[i]), x, yAt(x) - tall - 1.2 * sc, { size, align: 'center', color: PLATE_COLORS.text });
   });
+  if (read.bins.length) {
+    const rowLabelSize = Math.max(7, size - 1);
+    plateText(ctx, 'MASS', b.x0 + 2 * sc, beamY + 8.4 * sc, { size: rowLabelSize, weight: 700, color: PLATE_COLORS.dim });
+    if (read.poured) plateText(ctx, 'ATOMS', b.x0 + 2 * sc, b.y0 + 10.5 * sc, { size: rowLabelSize, weight: 700, color: PLATE_COLORS.dim });
+  }
   if (read.level) plateText(ctx, 'LEVEL', b.x0 + 2 * sc, b.y1 - 1.6 * sc, { size, weight: 700, color: PLATE_COLORS.phosphor });
 }
 
@@ -606,7 +615,8 @@ export const MASS_KIT = {
   kinds: {
     ...ATOMS_KIT.kinds,
     sample: { r: CARD_R, nojoin: true, rect: SAMPLE_RECT },
-    crate: { r: CARD_R, nojoin: true, rect: CRATE_RECT }
+    crate: { r: CARD_R, nojoin: true, rect: CRATE_RECT },
+    element: CARDS_KIT.kinds.element
   },
   planJoin,
   run,

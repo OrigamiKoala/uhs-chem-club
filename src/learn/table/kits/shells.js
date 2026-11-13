@@ -42,7 +42,7 @@ const upDown = (here, key, row, idx, spin) => placeElectron({ [key]: here }, row
 
 function planJoin(a, b, state) {
   const refuse = reason => ({ holds: false, home: true, reason });
-  if (b.kind !== 'box') return refuse('That goes on the rack.');
+  if (b.kind !== 'box') return refuse('That goes on an orbital of the diagram.');
   const { row, idx } = b.props;
   const key = boxKey(row, idx);
   const here = arrowsOf(state, b);
@@ -51,17 +51,17 @@ function planJoin(a, b, state) {
   if (a.kind === 'up' || a.kind === 'down') {
     const r = upDown(here, key, row, idx, a.kind === 'up' ? 'u' : 'd');
     if (r.refused) return refuse(r.refused);
-    return { holds: true, once: true, set: written(r.rack), reason: 'An electron went into the box.' };
+    return { holds: true, once: true, set: written(r.rack), reason: 'An electron went into the orbital.' };
   }
   if (a.kind === 'lift') {
     const pre = b.props.pre || '';
     if (pre && here.length <= pre.length) return refuse('That electron is fixed in place on this stage.');
     const r = removeElectron({ [key]: here }, row, idx);
     if (r.refused) return refuse(r.refused);
-    return { holds: true, once: true, set: written(r.rack), reason: 'An electron came out of the box.' };
+    return { holds: true, once: true, set: written(r.rack), reason: 'An electron came out of the orbital.' };
   }
   if (a.kind === 'etok') {
-    if (a.props.placed) return { holds: true, once: true, set: { a: { placed: false } }, reason: 'The electron came back off the rack.' };
+    if (a.props.placed) return { holds: true, once: true, set: { a: { placed: false } }, reason: 'The electron came back off the diagram.' };
     const addr = addressOfToken(a);
     const why = whyNoRoom(addr);
     if (why) return refuse(why);
@@ -71,7 +71,7 @@ function planJoin(a, b, state) {
     const spin = addr.ms > 0 ? 'up' : 'down';
     return { holds: true, once: true, set: { a: { placed: true } }, reason: `The electron stands in its orbital, pointing ${spin}.` };
   }
-  return refuse('That goes on the rack.');
+  return refuse('That goes on an orbital of the diagram.');
 }
 
 function run(state, fixtureId) {
@@ -79,7 +79,7 @@ function run(state, fixtureId) {
   if (!f || f.noRun) return null;
   if (f.kind === 'well') {
     const r = readOf(state, f.props.rack || 'rack');
-    if (r.total === 0) return { noop: 'Place electrons on the rack first.' };
+    if (r.total === 0) return { noop: 'Place electrons in the orbitals first.' };
     let val = 1; // ground state
     if (!r.laddered) val = 2; // excited (electrons can fall)
     else if (!r.ruleHolds) val = 3; // Hund's rule violation
@@ -150,7 +150,7 @@ export function shellsTable(spec, { w = 150 } = {}) {
  * strip that lights boxes here; `show` prints the row labels as numbers (`{n, l, ml, ms}`), `reach` the distance each row's cloud
  * reaches; `core` names the switch that folds the closed core away.
  */
-export function shelf(rackId, rows, at, { pre = null, locked = false, target = null, finder = null, show = null, reach = false, readout = true, core = null, labels = true } = {}) {
+export function shelf(rackId, rows, at, { pre = null, locked = false, target = null, finder = null, show = null, reach = false, readout = true, core = null, labels = true, verdict = true } = {}) {
   const n = rows.length;
   const pitch = n >= 7 ? 6.2 : n >= 5 ? 8 : 12;
   const maxBoxes = Math.max(...rows.map(r => boxesOf(rowOf(r).l)));
@@ -168,7 +168,7 @@ export function shelf(rackId, rows, at, { pre = null, locked = false, target = n
       const key = boxKey(id, k);
       const have = pre?.[key] || '';
       boxes.push({
-        id: boxPieceId(rackId, id, k), kind: 'box', label: 'Box', fixed: true,
+        id: boxPieceId(rackId, id, k), kind: 'box', label: 'Orbital', fixed: true,
         at: { x: Math.round((cx + (k - (count - 1) / 2) * BOX_PITCH_X) * 10) / 10, y: Math.round(y * 10) / 10 },
         props: {
           rack: rackId, row: id, idx: k,
@@ -183,7 +183,7 @@ export function shelf(rackId, rows, at, { pre = null, locked = false, target = n
   return {
     fixture: {
       id: `shelf-${rackId}`, kind: 'shelf', label: ' ', at: { ...at }, size: { w, h }, noRun: true, dials: {},
-      props: { backdrop: true, rack: rackId, rows, ...(show ? { show } : {}), ...(finder ? { finder } : {}), ...(target ? { target } : {}), ...(reach ? { reach: true } : {}), ...(core ? { core } : {}), readout, labels }
+      props: { backdrop: true, rack: rackId, rows, ...(show ? { show } : {}), ...(finder ? { finder } : {}), ...(target ? { target } : {}), ...(reach ? { reach: true } : {}), ...(core ? { core } : {}), readout, labels, ...(verdict ? {} : { verdict: false }) }
     },
     boxes,
     size: { w, h }
@@ -249,7 +249,7 @@ export function addressStrip(id, at, { fields = ['n', 'l', 'ml', 'ms'], show = f
 }
 
 /** The Energy Well: checks whether electrons are in ground state or if any can fall to lower rungs. */
-export function energyWell(id, at, { rack = 'rack', size = { w: 34, h: 36 }, label = 'Energy Well', runLabel = 'Test Energy' } = {}) {
+export function energyWell(id, at, { rack = 'rack', size = { w: 34, h: 36 }, label = 'Energy test', runLabel = 'Test Energy' } = {}) {
   return {
     id, kind: 'well', label, at: { ...at }, size, runLabel,
     dials: { state: { min: 0, max: 3, step: 1, value: 0 } },

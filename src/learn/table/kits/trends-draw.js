@@ -10,7 +10,7 @@
  */
 
 import { PLATE_COLORS } from '../../engine/plates.js';
-import { itemOf, springRead, sizeRead, stripRead, gainRead } from './trends-read.js';
+import { itemOf, springRead, sizeRead, stripRead, gainRead, zOf, nameOf } from './trends-read.js';
 
 const AMBER = PLATE_COLORS.amber;
 const PHOS = PLATE_COLORS.phosphor;
@@ -46,35 +46,52 @@ function slab(ctx, o, hw, hh, tone = '#2a2620') {
   return { x0, y0, w, h };
 }
 
+/** The radius every card is drawn at when a stage asks which atom is bigger (`props.plain`): the picture then shows charges and shells, not size. */
+const PLAIN_PM = 150;
+
+/**
+ * An atom card: the model the whole bench reasons from. The nucleus is the solid disc at the middle; the INNER shells are a dim band round it
+ * with their electrons dim; the OUTER shell's electrons are bright. Under the picture are the two counts the outer electron's attraction
+ * depends on: the charge of the nucleus and the number of inner electrons. Drawn to scale unless `props.plain`.
+ */
 function paintAtom(ctx, p, state, o) {
   const { hw, hh } = RECTS.atom;
   const box = slab(ctx, o, hw, hh);
   const item = itemOf(p);
   const k = PM_UNITS * o.sc;
   const cx = o.x;
-  const cy = o.y + 1.2 * o.sc;
-  const R = (item.radius ?? 100) * k;
+  const cy = o.y - 0.2 * o.sc;
+  const R = (p.props.plain ? PLAIN_PM : (item.radius ?? 100)) * k;
+  const n = item.shells.length;
+  const inner = item.shells.slice(0, n - 1).reduce((a, c) => a + c, 0);
   ctx.fillStyle = '#16140f';
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = item.radius == null ? DIM : DUST;
-  ctx.setLineDash?.(item.radius == null ? [3, 2] : []);
+  // The inner shells, as one band between the nucleus and the outer shell.
+  if (n > 1) {
+    ctx.fillStyle = 'rgba(184, 175, 160, 0.14)';
+    ctx.beginPath(); ctx.arc(cx, cy, R * (n - 1) / n + R * 0.08, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.strokeStyle = !p.props.plain && item.radius == null ? DIM : DUST;
+  ctx.setLineDash?.(!p.props.plain && item.radius == null ? [3, 2] : []);
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
   ctx.setLineDash?.([]);
-  const n = item.shells.length;
   item.shells.forEach((cnt, i) => {
     const r = R * (i + 1) / n;
-    if (i < n - 1) { ctx.strokeStyle = RIM; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }
-    ctx.fillStyle = PHOS;
+    const outer = i === n - 1;
+    if (!outer) { ctx.strokeStyle = RIM; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.fillStyle = outer ? PHOS : DIM;
     for (let e = 0; e < cnt; e++) {
       const a = (e / Math.max(cnt, 1)) * Math.PI * 2 + i * 0.6;
-      ctx.beginPath(); ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), Math.max(1, 0.34 * o.sc), 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), Math.max(1, (outer ? 0.36 : 0.28) * o.sc), 0, Math.PI * 2); ctx.fill();
     }
   });
-  ctx.fillStyle = STEEL;
+  ctx.fillStyle = AMBER;
   ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.4, 0.5 * o.sc), 0, Math.PI * 2); ctx.fill();
+  const small = Math.max(6, 1.6 * o.sc);
   say(ctx, p.label, o.x - box.w / 2 + 0.7 * o.sc, box.y0 + 1.7 * o.sc, Math.max(6.5, 1.9 * o.sc), { weight: 700, maxW: box.w - 3.5 * o.sc });
-  if (item.charge) say(ctx, item.charge > 0 ? `+${item.charge}` : String(item.charge), box.x0 + box.w - 0.8 * o.sc, box.y0 + 1.7 * o.sc, Math.max(6.5, 1.9 * o.sc), { align: 'right', weight: 700, color: AMBER });
-  if (p.props.lastCost != null) say(ctx, String(p.props.lastCost), box.x0 + box.w - 0.8 * o.sc, box.y0 + box.h - 1.5 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'right', color: DUST });
+  if (item.charge) say(ctx, item.charge > 0 ? `+${item.charge}` : `−${Math.abs(item.charge)}`, box.x0 + box.w - 0.8 * o.sc, box.y0 + 1.7 * o.sc, Math.max(6.5, 1.9 * o.sc), { align: 'right', weight: 700, color: AMBER });
+  say(ctx, `NUCLEUS +${item.z}`, box.x0 + 0.7 * o.sc, box.y0 + box.h - 3.3 * o.sc, small, { color: AMBER, maxW: box.w - 1.4 * o.sc });
+  say(ctx, `INNER e⁻ ${inner}`, box.x0 + 0.7 * o.sc, box.y0 + box.h - 1.4 * o.sc, small, { color: DUST, maxW: box.w - 1.4 * o.sc });
 }
 
 function paintElectron(ctx, p, state, o) {
@@ -90,7 +107,7 @@ export function paintPiece(ctx, p, state, o) {
 }
 
 export function faceKey(p, state) {
-  return `${p.label}|${p.props.charge || 0}|${p.props.lastCost ?? ''}`;
+  return `${p.label}|${p.props.charge || 0}|${p.props.plain ? 1 : 0}`;
 }
 
 /* ------------------------------------------------------------------
@@ -104,20 +121,52 @@ const frameOf = b => ({
   size: (k, min = 7) => Math.max(min, k * b.sc)
 });
 
+/** What the electron the dial names is attracted by: the nucleus's charge, the electrons between it and the nucleus, and (when shown) what is left. */
 function paintSpring(ctx, f, state, b) {
   const F = frameOf(b);
   const r = springRead(state, f.id);
   const show = f.props.show || {};
   const x = 23;
   let y = 14.6;
-  const line = (text, color = DUST, weight = 500) => { say(ctx, text, F.x(x), F.y(y), F.size(2.6, 7), { color, weight, maxW: F.len(f.size.w - x - 2) }); y += 3.5; };
+  const line = (text, color = DUST, weight = 500) => { say(ctx, text, F.x(x), F.y(y), F.size(2.6, 7), { color, weight, maxW: F.len(f.size.w - x - 2) }); y += 3.8; };
   if (!r.piece) { line('NO ATOM IN THE HOLDER', DIM); return; }
-  if (r.pull == null) { line('THE BENCH HAS NO SIZE FOR THIS ION', AMBER); return; }
-  line(`PULL ${r.pull.toFixed(2)}`, PHOS, 700);
-  line(`CORE CHARGE +${r.z}`);
-  line(`DISTANCE ${r.distPm} pm`);
-  if (show.between) line(`ELECTRONS BETWEEN ${r.between}`);
-  if (show.feel) line(`${f.props.feelWord || 'CHARGE IT FEELS'} +${r.zeff}`, AMBER);
+  if (r.pull == null) { line('NO MEASURED SIZE FOR THIS ION', AMBER); return; }
+  line(`NUCLEUS +${r.z}`, AMBER, 700);
+  line(`ELECTRONS BETWEEN ${r.between}`);
+  if (show.feel) line(`${f.props.feelWord || 'CHARGE FELT'} +${r.zeff}`, PHOS, 700);
+  if (show.dist) line(`DISTANCE ${r.distPm} pm`);
+}
+
+/** Subshell rows for each atom, lowest at the bottom, electrons as arrows; the outermost electron (the one a remover takes) is amber. */
+const LEVEL_ROWS = [['1s', 1], ['2s', 1], ['2p', 3]];
+function paintLevels(ctx, f, state, b) {
+  const F = frameOf(b);
+  const atoms = f.props.atoms || [];
+  const colW = (f.size.w - 4) / Math.max(1, atoms.length);
+  atoms.forEach((sym, ai) => {
+    const x0 = 2 + ai * colW;
+    let left = zOf(sym);
+    const fills = LEVEL_ROWS.map(([, boxes]) => { const take = Math.min(left, boxes * 2); left -= take; return take; });
+    const last = fills.reduce((m, cnt, i) => (cnt > 0 ? i : m), 0);
+    say(ctx, nameOf(sym).toUpperCase(), F.x(x0 + colW / 2), F.y(7.6), F.size(2.3, 6.5), { align: 'center', color: DUST, weight: 700, maxW: F.len(colW - 1) });
+    LEVEL_ROWS.forEach(([id, boxes], ri) => {
+      const y = f.size.h - 5 - ri * 7.2 - (ri === 2 ? 1.6 : 0);
+      say(ctx, id, F.x(x0 + 1), F.y(y), F.size(2.2, 6), { color: DIM });
+      for (let k = 0; k < boxes; k++) {
+        const bx = x0 + 7 + k * 5.2;
+        ctx.strokeStyle = STEEL;
+        ctx.strokeRect(F.x(bx), F.y(y - 2.2), F.len(4.4), F.len(4.4));
+        // Singly across the row first, then pairing: the order the electrons go in.
+        const cnt = fills[ri];
+        const here = (cnt > k ? 1 : 0) + (cnt > boxes + k ? 1 : 0);
+        for (let e = 0; e < here; e++) {
+          const isLast = ri === last && ((cnt <= boxes && k === cnt - 1) || (cnt > boxes && e === 1 && k === cnt - boxes - 1) || (cnt === boxes * 2 && e === 1 && k === boxes - 1));
+          say(ctx, e === 0 ? '↑' : '↓', F.x(bx + 1.3 + e * 1.8), F.y(y), F.size(3, 7), { align: 'center', color: isLast ? AMBER : DUST, weight: 700 });
+        }
+      }
+    });
+  });
+  say(ctx, 'ENERGY ↑', F.x(f.size.w - 1.5), F.y(f.size.h - 2), F.size(2, 6), { align: 'right', color: DIM });
 }
 
 function paintSizer(ctx, f, state, b) {
@@ -127,7 +176,7 @@ function paintSizer(ctx, f, state, b) {
   const w = f.size.w - x0 - 2;
   if (!r.piece) { say(ctx, 'NO ATOM IN THE HOLDER', F.x(x0), F.y(13), F.size(2.6, 7), { color: DIM, maxW: F.len(w) }); return; }
   if (f.props.measure && !r.measured) { say(ctx, 'NOT MEASURED YET', F.x(x0), F.y(13), F.size(2.6, 7), { color: DIM, maxW: F.len(w) }); return; }
-  if (r.radius == null) { say(ctx, 'THE BENCH HAS NO SIZE FOR THIS ION', F.x(x0), F.y(13), F.size(2.4, 6), { color: AMBER, maxW: F.len(w) }); return; }
+  if (r.radius == null) { say(ctx, 'NO MEASURED SIZE FOR THIS ION', F.x(x0), F.y(13), F.size(2.4, 6), { color: AMBER, maxW: F.len(w) }); return; }
   say(ctx, `RADIUS ${r.radius} pm`, F.x(x0), F.y(11.4), F.size(2.8, 7), { color: PHOS, weight: 700, maxW: F.len(w) });
   // A scale of picometres with the radius laid along it.
   const sc = w / 250;
@@ -144,8 +193,8 @@ function paintStrip(ctx, f, state, b) {
   const r = stripRead(state, f.id);
   const x = 22;
   if (!r.piece) { say(ctx, 'NO ATOM IN THE HOLDER', F.x(x), F.y(12), F.size(2.6, 7), { color: DIM, maxW: F.len(f.size.w - x - 2) }); return; }
-  say(ctx, `${Math.max(0, r.charge)} ELECTRONS TAKEN OFF`, F.x(x), F.y(11.6), F.size(2.6, 7), { color: DUST, maxW: F.len(f.size.w - x - 2) });
-  say(ctx, r.last != null ? `REQUIRED ${r.last} kJ/mol` : 'NOTHING REMOVED YET', F.x(x), F.y(15.4), F.size(2.6, 7), { color: r.last != null ? PHOS : DIM, weight: 700, maxW: F.len(f.size.w - x - 2) });
+  say(ctx, `ELECTRONS REMOVED ${Math.max(0, r.charge)}`, F.x(x), F.y(11.6), F.size(2.6, 7), { color: DUST, maxW: F.len(f.size.w - x - 2) });
+  say(ctx, r.last != null ? `ENERGY NEEDED ${r.last} kJ/mol` : 'NOTHING REMOVED YET', F.x(x), F.y(15.4), F.size(2.6, 7), { color: r.last != null ? PHOS : DIM, weight: 700, maxW: F.len(f.size.w - x - 2) });
 }
 
 function paintGain(ctx, f, state, b) {
@@ -169,4 +218,5 @@ export function paintFixture(ctx, f, state, b) {
   else if (f.kind === 'sizer') paintSizer(ctx, f, state, b);
   else if (f.kind === 'strip') paintStrip(ctx, f, state, b);
   else if (f.kind === 'gain') paintGain(ctx, f, state, b);
+  else if (f.kind === 'levels') paintLevels(ctx, f, state, b);
 }

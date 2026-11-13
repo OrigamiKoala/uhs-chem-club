@@ -41,7 +41,7 @@ export async function checkVerdigrisQ5({ ok, fail }) {
 
   const run = (i, script) => Q.STAGES[i].check(Q.stateFor(i, script));
   const LEAK = /weak|strong|hydroly|react|\bKb\b|\bKa\b|conjugate|rule|because/i;
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     holds(run(i, Q.SOLUTIONS[i]).ok, `stage ${i + 1}: the scripted solution is refused`);
     const m = run(i, Q.MISSES[i]);
     holds(!m.ok && m.msg, `stage ${i + 1}: the scripted miss is accepted or has no reason`);

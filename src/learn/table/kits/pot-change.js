@@ -127,7 +127,7 @@ const WINDOW_H = 26;
  * `unit` is the moles one disc stands for (the change's own when omitted). Returns the fixture, its seat slot and its size.
  */
 export function changePotFixture(id, at, o = {}) {
-  const { caseId = null, seat = !caseId, lid = 'open', amounts = null, unit = null, title = 'Pot', runLabel = 'Run', w = 76 } = o;
+  const { caseId = null, seat = !caseId, lid = 'open', amounts = null, unit = null, title = 'Reaction vessel', runLabel = 'Run', w = 76 } = o;
   const dials = {};
   const lidDial = lid === 'dial';
   if (lidDial) dials.lid = { min: 1, max: 2, step: 1, value: 1, label: 'Lid', labels: ['Open', 'Sealed'] };
@@ -237,7 +237,7 @@ function paintPotScale(ctx, f, state, b) {
   };
   line('BEFORE', r.before, 8.2);
   line('AFTER', r.after, 13);
-  say(ctx, 'pot weight left out', F.x(w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
+  say(ctx, 'vessel mass left out', F.x(w / 2), F.y(f.size.h - 2.2), F.size(1.8, 5.6), { align: 'center', color: DIM });
 }
 
 registerFixture('potscale', { paint: paintPotScale });
@@ -249,7 +249,7 @@ registerFixture('potscale', { paint: paintPotScale });
 export const LAMPS = Object.freeze([['gas', 'Gas given off'], ['colour', 'New colour'], ['solid', 'Solid forms'], ['temp', 'Temperature change']]);
 
 /** Four lamps that light from what the pot `of` did. */
-export function evidenceFixture(id, of, at, { title = 'Lamps', w = 40, grid = false } = {}) {
+export function evidenceFixture(id, of, at, { title = 'Signs of a reaction', w = 40, grid = false } = {}) {
   const size = grid ? { w: 66, h: 21 } : { w, h: 33 };
   return { id, kind: 'evidence', label: title, at: { ...at }, size, dials: {}, noRun: true, props: { of, grid } };
 }
@@ -280,20 +280,20 @@ registerFixture('evidence', { paint: paintEvidence });
 const POT_TEXT = f => {
   const p = f.props;
   const bits = [];
-  if (p.seat) bits.push('Drag a sample jar into the seat at the top left. What is in the jar is what the pot is asked to change.');
-  else if (p.caseId) bits.push(`The pot holds ${CASES[p.caseId].name.toLowerCase()}.`);
-  if (p.lidDial) bits.push('The "Lid" dial either leaves the pot open to the air or seals it shut.');
-  else if (p.lid === 'sealed') bits.push('This pot is sealed shut.');
-  if (p.amounts) bits.push(`The "${p.amounts.label}" dial sets how much goes in the pot.`);
+  if (p.seat) bits.push('Drag a sample jar into the seat at the top left. What is in the jar goes into the reaction vessel.');
+  else if (p.caseId) bits.push(`The vessel holds ${CASES[p.caseId].name.toLowerCase()}.`);
+  if (p.lidDial) bits.push('The "Lid" dial either leaves the vessel open to the air or seals it shut.');
+  else if (p.lid === 'sealed') bits.push('This vessel is sealed shut.');
+  if (p.amounts) bits.push(`The "${p.amounts.label}" dial sets how much goes in the vessel.`);
   bits.push(`Press "${f.runLabel || 'Run'}" to make the change happen.`);
-  bits.push('The window shows what is in the pot before on the left and after on the right, one disc for each amount it says. A grey row marked "out" is something that left the pot.');
+  bits.push('The particle view shows what is in the vessel before on the left and after on the right, one circle for each amount it says. A grey row marked "out" is something that left the vessel.');
   return bits.join(' ');
 };
 
 addTourText({
-  'pot:changepot': { title: 'Pot', dials: false, text: POT_TEXT },
-  'pot:potscale': { title: 'Balance', text: 'The balance weighs everything in the pot and leaves out the weight of the pot itself. The first line is the weight before you press the pot\'s key and the second is the weight after it.' },
-  'pot:evidence': { title: 'Lamps', text: 'There are four lamps, one for each thing you might notice in a pot. After you press the pot\'s key, a lamp lights if the pot did what it names, and stays dark if it did not.' }
+  'pot:changepot': { title: 'Reaction vessel', dials: false, text: POT_TEXT },
+  'pot:potscale': { title: 'Balance', text: 'The balance measures the mass of everything in the vessel and leaves out the mass of the vessel itself. The first line is the mass before you press Run and the second is the mass after it.' },
+  'pot:evidence': { title: 'Signs of a reaction', text: 'There are four signs, one for each thing you might notice in the vessel. After you press Run, a sign lights if the vessel did what it names, and stays dark if it did not.' }
 }, {
-  cjar: ['Sample jars', 'Each jar holds something to try. Drag a jar into the seat on the pot, or tap it and then tap the seat. A jar named with a letter keeps what it holds off its face.']
+  cjar: ['Sample jars', 'Each jar holds something to try. Drag a jar into the seat on the vessel, or tap it and then tap the seat.']
 });

@@ -291,7 +291,10 @@ export const STAGES = [
     return {
       id: 's6-colligative',
       title: 'A Salted Flask',
-      briefing: 'Dissolved particles raise the boiling point of water. Each mole of particles in a kilogram of water raises it by 0.51 °C, whatever the particles are.',
+      briefing: {
+        speaker: 'Vess',
+        body: 'Dissolved particles raise water\'s boiling point. As a dilute-solution rule of thumb, each mole of particles per kilogram of water raises it by 0.51 °C.'
+      },
       prompt: 'How many degrees above 100 °C does water boil with 3.00 mol of CaCl₂ in 2.00 kg?',
       entry: { id: 'rise', label: 'Rise in boiling point', unit: '°C' },
       widget,
@@ -299,7 +302,7 @@ export const STAGES = [
       hints: [
         'Use a card, the "Dissolved" dial and the "Boil" key, then the answer field.',
         'Compare the rise for sugar and for salt at the same amount, and count the particles drawn on each card.',
-        'Work out the moles dissolved in each kilogram of water and the particles one formula unit makes, then scale the rise up.'
+        'Count how many particles each formula unit breaks into, and scale the rise for the mass of water.'
       ],
       check(state) {
         const t = state.table;

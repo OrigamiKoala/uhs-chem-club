@@ -200,11 +200,14 @@ export const STAGES = [
   {
     id: 's5-equation',
     title: 'ΔH and Its Equation',
-    briefing: { speaker: SPEAKER, body: 'When ΔH is written beside an equation, it is the heat for the numbers of moles shown in that equation. If twice as many moles react, twice the heat is given out.' },
+    briefing: { speaker: SPEAKER, body: 'When ΔH is written beside an equation, it is the heat for the numbers of moles shown in that equation, where (g) marks a gas and (l) a liquid. If twice as many moles react, twice the heat is given out.' },
     prompt: 'How much heat is given out when 6.0 g of hydrogen burns?',
     entry: { id: 'kj', label: 'Heat given out', unit: 'kJ' },
     widget,
     table: heatTable({
+      pieces: [
+        charge('h2-sample', 'Hydrogen sample', { x: 30, y: 50 }, { moles: 3, dH: EQN_DH / 2, shown: '6.0 g H₂' })
+      ],
       fixtures: [
         plaqueFixture('eq', 'Burning hydrogen', { x: 52, y: 24 }, [
           '2 H₂(g) + O₂(g) → 2 H₂O(l)',
@@ -266,15 +269,22 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, ten grams of each fuel is burned under the same tank of water.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for the four fuels is recorded. Test it on the bench.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const c = cupFixture('cup', { x: 28, y: 31 }, { title: 'Water tank · 5000 g', water: TANK, T0: 20 });
+    const c = cupFixture('cup', { x: 28, y: 31 }, {
+      title: 'Water tank · 5000 g',
+      water: TANK,
+      T0: 20,
+      hideUntilCommit: true,
+      hideRiseUntilCommit: true,
+      gate: { railChanged: ['methane', 'hydrogen', 'methanol', 'carbon'] }
+    });
     const tin = (id, at) => ({ ...charge(id, `${FUELS[id].name[0].toUpperCase()}${FUELS[id].name.slice(1)}`, at, { moles: molesOf(id), dH: FUELS[id].dHc, shown: `${GRAMS} g = ${Number(molesOf(id).toPrecision(2))} mol` }) });
     return {
       id: 's4-rank',

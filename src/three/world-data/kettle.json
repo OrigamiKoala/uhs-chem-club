@@ -43,25 +43,11 @@
       "pts": [
         [
           0,
-          94
+          78
         ],
         [
           0,
           -43
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-1",
-      "width": 2.4,
-      "pts": [
-        [
-          0,
-          60
-        ],
-        [
-          -37.4,
-          60
         ]
       ]
     },
@@ -650,7 +636,7 @@
       "pos": [
         -2.8,
         0,
-        88
+        72
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -660,7 +646,7 @@
       "pos": [
         2.8,
         0,
-        78
+        62
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -670,7 +656,7 @@
       "pos": [
         -2.8,
         0,
-        68
+        52
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -680,7 +666,7 @@
       "pos": [
         2.8,
         0,
-        58
+        42
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -690,7 +676,7 @@
       "pos": [
         -2.8,
         0,
-        48
+        32
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -700,7 +686,7 @@
       "pos": [
         2.8,
         0,
-        38
+        22
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -710,7 +696,7 @@
       "pos": [
         -2.8,
         0,
-        28
+        12
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -720,7 +706,7 @@
       "pos": [
         2.8,
         0,
-        18
+        2
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -730,7 +716,7 @@
       "pos": [
         -2.8,
         0,
-        8
+        -8
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -740,7 +726,7 @@
       "pos": [
         2.8,
         0,
-        -2
+        -18
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -750,7 +736,7 @@
       "pos": [
         -2.8,
         0,
-        -12
+        -28
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -760,7 +746,7 @@
       "pos": [
         2.8,
         0,
-        -22
+        -38
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -770,47 +756,7 @@
       "pos": [
         -2.8,
         0,
-        -32
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        2.8,
-        0,
-        -42
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -12,
-        0,
-        58.1
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -23,
-        0,
-        61.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -34,
-        0,
-        58.1
+        -48
       ],
       "radius": 0.6,
       "minTier": "T3"
@@ -1088,32 +1034,9 @@
   ],
   "sites": [
     {
-      "id": "site-1",
-      "questId": "q1-recipe",
-      "stage": 1,
-      "pos": [
-        -42,
-        0,
-        60
-      ],
-      "approachPos": [
-        -37.4,
-        1.6,
-        60
-      ],
-      "label": "Bench 1 - The Same Recipe",
-      "structure": "assay-yard",
-      "built": true,
-      "flat": {
-        "x": -43.3,
-        "z": 59.75,
-        "r": 10.88
-      }
-    },
-    {
       "id": "site-2",
       "questId": "q2-names",
-      "stage": 2,
+      "stage": 1,
       "pos": [
         42,
         0,
@@ -1124,7 +1047,7 @@
         1.6,
         46
       ],
-      "label": "Bench 2 - Names and Formulas",
+      "label": "Bench 1 - Names and Formulas",
       "structure": "labelling-shed",
       "built": true,
       "flat": {
@@ -1136,7 +1059,7 @@
     {
       "id": "site-3",
       "questId": "q3-change",
-      "stage": 3,
+      "stage": 2,
       "pos": [
         -42,
         0,
@@ -1147,7 +1070,7 @@
         1.6,
         30
       ],
-      "label": "Bench 3 - Physical or Chemical",
+      "label": "Bench 2 - Physical or Chemical",
       "structure": "charging-pot",
       "built": true,
       "flat": {
@@ -1159,7 +1082,7 @@
     {
       "id": "site-4",
       "questId": "q4-balance",
-      "stage": 4,
+      "stage": 3,
       "pos": [
         42,
         0,
@@ -1170,7 +1093,7 @@
         1.6,
         14
       ],
-      "label": "Bench 4 - Balancing Equations",
+      "label": "Bench 3 - Balancing Equations",
       "structure": "control-room",
       "built": true,
       "flat": {
@@ -1182,7 +1105,7 @@
     {
       "id": "site-5",
       "questId": "q5-ionic",
-      "stage": 5,
+      "stage": 4,
       "pos": [
         -42,
         0,
@@ -1193,7 +1116,7 @@
         1.6,
         0
       ],
-      "label": "Bench 5 - Net Ionic Equations",
+      "label": "Bench 4 - Net Ionic Equations",
       "structure": "effluent-sump",
       "built": true,
       "flat": {
@@ -1205,7 +1128,7 @@
     {
       "id": "site-6",
       "questId": "q6-stoich",
-      "stage": 6,
+      "stage": 5,
       "pos": [
         42,
         0,
@@ -1216,7 +1139,7 @@
         1.6,
         -16
       ],
-      "label": "Bench 6 - What Is Made",
+      "label": "Bench 5 - What Is Made",
       "structure": "charge-floor",
       "built": true,
       "flat": {
@@ -1228,7 +1151,7 @@
     {
       "id": "site-7",
       "questId": "q7-titrate",
-      "stage": 7,
+      "stage": 6,
       "pos": [
         -42,
         0,
@@ -1239,7 +1162,7 @@
         1.6,
         -32
       ],
-      "label": "Bench 7 - Titration",
+      "label": "Bench 6 - Titration",
       "structure": "pickling-line",
       "built": true,
       "flat": {
@@ -1251,7 +1174,7 @@
     {
       "id": "site-8",
       "questId": "q8-kinds",
-      "stage": 8,
+      "stage": 7,
       "pos": [
         42,
         0,
@@ -1262,7 +1185,7 @@
         1.6,
         -40
       ],
-      "label": "Bench 8 - Kinds of Reaction",
+      "label": "Bench 7 - Kinds of Reaction",
       "structure": "tapping-floor",
       "built": true,
       "flat": {
@@ -1274,7 +1197,7 @@
     {
       "id": "site-9",
       "questId": "q9-hsab",
-      "stage": 9,
+      "stage": 8,
       "pos": [
         -42,
         0,
@@ -1285,7 +1208,7 @@
         1.6,
         -48
       ],
-      "label": "Bench 9 - Hard and Soft",
+      "label": "Bench 8 - Hard and Soft",
       "structure": "refining-vat",
       "built": true,
       "flat": {
@@ -1299,7 +1222,7 @@
     "pos": [
       0,
       1.6,
-      92
+      76
     ],
     "lookAt": [
       0,
@@ -1309,18 +1232,6 @@
   },
   "t2": {
     "stillCamera": {
-      "site-1": {
-        "pos": [
-          -37.4,
-          1.6,
-          60
-        ],
-        "lookAt": [
-          -42,
-          1.2,
-          60
-        ]
-      },
       "site-2": {
         "pos": [
           37.4,
@@ -1421,7 +1332,6 @@
   },
   "t1": {
     "siteOrder": [
-      "site-1",
       "site-2",
       "site-3",
       "site-4",

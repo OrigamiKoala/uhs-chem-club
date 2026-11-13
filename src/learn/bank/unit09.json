@@ -24,7 +24,7 @@
         }
       ],
       "answer": "b",
-      "explanation": "NH₃ takes a proton from water and becomes NH₄⁺. The conjugate acid of a base is the base plus one proton."
+      "explanation": "NH₃ accepts a proton from water and becomes NH₄⁺. The conjugate acid of a base is the base plus one proton."
     },
     {
       "id": "q2-scale#e1",
@@ -351,11 +351,11 @@
           "options": [
             {
               "id": "a",
-              "label": "Acted as a base by taking a proton from water"
+              "label": "Acted as a base by accepting a proton from water"
             },
             {
               "id": "b",
-              "label": "Acted as an acid by giving a proton to water"
+              "label": "Acted as an acid by donating a proton to water"
             },
             {
               "id": "c",
@@ -367,12 +367,12 @@
             }
           ],
           "answer": "a",
-          "explanation": "The NH₃ gained a hydrogen ion from a water molecule, which left the OH⁻ behind. A base is a proton taker; it does not need OH in its formula."
+          "explanation": "The NH₃ accepted a proton from a water molecule, which left the OH⁻ behind. A base is a proton acceptor; it does not need OH in its formula."
         },
         {
           "id": "q1-handover#b2",
           "quest": "q1-handover",
-          "question": "HCO₃⁻ gives a proton to OH⁻. Which substance is left as its conjugate base?",
+          "question": "HCO₃⁻ donates a proton to OH⁻. Which substance is left as its conjugate base?",
           "options": [
             {
               "id": "a",

@@ -52,6 +52,9 @@ export default async function check(q7, { TABLE, near, same, holds, rig }) {
     same(b.sym, 'O', 'unit02/q7-pes stage 3 (the build)');
     holds(b.whole, 'unit02/q7-pes stage 3: the graded build is no whole atom');
     holds(PES.sameSpectrum(b.peaks, EL.planPES('O')) && JSON.stringify(PES.pilesOf(b.peaks)) === JSON.stringify(PES.chamberRead(t, 'ch').piles), 'unit02/q7-pes stage 3: the build\'s outlines are not the sealed piles');
+    holds(!start(2).fixtures.ch.props.model, 'unit02/q7-pes stage 3: the built atom is drawn over the strip, so the stage is passed by turning dials until outlines cover peaks');
+    const unfired = TABLE.runScript(start(2), q7.SOLUTIONS[2].slice(1), { strict: true });
+    holds(q7.STAGES[2].check({ table: unfired }).ok === false, 'unit02/q7-pes stage 3: passes without the spectrum recorded');
     for (const [p, e] of [[8, 7], [7, 7], [9, 9]]) {
       const w = PES.buildRead(TABLE.runScript(start(2), [{ setDial: { fixture: 'build', dial: 'protons', value: p } }, { setDial: { fixture: 'build', dial: 'electrons', value: e } }]), 'build');
       holds(!(w.whole && w.sym === 'O'), `unit02/q7-pes stage 3: ${p} protons and ${e} electrons already pass`);

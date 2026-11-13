@@ -77,7 +77,7 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'Each phase reviews a bench from this world. Three mistakes reset the encounter.'
     },
-    prompt: 'Sort each hull plate as an element, a compound, or a mixture.',
+    prompt: 'Which hull plate is an element, which a compound and which a mixture?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -126,7 +126,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · Core Readout',
-    prompt: 'Build a neutral atom with the same atomic number as the sealed core.',
+    prompt: 'Which neutral atom has the same atomic number as the sealed core?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -157,12 +157,12 @@ export const STAGES = [
       const e = count(t, 'tray:out', 'electron');
       if (p + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Drag protons into the middle and electrons outside.' };
       if (p !== 6) return { ok: false, msg: 'Your protons do not match the sealed core\'s.' };
-      if (e !== p) return { ok: false, msg: 'Your needle does not read 0.' };
+      if (e !== p) return { ok: false, msg: 'Your charge meter does not read 0.' };
       return { ok: true };
     },
     hints: [
-      'Use the heap, the two trays and the needle.',
-      'Count the discs with a + in the middle of the sealed core and the electrons on its rings, then compare the two counts.',
+      'Use the particles, the two trays and the charge meter.',
+      'Count the protons in the middle of the sealed core and the electrons on its rings, then compare the two counts.',
       'A neutral atom balances its charge, and the atomic number is the count of protons.'
     ],
     reward: {
@@ -176,7 +176,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · Cooling Manifold',
-    prompt: 'Slot the card that belongs in the open place on the chart.',
+    prompt: 'Which card belongs in the open place on the chart?',
     widget: { type: 'table', label: 'The bench' },
     table: cardTable({
       pieces: [
@@ -208,7 +208,7 @@ export const STAGES = [
     ],
     reward: {
       title: 'Manifolds Quenched',
-      body: 'Atoms along a row step up one proton at a time, so a missing card can be found by counting from its neighbours. The last card in each row belongs to group 18, whose atoms have full outer shells.',
+      body: 'Along a period the atomic number rises by one, so the missing card is the one between its neighbours.',
       log: 'Cooling manifolds flooded with neon gas.'
     }
   },
@@ -216,8 +216,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- Phase 4 */
   {
     id: 'phase4',
-    title: 'Phase 4 · Slag Assay',
-    prompt: 'Sort the core slag under the element whose listed mass it balances at.',
+    title: 'Phase 4 · Slag Mass',
+    prompt: 'Which element is the core slag, going by its average atomic mass?',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [{
@@ -233,14 +233,14 @@ export const STAGES = [
         ]
       },
       fixtures: [{
-        id: 'assay', kind: 'assay', label: 'Assay', runLabel: 'Tip Sample', at: { x: 78, y: 24 }, size: { w: 96, h: 40 },
-        props: { slot: 'chute' }, dials: { pivot: { min: 9.5, max: 11.5, step: 0.1, value: 10.5, label: 'Fulcrum' } }
+        id: 'assay', kind: 'assay', label: 'Mass spectrometer', runLabel: 'Run sample', at: { x: 78, y: 24 }, size: { w: 96, h: 40 },
+        props: { slot: 'chute' }, dials: { pivot: { min: 9.5, max: 11.5, step: 0.1, value: 10.5, label: 'Pivot' } }
       }]
     }),
     foes: HOPPER_FOE,
     encounter: {
       species: 'the hopper',
-      act: 'Assay Slag',
+      act: 'Test Slag',
       intent: 'Pulverized isotope slag rattles down the sorting chute.'
     },
     check(state) {
@@ -250,9 +250,9 @@ export const STAGES = [
       return { ok: true };
     },
     hints: [
-      'Use "Tip Sample" and the "Fulcrum" dial.',
-      'Read the tally over each bin, then compare where the beam balances with the listed masses on the trays.',
-      'The point where the slag balances is its average weight, and only one tray lists that mass.'
+      'Use "Run sample" and the "Pivot" dial.',
+      'Read the atom count at each mass, then compare where the beam balances with the listed masses on the trays.',
+      'The point where the slag balances is its average atomic mass, and only one tray lists that mass.'
     ],
     reward: {
       title: 'Slag Identified',
@@ -265,7 +265,7 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · Swarm Weight',
-    prompt: 'Balance the sealed drum of carbon with scoops of one mole each.',
+    prompt: 'How many moles of carbon are in the sealed drum?',
     widget: { type: 'table', label: 'The bench' },
     table: balanceTable({
       unit: 'g',
@@ -302,7 +302,7 @@ export const STAGES = [
     ],
     reward: {
       title: 'The Hopper Falls',
-      body: 'Dividing a mass by the molar mass gives the moles, so 24 grams of carbon is two moles. The mole links a weighed amount to a count of atoms.',
+      body: 'Two scoops of one mole each balance the drum, so 24 g of carbon is 2 mol.',
       log: 'The Hopper dispersed. Foreign slag recovered from the chute.'
     }
   }

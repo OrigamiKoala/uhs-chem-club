@@ -163,7 +163,8 @@ export function wellRead(state, fid) {
     lowestOpen,
     config: r.config,
     laddered: r.laddered,
-    ruleHolds: r.ruleHolds
+    ruleHolds: r.ruleHolds,
+    pairedEarly: r.doubledWhileEmpty
   };
 }
 

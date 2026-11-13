@@ -1,23 +1,18 @@
 /**
  * Unit 7 · Bench 6 — Stoichiometry (q6-stoich)
  *
- * The blast-furnace charge floor, on the pot kit (`table/kits/pot.js`): a reaction pot that is fed from jars (or a dial), a catch jar
- * the pot's key fills, a balance that reads what a jar holds, and a window of particles. Every amount the pot makes is
- * `reactdata.js` `reactPlan` of what was fed; nothing on the table is authored. Eight stages and ONE click: the belief that grams react
- * in the ratio of the equation's coefficients.
+ * The blast-furnace charge floor, on the pot kit (`table/kits/pot.js`) and the heap kit (`table/kits/heap.js` for stage 5):
+ * a reaction vessel fed from jars (or a dial), a catch jar the vessel's key fills, a balance that reads what a jar holds,
+ * and a particle view. Every amount the vessel makes is `reactdata.js` `reactPlan` of what was fed; nothing on the table is authored.
  *
- *   1  PREDICT: how many grams of water does 4.0 g of hydrogen make?       (the held model: the coefficients are grams)
- *   2  TEST: the pot at 1 to 4 g of hydrogen, the balance, then 5.0 g past the dial   -> grams of product follow grams fed
- *   3  moles in, moles out: the window, one disc a mole; 12 mol past the dial          -> mole ratio
- *   4  a different pot: grams of salt from grams of chlorine, past the dial            -> grams to grams, theoretical yield
- *   5  two jars, the balance on what was made; type the hydrogen left                  -> excess reactant (limiting, on masses)
- *   6  heat limestone; the syringe at 10.0 g, then 50.0 g past it                      -> gas volume from moles
- *   7  the furnace makes less than the equation allows; type the percent               -> percent yield
- *   8  sealed: a salt sample, silver nitrate in plenty, weigh the solid; type the purity -> gravimetric analysis
- *
- * THE TEACHING STANCE. The equation is printed (balancing is `q4-balance`'s job) with the molar masses a stage needs, because
- * a constant is given and a method is not. A figure is typed past the dial's range, and a pot is always run once so a picture stands
- * behind the number. A product's mass is never printed: the catch jar says what it holds and the balance says how much.
+ *   1  PREDICT: how many grams of water does 4.0 g of hydrogen make?
+ *   2  TEST: the vessel at 1 to 4 g of hydrogen, the balance, then 5.0 g past the dial -> grams follow grams fed
+ *   3  moles in, moles out: the particle view, one circle a mole; 12 mol past the dial -> mole ratio
+ *   4  grams to grams, with a worked case in the briefing                              -> grams -> moles -> moles -> grams
+ *   5  limiting reactant seen with countable atoms (moved from q1 stage 4)             -> limiting reactant
+ *   6  two jars, the balance on what was made; type the hydrogen left                  -> excess reactant in grams
+ *   7  heat limestone; the syringe at 10.0 g, then 50.0 g past it                      -> gas volume from molar volume
+ *   8  the furnace makes less than the equation allows; type the percent               -> theoretical & percent yield
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -26,22 +21,22 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { potTable, jar, reactorFixture, weighFixture, plaqueFixture, stmt, reactorRead, weighRead, seatedIn, fixed } from '../../table/kits/pot.js';
+import { heapTable, heap, dock, product, limitOf, tallyOf } from '../../table/kits/heap.js';
 import { molarMass, reactPlan, parseEquation, gasVolume, percentYield } from '../../engine/reactdata.js';
 
 export const meta = { stageCount: 8 };
 
 export const VOCABULARY = [
   { term: /\bmole ratio\b/i, introducedAt: 3 },
-  { term: /\btheoretical yield\b/i, introducedAt: 4 },
-  { term: /\bexcess reactant\b/i, introducedAt: 5 },
-  { term: /\bpercent yield\b/i, introducedAt: 7 },
-  { term: /\bgravimetric analysis\b/i, introducedAt: 8 }
+  { term: /\blimiting reactants?\b/i, introducedAt: 5 },
+  { term: /\bexcess reactants?\b/i, introducedAt: 5 },
+  { term: /\btheoretical yield\b/i, introducedAt: 8 },
+  { term: /\bpercent yield\b/i, introducedAt: 8 }
 ];
 
-/** Moles and molar mass are Tallow's, the gas law is Bellows', the limiting reactant is this world's first bench. */
-export const BUILDS_ON = ['unit01/q6-weigh', 'unit04/q3-ideal', 'unit07/q1-recipe'];
+/** Moles and molar mass are Tallow's. */
+export const BUILDS_ON = ['unit01/q6-weigh'];
 
-/** The room this quest's table stands in at T4: Kettle has no world to stand in yet (`rooms.js`). */
 export const ROOM = 'foundry';
 
 const SPEAKER = 'Vess';
@@ -59,7 +54,6 @@ const EQ_AMMONIA = 'N2 + 3 H2 -> 2 NH3';
 const EQ_SALT = '2 Na + Cl2 -> 2 NaCl';
 const EQ_LIME = 'CaCO3 -> CaO + CO2';
 const EQ_ORE = 'Fe2O3 + 3 CO -> 2 Fe + 3 CO2';
-const EQ_SILVER = 'AgNO3 + NaCl -> AgCl + NaNO3';
 
 const gOf = (f, g) => g / molarMass(f);
 const made = (eq, feed) => reactPlan(parseEquation(eq), feed).made;
@@ -80,43 +74,39 @@ const CL2_TRIAL = 7.1;
 const CL2_ASKED = 21.3;
 const NACL_ASKED = made(EQ_SALT, { Cl2: gOf('Cl2', CL2_ASKED) }).NaCl * molarMass('NaCl');
 
-// Stage 5: 12.0 g of hydrogen and 64.0 g of oxygen.
-const S5 = { H2: 12.0, O2: 64.0 };
-const S5_PLAN = reactPlan(parseEquation(EQ_WATER), { H2: gOf('H2', S5.H2), O2: gOf('O2', S5.O2) });
-const H2_LEFT = S5_PLAN.left.H2 * molarMass('H2');
+// Stage 5: countable atoms (18 H, 11 O -> 9 H2O).
+const WATER_NEED = { H: 2, O: 1 };
+const atomAt = (id, el, x, y) => ({ id, kind: 'atom', label: el, at: { x, y }, props: { el } });
 
-// Stage 6: limestone, 10.0 g in the syringe, 50.0 g asked, at 25 °C and 1.00 atm.
+// Stage 6: 12.0 g of hydrogen and 64.0 g of oxygen.
+const S6 = { H2: 12.0, O2: 64.0 };
+const S6_PLAN = reactPlan(parseEquation(EQ_WATER), { H2: gOf('H2', S6.H2), O2: gOf('O2', S6.O2) });
+const H2_LEFT = S6_PLAN.left.H2 * molarMass('H2');
+
+// Stage 7: limestone, 10.0 g in the syringe, 50.0 g asked, at 25 °C and 1.00 atm.
 const GAS = { tC: 25, atm: 1.0 };
 const LIME_TRIAL = 10.0;
 const LIME_ASKED = 50.0;
 const litresFrom = g => gasVolume(made(EQ_LIME, { CaCO3: gOf('CaCO3', g) }).CO2, GAS.tC, GAS.atm);
 const CO2_ASKED = litresFrom(LIME_ASKED);
 
-// Stage 7: 79.8 g of ore in a furnace that keeps 62 % of the iron.
+// Stage 8: 79.8 g of ore in a furnace that keeps 62 % of the iron.
 const ORE_G = 79.8;
 const FURNACE = 0.62;
 const FE_POSSIBLE = made(EQ_ORE, { Fe2O3: gOf('Fe2O3', ORE_G) }).Fe * molarMass('Fe');
 const FE_MADE = Math.round(FE_POSSIBLE * FURNACE * 10) / 10;
 const YIELD_PCT = percentYield(FE_MADE, FE_POSSIBLE);
 
-// Stage 8: 2.00 g of a salt sample that is 90 % sodium chloride; silver nitrate in plenty.
-const SALT = { grams: 2.0, pure: 0.9 };
-const AGCL_MADE = Math.round(made(EQ_SILVER, { NaCl: gOf('NaCl', SALT.grams * SALT.pure) }).AgCl * molarMass('AgCl') * 100) / 100;
-const PURITY = ((AGCL_MADE / molarMass('AgCl')) * molarMass('NaCl') / SALT.grams) * 100;
-
 /* ------------------------------------------------------------------
    HELPERS
    ------------------------------------------------------------------ */
 
-/** The runs a pot has done on this table, as `{fed: moles, out: moles of the product it keeps}`. */
 function runsOf(t, fid) {
   return t.recorder.rows.filter(r => r.label.startsWith(`${fid}|`)).map(r => ({ fed: r.x, out: r.y }));
 }
 
 const typedValue = (t, id) => entryNumber(t, id);
 const within = (v, want, tol) => Math.abs(v - want) <= tol;
-
-/** The catch jar's weight on the balance, or null when nothing has been weighed. */
 const weighed = (t, fid) => { const r = weighRead(t, fid); return r.item ? r.grams : null; };
 
 const GUESS = { g2: '2.0 g', g4: '4.0 g', g18: '18 g', g36: '36 g', g72: '72 g' };
@@ -130,9 +120,8 @@ export const STAGES = [
   {
     id: 's1-predict',
     title: 'Water From Hydrogen',
-    // A PREDICT STAGE: the pot is not on the table yet. The guess is made first and comes back with the test.
     predict: true,
-    prompt: 'Choose how many grams of water 4.0 g of hydrogen makes, with plenty of oxygen.',
+    prompt: 'How many grams of water do you expect from 4.0 g of hydrogen, with plenty of oxygen?',
     widget,
     table: potTable({
       pieces: Object.entries(GUESS).map(([id, label], i) => stmt(id, label, { x: 24 + (i % 2) * 38, y: 10 + Math.floor(i / 2) * 16 })),
@@ -141,8 +130,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the five cards and the slot.',
-      'Think about what the numbers in the equation count, and what a hydrogen molecule and a water molecule each weigh.',
-      'Commit to the mass of water you expect, then run the pot to see what the balance reads.'
+      'Think about what the numbers in the equation count, and what a hydrogen molecule and a water molecule each have as mass.',
+      'Commit to the mass of water you expect, then run the vessel to see what the balance reads.'
     ],
     check(state) {
       const card = Object.values(state.table.pieces).find(p => p.zone === 'slot:guess');
@@ -156,14 +145,14 @@ export const STAGES = [
     reward: {
       log: 'Prediction locked in.',
       title: 'Now Test It',
-      body: 'Next, run the pot on several amounts of hydrogen and weigh the water it makes.'
+      body: 'Next, run the reaction vessel on several amounts of hydrogen and weigh the water it makes.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const r = reactorFixture('pot', { x: 47, y: 25 }, {
-      eq: EQ_WATER, pour: { species: 'H2', unit: 'g', list: H2_DIAL }, pourLabel: 'Hydrogen fed', plenty: ['O2'], out: 'H2O', window: false, title: 'Pot'
+      eq: EQ_WATER, pour: { species: 'H2', unit: 'g', list: H2_DIAL }, pourLabel: 'Hydrogen fed', plenty: ['O2'], out: 'H2O', window: false, title: 'Reaction vessel'
     });
     const b = weighFixture('bal', { x: 112, y: 38 });
     return {
@@ -172,7 +161,7 @@ export const STAGES = [
       get prompt() {
         const g = recall(QUEST_KEY);
         const guess = g && GUESS[g] ? `You guessed ${GUESS[g]}. ` : '';
-        return `${guess}Type the grams of water that ${H2_ASKED.toFixed(1)} g of hydrogen makes.`;
+        return `${guess}How many grams of water does ${H2_ASKED.toFixed(1)} g of hydrogen make?`;
       },
       entry: { id: 'g', label: 'Water made', unit: 'g' },
       widget,
@@ -182,7 +171,7 @@ export const STAGES = [
         zones: { slots: [...r.slots, b.slot] }
       }),
       hints: [
-        'Use the pot, its "Hydrogen fed" dial, the catch jar and the balance.',
+        'Use the reaction vessel, its "Hydrogen fed" dial, the catch jar and the balance.',
         'Compare the grams of hydrogen fed with the grams of water the balance reads, at each setting of the dial.',
         'Each extra gram of hydrogen makes the same extra mass of water, so the readings grow in step.'
       ],
@@ -192,9 +181,9 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the mass of water in grams.' };
         if (within(v, waterFrom(H2_ASKED), 0.6)) return { ok: true };
         const runs = runsOf(t, 'pot');
-        if (!runs.length) return { ok: false, msg: 'The pot has not been run yet.' };
+        if (!runs.length) return { ok: false, msg: 'The vessel has not been run yet.' };
         const rows = runs.map(x => `${fixed(x.fed * molarMass('H2'), 1)} g of hydrogen made ${fixed(x.out * molarMass('H2O'), 1)} g`).join(', ');
-        return { ok: false, msg: `${fixed(v, 1)} g does not carry on from what the pot made: ${rows}.` };
+        return { ok: false, msg: `${fixed(v, 1)} g does not carry on from what the vessel made: ${rows}.` };
       },
       get reward() {
         const g = recall(QUEST_KEY);
@@ -204,7 +193,7 @@ export const STAGES = [
         return {
           log: '4.0 g of hydrogen made 36 g of water.',
           title: 'Grams Follow the Amount Fed',
-          body: `${verdict}The water made grows in step with the hydrogen fed, 9 g for every gram. The 2 and the 2 in the equation count molecules, and a water molecule weighs nine times a hydrogen molecule.`
+          body: `${verdict}Every gram of hydrogen made 9 g of water. The amounts are in a fixed ratio, set by the equation.`
         };
       }
     };
@@ -213,12 +202,16 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const r = reactorFixture('pot', { x: 47, y: 29 }, {
-      eq: EQ_AMMONIA, pour: { species: 'H2', unit: 'mol', list: H2_MOLES }, pourLabel: 'Hydrogen fed', plenty: ['N2'], unitMol: 1, window: true, title: 'Pot'
+      eq: EQ_AMMONIA, pour: { species: 'H2', unit: 'mol', list: H2_MOLES }, pourLabel: 'Hydrogen fed', plenty: ['N2'], unitMol: 1, window: true, title: 'Reaction vessel'
     });
     return {
       id: 's3-moles',
       title: 'Ammonia by the Mole',
-      prompt: `Type the moles of ammonia that ${H2_ASKED_MOL} mol of hydrogen makes.`,
+      briefing: {
+        title: 'Counting in Moles',
+        body: 'A mole is a fixed, very large number of particles. Each circle in the particle view stands for one mole.'
+      },
+      prompt: `How many moles of ammonia does ${H2_ASKED_MOL} mol of hydrogen make?`,
       entry: { id: 'mol', label: 'Ammonia made', unit: 'mol' },
       widget,
       table: potTable({
@@ -226,8 +219,8 @@ export const STAGES = [
         zones: { slots: [] }
       }),
       hints: [
-        'Use the pot, its "Hydrogen fed" dial and the "Run" key.',
-        'Compare the discs of hydrogen before the reaction with the discs of ammonia after it, at each setting.',
+        'Use the reaction vessel, its "Hydrogen fed" dial and the "Run" key.',
+        'Compare the circles of hydrogen before the reaction with the circles of ammonia after it, at each setting.',
         'Every 3 mol of hydrogen makes the same number of moles of ammonia, so scale that up to the amount asked.'
       ],
       check(state) {
@@ -236,26 +229,30 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the moles of ammonia.' };
         if (within(v, NH3_ASKED, 0.05)) return { ok: true };
         const runs = runsOf(t, 'pot');
-        if (!runs.length) return { ok: false, msg: 'The pot has not been run yet.' };
+        if (!runs.length) return { ok: false, msg: 'The vessel has not been run yet.' };
         const rows = runs.map(x => `${fixed(x.fed, 0)} mol of hydrogen made ${fixed(x.out, 0)} mol of ammonia`).join(', ');
-        return { ok: false, msg: `${fixed(v, 1)} mol does not carry on from what the pot made: ${rows}.` };
+        return { ok: false, msg: `${fixed(v, 1)} mol does not carry on from what the vessel made: ${rows}.` };
       },
       reward: {
         log: '12 mol of hydrogen makes 8 mol of ammonia.',
         title: 'The Mole Ratio',
-        body: 'The coefficients of a balanced equation give the mole ratio: 3 mol of hydrogen to 2 mol of ammonia. An equation counts moles, so every step between substances goes through the mole ratio.'
+        body: 'Every 3 mol of hydrogen made 2 mol of ammonia: the coefficients in the equation. That is the mole ratio.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
-    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_SALT, seats: 1, plenty: ['Na'], out: 'NaCl', window: false, title: 'Pot' });
+    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_SALT, seats: 1, plenty: ['Na'], out: 'NaCl', window: false, title: 'Reaction vessel' });
     const b = weighFixture('bal', { x: 112, y: 40 });
     return {
       id: 's4-gramsgrams',
       title: 'Grams to Grams',
-      prompt: `Type the grams of salt that ${CL2_ASKED.toFixed(1)} g of chlorine makes.`,
+      briefing: {
+        title: 'Grams Go Through Moles',
+        body: 'A balance reads grams, while molar mass (g/mol) tells how many grams one mole weighs. Convert grams to moles first, then use the equation.\n\n4.0 g H₂ ÷ 2.0 g/mol = 2.0 mol H₂\n2 H₂ makes 2 H₂O: 2.0 mol H₂O\n2.0 mol × 18.0 g/mol = 36 g'
+      },
+      prompt: `How many grams of salt does ${CL2_ASKED.toFixed(1)} g of chlorine make?`,
       entry: { id: 'g', label: 'Salt made', unit: 'g' },
       widget,
       table: potTable({
@@ -270,9 +267,9 @@ export const STAGES = [
         zones: { slots: [...r.slots, b.slot] }
       }),
       hints: [
-        'Use the pot, the chlorine jar, the catch jar and the balance.',
+        'Use the reaction vessel, the chlorine jar, the catch jar and the balance.',
         'Compare the grams of chlorine fed with the grams of salt the balance reads.',
-        'Change the grams of chlorine to moles, use the ratio in the equation, then change the moles of salt to grams.'
+        'Follow the same three steps shown in the briefing: grams to moles, mole ratio from the equation, then moles to grams.'
       ],
       check(state) {
         const t = state.table;
@@ -280,31 +277,83 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the mass of salt in grams.' };
         if (within(v, NACL_ASKED, 0.6)) return { ok: true };
         const w = weighed(t, 'bal');
-        const trial = w != null && w > 0 ? ` The pot made ${fixed(w, 1)} g of salt from ${CL2_TRIAL.toFixed(1)} g of chlorine.` : ' Run the pot and weigh the catch jar.';
+        const trial = w != null && w > 0 ? ` The vessel made ${fixed(w, 1)} g of salt from ${CL2_TRIAL.toFixed(1)} g of chlorine.` : ' Run the vessel and weigh the catch jar.';
         return { ok: false, msg: `${fixed(v, 1)} g does not follow from the trial.${trial}` };
       },
       reward: {
         log: '21.3 g of chlorine makes 35.1 g of salt.',
-        title: 'Theoretical Yield',
-        body: 'Grams of one substance become grams of another through moles: 21.3 g of chlorine is 0.30 mol, the equation makes 0.60 mol of salt from it, and that weighs 35.1 g. The most the equation allows is the theoretical yield.'
+        title: 'Grams Through Moles',
+        body: '21.3 g of chlorine is 0.30 mol, which makes 0.60 mol of salt: 35.1 g.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
+  {
+    id: 's5-limiting',
+    title: 'One Reactant Runs Out',
+    prompt: 'How many water molecules can these hydrogen and oxygen atoms make?',
+    widget,
+    table: heapTable({
+      pieces: [
+        ...['h1', 'h2', 'h3'].map((id, i) => atomAt(id, 'H', 10 + i * 12, 33)),
+        ...['o1', 'o2'].map((id, i) => atomAt(id, 'O', 48 + i * 12, 33))
+      ],
+      zones: {
+        containers: [
+          heap('heap-h', 'Hydrogen supply', 'H', 18, { x: 17, y: 17 }),
+          heap('heap-o', 'Oxygen supply', 'O', 11, { x: 49, y: 17 }),
+          product('made', 'Built', { x: 92, y: 18 }, 24),
+          dock('dock', 'Molecule to copy', { x: 17, y: 53 }, { w: 28, h: 16 })
+        ]
+      },
+      fixtures: [
+        {
+          id: 'maker', kind: 'maker', label: 'Maker', runLabel: 'Make Molecule', at: { x: 54, y: 52 }, size: { w: 34, h: 18 },
+          props: { dock: 'container:dock', heaps: { H: 'heap-h', O: 'heap-o' }, product: 'made' }
+        },
+        { id: 'tally', kind: 'tally', label: 'Tally', at: { x: 96, y: 52 }, size: { w: 34, h: 16 }, noRun: true, dials: { n: { min: 0, max: 12, step: 1, value: 0, label: 'Molecules made' } } }
+      ]
+    }),
+    hints: [
+      'Build one water molecule on the table, put it in the dock, and press "Make Molecule" to copy it from the supplies.',
+      'Watch the two supplies shrink as molecules collect in the built tray, and note which supply empties first.',
+      'Keep pressing until one supply cannot make another molecule, then set the tally to how many molecules were built.'
+    ],
+    check(state) {
+      const t = state.table;
+      const left = { H: t.zones.containers['heap-h'].capacity, O: t.zones.containers['heap-o'].capacity };
+      const want = limitOf(left, WATER_NEED);
+      const tally = tallyOf(t, 'tally');
+      if (tally === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to the number of molecules the supplies make.' };
+      if (tally !== want.made) return { ok: false, msg: 'The tally does not match what the supplies can make. Build molecules until one supply empties, then count what was built.' };
+      return { ok: true };
+    },
+    reward: {
+      log: 'The hydrogen supply ran out at 9 water molecules.',
+      title: 'The Limiting Reactant',
+      body: 'The hydrogen ran out first and stopped the count. The reactant that runs out is the limiting reactant; what is left of the other is the excess reactant.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
   (() => {
-    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_WATER, seats: 2, out: 'H2O', window: false, title: 'Pot' });
+    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_WATER, seats: 2, out: 'H2O', window: false, title: 'Reaction vessel' });
     const b = weighFixture('bal', { x: 112, y: 40 });
     return {
-      id: 's5-excess',
+      id: 's6-excess',
       title: 'What Is Left Over',
-      prompt: 'Type the grams of hydrogen left over once the pot has made all the water it can.',
+      briefing: {
+        title: 'Limiting Reactant in Grams',
+        body: 'When both starting masses are in grams, convert each to moles first to see which runs out, then convert any leftover moles back to grams.\n\n2 Na + Cl₂ → 2 NaCl (5.0 mol Na, 2.0 mol Cl₂)\n2.0 mol Cl₂ uses 4.0 mol Na, leaving 1.0 mol Na × 23.0 g/mol = 23 g'
+      },
+      prompt: 'How many grams of hydrogen are left over when the vessel has made all the water it can?',
       entry: { id: 'g', label: 'Hydrogen left', unit: 'g' },
       widget,
       table: potTable({
         pieces: [
-          jar('h2', 'Hydrogen', { x: 14, y: 55 }, { species: 'H2', grams: S5.H2, shown: `${S5.H2.toFixed(1)} g` }),
-          jar('o2', 'Oxygen', { x: 36, y: 55 }, { species: 'O2', grams: S5.O2, shown: `${S5.O2.toFixed(1)} g` }),
+          jar('h2', 'Hydrogen', { x: 14, y: 55 }, { species: 'H2', grams: S6.H2, shown: `${S6.H2.toFixed(1)} g` }),
+          jar('o2', 'Oxygen', { x: 36, y: 55 }, { species: 'O2', grams: S6.O2, shown: `${S6.O2.toFixed(1)} g` }),
           jar('catch', 'Catch jar', { x: 58, y: 55 }, { catchFor: 'H2O' })
         ],
         fixtures: [
@@ -314,9 +363,9 @@ export const STAGES = [
         zones: { slots: [...r.slots, b.slot] }
       }),
       hints: [
-        'Use the pot, both jars, the catch jar and the balance.',
+        'Use the reaction vessel, both jars, the catch jar and the balance.',
         'Compare the grams fed with the grams of water the balance reads.',
-        'Change both feeds to moles and see which reactant the equation runs out of first; the other has the rest left.'
+        'Grams cannot be compared across substances; the equation’s ratio is in moles.'
       ],
       check(state) {
         const t = state.table;
@@ -324,40 +373,40 @@ export const STAGES = [
         if (Number.isNaN(v)) return { ok: false, notYet: true, msg: 'Type the mass of hydrogen in grams.' };
         if (within(v, H2_LEFT, 0.06)) return { ok: true };
         const w = weighed(t, 'bal');
-        const trial = w != null && w > 0 ? ` The pot made ${fixed(w, 1)} g of water from ${S5.H2.toFixed(1)} g of hydrogen and ${S5.O2.toFixed(1)} g of oxygen.` : ' Run the pot and weigh the catch jar.';
+        const trial = w != null && w > 0 ? ` The vessel made ${fixed(w, 1)} g of water from ${S6.H2.toFixed(1)} g of hydrogen and ${S6.O2.toFixed(1)} g of oxygen.` : ' Run the vessel and weigh the catch jar.';
         return { ok: false, msg: `${fixed(v, 1)} g of hydrogen left does not match the table.${trial}` };
       },
       reward: {
         log: 'Oxygen ran out; 4.0 g of hydrogen was left.',
-        title: 'Excess Reactant',
-        body: 'The oxygen ran out first and set how much water could form. The hydrogen was the excess reactant: 6.0 mol was fed, 4.0 mol was used, and the 2.0 mol left over weighs 4.0 g.'
+        title: 'Excess in Grams',
+        body: 'The oxygen was the limiting reactant. 4.0 mol of the 6.0 mol of hydrogen reacted, leaving 2.0 mol: 4.0 g.'
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 7 */
   (() => {
     const r = reactorFixture('pot', { x: 47, y: 29 }, {
-      eq: EQ_LIME, seats: 1, gas: { species: 'CO2', ...GAS, maxL: 3 }, window: false, title: 'Pot', runLabel: 'Heat'
+      eq: EQ_LIME, seats: 1, gas: { species: 'CO2', ...GAS, maxL: 3 }, window: false, title: 'Reaction vessel', runLabel: 'Heat'
     });
     return {
-      id: 's6-gas',
+      id: 's7-gas',
       title: 'Gas From Limestone',
-      prompt: `Type the litres of carbon dioxide that ${LIME_ASKED.toFixed(1)} g of limestone gives at 25 °C and 1.00 atm.`,
+      prompt: `How many litres of carbon dioxide does ${LIME_ASKED.toFixed(1)} g of limestone give at 25 °C and 1.00 atm?`,
       entry: { id: 'L', label: 'Gas volume', unit: 'L' },
       widget,
       table: potTable({
         pieces: [jar('lime', 'Limestone', { x: 121, y: 40 }, { species: 'CaCO3', grams: LIME_TRIAL, shown: `${LIME_TRIAL.toFixed(1)} g` })],
         fixtures: [
           r.fixture,
-          plaqueFixture('eq', 'Equation and constants', { x: 121, y: 12 }, ['CaCO₃ → CaO + CO₂', 'CaCO₃ 100.1 g/mol', 'R = 0.0821 L·atm/(mol·K)'], { w: 56 })
+          plaqueFixture('eq', 'Equation and molar volume', { x: 121, y: 12 }, ['CaCO₃ → CaO + CO₂', 'CaCO₃ 100.1 g/mol', 'At 25 °C, 1.00 atm: 1 mol gas = 24.5 L'], { w: 58 })
         ],
         zones: { slots: [...r.slots] }
       }),
       hints: [
-        'Use the pot, the limestone jar and the "Heat" key.',
+        'Use the reaction vessel, the limestone jar and the "Heat" key.',
         'Compare the grams of limestone heated with the litres the syringe reads.',
-        'The equation gives the moles of gas, and the gas law turns those moles into litres at the stated conditions.'
+        'Find the moles of carbon dioxide from the equation, then use the volume of 1 mol listed on the plate.'
       ],
       check(state) {
         const t = state.table;
@@ -365,25 +414,29 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the volume in litres.' };
         if (within(v, CO2_ASKED, 0.2)) return { ok: true };
         const runs = runsOf(t, 'pot');
-        if (!runs.length) return { ok: false, msg: 'The pot has not been heated yet.' };
+        if (!runs.length) return { ok: false, msg: 'The vessel has not been heated yet.' };
         return { ok: false, msg: `${fixed(v, 1)} L does not follow from the syringe, which read ${fixed(litresFrom(LIME_TRIAL), 2)} L for ${LIME_TRIAL.toFixed(1)} g.` };
       },
       reward: {
         log: '50.0 g of limestone gives 12.2 L of carbon dioxide.',
         title: 'Gas Volume From Moles',
-        body: 'The equation gives 1 mol of carbon dioxide for each mole of limestone, 0.50 mol from 50.0 g. Then PV = nRT turns moles of gas into litres: 0.50 mol at 25 °C and 1.00 atm fills 12.2 L.'
+        body: '50.0 g of limestone is 0.50 mol and gives 0.50 mol of carbon dioxide, which fills 12.2 L.'
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 8 */
   (() => {
     const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_ORE, seats: 1, plenty: ['CO'], out: 'Fe', yieldFrac: FURNACE, window: false, title: 'Furnace' });
     const b = weighFixture('bal', { x: 112, y: 40 });
     return {
-      id: 's7-yield',
+      id: 's8-yield',
       title: 'What the Furnace Keeps',
-      prompt: 'Type the percent of the iron the equation allows that the furnace actually made.',
+      briefing: {
+        title: 'Theoretical and Percent Yield',
+        body: 'The most product an equation allows is the theoretical yield. Percent yield is the mass actually made divided by it, times 100.\n\n3.0 g made of 4.0 g allowed = 75 %'
+      },
+      prompt: 'What is the percent yield of iron from this furnace?',
       entry: { id: 'pct', label: 'Percent made', unit: '%' },
       widget,
       table: potTable({
@@ -400,7 +453,7 @@ export const STAGES = [
       hints: [
         'Use the furnace, the ore jar, the catch jar and the balance.',
         'Compare the iron on the balance with the iron the equation allows from this much ore.',
-        'Work out the theoretical yield, then divide the iron actually made by it and multiply by 100.'
+        'Find the theoretical yield from the ore mass, then compare what the furnace actually made with it.'
       ],
       check(state) {
         const t = state.table;
@@ -414,50 +467,7 @@ export const STAGES = [
       reward: {
         log: '34.6 g of the 55.8 g possible: 62 %.',
         title: 'Percent Yield',
-        body: 'Percent yield is the mass actually made divided by the theoretical yield, times 100. Here 34.6 g of the 55.8 g the equation allows is 62 %; real reactions leave some product behind.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    const r = reactorFixture('pot', { x: 47, y: 24 }, { eq: EQ_SILVER, seats: 1, plenty: ['AgNO3'], out: 'AgCl', window: false, title: 'Pot', runLabel: 'Mix and Dry' });
-    const b = weighFixture('bal', { x: 112, y: 40 }, { digits: 2 });
-    return {
-      id: 's8-gravimetric',
-      title: 'Weigh the Cloud',
-      prompt: 'Type the percent of the sealed sample that is sodium chloride.',
-      entry: { id: 'pct', label: 'Percent salt', unit: '%' },
-      widget,
-      table: potTable({
-        pieces: [
-          jar('sample', 'Salt sample', { x: 14, y: 55 }, { species: 'NaCl', grams: SALT.grams, pure: SALT.pure, shown: `${SALT.grams.toFixed(2)} g` }),
-          jar('catch', 'Catch jar', { x: 38, y: 55 }, { catchFor: 'AgCl' })
-        ],
-        fixtures: [
-          r.fixture, b.fixture,
-          plaqueFixture('eq', 'Equation and listed masses', { x: 121, y: 11 }, ['AgNO₃ + NaCl → AgCl + NaNO₃', 'AgCl 143.4 g/mol', 'NaCl 58.5 g/mol'], { w: 56 })
-        ],
-        zones: { slots: [...r.slots, b.slot] }
-      }),
-      hints: [
-        'Use the pot, the sample jar, the catch jar and the balance.',
-        'Compare the dried solid on the balance with the 2.00 g the sample weighed.',
-        'Every mole of silver chloride came from a mole of sodium chloride, so work back from the solid to the salt.'
-      ],
-      check(state) {
-        const t = state.table;
-        const v = typedValue(t, 'pct');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the percent.' };
-        if (within(v, PURITY, 1.5)) return { ok: true };
-        const w = weighed(t, 'bal');
-        const trial = w != null && w > 0 ? ` The dried solid weighed ${fixed(w, 2)} g.` : ' Run the pot and weigh the catch jar.';
-        return { ok: false, msg: `${fixed(v, 1)} % does not follow from the table.${trial}` };
-      },
-      reward: {
-        log: '4.41 g of silver chloride: the sample is 90 % salt.',
-        title: 'Gravimetric Analysis',
-        body: 'In gravimetric analysis a substance is turned into a solid, dried and weighed, and the mass is worked back to how much of it was in the sample. The 4.41 g of solid held 0.0308 mol of chloride, so 90 % of the sample was salt.'
+        body: 'The equation allows 55.8 g (the theoretical yield) and the furnace made 34.6 g: a 62 % yield.'
       }
     };
   })()
@@ -466,13 +476,13 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
-  2: ['Drag the catch jar under the pot, run it, then weigh the jar.'],
+  2: ['Drag the catch jar under the vessel, run it, then weigh the jar.'],
   3: ['Turn the dial, press Run, then type your answer.'],
-  4: ['Seat the jars, run the pot, weigh the catch jar.'],
-  5: ['Seat the jars, run the pot, weigh the catch jar.'],
-  6: ['Drag the jar into the pot, press Heat, then type your answer.'],
-  7: ['Seat the jar, run the furnace, weigh the catch jar.'],
-  8: ['Seat the jars, run the pot, weigh the catch jar.']
+  4: ['Seat the jars, run the vessel, weigh the catch jar.'],
+  5: ['Join water, put it in the dock,', 'Make Molecule until empty, set tally.'],
+  6: ['Seat the jars, run the vessel, weigh the catch jar.'],
+  7: ['Drag the jar into the vessel, press Heat, then type your answer.'],
+  8: ['Seat the jar, run the furnace, weigh the catch jar.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -484,7 +494,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'An equation counts moles, so grams reach grams through the mole ratio. The reactant that runs out sets the theoretical yield, and a real furnace makes a percent of it. Forty tons of ore cannot give fifty tons of iron.'
+      body: 'An equation counts moles, so grams reach grams through the mole ratio. The reactant that runs out sets the theoretical yield, and a real furnace makes a percent of it.'
     }
   ]
 };
@@ -497,16 +507,18 @@ const put = (piece, to) => ({ place: { piece, to } });
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
 const run = id => ({ run: id });
 const typed = (entry, value) => ({ type: { entry, value: String(value) } });
+const joinTo = (a, b) => ({ join: [a, b] });
+const makes = n => Array.from({ length: n }, () => ({ run: 'maker' }));
 
 export const SOLUTIONS = [
   [put('g36', 'slot:guess')],
   [put('catch', 'slot:pot.out'), dial('pot', 'pour', 4), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '45')],
   [dial('pot', 'pour', 3), run('pot'), typed('mol', '8')],
   [put('cl2', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '35.1')],
+  [joinTo('h1', 'o1'), joinTo('h2', 'o1'), put('o1', 'container:dock'), ...makes(9), dial('tally', 'n', 9)],
   [put('h2', 'slot:pot.in1'), put('o2', 'slot:pot.in2'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '4.0')],
   [put('lime', 'slot:pot.in1'), run('pot'), typed('L', '12.2')],
-  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '62')],
-  [put('sample', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '90')]
+  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '62')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -515,10 +527,10 @@ export const MISSES = [
   [put('catch', 'slot:pot.out'), dial('pot', 'pour', 2), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '10')],
   [dial('pot', 'pour', 3), run('pot'), typed('mol', '18')],
   [put('cl2', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '17.55')],
+  [joinTo('h1', 'o1'), joinTo('h2', 'o1'), put('o1', 'container:dock'), ...makes(9), dial('tally', 'n', 11)],
   [put('h2', 'slot:pot.in1'), put('o2', 'slot:pot.in2'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('g', '0')],
   [put('lime', 'slot:pot.in1'), run('pot'), typed('L', '22.4')],
-  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '100')],
-  [put('sample', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '54.6')]
+  [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), run('pot'), put('catch', 'slot:bal.pan'), typed('pct', '100')]
 ];
 
 function blankState() { return {}; }
@@ -543,7 +555,7 @@ export function mount(container, ctx) {
 
 /* Exported for `verify:learn`, which holds every graded figure to the real tables. */
 export const CHECKS = {
-  EQ_WATER, EQ_AMMONIA, EQ_SALT, EQ_LIME, EQ_ORE, EQ_SILVER, H2_DIAL, H2_ASKED, PREDICT_ASKED, H2_MOLES, H2_ASKED_MOL, CL2_TRIAL, CL2_ASKED, S5, GAS,
-  LIME_TRIAL, LIME_ASKED, ORE_G, FURNACE, SALT, answers: { water: waterFrom(H2_ASKED), nh3: NH3_ASKED, nacl: NACL_ASKED, h2Left: H2_LEFT, co2: CO2_ASKED, feMade: FE_MADE, feAllowed: FE_POSSIBLE, yieldPct: YIELD_PCT, agcl: AGCL_MADE, purity: PURITY }
+  EQ_WATER, EQ_AMMONIA, EQ_SALT, EQ_LIME, EQ_ORE, H2_DIAL, H2_ASKED, PREDICT_ASKED, H2_MOLES, H2_ASKED_MOL, CL2_TRIAL, CL2_ASKED, S6, GAS,
+  LIME_TRIAL, LIME_ASKED, ORE_G, FURNACE, answers: { water: waterFrom(H2_ASKED), nh3: NH3_ASKED, nacl: NACL_ASKED, h2Left: H2_LEFT, co2: CO2_ASKED, feMade: FE_MADE, feAllowed: FE_POSSIBLE, yieldPct: YIELD_PCT }
 };
 export { reactorRead, seatedIn };

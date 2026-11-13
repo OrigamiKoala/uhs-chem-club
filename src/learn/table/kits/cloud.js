@@ -32,7 +32,7 @@ function run(state, fixtureId) {
   if (!f || f.noRun) return null;
   if (f.kind === 'cloud') {
     const fired = Math.round(f.dials.fired.value);
-    if (fired >= MAX_SHOTS) return { noop: `The plate has taken all ${MAX_SHOTS} shots it holds.` };
+    if (fired >= MAX_SHOTS) return { noop: `The plate holds all ${MAX_SHOTS} measurements it has room for.` };
     const k = SHOT_STEPS[f.dials.burst.value - 1] ?? 1;
     return { dials: { [f.id]: { fired: Math.min(MAX_SHOTS, fired + k) } } };
   }
@@ -283,13 +283,14 @@ const SHOT_LABELS = ['1', '50', '500'];
  * in pm, `ringMax` and `ringStep`); `slice` a slice switch of its own; `view` the id of the shared view fixture it is seen from;
  * `film: true` a slot for a film in its side column. Its height follows its dials.
  */
-export function cloudPlate(id, label, at, orbital, { seed = 1, ring = null, ringMax = 300, ringStep = 10, slice = false, view = null, film = false, extent = 5, pic = null, exposure = true } = {}) {
-  const rows = (exposure ? 1 : 0) + (ring ? 1 : 0) + (slice ? 1 : 0);
+export function cloudPlate(id, label, at, orbital, { seed = 1, ring = null, ringMax = 300, ringStep = 10, slice = false, view = null, film = false, extent = 5, pic = null, exposure = true, orbitals = null } = {}) {
+  const rows = (exposure ? 1 : 0) + (ring ? 1 : 0) + (slice ? 1 : 0) + (orbitals ? 1 : 0);
   const side = pic ?? (rows >= 3 ? 30 : 32);
   const picTop = 8 + 5 * Math.max(0, rows - 1) + 3.6;
   const size = { w: 64, h: Math.round((picTop + side + 8.5) * 10) / 10 };
   const dials = {};
-  if (exposure) dials.burst = { min: 1, max: 3, step: 1, value: 1, label: 'Number of shots:', labels: SHOT_LABELS };
+  if (orbitals) dials.orbital = { min: 1, max: orbitals.length, step: 1, value: 1, label: 'Orbital', labels: orbitals };
+  if (exposure) dials.burst = { min: 1, max: 3, step: 1, value: 1, label: 'Measurements:', labels: SHOT_LABELS };
   if (ring) dials.ring = { min: 0, max: ringMax, step: ringStep, value: 0, label: 'Ring (pm)' };
   if (slice) dials.slice = { min: 0, max: 1, step: 1, value: 0, label: 'Slice', labels: ['Off', 'On'] };
   dials.fired = { min: 0, max: MAX_SHOTS, step: 1, value: 0 };
@@ -299,10 +300,11 @@ export function cloudPlate(id, label, at, orbital, { seed = 1, ring = null, ring
   const sx = 2.5 + side + 2.5;
   return {
     fixture: {
-      id, kind: 'cloud', label, at: { ...at }, size, runLabel: 'Fire',
+      id, kind: 'cloud', label, at: { ...at }, size, runLabel: 'Measure',
       dials,
       props: {
         backdrop: true, hidden: ['fired'], orbital, seed, extent, pic: side,
+        ...(orbitals ? { orbitals } : {}),
         ...(ring ? { ring } : {}), ...(view ? { view } : {}), ...(film ? { film: slotId } : {})
       }
     },
@@ -344,6 +346,15 @@ export function blurGauge(id, at, { size = { w: 44, h: 37 } } = {}) {
 /** The Track Electron key: it asks the bench to follow the electron along a path, and the bench says why it cannot. */
 export function tracker(id, at, { size = { w: 40, h: 22 } } = {}) {
   return { id, kind: 'tracker', label: 'Path', at: { ...at }, size, runLabel: 'Track Electron', dials: {}, props: {} };
+}
+
+/** The wavefunction strip: ψ(x) above, ψ² dot density below, and a draggable probe along the line through the nucleus. */
+export function waveStrip(id, label, at, orbital, { extentPm = 200, size = { w: 72, h: 36 } } = {}) {
+  return {
+    id, kind: 'wavestrip', label, at: { ...at }, size, noRun: true,
+    dials: { probe: { min: -extentPm, max: extentPm, step: 10, value: 0, label: 'Probe (pm)' } },
+    props: { backdrop: true, orbital, extentPm }
+  };
 }
 
 export * from './cloud-read.js';

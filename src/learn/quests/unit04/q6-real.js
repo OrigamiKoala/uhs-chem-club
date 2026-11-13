@@ -29,7 +29,7 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import { gasTable, rig, chip, stmt, cylRead, rigAt, GASES } from '../../table/kits/gas.js';
-import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf } from './_shared.js';
+import { widget, put, dial, cardIn, answerCards, answerSlot, predictStage, youPredicted, guessOf } from './_shared.js';
 
 export const meta = { stageCount: 4 };
 
@@ -64,6 +64,11 @@ export const COLD = [200, 220, 240];
 const cyl = (id, label, gas, extra = {}) => ({ id, label, gas, n: 1, T: 300, V: 1, hold: 'dial', vdw: true, ...extra });
 
 export const GUESSES = [['less', 'Less than the gas law says'], ['exact', 'Exactly what the gas law says'], ['more', 'More than the gas law says']];
+export const COLD_CARDS = [
+  ['attractions', 'Attractions between particles lower pressure'],
+  ['volume', 'Particle volume raises pressure'],
+  ['none', 'Neither effect changes pressure']
+];
 
 /** The side of the gas law a cylinder reads on, as the card that says so: within two percent is "on" the law. */
 export function sideOf(q) {
@@ -79,12 +84,12 @@ export const STAGES = [
   predictStage({
     key: QUEST_KEY,
     title: 'Compression Prediction',
-    prompt: 'The gas law predicts helium squeezed to a hundredth of its volume reads a hundred times higher: what does a real gauge read?',
+    prompt: 'Helium compressed to a hundredth of its volume should have a hundred times the pressure by the gas law: what does a real sensor read?',
     items: GUESSES,
     hints: [
       'Lay one card in the slot.',
-      'Picture the gas squeezed until its particles nearly fill the room: ask whether they can still be treated as points.',
-      'Ask whether the gauge could rise by more or by less than the law says when the particles themselves take up room.'
+      'Picture the gas compressed until its particles nearly fill the volume: ask whether they can still be treated as points.',
+      'Ask whether the pressure could rise by more or by less than the law says when the particles themselves take up volume.'
     ],
     reward: {
       log: 'Prediction recorded.',
@@ -96,13 +101,15 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const r = rig(RIG, { x: 36, y: 30 }, {
-      cyls: [cyl('a', 'Holder 13', 'He')], volumes: SQUEEZE, volumeStart: 1, vmax: 24.6, w: 62, trueSize: true,
-      show: { temperature: false, amount: false, ideal: true }
+      cyls: [cyl('a', 'Cylinder 13', 'He')], volumes: SQUEEZE, volumeStart: 1, vmax: 24.6, w: 62, trueSize: true,
+      show: { temperature: false, amount: false, ideal: true },
+      gate: { slot: 'show' }, hideUntilCommit: ['gauge', 'ideal']
     });
     return {
       title: 'High-Pressure Compression',
+      briefing: 'A sealed cylinder holds 1 mol of helium at 300 K with particles drawn to scale.',
       get prompt() {
-        return youPredicted(QUEST_KEY, GUESSES, 'Compress the helium fully, then place the card for how the gauge compares with the gas law.', 'Compress the helium fully, then place the card for how the gauge compares with the gas law.');
+        return youPredicted(QUEST_KEY, GUESSES, 'Compress the helium fully and place the card for how the pressure compares with the gas law.', 'Compress the helium fully and place the card for how the pressure compares with the gas law.');
       },
       widget,
       table: gasTable({
@@ -111,9 +118,9 @@ export const STAGES = [
         zones: { slots: [{ id: 'show', label: 'Prediction', at: { x: 109, y: 27 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Turn the Piston dial, then place a card in the slot.',
-        'Compare the gauge with the gas law value at minimum volume.',
-        'Read the gauge and the gas law figure at the smallest room and see which is larger.'
+        'Turn the Piston dial and place a card in the slot.',
+        'Compare the measured pressure with the gas law value at minimum volume.',
+        'Read the pressure and the gas law figure at the smallest volume and see which is larger.'
       ],
       check(state) {
         const t = state.table;
@@ -121,11 +128,11 @@ export const STAGES = [
         if (Math.round(t.fixtures[RIG].dials.volume.value) !== SQUEEZE.length) return { ok: false, notYet: true, msg: 'Compress the cylinder to minimum volume first.' };
         if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
         if (card.id === sideOf(cylRead(t, RIG, 0))) return { ok: true };
-        return { ok: false, msg: 'The gauge is not on that side of the gas law value.' };
+        return { ok: false, msg: 'The measured pressure is not on that side of the gas law value.' };
       },
       get reward() {
         return {
-          log: 'Squeezed hard, the gauge reads above the law.',
+          log: 'Compressed hard, the pressure reads above the law.',
           title: 'Molecular Volume',
           body: 'At high pressures, helium exerts more pressure than the gas law predicts. Gas particles occupy finite volume themselves, leaving less empty space to move in.'
         };
@@ -136,31 +143,37 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const r = rig(RIG, { x: 36, y: 30 }, {
-      cyls: [cyl('a', 'Holder A', 'CO2', { V: HOLD_V, hold: 'V' })], temps: HOT, tempList: 'K', tempStart: 1, vmax: 24.6, w: 62, trueSize: true,
-      title: `Holder A  ${GASES.CO2.sym}, ${HOLD_V} L`, show: { temperature: false, amount: false, volume: false, ideal: true }
+      cyls: [cyl('a', 'Cylinder A', 'CO2', { V: HOLD_V, hold: 'V' })], temps: HOT, tempList: 'K', tempStart: 1, vmax: 24.6, w: 62, trueSize: true,
+      title: `Cylinder A  ${GASES.CO2.sym}, ${HOLD_V} L`, show: { temperature: false, amount: false, volume: false, ideal: true }
     });
     return {
       title: 'Deviations from Ideal Behavior',
-      prompt: 'Set the heater until the gauge matches the gas law figure printed with it.',
+      briefing: 'A 0.5 L cylinder holds 1 mol of carbon dioxide starting at 250 K.',
+      prompt: 'Why does cold CO₂ at 250 K read lower than the gas law predicts?',
       widget,
-      table: gasTable({ fixtures: [r] }),
+      table: gasTable({
+        pieces: answerCards(COLD_CARDS),
+        fixtures: [r],
+        zones: { slots: [answerSlot('Why cold CO₂ reads low')] }
+      }),
       hints: [
-        'Turn the Heater dial.',
-        'Compare the gauge with the gas law figure at each setting, and note which side of it the gauge is on.',
-        'The gauge sits below the figure at one end of the dial and above it at the other, so look between those settings.'
+        'Check the cold setting at 250 K, then turn the Heater dial to compare with hotter settings.',
+        'Compare the measured pressure with the gas law figure at 250 K and at 1500 K.',
+        'At 250 K particles move slowly, so pulls between them matter most.'
       ],
       check(state) {
         const t = state.table;
-        const q = cylRead(t, RIG, 0);
-        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Turn the Heater dial.' };
-        const side = sideOf(q);
-        if (side === 'exact') return { ok: true };
-        return { ok: false, msg: side === 'more' ? 'The gauge reads above the gas law figure.' : 'The gauge reads below the gas law figure.' };
+        const seen = t.fixtures[RIG].props.seen?.temp || [1];
+        if (seen.length < 2) return { ok: false, notYet: true, msg: 'Turn the Heater dial to compare 250 K with a warmer setting.' };
+        const card = cardIn(t, 'answer');
+        if (!card) return { ok: false, notYet: true, msg: 'Place a card in the slot.' };
+        if (card.id === 'attractions') return { ok: true };
+        return { ok: false, msg: 'Particle volume raises pressure; cold pulls between particles lower it.' };
       },
       reward: {
-        log: 'Cold, the gauge reads below the law; hot and cramped, above.',
+        log: 'Cold, pressure reads below the law; hot and cramped, above.',
         title: 'Ideal Gas and Real Gas',
-        body: 'A gas that always reads on the gas law is an ideal gas; a real gas strays from it. Cold, the pulls between particles hold the gauge below the law, and in a small room the space the particles fill pushes it above. Near 900 K the two effects cancel.'
+        body: 'A gas that always obeys the gas law is an ideal gas, whereas a real gas deviates. Cold attractions lower pressure and small-volume particle size raises it, canceling near 900 K.'
       }
     };
   })(),
@@ -168,41 +181,41 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   (() => {
     const r = rig(RIG, { x: 30, y: 32 }, {
-      cyls: [cyl('a', 'Holder A', 'N2', { V: 2, hold: 'V' }), cyl('b', 'Holder B', 'NH3', { V: 2, hold: 'V' }), cyl('c', 'Holder C', 'He', { V: 2, hold: 'V' })],
+      cyls: [cyl('a', 'Cylinder A', 'N2', { V: 2, hold: 'V' }), cyl('b', 'Cylinder B', 'NH3', { V: 2, hold: 'V' }), cyl('c', 'Cylinder C', 'He', { V: 2, hold: 'V' })],
       temps: COLD, tempList: 'K', tempStart: 1, vmax: 2, compact: true, w: 36, trueSize: true,
       show: { gauge: false, volume: false, temperature: false, amount: false, off: true }
     });
     return {
       title: 'Deviation Comparison',
-      prompt: 'Rank the three cold gases on the rail from the one that differs most from the gas law to the one that differs least.',
+      prompt: 'Rank the three cold gases on the rail from the one closest to the gas law to the one furthest from it.',
       widget,
       table: gasTable({
         pieces: [
-          ...['a', 'b', 'c'].map(id => chip(id, `HOLDER ${id.toUpperCase()}`, { x: 0, y: 0 })),
+          ...['a', 'b', 'c'].map(id => chip(id, `CYLINDER ${id.toUpperCase()}`, { x: 0, y: 0 })),
           { ...stmt('draw', 'Liquid at (°C): NH₃ −33 N₂ −196 He −269', { x: 100, y: 43 }), hidden: true, fetchFrom: 'drawoff' }
         ],
         fixtures: [r],
-        zones: { rail: { id: 'rail', at: { x: 108, y: 24 }, size: { w: 66, h: 16 }, first: 'Largest deviation', last: 'Smallest deviation', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] } },
+        zones: { rail: { id: 'rail', at: { x: 108, y: 24 }, size: { w: 66, h: 16 }, first: 'Smallest deviation', last: 'Largest deviation', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] } },
         fetch: [{ id: 'drawoff', label: 'Cold Draw-off', at: { x: 130, y: 56 } }]
       }),
       hints: [
-        'Turn the Heater dial, then arrange the chips on the rail.',
-        'Compare how far each cylinder deviates from the gas law at each temperature.',
-        'Work out the gap between each gauge and its gas law figure as a share of that figure.'
+        'Turn the Heater dial and arrange the cylinders on the rail.',
+        'Fetch the Cold Draw-off record to see the temperatures where each gas condenses into a liquid.',
+        'Compare the gap between each pressure and its gas law figure as a share of that figure.'
       ],
       check(state) {
         const t = state.table;
         const order = t.zones.rail.order;
         if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three cylinders on the rail.' };
         const dev = id => { const q = cylRead(t, RIG, id); return Math.abs(q.P - q.ideal) / q.ideal; };
-        const want = ['a', 'b', 'c'].sort((x, y) => dev(y) - dev(x));
+        const want = ['a', 'b', 'c'].sort((x, y) => dev(x) - dev(y));
         if (order.join() === want.join()) return { ok: true };
         return { ok: false, msg: 'Two adjacent cylinders on the rail are in the wrong order.' };
       },
       reward: {
         log: 'Stronger intermolecular forces cause greater deviation.',
         title: 'Intermolecular Attractions',
-        body: 'Stronger attractions between particles cause colder gases to fall further below ideal gas law predictions: ammonia most, nitrogen less, and helium least. These same attractive forces allow gases to condense into liquids.',
+        body: 'Stronger attractions between particles cause cold gases to fall further below ideal gas law predictions: helium least, nitrogen more, and ammonia most. These same attractive forces allow gases to condense into liquids.',
         last: true
       }
     };
@@ -213,7 +226,7 @@ export const STAGES = [
 const NOTES = {
   1: ['Place a card in the slot.'],
   2: ['Turn the Piston dial,', 'then place a card in the slot.'],
-  3: ['Turn the Heater dial.'],
+  3: ['Turn the Heater dial,', 'then place a card in the slot.'],
   4: ['Turn the Heater dial,', 'then arrange the chips on the rail.']
 };
 applyNotes(STAGES, NOTES);
@@ -238,16 +251,16 @@ export const DEBRIEF = {
 export const SOLUTIONS = [
   [put('exact', 'slot:predict')],
   [dial(RIG, 'volume', 6), put('more', 'slot:show')],
-  [dial(RIG, 'temp', 4)],
-  [{ fetch: 'drawoff' }, dial(RIG, 'temp', 1), dial(RIG, 'temp', 3), put('b', 'rail:0'), put('a', 'rail:1'), put('c', 'rail:2')]
+  [dial(RIG, 'temp', 4), put('attractions', 'slot:answer')],
+  [{ fetch: 'drawoff' }, dial(RIG, 'temp', 1), dial(RIG, 'temp', 3), put('c', 'rail:0'), put('a', 'rail:1'), put('b', 'rail:2')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
   [dial(RIG, 'volume', 6), put('exact', 'slot:show')],
-  [dial(RIG, 'temp', 2)],
-  [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2')]
+  [dial(RIG, 'temp', 2), put('volume', 'slot:answer')],
+  [put('b', 'rail:0'), put('a', 'rail:1'), put('c', 'rail:2')]
 ];
 
 function blankState() { return {}; }

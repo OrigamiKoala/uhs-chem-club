@@ -22,7 +22,7 @@ import { createRunner, stateFromScript, entryNumber } from '../../engine/stageru
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
+  heatTable, note, leadFixture, rxnFixture, gCard, plotFixture, gibbsBarsFixture, plaqueFixture, whereIs, plotRead, plotAt, gibbsFreeEnergy, crossingTemperature, fixed
 } from '../../table/kits/heat.js';
 
 export const meta = { stageCount: 5 };
@@ -92,9 +92,9 @@ export const STAGES = [
       if (card) remember(QUEST_KEY, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, the salt is on the bench at any temperature you choose.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for the cold-pack salt is recorded. Test it on the bench.'
     }
   },
 
@@ -107,14 +107,14 @@ export const STAGES = [
     widget,
     table: heatTable({
       fixtures: [
-        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, title: 'Cold-pack salt in water', w: 64 }),
-        plaqueFixture('key', 'Free energy change', { x: 114, y: 22 }, ['ΔG = ΔH − TΔS', 'ΔH: heat taken in', 'TΔS: kelvin temperature × entropy gained', 'Kelvin: K = °C + 273', 'ΔG negative: spontaneous'], { w: 62 })
+        plotFixture('plot', { x: 44, y: 30 }, { dH: SALT.dH, dS: SALT.dS, Ts: SALT.Ts, tempStart: 1, hideCrossing: true, hideDG: true, bars: true, title: 'Cold-pack salt in water', w: 68 }),
+        plaqueFixture('key', 'Free energy change', { x: 118, y: 22 }, ['ΔG = ΔH − TΔS', 'ΔH: heat taken in', 'TΔS: kelvin temperature × entropy gained', 'Kelvin: K = °C + 273', 'ΔG negative: spontaneous'], { w: 58 })
       ]
     }),
     hints: [
-      'Drag the ball along the line and watch ΔH, TΔS and ΔG printed under the plot.',
-      'Notice which of ΔH and TΔS grows as the temperature rises, and which stays the same.',
-      'The salt changes over at the temperature where ΔG is neither positive nor negative.'
+      'Drag the ball along the line and watch the ΔH and TΔS bars beside the plot.',
+      'Notice which bar grows as the temperature rises, and which stays the same.',
+      'The salt changes over at the temperature where the TΔS bar matches the ΔH bar.'
     ],
     check(state) {
       const t = state.table;
@@ -164,7 +164,7 @@ export const STAGES = [
       const wrong = Object.entries(want).find(([k, v]) => whereIs(t, k) !== v);
       if (!wrong) return { ok: true };
       const { dH, dS } = t.pieces[wrong[0]].props;
-      return { ok: false, msg: `The line for "${t.pieces[wrong[0]].label}" reads ${fixed(gibbsFreeEnergy(dH, dS, 100), 0, true)} kJ at 100 K and ${fixed(gibbsFreeEnergy(dH, dS, 600), 0, true)} kJ at 600 K.` };
+      return { ok: false, msg: `"${t.pieces[wrong[0]].label}" is in "${t.zones.trays[whereIs(t, wrong[0])].label}", yet its ΔG line reads ${fixed(gibbsFreeEnergy(dH, dS, 100), 0, true)} kJ at 100 K and ${fixed(gibbsFreeEnergy(dH, dS, 600), 0, true)} kJ at 600 K.` };
     },
     reward: {
       log: 'Each case was sorted by its line.',
@@ -193,14 +193,14 @@ export const STAGES = [
     widget,
     table: heatTable({
       fixtures: [
-        plaqueFixture('facts', 'N₂ + 3 H₂ → 2 NH₃', { x: 52, y: 26 }, [
+        plaqueFixture('facts', 'N₂ + 3 H₂ → 2 NH₃', { x: 48, y: 27 }, [
           'ΔH = −92 kJ',
           'ΔS = −199 J/(mol·K)',
           'T = 298 K',
           'ΔG = ΔH − TΔS',
           '1 kJ = 1,000 J'
-        ], { w: 70 }),
-        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'N₂'], [3, 'H₂']], rhs: [[2, 'NH₃']], w: 54, h: 34 })
+        ], { w: 86, bars: { dH: HABER.dH, dS: HABER.dS, T: HABER.T } }),
+        rxnFixture('atoms', { x: 121, y: 28 }, { lhs: [[1, 'N₂'], [3, 'H₂']], rhs: [[2, 'NH₃']], w: 50, h: 34 })
       ]
     }),
     hints: [

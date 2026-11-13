@@ -94,7 +94,8 @@ function lanternfallRules({ mods, TABLE, fail, holds, rig }) {
     // T7: a bench keeps the stages that carry a distinct idea, and at most one prediction pair per three stages (never every stage).
     const predicts = q.STAGES.filter(s => s.predict).length;
     if (!id.startsWith('boss-')) {
-      holds(q.STAGES.length >= 3 && q.STAGES.length <= 7, `unit02/${id}: ${q.STAGES.length} stages (a bench keeps 3 to 7)`);
+      // 2026-11-12: raised from 7 to 9. `q8-trends` gives each trend and each of its two causes a stage of its own (teaching pass).
+      holds(q.STAGES.length >= 3 && q.STAGES.length <= 9, `unit02/${id}: ${q.STAGES.length} stages (a bench keeps 3 to 9)`);
       holds(predicts >= 1, `unit02/${id}: no predict stage on the quest's click`);
       holds(predicts * 2 <= q.STAGES.length, `unit02/${id}: a prediction on too many stages`);
     } else {

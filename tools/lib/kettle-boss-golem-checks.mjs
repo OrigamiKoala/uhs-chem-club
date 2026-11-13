@@ -15,13 +15,13 @@ export async function check({ near }) {
   if (!near(C.GOLEM_PCT, 80.2, 0.1)) bad.push(`phase 4: the percent is ${C.GOLEM_PCT}, worked by hand 80.2`);
   if (!near(C.LEDGER.possibleTons, 27.9, 0.01)) bad.push(`phase 5: the most iron is ${C.LEDGER.possibleTons} t, worked by hand 27.9`);
   const put = (piece, to) => ({ place: { piece, to } });
-  const w4 = K.weighRead(g.stateFor(1, [put('ore', 'slot:pot.in1'), put('al', 'slot:pot.in2'), put('catch', 'slot:pot.out'), { run: 'pot' }, put('catch', 'slot:bal.pan')]).table, 'bal').grams;
+  const w4 = K.weighRead(g.stateFor(3, [put('ore', 'slot:pot.in1'), put('al', 'slot:pot.in2'), put('catch', 'slot:pot.out'), { run: 'pot' }, put('catch', 'slot:bal.pan')]).table, 'bal').grams;
   if (!near(w4, 17.9, 0.01)) bad.push(`phase 4: the catch jar weighs ${w4} g, worked by hand 17.9`);
-  const w5 = K.weighRead(g.stateFor(2, [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), { run: 'pot' }, put('catch', 'slot:bal.pan')]).table, 'bal').grams;
+  const w5 = K.weighRead(g.stateFor(4, [put('ore', 'slot:pot.in1'), put('catch', 'slot:pot.out'), { run: 'pot' }, put('catch', 'slot:bal.pan')]).table, 'bal').grams;
   if (!near(w5, 55.8, 0.01)) bad.push(`phase 5: the catch jar weighs ${w5} g, worked by hand 55.8`);
   // No plate prints an answer (a copyable figure).
   const printed = (i) => g.STAGES[i].table.fixtures.filter(f => f.kind === 'plaque').flatMap(f => f.props.lines).join(' | ');
-  if (/\b80(\.\d)?\b/.test(printed(1)) || /\b22\.3\b/.test(printed(1))) bad.push('phase 4: a plate prints the answer');
-  if (/\b27\.9\b/.test(printed(2))) bad.push('phase 5: a plate prints the answer');
+  if (/\b80(\.\d)?\b/.test(printed(3)) || /\b22\.3\b/.test(printed(3))) bad.push('phase 4: a plate prints the answer');
+  if (/\b27\.9\b/.test(printed(4))) bad.push('phase 5: a plate prints the answer');
   return bad;
 }

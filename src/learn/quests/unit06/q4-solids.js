@@ -23,7 +23,7 @@ import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import { matterTable, note, whereIs, leadFixture } from '../../table/kits/matter.js';
 import { solidCard, solidTestFixture, cardRows } from '../../table/kits/matter-tester.js';
-import { SOLIDS, meltText } from '../../engine/matterdata-tester.js';
+import { SOLIDS, meltText, currentReading } from '../../engine/matterdata-tester.js';
 
 export const meta = { stageCount: 5 };
 
@@ -248,7 +248,10 @@ export const STAGES = [
     return {
       id: 's4-sealed',
       title: 'Four Sealed Solids',
-      briefing: 'Solids come in four main kinds: molecular, ionic, metallic and covalent network. Each behaves differently when hammered, heated and wired to a lamp.',
+      briefing: {
+        speaker: 'Vess',
+        body: 'Metals hold ions in a sea of mobile electrons; ionic solids hold fixed ions that move only when molten; covalent network solids lock atoms in a full-crystal bond web, and molecular solids hold separate molecules.'
+      },
       prompt: 'What kind of solid is each sealed sample?',
       widget,
       table: benchTable(S4, tester, [['metallic', 'Metallic'], ['ionic', 'Ionic'], ['network', 'Network'], ['molecular', 'Molecular']]),
@@ -268,15 +271,29 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const tester = solidTestFixture('tester', TESTER_AT, {});
+    const tester = solidTestFixture('tester', { x: 39, y: 23.5 }, { tests: ['melt'], view: 'trace', w: 74, title: 'Melt & Trace Viewer' });
+    const cardPos5 = [{ x: 89, y: 14 }, { x: 113, y: 14 }, { x: 137, y: 14 }, { x: 89, y: 35.5 }, { x: 113, y: 35.5 }];
+    const cards5 = S5.map((s, i) => solidCard(s.id, s.solid, s.label ?? s.id, cardPos5[i], {
+      props: {
+        solid: s.solid,
+        strike: SOLIDS[s.solid].strike,
+        cur: currentReading(SOLIDS[s.solid], { T0: 0, maxT: 2000 })
+      }
+    }));
     return {
       id: 's5-sealed',
       title: 'Five Sealed Solids',
-      prompt: 'What kind of solid is each sealed sample?',
+      prompt: 'Use the hammer and current records on the cards and the melt-and-particle viewer to classify each solid.',
       widget,
-      table: benchTable(S5, tester, [['metallic', 'Metallic'], ['ionic', 'Ionic'], ['network', 'Network'], ['molecular', 'Molecular'], ['amorphous', 'Amorphous']]),
+      table: matterTable({
+        bounds: { w: 150, h: 72 },
+        recorder: { at: { x: 147.4, y: 2.4 }, size: { w: 5, h: 3.4 } },
+        pieces: cards5,
+        fixtures: [tester.fixture],
+        zones: { slots: [tester.slot], trays: trayRow([['metallic', 'Metallic'], ['ionic', 'Ionic'], ['network', 'Network'], ['molecular', 'Molecular'], ['amorphous', 'Amorphous']]) }
+      }),
       hints: [
-        'Use the tester: drag a sample in, turn the "Test" dial, and press "Test" for each test.',
+        'Read the hammer and current records already on each card, then drop a sample into the viewer and press "Heat".',
         'Two solids can agree on most tests, so compare every reading of every sample.',
         'A trace that falls at one temperature and a trace that falls over a range mean different things about the particles.'
       ],
@@ -328,7 +345,7 @@ export const SOLUTIONS = [
   [put('differ', 'slot:guess')],
   fileAll(S3),
   fileAll(S4, [1, 2, 3]),
-  fileAll(S5, [1, 2, 3])
+  fileAll(S5)
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -337,7 +354,7 @@ export const MISSES = [
   [],
   fileAll(S3, [null], { silica: 'one' }),
   fileAll(S4, [1, 2, 3], { x1: 'ionic', x4: 'network' }),
-  fileAll(S5, [1, 2, 3], { x1: 'ionic', x5: 'amorphous' })
+  fileAll(S5, [null], { x1: 'ionic', x5: 'amorphous' })
 ];
 
 function blankState() { return {}; }

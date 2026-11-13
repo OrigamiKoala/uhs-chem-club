@@ -104,9 +104,9 @@ const PAIR_LIGHT = { kinds: ['k01', 'k01'] };
 export const VOCABULARY = [
   { term: /\b(atoms?|atomic)\b/i, introducedAt: 1 },
   { term: /\belements?\b/i, introducedAt: 2 },
-  { term: /\bmixtures?\b/i, introducedAt: 2 },
   { term: /\b(molecules?|molecular)\b/i, introducedAt: 4 },
-  { term: /\bcompounds?\b/i, introducedAt: 6 }
+  { term: /\bcompounds?\b/i, introducedAt: 6 },
+  { term: /\bmixtures?\b/i, introducedAt: 7 }
 ];
 
 /* ------------------------------------------------------------------
@@ -166,7 +166,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Zoom In',
-    prompt: 'At what lowest power do separate particles show in Sample A?',
+    prompt: 'How far must you zoom in before Sample A shows separate particles?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -176,9 +176,9 @@ export const STAGES = [
       fixtures: [scopeFixture]
     }),
     hints: [
-      'Use the lens and its "Power" dial.',
+      'Drag the lens over Sample A and turn the Power dial.',
       'Compare the picture at neighbouring powers: what changes between them, and what only gets bigger?',
-      'Find the first power where you can pick out single particles, then step down one and check that the picture there is still clumps.'
+      'Find the first power where single particles appear; one step lower should still look like clumps.'
     ],
     check(state) {
       const t = state.table;
@@ -191,14 +191,18 @@ export const STAGES = [
     reward: {
       log: 'Atoms resolved at power 4.',
       title: 'Atoms',
-      body: 'Zoom in far enough and matter stops being smooth: it is made of separate tiny particles. These particles are called atoms.'
+      body: 'Zoomed in far enough, the sample is not smooth: it is made of separate particles called atoms.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Which samples hold only one kind of atom?',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An element is a substance made of only one kind of atom. Look at the atoms in each sample through the lens.'
+    },
+    prompt: 'Which samples are elements?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -210,8 +214,8 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          dishTray('one', 'One kind of atom', 22, 34, 40),
-          dishTray('more', 'More than one kind', 66, 34, 40)
+          dishTray('one', 'Element', 22, 34, 40),
+          dishTray('more', 'Not an element', 66, 34, 40)
         ]
       },
       fixtures: [scopeFixture]
@@ -219,7 +223,7 @@ export const STAGES = [
     hints: [
       'Use the lens on each sample, at a power where single atoms show.',
       'Compare the atoms within one picture by tint and size.',
-      'A sample belongs in the first tray only if every atom you can find in it matches every other.'
+      'A sample is an element only if every atom you can find in it matches every other.'
     ],
     check(state) {
       const t = state.table;
@@ -228,25 +232,29 @@ export const STAGES = [
       if (!one.length && !more.length) return { ok: false, notYet: true, msg: 'Put all four samples in a tray before you submit.' };
       if (one.length + more.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples in a tray before you submit.' };
       if (one.join() === 'dishA,dishD' && more.join() === 'dishB,dishC') return { ok: true };
-      const bad = [...one.filter(id => id === 'dishB' || id === 'dishC').map(() => 'One kind of atom'), ...more.filter(id => id === 'dishA' || id === 'dishD').map(() => 'More than one kind')];
+      const bad = [...one.filter(id => id === 'dishB' || id === 'dishC').map(() => 'Element'), ...more.filter(id => id === 'dishA' || id === 'dishD').map(() => 'Not an element')];
       const trays = [...new Set(bad)];
       return { ok: false, msg: `The "${trays[0]}" tray holds a sample whose atoms do not fit its label${trays.length > 1 ? ', and so does the other tray' : ''}.` };
     },
     reward: {
-      log: 'A and D hold one kind of atom each. B and C mix carbon and sodium.',
-      title: 'Elements and Mixtures',
-      body: 'A substance made of only one kind of atom is called an element. Different atoms sitting together without joining make a mixture.'
+      log: 'A and D hold one kind of atom each. B and C mix two kinds.',
+      title: 'Elements',
+      body: 'In an element every atom matches every other. The other samples hold two kinds of atom.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Elements',
-    prompt: 'Sort the atoms into trays so that each tray holds one element only.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Atoms of different elements can look alike, but each element has its own mass. Drop an atom in the scale slot to weigh it, then sort the atoms so each tray holds one element.'
+    },
+    prompt: 'Sort these atoms so each element sits in its own tray.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        // Sodium and magnesium are dressed alike on purpose: only the reader tells them apart.
+        // Sodium and magnesium are dressed alike on purpose: only the scale tells them apart.
         atomAt('a1', 'Na', 12, 10, { mask: true, tint: 'pale' }),
         atomAt('a2', 'C', 26, 10, { mask: true }),
         atomAt('a3', 'Mg', 40, 10, { mask: true, tint: 'pale' }),
@@ -255,7 +263,7 @@ export const STAGES = [
         atomAt('a6', 'C', 40, 24, { mask: true })
       ],
       zones: {
-        slots: [{ id: 'rd', label: 'Reader slot', at: { x: 66, y: 12 } }],
+        slots: [{ id: 'rd', label: 'Scale slot', at: { x: 66, y: 12 } }],
         trays: [
           trayAt('t1', 'Tray 1', 17, 50, 26, 16),
           trayAt('t2', 'Tray 2', 45, 50, 26, 16),
@@ -263,13 +271,13 @@ export const STAGES = [
           trayAt('t4', 'Tray 4', 101, 50, 26, 16)
         ]
       },
-      fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 98, y: 14 }, size: { w: 36, h: 14 }, noRun: true, props: { slot: 'rd' } }],
-      notes: [{ at: { x: 4, y: 36 }, text: 'Put an atom in the reader slot to read its name and mass.' }]
+      fixtures: [{ id: 'reader', kind: 'reader', label: 'Scale', at: { x: 98, y: 14 }, size: { w: 36, h: 14 }, noRun: true, props: { slot: 'rd' } }],
+      notes: [{ at: { x: 4, y: 36 }, text: 'Put an atom in the scale slot to read its mass.' }]
     }),
     hints: [
-      'Drop an atom in the reader slot to see its name and its mass.',
-      'Two of the elements look alike, but their masses differ: one reads 23.0 and the other 24.3.',
-      'Read every pale atom, then give each element a tray of its own and put every atom in the tray for its name.'
+      'Drop an atom in the scale slot to see its mass.',
+      'Two kinds look the same through the lens; compare their masses.',
+      'Weigh any atoms that look alike, then group atoms of the same mass into one tray.'
     ],
     check(state) {
       const t = state.table;
@@ -293,14 +301,18 @@ export const STAGES = [
     reward: {
       log: 'Three elements found: sodium, magnesium and carbon.',
       title: 'Every Element Has Its Own Atom',
-      body: 'The atoms of different elements differ in mass and size. When two elements look identical under the scope, weighing an atom tells them apart.'
+      body: 'Atoms of one element all have the same mass here, and atoms of different elements differ. Two that look alike can be told apart on a scale.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'What the Cutter Cannot Split',
-    prompt: 'Which one sample can the cutter not split?',
+    title: 'What Cannot Be Split',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Atoms can be joined by bonds; a group of atoms bonded together is a molecule. Lay the Break bonds tool on a dish to break every bond in it.'
+    },
+    prompt: 'Which sample has no bonds to break?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -308,31 +320,35 @@ export const STAGES = [
         dishAt('t2', 'SAMPLE B', sample('t2', 1, [{ ...CLUSTER_A, n: 1 }], 3.6), 36, 12, true),
         dishAt('t3', 'SAMPLE C', sample('t3', 1, [{ ...PAIR_LIGHT, n: 1 }], 3.6), 58, 12, true),
         dishAt('t4', 'SAMPLE D', sample('t4', 1, [{ kinds: ['k02'], n: 1 }], 3.6), 80, 12, true),
-        tool('cutter', 'Cutter')
+        tool('cutter', 'Break bonds')
       ],
-      zones: { trays: [dishTray('safe', 'Will not split', 47, 38, 40)] }
+      zones: { trays: [dishTray('safe', 'No bonds', 47, 38, 40)] }
     }),
     hints: [
-      'Use the cutter on every dish in turn.',
-      'Compare each picture before and after the cut: some change, and one does not.',
-      'Pick the sample whose picture is exactly as it was after cutting.'
+      'Drag the Break bonds tool onto each dish in turn.',
+      'Compare each picture before and after using the tool to see where bonds broke.',
+      'The sample that did not change had no bonds holding its atoms together.'
     ],
     check(state) {
       const safe = dishIn(state.table, 'safe');
       if (!safe.length) return { ok: false, notYet: true, msg: 'Put a sample in the tray first.' };
       if (safe.join() === 't4') return { ok: true };
-      return { ok: false, msg: 'That sample\'s picture changed after the cut.' };
+      return { ok: false, msg: 'That sample\'s picture changed when its bonds broke.' };
     },
     reward: {
-      log: 'A single helium atom will not divide.',
+      log: 'A single helium atom has no bonds to break.',
       title: 'Atoms Do Not Split',
-      body: 'Groups of atoms joined together are called molecules, and the cutter splits them apart. A lone atom cannot be divided.'
+      body: 'Three molecules came apart into single atoms. The fourth was a single atom already, and breaking bonds cannot split an atom.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Copy the Molecule',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Look at Sample A through the lens. The atom labels C, H and O stand for carbon, hydrogen and oxygen.'
+    },
     prompt: 'Build one molecule of Sample A from the loose atoms.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
@@ -347,8 +363,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the lens on Sample A, then join loose atoms.',
-      'Every molecule here is the same, so read just one: the atom in the middle and each atom joined to it.',
-      'Join one atom for every atom in that one molecule, by name: the middle one plus each joined one, and nothing else.'
+      'Every molecule here is the same, so look at just one: the atom in the middle and each atom joined to it.',
+      'Count how many of each element are in that molecule and join the same atoms.'
     ],
     check(state) {
       const mols = moleculesOf(state.table);
@@ -361,15 +377,19 @@ export const STAGES = [
     reward: {
       log: 'Copy built: 1 x oxygen, 2 x hydrogen.',
       title: 'Water, H2O',
-      body: 'Each water molecule contains one oxygen atom joined to two hydrogen atoms. A fixed combination of atoms defines a molecule.',
+      body: 'Each molecule here is one oxygen atom bonded to two hydrogen atoms: water, H₂O.',
       model: { type: 'molecule', name: 'water' }
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
-    title: 'Same Atoms, Different Recipe',
-    prompt: 'Build one molecule of each sample from the loose atoms.',
+    title: 'Same Elements, Different Compound',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A compound is a substance made of two or more elements bonded together. Its formula counts the atoms of each element in one molecule: water is H₂O.'
+    },
+    prompt: 'Build one molecule of Sample A and one of Sample B.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -384,8 +404,8 @@ export const STAGES = [
     }),
     hints: [
       'Use the lens on each sample, then join loose atoms.',
-      'Both samples use only hydrogen and oxygen, so compare how each molecule is put together, not what it is made of.',
-      'Copy one molecule from each sample, joining the atoms the way the lens shows them.'
+      'Both samples hold only hydrogen and oxygen, so compare how many of each atom sit in one molecule.',
+      'Count the oxygen and hydrogen atoms in a molecule of each sample and match those counts.'
     ],
     check(state) {
       const mols = moleculesOf(state.table);
@@ -398,15 +418,19 @@ export const STAGES = [
     reward: {
       log: 'Sample A: H2O. Sample B: H2O2.',
       title: 'Compounds',
-      body: 'Two or more different elements bonded together make a compound. Changing the recipe produces a different substance with different properties.',
-      model: { type: 'molecule', name: 'peroxide', caption: 'H₂O₂: the same two elements as water, joined in a different recipe.' }
+      body: 'H₂O and H₂O₂ are made of the same two elements in different counts, so they are different compounds.',
+      model: { type: 'molecule', name: 'peroxide', caption: 'H₂O₂: the same two elements as water, in a different formula.' }
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Mixture or Compound?',
-    prompt: 'Make a mixture and a compound from the hydrogen and oxygen atoms.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'In a mixture, different substances lie side by side with no bonds between them.'
+    },
+    prompt: 'Make a mixture in one tray and a compound in the other.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -425,9 +449,9 @@ export const STAGES = [
       opts: { atom3d: false }
     }),
     hints: [
-      'Use both trays, and join atoms by dropping one on another.',
-      'Look at what sits in each tray: are the atoms joined together, or only lying side by side?',
-      'Each tray must hold the arrangement that matches its label, and both are made from the same atoms.'
+      'Use both trays, and join atoms by dropping one onto another.',
+      'Look at whether the atoms in each tray are bonded together or lying loose side by side.',
+      'Check both trays: both need hydrogen and oxygen, differing only in whether the atoms are bonded.'
     ],
     check(state) {
       const t = state.table;
@@ -447,14 +471,14 @@ export const STAGES = [
     reward: {
       log: 'Same atoms: loose in a mixture, joined in a compound.',
       title: 'Mixture or Compound?',
-      body: 'The same atoms make a mixture when they lie loose beside each other and a compound when they are joined. Loose atoms can be separated again, but joined atoms cannot be pulled apart without breaking the joins.'
+      body: 'Loose side by side, the atoms are a mixture. Bonded together, the same atoms are a compound.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sort Them All',
-    prompt: 'Sort each sample as an element, a compound or a mixture.',
+    prompt: 'Sort the four samples into Element, Compound and Mixture.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -463,7 +487,7 @@ export const STAGES = [
         dishAt('m3', 'SAMPLE C', sample('m3', 4, [{ kinds: ['k06'], n: 12 }, { kinds: ['k16'], n: 12 }]), 51),
         dishAt('m4', 'SAMPLE D', sample('m4', 4, [{ ...PAIR_LIGHT, n: 18 }]), 71),
         tool('lens', 'Lens'),
-        tool('cutter', 'Cutter')
+        tool('cutter', 'Break bonds')
       ],
       zones: {
         trays: [
@@ -475,9 +499,9 @@ export const STAGES = [
       fixtures: [scopeFixture]
     }),
     hints: [
-      'Use the lens on each sample, and the cutter on any you are unsure of.',
-      'For each sample, check two things: how many different names its atoms read, and whether its atoms are joined in groups or sit loose.',
-      'Joining is not what separates the trays: ask how many kinds of atom the sample holds first, and only then whether they are joined.'
+      'Use the lens on each sample, and the Break bonds tool to test for bonds.',
+      'For each sample, check how many kinds of atom it holds and whether its atoms are bonded.',
+      'A sample can have bonds and still be an element, so settle the kinds of atom first.'
     ],
     check(state) {
       const t = state.table;
@@ -495,7 +519,7 @@ export const STAGES = [
       log: 'All four filed correctly.',
       title: 'Elements, Compounds, and Mixtures',
       last: true,
-      body: 'An element has only one kind of atom, a compound bonds different elements together, and a mixture keeps them unbonded. Every substance fits one of these three.'
+      body: 'One kind of atom is an element, and different elements bonded are a compound. Different substances not bonded to each other are a mixture.'
     }
   }
 ];

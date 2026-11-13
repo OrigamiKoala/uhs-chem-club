@@ -18,6 +18,7 @@ import { paintPiece as heatPiece, paintFixture as heatFixture, faceKey as heatFa
 import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './ph-registry.js';
 import { bodiesDress } from './ph-3d.js';
 import { markReplay, replayView, replayMark, demoView } from './ph-replay.js';
+import { revealTable } from './commit-gate.js';
 import './ph-tour.js';
 
 /* One import per instrument: each file registers its own fixtures and pieces. (marker: ph instruments) */
@@ -98,7 +99,7 @@ export const PH_KIT = {
   kinds: { ...HEAT_KIT.kinds, tag: { ...HEAT_KIT.kinds.tag, r: 8.4 }, ...pieceKinds() },
   run,
   // A miss replays the cause on the instruments that can (`ph-replay.js`).
-  onMiss: table => markReplay(table),
+  onMiss: table => { revealTable(table); markReplay(table); },
   // A short demonstration of an instrument being used, for the Tour: the fixture t seconds into it.
   demoOf: (f, t) => demoView(f, t),
   // A mechanism view (a window of moving particles) keeps the table's loop running and gives its painters a clock.

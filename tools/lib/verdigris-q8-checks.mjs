@@ -60,8 +60,8 @@ export async function checkVerdigrisQ8({ ok, fail }) {
   holds(r1.lo === 3 && r1.hi === 5 && r1.pctHA === 98, 'moving the dial to 3 does not paint 3 to 5 and read 98');
   const t2 = Q.stateFor(1, [dial('st', 'ph', 3), dial('st', 'ph', 6), dial('st', 'ph', 4)]).table;
   holds(stripRead(t2, 'st').lo === 3 && stripRead(t2, 'st').hi === 6 && stripRead(t2, 'st').pH === 4, 'the strip forgets the range it crossed');
-  const t8 = Q.stateFor(7, [dial('st', 'ph', 4.5), dial('st', 'acid', 2)]).table;
-  holds(stripRead(t8, 'st').ai === 1 && stripRead(t8, 'st').lo === 4.5 && stripRead(t8, 'st').hi === 4.5 && t8.fixtures.st.props.reach[0].lo === 4.5, 'a second acid shares the first acid\'s painted range');
+  const t7 = Q.stateFor(6, [dial('st', 'ph', 4.5), dial('st', 'acid', 2)]).table;
+  holds(stripRead(t7, 'st').ai === 1 && stripRead(t7, 'st').lo === 4.5 && stripRead(t7, 'st').hi === 4.5 && t7.fixtures.st.props.reach[0].lo === 4.5, 'a second acid shares the first acid\'s painted range');
   const texts = [];
   const rec = new Proxy({}, { get: (_, k) => (k === 'fillText' ? tx => texts.push(String(tx)) : k === 'measureText' ? tx => ({ width: String(tx).length * 6 }) : () => rec), set: () => true });
   const b = f => ({ sc: 4, X: v => v * 4, Y: v => v * 4, lay: fixtureLayout(f) });
@@ -103,23 +103,10 @@ export async function checkVerdigrisQ8({ ok, fail }) {
   holds(mixRead(live, 'f1').na === 2 && live.fixtures.f2.noRun === true, 'flask 1 does not pour or flask 2 does');
   ok('q8-capacity stage 5: flask 1 is spent after 8 pours (3.05), flask 2 takes 24, each slip is refused with the counts');
 
-  /* ---- stage 7: the solids ---- */
-  near(saturatedSpheres('Mg_OH_2'), 0.1119, 0.001, 'Mg(OH)2 saturated spheres');
-  near(saturatedSpheres('AgCl'), 0.01342, 0.0002, 'AgCl saturated spheres');
-  const m1 = solidAfter({ salt: 'Mg_OH_2', solid: 40, basic: true, n: 1, acidSph: 10 });
-  const m2 = solidAfter({ salt: 'Mg_OH_2', solid: 40, basic: true, n: 2, acidSph: 10 });
-  const a2 = solidAfter({ salt: 'AgCl', solid: 40, basic: false, n: 2, acidSph: 10 });
-  holds(m1.cations === 5 && m1.left === 35 && m2.cations === 10 && m2.left === 30 && a2.cations === 0 && a2.left === 40 && a2.anions === 0, 'the beakers after one and two pours are not 5/35, 10/30 and 0/40');
-  const sp = Q.stateFor(6, [pour('sm'), pour('sm'), pour('sa')]).table;
-  holds(solidRead(sp, 'sm').cations === 10 && solidRead(sp, 'sm').left === 30 && solidRead(sp, 'sa').cations === 0, 'the beakers on the table do not read 10/30 and 0');
-  holds(run(6, [dial('pick', 'value', 1)]).ok && [2, 3].every(v => !run(6, [dial('pick', 'value', v)]).ok), 'stage 7 accepts magnesium hydroxide only');
-  holds(/5 dissolved spheres and 35 squares/.test(run(6, [dial('pick', 'value', 2)]).msg), 'stage 7: the refusal does not give the counts');
-  ok('q8-capacity stage 7: Ksp saturation is under a sphere, acid dissolves 5 spheres of Mg(OH)2 a pour and none of AgCl');
-
-  /* ---- stage 8 ---- */
-  holds(run(7, [dial('pick', 'value', 2)]).ok && [1, 3].every(v => !run(7, [dial('pick', 'value', v)]).ok), 'stage 8 accepts acid Y only');
-  holds(/4 percent acid form and 96 percent base/.test(run(7, [dial('pick', 'value', 1)]).msg) && /64 and 36/.test(run(7, [dial('pick', 'value', 1)]).msg), 'stage 8: the refusal does not give the readings');
-  ok('q8-capacity stage 8: acid Y is the nearest to even at pH 4.5');
+  /* ---- stage 7 ---- */
+  holds(run(6, [dial('pick', 'value', 2)]).ok && [1, 3].every(v => !run(6, [dial('pick', 'value', v)]).ok), 'stage 7 accepts acid Y only');
+  holds(/4 percent acid form and 96 percent base/.test(run(6, [dial('pick', 'value', 1)]).msg) && /64 and 36/.test(run(6, [dial('pick', 'value', 1)]).msg), 'stage 7: the refusal does not give the readings');
+  ok('q8-capacity stage 7: acid Y is the nearest to even at pH 4.5');
 
   /* ---- builders reach the fixture ---- */
   const sf = stripFixture('s', { x: 50, y: 30 }, { acids: [C.ACETIC, C.METHYL_RED], indicator: true, start: 3, w: 70, title: 'T' });
@@ -135,8 +122,7 @@ export async function checkVerdigrisQ8({ ok, fail }) {
   holds(/4\.27/.test(body(3)) && /4\.70/.test(body(3)), 'stage 4 reward misses 4.27 or 4.70');
   holds(/40 spheres/.test(body(4)) && /8 pours/.test(body(4)) && /takes 24/.test(body(4)), 'stage 5 reward misses 40, 8 or 24');
   holds(/0\.09/.test(body(5)) && /0\.21/.test(body(5)) && /0\.61/.test(body(5)), 'stage 6 reward misses 0.09, 0.21 or 0.61');
-  holds(/5 more spheres/.test(body(6)), 'stage 7 reward misses 5 spheres');
-  holds(/64 percent/.test(body(7)) && /36 percent/.test(body(7)), 'stage 8 reward misses 64 and 36');
+  holds(/64 percent/.test(body(6)) && /36 percent/.test(body(6)), 'stage 7 reward misses 64 and 36');
   ok('q8-capacity rewards: the figures printed are the ones worked by hand');
 
   const story = QUEST_STORY['unit09/q8-capacity'];
@@ -158,7 +144,7 @@ export async function checkVerdigrisQ8({ ok, fail }) {
   /* ---- no refusal carries the rule ---- */
   const LEAKS = {
     1: /protonation|below the pKa|above the pKa|pKa/i, 2: /pKa|crosses|equal/i, 3: /capacity|more concentrated|amount of/i,
-    4: /spent|used up|divide|ratio|times/i, 5: /near equal|factor of ten|ratio/i, 6: /basic anion|hydroxide is a base|takes the acid/i, 7: /pKa|closest|nearest/i
+    4: /spent|used up|divide|ratio|times/i, 5: /near equal|factor of ten|ratio/i, 6: /pKa|closest|nearest/i
   };
   const refusals = {
     1: [[dial('pick', 'value', 1)], [dial('pick', 'value', 3)], [dial('pick', 'value', 4)]],
@@ -166,8 +152,7 @@ export async function checkVerdigrisQ8({ ok, fail }) {
     3: [[dial('pick', 'value', 1)], [dial('pick', 'value', 3)]],
     4: ['8', '3', '16'].map(v => [typed('n', v)]),
     5: [[dial('pick', 'value', 2)], [dial('pick', 'value', 3)]],
-    6: [[dial('pick', 'value', 2)], [dial('pick', 'value', 3)]],
-    7: [[dial('pick', 'value', 1)], [dial('pick', 'value', 3)]]
+    6: [[dial('pick', 'value', 1)], [dial('pick', 'value', 3)]]
   };
   for (const [i, scripts] of Object.entries(refusals)) for (const script of scripts) {
     const r = run(Number(i), script);

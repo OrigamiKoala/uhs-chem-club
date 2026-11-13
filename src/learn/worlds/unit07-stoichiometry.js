@@ -22,15 +22,6 @@ export const UNIT_07 = {
 
   quests: [
     {
-      id: 'q1-recipe',
-      title: 'The Same Recipe',
-      line: "Read each molecule's fixed recipe by weight.",
-      arena: 'bench',
-      stageCount: 8,
-      status: 'live',
-      module: () => import('../quests/unit07/q1-recipe.js')
-    },
-    {
       id: 'q2-names',
       title: 'Names and Formulas',
       line: "Read the labels on the foundry's crates.",
@@ -44,7 +35,7 @@ export const UNIT_07 = {
       title: 'Physical or Chemical',
       line: "Does the ore turn into something new?",
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit07/q3-change.js')
     },
@@ -80,7 +71,7 @@ export const UNIT_07 = {
       title: 'Titration',
       line: "Count the acid in the pickling tank.",
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit07/q7-titrate.js')
     },
@@ -96,9 +87,9 @@ export const UNIT_07 = {
     {
       id: 'q9-hsab',
       title: 'Hard and Soft',
-      line: 'Predict precipitation and reactions by ion firmness.',
+      line: 'Predict precipitation and reactions by hard and soft ions.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit07/q9-hsab.js')
     },
@@ -107,7 +98,7 @@ export const UNIT_07 = {
       title: 'Recipe Golem',
       line: 'Starve the foundry golem and weigh its recipe.',
       arena: 'boss',
-      stageCount: 3,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit07/boss-golem.js')
     }

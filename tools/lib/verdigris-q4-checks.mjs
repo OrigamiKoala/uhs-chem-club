@@ -23,14 +23,14 @@ export async function checkVerdigrisQ4({ ok, fail }) {
 
   const want = { 'hf,hcl': 0, 'hcl,hf': 100, 'hbr,hcl': 96, 'hcl,hbr': 4, 'acetic,hf': 14, 'acetic,hclo': 96, 'acetic,h2o': 100, 'acetic,hcl': 0, 'acetic,cl3': 1, 'acetic,acetic': 50 };
   for (const [k, n] of Object.entries(want)) { const [a, b] = k.split(','); const g = D.raceCount(a, b); if (g !== n) no(`race ${k}: got ${g}, expected ${n}`); }
-  const order = { 2: 'hbr,hcl,hf', 3: 'hf,h2o,nh3,ch4', 4: 'hclo4,hclo3,hclo2,hclo', 5: 'formic,acetic,ethanol', 6: 'cl3,cl2,cl1,acetic', 7: 'hcl,hf,hclo,h2o' };
+  const order = { 2: 'hf,hcl,hbr', 3: 'ch4,nh3,h2o,hf', 4: 'hclo,hclo2,hclo3,hclo4', 5: 'ethanol,acetic,formic', 6: 'hcl,hf,hclo,h2o' };
   for (const [s, o] of Object.entries(order)) holds(Q.CHECKS.WANT[s].join() === o, `stage ${s}: the rank is ${Q.CHECKS.WANT[s].join()}, expected ${o}`);
-  holds(Q.CHECKS.WANT[8].join() === 'x3,x4,x1,x5,x2', 'stage 8: the sealed rank is not C D A E B');
+  holds(Q.CHECKS.WANT[7].join() === 'x2,x5,x1,x4,x3', 'stage 7: the sealed rank is not B E A D C');
   ok('q4-structure race: counts and ranks agree with the values worked by hand');
 
   const run = (i, script) => Q.STAGES[i].check(Q.stateFor(i, script));
   const LEAK = /stronger|weaker|strength|conjugate|resonance|inductive|electroneg|pKa|bond|rule/i;
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     holds(run(i, Q.SOLUTIONS[i]).ok, `stage ${i + 1}: the scripted solution is refused`);
     const m = run(i, Q.MISSES[i]);
     holds(!m.ok && m.msg, `stage ${i + 1}: the scripted miss is accepted or has no reason`);
@@ -38,18 +38,18 @@ export async function checkVerdigrisQ4({ ok, fail }) {
   }
   holds(run(0, []).notYet, 'an empty predict rail is not "not yet"');
   // A correct rank is accepted without a single race having been run.
-  holds(run(1, ['hbr', 'hcl', 'hf'].map((id, i) => ({ place: { piece: id, to: `rail:${i}` } }))).ok, 'stage 2 wants races before it accepts the right order');
+  holds(run(1, ['hf', 'hcl', 'hbr'].map((id, i) => ({ place: { piece: id, to: `rail:${i}` } }))).ok, 'stage 2 wants races before it accepts the right order');
   // Every wrong order of three is refused with a reason.
-  const perms = [['hf', 'hcl', 'hbr'], ['hcl', 'hbr', 'hf'], ['hbr', 'hf', 'hcl'], ['hcl', 'hf', 'hbr'], ['hf', 'hbr', 'hcl']];
+  const perms = [['hbr', 'hcl', 'hf'], ['hcl', 'hbr', 'hf'], ['hbr', 'hf', 'hcl'], ['hcl', 'hf', 'hbr'], ['hf', 'hbr', 'hcl']];
   for (const p of perms) { const r = run(1, p.map((id, i) => ({ place: { piece: id, to: `rail:${i}` } }))); holds(!r.ok && r.msg, `stage 2: order ${p} is accepted or has no reason`); }
   const t = Q.stateFor(1, [{ place: { piece: 'hf', to: 'slot:race.a' } }, { place: { piece: 'hcl', to: 'slot:race.b' } }, { run: 'race' }]).table;
   holds(t.recorder.rows.length === 1 && t.recorder.rows[0].y === 0, 'a race of HF with Cl⁻ does not record 0');
   const none = Q.stateFor(1, [{ run: 'race' }]);
   holds(none.table.recorder.rows.length === 0, 'a race with empty places records a result');
   // The cards print structure only, never a pKa.
-  for (const i of [1, 2, 3, 4, 5, 6, 7]) for (const p of Object.values(Q.stateFor(i, []).table.pieces)) if (p.kind === 'phacid') holds(!/pKa|\bK\b/.test((p.props.rows || []).join(' ')), `stage ${i + 1}: a card prints a pKa`);
-  // Stage 7 starts with the reference acid in the first place.
-  holds(Q.stateFor(6, []).table.pieces.ref.zone === 'slot:race.a', 'stage 7: the reference acid is not in the first place');
+  for (const i of [1, 2, 3, 4, 5, 6]) for (const p of Object.values(Q.stateFor(i, []).table.pieces)) if (p.kind === 'phacid') holds(!/pKa|\bK\b/.test((p.props.rows || []).join(' ')), `stage ${i + 1}: a card prints a pKa`);
+  // Stage 6 starts with the reference acid in the first place.
+  holds(Q.stateFor(5, []).table.pieces.ref.zone === 'slot:race.a', 'stage 6: the reference acid is not in the first place');
   ok('q4-structure stages: every scripted solution passes, every miss names a reading, a right rank needs no race');
 
   const st = QUEST_STORY['unit09/q4-structure'];

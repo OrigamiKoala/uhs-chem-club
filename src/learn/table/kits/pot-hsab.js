@@ -82,7 +82,7 @@ export function probeFixture(id, at, { w = 50, h = 30 } = {}) {
     fixture: {
       id,
       kind: 'hsabprobe',
-      label: 'Firmness Probe',
+      label: 'Cloud probe',
       at: { ...at },
       size: { w, h },
       runLabel: 'Test',
@@ -96,7 +96,7 @@ export function probeFixture(id, at, { w = 50, h = 30 } = {}) {
 
 function runProbe(state, fid) {
   const r = probeRead(state, fid);
-  if (!r.ionId) return { noop: 'Put an ion disc into the socket first.' };
+  if (!r.ionId) return { noop: 'Put an ion into the socket first.' };
   return { x: r.data?.polarizability || 0, y: r.data?.deformation || 0, label: r.sig };
 }
 
@@ -106,7 +106,7 @@ function paintProbe(ctx, f, state, b) {
   const sc = b.sc;
 
   // Title
-  say(ctx, 'FIRMNESS PROBE', F.x(2.0), F.y(2.2), F.size(2.0, 6.4), { weight: 700, color: DUST });
+  say(ctx, 'CLOUD PROBE', F.x(2.0), F.y(2.2), F.size(2.0, 6.4), { weight: 700, color: DUST });
 
   // Display area on right
   const dx = F.x(19);
@@ -120,7 +120,7 @@ function paintProbe(ctx, f, state, b) {
   ctx.strokeRect(dx + 0.5, dy + 0.5, dw - 1, dh - 1);
 
   if (!r.ionId) {
-    say(ctx, 'Insert ion disc in socket', dx + dw / 2, dy + dh / 2, F.size(1.8, 5.6), { align: 'center', color: DIM });
+    say(ctx, 'Insert ion in socket', dx + dw / 2, dy + dh / 2, F.size(1.8, 5.6), { align: 'center', color: DIM });
     return;
   }
 
@@ -139,10 +139,12 @@ function paintProbe(ctx, f, state, b) {
   const sym = ion ? pretty(ion.f) : r.ionId;
   const isHardIon = r.data?.hard;
 
+  const baseR = r.data?.radius ? 3.5 + (r.data.radius - 70) / 50 : 5.5;
+
   if (!r.ran) {
     // Unpolarized round cloud
     ctx.beginPath();
-    ctx.arc(cx, cy, 5.5 * sc, 0, Math.PI * 2);
+    ctx.arc(cx, cy, baseR * sc, 0, Math.PI * 2);
     ctx.fillStyle = isHardIon ? '#5a7860' : '#8a6880';
     ctx.globalAlpha = 0.45;
     ctx.fill();
@@ -157,8 +159,8 @@ function paintProbe(ctx, f, state, b) {
 
   // Tested state
   const deform = r.data.deformation; // 0.08 hard, 0.65 soft
-  const rx = (5.5 + deform * 3.5) * sc;
-  const ry = (5.5 - deform * 1.8) * sc;
+  const rx = (baseR + deform * 3.5) * sc;
+  const ry = (baseR - deform * 1.8) * sc;
 
   ctx.beginPath();
   ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
@@ -416,23 +418,23 @@ registerPiece('hsabchip', {
 addTourText(
   {
     'pot:hsabprobe': {
-      title: 'Firmness Probe',
+      title: 'Cloud probe',
       dials: false,
-      text: 'Put an ion disc into the socket and press "Test". The probe measures how easily the ion\'s electron cloud deforms in an electric field.'
+      text: 'Put an ion into the socket and press "Test". The probe shows whether the ion\'s cloud keeps its shape or pulls out of shape in an electric field.'
     },
     'pot:hsabwells': {
       title: 'Reaction Wells',
       dials: false,
-      text: 'Seat solution jars in the test wells and press "Mix". The window shows whether the ions combine into an insoluble precipitate or remain dissolved.'
+      text: 'Seat solution jars in the test wells and press "Mix". The particle view shows whether the ions combine into an insoluble precipitate or remain dissolved.'
     },
     'pot:hsabbond': {
       title: 'Bond Viewer',
       dials: false,
-      text: 'Examine the two particle diagrams showing ionic charge attraction and covalent cloud overlap, then place matching chips in the sockets.'
+      text: 'Examine the two particle diagrams showing ionic charge attraction and covalent cloud overlap, then place matching cards in the sockets.'
     }
   },
   {
     hsabcard: ['Card', 'A card that names an ion pair or prediction. Drag it into the matching tray or slot.'],
-    hsabchip: ['Chip', 'A chip that names a formula or bond type. Drag it into the socket that matches.']
+    hsabchip: ['Card', 'A card that names a formula or bond type. Drag it into the socket that matches.']
   }
 );

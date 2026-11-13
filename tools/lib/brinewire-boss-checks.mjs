@@ -60,7 +60,7 @@ export async function checkBrinewireBoss({ ok, fail }) {
   holds(G.electronsToward('ag', 'mg') === 'left' && B.CHECKS.P2_ANODE === 'mg', 'the electrons move toward the silver beaker and magnesium is the anode');
   holds(run(1, [dial('pick', 'value', 2)]).ok, 'phase 2 accepts the right strip');
   const m2 = run(1, [{ run: 'rig' }, dial('pick', 'value', 1)]);
-  holds(!m2.ok && /needle swung to the left and read 1\.44 A/.test(m2.msg), `phase 2 refuses the left strip naming the needle: "${m2.msg}"`);
+  holds(!m2.ok && /ammeter pointed left and read 1\.44 A/.test(m2.msg), `phase 2 refuses the left strip naming the ammeter: "${m2.msg}"`);
   const m2b = run(1, [dial('pick', 'value', 1)]);
   holds(!m2b.ok && /has not been run/.test(m2b.msg), 'phase 2 says when the cell has not been run');
   holds(run(1, []).notYet, 'phase 2 waits for the dial');

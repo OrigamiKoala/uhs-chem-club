@@ -45,7 +45,7 @@ import {
   cardTable, cardSlot, cardTray, elementCard, tradeOf, piecesIn, slotCard, railOrder
 } from '../../table/kits/cards.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 6 };
 
 /**
  * When each withheld word is earned. `introducedAt` is the stage whose REWARD
@@ -53,15 +53,12 @@ export const meta = { stageCount: 7 };
  * is player-facing.
  */
 export const VOCABULARY = [
-  { term: /\batomic number\b/i, introducedAt: 1 },
-  { term: /\bperiods?\b/i, introducedAt: 2 },
-  { term: /\bperiodic\b/i, introducedAt: 3 },
-  { term: /\bgroups?\b/i, introducedAt: 4 },
-  { term: /\bnoble\b/i, introducedAt: 5 },
-  { term: /\bmetals?\b/i, introducedAt: 6 },
-  { term: /\bnonmetals?\b/i, introducedAt: 6 },
-  { term: /\balkali\b/i, introducedAt: 6 },
-  { term: /\bhalogens?\b/i, introducedAt: 6 }
+  { term: /\bperiods?\b/i, introducedAt: 1 },
+  { term: /\bperiodic\b/i, introducedAt: 2 },
+  { term: /\bgroups?\b/i, introducedAt: 3 },
+  { term: /\bnoble\b/i, introducedAt: 4 },
+  { term: /\bmetals?\b/i, introducedAt: 5 },
+  { term: /\bnonmetals?\b/i, introducedAt: 5 }
 ];
 
 const SPEAKER = 'Vess';
@@ -104,10 +101,10 @@ export const CARDS = {
 
 /** What each card does when another atom is pushed at it. */
 export const DOES_TEXT = {
-  gives: 'Hands one electron over.',
-  takes: 'Pulls one electron off the other atom and keeps it.',
-  shares: 'Neither gives nor takes. It holds on to a partner instead.',
-  inert: 'Nothing at all. It will not trade either way.'
+  gives: 'Loses one electron.',
+  takes: 'Gains one electron.',
+  shares: 'Shares electrons with a partner.',
+  inert: 'No change.'
 };
 
 /** The run of cards in catalogue order. */
@@ -168,63 +165,26 @@ const run = id => ({ run: id });
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Put Them In Order',
-    prompt: 'Lay the six cards on the strip, from fewest protons on the left to most on the right.',
-    widget: { type: 'table', label: 'The desk' },
-    table: cardTable({
-      pieces: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'].map((id, i) => card(id, { x: 30 + 18 * i, y: 48 })),
-      zones: { rail: { at: { x: 75, y: 22 }, size: { w: 102, h: 14 }, first: 'Fewest protons', last: 'Most protons', items: [] } }
-    }),
-    hints: [
-      'Use the strip along the top.',
-      'Read the protons printed on each card; how heavy a card is does not matter here.',
-      'Write the six proton counts down, sort them smallest to largest, and lay the cards in that order from the leftmost place to the rightmost.'
-    ],
-    check(state) {
-      const want = ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'];
-      const got = railOrder(state.table);
-      if (got.length < 6) {
-        return { ok: false, notYet: true, msg: `Lay all six cards on the strip first — ${got.length} of them are there.` };
-      }
-      if (got.join() === want.join()) return { ok: true };
-      const byMass = ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'];
-      if (got.join() === byMass.join()) {
-        return { ok: false, msg: 'The cards are in the order of their weights.' };
-      }
-      for (let i = 1; i < got.length; i++) {
-        const a = CARDS[got[i - 1]];
-        const b = CARDS[got[i]];
-        if (a && b && a.z > b.z) {
-          return { ok: false, msg: `${a.name} (${a.z} protons) sits before ${b.name} (${b.z} protons).` };
-        }
-      }
-      return { ok: false, msg: 'Two neighbouring cards are out of order by proton count.' };
+    title: 'Find the Repeat',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'These eighteen elements lie in order of atomic number. The dots on each card are its valence electrons.'
     },
-    reward: {
-      log: 'Six cards laid in count order.',
-      title: 'Atomic Number',
-      body: 'You laid the cards from fewest protons to most. That proton count is the atomic number.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'Find The Repeat',
-    prompt: 'Set aside every card where the number of valence electrons resets to one.',
+    prompt: 'At which elements does the count of valence electrons start again at one?',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: RUN_18.map((id, i) => card(id, { x: X(i % 9), y: i < 9 ? 14 : 30 })),
       zones: { trays: [cardTray('again', 'Where it starts over', { x: 75, y: 53 }, 4, 1)] }
     }),
     hints: [
-      'Each card carries one dot for every electron in its outer shell.',
-      'Follow the dots along the rows and watch how the count changes from card to card.',
-      'Compare each card with the one before it, and set aside every card whose dots fall back to a single dot after a longer run.'
+      'Count the outer-shell dots along the top row, then the bottom row.',
+      'Watch where the dot count drops back to one after a full shell.',
+      'Hydrogen begins the first row; look for the cards that begin a new cycle at one dot.'
     ],
     check(state) {
       const set = piecesIn(state.table, 'tray:again').map(p => p.id);
       if (set.length === 0) {
-        return { ok: false, notYet: true, msg: 'Set aside every card where the outer electron count drops back to 1.' };
+        return { ok: false, notYet: true, msg: 'Set aside every card where the valence electron count drops back to 1.' };
       }
       if (set.includes('c01')) {
         return { ok: false, msg: 'Hydrogen is where the pattern begins, not where it starts over.' };
@@ -233,22 +193,22 @@ export const STAGES = [
         return { ok: false, msg: 'You found one card where the count restarts, but there is another further along.' };
       }
       if (set.some(id => id !== 'c03' && id !== 'c11')) {
-        return { ok: false, msg: 'A card you set aside does not restart at 1 outer electron. Look for where the dot count drops back to 1.' };
+        return { ok: false, msg: 'A card you set aside does not restart at 1 valence electron.' };
       }
       if (set.length === 2) return { ok: true };
-      return { ok: false, msg: 'Set aside only the cards where the outer shell count drops back to 1.' };
+      return { ok: false, msg: 'Set aside only the cards where the valence electron count drops back to 1.' };
     },
     reward: {
       log: 'Repeat measured at 8.',
       title: 'Periods',
-      body: 'Outer-shell electrons increase and reset as each shell fills up. Breaking the rows where the count resets creates periods of 2, 8, and 8 elements, with a gap between groups 2 and 13.'
+      body: 'The count climbs as a shell fills, then starts again at one. Starting a new row at each of those cards gives periods of 2, 8 and 8.'
     }
   },
 
-  /* ---------------------------------------------------------------- 3 */
+  /* ---------------------------------------------------------------- 2 */
   {
-    title: 'Lay The Last Row',
-    prompt: 'File the eight loose cards into the empty bottom row, ordered left to right by atomic number.',
+    title: 'Lay the Last Row',
+    prompt: 'Where does each loose card belong in the bottom row?',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
@@ -260,9 +220,9 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Use the loose cards and the empty places in the row.',
-      'SODIUM reads the fewest protons of the eight and ARGON reads the most.',
-      'Put the fewest-proton card in the first place, then for each next place find the card with one proton more than the card before it.'
+      'Drag the loose cards into the empty places in the bottom row.',
+      'Compare the atomic number on each loose card.',
+      'Look at how atomic numbers run from left to right in the rows above.'
     ],
     check(state) {
       const want = ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
@@ -276,7 +236,7 @@ export const STAGES = [
       for (let i = 0; i < got.length; i++) {
         if (got[i] !== want[i]) {
           const here = CARDS[got[i]];
-          return { ok: false, msg: `Place ${i + 1} holds ${here.name} with ${here.z} protons, which is out of order with its neighbors.` };
+          return { ok: false, msg: `Place ${i + 1} holds ${here.name} with atomic number ${here.z}, which is out of order with its neighbours.` };
         }
       }
       return { ok: false, msg: 'The row is out of order — read the cards and lay them lowest on the left.' };
@@ -284,14 +244,18 @@ export const STAGES = [
     reward: {
       log: 'Chart complete: 18 cards, three rows.',
       title: 'The Periodic Table',
-      body: 'This arrangement is the periodic table. Elements are ordered by atomic number, with row breaks where electron patterns repeat.'
+      body: 'This arrangement is the periodic table: elements in order of atomic number, with a new row where the outer shell starts again.'
     }
   },
 
-  /* ---------------------------------------------------------------- 4 */
+  /* ---------------------------------------------------------------- 3 */
   {
     title: 'Read Down, Not Along',
-    prompt: 'File each of the three loose cards in the column it belongs to.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A row of the periodic table is a period and a column is a group.'
+    },
+    prompt: 'Which group does each loose card belong to?',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
@@ -303,9 +267,9 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Use the open places under the columns.',
-      'Compare the outer-shell dots on the loose cards with the dots on the cards in the column above each open place.',
-      'Pick one reading on the cards, follow it down a column to see which one never changes, then give each loose card the open place that matches it.'
+      'Drag each loose card into one of the open places in the bottom row.',
+      'Compare the outer-shell dots on each loose card with the cards above each open place.',
+      'Elements in the same group have the same number of valence electrons.'
     ],
     check(state) {
       const want = { s14: 'c14', s16: 'c16', s17: 'c17' };
@@ -315,7 +279,7 @@ export const STAGES = [
       }
       for (const [slot, id] of Object.entries(want)) {
         if (slotCard(state.table, slot) !== id) {
-          return { ok: false, msg: 'A loose card\'s dots differ from the dots on the cards in its column.' };
+          return { ok: false, msg: 'A loose card\'s dots differ from the dots on the cards in its group.' };
         }
       }
       return { ok: true };
@@ -323,70 +287,82 @@ export const STAGES = [
     reward: {
       log: 'Columns share outer-shell electrons.',
       title: 'Groups',
-      body: 'A column of the periodic table is called a group, and every card in a group has the same number of outer-shell electrons. Those outer electrons decide how an atom behaves, so a group is a list of atoms that behave alike.'
+      body: 'Every element in a group has the same number of valence electrons, so the elements of a group react alike.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 4 */
+  {
+    title: 'The Ones That Do Not React',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'In the partner test an atom with a full outer shell neither loses nor gains an electron.'
+    },
+    prompt: 'Which elements on the chart will show no change in the partner test?',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: chartCards({ fixed: false }),
+      zones: {
+        trays: [cardTray('inert', 'No change', { x: 36, y: 54 }, 4, 1)],
+        slots: [cardSlot('tester', { x: 92, y: 51 }, { label: 'Card' })]
+      },
+      fixtures: [{ id: 'tester', kind: 'tester', label: 'Partner test', runLabel: 'Test Card', at: { x: 126, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
+    }),
+    hints: [
+      'Look at the outer-shell dots on each card, or test a card in the Partner test.',
+      'A full first shell holds 2 electrons; a full second or third shell holds 8.',
+      'Find the group whose elements all have full outer shells.'
+    ],
+    check(state) {
+      const noble = ['c02', 'c10', 'c18'];
+      const got = piecesIn(state.table, 'tray:inert').map(p => p.id);
+      if (!got.length) return { ok: false, notYet: true, msg: 'The tray is empty. Sort the cards that will show no change.' };
+      const wrong = got.find(id => !noble.includes(id));
+      if (wrong) {
+        return { ok: false, msg: `${CARDS[wrong].name} does not have a full outer shell.` };
+      }
+      if (got.length < noble.length) {
+        return { ok: false, msg: 'An element with a full outer shell is still on the chart.' };
+      }
+      return { ok: true };
+    },
+    reward: {
+      log: 'Group 18 shows no change.',
+      title: 'Noble Gases',
+      body: 'Helium, neon and argon have full outer shells, so they do not react in the test. They are group 18, the noble gases.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'The Ones That Will Not Trade',
-    prompt: 'Put every card on the chart that will not trade an electron in the tray.',
-    widget: { type: 'table', label: 'The desk' },
-    table: cardTable({
-      pieces: chartCards({ fixed: false }),
-      zones: {
-        trays: [cardTray('inert', 'Will not trade', { x: 36, y: 54 }, 4, 1)],
-        slots: [cardSlot('tester', { x: 92, y: 51 }, { label: 'Card' })]
-      },
-      fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 126, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
-    }),
-    hints: [
-      'Use the tester and "Test Card".',
-      'Group 1 hands electrons over, group 17 takes them on, and group 14 shares.',
-      'Find the cards for which "Test Card" reports that nothing happens at all, and tray every card in that column.'
-    ],
-    check(state) {
-      const noble = ['c02', 'c10', 'c18'];
-      const got = piecesIn(state.table, 'tray:inert').map(p => p.id);
-      if (!got.length) return { ok: false, notYet: true, msg: 'The tray is empty. Tray the cards that will not trade.' };
-      const wrong = got.find(id => !noble.includes(id));
-      if (wrong) {
-        return { ok: false, msg: `${CARDS[wrong].name} does trade — ${DOES_TEXT[tradeOf(ELEMENT_OF[wrong])].replace(/\.$/, '').toLowerCase()}. Test it to see.` };
-      }
-      if (got.length < noble.length) {
-        return { ok: false, msg: 'A card that will not trade is still on the chart.' };
-      }
-      return { ok: true };
+    title: 'Metals and Nonmetals',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'An element that loses electrons when it reacts is a metal; one that gains them is a nonmetal. Six tested cards stand along the bottom.'
     },
-    reward: {
-      log: 'Group 18 never trades.',
-      title: 'Noble Gases',
-      body: 'Atoms are happy when they have a full outer shell (8 electrons).Group 18 are the noble gases, and they have a full outer shell, so there is nothing to gain by trading. Every other atom on the chart is reaching for that full shell, which is why they trade.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'Sort Them By What They Do',
-    prompt: 'Sort each of the six cards by what it does with its outer-shell electrons.',
+    prompt: 'What will each loose card do when it reacts?',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
-      pieces: ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'].map((id, i) => card(id, { x: 21 + 22 * i, y: 8 })),
+      pieces: [
+        ...['c03', 'c12', 'c08', 'c17', 'c06', 'c10'].map((id, i) => card(id, { x: 21 + 22 * i, y: 8 })),
+        ...['c11', 'c04', 'c14', 'c16', 'c09', 'c18'].map((id, i) => ({
+          ...card(id, { x: 21 + 22 * i, y: LOOSE_Y }, { tested: CARDS[id].does }),
+          fixed: true
+        }))
+      ],
       zones: {
         trays: [
-          { ...cardTray('gives', 'Hands one over', { x: 19, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
-          { ...cardTray('takes', 'Takes one on', { x: 56, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
-          { ...cardTray('shares', 'Holds on to a partner', { x: 93, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
-          { ...cardTray('inert', 'Does nothing', { x: 130, y: 32 }, 2, 2), size: { w: 33, h: 24 } }
-        ],
-        slots: [cardSlot('tester', { x: 84, y: 51.5 }, { label: 'Card' })]
-      },
-      fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 120, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
+          { ...cardTray('gives', 'Loses electrons: metal', { x: 19, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
+          { ...cardTray('takes', 'Gains electrons: nonmetal', { x: 56, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
+          { ...cardTray('shares', 'Shares', { x: 93, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
+          { ...cardTray('inert', 'No change', { x: 130, y: 32 }, 2, 2), size: { w: 33, h: 24 } }
+        ]
+      }
     }),
     hints: [
-      'Use the tester and "Test Card".',
-      'Cards in the same group behave alike, so you can predict untested cards from their column.',
-      'Cards on the left of the chart give electrons, cards on the right take them, the column under carbon holds on, and the last column does nothing.'
+      'Compare each loose card\'s outer-shell dots with the six tested cards along the bottom.',
+      'Elements in the same group have the same valence electrons and react alike.',
+      'Match each loose card to the tested card with the same number of outer-shell dots.'
     ],
     check(state) {
       const t = state.table;
@@ -398,54 +374,50 @@ export const STAGES = [
       }
       for (const id of ids) {
         if (where(id) !== tradeOf(ELEMENT_OF[id])) {
-          return { ok: false, msg: `${CARDS[id].name}\'s tray does not match what the tester shows it doing.` };
+          return { ok: false, msg: `${CARDS[id].name}'s tray does not match the tested card with the same valence electrons.` };
         }
       }
       return { ok: true };
     },
     reward: {
-      log: 'All six filed by what they do.',
+      log: 'All six sorted by what they do.',
       title: 'Metals and Nonmetals',
-      body: 'Elements on the left that give electrons are metals; group 1 are alkali metals. Elements on the right that take electrons are nonmetals; group 17 are halogens.'
+      body: 'Elements at the left of the table are metals and those at the right are nonmetals. An element reacts like the others in its group.'
     }
   },
 
-  /* ---------------------------------------------------------------- 7 */
+  /* ---------------------------------------------------------------- 6 */
   {
     title: 'The Card That Is Not There',
-    prompt: 'Place the unmeasured card where the chart says it goes, and set its proton count.',
+    prompt: 'What is the atomic number of the element missing from the chart?',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
         ...chartCards({ skip: ['c14'] }),
-        { ...elementCard('sealed', 'Si', { x: 13.5, y: 53 }, { sealed: true }), label: 'UNMEASURED' }
+        { ...elementCard('sealed', 'Si', { x: X(4), y: ROW_Y[2] }, { sealed: true }), label: 'UNMEASURED', fixed: true }
       ],
-      zones: { slots: [cardSlot('gap', { x: X(4), y: ROW_Y[2] }, { label: '' })] },
-      fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Stamp', at: { x: 75, y: 8 }, size: { w: 60, h: 12 }, noRun: true, dials: { protons: { min: 0, max: 20, step: 1, value: 0, label: 'Protons' } } }]
+      fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Atomic number', at: { x: 75, y: 8 }, size: { w: 60, h: 12 }, noRun: true, dials: { protons: { min: 0, max: 20, step: 1, value: 0, label: 'Atomic number' } } }]
     }),
     hints: [
-      'Use the open place and the stamp.',
-      'Read the cards on either side of the open place and the card above it.',
-      'Find the number that sits between its left and right neighbors.'
+      'Use the Atomic number dial.',
+      'Read the atomic numbers on the cards to the left and right of the unmeasured card.',
+      'Along a period, atomic number increases by one from left to right.'
     ],
     check(state) {
       const t = state.table;
-      if (slotCard(t, 'gap') !== 'sealed') {
-        return { ok: false, notYet: true, msg: 'Lay the unmeasured card in the open place first.' };
-      }
       const claim = t.fixtures.stamp.dials.protons.value;
       if (claim === 0) {
-        return { ok: false, notYet: true, msg: 'The stamp is still on zero — set the proton count you are claiming.' };
+        return { ok: false, notYet: true, msg: 'The dial is still on zero — set the atomic number of the missing element.' };
       }
       if (claim !== 14) {
-        return { ok: false, msg: `${claim} protons does not sit between the neighbours of that place.` };
+        return { ok: false, msg: `${claim} does not sit between the neighbours of that place.` };
       }
       return { ok: true };
     },
     reward: {
       log: 'Missing card worked out: 14.',
       title: 'A Chart That Predicts',
-      body: 'The periodic table predicts missing elements from surrounding patterns. The card in that slot is silicon, with atomic number 14.',
+      body: 'The missing element sits between 13 and 15, so its atomic number is 14: silicon. The table predicted it from its neighbours.',
       last: true
     }
   }
@@ -476,30 +448,22 @@ export const DEBRIEF = {
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'].map((id, i) => to(id, `rail:${i}`)),
   [to('c03', 'tray:again'), to('c11', 'tray:again')],
   ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'].map((id, i) => to(id, `slot:r${i + 1}`)),
   [to('c14', 'slot:s14'), to('c16', 'slot:s16'), to('c17', 'slot:s17')],
-  [
-    to('c10', 'slot:tester'), run('tester'), to('c18', 'slot:tester'), run('tester'), to('c09', 'slot:tester'), run('tester'),
-    to('c02', 'tray:inert'), to('c10', 'tray:inert'), to('c18', 'tray:inert')
-  ],
-  [
-    to('c03', 'slot:tester'), run('tester'), to('c08', 'slot:tester'), run('tester'), to('c06', 'slot:tester'), run('tester'),
-    to('c03', 'tray:gives'), to('c12', 'tray:gives'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')
-  ],
-  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }]
+  [to('c10', 'slot:tester'), run('tester'), to('c02', 'tray:inert'), to('c10', 'tray:inert'), to('c18', 'tray:inert')],
+  [to('c03', 'tray:gives'), to('c12', 'tray:gives'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')],
+  [{ setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'].map((id, i) => to(id, `rail:${i}`)),
   [to('c01', 'tray:again'), to('c03', 'tray:again')],
   ['c11', 'c12', 'c13', 'c15', 'c14', 'c16', 'c17', 'c18'].map((id, i) => to(id, `slot:r${i + 1}`)),
   [to('c16', 'slot:s14'), to('c14', 'slot:s16'), to('c17', 'slot:s17')],
-  [to('c09', 'slot:tester'), run('tester'), to('c09', 'tray:inert'), to('c17', 'tray:inert'), to('c02', 'tray:inert')],
+  [to('c09', 'tray:inert'), to('c17', 'tray:inert'), to('c02', 'tray:inert')],
   [to('c03', 'tray:gives'), to('c12', 'tray:takes'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')],
-  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 13 } }]
+  [{ setDial: { fixture: 'stamp', dial: 'protons', value: 13 } }]
 ];
 
 function blankState() { return {}; }

@@ -44,20 +44,35 @@ export function radialPdf(n, l, r) {
   return r * r * R * R;
 }
 
-/** |angular part|^2 of an orbital, up to a constant, in the direction (x, y, z). */
-export function angular(id, x, y, z) {
+/** Signed angular part of an orbital on the unit sphere, up to a positive constant. */
+export function angularPsi(id, x, y, z) {
   switch (id) {
     case '1s': case '2s': case '3s': return 1;
-    case '2px': case '3px': return x * x;
-    case '2py': case '3py': return y * y;
-    case '2pz': case '3pz': return z * z;
-    case '3dz2': return Math.pow(3 * z * z - 1, 2);
-    case '3dxz': return Math.pow(x * z, 2);
-    case '3dyz': return Math.pow(y * z, 2);
-    case '3dxy': return Math.pow(x * y, 2);
-    case '3dx2y2': return Math.pow(x * x - y * y, 2);
+    case '2px': case '3px': return x;
+    case '2py': case '3py': return y;
+    case '2pz': case '3pz': return z;
+    case '3dz2': return 3 * z * z - 1;
+    case '3dxz': return x * z;
+    case '3dyz': return y * z;
+    case '3dxy': return x * y;
+    case '3dx2y2': return x * x - y * y;
     default: return 1;
   }
+}
+
+/** Signed wavefunction ψ(x, y, z) in atomic units (bohr). */
+export function psiAt(id, x, y, z) {
+  const o = ORBITALS[id];
+  if (!o) return 0;
+  const r = Math.hypot(x, y, z);
+  if (r === 0) return radial(o.n, o.l, 0) * (o.l === 0 ? 1 : 0);
+  return radial(o.n, o.l, r) * angularPsi(id, x / r, y / r, z / r);
+}
+
+/** |angular part|^2 of an orbital, up to a constant, in the direction (x, y, z). */
+export function angular(id, x, y, z) {
+  const a = angularPsi(id, x, y, z);
+  return a * a;
 }
 
 /** The largest value `angular` takes on the unit sphere, so a draw can be accepted at f / fmax. */

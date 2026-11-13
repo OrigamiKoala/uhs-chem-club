@@ -12,7 +12,7 @@
 import { PLATE_COLORS } from '../../engine/plates.js';
 import { strokeRingWave, turnPoint } from '../../engine/cloudplate.js';
 import {
-  BOHR_PM, FILMS, pointsOf, projectDots, plateRead, ringRead, filmRead, trackRead, blurRead, viewRead, RING_CIRCUMFERENCE_PM, seatedIn, axisOf
+  BOHR_PM, FILMS, pointsOf, projectDots, plateRead, ringRead, filmRead, trackRead, blurRead, viewRead, waveStripRead, RING_CIRCUMFERENCE_PM, seatedIn, axisOf
 } from './cloud-read.js';
 
 const AMBER = PLATE_COLORS.amber;
@@ -291,24 +291,24 @@ function paintPlate(ctx, f, state, b) {
   const sx = 2.5 + pic + 2.5;
   const sw = f.size.w - sx - 1.5;
   let ly = picTop + 3;
-  sideLine(ctx, F, sx, ly, `SHOTS ${read.fired}`, read.fired ? PHOS : DIM, sw);
+  sideLine(ctx, F, sx, ly, `MEASURED ${read.fired}`, read.fired ? PHOS : DIM, sw);
   ly += 3.6;
   if (ring) {
     if (ring.mode === 'band') {
       sideLine(ctx, F, sx, ly, `IN THE SHELL ${ring.count}`, ring.fired ? AMBER : DIM, sw);
       ly += 3.6;
-      sideLine(ctx, F, sx, ly, `OF ${ring.total} SHOTS`, DIM, sw);
+      sideLine(ctx, F, sx, ly, `OF ${ring.total}`, DIM, sw);
     } else {
       sideLine(ctx, F, sx, ly, `INSIDE ${ring.count}`, ring.fired ? AMBER : DIM, sw);
       ly += 3.6;
-      sideLine(ctx, F, sx, ly, `OF ${ring.total} SHOTS`, DIM, sw);
+      sideLine(ctx, F, sx, ly, `OF ${ring.total}`, DIM, sw);
     }
     ly += 3.6;
   }
   if (film) {
     sideLine(ctx, F, sx, ly, film.shape ? `CAUGHT ${film.caught}` : 'NO FILM ON', film.shape ? AMBER : DIM, sw);
     ly += 3.6;
-    if (film.shape) sideLine(ctx, F, sx, ly, `OF ${film.total} SHOTS`, DIM, sw);
+    if (film.shape) sideLine(ctx, F, sx, ly, `OF ${film.total}`, DIM, sw);
     ly += 3.6;
   }
   if (read.slice) {
@@ -493,12 +493,94 @@ function paintTracker(ctx, f, state, b) {
   say(ctx, 'NO PATH TO FOLLOW', F.x(f.size.w / 2), F.y(7.6), F.size(2.4, 7), { align: 'center', color: DIM });
 }
 
+function paintWaveStrip(ctx, f, state, b) {
+  const F = frameOf(b);
+  const r = waveStripRead(state, f.id);
+  const w = f.size.w;
+  const x0 = 2.5;
+  const plotW = w - 5;
+  const waveY = 12.5;
+  const waveH = 12.5;
+  const cy = waveY + waveH / 2;
+  const bandY = 26;
+  const bandH = 5.5;
+
+  // Top well: ψ(x) curve
+  well(ctx, F.x(x0), F.y(waveY), F.len(plotW), F.len(waveH), { fill: INK, stroke: RIM });
+  ctx.strokeStyle = STEEL;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(F.x(x0), F.y(cy));
+  ctx.lineTo(F.x(x0 + plotW), F.y(cy));
+  ctx.moveTo(F.x(x0 + plotW / 2), F.y(waveY));
+  ctx.lineTo(F.x(x0 + plotW / 2), F.y(waveY + waveH));
+  ctx.stroke();
+
+  const xOf = pm => F.x(x0 + ((pm + r.extentPm) / (2 * r.extentPm)) * plotW);
+  const yOf = psi => F.y(cy - (r.maxAbs > 0 ? (psi / r.maxAbs) * (waveH * 0.42) : 0));
+
+  // Filled + and - regions and curve
+  ctx.save();
+  for (let i = 0; i < r.curve.length - 1; i++) {
+    const a = r.curve[i];
+    const p2 = r.curve[i + 1];
+    const mid = (a.psi + p2.psi) / 2;
+    ctx.fillStyle = mid >= 0 ? 'rgba(120, 161, 66, 0.28)' : 'rgba(217, 148, 35, 0.28)';
+    ctx.beginPath();
+    ctx.moveTo(xOf(a.pm), F.y(cy));
+    ctx.lineTo(xOf(a.pm), yOf(a.psi));
+    ctx.lineTo(xOf(p2.pm), yOf(p2.psi));
+    ctx.lineTo(xOf(p2.pm), F.y(cy));
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = mid >= 0 ? PHOS : AMBER;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(xOf(a.pm), yOf(a.psi));
+    ctx.lineTo(xOf(p2.pm), yOf(p2.psi));
+    ctx.stroke();
+  }
+  ctx.restore();
+  say(ctx, '+', F.x(x0 + 2), F.y(waveY + 2.5), F.size(2.4, 7), { color: PHOS, weight: 700 });
+  say(ctx, '\u2212', F.x(x0 + 2), F.y(waveY + waveH - 2.5), F.size(2.4, 7), { color: AMBER, weight: 700 });
+
+  // Bottom well: ψ² dot density band
+  well(ctx, F.x(x0), F.y(bandY), F.len(plotW), F.len(bandH), { fill: INK, stroke: RIM });
+  ctx.fillStyle = PHOS;
+  const dotSize = Math.max(1.2, F.len(0.5));
+  for (let i = 0; i < r.curve.length; i++) {
+    const pt = r.curve[i];
+    const d2 = r.maxAbs > 0 ? (pt.psi * pt.psi) / (r.maxAbs * r.maxAbs) : 0;
+    const nDots = Math.round(d2 * 5);
+    for (let k = 0; k < nDots; k++) {
+      const h = ((i * 37 + k * 73) % 19) / 19;
+      const dy = bandY + 0.8 + h * (bandH - 1.6);
+      ctx.fillRect(xOf(pt.pm) - dotSize / 2, F.y(dy) - dotSize / 2, dotSize, dotSize);
+    }
+  }
+
+  // Probe cursor across both wells
+  const px = xOf(r.probePm);
+  ctx.strokeStyle = '#e8e2d8';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(px, F.y(waveY));
+  ctx.lineTo(px, F.y(bandY + bandH));
+  ctx.stroke();
+
+  // Readout
+  const psiColor = r.label === '0' ? '#4ade80' : r.rel >= 0 ? PHOS : AMBER;
+  say(ctx, `\u03c8: ${r.label}`, F.x(x0), F.y(f.size.h - 2.1), F.size(2.2, 6.5), { color: psiColor, weight: 700 });
+  say(ctx, `DOTS NEAR PROBE: ${r.dotsNear}`, F.x(x0 + plotW), F.y(f.size.h - 2.1), F.size(2.2, 6.5), { align: 'right', color: DUST, weight: 700 });
+}
+
 function paintFixture(ctx, f, state, b) {
   if (f.kind === 'cloud') paintPlate(ctx, f, state, b);
   else if (f.kind === 'view') paintView(ctx, f, state, b);
   else if (f.kind === 'wavering') paintTrack(ctx, f, state, b);
   else if (f.kind === 'blur') paintBlur(ctx, f, state, b);
   else if (f.kind === 'tracker') paintTracker(ctx, f, state, b);
+  else if (f.kind === 'wavestrip') paintWaveStrip(ctx, f, state, b);
 }
 
 export { paintPiece, paintFixture, faceKey, seatedIn, axisOf };

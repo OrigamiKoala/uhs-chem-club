@@ -112,12 +112,11 @@ export const STAGE_STORY = {
     2: 'A sealed canister from the raid must be read without opening it.'
   },
   'q5-assay': {
-    1: 'A sample of the raiders\' salt has come off the pan, and Vess needs to know what is in it.',
-    8: 'Three sellers claim natural chlorine, but only one tells the truth.'
+    1: 'A sample of the raiders\' salt has come off the pan, and Vess needs to know what is in it.'
   },
   'q6-weigh': {
     1: 'The stores are sealed crates and drums, and Vess means to count them without opening one.',
-    6: 'A sealed drum waits on the dock with its papers lost.'
+    4: 'A sealed drum waits on the dock with its papers lost.'
   },
 
   /* ---- Lanternfall: relight the beacon towers ---- */
@@ -249,14 +248,11 @@ export const STAGE_STORY = {
   },
 
   /* ---- Kettle: halt the robot foundry ---- */
-  'q1-recipe': {
-    1: 'Vess holds three scoops from three foundry floors.'
-  },
   'q5-ionic': {
     1: 'The waste pond turned cloudy overnight, and Vess wants to know what changed in it.'
   },
   'q4-balance': {
-    1: 'The furnace recipe card on the control-room wall has no numbers, and Vess cannot tell whether it is right.'
+    1: 'The furnace equation board on the control-room wall has no coefficients, and Vess cannot tell whether it is balanced.'
   },
   'q2-names': {
     1: 'The foundry\'s crates carry labels nobody can read.'

@@ -249,6 +249,9 @@ export function chainEquilibrium(Ks, names, total) {
 const Q4_P = { A: -1, B: -1, C: 1 };
 const Q4_P_MIX = iceAmounts(Q4_P, { A: 1, B: 1, C: 0 }, 4).amounts;
 const Q4_CHAIN_MIX = chainEquilibrium([0.5, 3.0], ['A', 'B', 'C'], 2.4);
+const Q4_HI = { H2: -1, I2: -1, HI: 2 };
+const Q4_HI_MIX = iceAmounts(Q4_HI, { H2: 1, I2: 1, HI: 0 }, 54).amounts;
+const Q4_NO_MIX = { N2: 1.0, O2: 1.0, NO: 2.0, NO2: 1.0 };
 
 /**
  * The cards of q4. A card printed with K is a given; the K of a card the pan check measures is the ratio of the amounts its mixture
@@ -275,7 +278,16 @@ export const Q4 = Object.freeze({
   readA: { lhs: [[1, 'X']], rhs: [[1, 'Y']], K: 3.0, scale: 2 },
   readB: { lhs: [[1, 'Z']], rhs: [[2, 'Y']], K: 0.4, flipped: true },
   typedA: { lhs: [[1, 'A']], rhs: [[1, 'B']], K: 0.08 },
-  typedB: { lhs: [[1, 'C']], rhs: [[2, 'B']], K: 20 }
+  typedB: { lhs: [[1, 'C']], rhs: [[2, 'B']], K: 20 },
+  // Real reactions for Teeter q4-properties
+  mixHI: { 'H₂': Q4_HI_MIX.H2, 'I₂': Q4_HI_MIX.I2, HI: Q4_HI_MIX.HI },
+  mixNO: { 'N₂': Q4_NO_MIX.N2, 'O₂': Q4_NO_MIX.O2, NO: Q4_NO_MIX.NO, 'NO₂': Q4_NO_MIX.NO2 },
+  hi: { lhs: [[1, 'H₂'], [1, 'I₂']], rhs: [[2, 'HI']], K: 54 },
+  so3: { lhs: [[2, 'SO₂'], [1, 'O₂']], rhs: [[2, 'SO₃']], K: 280 },
+  no1: { lhs: [[1, 'N₂'], [1, 'O₂']], rhs: [[2, 'NO']], K: 4.0 },
+  no2: { lhs: [[2, 'NO'], [1, 'O₂']], rhs: [[2, 'NO₂']], K: 0.25 },
+  wg1: { lhs: [[1, 'C(s)'], [1, 'H₂O']], rhs: [[1, 'CO'], [1, 'H₂']], K: 2.5 },
+  wg2: { lhs: [[1, 'CO'], [1, 'H₂O']], rhs: [[1, 'CO₂'], [1, 'H₂']], K: 1.4 }
 });
 
 /** K of one card as it stands, by the rule alone (used only to lay out the answer tiles and to check the stages, never printed as evidence). */
@@ -377,8 +389,19 @@ export const R_ATM = 0.082057; // L·atm/(mol·K)
 
 export const K_SYSTEMS = Object.freeze({
   ab: { id: 'ab', eq: 'A ⇌ B', species: { A: -1, B: 1 }, K: 2, unit: 'mol/L', kind: 'c', model: true, source: 'model reaction: the pan of q1-both, K = kf/kr = 2' },
+  butane: {
+    id: 'butane', eq: 'butane ⇌ isobutane', species: { butane: -1, isobutane: 1 },
+    names: { butane: 'butane', isobutane: 'isobutane' }, K: 2.0, unit: 'mol/L', kind: 'c', T: 320,
+    source: 'n-butane ⇌ isobutane at 320 K: ΔH° = −8.4 kJ/mol, ΔS° = −20.5 J/(mol·K) → ΔG° = −1.84 kJ/mol, K ≈ 2.0'
+  },
+  rp: {
+    id: 'rp', eq: 'Reactant ⇌ Product', species: { R: -1, P: 1 },
+    names: { R: 'Reactant', P: 'Product' }, K: 2, unit: 'mol/L', kind: 'c', model: true,
+    source: 'unnamed reactions compared by K'
+  },
   hi: { id: 'hi', eq: 'H₂ + I₂ ⇌ 2 HI', species: { H2: -1, I2: -1, HI: 2 }, names: { H2: 'H₂', I2: 'I₂' }, K: 54, unit: 'mol/L', kind: 'c', T: 698, source: REACTIONS.hi.source },
   n2o4: { id: 'n2o4', eq: '2 NO₂ ⇌ N₂O₄', species: { NO2: -2, N2O4: 1 }, names: { NO2: 'NO₂', N2O4: 'N₂O₄' }, K: 6.7, unit: 'atm', kind: 'p', T: 298, source: REACTIONS.n2o4.source },
+  n2o4_rev: { id: 'n2o4_rev', eq: 'N₂O₄ ⇌ 2 NO₂', species: { N2O4: -1, NO2: 2 }, names: { N2O4: 'N₂O₄', NO2: 'NO₂' }, K: 1 / 6.7, unit: 'atm', kind: 'p', T: 298, source: 'inverse of K_SYSTEMS.n2o4 (Kp = 6.7 at 298 K → 0.149)' },
   caco3: {
     id: 'caco3', eq: 'CaCO₃(s) ⇌ CaO(s) + CO₂(g)', species: { CaCO3: -1, CaO: 1, CO2: 1 }, names: { CaCO3: 'CaCO₃', CaO: 'CaO', CO2: 'CO₂' },
     skip: ['CaCO3', 'CaO'], K: 0.22, unit: 'atm', units: { CaCO3: 'mol', CaO: 'mol', CO2: 'atm' }, kind: 'p', T: 1073, solid: { V: 10, T: 1073 },

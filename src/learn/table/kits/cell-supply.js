@@ -224,7 +224,21 @@ function paintCompare(ctx, f, state, b, F, r, T) {
       const look = g ? GAS_LOOK[g.gas] : null;
       tube(ctx, F, x - 4, T + 9, 8, 13, g ? Math.min(1, g.mL / 8) : 0, look ? look[0] : '#c9c3b4');
       if (g) {
-        put(ctx, `${fmt(g.mL, 1)} mL`, F.x(x), F.y(T + 39), size(F, 2.3, 6.4), { color: AMBER, weight: 700, maxW: F.len(24) });
+        const fast = key === 'brine' || role === 'cathode';
+        const nBub = fast ? 5 : 2;
+        const speed = fast ? 1.5 : 0.4;
+        const t = (b.clock || 0) * speed;
+        ctx.fillStyle = look[0];
+        for (let bi = 0; bi < nBub; bi++) {
+          const frac = (t + bi / nBub) % 1;
+          const bx = x + ((bi % 2) * 2 - 1) * 2.1;
+          const by = T + 32 - frac * 10;
+          ctx.beginPath();
+          ctx.arc(F.x(bx), F.y(by), Math.max(1.2, F.len(0.55)), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        put(ctx, fast ? 'fast bubbles' : 'slow (overpotential)', F.x(x), F.y(T + 35.8), size(F, 1.75, 5.2), { color: fast ? DUST : AMBER, maxW: F.len(25) });
+        put(ctx, `${fmt(g.mL, 1)} mL`, F.x(x), F.y(T + 39.2), size(F, 2.3, 6.4), { color: AMBER, weight: 700, maxW: F.len(24) });
         put(ctx, look[1], F.x(x), F.y(T + 43), size(F, 1.9, 5.6), { color: DUST, maxW: F.len(25) });
       }
     });
@@ -296,7 +310,7 @@ function dressSupply(f, state, c) {
   return group;
 }
 
-registerFixture('cellsupply', { paint: paintSupply, run, dress3d: dressSupply });
+registerFixture('cellsupply', { paint: paintSupply, run, dress3d: dressSupply, live: f => f.props.scene === 'compare' && (f.dials.seen?.value || 0) > 0 });
 
 /* ------------------------------------------------------------------ the builder */
 

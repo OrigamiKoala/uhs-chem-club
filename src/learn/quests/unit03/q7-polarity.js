@@ -181,7 +181,7 @@ export const STAGES = [
     title: 'Five Molecules',
     briefing: {
       speaker: SPEAKER,
-      body: 'A molecule that has a δ− side and a δ+ side turns in an electric field and is called polar. One whose bond dipoles pull equally in opposite directions has no such sides and is called nonpolar.'
+      body: 'A molecule that has a δ− side and a δ+ side turns in an electric field and is called polar. One whose bond dipoles balance symmetrically around the centre has no such sides and is called nonpolar.'
     },
     get prompt() {
       return testPrompt(QUEST_KEY, GUESSES, 'which of these five molecules are polar?');
@@ -253,7 +253,7 @@ export const STAGES = [
     reward: {
       log: 'The measured dipole is about 18% of a full transfer.',
       title: 'Percent Ionic Character',
-      body: 'About 18%: the shared pair is shifted toward chlorine but far from transferred. Percent ionic character puts a number on how unequal the sharing is, and no bond reaches 100%.',
+      body: 'About 18%: the shared pair is shifted toward chlorine but far from transferred. Percent ionic character puts a number on how unequal the sharing is.',
       last: true
     }
   }

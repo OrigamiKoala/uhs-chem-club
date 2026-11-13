@@ -220,9 +220,9 @@ function make(state, f) {
   const contents = {};
   for (const [sym, n] of Object.entries(dock.counts)) {
     const heap = f.props.heaps?.[sym];
-    if (!heap) return { noop: `No heap feeds ${nameOf(sym)}, so this maker cannot make that molecule.` };
+    if (!heap) return { noop: `No supply feeds ${nameOf(sym)}, so this maker cannot make that molecule.` };
     if (heapLeft(state, heap, sym) < n) {
-      return { noop: `The ${nameOf(sym)} heap holds too few for another.` };
+      return { noop: `The ${nameOf(sym)} supply holds too few for another.` };
     }
     contents[heap] = { [speciesOf(sym)]: -n };
   }

@@ -29,7 +29,7 @@
     {
       "id": "q1-knocks#1",
       "quest": "q1-knocks",
-      "question": "Gauges are fitted to the roof, the side wall and the floor of a sealed box of gas. How do the three readings compare?",
+      "question": "Pressure sensors are fitted to the roof, the side wall and the floor of a sealed box of gas. How do the three readings compare?",
       "options": [
         {
           "id": "a",
@@ -49,12 +49,12 @@
         }
       ],
       "answer": "a",
-      "explanation": "The particles fly in every direction and knock every wall alike, so the pressure is the same on all of them."
+      "explanation": "The particles fly in every direction and strike every wall alike, so the pressure is the same on all of them."
     },
     {
       "id": "q1-knocks#2",
       "quest": "q1-knocks",
-      "question": "A piston squeezes a gas into half the room at the same temperature. What happens to the knocks on the walls and to the pressure?",
+      "question": "A piston compresses a gas into half the volume at the same temperature. What happens to the wall collisions and to the pressure?",
       "options": [
         {
           "id": "a",
@@ -66,7 +66,7 @@
         },
         {
           "id": "c",
-          "label": "The knocks double and the pressure stays the same"
+          "label": "The collisions double and the pressure stays the same"
         },
         {
           "id": "d",
@@ -74,7 +74,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "The same particles in half the room reach the walls twice as often, so the knocks double and so does the pressure."
+      "explanation": "The same particles in half the volume reach the walls twice as often, so the collisions double and so does the pressure."
     },
     {
       "id": "q1-knocks#3",
@@ -254,11 +254,11 @@
     {
       "id": "q3-ideal#0",
       "quest": "q3-ideal",
-      "question": "One mole of helium and one mole of xenon are at the same temperature and pressure. Which fills more room?",
+      "question": "One mole of helium and one mole of xenon are at the same temperature and pressure. Which fills more volume?",
       "options": [
         {
           "id": "a",
-          "label": "They fill the same room"
+          "label": "They fill the same volume"
         },
         {
           "id": "b",
@@ -274,12 +274,12 @@
         }
       ],
       "answer": "a",
-      "explanation": "Equal numbers of particles of any gas fill equal rooms at the same temperature and pressure (Avogadro's law)."
+      "explanation": "Equal numbers of particles of any gas fill equal volumes at the same temperature and pressure (Avogadro's law)."
     },
     {
       "id": "q3-ideal#1",
       "quest": "q3-ideal",
-      "question": "About how much room does one mole of any gas fill at 0 °C and ordinary air pressure?",
+      "question": "About how much volume does one mole of any gas fill at 0 °C and ordinary air pressure?",
       "options": [
         {
           "id": "a",
@@ -304,7 +304,7 @@
     {
       "id": "q3-ideal#2",
       "quest": "q3-ideal",
-      "question": "Tank X and Tank Y have the same pressure and the same room, but Tank X is hotter. Which holds more particles?",
+      "question": "Tank X and Tank Y have the same pressure and the same volume, but Tank X is hotter. Which holds more particles?",
       "options": [
         {
           "id": "a",
@@ -324,7 +324,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Hotter particles push harder, so fewer of them give the same pressure in the same room."
+      "explanation": "Hotter particles exert more pressure per particle, so fewer of them give the same pressure in the same volume."
     },
     {
       "id": "q3-ideal#3",
@@ -358,19 +358,19 @@
       "options": [
         {
           "id": "a",
-          "label": "Pressure times room, divided by amount times kelvin"
+          "label": "Pressure times volume, divided by amount times kelvin"
         },
         {
           "id": "b",
-          "label": "Pressure plus room, divided by amount"
+          "label": "Pressure plus volume, divided by amount"
         },
         {
           "id": "c",
-          "label": "Pressure times temperature, divided by room"
+          "label": "Pressure times temperature, divided by volume"
         },
         {
           "id": "d",
-          "label": "Room divided by pressure"
+          "label": "Volume divided by pressure"
         }
       ],
       "answer": "a",
@@ -391,7 +391,7 @@
         },
         {
           "id": "c",
-          "label": "It falls, because the helium takes up room"
+          "label": "It falls, because the helium takes up volume"
         },
         {
           "id": "d",
@@ -399,7 +399,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Each gas pushes as if it were alone, so adding helium adds its own push and leaves the neon's where it was."
+      "explanation": "Each gas exerts pressure as if it were alone, so adding helium adds its own partial pressure and leaves the neon's where it was."
     },
     {
       "id": "q4-mixtures#1",
@@ -429,7 +429,7 @@
     {
       "id": "q4-mixtures#2",
       "quest": "q4-mixtures",
-      "question": "Two gases are in tanks of the same size at the same temperature. Tank X has more moles but lighter particles. Which pushes harder?",
+      "question": "Two gases are in tanks of the same volume at the same temperature. Tank X has more moles but lighter particles. Which has the higher pressure?",
       "options": [
         {
           "id": "a",
@@ -441,7 +441,7 @@
         },
         {
           "id": "c",
-          "label": "They push equally"
+          "label": "They have equal pressure"
         },
         {
           "id": "d",
@@ -449,7 +449,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "In the same room at the same temperature, the push goes with the number of moles, whatever the particles weigh."
+      "explanation": "In the same volume at the same temperature, the pressure goes with the number of moles, whatever the particles weigh."
     },
     {
       "id": "q4-mixtures#3",
@@ -479,7 +479,7 @@
     {
       "id": "q4-mixtures#4",
       "quest": "q4-mixtures",
-      "question": "The gauge of a mixture reads 300 kPa. Gas A pushes with 120 kPa and gas B with 100 kPa; there is one more gas, C. What is C's partial pressure?",
+      "question": "The total pressure of a mixture is 300 kPa. Gas A has a partial pressure of 120 kPa and gas B has 100 kPa; there is one more gas, C. What is C's partial pressure?",
       "options": [
         {
           "id": "a",
@@ -629,11 +629,11 @@
     {
       "id": "q6-real#0",
       "quest": "q6-real",
-      "question": "Helium is squeezed into a very small room. Compared with the gas law, its gauge reads:",
+      "question": "Helium is compressed into a very small volume. Compared with the gas law, its pressure reads:",
       "options": [
         {
           "id": "a",
-          "label": "Higher, because its particles take up room themselves"
+          "label": "Higher, because its particles take up volume themselves"
         },
         {
           "id": "b",
@@ -649,12 +649,12 @@
         }
       ],
       "answer": "a",
-      "explanation": "The particles are not points: in a very small room the room they fill themselves is a large share of it, so the pressure is higher than the law says."
+      "explanation": "The particles are not points: in a very small volume the volume they fill themselves is a large share of it, so the pressure is higher than the law says."
     },
     {
       "id": "q6-real#1",
       "quest": "q6-real",
-      "question": "Carbon dioxide is cooled until it is close to turning liquid. Compared with the gas law, its gauge reads:",
+      "question": "Carbon dioxide is cooled until it is close to turning liquid. Compared with the gas law, its pressure reads:",
       "options": [
         {
           "id": "a",
@@ -674,7 +674,7 @@
         }
       ],
       "answer": "a",
-      "explanation": "Slow particles are held back by the pull between them, so they push on the walls less than the gas law says."
+      "explanation": "Slow particles are held back by the attractions between them, so they exert less pressure on the walls than the gas law says."
     },
     {
       "id": "q6-real#2",
@@ -729,7 +729,7 @@
     {
       "id": "q6-real#4",
       "quest": "q6-real",
-      "question": "An ideal gas has particles that take up no room and pull on nothing. What would happen if one were cooled for ever?",
+      "question": "An ideal gas has particles that take up no volume and do not attract each other. What would happen if one were cooled indefinitely?",
       "options": [
         {
           "id": "a",
@@ -858,7 +858,7 @@
         {
           "id": "q1-knocks#b1",
           "quest": "q1-knocks",
-          "question": "A gas in a 4.0 L syringe is at 100 kPa. The plunger is pushed in until the gas fills 2.0 L, at the same temperature. What is the pressure?",
+          "question": "A gas in a 4.0 L syringe is at 100 kPa. The plunger is pressed in until the gas fills 2.0 L, at the same temperature. What is the pressure?",
           "options": [
             {
               "id": "a",
@@ -1259,8 +1259,8 @@
               }
             ],
             "answer": "a",
-            "hint": "A higher pressure squeezes the same moles into less room.",
-            "explain": "V = nRT / P, so a larger P gives a smaller V. The hydrogen is pushing at only 98.1 kPa."
+            "hint": "A higher pressure compresses the same moles into less volume.",
+            "explain": "V = nRT / P, so a larger P gives a smaller V. The hydrogen's partial pressure is only 98.1 kPa."
           }
         ],
         "finish": "A gas over water is a mixture, so subtract the vapour pressure before using the gas law for the dry gas."
@@ -1402,7 +1402,7 @@
           "options": [
             {
               "id": "a",
-              "label": "Particles take up room and cannot move"
+              "label": "Particles take up volume and cannot move"
             },
             {
               "id": "b",

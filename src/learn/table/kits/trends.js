@@ -29,22 +29,22 @@ function run(state, fixtureId) {
   if (f.kind === 'spring') {
     if (!piece) return { noop: 'Put an atom in the holder first.' };
     const p = pullOf(piece, f.dials.which.value === 2 ? 'inner' : 'outer');
-    if (!p) return { noop: 'The bench has no size for that ion, so it cannot read a pull.' };
+    if (!p) return { noop: 'There is no measured size for that ion.' };
     return { x: p.distPm, y: p.pull, label: piece.props.sym, stamp: { [piece.id]: { lastPull: p.pull } } };
   }
   if (f.kind === 'strip') {
     if (!piece) return { noop: 'Put an atom in the holder first.' };
     const charge = piece.props.charge || 0;
-    if (charge < 0) return { noop: 'That atom holds an extra electron: there is nothing of its own to strip.' };
+    if (charge < 0) return { noop: 'That atom holds an extra electron already.' };
     const cost = costOf(piece.props.sym, charge);
-    if (cost == null) return { noop: 'The bench has measured no further than that.' };
+    if (cost == null) return { noop: 'The remover has no measurement beyond that.' };
     return { x: charge + 1, y: cost, label: piece.props.sym, stamp: { [piece.id]: { charge: charge + 1, lastCost: cost } } };
   }
   if (f.kind === 'gain') {
     if (!piece) return { noop: 'Put an atom in the holder first.' };
-    if ((piece.props.charge || 0) !== 0) return { noop: 'This gauge reads neutral atoms only.' };
+    if ((piece.props.charge || 0) !== 0) return { noop: 'This instrument reads neutral atoms only.' };
     const v = gainOf(piece.props.sym, f.props.mode);
-    if (v == null) return { noop: 'The bench has no reading for that atom.' };
+    if (v == null) return { noop: 'There is no measurement for that atom.' };
     return { x: 1, y: v, label: piece.props.sym, stamp: { [piece.id]: { lastGain: v } } };
   }
   if (f.kind === 'sizer') {
@@ -95,31 +95,42 @@ export function trendsTable(spec, { w = 150, recorder = null } = {}) {
    ------------------------------------------------------------------ */
 
 /** A scale-model atom card of element `sym`. */
-export const atomCard = (id, label, sym, at, { zone = null, charge = 0 } = {}) => ({
-  id, kind: 'atom', label, at, ...(zone ? { zone } : {}), props: { sym, ...(charge ? { charge } : {}) }
+export const atomCard = (id, label, sym, at, { zone = null, charge = 0, plain = false, fixed = false } = {}) => ({
+  id, kind: 'atom', label, at, ...(zone ? { zone } : {}), ...(fixed ? { fixed: true } : {}), props: { sym, ...(charge ? { charge } : {}), ...(plain ? { plain: true } : {}) }
 });
+
+/** An atom card standing in a fixture's holder and fixed there: the one case the instrument measures, which the stage's other cards are reasoned from. */
+export const seatedAtom = (id, label, sym, built, opts = {}) => atomCard(id, label, sym, { ...built.slots[0].at }, { ...opts, fixed: true, zone: `slot:${built.slots[0].id}` });
 
 /** The loose electron that puts one back on an atom. */
 export const electronPiece = (id, at, label = 'Add Electron') => ({ id, kind: 'electron', label, at, props: {}, caption: 'Add Electron' });
 
 /** The spring gauge: a holder, a dial naming which electron, the readings the stage shows, and a Tug Electron key. */
-export function springFixture(id, at, { show = {}, feelWord = 'CHARGE IT FEELS', label = 'Spring gauge' } = {}) {
+export function springFixture(id, at, { show = {}, feelWord = 'CHARGE FELT', label = 'Charge on an electron' } = {}) {
   const size = { w: 62, h: 38 };
   const slotId = `${id}.atom`;
   const x0 = at.x - size.w / 2;
   const y0 = at.y - size.h / 2;
   return {
     fixture: {
-      id, kind: 'spring', label, at: { ...at }, size, runLabel: 'Tug Electron',
+      id, kind: 'spring', label, at: { ...at }, size, noRun: true,
       dials: { which: { min: 1, max: 2, step: 1, value: 1, label: 'Electron', labels: ['Outermost', 'Innermost'] } },
       props: { backdrop: true, slot: slotId, show, feelWord }
     },
-    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 21 }, size: { w: 11, h: 11 } }],
+    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 21 }, size: { w: 20, h: 19 } }],
     size
   };
 }
 
 /** The size gauge: a holder and the radius laid along a scale; `measure` gives it a Measure Atom key, and the reading waits for it. */
+/**
+ * Two atoms' subshells side by side, each drawn at its energy with its electrons as arrows and the outermost one marked: where the electron
+ * a remover takes comes from. `atoms` are element symbols.
+ */
+export function levelsFixture(id, at, atoms, { label = 'Subshells', size = { w: 56, h: 32 } } = {}) {
+  return { id, kind: 'levels', label, at: { ...at }, size, noRun: true, dials: {}, props: { backdrop: true, atoms: atoms.slice() } };
+}
+
 export function sizerFixture(id, at, { measure = false, label = 'Size gauge', w = 44 } = {}) {
   const size = { w, h: 28 };
   const slotId = `${id}.atom`;
@@ -130,7 +141,7 @@ export function sizerFixture(id, at, { measure = false, label = 'Size gauge', w 
       id, kind: 'sizer', label, at: { ...at }, size, ...(measure ? { runLabel: 'Measure Atom' } : { noRun: true }), dials: {},
       props: { backdrop: true, slot: slotId, measure }
     },
-    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 14 }, size: { w: 11, h: 11 } }],
+    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 14 }, size: { w: 20, h: 19 } }],
     size
   };
 }
@@ -143,7 +154,7 @@ export function stripFixture(id, at, { label = 'Electron Remover', runLabel = 'R
   const y0 = at.y - size.h / 2;
   return {
     fixture: { id, kind: 'strip', label, at: { ...at }, size, runLabel, dials: {}, props: { backdrop: true, slot: slotId } },
-    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 11, h: 11 } }],
+    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 20, h: 19 } }],
     size
   };
 }
@@ -156,7 +167,7 @@ export function gainFixture(id, at, { mode = 'affinity', label = 'Electron Adder
   const y0 = at.y - size.h / 2;
   return {
     fixture: { id, kind: 'gain', label, at: { ...at }, size, runLabel, dials: {}, props: { backdrop: true, slot: slotId, mode } },
-    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 11, h: 11 } }],
+    slots: [{ id: slotId, label: 'Atom', at: { x: x0 + 10.5, y: y0 + 15 }, size: { w: 20, h: 19 } }],
     size
   };
 }

@@ -48,7 +48,7 @@ export const meta = { stageCount: 5 };
 export const VOCABULARY = [
   { term: /\bcomplementary colou?rs?\b/i, introducedAt: 2 },
   { term: /\babsorbance\b/i, introducedAt: 3 },
-  { term: /\bcalibration curves?\b/i, introducedAt: 5 }
+  { term: /\bcalibration (?:curves?|lines?)\b/i, introducedAt: 5 }
 ];
 
 export const BUILDS_ON = ['unit02/q1-wave', 'unit02/q3-lines'];
@@ -86,7 +86,7 @@ export const STAGES = [
     title: 'A Blue Solution',
     // A PREDICT STAGE: the spectrometer is not on the table yet. The guess is made first, here, and comes back with the test.
     predict: true,
-    prompt: 'White light passes through a blue copper solution: which colour do you think the solution takes out?',
+    prompt: 'White light passes through a blue copper solution: which colour does the solution absorb?',
     widget,
     table: cuvetteTable({
       pieces: [],
@@ -126,12 +126,12 @@ export const STAGES = [
     const sp = spectro(SP, SPEC_AT, { strip: true, label: 'White light through the cuvette' });
     const chips = COLOURS.map((c, i) => chip(`c-${c.id}`, c.label, c.nm, { x: 14 + i * 22, y: 53 }));
     return {
-      title: 'Complementary Color',
+      title: 'Complementary Colour',
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": which colour does the copper solution take out of white light?`
-          : 'Which colour does the copper solution take out of white light?';
+          ? `You predicted "${GUESS_LABEL[guess]}": which colour does the copper solution absorb from white light?`
+          : 'Which colour does the copper solution absorb from white light?';
       },
       widget,
       table: cuvetteTable({
@@ -140,9 +140,9 @@ export const STAGES = [
         zones: { slots: [...sp.slots, { id: 'taken', label: 'Taken out', at: { x: 118, y: 24 }, size: { w: 11, h: 11 } }] }
       }),
       hints: [
-        'Use the strip, which shows the light that gets through the cuvette, and the slot for a colour chip.',
+        'Put the cuvette (the clear cell holding the solution) in the holder and read the strip of light that gets through.',
         'Compare the colours missing from that strip with the colour the solution looks.',
-        'Find where the strip is darkest, then put the chip for the colour of the spectrum at that place in the slot.'
+        'Find where the strip is darkest, and see which colour of the spectrum sits there.'
       ],
       check(state) {
         const t = state.table;
@@ -155,11 +155,11 @@ export const STAGES = [
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'orange'
           ? 'You predicted orange, and the strip agreed. '
-          : 'The strip did not agree with your prediction, which is how a guess gets better. ';
+          : 'The strip did not agree with your prediction. ';
         return {
           log: 'Orange missing, so the rest looks blue.',
           title: 'Complementary Colour',
-          body: `${verdict}A solution looks the colour opposite the one it takes in: copper(II) sulfate removes orange and leaves blue. The colour you see is the complementary colour of the light that is missing.`,
+          body: `${verdict}It absorbs orange and lets blue through. The colour seen is the complementary colour of the one absorbed.`,
           model: { type: 'cuvette', solute: 'cuso4', conc: 0.01, nm: 630, mode: 'white', caption: 'White light enters the copper solution: copper(II) ions absorb orange photons, allowing blue light to pass through.' }
         };
       }
@@ -171,7 +171,11 @@ export const STAGES = [
     const sp = spectro(SP, SPEC_AT, { tune: true, xAxis: 'nm', label: 'Spectrometer' });
     return {
       title: 'Peak Absorbance',
-      prompt: 'Set the wavelength of maximum absorbance for the solution.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Absorbance measures how much of the light at one wavelength a solution absorbs.'
+      },
+      prompt: 'At which wavelength does the solution absorb the most light?',
       widget,
       table: cuvetteTable({
         pieces: [cuvette('cu', 'TANK WATER', { x: 0, y: 0 }, { conc: COPPER, zone: BEAM })],
@@ -181,7 +185,7 @@ export const STAGES = [
       hints: [
         'Use the Wavelength dial and "Record" at each setting.',
         'Compare the absorbance readings across the spectrum to find the peak.',
-        'Stop the dial on the wavelength where absorbance is highest.'
+        'Find the wavelength whose reading on the sheet is highest.'
       ],
       check(state) {
         const t = state.table;
@@ -196,7 +200,7 @@ export const STAGES = [
       reward: {
         log: 'Absorbance peaks near 630 nm.',
         title: 'Absorbance',
-        body: 'Absorbance measures how much light a solution absorbs at a given wavelength. It is highest at the absorption maximum (λ_max), where the solution absorbs light most strongly. Measuring at this peak gives the largest and most reliable reading.'
+        body: 'Absorbance peaks in the orange. Each dissolved substance has a wavelength where its absorbance is largest.'
       }
     };
   })(),
@@ -206,7 +210,11 @@ export const STAGES = [
     const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrophotometer' });
     return {
       title: 'Concentration and Absorbance',
-      prompt: 'Prepare Cuvette B so that its absorbance is twice that of Cuvette A.',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Concentration is how much dissolved substance sits in a fixed volume of liquid. The stock dropper adds dissolved copper ions to raise the concentration.'
+      },
+      prompt: 'What concentration has twice the absorbance of Cuvette A?',
       widget,
       table: cuvetteTable({
         pieces: [
@@ -219,7 +227,7 @@ export const STAGES = [
       hints: [
         'Use Cu²⁺ Stock to increase concentration in Cuvette B, then slide it into the beam.',
         'Compare the absorbance of Cuvette A with Cuvette B as you add stock solute.',
-        'Add stock until Cuvette B reaches 8.0 mmol/L, giving twice the absorbance of Cuvette A.'
+        'See what each drop does to the absorbance, and what that says about doubling it.'
       ],
       check(state) {
         const t = state.table;
@@ -232,7 +240,7 @@ export const STAGES = [
       reward: {
         log: 'Twice the concentration, twice the absorbance.',
         title: 'Concentration and Absorbance',
-        body: 'Absorbance depends on solute concentration, not liquid volume. Doubling the dissolved molecules in the beam path doubles the light absorbed (A ∝ c).',
+        body: 'Twice the concentration gives twice the absorbance. Absorbance rises in step with concentration.',
         model: { type: 'cuvette', solute: 'cuso4', conc: 0.008, nm: 630, caption: 'Doubling concentration doubles absorbing copper(II) ions in the beam path, doubling absorbance.' }
       }
     };
@@ -242,8 +250,12 @@ export const STAGES = [
   (() => {
     const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrophotometer' });
     return {
-      title: 'Calibration Curve',
-      prompt: 'Determine the concentration of the unknown sample using the calibration line.',
+      title: 'Calibration Line',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Standards are samples of known concentration, measured in mmol/L (millimoles per litre). Measure them to draw a calibration line, then read the sealed sample off it.'
+      },
+      prompt: 'What is the concentration of the sealed sample?',
       widget,
       table: cuvetteTable({
         pieces: [
@@ -256,9 +268,9 @@ export const STAGES = [
         tools: ['straightedge']
       }, { recorder: { ...recorder('Concentration', 'mmol/L'), at: { x: 111, y: 13 } } }),
       hints: [
-        'Prepare the standards with stock solute, record each in the spectrophotometer, and lay the straightedge.',
-        'Find where the unknown sample\'s absorbance falls on the line.',
-        'Set the marker to the concentration that matches the unknown sample\'s absorbance on the calibration line.'
+        'Fill the three standards with stock, record each in the spectrophotometer, and lay the straightedge across them.',
+        'Record the sealed sample, then see where its absorbance meets the line.',
+        'Match the sealed sample\'s absorbance on the line to the concentration scale below.'
       ],
       check(state) {
         const t = state.table;
@@ -269,8 +281,8 @@ export const STAGES = [
       },
       reward: {
         log: 'Calibration line gave the unknown concentration.',
-        title: 'Calibration Curve',
-        body: 'Standards of known concentration establish the linear relationship between absorbance and concentration. An unknown sample\'s absorbance is then read off the line to determine its exact concentration.',
+        title: 'Calibration Line',
+        body: 'The standards make a straight line of absorbance against concentration. The sealed sample\'s absorbance sits on that line at its concentration.',
         model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'Unknown sample: concentration is determined directly from its absorbance on the calibration line.' },
         last: true
       }

@@ -101,6 +101,8 @@ export const STAGES = [
       title: 'Ice · 18.0 g', T0: -20, phase0: 'solid', pulses: [1, 3, 8], pulseStart: 2, window: false, cursor: 'mk',
       plot: { xMin: 0, xMax: 10, yMin: -30, yMax: 40, xStep: 2, yStep: 10 }
     });
+    rec.props.gate = { fixtureDial: 'mk', dial: 'value', start: 0 };
+    rec.props.gateMsg = 'Set your prediction on the number dial first, then press "Heat".';
     return {
       id: 's1-curve',
       title: 'Ice on the Heater',
@@ -111,7 +113,7 @@ export const STAGES = [
         fixtures: [rec, markerFixture('mk', 'Number dial', { x: 126, y: 14 }, { min: 0, max: 10, step: 0.5, start: 0, unit: 'kJ' })]
       }),
       hints: [
-        'Use the "Heat per press" dial and the "Heat" key, then drag the number dial along its groove.',
+        'Set your prediction on the number dial first, then use the "Heat per press" dial and press "Heat".',
         'Watch the thermometer and the pen as the heat added grows.',
         'Read the heat on the bottom axis where the line leaves its level stretch, and set the number dial to it.'
       ],
@@ -407,7 +409,7 @@ const typedAns = value => ({ type: { entry: 'kj', value } });
 const cookAll = ids => ids.flatMap(id => [put(id, 'slot:cooler.slot'), { run: 'cooler' }]);
 
 export const SOLUTIONS = [
-  [...heat(3), dial('mk', 'value', 7)],
+  [dial('mk', 'value', 7), ...heat(3)],
   [put('apart', 'slot:guess')],
   [dial('rec', 'heat', 3), ...heat(3)],
   [...heat(3), typedAns('12.0')],
@@ -418,7 +420,7 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [...heat(3), dial('mk', 'value', 1)],
+  [dial('mk', 'value', 1), ...heat(3)],
   [],
   [...heat(1)],
   [typedAns('6.0')],

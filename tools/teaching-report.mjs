@@ -45,7 +45,7 @@ async function load(unit) {
       const table = get(st, 'table') || {};
       out.push({
         quest, no: i + 1, title: text(get(st, 'title')), predict: !!get(st, 'predict'), boss: !!get(st, 'encounter'),
-        briefing: text(get(st, 'briefing')), prompt: text(get(st, 'prompt')),
+        briefing: text(get(st, 'briefing')), worked: (get(get(st, 'briefing') || {}, 'worked') || []).map(String), prompt: text(get(st, 'prompt')),
         hints: (get(st, 'hints') || []).map(text),
         reward: reward ? text(get(reward, 'body')) : '',
         typed: !!get(st, 'entry'),
@@ -91,6 +91,7 @@ function read(stages) {
     console.log(`table: ${[...s.fixtures, ...s.pieces.map(p => `${p} pieces`)].join('; ') || 'none'}`);
     if (s.labels.length) console.log(`labels: ${[...new Set(s.labels)].join(' | ')}`);
     if (s.briefing) console.log(`briefing: ${s.briefing}`);
+    if (s.worked?.length) console.log(`worked case under the briefing: ${s.worked.join(' / ')}`);
     console.log(`prompt: ${s.prompt}`);
     s.hints.forEach((h, i) => console.log(`hint ${i + 1}: ${h}`));
     console.log(`reward (${words(s.reward)}w): ${s.reward}`);

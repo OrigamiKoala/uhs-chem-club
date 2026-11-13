@@ -62,10 +62,8 @@ export async function checkVerdigrisQ7({ ok, fail }) {
   const rw = mixRead(t, 'fw'); const rm = mixRead(t, 'fm');
   holds(rw.na === 1 && rm.na === 1 && Math.abs(rw.pH - 2.0414) < 0.001 && Math.abs(rm.pH - 4.6576) < 0.003 && Math.abs(rm.pH0 - 4.7447) < 0.002, 'a Pour does not move the flask to the hand-worked readings');
   holds(rm.Au === 90 && rm.HAu === 110 && rm.caughtHA === 10 && rm.caughtA === 0 && rw.H === 10, 'the window does not count 90, 110, 10 caught and 10 free');
-  const t2 = Q.stateFor(7, [pour('fx'), pour('fx')]).table;
-  holds(mixRead(t2, 'fx').na === 2, 'two presses do not make two pours');
-  const full = Q.stateFor(7, Array.from({ length: 13 }, () => pour('fx'))).table;
-  holds(mixRead(full, 'fx').pours === 12, 'the flask takes more pours than its limit');
+  const full = Q.stateFor(6, Array.from({ length: 13 }, () => pour('fm'))).table;
+  holds(mixRead(full, 'fm').pours === 12, 'the flask takes more pours than its limit');
   ok('q7-buffer flask: a Pour is the planner, counted, and capped');
 
   /* ---- stage 2 and the dial verdicts ---- */
@@ -108,24 +106,12 @@ export async function checkVerdigrisQ7({ ok, fail }) {
   holds(/reads 4\.7\d/.test(run(5, [typed('ratio', '0.93')]).msg) && /reads 5\.\d\d/.test(run(5, [typed('ratio', '2.2')]).msg), 'stage 6: a refusal does not name the reading of the ratio typed');
   ok('q7-buffer typed stages: right figures pass, every slip is refused with a reading');
 
-  /* ---- stage 8: the sealed flasks ---- */
-  holds(run(7, [dial('pick', 'value', 3)]).ok, 'stage 8 refuses flask Z');
-  for (const v of [1, 2]) { const r = run(7, [dial('pick', 'value', v)]); holds(!r.ok && /2\.88/.test(r.msg) && /Flask/.test(r.msg), `stage 8: dial ${v} is accepted or refused without readings`); }
-  const sealed = Q.CHECKS.SEALED;
-  const shift = (s, na, nb) => st(s.ha, s.a, na, nb, s.Ka ?? KA).pH - st(s.ha, s.a, 0, 0, s.Ka ?? KA).pH;
-  holds(Math.abs(shift(sealed[0], 1, 0)) < 0.1 && Math.abs(shift(sealed[1], 0, 1)) < 0.2 && Math.abs(shift(sealed[2], 1, 0)) > 0.5 && Math.abs(shift(sealed[2], 0, 1)) > 0.5, 'the sealed flasks do not separate by the readings');
-  ok('q7-buffer stage 8: two flasks hold under 0.2, acetic acid alone moves over 0.5 for both pours');
-
-  /* ---- the painter: the reading, the was-line, the sealed word ---- */
+  /* ---- the painter: the reading, the was-line ---- */
   const texts = [];
   const rec = new Proxy({}, { get: (_, k) => (k === 'fillText' ? tx => texts.push(String(tx)) : k === 'measureText' ? tx => ({ width: String(tx).length * 6 }) : () => rec), set: () => true });
   const b = f => ({ sc: 4, X: v => v * 4, Y: v => v * 4, lay: fixtureLayout(f) });
   PH_KIT.paintFixture(rec, t.fixtures.fm, t, b(t.fixtures.fm));
   holds(texts.includes('4.66') && texts.includes('was 4.74') && texts.includes('100 mL') && texts.includes('one sphere is 0.1 mmol'), 'a poured flask does not print its pH, its start and its scale');
-  texts.length = 0;
-  const sealedT = Q.stateFor(7, []).table;
-  PH_KIT.paintFixture(rec, sealedT.fixtures.fz, sealedT, b(sealedT.fixtures.fz));
-  holds(texts.includes('sealed') && texts.includes('2.88'), 'a sealed flask does not print the word sealed and its pH');
   texts.length = 0;
   const noMeter = Q.stateFor(4, []).table;
   PH_KIT.paintFixture(rec, noMeter.fixtures.f3, noMeter, b(noMeter.fixtures.f3));
@@ -163,14 +149,13 @@ export async function checkVerdigrisQ7({ ok, fail }) {
   ok('q7-buffer story: every number Vess quotes is drawn from the same planner counts');
 
   /* ---- no refusal carries the rule ---- */
-  const LEAKS = { 1: /buffer|conjugate|takes? up|both members/i, 3: /takes? up|caught|conjugate/i, 4: /Henderson|log\b|ratio|pKa plus/i, 5: /Henderson|log\b|power of ten|pKa/i, 6: /buffer|rises|falls/i, 7: /buffer|both members/i };
+  const LEAKS = { 1: /buffer|conjugate|takes? up|both members/i, 3: /takes? up|caught|conjugate/i, 4: /Henderson|log\b|ratio|pKa plus/i, 5: /Henderson|log\b|power of ten|pKa/i, 6: /buffer|rises|falls/i };
   const refusals = {
     1: [[dial('pick', 'value', 2)], [dial('pick', 'value', 3)]],
     3: [[dial('pick', 'value', 1)], [dial('pick', 'value', 3)]],
     4: ['4.27', '4.74', '5.13'].map(v => [typed('ph', v)]),
     5: ['2.2', '0.93', '0.34'].map(v => [typed('ratio', v)]),
-    6: [[dial('pick', 'value', 1)], [dial('pick', 'value', 4)]],
-    7: [[dial('pick', 'value', 1)], [dial('pick', 'value', 2)]]
+    6: [[dial('pick', 'value', 1)], [dial('pick', 'value', 4)]]
   };
   for (const [i, scripts] of Object.entries(refusals)) for (const script of scripts) {
     const r = run(Number(i), script);

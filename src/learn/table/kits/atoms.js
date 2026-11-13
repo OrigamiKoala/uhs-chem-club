@@ -59,6 +59,7 @@
  */
 
 import { registerKit } from './registry.js';
+import { revealTable, isRevealed } from './commit-gate.js';
 import { LIGAR_SKIN, buildAtomBall, buildToolCap, buildJointSocket, ligarDeck } from '../../engine/ligar-props.js';
 import { planJoin as planPair, shellPlan } from '../../engine/joinbench.js';
 import {
@@ -959,8 +960,9 @@ function paintSpecimen(ctx, p, state, o) {
       const isOccupied = n > 0;
 
       if (isOccupied) {
-        ctx.strokeStyle = 'rgba(220, 214, 204, 0.72)';
-        ctx.lineWidth = Math.max(1.6, o.r * 0.013);
+        const outerMiss = isRevealed(state) && ri === rings.length - 1 && p.zone?.startsWith('tray:') && state?.pieces?.ref;
+        ctx.strokeStyle = outerMiss ? AMBER : 'rgba(220, 214, 204, 0.72)';
+        ctx.lineWidth = Math.max(outerMiss ? 2.2 : 1.6, o.r * (outerMiss ? 0.024 : 0.013));
         ctx.beginPath();
         ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
         ctx.stroke();
@@ -1438,8 +1440,7 @@ function paintReader(ctx, f, state, b) {
   }
   const el = elementOf(held.props.el);
   const mass = SCOPE_KINDS[Object.keys(SCOPE_KINDS).find(k => symOfKind(k) === el.sym)]?.mass;
-  plateText(ctx, `${el.name} (${el.sym})`, padX, b.y0 + (b.y1 - b.y0) * 0.55, { size, weight: 700, color: PLATE_COLORS.text });
-  plateText(ctx, mass != null ? `mass ${mass.toFixed(1)}` : '', padX, b.y1 - 2.2 * b.sc, { size, color: PLATE_COLORS.dust });
+  plateText(ctx, mass != null ? `mass ${mass.toFixed(1)} u` : '', padX, b.y0 + (b.y1 - b.y0) * 0.62, { size, weight: 700, color: PLATE_COLORS.text });
 }
 
 /**
@@ -1618,7 +1619,7 @@ function paintField(ctx, f, state, b) {
 }
 
 /** What the tester says a sample does with its outer electrons, in the words the trays use. */
-export const TRADE_TEXT = { gives: 'Gives one away', takes: 'Takes one on', inert: 'Will not trade' };
+export const TRADE_TEXT = { gives: 'Loses an electron', takes: 'Gains an electron', inert: 'No change' };
 
 /**
  * The tester's screen: the reading of the sample in its slot, in words, with the sample's name. It is blank until a sample has been
@@ -1634,7 +1635,8 @@ function paintTester(ctx, f, state, b) {
     plateText(ctx, `${held.label}`, b.x0 + 2.5 * unit, b.y0 + 6.9 * unit, { size: Math.max(7, Math.round(2.0 * unit)), align: 'left', base: 'middle', color: PLATE_COLORS.dust });
     plateText(ctx, reading, b.x0 + 2.5 * unit, b.y0 + 9.4 * unit, { size: Math.max(8, Math.round(2.7 * unit)), weight: 700, align: 'left', base: 'middle', color: AMBER });
   } else {
-    plateText(ctx, held ? 'press the key' : 'no sample', b.x0 + 2.5 * unit, b.y0 + 8 * unit, { size: Math.max(7, Math.round(2.2 * unit)), align: 'left', base: 'middle', color: PLATE_COLORS.dim });
+    const msg = held ? (held.props.casing ? 'cased — predict' : 'press the key') : 'no sample';
+    plateText(ctx, msg, b.x0 + 2.5 * unit, b.y0 + 8 * unit, { size: Math.max(7, Math.round(2.2 * unit)), align: 'left', base: 'middle', color: PLATE_COLORS.dim });
   }
 }
 
@@ -1766,7 +1768,7 @@ function run(state, fixtureId) {
   }
   if (f.kind === 'tester') {
     const held = Object.values(state.pieces).find(p => p.kind === 'specimen' && p.zone === `slot:${f.props.slot}` && !p.hidden);
-    if (!held) return null;
+    if (!held || held.props.casing) return null;
     return { stamp: { [held.id]: { tested: behaviourOf(held.props.rings) } } };
   }
   return null;
@@ -1857,6 +1859,7 @@ export const ATOMS_KIT = {
   chargeOf,
   readPiece,
   run,
+  onMiss: table => revealTable(table),
   piece3d,
   dress3d,
   deck3d: ligarDeck,

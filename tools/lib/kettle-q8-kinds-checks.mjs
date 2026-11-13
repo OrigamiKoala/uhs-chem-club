@@ -24,22 +24,22 @@ export async function check() {
   same('H in NaOH', P.oxNumbers('NaOH').H, 1);
   same('N in NH4Cl', P.oxNumbers('NH4Cl').N, -3);
 
-  // The kinds of each of the eight reactions of the log, read from the equations.
+  // The kinds of each of the five reactions of the log, read from the equations.
   const log = {
     zn: ['redox'], mg: ['combustion', 'redox', 'synthesis'], acid: ['acid-base'], lime: ['decomposition'],
-    ch4: ['combustion', 'redox'], nh3: ['acid-base', 'synthesis'], ore: ['redox'], h2o: ['decomposition', 'redox']
+    ch4: ['combustion', 'redox']
   };
   for (const c of q.CHECKS.S8_CARDS) same(`kinds of ${c.id}`, kinds(c.eq), log[c.id]);
-  // The click needs a card in three kinds, and every kind used by at least two cards.
+  // The click needs a card in three kinds, and every kind used by at least one card.
   same('Mg is three kinds', kinds('2 Mg + O2 -> 2 MgO').length, 3);
-  for (const k of P.KINDS) if (q.CHECKS.S8_CARDS.filter(c => kinds(c.eq).includes(k)).length < 2) bad.push(`kind ${k} appears on fewer than two cards`);
+  for (const k of P.KINDS) if (q.CHECKS.S8_CARDS.filter(c => kinds(c.eq).includes(k)).length < 1) bad.push(`kind ${k} appears on no cards`);
   // The shapes of stage 1: A join, B split, C neither, D split, E join, F neither.
   same('shapes of stage 1', q.CHECKS.S1_POTS.map(p => P.shapeOf(eq(p.eq))), ['many-to-one', 'one-to-many', 'neither', 'one-to-many', 'many-to-one', 'neither']);
-  // The protons of stage 3: A and C only (Mg with HCl is electrons, not a proton).
-  same('protons of stage 3', q.CHECKS.S3_POTS.map(p => Boolean(P.protonTransfer(eq(p.eq)))), [true, false, true, false, false]);
+  // The protons of stage 4: A and C only (Mg with HCl is electrons, not a proton).
+  same('protons of stage 4', q.CHECKS.S4_POTS.map(p => Boolean(P.protonTransfer(eq(p.eq)))), [true, false, true, false, false]);
   same('proton A', P.protonTransfer(eq('HCl + NaOH -> NaCl + H2O')).donor + '>' + P.protonTransfer(eq('HCl + NaOH -> NaCl + H2O')).acceptor, 'HCl>NaOH');
   // Electrons: zinc loses 2 as copper(II) gains 2; the ore: 2 Fe gain 3 each, 3 C lose 2 each.
-  same('electrons, zinc', P.electronFlow(eq(q.CHECKS.S4_EQ)).total, 2);
+  same('electrons, zinc', P.electronFlow(eq(q.CHECKS.S5_EQ)).total, 2);
   same('electrons, ore', P.electronFlow(eq('Fe2O3 + 3 CO -> 2 Fe + 3 CO2')).total, 6);
   same('no electrons in limestone', P.electronFlow(eq('CaCO3 -> CaO + CO2')), null);
   // Gas tests: oxygen relights, hydrogen pops, CO2 cloudy, water mists; nitrogen answers none.
@@ -52,14 +52,14 @@ export async function check() {
 
   // The asked figure is past everything the window shows, and nothing printed carries it.
   same('Mn answer', q.CHECKS.answers.mn, 7);
-  const s5 = q.STAGES[4];
-  const win5 = Object.values(s5.table.fixtures).find(f => f.kind === 'kwindow');
-  for (const c of win5.props.cases) {
-    if (c.species === 'MnO4') bad.push('stage 5: a worked case is the asked species');
+  const s6 = q.STAGES[5];
+  const win6 = Object.values(s6.table.fixtures).find(f => f.kind === 'kwindow');
+  for (const c of win6.props.cases) {
+    if (c.species === 'MnO4') bad.push('stage 6: a worked case is the asked species');
     const wr = K.workedRows(c.species, c.charge);
-    if (wr.rows.some(r => r.on === 7 || r.sum === 7)) bad.push(`stage 5: worked case ${c.name} prints the answer +7`);
+    if (wr.rows.some(r => r.on === 7 || r.sum === 7)) bad.push(`stage 6: worked case ${c.name} prints the answer +7`);
   }
-  for (const f of Object.values(s5.table.fixtures)) if (f.kind === 'plaque' && f.props.lines.some(l => /7/.test(l))) bad.push('stage 5: a plate prints the answer');
+  for (const f of Object.values(s6.table.fixtures)) if (f.kind === 'plaque' && f.props.lines.some(l => /7/.test(l))) bad.push('stage 6: a plate prints the answer');
   // No stage prints an equation that gives the answer to the sort it asks: the cards of stage 8 print equations only, the board readings are raw.
   for (const c of q.STAGES[7].table.pieces) if (/synthesis|decomposition|combustion|acid|redox/i.test(c.label)) bad.push(`stage 8: card ${c.id} names a kind`);
 
@@ -78,12 +78,12 @@ export async function check() {
   same('Mg lit again under redox', Boolean(back.table.pieces.mg.props.flipped), true);
   same('filed kinds of Mg', [...K.filedKinds(back.table).mg], ['redox']);
   // The rig reads only what has been tried, and hides the gas in an untested jar.
-  const rig0 = K.rigRead(lit(5, [{ place: { piece: 'ga', to: 'slot:rig.seat' } }]).table, 'rig');
+  const rig0 = K.rigRead(lit(1, [{ place: { piece: 'ga', to: 'slot:rig.seat' } }]).table, 'rig');
   same('untested jar shows nothing', Object.values(rig0.shown).filter(Boolean).length, 0);
-  const rig1 = K.rigRead(lit(5, [{ place: { piece: 'ga', to: 'slot:rig.seat' } }, { setDial: { fixture: 'rig', dial: 'test', value: 3 } }, { run: 'rig' }]).table, 'rig');
+  const rig1 = K.rigRead(lit(1, [{ place: { piece: 'ga', to: 'slot:rig.seat' } }, { setDial: { fixture: 'rig', dial: 'test', value: 3 } }, { run: 'rig' }]).table, 'rig');
   same('limewater on sample A', rig1.shown.limewater.result, 'cloudy');
   // An empty gas jar cannot be tested, and the burner fills only an empty jar.
-  const empty = lit(1, [{ place: { piece: 'gas', to: 'slot:rig.seat' } }, { run: 'rig' }]);
+  const empty = lit(2, [{ place: { piece: 'gas', to: 'slot:rig.seat' } }, { run: 'rig' }]);
   same('empty jar is not tested', empty.table.recorder.rows.length, 0);
 
   // No refusal gives the method.

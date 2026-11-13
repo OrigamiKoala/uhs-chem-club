@@ -56,6 +56,8 @@ function run(state, fixtureId) {
     const read = cellRead(state, f.id);
     if (!read.plate) return { noop: 'There is no plate in the holder to read.' };
     if (read.nm == null) return { noop: 'There is no light on the plate to read.' };
+    // A cell that plots against brightness (`props.plot`) writes the count for that brightness, and the fastest electron's speed beside it.
+    if (f.props.plot === 'brightness') return { x: read.brightness, y: read.count, label: `${read.speed.toFixed(1)} × 10⁵ m/s` };
     return { x: read.f14, y: read.speed, label: read.metal };
   }
   return null;
@@ -146,8 +148,13 @@ function dress3d(f, state, c) {
   return group.children.length ? group : null;
 }
 
+/** The table moves while a screen is drawing a lamp's wave (the wave crosses the screen) or a photocell is lit (photons arrive, electrons leave). */
+const live = state => state.kit === OPTICS_KIT_ID && Object.values(state.fixtures || {}).some(f =>
+  (f.kind === 'wave' && Boolean(waveRead(state, f.id))) || (f.kind === 'cell' && cellRead(state, f.id).nm != null));
+
 export const OPTICS_KIT = {
   id: OPTICS_KIT_ID,
+  live,
   kinds: {
     lamp: rect(8.5, 'lamp'),
     water: rect(8.5, 'water'),
@@ -298,9 +305,10 @@ export function spectrograph(id, label, at, { cell = false, ref = false, detecto
  * The photocell: a holder for a metal plate and a lamp that is either built in (a colour dial, `settings`) or a lamp piece put in
  * its slot (`lamp: true`). A brightness dial (`brightness: {start}`) or a fixed brightness (a number). The electrons it frees
  * run to a collector and into a counting cup, with the count and the speed of the fastest printed under them. `record` gives
- * the fixture a Run key that writes a reading on the recorder.
+ * the fixture a Run key that writes a reading on the recorder (`plot: 'brightness'` writes the count against the brightness instead
+ * of the speed against the frequency). `showHz` prints the lamp's frequency beside its wavelength.
  */
-export function photocell(id, label, at, { settings = null, start = 1, lamp: lampSlot = false, brightness = { start: 3 }, record = false, compact = false, size = null } = {}) {
+export function photocell(id, label, at, { settings = null, start = 1, lamp: lampSlot = false, brightness = { start: 3 }, record = false, compact = false, size = null, plot = null, showHz = false } = {}) {
   const rows = (settings ? 1 : 0) + (typeof brightness === 'object' ? 1 : 0);
   const tubeTop = compact ? 14 : rows >= 2 ? 23 : rows === 1 ? 17 : 12;
   const tubeH = 15;
@@ -322,7 +330,7 @@ export function photocell(id, label, at, { settings = null, start = 1, lamp: lam
       ...(record ? { runLabel: typeof record === 'string' ? record : 'Record' } : { noRun: true }),
       props: {
         backdrop: true, hideLabel: true, holder, ...(lampSlot ? { lamp: lampId } : {}), ...(settings ? { settings } : {}),
-        ...(typeof brightness === 'number' ? { brightness } : {}), rowPitch: 6, tubeTop, tubeH, meterH, ...(lampSlot ? { tx0: 27 } : {})
+        ...(typeof brightness === 'number' ? { brightness } : {}), rowPitch: 6, tubeTop, tubeH, meterH, ...(lampSlot ? { tx0: 27 } : {}), ...(plot ? { plot } : {}), ...(showHz ? { showHz: true } : {})
       }
     },
     slots

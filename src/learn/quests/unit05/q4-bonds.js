@@ -111,9 +111,9 @@ export const STAGES = [
       if (card) remember(KEY_1, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, the bond is on the bench to be pulled apart.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for breaking the bond is recorded. Test it on the bench.'
     }
   },
 
@@ -221,9 +221,9 @@ export const STAGES = [
       if (card) remember(KEY_2, card.id);
     },
     reward: {
-      log: 'Prediction locked in.',
-      title: 'Now Test It',
-      body: 'Next, the bond table for this reaction is on the bench.'
+      log: 'Prediction recorded.',
+      title: 'Hypothesis Recorded',
+      body: 'Your prediction for nitrogen and oxygen is recorded. Test it on the bench.'
     }
   },
 
@@ -231,6 +231,7 @@ export const STAGES = [
   {
     id: 's5-air',
     title: 'The Bond Table for Air',
+    briefing: { speaker: SPEAKER, body: 'A double line (=) marks a double bond, and a triple line (≡) marks a triple bond. Compare the bonds broken and formed, commit your answer in the slot, and the ledger totals will unlock.' },
     prompt: 'Will making nitric oxide from nitrogen and oxygen warm the bath or cool it?',
     widget,
     table: heatTable({
@@ -242,7 +243,7 @@ export const STAGES = [
         tag('cool', 'Cools the bath', { x: 110, y: 57.4 }),
         tag('same', 'Leaves it as it is', { x: 136, y: 57.4 })
       ],
-      fixtures: [ledgerFixture('ledger', { x: 108, y: 18 }, { broken: 'broken', formed: 'formed', hideNet: true, w: 52, title: 'N₂ + O₂ → 2 NO' })],
+      fixtures: [ledgerFixture('ledger', { x: 108, y: 18 }, { broken: 'broken', formed: 'formed', hideNet: true, hideTotalsUntilCommit: true, gate: { slot: 'answer' }, w: 52, title: 'N₂ + O₂ → 2 NO' })],
       zones: {
         trays: [
           { id: 'broken', label: 'Broken', at: { x: 40, y: 20 }, size: { w: 56, h: 24 }, cell: 27, cellH: 12 },

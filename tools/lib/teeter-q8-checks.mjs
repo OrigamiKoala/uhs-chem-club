@@ -127,17 +127,12 @@ export async function checkTeeterQ8(ok, bad) {
   }
   if (accepted === 1 && refusedWithoutReason === 0) ok('q8-free stage 2: one of six placements is accepted, the rest refused with a reason'); else bad(`q8-free stage 2: ${accepted} accepted, ${refusedWithoutReason} refused without a reason`);
 
-  // Stage 7: every pair of the three cards; only atp + g6p reaches the wanted reaction, and each wrong dial setting is refused.
+  // Stage 6: every pair of the three cards; only atp + g6p reaches the wanted reaction.
   const cards = ['g6p', 'pcr', 'atp'];
   let good = 0;
   for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) {
-    const st = q.stateFor(6, [cards[i], cards[j]].map(c => ({ place: { piece: c, to: 'tray:stack' } })).concat([{ setDial: { fixture: 'answer', dial: 'value', value: 1 } }]));
-    if (q.STAGES[6].check(st).ok) good++;
+    const st = q.stateFor(5, [cards[i], cards[j]].map(c => ({ place: { piece: c, to: 'tray:stack' } })));
+    if (q.STAGES[5].check(st).ok) good++;
   }
-  if (good === 1) ok('q8-free stage 7: only the ATP and glucose pair reaches the reaction wanted'); else bad(`q8-free stage 7: ${good} pairs pass`);
-  for (const v of [2, 3, 4]) {
-    const st = q.stateFor(6, [{ place: { piece: 'atp', to: 'tray:stack' } }, { place: { piece: 'g6p', to: 'tray:stack' } }, { setDial: { fixture: 'answer', dial: 'value', value: v } }]);
-    const r = q.STAGES[6].check(st);
-    if (r.ok || !r.msg) bad(`q8-free stage 7: dial ${v} is not refused with a reason`); else ok(`q8-free stage 7: dial ${v} refused`);
-  }
+  if (good === 1) ok('q8-free stage 6: only the ATP and glucose pair reaches the reaction wanted'); else bad(`q8-free stage 6: ${good} pairs pass`);
 }

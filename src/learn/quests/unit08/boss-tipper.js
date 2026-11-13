@@ -1,23 +1,16 @@
 /**
  * boss-tipper.js — Learn world 8 elite: THE TIPPER.
  *
- * The Fifth Guild's beam pump at the largest salt pan, rocking on its pivot and calling every pan it reaches finished. It is made of
+ * The Fifth Guild's beam pump at the largest salt pan, rocking on its pivot and calling every vessel it reaches finished. It is made of
  * everything Teeter measured, and each of its five phases puts the TABLETOP of a bench the player has worked back in front of them, on
  * the pans kit (`table/kits/pans.js`), with a NEW case on the table and the Tipper standing in the table's corner, watching it. Each
  * phase is a different tool and ONE decision:
  *
- *   1  the pans      which of three pans has reached equilibrium, read from its graph and two counts   (the pan, bench 1)
- *   2  the burner    K of 2 SO₂ + O₂ ⇌ 2 SO₃ from a settled pan's bars, typed                          (the vessels, bench 2)
- *   3  the draw      the mixture of 2 A ⇌ B that makes more A when left alone                          (the test vessel, bench 3)
- *   4  the squeeze   the NO₂ amount after N₂O₄ ⇌ 2 NO₂ is squeezed                                     (the vessel, bench 6)
- *   5  the feed      the HI amount in a pan whose two starts differ, typed                              (the settling bars, bench 5)
- *
- * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung is one sentence
- * and never the answer; rung 1 names the control. A refusal names what the table shows, never the rule. Nothing blocks a correct commit.
- * A miss costs one point of Integrity and three knock the table back, with every reading and hint still kept. The foe is the Tipper
- * itself, in the corner pad of each table (`table/layout.js` `FOE_PAD`: x from 126.5, y to 23.5 on a 150-wide table): it only observes,
- * and a boss phase never declares a field stage or a prediction (the walk is suspended while the Tipper stands, and a boss tests what
- * the benches taught).
+ *   1  the pans      which of three vessels has reached equilibrium, read from its graph and two counts (the pan, bench 1)
+ *   2  the burner    K of 2 SO₂ + O₂ ⇌ 2 SO₃ from a settled vessel's bars, typed                        (the vessels, bench 2)
+ *   3  the draw      the mixture of butane ⇌ isobutane that makes more butane when left alone           (the test vessel, bench 3, noRun)
+ *   4  the squeeze   the NO₂ amount after N₂O₄ ⇌ 2 NO₂ is compressed                                    (the vessel, bench 6)
+ *   5  the feed      the HI amount in a vessel with equal 0.80 M starts, typed                          (the settling bars, bench 5)
  *
  * Every figure is `engine/eqdata.js`; the numbers a stage grades against are the planners', never typed twice. Reactions are the pans'
  * (`K_SYSTEMS`, `LEAN_RXNS`, `Q5`). Clearing the last phase files the Case File clue `clue_teeter_pan`. The boss pays no XP.
@@ -25,15 +18,15 @@
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { session } from '../../../session.js';
-import { pansTable, panFixture, selectorFixture, plaqueFixture, panRead, pieceIn, dialValue } from '../../table/kits/pans.js';
+import { pansTable, panFixture, plaqueFixture, panRead, pieceIn, dialValue } from '../../table/kits/pans.js';
 import { vesselFixture as ratioVessel, vslRead, testVessel, mixCard } from '../../table/kits/pans-ratio.js';
 import { vesselFixture as stressVessel, vesselRead } from '../../table/kits/pans-stress.js';
 import { barsFixture } from '../../table/kits/pans-ice.js';
 import {
-  K_SYSTEMS, Q5, kSlips, fmtNum, runMixture, spName, systemRatio, iceAmounts, iceColumns
+  K_SYSTEMS, Q5, kSlips, fmtNum, systemRatio, iceAmounts, iceColumns
 } from '../../engine/eqdata.js';
 
-import { choiceFixture, pickable, pickColumns } from '../../table/kits/pans-choice.js';
+import { choiceFixture, pickable } from '../../table/kits/pans-choice.js';
 export const meta = { stageCount: 5 };
 
 export const BUILDS_ON = [
@@ -60,8 +53,7 @@ const runs = (fid, n) => Array.from({ length: n }, () => ({ run: fid }));
    THE FIGURES (inputs; every figure shown or graded is the planners')
    ------------------------------------------------------------------ */
 
-// Phase 1: three pans of A ⇌ B, each already run to tick 60. One has finished (B never turns back), one is still creeping toward its
-// level, and one has settled with three times as much B as A and both counts running.
+// Phase 1: three vessels of butane ⇌ isobutane, each already run to 60 s.
 const P1_PANS = [
   { id: 'p1', title: 'Vessel 1', kf: 0.12, kr: 0, seed: 81 },
   { id: 'p2', title: 'Vessel 2', kf: 0.09, kr: 0.03, seed: 94 },
@@ -70,31 +62,31 @@ const P1_PANS = [
 const P1_RUN = 60;
 const P1_PICK = 2;
 
-// Phase 2: 2 SO₂ + O₂ ⇌ 2 SO₃ (Kc = 280 at 1000 K), one pan opened already settled from 1.00 mol/L SO₂ and 0.50 mol/L O₂.
+// Phase 2: 2 SO₂ + O₂ ⇌ 2 SO₃ (Kc = 280 at 1000 K), one vessel opened already settled from 1.00 mol/L SO₂ and 0.50 mol/L O₂.
 const SO = K_SYSTEMS.so3;
 const P2_START = { SO2: 1, O2: 0.5 };
 const P2_PAN = [{ start: P2_START }];
 const P2_TOL = 0.03;
 
-// Phase 3: three mixtures of 2 A ⇌ B (K = 1.2). Mixture 1 holds equal amounts and sits above K, mixture 2 has the most A and sits below it,
-// mixture 3 is already on K.
-const AB2 = K_SYSTEMS.a2b;
+// Phase 3: three mixtures of butane ⇌ isobutane (K = 2.0). Mixture 1 has Q = 3.0 (> K, makes more butane),
+// Mixture 2 has equal amounts (Q = 1.0 < K, makes more isobutane), Mixture 3 is already on K (Q = 2.0).
+const BUTANE = K_SYSTEMS.butane;
 const P3_MIX = [
-  { id: 'm1', label: 'Mixture 1', amounts: { A: 0.5, B: 0.5 } },
-  { id: 'm2', label: 'Mixture 2', amounts: { A: 1.0, B: 0.5 } },
-  { id: 'm3', label: 'Mixture 3', amounts: { A: 0.7, B: 0.588 } }
+  { id: 'm1', label: 'Mixture 1', amounts: { butane: 0.4, isobutane: 1.2 } },
+  { id: 'm2', label: 'Mixture 2', amounts: { butane: 0.6, isobutane: 0.6 } },
+  { id: 'm3', label: 'Mixture 3', amounts: { butane: 0.4, isobutane: 0.8 } }
 ];
 const P3_WAY = 'reverse';
 
-// Phase 4: N₂O₄ ⇌ 2 NO₂ at 298 K, 0.040 mol in 1 L, settled, then squeezed.
+// Phase 4: N₂O₄ ⇌ 2 NO₂ at 298 K, 0.040 mol in 1 L, settled, then compressed.
 const P4 = { rxn: 'n2o4', mix: { N2O4: 0.04 }, V0: 1, T0: 298, axis: [-3, 4], unit: 0.0025, title: 'Vessel: N₂O₄ ⇌ 2 NO₂' };
 const P4_VOL = { min: 0.5, max: 1, step: 0.25 };
 const P4_OPTIONS = ['Rises', 'Falls', 'Stays the same', ' '];
 const P4_ANSWER = 2;
 
-// Phase 5: H₂ + I₂ ⇌ 2 HI (K = 54 at 698 K) from 0.50 mol/L H₂ and 1.00 mol/L I₂. The starts differ, so neither side is a perfect square.
+// Phase 5: H₂ + I₂ ⇌ 2 HI (K = 54 at 698 K) from equal 0.80 mol/L starts (both sides are squares, no quadratic needed).
 const HI = Q5.hi;
-const P5_START = { 'H₂': 0.5, 'I₂': 1.0 };
+const P5_START = { 'H₂': 0.8, 'I₂': 0.8 };
 const P5_ICE = iceAmounts(HI.species, P5_START, HI.K);
 const P5_TOL = 0.02;
 
@@ -106,10 +98,9 @@ const conc = v => v.toFixed(2);
    LAYOUT HELPERS (copied from the benches the phases come from)
    ------------------------------------------------------------------ */
 
-// q3: the test vessel and its seat, mixture cards along the bottom.
 const TV_AT = { x: 62, y: 22 };
 const cardAt = i => ({ x: 18 + i * 28, y: 58 });
-const p3Vessel = testVessel('tv', TV_AT, { system: 'a2b', q: true });
+const p3Vessel = testVessel('tv', TV_AT, { system: 'butane', q: true, noRun: true });
 
 /* ------------------------------------------------------------------
    THE FIVE PHASES
@@ -121,11 +112,11 @@ export const STAGES = [
   {
     id: 'p1-pans',
     title: 'Phase 1 · The Vessels',
-    prompt: 'Tap the vessel that has reached equilibrium.',
+    prompt: 'Which vessel has reached equilibrium?',
     widget,
     table: pansTable({
       fixtures: [
-        ...P1_PANS.map((p, i) => pickable(panFixture(p.id, { x: 24 + i * 50, y: 46 }, { kf: p.kf, kr: p.kr, b0: 0, seed: p.seed, start: P1_RUN, title: p.title, window: false, w: 44, h: 40 }), i + 1)),
+        ...P1_PANS.map((p, i) => pickable(panFixture(p.id, { x: 24 + i * 50, y: 46 }, { kf: p.kf, kr: p.kr, b0: 0, seed: p.seed, start: P1_RUN, title: p.title, aName: 'Butane', bName: 'Isobutane', window: false, w: 44, h: 40 }), i + 1)),
         choiceFixture('pick', 'Reached equilibrium', { x: 40, y: 11 }, { options: ['Vessel 1', 'Vessel 2', 'Vessel 3', ' '], start: 4, w: 56 })
       ]
     }, { h: 74 }),
@@ -138,7 +129,7 @@ export const STAGES = [
     hints: [
       'Use the "Run" key on each vessel, then tap the vessel you choose.',
       'Compare each vessel\'s graph with the two counts under it.',
-      'A vessel in equilibrium has a graph that has stopped moving and changes still counted in both directions.'
+      'Look at both the graph and the two change counts on each vessel.'
     ],
     check(state) {
       const t = state.table;
@@ -147,15 +138,15 @@ export const STAGES = [
       if (v === P1_PICK) return { ok: true };
       if (v === 1) {
         const r = panRead(t, 'p1');
-        return { ok: false, msg: `Vessel 1's "B to A" count reads ${r.rev}, and its blue line has reached the top of the graph.` };
+        return { ok: false, msg: `Vessel 1's "Isobutane to Butane" count reads ${r.rev}, and its blue line has reached the top of the graph.` };
       }
       const r = panRead(t, 'p3');
-      return { ok: false, msg: `Vessel 3's orange line is still falling at tick ${r.t}, and its blue line is still rising.` };
+      return { ok: false, msg: `Vessel 3's orange line is still falling at ${r.t} s, and its blue line is still rising.` };
     },
     reward: {
       log: 'Vessel 2 held steady with changes counted both ways.',
       title: 'Level, Not Finished',
-      body: 'Vessel 2 held steady at about three times as much B as A while both counts kept running, which is equilibrium. Vessel 1 had stopped because nothing turned back, and Vessel 3 had not settled.'
+      body: 'Vessel 2 held steady at about three times as much isobutane as butane while both counts kept running, which is equilibrium. Vessel 1 had stopped because nothing turned back, and Vessel 3 had not settled.'
     }
   },
 
@@ -163,7 +154,7 @@ export const STAGES = [
   {
     id: 'p2-burner',
     title: 'Phase 2 · The Burner',
-    prompt: 'Find K for this vessel, to two significant figures.',
+    prompt: 'What is K for this vessel, to two significant figures?',
     widget,
     entry: { id: 'k', label: 'K', unit: '' },
     table: pansTable({
@@ -176,9 +167,9 @@ export const STAGES = [
       intent: 'The Tipper feeds a burner with sulfur dioxide and oxygen, and the burner has settled.'
     },
     hints: [
-      'Type the figure in the field.',
+      'Read the settled bars and the equation printed on the vessel, then type K in the field.',
       'Read the amount of each substance from the bars and take the reaction from the equation printed beside them.',
-      'Write the ratio the way you found it on the ratio board, put the bar amounts in, and round to two figures.'
+      'Use the coefficients from the equation as powers in the products-over-reactants ratio.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');
@@ -202,10 +193,10 @@ export const STAGES = [
   {
     id: 'p3-draw',
     title: 'Phase 3 · The Draw',
-    prompt: 'Lay the mixture that will make more A when it is left alone.',
+    prompt: 'Which mixture will make more butane when left alone?',
     widget,
     table: pansTable({
-      pieces: P3_MIX.map((c, i) => mixCard(c.id, c.label, cardAt(i), 'a2b', c.amounts)),
+      pieces: P3_MIX.map((c, i) => mixCard(c.id, c.label, cardAt(i), 'butane', c.amounts)),
       fixtures: [p3Vessel.fixture],
       zones: { slots: [p3Vessel.seat] }
     }, { h: 72 }),
@@ -216,21 +207,22 @@ export const STAGES = [
       intent: 'The Tipper draws a mixture from each of three vessels into its test vessel.'
     },
     hints: [
-      'Use the cards, the slot in the vessel and the "Run" key.',
-      'Compare the marker with the K line for each mixture, and run any you are unsure of.',
-      'Lay the mixtures in the vessel one at a time; the one you want is the one whose bar of A rises when it is run.'
+      'Lay each mixture card in the test vessel to read its Q against K.',
+      'Compare the Q marker with the K line for each mixture.',
+      'Compare Q with K for each mixture to see which way it runs.'
     ],
     check(state) {
       const seat = pieceIn(state.table, 'tv.seat');
       if (!seat) return { ok: false, notYet: true, msg: 'Lay a mixture card in the vessel.' };
       const c = P3_MIX.find(x => x.id === seat.id);
       if (wayOf(c) === P3_WAY) return { ok: true };
-      return { ok: false, msg: ranText(c) };
+      const q = systemRatio(BUTANE, c.amounts);
+      return { ok: false, msg: `${c.label} has Q = ${fmtNum(q, 2)} against K = ${fmtNum(BUTANE.K, 2)}, so it ${q < BUTANE.K ? 'makes more isobutane' : 'does not change'}.` };
     },
     reward: {
-      log: 'The mixture with equal amounts made more A.',
-      title: 'Equal Amounts Move Too',
-      body: `Mixture 1 held equal amounts of A and B, and its Q was ${fmtNum(systemRatio(AB2, P3_MIX[0].amounts), 2)} against a K of ${fmtNum(AB2.K, 2)}, so it made A. Mixture 2, with the most A, had a Q below K and made B instead.`
+      log: 'The mixture with Q above K made more butane.',
+      title: 'Q Above K Moves Back',
+      body: `Mixture 1 had Q = ${fmtNum(systemRatio(BUTANE, P3_MIX[0].amounts), 2)} against K = ${fmtNum(BUTANE.K, 2)}, so it made more butane. Mixture 2 held equal amounts (Q = 1.0), below K, so it made isobutane instead.`
     }
   },
 
@@ -238,7 +230,7 @@ export const STAGES = [
   {
     id: 'p4-squeeze',
     title: 'Phase 4 · The Squeeze',
-    prompt: 'Lower the piston, then tap the graph where the NO₂ amount will settle.',
+    prompt: 'After the vessel is compressed, where does the amount of NO₂ settle?',
     widget,
     table: pansTable({
       fixtures: [
@@ -253,9 +245,9 @@ export const STAGES = [
       intent: 'The Tipper presses on a sealed vessel of brown gas.'
     },
     hints: [
-      'Drag the piston down, press "Run", then tap the graph.',
-      'Watch the NO₂ line against its level from before the compression, and the Q needle against the K line.',
-      'Follow Q against K just after the compression and once the lines are flat, and see which gas the amounts moved toward.'
+      'Drag the piston down, then tap the graph where the NO₂ amount will settle.',
+      'Watch the NO₂ line against its level from before the compression, and the Q marker against the K line.',
+      'Follow Q against K just after the compression and see which side has fewer gas molecules.'
     ],
     check(state) {
       const t = state.table;
@@ -278,12 +270,12 @@ export const STAGES = [
   {
     id: 'p5-feed',
     title: 'Phase 5 · The Feed',
-    prompt: 'Type the concentration of HI when this vessel has settled, in moles per litre.',
+    prompt: 'What is the concentration of HI when this vessel has settled, in mol/L?',
     widget,
     entry: { id: 'hi', label: 'HI at equilibrium', unit: 'M' },
     table: pansTable({
       fixtures: [
-        barsFixture('bars', { x: 42, y: 28 }, { species: iceColumns(HI.species, P5_START), K: HI.K, max: 1.2, title: 'Vessel', w: 62, h: 42 }),
+        barsFixture('bars', { x: 42, y: 28 }, { species: iceColumns(HI.species, P5_START), K: HI.K, max: 1.5, title: 'Vessel', w: 62, h: 42 }),
         plaqueFixture('plate', 'Vessel', { x: 116, y: 40 }, [HI.eq, `K = ${HI.K} at ${HI.T} K`, `start: ${conc(P5_START['H₂'])} M H₂, ${conc(P5_START['I₂'])} M I₂`], { w: 62 })
       ]
     }),
@@ -291,12 +283,12 @@ export const STAGES = [
     encounter: {
       species: 'the tipper',
       act: 'Commit Amount',
-      intent: 'The Tipper feeds a vessel with two gases in unequal amounts.'
+      intent: 'The Tipper feeds a vessel with equal amounts of H₂ and I₂.'
     },
     hints: [
-      'Use the "Settle" key on the vessel and the number field.',
-      'Compare the settled bars with the dashed start marks, and read the K on the plate.',
-      'The starts differ, so write K with 2x for HI and each start less x, then solve the quadratic for x.'
+      'Press "Settle" on the vessel and type the concentration in the field.',
+      'Compare the settled bars with the dashed start marks, and read K on the plate.',
+      'Write the equilibrium amounts from the ICE table into K = [HI]² ÷ ([H₂] × [I₂]), then solve for x.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'hi');
@@ -309,25 +301,20 @@ export const STAGES = [
     },
     get reward() {
       return {
-        log: 'The quadratic gave the amount that matches the bars.',
-        title: 'Unequal Starts',
-        body: `With unequal starts neither side of K is a perfect square, so x came from a quadratic: ${sig3(P5_ICE.x)} M. HI holds 2x, ${sig3(P5_ICE.amounts.HI)} M, and a little H₂ is left.`
+        log: 'Equal starts gave a square-root equation that matched the bars.',
+        title: 'Equal Starts',
+        body: `With equal 0.80 M starts, both sides are squares: 2x ÷ (0.80 − x) = √54, giving x = ${sig3(P5_ICE.x)} M and [HI] = ${sig3(P5_ICE.amounts.HI)} M.`
       };
     }
   }
 ];
 
 /* ------------------------------------------------------------------
-   WHAT A MIXTURE DOES WHEN IT IS LEFT ALONE (phase 3's refusals, from the planner)
+   WHAT A MIXTURE DOES WHEN IT IS LEFT ALONE (phase 3's direction, from the planner)
    ------------------------------------------------------------------ */
 
 const fill = (sys, a) => Object.fromEntries(Object.keys(sys.species).map(s => [s, a[s] ?? 0]));
-function wayOf(c) { return runMixture(AB2, fill(AB2, c.amounts)).dir; }
-function ranText(c) {
-  const r = runMixture(AB2, fill(AB2, c.amounts));
-  const parts = Object.keys(AB2.species).map(s => `${spName(AB2, s)} ${fmtNum(c.amounts[s] ?? 0, 3)} to ${fmtNum(r.after[s], 3)}`);
-  return `When run, ${c.label} goes ${parts.join(', ')} ${AB2.unit}.`;
-}
+function wayOf(c) { return systemRatio(BUTANE, fill(BUTANE, c.amounts)) > BUTANE.K ? 'reverse' : systemRatio(BUTANE, fill(BUTANE, c.amounts)) < BUTANE.K ? 'forward' : 'none'; }
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -370,7 +357,7 @@ export const MISSES = [
   [typed('k', '57')],
   [put('m2', 'slot:tv.seat')],
   [dial('v', 'vol', 0.5), ...runs('v', 6), dial('ans', 'value', 1)],
-  [{ run: 'bars' }, typed('hi', '1.0')]
+  [{ run: 'bars' }, typed('hi', '1.6')]
 ];
 
 function blankState() { return {}; }
@@ -379,20 +366,8 @@ export function stateFor(i, overrides) {
   return stateFromScript(STAGES[i], overrides);
 }
 
-/* ==================================================================
-   THE GAME
-   ================================================================== */
-
 export function mount(container, ctx) {
-  // Clearing the last phase files the clue. The boss pays no XP, so this is not a rail.
-  const bossCtx = {
-    ...ctx,
-    reportComplete() {
-      ctx.reportComplete();
-      session.recordClue?.(DEBRIEF.clueAwarded);
-    }
-  };
-  const runner = createRunner(container, bossCtx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
     onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });

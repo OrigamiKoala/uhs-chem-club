@@ -42,7 +42,7 @@ export const UNIT_01 = {
       title: 'Inside an Atom',
       line: 'Probe the nucleus, protons, neutrons, and electron shells.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit01/q2-core.js')
     },
@@ -51,7 +51,7 @@ export const UNIT_01 = {
       title: 'The Periodic Table',
       line: 'Lay every element in order and read the repeating pattern.',
       arena: 'bench',
-      stageCount: 7,
+      stageCount: 6,
       status: 'live',
       module: () => import('../quests/unit01/q3-catalogue.js')
     },
@@ -69,7 +69,7 @@ export const UNIT_01 = {
       title: 'Atomic Mass',
       line: 'Calculate average atomic mass from isotope abundances.',
       arena: 'bench',
-      stageCount: 11,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit01/q5-assay.js')
     },

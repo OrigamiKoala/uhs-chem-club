@@ -26,7 +26,7 @@ import {
 } from '../../table/kits/ph.js';
 import { sci, fmt, waterIons, waterKw, formulaStats, isConjugate, KW25 } from '../../engine/phdata.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bBr[øo]nsted.Lowry acids?\b/i, introducedAt: 1 },
@@ -49,8 +49,8 @@ const QUEST_KEY = 'unit09/q1-handover';
 const GUESS = {
   nothing: 'Nothing: it has no OH to give',
   release: 'Break apart and release OH⁻',
-  take: 'Take a hydrogen from water, leaving OH⁻',
-  give: 'Give a hydrogen to water',
+  take: 'Accept a proton from water, leaving OH⁻',
+  give: 'Donate a proton to water',
   stay: 'Dissolve and stay as it is'
 };
 const guessLine = (sentence, g) => (g && GUESS[g] ? `You predicted "${GUESS[g]}". ${sentence}` : sentence);
@@ -85,11 +85,6 @@ const S1_CARDS = ['HCl', 'Cl⁻', 'H₂O', 'H₃O⁺', 'OH⁻'];
 const S4_ACIDS = ['HNO₃', 'H₂O', 'NH₄⁺', 'HCN'];
 const S4_LEFT = ['NH₃', 'H₃O⁺', 'CN⁻', 'OH⁻', 'NO₃⁻', 'NH₂⁻'];
 const S5_CARDS = ['HNO₃', 'NH₃', 'H₂O', 'NO₃⁻', 'NH₄⁺'];
-const S8_REACTIONS = [
-  { eq: ['H₂SO₄', 'H₂O', 'HSO₄⁻', 'H₃O⁺'] },
-  { eq: ['CH₃COOH', 'NH₃', 'CH₃COO⁻', 'NH₄⁺'] },
-  { eq: ['HCO₃⁻', 'OH⁻', 'CO₃²⁻', 'H₂O'] }
-];
 /** The three waters of stage 6: pure, with a little strong acid, with a little strong base (mol/L added). */
 const WATERS = [
   { title: 'Pure water', spec: {} },
@@ -107,7 +102,11 @@ export const STAGES = [
   {
     id: 's1-hcl',
     title: 'Where the Hydrogen Goes',
-    prompt: 'Carry the proton to the particle that holds it once HCl is poured into water.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'A hydrogen atom without its electron is a single proton, written H⁺. Watch the white hydrogen when the HCl is poured.'
+    },
+    prompt: 'Which particle holds the proton after HCl is poured into water?',
     widget,
     // The graded answer is where the proton is carried on the bench, not a card: the window shows the pour, the bench is the answer.
     table: (() => {
@@ -120,9 +119,9 @@ export const STAGES = [
       }, { w: 184, h: 76 });
     })(),
     hints: [
-      'Press "Pour" and watch the white hydrogen, then carry a proton on the bench.',
+      'Press "Pour" and watch the white hydrogen, then carry a proton on the proton bench.',
       'Look at which particle holds the white hydrogen after the pour.',
-      'Drop a proton in the seat of the particle that holds the white hydrogen afterwards.'
+      'Ask which particle in the window gained the white hydrogen.'
     ],
     check(state) {
       const m = benchMove(state);
@@ -134,9 +133,9 @@ export const STAGES = [
       return { ok: false, msg: `In the window the white hydrogens leave the chlorine in ${n} of 8 cells; the proton you moved is on the wrong particle and comes straight back.` };
     },
     reward: {
-      log: 'Each HCl handed its hydrogen to a water molecule.',
+      log: 'Each HCl donated a proton to a water molecule.',
       title: 'Handing Over a Proton',
-      body: 'Each HCl handed its hydrogen, as a proton (H⁺, a hydrogen with no electron), to a water molecule, making hydronium, H₃O⁺, and leaving Cl⁻. An acid that hands a proton over is a Brønsted–Lowry acid.'
+      body: 'Each HCl donated (passed) a proton to a water molecule, making hydronium, H₃O⁺, and leaving Cl⁻. A substance that donates a proton is a Brønsted–Lowry acid.'
     }
   },
 
@@ -161,8 +160,8 @@ export const STAGES = [
     }, { h: 112 }),
     leadIn: true,
     hints: [
-      'Use the five cards and the slot.',
-      'Look at the formula NH₃ and ask what it has that water can use.',
+      'Place one of the five prediction cards in the slot.',
+      'Ask whether ammonia can only donate a proton, or whether water could donate one to it.',
       'Ask what particles could be left in the water if ammonia changed it.'
     ],
     check(state) {
@@ -181,7 +180,7 @@ export const STAGES = [
   {
     id: 's3-nh3',
     title: 'Ammonia Acts',
-    get prompt() { return guessLine('Carry the proton the way it moves once ammonia is poured into water.', recall(QUEST_KEY)); },
+    get prompt() { return guessLine('Which particle accepts a proton when ammonia is poured into water?', recall(QUEST_KEY)); },
     widget,
     table: (() => {
       const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'base', solute: NH3, label: 'Particle window', mark: 'water' });
@@ -193,9 +192,9 @@ export const STAGES = [
       }, { w: 184, h: 76 });
     })(),
     hints: [
-      'Press "Pour" and watch the white hydrogens, then carry a proton on the bench.',
+      'Press "Pour" and watch the white hydrogens, then carry a proton on the proton bench.',
       'Follow the white hydrogens of the water and see which particle holds them afterwards.',
-      'Compare the number of hydrogens on each ammonia particle before and after, and ask where the water\'s went.'
+      'Count the hydrogens on ammonia before and after the pour to see which way the proton moved.'
     ],
     check(state) {
       const m = benchMove(state);
@@ -210,9 +209,9 @@ export const STAGES = [
       const g = recall(QUEST_KEY);
       const verdict = g === 'take' ? 'The prediction held: ' : g ? 'Not what you predicted: ' : '';
       return {
-        log: 'Ammonia took a proton from water.',
-        title: 'A Base Takes a Proton',
-        body: `${verdict}ammonia took a proton from water, becoming NH₄⁺ and leaving OH⁻, with no OH in the ammonia itself. A substance that takes a proton is a Brønsted–Lowry base.`
+        log: 'Ammonia accepted a proton from water.',
+        title: 'A Base Accepts a Proton',
+        body: `${verdict}${verdict ? 'water' : 'Water'} donated a proton to ammonia, making NH₄⁺ and leaving OH⁻. A substance that accepts a proton is a Brønsted–Lowry base.`
       };
     }
   },
@@ -221,7 +220,11 @@ export const STAGES = [
   {
     id: 's4-pairs',
     title: 'What Is Left',
-    prompt: 'Pair each acid with the particle that is left of it after it hands a proton over.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'What is left of an acid after it donates a proton is its conjugate base. The two differ by one proton.'
+    },
+    prompt: 'What is the conjugate base of each acid?',
     widget,
     table: (() => {
       const slots = S4_ACIDS.map((a, i) => ({ id: `p${i}`, label: ' ', at: { x: 68, y: 12 + i * 18 }, size: { w: 22, h: 11 } }));
@@ -234,9 +237,9 @@ export const STAGES = [
       }, { w: 152, h: 78 });
     })(),
     hints: [
-      'Drag a formula card from the right into the place beside each acid.',
-      'Compare the formula of each acid with the formula of the formula card: hydrogens and charge.',
-      'The particle left behind is the acid without the proton it handed over.'
+      'Drag a formula card from the right into the slot beside each acid.',
+      'Compare the hydrogens and charge of each acid with each formula card.',
+      'A conjugate base is the acid after one H⁺ has left.'
     ],
     check(state) {
       const bad = [];
@@ -254,7 +257,7 @@ export const STAGES = [
     reward: {
       log: 'Each acid and what it leaves behind form a pair.',
       title: 'Conjugate Pairs',
-      body: 'An acid and the particle left when it hands over a proton are a conjugate acid–base pair: HNO₃ and NO₃⁻, H₂O and OH⁻, NH₄⁺ and NH₃, HCN and CN⁻. The two differ by exactly one proton.'
+      body: 'An acid and the particle left when it donates a proton are a conjugate acid–base pair. Each pair differs by one proton.'
     }
   },
 
@@ -262,7 +265,7 @@ export const STAGES = [
   {
     id: 's5-both',
     title: 'Two Ways Round',
-    prompt: 'Find the substance that acts as an acid in one window and as a base in the other.',
+    prompt: 'Which substance acts as an acid in one window and as a base in the other?',
     widget,
     table: (() => {
       const a = pourFixture('winA', { x: 46, y: 32 }, { scene: 'acid', solute: HNO3, label: 'Nitric acid', w: 88, window: 28, mark: 'water' });
@@ -275,8 +278,8 @@ export const STAGES = [
     })(),
     hints: [
       'Press "Pour" on both windows, then drag a formula card into the slot.',
-      'The water hydrogens are already marked white: follow them in each window.',
-      'Ask which substance is in both windows, and what it gained in one and lost in the other.'
+      'The water hydrogens are marked white: follow them in each window.',
+      'Check which substance gained a proton in one window and lost one in the other.'
     ],
     check(state) {
       const c = pieceIn(state.table, 'both');
@@ -291,9 +294,9 @@ export const STAGES = [
       return { ok: false, msg };
     },
     reward: {
-      log: 'Water gave a proton in one window and took one in the other.',
+      log: 'Water donated a proton in one window and accepted one in the other.',
       title: 'Amphoteric',
-      body: 'Water took a proton from the nitric acid and gave a proton to the ammonia. A substance that can act as an acid or as a base, depending on its partner, is amphoteric.'
+      body: 'Water accepted a proton from nitric acid and donated a proton to ammonia. A substance that can act as an acid or a base is amphoteric.'
     }
   },
 
@@ -301,7 +304,11 @@ export const STAGES = [
   {
     id: 's6-kw',
     title: 'Ions in Pure Water',
-    prompt: 'Arrange cards on the board into a ratio that reads the same number for all three waters.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'Pure water holds a little H₃O⁺ and OH⁻ from autoionization, when one water molecule donates a proton to another. The board compares pure water with acid and base added, showing their concentrations (moles per litre).'
+    },
+    prompt: 'Which combination of the two concentrations is the same for all three waters?',
     widget,
     table: (() => {
       const rig = rigParts('rig', { x: 86, y: 32 }, {
@@ -315,9 +322,9 @@ export const STAGES = [
       }, { w: 196, h: 54 });
     })(),
     hints: [
-      'Drag the two cards into the places above and below the line.',
-      'Compare the three numbers the board prints for each arrangement you try.',
-      'Try each card alone, then both on one side of the line, then one on each side.'
+      'Drag the two cards into the slots above and below the line on the expression board.',
+      'Compare the three numbers the expression board prints for each arrangement you try.',
+      'Look for an arrangement where the rise in one concentration cancels the fall in the other.'
     ],
     check(state) {
       const r = rigRead(state.table, 'rig');
@@ -330,7 +337,7 @@ export const STAGES = [
       return {
         log: 'H₃O⁺ times OH⁻ came to one number in every water.',
         title: 'Autoionization and Kw',
-        body: `Pure water holds H₃O⁺ and OH⁻ at ${sci(v.h, 2)} mol/L each, made by 2 H₂O ⇌ H₃O⁺ + OH⁻. This is autoionization. The two concentrations multiply to ${sci(KW25, 2)} in every water at 25 °C, and that number is Kw.`
+        body: `[H₃O⁺] × [OH⁻] is ${sci(KW25, 2)} in every water at 25 °C. That constant is Kw, and in pure water each ion is ${sci(v.h, 2)} mol/L.`
       };
     }
   },
@@ -339,18 +346,22 @@ export const STAGES = [
   {
     id: 's7-lewis',
     title: 'Without a Proton',
-    prompt: 'Find what moves when boron trifluoride, BF₃, meets ammonia, a case beyond the exam.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'Not every acid–base reaction moves a proton. The Mark dial lets you follow either the hydrogens or the lone pairs (unshared electron pairs).'
+    },
+    prompt: 'What moves when boron trifluoride, BF₃, meets ammonia?',
     widget,
     table: (() => {
-      const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'lewis', label: 'Particle window (beyond the exam)' });
+      const w = pourFixture('win', { x: 54, y: 38 }, { scene: 'lewis', label: 'Particle window' });
       return phTable({
         fixtures: [w, selectorFixture('verdict', 'What moved', { x: 144, y: 38 }, { options: ['A proton', 'An electron pair', 'Nothing', ' '], start: 4, w: 64 })]
       }, { w: 182, h: 76 });
     })(),
     hints: [
-      'Set the "Mark" dial, press "Pour", then set the answer dial.',
+      'Set the "Mark" dial, press "Pour", then set the "What moved" dial.',
       'Mark the hydrogens of NH₃, then the lone pairs, and compare the windows before and after.',
-      'Follow each mark and ask which one ends up on a different atom.'
+      'Follow each mark and see which one ends up between the two molecules.'
     ],
     check(state) {
       const v = dialValue(state.table, 'verdict');
@@ -360,57 +371,9 @@ export const STAGES = [
       return { ok: false, msg: `In the window all ${pourRead(state.table, 'win').moved} of 8 cells changed: each BF₃ is now joined to an NH₃.` };
     },
     reward: {
-      log: 'BF₃ took a lone pair from NH₃; no proton moved.',
+      log: 'BF₃ accepted a lone pair from NH₃; no proton moved.',
       title: 'Lewis Acid and Base',
-      body: 'The nitrogen shared its lone pair with the boron, and no proton moved. A substance that accepts an electron pair is a Lewis acid, and one that gives it is a Lewis base. This is beyond the exam.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-react',
-    title: 'Pairs in Reactions',
-    prompt: 'In each reaction, lay the two substances of each conjugate pair side by side.',
-    widget,
-    table: (() => {
-      const slots = []; const pieces = [];
-      S8_REACTIONS.forEach((r, i) => {
-        const y = 12 + i * 20;
-        // The chips of the equation stand in a shuffled order so the order of the equation is not the pairing.
-        const order = [0, 2, 3, 1].map(k => r.eq[k]);
-        order.forEach((f, k) => pieces.push(formulaChip(`r${i}-${slugOf(f)}`, f, { x: 12 + k * 20, y })));
-        for (const [g, x0] of [['a', 102], ['b', 148]]) for (const k of [0, 1]) slots.push({ id: `r${i}${g}${k}`, label: ' ', at: { x: x0 + k * 22, y }, size: { w: 20, h: 10 } });
-      });
-      return phTable({ pieces, zones: { slots } }, { w: 184, h: 66 });
-    })(),
-    hints: [
-      'Drag formula cards into the places on the right of each reaction.',
-      'Compare the hydrogens and the charge of each formula card with the others in its row.',
-      'A pair is two formula cards that differ by one proton: find which formula card each reactant becomes.'
-    ],
-    check(state) {
-      const t = state.table;
-      let empty = 0;
-      for (let i = 0; i < S8_REACTIONS.length; i++) {
-        const g = ['a', 'b'].map(x => [pieceIn(t, `r${i}${x}0`), pieceIn(t, `r${i}${x}1`)]);
-        empty += g.flat().filter(c => !c).length;
-        for (const [c1, c2] of g) {
-          if (!c1 || !c2) continue;
-          if (!isConjugate(c1.label, c2.label) && !isConjugate(c2.label, c1.label)) return { ok: false, msg: `Reaction ${i + 1}: ${describe(c1.label)}, and ${describe(c2.label)}.` };
-        }
-        if (!g.some(([c1, c2]) => !c1 || !c2)) {
-          const four = new Set(g.flat().map(c => c.label));
-          if (four.size < 4) return { ok: false, msg: `Reaction ${i + 1}: one substance is laid in two places.` };
-        }
-      }
-      if (empty === S8_REACTIONS.length * 4) return { ok: false, notYet: true, msg: 'Lay formula cards beside a reaction.' };
-      if (empty) return { ok: false, notYet: true, msg: 'Fill every place.' };
-      return { ok: true };
-    },
-    reward: {
-      log: 'Every reaction was two conjugate pairs.',
-      title: 'Pairs in a Reaction',
-      body: 'In each reaction an acid hands a proton to a base, and each of the two becomes its conjugate: the acid turns into a base and the base into an acid. The members of a pair differ by exactly one proton.'
+      body: 'Nitrogen shared its lone pair with boron, and no proton moved. A substance that accepts an electron pair is a Lewis acid; one that donates it is a Lewis base.'
     }
   }
 ];
@@ -418,7 +381,7 @@ export const STAGES = [
 /** The quest's closing card, shown only where a quest has no story animation yet. */
 export const DEBRIEF = {
   title: 'The Handover',
-  body: 'An acid hands a proton to a base. Water can be either, and every acid leaves a conjugate base behind.'
+  body: 'An acid donates a proton to a base. Water can be either, and every acid leaves a conjugate base behind.'
 };
 
 const slotT = i => `slot:rig.t${i}`;
@@ -433,15 +396,7 @@ export const SOLUTIONS = [
   [put('l-' + slugOf('NO₃⁻'), sl('p0')), put('l-' + slugOf('OH⁻'), sl('p1')), put('l-' + slugOf('NH₃'), sl('p2')), put('l-' + slugOf('CN⁻'), sl('p3'))],
   [{ run: 'winA' }, { run: 'winB' }, put(chip('H₂O'), sl('both'))],
   [put('t-H', slotT(1)), put('t-OH', slotT(2))],
-  [dial('win', 'mark', 3), { run: 'win' }, dial('verdict', 'value', 2)],
-  (() => {
-    const out = [];
-    S8_REACTIONS.forEach((r, i) => {
-      const [acid, base, cb, ca] = r.eq;
-      out.push(put(`r${i}-${slugOf(acid)}`, sl(`r${i}a0`)), put(`r${i}-${slugOf(cb)}`, sl(`r${i}a1`)), put(`r${i}-${slugOf(base)}`, sl(`r${i}b0`)), put(`r${i}-${slugOf(ca)}`, sl(`r${i}b1`)));
-    });
-    return out;
-  })()
+  [dial('win', 'mark', 3), { run: 'win' }, dial('verdict', 'value', 2)]
 ];
 
 export const MISSES = [
@@ -451,8 +406,7 @@ export const MISSES = [
   [put('l-' + slugOf('H₃O⁺'), sl('p1'))],
   [put(chip('NH₃'), sl('both'))],
   [put('t-H', slotT(1))],
-  [dial('verdict', 'value', 1)],
-  [put(`r0-${slugOf('H₂SO₄')}`, sl('r0a0')), put(`r0-${slugOf('H₃O⁺')}`, sl('r0a1'))]
+  [dial('verdict', 'value', 1)]
 ];
 
 function blankState() { return {}; }
@@ -470,4 +424,4 @@ export function mount(container, ctx) {
   return { dispose: () => runner.dispose() };
 }
 
-export const CHECKS = { S4_ACIDS, S4_LEFT, S5_CARDS, S8_REACTIONS, WATERS, GUESS, NH3, HCL, HNO3, hole, fmt, waterKw };
+export const CHECKS = { S4_ACIDS, S4_LEFT, S5_CARDS, WATERS, GUESS, NH3, HCL, HNO3, hole, fmt, waterKw };

@@ -95,7 +95,7 @@ export const STAGES = [
     id: 's1-reference',
     title: 'Against a Reference',
     briefing: { speaker: SPEAKER, body: 'Each electrode is measured against the same hydrogen electrode, which is set at 0 V. The reading is the metal\'s standard reduction potential, E°.' },
-    prompt: 'Which metal has the lowest standard reduction potential and which the highest?',
+    prompt: 'Order these metals from lowest to highest standard reduction potential.',
     widget,
     table: boardTable(
       S1_METALS.map((m, i) => electrodePiece(`e-${m}`, m, { x: 112 + (i % 2) * 34, y: 10 + Math.floor(i / 2) * 20 })),
@@ -176,10 +176,12 @@ export const STAGES = [
     widget,
     table: (() => {
       const rigs = S3_CELLS.map(([id, l, r, name], i) => rigFixture(id, { x: 26 + (i % 2) * 52, y: 26 + Math.floor(i / 2) * 50 }, { left: l, right: r, title: name, markable: true }));
+      const gate = { anyFixtureDial: { ids: S3_CELLS.map(([id]) => id), dial: 'mark', start: 0 } };
+      for (const r of rigs) { r.props.gate = gate; r.props.gateMsg = 'Tap the lamp of each cell you predict will light first, then press "Run".'; }
       return cellTable({ fixtures: rigs }, { w: 104, h: 104 });
     })(),
     hints: [
-      'Press "Run" on each cell, then tap the lamp of each cell that lights.',
+      'Tap the lamp of each cell you predict will light, then press "Run" on each cell.',
       'Compare each cell\'s voltmeter reading with its lamp, and look at which metal stands on which side.',
       'Look at the sign of each reading: the lamp follows it.'
     ],
@@ -295,7 +297,7 @@ export const STAGES = [
     title: 'The Energy Released',
     briefing: {
       speaker: SPEAKER,
-      body: 'The Faraday constant, F, is the charge of one mole of electrons: 96,485 coulombs. One volt is one joule for each coulomb.',
+      body: 'Electric charge is counted in coulombs (C), and the Faraday constant F is 96,485 C for one mole of electrons. One volt is one joule (J) of energy per coulomb, so ΔG° = −nFE° gives the free energy change.',
       worked: ['2 mol e⁻ × 96,485 C/mol = 192,970 C', '× 1.10 V = 212,000 J = 212 kJ']
     },
     prompt: 'How much energy, in kJ, is released when one mole of magnesium reacts with copper(II) ions?',
@@ -342,7 +344,7 @@ export const STAGES = [
     title: 'How Far It Goes',
     briefing: {
       speaker: SPEAKER,
-      body: 'A cell runs until it reaches equilibrium. The larger its E°, the further that equilibrium lies toward products.',
+      body: 'A cell runs until it reaches equilibrium, where forward and reverse reactions balance and the equilibrium constant K measures products over reactants. The larger E° is, the larger K is.',
       worked: ['Zn + Cu²⁺ → Zn²⁺ + Cu (n = 2 e⁻, E° = 1.10 V)', '2 × 1.10 ÷ 0.0592 = 37.2', 'K is about 10³⁷']
     },
     prompt: 'What is log K, to the nearest whole number, for zinc reacting with silver ions?',
@@ -399,7 +401,7 @@ export const DEBRIEF = {
 export const SOLUTIONS = [
   [...S1_METALS.map(m => put(`e-${m}`, SEAT)), ...S1_WANT.map((m, i) => put(`e-${m}`, `rail:${i}`))],
   [put('e-mg', SEAT), put('e-ag', SEAT), typed('e', fmt(cellE0('ag', 'mg'), 2))],
-  [...S3_CELLS.map(([id]) => run(id)), ...S3_CELLS.filter(([, l, r]) => cellE0(r, l) > 0).map(([id]) => dial(id, 'mark', 1))],
+  [...S3_CELLS.filter(([, l, r]) => cellE0(r, l) > 0).map(([id]) => dial(id, 'mark', 1)), ...S3_CELLS.map(([id]) => run(id))],
   [put('same', 'slot:guess')],
   [run('rig'), dial('rig', 'scale', 2), run('rig'), dial('pick', 'value', 1)],
   [run('rig'), typed('kj', fmt(-deltaG0(cellE0('cu', 'mg'), 2), 0))],
@@ -409,7 +411,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [put('e-mg', SEAT), put('e-zn', SEAT), ...['mg', 'zn', 'ag', 'cu'].map((m, i) => put(`e-${m}`, `rail:${i}`))],
   [put('e-mg', SEAT), put('e-ag', SEAT), typed('e', '-1.57')],
-  [run('ra'), run('rb'), run('rc'), run('rd'), dial('rb', 'mark', 1), dial('rc', 'mark', 1)],
+  [dial('rb', 'mark', 1), dial('rc', 'mark', 1), run('ra'), run('rb'), run('rc'), run('rd')],
   [],
   [run('rig'), dial('rig', 'scale', 2), run('rig'), dial('pick', 'value', 2)],
   [typed('kj', '261')],

@@ -190,7 +190,7 @@ export const STAGES = [
   {
     title: 'Two Pairs Short',
     get prompt() {
-      return testPrompt(QUEST_KEY, GUESSES, 'how can every atom in carbon dioxide have an octet with only sixteen electrons?');
+      return testPrompt(QUEST_KEY, GUESSES, 'build the Lewis structure of carbon dioxide so every atom has an octet with sixteen electrons.');
     },
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'CO2', 80, 28, 68]]),
@@ -244,7 +244,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Fewer Than Eight',
-    briefing: { speaker: SPEAKER, body: 'Fluorine is the most electronegative element and forms only single bonds: it never shares a second pair.' },
+    briefing: { speaker: SPEAKER, body: 'Fluorine is the most electronegative element (it pulls hardest on shared electrons) and forms only single bonds: it never shares a second pair.' },
     prompt: 'Where do the 24 valence electrons of BF₃ go, given that fluorine forms only single bonds?',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'BF3', 82, 36, 62]]),
@@ -294,7 +294,7 @@ export const STAGES = [
     reward: {
       log: 'Sulfur holds ten.',
       title: 'Expanded Octet',
-      body: 'The last pair is a lone pair on sulfur, which then has ten electrons round it: an expanded octet. Only atoms in the third period or below can have more than eight.'
+      body: 'The last pair is a lone pair on sulfur, which then has ten electrons round it: an expanded octet. Only atoms in the third row (period) of the periodic table or below can have more than eight.'
     }
   },
 

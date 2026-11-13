@@ -19,6 +19,7 @@ import { paintPiece, paintFixture, faceKey, RECTS, contentTop } from './matter-d
 import { paintTrayView } from './matter-window.js';
 import { probeRead, probeValue, seatedIn } from './matter-read.js';
 import { fixtureHandler, pieceDef, pieceKinds, allFixtureHandlers } from './matter-registry.js';
+import { revealTable, gateRun } from './commit-gate.js';
 import './matter-tour.js';
 
 /* One import per bench: each file registers its own instruments and pieces (`matter-registry.js`). */
@@ -37,6 +38,8 @@ export const MATTER_BOUNDS = HEAT_BOUNDS;
 function run(state, fid) {
   const f = state.fixtures[fid];
   if (!f || f.noRun) return null;
+  const blocked = gateRun(state, f);
+  if (blocked) return blocked;
   if (f.kind === 'probe') {
     const r = probeRead(state, fid);
     if (!r.item) return { noop: 'Put a card in the probe first.' };
@@ -115,7 +118,7 @@ export const MATTER_KIT = {
   tapZones,
   paintTray: paintTrayView,
   // A miss replays the cause: the glides of the heat kit start again and every particle keeps moving.
-  onMiss: () => { replayHeat(); replayMatter(); },
+  onMiss: table => { revealTable(table); replayHeat(); replayMatter(); },
   printed: p => (p.kind === 'mol' ? String(p.label) : pieceDef(p.kind)?.printed ? pieceDef(p.kind).printed(p) : HEAT_KIT.printed(p))
 };
 

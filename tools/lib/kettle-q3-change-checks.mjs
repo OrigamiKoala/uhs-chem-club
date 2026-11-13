@@ -95,9 +95,6 @@ export async function check({ near }) {
   for (const f of pr.table.fixtures || []) if (f.kind !== 'plaque') bad.push(`stage 3 (predict) shows an instrument (${f.kind})`);
   for (const p of pr.table.pieces || []) if (p.kind === 'cjar') bad.push('stage 3 (predict) shows a sample jar');
 
-  // The unlabelled samples carry no name or amount.
-  q.STAGES[7].table.pieces.forEach(p => { if (!/^Sample [ABC]$/.test(p.label) || p.props.shown) bad.push(`stage 8: jar ${p.id} shows what it holds`); });
-
   // No plate, jar or dial prints a stage's answer.
   const answers = { 6: ['119.7'] };
   q.STAGES.forEach((st, i) => {

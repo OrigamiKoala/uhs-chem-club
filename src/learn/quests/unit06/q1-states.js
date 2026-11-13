@@ -322,6 +322,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   (() => {
     const sc = scaleFixture('scale', { x: 33, y: 22 }, { lines: ['EACH JAR HOLDS 1.00 L', 'OF WATER'] });
+    sc.fixture.props.gate = { railChanged: ['c', 'a', 'b'] };
+    sc.fixture.props.gateMsg = 'Rank the jars on the strip first, then weigh them.';
     const jars = S6_JARS.map((j, i) => jarCard(j.id, j.label, { x: 12.2 + i * 21.2, y: 60 }, { sample: 'H2O', state: j.state, T: S6_STATE_AT[j.state] }));
     return {
       id: 's6-room',
@@ -334,7 +336,7 @@ export const STAGES = [
         zones: { slots: [sc.slot], rail: { at: { x: 107, y: 34 }, size: { w: 84, h: 16 }, first: 'Least space each', last: 'Most space each', items: jars.map(j => j.id), start: ['c', 'a', 'b'] } }
       }),
       hints: [
-        'Weigh each jar on the balance with its "Weigh" key, then drag the jars onto the strip.',
+        'Drag the jars onto the strip first, then weigh each jar on the balance with its "Weigh" key.',
         'Every jar has the same volume and holds the same kind of molecule.',
         'In jars of equal volume, greater mass means more molecules in the same space.'
       ],
@@ -425,7 +427,7 @@ export const SOLUTIONS = [
   [...readAt('ja', 1), ...readAt('ja', 2), ...readAt('ja', 3), ...readAt('jd', 2),
     put('melt', 'tray:same'), put('boil', 'tray:same'), put('split', 'tray:new')],
   [...readAt('ja', 1), ...readAt('ja', 2), ...readAt('ja', 3), put('between', 'slot:holds')],
-  [...S6_JARS.flatMap(j => [put(j.id, PSLOT), { run: 'scale' }]), ...S6_ORDER.map((id, i) => put(id, `rail:${i}`))],
+  [...S6_ORDER.map((id, i) => put(id, `rail:${i}`)), ...S6_JARS.flatMap(j => [put(j.id, PSLOT), { run: 'scale' }]), ...S6_ORDER.map((id, i) => put(id, `rail:${i}`))],
   [put('jw', PSLOT), { run: 'scale' }, put('js', PSLOT), { run: 'scale' }, typed('times', Math.round(TIMES))]
 ];
 
@@ -437,7 +439,7 @@ export const MISSES = [
   [...readAt('ja', 1), ...readAt('ja', 2), ...readAt('ja', 3), ...readAt('jd', 2),
     put('melt', 'tray:same'), put('boil', 'tray:new'), put('split', 'tray:new')],
   [...readAt('ja', 1), ...readAt('ja', 2), ...readAt('ja', 3), put('inside', 'slot:holds')],
-  [...S6_JARS.flatMap(j => [put(j.id, PSLOT), { run: 'scale' }]), ...['b', 'a', 'c'].map((id, i) => put(id, `rail:${i}`))],
+  [...['b', 'a', 'c'].map((id, i) => put(id, `rail:${i}`)), ...S6_JARS.flatMap(j => [put(j.id, PSLOT), { run: 'scale' }]), ...['b', 'a', 'c'].map((id, i) => put(id, `rail:${i}`))],
   [put('jw', PSLOT), { run: 'scale' }, put('js', PSLOT), { run: 'scale' }, typed('times', 1000)]
 ];
 

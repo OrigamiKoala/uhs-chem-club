@@ -25,6 +25,7 @@ import { buildBathDress, buildPairDress, buildBondChip, buildPhaseCard, buildCel
 import { cupRead, wellRead, plotRead, warmRead, cellsOpen, occupiedCells, loggedArrangements, shakesOf, shakeCells, targetMap, BOND_ENTHALPIES, cardTerms, fmtEqn, seatedIn } from './heat-read.js';
 import { paintMotion, isLive, replayHeat, contentTopOf } from './heat-motion.js';
 import { dressRecorded } from './pans-3d.js';
+import { revealTable, gateRun, isCommitted } from './commit-gate.js';
 import './heat-tour.js';
 import './heat-tour-min.js';
 
@@ -40,6 +41,8 @@ export const HEAT_RECORDER = Object.freeze({ at: { x: 147.4, y: 61.6 }, size: { 
 function run(state, fid) {
   const f = state.fixtures[fid];
   if (!f || f.noRun) return null;
+  const gate = gateRun(state, f);
+  if (gate) return gate;
   if (f.kind === 'cup') {
     const r = cupRead(state, fid);
     if (!r.item && !r.joules) return { noop: 'Put something in the cup, or turn the heater up, first.' };
@@ -78,8 +81,12 @@ function run(state, fid) {
 const rect = (r, kind, extra = {}) => ({ r, rect: RECTS[kind], nojoin: true, ...extra });
 
 /** Two blocks that touch hold; nothing else on this table joins. */
-function planJoin(a, b) {
-  if (a.kind === 'block' && b.kind === 'block') return { holds: true, link: { type: 'contact' }, reason: 'The blocks touch.' };
+function planJoin(a, b, state) {
+  if (a.kind === 'block' && b.kind === 'block') {
+    const gated = Object.values(state?.fixtures || {}).find(f => f.props?.gate && !isCommitted(state, f.props.gate));
+    if (gated) return { holds: false, home: true, reason: gated.props.gateMsg || 'Commit your prediction in the slot before joining the blocks.' };
+    return { holds: true, link: { type: 'contact' }, reason: 'The blocks touch.' };
+  }
   return { holds: false, home: true, reason: 'Nothing here joins: put a piece in a place.' };
 }
 
@@ -252,7 +259,7 @@ export const HEAT_KIT = {
   live,
   replay: () => replayHeat(),
   // A miss replays the cause: every glide (a thermometer, the atoms of a block, the burner) runs again from where it began.
-  onMiss: () => replayHeat(),
+  onMiss: table => { revealTable(table); replayHeat(); },
   tapZones,
   piece3d,
   dress3d,
@@ -429,12 +436,20 @@ export function chamberFixture(id, at, { cells = 8, particles = 4, title = 'Cham
 
 /** The plot of ΔG against temperature for a reaction of the given ΔH (kJ/mol) and ΔS (J/(mol·K)), and the dial that walks along it. */
 export function plotFixture(id, at, o = {}) {
-  const { dH, dS, Ts, tempStart = 1, hideDG = false, hideTug = false, hideCrossing = true, title = 'Free energy', w = 60, record = false, runLabel = 'Record', eq = '', words = false } = o;
+  const { dH, dS, Ts, tempStart = 1, hideDG = false, hideTug = false, hideCrossing = true, title = 'Free energy', w = 60, record = false, runLabel = 'Record', eq = '', words = false, bars = false } = o;
   return {
     id, kind: 'plot', label: title, at: { ...at }, size: { w, h: Math.round((contentTop(1) + 28) * 10) / 10 },
     dials: { temp: { min: 1, max: Ts.length, step: 1, value: tempStart, label: 'Temperature', labels: Ts.map(T => `${T} K`) } },
     ...(record ? { runLabel } : { noRun: true }),
-    props: { dH, dS, Ts, hideDG, hideTug, hideCrossing, eq, words }
+    props: { dH, dS, Ts, hideDG, hideTug, hideCrossing, eq, words, bars }
+  };
+}
+
+/** Side-by-side ΔH and TΔS bars for a fixed reaction at one temperature, showing how the two terms compare. */
+export function gibbsBarsFixture(id, title, at, { dH, dS, T, w = 52, h = 44 } = {}) {
+  return {
+    id, kind: 'gibbsbars', label: title, at: { ...at }, size: { w, h }, noRun: true, dials: {},
+    props: { dH, dS, T }
   };
 }
 
@@ -485,8 +500,8 @@ export function leadFixture(id, at, { scene, lhs = null, rhs = null, dH = 0, w =
 }
 
 /** A printed reference: lines of text on a plate. */
-export function plaqueFixture(id, label, at, lines, { w = 44 } = {}) {
-  return { id, kind: 'plaque', label, at: { ...at }, size: { w, h: 8.4 + lines.length * 3.8 }, noRun: true, dials: {}, props: { lines: lines.slice() } };
+export function plaqueFixture(id, label, at, lines, { w = 44, bars = null } = {}) {
+  return { id, kind: 'plaque', label, at: { ...at }, size: { w, h: Math.max(8.4 + lines.length * 3.8, bars ? 34 : 0) }, noRun: true, dials: {}, props: { lines: lines.slice(), ...(bars ? { bars } : {}) } };
 }
 
 /** A number to set: a marker the player sets to what they have read. */

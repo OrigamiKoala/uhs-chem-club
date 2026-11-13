@@ -39,22 +39,72 @@ export const nameBase = c => (c.props.anon ? `base of ${c.label}` : RACE[c.props
 const baseShort = c => (c.props.anon ? `base ${c.label}` : RACE[c.props.acid].base);
 
 /** An acid card. `rows` are the structure facts printed under the formula (strings). */
-export const acidCard = (id, acid, at, { rows = [], face = 'acid', label = null, anon = false } = {}) => ({
-  id, kind: 'phacid', label: label ?? (face === 'base' ? RACE[acid].base : RACE[acid].acid), at, props: { acid, rows, face, anon }
+export const acidCard = (id, acid, at, { rows = [], face = 'acid', label = null, anon = false, conj = true } = {}) => ({
+  id, kind: 'phacid', label: label ?? (face === 'base' ? RACE[acid].base : RACE[acid].acid), at, props: { acid, rows, face, anon, conj }
 });
+
+const CONJ_STYLE = {
+  hf: { kind: 'ion', r: 1.15, alpha: 0.56, tag: 'F⁻' },
+  hcl: { kind: 'ion', r: 1.55, alpha: 0.36, tag: 'Cl⁻' },
+  hbr: { kind: 'ion', r: 1.95, alpha: 0.24, tag: 'Br⁻' },
+  ch4: { kind: 'ion', r: 1.25, alpha: 0.56, tag: 'CH₃⁻' },
+  nh3: { kind: 'ion', r: 1.25, alpha: 0.46, tag: 'NH₂⁻' },
+  h2o: { kind: 'ion', r: 1.25, alpha: 0.36, tag: 'OH⁻' },
+  hclo: { kind: 'oxy', extra: 0, tag: 'ClO⁻' },
+  hclo2: { kind: 'oxy', extra: 1, tag: 'ClO₂⁻' },
+  hclo3: { kind: 'oxy', extra: 2, tag: 'ClO₃⁻' },
+  hclo4: { kind: 'oxy', extra: 3, tag: 'ClO₄⁻' },
+  ethanol: { kind: 'res', shared: false, tag: 'RO⁻' },
+  acetic: { kind: 'res', shared: true, tag: 'RCO₂⁻' },
+  formic: { kind: 'res', shared: true, tag: 'HCO₂⁻' }
+};
+
+function drawShade(ctx, x, y, rx, ry, alpha) {
+  ctx.save();
+  ctx.fillStyle = `rgba(218, 165, 68, ${alpha})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(218, 165, 68, ${Math.min(0.85, alpha + 0.22)})`;
+  ctx.lineWidth = Math.max(0.7, rx * 0.14);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawConjBase(ctx, p, box, sc, ox) {
+  const spec = p.props.conj !== false && CONJ_STYLE[p.props.acid];
+  if (!spec) return;
+  const cy = box.y0 + 15.1 * sc;
+  const gx = ox - 2.6 * sc;
+  if (spec.kind === 'ion') {
+    drawShade(ctx, gx, cy, spec.r * sc, spec.r * sc, spec.alpha);
+  } else if (spec.kind === 'oxy') {
+    const a = Math.max(0.16, 0.55 - spec.extra * 0.13);
+    drawShade(ctx, gx - 1.8 * sc, cy, 1.3 * sc, 1.3 * sc, a);
+    for (let i = 0; i < spec.extra; i++) {
+      drawShade(ctx, gx + (0.9 + i * 1.45) * sc, cy, 0.65 * sc, 0.65 * sc, 0.18);
+    }
+  } else if (spec.kind === 'res') {
+    if (spec.shared) drawShade(ctx, gx, cy, 2.9 * sc, 1.15 * sc, 0.28);
+    else drawShade(ctx, gx - 1.1 * sc, cy, 1.35 * sc, 1.35 * sc, 0.56);
+  }
+  const tag = p.props.anon ? 'base⁻' : spec.tag;
+  put(ctx, ionText(tag), ox + 4.4 * sc, cy + 0.1 * sc, Math.max(5.5, 1.55 * sc), { color: DUST, maxW: 8.5 * sc });
+}
 
 function paintCard(ctx, p, state, o) {
   const box = slab(ctx, o, CARD, '#1d1a16');
   const sc = o.sc; const rows = p.props.rows || [];
   const big = ionText(p.label);
-  put(ctx, big, o.x, box.y0 + (rows.length ? 4.3 : 9) * sc, Math.max(8, Math.min(3.1 * sc, (box.w - 1.2 * sc) / (Math.max(2, big.length) * 0.58))), { weight: 700, maxW: box.w - 1 * sc });
-  rows.slice(0, 3).forEach((r, i) => put(ctx, ionText(r), o.x, box.y0 + (8.4 + i * 3.1) * sc, Math.max(5.8, 1.62 * sc), { color: DUST, maxW: box.w - 1 * sc }));
+  put(ctx, big, o.x, box.y0 + (rows.length ? 4.1 : 8.5) * sc, Math.max(8, Math.min(3.1 * sc, (box.w - 1.2 * sc) / (Math.max(2, big.length) * 0.58))), { weight: 700, maxW: box.w - 1 * sc });
+  rows.slice(0, 2).forEach((r, i) => put(ctx, ionText(r), o.x, box.y0 + (8.0 + i * 2.9) * sc, Math.max(5.8, 1.58 * sc), { color: DUST, maxW: box.w - 1 * sc }));
+  drawConjBase(ctx, p, box, sc, o.x);
 }
 
 registerPiece('phacid', {
   kind: { r: 9, rect: CARD, nojoin: true },
   paint: paintCard,
-  faceKey: p => `phacid|${p.label}|${(p.props.rows || []).join('/')}`,
+  faceKey: p => `phacid|${p.label}|${(p.props.rows || []).join('/')}|${p.props.conj !== false ? p.props.acid : 'plain'}|${p.props.anon ? 1 : 0}`,
   printed: p => ionText(p.label)
 });
 

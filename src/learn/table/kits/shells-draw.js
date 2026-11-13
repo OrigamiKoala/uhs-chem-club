@@ -261,7 +261,8 @@ function paintShelf(ctx, f, state, b) {
     const core = f.props.core && state.fixtures[f.props.core]?.dials.core.value >= 1;
     say(ctx, `PLACED ${read.total}`, F.x(2), F.y(4.2), sz, { color: PHOS, weight: 700 });
     // The count of unpaired electrons is never printed here: the magnet is the instrument that finds it out.
-    const stText = read.total === 0 ? '' : (read.laddered && read.ruleHolds ? 'GROUND STATE' : 'EXCITED');
+    // `verdict: false` leaves the verdict to the energy test, so a stage is not passed by adding electrons until the diagram says GROUND STATE.
+    const stText = read.total === 0 || f.props.verdict === false ? '' : (read.laddered && read.ruleHolds ? 'GROUND STATE' : 'EXCITED');
     const stColor = read.laddered && read.ruleHolds ? '#78a142' : AMBER;
     say(ctx, stText, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: stColor, weight: 700 });
     const written = core ? read.short : read.config;
@@ -421,17 +422,17 @@ function paintWell(ctx, f, state, b) {
 
   // Readouts
   if (!read || !read.tested) {
-    say(ctx, 'POTENTIAL WELL', cx, F.y(23.5), F.size(2.3, 7), { align: 'center', color: DIM, weight: 700 });
+    say(ctx, 'ENERGY TEST', cx, F.y(23.5), F.size(2.3, 7), { align: 'center', color: DIM, weight: 700 });
     say(ctx, 'NOT TESTED', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: DIM });
   } else if (read.isGround) {
-    say(ctx, 'GROUND STATE', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: '#78a142', weight: 700 });
-    say(ctx, 'LOWEST ENERGY', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: '#78a142' });
+    say(ctx, 'LOWEST ENERGY', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: '#78a142', weight: 700 });
+    say(ctx, 'GROUND STATE', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: '#78a142' });
   } else if (read.isExcited) {
-    say(ctx, 'EXCITED STATE', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700 });
+    say(ctx, 'HIGHER ENERGY', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700 });
     say(ctx, `CAN FALL TO ${(read.lowestOpen || 'LOWER').toUpperCase()}`, cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: AMBER });
   } else if (read.hundIssue) {
-    say(ctx, 'HUND\'S RULE', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700 });
-    say(ctx, 'SPREAD BEFORE PAIRING', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: AMBER });
+    say(ctx, 'HIGHER ENERGY', cx, F.y(23.5), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700 });
+    say(ctx, read.pairedEarly ? 'PAIRED ELECTRONS REPEL' : 'SPINS NOT ALIKE', cx, F.y(26.8), F.size(2.0, 6), { align: 'center', color: AMBER });
   }
 }
 

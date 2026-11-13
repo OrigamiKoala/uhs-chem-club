@@ -2,16 +2,15 @@
  * Unit 8 · Bench 7 — Solubility Equilibria (q7-dissolve)
  *
  * Teeter's settling pond, on the pans kit (`table/kits/pans.js`) with the solubility beaker and the expression form
- * (`table/kits/pans-beaker.js`). Eight stages and ONE click: the belief that the salt with the smaller Ksp is always the less soluble.
+ * (`table/kits/pans-beaker.js`). Seven stages and ONE click: the belief that the salt with the smaller Ksp is always the less soluble.
  *
  *   1  add a salt until another scoop changes nothing     -> a limit: saturated; the solid and the water keep trading units
  *   2  write the equilibrium constant for a dissolving    -> Ksp, the solubility product (solid left out, powers from the equation)
  *   3  TYPED: moles of AgCl that dissolve per litre       -> molar solubility (past any dial; the picture is a nearby salt)
  *   4  PREDICT: AgCl or Ag2CrO4 holds more dissolved      -> the wrong model is on the table: "smaller Ksp, less soluble"
  *   5  TEST: read a beaker of each                        -> Ksp ranks solubility only between salts with the same ion ratio
- *   6  BaSO4 in water and in sulfate water                -> common-ion effect, precipitate
- *   7  three mixtures, Q against Ksp on a gauge           -> a precipitate forms only when Q is past Ksp
- *   8  AgCl and PbI2, the same added ion                  -> how far a solubility falls is not set by Ksp alone
+ *   6  BaSO4 with an "Added sulfate" dial                 -> common-ion effect, precipitate
+ *   7  three mixtures with Ksp on a plate (no Q gauge)    -> a precipitate forms only when Q is past Ksp
  *
  * THE WRONG MODEL IS ON THE TABLE. Stage 4's plate prints both Ksp values and its first card says AgCl dissolves more. Stage 5's beakers
  * read the other way: Ag2CrO4 (Ksp 1.1e-12) holds 6.5e-5 mol/L, AgCl (Ksp 1.8e-10) holds 1.3e-5.
@@ -25,12 +24,12 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { KSP, molarSolubility, dissolveState, solubilityWithCommon } from '../../engine/eqdata.js';
-import { pansTable, selectorFixture, plaqueFixture, note, pieceIn, dialValue } from '../../table/kits/pans.js';
+import { pansTable, plaqueFixture, note, pieceIn, dialValue } from '../../table/kits/pans.js';
 import { beakerFixture, kspFormFixture, beakerRead, formExpression, formSpecies, sci, ionText, SCOOP } from '../../table/kits/pans-beaker.js';
 
 import { clipFixture } from '../../table/kits/pans-clips.js';
-import { choiceFixture, pickable, pickColumns } from '../../table/kits/pans-choice.js';
-export const meta = { stageCount: 8 };
+import { choiceFixture, pickable } from '../../table/kits/pans-choice.js';
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\bsaturated\b/i, introducedAt: 1 },
@@ -40,7 +39,6 @@ export const VOCABULARY = [
   { term: /\bprecipitate\b/i, introducedAt: 6 }
 ];
 
-/** Bench 1 (settled, both ways) is built; `unit08/q2-k` and `unit08/q3-q` (K, Q against K) are what the Ksp and the gauge lean on. */
 export const BUILDS_ON = ['unit08/q1-both'];
 
 export function toolNoteFor() { return null; }
@@ -69,20 +67,16 @@ const S3_ASK = 'AgCl';
 const S3_TOL = 0.05;
 // Stage 5: both beakers hold the same 1.5e-4 mol/L of salt, and the dots in both are drawn against the larger solubility.
 const S5_TOTAL = 1.5e-4;
-// Stage 6: BaSO4 in water and in 0.10 mol/L sodium sulfate.
+// Stage 6: BaSO4 with a dial adding 0, 0.05, or 0.10 mol/L sulfate.
 const S6_TOTAL = 3 * s0('BaSO4');
-const S6_SULFATE = 0.10;
+const S6_LIST = [0, 0.05, 0.10];
+const S6_LABELS = ['none', '0.05 mol/L', '0.10 mol/L'];
 // Stage 7: three mixtures of Pb²⁺ and I⁻ after mixing, mol/L.
 const S7_MIX = [
   { cat: 5.0e-3, an: 1.0e-3 },
   { cat: 2.0e-3, an: 4.0e-3 },
   { cat: 1.0e-3, an: 3.0e-3 }
 ];
-// Stage 8: the added ion, mol/L, and the salt already in each beaker.
-const S8_ADDED = 0.10;
-const S8 = { AgCl: { total: 5e-5, ion: 'anion' }, PbI2: { total: 4e-3, ion: 'anion' } };
-const S8_LIST = [0, 0.01, S8_ADDED];
-const S8_LABELS = ['none', '0.01 mol/L', '0.10 mol/L'];
 
 /** What a stage's beaker reads, from the planner and the stage's own declaration (the check never reads a drawn figure). */
 const read = (salt, total, cat0 = 0, an0 = 0) => dissolveState(ksp(salt), ions(salt), total, cat0, an0);
@@ -100,7 +94,7 @@ export const STAGES = [
   {
     id: 's1-limit',
     title: 'Adding Solid',
-    prompt: 'Add CaF₂ until another scoop no longer changes either meter.',
+    prompt: 'How many scoops of CaF₂ can this water dissolve?',
     widget,
     table: pansTable({
       fixtures: [beakerFixture('jar', { x: 75, y: 27 }, { salt: S1_SALT, scoops: true, title: 'CaF₂ in water' })]
@@ -108,7 +102,7 @@ export const STAGES = [
     hints: [
       'Use the "Add solid" key on the beaker.',
       'Watch what the two meters do with each scoop, and what collects on the floor.',
-      'Keep adding until one scoop leaves both meters exactly where they were.'
+      'Keep adding until one scoop leaves both meters unchanged.'
     ],
     check(state) {
       const r = beakerRead(state.table, 'jar');
@@ -120,7 +114,7 @@ export const STAGES = [
     reward: {
       log: 'The meters stopped rising once solid stayed on the floor.',
       title: 'Saturated',
-      body: 'After a few scoops the water took no more CaF₂: the meters held still and the extra solid lay on the floor. Water holding as much dissolved solid as it can is saturated, and the solid and the water still trade units both ways.'
+      body: 'After a few scoops the meters stopped rising and the extra solid stayed on the floor. Water holding as much dissolved solid as it can is saturated; solid and ions are then at equilibrium.'
     }
   },
 
@@ -128,7 +122,8 @@ export const STAGES = [
   {
     id: 's2-expression',
     title: 'Writing the Expression',
-    prompt: 'Write the equilibrium constant expression for Ag₂CrO₄ dissolving in water.',
+    briefing: 'A solid at equilibrium with its dissolved ions has an equilibrium constant, called the solubility product constant, Ksp.',
+    prompt: 'What is the Ksp expression for Ag₂CrO₄?',
     widget,
     table: pansTable({
       fixtures: [
@@ -153,7 +148,7 @@ export const STAGES = [
     reward: {
       log: 'Each ion took the power of its coefficient; the solid was left out.',
       title: 'The Solubility Product',
-      body: 'The equilibrium constant for a solid dissolving is the solubility product constant, Ksp. For Ag₂CrO₄ it is [Ag⁺]²[CrO₄²⁻]: each ion raised to its coefficient in the equation, and the solid left out.'
+      body: 'Ksp = [Ag⁺]²[CrO₄²⁻]: each ion to its coefficient, and the solid left out as in any K.'
     }
   },
 
@@ -161,7 +156,11 @@ export const STAGES = [
   {
     id: 's3-typed',
     title: 'How Much Dissolves',
-    prompt: 'Type how many moles of AgCl dissolve in one litre of water, in mol/L.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'Molar solubility, s, is the moles of a salt that dissolve in one litre. The BaSO₄ beaker shows how one salt\'s Ksp sets its dissolved ions; use the Ksp plate to find AgCl.'
+    },
+    prompt: 'What is the molar solubility of AgCl, in mol/L?',
     entry: { id: 's', label: 'AgCl dissolved', unit: 'mol/L' },
     widget,
     table: pansTable({
@@ -187,7 +186,7 @@ export const STAGES = [
     reward: {
       log: 'About 1.3e−5 mol/L of AgCl dissolves.',
       title: 'Molar Solubility',
-      body: 'The molar solubility of a salt is the moles of it that dissolve in one litre of water. Each AgCl gives one Ag⁺ and one Cl⁻, so Ksp = s × s and s = √(1.8e−10) = 1.3e−5 mol/L.'
+      body: 'Each AgCl gives one Ag⁺ and one Cl⁻, so Ksp = s × s and s = 1.3 × 10⁻⁵ mol/L.'
     }
   },
 
@@ -197,7 +196,7 @@ export const STAGES = [
     title: 'Which Dissolves More',
     // A PREDICT STAGE: no beaker on the table. The guess is made here and comes back with the test.
     predict: true,
-    prompt: 'Which salt holds more dissolved in water, AgCl or Ag₂CrO₄?',
+    prompt: 'Which holds more dissolved in a litre of water, AgCl or Ag₂CrO₄?',
     widget,
     table: pansTable({
       pieces: [
@@ -212,7 +211,7 @@ export const STAGES = [
       zones: { slots: [{ id: 'guess', label: 'My prediction', at: { x: 118, y: 42 }, size: { w: 36, h: 14 } }] }
     }),
     hints: [
-      'Use the three cards and the slot.',
+      'Lay one of the three cards in the slot.',
       'Compare the two Ksp values on the plate.',
       'Decide whether the size of Ksp alone tells you how much of each salt dissolves.'
     ],
@@ -241,7 +240,7 @@ export const STAGES = [
       title: 'Two Beakers',
       get prompt() {
         const g = recall(QUEST_KEY);
-        return g && GUESS[g] ? `You predicted "${GUESS[g]}". Tap the salt that has more dissolved in its beaker.` : 'Tap the salt that has more dissolved in its beaker.';
+        return g && GUESS[g] ? `You predicted "${GUESS[g]}". Which salt has more dissolved in its beaker?` : 'Which salt has more dissolved in its beaker?';
       },
       widget,
       table: pansTable({
@@ -254,7 +253,7 @@ export const STAGES = [
       hints: [
         'Tap a beaker to choose it; both are already read.',
         'Compare how much of each salt is dissolved in each beaker, in moles per litre.',
-        'Count dissolved salt in whole formula units, which is the line marked "Dissolved salt", not one ion at a time.'
+        'Count dissolved salt on the line marked "Dissolved salt", not one ion at a time.'
       ],
       check(state) {
         const v = dialValue(state.table, 'pick');
@@ -269,69 +268,76 @@ export const STAGES = [
         return {
           log: 'Ag₂CrO₄ held more dissolved than AgCl.',
           title: 'Ksp Does Not Rank Alone',
-          body: `${verdict}Ag₂CrO₄ has the smaller Ksp, 1.1e−12 against 1.8e−10, yet more of it dissolves: 6.5e−5 mol/L against 1.3e−5. Ksp ranks salts only when they give the same ratio of ions.`
+          body: `${verdict}Ag₂CrO₄ has the smaller Ksp yet more of it dissolves, because its Ksp holds [Ag⁺] squared. Ksp values compare directly only for salts with the same ratio of ions.`
         };
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 6 */
-  (() => {
-    const t = S6_TOTAL;
-    return {
-      id: 's6-common',
-      title: 'Salt Already in the Water',
-      prompt: 'Tap the beaker that holds more dissolved BaSO₄.',
-      widget,
-      table: pansTable({
-        fixtures: [
-          pickable(beakerFixture('b1', { x: 40, y: 25 }, { salt: 'BaSO4', total: t, showDissolved: true, title: 'Beaker 1: water' }), 1),
-          pickable(beakerFixture('b2', { x: 112, y: 25 }, { salt: 'BaSO4', total: t, an0: S6_SULFATE, showDissolved: true, title: 'Beaker 2: 0.10 mol/L Na₂SO₄' }), 2),
-          choiceFixture('pick', 'Holds more dissolved', { x: 75, y: 60 }, { same: 3, options: ['Beaker 1', 'Beaker 2', 'The same', ' '], start: 4 })
-        ]
-      }, { h: 70 }),
-      hints: [
-        'Tap a beaker to choose it; both are already read.',
-        'Compare the "Dissolved salt" lines of the two beakers, and what each beaker\'s water held before any BaSO₄ went in.',
-        'Sulfate that came from the sodium salt is not BaSO₄ that has dissolved; only the Ba²⁺ meter counts BaSO₄ in the water.'
+  {
+    id: 's6-common',
+    title: 'A Common Ion',
+    prompt: 'What happens to the dissolved BaSO₄ when sodium sulfate is added to its saturated solution?',
+    widget,
+    table: pansTable({
+      pieces: [
+        note('more', 'More BaSO₄ dissolves', { x: 112, y: 11 }),
+        note('solid', 'Some BaSO₄ comes out as solid', { x: 112, y: 29 }),
+        note('same', 'Nothing changes', { x: 112, y: 47 })
       ],
-      check(state) {
-        const v = dialValue(state.table, 'pick');
-        if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
-        if (v === 1) return { ok: true };
-        const a = read('BaSO4', t); const b = read('BaSO4', t, 0, S6_SULFATE);
-        return { ok: false, msg: `Beaker 2 reads ${sci(b.dissolved)} mol/L of dissolved salt and Beaker 1 reads ${sci(a.dissolved)} mol/L.` };
-      },
-      reward: {
-        log: 'Sulfate already in the water cut how much BaSO₄ dissolved.',
-        title: 'Common-Ion Effect',
-        body: 'A salt dissolves less in water that already holds one of its ions. The extra sulfate drives BaSO₄ back out as solid, a precipitate; this is the common-ion effect, and [Ba²⁺][SO₄²⁻] still equals Ksp.'
-      }
-    };
-  })(),
+      fixtures: [
+        beakerFixture('b', { x: 42, y: 28 }, {
+          salt: 'BaSO4', total: S6_TOTAL, showDissolved: true,
+          common: { ion: 'anion', list: S6_LIST, label: 'Sulfate added', labels: S6_LABELS },
+          title: 'Saturated BaSO₄'
+        })
+      ],
+      zones: { slots: [{ id: 'ans', label: 'What happens', at: { x: 112, y: 66 }, size: { w: 46, h: 14 } }] }
+    }, { h: 78 }),
+    hints: [
+      'Turn the "Sulfate added" dial on the beaker, then lay a card in the slot.',
+      'Watch the Ba²⁺ meter, the "Dissolved salt" line, and the solid on the floor as you turn the dial up.',
+      'Notice whether the extra sulfate makes more BaSO₄ dissolve or drives some out of solution.'
+    ],
+    check(state) {
+      const card = pieceIn(state.table, 'ans');
+      if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
+      const cVal = dialValue(state.table, 'b', 'c');
+      if (cVal === 1) return { ok: false, msg: 'Turn the "Sulfate added" dial on the beaker to add sodium sulfate first.' };
+      if (card.id === 'solid') return { ok: true };
+      const r = beakerRead(state.table, 'b');
+      return { ok: false, msg: `With ${S6_LABELS[cVal - 1]} sulfate added, the dissolved BaSO₄ dropped to ${sci(r.dissolved)} mol/L and more solid sits on the floor.` };
+    },
+    reward: {
+      log: 'Added sulfate drove BaSO₄ out of solution as a solid.',
+      title: 'Common-Ion Effect',
+      body: 'The extra sulfate put Q above Ksp, so BaSO₄ left the water as a precipitate until Q was back on Ksp. This is the common-ion effect.'
+    }
+  },
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const dom = [Math.log10(ksp('PbI2')) - 1.5, Math.log10(ksp('PbI2')) + 1.5];
-    const jar = (i, x) => beakerFixture(`m${i + 1}`, { x, y: 25 }, {
-      salt: 'PbI2', total: 0, cat0: S7_MIX[i].cat, an0: S7_MIX[i].an, gauge: true, gaugeDomain: dom, tallies: false, compact: true, title: `Mix ${i + 1}`
+    const jar = (i, x) => beakerFixture(`m${i + 1}`, { x, y: 18 }, {
+      salt: 'PbI2', total: 0, cat0: S7_MIX[i].cat, an0: S7_MIX[i].an, gauge: false, tallies: false, compact: true, title: `Mix ${i + 1}`
     });
     const Q = i => read('PbI2', 0, S7_MIX[i].cat, S7_MIX[i].an).Q;
     return {
       id: 's7-mix',
       title: 'Mixing Two Solutions',
-      prompt: 'Tap the mixture in which a precipitate forms.',
+      prompt: 'In which mixture does a precipitate form?',
       widget,
       table: pansTable({
         fixtures: [
           pickable(jar(0, 26), 1), pickable(jar(1, 75), 2), pickable(jar(2, 124), 3),
-          choiceFixture('pick', 'Forms a precipitate', { x: 75, y: 60 }, { options: ['Mix 1', 'Mix 2', 'Mix 3', ' '], start: 4 })
+          plaqueFixture('ksp', 'Ksp at 25 °C', { x: 75, y: 49 }, [`${name('PbI2')}   ${sci(ksp('PbI2'))}`], { w: 46 }),
+          choiceFixture('pick', 'Forms a precipitate', { x: 75, y: 68 }, { options: ['Mix 1', 'Mix 2', 'Mix 3', ' '], start: 4 })
         ]
-      }, { h: 70 }),
+      }, { h: 80 }),
       hints: [
-        'Tap a mixture to choose it; each has a gauge.',
-        'Compare Q with Ksp on each gauge.',
-        'Use what Q above K and Q below K meant for a vessel on an earlier bench.'
+        'Work out Q from each mixture\'s ion concentrations and compare with Ksp on the plate, then tap a mixture.',
+        'For PbI₂, Q is [Pb²⁺] × [I⁻]², using the two ion readings on each beaker.',
+        'Compare each mixture\'s Q with Ksp = 9.8e−9 to see which one is above Ksp.'
       ],
       check(state) {
         const v = dialValue(state.table, 'pick');
@@ -342,42 +348,10 @@ export const STAGES = [
       reward: {
         log: 'Only the mixture with Q past Ksp formed a precipitate.',
         title: 'Q Against Ksp',
-        body: `A precipitate forms when mixing leaves Q above Ksp. Mix 2 has Q = ${sci(Q(1))} against Ksp = ${sci(ksp('PbI2'))}; the other two stay below Ksp, so no solid forms.`
+        body: 'Only Mix 2 has Q, the product of its ion concentrations, above Ksp, so only there does a solid form.'
       }
     };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    id: 's8-sealed',
-    title: 'Two Salts, One Added Ion',
-    prompt: 'Tap the salt whose solubility drops by the larger factor when 0.10 mol/L of a common ion is added.',
-    widget,
-    table: pansTable({
-      fixtures: [
-        pickable(beakerFixture('agcl', { x: 40, y: 28 }, { salt: 'AgCl', total: S8.AgCl.total, showDissolved: true, showPure: true, tallies: false, common: { ion: S8.AgCl.ion, list: S8_LIST, label: 'Cl− added', labels: S8_LABELS }, title: 'AgCl' }), 1),
-        pickable(beakerFixture('pbi2', { x: 112, y: 28 }, { salt: 'PbI2', total: S8.PbI2.total, showDissolved: true, showPure: true, tallies: false, common: { ion: S8.PbI2.ion, list: S8_LIST, label: 'I− added', labels: S8_LABELS }, title: 'PbI₂' }), 2),
-        choiceFixture('pick', 'Drops by the larger factor', { x: 75, y: 62 }, { same: 3, options: ['AgCl', 'PbI₂', 'The same', ' '], start: 4 })
-      ]
-    }, { h: 72 }),
-    hints: [
-      'Use the "added" dial on each beaker then tap the beaker you choose.',
-      'Compare each salt\'s "Dissolved salt" with and without the added ion, next to its "In pure water" line.',
-      'A factor is how many times smaller the dissolved amount becomes, the old figure divided by the new one.'
-    ],
-    check(state) {
-      const v = dialValue(state.table, 'pick');
-      if (v === 4) return { ok: false, notYet: true, msg: 'Tap one to choose it.' };
-      if (v === 1) return { ok: true };
-      const a = read('AgCl', S8.AgCl.total, 0, S8_ADDED); const b = read('PbI2', S8.PbI2.total, 0, S8_ADDED);
-      return { ok: false, msg: `AgCl goes from ${sci(s0('AgCl'))} to ${sci(a.dissolved)} mol/L and PbI₂ from ${sci(s0('PbI2'))} to ${sci(b.dissolved)} mol/L.` };
-    },
-    reward: {
-      log: 'The same added ion cut AgCl by a larger factor than PbI₂.',
-      title: 'Not by Ksp Alone',
-      body: 'Adding 0.10 mol/L of a common ion cuts AgCl from 1.3e−5 to 1.8e−9 mol/L, but PbI₂ from 1.3e−3 to 9.8e−7. How far a solubility falls depends on how the salt\'s ions enter its Ksp, not on the size of Ksp alone.'
-    }
-  }
+  })()
 ];
 
 /** The quest's closing card, shown only where a quest has no story animation yet. */
@@ -396,9 +370,8 @@ export const SOLUTIONS = [
   [{ type: { entry: 's', value: '1.3e-5' } }],
   [put('ag2', 'slot:guess')],
   [dial('pick', 'value', 2)],
-  [dial('pick', 'value', 1)],
-  [dial('pick', 'value', 2)],
-  [dial('agcl', 'c', 3), dial('pbi2', 'c', 3), dial('pick', 'value', 1)]
+  [dial('b', 'c', 3), put('solid', 'slot:ans')],
+  [dial('pick', 'value', 2)]
 ];
 
 export const MISSES = [
@@ -407,9 +380,8 @@ export const MISSES = [
   [{ type: { entry: 's', value: '1.8e-10' } }],
   [],
   [dial('pick', 'value', 1)],
-  [dial('pick', 'value', 2)],
-  [dial('pick', 'value', 1)],
-  [dial('agcl', 'c', 3), dial('pbi2', 'c', 3), dial('pick', 'value', 2)]
+  [dial('b', 'c', 3), put('more', 'slot:ans')],
+  [dial('pick', 'value', 1)]
 ];
 
 function blankState() { return {}; }
@@ -428,4 +400,4 @@ export function mount(container, ctx) {
 }
 
 /** For the checks in `tools/lib/teeter-q7-checks.mjs`. */
-export const CHECKS = { S1_SALT, S2_SALT, S3_PICTURE, S3_ASK, S3_TOL, S5_TOTAL, S6_TOTAL, S6_SULFATE, S7_MIX, S8, S8_ADDED, read, typed, formSpecies, solubilityWithCommon };
+export const CHECKS = { S1_SALT, S2_SALT, S3_PICTURE, S3_ASK, S3_TOL, S5_TOTAL, S6_TOTAL, S7_MIX, read, typed, formSpecies, solubilityWithCommon };

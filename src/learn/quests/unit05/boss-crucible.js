@@ -243,7 +243,7 @@ export const STAGES = [
       widget,
       table: heatTable({
         fixtures: [
-          plotFixture('plot', { x: 38, y: 30 }, { dH: 176, dS: 160, Ts: [600, 800, 1000, 1200, 1400], tempStart: 2, hideCrossing: true, title: 'Limestone seal' }),
+          plotFixture('plot', { x: 38, y: 30 }, { dH: 176, dS: 160, Ts: [600, 800, 1000, 1200, 1400], tempStart: 2, hideCrossing: true, bars: true, title: 'Limestone seal' }),
           plaqueFixture('ref', 'The reaction', { x: 98, y: 28 }, ['CaCO₃(s) → CaO(s) + CO₂(g)', 'ΔH = +176 kJ', 'ΔS = +160 J/(mol·K)', 'ΔG = ΔH − TΔS', '1 kJ = 1,000 J'], { w: 52 })
         ]
       }),

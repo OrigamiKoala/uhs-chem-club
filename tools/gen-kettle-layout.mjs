@@ -37,7 +37,7 @@ const round = n => Math.round(n * 100) / 100;
 
 /** Where the Golem is fought: open ground in front of the furnace, with the player's mark south of it. */
 const ARENA = { boss: [0, 0, -60], player: [0, 1.6, -44] };
-const SPAWN = [0, 1.6, 92];
+const SPAWN = [0, 1.6, 76];
 const PAD = [56, 78];
 const WALK = 94;      // props stand inside this; the walk is held to 100
 

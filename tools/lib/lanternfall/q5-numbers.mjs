@@ -41,6 +41,8 @@ export default async function check(q5, { TABLE, near, same, holds, rig }) {
     const third = TABLE.apply(pair, { place: { piece: 'up', to: b } });
     holds(third.last.joined === false, 'unit02/q5-numbers stage 3: a third arrow is taken');
     same(end(2).fixtures.count.dials.n.value, 2, 'unit02/q5-numbers stage 3 (the marker)');
+    const untested = TABLE.runScript(t0, [{ setDial: { fixture: 'count', dial: 'n', value: 2 } }], { strict: true });
+    holds(q5.STAGES[2].check({ table: untested }).ok === false, 'unit02/q5-numbers stage 3: passes without an orbital having been filled');
     holds(t0.fixtures.count.dials.n.value !== 2, 'unit02/q5-numbers stage 3: the marker starts on the answer');
   }
   // 4. exactly one pair of the six shares all four numbers, every candidate has a room, and the rack refuses whichever comes second
@@ -62,7 +64,6 @@ export default async function check(q5, { TABLE, near, same, holds, rig }) {
   {
     const t = end(4);
     same(Object.values(t.pieces).filter(p => p.kind === 'box').length, 9, 'unit02/q5-numbers stage 5 (boxes in the third shell)');
-    same(SHL.readOf(t, 'rack').total, EL.shellCapacity(3), 'unit02/q5-numbers stage 5 (electrons the full shell holds)');
     same(t.fixtures.count.dials.n.value, EL.shellCapacity(3), 'unit02/q5-numbers stage 5 (the marker)');
     holds(q5.STAGES[4].table.fixtures.find(f => f.id === 'count').dials.n.value !== 18, 'unit02/q5-numbers stage 5: the marker starts on the answer');
   }

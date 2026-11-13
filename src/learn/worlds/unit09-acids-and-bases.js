@@ -31,7 +31,7 @@ export const UNIT_09 = {
       title: 'The Handover',
       line: 'The Fifth calls the marsh water acid; find what an acid does to water.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit09/q1-handover.js')
     },
@@ -40,7 +40,7 @@ export const UNIT_09 = {
       title: 'Reading the Scale',
       line: 'The Fifth gives one number for the marsh; find what a pH number counts.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 9,
       status: 'live',
       module: () => import('../quests/unit09/q2-scale.js')
     },
@@ -58,7 +58,7 @@ export const UNIT_09 = {
       title: 'Acid Strength and Structure',
       line: 'The Fifth ranked the tanks by what they were made of; find what sets an acid’s strength.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit09/q4-structure.js')
     },
@@ -67,7 +67,7 @@ export const UNIT_09 = {
       title: 'Neutralization and Salts',
       line: 'The Fifth neutralised a tank and called it safe; measure what was left.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit09/q5-salts.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_09 = {
       title: 'Buffers',
       line: 'One sluice resists acid and one does not; find what in the water does.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit09/q7-buffer.js')
     },
@@ -94,7 +94,7 @@ export const UNIT_09 = {
       title: 'pKa, Protonation and Capacity',
       line: 'The sluice held, then failed; find how much it could take.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit09/q8-capacity.js')
     },

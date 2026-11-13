@@ -211,7 +211,7 @@ function paintTitrator(ctx, f, state, b) {
     discs(ctx, F, left.acidLeft / p.unit, wx + 0.8, c0 + 7, WARM);
     say(ctx, `${ionText('OH')} in the flask`, F.x(wx + 1.6), F.y(c0 + 16.6), F.size(2.3, 6.5), { color: COLD, weight: 700 });
     discs(ctx, F, left.baseLeft / p.unit, wx + 0.8, c0 + 20.6, COLD);
-    say(ctx, `one disc is ${p.unit} mol`, F.x(wx + 1.6), F.y(c0 + 31.2), F.size(1.9, 5.8), { color: DIM });
+    say(ctx, `one circle is ${p.unit} mol`, F.x(wx + 1.6), F.y(c0 + 31.2), F.size(1.9, 5.8), { color: DIM });
   }
 }
 
@@ -225,8 +225,8 @@ const TITRATOR_TEXT = f => {
   const p = f.props;
   const bits = [`The tall tube${p.named ? ' (a burette)' : ''} holds the base, and its scale and "reading" show how much has run out in all.`];
   bits.push(`The "Per press" dial sets how much one press lets out. Press "${f.runLabel}" to let that much run into the flask below; the base only runs out, so each press adds to the last, and Undo takes a press back.`);
-  if (p.mouth) bits.push('Drag a dye card into the slot beside the flask to put the dye in the flask.');
-  if (p.mode !== 'perm' && p.window) bits.push(`The flask shows its colour, and the window beside it shows a disc for each ${p.unit} mol of ${ionText('H')} and of ${ionText('OH')} left in the flask.`);
+  if (p.mouth) bits.push('Drag an indicator card into the slot beside the flask to put the indicator in the flask.');
+  if (p.mode !== 'perm' && p.window) bits.push(`The flask shows its colour, and the particle view beside it shows a circle for each ${p.unit} mol of ${ionText('H')} and of ${ionText('OH')} left in the flask.`);
   else bits.push('The flask shows the colour of what is in it.');
   return bits.join(' ');
 };
@@ -234,5 +234,5 @@ const TITRATOR_TEXT = f => {
 addTourText({
   'pot:titrator': { title: f => f.label, dials: false, text: TITRATOR_TEXT }
 }, {
-  indicator: ['Dye cards', 'Each card is a dye that changes colour. The swatches on the card show the colours it can have. Drag the card into the slot beside the flask; the flask then shows the dye\'s colour.']
+  indicator: ['Indicator cards', 'Each card is an indicator that changes colour. The swatches on the card show the colours it can have. Drag the card into the slot beside the flask; the flask then shows the indicator\'s colour.']
 });

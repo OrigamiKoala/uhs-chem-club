@@ -17,27 +17,25 @@
  *   4  PREDICT: where two gases let in at the two ends of a tube meet
  *   5  TEST: the race down the tube                              -> Diffusion
  *   6  the molar mass of an unknown gas, from how long it takes to half-empty -> Graham's law (a figure worked out)
- *   7  the speed that carries the average kinetic energy at 300 K     -> Root-Mean-Square Speed (a figure worked out)
+ *   7  four speed snapshots at 300 K ordered from lightest to heaviest particles -> Mass and Speed
  *
- * (Cut as repeats or as past the idea: the speed-peak target and the ranking of three gases' speeds, which bench one works out; the fast
- * tail of a heated gas; the ratio and the square-root law, which were arithmetic on the same leak; and the random walk of a smell,
- * whose lesson the tube shows. The unmarked sample no longer has to be fetched from the stack: it stands on the bench.)
+ * (Cut as repeats or as past the idea: the speed-peak target, the particle-speed calculation at 300 K, the fast tail of a heated gas,
+ * and the random walk of a smell. The unmarked sample stands on the bench.)
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript, entryNumber } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
-import { gasTable, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, plaqueFixture, histCard, speedBins, GASES, front } from '../../table/kits/gas.js';
+import { gasTable, rig, pinhole, tube, chip, stmt, halfTime, tubeRead, pinholeRead, histCard, speedBins, GASES, front } from '../../table/kits/gas.js';
 import { widget, put, dial, cardIn, predictStage, youPredicted, guessOf, typed } from './_shared.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 export const VOCABULARY = [
   { term: /\beffusion\b/i, introducedAt: 2 },
   { term: /\bdiffusion\b/i, introducedAt: 5 },
-  { term: /\bgraham.?s law\b/i, introducedAt: 6 },
-  { term: /\broot.mean.square\b/i, introducedAt: 7 }
+  { term: /\bgraham.?s law\b/i, introducedAt: 6 }
 ];
 
 /** Pressure, kelvin, the speed screen and the gas laws are plain words here. */
@@ -62,13 +60,9 @@ export const CHAMBERS = [['a', 'N2'], ['b', 'H2'], ['c', 'CO2'], ['d', 'He']];
 /** The reference chamber's gases and the sample's gas in stage 3. */
 export const REFERENCE_GASES = ['Ne', 'Ar', 'Kr', 'Xe'];
 export const SAMPLE = 'Kr';
-/** Stage 6: the reference gases on its dial, the unknown (not on the dial), and the figures to lay: the right mass, helium doubled, the nearest reference's, and a half of the answer. */
+/** Stage 6: the reference gases on its dial and the unknown (not on the dial). */
 export const MASS_GASES = ['He', 'Ne', 'Ar', 'Kr'];
 export const UNKNOWN = 'CH4';
-/** Stage 7: nitrogen at 300 K. The cards: the answer, the mean speed the screen shows, the slip of leaving out the 3, and the slip of using grams for kilograms. */
-export const SPEED_GAS = { gas: 'N2', T: 300 };
-export const SPEED_CARDS = [['a', '517 m/s', 517], ['b', '476 m/s', 476], ['c', '298 m/s', 298], ['d', '16 m/s', 16]];
-export const MASS_CARDS = [['a', '8 g/mol', 8], ['b', '16 g/mol', 16], ['c', '20 g/mol', 20], ['d', '32 g/mol', 32]];
 /** The tube: its length in centimetres and the stopwatch's seconds. */
 export const TUBE_CM = 100;
 const TUBE_TIMES = [0, 15, 30, 45, 60, 75];
@@ -111,10 +105,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   (() => {
     const p = pinhole(PIN, { x: 55, y: 25 }, {
-      chambers: CHAMBERS.map(([id, gas]) => ({ id, gas, label: `CHAMBER ${id.toUpperCase()}` })), times: TIMES, timeStart: 1, w: 100, record: false
+      chambers: CHAMBERS.map(([id, gas]) => ({ id, gas, label: `CHAMBER ${id.toUpperCase()}` })), times: TIMES, timeStart: 1, w: 100, record: false,
+      gate: { railChanged: CHAMBERS.map(([id]) => id) }, hideUntilCommit: ['left']
     });
     return {
       title: 'Effusion Rates',
+      briefing: 'Four chambers hold different gases at 300 K, each with a tiny pinhole opening into vacuum.',
       get prompt() {
         return youPredicted(KEY_LEAK, LEAK_GUESSES, 'Rank the four chambers on the rail from earliest to empty to latest to empty.', 'Rank the four chambers on the rail from earliest to empty to latest to empty.');
       },
@@ -152,7 +148,8 @@ export const STAGES = [
   (() => {
     const p = pinhole(PIN, { x: 40, y: 30 }, {
       chambers: [{ id: 'a', label: 'REFERENCE', pick: 'ref' }, { id: 'b', gas: SAMPLE, label: 'STACK LEAK', sealed: true }],
-      picks: { ref: { gases: REFERENCE_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false
+      picks: { ref: { gases: REFERENCE_GASES, label: 'Gas', start: 1 } }, times: TIMES, timeStart: 1, showHalf: true, record: false,
+      hideUntilCommit: ['half']
     });
     return {
       title: 'Identifying an Unknown Gas',
@@ -176,7 +173,7 @@ export const STAGES = [
       reward: {
         log: 'Effusion rate matched to reference gas.',
         title: 'Effusion Rate and Molar Mass',
-        body: 'Gases with identical effusion rates at the same temperature have the same molar mass. Comparing an unknown gas to reference standards identifies its molecular weight.'
+        body: 'Gases with identical effusion rates at the same temperature have the same molar mass. Comparing an unknown gas to reference standards identifies its molar mass.'
       }
     };
   })(),
@@ -185,7 +182,7 @@ export const STAGES = [
   predictStage({
     key: KEY_TUBE,
     title: 'Gas Meeting Point',
-    prompt: 'Ammonia and hydrogen chloride are let into opposite ends of a long tube of still air: where do they meet?',
+    prompt: 'Ammonia (NH₃, 17 g/mol) and hydrogen chloride (HCl, 36.5 g/mol) enter opposite ends of a tube: where do they meet?',
     items: TUBE_GUESSES,
     hints: [
       'Lay one card in the slot.',
@@ -201,11 +198,11 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const tb = tube('tube', { x: 42, y: 28 }, { ends: ['NH3', 'HCl'], times: TUBE_TIMES, timeStart: 1, length: TUBE_CM });
+    const tb = tube('tube', { x: 42, y: 28 }, { ends: ['NH3', 'HCl'], times: TUBE_TIMES, timeStart: 1, length: TUBE_CM, gate: { slot: 'show' }, hideUntilCommit: ['ring'] });
     return {
       title: 'Diffusion Along a Tube',
       get prompt() {
-        return youPredicted(KEY_TUBE, TUBE_GUESSES, 'Run the stopwatch until the gases meet, then place the card for where the ring formed.', 'Run the stopwatch until the gases meet, then place the card for where the ring formed.');
+        return youPredicted(KEY_TUBE, TUBE_GUESSES, 'Run the stopwatch until the gases meet and place the card for where the ring formed.', 'Run the stopwatch until the gases meet and place the card for where the ring formed.');
       },
       widget,
       table: gasTable({
@@ -232,7 +229,7 @@ export const STAGES = [
         return {
           log: 'The reaction ring formed closer to the heavier gas.',
           title: 'Diffusion',
-          body: 'Gases disperse through other gases by diffusion. Frequent molecular collisions slow net movement, but lighter molecules travel faster on average, causing the reaction ring to form closer to the heavier gas.'
+          body: 'Gases disperse through other gases by diffusion. Frequent collisions slow net movement, but lighter particles travel faster on average, so the ring forms closer to the heavier gas.'
         };
       }
     };
@@ -246,6 +243,7 @@ export const STAGES = [
     });
     return {
       title: 'Graham\'s Law',
+      briefing: 'An unknown gas and a selectable reference gas sit in identical pinhole chambers at the same temperature.',
       prompt: 'Type the mass of one mole of the unknown gas.',
       entry: { id: 'ans', label: 'Molar mass', unit: 'g/mol' },
       widget,
@@ -253,9 +251,9 @@ export const STAGES = [
         fixtures: [p],
       }),
       hints: [
-        'Turn the "Gas" dial and read each reference gas\'s half-empty time.',
-        'Compare how the half-empty time grows when the mass grows, from helium to neon and from neon to argon.',
-        'The half-empty time grows with the square root of the mass, so square the ratio of times before scaling a mass.'
+        'Turn the Gas dial and read each reference gas\'s half-empty time.',
+        'Compare how the half-empty time grows when the molar mass grows, from helium to neon and from neon to argon.',
+        'The half-empty time scales with the square root of the molar mass.'
       ],
       check(state) {
         const v = entryNumber(state.table, 'ans');
@@ -267,53 +265,28 @@ export const STAGES = [
       reward: {
         log: 'Time grew as the square root of the mass.',
         title: 'Graham\'s Law',
-        body: 'The half-empty time goes as the square root of the molar mass, so a time ratio of 2 means a mass ratio of 4 (Graham\'s law). The unknown takes twice as long as helium, so its molar mass is 4 × 4 = 16 g/mol: methane.'
+        body: 'The half-empty time scales as the square root of molar mass (Graham\'s law), so twice the time means four times the mass: 4 × 4 = 16 g/mol, methane.'
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const g = SPEED_GAS;
-    const plate = plaqueFixture('plate', 'Nitrogen gas', { x: 32, y: 33 }, [`Molar mass: ${GASES[g.gas].M.toFixed(1)} g/mol`, `Temperature: ${g.T} K`, 'Kinetic energy per mole: 3/2 RT', 'R = 8.314 J per mol·K'], { w: 56 });
-    return {
-      title: 'Particle Speed',
-      prompt: 'Type the speed at which a nitrogen particle\'s kinetic energy equals the average at 300 K.',
-      entry: { id: 'ans', label: 'Speed', unit: 'm/s' },
-      widget,
-      table: gasTable({
-        fixtures: [plate],
-      }),
-      hints: [
-        'Read the figures from the plate, then type the result.',
-        'Set the kinetic energy of one mole, one half times the molar mass times the speed squared, equal to the plate\'s figure.',
-        'Work in kilograms per mole, divide by the molar mass, then take the square root.'
-      ],
-      check(state) {
-        const v = entryNumber(state.table, 'ans');
-        if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the figure in m/s.' };
-        const want = rmsOf();
-        if (Math.abs(v - want) / want < 0.01) return { ok: true };
-        return { ok: false, msg: v > want ? 'A particle moving that fast has more than the average kinetic energy.' : 'A particle moving that slowly has less than the average kinetic energy.' };
-      },
-      reward: {
-        log: 'The average energy fixes the speed.',
-        title: 'Root-Mean-Square Speed',
-        body: 'Setting ½Mv² = 3/2 RT gives the root-mean-square speed, v = √(3RT ÷ M) = √(3 × 8.314 × 300 ÷ 0.0280) ≈ 517 m/s. It sits a little above the mean speed, and the molar mass must be in kg/mol.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
     const snap = (id, label, gas) => histCard(id, label, { x: 0, y: 0 }, gas, SNAP_T, SNAP_REF);
+    const speedRig = rig('speedRig', { x: 34, y: 29 }, {
+      cyls: [{ id: 'a', label: 'Reference', gas: 'He', n: 1, hold: 'V', V: 20, T: SNAP_T }],
+      vmax: 20, w: 60, speedScreen: true,
+      show: { gauge: false, volume: false, temperature: false, kelvin: true },
+      title: `Helium at ${SNAP_T} K`
+    });
     return {
       title: 'Speed Distribution and Mass',
       prompt: `Put the four speed snapshots in order from the lightest particles to the heaviest, all taken at ${SNAP_T} K.`,
       widget,
       table: gasTable({
         pieces: SNAP_GASES.map(([id, gas]) => snap(id, `SNAPSHOT ${id.toUpperCase()}`, gas)),
-        zones: { rail: { id: 'rail', at: { x: 80, y: 32 }, size: { w: 120, h: 26 }, first: 'Lightest', last: 'Heaviest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
+        fixtures: [speedRig],
+        zones: { rail: { id: 'rail', at: { x: 108, y: 32 }, size: { w: 76, h: 24 }, first: 'Lightest', last: 'Heaviest', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] } }
       }),
       hints: [
         'Drag the snapshots along the strip.',
@@ -332,18 +305,12 @@ export const STAGES = [
       reward: {
         log: 'At one temperature the heavier gas is slower.',
         title: 'Mass and Speed',
-        body: 'At one temperature every gas has the same average kinetic energy, so heavier particles move more slowly. Their curve is taller and narrower with its peak at a lower speed, while a light gas gives a low, wide curve shifted to high speeds.',
+        body: 'At one temperature every gas has the same average kinetic energy, so heavier particles move more slowly. Their curve is taller and narrower at lower speeds, while a light gas spreads wider toward high speeds.',
         last: true
       }
     };
   })()
 ];
-
-
-/** The speed whose kinetic energy is the average at stage 7's temperature, in m/s: the square root of 3RT over the molar mass in kg/mol. */
-export function rmsOf(g = SPEED_GAS) {
-  return Math.sqrt((3 * 8.314 * g.T) / (GASES[g.gas].M / 1000));
-}
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
@@ -353,8 +320,7 @@ const NOTES = {
   4: ['Place a card in the slot.'],
   5: ['Advance the Stopwatch dial and press Check,', 'then place a card in the slot.'],
   6: ['Turn the Gas dial,', 'then type your answer in the field at the bottom.'],
-  7: ['Type your answer in the field at the bottom.'],
-  8: ['Drag the snapshots along the strip.']
+  7: ['Drag the snapshots along the strip.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -380,9 +346,8 @@ export const SOLUTIONS = [
   [dial(PIN, 'time', 3), put('b', 'rail:0'), put('d', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
   [dial(PIN, 'time', 2), dial(PIN, 'ref', 3)],
   [put('hcl', 'slot:predict')],
-  [dial('tube', 'time', 6), { run: 'tube' }, put('hcl', 'slot:show')],
+  [put('hcl', 'slot:show'), dial('tube', 'time', 6), { run: 'tube' }],
   [dial(PIN, 'ref', 2), typed('ans', "16")],
-  [typed('ans', "517")],
   [put('c', 'rail:0'), put('a', 'rail:1'), put('d', 'rail:2'), put('b', 'rail:3')]
 ];
 
@@ -392,9 +357,8 @@ export const MISSES = [
   [dial(PIN, 'time', 3), put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2'), put('d', 'rail:3')],
   [dial(PIN, 'ref', 2)],
   [],
-  [dial('tube', 'time', 6), { run: 'tube' }, put('mid', 'slot:show')],
+  [put('mid', 'slot:show'), dial('tube', 'time', 6), { run: 'tube' }],
   [dial(PIN, 'ref', 2), typed('ans', "20")],
-  [typed('ans', "476")],
   [put('b', 'rail:0'), put('d', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')]
 ];
 
