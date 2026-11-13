@@ -22,6 +22,7 @@ import { KettleWorld } from "./kettle.js";
 import { TeeterWorld } from "./teeter.js";
 import { VerdigrisWorld } from "./verdigris.js";
 import { BrinewireWorld } from "./brinewire.js";
+import { QuicklightWorld } from "./quicklight.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -67,6 +68,8 @@ const TEETER_EXPOSURE = 0.88;
 const VERDIGRIS_EXPOSURE = 0.96;
 // Brinewire is pale salt flat under a dry straw-coloured haze: bright ground, so it sits near Teeter.
 const BRINEWIRE_EXPOSURE = 0.9;
+// Quicklight is dark storm-belt basalt under an electric indigo sky: dim ground, so it sits near Lanternfall.
+const QUICKLIGHT_EXPOSURE = 1.12;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -109,6 +112,7 @@ class Stage {
     this.teeterWorld = null;
     this.verdigrisWorld = null;
     this.brinewireWorld = null;
+    this.quicklightWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -832,6 +836,10 @@ class Stage {
       if (!this.brinewireWorld) this.brinewireWorld = this.warmWorld(new BrinewireWorld(this.renderer));
       return this.brinewireWorld;
     }
+    if (key === "quicklight") {
+      if (!this.quicklightWorld) this.quicklightWorld = this.warmWorld(new QuicklightWorld(this.renderer));
+      return this.quicklightWorld;
+    }
     return null;
   }
 
@@ -868,6 +876,7 @@ class Stage {
     if (key === "teeter") return TEETER_EXPOSURE;
     if (key === "verdigris") return VERDIGRIS_EXPOSURE;
     if (key === "brinewire") return BRINEWIRE_EXPOSURE;
+    if (key === "quicklight") return QUICKLIGHT_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1079,10 +1088,17 @@ class Stage {
     this.enterLearnWorld(this.brinewireWorld, BRINEWIRE_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter, Verdigris or Brinewire. */
+  /** Walk out onto Quicklight, the storm-belt cracking yard (Learn world 11). */
+  enterQuicklightScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("quicklight");
+    this.enterLearnWorld(this.quicklightWorld, QUICKLIGHT_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter, Verdigris, Brinewire or Quicklight. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld || w === this.quicklightWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1335,6 +1351,11 @@ class Stage {
   /** Light a Brinewire site's indicator when its quest is finished. */
   setBrinewireSiteComplete(questId, complete) {
     if (this.brinewireWorld) this.brinewireWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Quicklight site's indicator when its quest is finished. */
+  setQuicklightSiteComplete(questId, complete) {
+    if (this.quicklightWorld) this.quicklightWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Verdigris site's indicator when its quest is finished. */

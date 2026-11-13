@@ -370,7 +370,7 @@ export const SPECIES = {
       flat: () => 'The Flare sputters low above the manifold.',
       reversed: () => 'The Flare recoils as the feed slows.'
     },
-    pose(probe) {
+    plan(enc, foe, probe) {
       return { pose: probe?.pose || 'unmoved' };
     }
   }

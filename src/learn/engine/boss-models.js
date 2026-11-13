@@ -1716,78 +1716,85 @@ function buildClamp(monster) {
 }
 
 function buildFlare(monster) {
-  const { group, body } = rootOf(monster);
-  const darkIron = new THREE.MeshStandardMaterial({ color: 0x262930, roughness: 0.72, metalness: 0.55 });
-  const copper = new THREE.MeshStandardMaterial({ color: 0x9b5a2e, roughness: 0.48, metalness: 0.65 });
-  const glowMat = new THREE.MeshStandardMaterial({
-    color: 0xff9b38,
-    emissive: 0xff6a1a,
-    emissiveIntensity: 1.8,
-    roughness: 0.3
-  });
+  const k = new Kit(monster);
+  const steel = k.plate(0x525b68);
+  const darkIron = k.plate(0x262930);
+  const copper = k.std(0xb66e43, { rough: 0.42, metal: 0.88 });
+  const rust = k.plate(0x7c4f33);
+  const concrete = k.std(0x6e7178, { rough: 0.94, metal: 0.04 });
+  const bright = k.std(0xd7dad4, { rough: 0.25, metal: 0.9 });
+  const flame = k.glow(AMBER, 2.2);
 
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.7, 0.9, 12), darkIron);
-  base.position.y = 0.45;
-  body.add(base);
+  const body = k.node(monster.group, 0, 0, 0);
 
-  const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.35, 4.4, 12), darkIron);
-  stack.position.y = 3.0;
-  body.add(stack);
+  // Heavy octagonal-style concrete plinth + bolted steel skirt
+  k.cyl(body, 2.35, 2.6, 0.55, 16, concrete, 0, 0.275, 0);
+  k.cyl(body, 1.95, 2.15, 0.45, 16, darkIron, 0, 0.72, 0);
+  k.bolts(body, [-1.5, -0.75, 0, 0.75, 1.5].map(x => [x, 0.58, 1.85]), 0.06, bright, [0, 0, 1]);
 
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.14, 8, 24), copper);
-  ring.rotation.x = Math.PI / 2;
-  ring.position.y = 3.2;
-  body.add(ring);
+  // Central cracking stack + flanged induction rings
+  k.cyl(body, 0.92, 1.45, 3.6, 20, darkIron, 0, 2.65, 0);
+  for (const [y, r] of [[1.4, 1.5], [2.4, 1.32], [3.4, 1.15], [4.25, 1.02]]) {
+    k.cyl(body, r, r, 0.16, 20, steel, 0, y, 0);
+    k.cyl(body, r + 0.12, r + 0.12, 0.1, 20, copper, 0, y + 0.12, 0);
+  }
 
-  const crown = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.6, 10), glowMat);
-  crown.position.y = 5.8;
-  body.add(crown);
+  // Four external riser struts bracing the stack
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      k.strut(body, [sx * 1.65, 0.75, sz * 1.25], [sx * 0.92, 4.15, sz * 0.75], 0.085, steel, 8);
+    }
+  }
 
-  const head = new THREE.Group();
-  head.position.set(0, 4.8, 0.8);
-  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 10), glowMat);
-  head.add(eye);
-  body.add(head);
+  // Flare crown + eye housing
+  const crown = k.node(body, 0, 4.5, 0);
+  k.cyl(crown, 1.15, 0.85, 0.45, 18, darkIron, 0, 0.2, 0);
+  k.cyl(crown, 0.35, 0.95, 1.2, 16, flame, 0, 0.95, 0);
 
+  const head = k.node(body, 0, 4.05, 0.92);
+  k.box(head, 0.9, 0.55, 0.55, darkIron, 0, 0, 0, 0, 0, 0, 0.02);
+  k.cyl(head, 0.2, 0.2, 0.12, 14, flame, 0, 0, 0.26, Math.PI / 2, 0, 0);
+
+  // Two articulated discharge arms + muzzle on the right arm
   const arms = [-1, 1].map(sx => {
-    const g = new THREE.Group();
-    g.position.set(sx * 1.4, 3.4, 0);
-    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 2.2, 8), copper);
-    pipe.rotation.z = sx * 0.65;
-    pipe.position.set(sx * 0.8, -0.4, 0);
-    g.add(pipe);
-    body.add(g);
-    return { g, sx };
+    const shoulder = k.node(body, sx * 1.35, 3.55, 0.15);
+    k.box(shoulder, 0.55, 0.55, 0.55, steel, 0, 0, 0, 0, 0, 0, 0.02);
+    const upper = k.node(shoulder, sx * 0.25, -0.5, 0);
+    k.cyl(upper, 0.2, 0.24, 1.2, 12, copper, 0, -0.3, 0);
+    const elbow = k.node(upper, 0, -0.95, 0);
+    k.cyl(elbow, 0.24, 0.24, 0.35, 12, darkIron, 0, 0, 0, 0, 0, Math.PI / 2);
+    const wrist = k.node(elbow, 0, -0.85, 0.15);
+    k.cyl(wrist, 0.14, 0.18, 0.9, 12, steel, 0, 0, 0);
+    k.cyl(wrist, 0.2, 0.12, 0.24, 12, flame, 0, -0.55, 0);
+    return { sx, shoulder, elbow, wrist };
   });
+  monster.muzzle = k.node(arms[1].wrist, 0, -0.7, 0);
 
-  const muzzle = new THREE.Object3D();
-  muzzle.position.set(0, 5.8, 0.9);
-  body.add(muzzle);
-  monster.muzzle = muzzle;
-
-  for (const [idx, sx] of [-1, 1].entries()) {
-    const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.95, 0.1), copper);
-    p1.position.set(sx * 0.6, 2.2, 1.15);
-    body.add(p1);
-    monster.armour(p1, idx === 0 ? 0.25 : 0.5);
-
-    const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.95, 0.1), copper);
-    p2.position.set(sx * 0.6, 3.6, 1.0);
-    body.add(p2);
-    monster.armour(p2, idx === 0 ? 0.72 : 0.9);
+  // Four copper-clad armour plates struck off as it is wounded
+  for (const sx of [-1, 1]) {
+    const p1 = k.box(body, 0.85, 0.85, 0.09, rust, sx * 0.55, 1.9, 1.32, 0.08, sx * 0.22, 0, 0.015);
+    monster.armour(p1, sx < 0 ? 0.3 : 0.55);
+    const p2 = k.box(body, 0.85, 0.85, 0.09, copper, sx * 0.58, 3.0, 1.15, 0.06, sx * 0.2, 0, 0.015);
+    monster.armour(p2, sx < 0 ? 0.75 : 0.9);
   }
 
   return {
     update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
       const t = s.t || 0;
-      const idle = 1 - clamp01((s.hurt || 0) + (s.roar || 0) + (s.strike || 0));
-      const pulse = 1 + 0.25 * Math.sin(t * 4.5) * (1 - 0.5 * (s.wound || 0));
-      crown.scale.set(pulse, 1 + 0.35 * (s.roar || 0) - 0.3 * (s.wound || 0), pulse);
-      ring.rotation.z = t * 0.8;
       for (const a of arms) {
-        a.g.rotation.z = a.sx * (0.12 * Math.sin(t * 1.4) + 0.25 * (s.roar || 0) * idle);
+        const ph = a.sx * 0.8;
+        a.shoulder.rotation.x = -0.5 - 1.5 * up + 0.5 * down + idle * Math.sin(t * 0.9 + ph) * 0.08 + 0.16 * s.wound;
+        a.shoulder.rotation.z = a.sx * (0.18 + 0.18 * s.roar) + idle * Math.sin(t * 0.6 + ph) * 0.05;
+        a.elbow.rotation.x = -0.4 + 0.65 * up - 0.85 * down + idle * Math.sin(t * 1.2 + ph) * 0.1;
+        a.wrist.rotation.x = 0.3 * up - 0.25 * down;
       }
-      body.position.y = -clamp01(s.throes || 0) * 0.35;
+      const pulse = 1 + 0.18 * Math.sin(t * 4.5) * (1 - 0.4 * s.wound) + 0.25 * s.roar;
+      crown.scale.set(pulse, 1 + 0.3 * s.roar - 0.25 * s.wound, pulse);
+      head.rotation.y = idle * Math.sin(t * 0.5) * 0.14;
+      body.rotation.z = -0.06 * s.wound + Math.sin(t * 28) * 0.008 * (idle + s.hurt);
+      body.position.y = -clamp01(s.throes) * 0.3;
     }
   };
 }

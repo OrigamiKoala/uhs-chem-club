@@ -21,6 +21,7 @@ import kettleData from '../three/world-data/kettle.json' with { type: 'json' };
 import teeterData from '../three/world-data/teeter.json' with { type: 'json' };
 import verdigrisData from '../three/world-data/verdigris.json' with { type: 'json' };
 import brinewireData from '../three/world-data/brinewire.json' with { type: 'json' };
+import quicklightData from '../three/world-data/quicklight.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -198,6 +199,24 @@ const WORLDS_3D = {
       for (const site of brinewireData.sites) {
         if (!site.built) continue;
         stage.setBrinewireSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit11: {
+    id: 'unit11',
+    key: 'quicklight',
+    worldName: 'Quicklight',
+    data: quicklightData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterQuicklightScene(siteId, playerPos, lookAtPos);
+    },
+    siteForQuest(questId) {
+      return quicklightData.sites.find(s => s.questId === questId) || null;
+    },
+    syncProgress(stage, isComplete) {
+      for (const site of quicklightData.sites) {
+        if (!site.built) continue;
+        stage.setQuicklightSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

@@ -96,7 +96,7 @@ export const STAGES = [
     reward: {
       log: 'Doubling [A] doubled the initial rate.',
       title: 'Doubling [A]',
-      body: 'Doubling [A] doubled the initial rate. Here the rate is directly proportional to [A].'
+      body: 'Doubling [A] doubled the initial rate, so the rate scales 1-for-1 with [A] (first order).'
     }
   },
 
@@ -309,7 +309,7 @@ export const STAGES = [
     hints: [
       'Use the rate law and k from runs 1-2 with run 3\'s concentrations, then type the rate.',
       'Remember [NO] is squared while [O₂] is to the first power.',
-      'Multiply 2.0 × 0.30² × 0.20.'
+      'Plug k, [NO], and [O₂] into rate = k[NO]²[O₂], squaring [NO] before multiplying.'
     ],
     check(state) {
       const val = entryNumber(state.table, 'rate');

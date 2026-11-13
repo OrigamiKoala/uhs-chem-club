@@ -139,7 +139,7 @@ export const STAGES = [
     hints: [
       'Compare Run 1 and Run 2 on the log where [B] stays constant at 0.10 mol/L.',
       'Compare Run 1 and Run 3 where [A] stays constant at 0.10 mol/L.',
-      'Set the Order [A] and Order [B] dials on the Rate law board.'
+      'If doubling a concentration makes the rate quadruple, the order is 2; if it doubles, the order is 1.'
     ],
     check(state) {
       const oA = Math.round(state.table.fixtures.board?.dials?.o0?.value ?? 0);

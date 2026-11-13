@@ -310,6 +310,7 @@ const { KettleWorld } = await import('../src/three/kettle.js');
 const { TeeterWorld } = await import('../src/three/teeter.js');
 const { VerdigrisWorld } = await import('../src/three/verdigris.js');
 const { BrinewireWorld } = await import('../src/three/brinewire.js');
+const { QuicklightWorld } = await import('../src/three/quicklight.js');
 ok('every Ember Reach quest is a tabletop: none plays the old calorimeter');
 
 
@@ -788,7 +789,7 @@ console.log('The foes — spoil standing in the wells\n');
 
   for (const [label, key, World] of [
     ['Tallow', 'tallow', TallowWorld], ['Ligar', 'ligar', LigarWorld], ['Lanternfall', 'lanternfall', LanternfallWorld],
-    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld], ['Teeter', 'teeter', TeeterWorld], ['Verdigris', 'verdigris', VerdigrisWorld], ['Brinewire', 'brinewire', BrinewireWorld]
+    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld], ['Teeter', 'teeter', TeeterWorld], ['Verdigris', 'verdigris', VerdigrisWorld], ['Brinewire', 'brinewire', BrinewireWorld], ['Quicklight', 'quicklight', QuicklightWorld]
   ]) {
     const proto = World.prototype;
     const baked = proto.bakeStatics;
@@ -1188,7 +1189,7 @@ console.log('The foes — spoil standing in the wells\n');
   const { chromeReserve } = await import('../src/learn/engine/lean.js');
   const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
   const { allQuests } = await import('../src/learn/curriculum.js');
-  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld, unit08: TeeterWorld, unit09: VerdigrisWorld, unit10: BrinewireWorld };
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld, unit08: TeeterWorld, unit09: VerdigrisWorld, unit10: BrinewireWorld, unit11: QuicklightWorld };
   const worlds = new Map();
   const worldFor = unit => {
     if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }
@@ -1440,7 +1441,7 @@ console.log('The foes — spoil standing in the wells\n');
  *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
  *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
  */
-for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null], ['boss-compressor', 'unit04/boss-compressor.js', null], ['boss-crucible', 'unit05/boss-crucible.js', null], ['boss-undertow', 'unit06/boss-undertow.js', null], ['boss-tipper', 'unit08/boss-tipper.js', null], ['boss-leach', 'unit09/boss-leach.js', null], ['boss-clamp', 'unit10/boss-clamp.js', null]]) {
+for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null], ['boss-compressor', 'unit04/boss-compressor.js', null], ['boss-crucible', 'unit05/boss-crucible.js', null], ['boss-undertow', 'unit06/boss-undertow.js', null], ['boss-tipper', 'unit08/boss-tipper.js', null], ['boss-leach', 'unit09/boss-leach.js', null], ['boss-clamp', 'unit10/boss-clamp.js', null], ['boss-flare', 'unit11/boss-flare.js', null]]) {
   console.log(`\n${bossName} on its tables`);
   const MODEL = await import('../src/learn/table/model.js');
   const SNAP = await import('../src/learn/table/snap.js');

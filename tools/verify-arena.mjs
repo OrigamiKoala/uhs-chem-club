@@ -35,6 +35,7 @@ await import('../src/three/kettle.js');
 await import('../src/three/teeter.js');
 await import('../src/three/verdigris.js');
 await import('../src/three/brinewire.js');
+await import('../src/three/quicklight.js');
 const { collectBoxes } = await import('./lib/overlap.mjs');
 const { arenaTablePlan, buildArenaTable, ARENA_TABLE } = await import('../src/three/arena-table.js');
 const { BOSS_ARENA_SPOTS } = await import('../src/learn/engine/boss-arena.js');
@@ -58,7 +59,8 @@ const WORLDS = [
   ['unit07', 'Kettle', '../src/three/kettle.js', 'KettleWorld', 'boss-golem'],
   ['unit08', 'Teeter', '../src/three/teeter.js', 'TeeterWorld', 'boss-tipper'],
   ['unit09', 'Verdigris', '../src/three/verdigris.js', 'VerdigrisWorld', 'boss-leach'],
-  ['unit10', 'Brinewire', '../src/three/brinewire.js', 'BrinewireWorld', 'boss-clamp']
+  ['unit10', 'Brinewire', '../src/three/brinewire.js', 'BrinewireWorld', 'boss-clamp'],
+  ['unit11', 'Quicklight', '../src/three/quicklight.js', 'QuicklightWorld', 'boss-flare']
 ];
 
 const IGNORED = /cobbles|scrub|pebble|gravel|grass|dust|snow|ice-|decal/i;
@@ -157,14 +159,14 @@ for (const [unit, name, file, ctor, questId] of WORLDS) {
 
 /* ------------------------------------------------------------ the bodies */
 
-console.log('\nthe ten bodies');
+console.log('\nthe eleven bodies');
 {
   const { CombatMonster3D } = await import('../src/learn/engine/combat-monster-3d.js');
   const { BOSS_SPECIES } = await import('../src/learn/engine/boss-models.js');
-  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem', 'the tipper', 'the leach', 'the clamp'];
-  check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === SPECIES.length, 'boss-models.js builds all ten', `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
+  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem', 'the tipper', 'the leach', 'the clamp', 'the flare'];
+  check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === SPECIES.length, 'boss-models.js builds all eleven', `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
 
-  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4, 'the tipper': 1.4, 'the leach': 1.4, 'the clamp': 1.4 };
+  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4, 'the tipper': 1.4, 'the leach': 1.4, 'the clamp': 1.4, 'the flare': 1.4 };
   for (const spec of SPECIES) {
     const spotEntry = Object.values(BOSS_ARENA_SPOTS).find(s => s.species === spec);
     const scale = spotEntry?.scale ?? SCALE[spec];

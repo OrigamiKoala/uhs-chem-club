@@ -139,6 +139,14 @@ export const DESTINATIONS = {
       atmo: '#cdbf9f', atmoStrength: 0.5, seed: [2.9, 7.4, 4.2]
     }
   },
+  quicklight: {
+    key: 'quicklight', name: 'Quicklight', hash: '#/learn/unit11',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'volcanic', colors: ['#222736', '#333b4d', '#4f586b', '#e8a440'],
+      atmo: '#6f7ca8', atmoStrength: 0.55, seed: [6.4, 1.9, 5.5]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

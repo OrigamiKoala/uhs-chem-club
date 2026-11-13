@@ -1297,17 +1297,48 @@ export function buildFlare(foe) {
     plan: null, lunge: 0, still: false, t: 0,
     phase: (hashStr(foe.id) % 628) / 100,
     reach: 0.14, look: 0, baseX: 0, baseY: 0, baseZ: 0,
-    snap() {
-      const s = this.pose === 'live' ? 1.25 : this.pose === 'flat' ? 0.6 : 1.0;
-      flame.scale.set(s, s, s);
-      group.visible = !this.gone;
+    setPose(pose, plan = null, instant = false) {
+      this.plan = plan;
+      if (pose === this.pose) return;
+      this.pose = pose;
+      this.since = 0;
+      this.gone = false;
+      group.visible = true;
+      if (instant) this.snap();
     },
-    tick(dt) {
+    hitPlayer() { this.lunge = 1; },
+    snap() {
+      group.visible = !this.gone;
+      group.scale.set(1, 1, 1);
+      this.write(0);
+    },
+    update(dt, reduced, bearing = 0) {
       this.t += dt;
-      ring.rotation.z = this.t * 0.8;
+      this.since += dt;
+      this.still = reduced;
+      this.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - this.look) * (1 - Math.exp(-3 * dt));
+      this.lunge = Math.max(0, this.lunge - dt * 2.5);
+      if (this.pose === 'dispersed') {
+        const f = Math.min(1, this.since / 2.2);
+        group.position.y = this.baseY - f * 0.01;
+        group.scale.set(1 + f * 0.35, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.35);
+        if (f >= 0.99) { this.gone = true; group.visible = false; }
+      }
+      this.write(reduced ? 0 : this.t);
+    },
+    write(t) {
+      group.position.z = this.baseZ + this.lunge * 0.05;
+      group.rotation.y = this.look * 0.3;
+      ring.rotation.z = t * 0.8;
       const p = this.pose === 'live' ? 1.25 : this.pose === 'flat' ? 0.6 : 1.0;
-      const pulse = p + 0.12 * Math.sin(this.t * 4.5 + this.phase);
+      const pulse = p + (!this.still ? 0.12 * Math.sin(t * 4.5 + this.phase) : 0);
       flame.scale.set(pulse, pulse, pulse);
+    },
+    dispose() {
+      for (const m of [base, stack, ring, flame, hit]) {
+        m.geometry?.dispose();
+        if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(mat => mat.dispose());
+      }
     }
   };
   body.snap();
