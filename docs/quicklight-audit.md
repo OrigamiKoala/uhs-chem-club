@@ -1,33 +1,61 @@
-# Quicklight (`unit11`) Audit — Kinetics
+# Quicklight (`unit11`) audit — kinetics, 2026-11-13
 
-Built 2026-11-12 from [quicklight-world.md](plans/quicklight-world.md) on branch `world/unit11`.
+**Method and honest limits.** Played in the built-in browser at 3D On as a guest: the world and bench loaded, console read, and these stages watched or operated: q1 s1, s2 (real Run clicks), s3; q4 s2 (collision track), s4 (energy spread), s5 (profile). **Not played by hand:** q1 s4–s7, q2, q3, q5, q6, boss (read from the quest text, replayed by `verify:learn`/`verify:table` scripts only). Drag of cards by a real hand was not proven (the browser tool's synthetic drag ends short). Ratings below for unplayed stages are text-and-script ratings and say so.
 
-## Coverage & Structure
-- **AP CED Topics:** 5.1 (Reaction Rates), 5.2 (Introduction to Rate Law), 5.3 (Concentration Changes Over Time), 5.4 (Elementary Reactions), 5.5 (Collision Model), 5.6 (Reaction Energy Profile), 5.7 (Introduction to Reaction Mechanisms), 5.8 (Reaction Mechanism and Rate Law), 5.9 (Steady-State Approximation), 5.10 (Multistep Reaction Energy Profile), 5.11 (Catalysis), and 9.4 (Thermodynamic vs Kinetic Control in `q5-steps` s7 / `q4-collide` s7).
-- **Benches (6 benches, 35 stages):**
-  - `q1-watch` (6 stages): average/instantaneous rate, stoichiometric scaling (`-1/a Δ[A]/Δt`), and concentration/temperature/surface-area knobs.
-  - `q2-law` (5 stages): initial rates table, reaction orders (0, 1, 2), rate constant `k` with units, and predicting an unrun trial.
-  - `q3-time` (5 stages): constant half-life of first-order decay, integrated rate plots (`[A]`, `ln[A]`, `1/[A]` vs `t`), and `k = 0.693 / t½`.
-  - `q4-collide` (7 stages): collision frequency, activation energy threshold, orientation factor, Maxwell-Boltzmann temperature shift, reaction energy profiles (`Ea` forward/reverse, `ΔH`), and kinetic vs thermodynamic control.
-  - `q5-steps` (7 stages): elementary steps, intermediates, rate-determining step, molecularity, mechanism rate laws, fast pre-equilibrium, and two-step energy profiles.
-  - `q6-shortcut` (5 stages): catalyzed pathway (`Ea` lowered, `ΔH` unchanged), catalyst regeneration vs intermediate consumption, and heterogeneous surface catalysis.
-- **Boss (`boss-flare`, 5 phases):** re-tests rate calculation, initial-rate order deduction, half-life fraction remaining, forward activation energy from an energy profile, and mechanism matching.
-
-## Verification Evidence
-| Check | Scope | Result |
+## Blocking defects found and fixed
+| Defect | Evidence | Fix |
 | --- | --- | --- |
-| `verify:learn` | All 92 built quests, 592 stages, glossary, question bank `unit11.json` | Scripted (Node) |
-| `verify:table` | Real stage grading, wrong-answer messages, hint ladders, quantity ramps | Scripted (Node) |
-| `verify:story` | Story animations (`story-scenes-quicklight.js`) and `CASE_FILE` (`clue_quicklight_flare`) | Scripted (Node) |
-| `verify:quicklight` | `ratedata.js` planners, `quicklight.json` layout, 6 host extents, walkability flood-fill, pooled lamps | Scripted (Node) |
-| `verify:voyage` | Ship landing clearance, ramp foot, sill height on Quicklight | Scripted (Node) |
-| `verify:arena` | `boss-flare` arena spot, `the flare` 3D rig (39 meshes, 3784 tris, 9.2 m, 4 armour plates, muzzle, all poses) | Scripted (Node) |
-| `verify:bench` | All 6 Quicklight hosts inside `BENCH_BAY` volumes, pointer-path drag/tap at 7 viewports, `boss-flare` 3D corner foe | Scripted (Node) |
-| `teaching-report.mjs unit11` | 40 stages in 7 modules: 0 vague, 0 motive, 0 operation prompt, 0 reward long, 0 hint3 move/arithmetic | Scripted (Node) |
-| Browser hand play | Not run (per owner rule: no browser testing without explicit instruction) | Unverified in browser |
+| Whole world rendered white around the bench | console: 8 `computeBoundingSphere NaN` meshes in `quicklight-roads`; `texSubImage2D` errors | roads data uses `w`, code read `width` → `r.width ?? r.w` (`src/three/quicklight.js`) |
+| Ground/road/catwalk textures never built | `quicklight-textures.js` took `(size, repeat)` but callers pass `{size, seed}` and `buildMaterial` needs `{albedo,height,…}`; roughness/metalness maps had null images | rewrote the module to the shared contract (as Brinewire) |
+| Vessel said `Press "undefined"` | seen on q1 s2/s3 | label read from the fixture, not props |
+| Benches were flat paintings | user report; rate kit had no `dress3d` | new `table/kits/rate-3d.js` (below) |
 
-## Only the Owner Can Judge (Browser Play-Test List)
-1. **3D Storm-Belt Feel & Exposure (`QUICKLIGHT_EXPOSURE = 1.12`):** Whether dark basalt, catwalk plates, and amber work lamps read with clear contrast at 3D On without crushing shadows or blowing out the cased instruments.
-2. **Stage-by-Stage Comprehension (Ages 12–17):** Especially `q3-time` stage 3 (distinguishing linear `ln[A]` vs `1/[A]` plots), `q4-collide` stage 4 (Maxwell-Boltzmann tail above `Ea`), and `q5-steps` stage 6 (fast pre-equilibrium substitution).
-3. **Typed Worked-Figure Friendly Numbers:** Whether `q1-watch` s3, `q2-law` s4–5, `q3-time` s2 & s5, `q4-collide` s6, and `boss-flare` phases 1, 3, 4 feel fair and intuitive on desktop and 375 px landscape touchscreens.
-4. **Boss Flare (`the flare`) Readability:** Visual silhouette, flame pulse, armour-plate break feedback, and camera look-up framing in the storm-plaza arena.
+## 3D work
+`rate-3d.js` runs each flat painter against a recording context and builds solids from what it drew: a vessel's or collision track's glass window becomes a **glass tank**; its particles swim through depth and height (not on a sheet); catalyst rings are tori; speed arrows are beads laid on the track; collision spheres are enlarged. Per the owner: **graphs, plots and energy profiles stay flat on the plate** (a first build stood them up; removed). Verified on q1 s2, q4 s2. Not 3D: log, plotter, profile, spread, choice plates (they are 2D graphs/tables).
+
+## Per-stage table
+Verdict key: Op = operable, Int = intuitive, Busy = busywork risk, Intu = builds intuition, Acc = accurate. "P" = played; "T" = text/scripts only.
+
+| Stage | Played | Evidence | Verdict / action |
+| --- | --- | --- | --- |
+| q1 s1 predict | P | lead clip draws the curve; cards readable | ok |
+| q1 s2 two vessels | P | Run clicks work; tanks show A→B colour change, curves climb; hint 3 near-answer | ok; hint 3 reworded |
+| q1 s3 average rate | P | marked points on curve; typed rate | ok (worked example then new case) |
+| q1 s4 slowing | T | tap a curve stretch | ok |
+| q1 s5 two for one | T | miss text stated the answer ratio | miss and hint 3 reworded |
+| q1 s6 three changes | T | dial + dashed baseline + sort | ok |
+| q1 s7 rate of each substance (new) | T | 3 H₂ → 2 NH₃, typed, evidence-based misses | **added** (AP 5.1 quantitative) |
+| q2 s1–s5 | T | log + board; s4 hint 3 gave the division | hints 3 of s4, s5 reworded; the plate-and-log stages rely on the rates log fixture, unplayed |
+| q3 s1–s5 | T | s5 hint 3 gave the division | reworded |
+| q3 s6 integrated law (new) | T | typed [A] at 40 s with sanity bounds in misses | **added** (AP 5.3) |
+| q4 s1 | T | was "what two things must a collision have" with the theory on the cards, and used Ea unintroduced | now predict-first ("how many collisions react?") |
+| q4 s2 | P | track now a glass tank, spheres merge on reaction | briefing now defines Ea first |
+| q4 s3 | T | hint 3 gave the answer | reworded |
+| q4 s4 | P | energy columns flat; briefing/hint 3 gave numbers | reworded |
+| q4 s5 | P | tapped a "TS"-labelled peak (lookup) | **rewritten**: typed forward Ea read from the ball's energy; levels not printed |
+| q4 s6 | T | worked example was the same profile as the answer; miss gave arithmetic | new worked example, evidence misses |
+| q4 s7 | T | cards said "(lower barrier)" | plain Path A/B |
+| q5 s1 | T | briefing was a route | now defines elementary step |
+| q5 s2 | T | card text "(made in 1, used in 2)" was the answer | plain species |
+| q5 s3–s7 | T | s6 briefing states the substitution, s7 taps highest barrier | **weak, not yet reworked** (see below) |
+| q6 s1 | T | hints described a two-path picture the scene did not draw; distractors silly | now predict-first, hints match the preview |
+| q6 s2–s5 | T | card parentheticals and hint 3s gave answers | reworded |
+| boss p1–p5 | T | re-tests; hint 3s name the method | unchanged |
+
+## AP coverage (CED unit 5)
+5.1 rate (qualitative + stoichiometric typed, new); 5.2 initial rates/rate law (q2); 5.3 concentration over time (half-life, plots, new integrated-law stage); 5.4 elementary reactions; 5.5 collision model; 5.6 energy profile; 5.7–5.8 mechanisms and rate law; 5.9 steady-state/pre-equilibrium (only fast pre-equilibrium); 5.10 multistep profile; 5.11 catalysis.
+**Missing:** Arrhenius equation / ln k vs 1/T and two-temperature calculation (5.6, quantitative); half-life of zero and second order; steady-state approximation; units of k for other orders as a played stage; reading ΔH sign on a profile as a quantity.
+
+## Left weak / recommended next
+- q5 s3–s7 need the same pass as the others (s6 briefing carries the answer; s7 is a tap of the highest hump).
+- Add an Arrhenius bench stage (two temperatures, typed Ea) and a zero/second-order half-life stage.
+- Hand-play every unplayed stage above, especially card drops and the rates log.
+- The flat painter's title text looks doubled (ghosted) at the default camera on every Quicklight table; not diagnosed.
+- Tank height/size and sphere scale are judgement calls only the owner can judge by playing.
+
+## Work log
+1. Set-up as guest (guild/oath passes needed a hold; team patched into the stored guest session).
+2. Found white world → fixed roads and textures.
+3. Built `rate-3d.js`; owner asked 2D graphs stay flat → removed standing graphs, hill and columns.
+4. Text/leak fixes across q1–q6; q4 s1, q6 s1 made predict-first; q4 s5 rewritten; two quantitative stages added (counts 592→594, PRODUCT.md and CLAUDE.md updated).
+5. Checks run green: `verify:learn`, `verify:table`, `verify:story`, `verify:docs`, `verify:quicklight`, `verify:bench`, `verify:teaching`. Other worlds' scripts not re-run (only the rate kit and Quicklight files changed).

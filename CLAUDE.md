@@ -50,6 +50,11 @@ This file holds the engineering doctrine, hard rules, and commands.
 - **Investigation, not combat:** Ordinary misses are "missed trials" with explanatory reasons. Foes are dispersed, never killed. Only bosses engage in combat (`encounter`, single cosmetic health bar).
 - **Rewards & debriefs:** Every stage awards a reward card (1–2 short sentences, at most 40 words) confirming the concept seen; never introducing the concept or carrying the lesson after the fact. Quests conclude with Vess's debrief story animation (3–5 beats showing the mechanism, no purely decorative animations).
 
+## Quicklight notes
+
+- `src/learn/table/kits/rate-3d.js` dresses `kvessel`, `lead` and `collview` at 3D On (glass tanks, swimming spheres, collision spheres). Graphs, plots and energy profiles stay flat on the plate by owner decision; do not stand them up. `q1-watch` has 7 stages, `q3-time` 6.
+- Traps: `src/three/materials/quicklight-textures.js` must return the `{albedo,height,roughness,ao}` contract (a wrong shape blanks the whole world); world-data roads use `w`, not `width`; the flat run clocks are keyed per scope (`b.scope === '3d'`).
+
 ## Hard Engineering Rules
 
 - **Learn track pays no XP:** Nothing in `src/learn/` calls `session.addXp`, `api.gradeStage`, or `api.completeQuest`. Practice problems gate nothing and pay no XP.
