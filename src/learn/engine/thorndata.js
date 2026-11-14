@@ -353,20 +353,20 @@ addScenes({
     atoms: {
       c1: Cc(0, 0), c2: Cc(1.3, 0),
       h1: H(-0.6, 0.85), h2: H(-0.6, -0.85), h3: H(1.9, 0.85), h4: H(1.9, -0.85),
-      hb: H(0.1, 1.75), br: { el: 'Br', x: 0.1, y: 3.0 }
+      hb: H(0.35, 1.55), br: { el: 'Br', x: 1.65, y: 1.55 }
     },
     bonds: [['c1', 'c2', 2], ['c1', 'h1', 1], ['c1', 'h2', 1], ['c2', 'h3', 1], ['c2', 'h4', 1], ['hb', 'br', 1]],
-    lone: [['br', 0], ['br', 90], ['br', 180]]
+    lone: [['br', 0], ['br', 90], ['br', 270]]
   },
   /* The double bond's second pair has bonded to hydrogen; the H–Br pair has left with bromine. */
   'hbr-ethene-1': {
     atoms: {
       c1: Cc(0, 0), c2: Cc(1.3, 0, { q: 1 }),
       h1: H(-0.85, 0.5), h2: H(-0.6, -0.85), h3: H(1.9, 0.85), h4: H(1.9, -0.85),
-      hb: H(0, 1.05), br: { el: 'Br', x: 2.7, y: 2.6, q: -1 }
+      hb: H(0, 1.05), br: { el: 'Br', x: 3.0, y: 1.45, q: -1 }
     },
     bonds: [['c1', 'c2', 1], ['c1', 'h1', 1], ['c1', 'h2', 1], ['c2', 'h3', 1], ['c2', 'h4', 1], ['c1', 'hb', 1]],
-    lone: [['br', 0], ['br', 90], ['br', 180], ['br', 270]]
+    lone: [['br', 0], ['br', 90], ['br', 270], ['br', 180]]
   },
   /* Bromide has bonded to the carbon that had three bonds: bromoethane. */
   'hbr-ethene-2': {
@@ -435,7 +435,7 @@ addScenes({
     for (let i = 0; i < 6; i++) {
       const a = (Math.PI / 3) * i + Math.PI / 6;
       atoms[`c${i}`] = Cc(1.3 * Math.cos(a), 1.3 * Math.sin(a));
-      atoms[`h${i}`] = H(2.3 * Math.cos(a), 2.3 * Math.sin(a));
+      atoms[`h${i}`] = H(2.15 * Math.cos(a), 2.15 * Math.sin(a));
       bonds.push([`c${i}`, `h${i}`, 1]);
     }
     for (let i = 0; i < 6; i++) bonds.push([`c${i}`, `c${(i + 1) % 6}`, i % 2 === start ? 2 : 1]);
@@ -453,6 +453,8 @@ addPlays({
       [{ src: 'l:br:3', dst: 'c2' }]
     ]
   },
+  'hbr-step1': { scenes: ['hbr-ethene-0', 'hbr-ethene-1'], arrows: [[{ src: 'p:c1-c2', dst: 'hb' }, { src: 's:hb-br', dst: 'br' }]] },
+  'hbr-step2': { scenes: ['hbr-ethene-1', 'hbr-ethene-2'], arrows: [[{ src: 'l:br:3', dst: 'c2' }]] },
   /* Bromine adds across a double bond, through the bridged ion. */
   'br2-ene': {
     scenes: ['br2-ene-0', 'br2-ene-1', 'br2-ene-2'],

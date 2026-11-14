@@ -19,6 +19,16 @@
  */
 
 export const QUEST_STORY = {
+  /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
+  'unit13/q2-unsat': {
+    scene: 'thorn-unsat',
+    beats: [
+      { to: 0.32, say: 'Bromine reached the second pair of the double bond and bonded to both carbons, so the orange went.' },
+      { to: 0.66, say: 'With H–Br that same pair moved to the hydrogen, the electron-poor end, and the bromine left with the pair it had shared.' },
+      { to: 0.96, say: 'Then the bromide ion\'s pair moved to the carbon with three bonds: an addition reaction, with nothing left over.' }
+    ],
+    filed: 'Filed: the still makes alkenes, and an alkene reacts at its double bond, where one molecule can be joined to the next.'
+  },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',

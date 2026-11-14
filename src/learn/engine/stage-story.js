@@ -22,6 +22,8 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
+  'q2-unsat': { 1: 'The Fifth heats the tar until part of it changes, and Vess wants to know into what.' },
   /* ---- Lodestone: what is really in the Fifth's drums? ---- */
   'q1-dblock': { 1: 'The Fifth\'s manifest calls every drum iron salt; read iron\'s own electrons first.' },
   'q2-charges': { 1: 'The manifest gives each metal one charge; measure how many electrons these metals can lose.' },
