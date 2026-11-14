@@ -361,7 +361,7 @@
       "label": "Bench 4 - Functional Groups",
       "structure": "wood-acid-pit",
       "mound": "M4",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

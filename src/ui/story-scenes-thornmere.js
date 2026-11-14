@@ -10,6 +10,7 @@ import { fitScenes, drawScene } from '../learn/table/kits/thorn-draw.js';
 import { drawPlay } from '../learn/table/kits/thorn-mol.js';
 import '../learn/engine/thorn-scenes/q1-chains.js';
 import '../learn/engine/thorn-scenes/q3-isomers.js';
+import '../learn/engine/thorn-scenes/q4-groups.js';
 import { drawTwist, drawMirrorPair } from '../learn/table/kits/thorn-space.js';
 
 /** The bench painters draw in a fixture's frame; on the story plate one unit is one pixel. */
@@ -61,6 +62,22 @@ function isomers(ctx, w, h, t) {
   }
 }
 
+/* ---- q4-groups: the –OH group; the ethanoate's shared charge; the amine's pair ---- */
+function groups(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const rect = { x: 230, y: 100, w: 500, h: 330 };
+  if (t < 0.33) {
+    text(ctx, 'Ethanol: the –OH group', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    ctx.globalAlpha = ease(win(t, 0.02, 0.12)); sceneIn(ctx, 'ethanol', rect, { pairs: true, lit: ['a:o', 'a:ho'] }); ctx.globalAlpha = 1;
+  } else if (t < 0.67) {
+    text(ctx, 'Ethanoate: the charge moves between oxygens', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'ethanoate-shift', rect, ease(win(t, 0.36, 0.62)));
+  } else {
+    text(ctx, 'Methylamine takes a proton from water', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'amine-water', rect, ease(win(t, 0.7, 0.93)));
+  }
+}
+
 /* ---- q2-unsat: bromine reaches the second pair; H–Br adds in two steps ---- */
 function unsat(ctx, w, h, t) {
   ground(ctx, w, h);
@@ -80,7 +97,8 @@ function unsat(ctx, w, h, t) {
 export const THORNMERE_SCENES = {
   'thorn-chains': chains,
   'thorn-unsat': unsat,
-  'thorn-isomers': isomers
+  'thorn-isomers': isomers,
+  'thorn-groups': groups
   // q4-groups
   // q5-reactions
   // q6-polymers

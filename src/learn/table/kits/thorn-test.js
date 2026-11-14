@@ -331,6 +331,15 @@ addTest('ph', {
       say(ctx, e > 0.9 ? 'A proton has moved from water to nitrogen' : 'The molecule and a water molecule', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
       return;
     }
+    // A C=O with no hydrogen on its oxygen (a ketone such as propanone): nothing on it can leave as a proton.
+    if (show === 'propanone') {
+      bond(cx, cy - 0.5, gx, cy - 0.5); bond(cx, cy + 0.5, gx, cy + 0.5);
+      disc(cx, cy, r, 'C', 'C');
+      disc(gx, cy, r, 'O', 'O');
+      water(false, false);
+      say(ctx, sub && e > 0.9 ? 'Nothing has left the molecule' : 'The molecule and a water molecule', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
+      return;
+    }
     // An O–H group on carbon. An acid's proton moves to water; otherwise it stays where it is.
     const moves = Boolean(S.acid);
     const hx0 = gx + r * 1.5; const hx = moves ? hx0 + e * (wxo - r * 1.5 - hx0) : hx0 + Math.sin(k * 30) * 0.25 * (sub ? 1 - e : 0);
@@ -341,7 +350,6 @@ addTest('ph', {
     disc(cx, cy, r, 'C', 'C');
     disc(gx, cy, r, 'O', 'O', moves && e > 0.85 ? -1 : 0);
     disc(hx, cy, r * 0.6, 'H', 'H');
-    if (show === 'propanone' || show === 'methoxymethane') { /* no O–H on these: the hydrogen drawn is on carbon's neighbour and stays */ }
     water(moves && e > 0.85, false);
     say(ctx, moves && e > 0.9 ? 'A proton has moved to a water molecule' : sub && e > 0.9 ? 'Nothing has left the molecule' : 'The molecule and a water molecule', F.x(wx + 1.5), F.y(wy + wh - 2.2), F.size(1.5, 6), { color: C.dim, maxW: F.len(ww - 3) });
   }

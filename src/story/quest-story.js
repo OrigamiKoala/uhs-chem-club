@@ -47,6 +47,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: a formula on a drum does not say which molecule is in it, and the Fifth sorts its drums by shape.'
   },
+  'unit13/q4-groups': {
+    scene: 'thorn-groups',
+    beats: [
+      { to: 0.32, say: 'Ethanol\'s –OH hydrogen was drawn to the next molecule\'s oxygen, so it boiled far above methoxymethane, with the same formula.' },
+      { to: 0.66, say: 'Ethanoic acid gave a proton to water, and the charge it left moved between its two oxygens.' },
+      { to: 0.96, say: 'Methylamine\'s nitrogen pair took a proton from water: the amine is a base.' }
+    ],
+    filed: 'Filed: the liquid eating the drums is ethanoic acid, a carboxylic acid, and the Fifth keeps it beside an alcohol.'
+  },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',

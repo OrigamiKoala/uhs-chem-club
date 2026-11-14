@@ -6,6 +6,7 @@
 // q3-isomers
 import './thorn-space.js';
 // q4-groups
+import './thorn-groups.js';
 // q5-reactions
 // q6-polymers
 // boss-carapace

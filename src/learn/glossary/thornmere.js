@@ -24,8 +24,13 @@ export const TERMS = [
   { id: 'cis-trans', term: 'cis and trans', gloss: 'the two forms of a molecule whose groups are on the same side (cis) or opposite sides (trans) of a double bond', quest: 'q3-isomers', stage: 4, re: /\b(cis|trans)\b/i },
   { id: 'chiral', term: 'chiral', gloss: 'not able to be turned to match its own mirror image, as a left hand cannot match a right', quest: 'q3-isomers', stage: 6, re: /\bchiral\b/i },
   { id: 'enantiomer', term: 'enantiomer', gloss: 'one of a chiral molecule and its mirror image', quest: 'q3-isomers', stage: 6, re: /\benantiomers?\b/i },
-  { id: 'stereocentre', term: 'stereocentre', gloss: 'a carbon bonded to four different groups', quest: 'q3-isomers', stage: 8, re: /\bstereocentres?\b/i }
+  { id: 'stereocentre', term: 'stereocentre', gloss: 'a carbon bonded to four different groups', quest: 'q3-isomers', stage: 8, re: /\bstereocentres?\b/i },
   // q4-groups
+  { id: 'functional-group', term: 'functional group', gloss: 'a small group of atoms on a carbon chain that decides much of how the molecule behaves', quest: 'q4-groups', stage: 1, re: /\bfunctional groups?\b/i },
+  { id: 'alcohol', term: 'alcohol', gloss: 'a carbon chain carrying an –OH group', quest: 'q4-groups', stage: 1, re: /\balcohols?\b/i },
+  { id: 'carbonyl', term: 'carbonyl group', gloss: 'a carbon double-bonded to an oxygen, C=O', quest: 'q4-groups', stage: 4, re: /\bcarbonyl\b/i },
+  { id: 'carboxylic-acid', term: 'carboxylic acid', gloss: 'a molecule with the group –COOH, which gives a proton to water', quest: 'q4-groups', stage: 5, re: /\bcarboxylic acids?\b/i },
+  { id: 'amine', term: 'amine', gloss: 'a carbon chain with a nitrogen bonded into it, whose lone pair takes a proton', quest: 'q4-groups', stage: 7, re: /\bamines?\b/i }
   // q5-reactions
   // q6-polymers
 ];
@@ -57,8 +62,11 @@ export const NEEDS = {
   'q2-unsat:1': ['fourbonds'],
   'q2-unsat:4': ['pairmove'],
   // q3-isomers
-  'q3-isomers:3': ['imforces']
+  'q3-isomers:3': ['imforces'],
   // q4-groups
+  'q4-groups:1': ['imforces'],
+  'q4-groups:2': ['acidbase'],
+  'q4-groups:4': ['pairmove']
   // q5-reactions
   // q6-polymers
 };

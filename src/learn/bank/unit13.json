@@ -204,6 +204,56 @@
           "explanation": "In 2-bromobutane the second carbon holds H, Br, CH₃ and CH₂CH₃, four different groups, so its mirror image cannot be turned to match it. Each of the others has a carbon with two groups the same."
         }
       ]
+    },
+    "q4-groups": {
+      "problems": [
+        {
+          "id": "q4-groups#b1",
+          "quest": "q4-groups",
+          "question": "Propan-1-ol, CH₃CH₂CH₂OH, and methoxyethane, CH₃OCH₂CH₃, have the same formula. Which boils higher, and why?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Propan-1-ol: its –OH hydrogen forms hydrogen bonds to the next molecule's oxygen"
+            },
+            {
+              "id": "b",
+              "label": "Methoxyethane: its oxygen is in the middle of the chain"
+            },
+            {
+              "id": "c",
+              "label": "They boil at the same temperature, since their formulas are the same"
+            },
+            {
+              "id": "d",
+              "label": "Propan-1-ol: it is the heavier molecule"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Only propan-1-ol has a hydrogen bonded to oxygen, so only its molecules hold one another by hydrogen bonds. It boils at 97 °C; methoxyethane at 7 °C. Their masses are the same."
+        },
+        {
+          "id": "q4-groups#b2",
+          "quest": "q4-groups",
+          "question": "Methanoic acid, HCOOH, is put in water. Which hydrogen leaves as a proton?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The hydrogen bonded to oxygen"
+            },
+            {
+              "id": "b",
+              "label": "The hydrogen bonded to carbon"
+            },
+            {
+              "id": "c",
+              "label": "Neither: an –OH group makes water basic"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The O–H pair sits near oxygen, and the charge left on the –COO⁻ group is shared by two oxygens, so that proton leaves. A C–H pair sits nearly midway and stays."
+        }
+      ]
     }
   }
 }
