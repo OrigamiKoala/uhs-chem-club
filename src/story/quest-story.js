@@ -38,6 +38,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the still makes alkenes, and an alkene reacts at its double bond, where one molecule can be joined to the next.'
   },
+  'unit13/q3-isomers': {
+    scene: 'thorn-isomers',
+    beats: [
+      { to: 0.32, say: 'Butane and 2-methylpropane hold the same atoms joined in a different order: two molecules with one formula.' },
+      { to: 0.66, say: 'A double bond would not turn, so chlorines on one side and on opposite sides were two different molecules.' },
+      { to: 0.96, say: 'CHFClBr\'s mirror image matched it on no turn of the twelve: four different groups round one carbon make it chiral.' }
+    ],
+    filed: 'Filed: a formula on a drum does not say which molecule is in it, and the Fifth sorts its drums by shape.'
+  },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',

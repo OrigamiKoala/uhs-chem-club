@@ -74,3 +74,4 @@ export * from './heat.js';
 export { tbuildFixture, buildRead, buildScript, whereOn, tchoiceFixture, chosen, chosenIndex } from './thorn-build.js';
 export { tmolFixture, molRead, arrowScript, pickScript, tleadFixture, addLeadScene } from './thorn-mol.js';
 export { ttestFixture, testRead, resultOf, tcard, addTest, heatContacts } from './thorn-test.js';
+export { tmirrorFixture, mirrorRead, turnsToMatch, twistModel, twistAngle } from './thorn-space.js';

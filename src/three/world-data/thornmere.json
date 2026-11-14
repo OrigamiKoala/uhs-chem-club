@@ -255,7 +255,7 @@
       "label": "Bench 3 - Isomers",
       "structure": "mirror-vault",
       "mound": "M3",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

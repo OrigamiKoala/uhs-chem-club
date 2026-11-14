@@ -18,8 +18,13 @@ export const TERMS = [
   { id: 'electron-poor', term: 'electron-poor site', gloss: 'an atom that is short of electrons, because a shared pair is held nearer its neighbour or it has a positive charge', quest: 'q2-unsat', stage: 4, re: /\belectron-poor\b/i },
   { id: 'addition', term: 'addition reaction', gloss: 'a reaction in which atoms add across a double bond and nothing leaves', quest: 'q2-unsat', stage: 5, re: /\baddition reactions?\b/i },
   { id: 'unsaturated', term: 'unsaturated', gloss: 'holding fewer hydrogens than the carbon chain could, because of a double bond', quest: 'q2-unsat', stage: 6, re: /\bunsaturated\b/i },
-  { id: 'aromatic', term: 'aromatic', gloss: 'a ring, like benzene\'s, whose second pairs are shared round the whole ring', quest: 'q2-unsat', stage: 7, re: /\baromatic\b/i }
+  { id: 'aromatic', term: 'aromatic', gloss: 'a ring, like benzene\'s, whose second pairs are shared round the whole ring', quest: 'q2-unsat', stage: 7, re: /\baromatic\b/i },
   // q3-isomers
+  { id: 'structural-isomer', term: 'structural isomer', gloss: 'one of two or more molecules with the same formula whose atoms are joined in a different order', quest: 'q3-isomers', stage: 1, re: /\bstructural isomers?\b/i },
+  { id: 'cis-trans', term: 'cis and trans', gloss: 'the two forms of a molecule whose groups are on the same side (cis) or opposite sides (trans) of a double bond', quest: 'q3-isomers', stage: 4, re: /\b(cis|trans)\b/i },
+  { id: 'chiral', term: 'chiral', gloss: 'not able to be turned to match its own mirror image, as a left hand cannot match a right', quest: 'q3-isomers', stage: 6, re: /\bchiral\b/i },
+  { id: 'enantiomer', term: 'enantiomer', gloss: 'one of a chiral molecule and its mirror image', quest: 'q3-isomers', stage: 6, re: /\benantiomers?\b/i },
+  { id: 'stereocentre', term: 'stereocentre', gloss: 'a carbon bonded to four different groups', quest: 'q3-isomers', stage: 8, re: /\bstereocentres?\b/i }
   // q4-groups
   // q5-reactions
   // q6-polymers
@@ -50,8 +55,9 @@ export const STORY_ALLOW = ['tar', 'still', 'drum', 'armour', 'plate', 'plates',
 export const NEEDS = {
   'q1-chains:1': ['fourbonds'],
   'q2-unsat:1': ['fourbonds'],
-  'q2-unsat:4': ['pairmove']
+  'q2-unsat:4': ['pairmove'],
   // q3-isomers
+  'q3-isomers:3': ['imforces']
   // q4-groups
   // q5-reactions
   // q6-polymers

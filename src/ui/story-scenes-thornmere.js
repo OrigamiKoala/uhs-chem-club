@@ -5,10 +5,12 @@
  */
 
 import { C, text, ground, win, ease } from './story-kit.js';
-import { playOf, sceneOf } from '../learn/engine/thorndata.js';
+import { playOf, sceneOf, substance } from '../learn/engine/thorndata.js';
 import { fitScenes, drawScene } from '../learn/table/kits/thorn-draw.js';
 import { drawPlay } from '../learn/table/kits/thorn-mol.js';
 import '../learn/engine/thorn-scenes/q1-chains.js';
+import '../learn/engine/thorn-scenes/q3-isomers.js';
+import { drawTwist, drawMirrorPair } from '../learn/table/kits/thorn-space.js';
 
 /** The bench painters draw in a fixture's frame; on the story plate one unit is one pixel. */
 export const PX = Object.freeze({ x: d => d, y: d => d, len: d => d, size: (k, min = 6.5) => Math.max(min, k) });
@@ -38,6 +40,27 @@ function chains(ctx, w, h, t) {
   else show('cyclohexane', 'Cyclohexane: six carbons, twelve hydrogens', win(t, 0.69, 0.79));
 }
 
+/* ---- q3-isomers: two skeletons of C₄H₁₀; a double bond that springs back; a mirror image that never matches ---- */
+function isomers(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.33) {
+    text(ctx, 'C₄H₁₀, joined two ways', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    ctx.globalAlpha = ease(win(t, 0.02, 0.12));
+    sceneIn(ctx, 'skel-butane', { x: 110, y: 160, w: 320, h: 220 }, { skeletal: true });
+    sceneIn(ctx, 'skel-2-methylpropane', { x: 530, y: 160, w: 320, h: 220 }, { skeletal: true });
+    ctx.globalAlpha = 1;
+  } else if (t < 0.67) {
+    text(ctx, '1,2-Dichloroethene: the far end will not turn', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    const k = win(t, 0.36, 0.64);
+    const a = (Math.PI / 2) * Math.sin(Math.PI * Math.min(1, k * 1.2));
+    drawTwist(ctx, PX, 480, 290, 120, substance('dichloroethene12').ends, Math.max(0, a));
+  } else {
+    text(ctx, 'CHFClBr and its mirror image', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    const turn = Math.min(11, Math.floor(win(t, 0.7, 0.95) * 12));
+    drawMirrorPair(ctx, PX, { x: 120, y: 110, w: 720, h: 360 }, substance('bromochlorofluoromethane').groups, turn, { from: turn, k: 1 });
+  }
+}
+
 /* ---- q2-unsat: bromine reaches the second pair; H–Br adds in two steps ---- */
 function unsat(ctx, w, h, t) {
   ground(ctx, w, h);
@@ -56,8 +79,8 @@ function unsat(ctx, w, h, t) {
 
 export const THORNMERE_SCENES = {
   'thorn-chains': chains,
-  'thorn-unsat': unsat
-  // q3-isomers
+  'thorn-unsat': unsat,
+  'thorn-isomers': isomers
   // q4-groups
   // q5-reactions
   // q6-polymers

@@ -154,6 +154,56 @@
           "explanation": "Chlorine attracts the pair it shares with hydrogen, so hydrogen is the electron-poor end of H–Cl. The double bond's second pair is the electron-rich site, and it moves to that hydrogen."
         }
       ]
+    },
+    "q3-isomers": {
+      "problems": [
+        {
+          "id": "q3-isomers#b1",
+          "quest": "q3-isomers",
+          "question": "Hexane, C₆H₁₄, and 2-methylpentane, C₆H₁₄, are structural isomers. Which is expected to boil at the higher temperature?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Hexane"
+            },
+            {
+              "id": "b",
+              "label": "2-Methylpentane"
+            },
+            {
+              "id": "c",
+              "label": "They boil at the same temperature"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The unbranched chain lies along its neighbours over more of its length, so the dispersion forces between its molecules are stronger and more heat is needed to separate them. Hexane boils at 68.7 °C, 2-methylpentane at 60.3 °C."
+        },
+        {
+          "id": "q3-isomers#b2",
+          "quest": "q3-isomers",
+          "question": "Which molecule is chiral?",
+          "options": [
+            {
+              "id": "a",
+              "label": "2-Bromobutane, CH₃–CHBr–CH₂–CH₃"
+            },
+            {
+              "id": "b",
+              "label": "2-Bromopropane, CH₃–CHBr–CH₃"
+            },
+            {
+              "id": "c",
+              "label": "Bromomethane, CH₃Br"
+            },
+            {
+              "id": "d",
+              "label": "1,1-Dibromoethane, CH₃–CHBr₂"
+            }
+          ],
+          "answer": "a",
+          "explanation": "In 2-bromobutane the second carbon holds H, Br, CH₃ and CH₂CH₃, four different groups, so its mirror image cannot be turned to match it. Each of the others has a carbon with two groups the same."
+        }
+      ]
     }
   }
 }

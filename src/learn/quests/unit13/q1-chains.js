@@ -117,7 +117,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const B = tbuildFixture('board', { x: 75, y: 31 }, { cols: 4, rows: 2, auto: false, lockBonds: true, maxOrder: 1, start: { sites: [1, 2], bonds: [[1, 2, 1]], h: { 1: 3, 2: 3 } }, title: 'Ethane, full', w: 100, h: 52 });
+    const B = tbuildFixture('board', { x: 75, y: 31 }, { cols: 4, rows: 2, auto: false, lockBonds: true, maxOrder: 1, start: { sites: [1, 2], bonds: [[1, 2, 1]], h: { 1: 3, 2: 3 } }, title: 'Model board', w: 100, h: 52 });
     const guess = () => GUESS[recall(QUEST_KEY)];
     return {
       id: 's3-third',
@@ -258,7 +258,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const B = tbuildFixture('board', { x: 60, y: 31 }, { cols: 3, rows: 2, auto: true, lock: true, maxOrder: 1, start: { sites: [0, 1, 2, 3, 4, 5], bonds: [[0, 1, 1], [1, 2, 1], [2, 5, 1], [5, 4, 1], [4, 3, 1]] }, title: 'Hexane, bent round', w: 90, h: 54 });
+    const B = tbuildFixture('board', { x: 60, y: 31 }, { cols: 3, rows: 2, auto: true, lock: true, maxOrder: 1, start: { sites: [0, 1, 2, 3, 4, 5], bonds: [[0, 1, 1], [1, 2, 1], [2, 5, 1], [5, 4, 1], [4, 3, 1]] }, title: 'Model board', w: 90, h: 54 });
     return {
       id: 's7-ring',
       title: 'Closing the Ring',
@@ -276,7 +276,7 @@ export const STAGES = [
         if (!(v > 0)) return { ok: false, notYet: true, msg: 'Type the number of hydrogen atoms.' };
         if (v === 12) return { ok: true };
         const r = buildRead(state.table, 'board');
-        if (r.rings) return { ok: false, msg: `With the two ends bonded the board draws ${r.nH} hydrogens, not ${v}.` };
+        if (r.rings) return { ok: false, msg: `With the two ends bonded, the hydrogens drawn on the board do not number ${v}.` };
         if (v === 14) return { ok: false, msg: 'Hexane holds 14 before its ends are bonded; the ends have not been bonded on the board yet.' };
         return { ok: false, msg: `Hexane on the board holds 14 hydrogens before its ends are bonded; ${v} is not what is left after.` };
       },

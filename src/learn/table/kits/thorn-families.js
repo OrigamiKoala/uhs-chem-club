@@ -4,6 +4,7 @@
  */
 
 // q3-isomers
+import './thorn-space.js';
 // q4-groups
 // q5-reactions
 // q6-polymers

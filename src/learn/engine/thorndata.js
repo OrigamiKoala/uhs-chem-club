@@ -74,12 +74,15 @@ export const SUBSTANCES = Object.freeze({
   naoh: { name: 'Sodium hydroxide', formula: 'NaOH', ene: false, ph: 13.0, ionic: true }
 });
 
-export const substance = id => SUBSTANCES[id] || null;
+/** Substances a later bench adds (its own file calls `addSubstances`), so no two builders edit the table above. */
+const MORE = new Map();
+export function addSubstances(table) { for (const [id, s] of Object.entries(table)) { if (SUBSTANCES[id]) throw new Error(`substance ${id} exists`); MORE.set(id, Object.freeze(s)); } }
+export const substance = id => SUBSTANCES[id] || MORE.get(id) || null;
 /** Does bromine water lose its colour with this substance? Only a carbon–carbon double bond (not benzene's ring) adds bromine. */
-export const bromineFades = id => Boolean(SUBSTANCES[id]?.ene);
+export const bromineFades = id => Boolean(substance(id)?.ene);
 /** The meter's reading, to one decimal. */
-export const phOf = id => Math.round((SUBSTANCES[id].ph + 1e-9) * 10) / 10;
-export const boilOf = id => SUBSTANCES[id].bp;
+export const phOf = id => Math.round((substance(id).ph + 1e-9) * 10) / 10;
+export const boilOf = id => substance(id).bp;
 
 /* ------------------------------------------------------------------ formulas */
 

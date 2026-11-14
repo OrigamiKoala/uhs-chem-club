@@ -10,7 +10,7 @@ import './heat-tour.js';
 const FIXTURES = {
   'thorn:tbuild': {
     title: 'Model board', dials: false,
-    text: 'A board of places where atoms can stand. Each C is a carbon atom, each H a hydrogen atom, and a line between two atoms is a bond. Tap a dashed ring to set a carbon there; tap between two carbons that stand side by side to change their bond from none to single to double; where carbons show a broken ring, tap a carbon to give it a hydrogen. A carbon holds four bonds and takes no more, so a new bond to a full carbon makes one of its hydrogens leave. The board has square corners only, so rings of three or five carbons cannot be drawn on it. Where there is a "Record" key, it keeps the molecule on the board in the strip at the side.'
+    text: 'A board of places where atoms can stand. Each C is a carbon atom, each H a hydrogen atom, and a line between two atoms is a bond. Tap a dashed ring to set a carbon there; tap between two carbons that stand side by side to change their bond from none to single to double; where carbons show a broken ring, tap a carbon to give it a hydrogen; where the hydrogens are drawn for you, tap a carbon to take it away. A carbon holds four bonds and takes no more, so a new bond to a full carbon makes one of its hydrogens leave. The board has square corners only, so rings of three or five carbons cannot be drawn on it. Where there is a "Record" key, it keeps the molecule on the board in the strip at the side.'
   },
   'thorn:tmol': {
     title: 'Electron view', dials: false,

@@ -24,6 +24,7 @@
 export const STAGE_STORY = {
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'q1-chains': { 1: 'The Fifth pumps black tar from under this swamp, and Vess wants to know what it is made of.' },
+  'q3-isomers': { 1: 'Two of the Fifth\'s drums carry the same formula, and only one of them feeds the plate works.' },
   'q2-unsat': { 1: 'The Fifth heats the tar until part of it changes, and Vess wants to know into what.' },
   /* ---- Lodestone: what is really in the Fifth's drums? ---- */
   'q1-dblock': { 1: 'The Fifth\'s manifest calls every drum iron salt; read iron\'s own electrons first.' },

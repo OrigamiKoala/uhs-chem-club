@@ -3,7 +3,8 @@
  *
  *   tbuild   carbons on a square lattice. Tap an empty place beside a carbon to add a carbon there (it bonds to the carbon next to it);
  *            tap between two neighbouring carbons to change their bond (none, single, double); on a `manual` board tap a carbon to add
- *            a hydrogen, and on an `auto` board the hydrogens that fill each carbon's four bonds are drawn for you. A carbon with four
+ *            a hydrogen, and on an `auto` board the hydrogens that fill each carbon's four bonds are drawn for you and a tap on a carbon
+ *            takes it away (with its bonds). A carbon with four
  *            bonds takes no more: a new bond to a full carbon makes one of its hydrogens leave. An optional formula line counts the
  *            atoms on the board; an optional Record key keeps each different molecule on a strip.
  *   tchoice  statements to tap; the one tapped is the answer.
@@ -116,6 +117,8 @@ function settleBuild(state) {
     const cs = new Set(carbonsOf(f));
     // Only a bond with a carbon at both ends counts (a dial between empty places is ignored, never read).
     const live = ([, i, j]) => cs.has(i) && cs.has(j);
+    // A carbon taken away takes its bonds with it, so a carbon set there later starts with none.
+    for (const i of p.known) if (!cs.has(i)) for (const e of E) if (e[1] === i || e[2] === i) f.dials[e[0]].value = 0;
     const used = i => E.reduce((s, e) => s + (live(e) && (e[1] === i || e[2] === i) ? Math.round(f.dials[e[0]].value) : 0), 0);
     // A carbon just added bonds to the carbon beside it (the one with most bonds to spare).
     for (const i of cs) {
@@ -196,8 +199,9 @@ function buildTaps(f) {
     const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2; const er = G.pitch * 0.2;
     zones.push({ x0: mx - er, x1: mx + er, y0: my - er, y1: my + er, dial: d, step: 1, wrap: true });
   }
-  // A carbon: one more hydrogen (manual boards).
+  // A carbon: one more hydrogen (manual boards), or taken away (boards that draw the hydrogens, unless the carbons are locked).
   if (!p.auto) for (const i of cs) { const a = G.at(i); zones.push({ x0: a.x - rr, x1: a.x + rr, y0: a.y - rr, y1: a.y + rr, dial: `h${i}`, step: 1 }); }
+  else if (!p.lock) for (const i of cs) { const a = G.at(i); zones.push({ x0: a.x - rr, x1: a.x + rr, y0: a.y - rr, y1: a.y + rr, dial: `c${i}`, value: 0 }); }
   // An empty place beside a carbon: a new carbon.
   for (const i of openPlaces(f)) { const a = G.at(i); zones.push({ x0: a.x - rr, x1: a.x + rr, y0: a.y - rr, y1: a.y + rr, dial: `c${i}`, value: 1 }); }
   return zones;

@@ -104,6 +104,28 @@ export const PRIMERS = {
       });
     }
   },
+  imforces: {
+    title: 'Attractions between molecules',
+    html: `<p>Molecules attract one another even though each has no overall charge. Electrons shift for a moment to one side of a molecule, and the next molecule's electrons shift in step, so the two attract: a dispersion force. The more of two molecules lie against each other, the stronger it is. A hydrogen bonded to oxygen is also attracted to an oxygen of the next molecule: a hydrogen bond, much stronger. To boil a liquid, these attractions must be overcome. Slide how much of two molecules lie side by side.</p>
+      ${slider('im-n', 'Length lying side by side', 1, 5, 1, 2)}<p id="im-v"></p>`,
+    wire(root) {
+      bind(root, ['im-n'], (v, set) => {
+        const n = v('im-n');
+        set('im-v', `${'▬'.repeat(n)}<br>${'▬'.repeat(n)}<br>More contact, stronger attraction, more heat needed to part them: ${['', 'weakest', 'weak', 'middling', 'strong', 'strongest'][n]}.`);
+      });
+    }
+  },
+  acidbase: {
+    title: 'Acids, bases and pH',
+    html: `<p>A proton is a hydrogen atom without its electron, H⁺. An acid gives a proton to water, making H₃O⁺ and lowering the pH below 7; a base takes a proton from water, leaving OH⁻ and raising the pH above 7. Pure water is pH 7. Slide which way the proton goes.</p>
+      ${slider('ab-n', 'Proton moves (−1 to water, +1 from water)', -1, 1, 1, 0)}<p id="ab-v"></p>`,
+    wire(root) {
+      bind(root, ['ab-n'], (v, set) => {
+        const n = v('ab-n');
+        set('ab-v', n < 0 ? 'The sample gave a proton to water: an acid, pH below 7.' : n > 0 ? 'The sample took a proton from water: a base, pH above 7.' : 'No proton moved: the pH stays at 7.');
+      });
+    }
+  },
   pairmove: {
     title: 'Electron-rich, electron-poor and the curved arrow',
     html: `<p>Electrons are negative. A place in a molecule with a pair of electrons to spare is electron-rich; an atom whose shared electrons have been pulled away from it is electron-poor. Opposite charges attract, so a pair moves from an electron-rich site to an electron-poor one.</p>
