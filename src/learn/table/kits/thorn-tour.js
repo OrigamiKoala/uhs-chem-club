@@ -22,7 +22,7 @@ const FIXTURES = {
   },
   'thorn:ttest': {
     title: 'Test rig', dials: false,
-    text: 'A holder for one sample, a key, and a window that shows a few of the sample\'s particles much enlarged. Lay a sample card in the holder and press the key: the window shows what happens to the particles, and the line under it says what was seen. The card keeps its result.'
+    text: 'A Sample slot for one card, a key, and a window that shows a few of the sample\'s particles much enlarged. Lay a sample card in the Sample slot and press the key: the window shows what happens to the particles, and the line under it says what was seen. The card keeps its result.'
   },
   'thorn:tchoice': {
     title: 'Your answer', dials: false,
@@ -31,7 +31,7 @@ const FIXTURES = {
 };
 
 const PIECES = {
-  'thorn:tcard': ['Sample cards', 'Each card stands for one sample. Drag a card into a holder or a slot, or tap the card and then the place; a card that has been tested prints what the test showed.']
+  'thorn:tcard': ['Sample cards', 'Each card stands for one sample. Drag a card into a Sample slot or an answer slot, or tap the card and then the place; a card that has been tested prints what the test showed.']
 };
 
 addTourText(FIXTURES, PIECES);

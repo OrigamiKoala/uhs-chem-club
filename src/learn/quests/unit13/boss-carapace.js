@@ -80,7 +80,7 @@ export const STAGES = [
       foes: FOE,
       encounter: { species: 'the carapace', act: 'Open Seam', intent: 'The Carapace\'s plates are sealed at the seams with three hydrocarbons.' },
       hints: [
-        'Lay a scraping\'s card in the holder and press "Add Bromine Water".',
+        'Lay a scraping\'s card in the Sample slot and press "Add Bromine Water".',
         'Two scrapings share one formula: compare what each does to the bromine water.',
         'Two hydrogens short of a full chain can mean a ring or a double bond, and only one gives bromine a pair to reach.'
       ],
@@ -183,7 +183,7 @@ export const STAGES = [
 
 const NOTES = {
   1: ['Tap a dashed ring to add a carbon; type your answer.'],
-  2: ['Drag a card into the holder to test it, then drag your answer into the slot.'],
+  2: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.'],
   3: ['Tap a carbon to answer.'],
   4: ['Tap an atom to answer.'],
   5: ['Tap a bond to answer.']

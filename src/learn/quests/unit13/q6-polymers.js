@@ -264,7 +264,7 @@ export const STAGES = [
     table: thornTable({ pieces: [], fixtures: [V7] }),
     hints: [
       'Tap a pair of electrons, then the atom it moves to, and press "Move Electrons".',
-      'Find the lone pair that nitrogen holds, and the carbon of the other molecule whose pairs are pulled toward oxygen.',
+      'Compare the spare pairs on nitrogen and on the oxygens, and where each carbon\'s shared pairs sit.',
       'This is the ester bench\'s reaction again, with a nitrogen pair in place of an oxygen pair.'
     ],
     check: arrowCheck,

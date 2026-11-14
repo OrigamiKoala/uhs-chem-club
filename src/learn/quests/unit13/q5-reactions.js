@@ -159,9 +159,9 @@ export const STAGES = [
         }
       }),
       hints: [
-        'Lay a card in the holder and press "Send In OH⁻"; only two of the four are in store.',
+        'Lay a card in the Sample slot and press "Send In OH⁻"; only two of the four are in store.',
         'Compare what stands round the carbon in the two that can be tested.',
-        'Count the CH₃ groups on the carbon bonded to bromine in each formula.'
+        'A CH₃ group is far larger than a hydrogen, so ask how much of the way in each carbon\'s neighbours fill.'
       ],
       check(state) {
         const order = state.table.zones.rail.order;
@@ -188,8 +188,8 @@ export const STAGES = [
     table: thornTable({ pieces: [], fixtures: [V4] }),
     hints: [
       'Tap a pair of electrons, then the atom it moves to, and press "Move Electrons".',
-      'Find the lone pairs on ethanol\'s oxygen, and the atom of the acid whose pairs are pulled toward oxygen.',
-      'A pair moves from an electron-rich site to an electron-poor carbon, and the C=O pair can move out onto its oxygen to make room.'
+      'Compare where each molecule holds spare pairs, and where each of the acid\'s shared pairs sits along its bond.',
+      'A pair moves from an electron-rich site to an electron-poor carbon, and the C=O pair can move out onto its oxygen so the carbon keeps four bonds.'
     ],
     check: arrowCheck,
     reward: {
@@ -265,7 +265,7 @@ export const STAGES = [
         zones: { slots: [T.slot], trays: [tray('add', 'Addition', 48), tray('sub', 'Substitution', 88), tray('cond', 'Condensation', 128)] }
       }),
       hints: [
-        'Lay a reaction card in the holder and press "Run Reaction".',
+        'Lay a reaction card in the Sample slot and press "Run Reaction".',
         'Watch which atoms join and which leave, and count the separate molecules before and after.',
         'Addition leaves nothing over; substitution swaps one group for another; condensation joins two molecules and lets a small one go.'
       ],
@@ -320,11 +320,11 @@ export const STAGES = [
 const NOTES = {
   1: ['Drag the card you choose into the slot.'],
   2: ['Tap an atom, then press the key.'],
-  3: ['Drag a card into the holder to test it, then along the rail.'],
+  3: ['Drag a card into the Sample slot to test it, then along the rail.'],
   4: ['Tap a pair of dots, then an atom, then press the key.'],
   5: ['Tap a bond to answer.'],
   6: ['Tap an atom, then press the key.'],
-  7: ['Drag a card into the holder, then into a tray.'],
+  7: ['Drag a card into the Sample slot, then into a tray.'],
   8: ['Tap a carbon to answer.']
 };
 applyNotes(STAGES, NOTES);

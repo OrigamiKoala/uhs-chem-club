@@ -50,7 +50,7 @@ function runTest(state, fid) {
   const f = state.fixtures[fid];
   const p = f.props;
   const card = seated(state, p.slot);
-  if (!card) return { noop: 'There is no sample in the holder.' };
+  if (!card) return { noop: 'There is no sample card in the Sample slot.' };
   if (p.only && !p.only.includes(card.props.sub)) {
     p.last = { n: p.last.n + 1, sub: null, res: null, refused: 'None of that sample is in store.' };
     return { stamp: {} };
@@ -68,13 +68,13 @@ function paintTest(ctx, f, state, b) {
   const r = testRead(state, f.id);
   title(ctx, f, F, b);
   const right = Math.max(9, f.runLabel.length * 1.9 + 3) + 3;
-  // The window shows the sample last tested while it is still in the holder.
+  // The window shows the sample last tested while it is still in the Sample slot.
   const showing = r.card && p.last.sub && r.card.props.sub === p.last.sub;
   const k = showing ? progress(`${f.id}:run`, b, p.last.n, T.seconds ? T.seconds(p.last.res, p.last.sub) : 3) : 0;
   T.paint(ctx, f, F, { sub: showing ? p.last.sub : null, res: showing ? p.last.res : null, k, b, loaded: r.card ? r.card.props.sub : null });
   if (p.last.refused && r.card && !showing) foot(ctx, f, F, p.last.refused, C.amber, right);
   else if (showing && k >= 1) foot(ctx, f, F, T.line(p.last.res), C.text, right);
-  else if (!r.card) foot(ctx, f, F, 'Lay a sample card in the holder', C.dust, right);
+  else if (!r.card) foot(ctx, f, F, 'Lay a sample card in the Sample slot', C.dust, right);
   else if (!showing) foot(ctx, f, F, `Press "${f.runLabel}"`, C.dust, right);
 }
 

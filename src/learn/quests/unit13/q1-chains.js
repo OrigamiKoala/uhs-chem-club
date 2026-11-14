@@ -65,7 +65,7 @@ export const STAGES = [
       widget,
       table: thornTable({ pieces: [], fixtures: [B] }),
       hints: [
-        'Tap a carbon to give it a hydrogen, and keep going until its ring closes.',
+        'Tap a carbon to give it a hydrogen, and keep going until its dashed outline turns solid.',
         'Compare the bonds each carbon already uses with the four it can form.',
         'Each carbon spends one bond on the other carbon, so count what is left of four on each.'
       ],

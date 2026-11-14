@@ -132,7 +132,7 @@ export const STAGES = [
         zones: { slots: [T.slot] }
       }),
       hints: [
-        'Lay each card in the holder and press "Heat".',
+        'Lay each card in the Sample slot and press "Heat".',
         'Compare how much of the two molecules lie against each other in the window, and where each boils.',
         'Ask how much of a ball-shaped molecule can lie against its neighbour, compared with a more stretched one.'
       ],
@@ -166,7 +166,7 @@ export const STAGES = [
         zones: { slots: [T.slot, { id: 'two', label: 'Two forms', at: { x: 22, y: 52 }, size: { w: 36, h: 12 } }] }
       }),
       hints: [
-        'Lay a card in the holder and press "Twist", then try the others.',
+        'Lay a card in the Sample slot and press "Twist", then try the others.',
         'Compare what the far end does with a single bond and with a double bond, and look at the form drawn beside it.',
         'Two forms are two molecules only if twisting cannot join them and the far end turned over looks different.'
       ],
@@ -266,7 +266,7 @@ export const STAGES = [
         zones: { slots: [M.slot, { id: 'chiral', label: 'Chiral', at: { x: 22, y: 52 }, size: { w: 36, h: 12 } }] }
       }),
       hints: [
-        'Lay a card in the holder and press "Next Turn" until the count stops changing, then try the next card.',
+        'Lay a card in the Sample slot and press "Next Turn" until the count stops changing, then try the next card.',
         'Compare the best count each card reached, which it prints once it has been turned.',
         'Look at the four groups round each carbon: are any two of them the same?'
       ],
@@ -319,11 +319,11 @@ export const STAGES = [
 const NOTES = {
   1: ['Tap a dashed ring to add a carbon; tap between two carbons to bond them.'],
   2: ['Tap a ring to add a carbon, a carbon to take it away; "Record" keeps the board\'s molecule.'],
-  3: ['Drag a card into the holder to test it; tap a statement to answer.'],
-  4: ['Drag a card into the holder to test it, then drag your answer into the slot.'],
+  3: ['Drag a card into the Sample slot to test it; tap a statement to answer.'],
+  4: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.'],
   5: ['Drag the card you choose into the slot.'],
   6: ['Press the key to turn the image; tap your answer.'],
-  7: ['Drag a card into the holder, then drag your answer into the slot.'],
+  7: ['Drag a card into the Sample slot, then drag your answer into the slot.'],
   8: ['Tap a carbon to answer.']
 };
 applyNotes(STAGES, NOTES);

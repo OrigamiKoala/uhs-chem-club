@@ -93,7 +93,7 @@ export const STAGES = [
       hints: [
         'Heat each card in the rig, then tap an atom of the ethanol drawing.',
         'Compare what the window draws between two ethanol molecules with what it draws for methoxymethane.',
-        'Look for the atom ethanol has that methoxymethane lacks: a hydrogen bonded to oxygen.'
+        'A hydrogen bond forms between a hydrogen bonded to oxygen on one molecule and an oxygen on the next.'
       ],
       check(state) {
         const r = molRead(state.table, 'mol');
@@ -157,7 +157,7 @@ export const STAGES = [
         zones: { slots: [T.slot] }
       }),
       hints: [
-        'Lay each card in the holder and press "Add to Water".',
+        'Lay each card in the Sample slot and press "Add to Water".',
         'Compare the meter and the window for sodium hydroxide with those for ethanol.',
         'A base raises the pH because hydroxide ions come free in the water; ask whether any did with ethanol.'
       ],
@@ -227,7 +227,7 @@ export const STAGES = [
         zones: { slots: [T.slot, { id: 'acid', label: 'The acid', at: { x: 22, y: 52 }, size: { w: 36, h: 12 } }] }
       }),
       hints: [
-        'Lay each card in the holder and press "Add to Water".',
+        'Lay each card in the Sample slot and press "Add to Water".',
         'Compare the three meter readings and what moves in each window.',
         'An acid gives a proton to water and lowers the pH below 7.'
       ],
@@ -318,11 +318,11 @@ export const STAGES = [
 ];
 
 const NOTES = {
-  1: ['Drag a card into the holder to test it; tap an atom to answer.'],
+  1: ['Drag a card into the Sample slot to test it; tap an atom to answer.'],
   2: ['Drag the card you choose into the slot.'],
-  3: ['Drag a card into the holder to test it; tap a statement to answer.'],
+  3: ['Drag a card into the Sample slot to test it; tap a statement to answer.'],
   4: ['Tap an atom to answer.'],
-  5: ['Drag a card into the holder to test it, then drag your answer into the slot.'],
+  5: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.'],
   6: ['Tap an atom, then press the key.'],
   7: ['Tap a pair of dots, then an atom, then press the key.'],
   8: ['Tap a hydrogen to answer.']

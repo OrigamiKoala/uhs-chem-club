@@ -160,7 +160,7 @@ export const STAGES = [
         zones: { slots: [T.slot, { id: 'reacts', label: 'Takes the colour out', at: { x: 22, y: 52 }, size: { w: 36, h: 14 } }] }
       }),
       hints: [
-        'Lay a card in the holder and press "Add Bromine Water", then try the other card.',
+        'Lay a card in the Sample slot and press "Add Bromine Water", then try the other card.',
         'In the window, compare where each molecule\'s pairs of electrons sit and what the bromine molecule does.',
         'A pair that lies beside the line between two atoms can be reached from outside; a pair on the line cannot.'
       ],
@@ -305,7 +305,7 @@ export const STAGES = [
         zones: { slots: [T.slot, { id: 'alkene', label: 'The alkene', at: { x: 20, y: 52 }, size: { w: 34, h: 12 } }] }
       }),
       hints: [
-        'Lay a jar\'s card in the holder and press "Add Bromine Water".',
+        'Lay a jar\'s card in the Sample slot and press "Add Bromine Water".',
         'Two jars carry the same formula: compare what each does to the bromine water.',
         'A chain can lose two hydrogens by closing into a ring or by forming a double bond, and only one of those gives bromine a pair to reach.'
       ],
@@ -329,12 +329,12 @@ export const STAGES = [
 const NOTES = {
   1: ['Tap a carbon to add a hydrogen to it.'],
   2: ['Drag the card you choose into the slot.'],
-  3: ['Drag a card into the holder to test it, then drag your answer into the slot.'],
+  3: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.'],
   4: ['Tap a pair of dots, then an atom, then press the key.'],
   5: ['Tap an atom, then press the key.'],
   6: ['Tap a dashed ring to add a carbon; tap between two carbons to change the bond.'],
   7: ['Tap a bond in the ring to measure it; tap a statement to answer.'],
-  8: ['Drag a card into the holder to test it, then drag your answer into the slot.']
+  8: ['Drag a card into the Sample slot to test it, then drag your answer into the slot.']
 };
 applyNotes(STAGES, NOTES);
 

@@ -223,7 +223,7 @@ export function mirrorRead(state, id) {
 function runMirror(state, fid) {
   const f = state.fixtures[fid];
   const { sub, groups, card } = mirrorSubject(state, f);
-  if (!groups) return { noop: 'There is no sample in the holder.' };
+  if (!groups) return { noop: 'There is no sample card in the Sample slot.' };
   const key = sub || 'fixed';
   const tried = f.props.tried[key] || [0];
   if (tried.length >= TETRA_TURNS.length) return { noop: 'Every one of the twelve turns has been tried.' };
@@ -243,7 +243,7 @@ function runMirror(state, fid) {
 function settleMirror(state) {
   for (const f of Object.values(state.fixtures)) {
     if (f.kind !== 'tmirror' || !f.props.holder) continue;
-    // A new card in the holder starts its image as the plain mirror image, with its own count of turns.
+    // A new card in the Sample slot starts its image as the plain mirror image, with its own count of turns.
     const { sub } = mirrorSubject(state, f);
     if (!sub || sub === f.props.seen) continue;
     f.props.seen = sub;
@@ -261,7 +261,7 @@ function paintMirror(ctx, f, state, b) {
   ctx.fillStyle = C.win; ctx.fillRect(F.x(rect.x), F.y(rect.y), F.len(rect.w), F.len(rect.h));
   ctx.strokeStyle = C.steel; ctx.strokeRect(Math.round(F.x(rect.x)) + 0.5, Math.round(F.y(rect.y)) + 0.5, Math.round(F.len(rect.w)), Math.round(F.len(rect.h)));
   const right = Math.max(9, f.runLabel.length * 1.9 + 3) + 3;
-  if (!r.groups) { say(ctx, 'A molecule and its mirror image', F.x(rect.x + rect.w / 2), F.y(rect.y + rect.h / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); foot(ctx, f, F, 'Lay a sample card in the holder', C.dust, right); return; }
+  if (!r.groups) { say(ctx, 'A molecule and its mirror image', F.x(rect.x + rect.w / 2), F.y(rect.y + rect.h / 2), F.size(1.8, 6), { align: 'center', color: C.dim }); foot(ctx, f, F, 'Lay a sample card in the Sample slot', C.dust, right); return; }
   const k = progress(`${f.id}:turn`, b, f.props.last.n, 1.4);
   drawMirrorPair(ctx, F, rect, r.groups, r.turn, { from: f.props.last.from, k });
   say(ctx, 'Molecule', F.x(rect.x + rect.w * 0.25), F.y(rect.y + 2.6), F.size(1.6, 6), { align: 'center', color: C.dust });
@@ -293,7 +293,7 @@ addTest('mirror', { title: 'Mirror rig', key: 'Next Turn', result: () => null, l
 addTourText({
   'thorn:tmirror': {
     title: 'Mirror rig', dials: false,
-    text: 'A carbon with four groups, and beside it the same molecule as seen in a mirror. Press "Next Turn" to turn the mirror image to the next of the twelve ways it can be turned; a group of the image that lands where the same group of the molecule stands is ringed in amber, and the line below counts them. Where there is a holder, lay a sample card in it first.'
+    text: 'A carbon with four groups, and beside it the same molecule as seen in a mirror. Press "Next Turn" to turn the mirror image to the next of the twelve ways it can be turned; a group of the image that lands where the same group of the molecule stands is ringed in amber, and the line below counts them. Where there is a Sample slot, lay a sample card in it first.'
   }
 }, {});
 
