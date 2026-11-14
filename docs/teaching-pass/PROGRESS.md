@@ -100,7 +100,7 @@ Plans only; nothing is built. Each file is a lesson plan for a first build to th
 | --- | --- | --- | --- | --- |
 | Quicklight (`unit11`, kinetics, AP Unit 5) | `worlds/unit11-quicklight.md` | 6 and a boss | 35 and 5 phases | initial-rates log; three-key plotter |
 | Lodestone (`unit12`, transition metals) | `worlds/unit12-lodestone.md` | 4 and a boss | 22 and 5 phases | crystal-field view |
-| Thornmere (`unit13`, organic chemistry) | `worlds/unit13-thornmere.md` | 5 and a boss | 28 and 5 phases | mirror |
+| Thornmere (`unit13`, organic chemistry) | `worlds/unit13-thornmere.md` (superseded: **built 2026-11-14** from `docs/plans/thornmere-world.md`, audit `docs/thornmere-audit.md`) | 6 and a boss | 48 and 5 phases | mirror rig, twist test, approach test |
 | Cinder Halo (`unit14`, nuclear chemistry) | `worlds/unit14-cinder-halo.md` | 4 and a boss | 24 and 5 phases | counter and shields; chain view |
 
 Open question for the owner: `docs/plans/world-plans.md` lists Lodestone as "Thermodynamics & Entropy"; its chart file and stage list say transition metals. The plan follows the chart.

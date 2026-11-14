@@ -4,7 +4,7 @@
 **Subject:** carbon compounds: chains and rings, double bonds, isomers, functional groups, how organic reactions happen as movements of electron pairs, and polymers. Beyond the AP exam throughout (owner decision 2026-11-11: followable by a 13-year-old, and "beyond the exam" appears nowhere in play text).
 **Structure:** 6 benches of 8 stages (48) + 1 boss (`boss-carapace`, 5 phases) = 53 stages, 7 quest modules.
 **Kit:** `thorn` (`src/learn/table/kits/thorn*.js`), extending the heat kit's cards, slots, trays, rails, plaques and markers. Planners and data in `src/learn/engine/thorndata.js`.
-**Status:** spec written 2026-11-14 (Phase 0). The build record is appended at the end as phases finish.
+**Status:** built 2026-11-14 (all six benches and the boss live). Build record at the end; per-stage audit in `docs/thornmere-audit.md`.
 
 Sources: `docs/teaching-pass/worlds/unit13-thornmere.md` (the plan session's five-bench, 28-stage plan), `docs/plans/learn-quests.md` World 13 (six quests of eight), `PRODUCT.md` "Building a Learn world", `docs/quests/q1-charge-gardens.md`, and the owner's note on this run. Where they disagree this spec says what it chose and why.
 
@@ -279,3 +279,23 @@ North: the drowned forest proper, bare snags 40 to 70 m tall standing in tar to 
 **Seen:** the eight `q2-unsat` tabletops were drawn to PNG in Node with the game's own `drawTable` (`tools/thornmere-stills.mjs`) and read. Nothing was seen in a browser, and nothing of the 3D site was seen at all.
 
 **Parted from the spec:** mound coordinates moved south and the landing mound was enlarged to 28 m so the ship lands (the plan table in 6.3 is superseded by `site-plan.js`); the pit is a dished floor with no ramp; `lib/workings.js` was not needed.
+
+### State at 2026-11-14, end of the world build (branch `world/unit13`)
+
+**Built on top of the slice:** `q1-chains`, `q3-isomers`, `q4-groups`, `q5-reactions`, `q6-polymers` (8 stages each) and `boss-carapace` (5 phases): 6 benches, 48 bench stages, 53 stages with the boss, all `live` in the chart. Each bench has its scenes file (`src/learn/engine/thorn-scenes/<quest>.js`), its two bank problems (and a worked problem on the two computational benches, `q1-chains#w` and `q6-polymers#w`), a lead line, a debrief story animation, glossary terms and recap primers. New kit families: `thorn-space.js` (the twist test on the rig and the `tmirror` mirror rig), `thorn-groups.js` (the NaOH clip), `thorn-react.js` (the approach test and the reaction viewer). New recap primers `imforces` and `acidbase`. The boss has an articulated arena body (`buildCarapace` in `boss-models.js`), a bench foe body (`foebody.js`), a portrait and lines (`foes.js`), a saga clue (`clue_thornmere_carapace`, "The Lined Plate") and a debrief.
+
+**Where the build parted from section 3:**
+
+- `q1` s7, `q3` s2 and `q6` s5 take a **typed** count, not a marker: a marker running over its whole range can be solved by trying each setting.
+- `q3` s4: the twist is a **test on the test rig** (a "Twist" key that turns the far end and lets go), not a dial; once a double bond has sprung back, the rig draws the form with the far end turned over beside it, so 1,1- and 1,2-dichloroethene are told apart by looking.
+- `q3` s6 and s7 run on one fixture, `tmirror`; s7 takes cards in a Sample slot and prints each card's best count ("best 4 of 4").
+- `q4` s1 accepts the O or the H of ethanol's –OH.
+- `q5` s3's cards print condensed formulas (CH₃Br … (CH₃)₃CBr): the CH₃ groups round the carbon are the evidence for the two that cannot be tested.
+- `q5` s5 has no "Replay"; the atoms that came from ethanol are ringed instead. `q5` s7's reaction viewer is a test on the rig ("Run Reaction") that counts separate molecules before and after.
+- `q6` s2's chain maker prints no running count; the drawn chain is the count.
+- The model board gained one opt-in-free behaviour inside the thorn kit: on boards that draw their own hydrogens, a tap on a carbon takes it away (needed to count isomers without Start Over, which would also wipe the record strip). Only Thornmere uses the kit.
+- `verify:arena` now measures the Coil and the Carapace bodies (its list stopped at eleven, which failed on the parent commit) and checks Thornmere's arena spot.
+
+**Site:** unchanged from the slice. It was built before the shared groundwork (`src/three/lib/cover.js`, `tools/lib/world-shape-checks.mjs`) reached this branch, so it keeps its own `thornmere/cover.js` and `tools/lib/thornmere/shape-checks.mjs`; moving it onto the shared layers is a follow-up, not done here, because both pass and a migration would touch a working world for no gain the checks can see.
+
+**Evidence:** every stage solved by `verify:bench` (pointer path, drag and two taps, seven viewports) and by script, and drawn to PNG in Node at 812 × 375 and 667 × 375 and read. No stage was played by a hand: a browser pass was refused by the session's permission check, per `CLAUDE.md`. Per-stage record: `docs/thornmere-audit.md`.

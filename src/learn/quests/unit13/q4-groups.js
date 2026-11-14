@@ -64,7 +64,7 @@ const ARROW7 = {
     { src: 'l:n:0', dst: 'hn2', msg: 'That hydrogen is already bonded to this nitrogen: the pair returned.' }
   ]
 };
-const V6 = tmolFixture('view', { x: 64, y: 31 }, { play: 'ethanoate-shift', mode: 'arrow', arrow: ARROW6, pairs: true, title: 'The ethanoate ion', w: 112, h: 56 });
+const V6 = tmolFixture('view', { x: 59, y: 31 }, { play: 'ethanoate-shift', mode: 'arrow', arrow: ARROW6, pairs: true, title: 'The ethanoate ion', w: 104, h: 56 });
 const V7 = tmolFixture('view', { x: 75, y: 31 }, { play: 'amine-water', mode: 'arrow', arrow: ARROW7, pairs: true, title: 'Methylamine and water', w: 120, h: 56 });
 
 function arrowCheck(state) {
@@ -144,7 +144,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const T = ttestFixture('rig', { x: 78, y: 30 }, { test: 'ph', w: 70, h: 48 });
+    const T = ttestFixture('rig', { x: 88, y: 22 }, { test: 'ph', w: 84, h: 42 });
     const guess = () => GUESS[recall(QUEST_KEY)];
     return {
       id: 's3-ph',
@@ -152,8 +152,8 @@ export const STAGES = [
       get prompt() { const g = guess(); return `What does ethanol do to the pH of water?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: thornTable({
-        pieces: [tcard('c-naoh', 'naoh', { x: 11, y: 12 }), tcard('c-eth', 'ethanol', { x: 11, y: 28 })],
-        fixtures: [T.fixture, tchoiceFixture('ans', 'Ethanol', { x: 131, y: 31 }, { options: ['Raises it', 'Leaves it at 7', 'Lowers it'], w: 34 })],
+        pieces: [tcard('c-naoh', 'naoh', { x: 12, y: 8 }), tcard('c-eth', 'ethanol', { x: 12, y: 23 })],
+        fixtures: [T.fixture, tchoiceFixture('ans', 'Ethanol', { x: 24, y: 48 }, { options: ['Raises it', 'Leaves it at 7', 'Lowers it'], w: 44 })],
         zones: { slots: [T.slot] }
       }),
       hints: [
@@ -252,7 +252,7 @@ export const STAGES = [
     title: 'Why It Lets Go',
     prompt: 'Ethanoic acid lost a proton, leaving a spare pair on one oxygen: which atom can that pair move to?',
     widget,
-    table: thornTable({ pieces: [], fixtures: [V6, plaqueFixture('en', 'Electronegativity', { x: 136, y: 20 }, ['O  3.4', 'C  2.6'], { w: 24 })] }),
+    table: thornTable({ pieces: [], fixtures: [V6, plaqueFixture('en', 'Electronegativity', { x: 131, y: 20 }, ['O  3.4', 'C  2.6'], { w: 34 })] }),
     hints: [
       'Tap an atom and press "Move Electrons": the charged oxygen\'s spare pair is the one that moves.',
       'Look at which atom has its shared pairs pulled away toward an oxygen.',

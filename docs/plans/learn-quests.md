@@ -1376,6 +1376,8 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 ### World 13 — Thornmere (`unit13`, organic chemistry): 6 quests, beyond AP throughout
 
+> **Built 2026-11-14.** The world as built differs from the list below (six benches of eight stages and the Carapace, with electron movement taught on every reaction bench): see `docs/plans/thornmere-world.md` and `docs/thornmere-audit.md`. The list below is kept as the original proposal.
+
 #### `q1-chains` · Carbon Chains · domain rig (model kit), naming card board
 1. Build CH₄ and C₂H₆. → **hydrocarbon, alkane**
 2. Find the formula pattern. *CₙH₂ₙ₊₂.*

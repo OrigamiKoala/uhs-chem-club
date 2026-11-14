@@ -26,7 +26,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 | **10** | **Brinewire** | Electrochemistry | Unit 9 (9.7–9.11), 4.9 | 6 + Boss | 50 | Cell kit (`cell.js`) | Live | `docs/plans/brinewire-world.md` |
 | **11** | **Quicklight** | Kinetics & Rate Laws | Unit 5 (5.1–5.11) | Charted | — | Kinetic kit | Planned | `docs/plans/learn-quests.md` |
 | **12** | **Lodestone** | Thermodynamics & Entropy | Unit 9 (9.1–9.6) | Charted | — | Thermo kit | Planned | `docs/plans/learn-quests.md` |
-| **13** | **Thornmere** | Organic & Polymers | Organic / Bio | Charted | — | Bio/Polymer kit | Planned | `docs/plans/learn-quests.md` |
+| **13** | **Thornmere** | Organic & Polymers | Beyond the exam (touches 2.5–2.7, 3.1, 3.1.A.5, 3.2.A.7, 8.6) | 6 + Boss | 53 | Thorn kit (`thorn.js`) | Live | `docs/plans/thornmere-world.md` |
 | **14** | **Cinder Halo** | Nuclear & AP Capstone | Nuclear / Integrated | Charted | — | Capstone | Planned | `docs/plans/learn-quests.md` |
 
 ---

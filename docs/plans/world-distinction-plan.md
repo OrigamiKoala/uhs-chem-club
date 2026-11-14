@@ -174,7 +174,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Brinewire | A tidal barrage: a concrete wall across the marsh, impounded brine one side, a drop the other | Along the crest, then down a long ramp to the foot | Gate houses on the crest, the cell gallery inside the wall, the switchyard cage at its foot | Dry late afternoon, long shadows off the wall |
 | Quicklight | A refinery packed tight on basalt under a standing storm | A grid of alleys under pipe racks | Blast bunkers banked with earth, reactor skirts, a control block | Storm dusk; lightning to the rod pylons is the weather |
 | Lodestone | A winding slot canyon in banded iron, descending to a bowl | One path down the canyon, bend after bend | Alcoves under overhangs in the canyon wall, open on the canyon side | Rust dusk, light only on the upper walls |
-| Thornmere (unbuilt) | To claim: must not be flat, a ring, or any landform above | | | |
+| Thornmere | An archipelago of pitch mounds in a tar lake, each higher than the last | A zigzag chain mound to mound over root ridges, with two side branches | Inside the trees: hollow stumps, a root vault, a fallen hollow trunk, a pit under a stump's roots | Grey daylight under a high dead canopy; mist on the tar |
 | Cinder Halo (unbuilt) | To claim | | | |
 
 ---
@@ -245,9 +245,16 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Bellows | | | | | | |
 | Lanternfall | | | | | | |
 | Tallow | | | | | | |
+| Thornmere (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:thornmere`) | not yet |
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Thornmere, 2026-11-14 (branch `world/unit13`).** Built new, not rebuilt: there was no site before. `world-shape.mjs`: bench
+ground 1.00 to 4.80 m (3.8 m), relief 6.40 m, housed 6 of 6 (R7 R8 R6 R7 R4 R7), no cloned coordinates. `perf-worlds.mjs`:
+172 draws, 150k triangles. It uses its own cover mask (`thornmere/cover.js`) and shape checks (`tools/lib/thornmere/`), written
+before the shared G2 and G3 layers reached its branch; moving onto them is a follow-up. Spec and build record:
+`docs/plans/thornmere-world.md` section 6 and 8.
 
 **Groundwork, 2026-11-13 (branch `site/kettle`).** G1 `src/three/lib/workings.js`, G2 `src/three/lib/cover.js`,
 G3 `tools/lib/world-shape-checks.mjs` are built; G4 was already done; G5 is the "Shared site layers" entry in
