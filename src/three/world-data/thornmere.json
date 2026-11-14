@@ -455,7 +455,7 @@
       "label": "Bench 5 - Making and Breaking",
       "structure": "fallen-trunk",
       "mound": "M5",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

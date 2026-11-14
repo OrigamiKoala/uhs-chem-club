@@ -8,6 +8,7 @@ import './thorn-space.js';
 // q4-groups
 import './thorn-groups.js';
 // q5-reactions
+import './thorn-react.js';
 // q6-polymers
 // boss-carapace
 export {};

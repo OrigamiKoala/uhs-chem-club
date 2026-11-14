@@ -254,6 +254,56 @@
           "explanation": "The O–H pair sits near oxygen, and the charge left on the –COO⁻ group is shared by two oxygens, so that proton leaves. A C–H pair sits nearly midway and stays."
         }
       ]
+    },
+    "q5-reactions": {
+      "problems": [
+        {
+          "id": "q5-reactions#b1",
+          "quest": "q5-reactions",
+          "question": "A hydroxide ion meets chloromethane, CH₃Cl. Which atom does its spare pair of electrons move to?",
+          "options": [
+            {
+              "id": "a",
+              "label": "The carbon"
+            },
+            {
+              "id": "b",
+              "label": "The chlorine"
+            },
+            {
+              "id": "c",
+              "label": "A hydrogen"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Chlorine attracts the pair it shares with carbon, so carbon is the electron-poor site. The hydroxide's pair moves to the carbon, and the C–Cl pair leaves with the chlorine as a chloride ion: a substitution."
+        },
+        {
+          "id": "q5-reactions#b2",
+          "quest": "q5-reactions",
+          "question": "Methanol and ethanoic acid react, and water is given off. What kind of reaction is it, and what is made?",
+          "options": [
+            {
+              "id": "a",
+              "label": "A condensation, making an ester"
+            },
+            {
+              "id": "b",
+              "label": "An addition, making an alkene"
+            },
+            {
+              "id": "c",
+              "label": "A hydrolysis, making an alcohol"
+            },
+            {
+              "id": "d",
+              "label": "A substitution, making a carboxylic acid"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Two molecules join through a new C–O link from the acid's carbon to the alcohol's oxygen while water leaves: a condensation reaction, and the product, methyl ethanoate, is an ester."
+        }
+      ]
     }
   }
 }

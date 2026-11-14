@@ -30,8 +30,12 @@ export const TERMS = [
   { id: 'alcohol', term: 'alcohol', gloss: 'a carbon chain carrying an –OH group', quest: 'q4-groups', stage: 1, re: /\balcohols?\b/i },
   { id: 'carbonyl', term: 'carbonyl group', gloss: 'a carbon double-bonded to an oxygen, C=O', quest: 'q4-groups', stage: 4, re: /\bcarbonyl\b/i },
   { id: 'carboxylic-acid', term: 'carboxylic acid', gloss: 'a molecule with the group –COOH, which gives a proton to water', quest: 'q4-groups', stage: 5, re: /\bcarboxylic acids?\b/i },
-  { id: 'amine', term: 'amine', gloss: 'a carbon chain with a nitrogen bonded into it, whose lone pair takes a proton', quest: 'q4-groups', stage: 7, re: /\bamines?\b/i }
+  { id: 'amine', term: 'amine', gloss: 'a carbon chain with a nitrogen bonded into it, whose lone pair takes a proton', quest: 'q4-groups', stage: 7, re: /\bamines?\b/i },
   // q5-reactions
+  { id: 'substitution', term: 'substitution reaction', gloss: 'a reaction in which one group arrives at a carbon and another leaves it', quest: 'q5-reactions', stage: 2, re: /\bsubstitution\b/i },
+  { id: 'ester', term: 'ester', gloss: 'the product of a carboxylic acid and an alcohol, joined by a C–O link', quest: 'q5-reactions', stage: 5, re: /\besters?\b/i },
+  { id: 'condensation', term: 'condensation reaction', gloss: 'a reaction that joins two molecules while a small one, often water, leaves', quest: 'q5-reactions', stage: 5, re: /\bcondensation\b/i },
+  { id: 'hydrolysis', term: 'hydrolysis', gloss: 'breaking a link by adding water (or hydroxide) back across it', quest: 'q5-reactions', stage: 6, re: /\bhydrolysis\b/i }
   // q6-polymers
 ];
 
@@ -66,7 +70,8 @@ export const NEEDS = {
   // q4-groups
   'q4-groups:1': ['imforces'],
   'q4-groups:2': ['acidbase'],
-  'q4-groups:4': ['pairmove']
+  'q4-groups:4': ['pairmove'],
   // q5-reactions
+  'q5-reactions:1': ['pairmove']
   // q6-polymers
 };

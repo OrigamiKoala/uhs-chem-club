@@ -11,6 +11,7 @@ import { drawPlay } from '../learn/table/kits/thorn-mol.js';
 import '../learn/engine/thorn-scenes/q1-chains.js';
 import '../learn/engine/thorn-scenes/q3-isomers.js';
 import '../learn/engine/thorn-scenes/q4-groups.js';
+import '../learn/engine/thorn-scenes/q5-reactions.js';
 import { drawTwist, drawMirrorPair } from '../learn/table/kits/thorn-space.js';
 
 /** The bench painters draw in a fixture's frame; on the story plate one unit is one pixel. */
@@ -78,6 +79,22 @@ function groups(ctx, w, h, t) {
   }
 }
 
+/* ---- q5-reactions: substitution; an ester made; an ester broken ---- */
+function reactions(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const rect = { x: 200, y: 100, w: 560, h: 330 };
+  if (t < 0.33) {
+    text(ctx, 'Hydroxide and bromoethane', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'sub-oh', rect, ease(win(t, 0.03, 0.3)));
+  } else if (t < 0.67) {
+    text(ctx, 'Ethanoic acid and ethanol make an ester', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'ester-make', rect, ease(win(t, 0.36, 0.64)));
+  } else {
+    text(ctx, 'Hydroxide breaks the ester link', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'ester-break', rect, ease(win(t, 0.7, 0.93)));
+  }
+}
+
 /* ---- q2-unsat: bromine reaches the second pair; H–Br adds in two steps ---- */
 function unsat(ctx, w, h, t) {
   ground(ctx, w, h);
@@ -98,7 +115,8 @@ export const THORNMERE_SCENES = {
   'thorn-chains': chains,
   'thorn-unsat': unsat,
   'thorn-isomers': isomers,
-  'thorn-groups': groups
+  'thorn-groups': groups,
+  'thorn-reactions': reactions
   // q4-groups
   // q5-reactions
   // q6-polymers

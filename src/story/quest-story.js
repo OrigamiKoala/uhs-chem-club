@@ -56,6 +56,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the liquid eating the drums is ethanoic acid, a carboxylic acid, and the Fifth keeps it beside an alcohol.'
   },
+  'unit13/q5-reactions': {
+    scene: 'thorn-reactions',
+    beats: [
+      { to: 0.32, say: 'Hydroxide\'s pair moved to the carbon that bromine had left short of electrons, and the bromine left: one in, one out.' },
+      { to: 0.66, say: 'Ethanol\'s oxygen pair moved to the acid\'s C=O carbon, and water left: the two were joined into an ester.' },
+      { to: 0.96, say: 'Hydroxide\'s pair at that same carbon broke the link again: what water leaves, water can undo.' }
+    ],
+    filed: 'Filed: the Fifth joins an acid and an alcohol into ester links by losing water, so water can break those links.'
+  },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',
