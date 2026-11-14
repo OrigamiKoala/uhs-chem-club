@@ -91,5 +91,30 @@ export const PRIMERS = {
         set('io-v', `<p>Electrons kept: ${dots}</p><p>Charge = protons − electrons = 3 − ${3 - n} = <strong>${n ? '+' + n : '0'}</strong> ${n ? '(an ion)' : '(an atom)'}</p>`);
       });
     }
+  },
+  /* Thornmere (unit13): the recaps its benches assume, from Ligar and from the Charge Gardens. */
+  fourbonds: {
+    title: 'Covalent bonds and carbon',
+    html: `<p>A covalent bond is a pair of electrons shared by two atoms, drawn as a line. A carbon atom has four valence electrons and forms four bonds; a hydrogen atom forms one. Slide how many of a carbon's bonds go to other carbons.</p>
+      ${slider('fb-n', 'Bonds to other carbons', 0, 4, 1, 1)}<p id="fb-v"></p>`,
+    wire(root) {
+      bind(root, ['fb-n'], (v, set) => {
+        const n = v('fb-n');
+        set('fb-v', `Bonds left for hydrogen atoms: 4 − ${n} = <strong>${4 - n}</strong>`);
+      });
+    }
+  },
+  pairmove: {
+    title: 'Electron-rich, electron-poor and the curved arrow',
+    html: `<p>Electrons are negative. A place in a molecule with a pair of electrons to spare is electron-rich; an atom whose shared electrons have been pulled away from it is electron-poor. Opposite charges attract, so a pair moves from an electron-rich site to an electron-poor one.</p>
+      <p>A curved arrow shows one pair of electrons moving: it starts at the pair and ends at the atom the pair moves to. Slide how strongly the other atom attracts the shared pair.</p>
+      ${slider('pm-n', 'Attraction of atom B', 0, 4, 1, 2)}<p id="pm-v"></p>`,
+    wire(root) {
+      bind(root, ['pm-n'], (v, set) => {
+        const n = v('pm-n');
+        const left = '&nbsp;'.repeat(2 + n * 3);
+        set('pm-v', `A ${left}<strong>:</strong>${'&nbsp;'.repeat(14 - n * 3)} B &nbsp; ${n > 2 ? 'The pair sits near B, so A is electron-poor.' : n < 2 ? 'The pair sits near A, so B is electron-poor.' : 'The pair is shared evenly.'}`);
+      });
+    }
   }
 };

@@ -155,6 +155,14 @@ export const DESTINATIONS = {
       atmo: '#b0705a', atmoStrength: 0.5, seed: [3.7, 6.1, 1.4]
     }
   },
+  thornmere: {
+    key: 'thornmere', name: 'Thornmere', hash: '#/learn/unit13',
+    descent: 'Descending to the landing mound',
+    planet: {
+      kind: 'volcanic', colors: ['#0e0e0c', '#2a2a24', '#4a4a3c', '#6b6e5a'],
+      atmo: '#9a9c8c', atmoStrength: 0.5, seed: [5.1, 2.7, 8.3]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

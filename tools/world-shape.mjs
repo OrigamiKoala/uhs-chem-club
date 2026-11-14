@@ -23,7 +23,7 @@ const THREE = await import('three');
 const WORLDS = {
   tallow: 'TallowWorld', lanternfall: 'LanternfallWorld', ligar: 'LigarWorld', bellows: 'BellowsWorld',
   ember: 'EmberReachWorld', mirrowen: 'MirrowenWorld', kettle: 'KettleWorld', teeter: 'TeeterWorld',
-  verdigris: 'VerdigrisWorld', brinewire: 'BrinewireWorld', quicklight: 'QuicklightWorld', lodestone: 'LodestoneWorld'
+  verdigris: 'VerdigrisWorld', brinewire: 'BrinewireWorld', quicklight: 'QuicklightWorld', lodestone: 'LodestoneWorld', thornmere: 'ThornmereWorld'
 };
 
 const pick = process.argv.slice(2).filter(a => !a.startsWith('-'));

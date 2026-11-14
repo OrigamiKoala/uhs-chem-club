@@ -312,6 +312,7 @@ const { VerdigrisWorld } = await import('../src/three/verdigris.js');
 const { BrinewireWorld } = await import('../src/three/brinewire.js');
 const { QuicklightWorld } = await import('../src/three/quicklight.js');
 const { LodestoneWorld } = await import('../src/three/lodestone.js');
+const { ThornmereWorld } = await import('../src/three/thornmere.js');
 ok('every Ember Reach quest is a tabletop: none plays the old calorimeter');
 
 
@@ -790,7 +791,7 @@ console.log('The foes — spoil standing in the wells\n');
 
   for (const [label, key, World] of [
     ['Tallow', 'tallow', TallowWorld], ['Ligar', 'ligar', LigarWorld], ['Lanternfall', 'lanternfall', LanternfallWorld],
-    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld], ['Teeter', 'teeter', TeeterWorld], ['Verdigris', 'verdigris', VerdigrisWorld], ['Brinewire', 'brinewire', BrinewireWorld], ['Quicklight', 'quicklight', QuicklightWorld], ['Lodestone', 'lodestone', LodestoneWorld]
+    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld], ['Mirrowen', 'mirrowen', MirrowenWorld], ['Kettle', 'kettle', KettleWorld], ['Teeter', 'teeter', TeeterWorld], ['Verdigris', 'verdigris', VerdigrisWorld], ['Brinewire', 'brinewire', BrinewireWorld], ['Quicklight', 'quicklight', QuicklightWorld], ['Lodestone', 'lodestone', LodestoneWorld], ['Thornmere', 'thornmere', ThornmereWorld]
   ]) {
     const proto = World.prototype;
     const baked = proto.bakeStatics;
@@ -1190,7 +1191,7 @@ console.log('The foes — spoil standing in the wells\n');
   const { chromeReserve } = await import('../src/learn/engine/lean.js');
   const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
   const { allQuests } = await import('../src/learn/curriculum.js');
-  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld, unit08: TeeterWorld, unit09: VerdigrisWorld, unit10: BrinewireWorld, unit11: QuicklightWorld, unit12: LodestoneWorld };
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld, unit06: MirrowenWorld, unit07: KettleWorld, unit08: TeeterWorld, unit09: VerdigrisWorld, unit10: BrinewireWorld, unit11: QuicklightWorld, unit12: LodestoneWorld, unit13: ThornmereWorld };
   const worlds = new Map();
   const worldFor = unit => {
     if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }
