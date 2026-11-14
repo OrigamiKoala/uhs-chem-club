@@ -1,6 +1,6 @@
 # World distinction plan: eleven worlds that are different places
 
-**Status:** plan written 2026-11-13. No world rebuilt yet. Progress is tracked in section 9.
+**Status:** plan written 2026-11-13. Groundwork and Kettle (the pilot) are built and measured; the owner has not yet seen Kettle. Progress is tracked in section 9.
 **Owner's brief:** the walkable worlds read as one world in different colours. Ligar is the only one that
 is right: its terrain is its own, and its benches are found inside the quarry's workings and the mine's
 chambers. Every other world is too simple, and its benches are furniture standing on open ground.
@@ -168,7 +168,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Bellows | No ground: platforms at several levels round gasholders, over a cloud sea | Catwalks and ramps between platforms, open drop on both sides | Inside gasholder skirts, the compressor tower's base, a cold box; under moored bladders | High white sun, dark zenith |
 | Ember Reach | The inside wall of a caldera, stepping down toward a lava lake | A switchback road down the wall | Galleries cut into the caldera wall with one side open to the lake; the turbine hall | Ochre fume; the lake lights the rock from below |
 | Mirrowen | A harbour: quays, a dry dock sunk below the waterline, moored hulls, sea ice to the north | Along quays, over gangways and lock gates | Aboard hulls (holds, deckhouses), boathouses on piles, the dry dock floor | Cold white morning haze |
-| Kettle | One foundry building the size of the site; a slag tip outside | Through the building's bays, charge end to tapping end | The building itself: casting bays, the charge floor up a ramp, the tapping pit, a control cabin | Indoors: light shafts through the roof, one furnace source |
+| Kettle (built 2026-11-13) | One foundry building the size of the site, floors at five levels inside it; a slag tip and an ore stock outside | Up one crane aisle from the charge door to the cast house, bays opening off it, two ramps up and two down | The building itself: stores, scale bay, control cabin on a plinth, sump cellar, charge bank up a ramp, pickling bay, tapping pit, refining bay | Indoors under a cover mask: shafts through louvred bands high in the west walls and the charge door, one furnace source |
 | Teeter | A hillside of salt terraces: pans stepping down a slope, brine spilling pan to pan | Down the dikes and stairs-as-ramps, top pan to bottom | Weir houses and sluice chambers built into each terrace wall | Bright pale afternoon, evaporation shimmer |
 | Verdigris | A drowned masonry fort in a reed swamp, sightlines under 40 m | A branching boardwalk between towers, never straight for long | Tower rooms, vaulted cisterns, a flooded gatehouse | Low green-grey overcast, thick fog |
 | Brinewire | A tidal barrage: a concrete wall across the marsh, impounded brine one side, a drop the other | Along the crest, then down a long ramp to the foot | Gate houses on the crest, the cell gallery inside the wall, the switchyard cage at its foot | Dry late afternoon, long shadows off the wall |
@@ -233,8 +233,8 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 | World | Spec | Ground | Hosts | Plant and vista | Checks | Owner has seen it |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Groundwork G1 to G5 | | | | | | |
-| Kettle | | | | | | |
+| Groundwork G1 to G5 | n/a | n/a | n/a | n/a | 2026-11-13 (G1 to G5 built; see below) | n/a |
+| Kettle | 2026-11-13 | 2026-11-13 | 2026-11-13 (8 of 8 housed) | 2026-11-13 | 2026-11-13 (`verify:kettle` rewritten) | not yet |
 | Lodestone | | | | | | |
 | Teeter | | | | | | |
 | Verdigris | | | | | | |
@@ -248,6 +248,13 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Groundwork, 2026-11-13 (branch `site/kettle`).** G1 `src/three/lib/workings.js`, G2 `src/three/lib/cover.js`,
+G3 `tools/lib/world-shape-checks.mjs` are built; G4 was already done; G5 is the "Shared site layers" entry in
+`docs/engineering/engine-and-worlds.md`. Ligar is unchanged: its plan outputs (walls, colliders, holes, cover
+boxes, ring, routes) compare identical before and after, its cover shader text hashes the same,
+`verify:ligar` is green and `perf-worlds.mjs ligar` prints 566 draws and 867k triangles as before.
+Kettle then used all of it: `makeCover` (17 boxes, 4 openings) and the workings opt-ins (`roof`, `outdoorDoors`, `pass: false`).
 
 ---
 
@@ -266,3 +273,11 @@ and why.
   the tiers in section 7 are the estimate of relative size.
 - **Lore.** A changed landform must still match the world's `place`, its foes and its story lines
   (`docs/story/bible.md`). Brinewire and Verdigris change the most.
+
+**Kettle, 2026-11-13 (branch `site/kettle`).** Built as the row said, with three departures, each written into the row above:
+(1) the light shafts come through louvred bands high in the west walls and through the charge door, not through the roof,
+because the built sky's sun stands 25 degrees up in the west-south-west and a roof slot's light would land on a wall;
+(2) a second closed heap, the ore stock, stands east of the works; (3) the bench housing is eight named bays
+(the row's "casting bays" are the stores, scale, pickling and refining bays). Measurements and the owner's viewing list:
+`docs/plans/kettle-world.md` sections 11.10 to 11.12. For the next world: the shared layers held without change after the
+pilot's opt-ins; the things that cost time were ramps (entered only at their ends), the arena's clear ring, and door jambs.

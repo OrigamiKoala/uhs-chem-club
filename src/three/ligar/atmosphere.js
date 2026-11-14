@@ -27,6 +27,7 @@
  */
 
 import * as THREE from 'three';
+import { coverLightChunks as sharedCoverLightChunks } from '../lib/cover.js';
 import { createPlanetMaterial } from '../materials/celestial.js';
 import { SKY_RENDER_ORDER } from '../sky-order.js';
 
@@ -481,19 +482,16 @@ const LIGAR_COVER_PARS = /* glsl */ `
  * replace `#include <lights_fragment_begin>` and `#include <lights_fragment_end>`.
  */
 export function coverLightChunks() {
-  const begin = THREE.ShaderChunk.lights_fragment_begin
-    .replace('IncidentLight directLight;', `IncidentLight directLight;
-      #ifdef USE_FOG
+  // The chunk patch itself is the shared one (`lib/cover.js`, lifted from here); what is Ligar's is the test.
+  return sharedCoverLightChunks({
+    declare: `#ifdef USE_FOG
         float lgCoverK = ligarCover(vFogWorld);
       #else
         float lgCoverK = 0.0;
-      #endif`)
-    .replace('getDirectionalLightInfo( directionalLight, directLight );', `getDirectionalLightInfo( directionalLight, directLight );
-        directLight.color *= 1.0 - lgCoverK;`);
-  const end = THREE.ShaderChunk.lights_fragment_end + `
-    reflectedLight.indirectDiffuse *= 1.0 - lgCoverK;
-    reflectedLight.indirectSpecular *= 1.0 - lgCoverK;`;
-  return { begin, end };
+      #endif`,
+    sun: 'lgCoverK',
+    sky: 'lgCoverK'
+  });
 }
 
 /** Replace a material's fog with Ligar's air. Chains an existing onBeforeCompile. */

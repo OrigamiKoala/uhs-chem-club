@@ -19,6 +19,7 @@
 import { installDomShim } from './lib/dom-shim.mjs';
 installDomShim({ tier: 'T4' });
 const THREE = await import('three');
+const { housing, benchGround, marksOf, layoutKey } = await import('./lib/world-shape-checks.mjs');
 
 const WORLDS = {
   tallow: 'TallowWorld', lanternfall: 'LanternfallWorld', ligar: 'LigarWorld', bellows: 'BellowsWorld',
@@ -28,7 +29,6 @@ const WORLDS = {
 
 const pick = process.argv.slice(2).filter(a => !a.startsWith('-'));
 const names = pick.length ? pick.filter(n => WORLDS[n]) : Object.keys(WORLDS);
-const xz = p => [p[0], p[p.length - 1]];
 const layouts = {};
 
 console.log('world        benches  ground (m)       relief (m)  housed  housing per bench');
@@ -41,17 +41,11 @@ for (const name of names) {
     console.log(`${name.padEnd(12)} failed to build: ${String(err.message).split('\n')[0]}`);
     continue;
   }
-  world.scene.updateMatrixWorld(true);
-  const bodies = [];
-  world.scene.traverse(o => {
-    if (o.isMesh && o.geometry?.attributes?.position && o !== world.sky && !/sky|dome|cloud|haze/i.test(o.name || '')) bodies.push(o);
-  });
-
   const sites = world.data.sites;
-  const marks = sites.map(s => xz(s.approachPos || s.pos));
-  layouts[name] = sites.map(s => xz(s.pos).map(Math.round).join(',')).sort().join(' ');
+  const marks = marksOf(world);
+  layouts[name] = layoutKey(world.data);
 
-  const ground = marks.map(([x, z]) => world.getTerrainHeight(x, z));
+  const { heights: ground } = benchGround(world);
   const sp = Array.isArray(world.data.spawn) ? world.data.spawn : world.data.spawn.pos;
   let lo = Infinity, hi = -Infinity;
   for (const [x, z] of marks) {
@@ -61,23 +55,10 @@ for (const name of names) {
     }
   }
 
-  const ray = new THREE.Raycaster();
-  let housed = 0;
-  const housing = marks.map(([x, z], i) => {
-    const eye = new THREE.Vector3(x, ground[i] + 1.6, z);
-    ray.far = 14;
-    ray.set(eye, new THREE.Vector3(0, 1, 0));
-    const roof = ray.intersectObjects(bodies, false).length > 0;
-    ray.far = 12;
-    let closed = 0;
-    for (let k = 0; k < 8; k++) {
-      const a = k * Math.PI / 4;
-      ray.set(eye, new THREE.Vector3(Math.sin(a), 0, Math.cos(a)));
-      if (ray.intersectObjects(bodies, false).length) closed++;
-    }
-    if (roof && closed >= 4) housed++;
-    return (roof ? 'R' : '-') + closed;
-  });
+  // The measurements themselves are the ones the rebuilt worlds' verify scripts hold (`lib/world-shape-checks.mjs`).
+  const rows = housing(world, THREE);
+  const housed = rows.filter(r => r.housed).length;
+  const housingCodes = rows.map(r => r.code);
 
   console.log(
     name.padEnd(12),
@@ -85,7 +66,7 @@ for (const name of names) {
     `${Math.min(...ground).toFixed(2)} to ${Math.max(...ground).toFixed(2)}`.padEnd(16),
     (hi - lo).toFixed(2).padStart(10), ' ',
     `${housed}/${sites.length}`.padEnd(7),
-    housing.join(' ')
+    housingCodes.join(' ')
   );
   world.dispose?.();
 }

@@ -109,12 +109,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.5,
     species: 'the undertow'
   },
-  // On the open ground in front of the blast furnace (`world-data/kettle.json` keeps this ground open; `verify:kettle` holds the two together).
+  // On the cast house floor, inside the works, with the furnace's front behind it (`world-data/kettle.json` keeps this floor open;
+  // `verify:kettle` holds the two together).
   'boss-golem': {
     worldId: 'unit07',
-    playerPos: [0, 1.6, -44],
-    lookAtPos: [0, 1.6, -60],
-    bossPos: [0, 0, -60],
+    playerPos: [0, 1.6, -40.5],
+    lookAtPos: [0, 1.6, -54.5],
+    bossPos: [0, 0, -54.5],
     scale: 1.4,
     species: 'recipe golem'
   },

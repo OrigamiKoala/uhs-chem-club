@@ -23,7 +23,7 @@ import {
 } from './thornmere/atmosphere.js';
 import { makeThornmereField, buildThornmereTerrainGeometry } from './thornmere/terrain.js';
 import { shoreColliders, coverBoxes } from './thornmere/site-plan.js';
-import { createCover } from './lib/cover.js';
+import { createCover } from './thornmere/cover.js';
 import { buildLampPost, buildLandingPad, buildCarapaceGate, buildTar, buildVista } from './thornmere/plant.js';
 import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './thornmere/stations.js';

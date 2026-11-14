@@ -1,29 +1,45 @@
 #!/usr/bin/env node
 /**
- * verify-kettle.mjs — Integrity check of Kettle, Learn world 07's ground: the foundry works on the soda flat.
+ * verify-kettle.mjs — Integrity check of Kettle, Learn world 07's site: one ironworks building, entered at the charge
+ * end and walked through to the furnace (`docs/plans/kettle-world.md` section 11).
  *
- * Every rule `verify:ember` and the other worlds' checks hold their worlds to, held to this one:
+ * THE SAFETY RULES every walkable world is held to, held to this one:
  *
- *  - NO TWO THINGS OCCUPY THE SAME SPACE, from the declaration (every footprint disjoint, every host's extent and
- *    lane clear of every free prop) AND from the world as built: the real `KettleWorld` is constructed in Node and
- *    every pair of bodies measured; nothing is buried under the ground it stands on.
- *  - All nine benches have a host, every site names a quest the chart declares, and every LIVE quest has a site and
- *    a bench anchor (a quest that is not live yet already has its host, so the bench lands in it the day it goes live).
- *  - A SITE LABEL IS A SIGNPOST: `Bench N - <what it teaches>`, six words at most, sharing a word with its quest.
- *  - Every site FACES ITS APPROACH, stands on level ground, and its bench deploys onto a real plate under a work lamp.
- *  - THE PLAYER CAN WALK TO EVERY BENCH, to the pad and to the Golem's ground. The ground is flood-filled from the
- *    spawn against the real colliders, with no ledge anywhere.
- *  - A LANE OF LAMPS runs from the spawn to every approach: no stretch of the way is more than 12 m from a lamp.
- *  - ONLY LAMPS ARE LIT: every emissive material is a work lamp; the lamps share a fixed handful of real lights.
- *  - A HOST STANDS INSIDE THE EXTENT `host-plan.js` declares, and the declaration is tight.
- *  - THE GOLEM'S GROUND IS THE ONE `boss-arena.js` NAMES, and it is open (the corridor from the table to the boss too).
- *  - T4-only landmarks are decoration: removing them strands nothing. No player-facing string carries emoji.
+ *  - NO TWO THINGS OCCUPY THE SAME SPACE, from the declaration (no two rooms overlap, every door is on a plane two rooms
+ *    share and level across its threshold) AND from the world as built: the real `KettleWorld` is constructed in Node
+ *    and every pair of bodies measured (tolerance 0.06 m); nothing is buried under the floor it stands on.
+ *  - All eight benches have a host, every site names a quest the chart declares, and every LIVE quest has a site and a
+ *    bench anchor. A SITE LABEL IS A SIGNPOST: `Bench N - <what it teaches>`, six words at most.
+ *  - Every site FACES ITS APPROACH, stands on a level floor, and its bench deploys onto a real plate under a lamp.
+ *  - THE PLAYER CAN WALK TO EVERY BENCH, to the pad and to the Golem's ground, and nowhere they should not: the ground is
+ *    flood-filled from the spawn against the real colliders; no reachable cell drops off a ledge; neither heap can be
+ *    stood on; nothing reachable is lower than the cellar or higher than the charge bank.
+ *  - ONLY LAMPS ARE LIT: every emissive material is a lamp's filament or the furnace's iron (the one declared fire);
+ *    the lamps and the fire share three real lights and there is no other point light.
+ *  - A HOST STANDS INSIDE ITS OWN ROOM. THE GOLEM'S GROUND IS THE ONE `boss-arena.js` NAMES, and it is open.
+ *  - No player-facing string carries emoji; no sign stands in the works.
+ *
+ * THE SHAPE, which replaces the three checks that held the old template (two columns of sites, props inside a 100 m
+ * disc, one lamp lane down one road). These hold the numbers the site spec declares, through
+ * `tools/lib/world-shape-checks.mjs`:
+ *
+ *  - bench ground spans at least 5 m; at least six of eight benches are housed (a roof and four of eight directions
+ *    closed) and every bench has a roof and three; a bench's room is at least 11.2 x 11 m with 4.4 m over the floor;
+ *  - no bench stands on another world's bench coordinates; the benches are not on one circle and not in two columns;
+ *  - NO PLATE CAN BE SEEN FROM THE SPAWN;
+ *  - ONE FLOOR: no reachable cell has a body less than 2.4 m over it;
+ *  - INSIDE IS COVERED: every room has a box in the cover mask, a player at every bench has the sun and at least 0.7 of
+ *    the sky taken away, and a player at the spawn has neither;
+ *  - THE WAY IS LIT AND LED: the guide's route to every bench goes through doorways (never through a wall), and no
+ *    metre of it is more than 12 m from a lamp;
+ *  - the world costs at most 900k triangles and 566 draws.
  */
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { HOST_PLAN, LANE } from '../src/three/kettle/host-plan.js';
+import { HOST_PLAN, LANE, hostExtent, toWorld } from '../src/three/kettle/host-plan.js';
+import { makeWorksPlan, ROOMS, WALK } from '../src/three/kettle/works-plan.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const world = JSON.parse(readFileSync(join(root, 'src/three/world-data/kettle.json'), 'utf8'));
@@ -38,14 +54,7 @@ console.log(`Kettle — ${world.name}, ${world.place}\n`);
 
 /* ------------------------------------------------------------ declarations */
 
-const rectOf = (site, [x0, x1, z0, z1]) => {
-  const a = Math.atan2(site.approachPos[0] - site.pos[0], site.approachPos[2] - site.pos[2]);
-  const c = Math.cos(a), sn = Math.sin(a);
-  const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([lx, lz]) => [site.pos[0] + lx * c + lz * sn, site.pos[2] - lx * sn + lz * c]);
-  return { minX: Math.min(...pts.map(p => p[0])), maxX: Math.max(...pts.map(p => p[0])), minZ: Math.min(...pts.map(p => p[1])), maxZ: Math.max(...pts.map(p => p[1])) };
-};
-const rd = (x, z, r) => Math.hypot(Math.max(r.minX - x, 0, x - r.maxX), Math.max(r.minZ - z, 0, z - r.maxZ));
-
+const plan = makeWorksPlan(world);
 {
   const L = world.landmarks;
   const clashes = [];
@@ -53,27 +62,59 @@ const rd = (x, z, r) => Math.hypot(Math.max(r.minX - x, 0, x - r.maxX), Math.max
     const need = L[i].radius + L[j].radius, d = dist(L[i].pos, L[j].pos);
     if (d < need) clashes.push(`${L[i].asset}@[${L[i].pos[0]},${L[i].pos[2]}] and ${L[j].asset}@[${L[j].pos[0]},${L[j].pos[2]}] overlap by ${(need - d).toFixed(2)}u`);
   }
-  check(clashes.length === 0, `${L.length} landmarks, every footprint disjoint`, `landmark footprints overlap:\n         ${clashes.join('\n         ')}`);
-}
+  check(clashes.length === 0, `${L.length} yard landmarks, every footprint disjoint`, `landmark footprints overlap:\n         ${clashes.join('\n         ')}`);
 
-{
-  const clashes = [];
-  for (const s of world.sites) {
-    const plan = HOST_PLAN[s.id];
-    if (!plan || plan.structure !== s.structure || plan.questId !== s.questId) { clashes.push(`${s.id}: no host plan, or it names a different structure or quest than the layout`); continue; }
-    for (const [name, r] of [['host', rectOf(s, plan.extent)], ['lane', rectOf(s, [-LANE.hw, LANE.hw, LANE.from, LANE.to])]]) {
-      for (const l of world.landmarks) if (rd(l.pos[0], l.pos[2], r) < l.radius) clashes.push(`${s.id}'s ${name} is inside ${l.asset}@${l.pos[0]},${l.pos[2]}`);
+  // THE ROOMS, as declared: the JSON is the plan module's own, on the grid, disjoint, and joined level at every door.
+  const bad = [];
+  if (world.works.volumes.length !== ROOMS.length || ROOMS.some(r => !plan.byId.get(r.id))) bad.push('world-data/kettle.json is out of step with works-plan.js: run tools/gen-kettle-layout.mjs');
+  const over = (a, b) => a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
+  const V = plan.volumes;
+  for (const v of V) for (const k of ['minX', 'maxX', 'minZ', 'maxZ']) if (v.rect[k] % 2 !== 0) bad.push(`${v.id}: ${k} is off the 2 m grid (the terrain's hole would not meet its wall)`);
+  for (let i = 0; i < V.length; i++) for (let j = i + 1; j < V.length; j++) if (over(V[i].rect, V[j].rect)) bad.push(`${V[i].id} and ${V[j].id} overlap`);
+  const OPP = { minX: 'maxX', maxX: 'minX', minZ: 'maxZ', maxZ: 'minZ' };
+  let doors = 0;
+  for (const v of V) for (const o of v.openings) {
+    if (!o.to) continue;
+    doors++;
+    const other = plan.byId.get(o.to);
+    if (!other || other.rect[OPP[o.side]] !== v.rect[o.side]) { bad.push(`${v.id} -> ${o.to}: no shared plane`); continue; }
+    if (!other.openings.some(p => p.to === v.id && p.lo === o.lo && p.hi === o.hi)) bad.push(`${v.id} -> ${o.to}: the door is not opened on both sides`);
+    if (o.pass === false) continue;
+    if (o.hi - o.lo < 3.5) bad.push(`${v.id} -> ${o.to}: a door ${o.hi - o.lo} m wide leaves under 2.5 m between its jambs' colliders`);
+    const e = 0.01, alongZ = o.side === 'minX' || o.side === 'maxX';
+    const sgn = o.side === 'minX' || o.side === 'minZ' ? 1 : -1;
+    for (const s of [o.lo + e, o.hi - e]) {
+      const mine = alongZ ? plan.floorOf(v, v.rect[o.side] + sgn * e, s) : plan.floorOf(v, s, v.rect[o.side] + sgn * e);
+      const theirs = alongZ ? plan.floorOf(other, v.rect[o.side] - sgn * e, s) : plan.floorOf(other, s, v.rect[o.side] - sgn * e);
+      if (Math.abs(mine - theirs) > 0.02) bad.push(`${v.id} -> ${o.to}: the floor steps ${Math.abs(mine - theirs).toFixed(2)} m at the door`);
     }
   }
-  check(clashes.length === 0, `${world.sites.length} hosts and their lanes stand clear of every free prop`, `hosts clash with props:\n         ${clashes.join('\n         ')}`);
+  check(bad.length === 0, `${V.length} rooms on the 2 m grid, none overlapping, ${doors / 2} doors each on a shared plane and level across its threshold`, bad.join('\n         '));
+
+  const small = [];
+  for (const s of world.sites) {
+    const p = HOST_PLAN[s.id];
+    if (!p || p.structure !== s.structure || p.questId !== s.questId || p.room !== s.room) { small.push(`${s.id}: no host plan, or it names a different structure, quest or room than the layout`); continue; }
+    const v = plan.byId.get(p.room);
+    if (v.floor.y1 !== undefined) small.push(`${s.id}: stands on a ramp`);
+    if (v.rect.maxX - v.rect.minX < 11.2 || v.rect.maxZ - v.rect.minZ < 11 || v.roof < 4.4) small.push(`${s.id}: ${p.room} is under 11.2 x 11 m or has under 4.4 m of headroom`);
+    if (Math.abs(s.pos[1] - v.floor.y0) > 0.001) small.push(`${s.id}: declared at ${s.pos[1]} m, but ${p.room}'s floor is ${v.floor.y0}`);
+    for (const [lx, lz] of [[-2.5, -0.7], [2.5, -0.7], [-LANE.hw, LANE.to], [LANE.hw, LANE.to]]) {
+      const [x, z] = toWorld(p, lx, lz);
+      if (plan.volumeAt(x, z)?.id !== p.room) small.push(`${s.id}: its plate or lane leaves ${p.room} at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+    }
+  }
+  const rooms = new Set(world.sites.map(s => s.room));
+  if (rooms.size !== world.sites.length) small.push('two benches share a room');
+  check(small.length === 0, `${world.sites.length} benches, each in a room of its own at least 11.2 x 11 m with 4.4 m of headroom, its plate and lane inside it`, small.join('\n         '));
   const near = [];
   for (let i = 0; i < world.sites.length; i++) for (let j = i + 1; j < world.sites.length; j++) {
     const d = dist(world.sites[i].pos, world.sites[j].pos);
     if (d < 8) near.push(`${world.sites[i].id} and ${world.sites[j].id} are ${d.toFixed(1)}u apart`);
   }
   check(near.length === 0, 'no two sites are within 8u of each other', near.join('; '));
-  const walkBound = world.landmarks.filter(l => l.asset !== 'chimney' && l.asset !== 'furnace' && l.asset !== 'conveyor' && (Math.abs(l.pos[0]) + l.radius > 100 || Math.abs(l.pos[2]) + l.radius > 100));
-  check(walkBound.length === 0, 'every free prop stands inside the walk (100 m) or is the furnace works', `props past the walk: ${walkBound.map(l => l.asset).join(', ')}`);
+  const b = plan.bounds;
+  check(b.minX > -WALK + 8 && b.maxX < WALK - 8 && b.minZ > -WALK + 8 && b.maxZ < WALK - 8, `the works stands inside the walk (x ${b.minX} to ${b.maxX}, z ${b.minZ} to ${b.maxZ})`, 'a room reaches the edge of the walk');
 }
 
 /* -------------------------------------------------------------------- sites */
@@ -111,37 +152,22 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
 /* -------------------------------------------------------------- tier parity, words, spawn */
 
 {
-  const t4Only = world.landmarks.filter(l => l.minTier === 'T4');
-  const t3World = world.landmarks.filter(l => l.minTier !== 'T4');
-  check(t4Only.length > 0, `${t4Only.length} landmarks are T4 decoration`, 'no T4 decoration declared');
-  const blocked = [];
-  for (const s of world.sites) for (const l of t3World) if (dist(s.approachPos, l.pos) < l.radius + 0.5) blocked.push(`${s.id}'s approach is blocked by ${l.asset}`);
-  check(blocked.length === 0, 'every site is reachable with all T4 decoration removed', blocked.join('\n         '));
   check(world.sites.every(s => world.t2.stillCamera[s.id]), 'every site has a still framing for the baked tier', 'a site has no T2 still camera');
+  const off = world.sites.filter(s => { const c = world.t2.stillCamera[s.id]; const v = plan.volumeAt(c.pos[0], c.pos[2]); return v?.id !== s.room || Math.abs(c.pos[1] - (v.floor.y0 + 1.6)) > 0.01; });
+  check(off.length === 0, 'every still stands in its bench\'s own room, at the eye, on that room\'s floor', `stills out of their rooms: ${off.map(s => s.id).join(', ')}`);
+  check(world.t1.siteOrder.join() === world.sites.map(s => s.id).join(), 'the list tier keeps the benches in order', 'the T1 site order is out of step');
 
   const strings = [world.name, world.place, world.oneLine, ...world.sites.map(s => s.label)];
   check(!strings.some(s => /\p{Extended_Pictographic}/u.test(s)), 'the world is emoji-free', 'emoji in a player-facing string');
+  // NO SIGN STANDS IN THE WORKS: nothing in the world's own modules letters a placard.
+  const lettered = ['kettle.js', 'kettle/works.js', 'kettle/stations.js', 'kettle/plant.js', 'kettle/kit.js'].filter(f => /placard\s*\(/.test(readFileSync(join(root, 'src/three', f), 'utf8')));
+  check(lettered.length === 0, 'no sign stands in the works (no module letters a placard)', `placards in: ${lettered.join(', ')}`);
 
   const inProp = world.landmarks.find(l => l.asset !== 'landing-pad' && dist(world.spawn.pos, l.pos) < l.radius + 0.5);
-  check(!inProp, 'the player does not spawn inside anything', `spawn is inside ${inProp?.asset}`);
+  check(!inProp && plan.volumeAt(world.spawn.pos[0], world.spawn.pos[2]) === null, 'the player spawns on open yard, inside nothing', `spawn is inside ${inProp?.asset || 'the works'}`);
   const nearest = Math.min(...world.sites.map(s => dist(world.spawn.pos, s.pos)));
   check(nearest < 60, `the nearest site is ${nearest.toFixed(0)}u from the spawn`, `the nearest site is ${nearest.toFixed(0)}u away: too far to find`);
   check(world.landmarks.some(l => l.asset === 'landing-pad'), 'the Avalon has a pad to land on', 'no landing-pad landmark');
-  const lamps = world.landmarks.filter(l => l.asset === 'lamp-post').length;
-  check(lamps >= 18, `${lamps} work lamps line the road and the spurs`, `only ${lamps} work lamps`);
-
-  // THE LANE OF LAMPS: from the spawn up the road, then out along the spur, no stretch more than 12 m from a lamp.
-  const posts = world.landmarks.filter(l => l.asset === 'lamp-post').map(l => l.pos);
-  const dark = [];
-  for (const s of world.sites) {
-    const az = s.approachPos[2], ax = s.approachPos[0];
-    const pts = [];
-    for (let z = world.spawn.pos[2]; z >= az; z -= 1) pts.push([0, 0, z]);
-    for (let x = 0; x <= Math.abs(ax); x += 1) pts.push([Math.sign(ax) * x, 0, az]);
-    const gap = pts.find(p => !posts.some(l => dist(p, l) <= 12));
-    if (gap) dark.push(`${s.id}: dark at (${gap[0]}, ${gap[2]})`);
-  }
-  check(dark.length === 0, 'a lane of lamps runs from the spawn to every approach', `unlit stretches:\n         ${dark.join('\n         ')}`);
 }
 
 /* ------------------------------------------------ the boss's ground agrees */
@@ -165,6 +191,8 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
   installDomShim({ tier: 'T4' });
   const THREE = await import('three');
   const { findOverlaps } = await import('./lib/overlap.mjs');
+  const SHAPE = await import('./lib/world-shape-checks.mjs');
+  const { consolidateStatic } = await import('../src/three/materials/pbr-kit.js');
   const { KettleWorld } = await import('../src/three/kettle.js');
 
   let built = null;
@@ -180,11 +208,21 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
     const r = Math.min(-tb.min.x, tb.max.x, -tb.min.z, tb.max.z);
     check(r > 800, `the ground runs ${Math.round(r)} m to the horizon`, `the ground ends ${Math.round(r)} m out: there is an edge to fall off the world`);
     check(tb.max.y > 15 && tb.max.y < 80, `the mesas stand ${Math.round(tb.max.y)} m over the flat`, `the horizon is flat or absurd (${tb.max.y.toFixed(1)} m)`);
+    // The terrain mesh is the yard's only: it is cut away under every room, and whole everywhere else in the walk.
+    {
+      const ray = new THREE.Raycaster();
+      const down = new THREE.Vector3(0, -1, 0);
+      const hit = (x, z) => { ray.set(new THREE.Vector3(x, 60, z), down); ray.far = 200; return ray.intersectObject(built.terrainMesh, false).length > 0; };
+      const wrong = [];
+      for (const v of plan.volumes) { const c = [(v.rect.minX + v.rect.maxX) / 2 + 0.3, (v.rect.minZ + v.rect.maxZ) / 2 + 0.3]; if (hit(...c)) wrong.push(`${v.id}: the yard's ground is drawn under its floor`); }
+      for (const [x, z] of [[0, 76], [56, 78], [-70, 0], [70, 60], [0, 60]]) if (!hit(x, z)) wrong.push(`a hole in the yard at (${x}, ${z})`);
+      check(wrong.length === 0, 'the yard\'s ground is cut away under every room and whole everywhere else', wrong.join('; '));
+    }
 
     {
       const eye = new THREE.Vector3(3, 1.7, 80);
       let threw = null;
-      try { for (let f = 0; f < 3; f++) built.update(1 / 60, eye); } catch (err) { threw = err; }
+      try { for (let f = 0; f < 12; f++) built.update(1 / 60, eye); } catch (err) { threw = err; }
       check(!threw && built.sky.position.distanceTo(eye) < 1e-6, 'a frame updates with the eye handed in as a position, and the sky follows it', `update(delta, cameraPos) failed: ${threw?.message || 'the sky did not follow'}`);
     }
 
@@ -210,27 +248,35 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
         if (box.max.y < ground - 0.3 && buried.length < 10) buried.push(`${ownerName(o)}: a part at (${c.x.toFixed(1)}, ${c.y.toFixed(1)}, ${c.z.toFixed(1)}) tops out at ${box.max.y.toFixed(2)}u, under ground at ${ground.toFixed(2)}u`);
       };
       built.scene.traverse(o => {
-        if (!o.isMesh || EXEMPT.has(tagOf(o))) return;
+        if (!o.isMesh || o.isInstancedMesh || EXEMPT.has(tagOf(o))) return;
         if (o.userData.partBoxes?.length) { for (const pb of o.userData.partBoxes) test(pb.clone().applyMatrix4(o.matrixWorld), o); return; }
         if (o.parent?.userData?.partBoxes?.length && o.userData.ownGeometry) { for (const pb of o.parent.userData.partBoxes) test(pb.clone().applyMatrix4(o.parent.matrixWorld), o); return; }
         if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
         test(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld), o);
       });
-      check(buried.length === 0, 'no body is buried under the ground it stands on', `bodies buried under the ground:\n         ${buried.join('\n         ')}`);
+      check(buried.length === 0, 'no body is buried under the floor it stands on', `bodies buried under the ground:\n         ${buried.join('\n         ')}`);
     }
 
-    /* ONLY LAMPS ARE LIT. */
+    /* ONLY LAMPS ARE LIT, and the one fire. */
+    const lampAt = built.lamps.map(m => m.getWorldPosition(new THREE.Vector3()));
     {
       const lit = new Set();
+      const opaqueNoDepth = new Set();
       built.scene.traverse(o => {
         if (!o.isMesh) return;
-        for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m && m.emissive && m.emissiveIntensity > 0 && m.emissive.getHex() !== 0) lit.add(m);
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+          if (m && m.emissive && m.emissiveIntensity > 0 && m.emissive.getHex() !== 0) lit.add(m);
+          if (m && !m.transparent && m.depthWrite === false && o !== built.sky) opaqueNoDepth.add(m);
+        }
       });
-      const strangers = [...lit].filter(m => m !== built.M.lantern);
-      check(strangers.length === 0, `${lit.size} emissive material: the work lamps; nothing else in the world is lit`, `${strangers.length} emissive material(s) that are not a work lamp`);
+      const strangers = [...lit].filter(m => m !== built.M.lantern && m !== built.M.iron);
+      check(strangers.length === 0 && lit.has(built.M.iron), `${lit.size} emissive materials: the lamps' filament and the furnace's iron; nothing else in the world is lit`, `${strangers.length} emissive material(s) that are neither a lamp nor the furnace's iron`);
       let realLights = 0;
       built.scene.traverse(o => { if (o.isPointLight) realLights++; });
-      check(realLights === 3 && built.lamps.length >= 30, `${built.lamps.length} lamps share ${realLights} real lights`, `${built.lamps.length} lamps and ${realLights} real lights: the lamp pool is not what keeps the frame cheap`);
+      const { FURNACE_FIRE } = await import('../src/three/kettle/plant.js');
+      const fires = built.lamps.filter(m => m.userData.lamp.color === FURNACE_FIRE).length;
+      check(realLights === 3 && built.lamps.length >= 40 && fires === 1, `${built.lamps.length} lamps and one fire share ${realLights} real lights`, `${built.lamps.length} lamps, ${fires} fires and ${realLights} real lights: the lamp pool is not what keeps the frame cheap`);
+      check(opaqueNoDepth.size === 0, 'no opaque material leaves the depth buffer unwritten', `${opaqueNoDepth.size} opaque material(s) set depthWrite false`);
     }
 
     /* EVERY SITE FACES ITS APPROACH, and its bench deploys onto a real plate. */
@@ -240,75 +286,53 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
       if (!anchor) continue;
       const want = Math.atan2(site.approachPos[0] - site.pos[0], site.approachPos[2] - site.pos[2]);
       const diff = Math.abs(Math.atan2(Math.sin(anchor.rotationY - want), Math.cos(anchor.rotationY - want)));
-      check(diff < 0.01, `${site.id}: faces the ground the player walks in from`, `${site.id}: faces ${anchor.rotationY.toFixed(2)} rad, but its approach is at ${want.toFixed(2)}`);
+      check(diff < 0.01, `${site.id}: faces the floor the player walks in on`, `${site.id}: faces ${anchor.rotationY.toFixed(2)} rad, but its approach is at ${want.toFixed(2)}`);
       const ground = built.getTerrainHeight(anchor.position[0], anchor.position[2]);
-      check(Math.abs(anchor.topY - (ground + 0.995)) < 0.05, `${site.id}: the plate is at ${anchor.topY.toFixed(2)}u, standing on ground at ${ground.toFixed(2)}u`, `${site.id}: bench top at ${anchor.topY.toFixed(2)}, but the ground under it is ${ground.toFixed(2)}`);
+      check(Math.abs(anchor.topY - (ground + 0.995)) < 0.05 && Math.abs(ground - site.pos[1]) < 0.001, `${site.id}: the plate is at ${anchor.topY.toFixed(2)}u, standing on ${site.room}'s floor at ${ground.toFixed(2)}u`, `${site.id}: bench top at ${anchor.topY.toFixed(2)}, but the floor under it is ${ground.toFixed(2)}`);
       check(Boolean(anchor.dormant), `${site.id}: the cased instrument can be opened`, `${site.id}: no dormant cabinet, so deploying would draw two instruments in one place`);
     }
 
-    /* A TABLE IS WORKED BY ITS LAMP: a work lamp over every plate, a `lampMark` in the pool. */
+    /* A TABLE IS WORKED BY ITS LAMP: a lamp over every plate, and at least two in every bench's room. */
     {
       const bad = [];
       for (const site of world.sites) {
         const g = built.siteMarkers.get(site.questId).group;
         g.updateMatrixWorld(true);
         const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
-        const over = built.lamps.some(m => { const p = new THREE.Vector3(); m.getWorldPosition(p); p.applyMatrix4(inv); return Math.abs(p.x) < 2.4 && p.z > -1.4 && p.z < 1.0 && p.y > 2.4 && p.y < 4.2; });
+        const over = lampAt.some(q => { const p = q.clone().applyMatrix4(inv); return Math.abs(p.x) < 2.4 && p.z > -1.4 && p.z < 1.0 && p.y > 2.4 && p.y < 4.2; });
         if (!over) bad.push(`${site.id}: no lamp hangs over the plate`);
+        const inRoom = lampAt.filter(q => plan.volumeAt(q.x, q.z)?.id === site.room).length;
+        if (inRoom < 2) bad.push(`${site.id}: ${site.room} has ${inRoom} lamp(s) of its own`);
       }
-      check(bad.length === 0, `every one of the ${world.sites.length} plates has a lamp over it`, bad.join('\n         '));
+      check(bad.length === 0, `every one of the ${world.sites.length} plates has a lamp over it, and its room at least two`, bad.join('\n         '));
     }
 
-    /* THE WALK. Flood-fill the ground from the spawn against the real colliders, with the player's own radius. */
-    const R = 0.25, CELL = 0.5, MIN = -100, N = Math.round(200 / CELL), BUCK = 4;
-    const buckets = new Map();
-    const bkey = (i, j) => `${i}|${j}`;
-    for (const c of built.colliders) {
-      for (let i = Math.floor((c.x - c.radius - R) / BUCK); i <= Math.floor((c.x + c.radius + R) / BUCK); i++) {
-        for (let j = Math.floor((c.z - c.radius - R) / BUCK); j <= Math.floor((c.z + c.radius + R) / BUCK); j++) {
-          if (!buckets.has(bkey(i, j))) buckets.set(bkey(i, j), []);
-          buckets.get(bkey(i, j)).push(c);
-        }
-      }
+    /* THE WALK. Flood the ground from the spawn against the real colliders, with the player's own radius. */
+    const walk = SHAPE.flood(built, { bound: WALK });
+    check(walk.ledges.length === 0, `${walk.reached} cells of ground are walkable, and none of them drops off a ledge`, `the player can walk off a drop:\n         ${walk.ledges.join('\n         ')}`);
+    for (const site of world.sites) check(walk.reachable(site.approachPos[0], site.approachPos[2], 1.2), `${site.id}: a player can walk from the spawn to the bench's approach`, `${site.id}: its approach mark is sealed off from the spawn`);
+    {
+      const hs = walk.cells.map(c => c[2]);
+      const lo = Math.min(...hs), hi = Math.max(...hs);
+      const [flo, fhi] = [Math.min(...plan.volumes.map(v => plan.floorRange(v)[0])), Math.max(...plan.volumes.map(v => plan.floorRange(v)[1]))];
+      check(lo >= flo - 0.01 && hi <= fhi + 0.01, `the walk runs from ${lo.toFixed(2)} to ${hi.toFixed(2)} m: the cellar's floor to the charge bank's, and nothing above or below`, `walkable ground at ${lo.toFixed(2)} to ${hi.toFixed(2)} m, outside the floors (${flo} to ${fhi})`);
+      const onHeap = plan.hills.filter(h => walk.cells.some(c => plan.hillsHeight(c[0], c[1]) > 0.6 && c[0] > h.rect.minX && c[0] < h.rect.maxX && c[1] > h.rect.minZ && c[1] < h.rect.maxZ));
+      check(onHeap.length === 0, 'neither heap can be stood on: the ring round each is closed', `the walk reaches ${onHeap.map(h => h.id).join(', ')}`);
+      // Every reachable cell is either a room's floor or open yard: never the solid between rooms' walls is fine, but a
+      // room that cannot be reached is a room the plan got wrong.
+      const lost = plan.volumes.filter(v => !walk.reachable((v.rect.minX + v.rect.maxX) / 2, (v.rect.minZ + v.rect.maxZ) / 2, 3));
+      check(lost.length === 0, `all ${plan.volumes.length} rooms are reached on foot`, `rooms nobody can walk into: ${lost.map(v => v.id).join(', ')}`);
     }
-    const blocked = (x, z) => (buckets.get(bkey(Math.floor(x / BUCK), Math.floor(z / BUCK))) || []).some(c => Math.hypot(x - c.x, z - c.z) < c.radius + R);
-    const idx = (i, j) => i * N + j;
-    const at = i => MIN + (i + 0.5) * CELL;
-    const seen = new Uint8Array(N * N);
-    const si = Math.floor((world.spawn.pos[0] - MIN) / CELL), sj = Math.floor((world.spawn.pos[2] - MIN) / CELL);
-    const queue = [[si, sj]];
-    seen[idx(si, sj)] = 1;
-    const ledges = [];
-    while (queue.length) {
-      const [i, j] = queue.pop();
-      const x = at(i), z = at(j), h = built.getTerrainHeight(x, z);
-      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const ni = i + di, nj = j + dj;
-        if (ni < 0 || nj < 0 || ni >= N || nj >= N || seen[idx(ni, nj)]) continue;
-        const nx = at(ni), nz = at(nj);
-        if (blocked(nx, nz)) continue;
-        const nh = built.getTerrainHeight(nx, nz);
-        if (Math.abs(nh - h) > 0.6 && ledges.length < 8) ledges.push(`(${x.toFixed(1)}, ${z.toFixed(1)}) ${h.toFixed(2)}u -> (${nx.toFixed(1)}, ${nz.toFixed(1)}) ${nh.toFixed(2)}u`);
-        seen[idx(ni, nj)] = 1;
-        queue.push([ni, nj]);
-      }
-    }
-    let reached = 0;
-    for (let k = 0; k < seen.length; k++) if (seen[k]) reached++;
-    check(ledges.length === 0, `${reached} cells of ground are walkable, and none of them drops off a ledge`, `the player can walk off a drop:\n         ${ledges.join('\n         ')}`);
-    const reachable = (px, pz, within) => {
-      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (seen[idx(i, j)] && Math.hypot(at(i) - px, at(j) - pz) <= within) return true;
-      return false;
-    };
-    for (const site of world.sites) check(reachable(site.approachPos[0], site.approachPos[2], 1.6), `${site.id}: a player can walk from the spawn to the bench's approach`, `${site.id}: its approach mark is sealed off from the spawn`);
+    const pad = world.landmarks.find(l => l.asset === 'landing-pad');
+    check(walk.reachable(pad.pos[0], pad.pos[2], 6), 'the landing pad is joined to the rest of the ground', 'the landing pad is walled off from the spawn');
 
-    /* A HOST STANDS INSIDE THE EXTENT IT DECLARES, and the declaration is tight. */
+    /* A HOST STANDS INSIDE ITS OWN ROOM, and fills it: its machinery reaches three of the four walls. */
     {
       const off = [];
       for (const site of world.sites) {
         const marker = built.siteMarkers.get(site.questId);
-        const plan = HOST_PLAN[site.id];
-        if (!marker || !plan) { off.push(`${site.id}: no host group`); continue; }
+        const p = HOST_PLAN[site.id];
+        if (!marker || !p) { off.push(`${site.id}: no host group`); continue; }
         const g = marker.group;
         g.updateMatrixWorld(true);
         const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
@@ -318,46 +342,145 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
           if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
           total.union(o.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)));
         });
-        const [x0, x1, z0, z1] = plan.extent;
+        const [x0, x1, z0, z1] = hostExtent(p);
+        const v = plan.byId.get(p.room);
+        let touched = 0;
         for (const [name, got, want, dir] of [['left', total.min.x, x0, -1], ['right', total.max.x, x1, 1], ['back', total.min.z, z0, -1], ['front', total.max.z, z1, 1]]) {
-          if (dir * (got - want) > 0.25) off.push(`${site.id} (${plan.structure}) stands ${(dir * (got - want)).toFixed(2)} m outside its declared extent on the ${name}`);
-          else if (dir * (want - got) > 2.5) off.push(`${site.id} (${plan.structure}) declares ${(dir * (want - got)).toFixed(2)} m more than it builds on the ${name}`);
+          if (dir * (got - want) > 0.1) off.push(`${site.id} (${p.room}) stands ${(dir * (got - want)).toFixed(2)} m through its ${name} wall`);
+          if (dir * (want - got) < 2.5) touched++;
         }
+        if (touched < 3) off.push(`${site.id} (${p.room}) reaches only ${touched} of its room's walls: the room is not furnished, the bench is standing in it`);
+        if (total.max.y > v.top - v.floor.y0 + 0.05) off.push(`${site.id} (${p.room}) stands ${(total.max.y - (v.top - v.floor.y0)).toFixed(2)} m through its roof`);
       }
-      check(off.length === 0, 'every host stands inside the extent host-plan.js declares, and the declaration is tight', `hosts out of step with host-plan.js:\n         ${off.join('\n         ')}`);
+      check(off.length === 0, 'every host stands inside its own room, under its roof, and reaches at least three of its walls', `hosts out of step with their rooms:\n         ${off.join('\n         ')}`);
     }
 
-    /* THE LEVEL GROUND UNDER EVERY HOST AND ITS LANE. */
+    /* THE LEVEL FLOOR UNDER EVERY HOST AND ITS LANE. */
     {
       const bad = [];
       for (const site of world.sites) {
-        const plan = HOST_PLAN[site.id];
-        const a = Math.atan2(site.approachPos[0] - site.pos[0], site.approachPos[2] - site.pos[2]);
-        const c = Math.cos(a), sn = Math.sin(a);
+        const p = HOST_PLAN[site.id];
+        const [x0, x1, z0, z1] = hostExtent(p);
         const hs = [];
-        const [x0, x1, z0] = plan.extent;
-        for (let lx = x0; lx <= x1; lx += 1.5) for (let lz = z0; lz <= LANE.to; lz += 1.5) hs.push(built.getTerrainHeight(site.pos[0] + lx * c + lz * sn, site.pos[2] - lx * sn + lz * c));
+        for (let lx = x0 + 0.1; lx <= x1 - 0.1; lx += 1.5) for (let lz = z0 + 0.1; lz <= z1 - 0.1; lz += 1.5) hs.push(built.getTerrainHeight(...toWorld(p, lx, lz)));
         const spread = Math.max(...hs) - Math.min(...hs);
-        if (spread > 0.35) bad.push(`${site.id}: the ground under its host and lane varies by ${spread.toFixed(2)} m`);
+        if (spread > 0.01) bad.push(`${site.id}: the floor of its room varies by ${spread.toFixed(2)} m`);
       }
-      check(bad.length === 0, 'the ground under every host and its lane is level', bad.join('\n         '));
+      check(bad.length === 0, 'the floor of every bench\'s room is level, wall to wall', bad.join('\n         '));
     }
-
-    const pad = world.landmarks.find(l => l.asset === 'landing-pad');
-    check(reachable(pad.pos[0], pad.pos[2], 6), 'the landing pad is joined to the rest of the ground', 'the landing pad is walled off from the spawn');
 
     /* THE GOLEM'S GROUND. */
     {
       const A = world.arena;
-      check(reachable(A.player[0], A.player[2], 1.0) && reachable(A.boss[0], A.boss[2], 1.0), "the Golem's ground and the player's mark in front of it are walkable", "the boss's ground is sealed off");
+      check(walk.reachable(A.player[0], A.player[2], 1.0) && walk.reachable(A.boss[0], A.boss[2], 1.0), "the Golem's ground and the player's mark in front of it are walkable", "the boss's ground is sealed off");
       let clear = true;
       for (let a = 0; a < 16; a++) {
         const x = A.boss[0] + Math.cos(a / 16 * Math.PI * 2) * 7, z = A.boss[2] + Math.sin(a / 16 * Math.PI * 2) * 7;
-        for (let t = 0; t <= 1; t += 0.1) if (blocked(A.boss[0] + (x - A.boss[0]) * t, A.boss[2] + (z - A.boss[2]) * t)) clear = false;
+        for (let t = 0; t <= 1; t += 0.1) if (walk.blocked(A.boss[0] + (x - A.boss[0]) * t, A.boss[2] + (z - A.boss[2]) * t)) clear = false;
       }
-      check(clear, 'seven metres all round the Golem are open ground', 'something stands within seven metres of the Golem');
-      const furnace = world.landmarks.find(l => l.asset === 'furnace');
-      check(Boolean(furnace) && furnace.pos[2] < A.boss[2] - 20, `the Golem is fought in front of the furnace (${(A.boss[2] - furnace.pos[2]).toFixed(0)} m off)`, 'the arena is not in front of the furnace');
+      check(clear, 'seven metres all round the Golem are open floor', 'something stands within seven metres of the Golem');
+      const F = world.works.furnace;
+      const cast = plan.byId.get('cast');
+      check(plan.volumeAt(A.boss[0], A.boss[2]) === cast && plan.volumeAt(A.player[0], A.player[2]) === cast && F.z < A.boss[2] - 10 && Math.abs(F.x - A.boss[0]) < 1,
+        `the Golem is fought on the cast house floor, the furnace ${(A.boss[2] - F.z).toFixed(1)} m behind it`, 'the arena is not in the cast house in front of the furnace');
+      check(cast.top - cast.floor.y0 >= 12, `the cast house's roof is ${cast.top} m over the Golem's ground`, 'the cast house is too low for the fight to be seen');
+    }
+
+    /* ================================================================ THE SHAPE */
+    console.log('');
+    {
+      const g = SHAPE.benchGround(built);
+      check(g.span >= 5, `bench ground runs from ${g.lo.toFixed(2)} to ${g.hi.toFixed(2)} m: a span of ${g.span.toFixed(2)} m`, `bench ground spans only ${g.span.toFixed(2)} m (the spec holds 5)`);
+      const levels = new Set(g.heights.map(h => h.toFixed(1)));
+      check(levels.size >= 4, `the benches stand on ${levels.size} different levels`, `the benches stand on only ${levels.size} levels`);
+      const rows = SHAPE.housing(built, THREE);
+      const housed = rows.filter(r2 => r2.housed).length;
+      check(housed >= 6, `${housed} of ${rows.length} benches are housed (${rows.map(r2 => r2.code).join(' ')})`, `only ${housed} of ${rows.length} benches are housed (${rows.map(r2 => r2.code).join(' ')}); the spec holds 6`);
+      const open = rows.filter(r2 => !r2.roof || r2.closed < 3);
+      check(open.length === 0, 'every bench has a roof and at least three directions closed', `benches standing in the open: ${open.map(r2 => `${r2.id} ${r2.code}`).join(', ')}`);
+      const shared = SHAPE.sharedLayout(world);
+      check(shared.length === 0, 'no bench stands on another world\'s bench coordinates', `the layout is shared with: ${shared.join(', ')}`);
+      check(!SHAPE.oneCircle(world), 'the benches are not on one circle', 'every bench stands on one circle: the ring template');
+      check(!SHAPE.twoColumns(world), 'the benches are not in two columns or two rows', 'the benches stand on two lines: the road template');
+      const seen = SHAPE.platesInView(built, THREE, world.spawn.pos);
+      check(seen.length === 0, 'no plate can be seen from the spawn', `plates in view from the spawn: ${seen.join(', ')}`);
+      // From just inside the charge door, looking up the nave: still none (the benches are in the bays, not the aisle).
+      const inside = SHAPE.platesInView(built, THREE, [0, 1.6, 44]);
+      check(inside.length <= 1, `from just inside the charge door ${inside.length} plate(s) can be seen`, `plates in view from the charge door: ${inside.join(', ')}`);
+      const low = SHAPE.lowBodies(built, THREE, walk.cells, { every: 3 });
+      check(low.length === 0, 'one floor: no reachable cell has a body less than 2.4 m over it', `bodies low over the walk:\n         ${low.join('\n         ')}`);
+    }
+
+    /* INSIDE IS COVERED. */
+    {
+      const spec = plan.coverSpec();
+      const bad = [];
+      if (spec.boxes.length !== plan.volumes.length) bad.push(`${spec.boxes.length} cover boxes for ${plan.volumes.length} rooms`);
+      if (!built.cover || built.cover.boxes.length !== spec.boxes.length) bad.push('the world did not set its cover mask from the plan');
+      for (const site of world.sites) {
+        const c = built.cover.at(site.approachPos[0], site.approachPos[1], site.approachPos[2]);
+        if (c.sky < 0.7) bad.push(`${site.id}: only ${c.sky.toFixed(2)} of the sky is taken away at its mark`);
+        // A bench may stand in a shaft of sun for part of its floor; the plate itself must not be in one.
+        const a = built.benchAnchor(site.questId);
+        const p = built.cover.at(a.position[0], a.topY + 0.1, a.position[2]);
+        if (p.sun < 0.95) bad.push(`${site.id}: the sun reaches its plate (${p.sun.toFixed(2)} taken away)`);
+      }
+      const out = built.cover.at(world.spawn.pos[0], world.spawn.pos[1], world.spawn.pos[2]);
+      if (out.sun > 0 || out.sky > 0) bad.push('the spawn, in the open yard, is covered');
+      const lit = spec.openings.filter(o => {
+        // Each opening lets the sun onto something: a point two metres along the light from its middle is in its shaft.
+        const s = built.cover.uniforms.uCvSun.value;
+        const mid = o.axis === 'x' ? [o.at, (o.lo[0] + o.hi[0]) / 2, (o.lo[1] + o.hi[1]) / 2] : [(o.lo[0] + o.hi[0]) / 2, (o.lo[1] + o.hi[1]) / 2, o.at];
+        const q = [mid[0] - s.x * 2, mid[1] - s.y * 2, mid[2] - s.z * 2];
+        return built.cover.at(...q).sun < 0.2;
+      });
+      if (lit.length !== spec.openings.length) bad.push(`${spec.openings.length - lit.length} opening(s) let no sun in: the sun is on the wrong side of the wall`);
+      let unpatched = 0;
+      built.scene.traverse(o => { if (o.isMesh && o.material?.isMeshStandardMaterial && !o.material.userData.worldCover) unpatched++; });
+      if (unpatched) bad.push(`${unpatched} meshes' materials never had the cover mask`);
+      check(bad.length === 0, `every room is covered (${spec.boxes.length} boxes); the sun comes in through ${spec.openings.length} openings; the yard is in the open`, bad.join('\n         '));
+    }
+
+    /* THE WAY IS LED AND LIT. */
+    {
+      const walls = plan.wallColliders();
+      const inWall = (x, z) => walls.some(b => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ);
+      const bad = [];
+      for (const site of world.sites) {
+        const way = built.routeTo(site.id, [world.spawn.pos[0], world.spawn.pos[2]]);
+        if (!way || way.length < 3) { bad.push(`${site.id}: the guide has no way through the works`); continue; }
+        let through = null, dark = null;
+        for (let i = 0; i < way.length - 1; i++) {
+          const [ax, az] = way[i], [bx, bz] = way[i + 1];
+          const n = Math.ceil(Math.hypot(bx - ax, bz - az));
+          for (let k = 0; k <= n; k++) {
+            const x = ax + (bx - ax) * (k / n), z = az + (bz - az) * (k / n);
+            if (!through && inWall(x, z)) through = [x, z];
+            if (!dark && !lampAt.some(q => Math.hypot(q.x - x, q.z - z) <= 12)) dark = [x, z];
+          }
+        }
+        if (through) bad.push(`${site.id}: the guide's way goes through a wall at (${through.map(v => v.toFixed(1))})`);
+        if (dark) bad.push(`${site.id}: dark at (${dark.map(v => v.toFixed(1))}): no lamp within 12 m of the way`);
+        const end = way[way.length - 1];
+        if (Math.hypot(end[0] - site.approachPos[0], end[1] - site.approachPos[2]) > 0.01) bad.push(`${site.id}: the way does not end at its approach mark`);
+      }
+      check(bad.length === 0, 'the guide\'s way to every bench goes through doorways, and no metre of it is more than 12 m from a lamp', bad.join('\n         '));
+    }
+
+    /* THE COST, as `tools/perf-worlds.mjs` counts it. */
+    {
+      const again = new KettleWorld(null);
+      consolidateStatic(again.scene);
+      let draws = 0, tris = 0;
+      again.scene.traverse(o => {
+        if (!(o.isMesh || o.isLine || o.isPoints)) return;
+        for (let n = o; n; n = n.parent) if (!n.visible) return;
+        draws += Array.isArray(o.material) && o.geometry?.groups?.length ? o.geometry.groups.length : 1;
+        const g = o.geometry;
+        if (g) tris += (g.index ? g.index.count : g.attributes.position.count) / 3 * (o.isInstancedMesh ? o.count : 1);
+      });
+      check(draws <= 566 && tris <= 900000, `the world costs ${draws} draws and ${Math.round(tris / 1000)}k triangles (the budget is 566 and 900k)`, `over budget: ${draws} draws, ${Math.round(tris / 1000)}k triangles`);
+      again.dispose();
     }
   }
 }

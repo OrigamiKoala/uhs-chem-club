@@ -70,7 +70,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/mirrowen-world.md`
 
 ### Unit 07: Kettle (Chemical Reactions and Stoichiometry)
-- **Setting:** An automated metal foundry and chemical processing works on a soda flat.
+- **Setting:** One ironworks building on a soda flat, entered at the charge door and walked through to the furnace: a crane aisle with the bays opening off it on five floor levels, a slag tip and an ore stock outside (site rebuilt 2026-11-13, `kettle-world.md` section 11).
 - **Benches:** `q1-recipe` (definite composition and limiting reactants), `q2-names` (naming ionic, molecular, and acid compounds), `q3-change` (physical vs chemical change, mass conservation), `q4-balance` (balancing reaction equations), `q5-ionic` (net ionic equations and solubility rules), `q6-stoich` (molar stoichiometry and gravimetric yield), `q7-titrate` (acid-base titration), `q8-kinds` (synthesis, decomposition, redox, combustion), and `boss-golem`.
 - **Core Teaching Click:** Grams react in the ratio of moles and coefficients, never in the direct ratio of grams.
 - **Reference:** `docs/plans/kettle-world.md`
