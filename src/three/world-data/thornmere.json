@@ -139,7 +139,7 @@
       "label": "Bench 1 - Carbon Chains",
       "structure": "tapped-stump",
       "mound": "M1",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

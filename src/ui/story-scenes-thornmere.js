@@ -8,6 +8,7 @@ import { C, text, ground, win, ease } from './story-kit.js';
 import { playOf, sceneOf } from '../learn/engine/thorndata.js';
 import { fitScenes, drawScene } from '../learn/table/kits/thorn-draw.js';
 import { drawPlay } from '../learn/table/kits/thorn-mol.js';
+import '../learn/engine/thorn-scenes/q1-chains.js';
 
 /** The bench painters draw in a fixture's frame; on the story plate one unit is one pixel. */
 export const PX = Object.freeze({ x: d => d, y: d => d, len: d => d, size: (k, min = 6.5) => Math.max(min, k) });
@@ -22,6 +23,19 @@ export function playIn(ctx, playId, rect, k, { pairs = true, unit = 110 } = {}) 
 export function sceneIn(ctx, sceneId, rect, o = {}) {
   const S = sceneOf(sceneId);
   drawScene(ctx, PX, fitScenes([S], rect, o.unit || 110), S, o);
+}
+
+/* ---- q1-chains: ethane, propane, cyclohexane, each counted on the plate ---- */
+function chains(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const rect = { x: 230, y: 100, w: 500, h: 320 };
+  const show = (id, head, a) => {
+    text(ctx, head, 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    ctx.globalAlpha = ease(a); sceneIn(ctx, id, rect); ctx.globalAlpha = 1;
+  };
+  if (t < 0.33) show('ethane', 'Ethane: two carbons, six hydrogens', win(t, 0.02, 0.12));
+  else if (t < 0.67) show('propane', 'Propane: three carbons, eight hydrogens', win(t, 0.35, 0.45));
+  else show('cyclohexane', 'Cyclohexane: six carbons, twelve hydrogens', win(t, 0.69, 0.79));
 }
 
 /* ---- q2-unsat: bromine reaches the second pair; H–Br adds in two steps ---- */
@@ -41,8 +55,8 @@ function unsat(ctx, w, h, t) {
 }
 
 export const THORNMERE_SCENES = {
+  'thorn-chains': chains,
   'thorn-unsat': unsat
-  // q1-chains
   // q3-isomers
   // q4-groups
   // q5-reactions

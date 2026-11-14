@@ -2,6 +2,105 @@
   "world": "unit13",
   "end": [],
   "bench": {
+    "q1-chains": {
+      "problems": [
+        {
+          "id": "q1-chains#b1",
+          "quest": "q1-chains",
+          "question": "An alkane chain has eight carbons and single bonds only. How many hydrogen atoms does it hold?",
+          "options": [
+            {
+              "id": "a",
+              "label": "18"
+            },
+            {
+              "id": "b",
+              "label": "16"
+            },
+            {
+              "id": "c",
+              "label": "32"
+            },
+            {
+              "id": "d",
+              "label": "17"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Two hydrogens for each of the eight carbons is 16, and each end carbon holds one more: 16 + 2 = 18, C₈H₁₈."
+        },
+        {
+          "id": "q1-chains#b2",
+          "quest": "q1-chains",
+          "question": "A skeletal formula is a zigzag line with four corners and two ends, and it does not split. Which molecule is it?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Hexane"
+            },
+            {
+              "id": "b",
+              "label": "Butane"
+            },
+            {
+              "id": "c",
+              "label": "Pentane"
+            },
+            {
+              "id": "d",
+              "label": "Cyclohexane"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Every corner and every end of a skeletal formula is a carbon: four corners and two ends make six carbons in one unbranched chain, hexane."
+        }
+      ],
+      "worked": {
+        "id": "q1-chains#w",
+        "quest": "q1-chains",
+        "title": "Hydrogens on a long chain",
+        "setup": "A wax molecule is an alkane chain of 25 carbons with single bonds only. Find how many hydrogen atoms it holds.",
+        "steps": [
+          {
+            "say": "How many hydrogens do the 25 carbons hold at two each?",
+            "kind": "number",
+            "answer": 50,
+            "unit": "",
+            "calc": "2 * 25",
+            "hint": "Every carbon in the chain holds at least two hydrogens.",
+            "explain": "2 × 25 = 50."
+          },
+          {
+            "say": "How many more do the two end carbons hold between them?",
+            "kind": "number",
+            "answer": 2,
+            "unit": "",
+            "calc": "1 + 1",
+            "hint": "Each end carbon is bonded to only one other carbon.",
+            "explain": "Each end carbon holds one more: 1 + 1 = 2."
+          },
+          {
+            "say": "How many hydrogen atoms does the chain hold in all?",
+            "kind": "number",
+            "answer": 52,
+            "unit": "",
+            "calc": "2 * 25 + 2",
+            "hint": "Add the two counts.",
+            "explain": "50 + 2 = 52: the wax is C₂₅H₅₂."
+          },
+          {
+            "say": "The same 25 carbons closed into one ring hold how many hydrogens?",
+            "kind": "number",
+            "answer": 50,
+            "unit": "",
+            "calc": "2 * 25 + 2 - 2",
+            "hint": "Closing a ring makes one more bond, and each end carbon gives up a hydrogen for it.",
+            "explain": "52 − 2 = 50."
+          }
+        ],
+        "finish": "An alkane chain of n carbons holds 2n + 2 hydrogens, and each ring takes two away."
+      }
+    },
     "q2-unsat": {
       "problems": [
         {

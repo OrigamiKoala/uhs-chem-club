@@ -20,6 +20,15 @@
 
 export const QUEST_STORY = {
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
+  'unit13/q1-chains': {
+    scene: 'thorn-chains',
+    beats: [
+      { to: 0.32, say: 'Two carbons held six hydrogens: each carbon used one of its four bonds on the other and three on hydrogens.' },
+      { to: 0.66, say: 'A third carbon took the place of one hydrogen and held three of its own, so the chain gained two, not four.' },
+      { to: 0.96, say: 'When hexane\'s two ends bonded, each gave up a hydrogen, and the chain became a ring of twelve.' }
+    ],
+    filed: 'Filed: the tar is chains and rings of carbon holding hydrogen, alkanes, and the Fifth heats it in a still.'
+  },
   'unit13/q2-unsat': {
     scene: 'thorn-unsat',
     beats: [
