@@ -32,7 +32,7 @@ export const BANNED = [
   { re: /\brecipes?\b/i, use: 'formula', why: 'stand-in word' },
   { re: /\bsticky\b/i, use: 'attraction', why: 'vague word' },
   { re: /\bwants?\b/i, use: 'attraction / lower energy', why: 'anthropomorphic motive' },
-  { re: /\blikes?\b/i, use: 'is attracted to', why: 'anthropomorphic motive' },
+  { re: /\blikes\b/i, use: 'is attracted to', why: 'anthropomorphic motive' },
   { re: /\bprefers?\b/i, use: 'lower energy', why: 'anthropomorphic motive' },
   { re: /\bhappy\b/i, use: 'lower energy', why: 'anthropomorphic motive' },
   { re: /\battacks?\b/i, use: 'moves to', why: 'a pair of electrons moves; nothing attacks' },

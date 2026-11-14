@@ -5,6 +5,9 @@
  *   node tools/lib/thornmere/data-checks.mjs      (also run by verify:thornmere)
  */
 import * as D from '../../../src/learn/engine/thorndata.js';
+import { installDomShim } from '../dom-shim.mjs';
+if (typeof document === 'undefined') installDomShim({ tier: 'T1' });
+const { heatContacts } = await import('../../../src/learn/table/kits/thorn-test.js');
 
 export function runThornDataChecks({ ok, fail }) {
   const before = { n: 0 };
@@ -75,6 +78,11 @@ export function runThornDataChecks({ ok, fail }) {
   eq('pH ethanol', D.phOf('ethanol'), 7.0); eq('pH NaOH', D.phOf('naoh'), 13.0);
   eq('C-C', D.BOND_PM['C-C'], 154); eq('C=C', D.BOND_PM['C=C'], 134); eq('benzene', D.BOND_PM.benzene, 139);
   eq('benzene bond a', D.bondLengthPm('benzene-a', 'c0', 'c1'), 139); eq('benzene bond b', D.bondLengthPm('benzene-a', 'c1', 'c2'), 139);
+
+  // The heat window draws two molecules lying together: the places they touch must fall in the order the boiling points do.
+  const touch = k => heatContacts(k).touching.length;
+  if (!(touch('pentane') > touch('methylbutane') && touch('methylbutane') > touch('dimethylpropane') && touch('butane') > touch('methylpropane'))) { before.n++; fail('thorndata: the heat window\'s contacts do not follow the boiling points'); }
+  eq('ethanol and methoxymethane touch alike', touch('ethanol'), touch('methoxymethane'));
 
   // Where pairs are drawn: toward the more electronegative atom, in the order of the electronegativity difference.
   const pp = D.pairPlace;

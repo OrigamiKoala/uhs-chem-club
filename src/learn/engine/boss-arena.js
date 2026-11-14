@@ -164,6 +164,14 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, -58],
     scale: 1.5,
     species: 'the coil'
+  },
+  'boss-carapace': {
+    worldId: 'unit13',
+    playerPos: [44, 1.6, -58],
+    lookAtPos: [44, 1.6, -74],
+    bossPos: [44, 0, -74],
+    scale: 1.5,
+    species: 'the carapace'
   }
 };
 

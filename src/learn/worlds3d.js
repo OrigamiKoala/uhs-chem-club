@@ -23,6 +23,7 @@ import verdigrisData from '../three/world-data/verdigris.json' with { type: 'jso
 import brinewireData from '../three/world-data/brinewire.json' with { type: 'json' };
 import quicklightData from '../three/world-data/quicklight.json' with { type: 'json' };
 import lodestoneData from '../three/world-data/lodestone.json' with { type: 'json' };
+import thornmereData from '../three/world-data/thornmere.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -236,6 +237,24 @@ const WORLDS_3D = {
       for (const site of lodestoneData.sites) {
         if (!site.built) continue;
         stage.setLodestoneSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit13: {
+    id: 'unit13',
+    key: 'thornmere',
+    worldName: 'Thornmere',
+    data: thornmereData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterThornmereScene(siteId, playerPos, lookAtPos);
+    },
+    siteForQuest(questId) {
+      return thornmereData.sites.find(s => s.questId === questId) || null;
+    },
+    syncProgress(stage, isComplete) {
+      for (const site of thornmereData.sites) {
+        if (!site.built) continue;
+        stage.setThornmereSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

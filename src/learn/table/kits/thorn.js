@@ -73,4 +73,4 @@ export function thornTable(spec, { w = THORN_BOUNDS.w, h = THORN_BOUNDS.h, recor
 export * from './heat.js';
 export { tbuildFixture, buildRead, buildScript, whereOn, tchoiceFixture, chosen, chosenIndex } from './thorn-build.js';
 export { tmolFixture, molRead, arrowScript, pickScript, tleadFixture, addLeadScene } from './thorn-mol.js';
-export { ttestFixture, testRead, resultOf, tcard, addTest } from './thorn-test.js';
+export { ttestFixture, testRead, resultOf, tcard, addTest, heatContacts } from './thorn-test.js';

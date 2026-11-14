@@ -26,7 +26,8 @@ const WORLDS = {
   verdigris: ['../src/three/verdigris.js', 'VerdigrisWorld'],
   brinewire: ['../src/three/brinewire.js', 'BrinewireWorld'],
   quicklight: ['../src/three/quicklight.js', 'QuicklightWorld'],
-  lodestone: ['../src/three/lodestone.js', 'LodestoneWorld']
+  lodestone: ['../src/three/lodestone.js', 'LodestoneWorld'],
+  thornmere: ['../src/three/thornmere.js', 'ThornmereWorld']
 };
 
 const pick = process.argv.slice(2).filter(a => !a.startsWith('-'));
