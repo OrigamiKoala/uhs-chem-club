@@ -177,3 +177,176 @@ Wiring: card rows, tray cell heights, rail labels — laid out and checked by `v
 ## Build record
 
 - 2026-11-13: Completed `q5-colour` layout fixes (`lode-light.js` `dsplitFixture` slot label, `q5-colour.js` stage 7/8 positions), added `lode-magnet.js` (`magnetFixture`, `magnetRead`), `d6-equal` lead clip, `q6-spin` (7 stages), `boss-coil` (5 phases), `the coil` foe/model/arena spot, `clue_lodestone_coil`, bank items in `unit12.json`, story entries/scenes (`lode-spin`, `lode-coil`), and marked `site-6` (`q6-spin`) `built: true` in `lodestone.json`. All 6 benches + boss (44 stages) pass `verify:learn`, `verify:table`, `verify:story`, `verify:lodestone`, and `verify:docs`.
+
+---
+
+## 7. Site rebuild (2026-11-14)
+
+The brief is Lodestone's row in `docs/plans/world-distinction-plan.md` section 6: *a winding slot canyon in banded iron,
+descending to a bowl; one path down the canyon, bend after bend; alcoves under overhangs in the canyon wall, open on the
+canyon side; rust dusk, light only on the upper walls.* This section is what the build is audited against. Section 5
+above describes the site this replaces (a flat floor between two walls, six huts either side of a haul road).
+
+### 7.1 The place
+
+**In one sentence:** a slot canyon cut down through banded iron rock, where the Fifth stored its drums in the hollows the
+water carved under each bend, and which ends in a round pothole where its sorting magnet stands.
+
+**The first ten seconds:** the player stands in a shallow scoured hollow on a bare iron tableland, the Avalon behind
+them; low banded walls round the hollow, a dark cleft opening in its west side, the floor of the cleft already sloping
+down out of the evening light. No bench is in view.
+
+### 7.2 The signature
+
+| | Lodestone |
+| :--- | :--- |
+| Landform | A slot canyon 9 to 10 m wide and 4 to 33 m deep, cut through a tableland of banded iron that rises to the south-west; joint-controlled, so it runs straight between sharp bends; it ends in a round pothole 38 m across |
+| Walk shape | One path, no branches: from the hollow at the canyon head, down eleven straight runs and ten bends (one a 45 degree jog), to the pothole |
+| Bench housing | Each bench is in an undercut alcove cut into the outside wall of a bend (where the water struck), under the overhanging hard band above it; three sides rock, open on the canyon side; six rooms of different shape |
+| Light | Rust dusk with the sun 11 degrees up in the west-south-west: sunlight reaches only the top few metres of the walls; the floor and alcoves are in shade (cover mask), lit by the Fifth's work lamps |
+
+Checked against every other row of section 6. Landform: no other row is a canyon or a cleft (Ember Reach is the inside of a
+caldera, Ligar a plateau with hills and a quarry, Lanternfall a glacier). Walk shape: no other row is a single unbranched
+descending path in a trench (Ember's is a switchback road on an open wall, Teeter's goes down terraces in the open,
+Thornmere's is a zigzag with branches). Bench housing: the nearest is Ember Reach's galleries "with one side open to the
+lake"; Lodestone's alcoves differ in being at floor level under an overhang, opening onto a 10 m slot with its far wall
+within 12 m, not onto open air. The row is built as written.
+
+### 7.3 Plan (world metres; +x east, +z north)
+
+- **The walk** is the canyon floor, the hollow at its head and the pothole: about 320 m of path inside x -51..92,
+  z -86..94. Everything else is rock: the tableland above the walls is never reachable.
+- **The hollow** (the pad's ground): x 34..92, z 52..94, floor 0.0, walls 3 to 5 m. Pad centre (66, 74). Spawn (44, 86),
+  looking south-west at the cleft. The cleft opens in the hollow's west wall at z 69..79.
+- **The canyon**, centre line and floor (half-width 5 m; 4.5 m on the jog). A bend is level for 6 m either side of it
+  (5.5 m at the jog); between bends the floor falls on an even grade:
+
+| Point | x, z | Floor | Run to next | Grade |
+| :--- | :--- | ---: | :--- | :--- |
+| P0 head | 30, 74 | 0.0 | west 40 m | 7% |
+| P1 | -10, 74 | -2.0 | south 30 m | 11% |
+| P2 | -10, 44 | -4.0 | east 46 m | 8% |
+| P3 | 36, 44 | -6.5 | south 32 m | 10% |
+| P4 | 36, 12 | -8.5 | west 30 m | 10% |
+| Q1 | 6, 12 | -9.5 | south-west 20 m | 11% |
+| Q2 | -8, -2 | -10.5 | west 26 m | 7% |
+| P5 | -34, -2 | -11.5 | south 26 m | 11% |
+| P6 | -34, -28 | -13.0 | east 48 m | 4% |
+| P7 | 14, -28 | -14.5 | south into the pothole | 10% |
+| Pothole | centre 14, -67, radius 19 | -15.5 | | |
+
+- **High ground:** the tableland, everywhere outside the walk. It stands about 4 m over the hollow and rises to the
+  south-west, to about 20 m at the pothole: so the walls are 4 m at the head, 10 m at Bench 1 and over 30 m round the
+  pothole. Closed by a wall of colliders laid on every cell along the edge of the walk.
+- **Water or drops:** none to fall into. The seep at Bench 3 lies in a rock basin with a kerb.
+- **Route, spawn to each bench, in bench order:** west down the cleft to P1 (Bench 1 straight ahead in the west wall);
+  south to P2 (Bench 2 ahead in the south wall); east to P3 (Bench 3 ahead in the east wall); south to P4 (Bench 4 ahead
+  in the south wall); west and round the jog to P5 (Bench 5 ahead in the west wall); south to P6 (Bench 6 ahead in the
+  south wall); east and south into the pothole.
+- **The boss's ground:** the pothole floor, level at -15.5. The Coil at (14, -69); the player's mark at (14, -53), just
+  inside the pothole from the last run. `BOSS_ARENA_SPOTS['boss-coil']` moves there.
+
+### 7.4 Section along the route (floor height, start to end)
+
+```
+ s (m)    0    40    70   116   148  178 198  224   252        300 320
+ floor  0.0  -2.0  -4.0  -6.5  -8.5 -9.5 -10.5 -11.5 -13.0     -14.5 -15.5
+ bench         B1    B2    B3    B4              B5    B6            boss
+ walls   4     10    13    15    17    19     21   24    28         31  33   (tableland over the floor, about)
+```
+
+Bench ground spans -2.0 to -13.0 m: 11 m.
+
+### 7.5 The benches
+
+Every room is an alcove: a level rock floor, a back wall and two side walls of rock, and the overhanging band as its roof,
+open on the canyon side across its whole width. The plate stands 4.5 m out from the back wall, facing the canyon; the
+player's mark is 2.5 to 3 m inside the lip, under the roof. Across the canyon the far wall is 10 m away.
+
+1. **Bench 1, The d-Block (`q1-dblock`), the core store at P1.** Teaches how iron's own electrons are arranged and which
+   leave first. The Fifth's prospectors kept their drill core here: an assay of the canyon's iron starts with the iron in
+   the rock. **Room:** the widest and lowest, 14 m across, 12 deep, 4.8 m to a flat roof (the underside of a hard band of
+   chert). Closed west, north, south; open east. **Arrival:** walking west down the first run, it is in the wall straight
+   ahead, a long low dark mouth. **Lamps:** two caged lamps on roof bolts, one over the plate. **Round the plate:** core
+   racks (steel frames, core boxes of banded core) along both side walls, a core saw on its bed behind the plate, timber
+   cribbing at the two lip corners where the band was propped.
+2. **Bench 2, Many Charges (`q2-charges`), the manganese face at P2.** Teaches that one metal can lose different numbers of
+   electrons. A black band of manganese ore crosses the back wall; manganese is the metal of many charges, and its
+   minerals (pink, brown, black) are its different ions in rock. **Room:** 12 across, 12.5 deep, the roof stepped: 5.2 m at
+   the lip, 7.5 m over the back half where a slab fell out. Closed south, east, west; open north. **Arrival:** walking
+   south, ahead in the south wall; the high back vault shows over the lip. **Lamps:** a lamp on a bolt over the plate, a
+   floodlamp on a stand at the face. **Round the plate:** the face itself (drill holes in the black band), a column-mounted
+   rock drill to the right, three sorting bins of ore to the left.
+3. **Bench 3, Complex Ions (`q3-complex`), the seep at P3.** Teaches ligands bonding to a metal ion through a lone pair:
+   water does it in the seep, ammonia did it in the spilled drums. A bedding plane in the roof weeps groundwater into a rock
+   basin. **Room:** 12.4 across, 13 deep (the deepest), 5.5 m roof with a drip line. Closed east, north, south; open
+   west. **Arrival:** walking east, ahead in the east wall; the drip and the basin are seen first. **Lamps:** two, one over
+   the plate, one over the basin. **Round the plate:** the kerbed seep basin along the left wall with its water level, the
+   Fifth's leach tank and a dosing drum of ammonia on a cradle to the right, a hose between.
+4. **Bench 4, Shapes and Isomers (`q4-shapes`), the drum gallery at P4.** Teaches that one formula can be two arrangements:
+   two drums listed alike. The Fifth's drum store. **Room:** the longest, 18 across, 11.6 deep, 4.6 m roof, held at the lip
+   by three steel props. Closed south, east, west; open north between the props. **Arrival:** walking south, ahead in the
+   south wall: a long gallery of drums behind props. **Lamps:** three along the gallery, one over the plate. **Round the
+   plate:** drums chocked on timber in rows at both ends, a runway beam with a chain hoist along the back above 2.4 m.
+5. **Bench 5, Colour (`q5-colour`), the chimney at P5.** Teaches that a solution's colour is the light it does not
+   absorb, set by the ligands round the ion. The back wall is stained by what seeps down it: blue-green where copper comes
+   through, ochre iron, black manganese: colour read off the rock. **Room:** 11.6 across, 12 deep, 8.5 m roof, with a
+   chimney cleft rising out of the back third to a slot of sky. Closed west, north, south; open east. **Arrival:** walking
+   west after the jog, ahead in the west wall; the slot of sky in its roof. **Lamps:** two, one over the plate, one high on
+   the stained wall. **Round the plate:** the stained face, a sample stand of glass jars on a shelf cut in the rock to the
+   left, a lamp-box (a hooded lamp and a white board for judging colour) to the right.
+6. **Bench 6, Magnetism (`q6-spin`), the magnetite pocket at P6.** Teaches that unpaired electrons are pulled into a
+   magnet. A jet-black band of magnetite, the lodestone itself, crosses the pocket; the Coil's control is wired from here.
+   **Room:** 13 across, 12 deep, 5.2 m roof, a rock pillar left standing in the right-hand corner. Closed south, east,
+   west; open north. **Arrival:** walking south, ahead in the south wall, the heavy cable from the pothole running in
+   along the floor. **Lamps:** two. **Round the plate:** switchgear cabinets against the back wall, a test electromagnet
+   (a yoke and coil on a frame) to the left, the cable drum and the pillar to the right.
+
+No two rooms share proportions or roof: wide and low; stepped vault; deepest with a drip line; long with props; tall with a
+chimney; pillared pocket.
+
+### 7.6 How it differs from each neighbour
+
+- **Tallow:** dead-flat salt pan in glare; here you are down in a trench and never see a horizon from a bench.
+- **Lanternfall:** ice and a frozen lake; here, rock walls in bands of red and black, and no water to speak of.
+- **Ligar:** hills, a quarry and mine drifts on a basalt plateau; here one path in a slot, and the benches are open-mouthed alcoves, not chambers at the end of tunnels.
+- **Bellows:** platforms over a cloud sea; here the ground is rock all round and above.
+- **Ember Reach:** a caldera wall in the open over a lava lake; here a closed slot with its far wall 10 m away.
+- **Mirrowen:** quays and hulls by the sea; here no water, no sky but a strip.
+- **Kettle:** inside one building; here inside the ground itself, rock walls not built ones.
+- **Teeter:** salt terraces stepping down an open hillside; here the descent is in a trench.
+- **Verdigris:** a drowned fort and boardwalks in fog; here dry rock and one path.
+- **Brinewire:** a barrage wall across a marsh; here two natural walls, banded, and no water.
+- **Quicklight:** a refinery of pipe racks on basalt; here almost nothing built but the Fifth's few fittings.
+- **Thornmere:** tar mounds and hollow trees; here the walls, not the floor, are the landform.
+
+### 7.7 The far country
+
+From the hollow and from above the canyon walls: the tableland running to the horizon, rising to the south-west.
+North: the Fifth's ropeway, a line of steel pylons running away north to a loading tower. East: an escarpment where the
+iron beds dip and their bands show in its face. South: a black butte of magnetite standing alone, the hill the world is
+named for. West: a dead ore conveyor on trestles and its bin. From inside the canyon only the sky and the sunlit upper walls.
+
+### 7.8 Numbers held
+
+- `world-shape.mjs`: 6 of 6 benches housed (R5 or better each), bench ground -2.0 to -13.0 (11 m), no cloned coordinates.
+- Plates in view from the spawn: none (at most two allowed).
+- Cost at T4: at most 500 draws and 600k triangles (budget 566 and 900k).
+
+### 7.9 Kept, rebuilt, archived
+
+| File | Fate |
+| :--- | :--- |
+| `src/three/lodestone.js` | Rebuilt (same contract, adds `routeTo`); old in `archive/2026-11-14/site-lodestone/` |
+| `src/three/lodestone/host-plan.js` | Rebuilt (alcoves, plate positions); old archived |
+| `src/three/lodestone/canyon-plan.js` | New: the canyon, the alcoves, the floor, the walk, colliders, cover, the guide's route (pure data, on `lib/workings.js`) |
+| `src/three/lodestone/terrain.js` | Rebuilt: one height field from the plan, the ground mesh, the canyon's rock walls and the alcove roofs; old archived |
+| `src/three/lodestone/rock.js` | New: the banded iron surface (per pixel, by height in the world) |
+| `src/three/lodestone/stations.js` | Rebuilt: six alcove hosts; old archived |
+| `src/three/lodestone/plant.js` | Rebuilt: canyon lamps, cable, the Coil's yard, the far country; old archived |
+| `src/three/lodestone/atmosphere.js` | Kept, sun lowered to 11 degrees |
+| `src/three/materials/lodestone-textures.js` | Kept (Thornmere uses it too) |
+| `tools/gen-lodestone-layout.mjs` | Rebuilt; old archived |
+| `tools/verify-lodestone.mjs` | Rebuilt to the new shape; old archived |
+| `src/learn/engine/boss-arena.js` | `boss-coil` spot moved into the pothole |
+| `tools/verify-arena.mjs` | Gains Lodestone (it was not measured) |
