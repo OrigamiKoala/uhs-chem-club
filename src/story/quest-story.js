@@ -74,6 +74,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the plates are a condensation polymer, and hydroxide breaks it at every link where water left.'
   },
+  'unit13/boss-carapace': {
+    scene: 'thorn-carapace',
+    beats: [
+      { to: 0.32, say: 'The wax was C₃₀H₆₂, and the seam that took the colour out of bromine water held the double bond.' },
+      { to: 0.66, say: 'The filler\'s second carbon held four different groups, and the link\'s C=O carbon was the electron-poor site.' },
+      { to: 0.96, say: 'Hydroxide\'s pair went to that carbon, and every amide link gave way: the armour came apart where water had left it.' }
+    ],
+    filed: 'Filed: under the polymer every plate is lined with lead, and lead is a shield against radiation.'
+  },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',

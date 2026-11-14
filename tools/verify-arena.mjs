@@ -159,14 +159,14 @@ for (const [unit, name, file, ctor, questId] of WORLDS) {
 
 /* ------------------------------------------------------------ the bodies */
 
-console.log('\nthe eleven bodies');
+console.log('\nthe bodies');
 {
   const { CombatMonster3D } = await import('../src/learn/engine/combat-monster-3d.js');
   const { BOSS_SPECIES } = await import('../src/learn/engine/boss-models.js');
-  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem', 'the tipper', 'the leach', 'the clamp', 'the flare'];
-  check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === SPECIES.length, 'boss-models.js builds all eleven', `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
+  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil', 'the carapace'];
+  check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === SPECIES.length, `boss-models.js builds all ${SPECIES.length}`, `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
 
-  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4, 'the tipper': 1.4, 'the leach': 1.4, 'the clamp': 1.4, 'the flare': 1.4 };
+  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4, 'the tipper': 1.4, 'the leach': 1.4, 'the clamp': 1.4, 'the flare': 1.4, 'the coil': 1.5, 'the carapace': 1.5 };
   for (const spec of SPECIES) {
     const spotEntry = Object.values(BOSS_ARENA_SPOTS).find(s => s.species === spec);
     const scale = spotEntry?.scale ?? SCALE[spec];

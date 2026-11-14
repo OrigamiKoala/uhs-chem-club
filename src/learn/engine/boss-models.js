@@ -15,6 +15,7 @@
  *   the tipper         Teeter          a beam pump grown huge: a lattice beam on a pivot, a salt pan hung from each end, a dial over the pivot
  *   the leach          Verdigris       a sump pump: a volute casing on braced legs, five intake vats, two jointed intake hoses for arms
  *   the clamp          Brinewire       a drain clamp on a pylon: a lattice mast on a sled, five cells ringed round its back, two jointed arms ending in clamp jaws
+ *   the carapace       Thornmere       a crawler under rows of linked polymer plates laid like scales, on six jointed legs, with two shears
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1799,6 +1800,105 @@ function buildFlare(monster) {
   };
 }
 
+
+function buildCarapace(monster) {
+  const k = new Kit(monster);
+  const resin = k.plate(0x2f2a24, { rough: 0.9, metal: 0.15 });
+  const shell = k.plate(0x4a4136, { rough: 0.85, metal: 0.2 });
+  const seamed = k.plate(0x5e5446, { rough: 0.8, metal: 0.25 });
+  const steel = k.plate(0x555c63);
+  const pitch = k.std(0x15120f, { rough: 0.55, metal: 0.05 });
+  const bright = k.std(0xd7dad4, { rough: 0.25, metal: 0.9 });
+  const lens = k.glow(AMBER, 2);
+
+  const body = k.node(monster.group, 0, 1.55, 0);
+
+  // The hull: a low barrel of ribs, and over it rows of curved plates laid like scales, each row a chain of linked units.
+  k.sph(body, 1.55, resin, 0, 0.45, 0, 1.15, 0.62, 1.35);
+  const rows = [];
+  for (let r = 0; r < 5; r++) {
+    const row = k.node(body, 0, 0.75 + r * 0.05, -1.25 + r * 0.62);
+    const span = 1.1 + Math.sin((r + 0.5) / 5 * Math.PI) * 0.75;
+    for (let i = -2; i <= 2; i++) {
+      const a = (i / 2) * 0.95;
+      const plateM = k.box(row, span * 0.48, 0.12, 0.72, (r + i) % 2 ? shell : seamed, Math.sin(a) * span, Math.cos(a) * 0.55 - 0.3, 0, 0.18, 0, -a * 0.9, 0.02);
+      if (r % 2 === 0 && Math.abs(i) === 1) monster.armour(plateM, 0.2 + r * 0.15 + (i > 0 ? 0.08 : 0));
+    }
+    k.bolts(row, [-1, 0, 1].map(i => [i * span * 0.55, 0.42, 0.3]), 0.05, bright, [0, 1, 0]);
+    rows.push(row);
+  }
+
+  // The head: a wedge of plate, two lenses, and a mouth of cutting plates.
+  const head = k.node(body, 0, 0.45, 1.75);
+  k.box(head, 1.25, 0.62, 0.8, shell, 0, 0, 0, -0.12, 0, 0, 0.05);
+  for (const sx of [-1, 1]) k.cyl(head, 0.11, 0.11, 0.08, 12, lens, sx * 0.34, 0.12, 0.41, Math.PI / 2, 0, 0);
+  const jaw = k.node(head, 0, -0.32, 0.25);
+  k.box(jaw, 0.9, 0.12, 0.55, pitch, 0, 0, 0.1);
+
+  // Six legs, each a hip, a thigh and a shin, set into the hull's flanks.
+  const legs = [];
+  for (const sx of [-1, 1]) {
+    for (let j = 0; j < 3; j++) {
+      const hip = k.node(body, sx * 1.35, 0.15, -0.9 + j * 0.9);
+      k.cyl(hip, 0.2, 0.2, 0.28, 10, steel, 0, 0, 0, 0, 0, Math.PI / 2);
+      const thigh = k.node(hip, 0, 0, 0, 0, 0, sx * -0.9);
+      k.beam(thigh, [0, 0, 0], [sx * 0.95, 0.35, 0], 0.18, 0.18, shell);
+      const knee = k.node(thigh, sx * 0.95, 0.35, 0);
+      k.sph(knee, 0.14, steel, 0, 0, 0);
+      const shin = k.node(knee, 0, 0, 0, 0, 0, sx * 1.6);
+      k.beam(shin, [0, 0, 0], [sx * 0.25, -1.55, 0], 0.13, 0.13, resin);
+      k.cone(shin, 0.09, 0.3, 8, steel, sx * 0.27, -1.65, 0, Math.PI, 0, 0);
+      legs.push({ sx, j, thigh, knee });
+    }
+  }
+
+  // Two forearms ending in shears: the plates it cuts with.
+  const arms = [-1, 1].map(sx => {
+    const shoulder = k.node(body, sx * 0.85, 0.5, 1.45);
+    k.sph(shoulder, 0.22, steel, 0, 0, 0);
+    const upper = k.node(shoulder, 0, 0, 0, -0.6, sx * 0.3, 0);
+    k.beam(upper, [0, 0, 0], [0, 0, 1.1], 0.2, 0.2, shell);
+    const elbow = k.node(upper, 0, 0, 1.1);
+    k.cyl(elbow, 0.16, 0.16, 0.3, 10, steel, 0, 0, 0, 0, 0, Math.PI / 2);
+    const fore = k.node(elbow, 0, 0, 0);
+    k.beam(fore, [0, 0, 0], [0, -0.2, 0.9], 0.16, 0.22, seamed);
+    const blades = [-1, 1].map(bs => {
+      const b = k.node(fore, 0, -0.2, 0.9);
+      k.extrude(b, [[0, 0], [0.1 * bs, 0.05], [0.04 * bs, 0.7], [-0.02 * bs, 0.62]], 0.05, bright).rotation.set(Math.PI / 2, 0, 0);
+      return { b, bs };
+    });
+    return { sx, shoulder, elbow, blades };
+  });
+  monster.muzzle = k.node(arms[1].elbow, 0, -0.2, 1.0);
+
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t || 0;
+      // The legs step in two sets of three; hurt, the near legs fold.
+      for (const L of legs) {
+        const ph = (L.j + (L.sx > 0 ? 1 : 0)) % 2 ? Math.PI : 0;
+        L.thigh.rotation.y = idle * Math.sin(t * 1.4 + ph) * 0.14;
+        L.thigh.rotation.z = L.sx * (-0.9 + 0.12 * Math.max(0, Math.sin(t * 1.4 + ph)) * idle + 0.25 * s.wound);
+        L.knee.rotation.z = L.sx * (0.1 * down - 0.15 * s.wound);
+      }
+      for (const a of arms) {
+        a.shoulder.rotation.x = -0.4 * up + 0.5 * down + idle * Math.sin(t * 0.9 + a.sx) * 0.06 + 0.2 * s.wound;
+        a.elbow.rotation.x = -0.6 * up + 0.8 * down;
+        const open = clamp01(0.3 + 0.6 * up - 0.5 * down + idle * Math.sin(t * 1.6 + a.sx) * 0.1);
+        for (const { b, bs } of a.blades) b.rotation.y = bs * open * 0.45;
+      }
+      // The plate rows ripple as it breathes and gape as it is wounded.
+      rows.forEach((row, i) => { row.rotation.x = idle * Math.sin(t * 1.1 + i * 0.7) * 0.03 + 0.05 * s.wound * (i % 2 ? 1 : -1) - 0.08 * s.roar; });
+      head.rotation.x = -0.15 * s.roar + 0.12 * down;
+      head.rotation.y = idle * Math.sin(t * 0.5) * 0.12;
+      body.position.y = 1.55 - 0.12 * down - clamp01(s.throes) * 0.5 - 0.15 * s.wound;
+      body.rotation.z = Math.sin(t * 20) * 0.006 * s.hurt;
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1813,7 +1913,8 @@ const BUILDERS = {
   'the leach': buildLeach,
   'the clamp': buildClamp,
   'the flare': buildFlare,
-  'the coil': buildFlare
+  'the coil': buildFlare,
+  'the carapace': buildCarapace
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */

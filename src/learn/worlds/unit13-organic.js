@@ -20,6 +20,6 @@ export const UNIT_13 = {
     { id: 'q4-groups', title: 'Functional Groups', line: 'One of the still\'s clear liquids is eating its drum.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit13/q4-groups.js') },
     { id: 'q5-reactions', title: 'Making and Breaking', line: 'Two liquids are joined into the links of the armour.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit13/q5-reactions.js') },
     { id: 'q6-polymers', title: 'Long Chains', line: 'The fortress plates are one molecule repeated.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit13/q6-polymers.js') },
-    { id: 'boss-carapace', title: 'The Carapace', line: 'Open the Fifth\'s armoured gate.', arena: 'boss', stageCount: 5, status: 'draft', module: null }
+    { id: 'boss-carapace', title: 'The Carapace', line: 'Open the Fifth\'s armoured gate.', arena: 'boss', stageCount: 5, status: 'live', module: () => import('../quests/unit13/boss-carapace.js') }
   ]
 };

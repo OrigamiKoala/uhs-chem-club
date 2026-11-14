@@ -138,6 +138,14 @@ export const CLUES = {
     summary: 'A trace of catalyst powder scraped from the cracking tower vent, unchanged after every burn cycle.',
     note: 'The powder opened a lower-barrier pathway through a slow intermediate step without being consumed. The Fifth called it a secret accelerant and never timed the steps.'
   },
+  clue_thornmere_carapace: {
+    id: 'clue_thornmere_carapace',
+    act: 'act4',
+    source: 'Thornmere Boss · The Carapace',
+    name: 'The Lined Plate',
+    summary: 'A plate of the Carapace\'s armour, cut free at its amide links, with a dense grey layer bonded under the polymer.',
+    note: 'The polymer was made to be cut by water, so the Fifth never meant it to last. The heavy layer under it was the point: it is lead, and lead stops radiation.'
+  },
   clue_lodestone_coil: {
     id: 'clue_lodestone_coil',
     act: 'act4',
@@ -466,6 +474,8 @@ export const EPISODES = {
     worldId: 'unit13',
     worldName: 'Thornmere',
     act: 'act4',
+    bossId: 'boss-carapace',
+    clueId: 'clue_thornmere_carapace',
     arrival: 'We are over the tar swamps of Thornmere. The raiders built an armored fortress behind thick plastic plates that our standard tools cannot pierce.',
     closing: 'The polymer armor is dissolved and the fortress gates are open. The armor was packed with heavy lead to protect against lethal nuclear radiation.',
     spoilFamily: 'Polymer carapaces',

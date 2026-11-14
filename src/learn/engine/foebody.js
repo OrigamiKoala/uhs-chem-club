@@ -1352,8 +1352,91 @@ function buildCoil(foe) {
   return b;
 }
 
+
+/** The Carapace: a low dome of plates linked in rows, on six short legs. Its rows lift apart as it is dispersed. */
+function buildCarapace(foe) {
+  const group = new THREE.Group();
+  const resin = new THREE.MeshStandardMaterial({ color: 0x3a332b, roughness: 0.88, metalness: 0.15 });
+  const plate = new THREE.MeshStandardMaterial({ color: 0x5e5446, roughness: 0.8, metalness: 0.25 });
+  const leg = new THREE.MeshStandardMaterial({ color: 0x555c63, roughness: 0.6, metalness: 0.6 });
+
+  const hull = new THREE.Mesh(new THREE.SphereGeometry(0.06, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), resin);
+  hull.scale.set(1.1, 0.7, 1.3);
+  hull.position.y = 0.03;
+  group.add(hull);
+  const rows = [];
+  for (let r = 0; r < 4; r++) {
+    const row = new THREE.Mesh(new THREE.BoxGeometry(0.11 - Math.abs(r - 1.5) * 0.015, 0.008, 0.022), plate);
+    row.position.set(0, 0.07 + (r === 1 || r === 2 ? 0.006 : 0), -0.045 + r * 0.03);
+    group.add(row); rows.push(row);
+  }
+  const legs = [];
+  for (const sx of [-1, 1]) for (let j = 0; j < 3; j++) {
+    const l = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.06, 6), leg);
+    l.position.set(sx * 0.07, 0.02, -0.04 + j * 0.04);
+    l.rotation.z = sx * 0.9;
+    group.add(l); legs.push(l);
+  }
+  const hit = hitTarget(0.14, 0.12);
+  hit.position.y = 0.05;
+  group.add(hit);
+
+  const body = {
+    species: 'the carapace',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.14, look: 0, baseX: 0, baseY: 0, baseZ: 0,
+    setPose(pose, plan = null, instant = false) {
+      this.plan = plan;
+      if (pose === this.pose) return;
+      this.pose = pose;
+      this.since = 0;
+      this.gone = false;
+      group.visible = true;
+      if (instant) this.snap();
+    },
+    hitPlayer() { this.lunge = 1; },
+    snap() {
+      group.visible = !this.gone;
+      group.scale.set(1, 1, 1);
+      this.write(0);
+    },
+    update(dt, reduced, bearing = 0) {
+      this.t += dt;
+      this.since += dt;
+      this.still = reduced;
+      this.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - this.look) * (1 - Math.exp(-3 * dt));
+      this.lunge = Math.max(0, this.lunge - dt * 2.5);
+      if (this.pose === 'dispersed') {
+        const f = Math.min(1, this.since / 2.2);
+        rows.forEach((row, i) => { row.position.y = 0.07 + f * (0.02 + i * 0.012); row.rotation.z = f * (i % 2 ? 0.5 : -0.5); });
+        group.scale.set(1, Math.max(0.001, 1 - f * 0.9), 1);
+        if (f >= 0.99) { this.gone = true; group.visible = false; }
+      }
+      this.write(reduced ? 0 : this.t);
+    },
+    write(t) {
+      group.position.z = this.baseZ + this.lunge * 0.05;
+      group.rotation.y = this.look * 0.3;
+      const p = this.pose === 'live' ? 1.0 : this.pose === 'flat' ? 0.3 : 0.6;
+      legs.forEach((l, i) => { l.rotation.x = !this.still ? 0.25 * p * Math.sin(t * 3 + i + this.phase) : 0; });
+      if (this.pose !== 'dispersed') rows.forEach((row, i) => { row.position.y = 0.07 + (i === 1 || i === 2 ? 0.006 : 0) + (!this.still ? 0.002 * p * Math.sin(t * 2 + i) : 0); });
+    },
+    dispose() {
+      for (const m of [hull, ...rows, ...legs, hit]) {
+        m.geometry?.dispose();
+        if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(mat => mat.dispose());
+      }
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil', 'the carapace'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -1374,6 +1457,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the clamp') return buildClamp(foe);
   if (species === 'the flare') return buildFlare(foe);
   if (species === 'the coil') return buildCoil(foe);
+  if (species === 'the carapace') return buildCarapace(foe);
   return null;
 }
 

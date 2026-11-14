@@ -158,3 +158,12 @@ const amide = {
 };
 
 addScenes({ pvc, polyester, polyamide, amide });
+
+/* 2-Bromobutane, CH₃–CHBr–CH₂–CH₃ (the boss's third phase): the second carbon holds H, Br, CH₃ and C₂H₅. */
+addScenes({
+  bromobutane: {
+    atoms: { m1: G('CH₃', -1.3, 0.3), c2: Cc(0, 0), h: H(0, -0.95), br: { el: 'Br', x: 0.3, y: 1.35 }, c3: G('CH₂', 1.3, -0.3), m4: G('CH₃', 2.6, 0.2) },
+    bonds: [['m1', 'c2', 1], ['c2', 'h', 1], ['c2', 'br', 1], ['c2', 'c3', 1], ['c3', 'm4', 1]],
+    lone: []
+  }
+});

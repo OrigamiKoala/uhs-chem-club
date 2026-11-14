@@ -399,6 +399,52 @@
         ],
         "finish": "A condensation chain of n monomers has n − 1 links and gives off n − 1 water molecules."
       }
+    },
+    "boss-carapace": {
+      "problems": [
+        {
+          "id": "boss-carapace#b1",
+          "quest": "boss-carapace",
+          "question": "Nylon's links are amide links, made as water left. Which reagent would break nylon back into its monomers?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Hydroxide ions in water, which add water back across each link"
+            },
+            {
+              "id": "b",
+              "label": "Bromine water, which adds across double bonds"
+            },
+            {
+              "id": "c",
+              "label": "Hydrogen gas, which adds across double bonds"
+            }
+          ],
+          "answer": "a",
+          "explanation": "An amide link is made by condensation, losing water, so it is broken by hydrolysis: hydroxide's pair moves to the C=O carbon and the C–N bond gives way. Nylon has no carbon–carbon double bonds for bromine or hydrogen to add across."
+        },
+        {
+          "id": "boss-carapace#b2",
+          "quest": "boss-carapace",
+          "question": "A sample has the formula C₆H₁₂ and leaves bromine water orange. What is it?",
+          "options": [
+            {
+              "id": "a",
+              "label": "A ring of six carbons, cyclohexane"
+            },
+            {
+              "id": "b",
+              "label": "An alkene with one double bond"
+            },
+            {
+              "id": "c",
+              "label": "An alkane chain of six carbons"
+            }
+          ],
+          "answer": "a",
+          "explanation": "C₆H₁₂ is two hydrogens short of the chain C₆H₁₄, so it has either a ring or a double bond. It left bromine water orange, so there is no double bond: it is a ring."
+        }
+      ]
     }
   }
 }

@@ -112,6 +112,23 @@ function polymers(ctx, w, h, t) {
   }
 }
 
+/* ---- boss-carapace: the wax counted, the link's poor carbon, the chain cut ---- */
+function carapace(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const rect = { x: 120, y: 110, w: 720, h: 320 };
+  if (t < 0.33) {
+    text(ctx, 'Wax: C₃₀H₆₂', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    ctx.globalAlpha = ease(win(t, 0.02, 0.12)); sceneIn(ctx, 'skel-pentane', { x: 280, y: 160, w: 400, h: 200 }, { skeletal: true }); ctx.globalAlpha = 1;
+  } else if (t < 0.67) {
+    text(ctx, 'One link of the armour', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    ctx.globalAlpha = ease(win(t, 0.35, 0.45)); sceneIn(ctx, 'amide', { x: 250, y: 120, w: 460, h: 300 }, { pairs: true, lit: ['a:c'] }); ctx.globalAlpha = 1;
+  } else {
+    text(ctx, 'The chain, cut at its amide links', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    const cut = win(t, 0.72, 0.9);
+    sceneIn(ctx, 'polyamide', rect, { pairs: false, lit: cut > 0.5 ? ['b:c1-n1', 'b:n2-c2'] : [] });
+  }
+}
+
 /* ---- q2-unsat: bromine reaches the second pair; H–Br adds in two steps ---- */
 function unsat(ctx, w, h, t) {
   ground(ctx, w, h);
@@ -134,7 +151,8 @@ export const THORNMERE_SCENES = {
   'thorn-isomers': isomers,
   'thorn-groups': groups,
   'thorn-reactions': reactions,
-  'thorn-polymers': polymers
+  'thorn-polymers': polymers,
+  'thorn-carapace': carapace
   // q4-groups
   // q5-reactions
   // q6-polymers

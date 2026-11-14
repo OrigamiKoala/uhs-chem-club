@@ -375,6 +375,23 @@ export const SPECIES = {
     }
   },
 
+  'the carapace': {
+    name: 'The Carapace',
+    counter: 'Trial missed: the reading does not match what the armour shows.',
+    knockback: 'Knocked back. The Carapace closes its plates, but your bench readings remain.',
+    hit: 'A row of the Carapace\'s plates comes unlinked and falls.',
+    lines: {
+      idle: () => 'Rows of linked plates rise and fall over the crawler\'s back.',
+      unmoved: () => 'The Carapace sets its plates edge to edge across the gate.',
+      live: () => 'The Carapace\'s shears open.',
+      flat: () => 'The Carapace sinks low on its legs.',
+      reversed: () => 'The Carapace draws back as its plates unlink.'
+    },
+    plan(enc, foe, probe) {
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
   'the coil': {
     name: 'The Coil',
     counter: 'Trial missed: the reading does not match what the sorting magnet shows.',
@@ -628,6 +645,14 @@ function flareArt(pose) {
   return svg(tower + flame, 'The Flare');
 }
 
+function carapaceArt(pose) {
+  const rows = [18, 25, 32, 39].map((y, i) => `<path d="M${14 + i} ${y} Q32 ${y - 7} ${50 - i} ${y}" fill="none" stroke="${pose === 'live' ? LIT : EDGE}" stroke-width="2"/>`).join('');
+  const hull = `<ellipse cx="32" cy="32" rx="19" ry="13" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`;
+  const legs = [-1, 1].map(s => [24, 32, 40].map(y => `<line x1="${32 + s * 17}" y1="${y}" x2="${32 + s * 27}" y2="${y + 10}" stroke="${EDGE}" stroke-width="1.5"/>`).join('')).join('');
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${hull}${legs}</g>`, 'The Carapace, unlinked');
+  return svg(legs + hull + rows, 'The Carapace');
+}
+
 function coilArt(pose) {
   const core = `<rect x="26" y="18" width="12" height="30" rx="2" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`;
   const rings = [23, 29, 35, 41].map(y => `<ellipse cx="32" cy="${y}" rx="12" ry="3" fill="none" stroke="${pose === 'live' ? LIT : EDGE}" stroke-width="1.6"/>`).join('');
@@ -637,6 +662,7 @@ function coilArt(pose) {
 
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the carapace') return carapaceArt(pose);
   if (species === 'the coil') return coilArt(pose);
   if (species === 'the flare') return flareArt(pose);
   if (species === 'the clamp') return clampArt(pose, plan);
