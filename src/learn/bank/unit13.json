@@ -304,6 +304,101 @@
           "explanation": "Two molecules join through a new C–O link from the acid's carbon to the alcohol's oxygen while water leaves: a condensation reaction, and the product, methyl ethanoate, is an ester."
         }
       ]
+    },
+    "q6-polymers": {
+      "problems": [
+        {
+          "id": "q6-polymers#b1",
+          "quest": "q6-polymers",
+          "question": "Poly(propene) is made from propene, CH₂=CH–CH₃. What does each repeating unit of the chain look like?",
+          "options": [
+            {
+              "id": "a",
+              "label": "–CH₂–CH(CH₃)–, joined by single bonds"
+            },
+            {
+              "id": "b",
+              "label": "–CH=C(CH₃)–, keeping its double bond"
+            },
+            {
+              "id": "c",
+              "label": "–CH₂–CH₂–CH₂–"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Each double bond's second pair becomes the bond to the next unit, so the three carbons of propene stay together as –CH₂–CH(CH₃)–, with single bonds only, and nothing leaves."
+        },
+        {
+          "id": "q6-polymers#b2",
+          "quest": "q6-polymers",
+          "question": "A protein chain is made of 120 amino acids joined end to end. How many water molecules were given off as it formed?",
+          "options": [
+            {
+              "id": "a",
+              "label": "119"
+            },
+            {
+              "id": "b",
+              "label": "120"
+            },
+            {
+              "id": "c",
+              "label": "60"
+            },
+            {
+              "id": "d",
+              "label": "240"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Each amide link is made as one water molecule leaves, and 120 amino acids in a row have 119 links between them."
+        }
+      ],
+      "worked": {
+        "id": "q6-polymers#w",
+        "quest": "q6-polymers",
+        "title": "Water from a condensation chain",
+        "setup": "A nylon chain is made from 800 two-ended monomers joined end to end. Find how many water molecules were given off, and how many links a hydrolysis would have to cut to free every monomer.",
+        "steps": [
+          {
+            "say": "How many links join 800 monomers in a row?",
+            "kind": "number",
+            "answer": 799,
+            "unit": "",
+            "calc": "800 - 1",
+            "hint": "A row of monomers has one link fewer than it has monomers.",
+            "explain": "800 − 1 = 799 links."
+          },
+          {
+            "say": "How many water molecules were given off?",
+            "kind": "number",
+            "answer": 799,
+            "unit": "",
+            "calc": "800 - 1",
+            "hint": "Each link gave off one water molecule.",
+            "explain": "One for each link: 799."
+          },
+          {
+            "say": "How many water molecules must a hydrolysis add back to free all 800 monomers?",
+            "kind": "number",
+            "answer": 799,
+            "unit": "",
+            "calc": "800 - 1",
+            "hint": "Hydrolysis adds water back across each link it cuts.",
+            "explain": "Every link must be cut, one water each: 799."
+          },
+          {
+            "say": "If the chain were 1600 monomers long, how many water molecules would it give off?",
+            "kind": "number",
+            "answer": 1599,
+            "unit": "",
+            "calc": "1600 - 1",
+            "hint": "Count the links again.",
+            "explain": "1600 − 1 = 1599: doubling the monomers does not quite double the links."
+          }
+        ],
+        "finish": "A condensation chain of n monomers has n − 1 links and gives off n − 1 water molecules."
+      }
     }
   }
 }

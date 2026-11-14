@@ -35,8 +35,15 @@ export const TERMS = [
   { id: 'substitution', term: 'substitution reaction', gloss: 'a reaction in which one group arrives at a carbon and another leaves it', quest: 'q5-reactions', stage: 2, re: /\bsubstitution\b/i },
   { id: 'ester', term: 'ester', gloss: 'the product of a carboxylic acid and an alcohol, joined by a C–O link', quest: 'q5-reactions', stage: 5, re: /\besters?\b/i },
   { id: 'condensation', term: 'condensation reaction', gloss: 'a reaction that joins two molecules while a small one, often water, leaves', quest: 'q5-reactions', stage: 5, re: /\bcondensation\b/i },
-  { id: 'hydrolysis', term: 'hydrolysis', gloss: 'breaking a link by adding water (or hydroxide) back across it', quest: 'q5-reactions', stage: 6, re: /\bhydrolysis\b/i }
+  { id: 'hydrolysis', term: 'hydrolysis', gloss: 'breaking a link by adding water (or hydroxide) back across it', quest: 'q5-reactions', stage: 6, re: /\bhydrolysis\b/i },
   // q6-polymers
+  { id: 'monomer', term: 'monomer', gloss: 'a small molecule that joins to others of its kind', quest: 'q6-polymers', stage: 2, re: /\bmonomers?\b/i },
+  { id: 'polymer', term: 'polymer', gloss: 'a very long molecule made of many monomers joined end to end', quest: 'q6-polymers', stage: 2, re: /\bpolymers?\b/i },
+  { id: 'addition-polymer', term: 'addition polymer', gloss: 'a polymer made by joining monomers through their double bonds, with nothing left over', quest: 'q6-polymers', stage: 2, re: /\baddition polymers?\b/i },
+  { id: 'condensation-polymer', term: 'condensation polymer', gloss: 'a polymer made by joining monomers while a small molecule, often water, leaves at each link', quest: 'q6-polymers', stage: 5, re: /\bcondensation polymers?\b/i },
+  { id: 'amino-acid', term: 'amino acid', gloss: 'a molecule with an amine group at one end and a carboxylic acid group at the other', quest: 'q6-polymers', stage: 7, re: /\bamino acids?\b/i },
+  { id: 'amide-link', term: 'amide link', gloss: 'the C–N link made when an amine group joins a carboxylic acid group and water leaves', quest: 'q6-polymers', stage: 7, re: /\bamide links?\b/i },
+  { id: 'protein', term: 'protein', gloss: 'a long chain of amino acids joined by amide links', quest: 'q6-polymers', stage: 7, re: /\bproteins?\b/i }
 ];
 
 export const BANNED = [

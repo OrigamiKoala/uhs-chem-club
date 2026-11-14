@@ -27,6 +27,7 @@ export const STAGE_STORY = {
   'q3-isomers': { 1: 'Two of the Fifth\'s drums carry the same formula, and only one of them feeds the plate works.' },
   'q4-groups': { 1: 'One of the still\'s clear liquids is eating through its drum, and Vess wants to know which.' },
   'q5-reactions': { 1: 'Vess needs to know how two of the still\'s liquids are joined into the links of the armour.' },
+  'q6-polymers': { 1: 'The fortress plates are one molecule repeated thousands of times, and Vess wants the place to cut it.' },
   'q2-unsat': { 1: 'The Fifth heats the tar until part of it changes, and Vess wants to know into what.' },
   /* ---- Lodestone: what is really in the Fifth's drums? ---- */
   'q1-dblock': { 1: 'The Fifth\'s manifest calls every drum iron salt; read iron\'s own electrons first.' },

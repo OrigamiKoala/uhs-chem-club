@@ -573,7 +573,7 @@
       "label": "Bench 6 - Long Chains",
       "structure": "plate-works",
       "mound": "M6",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

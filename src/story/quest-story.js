@@ -65,6 +65,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the Fifth joins an acid and an alcohol into ester links by losing water, so water can break those links.'
   },
+  'unit13/q6-polymers': {
+    scene: 'thorn-polymers',
+    beats: [
+      { to: 0.32, say: 'Each monomer joined through the second pair of its double bond, so the chain holds single bonds only, and nothing left.' },
+      { to: 0.66, say: 'Two-ended monomers joined with one water molecule falling at every link: four monomers, three waters.' },
+      { to: 0.96, say: 'Glycine joined glycine the same way, nitrogen\'s pair to the C=O carbon: an amide link, the link of a protein.' }
+    ],
+    filed: 'Filed: the plates are a condensation polymer, and hydroxide breaks it at every link where water left.'
+  },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
     scene: 'lode-dblock',

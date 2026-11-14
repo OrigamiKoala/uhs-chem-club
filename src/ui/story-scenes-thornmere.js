@@ -12,6 +12,7 @@ import '../learn/engine/thorn-scenes/q1-chains.js';
 import '../learn/engine/thorn-scenes/q3-isomers.js';
 import '../learn/engine/thorn-scenes/q4-groups.js';
 import '../learn/engine/thorn-scenes/q5-reactions.js';
+import '../learn/engine/thorn-scenes/q6-polymers.js';
 import { drawTwist, drawMirrorPair } from '../learn/table/kits/thorn-space.js';
 
 /** The bench painters draw in a fixture's frame; on the story plate one unit is one pixel. */
@@ -95,6 +96,22 @@ function reactions(ctx, w, h, t) {
   }
 }
 
+/* ---- q6-polymers: the chain grows; water falls at each link; glycine joins glycine ---- */
+function polymers(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const rect = { x: 120, y: 100, w: 720, h: 330 };
+  if (t < 0.33) {
+    text(ctx, '2-Methylpropene joins into a chain', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'chain-grow', rect, ease(win(t, 0.03, 0.3)), { pairs: false, unit: 70 });
+  } else if (t < 0.67) {
+    text(ctx, 'One water molecule at every link', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'cond-chain', rect, ease(win(t, 0.36, 0.64)), { pairs: false, unit: 90 });
+  } else {
+    text(ctx, 'Two glycines join by an amide link', 480, 60, { size: 26, color: C.text, align: 'center', weight: 700 });
+    playIn(ctx, 'gly-join', rect, ease(win(t, 0.7, 0.93)), { unit: 80 });
+  }
+}
+
 /* ---- q2-unsat: bromine reaches the second pair; H–Br adds in two steps ---- */
 function unsat(ctx, w, h, t) {
   ground(ctx, w, h);
@@ -116,7 +133,8 @@ export const THORNMERE_SCENES = {
   'thorn-unsat': unsat,
   'thorn-isomers': isomers,
   'thorn-groups': groups,
-  'thorn-reactions': reactions
+  'thorn-reactions': reactions,
+  'thorn-polymers': polymers
   // q4-groups
   // q5-reactions
   // q6-polymers
