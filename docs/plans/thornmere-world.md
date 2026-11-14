@@ -265,3 +265,17 @@ North: the drowned forest proper, bare snags 40 to 70 m tall standing in tar to 
 ## 8. Build record
 
 (appended as phases finish)
+
+### State at 2026-11-14 (run stopped by the owner after the vertical slice)
+
+**Built and checked:** the spec; `thorndata.js` planners and data with `tools/lib/thornmere/data-checks.mjs`; the `thorn` kit (model board, electron view with curved arrows, lead clips, test rig with bromine, heat and pH tests, sample cards, answer list); bench 2 `q2-unsat` (8 stages) with glossary, primers, bank, lead line and story animation; the whole walkable site (ground, six rooms with benches built in, cover mask, gate, far country, layout generator, `verify:thornmere`) and its registration in the stage, voyage, arena table and check lists.
+
+**Not built:** `q1-chains`, `q3-isomers`, `q4-groups`, `q5-reactions`, `q6-polymers` and `boss-carapace` (charted `draft`, no module); the twist and mirror fixtures; the approach test; the boss body and finale; Field Manual, commendations, requisitions and saga entries; the audit file; the AP audit and distinction-plan rows. Five rooms on the site therefore hold a bench with no quest behind it yet.
+
+**Measured (Node):** `world-shape.mjs` thornmere: 6 benches, ground 1.00 to 4.80 m, relief 6.40 m, housed 6/6 (R7 R8 R6 R7 R4 R7), no cloned coordinates. `perf-worlds.mjs` thornmere: 172 draws, 151k triangles. Shore: 1,239 colliders; flood fill reaches the pad, the gate's ground and all six approaches and no ground under the tar.
+
+**Checks run green:** `verify:learn`, `verify:table`, `verify:story`, `verify:docs`, `verify:thornmere`, `verify:voyage`, `verify:bench` (all eight `q2-unsat` stages solved by pointer path at seven viewports; all six Thornmere bays clear). `verify:arena` fails three checks that fail identically on the parent commit `abeab8d` (Kettle's arena lamp post, and the body list). The other worlds' scripts, `verify:teaching`, `verify:drills`, `verify:sync`, `verify:run` and the build were not run.
+
+**Seen:** the eight `q2-unsat` tabletops were drawn to PNG in Node with the game's own `drawTable` (`tools/thornmere-stills.mjs`) and read. Nothing was seen in a browser, and nothing of the 3D site was seen at all.
+
+**Parted from the spec:** mound coordinates moved south and the landing mound was enlarged to 28 m so the ship lands (the plan table in 6.3 is superseded by `site-plan.js`); the pit is a dished floor with no ramp; `lib/workings.js` was not needed.
