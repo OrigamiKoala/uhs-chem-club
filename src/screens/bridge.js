@@ -172,12 +172,6 @@ export function renderBridge(container) {
               await playCinematic("launch");
             } catch (err) {}
             window.location.hash = "#/quest";
-          },
-          onClose: async () => {
-            try {
-              await playCinematic("launch");
-            } catch (err) {}
-            window.location.hash = "#/quest";
           }
         });
         return;

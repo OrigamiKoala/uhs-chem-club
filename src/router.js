@@ -237,6 +237,7 @@ export class Router {
   constructor(appContainer) {
     this.appContainer = appContainer;
     this.booted = false;
+    this.currentHash = window.location.hash || '#/';
     window.addEventListener('hashchange', () => this.handleRoute());
     // The ship is down and the player has walked off it: draw the route they
     // flew for, now that they are standing on its ground.
@@ -277,6 +278,7 @@ export class Router {
     const isAlreadyOnDest = stage.mode === 'world' && v?.parked?.key === target.key;
 
     if (!isAlreadyOnDest) {
+      const prevHash = this.currentHash || '#/starmap';
       openWorldStoryModal(worldId, {
         isPreLaunch: true,
         onLaunch: () => {
@@ -284,8 +286,7 @@ export class Router {
           this._executeVoyage(target, raw);
         },
         onClose: () => {
-          sessionStorage.setItem(`story_just_shown_${worldId}`, String(Date.now()));
-          this._executeVoyage(target, raw);
+          try { history.replaceState(null, '', prevHash); } catch (e) {}
         }
       });
       return true;
@@ -300,6 +301,7 @@ export class Router {
     if (`#${raw}` !== target.hash) {
       try { history.replaceState(null, '', target.hash); } catch (e) {}
     }
+    this.currentHash = target.hash;
     soundscape.setRoom('bridge');
     this.appContainer.innerHTML = '';
     renderVoyageHud(this.appContainer);
@@ -418,6 +420,8 @@ export class Router {
     });
 
     window.scrollTo(0, 0);
+
+    this.currentHash = window.location.hash || '#/';
 
     const routePattern = routeDef.pattern
       ? '/' + routeDef.pattern.map(p => p.startsWith(':') ? `[${p.slice(1)}]` : p).join('/')

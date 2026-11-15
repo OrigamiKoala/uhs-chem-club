@@ -180,7 +180,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
 
     modalEl.querySelector('#story-modal-close-x')?.addEventListener('click', () => {
       soundscape.playToggleClack();
-      cleanupAndClose(true);
+      cleanupAndClose(false);
     });
 
     modalEl.querySelector('#story-footer-skip-btn')?.addEventListener('click', () => {
@@ -231,8 +231,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     dismissible: true,
     onClose: () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (opts.onLaunch) opts.onLaunch();
-      else if (opts.onClose) opts.onClose();
+      if (opts.onClose) opts.onClose();
     }
   });
 

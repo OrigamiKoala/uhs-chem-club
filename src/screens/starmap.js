@@ -420,12 +420,6 @@ export function renderStarMap(container) {
             await playCinematic("launch");
           } catch (e) {}
           window.location.hash = "#/quest";
-        },
-        onClose: async () => {
-          try {
-            await playCinematic("launch");
-          } catch (e) {}
-          window.location.hash = "#/quest";
         }
       });
       return;
