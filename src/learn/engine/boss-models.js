@@ -16,6 +16,7 @@
  *   the leach          Verdigris       a sump pump: a volute casing on braced legs, five intake vats, two jointed intake hoses for arms
  *   the clamp          Brinewire       a drain clamp on a pylon: a lattice mast on a sled, five cells ringed round its back, two jointed arms ending in clamp jaws
  *   the carapace       Thornmere       a crawler under rows of linked polymer plates laid like scales, on six jointed legs, with two shears
+ *   the core           Cinder Halo     a squat reactor vessel on four braced legs, a head of control-rod drives, two grapples of bent rods
  *
  * SCOURED PLATE. Weathered metal, bone-white salt and char; light is filament, not LED: the only lit parts are lenses, seams and a
  * maw, as small emissive surfaces, and `CombatMonster3D.applyTint` drives all of them (they pulse as it is hurt). No point lights.
@@ -1899,6 +1900,57 @@ function buildCarapace(monster) {
   };
 }
 
+/** The Transmutation Core: a squat reactor vessel on four braced legs, its head of control-rod drives, two grapples of bent rods. */
+function buildCore(monster) {
+  const k = new Kit(monster);
+  const vessel = k.plate(0x4b4f56, { rough: 0.6, metal: 0.7 });
+  const band = k.plate(0x6b625a, { rough: 0.7, metal: 0.6 });
+  const concrete = k.std(0x7d7a74, { rough: 0.95, metal: 0.02 });
+  const brass = k.std(0xb8944f, { rough: 0.4, metal: 0.9 });
+  const lens = k.glow(AMBER, 1.6);
+  const body = k.node(monster.group, 0, 1.9, 0);
+  k.cyl(body, 1.25, 1.35, 2.2, 40, vessel, 0, 0, 0);
+  const bands = [-0.7, 0, 0.7].map(y => k.cyl(body, 1.4, 1.4, 0.16, 40, band, 0, y, 0));
+  // The vessel's dished bottom and the head's lifting lugs.
+  k.sph(body, 1.3, vessel, 0, -1.1, 0, 1, 0.4, 1);
+  for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2 + 0.4; k.torus(body, 0.18, 0.05, band, Math.cos(a) * 1.0, 1.42, Math.sin(a) * 1.0, 0, a, 0); }
+  for (const y of [-0.7, 0.7]) k.bolts(body, Array.from({ length: 24 }, (_, i) => [Math.cos((i / 24) * Math.PI * 2) * 1.42, y + 0.09, Math.sin((i / 24) * Math.PI * 2) * 1.42]), 0.045, brass, [0, 1, 0]);
+  monster.armour(bands[1], 0.5);
+  monster.armour(bands[2], 0.85);
+  const head = k.node(body, 0, 1.15, 0);
+  k.cyl(head, 1.2, 1.3, 0.3, 40, concrete, 0, 0, 0);
+  const rods = [];
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    const rod = k.node(head, Math.cos(a) * 0.75, 0.15, Math.sin(a) * 0.75);
+    k.cyl(rod, 0.07, 0.07, 1.1, 8, brass, 0, 0.55, 0);
+    rods.push(rod);
+  }
+  k.cyl(head, 0.16, 0.16, 0.06, 12, lens, 0, 0.2, 1.05, Math.PI / 2, 0, 0);
+  for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) k.strut(body, [sx * 1.0, -0.9, sz * 1.0], [sx * 1.6, -1.9, sz * 1.6], 0.12, band);
+  const arms = [-1, 1].map(sx => {
+    const shoulder = k.node(body, sx * 1.35, 0.4, 0.6);
+    k.sph(shoulder, 0.22, band, 0, 0, 0);
+    const fore = k.node(shoulder, 0, 0, 0);
+    k.strut(fore, [0, 0, 0], [sx * 0.4, -0.3, 1.2], 0.09, brass);
+    k.strut(fore, [sx * 0.4, -0.3, 1.2], [sx * 0.2, -0.7, 1.6], 0.07, brass);
+    return { sx, shoulder };
+  });
+  monster.muzzle = k.node(head, 0, 0.2, 1.1);
+  return {
+    update(s) {
+      const { up, down } = attackPose(s);
+      const idle = s.calm ? 0 : 1;
+      const t = s.t || 0;
+      rods.forEach((r, i) => { r.position.y = 0.15 + idle * Math.max(0, Math.sin(t * 1.3 + i)) * 0.18 - 0.12 * s.wound; });
+      for (const a of arms) a.shoulder.rotation.x = -0.5 * up + 0.6 * down + idle * Math.sin(t * 0.8 + a.sx) * 0.08;
+      head.rotation.y = idle * Math.sin(t * 0.4) * 0.1;
+      body.position.y = 1.9 - 0.1 * down - clamp01(s.throes) * 0.5 - 0.12 * s.wound;
+      body.rotation.z = Math.sin(t * 22) * 0.006 * s.hurt;
+    }
+  };
+}
+
 /* ====================================================================== registry */
 
 const BUILDERS = {
@@ -1914,7 +1966,8 @@ const BUILDERS = {
   'the clamp': buildClamp,
   'the flare': buildFlare,
   'the coil': buildFlare,
-  'the carapace': buildCarapace
+  'the carapace': buildCarapace,
+  'the core': buildCore
 };
 
 /** Build the body for `species` into `monster.group`; returns its rig, or null when this file does not build that species. */

@@ -1353,6 +1353,13 @@ function buildCoil(foe) {
 }
 
 
+/** The Core's bench body: the Flare's stack and vent, renamed, as the Coil's is (a small cooling stack over the reactor). */
+function buildCoreBody(foe) {
+  const b = buildFlare(foe);
+  b.species = 'the core';
+  return b;
+}
+
 /** The Carapace: a low dome of plates linked in rows, on six short legs. Its rows lift apart as it is dispersed. */
 function buildCarapace(foe) {
   const group = new THREE.Group();
@@ -1436,7 +1443,7 @@ function buildCarapace(foe) {
 }
 
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil', 'the carapace'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible', 'the undertow', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil', 'the carapace', 'the core'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -1458,6 +1465,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the flare') return buildFlare(foe);
   if (species === 'the coil') return buildCoil(foe);
   if (species === 'the carapace') return buildCarapace(foe);
+  if (species === 'the core') return buildCoreBody(foe);
   return null;
 }
 

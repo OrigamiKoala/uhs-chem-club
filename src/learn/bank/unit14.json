@@ -460,6 +460,60 @@
         ],
         "finish": "The mass that goes missing comes out as energy: 931.5 MeV for every u."
       }
+    },
+    "boss-core": {
+      "problems": [
+        {
+          "id": "boss-core#b1",
+          "quest": "boss-core",
+          "question": "A reactor's control rods soak up neutrons. Why does pushing them further in slow the chain reaction?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Fewer of each fission's neutrons go on to split another nucleus"
+            },
+            {
+              "id": "b",
+              "label": "The rods cool the fuel, and cold nuclei decay more slowly"
+            },
+            {
+              "id": "c",
+              "label": "The rods turn uranium into lead"
+            },
+            {
+              "id": "d",
+              "label": "The rods stop gamma rays from leaving"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Each fission frees about three neutrons; a reaction holds steady when one of them goes on to cause another fission. Rods that soak up more leave fewer than one, so the chain dies away. Temperature does not change how fast nuclei decay."
+        },
+        {
+          "id": "boss-core#b2",
+          "quest": "boss-core",
+          "question": "A source counts 6,400 per minute; its half-life is 2 hours. What will it count after 8 hours?",
+          "options": [
+            {
+              "id": "a",
+              "label": "400"
+            },
+            {
+              "id": "b",
+              "label": "800"
+            },
+            {
+              "id": "c",
+              "label": "1,600"
+            },
+            {
+              "id": "d",
+              "label": "0"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Eight hours is four half-lives: 6,400 → 3,200 → 1,600 → 800 → 400."
+        }
+      ]
     }
   }
 }

@@ -202,6 +202,17 @@ function shortfall(ctx, w, h, t) {
   }
 }
 
+/* ---- boss-core: the five phases; the rods dropping home ---- */
+function core(ctx, w, h, t) {
+  ground(ctx, w, h);
+  head(ctx, t < 0.62 ? 'The Transmutation Core' : 'Rods home');
+  ctx.fillStyle = '#4b4f56'; ctx.fillRect(400, 220, 160, 200);
+  const k = win(t, 0.64, 0.92);
+  for (let i = 0; i < 7; i++) { const top = 140 + k * 90; ctx.fillStyle = '#b8944f'; ctx.fillRect(410 + i * 22, top, 8, 80); }
+  const g = generations(t < 0.64 ? 0 : 2, 4);
+  text(ctx, `fissions per generation: ${g.join(', ')}`, 480, 470, { size: 22, color: K.amber, align: 'center' });
+}
+
 export const CINDERHALO_SCENES = {
   'ch-warm': warm,
   // q2-what-comes-off
@@ -215,6 +226,7 @@ export const CINDERHALO_SCENES = {
   // q6-shortfall
   'ch-shortfall': shortfall,
   // boss-core
+  'ch-core': core
 };
 
 export { gammaWave, lepton, nucSym, symbolOf, leftAt, generations, BE_PER_NUCLEON };

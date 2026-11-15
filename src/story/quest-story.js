@@ -74,6 +74,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the Core splits uranium; one runaway chain made these craters.'
   },
+  'unit14/boss-core': {
+    scene: 'ch-core',
+    beats: [
+      { to: 0.3, say: 'The frozen can counted far above the background, and the cask leaked beta and gamma.' },
+      { to: 0.62, say: 'Its sodium coolant became magnesium, and its cobalt source fell to an eighth in three half-lives.' },
+      { to: 0.96, say: 'Each fission gave out 173 MeV. With the rods home, each one caused less than one more, and the Core went quiet.' }
+    ],
+    filed: 'Filed: the Fifth made no gold; it split uranium, and its runaway chain made the great crater.'
+  },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
     scene: 'thorn-chains',

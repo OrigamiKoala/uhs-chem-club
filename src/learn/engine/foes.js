@@ -392,6 +392,23 @@ export const SPECIES = {
     }
   },
 
+  'the core': {
+    name: 'The Transmutation Core',
+    counter: 'Trial missed: the reading does not match what the reactor shows.',
+    knockback: 'Knocked back. The Core lifts its rods again, but your bench readings remain.',
+    hit: 'A control rod drops home into the Core and its vessel cools a step.',
+    lines: {
+      idle: () => 'The Core\'s rod drives rise and fall over its vessel.',
+      unmoved: () => 'The Core holds its rods out of the fuel.',
+      live: () => 'The Core\'s grapples reach for the fuel racks.',
+      flat: () => 'The Core sinks on its braced legs.',
+      reversed: () => 'The Core draws back as a rod drops home.'
+    },
+    plan(enc, foe, probe) {
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
   'the coil': {
     name: 'The Coil',
     counter: 'Trial missed: the reading does not match what the sorting magnet shows.',
@@ -653,6 +670,14 @@ function carapaceArt(pose) {
   return svg(legs + hull + rows, 'The Carapace');
 }
 
+function coreArt(pose) {
+  const vessel = `<rect x="20" y="24" width="24" height="26" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/><line x1="20" y1="33" x2="44" y2="33" stroke="${EDGE}" stroke-width="1.2"/><line x1="20" y1="42" x2="44" y2="42" stroke="${EDGE}" stroke-width="1.2"/>`;
+  const rods = [24, 29, 34, 39].map((x, i) => `<line x1="${x + 1}" y1="24" x2="${x + 1}" y2="${pose === 'live' ? 10 + (i % 2) * 3 : 16 + (i % 2) * 2}" stroke="${pose === 'live' ? LIT : EDGE}" stroke-width="1.8"/>`).join('');
+  const legs = `<line x1="22" y1="50" x2="16" y2="58" stroke="${EDGE}" stroke-width="1.5"/><line x1="42" y1="50" x2="48" y2="58" stroke="${EDGE}" stroke-width="1.5"/>`;
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${vessel}${legs}</g>`, 'The Transmutation Core, shut down');
+  return svg(legs + vessel + rods, 'The Transmutation Core');
+}
+
 function coilArt(pose) {
   const core = `<rect x="26" y="18" width="12" height="30" rx="2" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`;
   const rings = [23, 29, 35, 41].map(y => `<ellipse cx="32" cy="${y}" rx="12" ry="3" fill="none" stroke="${pose === 'live' ? LIT : EDGE}" stroke-width="1.6"/>`).join('');
@@ -663,6 +688,7 @@ function coilArt(pose) {
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
   if (species === 'the carapace') return carapaceArt(pose);
+  if (species === 'the core') return coreArt(pose);
   if (species === 'the coil') return coilArt(pose);
   if (species === 'the flare') return flareArt(pose);
   if (species === 'the clamp') return clampArt(pose, plan);

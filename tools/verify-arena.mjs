@@ -38,6 +38,7 @@ await import('../src/three/brinewire.js');
 await import('../src/three/quicklight.js');
 await import('../src/three/lodestone.js');
 await import('../src/three/thornmere.js');
+await import('../src/three/cinderhalo.js');
 const { collectBoxes } = await import('./lib/overlap.mjs');
 const { arenaTablePlan, buildArenaTable, ARENA_TABLE } = await import('../src/three/arena-table.js');
 const { BOSS_ARENA_SPOTS } = await import('../src/learn/engine/boss-arena.js');
@@ -64,7 +65,8 @@ const WORLDS = [
   ['unit10', 'Brinewire', '../src/three/brinewire.js', 'BrinewireWorld', 'boss-clamp'],
   ['unit11', 'Quicklight', '../src/three/quicklight.js', 'QuicklightWorld', 'boss-flare'],
   ['unit12', 'Lodestone', '../src/three/lodestone.js', 'LodestoneWorld', 'boss-coil'],
-  ['unit13', 'Thornmere', '../src/three/thornmere.js', 'ThornmereWorld', 'boss-carapace']
+  ['unit13', 'Thornmere', '../src/three/thornmere.js', 'ThornmereWorld', 'boss-carapace'],
+  ['unit14', 'Cinder Halo', '../src/three/cinderhalo.js', 'CinderHaloWorld', 'boss-core']
 ];
 
 const IGNORED = /cobbles|scrub|pebble|gravel|grass|dust|snow|ice-|decal/i;
@@ -167,10 +169,10 @@ console.log('\nthe bodies');
 {
   const { CombatMonster3D } = await import('../src/learn/engine/combat-monster-3d.js');
   const { BOSS_SPECIES } = await import('../src/learn/engine/boss-models.js');
-  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil', 'the carapace'];
+  const SPECIES = ['the hopper', 'the lantern-eater', 'basalt warden', 'the compressor', 'the crucible', 'the undertow', 'recipe golem', 'the tipper', 'the leach', 'the clamp', 'the flare', 'the coil', 'the carapace', 'the core'];
   check(SPECIES.every(s => BOSS_SPECIES.includes(s)) && BOSS_SPECIES.length === SPECIES.length, `boss-models.js builds all ${SPECIES.length}`, `boss-models.js builds ${BOSS_SPECIES.join(', ')}`);
 
-  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4, 'the tipper': 1.4, 'the leach': 1.4, 'the clamp': 1.4, 'the flare': 1.4, 'the coil': 1.5, 'the carapace': 1.5 };
+  const SCALE = { 'the hopper': 1.8, 'the lantern-eater': 1.1, 'basalt warden': 1.0, 'the compressor': 1.5, 'the crucible': 1.4, 'the undertow': 1.5, 'recipe golem': 1.4, 'the tipper': 1.4, 'the leach': 1.4, 'the clamp': 1.4, 'the flare': 1.4, 'the coil': 1.5, 'the carapace': 1.5, 'the core': 1.5 };
   for (const spec of SPECIES) {
     const spotEntry = Object.values(BOSS_ARENA_SPOTS).find(s => s.species === spec);
     const scale = spotEntry?.scale ?? SCALE[spec];

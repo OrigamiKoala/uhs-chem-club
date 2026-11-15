@@ -146,6 +146,14 @@ export const CLUES = {
     summary: 'A plate of the Carapace\'s armour, cut free at its amide links, with a dense grey layer bonded under the polymer.',
     note: 'The polymer was made to be cut by water, so the Fifth never meant it to last. The heavy layer under it was the point: it is lead, and lead stops radiation.'
   },
+  clue_cinderhalo_core: {
+    id: 'clue_cinderhalo_core',
+    act: 'act4',
+    source: 'Cinder Halo Boss · The Transmutation Core',
+    name: 'The Rod Log',
+    summary: 'The Core\'s control-rod log, with every rod pulled out of the fuel the night the great crater was made.',
+    note: 'With no rods in, each fission caused three more, and the chain ran away. The Fifth did not make gold from scrap: it split uranium, and the elements in its slag were what the splitting and the decays left behind.'
+  },
   clue_lodestone_coil: {
     id: 'clue_lodestone_coil',
     act: 'act4',
@@ -492,6 +500,8 @@ export const EPISODES = {
     worldId: 'unit14',
     worldName: 'Cinder Halo',
     act: 'act4',
+    bossId: 'boss-core',
+    clueId: 'clue_cinderhalo_core',
     arrival: 'This is our final mission. We have tracked the Fifth Guild to Cinder Halo, where they have started an unstable nuclear core that threatens to destroy the entire sector.',
     closing: 'The nuclear core is stabilized and the war is over. We have stopped the disaster and brought the forgotten crews to the negotiating table.',
     spoilFamily: 'Transmutation core',
