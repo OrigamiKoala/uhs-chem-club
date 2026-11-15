@@ -141,14 +141,14 @@ export class CinderHaloWorld {
     this.keyLight = key;
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
-    const amb = this.data.ambience || { fogColor: 0x5b524b, fogNear: 70, fogFar: 460 };
+    const amb = this.data.ambience || { fogColor: 0xcbc1b2, fogNear: 70, fogFar: 460 };
     this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
     this.scene.background = CHSKY.horizon.clone();
     const env = createChEnvironment(this.renderer);
     if (env) {
       this.envTarget = env;
       this.scene.environment = env.texture;
-      this.scene.environmentIntensity = 0.5;
+      this.scene.environmentIntensity = 0.85;
     }
   }
 

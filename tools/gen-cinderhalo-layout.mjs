@@ -59,7 +59,7 @@ const out = {
   place: 'Crater sea',
   oneLine: 'Radioactivity, the three radiations, nuclear equations, stability, half-life, and the energy in a nucleus.',
   sky: 'cinderhalo-sky',
-  ambience: { fogColor: 0x5b524b, fogNear: 70, fogFar: 460 },
+  ambience: { fogColor: 0xcbc1b2, fogNear: 70, fogFar: 460 },
   spawn: { pos: [...SPAWN], lookAt: [0, 1.6, 30] },
   pad: { pos: [PAD[0], 0, PAD[1]], r: 10 },
   arena: { boss: [...ARENA.boss], player: [...ARENA.player] },
