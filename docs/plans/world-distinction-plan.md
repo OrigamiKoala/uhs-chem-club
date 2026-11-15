@@ -235,7 +235,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | Groundwork G1 to G5 | n/a | n/a | n/a | n/a | 2026-11-13 (G1 to G5 built; see below) | n/a |
 | Kettle | 2026-11-13 | 2026-11-13 | 2026-11-13 (8 of 8 housed) | 2026-11-13 | 2026-11-13 (`verify:kettle` rewritten) | not yet |
-| Lodestone | | | | | | |
+| Lodestone | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:lodestone` rewritten) | not yet |
 | Teeter | | | | | | |
 | Verdigris | | | | | | |
 | Brinewire | | | | | | |
@@ -255,6 +255,18 @@ ground 1.00 to 4.80 m (3.8 m), relief 6.40 m, housed 6 of 6 (R7 R8 R6 R7 R4 R7),
 172 draws, 150k triangles. It uses its own cover mask (`thornmere/cover.js`) and shape checks (`tools/lib/thornmere/`), written
 before the shared G2 and G3 layers reached its branch; moving onto them is a follow-up. Spec and build record:
 `docs/plans/thornmere-world.md` section 6 and 8.
+
+**Lodestone, 2026-11-14 (branch `site/lodestone`).** Built as the row says. `world-shape.mjs`: bench ground -13.0 to -2.0 m
+(11 m), relief 29.7 m, housed 6 of 6 (R6 R6 R6 R5 R6 R6), no cloned coordinates, no plate in view from the spawn.
+`perf-worlds.mjs`: 170 draws, 306k triangles (before: 199 and 181k). It uses the shared layers as they were: the alcoves are
+`lib/workings.js` volumes with one `to: null` opening (`outdoorDoors`); `lib/cover.js` covers the canyon runs, the pothole
+and the alcoves below their rims with a per-box sky residual. New and world-local: the walk as a union of shapes with an
+inside depth, closed by a collider on every 0.5 m edge cell and faced by a rock sheet traced round the edge (marching
+squares), and rock coloured by height in the world. For the next world: keep 7 m of rock between any two parts of a walk
+(thinner, and the faces' lips land in the other part), hold the ground at the floor for longer than a grid cell's diagonal
+past the walk's edge, and turn a host's box colliders as boxes when it faces along an axis. `tools/glsl-check.mjs` compiles a
+world's patched shaders offline (`glslangValidator`); the cover mask's GLSL now has that evidence. Spec, departures and the
+owner's viewing list: `docs/plans/lodestone-world.md` section 7.
 
 **Groundwork, 2026-11-13 (branch `site/kettle`).** G1 `src/three/lib/workings.js`, G2 `src/three/lib/cover.js`,
 G3 `tools/lib/world-shape-checks.mjs` are built; G4 was already done; G5 is the "Shared site layers" entry in

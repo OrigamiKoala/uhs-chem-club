@@ -271,6 +271,9 @@ Each row is a defect that was built, found and fixed. Do not build it again.
 | A building's outside wall gone dark | The outside face of a wall lies on the covered room's own plane, so the cover mask read it as indoors | Test cover a little in front of the surface along its normal (`makeCover` `push`); keep the boxes just inside the wall planes |
 | The guide cutting a door's corner | A route from door middle to door middle clipped the jamb when the last leg came from the side | Cross every doorway along its own axis: a point a stride before it and a stride after (`kettle/works-plan.js` `routeTo`) |
 | A leaning member over walkable floor | A hoist frame's raking legs and a runner's spout stood over floor the walk could reach, at shin height | A host's collider covers the plan of everything under 2.4 m, not only its base; `lowBodies` in `tools/lib/world-shape-checks.mjs` finds the rest |
+| A rock fin too thin for its faces | Lodestone: with 3 m of rock between a canyon run and the hollow, the rock faces' top lips (drawn back into the rock) landed in the hollow | Keep at least 7 m of rock between any two parts of a walk; measure every rock-face vertex against the walk |
+| A box collider turned into discs | A host's box colliders laid as a row of discs left the box's corners walkable, under drum hoops at shin height | A host turned by a quarter turn keeps its box colliders as boxes (`lodestone.js` `initHosts`) |
+| A shader patch nobody compiled | No Node check runs a GPU, so a world's `onBeforeCompile` GLSL is first tried in front of the owner | Run `node tools/glsl-check.mjs <world>` after changing a patch (needs `glslangValidator`) |
 
 ### Teeter (equilibrium) additions
 

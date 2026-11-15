@@ -221,7 +221,7 @@ export function buildManganeseFace(w) {
   k.box(g, [0.24, 0.22, 0.5], M.rusted, [cx - 1.35, 1.8, cz + 0.05]);
   k.cyl(g, [0.022, 0.022, 0.6, 8], M.steel, [cx - 1.35, 1.66, cz - 1.25], [Math.PI / 2, 0, 0], false);
   // Its air hose, slack along the floor to a receiver beside the wall.
-  k.pipe(g, [[cx - 1.35, 1.8, cz + 0.3], [cx - 0.9, 0.9, cz + 0.7], [cx - 0.2, 0.08, cz + 1.0], [room.x1 - 0.6, 0.08, cz + 1.2], [room.x1 - 0.6, 0.6, cz + 2.0]], 0.035, M.rubber);
+  k.pipe(g, [[cx - 1.22, 1.82, cz + 0.12], [cx - 0.6, 1.0, cz + 0.2], [cx - 0.2, 0.08, cz + 0.45], [cx + 0.2, 0.08, cz + 0.8], [room.x1 - 0.6, 0.08, cz + 1.0], [room.x1 - 0.6, 0.6, cz + 2.0]], 0.035, M.rubber);
   k.cyl(g, [0.35, 0.35, 1.3, 16], M.drumGreen, [room.x1 - 0.6, 0.75, cz + 2.6]);
   h.solid(cx - 0.75, cz - 0.1, 1.05, 1.5);
   h.solid(room.x1 - 0.6, cz + 1.9, 0.42, 1.15);

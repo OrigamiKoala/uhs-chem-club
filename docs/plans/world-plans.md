@@ -25,7 +25,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 | **09** | **Verdigris** | Acids & Bases | Unit 8 (8.1–8.11) | 8 + Boss | 65 | pH kit (`ph.js`) | Live | `docs/plans/verdigris-world.md` |
 | **10** | **Brinewire** | Electrochemistry | Unit 9 (9.7–9.11), 4.9 | 6 + Boss | 50 | Cell kit (`cell.js`) | Live | `docs/plans/brinewire-world.md` |
 | **11** | **Quicklight** | Kinetics & Rate Laws | Unit 5 (5.1–5.11) | Charted | — | Kinetic kit | Planned | `docs/plans/learn-quests.md` |
-| **12** | **Lodestone** | Thermodynamics & Entropy | Unit 9 (9.1–9.6) | Charted | — | Thermo kit | Planned | `docs/plans/learn-quests.md` |
+| **12** | **Lodestone** | Transition Metals | Beyond the exam | 6 + Boss | 46 | Lode kit (`lode.js`) | Live | `docs/plans/lodestone-world.md` |
 | **13** | **Thornmere** | Organic & Polymers | Beyond the exam (touches 2.5–2.7, 3.1, 3.1.A.5, 3.2.A.7, 8.6) | 6 + Boss | 53 | Thorn kit (`thorn.js`) | Live | `docs/plans/thornmere-world.md` |
 | **14** | **Cinder Halo** | Nuclear & AP Capstone | Nuclear / Integrated | Charted | — | Capstone | Planned | `docs/plans/learn-quests.md` |
 
@@ -92,6 +92,12 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Benches:** `q1-halves` (redox half-reactions and oxidation states), `q2-activity` (activity series and displacement reactions), `q3-galvanic` (galvanic cell construction, salt bridge, electrodes), `q4-potential` (standard cell potential E°cell and ΔG° = -nFE°), `q5-load` (cell potential under non-standard conditions, Nernst, concentration cells), `q6-electrolysis` (electrolytic cells, Faraday's law of electrolysis), and `boss-clamp`.
 - **Core Teaching Click:** Voltage is energy per electron (intensive); a cell runs down until Q = K (E = 0), not until all reactants vanish.
 - **Reference:** `docs/plans/brinewire-world.md`
+
+### Unit 12: Lodestone (Transition Metals)
+- **Setting:** A slot canyon cut down through banded iron, walked from a scoured hollow at its head down eleven straight runs and ten bends to a round pothole where the Fifth's sorting magnet stands; each bench is in an alcove under the overhanging bed at the outside of a bend (site rebuilt 2026-11-14, `lodestone-world.md` section 7).
+- **Benches:** `q1-dblock` (d-electron arrangements; ions lose 4s first), `q2-charges` (successive ionization energies, several charges), `q3-complex` (ligands, the coordinate bond, coordination number, chelates), `q4-shapes` (octahedral, tetrahedral, square planar; cis and trans), `q5-colour` (complementary colour, crystal field splitting), `q6-spin` (paramagnetism, high and low spin), and `boss-coil`.
+- **Core Teaching Click:** The d electrons decide everything: which electrons leave, which charges form, what colour a complex is and whether a magnet pulls it.
+- **Reference:** `docs/plans/lodestone-world.md`
 
 ---
 

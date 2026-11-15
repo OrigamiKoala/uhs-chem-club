@@ -280,7 +280,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `three/lib/cover.js`: `coverLightChunks` is Ligar's sun-and-sky removal, lifted (Ligar's shader text is unchanged); `makeCover({ sun, boxes, openings })` is the same mask for stock
   materials and `THREE.Fog`, with a per-box `sky` residual, a normal `push` so the outside face of a wall on a box's own plane stays lit, and `openings` (roof slots, windows, doorways)
   through which the sun still reaches a covered fragment: a light shaft with no shadow map. Call `cover.applyTo(scene)` after the build and again for late materials (a deployed
-  instrument). The mask holds 20 boxes and 8 openings; the counts size shader arrays, so they are fixed (about 80 uniform vectors: a handset's fragment shader has few to spare). **Its GLSL has not been compiled by any check: no Node test can, so the first run at `3D On` is its test.**
+  instrument). The mask holds 20 boxes and 8 openings; the counts size shader arrays, so they are fixed (about 80 uniform vectors: a handset's fragment shader has few to spare). Its GLSL is compiled offline by `node tools/glsl-check.mjs <world>` (a reading aid that needs `glslangValidator`; it approximates three's prefix, so a pass is evidence, not proof; Kettle's and Lodestone's compile).
   `tools/lib/world-shape-checks.mjs`: bench ground span, housing, shared layouts, one circle, two columns, plates in view, the flood fill, and low bodies over walkable cells
   (single floor). `tools/world-shape.mjs` prints through it; a rebuilt world's `verify-<world>.mjs` calls it as checks. Traps: the cover test at a wall's own plane reads covered
   without `push`; a shaft needs a real hole in the roof or wall as well, or a desktop's shadow map closes it.
@@ -299,6 +299,16 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   (`lib/cover.js`) covers every room with a per-room sky residual; the sun comes in through the charge door and three louvred bands (`CLERESTORY`), which are real holes in the walls too; the iron in the runner
   (`M.iron`) is the one fire, a source in the three-light pool. Traps met: a ramp is entered only at its ends (a side door onto a graded floor is a ledge); a stanchion must not stand in a doorway (the frames'
   positions are listed, not stepped); the arena's 7 m ring must clear the spout's collider under the tap hole; the bench's own parts read as bay intrusions unless `bakeStatics` is stubbed as `verify:bench` does.
+- **Lodestone** (`unit12`, `three/lodestone.js` + `lodestone/`, `tools/gen-lodestone-layout.mjs`, `tools/verify-lodestone.mjs`; site rebuilt 2026-11-14, `docs/plans/lodestone-world.md` section 7): A SLOT
+  CANYON IN BANDED IRON. `lodestone/canyon-plan.js` (pure data) declares the hollow, eleven runs along a centre line (`LINE`: floor level over a landing at each bend, graded between), six alcoves (shared-layer
+  volumes with one `to: null` mouth) and the pothole; `sample(x, z)` is the walk as a union with an inside depth, and everything is read off it: the height field (`height`: the floor inside; outside, held at
+  the floor for 1.6 m, then up to the `tableland` by 3.6 m), `edgeColliders` (a box on every 0.5 m cell along the edge, merged), `edgeLoops` (the edge traced by marching squares), `coverSpec` (a box per run
+  and the pothole below the rims, plus the alcoves), `routeTo` (centre line bend by bend, in by the mouth). `terrain.js` draws the ground mesh, a rock-face sheet along the edge loops (courses set back by bed,
+  never over the walk) and the overhanging roofs (blocks; stepped or split by a chimney); all `phys: 'ground'`. `rock.js` colours rock by height in the world (beds run level across ground, faces and roofs) and
+  carries an `lsStain` attribute for seams, seep stains and the trodden way. `stations.js` furnishes one alcove per bench (`host-plan.js` derives the plate from the alcove); a host faces along an axis, so
+  `lodestone.js` turns its box colliders as boxes. The Coil is fought in the pothole (`BOSS_ARENA_SPOTS['boss-coil']`). Traps met: a rock fin under 7 m thick put the faces' top lips in the next part of
+  the walk; a 0.4 to 1 m jog where an alcove's side wall met the canyon's wall put face vertices into the walk; a contour simplified against its original neighbours drew a 54 m chord across the rock;
+  `lowBodies` reads the ground mesh itself near a wall foot (skip `terrainMesh`); an air hose's bounding box reached 2 cm into a bay.
 - **Avalon ship** (`three/ship.js` over `three/ship/`, `ship-rooms.js`, `ship-graph.js`): built from a
   shared kit; doors open as you approach, portals are arches; `SHIP_ANCHORS` derived from the graph and
   must stand on clear deck; every doorway names its destination on both faces; lighting rooms declare

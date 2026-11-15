@@ -20,8 +20,8 @@ import * as THREE from 'three';
 
 /**
  * What stains or crosses a face, by index (the second number of a geometry's `lsStain` attribute; the first is how
- * much): 0 copper's blue-green, 1 iron's ochre, 2 the black of manganese and magnetite. A geometry with no `lsStain`
- * reads 0 for both, so it is unstained.
+ * much): 0 copper's blue-green, 1 iron's ochre, 2 the black of manganese and magnetite; 3 on the ground is where people
+ * walk (trodden flat and paler). A geometry with no `lsStain` reads 0 for both, so it is unstained.
  */
 export const STAIN = [[0.07, 0.2, 0.17], [0.42, 0.22, 0.06], [0.022, 0.021, 0.024]];
 
@@ -93,17 +93,22 @@ export function bandRock(material, { floorTint = [0.86, 0.72, 0.66], faceGrain =
         vec3 lsIron = mix(${v3(H)}, ${v3(M)}, lsB.y);
         vec3 lsRock = mix(lsStone, lsIron, lsB.x) * (1.0 - ${faceGrain.toFixed(2)} + ${faceGrain.toFixed(2)} * lsGrain * 2.6);
         // What has seeped down or crosses a face: a stain or a seam (\`lsStain\`: how much, and which).
+        float lsStainW = vLsStain.y > 2.5 ? 0.0 : vLsStain.x;
         vec3 lsStainC = vLsStain.y < 0.5 ? ${v3(STAIN[0])} : (vLsStain.y < 1.5 ? ${v3(STAIN[1])} : ${v3(STAIN[2])});
-        lsRock = mix(lsRock, lsStainC * (0.75 + lsGrain * 0.9), clamp(vLsStain.x, 0.0, 1.0));
+        lsRock = mix(lsRock, lsStainC * (0.75 + lsGrain * 0.9), clamp(lsStainW, 0.0, 1.0));
         // The dry wash's floor: its gravel, darker with iron sand where a surface lies lowest in its run.
         vec3 lsFloor = diffuseColor.rgb * ${v3(floorTint)};
         float lsSand = smoothstep(0.55, 0.85, lsN2(vLsWorld.xz * 0.45)) * 0.35;
         lsFloor = mix(lsFloor, ${v3(M)} * 2.2, lsSand * (1.0 - lsFace));
+        // Where people walk (a ground vertex's \`lsStain\` with 3 for its second number): the gravel trodden flat and paler.
+        float lsWorn = vLsStain.y > 2.5 ? clamp(vLsStain.x, 0.0, 1.0) : 0.0;
+        lsFloor = mix(lsFloor, mix(lsFloor, ${v3(C)} * 1.25, 0.45), lsWorn * (1.0 - lsFace));
         diffuseColor.rgb = mix(lsFloor, lsRock, lsFace);`)
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
         metalnessFactor = mix(metalnessFactor, 0.55, lsFace * lsB.x * (1.0 - lsB.y));`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix(roughnessFactor, 0.48, lsFace * lsB.x * (1.0 - lsB.y));`);
+        roughnessFactor = mix(roughnessFactor, 0.48, lsFace * lsB.x * (1.0 - lsB.y));
+        roughnessFactor = mix(roughnessFactor, roughnessFactor * 0.82, (vLsStain.y > 2.5 ? clamp(vLsStain.x, 0.0, 1.0) : 0.0) * (1.0 - lsFace));`);
   };
   const prevKey = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
   material.customProgramCacheKey = () => `${prevKey}|lodestone-rock`;

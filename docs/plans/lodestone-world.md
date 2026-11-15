@@ -158,6 +158,8 @@ Tour words (`lode-tour.js`) for each fixture and the two pieces, three beats eac
 
 ## 5. World plan
 
+*Replaced 2026-11-14 by the site rebuild, section 7; kept as the record of the first site (archived in `archive/2026-11-14/site-lodestone/`).*
+
 Lodestone: a dark iron canyon floor under a rust sky; the Fifth's drum depot along the canyon. Six hosts on a curved walk down the canyon floor, each a working point of the depot: 1 assay hut (core racks), 2 the ore crusher's sample deck, 3 the leach vats, 4 the drum-filling gantry, 5 the colour-check booth under the floodlights, 6 the Coil's control shed. The Coil (boss) stands in an open bowl at the canyon's end. Generator `tools/gen-lodestone-layout.mjs` → `src/three/world-data/lodestone.json`; `src/three/lodestone.js` + `src/three/lodestone/` (terrain, atmosphere, hosts, host plan); `tools/verify-lodestone.mjs` (overlap, buried bodies, walkability flood fill, lamps only, bay clearance, arena kept open), modelled on `verify-quicklight.mjs`.
 
 ## 6. Pitfall review
@@ -224,9 +226,9 @@ within 12 m, not onto open air. The row is built as written.
 | Point | x, z | Floor | Run to next | Grade |
 | :--- | :--- | ---: | :--- | :--- |
 | P0 head | 30, 74 | 0.0 | west 40 m | 7% |
-| P1 | -10, 74 | -2.0 | south 30 m | 11% |
-| P2 | -10, 44 | -4.0 | east 46 m | 8% |
-| P3 | 36, 44 | -6.5 | south 32 m | 10% |
+| P1 | -10, 74 | -2.0 | south 34 m | 11% |
+| P2 | -10, 40 | -4.0 | east 46 m | 9% |
+| P3 | 36, 40 | -6.8 | south 28 m | 13% |
 | P4 | 36, 12 | -8.5 | west 30 m | 10% |
 | Q1 | 6, 12 | -9.5 | south-west 20 m | 11% |
 | Q2 | -8, -2 | -10.5 | west 26 m | 7% |
@@ -249,8 +251,8 @@ within 12 m, not onto open air. The row is built as written.
 ### 7.4 Section along the route (floor height, start to end)
 
 ```
- s (m)    0    40    70   116   148  178 198  224   252        300 320
- floor  0.0  -2.0  -4.0  -6.5  -8.5 -9.5 -10.5 -11.5 -13.0     -14.5 -15.5
+ s (m)    0    40    74   120   148  178 198  224   252        300 320
+ floor  0.0  -2.0  -4.0  -6.8  -8.5 -9.5 -10.5 -11.5 -13.0     -14.5 -15.5
  bench         B1    B2    B3    B4              B5    B6            boss
  walls   4     10    13    15    17    19     21   24    28         31  33   (tableland over the floor, about)
 ```
@@ -350,3 +352,106 @@ named for. West: a dead ore conveyor on trestles and its bin. From inside the ca
 | `tools/verify-lodestone.mjs` | Rebuilt to the new shape; old archived |
 | `src/learn/engine/boss-arena.js` | `boss-coil` spot moved into the pothole |
 | `tools/verify-arena.mjs` | Gains Lodestone (it was not measured) |
+
+### 7.10 Build record (2026-11-14, branch `site/lodestone`)
+
+**What was built.**
+
+- `lodestone/canyon-plan.js` (pure data, no THREE): the hollow, eleven runs (`LINE`), six alcoves (`ALCOVES`) and the
+  pothole as one union with `sample(x, z)` (how far inside the walk, and the floor there). The floor is level over a
+  landing at each bend (long enough to take the whole of an alcove's mouth) and graded between; a dry-wash runnel 16 cm
+  deep runs down the middle of a run, never on a landing. Outside the walk the ground is held at the floor for 1.6 m
+  (longer than a 1 m grid cell's diagonal, so the ground mesh never rises in front of a rock face), then climbs to the
+  tableland by 3.6 m. The alcoves are the shared layer's volumes (`lib/workings.js`: one opening, the mouth, `to: null`,
+  `outdoorDoors`), which give the cover boxes. `edgeColliders()` closes the walk with a box on every 0.5 m cell along its
+  edge (merged to 190 boxes); `edgeLoops()` traces the edge (marching squares) for the rock faces; `coverSpec()` and
+  `routeTo()` (down the centre line bend by bend, in by the mouth) are the light and the guide.
+- `lodestone/terrain.js`: the ground mesh (1 m cells over the walk, to 900 m), a sheet of rock faces along the walk's whole
+  edge (stepped in and out by the beds, never over the walk), and the overhanging bed over each alcove (stepped at the
+  manganese face, split by the chimney's cleft).
+- `lodestone/rock.js`: the banded iron drawn per pixel by height in the world (red jasper, pale chert, grey hematite that
+  catches the light, black magnetite), so a bed runs level across ground, faces and roofs; the floor is the gravel with
+  iron sand and a trodden way; stains and seams on three alcoves' walls (`lsStain`).
+- `lodestone/stations.js`: the six hosts of 7.5. `lodestone/plant.js`: 24 wall lamps every 13 m down the canyon and one at the
+  cleft's mouth, four mast floodlamps in the pothole, the Coil's cable and junction box, ten fallen blocks, the sorted drums in the pothole,
+  and the far country (ropeway north, escarpment east in the height field, black butte south, conveyor west).
+- `atmosphere.js`: the sun lowered to 11.6 degrees in the west-south-west. `boss-arena.js`: `boss-coil` moved into the
+  pothole (`[14, -15.5, -69]`, the player at `[14, -53]`). `verify:arena` now measures Lodestone (it did not before).
+- `tools/gen-lodestone-layout.mjs`, `tools/verify-lodestone.mjs` rewritten; `tools/glsl-check.mjs` added (a reading aid
+  that compiles a world's patched shaders with `glslangValidator`: Lodestone's banded rock and cover mask, and Kettle's
+  cover mask, compile).
+
+**Where the build parted from the spec.**
+
+1. Bends P2 and P3 moved 4 m south (z 44 to 40) and P3's floor from -6.5 to -6.8: with them at 44 the rock between the
+   second run and the hollow was 3 m thick, and the faces' top lips (3.9 m back) landed inside the hollow. Every part of
+   the walk is now at least 7 m of rock from every other part.
+2. Four alcoves were moved by up to 1 m so their side walls line up with the canyon's walls (a 0.4 to 1 m jog at a mouth's
+   corner put rock-face vertices into the walk). Sizes are as specified.
+3. All six hosts were built together after the ground, not the hardest first: the shape of every alcove is the same
+   construction (the plan's rect, the faces, the roof), so the pattern was proved on the ground phase's measurements of all
+   six at once (housing, flood, bay clearance) before any machinery went in.
+4. The drum gallery's front rows nearest the aisle are stacked two high: at one high, the gallery (the longest room) read
+   R3 from its mark, because a ray at eye height passes over one drum.
+5. The canyon's lamps are placed every 13 m of canyon, each stepped along the wall or onto the other wall where the first
+   wall is an alcove's mouth or a corner (at a fixed 14 m with no stepping, the guide's way past P4 was 13 m from the
+   nearest lamp). 52 lamps in all share the three pooled lights.
+6. Lamps per alcove: the core store, the manganese face and the drum gallery have three, the chimney four (its lamp-box
+   has its own), the seep and the magnetite pocket two; 7.5 named fewer for the first two and the chimney.
+
+**Before and after** (`node tools/world-shape.mjs lodestone ligar`, `node tools/perf-worlds.mjs lodestone ligar`):
+
+| | Bench ground | Relief | Housed | Housing | Draws | k triangles | Objects |
+| :--- | :--- | ---: | :---: | :--- | ---: | ---: | ---: |
+| Lodestone before | 0.00 to 0.00 | 0.16 m | 0/6 | -1 -0 -1 -0 -1 -1 | 199 | 181 | 284 |
+| Lodestone after | -13.00 to -2.00 | 29.66 m | 6/6 | R6 R6 R6 R5 R6 R6 | 170 | 306 | 264 |
+| Ligar (unchanged) | -2.60 to 0.89 | 21.55 m | 7/9 | -2 R6 R4 R4 -2 R7 R6 R5 R7 | 566 | 867 | 752 |
+
+No two worlds share bench coordinates. `perf-bench-rest.mjs`: the six Lodestone tabletops rest on every stage (unchanged;
+the tabletops are not the site's).
+
+**Archived:** the first site's modules, generator, JSON and check, in `archive/2026-11-14/site-lodestone/` (README there).
+
+**Still weak.** Nothing here has been seen. The rock faces are a 1 m-column sheet stepped by bed: at the head, where the
+walls are 3 to 5 m, the sheet's lip and the tableland meet at a rough seam that may show from the hollow. The far country
+is plain boxes and struts. The chimney's sky slot is only as wide as the gap between two roof blocks (1.8 m); whether it
+reads from the bench is the owner's call. The drip at the seep is four falling drops, nothing more.
+
+### 7.11 The owner's viewing list
+
+Nothing below has been seen in a browser; each line is what the measurements say should be there.
+
+1. **The spawn (44, 86), as you land.** A level hollow of pale gravel, the Avalon on the pad behind, banded walls 3 to 5 m
+   high all round, a lamp post on the way to a cleft in the west wall. No bench. *Fails if* a plate or an alcove is in view,
+   or the hollow reads as a plain with no walls.
+2. **At the cleft's mouth (36, 74), facing west.** The canyon's first run going down between walls that grow as it goes, a
+   lamp on a bracket every 13 m, and at the far end, 50 m off, a long low dark mouth in the wall ahead (Bench 1). *Fails
+   if* the walls are smooth slopes rather than faces, or the beds do not run level along them.
+3. **At Bench 1's plate, facing the mouth.** Core racks down both walls, two timber cribs at the lip, the flat chert roof
+   4.8 m up, the canyon 10 m across beyond the lip. *Fails if* the room is lit like outdoors, or the roof shows a seam to
+   the sky.
+4. **Walking south from P1 to P2.** The floor drops 2 m in 18 m; Bench 2's mouth ahead in the south wall, its high back
+   vault visible over the lip, a black seam across its back wall a metre up. *Fails if* the seam does not read as a band in
+   the rock.
+5. **At Bench 3's plate.** The kerbed basin on the left with drops falling into it from the roof, the leach tank with
+   deep blue liquor on the right, the drum of ammonia on its cradle. *Fails if* the drops hang still or the liquor reads
+   cyan.
+6. **At Bench 4's plate, facing the mouth.** The longest room: drums in rows both ends, the front ones two high, four
+   steel props at the lip, a runway beam with a yellow hoist along the back. *Fails if* the props crowd the camera when
+   leaned in.
+7. **On the jog (Q1 to Q2) looking down.** The one diagonal run, the canyon turning 45 degrees, walls now about 20 m.
+   *Fails if* the faces show a jagged staircase along the diagonal.
+8. **At Bench 5's plate, looking up.** An 8.5 m roof with a cleft open to the sky over the back third; the back wall
+   streaked blue-green, ochre and black under it; jars on a shelf to the left, a hooded lamp-box to the right. *Fails if*
+   the streaks read as paint, or the cleft lets the sun onto the floor.
+9. **At Bench 6's plate.** Two black magnetite bands across the walls, switchgear against the back, the test magnet on
+   the left, the rock pillar and the cable drum on the right, the cable running out of the mouth. *Fails if* the pillar
+   reads as a column of the same rock with no join to the roof.
+10. **The lowest ground: the pothole's floor (14, -53), facing south.** A round pit 38 m across with walls over 30 m, the
+    sun only on their top few metres, four floodlamp masts, drums sorted on a tray to the left and standing to the right,
+    the Coil's cable running to a box at the wall. The Coil rises at (14, -69). *Fails if* the sun reaches the floor, or
+    the walls read lower than the canyon's.
+11. **From anywhere in the canyon, looking up.** A strip of rust-dusk sky; only the top few metres of the walls in sun.
+    *Fails if* the walls are sunlit to the floor on a phone (the cover mask failed).
+12. **From the hollow, looking out.** Ropeway pylons running away north, an escarpment east, a black butte south, a
+    conveyor on trestles west. *Fails if* any of them floats or sinks.

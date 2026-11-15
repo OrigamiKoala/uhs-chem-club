@@ -77,11 +77,50 @@ export function buildGroundGeometry(field, plan) {
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   geo.setAttribute('uv1', new THREE.BufferAttribute(uvs.slice(), 2));
+  geo.setAttribute('lsStain', new THREE.BufferAttribute(wornGround(xs, zs, plan), 2));
   geo.setIndex(new THREE.BufferAttribute(index, 1));
   geo.computeVertexNormals();
   geo.computeBoundingBox();
   geo.computeBoundingSphere();
   return geo;
+}
+
+/**
+ * Where people walk, per ground vertex (`rock.js`: [how much, 3]): from the pad and the spawn across the hollow to the
+ * cleft, then down the middle of the canyon, a path a metre and a half wide either side, faded at its edges, in at
+ * every alcove's mouth to its plate.
+ */
+function wornGround(xs, zs, plan) {
+  const legs = [];
+  const line = plan.runs.map(r => [r.A.x, r.A.z]).concat([[plan.runs[plan.runs.length - 1].B.x, plan.runs[plan.runs.length - 1].B.z]]);
+  for (let i = 0; i < line.length - 1; i++) legs.push([line[i], line[i + 1], 1.5]);
+  legs.push([[66, 74], [44, 80], 2.0], [[44, 86], [36, 74], 1.6], [[44, 80], [30, 74], 1.8]);
+  for (const al of plan.alcoves) {
+    const m = plan.mouthOf(al);
+    const back = [m.mid[0] - al.face[0] * (plan.distFromBack(al, ...m.mid) - 5.5), m.mid[1] - al.face[1] * (plan.distFromBack(al, ...m.mid) - 5.5)];
+    legs.push([plan.pointAt(plan.sAt(...m.out)), back, 1.2]);
+  }
+  const segDist = (x, z, a, b) => {
+    const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz || 1;
+    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / l2));
+    return Math.hypot(x - a[0] - dx * t, z - a[1] - dz * t);
+  };
+  const out = new Float32Array(xs.length * zs.length * 2);
+  const b = plan.bounds;
+  for (let j = 0; j < zs.length; j++) for (let i = 0; i < xs.length; i++) {
+    const x = xs[i], z = zs[j], k = (j * xs.length + i) * 2;
+    if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
+    let w = 0;
+    for (const [a, c, hw] of legs) {
+      const d = segDist(x, z, a, c);
+      if (d < hw + 1.2) w = Math.max(w, 1 - smooth(hw * 0.5, hw + 1.2, d));
+    }
+    // Broken up, as a trodden way is: patches where the gravel lies loose again.
+    w *= 0.55 + 0.45 * fbm(x * 0.35, z * 0.35, 101, 2);
+    out[k] = w * 0.85;
+    out[k + 1] = 3;
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------ the faces */
