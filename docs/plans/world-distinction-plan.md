@@ -175,7 +175,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Quicklight | A refinery packed tight on basalt under a standing storm | A grid of alleys under pipe racks | Blast bunkers banked with earth, reactor skirts, a control block | Storm dusk; lightning to the rod pylons is the weather |
 | Lodestone | A winding slot canyon in banded iron, descending to a bowl | One path down the canyon, bend after bend | Alcoves under overhangs in the canyon wall, open on the canyon side | Rust dusk, light only on the upper walls |
 | Thornmere | An archipelago of pitch mounds in a tar lake, each higher than the last | A zigzag chain mound to mound over root ridges, with two side branches | Inside the trees: hollow stumps, a root vault, a fallen hollow trunk, a pit under a stump's roots | Grey daylight under a high dead canopy; mist on the tar |
-| Cinder Halo (unbuilt) | To claim | | | |
+| Cinder Halo | An impact-crater field: one great crater with smaller craters punched into its wall, each floor lower than the last | Down crater by crater through cuttings in the rims, spiralling inward and down round the great crater to its floor | Shielded concrete cells built into each crater's wall, entered by a dog-leg maze | Ash dusk under the planet's ring arcing across the sky; filament lamps inside the cells |
 
 ---
 
