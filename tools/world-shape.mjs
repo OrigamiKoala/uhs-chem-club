@@ -24,7 +24,7 @@ const { housing, benchGround, marksOf, layoutKey } = await import('./lib/world-s
 const WORLDS = {
   tallow: 'TallowWorld', lanternfall: 'LanternfallWorld', ligar: 'LigarWorld', bellows: 'BellowsWorld',
   ember: 'EmberReachWorld', mirrowen: 'MirrowenWorld', kettle: 'KettleWorld', teeter: 'TeeterWorld',
-  verdigris: 'VerdigrisWorld', brinewire: 'BrinewireWorld', quicklight: 'QuicklightWorld', lodestone: 'LodestoneWorld', thornmere: 'ThornmereWorld'
+  verdigris: 'VerdigrisWorld', brinewire: 'BrinewireWorld', quicklight: 'QuicklightWorld', lodestone: 'LodestoneWorld', thornmere: 'ThornmereWorld', cinderhalo: 'CinderHaloWorld'
 };
 
 const pick = process.argv.slice(2).filter(a => !a.startsWith('-'));

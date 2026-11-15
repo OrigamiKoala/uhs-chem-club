@@ -24,6 +24,7 @@ import brinewireData from '../three/world-data/brinewire.json' with { type: 'jso
 import quicklightData from '../three/world-data/quicklight.json' with { type: 'json' };
 import lodestoneData from '../three/world-data/lodestone.json' with { type: 'json' };
 import thornmereData from '../three/world-data/thornmere.json' with { type: 'json' };
+import cinderhaloData from '../three/world-data/cinderhalo.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -237,6 +238,24 @@ const WORLDS_3D = {
       for (const site of lodestoneData.sites) {
         if (!site.built) continue;
         stage.setLodestoneSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit14: {
+    id: 'unit14',
+    key: 'cinderhalo',
+    worldName: 'Cinder Halo',
+    data: cinderhaloData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterCinderHaloScene(siteId, playerPos, lookAtPos);
+    },
+    siteForQuest(questId) {
+      return cinderhaloData.sites.find(s => s.questId === questId) || null;
+    },
+    syncProgress(stage, isComplete) {
+      for (const site of cinderhaloData.sites) {
+        if (!site.built) continue;
+        stage.setCinderHaloSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

@@ -31,6 +31,7 @@ import { BRINEWIRE_BOSS_SCENES } from './story-scenes-brinewire-boss.js';
 import { QUICKLIGHT_SCENES } from './story-scenes-quicklight.js';
 import { LODESTONE_SCENES } from './story-scenes-lodestone.js';
 import { THORNMERE_SCENES } from './story-scenes-thornmere.js';
+import { CINDERHALO_SCENES } from './story-scenes-cinderhalo.js';
 import { VERDIGRIS_Q4Q5_SCENES } from './story-scenes-verdigris-q4q5.js';
 import { VERDIGRIS_TITRATE_SCENES } from './story-scenes-verdigris-titrate.js';
 import { VERDIGRIS_Q1Q2_SCENES } from './story-scenes-verdigris-q1q2.js';
@@ -1328,6 +1329,7 @@ export const SCENES = {
   ...legacy(QUICKLIGHT_SCENES),
   ...legacy(LODESTONE_SCENES),
   ...legacy(THORNMERE_SCENES),
+  ...legacy(CINDERHALO_SCENES),
   ...legacy(VERDIGRIS_Q4Q5_SCENES),
   ...legacy(VERDIGRIS_TITRATE_SCENES),
   ...legacy(VERDIGRIS_Q1Q2_SCENES),

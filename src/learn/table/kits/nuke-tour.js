@@ -1,0 +1,47 @@
+/**
+ * kits/nuke-tour.js — what the Tour says about Cinder Halo's instruments (unit14). Three beats per step: what it is, what to do with it,
+ * what it tells you. Words only the benches have already earned; never which move solves a stage. Later families add their own words
+ * with `addTourText` from their own file.
+ */
+
+import { addTourText, aliasTourKit } from '../tour.js';
+import './heat-tour.js';
+
+const FIXTURES = {
+  'nuke:ncount': {
+    title: 'Counter', dials: false,
+    text: 'A sample sits on the left and a tube on the right; every track that reaches the tube is one count. Drag a card into the Sample slot and press the key to count for one minute; the card keeps its count. Where the rig has a shield slot, plates or keys, a card in the shield slot stands in the tracks\' way, the plates pull on charged tracks, and the keys set the temperature or close lead round the tube.'
+  },
+  'nuke:nnuc': {
+    title: 'Nucleus view', dials: false,
+    text: 'A nucleus drawn as its protons (rust) and neutrons (grey), every one counted underneath. Press "Watch the Nucleus" to see what leaves it or changes in it, drawn and counted. Not to scale.'
+  },
+  'nuke:nchart': {
+    title: 'Chart of nuclides', dials: false,
+    text: 'Every square is one kind of nucleus: protons count across, neutrons count up, and the square shows its element and mass number. Tap a square to read it or to choose it as your answer; filled squares, where shown, are stable nuclei, and bismuth-209, which decays too slowly to measure, is drawn stable.'
+  },
+  'nuke:nchoice': {
+    title: 'Your answer', dials: false,
+    text: 'Tap the statement you choose; it lights. The statement lit when you press Submit is your answer.'
+  },
+  'nuke:nlead': {
+    title: 'Watch first', dials: false,
+    text: 'A short case that loops. Watch it, then make your prediction.'
+  },
+  'nuke:ndrum': {
+    title: 'Sealed drums', dials: false,
+    text: 'Two sealed drums on the deck, each with its temperature and the oxygen left inside. Tap a drum to look inside its wall, enlarged: its atoms, and any tracks that stop there.'
+  },
+  'nuke:ntissue': {
+    title: 'Tissue strip', dials: false,
+    text: 'A strip of living cells with a source inside its left end. Tap Alpha, Beta or Gamma to see that radiation\'s trail; each amber mark is a molecule it broke.'
+  }
+};
+
+const PIECES = {
+  'nuke:nsrc': ['Sample cards', 'Each card is one sample. Drag it into the Sample slot to count it; it shows the last count it gave. Drag the card you choose into the answer slot.'],
+  'nuke:nshield': ['Shield cards', 'Each card is a sheet of one material, drawn as thick as it is. Drag it into the Shield slot to stand it between the sample and the tube.']
+};
+
+addTourText(FIXTURES, PIECES);
+aliasTourKit('heat', 'nuke');

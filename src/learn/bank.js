@@ -53,8 +53,9 @@ const unit10 = { ...unit10Base, bench: { ...unit10Base.bench, 'q1-halves': b10q1
 import unit11 from './bank/unit11.json' with { type: 'json' };
 import unit12 from './bank/unit12.json' with { type: 'json' };
 import unit13 from './bank/unit13.json' with { type: 'json' };
+import unit14 from './bank/unit14.json' with { type: 'json' };
 
-export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09, unit10, unit11, unit12, unit13 };
+export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09, unit10, unit11, unit12, unit13, unit14 };
 
 const EMPTY = { world: null, end: [], bench: {} };
 

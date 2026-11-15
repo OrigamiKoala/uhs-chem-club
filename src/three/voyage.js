@@ -155,6 +155,14 @@ export const DESTINATIONS = {
       atmo: '#b0705a', atmoStrength: 0.5, seed: [3.7, 6.1, 1.4]
     }
   },
+  cinderhalo: {
+    key: 'cinderhalo', name: 'Cinder Halo', hash: '#/learn/unit14',
+    descent: 'Descending to the crater rim',
+    planet: {
+      kind: 'volcanic', colors: ['#120806', '#2a1c16', '#4a2a1e', '#6b5c50'],
+      atmo: '#8a6f5a', atmoStrength: 0.45, seed: [7.3, 1.9, 4.6]
+    }
+  },
   thornmere: {
     key: 'thornmere', name: 'Thornmere', hash: '#/learn/unit13',
     descent: 'Descending to the landing mound',

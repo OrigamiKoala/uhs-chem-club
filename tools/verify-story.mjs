@@ -302,6 +302,8 @@ ok('spine beat prerequisite unlock logic validated');
   for (const q of WORLDS.find(w => w.id === 'unit12').quests) if (q.module && !QUEST_STORY[`unit12/${q.id}`]) fail(`unit12/${q.id} has no story animation`);
   // Thornmere too: every built quest of unit13 has its one animation.
   for (const q of WORLDS.find(w => w.id === 'unit13').quests) if (q.module && !QUEST_STORY[`unit13/${q.id}`]) fail(`unit13/${q.id} has no story animation`);
+  // Cinder Halo too: every built quest of unit14 has its one animation.
+  for (const q of WORLDS.find(w => w.id === 'unit14').quests) if (q.module && !QUEST_STORY[`unit14/${q.id}`]) fail(`unit14/${q.id} has no story animation`);
   if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, 3 to 5 lines of Vess, a filed line, and every scene paints at every line`);
 }
 

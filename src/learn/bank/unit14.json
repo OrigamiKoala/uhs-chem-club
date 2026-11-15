@@ -1,0 +1,213 @@
+{
+  "world": "unit14",
+  "end": [],
+  "bench": {
+    "q1-still-warm": {
+      "problems": [
+        {
+          "id": "q1-still-warm#b1",
+          "quest": "q1-still-warm",
+          "question": "A counter reads 25 counts a minute with nothing in front of it and 25 with a rock sample in front of it. What does that tell you about the rock?",
+          "options": [
+            {
+              "id": "a",
+              "label": "It gives off no radiation the counter can find"
+            },
+            {
+              "id": "b",
+              "label": "It is radioactive"
+            },
+            {
+              "id": "c",
+              "label": "It stops background radiation"
+            },
+            {
+              "id": "d",
+              "label": "Its nuclei decay only when it is warm"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The 25 counts are background radiation from rock, air and space. A sample that adds nothing to the empty count gives off no radiation the counter can find."
+        },
+        {
+          "id": "q1-still-warm#b2",
+          "quest": "q1-still-warm",
+          "question": "A radioactive sample counts 3,000 a minute at 20 °C. It is heated to 500 °C. About what will it count?",
+          "options": [
+            {
+              "id": "a",
+              "label": "About 3,000"
+            },
+            {
+              "id": "b",
+              "label": "Far more than 3,000"
+            },
+            {
+              "id": "c",
+              "label": "Far fewer than 3,000"
+            },
+            {
+              "id": "d",
+              "label": "Nothing: heat stops decay"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Heat makes the atoms move faster but does not reach the nucleus, so the nuclei decay as often as before and the count stays about 3,000."
+        }
+      ]
+    },
+    "q2-what-comes-off": {
+      "problems": [
+        {
+          "id": "q2-what-comes-off#b1",
+          "quest": "q2-what-comes-off",
+          "question": "A source counts 2,000 a minute with nothing in front, 1,950 behind paper, and 30 behind 5 mm of aluminium. The background is 25. What does it give off?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Beta particles"
+            },
+            {
+              "id": "b",
+              "label": "Alpha particles"
+            },
+            {
+              "id": "c",
+              "label": "Gamma rays"
+            },
+            {
+              "id": "d",
+              "label": "Alpha particles and gamma rays"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Paper barely changed the count, so there is no alpha; aluminium brought it down to about the background, so what passed paper was beta, with no gamma left over."
+        },
+        {
+          "id": "q2-what-comes-off#b2",
+          "quest": "q2-what-comes-off",
+          "question": "Between two charged plates, which radiation bends toward the negative plate, and only a little?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Alpha particles"
+            },
+            {
+              "id": "b",
+              "label": "Beta particles"
+            },
+            {
+              "id": "c",
+              "label": "Gamma rays"
+            },
+            {
+              "id": "d",
+              "label": "None of them"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Alpha particles are positive, so they are pulled toward the negative plate, and they are over 7,000 times as heavy as an electron, so they turn only a little."
+        }
+      ]
+    },
+    "q3-equations": {
+      "problems": [
+        {
+          "id": "q3-equations#b1",
+          "quest": "q3-equations",
+          "question": "Radium-226 (atomic number 88) gives off an alpha particle. Which nucleus is left?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Radon-222, atomic number 86"
+            },
+            {
+              "id": "b",
+              "label": "Radium-222, atomic number 88"
+            },
+            {
+              "id": "c",
+              "label": "Thorium-230, atomic number 90"
+            },
+            {
+              "id": "d",
+              "label": "Radon-224, atomic number 86"
+            }
+          ],
+          "answer": "a",
+          "explanation": "An alpha particle carries away mass number 4 and atomic number 2: 226 − 4 = 222 and 88 − 2 = 86, which is radon."
+        },
+        {
+          "id": "q3-equations#b2",
+          "quest": "q3-equations",
+          "question": "Carbon-14 (atomic number 6) gives off a beta particle. Which nucleus is left?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Nitrogen-14, atomic number 7"
+            },
+            {
+              "id": "b",
+              "label": "Boron-14, atomic number 5"
+            },
+            {
+              "id": "c",
+              "label": "Carbon-13, atomic number 6"
+            },
+            {
+              "id": "d",
+              "label": "Nitrogen-15, atomic number 7"
+            }
+          ],
+          "answer": "a",
+          "explanation": "In beta decay a neutron becomes a proton and an electron leaves: the mass number stays 14 and the atomic number rises to 7, nitrogen."
+        }
+      ],
+      "worked": {
+        "id": "q3-equations#w",
+        "quest": "q3-equations",
+        "title": "Counting the steps of a decay series",
+        "setup": "Neptunium-237 (atomic number 93) decays in a series that ends on bismuth-209 (atomic number 83). Find how many alpha and beta decays it takes.",
+        "steps": [
+          {
+            "say": "By how much does the mass number fall?",
+            "kind": "number",
+            "answer": 28,
+            "unit": "",
+            "calc": "237 - 209",
+            "hint": "Subtract the end's mass number from the start's.",
+            "explain": "237 − 209 = 28."
+          },
+          {
+            "say": "How many alpha decays is that?",
+            "kind": "number",
+            "answer": 7,
+            "unit": "",
+            "calc": "(237 - 209) / 4",
+            "hint": "Only alpha decay changes the mass number, by 4 each time.",
+            "explain": "28 ÷ 4 = 7 alpha decays."
+          },
+          {
+            "say": "What atomic number would 7 alpha decays alone leave?",
+            "kind": "number",
+            "answer": 79,
+            "unit": "",
+            "calc": "93 - 2 * 7",
+            "hint": "Each alpha decay lowers the atomic number by 2.",
+            "explain": "93 − 14 = 79."
+          },
+          {
+            "say": "How many beta decays bring it up to 83?",
+            "kind": "number",
+            "answer": 4,
+            "unit": "",
+            "calc": "83 - (93 - 2 * 7)",
+            "hint": "Each beta decay raises the atomic number by 1.",
+            "explain": "83 − 79 = 4 beta decays."
+          }
+        ],
+        "finish": "Only alpha decay changes the mass number, by 4 each: the fall in mass number counts the alphas, and the betas make up the atomic number."
+      }
+    }
+  }
+}

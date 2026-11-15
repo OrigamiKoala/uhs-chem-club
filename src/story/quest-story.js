@@ -19,6 +19,34 @@
  */
 
 export const QUEST_STORY = {
+  /* ---- Cinder Halo: what is the Fifth doing to the nucleus, and how is it powered? ---- */
+  'unit14/q1-still-warm': {
+    scene: 'ch-warm',
+    beats: [
+      { to: 0.32, say: 'Ore A counted far above the empty counter and ore B did not: only ore A is radioactive.' },
+      { to: 0.65, say: 'One of its uranium nuclei threw out two protons and two neutrons, and 90 protons left it thorium.' },
+      { to: 0.96, say: 'Cold or hot, the ore counted the same. Heat and cold never reach the nucleus.' }
+    ],
+    filed: 'Filed: the drums are warm because their nuclei decay, and no cold slows it.'
+  },
+  'unit14/q2-what-comes-off': {
+    scene: 'ch-rays',
+    beats: [
+      { to: 0.32, say: 'The plates sorted three radiations: alpha bent a little toward negative, beta sharply toward positive, gamma straight on.' },
+      { to: 0.65, say: 'Alpha stopped in paper and beta in aluminium. Gamma, with no charge, went on into the lead.' },
+      { to: 0.96, say: 'Inside the body alpha spends itself in a few cells, so it does its harm there.' }
+    ],
+    filed: 'Filed: the drums leak gamma rays; only thick lead or concrete holds them.'
+  },
+  'unit14/q3-equations': {
+    scene: 'ch-equations',
+    beats: [
+      { to: 0.32, say: 'Uranium-238 threw out two protons and two neutrons: 238 is 234 plus 4, and 92 is 90 plus 2.' },
+      { to: 0.65, say: 'In beta decay a neutron became a proton, so thorium became protactinium and the mass number stayed 234.' },
+      { to: 0.96, say: 'Eight alpha steps and six beta steps walked uranium-238 all the way down to lead-206.' }
+    ],
+    filed: 'Filed: each decay makes a new element, step by step, from uranium down to lead.'
+  },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
     scene: 'thorn-chains',

@@ -175,6 +175,16 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [44, 0, -74],
     scale: 1.5,
     species: 'the carapace'
+  },
+  // On the great crater's floor, level at -15.0, in front of the split dome (`cinderhalo/site-plan.js` ARENA; `verify:cinderhalo`
+  // holds the two together). The player's mark is just inside the floor from the last cutting.
+  'boss-core': {
+    worldId: 'unit14',
+    playerPos: [0, 1.6, 4],
+    lookAtPos: [0, 1.6, -12],
+    bossPos: [0, -15, -12],
+    scale: 1.5,
+    species: 'the core'
   }
 };
 

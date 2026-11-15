@@ -22,6 +22,10 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
+  /* ---- Cinder Halo: what is the Fifth doing to the nucleus, and how is it powered? ---- */
+  'q1-still-warm': { 1: 'The Fifth\'s ore drums stay warm with no fire under them, and Vess wants to know why.' },
+  'q3-equations': { 1: 'The Fifth\'s slag holds elements its ore never had, and Vess wants to know where they came from.' },
+  'q2-what-comes-off': { 1: 'Something leaks through the Fifth\'s drum walls, and Vess needs to know what will stop it.' },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'q1-chains': { 1: 'The Fifth pumps black tar from under this swamp, and Vess wants to know what it is made of.' },
   'q3-isomers': { 1: 'Two of the Fifth\'s drums carry the same formula, and only one of them feeds the plate works.' },

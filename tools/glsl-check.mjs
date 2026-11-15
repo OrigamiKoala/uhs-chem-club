@@ -27,7 +27,7 @@ const THREE = await import('three');
 const CLASSES = {
   tallow: 'TallowWorld', lanternfall: 'LanternfallWorld', ligar: 'LigarWorld', bellows: 'BellowsWorld', ember: 'EmberReachWorld',
   mirrowen: 'MirrowenWorld', kettle: 'KettleWorld', teeter: 'TeeterWorld', verdigris: 'VerdigrisWorld', brinewire: 'BrinewireWorld',
-  quicklight: 'QuicklightWorld', lodestone: 'LodestoneWorld', thornmere: 'ThornmereWorld'
+  quicklight: 'QuicklightWorld', lodestone: 'LodestoneWorld', thornmere: 'ThornmereWorld', cinderhalo: 'CinderHaloWorld'
 };
 const name = process.argv[2];
 const cls = process.argv[3] || CLASSES[name];

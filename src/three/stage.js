@@ -25,6 +25,7 @@ import { BrinewireWorld } from "./brinewire.js";
 import { QuicklightWorld } from "./quicklight.js";
 import { LodestoneWorld } from "./lodestone.js";
 import { ThornmereWorld } from "./thornmere.js";
+import { CinderHaloWorld } from "./cinderhalo.js";
 import { buildArenaTable } from "./arena-table.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
@@ -74,6 +75,8 @@ const BRINEWIRE_EXPOSURE = 0.9;
 const QUICKLIGHT_EXPOSURE = 1.12;
 const LODESTONE_EXPOSURE = 1.1;
 const THORNMERE_EXPOSURE = 1.05;
+// Cinder Halo is black cinder under an ash dusk: dim ground and a low sun, so it sits near Lodestone.
+const CINDERHALO_EXPOSURE = 1.12;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -82,6 +85,7 @@ const DARK_WORLDS = new Set([
   "lanternfall",
   "lodestone",
   "thornmere",
+  "cinderhalo",
   "ligar",
   "quicklight",
   "ember"
@@ -129,6 +133,7 @@ class Stage {
     this.quicklightWorld = null;
     this.lodestoneWorld = null;
     this.thornmereWorld = null;
+    this.cinderhaloWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -880,6 +885,10 @@ class Stage {
       if (!this.thornmereWorld) this.thornmereWorld = this.warmWorld(new ThornmereWorld(this.renderer), key);
       return this.thornmereWorld;
     }
+    if (key === "cinderhalo") {
+      if (!this.cinderhaloWorld) this.cinderhaloWorld = this.warmWorld(new CinderHaloWorld(this.renderer), key);
+      return this.cinderhaloWorld;
+    }
     return null;
   }
 
@@ -928,6 +937,7 @@ class Stage {
     if (key === "quicklight") return QUICKLIGHT_EXPOSURE;
     if (key === "lodestone") return LODESTONE_EXPOSURE;
     if (key === "thornmere") return THORNMERE_EXPOSURE;
+    if (key === "cinderhalo") return CINDERHALO_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -1162,10 +1172,17 @@ class Stage {
     this.enterLearnWorld(this.thornmereWorld, THORNMERE_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
+  /** Walk out onto Cinder Halo, the crater sea (Learn world 14). */
+  enterCinderHaloScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("cinderhalo");
+    this.enterLearnWorld(this.cinderhaloWorld, CINDERHALO_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
   /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows, Ember Reach, Mirrowen, Kettle, Teeter, Verdigris, Brinewire or Quicklight. */
   isLearnWorld(w) {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
-      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld || w === this.quicklightWorld || w === this.lodestoneWorld || w === this.thornmereWorld);
+      w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld || w === this.quicklightWorld || w === this.lodestoneWorld || w === this.thornmereWorld || w === this.cinderhaloWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1434,6 +1451,11 @@ class Stage {
   /** Light a Thornmere site's indicator when its quest is finished. */
   setThornmereSiteComplete(questId, complete) {
     if (this.thornmereWorld) this.thornmereWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Cinder Halo site's indicator when its quest is finished. */
+  setCinderHaloSiteComplete(questId, complete) {
+    if (this.cinderhaloWorld) this.cinderhaloWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Verdigris site's indicator when its quest is finished. */
