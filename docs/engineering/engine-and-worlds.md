@@ -269,9 +269,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `verify:bench` fails any world body inside one except what `tools/bay-legacy.json` still waives (a
   ratchet: a rebuilt bench's line must be deleted, and new hosts get none; the file is empty now). A host leaves the bay empty by standing machinery to the
   sides (|x| > 2.8), behind the plate (z < -2) or above 2.4 m. **Only lamps are lit**; a lamp is a `lampMark` in a
-  `LampPool`, never a `PointLight`: the pool only records the lamps and adds no light to the scene, so a lamp is its
-  emissive mesh and the ground round the player is lit by the sun, the sky and the suit flashlight (`stage.js`,
-  compiled with the world in `warmWorld`).
+  `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight` outside it.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques
   (`SKY_RENDER_ORDER`; a world's opaque material must not set `depthWrite:false`).
 - **Shared site layers (world-distinction groundwork, 2026-11-13):** three modules a rebuilt world's site stands on; every option is opt-in and the defaults are Ligar's.

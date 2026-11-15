@@ -58,8 +58,8 @@
  * LIGHT: nothing here blooms. The sun is low, red with dust and about to go;
  * the only emissive surfaces in the whole world are the forge in the ore drift, the
  * luminaires, the mast lamps and one indicator per bench — and the luminaires
- * are declared in the lamp pool (lamp-pool.js), which adds no real light: a
- * PointLight is shaded on every pixel of the quarry whether it reaches it or not.
+ * share a pool of three real lights (lamp-pool.js), because a PointLight is
+ * shaded on every pixel of the quarry whether it reaches it or not.
  */
 
 import * as THREE from 'three';

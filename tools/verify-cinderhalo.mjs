@@ -196,7 +196,7 @@ console.log('\nCinder Halo — the world built in Node\n');
   }
   let lights = 0;
   w.scene.traverse(o => { if (o.isPointLight || o.isSpotLight) lights++; });
-  check(lights === 0 && w.lamps.length >= 30, `${w.lamps.length} lamps add no real lights to the scene`, `${w.lamps.length} lamps and ${lights} real lights: a lamp is its emissive mesh only (lamp-pool.js)`);
+  check(lights === 3 && w.lamps.length >= 30, `${w.lamps.length} lamps share ${lights} real lights`, `${w.lamps.length} lamps and ${lights} real lights: the lamp pool is not what keeps the frame cheap`);
   {
     let bad = 0;
     w.scene.traverse(o => {

@@ -81,17 +81,6 @@ const CINDERHALO_EXPOSURE = 1.12;
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
 
-const DARK_WORLDS = new Set([
-  "lanternfall",
-  "lodestone",
-  "thornmere",
-  "cinderhalo",
-  "ligar",
-  "quicklight",
-  "ember"
-]);
-const FLASHLIGHT_INTENSITY = 24;
-
 /** The frame budget every scene here was built to (see `skipRefresh`). */
 const FRAME_MS = 1000 / 60;
 /** A refresh this close to due is drawn: vsync timestamps jitter. */
@@ -139,9 +128,6 @@ class Stage {
     this.activeWorld = null;
     this.activeQuestScene = null;
     this.activeQuestViewer = null;
-    this.flashlight = null;
-    this.flashlightOn = false;
-    this._flashlightWorld = null;
 
     this.starfield = null;
     this.isPaused = false;
@@ -214,15 +200,6 @@ class Stage {
     // Personal camera inspection light (cadet suit chest luminaire)
     this.cameraLight = new THREE.PointLight(0xffedd2, 1.4, 12, 1.3);
     this.camera.add(this.cameraLight);
-
-    // Directional suit flashlight for exploring worlds (aimed along camera look)
-    this.flashlight = new THREE.SpotLight(0xfff1d8, 0, 45, Math.PI / 2.4, 0.5, 1.4);
-    this.flashlight.castShadow = false;
-    this.flashlight.position.set(0.14, -0.12, -0.05);
-    this.flashlight.target.position.set(0, 0, -10);
-    this.flashlight.visible = false;
-    this.camera.add(this.flashlight);
-    this.camera.add(this.flashlight.target);
 
     this.shipScene.add(this.camera);
 
@@ -406,9 +383,6 @@ class Stage {
       if (e.repeat) return;
       if (e.key === "x" || e.key === "X" || e.code === "KeyX") {
         handleKeyX();
-      } else if ((e.key === "f" || e.key === "F" || e.code === "KeyF") &&
-          this.mode === "world" && this.activeWorld && !this.fpsControls?.walkKeysAtBench) {
-        this.flashlightOn = !this.flashlightOn;
       }
     });
 
@@ -901,11 +875,8 @@ class Stage {
    * on the frame it happened, which is what walking Ligar felt like. Asked
    * for here, the driver compiles them in parallel where it can
    * (KHR_parallel_shader_compile), while the voyage is still in space.
-   * A world's own light count never changes after it is built (lamp-pool.js
-   * adds none). The one light that joins it is the suit flashlight, which
-   * rides the camera, so the camera stands in the world's scene with the
-   * flashlight showing while the programs are requested: what is compiled
-   * here is then what is drawn, and stepping off recompiles nothing.
+   * A world's light count never changes after it is built (lamp-pool.js), so
+   * what is compiled here is what is drawn.
    */
   warmWorld(world, key) {
     if (world && key) world._worldKey = key;
@@ -913,33 +884,9 @@ class Stage {
     // What is in the scene now is the world's; a bench's own bodies come later (shadow-pace.js).
     if (world?.scene) markWorldOwn(world.scene);
     if (world?.scene && r?.compileAsync) {
-      const cam = this.camera;
-      const home = cam.parent;
-      const suit = this.cameraLight?.visible;
-      const torch = this.flashlight?.visible;
-      // compileAsync reads the scene's lights before it returns; the camera is home again by then.
-      world.scene.add(cam);
-      if (this.cameraLight) this.cameraLight.visible = false;
-      if (this.flashlight) this.flashlight.visible = true;
-      let pending = null;
-      try {
-        pending = r.compileAsync(world.scene, cam);
-      } finally {
-        if (home) home.add(cam); else world.scene.remove(cam);
-        if (this.cameraLight) this.cameraLight.visible = suit;
-        if (this.flashlight) this.flashlight.visible = torch;
-      }
-      pending?.catch(() => {});
+      r.compileAsync(world.scene, this.camera).catch(() => {});
     }
     return world;
-  }
-
-  syncFlashlightForWorld(world, key) {
-    if (!world) return;
-    if (this._flashlightWorld !== world) {
-      this._flashlightWorld = world;
-      this.flashlightOn = DARK_WORLDS.has(key);
-    }
   }
 
   exposureFor(key) {
@@ -992,7 +939,6 @@ class Stage {
   finishDisembark(world, key, pos, quat) {
     this.mode = "world";
     this.activeWorld = world;
-    this.syncFlashlightForWorld(world, key);
     this._arrivalHold = world;
     this.arrivedByVoyage = true;
     if (this.renderer) this.renderer.toneMappingExposure = this.exposureFor(key);
@@ -1046,7 +992,6 @@ class Stage {
     this.worldFor("erebus");
     this.mode = "world";
     this.activeWorld = this.worldScene;
-    this.syncFlashlightForWorld(this.worldScene, "erebus");
     if (this.renderer) this.renderer.toneMappingExposure = EREBUS_EXPOSURE;
 
     if (this.worldScene && this._arrivalHold === this.worldScene) {
@@ -1330,7 +1275,6 @@ class Stage {
   enterLearnWorld(world, exposure, focusSiteId = null, playerPos = null, lookAtPos = null) {
     this.mode = "world";
     this.activeWorld = world;
-    this.syncFlashlightForWorld(world, world?._worldKey);
 
     if (!world) return;
     if (this.renderer) this.renderer.toneMappingExposure = exposure;
@@ -1495,8 +1439,6 @@ class Stage {
     const leftWorld = this.activeWorld;
     this.mode = "ship";
     this.activeWorld = null;
-    this._flashlightWorld = null;
-    this.flashlightOn = false;
     this._arrivalHold = null;
     this.arrivedByVoyage = false;
     if (this.voyage) {
@@ -1707,11 +1649,6 @@ class Stage {
     // Avalon's ramp. An invisible light is not counted.
     const inShip = this.camera.parent === this.shipScene;
     if (this.cameraLight) this.cameraLight.visible = inShip;
-    if (this.flashlight) {
-      const inWorldScene = Boolean(this.activeWorld && this.camera.parent === this.activeWorld.scene);
-      this.flashlight.visible = inWorldScene;
-      this.flashlight.intensity = inWorldScene && this.flashlightOn ? FLASHLIGHT_INTENSITY : 0;
-    }
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
     this.syncTouchControls(now);

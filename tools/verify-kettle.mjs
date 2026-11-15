@@ -275,7 +275,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
       built.scene.traverse(o => { if (o.isPointLight) realLights++; });
       const { FURNACE_FIRE } = await import('../src/three/kettle/plant.js');
       const fires = built.lamps.filter(m => m.userData.lamp.color === FURNACE_FIRE).length;
-      check(realLights === 0 && built.lamps.length >= 40 && fires === 1, `${built.lamps.length} lamps and one fire add no real lights to the scene`, `${built.lamps.length} lamps, ${fires} fires and ${realLights} real lights: a lamp is its emissive mesh only (lamp-pool.js)`);
+      check(realLights === 3 && built.lamps.length >= 40 && fires === 1, `${built.lamps.length} lamps and one fire share ${realLights} real lights`, `${built.lamps.length} lamps, ${fires} fires and ${realLights} real lights: the lamp pool is not what keeps the frame cheap`);
       check(opaqueNoDepth.size === 0, 'no opaque material leaves the depth buffer unwritten', `${opaqueNoDepth.size} opaque material(s) set depthWrite false`);
     }
 
