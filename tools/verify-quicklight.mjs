@@ -135,7 +135,7 @@ console.log('\nQuicklight built world (Node)\n');
   w.scene.traverse(o => {
     if (o.isPointLight || o.isSpotLight) totalPointLights++;
   });
-  check(totalPointLights === w.lamps.length, `all ${w.lamps.length} lamps have real always-on PointLights`, `${totalPointLights} lights for ${w.lamps.length} lamps`);
+  check(totalPointLights === 0, `${w.lamps.length} lamps add no real lights to the scene`, `${totalPointLights} point lights for ${w.lamps.length} lamps: a lamp is its emissive mesh only (lamp-pool.js)`);
 
   let hostErrors = 0;
   for (const s of worldData.sites) {

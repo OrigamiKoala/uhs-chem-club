@@ -901,8 +901,11 @@ class Stage {
    * on the frame it happened, which is what walking Ligar felt like. Asked
    * for here, the driver compiles them in parallel where it can
    * (KHR_parallel_shader_compile), while the voyage is still in space.
-   * A world's light count never changes after it is built (lamp-pool.js), so
-   * what is compiled here is what is drawn.
+   * A world's own light count never changes after it is built (lamp-pool.js
+   * adds none). The one light that joins it is the suit flashlight, which
+   * rides the camera, so the camera stands in the world's scene with the
+   * flashlight showing while the programs are requested: what is compiled
+   * here is then what is drawn, and stepping off recompiles nothing.
    */
   warmWorld(world, key) {
     if (world && key) world._worldKey = key;
@@ -910,7 +913,23 @@ class Stage {
     // What is in the scene now is the world's; a bench's own bodies come later (shadow-pace.js).
     if (world?.scene) markWorldOwn(world.scene);
     if (world?.scene && r?.compileAsync) {
-      r.compileAsync(world.scene, this.camera).catch(() => {});
+      const cam = this.camera;
+      const home = cam.parent;
+      const suit = this.cameraLight?.visible;
+      const torch = this.flashlight?.visible;
+      // compileAsync reads the scene's lights before it returns; the camera is home again by then.
+      world.scene.add(cam);
+      if (this.cameraLight) this.cameraLight.visible = false;
+      if (this.flashlight) this.flashlight.visible = true;
+      let pending = null;
+      try {
+        pending = r.compileAsync(world.scene, cam);
+      } finally {
+        if (home) home.add(cam); else world.scene.remove(cam);
+        if (this.cameraLight) this.cameraLight.visible = suit;
+        if (this.flashlight) this.flashlight.visible = torch;
+      }
+      pending?.catch(() => {});
     }
     return world;
   }

@@ -310,7 +310,7 @@ const PLAN_QUESTS = ['q1-both', 'q2-k', 'q3-q', 'q4-properties', 'q5-ice', 'q6-l
       check(strangers.length === 0, `${lit.size} emissive material: the work lamps; nothing else in the world is lit`, `${strangers.length} emissive material(s) that are not a work lamp`);
       let realLights = 0;
       built.scene.traverse(o => { if (o.isPointLight) realLights++; });
-      check(realLights === built.lamps.length && built.lamps.length >= 30, `all ${built.lamps.length} lamps have real always-on lights (${realLights})`, `${built.lamps.length} lamps and ${realLights} real lights`);
+      check(realLights === 0 && built.lamps.length >= 30, `${built.lamps.length} lamps add no real lights to the scene`, `${built.lamps.length} lamps and ${realLights} real lights: a lamp is its emissive mesh only (lamp-pool.js)`);
     }
 
     /* THE BRINE: a sheet in every pan, at the water's level, never lit, never solid. */

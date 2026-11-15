@@ -746,7 +746,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
         }
         check(unlit.length === 0, `every underground bench whose quest is a table (${tables.length}) has a lamp over its plate`, `mine tables with no lamp over them:\n         ${unlit.join('\n         ')}`);
       }
-      check(built.lampPool.lights.length === built.lampPool.sources.length && built.lampPool.lights.length > 0, `all ${built.lampPool.sources.length} pooled lamps have real always-on lights`, `the pool has ${built.lampPool.lights.length} lights for ${built.lampPool.sources.length} sources`);
+      check(built.lampPool.lights.length === 0 && built.lampPool.sources.length > 0, `${built.lampPool.sources.length} declared lamps add no real lights to the scene`, `the pool has ${built.lampPool.lights.length} lights for ${built.lampPool.sources.length} sources: a lamp is its emissive mesh only (lamp-pool.js)`);
 
       // And NOTHING ELSE IS LIT: every emissive material is a lamp's diffuser, the forge's coals, or a bench's indicator.
       const allowed = new Set([...built.lamps.map(l => l.material), built.forgeCoals?.material,

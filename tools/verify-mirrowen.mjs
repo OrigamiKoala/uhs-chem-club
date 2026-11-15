@@ -379,9 +379,9 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*["']([
         `${strangers.length} emissive material(s) that are not a work lamp`);
       let realLights = 0;
       built.scene.traverse(o => { if (o.isPointLight) realLights++; });
-      check(realLights === built.lamps.length && built.lamps.length >= 30,
-        `all ${built.lamps.length} lamps have real always-on lights (${realLights})`,
-        `${built.lamps.length} lamps and ${realLights} real lights`);
+      check(realLights === 0 && built.lamps.length >= 30,
+        `${built.lamps.length} lamps add no real lights to the scene`,
+        `${built.lamps.length} lamps and ${realLights} real lights: a lamp is its emissive mesh only (lamp-pool.js)`);
     }
 
     /* EVERY SITE FACES ITS APPROACH, and its bench deploys onto a real plate. */
