@@ -4,5 +4,6 @@
  */
 
 // q5-half-gone
+import './nuke-decay.js';
 // q6-shortfall
 export {};

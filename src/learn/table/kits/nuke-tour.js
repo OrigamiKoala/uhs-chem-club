@@ -32,6 +32,10 @@ const FIXTURES = {
     title: 'Sealed drums', dials: false,
     text: 'Two sealed drums on the deck, each with its temperature and the oxygen left inside. Tap a drum to look inside its wall, enlarged: its atoms, and any tracks that stop there.'
   },
+  'nuke:ndecay': {
+    title: 'Decaying sample', dials: false,
+    text: 'A grid of radioactive nuclei: a bright one has not decayed, a dark one has. Tap "Wait" to move the clock on and "Back" to move it back; the plot beside the grid marks what is left at every step so far.'
+  },
   'nuke:ntissue': {
     title: 'Tissue strip', dials: false,
     text: 'A strip of living cells with a source inside its left end. Tap Alpha, Beta or Gamma to see that radiation\'s trail; each amber mark is a molecule it broke.'

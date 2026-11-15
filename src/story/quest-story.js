@@ -56,6 +56,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the Fifth\'s store is full of nuclei off the band; they cannot keep.'
   },
+  'unit14/q5-half-gone': {
+    scene: 'ch-halflife',
+    beats: [
+      { to: 0.32, say: 'In 8 days half of the 256 iodine nuclei decayed: 128 were left.' },
+      { to: 0.65, say: 'In the next 8 days half of those 128 went, leaving 64: a quarter, not none.' },
+      { to: 0.96, say: 'The bone counted 1.9 against a living 15.3: three half-lives, about 17,190 years.' }
+    ],
+    filed: 'Filed: the slag\'s clock says the works have run for decades, not months.'
+  },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
     scene: 'thorn-chains',

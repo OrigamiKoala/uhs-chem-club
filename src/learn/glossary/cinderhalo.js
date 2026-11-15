@@ -64,5 +64,7 @@ export const NEEDS = {
   'q1-still-warm:1': ['nucleons'],
   'q1-still-warm:3': ['nucleons'],
   'q2-what-comes-off:5': ['ions'],
-  'q3-equations:1': ['nucleons']
+  'q3-equations:1': ['nucleons'],
+  'q5-half-gone:1': ['firstorder'],
+  'q5-half-gone:6': ['firstorder', 'log']
 };

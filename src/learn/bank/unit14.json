@@ -262,6 +262,105 @@
           "explanation": "The push between protons grows with every pair of them, but the strong nuclear force holds only touching nucleons, so a big nucleus needs extra neutrons to stay together."
         }
       ]
+    },
+    "q5-half-gone": {
+      "problems": [
+        {
+          "id": "q5-half-gone#b1",
+          "quest": "q5-half-gone",
+          "question": "A sample of phosphorus-32 (half-life 14.3 days) counts 2,400 per minute. About what will it count 43 days later?",
+          "options": [
+            {
+              "id": "a",
+              "label": "About 300"
+            },
+            {
+              "id": "b",
+              "label": "About 800"
+            },
+            {
+              "id": "c",
+              "label": "About 0"
+            },
+            {
+              "id": "d",
+              "label": "About 1,200"
+            }
+          ],
+          "answer": "a",
+          "explanation": "43 days is three half-lives of 14.3 days, so the count halves three times: 2,400 → 1,200 → 600 → 300."
+        },
+        {
+          "id": "q5-half-gone#b2",
+          "quest": "q5-half-gone",
+          "question": "Two samples of the same isotope, one of 1 g and one of 10 g, are watched. Which loses half of its nuclei first?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Both take the same time"
+            },
+            {
+              "id": "b",
+              "label": "The 1 g sample"
+            },
+            {
+              "id": "c",
+              "label": "The 10 g sample"
+            },
+            {
+              "id": "d",
+              "label": "It depends on the temperature"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Radioactive decay is first order: each nucleus has the same chance of decaying in any day, so the half-life is the same whatever the amount, and temperature does not change it."
+        }
+      ],
+      "worked": {
+        "id": "q5-half-gone#w",
+        "quest": "q5-half-gone",
+        "title": "Dating a wooden beam",
+        "setup": "A wooden beam from the Fifth's works counts 3.8 carbon-14 counts per minute per gram; living wood counts 15.3. Carbon-14's half-life is 5,730 years. Find the beam's age.",
+        "steps": [
+          {
+            "say": "What fraction of the living count does the beam keep? (as a decimal, three places)",
+            "kind": "number",
+            "answer": 0.248,
+            "unit": "",
+            "calc": "3.8 / 15.3",
+            "hint": "Divide the beam's count by the living count.",
+            "explain": "3.8 ÷ 15.3 = 0.248, about a quarter."
+          },
+          {
+            "say": "How many halvings leave about a quarter?",
+            "kind": "number",
+            "answer": 2,
+            "unit": "",
+            "calc": "2",
+            "hint": "Halve once, then halve again.",
+            "explain": "Half of a half is a quarter: 2 halvings."
+          },
+          {
+            "say": "How old is the beam, in years?",
+            "kind": "number",
+            "answer": 11460,
+            "unit": "years",
+            "calc": "2 * 5730",
+            "hint": "Each halving is one half-life.",
+            "explain": "2 × 5,730 = 11,460 years."
+          },
+          {
+            "say": "What is carbon-14's rate constant, per year? (three significant figures, in scientific form like 1.21e-4)",
+            "kind": "number",
+            "answer": 0.000121,
+            "unit": "per year",
+            "calc": "0.693 / 5730",
+            "hint": "Use t½ = 0.693 / k.",
+            "explain": "k = 0.693 ÷ 5,730 = 1.21 × 10⁻⁴ per year."
+          }
+        ],
+        "finish": "Each half-life halves the count: count the halvings, then multiply by the half-life."
+      }
     }
   }
 }

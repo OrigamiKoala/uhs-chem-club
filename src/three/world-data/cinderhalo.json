@@ -886,7 +886,7 @@
       "label": "Bench 5 - Half Gone, Then Half Again",
       "structure": "cask-vault",
       "crater": "C5",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

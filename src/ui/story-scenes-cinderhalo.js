@@ -6,7 +6,7 @@
 
 import { C as K, text, ground, win, ease } from './story-kit.js';
 import { C, drawNucleus, protonSlots, nucleon, gammaWave, lepton, commas, nucSym } from '../learn/table/kits/nuke-draw.js';
-import { countsOf, decayOf, symbolOf, nameOf, leftAt, generations, BE_PER_NUCLEON, stableOf as STABLE_OF } from '../learn/engine/nucdata.js';
+import { countsOf, decayOf, symbolOf, nameOf, leftAt, generations, BE_PER_NUCLEON, stableOf as STABLE_OF, decayTimes, gridLeft } from '../learn/engine/nucdata.js';
 
 /** The bench helpers draw in fixture units; on the story plate one unit is one pixel. */
 export const PX = Object.freeze({ x: d => d, y: d => d, len: d => d, size: (k, min = 6.5) => Math.max(min, k) });
@@ -157,6 +157,24 @@ function stability(ctx, w, h, t) {
   }
 }
 
+/* ---- q5-half-gone: the grid halving, then halving again; the carbon clock ---- */
+function halflife(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const grid = (days, label) => {
+    const left = gridLeft(decayTimes(256, 8.02, 7), days);
+    const T = decayTimes(256, 8.02, 7);
+    for (let i = 0; i < 256; i++) { ctx.fillStyle = T[i] <= days ? '#3a3630' : C.alpha; ctx.beginPath(); ctx.arc(330 + (i % 16) * 19, 130 + Math.floor(i / 16) * 19, 7, 0, Math.PI * 2); ctx.fill(); }
+    text(ctx, `${label}: ${left} of 256 left`, 480, 470, { size: 22, color: K.amber, align: 'center' });
+  };
+  if (t < 0.33) { head(ctx, 'One half-life'); grid(Math.round(8 * win(t, 0.03, 0.28)), `Day ${Math.round(8 * win(t, 0.03, 0.28))}`); }
+  else if (t < 0.66) { head(ctx, 'Half again'); const d = 8 + Math.round(8 * win(t, 0.36, 0.6)); grid(d, `Day ${d}`); }
+  else {
+    head(ctx, 'The carbon clock');
+    const k = win(t, 0.69, 0.92); const steps = Math.min(3, Math.floor(k * 4));
+    [15.3, 7.7, 3.8, 1.9].slice(0, steps + 1).forEach((v, i) => text(ctx, `${(i * 5730).toLocaleString('en-US')} years: ${v} per minute per gram`, 480, 180 + i * 60, { size: 24, color: i === 3 ? K.amber : K.text, align: 'center' }));
+  }
+}
+
 export const CINDERHALO_SCENES = {
   'ch-warm': warm,
   // q2-what-comes-off
@@ -166,6 +184,7 @@ export const CINDERHALO_SCENES = {
   // q4-stability
   'ch-stability': stability,
   // q5-half-gone
+  'ch-halflife': halflife,
   // q6-shortfall
   // boss-core
 };
