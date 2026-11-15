@@ -97,37 +97,44 @@ export function lookFor(id) {
 const SYSTEM_COUNTS = [3, 2, 3, 2, 3, 2]; // 6 star systems, 15 worlds total
 const STAR_KINDS = ['warm', 'cool', 'amber', 'cool', 'warm', 'white'];
 
-export function buildStarSystems(count = SYSTEM_COUNTS.length) {
-  const rng = mulberry32(hashString('avalon-star-systems-v3'));
+export function buildStarSystems(count = SYSTEM_COUNTS.length, rng = Math.random) {
   // Scatter star systems randomly across [160..840] x [140..560] with minimum separation
   // so orbital rings stay inside the chart and worlds remain >= 60 units apart, avoiding any grid.
   const minX = 160;
   const maxX = GALAXY_W - 160;
   const minY = 140;
   const maxY = GALAXY_H - 140;
-  const minSep = 242;
-  const placed = [];
-  for (let i = 0; i < count; i++) {
-    let best = null;
-    let bestMinDist = -1;
-    for (let attempt = 0; attempt < 250; attempt++) {
-      const x = minX + rng() * (maxX - minX);
-      const y = minY + rng() * (maxY - minY);
-      let dMin = Infinity;
-      for (const p of placed) {
-        const d = Math.hypot(x - p.baseX, y - p.baseY);
-        if (d < dMin) dMin = d;
+  const minSep = 235;
+  let placed = [];
+  for (let restart = 0; restart < 20; restart++) {
+    placed = [];
+    let allOk = true;
+    for (let i = 0; i < count; i++) {
+      let best = null;
+      let bestMinDist = -1;
+      let found = false;
+      for (let attempt = 0; attempt < 250; attempt++) {
+        const x = minX + rng() * (maxX - minX);
+        const y = minY + rng() * (maxY - minY);
+        let dMin = Infinity;
+        for (const p of placed) {
+          const d = Math.hypot(x - p.baseX, y - p.baseY);
+          if (d < dMin) dMin = d;
+        }
+        if (dMin >= minSep) {
+          best = { baseX: x, baseY: y };
+          found = true;
+          break;
+        }
+        if (dMin > bestMinDist) {
+          bestMinDist = dMin;
+          best = { baseX: x, baseY: y };
+        }
       }
-      if (dMin >= minSep) {
-        best = { baseX: x, baseY: y };
-        break;
-      }
-      if (dMin > bestMinDist) {
-        bestMinDist = dMin;
-        best = { baseX: x, baseY: y };
-      }
+      if (!found) allOk = false;
+      placed.push(best);
     }
-    placed.push(best);
+    if (allOk) break;
   }
   const systems = [];
   for (let i = 0; i < count; i++) {
@@ -139,7 +146,7 @@ export function buildStarSystems(count = SYSTEM_COUNTS.length) {
       baseY: cell.baseY,
       starKind: STAR_KINDS[i % STAR_KINDS.length],
       starScale: 0.95 + rng() * 0.4,
-      tilt: 0.68 + rng() * 0.18,
+      tilt: 0.72 + rng() * 0.16,
       planeRot: (rng() - 0.5) * 0.65
     });
   }
@@ -164,44 +171,56 @@ export function planetPos(node, _time = 0) {
   };
 }
 
-export function layoutSystems(list) {
-  const starSystems = buildStarSystems(SYSTEM_COUNTS.length);
-  const rng = mulberry32(hashString('avalon-galaxy-v2'));
-  // Spread worlds across the 6 star systems at random angles around each host star.
-  const slots = [];
-  SYSTEM_COUNTS.forEach((cnt, sysIdx) => {
-    const radii = cnt === 2 ? [40, 70] : [34, 60, 86];
-    const baseAng = rng() * Math.PI * 2;
-    for (let slot = 0; slot < cnt; slot++) {
-      slots.push({
-        sysIdx,
-        orbitR: radii[slot],
-        orbitSpeed: 0,
-        orbitPhase: baseAng + (slot * Math.PI * 2) / cnt + (rng() - 0.5) * 0.35
-      });
+export function layoutSystems(list, seed = null) {
+  const rng = seed == null ? Math.random : mulberry32(hashString(String(seed)));
+  let bestOut = null;
+  let bestMin = -1;
+  for (let attempt = 0; attempt < 15; attempt++) {
+    const starSystems = buildStarSystems(SYSTEM_COUNTS.length, rng);
+    // Spread worlds across the 6 star systems at random angles around each host star.
+    const slots = [];
+    SYSTEM_COUNTS.forEach((cnt, sysIdx) => {
+      const radii = cnt === 2 ? [40, 70] : [34, 60, 86];
+      const baseAng = rng() * Math.PI * 2;
+      for (let slot = 0; slot < cnt; slot++) {
+        slots.push({
+          sysIdx,
+          orbitR: radii[slot],
+          orbitSpeed: 0,
+          orbitPhase: baseAng + (slot * Math.PI * 2) / cnt + (rng() - 0.5) * 0.35
+        });
+      }
+    });
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      const sl = slots[i % slots.length];
+      const system = starSystems[sl.sysIdx];
+      const node = {
+        id: list[i].id,
+        index: i,
+        act: list[i].act || 'act1',
+        system,
+        orbitR: sl.orbitR,
+        orbitSpeed: sl.orbitSpeed,
+        orbitPhase: sl.orbitPhase,
+        x: 0,
+        y: 0
+      };
+      const p = planetPos(node, 0);
+      node.x = p.x;
+      node.y = p.y;
+      out.push(node);
     }
-  });
-  const out = [];
-  for (let i = 0; i < list.length; i++) {
-    const sl = slots[i % slots.length];
-    const system = starSystems[sl.sysIdx];
-    const node = {
-      id: list[i].id,
-      index: i,
-      act: list[i].act || 'act1',
-      system,
-      orbitR: sl.orbitR,
-      orbitSpeed: sl.orbitSpeed,
-      orbitPhase: sl.orbitPhase,
-      x: 0,
-      y: 0
-    };
-    const p = planetPos(node, 0);
-    node.x = p.x;
-    node.y = p.y;
-    out.push(node);
+    let minD = Infinity;
+    for (let i = 0; i < out.length; i++) {
+      for (let j = i + 1; j < out.length; j++) {
+        minD = Math.min(minD, Math.hypot(out[i].x - out[j].x, out[i].y - out[j].y));
+      }
+    }
+    if (minD > bestMin) { bestMin = minD; bestOut = out; }
+    if (minD >= 62) return out;
   }
-  return out;
+  return bestOut;
 }
 
 /**

@@ -54,7 +54,9 @@ const lanes = G.layoutLanes(systems);
   Math.hypot(p1.x - p0.x, p1.y - p0.y) === 0 ? ok('planets remain static around their stars over time') : fail('planets moved over time');
 
   const a = JSON.stringify(G.layoutSystems(list));
-  a === JSON.stringify(G.layoutSystems(list)) ? ok('layout is deterministic (the same chart on every machine)') : fail('layout is not deterministic');
+  a !== JSON.stringify(G.layoutSystems(list)) ? ok('layout generates a new random positioning on each open') : fail('layout is identical on every open');
+  const sA = JSON.stringify(G.layoutSystems(list, 'verify-seed'));
+  sA === JSON.stringify(G.layoutSystems(list, 'verify-seed')) ? ok('seeded layout is deterministic when a seed is given') : fail('seeded layout is not deterministic');
 }
 
 /* ---- every world has a look ---- */
