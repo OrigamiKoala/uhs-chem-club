@@ -20,7 +20,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 - `src/three/`: Persistent WebGL stage (`src/three/stage.js`) and 3D worlds.
 - `src/screens/`: DOM screen renders and route views.
 - `src/ui/calculator.js`: Digital scientific calculator.
-- `src/ui/galaxy-map.js`: Star map chart rendering worlds across 6 drifting, scattered star systems with rotating planets.
+- `src/ui/galaxy-map.js`: Star map chart rendering worlds at static random positions across 6 scattered star systems.
 - `api/[...route].js`: Vercel serverless proxy with rate limiting and local mocks.
 - `apps-script/`: Google Sheets backend (authoritative persistence for non-guest users).
 

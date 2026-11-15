@@ -89,7 +89,7 @@ export function lookFor(id) {
 
 /**
  * Place the worlds across multiple scattered star systems (no central core or track).
- * Each star system drifts smoothly over time; each world orbits its host star.
+ * Stars and planets are placed at deterministic random positions without animation.
  *
  * @param {Array<{id:string, act?:string}>} list  road order, Erebus first
  * @returns {Array<{id:string, index:number, x:number, y:number, act:string, system:object, orbitR:number, orbitSpeed:number, orbitPhase:number}>}
@@ -98,25 +98,40 @@ const SYSTEM_COUNTS = [3, 2, 3, 2, 3, 2]; // 6 star systems, 15 worlds total
 const STAR_KINDS = ['warm', 'cool', 'amber', 'cool', 'warm', 'white'];
 
 export function buildStarSystems(count = SYSTEM_COUNTS.length) {
-  const rng = mulberry32(hashString('avalon-star-systems-v2'));
-  // 3x2 jittered grid across [150..850] x [145..555], shuffled so placement feels organic.
-  const cells = [];
-  for (let row = 0; row < 2; row++) {
-    for (let col = 0; col < 3; col++) {
-      cells.push({
-        baseX: 195 + col * 305 + (rng() - 0.5) * 85,
-        baseY: 185 + row * 315 + (rng() - 0.5) * 75
-      });
+  const rng = mulberry32(hashString('avalon-star-systems-v3'));
+  // Scatter star systems randomly across [160..840] x [140..560] with minimum separation
+  // so orbital rings stay inside the chart and worlds remain >= 60 units apart, avoiding any grid.
+  const minX = 160;
+  const maxX = GALAXY_W - 160;
+  const minY = 140;
+  const maxY = GALAXY_H - 140;
+  const minSep = 242;
+  const placed = [];
+  for (let i = 0; i < count; i++) {
+    let best = null;
+    let bestMinDist = -1;
+    for (let attempt = 0; attempt < 250; attempt++) {
+      const x = minX + rng() * (maxX - minX);
+      const y = minY + rng() * (maxY - minY);
+      let dMin = Infinity;
+      for (const p of placed) {
+        const d = Math.hypot(x - p.baseX, y - p.baseY);
+        if (d < dMin) dMin = d;
+      }
+      if (dMin >= minSep) {
+        best = { baseX: x, baseY: y };
+        break;
+      }
+      if (dMin > bestMinDist) {
+        bestMinDist = dMin;
+        best = { baseX: x, baseY: y };
+      }
     }
-  }
-  // Deterministic shuffle
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [cells[i], cells[j]] = [cells[j], cells[i]];
+    placed.push(best);
   }
   const systems = [];
   for (let i = 0; i < count; i++) {
-    const cell = cells[i % cells.length];
+    const cell = placed[i];
     systems.push({
       id: `sys-${i}`,
       index: i,
@@ -124,38 +139,21 @@ export function buildStarSystems(count = SYSTEM_COUNTS.length) {
       baseY: cell.baseY,
       starKind: STAR_KINDS[i % STAR_KINDS.length],
       starScale: 0.95 + rng() * 0.4,
-      tilt: 0.58 + rng() * 0.22,
-      planeRot: (rng() - 0.5) * 0.65,
-      // Smooth multi-frequency drift so star systems constantly move and change position.
-      ax1: 28 + rng() * 22,
-      ay1: 22 + rng() * 18,
-      ax2: 14 + rng() * 14,
-      ay2: 12 + rng() * 12,
-      fx1: 0.00007 + rng() * 0.00006,
-      fy1: 0.00008 + rng() * 0.00006,
-      fx2: 0.00013 + rng() * 0.00007,
-      fy2: 0.00011 + rng() * 0.00007,
-      px1: rng() * Math.PI * 2,
-      py1: rng() * Math.PI * 2,
-      px2: rng() * Math.PI * 2,
-      py2: rng() * Math.PI * 2
+      tilt: 0.68 + rng() * 0.18,
+      planeRot: (rng() - 0.5) * 0.65
     });
   }
   return systems;
 }
 
-export function starPos(sys, time = 0) {
-  if (!time) return { x: sys.baseX, y: sys.baseY };
-  return {
-    x: sys.baseX + Math.sin(time * sys.fx1 + sys.px1) * sys.ax1 + Math.cos(time * sys.fx2 + sys.px2) * sys.ax2,
-    y: sys.baseY + Math.cos(time * sys.fy1 + sys.py1) * sys.ay1 + Math.sin(time * sys.fy2 + sys.py2) * sys.ay2
-  };
+export function starPos(sys, _time = 0) {
+  return { x: sys.baseX, y: sys.baseY };
 }
 
-export function planetPos(node, time = 0) {
+export function planetPos(node, _time = 0) {
   if (!node.system) return { x: node.x, y: node.y };
-  const s = starPos(node.system, time);
-  const ang = node.orbitPhase + time * node.orbitSpeed;
+  const s = starPos(node.system, 0);
+  const ang = node.orbitPhase;
   const lx = Math.cos(ang) * node.orbitR;
   const ly = Math.sin(ang) * node.orbitR * node.system.tilt;
   const c = Math.cos(node.system.planeRot);
@@ -169,7 +167,7 @@ export function planetPos(node, time = 0) {
 export function layoutSystems(list) {
   const starSystems = buildStarSystems(SYSTEM_COUNTS.length);
   const rng = mulberry32(hashString('avalon-galaxy-v2'));
-  // Spread worlds across the 6 star systems in a deterministic shuffled order.
+  // Spread worlds across the 6 star systems at random angles around each host star.
   const slots = [];
   SYSTEM_COUNTS.forEach((cnt, sysIdx) => {
     const radii = cnt === 2 ? [40, 70] : [34, 60, 86];
@@ -178,7 +176,7 @@ export function layoutSystems(list) {
       slots.push({
         sysIdx,
         orbitR: radii[slot],
-        orbitSpeed: (0.00042 - slot * 0.00009) * (sysIdx % 2 === 0 ? 1 : -1),
+        orbitSpeed: 0,
         orbitPhase: baseAng + (slot * Math.PI * 2) / cnt + (rng() - 0.5) * 0.35
       });
     }
@@ -707,10 +705,9 @@ const STAR_PALETTE = {
   white: { core: '#ffffff', mid: 'rgba(220,228,242,0.55)', outer: 'rgba(195,210,235,0)' }
 };
 
-function drawStar(ctx, x, y, size, kind = 'warm', time = 0, animate = false) {
+function drawStar(ctx, x, y, size, kind = 'warm') {
   const pal = STAR_PALETTE[kind] || STAR_PALETTE.warm;
-  const pulse = animate ? 1 + 0.08 * Math.sin(time * 0.0025 + x * 0.03) : 1;
-  const r = size * pulse;
+  const r = size;
 
   ctx.save();
   // Soft corona
@@ -759,7 +756,7 @@ function drawSystem(ctx, view, w, h, node, opts) {
 
   ctx.save();
   ctx.globalAlpha = sealed ? 0.62 : 1;
-  const spin = animate ? time * 0.00055 + node.index * 1.1 : node.index * 0.9;
+  const spin = node.index * 0.9;
   drawPlanet(ctx, p.x, p.y, planetR, node.id, spin);
   ctx.restore();
 
@@ -857,16 +854,16 @@ export function drawGalaxy(ctx, state) {
   const planetR = planetPx(view, w, h);
   const showName = w >= 480 || view.k / fitScale(w, h) >= 1.5;
 
-  // Draw each unique host star (bright, visible, and drifting with its system).
+  // Draw each unique host star at its static position.
   const seenStars = new Set();
   const starR = Math.max(4.5, planetR * 0.58);
   for (const n of nodes) {
     if (!n.system || seenStars.has(n.system.id)) continue;
     seenStars.add(n.system.id);
-    const sp = starPos(n.system, animate ? time : 0);
+    const sp = starPos(n.system, 0);
     const scr = worldToScreen(view, w, h, sp.x, sp.y);
     if (scr.x < -120 || scr.y < -120 || scr.x > w + 120 || scr.y > h + 120) continue;
-    drawStar(ctx, scr.x, scr.y, starR * (n.system.starScale || 1), n.system.starKind, time, animate);
+    drawStar(ctx, scr.x, scr.y, starR * (n.system.starScale || 1), n.system.starKind);
   }
 
   // Far systems first so a zoomed-in planet is never painted over by a neighbour.
@@ -1057,14 +1054,12 @@ export function mountGalaxyMap(root, opts) {
       if (f >= 1) tween = null;
       dirty = true;
     }
-    const animate = !prefersReduced;
-    // 30 fps is plenty for a chart, and the world behind this terminal is rendering too.
-    if (dirty || (animate && now - lastFrame > 33)) {
+    if (dirty) {
       lastFrame = now;
       dirty = false;
       if (w > 0) {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawGalaxy(ctx, { nodes, lanes, view, w, h, time: now, animate, selectedId, hoverId, acts });
+        drawGalaxy(ctx, { nodes, lanes, view, w, h, time: 0, animate: false, selectedId, hoverId, acts });
       }
     }
     raf = requestAnimationFrame(frame);

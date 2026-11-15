@@ -44,14 +44,14 @@ const lanes = G.layoutLanes(systems);
   const starIds = new Set(systems.map(s => s.system?.id).filter(Boolean));
   starIds.size >= 4 ? ok(`worlds distributed across ${starIds.size} star systems`) : fail(`expected >= 4 star systems, got ${starIds.size}`);
 
-  // Star systems and planets move over time.
+  // Star systems and planets are static (no orbital or drift animation).
   const s0 = G.starPos(systems[0].system, 0);
   const s1 = G.starPos(systems[0].system, 5000);
-  Math.hypot(s1.x - s0.x, s1.y - s0.y) > 5 ? ok('star systems move and change position over time') : fail('star systems are static');
+  Math.hypot(s1.x - s0.x, s1.y - s0.y) === 0 ? ok('star systems remain static over time') : fail('star systems moved over time');
 
   const p0 = G.planetPos(systems[0], 0);
   const p1 = G.planetPos(systems[0], 5000);
-  Math.hypot(p1.x - p0.x, p1.y - p0.y) > 5 ? ok('planets orbit their stars over time') : fail('planets do not orbit');
+  Math.hypot(p1.x - p0.x, p1.y - p0.y) === 0 ? ok('planets remain static around their stars over time') : fail('planets moved over time');
 
   const a = JSON.stringify(G.layoutSystems(list));
   a === JSON.stringify(G.layoutSystems(list)) ? ok('layout is deterministic (the same chart on every machine)') : fail('layout is not deterministic');
