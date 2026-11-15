@@ -216,7 +216,7 @@ class Stage {
     this.camera.add(this.cameraLight);
 
     // Directional suit flashlight for exploring worlds (aimed along camera look)
-    this.flashlight = new THREE.SpotLight(0xfff1d8, 0, 45, Math.PI / 6.5, 0.45, 1.4);
+    this.flashlight = new THREE.SpotLight(0xfff1d8, 0, 45, Math.PI / 2.4, 0.5, 1.4);
     this.flashlight.castShadow = false;
     this.flashlight.position.set(0.14, -0.12, -0.05);
     this.flashlight.target.position.set(0, 0, -10);

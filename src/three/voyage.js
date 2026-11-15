@@ -482,6 +482,17 @@ export class Voyage {
     this.shipQuat = new THREE.Quaternion();
     this.shipMatrix = new THREE.Matrix4();
     this.extCam = new THREE.PerspectiveCamera(BASE_FOV, 1, 0.5, 60000);
+    // Match the suit flashlight's SpotLight on `stage.camera` so rendering or
+    // compiling a world through `extCam` keeps the same light count `warmWorld`
+    // compiled against and never triggers a mid-descent shader recompile.
+    if (stage?.flashlight) {
+      this._extTorch = new THREE.SpotLight(0xfff1d8, 0, 45, Math.PI / 2.4, 0.5, 1.4);
+      this._extTorch.castShadow = false;
+      this._extTorch.position.set(0.14, -0.12, -0.05);
+      this._extTorch.target.position.set(0, 0, -10);
+      this.extCam.add(this._extTorch);
+      this.extCam.add(this._extTorch.target);
+    }
 
     this.camPos = new THREE.Vector3();
     this.camQuat = new THREE.Quaternion();
@@ -1197,7 +1208,14 @@ export class Voyage {
       const r = this.stage.renderer;
       if (r?.compileAsync) {
         model.group.visible = true;
-        r.compileAsync(model.group, this.stage.camera, world.scene).catch(() => {});
+        if (this._extTorch) world.scene.add(this.extCam);
+        let pending = null;
+        try {
+          pending = r.compileAsync(model.group, this.stage.camera, world.scene);
+        } finally {
+          if (this._extTorch) world.scene.remove(this.extCam);
+        }
+        pending?.catch(() => {});
       }
       // Never drawn while the player is inside it.
       model.group.visible = false;
@@ -1567,14 +1585,20 @@ export class Voyage {
       this.space.home.position.copy(this.shipPos);
     }
 
-    const scene = this.exterior === 'world' && this.extWorld ? this.extWorld.scene : this.space?.scene;
+    const renderingWorld = this.exterior === 'world' && Boolean(this.extWorld);
+    const scene = renderingWorld ? this.extWorld.scene : this.space?.scene;
     const baseExposure = renderer.toneMappingExposure;
     const autoClear = renderer.autoClear;
     renderer.autoClear = false;
     renderer.clear();
     if (scene) {
-      renderer.toneMappingExposure = this.exterior === 'world' ? this.extExposure : 1.2;
-      renderer.render(scene, ext);
+      renderer.toneMappingExposure = renderingWorld ? this.extExposure : 1.2;
+      if (renderingWorld && this._extTorch) scene.add(this.extCam);
+      try {
+        renderer.render(scene, ext);
+      } finally {
+        if (renderingWorld && this._extTorch) scene.remove(this.extCam);
+      }
     }
 
     // Cloud, or the flash of the jump, laid over the outside only.
