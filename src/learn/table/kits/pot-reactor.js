@@ -234,22 +234,15 @@ registerFixture('weigh', { paint: paintWeigh });
 
 const REACTOR_TEXT = f => {
   const p = f.props;
-  const bits = [];
-  if (p.ins?.length) bits.push('Drag a jar into a seat at the top left. What is in the jar is what the vessel is fed.');
-  if (p.pour) bits.push(`The "${p.pour.label || 'Fed'}" dial sets how much of the ${nameOfSpecies(p.pour.species).toLowerCase()} is poured in.`);
-  if (p.plenty?.length) bits.push(`The vessel supplies ${p.plenty.map(s => nameOfSpecies(s).toLowerCase()).join(' and ')} on its own, as much as is needed.`);
-  if (p.out) bits.push('Put an empty jar in the seat at the top right to catch what is made.');
-  bits.push('Press "Run" to start the reaction.');
-  if (p.gas) bits.push('The syringe fills with the gas that is made, and its top scale reads in litres.');
-  else if (p.window) bits.push('The particle view shows the particles before the reaction on the left and after it on the right, one circle for each unit it says.');
-  return bits.join(' ');
+  return p.ins?.length ? 'Place jars in the seats and press "Run" to react them.'
+    : 'Set the dial and press "Run" to run the reaction.';
 };
 
 addTourText({
   'pot:reactor': { title: 'Reaction vessel', dials: false, text: REACTOR_TEXT },
-  'pot:weigh': { title: 'Balance', text: 'Drag a jar onto the pan to read how much is in it, in grams. The mass of the jar itself is left out.' }
+  'pot:weigh': { title: 'Balance', text: 'Drag a jar onto the pan to weigh its contents.' }
 }, {
-  jar: ['Jars', 'Each jar holds one substance. A jar that says an amount holds that much. An empty jar starts with nothing, and fills when the vessel makes something. Drag a jar into a seat; to find out how much a filled jar holds, put it on the balance.']
+  jar: ['Jars', 'Drag a jar into a vessel seat, or onto the balance to weigh it.']
 });
 
 export { molarMass };

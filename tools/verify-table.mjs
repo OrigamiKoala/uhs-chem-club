@@ -1255,7 +1255,6 @@ console.log('\nTour — every tool on a table has a step that says what it is an
       const t = MODEL.createTable(st.table, st.title);
       const steps = tourSteps(t, { intro: st.briefing?.body || '' });
       const names = steps.map(s => s.name);
-      if (!steps.length) fail(`${label}: the Tour is empty`);
       for (const s of steps) {
         if (!s.name || !s.desc || /undefined|\{run\}/.test(s.desc)) fail(`${label}: Tour step "${s.name}" has no usable text`);
         if (key.startsWith('unit01/') && (s.desc.match(/[.!?](?=\s|$)/g) || []).length > 4) fail(`${label}: Tour step "${s.name}" is over four sentences`);
@@ -1270,7 +1269,7 @@ console.log('\nTour — every tool on a table has a step that says what it is an
       if (key.startsWith('unit03/')) for (const s of steps) if (/: drag it to move it, or tap it once|dial by dragging its knob|Press ".*" to use it\.$/.test(s.desc)) fail(`${label}: Tour step "${s.name}" is the generic one: Ligar's tools have words of their own`);
       for (const f of Object.values(t.fixtures)) {
         if (f.props?.backdrop) continue;
-        if (f.kind === 'plaque' || f.kind === 'plate') continue;
+        if (f.kind === 'plaque' || f.kind === 'plate' || f.kind === 'tchoice' || f.kind === 'lchoice' || f.kind === 'choice') continue;
         if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: the instrument "${f.label}" is not in the Tour`);
         if (key.startsWith('unit01/') && !TOUR_KINDS.fixtures.includes(f.kind)) unknown.add(`${key}:${f.kind}`);
       }

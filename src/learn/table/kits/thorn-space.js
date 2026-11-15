@@ -293,7 +293,7 @@ addTest('mirror', { title: 'Mirror rig', key: 'Next Turn', result: () => null, l
 addTourText({
   'thorn:tmirror': {
     title: 'Mirror rig', dials: false,
-    text: 'A carbon with four groups, and beside it the same molecule as seen in a mirror. Press "Next Turn" to turn the mirror image to the next of the twelve ways it can be turned; a group of the image that lands where the same group of the molecule stands is ringed in amber, and the line below counts them. Where there is a Sample slot, lay a sample card in it first.'
+    text: 'Press "Next Turn" to rotate the mirror image and test whether groups align.'
   }
 }, {});
 

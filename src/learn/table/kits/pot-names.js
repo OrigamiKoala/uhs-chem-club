@@ -300,13 +300,13 @@ registerFixture('window', { paint: paintWindow, run: runWindow });
 addTourText({
   'pot:ionneedle': {
     title: 'Charge meter', dials: false,
-    text: 'The charge meter belongs to the tray named beside it. It adds up the charges printed on the ions lying in that tray: it swings toward + for a positive total, toward − for a negative one, and rests on 0 when they cancel. An ion that prints no charge adds nothing.'
+    text: 'Adds up the charges of ions placed in the tray.'
   },
   'pot:window': {
     title: 'Particle view', dials: false,
-    text: 'Drag a sample onto the seat at the left. Press the key on the particle view and the panel draws what is inside the sample, one circle for each atom with its symbol on it. Atoms drawn joined inside one outline are held together as one piece.'
+    text: 'Drag a sample onto the seat and press the key to inspect its particles.'
   }
 }, {
-  'pot:ionchip': ['Ions', 'Each piece is one ion with its symbol, and its charge in the corner when it prints one. Drag an ion into a tray, or tap it and then tap the tray. An ion made of several atoms is drawn with its atoms joined inside one outline.'],
-  'pot:crate': ['Samples', 'Each sample holds one substance. A name printed on it says what is inside. Drag a sample onto the seat of the particle view to look into it.']
+  'pot:ionchip': ['Ions', 'Drag an ion into a tray to group or balance charges.'],
+  'pot:crate': ['Samples', 'Drag a sample onto the particle view seat to inspect it.']
 });

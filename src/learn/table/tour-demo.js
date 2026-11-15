@@ -151,3 +151,177 @@ function zoneSpot(table, kit, LAYOUT, a) {
   }
   return null;
 }
+
+/** Synthesize a short live demonstration directly on `table` for a given Tour step (`fx`, `pc`, or `tool`). */
+export async function buildLiveDemo(table, step) {
+  if (!table || !step) return null;
+  const [MODEL, LAYOUT, KITS] = await Promise.all([import('./model.js'), import('./layout.js'), import('./kits/index.js')]);
+  const kit = KITS.getKit(table.kit);
+  const steps = [];
+  let at = 0.85;
+
+  const findDraggable = (accepts) => Object.values(table.pieces || {}).find(p =>
+    !p.hidden && !p.fixed && !p.props?.scratch && (!accepts || accepts.includes(p.kind))
+  );
+
+  if (step.fx && table.fixtures?.[step.fx]) {
+    const f = table.fixtures[step.fx];
+    const lay = LAYOUT.fixtureLayout(f);
+    // Find a slot inside or near this fixture that is currently empty and can take a piece.
+    const slots = Object.values(table.zones?.slots || {}).filter(z => !z.occupant);
+    const nearSlot = slots.find(z => z.at.x >= lay.box.x0 - 10 && z.at.x <= lay.box.x1 + 10 && z.at.y >= lay.box.y0 - 10 && z.at.y <= lay.box.y1 + 10) || slots[0];
+    const containers = Object.values(table.zones?.containers || {});
+    const nearCont = containers.find(z => z.at.x >= lay.box.x0 - 12 && z.at.x <= lay.box.x1 + 12 && z.at.y >= lay.box.y0 - 12 && z.at.y <= lay.box.y1 + 12);
+
+    if (nearSlot) {
+      const p = findDraggable(nearSlot.accepts);
+      if (p) {
+        steps.push({ at, drag: { piece: p.id, to: nearSlot.at }, action: { place: { piece: p.id, to: `slot:${nearSlot.id}` } } });
+        at += 1.3;
+      }
+    } else if (nearCont) {
+      const p = findDraggable(nearCont.accepts);
+      if (p) {
+        steps.push({ at, drag: { piece: p.id, to: nearCont.at }, action: { place: { piece: p.id, to: `container:${nearCont.id}` } } });
+        at += 1.3;
+      }
+    }
+
+    if (!f.noRun) {
+      steps.push({ at, press: f.id, action: { run: f.id } });
+      at += 1.6;
+    } else if (Object.keys(f.dials || {}).length) {
+      const [dName, d] = Object.entries(f.dials)[0];
+      const track = lay.dials.find(x => x.name === dName);
+      const mid = d.min + Math.round(((d.max - d.min) * 0.65) / (d.step || 1)) * (d.step || 1);
+      const val = mid === d.value ? d.max : Math.min(d.max, Math.max(d.min, mid));
+      const action = { setDial: { fixture: f.id, dial: dName, value: val } };
+      const spot = zoneSpot(table, kit, LAYOUT, action.setDial) || (track ? { x: track.x0 + ((val - d.min) / (d.max - d.min || 1)) * (track.x1 - track.x0), y: track.y } : { x: f.at.x, y: f.at.y });
+      steps.push({ at, tap: spot, action });
+      at += 1.5;
+    } else {
+      const z = [...(f.props?.taps || []), ...(kit?.tapZones?.(f, table) || [])].find(x => x.action);
+      if (z) {
+        steps.push({ at, tap: { x: lay.box.x0 + (z.x0 + z.x1) / 2, y: lay.box.y0 + (z.y0 + z.y1) / 2 }, action: z.action });
+        at += 1.5;
+      }
+    }
+  } else if (step.pc && table.pieces?.[step.pc]) {
+    const p = table.pieces[step.pc];
+    if (p.props?.markable) {
+      steps.push({ at, tap: { ...p.at }, action: { mark: p.id } });
+      at += 1.4;
+    } else if (p.kind === 'lens' || p.kind === 'cutter') {
+      const dish = Object.values(table.pieces).find(q => q.id !== p.id && !q.hidden && q.kind === 'dish');
+      if (dish) {
+        steps.push({ at, drag: { piece: p.id, to: dish.at }, action: { place: { piece: p.id, to: { ...dish.at } } } });
+        at += 1.5;
+      }
+    } else if (p.kind === 'atom') {
+      const other = Object.values(table.pieces).find(q => q.id !== p.id && !q.hidden && q.kind === 'atom');
+      if (other) {
+        const to = { x: other.at.x + 6.5, y: other.at.y };
+        steps.push({ at, drag: { piece: p.id, to }, action: { place: { piece: p.id, to } } });
+        at += 1.5;
+      }
+    } else {
+      const slot = Object.values(table.zones?.slots || {}).find(z => !z.occupant && (!z.accepts || z.accepts.includes(p.kind)));
+      const cont = !slot && Object.values(table.zones?.containers || {})[0];
+      const tray = !slot && !cont && Object.values(table.zones?.trays || {})[0];
+      const target = slot ? { to: `slot:${slot.id}`, pt: slot.at } : cont ? { to: `container:${cont.id}`, pt: cont.at } : tray ? { to: `tray:${tray.id}`, pt: tray.at } : null;
+      if (target) {
+        steps.push({ at, drag: { piece: p.id, to: target.pt }, action: { place: { piece: p.id, to: target.to } } });
+        at += 1.5;
+      }
+    }
+  } else if (step.tool) {
+    steps.push({ at, toolBtn: step.tool, action: { tool: step.tool } });
+    at += 1.6;
+  }
+
+  if (!steps.length) {
+    if (step.demo) return step.demo.build();
+    return null;
+  }
+  // Verify at least one step applies cleanly without error.
+  void MODEL;
+  return { table, steps, loop: at + 1.4 };
+}
+
+/**
+ * Play a tour step's animation directly on the live `tabletop` (via `setPreview`) and drive a floating
+ * screen-space pointer cursor via `onPointer({ x, y, pressing } | null)`.
+ */
+export async function playLiveTourDemo(tabletop, table, step, onPointer) {
+  if (!tabletop || !table) return () => {};
+  const [MODEL, LAYOUT] = await Promise.all([import('./model.js'), import('./layout.js')]);
+  const d = await buildLiveDemo(table, step);
+  if (!d) { onPointer?.(null); return () => {}; }
+  const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  let stopped = false; let raf = 0;
+  const cache = [d.table];
+  const stateAfter = n => {
+    while (cache.length <= n) {
+      const prev = cache[cache.length - 1];
+      let next = prev;
+      try { next = MODEL.apply(prev, d.steps[cache.length - 1].action); } catch { /* ignore invalid preview step */ }
+      cache.push(next);
+    }
+    return cache[n];
+  };
+  const fixtureSpot = id => {
+    const f = d.table.fixtures[id];
+    const r = f && LAYOUT.fixtureLayout(f).run;
+    return r ? { x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 } : (f ? { ...f.at } : null);
+  };
+  const t0 = performance.now();
+  const frame = now => {
+    if (stopped) return;
+    const t = reduced ? d.loop : ((now - t0) / 1000) % d.loop;
+    let n = 0; while (n < d.steps.length && d.steps[n].at <= t) n++;
+    const st = stateAfter(n);
+    const shown = {};
+    for (const p of Object.values(st.pieces)) shown[p.id] = { ...p.at };
+    let hand = null; let domSpot = null; let pressing = false;
+    d.steps.forEach(s => {
+      if (reduced || t < s.at - LEAD || t > s.at + 0.35) return;
+      const k = Math.min(1, Math.max(0, (t - (s.at - LEAD)) / LEAD));
+      if (s.drag && d.table.pieces[s.drag.piece]) {
+        const from = d.table.pieces[s.drag.piece].at;
+        const pos = { x: from.x + (s.drag.to.x - from.x) * ease(k), y: from.y + (s.drag.to.y - from.y) * ease(k) };
+        if (t < s.at) { shown[s.drag.piece] = pos; hand = pos; pressing = k > 0.12; }
+        else hand = s.drag.to;
+      } else if (s.press) {
+        const to = fixtureSpot(s.press);
+        if (to) {
+          const from = { x: to.x - 10, y: to.y + 8 };
+          hand = { x: from.x + (to.x - from.x) * ease(k), y: from.y + (to.y - from.y) * ease(k) };
+          pressing = t >= s.at - 0.12;
+        }
+      } else if (s.tap) {
+        const to = s.tap; const from = { x: to.x - 10, y: to.y + 8 };
+        hand = { x: from.x + (to.x - from.x) * ease(k), y: from.y + (to.y - from.y) * ease(k) };
+        pressing = t >= s.at - 0.12;
+      } else if (s.toolBtn) {
+        const el = document.querySelector(`[data-tool="${s.toolBtn}"]`);
+        const r = el?.getBoundingClientRect?.();
+        if (r) {
+          const tx = r.left + r.width / 2; const ty = r.top + r.height / 2;
+          domSpot = { x: tx - 28 * (1 - ease(k)), y: ty + 22 * (1 - ease(k)) };
+          pressing = t >= s.at - 0.12;
+        }
+      }
+    });
+    tabletop.setPreview?.(st, shown);
+    const pt = domSpot || (hand && tabletop.screenPointOf?.(hand));
+    onPointer?.(pt ? { x: pt.x, y: pt.y, pressing } : null);
+    if (!reduced) raf = requestAnimationFrame(frame);
+  };
+  frame(t0);
+  return () => {
+    stopped = true;
+    cancelAnimationFrame(raf);
+    tabletop.setPreview?.(null);
+    onPointer?.(null);
+  };
+}

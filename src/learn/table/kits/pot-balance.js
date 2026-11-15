@@ -398,43 +398,30 @@ export function eqBench({ eq, dialed = 'all', start = {}, sub = null, states = f
    TOUR WORDS
    ------------------------------------------------------------------ */
 
-const BOARD_TEXT = f => {
-  const p = f.props;
-  const dials = Object.keys(f.dials).length;
-  const bits = [];
-  if (p.lex >= 1) bits.push('The board writes out what happens in the pot: the reactants on the left of the arrow and the products on the right, each with the number written in front of it.');
-  else bits.push('The board writes out what happens in the pot: the substances before the change on the left of the arrow and the substances after it on the right.');
-  if (dials) {
-    const named = p.lex >= 2 ? 'a coefficient' : 'a number in front of a substance';
-    bits.push(`Each dial is named for one substance, and turning it sets ${named}.`);
-    if (p.sub) bits.push('The dial named after a formula with a bare small number turns that small number inside the formula.');
-  }
-  bits.push(dials ? 'The line on the board changes as you turn a dial.' : 'Nothing on it is set by hand.');
-  return bits.join(' ');
-};
+const BOARD_TEXT = f => (Object.keys(f.dials).length
+  ? 'Turn the dials to set the numbers in the equation.'
+  : 'Shows the equation for the reaction in the pot.');
 
 addTourText({
   'pot:eqboard': { title: 'Board', dials: false, text: BOARD_TEXT },
   'pot:eqwindow': {
     title: 'Particle view', dials: false,
     text: f => (f.props.pot
-      ? 'The particle view shows a reaction vessel before a change on the left and after it on the right. Each small circle is an atom, coloured by the key along the bottom, and a cluster is one molecule. This picture is fixed: no dial changes it.'
-      : 'The particle view draws what the board says. Each small circle is an atom, coloured by the key along the bottom, and a cluster is one molecule. The left half is before the change and the right half is after it, so turning a board dial redraws it.')
+      ? 'Shows the molecules before and after the change.'
+      : 'Draws the molecules before and after as set on the board.')
   },
   'pot:eqledger': {
     title: 'Atom ledger', dials: false,
-    text: f => (f.props.groups
-      ? 'The ledger counts pieces: a group of atoms that stays together is counted once, as one piece. It prints how many of each piece stand on the left of the arrow and on the right, for the numbers set on the board. It only counts: you compare the two columns.'
-      : 'The ledger counts atoms, one row for each kind. It prints how many of that atom stand on the left of the arrow and on the right, for the numbers set on the board. It only counts: you compare the two columns.')
+    text: 'Counts each atom or group on both sides of the arrow.'
   },
   'pot:eqformula': {
     title: 'Formula', dials: false,
-    text: 'Each dial is named for one kind of atom and sets how many of it the formula has. The line at the bottom writes the formula the dials spell, and shows a dash while every dial is at 0.'
+    text: 'Turn each dial to set how many of that atom the formula has.'
   },
   'pot:eqtally': {
     title: 'Tally', dials: false,
-    text: 'Two dials for one kind of atom. Set the dial named "before" to the number of those atoms you count in the left half of the particle view, and the dial named "after" to the number in the right half. They only hold your count.'
+    text: 'Set "before" and "after" to the atom counts you observe.'
   }
 }, {
-  statetile: ['State tiles', 'Each tile has a symbol in brackets and a word for what it means. Drag a tile into the slot under a substance to write it after that substance on the board. The particle view shows how the particles of each substance sit.']
+  statetile: ['State tiles', 'Drag a state tile into the slot under a substance.']
 });

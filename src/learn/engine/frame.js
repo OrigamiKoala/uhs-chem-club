@@ -1164,9 +1164,10 @@ export class LearnFrame {
    * replays all of it.
    */
   /** The steps the Tour gives for the table on this stage (`table/tour.js`), or null when the stage is not a table. */
-  setTourSteps(steps, table = null) {
+  setTourSteps(steps, table = null, tabletop = null) {
     this.tourSteps = steps && steps.length ? steps : null;
     this.tourTable = table;
+    this.tourTabletop = tabletop;
   }
 
   /**
@@ -1256,8 +1257,17 @@ export class LearnFrame {
     this.runTour(steps);
   }
 
-  /** Step through `steps` (`{name, desc, kind?, id?}`) in the modal, with Back, Skip and Next. */
+  /**
+   * Step through `steps` (`{name, desc, fx?, pc?, tool?, isBriefing?}`).
+   * On a tabletop, highlights the actual tool on screen with a live animated pointer and a compact
+   * callout card positioned beside it so the bench stays visible. Falls back to the modal for non-table benches.
+   */
   runTour(steps) {
+    this.closeTour?.();
+    if (this.tourTabletop && this.tourTable) {
+      this.runTableTour(steps);
+      return;
+    }
     let i = 0;
     const leave = () => {
       stopDemo?.();
@@ -1275,14 +1285,12 @@ export class LearnFrame {
         <div class="lq-brief-card">
           <div class="lq-brief-head">
             <span class="eyebrow lit" id="lq-briefing-title">${esc(st.name)}</span>
-            <span class="tag live">${i + 1} / ${steps.length}</span>
+            ${steps.length > 1 ? `<span class="tag live">${i + 1} / ${steps.length}</span>` : ''}
           </div>
-          ${this.tourClipMarkup(st)}
-          ${st.demo ? '<canvas class="lq-tour-demo" width="480" height="210" aria-hidden="true"></canvas>' : ''}
           <p class="lq-brief-text">${esc(clampSentences(st.desc, 4))}</p>
           ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` : ''}
           <div class="debrief-controls-left lq-modal-keys">
-            <button type="button" class="btn-secondary" data-tour="back" ${i === 0 ? 'disabled' : ''}>Back</button>
+            ${steps.length > 1 ? `<button type="button" class="btn-secondary" data-tour="back" ${i === 0 ? 'disabled' : ''}>Back</button>` : ''}
             ${last ? '' : '<button type="button" class="btn-secondary" data-tour="skip">Skip</button>'}
             <button type="button" class="btn-primary" data-tour="${last ? 'skip' : 'next'}">${last ? 'Done' : 'Next'}</button>
           </div>
@@ -1291,12 +1299,6 @@ export class LearnFrame {
         labelledBy: 'lq-briefing-title',
         onClose: () => { stopDemo?.(); activeBenchViewer()?.hideInstrumentHalos(); }
       });
-      this.startTourClip(st);
-      const cv = document.querySelector('#modal-container canvas.lq-tour-demo');
-      if (cv && st.demo) {
-        const mine = i;
-        import('../table/tour-demo.js').then(m => m.playTourDemo(cv, st.demo)).then(stop => { if (mine === i && document.body.contains(cv)) stopDemo = stop; else stop(); }).catch(() => {});
-      }
       document.querySelectorAll('[data-tour]').forEach(btn => {
         btn.addEventListener('click', () => {
           const act = btn.dataset.tour;
@@ -1307,6 +1309,171 @@ export class LearnFrame {
         });
       });
       document.querySelector('#modal-container [data-tour="next"], #modal-container [data-tour="skip"]:last-of-type')?.focus();
+    };
+    render();
+  }
+
+  /** Compute viewport rect `{left, top, width, height}` for a tabletop tour step, or null. */
+  tourTargetRect(st) {
+    const tt = this.tourTabletop;
+    const t = this.tourTable;
+    if (!tt || !t || !st) return null;
+    if (st.fx && t.fixtures?.[st.fx] && tt.screenRectOf) {
+      return tt.screenRectOf(fixtureLayout(t.fixtures[st.fx]).box);
+    }
+    if (st.pc && t.pieces?.[st.pc] && tt.screenRectOf) {
+      const p = t.pieces[st.pc];
+      const r = 4;
+      return tt.screenRectOf({ x0: p.at.x - r, y0: p.at.y - r, x1: p.at.x + r, y1: p.at.y + r });
+    }
+    if (st.tool) {
+      const el = document.querySelector(`[data-tool="${st.tool}"]`);
+      const r = el?.getBoundingClientRect?.();
+      if (r && r.width > 0) return { left: r.left, top: r.top, width: r.width, height: r.height };
+    }
+    return null;
+  }
+
+  /** In-place tabletop tour: spotlight around the actual tool, animated sample pointer, and compact callout beside it. */
+  runTableTour(steps) {
+    let i = 0;
+    let stopDemo = null;
+    const overlay = document.createElement('div');
+    overlay.id = 'lq-tour-overlay';
+    overlay.className = 'lq-tour-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'false');
+    overlay.innerHTML = `
+      <div class="lq-tour-spotlight" aria-hidden="true"></div>
+      <div class="lq-tour-pointer" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle class="lq-tour-pulse" cx="4" cy="4" r="9" stroke="#e59b24" stroke-width="2" opacity="0"/>
+          <path d="M3 2 L14 15 L8.5 14 L5.5 21 Z" fill="#dcd6cc" stroke="#100f0c" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="lq-tour-card" aria-labelledby="lq-tour-title"></div>
+    `;
+    document.body.appendChild(overlay);
+
+    const spot = overlay.querySelector('.lq-tour-spotlight');
+    const ptr = overlay.querySelector('.lq-tour-pointer');
+    const pulse = overlay.querySelector('.lq-tour-pulse');
+    const ptrPath = overlay.querySelector('.lq-tour-pointer path');
+    const card = overlay.querySelector('.lq-tour-card');
+
+    const updatePointer = p => {
+      if (!p) { ptr.style.opacity = '0'; return; }
+      ptr.style.opacity = '1';
+      ptr.style.transform = `translate3d(${Math.round(p.x - 3)}px, ${Math.round(p.y - 2)}px, 0)`;
+      if (ptrPath) ptrPath.setAttribute('fill', p.pressing ? '#e59b24' : '#dcd6cc');
+      if (pulse) pulse.setAttribute('opacity', p.pressing ? '0.9' : '0');
+    };
+
+    const positionCard = rect => {
+      const vw = window.innerWidth || 1280;
+      const vh = window.innerHeight || 720;
+      const pad = 8;
+      const cw = card.offsetWidth || 290;
+      const ch = card.offsetHeight || 130;
+      if (!rect) {
+        spot.style.display = 'none';
+        card.style.left = `${Math.max(12, vw - cw - 20)}px`;
+        card.style.top = `${Math.max(12, Math.min(vh - ch - 20, 76))}px`;
+        return;
+      }
+      spot.style.display = 'block';
+      const sx = Math.max(4, rect.left - pad);
+      const sy = Math.max(4, rect.top - pad);
+      const sw = Math.min(vw - sx - 4, rect.width + pad * 2);
+      const sh = Math.min(vh - sy - 4, rect.height + pad * 2);
+      spot.style.left = `${sx}px`;
+      spot.style.top = `${sy}px`;
+      spot.style.width = `${sw}px`;
+      spot.style.height = `${sh}px`;
+
+      // Place callout beside the spotlight where there is the most room without overlapping it.
+      const gap = 12;
+      let cx = sx; let cy = sy + sh + gap;
+      if (sy + sh + gap + ch <= vh - 12) {
+        cy = sy + sh + gap;
+        cx = Math.max(12, Math.min(vw - cw - 12, sx));
+      } else if (sy - gap - ch >= 12) {
+        cy = sy - gap - ch;
+        cx = Math.max(12, Math.min(vw - cw - 12, sx));
+      } else if (sx + sw + gap + cw <= vw - 12) {
+        cx = sx + sw + gap;
+        cy = Math.max(12, Math.min(vh - ch - 12, sy));
+      } else if (sx - gap - cw >= 12) {
+        cx = sx - gap - cw;
+        cy = Math.max(12, Math.min(vh - ch - 12, sy));
+      } else {
+        cx = Math.max(12, vw - cw - 12);
+        cy = Math.max(12, vh - ch - 12);
+      }
+      card.style.left = `${Math.round(cx)}px`;
+      card.style.top = `${Math.round(cy)}px`;
+    };
+
+    const leave = () => {
+      stopDemo?.(); stopDemo = null;
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+      overlay.remove();
+      this.closeTour = null;
+      soundscape.playNavRelayClick?.();
+    };
+    this.closeTour = leave;
+
+    const onResize = () => positionCard(this.tourTargetRect(steps[i]));
+    const onKey = e => {
+      if (e.key === 'Escape') { leave(); }
+      else if (e.key === 'ArrowRight') {
+        if (i >= steps.length - 1) leave();
+        else { i++; soundscape.playCrtTick?.(); render(); }
+      } else if (e.key === 'ArrowLeft' && i > 0) {
+        i--; soundscape.playCrtTick?.(); render();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+
+    const render = () => {
+      stopDemo?.(); stopDemo = null;
+      updatePointer(null);
+      const st = steps[i];
+      const last = i === steps.length - 1;
+      card.innerHTML = `
+        <div class="lq-brief-head">
+          <span class="eyebrow lit" id="lq-tour-title">${esc(st.name)}</span>
+          ${steps.length > 1 ? `<span class="tag live">${i + 1} / ${steps.length}</span>` : ''}
+        </div>
+        <p class="lq-tour-text">${esc(st.desc)}</p>
+        ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` : ''}
+        <div class="lq-tour-actions">
+          ${i > 0 ? '<button type="button" class="btn-secondary" data-tour="back">Back</button>' : ''}
+          ${last ? '' : '<button type="button" class="btn-secondary" data-tour="skip">Skip</button>'}
+          <button type="button" class="btn-primary" data-tour="${last ? 'skip' : 'next'}">${last ? 'Done' : 'Next'}</button>
+        </div>
+      `;
+      card.querySelectorAll('[data-tour]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const act = btn.dataset.tour;
+          if (act === 'skip') { leave(); return; }
+          i = Math.max(0, Math.min(steps.length - 1, i + (act === 'next' ? 1 : -1)));
+          soundscape.playCrtTick?.();
+          render();
+        });
+      });
+      positionCard(this.tourTargetRect(st));
+      card.querySelector('[data-tour="next"], [data-tour="skip"]:last-of-type')?.focus();
+
+      if (!st.isBriefing && (st.fx || st.pc || st.tool || st.demo)) {
+        const mine = i;
+        import('../table/tour-demo.js')
+          .then(m => m.playLiveTourDemo(this.tourTabletop, this.tourTable, st, updatePointer))
+          .then(stop => { if (mine === i && overlay.isConnected) stopDemo = stop; else stop?.(); })
+          .catch(() => {});
+      }
     };
     render();
   }
@@ -1547,6 +1714,7 @@ export class LearnFrame {
     guard(() => this.encounter?.dispose());
     guard(() => window.removeEventListener('resize', this.onFit));
     guard(() => window.removeEventListener('scroll', this.onFit, { capture: true }));
+    guard(() => this.closeTour?.());
     guard(() => closeModal());
     guard(() => { import('../../ui/calculator.js').then(m => m.closeCalculator()).catch(() => {}); });
     guard(() => this.retirePanels());

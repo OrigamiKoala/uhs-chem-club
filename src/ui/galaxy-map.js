@@ -88,30 +88,120 @@ export function lookFor(id) {
    ------------------------------------------------------------------ */
 
 /**
- * Place the systems on an inward spiral, rim to core, in road order.
+ * Place the worlds across multiple scattered star systems (no central core or track).
+ * Each star system drifts smoothly over time; each world orbits its host star.
  *
  * @param {Array<{id:string, act?:string}>} list  road order, Erebus first
- * @returns {Array<{id:string, index:number, x:number, y:number, act:string}>}
+ * @returns {Array<{id:string, index:number, x:number, y:number, act:string, system:object, orbitR:number, orbitSpeed:number, orbitPhase:number}>}
  */
+const SYSTEM_COUNTS = [3, 2, 3, 2, 3, 2]; // 6 star systems, 15 worlds total
+const STAR_KINDS = ['warm', 'cool', 'amber', 'cool', 'warm', 'white'];
+
+export function buildStarSystems(count = SYSTEM_COUNTS.length) {
+  const rng = mulberry32(hashString('avalon-star-systems-v2'));
+  // 3x2 jittered grid across [150..850] x [145..555], shuffled so placement feels organic.
+  const cells = [];
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 3; col++) {
+      cells.push({
+        baseX: 195 + col * 305 + (rng() - 0.5) * 85,
+        baseY: 185 + row * 315 + (rng() - 0.5) * 75
+      });
+    }
+  }
+  // Deterministic shuffle
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+  const systems = [];
+  for (let i = 0; i < count; i++) {
+    const cell = cells[i % cells.length];
+    systems.push({
+      id: `sys-${i}`,
+      index: i,
+      baseX: cell.baseX,
+      baseY: cell.baseY,
+      starKind: STAR_KINDS[i % STAR_KINDS.length],
+      starScale: 0.95 + rng() * 0.4,
+      tilt: 0.58 + rng() * 0.22,
+      planeRot: (rng() - 0.5) * 0.65,
+      // Smooth multi-frequency drift so star systems constantly move and change position.
+      ax1: 28 + rng() * 22,
+      ay1: 22 + rng() * 18,
+      ax2: 14 + rng() * 14,
+      ay2: 12 + rng() * 12,
+      fx1: 0.00007 + rng() * 0.00006,
+      fy1: 0.00008 + rng() * 0.00006,
+      fx2: 0.00013 + rng() * 0.00007,
+      fy2: 0.00011 + rng() * 0.00007,
+      px1: rng() * Math.PI * 2,
+      py1: rng() * Math.PI * 2,
+      px2: rng() * Math.PI * 2,
+      py2: rng() * Math.PI * 2
+    });
+  }
+  return systems;
+}
+
+export function starPos(sys, time = 0) {
+  if (!time) return { x: sys.baseX, y: sys.baseY };
+  return {
+    x: sys.baseX + Math.sin(time * sys.fx1 + sys.px1) * sys.ax1 + Math.cos(time * sys.fx2 + sys.px2) * sys.ax2,
+    y: sys.baseY + Math.cos(time * sys.fy1 + sys.py1) * sys.ay1 + Math.sin(time * sys.fy2 + sys.py2) * sys.ay2
+  };
+}
+
+export function planetPos(node, time = 0) {
+  if (!node.system) return { x: node.x, y: node.y };
+  const s = starPos(node.system, time);
+  const ang = node.orbitPhase + time * node.orbitSpeed;
+  const lx = Math.cos(ang) * node.orbitR;
+  const ly = Math.sin(ang) * node.orbitR * node.system.tilt;
+  const c = Math.cos(node.system.planeRot);
+  const sn = Math.sin(node.system.planeRot);
+  return {
+    x: s.x + lx * c - ly * sn,
+    y: s.y + lx * sn + ly * c
+  };
+}
+
 export function layoutSystems(list) {
-  const n = list.length;
+  const starSystems = buildStarSystems(SYSTEM_COUNTS.length);
+  const rng = mulberry32(hashString('avalon-galaxy-v2'));
+  // Spread worlds across the 6 star systems in a deterministic shuffled order.
+  const slots = [];
+  SYSTEM_COUNTS.forEach((cnt, sysIdx) => {
+    const radii = cnt === 2 ? [40, 70] : [34, 60, 86];
+    const baseAng = rng() * Math.PI * 2;
+    for (let slot = 0; slot < cnt; slot++) {
+      slots.push({
+        sysIdx,
+        orbitR: radii[slot],
+        orbitSpeed: (0.00042 - slot * 0.00009) * (sysIdx % 2 === 0 ? 1 : -1),
+        orbitPhase: baseAng + (slot * Math.PI * 2) / cnt + (rng() - 0.5) * 0.35
+      });
+    }
+  });
   const out = [];
-  const R0 = 300;
-  const R1 = 112;
-  const turn = 7.6;
-  const rng = mulberry32(hashString('avalon-galaxy-v1'));
-  for (let i = 0; i < n; i++) {
-    const t = n > 1 ? i / (n - 1) : 0;
-    // Scattered, not strung on a curve: each world is pushed well off the spiral by its own jitter, in radius and in bearing.
-    const r = R0 + (R1 - R0) * t + (rng() - 0.5) * 52;
-    const th = -2.35 + turn * t + (rng() - 0.5) * 0.34;
-    out.push({
+  for (let i = 0; i < list.length; i++) {
+    const sl = slots[i % slots.length];
+    const system = starSystems[sl.sysIdx];
+    const node = {
       id: list[i].id,
       index: i,
       act: list[i].act || 'act1',
-      x: CORE.x + Math.cos(th) * r * 1.42 + (rng() - 0.5) * 26,
-      y: CORE.y + Math.sin(th) * r * 0.95 + (rng() - 0.5) * 20
-    });
+      system,
+      orbitR: sl.orbitR,
+      orbitSpeed: sl.orbitSpeed,
+      orbitPhase: sl.orbitPhase,
+      x: 0,
+      y: 0
+    };
+    const p = planetPos(node, 0);
+    node.x = p.x;
+    node.y = p.y;
+    out.push(node);
   }
   return out;
 }
@@ -199,12 +289,13 @@ export function planetPx(view, w, h) {
 }
 
 /** The system under a screen point (or the nearest within `slop` px, 22 for a finger), else null. */
-export function hitSystem(systems, view, w, h, sx, sy, slop = 22) {
+export function hitSystem(systems, view, w, h, sx, sy, slop = 22, time = 0) {
   let best = null;
   let bestD = Infinity;
   const reach = Math.max(slop, planetPx(view, w, h) * 1.6);
   for (const s of systems) {
-    const p = worldToScreen(view, w, h, s.x, s.y);
+    const pos = planetPos(s, time);
+    const p = worldToScreen(view, w, h, pos.x, pos.y);
     const d = Math.hypot(p.x - sx, p.y - sy);
     if (d <= reach && d < bestD) { best = s; bestD = d; }
   }
@@ -219,7 +310,7 @@ let backdropCache = null;
 
 export function buildBackdrop() {
   if (backdropCache) return backdropCache;
-  const rng = mulberry32(hashString('avalon-galaxy-sky'));
+  const rng = mulberry32(hashString('avalon-galaxy-sky-v2'));
   const stars = [];
   for (let layer = 0; layer < 3; layer++) {
     const count = [130, 90, 50][layer];
@@ -235,30 +326,34 @@ export function buildBackdrop() {
       });
     }
   }
-  // Dust along the spiral arm, each speck tinted by the act it lies in.
+  // Scattered nebula dust clouds across the sector (no spiral track).
   const dust = [];
-  for (let i = 0; i < 900; i++) {
-    const t = rng();
-    const r = 300 + (112 - 300) * t + (rng() - 0.5) * 120 * (0.4 + (1 - t) * 0.6);
-    const th = -2.35 + 7.6 * t + (rng() - 0.5) * 0.7;
-    // Road order puts the acts at roughly these shares of the spiral.
-    const act = t < 0.25 ? 'act1' : t < 0.54 ? 'act2' : t < 0.82 ? 'act3' : 'act4';
+  const acts = ['act1', 'act2', 'act3', 'act4'];
+  const clouds = Array.from({ length: 8 }, () => ({
+    cx: 80 + rng() * (GALAXY_W - 160),
+    cy: 70 + rng() * (GALAXY_H - 140),
+    rx: 70 + rng() * 110,
+    ry: 55 + rng() * 90,
+    act: acts[Math.floor(rng() * acts.length)]
+  }));
+  for (let i = 0; i < 650; i++) {
+    const cl = clouds[i % clouds.length];
+    const ang = rng() * Math.PI * 2;
+    const rad = Math.pow(rng(), 0.75);
     dust.push({
-      x: CORE.x + Math.cos(th) * r * 1.42,
-      y: CORE.y + Math.sin(th) * r * 0.95,
-      a: 0.06 + rng() * 0.2,
+      x: cl.cx + Math.cos(ang) * rad * cl.rx,
+      y: cl.cy + Math.sin(ang) * rad * cl.ry,
+      a: 0.05 + rng() * 0.16,
       s: 0.6 + rng() * 1.3,
-      act
+      act: cl.act
     });
   }
-  // The disc: a few hundred faint field stars thicker toward the core.
+  // Evenly scattered faint background field stars.
   const disc = [];
-  for (let i = 0; i < 360; i++) {
-    const r = Math.pow(rng(), 1.7) * 420;
-    const th = rng() * Math.PI * 2;
+  for (let i = 0; i < 320; i++) {
     disc.push({
-      x: CORE.x + Math.cos(th) * r * 1.42,
-      y: CORE.y + Math.sin(th) * r * 0.95,
+      x: -80 + rng() * (GALAXY_W + 160),
+      y: -80 + rng() * (GALAXY_H + 160),
       a: 0.08 + rng() * 0.3,
       r: 0.5 + rng() * 0.7
     });
@@ -440,15 +535,25 @@ function band(ctx, x, y, r, off, thick, color, alpha) {
   ctx.globalAlpha = 1;
 }
 
-function patches(ctx, x, y, r, seed, count, color, alpha, size) {
+/** Draw surface patches wrapped around a rotating sphere (longitude `lon` + `spin`). */
+function patches(ctx, x, y, r, seed, count, color, alpha, size, spin = 0) {
   const rng = mulberry32(hashString(seed));
   ctx.fillStyle = color;
   ctx.globalAlpha = alpha;
   for (let i = 0; i < count; i++) {
-    const a = rng() * Math.PI * 2;
-    const d = Math.sqrt(rng()) * r * 0.85;
+    const baseLon = rng() * Math.PI * 2;
+    const lat = (rng() - 0.5) * 1.45;
+    const rxBase = r * size * (0.6 + rng() * 0.75);
+    const ryBase = r * size * (0.38 + rng() * 0.45);
+    const tilt = rng() * Math.PI;
+    const lon = baseLon + spin;
+    const facing = Math.cos(lon);
+    if (facing <= -0.15) continue;
+    const px = x + Math.sin(lon) * Math.cos(lat) * r * 0.9;
+    const py = y + Math.sin(lat) * r * 0.85;
+    const foreshorten = Math.max(0.18, facing);
     ctx.beginPath();
-    ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, r * size * (0.6 + rng() * 0.8), r * size * (0.35 + rng() * 0.5), rng() * Math.PI, 0, Math.PI * 2);
+    ctx.ellipse(px, py, rxBase * foreshorten, ryBase, tilt, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -465,17 +570,17 @@ export function drawPlanet(ctx, x, y, r, id, spin = 0) {
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  if (r >= 7) {
+  if (r >= 6) {
     clipDisc(ctx, x, y, r, () => {
-      const ox = (spin * r * 0.5) % (r * 0.6);
       switch (look.kind) {
         case 'salt':
-          patches(ctx, x + ox, y, r, id + 'a', 7, '#f2eee2', 0.35, 0.34);
-          patches(ctx, x - ox, y, r, id + 'b', 5, '#8e8878', 0.25, 0.28);
+          patches(ctx, x, y, r, id + 'a', 8, '#f2eee2', 0.42, 0.34, spin);
+          patches(ctx, x, y, r, id + 'b', 6, '#8e8878', 0.3, 0.28, spin);
           break;
         case 'ice':
           band(ctx, x, y, r, -0.78, 0.3, '#eef6fa', 0.55);
           band(ctx, x, y, r, 0.8, 0.26, '#eef6fa', 0.45);
+          patches(ctx, x, y, r, id + 'ice', 6, '#dff0f8', 0.4, 0.24, spin);
           ctx.strokeStyle = COLORS.green;
           ctx.globalAlpha = 0.65;
           ctx.lineWidth = Math.max(1, r * 0.07);
@@ -486,16 +591,23 @@ export function drawPlanet(ctx, x, y, r, id, spin = 0) {
           break;
         case 'basalt': {
           ctx.strokeStyle = look.vein;
-          ctx.globalAlpha = 0.7;
-          ctx.lineWidth = Math.max(0.8, r * 0.05);
+          ctx.globalAlpha = 0.75;
+          ctx.lineWidth = Math.max(0.8, r * 0.055);
           const rng = mulberry32(hashString(id));
-          for (let i = 0; i < 5; i++) {
-            const sx = x + (rng() - 0.5) * r * 1.6 + ox * 0.3;
-            const sy = y + (rng() - 0.5) * r * 1.6;
+          for (let i = 0; i < 6; i++) {
+            const lon = rng() * Math.PI * 2 + spin;
+            const lat = (rng() - 0.5) * 1.3;
+            const dLon = (rng() - 0.5) * 0.9;
+            const dLat = (rng() - 0.5) * 0.7;
+            if (Math.cos(lon) <= -0.1) continue;
+            const sx = x + Math.sin(lon) * Math.cos(lat) * r * 0.88;
+            const sy = y + Math.sin(lat) * r * 0.85;
+            const ex = x + Math.sin(lon + dLon) * Math.cos(lat + dLat) * r * 0.88;
+            const ey = y + Math.sin(lat + dLat) * r * 0.85;
             ctx.beginPath();
             ctx.moveTo(sx, sy);
-            ctx.lineTo(sx + (rng() - 0.5) * r * 0.9, sy + (rng() - 0.5) * r * 0.9);
-            ctx.lineTo(sx + (rng() - 0.5) * r * 1.2, sy + (rng() - 0.5) * r * 1.2);
+            ctx.lineTo((sx + ex) * 0.5 + (rng() - 0.5) * r * 0.25, (sy + ey) * 0.5 + (rng() - 0.5) * r * 0.25);
+            ctx.lineTo(ex, ey);
             ctx.stroke();
           }
           ctx.globalAlpha = 1;
@@ -503,50 +615,56 @@ export function drawPlanet(ctx, x, y, r, id, spin = 0) {
         }
         case 'gas': {
           const tones = ['#dfe6ec', '#8fa3b3', '#c9d3db', '#6f859a', '#d8dfe5'];
-          tones.forEach((c, i) => band(ctx, x, y + ox * 0.0, r, -0.8 + i * 0.4, 0.3, c, 0.55));
+          tones.forEach((c, i) => band(ctx, x, y, r, -0.8 + i * 0.4, 0.3, c, 0.55));
+          patches(ctx, x, y, r, id + 'storm', 5, '#f0f5fa', 0.48, 0.22, spin * 1.15);
+          patches(ctx, x, y, r, id + 'eddy', 4, '#5a6e82', 0.42, 0.18, spin);
           break;
         }
         case 'vent':
-          patches(ctx, x + ox, y, r, id, 8, look.vein, 0.55, 0.14);
-          patches(ctx, x, y, r, id + 'c', 5, '#2a1511', 0.4, 0.3);
+          patches(ctx, x, y, r, id, 9, look.vein, 0.6, 0.15, spin);
+          patches(ctx, x, y, r, id + 'c', 6, '#2a1511', 0.45, 0.3, spin);
           break;
         case 'tidal':
           band(ctx, x, y, r, 0.1, 0.5, '#bfd8da', 0.35);
           band(ctx, x, y, r, -0.5, 0.18, '#ffffff', 0.25);
+          patches(ctx, x, y, r, id + 'tide', 7, '#e2f2f3', 0.42, 0.24, spin);
+          patches(ctx, x, y, r, id + 'reef', 4, '#325254', 0.35, 0.2, spin);
           break;
         case 'lake':
-          patches(ctx, x + ox, y, r, id, 5, look.vein, 0.5, 0.32);
-          patches(ctx, x, y, r, id + 'd', 4, '#7a5a34', 0.3, 0.3);
+          patches(ctx, x, y, r, id, 6, look.vein, 0.55, 0.32, spin);
+          patches(ctx, x, y, r, id + 'd', 5, '#7a5a34', 0.35, 0.3, spin);
           break;
         case 'pans':
-          patches(ctx, x + ox, y, r, id, 6, look.vein, 0.5, 0.3);
-          patches(ctx, x, y, r, id + 'e', 6, '#f0e6cc', 0.3, 0.26);
+          patches(ctx, x, y, r, id, 7, look.vein, 0.52, 0.3, spin);
+          patches(ctx, x, y, r, id + 'e', 7, '#f0e6cc', 0.35, 0.26, spin);
           break;
         case 'marsh':
-          patches(ctx, x + ox, y, r, id, 7, look.vein, 0.5, 0.3);
-          patches(ctx, x, y, r, id + 'f', 5, '#2c4a35', 0.4, 0.3);
+          patches(ctx, x, y, r, id, 8, look.vein, 0.52, 0.3, spin);
+          patches(ctx, x, y, r, id + 'f', 6, '#2c4a35', 0.42, 0.3, spin);
           break;
         case 'copper':
-          patches(ctx, x + ox, y, r, id, 7, look.vein, 0.55, 0.26);
+          patches(ctx, x, y, r, id, 8, look.vein, 0.58, 0.26, spin);
+          patches(ctx, x, y, r, id + 'cu', 5, '#6b3826', 0.35, 0.22, spin);
           break;
         case 'storm':
           band(ctx, x, y, r, -0.2, 0.34, '#aab4cc', 0.5);
-          patches(ctx, x + ox, y, r, id, 4, look.vein, 0.7, 0.1);
+          patches(ctx, x, y, r, id, 6, look.vein, 0.72, 0.14, spin * 1.2);
+          patches(ctx, x, y, r, id + 'st', 5, '#d5ddf0', 0.35, 0.24, spin);
           break;
         case 'canyon':
           for (let i = 0; i < 4; i++) band(ctx, x, y, r, -0.6 + i * 0.4, 0.07, '#2c1810', 0.55);
-          patches(ctx, x + ox, y, r, id, 5, '#b4735a', 0.3, 0.3);
+          patches(ctx, x, y, r, id, 7, '#b4735a', 0.38, 0.3, spin);
           break;
         case 'fen':
-          patches(ctx, x + ox, y, r, id, 8, '#7a9a55', 0.4, 0.28);
-          patches(ctx, x, y, r, id + 'g', 4, '#1f3a2c', 0.4, 0.3);
+          patches(ctx, x, y, r, id, 9, '#7a9a55', 0.45, 0.28, spin);
+          patches(ctx, x, y, r, id + 'g', 5, '#1f3a2c', 0.42, 0.3, spin);
           break;
         case 'crater':
-          patches(ctx, x + ox, y, r, id, 6, look.vein, 0.5, 0.16);
-          patches(ctx, x, y, r, id + 'h', 6, '#0a0403', 0.5, 0.2);
+          patches(ctx, x, y, r, id, 7, look.vein, 0.55, 0.18, spin);
+          patches(ctx, x, y, r, id + 'h', 7, '#0a0403', 0.52, 0.22, spin);
           break;
         default:
-          patches(ctx, x + ox, y, r, id, 6, '#e0b878', 0.3, 0.3);
+          patches(ctx, x, y, r, id, 7, '#e0b878', 0.36, 0.3, spin);
           break;
       }
       // The night side: a dark crescent keeps every planet round.
@@ -582,16 +700,44 @@ export function drawPlanet(ctx, x, y, r, id, spin = 0) {
   }
 }
 
-function drawStar(ctx, x, y, size, warm) {
-  ctx.fillStyle = warm ? COLORS.starWarm : COLORS.starCool;
-  ctx.fillRect(x - size / 2, y - size / 2, size, size);
-  // A hairline cross: the only "glow" a survey chart allows.
-  ctx.strokeStyle = warm ? 'rgba(232,207,156,0.55)' : 'rgba(207,217,242,0.55)';
-  ctx.lineWidth = 1;
+const STAR_PALETTE = {
+  warm:  { core: '#fff3d6', mid: 'rgba(244,205,130,0.55)', outer: 'rgba(232,175,90,0)' },
+  amber: { core: '#ffe2b0', mid: 'rgba(235,145,55,0.55)',  outer: 'rgba(210,110,30,0)' },
+  cool:  { core: '#eef5ff', mid: 'rgba(175,205,250,0.55)', outer: 'rgba(130,175,245,0)' },
+  white: { core: '#ffffff', mid: 'rgba(220,228,242,0.55)', outer: 'rgba(195,210,235,0)' }
+};
+
+function drawStar(ctx, x, y, size, kind = 'warm', time = 0, animate = false) {
+  const pal = STAR_PALETTE[kind] || STAR_PALETTE.warm;
+  const pulse = animate ? 1 + 0.08 * Math.sin(time * 0.0025 + x * 0.03) : 1;
+  const r = size * pulse;
+
+  ctx.save();
+  // Soft corona
+  const corona = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 3.0);
+  corona.addColorStop(0, pal.core);
+  corona.addColorStop(0.28, pal.mid);
+  corona.addColorStop(1, pal.outer);
+  ctx.fillStyle = corona;
   ctx.beginPath();
-  ctx.moveTo(x - size * 2.4, y); ctx.lineTo(x + size * 2.4, y);
-  ctx.moveTo(x, y - size * 2.4); ctx.lineTo(x, y + size * 2.4);
+  ctx.arc(x, y, r * 3.0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Crisp bright stellar disc
+  ctx.fillStyle = pal.core;
+  ctx.beginPath();
+  ctx.arc(x, y, Math.max(2.6, r * 0.72), 0, Math.PI * 2);
+  ctx.fill();
+
+  // Prominent 4-point diffraction spikes
+  ctx.strokeStyle = pal.mid;
+  ctx.lineWidth = Math.max(1, r * 0.16);
+  const spike = r * 3.2;
+  ctx.beginPath();
+  ctx.moveTo(x - spike, y); ctx.lineTo(x + spike, y);
+  ctx.moveTo(x, y - spike); ctx.lineTo(x, y + spike);
   ctx.stroke();
+  ctx.restore();
 }
 
 function stateInk(state) {
@@ -601,117 +747,38 @@ function stateInk(state) {
 }
 
 /**
- * Draw one system: host star, orbit, planet, a ring of moons (one per quest),
- * state mark and label.
+ * Draw one world (rotating planet + label) at its current orbital position.
+ * No orbit rings, pulsing rings, squares, or brackets around the planet.
  */
 function drawSystem(ctx, view, w, h, node, opts) {
   const { time, animate, selected, hovered, showName, planetR } = opts;
-  const p = worldToScreen(view, w, h, node.x, node.y);
+  const worldP = planetPos(node, animate ? time : 0);
+  const p = worldToScreen(view, w, h, worldP.x, worldP.y);
   if (p.x < -80 || p.y < -80 || p.x > w + 80 || p.y > h + 80) return;
-  const look = lookFor(node.id);
   const sealed = node.state === 'locked' || node.state === 'charted';
-  const orbitR = planetR * 2.1;
-  const ang = animate ? time * 0.00018 * (0.6 + (node.index % 5) * 0.12) + node.index : node.index * 1.3;
-  const px = p.x + Math.cos(ang) * orbitR;
-  const py = p.y + Math.sin(ang) * orbitR * 0.55;
 
   ctx.save();
-  ctx.globalAlpha = sealed ? 0.55 : 1;
-
-  // Orbit.
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(214,196,168,0.18)';
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, orbitR, orbitR * 0.55, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  drawStar(ctx, p.x, p.y, Math.max(2.4, planetR * 0.28), look.star === 'warm');
-  drawPlanet(ctx, px, py, planetR, node.id, animate ? time * 0.00004 : 0);
-
-  // Moons: one per quest, lit when finished. Only where they are big enough to read.
-  if (planetR >= 15 && node.quests && node.quests.length) {
-    const n = node.quests.length;
-    const mr = planetR * 3.1;
-    ctx.strokeStyle = 'rgba(214,196,168,0.12)';
-    ctx.beginPath();
-    ctx.ellipse(px, py, mr, mr * 0.55, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    node.quests.forEach((q, i) => {
-      const a = (i / n) * Math.PI * 2 + (animate ? time * 0.0003 : 0.4) + node.index;
-      const mx = px + Math.cos(a) * mr;
-      const my = py + Math.sin(a) * mr * 0.55;
-      const s = Math.max(2.2, planetR * 0.13);
-      if (q.done) {
-        ctx.fillStyle = COLORS.gold;
-        ctx.fillRect(mx - s, my - s, s * 2, s * 2);
-      } else if (q.live) {
-        ctx.strokeStyle = COLORS.amber;
-        ctx.strokeRect(mx - s, my - s, s * 2, s * 2);
-      } else {
-        ctx.strokeStyle = 'rgba(140,131,118,0.7)';
-        ctx.setLineDash([2, 2]);
-        ctx.strokeRect(mx - s, my - s, s * 2, s * 2);
-        ctx.setLineDash([]);
-      }
-    });
-  }
-
-  // State mark: a tick for finished, a pulsing ring for open.
-  if (node.state === 'open') {
-    const pulse = animate ? 0.55 + 0.45 * Math.sin(time * 0.003 + node.index) : 0.8;
-    ctx.strokeStyle = `rgba(229,155,36,${pulse.toFixed(3)})`;
-    ctx.lineWidth = 1.25;
-    ctx.beginPath();
-    ctx.arc(px, py, planetR + 4, 0, Math.PI * 2);
-    ctx.stroke();
-  } else if (node.state === 'complete') {
-    ctx.strokeStyle = COLORS.gold;
-    ctx.lineWidth = 1.25;
-    ctx.beginPath();
-    ctx.arc(px, py, planetR + 4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(px + planetR * 0.55, py - planetR - 8);
-    ctx.lineTo(px + planetR * 0.8, py - planetR - 4);
-    ctx.lineTo(px + planetR * 1.25, py - planetR - 11);
-    ctx.stroke();
-  }
-
-  // Selection reticle: four corner brackets, the way a survey plate marks a target.
-  if (selected || hovered) {
-    const b = planetR + 11;
-    const l = Math.max(4, planetR * 0.45);
-    ctx.strokeStyle = selected ? COLORS.amber : COLORS.gold;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    for (const sx of [-1, 1]) {
-      for (const sy of [-1, 1]) {
-        ctx.moveTo(px + sx * b, py + sy * (b - l));
-        ctx.lineTo(px + sx * b, py + sy * b);
-        ctx.lineTo(px + sx * (b - l), py + sy * b);
-      }
-    }
-    ctx.stroke();
-  }
+  ctx.globalAlpha = sealed ? 0.62 : 1;
+  const spin = animate ? time * 0.00055 + node.index * 1.1 : node.index * 0.9;
+  drawPlanet(ctx, p.x, p.y, planetR, node.id, spin);
   ctx.restore();
 
   // Label: code always, name when there is room (or when picked).
-  const side = node.labelSide === undefined ? (node.x >= CORE.x ? 1 : -1) : node.labelSide;
-  // Beside the planet, or (when both sides are taken) centred underneath it.
-  const lx = side === 0 ? px : px + side * (planetR + 14);
-  const dy = side === 0 ? planetR + 18 : 0;
+  const side = node.labelSide === undefined ? 1 : node.labelSide;
+  const lx = side === 0 ? p.x : p.x + side * (planetR + 12);
+  const dy = side === 0 ? planetR + 16 : 0;
   ctx.textAlign = side === 0 ? 'center' : side > 0 ? 'left' : 'right';
   ctx.font = fontFor(10, '');
-  ctx.fillStyle = stateInk(node.state);
-  ctx.fillText(node.code, lx, py - 3 + dy);
+  ctx.fillStyle = selected ? COLORS.amber : stateInk(node.state);
+  ctx.fillText(node.code, lx, p.y - 3 + dy);
   if (showName || selected || hovered) {
     ctx.font = fontFor(12, 'bold');
-    ctx.fillStyle = sealed ? COLORS.textDim : COLORS.text;
-    ctx.fillText(node.name.toUpperCase(), lx, py + 10 + dy);
+    ctx.fillStyle = selected || hovered ? COLORS.amber : sealed ? COLORS.textDim : COLORS.text;
+    ctx.fillText(node.name.toUpperCase(), lx, p.y + 10 + dy);
     if (planetR >= 11) {
       ctx.font = fontFor(9, '');
       ctx.fillStyle = COLORS.textMuted;
-      ctx.fillText(node.place, lx, py + 22 + dy);
+      ctx.fillText(node.place, lx, p.y + 22 + dy);
     }
   }
 }
@@ -783,16 +850,25 @@ function drawActLabels(ctx, view, w, h, nodes, acts) {
  * @param state { nodes, lanes, view, w, h, time, animate, selectedId, hoverId, acts }
  */
 export function drawGalaxy(ctx, state) {
-  const { nodes, lanes, view, w, h, time = 0, animate = false, selectedId = null, hoverId = null, acts = [] } = state;
-  const nodeById = {};
-  nodes.forEach(n => { nodeById[n.id] = n; });
+  const { nodes, view, w, h, time = 0, animate = false, selectedId = null, hoverId = null } = state;
 
   drawBackdrop(ctx, view, w, h, time, animate);
-  drawCore(ctx, view, w, h, time, animate);
-  drawLanes(ctx, view, w, h, lanes, nodeById, time, animate);
 
   const planetR = planetPx(view, w, h);
   const showName = w >= 480 || view.k / fitScale(w, h) >= 1.5;
+
+  // Draw each unique host star (bright, visible, and drifting with its system).
+  const seenStars = new Set();
+  const starR = Math.max(4.5, planetR * 0.58);
+  for (const n of nodes) {
+    if (!n.system || seenStars.has(n.system.id)) continue;
+    seenStars.add(n.system.id);
+    const sp = starPos(n.system, animate ? time : 0);
+    const scr = worldToScreen(view, w, h, sp.x, sp.y);
+    if (scr.x < -120 || scr.y < -120 || scr.x > w + 120 || scr.y > h + 120) continue;
+    drawStar(ctx, scr.x, scr.y, starR * (n.system.starScale || 1), n.system.starKind, time, animate);
+  }
+
   // Far systems first so a zoomed-in planet is never painted over by a neighbour.
   const order = nodes.slice().sort((a, b) => b.x + b.y * 0.1 - (a.x + a.y * 0.1));
   for (const n of order) {
@@ -843,7 +919,7 @@ export function mountGalaxyMap(root, opts) {
   const { nodes: rawNodes, acts = [], reducedMotion = false, onAction } = opts;
   const placed = layoutSystems(rawNodes);
   const sides = labelSides(placed);
-  const nodes = rawNodes.map((n, i) => ({ ...n, index: i, x: placed[i].x, y: placed[i].y, labelSide: sides[placed[i].id] }));
+  const nodes = rawNodes.map((n, i) => ({ ...placed[i], ...n, index: i, labelSide: sides[placed[i].id] }));
   const lanes = layoutLanes(nodes);
   const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
 
@@ -862,8 +938,6 @@ export function mountGalaxyMap(root, opts) {
         <li><i class="gx-key open"></i>Open</li>
         <li><i class="gx-key done"></i>Finished</li>
         <li><i class="gx-key sealed"></i>Sealed or uncharted</li>
-        <li><i class="gx-key lane"></i>Jump lane flown</li>
-        <li><i class="gx-key lane dashed"></i>Lane charted</li>
       </ul>
     </div>
   `;
@@ -929,7 +1003,8 @@ export function mountGalaxyMap(root, opts) {
   function focusNode(id) {
     const n = byId[id];
     if (!n) return;
-    flyTo({ k: fitScale(w, h) * 6, cx: n.x, cy: n.y });
+    const pos = planetPos(n, prefersReduced ? 0 : lastFrame);
+    flyTo({ k: fitScale(w, h) * 6, cx: pos.x, cy: pos.y });
   }
 
   function renderPlate() {
@@ -1048,7 +1123,7 @@ export function mountGalaxyMap(root, opts) {
         dirty = true;
       }
     } else if (e.pointerType === 'mouse') {
-      const hit = hitSystem(nodes, view, w, h, p.x, p.y, 16);
+      const hit = hitSystem(nodes, view, w, h, p.x, p.y, 16, prefersReduced ? 0 : lastFrame);
       const id = hit ? hit.id : null;
       if (id !== hoverId) { hoverId = id; canvas.style.cursor = id ? 'pointer' : 'grab'; dirty = true; }
     }
@@ -1060,7 +1135,7 @@ export function mountGalaxyMap(root, opts) {
     if (pointers.size < 2) pinch = null;
     if (drag && pointers.size === 0) {
       if (!drag.moved) {
-        const hit = hitSystem(nodes, view, w, h, p.x, p.y);
+        const hit = hitSystem(nodes, view, w, h, p.x, p.y, 22, prefersReduced ? 0 : lastFrame);
         if (hit) select(hit.id);
       }
       drag = null;
@@ -1071,7 +1146,7 @@ export function mountGalaxyMap(root, opts) {
   canvas.addEventListener('pointerleave', () => { if (hoverId) { hoverId = null; dirty = true; } });
   canvas.addEventListener('dblclick', e => {
     const p = local(e);
-    const hit = hitSystem(nodes, view, w, h, p.x, p.y);
+    const hit = hitSystem(nodes, view, w, h, p.x, p.y, 22, prefersReduced ? 0 : lastFrame);
     if (hit) select(hit.id, { focus: true });
     else zoomAt(p.x, p.y, 1.8);
   });

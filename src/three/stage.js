@@ -78,6 +78,16 @@ const THORNMERE_EXPOSURE = 1.05;
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
 
+const DARK_WORLDS = new Set([
+  "lanternfall",
+  "lodestone",
+  "thornmere",
+  "ligar",
+  "quicklight",
+  "ember"
+]);
+const FLASHLIGHT_INTENSITY = 24;
+
 /** The frame budget every scene here was built to (see `skipRefresh`). */
 const FRAME_MS = 1000 / 60;
 /** A refresh this close to due is drawn: vsync timestamps jitter. */
@@ -124,6 +134,9 @@ class Stage {
     this.activeWorld = null;
     this.activeQuestScene = null;
     this.activeQuestViewer = null;
+    this.flashlight = null;
+    this.flashlightOn = false;
+    this._flashlightWorld = null;
 
     this.starfield = null;
     this.isPaused = false;
@@ -196,6 +209,16 @@ class Stage {
     // Personal camera inspection light (cadet suit chest luminaire)
     this.cameraLight = new THREE.PointLight(0xffedd2, 1.4, 12, 1.3);
     this.camera.add(this.cameraLight);
+
+    // Directional suit flashlight for exploring worlds (aimed along camera look)
+    this.flashlight = new THREE.SpotLight(0xfff1d8, 0, 45, Math.PI / 6.5, 0.45, 1.4);
+    this.flashlight.castShadow = false;
+    this.flashlight.position.set(0.14, -0.12, -0.05);
+    this.flashlight.target.position.set(0, 0, -10);
+    this.flashlight.visible = false;
+    this.camera.add(this.flashlight);
+    this.camera.add(this.flashlight.target);
+
     this.shipScene.add(this.camera);
 
     this.shipScene.add(hemiLight, ambientLight, starlight, starlight.target);
@@ -378,6 +401,9 @@ class Stage {
       if (e.repeat) return;
       if (e.key === "x" || e.key === "X" || e.code === "KeyX") {
         handleKeyX();
+      } else if ((e.key === "f" || e.key === "F" || e.code === "KeyF") &&
+          this.mode === "world" && this.activeWorld && !this.fpsControls?.walkKeysAtBench) {
+        this.flashlightOn = !this.flashlightOn;
       }
     });
 
@@ -799,59 +825,59 @@ class Stage {
   worldFor(key) {
     if (!this.renderer) return null;
     if (key === "erebus") {
-      if (!this.worldScene) this.worldScene = this.warmWorld(new WorldScene(this.renderer));
+      if (!this.worldScene) this.worldScene = this.warmWorld(new WorldScene(this.renderer), key);
       return this.worldScene;
     }
     if (key === "tallow") {
-      if (!this.tallowWorld) this.tallowWorld = this.warmWorld(new TallowWorld(this.renderer));
+      if (!this.tallowWorld) this.tallowWorld = this.warmWorld(new TallowWorld(this.renderer), key);
       return this.tallowWorld;
     }
     if (key === "ligar") {
-      if (!this.ligarWorld) this.ligarWorld = this.warmWorld(new LigarWorld(this.renderer));
+      if (!this.ligarWorld) this.ligarWorld = this.warmWorld(new LigarWorld(this.renderer), key);
       return this.ligarWorld;
     }
     if (key === "lanternfall") {
-      if (!this.lanternfallWorld) this.lanternfallWorld = this.warmWorld(new LanternfallWorld(this.renderer));
+      if (!this.lanternfallWorld) this.lanternfallWorld = this.warmWorld(new LanternfallWorld(this.renderer), key);
       return this.lanternfallWorld;
     }
     if (key === "bellows") {
-      if (!this.bellowsWorld) this.bellowsWorld = this.warmWorld(new BellowsWorld(this.renderer));
+      if (!this.bellowsWorld) this.bellowsWorld = this.warmWorld(new BellowsWorld(this.renderer), key);
       return this.bellowsWorld;
     }
     if (key === "ember") {
-      if (!this.emberWorld) this.emberWorld = this.warmWorld(new EmberReachWorld(this.renderer));
+      if (!this.emberWorld) this.emberWorld = this.warmWorld(new EmberReachWorld(this.renderer), key);
       return this.emberWorld;
     }
     if (key === "mirrowen") {
-      if (!this.mirrowenWorld) this.mirrowenWorld = this.warmWorld(new MirrowenWorld(this.renderer));
+      if (!this.mirrowenWorld) this.mirrowenWorld = this.warmWorld(new MirrowenWorld(this.renderer), key);
       return this.mirrowenWorld;
     }
     if (key === "kettle") {
-      if (!this.kettleWorld) this.kettleWorld = this.warmWorld(new KettleWorld(this.renderer));
+      if (!this.kettleWorld) this.kettleWorld = this.warmWorld(new KettleWorld(this.renderer), key);
       return this.kettleWorld;
     }
     if (key === "teeter") {
-      if (!this.teeterWorld) this.teeterWorld = this.warmWorld(new TeeterWorld(this.renderer));
+      if (!this.teeterWorld) this.teeterWorld = this.warmWorld(new TeeterWorld(this.renderer), key);
       return this.teeterWorld;
     }
     if (key === "verdigris") {
-      if (!this.verdigrisWorld) this.verdigrisWorld = this.warmWorld(new VerdigrisWorld(this.renderer));
+      if (!this.verdigrisWorld) this.verdigrisWorld = this.warmWorld(new VerdigrisWorld(this.renderer), key);
       return this.verdigrisWorld;
     }
     if (key === "brinewire") {
-      if (!this.brinewireWorld) this.brinewireWorld = this.warmWorld(new BrinewireWorld(this.renderer));
+      if (!this.brinewireWorld) this.brinewireWorld = this.warmWorld(new BrinewireWorld(this.renderer), key);
       return this.brinewireWorld;
     }
     if (key === "quicklight") {
-      if (!this.quicklightWorld) this.quicklightWorld = this.warmWorld(new QuicklightWorld(this.renderer));
+      if (!this.quicklightWorld) this.quicklightWorld = this.warmWorld(new QuicklightWorld(this.renderer), key);
       return this.quicklightWorld;
     }
     if (key === "lodestone") {
-      if (!this.lodestoneWorld) this.lodestoneWorld = this.warmWorld(new LodestoneWorld(this.renderer));
+      if (!this.lodestoneWorld) this.lodestoneWorld = this.warmWorld(new LodestoneWorld(this.renderer), key);
       return this.lodestoneWorld;
     }
     if (key === "thornmere") {
-      if (!this.thornmereWorld) this.thornmereWorld = this.warmWorld(new ThornmereWorld(this.renderer));
+      if (!this.thornmereWorld) this.thornmereWorld = this.warmWorld(new ThornmereWorld(this.renderer), key);
       return this.thornmereWorld;
     }
     return null;
@@ -869,7 +895,8 @@ class Stage {
    * A world's light count never changes after it is built (lamp-pool.js), so
    * what is compiled here is what is drawn.
    */
-  warmWorld(world) {
+  warmWorld(world, key) {
+    if (world && key) world._worldKey = key;
     const r = this.renderer;
     // What is in the scene now is the world's; a bench's own bodies come later (shadow-pace.js).
     if (world?.scene) markWorldOwn(world.scene);
@@ -877,6 +904,14 @@ class Stage {
       r.compileAsync(world.scene, this.camera).catch(() => {});
     }
     return world;
+  }
+
+  syncFlashlightForWorld(world, key) {
+    if (!world) return;
+    if (this._flashlightWorld !== world) {
+      this._flashlightWorld = world;
+      this.flashlightOn = DARK_WORLDS.has(key);
+    }
   }
 
   exposureFor(key) {
@@ -928,6 +963,7 @@ class Stage {
   finishDisembark(world, key, pos, quat) {
     this.mode = "world";
     this.activeWorld = world;
+    this.syncFlashlightForWorld(world, key);
     this._arrivalHold = world;
     this.arrivedByVoyage = true;
     if (this.renderer) this.renderer.toneMappingExposure = this.exposureFor(key);
@@ -981,6 +1017,7 @@ class Stage {
     this.worldFor("erebus");
     this.mode = "world";
     this.activeWorld = this.worldScene;
+    this.syncFlashlightForWorld(this.worldScene, "erebus");
     if (this.renderer) this.renderer.toneMappingExposure = EREBUS_EXPOSURE;
 
     if (this.worldScene && this._arrivalHold === this.worldScene) {
@@ -1257,6 +1294,7 @@ class Stage {
   enterLearnWorld(world, exposure, focusSiteId = null, playerPos = null, lookAtPos = null) {
     this.mode = "world";
     this.activeWorld = world;
+    this.syncFlashlightForWorld(world, world?._worldKey);
 
     if (!world) return;
     if (this.renderer) this.renderer.toneMappingExposure = exposure;
@@ -1416,6 +1454,8 @@ class Stage {
     const leftWorld = this.activeWorld;
     this.mode = "ship";
     this.activeWorld = null;
+    this._flashlightWorld = null;
+    this.flashlightOn = false;
     this._arrivalHold = null;
     this.arrivedByVoyage = false;
     if (this.voyage) {
@@ -1624,7 +1664,13 @@ class Stage {
     // added a light to that world's scene, and a changed light count
     // recompiles every material in it: a freeze of seconds at the foot of the
     // Avalon's ramp. An invisible light is not counted.
-    if (this.cameraLight) this.cameraLight.visible = this.camera.parent === this.shipScene;
+    const inShip = this.camera.parent === this.shipScene;
+    if (this.cameraLight) this.cameraLight.visible = inShip;
+    if (this.flashlight) {
+      const inWorldScene = Boolean(this.activeWorld && this.camera.parent === this.activeWorld.scene);
+      this.flashlight.visible = inWorldScene;
+      this.flashlight.intensity = inWorldScene && this.flashlightOn ? FLASHLIGHT_INTENSITY : 0;
+    }
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
     this.syncTouchControls(now);

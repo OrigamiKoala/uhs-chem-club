@@ -279,21 +279,14 @@ registerFixture('evidence', { paint: paintEvidence });
 
 const POT_TEXT = f => {
   const p = f.props;
-  const bits = [];
-  if (p.seat) bits.push('Drag a sample jar into the seat at the top left. What is in the jar goes into the reaction vessel.');
-  else if (p.caseId) bits.push(`The vessel holds ${CASES[p.caseId].name.toLowerCase()}.`);
-  if (p.lidDial) bits.push('The "Lid" dial either leaves the vessel open to the air or seals it shut.');
-  else if (p.lid === 'sealed') bits.push('This vessel is sealed shut.');
-  if (p.amounts) bits.push(`The "${p.amounts.label}" dial sets how much goes in the vessel.`);
-  bits.push(`Press "${f.runLabel || 'Run'}" to make the change happen.`);
-  bits.push('The particle view shows what is in the vessel before on the left and after on the right, one circle for each amount it says. A grey row marked "out" is something that left the vessel.');
-  return bits.join(' ');
+  return p.seat ? 'Drag a jar into the seat, set dials, and press "Run".'
+    : `Set dials and press "${f.runLabel || 'Run'}" to see before and after.`;
 };
 
 addTourText({
   'pot:changepot': { title: 'Reaction vessel', dials: false, text: POT_TEXT },
-  'pot:potscale': { title: 'Balance', text: 'The balance measures the mass of everything in the vessel and leaves out the mass of the vessel itself. The first line is the mass before you press Run and the second is the mass after it.' },
-  'pot:evidence': { title: 'Signs of a reaction', text: 'There are four signs, one for each thing you might notice in the vessel. After you press Run, a sign lights if the vessel did what it names, and stays dark if it did not.' }
+  'pot:potscale': { title: 'Balance', text: 'Shows the vessel\'s mass before and after Run.' },
+  'pot:evidence': { title: 'Signs of a reaction', text: 'Lights up each sign observed after pressing Run.' }
 }, {
-  cjar: ['Sample jars', 'Each jar holds something to try. Drag a jar into the seat on the vessel, or tap it and then tap the seat.']
+  cjar: ['Sample jars', 'Drag a jar into the vessel seat to test it.']
 });

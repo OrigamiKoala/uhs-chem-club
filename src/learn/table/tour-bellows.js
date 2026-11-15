@@ -27,52 +27,45 @@ const hasFixture = (t, kind) => Object.values(t.fixtures || {}).some(f => f.kind
 
 const FIXTURES = {
   rig: {
-    title: 'Cylinder and piston',
-    text: 'A glass cylinder holds a gas, shown as moving particles between its end wall and the piston. The readings printed under it say what the gas is doing right now. {runSentence}'
+    title: 'Cylinder & piston',
+    text: 'Drag the dials to move the piston, heat the gas, or add gas. {runSentence}'
   },
   box: {
     title: 'Sealed box',
-    text: 'A sealed glass box holds a gas, shown as moving particles. A pressure sensor is fitted to its roof, to its side wall and to its floor, and each sensor shows the pressure on its own wall. {runSentence}'
+    text: 'Sensors on the walls read how hard the gas pushes. {runSentence}'
   },
   common: {
     title: 'Common tank',
-    text: 'A big empty tank with a list under it. Drag a tank into the place below it to open that tank\'s valve into it, and drag the tank out again to shut it. The readout shows the total pressure, and the list shows each gas\'s partial pressure, each marked by its own shape. {runSentence}'
+    text: 'Drag tanks into or out of the slots below to mix them. {runSentence}'
   },
   pinhole: {
-    title: 'Chambers with a pinhole',
-    text: 'Each sealed chamber has one tiny hole in its wall, and gas leaks out through it. The "Stopwatch" dial sets how many seconds the hole has been open, and each chamber shows how much of its gas is left. {runSentence}'
+    title: 'Pinhole chambers',
+    text: 'Gas leaks through the pinhole; turn "Stopwatch" to advance time. {runSentence}'
   },
   tube: {
     title: 'Tube',
-    text: 'A tube of still air with a different gas let in at each end. The "Stopwatch" dial sets how long they have been creeping along, and a white ring shows where the two meet once they touch. {runSentence}'
+    text: 'Turn "Stopwatch" to watch the two gases creep along the tube. {runSentence}'
   },
   scale: {
     title: 'Scale',
-    text: 'Drag a tank onto the pan to weigh it. The reading is the mass of the gas inside, in grams.'
+    text: 'Drag a tank onto the pan to weigh the gas inside.'
   },
   marker: {
     title: 'Marker',
     dials: false,
-    text: 'A marker you set to a number. Drag its knob to the figure you want; the number it shows when you press Submit is your answer.'
+    text: 'Drag the knob to your number.'
   }
 };
 
 const PIECES = {
-  tank: ['Gas tanks', 'Each tank is a steel bottle of gas with its own pressure readout and its name on the lid.', t => {
-    const bits = [];
-    if (hasFixture(t, 'scale')) bits.push('Drag a tank onto the scale pan to weigh it.');
-    if (hasFixture(t, 'common')) bits.push('Drag a tank into the place under the common tank to open it.');
-    if (Object.keys(t.zones?.trays || {}).length) bits.push('Drag a tank into a tray to put it in that group.');
-    if (t.zones?.rail) bits.push('Drag a tank into its place along the strip.');
-    return bits.length ? ` ${bits.join(' ')}` : '';
-  }],
-  stmt: ['Cards', 'Each card has one claim printed on it.', placeSentence],
-  num: ['Number cards', 'Each card has one number printed on it.', placeSentence],
-  hist: ['Speed snapshots', 'Each card is a snapshot of a gas: its bars show how many of its particles are moving at each speed, from slow on the left to fast on the right.', placeSentence],
-  curve: ['Record cards', 'Each card is a line plotted from an earlier set of readings.', placeSentence],
-  chip: ['Chips', 'Each chip is a name tag.', placeSentence],
-  pellet: ['Pellet', 'A pellet of chalk in a dish. Drag the dish into the acid dish to drop the pellet in; the gas it gives off raises the piston.'],
-  trap: ['Trap', 'A trap takes one kind of gas out of a tank. Drag it onto a tank of mixed gas and watch the tank\'s pressure.']
+  tank: ['Gas tanks', 'Drag a tank onto a pan, slot, or tray.'],
+  stmt: null,
+  num: null,
+  hist: null,
+  curve: null,
+  chip: null,
+  pellet: ['Pellet', 'Drag the pellet dish into the acid dish to react them.'],
+  trap: ['Trap', 'Drag the trap onto a tank to remove one gas.']
 };
 
 const DIALS = {

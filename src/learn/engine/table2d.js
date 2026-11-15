@@ -502,7 +502,38 @@ export class Table2D extends PlateBench {
   }
 
   draw(ctx, w, h) {
-    return drawTable(ctx, w, h, this.state, { shown: this.shown, drag: this.drag, railGap: this.railGap, pourFrom: this.gestures.pourFrom, clock: this.clock || 0 });
+    const st = this.preview?.state || this.state;
+    const shown = this.preview?.shown || this.shown;
+    return drawTable(ctx, w, h, st, { shown, drag: this.drag, railGap: this.railGap, pourFrom: this.gestures.pourFrom, clock: this.clock || 0 });
+  }
+
+  /** Show a non-destructive tour preview state on the live canvas, or null to restore. */
+  setPreview(state, shown = null) {
+    this.preview = state ? { state, shown } : null;
+    this.drawAll();
+    if (state) this.startAnim();
+  }
+
+  /** Convert a table-unit box `{x0, y0, x1, y1}` to viewport CSS pixel coordinates. */
+  screenRectOf(box) {
+    const plate = this.plates[0];
+    const st = this.preview?.state || this.state;
+    if (!plate?.canvas || !st || !box) return null;
+    const rect = plate.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const { sc, ox, oy } = fit(plate.w, plate.h, st.bounds);
+    const k = rect.width / plate.w;
+    const x0 = rect.left + (ox + box.x0 * sc) * k;
+    const y0 = rect.top + (oy + box.y0 * sc) * k;
+    const x1 = rect.left + (ox + box.x1 * sc) * k;
+    const y1 = rect.top + (oy + box.y1 * sc) * k;
+    return { left: x0, top: y0, width: Math.max(12, x1 - x0), height: Math.max(12, y1 - y0) };
+  }
+
+  /** Convert a table-unit point `{x, y}` to viewport CSS pixel coordinates. */
+  screenPointOf(pt) {
+    const r = pt && this.screenRectOf({ x0: pt.x, y0: pt.y, x1: pt.x, y1: pt.y });
+    return r ? { x: r.left, y: r.top } : null;
   }
 
   /** Pieces ease toward their places, and the rail's others slide from a held-open gap. */

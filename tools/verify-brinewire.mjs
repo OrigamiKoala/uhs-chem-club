@@ -328,7 +328,7 @@ const PLAN_QUESTS = ['q1-halves', 'q2-activity', 'q3-galvanic', 'q4-potential', 
       check(strangers.length === 0, `${lit.size} emissive material: the work lamps; nothing else in the world is lit`, `${strangers.length} emissive material(s) that are not a work lamp`);
       let realLights = 0;
       built.scene.traverse(o => { if (o.isPointLight) realLights++; });
-      check(realLights === 3 && built.lamps.length >= 30, `${built.lamps.length} lamps share ${realLights} real lights`, `${built.lamps.length} lamps and ${realLights} real lights: the lamp pool is not what keeps the frame cheap`);
+      check(realLights === built.lamps.length && built.lamps.length >= 30, `all ${built.lamps.length} lamps have real always-on lights (${realLights})`, `${built.lamps.length} lamps and ${realLights} real lights`);
     }
 
     /* THE WATER: a sheet in every pool, at the water's level, never lit, never solid. */

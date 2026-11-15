@@ -260,6 +260,7 @@ export class Table3D extends BenchViewer3D {
 
   setState(state, opts = {}) {
     if (this.disposed) return;
+    if (!opts.preview) this._savedState = null;
     const first = !this.state;
     const stageChanged = Boolean(opts.newStage || (opts.stageIndex != null && opts.stageIndex !== this.stageIndex));
     if (opts.stageIndex != null) this.stageIndex = opts.stageIndex;
@@ -1520,6 +1521,50 @@ export class Table3D extends BenchViewer3D {
 
   getKeyList() { return []; }
   showInstrumentHalos() {}
+
+  /** Show a non-destructive tour preview state on the live 3D bench, or null to restore. */
+  setPreview(state, shown = null) {
+    if (state) {
+      if (!this._savedState) this._savedState = this.state;
+      this.setState(state, { preview: true });
+      if (shown) {
+        for (const [id, pt] of Object.entries(shown)) this.shown[id] = { ...pt };
+        this.syncPieces();
+      }
+    } else if (this._savedState) {
+      const s = this._savedState;
+      this._savedState = null;
+      this.setState(s, { preview: true });
+    }
+  }
+
+  /** Convert a table-unit point `{x, y}` to viewport CSS pixel coordinates. */
+  screenPointOf(pt) {
+    if (!this.map || !this.camera || !pt) return null;
+    this.camera.updateMatrixWorld(true);
+    this.root.updateMatrixWorld(true);
+    const vp = this.leanViewport();
+    const c = this.map.toPlate(pt);
+    const v = new THREE.Vector3(c.x, PLATE_Y, c.z);
+    this.root.localToWorld(v);
+    v.project(this.camera);
+    return { x: (v.x * 0.5 + 0.5) * vp.w, y: (-v.y * 0.5 + 0.5) * vp.h };
+  }
+
+  /** Convert a table-unit box `{x0, y0, x1, y1}` to viewport CSS pixel coordinates. */
+  screenRectOf(box) {
+    if (!box) return null;
+    const pts = [
+      this.screenPointOf({ x: box.x0, y: box.y0 }),
+      this.screenPointOf({ x: box.x1, y: box.y0 }),
+      this.screenPointOf({ x: box.x0, y: box.y1 }),
+      this.screenPointOf({ x: box.x1, y: box.y1 })
+    ].filter(Boolean);
+    if (!pts.length) return null;
+    const xs = pts.map(p => p.x); const ys = pts.map(p => p.y);
+    const left = Math.min(...xs); const top = Math.min(...ys);
+    return { left, top, width: Math.max(12, Math.max(...xs) - left), height: Math.max(12, Math.max(...ys) - top) };
+  }
   /** Tool keys live in the foot dock and readings on the paper strip: nothing mirrors onto this plate. */
   setKeys() {}
   setReadings() {}

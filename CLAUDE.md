@@ -20,6 +20,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 - `src/three/`: Persistent WebGL stage (`src/three/stage.js`) and 3D worlds.
 - `src/screens/`: DOM screen renders and route views.
 - `src/ui/calculator.js`: Digital scientific calculator.
+- `src/ui/galaxy-map.js`: Star map chart rendering worlds across 6 drifting, scattered star systems with rotating planets.
 - `api/[...route].js`: Vercel serverless proxy with rate limiting and local mocks.
 - `apps-script/`: Google Sheets backend (authoritative persistence for non-guest users).
 
@@ -33,7 +34,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
   5. *Simplicity & focus:* Exactly one decision per stage; direct answer forms (no decoding entry puzzles).
   6. *Hint ladder:* Exactly three one-sentence rungs (1: where to look / control, 2: what to compare / notice, 3: how to reason; never the answer or arithmetic).
   7. *Self-contained & builds on prerequisites:* Solvable from bench evidence without external lookup; respects `BUILDS_ON`.
-- **Explain without giving away answers:** Teach the idea on one case (briefing ≤2 sentences or predict lead clip), then ask the student to solve a different case. The Tour explains tools in three beats (what it is, what to do, what it tells you) without revealing solutions.
+- **Explain without giving away answers:** Teach the idea on one case (briefing ≤2 sentences or predict lead clip), then ask the student to solve a different case. The Tour highlights each new tool in place on the bench with a live pointer animation and a concise one-sentence callout without revealing solutions.
 - **Tabletop as the answer:** Answers are constructed on the table (flat in 2D / 3D Off), not through multiple-choice questions (unless reading-only). Every drag has a two-tap twin.
 - **Predict first, test second:** Commit a hypothesis on a stripped table before revealing runnable instruments. Predictions are never graded (`src/learn/table/kits/commit-gate.js`).
 - **Live mechanism views:** Instruments have active mechanism views moving in time (3D and 2D `live`), reflecting physical processes. Heat is never drawn as a particle; energy transfer is shown via particle motion spreading from contact.
@@ -49,7 +50,8 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 - **Physical honesty:** Flat representations (spectra, graphs) are drawn flat; spatial concepts (orbitals, lattices, molecules) are 3D objects. What is drawn is what is graded.
 - **Simplicity & focus:** Exactly one decision per stage. The bench holds only what that decision requires; remove clutter instead of explaining it.
 - **Scientific Calculator:** Every stage provides a `Calc` button opening an entry-line digital scientific calculator with constants palette, Ans chaining, and stage input insertion.
-- **Spatial layout & collisions:** No physical overlaps in 3D worlds (`tools/lib/overlap.mjs`, tolerance 0.06 m). Pointer is never locked (`requestPointerLock` is a no-op). Single window listener for `X` key.
+- **Spatial layout & collisions:** No physical overlaps in 3D worlds (`tools/lib/overlap.mjs`, tolerance 0.06 m). Pointer is never locked (`requestPointerLock` is a no-op). Single window listener for `X` and `F` keys.
+- **World lighting & flashlight:** `src/three/lamp-pool.js` creates an always-on `PointLight` per declared lamp source (rather than proximity pooling). `src/three/stage.js` attaches a camera-aimed `SpotLight` flashlight (`F` to toggle while walking in a world; on by default on dark worlds `lanternfall`, `lodestone`, `thornmere`, `ligar`, `quicklight`, `ember`).
 - **Frame cost:** Draw calls are the budget. Static props use `mergeStatic` / `consolidateStatic`; moving meshes stay under `noMerge` or `mover`. Keep shadow maps resting when idle (`shadow-pace.js`). No `backdrop-filter` over the live canvas. Measure with `tools/perf-worlds.mjs` and `tools/perf-bench-rest.mjs`.
 - **Dedicated views & UI lifecycle:** Full-screen dark backdrop for practice/worked problems; dedicated layout for 3D Off (`.learn-quest-2d`). `mountConsole` must be the final statement in Charge Gardens stage render.
 

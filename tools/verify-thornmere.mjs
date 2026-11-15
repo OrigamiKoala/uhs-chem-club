@@ -187,7 +187,7 @@ console.log('\nThornmere — the world built in Node\n');
   }
   let lights = 0;
   w.scene.traverse(o => { if (o.isPointLight || o.isSpotLight) lights++; });
-  check(lights <= 3, `only pooled lamps are lit (${lights} point lights for ${w.lamps.length} lamps)`, `${lights} point lights`);
+  check(lights === w.lamps.length, `all ${w.lamps.length} lamps have real always-on lights (${lights})`, `${lights} point lights for ${w.lamps.length} lamps`);
   {
     let bad = 0;
     w.scene.traverse(o => {

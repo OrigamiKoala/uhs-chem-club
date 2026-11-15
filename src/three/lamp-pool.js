@@ -1,22 +1,10 @@
 /**
- * lamp-pool.js — many lamps in a world, a few lights in the shader.
+ * lamp-pool.js — world lamp registry where every declared lamp owns an always-on PointLight.
  *
- * WHY THIS EXISTS. A forward renderer shades every lit fragment against every
- * PointLight in the scene, and it does so whether that light is lit or not: a
- * light at intensity zero, or forty metres away with a four-metre range, still
- * costs the full specular term on every pixel of sand on the screen. Erebus
- * carried twenty-one of them (one per pylon and the lander's bay), which made
- * the light loop the most expensive thing in the ground's shader by a distance.
- *
- * A lamp's light only shows within a few metres of it, so only the lamps round
- * the player need a light at all. The pool owns a FIXED number of real lights
- * (a changing count would recompile every material in view) and hands them to
- * the lit sources nearest the eye.
- *
- * NOTHING POPS. Each pooled light is weighted by how much nearer its source is
- * than the first source that missed out, over `band` metres. Two sources trade
- * places only when they are the same distance away, and at that moment both
- * weigh zero — so a lamp dims out as another dims in, continuously.
+ * Each `add(src)` creates a real `THREE.PointLight` in `parent` so every lit
+ * source illuminates its surroundings continuously rather than turning on only
+ * as the player approaches. Sources with `on: false` (e.g. dormant pylons) stay
+ * at intensity 0 until turned on.
  */
 
 import * as THREE from 'three';
@@ -24,21 +12,14 @@ import * as THREE from 'three';
 export class LampPool {
   /**
    * @param {THREE.Object3D} parent where the lights live (a scene: sources are world space)
-   * @param {number} size how many real lights
+   * @param {number} [_size] unused legacy pool cap, kept for call-site compatibility
    * @param {{ band?: number }} [opts]
    */
-  constructor(parent, size, { band = 6 } = {}) {
+  constructor(parent, _size = 0, { band = 6 } = {}) {
+    this.parent = parent;
     this.band = band;
     this.sources = [];
     this.lights = [];
-    this._live = [];
-    for (let i = 0; i < size; i++) {
-      const light = new THREE.PointLight(0xffffff, 0, 1, 2);
-      light.castShadow = false;
-      light.name = `lamp-pool-${i}`;
-      parent.add(light);
-      this.lights.push(light);
-    }
   }
 
   /**
@@ -51,34 +32,47 @@ export class LampPool {
       on: true, decay: 2, ...src,
       position: src.position.clone(),
       color: new THREE.Color(src.color),
-      _d: 0
+      _d: 0,
+      _light: null
     };
+    const light = new THREE.PointLight(
+      s.color,
+      s.on && s.intensity > 0 ? s.intensity : 0,
+      s.distance,
+      s.decay
+    );
+    light.position.copy(s.position);
+    light.castShadow = false;
+    light.name = `lamp-pool-${this.lights.length}`;
+    this.parent.add(light);
+    this.lights.push(light);
+    s._light = light;
     this.sources.push(s);
     return s;
   }
 
-  update(eye) {
-    if (!eye) return;
-    const live = this._live;
-    live.length = 0;
-    for (const s of this.sources) {
-      if (!s.on || s.intensity <= 0) continue;
-      s._d = s.position.distanceTo(eye);
-      live.push(s);
+  /** Remove a previously added lamp source and its PointLight from the scene. */
+  remove(src) {
+    const i = this.sources.indexOf(src);
+    if (i >= 0) this.sources.splice(i, 1);
+    if (src?._light) {
+      this.parent.remove(src._light);
+      const li = this.lights.indexOf(src._light);
+      if (li >= 0) this.lights.splice(li, 1);
+      src._light.dispose?.();
+      src._light = null;
     }
-    live.sort((a, b) => a._d - b._d);
-    const n = this.lights.length;
-    const next = live.length > n ? live[n]._d : Infinity;
-    for (let i = 0; i < n; i++) {
-      const light = this.lights[i];
-      const s = live[i];
-      if (!s) { light.intensity = 0; continue; }
-      const w = Math.min(1, (next - s._d) / this.band);
+  }
+
+  update(_eye) {
+    for (const s of this.sources) {
+      const light = s._light;
+      if (!light) continue;
       light.position.copy(s.position);
       light.color.copy(s.color);
       light.distance = s.distance;
       light.decay = s.decay;
-      light.intensity = s.intensity * w;
+      light.intensity = s.on && s.intensity > 0 ? s.intensity : 0;
     }
   }
 }

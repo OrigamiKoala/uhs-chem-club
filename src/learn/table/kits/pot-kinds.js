@@ -467,28 +467,21 @@ export { KINDS, KIND_LABEL };
    TOUR WORDS
    ------------------------------------------------------------------ */
 
-const WINDOW_TEXT = {
-  pieces: 'The "{dial}" dial picks which reaction to look at. Press "{run}" and the atoms are shown as they stand before the reaction on the left and after it on the right. A name under each group says which substance it is, and a number in front says how many of them there are.',
-  proton: 'The "{dial}" dial picks which reaction to look at. Press "{run}" and the atoms are shown before the reaction on the left and after it on the right. A hydrogen ion is a hydrogen atom that has lost its electron: when one passes from a molecule to another, the particle view rings it in amber.',
-  electrons: 'The "{dial}" dial picks which reaction to look at. Press "{run}" and the atoms are shown before the reaction on the left and after it on the right. Amber dots are electrons, and a charge printed after a symbol is what that atom holds.',
-  numbers: 'The "{dial}" dial picks a species that has already been worked out. The particle view draws its atoms, shows the oxidation number on each atom, and adds them up beside the charge of the species.'
-};
-
 addTourText({
   'pot:kwindow': {
     title: 'Particle view', dials: false,
-    text: f => (f.dials.pot ? WINDOW_TEXT[f.props.mode] : WINDOW_TEXT[f.props.mode].replace(/^The "\{dial\}" dial picks which reaction to look at\. /, '')).replace('{dial}', f.dials.pot?.label || '').replace('{run}', f.runLabel || 'Run')
+    text: f => `${f.dials.pot ? `Pick a case with "${f.dials.pot.label}"` : 'Inspect atoms before and after'}${f.noRun ? '.' : ` and press "${f.runLabel || 'Run'}".`}`
   },
-  'pot:burner': { title: 'Burner', dials: false, text: 'Put the fuel jar on the left seat and an empty gas jar on the right seat. Press "Burn" to burn the fuel in oxygen that the burner supplies. The gas jar fills with whatever the burning leaves.' },
+  'pot:burner': { title: 'Burner', dials: false, text: 'Place a fuel jar and an empty gas jar, then press "Burn".' },
   'pot:gasrig': {
     title: 'Gas tests', dials: false,
-    text: 'Put a gas jar on the seat. The "Test" dial picks glowing splint, lit splint, limewater or cold glass; press "Test" to try it in the jar. The result stays printed beside the test, so you can compare all four.'
+    text: 'Put a gas jar on the seat, pick a test, and press "Test".'
   },
   'pot:klook': {
     title: 'Look for', dials: false,
-    text: 'The "Look for" dial picks a kind of reaction. Beside each reaction card, the board prints the reading that kind depends on. Tap a card to light it when its reaction belongs to the kind the dial is on; the cards remember which kinds they are lit for.'
+    text: 'Pick a reaction kind, then tap matching reaction cards to light them.'
   }
 }, {
-  rxn: ['Reaction cards', 'Each card is one reaction written as an equation, with the state of each substance in brackets: (s) solid, (l) liquid, (g) gas, (aq) dissolved in water. Tap a card to light it, and tap again to put the light out.'],
-  gjar: ['Gas jars', 'Each jar holds a gas. A jar that says "empty" fills when the burner is run over it. Drag a jar onto the gas test seat to try a test in it.']
+  rxn: ['Reaction cards', 'Tap a reaction card to mark or unmark it.'],
+  gjar: ['Gas jars', 'Fill an empty jar at the burner, then test it on the gas rig.']
 });

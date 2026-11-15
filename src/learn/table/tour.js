@@ -33,50 +33,50 @@ const DIAL = {
  * `dials: false` means the text already covers the fixture's dials.
  */
 const FIXTURE = {
-  scope: { title: 'Lens and Power dial', dials: false, text: 'The lens is the round tool on the shelf. Drag it on top of a dish to see a magnified picture of what that sample is made of. ' + DIAL.Power },
-  reader: { title: 'Scale', text: 'Drag an atom into the scale slot. The scale then shows that atom\'s mass.' },
-  beam: { title: 'Beam and detectors', text: 'Press "{run}". A stream of tiny shots is sent at the thin foil. Each detector (Ahead, Side and Back) counts the shots that land on it, and adds to its count every time you fire again.' },
-  field: { title: 'Charged plates', text: 'Drag particles into the bed between the two plates, then press "{run}". Charged plates pull sideways on anything that has an electric charge, and do nothing to anything that has none. Each particle is tagged "bent" or "straight" to show what happened to it.' },
-  needle: { title: 'Charge meter', text: 'The charge meter shows the total electric charge of the atom it is attached to. A proton adds + charge and an electron adds − charge. The meter points to + when there are more protons, to − when there are more electrons, and rests on 0 when the two are equal.' },
-  mass: { title: 'Mass counter', text: 'Shows the total mass of the atom. Protons and neutrons each add 1 to the mass, while electrons have almost no mass and do not change the reading.' },
-  tester: { title: 'Partner test', text: 'Drag a {item} into the slot, then press "{run}". The test shows whether the atom loses an electron, gains an electron, shares, or makes no change.' },
-  'cards:tester': { title: 'Partner test', text: 'Drag a card into the slot, then press "{run}". The test shows whether that atom loses an electron, gains an electron, shares, or makes no change.' },
-  stamp: { title: 'Stamp', dials: false, text: 'Use the stamp to write down a number for the unmeasured card. ' + DIAL.Protons },
-  assay: { title: 'Mass spectrometer', text: 'Drag a sample onto the chute, then press "{run}". The atoms sort by mass, each mass shows how many atoms landed there, and the beam underneath tips toward the heavier side.' },
-  coder: { title: 'Code reader', dials: false, text: 'Use the "Bin" dial to pick a bin, then press "{run}". It shows the name of the element that bin\'s atoms belong to.' },
-  balance: { title: 'Balance', text: 'Two pans hang from a beam. The beam tips down toward the heavier pan, and lies flat when both pans have the same mass.{counters}' },
-  scale: { title: 'Scale', text: 'Drag something onto the pan to read its mass. {runSentence}' },
-  mixer: { title: 'Mix', text: 'This pan is filled with atoms of two kinds, a lighter kind and a heavier kind. The mass on the pan depends on how many of each there are.' },
-  spectrum: { title: 'Mass spectrum', dials: false, text: 'Each bar is one isotope mass. Read the mass under it, and how high it stands against the scale on the left: the percent of all the atoms with that mass.' },
-  tally: { title: 'Tally', dials: false, text: 'Use the "Moles" dial to enter the number you worked out.' }
+  scope: { title: 'Lens & Power', dials: false, text: 'Drag the lens onto a dish; turn Power to zoom.' },
+  reader: { title: 'Scale', text: 'Drag an atom into the slot to read its mass.' },
+  beam: { title: 'Beam & detectors', text: 'Press "{run}" to fire shots at the foil and count hits.' },
+  field: { title: 'Charged plates', text: 'Drag particles between the plates, then press "{run}".' },
+  needle: { title: 'Charge meter', text: 'Shows total charge: + from protons, − from electrons.' },
+  mass: { title: 'Mass counter', text: 'Shows total mass (protons + neutrons).' },
+  tester: { title: 'Partner test', text: 'Drag a {item} into the slot, then press "{run}".' },
+  'cards:tester': { title: 'Partner test', text: 'Drag a card into the slot, then press "{run}".' },
+  stamp: { title: 'Stamp', dials: false, text: 'Set the "Protons" dial for the unmeasured card.' },
+  assay: { title: 'Mass spectrometer', text: 'Drag a sample onto the chute, then press "{run}".' },
+  coder: { title: 'Code reader', dials: false, text: 'Pick a "Bin", then press "{run}" to read its element.' },
+  balance: { title: 'Balance', text: 'Drag items onto the pans to compare their mass.' },
+  scale: { title: 'Scale', text: 'Drag an item onto the pan to weigh it.' },
+  mixer: { title: 'Mix', text: 'Pan filled with two atom kinds; mass depends on their ratio.' },
+  spectrum: { title: 'Mass spectrum', dials: false, text: 'Each bar shows an isotope mass and its percentage.' },
+  tally: { title: 'Tally', dials: false, text: 'Set the "Moles" dial to your answer.' }
 };
 
-/** A kind of piece, by `kind`: [title, text, optional (table) => extra sentence]. Only kinds on the table get a step. */
+/** A kind of piece, by `kind`: [title, text, optional (table) => extra sentence]. Only tool-like pieces get a step. */
 const PIECE = {
-  dish: ['Sample dishes', 'Each dish holds a sample of material, which you can look inside with the lens.', t => (hasTrays(t) ? ' Drag a dish into a tray to put it in that group.' : '')],
-  lens: ['Lens', 'Drag the lens on top of a dish to see a magnified picture of what is inside it.'],
-  cutter: ['Break bonds', 'Drag this tool across a dish. It separates the sample into smaller pieces if it can be broken, and leaves it alone if it cannot.'],
-  atom: ['Atoms', 'Drag one atom on top of another to join them into one group that moves together. Tap the line between two joined atoms to break them apart.', t => ligarAtomSentence(t)],
-  proton: ['Particles', 'Drag a particle onto the atom to add it, or drag it off to take it away.', t => (hasNeedle(t) ? ' The charge meter changes as you add or remove them.' : '')],
+  dish: ['Sample dishes', 'Drag the lens onto a dish to look inside.'],
+  lens: ['Lens', 'Drag the lens onto a dish to magnify it.'],
+  cutter: ['Break bonds', 'Drag across a dish to split the sample into smaller pieces.'],
+  atom: ['Atoms', 'Drag one atom onto another to join them; tap the bond to split.'],
+  proton: ['Particles', 'Drag a particle onto or off the atom.'],
   neutron: null,
   electron: null,
-  nucleus: ['Middle of the atom', 'This is the middle of an atom, drawn big enough to see. Each disc is one particle; a disc with a + on it is a proton.'],
-  specimen: ['Atom samples', 'Each sample is a picture of one atom. The dot is its middle, and each ring around it holds electrons, which are the small dots on the ring.', t => (hasCounts(t) ? ' Where a sample prints numbers, they count its protons and neutrons.' : '') + (hasTrays(t) ? ' Drag a sample into a tray to put it in that group.' : '')],
-  speck: ['Particles', 'Each particle comes from the middle of an atom, and they all look the same. Drag one into a tray to put it in that group.'],
-  model: ['Model cards', 'Each card is a drawing of one idea of how an atom is built.', t => slotSentence(t)],
-  detector: ['Detectors', 'A detector counts the shots that land on it. It stays where it is, and the count only goes up.'],
-  ion: ['Charged tiles', 'Each tile shows its own charge, such as +2 or −1. Drag tiles onto the pad; the charge meter shows the total charge of the pad.'],
-  element: ['Element cards', 'Each card is one element. It shows how many protons it has, one dot for each electron in its outer shell, and its weight.'],
-  sample: ['Samples', 'Each sample is a pile of atoms. Drag one onto the chute to tip it out.'],
-  crate: ['Crates', 'Each crate holds a stock of one kind of atom. Drag a crate onto a pan to weigh it against the other pan, or onto the scale to read what it weighs.'],
+  nucleus: ['Nucleus', 'Each + disc in the centre is a proton.'],
+  specimen: ['Atom samples', 'Drag each sample into the matching tray.'],
+  speck: ['Particles', 'Drag a particle into a tray to sort it.'],
+  model: null,
+  detector: ['Detectors', 'Counts shots that land on it.'],
+  ion: ['Charged tiles', 'Drag tiles onto the pad to add their charges.'],
+  element: ['Element cards', 'Shows protons, outer electrons, and atomic weight.'],
+  sample: ['Samples', 'Drag a sample onto the chute to test it.'],
+  crate: ['Crates', 'Drag a crate onto a pan or scale to weigh it.'],
   token: null,
   /* ---- LIGAR (unit03) ---- */
-  guess: ['Guess cards', 'Each card is one idea of what will happen.', t => ligarGuessSentence(t)]
+  guess: null
 };
 
 /** Tool keys the table can carry on its foot dock. */
 const TOOL = {
-  straightedge: ['Straightedge', 'Press "Straightedge" to lay a line across the points on the strip, so you can see whether they fall in a straight line.']
+  straightedge: ['Straightedge', 'Press "Straightedge" to lay a line across the points.']
 };
 
 /**
@@ -117,40 +117,41 @@ const hasNeedle = t => Object.values(t.fixtures || {}).some(f => f.kind === 'nee
 const hasCounts = t => Object.values(t.pieces || {}).some(p => p.kind === 'specimen' && p.props?.counts);
 const quote = s => `"${s}"`;
 
-/** The generic text for a fixture whose kind has no entry: its label, its key and its dials. */
-function fallbackFixture(f, kitId) {
-  const bits = [`${f.label}.`];
-  if (f.runLabel) bits.push(`Press ${quote(f.runLabel)} to use it.`);
-  for (const d of Object.values(f.dials || {})) bits.push(dialText(d, kitId));
-  return bits.join(' ');
+/** The generic text for a fixture whose kind has no entry: its label and its key or dial. */
+function fallbackFixture(f) {
+  if (f.runLabel) return `Press ${quote(f.runLabel)} to use ${f.label}.`;
+  const d = Object.values(f.dials || {})[0];
+  return d ? `Drag the ${quote(d.label || f.label)} dial.` : `${f.label}.`;
 }
 
-/** What one dial does: the kit's own words for it (`registerTour`), else the shared ones, else the plain how-to. */
-function dialText(d, kitId) {
-  return EXTRA.dials[`${kitId}:${d.label}`] || DIAL[d.label] || `Move the ${quote(d.label || 'its')} dial by dragging its knob or tapping its groove.`;
-}
-
-/** The title and text of a fixture: what it is and does, then each dial it carries that the text has not covered. */
+/** The title and text of a fixture: concise, one sentence, no dial boilerplate appended. */
 function fixtureStep(f, kitId, table) {
   const own = ligarFixture(f, kitId, table);
-  if (own) {
-    const dials = own.ownDials ? [] : Object.values(f.dials || {}).map(d => DIAL[d.label] || `Move the ${quote(d.label || 'its')} dial by dragging its knob or tapping its groove.`);
-    return { title: own.title, text: [own.text, ...dials].join(' ') };
-  }
+  if (own) return { title: own.title, text: own.text };
   const entry = EXTRA.fixtures[`${kitId}:${f.kind}`] || FIXTURE[`${kitId}:${f.kind}`] || FIXTURE[f.kind];
-  if (!entry) return { title: f.label, text: fallbackFixture(f, kitId) };
-  const runSentence = f.runLabel ? `Press "${f.runLabel}" to record the reading as a point on the strip.` : '';
+  if (!entry) return { title: f.label, text: fallbackFixture(f) };
+  const runSentence = f.runLabel ? `Press "${f.runLabel}" to record.` : '';
   const rawTitle = typeof entry.title === 'function' ? entry.title(f, table) : entry.title;
   const rawText = typeof entry.text === 'function' ? entry.text(f, table) : entry.text;
   const text = rawText
     .replace('{run}', f.runLabel || 'Run')
     .replace('{item}', 'sample')
     .replace('{runSentence}', runSentence)
-    .replace('{counters}', f.props?.counters ? ' The counter above a pan shows how many atoms are on it.' : '')
+    .replace('{counters}', '')
     .trim();
-  const dials = entry.dials === false ? [] : Object.values(f.dials || {}).map(d => dialText(d, kitId));
-  return { title: rawTitle || f.label, text: [text, ...dials].join(' ') };
+  return { title: rawTitle || f.label, text };
 }
+
+// Fixtures that are pure answer-picking UI or static displays, not tools to explain.
+const SKIP_FIXTURES = new Set(['plaque', 'plate', 'tchoice', 'lchoice', 'choice']);
+
+// Pieces that are self-explanatory cards, statements, or inputs already covered by an instrument step.
+const SKIP_PIECES = new Set([
+  'token', 'model', 'guess', 'stmt', 'note', 'tag', 'chip', 'num', 'card',
+  'matter:stmt', 'cell:tag', 'cell:note', 'cell:chip',
+  'heat:stmt', 'heat:tag', 'heat:note', 'heat:chip', 'heat:num', 'heat:gcard', 'heat:shift', 'heat:phase', 'heat:shelf',
+  'thorn:tcard'
+]);
 
 /**
  * The steps for a table. `intro` is the stage's briefing (what Vess says), kept as the first step when there is one; `worked` are the
@@ -165,72 +166,61 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
   const kit = table.kit;
   const steps = [];
   const demoOf = key => demoFor(kit, key) || demoFor(kit, key.replace(/^(fx_[^_]+)_.+$/, '$1'));
-  const add = (key, name, desc) => steps.push({ flag: `tour_${kit}_${key}`, name, desc, ...(demoOf(key) ? { demo: demoOf(key) } : {}) });
-  // What is true on every table is said once in the whole game, never per kit and never again when the Tour is replayed.
-  const addGeneral = (key, name, desc, once = false) => steps.push({ flag: `tour_${key}`, name, desc, ...(once ? { once: true } : {}), ...(demoFor('*', key) ? { demo: demoFor('*', key) } : {}) });
+  const add = (key, name, desc, extra = {}) => steps.push({ flag: `tour_${kit}_${key}`, name, desc, ...extra, ...(demoOf(key) ? { demo: demoOf(key) } : {}) });
 
   // `worked` is a worked case shown under the briefing: the steps of one calculation on a neighbouring case, one line each.
-  if (intro) steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, ...(worked?.length ? { lines: worked.slice() } : {}) });
-  addGeneral('table', 'Moving pieces', 'Drag a piece, or tap it and then its place. Keys: Undo, Start Over, Submit.', true);
+  if (intro) steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, isBriefing: true, ...(worked?.length ? { lines: worked.slice() } : {}) });
 
-  // The instruments, in the order they stand on the plate (top to bottom, left to right).
+  // The instruments, in the order they stand on the plate (top to bottom, left to right). One step per fixture kind.
   const fixtures = Object.values(table.fixtures || {}).sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x);
   for (const f of fixtures) {
-    // A plain surface things stand on has nothing to explain; one with a key or a dial is an instrument.
     if (f.props?.backdrop && f.noRun && !Object.keys(f.dials || {}).length) continue;
-    // Printed plaques and plates display static facts with nothing to press or interact with; omit from Tour.
-    if (f.kind === 'plaque' || f.kind === 'plate') continue;
-    const { title, text } = fixtureStep(f, kit, table);
+    if (SKIP_FIXTURES.has(f.kind)) continue;
     const twin = steps.some(st => st.flag === `tour_${kit}_fx_${f.kind}`);
-    // Teeter's benches hold several of one instrument (three vessels, two beakers): one step explains them all.
-    if (twin && kit === 'pans') continue;
-    add(twin ? `fx_${f.kind}_${f.id}` : `fx_${f.kind}`, title, text);
-    // Which instrument the step is about, so the Tour can play it (`frame.js` `tourClipMarkup`).
-    steps[steps.length - 1].fx = f.id;
+    if (twin) continue;
+    const { title, text } = fixtureStep(f, kit, table);
+    add(`fx_${f.kind}`, title, text, { fx: f.id });
   }
 
   const hasFixture = kind => Object.values(table.fixtures || {}).some(f => f.kind === kind);
-  // The kinds of piece on the table, once each, fixed furniture included (a fixed detector is still a thing to read).
   const seen = new Set();
   for (const p of Object.values(table.pieces || {})) {
     if (p.props?.scratch || p.hidden) continue;
     let kind = p.kind;
-    // A kit may have its own words for a kind (`<kit>:<kind>`, Lanternfall's lamps, plates and cards); they come before the shared ones.
     const own = PIECE[`${kit}:${kind}`];
     if (own) kind = `${kit}:${kind}`;
     else if (kind === 'neutron' || kind === 'electron') kind = 'proton';
     if (seen.has(kind)) continue;
     seen.add(kind);
+    if (SKIP_PIECES.has(kind)) continue;
     // Parts the instrument's own step already explains.
     if (kind === 'lens' && hasFixture('scope')) continue;
     if (kind === 'detector' && hasFixture('beam')) continue;
-    if (kind === 'token') continue;
+    if (kind === 'dish' && (hasFixture('scope') || hasFixture('cutter'))) continue;
+    if (kind === 'speck' && hasFixture('field')) continue;
+    if (kind === 'sample' && (hasFixture('assay') || hasFixture('tester') || hasFixture('flask'))) continue;
+    if (kind === 'crate' && (hasFixture('balance') || hasFixture('scale'))) continue;
+    if (kind === 'charge' && hasFixture('cup')) continue;
+    if (kind === 'ptc' && hasFixture('cells')) continue;
     if (ligarSkip(table, p)) continue;
     // A marked particle is tapped, not carried.
     if (kind === 'proton' && p.props?.markable) {
-      add('pc_marks', 'Marking particles', 'Tap a particle to mark it as part of your answer. A ring appears round it so you can see which ones you have picked. Tap it again to unmark it. When you press Submit, your answer is the particles that have a ring.');
+      add('pc_marks', 'Marking particles', 'Tap a particle to mark or unmark it.', { pc: p.id });
       continue;
     }
     const lig = ligarPiece(kind, kit, table);
-    if (lig) { add(`pc_${kind}`, lig[0], lig[1]); continue; }
+    if (lig) { add(`pc_${kind}`, lig[0], lig[1], { pc: p.id }); continue; }
     const entry = EXTRA.pieces[`${kit}:${kind}`] || PIECE[kind];
-    if (entry) add(`pc_${kind.replace(':', '_')}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''));
-    else add(`pc_${kind}`, p.label || kind, `${p.label || 'This piece'}: drag it to move it, or tap it once and then tap the place you want it to go.`);
+    if (!entry) continue;
+    add(`pc_${kind.replace(':', '_')}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''), { pc: p.id });
   }
 
-  // Where answers go.
-  const trays = Object.keys(table.zones?.trays || {}).filter(id => !id.startsWith('scr-'));
-  if (trays.length) addGeneral('trays', 'Trays', 'Drag pieces into the trays. The trays are your answer.');
-  if (table.zones?.rail) addGeneral('rail', 'The strip', 'Drag cards onto the strip, in order.');
   const drum = Object.values(table.zones?.containers || {}).find(z => z.id === 'drum');
-  if (drum) add('drum', drum.label || 'Drum', 'The drum holds the material to pour. Drag from the drum onto the Pour pan, or tap the drum and then the pan. Each pour moves one fixed amount.');
-  if (!LIGAR_KITS.has(kit) && Object.keys(table.zones?.containers || {}).filter(id => id !== 'drum').length && !hasFixture('balance') && !hasFixture('scale')) add('containers', 'Pans', 'Drag a piece onto a pan to put it there. Whatever is on a pan is what gets weighed.');
-  if (table.prediction) addGeneral('prediction', 'Prediction', 'Drag your guess into the slot. It is not graded.');
-  if (!LIGAR_KITS.has(kit) && table.recorder && table.recorder.box && table.recorder.box.size.w > 2 && Object.values(table.fixtures || {}).some(f => !f.noRun)) addGeneral('strip', 'Paper strip', 'Each reading adds a point.');
+  if (drum) add('drum', drum.label || 'Drum', 'Drag from the drum onto the Pour pan.');
 
   for (const t of table.tools || []) {
     const entry = TOOL[t];
-    add(`tool_${t}`, entry ? entry[0] : t, entry ? entry[1] : `Press ${quote(t)} to use it.`);
+    add(`tool_${t}`, entry ? entry[0] : t, entry ? entry[1] : `Press ${quote(t)} to use it.`, { tool: t });
   }
   return steps;
 }

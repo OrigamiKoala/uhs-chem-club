@@ -135,7 +135,7 @@ console.log('\nQuicklight built world (Node)\n');
   w.scene.traverse(o => {
     if (o.isPointLight || o.isSpotLight) totalPointLights++;
   });
-  check(totalPointLights <= 3, 'only pooled lamps are lit (<= 3 PointLights)', `${totalPointLights} lights`);
+  check(totalPointLights === w.lamps.length, `all ${w.lamps.length} lamps have real always-on PointLights`, `${totalPointLights} lights for ${w.lamps.length} lamps`);
 
   let hostErrors = 0;
   for (const s of worldData.sites) {

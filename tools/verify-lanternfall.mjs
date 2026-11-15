@@ -310,9 +310,9 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
         `${strangers.length} emissive material(s) that are not a lantern`);
       let realLights = 0;
       built.scene.traverse(o => { if (o.isPointLight) realLights++; });
-      check(realLights === 3 && built.lamps.length >= 30,
-        `${built.lamps.length} lamps share ${realLights} real lights`,
-        `${built.lamps.length} lamps and ${realLights} real lights: the lamp pool is not what keeps the frame cheap`);
+      check(realLights === built.lamps.length && built.lamps.length >= 30,
+        `all ${built.lamps.length} lamps have real always-on lights (${realLights})`,
+        `${built.lamps.length} lamps and ${realLights} real lights`);
     }
 
     /* EVERY SITE FACES ITS APPROACH, and its bench deploys onto a real plate. */

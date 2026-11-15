@@ -258,7 +258,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'((?:q\d+|boss)-[a-z]+)',\s*title:
       check(strangers.length === 0, `${lit.size} emissive material(s): the lamps' filament; nothing else in the canyon is lit`, `${strangers.length} emissive material(s) that are not a lamp's filament`);
       let realLights = 0;
       built.scene.traverse(o => { if (o.isPointLight || o.isSpotLight) realLights++; });
-      check(realLights === 3 && built.lamps.length >= 36, `${built.lamps.length} lamps share ${realLights} real lights`, `${built.lamps.length} lamps and ${realLights} real lights: the lamp pool is not what keeps the frame cheap`);
+      check(realLights === built.lamps.length && built.lamps.length >= 36, `all ${built.lamps.length} lamps have real always-on lights (${realLights})`, `${built.lamps.length} lamps and ${realLights} real lights`);
       check(opaqueNoDepth.size === 0, 'no opaque material leaves the depth buffer unwritten', `${opaqueNoDepth.size} opaque material(s) set depthWrite false`);
     }
 

@@ -384,23 +384,15 @@ registerFixture('ionfilter', { paint: paintFilter, run: runFilter });
    TOUR WORDS
    ------------------------------------------------------------------ */
 
-const POT_TEXT = f => {
-  const p = f.props;
-  const bits = [];
-  if (p.mixes) bits.push('The "Mixture" dial picks which two solutions are poured in; their formulas are printed at the left.');
-  else bits.push('Drag a jar into each of the two seats at the left.');
-  bits.push('Press "Mix" to pour them together. Each jar pours in just the amount that is used up.');
-  if (p.window) bits.push('The particle view shows the ions before pouring, one half for each jar, and after: the ions still dissolved, with any ions that left the water packed together at the bottom. Each circle is one ion with its charge on it, and the key under BEFORE says which colour is which.');
-  else bits.push('The glass shows what the reaction vessel looks like afterwards.');
-  if (p.lamp) bits.push('The two conductivity bulbs shine brighter when more ions are dissolved in the water.');
-  return bits.join(' ');
-};
+const POT_TEXT = f => (f.props.mixes
+  ? 'Pick a "Mixture" and press "Mix" to pour them together.'
+  : 'Drag two jars onto the seats and press "Mix".');
 
 addTourText({
   'pot:ionpot': { title: 'Reaction vessel', dials: false, text: POT_TEXT },
-  'pot:ionfilter': { title: 'Filter', text: 'Press "Filter" after mixing to lift any solid out of the vessel onto the paper. The paper shows what was caught.' }
+  'pot:ionfilter': { title: 'Filter', text: 'Press "Filter" to lift any solid onto the filter paper.' }
 }, {
-  sol: ['Solution jars', 'Each jar holds a salt dissolved in water: its formula is printed, with its name under it. A jar called Jar 1 or Jar 2 is sealed. Drag a jar into a seat of the vessel.'],
-  ion: ['Ions', 'Each piece is one ion. Its charge is printed on it and its colour matches the circles in the particle view. Drag an ion into a tray to count it there.'],
-  formula: ['Formula cards', 'Each card is one substance written as a formula, with (s) for a solid, (aq) for dissolved and (l) for a liquid. Drag a card into a slot to place it there.']
+  sol: ['Solution jars', 'Drag two solution jars onto the vessel seats to mix them.'],
+  'pot:ion': ['Ions', 'Drag an ion into a tray to sort or count it.'],
+  formula: null
 });

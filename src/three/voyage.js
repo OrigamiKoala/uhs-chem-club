@@ -1205,8 +1205,7 @@ export class Voyage {
     }
     const hs = this._hatchSource;
     if (hs && hs.pool === p.world.lampPool) {
-      const i = hs.pool.sources.indexOf(hs.src);
-      if (i >= 0) hs.pool.sources.splice(i, 1);
+      hs.pool.remove(hs.src);
       this._hatchSource = null;
     }
     if (!keepExterior) this._removeFarGround(p.world);

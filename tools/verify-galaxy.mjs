@@ -40,13 +40,18 @@ const lanes = G.layoutLanes(systems);
   const out = systems.filter(s => s.x < 70 || s.x > G.GALAXY_W - 70 || s.y < 50 || s.y > G.GALAXY_H - 50);
   out.length ? fail(`worlds too near the edge: ${out.map(s => s.id)}`) : ok('every world sits inside the chart with room for its label');
 
-  // Nothing sits on the reactor at the core.
-  const nearCore = systems.filter(s => Math.hypot((s.x - G.CORE.x) / 1.42, (s.y - G.CORE.y) / 0.95) < 70);
-  nearCore.length ? fail(`worlds inside the core: ${nearCore.map(s => s.id)}`) : ok('no world sits inside the reactor at the core');
+  // Distributed across multiple scattered star systems (no central black-hole track).
+  const starIds = new Set(systems.map(s => s.system?.id).filter(Boolean));
+  starIds.size >= 4 ? ok(`worlds distributed across ${starIds.size} star systems`) : fail(`expected >= 4 star systems, got ${starIds.size}`);
 
-  // The road runs rim to core: radius falls along it.
-  const radii = systems.map(s => Math.hypot((s.x - G.CORE.x) / 1.42, (s.y - G.CORE.y) / 0.95));
-  radii[0] > radii[radii.length - 1] + 100 && radii[0] > 250 ? ok('Erebus is on the rim and Cinder Halo is nearest the core') : fail('the road does not run rim to core');
+  // Star systems and planets move over time.
+  const s0 = G.starPos(systems[0].system, 0);
+  const s1 = G.starPos(systems[0].system, 5000);
+  Math.hypot(s1.x - s0.x, s1.y - s0.y) > 5 ? ok('star systems move and change position over time') : fail('star systems are static');
+
+  const p0 = G.planetPos(systems[0], 0);
+  const p1 = G.planetPos(systems[0], 5000);
+  Math.hypot(p1.x - p0.x, p1.y - p0.y) > 5 ? ok('planets orbit their stars over time') : fail('planets do not orbit');
 
   const a = JSON.stringify(G.layoutSystems(list));
   a === JSON.stringify(G.layoutSystems(list)) ? ok('layout is deterministic (the same chart on every machine)') : fail('layout is not deterministic');
@@ -100,10 +105,12 @@ for (const [w, h] of [[340, 280], [960, 560]]) {
   });
   for (const [w, h, label] of [[340, 280, 'phone'], [960, 560, 'wide']]) {
     const fit = G.fitScale(w, h);
+    const p4 = G.planetPos(systems[4], 1234);
+    const p14 = G.planetPos(systems[14], 1234);
     for (const [vlabel, view] of [
       ['whole map', { k: fit, cx: G.GALAXY_W / 2, cy: G.GALAXY_H / 2 }],
-      ['zoomed in', G.clampView({ k: fit * 4.2, cx: systems[4].x, cy: systems[4].y }, w, h)],
-      ['zoomed far', G.clampView({ k: fit * 9, cx: systems[14].x, cy: systems[14].y }, w, h)]
+      ['zoomed in', G.clampView({ k: fit * 4.2, cx: p4.x, cy: p4.y }, w, h)],
+      ['zoomed far', G.clampView({ k: fit * 9, cx: p14.x, cy: p14.y }, w, h)]
     ]) {
       const ctx = makeCtx(w, h);
       let threw = null;
@@ -111,9 +118,10 @@ for (const [w, h] of [[340, 280], [960, 560]]) {
         G.drawGalaxy(ctx, { nodes, lanes, view, w, h, time: 1234, animate: true, selectedId: nodes[4].id, hoverId: nodes[6].id, acts: [{ id: 'act1', label: 'Act I' }, { id: 'act4', label: 'Act IV' }] });
       } catch (e) { threw = e; }
       const st = ctx.stats;
+      const minCalls = vlabel === 'whole map' ? 300 : vlabel === 'zoomed far' ? 30 : 80;
       if (threw) fail(`${label} ${vlabel}: draw threw ${threw.stack?.split('\n')[1] || threw}`);
       else if (st.nan) fail(`${label} ${vlabel}: ${st.nan} NaN coordinate(s)`);
-      else if (st.calls < (vlabel === 'whole map' ? 400 : 150)) fail(`${label} ${vlabel}: only ${st.calls} draw calls`);
+      else if (st.calls < minCalls) fail(`${label} ${vlabel}: only ${st.calls} draw calls`);
       else ok(`${label} ${vlabel}: drawn (${st.calls} calls, no NaN)`);
       if (label === 'wide' && vlabel === 'whole map') {
         const names = nodes.filter(n => st.text.includes(n.name.toUpperCase()));

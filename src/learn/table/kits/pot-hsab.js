@@ -420,21 +420,21 @@ addTourText(
     'pot:hsabprobe': {
       title: 'Cloud probe',
       dials: false,
-      text: 'Put an ion into the socket and press "Test". The probe shows whether the ion\'s cloud keeps its shape or pulls out of shape in an electric field.'
+      text: 'Place an ion in the socket and press "Test" to test its cloud.'
     },
     'pot:hsabwells': {
       title: 'Reaction Wells',
       dials: false,
-      text: 'Seat solution jars in the test wells and press "Mix". The particle view shows whether the ions combine into an insoluble precipitate or remain dissolved.'
+      text: 'Seat solution jars in the wells and press "Mix" to test for precipitate.'
     },
     'pot:hsabbond': {
       title: 'Bond Viewer',
       dials: false,
-      text: 'Examine the two particle diagrams showing ionic charge attraction and covalent cloud overlap, then place matching cards in the sockets.'
+      text: 'Compare the two bond diagrams, then place matching cards in the sockets.'
     }
   },
   {
-    hsabcard: ['Card', 'A card that names an ion pair or prediction. Drag it into the matching tray or slot.'],
-    hsabchip: ['Card', 'A card that names a formula or bond type. Drag it into the socket that matches.']
+    hsabcard: null,
+    hsabchip: null
   }
 );

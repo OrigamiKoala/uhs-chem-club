@@ -221,18 +221,10 @@ registerFixture('titrator', { paint: paintTitrator, run: runTitrator });
    TOUR WORDS
    ------------------------------------------------------------------ */
 
-const TITRATOR_TEXT = f => {
-  const p = f.props;
-  const bits = [`The tall tube${p.named ? ' (a burette)' : ''} holds the base, and its scale and "reading" show how much has run out in all.`];
-  bits.push(`The "Per press" dial sets how much one press lets out. Press "${f.runLabel}" to let that much run into the flask below; the base only runs out, so each press adds to the last, and Undo takes a press back.`);
-  if (p.mouth) bits.push('Drag an indicator card into the slot beside the flask to put the indicator in the flask.');
-  if (p.mode !== 'perm' && p.window) bits.push(`The flask shows its colour, and the particle view beside it shows a circle for each ${p.unit} mol of ${ionText('H')} and of ${ionText('OH')} left in the flask.`);
-  else bits.push('The flask shows the colour of what is in it.');
-  return bits.join(' ');
-};
+const TITRATOR_TEXT = f => `Set "Per press" and press "${f.runLabel}" to add base to the flask.`;
 
 addTourText({
   'pot:titrator': { title: f => f.label, dials: false, text: TITRATOR_TEXT }
 }, {
-  indicator: ['Indicator cards', 'Each card is an indicator that changes colour. The swatches on the card show the colours it can have. Drag the card into the slot beside the flask; the flask then shows the indicator\'s colour.']
+  indicator: ['Indicator cards', 'Drag an indicator into the slot beside the flask.']
 });
