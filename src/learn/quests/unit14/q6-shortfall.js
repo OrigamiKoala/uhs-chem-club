@@ -212,7 +212,7 @@ export const STAGES = [
   {
     id: 's6-chain',
     title: 'The Chain',
-    briefing: { speaker: SPEAKER, body: 'Each fission frees three neutrons, and each can split another nucleus. Control rods soak up neutrons.' },
+    briefing: { speaker: SPEAKER, body: 'A fission like the one you watched frees three neutrons, and each can split another nucleus. Control rods soak up neutrons.' },
     prompt: 'Of each fission\'s three neutrons, how many must the rods soak up for the reaction to hold steady?',
     widget,
     table: nukeTable({

@@ -1442,6 +1442,8 @@ placeholder charts (`q2-ledger` … `q5-kinds`) are replaced by these.
 
 ### World 14 — Cinder Halo (`unit14`, nuclear chemistry): 5 quests, beyond AP throughout
 
+> **Superseded 2026-11-14.** Cinder Halo was built as six benches and a boss from `docs/plans/cinderhalo-world.md`, which records where it parted from this list (radioactivity split from the three radiations, the cold-count click, mass defect, fission and fusion kept on one bench). The list below is the original proposal.
+
 #### `q1-warm` · Radioactivity · detector bench
 1. Hold the counter to two samples. *Only one clicks.* → **radioactivity**
 2. Put paper in front of the sample. → **alpha radiation**

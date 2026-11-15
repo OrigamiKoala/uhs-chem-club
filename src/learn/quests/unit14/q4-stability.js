@@ -49,7 +49,7 @@ function moveStage({ id, title, prompt, briefing = null, Z, N, label, z, n, answ
   return {
     id, title, prompt, widget,
     ...(briefing ? { briefing: { speaker: SPEAKER, body: briefing } } : {}),
-    table: nukeTable({ pieces: [], fixtures: [nchartFixture('chart', { x: 74, y: 31 }, { z, n, band: true, line: true, mode: 'move', marks: [{ Z, N, label }], w: 140, h: 60 })] }),
+    table: nukeTable({ pieces: [], fixtures: [nchartFixture('chart', { x: 74, y: 31 }, { z, n, band: true, line: true, mode: 'move', marks: [{ Z, N, label }], preview: false, w: 140, h: 60 })] }),
     hints,
     check(state) {
       const mv = chartMove(state.table, 'chart');
@@ -110,7 +110,7 @@ export const STAGES = [
     }),
     hints: [
       'Lead-208\'s mass number, 208, is its protons and neutrons together.',
-      'Protons all carry a positive charge, and like charges push apart.',
+      'Protons all carry a positive charge, and like charges repel.',
       'Think about what a nucleus with many protons would need more of to hold together.'
     ],
     check(state) {
@@ -129,22 +129,22 @@ export const STAGES = [
     const guess = () => GUESS[recall(QUEST_KEY)];
     return {
       id: 's3-heavy',
-      title: 'Pushes and Holds',
-      briefing: { speaker: SPEAKER, body: 'Every proton pushes on every other proton in the nucleus. The strong nuclear force holds protons and neutrons together, but only those that touch.' },
+      title: 'Repulsion and the Strong Force',
+      briefing: { speaker: SPEAKER, body: 'Every proton repels every other proton in the nucleus. The strong nuclear force holds protons and neutrons together, but only those that touch.' },
       get prompt() { const g = guess(); return `Do stable heavy nuclei hold more neutrons than protons, as many, or fewer?${g ? ` You predicted ${g}.` : ''}`; },
       widget,
       table: nukeTable({
         pieces: [],
         fixtures: [
           nchartFixture('chart', { x: 52, y: 31 }, { z: [1, 83], n: [0, 127], band: true, line: true, mode: 'columns', w: 100, h: 60 }),
-          nnucFixture('nuc', { x: 126, y: 16 }, { follow: 'chart', w: 44, h: 30, title: 'Pushes and holds' }),
+          nnucFixture('nuc', { x: 126, y: 16 }, { follow: 'chart', w: 44, h: 30, title: 'Repulsion and hold' }),
           nchoiceFixture('ans', 'Stable heavy nuclei hold', { x: 124, y: 48 }, { options: ['More neutrons', 'As many', 'Fewer neutrons'], w: 40 })
         ]
       }),
       hints: [
         'Tap a light column and a heavy column on the chart, and read the counts under the nucleus view.',
-        'Compare how the number of pushes grows with how the number of holds grows from a small nucleus to a big one.',
-        'A neutron adds holds without adding any push, so ask what a big nucleus needs more of.'
+        'Compare how the proton pairs that repel grow with how the touching pairs held grow, from a small nucleus to a big one.',
+        'A neutron adds to the strong force\'s hold without adding any repulsion, so ask what a big nucleus needs more of.'
       ],
       check(state) {
         const pick = chosenIndex(state.table, 'ans');
@@ -157,7 +157,7 @@ export const STAGES = [
         return {
           log: 'Heavy stable nuclei hold more neutrons than protons.',
           title: 'Strong Nuclear Force',
-          body: `More${g ? ` (you predicted ${g})` : ''}: the band bends above the line. Extra neutrons add the strong nuclear force's hold without adding any push.`
+          body: `More${g ? ` (you predicted ${g})` : ''}: the band bends above the line. Extra neutrons add the strong nuclear force's hold without adding any repulsion.`
         };
       }
     };
@@ -167,13 +167,13 @@ export const STAGES = [
   moveStage({
     id: 's4-above',
     title: 'Too Many Neutrons',
-    briefing: 'The keys beside the chart are the three moves a decay can make: tap one to draw it from the marked nucleus. A nucleus off the band decays, and a decay moves it.',
+    briefing: 'The keys beside the chart are the three moves a decay can make, each drawn as an arrow. A nucleus off the band decays, and the decay moves it one of those ways.',
     prompt: 'Carbon-14 sits above the band: which decay brings it toward the band?',
     Z: 6, N: 8, label: 'Carbon-14', z: [1, 10], n: [0, 12], answer: 'beta',
     hints: [
-      'Tap each move and watch where it would take carbon-14.',
-      'Compare where each move lands with the filled squares.',
-      'Carbon-14 holds more neutrons than the stable carbons, so it needs a move that swaps a neutron for a proton.'
+      'Find carbon-14 on the chart, the filled squares near it, and the three arrows in the legend.',
+      'Compare carbon-14\'s neutrons with those of the stable carbons in its column.',
+      'Follow each arrow from carbon-14 in your head and ask which one heads toward the filled squares.'
     ],
     reward: { log: 'Carbon-14 decays by beta decay onto nitrogen-14.', title: 'Above the Band', body: 'Beta decay: a neutron becomes a proton, moving carbon-14 onto nitrogen-14, a filled square.' }
   }),
@@ -185,9 +185,9 @@ export const STAGES = [
     prompt: 'Oxygen-15 sits below the band: which decay brings it toward the band?',
     Z: 8, N: 7, label: 'Oxygen-15', z: [1, 10], n: [0, 12], answer: 'positron',
     hints: [
-      'Tap each move and watch where it would take oxygen-15.',
-      'Compare where each move lands with the filled squares.',
-      'Oxygen-15 holds fewer neutrons than the stable oxygens, so it needs a move that swaps a proton for a neutron.'
+      'Find oxygen-15 on the chart, the filled squares near it, and the three arrows in the legend.',
+      'Compare oxygen-15\'s neutrons with those of the stable oxygens in its column.',
+      'Follow each arrow from oxygen-15 in your head and ask which one heads toward the filled squares.'
     ],
     reward: { log: 'Oxygen-15 decays by positron emission onto nitrogen-15.', title: 'Below the Band', body: 'Positron emission: a proton becomes a neutron, moving oxygen-15 onto nitrogen-15. Electron capture would make the same move.' }
   }),
@@ -199,9 +199,9 @@ export const STAGES = [
     prompt: 'Polonium-210 holds 84 protons, more than any stable nucleus: which decay does it undergo?',
     Z: 84, N: 126, label: 'Polonium-210', z: [76, 90], n: [118, 132], answer: 'alpha',
     hints: [
-      'Tap each move and watch where it would take polonium-210.',
-      'Notice where the filled squares end, and which move gets back among them.',
-      'Only one move lowers the number of protons by more than one.'
+      'Find polonium-210 on the chart and the last column that has filled squares.',
+      'Count how many protons polonium-210 has beyond that last column.',
+      'Compare how many protons each arrow takes away with how far polonium-210 is past the band\'s end.'
     ],
     reward: { log: 'Polonium-210 decays by alpha decay onto lead-206.', title: 'Past the End', body: 'Alpha: it takes away two protons and two neutrons at once, landing on lead-206. No nucleus with more than 83 protons is stable.' }
   }),
@@ -244,9 +244,9 @@ export const STAGES = [
     prompt: 'A sealed vial holds a nucleus of 27 protons and 33 neutrons: which decay will it undergo?',
     Z: 27, N: 33, label: 'The vial', z: [20, 32], n: [24, 38], answer: 'beta',
     hints: [
-      'Tap each move and watch where it would take the vial\'s nucleus.',
-      'Compare the vial\'s square with the filled square in the same column.',
-      'A nucleus with more neutrons than the stable one of its element needs a move that swaps a neutron for a proton.'
+      'Find the vial\'s square on the chart and the filled squares in its column.',
+      'Compare the vial\'s neutrons with those of the stable nucleus of the same element.',
+      'Follow each arrow from the vial\'s square in your head and ask which one heads toward the filled squares.'
     ],
     reward: { log: 'Cobalt-60 decays by beta decay onto nickel-60.', title: 'One Neutron Too Many', body: 'Beta decay: one neutron more than cobalt-59, the stable one, so a neutron becomes a proton, and cobalt-60 becomes nickel-60.' }
   })

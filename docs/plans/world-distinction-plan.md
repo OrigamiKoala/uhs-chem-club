@@ -246,9 +246,18 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Lanternfall | | | | | | |
 | Tallow | | | | | | |
 | Thornmere (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:thornmere`) | not yet |
+| Cinder Halo (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:cinderhalo`) | not yet |
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Cinder Halo, 2026-11-14 (branch `world/unit14`).** Built new as the row says. `world-shape.mjs`: bench ground -12.50 to -2.00 m (10.5 m),
+relief 20.58 m, housed 6 of 6 (R8 R8 R8 R8 R8 R8), no cloned coordinates, no plate in view from the spawn. `perf-worlds.mjs`: 142 draws,
+152k triangles. It uses the shared layers as they are: `lib/cover.js` (`makeCover`, twelve boxes: six cells and six vestibules) and
+`tools/lib/world-shape-checks.mjs`; `lib/workings.js` was not needed (each cell is its host's own body on a crater floor). New and
+world-local: a height field that is the lowest of the plain and every crater floor's and cutting's wall rise, so floors are flat and
+every wall rises from the walk; a dog-leg vestibule on every cell, checked by a ray from outside the vestibule to the plate. Spec,
+build record and the owner's viewing list: `docs/plans/cinderhalo-world.md` section 8.
 
 **Thornmere, 2026-11-14 (branch `world/unit13`).** Built new, not rebuilt: there was no site before. `world-shape.mjs`: bench
 ground 1.00 to 4.80 m (3.8 m), relief 6.40 m, housed 6 of 6 (R7 R8 R6 R7 R4 R7), no cloned coordinates. `perf-worlds.mjs`:

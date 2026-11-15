@@ -7,8 +7,8 @@
  * (electron capture); or the nucleus settles and a gamma ray leaves. What leaves is drawn and counted. The counts after may be hidden
  * (`hideAfter`), so the student works out what is left from what left.
  *
- * `follow: <chart id>` draws the nucleus of the square picked on that chart instead, with the pushes between its protons (every pair) and
- * the holds between touching nucleons, and prints how many of each the drawing has.
+ * `follow: <chart id>` draws the nucleus of the square picked on that chart instead, with the repulsion between its protons (every pair)
+ * and the strong force's hold between touching nucleons, and prints how many of each the drawing has.
  */
 
 import { DECAY, decayOf, symbolOf, nameOf } from '../../engine/nucdata.js';
@@ -124,7 +124,7 @@ function paintPushes(ctx, f, F, state, b) {
   for (let i = 0; i < prot.length; i++) for (let j = i + 1; j < prot.length; j++) { ctx.beginPath(); ctx.moveTo(F.x(prot[i].x), F.y(prot[i].y)); ctx.lineTo(F.x(prot[j].x), F.y(prot[j].y)); ctx.stroke(); }
   drawNucleus(ctx, F, cx, cy, R, isP);
   say(ctx, `${nameOf(Z)}-${n}`, F.x(2.2), F.y(8.4), F.size(1.9, 6.4), { color: C.text, weight: 600 });
-  foot(ctx, f, F, `${pushes} pushes between protons · ${holds} holds between touching nucleons`, C.text);
+  foot(ctx, f, F, `${pushes} proton pairs repelling · ${holds} touching pairs held`, C.text);
 }
 
 function paintNuc(ctx, f, state, b) {

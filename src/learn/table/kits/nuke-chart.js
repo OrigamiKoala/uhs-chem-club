@@ -7,7 +7,7 @@
  *   pick     a tap on a square picks it (the answer, or a reading)
  *   columns  a tap on a column reads that element's stable nuclei (for a chart too fine to tap square by square)
  *   walk     "Alpha" and "Beta" keys move a marker from `start` one decay at a time and draw its path (`props.path`, kept by `dialed`)
- *   move     the legend's keys are the answer; the move chosen is drawn from the first mark
+ *   move     the legend's keys are the answer; the move chosen is drawn from the first mark (unless `preview: false`)
  */
 
 import { stable, stableOf, symbolOf, nameOf, stepOf, DECAY } from '../../engine/nucdata.js';
@@ -15,7 +15,7 @@ import { registerFixture } from './nuke-registry.js';
 import { C, frameOf, say, title, foot, box, key, keyRow, nucSym } from './nuke-draw.js';
 import { chartDims, chartPick, chartMove, walkAt, MOVES } from './nuke-chart-read.js';
 
-export function nchartFixture(id, at, { z, n, band = false, line = false, marks = [], eq = null, legend = false, mode = 'pick', start = null, w = 96, h = 50, title: ttl = 'Chart of nuclides', reading = true } = {}) {
+export function nchartFixture(id, at, { z, n, band = false, line = false, marks = [], eq = null, legend = false, mode = 'pick', start = null, w = 96, h = 50, title: ttl = 'Chart of nuclides', reading = true, preview = true } = {}) {
   const cells = (z[1] - z[0] + 1) * (n[1] - n[0] + 1);
   const dials = {};
   const hidden = [];
@@ -25,7 +25,7 @@ export function nchartFixture(id, at, { z, n, band = false, line = false, marks 
   if (legend || mode === 'move') { dials.move = { min: 0, max: 3, step: 1, value: 0, label: 'Move' }; hidden.push('move'); }
   return {
     id, kind: 'nchart', label: ttl, at: { ...at }, size: { w, h }, dials, noRun: true,
-    props: { z, n, band, line, marks, eq, legend: legend || mode === 'move', mode, start, path: '', reading, hidden }
+    props: { z, n, band, line, marks, eq, legend: legend || mode === 'move', mode, start, path: '', reading, preview, hidden }
   };
 }
 
@@ -140,7 +140,8 @@ function paintChart(ctx, f, state, b) {
     });
     // The move chosen, drawn from the first mark.
     const from = p.marks[0];
-    if (mv && from) {
+    // With `preview: false` the move chosen is lit in the legend only: where it lands is for the student to work out.
+    if (mv && from && p.preview !== false) {
       const s = stepOf(mv);
       const to = { Z: from.Z + s.dZ, N: from.N + s.dN };
       arrow(ctx, F, G.X(from.Z) + G.cell / 2, G.Y(from.N) + G.cell / 2, G.X(to.Z) + G.cell / 2, G.Y(to.N) + G.cell / 2);

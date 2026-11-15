@@ -285,3 +285,86 @@ North: the broken shell of a cooling tower on the plain. East: a line of transmi
 ## 8. Build record
 
 (appended as phases finish)
+
+### State at 2026-11-14, end of the world build (branch `world/unit14`)
+
+**Built:** `nucdata.js` (planners and data, held to source values by `tools/lib/cinderhalo/data-checks.mjs`); the `nuke` kit (counter rig with
+shield slot, charged plates, temperature keys and lead housing; sealed drums; tissue strip; nucleus view with five decays and a
+repulsion-and-hold drawing; chart of nuclides with pick, columns, walk and move modes and a live nuclear equation; decaying sample with
+one or two grids, a clock and a count or ln plot; balance; binding-energy curve; chain chamber; answer list; lead clip) with Tour words for
+every fixture and piece; six benches of 8 stages and the Transmutation Core (5 phases): 53 stages, all `live`. Each bench has its lead
+line, its two bank problems (worked problems on `q3`, `q5`, `q6`), glossary terms, recap primers (`nucleons`, `firstorder`) and a debrief
+story animation (`src/ui/story-scenes-cinderhalo.js`). The boss has an arena body (`buildCore` in `boss-models.js`), a bench body
+(`foebody.js`, the Flare's, renamed, as the Coil's is), a portrait and lines (`foes.js`), a saga clue (`clue_cinderhalo_core`, "The Rod
+Log") and the `boss-core` arena spot. The walkable site, layout generator, `verify:cinderhalo`, and the registrations in `stage.js`
+(Cinder Halo joins the dark worlds whose flashlight is on by default), `voyage.js`, `worlds3d.js`, `boss-arena.js` and every tool's list.
+
+**Where the build parted from the spec (sections 3 and 6):**
+
+- `q2` s3's new sources are S (beta), T (alpha), U (gamma); the alpha source is a second polonium-210, not americium (whose gamma would
+  have drawn straight tracks beside the bent ones).
+- `q2` s5 and s8 carry no how-to note (no clear strip on a full table); the Tour and the rig's own foot line say how to count.
+- `q4` s3 is titled *Repulsion and the Strong Force*; "push" and "hold" were stand-in words caught by the cold read.
+- `q4` s4, s5, s6, s8: the chart no longer draws where a chosen move lands (it made a choice of three into a search); a miss names it.
+- `q4` s7 reads gold-197's neutrons from the chart (the spec said only Z and A); the stage is the division, worked first on iron-56.
+- `q5` s3 and s4 answer on a list, not cards; `q5` s7's bone count is a plate beside the grid; `q5` s8's clock steps one hour.
+- `q6` s5 draws no curve (the balance is the evidence); `q6` s6's briefing says *a fission like the one you watched* frees three
+  neutrons (uranium-235 averages about 2.4; the channel on the bench frees 3).
+- Site: the arena moved to boss (0, −15, −12), player (0, 4) and the dome to (0, −26) so the fallen plates stay on the floor; the vestibule
+  ends flush with the cell's side wall (8.6 m in the spec left a gap beside the room); the drum store's ribs are open cylinder segments.
+- Commits: benches 1 to 3 and the site went in one commit (the slice and the next two benches were checked together before it).
+
+**Measured (Node).** Before: Cinder Halo had no site (`world-shape.mjs` and `perf-worlds.mjs` listed no `cinderhalo`). After:
+
+| | world-shape (ground, relief, housed) | perf-worlds (draws, k tris) |
+| --- | --- | --- |
+| cinderhalo | −12.50 to −2.00 m, 20.58 m, 6/6 (R8 R8 R8 R8 R8 R8) | 142, 152 |
+| ligar (reference, unchanged) | −2.60 to 0.89 m, 21.55 m, 7/9 | 566, 867 |
+| kettle (reference, unchanged) | −2.40 to 3.20 m, 5.60 m, 8/8 | 233, 113 |
+
+No two worlds share bench coordinates. No plate is in view from the spawn. `glsl-check.mjs cinderhalo`: every patched shader compiles; the
+sky shader (with the ring) was also compiled by hand with `glslangValidator`.
+
+**Archived:** nothing (there was no site, and the four-quest draft chart was replaced in place; its ids and titles are recorded in the
+chart file's header and in section 0).
+
+**Not done:** no stage drawn to PNG (no Node canvas in the project); nothing seen in a browser; no stage played by a hand.
+
+### The owner's 3D viewing list
+
+1. **The spawn, facing south.** In view: the landing apron of packed ash, the cutting west toward the first crater with a lamp at its mouth,
+   the planet's ring across the sky, and south the great crater's far rim and the reactor stack beyond it. Failure: a bench plate in view, a
+   lit doorway visible from here, or the ring drawn as a glow.
+2. **The tip of the overlook (0, 34), facing south.** In view: down a 15 m bowl to the split dome on a dark glassy floor. Failure: the bowl
+   reads as a flat plate, or the edge has no wall and looks walkable.
+3. **Halfway down the first cutting, facing west.** In view: crater walls banded by height on both sides, the first crater's floor opening
+   ahead. Failure: the cutting reads as a road on a plain.
+4. **Crater 1's floor, facing the drum store's vestibule.** In view: a concrete cell against the crater wall, rock rising above its roof,
+   its vestibule opening at the side, a lamp post by it. Failure: a hut standing in the open.
+5. **Inside the drum store at the plate, facing the back.** In view: the barrel vault on ribs, racks of drums two high behind and down the
+   left. Failure: sky light inside, the vault open at its ends, the room cramped.
+6. **The shield cell's plate, facing the lead wall.** In view: lead bricks, the dark window, two manipulator arms. Failure: an arm in the
+   lean-in view.
+7. **The target hall's plate, facing the back.** In view: the beam pipe through the back wall on its magnets to the target block, the stepped
+   roof. Failure: the pipe overlapping the bench.
+8. **The separation hall from its door.** In view: the tallest cell, two rows of tall columns with copper headers, trusses. Failure: columns
+   closing the space across the plate.
+9. **The cask vault's plate.** In view: two ranks of vented casks behind the plate, more down the left wall, air slots high in the back.
+10. **The pool hall's plate.** In view: the raised pool with dark water and racks under it, the crane bridge over it, the monitor roof.
+    Failure: the water drawn bright or see-through to the floor.
+11. **The lowest cell (crater 6, −12.5 m) looking back up the cutting from crater 5.** In view: the descent; you should feel you have come
+    down a long way from the landing.
+12. **The Core's ground (0, 4), facing south.** In view: the split dome with the vessel standing in it, the rod drives, fallen roof plates to
+    either side, the boss in front of the split. Failure: the boss inside the dome or a plate under its feet.
+
+### Stages only the owner can judge by playing
+
+- `q1` s5 (the cold count): whether a student trusts that 1,846 and 1,860 are "the same" when the rig scatters by about 1 %.
+- `q2` s1 to s3: whether the bend of the alpha tracks is visible enough at phone size.
+- `q2` s6: whether the tissue strip reads as cells and breaks.
+- `q3` s7: whether fourteen taps feel like discovery or chores.
+- `q4` s3: whether the drawn repulsion lines and holds read at all on a nucleus of 208 discs 44 units wide.
+- `q4` s4 to s8: whether the legend's arrows are read as moves on a fine chart.
+- `q5` s6, s7 and boss phases 4 and 5: whether the typed worked figures feel like understanding to a 12-year-old.
+- `q6` s6: whether a student sees "holds steady" in the generation counts.
+- The counter's foot line and the chart's equation line at 375 px landscape (measured only at 340 px and 812 × 375).

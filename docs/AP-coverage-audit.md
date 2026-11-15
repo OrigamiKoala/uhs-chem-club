@@ -6,7 +6,7 @@ Audited Nov 13, 2026 against `docs/ap-chemistry-course-and-exam-description.pdf`
 
 - **Source of truth:** `docs/ap-chemistry-course-and-exam-description.pdf` (all 91 topics, learning objectives, essential knowledge statements, `EQN:` lines, and exclusion statements).
 - **Built track:** All 12 live Learn worlds (`unit01`–`unit12`, 107 charted quests, all `src/learn/quests/` modules and `src/learn/bank/*.json` practice + worked problems).
-- **Content beyond AP:** Worlds/benches beyond the AP CED (`unit02/q5-numbers`, `unit02/q10-wavefunctions`, `unit03/q9-orbitals`, `unit04/q5-speed` Graham's law/effusion, `unit06/q5-crossing` phase diagrams, `unit06/q7-separate` boiling-point elevation, `unit07/q9-hsab`, `unit12` Lodestone, `unit13` Thornmere (built 2026-11-14, organic chemistry; its `q6-polymers` also gives 3.1.A.5 and 3.2.A.7 a bench of their own, and `q4-groups` stages 3 to 8 work 8.6 on carboxylic acids and amines), and draft `unit14`) are preserved as-is.
+- **Content beyond AP:** Worlds/benches beyond the AP CED (`unit02/q5-numbers`, `unit02/q10-wavefunctions`, `unit03/q9-orbitals`, `unit04/q5-speed` Graham's law/effusion, `unit06/q5-crossing` phase diagrams, `unit06/q7-separate` boiling-point elevation, `unit07/q9-hsab`, `unit12` Lodestone, `unit13` Thornmere (built 2026-11-14, organic chemistry; its `q6-polymers` also gives 3.1.A.5 and 3.2.A.7 a bench of their own, and `q4-groups` stages 3 to 8 work 8.6 on carboxylic acids and amines), and `unit14` Cinder Halo (built 2026-11-14, nuclear chemistry; its `q5-half-gone` also works CED 5.3.A.5 and 5.3.A.6 on radioactive decay)) are preserved as-is.
 - **Boundary of this pass:** Where a quantitative or qualitative AP gap could be patched on an existing bench without modifying quest/stage code, a guided `worked` problem was added to `src/learn/bank/<unit>.json` and verified with `npm run verify:learn`. Where a missing topic is best covered by a new stage or bench, it is **flagged below** and scheduled in [ap-gap-implementation-plan.md](file:///Users/carlliu/chem-3d/docs/plans/ap-gap-implementation-plan.md) with no quest code written.
 
 ---
@@ -100,7 +100,7 @@ With `unit01`–`unit11` built, the two cut stages restored (`unit02/q9-absorb` 
 | --- | --- | --- | --- | --- | --- |
 | 5.1 | Reaction rates | `unit11/q1-watch` (s1–s6), `q1-watch#w` | Covered | Covered | **Covered** |
 | 5.2 | Introduction to rate law | `unit11/q2-law` (s1–s5), `q2-law#w` | Covered | Covered | **Covered** |
-| 5.3 | Concentration changes over time (0th/1st/2nd, `t½`) | `unit11/q3-time` (s1–s7), `q3-time#w`, `boss-flare#w` (added) | Covered | Covered | **Covered** |
+| 5.3 | Concentration changes over time (0th/1st/2nd, `t½`) | `unit11/q3-time` (s1–s7), `q3-time#w`, `boss-flare#w` (added); 5.3.A.5 and 5.3.A.6 (radioactive decay as first order) also `unit14/q5-half-gone` (s1, s3–s6), `boss-core` phase 4 | Covered | Covered | **Covered** |
 | 5.4 | Elementary reactions | `unit11/q5-steps` (s4) | Covered | n/a | **Covered** |
 | 5.5 | Collision model | `unit11/q4-collide` (s1–s4) | Covered | n/a | **Covered** |
 | 5.6 | Reaction energy profile | `unit11/q4-collide` (s5–s9), `q4-collide#w`, `boss-flare#w` (added) | Covered | Covered | **Covered** |

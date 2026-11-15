@@ -173,7 +173,7 @@ export const STAGES = [
     }),
     hints: [
       'The clip shows the same fizzing tablet in warm water and in ice-cold water.',
-      'Ask whether the decay you watched happened among the electrons, where reactions happen, or somewhere else.',
+      'Ask whether the decay you watched happened among the electrons, where chemical reactions happen, or somewhere else.',
       'Cold slows the motion of atoms; think about which part of the atom that motion could reach.'
     ],
     check(state) {

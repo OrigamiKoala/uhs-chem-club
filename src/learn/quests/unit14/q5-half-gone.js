@@ -62,7 +62,7 @@ export const STAGES = [
     hints: [
       'Tap "Wait 1 day" to move the clock on, and "Back" to move it back.',
       'Watch the count of nuclei left under the grid against the 256 you started with.',
-      'Half of 256 is 128, so stop the clock on the day the grid first shows that many left.'
+      'Stop the clock on the first day the grid holds half the nuclei it started with.'
     ],
     check(state) {
       const r = decayRead(state.table, 'grid');
@@ -201,7 +201,7 @@ export const STAGES = [
     hints: [
       'Run the clock and watch the points on the plot of ln(nuclei left).',
       'Read the half-life from the grid as you did on the first stage.',
-      'Put the half-life into the equation on the plate and solve it for k.'
+      'The plate links the half-life you can read off the grid to k, as the worked case did for cobalt-60.'
     ],
     check(state) {
       const v = entryNumber(state.table, 'k');

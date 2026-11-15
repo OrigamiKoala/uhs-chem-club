@@ -84,7 +84,7 @@ export const STAGES = [
   platesStage({
     id: 's1-straight',
     title: 'Between the Plates',
-    briefing: 'Two charged plates stand either side of the tracks: positive above, negative below. Opposite charges attract, and like charges push apart.',
+    briefing: 'Two charged plates stand either side of the tracks: positive above, negative below. Opposite charges attract, and like charges repel.',
     prompt: 'Which source gives off radiation with no charge?',
     cards: [['src-p', 'po210', 'Source P'], ['src-q', 'sr90', 'Source Q'], ['src-r', 'co60s', 'Source R']],
     slotLabel: 'No charge',

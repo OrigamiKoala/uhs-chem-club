@@ -27,7 +27,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 | **11** | **Quicklight** | Kinetics & Rate Laws | Unit 5 (5.1–5.11) | Charted | — | Kinetic kit | Planned | `docs/plans/learn-quests.md` |
 | **12** | **Lodestone** | Transition Metals | Beyond the exam | 6 + Boss | 46 | Lode kit (`lode.js`) | Live | `docs/plans/lodestone-world.md` |
 | **13** | **Thornmere** | Organic & Polymers | Beyond the exam (touches 2.5–2.7, 3.1, 3.1.A.5, 3.2.A.7, 8.6) | 6 + Boss | 53 | Thorn kit (`thorn.js`) | Live | `docs/plans/thornmere-world.md` |
-| **14** | **Cinder Halo** | Nuclear & AP Capstone | Nuclear / Integrated | Charted | — | Capstone | Planned | `docs/plans/learn-quests.md` |
+| **14** | **Cinder Halo** | Nuclear Chemistry | AP 5.3.A.5–5.3.A.6; the rest beyond the exam | 6 + Boss | 53 | Nuke kit (`nuke.js`) | Live | `docs/plans/cinderhalo-world.md` |
 
 ---
 

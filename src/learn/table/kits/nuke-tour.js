@@ -10,7 +10,7 @@ import './heat-tour.js';
 const FIXTURES = {
   'nuke:ncount': {
     title: 'Counter', dials: false,
-    text: 'A sample sits on the left and a tube on the right; every track that reaches the tube is one count. Drag a card into the Sample slot and press the key to count for one minute; the card keeps its count. Where the rig has a shield slot, plates or keys, a card in the shield slot stands in the tracks\' way, the plates pull on charged tracks, and the keys set the temperature or close lead round the tube.'
+    text: 'A sample sits on the left and a tube on the right; every track that reaches the tube is one count. Drag a card into the Sample slot and press the key to count for one minute; the card keeps its count. Where the rig has a shield slot, plates or keys, a card in the shield slot stands in the tracks\' way, the plates pull on charged tracks (drawn bending more than plates this size really would), and the keys set the temperature or close lead round the tube.'
   },
   'nuke:nnuc': {
     title: 'Nucleus view', dials: false,
