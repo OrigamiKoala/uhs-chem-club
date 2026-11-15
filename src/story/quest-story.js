@@ -47,6 +47,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: each decay makes a new element, step by step, from uranium down to lead.'
   },
+  'unit14/q4-stability': {
+    scene: 'ch-stability',
+    beats: [
+      { to: 0.32, say: 'Up to calcium the stable squares sit on the line: about as many neutrons as protons.' },
+      { to: 0.65, say: 'Heavier, the band bends above it: lead-208 holds 126 neutrons with its 82 protons, because neutrons hold without pushing.' },
+      { to: 0.96, say: 'Carbon-14, above the band, decays by beta decay onto nitrogen-14, a filled square.' }
+    ],
+    filed: 'Filed: the Fifth\'s store is full of nuclei off the band; they cannot keep.'
+  },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
     scene: 'thorn-chains',

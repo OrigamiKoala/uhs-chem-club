@@ -104,7 +104,7 @@ function paintDecay(ctx, f, F, b) {
 /** The nucleus of the picked square, with every push between two protons and every hold between two touching nucleons. */
 function paintPushes(ctx, f, F, state, b) {
   const pick = chartPick(state, f.props.follow);
-  if (!pick) { say(ctx, 'Tap a square on the chart', F.x(f.size.w / 2), F.y(f.size.h / 2), F.size(1.8, 6.2), { align: 'center', color: C.dim }); return; }
+  if (!pick || pick.N == null) { say(ctx, 'Tap an element on the chart', F.x(f.size.w / 2), F.y(f.size.h / 2), F.size(1.8, 6.2), { align: 'center', color: C.dim }); return; }
   const { Z, N } = pick; const n = Z + N;
   const cx = f.size.w * 0.5; const cy = 9 + (f.size.h - 17) / 2;
   const R = Math.min((f.size.h - 19) / 2, f.size.w * 0.3) * Math.min(1, Math.sqrt(n / 80) * 0.6 + 0.4);

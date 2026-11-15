@@ -3,7 +3,7 @@
  * the move chosen from the legend. Pure; shared by the chart's painter, the nucleus view that follows it, and the quests' checks.
  */
 
-import { stepOf } from '../../engine/nucdata.js';
+import { stepOf, stableOf } from '../../engine/nucdata.js';
 
 export const MOVES = Object.freeze(['alpha', 'beta', 'positron']);
 
@@ -29,7 +29,11 @@ export function chartPick(state, id) {
   const v = Math.round(f.dials.pick?.value || 0);
   if (!v) return null;
   const d = chartDims(f);
-  if (f.props.mode === 'columns') return { Z: d.z0 + v - 1, N: null };
+  if (f.props.mode === 'columns') {
+    // A column picks an element; the nucleus shown for it is its heaviest stable one (none past bismuth).
+    const Z = d.z0 + v - 1; const st = stableOf(Z);
+    return { Z, N: st.length ? st[st.length - 1] - Z : null };
+  }
   const i = v - 1;
   return { Z: d.z0 + (i % d.cols), N: d.n0 + Math.floor(i / d.cols) };
 }

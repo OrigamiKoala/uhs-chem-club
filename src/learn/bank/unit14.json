@@ -208,6 +208,60 @@
         ],
         "finish": "Only alpha decay changes the mass number, by 4 each: the fall in mass number counts the alphas, and the betas make up the atomic number."
       }
+    },
+    "q4-stability": {
+      "problems": [
+        {
+          "id": "q4-stability#b1",
+          "quest": "q4-stability",
+          "question": "Sodium-24 has 11 protons and 13 neutrons; the only stable sodium has 12 neutrons. Which decay will sodium-24 undergo?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Beta decay"
+            },
+            {
+              "id": "b",
+              "label": "Positron emission"
+            },
+            {
+              "id": "c",
+              "label": "Alpha decay"
+            },
+            {
+              "id": "d",
+              "label": "None: it is stable"
+            }
+          ],
+          "answer": "a",
+          "explanation": "It holds one neutron more than the stable sodium, so it sits above the band; beta decay turns a neutron into a proton and brings it onto magnesium-24, a stable nucleus."
+        },
+        {
+          "id": "q4-stability#b2",
+          "quest": "q4-stability",
+          "question": "Why do heavy stable nuclei hold more neutrons than protons?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Every proton pushes on every other, and neutrons add the strong nuclear force's hold without adding any push"
+            },
+            {
+              "id": "b",
+              "label": "Neutrons have a charge that cancels the protons'"
+            },
+            {
+              "id": "c",
+              "label": "Protons slowly turn into neutrons as an atom ages"
+            },
+            {
+              "id": "d",
+              "label": "A nucleus needs as many neutrons as electrons"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The push between protons grows with every pair of them, but the strong nuclear force holds only touching nucleons, so a big nucleus needs extra neutrons to stay together."
+        }
+      ]
     }
   }
 }

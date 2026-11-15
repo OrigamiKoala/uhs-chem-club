@@ -704,7 +704,7 @@
       "label": "Bench 4 - Which Nuclei Last",
       "structure": "separation-hall",
       "crater": "C4",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,

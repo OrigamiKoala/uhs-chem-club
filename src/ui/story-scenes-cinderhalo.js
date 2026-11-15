@@ -6,7 +6,7 @@
 
 import { C as K, text, ground, win, ease } from './story-kit.js';
 import { C, drawNucleus, protonSlots, nucleon, gammaWave, lepton, commas, nucSym } from '../learn/table/kits/nuke-draw.js';
-import { countsOf, decayOf, symbolOf, nameOf, leftAt, generations, BE_PER_NUCLEON } from '../learn/engine/nucdata.js';
+import { countsOf, decayOf, symbolOf, nameOf, leftAt, generations, BE_PER_NUCLEON, stableOf as STABLE_OF } from '../learn/engine/nucdata.js';
 
 /** The bench helpers draw in fixture units; on the story plate one unit is one pixel. */
 export const PX = Object.freeze({ x: d => d, y: d => d, len: d => d, size: (k, min = 6.5) => Math.max(min, k) });
@@ -137,6 +137,26 @@ function equations(ctx, w, h, t) {
   }
 }
 
+/* ---- q4-stability: the band of stability, light and heavy; carbon-14 moved onto it ---- */
+function stability(ctx, w, h, t) {
+  ground(ctx, w, h);
+  const draw = (z1, n1, k) => {
+    const cell = Math.min(560 / z1, 340 / n1); const X = z => 200 + (z - 1) * cell; const Y = n => 450 - n * cell;
+    for (let Z = 1; Z <= z1; Z++) for (const A of (STABLE_OF(Z))) { const N = A - Z; if (N > n1 || Z > z1 * k + 1) continue; ctx.fillStyle = '#8a8070'; ctx.fillRect(X(Z), Y(N) - cell, Math.max(2, cell - 1), Math.max(2, cell - 1)); }
+    ctx.strokeStyle = K.dim; ctx.setLineDash?.([6, 5]); ctx.beginPath(); ctx.moveTo(X(1), Y(1)); ctx.lineTo(X(Math.min(z1, n1)), Y(Math.min(z1, n1))); ctx.stroke(); ctx.setLineDash?.([]);
+    return { X, Y, cell };
+  };
+  if (t < 0.33) { head(ctx, 'Up to calcium'); draw(20, 28, win(t, 0.03, 0.28)); }
+  else if (t < 0.66) { head(ctx, 'The whole band'); const g = draw(83, 127, win(t, 0.36, 0.6)); if (t > 0.58) text(ctx, 'lead-208: 82 protons, 126 neutrons', g.X(82) - 10, g.Y(126) - 20, { size: 20, color: K.amber, align: 'right' }); }
+  else {
+    head(ctx, 'Carbon-14 decays onto the band');
+    const g = draw(10, 12, 1); const k = win(t, 0.7, 0.9);
+    const x0 = g.X(6) + g.cell / 2; const y0 = g.Y(8) - g.cell / 2; const x1 = g.X(7) + g.cell / 2; const y1 = g.Y(7) - g.cell / 2;
+    ctx.strokeStyle = K.amber; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + (x1 - x0) * k, y0 + (y1 - y0) * k); ctx.stroke(); ctx.lineWidth = 1;
+    text(ctx, k < 1 ? 'carbon-14' : 'nitrogen-14, stable', x1 + 30, y1, { size: 20, color: K.amber });
+  }
+}
+
 export const CINDERHALO_SCENES = {
   'ch-warm': warm,
   // q2-what-comes-off
@@ -144,6 +164,7 @@ export const CINDERHALO_SCENES = {
   // q3-equations
   'ch-equations': equations,
   // q4-stability
+  'ch-stability': stability,
   // q5-half-gone
   // q6-shortfall
   // boss-core
