@@ -213,8 +213,11 @@ export function layoutSystems(list) {
  */
 export function labelSides(systems) {
   const out = {};
-  const clash = (s, side) => systems.some(o =>
-    o !== s && Math.abs(o.y - s.y) < 34 && (o.x - s.x) * side > 0 && (o.x - s.x) * side < 175);
+  const edgeClash = (s, side) =>
+    (side === 1 && s.x > GALAXY_W - 185) ||
+    (side === -1 && s.x < 185);
+  const clash = (s, side) => edgeClash(s, side) || systems.some(o =>
+    o !== s && Math.abs(o.y - s.y) < 38 && (o.x - s.x) * side > 0 && (o.x - s.x) * side < 185);
   for (const s of systems) {
     const outward = s.x >= CORE.x ? 1 : -1;
     if (!clash(s, outward)) out[s.id] = outward;
@@ -286,18 +289,39 @@ export function planetPx(view, w, h) {
   return Math.max(5, Math.min(90, 7.5 * Math.pow(rel, 0.85) + 1.5));
 }
 
-/** The system under a screen point (or the nearest within `slop` px, 22 for a finger), else null. */
-export function hitSystem(systems, view, w, h, sx, sy, slop = 22, time = 0) {
+/** The system under a screen point (planet circle or its label), else null. */
+export function hitSystem(systems, view, w, h, sx, sy, slop = 24, time = 0) {
   let best = null;
   let bestD = Infinity;
-  const reach = Math.max(slop, planetPx(view, w, h) * 1.6);
+  let bestLabel = null;
+  let bestLabelD = Infinity;
+  const pr = planetPx(view, w, h);
+  const reach = Math.max(slop, pr * 1.8);
+  const showName = w >= 480 || view.k / fitScale(w, h) >= 1.5;
   for (const s of systems) {
     const pos = planetPos(s, time);
     const p = worldToScreen(view, w, h, pos.x, pos.y);
     const d = Math.hypot(p.x - sx, p.y - sy);
     if (d <= reach && d < bestD) { best = s; bestD = d; }
+    if (s.name || s.code) {
+      const side = s.labelSide === undefined ? 1 : s.labelSide;
+      const lx = side === 0 ? p.x : p.x + side * (pr + 12);
+      const dy = side === 0 ? pr + 16 : 0;
+      const nameW = showName && s.name ? s.name.length * 8.2 : 0;
+      const codeW = s.code ? s.code.length * 6.5 : 0;
+      const lw = Math.max(44, nameW, codeW);
+      const pad = 6;
+      const x0 = (side === 0 ? lx - lw / 2 : side > 0 ? lx : lx - lw) - pad;
+      const x1 = (side === 0 ? lx + lw / 2 : side > 0 ? lx + lw : lx) + pad;
+      const y0 = p.y + dy - 14 - pad;
+      const y1 = p.y + dy + (showName ? 16 : 2) + (pr >= 11 && showName ? 12 : 0) + pad;
+      if (sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1 && d < bestLabelD) {
+        bestLabel = s;
+        bestLabelD = d;
+      }
+    }
   }
-  return best;
+  return best || bestLabel;
 }
 
 /* ------------------------------------------------------------------
@@ -1112,13 +1136,13 @@ export function mountGalaxyMap(root, opts) {
     if (drag) {
       const dx = p.x - drag.sx;
       const dy = p.y - drag.sy;
-      if (Math.abs(dx) + Math.abs(dy) > 5) drag.moved = true;
+      if (Math.hypot(dx, dy) > 8) drag.moved = true;
       if (drag.moved) {
         view = clampView({ k: view.k, cx: drag.cx - dx / view.k, cy: drag.cy - dy / view.k }, w, h);
         dirty = true;
       }
     } else if (e.pointerType === 'mouse') {
-      const hit = hitSystem(nodes, view, w, h, p.x, p.y, 16, prefersReduced ? 0 : lastFrame);
+      const hit = hitSystem(nodes, view, w, h, p.x, p.y, 24, 0);
       const id = hit ? hit.id : null;
       if (id !== hoverId) { hoverId = id; canvas.style.cursor = id ? 'pointer' : 'grab'; dirty = true; }
     }
@@ -1130,7 +1154,7 @@ export function mountGalaxyMap(root, opts) {
     if (pointers.size < 2) pinch = null;
     if (drag && pointers.size === 0) {
       if (!drag.moved) {
-        const hit = hitSystem(nodes, view, w, h, p.x, p.y, 22, prefersReduced ? 0 : lastFrame);
+        const hit = hitSystem(nodes, view, w, h, p.x, p.y, 24, 0);
         if (hit) select(hit.id);
       }
       drag = null;
@@ -1141,7 +1165,7 @@ export function mountGalaxyMap(root, opts) {
   canvas.addEventListener('pointerleave', () => { if (hoverId) { hoverId = null; dirty = true; } });
   canvas.addEventListener('dblclick', e => {
     const p = local(e);
-    const hit = hitSystem(nodes, view, w, h, p.x, p.y, 22, prefersReduced ? 0 : lastFrame);
+    const hit = hitSystem(nodes, view, w, h, p.x, p.y, 24, 0);
     if (hit) select(hit.id, { focus: true });
     else zoomAt(p.x, p.y, 1.8);
   });
