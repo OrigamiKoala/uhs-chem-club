@@ -59,7 +59,7 @@ The core doctrine is: **teach chemistry clearly, intuitively, and hands-on, with
 
 - `npm run dev`: Start local Vite dev server (:3000) with API proxy.
 - `npm run build`: Production build into `dist/`.
-- `npm run verify`: Complete test and verification suite (`verify:learn`, `verify:table`, `verify:story`, `verify:docs`, per-world checks, etc.).
+- `npm run verify`: Complete test and verification suite (`tools/verify-all.mjs` runs all `verify:*` checks in parallel across CPU cores, then `npm run build`).
 - Reading aids (not checks): `node tools/teaching-report.mjs <unitNN> [quest] [--read|--totals]`, `node tools/perf-worlds.mjs`, `node tools/world-shape.mjs [world ...]` (ground levels, benches housed, cloned layouts), `node tools/glsl-check.mjs <world>` (compiles a world's patched shaders offline; needs `glslangValidator`).
 - **Testing discipline:** The owner play-tests in the browser; agents do NOT test in the browser. Verify changes using `npm run verify`, `npm run build`, and Node scripts.
 

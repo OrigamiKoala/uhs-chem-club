@@ -168,6 +168,7 @@ export function installDomShim({ tier = 'T4' } = {}) {
   }
   // The tier module reads a stored preference at load. Saying T4 here is how
   // the verifier gets the world every T4 player actually walks.
+  globalThis.__AVALON_HEADLESS__ = true;
   globalThis.localStorage.setItem('avalon_gfx_tier_pref', tier);
   globalThis.localStorage.setItem('avalon_gfx_rev', '3');
 

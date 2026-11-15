@@ -219,19 +219,128 @@ export function flood(world, { bound = 100, cell = 0.5, radius = 0.25, step = 0.
  */
 export function lowBodies(world, THREE, cells, { from = 0.35, clear = 2.4, every = 5, allow = null, skip = null } = {}) {
   const bodies = bodiesOf(world).filter(o => !(skip && skip(o)));
+  const CELL = 4;
+  const key = (ix, iz) => ix * 8192 + iz;
+  const meshGrid = new Map();
+  const triGrid = new Map();
+  const addTo = (map, k, item) => {
+    let arr = map.get(k);
+    if (!arr) { arr = []; map.set(k, arr); }
+    arr.push(item);
+  };
+
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+  for (const o of bodies) {
+    const box = new THREE.Box3().setFromObject(o);
+    if (box.isEmpty()) continue;
+    const x0 = Math.floor(box.min.x / CELL), x1 = Math.floor(box.max.x / CELL);
+    const z0 = Math.floor(box.min.z / CELL), z1 = Math.floor(box.max.z / CELL);
+    const span = (x1 - x0 + 1) * (z1 - z0 + 1);
+    const pos = o.geometry?.attributes?.position;
+    const triCount = pos ? (o.geometry.index ? o.geometry.index.count : pos.count) / 3 : 0;
+
+    // Large spanning meshes (terrain, merged statics) are bucketed per-triangle so rays only test local triangles.
+    if (!o.isInstancedMesh && !Array.isArray(o.material) && span > 64 && triCount > 500) {
+      const idx = o.geometry.index;
+      const mat = o.matrixWorld;
+      const side = o.material ? o.material.side : THREE.FrontSide;
+      const doubleSide = side === THREE.DoubleSide;
+      const flip = side === THREE.BackSide;
+      for (let t = 0; t < triCount; t++) {
+        const i0 = idx ? idx.getX(t * 3) : t * 3;
+        const i1 = idx ? idx.getX(t * 3 + 1) : t * 3 + 1;
+        const i2 = idx ? idx.getX(t * 3 + 2) : t * 3 + 2;
+        vA.fromBufferAttribute(pos, i0).applyMatrix4(mat);
+        vB.fromBufferAttribute(pos, flip ? i2 : i1).applyMatrix4(mat);
+        vC.fromBufferAttribute(pos, flip ? i1 : i2).applyMatrix4(mat);
+        const minX = Math.min(vA.x, vB.x, vC.x), maxX = Math.max(vA.x, vB.x, vC.x);
+        const minY = Math.min(vA.y, vB.y, vC.y), maxY = Math.max(vA.y, vB.y, vC.y);
+        const minZ = Math.min(vA.z, vB.z, vC.z), maxZ = Math.max(vA.z, vB.z, vC.z);
+        const tri = {
+          o, doubleSide, minX, maxX, minY, maxY, minZ, maxZ,
+          ax: vA.x, ay: vA.y, az: vA.z,
+          bx: vB.x, by: vB.y, bz: vB.z,
+          cx: vC.x, cy: vC.y, cz: vC.z
+        };
+        const tx0 = Math.floor(minX / CELL), tx1 = Math.floor(maxX / CELL);
+        const tz0 = Math.floor(minZ / CELL), tz1 = Math.floor(maxZ / CELL);
+        for (let ix = tx0; ix <= tx1; ix++) {
+          for (let iz = tz0; iz <= tz1; iz++) addTo(triGrid, key(ix, iz), tri);
+        }
+      }
+    } else {
+      const entry = { o, box };
+      for (let ix = x0; ix <= x1; ix++) {
+        for (let iz = z0; iz <= z1; iz++) addTo(meshGrid, key(ix, iz), entry);
+      }
+    }
+  }
+
   const ray = new THREE.Raycaster();
   const up = new THREE.Vector3(0, 1, 0);
+  const origin = new THREE.Vector3();
   const bad = [];
+  const far = clear - from;
+
   for (let k = 0; k < cells.length; k += every) {
     const [x, z, h] = cells[k];
     if (allow && allow(x, z)) continue;
-    ray.set(new THREE.Vector3(x, h + from, z), up);
-    ray.far = clear - from;
-    const hit = ray.intersectObjects(bodies, false)[0];
-    if (hit) {
-      let top = hit.object;
+    const y0 = h + from, y1 = h + clear;
+    const cellKey = key(Math.floor(x / CELL), Math.floor(z / CELL));
+
+    let bestDist = Infinity;
+    let bestObj = null;
+
+    const localMeshes = meshGrid.get(cellKey);
+    if (localMeshes) {
+      const candidates = [];
+      for (let i = 0; i < localMeshes.length; i++) {
+        const { o, box } = localMeshes[i];
+        if (x >= box.min.x && x <= box.max.x && z >= box.min.z && z <= box.max.z && box.max.y >= y0 && box.min.y <= y1) {
+          candidates.push(o);
+        }
+      }
+      if (candidates.length) {
+        origin.set(x, y0, z);
+        ray.set(origin, up);
+        ray.far = far;
+        const hit = ray.intersectObjects(candidates, false)[0];
+        if (hit && hit.distance < bestDist) {
+          bestDist = hit.distance;
+          bestObj = hit.object;
+        }
+      }
+    }
+
+    const localTris = triGrid.get(cellKey);
+    if (localTris) {
+      for (let i = 0; i < localTris.length; i++) {
+        const t = localTris[i];
+        if (x < t.minX || x > t.maxX || z < t.minZ || z > t.maxZ || t.maxY < y0 || t.minY > y1) continue;
+        // 2D XZ barycentric test for a vertical ray at (x, z) along +Y.
+        const e0x = t.bx - t.ax, e0z = t.bz - t.az;
+        const e1x = t.cx - t.ax, e1z = t.cz - t.az;
+        const ny = e0z * e1x - e0x * e1z; // y-component of (B - A) x (C - A)
+        if (!t.doubleSide && ny >= 0) continue; // FrontSide upward ray only hits downward-facing triangles (ny < 0)
+        if (Math.abs(ny) < 1e-12) continue;
+        const px = x - t.ax, pz = z - t.az;
+        const u = (pz * e1x - px * e1z) / ny;
+        if (u < 0 || u > 1) continue;
+        const v = (e0z * px - e0x * pz) / ny;
+        if (v < 0 || u + v > 1) continue;
+        const hitY = t.ay + u * (t.by - t.ay) + v * (t.cy - t.ay);
+        const dist = hitY - y0;
+        if (dist >= 0 && dist <= far && dist < bestDist) {
+          bestDist = dist;
+          bestObj = t.o;
+        }
+      }
+    }
+
+    if (bestObj) {
+      let top = bestObj;
       while (top.parent && top.parent !== world.scene) top = top.parent;
-      bad.push(`(${x.toFixed(1)}, ${z.toFixed(1)}): ${top.name || top.type} is ${(from + hit.distance).toFixed(2)} m over the floor`);
+      bad.push(`(${x.toFixed(1)}, ${z.toFixed(1)}): ${top.name || top.type} is ${(from + bestDist).toFixed(2)} m over the floor`);
       if (bad.length >= 8) break;
     }
   }

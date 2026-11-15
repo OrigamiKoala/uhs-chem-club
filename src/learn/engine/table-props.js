@@ -122,10 +122,18 @@ export function boxUVs(geo, w, h, d) {
   return geo;
 }
 
+const _slabCache = new Map();
+
 /** A rounded slab `w` x `d` in plan, `h` tall. */
 export function roundedSlab(w, d, h, rad = 0.012, bevel = 0.002) {
-  const b = Math.min(bevel, h / 3);
-  return slabGeometry(roundedRectShape(Math.max(0.002, w - 2 * b), Math.max(0.002, d - 2 * b), Math.max(0.001, rad - b)), h, bevel);
+  const key = `${w}|${d}|${h}|${rad}|${bevel}`;
+  let base = _slabCache.get(key);
+  if (!base) {
+    const b = Math.min(bevel, h / 3);
+    base = slabGeometry(roundedRectShape(Math.max(0.002, w - 2 * b), Math.max(0.002, d - 2 * b), Math.max(0.001, rad - b)), h, bevel);
+    _slabCache.set(key, base);
+  }
+  return base.clone();
 }
 
 /** A tray's walls: a rounded rectangle with the middle taken out. */

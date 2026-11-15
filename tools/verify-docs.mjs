@@ -100,7 +100,8 @@ const LIVE_DOCS = ['PRODUCT.md', 'CLAUDE.md', 'DESIGN.md', 'README.md', 'docs/en
 /* ---- the chain runs this check ---- */
 {
   const pkg = JSON.parse(read('package.json'));
-  /verify:docs/.test(pkg.scripts.verify) ? ok('npm run verify runs verify:docs') : fail('npm run verify does not run verify:docs');
+  const runsDocs = /verify:docs/.test(pkg.scripts.verify) || (/verify-all\.mjs/.test(pkg.scripts.verify) && Boolean(pkg.scripts['verify:docs']));
+  runsDocs ? ok('npm run verify runs verify:docs') : fail('npm run verify does not run verify:docs');
 }
 
 if (failures) { console.log(`\nDOCS FAILED (${failures})`); process.exit(1); }

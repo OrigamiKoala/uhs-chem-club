@@ -154,6 +154,7 @@ export function canvas2d(w, h) {
 
 /** Texture resolution for the current tier. One knob, used by every generator. */
 export function texSize(base = 512) {
+  if (globalThis.__AVALON_HEADLESS__) return 8;
   return tierAtLeast('T4') ? base : Math.max(128, base >> 1);
 }
 

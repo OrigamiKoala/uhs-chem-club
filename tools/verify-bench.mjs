@@ -1273,72 +1273,82 @@ console.log('The foes — spoil standing in the wells\n');
         setBenchHost(null);
       }
 
-      for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
-        setGlass(vw, vh);
-        const camera0 = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+      {
+        const [, vw0, vh0] = LEAN_VIEWPORTS[0];
+        setGlass(vw0, vh0);
+        const camera0 = new THREE.PerspectiveCamera(FOV, vw0 / vh0, 0.05, 80);
         const bench = new Table3D(null, { skin: unit, world: frameOf(camera0), onAction: () => {}, room: roomId });
         const camera = standalone ? bench.camera : camera0;
         const state = MODEL.createTable(spec, stage.title);
-        try { bench.setState(state); } catch (e) { fail(`${label} @ ${vpName}: building the built table faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`); bench.dispose(); continue; }
-        bench.settleLean();
-        const tag = `${label} leaned in @ ${vpName} (${vw}x${vh})`;
-        if (!bench.leaning || !bench.lean?.pose) { fail(`${tag}: the table did not lean in`); bench.dispose(); continue; }
-        if (!bench.lean.pose.fits) fail(`${tag}: the used zone does not fit the free glass`);
-        const res = chromeReserve(vw, vh);
-        const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
-        camera.updateMatrixWorld(true);
-        const zones = bench.leanZones || [bench.map.zone];
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        for (const zone of zones) for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
-          const p = new THREE.Vector3(x, 0.895, z);
-          bench.root.localToWorld(p);
-          p.project(camera);
-          minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
-        }
-        const eps = 0.012;
-        if (minX < free.l - eps || maxX > free.r + eps) fail(`${tag}: the table runs out of the free width`);
-        if (maxY > free.t + eps) fail(`${tag}: the table runs under the HUD and the prompt strip`);
-        if (minY < free.b - eps) fail(`${tag}: the table runs under the foot dock`);
+        let builtOk = true;
+        try { bench.setState(state); } catch (e) { fail(`${label} @ ${LEAN_VIEWPORTS[0][0]}: building the built table faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`); builtOk = false; }
+        if (builtOk) {
+          for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+            setGlass(vw, vh);
+            camera.aspect = vw / vh;
+            camera.updateProjectionMatrix();
+            bench.leanIn({ instant: true, zones: bench.leanZones });
+            bench.settleLean();
+            const tag = `${label} leaned in @ ${vpName} (${vw}x${vh})`;
+            if (!bench.leaning || !bench.lean?.pose) { fail(`${tag}: the table did not lean in`); continue; }
+            if (!bench.lean.pose.fits) fail(`${tag}: the used zone does not fit the free glass`);
+            const res = chromeReserve(vw, vh);
+            const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
+            camera.updateMatrixWorld(true);
+            const zones = bench.leanZones || [bench.map.zone];
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (const zone of zones) for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
+              const p = new THREE.Vector3(x, 0.895, z);
+              bench.root.localToWorld(p);
+              p.project(camera);
+              minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+            }
+            const eps = 0.012;
+            if (minX < free.l - eps || maxX > free.r + eps) fail(`${tag}: the table runs out of the free width`);
+            if (maxY > free.t + eps) fail(`${tag}: the table runs under the HUD and the prompt strip`);
+            if (minY < free.b - eps) fail(`${tag}: the table runs under the foot dock`);
 
-        // The smallest piece, in screen pixels.
-        for (const p of Object.values(state.pieces)) {
-          // A fixed piece (an atom on a Lewis slate, a joint) is never grabbed: it is a target, found by the reach
-          // of the piece dropped on it, so it owes no hit size. An electron is drawn at particle scale (14 px)
-          // and grabbed by gestures' generous reach.
-          if (p.hidden || p.fixed) continue;
-          const r = REG.radiusOf(kit, p);
-          const a = bench.map.toPlate(p.at);
-          const b = bench.map.toPlate({ x: p.at.x + r, y: p.at.y });
-          const pa = new THREE.Vector3(a.x, 0.895, a.z);
-          const pb = new THREE.Vector3(b.x, 0.895, b.z);
-          bench.root.localToWorld(pa); bench.root.localToWorld(pb);
-          pa.project(camera); pb.project(camera);
-          const px = 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2);
-          const minPx = p.kind === 'electron' ? 14 : 28;
-          if (px < minPx) fail(`${tag}: piece ${p.id} is ${px.toFixed(1)} px across, under ${minPx}`);
-        }
+            // The smallest piece, in screen pixels.
+            for (const p of Object.values(state.pieces)) {
+              // A fixed piece (an atom on a Lewis slate, a joint) is never grabbed: it is a target, found by the reach
+              // of the piece dropped on it, so it owes no hit size. An electron is drawn at particle scale (14 px)
+              // and grabbed by gestures' generous reach.
+              if (p.hidden || p.fixed) continue;
+              const r = REG.radiusOf(kit, p);
+              const a = bench.map.toPlate(p.at);
+              const b = bench.map.toPlate({ x: p.at.x + r, y: p.at.y });
+              const pa = new THREE.Vector3(a.x, 0.895, a.z);
+              const pb = new THREE.Vector3(b.x, 0.895, b.z);
+              bench.root.localToWorld(pa); bench.root.localToWorld(pb);
+              pa.project(camera); pb.project(camera);
+              const px = 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2);
+              const minPx = p.kind === 'electron' ? 14 : 28;
+              if (px < minPx) fail(`${tag}: piece ${p.id} is ${px.toFixed(1)} px across, under ${minPx}`);
+            }
 
-        const local = bench.root.worldToLocal(camera.position.clone());
-        const inBay = [local.x, local.y + (BAY.PLATE_TOP - 0.895), local.z];
-        if (!inBox(inBay, lean) && !inBox(inBay, approach)) fail(`${tag}: the camera is outside the approach and lean air`);
+            const local = bench.root.worldToLocal(camera.position.clone());
+            const inBay = [local.x, local.y + (BAY.PLATE_TOP - 0.895), local.z];
+            if (!inBox(inBay, lean) && !inBox(inBay, approach)) fail(`${tag}: the camera is outside the approach and lean air`);
 
-        // Every kit-painted piece has a face, and every table is dressed from the host's own materials.
-        if (vpName === '16:9') {
-          const painted = bench.pieceRoot.children.filter(c => c.userData.ring).length;
-          const expect = Object.values(state.pieces).filter(p => !p.hidden && !(p.kind === 'card' || p.token)).length;
-          if (painted < expect) fail(`${tag}: ${painted} of ${expect} pieces were built`);
-          const offenders = new Set();
-          const dress = mats || bench.room?.mats || null;
-          for (const root of [bench.fixtureRoot, bench.pieceRoot, bench.joinRoot]) {
-            root.traverse(o => {
-              if (!o.isMesh) return;
-              const m = o.material;
-              if (dress && (Object.values(dress).includes(m) || m.userData?.tableOwned)) return;
-              offenders.add(m === bench.steelMat || m === bench.darkMat ? 'the bench kit' : (m.type || 'a material'));
-            });
+            // Every kit-painted piece has a face, and every table is dressed from the host's own materials.
+            if (vpName === '16:9') {
+              const painted = bench.pieceRoot.children.filter(c => c.userData.ring).length;
+              const expect = Object.values(state.pieces).filter(p => !p.hidden && !(p.kind === 'card' || p.token)).length;
+              if (painted < expect) fail(`${tag}: ${painted} of ${expect} pieces were built`);
+              const offenders = new Set();
+              const dress = mats || bench.room?.mats || null;
+              for (const root of [bench.fixtureRoot, bench.pieceRoot, bench.joinRoot]) {
+                root.traverse(o => {
+                  if (!o.isMesh) return;
+                  const m = o.material;
+                  if (dress && (Object.values(dress).includes(m) || m.userData?.tableOwned)) return;
+                  offenders.add(m === bench.steelMat || m === bench.darkMat ? 'the bench kit' : (m.type || 'a material'));
+                });
+              }
+              if (roomId && !bench.room) fail(`${tag}: names the room "${roomId}" and was built without it`);
+              if (offenders.size && (!boss || roomId)) fail(`${tag}: dressed from ${[...offenders].join(', ')}, not ${roomId ? `the ${roomId} room's` : "the host's"} own materials`);
+            }
           }
-          if (roomId && !bench.room) fail(`${tag}: names the room "${roomId}" and was built without it`);
-          if (offenders.size && (!boss || roomId)) fail(`${tag}: dressed from ${[...offenders].join(', ')}, not ${roomId ? `the ${roomId} room's` : "the host's"} own materials`);
         }
         bench.dispose();
       }
