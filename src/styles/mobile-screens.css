@@ -360,7 +360,23 @@
   .m-learn-quest .lq-controls { gap: 0.5rem 0.7rem; padding: 7px 8px; }
   .m-learn-quest .lq-dial { flex: 1 1 100%; justify-content: space-between; }
   .m-learn-quest .lq-dial-segs i { width: 12px; height: 20px; }
-  .m-learn-quest .lq-tool { flex: 1; min-height: 44px; }
+  .m-learn-quest .table-tools,
+  .m-learn-quest.learn-quest-2d .table-tools {
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .m-learn-quest .table-tools::-webkit-scrollbar { display: none; }
+  .m-learn-quest .lq-tool {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
   .m-learn-quest .lq-controls .quest-btn-sm { min-height: 44px; min-width: 44px; }
   .m-learn-quest .lq-choice-btn { min-height: 44px; }
 

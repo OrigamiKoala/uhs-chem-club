@@ -1514,7 +1514,7 @@ export class Table3D extends BenchViewer3D {
       kind: 'stations',
       name: 'The table',
       shortDesc: 'Drag the pieces',
-      desc: 'Drag a piece to move it, or tap a piece and then tap where it goes. Undo takes back your last move and Start Over clears the table.',
+      desc: 'Drag a piece to move it, or tap a piece and then tap where it goes. Undo takes back your last move and Restart clears the table.',
       tag: 'DRAG OR TAP'
     }];
   }

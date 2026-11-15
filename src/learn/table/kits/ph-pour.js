@@ -194,7 +194,7 @@ function paintPour(ctx, f, state, b) {
 
 function runPour(state, fid) {
   const r = pourRead(state, fid);
-  if (r.poured) return { noop: 'It is already poured. Start Over puts it back.' };
+  if (r.poured) return { noop: 'It is already poured. Restart puts it back.' };
   return { x: state.recorder.rows.length + 1, y: r.moved, label: fid, dials: { [fid]: { poured: 1 } } };
 }
 

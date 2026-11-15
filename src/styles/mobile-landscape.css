@@ -438,4 +438,35 @@
   .m-learn-quest:not(.learn-quest-inworld) .lq-actions .btn-secondary { width: auto; min-height: 44px; }
   .m-learn-quest:not(.learn-quest-inworld) .lq-actions .lq-commit { flex: 1; }
   .m-learn-quest:not(.learn-quest-inworld) .lq-prompt-strip { display: none; }
+
+  .m-learn-quest .table-tools,
+  .m-learn-quest.learn-quest-2d .table-tools {
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .m-learn-quest .table-tools::-webkit-scrollbar { display: none; }
+  .m-learn-quest .lq-tool {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .lq-tdock-row,
+  .lq-tdock-left,
+  .lq-tdock-left .lq-stage-actions,
+  .lq-tdock-right .lq-actions,
+  .lq-tkeys .table-tools {
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+  }
+  .lq-tkeys { overflow-x: auto; scrollbar-width: none; }
+  .lq-tkeys::-webkit-scrollbar { display: none; }
+  .lq-tdock button {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
 }
