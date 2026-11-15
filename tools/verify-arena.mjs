@@ -36,6 +36,7 @@ await import('../src/three/teeter.js');
 await import('../src/three/verdigris.js');
 await import('../src/three/brinewire.js');
 await import('../src/three/quicklight.js');
+await import('../src/three/lodestone.js');
 await import('../src/three/thornmere.js');
 const { collectBoxes } = await import('./lib/overlap.mjs');
 const { arenaTablePlan, buildArenaTable, ARENA_TABLE } = await import('../src/three/arena-table.js');
@@ -62,6 +63,7 @@ const WORLDS = [
   ['unit09', 'Verdigris', '../src/three/verdigris.js', 'VerdigrisWorld', 'boss-leach'],
   ['unit10', 'Brinewire', '../src/three/brinewire.js', 'BrinewireWorld', 'boss-clamp'],
   ['unit11', 'Quicklight', '../src/three/quicklight.js', 'QuicklightWorld', 'boss-flare'],
+  ['unit12', 'Lodestone', '../src/three/lodestone.js', 'LodestoneWorld', 'boss-coil'],
   ['unit13', 'Thornmere', '../src/three/thornmere.js', 'ThornmereWorld', 'boss-carapace']
 ];
 

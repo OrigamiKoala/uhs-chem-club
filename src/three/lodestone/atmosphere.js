@@ -1,12 +1,13 @@
 /**
- * quicklight/atmosphere.js — Rust-dusk canyon sky and lighting for Lodestone (unit12).
+ * lodestone/atmosphere.js — Rust-dusk canyon sky and lighting for Lodestone (unit12).
  */
 
 import * as THREE from 'three';
 import { SKY_RENDER_ORDER } from '../sky-order.js';
 export { followErShadow as followLsShadow, followCamera } from '../ember/atmosphere.js';
 
-export const LODESTONE_SUN = new THREE.Vector3(0.35, 0.42, 0.84).normalize();
+/** Toward the sun: 11 degrees up in the west-south-west, so it reaches only the top few metres of the canyon's walls. */
+export const LODESTONE_SUN = new THREE.Vector3(-0.86, 0.2, -0.46).normalize();
 
 export const LSSKY = {
   zenith: new THREE.Color('#2a1d1a'),

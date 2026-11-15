@@ -158,11 +158,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.5,
     species: 'the flare'
   },
+  // In the pothole at the foot of the canyon, its floor level at -15.5 (`lodestone/canyon-plan.js` ARENA; `verify:lodestone`
+  // holds the two together). The player's mark is just inside the pothole from the last run.
   'boss-coil': {
     worldId: 'unit12',
-    playerPos: [0, 1.6, -42],
-    lookAtPos: [0, 1.6, -58],
-    bossPos: [0, 0, -58],
+    playerPos: [14, 1.6, -53],
+    lookAtPos: [14, 1.6, -69],
+    bossPos: [14, -15.5, -69],
     scale: 1.5,
     species: 'the coil'
   },

@@ -1,156 +1,267 @@
 {
   "id": "lodestone",
   "name": "Lodestone",
+  "place": "Iron canyons",
+  "oneLine": "d electrons, many charges, complex ions, their shapes, colour and magnetism.",
   "sky": "lodestone-sky",
-  "canyon": {
-    "wallX": 46,
-    "north": 100,
-    "south": -78,
-    "floorW": 40
+  "ambience": {
+    "keyLight": 15771768,
+    "fillLight": 11569780,
+    "fogColor": 6964276,
+    "fogNear": 90,
+    "fogFar": 640
   },
-  "spawn": [
-    0,
-    1.6,
-    90
-  ],
-  "pad": {
-    "pos": [
-      24,
-      0,
-      84
+  "walk": 100,
+  "canyon": {
+    "line": [
+      {
+        "id": "P0",
+        "pos": [
+          30,
+          0,
+          74
+        ]
+      },
+      {
+        "id": "P1",
+        "pos": [
+          -10,
+          -2,
+          74
+        ]
+      },
+      {
+        "id": "P2",
+        "pos": [
+          -10,
+          -4,
+          40
+        ]
+      },
+      {
+        "id": "P3",
+        "pos": [
+          36,
+          -6.8,
+          40
+        ]
+      },
+      {
+        "id": "P4",
+        "pos": [
+          36,
+          -8.5,
+          12
+        ]
+      },
+      {
+        "id": "Q1",
+        "pos": [
+          6,
+          -9.5,
+          12
+        ]
+      },
+      {
+        "id": "Q2",
+        "pos": [
+          -8,
+          -10.5,
+          -2
+        ]
+      },
+      {
+        "id": "P5",
+        "pos": [
+          -34,
+          -11.5,
+          -2
+        ]
+      },
+      {
+        "id": "P6",
+        "pos": [
+          -34,
+          -13,
+          -28
+        ]
+      },
+      {
+        "id": "P7",
+        "pos": [
+          14,
+          -14.5,
+          -28
+        ]
+      },
+      {
+        "id": "P8",
+        "pos": [
+          14,
+          -15.5,
+          -50
+        ]
+      }
     ],
-    "r": 10
+    "hollow": {
+      "minX": 34,
+      "maxX": 92,
+      "minZ": 52,
+      "maxZ": 94
+    },
+    "pothole": {
+      "pos": [
+        14,
+        -15.5,
+        -67
+      ],
+      "r": 19
+    },
+    "alcoves": [
+      {
+        "id": "core-store",
+        "site": "site-1",
+        "rect": {
+          "minX": -27,
+          "maxX": -15,
+          "minZ": 65,
+          "maxZ": 79
+        },
+        "face": [
+          1,
+          0
+        ],
+        "floor": -2,
+        "roof": 4.8
+      },
+      {
+        "id": "manganese-face",
+        "site": "site-2",
+        "rect": {
+          "minX": -15,
+          "maxX": -3,
+          "minZ": 22.5,
+          "maxZ": 35
+        },
+        "face": [
+          0,
+          1
+        ],
+        "floor": -4,
+        "roof": 5.2
+      },
+      {
+        "id": "seep",
+        "site": "site-3",
+        "rect": {
+          "minX": 41,
+          "maxX": 54,
+          "minZ": 32.6,
+          "maxZ": 45
+        },
+        "face": [
+          -1,
+          0
+        ],
+        "floor": -6.8,
+        "roof": 5.5
+      },
+      {
+        "id": "drum-gallery",
+        "site": "site-4",
+        "rect": {
+          "minX": 23,
+          "maxX": 41,
+          "minZ": -4.6,
+          "maxZ": 7
+        },
+        "face": [
+          0,
+          1
+        ],
+        "floor": -8.5,
+        "roof": 4.6
+      },
+      {
+        "id": "chimney",
+        "site": "site-5",
+        "rect": {
+          "minX": -51,
+          "maxX": -39,
+          "minZ": -9,
+          "maxZ": 3
+        },
+        "face": [
+          1,
+          0
+        ],
+        "floor": -11.5,
+        "roof": 8.5
+      },
+      {
+        "id": "magnetite-pocket",
+        "site": "site-6",
+        "rect": {
+          "minX": -39,
+          "maxX": -26,
+          "minZ": -45,
+          "maxZ": -33
+        },
+        "face": [
+          0,
+          1
+        ],
+        "floor": -13,
+        "roof": 5.2
+      }
+    ]
   },
   "arena": {
     "boss": [
-      0,
-      0,
-      -58
+      14,
+      -15.5,
+      -69
     ],
     "player": [
-      0,
+      14,
       1.6,
-      -42
+      -53
     ]
   },
-  "plaza": {
-    "minX": -14,
-    "maxX": 14,
-    "minZ": -68,
-    "maxZ": -34
-  },
-  "roads": [
+  "roads": [],
+  "landmarks": [
     {
-      "id": "haul-road",
-      "w": 6.4,
-      "pts": [
-        [
-          0,
-          94
-        ],
-        [
-          0,
-          -40
-        ]
-      ]
+      "asset": "landing-pad",
+      "pos": [
+        66,
+        0,
+        74
+      ],
+      "rotY": 0,
+      "radius": 10,
+      "minTier": "T3"
     },
     {
-      "id": "pad-spur",
-      "w": 5,
-      "pts": [
-        [
-          0,
-          84
-        ],
-        [
-          15,
-          84
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        40.5,
+        0,
+        82
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-1",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          64
-        ],
-        [
-          -19.4,
-          64
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-2",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          46
-        ],
-        [
-          19.4,
-          46
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-3",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          28
-        ],
-        [
-          -19.4,
-          28
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-4",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          10
-        ],
-        [
-          19.4,
-          10
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-5",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          -8
-        ],
-        [
-          -19.4,
-          -8
-        ]
-      ]
-    },
-    {
-      "id": "spur-site-6",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          -26
-        ],
-        [
-          19.4,
-          -26
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        37.5,
+        0,
+        70.4
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     }
   ],
   "sites": [
@@ -159,520 +270,212 @@
       "questId": "q1-dblock",
       "stage": 1,
       "pos": [
-        -24,
-        0,
-        64
+        -22.5,
+        -2,
+        72
       ],
       "approachPos": [
-        -19.4,
-        1.6,
-        64
+        -17.9,
+        -0.4,
+        72
       ],
       "label": "Bench 1 - The d-Block Assay",
-      "structure": "assay-hut",
+      "structure": "core-store",
       "built": true,
-      "flat": {
-        "x": -25.45,
-        "z": 64,
-        "r": 10.26
-      }
+      "alcove": "core-store"
     },
     {
       "id": "site-2",
       "questId": "q2-charges",
       "stage": 2,
       "pos": [
-        24,
-        0,
-        46
+        -9,
+        -4,
+        27
       ],
       "approachPos": [
-        19.4,
-        1.6,
-        46
+        -9,
+        -2.4,
+        31.6
       ],
       "label": "Bench 2 - Many Charges",
-      "structure": "ore-crusher",
+      "structure": "manganese-face",
       "built": true,
-      "flat": {
-        "x": 25.45,
-        "z": 46,
-        "r": 10.26
-      }
+      "alcove": "manganese-face"
     },
     {
       "id": "site-3",
       "questId": "q3-complex",
       "stage": 3,
       "pos": [
-        -24,
-        0,
-        28
+        49.5,
+        -6.8,
+        38.8
       ],
       "approachPos": [
-        -19.4,
-        1.6,
-        28
+        44.9,
+        -5.2,
+        38.8
       ],
       "label": "Bench 3 - Complex Ions",
-      "structure": "leach-vats",
+      "structure": "seep",
       "built": true,
-      "flat": {
-        "x": -25.45,
-        "z": 28,
-        "r": 10.26
-      }
+      "alcove": "seep"
     },
     {
       "id": "site-4",
       "questId": "q4-shapes",
       "stage": 4,
       "pos": [
-        24,
-        0,
-        10
+        32,
+        -8.5,
+        -0.1
       ],
       "approachPos": [
-        19.4,
-        1.6,
-        10
+        32,
+        -6.9,
+        4.5
       ],
       "label": "Bench 4 - Shapes and Isomers",
-      "structure": "drum-gantry",
+      "structure": "drum-gallery",
       "built": true,
-      "flat": {
-        "x": 25.45,
-        "z": 10,
-        "r": 10.26
-      }
+      "alcove": "drum-gallery"
     },
     {
       "id": "site-5",
       "questId": "q5-colour",
       "stage": 5,
       "pos": [
-        -24,
-        0,
-        -8
+        -46.5,
+        -11.5,
+        -3
       ],
       "approachPos": [
-        -19.4,
-        1.6,
-        -8
+        -41.9,
+        -9.9,
+        -3
       ],
       "label": "Bench 5 - Colour Booth",
-      "structure": "colour-booth",
+      "structure": "chimney",
       "built": true,
-      "flat": {
-        "x": -25.45,
-        "z": -8,
-        "r": 10.26
-      }
+      "alcove": "chimney"
     },
     {
       "id": "site-6",
       "questId": "q6-spin",
       "stage": 6,
       "pos": [
-        24,
-        0,
-        -26
+        -32.5,
+        -13,
+        -40.5
       ],
       "approachPos": [
-        19.4,
-        1.6,
-        -26
+        -32.5,
+        -11.4,
+        -35.9
       ],
       "label": "Bench 6 - Magnetism",
-      "structure": "coil-shed",
+      "structure": "magnetite-pocket",
       "built": true,
-      "flat": {
-        "x": 25.45,
-        "z": -26,
-        "r": 10.26
-      }
+      "alcove": "magnetite-pocket"
     }
   ],
-  "landmarks": [
-    {
-      "asset": "landing-pad",
-      "pos": [
-        24,
-        0,
-        84
-      ],
-      "rotY": 0,
-      "radius": 10
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -8.6,
-        0,
-        80
-      ],
-      "rotY": 6.09,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -8.6,
-        0,
-        56
-      ],
-      "rotY": 3.84,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        8.6,
-        0,
-        56
-      ],
-      "rotY": 4.13,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -8.6,
-        0,
-        38
-      ],
-      "rotY": 5.84,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        8.6,
-        0,
-        38
-      ],
-      "rotY": 0.09,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -8.6,
-        0,
-        20
-      ],
-      "rotY": 0.45,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        8.6,
-        0,
-        20
-      ],
-      "rotY": 1.57,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -8.6,
-        0,
-        2
-      ],
-      "rotY": 3.88,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        8.6,
-        0,
-        2
-      ],
-      "rotY": 0.42,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        -8.6,
-        0,
-        -16
-      ],
-      "rotY": 5.72,
-      "radius": 0.6
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
-        8.6,
-        0,
-        -16
-      ],
-      "rotY": 1.08,
-      "radius": 0.6
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        -14,
-        0,
-        76
-      ],
-      "rotY": 2.77,
-      "radius": 2
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        14,
-        0,
-        58
-      ],
-      "rotY": 0.66,
-      "radius": 2
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        -14,
-        0,
-        40
-      ],
-      "rotY": 6.26,
-      "radius": 2
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        14,
-        0,
-        22
-      ],
-      "rotY": 4.5,
-      "radius": 2
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        -14,
-        0,
-        4
-      ],
-      "rotY": 0.2,
-      "radius": 2
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        14,
-        0,
-        -12
-      ],
-      "rotY": 3.44,
-      "radius": 2
-    },
-    {
-      "asset": "drum-stack",
-      "pos": [
-        -14,
-        0,
-        -24
-      ],
-      "rotY": 0.66,
-      "radius": 2
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        -38,
-        0,
-        82
-      ],
-      "rotY": 0.39,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        38,
-        0,
-        64
-      ],
-      "rotY": 5.27,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        -38,
-        0,
-        46
-      ],
-      "rotY": 1.95,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        38,
-        0,
-        28
-      ],
-      "rotY": 3.51,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        -38,
-        0,
-        10
-      ],
-      "rotY": 4.34,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        38,
-        0,
-        -8
-      ],
-      "rotY": 1.58,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        -38,
-        0,
-        -26
-      ],
-      "rotY": 0.17,
-      "radius": 2.6
-    },
-    {
-      "asset": "ore-heap",
-      "pos": [
-        38,
-        0,
-        -44
-      ],
-      "rotY": 3.17,
-      "radius": 2.6
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        -36,
-        0,
-        64
-      ],
-      "rotY": 3.01,
-      "radius": 1.7
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        36,
-        0,
-        46
-      ],
-      "rotY": 2.32,
-      "radius": 1.7
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        -36,
-        0,
-        28
-      ],
-      "rotY": 0.55,
-      "radius": 1.7
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        36,
-        0,
-        10
-      ],
-      "rotY": 5.53,
-      "radius": 1.7
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        -36,
-        0,
-        -8
-      ],
-      "rotY": 4.84,
-      "radius": 1.7
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        -30,
-        0,
-        -52
-      ],
-      "rotY": 1.24,
-      "radius": 1.7
-    },
-    {
-      "asset": "lode-boulder",
-      "pos": [
-        30,
-        0,
-        -64
-      ],
-      "rotY": 2.72,
-      "radius": 1.7
-    },
-    {
-      "asset": "coil-mast",
-      "pos": [
-        -18,
-        0,
-        -50
-      ],
-      "rotY": 0.02,
-      "radius": 1.2
-    },
-    {
-      "asset": "coil-mast",
-      "pos": [
-        18,
-        0,
-        -50
-      ],
-      "rotY": 2.35,
-      "radius": 1.2
-    },
-    {
-      "asset": "coil-mast",
-      "pos": [
-        -18,
-        0,
-        -66
-      ],
-      "rotY": 3.39,
-      "radius": 1.2
-    },
-    {
-      "asset": "coil-mast",
-      "pos": [
-        18,
-        0,
-        -66
-      ],
-      "rotY": 3.31,
-      "radius": 1.2
+  "spawn": {
+    "pos": [
+      44,
+      1.6,
+      86
+    ],
+    "lookAt": [
+      30,
+      1.6,
+      74
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          -17.9,
+          -0.4,
+          72
+        ],
+        "lookAt": [
+          -22.5,
+          -0.8,
+          72
+        ]
+      },
+      "site-2": {
+        "pos": [
+          -9,
+          -2.4,
+          31.6
+        ],
+        "lookAt": [
+          -9,
+          -2.8,
+          27
+        ]
+      },
+      "site-3": {
+        "pos": [
+          44.9,
+          -5.2,
+          38.8
+        ],
+        "lookAt": [
+          49.5,
+          -5.6,
+          38.8
+        ]
+      },
+      "site-4": {
+        "pos": [
+          32,
+          -6.9,
+          4.5
+        ],
+        "lookAt": [
+          32,
+          -7.3,
+          -0.1
+        ]
+      },
+      "site-5": {
+        "pos": [
+          -41.9,
+          -9.9,
+          -3
+        ],
+        "lookAt": [
+          -46.5,
+          -10.3,
+          -3
+        ]
+      },
+      "site-6": {
+        "pos": [
+          -32.5,
+          -11.4,
+          -35.9
+        ],
+        "lookAt": [
+          -32.5,
+          -11.8,
+          -40.5
+        ]
+      }
     }
-  ]
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6"
+    ]
+  }
 }
