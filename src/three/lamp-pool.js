@@ -57,6 +57,12 @@ export class LampPool {
     return s;
   }
 
+  /** Forget a previously declared lamp. */
+  remove(src) {
+    const i = this.sources.indexOf(src);
+    if (i >= 0) this.sources.splice(i, 1);
+  }
+
   update(eye) {
     if (!eye) return;
     const live = this._live;
