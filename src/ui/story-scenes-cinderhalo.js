@@ -175,6 +175,33 @@ function halflife(ctx, w, h, t) {
   }
 }
 
+/* ---- q6-shortfall: the balance; the split; the chain ---- */
+function shortfall(ctx, w, h, t) {
+  ground(ctx, w, h);
+  if (t < 0.33) {
+    head(ctx, 'Lighter together');
+    const k = ease(win(t, 0.05, 0.25)); const a = 0.12 * k;
+    ctx.strokeStyle = K.text; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(480 - 220 * Math.cos(a), 220 + 220 * Math.sin(a)); ctx.lineTo(480 + 220 * Math.cos(a), 220 - 220 * Math.sin(a)); ctx.stroke(); ctx.lineWidth = 1;
+    text(ctx, '2 protons + 2 neutrons: 4.031882 u', 260, 330, { size: 20, color: K.text, align: 'center' });
+    text(ctx, 'helium-4: 4.001506 u', 700, 290, { size: 20, color: K.amber, align: 'center' });
+    if (k > 0.8) text(ctx, '0.030376 u × 931.5 = 28.3 MeV', 480, 440, { size: 24, color: K.amber, align: 'center' });
+  } else if (t < 0.66) {
+    head(ctx, 'Splitting uranium-235');
+    const k = ease(win(t, 0.36, 0.6));
+    if (k < 0.3) drawNucleus(ctx, PX, 480, 270, 90, protonSlots(92, 143, 'su'));
+    else { drawNucleus(ctx, PX, 480 - k * 170, 260, 75, protonSlots(56, 85, 'sb')); drawNucleus(ctx, PX, 480 + k * 170, 280, 65, protonSlots(36, 56, 'sk')); }
+    text(ctx, '236.052595 u before   235.866571 u after', 480, 460, { size: 22, color: K.amber, align: 'center' });
+  } else {
+    head(ctx, 'The chain');
+    const k = win(t, 0.69, 0.95);
+    [[0, 'none soaked up'], [2, 'two soaked up']].forEach(([ab, lab], row) => {
+      const g = generations(ab, 4); const shown = Math.min(4, Math.floor(k * 4.5) + 1);
+      for (let i = 0; i < shown; i++) text(ctx, String(g[i]), 300 + i * 130, 220 + row * 140, { size: 34, color: K.amber, align: 'center' });
+      text(ctx, lab, 120, 220 + row * 140, { size: 20, color: K.text });
+    });
+  }
+}
+
 export const CINDERHALO_SCENES = {
   'ch-warm': warm,
   // q2-what-comes-off
@@ -186,6 +213,7 @@ export const CINDERHALO_SCENES = {
   // q5-half-gone
   'ch-halflife': halflife,
   // q6-shortfall
+  'ch-shortfall': shortfall,
   // boss-core
 };
 

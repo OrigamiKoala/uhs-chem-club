@@ -81,3 +81,4 @@ export { nchartFixture } from './nuke-chart.js';
 export { chartPick, chartMove, pickValue, walkAt } from './nuke-chart-read.js';
 export { nchoiceFixture, chosenIndex, nleadFixture, addNukeLead } from './nuke-choice.js';
 export { ndecayFixture, decayRead, clockOf, leftIn, rateAt } from './nuke-decay.js';
+export { nscaleFixture, scaleRead, ncurveFixture, curvePick, nchainFixture, chainRead } from './nuke-scale.js';

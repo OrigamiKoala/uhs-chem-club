@@ -65,6 +65,15 @@ export const QUEST_STORY = {
     ],
     filed: 'Filed: the slag\'s clock says the works have run for decades, not months.'
   },
+  'unit14/q6-shortfall': {
+    scene: 'ch-shortfall',
+    beats: [
+      { to: 0.32, say: 'Helium-4 weighed 0.030376 u less than its four parts apart: 28.3 MeV of binding energy.' },
+      { to: 0.65, say: 'Split, uranium-235 and its neutron lost 0.186 u: the pieces sit higher on the curve, so energy came out.' },
+      { to: 0.96, say: 'Each fission frees three neutrons; with two soaked up the chain held steady, with none it tripled each time.' }
+    ],
+    filed: 'Filed: the Core splits uranium; one runaway chain made these craters.'
+  },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
     scene: 'thorn-chains',

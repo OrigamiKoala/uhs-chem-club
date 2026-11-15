@@ -361,6 +361,105 @@
         ],
         "finish": "Each half-life halves the count: count the halvings, then multiply by the half-life."
       }
+    },
+    "q6-shortfall": {
+      "problems": [
+        {
+          "id": "q6-shortfall#b1",
+          "quest": "q6-shortfall",
+          "question": "A nucleus weighs 0.0100 u less than its protons and neutrons apart. About how much energy holds it together? (1 u = 931.5 MeV)",
+          "options": [
+            {
+              "id": "a",
+              "label": "About 9.3 MeV"
+            },
+            {
+              "id": "b",
+              "label": "About 0.010 MeV"
+            },
+            {
+              "id": "c",
+              "label": "About 93 MeV"
+            },
+            {
+              "id": "d",
+              "label": "About 931.5 MeV"
+            }
+          ],
+          "answer": "a",
+          "explanation": "The missing mass times 931.5 MeV per u: 0.0100 × 931.5 = 9.3 MeV is its binding energy."
+        },
+        {
+          "id": "q6-shortfall#b2",
+          "quest": "q6-shortfall",
+          "question": "Why does splitting a uranium nucleus give energy out, while splitting an iron nucleus would not?",
+          "options": [
+            {
+              "id": "a",
+              "label": "Uranium's pieces sit higher on the binding-energy curve; iron is already at the top"
+            },
+            {
+              "id": "b",
+              "label": "Uranium is radioactive and iron is not"
+            },
+            {
+              "id": "c",
+              "label": "Iron has fewer neutrons to release"
+            },
+            {
+              "id": "d",
+              "label": "Uranium is heavier, so it holds more energy in total"
+            }
+          ],
+          "answer": "a",
+          "explanation": "Energy comes out when nucleons end up more tightly held. Uranium's pieces hold theirs more tightly than uranium did; iron's nucleons are already held as tightly as any, so splitting it would take energy in."
+        }
+      ],
+      "worked": {
+        "id": "q6-shortfall#w",
+        "quest": "q6-shortfall",
+        "title": "The energy of one fission",
+        "setup": "Uranium-235 (235.043930 u) takes in a neutron (1.008665 u) and splits into barium-141 (140.914403 u), krypton-92 (91.926173 u) and three neutrons. Find the energy one fission gives out.",
+        "steps": [
+          {
+            "say": "What is the mass before the split, in u?",
+            "kind": "number",
+            "answer": 236.052595,
+            "unit": "u",
+            "calc": "235.043930 + 1.008665",
+            "hint": "Add the uranium and the neutron.",
+            "explain": "235.043930 + 1.008665 = 236.052595 u."
+          },
+          {
+            "say": "What is the mass after the split, in u?",
+            "kind": "number",
+            "answer": 235.866571,
+            "unit": "u",
+            "calc": "140.914403 + 91.926173 + 3 * 1.008665",
+            "hint": "Add the barium, the krypton and three neutrons.",
+            "explain": "140.914403 + 91.926173 + 3.025995 = 235.866571 u."
+          },
+          {
+            "say": "How much mass goes missing, in u?",
+            "kind": "number",
+            "answer": 0.186024,
+            "unit": "u",
+            "calc": "235.043930 + 1.008665 - (140.914403 + 91.926173 + 3 * 1.008665)",
+            "hint": "Take the mass after from the mass before.",
+            "explain": "236.052595 − 235.866571 = 0.186024 u."
+          },
+          {
+            "say": "How much energy is that, in MeV?",
+            "kind": "number",
+            "answer": 173.3,
+            "unit": "MeV",
+            "calc": "(235.043930 + 1.008665 - (140.914403 + 91.926173 + 3 * 1.008665)) * 931.5",
+            "hint": "1 u is 931.5 MeV.",
+            "explain": "0.186024 × 931.5 = 173.3 MeV."
+          }
+        ],
+        "finish": "The mass that goes missing comes out as energy: 931.5 MeV for every u."
+      }
     }
   }
 }

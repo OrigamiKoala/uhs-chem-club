@@ -36,6 +36,18 @@ const FIXTURES = {
     title: 'Decaying sample', dials: false,
     text: 'A grid of radioactive nuclei: a bright one has not decayed, a dark one has. Tap "Wait" to move the clock on and "Back" to move it back; the plot beside the grid marks what is left at every step so far.'
   },
+  'nuke:nscale': {
+    title: 'Balance', dials: false,
+    text: 'Two pans on a beam that tips toward the heavier; each pan prints its mass in u (one u is about the mass of one proton). Where it has keys, tap "Add Proton" or "Add Neutron" to load the left pan.'
+  },
+  'nuke:ncurve': {
+    title: 'Binding-energy curve', dials: false,
+    text: 'Each point is one nucleus: its mass number across, and how tightly each of its protons and neutrons is held up the side. Tap a point to read it, or to choose it as your answer.'
+  },
+  'nuke:nchain': {
+    title: 'Chain chamber', dials: false,
+    text: 'A block of uranium-235. Press "Fire Neutron" to send one neutron in and watch what follows. Where it has rod keys, they set how many of the three neutrons each split frees the control rods soak up.'
+  },
   'nuke:ntissue': {
     title: 'Tissue strip', dials: false,
     text: 'A strip of living cells with a source inside its left end. Tap Alpha, Beta or Gamma to see that radiation\'s trail; each amber mark is a molecule it broke.'

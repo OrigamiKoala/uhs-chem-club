@@ -23,7 +23,7 @@ export const UNIT_14 = {
     { id: 'q3-equations', title: 'Balancing the Nucleus', line: 'The slag holds elements the ore never had.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit14/q3-equations.js') },
     { id: 'q4-stability', title: 'Which Nuclei Last', line: 'Some of the Fifth\'s made nuclei will not keep.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit14/q4-stability.js') },
     { id: 'q5-half-gone', title: 'Half Gone, Then Half Again', line: 'A countdown that never quite reaches nothing.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit14/q5-half-gone.js') },
-    { id: 'q6-shortfall', title: 'The Missing Weight', line: 'The pieces weigh less together than they did apart.', arena: 'bench', stageCount: 8, status: 'draft', module: null },
+    { id: 'q6-shortfall', title: 'The Missing Weight', line: 'The pieces weigh less together than they did apart.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit14/q6-shortfall.js') },
     { id: 'boss-core', title: 'The Transmutation Core', line: 'Shut down the Fifth\'s reactor.', arena: 'boss', stageCount: 5, status: 'draft', module: null }
   ]
 };

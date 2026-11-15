@@ -1108,7 +1108,7 @@
       "label": "Bench 6 - The Missing Weight",
       "structure": "pool-hall",
       "crater": "C6",
-      "built": false,
+      "built": true,
       "route": [
         [
           0,
