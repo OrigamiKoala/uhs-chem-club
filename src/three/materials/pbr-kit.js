@@ -466,27 +466,31 @@ export function platedMetal(opts = {}) {
     hgt += (fbm(u * 96, v * 6, { octaves: 2, period: 96, seed: rngSeed }) - 0.5) * 0.05 * grain;
 
     // Panel grid. Each panel is a slightly different thickness, so the gaps
-    // catch light unevenly the way real shimmed plate does.
-    const pu = u * panels, pv = v * panels;
-    const fu = pu - Math.floor(pu), fv = pv - Math.floor(pv);
-    const gap = 0.018;
-    const edge = Math.min(fu, 1 - fu, fv, 1 - fv);
-    if (edge < gap) {
-      hgt -= 0.34 * (1 - edge / gap);            // the gap itself
-    } else if (edge < gap * 2.4) {
-      hgt += 0.05 * (1 - (edge - gap) / (gap * 1.4)); // the rolled-over chamfer
-    }
-    hgt += (latticeHash(Math.floor(pu), Math.floor(pv), panels, rngSeed) - 0.5) * 0.03;
+    // catch light unevenly the way real shimmed plate does. `panels: 0` is one
+    // unbroken sheet, for parts whose seams and fasteners are modelled: a
+    // grid drawn in the texture cannot line up with them.
+    if (panels > 0) {
+      const pu = u * panels, pv = v * panels;
+      const fu = pu - Math.floor(pu), fv = pv - Math.floor(pv);
+      const gap = 0.018;
+      const edge = Math.min(fu, 1 - fu, fv, 1 - fv);
+      if (edge < gap) {
+        hgt -= 0.34 * (1 - edge / gap);            // the gap itself
+      } else if (edge < gap * 2.4) {
+        hgt += 0.05 * (1 - (edge - gap) / (gap * 1.4)); // the rolled-over chamfer
+      }
+      hgt += (latticeHash(Math.floor(pu), Math.floor(pv), panels, rngSeed) - 0.5) * 0.03;
 
-    // Rivet lines, set in from every panel edge.
-    if (rivets) {
-      const pitch = 0.085;
-      for (const [cu, cv] of [[fu, fv], [fv, fu]]) {
-        const inset = 0.045;
-        if (Math.abs(cu - inset) < 0.02 || Math.abs(cu - (1 - inset)) < 0.02) {
-          const t = cv / pitch;
-          const dr = Math.hypot((cu - (cu < 0.5 ? inset : 1 - inset)) / 0.02, (t - Math.round(t)) * 2);
-          if (dr < 1) hgt += 0.20 * Math.cos(dr * Math.PI * 0.5);
+      // Rivet lines, set in from every panel edge.
+      if (rivets) {
+        const pitch = 0.085;
+        for (const [cu, cv] of [[fu, fv], [fv, fu]]) {
+          const inset = 0.045;
+          if (Math.abs(cu - inset) < 0.02 || Math.abs(cu - (1 - inset)) < 0.02) {
+            const t = cv / pitch;
+            const dr = Math.hypot((cu - (cu < 0.5 ? inset : 1 - inset)) / 0.02, (t - Math.round(t)) * 2);
+            if (dr < 1) hgt += 0.20 * Math.cos(dr * Math.PI * 0.5);
+          }
         }
       }
     }

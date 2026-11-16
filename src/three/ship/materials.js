@@ -14,6 +14,14 @@
  * one copy of the texture, which is the single loudest tell of a scene built
  * from primitives: the rivets are the size of the object instead of the size
  * of rivets.
+ *
+ * SEAMS AND FASTENERS ARE PARTS, NOT PAINT. The lining is assembled from
+ * modelled panels, ribs and plates, and a seam grid or a rivet row drawn in a
+ * world-scale texture cannot line up with them: it crosses a locker door at
+ * whatever height the tile happens to fall. So every lining material is one
+ * unbroken sheet (`panels: 0`) that carries grain, wear and staining only, and
+ * the parts supply the joints. Only the hull plating, laid in runs many tiles
+ * long, wears a plate pattern.
  */
 
 import * as THREE from "three";
@@ -71,10 +79,10 @@ export function createShipMaterials() {
   M.bulkheadMat = worldUV(buildMaterial(
     platedMetal({
       paint: '#2a2b2d', metal: '#4a4843', rust: '#5a3822',
-      panels: 3, seed: 61, weather: 0.5, size: texSize(256)
+      panels: 0, seed: 61, weather: 0.4, size: texSize(256)
     }),
     { repeat: 1, roughness: 1.0 }
-  ), 1.2);
+  ), 2.0);
   M.bulkheadMat.color.setHex(0x8a8884);
 
   /*
@@ -86,30 +94,30 @@ export function createShipMaterials() {
   M.panelMat = worldUV(buildMaterial(
     platedMetal({
       paint: '#6a6a66', metal: '#8a867d', rust: '#6c4a30',
-      panels: 2, seed: 71, weather: 0.36, size: texSize(512), grain: 0.7
+      panels: 0, seed: 71, weather: 0.26, size: texSize(512), grain: 0.7
     }),
     { repeat: 1, roughness: 1.0 }
-  ), 2.2);
+  ), 2.6);
   M.panelMat.normalScale.set(0.8, 0.8);
   M.panelMat.aoMapIntensity = 0.7;
 
   M.panelDarkMat = worldUV(buildMaterial(
     platedMetal({
       paint: '#3a3b3c', metal: '#5f5c56', rust: '#5d3b24',
-      panels: 3, seed: 83, weather: 0.46, size: texSize(512)
+      panels: 0, seed: 83, weather: 0.34, size: texSize(512)
     }),
     { repeat: 1, roughness: 1.0 }
-  ), 1.8);
+  ), 2.4);
   M.panelDarkMat.aoMapIntensity = 0.8;
 
   // Structural frames, portals and ribs: gunmetal, oiled, bright on the edges.
   M.ribMat = worldUV(buildMaterial(
     platedMetal({
       paint: '#43454a', metal: '#7d7a73', rust: '#5b3a24',
-      panels: 1, seed: 97, weather: 0.55, size: texSize(256), rivets: true
+      panels: 0, seed: 97, weather: 0.45, size: texSize(256)
     }),
     { repeat: 1, roughness: 1.0, metalness: 0.55 }
-  ), 1.4);
+  ), 1.8);
   M.trimMat = new THREE.MeshStandardMaterial({ color: 0x3b3d41, roughness: 0.46, metalness: 0.78 });
   M.gunmetalMat = new THREE.MeshStandardMaterial({ color: 0x26282b, roughness: 0.55, metalness: 0.7 });
   M.steelMat = new THREE.MeshStandardMaterial({ color: 0x8d8c88, roughness: 0.34, metalness: 0.9 });
@@ -126,10 +134,21 @@ export function createShipMaterials() {
   M.ceilingMat = worldUV(buildMaterial(
     platedMetal({
       paint: '#2f3033', metal: '#55524c', rust: '#4f3421',
-      panels: 4, seed: 113, weather: 0.4, size: texSize(256)
+      panels: 0, seed: 113, weather: 0.32, size: texSize(256)
     }),
     { repeat: 1, roughness: 1.0 }
-  ), 1.6);
+  ), 2.0);
+
+  // Pressure vessels (the furnace drum, the engine casing): dark rolled sheet
+  // wrapped round the barrel on the cylinder's own UVs, twice about and once
+  // along, so it closes on itself with no projection seam.
+  M.vesselMat = buildMaterial(
+    platedMetal({
+      paint: '#333436', metal: '#5c5953', rust: '#5a3822',
+      panels: 0, seed: 131, weather: 0.42, size: texSize(512)
+    }),
+    { repeat: [2, 1], roughness: 1.0 }
+  );
 
   /*
    * THE DECK. Treadplate ground flat along the line people take; deck tiles

@@ -1012,7 +1012,15 @@ export function mountGalaxyMap(root, opts) {
     // Hidden (the other tab is showing): wait for the observer to tell us it has a width.
     if (!rect.width) return;
     const nw = Math.max(280, Math.round(rect.width));
-    const nh = Math.round(Math.max(300, Math.min(560, nw * 0.72)));
+    let nh = Math.round(Math.max(300, Math.min(560, nw * 0.72)));
+    // A phone held sideways: the chart is the glass that is left under the terminal's header and tabs, no taller, so the
+    // world plate beside it and its Enter key are never a scroll away (a drag on the chart pans it, it does not scroll).
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse) and (max-height: 500px) and (orientation: landscape)').matches) {
+      const host = canvas.closest?.('.in-world-terminal, .screen-container');
+      const hostTop = host ? host.getBoundingClientRect().top - host.scrollTop : -(window.scrollY || 0);
+      const glass = Math.round(window.visualViewport?.height || window.innerHeight || 360);
+      nh = Math.max(170, glass - Math.round(rect.top - hostTop) - 8);
+    }
     const nd = Math.min(2, window.devicePixelRatio || 1);
     if (nw === w && nh === h && nd === dpr) return;
     const first = !sized;

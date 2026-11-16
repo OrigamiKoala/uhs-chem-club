@@ -313,7 +313,12 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   shared kit; doors open as you approach, portals are arches; `SHIP_ANCHORS` derived from the graph and
   must stand on clear deck; every doorway names its destination on both faces; lighting rooms declare
   sources (`ship.addLight`, ≤8 pool lights). `[E]` acts on what the camera is pointed at
-  (`aim-target.js`), never what is nearest.
+  (`aim-target.js`), never what is nearest. Surfaces (`ship/materials.js`): a material tagged
+  `userData.worldUV` is laid at a fixed size in metres by `applyWorldUVs` (`ship/kit.js`), box-projected
+  per triangle with u to the viewer's right. Lining materials (panel, rib, ceiling, bulkhead) are unbroken
+  sheets (`platedMetal({ panels: 0 })`): seams and fasteners are modelled parts, because a grid or rivet row
+  in a world-scale texture cuts across the parts at random. Only the hull plating wears a plate pattern
+  (`/art/durasteel_plate.jpg`); drums and casings wear `M.vesselMat` on the cylinder's own UVs.
 - **Voyage** (`three/voyage.js`, `ship-exterior.js`, `guide-arrow.js`, `screens/voyage.js`): at T4 a world
   is flown to, never stepped into; two passes with one camera; the only cut is inside a full cloud deck.
   Stepping off must not change a world's light count (`hatchLamp` descriptor into the `LampPool`). Stands

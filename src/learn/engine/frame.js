@@ -41,6 +41,8 @@ import {
 
 const RUNG2_AFTER_MS = 45000;
 
+const CALC_ICON = '<svg class="lq-calc-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>';
+
 /**
  * The key legend: what every control on this stage's plate actually DOES, in
  * one plain sentence each.
@@ -265,7 +267,7 @@ export class LearnFrame {
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
           <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn stage-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">Stage Panel</button>
-          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">Calc</button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-dock-calc" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
           <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Submit answer">Submit</button>
         </div>
 
@@ -300,7 +302,7 @@ export class LearnFrame {
               <div class="lq-banner" role="status" aria-live="polite"></div>
               <div class="lq-actions">
                 <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">Calc</button>
+                <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
                 <button type="button" class="btn-primary lq-commit" data-act="submit">Submit</button>
               </div>
             </div>
@@ -655,7 +657,10 @@ export class LearnFrame {
     if (this.disposed && on) return;
     this.tableWantOn = on;
     if (cbs) this.tableCbs = cbs;
-    const isMobile = typeof window !== 'undefined' && (window.innerWidth <= 768 || window.matchMedia?.('(max-width: 768px)').matches);
+    // A phone held sideways is short, not narrow: the card would cover the table, so it takes the strip and dock at any width
+    // (`mobile-native.css` lays them out for it). Only an upright phone keeps the card.
+    const sideways = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(pointer: coarse) and (max-height: 500px) and (orientation: landscape)').matches);
+    const isMobile = !sideways && typeof window !== 'undefined' && (window.innerWidth <= 768 || window.matchMedia?.('(max-width: 768px)').matches);
     const effectiveOn = on && !isMobile;
     if (effectiveOn === Boolean(this.tableMode)) return;
     const root = this.container.querySelector('.lq');
@@ -804,7 +809,7 @@ export class LearnFrame {
     this.el.actions.innerHTML = `
       ${entryHtml}
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">Calc</button>
+      <button type="button" class="btn-secondary lq-calc-key" data-act="calc" title="Open scientific calculator" aria-label="Open scientific calculator">${CALC_ICON}</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');

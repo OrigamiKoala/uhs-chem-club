@@ -4,6 +4,9 @@
 
 import * as THREE from 'three';
 
+// A handset has no keyboard and no mouse: the ship's screens name the sticks and the [E] stick key there, and nothing else.
+const TOUCH = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(pointer: coarse)').matches);
+
 /**
  * Creates weathered durasteel armor plating with panel seams, rivets, and grime
  */
@@ -481,7 +484,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
 
   // Top-right Close [X] badge
   ctx.font = 'bold 11px monospace';
-  const closeText = 'Close [X]';
+  const closeText = TOUCH ? 'Close' : 'Close [X]';
   const closeW = ctx.measureText(closeText).width;
   const badgeX = 488 - closeW - 10;
   const badgeY = 22;
@@ -543,7 +546,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   ctx.font = 'bold 13px monospace';
   ctx.fillStyle = '#d99423';
   ctx.textAlign = 'center';
-  ctx.fillText('[E] / CLICK HOLO-TABLE TO DISEMBARK', 256, 216);
+  ctx.fillText(TOUCH ? '[E] AT HOLO-TABLE TO DISEMBARK' : '[E] / CLICK HOLO-TABLE TO DISEMBARK', 256, 216);
   ctx.textAlign = 'left';
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -605,7 +608,7 @@ export function createClubHoloTexture() {
 
   // Top-right Close [X] badge
   ctx.font = 'bold 15px monospace';
-  const closeText = 'Close [X]';
+  const closeText = TOUCH ? 'Close' : 'Close [X]';
   const closeW = ctx.measureText(closeText).width;
   const badgeX = 964 - closeW - 14;
   const badgeY = 34;
@@ -666,7 +669,7 @@ export function createClubHoloTexture() {
   // Controls hint below Star Map label
   ctx.font = 'bold 24px monospace';
   ctx.fillStyle = '#ffb347';
-  ctx.fillText('DRAG TO LOOK, WASD TO MOVE', 512, 440);
+  ctx.fillText(TOUCH ? 'LEFT STICK MOVES, RIGHT STICK LOOKS' : 'DRAG TO LOOK, WASD TO MOVE', 512, 440);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);
@@ -716,7 +719,7 @@ export function createCommsHoloTexture(teams = [], chatter = '') {
 
   // Top-right Close [X] badge
   ctx.font = 'bold 15px monospace';
-  const closeText = 'Close [X]';
+  const closeText = TOUCH ? 'Close' : 'Close [X]';
   const closeW = ctx.measureText(closeText).width;
   const badgeX = 964 - closeW - 14;
   const badgeY = 32;
@@ -924,7 +927,7 @@ export function createCommsStandingsTexture(teams = [], chatter = '') {
 
   ctx.font = 'bold 11px monospace';
   ctx.fillStyle = '#38b000';
-  ctx.fillText('PRESS [E] / CLICK CONSOLE TO ACCESS FULL FLEET COMMS', 22, 226);
+  ctx.fillText(TOUCH ? 'PRESS [E] AT CONSOLE TO ACCESS FULL FLEET COMMS' : 'PRESS [E] / CLICK CONSOLE TO ACCESS FULL FLEET COMMS', 22, 226);
 
   const texture = new THREE.CanvasTexture(canvas);
   return texture;
@@ -989,7 +992,7 @@ export function createCargoManifestTexture(itemCount = 0, maxSlots = 8, trinketN
   ctx.font = 'bold 12px monospace';
   ctx.fillStyle = '#ff9f1c';
   ctx.textAlign = 'center';
-  ctx.fillText('[E] / CLICK TERMINAL TO DEPLOY SALVAGE & VIEW LOCKER', 256, 218);
+  ctx.fillText(TOUCH ? '[E] AT TERMINAL TO DEPLOY SALVAGE & VIEW LOCKER' : '[E] / CLICK TERMINAL TO DEPLOY SALVAGE & VIEW LOCKER', 256, 218);
   ctx.textAlign = 'left';
 
   const texture = new THREE.CanvasTexture(canvas);

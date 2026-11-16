@@ -199,33 +199,72 @@ export function lamp(parent, M, x, y, z, mat = M.amberLampMat, r = 0.012) {
 /**
  * Re-map every mesh whose material carries `userData.worldUV` so its texture
  * is laid at a fixed size in the world, box-projected on the dominant axis of
- * each vertex normal. Runs once, before the bake, on geometry it clones.
+ * each TRIANGLE's normal. Runs once, before the bake, on geometry it clones.
+ *
+ * The axis is chosen per triangle, not per vertex: round a drum or a pipe the
+ * vertex normals of one triangle fall either side of a 45 degree line, and a
+ * triangle whose corners are projected on different axes smears the texture
+ * across itself. Such a geometry is un-indexed so each triangle owns its UVs.
+ *
+ * u and v follow the faces of a `BoxGeometry` (u to the viewer's right, v up),
+ * so lettering in a plate reads the right way round on every wall.
  */
 export function applyWorldUVs(root) {
   root.updateMatrixWorld(true);
-  const p = new THREE.Vector3();
+  const P = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), fn = new THREE.Vector3();
   const n = new THREE.Vector3();
   const nm = new THREE.Matrix3();
+  const axisOf = v => {
+    const ax = Math.abs(v.x), ay = Math.abs(v.y), az = Math.abs(v.z);
+    return ax >= ay && ax >= az ? 0 : ay >= az ? 1 : 2;
+  };
   root.traverse(o => {
     if (!o.isMesh || o.isInstancedMesh) return;
     const s = o.material?.userData?.worldUV;
-    if (!s || !o.geometry?.attributes?.position) return;
-    const g = o.geometry.clone();
-    const pos = g.attributes.position;
-    const nor = g.attributes.normal;
-    if (!nor) return;
-    const uv = new Float32Array(pos.count * 2);
+    if (!s || !o.geometry?.attributes?.position || !o.geometry.attributes.normal) return;
+    let g = o.geometry.clone();
     nm.getNormalMatrix(o.matrixWorld);
-    for (let i = 0; i < pos.count; i++) {
-      p.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
-      n.fromBufferAttribute(nor, i).applyMatrix3(nm);
-      const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
-      let u, v;
-      if (ax >= ay && ax >= az) { u = p.z * Math.sign(n.x || 1); v = p.y; }
-      else if (ay >= az) { u = p.x; v = p.z * Math.sign(n.y || 1); }
-      else { u = -p.x * Math.sign(n.z || 1); v = p.y; }
-      uv[i * 2] = u / s;
-      uv[i * 2 + 1] = v / s;
+
+    // Keep the index when every triangle's corners already agree on an axis
+    // (boxes, plates, extrusions); only curved parts pay for their own corners.
+    if (g.index) {
+      const idx = g.index, nor = g.attributes.normal;
+      let split = false;
+      for (let t = 0; t < idx.count && !split; t += 3) {
+        const a = axisOf(n.fromBufferAttribute(nor, idx.getX(t)).applyMatrix3(nm));
+        for (let k = 1; k < 3; k++) {
+          if (axisOf(n.fromBufferAttribute(nor, idx.getX(t + k)).applyMatrix3(nm)) !== a) split = true;
+        }
+      }
+      if (split) { const flat = g.toNonIndexed(); g.dispose(); g = flat; }
+    }
+
+    const pos = g.attributes.position, nor = g.attributes.normal, idx = g.index;
+    const uv = new Float32Array(pos.count * 2);
+    const count = idx ? idx.count : pos.count;
+    for (let t = 0; t < count; t += 3) {
+      const ids = [0, 1, 2].map(k => (idx ? idx.getX(t + k) : t + k));
+      ids.forEach((id, k) => P[k].fromBufferAttribute(pos, id).applyMatrix4(o.matrixWorld));
+      fn.crossVectors(e1.subVectors(P[1], P[0]), e2.subVectors(P[2], P[0]));
+      // A sliver has no normal of its own: fall back on its first corner's.
+      n.fromBufferAttribute(nor, ids[0]).applyMatrix3(nm);
+      // Corners shared through an index must get one answer from every
+      // triangle that uses them, and their own normals are what agreed above.
+      // A sliver has no normal of its own either.
+      if (idx || fn.lengthSq() < 1e-14) fn.copy(n);
+      // Face the way the shading does, so a back-wound triangle is not mirrored.
+      else if (fn.dot(n) < 0) fn.negate();
+      const axis = axisOf(fn);
+      ids.forEach((id, k) => {
+        const p = P[k];
+        let u, v;
+        if (axis === 0) { u = -p.z * Math.sign(fn.x || 1); v = p.y; }
+        else if (axis === 1) { u = p.x; v = -p.z * Math.sign(fn.y || 1); }
+        else { u = p.x * Math.sign(fn.z || 1); v = p.y; }
+        uv[id * 2] = u / s;
+        uv[id * 2 + 1] = v / s;
+      });
     }
     g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
     o.geometry = g;
@@ -358,6 +397,11 @@ function pressedPanel(g, M, u0, u1, y0, y1, dark = false) {
   box(g, dark ? M.panelDarkMat : M.panelMat, w, h, 0.022, (u0 + u1) / 2, (y0 + y1) / 2, 0.011);
   if (w > 0.34 && h > 0.3) {
     box(g, dark ? M.panelMat : M.panelDarkMat, w - 0.14, h - 0.14, 0.012, (u0 + u1) / 2, (y0 + y1) / 2, 0.028);
+    // The rim's fasteners are parts, one at each corner of this panel, so they
+    // sit where the panel is and not where a texture tile happens to fall.
+    for (const su of [u0 + 0.035, u1 - 0.035]) {
+      for (const sy of [y0 + 0.035, y1 - 0.035]) cyl(g, M.steelMat, 0.008, 0.005, su, sy, 0.0245, 'z', 6);
+    }
   }
 }
 

@@ -169,7 +169,7 @@ function reactor(g, M, glow, S, cx, cz) {
   R.add(br);
 
   // The drum: plate, collars, ribs, and one seam of glow under the top collar.
-  cyl(R, M.durasteelMat, 0.72, 2.5, 0, 1.97, 0, 'y', 28);
+  cyl(R, M.vesselMat, 0.72, 2.5, 0, 1.97, 0, 'y', 28);
   for (const y of [0.8, 2.62, 3.18]) cyl(R, M.trimMat, 0.765, 0.08, 0, y, 0, 'y', 28);
   cyl(R, glow, 0.725, 0.03, 0, 2.72, 0, 'y', 28);
   const yaw = 0.6;
@@ -468,7 +468,7 @@ export function buildFurnaceRoom(ship) {
     ring(g, M.gunmetalMat, 0.625, 0.03, x, my, mz, 'x', 28);
     g.add(boltLine([x - 0.1, 0.11, mz - 0.6], [x - 0.1, 0.11, mz + 0.6], 5, M.steelMat, { size: 0.014 }));
   }
-  cyl(g, M.durasteelMat, 0.6, 2.2, 3.35, my, mz, 'x', 28);
+  cyl(g, M.vesselMat, 0.6, 2.2, 3.35, my, mz, 'x', 28);
   for (const x of [2.95, 3.35, 3.75]) ring(g, M.steelMat, 0.64, 0.045, x, my, mz, 'x', 28);
   for (const x of [3.15, 3.55]) cyl(g, M.gunmetalMat, 0.615, 0.1, x, my, mz, 'x', 28);
   // West end: a bell, a bolted end plate, a handwheel on the access plug.
