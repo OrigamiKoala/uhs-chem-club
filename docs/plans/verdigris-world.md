@@ -357,3 +357,142 @@ Checks run green at build: verify:verdigris, teeter, ember, mirrowen, kettle, li
 **Differs from the spec.** Phase 2 ranks three acids at different strengths (spec: one concentration) because at one strength the windows alone give the order; phase 1 adds a base at 60 °C that reads 7.00. The Leach has one foe per phase (as the Tipper) and reacts only through the pose it is handed on a table. The bank gives the boss `#b1/#b2` because `verify:learn` demands two bench problems of every quest.
 
 **Unverified:** 3D On look of the Leach on the table and its 0.6 scale; 375 px; the new tables at six aspects are checked by `verify:bench` only for layout and pointer paths. Weakest: phase 3 (a meter-read sort, like q5 s5) and phase 4 (q6 s5 with the base flipped).
+
+---
+
+## 8. Site rebuild (2026-11-16)
+
+Branch `site/verdigris`. This section is the spec the rebuilt site is audited against (`docs/plans/world-distinction-plan.md`
+section 3) and, at its foot, the build record. It changes the 3D site only: no quest, stage, kit, bank entry, glossary,
+story line, site id, quest id or label changes. (The run's prompt named `unit08`; Verdigris is `unit09`, and that is what
+this rebuild touches.)
+
+### 8.1 The place
+
+**Verdigris is a drowned fort in a reed swamp: a masonry enceinte whose ward has filled with water, its curtain walls and
+towers standing out of the flood, crossed by boardwalks that turn and branch between the towers, with the benches inside the
+towers, down in the fort's cisterns and in the gatehouse.** In the first ten seconds after landing a player stands on a timber
+landing stage in tall reeds and fog, sees a boardwalk leaving west into the reeds and, 30 to 50 m off through the fog, the dark
+mass of the fort's south wall and its gatehouse rising out of a moat; no bench is in sight.
+
+Lore: `saga.js` already calls the place "the marsh fortress" with notices on its gates, so the row's drowned fort is the place as
+written; nothing in the story changes.
+
+### 8.2 Signature
+
+| Landform | Walk shape | Bench housing | Light |
+| :--- | :--- | :--- | :--- |
+| A drowned masonry fort in a reed swamp: a flooded ward inside a broken curtain, towers and cistern heads standing out of the water, a moat round it, reed beds outside | A branching boardwalk on piles: from a landing stage in the reeds over the moat bridge, through the gatehouse, then a trunk with branches turning between the towers; no run of planks longer than 22 m, ramps up to tower doors, vaulted stairs down into cisterns | Tower chambers (three towers and the keep), vaulted cisterns sunk below the water (three, entered down a stair), and the flooded gatehouse's winch chamber | Low green-grey overcast (the built sky kept), thick fog (fog from 4 m, gone at 220 m); inside, the cover mask, the sun in at the doors that face it |
+
+Checked against section 6: no other row has a fort, a swamp or water you walk over on piles (Mirrowen's quays are at a harbour's
+edge, Thornmere's mounds stand in tar and are walked on the ground). The walk is not Teeter's comb (one stair, level dikes), not
+Ember Reach's switchback, not Lodestone's single canyon path, not Thornmere's zigzag chain of mounds, not Cinder Halo's spiral, not
+Kettle's crane aisle, not Quicklight's grid of alleys: it is a tree of short plank runs with eight branches. The housing is not
+Teeter's rooms dug into terrace walls, not Lodestone's alcoves, not Cinder Halo's shielded cells, not Kettle's bays, not Ligar's
+mine chambers: each room is a free-standing tower's chamber, a cistern below the water table, or a gatehouse chamber.
+The row is built as written.
+
+### 8.3 Plan (x east, z south, metres)
+
+- **Levels.** Water 0.55 m under the decks (`WATER` -0.55); the decks at 0.00; the swamp's bed at about -1.6, the moat's at -2.6.
+  Rooms: the gatehouse's winch chamber 0.0; the corner tower 2.0; the south-west tower 2.8; the water-gate tower 1.2; the keep's
+  hall 4.4; the twin cistern -2.8; the salt cistern -2.0; the great cistern -3.6.
+- **The fort.** Outer faces x -60 to 46, z -66 to 30; curtain 3 m thick, standing 4.2 m over the water, broken down near the water
+  in one length of each wall. The gatehouse (x -4 to 30, z 24 to 40) projects south over the moat. A moat of open water 16 m wide
+  runs round the curtain; reed beds outside it and in the ward's shallows.
+- **The walk** (`verdigris/fort-plan.js`, all `lib/workings.js` volumes, closed on every side that is not a doorway):
+  - the landing stage x 58 to 88, z 38 to 72, the pad at (74, 57), the spawn at (63, 42);
+  - outside: west 21 m (w1), south 8 m (w2), west 20 m (w3), then north over the moat bridge (x 10.4 to 13.6, z 40 to 54.4);
+  - the gate passage x 10.4 to 13.6, z 22 to 40, roofed, the deck over the flooded gate channel;
+  - the ward: a landing at the gate's inner mouth (j4); a branch east up a ramp to the corner tower; the trunk north to j5; west to
+    the twin cistern's stair (j6); west and south-west in three runs to the south-west tower's ramp; north to the salt cistern's
+    stair (j11); east to the foot of the keep's ramp (j12); north and east to the water-gate tower's ramp (j14); back west to the
+    great cistern's stair (j15); east along the north to the pump stage (x 22.4 to 42, z -62 to -28).
+- **Closed ground.** Every tower, cistern head, the keep and its plinth, the gatehouse and the curtain are masonry bodies; the
+  water, the moat and the reed beds lie below and beside the decks; the workings' wall colliders close every deck side that is not
+  a doorway, so nothing but the walk can be stood on.
+- **Route in bench order** (all along the guide's way, door by door): spawn, the gate passage and bench 1 (winch chamber, door off
+  the passage's east side), back to the inner landing, east up ramp 2 to bench 2, north and west to the stair down to bench 3,
+  west, south and west to ramp 4 and bench 4, back to j8 and north to the stair down to bench 5, east and up ramp 6 to bench 6,
+  north and east up ramp 7 to bench 7, west and down the stair to bench 8, east along the north to the pump stage.
+- **The boss's ground.** The Leach at (32, 0, -50) on the pump stage, the player's mark at (32, 1.6, -34); the sump it draws on is
+  the open water off the stage's north edge.
+
+### 8.4 Section along the route
+
+Spawn 0.0 (stage) - bench 1 at 0.0 - ramp up to 2.0, bench 2 - back down, stair down to -2.8, bench 3 - ramp up to 2.8, bench 4
+- stair down to -2.0, bench 5 - ramp up to 4.4, bench 6 - ramp up to 1.2, bench 7 - stair down to -3.6, bench 8 - the pump stage
+at 0.0. Bench ground spans 8.0 m (-3.6 to 4.4) on eight levels; every visit is up or down from the decks.
+
+### 8.5 The benches and their rooms
+
+Every room is entered by one door (3.6 m wide, lintel 3.2 m) or the foot of one stair; the plate stands 3 m from the back wall
+facing it, the player with their back to the door. The cover mask takes the sun and about 0.7 of the sky out of every room, door,
+stair and the gate passage. Each room has a lamp over the plate and one by the door, from the world's `LampPool`. No two rooms
+share a size or a roof.
+
+1. **The Handover (`q1-handover`), the winch chamber of the flooded gatehouse**, 12.4 x 11.6, a groin vault on four corner piers
+   (crown 4.8). An acid hands a proton over to water: this is the room where the gate's sluice hands water from the moat to the
+   ward, so the winding gear for the sluice (drum, chain, a pawl wheel, the chain going down through a slot to the gate) stands
+   behind the plate. Closed on three sides and overhead; the door opens west onto the gate passage, so the player comes over the
+   bridge, into the dark passage, and the lit doorway is on their right.
+2. **Reading the Scale (`q2-scale`), the tide chamber of the corner tower**, 13.2 x 13.0 at 2.0 m, the timber floor of the
+   storey above on two oak girders (4.6 m). A scale is read here: a stilling well connected to the moat stands in the back
+   corner with a graduated staff, the marks on a board of gauge readings. Up a timber ramp from the inner landing.
+3. **Weak Acids and Bases (`q3-weak`), the twin cistern**, 13.6 x 12.0 at -2.8 m, a barrel vault (4.6 m). Two equal cells: the
+   room is the drained one; through an arcade on its side is the twin cell, still holding water to the old line. Same amount,
+   different reading. Down a vaulted stair 12 m long from the trunk.
+4. **Acid Strength and Structure (`q4-structure`), the acid store in the south-west tower**, 13.2 x 12.0 at 2.8 m, a stone roof
+   corbelled in in courses to a slab (5.0 m). The Fifth's reagent store: racks of acid carboys by kind, compared by what they are
+   made of. Up a timber ramp along the west curtain.
+5. **Neutralization and Salts (`q5-salts`), the salt cistern**, 13.6 x 12.0 at -2.0 m, a flat roof on a grid of squat pillars
+   (4.4 m), white salt crust on every pillar up to the old water line: what was left after neutralising. Down a stair from j11.
+6. **Titration Curves (`q6-titrate`), the keep's hall**, 13.6 x 12.0 at 4.4 m, tall walls and a timber roof on trusses (6.6 m to
+   the tie beams), the dosing tank high on a steel frame over the back with its metering pipe coming down to a receiving vat
+   beside the plate. Up a stone ramp 17.6 m long onto the keep's plinth: the highest bench.
+7. **Buffers (`q7-buffer`), the water-gate tower's chamber**, 13.2 x 13.0 at 1.2 m, a pointed tunnel vault (5.0 m). The fort's
+   water gate: the channel through the north wall runs beside the room behind a grille, with two sluices, one that held and one
+   that did not. Up a short ramp from the north boardwalk.
+8. **pKa, Protonation and Capacity (`q8-capacity`), the great cistern**, 14.0 x 12.0 at -3.6 m, heavy transverse arches every few
+   metres carrying a flat roof (4.6 m), reserve vats of rising size along one wall, a breach high in the far corner where the
+   cistern failed: how much it could take. Down the longest stair (13 m) from j15: the lowest bench.
+
+### 8.6 How it differs from each neighbour
+
+- Tallow: a dead-flat white pan; Verdigris is water and reeds round a fort, fogged in.
+- Lanternfall: ice and a frozen lake at night; Verdigris is an overcast swamp you cross on planks.
+- Ligar: hills and mines on dry basalt; Verdigris has no hill, its levels are towers and cisterns.
+- Bellows: decks over a cloud sea; Verdigris's decks are on piles in a swamp, a metre over the water.
+- Ember Reach: a caldera wall with a switchback road; Verdigris is a flat swamp and a fort.
+- Mirrowen: a harbour's quays and hulls; Verdigris has no sea, no ship, and its water is inside a fort.
+- Kettle: inside one foundry building; Verdigris is outdoors among separate towers and cisterns.
+- Teeter: terraces of pans walked down one stair; Verdigris is level water crossed on branching boardwalks.
+- Brinewire: one long barrage wall across a marsh; Verdigris is an enclosed fort, walked through, not along.
+- Quicklight: refinery alleys under pipe racks; Verdigris is old masonry and planks.
+- Lodestone: a narrow canyon walked bend after bend; Verdigris is an open, fogged plan of boardwalks.
+- Thornmere: pitch mounds in a tar lake, benches inside trees; Verdigris's benches are in masonry.
+- Cinder Halo: craters and shielded cells; Verdigris is flat water and a fort.
+
+### 8.7 The far country
+
+North: the swamp runs on to low wooded rises; a ruined outwork (a ravelin's broken tower) stands in the water 120 m out. East: a
+drowned chapel with a green copper dome, its walls in the water. South: a line of dead trees, a drowned avenue, and the
+Fifth's pump line on timber trestles running off into the fog. West: a broken aqueduct of masonry arches crossing the swamp.
+The fog takes everything past 220 m; the ground runs on to the horizon.
+
+### 8.8 The numbers held
+
+- `world-shape.mjs`: 8 of 8 housed, each R5 or better; bench ground -3.6 to 4.4 m (8.0 m) on eight levels; no clones; not one
+  circle, not two columns.
+- Plates in view from the spawn: 0. From each bench's mark, no other plate.
+- Every room at least 11.2 x 11 m inside with 4.4 m over the plate's floor; every plank run at most 22 m.
+- Budget at T4 (`perf-worlds.mjs`): at most 566 draws and 900k triangles; target under 420 draws and 500k triangles.
+
+### 8.9 Kept, rebuilt, archived
+
+- Kept: `verdigris/atmosphere.js` (the sky; the sun is exported for the cover mask), `materials/verdigris-textures.js`,
+  `world-data/verdigris.json`'s ids, labels, quest ids and `built` flags, the Leach's body (`engine/boss-models.js`).
+- Rebuilt: `verdigris.js`, `verdigris/terrain.js`, `verdigris/stations.js`, `verdigris/plant.js`, `verdigris/host-plan.js`,
+  `tools/gen-verdigris-layout.mjs`, `tools/verify-verdigris.mjs`; new `verdigris/fort-plan.js` (pure data).
+- Archived to `archive/2026-11-16/site-verdigris/`: the old versions of every rebuilt file and the old JSON, with a README.
+- Shared: `learn/engine/boss-arena.js` (the Leach's spot moves); no shared library changes planned.
