@@ -598,3 +598,160 @@ No browser was used. Unseen: whether the salt-crust ground, the bleached boards 
 - `verify:bench` currently reports six lines for `unit10/q2-activity` (pieces `s-zn` and `s-fe` 25.9 to 27.9 px across at the two phone-landscape viewports, under 28 px). That is the q2 builder's table, not the world; every Brinewire host line in `verify:bench` is green.
 - The built flags in `brinewire.json` go stale each time another builder lands a quest. Rerun the generator last.
 
+
+---
+
+## 9. Site rebuild (2026-11-17)
+
+Branch `site/brinewire`. The brief is Brinewire's row in `docs/plans/world-distinction-plan.md` section 6 (a tidal barrage).
+This section is the spec the rebuild is audited against; the build record follows it (9.10 onward). It changes the site only:
+no quest, stage, kit, bank entry, glossary, story line, site id, quest id or label.
+
+Lore: `saga.js` calls Brinewire "a shallow copper marsh. Pools of salt water, strung with metal bars and cables, feed the grid",
+with the Fifth's drain clamps "on every pylon" and the Clamp's last cell reading "like every cell on the road". A barrage across
+that marsh, holding the brine pools back on one side, with the marsh's cells in a gallery inside it and the grid leaving from its
+foot, is the place as written: the impounded water is the pools (the cell frames stand in it), the road is the crest, the pylons
+stand in the lagoon and march off from the switchyard. Nothing in the story changes. The row was proposed as one that "needs a
+yes"; this run was sent with the row as its brief, which is taken as that yes.
+
+### 9.1 The place
+
+**Brinewire is a tidal barrage: one concrete wall across the copper marsh, a lagoon of impounded brine standing 10 m up against
+its west face, a 12 m drop down its east face to the tailrace and the tidal flats; the benches are in the gate houses on its
+crest, in a gallery of cell chambers inside the wall, and in the switchyard's cage at its foot.** In the first ten seconds after
+landing a player stands on the north abutment at the head of the crest road, sees the road run straight south along the top of the
+wall for 130 m between two parapets, the lagoon on their right reaching west to the sun with pylons and cell frames standing in
+it, two gate houses standing off the road over the water, and on their left the wall's deck and, past its edge, the flats far below;
+no bench's plate is in sight.
+
+### 9.2 Signature
+
+| Landform | Walk shape | Bench housing | Light |
+| :--- | :--- | :--- | :--- |
+| A tidal barrage: a straight concrete wall 28 m thick across the marsh between two headlands; impounded brine at 10.2 m against its west face, a 12 m drop to the tailrace basin and the tidal flats on its east | Along the crest road (level, 130 m), then down one long ramp built against the wall's east face, two flights with a landing half way, to the foot apron | Two gate houses standing off the crest over the lagoon on piers; three cell chambers off a gallery inside the wall, entered by an adit from the ramp's landing; the switchyard's rectifier cage against the wall at its foot | The built sky kept: dry late afternoon, the sun 17 degrees up in the west-south-west, so the whole east side (ramp, foot, switchyard) lies in the wall's shadow. Inside, the cover mask; the sun in only through the gate houses' west windows |
+
+Checked against section 6. Landform: no other row is a dam; Mirrowen's water is at one level at a harbour's edge, Teeter's walls
+are a terraced hillside, Verdigris's water is a swamp round a fort. Walk shape: a level crest followed by one ramp is not Teeter's
+comb, Ember Reach's switchback, Kettle's aisle, Lodestone's canyon path, Verdigris's branching boardwalk, Thornmere's zigzag,
+Cinder Halo's spiral, Mirrowen's quays or Quicklight's grid. Housing: houses standing over water on piers, a gallery of chambers
+inside a dam and a mesh cage are not Teeter's rooms dug in behind terrace walls (each opening straight off a dike), Ligar's mine
+chambers (in rock, down drifts), Kettle's bays, Lodestone's alcoves, Cinder Halo's cells, Verdigris's towers and cisterns. The
+row is built as written.
+
+### 9.3 Plan (x east, z south, metres; north is -z)
+
+Levels: the crest 12.0; the gallery 6.0; the foot 0.0. The lagoon's brine stands at 10.2 (its bed at 4); the tailrace basin's
+water at -1.6 (its bed at -3.5); the tidal flats at -1.2.
+
+- **The wall.** Runs north and south from z -92 to z 80 between the headlands. Its west (upstream) face at x -34; the crest road
+  on top of it, x -34 to -24, between a parapet on each side; east of the road the wall's DECK (x -23.4 to 4, top 12.6), fenced
+  off from the road by its parapet and never walked: gantry rails, hatch covers, the cable trench, the gate hoists' motor houses.
+  Its east (downstream) face at x 4. Inside the deck, at 6.0, the cell gallery.
+- **North abutment yard**, x -52 to -14, z -95 to -66, at 12.0: the pad (centre -33, -82), the spawn at (-29, 13.6, -66) looking
+  south down the road. Closed by the headland's rock on the north and west, by the deck on the east.
+- **Crest road**, x -34 to -24, z -66 to 62, at 12.0.
+- **Gate house 1** (site-1) off the road's west side over the lagoon on a pier: inside x -47.6 to -34.6, z -56 to -43; its door
+  through the parapet line (x -34.6 to -34, z -51.3 to -47.7).
+- **Gate house 2** (site-2): inside x -46.2 to -34.6, z -14 to -1.6; door z -9.6 to -6.0.
+- **South abutment yard**, x -34 to 10, z 62 to 78, at 12.0, closed by the south headland on the south and by parapets on the
+  west (the lagoon) and the east (the drop to the basin).
+- **The ramp**, x 4 to 10, against the wall's east face, its east side a parapet over the basin: flight 1 from the south yard
+  (z 62, 12.0) north to z 14 (6.0), 1 in 8; the landing z 2 to 14 at 6.0; flight 2 north to z -46 (0.0), 1 in 8.
+- **The adit**, x -3 to 4, z 6 to 10, at 6.0: from the landing west through the face into the gallery.
+- **The gallery**, x -8 to -3, z -34 to 30, at 6.0, roofed at 4.4.
+- **Cell chambers**, each through a door in the gallery's west wall (x -8.8 to -8): chamber 3 (site-3) x -21.4 to -8.8, z 14 to
+  27.4; chamber 4 (site-4) x -20.4 to -8.8, z -8.6 to 3.0; chamber 5 (site-5) x -21.4 to -8.8, z -32 to -19.
+- **The foot apron**, x 4 to 46, z -92 to -46, at 0.0, met by flight 2's foot. Closed by the headland on the north, the sea wall
+  over the tidal flats on the east (x 46), the quay edge of the tailrace basin on the south (z -46, east of the ramp).
+- **The switchyard cage** (site-6) against the wall's east face at the foot: inside x 4.6 to 17.6, z -80 to -67, door in its east
+  side.
+- **The Clamp's ground**: on the apron, boss at (34, 0, -74), the player's mark at (34, 1.6, -58); open 7 m all round.
+- **Kept out**: the lagoon (parapet, gate houses' walls), the deck (the road's east parapet), the basin and the flats (the ramp's
+  parapet, the quay rail, the sea wall), the headlands (the yards' retaining walls). Every closed side of every walk volume is a
+  wall collider (`lib/workings.js`); flood fill from the spawn proves it.
+
+Route in bench order: spawn, south 17 m to gate house 1's door (west), on south 41 m to gate house 2 (west), on south 70 m to the
+south yard, east across it to the ramp's head, down flight 1 to the landing, west through the adit into the gallery, south to
+chamber 3, north past the adit to chamber 4 and chamber 5, back out to the landing, down flight 2 to the foot, north-east to the
+cage's door. The Clamp's ground is beside the cage on the apron.
+
+### 9.4 Section along the route
+
+Spawn 12.0, the crest road 12.0 for 128 m (gate houses 1 and 2 at 12.0), the south yard 12.0, flight 1 falling 6 m over 48 m,
+the landing and the gallery at 6.0 (chambers 3, 4 and 5), flight 2 falling 6 m over 48 m, the apron at 0.0 (the cage, the Clamp).
+Bench ground: 12.0, 12.0, 6.0, 6.0, 6.0, 0.0: a span of 12 m on three levels.
+
+### 9.5 The benches and their rooms
+
+1. **Half-Reactions (`q1-halves`), gate house 1, the hoist house.** The bench asks what moves when a metal rots. A sluice gate is
+   a steel leaf standing in brine: it rusts from the waterline, and its hoist house is where it is lifted out and seen. The room
+   (13.0 × 13.0, walls of concrete block, a gabled steel-truss roof, eaves 6.4 m, ridge 8.6 m) is closed on four sides; the
+   gate's slot crosses the floor behind the plate under a grating, and the leaf, raised, stands in it to the roof truss with its
+   waterline band of rust and blistered paint; a hoist crab runs on a beam over it. West windows look over the lagoon (the low
+   sun comes in through them). The player comes along the road, turns west through the door, and sees the leaf over the plate.
+   Lamps: one pendant over the plate, one by the door.
+2. **Which Metal Gives (`q2-activity`), gate house 2, the anode store.** The bench orders metals by which gives electrons first.
+   This house keeps the gates' sacrificial anodes: racks of zinc and aluminium anode blocks, spent anodes eaten to their cores in
+   bins, a bolted copper bus with its iron clamps. The room (11.6 × 12.4) has a monopitch roof rising from 4.8 m at the door to
+   6.6 m at the lagoon wall, a high strip window in that wall; the anode racks line both side walls and the back. Lamps: a
+   pendant over the plate, one on the back rack.
+3. **Galvanic Cells (`q3-galvanic`), cell chamber 3, the bridge chamber.** The bench splits a reaction into two halves and joins
+   them with a wire and a bridge. The chamber holds two half-cell tanks either side of the plate, fed with brine through the wall
+   from the lagoon, and a salt-bridge trough between them across the back, with the cell leads on porcelain insulators. A barrel
+   vault (crown 5.4 m) running east and west, 13.4 × 12.6, entered from the gallery by a door in its east wall. Lamps: pendant
+   over the plate, one by the door.
+4. **Cell Potential (`q4-potential`), cell chamber 4, the meter room.** The bench reads a cell's voltage and what sets it. Every
+   cell in the gallery is read here: a panel of voltmeters on the back wall, a recorder desk, a rack of reference electrodes. A
+   flat slab roof on rolled steel beams at 4.6 m; 11.6 × 11.6. Lamps: two pendants (plate, door).
+5. **Under Load (`q5-load`), cell chamber 5, the battery hall.** The bench runs a cell down to equilibrium. The hall holds two
+   tiers of glass-sided cells on a steel stand along each side wall, a busbar over them, the load resistor grid against the back
+   wall; a crane runway on two beams under a 6.0 m slab. 12.6 × 13.0. Lamps: pendant over the plate, one by the door, one over
+   the resistor grid.
+6. **Electrolysis (`q6-electrolysis`), the switchyard cage at the foot.** The bench pushes current backward through a cell and
+   counts the metal plated. The rectifier cage is where the grid's current is turned back into the cells: a rectifier cabinet,
+   a plating tank fed from the tailrace with anode bars across it, cable trays up the wall. Steel stanchions and expanded-metal
+   mesh walls on the north, east and south, the wall's concrete face on the west, a sheet roof (lean-to, 5.2 m to 6.4 m) on
+   rolled beams; 13.0 × 13.0, door in the east mesh wall. Lamps: pendant over the plate, one by the door.
+
+No two rooms share a shell: gable, monopitch, barrel vault, beam-and-slab, tall slab with crane runway, mesh cage.
+
+### 9.6 How it differs from each neighbour
+
+- Tallow: a flat white pan with the plant on it; Brinewire is a wall with water high on one side and a drop on the other.
+- Lanternfall: ice and a frozen lake at night; Brinewire is concrete and brine in afternoon sun.
+- Ligar: hills of basalt with mines driven into them; Brinewire's levels are one built wall, its chambers are inside concrete.
+- Bellows: decks in the sky over cloud; Brinewire stands on a marsh, and its one high walk is a road on a dam.
+- Ember Reach: a caldera wall walked by switchbacks over lava; Brinewire is walked straight along a crest and down one ramp.
+- Mirrowen: a harbour at one water level, quays and hulls; Brinewire has two water levels 12 m apart either side of a wall.
+- Kettle: inside one foundry; Brinewire is outdoors on a dam, with rooms in it and on it.
+- Teeter: a hillside of five terraces walked down one stair; Brinewire is one wall, one crest, one ramp.
+- Verdigris: towers in a fogged reed swamp on boardwalks; Brinewire is open and clear, a road on concrete.
+- Quicklight: a tight grid of refinery alleys in a storm; Brinewire is one long straight line with long views.
+- Lodestone: a narrow canyon walked bend after bend; Brinewire is a straight built wall with views both ways.
+- Thornmere: mounds in a tar lake; Brinewire is a concrete wall holding water back.
+- Cinder Halo: craters and shielded cells behind dog-legs; Brinewire's rooms are straight off a road and a gallery.
+
+### 9.7 The far country
+
+West: the lagoon to a low shore 600 m off with a line of hills under the sun; standing in the lagoon, the marsh's cell frames
+(timber trestles strung with metal plates) and a line of lattice pylons with their cables. East: the tidal flats with channels,
+and the transmission line leaving the switchyard on tall lattice towers, striding east to a town's chimneys on the horizon.
+North: the north headland, a bluff of bedded rock, with the brine intake tower standing out of the lagoon beside it. South: the
+south headland, with a disused copper works on it (a brick stack and sheds).
+
+### 9.8 The numbers held
+
+- `world-shape.mjs`: 6 of 6 housed (R5 or better), bench ground 0.0 to 12.0 (12 m), no cloned coordinates.
+- From the spawn no plate in view; from each bench no other plate.
+- Rooms at least 11.2 × 11 m with 4.4 m over the plate.
+- At most 566 draws and 900k triangles at T4 (the plan's section 4); aim under 400 and 400k.
+
+### 9.9 Kept, rebuilt, archived
+
+- Kept: `brinewire/atmosphere.js` (the sky, the sun), `materials/brinewire-textures.js` (concrete, boards, salt mud, brine),
+  `tools/lib/brinewire-*-checks.mjs` (the planners' data), the Clamp's arena body in `boss-models.js`.
+- Rebuilt: `brinewire.js`, `brinewire/host-plan.js`, `brinewire/terrain.js`, `brinewire/stations.js`, `brinewire/plant.js`,
+  `tools/gen-brinewire-layout.mjs`, `tools/verify-brinewire.mjs`, `world-data/brinewire.json`; new `brinewire/barrage-plan.js`.
+  `boss-arena.js`'s `boss-clamp` spot moves to the apron.
+- Archived to `archive/2026-11-17/site-brinewire/`: the first build's world module, its terrain, plant, stations, host plan,
+  generator, verify script and JSON.
