@@ -139,14 +139,14 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.4,
     species: 'the leach'
   },
-  // On the switch-house court at the south end of the spine, on the shore of the lagoon, the largest pool (`world-data/brinewire.json` keeps this
-  // ground open; `verify:brinewire` holds the two together). The Clamp's arena body is in `boss-models.js`; its quest `boss-clamp`, its table
+  // On the apron at the barrage's foot, the wall's east face to its west and the tailrace basin to its south (`brinewire/barrage-plan.js`
+  // ARENA; `verify:brinewire` holds the two together). The Clamp's arena body is in `boss-models.js`; its quest `boss-clamp`, its table
   // foe body (`foebody.js`, `foes.js`) and its finale are built apart, and hook in under the species name 'the clamp'.
   'boss-clamp': {
     worldId: 'unit10',
-    playerPos: [0, 1.6, -38],
-    lookAtPos: [0, 1.6, -54],
-    bossPos: [0, 0, -54],
+    playerPos: [34, 1.6, -58],
+    lookAtPos: [34, 1.6, -74],
+    bossPos: [34, 0, -74],
     scale: 1.4,
     species: 'the clamp'
   },

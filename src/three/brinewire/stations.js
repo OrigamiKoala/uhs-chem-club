@@ -1,35 +1,42 @@
 /**
- * brinewire/stations.js — The six hosts: the pieces of the marsh's power works a Learn bench is built into.
+ * brinewire/stations.js — The six hosts: what the barrage keeps in each of its rooms, and the bench built into it.
  *
- * A bench on Brinewire is not a bench in a room. It is a working point of the grid: the rotting pylon base in its brine
- * sump, the dip pool with its row of hung strips, a pair of pools joined by a pipe bridge, the metering shed, the battery
- * bank and the plating works. Each builder returns the machine AND its bench as ONE object, so the overlap rule (which
- * exempts a body's own parts) lets the bench be bolted to the thing it belongs to, and the bay contract (`bench-bay.js`)
- * keeps the volume the plate, the instrument, the screens and the camera need empty.
+ * A bench on Brinewire stands in a ROOM of the barrage (`barrage-plan.js`): a gate house on the crest, a cell chamber off the
+ * gallery inside the wall, or the switchyard's cage at the foot. The room's shell (floor, walls, roof) is the barrage's
+ * (`terrain.js`). The HOST is what stands in it and its bench, as ONE object: so the overlap rule (which exempts a body's own
+ * parts) lets the bench be bolted to the thing it belongs to, and the bay contract (`bench-bay.js`) keeps the volume the plate,
+ * the instrument, the screens and the camera need empty of it.
  *
- * THE HOST FRAME. Origin on the ground under the middle of the plate; +z is the front (toward the spine the player
- * walks in from), +x to the player's right. The world places the group at `site.pos`, turned to face its approach.
- * Machinery stands to the sides (|x| > 2.85), behind the plate (z < -2.05), or above 2.4 m behind it; the work lamp
- * hangs over the plate on a boom from a mast at the side. `verify:bench` measures all of it and `verify:brinewire`
- * measures that no host stands outside the extent `host-plan.js` declares for it.
+ *   1 hoist house     the sluice gate's steel leaf raised in its slot behind the plate, rusted at its waterline; the crab
+ *                     on its runway over it; the hand-hoist gearbox; replaced rollers and seals
+ *   2 anode store     racks of zinc and aluminium anodes on the walls; bins of spent anodes eaten to their cores; a copper
+ *                     bus with iron clamps bolted to the wall, the iron rusted where it touches the copper
+ *   3 bridge chamber  two half-cell tanks either side of the plate, a zinc plate in one and a copper plate in the other,
+ *                     brine fed in from the lagoon; the salt-bridge trough between them across the back; the leads
+ *   4 meter room      a panel of voltmeters across the back wall, one for every cell in the gallery; a chart recorder;
+ *                     a rack of reference electrodes
+ *   5 battery hall    two tiers of glass-sided cells along both side walls, the busbars over them; the load resistor
+ *                     grid against the back wall
+ *   6 rectifier cage  the rectifier cabinet against the wall; the plating tank with its anode bars; the busbars coming in
+ *                     from the transformers outside
  *
- * ONLY LAMPS ARE LIT. A host's work lamp is a `lampMark` the world pools; nothing here owns a PointLight, and the
- * load lamps on the battery bank are unlit glass.
+ * THE HOST FRAME. Origin on the room's floor under the middle of the plate; +z toward the door (and the player), +x to the
+ * player's right. Every builder is given its room in that frame (`h.room`: `x0, x1, z0, z1` with the walls' colliders taken
+ * off, `hang` the height a lamp's rod is fixed at). Machinery stands to the sides (|x| > 2.85), behind the plate
+ * (z < -2.0), or above 2.4 m; `verify:bench` measures all of it and `verify:brinewire` measures that no host leaves its room.
  *
- * THE DORMANT INSTRUMENT. What stands on the plate when nobody is working is the bench's instrument, cased up: the
- * one clean, bright thing among patina and weathered concrete (`M.case`). Pressing [E] hides the case and opens the table.
+ * ONLY LAMPS ARE LIT. A host hangs its room's lamps (`lampMark`s the world pools); nothing here owns a PointLight.
+ * NO SIGN STANDS ON THE BARRAGE. Nothing here carries lettering.
  *
- * @returns {{ group, bench, benchLocal, colliders }} `colliders` are host-local discs `{ lx, lz, r }` and boxes
- *   `{ lx, lz, hw, hd }`; the world turns them to its own frame.
+ * @returns {{ group, bench, benchLocal, colliders, movers }} `colliders` are host-local discs `{ lx, lz, r }` and boxes
+ *   `{ lx, lz, hw, hd }`; the world turns them to its own frame. `movers` have `update(t)`.
  */
 
 import * as THREE from 'three';
 import { buildBayBench } from '../bench-bay.js';
-import { placard } from '../materials/pbr-kit.js';
-import { HOST_PLAN } from './host-plan.js';
-
-const LAMP = 0xd99423;
-const UP = new THREE.Vector3(0, 1, 0);
+import { HOST_PLAN, hostExtent } from './host-plan.js';
+import { ROOMS, WALL_T } from './barrage-plan.js';
+import { kitFor } from '../kettle/kit.js';
 
 /* ----------------------------------------------------------------- the bench */
 
@@ -84,270 +91,389 @@ export function buildBwBench(ctx, { kind = 'beaker', plate = 'BRW-01', skin = 'd
   });
 }
 
-/* --------------------------------------------------------------- the parts kit */
+/* --------------------------------------------------------------- start and finish */
 
-function kitFor(w) {
-  const own = (...o) => w.own(...o);
-  const { M, t4 } = w;
-  const place = (m, [x, y, z], rot, shadow) => {
-    m.position.set(x, y, z);
-    if (rot) m.rotation.set(...rot);
-    if (shadow) m.castShadow = m.receiveShadow = t4;
-    return m;
-  };
-  /** Every verb adds a mesh to the group `g` and hands the mesh back. */
-  const box = (g, [sx, sy, sz], mat, p, rot = null, shadow = true) => g.add(place(new THREE.Mesh(own(new THREE.BoxGeometry(sx, sy, sz)), mat), p, rot, shadow)) && g.children[g.children.length - 1];
-  const cyl = (g, [rt, rb, h, seg = 16], mat, p, rot = null, shadow = true) => g.add(place(new THREE.Mesh(own(new THREE.CylinderGeometry(rt, rb, h, seg)), mat), p, rot, shadow)) && g.children[g.children.length - 1];
-  const tube = (g, [r, h], mat, p) => g.add(place(new THREE.Mesh(own(new THREE.CylinderGeometry(r, r, h, 18, 1, true)), mat), p, null, false)) && g.children[g.children.length - 1];
-  const cone = (g, [r, h, seg = 14], mat, p) => g.add(place(new THREE.Mesh(own(new THREE.ConeGeometry(r, h, seg)), mat), p, null, true)) && g.children[g.children.length - 1];
-  const strut = (g, a, b, r, mat, seg = 8) => {
-    const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
-    const m = new THREE.Mesh(own(new THREE.CylinderGeometry(r, r, va.distanceTo(vb), seg)), mat);
-    m.position.copy(va).add(vb).multiplyScalar(0.5);
-    m.quaternion.setFromUnitVectors(UP, vb.clone().sub(va).normalize());
-    g.add(m);
-    return m;
-  };
-  const pipe = (g, pts, r, mat) => {
-    for (let i = 0; i < pts.length - 1; i++) strut(g, pts[i], pts[i + 1], r, mat, 10);
-    for (let i = 1; i < pts.length - 1; i++) g.add(place(new THREE.Mesh(own(new THREE.SphereGeometry(r * 1.02, 12, 8)), mat), pts[i]));
-  };
-  const footing = (g, x, z, s = 0.34) => box(g, [s + 0.16, 0.05, s + 0.16], M.darkSteel, [x, 0.025, z], null, false);
-  /** A square post on a footing, from the ground to `top`. */
-  const post = (g, x, z, top, s = 0.16, mat = M.darkSteel) => { footing(g, x, z, Math.max(0.28, s + 0.14)); box(g, [s, top - 0.05, s], mat, [x, 0.05 + (top - 0.05) / 2, z]); };
-  const tag = (g, text, size, p, ry = 0) => {
-    const t = placard(text, { fg: '#1c211c', bg: '#cfc9b8', ...size });
-    t.position.set(...p);
-    t.rotation.y = ry;
-    g.add(t);
-    own(t.geometry, t.material, t.material.map);
-  };
-  const lamp = (g, x, y, z, { intensity = 8, distance = 12 } = {}) => {
-    const mark = new THREE.Object3D();
-    mark.position.set(x, y, z);
-    mark.userData.lamp = { color: LAMP, intensity, distance, decay: 1.7 };
-    g.add(mark);
-    w.lamps.push(mark);
-    box(g, [0.4, 0.1, 0.2], M.lantern, [x, y + 0.12, z], null, false);
-  };
-  /** A lamp on a mast with a boom that reaches it out over the plate. */
-  const lampMast = (g, x, z, { h = 3.7, arm = [0, 0] } = {}) => {
-    footing(g, x, z, 0.3);
-    cyl(g, [0.045, 0.06, h, 10], M.darkSteel, [x, h / 2, z]);
-    strut(g, [x, h - 0.05, z], [x + arm[0], h - 0.05, z + arm[1]], 0.035, M.darkSteel);
-    lamp(g, x + arm[0], h - 0.24, z + arm[1]);
-  };
-  /** A plank deck under the whole host: ground, so the machines stand on it rather than in it. */
-  const slab = (g, [x0, x1, z0, z1]) => {
-    const m = box(g, [x1 - x0, 0.1, z1 - z0], M.plank, [(x0 + x1) / 2, 0, (z0 + z1) / 2], null, false);
-    m.userData.phys = 'ground';
-    return m;
-  };
-  return { box, cyl, tube, cone, strut, pipe, footing, post, tag, lamp, lampMast, slab, own };
+/** A room's lamp: hung from the roof on a rod. */
+const ROOM_LAMP = { intensity: 9, distance: 12 };
+
+/**
+ * The height a lamp's rod is fixed at over a host-frame point: the underside of the roof, or of the member it hangs from.
+ * Every room faces east, so host (lx, lz) is world (px + lz, pz - lx).
+ */
+function roofUnder(room, plan, lx, lz) {
+  const r = room.rect;
+  const x = plan.pos[0] + lz, z = plan.pos[1] - lx;
+  const T = WALL_T;
+  if (room.shell === 'gable') return room.top - 0.18;
+  if (room.shell === 'mono') {
+    const X0 = r.minX - T - 0.35, X1 = r.maxX + T + 0.35;
+    return room.top + (room.ridge - room.top) * ((X1 - x) / (X1 - X0)) - 0.12;
+  }
+  if (room.shell === 'vault') {
+    const half = (r.maxZ - r.minZ) / 2, rise = room.top - 3.8, R = (half * half + rise * rise) / (2 * rise);
+    const off = z - (r.minZ + r.maxZ) / 2;
+    return room.top - (R - Math.sqrt(Math.max(0, R * R - off * off)));
+  }
+  if (room.shell === 'cage') {
+    const run = r.maxX + T - (r.minX - T);
+    return room.top + (room.ridge - room.top) * ((r.maxX + T - x) / run) - 0.35;
+  }
+  if (room.shell === 'hall') return room.top - 0.5;
+  return room.top;
 }
 
 function start(w, siteId, name) {
   const k = kitFor(w);
   const plan = HOST_PLAN[siteId];
+  const room = ROOMS.find(r => r.id === plan.room);
   const g = new THREE.Group();
   g.name = name;
   const bench = buildBwBench(w.ctx, { kind: plan.kind, plate: plan.plate, skin: plan.skin });
   g.add(bench.group);
-  k.slab(g, [plan.extent[0], plan.extent[1], plan.extent[2], plan.extent[3] - 0.2]);
-  return { k, M: w.M, g, bench, colliders: [{ lx: 0, lz: 0, hw: 2.4, hd: 0.65 }] };
+  const [x0, x1, z0, z1] = hostExtent(plan);
+  const topAt = (lx, lz) => roofUnder(room, plan, lx, lz);
+  const box = { x0, x1, z0, z1, top: room.top, topAt, room };
+  const colliders = [{ lx: 0, lz: 0, hw: 2.4, hd: 0.65 }];
+  const movers = [];
+  /** Hang a lamp from the roof at (x, z), `y` over the floor. */
+  const hang = (x, z, y = 3.5, opts = ROOM_LAMP) => k.pendant(g, x, y, z, topAt(x, z) - 0.02, opts);
+  const solid = (lx, lz, hw, hd) => colliders.push({ lx, lz, hw, hd });
+  const round = (lx, lz, r) => colliders.push({ lx, lz, r });
+  return { k, M: w.M, g, bench, colliders, movers, room: box, hang, solid, round, w, plan };
 }
-const finish = (h, mast = [3.2, -1.8, [-2.9, 1.8]]) => {
-  h.k.lampMast(h.g, mast[0], mast[1], { arm: mast[2] });
-  h.colliders.push({ lx: mast[0], lz: mast[1], r: 0.2 });
-  return { group: h.g, bench: h.bench, benchLocal: [0, 0, 0], colliders: h.colliders };
+
+/** The lamp over the plate, one by the door, and the host handed back. */
+const finish = (h, { plateZ = -0.3, doorZ = null, y = 3.5 } = {}) => {
+  h.hang(0, plateZ, y);
+  const dz = doorZ ?? h.room.z1 - 2.2;
+  h.hang(0, dz, Math.min(3.3, h.room.topAt(0, dz) - 0.6));
+  return { group: h.g, bench: h.bench, benchLocal: [0, 0, 0], colliders: h.colliders, movers: h.movers };
 };
 
+/* ------------------------------------------------------------------------ shared pieces */
 
-/** A ring (a handwheel) laid flat, owned by the world. */
-function wheel(w, g, r, mat, p) {
-  const m = new THREE.Mesh(w.own(new THREE.TorusGeometry(r, r * 0.1, 8, 22)), mat);
-  m.position.set(...p);
-  m.rotation.x = Math.PI / 2;
-  g.add(m);
-  return m;
-}
+/** A drum standing on its end, with its two rolling hoops. */
+const drum = (h, x, z, mat, y = 0) => {
+  h.k.cyl(h.g, [0.29, 0.29, 0.88, 16], mat, [x, y + 0.44, z]);
+  for (const dy of [0.28, 0.6]) h.k.cyl(h.g, [0.3, 0.3, 0.03, 16], h.M.darkSteel, [x, y + dy, z], null, false);
+};
 
-/** A walled basin of marsh water: four low walls and a sheet of liquid, the liquid kept clear of the walls. */
-function basin(k, g, M, [x0, x1, z0, z1], { wall = M.concrete, liquid = M.water, h = 1.0, t = 0.3, level = 0.72 } = {}) {
-  k.box(g, [x1 - x0, h, t], wall, [(x0 + x1) / 2, h / 2, z0]);
-  k.box(g, [x1 - x0, h, t], wall, [(x0 + x1) / 2, h / 2, z1]);
-  for (const x of [x0, x1]) k.box(g, [t, h, z1 - z0 - t], wall, [x, h / 2, (z0 + z1) / 2]);
-  k.box(g, [x1 - x0 - t * 2, 0.05, z1 - z0 - t * 2], liquid, [(x0 + x1) / 2, level, (z0 + z1) / 2], null, false);
-}
-
-
-/* ------------------------------------------------------------------------ 1 */
-
-/** The pylon base: a lattice pylon's four legs anchored in a concrete footing that stands in a rusting brine sump, with a bolted foot plate and a sample jar. */
-export function buildPylonBase(w) {
-  const h = start(w, 'site-1', 'pylon-base');
-  const { k, M, g } = h;
-  const Z0 = -9.0, Z1 = -4.2, ZM = -6.6;
-  basin(k, g, M, [-5.8, 5.8, Z0, Z1], { level: 0.62, wall: M.concrete });
-  k.box(g, [4.6, 0.5, 4.0], M.concrete, [0, 0.25, ZM], null, true);                        // the footing the legs are bolted to
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const lx = sx * 1.7, lz = ZM + sz * 1.5;
-    k.box(g, [0.7, 0.14, 0.7], M.rusted, [lx, 0.57, lz]);                                  // the foot plate
-    k.box(g, [0.26, 1.6, 0.26], M.rusted, [lx, 1.4, lz]);                                  // the rotted collar
-    k.strut(g, [lx, 2.2, lz], [sx * 0.7, 7.4, ZM + sz * 0.6], 0.09, M.steel, 6);           // the leg, drawn in toward the waist
+/** A handwheel on a spindle, its face toward +z (`axis` 'z') or toward +x ('x'). */
+function handwheel(h, x, y, z, axis = 'z', r = 0.28) {
+  const { k, g, M } = h;
+  const ring = new THREE.Mesh(h.w.own(new THREE.TorusGeometry(r, 0.025, 8, 24)), M.darkSteel);
+  ring.position.set(x, y, z);
+  if (axis === 'x') ring.rotation.y = Math.PI / 2;
+  g.add(ring);
+  for (let i = 0; i < 3; i++) {
+    const sp = k.box(g, [2 * r, 0.025, 0.025], M.darkSteel, [x, y, z], null, false);
+    if (axis === 'z') sp.rotation.z = i * Math.PI / 3; else { sp.rotation.y = Math.PI / 2; sp.rotation.x = i * Math.PI / 3; }
   }
-  for (const y of [3.2, 5.2]) {
-    const s = 1.7 - (y - 2.2) / 5.2 * 1.0, sz = 1.5 - (y - 2.2) / 5.2 * 0.9;
-    k.strut(g, [-s, y, ZM - sz], [s, y, ZM - sz], 0.05, M.darkSteel, 5);
-    k.strut(g, [-s, y, ZM + sz], [s, y, ZM + sz], 0.05, M.darkSteel, 5);
-    k.strut(g, [-s, y, ZM - sz], [-s, y, ZM + sz], 0.05, M.darkSteel, 5);
-    k.strut(g, [s, y, ZM - sz], [s, y, ZM + sz], 0.05, M.darkSteel, 5);
-  }
-  k.strut(g, [-1.7, 2.2, ZM + 1.5], [-1.1, 4.2, ZM + 1.05], 0.045, M.darkSteel, 5);
-  k.cyl(g, [0.5, 0.5, 1.0, 20], M.glass, [4.7, 0.6, -3.6]);                                // the sample jar on its plinth
-  k.cyl(g, [0.44, 0.44, 0.6, 20], M.water, [4.7, 0.5, -3.6], null, false);
-  k.box(g, [1.2, 0.1, 1.2], M.concrete, [4.7, 0.05, -3.6], null, false);
-  k.tag(g, 'PYLON BASE', { w: 0.8, h: 0.18 }, [-3.4, 0.8, Z1 + 0.17]);
-  h.colliders.push({ lx: 0, lz: -6.6, hw: 5.8, hd: 2.4 }, { lx: 4.7, lz: -3.6, r: 0.7 });
-  return finish(h);
 }
 
-/* ------------------------------------------------------------------------ 2 */
-
-/** The dip pool: a long pool under a gantry that hangs a row of metal strips over it on chains. */
-export function buildDipPool(w) {
-  const h = start(w, 'site-2', 'dip-pool');
-  const { k, M, g } = h;
-  basin(k, g, M, [-6.3, 6.3, -8.2, -4.6], { level: 0.58, wall: M.concrete });
-  for (const sx of [-1, 1]) k.post(g, sx * 6.7, -6.4, 3.7, 0.22);                           // the gantry
-  k.box(g, [13.8, 0.16, 0.22], M.darkSteel, [0, 3.7, -6.4]);
-  const strips = [M.copper, M.steel, M.brass, M.darkSteel, M.rusted, M.patina, M.copperClad];
-  strips.forEach((mat, i) => {
-    const x = -4.8 + i * 1.6;
-    k.box(g, [0.02, 1.8, 0.02], M.steel, [x, 2.7, -6.4], null, false);                      // the chain
-    k.box(g, [0.34, 1.1, 0.04], mat, [x, 1.4, -6.4]);                                       // the strip, its foot under the surface
-  });
-  k.box(g, [1.6, 0.9, 0.9], M.timberDark, [-5.2, 0.45, -2.8]);                              // the drying rack's bench
-  for (let i = 0; i < 3; i++) k.box(g, [0.3, 0.02, 0.5], strips[i * 2], [-5.55 + i * 0.35, 0.92, -2.8], null, false);
-  k.tag(g, 'DIP POOL', { w: 0.6, h: 0.16 }, [3.5, 0.8, -4.43]);
-  h.colliders.push({ lx: 0, lz: -6.4, hw: 6.9, hd: 2.0 }, { lx: -5.2, lz: -2.8, hw: 0.9, hd: 0.5 });
-  return finish(h);
+/** A steel shelf rack along z against a side wall at x: uprights, shelves, and `load(x, y, z, bay)` on each bay of each shelf. */
+function rackAlongZ(h, x, z0, z1, { depth = 0.7, top = 2.6, shelves = [0.45, 1.15, 1.85, 2.55], bay = 1.6, load = null, mat = null } = {}) {
+  const { k, g, M } = h;
+  const n = Math.max(1, Math.round((z1 - z0) / bay));
+  const step = (z1 - z0) / n;
+  for (let i = 0; i <= n; i++) for (const dx of [-depth / 2 + 0.04, depth / 2 - 0.04]) k.box(g, [0.06, top, 0.06], mat || M.darkSteel, [x + dx, top / 2, z0 + i * step]);
+  for (const y of shelves) {
+    k.box(g, [depth, 0.04, z1 - z0], M.steel, [x, y, (z0 + z1) / 2]);
+    if (load) for (let i = 0; i < n; i++) load(x, y + 0.02, z0 + (i + 0.5) * step, step);
+  }
+  h.solid(x, (z0 + z1) / 2, depth / 2, (z1 - z0) / 2);
 }
 
-/* ------------------------------------------------------------------------ 3 */
-
-/** The pool pair: two lined pools, an arched pipe bridge between them and a cable strung from post to post over a meter. */
-export function buildPoolPair(w) {
-  const h = start(w, 'site-3', 'pool-pair');
-  const { k, M, g } = h;
-  basin(k, g, M, [-6.8, -0.8, -8.4, -4.4], { level: 0.62, wall: M.concrete });
-  basin(k, g, M, [0.8, 6.8, -8.4, -4.4], { level: 0.62, wall: M.concrete });
-  k.pipe(g, [[-3.0, 0.4, -6.4], [-3.0, 1.9, -6.4], [-2.4, 2.5, -6.4], [2.4, 2.5, -6.4], [3.0, 1.9, -6.4], [3.0, 0.4, -6.4]], 0.13, M.glass);   // the bridge
-  for (const sx of [-1, 1]) {
-    k.post(g, sx * 5.4, -7.6, 2.9, 0.2);                                                    // an electrode post in each pool
-    k.cyl(g, [0.07, 0.07, 1.9, 10], M.copper, [sx * 5.4, 1.0, -6.2]);
-    k.box(g, [0.3, 0.2, 0.3], M.darkSteel, [sx * 5.4, 2.0, -6.2], null, false);
-  }
-  k.pipe(g, [[-5.4, 2.9, -7.6], [-5.4, 3.5, -7.6], [5.4, 3.5, -7.6], [5.4, 2.9, -7.6]], 0.04, M.copper);   // the cable
-  k.post(g, 0, -8.15, 3.0, 0.16);
-  k.box(g, [0.5, 0.4, 0.22], M.case, [0, 3.2, -8.15]);
-  k.tag(g, 'POOL A', { w: 0.45, h: 0.15 }, [-3.8, 0.8, -4.23]);
-  k.tag(g, 'POOL B', { w: 0.45, h: 0.15 }, [3.8, 0.8, -4.23]);
-  h.colliders.push({ lx: -3.8, lz: -6.4, hw: 3.1, hd: 2.1 }, { lx: 3.8, lz: -6.4, hw: 3.1, hd: 2.1 });
-  return finish(h);
+/** A cable tray along z at height y on brackets off the side wall at `wall` (the wall's x), `out` its reach. */
+function trayAlongZ(h, wall, y, z0, z1, out = 0.5) {
+  const { k, g, M } = h;
+  const s = Math.sign(wall);
+  const x = wall - s * out / 2;
+  k.box(g, [out, 0.04, z1 - z0], M.darkSteel, [x, y, (z0 + z1) / 2], null, false);
+  for (const dx of [-out / 2, out / 2]) k.box(g, [0.03, 0.12, z1 - z0], M.darkSteel, [x + dx, y + 0.06, (z0 + z1) / 2], null, false);
+  for (let z = z0 + 0.4; z < z1; z += 1.6) k.box(g, [out, 0.06, 0.06], M.darkSteel, [x, y - 0.05, z], null, false);
+  // The cables in it.
+  for (let i = 0; i < 3; i++) k.cyl(g, [0.035, 0.035, z1 - z0 - 0.1, 6], M.rubber, [x - out / 2 + 0.12 + i * 0.12, y + 0.06, (z0 + z1) / 2], [Math.PI / 2, 0, 0], false);
 }
 
-/* ------------------------------------------------------------------------ 4 */
+/* ------------------------------------------------------------------------ the hosts */
 
-/** The metering shed: an open-fronted concrete shed with a row of dial meters on the back wall, a recorder drum on a plinth and a rack of spare strips. */
-export function buildMeteringShed(w) {
-  const h = start(w, 'site-4', 'metering-shed');
-  const { k, M, g } = h;
-  k.box(g, [13.2, 3.3, 0.25], M.concrete, [0, 1.65, -7.45]);
-  for (const sx of [-1, 1]) {
-    k.box(g, [0.25, 3.3, 5.0], M.concrete, [sx * 6.5, 1.65, -4.9]);
-    k.post(g, sx * 6.5, -2.3, 3.4, 0.2);
+/**
+ * 1 THE HOIST HOUSE over gate 1. The sluice gate's steel leaf stands raised in its slot across the back of the room: its paint
+ * blistered and its steel rusted through a band where it stood at the waterline. The crab that lifts it runs on a beam over it.
+ * On the left, the hand-hoist gearbox and its handwheel; on the right, the replaced rollers and the seal rubber.
+ */
+function hoistHouse(w) {
+  const h = start(w, 'site-1', 'host-hoist-house');
+  const { k, g, M, room } = h;
+  const zs = -2.35;
+  // The slot in the floor, grated either side of the leaf; the guide channels up the room to the truss.
+  k.box(g, [6.4, 0.03, 0.7], M.darkSteel, [0, 0.015, zs], null, false);
+  for (const s of [-1, 1]) {
+    const x = s * 2.95;
+    k.box(g, [0.3, room.top - 0.2, 0.12], M.darkSteel, [x, (room.top - 0.2) / 2, zs - 0.2]);
+    k.box(g, [0.3, room.top - 0.2, 0.12], M.darkSteel, [x, (room.top - 0.2) / 2, zs + 0.2]);
+    k.box(g, [0.1, room.top - 0.2, 0.3], M.darkSteel, [x + s * 0.1, (room.top - 0.2) / 2, zs]);
   }
-  k.box(g, [13.6, 0.2, 5.8], M.darkSteel, [0, 3.45, -4.6], [0.06, 0, 0]);
-  k.box(g, [8.4, 1.3, 0.1], M.caseDark, [-0.6, 2.0, -7.2]);                                 // the meter board
-  for (let i = 0; i < 6; i++) {
-    const x = -4.0 + i * 1.4;
-    k.cyl(g, [0.46, 0.46, 0.12, 22], M.case, [x, 2.05, -7.1], [Math.PI / 2, 0, 0]);
-    k.cyl(g, [0.4, 0.4, 0.02, 22], M.glassDark, [x, 2.05, -7.03], [Math.PI / 2, 0, 0], false);
-    k.box(g, [0.03, 0.3, 0.015], M.paint2, [x, 2.1, -7.01], [0, 0, 0.5 + i * 0.35], false);
-  }
-  k.cyl(g, [0.5, 0.5, 1.1, 20], M.case, [4.4, 1.55, -4.6], [0, 0, Math.PI / 2]);           // the recorder drum
-  k.box(g, [1.8, 0.9, 1.2], M.concrete, [4.4, 0.45, -4.6]);                                 // on its plinth
-  k.box(g, [1.5, 1.6, 0.4], M.timberDark, [-4.9, 0.85, -4.2]);                              // the rack of spare strips
-  [M.copper, M.steel, M.brass, M.darkSteel].forEach((mat, i) => k.box(g, [0.1, 1.2, 0.03], mat, [-5.4 + i * 0.3, 1.05, -3.96], null, false));
-  k.tag(g, 'METERING SHED', { w: 0.9, h: 0.2 }, [3.4, 2.7, -7.31]);
-  h.colliders.push({ lx: 0, lz: -7.4, hw: 6.3, hd: 0.5 }, { lx: 4.4, lz: -4.6, hw: 1.0, hd: 0.7 }, { lx: -4.9, lz: -4.2, hw: 0.8, hd: 0.3 });
-  return finish(h);
+  // The leaf, raised: a skin plate on four horizontal girders, rusted along the band that sat at the waterline.
+  const leafTop = 4.3;
+  k.box(g, [5.6, leafTop, 0.12], M.gateLeaf, [0, leafTop / 2, zs - 0.1]);
+  for (const y of [0.35, 1.4, 2.5, 3.6]) k.box(g, [5.6, 0.26, 0.24], M.gateLeaf, [0, y, zs + 0.08]);
+  k.box(g, [5.62, 0.9, 0.14], M.rust, [0, 1.15, zs - 0.08]);
+  for (let i = 0; i < 9; i++) k.box(g, [0.24 + (i % 3) * 0.1, 0.18, 0.02], M.rust, [-2.4 + i * 0.6, 1.75 + (i % 4) * 0.12, zs + 0.21], null, false);
+  // The rollers down each edge and the two lifting lugs.
+  for (const s of [-1, 1]) for (const y of [0.6, 2.0, 3.4]) k.cyl(g, [0.16, 0.16, 0.1, 12], M.darkSteel, [s * 2.68, y, zs + 0.05], [0, 0, Math.PI / 2], false);
+  for (const s of [-1, 1]) k.box(g, [0.14, 0.3, 0.24], M.darkSteel, [s * 1.6, leafTop + 0.12, zs]);
+  // The runway beam across the room over the slot, the crab on it, its two chains to the lugs.
+  k.beam(g, [room.x0, 6.0, zs], [room.x1, 6.0, zs], { d: 0.36, f: 0.24 });
+  k.box(g, [1.2, 0.5, 0.9], M.paintYellow, [0, 5.55, zs]);
+  for (const s of [-1, 1]) k.strut(g, [s * 0.4, 5.3, zs], [s * 1.6, leafTop + 0.27, zs], 0.03, M.darkSteel);
+  h.solid(0, zs, 3.1, 0.35);
+  // Left: the hand-hoist gearbox on its plinth and its handwheel, the drive shaft up to the crab's beam.
+  const L = -4.4;
+  k.box(g, [1.4, 0.3, 1.2], M.concrete, [L, 0.15, -1.4]);
+  k.box(g, [1.0, 1.1, 0.8], M.castIron ?? M.darkSteel, [L, 0.85, -1.4]);
+  handwheel(h, L, 1.2, -0.9, 'z', 0.42);
+  k.cyl(g, [0.06, 0.06, 4.6, 8], M.steel, [L, 3.6, -1.4], null, false);
+  h.solid(L, -1.4, 0.7, 0.6);
+  // Left, toward the door: two paint drums and a coil of seal rubber on a pallet.
+  drum(h, -5.4, 2.4, M.drumB); drum(h, -5.4, 3.2, M.drumB);
+  h.round(-5.4, 2.8, 0.75);
+  k.box(g, [1.2, 0.12, 1.0], M.timber, [-5.2, 0.06, 5.2]);
+  for (let i = 0; i < 4; i++) k.cyl(g, [0.42 - i * 0.02, 0.42 - i * 0.02, 0.1, 18], M.rubber, [-5.2, 0.18 + i * 0.1, 5.2], null, false);
+  h.solid(-5.2, 5.2, 0.6, 0.5);
+  // Right: the replaced rollers, rusted to their axles, on a rack, and a bench with a vice and a wire brush.
+  rackAlongZ(h, 5.4, -1.6, 2.2, { depth: 0.6, top: 1.6, shelves: [0.4, 1.0, 1.55], bay: 1.9, load: (x, y, z) => {
+    for (const dz of [-0.4, 0, 0.4]) k.cyl(g, [0.15, 0.15, 0.1, 12], M.rust, [x, y + 0.15, z + dz], [0, 0, Math.PI / 2], false);
+  } });
+  k.box(g, [0.8, 0.06, 2.0], M.timberDark, [5.3, 0.92, 4.4]);
+  for (const dz of [-0.8, 0.8]) for (const dx of [-0.3, 0.3]) k.box(g, [0.06, 0.9, 0.06], M.darkSteel, [5.3 + dx, 0.45, 4.4 + dz]);
+  k.box(g, [0.2, 0.18, 0.3], M.darkSteel, [5.1, 1.04, 3.8]);
+  h.solid(5.3, 4.4, 0.42, 1.02);
+  return finish(h, { plateZ: 0.25, doorZ: 6.75 });
 }
 
-/* ------------------------------------------------------------------------ 5 */
-
-/** The battery bank: two tiers of big glass-sided cells on a steel rack, a copper busbar along the top and a row of load lamps. */
-export function buildBatteryBank(w) {
-  const h = start(w, 'site-5', 'battery-bank');
-  const { k, M, g } = h;
-  const Z = -6.0;
-  for (const sx of [-1, 1]) for (const dz of [-1, 1]) k.post(g, sx * 6.2, Z + dz * 1.2, 3.3, 0.16);   // the rack
-  for (const y of [0.5, 1.9]) k.box(g, [12.8, 0.1, 2.8], M.darkSteel, [0, y, Z]);
-  for (let tier = 0; tier < 2; tier++) {
-    const y = 0.55 + tier * 1.4;
-    for (let i = 0; i < 6; i++) {
-      const x = -5.0 + i * 2.0;
-      k.cyl(g, [0.62, 0.62, 1.1, 20], M.glass, [x, y + 0.6, Z]);                           // a glass-sided cell
-      k.cyl(g, [0.52, 0.52, 0.8, 20], M.water, [x, y + 0.45, Z], null, false);
-      k.cyl(g, [0.6, 0.6, 0.08, 20], M.darkSteel, [x, y + 1.19, Z], null, false);          // its lid
-      k.cyl(g, [0.06, 0.06, 0.25, 8], M.copper, [x, y + 1.35, Z - 0.2], null, false);      // and its terminals
-      k.cyl(g, [0.06, 0.06, 0.25, 8], M.steel, [x, y + 1.35, Z + 0.2], null, false);
+/**
+ * 2 THE ANODE STORE over gate 2. The gates are kept from rotting by blocks of a more active metal bolted to them, which rot in
+ * the steel's place: here they are kept new on racks (zinc, aluminium), and the spent ones come back eaten to their steel
+ * cores. On the right wall a copper bus is held by iron clamps, and the iron is rusted where it touches the copper.
+ */
+function anodeStore(w) {
+  const h = start(w, 'site-2', 'host-anode-store');
+  const { k, g, M, room } = h;
+  const anode = (x, y, z, mat, len = 0.5) => {
+    k.box(g, [0.12, 0.1, len], mat, [x, y + 0.05, z], null, false);
+    k.box(g, [0.03, 0.03, len + 0.3], M.darkSteel, [x, y + 0.05, z], null, false);
+  };
+  // Behind the plate, under the strip window: a low rack of new zinc anodes the length of the back wall.
+  {
+    const xa = room.x0 + 0.4, xb = room.x1 - 0.4, z = -2.35;
+    for (let i = 0; i <= 5; i++) for (const dz of [-0.26, 0.26]) k.box(g, [0.06, 1.4, 0.06], M.darkSteel, [xa + (xb - xa) * i / 5, 0.7, z + dz]);
+    for (const y of [0.35, 0.85, 1.35]) {
+      k.box(g, [xb - xa, 0.04, 0.6], M.steel, [(xa + xb) / 2, y, z]);
+      for (let i = 0; i < 10; i++) {
+        const x = xa + 0.5 + i * (xb - xa - 1.0) / 9;
+        k.box(g, [0.5, 0.1, 0.12], y > 1 ? M.zinc : M.steel, [x, y + 0.07, z], null, false);
+        k.box(g, [0.8, 0.03, 0.03], M.darkSteel, [x, y + 0.07, z], null, false);
+      }
     }
+    h.solid((xa + xb) / 2, z, (xb - xa) / 2, 0.32);
   }
-  k.box(g, [12.4, 0.12, 0.12], M.copper, [0, 3.3, Z - 1.1]);                                // the busbar
-  for (let i = 0; i < 5; i++) {
-    const x = -4.0 + i * 2.0;
-    k.cyl(g, [0.12, 0.12, 0.2, 12], M.caseDark, [x, 2.95, Z - 1.1]);                        // the load lamps, hung under it (unlit glass)
-    k.cyl(g, [0.16, 0.16, 0.3, 12], M.glass, [x, 2.7, Z - 1.1], null, false);
+  // Left wall: new anodes, zinc above and aluminium below, on a deep rack.
+  rackAlongZ(h, room.x0 + 0.45, -1.8, 4.4, { depth: 0.7, top: 2.3, shelves: [0.4, 1.0, 1.6, 2.2], bay: 1.55, load: (x, y, z) => {
+    for (const dx of [-0.16, 0.16]) anode(x + dx, y, z, y > 1.2 ? M.zinc : M.steel);
+  } });
+  // Right wall: the spent anodes in bins (eaten to their cores), then the copper bus on the wall with its iron clamps.
+  for (const [i, z] of [-1.4, -0.2, 1.0].entries()) {
+    k.box(g, [0.9, 0.7, 1.0], M.darkSteel, [room.x1 - 0.55, 0.35, z]);
+    for (let j = 0; j < 4; j++) k.box(g, [0.1, 0.08, 0.3 + (j % 2) * 0.12], M.zincSpent, [room.x1 - 0.7 + (j % 2) * 0.25, 0.74, z - 0.3 + j * 0.18], null, false);
+    void i;
   }
-  k.tag(g, 'BATTERY BANK', { w: 0.9, h: 0.2 }, [-3.4, 0.55, Z + 1.55]);
-  h.colliders.push({ lx: 0, lz: Z, hw: 6.6, hd: 1.6 });
-  return finish(h, [3.2, -1.6, [-2.9, 1.6]]);
+  h.solid(room.x1 - 0.55, -0.2, 0.45, 1.7);
+  const bz0 = 2.4, bz1 = room.z1 - 1.2;
+  k.box(g, [0.06, 0.12, bz1 - bz0], M.copper, [room.x1 - 0.25, 1.9, (bz0 + bz1) / 2]);
+  for (let z = bz0 + 0.4; z < bz1; z += 1.1) {
+    k.box(g, [0.18, 0.3, 0.1], M.rusted, [room.x1 - 0.2, 1.9, z]);
+    k.box(g, [0.04, 0.34, 0.14], M.rust, [room.x1 - 0.31, 1.9, z], null, false);
+  }
+  // A weigh scale for the spent anodes by the door, on the right.
+  k.box(g, [0.9, 0.12, 0.9], M.darkSteel, [room.x1 - 0.8, 0.06, room.z1 - 1.6]);
+  k.box(g, [0.08, 1.1, 0.08], M.darkSteel, [room.x1 - 0.4, 0.6, room.z1 - 1.95]);
+  k.cyl(g, [0.18, 0.18, 0.06, 18], M.paint2, [room.x1 - 0.4, 1.2, room.z1 - 1.88], [Math.PI / 2, 0, 0], false);
+  h.solid(room.x1 - 0.8, room.z1 - 1.6, 0.5, 0.5);
+  return finish(h, { plateZ: 0.2 });
 }
 
-/* ------------------------------------------------------------------------ 6 */
-
-/** The plating works: two plating tanks with anode bars across them, a rectifier cabinet, a hoist gantry and a plate hung from its hook. */
-export function buildPlatingWorks(w) {
-  const h = start(w, 'site-6', 'plating-works');
-  const { k, M, g } = h;
-  basin(k, g, M, [-6.8, -1.3, -8.8, -5.2], { level: 0.7, wall: M.concrete, h: 1.1 });
-  basin(k, g, M, [1.3, 6.8, -8.8, -5.2], { level: 0.7, wall: M.concrete, h: 1.1 });
-  for (const sx of [-1, 1]) {
-    k.box(g, [4.6, 0.1, 0.1], M.copper, [sx * 4.05, 1.3, -6.5]);                            // the anode bars across
-    k.box(g, [0.12, 0.9, 0.5], M.copper, [sx * 5.4, 0.85, -6.5], null, false);
-    k.box(g, [0.12, 0.9, 0.5], M.copper, [sx * 2.7, 0.85, -6.5], null, false);
+/**
+ * 3 THE BRIDGE CHAMBER. A cell is two halves: here each half is a concrete tank of brine fed from the lagoon through the wall,
+ * a zinc plate hung in the left and a copper plate in the right; the glazed salt-bridge trough runs between them across the
+ * back of the room, and the two leads go up to the porcelain insulators on the back wall.
+ */
+function bridgeChamber(w) {
+  const h = start(w, 'site-3', 'host-bridge-chamber');
+  const { k, g, M, room } = h;
+  const tank = (s, plate) => {
+    const xc = s * 4.7, hw = 1.35, z0 = -2.4, z1 = 3.0, H = 1.1;
+    for (const [x, sx] of [[xc - hw, 0.18], [xc + hw, 0.18]]) k.box(g, [sx, H, z1 - z0], M.concrete, [x, H / 2, (z0 + z1) / 2]);
+    for (const z of [z0, z1]) k.box(g, [2 * hw + 0.18, H, 0.18], M.concrete, [xc, H / 2, z]);
+    k.box(g, [2 * hw - 0.18, 0.06, z1 - z0 - 0.18], M.water, [xc, H - 0.2, (z0 + z1) / 2], null, false);
+    // The plate hung on a bar across the tank, its lead up from it.
+    k.box(g, [0.06, 0.06, z1 - z0 + 0.2], M.darkSteel, [xc, H + 0.5, (z0 + z1) / 2], null, false);
+    k.box(g, [0.05, 1.0, 2.6], plate, [xc, H + 0.0, (z0 + z1) / 2]);
+    k.strut(g, [xc, H + 0.5, 0.3], [xc, 3.2, -2.55], 0.025, M.rubber);
+    // The feed from the lagoon: a pipe out of the back wall, down into the tank, its valve.
+    k.pipe(g, [[xc + s * 0.6, 2.6, room.z0 + 0.05], [xc + s * 0.6, 2.6, -2.2], [xc + s * 0.6, 1.3, -2.2]], 0.07, M.copper);
+    handwheel(h, xc + s * 0.6, 2.2, -2.05, 'z', 0.16);
+    h.solid(xc, (z0 + z1) / 2, hw + 0.1, (z1 - z0) / 2 + 0.1);
+  };
+  tank(-1, M.zinc);
+  tank(1, M.copper);
+  // The salt bridge: a glazed U-trough on brick piers, from the top of one tank to the other across the back.
+  for (const x of [-2.4, 0, 2.4]) k.box(g, [0.4, 1.0, 0.4], M.brick, [x, 0.5, -2.35]);
+  k.box(g, [6.9, 0.08, 0.5], M.paint2, [0, 1.04, -2.35]);
+  for (const dz of [-0.22, 0.22]) k.box(g, [6.9, 0.22, 0.06], M.paint2, [0, 1.17, -2.35 + dz]);
+  k.box(g, [6.8, 0.05, 0.38], M.water, [0, 1.16, -2.35], null, false);
+  h.solid(0, -2.35, 3.4, 0.3);
+  // The insulators on the back wall the leads run to, and the lead across between them above the plate's head.
+  for (const x of [-3.0, 3.0]) {
+    k.box(g, [0.5, 0.08, 0.3], M.darkSteel, [x, 3.15, -2.55]);
+    for (let i = 0; i < 3; i++) k.cyl(g, [0.09, 0.09, 0.05, 10], M.paint2, [x, 3.28 + i * 0.09, -2.55], null, false);
   }
-  k.box(g, [1.8, 2.4, 0.9], M.darkSteel, [0, 1.25, -8.3]);                                   // the rectifier cabinet
-  for (const dx of [-0.5, 0.5]) k.cyl(g, [0.14, 0.14, 0.06, 14], M.brass, [dx, 1.9, -7.82], [Math.PI / 2, 0, 0], false);
-  k.box(g, [0.8, 0.3, 0.04], M.caseDark, [0, 1.35, -7.83], null, false);
-  for (const sx of [-1, 1]) k.post(g, sx * 7.0, -4.2, 4.3, 0.22);                           // the hoist gantry
-  k.box(g, [14.4, 0.2, 0.26], M.darkSteel, [0, 4.3, -4.2]);
-  k.box(g, [0.7, 0.4, 0.5], M.rusted, [-3.0, 4.0, -4.2]);                                    // the trolley
-  k.box(g, [0.03, 2.0, 0.03], M.steel, [-3.0, 2.8, -4.2], null, false);                      // its cable
-  k.box(g, [0.5, 0.7, 0.05], M.copperClad, [-3.0, 1.45, -4.2]);                              // and the plate on the hook
-  k.tag(g, 'PLATING WORKS', { w: 0.95, h: 0.2 }, [0, 0.6, -3.7]);
-  h.colliders.push({ lx: -4.05, lz: -7.0, hw: 2.8, hd: 1.9 }, { lx: 4.05, lz: -7.0, hw: 2.8, hd: 1.9 }, { lx: 0, lz: -8.3, hw: 0.9, hd: 0.5 });
-  return finish(h, [3.4, -1.8, [-3.1, 1.8]]);
+  k.strut(g, [-3.0, 3.5, -2.55], [3.0, 3.5, -2.55], 0.022, M.rubber);
+  // By the door: a carboy rack of fresh brine on the left, the lead coils on the right.
+  for (const [i, z] of [5.0, 5.8, 6.6].entries()) { k.cyl(g, [0.26, 0.26, 0.6, 14], M.glass, [-5.6, 0.32, z]); void i; }
+  h.solid(-5.6, 5.8, 0.4, 1.2);
+  for (let i = 0; i < 3; i++) k.cyl(g, [0.36, 0.36, 0.1, 16], M.rubber, [5.6, 0.06 + i * 0.1, 5.6], null, false);
+  h.round(5.6, 5.6, 0.45);
+  return finish(h, { plateZ: -0.2 });
 }
 
-/** Builder per site id. */
+/**
+ * 4 THE METER ROOM. Every cell in the gallery is read here: a steel panel across the back wall with a voltmeter for each, their
+ * leads coming down from the tray along the wall; a chart recorder on a desk on the left; the reference electrodes in tubes of
+ * brine on a rack on the right.
+ */
+function meterRoom(w) {
+  const h = start(w, 'site-4', 'host-meter-room');
+  const { k, g, M, room } = h;
+  // The panel: a steel board on the back wall, 12 dials in two rows over the plate's head, a switch row under them.
+  k.box(g, [6.4, 3.2, 0.12], M.steel, [0, 1.8, -2.55]);
+  for (let row = 0; row < 2; row++) for (let i = 0; i < 6; i++) {
+    const x = -2.5 + i * 1.0, y = 2.7 + row * 0.55;
+    k.cyl(g, [0.2, 0.2, 0.06, 20], M.caseDark, [x, y, -2.47], [Math.PI / 2, 0, 0], false);
+    k.cyl(g, [0.16, 0.16, 0.02, 20], M.paint2, [x, y, -2.43], [Math.PI / 2, 0, 0], false);
+    k.box(g, [0.01, 0.13, 0.01], M.caseDark, [x + 0.03, y + 0.02, -2.41], [0, 0, -0.5 + ((i * 7 + row * 3) % 9) * 0.12], false);
+  }
+  for (let i = 0; i < 12; i++) k.box(g, [0.06, 0.12, 0.06], M.caseDark, [-2.75 + i * 0.5, 2.2, -2.46], null, false);
+  trayAlongZ(h, room.x0, 3.8, -2.6, room.z1 - 0.5);
+  for (let i = 0; i < 6; i++) k.strut(g, [room.x0 + 0.3, 3.8, -2.4 + i * 0.05], [-2.5 + i, 3.0, -2.5], 0.012, M.rubber);
+  h.solid(0, -2.55, 3.2, 0.15);
+  // Left: the chart recorder on its desk, a roll of chart paper on the drum, a stool.
+  k.box(g, [1.0, 0.08, 1.8], M.timberDark, [-4.6, 0.8, 0.6]);
+  for (const [dx, dz] of [[-0.4, -0.8], [0.4, -0.8], [-0.4, 2.0], [0.4, 2.0]]) k.box(g, [0.06, 0.8, 0.06], M.darkSteel, [-4.6 + dx, 0.4, 0.6 + dz * 0.5]);
+  k.box(g, [0.7, 0.5, 0.8], M.caseDark, [-4.6, 1.09, 0.3]);
+  k.cyl(g, [0.1, 0.1, 0.62, 14], M.paper, [-4.6, 1.42, 0.3], [Math.PI / 2, 0, 0], false);
+  k.box(g, [0.5, 0.01, 0.45], M.paper, [-4.45, 0.85, 1.2], [-0.15, 0, 0], false);
+  h.solid(-4.6, 0.6, 0.55, 0.95);
+  k.cyl(g, [0.2, 0.18, 0.65, 12], M.darkSteel, [-3.5, 0.32, 1.8]);
+  h.round(-3.5, 1.8, 0.3);
+  // Right: the rack of reference electrodes, each a glass tube of brine in a clip, their leads to the panel.
+  rackAlongZ(h, room.x1 - 0.4, -1.8, 3.0, { depth: 0.5, top: 1.9, shelves: [0.5, 1.2, 1.85], bay: 1.6, load: (x, y, z) => {
+    for (let i = 0; i < 4; i++) k.cyl(g, [0.03, 0.03, 0.4, 8], M.glass, [x, y + 0.2, z - 0.45 + i * 0.3], null, false);
+  } });
+  trayAlongZ(h, room.x1, 3.8, -2.6, room.z1 - 0.5);
+  return finish(h, { plateZ: -0.3, y: 3.3 });
+}
+
+/**
+ * 5 THE BATTERY HALL. The gallery's cells, in glass-sided jars with their plates showing through, stand in two tiers on steel
+ * stands along both side walls; a copper busbar runs along the top of each stand; the load, a grid of resistor elements in a
+ * steel frame, stands against the back wall.
+ */
+function batteryHall(w) {
+  const h = start(w, 'site-5', 'host-battery-hall');
+  const { k, g, M, room } = h;
+  const stand = (s) => {
+    const x = s * (room.x1 - 0.65), z0 = -2.4, z1 = room.z1 - 1.0;
+    const n = Math.round((z1 - z0) / 0.7);
+    for (const y of [0.5, 1.45]) {
+      k.box(g, [0.9, 0.06, z1 - z0], M.darkSteel, [x, y, (z0 + z1) / 2]);
+      for (let i = 0; i < n; i++) {
+        const z = z0 + 0.35 + i * (z1 - z0 - 0.7) / (n - 1);
+        k.box(g, [0.6, 0.62, 0.52], M.glass, [x, y + 0.35, z]);
+        for (const dz of [-0.12, 0, 0.12]) k.box(g, [0.5, 0.48, 0.02], dz ? M.lead : M.copper, [x, y + 0.3, z + dz], null, false);
+        k.cyl(g, [0.03, 0.03, 0.12, 8], M.lead, [x - 0.1 * s, y + 0.72, z], null, false);
+      }
+    }
+    for (const dz of [z0, z1]) for (const dx of [-0.42, 0.42]) k.box(g, [0.06, 2.4, 0.06], M.darkSteel, [x + dx, 1.2, dz]);
+    k.box(g, [0.06, 0.14, z1 - z0], M.copper, [x - 0.1 * s, 2.3, (z0 + z1) / 2]);
+    h.solid(x, (z0 + z1) / 2, 0.48, (z1 - z0) / 2);
+  };
+  stand(-1); stand(1);
+  // The load against the back wall: a steel frame of resistor grids, three bays, behind the plate; the bus over to it.
+  k.box(g, [5.2, 2.9, 0.06], M.darkSteel, [0, 1.6, -2.58]);
+  for (let i = 0; i < 3; i++) {
+    const x = -1.7 + i * 1.7;
+    for (let j = 0; j < 7; j++) k.box(g, [1.4, 0.05, 0.12], M.rusted, [x, 0.6 + j * 0.3, -2.42], null, false);
+    for (const dx of [-0.72, 0.72]) k.box(g, [0.06, 2.4, 0.3], M.darkSteel, [x + dx, 1.5, -2.4]);
+  }
+  for (const s of [-1, 1]) k.box(g, [room.x1 - 3.0, 0.1, 0.1], M.copper, [s * (room.x1 + 2.6) / 2, 3.2, -2.4], null, false);
+  h.solid(0, -2.45, 2.7, 0.3);
+  h.hang(0, 4.0, 3.6);
+  return finish(h, { plateZ: -0.3, y: 3.6 });
+}
+
+/**
+ * 6 THE RECTIFIER CAGE at the foot. The grid's current comes in from the transformers outside on busbars through the cage's
+ * north side; the rectifier cabinet against the wall turns it one way; from it, the bars run to the plating tank on the left,
+ * filled from the tailrace, its anode bars across it and its cathode plates hung between them.
+ */
+function rectifierCage(w) {
+  const h = start(w, 'site-6', 'host-rectifier-cage');
+  const { k, g, M, room } = h;
+  // The rectifier: a louvred steel cabinet against the wall behind the plate.
+  k.box(g, [5.0, 2.6, 0.62], M.paintBlue, [0, 1.3, -2.36]);
+  for (let i = 0; i < 6; i++) k.box(g, [0.7, 0.04, 0.03], M.darkSteel, [-2.0 + i * 0.8, 2.2, -2.04], null, false);
+  for (let i = 0; i < 4; i++) k.box(g, [0.5, 0.9, 0.02], M.darkSteel, [-1.8 + i * 1.2, 0.9, -2.04], null, false);
+  h.solid(0, -2.36, 2.5, 0.31);
+  // The bus in from the right (north), over the cabinet, and out to the tank on the left.
+  k.box(g, [room.x1 - 2.4, 0.12, 0.08], M.copper, [(room.x1 + 2.4) / 2, 3.6, -2.4], null, false);
+  for (const s of [-1, 1]) k.box(g, [0.08, 1.0, 0.08], M.copper, [s * 2.4, 3.1, -2.4], null, false);
+  k.box(g, [Math.abs(room.x0) - 2.4, 0.12, 0.08], M.copper, [(room.x0 - 2.4) / 2, 3.6, -2.4], null, false);
+  for (const x of [room.x1 - 0.3, 3.6]) for (let i = 0; i < 3; i++) k.cyl(g, [0.08, 0.08, 0.05, 10], M.paint2, [x, 3.82 + i * 0.07, -2.4], null, false);
+  // The plating tank on the left: a long steel tank on sleepers, brine in it, the anode bars across, the plates hung between.
+  const tx = -4.55, tz0 = -1.8, tz1 = 5.4, tw = 1.45;
+  k.box(g, [2 * tw, 0.2, tz1 - tz0], M.timberDark, [tx, 0.1, (tz0 + tz1) / 2]);
+  k.box(g, [2 * tw, 1.0, 0.1], M.darkSteel, [tx, 0.7, tz0]);
+  k.box(g, [2 * tw, 1.0, 0.1], M.darkSteel, [tx, 0.7, tz1]);
+  for (const x of [tx - tw, tx + tw]) k.box(g, [0.1, 1.0, tz1 - tz0], M.darkSteel, [x, 0.7, (tz0 + tz1) / 2]);
+  k.box(g, [2 * tw - 0.1, 0.05, tz1 - tz0 - 0.1], M.water, [tx, 1.05, (tz0 + tz1) / 2], null, false);
+  for (let i = 0; i < 6; i++) {
+    const z = tz0 + 0.6 + i * (tz1 - tz0 - 1.2) / 5;
+    k.box(g, [2 * tw + 0.3, 0.06, 0.08], i % 2 ? M.copper : M.darkSteel, [tx, 1.32, z], null, false);
+    k.box(g, [1.6, 0.9, 0.03], i % 2 ? M.copperClad : M.patina, [tx, 0.82, z], null, false);
+  }
+  k.strut(g, [room.x0 + 0.2, 3.6, -2.4], [tx, 1.4, tz0 + 0.6], 0.04, M.copper);
+  h.solid(tx, (tz0 + tz1) / 2, tw + 0.05, (tz1 - tz0) / 2 + 0.05);
+  // The feed from the tailrace: a pipe in through the floor at the tank's door end, its valve.
+  k.pipe(g, [[tx + tw + 0.3, 0.05, tz1 + 0.6], [tx + tw + 0.3, 1.3, tz1 + 0.6], [tx + tw - 0.2, 1.3, tz1 - 0.2]], 0.07, M.darkSteel);
+  handwheel(h, tx + tw + 0.3, 1.0, tz1 + 0.78, 'z', 0.16);
+  h.round(tx + tw + 0.3, tz1 + 0.6, 0.25);
+  // Right: an isolator cabinet and the earthing switch handle on the wall, a rack of finished plates.
+  k.box(g, [0.8, 1.9, 1.2], M.paintBlue, [room.x1 - 0.5, 0.95, -0.8]);
+  k.box(g, [0.05, 0.5, 0.06], M.paintRed, [room.x1 - 0.95, 1.4, -0.4], null, false);
+  h.solid(room.x1 - 0.5, -0.8, 0.42, 0.62);
+  rackAlongZ(h, room.x1 - 0.45, 1.6, 5.0, { depth: 0.6, top: 1.6, shelves: [0.5, 1.1, 1.55], bay: 1.7, load: (x, y, z) => {
+    for (let i = 0; i < 5; i++) k.box(g, [0.36, 0.5, 0.02], M.copperClad, [x, y + 0.25, z - 0.4 + i * 0.2], null, false);
+  } });
+  return finish(h, { plateZ: -0.3, y: 3.4 });
+}
+
 export const HOST_BUILDERS = {
-  'site-1': buildPylonBase,
-  'site-2': buildDipPool,
-  'site-3': buildPoolPair,
-  'site-4': buildMeteringShed,
-  'site-5': buildBatteryBank,
-  'site-6': buildPlatingWorks
+  'site-1': hoistHouse,
+  'site-2': anodeStore,
+  'site-3': bridgeChamber,
+  'site-4': meterRoom,
+  'site-5': batteryHall,
+  'site-6': rectifierCage
 };
