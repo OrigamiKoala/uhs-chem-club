@@ -1,6 +1,6 @@
-{world} = <fill in one: Kettle | Lodestone | Teeter | Verdigris | Brinewire | Quicklight | Ember Reach | Mirrowen | Bellows | Lanternfall | Tallow>
-{key}   = <the world's folder name under src/three/: kettle | lodestone | teeter | verdigris | brinewire | quicklight | ember | mirrowen | bellows | lanternfall | tallow>
-{unit}  = <unit07 | unit12 | unit08 | unit09 | unit10 | unit11 | unit05 | unit06 | unit04 | unit02 | unit01>
+{world} = <fill in one: Brinewire | Quicklight | Ember Reach | Mirrowen | Bellows | Lanternfall | Tallow>
+{key}   = <fill in one: brinewire | quicklight | ember | mirrowen | bellows | lanternfall | tallow>
+{unit}  = <unit09 | unit10 | unit11 | unit05 | unit06 | unit04 | unit02 | unit01>
 
 # Goal
 

@@ -33,11 +33,13 @@ export class FpsControls {
     this.enabled = true;
 
     // Movement state
+    this.pressedKeys = new Set();
     this.moveForward = false;
     this.moveBackward = false;
     this.moveLeft = false;
     this.moveRight = false;
     this.isSprinting = false;
+    this.jumpHeld = false;
 
     // Analogue input from the twin sticks. x is strafe, y is forward for move;
     // for look these are -1..1 rates applied per second, not per event.
@@ -115,6 +117,7 @@ export class FpsControls {
     // Event handlers bound to instance
     this._onKeyDown = this.onKeyDown.bind(this);
     this._onKeyUp = this.onKeyUp.bind(this);
+    this._onBlur = this.releaseKeys.bind(this);
     this._onMouseMove = this.onMouseMove.bind(this);
     this._onMouseDown = this.onMouseDown.bind(this);
     this._onMouseUp = this.onMouseUp.bind(this);
@@ -167,6 +170,7 @@ export class FpsControls {
   bindEvents() {
     window.addEventListener("keydown", this._onKeyDown);
     window.addEventListener("keyup", this._onKeyUp);
+    window.addEventListener("blur", this._onBlur);
     document.addEventListener("pointerlockchange", this._onPointerlockChange);
 
     window.addEventListener("mousedown", this._onMouseDown);
@@ -177,6 +181,7 @@ export class FpsControls {
   dispose() {
     window.removeEventListener("keydown", this._onKeyDown);
     window.removeEventListener("keyup", this._onKeyUp);
+    window.removeEventListener("blur", this._onBlur);
     document.removeEventListener("pointerlockchange", this._onPointerlockChange);
 
     window.removeEventListener("mousedown", this._onMouseDown);
@@ -298,6 +303,19 @@ export class FpsControls {
     this.trauma = Math.min(1.0, this.trauma + amount);
   }
 
+  /** Derive movement booleans from the set of currently held key codes. */
+  _syncKeyFlags() {
+    const keys = this.pressedKeys;
+    this.moveForward = keys.has("KeyW") || keys.has("ArrowUp");
+    this.moveBackward = keys.has("KeyS") || keys.has("ArrowDown");
+    this.moveLeft = keys.has("KeyA") || keys.has("ArrowLeft");
+    this.moveRight = keys.has("KeyD") || keys.has("ArrowRight");
+    this.isSprinting = keys.has("ShiftLeft") || keys.has("ShiftRight");
+    this.hoverUp = this.walkKeysAtBench && (keys.has("KeyR") || keys.has("PageUp"));
+    this.hoverDown = this.walkKeysAtBench && (keys.has("KeyF") || keys.has("PageDown"));
+    this.jumpHeld = keys.has("Space");
+  }
+
   /**
    * Drop every held key and stop dead.
    *
@@ -306,13 +324,8 @@ export class FpsControls {
    * themselves already walking. Callers that stand the walk down call this.
    */
   releaseKeys() {
-    this.moveForward = false;
-    this.moveBackward = false;
-    this.moveLeft = false;
-    this.moveRight = false;
-    this.isSprinting = false;
-    this.hoverUp = false;
-    this.hoverDown = false;
+    this.pressedKeys.clear();
+    this._syncKeyFlags();
     this.isDragging = false;
     this.velocity.set(0, 0, 0);
   }
@@ -347,34 +360,36 @@ export class FpsControls {
 
     switch (e.code) {
       case "KeyW":
-      case "ArrowUp":
-        this.moveForward = true;
-        break;
       case "KeyS":
-      case "ArrowDown":
-        this.moveBackward = true;
-        break;
       case "KeyA":
-      case "ArrowLeft":
-        this.moveLeft = true;
-        break;
       case "KeyD":
-      case "ArrowRight":
-        this.moveRight = true;
-        break;
       case "ShiftLeft":
       case "ShiftRight":
-        this.isSprinting = true;
+        this.pressedKeys.add(e.code);
+        this._syncKeyFlags();
+        break;
+      case "ArrowUp":
+      case "ArrowDown":
+      case "ArrowLeft":
+      case "ArrowRight":
+        e.preventDefault?.();
+        this.pressedKeys.add(e.code);
+        this._syncKeyFlags();
         break;
       case "KeyR":
       case "PageUp":
-        if (this.walkKeysAtBench) this.hoverUp = true;
-        break;
       case "KeyF":
       case "PageDown":
-        if (this.walkKeysAtBench) this.hoverDown = true;
+        if (this.walkKeysAtBench) {
+          if (e.code === "PageUp" || e.code === "PageDown") e.preventDefault?.();
+          this.pressedKeys.add(e.code);
+          this._syncKeyFlags();
+        }
         break;
       case "Space":
+        e.preventDefault?.();
+        this.pressedKeys.add(e.code);
+        this._syncKeyFlags();
         this.requestJump();
         break;
       case "KeyE":
@@ -388,35 +403,8 @@ export class FpsControls {
   }
 
   onKeyUp(e) {
-    switch (e.code) {
-      case "KeyW":
-      case "ArrowUp":
-        this.moveForward = false;
-        break;
-      case "KeyS":
-      case "ArrowDown":
-        this.moveBackward = false;
-        break;
-      case "KeyA":
-      case "ArrowLeft":
-        this.moveLeft = false;
-        break;
-      case "KeyD":
-      case "ArrowRight":
-        this.moveRight = false;
-        break;
-      case "ShiftLeft":
-      case "ShiftRight":
-        this.isSprinting = false;
-        break;
-      case "KeyR":
-      case "PageUp":
-        this.hoverUp = false;
-        break;
-      case "KeyF":
-      case "PageDown":
-        this.hoverDown = false;
-        break;
+    if (this.pressedKeys.delete(e.code)) {
+      this._syncKeyFlags();
     }
   }
 
@@ -637,6 +625,10 @@ export class FpsControls {
       if (Math.abs(this.hoverOffset) < 0.002) this.hoverOffset = 0;
     }
     const targetBaseEyeY = baseGroundY + this.eyeHeight + this.hoverOffset;
+
+    if (this.jumpHeld && this.isGrounded) {
+      this.requestJump();
+    }
 
     if (!this.isGrounded || this.verticalVelocity !== 0) {
       const prevVv = this.verticalVelocity;
