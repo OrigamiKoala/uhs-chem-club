@@ -59,7 +59,6 @@ const post = (x, z) => landmarks.push({ asset: 'lamp-post', pos: [round(x), roun
 // On the shelf, from the spawn to the stair's head.
 post(SHELF.minX + 1.2, 30); post(SHELF.minX + 1.2, 42.6);
 // Along every dike, on its kerb side, from the stair north past its last room; on the drying floor, by its east wall.
-const doorsOn = k => plan.rooms.filter(r => r.wall === k).map(r => (r.door.rect.minZ + r.door.rect.maxZ) / 2);
 for (const k of [1, 2, 3]) {
   const d = plan.byId.get(`dike-${k}`).rect;
   const x = FACE[k] - DIKE_W + 0.9;
@@ -72,7 +71,6 @@ for (const k of [1, 2, 3]) {
     post(x, z);
   }
 }
-void doorsOn;
 for (const l of landmarks) {
   if (l.asset === 'landing-pad') continue;
   const v = plan.volumeAt(l.pos[0], l.pos[2]);

@@ -325,7 +325,7 @@ door. No two rooms share a size, a roof or a fit-out.
    and west (crown 4.7 m). A settled pan still exchanges brine both ways; this is the room where brine is let from the
    pan above to the pan below and back, so the culvert crosses the back wall behind the plate with a gate at each end on
    a handwheel. Closed on three sides and overhead (the pan); the dike outside the door. The player comes off the stair
-   foot and the doorway is the first opening in the wall on their right, 10 m along.
+   foot and the doorway is the first opening in the wall on their right, 12 m along.
 2. **The Number That Holds (`q2-k`), the weigh house**, wall 1, 14.0 x 11.4, a weir house: its walls rise 1.2 m above
    terrace 0's pans and carry a gabled timber roof (ridge 7.6 m over the floor). A platform scale on its pit beside the
    plate, a steelyard on the back wall, sacks on pallets: the same ratio is weighed whatever the batch. Its roof is the
