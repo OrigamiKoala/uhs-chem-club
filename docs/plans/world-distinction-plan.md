@@ -171,7 +171,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Kettle (built 2026-11-13) | One foundry building the size of the site, floors at five levels inside it; a slag tip and an ore stock outside | Up one crane aisle from the charge door to the cast house, bays opening off it, two ramps up and two down | The building itself: stores, scale bay, control cabin on a plinth, sump cellar, charge bank up a ramp, pickling bay, tapping pit, refining bay | Indoors under a cover mask: shafts through louvred bands high in the west walls and the charge door, one furnace source |
 | Teeter (built 2026-11-16) | A west-facing hillside of salt terraces: five levels of pans 5.5 m apart behind masonry walls, brine spilling pan to pan; spurs close the valley's head | One stair straight down the fall line (four ramps through four walls), a level dike branching off its foot on each terrace: a comb, not a switchback | Rooms dug into the terrace walls under the pans (the pans' floor is the roof), entered by a passage through the wall; two are weir houses standing up among the pans | Bright pale afternoon, evaporation shimmer; indoors under a cover mask, the sun in at each door |
 | Verdigris (built 2026-11-16) | A drowned masonry fort in a reed swamp: a flooded ward inside a broken curtain, towers and cistern heads out of the water, a moat round it; sightlines closed by reeds, walls and fog | A branching boardwalk on piles from a landing stage in the reeds, over the moat bridge, through the gatehouse, then a trunk with branches between the towers; no plank run longer than 22 m, ramps up to tower doors, stairs down into cisterns | Tower chambers (three towers and the keep's hall) above the water, three vaulted cisterns sunk below it, the flooded gatehouse's winch chamber | Low green-grey overcast, fog from 4 m gone at 220 m; indoors under a cover mask, the sun in only at doors that face it and open onto a deck |
-| Brinewire | A tidal barrage: a concrete wall across the marsh, impounded brine one side, a drop the other | Along the crest, then down a long ramp to the foot | Gate houses on the crest, the cell gallery inside the wall, the switchyard cage at its foot | Dry late afternoon, long shadows off the wall |
+| Brinewire (built 2026-11-17) | A tidal barrage: a concrete wall across the marsh between two headlands, impounded brine 10 m up its west face, a 12 m drop to the tailrace and the tidal flats on its east | Along the crest road, then down one long ramp on the wall's east face (two flights, a landing at the gallery's level) to the foot | Gate houses on piers off the crest over the lagoon, three cell chambers off a gallery inside the wall (entered by an adit from the landing), the switchyard's rectifier cage against the wall at its foot | Dry late afternoon, the east side in the wall's long shadow; indoors under a cover mask, the low sun in only through each gate house's south window |
 | Quicklight | A refinery packed tight on basalt under a standing storm | A grid of alleys under pipe racks | Blast bunkers banked with earth, reactor skirts, a control block | Storm dusk; lightning to the rod pylons is the weather |
 | Lodestone | A winding slot canyon in banded iron, descending to a bowl | One path down the canyon, bend after bend | Alcoves under overhangs in the canyon wall, open on the canyon side | Rust dusk, light only on the upper walls |
 | Thornmere | An archipelago of pitch mounds in a tar lake, each higher than the last | A zigzag chain mound to mound over root ridges, with two side branches | Inside the trees: hollow stumps, a root vault, a fallen hollow trunk, a pit under a stump's roots | Grey daylight under a high dead canopy; mist on the tar |
@@ -238,7 +238,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Lodestone | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:lodestone` rewritten) | not yet |
 | Teeter | 2026-11-16 | 2026-11-16 | 2026-11-16 (8 of 8 housed) | 2026-11-16 | 2026-11-16 (`verify:teeter` rewritten) | not yet |
 | Verdigris | 2026-11-16 | 2026-11-16 | 2026-11-16 (8 of 8 housed) | 2026-11-16 | 2026-11-16 (`verify:verdigris` rewritten) | not yet |
-| Brinewire | | | | | | |
+| Brinewire | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:brinewire` rewritten) | not yet |
 | Quicklight | | | | | | |
 | Ember Reach | | | | | | |
 | Mirrowen | | | | | | |
@@ -250,6 +250,17 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Brinewire, 2026-11-17 (branch `site/brinewire`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground 0.00 to
+12.00 m (12.0 m, three levels), relief 12.6 m, housed 6 of 6 (R7 R7 R8 R8 R8 R7), no cloned coordinates, no plate in view from the
+spawn. `perf-worlds.mjs`: 280 draws, 247k triangles (before: 369 and 212k). It uses the shared layers as they are: `lib/workings.js`
+(the walk is volumes, `outdoorDoors`) and `lib/cover.js` (14 boxes, two windows). Departures: the north yard runs the wall's full
+width so the landing ground stands over the drop (from the crest road the 27 m deck hides the foot); the edges over the tailwater
+side are kerbs and railings, not parapets (a solid parapet hid the drop from a player standing at it); the gate houses take the sun
+through south windows (a west window's light landed past the door). For the next world: a parapet on a raised walk must not reach
+the eye, and a drop is only seen over a railing; test a view by ray from the eye at the edge before claiming it. The row's "needs
+a yes" on lore: the run was sent with this row as its brief, and `saga.js`'s marsh pools, cells and pylons fit the barrage
+unchanged. Spec, build record and the owner's viewing list: `docs/plans/brinewire-world.md` section 9.
 
 **Verdigris, 2026-11-16 (branch `site/verdigris`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -3.60 to
 4.40 m (8.0 m), relief 8.0 m, housed 8 of 8 (R8 R7 R7 R7 R8 R7 R7 R8), no cloned coordinates (before: Teeter's first site's), no plate in

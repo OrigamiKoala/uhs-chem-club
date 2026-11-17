@@ -324,6 +324,21 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   (`BOSS_ARENA_SPOTS['boss-leach']`). Cover: a box per room, door, stair, the gate passage and the twin cell (18); the sun comes in only at doors that face it AND open onto a deck (three).
   `routeTo` passes every doorway square (a point up to a metre either side of it). Traps met: the old water sheet ran through anything sunk below it; a sun opening at a stair's foot is under a
   roof; the strip behind a plate set 3 m from the wall is 0.65 m deep, so a big tank goes above 2.4 m forward over the plate; a stain on a wall is a decal, not a body leaving its room.
+- **Brinewire** (`unit10`, `three/brinewire.js` + `brinewire/`, `tools/gen-brinewire-layout.mjs`, `tools/verify-brinewire.mjs`; site rebuilt 2026-11-17, `docs/plans/brinewire-world.md` section 9): A TIDAL
+  BARRAGE. `brinewire/barrage-plan.js` (pure data on `lib/workings.js`, `outdoorDoors: true`) declares the wall (west face x -34.6, the crest road x -34 to -24, the deck to the east face at x 4, `DECK`
+  12.6, never walked), and the walk as volumes: open kinds `yard` (the north yard runs the wall's full width, the south yard), `road`, `ramp` (two flights graded along z down the east face), `landing`,
+  `apron` (the foot, three rectangles round the cage); roofed kinds `passage` (a door through a wall), `adit`, `gallery` and `room` (`ROOMS`: two gate houses on piers over the lagoon, three chambers off
+  the gallery at 6.0 under the deck, the switchyard's cage at the foot). Every door is in a room's east side. `height(x, z)` is a volume's floor, within `EDGE` of an open volume's closed side the same floor,
+  else `land` (crest and deck on the wall, the lagoon's bed west, the basin and the tidal flats east, the two headlands). `terrain.js` holes the ground mesh under the whole wall and every volume and BUILDS
+  the barrage: the deck slab, the east face with the adit's mouth and a railing on its kerb, every open volume's closed side as a wall chosen by what lies a metre beyond it (a parapet; a retaining wall
+  under higher land; a kerb and railing over the tailwater side, so the drop is seen; half a metre over the deck so it is seen across), the water's line on every face in brine, the walks' paving
+  (one vertex-coloured mesh: joints, wear, salt), and each roofed volume's shell by kind and `shell` (`gable`, `mono`, `vault`, `beams`, `hall`, `cage` with alpha-tested expanded-metal mesh). Two water
+  sheets, the lagoon at 10.2 and the tailwater at -1.6. `stations.js` furnishes one room per bench and draws each host's glass as one mesh; `plant.js` holds the ramp's lamps on standards, the gallery's
+  pendants, the four outfalls through the ramp's wall (their water the one mover), the deck's gantry crane and hatches, the switchyard (two transformers, a portal gantry, the terminal tower and its line)
+  and the far country. Cover: a box per room, passage, the adit and the gallery (14); the low sun (17.6 degrees, from the west-south-west) comes into the gate houses through a window in each one's south
+  wall (doors face east, away from it). `routeTo` stands off every doorway square to it. The Clamp is fought on the apron (`BOSS_ARENA_SPOTS['boss-clamp']`). Traps met: a parapet on a raised walk that
+  reaches eye height (the deck's, at 13.7 over a crest at 12) hides the whole far side; a solid 0.6 m parapet hides a 12 m drop from someone standing at it, a kerb and railing does not; a window in
+  the back wall under a sun this low lands its light past the door, a south window lands it on the floor.
 - **Lodestone** (`unit12`, `three/lodestone.js` + `lodestone/`, `tools/gen-lodestone-layout.mjs`, `tools/verify-lodestone.mjs`; site rebuilt 2026-11-14, `docs/plans/lodestone-world.md` section 7): A SLOT
   CANYON IN BANDED IRON. `lodestone/canyon-plan.js` (pure data) declares the hollow, eleven runs along a centre line (`LINE`: floor level over a landing at each bend, graded between), six alcoves (shared-layer
   volumes with one `to: null` mouth) and the pothole; `sample(x, z)` is the walk as a union with an inside depth, and everything is read off it: the height field (`height`: the floor inside; outside, held at

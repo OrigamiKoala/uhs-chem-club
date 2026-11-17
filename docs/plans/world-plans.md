@@ -88,7 +88,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/verdigris-world.md`
 
 ### Unit 10: Brinewire (Electrochemistry)
-- **Setting:** The copper marsh: salt flats with brine pools, transmission pylons, plating tanks, and galvanic cells.
+- **Setting:** The copper marsh, crossed by a tidal barrage: a concrete wall with the marsh's brine impounded against its west face and a 12 m drop to the tailrace and the tidal flats on its east. The benches are in two gate houses off the crest road, three cell chambers in a gallery inside the wall, and the switchyard's cage at its foot (site rebuilt 2026-11-17; `docs/plans/brinewire-world.md` section 9).
 - **Benches:** `q1-halves` (redox half-reactions and oxidation states), `q2-activity` (activity series and displacement reactions), `q3-galvanic` (galvanic cell construction, salt bridge, electrodes), `q4-potential` (standard cell potential E°cell and ΔG° = -nFE°), `q5-load` (cell potential under non-standard conditions, Nernst, concentration cells), `q6-electrolysis` (electrolytic cells, Faraday's law of electrolysis), and `boss-clamp`.
 - **Core Teaching Click:** Voltage is energy per electron (intensive); a cell runs down until Q = K (E = 0), not until all reactants vanish.
 - **Reference:** `docs/plans/brinewire-world.md`
