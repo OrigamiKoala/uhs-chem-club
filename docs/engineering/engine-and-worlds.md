@@ -299,6 +299,17 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   (`lib/cover.js`) covers every room with a per-room sky residual; the sun comes in through the charge door and three louvred bands (`CLERESTORY`), which are real holes in the walls too; the iron in the runner
   (`M.iron`) is the one fire, a source in the three-light pool. Traps met: a ramp is entered only at its ends (a side door onto a graded floor is a ledge); a stanchion must not stand in a doorway (the frames'
   positions are listed, not stepped); the arena's 7 m ring must clear the spout's collider under the tap hole; the bench's own parts read as bay intrusions unless `bakeStatics` is stubbed as `verify:bench` does.
+- **Teeter** (`unit08`, `three/teeter.js` + `teeter/`, `tools/gen-teeter-layout.mjs`, `tools/verify-teeter.mjs`; site rebuilt 2026-11-16, `docs/plans/teeter-world.md` section 9): A HILLSIDE OF SALT
+  TERRACES. `teeter/terrace-plan.js` (pure data on `lib/workings.js`) declares five terrace levels 5.5 m apart (`LEVEL`), the wall faces (`FACE`), and the walk as volumes: the shelf, four ramps on one
+  line at the south edge (the stair, 1 in 4), three dikes and the drying floor (open kinds `dike`, `ramp`), and eight rooms with their passages (roofed). `height(x, z)` is a volume's floor, or within
+  `EDGE` (0.3 m) of an open volume's closed side the same floor (the step hides inside the wall or kerb there), else `land` (the terraces, the hill east of the shelf, the spurs past |z| 128, the valley).
+  `terrain.js` draws the ground on a grid with a vertex row on every step line, leaves a hole over every roofed volume (a vertex on a hole's rim takes the land's height), and builds the masonry
+  (terrace walls, kerbs, the stair's walls, the pans' bunds, every room's floor, walls and roof by `shell`) as `phys: 'ground'` meshes merged by material per 40 m square. A room's roof top is the
+  pans' floor above it; the two weir houses (`gable`, `mono`) stand up through the pans. `stations.js` furnishes one room per bench (`host-plan.js` derives the plate from the room, facing west);
+  `plant.js` holds the beam pumps (one over room 6's shaft, its rod working the barrel in the room), the spring house and lade, the stair's lamps, the brine falls, the drying floor's heaps and the far
+  country. Cover: every room and passage is a box (`sky` 0.3 and 0.45 kept), the sun comes in through each door's first 2.5 m (`openings`). The Tipper is fought on the drying floor
+  (`BOSS_ARENA_SPOTS['boss-tipper']`). Traps met: a fixture placed from the room's middle (the pump shaft) landed over the plate, which also stands across the middle; a pan test in plan view counted
+  the rooms under the pans as brine; a low sun cannot come down a roof shaft (it lands 17 m away), so rooms take their sun through the door.
 - **Lodestone** (`unit12`, `three/lodestone.js` + `lodestone/`, `tools/gen-lodestone-layout.mjs`, `tools/verify-lodestone.mjs`; site rebuilt 2026-11-14, `docs/plans/lodestone-world.md` section 7): A SLOT
   CANYON IN BANDED IRON. `lodestone/canyon-plan.js` (pure data) declares the hollow, eleven runs along a centre line (`LINE`: floor level over a landing at each bend, graded between), six alcoves (shared-layer
   volumes with one `to: null` mouth) and the pothole; `sample(x, z)` is the walk as a union with an inside depth, and everything is read off it: the height field (`height`: the floor inside; outside, held at

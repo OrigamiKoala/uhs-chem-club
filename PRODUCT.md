@@ -274,6 +274,9 @@ Each row is a defect that was built, found and fixed. Do not build it again.
 | A rock fin too thin for its faces | Lodestone: with 3 m of rock between a canyon run and the hollow, the rock faces' top lips (drawn back into the rock) landed in the hollow | Keep at least 7 m of rock between any two parts of a walk; measure every rock-face vertex against the walk |
 | A box collider turned into discs | A host's box colliders laid as a row of discs left the box's corners walkable, under drum hoops at shin height | A host turned by a quarter turn keeps its box colliders as boxes (`lodestone.js` `initHosts`) |
 | A shader patch nobody compiled | No Node check runs a GPU, so a world's `onBeforeCompile` GLSL is first tried in front of the owner | Run `node tools/glsl-check.mjs <world>` after changing a patch (needs `glslangValidator`) |
+| A room's fixture placed from the room's middle | Teeter: the pump shaft, set a fixed distance in from the back wall across the room's middle, came down right over the plate, which stands across the same middle | Place a room's fixtures in the host frame against the bay (to the sides, behind, or above 2.4 m), never from the room's corners |
+| Water above a room counted as walkable brine | Teeter: a plan-view test of "no reachable cell in a pan" failed on the rooms dug in under the pans | Where ground runs under a body, test height as well as plan (`verify-teeter.mjs`) |
+| A sun shaft that cannot shine | A roof opening under a sun 14 degrees up sends its light 17 m sideways, out of the room | Let a low sun in through doors and walls; check where the shaft lands with `cover.at` before declaring it |
 
 ### Teeter (equilibrium) additions
 

@@ -76,7 +76,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/kettle-world.md`
 
 ### Unit 08: Teeter (Chemical Equilibrium)
-- **Setting:** An open plateau with dynamic balancing pans, twin reaction chambers, and equilibrium meters.
+- **Setting:** A west-facing hillside of salt terraces: five levels of brine pans held up by masonry walls, one stair straight down the fall line with a level dike branching off it on each terrace, and the benches in rooms dug into the terrace walls under the pans (two are weir houses standing up among them); the Tipper is fought on the drying floor at the bottom (site rebuilt 2026-11-16, `teeter-world.md` section 9).
 - **Benches:** `q1-both` (forward and reverse rates reaching balance), `q2-k` (equilibrium constant K expression), `q3-q` (reaction quotient Q vs K), `q4-properties` (manipulating K values and Kp/Kc), `q5-calc` (RICE tables and equilibrium concentrations), `q6-lean` (Le Chatelier's principle: T, P, V, concentrations), `q7-dissolve` (solubility product Ksp), `q8-common` (common ion effect and precipitation), and `boss-tipper`.
 - **Core Teaching Click:** Equilibrium is a dynamic balance where forward and reverse rates are equal, not a state where reactions have stopped.
 - **Reference:** `docs/plans/teeter-world.md`

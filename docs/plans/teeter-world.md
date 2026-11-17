@@ -1,6 +1,6 @@
 # Teeter (`unit08`, equilibrium): world spec and build record
 
-Status: **Phase 0 spec** (2026-11-04). The build record at the foot is filled in as phases land; a section marked *Not built* is a plan, not a claim. The chart in `src/learn/worlds/unit08-equilibrium.js` still holds the old four placeholder quests until Phase 2 replaces it with the eight benches below.
+Status: **built** (benches 2026-11-04; site rebuilt 2026-11-16, section 9). Originally: Phase 0 spec (2026-11-04). The build record at the foot is filled in as phases land; a section marked *Not built* is a plan, not a claim. The chart in `src/learn/worlds/unit08-equilibrium.js` still holds the old four placeholder quests until Phase 2 replaces it with the eight benches below.
 
 Place: **the salt pans**, shallow brine beds behind dikes, with beam pumps that rock on their pivots (the Teeter). Case thread: the Fifth claims a pan "finished" a crop of salt and walked away; Vess's case is that nothing in a settled pan is finished, only balanced, so a pan that looks idle can be made to give more. The Fifth's alchemy rumour (turning one salt into another) is taken apart by showing the same pan reached from either end.
 
@@ -384,3 +384,120 @@ valley floor 22 m below the drying floor, a river channel, and a far range of hi
   `tools/gen-teeter-layout.mjs`, `tools/verify-teeter.mjs`; new `teeter/terrace-plan.js` (pure data).
 - Archived to `archive/2026-11-16/site-teeter/`: the old versions of every rebuilt file, with a README.
 - Shared: `learn/engine/boss-arena.js` (the Tipper's spot moves); no shared library changes planned.
+
+### 9.10 Build record (2026-11-16)
+
+Built on branch `site/teeter` in four commits after the spec. Nothing was looked at in a browser: every claim below is a
+Node measurement; section 9.12 is what the owner should look at.
+
+- **The plan** (`teeter/terrace-plan.js`, pure data on `lib/workings.js`): 25 volumes (the shelf, four ramps, three dikes,
+  the drying floor, eight passages, eight rooms), 364 pans, the height field, the cover spec and the guide's route.
+  The shared layers are used as they are; no shared code changed except `learn/engine/boss-arena.js` (the Tipper's spot).
+- **The ground** (`teeter/terrain.js`): a grid to 900 m with a vertex row on every step line; a hole over every room and
+  passage; masonry by material per 40 m square: terrace walls and the drying floor's parapet, kerbs, the stair's side
+  walls, the shelf's bank, timber fences across the closed ends of the dikes, the pans' bunds, and each room's floor,
+  walls and roof by its shell (`vaultX`, `gable`, `steel`, `joists`, `mono`, `shaft`, `vaultZ`, `jack`). The ground's
+  colours mark clay dikes, crust, stair stone, hill rock and valley; a trodden way darkens the middle of the stair, each
+  dike's line and the shelf from the pad to the stair head; the hill pales to a salt scar down the gully above the spring.
+- **The hosts** (`teeter/stations.js`): as section 9.5, each furnishing three walls of its room; room 6's barrel is worked
+  by the beam pump on the terrace above (`plant.js`), its rod stroking 0.06 to 0.96 m over the barrel's gland.
+- **The plant** (`teeter/plant.js`): four beam pumps (three on piers in the pans away from the walk, one over room 6's
+  shaft), the spring house and its lade, a bracket lamp on each side wall of each ramp, seven brine falls on the terrace
+  walls away from the walk (a moving sheet each), three salt heaps and a barrow on the drying floor; the far country: a
+  graduation tower on the north spur, the cistern house at the head of the gully east of the shelf, the brine main on
+  trestles down the south spur, the river on the valley floor west.
+- **Checks**: `tools/verify-teeter.mjs` rewritten (section 9.11). The first build's script is archived.
+
+**Where the build parted from the spec:**
+- Room 6's shaft was first declared behind the plate across the room's middle; that put it straight over the plate. It
+  stands 4.6 m to the south of the plate instead (`shaft.side`), over the barrel at the side of the bay.
+- The spec said the sun would come "down one pump shaft". With the sun 14 degrees up, light through a roof opening lands
+  about 17 m to the side, outside the room. Every room, room 6 included, takes its sun through its door's first 2.5 m;
+  the shaft lets in sky only. (The door light was also cut back from 4 m to 2.5 m so it reaches neither the lane nor
+  the plate.)
+- The spec targeted under 300 draws; the build costs 401 (inside the 566 budget). The masonry is the cost: eleven
+  materials over 40 m squares.
+- Phases 3 and 4 were built in one pass (one shared room-host pattern, eight different fit-outs) and committed together.
+- The four beam pumps, the falls and the fences are additions the spec did not list; each belongs to a working
+  (lifting brine, spilling pan to pan, closing a dike's end where the clay runs on level).
+- Section 7 of the distinction plan asks for the standard to be re-read after world 3 against the owner's view of worlds
+  1 to 3; the owner has seen none of them yet, so the standard is unchanged.
+
+### 9.11 Measurements, before and after
+
+`node tools/world-shape.mjs teeter ligar`
+
+| | Benches | Ground under the benches | Relief | Housed | Per bench |
+| :--- | :---: | :--- | :---: | :---: | :--- |
+| Before | 8 | 0.00 to 0.00 | 0.34 m | 0/8 | -1 -1 -1 -1 -1 -2 -1 -1 |
+| After | 8 | 0.00 to 16.50 | 22.00 m | 8/8 | R7 R8 R7 R7 R7 R7 R7 R7 |
+| Ligar | 9 | -2.60 to 0.89 | 21.55 m | 7/9 | -2 R6 R4 R4 -2 R7 R6 R5 R7 |
+
+No two worlds share bench coordinates (before, Teeter's benches stood on Verdigris's).
+
+`node tools/perf-worlds.mjs teeter ligar`
+
+| | Build ms | Objects | Draws | k tris | Materials | Casters | Caster k tris | Transparent |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Before | 137 | 599 | 390 | 184 | 56 | 189 | 22 | 54 |
+| After | 332 | 519 | 401 | 263 | 57 | 222 | 29 | 17 |
+| Ligar | 1119 | 752 | 566 | 867 | 200 | 198 | 455 | 64 |
+
+`node tools/perf-bench-rest.mjs`: all eight Teeter benches come to rest untouched (684 of 689 stages over all worlds;
+the five that do not are in other worlds and this branch changes no table code).
+
+`verify:teeter` holds: 22,307 walkable cells, no ledge, every reachable cell inside a walk volume, none in a pan; every
+approach, the pad and the arena reached; no overlaps; nothing buried; 8 of 8 housed R7 or R8; bench ground 16.5 m on
+4 levels in walk order; no plate in view from the spawn, and from each bench's mark no other plate; one floor; at every
+mark the sun and 0.7 of the sky taken away, the dikes and the shelf uncovered, sun on the floor inside every door; the
+guide's way to every bench, on to the next and back up stays on the walk and within 12 m of a lamp; the Tipper's ground
+open for 7 m, level, in view; the cover mask's GLSL compiles (`node tools/glsl-check.mjs teeter`).
+
+Every other check run on this branch is green: `verify:bench`, `verify:arena`, `verify:voyage`, `verify:learn`,
+`verify:table`, `verify:docs`, `verify:story`, `verify:normals`, and every world's own script (`tallow`, `lanternfall`,
+`ligar`, `bellows`, `ember`, `mirrowen`, `kettle`, `verdigris`, `brinewire`, `quicklight`, `lodestone`, `thornmere`,
+`cinderhalo`).
+
+Archived: `archive/2026-11-16/site-teeter/` (the old `teeter.js`, `terrain.js`, `stations.js`, `plant.js`,
+`host-plan.js`, generator, verify script and JSON), with a README.
+
+### 9.12 The owner's viewing list
+
+Nothing here has been seen. For each place: where to stand, what should be in view, and what would mean it failed.
+
+1. **The landing** (spawn, the shelf at 22 m, facing west-south-west). The shelf's yard; to the left the head of the
+   stair dropping away between two low walls; ahead, past a kerb, terrace 0's pans and then four terraces of brine
+   stepping down to a broad floor and the valley beyond; to the right among the pans, the weigh house's gabled roof;
+   behind the north fence, the spring house. *Failed if* any bench plate is visible, or the hill reads as one flat plate.
+2. **The stair head** (the shelf's west edge at z 36, facing west). Ramp 1 running down 22 m between its side walls,
+   through a gap in terrace wall 1, a bracket lamp on each side; the next three ramps in line below it. *Failed if* a
+   side wall floats, a step shows at a ramp's foot, or the ramp looks like a cliff.
+3. **First sight of bench 1** (the foot of ramp 1 on terrace 1, facing north). On the right the face of wall 1, 5.6 m
+   of dressed stone, with a doorway 12 m along (room 1) and another 35 m along (room 2); on the left the kerb and the
+   pans, then the edge. *Failed if* a doorway is hard to pick out of the wall.
+4. **The sluice chamber** (at Bench 1's plate, facing the door). A barrel vault overhead; the culvert of brine high
+   behind the plate with a gate on its handwheel at each end; a trough along the left wall, a hand pump by the door on
+   the right; the floor sunlit only just inside the door. *Failed if* the room is as bright as outside on a phone, the
+   vault shows gaps against the walls, or the sun lies across the plate.
+5. **The weigh house** (Bench 2's plate, then from the shelf above). Inside: a tall timber roof on tie beams, the scale
+   by the right wall, the steelyard hanging inside its rope rail on the left. From the shelf: the house's roof standing
+   up out of the pans. *Failed if* the house's walls do not meet the pans.
+6. **The pump chamber** (Bench 6's plate, then its pier on terrace 2). To the right of the plate the rod slides up and
+   down a shaft open to the sky into the barrel; the brine main along the left wall. Above, on terrace 2, the beam pump
+   rocks on a stone pier among the pans over the shaft's mouth. *Failed if* the rod and the barrel do not line up, or
+   the rod leaves the shaft.
+7. **The other rooms** (Benches 3, 4, 5, 7, 8, each at the plate). Each roof differs: rolled steel beams; timber joists
+   on two girders; a monopitch house rising to the back; a vault running across the room; brick jack arches between
+   steel beams. *Failed if* two rooms read as the same room.
+8. **The highest ground** (the shelf's east bank, facing east). The hill rising behind the spring house, a white salt
+   scar down the gully, the cistern house at the gully's head. *Failed if* the bank and the hill meet with a gap.
+9. **The lowest ground** (the drying floor's parapet, facing west). The great pan 5.5 m below, the decor terraces
+   stepping down to the valley floor, the river, a far range on the horizon. *Failed if* the terraces end in a cut edge.
+10. **The Tipper's ground** (the player's mark on the drying floor, (-55, -8), facing north). Open level floor to the
+    Tipper 16 m ahead, the parapet and the great pan on the left, wall 4's face on the right. *Failed if* anything
+    stands in the way or the floor slopes.
+11. **The terraces beyond the walk** (the north end of dike 2, facing north). The dike closed by a timber fence; the
+    pans running on along the hill; a brine fall down wall 2 about 30 m off; the graduation tower on the north spur.
+    *Failed if* the fall's sheet floats off the wall or does not move.
+12. **South** (the foot of ramp 4, facing south). The brine main on its trestles coming down the south spur to the
+    valley. *Failed if* it floats over or sinks into the spur.

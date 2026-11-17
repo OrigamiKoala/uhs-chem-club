@@ -169,7 +169,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Ember Reach | The inside wall of a caldera, stepping down toward a lava lake | A switchback road down the wall | Galleries cut into the caldera wall with one side open to the lake; the turbine hall | Ochre fume; the lake lights the rock from below |
 | Mirrowen | A harbour: quays, a dry dock sunk below the waterline, moored hulls, sea ice to the north | Along quays, over gangways and lock gates | Aboard hulls (holds, deckhouses), boathouses on piles, the dry dock floor | Cold white morning haze |
 | Kettle (built 2026-11-13) | One foundry building the size of the site, floors at five levels inside it; a slag tip and an ore stock outside | Up one crane aisle from the charge door to the cast house, bays opening off it, two ramps up and two down | The building itself: stores, scale bay, control cabin on a plinth, sump cellar, charge bank up a ramp, pickling bay, tapping pit, refining bay | Indoors under a cover mask: shafts through louvred bands high in the west walls and the charge door, one furnace source |
-| Teeter | A hillside of salt terraces: pans stepping down a slope, brine spilling pan to pan | Down the dikes and stairs-as-ramps, top pan to bottom | Weir houses and sluice chambers built into each terrace wall | Bright pale afternoon, evaporation shimmer |
+| Teeter (built 2026-11-16) | A west-facing hillside of salt terraces: five levels of pans 5.5 m apart behind masonry walls, brine spilling pan to pan; spurs close the valley's head | One stair straight down the fall line (four ramps through four walls), a level dike branching off its foot on each terrace: a comb, not a switchback | Rooms dug into the terrace walls under the pans (the pans' floor is the roof), entered by a passage through the wall; two are weir houses standing up among the pans | Bright pale afternoon, evaporation shimmer; indoors under a cover mask, the sun in at each door |
 | Verdigris | A drowned masonry fort in a reed swamp, sightlines under 40 m | A branching boardwalk between towers, never straight for long | Tower rooms, vaulted cisterns, a flooded gatehouse | Low green-grey overcast, thick fog |
 | Brinewire | A tidal barrage: a concrete wall across the marsh, impounded brine one side, a drop the other | Along the crest, then down a long ramp to the foot | Gate houses on the crest, the cell gallery inside the wall, the switchyard cage at its foot | Dry late afternoon, long shadows off the wall |
 | Quicklight | A refinery packed tight on basalt under a standing storm | A grid of alleys under pipe racks | Blast bunkers banked with earth, reactor skirts, a control block | Storm dusk; lightning to the rod pylons is the weather |
@@ -236,7 +236,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Groundwork G1 to G5 | n/a | n/a | n/a | n/a | 2026-11-13 (G1 to G5 built; see below) | n/a |
 | Kettle | 2026-11-13 | 2026-11-13 | 2026-11-13 (8 of 8 housed) | 2026-11-13 | 2026-11-13 (`verify:kettle` rewritten) | not yet |
 | Lodestone | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:lodestone` rewritten) | not yet |
-| Teeter | | | | | | |
+| Teeter | 2026-11-16 | 2026-11-16 | 2026-11-16 (8 of 8 housed) | 2026-11-16 | 2026-11-16 (`verify:teeter` rewritten) | not yet |
 | Verdigris | | | | | | |
 | Brinewire | | | | | | |
 | Quicklight | | | | | | |
@@ -250,6 +250,16 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Teeter, 2026-11-16 (branch `site/teeter`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground 0.00 to 16.50 m
+(16.5 m), relief 22.0 m, housed 8 of 8 (R7 R8 R7 R7 R7 R7 R7 R7), no cloned coordinates (before: Verdigris's), no plate in view from the
+spawn. `perf-worlds.mjs`: 401 draws, 263k triangles (before: 390 and 184k). It uses the shared layers as they are: `lib/workings.js`
+(the whole walk and the rooms are volumes; the walk's walls are its colliders) and `lib/cover.js` (16 boxes, a door opening per room).
+Departures: the walk shape is a comb (one stair, level dikes branching off), so it is not a second switchback beside Ember Reach's row;
+the sun comes into the rooms through their doors, not down a shaft (the sun is 14 degrees up). For the next world: a fixture placed from
+a room's middle lands on the plate; test height as well as plan wherever ground runs under a body. The standard in section 3 was not
+re-read against the owner's view (section 7) because the owner has not yet seen Kettle, Lodestone or Teeter. Spec, build record and the
+owner's viewing list: `docs/plans/teeter-world.md` section 9.
 
 **Cinder Halo, 2026-11-14 (branch `world/unit14`).** Built new as the row says. `world-shape.mjs`: bench ground -12.50 to -2.00 m (10.5 m),
 relief 20.58 m, housed 6 of 6 (R8 R8 R8 R8 R8 R8), no cloned coordinates, no plate in view from the spawn. `perf-worlds.mjs`: 142 draws,
