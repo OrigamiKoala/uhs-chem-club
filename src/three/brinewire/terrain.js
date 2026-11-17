@@ -234,6 +234,15 @@ function block(sx, sy, sz, cx, cy, cz, tile = 2.4) {
 /** A box from (x0, y0, z0) to (x1, y1, z1). */
 export const span = (x0, x1, y0, y1, z0, z1, tile) => block(x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, tile);
 
+/** A square bar of side `t` from point p to point q (a rail). */
+function bar(p, q, t) {
+  const d = new THREE.Vector3(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
+  const g = new THREE.BoxGeometry(t, d.length(), t);
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()));
+  g.translate((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2);
+  return g;
+}
+
 /** Split [a, b] into pieces no longer than `len`, skipping the gaps. */
 function pieces(a, b, gaps, len = 24) {
   const spans = [];
@@ -270,16 +279,14 @@ export function buildBarrage(plan) {
   const cage = rooms.find(r => r.shell === 'cage');
   const cageBand = { minX: cage.rect.minX - T, maxX: cage.rect.maxX + T, minZ: cage.rect.minZ - T, maxZ: cage.rect.maxZ + T };
 
-  /* ---- the deck: its slab, over the wall from the road's parapet to the east face, end to end. */
-  for (const [z0, z1] of pieces(WALL.north, WALL.south - T, [], 32)) put('deck', span(WALL.deckW, WALL.east - T, DECK - DECK_SLAB, DECK, z0, z1, 3));
-  // Its end over the south yard, from the yard up to the deck's parapet.
-  put('concrete', span(WALL.roadE, WALL.east, CREST - 0.4, DECK + PARAPET - 0.12, WALL.south - T, WALL.south, 2.4));
-  put('coping', span(WALL.roadE, WALL.east, DECK + PARAPET - 0.12, DECK + PARAPET, WALL.south - T - 0.05, WALL.south + 0.05, 1.2));
+  /* ---- the deck: its slab, over the wall from the road's parapet to the east face, from the north yard to the south. */
+  for (const [z0, z1] of pieces(YARD_N.maxZ, WALL.south - T, [], 32)) put('deck', span(WALL.deckW, WALL.east - T, DECK - DECK_SLAB, DECK, z0, z1, 3));
 
-  /* ---- the east face: from the tailwater's bed (or the foot) to the deck's parapet, end to end, with the adit's mouth in it. */
+  /* ---- the east face: from the tailwater's bed (or the foot) to a kerb at the deck's edge, from the north yard (whose own
+   * parapet is the face there) to the south, with the adit's mouth in it; a railing along the deck's edge on the kerb. */
   {
-    const x0 = WALL.east - T, x1 = WALL.east, top = DECK + PARAPET;
-    for (const [z0, z1] of pieces(WALL.north, WALL.south, [[ADIT.minZ, ADIT.maxZ]], 16)) {
+    const x0 = WALL.east - T, x1 = WALL.east, top = DECK + 0.15;
+    for (const [z0, z1] of pieces(YARD_N.maxZ, WALL.south, [[ADIT.minZ, ADIT.maxZ]], 16)) {
       const low = z0 >= APRON.maxZ - 0.01 ? BASIN.bed - 0.3 : FOOT - 0.4;
       put('face', span(x0, x1, low, top - 0.12, z0, z1, 3));
       put('coping', span(x0 - 0.05, x1 + 0.05, top - 0.12, top, z0, z1, 1.2));
@@ -289,6 +296,14 @@ export function buildBarrage(plan) {
     put('coping', span(x0 - 0.05, x1 + 0.05, top - 0.12, top, ADIT.minZ, ADIT.maxZ, 1.2));
     put('face', span(x0, x1, BASIN.bed - 0.3, GALLERY - 0.4, ADIT.minZ, ADIT.maxZ, 3));
     put('coping', span(x1 - 0.02, x1 + 0.16, GALLERY + 3.6, GALLERY + 3.95, ADIT.minZ - 0.4, ADIT.maxZ + 0.4, 1.2));
+    // The railing: a post every 2 m, a mid rail and a top rail.
+    const xr = (x0 + x1) / 2, z0 = YARD_N.maxZ + 0.6, z1 = WALL.south - T - 0.1;
+    const n = Math.round((z1 - z0) / 2);
+    for (let i = 0; i <= n; i++) {
+      const z = z0 + (z1 - z0) * i / n;
+      put('rail', span(xr - 0.04, xr + 0.04, top, top + 1.05, z - 0.04, z + 0.04, 1));
+    }
+    for (const y of [0.5, 1.0]) put('rail', span(xr - 0.025, xr + 0.025, top + y, top + y + 0.05, z0, z1, 1));
   }
 
   /* ---- the walls round every open walk: a parapet over a drop, a retaining wall under higher land, the deck's parapet. */
@@ -333,20 +348,35 @@ export function buildBarrage(plan) {
       const drop = lo < floorLo - 0.5;
       const deck = hi >= DECK - 0.01 && hi < DECK + 0.5;
       const rise = hi > floorHi + 0.5;
-      const top = deck ? DECK + PARAPET : rise ? hi + 0.3 : floorHi + PARAPET;
+      // Over the deck the parapet stands a person's height over the walk, half a metre over the deck: the deck is seen across.
+      // Over the tailwater side's drop the edge is a kerb and a railing, so the drop is seen from the walk; elsewhere a parapet.
+      const px = along === 'z' ? w.plane + dir * 1.0 : mid;
+      const railed = drop && px > WALL.east;
+      const top = railed ? floorHi + 0.25 : deck ? floorHi + PARAPET : rise ? hi + 0.3 : floorHi + PARAPET;
       const bottom = drop ? lo - 0.3 : floorLo - 0.4;
-      const thick = drop ? T + 0.3 : T;
+      // Over a drop the wall is thicker (the land's own step lies inside it), unless it would stand proud of the east face.
+      const thick = drop && Math.abs(w.plane + dir * T - WALL.east) > 0.05 ? T + 0.3 : T;
       const [x0, x1, z0, z1] = along === 'z'
         ? (dir < 0 ? [w.plane - thick, w.plane, a, b] : [w.plane, w.plane + thick, a, b])
         : (dir < 0 ? [a, b, w.plane - thick, w.plane] : [a, b, w.plane, w.plane + thick]);
       put(drop && (v.kind === 'road' || v.kind === 'yard') ? 'face' : 'concrete', span(x0, x1, bottom, top - 0.12, z0, z1, drop ? 3 : 2.4));
       // Where the wall stands in brine: the water's line on its outer face, a dark wet band and the salt dried white over it.
       if (drop) {
-        const px = along === 'z' ? w.plane + dir * 1.0 : mid;
         const W = px < WALL.west ? LAGOON.water : BASIN.water;
         if (bottom < W - 0.3) waterline(put, along, dir, along === 'z' ? (dir < 0 ? x0 : x1) : (dir < 0 ? z0 : z1), a, b, W);
       }
       put('coping', span(x0 - (along === 'z' ? 0.05 : 0), x1 + (along === 'z' ? 0.05 : 0), top - 0.12, top, z0 - (along === 'x' ? 0.05 : 0), z1 + (along === 'x' ? 0.05 : 0), 1.2));
+      if (railed) {
+        // Posts at each end and the middle of the length, a top rail and a mid rail following the floor's slope.
+        const c = along === 'z' ? (x0 + x1) / 2 : (z0 + z1) / 2;
+        const at = (t, y) => along === 'z' ? [c, y, t] : [t, y, c];
+        for (const t of [a + 0.05, (a + b) / 2, b - 0.05]) {
+          const yt = fl(Math.min(Math.max(t, full[0]), full[1])) + PARAPET;
+          const p = at(t, 0);
+          put('rail', span(p[0] - 0.04, p[0] + 0.04, top, yt, p[2] - 0.04, p[2] + 0.04, 1));
+        }
+        for (const h of [0.6, PARAPET]) put('rail', bar(at(a, fl(Math.max(a, full[0])) + h), at(b, fl(Math.min(b, full[1])) + h), 0.05));
+      }
     }
   }
 

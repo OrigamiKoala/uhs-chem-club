@@ -16,7 +16,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { part, between, rng } from '../ember/kit.js';
 import { kitFor } from '../kettle/kit.js';
 import {
-  GALLERY, FOOT, DECK, WALL, RAMP, ADIT, GALLERY_RECT, APRON, BASIN, LAGOON, ROOMS, land
+  GALLERY, FOOT, DECK, WALL, RAMP, ADIT, GALLERY_RECT, APRON, BASIN, LAGOON, ROOMS, YARD_N, land
 } from './barrage-plan.js';
 
 export { buildLampPost, buildLandingPad } from '../ember/plant.js';
@@ -33,13 +33,25 @@ export function rampFloor(z) {
 
 /* ================================================================== lamps */
 
-/** The ramp's lamps on brackets off the wall's face, the adit's and the gallery's pendants from their roofs. */
+/**
+ * The ramp's lamps on standards fixed to the kerb along its east edge, leaning out over the ramp; the adit's and the gallery's
+ * pendants from their roofs. The kerb is built in 4 m lengths, each a hand's height over its own higher end.
+ */
 function buildWallLamps(w) {
-  const k = kitFor(w);
+  const k = kitFor(w), M = w.M;
   const g = new THREE.Group();
   g.name = 'wall-lamps';
-  // Down the ramp, every 12 m, on the face at 3 m over the floor.
-  for (let z = RAMP.top - 6; z > RAMP.foot + 2; z -= 12) k.bracketLamp(g, WALL.east + 0.05, rampFloor(z) + 3.0, z, [0.55, 0], { intensity: 7, distance: 12 });
+  const pieceTop = (z) => {
+    const from = z >= RAMP.landS ? RAMP.landS : z >= RAMP.landN ? RAMP.landN : RAMP.foot;
+    const end = z >= RAMP.landN && z < RAMP.landS ? RAMP.landS : from + 4 * Math.ceil((z - from) / 4 + 1e-9);
+    return rampFloor(Math.min(end, RAMP.top) - 1e-6) + 0.25;
+  };
+  for (const z of [56, 44, 32, 20, 8, -4, -16, -28, -40]) {
+    const base = pieceTop(z), x = RAMP.maxX + 0.3;
+    k.box(g, [0.24, 0.1, 0.24], M.darkSteel, [x, base + 0.05, z], null, false);
+    k.box(g, [0.08, 3.1, 0.08], M.darkSteel, [x, base + 1.6, z]);
+    k.bracketLamp(g, x, base + 2.95, z, [-0.7, 0], { intensity: 7, distance: 12 });
+  }
   // The adit, and the gallery every 8 m, hung from the roof.
   const roofG = GALLERY + 4.4, roofA = GALLERY + 3.6;
   k.pendant(g, (ADIT.minX + ADIT.maxX) / 2, GALLERY + 2.9, (ADIT.minZ + ADIT.maxZ) / 2, roofA - 0.02, { intensity: 7, distance: 11 });
@@ -117,7 +129,8 @@ function buildDeck(w) {
   g.name = 'deck-plant';
   const y = DECK;
   // The rails, the full length.
-  for (const x of [-20.6, 0.6]) k.box(g, [0.3, 0.16, WALL.south - WALL.north - 6], M.darkSteel, [x, y + 0.08, (WALL.north + WALL.south) / 2 - 2], null, false);
+  const z0 = YARD_N.maxZ + 1.0, z1 = WALL.south - 1.4;
+  for (const x of [-20.6, 0.6]) k.box(g, [0.3, 0.16, z1 - z0], M.darkSteel, [x, y + 0.08, (z0 + z1) / 2], null, false);
   // The hatch covers over the turbine pits (east of the gallery), every 9 m.
   for (let z = -60; z < 56; z += 9) {
     k.box(g, [5.2, 0.12, 5.6], M.steel, [-0.8 - 6.6, y + 0.06, z], null, false);
@@ -135,7 +148,7 @@ function buildDeck(w) {
   k.strut(g, [-12, y + 9.1, gz], [-12, y + 4.0, gz], 0.02, M.darkSteel);
   k.box(g, [0.5, 0.4, 0.3], M.darkSteel, [-12, y + 3.8, gz]);
   // The cable trench along the east edge, its chequer-plate lids.
-  k.box(g, [1.4, 0.06, WALL.south - WALL.north - 4], M.darkSteel, [2.2, y + 0.03, (WALL.north + WALL.south) / 2], null, false);
+  k.box(g, [1.4, 0.06, z1 - z0], M.darkSteel, [2.2, y + 0.03, (z0 + z1) / 2], null, false);
   // A hoist motor house on the deck behind each gate house, with the gate's hoist shaft running over the road's parapet to it.
   for (const r of ROOMS.slice(0, 2)) {
     const z = (r.rect.minZ + r.rect.maxZ) / 2;

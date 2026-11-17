@@ -47,8 +47,11 @@ export const WALL_T = 0.6;
 /** How far an open volume's floor runs into the wall that closes it (the step is hidden there). */
 export const EDGE = 0.3;
 
-/** The north and south abutment yards, the ramp's line, the landing, the foot. */
-export const YARD_N = { minX: -52, maxX: -24, minZ: -95, maxZ: -66 };
+/**
+ * The north and south abutment yards, the ramp's line, the landing, the foot. The north yard runs the wall's full width, from
+ * the lagoon to the east face: its east parapet stands over the 12 m drop to the foot.
+ */
+export const YARD_N = { minX: -52, maxX: 3.4, minZ: -95, maxZ: -66 };
 export const YARD_S = { minX: -34, maxX: 10, minZ: 62, maxZ: 78 };
 export const RAMP = { minX: 4, maxX: 10, top: 62, landN: 2, landS: 14, foot: -46 };
 export const APRON = { minX: 4, maxX: 46, minZ: -92, maxZ: -46 };

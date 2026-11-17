@@ -33,7 +33,7 @@
         "kind": "yard",
         "rect": {
           "minX": -52,
-          "maxX": -24,
+          "maxX": 3.4,
           "minZ": -95,
           "maxZ": -66
         }
@@ -445,7 +445,7 @@
     {
       "asset": "lamp-post",
       "pos": [
-        -25,
+        2.4,
         12,
         -68
       ],
