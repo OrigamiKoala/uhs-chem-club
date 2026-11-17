@@ -394,7 +394,7 @@ export function makeFortPlan() {
 
   /**
    * THE COVER: every room, door, stair and the gate passage is roofed (the sun and most of the sky taken out). A door that
-   * faces the sun lets it onto the floor just inside; the twin cell of the cistern beside room 3 is covered too.
+   * faces the sun and opens onto an open deck lets it onto the floor just inside; the twin cell beside room 3 is covered too.
    */
   function coverSpec(sun = [-0.8, 0.3, 0.5]) {
     const boxes = [];
@@ -415,6 +415,9 @@ export function makeFortPlan() {
     const len = Math.hypot(...sun), s = sun.map(c => c / len);
     for (const r of rooms) {
       const o = r.opening, v = r.vol.rect, lo = r.level;
+      // Only a door that opens onto an open deck: a stair's foot or a door off the gate passage is under a roof itself.
+      const door = byId.get(o.to);
+      if (door.kind !== 'door' || !door.openings.some(q => q.to !== r.id && byId.get(q.to)?.kind === 'deck')) continue;
       const out = { minX: [-1, 0], maxX: [1, 0], minZ: [0, -1], maxZ: [0, 1] }[o.side];
       if (out[0] * s[0] + out[1] * s[2] < 0.3) continue;
       const axis = o.side.endsWith('X') ? 'x' : 'z';

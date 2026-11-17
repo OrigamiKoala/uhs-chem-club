@@ -277,6 +277,8 @@ Each row is a defect that was built, found and fixed. Do not build it again.
 | A room's fixture placed from the room's middle | Teeter: the pump shaft, set a fixed distance in from the back wall across the room's middle, came down right over the plate, which stands across the same middle | Place a room's fixtures in the host frame against the bay (to the sides, behind, or above 2.4 m), never from the room's corners |
 | Water above a room counted as walkable brine | Teeter: a plan-view test of "no reachable cell in a pan" failed on the rooms dug in under the pans | Where ground runs under a body, test height as well as plan (`verify-teeter.mjs`) |
 | A sun shaft that cannot shine | A roof opening under a sun 14 degrees up sends its light 17 m sideways, out of the room | Let a low sun in through doors and walls; check where the shaft lands with `cover.at` before declaring it |
+| Water drawn through a sunk room | Verdigris: one water sheet at the swamp's level would have run straight through the cisterns sunk below it, and the ground mesh through their floors | Cut the water sheet away over every structure hollow below the water (`verdigris/terrain.js` `dryRects`) and the ground mesh under every roofed volume; draw any water inside on its own |
+| Sun let in at a door under another roof | Verdigris: a cover opening at every sun-facing door put sunlight on the floor at the foot of a cistern's roofed stair and inside a door off the vaulted gate passage | Give a door a sun opening only when its far side is open ground (`fort-plan.js` `coverSpec`) |
 
 ### Teeter (equilibrium) additions
 

@@ -310,6 +310,20 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   country. Cover: every room and passage is a box (`sky` 0.3 and 0.45 kept), the sun comes in through each door's first 2.5 m (`openings`). The Tipper is fought on the drying floor
   (`BOSS_ARENA_SPOTS['boss-tipper']`). Traps met: a fixture placed from the room's middle (the pump shaft) landed over the plate, which also stands across the middle; a pan test in plan view counted
   the rooms under the pans as brine; a low sun cannot come down a roof shaft (it lands 17 m away), so rooms take their sun through the door.
+- **Verdigris** (`unit09`, `three/verdigris.js` + `verdigris/`, `tools/gen-verdigris-layout.mjs`, `tools/verify-verdigris.mjs`; site rebuilt 2026-11-16, `docs/plans/verdigris-world.md` section 8): A DROWNED
+  FORT IN A REED SWAMP. `verdigris/fort-plan.js` (pure data on `lib/workings.js`) declares the walk as volumes and the doorways as LINKED PAIRS (`link(a, b, ...)`): two linked volumes must share a wall and
+  the opening is the span they share, so a declaration that does not meet fails `problems()`. Kinds: `deck` (open: the landing stage, every plank run and junction, the ramps up to tower doors, the bridge,
+  the pump stage), `gate` (the vaulted gate passage, roofed), `door`, `stair` (a roofed, graded way down into a cistern) and `room`. `structures()` lists the masonry masses (the curtain with one breach
+  per wall, three towers, the keep and its plinth, the gatehouse, three cistern heads with their stairs and the twin cell beside room 3). `height(x, z)` is a volume's floor, or within `EDGE` of a deck's
+  closed side the same floor, else `land` (the swamp's bed under `WATER` -0.55, the moat deeper, reed-bed mud, wooded rises past 300 m). `terrain.js` draws the land on a grid with holes under every
+  roofed volume, ONE water sheet cut away over every structure hollow below it (`dryRects`; the gate channel and the twin cell's water are drawn on their own), every deck (planks across the line of
+  travel, fascia, piles, rails on each closed side), and the masonry and each room's roof by `shell` (`groin`, `joists`, `vault`, `corbel`, `pillars`, `hall`, `pointed`, `arches`), merged by material per
+  40 m square. `stations.js` furnishes one room per bench (`host-plan.js` derives the plate from the room and its `face`); `plant.js` holds the boardwalk lamps (a post bolted to a deck's fascia every ten
+  metres), the passage and stair lamps, the gate's sluices, the pump's discharge pouring over the north breach (the one mover), the reed beds (one-triangle blades merged per 90 m square, ambient) and
+  the far country. Levels: cisterns -3.6, -2.8, -2.0; the winch chamber and the decks 0; towers 1.2, 2.0, 2.8; the keep's hall 4.4. Fog 4 to 220 m. The Leach is fought on the pump stage
+  (`BOSS_ARENA_SPOTS['boss-leach']`). Cover: a box per room, door, stair, the gate passage and the twin cell (18); the sun comes in only at doors that face it AND open onto a deck (three).
+  `routeTo` passes every doorway square (a point up to a metre either side of it). Traps met: the old water sheet ran through anything sunk below it; a sun opening at a stair's foot is under a
+  roof; the strip behind a plate set 3 m from the wall is 0.65 m deep, so a big tank goes above 2.4 m forward over the plate; a stain on a wall is a decal, not a body leaving its room.
 - **Lodestone** (`unit12`, `three/lodestone.js` + `lodestone/`, `tools/gen-lodestone-layout.mjs`, `tools/verify-lodestone.mjs`; site rebuilt 2026-11-14, `docs/plans/lodestone-world.md` section 7): A SLOT
   CANYON IN BANDED IRON. `lodestone/canyon-plan.js` (pure data) declares the hollow, eleven runs along a centre line (`LINE`: floor level over a landing at each bend, graded between), six alcoves (shared-layer
   volumes with one `to: null` mouth) and the pothole; `sample(x, z)` is the walk as a union with an inside depth, and everything is read off it: the height field (`height`: the floor inside; outside, held at

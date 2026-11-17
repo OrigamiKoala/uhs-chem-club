@@ -82,7 +82,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/teeter-world.md`
 
 ### Unit 09: Verdigris (Acids and Bases)
-- **Setting:** A terraced chemical leaching plant with titration carousels, pH meters, and buffer pools.
+- **Setting:** A drowned masonry fort in a reed swamp, crossed on branching boardwalks; the benches are in the gatehouse's winch chamber, three tower chambers and the keep's hall up ramps from the boardwalk, and three cisterns down stairs below the water (site rebuilt 2026-11-16, `verdigris-world.md` section 8).
 - **Benches:** `q1-handover` (Bronsted-Lowry proton transfer), `q2-scale` (pH, pOH, Kw, autoionization of water), `q3-weak` (weak acid Ka and weak base Kb), `q4-structure` (molecular structure effects on acid strength), `q5-salts` (acid-base properties of salt solutions), `q6-titrate` (titration curves: strong/weak, polyprotic), `q7-buffer` (buffer composition and Henderson-Hasselbalch), `q8-capacity` (buffer capacity and alpha-plots), and `boss-leach`.
 - **Core Teaching Click:** Strong acids dissociate completely; weak acids establish an equilibrium. Buffers resist pH change via conjugate pairs.
 - **Reference:** `docs/plans/verdigris-world.md`
