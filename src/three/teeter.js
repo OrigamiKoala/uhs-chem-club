@@ -1,101 +1,101 @@
 /**
- * teeter.js — Teeter, Learn world 08, as a place you walk (T4).
+ * teeter.js — Teeter, Learn world 08 (equilibrium), as a place you walk (T4).
  *
- * A field of salt pans: shallow, flat, still brine in rectangular pans over floors of white crust, held apart by
- * dikes of packed clay, with a shell causeway running north from the landing pad through the middle of them. The
- * ground the player walks is the dike tops and the causeway; the pans are fenced by their banks and never waded.
- * Eight dikes run out from the causeway, the odd benches on the west and the even on the east, each ending in a
- * head that holds a host: the sluice gate, the weigh house, the tilting gauge, the sorting house, the ledger desk,
- * the pump station, the settling pond and the plotting hut. Beam pumps stand in the pans and rock like see-saws.
- * The causeway ends on a plaza on the shore of the largest pan, which is where the Tipper is fought.
+ * Teeter is A HILLSIDE OF SALT TERRACES. The hill faces west; it is cut into five level terraces 5.5 m apart, each a band
+ * of brine pans held up by a masonry wall. The Avalon sets down on the top shelf by the spring house; from there ONE STAIR
+ * runs straight down the fall line at the south edge, four ramps cut down through four walls, and at the foot of each a
+ * level DIKE branches north along the wall above it. The benches are in ROOMS DUG INTO THE TERRACE WALLS under the pans
+ * above them (two are weir houses whose upper storey stands up among those pans), entered from the dike through a
+ * passage in the wall. The Tipper is fought on the drying floor at the bottom, over the great pan.
+ * `docs/plans/teeter-world.md` section 9 is the site's spec.
  *
- * It is built behind the SAME contract as every walkable Learn world, so the stage, the voyage, the walk HUD
- * and the bench dispatcher treat it as just another place:
+ * It is built behind the SAME contract as every walkable Learn world, so the stage, the voyage, the walk HUD and the bench
+ * dispatcher treat it as just another place:
  *
  *   scene, data, colliders, terrainMesh, hasFarTerrain, lampPool,
  *   getTerrainHeight(x, z), benchAnchor(questId), setBenchDeployed(questId, on),
- *   setSiteComplete(questId, complete), update(delta, cameraPos), dispose()
+ *   setSiteComplete(questId, complete), routeTo(siteId, from, to), update(delta, cameraPos), dispose()
  *
  * WHERE EVERYTHING LIVES
- *   teeter/atmosphere.js   the sky, the sun, the environment
- *   teeter/terrain.js      the pans cut into the land; roads, brine sheets and the boss's plaza
- *   teeter/plant.js        the beam pumps, salt heaps, brine tanks, salt houses, drums and sacks
- *   teeter/stations.js     the eight hosts the benches are built into (host-plan.js is their footprints)
- *   materials/teeter-textures.js   the surfaces
- * laid out by `tools/gen-teeter-layout.mjs`.
+ *   teeter/terrace-plan.js  the terraces, the stair, the dikes, the rooms, the pans, the cover, the way: pure data
+ *   teeter/terrain.js       the ground mesh, the masonry (walls, kerbs, the stair, every room's shell), the brine
+ *   teeter/stations.js      the eight hosts (host-plan.js says which room each furnishes)
+ *   teeter/plant.js         the pumps, the spring house, the stair's lamps, the falls, the drying floor, the far country
+ *   teeter/atmosphere.js    the sky, the sun, the environment
+ * laid out by `tools/gen-teeter-layout.mjs`. (The first build, two columns of hosts either side of a causeway on a flat
+ * field of pans, is in `archive/2026-11-16/site-teeter/`.)
  *
- * THE RULES IT KEEPS, as the other worlds do: nothing occupies the same space as anything else; a site faces
- * the ground the player walks in from; ONLY LAMPS ARE LIT (a work lamp is a `lampMark` pooled into three real
- * lights; nothing owns a PointLight); what never moves is baked (the beam pumps' beams and rods are the only
- * moving parts, and they are kept out of the bake).
+ * THE RULES IT KEEPS: nothing occupies the same space as anything else; a site faces the door the player walks in by;
+ * there is one floor (a roof over a room is a body, and the pans over it are not walked); ONLY LAMPS ARE LIT (a lamp is a
+ * `lampMark` in the lamp pool); what never moves is baked. INSIDE A ROOM THE SUN IS TAKEN AWAY: the cover mask
+ * (`lib/cover.js`) covers every room and passage, on a phone too; the sun reaches only the first metres inside each door.
  */
 
 import * as THREE from 'three';
 import teeterData from './world-data/teeter.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
-import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d } from './materials/pbr-kit.js';
-import { panCrust, causeway, saltSlab, brineRipple } from './materials/teeter-textures.js';
+import { platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic } from './materials/pbr-kit.js';
+import { panCrust, saltSlab, brineRipple } from './materials/teeter-textures.js';
 import {
-  createTtSkyDome, createTtLights, followTtShadow, createTtEnvironment, ttSkyUniforms, followCamera, TTSKY
+  createTtSkyDome, createTtLights, followTtShadow, createTtEnvironment, ttSkyUniforms, followCamera, TTSKY, TEETER_SUN
 } from './teeter/atmosphere.js';
-import { makeTeeterField, buildTeeterTerrainGeometry, buildBrineGeometry, buildRibbon, buildDisc, PAN } from './teeter/terrain.js';
-import {
-  buildBeamPump, buildSaltHeap, buildBrineTank, buildSaltHouse, buildDrumStack, buildSackStack,
-  buildLampPost, buildLandingPad
-} from './teeter/plant.js';
-import { yawPoint } from './ember/kit.js';
+import { makeTerracePlan } from './teeter/terrace-plan.js';
+import { makeTeeterField, buildGroundGeometry, buildMasonry, buildBrineGeometry, mergeList } from './teeter/terrain.js';
+import * as PLANT from './teeter/plant.js';
 import { HOST_BUILDERS } from './teeter/stations.js';
+import { FILAMENT } from './kettle/kit.js';
+import { makeCover } from './lib/cover.js';
+import { yawPoint } from './ember/kit.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
-/** The amber filament every work lamp in the world burns. A lamp is a lamp. */
-const FILAMENT = 0xd99423;
-
 /** Landmarks that are round, or turn themselves: their group is never turned. */
-const SELF_TURNED = new Set(['lamp-post', 'brine-tank', 'salt-heap']);
-
-const BUILDERS = {
-  'beam-pump': buildBeamPump, 'salt-heap': buildSaltHeap, 'brine-tank': buildBrineTank, 'salt-house': buildSaltHouse,
-  'drum-stack': buildDrumStack, 'sack-stack': buildSackStack
-};
+const SELF_TURNED = new Set(['lamp-post', 'landing-pad']);
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
 
+/** The masonry is merged by material over squares this size, so frustum culling still has pieces to cull. */
+const MASONRY_SQUARE = 40;
+
 export class TeeterWorld {
-  constructor(renderer) {
+  constructor(renderer = null) {
     this.renderer = renderer;
-    this.data = teeterData;
     this.scene = new THREE.Scene();
     this.scene.name = 'teeter';
-
+    this.data = teeterData;
     this.colliders = [];
-    this.siteMarkers = new Map();    // questId -> { site, group, indicator }
-    this.benchAnchors = new Map();   // questId -> the physical frame of that site's working surface
     this.disposables = [];
-    this.lamps = [];                 // lampMarks: where the pooled light comes from
-    this.landmarkNodes = [];         // [{ lm, node }] for colliders
-    this.animated = [];              // groups with userData.animate(t): the beam pumps
+    this.lamps = [];
+    this.siteMarkers = new Map();
+    this.benchAnchors = new Map();
     this.siteColliders = [];
+    this.landmarkNodes = [];
+    this.movers = [];
     this.elapsed = 0;
     this.benchesOpen = 0;
-    // The flat and the mesas run to the horizon on their own; the voyage must not lay a ring over them.
+    // The hill, the spurs and the valley run to the horizon on their own; the voyage must not lay a ring over them.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
 
-    this.field = makeTeeterField(this.data);
+    // THE TERRACES, AS A PLAN. The height field, the walk, the colliders, the light mask and the guide all stand on it.
+    this.plan = makeTerracePlan();
+    const pad = this.data.landmarks.find(l => l.asset === 'landing-pad');
+    this.field = makeTeeterField(this.plan, pad ? [pad.pos[0], pad.pos[2]] : null);
 
     this.initMaterials();
     this.initLighting();
     this.sky = createTtSkyDome(900);
     this.scene.add(this.sky);
     this.initTerrain();
+    this.initPlant();
     this.initLandmarks();
     this.initHosts();
     this.initLampPool();
     this.bakeStatics();
     this.buildColliders();
     this.enableAmbientOcclusion();
+    this.initCover();
   }
 
   own(...objs) {
@@ -103,9 +103,9 @@ export class TeeterWorld {
     return objs[0];
   }
 
-  /** What the builders are handed: materials, `own`, the lamp list and the tier. */
+  /** What the builders are handed: materials, `own`, the lamp list, the tier, the field and the plan. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field, plan: this.plan };
   }
 
   /** `aoMap` samples the SECOND uv set, which a primitive geometry does not have: reuse the first. */
@@ -131,40 +131,61 @@ export class TeeterWorld {
       m.aoMapIntensity = 0.85;
       return m;
     };
-    M.slab = buildMaterial(saltSlab({ size: texSize(512), seed: 7 }), { repeat: 1, roughness: 1.0 });
-    M.concrete = M.slab;
-    // Salt-pan metal is galvanised and pale, with the white bloom of spray over the rust.
+    const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
+    // THE GROUND: the pans' crust for grain; the vertex colours say what it is (clay dike, crust, stair stone, hill rock).
+    M.ground = buildMaterial(panCrust({ size: texSize(512), seed: 31 }), { repeat: 1, roughness: 1.0 });
+    M.ground.vertexColors = true;
+    M.ground.normalScale.set(1.1, 1.1);
+    M.ground.envMapIntensity = 0.6;
+    for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
+    // THE MASONRY: dressed limestone, salt-bloomed. Coping and flags a shade darker; the rooms' insides darker again.
+    const stone = (color, seed) => {
+      const m = buildMaterial(saltSlab({ size: texSize(512), seed }), { repeat: 1, roughness: 1.0 });
+      m.color = new THREE.Color(color);
+      return m;
+    };
+    M.masonry = stone(0xe0d9c8, 7);
+    M.coping = stone(0xc9c1ae, 11);
+    M.flags = stone(0xb6ad9a, 13);
+    M.vault = stone(0xcdc4b0, 17);
+    M.brick = std({ color: 0x9a6a4c, roughness: 0.9, metalness: 0 });
+    M.kerb = std({ color: 0xbdb39c, roughness: 0.97, metalness: 0 });
+    M.bund = std({ color: 0xc9c0aa, roughness: 0.97, metalness: 0 });
+    M.concrete = M.masonry;
+    M.slab = M.masonry;
     M.clad = metal('#cfd2cd', '#aeb2ad', '#a08a6c', 81, 0.3, 2, 512);
     M.steel = metal('#9da39d', '#808880', '#8d6f52', 83, 0.4, 2, 512);
     M.darkSteel = metal('#43484a', '#585d5c', '#76604c', 85, 0.5, 4);
     M.rusted = metal('#76543e', '#62544a', '#84512f', 87, 0.8, 3);
-    M.plaster = metal('#dcd7c9', '#b8b3a5', '#9c8467', 91, 0.35, 3, 512);
     M.roofSheet = metal('#8e9593', '#7c8381', '#8a6444', 95, 0.55, 5);
-    M.crate = metal('#8a8f72', '#767b62', '#85654a', 101, 0.45, 2);
-    M.crateB = metal('#a58559', '#85704c', '#74543a', 103, 0.5, 2);
     M.benchTop = metal('#a9aeaa', '#8d938f', '#8a7358', 105, 0.4, 3);
-    M.timber = std({ color: 0x9c8a6c, roughness: 0.95, metalness: 0 });
+    M.paintGrey = metal('#8a8e88', '#6f736d', '#6a5442', 121, 0.4, 2);
+    M.timber = std({ color: 0x8a7658, roughness: 0.95, metalness: 0 });
+    M.timberDark = std({ color: 0x5a4a38, roughness: 0.95, metalness: 0 });
+    M.brushwood = std({ color: 0x4d4436, roughness: 1.0, metalness: 0 });
     M.salt = std({ color: 0xece9de, roughness: 0.95, metalness: 0 });
-    M.saltHeap = M.salt;
     M.saltWhite = std({ color: 0xf3f1e8, roughness: 0.9, metalness: 0 });
     M.sack = std({ color: 0xd9d3c0, roughness: 0.95, metalness: 0 });
+    M.paper = std({ color: 0xe9e3d2, roughness: 0.9, metalness: 0 });
+    M.board = std({ color: 0x2c3230, roughness: 0.85, metalness: 0 });
     M.brass = std({ color: 0xb08d4c, roughness: 0.42, metalness: 0.9 });
     M.copper = std({ color: 0xb06a43, roughness: 0.45, metalness: 0.9 });
+    M.castIron = metal('#4c4a48', '#3f3d3b', '#6a4a30', 115, 0.55, 3);
     M.rubber = std({ color: 0x1c1a1a, roughness: 0.9, metalness: 0 });
     M.drumB = std({ color: 0x8a3b2a, roughness: 0.62, metalness: 0.45 });
     M.paintBlue = std({ color: 0x3f6f8c, roughness: 0.62, metalness: 0.3 });
     M.paintYellow = std({ color: 0xc9a14a, roughness: 0.7, metalness: 0.1 });
     M.paintRed = std({ color: 0x8e2f22, roughness: 0.65, metalness: 0.1 });
     M.paint2 = std({ color: 0xe8e2d4, roughness: 0.6, metalness: 0 });
-    // Brine is still, grey-green and glossy: a sheet in a host's basin, and the translucent sheet over a pan's crust.
-    const ripple = () => buildMaterial(brineRipple({ size: texSize(256), seed: 9 }), { repeat: 1, roughness: 0.14 });
-    M.brine = ripple();
+    // Brine is still, grey-green and glossy: in a room's culvert or tank (opaque), and over every pan (translucent).
+    M.brine = buildMaterial(brineRipple({ size: texSize(256), seed: 9 }), { repeat: 1, roughness: 0.14 });
     M.brine.envMapIntensity = 1.3;
-    M.panWater = ripple();
+    M.panWater = buildMaterial(brineRipple({ size: texSize(256), seed: 19 }), { repeat: 1, roughness: 0.12 });
     M.panWater.envMapIntensity = 1.3;
     M.panWater.transparent = true;
     M.panWater.opacity = 0.78;
     M.panWater.depthWrite = false;
+    M.river = std({ color: 0x5d6a66, roughness: 0.1, metalness: 0, envMapIntensity: 1.1 });
     M.glass = std({ color: 0xd5dfe2, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false });
     M.glassDark = std({ color: 0x0f1214, roughness: 0.18, metalness: 0.2 });
     // THE ONE CLEAN THING in a weathered works: the cased instrument keeps its own bright paint and bare metal.
@@ -172,15 +193,6 @@ export class TeeterWorld {
     M.caseDark = std({ color: 0x2f333a, roughness: 0.55, metalness: 0.4 });
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
-
-    // The causeway and the spurs: shell and grit, feathered into the clay at both edges.
-    M.road = buildMaterial(causeway({ size: texSize(512), seed: 3 }), { repeat: 1, roughness: 1.0 });
-    M.road.alphaMap = this.own(this.featherTexture());
-    M.road.transparent = true;
-    M.road.depthWrite = false;
-    M.road.polygonOffset = true;
-    M.road.polygonOffsetFactor = -2;
-    M.road.polygonOffsetUnits = -2;
 
     for (const m of Object.values(M)) {
       this.own(m);
@@ -190,22 +202,6 @@ export class TeeterWorld {
     this.lanternMat = M.lantern;
   }
 
-  /** An alpha ramp across a road: clear at both edges, solid in the middle. */
-  featherTexture() {
-    const c = canvas2d(64, 4);
-    const x = c.getContext('2d');
-    const g = x.createLinearGradient?.(0, 0, 64, 0);
-    if (g) {
-      for (const [s, col] of [[0, '#000'], [0.2, '#fff'], [0.8, '#fff'], [1, '#000']]) g.addColorStop(s, col);
-      x.fillStyle = g;
-    } else x.fillStyle = '#fff';
-    x.fillRect(0, 0, 64, 4);
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = THREE.ClampToEdgeWrapping;
-    t.wrapT = THREE.RepeatWrapping;
-    return t;
-  }
-
   /* ------------------------------------------------------------ light and sky */
 
   initLighting() {
@@ -213,7 +209,6 @@ export class TeeterWorld {
     this.keyLight = key;
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
-    // The haze is the horizon's own colour; near and far are what the voyage reads.
     const amb = this.data.ambience;
     this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
     this.scene.background = TTSKY.horizon.clone();
@@ -231,17 +226,10 @@ export class TeeterWorld {
     return this.field.height(x, z);
   }
 
+  /** The ground mesh, the masonry and the brine. The ground and the masonry are GROUND; the brine is ambient. */
   initTerrain() {
-    const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
-    const crust = buildMaterial(panCrust({ size: texSize(512), seed: 31 }), { repeat: 1, roughness: 1.0 });
-    crust.vertexColors = true;
-    crust.normalScale.set(1.3, 1.3);
-    crust.envMapIntensity = 0.7;
-    for (const t of crust.userData.surfaceMaps || []) { t.anisotropy = aniso; this.own(t); }
-    this.own(crust);
-
-    const geo = this.own(buildTeeterTerrainGeometry(this.field, this.data));
-    this.terrainMesh = new THREE.Mesh(geo, crust);
+    const ground = this.own(buildGroundGeometry(this.field, this.plan));
+    this.terrainMesh = new THREE.Mesh(ground, this.M.ground);
     this.terrainMesh.name = 'teeter-ground';
     this.terrainMesh.frustumCulled = false;
     this.terrainMesh.userData.phys = 'ground';
@@ -249,72 +237,99 @@ export class TeeterWorld {
     this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
 
-    // The brine: one sheet per pan, over the crust. It is ambience (nothing stands on it), so it is exempt from the overlap rule.
-    const brine = new THREE.Group();
-    brine.name = 'teeter-brine';
-    brine.userData.phys = 'ambient';
-    for (const p of this.data.pans) {
-      const m = new THREE.Mesh(this.own(buildBrineGeometry(p)), this.M.panWater);
-      m.renderOrder = 2;
-      m.userData.noWeather = true;
-      brine.add(m);
+    // THE MASONRY, merged by material over 40 m squares: walls, kerbs, the stair, the rooms' shells, the pans' bunds.
+    const lists = buildMasonry(this.plan);
+    const mat = { wall: this.M.masonry, coping: this.M.coping, kerb: this.M.kerb, bund: this.M.bund, flags: this.M.flags, vault: this.M.vault, timber: this.M.timber, steel: this.M.darkSteel, brick: this.M.brick, roof: this.M.roofSheet, rail: this.M.timberDark };
+    const masonry = new THREE.Group();
+    masonry.name = 'terraces';
+    masonry.userData.phys = 'ground';
+    masonry.userData.noMerge = true;
+    for (const [key, list] of Object.entries(lists)) {
+      const squares = new Map();
+      for (const g of list) {
+        g.computeBoundingBox();
+        const c = g.boundingBox.getCenter(new THREE.Vector3());
+        const sk = `${Math.floor(c.x / MASONRY_SQUARE)},${Math.floor(c.z / MASONRY_SQUARE)}`;
+        if (!squares.has(sk)) squares.set(sk, []);
+        squares.get(sk).push(g);
+      }
+      for (const [sk, gs] of squares) {
+        const geo = mergeList(gs);
+        if (!geo) continue;
+        const m = new THREE.Mesh(this.own(geo), mat[key]);
+        m.name = `masonry:${key}@${sk}`;
+        m.castShadow = this.t4 && key !== 'bund' && key !== 'flags';
+        m.receiveShadow = this.t4;
+        masonry.add(m);
+      }
     }
-    this.scene.add(brine);
+    this.scene.add(masonry);
+    this.masonry = masonry;
 
-    // The causeway, a spur to every approach, the pad's spur, and the boss's plaza.
-    const ribbons = this.data.roads.map(r => buildRibbon(this.field, r.pts, r.width));
-    ribbons.push(buildDisc(this.field, this.data.arena.boss[0], this.data.arena.boss[2], 10.5));
-    const g = new THREE.Group();
-    g.name = 'teeter-roads';
-    g.userData.phys = 'ground';
-    for (const geo2 of ribbons) {
-      const m = new THREE.Mesh(this.own(geo2), this.M.road);
-      m.renderOrder = 1;
-      m.receiveShadow = this.t4;
-      m.userData.noWeather = true;
-      g.add(m);
-    }
-    this.scene.add(g);
+    // The brine over every pan: one sheet, ambience (nothing stands on it).
+    const brine = new THREE.Mesh(this.own(buildBrineGeometry(this.plan)), this.M.panWater);
+    brine.name = 'teeter-brine';
+    brine.renderOrder = 2;
+    brine.userData.phys = 'ambient';
+    brine.userData.noMerge = true;
+    brine.userData.noWeather = true;
+    this.scene.add(brine);
   }
 
-  /* ------------------------------------------------------------ the plant */
+  /** The pumps, the spring house, the stair's lamps, the falls, the drying floor, the far country. */
+  initPlant() {
+    this.plantColliders = [];
+    for (const build of PLANT.PLANT_BUILDERS) {
+      const node = build(this);
+      if (!node) continue;
+      this.scene.add(node);
+      for (const m of node.userData.movers || []) this.movers.push(m);
+      for (const c of node.userData.colliders || []) this.plantColliders.push(c.minX !== undefined ? { ...c } : { x: c.x, z: c.z, radius: c.r });
+    }
+  }
 
+  /** The shelf's pad and the lamp posts along the dikes. */
   initLandmarks() {
     const ctx = this.ctx;
-    let seed = 1;
     let posts = 0;
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
-      const y = this.getTerrainHeight(lm.pos[0], lm.pos[2]);
       let node = null;
-      if (lm.asset === 'lamp-post') node = buildLampPost(ctx, posts++);
-      else if (lm.asset === 'landing-pad') node = buildLandingPad(ctx, this.field);
-      else if (BUILDERS[lm.asset]) node = BUILDERS[lm.asset](ctx, lm, seed++);
+      if (lm.asset === 'lamp-post') node = PLANT.buildLampPost(ctx, posts++);
+      else if (lm.asset === 'landing-pad') node = PLANT.buildLandingPad(ctx, this.field);
       if (!node) continue;
-      node.position.set(lm.pos[0], lm.asset === 'landing-pad' ? 0 : y, lm.pos[2]);
+      const y = lm.asset === 'landing-pad' ? this.plan.height(lm.pos[0], lm.pos[2]) : this.getTerrainHeight(lm.pos[0], lm.pos[2]);
+      node.position.set(lm.pos[0], y, lm.pos[2]);
       if (!SELF_TURNED.has(lm.asset)) node.rotation.y = lm.rotY || 0;
       node.name = `${lm.asset}@${lm.pos[0]},${lm.pos[2]}`;
       if (lm.asset === 'landing-pad') node.userData.phys = 'ground';
       this.scene.add(node);
       this.landmarkNodes.push({ lm, node });
-      if (node.userData.animate) this.animated.push(node);
     }
+  }
+
+  /**
+   * The way on foot from where the player stands to a site's approach mark, as a list of [x, z]: out of a room by its
+   * door, along the dike to the stair, down (or up) the stair, along the next dike, in at the door. The guide follows it.
+   */
+  routeTo(siteId, fromPos, toPos = null) {
+    const site = this.data.sites.find(s => s.id === siteId);
+    if (!site) return null;
+    const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.z];
+    const to = toPos ? [toPos[0], 0, toPos[1]] : site.approachPos;
+    return this.plan.routeTo(from[0], from[from.length === 3 ? 2 : 1], to[0], to[2]);
   }
 
   /* ------------------------------------------------------------ the sites */
 
-  /** Which way a site faces: toward the ground a player walks in from, derived from `approachPos`. */
+  /** Which way a site faces: toward the door a player walks in by, derived from `approachPos`. */
   siteFacing(site) {
     const ax = (site.approachPos?.[0] ?? site.pos[0]) - site.pos[0];
     const az = (site.approachPos?.[2] ?? site.pos[2]) - site.pos[2];
     return Math.hypot(ax, az) < 0.01 ? 0 : Math.atan2(ax, az);
   }
 
-  /**
-   * Build every host: the piece of the works a bench belongs to (stations.js), placed at its site and turned to
-   * face its approach. A host is built whether or not its quest is live yet (`site.built` says whether the quest is; an unbuilt
-   * site reads SEALED at the door), so a bench lands in its host the day it goes live. The bench is a part of its host, one object.
-   */
+  /** Build every host in its room, turned to face its door. The bench is a part of its host, one object. */
   initHosts() {
     for (const site of this.data.sites) {
       const build = HOST_BUILDERS[site.id];
@@ -324,29 +339,22 @@ export class TeeterWorld {
       g.position.set(site.pos[0], this.getTerrainHeight(site.pos[0], site.pos[2]), site.pos[2]);
       g.rotation.y = this.siteFacing(site);
       this.scene.add(g);
+      for (const m of host.movers || []) this.movers.push(m);
 
       this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
       this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
 
       const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
       const at = (lx, lz) => [g.position.x + lx * cos + lz * sin, g.position.z - lx * sin + lz * cos];
-      // The host's colliders are in its own frame; the walk wants them in the world's. A host is turned to face its approach, and
-      // a turned box would collide as the larger box that holds it, so a box is laid as a row of discs along its long side.
+      // Every room faces along an axis, so a host turns by a quarter turn and its box colliders stay boxes, exactly.
       for (const c of host.colliders) {
         if (c.r !== undefined) { const [x, z] = at(c.lx, c.lz); this.siteColliders.push({ x, z, radius: c.r }); continue; }
-        const long = Math.max(c.hw, c.hd), short = Math.min(c.hw, c.hd);
-        const n = Math.max(1, Math.ceil((long * 2) / (short * 1.3)));
-        const step = n > 1 ? (long * 2 - short * 2) / (n - 1) : 0;
-        for (let i = 0; i < n; i++) {
-          const o = n > 1 ? -long + short + i * step : 0;
-          const [x, z] = c.hw >= c.hd ? at(c.lx + o, c.lz) : at(c.lx, c.lz + o);
-          this.siteColliders.push({ x, z, radius: short });
-        }
+        const pts = [[c.lx - c.hw, c.lz - c.hd], [c.lx + c.hw, c.lz + c.hd]].map(([a, b]) => at(a, b));
+        this.siteColliders.push({ minX: Math.min(pts[0][0], pts[1][0]), maxX: Math.max(pts[0][0], pts[1][0]), minZ: Math.min(pts[0][1], pts[1][1]), maxZ: Math.max(pts[0][1], pts[1][1]) });
       }
     }
   }
 
-  /** Record where a bench's working surface is, in world terms. */
   registerBenchAnchor(site, group, bench, local) {
     const cos = Math.cos(group.rotation.y), sin = Math.sin(group.rotation.y);
     const [lx, ly, lz] = local;
@@ -359,7 +367,6 @@ export class TeeterWorld {
     });
   }
 
-  /** Case the bench instrument up, or open it. One object, two states. */
   setBenchDeployed(questId, deployed) {
     const anchor = this.benchAnchors.get(questId);
     if (anchor?.dormant) anchor.dormant.visible = !deployed;
@@ -370,12 +377,10 @@ export class TeeterWorld {
     }
   }
 
-  /** The working surface for a quest's site, or null if it has no bench. */
   benchAnchor(questId) {
     return this.benchAnchors.get(questId) || null;
   }
 
-  /** Light a site's indicator when its quest is complete: the world reads state, it never keeps it. */
   setSiteComplete(questId, complete) {
     const marker = this.siteMarkers.get(questId);
     if (!marker?.indicator) return;
@@ -386,16 +391,14 @@ export class TeeterWorld {
 
   /* ------------------------------------------------------------ lamps, bake, walls */
 
-  /** THE WORK LAMPS SHARE THREE LIGHTS: only the lamps round the player need a real light at all (lamp-pool.js). */
+  /** Every lamp is declared to the pool (lamp-pool.js): where it is and whether it is on. */
   initLampPool() {
     this.lampPool = new LampPool(this.scene, 3);
     this.scene.updateMatrixWorld(true);
-    for (const mark of this.lamps) {
-      this.lampPool.add({ ...mark.userData.lamp, position: mark.getWorldPosition(new THREE.Vector3()) });
-    }
+    for (const mark of this.lamps) this.lampPool.add({ ...mark.userData.lamp, position: mark.getWorldPosition(new THREE.Vector3()) });
   }
 
-  /** WHAT NEVER MOVES IS BAKED. The cased instruments and the indicators stay their own meshes. */
+  /** WHAT NEVER MOVES IS BAKED. The cased instruments, the indicators, the pumps' beams and rods and the falls stay their own. */
   bakeStatics() {
     const bake = (group) => {
       group.traverse(o => { if (o !== group && (o.userData.phys || o.userData.openShell)) o.userData.noMerge = true; });
@@ -412,8 +415,12 @@ export class TeeterWorld {
       if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge || node.userData.phys) continue;
       bake(node);
     }
-    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
-    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
+    // The far country is the horizon's own, and it is baked the same way.
+    for (const node of this.scene.children) {
+      if (node.name !== 'far-country') continue;
+      mergeStatic(node);
+      node.traverse(o => { if (o.isMesh) o.userData.phys = 'ambient'; });
+    }
     this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
@@ -422,7 +429,7 @@ export class TeeterWorld {
     });
   }
 
-  /** Every prop collides as the part of it a body can actually touch. */
+  /** The walk's walls (every closed side of every volume), the plant, the posts and every host's machinery. */
   buildColliders() {
     for (const { lm, node } of this.landmarkNodes) {
       const rot = node.rotation.y;
@@ -431,13 +438,20 @@ export class TeeterWorld {
         this.colliders.push({ x: lm.pos[0] + dx, z: lm.pos[2] + dz, radius: c.r });
       }
     }
+    this.edgeColliders = this.plan.colliders();
+    for (const c of this.edgeColliders) this.colliders.push(c);
+    for (const c of this.plantColliders) this.colliders.push(c);
     for (const c of this.siteColliders) this.colliders.push(c);
-    // THE PANS ARE FENCED. A pan is shallow, and shallow water is never waded or climbed: each pan near the walk is a box, held in
-    // to where its bank begins to fall, so the ground that is walked is the dike tops and the causeway.
-    for (const p of this.data.pans) {
-      if (p.decor) continue;
-      this.colliders.push({ minX: p.minX + PAN.rim - 0.2, maxX: p.maxX - PAN.rim + 0.2, minZ: p.minZ + PAN.rim - 0.2, maxZ: p.maxZ - PAN.rim + 0.2 });
-    }
+  }
+
+  /**
+   * INSIDE A ROOM THE SUN IS TAKEN AWAY. The mask takes the sun and 0.7 of the sky out of every room and passage; the sun
+   * still reaches the first metres inside each door, and down room 6's shaft. A deployed instrument arrives later with
+   * materials of its own; `update` covers it.
+   */
+  initCover() {
+    this.cover = makeCover({ sun: TEETER_SUN, ...this.plan.coverSpec() });
+    this.cover.applyTo(this.scene);
   }
 
   /* ------------------------------------------------------------ frame */
@@ -445,18 +459,17 @@ export class TeeterWorld {
   update(delta, cameraPos) {
     this.elapsed += delta;
     ttSkyUniforms.uTtTime.value = this.elapsed;
-    for (const node of this.animated) node.userData.animate(this.elapsed);
-    // The brine creeps: its ripple slides slowly across every sheet (the shimmer of the air is the sky's).
-    const n = this.M.panWater.normalMap, m = this.M.panWater.map, t = this.elapsed;
-    if (n) n.offset.set(t * 0.004, t * 0.0025);
-    if (m) m.offset.set(t * 0.002, -t * 0.0015);
     if (cameraPos) {
       followCamera(this.sky, cameraPos);
       const moved = followTtShadow(this.keyLight, cameraPos, SHADOW_FOLLOW_STEP);
       paceShadow(this.keyLight, moved, { live: this.benchesOpen > 0 && this.benchMoving !== false, every: 30 });
       this.lampPool?.update(cameraPos);
     }
-    // Work lamps are old, not alarming: a slow filament drift.
+    if ((this._coverTick = ((this._coverTick ?? 0) + 1) % 10) === 0) this.cover.applyTo(this.scene);
+    for (const m of this.movers) m.update(this.elapsed);
+    // The brine creeps: its ripple slides slowly across every sheet (the shimmer of the air is the sky's).
+    const n = this.M.panWater.normalMap, t = this.elapsed;
+    if (n) n.offset.set(t * 0.004, t * 0.0025);
     this.lanternMat.emissiveIntensity = 1.35 + Math.sin(this.elapsed * 1.3) * 0.1;
   }
 
@@ -471,6 +484,6 @@ export class TeeterWorld {
     this.benchAnchors.clear();
     this.colliders = [];
     this.lamps = [];
-    this.animated = [];
+    this.movers = [];
   }
 }

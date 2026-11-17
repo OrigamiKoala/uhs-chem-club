@@ -119,13 +119,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.4,
     species: 'recipe golem'
   },
-  // On the plaza at the north end of the causeway, on the shore of the largest pan (`world-data/teeter.json` keeps this ground open;
-  // `verify:teeter` holds the two together). The Tipper's body is built with its quest (`boss-models.js`); until then this is the ground only.
+  // At the north end of the drying floor, the bottom terrace, the great pan below the parapet to its west
+  // (`teeter/terrace-plan.js` ARENA; `verify:teeter` holds the two together).
   'boss-tipper': {
     worldId: 'unit08',
-    playerPos: [0, 1.6, -38],
-    lookAtPos: [0, 1.6, -54],
-    bossPos: [0, 0, -54],
+    playerPos: [-55, 1.6, -8],
+    lookAtPos: [-55, 1.6, -24],
+    bossPos: [-55, 0, -24],
     scale: 1.4,
     species: 'the tipper'
   },

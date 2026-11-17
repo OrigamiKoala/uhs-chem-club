@@ -1,79 +1,78 @@
 /**
- * teeter/host-plan.js — What each of Teeter's eight hosts is, where it stands, and how much ground it takes.
+ * teeter/host-plan.js — What each of Teeter's eight hosts is, which room in the terrace walls it stands in, and where its plate is.
  *
  * Pure data, no THREE: the layout generator, the world and `verify:teeter` all stand on this one table.
- * `extent` is the host's footprint in ITS OWN frame, `[x0, x1, z0, z1]`: x to the player's right, z toward the
- * player (the bench's plate is at the origin, so a host's machinery has negative z). It is the bounding rectangle
- * of every body the builder stands on the ground, measured by `verify:teeter` against the real build, so the
- * generator can keep everything else out of it without building anything.
  *
- * A host is the piece of the pan works a bench belongs to: the sluice gate between two pans, the weigh house, the
- * tilting gauge, the card-sorting house, the ledger desk, the pump station with its beam pump, the settling pond
- * and the plotting hut. They stand on the heads of eight dikes that run out from the causeway, the odd benches on
- * the west and the even on the east, each with its plate turned to the causeway.
+ * A host is the working of ONE ROOM (`terrace-plan.js` declares them) and its bench: the sluice chamber's culvert and
+ * gates, the weigh house's scale, the gauge chamber's tilting trough, the tally room's pigeonholes, the ledger house's
+ * desk, the pump chamber's pump barrel, the settling cistern's tanks, the plotting room's board. The room's shell (floor,
+ * walls, roof) is the terraces' (`terrain.js`); the host furnishes it and hangs its lamps.
+ *
+ * `pos` is where the plate stands (world x, z): `PLATE_FROM_BACK` out from the room's back wall, across its middle; `face`
+ * is toward the door (west). THE HOST FRAME has its origin on the floor under the middle of the plate, +z toward the
+ * player (and the door), +x to the player's right (south). `hostExtent` is the room in that frame, the walls' colliders
+ * taken off: no part of a host may stand outside it.
+ *
+ * Site ids are `site-N`, as in every other world; `questId` and `label` are unchanged from the first build.
  */
+
+import { ROOMS, PLATE_FROM_BACK, FACE, WALL_T, LEVEL } from './terrace-plan.js';
 
 /** The bench's own plate and the two feet round it that are always the bench's (host frame). */
 export const BENCH_RECT = [-2.5, 2.5, -0.7, 0.7];
 
-/** The open ground in front of a plate, where the camera stands and the player walks in (host frame). */
+/** The open floor in front of a plate, where the camera stands and the player walks in (host frame). */
 export const LANE = { hw: 2.8, from: 0.65, to: 5.6 };
 
 /** How far in front of a plate the player is asked to stand. */
 export const APPROACH = 4.6;
 
-/**
- * `pos` is where the plate stands (world x, z); `face` is the way the plate looks, toward the causeway.
- * `structure` names the host in the layout, `kind` dresses the cased instrument on the plate, `skin` its frame.
- * Site ids are `site-N`, as in every other world; `questId` is the bench's quest, live or not.
- */
-export const HOST_PLAN = {
-  'site-1': {
-    questId: 'q1-both', label: 'Bench 1 - Running Both Ways', title: 'Running Both Ways', structure: 'sluice-gate', kind: 'pan', skin: 'deck', plate: 'TTR-01',
-    pos: [-42, 62], face: [1, 0],
-    // Two brine basins either side of a gated dividing wall, a gantry over the gate and a handwheel on its stem.
-    extent: [-7.0, 7.0, -9.4, 0.8]
-  },
-  'site-2': {
-    questId: 'q2-k', label: 'Bench 2 - The Number K', title: 'The Number That Holds', structure: 'weigh-house', kind: 'scale', skin: 'desk', plate: 'TTR-02',
-    pos: [42, 48], face: [-1, 0],
-    // A weigh house open to the front: a platform scale on its pit, a steelyard beam on the back wall and sacks on pallets.
-    extent: [-7.0, 7.0, -8.0, 0.8]
-  },
-  'site-3': {
-    questId: 'q3-q', label: 'Bench 3 - Which Way', title: 'Which Way It Goes', structure: 'tilting-gauge', kind: 'gauge', skin: 'shelf', plate: 'TTR-03',
-    pos: [-42, 34], face: [1, 0],
-    // A long trough on a pivot with a graduated gauge post and a pointer, over a catch basin.
-    extent: [-7.0, 7.0, -8.6, 0.8]
-  },
-  'site-4': {
-    questId: 'q4-properties', label: 'Bench 4 - Combining K', title: 'Combining K', structure: 'sorting-house', kind: 'cards', skin: 'desk', plate: 'TTR-04',
-    pos: [42, 20], face: [-1, 0],
-    // A shed with a wall of pigeonholes, a sorting table and crates waiting to be filed.
-    extent: [-7.0, 7.0, -7.8, 0.8]
-  },
-  'site-5': {
-    questId: 'q5-ice', label: 'Bench 5 - Equilibrium Concentrations', title: 'Equilibrium Concentrations', structure: 'ledger-desk', kind: 'ledger', skin: 'shelf', plate: 'TTR-05',
-    pos: [-42, 6], face: [1, 0],
-    // A clerk's hut with a sloped ledger desk, a column board on the wall and a stack of record books.
-    extent: [-7.0, 7.0, -7.4, 0.8]
-  },
-  'site-6': {
-    questId: 'q6-lean', label: 'Bench 6 - Le Chatelier', title: "Le Chatelier's Principle", structure: 'pump-station', kind: 'beam', skin: 'deck', plate: 'TTR-06',
-    pos: [42, -8], face: [-1, 0],
-    // The pump station: a beam pump rocking on its A-frame over a wellhead, a pump house and the brine main.
-    extent: [-7.4, 7.4, -9.6, 0.8]
-  },
-  'site-7': {
-    questId: 'q7-dissolve', label: 'Bench 7 - Solubility Equilibria', title: 'Solubility Equilibria', structure: 'settling-pond', kind: 'dish', skin: 'deck', plate: 'TTR-07',
-    pos: [-42, -22], face: [1, 0],
-    // A walled settling pond with a salt rim, a cone-bottomed settling tank on legs and drums of reagent.
-    extent: [-7.2, 7.2, -9.2, 0.8]
-  },
-  'site-8': {
-    questId: 'q8-free', label: 'Bench 8 - Free Energy', title: 'Free Energy and K', structure: 'plotting-hut', kind: 'plot', skin: 'desk', plate: 'TTR-08',
-    pos: [42, -34], face: [-1, 0],
-    // A plotting hut: a gridded board on the wall, a drafting table, a rule on a rail and a rack of rolled charts.
-    extent: [-7.0, 7.0, -7.8, 0.8]
-  }
+/** How far in from a wall's face a host keeps (the walls' colliders reach 0.3 m in). */
+export const WALL_IN = 0.3;
+
+const PLAN = {
+  'site-1': { questId: 'q1-both', label: 'Bench 1 - Running Both Ways', title: 'Running Both Ways', structure: 'sluice-chamber', kind: 'pan', skin: 'deck', plate: 'TTR-01' },
+  'site-2': { questId: 'q2-k', label: 'Bench 2 - The Number K', title: 'The Number That Holds', structure: 'weigh-house', kind: 'scale', skin: 'desk', plate: 'TTR-02' },
+  'site-3': { questId: 'q3-q', label: 'Bench 3 - Which Way', title: 'Which Way It Goes', structure: 'gauge-chamber', kind: 'gauge', skin: 'shelf', plate: 'TTR-03' },
+  'site-4': { questId: 'q4-properties', label: 'Bench 4 - Combining K', title: 'Combining K', structure: 'tally-room', kind: 'cards', skin: 'desk', plate: 'TTR-04' },
+  'site-5': { questId: 'q5-ice', label: 'Bench 5 - Equilibrium Concentrations', title: 'Equilibrium Concentrations', structure: 'ledger-house', kind: 'ledger', skin: 'shelf', plate: 'TTR-05' },
+  'site-6': { questId: 'q6-lean', label: 'Bench 6 - Le Chatelier', title: "Le Chatelier's Principle", structure: 'pump-chamber', kind: 'beam', skin: 'deck', plate: 'TTR-06' },
+  'site-7': { questId: 'q7-dissolve', label: 'Bench 7 - Solubility Equilibria', title: 'Solubility Equilibria', structure: 'settling-cistern', kind: 'dish', skin: 'deck', plate: 'TTR-07' },
+  'site-8': { questId: 'q8-free', label: 'Bench 8 - Free Energy', title: 'Free Energy and K', structure: 'plotting-room', kind: 'plot', skin: 'desk', plate: 'TTR-08' }
 };
+
+/** A room's rectangle in the world. */
+export function roomRect(r) {
+  const minX = FACE[r.wall] + WALL_T;
+  return { minX, maxX: minX + r.depth, minZ: r.z[0], maxZ: r.z[1] };
+}
+
+export const HOST_PLAN = Object.fromEntries(Object.entries(PLAN).map(([id, p]) => {
+  const room = ROOMS.find(r => r.site === id);
+  const rr = roomRect(room);
+  const x = rr.maxX - PLATE_FROM_BACK, z = (rr.minZ + rr.maxZ) / 2;
+  return [id, { ...p, room: room.id, floor: LEVEL[room.wall], pos: [Math.round(x * 100) / 100, Math.round(z * 100) / 100], face: [-1, 0] }];
+}));
+
+/** A world point in a host's frame: x to the player's right, z toward the player. */
+export function toHost(plan, x, z) {
+  const [px, pz] = plan.pos, [fx, fz] = plan.face;
+  const dx = x - px, dz = z - pz;
+  return [dx * fz - dz * fx, dx * fx + dz * fz];
+}
+
+/** A host-frame point as a world point. */
+export function toWorld(plan, lx, lz) {
+  const [px, pz] = plan.pos, [fx, fz] = plan.face;
+  return [px + lx * fz + lz * fx, pz - lx * fx + lz * fz];
+}
+
+/** The host's room in its own frame: `[x0, x1, z0, z1]`, the walls' colliders taken off every side but the door's. */
+export function hostExtent(plan) {
+  const room = ROOMS.find(r => r.id === plan.room);
+  const r = roomRect(room);
+  const pts = [[r.minX, r.minZ], [r.maxX, r.minZ], [r.minX, r.maxZ], [r.maxX, r.maxZ]].map(([x, z]) => toHost(plan, x, z));
+  const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
+  const z0 = Math.min(...pts.map(p => p[1])), z1 = Math.max(...pts.map(p => p[1]));
+  return [x0 + WALL_IN, x1 - WALL_IN, z0 + WALL_IN, z1 - WALL_IN];
+}
