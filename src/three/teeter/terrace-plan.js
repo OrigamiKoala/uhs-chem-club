@@ -86,7 +86,7 @@ export const ROOMS = [
   { id: 'room-3', site: 'site-3', wall: 2, z: [10.6, 22.2], depth: 13.0, shell: 'steel', top: 4.6, sky: 0.3 },
   { id: 'room-4', site: 'site-4', wall: 2, z: [-18, -5], depth: 12.0, shell: 'joists', top: 4.5, sky: 0.3 },
   { id: 'room-5', site: 'site-5', wall: 3, z: [18, 30.4], depth: 11.4, shell: 'mono', top: 6.0, ridge: 7.4, sky: 0.34 },
-  { id: 'room-6', site: 'site-6', wall: 3, z: [-6, 9], depth: 13.6, shell: 'shaft', top: 4.6, sky: 0.3, shaft: { back: 1.0, size: 2.4 } },
+  { id: 'room-6', site: 'site-6', wall: 3, z: [-6, 9], depth: 13.6, shell: 'shaft', top: 4.6, sky: 0.3, shaft: { back: 1.0, size: 2.4, side: 4.6 } },
   { id: 'room-7', site: 'site-7', wall: 4, z: [5, 18.6], depth: 12.2, shell: 'vaultZ', top: 4.7, sky: 0.3 },
   { id: 'room-8', site: 'site-8', wall: 4, z: [-20, -7.2], depth: 11.8, shell: 'jack', top: 4.5, sky: 0.3 }
 ];
@@ -167,10 +167,10 @@ export function land(x, z) {
   return t + (Math.max(t, slope) - t) * fade + spur;
 }
 
-/** A room's shaft (x, z of its middle, its size), and the pier round its mouth on the terrace above. */
+/** A room's shaft (x, z of its middle, its size; `side` sets it to the south of the plate, clear of the bay), and the pier round its mouth on the terrace above. */
 export function shaftOf(r) {
   const minX = FACE[r.wall] + WALL_T, maxX = minX + r.depth;
-  const cx = maxX - r.shaft.back - r.shaft.size / 2, cz = (r.z[0] + r.z[1]) / 2;
+  const cx = maxX - r.shaft.back - r.shaft.size / 2, cz = (r.z[0] + r.z[1]) / 2 + (r.shaft.side || 0);
   return { cx, cz, size: r.shaft.size };
 }
 export function shaftPier(r) {
