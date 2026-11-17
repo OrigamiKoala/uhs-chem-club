@@ -344,7 +344,7 @@ export function makeTerracePlan() {
 
   /**
    * THE COVER: every room and every passage is roofed (the sun and 0.7 of the sky taken out). The sun still reaches the first
-   * metres inside each doorway (a real hole), and down room 6's shaft, which stands in for its door.
+   * metres inside each doorway (a real hole); room 6's shaft lets in sky, not sun (the sun stands 14 degrees up).
    */
   function coverSpec() {
     const boxes = [];
@@ -358,12 +358,7 @@ export function makeTerracePlan() {
     const openings = [];
     for (const r of rooms) {
       const v = r.vol.rect, d = r.door.rect, lo = r.level;
-      if (r.shaft) {
-        const s = shaftOf(r), h = s.size / 2;
-        openings.push({ id: `${r.id}-shaft`, axis: 'y', at: lo + r.top, lo: [s.cx - h, s.cz - h], hi: [s.cx + h, s.cz + h], reach: { min: [v.minX, lo - 0.3, v.minZ], max: [v.maxX, lo + r.top + 0.5, v.maxZ] } });
-        continue;
-      }
-      openings.push({ id: `${r.id}-door`, axis: 'x', at: d.minX, lo: [lo, d.minZ], hi: [lo + DOOR.top, d.maxZ], reach: { min: [d.minX - 0.5, lo - 0.3, v.minZ], max: [v.minX + 4, lo + DOOR.top + 0.5, v.maxZ] } });
+      openings.push({ id: `${r.id}-door`, axis: 'x', at: d.minX, lo: [lo, d.minZ], hi: [lo + DOOR.top, d.maxZ], reach: { min: [d.minX - 0.5, lo - 0.3, v.minZ], max: [v.minX + 2.5, lo + DOOR.top + 0.5, v.maxZ] } });
     }
     return { boxes, openings };
   }

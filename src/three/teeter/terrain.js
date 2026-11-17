@@ -65,6 +65,28 @@ function surfaceAt(plan, x, z) {
   return x >= dikeStart(k) ? 0 : 1;
 }
 
+/** How worn the ground is at (x, z): 1 on the line people walk (a dike's middle, the stair's, the floor's way to its rooms). */
+function trodden(plan, x, z) {
+  const v = plan.volumeAt(x, z);
+  if (!v) return 0;
+  const bell = d => Math.exp(-(d * d) / 1.4);
+  if (v.kind === 'ramp') return bell(z - (STAIR.z0 + STAIR.z1) / 2);
+  if (v.id === 'shelf') {
+    // From the pad to the stair's head.
+    const t = Math.max(0, Math.min(1, ((x - 80) * (64 - 80) + (z - 10) * (36.2 - 10)) / ((64 - 80) ** 2 + (36.2 - 10) ** 2)));
+    return bell(Math.hypot(x - (80 + (64 - 80) * t), z - (10 + (36.2 - 10) * t)) / 1.4) * 0.8;
+  }
+  if (v.kind === 'dike') return bell(x - plan.lineOf(plan.terraceOf(x, z))) * (v.id === 'floor' && z < -16 ? 0.4 : 1);
+  return 0;
+}
+
+/** The salt scar in the gully above the spring: 0 to 1. */
+function scar(x, z) {
+  const d = x - SHELF.maxX;
+  if (d < 4) return 0;
+  return Math.exp(-((z - 10) * (z - 10)) / (60 + d * 0.8)) * smooth(4, 20, d) * (1 - smooth(160, 300, d)) * 0.75;
+}
+
 const COLOURS = [
   [0.80, 0.77, 0.70],   // dike: packed clay, dusted with dried salt
   [0.97, 0.96, 0.92],   // pan floor: white crust (under the brine)
@@ -99,9 +121,13 @@ export function buildGroundGeometry(field, plan) {
     const l = Math.hypot(...n);
     nor[k * 3] = n[0] / l; nor[k * 3 + 1] = n[1] / l; nor[k * 3 + 2] = n[2] / l;
     const s = surfaceAt(plan, x, z);
-    const c = COLOURS[s];
-    // A slow mottle, so a dike is not one flat colour; the bare hill pales where it is steep.
-    const m = 0.94 + 0.06 * Math.sin(x * 0.37 + Math.sin(z * 0.21) * 2) * Math.sin(z * 0.29 + x * 0.05);
+    let c = COLOURS[s];
+    // A slow mottle, so a dike is not one flat colour.
+    let m = 0.94 + 0.06 * Math.sin(x * 0.37 + Math.sin(z * 0.21) * 2) * Math.sin(z * 0.29 + x * 0.05);
+    // THE TRODDEN WAY: down the middle of the stair and along each dike's line, the clay is worn darker and the salt dust gone.
+    m *= 1 - 0.13 * trodden(plan, x, z);
+    // The hill pales into a white salt scar down the gully above the spring, where the brine seeps out of the rock.
+    if (s === 3) c = c.map((v, q) => v + (0.95 - v) * scar(x, z));
     for (let q = 0; q < 3; q++) col[k * 3 + q] = c[q] * m;
     uv[k * 2] = x / 7; uv[k * 2 + 1] = z / 7;
   }

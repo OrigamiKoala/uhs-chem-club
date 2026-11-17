@@ -446,7 +446,7 @@ export class TeeterWorld {
 
   /**
    * INSIDE A ROOM THE SUN IS TAKEN AWAY. The mask takes the sun and 0.7 of the sky out of every room and passage; the sun
-   * still reaches the first metres inside each door, and down room 6's shaft. A deployed instrument arrives later with
+   * still reaches the first metres inside each door. A deployed instrument arrives later with
    * materials of its own; `update` covers it.
    */
   initCover() {

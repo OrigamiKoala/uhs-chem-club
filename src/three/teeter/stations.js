@@ -209,9 +209,9 @@ function sluiceChamber(w) {
   // The two gates where the culvert meets the side walls: a frame, a gate plate raised part way, a spindle, a handwheel.
   for (const s of [-1, 1]) {
     const gx = s * (X - 0.7);
-    for (const dz of [-0.62, 0.62]) k.box(g, [0.14, 4.1, 0.14], M.darkSteel, [gx, 2.05, -2.15 + dz]);
+    for (const dz of [-0.48, 0.62]) k.box(g, [0.14, 4.1, 0.14], M.darkSteel, [gx, 2.05, -2.15 + dz]);
     k.box(g, [0.1, 1.0, 1.1], M.castIron, [gx, 3.35, -2.15]);
-    k.box(g, [0.3, 0.16, 1.4], M.darkSteel, [gx, 4.1, -2.15]);
+    k.box(g, [0.3, 0.16, 1.24], M.darkSteel, [gx, 4.1, -2.05]);
     k.cyl(g, [0.03, 0.03, 1.6, 8], M.steel, [gx, 3.3, -1.45], null, false);
     k.box(g, [0.4, 1.2, 0.4], M.castIron, [gx, 0.6, -1.35]);
     handwheel(h, gx, 1.32, -1.1, 'z', 0.26);
