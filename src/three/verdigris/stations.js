@@ -321,7 +321,7 @@ function twinCistern(w) {
   k.pipe(g, [[-1.2, 0.09, -2.3], [hx, 0.09, -2.3], [hx, 0.09, room.z1 - 0.5]], 0.085, M.rubber);
   // Sample jars on a rack along the left wall, two dippers on pegs.
   rackAlongZ(h, room.x0 + 0.45, 0.4, 4.2, { depth: 0.55, top: 1.8, shelves: [0.35, 1.0, 1.65], bay: 1.3, load: (x, y, z, b) => {
-    for (let i = 0; i < 3; i++) k.cyl(g, [0.09, 0.09, 0.24, 12], M.glass, [x, y + 0.12, z - b / 3 + i * b / 3], null, false);
+    for (let i = 0; i < 3; i++) k.cyl(g, [0.09, 0.09, 0.24, 12], M.glassCarboy, [x, y + 0.12, z - b / 3 + i * b / 3], null, false);
   } });
   for (const dz of [5.2, 5.9]) {
     k.box(g, [0.08, 0.08, 0.2], M.timberDark, [room.x0 + 0.06, 2.0, dz], null, false);
@@ -388,7 +388,7 @@ function acidStore(w) {
   k.cyl(tilted, [0.2, 0.26, 0.2, 14], M.glassCarboy, [0, 0.3, 0]);
   h.solid(tx, tz, 0.5, 0.5);
   k.pipe(g, [[tx - 0.6, 1.3, tz], [tx - 1.0, 1.1, tz], [tx - 1.0, 0.3, tz]], 0.02, M.rubber);
-  k.cyl(g, [0.16, 0.14, 0.3, 14], M.glass, [tx - 1.0, 0.15, tz]);
+  k.cyl(g, [0.16, 0.14, 0.3, 14], M.glassCarboy, [tx - 1.0, 0.15, tz]);
   h.round(tx - 1.0, tz, 0.22);
   return finish(h, 3.6);
 }
@@ -440,28 +440,30 @@ function saltCistern(w) {
 function dosingHall(w) {
   const h = start(w, 'site-6', 'host-dosing-hall');
   const { k, g, M, room } = h;
-  // The frame: four stanchions, two at the back wall and two forward at the sides, carrying a deck at 3.6 m.
-  const fy = 3.6, fz0 = room.z0 + 0.3, fz1 = -2.15;
+  // The frame: four stanchions, two at the back wall and two forward at the sides, carrying a deck at 3.6 m that reaches
+  // forward over the back of the plate (above 2.4 m, clear of the bay).
+  const fy = 3.6, fz0 = room.z0 + 0.3, fz1 = -2.15, dz0 = room.z0 + 0.1, dz1 = -0.5, tz = -1.5;
   for (const x of [-4.6, 4.6]) for (const z of [fz0, fz1]) k.stanchion(g, x, z, 0, fy, { d: 0.25, b: 0.22 });
   for (const z of [fz0, fz1]) k.beam(g, [-4.6, fy - 0.2, z], [4.6, fy - 0.2, z], { d: 0.36, f: 0.22 });
-  k.box(g, [9.6, 0.06, fz1 - fz0 + 0.6], M.steel, [0, fy + 0.03, (fz0 + fz1) / 2]);
+  for (const x of [-4.6, -1.6, 1.6, 4.6]) k.beam(g, [x, fy - 0.2, dz0], [x, fy - 0.2, dz1], { d: 0.36, f: 0.22 });
+  k.box(g, [9.6, 0.06, dz1 - dz0], M.steel, [0, fy + 0.03, (dz0 + dz1) / 2]);
   for (const x of [-4.6, 4.6]) { h.solid(x, (fz0 + fz1) / 2, 0.2, (fz1 - fz0) / 2 + 0.15); }
-  // The dosing tank on the deck: a horizontal cylinder with dished ends, a filler, a sight glass.
-  k.cyl(g, [0.85, 0.85, 5.6, 22], M.copperClad, [0, fy + 0.95, (fz0 + fz1) / 2], [0, 0, Math.PI / 2]);
+  // The dosing tank on the deck: a horizontal cylinder with dished ends on two saddles, a filler, its sight glass.
+  k.cyl(g, [0.85, 0.85, 5.6, 22], M.copperClad, [0, fy + 0.95, tz], [0, 0, Math.PI / 2]);
   for (const s of [-1, 1]) {
     const end = new THREE.Mesh(w.own(new THREE.SphereGeometry(0.85, 18, 10, 0, Math.PI)), M.copperClad);
-    end.position.set(s * 2.8, fy + 0.95, (fz0 + fz1) / 2);
+    end.position.set(s * 2.8, fy + 0.95, tz);
     end.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2;
     g.add(end);
   }
-  for (const x of [-1.6, 1.6]) k.box(g, [0.25, 0.55, 1.2], M.darkSteel, [x, fy + 0.3, (fz0 + fz1) / 2]);
-  k.cyl(g, [0.12, 0.12, 0.5, 12], M.castIron, [-1.0, fy + 1.95, (fz0 + fz1) / 2]);
-  // A guard rail round the deck's front edge.
-  k.box(g, [9.4, 0.05, 0.05], M.darkSteel, [0, fy + 1.0, fz1 + 0.25]);
-  for (const x of [-4.4, -1.5, 1.5, 4.4]) k.box(g, [0.05, 1.0, 0.05], M.darkSteel, [x, fy + 0.5, fz1 + 0.25], null, false);
+  for (const x of [-1.6, 1.6]) k.box(g, [0.25, 0.4, 1.2], M.darkSteel, [x, fy + 0.26, tz]);
+  k.cyl(g, [0.12, 0.12, 0.5, 12], M.castIron, [-1.0, fy + 1.95, tz]);
+  // A guard rail along the deck's front edge.
+  k.box(g, [9.4, 0.05, 0.05], M.darkSteel, [0, fy + 1.0, dz1 - 0.05]);
+  for (const x of [-4.4, -1.5, 1.5, 4.4]) k.box(g, [0.05, 1.0, 0.05], M.darkSteel, [x, fy + 0.5, dz1 - 0.05], null, false);
   // The metering run: from the tank's end down the right in a glass sight tube with a valve top and bottom, to the vat.
   const mx = 3.9;
-  k.pipe(g, [[2.8, fy + 0.5, (fz0 + fz1) / 2], [mx, fy + 0.5, fz1 + 0.6], [mx, 2.5, fz1 + 0.6]], 0.05, M.copper);
+  k.pipe(g, [[2.8, fy + 0.5, tz], [mx, fy + 0.5, fz1 + 0.6], [mx, 2.5, fz1 + 0.6]], 0.05, M.copper);
   k.cyl(g, [0.05, 0.05, 1.2, 12], M.glass, [mx, 1.85, fz1 + 0.6]);
   for (const y of [2.5, 1.2]) { k.cyl(g, [0.08, 0.08, 0.14, 10], M.brass, [mx, y, fz1 + 0.6]); handwheel(h, mx + 0.16, y, fz1 + 0.6, 'x', 0.12); }
   k.pipe(g, [[mx, 1.2, fz1 + 0.6], [mx, 0.95, fz1 + 1.4]], 0.04, M.copper);

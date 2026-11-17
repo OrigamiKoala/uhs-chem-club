@@ -671,6 +671,8 @@ function buildGatehouse(plan, put, s, r, BASE) {
   put('flags', span(v.minX, v.maxX, r.level - 0.2, r.level, v.minZ, v.maxZ, 1.8));
   roomRoof(put, r);
   put('stone', span(v.minX, v.maxX, r.level + r.top + 0.5, top - 0.3, v.minZ, v.maxZ));
+  // The channel's bed under the passage (the ground is cut away there), flagged.
+  put('flags', span(P.minX, P.maxX, BASE + 0.9, -1.6, z0, z1, 1.8));
   // The door's sill across the east channel, from the deck to the chamber.
   const d1 = plan.byId.get('door-1').rect;
   put('flags', span(d1.minX, P.maxX, WATER - 0.4, DECK, d1.minZ, d1.maxZ, 1.2));

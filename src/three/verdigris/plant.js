@@ -129,19 +129,18 @@ export function buildPumpDischarge(w) {
   g.add(sheet);
   const tex = w.M.water.map;
   g.userData.movers = [{ update(t) { sheet.scale.x = 1 + Math.sin(t * 3.1) * 0.04; if (tex) tex.offset.y = -t * 0.35; } }];
-  g.userData.noMerge = true;
   return g;
 }
 
 /**
  * THE REED BEDS. A clump of reeds on every mud bank the land function grows them on (outside the moat and in the ward's
  * shallows), never within 1.4 m of a deck or on a structure. Each blade is one thin double-sided triangle; the clumps are
- * merged by 40 m square, and the whole is ambient (the walk never meets it).
+ * merged by 90 m square, and the whole is ambient (the walk never meets it).
  */
 export function buildReedBeds(w) {
   const plan = w.plan, M = w.M;
   const r = rng(0x5eed);
-  const SQ = 40;
+  const SQ = 90;
   const squares = new Map();
   const blocked = (x, z) => {
     for (const v of plan.volumes) {
