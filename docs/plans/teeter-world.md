@@ -254,3 +254,133 @@ Each row: **N/A** (why) or **Avoided by** (how). To be re-checked in play (audit
 - **Built differently from the spec:** the pan is a flat top-down dish (no 3D particle solids); `q2-k` gained a predict stage and lost the Kp gauge stage; `q3-q` stage 1 is "lay the mixture at equilibrium"; `q4-properties` has no Kp/Kc stage (beyond the exam) and stage 4 halves every amount; `q6-lean` stage 8 takes NH₃ out of the vessel (the three-dial search was replaced); `q7-dissolve` stage 4 is the predict stage; `q8-free` stage 1 is a predict stage; the boss phase 4 is a stress alone. Hints, misses and rewards for q2 to q8 and the boss were written by the builders to the ladder in each module.
 - **Walkable world:** `src/three/teeter.js` and `teeter/`, layout from `tools/gen-teeter-layout.mjs`, eight hosts on dike tops, the Tipper arena in the largest pan. `verify:teeter` holds overlap, walkability, lamps, bay clearance and lean-in for every host. The `q2-k` bench was seen once built in the world at `3D On`.
 - **Shared code changed:** `stage.js`, `voyage.js`, `worlds3d.js`, `boss-arena.js`, `foes.js`, `foebody.js`, `boss-models.js`, `verify-arena/bench/voyage/story.mjs` (Teeter added; opt-in lists), `eqdata.js` (appended).
+
+---
+
+## 9. Site rebuild (2026-11-16)
+
+Branch `site/teeter`. This section is the spec the rebuilt site is audited against (`docs/plans/world-distinction-plan.md`
+section 3) and, at its foot, the build record. It changes the 3D site only: no quest, stage, kit, bank entry, glossary,
+story line, site id, quest id or label changes.
+
+### 9.1 The place
+
+**Teeter is a hillside of salt terraces: pans of brine stepping down a slope in five levels, each terrace held up by a
+masonry wall, with one stair cut straight down the fall line and the works' rooms dug into the terrace walls under the
+pans above them.** In the first ten seconds after landing a player stands on the top shelf by the spring house, looks west
+down the hill over four terraces of flat brine to the valley floor, and sees the head of the stair dropping away at their
+left; no bench is in sight.
+
+### 9.2 Signature
+
+| Landform | Walk shape | Bench housing | Light |
+| :--- | :--- | :--- | :--- |
+| A west-facing hillside cut into five level terraces 5.5 m apart, each a band of pans behind a masonry wall; the terraces fill the head of a side valley closed by spurs to the north and south | One straight stair down the fall line (four ramps through four walls, all on one line at the south edge), with a level dike branching north from its foot on every terrace; a comb, not a switchback | Rooms dug into the terrace walls under the pans: the wall is the room's front, a pan of brine is its roof; entered from the dike through a passage in the wall. Two of the eight are weir houses whose upper storey stands up among the pans above | Bright pale afternoon from the west-south-west, the brine glare, the sky's own evaporation shimmer; inside, the cover mask with the sun let in through each doorway's first metres and down one pump shaft |
+
+Checked against section 6: no other row has terraces of pans (Tallow is a dead-flat pan, Brinewire a barrage wall);
+the walk is not Ember Reach's switchback road (Teeter's descent is one straight line of ramps and its level walking is
+on dead-end dikes off it), not Lodestone's single path bend after bend, not Cinder Halo's inward spiral, not Thornmere's
+zigzag chain. The housing is not Cinder Halo's shielded cells (no dog-leg; the room's roof is a working pan with brine on
+it), not Kettle's bays inside one building, not Lodestone's alcoves (closed on four sides, roofed by built masonry).
+Drift from the row: the row says "weir houses and sluice chambers built into each terrace wall"; that is what is built,
+two rooms to each of the four walls that stand above a dike. The row's walk ("down the dikes and stairs-as-ramps, top pan
+to bottom") is kept; the dikes branch off the stair rather than zigzag, so the walk is not a second switchback.
+
+### 9.3 Plan (x east, z south, metres; downhill is west)
+
+- **Levels.** Terrace 0 (the top shelf) 22.0; terrace 1 16.5; terrace 2 11.0; terrace 3 5.5; terrace 4 (the drying
+  floor) 0.0. Below the walk, decor terraces at -5.5 (the great pan), -11, -16.5 and the valley floor at -22.
+- **Walls.** The downhill face of wall k stands at x = 40 (wall 1), 12 (wall 2), -16 (wall 3), -44 (wall 4), -66
+  (wall 5, the drying floor's parapet), then -90, -114, -138 (decor). Each wall is 1 m thick and rises from the terrace
+  below it to the bank of the pans above (5.6 m), or to a 0.9 m parapet where the walk is above it. Walls and pans run
+  north and south to |z| = 128, where the spurs rise over them.
+- **The walk** (all `lib/workings.js` volumes, closed on every side that is not a doorway):
+  - the shelf (terrace 0): x 62 to 95, z -24 to 44, at 22.0; the pad at (80, 10), the spawn at (70, 30);
+  - the stair: four ramps, each x F to F+22, z 34 to 38.4, rising 5.5 m over 22 m (1 in 4), cut down through the
+    terrace above and through the wall, from the shelf to terrace 1, 1 to 2, 2 to 3, 3 to 4;
+  - the dikes: terrace 1 x 34 to 40, z -10 to 40; terrace 2 x 6 to 12, z -22 to 40; terrace 3 x -22 to -16,
+    z -10 to 40; each 6 m wide along the foot of the wall above it, a kerb on its west side over the pans;
+  - the drying floor (terrace 4): x -65 to -44, z -34 to 40, the parapet over the great pan on its west.
+- **Closed ground.** Every pan (0.35 m under its terrace, brine on it), the top of every wall, every roof, the hill
+  east of the shelf and the spurs: no volume reaches them, and the workings' wall colliders close every volume side.
+- **Route in bench order:** shelf, down ramp 1, north along terrace 1 to bench 1 (z 24) and bench 2 (z 1), back to
+  the stair, down ramp 2, north to bench 3 (z 16) and bench 4 (z -11.5), back, down ramp 3 to bench 5 (z 24) and
+  bench 6 (z 1.5), back, down ramp 4 onto the drying floor to bench 7 (z 12) and bench 8 (z -13.6).
+- **The boss's ground.** The Tipper at (-55, 0, -24) at the drying floor's north end, the player's mark at
+  (-55, 1.6, -8); the great pan lies below the parapet to its west.
+
+### 9.4 Section along the route
+
+Spawn 22.0 (shelf) - ramp 1 down to 16.5 - benches 1, 2 at 16.5 - ramp 2 to 11.0 - benches 3, 4 at 11.0 - ramp 3 to
+5.5 - benches 5, 6 at 5.5 - ramp 4 to 0.0 - benches 7, 8 and the Tipper at 0.0. Bench ground spans 16.5 m on four levels.
+
+### 9.5 The benches and their rooms
+
+Every room is dug in east of its wall's face, entered through a 3.6 m passage in the wall (a lintel at 3.4 m), and lit
+by its own pendant lamps; the cover mask takes the sun and 0.7 of the sky out of it, the sun reaching only the floor
+inside the doorway. The plate stands 3 m from the back wall facing the door; the player stands with their back to the
+door. No two rooms share a size, a roof or a fit-out.
+
+1. **Running Both Ways (`q1-both`), the sluice chamber**, wall 1, 13.0 wide x 12.4 deep, a barrel vault running east
+   and west (crown 4.7 m). A settled pan still exchanges brine both ways; this is the room where brine is let from the
+   pan above to the pan below and back, so the culvert crosses the back wall behind the plate with a gate at each end on
+   a handwheel. Closed on three sides and overhead (the pan); the dike outside the door. The player comes off the stair
+   foot and the doorway is the first opening in the wall on their right, 10 m along.
+2. **The Number That Holds (`q2-k`), the weigh house**, wall 1, 14.0 x 11.4, a weir house: its walls rise 1.2 m above
+   terrace 0's pans and carry a gabled timber roof (ridge 7.6 m over the floor). A platform scale on its pit beside the
+   plate, a steelyard on the back wall, sacks on pallets: the same ratio is weighed whatever the batch. Its roof is the
+   one building a player on the shelf can see among the pans.
+3. **Which Way It Goes (`q3-q`), the gauge chamber**, wall 2, 11.6 x 13.0, a flat roof on rolled steel beams at 4.6 m.
+   A trough on a pivot over a catch basin with a graduated gauge post: which way the level runs before it settles.
+4. **Combining K (`q4-properties`), the tally room**, wall 2, 13.0 x 12.0, timber joists on two timber girders at
+   4.5 m. Walls of pigeonholes and a sorting table: the pans' numbers filed and combined.
+5. **Equilibrium Concentrations (`q5-ice`), the ledger house**, wall 3, 12.4 x 11.4, a weir house with a monopitch roof
+   rising to 7.2 m at the back. The clerk's sloped desk, a column board, record books: start, change, what is left.
+6. **Le Chatelier's Principle (`q6-lean`), the pump chamber**, wall 3, 15.0 x 13.6, a slab roof at 4.6 m with a
+   square shaft open to the sky behind the plate; the beam pump on terrace 2's pan above rocks over the shaft and its rod
+   comes down it to the pump barrel in the room. Push the pan, it moves back: the one room with a working machine in it.
+7. **Solubility Equilibria (`q7-dissolve`), the settling cistern**, wall 4, 13.6 x 12.2, a barrel vault running north
+   and south (crown 4.7 m). A sunk settling tank behind the plate with crust on its walls, a cone-bottomed tank on legs,
+   drums of reagent: how much salt a pan can hold.
+8. **Free Energy and K (`q8-free`), the plotting room**, wall 4, 12.8 x 11.8, brick jack arches between steel beams at
+   4.5 m. A gridded board on the back wall, a drafting table, a rack of rolled charts.
+
+### 9.6 How it differs from each neighbour
+
+- Tallow: one dead-flat white pan to the horizon; Teeter is a hill of stacked pans you walk down.
+- Lanternfall: ice and a frozen lake at night; Teeter is brine under a bright sky, and you descend.
+- Ligar: hills you walk round and mines you walk into; Teeter's levels are built terraces, the rooms are masonry under water.
+- Bellows: decks over a cloud sea; Teeter stands on the ground, terraced.
+- Ember Reach: a caldera wall with a switchback road; Teeter has one straight stair and level dikes, and no fire.
+- Mirrowen: quays and hulls at sea level; Teeter is a hillside with no sea.
+- Kettle: inside one building; Teeter is outdoors with rooms in its retaining walls.
+- Verdigris: towers in a fogged swamp, short sightlines; Teeter sees across the whole hill and the valley.
+- Brinewire: one long wall across a marsh, walked along its crest; Teeter has five walls stacked down a slope.
+- Quicklight: refinery alleys under pipe racks in a storm; Teeter is open terraces in sun.
+- Lodestone: a narrow canyon walked bend after bend; Teeter is a broad open slope walked straight down.
+- Thornmere: mounds in a tar lake; Teeter's ground is level stone terraces and brine.
+- Cinder Halo: craters and shielded cells behind dog-legs; Teeter's rooms open straight off a dike, under pans.
+
+### 9.7 The far country
+
+North: the terraces run on along the hill to the north spur, on which a graduation tower stands (a long timber frame
+stacked with brushwood). East: the hill rises behind the spring house to a bare ridge, a white salt scar in the gully
+above the spring. South: the south spur, with the brine main on trestles running down it to the valley. West: the
+valley floor 22 m below the drying floor, a river channel, and a far range of hills on the horizon.
+
+### 9.8 The numbers held
+
+- `world-shape.mjs`: 8 of 8 housed, each R5 or better; bench ground 0.0 to 16.5 m (16.5 m) on 4 levels; no clones;
+  not one circle, not two columns.
+- Plates in view from the spawn: 0. From each bench's mark, no other plate.
+- Every room at least 11.2 x 11 m inside with 4.4 m over the plate's floor.
+- Budget at T4 (`perf-worlds.mjs`): at most 566 draws and 900k triangles; target under 300 draws and 400k triangles.
+
+### 9.9 Kept, rebuilt, archived
+
+- Kept: `teeter/atmosphere.js` (the sky; the sun is exported for the cover mask), `materials/teeter-textures.js`, the
+  beam pump (`buildBeamPump`, moved into the new `plant.js`), `world-data/teeter.json`'s ids, labels and quest ids.
+- Rebuilt: `teeter.js`, `teeter/terrain.js`, `teeter/stations.js`, `teeter/plant.js`, `teeter/host-plan.js`,
+  `tools/gen-teeter-layout.mjs`, `tools/verify-teeter.mjs`; new `teeter/terrace-plan.js` (pure data).
+- Archived to `archive/2026-11-16/site-teeter/`: the old versions of every rebuilt file, with a README.
+- Shared: `learn/engine/boss-arena.js` (the Tipper's spot moves); no shared library changes planned.
