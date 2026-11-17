@@ -129,13 +129,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.4,
     species: 'the tipper'
   },
-  // On the pump house court at the south end of the spine, on the shore of the sump, the largest pool (`world-data/verdigris.json` keeps this
-  // ground open; `verify:verdigris` holds the two together). The Leach's body is in `boss-models.js`; the quest `boss-leach` is built apart.
+  // On the pump stage in the drowned fort's north-east corner, the sump's open water off its north edge (`world-data/verdigris.json`
+  // keeps this ground open; `verify:verdigris` holds the two together). The Leach's body is in `boss-models.js`; the quest `boss-leach` is built apart.
   'boss-leach': {
     worldId: 'unit09',
-    playerPos: [0, 1.6, -38],
-    lookAtPos: [0, 1.6, -54],
-    bossPos: [0, 0, -54],
+    playerPos: [32, 1.6, -34],
+    lookAtPos: [32, 1.6, -50],
+    bossPos: [32, 0, -50],
     scale: 1.4,
     species: 'the leach'
   },

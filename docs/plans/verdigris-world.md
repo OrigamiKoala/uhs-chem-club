@@ -403,7 +403,7 @@ The row is built as written.
 - **The walk** (`verdigris/fort-plan.js`, all `lib/workings.js` volumes, closed on every side that is not a doorway):
   - the landing stage x 58 to 88, z 38 to 72, the pad at (74, 57), the spawn at (63, 42);
   - outside: west 21 m (w1), south 8 m (w2), west 20 m (w3), then north over the moat bridge (x 10.4 to 13.6, z 40 to 54.4);
-  - the gate passage x 10.4 to 13.6, z 22 to 40, roofed, the deck over the flooded gate channel;
+  - the gate passage x 10.4 to 13.6, z 24 to 40, roofed, the deck over the flooded gate channel;
   - the ward: a landing at the gate's inner mouth (j4); a branch east up a ramp to the corner tower; the trunk north to j5; west to
     the twin cistern's stair (j6); west and south-west in three runs to the south-west tower's ramp; north to the salt cistern's
     stair (j11); east to the foot of the keep's ramp (j12); north and east to the water-gate tower's ramp (j14); back west to the
