@@ -666,10 +666,12 @@ export function createClubHoloTexture() {
   ctx.fillText('◀  STAR MAP', 512, 305);
   ctx.shadowBlur = 0;
 
-  // Controls hint below Star Map label
-  ctx.font = 'bold 24px monospace';
-  ctx.fillStyle = '#ffb347';
-  ctx.fillText(TOUCH ? 'LEFT STICK MOVES, RIGHT STICK LOOKS' : 'DRAG TO LOOK, WASD TO MOVE', 512, 440);
+  // Controls hint below Star Map label (desktop only; touch users have on-screen sticks)
+  if (!TOUCH) {
+    ctx.font = 'bold 24px monospace';
+    ctx.fillStyle = '#ffb347';
+    ctx.fillText('DRAG TO LOOK, WASD/RF TO MOVE', 512, 440);
+  }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);

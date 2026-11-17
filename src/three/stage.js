@@ -9,7 +9,7 @@ import { tierManager, tierAtLeast, isTouchPrimary } from "./tier.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { CameraRig, SHIP_ANCHORS } from "./camera-rig.js";
 import { ShipInterior } from "./ship.js";
-import { SHIP_BOUNDS } from "./ship-rooms.js";
+import { SHIP_BOUNDS, shipCeilingHeight } from "./ship-rooms.js";
 import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
@@ -341,7 +341,8 @@ class Stage {
       "ship",
       null,
       SHIP_BOUNDS,
-      this.shipInterior.getActiveColliders()
+      this.shipInterior.getActiveColliders(),
+      shipCeilingHeight
     );
 
     // The Avalon's flights between worlds (T4): turning to the canopy, the
@@ -1458,7 +1459,8 @@ class Stage {
         "ship",
         null,
         SHIP_BOUNDS,
-        this.shipInterior ? this.shipInterior.getActiveColliders() : []
+        this.shipInterior ? this.shipInterior.getActiveColliders() : [],
+        shipCeilingHeight
       );
     }
     if (this.cameraRig && !boarding) {

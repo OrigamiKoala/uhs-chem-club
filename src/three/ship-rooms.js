@@ -132,6 +132,14 @@ export const CANOPY = {
   rake: 0.9       // how far aft the head sits of the sill, measured square to each pane
 };
 
+/** Ceiling lining height (m) at world (x, z) inside the Avalon. */
+export function shipCeilingHeight(_x, z) {
+  if (z < -7.8) return CEIL.furnace - 0.12;
+  if (z <= 0.5) return CEIL.room - 0.12;
+  if (z <= 4.3) return CEIL.bridge - 0.12;
+  return CANOPY.top;
+}
+
 /** The x-interval of a convex outline at depth z, or null outside it. */
 export function outlineSpan(outline, z) {
   const xs = [];

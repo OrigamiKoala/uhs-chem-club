@@ -20,10 +20,12 @@ import * as THREE from "three";
 
 /** Keys that only ever mean "move", so nothing on a panel can want them. */
 const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight", "KeyR", "KeyF", "PageUp", "PageDown"]);
-// Hover limits, metres relative to the standing eye height (deployed bench only).
-const HOVER_MIN = -0.8;
+// Hover limits, metres relative to the standing eye height.
+const HOVER_MIN = -1.2;
 const HOVER_MAX = 14;
 const HOVER_SPEED = 2.6;
+const SHIP_FLOOR_CLEARANCE = 0.35;
+const CEIL_CLEARANCE = 0.25;
 const _eulerTemp = new THREE.Euler(0, 0, 0, "YXZ");
 
 export class FpsControls {
@@ -100,7 +102,9 @@ export class FpsControls {
     this.hoverOffset = 0;
     this.hoverUp = false;
     this.hoverDown = false;
+    this.mode = "world";
     this.terrainHeightFn = null;
+    this.ceilingHeightFn = null;
     this.boundaryBounds = null; // { minX, maxX, minZ, maxZ }
     this.boxColliders = []; // [{ minX, maxX, minZ, maxZ }]
     this.radialColliders = []; // [{ x, z, radius }]
@@ -311,8 +315,9 @@ export class FpsControls {
     this.moveLeft = keys.has("KeyA") || keys.has("ArrowLeft");
     this.moveRight = keys.has("KeyD") || keys.has("ArrowRight");
     this.isSprinting = keys.has("ShiftLeft") || keys.has("ShiftRight");
-    this.hoverUp = this.walkKeysAtBench && (keys.has("KeyR") || keys.has("PageUp"));
-    this.hoverDown = this.walkKeysAtBench && (keys.has("KeyF") || keys.has("PageDown"));
+    const canHover = this.walkKeysAtBench || this.mode === "ship";
+    this.hoverUp = canHover && (keys.has("KeyR") || keys.has("PageUp"));
+    this.hoverDown = canHover && (keys.has("KeyF") || keys.has("PageDown"));
     this.jumpHeld = keys.has("Space");
   }
 
@@ -380,7 +385,7 @@ export class FpsControls {
       case "PageUp":
       case "KeyF":
       case "PageDown":
-        if (this.walkKeysAtBench) {
+        if (this.walkKeysAtBench || this.mode === "ship") {
           if (e.code === "PageUp" || e.code === "PageDown") e.preventDefault?.();
           this.pressedKeys.add(e.code);
           this._syncKeyFlags();
@@ -428,16 +433,21 @@ export class FpsControls {
     this.euler.setFromQuaternion(this.camera.quaternion, "YXZ");
     this.euler.z = 0;
     this.velocity.set(0, 0, 0);
-    if (this.walkKeysAtBench) {
+    if (this.walkKeysAtBench || this.mode === "ship") {
       const ground = this.terrainHeightFn ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z) : 0;
       this.hoverOffset = Math.max(HOVER_MIN, Math.min(HOVER_MAX, this.basePosition.y - ground - this.eyeHeight));
     }
   }
 
-  setMode(mode, terrainFn = null, bounds = null, colliders = []) {
+  setMode(mode, terrainFn = null, bounds = null, colliders = [], ceilingFn = null) {
+    this.mode = mode;
     this.terrainHeightFn = terrainFn;
+    this.ceilingHeightFn = ceilingFn;
     this.boundaryBounds = bounds;
     this.setColliders(colliders);
+    if (mode !== "ship" && !this.walkKeysAtBench) {
+      this.hoverOffset = 0;
+    }
     this.syncFromCamera();
   }
 
@@ -612,14 +622,24 @@ export class FpsControls {
     const baseGroundY = this.terrainHeightFn
       ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z)
       : 0;
-    // Hover keys move the head up and down smoothly; off a bench the offset
-    // eases back to standing height.
-    if (this.walkKeysAtBench) {
+    // Hover keys move the head up and down smoothly; off a bench (outside the
+    // ship) the offset eases back to standing height.
+    const canHover = this.walkKeysAtBench || this.mode === "ship";
+    let minHover = this.mode === "ship" ? Math.max(HOVER_MIN, SHIP_FLOOR_CLEARANCE - this.eyeHeight) : HOVER_MIN;
+    let maxHover = HOVER_MAX;
+    const ceilY = this.ceilingHeightFn
+      ? this.ceilingHeightFn(this.basePosition.x, this.basePosition.z)
+      : Infinity;
+    if (Number.isFinite(ceilY)) {
+      maxHover = Math.min(maxHover, ceilY - CEIL_CLEARANCE - baseGroundY - this.eyeHeight);
+    }
+    if (canHover) {
       const dir = (this.hoverUp ? 1 : 0) - (this.hoverDown ? 1 : 0);
       if (dir) {
         const fast = this.isSprinting || this.analogSprint ? 2 : 1;
-        this.hoverOffset = Math.max(HOVER_MIN, Math.min(HOVER_MAX, this.hoverOffset + dir * HOVER_SPEED * fast * dt));
+        this.hoverOffset += dir * HOVER_SPEED * fast * dt;
       }
+      this.hoverOffset = Math.max(minHover, Math.min(maxHover, this.hoverOffset));
     } else if (this.hoverOffset !== 0) {
       this.hoverOffset -= this.hoverOffset * Math.min(1, dt * 5);
       if (Math.abs(this.hoverOffset) < 0.002) this.hoverOffset = 0;
@@ -646,6 +666,14 @@ export class FpsControls {
       }
     } else {
       this.basePosition.y = targetBaseEyeY;
+    }
+
+    if (Number.isFinite(ceilY)) {
+      const maxEyeY = ceilY - CEIL_CLEARANCE;
+      if (this.basePosition.y > maxEyeY) {
+        this.basePosition.y = maxEyeY;
+        if (this.verticalVelocity > 0) this.verticalVelocity = 0;
+      }
     }
 
     // Dynamic recovery of landing compression and trauma decay

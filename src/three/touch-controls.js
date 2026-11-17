@@ -66,7 +66,6 @@ export class TouchControls {
     root.innerHTML = `
       <div class="tc-zone tc-zone-move" data-stick="move">
         <div class="tc-ring">
-          <span class="tc-ring-label">MOVE</span>
           <div class="tc-knob"></div>
         </div>
       </div>
@@ -76,7 +75,6 @@ export class TouchControls {
       </div>
       <div class="tc-zone tc-zone-look" data-stick="look">
         <div class="tc-ring">
-          <span class="tc-ring-label">LOOK</span>
           <div class="tc-knob"></div>
         </div>
       </div>

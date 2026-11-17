@@ -83,20 +83,6 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
 
 .tc-zone.active .tc-ring { opacity: 0.92; }
 
-.tc-ring-label {
-  position: absolute;
-  left: 50%;
-  top: 8px;
-  transform: translateX(-50%);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.tc-zone.active .tc-ring-label { color: var(--accent-bronze); }
-
 .tc-knob {
   position: absolute;
   left: 50%;
