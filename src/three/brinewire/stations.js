@@ -33,6 +33,7 @@
  */
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildBayBench } from '../bench-bay.js';
 import { HOST_PLAN, hostExtent } from './host-plan.js';
 import { ROOMS, WALL_T } from './barrage-plan.js';
@@ -139,11 +140,21 @@ function start(w, siteId, name) {
   const hang = (x, z, y = 3.5, opts = ROOM_LAMP) => k.pendant(g, x, y, z, topAt(x, z) - 0.02, opts);
   const solid = (lx, lz, hw, hd) => colliders.push({ lx, lz, hw, hd });
   const round = (lx, lz, r) => colliders.push({ lx, lz, r });
-  return { k, M: w.M, g, bench, colliders, movers, room: box, hang, solid, round, w, plan };
+  /** Glass is drawn sorted, one draw per mesh: a host's glass is gathered and drawn as ONE mesh (`finish`). */
+  const glass = [];
+  const pane = (geo, x, y, z) => { geo.translate(x, y, z); glass.push(geo); };
+  return { k, M: w.M, g, bench, colliders, movers, room: box, hang, solid, round, w, plan, glass, pane };
 }
 
 /** The lamp over the plate, one by the door, and the host handed back. */
 const finish = (h, { plateZ = -0.3, doorZ = null, y = 3.5 } = {}) => {
+  if (h.glass.length) {
+    const geo = mergeGeometries(h.glass.map(gg => (gg.index ? gg.toNonIndexed() : gg)));
+    for (const gg of h.glass) gg.dispose();
+    const m = new THREE.Mesh(h.w.own(geo), h.M.glass);
+    m.name = `${h.g.name}:glass`;
+    h.g.add(m);
+  }
   h.hang(0, plateZ, y);
   const dz = doorZ ?? h.room.z1 - 2.2;
   h.hang(0, dz, Math.min(3.3, h.room.topAt(0, dz) - 0.6));
@@ -341,7 +352,7 @@ function bridgeChamber(w) {
   }
   k.strut(g, [-3.0, 3.5, -2.55], [3.0, 3.5, -2.55], 0.022, M.rubber);
   // By the door: a carboy rack of fresh brine on the left, the lead coils on the right.
-  for (const [i, z] of [5.0, 5.8, 6.6].entries()) { k.cyl(g, [0.26, 0.26, 0.6, 14], M.glass, [-5.6, 0.32, z]); void i; }
+  for (const z of [5.0, 5.8, 6.6]) h.pane(new THREE.CylinderGeometry(0.26, 0.26, 0.6, 14), -5.6, 0.32, z);
   h.solid(-5.6, 5.8, 0.4, 1.2);
   for (let i = 0; i < 3; i++) k.cyl(g, [0.36, 0.36, 0.1, 16], M.rubber, [5.6, 0.06 + i * 0.1, 5.6], null, false);
   h.round(5.6, 5.6, 0.45);
@@ -379,7 +390,7 @@ function meterRoom(w) {
   h.round(-3.5, 1.8, 0.3);
   // Right: the rack of reference electrodes, each a glass tube of brine in a clip, their leads to the panel.
   rackAlongZ(h, room.x1 - 0.4, -1.8, 3.0, { depth: 0.5, top: 1.9, shelves: [0.5, 1.2, 1.85], bay: 1.6, load: (x, y, z) => {
-    for (let i = 0; i < 4; i++) k.cyl(g, [0.03, 0.03, 0.4, 8], M.glass, [x, y + 0.2, z - 0.45 + i * 0.3], null, false);
+    for (let i = 0; i < 4; i++) h.pane(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), x, y + 0.2, z - 0.45 + i * 0.3);
   } });
   trayAlongZ(h, room.x1, 3.8, -2.6, room.z1 - 0.5);
   return finish(h, { plateZ: -0.3, y: 3.3 });
@@ -400,7 +411,7 @@ function batteryHall(w) {
       k.box(g, [0.9, 0.06, z1 - z0], M.darkSteel, [x, y, (z0 + z1) / 2]);
       for (let i = 0; i < n; i++) {
         const z = z0 + 0.35 + i * (z1 - z0 - 0.7) / (n - 1);
-        k.box(g, [0.6, 0.62, 0.52], M.glass, [x, y + 0.35, z]);
+        h.pane(new THREE.BoxGeometry(0.6, 0.62, 0.52), x, y + 0.35, z);
         for (const dz of [-0.12, 0, 0.12]) k.box(g, [0.5, 0.48, 0.02], dz ? M.lead : M.copper, [x, y + 0.3, z + dz], null, false);
         k.cyl(g, [0.03, 0.03, 0.12, 8], M.lead, [x - 0.1 * s, y + 0.72, z], null, false);
       }

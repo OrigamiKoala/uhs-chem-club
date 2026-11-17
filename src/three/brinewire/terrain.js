@@ -253,13 +253,14 @@ function pieces(a, b, gaps, len = 24) {
 }
 
 /** The material keys the barrage is built in. */
-export const BARRAGE_KEYS = ['concrete', 'face', 'coping', 'deck', 'block', 'vault', 'brick', 'floor', 'steel', 'roof', 'rail', 'timber', 'mesh'];
+export const BARRAGE_KEYS = ['concrete', 'face', 'coping', 'deck', 'block', 'vault', 'brick', 'floor', 'steel', 'roof', 'rail', 'timber', 'mesh', 'wet', 'salt'];
 
 /**
  * Every built body of the barrage, as lists of geometries by material key. The world merges each list into meshes
  * (`phys: 'ground'`). Keys: concrete (walls, piers), face (the wall's two great faces, board-marked), coping (parapet tops,
  * lintels), deck (the deck's top), block (gate houses' block walls), vault (inside a chamber), brick (a vault's courses),
- * floor (rooms' floor slabs), steel (beams, stanchions, trusses), roof (sheeting), rail (railings), timber, mesh (the cage).
+ * floor (rooms' floor slabs), steel (beams, stanchions, trusses), roof (sheeting), rail (railings), timber, mesh (the cage),
+ * wet and salt (the water's line on every face standing in brine).
  */
 export function buildBarrage(plan) {
   const G = Object.fromEntries(BARRAGE_KEYS.map(k => [k, []]));
@@ -339,14 +340,32 @@ export function buildBarrage(plan) {
         ? (dir < 0 ? [w.plane - thick, w.plane, a, b] : [w.plane, w.plane + thick, a, b])
         : (dir < 0 ? [a, b, w.plane - thick, w.plane] : [a, b, w.plane, w.plane + thick]);
       put(drop && (v.kind === 'road' || v.kind === 'yard') ? 'face' : 'concrete', span(x0, x1, bottom, top - 0.12, z0, z1, drop ? 3 : 2.4));
+      // Where the wall stands in brine: the water's line on its outer face, a dark wet band and the salt dried white over it.
+      if (drop) {
+        const px = along === 'z' ? w.plane + dir * 1.0 : mid;
+        const W = px < WALL.west ? LAGOON.water : BASIN.water;
+        if (bottom < W - 0.3) waterline(put, along, dir, along === 'z' ? (dir < 0 ? x0 : x1) : (dir < 0 ? z0 : z1), a, b, W);
+      }
       put('coping', span(x0 - (along === 'z' ? 0.05 : 0), x1 + (along === 'z' ? 0.05 : 0), top - 0.12, top, z0 - (along === 'x' ? 0.05 : 0), z1 + (along === 'x' ? 0.05 : 0), 1.2));
-      void mid;
     }
   }
 
   /* ---- the rooms, the passages, the gallery and the adit. */
   for (const v of plan.roofed) buildShell(plan, v, put);
   return G;
+}
+
+/**
+ * The water's line on a face standing in brine: from a hand under the water to 0.55 m over it the concrete is dark and wet
+ * (the tide works up and down it), and over that 0.3 m of salt dried white. `at` is the face's plane, `out` which way it looks.
+ */
+function waterline(put, along, out, at, a, b, W) {
+  const t = 0.02, o = out * 0.012;
+  const band = (key, y0, y1) => along === 'z'
+    ? put(key, span(at + o - t / 2, at + o + t / 2, y0, y1, a, b, 1.6))
+    : put(key, span(a, b, y0, y1, at + o - t / 2, at + o + t / 2, 1.6));
+  band('wet', W - 0.1, W + 0.55);
+  band('salt', W + 0.55, W + 0.85);
 }
 
 /** The walls of a roofed volume on its four sides, outside its rectangle, from under its floor to `top`, cut for its openings. */
@@ -471,6 +490,9 @@ function buildGateHouse(plan, room, put) {
   // The pier: from the lagoon's bed to under the floor, a little wider than the house, with a cutwater facing the lagoon.
   put('concrete', span(r.minX - T - 0.6, r.maxX, LAGOON.bed - 2.2, L - 0.3, r.minZ - T - 0.6, r.maxZ + T + 0.6, 3));
   put('coping', span(r.minX - T - 0.7, r.maxX, L - 0.3, L - 0.18, r.minZ - T - 0.7, r.maxZ + T + 0.7, 1.2));
+  waterline(put, 'z', -1, r.minX - T - 0.6, r.minZ - T - 0.6, r.maxZ + T + 0.6, LAGOON.water);
+  waterline(put, 'x', -1, r.minZ - T - 0.6, r.minX - T - 0.6, r.maxX, LAGOON.water);
+  waterline(put, 'x', 1, r.maxZ + T + 0.6, r.minX - T - 0.6, r.maxX, LAGOON.water);
   floorSlab(put, r, L, 0.12);
   const eave = L + room.top, ridge = L + room.ridge;
   const win = room.window;

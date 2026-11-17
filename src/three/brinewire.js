@@ -175,6 +175,10 @@ export class BrinewireWorld {
     M.block = concrete(0xc2bcae, 23);
     M.floor = concrete(0x9d998f, 29);
     M.concreteDark = concrete(0x8f8b82, 37);
+    // The water's line on a face: wet concrete with a skin of weed, and the salt dried over it.
+    M.wetFace = concrete(0x4f564c, 43);
+    M.wetFace.roughness = 0.55;
+    M.saltCrust = std({ color: 0xdcd8cc, roughness: 0.95, metalness: 0 });
     // The walks' paving: the same concrete, coloured per vertex (joints, wear, salt).
     M.paving = concrete(0xffffff, 41);
     M.paving.vertexColors = true;
@@ -282,7 +286,8 @@ export class BrinewireWorld {
     const lists = buildBarrage(this.plan);
     const mat = {
       concrete: this.M.concrete, face: this.M.face, coping: this.M.coping, deck: this.M.deck, block: this.M.block, vault: this.M.vault,
-      brick: this.M.brick, floor: this.M.floor, steel: this.M.darkSteel, roof: this.M.roofSheet, rail: this.M.darkSteel, timber: this.M.timber, mesh: this.M.mesh
+      brick: this.M.brick, floor: this.M.floor, steel: this.M.darkSteel, roof: this.M.roofSheet, rail: this.M.darkSteel, timber: this.M.timber, mesh: this.M.mesh,
+      wet: this.M.wetFace, salt: this.M.saltCrust
     };
     const barrage = new THREE.Group();
     barrage.name = 'barrage';
@@ -302,7 +307,7 @@ export class BrinewireWorld {
         if (!geo) continue;
         const m = new THREE.Mesh(this.own(geo), mat[key]);
         m.name = `barrage:${key}@${sk}`;
-        m.castShadow = this.t4 && key !== 'floor' && key !== 'mesh';
+        m.castShadow = this.t4 && !['floor', 'mesh', 'wet', 'salt'].includes(key);
         m.receiveShadow = this.t4;
         barrage.add(m);
       }
