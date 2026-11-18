@@ -1,6 +1,6 @@
-{world} = <fill in one: Quicklight | Ember Reach | Mirrowen | Bellows | Lanternfall | Tallow>
-{key}   = <fill in one: quicklight | ember | mirrowen | bellows | lanternfall | tallow>
-{unit}  = <unit11 | unit05 | unit06 | unit04 | unit02 | unit01>
+{world} = <fill in one: Ember Reach | Mirrowen | Bellows | Lanternfall | Tallow>
+{key}   = <fill in one: ember | mirrowen | bellows | lanternfall | tallow>
+{unit}  = <unit05 | unit06 | unit04 | unit02 | unit01>
 
 # Goal
 
