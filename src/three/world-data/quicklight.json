@@ -1,150 +1,585 @@
 {
   "id": "quicklight",
   "name": "Quicklight",
+  "place": "Storm-belt refinery",
+  "oneLine": "Reaction rates, rate laws, half-life, collisions, mechanisms and catalysts.",
   "sky": "quicklight-sky",
-  "spawn": [
-    0,
-    1.6,
-    92
-  ],
-  "pad": {
-    "pos": [
-      60,
-      0,
-      84
+  "ambience": {
+    "keyLight": 15979684,
+    "fillLight": 9281720,
+    "fogColor": 5067875,
+    "fogNear": 50,
+    "fogFar": 520
+  },
+  "walk": 100,
+  "refinery": {
+    "levels": {
+      "grade": 0,
+      "plot": 5,
+      "cellar": -3.5,
+      "pit": -4,
+      "cat": 2
+    },
+    "volumes": [
+      {
+        "id": "yard",
+        "kind": "yard",
+        "rect": {
+          "minX": -92,
+          "maxX": -60,
+          "minZ": -92,
+          "maxZ": -56
+        }
+      },
+      {
+        "id": "b1",
+        "kind": "alley",
+        "rect": {
+          "minX": -60,
+          "maxX": 60,
+          "minZ": -72,
+          "maxZ": -65
+        }
+      },
+      {
+        "id": "a1",
+        "kind": "alley",
+        "rect": {
+          "minX": -60,
+          "maxX": -53,
+          "minZ": -65,
+          "maxZ": -26
+        }
+      },
+      {
+        "id": "a2",
+        "kind": "alley",
+        "rect": {
+          "minX": -10,
+          "maxX": -3,
+          "minZ": -65,
+          "maxZ": -26
+        }
+      },
+      {
+        "id": "a3",
+        "kind": "alley",
+        "rect": {
+          "minX": 53,
+          "maxX": 60,
+          "minZ": -65,
+          "maxZ": -26
+        }
+      },
+      {
+        "id": "b2",
+        "kind": "alley",
+        "rect": {
+          "minX": -60,
+          "maxX": 60,
+          "minZ": -26,
+          "maxZ": -19
+        }
+      },
+      {
+        "id": "a2s",
+        "kind": "alley",
+        "rect": {
+          "minX": -10,
+          "maxX": -3,
+          "minZ": -19,
+          "maxZ": 8
+        }
+      },
+      {
+        "id": "rise",
+        "kind": "ramp",
+        "rect": {
+          "minX": -10,
+          "maxX": -3,
+          "minZ": 8,
+          "maxZ": 38
+        }
+      },
+      {
+        "id": "c1",
+        "kind": "alley",
+        "rect": {
+          "minX": -60,
+          "maxX": 60,
+          "minZ": 38,
+          "maxZ": 45
+        }
+      },
+      {
+        "id": "d1",
+        "kind": "alley",
+        "rect": {
+          "minX": -60,
+          "maxX": -53,
+          "minZ": 45,
+          "maxZ": 80
+        }
+      },
+      {
+        "id": "d2",
+        "kind": "alley",
+        "rect": {
+          "minX": 7,
+          "maxX": 14,
+          "minZ": 45,
+          "maxZ": 80
+        }
+      },
+      {
+        "id": "c2",
+        "kind": "alley",
+        "rect": {
+          "minX": -60,
+          "maxX": 40,
+          "minZ": 80,
+          "maxZ": 87
+        }
+      },
+      {
+        "id": "flare",
+        "kind": "yard",
+        "rect": {
+          "minX": 40,
+          "maxX": 86,
+          "minZ": 52,
+          "maxZ": 90
+        }
+      },
+      {
+        "id": "down-1",
+        "kind": "ramp",
+        "rect": {
+          "minX": -30,
+          "maxX": -24,
+          "minZ": -65,
+          "maxZ": -44
+        }
+      },
+      {
+        "id": "court-1",
+        "kind": "court",
+        "rect": {
+          "minX": -30,
+          "maxX": -24,
+          "minZ": -44,
+          "maxZ": -35
+        }
+      },
+      {
+        "id": "down-3",
+        "kind": "ramp",
+        "rect": {
+          "minX": -34,
+          "maxX": -10,
+          "minZ": -9,
+          "maxZ": -3
+        }
+      },
+      {
+        "id": "court-3",
+        "kind": "court",
+        "rect": {
+          "minX": -50,
+          "maxX": -34,
+          "minZ": -13,
+          "maxZ": 1
+        }
+      },
+      {
+        "id": "down-6",
+        "kind": "ramp",
+        "rect": {
+          "minX": -24,
+          "maxX": -18,
+          "minZ": 62,
+          "maxZ": 80
+        }
+      },
+      {
+        "id": "court-6",
+        "kind": "court",
+        "rect": {
+          "minX": -24,
+          "maxX": -18,
+          "minZ": 50,
+          "maxZ": 62
+        }
+      },
+      {
+        "id": "door-1",
+        "kind": "passage",
+        "rect": {
+          "minX": -31,
+          "maxX": -30,
+          "minZ": -42,
+          "maxZ": -38.4
+        }
+      },
+      {
+        "id": "room-1",
+        "kind": "room",
+        "rect": {
+          "minX": -43.4,
+          "maxX": -31,
+          "minZ": -46.2,
+          "maxZ": -34.2
+        }
+      },
+      {
+        "id": "door-2",
+        "kind": "passage",
+        "rect": {
+          "minX": -3,
+          "maxX": -2,
+          "minZ": -48.3,
+          "maxZ": -44.7
+        }
+      },
+      {
+        "id": "room-2",
+        "kind": "room",
+        "rect": {
+          "minX": -2,
+          "maxX": 11,
+          "minZ": -53,
+          "maxZ": -40
+        }
+      },
+      {
+        "id": "door-3",
+        "kind": "passage",
+        "rect": {
+          "minX": -50.8,
+          "maxX": -50,
+          "minZ": -8.2,
+          "maxZ": -4.6
+        }
+      },
+      {
+        "id": "room-3",
+        "kind": "room",
+        "rect": {
+          "minX": -62.8,
+          "maxX": -50.8,
+          "minZ": -12.4,
+          "maxZ": -0.4
+        }
+      },
+      {
+        "id": "door-4",
+        "kind": "passage",
+        "rect": {
+          "minX": -26.8,
+          "maxX": -23.2,
+          "minZ": 34,
+          "maxZ": 38
+        }
+      },
+      {
+        "id": "room-4",
+        "kind": "room",
+        "rect": {
+          "minX": -31.2,
+          "maxX": -18.8,
+          "minZ": 21.2,
+          "maxZ": 34
+        }
+      },
+      {
+        "id": "door-5",
+        "kind": "passage",
+        "rect": {
+          "minX": 25.2,
+          "maxX": 28.8,
+          "minZ": 37.2,
+          "maxZ": 38
+        }
+      },
+      {
+        "id": "room-5",
+        "kind": "room",
+        "rect": {
+          "minX": 18,
+          "maxX": 36,
+          "minZ": 25,
+          "maxZ": 37.2
+        }
+      },
+      {
+        "id": "door-6",
+        "kind": "passage",
+        "rect": {
+          "minX": -25,
+          "maxX": -24,
+          "minZ": 54.2,
+          "maxZ": 57.8
+        }
+      },
+      {
+        "id": "room-6",
+        "kind": "room",
+        "rect": {
+          "minX": -37,
+          "maxX": -25,
+          "minZ": 50,
+          "maxZ": 62
+        }
+      }
     ],
-    "r": 10
+    "rooms": [
+      {
+        "id": "room-1",
+        "site": "site-1",
+        "shell": "arch",
+        "rect": {
+          "minX": -43.4,
+          "maxX": -31,
+          "minZ": -46.2,
+          "maxZ": -34.2
+        },
+        "floor": -3.5,
+        "top": 4.8
+      },
+      {
+        "id": "room-2",
+        "site": "site-2",
+        "shell": "block",
+        "rect": {
+          "minX": -2,
+          "maxX": 11,
+          "minZ": -53,
+          "maxZ": -40
+        },
+        "floor": 0,
+        "top": 4.6
+      },
+      {
+        "id": "room-3",
+        "site": "site-3",
+        "shell": "cellar",
+        "rect": {
+          "minX": -62.8,
+          "maxX": -50.8,
+          "minZ": -12.4,
+          "maxZ": -0.4
+        },
+        "floor": -4,
+        "top": 4.7
+      },
+      {
+        "id": "room-4",
+        "site": "site-4",
+        "shell": "skirt",
+        "rect": {
+          "minX": -31.2,
+          "maxX": -18.8,
+          "minZ": 21.2,
+          "maxZ": 34
+        },
+        "floor": 5,
+        "top": 6.2
+      },
+      {
+        "id": "room-5",
+        "site": "site-5",
+        "shell": "table",
+        "rect": {
+          "minX": 18,
+          "maxX": 36,
+          "minZ": 25,
+          "maxZ": 37.2
+        },
+        "floor": 5,
+        "top": 5
+      },
+      {
+        "id": "room-6",
+        "site": "site-6",
+        "shell": "magazine",
+        "rect": {
+          "minX": -37,
+          "maxX": -25,
+          "minZ": 50,
+          "maxZ": 62
+        },
+        "floor": 2,
+        "top": 4.6
+      }
+    ]
   },
   "arena": {
     "boss": [
-      0,
-      0,
-      -54
+      68,
+      5,
+      72
     ],
     "player": [
-      0,
-      1.6,
-      -38
+      68,
+      6.6,
+      56
     ]
   },
-  "plaza": {
-    "minX": -14,
-    "maxX": 14,
-    "minZ": -64,
-    "maxZ": -30
-  },
-  "roads": [
+  "roads": [],
+  "landmarks": [
     {
-      "id": "spine",
-      "w": 6.4,
-      "pts": [
-        [
-          0,
-          94
-        ],
-        [
-          0,
-          -36
-        ]
-      ]
+      "asset": "landing-pad",
+      "pos": [
+        -78,
+        0,
+        -78
+      ],
+      "rotY": 0,
+      "radius": 10,
+      "minTier": "T3"
     },
     {
-      "id": "pad-spur",
-      "w": 5,
-      "pts": [
-        [
-          0,
-          84
-        ],
-        [
-          48,
-          84
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        -61.2,
+        0,
+        -60
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-1",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          62
-        ],
-        [
-          -37.4,
-          62
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        -61.2,
+        0,
+        -76
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-2",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          46
-        ],
-        [
-          37.4,
-          46
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        -74,
+        0,
+        -63.2
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-3",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          28
-        ],
-        [
-          -37.4,
-          28
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        -90.6,
+        0,
+        -63.2
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-4",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          12
-        ],
-        [
-          37.4,
-          12
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        -90.6,
+        0,
+        -90.6
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-5",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          -6
-        ],
-        [
-          -37.4,
-          -6
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        41.4,
+        5,
+        60
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     },
     {
-      "id": "spur-site-6",
-      "w": 4.8,
-      "pts": [
-        [
-          0,
-          -22
-        ],
-        [
-          37.4,
-          -22
-        ]
-      ]
+      "asset": "lamp-post",
+      "pos": [
+        41.4,
+        5,
+        74
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        41.4,
+        5,
+        88.6
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        56,
+        5,
+        88.6
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        56,
+        5,
+        53.4
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        72,
+        5,
+        53.4
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        84.6,
+        5,
+        60
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lamp-post",
+      "pos": [
+        55,
+        5,
+        67
+      ],
+      "rotY": 0,
+      "radius": 0.6,
+      "minTier": "T3"
     }
   ],
   "sites": [
@@ -153,320 +588,212 @@
       "questId": "q1-watch",
       "stage": 1,
       "pos": [
-        -42,
-        0,
-        62
+        -40.4,
+        -3.5,
+        -40.2
       ],
       "approachPos": [
-        -37.4,
-        1.6,
-        62
+        -35.8,
+        -1.9,
+        -40.2
       ],
       "label": "Bench 1 - Watching the Speed",
-      "structure": "watch-tower",
+      "structure": "analyser-bunker",
       "built": true,
-      "flat": {
-        "x": -43.45,
-        "z": 62,
-        "r": 10.26
-      }
+      "room": "room-1"
     },
     {
       "id": "site-2",
       "questId": "q2-law",
       "stage": 2,
       "pos": [
-        42,
+        8,
         0,
-        46
+        -46.5
       ],
       "approachPos": [
-        37.4,
+        3.4,
         1.6,
-        46
+        -46.5
       ],
       "label": "Bench 2 - Feed Manifold",
-      "structure": "manifold-desk",
+      "structure": "control-room",
       "built": true,
-      "flat": {
-        "x": 43.45,
-        "z": 46,
-        "r": 10.59
-      }
+      "room": "room-2"
     },
     {
       "id": "site-3",
       "questId": "q3-time",
       "stage": 3,
       "pos": [
-        -42,
-        0,
-        28
+        -59.8,
+        -4,
+        -6.4
       ],
       "approachPos": [
-        -37.4,
-        1.6,
-        28
+        -55.2,
+        -2.4,
+        -6.4
       ],
       "label": "Bench 3 - Concentration Over Time",
-      "structure": "decay-tank",
+      "structure": "pump-cellar",
       "built": true,
-      "flat": {
-        "x": -43.45,
-        "z": 28,
-        "r": 10.59
-      }
+      "room": "room-3"
     },
     {
       "id": "site-4",
       "questId": "q4-collide",
       "stage": 4,
       "pos": [
-        42,
-        0,
-        12
+        -25,
+        5,
+        24.2
       ],
       "approachPos": [
-        37.4,
-        1.6,
-        12
+        -25,
+        6.6,
+        28.8
       ],
       "label": "Bench 4 - Collisions and the Hill",
-      "structure": "collision-rig",
+      "structure": "reactor-skirt",
       "built": true,
-      "flat": {
-        "x": 43.45,
-        "z": 12,
-        "r": 10.59
-      }
+      "room": "room-4"
     },
     {
       "id": "site-5",
       "questId": "q5-steps",
       "stage": 5,
       "pos": [
-        -42,
-        0,
-        -6
+        27,
+        5,
+        28
       ],
       "approachPos": [
-        -37.4,
-        1.6,
-        -6
+        27,
+        6.6,
+        32.6
       ],
       "label": "Bench 5 - Steps",
-      "structure": "step-reactor",
+      "structure": "reactor-table",
       "built": true,
-      "flat": {
-        "x": -43.45,
-        "z": -6,
-        "r": 10.59
-      }
+      "room": "room-5"
     },
     {
       "id": "site-6",
       "questId": "q6-shortcut",
       "stage": 6,
       "pos": [
-        42,
-        0,
-        -22
+        -34,
+        2,
+        56
       ],
       "approachPos": [
-        37.4,
-        1.6,
-        -22
+        -29.4,
+        3.6,
+        56
       ],
       "label": "Bench 6 - Catalysts",
-      "structure": "catalyst-bed",
+      "structure": "catalyst-bunker",
       "built": true,
-      "flat": {
-        "x": 43.45,
-        "z": -22,
-        "r": 10.59
-      }
+      "room": "room-6"
     }
   ],
-  "landmarks": [
-    {
-      "kind": "cracking-tower",
-      "pos": [
-        -24,
-        0,
-        72
-      ],
-      "yaw": 3.99
-    },
-    {
-      "kind": "cracking-tower",
-      "pos": [
-        24,
-        0,
-        64
-      ],
-      "yaw": 2.94
-    },
-    {
-      "kind": "cracking-tower",
-      "pos": [
-        -24,
-        0,
-        42
-      ],
-      "yaw": 4.5
-    },
-    {
-      "kind": "cracking-tower",
-      "pos": [
-        24,
-        0,
-        26
-      ],
-      "yaw": 0.62
-    },
-    {
-      "kind": "cracking-tower",
-      "pos": [
-        -24,
-        0,
-        8
-      ],
-      "yaw": 2.9
-    },
-    {
-      "kind": "cracking-tower",
-      "pos": [
-        24,
-        0,
-        -8
-      ],
-      "yaw": 0.14
-    },
-    {
-      "kind": "storage-tank",
-      "pos": [
-        -22,
-        0,
-        -24
-      ],
-      "yaw": 5.23
-    },
-    {
-      "kind": "storage-tank",
-      "pos": [
-        22,
-        0,
-        -40
-      ],
-      "yaw": 1.88
-    },
-    {
-      "kind": "storage-tank",
-      "pos": [
-        -64,
-        0,
-        48
-      ],
-      "yaw": 4.98
-    },
-    {
-      "kind": "storage-tank",
-      "pos": [
-        64,
-        0,
-        30
-      ],
-      "yaw": 1.22
-    },
-    {
-      "kind": "storage-tank",
-      "pos": [
-        -64,
-        0,
-        12
-      ],
-      "yaw": 1.11
-    },
-    {
-      "kind": "storage-tank",
-      "pos": [
-        64,
-        0,
-        -8
-      ],
-      "yaw": 2.82
-    },
-    {
-      "kind": "manifold-rack",
-      "pos": [
-        -20,
-        0,
-        52
-      ],
-      "yaw": 5.46
-    },
-    {
-      "kind": "manifold-rack",
-      "pos": [
-        20,
-        0,
-        38
-      ],
-      "yaw": 1.92
-    },
-    {
-      "kind": "manifold-rack",
-      "pos": [
-        -20,
-        0,
-        18
-      ],
-      "yaw": 0.75
-    },
-    {
-      "kind": "manifold-rack",
-      "pos": [
-        20,
-        0,
-        2
-      ],
-      "yaw": 3.06
-    },
-    {
-      "kind": "storm-pylon",
-      "pos": [
-        -68,
-        0,
-        72
-      ],
-      "yaw": 4.74
-    },
-    {
-      "kind": "storm-pylon",
-      "pos": [
-        68,
-        0,
-        58
-      ],
-      "yaw": 2.25
-    },
-    {
-      "kind": "storm-pylon",
-      "pos": [
-        -68,
-        0,
-        -24
-      ],
-      "yaw": 0.71
-    },
-    {
-      "kind": "storm-pylon",
-      "pos": [
-        68,
-        0,
-        -42
-      ],
-      "yaw": 2.95
+  "spawn": {
+    "pos": [
+      -63,
+      1.6,
+      -68.5
+    ],
+    "lookAt": [
+      -40,
+      1.4,
+      -68.5
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          -35.8,
+          -1.9,
+          -40.2
+        ],
+        "lookAt": [
+          -40.4,
+          -2.3,
+          -40.2
+        ]
+      },
+      "site-2": {
+        "pos": [
+          3.4,
+          1.6,
+          -46.5
+        ],
+        "lookAt": [
+          8,
+          1.2,
+          -46.5
+        ]
+      },
+      "site-3": {
+        "pos": [
+          -55.2,
+          -2.4,
+          -6.4
+        ],
+        "lookAt": [
+          -59.8,
+          -2.8,
+          -6.4
+        ]
+      },
+      "site-4": {
+        "pos": [
+          -25,
+          6.6,
+          28.8
+        ],
+        "lookAt": [
+          -25,
+          6.2,
+          24.2
+        ]
+      },
+      "site-5": {
+        "pos": [
+          27,
+          6.6,
+          32.6
+        ],
+        "lookAt": [
+          27,
+          6.2,
+          28
+        ]
+      },
+      "site-6": {
+        "pos": [
+          -29.4,
+          3.6,
+          56
+        ],
+        "lookAt": [
+          -34,
+          3.2,
+          56
+        ]
+      }
     }
-  ]
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6"
+    ]
+  }
 }

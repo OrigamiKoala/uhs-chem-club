@@ -150,11 +150,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.4,
     species: 'the clamp'
   },
+  // In the flare yard on the reactor plot, the player's mark by the yard's north fence, the flare stack beyond the boss to its south-east (`quicklight/refinery-plan.js` ARENA;
+  // `verify:quicklight` holds the two together).
   'boss-flare': {
     worldId: 'unit11',
-    playerPos: [0, 1.6, -38],
-    lookAtPos: [0, 1.6, -54],
-    bossPos: [0, 0, -54],
+    playerPos: [68, 6.6, 56],
+    lookAtPos: [68, 6.6, 72],
+    bossPos: [68, 5, 72],
     scale: 1.5,
     species: 'the flare'
   },

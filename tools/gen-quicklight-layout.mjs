@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 /**
- * gen-quicklight-layout.mjs — Lays out Quicklight's storm-belt refinery and writes `src/three/world-data/quicklight.json`.
+ * gen-quicklight-layout.mjs — Lays out Quicklight's refinery and writes `src/three/world-data/quicklight.json`.
+ *
+ * The alleys, the ramps, the courts and the rooms are declared in `src/three/quicklight/refinery-plan.js`, and which bench stands
+ * in which room in `src/three/quicklight/host-plan.js`. This script checks the two agree, places the sites (plate, approach mark,
+ * floor), the pad and the lamp posts on the two yards, and writes the JSON the stage, the voyage, the lower tiers and the checks
+ * read. A site is `built` exactly when its quest has a module in `src/learn/quests/unit11/`. Deterministic: run it twice, get the
+ * same file. (The first build's generator, which laid the benches in two columns either side of a spine road on a flat plate, is
+ * in `archive/2026-11-17/site-quicklight/tools/`.)
  *
  * Run: node tools/gen-quicklight-layout.mjs
  */
@@ -8,168 +15,96 @@
 import { writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { HOST_PLAN, LANE, APPROACH } from '../src/three/quicklight/host-plan.js';
+import {
+  makeRefineryPlan, SPAWN, SPAWN_LOOK, PAD, ARENA, STACK, GRADE, PLOT, CELLAR, PIT, CAT, WALK
+} from '../src/three/quicklight/refinery-plan.js';
+import { HOST_PLAN, LANE, APPROACH, toWorld } from '../src/three/quicklight/host-plan.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-const rnd = mulberry32(0x91c417);
 const round = n => Math.round(n * 100) / 100;
+let problems = 0;
+const bad = msg => { problems++; console.error(`  ${msg}`); };
 
-const ARENA = { boss: [0, 0, -54], player: [0, 1.6, -38] };
-const PLAZA = { minX: -14, maxX: 14, minZ: -64, maxZ: -30 };
-const SPAWN = [0, 1.6, 92];
-const PAD = [60, 84];
+const plan = makeRefineryPlan();
+for (const p of plan.problems()) bad(p);
 
-const SITE_DEFS = Object.entries(HOST_PLAN).map(([id, plan], i) => ({
-  id, plan, stage: i + 1, pos: plan.pos, f: plan.face
-}));
+/* ---------------------------------------------------------------- the sites */
 
-function toWorld(def, lx, lz) {
-  const [px, pz] = def.pos;
-  const [fx, fz] = def.f;
-  return [px + lx * fz + lz * fx, pz - lx * fx + lz * fz];
-}
-
-function hostRect(def, [x0, x1, z0, z1]) {
-  const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([lx, lz]) => toWorld(def, lx, lz));
-  return {
-    minX: Math.min(...pts.map(p => p[0])),
-    maxX: Math.max(...pts.map(p => p[0])),
-    minZ: Math.min(...pts.map(p => p[1])),
-    maxZ: Math.max(...pts.map(p => p[1]))
-  };
-}
-
-const unionRect = (a, b) => ({
-  minX: Math.min(a.minX, b.minX),
-  maxX: Math.max(a.maxX, b.maxX),
-  minZ: Math.min(a.minZ, b.minZ),
-  maxZ: Math.max(a.maxZ, b.maxZ)
-});
-
-const rectOverlap = (a, b, gap = 0) => (
-  a.minX < b.maxX + gap && a.maxX > b.minX - gap && a.minZ < b.maxZ + gap && a.maxZ > b.minZ - gap
-);
-
-const questExists = id => existsSync(join(root, 'src/learn/quests/unit11', `${id}.js`));
-
-const sites = SITE_DEFS.map(d => {
-  const [fx, fz] = d.f;
-  const area = unionRect(hostRect(d, d.plan.extent), hostRect(d, [-LANE.hw, LANE.hw, LANE.from, LANE.to]));
-  const cx = (area.minX + area.maxX) / 2;
-  const cz = (area.minZ + area.maxZ) / 2;
-  return {
-    id: d.id,
-    questId: d.plan.questId,
-    stage: d.stage,
-    pos: [d.pos[0], 0, d.pos[1]],
-    approachPos: [round(d.pos[0] + fx * APPROACH), 1.6, round(d.pos[1] + fz * APPROACH)],
-    label: d.plan.label,
-    structure: d.plan.structure,
-    built: questExists(d.plan.questId),
-    flat: {
-      x: round(cx),
-      z: round(cz),
-      r: round(Math.hypot(area.maxX - area.minX, area.maxZ - area.minZ) / 2 + 1.0)
-    }
-  };
-});
-
-// Spine road + 6 spur catwalks + pad connector
-const roads = [
-  { id: 'spine', w: 6.4, pts: [[0, 94], [0, -36]] },
-  { id: 'pad-spur', w: 5.0, pts: [[0, 84], [48, 84]] },
-  ...SITE_DEFS.map(d => ({
-    id: `spur-${d.id}`,
-    w: 4.8,
-    pts: [[0, d.pos[1]], [round(d.pos[0] + d.f[0] * 4.6), d.pos[1]]]
-  }))
-];
-
-// Keep-out rectangles for landmarks
-const keepOut = [
-  PLAZA,
-  { minX: -6, maxX: 6, minZ: -38, maxZ: 98 }, // spine
-  { minX: 46, maxX: 74, minZ: 70, maxZ: 98 }, // landing pad
-  { minX: -2, maxX: 50, minZ: 80, maxZ: 88 }, // pad spur
-  ...SITE_DEFS.map(d => unionRect(hostRect(d, d.plan.extent), hostRect(d, [-LANE.hw - 1, LANE.hw + 1, LANE.from - 1, LANE.to + 1]))),
-  ...SITE_DEFS.map(d => {
-    const x0 = Math.min(0, d.pos[0]);
-    const x1 = Math.max(0, d.pos[0]);
-    return { minX: x0 - 2, maxX: x1 + 2, minZ: d.pos[1] - 4, maxZ: d.pos[1] + 4 };
-  })
-];
-
-const landmarks = [];
-const placedRects = [...keepOut];
-
-function tryPlace(kind, x, z, hw, hd, extra = {}) {
-  const r = { minX: x - hw, maxX: x + hw, minZ: z - hd, maxZ: z + hd };
-  if (Math.abs(x) > 88 || Math.abs(z) > 88) return false;
-  for (const k of placedRects) {
-    if (rectOverlap(r, k, 1.5)) return false;
+const sites = Object.entries(HOST_PLAN).map(([id, p], i) => {
+  const room = plan.roomById.get(p.room);
+  if (!room) { bad(`${id}: no room ${p.room}`); return null; }
+  if (room.site !== id) bad(`${id}: ${room.id} is declared for ${room.site}`);
+  const [ax, az] = toWorld(p, 0, APPROACH);
+  // The plate, its feet and its lane lie on the room's level floor, inside it.
+  for (const [lx, lz] of [[-2.5, -0.7], [2.5, -0.7], [-LANE.hw, LANE.from], [LANE.hw, LANE.from], [-LANE.hw, LANE.to], [LANE.hw, LANE.to], [0, APPROACH]]) {
+    const [x, z] = toWorld(p, lx, lz);
+    if (plan.volumeAt(x, z) !== room.vol) bad(`${id}: its plate or lane leaves ${room.id} at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+    if (Math.abs(plan.height(x, z) - room.level) > 1e-6) bad(`${id}: the floor under its plate or lane is not level at (${x.toFixed(1)}, ${z.toFixed(1)})`);
   }
-  placedRects.push(r);
-  landmarks.push({ kind, pos: [round(x), 0, round(z)], yaw: round(rnd() * Math.PI * 2), ...extra });
-  return true;
+  const built = existsSync(join(root, 'src/learn/quests/unit11', `${p.questId}.js`));
+  return {
+    id, questId: p.questId, stage: i + 1,
+    pos: [p.pos[0], round(room.level), p.pos[1]],
+    approachPos: [round(ax), round(room.level + 1.6), round(az)],
+    label: p.label, structure: p.structure, built, room: room.id
+  };
+}).filter(Boolean);
+for (let i = 0; i < sites.length; i++) for (let j = i + 1; j < sites.length; j++) {
+  const d = Math.hypot(sites[i].pos[0] - sites[j].pos[0], sites[i].pos[2] - sites[j].pos[2]);
+  if (d < 20) bad(`${sites[i].id} and ${sites[j].id} are ${d.toFixed(1)} m apart`);
 }
 
-// Place lamp posts along spine and spurs (never in plaza or lanes)
-for (const z of [78, 54, 36, 20, 2, -14, -28]) {
-  tryPlace('lamp-post', -4.2, z, 0.8, 0.8);
-  tryPlace('lamp-post', 4.2, z, 0.8, 0.8);
+/* ---------------------------------------------------------------- the pad and the lamp posts */
+
+// The alleys are lit from the pipe racks over them (`quicklight/plant.js`); posts stand only on the two open yards.
+const landmarks = [{ asset: 'landing-pad', pos: [PAD[0], GRADE, PAD[1]], rotY: 0, radius: 10, minTier: 'T3' }];
+const post = (x, z) => landmarks.push({ asset: 'lamp-post', pos: [round(x), round(plan.height(x, z)), round(z)], rotY: 0, radius: 0.6, minTier: 'T3' });
+// The laydown yard: along its east edge by the two alleys' mouths, and its south edge.
+post(-61.2, -60);
+post(-61.2, -76);
+post(-74, -63.2);
+post(-90.6, -63.2);
+post(-90.6, -90.6);
+// The flare yard: inside its fence, round the Flare's ground.
+for (const [x, z] of [[41.4, 60], [41.4, 74], [41.4, 88.6], [56, 88.6], [56, 53.4], [72, 53.4], [84.6, 60], [55, 67]]) post(x, z);
+for (const l of landmarks) {
+  if (l.asset === 'landing-pad') continue;
+  const v = plan.volumeAt(l.pos[0], l.pos[2]);
+  if (!v || v.kind !== 'yard') bad(`lamp-post@${l.pos[0]},${l.pos[2]} is not on a yard`);
+  if (Math.hypot(l.pos[0] - ARENA.boss[0], l.pos[2] - ARENA.boss[2]) < 9) bad(`lamp-post@${l.pos[0]},${l.pos[2]} is on the Flare's ground`);
+  if (Math.hypot(l.pos[0] - PAD[0], l.pos[2] - PAD[1]) < 11) bad(`lamp-post@${l.pos[0]},${l.pos[2]} is on the pad`);
+  if (Math.hypot(l.pos[0] - STACK.x, l.pos[2] - STACK.z) < 6) bad(`lamp-post@${l.pos[0]},${l.pos[2]} is at the stack's foot`);
 }
+if (Math.hypot(SPAWN[0] - PAD[0], SPAWN[2] - PAD[1]) < 14) bad('the spawn is on the pad');
+if (plan.volumeAt(SPAWN[0], SPAWN[2])?.id !== 'yard') bad('the spawn is not on the laydown yard');
+if (plan.volumeAt(ARENA.boss[0], ARENA.boss[2])?.id !== 'flare' || plan.volumeAt(ARENA.player[0], ARENA.player[2])?.id !== 'flare') bad('the Flare\'s ground is not in the flare yard');
 
-// Place cracking towers, storage tanks, manifold racks, and storm pylons in outer quadrants
-const candidates = [
-  ['cracking-tower', -24, 72, 4.5, 4.5],
-  ['cracking-tower', 24, 64, 4.5, 4.5],
-  ['cracking-tower', -24, 42, 4.5, 4.5],
-  ['cracking-tower', 24, 26, 4.5, 4.5],
-  ['cracking-tower', -24, 8, 4.5, 4.5],
-  ['cracking-tower', 24, -8, 4.5, 4.5],
-  ['storage-tank', -22, -24, 4.2, 4.2],
-  ['storage-tank', 22, -40, 4.2, 4.2],
-  ['storage-tank', -64, 48, 4.2, 4.2],
-  ['storage-tank', 64, 30, 4.2, 4.2],
-  ['storage-tank', -64, 12, 4.2, 4.2],
-  ['storage-tank', 64, -8, 4.2, 4.2],
-  ['manifold-rack', -20, 52, 3.2, 2.2],
-  ['manifold-rack', 20, 38, 3.2, 2.2],
-  ['manifold-rack', -20, 18, 3.2, 2.2],
-  ['manifold-rack', 20, 2, 3.2, 2.2],
-  ['storm-pylon', -68, 72, 2.5, 2.5],
-  ['storm-pylon', 68, 58, 2.5, 2.5],
-  ['storm-pylon', -68, -24, 2.5, 2.5],
-  ['storm-pylon', 68, -42, 2.5, 2.5]
-];
+/* ---------------------------------------------------------------- the world */
 
-for (const [kind, x, z, hw, hd] of candidates) {
-  tryPlace(kind, x, z, hw, hd);
-}
+if (problems) { console.error(`${problems} layout problem(s); nothing written.`); process.exit(1); }
 
-const out = {
+const world = {
   id: 'quicklight',
   name: 'Quicklight',
+  place: 'Storm-belt refinery',
+  oneLine: 'Reaction rates, rate laws, half-life, collisions, mechanisms and catalysts.',
   sky: 'quicklight-sky',
-  spawn: SPAWN,
-  pad: { pos: [PAD[0], 0, PAD[1]], r: 10 },
-  arena: ARENA,
-  plaza: PLAZA,
-  roads,
+  ambience: { keyLight: 0xf3d4a4, fillLight: 0x8da0b8, fogColor: 0x4d5463, fogNear: 50, fogFar: 520 },
+  walk: WALK,
+  refinery: {
+    levels: { grade: GRADE, plot: PLOT, cellar: CELLAR, pit: PIT, cat: CAT },
+    volumes: plan.volumes.map(v => ({ id: v.id, kind: v.kind, rect: v.rect })),
+    rooms: plan.rooms.map(r => ({ id: r.id, site: r.site, shell: r.shell, rect: r.vol.rect, floor: r.level, top: r.top }))
+  },
+  arena: { boss: [...ARENA.boss], player: [...ARENA.player] },
+  roads: [],
+  landmarks,
   sites,
-  landmarks
+  spawn: { pos: SPAWN, lookAt: SPAWN_LOOK },
+  // The still for the baked tier stands at the approach mark, at the eye, on its room's floor, looking at the plate.
+  t2: { stillCamera: Object.fromEntries(sites.map(s => [s.id, { pos: s.approachPos, lookAt: [s.pos[0], round(s.pos[1] + 1.2), s.pos[2]] }])) },
+  t1: { siteOrder: sites.map(s => s.id) }
 };
 
-const outPath = join(root, 'src/three/world-data/quicklight.json');
-writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n', 'utf8');
-console.log(`Wrote ${outPath}: ${sites.length} sites, ${landmarks.length} landmarks, ${roads.length} roads.`);
+writeFileSync(join(root, 'src/three/world-data/quicklight.json'), JSON.stringify(world, null, 2) + '\n');
+console.log(`Quicklight: ${plan.volumes.length} volumes (${plan.rooms.length} rooms), ${sites.length} sites, ${landmarks.length} landmarks written.`);

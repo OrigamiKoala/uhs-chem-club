@@ -1,0 +1,472 @@
+{
+  "id": "quicklight",
+  "name": "Quicklight",
+  "sky": "quicklight-sky",
+  "spawn": [
+    0,
+    1.6,
+    92
+  ],
+  "pad": {
+    "pos": [
+      60,
+      0,
+      84
+    ],
+    "r": 10
+  },
+  "arena": {
+    "boss": [
+      0,
+      0,
+      -54
+    ],
+    "player": [
+      0,
+      1.6,
+      -38
+    ]
+  },
+  "plaza": {
+    "minX": -14,
+    "maxX": 14,
+    "minZ": -64,
+    "maxZ": -30
+  },
+  "roads": [
+    {
+      "id": "spine",
+      "w": 6.4,
+      "pts": [
+        [
+          0,
+          94
+        ],
+        [
+          0,
+          -36
+        ]
+      ]
+    },
+    {
+      "id": "pad-spur",
+      "w": 5,
+      "pts": [
+        [
+          0,
+          84
+        ],
+        [
+          48,
+          84
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-1",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          62
+        ],
+        [
+          -37.4,
+          62
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-2",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          46
+        ],
+        [
+          37.4,
+          46
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-3",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          28
+        ],
+        [
+          -37.4,
+          28
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-4",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          12
+        ],
+        [
+          37.4,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-5",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          -6
+        ],
+        [
+          -37.4,
+          -6
+        ]
+      ]
+    },
+    {
+      "id": "spur-site-6",
+      "w": 4.8,
+      "pts": [
+        [
+          0,
+          -22
+        ],
+        [
+          37.4,
+          -22
+        ]
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-watch",
+      "stage": 1,
+      "pos": [
+        -42,
+        0,
+        62
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        62
+      ],
+      "label": "Bench 1 - Watching the Speed",
+      "structure": "watch-tower",
+      "built": true,
+      "flat": {
+        "x": -43.45,
+        "z": 62,
+        "r": 10.26
+      }
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-law",
+      "stage": 2,
+      "pos": [
+        42,
+        0,
+        46
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        46
+      ],
+      "label": "Bench 2 - Feed Manifold",
+      "structure": "manifold-desk",
+      "built": true,
+      "flat": {
+        "x": 43.45,
+        "z": 46,
+        "r": 10.59
+      }
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-time",
+      "stage": 3,
+      "pos": [
+        -42,
+        0,
+        28
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        28
+      ],
+      "label": "Bench 3 - Concentration Over Time",
+      "structure": "decay-tank",
+      "built": true,
+      "flat": {
+        "x": -43.45,
+        "z": 28,
+        "r": 10.59
+      }
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-collide",
+      "stage": 4,
+      "pos": [
+        42,
+        0,
+        12
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        12
+      ],
+      "label": "Bench 4 - Collisions and the Hill",
+      "structure": "collision-rig",
+      "built": true,
+      "flat": {
+        "x": 43.45,
+        "z": 12,
+        "r": 10.59
+      }
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-steps",
+      "stage": 5,
+      "pos": [
+        -42,
+        0,
+        -6
+      ],
+      "approachPos": [
+        -37.4,
+        1.6,
+        -6
+      ],
+      "label": "Bench 5 - Steps",
+      "structure": "step-reactor",
+      "built": true,
+      "flat": {
+        "x": -43.45,
+        "z": -6,
+        "r": 10.59
+      }
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-shortcut",
+      "stage": 6,
+      "pos": [
+        42,
+        0,
+        -22
+      ],
+      "approachPos": [
+        37.4,
+        1.6,
+        -22
+      ],
+      "label": "Bench 6 - Catalysts",
+      "structure": "catalyst-bed",
+      "built": true,
+      "flat": {
+        "x": 43.45,
+        "z": -22,
+        "r": 10.59
+      }
+    }
+  ],
+  "landmarks": [
+    {
+      "kind": "cracking-tower",
+      "pos": [
+        -24,
+        0,
+        72
+      ],
+      "yaw": 3.99
+    },
+    {
+      "kind": "cracking-tower",
+      "pos": [
+        24,
+        0,
+        64
+      ],
+      "yaw": 2.94
+    },
+    {
+      "kind": "cracking-tower",
+      "pos": [
+        -24,
+        0,
+        42
+      ],
+      "yaw": 4.5
+    },
+    {
+      "kind": "cracking-tower",
+      "pos": [
+        24,
+        0,
+        26
+      ],
+      "yaw": 0.62
+    },
+    {
+      "kind": "cracking-tower",
+      "pos": [
+        -24,
+        0,
+        8
+      ],
+      "yaw": 2.9
+    },
+    {
+      "kind": "cracking-tower",
+      "pos": [
+        24,
+        0,
+        -8
+      ],
+      "yaw": 0.14
+    },
+    {
+      "kind": "storage-tank",
+      "pos": [
+        -22,
+        0,
+        -24
+      ],
+      "yaw": 5.23
+    },
+    {
+      "kind": "storage-tank",
+      "pos": [
+        22,
+        0,
+        -40
+      ],
+      "yaw": 1.88
+    },
+    {
+      "kind": "storage-tank",
+      "pos": [
+        -64,
+        0,
+        48
+      ],
+      "yaw": 4.98
+    },
+    {
+      "kind": "storage-tank",
+      "pos": [
+        64,
+        0,
+        30
+      ],
+      "yaw": 1.22
+    },
+    {
+      "kind": "storage-tank",
+      "pos": [
+        -64,
+        0,
+        12
+      ],
+      "yaw": 1.11
+    },
+    {
+      "kind": "storage-tank",
+      "pos": [
+        64,
+        0,
+        -8
+      ],
+      "yaw": 2.82
+    },
+    {
+      "kind": "manifold-rack",
+      "pos": [
+        -20,
+        0,
+        52
+      ],
+      "yaw": 5.46
+    },
+    {
+      "kind": "manifold-rack",
+      "pos": [
+        20,
+        0,
+        38
+      ],
+      "yaw": 1.92
+    },
+    {
+      "kind": "manifold-rack",
+      "pos": [
+        -20,
+        0,
+        18
+      ],
+      "yaw": 0.75
+    },
+    {
+      "kind": "manifold-rack",
+      "pos": [
+        20,
+        0,
+        2
+      ],
+      "yaw": 3.06
+    },
+    {
+      "kind": "storm-pylon",
+      "pos": [
+        -68,
+        0,
+        72
+      ],
+      "yaw": 4.74
+    },
+    {
+      "kind": "storm-pylon",
+      "pos": [
+        68,
+        0,
+        58
+      ],
+      "yaw": 2.25
+    },
+    {
+      "kind": "storm-pylon",
+      "pos": [
+        -68,
+        0,
+        -24
+      ],
+      "yaw": 0.71
+    },
+    {
+      "kind": "storm-pylon",
+      "pos": [
+        68,
+        0,
+        -42
+      ],
+      "yaw": 2.95
+    }
+  ]
+}
