@@ -26,7 +26,7 @@ import {
 } from './ember/atmosphere.js';
 import { makeCalderaPlan, LAKE_Y, LEVEL } from './ember/caldera-plan.js';
 import {
-  buildEmberTerrainGeometry, buildLakeGeometry, buildCalderaShells
+  buildEmberTerrainGeometry, buildLakeGeometry, buildCalderaShells, buildCalderaVista
 } from './ember/terrain.js';
 import {
   buildFumarole, buildSulphurMound, buildMudPot, buildGeyser, buildSinterTerrace, buildLavaLobe,
@@ -262,6 +262,10 @@ export class EmberReachWorld {
     // Room shells, retaining walls, kerbs and lake-facing railings.
     this.shells = buildCalderaShells(this.ctx, this.plan);
     this.scene.add(this.shells);
+
+    // Far-country volcanic and geothermal landmarks (one per quarter of the horizon).
+    this.vista = buildCalderaVista(this.ctx, this.plan);
+    this.scene.add(this.vista);
 
     // The lava lake lying flat in the caldera floor 20 m below Level 4.
     const L = this.data.lake;

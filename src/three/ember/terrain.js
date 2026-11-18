@@ -65,9 +65,10 @@ function groundTint(x, z, y, slope, plan, data, marks) {
   let c;
 
   if (inWalk) {
-    // Compacted dark cinder on the switchback road, slightly warmer sinter dust near edges.
+    // Compacted dark cinder haul road with subtle wheel-track darkening and dusty sinter shoulders.
     const n = fbm2(x * 0.09, z * 0.09, 31, 2);
-    c = mix3(C.cinder, C.tuffB, n * 0.35);
+    const track = 0.5 + 0.5 * Math.cos(z * 1.45 + x * 0.12);
+    c = mix3(C.cinder, C.tuffB, n * 0.28 + track * 0.14);
   } else if (z < -76) {
     // Caldera floor: dark cooled basalt flow, reddening toward the lava lake and cone.
     const n = fbm2(x * 0.04, z * 0.04, 83, 3);
@@ -79,14 +80,14 @@ function groundTint(x, z, y, slope, plan, data, marks) {
     const rc = Math.hypot(x - Co.x, z - Co.z);
     if (rc < Co.radius) c = mix3(c, C.scoria, (1 - smooth(Co.radius * 0.2, Co.radius, rc)) * 0.45);
   } else {
-    // Stepped caldera wall and outer amphitheatre: stratified tuff and dark basalt flows.
-    const band = Math.sin(y * 0.28 + fbm2(x * 0.02, z * 0.02, 89, 2) * 3.5);
-    const tuff = band > 0 ? mix3(C.tuffB, C.tuffA, band) : mix3(C.tuffB, C.basalt, -band * 0.85);
+    // Stepped caldera wall and outer amphitheatre: stratified basalt flows and ochre tuff bands in section.
+    const strata = Math.sin(y * 0.42 + fbm2(x * 0.018, z * 0.018, 89, 2) * 3.0);
+    const tuff = strata > 0.15 ? mix3(C.tuffB, C.tuffA, strata) : mix3(C.tuffB, C.basalt, Math.min(1, -strata * 0.9 + 0.15));
     const cap = mix3(C.sinter, C.tuffC, fbm2(x * 0.03, z * 0.03, 97, 2));
-    c = mix3(cap, tuff, smooth(0.08, 0.38, slope));
+    c = mix3(cap, tuff, smooth(0.06, 0.34, slope));
     // Lower cliff ledges dusted with warm ochre fume.
     if (y > -18 && y < 22) {
-      c = mix3(c, C.ochre, smooth(22, -6, y) * (1 - smooth(0.15, 0.55, slope)) * 0.22);
+      c = mix3(c, C.ochre, smooth(22, -6, y) * (1 - smooth(0.15, 0.55, slope)) * 0.24);
     }
   }
 
@@ -464,6 +465,54 @@ export function buildCalderaShells(ctx, plan) {
     group.add(mesh);
   }
 
+  return group;
+}
+
+/**
+ * Far-country landmarks beyond the walk (`phys: 'ambient'`, merged per material):
+ * one volcanic/geothermal landmark per quarter of the horizon.
+ */
+export function buildCalderaVista(ctx, plan) {
+  const group = new THREE.Group();
+  group.name = 'ember-vista';
+  group.userData.phys = 'ambient';
+  group.userData.noWeather = true;
+
+  const buckets = new Map();
+
+  // 1. North-West: jagged basalt caldera spire rising out of the cooled lava floor
+  const nwY = plan.height(-175, -210);
+  addCyl(buckets, 'rock', 4, 24, 68, 7, -175, nwY + 32, -210);
+  addCyl(buckets, 'rock', 2.5, 14, 44, 6, -158, nwY + 20, -200, 0.12, 0.4, -0.15);
+
+  // 2. East: geothermal ridge derrick & high vent stack on the east caldera wall bench
+  const eY = plan.height(185, -90);
+  addBox(buckets, 'concrete', 14, 6, 14, 185, eY + 2, -90);
+  addCyl(buckets, 'rusted', 1.6, 2.2, 34, 10, 185, eY + 22, -90);
+  addBox(buckets, 'darkSteel', 18, 2.5, 2.5, 185, eY + 12, -90);
+
+  // 3. South: high ridge collector & relay mast cresting the south caldera rim
+  const sY = plan.height(8, 205);
+  addBox(buckets, 'concrete', 10, 4, 10, 8, sY + 1, 205);
+  addCyl(buckets, 'darkSteel', 0.45, 1.4, 38, 8, 8, sY + 21, 205);
+  addBox(buckets, 'steel', 12, 0.8, 0.8, 8, sY + 31, 205);
+
+  // 4. West: stepped basalt buttress framing the WSW sun gap
+  const wY = plan.height(-185, 38);
+  addBox(buckets, 'rock', 36, 42, 28, -185, wY + 18, 38, 0, 0.25, 0);
+  addBox(buckets, 'rock', 22, 26, 18, -170, wY + 10, 22, 0, -0.2, 0);
+
+  for (const [matKey, geos] of buckets) {
+    const merged = mergeGeometries(geos, false);
+    for (const g of geos) g.dispose();
+    if (!merged) continue;
+    ctx.own(merged);
+    const mesh = new THREE.Mesh(merged, ctx.M[matKey] || ctx.M.rock);
+    mesh.name = `vista:${matKey}`;
+    mesh.userData.phys = 'ambient';
+    mesh.userData.noWeather = true;
+    group.add(mesh);
+  }
   return group;
 }
 
