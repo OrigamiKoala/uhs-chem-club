@@ -64,7 +64,60 @@
 
 ![alt text](image-30.png) Shrink the proton and neutron a lot so they can all actually fit in the nucleus together for this kit.
 
+![alt text](image-31.png) Remove this 3D explainer.
+
+![alt text](image-32.png) For this kit, replace "needle" with "charge".
+
+![alt text](image-33.png) For this animation, replace it with an animatin of two electrons of magnesium leaving, and the atom being stable (smiley face on the nucleus) with the text "Magnesium 2+ has a full outer shell, so it is stable"
+
+![alt text](image-34.png) On these atom labels, add the charges, so instead of writing "Mg" write "Mg 2+" (make sure you do the superscript)
+
+![alt text](image-35.png) For this animation slow down the electron transfer and exaggerate it - highlight the electrons moving.
+
+![alt text](image-36.png) For this stage's tour, remove the animation - just highlight the card.
+
+For Quest 5 Vess debrief, remove the part that says how chlorine got messed with - this just confuses the user.
+
+![alt text](image-37.png) For this stage, remove the tour, and instead of having the four atoms separate have it pre-built into a molcule of methane. Also, for this atom kit (for all the benches) instead of connecting the centers of the atoms with cylinder bonds, connect the centers of the 2D plates holding up the atoms with thick lines. Additionally, have the 3D atoms physically touch and electrons frozen between the atoms, but don't connect their centers with cylinders.
+
+![alt text](image-38.png) For this part of the stage, show the pointer animation clicking on the green fluid then clicking on the empty pan and the substance transferring.
+
+![alt text](image-39.png) Remove this part of the tour or put it in a different stage, since there isn't a pan for this stage.
+
 ## Lanternfall
+
+![alt text](image-40.png) Make sure this tour animation includes the pointer dragging a detector in as well.
+
+![alt text](image-41.png) For the result dial for this stage, instead of "Less time taken by ____", have "Not set", "Red is faster", "Violet is faster" or "neither is faster".
+
+![alt text](image-42.png) For this stage, make sure a wave is drawn on the 2D surface and a measurement is shown - instead of just a line on a ruler, show a wave and a measurement of the wavelength. Also, for the sources instead of saying "Relay mast" say "Radio", instead of "Medic x-ray" say "X-ray" and so on so forth.
+
+![alt text](image-43.png) Make sure for this sort of stage, I can have the right answer in the calculator and press "use value" and as long as the answer is right it is accepted - right now, I did that and it filled in "4.8e14" into the "___e14" box, instead of "4.8".
+
+![alt text](image-44.png) Remove the part that says "__ crests counted" for both red and violet; instead, add a graphic similar to that of the first stage where the wave gets longer, changes color, and the frequency/wavelength shift. Also for this Vess debrief, remove the part that says "I want to know why ____" because the user hasn't been introduced to the photoelectric effect and the mystery yet.
+
+![alt text](image-45.png) This is a very bad introduction to the photoelectric effect - it should start with a stage where the user discovers that shining light can knock electrons off, then do this stage.
+
+![alt text](image-46.png) This tour is out of order - start with dragging the plate on, then do the dial adjusting thing.
+
+![alt text](image-47.png) For this stage, I don't see the electrons coming out of the metal - have an animation where as soon as the work function is hit for the metal, white dots start flowing out (change the speed as the brightness increases).
+
+![alt text](image-48.png) Make sure I don't have to click anything for this animation - remove the buttons. Instead, show an animation of first a red photon hitting the metal, then UV. Show multiple brightnesses of photons too.
+
+![alt text](image-49.png) This bench feels the exact same as the previous bench - remove it and introduce the threshold frequency/work function in the previous stage.
+
+![alt text](image-50.png) Fix the ugly overlaps around the dial and the red text.
+
+![alt text](image-51.png) Superscript displays are weird. Also, rephrase this to just "KE_electron = E_photon - W".
+
+![alt text](image-52.png) Superscript displays are also weird on the bench.
+
+![alt text](image-53.png) There is too much going on in this animation at once - please explain each concept separately instead of bundling them into one display. The animation should be easy to interpret, with only one concept going on at a time.
+
+
+
+
+
 
 
 

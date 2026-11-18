@@ -120,7 +120,7 @@ export const STAGES = [
         speaker: SPEAKER,
         body: 'Light is a wave. The distance from one crest (the top of a wave) to the next is its wavelength, and the number of crests that pass a point each second is its frequency.'
       },
-      prompt: 'Which colours of light have a higher frequency than Beacon 1\'s green light?',
+      prompt: 'Find a colour of light that has a higher frequency than Beacon 1\'s green light.',
       widget,
       table: opticsTable({
         pieces: [

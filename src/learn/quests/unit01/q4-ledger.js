@@ -322,7 +322,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lose the Outer Shell',
-    prompt: 'Remove magnesium\'s valence electrons to form its ion.',
+    prompt: 'Remove magnesium\'s valence electrons to form its ion. Magnesium forms an ion with a charge of +2.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
