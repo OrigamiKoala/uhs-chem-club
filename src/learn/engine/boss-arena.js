@@ -89,13 +89,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.5,
     species: 'the compressor'
   },
-  // In front of the caldera main's expansion loop, with the rim and the cone behind it
+  // On the caldera-edge overlook (Level 4, y = 0), with the railed drop, lava lake and cone behind it
   // (`world-data/ember.json` keeps this ground open; `verify:ember` holds the two together).
   'boss-crucible': {
     worldId: 'unit05',
-    playerPos: [0, 1.6, -47],
-    lookAtPos: [0, 1.6, -63],
-    bossPos: [0, 0, -63],
+    playerPos: [0, 1.6, -42],
+    lookAtPos: [0, 1.6, -58],
+    bossPos: [0, 0, -58],
     scale: 1.4,
     species: 'the crucible'
   },
