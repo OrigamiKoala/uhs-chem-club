@@ -284,7 +284,7 @@ export function buildCalderaShells(ctx, plan) {
       : 'rock';
 
     // Solid perimeter wall segments from `workings.js` (auto-omits doorway and open bay).
-    const wallH = rm.shell === 'turbineHall' ? top + 0.4 : top + 0.8;
+    const wallH = rm.shell === 'turbineHall' ? top + 0.4 : top + 0.45;
     for (const seg of plan.wallSegments(v)) {
       const len = Math.hypot(seg.bx - seg.ax, seg.bz - seg.az);
       const mx = (seg.ax + seg.bx) / 2;
@@ -301,7 +301,7 @@ export function buildCalderaShells(ctx, plan) {
 
     // Lintels / headers over doorway and open viewing bay (always >= 4.7 m over floor to clear lean-in camera).
     const lintelBottom = Math.max(4.75, top - 0.55);
-    const lintelH = Math.max(0.5, (y0 + top + 0.8) - (y0 + lintelBottom));
+    const lintelH = Math.max(0.45, (y0 + top + 0.45) - (y0 + lintelBottom));
     addBox(buckets, wallMat, (d1 - d0) + 0.4, lintelH, WALL_T + 0.2, (d0 + d1) / 2, y0 + lintelBottom + lintelH / 2, r.minZ - WALL_T / 2);
     if (rm.bay) {
       const [b0, b1] = rm.bay;
@@ -311,7 +311,7 @@ export function buildCalderaShells(ctx, plan) {
     // Roof + distinct architectural ceiling per shell type (all structural ribs stay >= top - 0.35 >= 4.8 m).
     if (rm.shell === 'ribs') {
       // Room 1: Rock-cut gallery with rolled steel arch ribs and corrugated lagging overhead.
-      addBox(buckets, 'rock', W + 1.4, 0.9, D + 1.4, cx, y0 + top + 0.45, cz);
+      addBox(buckets, 'rock', W + 1.4, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
       for (let x = r.minX + 1.4; x <= r.maxX - 1.2; x += 2.8) {
         addBox(buckets, 'darkSteel', 0.28, top, 0.34, x, y0 + top / 2, r.maxZ - 0.18);
         addBox(buckets, 'darkSteel', 0.28, 0.32, D - 0.2, x, y0 + top - 0.16, cz);
@@ -321,7 +321,7 @@ export function buildCalderaShells(ctx, plan) {
       addBox(buckets, 'rock', 0.8, top, 1.0, d1 + 0.4, y0 + top / 2, r.minZ - 0.2);
     } else if (rm.shell === 'sinterArch') {
       // Room 2: Stepped sinter-crusted gallery with transverse concrete arches and open lake bay.
-      addBox(buckets, 'sinterWarm', W + 1.4, 0.9, D + 1.4, cx, y0 + top + 0.45, cz);
+      addBox(buckets, 'sinterWarm', W + 1.4, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
       for (let z = r.minZ + 1.5; z <= r.maxZ - 1.2; z += 3.2) {
         addBox(buckets, 'concrete', W - 0.2, 0.32, 0.45, cx, y0 + top - 0.16, z);
       }
@@ -349,7 +349,7 @@ export function buildCalderaShells(ctx, plan) {
       addBox(buckets, 'brick', 0.9, top, 0.9, d1 + 0.45, y0 + top / 2, r.minZ - 0.25);
     } else if (rm.shell === 'overhang') {
       // Room 4: Rough-hewn stepped basalt overhang with wide 8 m colonnade facing the caldera.
-      addBox(buckets, 'rock', W + 1.6, 1.1, D + 1.4, cx, y0 + top + 0.55, cz);
+      addBox(buckets, 'rock', W + 1.6, 0.45, D + 1.4, cx, y0 + top + 0.225, cz);
       // Stepped rock soffit ledges along the back and sides.
       addBox(buckets, 'rock', W - 0.4, 0.45, 2.2, cx, y0 + top - 0.22, r.maxZ - 1.1);
       addBox(buckets, 'rock', 1.6, 0.45, D - 0.4, r.minX + 0.8, y0 + top - 0.22, cz);

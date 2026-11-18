@@ -26,8 +26,8 @@ import { makeWorkings, insideRect, floorOf } from '../lib/workings.js';
 /** The walk stays inside this square about the origin (stage bound for every Learn world). */
 export const WALK = 100;
 
-/** Walking terrace elevations (m), top rim shelf down to caldera-edge plant terrace. */
-export const LEVEL = [20, 15, 10, 5, 0];
+/** Walking terrace elevations (m), top rim shelf down to caldera-edge plant terrace (6 m per step). */
+export const LEVEL = [24, 18, 12, 6, 0];
 
 /** Caldera floor and lava lake elevations (m), 20 m below Level 4 (40 m below the rim). */
 export const CALDERA_FLOOR = -20;
