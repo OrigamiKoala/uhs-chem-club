@@ -217,3 +217,122 @@ Fifth's siphon feeds an endothermic process.
 
 **Counts for the docs pass** (not edited here): Ember Reach is 7 benches + 1 boss = 8 quests, **33 stages** (was 61), so the registry's total goes from 330 to 302.
 `verify:docs` will fail on the PRODUCT.md figures until the orchestrator updates them. `calorimeter3d.js`/`thermomount.js` were already retired.
+
+---
+
+## Site rebuild (2026-11-18)
+
+Rebuilt on branch `site/ember` against `docs/plans/world-distinction-plan.md` section 3 and Ember Reach's row in section 6. Changes the 3D site only: no quest, stage, kit, bank entry, glossary, story line, site id, quest id or bench label changes.
+
+### 1. The place
+
+A switchback haul road cut down the inside cliff wall of a volcanic caldera toward a molten lava lake, with geothermal workings hollowed into the rock at each terrace and a turbine hall at the foot.
+
+In the first ten seconds after landing on the rim shelf, the player stands beside a steel guardrail looking down four stacked zigzags of cliff road into a steaming caldera floor forty metres below, where a crusted lava lake and a venting volcanic cone sit beneath ochre fume, with no bench visible from the rim.
+
+### 2. The signature
+
+| Field | Ember Reach |
+| :--- | :--- |
+| Landform | The inside wall of a caldera, stepping down toward a lava lake |
+| Walk shape | A switchback road down the wall (four 1-in-6 ramps alternating west and east between four hairpin turns) |
+| Bench housing | Six galleries cut into the caldera wall with their lake-facing side open to the drop; the turbine hall at the foot |
+| Light | Kept built sky (`ember/atmosphere.js`): ochre fume and low copper sun from WSW, weak north lake glow on the rock from below; galleries and the turbine hall under the shared cover mask (`lib/cover.js`), lit by their own pooled amber lamps |
+
+Checked against all other rows in `docs/plans/world-distinction-plan.md` section 6: no other world has a caldera inside wall, a zigzag switchback road down a cliff, or rock-cut galleries with one side open to a lava lake + turbine hall. (Teeter uses a straight fall-line comb stair with level dikes branching off; Brinewire uses a single two-flight ramp down a concrete barrage face; Lodestone uses a winding slot canyon with alcoves under overhangs.)
+
+### 3. Plan (words and coordinates)
+
+All walkable ground stays inside `[-94, +94]` in `x` and `[-74, +94]` in `z` (well inside the `±100 m` stage bound). North (`-z`) is into the caldera toward the lava lake; south (`+z`) is up into the rising caldera wall. Every open edge facing the drop is closed by an open steel railing (`pass: false`, 1.05 m high — below eye height so the lake and lower terraces remain in full view).
+
+- **Level 0 — Rim Shelf (`y = 20.0 m`):** `yard-rim` (`x ∈ [14, 92], z ∈ [58, 92]`).
+  - **Landing pad:** `(66, 20.0, 76)`, clear radius > 16 m in every direction.
+  - **Spawn:** `(26, 21.6, 66)`, looking toward `(-6, 21.0, 60)` (west-northwest down Ramp 1 and across the caldera).
+  - North rail at `z = 58` overlooks the entire switchback and the lava lake.
+- **Ramp 1 (`y: 20.0 → 15.0 m`):** `x ∈ [-16, 14], z ∈ [58, 66]` (30 m westbound, 1 in 6 grade).
+- **Hairpin 1 (`turn-1`, `y = 15.0 m`):** `x ∈ [-30, -16], z ∈ [34, 66]`. Turns the road from westbound to eastbound, stepping 24 m north.
+- **Level 1 — Upper Terrace (`y = 15.0 m`):** `road-1` (`x ∈ [-16, 46], z ∈ [34, 42]`, north rail at `z = 34`).
+  - **Bench 1 (`room-1`, `site-1`):** cut into the cliff south of `road-1`, `x ∈ [-12, 2], z ∈ [42.6, 55.6]`.
+  - **Bench 2 (`room-2`, `site-2`):** cut into the cliff south of `road-1`, `x ∈ [24, 38], z ∈ [42.6, 55.6]`, with a perched hot-spring seep basin at its east rock wall and a 7.6 m railed north bay opening onto the lake view.
+- **Ramp 2 (`y: 15.0 → 10.0 m`):** `x ∈ [46, 76], z ∈ [34, 42]` (30 m eastbound, 1 in 6 grade).
+- **Hairpin 2 (`turn-2`, `y = 10.0 m`):** `x ∈ [76, 88], z ∈ [10, 42]`. Turns the road westbound.
+- **Level 2 — Middle Terrace (`y = 10.0 m`):** `road-2` (`x ∈ [-26, 76], z ∈ [10, 18]`, north rail at `z = 10`).
+  - **Bench 3 (`room-3`, `site-3`):** cut into the cliff south of `road-2`, `x ∈ [44, 58], z ∈ [18.6, 31.6]` (reached first going west).
+  - **Bench 4 (`room-4`, `site-4`):** cut into the cliff south of `road-2`, `x ∈ [-2, 12], z ∈ [18.6, 31.6]`.
+- **Ramp 3 (`y: 10.0 → 5.0 m`):** `x ∈ [-56, -26], z ∈ [10, 18]` (30 m westbound, 1 in 6 grade).
+- **Hairpin 3 (`turn-3`, `y = 5.0 m`):** `x ∈ [-68, -56], z ∈ [-14, 18]`. Turns the road eastbound.
+- **Level 3 — Lower Terrace (`y = 5.0 m`):** `road-3` (`x ∈ [-56, 34], z ∈ [-14, -6]`, north rail at `z = -14`).
+  - **Bench 5 (`room-5`, `site-5`):** cut into the cliff south of `road-3`, `x ∈ [-36, -22], z ∈ [-5.4, 7.6]`.
+  - **Bench 6 (`room-6`, `site-6`):** cut into the cliff south of `road-3`, `x ∈ [4, 18], z ∈ [-5.4, 7.6]`.
+- **Ramp 4 (`y: 5.0 → 0.0 m`):** `x ∈ [34, 64], z ∈ [-14, -6]` (30 m eastbound, 1 in 6 grade).
+- **Hairpin 4 (`turn-4`, `y = 0.0 m`):** `x ∈ [64, 76], z ∈ [-42, -6]`. Turns the road westbound onto the lowest terrace.
+- **Level 4 — Caldera-Edge Plant Terrace (`y = 0.0 m`):**
+  - `road-4` (`x ∈ [20, 64], z ∈ [-42, -30]`).
+  - **Bench 7 (`room-7`, `site-7`, Turbine Hall):** against the cliff foot south of `road-4`, `x ∈ [28, 44], z ∈ [-29.4, -16.4]`.
+  - **Boss Arena & Overlook (`arena-deck`):** `x ∈ [-24, 20], z ∈ [-72, -30]`, entered from `road-4` under the caldera main's 7.4 m expansion loop at `x = 20`. Open rail along `z = -72` overlooking the 20 m drop to the lava lake.
+  - **Boss (`BOSS_ARENA_SPOTS['boss-crucible']`):** `playerPos: [0, 1.6, -42]`, `bossPos: [0, 0, -58]`, `lookAtPos: [0, 1.6, -58]` — open 14+ m in every direction, facing due north with the railed overlook, lava lake and volcanic cone directly behind The Crucible.
+- **Closed ground & drops:** Every cliff wall, terrace retaining face, and lake-facing edge is closed by `lib/workings.js` wall and barrier colliders. Nobody can climb onto any cliff bench, roof, or drop off into the caldera floor (`y = -20 m`) or lava lake (`y = -20.25 m`).
+
+### 4. Section along the main route
+
+| Segment | Horizontal run | Elevation | Grade |
+| :--- | :--- | :--- | :--- |
+| Spawn (`yard-rim`) | `(26, 66) → (14, 62)` | `20.0 m` | level |
+| `ramp-1` | `x: 14 → -16` | `20.0 → 15.0 m` | 1 in 6 down |
+| `turn-1` + `road-1` (Benches 1, 2) | `x: -23 → 46` | `15.0 m` | level |
+| `ramp-2` | `x: 46 → 76` | `15.0 → 10.0 m` | 1 in 6 down |
+| `turn-2` + `road-2` (Benches 3, 4) | `x: 82 → -26` | `10.0 m` | level |
+| `ramp-3` | `x: -26 → -56` | `10.0 → 5.0 m` | 1 in 6 down |
+| `turn-3` + `road-3` (Benches 5, 6) | `x: -62 → 34` | `5.0 m` | level |
+| `ramp-4` | `x: 34 → 64` | `5.0 → 0.0 m` | 1 in 6 down |
+| `turn-4` + `road-4` (Bench 7) + `arena-deck` | `x: 70 → 0, z: -36 → -58` | `0.0 m` | level |
+| Drop past north rail (`z < -72`) | cliff face to caldera floor | `0.0 → -20.0 m` | sheer cliff (closed) |
+
+Bench ground spans **15.0 m** (`0.00 to 15.00 m` across four levels); the walk spans **20.0 m** (`0.00 to 20.00 m`).
+
+### 5. The seven benches (one paragraph each)
+
+1. **Bench 1 — `q1-flow` (Heat and Temperature) — Wellhead Exchanger Gallery (`room-1`, Level 1, `y = 15.0 m`).** Teaches the distinction between temperature and thermal energy and the direction of heat flow. Cut 13 m deep into the upper cliff wall (`14 × 13 m`, clear height `5.4 m`), framed with rolled steel arch ribs (`ribs` shell) and basalt rock walls on south, east and west, with a 6.4 m wide north portal flanked by rock piers opening onto `road-1` and the lake drop beyond. The player descends Ramp 1, rounds Hairpin 1 and enters the bright amber-lit mouth on their right; behind the north-facing plate stand the production wellhead, its insulated flowline on stanchions, the plate heat exchanger and the hot-water tank. Two overhead caged work lamps from the pool light the plate and exchanger.
+2. **Bench 2 — `q2-calorimetry` (Calorimetry) — Perched Spring Gallery (`room-2`, Level 1, `y = 15.0 m`).** Teaches specific heat capacity and heat transfer in a calorimeter bath. Cut into the eastern half of Level 1's cliff wall (`14 × 13 m`, stepped sinter-arch ceiling `5.2 m`, `sinterArch` shell) where a hot geothermal seep issues from the volcanic rock into a stone-rimmed pool along the east back wall. Oriented east-west: the player enters at the north-west door from `road-1`, facing east toward the plate; along the entire north side to the player's left (`7.6 m` span) is a railed open gallery bay looking straight across the caldera toward the lava lake. Behind and beside the plate stand the steaming spring basin, the sampling davit and basket, the lagged calorimeter bath and the platform scale, lit by two overhead lamps.
+3. **Bench 3 — `q3-enthalpy` (Reaction Enthalpy) — Boiler Vault (`room-3`, Level 2, `y = 10.0 m`).** Teaches enthalpy of reaction and comparing fuels per gram vs. per mole. A refractory-brick barrel vault (`13.6 × 13.4 m`, crown `5.6 m`, `brickVault` shell) set deep into the middle cliff wall just west of Hairpin 2, entered through an arched masonry portal from `road-2` with an open north flank looking toward the caldera. Standing at the north-facing plate, the player sees the brick-set horizontal boiler drum on its saddles, firebox door, steel flue piercing the vault crown into the cliff above, and the fuel-canister cage and hopper beside the bay, lit by twin vault-hung lamps.
+4. **Bench 4 — `q4-bonds` (Bond Enthalpies) — Fumarole Overhang (`room-4`, Level 2, `y = 10.0 m`).** Teaches that breaking bonds takes energy and forming bonds releases it. The widest open-sided rock-cut gallery (`15 × 13 m`, rough-hewn stepped basalt overhang `5.8 m`, `overhang` shell) on the western half of Level 2, with an 8.0 m open north face divided by heavy steel stanchions so sulphur fume vents straight out over the caldera. Behind the north-facing plate, an active sulphur fumarole cone breathes through a steel floor grate under a suspended copper cracking coil, exhaust hood and flue, flanked by supply drums and the dual-dial gauge board, lit by two boom-hung lamps.
+5. **Bench 5 — `q5-hess` (Hess's Law) — Separator Gantry Bay (`room-5`, Level 3, `y = 5.0 m`).** Teaches that enthalpy change depends only on start and end states, not the route taken. A concrete-and-truss pipe gallery (`14.4 × 13.2 m`, clear height `6.0 m`, `gantry` shell) cut into the lower cliff wall just east of Hairpin 3, right where the caldera steam main runs past its wide 6.8 m north portal. Behind the north-facing plate stand the vertical cyclone separator, the overhead steam header, and the two parallel routes down to the same drain (a direct insulated vertical shaft beside a stepped multi-elbow manifold), lit by overhead gantry lamps.
+6. **Bench 6 — `q6-entropy` (Entropy) — Silencer Expansion Alcove (`room-6`, Level 3, `y = 5.0 m`).** Teaches entropy as the number of microstates (ways energy and particles spread). A baffled acoustic concrete alcove (`14 × 13 m`, clear height `5.6 m`, `baffle` shell) on the eastern half of Level 3, oriented west-east: the player enters at the north-east doorway from `road-3` facing west toward the plate, with a 7.4 m railed open bay along the north wall to their right overlooking the caldera drop. Behind the west-facing plate stand the twin vertical expansion silencers venting steam out over the drop, the twin glass expansion bulbs with their brass stopcock, and the vacuum pump, lit by two acoustic-baffle lamps.
+7. **Bench 7 — `q7-gibbs` (Free Energy) — The Turbine Hall (`room-7`, Level 4, `y = 0.0 m`).** Teaches Gibbs free energy as the balance between enthalpy and entropy with temperature. A full gabled steel-truss industrial hall (`16 × 13.4 m`, eaves `6.8 m`, ridge `9.0 m`, `turbineHall` shell) standing at the foot of the caldera wall on Level 4, entered through a wide industrial bay door from `road-4` with high north clerestory glazing facing the lava lake. Inside, behind the north-facing control bench, sit the insulated steam turbine casing, generator housing, control console of dials, small test furnace and beam balance, lit by three high-bay filament lamps.
+
+### 6. How it differs from each of the other eleven worlds
+
+- **Tallow:** dead-flat white salt pan with standalone plant buildings vs. a 20 m switchback carved down a volcanic cliff wall.
+- **Lanternfall:** frozen glacial lake shore with ice caves under aurora vs. a sunlit/ochre-fumed caldera cliff overlooking molten rock.
+- **Ligar:** basalt plateau with a quarry pit and closed underground mine drifts into hills vs. a terraced caldera wall with open-sided galleries looking out over a lava lake.
+- **Bellows:** elevated steel decks and catwalks over a cloud sea with no ground vs. solid volcanic rock cut into a switchback road.
+- **Mirrowen:** sea-level harbour quays, canal and moored hulls vs. a descending volcanic cliff road with rock-cut galleries.
+- **Kettle:** one enclosed foundry building covering the site with interior crane aisle vs. an open-air caldera switchback where six of seven rooms open directly onto a volcanic drop.
+- **Teeter:** west-facing salt-pan terraces with a single straight fall-line stair and branching dikes (a comb) vs. a north-facing caldera wall with alternating east-west switchback ramps and hairpins.
+- **Verdigris:** drowned masonry fort in a reed swamp crossed by boardwalks on piles vs. dry high-relief volcanic rock cut into a multi-level cliff road.
+- **Brinewire:** a single concrete tidal barrage wall across a marsh with an interior cell gallery vs. a natural stepped caldera wall descending to a lava lake.
+- **Quicklight:** flat-topped lava-flow refinery packed into a grid of ten alleys under pipe racks and lightning vs. a single-route switchback cliff road with open vistas across a caldera.
+- **Lodestone:** a narrow winding slot canyon in banded iron closing overhead vs. a wide open caldera wall facing out across a vast crater and lava lake.
+
+### 7. The far country
+
+- **North (`-z`):** The caldera floor 20 m below Level 4 (`y = -20 m`), the crusted molten lava lake (`x = -12, z = -155, rx = 75, rz = 45`, `M.magma`), and the active volcanic cone rising 175 m out of the far floor (`x = 68, z = -310`) with its rising fume plume; beyond them, the far north caldera rim wall 400–650 m out.
+- **South (`+z`):** Stepped basalt and tuff caldera walls rising 140–220 m behind the rim shelf, with a geothermal power pylon line climbing out toward the high rim and two distant worker habitats on the upper shoulder.
+- **East (`+x`):** The curving east caldera amphitheatre wall with tiered lava-flow ledges, a distant ridge wellhead and steam plumes rising from fissures along the cliff.
+- **West (`-x`):** Lowered caldera wall toward the WSW sun (so the low copper sun clears the rim), cooling cells and transformer yard perched on an outer west bench below Level 4, and the curving west cliff wall.
+
+### 8. Numbers to hold
+
+- **Bench ground span:** `15.00 m` (`0.00 to 15.00 m`, target `>= 3 m`).
+- **Housed benches:** `7/7` (`R5` to `R8`, target `>= 5/7`).
+- **Plates in view from spawn:** `0` (target `<= 2`).
+- **Shared layout / ring / two-columns:** none, false, false.
+- **Frame budget (T4, `perf-worlds.mjs`):** `<= 900k` triangles, `<= 566` draw calls (target ~250–380 draws, ~250–450k tris).
+- **Real lights:** 3 pooled `PointLight`s (`LampPool`), plus the built sky's sun, hemisphere and weak north lake fill.
+
+### 9. Kept, rebuilt, archived
+
+- **Kept unchanged:** `src/three/ember/atmosphere.js`, `src/three/ember/effects.js`, `src/three/ember/field.js`, `src/three/ember/kit.js`, `src/three/materials/ember-textures.js`, all `src/learn/quests/unit05/*`, `src/learn/bank/unit05.json`, `src/learn/worlds/unit05-thermodynamics.js`.
+- **New:** `src/three/ember/caldera-plan.js` (pure data + height field + `lib/workings.js` volumes + `lib/cover.js` spec, no THREE).
+- **Rebuilt:** `src/three/ember/terrain.js`, `src/three/ember/host-plan.js`, `src/three/ember/stations.js`, `src/three/ember/plant.js` (adapted helpers kept, wall/rail/pipe builders updated), `src/three/ember.js`, `tools/gen-ember-layout.mjs`, `src/three/world-data/ember.json`, `tools/verify-ember.mjs`, and `BOSS_ARENA_SPOTS['boss-crucible']` in `src/learn/engine/boss-arena.js`.
+- **Archived** (to `archive/2026-11-18/site-ember/` with README): old `tools/gen-ember-layout.mjs`, old `tools/verify-ember.mjs`, old `src/three/ember/terrain.js`, old `src/three/ember/host-plan.js`, old `src/three/ember/stations.js`, old `src/three/ember.js`.
