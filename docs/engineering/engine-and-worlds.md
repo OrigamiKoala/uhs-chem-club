@@ -339,6 +339,20 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   wall (doors face east, away from it). `routeTo` stands off every doorway square to it. The Clamp is fought on the apron (`BOSS_ARENA_SPOTS['boss-clamp']`). Traps met: a parapet on a raised walk that
   reaches eye height (the deck's, at 13.7 over a crest at 12) hides the whole far side; a solid 0.6 m parapet hides a 12 m drop from someone standing at it, a kerb and railing does not; a window in
   the back wall under a sun this low lands its light past the door, a south window lands it on the floor.
+- **Quicklight** (`unit11`, `three/quicklight.js` + `quicklight/`, `tools/gen-quicklight-layout.mjs`, `tools/verify-quicklight.mjs`; site rebuilt 2026-11-17, `docs/plans/quicklight-world.md` section 7):
+  A REFINERY ON TWO LAVA FLOWS. `quicklight/refinery-plan.js` (pure data on `lib/workings.js`, `outdoorDoors: true`) declares the levels (`GRADE` 0, `PLOT` 5 south of the upper flow's front at
+  z 7 to 9, sunk floors -3.5, -4 and +2), the walk as volumes (open kinds `yard`, `alley`, `ramp`, `court`: two grids of alleys joined by the `rise` ramp through the front; a ramp and a court down to
+  each sunk room) joined by a `LINKS` table, and `ROOMS` (shells `arch`, `block`, `cellar`, `skirt`, `table`, `magazine`); `problems()` holds the plan to itself (room sizes, doors with a metre each
+  side, ramps no steeper than 1 in 6, every opening answered). `height(x, z)` is a volume's floor, within `EDGE` of an open side the same floor, else `land` (the plant's hardstanding on each flow,
+  the front between them, the tank bund at -4, the earth banked over the two bunkers, the lava field outside the fence). The ground mesh runs over the bunkers (their rooms are under it) and is holed
+  under every other volume and the control block. `terrain.js` builds every open side as a kerb and handrail (a fence round the yards and at the plant's edge), a parapet over a drop or a retaining wall
+  under higher land, the bund's wall, each room's shell, the control block, the cracking reactor on its round skirt and the reactor train on its table. `plant.js`: a rack of steel bents every 6 m over
+  every alley (a bent's leg stands on higher land behind a retaining wall, or its beam sits in a shoe on a building's face), a lamp on a bent every 9 m or so, standards on the ramps' walls, a packer
+  that fills every block with whole units (eight kinds) nearest the walk first and then on a finer pass, the bund's tanks, the feed heater, the flare stack, rod pylons and the far country. The
+  lightning (`atmosphere.js` `buildLightning`) is the one declared light source besides the lamps: unlit bolt meshes, a sky flash uniform and the hemisphere's intensity, no PointLight. Cover: a box
+  per room and passage (12), no sun openings. The Flare is fought in the flare yard (`BOSS_ARENA_SPOTS['boss-flare']`). Traps met: the cellar's beams at 4.5 m across the plate's line stood in the
+  lean-in box (to 4.6 m), so its clear height is 4.7; `verify:arena` measures the arena table's collider as an axis-aligned box 4.8 m wide in x, so a boss mark must face along z; a guide leg that
+  runs exactly along a shared plane belongs to neither volume, so `routeTo` nudges its test point off the plane.
 - **Lodestone** (`unit12`, `three/lodestone.js` + `lodestone/`, `tools/gen-lodestone-layout.mjs`, `tools/verify-lodestone.mjs`; site rebuilt 2026-11-14, `docs/plans/lodestone-world.md` section 7): A SLOT
   CANYON IN BANDED IRON. `lodestone/canyon-plan.js` (pure data) declares the hollow, eleven runs along a centre line (`LINE`: floor level over a landing at each bend, graded between), six alcoves (shared-layer
   volumes with one `to: null` mouth) and the pothole; `sample(x, z)` is the walk as a union with an inside depth, and everything is read off it: the height field (`height`: the floor inside; outside, held at

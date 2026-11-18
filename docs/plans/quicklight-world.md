@@ -5,7 +5,7 @@
 **Place:** Storm belt — high-altitude fuel cracking towers and catalyst decks  
 **Target audience:** Students aged 12–17, first-time chemistry learners  
 **Structure:** 6 benches (35 stages) + 1 boss (`boss-flare`, 5 phases) = 40 stages total  
-**Status:** Phase 0 Spec (2026-11-12)
+**Status:** Phase 0 Spec (2026-11-12); site rebuilt 2026-11-17 (section 7)
 
 ---
 
@@ -145,9 +145,9 @@ To keep `pans` (Teeter) and `heat` (Ember Reach) 100% isolated and zero-risk, we
 
 ## 5. World Plan (Storm Belt — Quicklight)
 
-- **Site layout (`tools/gen-quicklight-layout.mjs` → `src/three/world-data/quicklight.json`):** High-altitude storm belt cracking platform & catwalks (`src/three/quicklight.js`, `src/three/quicklight/`).
-- **Six hosts** built into the refinery's machinery (cracking tower manifold, initial-rates bay, decay tank catwalk, collision chamber deck, mechanism valve rack, catalyst bed) + **boss arena** (`boss-flare` at the central flare stack).
-- **Textures & atmosphere:** Storm-belt clouds, weathered titanium & bronze refinery towers, warm filament lamps (only lamps lit), bay envelopes clear, walkability flood fill verified by `tools/verify-quicklight.mjs`.
+- **Site:** rebuilt 2026-11-17 as a refinery on two lava flows; section 7 is the spec, the build record and the owner's viewing list. Layout: `tools/gen-quicklight-layout.mjs` → `src/three/world-data/quicklight.json`, on `src/three/quicklight/refinery-plan.js`.
+- **Six hosts**, one per room: the analyser bunker, the control room, the pump cellar in the tank bund, inside the cracking reactor's skirt, under the reactor train's table, the catalyst bunker. The boss arena (`boss-flare`) is in the flare yard.
+- **Textures & atmosphere:** storm dusk, lightning to the rod pylons; warm filament lamps (only lamps lit, from a pool of three lights); every room under the cover mask; checks in `tools/verify-quicklight.mjs`.
 
 ---
 
@@ -165,3 +165,244 @@ To keep `pans` (Teeter) and `heat` (Ember Reach) 100% isolated and zero-risk, we
 - **Two-tap twin, drop zones, phone floor (340 px / 375 px):** All pieces have `r >= 2.2`, `bounds` sized for 340 px, `tapZones` and two-tap placements everywhere.
 - **3D On & `3D Off` parity:** Pure planners in `ratedata.js` drive both `Table2D` and `Table3D`.
 - **Shared files & parallel safety:** All new kit fixtures live in `rate*.js` via `rate-registry.js`, leaving `pans.js` and `heat.js` untouched.
+
+---
+
+## 7. Site rebuild (2026-11-17)
+
+The first site (a flat plate, six rigs in two columns either side of a spine road, the template shared with Brinewire) is in
+`archive/2026-11-17/site-quicklight/`. This section is the spec the rebuild was held to, then the build record. The brief is
+Quicklight's row in `docs/plans/world-distinction-plan.md` section 6. Nothing here was seen in a browser: every geometric claim is
+a Node measurement, and 7.12 lists where the owner should stand to judge it.
+
+### 7.1 The place
+
+**A refinery crammed onto a black lava field under a standing storm, its alleys running under pipe racks between packed process
+units, half of it on a lower flow and half up on the next flow's front.** In the first ten seconds after landing the player stands
+in a fenced laydown yard on bare dark hardstanding, looking east down a 7 m alley roofed by two tiers of pipes on steel bents,
+process units (columns, drums, exchanger banks, fin-fan coolers) close on both sides, the feed heater's stack and the reactor
+train's three vessels above them, lattice rod pylons out on the lava, and now and then a bolt of lightning to one of the pylons.
+
+### 7.2 The signature
+
+| | Quicklight | Checked against section 6 |
+| :--- | :--- | :--- |
+| Landform | A refinery packed onto two young basalt lava flows; the upper flow's front, 5 m high, crosses the site west to east | No other row is built plant on a lava field; Ligar's basalt is a columnar plateau with a quarry, and its benches are in rock, not plant |
+| Walk shape | A grid of ten alleys under pipe racks meeting at eleven junctions, two grids (one per flow) joined by one ramp cut up through the flow's front | No other row is a grid: Kettle is one aisle, Teeter a comb, Verdigris a branching boardwalk, Brinewire a crest road and a ramp, Lodestone one canyon path |
+| Bench housing | Two bunkers sunk under banked earth (the analyser bunker, the catalyst bunker), inside a reactor's skirt, under a reactor table, the control block, a pump cellar in a sunk tank bund | Kettle's rooms are bays of one building; Cinder Halo's cells are in crater walls entered by dog-legs; Teeter's are dug into terrace walls; none is earth-banked plant, a reactor skirt or a table |
+| Light | Storm dusk (the built sky kept); lightning to the rod pylons, the sky and the hemisphere's fill rising with each strike; inside every room only its lamps | as the row |
+
+Departure from the row: one bench (3) is in a pump cellar in the sunk tank bund, which the row does not name. The row's housings
+cover five of six; the tank bund gives the world its lowest floor and fits bench 3's stake (decomposition in the reserve tanks).
+
+### 7.3 Plan (north is -z; `quicklight/refinery-plan.js` holds every number)
+
+- **The walk** stays in x -92 to 86, z -92 to 90 (the stage's square is ±96).
+- **Levels.** `GRADE` 0 (the lower flow), `PLOT` 5 (the upper flow, south of its front at z 7 to 9), and three sunk floors:
+  the analyser bunker -3.5, the tank bund -4, the catalyst bunker +2.
+- **The lower grid (grade):** the laydown yard x -92 to -60, z -92 to -56 (the pad at (-78, -78), the spawn at (-63, -68.5)
+  looking east); alley b1 along z -72 to -65 from x -60 to 60; alleys a1, a2, a3 running south from it (x -60 to -53, -10 to -3,
+  53 to 60) to alley b2 (z -26 to -19); a2s on south from b2 to the flow's front at z 8.
+- **The rise:** one ramp x -10 to -3 from z 8 (grade) to z 38 (plot), 1 in 6, in a cutting through the flow's front.
+- **The plot grid:** alley c1 along z 38 to 45 (x -60 to 60); d1 and d2 south from it (x -60 to -53, 7 to 14) to c2 (z 80 to 87,
+  x -60 to 40); c2's east end is the gate into the fenced flare yard (x 40 to 86, z 52 to 90).
+- **Closed high ground and drops.** Every side of every volume that is not a doorway is a collider (`lib/workings.js`). Units fill
+  every block between the alleys; earth is banked over the two bunkers; the tank bund is a 4 m pit with tanks in it; outside the
+  fence (x -78 to 98, z -100 to 104, and the yard's corner) is the lava field. No reachable cell is any of these (flood fill).
+- **The route, bench by bench** (the guide's way, `routeTo`): spawn → b1 east → down the ramp `down-1` (z -65 to -44, 0 to -3.5)
+  → `court-1` → Bench 1 (72 m); back up, b1 east to a2, a2 south → Bench 2 off a2's east side (86 m); a2 to b2, b2 to a2s, west
+  down `down-3` (x -10 to -34, 0 to -4) between the bund's tanks → `court-3` → Bench 3 (163 m); back up, a2s south, up the rise
+  → c1 west → Bench 4 off c1's north side (192 m); c1 east → Bench 5 off c1's north side (203 m); c1 to d2, d2 south to c2, c2
+  west, down `down-6` (z 80 to 62, 5 to 2) → `court-6` → Bench 6 (322 m); c2 east through the gate → the flare yard.
+- **The boss's ground:** the flare yard, the player's mark (68, 6.6, 56) by its north fence, the Flare at (68, 5, 72), the stack
+  at (80, 82) beyond it to the south-east (`BOSS_ARENA_SPOTS['boss-flare']` moved there).
+
+### 7.4 Section along the main route
+
+| Along the way | Floor (m) |
+| :--- | :--- |
+| Spawn, yard, b1 | 0.0 |
+| Down `down-1` to `court-1`, Bench 1 | 0.0 → -3.5 |
+| b1, a2, Bench 2 | 0.0 |
+| b2, a2s, down `down-3` to `court-3`, Bench 3 | 0.0 → -4.0 |
+| a2s, up the rise | -4.0 → 0.0 → 5.0 |
+| c1, Benches 4 and 5 | 5.0 |
+| d2, c2, down `down-6` to `court-6`, Bench 6 | 5.0 → 2.0 |
+| c2, the flare yard | 5.0 |
+
+Bench ground: -4.0 to 5.0 m (9.0 m), on five levels.
+
+### 7.5 The benches and their rooms
+
+1. **`q1-watch` How Fast (Watching the Speed): the analyser bunker.** Rate as the change of concentration over time; the bunker
+   is where the product stream is sampled and analysed again and again, so its make-up can be watched as it changes. A corrugated
+   steel arch (12.4 by 12 m, 5.2 m at the crown) over 2 m concrete stem walls, sunk to -3.5 under 3 m of banked earth; closed on
+   every side, the concrete headwall with the door facing east onto a sunk court. The player comes off b1 down a 21 m ramp between
+   retaining walls and sees the headwall and the earth heap over it. Lamps: two pendants from the ribs over the plate and by the
+   door, two over the side walls. Behind the plate three analyser ovens and their controllers and a clock; the sample-conditioning
+   panel with glass flow meters on the left; carrier-gas cylinders chained in a rack on the right.
+2. **`q2-law` The Rate Law (Feed Manifold): the control room in the control block.** The rate law is found by changing one feed
+   at a time; the control room is where the feeds are set. A 13 by 13 m room with metre-thick blast walls in a windowless concrete
+   block (33 by 29 m, 7.2 m high), entered from a2; a slab roof on downstand beams, cable trays at 4.7 m. Lamps: six pendants.
+   Behind the plate the mimic board of the three feed lines meeting at the reactor; the operators' console and chairs on the left;
+   marshalling cabinets and the shift desk on the right.
+3. **`q3-time` Concentration Over Time: the pump cellar in the tank bund.** Decay over time, the half-life; the cellar is where
+   the reserve tanks' product is pumped and their samples drawn day by day. 12 by 12 m, floor -4, concrete walls, a slab on rolled
+   steel beams (4.7 m clear) carrying the tank manifold's deck. The player walks down a ramp between four tanks into the bund and
+   across its court to the door. Lamps: four pendants. The valve manifold across the back wall; two transfer pumps on plinths on
+   the left; the sample cooler and a rack of thirty sample bottles on the right.
+4. **`q4-collide` Collisions and the Hill: inside the cracking reactor's skirt.** Only collisions with enough energy react, and
+   heat raises their share; the reactor is where the heated feed meets. A 12.4 by 12.8 m room walled to 3 m in blockwork inside
+   the reactor's round fireproofed skirt (9.1 m radius, 8 m high), the vessel's bottom head overhead (6.8 m at its lowest), the
+   vessel itself 22 m tall above it. Entered from c1 by a 4 m access way through the skirt. Lamps: four pendants from the head.
+   The feed nozzles' four lines dropping from the head to valves; a steam ring at 3.65 m; thermocouple heads and the temperature
+   recorder on the left; refractory brick on pallets and a tub of castable on the right.
+5. **`q5-steps` Steps: under the reactor train's table.** A mechanism runs in steps; the train is three reactors in series, the
+   product of one fed to the next. An 18 by 12.2 m room under a concrete table on columns, block infill between them, the table's
+   slab 5.5 m over the floor, the three vessels (12, 15 and 11 m) standing on it with their transfer lines. Entered from c1. Lamps:
+   four pendants. Behind the plate the three reactors' bottom outlets, each with its valve and sample point; a chain hoist on a
+   runway; the dosing skid on the left; three racks of sample bombs, one per reactor, on the right.
+6. **`q6-shortcut` Catalysts: the catalyst bunker.** A catalyst is not used up; the bunker is where the catalyst is kept, new in
+   sealed drums and spent in open ones. 12 by 12 m, sunk to +2 under 2.7 m of earth on the plot, metre-thick concrete walls, the
+   headwall with its door facing east onto a sunk court reached down a ramp from c2. Lamps: four pendants. The loading hopper
+   coming down through the roof in the back-left corner over a drum; spent catalyst in open drums on the left; the sieve behind the
+   plate; new catalyst on pallets and a part-emptied bulk bag on the right; the hopper's hatch stands on top of the heap outside.
+
+No two rooms share a size or a shell (`arch`, `block`, `cellar`, `skirt`, `table`, `magazine`; `verify:quicklight` holds both).
+
+### 7.6 How it differs from each other world
+
+| World | What a player would point at |
+| :--- | :--- |
+| Tallow | Tallow is flat white salt to a mirror horizon with a few buildings; Quicklight is black lava, crammed with plant, under storm cloud |
+| Lanternfall | Ice and a frozen lake in polar night; here no ice, and a grid of pipe-racked alleys |
+| Ligar | Ligar's benches are in a quarry and mine drifts in columnar rock; here they are in plant (bunkers, a reactor skirt, a control block), the rock is young flow lava |
+| Bellows | Platforms over a cloud sea; here solid ground on two levels |
+| Ember Reach | One switchback down a caldera wall to a lava lake; here a grid on flat flows, no molten lava |
+| Mirrowen | Quays, hulls and sea ice; here no water at all |
+| Kettle | Inside one foundry building; here outdoors in alleys between many units, under racks |
+| Teeter | Salt terraces down a hillside, one stair; here two flat grids and one ramp |
+| Verdigris | Boardwalks over a reedy flooded fort; here dry concrete alleys |
+| Brinewire | One concrete wall with a lagoon and a drop; here a dense plant and no water |
+| Lodestone | One canyon path between rust-red walls; here a grid, open sky over the racks |
+| Thornmere | Tar lake and tree mounds; here steel plant on lava |
+| Cinder Halo | Craters and cells in crater walls under a ring; here a refinery grid, rooms in plant |
+
+### 7.7 The far country
+
+North: rod pylons out on the lava field and the field rising to old cones. East: the shield volcano the flows came from, low and
+broad, with a notched summit. South: the export tank farm, six floating-roof tanks 44 m across. West: three pressure spheres on
+legs and the line to them on sleepers. On every side: the rod pylons (six beyond the fence, three on the plant) that the lightning
+strikes. All `phys: 'ambient'`.
+
+### 7.8 The numbers held (`verify:quicklight`)
+
+Bench ground at least 8 m on at least four levels; six of six housed, each R6 or better; no plate in view from the spawn or from
+any bench's mark; at least nine alleys and eight junctions; every alley under a rack over most of its length; from every alley at
+least three in five sightlines into the blocks beside it meet plant within 25 m at the eye; the budget (566 draws, 900k
+triangles). The packing threshold (three in five) was set after the first measurement: the sightlines that miss pass under fin-fan
+banks and over pump rows, which a player would see through too.
+
+### 7.9 Kept, rebuilt, archived
+
+| File | |
+| :--- | :--- |
+| `src/three/quicklight/refinery-plan.js` | new: the pure plan (levels, volumes, rooms, land, cover, route, its own consistency checks) |
+| `src/three/quicklight/host-plan.js` | rebuilt: each host names its room; quest ids, labels, plates and kinds unchanged |
+| `src/three/quicklight/terrain.js` | rebuilt: ground mesh, paving, walls, the bund, room shells, the control block, the reactor and the reactor train |
+| `src/three/quicklight/stations.js` | rebuilt: six hosts that furnish their rooms; the old lettered tags are gone |
+| `src/three/quicklight/plant.js` | rebuilt: racks and their lamps, ramp lamps, the unit packer, the bund's tanks, the feed heater, rod pylons, the flare stack, the far country |
+| `src/three/quicklight/atmosphere.js` | kept; the lightning and a flash uniform added |
+| `src/three/quicklight.js` | rebuilt on Brinewire's pattern (cover mask, plan colliders, `routeTo`) |
+| `tools/gen-quicklight-layout.mjs`, `tools/verify-quicklight.mjs`, `world-data/quicklight.json` | rebuilt / regenerated |
+| `src/learn/engine/boss-arena.js` | `boss-flare`'s spot moved to the flare yard |
+| `src/three/materials/quicklight-textures.js` | kept (`stormBasalt`, `pourConcrete`) |
+
+The old `quicklight.js`, `terrain.js`, `stations.js`, `plant.js`, `host-plan.js`, generator, verify script and JSON are in
+`archive/2026-11-17/site-quicklight/` with a README.
+
+### 7.10 Build record
+
+Built as 7.1 to 7.9 say. Shared code changed: none (`lib/workings.js`, `lib/cover.js` and `tools/lib/world-shape-checks.mjs`
+were used as they are; `outdoorDoors: true`; 12 cover boxes, no openings). Measurements, before and after:
+
+| | Before | After |
+| :--- | :--- | :--- |
+| `world-shape.mjs` ground under benches | 0.00 to 0.00 m | -4.00 to 5.00 m (9.0 m, five levels) |
+| relief on the way | 0.10 m | 13.60 m |
+| housed | 0 of 6 (`-1 -1 -0 -1 -1 -1`) | 6 of 6 (`R8 R7 R7 R7 R7 R8`) |
+| plates in view from the spawn | not measured (the first script had no such check) | none |
+| `perf-worlds.mjs` draws / triangles | 116 / 163k | 268 / 662k |
+| shadow casters (triangles) | 30 (4k) | 128 (312k) |
+| lamps / real lights | 3 real lights | 111 lamps on 3 real lights |
+| Ligar (reference, unchanged) | 566 / 867k | 566 / 867k |
+
+`perf-bench-rest.mjs` after: 684 of 689 deployed table stages come to rest untouched (unit11's six benches all rest); the site
+does not change a table.
+
+Where the build parted from the spec as first drawn, and why:
+
+- The Flare's mark is due north of the boss (player (68, 56), boss (68, 72)), not on a diagonal: `verify:arena` measures the
+  arena table's collider as an axis-aligned box and holds it to the plate's width along x, which only a mark due north or south
+  of the boss meets.
+- The pump cellar's clear height went from 4.5 to 4.7 m: its beams run across the plate's line, and at 4.5 they would have stood
+  inside the lean-in camera's box (to 4.6 m).
+- The plant's fence was moved out (x -78 to 98, z -100 to 104) so the units pack the outer alleys' far sides too; units stand
+  beyond the walk's square, which only bounds the walk.
+- The racks' bents stand on whatever is beside the kerb: on the earth by a bunker (a step further out, behind its retaining
+  wall), or with their beam ends in shoes on the control block's face where a leg cannot stand.
+- One extra lamp post in the flare yard at (55, 67): the way from the gate to the player's mark ran more than 12 m from a lamp.
+
+What is still weak: the units are a packer's work, chosen from eight kinds on a lattice; a hand would place a unit's parts as one
+process (a column with its own reflux drum, its own pumps). The steam plume over the shield and rain are not built. The reactor's
+shell is not in view from the spawn (columns on the lower grid stand in front of it); it is from the top of the rise, c2, the bund
+and the flare yard.
+
+### 7.11 Checks run
+
+`verify:quicklight` (109 checks), `verify:bench`, `verify:arena`, `verify:voyage`, `verify:learn`, `verify:table`, `verify:docs`,
+and every other world's script (`tallow`, `lanternfall`, `ligar`, `bellows`, `ember`, `mirrowen`, `kettle`, `teeter`,
+`verdigris`, `brinewire`, `lodestone`, `thornmere`, `cinderhalo`): all green. `tools/glsl-check.mjs quicklight`: the patched
+material program compiles.
+
+### 7.12 The owner's viewing list
+
+Nothing here has been seen in a browser. Stand where each entry says and judge.
+
+1. **The landing (spawn, on the laydown yard, facing east).** In view: the fenced yard, b1 ahead as a 7 m alley roofed by two
+   tiers of pipes on steel bents, units close on both sides, the feed heater's stack and the reactor train's vessels over the
+   roofs, rod pylons out on the lava. No bench. *Failed if* it reads as an open plate, if a bench plate is in view, or if the
+   rack reads as a tunnel with no sky.
+2. **At the head of `down-1` (b1 at x -27, facing south).** A 21 m ramp down between rising retaining walls to a sunk court and
+   the analyser bunker's concrete headwall at its foot (the earth heap over the bunker is behind units from here; it shows over
+   the court's west wall once you are down the ramp). *Failed if* the bunker reads as a shed standing on the ground, or the
+   ramp's walls look like floating slabs.
+3. **At Bench 1's plate, facing the door.** The corrugated arch overhead on its ribs, the door's light at the far end, the
+   flow-meter panel on the left wall, the cylinders on the right; dark but for the pendants. *Failed if* the arch is lit by the sky
+   or the room feels cramped at the plate.
+4. **In a2 opposite the control block's door (facing east).** A windowless concrete block filling the side of the alley, the
+   rack's beams ending in shoes on its face. At Bench 2's plate: the mimic board across the back wall, consoles left, cabinets
+   right. *Failed if* the block reads as a plain box with nothing round it.
+5. **At the head of `down-3` (a2s at x -9, z -6, facing west).** The ramp running 24 m down into the tank bund between parapets,
+   the bund's court at its foot, the cellar's deck and manifold at the far side; walking down, the four tanks rise either side.
+   (From b2 the bund wall hides the bund's floor; only the tanks' roofs show over it.) *Failed if* the bund's floor is not seen
+   from the ramp or the tanks float.
+6. **At Bench 3's plate (the lowest ground, -4 m), facing the door.** Beams overhead, pumps left, sample rack right; through the
+   door the bund court. *Failed if* the beams sit in the camera when leaning in.
+7. **At the foot of the rise (a2s at z 6, facing south).** A ramp cut up through the lava flow's front between retaining walls,
+   the reactor's shell rising beyond its top. *Failed if* the flow's front does not read as a step in the land.
+8. **At the top of the rise (c1 at x -6.5, facing west).** c1 under its rack on the plot; the cracking reactor's round skirt and
+   22 m vessel on the right, its access way opening off the alley. *Failed if* the reactor does not dominate the plot.
+9. **At Bench 4's plate, looking up.** The square block walls to 3 m, the round skirt above them, the vessel's dished bottom head
+   over the room, the feed lines dropping to their valves. *Failed if* the square walls and the round skirt read as a mistake
+   rather than a room built inside the skirt.
+10. **At Bench 5's plate, facing the door.** A long low room under a concrete table, three outlets with valves behind the plate.
+    The three reactors standing on the table are seen from the flare yard's mark (to the west) and their tops from the spawn; from
+    c1 right in front of the room the table's edge and c1's own rack hide them. *Failed if* the room reads as a tunnel.
+11. **At the head of `down-6` (c2 at x -21, facing north).** A ramp down 3 m to a court, the catalyst bunker's earth heap on the
+    left rising to about 5 m over the plot (the hopper's hatch on its top is behind the heap's shoulder from here). At Bench 6's
+    plate: the hopper coming through the roof in the back corner. *Failed if* the heap reads as a hill with nothing in it.
+12. **In the flare yard at the player's mark (68, 56), facing south.** Open crushed-basalt ground, the Flare's place 16 m ahead,
+    the flare stack in its three-legged derrick beyond, the knock-out drum outside the east fence. Wait a minute: lightning
+    should strike a rod pylon and the sky brighten with it. *Failed if* the yard is cluttered, the stack is hidden, or the
+    lightning reads as a glow or a neon line.

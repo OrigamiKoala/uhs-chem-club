@@ -172,7 +172,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Teeter (built 2026-11-16) | A west-facing hillside of salt terraces: five levels of pans 5.5 m apart behind masonry walls, brine spilling pan to pan; spurs close the valley's head | One stair straight down the fall line (four ramps through four walls), a level dike branching off its foot on each terrace: a comb, not a switchback | Rooms dug into the terrace walls under the pans (the pans' floor is the roof), entered by a passage through the wall; two are weir houses standing up among the pans | Bright pale afternoon, evaporation shimmer; indoors under a cover mask, the sun in at each door |
 | Verdigris (built 2026-11-16) | A drowned masonry fort in a reed swamp: a flooded ward inside a broken curtain, towers and cistern heads out of the water, a moat round it; sightlines closed by reeds, walls and fog | A branching boardwalk on piles from a landing stage in the reeds, over the moat bridge, through the gatehouse, then a trunk with branches between the towers; no plank run longer than 22 m, ramps up to tower doors, stairs down into cisterns | Tower chambers (three towers and the keep's hall) above the water, three vaulted cisterns sunk below it, the flooded gatehouse's winch chamber | Low green-grey overcast, fog from 4 m gone at 220 m; indoors under a cover mask, the sun in only at doors that face it and open onto a deck |
 | Brinewire (built 2026-11-17) | A tidal barrage: a concrete wall across the marsh between two headlands, impounded brine 10 m up its west face, a 12 m drop to the tailrace and the tidal flats on its east | Along the crest road, then down one long ramp on the wall's east face (two flights, a landing at the gallery's level) to the foot | Gate houses on piers off the crest over the lagoon, three cell chambers off a gallery inside the wall (entered by an adit from the landing), the switchyard's rectifier cage against the wall at its foot | Dry late afternoon, the east side in the wall's long shadow; indoors under a cover mask, the low sun in only through each gate house's south window |
-| Quicklight | A refinery packed tight on basalt under a standing storm | A grid of alleys under pipe racks | Blast bunkers banked with earth, reactor skirts, a control block | Storm dusk; lightning to the rod pylons is the weather |
+| Quicklight (built 2026-11-17) | A refinery packed tight onto two young basalt lava flows under a standing storm; the upper flow's 5 m front crosses the site, the tank bund sunk 4 m | A grid of ten alleys under pipe racks (eleven junctions), one grid on each flow, joined by one ramp cut up through the front | Two bunkers sunk under banked earth (analyser, catalyst), inside the cracking reactor's skirt, under the reactor train's table, the control block, a pump cellar in the tank bund | Storm dusk; lightning to the rod pylons is the weather, the sky and the fill rising with each strike; indoors under a cover mask, lamps only |
 | Lodestone | A winding slot canyon in banded iron, descending to a bowl | One path down the canyon, bend after bend | Alcoves under overhangs in the canyon wall, open on the canyon side | Rust dusk, light only on the upper walls |
 | Thornmere | An archipelago of pitch mounds in a tar lake, each higher than the last | A zigzag chain mound to mound over root ridges, with two side branches | Inside the trees: hollow stumps, a root vault, a fallen hollow trunk, a pit under a stump's roots | Grey daylight under a high dead canopy; mist on the tar |
 | Cinder Halo | An impact-crater field: one great crater with smaller craters punched into its wall, each floor lower than the last | Down crater by crater through cuttings in the rims, spiralling inward and down round the great crater to its floor | Shielded concrete cells built into each crater's wall, entered by a dog-leg maze | Ash dusk under the planet's ring arcing across the sky; filament lamps inside the cells |
@@ -239,7 +239,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Teeter | 2026-11-16 | 2026-11-16 | 2026-11-16 (8 of 8 housed) | 2026-11-16 | 2026-11-16 (`verify:teeter` rewritten) | not yet |
 | Verdigris | 2026-11-16 | 2026-11-16 | 2026-11-16 (8 of 8 housed) | 2026-11-16 | 2026-11-16 (`verify:verdigris` rewritten) | not yet |
 | Brinewire | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:brinewire` rewritten) | not yet |
-| Quicklight | | | | | | |
+| Quicklight | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:quicklight` rewritten) | not yet |
 | Ember Reach | | | | | | |
 | Mirrowen | | | | | | |
 | Bellows | | | | | | |
@@ -250,6 +250,16 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Quicklight, 2026-11-17 (branch `site/quicklight`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -4.00 to
+5.00 m (9.0 m, five levels), relief 13.6 m, housed 6 of 6 (R8 R7 R7 R7 R7 R8), no cloned coordinates, no plate in view from the spawn.
+`perf-worlds.mjs`: 268 draws, 662k triangles (before: 116 and 163k). It uses the shared layers as they are: `lib/workings.js` (the walk
+is 19 open volumes and 12 roofed ones, `outdoorDoors`) and `lib/cover.js` (12 boxes, no openings). Departures: one bench is in a pump
+cellar in the sunk tank bund, which the row does not name; the Flare's mark is due north of the boss, because `verify:arena` holds the
+arena table's collider as an axis-aligned box. For the next world: a roof member at 4.4 to 4.6 m across a plate's line stands in the
+lean-in camera's box (it reaches 4.6 m); `verify:arena` only passes a boss mark that faces along z; a unit packer needs a finer second
+pass along the alleys or the blocks read open at eye height. Spec, build record and the owner's viewing list:
+`docs/plans/quicklight-world.md` section 7.
 
 **Brinewire, 2026-11-17 (branch `site/brinewire`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground 0.00 to
 12.00 m (12.0 m, three levels), relief 12.6 m, housed 6 of 6 (R7 R7 R8 R8 R8 R7), no cloned coordinates, no plate in view from the

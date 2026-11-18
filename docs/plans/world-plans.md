@@ -93,6 +93,12 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Core Teaching Click:** Voltage is energy per electron (intensive); a cell runs down until Q = K (E = 0), not until all reactants vanish.
 - **Reference:** `docs/plans/brinewire-world.md`
 
+### Unit 11: Quicklight (Kinetics)
+- **Setting:** A refinery crammed onto a black lava field under a standing storm: a grid of alleys under pipe racks between packed process units, on a lower flow and, up one ramp through the upper flow's front, on the reactor plot. The benches are in the analyser bunker and the catalyst bunker (both sunk under banked earth), the control room, the pump cellar in the sunk tank bund, inside the cracking reactor's skirt and under the reactor train's table; lightning strikes the rod pylons (site rebuilt 2026-11-17; `docs/plans/quicklight-world.md` section 7).
+- **Benches:** `q1-watch` (reaction rate from a concentration curve), `q2-law` (initial rates, orders, the rate law and k), `q3-time` (half-life and the straight-line plots), `q4-collide` (the collision model, activation energy, the Maxwell-Boltzmann tail), `q5-steps` (elementary steps, the rate-determining step, mechanisms), `q6-shortcut` (catalysts), and `boss-flare`.
+- **Core Teaching Click:** Rate is how fast concentration changes; the slowest step sets it; a catalyst gives a path with a lower activation energy and comes out unchanged.
+- **Reference:** `docs/plans/quicklight-world.md`
+
 ### Unit 12: Lodestone (Transition Metals)
 - **Setting:** A slot canyon cut down through banded iron, walked from a scoured hollow at its head down eleven straight runs and ten bends to a round pothole where the Fifth's sorting magnet stands; each bench is in an alcove under the overhanging bed at the outside of a bend (site rebuilt 2026-11-14, `lodestone-world.md` section 7).
 - **Benches:** `q1-dblock` (d-electron arrangements; ions lose 4s first), `q2-charges` (successive ionization energies, several charges), `q3-complex` (ligands, the coordinate bond, coordination number, chelates), `q4-shapes` (octahedral, tetrahedral, square planar; cis and trans), `q5-colour` (complementary colour, crystal field splitting), `q6-spin` (paramagnetism, high and low spin), and `boss-coil`.
