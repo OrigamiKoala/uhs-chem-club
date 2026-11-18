@@ -114,40 +114,40 @@ add('transformer', -44, -22, 4.2, { minTier: 'T3' });
 // The Fifth Guild's frost-furred siphon manifold on the rock ledge just west of the overlook (`arena-deck` ends at x = -24).
 add('siphon-manifold', -31.5, -54, 4.6, { rotY: round(deg(90)), minTier: 'T3' });
 
-// Production wellheads on unwalked cliff shoulders feeding the geothermal plant.
-add('wellhead', 96, 48, 3.4, { rotY: round(deg(180)), minTier: 'T3' });
-add('wellhead', -78, -28, 3.4, { rotY: round(deg(0)), minTier: 'T3' });
+// Production wellheads on flat outer caldera shoulders feeding the geothermal plant.
+add('wellhead', 96, 66, 3.4, { rotY: round(deg(180)), minTier: 'T3' });
+add('wellhead', -78, -42, 3.4, { rotY: round(deg(0)), minTier: 'T3' });
 
-// Volcanic vent field features placed purposefully on unwalked cliff ledges & outer shelves (never on the road).
+// Volcanic vent field features placed purposefully on flat unwalked terrace shoulders (never on slopes or the road).
 // Geyser on the lower east shelf outside Turn 4, visible as the player descends Ramp 4.
-add('geyser', 86, -32, 4.6, { minTier: 'T3' });
-// Mud pots on the unwalked caldera ledges between terraces.
-add('mud-pot', -42, 48, 3.2, { minTier: 'T3' });
-add('mud-pot', 86, -54, 2.8, { scale: 0.85, minTier: 'T3' });
-// Sinter terraces on the unwalked ledges near Level 1 & Level 2.
-add('sinter-terrace', 14, 49, 4.4, { scale: 0.85, rotY: 0.5, minTier: 'T4' });
-add('sinter-terrace', 28, 25, 4.4, { scale: 0.85, rotY: 2.2, minTier: 'T4' });
+add('geyser', 86, -40, 4.6, { minTier: 'T3' });
+// Mud pots on the flat outer shoulders.
+add('mud-pot', -42, 38, 3.2, { minTier: 'T3' });
+add('mud-pot', 86, -56, 2.8, { scale: 0.85, minTier: 'T3' });
+// Sinter terraces on the flat outer shoulders.
+add('sinter-terrace', -44, 62, 4.4, { scale: 0.85, rotY: 0.5, minTier: 'T4' });
+add('sinter-terrace', 44, -56, 4.4, { scale: 0.85, rotY: 2.2, minTier: 'T4' });
 
-// Fumaroles breathing sulphur plumes along the unwalked caldera ledges and flanks.
+// Fumaroles breathing sulphur plumes along flat outer caldera shoulders and overlook flanks.
 const fumaroles = [
-  [-40, 24, 1.1], [-12, 25, 0.95], [66, 25, 1.0],
-  [-48, 2, 1.1], [-8, 2, 0.9], [30, 2, 1.0],
-  [54, -22, 1.05], [-34, -70, 1.2], [32, -56, 1.15],
-  [84, 52, 0.95], [-46, 56, 1.0]
+  [-56, 38, 1.0], [96, 38, 1.0], [96, 14, 1.0],
+  [-78, 10, 1.05], [-78, -10, 1.0], [86, -10, 1.0],
+  [54, -52, 1.05], [-34, -66, 1.15], [32, -56, 1.1],
+  [96, 78, 0.95], [-52, 62, 1.0]
 ];
 for (const [fx, fz, sc] of fumaroles) {
   add('fumarole', fx, fz, round(1.5 * sc), { scale: sc, minTier: 'T4' });
 }
 
-// Sulphur mounds & obsidian lava lobes on unwalked ledges.
+// Sulphur mounds & obsidian lava lobes on flat outer shoulders.
 const mounds = [
-  [-36, 30, 1.0], [20, 25, 0.9], [-16, 2, 1.0], [42, -52, 1.1], [-36, -64, 1.0]
+  [-50, 38, 1.0], [94, 24, 0.9], [-76, -18, 1.0], [42, -48, 1.0], [-36, -60, 1.0]
 ];
 for (const [mx, mz, sc] of mounds) {
   add('sulfur-mound', mx, mz, round(0.95 * sc), { scale: sc, minTier: 'T4' });
 }
 const lobes = [
-  [-44, 62, 1.2], [86, -2, 1.3], [-76, -8, 1.15], [34, -64, 1.25], [-44, -68, 1.3]
+  [-56, 62, 1.15], [88, -22, 1.2], [-76, -34, 1.15], [34, -64, 1.2], [-44, -66, 1.2]
 ];
 for (const [lx, lz, sc] of lobes) {
   add('lava-lobe', lx, lz, round(1.4 * sc), { scale: sc, minTier: 'T4' });

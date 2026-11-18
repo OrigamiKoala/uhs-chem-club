@@ -390,8 +390,8 @@
       "asset": "wellhead",
       "pos": [
         96,
-        19.6,
-        48
+        24.11,
+        66
       ],
       "radius": 3.4,
       "rotY": 3.14,
@@ -401,8 +401,8 @@
       "asset": "wellhead",
       "pos": [
         -78,
-        0.35,
-        -28
+        0.27,
+        -42
       ],
       "radius": 3.4,
       "rotY": 0,
@@ -412,8 +412,8 @@
       "asset": "geyser",
       "pos": [
         86,
-        0.17,
-        -32
+        0.24,
+        -40
       ],
       "radius": 4.6,
       "minTier": "T3"
@@ -422,8 +422,8 @@
       "asset": "mud-pot",
       "pos": [
         -42,
-        19.8,
-        48
+        18,
+        38
       ],
       "radius": 3.2,
       "minTier": "T3"
@@ -432,8 +432,8 @@
       "asset": "mud-pot",
       "pos": [
         86,
-        0.13,
-        -54
+        0.09,
+        -56
       ],
       "radius": 2.8,
       "scale": 0.85,
@@ -442,9 +442,9 @@
     {
       "asset": "sinter-terrace",
       "pos": [
-        14,
-        20.6,
-        49
+        -44,
+        23.89,
+        62
       ],
       "radius": 4.4,
       "scale": 0.85,
@@ -454,9 +454,9 @@
     {
       "asset": "sinter-terrace",
       "pos": [
-        28,
-        14.32,
-        25
+        44,
+        0.02,
+        -56
       ],
       "radius": 4.4,
       "scale": 0.85,
@@ -466,31 +466,9 @@
     {
       "asset": "fumarole",
       "pos": [
-        -40,
-        13.95,
-        24
-      ],
-      "radius": 1.65,
-      "scale": 1.1,
-      "minTier": "T4"
-    },
-    {
-      "asset": "fumarole",
-      "pos": [
-        -12,
-        14.41,
-        25
-      ],
-      "radius": 1.42,
-      "scale": 0.95,
-      "minTier": "T4"
-    },
-    {
-      "asset": "fumarole",
-      "pos": [
-        66,
-        14.35,
-        25
+        -56,
+        18.05,
+        38
       ],
       "radius": 1.5,
       "scale": 1,
@@ -499,31 +477,53 @@
     {
       "asset": "fumarole",
       "pos": [
-        -48,
-        8.71,
-        2
+        96,
+        17.95,
+        38
       ],
-      "radius": 1.65,
-      "scale": 1.1,
+      "radius": 1.5,
+      "scale": 1,
       "minTier": "T4"
     },
     {
       "asset": "fumarole",
       "pos": [
-        -8,
-        9.17,
-        2
+        96,
+        12.08,
+        14
       ],
-      "radius": 1.35,
-      "scale": 0.9,
+      "radius": 1.5,
+      "scale": 1,
       "minTier": "T4"
     },
     {
       "asset": "fumarole",
       "pos": [
-        30,
-        8.93,
-        2
+        -78,
+        11.97,
+        10
+      ],
+      "radius": 1.58,
+      "scale": 1.05,
+      "minTier": "T4"
+    },
+    {
+      "asset": "fumarole",
+      "pos": [
+        -78,
+        6.01,
+        -10
+      ],
+      "radius": 1.5,
+      "scale": 1,
+      "minTier": "T4"
+    },
+    {
+      "asset": "fumarole",
+      "pos": [
+        86,
+        6.07,
+        -10
       ],
       "radius": 1.5,
       "scale": 1,
@@ -533,8 +533,8 @@
       "asset": "fumarole",
       "pos": [
         54,
-        3.04,
-        -22
+        -0.05,
+        -52
       ],
       "radius": 1.58,
       "scale": 1.05,
@@ -544,11 +544,11 @@
       "asset": "fumarole",
       "pos": [
         -34,
-        -0.08,
-        -70
+        -0.11,
+        -66
       ],
-      "radius": 1.8,
-      "scale": 1.2,
+      "radius": 1.73,
+      "scale": 1.15,
       "minTier": "T4"
     },
     {
@@ -558,16 +558,16 @@
         0.04,
         -56
       ],
-      "radius": 1.73,
-      "scale": 1.15,
+      "radius": 1.65,
+      "scale": 1.1,
       "minTier": "T4"
     },
     {
       "asset": "fumarole",
       "pos": [
-        84,
-        22.03,
-        52
+        96,
+        24.13,
+        78
       ],
       "radius": 1.42,
       "scale": 0.95,
@@ -576,9 +576,9 @@
     {
       "asset": "fumarole",
       "pos": [
-        -46,
-        23.73,
-        56
+        -52,
+        23.8,
+        62
       ],
       "radius": 1.5,
       "scale": 1,
@@ -587,9 +587,9 @@
     {
       "asset": "sulfur-mound",
       "pos": [
-        -36,
-        17.39,
-        30
+        -50,
+        17.96,
+        38
       ],
       "radius": 0.95,
       "scale": 1,
@@ -598,9 +598,9 @@
     {
       "asset": "sulfur-mound",
       "pos": [
-        20,
-        14.34,
-        25
+        94,
+        13.85,
+        24
       ],
       "radius": 0.86,
       "scale": 0.9,
@@ -609,9 +609,9 @@
     {
       "asset": "sulfur-mound",
       "pos": [
-        -16,
-        9.08,
-        2
+        -76,
+        5.3,
+        -18
       ],
       "radius": 0.95,
       "scale": 1,
@@ -621,19 +621,19 @@
       "asset": "sulfur-mound",
       "pos": [
         42,
-        -0.02,
-        -52
+        -0.01,
+        -48
       ],
-      "radius": 1.05,
-      "scale": 1.1,
+      "radius": 0.95,
+      "scale": 1,
       "minTier": "T4"
     },
     {
       "asset": "sulfur-mound",
       "pos": [
         -36,
-        -0.12,
-        -64
+        -0.13,
+        -60
       ],
       "radius": 0.95,
       "scale": 1,
@@ -642,9 +642,20 @@
     {
       "asset": "lava-lobe",
       "pos": [
-        -44,
+        -56,
         23.89,
         62
+      ],
+      "radius": 1.61,
+      "scale": 1.15,
+      "minTier": "T4"
+    },
+    {
+      "asset": "lava-lobe",
+      "pos": [
+        88,
+        3.03,
+        -22
       ],
       "radius": 1.68,
       "scale": 1.2,
@@ -653,20 +664,9 @@
     {
       "asset": "lava-lobe",
       "pos": [
-        86,
-        6.9,
-        -2
-      ],
-      "radius": 1.82,
-      "scale": 1.3,
-      "minTier": "T4"
-    },
-    {
-      "asset": "lava-lobe",
-      "pos": [
         -76,
-        6,
-        -8
+        0.27,
+        -34
       ],
       "radius": 1.61,
       "scale": 1.15,
@@ -679,19 +679,19 @@
         0.17,
         -64
       ],
-      "radius": 1.75,
-      "scale": 1.25,
+      "radius": 1.68,
+      "scale": 1.2,
       "minTier": "T4"
     },
     {
       "asset": "lava-lobe",
       "pos": [
         -44,
-        -0.09,
-        -68
+        -0.08,
+        -66
       ],
-      "radius": 1.82,
-      "scale": 1.3,
+      "radius": 1.68,
+      "scale": 1.2,
       "minTier": "T4"
     },
     {
