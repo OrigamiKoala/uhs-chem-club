@@ -240,7 +240,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Verdigris | 2026-11-16 | 2026-11-16 | 2026-11-16 (8 of 8 housed) | 2026-11-16 | 2026-11-16 (`verify:verdigris` rewritten) | not yet |
 | Brinewire | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:brinewire` rewritten) | not yet |
 | Quicklight | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:quicklight` rewritten) | not yet |
-| Ember Reach | | | | | | |
+| Ember Reach | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:ember` rewritten) | not yet |
 | Mirrowen | | | | | | |
 | Bellows | | | | | | |
 | Lanternfall | | | | | | |
@@ -250,6 +250,8 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Ember Reach, 2026-11-18 (branch `site/ember`).** Built as the row says: the north-facing inside wall of a volcanic caldera stepping down 24 m across five levels (6 m per step) in a four-ramp switchback road with four hairpins toward a lava lake 20 m below Level 4; six rock-cut geothermal galleries (five distinct open-sided rock/sinter/brick/gantry/baffle architectures, two oriented sideways with 7.6 m railed lake-viewing bays) plus the enclosed gabled Turbine Hall at the foot. `world-shape.mjs`: bench ground 0.00 to 18.00 m (18.0 m, four levels), relief 24.15 m, housed 7 of 7 (R7 R7 R7 R7 R7 R7 R7), no cloned coordinates, 0 plates in view from spawn. `perf-worlds.mjs`: 369 draws, 141k triangles, 166 ms build (before: 464 draws, 250k triangles, 388 ms). Uses `lib/workings.js` (28 volumes: 14 open road/ramp/yard volumes, 7 doors, 7 rooms; `pass: false` 1.05 m railings along every lake-facing drop) and `lib/cover.js` (14 boxes, per-room sky residual 0.20–0.42). Departures: terrace steps were raised from 5 m to 6 m (1-in-5 ramps) so every gallery roof tucks cleanly below the terrace rail above it; `ember/terrain.js` retains `{ fbm2, buildRibbon, buildDisc }` exports for Mirrowen. Spec, build record and owner's viewing list: `docs/plans/ember-reach-world.md` ("Site rebuild (2026-11-18)").
 
 **Quicklight, 2026-11-17 (branch `site/quicklight`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -4.00 to
 5.00 m (9.0 m, five levels), relief 13.6 m, housed 6 of 6 (R8 R7 R7 R7 R7 R8), no cloned coordinates, no plate in view from the spawn.

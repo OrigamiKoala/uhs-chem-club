@@ -58,7 +58,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/bellows-world.md`
 
 ### Unit 05: Ember Reach (Thermochemistry and Calorimetry)
-- **Setting:** A hydrothermal caldera shelf with fumaroles, hot springs, turbines, and heat exchanger pipes.
+- **Setting:** The inside cliff wall of a volcanic caldera stepping down 24 m in a four-ramp switchback road toward a lava lake, with six rock-cut geothermal galleries and a turbine hall at the foot.
 - **Benches:** `q1-flux` (heat vs temperature), `q2-heat` (specific heat capacity q = mcΔT), `q3-calorimeter` (coffee-cup calorimetry), `q4-rxn` (enthalpy of chemical reaction), `q5-curve` (heating/cooling curves), `q6-hess` (Hess's law), `q7-bonds` (bond enthalpy calculations), and `boss-crucible`.
 - **Core Teaching Click:** Live thermal motion and temperature curves. A calorimeter isolates exchange; heat released equals heat absorbed.
 - **Reference:** `docs/plans/ember-reach-world.md`

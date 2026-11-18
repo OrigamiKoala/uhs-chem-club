@@ -336,3 +336,43 @@ Bench ground spans **15.0 m** (`0.00 to 15.00 m` across four levels); the walk s
 - **New:** `src/three/ember/caldera-plan.js` (pure data + height field + `lib/workings.js` volumes + `lib/cover.js` spec, no THREE).
 - **Rebuilt:** `src/three/ember/terrain.js`, `src/three/ember/host-plan.js`, `src/three/ember/stations.js`, `src/three/ember/plant.js` (adapted helpers kept, wall/rail/pipe builders updated), `src/three/ember.js`, `tools/gen-ember-layout.mjs`, `src/three/world-data/ember.json`, `tools/verify-ember.mjs`, and `BOSS_ARENA_SPOTS['boss-crucible']` in `src/learn/engine/boss-arena.js`.
 - **Archived** (to `archive/2026-11-18/site-ember/` with README): old `tools/gen-ember-layout.mjs`, old `tools/verify-ember.mjs`, old `src/three/ember/terrain.js`, old `src/three/ember/host-plan.js`, old `src/three/ember/stations.js`, old `src/three/ember.js`.
+
+### 10. Build record and before/after measurements (2026-11-18)
+
+Built on branch `site/ember` (`caldera-plan.js`, `terrain.js`, `host-plan.js`, `stations.js`, `ember.js`, `gen-ember-layout.mjs`, `verify-ember.mjs`, `boss-arena.js`).
+
+**Departures from the initial spec:**
+- **Terrace step raised from 5 m to 6 m (`LEVEL = [24, 18, 12, 6, 0]`):** A ray check from the rim shelf railing showed that a 5 m step let `room-2`'s roof slab (`15 + 5.2 + 0.9 = 21.1 m`) rise above Level 0 (`20 m`). Raising the step to 6 m (1-in-5 grade on the 30 m ramps) and trimming gallery roof slabs to 0.45 m tucked every rock-cut gallery roof cleanly below the terrace rail above it, increasing bench ground span from 15.0 m to **18.0 m** (`0.00 to 18.00 m`) and walk relief to **24.15 m**.
+- **Mirrowen compatibility exports:** `src/three/mirrowen/terrain.js` imports `{ fbm2, buildRibbon, buildDisc }` from `../ember/terrain.js`. All three remain exported from `ember/terrain.js` so `verify:mirrowen` passes unchanged.
+- **No direct sun openings in `coverSpec()`:** Because the gallery openings face north (`-z`) away from the WSW sun (`EMBER_SUN`), the galleries use `sky` residuals (`0.30–0.42`, `0.20` in the enclosed Turbine Hall) and their own overhead pooled filament lamps rather than sun shafts.
+
+**Before vs. after (`world-shape.mjs` and `perf-worlds.mjs`):**
+
+| Metric | Before (flat ring) | After (caldera switchback) | Ligar (reference) |
+| :--- | :---: | :---: | :---: |
+| Bench ground (m) | `0.00 to 0.00` (0.00 m) | `0.00 to 18.00` (**18.00 m**) | `-2.60 to 0.89` (3.49 m) |
+| Relief (m) | `0.44` | **`24.15`** | `21.55` |
+| Housed benches | `0/7` (`-2 -0 -1 -0 -1 -0 -3`) | **`7/7` (`R7 R7 R7 R7 R7 R7 R7`)** | `7/9` |
+| Plates in view from spawn | all visible | **`0`** | `<= 2` |
+| T4 draws (`perf-worlds.mjs`) | `464` | **`369`** (budget `<= 566`) | `566` |
+| T4 k tris (`perf-worlds.mjs`) | `250` | **`141`** (budget `<= 900`) | `867` |
+| Build time (ms) | `388` | **`166`** | `1127` |
+| Lights | `Dir*:1 Hemi:1 Dir:1 Pt:3` | `Dir*:1 Hemi:1 Dir:1 Pt:3` | `Dir*:1 Hemi:1 Pt*:1 Pt:3` |
+
+`perf-bench-rest.mjs`: `684 of 689 deployed table stages come to rest untouched` (all 7 Ember Reach benches come to rest).
+Archived files: `archive/2026-11-18/site-ember/` (`README.md`, `ember.js`, `terrain.js`, `host-plan.js`, `stations.js`, `gen-ember-layout.mjs`, `verify-ember.mjs`).
+
+### 11. Owner's viewing list (10 places to stand)
+
+Nothing here has been seen in a browser; every claim below is from Node geometry and ray checks.
+
+1. **Landing & Rim Shelf spawn `(26, 25.6, 66)`, looking west-northwest toward Ramp 1 and north toward the caldera:** You should see the rim's open yellow-painted steel railing (`z = 58`), the landing pad behind/east at `(66, 24, 76)`, Ramp 1 dropping west down the dark volcanic cliff wall, the active volcanic cone rising on the far north horizon (`375 m` away) with its fume plume, and **no bench plate in view**. *Failure:* a flat plate with benches standing in a ring, a roof poking above the rim rail, or a solid parapet hiding the drop.
+2. **First sight of Bench 1 — foot of Ramp 1 rounding Hairpin 1 `(-20, 19.6, 38)`, looking east along `road-1`:** You should see `road-1` running east at `y = 18 m` with an open railing on the left (north) over the caldera drop and the dark basalt cliff face on the right (south), with the amber-lit portal of Room 1 (`x ∈ [-8.2, -1.8]`) cut directly into the cliff wall ahead on the right. *Failure:* a freestanding hut on open ground, or a dark unlit hole with no lamp glow.
+3. **Bench 1 — Wellhead Exchanger Gallery (`room-1`, plate at `(-5, 18, 52)`, facing south into the plate then turning north):** Inside a rock-cut steel-ribbed gallery (`5.4 m` ceiling) with the wellhead, insulated flowline, lagged hot-water tank and corrugated plate heat exchanger behind the plate under two pendant lamps; turning around looks out the 6.4 m portal across `road-1` toward the caldera. *Failure:* cramped lean-in view, machinery touching the bay, or bright unshaded sky light inside the gallery.
+4. **Bench 2 — Perched Spring Gallery (`room-2`, plate at `(34.4, 18, 49.1)`, facing east into the plate):** Inside a sinter-arch gallery with a steaming turquoise geothermal seep basin behind the plate, sampling davit and basket on the right, lagged bath and scale on the left; to your left (north) is a 7.6 m railed viewing bay looking out across the caldera toward the volcanic cone. *Failure:* solid wall blocking the north bay, or water missing/buried.
+5. **Bench 3 — Boiler Vault (`room-3`, plate at `(51, 12, 28)`, facing south into the plate):** One level lower (`y = 12 m`) inside a refractory-brick barrel vault with the brick-set horizontal boiler drum, firebox door, flue piercing the vault crown, fuel-canister cage (left) and hopper (right). *Failure:* flat concrete box identical to Room 1, or flue clipping the bay.
+6. **Bench 4 — Fumarole Overhang (`room-4`, plate at `(5.5, 12, 28)`, facing south into the plate):** Under a wide rough-hewn stepped basalt overhang with an 8 m colonnade open to `road-2`; behind the plate, an active sulphur fumarole breathes under a helical copper cracking coil, exhaust hood and flue, flanked by supply drums and the dual-dial gauge board. *Failure:* fumarole steam missing or pipes floating/blocking the walk.
+7. **Bench 5 — Separator Gantry Bay (`room-5`, plate at `(-28.8, 6, 4)`, facing south into the plate):** Another level down (`y = 6 m`) inside a concrete-and-truss pipe gallery with overhead insulated steam mains; behind the plate stand the cyclone separator and overhead header splitting into two parallel routes (straight vertical shaft vs. three-step copper manifold) to the same floor drain. *Failure:* only one pipe route visible, or ceiling girders dipping into the lean-in camera.
+8. **Bench 6 — Silencer Expansion Alcove (`room-6`, plate at `(7.6, 6, 1.1)`, facing west into the plate):** Inside a baffled acoustic concrete alcove with twin vertical expansion silencers venting steam behind the plate, twin glass expansion bulbs and brass stopcock between them, vacuum pump (left) and gas cylinders (right); to your right (north) is a 7.4 m railed open bay overlooking the caldera drop. *Failure:* solid wall on the north bay, or identical orientation/architecture to Room 5.
+9. **Bench 7 — The Turbine Hall (`room-7`, plate at `(36, 0, -20)`, facing south into the plate):** At the lowest level (`y = 0 m`), inside a tall gabled steel-truss industrial hall (`6.8 m` eaves, `9.0 m` ridge) with the stepped steam turbine casing coupled to the ribbed generator behind the plate, four-gauge control console on the left, and refractory test furnace + brass beam balance on the right, under three high-bay pendant lamps. *Failure:* bright unshaded interior (cover mask not working), or turbine casing intruding on the bay behind the plate.
+10. **Lowest ground, expansion loop, Fifth's siphon, and Boss Arena (`(0, 1.6, -42)` facing north, then walking to the north rail `(0, 1.6, -70.5)`):** Entering `arena-deck` from `road-4` passes under the caldera main's 7.4 m expansion loop (`x = 20`); the open flat deck holds the Crucible's arena (`bossPos = [0, 0, -58]`), with the Fifth Guild's frost-furred siphon manifold visible on the west ledge (`x = -31.5, z = -54`); standing at the north rail (`z = -70.5`) gives a completely unobstructed view 20 m straight down onto the drifting crusted lava lake (`y = -20.25 m`) and the steaming volcanic cone beyond. *Failure:* expansion loop too low to walk under, anything obstructing the 16 m sightline to the Crucible, or any gap in the north railing.
