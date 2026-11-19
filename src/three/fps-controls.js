@@ -307,6 +307,10 @@ export class FpsControls {
     this.trauma = Math.min(1.0, this.trauma + amount);
   }
 
+  _canHover() {
+    return this.walkKeysAtBench || this.mode === "ship" || this.mode === "world";
+  }
+
   /** Derive movement booleans from the set of currently held key codes. */
   _syncKeyFlags() {
     const keys = this.pressedKeys;
@@ -315,7 +319,7 @@ export class FpsControls {
     this.moveLeft = keys.has("KeyA") || keys.has("ArrowLeft");
     this.moveRight = keys.has("KeyD") || keys.has("ArrowRight");
     this.isSprinting = keys.has("ShiftLeft") || keys.has("ShiftRight");
-    const canHover = this.walkKeysAtBench || this.mode === "ship";
+    const canHover = this._canHover();
     this.hoverUp = canHover && (keys.has("KeyR") || keys.has("PageUp"));
     this.hoverDown = canHover && (keys.has("KeyF") || keys.has("PageDown"));
     this.jumpHeld = keys.has("Space");
@@ -385,7 +389,7 @@ export class FpsControls {
       case "PageUp":
       case "KeyF":
       case "PageDown":
-        if (this.walkKeysAtBench || this.mode === "ship") {
+        if (this._canHover()) {
           if (e.code === "PageUp" || e.code === "PageDown") e.preventDefault?.();
           this.pressedKeys.add(e.code);
           this._syncKeyFlags();
@@ -433,7 +437,7 @@ export class FpsControls {
     this.euler.setFromQuaternion(this.camera.quaternion, "YXZ");
     this.euler.z = 0;
     this.velocity.set(0, 0, 0);
-    if (this.walkKeysAtBench || this.mode === "ship") {
+    if (this._canHover()) {
       const ground = this.terrainHeightFn ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z) : 0;
       this.hoverOffset = Math.max(HOVER_MIN, Math.min(HOVER_MAX, this.basePosition.y - ground - this.eyeHeight));
     }
@@ -445,7 +449,7 @@ export class FpsControls {
     this.ceilingHeightFn = ceilingFn;
     this.boundaryBounds = bounds;
     this.setColliders(colliders);
-    if (mode !== "ship" && !this.walkKeysAtBench) {
+    if (!this._canHover()) {
       this.hoverOffset = 0;
     }
     this.syncFromCamera();
@@ -622,9 +626,9 @@ export class FpsControls {
     const baseGroundY = this.terrainHeightFn
       ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z)
       : 0;
-    // Hover keys move the head up and down smoothly; off a bench (outside the
-    // ship) the offset eases back to standing height.
-    const canHover = this.walkKeysAtBench || this.mode === "ship";
+    // Hover keys move the head up and down smoothly when hovering is allowed;
+    // otherwise the offset eases back to standing height.
+    const canHover = this._canHover();
     let minHover = this.mode === "ship" ? Math.max(HOVER_MIN, SHIP_FLOOR_CLEARANCE - this.eyeHeight) : HOVER_MIN;
     let maxHover = HOVER_MAX;
     const ceilY = this.ceilingHeightFn
