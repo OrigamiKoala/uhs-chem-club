@@ -1,36 +1,31 @@
 /**
  * bellows.js — Bellows, Learn world 04, as a place you walk (T4).
  *
- * A cloud deck. One great circular steel platform rides a sea of pressurised
- * cloud in thin air, with the Compressor standing at its middle, the six benches
- * of "Gases" on a ring round it, a road of work lamps between them, the gas works
- * (holders, scoops, vents, pipe racks) standing off outside the ring, a rail round
- * the edge and the Avalon's pad on the near side. There is no ground in Bellows:
- * what you stand on is a plate, and what is under the plate is weather.
+ * A gas works hung in thin air over a sea of cloud. There is no ground: the player lands on a steel stage
+ * and walks railed catwalks and ramps between decks at seven heights, from 8 m under the stage to 12 m over
+ * it, round the works' structures: the Compressor's tower on its plinth (the apron in front of it is the
+ * boss's ground), a sphere on its skirt, a piston gasholder, a liquefier's cold box, a bladder moored over
+ * its gondola and a bladder hauled down onto its cradle. The six benches are inside those structures
+ * (`bellows/works-plan.js`).
  *
- * It is built behind the SAME contract as Tallow, Lanternfall and Ligar, so the
- * stage, the voyage, the walk HUD and the bench dispatcher treat it as just
- * another place:
- *
- *   scene, data, colliders, terrainMesh, hasFarTerrain, lampPool,
+ * Public contract (identical across all walkable Learn worlds):
+ *   scene, data, colliders, terrainMesh, hasFarTerrain, lampPool, cover,
  *   getTerrainHeight(x, z), benchAnchor(questId), setBenchDeployed(questId, on),
- *   setSiteComplete(questId, complete), update(delta, cameraPos), dispose()
+ *   setSiteComplete(questId, complete), routeTo(siteId, from, to), update(delta, cameraPos), dispose()
  *
- * The pieces live beside it in `three/bellows/` (sky and cloud sea, deck and rail,
- * props, sites, effects), laid out by `tools/gen-bellows-layout.mjs`.
+ * WHERE EVERYTHING LIVES
+ *   bellows/works-plan.js   the plan: levels, volumes, rooms, structures, the one height field (no THREE)
+ *   bellows/decks.js        the decks, rails, legs, rooms, passages and structures
+ *   bellows/stations.js     the six hosts in their rooms (host-plan.js is their footprints)
+ *   bellows/plant.js        the Compressor, the pad, the cumulus heads
+ *   bellows/vista.js        what stands in the far country
+ *   bellows/atmosphere.js   the sky, the cloud sea, the sun, the environment
+ *   bellows/effects.js      spindrift and plumes
+ * laid out by `tools/gen-bellows-layout.mjs`.
  *
- * THE RULES IT KEEPS, as the other worlds do:
- *   - NOTHING OCCUPIES THE SAME SPACE AS ANYTHING ELSE: every landmark declares a
- *     footprint, every pair is disjoint, and `verify:bellows` measures the world
- *     that was actually built.
- *   - A SITE FACES THE GROUND THE PLAYER WALKS IN FROM: the angle is derived from
- *     `approachPos`, so moving an approach mark turns the site to meet it.
- *   - ONLY LAMPS ARE LIT. A work lamp is a `lampMark` pooled into three real
- *     lights (`lamp-pool.js`); nothing here owns a PointLight.
- *   - WHAT NEVER MOVES IS BAKED. The Compressor's rod and wheel, the cased
- *     instruments and the indicators stay addressable; the rest is merged.
- *   - THE RAIL IS A WALL. The deck's edge is a closed ring of colliders, so the
- *     only drop in the world is one nobody can reach.
+ * THE RULES IT KEEPS: nothing occupies the same space as anything else; only lamps are lit, from a pool of
+ * three lights; what never moves is baked; every roofed room is under the shared cover mask; every drop is
+ * closed by the rails the plan declares.
  */
 
 import * as THREE from 'three';
@@ -39,26 +34,30 @@ import { tierAtLeast } from './tier.js';
 import {
   platedMetal, treadPlate, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
 } from './materials/pbr-kit.js';
+import { slabConcrete, ribbedSheet } from './materials/kettle-textures.js';
 import {
   createBwSkyDome, createCloudSea, createBwLights, followBwShadow, createBwEnvironment,
-  bwSkyUniforms, followCamera, BWSKY
+  bwSkyUniforms, followCamera, BWSKY, SUN_DIR
 } from './bellows/atmosphere.js';
-import { makeBellowsField, buildDeckGeometry, buildRim, buildMarkings, buildUnderside } from './bellows/terrain.js';
-import {
-  buildCompressorTower, buildGasholder, buildScoopPylon, buildPipeRack, buildVentStack,
-  buildCrateStack, buildMooredBladder, buildLampPost, buildCommsMast, buildLandingPad, buildCloudHeads
-} from './bellows/props.js';
+import { makeWorksPlan, PLINTH, SEA } from './bellows/works-plan.js';
+import { buildWorks, buildWorksLamps, buildDeckPlate } from './bellows/decks.js';
+import { buildCompressorTower, buildLandingPad, buildCloudHeads } from './bellows/plant.js';
+import { buildVista } from './bellows/vista.js';
 import { HOST_BUILDERS } from './bellows/stations.js';
 import { registerFieldPoint } from './field-points.js';
 import { createBellowsEffects } from './bellows/effects.js';
 import { LampPool } from './lamp-pool.js';
+import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
-/** The amber filament every work lamp in the world burns. A lamp is a lamp. */
+/** The amber filament every work lamp in the world burns. */
 const FILAMENT = 0xd99423;
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
+
+/** Where the Compressor stands on its plinth. */
+const COMPRESSOR_AT = [0, PLINTH.top, -10];
 
 export class BellowsWorld {
   constructor(renderer) {
@@ -72,7 +71,7 @@ export class BellowsWorld {
     this.benchAnchors = new Map();   // questId -> the physical frame of that site's working surface
     this.disposables = [];
     this.lamps = [];                 // lampMarks: where the pooled light comes from
-    this.vents = [];                 // world-space plume mouths
+    this.vents = [];                 // world-space plume mouths [x, y, z]
     this.movers = [];                // the Compressor's rod and wheel
     this.elapsed = 0;
     this.benchesOpen = 0;
@@ -80,16 +79,18 @@ export class BellowsWorld {
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
 
-    this.field = makeBellowsField(this.data);
+    this.plan = makeWorksPlan();
+    this.field = this.plan;
 
     this.initMaterials();
     this.initLighting();
     this.initSky();
-    this.initDeck();
+    this.initWorks();
     this.initLandmarks();
     this.initHosts();
     this.initEffects();
     this.initLampPool();
+    this.initCover();
     this.bakeStatics();
     this.buildColliders();
     this.collectMovers();
@@ -102,16 +103,11 @@ export class BellowsWorld {
     return objs[0];
   }
 
-  /** What the builders are handed: materials, `own`, the lamp list and the tier. */
+  /** What the builders are handed: materials, `own`, the lamp list, the tier and the plan. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.plan, plan: this.plan };
   }
 
-  /**
-   * Turn on ambient occlusion everywhere it was generated. `aoMap` samples the
-   * SECOND uv set, which a primitive geometry does not have, so one pass tells
-   * every mesh to reuse its own uvs for it.
-   */
   enableAmbientOcclusion() {
     const done = new Set();
     this.scene.traverse(o => {
@@ -131,61 +127,49 @@ export class BellowsWorld {
 
   initMaterials() {
     const M = {};
-    // The deck: tread plate, cold and bright, scoured by thin air and sun more than by rain.
+    const std = o => new THREE.MeshStandardMaterial(o);
+    const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => {
+      const m = buildMaterial(platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 1, roughness: 1.0 });
+      m.normalScale.set(1.2, 1.2);
+      m.aoMapIntensity = 0.85;
+      return m;
+    };
+
+    // The deck: tread plate, cold and bright, scoured by thin air and sun more than by rain; worn per vertex.
     M.deck = buildMaterial(treadPlate({ size: texSize(512), base: '#8e949c', seed: 7, weather: 0.35 }), { repeat: 1, roughness: 1.0 });
     M.deck.normalScale.set(1.1, 1.1);
     M.deck.envMapIntensity = 0.9;
-    M.deck.vertexColors = false;
+    M.deck.vertexColors = true;
 
-    const steel = platedMetal({
-      paint: '#b9c3cf', metal: '#8d98a5', rust: '#8a7660',
-      panels: 2, seed: 61, weather: 0.3, size: texSize(512)
-    });
-    const dark = platedMetal({
-      paint: '#3d4756', metal: '#5a6574', rust: '#6b5a48',
-      panels: 4, seed: 67, weather: 0.38, size: texSize(256)
-    });
-    const clad = platedMetal({
-      paint: '#d9dee6', metal: '#9aa4b2', rust: '#9a8266',
-      panels: 3, seed: 71, weather: 0.22, size: texSize(256)
-    });
-    M.steel = buildMaterial(steel, { repeat: 2, roughness: 1.0 });
-    M.darkSteel = buildMaterial(dark, { repeat: 3, roughness: 1.0 });
-    M.cladding = buildMaterial(clad, { repeat: 2, roughness: 1.0 });
-    for (const m of [M.steel, M.darkSteel, M.cladding]) { m.normalScale.set(1.2, 1.2); m.aoMapIntensity = 0.85; }
+    M.steel = metal('#b9c3cf', '#8d98a5', '#8a7660', 61, 0.3, 2, 512);
+    M.darkSteel = metal('#3d4756', '#5a6574', '#6b5a48', 67, 0.38, 4);
+    M.cladding = metal('#d9dee6', '#9aa4b2', '#9a8266', 71, 0.22, 3, 512);
+    M.grating = metal('#4a525e', '#5d6672', '#6b5a48', 73, 0.5, 6);
+    M.concrete = buildMaterial(slabConcrete({ size: texSize(512), seed: 13 }), { repeat: 1, roughness: 1.0 });
+    M.concrete.color.set(0xb6b8bc);
+    M.ribbed = buildMaterial(ribbedSheet({ size: texSize(512), seed: 47, paint: '#c9cfd6', rust: '#8a7660', weather: 0.25 }), { repeat: 1, roughness: 1.0 });
 
-    M.brass = new THREE.MeshStandardMaterial({ color: 0xb08d4c, roughness: 0.4, metalness: 0.9 });
-    M.skin = new THREE.MeshStandardMaterial({ color: 0x3b3b41, roughness: 0.82, metalness: 0.05 });
-    M.crate = new THREE.MeshStandardMaterial({ color: 0x6a7684, roughness: 0.85, metalness: 0.2 });
+    M.brass = std({ color: 0xb08d4c, roughness: 0.4, metalness: 0.9 });
+    M.copper = std({ color: 0xb5714a, roughness: 0.42, metalness: 0.9 });
+    M.skin = std({ color: 0x3b3b41, roughness: 0.82, metalness: 0.05 });
+    M.canvas = std({ color: 0x5c5a55, roughness: 0.95, metalness: 0 });
+    M.insul = std({ color: 0xd8dbdc, roughness: 0.85, metalness: 0.05 });
+    M.crate = std({ color: 0x6a7684, roughness: 0.85, metalness: 0.2 });
     // THE ONE CLEAN THING on a weathered plant: the cased instrument keeps its own bright paint and bare metal.
-    M.case = new THREE.MeshStandardMaterial({ color: 0xe6ebf1, roughness: 0.5, metalness: 0.25 });
-    M.caseDark = new THREE.MeshStandardMaterial({ color: 0x2d3744, roughness: 0.55, metalness: 0.4 });
-    M.rubber = new THREE.MeshStandardMaterial({ color: 0x1b1d21, roughness: 0.95, metalness: 0 });
-    M.cloud = new THREE.MeshStandardMaterial({ color: 0xf2f5fa, roughness: 1, metalness: 0 });
-    M.rime = new THREE.MeshStandardMaterial({ color: 0xdfe8f2, roughness: 0.6, metalness: 0 });
+    M.case = std({ color: 0xe6ebf1, roughness: 0.5, metalness: 0.25 });
+    M.caseDark = std({ color: 0x2d3744, roughness: 0.55, metalness: 0.4 });
+    M.rubber = std({ color: 0x1b1d21, roughness: 0.95, metalness: 0 });
+    M.cloud = std({ color: 0xf2f5fa, roughness: 1, metalness: 0 });
+    M.rime = std({ color: 0xdfe8f2, roughness: 0.6, metalness: 0 });
+    M.paintRed = std({ color: 0x8e2f22, roughness: 0.65, metalness: 0.1 });
 
-    // Hazed panes and dark glass. Transparent materials are decals to the overlap
-    // check and are left out of a bake, as in the other worlds.
-    M.pane = new THREE.MeshStandardMaterial({
-      color: 0xdbe6f3, roughness: 0.35, metalness: 0, transparent: true, opacity: 0.34,
-      depthWrite: false, side: THREE.DoubleSide
-    });
-    M.glass = new THREE.MeshStandardMaterial({
-      color: 0xc4dcef, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false
-    });
-    M.glassDark = new THREE.MeshStandardMaterial({ color: 0x0b1219, roughness: 0.2, metalness: 0.2 });
-
-    // Paint on the deck, and the ink of a rule or a dial: a decal, and a plain dark-on-light mark.
-    M.paint = new THREE.MeshStandardMaterial({
-      color: 0xc9a14a, roughness: 0.8, metalness: 0, transparent: true, opacity: 0.92,
-      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, depthWrite: false
-    });
-    M.paint2 = new THREE.MeshStandardMaterial({ color: 0xe8eef6, roughness: 0.6, metalness: 0 });
+    // Hazed panes and dark glass. Transparent materials are decals to the overlap check and are left out of a bake.
+    M.glass = std({ color: 0xc4dcef, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false });
+    M.glassDark = std({ color: 0x0b1219, roughness: 0.2, metalness: 0.2 });
+    M.paint2 = std({ color: 0xe8eef6, roughness: 0.6, metalness: 0 });
 
     // The one warm thing: an amber filament behind glass.
-    M.lantern = new THREE.MeshStandardMaterial({
-      color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6
-    });
+    M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
     for (const m of Object.values(M)) {
       this.own(m);
@@ -205,7 +189,6 @@ export class BellowsWorld {
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
 
-    // The haze is the horizon's own colour; near and far are what the voyage reads.
     const amb = this.data.ambience;
     this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
     this.scene.background = BWSKY.horizon.clone();
@@ -224,86 +207,70 @@ export class BellowsWorld {
   }
 
   /* ======================================================================
-     THE DECK AND THE SEA
+     THE WORKS: DECKS, RAILS, LEGS, ROOMS AND STRUCTURES, AND THE SEA UNDER THEM
      ====================================================================== */
 
-  /** The walking surface: the deck inside its rim, and the sea of cloud below it (a drop nobody can reach). */
+  /** The walking surface: a deck's floor where the plan declares one, and the cloud sea (a drop no one can reach) elsewhere. */
   getTerrainHeight(x, z) {
-    return this.field.height(x, z);
+    return this.plan.height(x, z);
   }
 
-  initDeck() {
-    const R = this.data.deck.radius;
+  initWorks() {
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
     for (const t of this.M.deck.userData.surfaceMaps || []) t.anisotropy = aniso;
 
-    this.deckMesh = new THREE.Mesh(this.own(buildDeckGeometry(R)), this.M.deck);
+    this.deckMesh = new THREE.Mesh(this.own(buildDeckPlate(this.plan)), this.M.deck);
     this.deckMesh.name = 'bellows-deck';
+    this.deckMesh.frustumCulled = false;
     this.deckMesh.userData.phys = 'ground';
     this.deckMesh.userData.noWeather = true;
     this.deckMesh.receiveShadow = this.t4;
     this.scene.add(this.deckMesh);
 
-    this.scene.add(buildUnderside(this.ctx, R, this.data.deck.seaLevel));
-
-    const rim = buildRim(this.ctx, R);
-    this.scene.add(rim.group);
-    this.rimColliders = rim.colliders;
-
-    this.scene.add(buildMarkings(this.ctx, this.data));
+    const works = buildWorks(this.ctx, this.plan);
+    this.works = works.group;
+    this.scene.add(this.works);
+    this.scene.add(buildWorksLamps(this.ctx, works.lamps));
 
     // The cloud sea is the world's ground to the horizon, and the thing the voyage reads as terrain.
-    this.sea = createCloudSea({ radius: 1500, y: this.data.deck.seaLevel });
+    this.sea = createCloudSea({ radius: 1500, y: SEA });
     this.own(this.sea.geometry, this.sea.material);
     this.terrainMesh = this.sea;
     this.scene.add(this.sea);
 
-    this.cloudHeads = buildCloudHeads(this.ctx, this.data.deck.seaLevel);
+    this.cloudHeads = buildCloudHeads(this.ctx, SEA);
     this.scene.add(this.cloudHeads);
+    this.vista = buildVista(this.ctx);
+    this.scene.add(this.vista);
   }
 
   /* ======================================================================
-     LANDMARKS
+     LANDMARKS: the pad, and the Compressor on its plinth
      ====================================================================== */
 
   initLandmarks() {
     const ctx = this.ctx;
-    let seed = 1;
-    let posts = 0;
     for (const lm of this.data.landmarks) {
-      if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
-      let node = null;
-      switch (lm.asset) {
-        case 'compressor-tower': node = buildCompressorTower(ctx); break;
-        case 'gasholder': node = buildGasholder(ctx, lm.rotY || 0); break;
-        case 'scoop-pylon': node = buildScoopPylon(ctx, lm.rotY || 0); break;
-        case 'pipe-rack': node = buildPipeRack(ctx, lm.rotY || 0); break;
-        case 'vent-stack': node = buildVentStack(ctx); break;
-        case 'crate-stack': node = buildCrateStack(ctx, lm.rotY || 0, seed++); break;
-        case 'bladder-moor': node = buildMooredBladder(ctx, lm.rotY || 0); break;
-        case 'lamp-post': node = buildLampPost(ctx, posts++); break;
-        case 'comms-mast': node = buildCommsMast(ctx); break;
-        case 'landing-pad': node = buildLandingPad(ctx); break;
-        default: node = null;
-      }
-      if (!node) continue;
-      node.position.set(lm.pos[0], 0, lm.pos[2]);
-      node.name = `${lm.asset}@${lm.pos[0]},${lm.pos[2]}`;
-      if (lm.asset === 'landing-pad') node.userData.phys = 'ground';
-      for (const v of node.userData.vents || []) this.vents.push([lm.pos[0] + v[0], v[1], lm.pos[2] + v[2]]);
+      if (lm.asset !== 'landing-pad') continue;
+      const node = buildLandingPad(ctx);
+      node.position.set(lm.pos[0], this.getTerrainHeight(lm.pos[0], lm.pos[2]), lm.pos[2]);
+      node.name = `landing-pad@${lm.pos[0]},${lm.pos[2]}`;
+      node.userData.phys = 'ground';
       this.scene.add(node);
     }
+    const tower = buildCompressorTower(ctx);
+    tower.position.set(...COMPRESSOR_AT);
+    tower.name = 'compressor-tower';
+    for (const v of tower.userData.vents || []) this.vents.push([COMPRESSOR_AT[0] + v[0], COMPRESSOR_AT[1] + v[1], COMPRESSOR_AT[2] + v[2]]);
+    this.scene.add(tower);
+    this.compressor = tower;
   }
 
   /* ======================================================================
-     THE SITES
+     THE SIX HOSTS
      ====================================================================== */
 
-  /**
-   * Which way a site faces: toward the ground a player walks in from. Derived
-   * from `approachPos`, the same rule the other worlds follow, for the same
-   * reason: a hardcoded angle puts a player behind a bench's back wall.
-   */
+  /** Which way a site faces: toward the floor a player walks in from (derived from `approachPos`). */
   siteFacing(site) {
     const ax = (site.approachPos?.[0] ?? site.pos[0]) - site.pos[0];
     const az = (site.approachPos?.[2] ?? site.pos[2]) - site.pos[2];
@@ -311,13 +278,9 @@ export class BellowsWorld {
     return Math.atan2(ax, az);
   }
 
-  /**
-   * Build every host: the piece of the gas works a bench belongs to (stations.js), placed at its site and
-   * turned to face its approach. The bench is a part of its host, one object, so a bench is never bolted to
-   * anything but the machine it is for.
-   */
   initHosts() {
     this.siteColliders = [];
+    this.hostVents = [];
     for (const site of this.data.sites) {
       const build = HOST_BUILDERS[site.id];
       if (!build || !site.built) continue;
@@ -330,9 +293,15 @@ export class BellowsWorld {
       this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
       this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
 
-      // The places the player is sent to for this bench (plan section 2.5): real pieces of the host, in the world's frame.
       const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
       const at = (lx, lz) => [g.position.x + lx * cos + lz * sin, g.position.z - lx * sin + lz * cos];
+
+      for (const v of host.vents || []) {
+        const [x, z] = at(v.lx, v.lz);
+        this.hostVents.push([x, g.position.y + v.ly, z]);
+      }
+
+      // The places the player is sent to for this bench (a field stage): real pieces of the host, in the world's frame.
       for (const fp of host.fieldPoints || []) {
         const [px, pz] = at(fp.lx, fp.lz);
         const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
@@ -343,39 +312,27 @@ export class BellowsWorld {
         });
       }
 
-      // The host's colliders are in its own frame; the walk wants them in the world's. A host is turned to face its approach, and
-      // a turned box would collide as the larger box that holds it, so a box is laid as a row of discs along its long side.
+      // Every host faces along an axis, so a box stays an exact box in the world's frame.
       for (const c of host.colliders) {
-        if (c.r !== undefined) { const [x, z] = at(c.lx, c.lz); this.siteColliders.push({ x, z, radius: c.r }); continue; }
-        const long = Math.max(c.hw, c.hd);
-        const short = Math.min(c.hw, c.hd);
-        const n = Math.max(1, Math.ceil((long * 2) / (short * 1.3)));
-        const step = n > 1 ? (long * 2 - short * 2) / (n - 1) : 0;
-        for (let i = 0; i < n; i++) {
-          const o = n > 1 ? -long + short + i * step : 0;
-          const [x, z] = c.hw >= c.hd ? at(c.lx + o, c.lz) : at(c.lx, c.lz + o);
-          this.siteColliders.push({ x, z, radius: short });
+        if (c.r !== undefined) {
+          const [x, z] = at(c.lx, c.lz);
+          this.siteColliders.push({ x, z, radius: c.r });
+          continue;
         }
+        const [p0x, p0z] = at(c.lx - c.hw, c.lz - c.hd);
+        const [p1x, p1z] = at(c.lx + c.hw, c.lz + c.hd);
+        this.siteColliders.push({ minX: Math.min(p0x, p1x), maxX: Math.max(p0x, p1x), minZ: Math.min(p0z, p1z), maxZ: Math.max(p0z, p1z) });
       }
     }
   }
 
-  /**
-   * Record where a bench's working surface is, in world terms. `local` is where
-   * the bench sits inside the site group; the group's own rotation is applied so
-   * a site that faces another way still reports the plate it actually has.
-   */
   registerBenchAnchor(site, group, bench, local) {
     const cos = Math.cos(group.rotation.y);
     const sin = Math.sin(group.rotation.y);
     const [lx, ly, lz] = local;
     this.benchAnchors.set(site.questId, {
       siteId: site.id,
-      position: [
-        group.position.x + lx * cos + lz * sin,
-        group.position.y + (ly || 0),
-        group.position.z - lx * sin + lz * cos
-      ],
+      position: [group.position.x + lx * cos + lz * sin, group.position.y + (ly || 0), group.position.z - lx * sin + lz * cos],
       rotationY: group.rotation.y,
       topY: group.position.y + (ly || 0) + bench.topY,
       dormant: bench.dormant
@@ -393,15 +350,11 @@ export class BellowsWorld {
     }
   }
 
-  /** The working surface for a quest's site, or null if it has no bench. */
   benchAnchor(questId) {
     return this.benchAnchors.get(questId) || null;
   }
 
-  /**
-   * Light a site's indicator when its quest is complete. Driven by the Learn
-   * track's own progress: the world reads state, it never keeps it.
-   */
+  /** Light a site's indicator when its quest is complete. The world reads state, it never keeps it. */
   setSiteComplete(questId, complete) {
     const marker = this.siteMarkers.get(questId);
     if (!marker || !marker.indicator) return;
@@ -410,24 +363,29 @@ export class BellowsWorld {
     marker.indicator.material.needsUpdate = true;
   }
 
+  /** The way on foot to a bench: deck by deck, along the catwalks and ramps, door by door (`lib/workings.js`). */
+  routeTo(siteId, fromPos, toPos = null) {
+    const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.y, fromPos.z];
+    const site = this.data.sites.find(s => s.id === siteId || s.questId === siteId);
+    const to = toPos ? (Array.isArray(toPos) ? toPos : [toPos.x, toPos.y, toPos.z]) : site?.approachPos;
+    if (!to) return [[from[0], from[from.length - 1]]];
+    return this.plan.routeTo(from[0], from[from.length - 1], to[0], to[to.length - 1]);
+  }
+
   /* ======================================================================
-     AIR, LAMPS AND THE FRAME BUDGET
+     AIR, LAMPS, COVER MASK AND BAKE
      ====================================================================== */
 
   initEffects() {
+    const vents = [...this.vents, ...this.hostVents, ...(this.data.vents || []).map(v => [v.x, v.y, v.z])];
     this.effects = createBellowsEffects({
       heightAt: (x, z) => this.getTerrainHeight(x, z),
       t4: this.t4,
-      vents: this.vents
+      vents
     });
     this.scene.add(this.effects.group);
   }
 
-  /**
-   * THE WORK LAMPS SHARE THREE LIGHTS. A lamp's light shows only within a few
-   * metres of it, so only the lamps round the player need a real light at all
-   * (lamp-pool.js).
-   */
   initLampPool() {
     this.lampPool = new LampPool(this.scene, 3);
     this.scene.updateMatrixWorld(true);
@@ -436,11 +394,12 @@ export class BellowsWorld {
     }
   }
 
-  /**
-   * WHAT NEVER MOVES IS BAKED. Every top-level group not already baked becomes a
-   * mesh or two per material; the cased instruments, the indicators and the
-   * Compressor's moving parts stay their own meshes.
-   */
+  initCover() {
+    this.cover = makeCover({ sun: SUN_DIR, ...this.plan.coverSpec() });
+    this.cover.applyTo(this.scene);
+  }
+
+  /** WHAT NEVER MOVES IS BAKED. The cased instruments, the indicators and the Compressor's moving parts stay their own meshes. */
   bakeStatics() {
     const bake = (group) => {
       group.traverse(o => {
@@ -460,8 +419,6 @@ export class BellowsWorld {
       if (node === this.effects?.group) continue;
       bake(node);
     }
-    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
-    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
     this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
@@ -470,54 +427,18 @@ export class BellowsWorld {
     });
   }
 
-  /** Find the moving parts once the bake is done: the baked props kept them as they were. */
   collectMovers() {
     this.scene.traverse(o => { if (o.userData.mover) this.movers.push(o); });
   }
 
   /* ======================================================================
-     COLLISION
-     Every prop collides as the part of it a body can actually touch.
+     COLLISION: the walls and rails the plan declares, the drum's ring, the hosts
      ====================================================================== */
 
   buildColliders() {
-    const push = (x, z, radius) => this.colliders.push({ x, z, radius });
-    const rot = (lm, lx, lz) => {
-      const c = Math.cos(lm.rotY || 0), s = Math.sin(lm.rotY || 0);
-      return [lm.pos[0] + lx * c + lz * s, lm.pos[2] - lx * s + lz * c];
-    };
-
-    for (const lm of this.data.landmarks) {
-      if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
-      switch (lm.asset) {
-        case 'lamp-post': push(lm.pos[0], lm.pos[2], 0.3); break;
-        case 'compressor-tower': push(lm.pos[0], lm.pos[2], 11.4); break;
-        case 'gasholder':
-          // The holder stands on six legs: a player can walk under the sphere, never through a leg.
-          for (let i = 0; i < 6; i++) {
-            const a = (i / 6) * Math.PI * 2 + 0.2;
-            const [x, z] = rot(lm, Math.cos(a) * 3.9, Math.sin(a) * 3.9);
-            push(x, z, 0.55);
-          }
-          break;
-        case 'scoop-pylon': push(lm.pos[0], lm.pos[2], 1.7); break;
-        case 'vent-stack': push(lm.pos[0], lm.pos[2], 1.5); break;
-        case 'comms-mast': push(lm.pos[0], lm.pos[2], 0.7); break;
-        case 'pipe-rack':
-          // Elevated: it collides as its trestle feet, and you walk under the pipes.
-          for (const x of [-6.2, -2.07, 2.07, 6.2]) {
-            for (const z of [-1.5, 1.5]) { const [px, pz] = rot(lm, x, z); push(px, pz, 0.45); }
-          }
-          break;
-        case 'bladder-moor':
-          for (const x of [-2.4, -1.2, 0, 1.2, 2.4]) { const [px, pz] = rot(lm, x, 0); push(px, pz, 1.3); }
-          break;
-        case 'crate-stack': push(lm.pos[0], lm.pos[2], 1.9); break;
-        default: break;   // the pad is walked over
-      }
-    }
+    for (const c of this.plan.wallColliders()) this.colliders.push(c);
+    for (const c of this.plan.extraColliders()) this.colliders.push(c);
     for (const c of this.siteColliders) this.colliders.push(c);
-    for (const c of this.rimColliders) this.colliders.push(c);
   }
 
   /* ======================================================================
