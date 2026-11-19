@@ -28,6 +28,6 @@ export const HOST_PLAN = Object.fromEntries(ROOMS.map(rm => {
     skin: rm.skin,
     plate: rm.plate,
     shell: rm.shell,
-    extent: [-halfX, halfX, backZ, 3.0]
+    extent: [-halfX, halfX, backZ, 6.0]
   }];
 }));

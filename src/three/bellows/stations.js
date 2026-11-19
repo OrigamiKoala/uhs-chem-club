@@ -27,6 +27,7 @@
 import * as THREE from 'three';
 import { buildBayBench, ctxMats } from '../bench-bay.js';
 import { HOST_PLAN } from './host-plan.js';
+import { BAGS, bagBelly } from './works-plan.js';
 
 const LAMP = 0xd99423;
 const Y = new THREE.Vector3(0, 1, 0);
@@ -203,13 +204,114 @@ function start(w, siteId, name) {
 const done = ({ g, bench, colliders, vents, fieldPoints }) => ({ group: g, bench, benchLocal: [0, 0, 0], colliders, vents, fieldPoints });
 
 /* ======================================================================
+   1. INSIDE THE SPHERE'S SKIRT (site-1, q1-knocks, Pressure and Temperature)
+   The plated skirt that carries the spherical holder; the catch deck under the sphere is the roof. Behind
+   the plate the gauge board on the skirt, its lines running up through the deck to the sphere. To the left
+   the sphere's relief valve on its stand and the knockout pot under it; to the right the drain leg down
+   from the sphere into the drain pot with its level glass, and a ladder up the skirt to the deck's hatch.
+   ====================================================================== */
+
+function buildSkirt(w) {
+  const h = start(w, 'site-1', 'sphere-skirt');
+  const { k, M, g, colliders } = h;
+  const CEIL = 4.8;
+  // The gauge board on the back plating, above the screens, its lines up to the sphere.
+  k.box(g, [3.8, 1.0, 0.06], M.darkSteel, [0, 3.05, -3.24]);
+  for (const [x, n] of [[-1.35, -0.9], [-0.45, -0.3], [0.45, 0.2], [1.35, 0.7]]) {
+    k.gauge(g, x, 3.05, -3.2, 0.2, n);
+    k.strut(g, [x, 3.25, -3.17], [x, 5.15, -3.17], 0.014, M.copper, 5);
+  }
+  // A header along the back plating high up, from the relief stand across to the drain leg.
+  k.pipe(g, [[-4.6, 4.3, -2.95], [4.6, 4.3, -2.95]], 0.12, M.steel);
+  // THE RELIEF VALVE at the left: a riser from the header down to a spring valve, its discharge into the knockout pot.
+  k.pipe(g, [[-4.6, 4.3, -2.95], [-4.6, 2.4, -2.95]], 0.12, M.steel);
+  k.cyl(g, [0.22, 0.22, 0.55, 14], M.paintRed, [-4.6, 2.05, -2.95]);
+  k.cyl(g, [0.1, 0.16, 0.7, 12], M.paintRed, [-4.6, 2.65, -2.95]);
+  k.cyl(g, [0.16, 0.16, 0.08, 12], M.darkSteel, [-4.6, 1.75, -2.95]);
+  k.pipe(g, [[-4.6, 1.75, -2.95], [-4.6, 1.75, -1.4], [-5.3, 1.75, -1.0]], 0.1, M.steel);
+  k.box(g, [0.5, 1.7, 0.5], M.darkSteel, [-4.6, 0.85, -2.95]);
+  k.vessel(g, -5.3, -0.6, 0.62, 1.4, M.steel);
+  k.gauge(g, -5.3, 1.1, 0.04, 0.14, 0.2);
+  colliders.push({ lx: -4.6, lz: -2.95, r: 0.42 });
+  colliders.push({ lx: -5.3, lz: -0.6, r: 0.72 });
+  // THE DRAIN LEG at the right: down from the deck to a drain pot with its level glass and a valve to the floor drain.
+  k.pipe(g, [[4.6, 4.3, -2.95], [4.6, 5.15, -2.95]], 0.12, M.steel);
+  k.pipe(g, [[5.0, 5.15, -1.2], [5.0, 2.2, -1.2]], 0.16, M.steel);
+  k.vessel(g, 5.0, -1.2, 0.55, 1.2, M.steel);
+  k.strut(g, [5.62, 0.6, -1.2], [5.62, 1.6, -1.2], 0.045, M.glass, 8);
+  for (const y of [0.55, 1.65]) k.box(g, [0.14, 0.08, 0.14], M.darkSteel, [5.62, y, -1.2]);
+  k.pipe(g, [[5.0, 0.35, -0.6], [5.0, 0.35, 0.3], [5.0, 0.05, 0.3]], 0.07, M.steel);
+  k.wheel(g, 5.0, 0.75, 0.3, 0.12);
+  colliders.push({ lx: 5.0, lz: -1.0, r: 0.75 });
+  colliders.push({ lx: 5.0, lz: 0.3, r: 0.2 });
+  // The ladder up the right-hand plating to the hatch in the catch deck.
+  for (const z of [1.9, 2.5]) k.box(g, [0.06, CEIL + 0.3, 0.06], M.darkSteel, [6.45, (CEIL + 0.3) / 2, z]);
+  for (let y = 0.3; y < CEIL; y += 0.3) k.box(g, [0.03, 0.03, 0.6], M.darkSteel, [6.45, y, 2.2]);
+  colliders.push({ lx: 6.3, lz: 2.2, hw: 0.3, hd: 0.45 });
+  // Lamps hung from the catch deck's beams.
+  k.pendant(g, 0, 3.4, -0.6, CEIL);
+  k.pendant(g, -4.0, 3.6, 2.8, CEIL, { intensity: 5 });
+  k.pendant(g, 3.8, 3.6, 2.8, CEIL, { intensity: 5 });
+  return done(h);
+}
+
+/* ======================================================================
+   2. THE COMPRESSOR TOWER'S BASE HALL (site-2, q2-laws, The Gas Laws)
+   Cast into the plinth under the Compressor. Behind the plate the crankcase along the back wall with
+   the three crosshead guides rising from it through the roof to the cylinders above. To the left the
+   intercooler lies on its saddles; to the right the receiver stands, and the delivery main runs across
+   under the roof from one to the other.
+   ====================================================================== */
+
+function buildHall(w) {
+  const h = start(w, 'site-2', 'tower-hall');
+  const { k, M, g, colliders } = h;
+  const CEIL = 5.2;
+  // The crankcase: a long cast block along the back wall, inspection doors in its face, the shaft's cover on top.
+  k.box(g, [11.2, 1.9, 1.12], M.darkSteel, [0, 0.95, -2.71], null, true);
+  for (const x of [-4.2, -1.4, 1.4, 4.2]) {
+    k.box(g, [1.1, 0.8, 0.04], M.steel, [x, 1.05, -2.13]);
+    for (const [dx, dy] of [[-0.45, -0.3], [0.45, -0.3], [-0.45, 0.3], [0.45, 0.3]]) k.cyl(g, [0.035, 0.035, 0.05, 6], M.brass, [x + dx, 1.05 + dy, -2.1], [Math.PI / 2, 0, 0]);
+  }
+  k.cyl(g, [0.5, 0.5, 11.0, 18], M.steel, [0, 1.9, -2.71], [0, 0, Math.PI / 2]);
+  // The crosshead guides: three cast frames from the crankcase up through the roof to the cylinders above.
+  for (const x of [-3.6, 0, 3.6]) {
+    k.box(g, [1.0, CEIL - 2.3, 0.9], M.steel, [x, 2.3 + (CEIL - 2.3) / 2, -2.78], null, true);
+    k.box(g, [0.5, 1.4, 0.04], M.glassDark, [x, 3.4, -2.31]);
+    k.box(g, [1.2, 0.16, 1.1], M.darkSteel, [x, 2.38, -2.78]);
+  }
+  // Oil lines along the crankcase's top.
+  k.pipe(g, [[-5.2, 2.2, -2.3], [5.2, 2.2, -2.3]], 0.04, M.brass);
+  colliders.push({ lx: 0, lz: -2.71, hw: 5.65, hd: 0.6 });
+  // THE INTERCOOLER at the left: a shell on two saddles, its tube plate and water connections, a line up to the roof.
+  for (const z of [-1.4, 2.0]) k.box(g, [1.2, 0.6, 0.4], M.darkSteel, [-4.9, 0.3, z]);
+  k.cyl(g, [0.72, 0.72, 4.4, 22], M.steel, [-4.9, 1.3, 0.3], [Math.PI / 2, 0, 0], true);
+  for (const z of [-1.9, 2.5]) k.cyl(g, [0.86, 0.86, 0.12, 22], M.darkSteel, [-4.9, 1.3, z], [Math.PI / 2, 0, 0]);
+  k.pipe(g, [[-4.9, 2.0, -1.0], [-4.9, CEIL - 0.6, -1.0], [-4.9, CEIL - 0.6, -2.3]], 0.16, M.steel);
+  k.pipe(g, [[-5.5, 1.9, 1.6], [-5.5, 2.6, 1.6], [-6.3, 2.6, 1.6]], 0.08, M.steel);
+  k.pipe(g, [[-4.3, 1.9, 1.6], [-4.3, 2.6, 1.6], [-4.3, 2.6, 2.9]], 0.08, M.steel);
+  colliders.push({ lx: -4.9, lz: 0.3, hw: 0.95, hd: 2.4 });
+  // THE RECEIVER at the right: a vertical vessel, its relief valve and gauge, the delivery main across under the roof.
+  k.vessel(g, 4.9, 0.6, 0.95, 2.8, M.steel);
+  k.cyl(g, [0.12, 0.12, 0.5, 10], M.paintRed, [4.9, 4.05, 0.6]);
+  k.gauge(g, 4.9, 1.6, 1.58, 0.2, 0.5);
+  k.pipe(g, [[4.9, 4.3, 0.6], [4.9, CEIL - 0.6, 0.6], [4.9, CEIL - 0.6, -2.3], [-4.9, CEIL - 0.6, -2.3]], 0.16, M.steel);
+  colliders.push({ lx: 4.9, lz: 0.6, r: 1.1 });
+  // A lube oil pump skid in the back right corner beside the crankcase.
+  // Lamps hung from the crane girders.
+  k.pendant(g, 0, 3.4, -0.6, CEIL - 0.55);
+  k.pendant(g, -3.2, 3.7, 3.6, CEIL, { intensity: 5 });
+  k.pendant(g, 3.2, 3.7, 3.6, CEIL, { intensity: 5 });
+  return done(h);
+}
+
+/* ======================================================================
    3. THE METER HOUSE INSIDE THE PISTON HOLDER (site-3, q3-ideal, Ideal Gas Law)
    Low plated partitions inside the drum, the piston parked overhead. Behind the plate the meter run
    carries the gas in from the inlet riser at the left, which stands up to a bellmouth under the piston.
    To the left the volume indicator reads the piston's height off a tape; to the right the station meter
    and its gauge and thermometer stand.
    ====================================================================== */
-
 function buildHolderMeter(w) {
   const h = start(w, 'site-3', 'holder-meter');
   const { k, M, g, colliders } = h;
@@ -263,25 +365,185 @@ function buildHolderMeter(w) {
 }
 
 /* ======================================================================
-   PLACEHOLDER (phase 2): the bench, a lamp over it and a box where the host's machinery will stand
+   4. THE GONDOLA UNDER THE MOORED BLADDER (site-4, q4-mixtures, Partial Pressures)
+   The car hung under the bag, moored alongside the deck. Behind the plate the blending manifold on the
+   car's end wall, four cell valves on it, each with a riser up through the roof to one of the bag's cells.
+   To the left the racks of gas bottles the blend is made from; to the right the sampling counter with its
+   bottles and a manometer. Windows along both sides look out over the drop.
    ====================================================================== */
 
-function placeholder(siteId) {
-  return w => {
-    const h = start(w, siteId, `host-${siteId}`);
-    h.k.pendant(h.g, 0, 3.4, -0.6, 5.0);
-    h.k.box(h.g, [3, 2, 1.2], w.M.darkSteel, [0, 1, -2.6]);
-    h.colliders.push({ lx: 0, lz: -2.6, hw: 1.5, hd: 0.6 });
-    return done(h);
-  };
+function buildGondola(w) {
+  const h = start(w, 'site-4', 'gondola');
+  const { k, M, g, colliders } = h;
+  const CEIL = 4.95;
+  // The blending manifold: a header across the end wall, a cell valve and a gauge on each riser.
+  k.pipe(g, [[-4.6, 1.5, -2.7], [4.6, 1.5, -2.7]], 0.1, M.steel);
+  for (const [i, x] of [-3.6, -1.2, 1.2, 3.6].entries()) {
+    k.pipe(g, [[x, 1.5, -2.7], [x, 1.5, -2.95], [x, CEIL + 0.2, -2.95]], 0.07, M.steel);
+    k.cyl(g, [0.12, 0.12, 0.3, 10], M.darkSteel, [x, 2.0, -2.95]);
+    const wh = new THREE.Mesh(k.own(new THREE.TorusGeometry(0.17, 0.02, 6, 16)), M.paintRed);
+    wh.position.set(x, 2.0, -2.7);
+    g.add(wh);
+    k.gauge(g, x, 2.85, -2.86, 0.15, -0.6 + i * 0.4);
+  }
+  for (const x of [-4.4, 4.4]) k.box(g, [0.25, 1.5, 0.4], M.darkSteel, [x, 0.75, -2.8]);
+  k.cyl(g, [0.16, 0.16, 0.6, 12], M.darkSteel, [0, 1.5, -2.7], [0, 0, Math.PI / 2]);
+  colliders.push({ lx: 0, lz: -2.8, hw: 4.7, hd: 0.35 });
+  // THE BOTTLE RACKS at the left: two rows of cylinders in a frame, chained, their valves capped.
+  for (const z of [-2.2, -1.3, -0.4, 0.5]) {
+    for (const x of [-4.0, -4.9]) {
+      k.cyl(g, [0.15, 0.15, 1.45, 12], z < -1 ? M.caseDark : M.steel, [x, 0.75, z]);
+      k.cyl(g, [0.07, 0.11, 0.18, 10], M.brass, [x, 1.56, z]);
+    }
+  }
+  for (const y of [0.4, 1.2]) {
+    k.box(g, [1.6, 0.05, 3.4], M.darkSteel, [-4.45, y, -0.85]);
+  }
+  for (const [x, z] of [[-3.65, -2.5], [-5.25, -2.5], [-3.65, 0.8], [-5.25, 0.8]]) k.box(g, [0.06, 1.4, 0.06], M.darkSteel, [x, 0.7, z]);
+  k.pipe(g, [[-4.0, 1.7, -2.2], [-4.0, 2.3, -2.2], [-4.0, 2.3, -2.7]], 0.04, M.copper);
+  colliders.push({ lx: -4.45, lz: -0.85, hw: 0.95, hd: 1.8 });
+  // THE SAMPLING COUNTER at the right: a counter on legs along the car's side, sample bottles and a manometer on it.
+  k.box(g, [0.8, 0.06, 2.6], M.darkSteel, [4.9, 0.92, 1.3]);
+  for (const [x, z] of [[4.6, 0.1], [5.2, 0.1], [4.6, 2.5], [5.2, 2.5]]) k.box(g, [0.05, 0.9, 0.05], M.darkSteel, [x, 0.45, z]);
+  for (const z of [0.4, 0.8, 1.2]) k.cyl(g, [0.07, 0.07, 0.3, 12], M.glass, [4.8, 1.1, z]);
+  k.box(g, [0.06, 0.9, 0.5], M.darkSteel, [5.25, 1.4, 2.0]);
+  for (const z of [1.85, 2.15]) k.strut(g, [5.2, 1.05, z], [5.2, 1.8, z], 0.02, M.glass, 6);
+  k.pipe(g, [[5.2, 1.0, 1.85], [5.2, 0.98, 2.15]], 0.02, M.glass);
+  colliders.push({ lx: 4.9, lz: 1.3, hw: 0.55, hd: 1.4 });
+  // A blend vessel in the right back corner, the bottles' line into it, its outlet into the header.
+  k.vessel(g, 4.7, -1.8, 0.5, 1.6, M.steel);
+  k.pipe(g, [[4.7, 2.6, -1.8], [4.7, 2.8, -1.8], [4.6, 2.8, -2.6], [4.6, 1.5, -2.7]], 0.05, M.steel);
+  colliders.push({ lx: 4.7, lz: -1.8, r: 0.6 });
+  // Lamps from the car's roof frames.
+  k.pendant(g, 0, 3.4, -0.6, CEIL);
+  k.pendant(g, 0, 3.8, 5.6, CEIL, { intensity: 5 });
+  return done(h);
+}
+
+/* ======================================================================
+   5. UNDER THE BLADDER ON ITS CRADLE (site-5, q5-speed, Speed and Escape)
+   A bladder brought down onto its cradle for its skin test: its belly is the roof and its curtain the
+   walls. Behind the plate a square of the bag's skin stretched in a test frame, and the leak-test header
+   along the back curtain with its two effusion tubes. To the left the inflation trunk comes down out of
+   the bag to its valve; to the right the bank of bottles the bag is filled from.
+   ====================================================================== */
+
+function buildCradle(w) {
+  const h = start(w, 'site-5', 'bag-cradle');
+  const { k, M, g, colliders } = h;
+  const site = w.data.sites.find(s => s.id === 'site-5');
+  const bag = BAGS.find(b => b.id === 'cradled');
+  // The bag's belly over a point of the room, in the host frame (the host faces south: local x is world x).
+  const ceil = (lx, lz) => bagBelly(bag, site.pos[0] + lx, site.pos[2] + lz) - site.pos[1] - 0.05;
+  // THE SKIN UNDER TEST: a square of the bag's skin stretched in a frame, a test cell clamped on its face.
+  k.box(g, [2.6, 0.12, 0.4], M.darkSteel, [0, 0.06, -2.75]);
+  for (const x of [-1.25, 1.25]) k.box(g, [0.1, 2.2, 0.1], M.darkSteel, [x, 1.2, -2.75]);
+  k.box(g, [2.6, 0.1, 0.1], M.darkSteel, [0, 2.3, -2.75]);
+  k.box(g, [2.3, 1.8, 0.02], M.skin, [0, 1.25, -2.75]);
+  k.cyl(g, [0.22, 0.22, 0.16, 18], M.caseDark, [0, 1.25, -2.62], [Math.PI / 2, 0, 0]);
+  k.pipe(g, [[0, 1.25, -2.54], [0, 1.25, -2.3], [0.6, 1.25, -2.3], [0.6, 0.8, -2.3]], 0.025, M.copper);
+  colliders.push({ lx: 0, lz: -2.75, hw: 1.35, hd: 0.25 });
+  // THE LEAK-TEST HEADER along the back curtain, an effusion tube on a stand at each end of it.
+  k.pipe(g, [[-5.6, 1.0, -3.05], [5.6, 1.0, -3.05]], 0.06, M.steel);
+  for (const x of [-3.6, 3.6]) {
+    k.box(g, [0.5, 0.08, 0.5], M.darkSteel, [x, 0.04, -2.65]);
+    k.box(g, [0.08, 1.0, 0.08], M.darkSteel, [x, 0.5, -2.65]);
+    k.strut(g, [x, 1.0, -2.65], [x, 2.4, -2.65], 0.07, M.glass, 12);
+    k.cyl(g, [0.1, 0.1, 0.08, 12], M.darkSteel, [x, 2.4, -2.65]);
+    k.cyl(g, [0.1, 0.1, 0.08, 12], M.darkSteel, [x, 1.0, -2.65]);
+    k.pipe(g, [[x, 1.0, -2.65], [x, 1.0, -3.05]], 0.04, M.steel);
+    colliders.push({ lx: x, lz: -2.65, r: 0.32 });
+  }
+  // THE INFLATION TRUNK at the left: a cloth hose down out of the bag's belly to its valve on the floor.
+  {
+    const x = -5.2, z = -1.2;
+    const top = ceil(x, z) + 0.4;
+    k.cyl(g, [0.42, 0.48, top - 0.9, 18], M.canvas, [x, 0.9 + (top - 0.9) / 2, z]);
+    for (let y = 1.4; y < top - 0.3; y += 0.9) k.cyl(g, [0.5, 0.5, 0.05, 18], M.darkSteel, [x, y, z]);
+    k.box(g, [1.1, 0.6, 1.1], M.darkSteel, [x, 0.3, z]);
+    k.cyl(g, [0.5, 0.5, 0.3, 18], M.steel, [x, 0.75, z]);
+    k.wheel(g, x + 0.75, 0.75, z, 0.16);
+    k.pipe(g, [[x, 0.3, z + 0.55], [x, 0.3, 1.4], [-3.6, 0.3, 1.4]], 0.12, M.steel);
+    colliders.push({ lx: x, lz: z, r: 0.75 });
+    colliders.push({ lx: -4.4, lz: 1.4, hw: 0.95, hd: 0.2 });
+  }
+  // THE BOTTLE BANK at the right: long cylinders laid in a rack, three high, coupled to one valve.
+  for (const y of [0.45, 0.95, 1.45]) {
+    for (const x of [4.5, 5.15]) k.cyl(g, [0.22, 0.22, 2.8, 14], M.steel, [x, y, -1.1], [Math.PI / 2, 0, 0]);
+  }
+  for (const z of [-2.4, 0.2]) k.box(g, [1.6, 1.8, 0.12], M.darkSteel, [4.82, 0.9, z]);
+  k.pipe(g, [[4.5, 1.45, 0.3], [4.5, 1.9, 0.6], [4.0, 1.9, 0.6], [4.0, 1.0, 0.6]], 0.04, M.brass);
+  k.wheel(g, 4.0, 1.12, 0.6, 0.1);
+  colliders.push({ lx: 4.82, lz: -1.1, hw: 0.85, hd: 1.45 });
+  // Lamps hung from the bag's load straps.
+  k.pendant(g, 0, 3.4, -0.6, ceil(0, -0.6));
+  k.pendant(g, -3.6, 3.8, 3.0, ceil(-3.6, 3.0), { intensity: 5 });
+  k.pendant(g, 3.6, 3.8, 3.0, ceil(3.6, 3.0), { intensity: 5 });
+  return done(h);
+}
+
+/* ======================================================================
+   6. THE FOOT OF THE COLD BOX (site-6, q6-real, Real Gases)
+   Inside the liquefier's insulated casing, under the box's own floor. Behind the plate the three plate-fin
+   heat exchanger cores, rimed at their feet. To the left the expansion turbine on its skid, the cold gas
+   in from overhead; to the right the draw-off valve (the field point Quest 6 sends the player to) and a
+   dewar.
+   ====================================================================== */
+
+function buildCasing(w) {
+  const h = start(w, 'site-6', 'cold-box');
+  const { k, M, g, colliders, fieldPoints } = h;
+  const CEIL = 4.8;
+  // THE CORES: three brazed blocks on a stand behind the plate, a half-round header on each face.
+  k.box(g, [10.6, 0.3, 1.1], M.darkSteel, [0, 0.15, -2.75]);
+  for (const [x, wdt] of [[-4.0, 1.6], [0, 1.8], [4.0, 1.6]]) {
+    k.box(g, [wdt, 4.1, 0.95], M.cladding, [x, 0.3 + 2.05, -2.78], null, true);
+    for (let y = 0.8; y < 4.4; y += 0.5) k.box(g, [wdt + 0.04, 0.03, 0.99], M.darkSteel, [x, y, -2.78]);
+    k.cyl(g, [0.16, 0.16, 3.4, 12], M.cladding, [x - wdt * 0.3, 2.4, -2.25]);
+    k.cyl(g, [0.16, 0.16, 3.4, 12], M.cladding, [x + wdt * 0.3, 2.4, -2.25]);
+    k.box(g, [wdt + 0.06, 0.6, 1.0], M.rime, [x, 0.6, -2.78]);
+    k.strut(g, [x - wdt * 0.3, 4.1, -2.25], [x - wdt * 0.3, CEIL, -2.25], 0.09, M.cladding);
+  }
+  colliders.push({ lx: 0, lz: -2.75, hw: 5.3, hd: 0.6 });
+  // THE EXPANSION TURBINE at the left: a volute on a skid, its brake fan, the cold gas in from overhead.
+  k.box(g, [1.6, 0.4, 2.2], M.darkSteel, [-4.9, 0.2, 0.6]);
+  k.cyl(g, [0.55, 0.55, 0.7, 20], M.steel, [-4.9, 1.0, 0.2], [Math.PI / 2, 0, 0], true);
+  k.cyl(g, [0.3, 0.38, 0.9, 16], M.steel, [-4.9, 1.0, 0.95], [Math.PI / 2, 0, 0]);
+  k.cyl(g, [0.45, 0.45, 0.12, 16], M.darkSteel, [-4.9, 1.0, 1.45], [Math.PI / 2, 0, 0]);
+  k.pipe(g, [[-4.9, 1.55, 0.2], [-4.9, CEIL - 0.2, 0.2], [-4.9, CEIL - 0.2, -2.2]], 0.14, M.insul);
+  k.pipe(g, [[-5.45, 1.0, 0.2], [-5.9, 1.0, 0.2], [-5.9, 1.0, -2.0], [-4.9, 1.0, -2.2]], 0.12, M.insul);
+  k.cyl(g, [0.18, 0.18, 0.9, 12], M.rime, [-5.9, 1.0, -0.9], [Math.PI / 2, 0, 0]);
+  colliders.push({ lx: -5.1, lz: -0.2, hw: 1.05, hd: 1.9 });
+  // THE DRAW-OFF at the right: the liquid's valve on its stand, piped from the core (a field point).
+  {
+    const PX = 3.5, PZ = -1.5;
+    k.box(g, [0.5, 0.06, 0.5], M.darkSteel, [PX, 0.03, PZ - 0.05]);
+    k.cyl(g, [0.06, 0.06, 1.1, 10], M.darkSteel, [PX, 0.6, PZ - 0.1]);
+    k.cyl(g, [0.14, 0.14, 0.32, 14], M.brass, [PX, 1.22, PZ - 0.1], [0, 0, Math.PI / 2]);
+    k.cyl(g, [0.04, 0.04, 0.26, 8], M.brass, [PX, 1.12, PZ + 0.1], [Math.PI / 2, 0, 0]);
+    k.wheel(g, PX, 1.5, PZ - 0.1, 0.1);
+    k.pipe(g, [[PX, 1.3, PZ - 0.2], [PX, 1.3, -2.2]], 0.05, M.insul);
+    k.cyl(g, [0.09, 0.09, 0.3, 10], M.rime, [PX, 1.3, PZ - 0.45], [Math.PI / 2, 0, 0]);
+    colliders.push({ lx: PX, lz: PZ - 0.1, hw: 0.3, hd: 0.3 });
+    fieldPoints.push({ id: 'drawoff', label: 'Cold Draw-off', lx: PX, ly: 1.2, lz: PZ, half: [0.4, 0.5, 0.35], stand: { lx: PX, lz: PZ + 1.4 } });
+  }
+  // A dewar on the floor at the right, its neck rimed.
+  k.vessel(g, 5.3, 1.3, 0.6, 1.1, M.insul);
+  k.cyl(g, [0.16, 0.16, 0.3, 12], M.rime, [5.3, 2.1, 1.3]);
+  colliders.push({ lx: 5.3, lz: 1.3, r: 0.7 });
+  // Lamps hung from the box's floor beams.
+  k.pendant(g, 0, 3.4, -0.6, CEIL);
+  k.pendant(g, -3.6, 3.7, 3.4, CEIL, { intensity: 5 });
+  k.pendant(g, 3.6, 3.7, 3.4, CEIL, { intensity: 5 });
+  return done(h);
 }
 
 /** Builder per site id. */
 export const HOST_BUILDERS = {
-  'site-1': placeholder('site-1'),
-  'site-2': placeholder('site-2'),
+  'site-1': buildSkirt,
+  'site-2': buildHall,
   'site-3': buildHolderMeter,
-  'site-4': placeholder('site-4'),
-  'site-5': placeholder('site-5'),
-  'site-6': placeholder('site-6')
+  'site-4': buildGondola,
+  'site-5': buildCradle,
+  'site-6': buildCasing
 };
