@@ -10,6 +10,8 @@
 
 ![alt text](image-4.png) There is too much text on the door - keep it as "Airlock" and remove all other text. Also, the hinge on the bottom left corner is z-fighting.
 
+![alt text](image-54.png) On this screen, remove "Campaign Briefing", "Tactical Mission", the dot to the left of "Vess", "Click or press space to advance", "Hauler Avalon // Vess direct link", and redo the skip/continue buttons so there is exactly one button to skip and one button to continue, rather than me being able to click on the text to continue. Also remove "Take off and deploy to ____" and replace it with "Take off"
+
 ## Tallow
 
 ![alt text](image-2.png) Don't place the blocks in front of the ladder.
@@ -114,10 +116,50 @@ For Quest 5 Vess debrief, remove the part that says how chlorine got messed with
 
 ![alt text](image-53.png) There is too much going on in this animation at once - please explain each concept separately instead of bundling them into one display. The animation should be easy to interpret, with only one concept going on at a time.
 
+![alt text](image-55.png) The filament/tube base is z-fighting with the thing underneath it. Also, fix the overlap between the tray and the edge of the plate beneath the filament/helium tube. Plus, the tray's blue edges are glitching (z-fighting).
 
+![alt text](image-56.png) Remove the text "No strip alongside". Remove the entire part where if you get the right line spectra, the lines turn golden and it says "lines on the strip that fall on the line ___". Remove all of that. Replacee "Alongside" label for the slot with "Reference". Also, the reference spectras' edges are also glitching. A lot of edges are glitching. 
 
+![alt text](image-57.png) For this stage, add an explainer animation where a photon hits the electron and it climbs up the ladder, but photons of other colors pass right through.
 
+![alt text](image-58.png) This is a terrible exploration of the fact that an electron acts as both a particle and a wave - add another stage exploring this before this stage.
 
+![alt text](image-59.png) Fix the visual for the ring track so I actually see waves (peakes and troughs) around the ring (standing waves). Also, right now there are two overlapping displays - a 2D one and a 3D one. Please remove the 2D one and only keep a 3D standing waves display. When I initially put the card in, an animation should play where the wave traces itself in 3D space around the ring, and for the wavelengths that cancel it starts to go around again and again, shrinking until it vanishes. For the wavelengths that reinforce, every time it goes around the wave gets a little taller. Instead of "Lasts" and "cancels itself", just do "Grows stronger" and "Grows weaker".
 
+![alt text](image-60.png) The explainers should all be animations, not interactives - there should be no buttons to click. Remove the buttons and create an animation that better explains this concept - the current animation makes no sense. The animation should have as few words as possible - I think for this stage, no words are necessary.
 
+![alt text](image-61.png) The question "Where round the nucleus" is so vague and doesn't make any sense. Rephrase the question.
 
+![alt text](image-62.png) This stage is a terrible way to introduce p orbitals - remove it and create another stage that explains p orbitals better.
+
+![alt text](image-63.png) Remove the text "Joystick" and enlarge the joystick so it is actually visible. Remove the "Turn" and "Tilt" angle markings.
+
+![alt text](image-64.png) I had no clue I was looking at d-orbitals here until the end. Also, the explainer should not be an interactive with buttons; it should have no buttons and almost no text. An animation only.
+
+![alt text](image-65.png) Edit this Vess debrief to actually show the different orbital shapes.
+
+![alt text](image-66.png) Make sure you make it obvious which orbital the quantum numbers address is actually pointing at. Also, the words "No orbital has this address" overlaps with "Target" - please fix that. Also, include the 3D representations of the orbital selected in the corner - if p is selected, show all the p orbitals, and highlight which one is which when you switch ml.  
+
+![alt text](image-67.png) Remove this stage and the prediction stage before it.
+
+![alt text](image-68.png) The displays for the cards suck - please make the text on the cards prettier and rearrange the display so it is aesthetically pleasing. Also, make it clear in the question I have to put the electrons into the diagram. Once an electron has been placed, the big card should vanish and should be replaced by a small label next to the arrow describing the numbers. Remove the current labels on the empty orbital diagram.
+
+At the end, add more stages where the user has to sort the electrons with the quantum numbers into the right spots. 
+
+![alt text](image-69.png) Make sure the Vess debrief actually has arrows instead of weird lines with balls at the end.
+
+![alt text](image-70.png) This part of the debrief is really vague - you have to elaborate more and explain better, without using weird terminology or phrasing like you are right now. Explain clearly, concisely, and with animations accompanying.
+
+![alt text](image-71.png) On the navbar, when I click on a button, not only does its outline light up but a thicker underline appears too - this feels weird. Please remove the highlighting altogether. Clicking one of the buttons should not change its appearance.
+
+![alt text](image-72.png) Remove this animation part of the explainer.
+
+![alt text](image-73.png) Remove the animation part of this explainer.
+
+Make sure at the end of quest6 (electron configuration) there are stages covering the exceptions to the aufbau principle - chromium, copper, etc.
+
+![alt text](image-74.png) Remove the golden cut-off text entirely.
+
+![alt text](image-75.png) Remove the animation part of this explainer.
+
+![alt text](image-76.png) Remove the animation part of this explainer.
