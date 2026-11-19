@@ -180,3 +180,154 @@ ten story animations (one per quest).
   in `tools/lib/lanternfall/`; the old block is archived in `archive/2026-10-23/tools/`. `verify:table`'s predict-first check now covers unit02.
 - **Not done.** The benches have not been played: the owner plays them. The Field Manual's Lanternfall terms were re-pointed at the new stages
   (five of them now name a different term: Emission Spectrum, Standing Wave, Hund's Rule, Atomic Radius, Calibration Curve).
+
+## Site rebuild (2026-11-18)
+
+Branch `site/lanternfall`. The brief is Lanternfall's row in `docs/plans/world-distinction-plan.md` section 6; this
+section is the spec the build is audited against, and then its record. Everything below the line "Build record" was
+written after the build, from measurements; nothing here was seen in a browser.
+
+### 1. The place
+
+**One sentence.** A glacier tongue ends in an ice cliff on a frozen lake, and the expedition works round the lake's
+shore and over the glacier, in caves under the shore's pressure ridges, in the moraine, in the glacier's ice, and in a
+dome on the far shore.
+
+**The first ten seconds.** The player stands on the south shore's moraine flat with the pad behind them. Ahead is the
+lake, flat and dark, with a ragged wall of rafted ice slabs along its near shore, and beyond it the glacier's snout: a
+14 m cliff of ice across the north end of the lake, the glacier climbing away behind it to an icefall and a summit
+of rock. A road of lanterns runs east along the shore and climbs the moraine; on the right a dome stands on a knoll.
+No bench is in view.
+
+### 2. The signature
+
+| | This build | Checked against the other rows |
+| :--- | :--- | :--- |
+| Landform | A glacier tongue (surface 14 to 16 m) ending in an ice cliff on a frozen lake (0 m); moraines down both sides; pressure ridges of rafted lake ice along the shore; a nunatak through the glacier's west margin; an erratic on the west moraine | No other row has a glacier, a lake you do not walk on, or ice as the ground |
+| Walk shape | A loop round the lake: up the east moraine, over the glacier on one marked crossing above the snout, down the west moraine; four spurs leave it (two cut down to the lake ice, one cut down into the glacier, one up a crawler's tailgate) | Mirrowen walks round a basin on built quays at right angles with gangways onto decks; this loop is natural shore and glacier with grades of 1 in 5 to 1 in 7, and crosses the ice that feeds the lake |
+| Bench housing | Ten different rooms in the ice and the land: two caves under pressure ridges on the lake ice, a vault cut into ice-cored moraine, a meltwater cave in the glacier's margin, the crawler's drill hall, the records tent pitched at the bottom of a crevasse and its annexe cut into the crevasse wall, a chamber cut into the nunatak under the tower, a room under the erratic, the dome | No other row houses benches in ice or under ice |
+| Light | Polar night and the aurora, kept from the built sky; indoors under the shared cover mask, lamps only | as the row |
+
+The row is held. The only addition is the erratic and the nunatak, which the row did not name; both are glacial
+landforms and give the west shore rooms that are not ice.
+
+### 3. The plan (x east, z south, metres)
+
+- **Walk extent:** x -63 to 65, z -95 to 72 (inside the stage's 100 m square).
+- **Lake:** an ellipse centred (0, 6), 34 m by 22 m half-axes, ice at 0.0 m. Not walked: the shore walk is held out of it
+  by colliders along every lake-facing edge; two caves stand on the ice at its east and west shores.
+- **South shore, the yard:** x -40 to 50, z 30 to 72, level at 2.0 m. The pad at (22, 58), the spawn at (4, 40) facing
+  north over the lake, the boss's ground at its west end.
+- **East shore:** a path x 40 to 50 climbing north from the yard: ramp z 30 to 14 (2 to 5 m), landing z 0 to 14 (5 m, Bench 2's
+  door on its east side), ramp z 0 to -22 (5 to 9 m), landing z -36 to -22 (9 m, Bench 3's door on its west side), ramp
+  z -36 to -62 (9 to 14 m).
+- **The crossing:** x -62 to 50, z -74 to -62, level at 14 m, over the glacier 45 to 55 m north of the snout. The crawler's
+  tailgate leaves it to the north (x -2 to 2, 14 to 15.4 m); the crevasse ramp leaves it to the south (x -18 to -12,
+  z -62 to -34.8, 14 down to 8.4 m).
+- **West shore:** a path x -62 to -52 coming down south: ramp z -62 to -40 (14 to 10 m), landing z -40 to -26 (10 m,
+  Bench 7's door on its west), ramp z -26 to -4 (10 to 6 m), landing z -4 to 10 (6 m, Bench 8's door on its east), ramp
+  z 10 to 30 (6 to 2 m), then a turn x -62 to -40, z 30 to 42 at 2 m into the yard; the dome's porch leaves it south.
+- **Spurs to the lake:** from the yard's lake edge, two ramps cut down through the shore bank to the ice: x 19 to 25 (2 to
+  0 m) to Bench 1, x -27 to -21 (2 to 0 m) to Bench 9.
+- **Closed ground:** the moraines either side (rising 4 to 12 m above the paths), the glacier either side of the crossing
+  and of the crevasse ramp, the nunatak, the snout's cliff, the lake. Every edge of every walk volume that is not a doorway
+  is a collider (`lib/workings.js` walls); the flood fill proves it.
+- **Route in bench order:** spawn, east along the yard to the Bench 1 spur and down; back up, east and up the east shore to
+  Bench 2 and Bench 3; up to the crossing, west to the crawler (Bench 4); down the crevasse ramp to the records tent (Bench
+  5) and through to its annexe (Bench 6); back up, west along the crossing and down the west shore to Bench 7 and Bench 8;
+  down to the yard, Bench 9's spur, and the dome (Bench 10).
+- **Boss ground:** the yard's west end, the Lantern-Eater over (-22, 40) with the lake and the snout behind it, the player
+  at (-22, 54). Open and level (2.0 m) for 7 m all round.
+
+### 4. The section (main loop, start to end)
+
+Yard 2.0 → east ramp to 5.0 (1 in 5.3) → Bench 2 landing 5.0 → ramp to 9.0 (1 in 5.5) → Bench 3 landing 9.0 → ramp to
+14.0 (1 in 5.2) → crossing 14.0 (crawler floor 15.4 up its tailgate; records tent 8.4 down the crevasse ramp, 1 in 5) →
+west ramp to 10.0 (1 in 5.5) → Bench 7 landing 10.0 → ramp to 6.0 (1 in 5.5) → Bench 8 landing 6.0 → ramp to 2.0
+(1 in 5) → yard 2.0. The lake caves are at 0.0, down 2 m spurs. **Bench ground: 0.0 to 15.4 m (15.4 m span).**
+
+### 5. The benches
+
+1. **q1-wave, Light Waves — the flume cave.** A cave under the pressure ridge on the lake ice at the east shore. A pressure
+   ridge is lake ice broken and rafted by the push of the glacier; the slabs lean together over a hollow. Closed on all four
+   sides by rafted slabs, roofed by tilted slabs 5.4 m up; 14 x 14 m. The player comes down the cut spur from the yard and
+   in at the south; the flume (a trough of lake water fed through a hole in the ice) runs along the back wall behind the
+   plate, its paddle at one end and its beach at the other, the strobe on a gantry over it. Lamps: one pendant over the
+   plate from the gantry, one by the door. A wave tank on lake water, in the lake's own ice.
+2. **q2-photon, Photons — the mast vault.** A vault dug into the ice-cored east moraine under the foot of an aurora mast,
+   its walls and roof held back by timber cribbing on steel sets. Closed on three sides and the roof by the moraine, the
+   fourth by its front wall with the door; 14 x 14 m, 5.2 m to the lagging. The mast's photocell cable comes down a lined
+   shaft through the roof into the housing behind the plate; the battery racks and the plate case stand along the walls.
+   Photons from the sky, measured under the mast that looks at it.
+3. **q3-lines, Line Spectra — the meltwater cave.** A cave melted along the glacier's east margin, where the ice meets the
+   moraine: a long arch of scalloped blue ice, open only at its door on the east landing; 14 x 14 m, 5.2 m to the crown. The
+   spectrograph sled is parked inside, its tailgate down to the plate; the gas tube rack and the spare lamp on the sled's
+   bed. Dark: the only light is the work lamps, which is what a spectrograph needs.
+4. **q4-cloud, Orbitals — the crawler's drill hall.** The expedition's ice-core drilling crawler parked north of the crossing
+   on its scraped apron, its tailgate let down to the track. The hall is a steel box on the crawler's deck 1.4 m above the
+   ice, 14 x 13 m, 5.2 m to its roof, ribbed and lagged; the drill tower stands through the roof behind the plate, with the
+   core barrel racks and the cloud chamber's cabinet along the walls. Closed on all sides; the tailgate is the door.
+5. **q5-numbers, Quantum Numbers — the records tent.** At the foot of the cut ramp down into a crevasse below the crossing,
+   the records tent (a long arched tent of canvas on timber hoops) is pitched across the crevasse's floor between its ice
+   walls. 16 x 12 m, 5.0 m to the hoops; the crevasse's ice walls stand outside the canvas, the snow bridge over the
+   crevasse above it. The board of boxes stands behind the plate; the filing cabinets and the stove along the sides.
+6. **q6-filling, Electron Configuration — the records annexe.** A chamber cut square into the crevasse's west wall off the
+   tent's west end, entered through a short passage beside the board's back face. Flat cut ceiling at 4.8 m (5.0 at the
+   plate), tool marks on the ice, plan tables and the charts in racks; 14 x 14 m. Ice on five sides.
+7. **q7-pes, Photoelectron Spectroscopy — the nunatak chamber.** A chamber blasted into the nunatak (a peak of rock that
+   stands up through the glacier's west margin), under the lattice tower on its summit. Rock on three sides and above, rock
+   bolts and mesh on the walls, its door on the west landing; 14 x 14 m, 5.4 m up. The detector arc, its sample chamber and
+   the specimen rack stand behind and beside the plate; the tower's cable comes down a borehole.
+8. **q8-trends, Periodic Trends — under the erratic.** A boulder the size of a house left on the west moraine by the
+   glacier, with a room built under its overhang: dry-stone walls on three sides, the boulder's underside as the roof
+   (4.9 to 6.5 m up), the door on the west landing; 14 x 14 m. The camp's metal stock and sample tiles in racks along the
+   walls.
+9. **q9-absorb, Spectroscopy — the ice-hole cave.** A cave under the west shore's pressure ridge on the lake ice, lower
+   and wider than the flume cave and domed rather than leaning: slabs stacked into a rough corbelled vault, 14 x 12 m, 5.0 m
+   at the plate. A hole cut through the floor's ice to the water under it, with its tripod and winch, and the sealed tank
+   beside the plate. The water the bench measures is the water under the floor.
+10. **q10-wavefunctions, Wavefunctions — the dome.** The observatory's geodesic dome on the south-west knoll, entered
+    through a porch (an airlock of two doors) off the west turn. Struts and panels all round and overhead, 13 x 13 m floor
+    inside a 9.6 m radius, 8 m to the crown; cabinets fill the ring between the floor and the dome's foot. The resonance
+    rig stands behind the plate.
+
+### 6. How it differs from each neighbour
+
+- **Tallow:** a dead-flat salt pan and a process plant; here every step of the walk climbs or drops, and the ground is ice and moraine.
+- **Ligar:** basalt hills, a quarry and mine drifts in rock; here the hollows are in ice, the hub is a lake you cannot walk on.
+- **Bellows:** steel decks in the air over cloud; here the ground is the ground, and there is no deck except the crawler's.
+- **Ember Reach:** a switchback down a caldera wall to a lava lake; here a loop round a frozen lake, and the cliff is ice.
+- **Mirrowen:** right-angled quays of masonry round a harbour basin with ships; here a natural shore of moraine and ridge ice, no ship.
+- **Kettle:** inside one building; here outside, and the rooms are in the land.
+- **Teeter:** terraced salt pans down a hillside, a comb walk; here a loop, and nothing is terraced.
+- **Verdigris:** boardwalks over a swamp to a drowned fort; here no water is liquid except under a hole.
+- **Brinewire:** a concrete barrage; here nothing poured, the only structures are a crawler, a tent, a dome and timber sets.
+- **Quicklight:** a refinery grid under pipe racks; here no grid and no rack.
+- **Lodestone:** a slot canyon in banded iron, one way down; here a loop that climbs onto a glacier.
+- **Thornmere:** mounds in a tar lake under dead trees; here one lake, frozen, and no tree.
+- **Cinder Halo:** craters and concrete cells; here caves and ice.
+
+### 7. The far country
+
+- **North:** the glacier climbing from the snout to an icefall (seracs) and an ice field below a ring of peaks.
+- **East:** the east lateral moraine with the aurora masts on its crest, and beyond it a range of dark peaks.
+- **South:** the outwash plain the lake drains across, the comms mast on its rise, and low hills.
+- **West:** the nunatak's summit and the tower on it, and the glacier's west margin running north to a col.
+
+### 8. The numbers to hold
+
+- `world-shape.mjs`: bench ground 0.0 to 15.4 m (span 15.4 m), 10 of 10 housed (R5 or better), no clones.
+- Plates in view from the spawn: 0 (at most two).
+- `perf-worlds.mjs`: at most 566 draws and 900k triangles at T4; target under 350 draws and 450k triangles.
+
+### 9. Kept, rebuilt, archived
+
+- **Kept:** `lanternfall/atmosphere.js` (the sky, the aurora, the lights), `lanternfall/effects.js` (diamond dust),
+  `materials/lanternfall-textures.js`, `lanternfall/props.js` (the aurora mast, comms mast, lantern post, landing pad,
+  sled and camp builders are used as they are).
+- **New:** `lanternfall/glacier-plan.js` (the pure plan: volumes, rooms, height field, cover, routes),
+  `lanternfall/ground.js` (the terrain mesh, the lake ice, cut faces, ridge slabs, vista).
+- **Rebuilt:** `lanternfall.js`, `lanternfall/host-plan.js`, `lanternfall/stations.js` (ten rooms and their benches),
+  `tools/gen-lanternfall-layout.mjs`, `tools/verify-lanternfall.mjs`, `world-data/lanternfall.json`.
+- **Archived** to `archive/2026-11-18/site-lanternfall/`: the old `lanternfall.js`, `lanternfall/terrain.js`,
+  `lanternfall/stations.js`, `lanternfall/host-plan.js`, `tools/gen-lanternfall-layout.mjs`, `tools/verify-lanternfall.mjs`.
