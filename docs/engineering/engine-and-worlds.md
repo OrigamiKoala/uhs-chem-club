@@ -40,7 +40,7 @@ Submissions, Inventory`; the rest are code constants. `Db.getAll` memoizes per e
 Fourteen worlds in road order (`unit01`…`unit14`): Tallow (atoms, table, mole), Lanternfall (light,
 orbitals, trends), Ligar (bonding), Bellows (gases), Ember Reach, Mirrowen, Kettle, Teeter, Verdigris,
 Brinewire, Quicklight, Lodestone, Thornmere, Cinder Halo. Built: Tallow (6 benches + `boss-hopper`),
-Lanternfall (9 + `boss-eater`), Ligar (9 + `boss-warden`), Bellows (6 + `boss-compressor`), Ember Reach
+Lanternfall (10 + `boss-eater`), Ligar (9 + `boss-warden`), Bellows (6 + `boss-compressor`), Ember Reach
 (7 + `boss-crucible`), Kettle (`q1-recipe` + `boss-golem`; no walkable world, so at T4 its bench builds its
 own room); later worlds are listed in `PRODUCT.md` (Thornmere, organic chemistry, 6 benches + `boss-carapace`, on the thorn kit; Cinder Halo, nuclear chemistry, 6 benches + `boss-core`, on the nuke kit). Tallow, Lanternfall, Ligar, Bellows and Ember Reach are walkable at T4 (`learn/worlds3d.js`). **Every built world is open from the start**; inside a world quest N opens
 when N−1 is complete; charted (unbuilt) quests don't hold anything shut. World `status` is derived (`live`
@@ -179,18 +179,26 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   instrument is the one unsalted, less rough thing on the machine. `t1.siteDescriptions` is gone (nothing
   read it). Lanternfall `q1-wave` … `q9-absorb`
   (plain labels until the word is earned; honest plates; box rack magnet measures the REAL sample;
-  `q5-numbers`/`q9-orbitals` are beyond the exam and say so). Lanternfall's benches are the working points of an
-  aurora expedition camped round the frozen lake (`lanternfall/stations.js`, nine hosts keyed by site id; their
-  footprints are the pure data in `lanternfall/host-plan.js`, which the generator, the world and `verify:lanternfall`
-  share): 1 wave flume on the south shore (fed from the lake), 2 photocell housing at an aurora mast's foot, 3
-  spectrograph sled in camp 1 (tailgate down), 4 the ice crawler's lab module (doors open, floor level with the plate),
-  5 and 6 the two halves of ONE records tent, back to back (`TENT_SPAN` 7 m, ridges meeting; the board has a face for each),
-  7 detector arc on a mast platform, 8 sample-tile racks in camp 3's store, 9 cuvette sled beside a hole cut through the
-  lake ice (`WATER_HOLE`; the generator refuses unless the ring is inside the lake). Every facing is cardinal; each site
-  carries a `flat` disc (written by `tools/gen-lanternfall-layout.mjs`, read by `lanternfall/terrain.js`) that levels the
-  ice under its host and lane; a host's landmark carries `host: <siteId>`; the cased instrument is `M.case`, the one clean
-  thing in a weathered camp; the road of lantern posts follows the walk from the spawn to each approach in bench order.
-  The lantern-eater's ground (`BOSS_ARENA_SPOTS['boss-eater']`) is kept open by the generator and `verify:lanternfall`. Ligar `q1-joins` … `q9-orbitals` (Lewis
+  `q5-numbers`/`q9-orbitals` are beyond the exam and say so). Lanternfall's site (rebuilt 2026-11-18, `docs/plans/lanternfall-world.md` "Site rebuild") is a glacier tongue
+  ending in an ice cliff on a frozen lake. `lanternfall/glacier-plan.js` (pure) declares the walk on `lib/workings.js`: a
+  loop of open volumes round the lake (the south yard, the east ablation valley in grades and landings, a crossing over
+  the glacier at 14 m, the west valley), spurs down to two caves on the lake ice and down a crevasse ramp, the crawler's
+  tailgate, and ten rooms each behind a door volume; the one height field (`height`); the mesh's `surface` (the land over
+  a room buried in it, less the band on its door's side, so the terrain never skins a doorway); `cutFaces()` and
+  `shoreEdges()` found from the walls; `coverSpec()` (one box per room). `lanternfall/ground.js` draws the terrain, the
+  lake's ice (its own level mesh, the walk and the cave floors cut out of it), the cut faces in section, the shore's
+  pressure-ridge slabs, the snout, the crevasse field (drawn, since a crack is narrower than the 3 m grid) and the far
+  country. `lanternfall/stations.js` builds each host as its room's shell (`phys: 'ground'`, merged per material by
+  `lanternfall/kit.js`) plus machinery plus `buildBayBench`: 1 flume cave and 9 ice-hole cave under pressure ridges on the
+  lake ice, 2 crib-and-set vault in the moraine under an aurora mast, 3 meltwater barrel in the glacier's margin, 4 the
+  drilling crawler's hall up its tailgate, 5 the records tent in a crevasse and 6 its annexe cut in the ice, 7 a chamber in
+  the nunatak's rock, 8 dry-stone walls under an erratic, 10 the dome on its platform. A buried room draws a portal: the
+  land's face at the outer plane with the door cut through it and a lined passage. `host-plan.js` holds only structure,
+  kind, skin and plate. The Lantern-Eater's ground (`BOSS_ARENA_SPOTS['boss-eater']`, the yard's west end) is
+  `glacier-plan.js` `ARENA`; `verify:lanternfall` holds the two together, every reachable cell inside the walk, nobody on
+  the open lake, and every host's machinery inside its room. Traps met: a lift term `max(y, k * v)` whose mask is nought
+  clamps ground below 0 m up to 0; a rack bench at heading pi missed one drag in `q5-numbers` stage 5 (the table's pick,
+  unfixed), so Bench 5 faces west. Ligar `q1-joins` … `q9-orbitals` (Lewis
   board has one rule: H and F share one pair; domain rig puts every angle behind a protractor; formula
   unit earned in `q2-lattice`). Ligar's benches are built INTO its workings (`ligar/stations.js`, nine hosts
   returning `{group, bench, benchLocal, colliders}`): 1 slab-dressing yard at the quarry's west face, 3 crusher

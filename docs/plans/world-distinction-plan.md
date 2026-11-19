@@ -163,7 +163,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | World | Landform | Walk shape | Bench housing | Light (kept from the built sky unless noted) |
 | :--- | :--- | :--- | :--- | :--- |
 | Tallow | Dead-flat salt pan to a mirror horizon; one excavated pit | Along the process line, brine to bagged salt | Inside the plant's own buildings: evaporator hall, tower base, control house, bagging shed, the pit | White high-altitude glare, ice halo |
-| Lanternfall | A glacier tongue running down to a frozen lake; crevasse field, pressure ridges | Round the lake shore, with spurs cut down into the ice | Ice: a crevasse lab down a cut ramp, caves under pressure ridges, the dome, the crawler's cabin | Polar night, aurora |
+| Lanternfall (built 2026-11-18) | A glacier tongue (surface 14 to 16 m) ending in an ice cliff 16 m high on a frozen lake (0 m); an ablation valley between the ice and each lateral moraine; a crevasse field above the snout; pressure ridges of rafted lake ice along the shore; a nunatak through the west margin; an erratic on the west moraine | A loop round the lake: up the east ablation valley, over the glacier on a graded crossing, down the west valley; spurs cut down through the shore bank to two caves on the lake ice and down into a crevasse, and one up the crawler's tailgate | In the ice and the land: two caves under pressure ridges on the lake ice (a flume cave, an ice-hole cave), a vault in the ice-cored moraine under an aurora mast, a meltwater cave in the glacier's margin, the drilling crawler's hall, the records tent pitched in a crevasse and its annexe cut into the ice, a chamber in the nunatak under its tower, a room under the erratic, the dome | Polar night, aurora; indoors under a cover mask, lamps only |
 | **Ligar** (reference, unchanged) | Basalt plateau, trap-bench hills, a quarry cut | Hub at the quarry, adits into two hills | Mine chambers and quarry workings | Dusk, low amber sun |
 | Bellows (built 2026-11-18) | No ground: steel decks on lattice legs at seven heights (-8 to +12 m) round a sphere on its skirt, a piston holder, the Compressor's tower, a cold box and two bladders, over a cloud sea 38 m and more below | A hub (the apron) and five arms of 4 m catwalks and 1-in-5 ramps over the drop, railed on both sides | Inside the sphere's skirt, the tower's base hall, the meter house inside the piston holder under the parked piston, the gondola hung under the moored bladder, under the bladder hauled down onto its cradle (the bag is the roof), the cold box's foot | High white sun, dark zenith; indoors under a cover mask, lamps only |
 | Ember Reach | The inside wall of a caldera, stepping down toward a lava lake | A switchback road down the wall | Galleries cut into the caldera wall with one side open to the lake; the turbine hall | Ochre fume; the lake lights the rock from below |
@@ -243,13 +243,27 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Ember Reach | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:ember` rewritten) | not yet |
 | Mirrowen | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:mirrowen` rewritten) | not yet |
 | Bellows | 2026-11-18 | 2026-11-18 | 2026-11-18 (6 of 6 housed) | 2026-11-18 | 2026-11-18 (`verify:bellows` rewritten) | not yet |
-| Lanternfall | | | | | | |
+| Lanternfall | 2026-11-18 | 2026-11-18 | 2026-11-18 (10 of 10 housed) | 2026-11-18 | 2026-11-18 (`verify:lanternfall` rewritten) | not yet |
 | Tallow | | | | | | |
 | Thornmere (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:thornmere`) | not yet |
 | Cinder Halo (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:cinderhalo`) | not yet |
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Lanternfall, 2026-11-18 (branch `site/lanternfall`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground
+0.00 to 15.40 m (15.4 m, eight floor levels), relief 16.8 m, housed 10 of 10 (R7 R7 R6 R7 R7 R8 R7 R7 R7 R7), no cloned coordinates,
+no plate in view from the spawn. `perf-worlds.mjs`: 215 draws, 171k triangles (before: 262 and 92k). It uses the shared layers as they
+are: `lib/workings.js` (17 open volumes, ten rooms, ten doors, `outdoorDoors`) and `lib/cover.js` (10 boxes, no openings); shared code
+is unchanged. New and world-local: the terrain MESH is drawn from `surface`, the land over a room buried in it (the walk's height
+field is still the floor), less the band on the door's side, so a portal is a face with the door cut through it and the terrain never
+skins the doorway; the cut faces and the shore's ridge slabs are found from the walls, not listed. Departures: the row's "crevasse lab"
+is the records tent pitched in a crevasse (the story calls it the records tent); the walk also crosses the glacier, which closes the
+loop round the lake; Bench 5's plate faces across the tent because at heading pi `verify:bench` failed `q5-numbers` stage 5's drag by
+one card (a near miss in the table's pick, unfixed). The walk is a loop round a lake, as Mirrowen's is round a basin: told apart by a
+natural shore and moraine against built quays, and by the glacier crossing. For the next world: a term `max(y, k * v)` whose mask `k`
+is nought clamps any ground below 0 m up to 0 (it lifted the lake's bed to the ice); a feature narrower than the terrain's grid is drawn,
+not carved. Spec, build record and the owner's viewing list: `docs/plans/lanternfall-world.md`, "Site rebuild (2026-11-18)".
 
 **Bellows, 2026-11-18 (branch `site/bellows`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -8.00 to 12.00 m
 (20.0 m, six floor levels), relief 58.0 m (it counts the cloud sea under the gaps between decks), housed 6 of 6 (R7 R7 R7 R7 R7 R8), no cloned

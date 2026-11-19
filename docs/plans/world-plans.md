@@ -40,7 +40,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/tallow-ligar-world.md`
 
 ### Unit 02: Lanternfall (Light, Electron Spectra, and Orbitals)
-- **Setting:** An aurora research expedition camped around a frozen lake with masts, detector arcs, spectrograph sleds, and cuvette rigs.
+- **Setting:** A glacier tongue ending in an ice cliff on a frozen lake under the aurora. The walk loops round the lake and over the glacier; the benches are in rooms off it: two caves under pressure ridges on the lake ice, a vault in the moraine under an aurora mast, a meltwater cave, the drilling crawler's hall, the records tent in a crevasse and its annexe, a chamber in the nunatak, a room under an erratic, and the observatory dome (`docs/plans/lanternfall-world.md`, "Site rebuild").
 - **Benches:** `q1-wave` (wavelength & frequency), `q2-photon` (Planck energy), `q3-lines` (Bohr emission lines), `q4-cloud` (quantum probability clouds), `q5-numbers` (quantum numbers), `q6-filling` (Aufbau & Hund), `q7-pes` (Photoelectron Spectroscopy), `q8-trends` (atomic radii & ionization energy), `q9-absorb` (Beer-Lambert law), `q10-wavefunctions` (radial distribution), and `boss-eater`.
 - **Core Teaching Click:** Real PES traces are drawn honest and flat; electrons are sorted into shells by binding energy.
 - **Reference:** `docs/plans/lanternfall-world.md`

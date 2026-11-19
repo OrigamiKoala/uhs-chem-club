@@ -10,6 +10,11 @@ This closes the two items `learn-quests.md` left open for this world: decision 3
 first: the light bench, as recommended) and decision 4 (Lanternfall as ground; it was asked for
 outright, so the "page first, ground later" recommendation was not followed).
 
+> **Superseded (2026-11-18): the site was rebuilt.** The ring round the lake and the camp's hosts on open ice (both
+> described below) are gone: the world is a glacier tongue on a frozen lake, the walk a loop round the lake and over the
+> glacier, and every bench is in a room in the ice or the land. See "Site rebuild (2026-11-18)" at the end of this file;
+> the old files are in `archive/2026-11-18/site-lanternfall/`.
+
 > **Superseded (2026-10-16):** the ring of shelters described below was replaced by P4 of
 > `bench-integration.md`. The nine benches are now built into an observatory camp's equipment
 > (`three/lanternfall/stations.js`), laid out by the rewritten generator. The instruments
@@ -331,3 +336,138 @@ west ramp to 10.0 (1 in 5.5) → Bench 7 landing 10.0 → ramp to 6.0 (1 in 5.5)
   `tools/gen-lanternfall-layout.mjs`, `tools/verify-lanternfall.mjs`, `world-data/lanternfall.json`.
 - **Archived** to `archive/2026-11-18/site-lanternfall/`: the old `lanternfall.js`, `lanternfall/terrain.js`,
   `lanternfall/stations.js`, `lanternfall/host-plan.js`, `tools/gen-lanternfall-layout.mjs`, `tools/verify-lanternfall.mjs`.
+
+### 10. Build record (2026-11-18)
+
+Everything in this record comes from Node measurements (`verify:lanternfall`, `tools/world-shape.mjs`,
+`tools/perf-worlds.mjs`). **Nothing was seen in a browser.**
+
+**What was built.**
+
+- `lanternfall/glacier-plan.js` (pure, no THREE): 17 open walk volumes (the yard, the east and west paths in grades and
+  landings, the crossing, two lake spurs, the crevasse ramp, the tailgate), ten rooms and ten door volumes on
+  `lib/workings.js` (`outdoorDoors`, open kinds `yard`/`path`/`ramp`); one height field (`height`) and the mesh's
+  `surface` (the hill over a buried room); `cutFaces()` and `shoreEdges()` found from the walls rather than listed;
+  `coverSpec()` (10 boxes, one per room with its door); `holes()`.
+- `lanternfall/ground.js`: the terrain mesh (3 m grid in the core, snapped to every volume side and to the lines a face
+  stands between), the lake's ice as its own mesh with the walk and the cave floors cut out of it, 108 cut faces painted
+  as ice or till in section, the shore's pressure-ridge slabs and one open ridge across the lake, the snout's cliff with
+  seracs on its lip, the crevasse field (drawn: the cracks are narrower than the grid), and the far country (the
+  icefall's seracs north, the outwash plain's channels south, the tower on the nunatak west; the aurora masts east are
+  `props.js` landmarks).
+- `lanternfall/stations.js`: ten hosts, each the room's shell (`phys: 'ground'`, merged per material by
+  `lanternfall/kit.js`) plus its machinery and `buildBayBench`, as one object. Buried rooms draw a portal at the face of
+  the land with the door cut through it and a lined passage.
+- `lanternfall.js`: the same public contract, plus `routeTo` and `cover` as the other rebuilt worlds have.
+- `tools/gen-lanternfall-layout.mjs` (reads the old JSON for ids, quest ids, labels, stages and built flags, so it
+  cannot rename a bench; writes 38 lantern posts down the walk, three aurora masts, the comms mast, two camps and a sled
+  beyond the yard, the pad), `tools/verify-lanternfall.mjs` (rewritten; section 6 of the prompt).
+- `learn/engine/boss-arena.js`: the Lantern-Eater's spot moved to the yard's west end, `[-22, 2.6, 40]`, player
+  `[-22, 1.6, 54]`.
+
+**Where the build parted from the spec, and why.**
+
+1. **Bench 1 faces east, along the flume, not toward its door.** Facing the door, its plate was in a straight line from
+   the yard down the spur. The flume runs along the cave's west wall behind the plate; the door is on the plate's left.
+2. **Bench 5 faces west, across the tent, and the tent runs along the crevasse** (16 m), not across it. With the plate
+   facing north (heading pi) `verify:bench` failed `q5-numbers` stage 5: dragging the solution through the pointer path
+   missed one card (`differs in props`), at every position tried; facing west it passes. Nothing else changed, so this
+   is a near-miss in the table's pick at that heading, not the room. The way in from the crevasse ramp is now a door in
+   the tent's side, framed through the canvas; the annexe (Bench 6) opens off the tent's far end.
+3. **Bench 9's plate stands 1.8 m north of the middle of its wall**, and both lake spurs are 4 m wide (spec: 6): from the
+   spawn, Bench 9's plate was in view through its door. Now no plate is in view.
+4. **The spawn is at (10, 3.6, 40)**, not (4, 3.6, 40), for the same reason.
+5. **The crevasses are drawn, not carved.** They are about a metre wide; carved into a 3 m grid they came out as random
+   bumps. The height field has no crevasses; the crevasse field is a mesh of openings on the glacier's surface.
+6. **Room 6 is 14 x 12 m** (spec: 14 x 14), so that it shares Room 5's west wall exactly.
+7. **The dome stands on a square timber platform** that covers the square the terrain is cut out under it.
+8. **No new moving thing.** What moves is what moved before: the aurora in the sky and the diamond dust. Movement was the
+   fourth item of Phase 5 and the budget was not the limit; it was left out to keep this run's scope.
+
+**Measurements, before and after.**
+
+| | Before | After |
+| :--- | :--- | :--- |
+| `world-shape.mjs`: ground under the benches | 0.00 to 0.00 m | 0.00 to 15.40 m |
+| relief on the way to them | 0.64 m | 16.79 m |
+| housed | 0/10 (`-1 -1 -1 -2 -3 -3 -1 -1 -1 -1`) | 10/10 (`R7 R7 R6 R7 R7 R8 R7 R7 R7 R7`) |
+| plates in view from the spawn | all ten (open ground) | 0 |
+| cloned coordinates | none | none |
+| `perf-worlds.mjs` T4: draws | 262 | 215 |
+| triangles | 92k | 171k |
+| build | 110 ms | 245 ms |
+| casters (k triangles) | 69 (19k) | 80 (74k) |
+| lights | Directional 1, Hemisphere 1, Point 3 | the same |
+| `perf-bench-rest.mjs` | 687 of 692 stages at rest (parent) | 687 of 692 (all ten unit02 quests at rest) |
+
+**Checks.** `verify:lanternfall`, `verify:bench`, `verify:arena`, `verify:voyage`, `verify:learn`, `verify:table`,
+`verify:docs`, `verify:story`, and every other world's script (`tallow`, `ligar`, `bellows`, `ember`, `mirrowen`,
+`kettle`, `teeter`, `verdigris`, `brinewire`, `quicklight`, `lodestone`, `thornmere`, `cinderhalo`): all green.
+`node tools/glsl-check.mjs lanternfall`: the cover-patched program compiles. Shared code was not changed (the shared
+layers were used as they are); the only file outside the world changed is `boss-arena.js`'s spot.
+
+**Archived** in `archive/2026-11-18/site-lanternfall/` (with a README): the old `lanternfall.js`,
+`lanternfall/terrain.js`, `lanternfall/stations.js`, `lanternfall/host-plan.js`, `world-data/lanternfall.json`,
+`tools/gen-lanternfall-layout.mjs`, `tools/verify-lanternfall.mjs`. `lanternfall/terrain.js` was the only one taken
+out of the live tree; the others were replaced in place.
+
+**What is still weak.**
+
+- The look is unseen. Ice and till in section are vertex colour on rough sheets; whether they read as ice and moraine
+  at a distance is the owner's to judge.
+- The lake-facing edges of the yard and the east path are held by colliders with ridge slabs 1.4 m and more beyond
+  them; there is no body on the edge itself, so the stop is a bank's edge with nothing on it.
+- The erratic is a noise-shaped lump with a flat underside; the crawler's cab faces away from the crossing.
+- The terrain grid is 3 m in the core: the glacier and the moraines are smooth at the scale of a boot.
+- The q5 stage 5 near-miss at heading pi (departure 2) is in the tabletop's pointer path, not here; it is unfixed.
+
+### 11. The owner's viewing list
+
+Stand where each entry says and look the way it says. Failure is what would mean the site did not come out as built.
+
+1. **The landing** (spawn, (10, 3.6, 40), facing north). The lake below, flat and dark, a ragged line of tilted ice
+   slabs along its near shore; across it the glacier's snout, an ice cliff about 16 m high spanning most of the north
+   shore, the glacier rising behind it to an icefall; to the left the nunatak's peak with a lattice tower on it; lantern
+   posts leading east along the yard and up the east valley. *Fails if* any bench plate is in view, or the lake reads as
+   a walkable plain, or the snout is not seen.
+2. **The first bench from the yard** ((22, 3.6, 31), facing north, at the top of the east spur). A 4 m ramp cut down
+   through the bank onto the lake ice, ending at a doorway in a heap of rafted slabs (the flume cave). *Fails if* the cave
+   reads as a hut standing on the ice, or the doorway is not visible.
+3. **Bench 1, the flume cave** (approach (23.8, 1.6, 11), facing west). The plate, the glass-fronted flume behind it
+   along the west wall with its paddle and beach, the strobe gantry over it, slab walls leaning in, a slab roof 5.4 m
+   up, the hole in the floor ice by the pump. *Fails if* daylight or sky lights the room, or the room feels cramped.
+4. **Bench 2's portal** ((45, 6.6, 7), facing east). A timber-framed doorway in a face of grey moraine, the aurora mast on
+   the moraine above it. Inside: steel sets, log cribbing, the photocell housing behind the plate with its tube up a
+   shaft. *Fails if* the portal floats on the slope or the face shows a seam to the terrain.
+5. **The east ablation valley** ((45, 11.4, -40), facing north). The path climbing between the moraine on the right and
+   the glacier's margin on the left, cut faces of till and of ice on either side; Bench 3's door in the ice face on the
+   left just behind. *Fails if* the path reads as a road on a plain.
+6. **Bench 3, the meltwater cave** (approach (31, 10.6, -27.6), facing north). A barrel vault of scalloped blue ice, the
+   spectrograph sled parked down the left of the plate, the door alcove to the right. *Fails if* the vault's scallops
+   look like a pattern on a flat wall, or the room is lit from outside.
+7. **The highest ground: the crossing** ((40, 15.6, -68), facing west). A graded track across the glacier with low ice
+   faces each side; to the left (south) the crevasse field's dark cracks running across the tongue toward the snout;
+   ahead on the right the drilling crawler with its tailgate down. *Fails if* the cracks read as stripes painted on snow,
+   or the crawler is hidden.
+8. **Bench 4, the drill hall** (from the tailgate's foot, (0, 15.7, -74.5), facing north, then inside at the approach
+   (0, 17, -85.2)). A steel tailgate up into a ribbed hall on tracks; the drill tower standing through the roof behind
+   the plate, core barrels racked on the right. *Fails if* the hall floats over the apron or the tower is cut off at the
+   roof.
+9. **Down into the crevasse** ((-15, 15.4, -61), facing south). A ramp cut 5.6 m down between walls of banded ice to a
+   timber doorway. Then **Bench 5** (approach (-16.2, 10, -28), facing east): canvas on timber hoops overhead, the board
+   of boxes behind the plate, the crevasse's ice walls outside the canvas; **Bench 6** through the door at the tent's far
+   end: saw-marked ice walls, chart racks, a flat ice ceiling. *Fails if* the tent reads as standing in the open or the
+   two rooms look alike.
+10. **Bench 7, the nunatak chamber** (from (-57, 11.6, -33), facing west). A steel-framed doorway in dark banded rock;
+    inside, rock bolts in rows, the detector arc behind the plate, a cable down a borehole. *Fails if* the rock looks
+    like the moraine.
+11. **Bench 8, under the erratic** (from (-57, 7.6, 3), facing east). Dry-stone walls under a granite boulder much larger
+    than the room, the lake beyond to the right. **Bench 9** (from (-24, 3.6, 31), facing north): the west spur down to a
+    corbelled slab cave on the lake ice, its hole with a tripod over black water. *Fails if* the boulder reads as a
+    roof slab, or the hole cave looks like the flume cave.
+12. **The dome and the boss's ground** (from (-22, 3.6, 54), facing north). Open level yard, the lake and the snout
+    beyond where the Lantern-Eater hangs; turning left, the geodesic dome on its platform with its porch (Bench 10
+    inside: a drum rig behind the plate, cabinets round the ring). *Fails if* anything stands in the 7 m round the boss's
+    mark, or the dome's panels show the sky through gaps.
+
+The lowest ground is the two caves on the lake ice (0.0 m); the highest is the drill hall's floor (15.4 m).
