@@ -167,7 +167,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | **Ligar** (reference, unchanged) | Basalt plateau, trap-bench hills, a quarry cut | Hub at the quarry, adits into two hills | Mine chambers and quarry workings | Dusk, low amber sun |
 | Bellows | No ground: platforms at several levels round gasholders, over a cloud sea | Catwalks and ramps between platforms, open drop on both sides | Inside gasholder skirts, the compressor tower's base, a cold box; under moored bladders | High white sun, dark zenith |
 | Ember Reach | The inside wall of a caldera, stepping down toward a lava lake | A switchback road down the wall | Galleries cut into the caldera wall with one side open to the lake; the turbine hall | Ochre fume; the lake lights the rock from below |
-| Mirrowen | A harbour: quays, a dry dock sunk below the waterline, moored hulls, sea ice to the north | Along quays, over gangways and lock gates | Aboard hulls (holds, deckhouses), boathouses on piles, the dry dock floor | Cold white morning haze |
+| Mirrowen (built 2026-11-18) | A harbour: quay walls 2.6 m above the water round a basin, a mole, a dry dock sunk 7 m (4.4 m below the waterline), an ice-breaker and a tanker moored and a freighter frozen into the canal, sea ice to the north | A ring of right-angled quays joined by two gate walks over water (the canal's lock gate, the dry dock's gate), gangways up onto three decks, companionways down inside the hulls | Aboard hulls (a deckhouse, a tanker's pump room, a hold, an evaporator flat), two boathouses on piles (a thaw shed, a salt store), a pump well off the dry dock's floor | Cold white morning haze; indoors under a cover mask, lamps only |
 | Kettle (built 2026-11-13) | One foundry building the size of the site, floors at five levels inside it; a slag tip and an ore stock outside | Up one crane aisle from the charge door to the cast house, bays opening off it, two ramps up and two down | The building itself: stores, scale bay, control cabin on a plinth, sump cellar, charge bank up a ramp, pickling bay, tapping pit, refining bay | Indoors under a cover mask: shafts through louvred bands high in the west walls and the charge door, one furnace source |
 | Teeter (built 2026-11-16) | A west-facing hillside of salt terraces: five levels of pans 5.5 m apart behind masonry walls, brine spilling pan to pan; spurs close the valley's head | One stair straight down the fall line (four ramps through four walls), a level dike branching off its foot on each terrace: a comb, not a switchback | Rooms dug into the terrace walls under the pans (the pans' floor is the roof), entered by a passage through the wall; two are weir houses standing up among the pans | Bright pale afternoon, evaporation shimmer; indoors under a cover mask, the sun in at each door |
 | Verdigris (built 2026-11-16) | A drowned masonry fort in a reed swamp: a flooded ward inside a broken curtain, towers and cistern heads out of the water, a moat round it; sightlines closed by reeds, walls and fog | A branching boardwalk on piles from a landing stage in the reeds, over the moat bridge, through the gatehouse, then a trunk with branches between the towers; no plank run longer than 22 m, ramps up to tower doors, stairs down into cisterns | Tower chambers (three towers and the keep's hall) above the water, three vaulted cisterns sunk below it, the flooded gatehouse's winch chamber | Low green-grey overcast, fog from 4 m gone at 220 m; indoors under a cover mask, the sun in only at doors that face it and open onto a deck |
@@ -241,7 +241,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Brinewire | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:brinewire` rewritten) | not yet |
 | Quicklight | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:quicklight` rewritten) | not yet |
 | Ember Reach | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:ember` rewritten) | not yet |
-| Mirrowen | | | | | | |
+| Mirrowen | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:mirrowen` rewritten) | not yet |
 | Bellows | | | | | | |
 | Lanternfall | | | | | | |
 | Tallow | | | | | | |
@@ -250,6 +250,19 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Mirrowen, 2026-11-18 (branch `site/mirrowen`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -7.00 to
+1.20 m (8.2 m, seven floor levels), relief 15.0 m, housed 7 of 7 (R7 R8 R7 R8 R6 R7 R8), no cloned coordinates, no plate in view from
+the spawn. `perf-worlds.mjs`: 292 draws, 283k triangles (before: 265 and 132k). It uses the shared layers as they are: `lib/workings.js`
+(31 volumes in four kinds: ground volumes the terrain draws, decks the terrain is cut away under, rooms and roofed passages; `outdoorDoors`,
+`pass: false` kerbs, railings, bulwarks, windows and one open bay) and `lib/cover.js` (10 boxes, no sun openings). Departures: the row's
+"lock gates" are two gates, the canal's lock gate and the dry dock's gate; Bench 3 stands in the pump well that opens off the dry dock's
+floor, not on the open floor (it is housed and still reached across the floor); the walk is a ring round the basin, which Lanternfall's
+row also walks round water, so the two are told apart by built quay edges against a natural shore and by gangways up onto decks. For the
+next world: a room aboard a ship is a volume inside the hull's plan with the deck cut away round it; a passage sloping down under a deck
+needs a roof that follows its floor and then runs flat under the deck, or the deck is holed at its low end; a host that sets `side` or a
+colour on a material from the world's `M` changes every body that shares it. Spec, build record and the owner's viewing list:
+`docs/plans/mirrowen-world.md`, "Site rebuild (2026-11-18)".
 
 **Ember Reach, 2026-11-18 (branch `site/ember`).** Built as the row says: the north-facing inside wall of a volcanic caldera stepping down 24 m across five levels (6 m per step) in a four-ramp switchback road with four hairpins toward a lava lake 20 m below Level 4; six rock-cut geothermal galleries (five distinct open-sided rock/sinter/brick/gantry/baffle architectures, two oriented sideways with 7.6 m railed lake-viewing bays) plus the enclosed gabled Turbine Hall at the foot. `world-shape.mjs`: bench ground 0.00 to 18.00 m (18.0 m, four levels), relief 24.15 m, housed 7 of 7 (R7 R7 R7 R7 R7 R7 R7), no cloned coordinates, 0 plates in view from spawn. `perf-worlds.mjs`: 369 draws, 141k triangles, 166 ms build (before: 464 draws, 250k triangles, 388 ms). Uses `lib/workings.js` (28 volumes: 14 open road/ramp/yard volumes, 7 doors, 7 rooms; `pass: false` 1.05 m railings along every lake-facing drop) and `lib/cover.js` (14 boxes, per-room sky residual 0.20–0.42). Departures: terrace steps were raised from 5 m to 6 m (1-in-5 ramps) so every gallery roof tucks cleanly below the terrace rail above it; `ember/terrain.js` retains `{ fbm2, buildRibbon, buildDisc }` exports for Mirrowen. Spec, build record and owner's viewing list: `docs/plans/ember-reach-world.md` ("Site rebuild (2026-11-18)").
 

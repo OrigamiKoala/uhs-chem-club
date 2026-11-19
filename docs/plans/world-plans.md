@@ -64,7 +64,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/ember-reach-world.md`
 
 ### Unit 06: Mirrowen (Intermolecular Forces, States, and Solutions)
-- **Setting:** A coastal frozen canal and ice basin. Automated dosing stations, vapour flasks, and separation columns.
+- **Setting:** A working harbour on a cold morning: quays round a basin, a mole out to the frozen sea, a dry dock sunk below the waterline behind its gate, and a canal frozen by the Fifth behind its lock gate. The benches are aboard the ships (the ice-breaker's deckhouse and evaporator flat, the tanker's pump room, the frozen freighter's hold), in two boathouses on piles (a thaw shed, a salt store) and in the pump well off the dry dock's floor; the Undertow is fought on the mole head (site rebuilt 2026-11-18, `mirrowen-world.md`, "Site rebuild").
 - **Benches:** `q1-states` (particle spacing and compressibility), `q2-grip` (London dispersion, dipole-dipole, hydrogen bonding), `q3-boil` (vapour pressure and dynamic equilibrium), `q4-solids` (crystalline vs amorphous networks), `q5-crossing` (heating curves and phase change enthalpies), `q6-solution` (molarity, dilution, ionic dissolving), `q7-separate` (chromatography, distillation, filtration), and `boss-undertow`.
 - **Core Teaching Click:** Molecules remain whole when melting or boiling; intermolecular forces act *between* molecules, not inside them.
 - **Reference:** `docs/plans/mirrowen-world.md`

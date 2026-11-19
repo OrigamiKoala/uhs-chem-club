@@ -858,3 +858,90 @@ view from the spawn (target none). Perf at T4 inside 900k triangles and 566 draw
 | `tools/verify-mirrowen.mjs` | Rewritten on `world-shape-checks.mjs`; the old one is archived |
 | `src/learn/engine/boss-arena.js` | The Undertow's spot moves to the mole head |
 | Archive | `archive/2026-11-18/site-mirrowen/` (old terrain, stations, host plan, world, generator, verify script) |
+
+### 10. Build record (2026-11-18)
+
+**Built.** `mirrowen/harbour-plan.js` declares the harbour (31 volumes, 7 rooms, 3 hulls, the dock pit, the canal, the pump house) and the
+one height field; `mirrowen/terrain.js` draws the ground, the water and every built surface from it; `mirrowen/stations.js` builds the
+seven hosts in their rooms; `mirrowen.js` wires them on Ember Reach's contract (`routeTo`, `cover`). `tools/gen-mirrowen-layout.mjs`
+writes the JSON (sites, 52 landmarks: pad, 28 lamp posts, 8 bollards, a portal crane, 9 warehouses, 5 ice walls; 3 plumes; the worn
+lines in the setts; `t2` stills; `t1` order). `boss-arena.js` moves the Undertow to the mole head. No shared library changed.
+
+**Where the build parted from the spec, and why.**
+- The quay crane over the ice-breaker's berth and the warehouse rows were added in Phase 5 (the harbour reads as a working one from the
+  spawn; the walk passes between the crane's legs).
+- The thaw shed's frozen launch stands on the slip outside the room, built with the shed, not with the host (it lies outside the host's
+  extent over the water).
+- The rooms take no sun: the sun stands low in the east-south-east and the only windows (the deckhouse's) face north, so they let in sky,
+  which the cover mask keeps as each room's residual.
+- The dock stair is a ramp of 1 in 3.4 cut down the dock's west wall, not a flight of steps (the walk has no steps).
+- A host's extent reaches 3 m in front of the plate (Ember Reach's reached 0.85 m), so machinery stands along the side walls as well as
+  behind the plate; every door is kept clear by hand (only the thaw shed's door is in a side wall).
+
+**Measurements, before and after** (`node tools/world-shape.mjs mirrowen ligar`, `node tools/perf-worlds.mjs mirrowen ligar`):
+
+| | Before (ring round a basin) | After (harbour) | Ligar |
+| :--- | :---: | :---: | :---: |
+| Bench ground | 0.00 to 0.00 (0 m) | -7.00 to 1.20 (**8.2 m**) | -2.60 to 0.89 |
+| Relief on the way | 0.30 m | 15.00 m | 21.55 m |
+| Housed | 0/7 (-2 -1 -2 -0 -2 -1 -0) | **7/7** (R7 R8 R7 R8 R6 R7 R8) | 7/9 |
+| Plates in view from the spawn | all seven on one ring | none | |
+| Draws at T4 | 265 | 292 | 566 |
+| Triangles at T4 | 132k | 283k | 867k |
+| Build time (Node) | 192 ms | 243 ms | 1132 ms |
+
+`node tools/perf-bench-rest.mjs`: every unit06 stage comes to rest (7, 9, 8, 6, 7, 7, 7 of 7, 9, 8, 6, 7, 7, 7).
+
+**Checks** (each run as its own script on this branch): `verify:mirrowen`, `verify:bench`, `verify:arena`, `verify:voyage`,
+`verify:table`, `verify:docs`, `verify:story`, `verify:teaching`, and every other world's script (`tallow`, `lanternfall`, `ligar`,
+`bellows`, `ember`, `kettle`, `teeter`, `verdigris`, `brinewire`, `quicklight`, `lodestone`, `thornmere`, `cinderhalo`) are green.
+`verify:learn` fails on one line, `unit01/q4-ledger stage 5: prompt must be exactly 1 sentence`, a Tallow prompt this run did not touch;
+it fails the same way on the parent commit (`3265087`). `tools/glsl-check.mjs mirrowen` compiles the cover mask's shaders.
+`tools/world-shape.mjs` finds no two worlds sharing bench coordinates.
+
+**Archived** to `archive/2026-11-18/site-mirrowen/` (README there): the old `mirrowen.js`, `terrain.js`, `stations.js`, `host-plan.js`,
+`gen-mirrowen-layout.mjs`, `verify-mirrowen.mjs` and the old `mirrowen.json`. The old checks that held the ring (the quay ring of
+colliders, the 44 m bench ring, the canal's frozen stretch) are replaced by the plan checks, the flood fill's "every reachable cell is in a
+walk volume", the water checks and `world-shape-checks.mjs`.
+
+**What is still weak.**
+- The hulls are straight-sided boxes with a prism for a bow: no flare, no sheer, no rounded bilge. Seen from the quay they read as ships
+  by their paint, deckhouses, funnels and masts, not by their lines.
+- The ground's surface is vertex colour on a 2 m grid (setts by a pattern, worn lines pale); there is no per-pixel shader as Ligar has.
+- The water sheet is a snapped grid of 67k triangles; a coarser sheet would do the same job.
+- The far country is a handful of boxes and cylinders per quarter (iceberg, beset ship, breakwater and light, town rows, ice walls).
+- The walk is a ring round water, as Lanternfall's row's is; the difference rests on built quay edges and the gangways and gates.
+- Nothing here has been seen in a browser.
+
+### 11. The owner's viewing list
+
+Nothing in this rebuild was looked at in a browser. Every claim above is a Node measurement. Stand at each place and judge:
+
+1. **The landing** (spawn, the terrace at (24, 5, 50), facing north-west). Over the railing, 5 m down: the main quay, the ice-breaker
+   alongside it with its gangway out and the portal crane over its berth; the mole running north to the tanker; the white canal behind
+   the lock to the west; sea ice on the horizon. *Fails if* a bench plate is in view, or the quay and the water read as one flat floor.
+2. **The foot of the harbour stair** ((-20, 0, 46), facing east along the main quay). The 5 m quay wall and the terrace railing on the
+   right, the crane's legs ahead, the ice-breaker's red side and white deckhouse to the left beyond the quay's edge, the water 2.6 m down.
+   *Fails if* there is no visible drop at the quay's edge.
+3. **Bench 1, the deckhouse** (at the plate, facing it from the approach (13, 2.8, 8.2), looking north). The plate with the window band
+   behind it, and through the glass the basin, the white canal and the sea ice; the steering wheel and telegraph left, the radar console
+   and chart table right. *Fails if* the room is as bright as outdoors, or the windows show only sky.
+4. **Bench 2, the tanker's pump room** (at the foot of the companionway (65, -4.4, -34), facing north). A dark steel room 5.4 m below
+   the tanker's deck lit by three lamps: three pumps behind the plate, the manifold right, the stripping pump left.
+5. **The dry dock's gate** ((16, 0, -64), facing north, then south). North, over the railing: a 7 m drop to the dock floor and the tug on
+   its keel blocks, shores to the walls. South, over the other railing: open water 2.6 m down. *Fails if* water shows inside the dock.
+6. **The lowest ground: the dock floor** ((12, -7, -93), facing east). Dock walls 7 m high on every side, the tug's black hull over you,
+   the pump well's door in the east wall. *Fails if* the walls do not rise above the quays' level or the floor is lit like a room.
+7. **Bench 3, the pump well** (approach (35.8, -5.4, -85), facing east). A concrete chamber: the two dock pumps either side of the plate,
+   their shafts going up through the roof, the priming tank hung over the plate's back, the valve wheel below it.
+8. **The canal lock gate** (its middle, (-44, 0, -49)). West: white ice, the freighter's rusted hull frozen in, the Fifth's crystal walls.
+   East: open grey-green water. *Fails if* the two sides look alike.
+9. **Bench 4, the freighter's hold** (approach (-85.8, -2.0, -50), facing west). Crates of sheet glass behind the plate, sacks, wax and
+   ingots to the left, columns of ice pushing in from the hull's side on the right, the hatch covers overhead.
+10. **Benches 5 and 6, the boathouses** (thaw shed approach (-27, 0.8, -31.8) facing north, then turn right: the open end, the slip and the
+    iced launch on its cradle; salt store approach (-28.2, 2.2, -13) facing east: the hopper over the plate's back, the tanks either side).
+    *Fails if* the two sheds read as one building twice.
+11. **Bench 7, the evaporator flat** (approach (-17.8, -0.8, 7), facing west). Under the ice-breaker's forecastle: the lagged evaporator
+    left, the copper condenser right, the vapour line across over the plate. *Fails if* it reads as the same room as Bench 2.
+12. **The boss's ground** ((62, 1.6, -70), facing north). The open mole head, kerbs on three sides, the frozen sea beyond, the pump house's
+    brick wall to the left. *Fails if* anything stands within 7 m of the Undertow's mark at (62, 0, -84).
