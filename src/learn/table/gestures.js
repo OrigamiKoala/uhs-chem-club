@@ -116,7 +116,7 @@ export class TableGestures {
     let best = null;
     let top = null;
     for (const p of Object.values(s.pieces)) {
-      if (p.hidden) continue;
+      if (p.hidden || p.fixed) continue;
       const c = this.view.posOf(p.id) || p.at;
       // A piece in the hand is taken again only on the piece itself: a target beside it (the next rung of a ladder, a slot a
       // hair's breadth away) must be tappable, and the generous reach that makes a piece easy to grab would swallow it.

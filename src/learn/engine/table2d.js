@@ -213,7 +213,8 @@ export function drawTable(ctx, w, h, state, view = {}) {
   }
   for (const s of Object.values(state.zones.slots)) {
     const r = rectOf(s, SIZES.slot);
-    outline(r, Boolean(holding));
+    const fixed = Object.values(state.pieces).some(p => p.zone === `slot:${s.id}` && p.fixed);
+    outline(r, Boolean(holding) && !fixed);
     zoneWords('slot', s);
   }
   const rail = state.zones.rail;

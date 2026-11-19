@@ -566,6 +566,7 @@ function drop(s, kit, id, t) {
 
   if (t.kind === 'slot') {
     const key = zoneKey('slot', t.id);
+    if (Object.values(s.pieces).some(o => o.zone === key && o.id !== id && o.fixed)) return fail('That holder is fixed in place.');
     unlinkAll(s, id);
     leaveZone(s, id);
     if (s.zones.slots[t.id].row) return fileIntoRow(s, id, s.zones.slots[t.id]);
