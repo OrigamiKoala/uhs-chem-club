@@ -1,111 +1,61 @@
 /**
  * mirrowen.js — Mirrowen, Learn world 06, as a place you walk (T4).
  *
- * A tidal shelf in the morning under a high white haze. A round harbour basin lies at the middle of
- * it, grey-green and still, and a canal sixteen metres across runs out of it to the north. Seven
- * working points of the harbour stand on a ring round the basin, each with a bench built into it: an
- * ice-breaker's chart house, a bay of the tank farm, the pumping station, the yard where canal ice is
- * cut, the boiler house, a dosing station and the distillery. Lamps mark the quay between them. Far up
- * the canal, past the last lamp, the Fifth froze the water at its ordinary temperature: the sheet lies
- * white-blue between two walls of crystal ice, with the ships it trapped listing in it. The Undertow
- * is fought on the open quay beside it.
+ * A working harbour on a cold morning. The player lands on the town terrace and walks down the stair in
+ * the quay wall to the main quay. Round the basin run the quays: the main quay, a mole north to a head
+ * on the frozen sea, the north quay, the west shore. Two gates join them over water: the dry dock's gate
+ * and the canal's lock gate. An ice-breaker and a tanker lie moored with their gangways out; a freighter
+ * lies frozen into the canal behind the lock, where the Fifth froze the water at its ordinary
+ * temperature. The benches are inside the harbour: aboard the three ships, in two boathouses on piles,
+ * and in the pump well at the floor of the dry dock (`mirrowen/harbour-plan.js`).
  *
- * It is built behind the SAME contract as Tallow, Lanternfall, Ligar, Bellows and Ember Reach, so the
- * stage, the voyage, the walk HUD and the bench dispatcher treat it as just another place:
- *
- *   scene, data, colliders, terrainMesh, hasFarTerrain, lampPool,
+ * Public contract (identical across all walkable Learn worlds):
+ *   scene, data, colliders, terrainMesh, hasFarTerrain, lampPool, cover,
  *   getTerrainHeight(x, z), benchAnchor(questId), setBenchDeployed(questId, on),
- *   setSiteComplete(questId, complete), update(delta, cameraPos), dispose()
+ *   setSiteComplete(questId, complete), routeTo(siteId, from, to), update(delta, cameraPos), dispose()
  *
  * WHERE EVERYTHING LIVES
+ *   mirrowen/harbour-plan.js   the plan: levels, volumes, rooms, hulls, the one height field (no THREE)
+ *   mirrowen/terrain.js        the ground, the water, the quay walls, the dock, the hulls, the rooms, the far country
+ *   mirrowen/stations.js       the seven hosts in their rooms (host-plan.js is their footprints)
+ *   mirrowen/plant.js          lamp posts, bollards, the pad, the Fifth's ice walls
  *   mirrowen/atmosphere.js     the sky, the sun, the environment
- *   mirrowen/terrain.js        the shelf, the water, the sea, the ice; the roads
- *   mirrowen/plant.js          what people built, and the Fifth's ice and the hulls in it
- *   mirrowen/stations.js       the seven hosts the benches are built into (host-plan.js is their footprints)
  *   mirrowen/effects.js        steam, sea smoke, diamond dust
- *   materials/mirrowen-textures.js  the surfaces
  * laid out by `tools/gen-mirrowen-layout.mjs`.
  *
- * THE RULES IT KEEPS, as the other worlds do:
- *   - NOTHING OCCUPIES THE SAME SPACE AS ANYTHING ELSE: every landmark declares a footprint, every pair is
- *     disjoint, and `verify:mirrowen` measures the world that was actually built.
- *   - A SITE FACES THE GROUND THE PLAYER WALKS IN FROM: the angle is derived from `approachPos`.
- *   - ONLY LAMPS ARE LIT. A work lamp is a `lampMark` pooled into three real lights; nothing here owns a
- *     PointLight and no other surface glows.
- *   - WHAT NEVER MOVES IS BAKED. The radar scanner and the bench indicators stay addressable; the rest is merged.
- *   - THE WATER IS A WALL. A closed ring of colliders lies round the basin and the canal, so nobody
- *     walks into them, and the frozen end of the canal is closed by ice on both banks.
+ * THE RULES IT KEEPS: nothing occupies the same space as anything else; only lamps are lit, from a pool of
+ * three lights; what never moves is baked; every roofed room is under the shared cover mask; the water,
+ * the ice and every drop are closed by the walls and railings the plan declares.
  */
 
 import * as THREE from 'three';
 import mirrowenData from './world-data/mirrowen.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic, canvas2d
+  platedMetal, buildMaterial, enableAO, texSize, mergeStatic, consolidateStatic
 } from './materials/pbr-kit.js';
 import { frostShingle, quayPaving, crystalIce, canalRipple } from './materials/mirrowen-textures.js';
 import {
-  createMwSkyDome, createMwLights, followMwShadow, createMwEnvironment, mwSkyUniforms, followCamera, MWSKY
+  createMwSkyDome, createMwLights, followMwShadow, createMwEnvironment, mwSkyUniforms, followCamera, MWSKY, MIRROWEN_SUN
 } from './mirrowen/atmosphere.js';
-import {
-  makeMirrowenField, buildMirrowenTerrainGeometry, buildWaterGeometry, buildSeaGeometry, buildRibbon, buildDisc
-} from './mirrowen/terrain.js';
-import {
-  buildLampPost, buildBollard, buildCrateStack, buildDrumRack, buildShed, buildGantryCrane, buildHarbourLight,
-  buildLandingPad, buildIceWall, buildHull
-} from './mirrowen/plant.js';
+import { makeHarbourPlan, WATER, TERRACE } from './mirrowen/harbour-plan.js';
+import { buildMirrowenTerrainGeometry, buildWaterGeometry, buildHarbourShells, buildHarbourVista } from './mirrowen/terrain.js';
+import { buildLampPost, buildBollard, buildLandingPad, buildIceWall } from './mirrowen/plant.js';
 import { yawPoint } from './mirrowen/kit.js';
 import { HOST_BUILDERS } from './mirrowen/stations.js';
-import { registerFieldPoint } from './field-points.js';
 import { createMirrowenEffects } from './mirrowen/effects.js';
 import { LampPool } from './lamp-pool.js';
+import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
-/** The amber filament every work lamp in the world burns. A lamp is a lamp. */
+/** The amber filament every work lamp in the world burns. */
 const FILAMENT = 0xd99423;
 
 /** Landmarks that are round, or turn themselves: their group is never turned. */
-const SELF_TURNED = new Set(['lamp-post', 'bollard', 'harbour-light', 'ice-wall']);
+const SELF_TURNED = new Set(['lamp-post', 'bollard', 'ice-wall']);
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
-
-/** How far outside the waterline the ring of colliders stands, and the spacing along it. */
-const WATER_RING = 0.55;
-const WATER_RING_STEP = 0.85;
-
-/**
- * The closed ring of colliders round the open water: points on the offset outline of the basin and the
- * canal (a circle, two straight banks and a rounded end), kept where they are not inside the other
- * shape's offset. Exported so `verify:mirrowen` reads the same ring the walk does.
- */
-export function waterRing(field, data, offset = WATER_RING, step = WATER_RING_STEP) {
-  const { basin: B, channel: C } = data.water;
-  const out = [];
-  const keep = (x, z) => field.waterSD(x, z) >= offset - 0.05;
-  const push = (x, z) => { if (keep(x, z)) out.push({ x, z, radius: 0.75 }); };
-  const RB = B.radius + offset;
-  const nb = Math.ceil((2 * Math.PI * RB) / step);
-  for (let i = 0; i < nb; i++) { const a = (i / nb) * Math.PI * 2; push(B.x + Math.sin(a) * RB, B.z + Math.cos(a) * RB); }
-  const RC = C.half + offset;
-  const L = Math.hypot(C.bx - C.ax, C.bz - C.az);
-  const ux = (C.bx - C.ax) / L, uz = (C.bz - C.az) / L;
-  const nx = -uz, nz = ux;
-  const nl = Math.ceil(L / step);
-  for (let i = 0; i <= nl; i++) {
-    const t = (i / nl) * L;
-    for (const s of [-1, 1]) push(C.ax + ux * t + nx * s * RC, C.az + uz * t + nz * s * RC);
-  }
-  for (const [px, pz, dir] of [[C.bx, C.bz, 1], [C.ax, C.az, -1]]) {
-    const na = Math.ceil((Math.PI * RC) / step);
-    const base = Math.atan2(ux * dir, uz * dir);
-    for (let i = 0; i <= na; i++) {
-      const a = base - Math.PI / 2 + (i / na) * Math.PI;
-      push(px + Math.sin(a) * RC, pz + Math.cos(a) * RC);
-    }
-  }
-  return out;
-}
 
 export class MirrowenWorld {
   constructor(renderer) {
@@ -115,51 +65,46 @@ export class MirrowenWorld {
     this.scene.name = 'mirrowen';
 
     this.colliders = [];
-    this.siteMarkers = new Map();    // questId -> { site, group, indicator }
-    this.benchAnchors = new Map();   // questId -> the physical frame of that site's working surface
+    this.siteMarkers = new Map();
+    this.benchAnchors = new Map();
     this.disposables = [];
-    this.lamps = [];                 // lampMarks: where the pooled light comes from
-    this.vents = [];                 // world-space steam mouths
-    this.movers = [];                // the radar scanner
-    this.landmarkNodes = [];         // [{ lm, node }] for colliders
+    this.lamps = [];
+    this.vents = [];
+    this.movers = [];
+    this.landmarkNodes = [];
     this.elapsed = 0;
     this.benchesOpen = 0;
-    // The shelf and the ice run to the horizon on their own; the voyage must not lay a ring over them.
+    // The harbour, the hills and the sea ice run to the horizon on their own.
     this.hasFarTerrain = true;
     this.t4 = tierAtLeast('T4');
 
-    this.field = makeMirrowenField(this.data);
+    this.plan = makeHarbourPlan();
+    this.field = this.plan;
 
     this.initMaterials();
     this.initLighting();
     this.initSky();
     this.initTerrain();
     this.initLandmarks();
-    this.initHulls();
     this.initHosts();
     this.initEffects();
     this.initLampPool();
+    this.initCover();
     this.bakeStatics();
     this.buildColliders();
     this.collectMovers();
     this.enableAmbientOcclusion();
   }
 
-  /** Track a texture/geometry/material so dispose() can actually free it. */
   own(...objs) {
     for (const o of objs) if (o && typeof o.dispose === 'function') this.disposables.push(o);
     return objs[0];
   }
 
-  /** What the builders are handed: materials, `own`, the lamp list and the tier. */
   get ctx() {
-    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.field };
+    return { M: this.M, own: (...o) => this.own(...o), lamps: this.lamps, t4: this.t4, field: this.plan, plan: this.plan };
   }
 
-  /**
-   * Turn on ambient occlusion everywhere it was generated. `aoMap` samples the SECOND uv set, which a
-   * primitive geometry does not have, so one pass tells every mesh to reuse its own uvs for it.
-   */
   enableAmbientOcclusion() {
     const done = new Set();
     this.scene.traverse(o => {
@@ -180,17 +125,32 @@ export class MirrowenWorld {
   initMaterials() {
     const M = {};
     const std = o => new THREE.MeshStandardMaterial(o);
-
-    M.concrete = buildMaterial(quayPaving({ size: texSize(512), seed: 5 }), { repeat: 1, roughness: 1.0 });
-
     const metal = (paint, base, rust, seed, weather, panels = 2, size = 256) => buildMaterial(
       platedMetal({ paint, metal: base, rust, panels, seed, weather, size: texSize(size) }), { repeat: 2, roughness: 1.0 }
     );
+
+    // Stone and concrete: the quays are dressed granite, the dock and the pump well cast concrete.
+    M.granite = buildMaterial(quayPaving({ size: texSize(512), seed: 5 }), { repeat: 1, roughness: 1.0 });
+    M.granite.color.set(0xb4b6b4);
+    M.concrete = buildMaterial(quayPaving({ size: texSize(512), seed: 9 }), { repeat: 2, roughness: 1.0 });
+    M.concrete.color.set(0x9a9c98);
+
+    // Steel: painted plate weathered by the sea, a different paint for each ship.
     M.clad = metal('#c3c9c9', '#a7adae', '#8b7a62', 81, 0.3, 2, 512);
     M.steel = metal('#8d979a', '#737d80', '#7d5f45', 83, 0.45, 2, 512);
     M.darkSteel = metal('#363d41', '#52595c', '#6b5442', 85, 0.5, 4);
     M.rusted = metal('#6c4a3c', '#5b4b44', '#7a4a2a', 87, 0.85, 3);
-    M.shipHull = metal('#6b3b31', '#5a4640', '#7a4a2a', 89, 0.7, 5, 512);
+    M.shipRed = metal('#7a3027', '#5a4640', '#7a4a2a', 89, 0.55, 5, 512);
+    M.shipBlack = metal('#25292b', '#3a3e40', '#6b4a32', 90, 0.5, 5, 512);
+    M.shipRust = metal('#5c4136', '#52463f', '#7d4a28', 92, 0.95, 5, 512);
+    M.shipWhite = metal('#d6d9d5', '#b4b8b6', '#8a7258', 94, 0.45, 3, 512);
+    M.hullPlate = metal('#4d5457', '#5a6164', '#6e5440', 96, 0.6, 4);
+    M.deckPlate = metal('#5f625c', '#6b6e68', '#6e5440', 98, 0.7, 6, 512);
+    M.tankSteel = metal('#7d8a84', '#6c7570', '#7a5a40', 100, 0.55, 3, 512);
+    M.holdSteel = metal('#6a5a48', '#5b5048', '#7a4a2a', 102, 0.9, 4, 512);
+    M.hatch = metal('#3c4a52', '#4c565c', '#6e5440', 104, 0.6, 3);
+    M.bootTop = metal('#2b2f2f', '#3a3e3e', '#5a4a3a', 106, 0.5, 2);
+    M.grating = metal('#4a4f50', '#5d6264', '#6e5440', 97, 0.55, 6);
     M.hallWall = metal('#a9b2b1', '#8e9694', '#7d6248', 91, 0.5, 3, 512);
     M.hallRoof = metal('#566066', '#4f5a60', '#7a5638', 93, 0.62, 4);
     M.roofSheet = metal('#6a7678', '#5f6b6d', '#7d5236', 95, 0.7, 5);
@@ -199,67 +159,56 @@ export class MirrowenWorld {
     M.tankGreen = metal('#4c6a64', '#455e59', '#7a5a40', 101, 0.5, 3, 512);
     M.crate = metal('#6a7a62', '#5f6a58', '#7a5a40', 103, 0.5, 2);
     M.crateB = metal('#8a7048', '#75623f', '#6a4a30', 105, 0.55, 2);
-    for (const m of [M.clad, M.steel, M.darkSteel, M.rusted, M.shipHull, M.hallWall, M.hallRoof, M.roofSheet, M.perf, M.tankWhite, M.tankGreen, M.crate, M.crateB]) {
-      m.normalScale.set(1.2, 1.2);
-      m.aoMapIntensity = 0.85;
+    for (const k of ['clad', 'steel', 'darkSteel', 'rusted', 'shipRed', 'shipBlack', 'shipRust', 'shipWhite', 'hullPlate', 'deckPlate', 'tankSteel', 'holdSteel', 'hatch', 'bootTop', 'grating', 'hallWall', 'hallRoof', 'roofSheet', 'perf', 'tankWhite', 'tankGreen', 'crate', 'crateB']) {
+      M[k].normalScale.set(1.2, 1.2);
+      M[k].aoMapIntensity = 0.85;
     }
 
     M.brass = std({ color: 0xb08d4c, roughness: 0.42, metalness: 0.9 });
     M.copper = std({ color: 0xb5714a, roughness: 0.4, metalness: 0.9 });
     M.rubber = std({ color: 0x1c1d1e, roughness: 0.9, metalness: 0 });
     M.insul = std({ color: 0xdcdcd4, roughness: 0.82, metalness: 0.05 });
-    M.timber = std({ color: 0x5a4c3e, roughness: 0.95, metalness: 0 });
+    M.timber = std({ color: 0x6a5a48, roughness: 0.95, metalness: 0 });
+    M.timberDark = std({ color: 0x3e342c, roughness: 0.95, metalness: 0 });
+    M.boards = std({ color: 0x5d5448, roughness: 0.96, metalness: 0 });
     M.brick = std({ color: 0x80483b, roughness: 0.92, metalness: 0 });
     M.drum = std({ color: 0x3d5a6e, roughness: 0.6, metalness: 0.5 });
     M.drumB = std({ color: 0x8a3b2a, roughness: 0.62, metalness: 0.45 });
     M.paintYellow = std({ color: 0xc9a14a, roughness: 0.7, metalness: 0.1 });
     M.paintRed = std({ color: 0x8e2f22, roughness: 0.65, metalness: 0.1 });
     M.paint2 = std({ color: 0xe8e8e0, roughness: 0.6, metalness: 0 });
+    M.sack = std({ color: 0xc8bea4, roughness: 0.98, metalness: 0 });
+    M.salt = std({ color: 0xe6e6e0, roughness: 0.9, metalness: 0 });
 
-    // Glass. Transparent materials are decals to the overlap check and are left out of a bake, as in the other worlds.
+    // Glass. Transparent materials are decals to the overlap check and are left out of a bake.
     M.glass = std({ color: 0xd5dfe2, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.3, depthWrite: false });
     M.glassDark = std({ color: 0x0f1416, roughness: 0.18, metalness: 0.2 });
 
-    // THE ONE CLEAN THING in a weathered harbour: the cased instrument keeps its own bright paint and bare metal.
+    // The cased instrument keeps its own bright paint and bare metal.
     M.case = std({ color: 0xe9ebe6, roughness: 0.5, metalness: 0.25 });
     M.caseDark = std({ color: 0x2f353a, roughness: 0.55, metalness: 0.4 });
 
     // The one warm thing: an amber filament behind glass.
     M.lantern = std({ color: 0x5a4a38, emissive: FILAMENT, emissiveIntensity: 1.4, roughness: 0.6 });
 
-    // The Fifth's ice, on the props: crystal columns, white where milky and blue where clear. Opaque, so it is a body.
-    const crystal = crystalIce({ size: texSize(512), seed: 21 });
-    M.ice = buildMaterial(crystal, { repeat: 1, roughness: 1.0 });
+    // The Fifth's ice: crystal columns, white where milky and blue where clear. Opaque, so it is a body.
+    M.ice = buildMaterial(crystalIce({ size: texSize(512), seed: 21 }), { repeat: 1, roughness: 1.0 });
     M.ice.normalScale.set(1.3, 1.3);
     M.ice.envMapIntensity = 1.5;
     M.ice.flatShading = true;
     M.iceDeep = M.ice.clone();
     M.iceDeep.color.set(0x9ec4da);
     M.iceDeep.flatShading = true;
-    // The sheet laid over the frozen water, coloured per vertex.
-    M.iceSheet = buildMaterial(crystalIce({ size: texSize(512), seed: 23 }), { repeat: 3, roughness: 1.0 });
-    M.iceSheet.vertexColors = true;
-    M.iceSheet.envMapIntensity = 1.4;
-    M.iceSheet.normalScale.set(0.8, 0.8);
 
-    // The ground: frost shingle, painted per vertex.
+    // The ground: frost-dusted setts and ice, painted per vertex.
     const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
-    M.shingle = buildMaterial(frostShingle({ size: texSize(512), seed: 7 }), { repeat: 1, roughness: 1.0 });
-    M.shingle.vertexColors = true;
-    M.shingle.normalScale.set(1.35, 1.35);
-    M.shingle.envMapIntensity = 0.7;
-    for (const t of M.shingle.userData.surfaceMaps || []) t.anisotropy = aniso;
+    M.ground = buildMaterial(frostShingle({ size: texSize(512), seed: 7 }), { repeat: 1, roughness: 1.0 });
+    M.ground.vertexColors = true;
+    M.ground.normalScale.set(1.2, 1.2);
+    M.ground.envMapIntensity = 0.7;
+    for (const t of M.ground.userData.surfaceMaps || []) t.anisotropy = aniso;
 
-    // The roads: rolled concrete slabs, feathered into the shingle at both edges.
-    M.paving = buildMaterial(quayPaving({ size: texSize(512), seed: 3 }), { repeat: 1, roughness: 1.0 });
-    M.paving.alphaMap = this.own(this.featherTexture());
-    M.paving.transparent = true;
-    M.paving.depthWrite = false;
-    M.paving.polygonOffset = true;
-    M.paving.polygonOffsetFactor = -2;
-    M.paving.polygonOffsetUnits = -2;
-
-    // The water: a mirror that moves, coloured by its depth; and the sea, which is one colour.
+    // The water: a moving mirror, coloured per vertex.
     const ripple = buildMaterial(canalRipple({ size: texSize(256), seed: 17 }), { repeat: 3, roughness: 0.06 });
     ripple.map?.dispose();
     ripple.map = null;
@@ -269,11 +218,6 @@ export class MirrowenWorld {
     ripple.envMapIntensity = 1.5;
     ripple.normalScale.set(0.35, 0.35);
     M.water = ripple;
-    M.sea = ripple.clone();
-    M.sea.vertexColors = false;
-    M.sea.color.set(0x4d6c70);
-    M.sea.normalMap = ripple.normalMap;
-    M.sea.normalScale.set(0.5, 0.5);
 
     for (const m of Object.values(M)) {
       this.own(m);
@@ -281,27 +225,6 @@ export class MirrowenWorld {
     }
     this.M = M;
     this.lanternMat = M.lantern;
-  }
-
-  /** An alpha ramp across a road: clear at both edges, solid in the middle. */
-  featherTexture() {
-    const c = canvas2d(64, 4);
-    const x = c.getContext('2d');
-    const g = x.createLinearGradient?.(0, 0, 64, 0);
-    if (g) {
-      g.addColorStop(0, '#000');
-      g.addColorStop(0.2, '#fff');
-      g.addColorStop(0.8, '#fff');
-      g.addColorStop(1, '#000');
-      x.fillStyle = g;
-    } else {
-      x.fillStyle = '#fff';
-    }
-    x.fillRect(0, 0, 64, 4);
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = THREE.ClampToEdgeWrapping;
-    t.wrapT = THREE.RepeatWrapping;
-    return t;
   }
 
   /* ======================================================================
@@ -314,7 +237,6 @@ export class MirrowenWorld {
     this.scene.add(key, key.target, hemi);
     holdShadowUntilAsked(this.scene, key);
 
-    // The haze is the horizon's own colour; near and far are what the voyage reads.
     const amb = this.data.ambience;
     this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
     this.scene.background = MWSKY.horizon.clone();
@@ -333,17 +255,16 @@ export class MirrowenWorld {
   }
 
   /* ======================================================================
-     THE GROUND, THE WATER, THE SEA AND THE ROADS
+     THE GROUND, THE WATER AND WHAT IS BUILT OF STONE AND STEEL
      ====================================================================== */
 
-  /** The walking surface: the shelf, the pad, the banks of the canal, and past the shelf the sea bed. */
   getTerrainHeight(x, z) {
-    return this.field.height(x, z);
+    return this.plan.height(x, z);
   }
 
   initTerrain() {
-    const geo = this.own(buildMirrowenTerrainGeometry(this.field, this.data));
-    this.terrainMesh = new THREE.Mesh(geo, this.M.shingle);
+    const geo = this.own(buildMirrowenTerrainGeometry(this.plan, this.data));
+    this.terrainMesh = new THREE.Mesh(geo, this.M.ground);
     this.terrainMesh.name = 'mirrowen-ground';
     this.terrainMesh.frustumCulled = false;
     this.terrainMesh.userData.phys = 'ground';
@@ -351,75 +272,21 @@ export class MirrowenWorld {
     this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
 
-    const L = this.field.LEVEL;
-    // The open water, and the sheet over the frozen stretch.
-    const water = new THREE.Mesh(this.own(buildWaterGeometry(this.field, this.data, 'open')), this.M.water);
+    const water = new THREE.Mesh(this.own(buildWaterGeometry(this.plan)), this.M.water);
     water.name = 'mirrowen-water';
-    water.position.y = L;
+    water.position.y = WATER;
+    water.frustumCulled = false;
     water.userData.phys = 'ground';
     water.userData.noWeather = true;
     water.receiveShadow = this.t4;
     this.scene.add(water);
     this.waterMesh = water;
-    const ice = new THREE.Mesh(this.own(buildWaterGeometry(this.field, this.data, 'ice')), this.M.iceSheet);
-    ice.name = 'mirrowen-ice-sheet';
-    ice.position.y = L + 0.05;
-    ice.userData.phys = 'ground';
-    ice.userData.noWeather = true;
-    ice.receiveShadow = this.t4;
-    this.scene.add(ice);
-    this.iceMesh = ice;
-    // The sea, from beyond the walk's reach to the horizon.
-    const sea = new THREE.Mesh(this.own(buildSeaGeometry((this.data.shore ?? 148) + 2)), this.M.sea);
-    sea.name = 'mirrowen-sea';
-    sea.position.y = L;
-    sea.userData.phys = 'ground';
-    sea.userData.noWeather = true;
-    this.scene.add(sea);
-    this.seaMesh = sea;
 
-    this.initRoads();
-  }
+    this.shells = buildHarbourShells(this.ctx, this.plan);
+    this.scene.add(this.shells);
 
-  /** The roads: the quay ring (broken where the canal crosses it), a spoke to every bench, the way in, the pad, and the lane to the boss's ground. */
-  initRoads() {
-    const D = this.data;
-    const R = D.road.radius;
-    const ribbons = [];
-    // The quay ring, as arcs: split wherever the water or its bank would lie under it.
-    {
-      let run = [];
-      const flush = () => { if (run.length > 1) ribbons.push(buildRibbon(this.field, run, 3.2)); run = []; };
-      for (let i = 0; i <= 120; i++) {
-        const a = (i / 120) * Math.PI * 2;
-        const x = Math.sin(a) * R, z = Math.cos(a) * R;
-        if (this.field.waterSD(x, z) < 4) flush();
-        else run.push([x, z]);
-      }
-      flush();
-    }
-    for (const s of D.sites) {
-      const [ax, , az] = s.approachPos;
-      const n = Math.hypot(ax, az);
-      ribbons.push(buildRibbon(this.field, [[ax / n * (R + 1.2), az / n * (R + 1.2)], [ax * 1.02, az * 1.02]], 2.4));
-    }
-    const sp = D.spawn.pos;
-    ribbons.push(buildRibbon(this.field, [[sp[0], sp[2] + 2], [0, R + 1.2]], 3.0));
-    const pad = D.landmarks.find(l => l.asset === 'landing-pad');
-    if (pad) ribbons.push(buildRibbon(this.field, [[1.5, 80], [pad.pos[0] - this.field.PAD_R + 0.5, pad.pos[2]]], 2.6));
-    for (const lane of D.lanes || []) ribbons.push(buildRibbon(this.field, lane.points, lane.width || 3.0));
-    ribbons.push(buildDisc(this.field, D.arena.boss[0], D.arena.boss[2], 10.5));
-    const g = new THREE.Group();
-    g.name = 'mirrowen-roads';
-    g.userData.phys = 'ground';
-    for (const geo of ribbons) {
-      const m = new THREE.Mesh(this.own(geo), this.M.paving);
-      m.renderOrder = 1;
-      m.receiveShadow = this.t4;
-      m.userData.noWeather = true;
-      g.add(m);
-    }
-    this.scene.add(g);
+    this.vista = buildHarbourVista(this.ctx, this.plan);
+    this.scene.add(this.vista);
   }
 
   /* ======================================================================
@@ -437,43 +304,29 @@ export class MirrowenWorld {
       switch (lm.asset) {
         case 'lamp-post': node = buildLampPost(ctx, posts++); break;
         case 'bollard': node = buildBollard(ctx); break;
-        case 'crate-stack': node = buildCrateStack(ctx, lm, seed++); break;
-        case 'drum-rack': node = buildDrumRack(ctx, lm, seed++); break;
-        case 'shed': node = buildShed(ctx); break;
-        case 'gantry-crane': node = buildGantryCrane(ctx); break;
-        case 'harbour-light': node = buildHarbourLight(ctx); break;
-        case 'landing-pad': node = buildLandingPad(ctx, this.field); break;
+        case 'landing-pad': node = buildLandingPad(ctx, this.plan); break;
         case 'ice-wall': node = buildIceWall(ctx, lm, seed++); break;
         default: node = null;
       }
       if (!node) continue;
-      node.position.set(lm.pos[0], lm.asset === 'landing-pad' ? 0 : y, lm.pos[2]);
-      // A round thing carries its turn in its own layout (a turned group's parts are measured by boxes
-      // turned with it, which a round body overfills); everything else is turned by its landmark.
+      node.position.set(lm.pos[0], lm.asset === 'landing-pad' ? TERRACE : y, lm.pos[2]);
       if (!SELF_TURNED.has(lm.asset)) node.rotation.y = lm.rotY || 0;
       node.name = `${lm.asset}@${lm.pos[0]},${lm.pos[2]}`;
       if (lm.asset === 'landing-pad') node.userData.phys = 'ground';
       this.scene.add(node);
       this.landmarkNodes.push({ lm, node });
-    }
-  }
-
-  /** The ships the ice took: hulls listing in the sheet, laid out in the JSON. */
-  initHulls() {
-    for (const h of this.data.hulls || []) {
-      const node = buildHull(this.ctx, h);
-      node.position.set(h.x, this.field.LEVEL, h.z);
-      node.rotation.y = h.yaw || 0;
-      node.name = `${h.tug ? 'tug' : 'cargo-ship'}@${h.x},${h.z}`;
-      this.scene.add(node);
+      const rot = node.rotation.y;
+      for (const v of node.userData.vents || []) {
+        const [dx, dz] = yawPoint(v.x, v.z, rot);
+        this.vents.push({ ...v, x: lm.pos[0] + dx, y: y + v.y, z: lm.pos[2] + dz });
+      }
     }
   }
 
   /* ======================================================================
-     THE SITES
+     THE SEVEN HOSTS
      ====================================================================== */
 
-  /** Which way a site faces: toward the ground a player walks in from. */
   siteFacing(site) {
     const ax = (site.approachPos?.[0] ?? site.pos[0]) - site.pos[0];
     const az = (site.approachPos?.[2] ?? site.pos[2]) - site.pos[2];
@@ -481,11 +334,6 @@ export class MirrowenWorld {
     return Math.atan2(ax, az);
   }
 
-  /**
-   * Build every host: the piece of the harbour a bench belongs to (stations.js), placed at its site and
-   * turned to face its approach. The bench is a part of its host, one object, so a bench is never bolted
-   * to anything but the machine it is for.
-   */
   initHosts() {
     this.siteColliders = [];
     this.hostVents = [];
@@ -504,60 +352,39 @@ export class MirrowenWorld {
       const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
       const at = (lx, lz) => [g.position.x + lx * cos + lz * sin, g.position.z - lx * sin + lz * cos];
 
-      for (const fp of host.fieldPoints || []) {
-        const [px, pz] = at(fp.lx, fp.lz);
-        const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
-        registerFieldPoint(this, {
-          id: fp.id, siteId: site.id, label: fp.label, host: site.id,
-          pos: [px, g.position.y + fp.ly, pz], half: fp.half, rotY: g.rotation.y,
-          stand: [sx, g.position.y, sz]
-        });
-      }
-
-      // The steam a host lets go of, in the world's frame.
       for (const v of host.vents || []) {
         const [x, z] = at(v.lx, v.lz);
         const { lx, lz, ly, ...rest } = v;
         this.hostVents.push({ ...rest, x, y: g.position.y + (ly ?? v.y), z });
       }
 
-      // The host's colliders are in its own frame; the walk wants them in the world's. A host is turned
-      // to face its approach, and a turned box would collide as the larger box that holds it, so a box is
-      // laid as a row of discs along its long side.
+      // Every host faces along an axis, so a box stays an exact box in the world's frame.
       for (const c of host.colliders) {
-        if (c.r !== undefined) { const [x, z] = at(c.lx, c.lz); this.siteColliders.push({ x, z, radius: c.r }); continue; }
-        const long = Math.max(c.hw, c.hd);
-        const short = Math.min(c.hw, c.hd);
-        const n = Math.max(1, Math.ceil((long * 2) / (short * 1.3)));
-        const step = n > 1 ? (long * 2 - short * 2) / (n - 1) : 0;
-        for (let i = 0; i < n; i++) {
-          const o = n > 1 ? -long + short + i * step : 0;
-          const [x, z] = c.hw >= c.hd ? at(c.lx + o, c.lz) : at(c.lx, c.lz + o);
-          this.siteColliders.push({ x, z, radius: short });
+        if (c.r !== undefined) {
+          const [x, z] = at(c.lx, c.lz);
+          this.siteColliders.push({ x, z, radius: c.r });
+          continue;
         }
+        const [p0x, p0z] = at(c.lx - c.hw, c.lz - c.hd);
+        const [p1x, p1z] = at(c.lx + c.hw, c.lz + c.hd);
+        this.siteColliders.push({ minX: Math.min(p0x, p1x), maxX: Math.max(p0x, p1x), minZ: Math.min(p0z, p1z), maxZ: Math.max(p0z, p1z) });
       }
     }
   }
 
-  /** Record where a bench's working surface is, in world terms. */
   registerBenchAnchor(site, group, bench, local) {
     const cos = Math.cos(group.rotation.y);
     const sin = Math.sin(group.rotation.y);
     const [lx, ly, lz] = local;
     this.benchAnchors.set(site.questId, {
       siteId: site.id,
-      position: [
-        group.position.x + lx * cos + lz * sin,
-        group.position.y + (ly || 0),
-        group.position.z - lx * sin + lz * cos
-      ],
+      position: [group.position.x + lx * cos + lz * sin, group.position.y + (ly || 0), group.position.z - lx * sin + lz * cos],
       rotationY: group.rotation.y,
       topY: group.position.y + (ly || 0) + bench.topY,
       dormant: bench.dormant
     });
   }
 
-  /** Case the bench instrument up, or open it. One object, two states. */
   setBenchDeployed(questId, deployed) {
     const anchor = this.benchAnchors.get(questId);
     if (anchor?.dormant) anchor.dormant.visible = !deployed;
@@ -568,12 +395,10 @@ export class MirrowenWorld {
     }
   }
 
-  /** The working surface for a quest's site, or null if it has no bench. */
   benchAnchor(questId) {
     return this.benchAnchors.get(questId) || null;
   }
 
-  /** Light a site's indicator when its quest is complete. The world reads state, it never keeps it. */
   setSiteComplete(questId, complete) {
     const marker = this.siteMarkers.get(questId);
     if (!marker || !marker.indicator) return;
@@ -582,26 +407,32 @@ export class MirrowenWorld {
     marker.indicator.material.needsUpdate = true;
   }
 
+  /** The way on foot to a bench: quay by quay, over the gates and up the gangways, door by door (`lib/workings.js`). */
+  routeTo(siteId, fromPos, toPos = null) {
+    const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.y, fromPos.z];
+    const site = this.data.sites.find(s => s.id === siteId || s.questId === siteId);
+    const to = toPos ? (Array.isArray(toPos) ? toPos : [toPos.x, toPos.y, toPos.z]) : site?.approachPos;
+    if (!to) return [[from[0], from[from.length - 1]]];
+    return this.plan.routeTo(from[0], from[from.length - 1], to[0], to[to.length - 1]);
+  }
+
   /* ======================================================================
-     AIR, LAMPS AND THE FRAME BUDGET
+     AIR, LAMPS, COVER MASK AND BAKE
      ====================================================================== */
 
   initEffects() {
-    const D = this.data;
-    const L = this.field.LEVEL;
-    // Sea smoke over the open water: the basin, and the canal as far as the sheet.
-    const mist = [{ x: D.water.basin.x, z: D.water.basin.z, y: L, r: D.water.basin.radius - 1 }];
-    for (let z = D.water.channel.az - 10; z > D.water.frozenZ + 4; z -= 9) mist.push({ x: D.water.channel.ax, z, y: L, r: D.water.channel.half - 1 });
+    // Sea smoke lifts off the open water: the basin and the outer harbour.
+    const mist = [];
+    for (const [x, z, r] of [[0, -40, 14], [-20, -20, 12], [10, -10, 10], [20, -50, 10], [-24, -54, 10], [62, -30, 9], [84, 0, 10], [80, -50, 10]]) mist.push({ x, z, y: WATER, r });
     this.effects = createMirrowenEffects({
       heightAt: (x, z) => this.getTerrainHeight(x, z),
       t4: this.t4,
-      vents: [...this.vents, ...this.hostVents],
+      vents: [...this.vents, ...this.hostVents, ...(this.data.vents || [])],
       mist
     });
     this.scene.add(this.effects.group);
   }
 
-  /** THE WORK LAMPS SHARE THREE LIGHTS. Only the lamps round the player need a real light at all (lamp-pool.js). */
   initLampPool() {
     this.lampPool = new LampPool(this.scene, 3);
     this.scene.updateMatrixWorld(true);
@@ -610,7 +441,11 @@ export class MirrowenWorld {
     }
   }
 
-  /** WHAT NEVER MOVES IS BAKED. The cased instruments, the indicators and the scanner stay their own meshes. */
+  initCover() {
+    this.cover = makeCover({ sun: MIRROWEN_SUN, ...this.plan.coverSpec() });
+    this.cover.applyTo(this.scene);
+  }
+
   bakeStatics() {
     const bake = (group) => {
       group.traverse(o => {
@@ -630,8 +465,6 @@ export class MirrowenWorld {
       if (node === this.effects?.group) continue;
       bake(node);
     }
-    // Then, where the world is going to be drawn, the props are baked together, a material at a time, by patch of
-    // ground (pbr-kit.js). The checks build a world with no renderer and read it prop by prop, as it was laid out.
     this.staticMerge = this.renderer ? consolidateStatic(this.scene) : null;
     const owned = new Set(this.disposables);
     this.scene.traverse(o => {
@@ -640,17 +473,18 @@ export class MirrowenWorld {
     });
   }
 
-  /** Find the moving parts once the bake is done. */
   collectMovers() {
     this.scene.traverse(o => { if (o.userData.mover) this.movers.push(o); });
   }
 
   /* ======================================================================
      COLLISION
-     Every prop collides as the part of it a body can actually touch.
      ====================================================================== */
 
   buildColliders() {
+    // Every wall, kerb, railing and bulwark the plan declares, and the tug in the dock.
+    for (const c of this.plan.wallColliders()) this.colliders.push(c);
+    for (const c of this.plan.extraColliders()) this.colliders.push(c);
     for (const { lm, node } of this.landmarkNodes) {
       const rot = node.rotation.y;
       for (const c of node.userData.colliders || []) {
@@ -658,9 +492,6 @@ export class MirrowenWorld {
         this.colliders.push({ x: lm.pos[0] + dx, z: lm.pos[2] + dz, radius: c.r });
       }
     }
-    // The water: a closed ring round the basin and the canal, so nobody walks into it.
-    this.waterColliders = waterRing(this.field, this.data);
-    for (const c of this.waterColliders) this.colliders.push(c);
     for (const c of this.siteColliders) this.colliders.push(c);
   }
 
@@ -685,10 +516,9 @@ export class MirrowenWorld {
     for (const o of this.movers) {
       const m = o.userData.mover;
       if (m.kind === 'yaw') o.rotation.y += m.rate * delta;
+      else if (m.kind === 'swing') o.rotation.z = Math.sin(this.elapsed * m.rate + (m.phase || 0)) * m.amp;
     }
-    // The water moves.
     if (this.M.water.normalMap) this.M.water.normalMap.offset.set(this.elapsed * 0.004, this.elapsed * 0.003);
-    // Work lamps are old, not alarming: a slow filament drift.
     this.lanternMat.emissiveIntensity = 1.35 + Math.sin(this.elapsed * 1.3) * 0.1;
   }
 

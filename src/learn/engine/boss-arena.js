@@ -99,13 +99,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.4,
     species: 'the crucible'
   },
-  // On the east bank of the canal, with the frozen stretch to its west and the wall of ice behind it
-  // (`world-data/mirrowen.json` keeps this ground open; `verify:mirrowen` holds the two together).
+  // On the open mole head, with the frozen sea behind it to the north
+  // (`mirrowen/harbour-plan.js` ARENA; `verify:mirrowen` holds the two together).
   'boss-undertow': {
     worldId: 'unit06',
-    playerPos: [30, 1.6, -62],
-    lookAtPos: [30, 1.6, -78],
-    bossPos: [30, 0, -78],
+    playerPos: [62, 1.6, -70],
+    lookAtPos: [62, 1.6, -84],
+    bossPos: [62, 0, -84],
     scale: 1.5,
     species: 'the undertow'
   },
