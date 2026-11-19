@@ -231,7 +231,7 @@ export const SPINE_BEATS = [
 export const CAMPAIGN_STORY = [
   {
     speaker: 'Vess',
-    text: 'Welcome aboard the Avalon. I am Vess. Someone calling themselves the Fifth Guild is hitting outposts across the rim, and nobody knows who they are or what they want.'
+    text: 'Welcome aboard the Avalon. Someone calling themselves the Fifth Guild is hitting outposts across the rim, and nobody knows who they are or what they want.'
   },
   {
     speaker: 'Vess',

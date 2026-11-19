@@ -1014,10 +1014,10 @@ export function renderQuest(container) {
         const targetStageIdx = currentStageIdx + 1;
         maxStageReached = Math.max(maxStageReached, targetStageIdx);
 
-        // Milestone cinematic check (Stage 7, 10, 20)
+        // Milestone cinematic check (Stage 7, 10, 20) — plays on replay too
         const milestoneStageNum = currentStageIdx + 1;
         const milestone = QUEST1_STORY.milestones[milestoneStageNum];
-        if (milestone && !session.hasFlag(`milestone_${milestoneStageNum}`)) {
+        if (milestone) {
           session.setFlag(`milestone_${milestoneStageNum}`, true);
           session.recordNotebook(`erebus:milestone:${milestoneStageNum}`);
           gradeBtn.disabled = true;
@@ -1054,10 +1054,8 @@ export function renderQuest(container) {
   }
 
   async function showCompletionModal() {
-    if (!session.hasFlag('cinematic_item_award')) {
-      session.setFlag('cinematic_item_award', true);
-      await playCinematic(QUEST1_STORY.debrief.cinematic || 'item_award');
-    }
+    session.setFlag('cinematic_item_award', true);
+    await playCinematic(QUEST1_STORY.debrief.cinematic || 'item_award');
     let comp = null;
     try {
       comp = await api.completeQuest(QUEST_ID);

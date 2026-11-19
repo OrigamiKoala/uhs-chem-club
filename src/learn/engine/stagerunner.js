@@ -190,8 +190,8 @@ export function createRunner(container, ctx, cfg) {
     renderWidget();
     syncTabletop(stage);
 
-    // The Tour opens by itself on a stage that brings a tool the player has not met (and only then); a briefing opens it on any stage.
-    if ((stage.briefing || stage.widget?.type === 'table') && !ctx.isComplete && cleared <= i) frame.showBriefing();
+    // Stage briefings always trigger (including on replay); the generic tabletop Tour only auto-opens on first run.
+    if (stage.briefing || (stage.widget?.type === 'table' && !ctx.isComplete && cleared <= i)) frame.showBriefing();
   }
 
   function next() {

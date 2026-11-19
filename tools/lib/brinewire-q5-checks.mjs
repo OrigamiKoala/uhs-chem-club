@@ -129,7 +129,7 @@ export async function checkBrinewireQ5({ ok, fail }) {
   for (const n of ['0.012', `${e.nAnode} tin`, `${e.nCathode} lead`, '2.6', '2.5', '1.01', '0.059', '1000', '0.01']) holds(story.includes(n), `story is missing ${n}`);
   holds(Math.abs(e.nAnode / e.nCathode - 2.6) < 0.05, 'story ratio 72 over 28 is 2.6');
   holds(STAGE_STORY['q5-load']?.[1] === 'Track why the marsh\'s backup batteries lose voltage as they run.', 'stage 1 lead line');
-  holds(QUEST_STORY['unit10/q5-load'].pin === 'Batteries fade as concentrations shift toward balance.', 'the Case Pin');
+  holds(QUEST_STORY['unit10/q5-load'].pin === 'Brinewire\'s backup batteries fade as their ion concentrations shift toward balance.', 'the Case Pin');
   ok('q5-load story: every number Vess quotes is a planner figure');
 
   if (!bad) ok('Brinewire q5-load: every load run, Nernst voltage, concentration cell, slip, refusal and story number agrees with the values worked by hand');

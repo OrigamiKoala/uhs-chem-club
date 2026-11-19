@@ -13,6 +13,7 @@ import { canWalk, world3dFor } from '../learn/worlds3d.js';
 import { openWorldPractice, worldHasPractice, practiceOfferedFlag } from '../learn/practice.js';
 import { openWorldStoryModal } from '../story/story-modal.js';
 import { getEpisode } from '../story/saga.js';
+import { hasStory, playQuestStory } from '../ui/story-anim.js';
 import { session } from '../session.js';
 import { showToast } from '../ui/toast.js';
 
@@ -58,8 +59,15 @@ function installSiteListener() {
  * screen behind it is already drawn, and Close is the first key on the card.
  * Once offered it never auto-opens again — the Problems key is how it comes back.
  */
-function maybeOfferStory() {
-  // Storyline is delivered on demand, never auto-popping up over world exploration.
+function maybeOfferStory(world, { returningFromBench = false } = {}) {
+  if (returningFromBench) return;
+  // If router.js just showed the pre-launch briefing for this flight, don't show it a second time.
+  try {
+    const justShown = Number(sessionStorage.getItem(`story_just_shown_${world.id}`)) || 0;
+    if (Date.now() - justShown < 30000) return;
+  } catch (e) {}
+  // In 2D / non-voyage arrival (or direct jump), show the short 2-line world mystery briefing even if already completed.
+  openWorldStoryModal(world);
 }
 
 /**
@@ -129,7 +137,7 @@ export function renderLearnWorld(container, params = {}) {
     renderWalkHud(container, world);
     bindPracticeKeys(container);
     maybeOfferPractice(world);
-    maybeOfferStory(world);
+    maybeOfferStory(world, { returningFromBench: Boolean(fromQuest) });
     return;
   }
 
@@ -200,7 +208,10 @@ export function renderLearnWorld(container, params = {}) {
                 </div>
               </div>
 
-              <div class="learn-quest-action">
+              <div class="learn-quest-action" style="display: flex; gap: 0.4rem; align-items: center;">
+                ${qp.complete && hasStory(`${world.id}/${q.id}`)
+                  ? `<button type="button" class="btn-secondary quest-btn-sm m-tap" data-story-key="${esc(`${world.id}/${q.id}`)}">Story</button>`
+                  : ''}
                 ${enterable
                   ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
                   : `<span class="eyebrow learn-quest-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
@@ -213,11 +224,14 @@ export function renderLearnWorld(container, params = {}) {
   `;
 
   bindPracticeKeys(container);
+  container.querySelectorAll('[data-story-key]').forEach(btn => {
+    btn.addEventListener('click', () => playQuestStory(btn.dataset.storyKey));
+  });
   container.querySelector('#learn-world-briefing-btn')?.addEventListener('click', () => {
     openWorldStoryModal(world);
   });
   maybeOfferPractice(world);
-  maybeOfferStory(world);
+  maybeOfferStory(world, { returningFromBench: Boolean(sessionStorage.getItem('avalon_learn_last_site')) });
 }
 
 /**
@@ -317,9 +331,14 @@ function renderWalkHud(container, world) {
                       ${q.stageCount ? `${q.stageCount} stages` : ''}${qp.complete ? ' · Cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
                     </span>
                   </span>
-                  ${enterable
-                    ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
-                    : `<span class="tag ${tag.cls}">${tag.label}</span>`}
+                  <span style="display: inline-flex; gap: 0.35rem; align-items: center;">
+                    ${qp.complete && hasStory(`${world.id}/${q.id}`)
+                      ? `<button type="button" class="btn-secondary quest-btn-sm m-tap" data-story-key="${esc(`${world.id}/${q.id}`)}">Story</button>`
+                      : ''}
+                    ${enterable
+                      ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
+                      : `<span class="tag ${tag.cls}">${tag.label}</span>`}
+                  </span>
                 </li>
               `;
             }).join('')}
@@ -373,6 +392,12 @@ function renderWalkHud(container, world) {
 
   openSitesBtn?.addEventListener('click', openSitesPopup);
   closeSitesBtn?.addEventListener('click', closeSitesPopup);
+  container.querySelectorAll('[data-story-key]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      closeSitesPopup();
+      playQuestStory(btn.dataset.storyKey);
+    });
+  });
 
   scrim?.addEventListener('click', (e) => {
     if (e.target === scrim) closeSitesPopup();

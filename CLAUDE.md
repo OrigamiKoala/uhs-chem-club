@@ -20,6 +20,7 @@ Avalon is the UHS Chemistry Club's competition portal for middle- and high-schoo
 - `src/three/` — Persistent WebGL stage (`src/three/stage.js`) and 3D worlds.
 - `src/story/` — Fifth Guild mystery data (`saga.js` with 4-Question Act definitions, 15 clues, low-text `EPISODES` without 3-paragraph walls; `quest-story.js` with `role` + `pin` Case Pins on non-`Toolkit` quests; `quest1.js`; `lore.js`; `story-modal.js`).
 - `src/screens/` & `src/ui/` — DOM screens (`casefile.js` unified 4-Question Case Board showing all seen clues, messages, briefings, and bench Case Pins in one place), route views, and shared UI (`calculator.js` with scientific-notation entry unit scaling, `galaxy-map.js`, `tallow-explainers.js` custom reward animations, `photoelectric-explainer.js`, `orbital-3d-viewer.js`).
+- `src/ui/cutscene/` & `src/ui/cutscene-player.js` — Lore cutscenes: letterboxed 2D canvas scenes for the campaign opening (`intro.js`) and each world's arrival (`arrival.js` shared 4-beat shape: incident → lander → local guide → evidence; per-world specs in `worlds-a/b/c.js`; figures/landers/Fifth mark in `kit.js`). Lines come from `CAMPAIGN_STORY` and each episode's `arrival`/`objective`; `story-modal.js` plays them in place of the text card. Pure functions of scene time, painted on a stub by `verify:story`.
 - `api/[...route].js` & `apps-script/` — Vercel serverless proxy and Google Sheets backend.
 
 ## Teaching Doctrine (Learn Track)

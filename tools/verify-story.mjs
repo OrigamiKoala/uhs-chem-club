@@ -318,6 +318,51 @@ ok('spine beat prerequisite unlock logic validated');
   if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, valid role, 3 to 5 lines of Vess, short Case Pin on clue/fix/boss quests, and every scene paints at every line`);
 }
 
+// 10. Lore cutscenes: the campaign opening and every world's arrival. Each world with an episode has one; every line is the
+//     story's own; every frame paints, with no NaN, from the first to the last.
+{
+  const { cutsceneFor, cutsceneIds } = await import('../src/ui/cutscene/index.js');
+  const stub = () => {
+    const calls = { n: 0, nan: 0 };
+    const make = () => new Proxy(function () {}, {
+      get: (_, k) => {
+        if (k === 'calls') return calls;
+        if (k === 'measureText') return () => ({ width: 80 });
+        return (...args) => {
+          calls.n++;
+          if (args.some(a => typeof a === 'number' && !Number.isFinite(a))) calls.nan++;
+          return /^create/.test(String(k)) ? make() : undefined;
+        };
+      },
+      set: () => true
+    });
+    return make();
+  };
+  const ids = cutsceneIds();
+  for (const wid of Object.keys(EPISODES)) if (!ids.includes(wid)) fail(`world "${wid}" has an episode but no arrival cutscene`);
+  let frames = 0;
+  for (const id of ids) {
+    const sc = cutsceneFor(id);
+    if (!sc) { fail(`cutscene "${id}" does not build`); continue; }
+    const total = sc.beats.reduce((t, b) => t + b.dur, 0);
+    if (Math.abs(total - sc.duration) > 1e-6) fail(`cutscene "${id}" beats add to ${total}s, not its ${sc.duration}s`);
+    if (!sc.beats[sc.beats.length - 1].say) fail(`cutscene "${id}" must end on a spoken line`);
+    for (const b of sc.beats) {
+      if (!b.say) continue;
+      if (sentenceCount(b.say) > 2) fail(`cutscene "${id}" line is over 2 sentences: "${b.say}"`);
+      if (/!/.test(b.say) || /\p{Extended_Pictographic}/u.test(b.say)) fail(`cutscene "${id}" line carries "!" or an emoji: "${b.say}"`);
+    }
+    for (let T = 0; T <= sc.duration + 1e-9; T += 0.25) {
+      const ctx = stub();
+      try { sc.paint(ctx, T, 0); sc.paint(ctx, T, 9.7); } catch (err) { fail(`cutscene "${id}" throws at T=${T.toFixed(2)}: ${err.message}`); break; }
+      if (!ctx.calls.n) fail(`cutscene "${id}" paints nothing at T=${T.toFixed(2)}`);
+      if (ctx.calls.nan) { fail(`cutscene "${id}" draws NaN at T=${T.toFixed(2)}`); break; }
+      frames++;
+    }
+  }
+  ok(`${ids.length} lore cutscenes (opening + every world's arrival): lines from the story, ${frames} frames paint clean`);
+}
+
 if (failures > 0) {
   console.log(`\nSTORY INTEGRITY FAILED (${failures} errors)`);
   process.exit(1);

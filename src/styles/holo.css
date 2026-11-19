@@ -1359,6 +1359,120 @@
   background: var(--accent-amber);
 }
 
+/* ===================================================================
+   LORE CUTSCENE (a world's arrival, the campaign opening)
+   A letterboxed 2D scene; Vess's line set under it in the bottom bar.
+   =================================================================== */
+.cutscene {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: #050403;
+  display: flex;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.cutscene-frame {
+  --cut-w: clamp(280px, calc((100vh - 200px) * 1.7778), 100%);
+  width: var(--cut-w);
+  max-width: 1180px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cutscene-stage { position: relative; }
+
+.cutscene-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #050403;
+  cursor: pointer;
+}
+
+.cutscene-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-durasteel);
+  cursor: pointer;
+}
+
+.cutscene-sub {
+  min-height: 4.6rem;
+  padding: 0.5rem 1rem 0.75rem;
+  background: #050403;
+  text-align: center;
+}
+
+.cutscene-speaker {
+  display: block;
+  min-height: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-amber);
+}
+
+.cutscene-line {
+  margin: 0.3rem auto 0;
+  max-width: 46rem;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--text-bright, #dcd6cc);
+}
+
+.cutscene-keys {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-durasteel);
+}
+
+.cutscene-pips {
+  display: flex;
+  gap: 6px;
+  margin-right: auto;
+}
+
+.cutscene-pips i {
+  display: block;
+  width: 18px;
+  height: 4px;
+  background: var(--plate-400, #3a3631);
+}
+
+.cutscene-pips i.done { background: var(--text-muted); }
+.cutscene-pips i.on { background: var(--accent-amber); }
+
+@media (max-height: 520px) and (min-aspect-ratio: 3 / 2) {
+  .cutscene { padding: 6px; }
+  .cutscene-frame { --cut-w: clamp(280px, calc((100vh - 130px) * 1.7778), 100%); }
+  .cutscene-sub { min-height: 3.4rem; padding: 0.3rem 0.75rem 0.4rem; }
+  .cutscene-line { font-size: 0.9rem; }
+}
+
+@media (max-width: 640px) {
+  .cutscene { padding: 8px; }
+  .cutscene-frame { width: 100%; }
+  .cutscene-keys { flex-wrap: wrap; }
+  .cutscene-keys .btn-secondary,
+  .cutscene-keys .btn-primary { min-height: 44px; }
+  .cutscene-keys .btn-primary { flex: 1 1 auto; }
+  .cutscene-pips { flex-basis: 100%; order: -1; margin: 0 0 2px; }
+  .cutscene-pips i { flex: 1; width: auto; }
+}
+
 /* A phone held sideways: the scene on the left, Vess and the keys on the right. */
 @media (max-height: 520px) and (min-aspect-ratio: 3 / 2) {
   .story-anim { padding: 8px; }

@@ -2,8 +2,9 @@
  * story-modal.js — Storyline onboarding and sector briefing modals.
  *
  * Provides:
- *   - openWorldStoryModal(world, opts): Tactical world mission briefing modal in novelistic paragraph form.
- *   - openCampaignStoryModal(opts): Full campaign storyline modal in novelistic paragraph form.
+ *   - openWorldStoryModal(world, opts): a world's briefing — its arrival cutscene (`ui/cutscene-player.js`), or the
+ *     text card when the world has none.
+ *   - openCampaignStoryModal(opts): the campaign briefing — the opening cutscene, or the text card as a fallback.
  */
 
 import { showModal, closeModal } from '../ui/modal.js';
@@ -12,6 +13,7 @@ import { getEpisode, CAMPAIGN_STORY } from './saga.js';
 import { worldBriefingIds, campaignBriefingIds } from './lore.js';
 import { session } from '../session.js';
 import { esc } from '../ui/layout.js';
+import { hasCutscene, playCutscene } from '../ui/cutscene-player.js';
 
 /**
  * Open the mission briefing modal for a specific world.
@@ -43,6 +45,15 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
   // The whole briefing is filed the moment it opens, so skipping it never costs
   // the player the lore: the notebook is where they catch up.
   session.recordNotebookMany(worldBriefingIds(worldId));
+
+  // A world with an arrival cutscene shows it in place of the text card; the lines are the same.
+  if (hasCutscene(worldId)) {
+    playCutscene(worldId, { title: worldName, doneLabel: isPreLaunch ? 'Take Off' : 'Done' }).then(result => {
+      if (result === 'done' && opts.onLaunch) opts.onLaunch();
+      else opts.onClose?.();
+    });
+    return;
+  }
 
   let currentIdx = 0;
 
@@ -226,6 +237,14 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
  */
 export function openCampaignStoryModal(opts = {}) {
   session.recordNotebookMany(campaignBriefingIds());
+  if (hasCutscene('intro')) {
+    playCutscene('intro', { title: 'Campaign briefing' }).then(result => {
+      session.setFlag('story_onboarding_completed', true);
+      if (result === 'done' && opts.onComplete) opts.onComplete();
+      else opts.onClose?.();
+    });
+    return;
+  }
   let currentIdx = 0;
   const total = CAMPAIGN_STORY.length;
 

@@ -25,7 +25,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'One of its uranium nuclei threw out two protons and two neutrons, and 90 protons left it thorium.' },
       { to: 0.96, say: 'Cold or hot, the ore counted the same. Heat and cold never reach the nucleus.' }
     ],
-    pin: 'Decaying nuclei give off heat that cold cannot stop.'
+    pin: 'The Fifth\'s ore drums stay warm in freezing air because decaying nuclei release heat.'
   },
   'unit14/q2-what-comes-off': {
     scene: 'ch-rays',
@@ -35,7 +35,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'Alpha stopped in paper and beta in aluminium. Gamma, with no charge, went on into the lead.' },
       { to: 0.96, say: 'Inside the body alpha spends itself in a few cells, so it does its harm there.' }
     ],
-    pin: 'Gamma rays pass through metal; only thick lead stops them.'
+    pin: 'The Fifth\'s drums leak gamma rays—that is why their Thornmere armor was lined with lead.'
   },
   'unit14/q3-equations': {
     scene: 'ch-equations',
@@ -45,7 +45,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'In beta decay a neutron became a proton, so thorium became protactinium and the mass number stayed 234.' },
       { to: 0.96, say: 'Eight alpha steps and six beta steps walked uranium-238 all the way down to lead-206.' }
     ],
-    pin: 'Nuclear decay turns uranium step-by-step into new elements.'
+    pin: 'Nuclear decay turns the Fifth\'s uranium step-by-step into the strange elements in their slag.'
   },
   'unit14/q4-stability': {
     scene: 'ch-stability',
@@ -55,7 +55,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'Heavier, the band bends above it: lead-208 holds 126 neutrons with its 82 protons, because neutrons hold without repelling.' },
       { to: 0.96, say: 'Carbon-14, above the band, decays by beta decay onto nitrogen-14, a filled square.' }
     ],
-    pin: 'Their storage is full of unstable nuclei.'
+    pin: 'The Fifth\'s Cinder Halo storage is packed with unstable nuclei that keep decaying.'
   },
   'unit14/q5-half-gone': {
     scene: 'ch-halflife',
@@ -65,7 +65,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'In the next 8 days half of those 128 went, leaving 64: a quarter, not none.' },
       { to: 0.96, say: 'The bone counted 1.9 against a living 15.3: three half-lives, about 17,190 years.' }
     ],
-    pin: 'They have been running this crater for decades.'
+    pin: 'Half-life decay proves the Fifth has been working Cinder Halo\'s crater for decades.'
   },
   'unit14/q6-shortfall': {
     scene: 'ch-shortfall',
@@ -75,7 +75,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'Split, uranium-235 and its neutron lost 0.186 u: the pieces sit higher on the curve, so energy came out.' },
       { to: 0.96, say: 'Each fission frees three neutrons; with two soaked up the chain held steady, with none it tripled each time.' }
     ],
-    pin: 'Splitting uranium turns tiny lost mass into huge energy.'
+    pin: 'The Fifth\'s reactor runs with no fuel line by turning lost uranium mass into huge energy.'
   },
   'unit14/boss-core': {
     scene: 'ch-core',
@@ -85,7 +85,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'Its sodium coolant became magnesium, and its cobalt source fell to an eighth in three half-lives.' },
       { to: 0.96, say: 'Each fission gave out 173 MeV. With the rods home, each one caused less than one more, and the Core went quiet.' }
     ],
-    pin: 'Case Solved: Not alchemy—nuclear fission. Reactor stabilized.'
+    pin: 'Case Solved: Not alchemy—nuclear fission. The Fifth\'s reactor on Cinder Halo is stabilized.'
   },
   /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
   'unit13/q1-chains': {
@@ -96,7 +96,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'A third carbon took the place of one hydrogen and held three of its own, so the chain gained two, not four.' },
       { to: 0.96, say: 'When hexane\'s two ends bonded, each gave up a hydrogen, and the chain became a ring of twelve.' }
     ],
-    pin: 'The tar is carbon-hydrogen chains (alkanes).'
+    pin: 'The black swamp tar the Fifth pumps into Thornmere\'s plant is carbon-hydrogen alkanes.'
   },
   'unit13/q2-unsat': {
     scene: 'thorn-unsat',
@@ -106,7 +106,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'With H–Br that same pair moved to the hydrogen, the electron-poor end, and the bromine left with the pair it had shared.' },
       { to: 0.96, say: 'Then the bromide ion\'s pair moved to the carbon with three bonds: an addition reaction, with nothing left over.' }
     ],
-    pin: 'Double bonds let molecules snap together.'
+    pin: 'The Fifth\'s heater turns swamp tar into double-bonded molecules that snap together.'
   },
   'unit13/q3-isomers': {
     scene: 'thorn-isomers',
@@ -116,7 +116,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'A double bond would not turn, so chlorines on one side and on opposite sides were two different molecules.' },
       { to: 0.96, say: 'CHFClBr\'s mirror image matched it on no turn of the twelve: four different groups round one carbon make it chiral.' }
     ],
-    pin: 'Different shapes make different molecules.'
+    pin: 'Different shapes explain why only one of the Fifth\'s two matching drums builds armor.'
   },
   'unit13/q4-groups': {
     scene: 'thorn-groups',
@@ -126,7 +126,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'Ethanoic acid gave a proton to water, and the charge it left moved between its two oxygens.' },
       { to: 0.96, say: 'Methylamine\'s nitrogen pair took a proton from water: the amine is a base.' }
     ],
-    pin: 'It is a carboxylic acid, stored next to an alcohol.'
+    pin: 'The liquid eating through the Fifth\'s drum is a carboxylic acid stored beside an alcohol.'
   },
   'unit13/q5-reactions': {
     scene: 'thorn-reactions',
@@ -136,7 +136,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'Ethanol\'s oxygen pair moved to the acid\'s C=O carbon, and water left: the two were joined into an ester.' },
       { to: 0.96, say: 'Hydroxide\'s pair at that same carbon broke the link again: what water leaves, water can undo.' }
     ],
-    pin: 'They join by losing water—so water can break them.'
+    pin: 'The Fifth joins their armor links by losing water—which means water can cut them.'
   },
   'unit13/q6-polymers': {
     scene: 'thorn-polymers',
@@ -146,7 +146,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'Two-ended monomers joined with one water molecule falling at every link: four monomers, three waters.' },
       { to: 0.96, say: 'Glycine joined glycine the same way, nitrogen\'s pair to the C=O carbon: an amide link, the link of a protein.' }
     ],
-    pin: 'Hydroxide cuts the polymer chains right at the links.'
+    pin: 'Hydroxide cuts the Fifth\'s polymer armor right at the links, breaching the outpost.'
   },
   'unit13/boss-carapace': {
     scene: 'thorn-carapace',
@@ -156,7 +156,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'The filler\'s second carbon held four different groups, and the link\'s C=O carbon was the electron-poor site.' },
       { to: 0.96, say: 'Hydroxide\'s pair went to that carbon, and every amide link gave way: the armour came apart where water had left it.' }
     ],
-    pin: 'Armor is lined with lead—they are shielding against radiation.'
+    pin: 'Thornmere\'s plastic armor hides thick lead plates—the Fifth is shielding against nuclear radiation.'
   },
   /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
   'unit12/q1-dblock': {
@@ -176,7 +176,7 @@ export const QUEST_STORY = {
       { to: 0.64, say: 'Manganese climbed in even steps through seven electrons, so it can carry any charge from +2 to +7.' },
       { to: 0.95, say: 'Fe²⁺ lost its third electron for 2,957 kJ/mol, less than Mn²⁺\'s 3,248, because that electron shared an orbital.' }
     ],
-    pin: 'Transition metals take multiple charges.'
+    pin: 'Transition metals in the Fifth\'s canyon drums can hold multiple different charges.'
   },
   'unit12/q3-complex': {
     scene: 'lode-complex',
@@ -186,7 +186,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'Copper kept its nine 3d electrons; both electrons of each new bond came from a nitrogen lone pair.' },
       { to: 0.95, say: 'Six water molecules fit round Fe³⁺ but only four chloride ions round Cu²⁺, and the drum\'s +1 meant two Cl− round Cr³⁺.' }
     ],
-    pin: 'Ligands bind around the metal to form complex ions.'
+    pin: 'Spilled ammonia bound around the metal in the Fifth\'s drum, turning it deep blue.'
   },
   'unit12/q4-shapes': {
     scene: 'lode-shapes',
@@ -196,7 +196,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'Round Pt²⁺, two NH₃ and two Cl− made only two models that no turn could lay on each other.' },
       { to: 0.95, say: 'With the Cl− side by side the model is cis; opposite, it is trans. One formula, two substances.' }
     ],
-    pin: 'Same formula, different 3D arrangement.'
+    pin: 'Two of the Fifth\'s metal drums share one formula but have different 3D shapes.'
   },
   'unit12/q5-colour': {
     scene: 'lode-colour',
@@ -206,7 +206,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'Six ligands lifted the two d orbitals that point at them, and only a photon matching that gap was taken out.' },
       { to: 0.95, say: 'With ammonia round the same copper the gap widened to 199 kJ/mol, and the dark band moved from red to orange.' }
     ],
-    pin: 'Color reveals the ligands around the metal.'
+    pin: 'Each unlabeled drum\'s color reveals which ligands are bound around its metal.'
   },
   'unit12/q6-spin': {
     scene: 'lode-spin',
@@ -216,7 +216,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'When the gap is wider than the pairing cost, six d electrons pair up in the lower three orbitals: low spin.' },
       { to: 0.95, say: 'Magnetic pull grows with the number of unpaired electrons, and both colour and pull read the same gap.' }
     ],
-    pin: 'Unpaired d-electrons make a metal magnetic.'
+    pin: 'The Fifth\'s giant canyon magnet grabs only drums whose metals have unpaired d-electrons.'
   },
   'unit12/boss-coil': {
     scene: 'lode-coil',
@@ -226,7 +226,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'We balanced [Co(NH₃)₅Cl]²⁺ at +2 and matched [Co(NH₃)₆]³⁺\'s absorbed blue light to orange on the wheel.' },
       { to: 0.95, say: 'High-spin [Fe(H₂O)₆]³⁺ outpulled low-spin [Fe(CN)₆]³−, shutting down the Coil and revealing the relay to Cinder Halo.' }
     ],
-    pin: 'All sorted ore shipments route straight to Cinder Halo.'
+    pin: 'The sorting magnet\'s chip routes every Fifth Guild metal shipment straight to Cinder Halo.'
   },
   'unit11/q1-watch': {
     scene: 'rate-watch',
@@ -236,7 +236,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'Every run starts steepest and flattens as reactant is used up; for 2 A → B, A falls twice as fast as B rises.' },
       { to: 0.95, say: 'Higher concentration, higher temperature, and powdered solids all gave steeper lines; a larger vessel slowed the rate.' }
     ],
-    pin: 'Same fuel reaction, much faster rate.'
+    pin: 'The Fifth\'s spiked fuel line runs the exact same reaction at a much faster rate.'
   },
   'unit11/q2-law': {
     scene: 'rate-watch',
@@ -246,7 +246,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'Those measured powers give rate = k[A][B]², showing that stoichiometric coefficients never determine the rate law.' },
       { to: 0.95, say: 'With k = 2.0 from runs 1 and 2, the rate law predicted 0.036 mol/(L·s) for run 3.' }
     ],
-    pin: 'Only two feeds control the reaction rate.'
+    pin: 'Only two of the three fuel feeds control how fast Quicklight\'s tower heats up.'
   },
   'unit11/q3-time': {
     scene: 'rate-watch',
@@ -256,7 +256,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'Replotting the readings as ln[A] against time put every point on the straightedge, while 1/[A] straightened second-order data.' },
       { to: 0.95, say: 'From t½ = 15 s, the relation k = 0.693 ÷ t½ gave k = 0.0462 each second.' }
     ],
-    pin: 'First-order decay drops by half in equal steps.'
+    pin: 'The spiked fuel breaks down by half in equal steps—classic first-order decay.'
   },
   'unit11/q4-collide': {
     scene: 'rate-watch',
@@ -275,7 +275,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'The slowest step sets the pace, and only a slow step matching the measured rate law fits experiment.' },
       { to: 0.95, say: 'On a two-step energy profile, the highest climb marks the rate-determining step and the valley holds the intermediate.' }
     ],
-    pin: 'The slowest step sets the speed of the whole reaction.'
+    pin: 'The slowest step sets the speed of Quicklight\'s overheating fuel spike.'
   },
   'unit11/q6-shortcut': {
     scene: 'rate-watch',
@@ -285,7 +285,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'All six catalyst particles remained at the end, and the reactant and product energies did not move.' },
       { to: 0.95, say: 'A catalyst is consumed first and regenerated later, and solid catalysts work at their exposed surface.' }
     ],
-    pin: 'The dust is a catalyst—it lowers the energy hill.'
+    pin: 'The Fifth\'s vent dust is a catalyst—it lowers the energy hill without running out.'
   },
   'unit11/boss-flare': {
     scene: 'rate-watch',
@@ -295,7 +295,7 @@ export const QUEST_STORY = {
       { to: 0.70, say: 'Four 12 s half-lives left 0.0625 of the peroxide core, behind an 80 kJ/mol ignition barrier.' },
       { to: 0.95, say: 'The pre-equilibrium mechanism 2 X ⇌ X₂ followed by slow X₂ + Y → Z matched rate = k[X]²[Y] and shut the flare down.' }
     ],
-    pin: 'Their leader is "The Catalyst"—the crews the Guilds left behind.'
+    pin: 'Their leader is "The Catalyst"—the old crews the Four Guilds left behind.'
   },
   /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
   'unit10/q5-load': {
@@ -307,7 +307,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'Tin over lead was 2.6, close to this cell\'s K of 2.5. Q rises from 1 as the cell runs, and the voltage reaches 0 V when Q reaches K.' },
       { to: 0.94, say: 'Zinc at 1.0 M with copper at 0.0010 M has Q = 1000 and reads 1.01 V. Copper at 0.010 M against 1.0 M has Q = 0.01 and reads 0.059 V.' }
     ],
-    pin: 'Batteries fade as concentrations shift toward balance.'
+    pin: 'Brinewire\'s backup batteries fade as their ion concentrations shift toward balance.'
   },
   'unit10/q6-electrolysis': {
     scene: 'electrolysis-push',
@@ -318,7 +318,7 @@ export const QUEST_STORY = {
       { to: 0.72, say: 'One ampere for 30 s passed 30 C and 2 A for 10 s passed 20 C, yet 0.5 A for 100 s passed 50 C and plated the most silver. A coulomb is an ampere-second.' },
       { to: 0.94, say: '2.00 A for 1800 s passed 3600 C, which is 0.0373 mol of electrons. Two for each copper atom gives 0.0187 mol, 1.19 g of copper: Faraday\'s law.' }
     ],
-    pin: 'They are electroplating pure copper straight out of the marsh.'
+    pin: 'The Fifth is forcing electric current into the pools to electroplate pure copper.'
   },
   'unit10/q2-activity': {
     scene: 'dip-order',
@@ -329,7 +329,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Magnesium, zinc and iron bubbled in acid and copper and silver did not, so hydrogen sits after iron. A copper strip in zinc stayed clean: the swap runs one way only.' },
       { to: 0.94, say: 'Nails wired to zinc or magnesium had no blue spots, and nails wired to copper or tin had 5. The more active partner gives its electrons first, so it is the one used up.' }
     ],
-    pin: 'More active metals lose electrons first.'
+    pin: 'The more active metal on Brinewire\'s pylons gives up its electrons first.'
   },
   'unit10/q1-halves': {
     scene: 'half-join',
@@ -340,7 +340,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Aluminium gives 3 electrons and copper takes 2, so the halves are written 2 and 3 times: 6 electrons given and 6 taken.' },
       { to: 0.94, say: 'Permanganate in acid takes 5 electrons from 5 iron(II) ions, with charge 17 on each side. A redox reaction is one where some oxidation number changes.' }
     ],
-    pin: 'Corrosion is electrons moving from one metal to another.'
+    pin: 'Electrons moving between metals explain why the Fifth\'s tampered pylons are corroding.'
   },
   'unit10/q3-galvanic': {
     scene: 'cell-open',
@@ -351,7 +351,7 @@ export const QUEST_STORY = {
       { to: 0.72, say: 'Each electron through the wire sends one charge through the bridge: 4 negative ions moved toward the anode and 4 positive ions toward the cathode. The electrons never enter the bridge.' },
       { to: 0.94, say: 'After an hour the iron anode had lost 0.37 g and the copper cathode had gained 0.42 g. The mass follows the atoms.' }
     ],
-    pin: 'A salt bridge completes the circuit so ions can flow.'
+    pin: 'Replacing the salt bridges the Fifth cut restores ion flow to the marsh batteries.'
   },
   'unit10/q4-potential': {
     scene: 'cell-gap',
@@ -362,7 +362,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Written twice over, the zinc and copper cell moved twice the electrons and gave out twice the energy, yet the voltmeter still read 1.10 V.' },
       { to: 0.94, say: 'The energy follows ΔG° = −nFE°, and log K = nE° ÷ 0.0592. For zinc with silver, n = 2 and E° = 1.56 V.' }
     ],
-    pin: 'Voltage depends on the metals, not tank size.'
+    pin: 'Voltage depends on the metal pair, letting us pick the strongest cells for Brinewire.'
   },
   /* ---- Brinewire: the Clamp's five cells, read the way every cell on the road was ---- */
   'unit10/boss-clamp': {
@@ -375,7 +375,7 @@ export const QUEST_STORY = {
       { to: 0.78, say: 'Beakers of 0.010 M and 1.0 M zinc read 0.059 V, and the electrons left the bar in the dilute beaker. The dilute side is the anode.' },
       { to: 0.94, say: '1.50 A for 1200 s passed 1800 C, which is 0.0187 mol of electrons, and two electrons plate each zinc atom. That plated 0.61 g of zinc.' }
     ],
-    pin: 'Fifth stole tons of plated copper—wiring something huge.'
+    pin: 'The Fifth stole tons of pure copper from Brinewire—they are wiring something huge.'
   },
   /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
   'unit09/q2-scale': {
@@ -387,7 +387,7 @@ export const QUEST_STORY = {
       { to: 0.78, say: 'Diluted again and again, hydrochloric acid reads 6.00, 6.79, 6.98 and 7.00. The hydronium of water itself is a floor the pH does not pass.' },
       { to: 0.94, say: 'Water at 50 °C reads 6.63 yet holds equal H₃O⁺ and OH⁻. Neutral means equal amounts, not a pH of 7.' }
     ],
-    pin: 'Each pH step is a 10× jump in strength.'
+    pin: 'Each pH step in the Fifth\'s marsh tanks is a 10× jump in acid strength.'
   },
   'unit09/q1-handover': {
     scene: 'handover',
@@ -398,7 +398,7 @@ export const QUEST_STORY = {
       { to: 0.78, say: 'Each acid and what it leaves behind differ by one proton: they are a conjugate pair. Water turns up on both sides, so water is amphoteric.' },
       { to: 0.94, say: 'Even pure water makes a few ions, 1.0 × 10⁻⁷ mol/L of each. Multiplied they give Kw, 1.0 × 10⁻¹⁴ at 25 °C.' }
     ],
-    pin: 'Acids pass protons to water.'
+    pin: 'The Fifth\'s marsh runoff is passing protons to Verdigris\'s water—true acid waste.'
   },
   'unit09/q8-capacity': {
     scene: 'capacity-limit',
@@ -409,7 +409,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Flask 1 held 40 spheres of acetate and each pour used 5. After 8 pours 2 were left and the pH had fallen from 4.75 to 3.05.' },
       { to: 0.94, say: 'Two pours of acid dissolved 10 spheres of magnesium hydroxide, because the acid takes up its hydroxide, and none of the silver chloride. A basic anion makes a salt more soluble as the pH falls.' }
     ],
-    pin: 'Fort\'s water intake shielded with measured buffer capacity.'
+    pin: 'Verdigris\'s water intake is now protected with a measured buffer capacity.'
   },
   'unit09/q7-buffer': {
     scene: 'buffer-catch',
@@ -420,7 +420,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Base is caught the other way: acetic acid fell from 100 to 90 and acetate rose to 110, so the pH rose only from 4.74 to 4.83.' },
       { to: 0.94, say: 'The pH is the pKa plus the log of acetate over acetic acid. Acetate to acetic acid of 100 to 100 reads 4.74, 150 to 50 reads 5.22, and 100 to 10 reads 5.74.' }
     ],
-    pin: 'A weak acid plus its conjugate base resists pH swings.'
+    pin: 'A weak acid and its conjugate base shield the radio fort from Fifth acid spikes.'
   },
   'unit09/q3-weak': {
     scene: 'weak-windows',
@@ -431,7 +431,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'H₃O⁺ times CH₃COO⁻ over CH₃COOH comes to one number in every flask. That number is Ka, and it belongs to the acid, not to how much was put in.' },
       { to: 0.94, say: 'Take any acid and its base: Ka times Kb comes to 1.0 × 10⁻¹⁴. So a larger Ka always goes with a smaller Kb.' }
     ],
-    pin: 'Strong acids split completely; weak ones barely do.'
+    pin: 'Strong acids split completely while weak ones barely do—explaining the harsher marsh tank.'
   },
   'unit09/q6-titrate': {
     scene: 'titration-reads',
@@ -442,7 +442,7 @@ export const QUEST_STORY = {
       { to: 0.78, say: 'Half way to each equivalence point the pH matched the acid\'s pKa: 4.75 for acetic acid and 3.75 for formic acid. That is the half-equivalence point.' },
       { to: 0.94, say: 'Sulfurous acid rose steeply twice, at 10.0 mL and 20.0 mL. A polyprotic acid gives up its protons one step at a time.' }
     ],
-    pin: 'Exact neutralization point found for the waste tank.'
+    pin: 'The pH curve pinpointed the exact neutralization point for Verdigris\'s worst waste tank.'
   },
   'unit09/q4-structure': {
     scene: 'race-pairs',
@@ -462,7 +462,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'Sodium chloride read 7.00, sodium fluoride 8.09 and ammonium chloride 5.13. The ion of a weak parent reacts with water; the ions of strong parents do not.' },
       { to: 0.94, say: 'When one reagent is left over, it decides the pH. After 20.0 mL of base met 30.0 mL of acid, 33 of 100 acid units were left and the flask read 1.70.' }
     ],
-    pin: 'Neutralizing can still leave acidic or basic salts.'
+    pin: 'Neutralizing the Fifth\'s waste tank can still leave acidic or basic salts behind.'
   },
   /* ---- Verdigris: the Fifth called the marsh water acid and measured nothing ---- */
   'unit09/boss-leach': {
@@ -474,7 +474,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Ammonia used up 25.0 mL of acid at a pH of 5.28. Methyl red changed within that volume, and the other dyes did not.' },
       { to: 0.94, say: '100 acetic acid spheres with 227 of acetate read 5.10. A pH comes from a ratio you can build.' }
     ],
-    pin: 'Acid waste matches heavy ore washing—not normal mining.'
+    pin: 'The Fifth\'s acid runoff matches heavy ore washing—not ordinary mining.'
   },
   /* ---- Teeter: is a pan the Fifth calls finished really finished? ---- */
   'unit08/boss-tipper': {
@@ -486,7 +486,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Behind it is the Fifth\'s last pan. Opened from A alone or from B alone, it settles on the same ratio.' },
       { to: 0.94, say: 'Its particles are still changing, in both directions. The Fifth called it finished, but it is only in balance.' }
     ],
-    pin: 'Abandoned salt ponds are a hidden Fifth Guild chemical plant.'
+    pin: 'Teeter\'s "abandoned" salt ponds are a hidden Fifth Guild continuous chemical plant.'
   },
   'unit08/q4-properties': {
     scene: 'k-rewrite',
@@ -505,7 +505,7 @@ export const QUEST_STORY = {
       { to: 0.64, say: 'With a small K, hardly any reactant is used up. K is a ratio of amounts, not the share that turns over.' },
       { to: 0.94, say: 'From a small start the same K uses up much more of the reactant, so the shortcut fails and the quadratic is needed.' }
     ],
-    pin: 'Calculated exact output of the Fifth\'s ponds.'
+    pin: 'ICE math reveals how much chemical product the Fifth\'s Teeter ponds make.'
   },
   'unit08/q1-both': {
     scene: 'pan-both-ways',
@@ -515,7 +515,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'Ring some particles and they keep changing colour in the flat pan, A to B and back. That is dynamic equilibrium: both changes keep going, at about the same rate.' },
       { to: 0.9, say: 'Start from B alone and the pan settles at the same amounts. A reversible reaction can be reached from either end.' }
     ],
-    pin: 'The pond is still reacting in both directions at once.'
+    pin: 'The Fifth\'s "abandoned" salt pond on Teeter is still reacting in both directions.'
   },
   'unit08/q6-lean': {
     scene: 'lean-push',
@@ -526,7 +526,7 @@ export const QUEST_STORY = {
       { to: 0.72, say: 'Add argon and the pressure rises, but the pressure of each gas that reacts does not. Q stays on K and nothing moves.' },
       { to: 0.92, say: 'Heat the vessel and K itself changes, here falling. Of all the changes tried, only temperature moves K.' }
     ],
-    pin: 'Removing product keeps the pond making more nonstop.'
+    pin: 'The Fifth\'s drain pump removes product so the salt pond keeps making more nonstop.'
   },
   'unit08/q2-k': {
     scene: 'ratio-holds',
@@ -536,7 +536,7 @@ export const QUEST_STORY = {
       { to: 0.68, say: 'With H₂ and I₂ making HI, the 2 in the equation becomes a power. HI squared over H₂ times I₂ is the same on every pan.' },
       { to: 0.92, say: 'That number is K. A large K leaves almost no reactant, and a small K leaves almost no product.' }
     ],
-    pin: 'Every pond settles to the same ratio, K.'
+    pin: 'Every Fifth Guild pond on Teeter settles to the same equilibrium ratio, K.'
   },
   'unit08/q3-q': {
     scene: 'needle-to-k',
@@ -546,7 +546,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'A mixture with equal amounts has a Q below K, so it makes B. Which amount is larger does not decide the direction.' },
       { to: 0.92, say: 'A mixture whose Q is already K does not change. Below K a reaction makes products; above K it makes reactants.' }
     ],
-    pin: 'Comparing Q to K predicts the reaction\'s direction.'
+    pin: 'Comparing Q to K predicts which way the Fifth\'s fresh tank mix will run.'
   },
   'unit08/q8-free': {
     scene: 'free-k',
@@ -567,19 +567,19 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'Put the same ion in the water first and the solid gives up less. AgCl dissolves 1.3e−5 mol/L in water and 1.8e−9 mol/L with 0.10 mol/L chloride already there.' },
       { to: 0.94, say: 'Ksp alone does not rank salts. Ag₂CrO₄ has the smaller Ksp and still holds more dissolved, 6.5e−5 mol/L against 1.3e−5.' }
     ],
-    pin: 'A shared ion forces salt out of solution.'
+    pin: 'A shared ion forces salt out of solution before it clogs Teeter\'s pond pipes.'
   },
   /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'unit01/q1-grain': {
     scene: 'grain-resolve',
     role: 'Direct Clue',
     beats: [
-      { to: 0.22, say: 'Zoom in far enough on a sample and it stops being smooth. Matter is made of tiny atoms.' },
+      { to: 0.22, say: 'Zoom in on the sample from Tallow\'s raided salt bin and it stops being smooth. Matter is made of tiny atoms.' },
       { to: 0.46, say: 'A substance made of one kind of atom is an element. Different atoms sitting together without joining make a mixture.' },
       { to: 0.70, say: 'Atoms that are joined make a molecule. The bonds in a molecule can break, but a single atom never splits.' },
-      { to: 0.90, say: 'Join atoms of different elements and you have a compound, a new substance with its own formula.' }
+      { to: 0.90, say: 'Join different atoms and you get a compound, like Tallow\'s salt. None of this explains how a heavy chunk showed up in the bin.' }
     ],
-    pin: 'Pure elements cannot be split into new ones.'
+    pin: 'Tallow\'s raided salt bin holds ordinary atoms—the Fifth did not split any element.'
   },
   'unit01/q2-core': {
     scene: 'beam-foil',
@@ -588,9 +588,9 @@ export const QUEST_STORY = {
       { to: 0.24, say: 'Fire a beam at a thin foil and nearly every shot goes straight through. An atom is mostly empty space, with a tiny dense center, the nucleus.' },
       { to: 0.50, say: 'The nucleus holds protons, each +1, and neutrons, which carry no charge. The electrons, each -1, sit far outside it in shells.' },
       { to: 0.74, say: 'The protons decide which element an atom is. The electrons in the outer shell, the valence electrons, decide how it reacts.' },
-      { to: 0.90, say: 'To turn salt into gold you would have to change the protons inside the nucleus. Nothing on these benches can reach that deep.' }
+      { to: 0.90, say: 'To turn salt into gold the Fifth would have to change the protons in the nucleus. Ordinary chemistry cannot reach that deep.' }
     ],
-    pin: 'Protons set an element\'s identity—chemistry never changes them.'
+    pin: 'Protons lock an atom\'s identity, so the Fifth cannot turn Tallow\'s salt into gold.'
   },
   'unit01/q3-catalogue': {
     scene: 'chart-fill',
@@ -611,7 +611,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'Take electrons off and the atom is a cation; add some and it is an anion. One magnesium and two chlorines cancel to zero.' },
       { to: 0.90, say: 'A label can claim anything, but the counts cannot be argued with. I will run the unlabeled salt tanks through the same check.' }
     ],
-    pin: 'Neutrons change weight, not which element it is.'
+    pin: 'Neutrons change weight, not identity—the Fifth\'s unlabeled salt tank is still ordinary sodium chloride.'
   },
   'unit01/q5-assay': {
     scene: 'balance-bins',
@@ -622,7 +622,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'Any single atom has a whole-number mass, but an average rarely does. The decimal tells you how the mix sits: 35.5 is nearer 35 than 37.' },
       { to: 0.90, say: 'Natural chlorine always balances at 35.5, because three quarters of its atoms have mass 35 and one quarter have mass 37.' }
     ],
-    pin: 'Tallow\'s salt is normal chlorine—not altered.'
+    pin: 'Tallow\'s salt matches natural chlorine at 35.5—the Fifth did not alter the salt itself.'
   },
   'unit01/q6-weigh': {
     scene: 'scale-count',
@@ -633,7 +633,7 @@ export const QUEST_STORY = {
       { to: 0.76, say: 'If there are 72 grams of water and each mole weighs 18 grams, then there are 4 moles of water.' },
       { to: 0.90, say: 'So a sealed crate can be counted without opening it, and nothing in the stores can hide inside one. The sealed drums on the dock are next.' }
     ],
-    pin: 'Tons of raw salt are missing from Tallow.'
+    pin: 'Weighing the raided drums proves the Fifth hauled away tons of raw Tallow salt.'
   },
   /* ---- Ligar (2026-10-23 rollout): the blast at the rescue pass, and what held the rock together ---- */
   'unit03/q1-joins': {
@@ -645,7 +645,7 @@ export const QUEST_STORY = {
       { to: 0.6, say: 'How many electrons each atom loses, gains or shares is a count, which is why a compound has one formula.' },
       { to: 0.8, say: 'The rubble round the tunnel mouth is held by bonds like these. Next I hit, heat and wire a whole block of each kind.' }
     ],
-    pin: 'Different bonds need different ways to break.'
+    pin: 'The tunnel rubble mixes bond types, so clearing the Fifth\'s blast takes different tools.'
   },
   'unit03/q2-lattice': {
     scene: 'liner-heat',
@@ -655,7 +655,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'A network bonded all the way through barely melts at all, and a metal carries a current cold.' },
       { to: 0.75, say: 'Nothing you measured belongs to an atom: it belongs to how atoms are held together. So the bond type tells you what a material will do before you test it.' }
     ],
-    pin: 'Covalent networks survive extreme heat.'
+    pin: 'Covalent networks survive extreme heat without shocking the trapped Ligar miners.'
   },
   'unit03/q3-distance': {
     scene: 'well-depth',
@@ -665,7 +665,7 @@ export const QUEST_STORY = {
       { to: 0.65, say: 'The deeper the curve, the more energy it takes to pull the atoms apart: the bond energy. More shared pairs sit closer and hold more strongly.' },
       { to: 0.85, say: 'Every bond length and bond energy in a table is a point on one of these curves, so a breaker charge can be loaded for the bond it has to beat.' }
     ],
-    pin: 'Breaking basalt\'s bonds takes extreme energy.'
+    pin: 'Breaking basalt\'s bonds takes huge energy—the Fifth used far more heat than any torch.'
   },
   'unit03/q4-dots': {
     scene: 'lewis-count',
@@ -676,7 +676,7 @@ export const QUEST_STORY = {
       { to: 0.72, say: 'The central atom has only four electrons around it, short of an octet, and none are left to give it.' },
       { to: 0.92, say: 'So each oxygen shares one of its lone pairs. Both single bonds become double bonds, and every atom counts eight.' }
     ],
-    pin: 'Electron counts predict how tunnel gases bond.'
+    pin: 'Electron counts map the unknown gases leaking from the Fifth\'s tunnel blast.'
   },
   'unit03/q5-resonance': {
     scene: 'resonance-hybrid',
@@ -715,7 +715,7 @@ export const QUEST_STORY = {
       { to: 0.8, say: 'Shape decides: water turned in the field, while carbon dioxide did not, however polar its bonds.' },
       { to: 0.9, say: 'Whether a molecule is polar decides what it dissolves in and how it behaves near a charge. In hydrogen chloride the shared pair is shifted only about 18% of the way to chlorine.' }
     ],
-    pin: 'Polar gases cling; nonpolar gases vent clean.'
+    pin: 'Polar tunnel gases cling to the rescue gear while nonpolar gases vent clean.'
   },
   'unit03/q9-orbitals': {
     scene: 'magnet-pull',
@@ -725,7 +725,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'Electrons fill them from the lowest up. Oxygen\'s last two stand unpaired, which is why a magnet attracted it, while nitrogen, with every electron paired, was not attracted.' },
       { to: 0.75, say: 'Where a Lewis structure fails, as with oxygen\'s magnetism, molecular orbitals still work, which is why chemists keep both models. Ligar\'s last guard stands at the end of the cut.' }
     ],
-    pin: 'Oxygen is magnetic—air supply confirmed.'
+    pin: 'Magnetism confirms breathable oxygen is still reaching Ligar\'s trapped miners.'
   },
   'unit03/boss-warden': {
     scene: 'warden-cut',
@@ -735,7 +735,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The warden settles back into quarry stone, and the slab behind it has been cut clean through, ionic and covalent rock alike.' },
       { to: 0.75, say: 'No chartered refinery torch makes heat like that, and whoever made the cut was not working with bonds at all. The slab goes into the Case File.' }
     ],
-    pin: 'Basalt melted glass-smooth. The Fifth has extreme heat.'
+    pin: 'Ligar\'s basalt was melted glass-smooth—the Fifth has an extreme heat source.'
   },
 
   'unit01/boss-hopper': {
@@ -747,7 +747,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'It is bismuth. No salt flat makes bismuth on its own, and nothing we weighed or counted could have made it here.' },
       { to: 0.90, say: 'The ingot goes into the Case File. The next world asks why the electrons in every atom you have weighed sit only where they do.' }
     ],
-    pin: 'Bismuth found in pure salt. Chemistry cannot make it.'
+    pin: 'We pulled heavy bismuth from Tallow\'s pure salt—ordinary chemistry could never make it.'
   },
 
   /* ---- Bellows: the Fifth jammed the station's holders; the chemistry reads what a gauge counts and ends on a sealed tank that stayed warm ---- */
@@ -759,7 +759,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The gas is not pressing down with its weight: more gas, less room or more heat all make the knocks harder or more frequent.' },
       { to: 0.75, say: 'Temperature measures the average kinetic energy of the particles, and pressure reflects how frequently and forcefully they collide with walls.' }
     ],
-    pin: 'Pressure comes from gas particles hitting walls.'
+    pin: 'Gas particles slamming walls explain why the Fifth\'s jammed fuel tanks are spiking.'
   },
   'unit04/q2-laws': {
     scene: 'cold-tank',
@@ -769,7 +769,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'So a sealed tank left out in the cold must lose pressure in step with its kelvin temperature: cool one by fifty degrees and its gauge falls by about a sixth.' },
       { to: 0.75, say: 'Every cold-weather check on the station comes down to this, and a tank that does not follow it has something wrong inside.' }
     ],
-    pin: 'A sealed tank staying hot in cold air has an inside heat source.'
+    pin: 'A sealed tank staying hot in Bellows\' freezing wind must have an inside heat source.'
   },
   'unit04/q3-ideal': {
     scene: 'equal-rooms',
@@ -779,7 +779,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'A mole of helium and a mole of carbon dioxide fill the same room, though one weighs eleven times the other.' },
       { to: 0.75, say: 'So a pressure, a room and a temperature are enough to count a sealed tank without opening it, which is the first check when a holder reads too high.' }
     ],
-    pin: 'Tank amounts counted without opening a valve.'
+    pin: 'We counted the gas trapped in the Fifth\'s jammed tanks without opening a valve.'
   },
   'unit04/q4-mixtures': {
     scene: 'mix-share',
@@ -789,7 +789,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The moles, not the weight, decide who pushes hardest. Splitting a tank\'s push gas by gas is how a crew sees what has been added to it.' },
       { to: 0.75, say: 'The station\'s air is a mixture, and so is the fuel in its lines, so whatever the Fifth added will show up as a push of its own.' }
     ],
-    pin: 'Each gas adds its own partial pressure.'
+    pin: 'Each gas adds its own partial pressure inside the Fifth\'s tampered fuel line.'
   },
   'unit04/q5-speed': {
     scene: 'leak-race',
@@ -799,7 +799,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The leak at the vent stack emptied at the same pace as krypton, and a leak that matches a known gas has the same kind of particle.' },
       { to: 0.75, say: 'Graham\'s law connects effusion and diffusion rates inversely to the square root of molar mass.' }
     ],
-    pin: 'The Fifth\'s vent is leaking heavy krypton gas.'
+    pin: 'The Fifth\'s damaged vent on Bellows is leaking heavy krypton gas.'
   },
   'unit04/q6-real': {
     scene: 'crowd-and-pull',
@@ -809,7 +809,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'It reads below it where they cling, because they pull on each other, and that same pull is what turns a gas into a liquid.' },
       { to: 0.75, say: 'So a gas is closest to ideal when it is thin and warm, and every pressure vessel on the cloud deck is designed knowing exactly where the gas law stops being true.' }
     ],
-    pin: 'Extreme pressure forces gas particles to attract and crowd.'
+    pin: 'Over-packing Bellows\' tanks past ideal limits forced the gas particles to crowd.'
   },
   'unit04/boss-compressor': {
     scene: 'warm-cylinder',
@@ -819,7 +819,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The Compressor stands cold in its housing. In its vault is a sealed cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it.' },
       { to: 0.75, say: 'Gay-Lussac\'s law says no sealed gas can do that unless something inside is giving off heat. The cylinder goes into the Case File.' }
     ],
-    pin: 'Sealed tank stayed hot 12 days in freezing air. Not chemical.'
+    pin: 'The Fifth\'s sealed tank stayed hot 12 days in freezing air—not ordinary chemistry.'
   },
   /* ---- Ember Reach: the Fifth's manifold is frosted over, so what runs inside it takes heat in ---- */
   /* ---- Kettle: the forged ledger ---- */
@@ -832,7 +832,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'The potassium and nitrate ions are spectator ions: the same discs stand in the water before and after the mixing.' },
       { to: 0.94, say: 'The net ionic equation keeps only what changed: the lead ion and two iodide ions packing into a solid.' }
     ],
-    pin: 'One ion pair precipitated out; the rest stayed dissolved.'
+    pin: 'One ion pair precipitated out and turned Kettle\'s foundry waste pond cloudy.'
   },
   'unit07/boss-golem': {
     scene: 'golem-vault',
@@ -843,7 +843,7 @@ export const QUEST_STORY = {
       { to: 0.7, say: 'Behind it is a vault, and in the vault is the shipping log: ore in, metal out.' },
       { to: 0.92, say: 'The ore in the log can give at most 27.9 tons of iron. The log claims 50.0, so 22.1 tons came from somewhere else.' }
     ],
-    pin: '50 tons from 40 tons is impossible. Extra metal came from elsewhere.'
+    pin: 'Kettle\'s 50-ton iron log is impossible—22 tons of metal came from outside the ore.'
   },
   'unit07/q4-balance': {
     scene: 'recipe-board',
@@ -853,7 +853,7 @@ export const QUEST_STORY = {
       { to: 0.6, say: 'A coefficient in front of a formula counts molecules, so it changes the atom counts and leaves each substance alone. Raise them one at a time and the rows come closer.' },
       { to: 0.94, say: 'At 1, 3, 2 and 3 every row agrees: 2 iron, 3 carbon and 6 oxygen on each side.' }
     ],
-    pin: 'Furnace recipe balanced: Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
+    pin: 'Kettle\'s furnace recipe balances cleanly: Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂.'
   },
   'unit07/q2-names': {
     scene: 'crate-labels',
@@ -863,7 +863,7 @@ export const QUEST_STORY = {
       { to: 0.6, say: 'A name says the same in words. The metal keeps its name and the other ion takes the ending -ide, so Mg²⁺ with O²⁻ is magnesium oxide.' },
       { to: 0.94, say: 'In Fe₂O₃ the three oxide ions hold 6− between them, so each of the two irons is 3+. The Roman numeral is that charge, not a count: iron(III) oxide.' }
     ],
-    pin: 'The crates hold iron(III) oxide, Fe₂O₃.'
+    pin: 'The Fifth\'s unlabeled foundry crates hold iron(III) oxide, Fe₂O₃.'
   },
   'unit07/q3-change': {
     scene: 'sealed-pot',
@@ -874,7 +874,7 @@ export const QUEST_STORY = {
       { to: 0.77, say: 'Seal the lid and nothing gets in or out. The atoms only join up differently, so the balance reads the same before and after.' },
       { to: 0.94, say: 'The balance changes only when atoms cross the lid. A sealed vessel makes nothing and loses nothing.' }
     ],
-    pin: 'Mass never changes in a sealed reaction.'
+    pin: 'Sealed reactions never create extra mass—something in the Fifth\'s foundry log is wrong.'
   },
   'unit07/q6-stoich': {
     scene: 'furnace-ledger',
@@ -885,7 +885,7 @@ export const QUEST_STORY = {
       { to: 0.72, say: 'Feed two reactants and the reaction stops when one runs out. What is left of the other is the excess.' },
       { to: 0.94, say: 'Forty tons of ore can give at most 28.0 tons of iron. A real furnace keeps only a part of that.' }
     ],
-    pin: 'Max yield is 28 tons—22 tons of metal came from elsewhere.'
+    pin: '40 tons of ore makes at most 28 tons of iron—22 tons came from elsewhere.'
   },
   'unit07/q7-titrate': {
     scene: 'burette-count',
@@ -896,7 +896,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'When the particles match, that is the equivalence point. The indicator turns on the very next drop, which is the endpoint.' },
       { to: 0.95, say: 'So the acid\'s strength is the base\'s strength times the volume counted, over the volume in the flask.' }
     ],
-    pin: 'Acid tank strength checked against the Fifth\'s log.'
+    pin: 'Titration checked the acid strength in the Fifth\'s foundry cleaning tank.'
   },
   'unit07/q8-kinds': {
     scene: 'furnace-log',
@@ -917,7 +917,7 @@ export const QUEST_STORY = {
       { to: 0.75, say: 'Soft silver ions share electrons with soft sulfide through covalent overlap, forming an insoluble black precipitate.' },
       { to: 0.95, say: 'Hard soft acid base theory explains how the foundry selectively separates precious metals from furnace waste.' }
     ],
-    pin: 'Metal waste separated cleanly by sulfide affinity.'
+    pin: 'Sulfide affinity separates the mixed metals left in the Fifth\'s foundry waste vat.'
   },
   'unit05/q1-flow': {
     scene: 'frost-manifold',
@@ -927,7 +927,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'A thermometer in a bath reports on the surroundings of whatever is reacting: a bath that cools means heat is going into the chemicals, which is endothermic.' },
       { to: 0.75, say: 'On the overlook, the Fifth\'s manifold is furred with frost in the middle of a hot caldera. Frost on the pipes means heat is going into the manifold.' }
     ],
-    pin: 'The Fifth\'s pipe is absorbing heat—an endothermic draw.'
+    pin: 'The Fifth\'s volcano pipe is pulling heat away from Ember Reach\'s shelters.'
   },
   'unit05/q2-calorimetry': {
     scene: 'heat-swap',
@@ -937,7 +937,7 @@ export const QUEST_STORY = {
       { to: 0.64, say: 'They meet where the heat the block lost has gone into the water. Nothing is made or lost on the way.' },
       { to: 0.86, say: 'Heat follows q = m × c × ΔT, and the two sides come to the same number of joules. A calorimeter measures one side to learn the other.' }
     ],
-    pin: 'Specific heat identifies the Fifth\'s pipe metal.'
+    pin: 'Specific heat identifies the unlabeled metal pipe the Fifth tapped into the volcano.'
   },
   'unit05/q3-enthalpy': {
     scene: 'fuel-bars',
@@ -947,7 +947,7 @@ export const QUEST_STORY = {
       { to: 0.6, say: 'Per mole, methane gives out the most of these four fuels and hydrogen the least.' },
       { to: 0.85, say: 'Per gram the order turns over, and hydrogen leads by a wide margin. A mole of hydrogen weighs so little that its mass carries a lot of heat.' }
     ],
-    pin: 'Fuel output calculated before burning.'
+    pin: 'Measuring heat per gram lets the rescue skiff lift off with the right fuel.'
   },
   'unit05/q4-bonds': {
     scene: 'bond-ledger',
@@ -957,7 +957,7 @@ export const QUEST_STORY = {
       { to: 0.4, say: 'Splitting chlorine costs another 242, so four separate atoms stand 678 kJ above where the reaction began.' },
       { to: 0.78, say: 'Forming a bond gives energy back, 431 for each H–Cl. Two of them return 862, more than was paid, so the reaction gives out 184 kJ.' }
     ],
-    pin: 'Bond energies show the Fifth\'s coil costs huge heat.'
+    pin: 'Bond energies show the Fifth\'s cracking coil burns through huge amounts of heat.'
   },
   'unit05/q6-entropy': {
     scene: 'spread-count',
@@ -976,7 +976,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'A reaction nobody can run can still be worked out from ones that were measured, because measured from the elements, every compound sits at a height of its own.' },
       { to: 0.75, say: 'The straight shaft at the separator is sealed, but the stepped pipe beside it starts and ends in the same two places. Heat counts only those two places, so the open pipe gives the same total.' }
     ],
-    pin: 'Total heat is the same by any route.'
+    pin: 'Side pipes reveal the total heat flowing down the Fifth\'s sealed main shaft.'
   },
   'unit05/q7-gibbs': {
     scene: 'seal-crossing',
@@ -986,7 +986,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The free energy, ΔG = ΔH − TΔS, sets them against each other, and temperature turns up the spreading until a change that takes heat in can still run.' },
       { to: 0.75, say: 'Ice melts at 273 K because that is where the heat it costs and the spreading it gains are equal, and the limestone seal on the Fifth\'s siphon core gives way only above its own crossing.' }
     ],
-    pin: 'The underground process only runs at extreme heat.'
+    pin: 'The Fifth\'s hidden underground process only turns on at extreme volcano heat.'
   },
   'unit05/boss-crucible': {
     scene: 'crucible-open',
@@ -996,7 +996,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'The Crucible splits along its firebrick seams. Inside is a heat exchanger that carried megawatts away from the shelters without a wisp of steam reaching the sky.' },
       { to: 0.75, say: 'Below the exchanger, a pipe runs down into the crust. The siphon manifold goes into the Case File.' }
     ],
-    pin: 'Stolen volcano heat powered a hidden underground rig.'
+    pin: 'The Fifth drained Ember Reach\'s volcano heat to power a hidden underground rig.'
   },
   /* ---- Lanternfall (unit02): who dimmed the beacons, and what is the Fifth lighting with a lens no guild lamp can make? ---- */
   'unit02/q1-wave': {
@@ -1007,7 +1007,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'What the eye calls colour is a thin slice of the electromagnetic spectrum. A radio mast, an oven and an X-ray tube sit on the same scale, at other wavelengths.' },
       { to: 0.75, say: 'Red and violet cross the same gap in the same time: every colour of light travels at the same speed.' }
     ],
-    pin: 'Short wavelengths carry the lighthouse signal.'
+    pin: 'Short wavelengths carry the beacon signal the Fifth blacked out across Lanternfall.'
   },
   'unit02/q2-photon': {
     scene: 'photon-plate',
@@ -1017,7 +1017,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'No number of weaker photons can add up to it. A photon of red carries too little, however many arrive, while one photon of violet is enough.' },
       { to: 0.75, say: 'Energy comes in amounts, not smooth slopes, so electrons can only hold certain energies. The sky over this ice glows in a few sharp colours, and I want to know why.' }
     ],
-    pin: 'Only high-frequency light knocks electrons loose.'
+    pin: 'Only high-frequency light triggers the lighthouse plates—the Fifth used that to blind them.'
   },
   'unit02/q3-lines': {
     scene: 'line-gas',
@@ -1028,7 +1028,7 @@ export const QUEST_STORY = {
       { to: 0.6, say: 'Every aurora, neon sign and star is read this way: the colours say which atoms are there, and the dark lines of an absorption spectrum say which cool atoms lie in front.' },
       { to: 0.8, say: 'The ladder only fits hydrogen, because an electron is not a bead on a rung. I want to know where an electron actually is.' }
     ],
-    pin: 'The Fifth\'s lighthouse tube uses helium gas.'
+    pin: 'The sealed tube the Fifth left at the lighthouse tower holds helium gas.'
   },
   'unit02/q4-cloud': {
     scene: 'cloud-ball',
@@ -1065,7 +1065,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'It is the configuration measured instead of written, and the experiment that proved the rows you filled on the rack are real. Nobody drew the ladder in; the spectrum shows it.' },
       { to: 0.75, say: 'The specimen left at the tower shows peaks of two, two and four. Binding energy has a pattern across the whole table, and the next bench follows it.' }
     ],
-    pin: 'The tower residue is pure oxygen-rich oxide.'
+    pin: 'The unlabeled powder from the Fifth\'s tower matches pure oxygen-rich oxide.'
   },
   'unit02/q8-trends': {
     scene: 'radii-row',
@@ -1075,7 +1075,7 @@ export const QUEST_STORY = {
       { to: 0.5, say: 'Across a row each atom has more protons and is smaller, because the extra charge pulls the same shell in. Radius and ionization energy are that law measured two ways.' },
       { to: 0.75, say: 'Nearly every property a chemist predicts starts from where an element sits on the table. I sort the camp\'s metal stock by size and by what it costs to strip an electron.' }
     ],
-    pin: 'Low-ionization metals trigger the lighthouse plate easily.'
+    pin: 'Low-ionization metals rebuild Lanternfall\'s damaged lighthouse plates so they trigger easily.'
   },
   'unit02/q9-absorb': {
     scene: 'beam-dim',
@@ -1086,7 +1086,7 @@ export const QUEST_STORY = {
       { to: 0.75, say: 'Three standards draw the calibration line, and the sealed tank sample\'s reading is read back off it. Pharmacies, water labs and hospitals measure what is dissolved the same way.' },
       { to: 0.9, say: 'One feeder still haunts the ice: the Lantern-Eater, made of everything you have measured here.' }
     ],
-    pin: 'Copper leaked into the lighthouse coolant tank.'
+    pin: 'Light absorption proves copper leaked into the fouled lighthouse coolant tank.'
   },
   'unit02/q10-wavefunctions': {
     scene: 'cloud-ball',
@@ -1106,7 +1106,7 @@ export const QUEST_STORY = {
       { to: 0.75, say: 'No guild lamp gives light that short. Someone put high-energy optics here on purpose.' },
       { to: 0.9, say: 'The lens goes into the Case File. Across the fog rise the crystal lattices of Ligar, held together by the very electron pairs you have mapped.' }
     ],
-    pin: 'UV lens found—Fifth ships fly unseen in ultraviolet.'
+    pin: 'We recovered an ultraviolet lens—Fifth Guild ships fly unseen in UV light.'
   },
 
   /* ---- Mirrowen: what is the canal ice made of, and why does it stay solid when the water beside it does not? ---- */
@@ -1118,7 +1118,7 @@ export const QUEST_STORY = {
       { to: 0.64, say: 'Water weighs 18 g a mole and hydrogen sulfide 34, yet water needs 40.7 kJ and hydrogen sulfide 18.7. A hydrogen bond beats weight.' },
       { to: 0.9, say: 'Even so, breaking every O–H bond in a mole of water takes 926 kJ. The forces between molecules are a sliver of the bonds inside them.' }
     ],
-    pin: 'Strong hydrogen bonds hold water tight.'
+    pin: 'Strong hydrogen bonds explain why Mirrowen\'s frozen canal water grips so tightly.'
   },
   'unit06/q1-states': {
     scene: 'states-three',
@@ -1128,7 +1128,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'Carry the jar from solid to liquid to gas and the reader names H₂O the whole way. The molecules only change places, so no bond breaks.' },
       { to: 0.9, say: 'A litre of liquid water weighs about 1,700 times a litre of steam, so a gas is mostly empty space. Melting and boiling overcome the intermolecular forces between molecules, never the bonds inside them.' }
     ],
-    pin: 'Same molecules—just locked in place.'
+    pin: 'Mirrowen\'s canal ice is still water molecules—the Fifth just locked them in place.'
   },
   'unit06/q3-boil': {
     scene: 'boil-flask',
@@ -1147,7 +1147,7 @@ export const QUEST_STORY = {
       { to: 0.7, say: 'Quartz held its shape to 1713 °C and then ran. Fused silica, made of the same atoms, went soft a little at a time from 1040 to 1585 °C.' },
       { to: 0.9, say: 'In the crystal every silicon has the same angles, so every bond gives way together. In glass the angles differ, so the bonds give way a few at a time.' }
     ],
-    pin: 'Sharp melting point—the canal ice is a crystal.'
+    pin: 'A sharp melting point proves the Fifth\'s canal barrier is a crystal, not glass.'
   },
   'unit06/q5-crossing': {
     scene: 'crossing-curve',
@@ -1157,7 +1157,7 @@ export const QUEST_STORY = {
       { to: 0.62, say: 'The heat is not lost. It frees the molecules, from the ice and then from the liquid, and boiling a mole takes 40.65 kJ.' },
       { to: 0.9, say: 'Run it back and the steam condenses and the water freezes, giving out the same heat. The way down totals −54.9 kJ.' }
     ],
-    pin: 'Melting energy breaks attractions without raising temperature.'
+    pin: 'Melting the Fifth\'s canal ice takes heat just to break attractions between molecules.'
   },
   'unit06/q6-solution': {
     scene: 'solution-drop',
@@ -1168,7 +1168,7 @@ export const QUEST_STORY = {
       { to: 0.8, say: 'Topping a flask up with water leaves the moles alone and spreads them over more litres. Twenty-five mL of 2.00 M stock made up to 100 mL is 0.500 M.' },
       { to: 0.96, say: 'Dissolving also moves heat. Calcium chloride warmed the bath, and sodium chloride, potassium chloride and ammonium nitrate cooled it.' }
     ],
-    pin: 'Canal concentration measured in moles per liter.'
+    pin: 'We measured how much of the Fifth\'s chemical is dissolved in each liter of canal water.'
   },
   'unit06/q7-separate': {
     scene: 'pull-apart',
@@ -1178,7 +1178,7 @@ export const QUEST_STORY = {
       { to: 0.66, say: 'On paper, each dye climbs as far as its grip on the paper and on the liquid allow, so water and hexane with acetone put the same three dyes in opposite orders.' },
       { to: 0.9, say: 'In the still the liquid held least tightly comes over first: acetone, then ethanol, then water, each vial richer in one but never pure. Boiling the water off leaves the dissolved agent in the flask.' }
     ],
-    pin: 'Boiling off the water leaves the Fifth\'s chemical behind.'
+    pin: 'Boiling off the canal water leaves the Fifth\'s lab-made chemical behind in the flask.'
   },
   'unit06/boss-undertow': {
     scene: 'undertow-finale',
@@ -1188,7 +1188,7 @@ export const QUEST_STORY = {
       { to: 0.6, say: 'The Undertow let go when the readings stopped agreeing with its hold. It slumps back into grey brine along the quay.' },
       { to: 0.85, say: 'What it was drawing on has a grip on water and thins like any solution. It was made to be taken out again.' }
     ],
-    pin: 'Canal chemical was lab-made—the Fifth has a factory.'
+    pin: 'Mirrowen\'s canal chemical was lab-made—the Fifth Guild is running a real factory.'
   },
 };
 
