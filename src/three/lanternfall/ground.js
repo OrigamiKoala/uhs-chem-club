@@ -13,7 +13,7 @@
 
 import * as THREE from 'three';
 import {
-  LAKE, GLACIER, NUNATAK, EDGE, FACE_T, fbm2, ridge2, smooth, lakeE, glacierMask, crevasseDepth, glacierSurface
+  LAKE, GLACIER, NUNATAK, EDGE, FACE_T, fbm2, ridge2, smooth, lakeE, glacierMask, glacierSurface, crevasseBend
 } from './glacier-plan.js';
 import { Buckets, rng } from './kit.js';
 
@@ -78,14 +78,11 @@ function groundTint(x, z, y, slope, plan) {
     let under;
     if (rn < NUNATAK.r * 1.05) under = mix3(C.rock, C.rubble, fbm2(x * 0.2, z * 0.2, 37, 2) * 0.4);
     else if (gm > 0.5) {
-      // Glacier ice: blue in the open cracks, white on the surface, with a dirt band near the margins.
-      const crev = crevasseDepth(x, z);
-      under = mix3(C.glacier, C.blue, Math.min(1, crev / 2));
-      if (crev > 1.2) under = mix3(under, C.deep, Math.min(1, (crev - 1.2) / 1.6));
+      // Glacier ice where the wind has scoured the snow off: blue-white.
+      under = mix3(C.glacier, C.blue, 0.35);
     } else under = mix3(C.till, C.rubble, fbm2(x * 0.12, z * 0.12, 41, 3));
     const flatSnow = gm > 0.5 && rn > NUNATAK.r ? C.glacier : C.snow;
     c = mix3(flatSnow, under, bare);
-    if (gm > 0.5 && crevasseDepth(x, z) > 0.4) c = mix3(c, C.blue, 0.6);
     // Wind drifts in the lee of the moraines.
     c = mix3(c, C.drift, (1 - bare) * fbm2(x * 0.04, z * 0.04, 43, 2) * 0.35);
   }
@@ -300,6 +297,49 @@ export function buildSnout(ctx) {
     return [x, y, z];
   }, iceSection);
   return b.build(ctx.M, 'lanternfall-snout', { shadows: false });
+}
+
+/**
+ * THE CREVASSE FIELD between the crossing and the snout: each crack a slot a metre or so wide across the tongue, its
+ * lips of snow, its inside blue going to black. Drawn as two walls going down into the ice from the surface and a
+ * dark floor two to four metres down, so the cracks read from the crossing and from the shore.
+ */
+export function buildCrevasses(ctx, plan) {
+  const b = new Buckets();
+  const r = rng(515);
+  const keep = (x, z) => !plan.volumeAt(x, z) && !plan.inBuilt(x, z, 2.2) && plan.landHeight(x, z) > 12 &&
+    !plan.openVols.some(v => x > v.rect.minX - 2.2 && x < v.rect.maxX + 2.2 && z > v.rect.minZ - 2.2 && z < v.rect.maxZ + 2.2);
+  const step = Math.PI / 0.42;
+  for (let zk = -58; zk < GLACIER.snout - 4; zk += step * (0.8 + r() * 0.4)) {
+    const x0 = GLACIER.west + 4 + r() * 6, x1 = GLACIER.east - 3 - r() * 6;
+    let run = [];
+    const flush = () => {
+      if (run.length < 3) { run = []; return; }
+      const pts = run;
+      const n = pts.length - 1;
+      b.sheet('crevasse', n, 4, (u, v) => {
+        const i = Math.min(n, Math.round(u * n));
+        const [x, z, y, wdt] = pts[i];
+        return [x, y + 0.05, z + (v * 2 - 1) * wdt];
+      });
+      // The dark of the crack, a narrower ribbon in the middle of the opening.
+      b.sheet('crevasseDeep', n, 1, (u, v) => {
+        const i = Math.min(n, Math.round(u * n));
+        const [x, z, y, wdt] = pts[i];
+        return [x, y + 0.07, z + (v * 2 - 1) * wdt * 0.55];
+      });
+      run = [];
+    };
+    for (let x = x0; x <= x1; x += 1.5) {
+      const z = zk - crevasseBend(x);
+      const t = (x - x0) / (x1 - x0);
+      const wdt = (0.35 + 0.5 * Math.sin(Math.PI * t)) * (0.8 + 0.4 * fbm2(x * 0.2, zk, 19, 2));
+      if (!keep(x, z) || !keep(x, z - wdt - 0.5) || !keep(x, z + wdt + 0.5)) { flush(); continue; }
+      run.push([x, z, plan.landHeight(x, z), wdt, 2.2 + 1.8 * Math.sin(Math.PI * t)]);
+    }
+    flush();
+  }
+  return b.build(ctx.M, 'lanternfall-crevasses', { shadows: false });
 }
 
 /* ======================================================================

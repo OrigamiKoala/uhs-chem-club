@@ -1000,11 +1000,11 @@ function buildHoleCave(w) {
   k.cyl(g, [0.006, 0.006, 2.8, 4], M.darkSteel, [hx, 1.45, hz]);
   k.cyl(g, [0.12, 0.12, 0.5, 10], M.steel, [hx - 0.9, 1.0, hz - 0.9], [0, 0, Math.PI / 2]);
   // The sealed tank on the plate's right, the sampling bottles in their crate.
-  k.cyl(g, [0.55, 0.55, 1.5, 18], M.steel, [3.6, 0.75, -1.0], null, true);
-  for (const y of [0.3, 1.2]) k.cyl(g, [0.57, 0.57, 0.06, 18], M.darkSteel, [3.6, y, -1.0]);
+  k.cyl(g, [0.55, 0.55, 1.5, 18], M.steel, [3.4, 0.75, -1.0], null, true);
+  for (const y of [0.3, 1.2]) k.cyl(g, [0.57, 0.57, 0.06, 18], M.darkSteel, [3.4, y, -1.0]);
   k.box(g, [0.8, 0.4, 0.5], M.timber, [F.x1 - 0.8, 0.2, F.z0 + 0.8]);
   for (let i = 0; i < 6; i++) k.cyl(g, [0.05, 0.05, 0.22, 8], M.glass, [F.x1 - 1.05 + (i % 3) * 0.25, 0.51, F.z0 + 0.7 + Math.floor(i / 3) * 0.2]);
-  h.colliders.push({ lx: hx, lz: hz, r: 1.35 }, { lx: 3.6, lz: -1.0, r: 0.7 }, { lx: F.x1 - 0.8, lz: F.z0 + 0.8, hw: 0.5, hd: 0.35 });
+  h.colliders.push({ lx: hx, lz: hz, r: 1.35 }, { lx: 3.4, lz: -1.0, r: 0.65 }, { lx: F.x1 - 0.8, lz: F.z0 + 0.8, hw: 0.5, hd: 0.35 });
   k.pendant(g, 0, 3.3, -0.6, F.T);
   k.pendant(g, F.x0 + 1.6, 3.1, (F.door.lo + F.door.hi) / 2, F.T, { intensity: 6, distance: 10 });
   return finish(w, h, 'hole-cave-shell');

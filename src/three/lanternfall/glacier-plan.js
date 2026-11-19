@@ -131,7 +131,7 @@ export const ROOMS = [
   {
     id: 'room-9', site: 'site-9', questId: 'q9-absorb', title: 'Spectroscopy',
     rect: { minX: -34, maxX: -20, minZ: 6.8, maxZ: 18.8 }, floor: 0, onto: 'spur-9',
-    door: { side: 'maxZ', lo: -26, hi: -22 }, facing: 'east', back: 3.6, along: -2.5,
+    door: { side: 'maxZ', lo: -26, hi: -22 }, facing: 'east', back: 3.6, along: -1.8,
     top: 5.0, buried: false, ground: null, shell: 'holeCave', sky: 0.16
   },
   {
@@ -362,7 +362,12 @@ export function glacierSurface(x, z) {
   return y;
 }
 
-/** Crevasses: transverse cracks across the lower tongue, open in the ice between the crossing and the snout. */
+/**
+ * Crevasses: transverse cracks across the lower tongue between the crossing and the snout, each a line
+ * `z = zk - bend(x)`. Too narrow for the terrain's grid, so they are drawn (`ground.js` `buildCrevasses`), not carved
+ * into the height field; `crevasseDepth` says how open the crack is at a point, for drawing only.
+ */
+export const crevasseBend = x => 4 * Math.sin(x * 0.05 + 1.3) + 2 * fbm2(x * 0.08, 0.5, 13, 2);
 export function crevasseDepth(x, z) {
   if (z > GLACIER.snout - 3 || z < -60) return 0;
   const bend = 4 * Math.sin(x * 0.05 + 1.3) + 2 * fbm2(x * 0.08, z * 0.02, 13, 2);
@@ -415,24 +420,29 @@ export function makeGlacierPlan() {
     const ve = valleyEast(z) + 0.8, vw = valleyWest(z) + 0.8;
     const me = smooth(31, 36, x) * smooth(-2, -14, z);
     const mw = smooth(-44, -49, x) * smooth(14, 2, z);
-    y = Math.max(y, ve * me, vw * mw);
+    // (A term whose mask is nought must not lift the lake's bed to 0 m: each lifts only where it applies.)
+    const lift = (v, k) => { if (k > 1e-3 && v > y) y = v; };
+    lift(ve * me, me);
+    lift(vw * mw, mw);
 
     // The east lateral moraine: a sharp-crested bank along x ~ 60 above its valley, and the valley side behind it.
     const eastBase = valleyEast(Math.min(z, 30));
-    const eastM = (eastBase + 6 + (fbm2(z * 0.05, 3, 21, 2) - 0.5) * 3) * Math.exp(-(((x - 60) / 7.5) ** 2)) * smooth(36, 20, z);
-    const eastSide = smooth(63, 70, x) * (eastBase + 4 + Math.min(70, (x - 64) * 0.9) + (fbm2(x * 0.03, z * 0.03, 25, 3) - 0.5) * 8) * smooth(40, 10, z);
-    y = Math.max(y, eastM, eastSide);
+    const kEM = Math.exp(-(((x - 60) / 7.5) ** 2)) * smooth(36, 20, z);
+    const kES = smooth(63, 70, x) * smooth(40, 10, z);
+    lift((eastBase + 6 + (fbm2(z * 0.05, 3, 21, 2) - 0.5) * 3) * kEM, kEM);
+    lift((eastBase + 4 + Math.min(70, (x - 64) * 0.9) + (fbm2(x * 0.03, z * 0.03, 25, 3) - 0.5) * 8) * kES, kES);
 
     // The west lateral moraine between the west path and the ice, and the west valley side.
     const westBase = valleyWest(Math.min(z, 30));
-    const westM = (westBase + 3 + (fbm2(z * 0.05, 9, 23, 2) - 0.5) * 2) * Math.exp(-(((x + 48.5) / 2.8) ** 2)) * smooth(12, 2, z);
-    const westSide = smooth(-62.3, -64, x) * (westBase + 1.5 + Math.min(80, (-62 - x) * 1.1) + (fbm2(x * 0.03, z * 0.03, 27, 3) - 0.5) * 8) * smooth(64, 36, z);
-    y = Math.max(y, westM, westSide);
+    const kWM = Math.exp(-(((x + 48.5) / 2.8) ** 2)) * smooth(12, 2, z);
+    const kWS = smooth(-62.3, -64, x) * smooth(64, 36, z);
+    lift((westBase + 3 + (fbm2(z * 0.05, 9, 23, 2) - 0.5) * 2) * kWM, kWM);
+    lift((westBase + 1.5 + Math.min(80, (-62 - x) * 1.1) + (fbm2(x * 0.03, z * 0.03, 27, 3) - 0.5) * 8) * kWS, kWS);
 
     // The glacier over the land, its snout an ice cliff onto the lake.
     const gm = glacierMask(x, z);
     if (gm > 0) {
-      const g = glacierSurface(x, z) - crevasseDepth(x, z);
+      const g = glacierSurface(x, z);
       y = y * (1 - gm) + Math.max(y, g) * gm;
     }
 

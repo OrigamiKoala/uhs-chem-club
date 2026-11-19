@@ -64,11 +64,13 @@ export const BOSS_ARENA_SPOTS = {
     scale: 1.8,
     species: 'the hopper'
   },
+  // On the south yard's west end, the lake and the glacier's snout behind it to the north
+  // (`lanternfall/glacier-plan.js` ARENA; `verify:lanternfall` holds the two together).
   'boss-eater': {
     worldId: 'unit02',
-    playerPos: [0, 1.6, 68.0],
-    lookAtPos: [0, 1.6, 54.0],
-    bossPos: [0, 2.6, 54.0],
+    playerPos: [-22, 1.6, 54],
+    lookAtPos: [-22, 1.6, 40],
+    bossPos: [-22, 2.6, 40],
     scale: 1.1,
     species: 'the lantern-eater',
     flies: true

@@ -32,7 +32,7 @@ import {
 } from './lanternfall/atmosphere.js';
 import { makeGlacierPlan, YARD } from './lanternfall/glacier-plan.js';
 import {
-  buildTerrainGeometry, buildLakeGeometry, buildCutFaces, buildShoreRidges, buildSnout, buildVista
+  buildTerrainGeometry, buildLakeGeometry, buildCutFaces, buildShoreRidges, buildSnout, buildCrevasses, buildVista
 } from './lanternfall/ground.js';
 import { buildAuroraMast, buildCommsMast, buildLanternPost, buildCamp, buildSled, buildLandingPad } from './lanternfall/props.js';
 import { HOST_BUILDERS } from './lanternfall/stations.js';
@@ -159,6 +159,8 @@ export class LanternfallWorld {
     M.panel = std({ color: 0xc4ccd0, roughness: 0.7, metalness: 0.2, side: THREE.DoubleSide });
     M.serac = std({ color: 0xbcd6e4, roughness: 0.6, metalness: 0 });
     M.channel = std({ color: 0x8eb0c2, roughness: 0.15, metalness: 0 });
+    M.crevasse = std({ color: 0x8fb4cf, roughness: 0.45, metalness: 0, side: THREE.DoubleSide });
+    M.crevasseDeep = std({ color: 0x0b1a26, roughness: 0.6, metalness: 0, side: THREE.DoubleSide });
 
     for (const m of Object.values(M)) {
       this.own(m);
@@ -243,6 +245,7 @@ export class LanternfallWorld {
     this.scene.add(buildCutFaces(ctx, this.plan));
     this.scene.add(buildShoreRidges(ctx, this.plan));
     this.scene.add(buildSnout(ctx));
+    this.scene.add(buildCrevasses(ctx, this.plan));
     this.scene.add(buildVista(ctx, this.plan));
     this.ownMadeMaterials();
   }
