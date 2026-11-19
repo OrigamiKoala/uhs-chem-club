@@ -107,7 +107,7 @@ export const ROOMS = [
   {
     id: 'room-5', site: 'site-5', questId: 'q5-numbers', title: 'Quantum Numbers',
     rect: { minX: -24, maxX: -8, minZ: -34, maxZ: -22 }, floor: 8.4, onto: 'crevasse',
-    door: { side: 'minZ', lo: -18, hi: -12 }, facing: 'west', back: 3.6, along: 0,
+    door: { side: 'minZ', lo: -18, hi: -12 }, facing: 'north', back: 3.6, along: 0,
     top: 5.4, buried: true, shell: 'recordsTent', sky: 0.1
   },
   {
