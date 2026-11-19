@@ -203,6 +203,66 @@ function start(w, siteId, name) {
 const done = ({ g, bench, colliders, vents, fieldPoints }) => ({ group: g, bench, benchLocal: [0, 0, 0], colliders, vents, fieldPoints });
 
 /* ======================================================================
+   3. THE METER HOUSE INSIDE THE PISTON HOLDER (site-3, q3-ideal, Ideal Gas Law)
+   Low plated partitions inside the drum, the piston parked overhead. Behind the plate the meter run
+   carries the gas in from the inlet riser at the left, which stands up to a bellmouth under the piston.
+   To the left the volume indicator reads the piston's height off a tape; to the right the station meter
+   and its gauge and thermometer stand.
+   ====================================================================== */
+
+function buildHolderMeter(w) {
+  const h = start(w, 'site-3', 'holder-meter');
+  const { k, M, g, colliders } = h;
+  const CEIL = 4.85;
+  // The inlet riser at the back left: a main up from the floor to a bellmouth under the piston.
+  k.cyl(g, [0.55, 0.55, 3.9, 20], M.steel, [-5.2, 1.95, -2.55], null, true);
+  k.cyl(g, [0.95, 0.6, 0.5, 20], M.steel, [-5.2, 4.15, -2.55]);
+  k.cyl(g, [0.72, 0.72, 0.08, 20], M.darkSteel, [-5.2, 0.9, -2.55]);
+  k.cyl(g, [0.72, 0.72, 0.08, 20], M.darkSteel, [-5.2, 2.9, -2.55]);
+  colliders.push({ lx: -5.2, lz: -2.55, r: 0.8 });
+  // The meter run along the back: a pipe at waist height on saddles, flanged either side of the orifice carrier.
+  k.pipe(g, [[-4.6, 1.15, -2.65], [4.4, 1.15, -2.65]], 0.22, M.steel);
+  for (const x of [-3.4, -1.0, 1.0, 3.4]) k.box(g, [0.3, 0.95, 0.5], M.darkSteel, [x, 0.48, -2.65]);
+  for (const x of [-0.35, 0.35]) k.cyl(g, [0.36, 0.36, 0.08, 18], M.darkSteel, [x, 1.15, -2.65], [0, 0, Math.PI / 2]);
+  k.box(g, [0.5, 0.9, 0.5], M.caseDark, [0, 1.75, -2.65]);
+  k.strut(g, [-0.15, 1.38, -2.65], [-0.15, 1.3, -2.65], 0.02, M.brass);
+  k.gauge(g, -0.3, 2.85, -2.85, 0.24, -0.2);
+  k.gauge(g, 0.3, 2.85, -2.85, 0.24, 0.6);
+  k.pipe(g, [[-0.15, 2.2, -2.65], [-0.3, 2.6, -2.85]], 0.02, M.brass);
+  k.pipe(g, [[0.15, 2.2, -2.65], [0.3, 2.6, -2.85]], 0.02, M.brass);
+  colliders.push({ lx: 0, lz: -2.65, hw: 4.7, hd: 0.4 });
+  // The run turns up at the right into the station meter.
+  k.pipe(g, [[4.4, 1.15, -2.65], [4.9, 1.15, -2.65], [4.9, 1.15, -1.6]], 0.22, M.steel);
+  // THE STATION METER: a cased bellows meter on a plinth, its index on top, a thermometer well and a gauge on a stand.
+  k.box(g, [1.6, 0.3, 1.4], M.darkSteel, [4.9, 0.15, -0.9]);
+  k.box(g, [1.4, 1.5, 1.2], M.steel, [4.9, 1.05, -0.9], null, true);
+  k.box(g, [1.46, 0.08, 1.26], M.darkSteel, [4.9, 1.82, -0.9]);
+  k.box(g, [0.6, 0.3, 0.4], M.caseDark, [4.9, 2.0, -0.9]);
+  k.box(g, [0.46, 0.18, 0.02], M.glassDark, [4.9, 2.02, -0.69]);
+  k.pipe(g, [[4.9, 1.15, -0.25], [4.9, 1.15, 0.6], [4.9, 0.4, 0.6]], 0.22, M.steel);
+  k.cyl(g, [0.035, 0.035, 0.6, 8], M.brass, [4.3, 1.5, 0.6], [0, 0, Math.PI / 2]);
+  k.cyl(g, [0.03, 0.03, 1.4, 8], M.darkSteel, [3.6, 0.7, 0.7]);
+  k.gauge(g, 3.6, 1.55, 0.74, 0.18, 0.3);
+  colliders.push({ lx: 4.85, lz: -0.6, hw: 0.95, hd: 1.45 });
+  colliders.push({ lx: 3.6, lz: 0.7, r: 0.25 });
+  // THE VOLUME INDICATOR at the left: a tall scale on a post, its pointer hung from the piston on a tape.
+  k.box(g, [0.5, 0.12, 0.5], M.darkSteel, [-5.4, 0.06, 0.4]);
+  k.box(g, [0.14, 4.6, 0.14], M.darkSteel, [-5.4, 2.4, 0.4]);
+  k.box(g, [0.06, 3.6, 0.5], M.paint2, [-5.3, 2.4, 0.4]);
+  for (let i = 0; i <= 18; i++) k.box(g, [0.02, 0.02, i % 6 === 0 ? 0.3 : 0.16], M.caseDark, [-5.26, 0.6 + i * 0.2, 0.4 + (i % 6 === 0 ? 0.07 : 0.14)]);
+  k.box(g, [0.08, 0.06, 0.36], M.paintRed, [-5.22, 3.05, 0.4]);
+  k.strut(g, [-5.22, 3.08, 0.4], [-5.22, CEIL, 0.4], 0.01, M.darkSteel, 4);
+  colliders.push({ lx: -5.4, lz: 0.4, r: 0.35 });
+  // A pressure gauge on the partition at the left, its line up to the drum's floor.
+  k.gauge(g, -6.45, 1.6, -1.2, 0.2, -0.4);
+  // Lamps hung from the piston's ribs.
+  k.pendant(g, 0, 3.4, -0.6, CEIL);
+  k.pendant(g, -4.2, 3.6, 2.6, CEIL, { intensity: 5 });
+  k.pendant(g, 4.2, 3.6, 2.6, CEIL, { intensity: 5 });
+  return done(h);
+}
+
+/* ======================================================================
    PLACEHOLDER (phase 2): the bench, a lamp over it and a box where the host's machinery will stand
    ====================================================================== */
 
@@ -220,7 +280,7 @@ function placeholder(siteId) {
 export const HOST_BUILDERS = {
   'site-1': placeholder('site-1'),
   'site-2': placeholder('site-2'),
-  'site-3': placeholder('site-3'),
+  'site-3': buildHolderMeter,
   'site-4': placeholder('site-4'),
   'site-5': placeholder('site-5'),
   'site-6': placeholder('site-6')
