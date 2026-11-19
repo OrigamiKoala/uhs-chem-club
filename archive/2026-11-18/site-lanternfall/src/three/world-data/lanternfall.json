@@ -1,0 +1,1339 @@
+{
+  "id": "lanternfall",
+  "name": "Lanternfall",
+  "place": "Aurora ice",
+  "oneLine": "Light, energy levels, orbitals, and periodic trends.",
+  "sky": "lanternfall-sky",
+  "terrain": {
+    "heightmap": "lanternfall-ice",
+    "size": [
+      240,
+      240
+    ],
+    "maxHeight": 4,
+    "material": "packed-ice"
+  },
+  "ambience": {
+    "keyLight": 10479812,
+    "fillLight": 3889807,
+    "fogColor": 1716037,
+    "fogNear": 40,
+    "fogFar": 520,
+    "dustDensity": 0.4
+  },
+  "lake": {
+    "x": 0,
+    "z": 0,
+    "radius": 24
+  },
+  "landmarks": [
+    {
+      "asset": "wave-tank",
+      "pos": [
+        -3,
+        0,
+        24.5
+      ],
+      "radius": 6.5,
+      "minTier": "T3",
+      "host": "site-1"
+    },
+    {
+      "asset": "photocell-mast",
+      "pos": [
+        36,
+        0,
+        26
+      ],
+      "radius": 4.2,
+      "minTier": "T3",
+      "host": "site-2"
+    },
+    {
+      "asset": "spectrograph-sled",
+      "pos": [
+        64,
+        0,
+        0.5
+      ],
+      "radius": 7.5,
+      "minTier": "T3",
+      "host": "site-3"
+    },
+    {
+      "asset": "crawler-lab",
+      "pos": [
+        42,
+        0,
+        -52.5
+      ],
+      "radius": 5.5,
+      "minTier": "T3",
+      "host": "site-4"
+    },
+    {
+      "asset": "records-tent",
+      "pos": [
+        6,
+        0,
+        -55
+      ],
+      "radius": 0.45,
+      "minTier": "T3",
+      "host": "site-5"
+    },
+    {
+      "asset": "records-tent",
+      "pos": [
+        6,
+        0,
+        -56
+      ],
+      "radius": 0.45,
+      "minTier": "T3",
+      "host": "site-6"
+    },
+    {
+      "asset": "detector-mast",
+      "pos": [
+        -36,
+        0,
+        -48
+      ],
+      "radius": 6,
+      "minTier": "T3",
+      "host": "site-7"
+    },
+    {
+      "asset": "tile-store",
+      "pos": [
+        -67,
+        0,
+        -11
+      ],
+      "radius": 8.5,
+      "minTier": "T3",
+      "host": "site-8"
+    },
+    {
+      "asset": "water-hole",
+      "pos": [
+        -20.5,
+        0,
+        12.5
+      ],
+      "radius": 5,
+      "minTier": "T3",
+      "host": "site-9"
+    },
+    {
+      "asset": "wavefunction-dome",
+      "pos": [
+        -48,
+        0,
+        14.5
+      ],
+      "radius": 4.5,
+      "minTier": "T3",
+      "host": "site-10"
+    },
+    {
+      "asset": "landing-pad",
+      "pos": [
+        52,
+        0,
+        80
+      ],
+      "radius": 8.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "comms-mast",
+      "pos": [
+        64,
+        0,
+        70
+      ],
+      "radius": 1.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        17.57,
+        0,
+        -80.42
+      ],
+      "radius": 3,
+      "scale": 0.91,
+      "rotY": 2.13,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -70.62,
+        0,
+        -49.18
+      ],
+      "radius": 3,
+      "scale": 1.16,
+      "rotY": 5.69,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -26.46,
+        0,
+        77.48
+      ],
+      "radius": 3,
+      "scale": 1.57,
+      "rotY": 5.23,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -57.77,
+        0,
+        31.39
+      ],
+      "radius": 3,
+      "scale": 1.02,
+      "rotY": 1.37,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -66.75,
+        0,
+        -26.6
+      ],
+      "radius": 3,
+      "scale": 1.55,
+      "rotY": 5.09,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        78.27,
+        0,
+        18.13
+      ],
+      "radius": 3,
+      "scale": 1.5,
+      "rotY": 2.69,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -77.37,
+        0,
+        37.65
+      ],
+      "radius": 3,
+      "scale": 1.26,
+      "rotY": 1.06,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -15.19,
+        0,
+        81.68
+      ],
+      "radius": 3,
+      "scale": 1.39,
+      "rotY": 0.11,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        20.28,
+        0,
+        -68.96
+      ],
+      "radius": 3,
+      "scale": 0.87,
+      "rotY": 1.09,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        1.5,
+        0,
+        -70.69
+      ],
+      "radius": 3,
+      "scale": 0.84,
+      "rotY": 0.21,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        68.18,
+        0,
+        52.26
+      ],
+      "radius": 3,
+      "scale": 1.58,
+      "rotY": 0.44,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -21.21,
+        0,
+        -86.01
+      ],
+      "radius": 3,
+      "scale": 1.25,
+      "rotY": 4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        77.02,
+        0,
+        9.86
+      ],
+      "radius": 3,
+      "scale": 1.07,
+      "rotY": 4.03,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -67.79,
+        0,
+        8.87
+      ],
+      "radius": 3,
+      "scale": 1.66,
+      "rotY": 0.08,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -11.63,
+        0,
+        -29.26
+      ],
+      "radius": 2.4,
+      "scale": 0.81,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        16.12,
+        0,
+        -26.49
+      ],
+      "radius": 2.4,
+      "scale": 0.84,
+      "rotY": 0.19,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -11.12,
+        0,
+        37.62
+      ],
+      "radius": 2.4,
+      "scale": 1.18,
+      "rotY": 5.69,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -20.14,
+        0,
+        36.98
+      ],
+      "radius": 2.4,
+      "scale": 0.66,
+      "rotY": 0.05,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        24.17,
+        0,
+        29.14
+      ],
+      "radius": 2.4,
+      "scale": 0.78,
+      "rotY": 0.02,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ice-spire",
+      "pos": [
+        -30.31,
+        0,
+        29.36
+      ],
+      "radius": 2.4,
+      "scale": 0.61,
+      "rotY": 6.13,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        41.69,
+        0,
+        -69.55
+      ],
+      "radius": 6.5,
+      "scale": 0.93,
+      "rotY": 0.02,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        74.61,
+        0,
+        -43.74
+      ],
+      "radius": 6.5,
+      "scale": 1.26,
+      "rotY": 4.13,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        44.01,
+        0,
+        61.26
+      ],
+      "radius": 6.5,
+      "scale": 0.85,
+      "rotY": 2.89,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        -78.77,
+        0,
+        -36.5
+      ],
+      "radius": 6.5,
+      "scale": 1.02,
+      "rotY": 4.87,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        84.47,
+        0,
+        -3.86
+      ],
+      "radius": 6.5,
+      "scale": 1,
+      "rotY": 2.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        -51.88,
+        0,
+        75.3
+      ],
+      "radius": 6.5,
+      "scale": 1.06,
+      "rotY": 4.36,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        -1.4,
+        0,
+        -83.81
+      ],
+      "radius": 6.5,
+      "scale": 0.82,
+      "rotY": 2.68,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        65.35,
+        0,
+        35.88
+      ],
+      "radius": 6.5,
+      "scale": 0.8,
+      "rotY": 0.43,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pressure-ridge",
+      "pos": [
+        53.85,
+        0,
+        -29.35
+      ],
+      "radius": 6.5,
+      "scale": 1.2,
+      "rotY": 5.24,
+      "minTier": "T3"
+    },
+    {
+      "asset": "aurora-mast",
+      "pos": [
+        51.86,
+        0,
+        -70.48
+      ],
+      "radius": 2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "aurora-mast",
+      "pos": [
+        75.15,
+        0,
+        23.61
+      ],
+      "radius": 2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "aurora-mast",
+      "pos": [
+        -44.85,
+        0,
+        -60.49
+      ],
+      "radius": 2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "camp",
+      "pos": [
+        27.19,
+        0,
+        -54.03
+      ],
+      "radius": 3.6,
+      "rotY": 1.15,
+      "minTier": "T3"
+    },
+    {
+      "asset": "camp",
+      "pos": [
+        30.63,
+        0,
+        -69.82
+      ],
+      "radius": 3.6,
+      "rotY": 3.52,
+      "minTier": "T3"
+    },
+    {
+      "asset": "camp",
+      "pos": [
+        65.9,
+        0,
+        -28.5
+      ],
+      "radius": 3.6,
+      "rotY": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "sled",
+      "pos": [
+        -51.18,
+        0,
+        -17.06
+      ],
+      "radius": 1.8,
+      "rotY": 1.3,
+      "minTier": "T4"
+    },
+    {
+      "asset": "sled",
+      "pos": [
+        35.32,
+        0,
+        -20.34
+      ],
+      "radius": 1.8,
+      "rotY": 5.34,
+      "minTier": "T4"
+    },
+    {
+      "asset": "sled",
+      "pos": [
+        76.44,
+        0,
+        -17.58
+      ],
+      "radius": 1.8,
+      "rotY": 4.72,
+      "minTier": "T4"
+    },
+    {
+      "asset": "sled",
+      "pos": [
+        50.64,
+        0,
+        14.02
+      ],
+      "radius": 1.8,
+      "rotY": 5.91,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        80.64,
+        0,
+        29.74
+      ],
+      "radius": 0.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        54.79,
+        0,
+        63.93
+      ],
+      "radius": 0.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        -0.47,
+        0,
+        -63
+      ],
+      "radius": 0.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        -52.37,
+        0,
+        -66.25
+      ],
+      "radius": 0.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        -32.69,
+        0,
+        62.78
+      ],
+      "radius": 0.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        20.17,
+        0,
+        70.07
+      ],
+      "radius": 0.35,
+      "minTier": "T4"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        2.59,
+        0,
+        78.83
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        0.27,
+        0,
+        40.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        2,
+        0,
+        37.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        11.5,
+        0,
+        37.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        21,
+        0,
+        37.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        30.5,
+        0,
+        37.9
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        44.96,
+        0,
+        23.23
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        43.9,
+        0,
+        12.15
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        53.28,
+        0,
+        6.15
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        56.08,
+        0,
+        -9.68
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        52.93,
+        0,
+        -18.64
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        44.31,
+        0,
+        -25.68
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        46.63,
+        0,
+        -36.57
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        36.59,
+        0,
+        -38.96
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        28.17,
+        0,
+        -46.24
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        18.8,
+        0,
+        -47.81
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        0.85,
+        0,
+        -44.38
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -5.9,
+        0,
+        -52.5
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -8.04,
+        0,
+        -59.36
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -16.3,
+        0,
+        -54.67
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -24.56,
+        0,
+        -49.97
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -29.95,
+        0,
+        -40.24
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -43.09,
+        0,
+        -36.25
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -48.05,
+        0,
+        -28.15
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -53.01,
+        0,
+        -20.05
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -54.71,
+        0,
+        -2.69
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -47.07,
+        0,
+        2.96
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -39.44,
+        0,
+        8.62
+      ],
+      "radius": 0.6,
+      "minTier": "T3"
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-wave",
+      "stage": 1,
+      "pos": [
+        -3,
+        0,
+        30
+      ],
+      "approachPos": [
+        -3,
+        1.6,
+        35
+      ],
+      "label": "Bench 1 - Light Waves",
+      "structure": "wave-tank",
+      "built": true,
+      "flat": {
+        "x": -3,
+        "z": 27.85,
+        "r": 11.65
+      }
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-photon",
+      "stage": 2,
+      "pos": [
+        36,
+        0,
+        30
+      ],
+      "approachPos": [
+        36,
+        1.6,
+        35
+      ],
+      "label": "Bench 2 - Photons",
+      "structure": "photocell-mast",
+      "built": true,
+      "flat": {
+        "x": 36,
+        "z": 29.85,
+        "r": 8.69
+      }
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-lines",
+      "stage": 3,
+      "pos": [
+        60,
+        0,
+        -4
+      ],
+      "approachPos": [
+        55,
+        1.6,
+        -4
+      ],
+      "label": "Bench 3 - Line Spectra",
+      "structure": "spectrograph-sled",
+      "built": true,
+      "flat": {
+        "x": 60.8,
+        "z": 0.5,
+        "r": 10.97
+      }
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-cloud",
+      "stage": 4,
+      "pos": [
+        42,
+        0,
+        -46
+      ],
+      "approachPos": [
+        42,
+        1.6,
+        -41
+      ],
+      "label": "Bench 4 - Orbitals",
+      "structure": "crawler-lab",
+      "built": true,
+      "flat": {
+        "x": 42,
+        "z": -48.85,
+        "r": 9.91
+      }
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-numbers",
+      "stage": 5,
+      "pos": [
+        6,
+        0,
+        -52
+      ],
+      "approachPos": [
+        6,
+        1.6,
+        -47
+      ],
+      "label": "Bench 5 - Quantum Numbers",
+      "structure": "records-tent",
+      "built": true,
+      "flat": {
+        "x": 6,
+        "z": -51,
+        "r": 8.12
+      }
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-filling",
+      "stage": 6,
+      "pos": [
+        6,
+        0,
+        -59
+      ],
+      "approachPos": [
+        6,
+        1.6,
+        -64
+      ],
+      "label": "Bench 6 - Electron Configuration",
+      "structure": "records-tent",
+      "built": true,
+      "flat": {
+        "x": 6,
+        "z": -60,
+        "r": 8.12
+      }
+    },
+    {
+      "id": "site-7",
+      "questId": "q7-pes",
+      "stage": 7,
+      "pos": [
+        -38,
+        0,
+        -44
+      ],
+      "approachPos": [
+        -38,
+        1.6,
+        -39
+      ],
+      "label": "Bench 7 - Photoelectron Spectroscopy",
+      "structure": "detector-mast",
+      "built": true,
+      "flat": {
+        "x": -36.6,
+        "z": -44.65,
+        "r": 9.89
+      }
+    },
+    {
+      "id": "site-8",
+      "questId": "q8-trends",
+      "stage": 8,
+      "pos": [
+        -62,
+        0,
+        -8
+      ],
+      "approachPos": [
+        -57,
+        1.6,
+        -8
+      ],
+      "label": "Bench 8 - Periodic Trends",
+      "structure": "tile-store",
+      "built": true,
+      "flat": {
+        "x": -63.7,
+        "z": -10.8,
+        "r": 12.7
+      }
+    },
+    {
+      "id": "site-9",
+      "questId": "q9-absorb",
+      "stage": 9,
+      "pos": [
+        -25,
+        0,
+        12
+      ],
+      "approachPos": [
+        -30,
+        1.6,
+        12
+      ],
+      "label": "Bench 9 - Spectroscopy",
+      "structure": "water-hole",
+      "built": true,
+      "flat": {
+        "x": -23.95,
+        "z": 12.45,
+        "r": 9.03
+      }
+    },
+    {
+      "id": "site-10",
+      "questId": "q10-wavefunctions",
+      "stage": 10,
+      "pos": [
+        -48,
+        0,
+        18
+      ],
+      "approachPos": [
+        -48,
+        1.6,
+        23
+      ],
+      "label": "Bench 10 - Wavefunctions",
+      "structure": "wavefunction-dome",
+      "built": true,
+      "flat": {
+        "x": -48,
+        "z": 17.55,
+        "r": 8.65
+      }
+    }
+  ],
+  "spawn": {
+    "pos": [
+      0,
+      1.6,
+      84
+    ],
+    "lookAt": [
+      0,
+      1.6,
+      30
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          -3,
+          1.6,
+          35
+        ],
+        "lookAt": [
+          -3,
+          1.2,
+          30
+        ]
+      },
+      "site-2": {
+        "pos": [
+          36,
+          1.6,
+          35
+        ],
+        "lookAt": [
+          36,
+          1.2,
+          30
+        ]
+      },
+      "site-3": {
+        "pos": [
+          55,
+          1.6,
+          -4
+        ],
+        "lookAt": [
+          60,
+          1.2,
+          -4
+        ]
+      },
+      "site-4": {
+        "pos": [
+          42,
+          1.6,
+          -41
+        ],
+        "lookAt": [
+          42,
+          1.2,
+          -46
+        ]
+      },
+      "site-5": {
+        "pos": [
+          6,
+          1.6,
+          -47
+        ],
+        "lookAt": [
+          6,
+          1.2,
+          -52
+        ]
+      },
+      "site-6": {
+        "pos": [
+          6,
+          1.6,
+          -64
+        ],
+        "lookAt": [
+          6,
+          1.2,
+          -59
+        ]
+      },
+      "site-7": {
+        "pos": [
+          -38,
+          1.6,
+          -39
+        ],
+        "lookAt": [
+          -38,
+          1.2,
+          -44
+        ]
+      },
+      "site-8": {
+        "pos": [
+          -57,
+          1.6,
+          -8
+        ],
+        "lookAt": [
+          -62,
+          1.2,
+          -8
+        ]
+      },
+      "site-9": {
+        "pos": [
+          -30,
+          1.6,
+          12
+        ],
+        "lookAt": [
+          -25,
+          1.2,
+          12
+        ]
+      },
+      "site-10": {
+        "pos": [
+          -48,
+          1.6,
+          23
+        ],
+        "lookAt": [
+          -48,
+          1.2,
+          18
+        ]
+      }
+    }
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6",
+      "site-7",
+      "site-8",
+      "site-9",
+      "site-10"
+    ]
+  },
+  "tracks": []
+}

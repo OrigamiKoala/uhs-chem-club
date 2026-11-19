@@ -5,12 +5,12 @@
   "oneLine": "Light, energy levels, orbitals, and periodic trends.",
   "sky": "lanternfall-sky",
   "terrain": {
-    "heightmap": "lanternfall-ice",
+    "heightmap": "lanternfall-glacier",
     "size": [
       240,
       240
     ],
-    "maxHeight": 4,
+    "maxHeight": 16,
     "material": "packed-ice"
   },
   "ambience": {
@@ -23,1300 +23,812 @@
   },
   "lake": {
     "x": 0,
-    "z": 0,
-    "radius": 24
+    "z": 6,
+    "rx": 34,
+    "rz": 22,
+    "radius": 22
   },
-  "landmarks": [
-    {
-      "asset": "wave-tank",
-      "pos": [
-        -3,
-        0,
-        24.5
-      ],
-      "radius": 6.5,
-      "minTier": "T3",
-      "host": "site-1"
-    },
-    {
-      "asset": "photocell-mast",
-      "pos": [
-        36,
-        0,
-        26
-      ],
-      "radius": 4.2,
-      "minTier": "T3",
-      "host": "site-2"
-    },
-    {
-      "asset": "spectrograph-sled",
-      "pos": [
-        64,
-        0,
-        0.5
-      ],
-      "radius": 7.5,
-      "minTier": "T3",
-      "host": "site-3"
-    },
-    {
-      "asset": "crawler-lab",
-      "pos": [
-        42,
-        0,
-        -52.5
-      ],
-      "radius": 5.5,
-      "minTier": "T3",
-      "host": "site-4"
-    },
-    {
-      "asset": "records-tent",
-      "pos": [
-        6,
-        0,
-        -55
-      ],
-      "radius": 0.45,
-      "minTier": "T3",
-      "host": "site-5"
-    },
-    {
-      "asset": "records-tent",
-      "pos": [
-        6,
-        0,
-        -56
-      ],
-      "radius": 0.45,
-      "minTier": "T3",
-      "host": "site-6"
-    },
-    {
-      "asset": "detector-mast",
-      "pos": [
-        -36,
-        0,
-        -48
-      ],
-      "radius": 6,
-      "minTier": "T3",
-      "host": "site-7"
-    },
-    {
-      "asset": "tile-store",
-      "pos": [
-        -67,
-        0,
-        -11
-      ],
-      "radius": 8.5,
-      "minTier": "T3",
-      "host": "site-8"
-    },
-    {
-      "asset": "water-hole",
-      "pos": [
-        -20.5,
-        0,
-        12.5
-      ],
-      "radius": 5,
-      "minTier": "T3",
-      "host": "site-9"
-    },
-    {
-      "asset": "wavefunction-dome",
-      "pos": [
-        -48,
-        0,
-        14.5
-      ],
-      "radius": 4.5,
-      "minTier": "T3",
-      "host": "site-10"
-    },
-    {
-      "asset": "landing-pad",
-      "pos": [
-        52,
-        0,
-        80
-      ],
-      "radius": 8.5,
-      "minTier": "T3"
-    },
-    {
-      "asset": "comms-mast",
-      "pos": [
-        64,
-        0,
-        70
-      ],
-      "radius": 1.4,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        17.57,
-        0,
-        -80.42
-      ],
-      "radius": 3,
-      "scale": 0.91,
-      "rotY": 2.13,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -70.62,
-        0,
-        -49.18
-      ],
-      "radius": 3,
-      "scale": 1.16,
-      "rotY": 5.69,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -26.46,
-        0,
-        77.48
-      ],
-      "radius": 3,
-      "scale": 1.57,
-      "rotY": 5.23,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -57.77,
-        0,
-        31.39
-      ],
-      "radius": 3,
-      "scale": 1.02,
-      "rotY": 1.37,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -66.75,
-        0,
-        -26.6
-      ],
-      "radius": 3,
-      "scale": 1.55,
-      "rotY": 5.09,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        78.27,
-        0,
-        18.13
-      ],
-      "radius": 3,
-      "scale": 1.5,
-      "rotY": 2.69,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -77.37,
-        0,
-        37.65
-      ],
-      "radius": 3,
-      "scale": 1.26,
-      "rotY": 1.06,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -15.19,
-        0,
-        81.68
-      ],
-      "radius": 3,
-      "scale": 1.39,
-      "rotY": 0.11,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        20.28,
-        0,
-        -68.96
-      ],
-      "radius": 3,
-      "scale": 0.87,
-      "rotY": 1.09,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        1.5,
-        0,
-        -70.69
-      ],
-      "radius": 3,
-      "scale": 0.84,
-      "rotY": 0.21,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        68.18,
-        0,
-        52.26
-      ],
-      "radius": 3,
-      "scale": 1.58,
-      "rotY": 0.44,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -21.21,
-        0,
-        -86.01
-      ],
-      "radius": 3,
-      "scale": 1.25,
-      "rotY": 4,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        77.02,
-        0,
-        9.86
-      ],
-      "radius": 3,
-      "scale": 1.07,
-      "rotY": 4.03,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -67.79,
-        0,
-        8.87
-      ],
-      "radius": 3,
-      "scale": 1.66,
-      "rotY": 0.08,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -11.63,
-        0,
-        -29.26
-      ],
-      "radius": 2.4,
-      "scale": 0.81,
-      "rotY": 1.57,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        16.12,
-        0,
-        -26.49
-      ],
-      "radius": 2.4,
-      "scale": 0.84,
-      "rotY": 0.19,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -11.12,
-        0,
-        37.62
-      ],
-      "radius": 2.4,
-      "scale": 1.18,
-      "rotY": 5.69,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -20.14,
-        0,
-        36.98
-      ],
-      "radius": 2.4,
-      "scale": 0.66,
-      "rotY": 0.05,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        24.17,
-        0,
-        29.14
-      ],
-      "radius": 2.4,
-      "scale": 0.78,
-      "rotY": 0.02,
-      "minTier": "T3"
-    },
-    {
-      "asset": "ice-spire",
-      "pos": [
-        -30.31,
-        0,
-        29.36
-      ],
-      "radius": 2.4,
-      "scale": 0.61,
-      "rotY": 6.13,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        41.69,
-        0,
-        -69.55
-      ],
-      "radius": 6.5,
-      "scale": 0.93,
-      "rotY": 0.02,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        74.61,
-        0,
-        -43.74
-      ],
-      "radius": 6.5,
-      "scale": 1.26,
-      "rotY": 4.13,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        44.01,
-        0,
-        61.26
-      ],
-      "radius": 6.5,
-      "scale": 0.85,
-      "rotY": 2.89,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        -78.77,
-        0,
-        -36.5
-      ],
-      "radius": 6.5,
-      "scale": 1.02,
-      "rotY": 4.87,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        84.47,
-        0,
-        -3.86
-      ],
-      "radius": 6.5,
-      "scale": 1,
-      "rotY": 2.8,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        -51.88,
-        0,
-        75.3
-      ],
-      "radius": 6.5,
-      "scale": 1.06,
-      "rotY": 4.36,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        -1.4,
-        0,
-        -83.81
-      ],
-      "radius": 6.5,
-      "scale": 0.82,
-      "rotY": 2.68,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        65.35,
-        0,
-        35.88
-      ],
-      "radius": 6.5,
-      "scale": 0.8,
-      "rotY": 0.43,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pressure-ridge",
-      "pos": [
-        53.85,
-        0,
-        -29.35
-      ],
-      "radius": 6.5,
-      "scale": 1.2,
-      "rotY": 5.24,
-      "minTier": "T3"
-    },
-    {
-      "asset": "aurora-mast",
-      "pos": [
-        51.86,
-        0,
-        -70.48
-      ],
-      "radius": 2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "aurora-mast",
-      "pos": [
-        75.15,
-        0,
-        23.61
-      ],
-      "radius": 2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "aurora-mast",
-      "pos": [
-        -44.85,
-        0,
-        -60.49
-      ],
-      "radius": 2,
-      "minTier": "T3"
-    },
-    {
-      "asset": "camp",
-      "pos": [
-        27.19,
-        0,
-        -54.03
-      ],
-      "radius": 3.6,
-      "rotY": 1.15,
-      "minTier": "T3"
-    },
-    {
-      "asset": "camp",
-      "pos": [
-        30.63,
-        0,
-        -69.82
-      ],
-      "radius": 3.6,
-      "rotY": 3.52,
-      "minTier": "T3"
-    },
-    {
-      "asset": "camp",
-      "pos": [
-        65.9,
-        0,
-        -28.5
-      ],
-      "radius": 3.6,
-      "rotY": 0.45,
-      "minTier": "T3"
-    },
-    {
-      "asset": "sled",
-      "pos": [
-        -51.18,
-        0,
-        -17.06
-      ],
-      "radius": 1.8,
-      "rotY": 1.3,
-      "minTier": "T4"
-    },
-    {
-      "asset": "sled",
-      "pos": [
-        35.32,
-        0,
-        -20.34
-      ],
-      "radius": 1.8,
-      "rotY": 5.34,
-      "minTier": "T4"
-    },
-    {
-      "asset": "sled",
-      "pos": [
-        76.44,
-        0,
-        -17.58
-      ],
-      "radius": 1.8,
-      "rotY": 4.72,
-      "minTier": "T4"
-    },
-    {
-      "asset": "sled",
-      "pos": [
-        50.64,
-        0,
-        14.02
-      ],
-      "radius": 1.8,
-      "rotY": 5.91,
-      "minTier": "T4"
-    },
-    {
-      "asset": "stake-marker",
-      "pos": [
-        80.64,
-        0,
-        29.74
-      ],
-      "radius": 0.35,
-      "minTier": "T4"
-    },
-    {
-      "asset": "stake-marker",
-      "pos": [
-        54.79,
-        0,
-        63.93
-      ],
-      "radius": 0.35,
-      "minTier": "T4"
-    },
-    {
-      "asset": "stake-marker",
-      "pos": [
-        -0.47,
-        0,
-        -63
-      ],
-      "radius": 0.35,
-      "minTier": "T4"
-    },
-    {
-      "asset": "stake-marker",
-      "pos": [
-        -52.37,
-        0,
-        -66.25
-      ],
-      "radius": 0.35,
-      "minTier": "T4"
-    },
-    {
-      "asset": "stake-marker",
-      "pos": [
-        -32.69,
-        0,
-        62.78
-      ],
-      "radius": 0.35,
-      "minTier": "T4"
-    },
-    {
-      "asset": "stake-marker",
-      "pos": [
-        20.17,
-        0,
-        70.07
-      ],
-      "radius": 0.35,
-      "minTier": "T4"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        2.59,
-        0,
-        78.83
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        0.27,
-        0,
-        40.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        2,
-        0,
-        37.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        11.5,
-        0,
-        37.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        21,
-        0,
-        37.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        30.5,
-        0,
-        37.9
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        44.96,
-        0,
-        23.23
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        43.9,
-        0,
-        12.15
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        53.28,
-        0,
-        6.15
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        56.08,
-        0,
-        -9.68
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        52.93,
-        0,
-        -18.64
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        44.31,
-        0,
-        -25.68
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        46.63,
-        0,
-        -36.57
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        36.59,
-        0,
-        -38.96
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        28.17,
-        0,
-        -46.24
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        18.8,
-        0,
-        -47.81
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        0.85,
-        0,
-        -44.38
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -5.9,
-        0,
-        -52.5
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -8.04,
-        0,
-        -59.36
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -16.3,
-        0,
-        -54.67
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -24.56,
-        0,
-        -49.97
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -29.95,
-        0,
-        -40.24
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -43.09,
-        0,
-        -36.25
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -48.05,
-        0,
-        -28.15
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -53.01,
-        0,
-        -20.05
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -54.71,
-        0,
-        -2.69
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -47.07,
-        0,
-        2.96
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lantern-post",
-      "pos": [
-        -39.44,
-        0,
-        8.62
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    }
-  ],
+  "arena": {
+    "boss": [
+      -22,
+      2.6,
+      40
+    ],
+    "player": [
+      -22,
+      1.6,
+      54
+    ]
+  },
+  "spawn": {
+    "pos": [
+      10,
+      3.6,
+      40
+    ],
+    "lookAt": [
+      0,
+      9,
+      -30
+    ]
+  },
   "sites": [
     {
       "id": "site-1",
       "questId": "q1-wave",
       "stage": 1,
+      "roomId": "room-1",
       "pos": [
-        -3,
+        19.2,
         0,
-        30
+        11
       ],
       "approachPos": [
-        -3,
+        23.8,
         1.6,
-        35
+        11
       ],
       "label": "Bench 1 - Light Waves",
-      "structure": "wave-tank",
-      "built": true,
-      "flat": {
-        "x": -3,
-        "z": 27.85,
-        "r": 11.65
-      }
+      "structure": "flume-cave",
+      "built": true
     },
     {
       "id": "site-2",
       "questId": "q2-photon",
       "stage": 2,
+      "roomId": "room-2",
       "pos": [
-        36,
-        0,
-        30
+        61,
+        5,
+        7
       ],
       "approachPos": [
-        36,
-        1.6,
-        35
+        56.4,
+        6.6,
+        7
       ],
       "label": "Bench 2 - Photons",
-      "structure": "photocell-mast",
-      "built": true,
-      "flat": {
-        "x": 36,
-        "z": 29.85,
-        "r": 8.69
-      }
+      "structure": "mast-vault",
+      "built": true
     },
     {
       "id": "site-3",
       "questId": "q3-lines",
       "stage": 3,
+      "roomId": "room-3",
       "pos": [
-        60,
-        0,
-        -4
+        31,
+        9,
+        -32.2
       ],
       "approachPos": [
-        55,
-        1.6,
-        -4
+        31,
+        10.6,
+        -27.6
       ],
       "label": "Bench 3 - Line Spectra",
-      "structure": "spectrograph-sled",
-      "built": true,
-      "flat": {
-        "x": 60.8,
-        "z": 0.5,
-        "r": 10.97
-      }
+      "structure": "melt-cave",
+      "built": true
     },
     {
       "id": "site-4",
       "questId": "q4-cloud",
       "stage": 4,
+      "roomId": "room-4",
       "pos": [
-        42,
         0,
-        -46
+        15.4,
+        -89.8
       ],
       "approachPos": [
-        42,
-        1.6,
-        -41
+        0,
+        17,
+        -85.2
       ],
       "label": "Bench 4 - Orbitals",
-      "structure": "crawler-lab",
-      "built": true,
-      "flat": {
-        "x": 42,
-        "z": -48.85,
-        "r": 9.91
-      }
+      "structure": "drill-hall",
+      "built": true
     },
     {
       "id": "site-5",
       "questId": "q5-numbers",
       "stage": 5,
+      "roomId": "room-5",
       "pos": [
-        6,
-        0,
-        -52
+        -11.6,
+        8.4,
+        -28
       ],
       "approachPos": [
-        6,
-        1.6,
-        -47
+        -16.2,
+        10,
+        -28
       ],
       "label": "Bench 5 - Quantum Numbers",
       "structure": "records-tent",
-      "built": true,
-      "flat": {
-        "x": 6,
-        "z": -51,
-        "r": 8.12
-      }
+      "built": true
     },
     {
       "id": "site-6",
       "questId": "q6-filling",
       "stage": 6,
+      "roomId": "room-6",
       "pos": [
-        6,
-        0,
-        -59
+        -31.8,
+        8.4,
+        -30.4
       ],
       "approachPos": [
-        6,
-        1.6,
-        -64
+        -31.8,
+        10,
+        -25.8
       ],
       "label": "Bench 6 - Electron Configuration",
-      "structure": "records-tent",
-      "built": true,
-      "flat": {
-        "x": 6,
-        "z": -60,
-        "r": 8.12
-      }
+      "structure": "records-annexe",
+      "built": true
     },
     {
       "id": "site-7",
       "questId": "q7-pes",
       "stage": 7,
+      "roomId": "room-7",
       "pos": [
-        -38,
-        0,
-        -44
+        -69.8,
+        10,
+        -29.6
       ],
       "approachPos": [
-        -38,
-        1.6,
-        -39
+        -69.8,
+        11.6,
+        -34.2
       ],
       "label": "Bench 7 - Photoelectron Spectroscopy",
-      "structure": "detector-mast",
-      "built": true,
-      "flat": {
-        "x": -36.6,
-        "z": -44.65,
-        "r": 9.89
-      }
+      "structure": "nunatak-chamber",
+      "built": true
     },
     {
       "id": "site-8",
       "questId": "q8-trends",
       "stage": 8,
+      "roomId": "room-8",
       "pos": [
-        -62,
-        0,
-        -8
+        -40.8,
+        6,
+        3
       ],
       "approachPos": [
-        -57,
-        1.6,
-        -8
+        -45.4,
+        7.6,
+        3
       ],
       "label": "Bench 8 - Periodic Trends",
-      "structure": "tile-store",
-      "built": true,
-      "flat": {
-        "x": -63.7,
-        "z": -10.8,
-        "r": 12.7
-      }
+      "structure": "erratic-store",
+      "built": true
     },
     {
       "id": "site-9",
       "questId": "q9-absorb",
       "stage": 9,
+      "roomId": "room-9",
       "pos": [
-        -25,
+        -30.4,
         0,
-        12
+        10.3
       ],
       "approachPos": [
-        -30,
+        -25.8,
         1.6,
-        12
+        10.3
       ],
       "label": "Bench 9 - Spectroscopy",
-      "structure": "water-hole",
-      "built": true,
-      "flat": {
-        "x": -23.95,
-        "z": 12.45,
-        "r": 9.03
-      }
+      "structure": "hole-cave",
+      "built": true
     },
     {
       "id": "site-10",
       "questId": "q10-wavefunctions",
       "stage": 10,
+      "roomId": "room-10",
       "pos": [
-        -48,
-        0,
-        18
+        -53,
+        2,
+        54.8
       ],
       "approachPos": [
-        -48,
-        1.6,
-        23
+        -53,
+        3.6,
+        50.2
       ],
       "label": "Bench 10 - Wavefunctions",
-      "structure": "wavefunction-dome",
-      "built": true,
-      "flat": {
-        "x": -48,
-        "z": 17.55,
-        "r": 8.65
-      }
+      "structure": "dome",
+      "built": true
     }
   ],
-  "spawn": {
-    "pos": [
-      0,
-      1.6,
-      84
-    ],
-    "lookAt": [
-      0,
-      1.6,
-      30
-    ]
-  },
+  "landmarks": [
+    {
+      "asset": "landing-pad",
+      "pos": [
+        22,
+        2.12,
+        58
+      ],
+      "radius": 10,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -34.37,
+        2,
+        30.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -23.12,
+        2,
+        71.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -11.87,
+        2,
+        30.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -0.62,
+        2,
+        71.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        10.63,
+        2,
+        30.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        33.13,
+        2,
+        30.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        44.38,
+        2,
+        71.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        20.75,
+        1,
+        24.4
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        40.75,
+        3.5,
+        22
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        40.75,
+        5,
+        7
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        40.75,
+        8,
+        -16.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        49.25,
+        6,
+        -5.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        49.25,
+        9,
+        -29
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        40.75,
+        12.75,
+        -55.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        49.25,
+        10.25,
+        -42.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -56.4,
+        14,
+        -73.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -45.2,
+        14,
+        -62.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -34,
+        14,
+        -73.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -22.8,
+        14,
+        -62.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -11.6,
+        14,
+        -73.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -0.4,
+        14,
+        -62.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        10.8,
+        14,
+        -73.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        22,
+        14,
+        -62.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        33.2,
+        14,
+        -73.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        44.4,
+        14,
+        -73.25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -1.25,
+        14.7,
+        -77.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -17.25,
+        12.6,
+        -55.2
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -12.75,
+        9.8,
+        -41.6
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -61.25,
+        13,
+        -56.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -52.75,
+        11,
+        -45.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -52.75,
+        10,
+        -33
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -61.25,
+        9,
+        -20.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -52.75,
+        7,
+        -9.5
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -61.25,
+        6,
+        3
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -61.25,
+        5,
+        15
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -52.75,
+        3,
+        25
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -45.5,
+        2,
+        30.75
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "lantern-post",
+      "pos": [
+        -25.25,
+        1,
+        24.8
+      ],
+      "radius": 0.45,
+      "minTier": "T3"
+    },
+    {
+      "asset": "aurora-mast",
+      "pos": [
+        66.6,
+        11.3,
+        7.6
+      ],
+      "radius": 1.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "aurora-mast",
+      "pos": [
+        61,
+        15.41,
+        -22
+      ],
+      "radius": 1.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "aurora-mast",
+      "pos": [
+        61.5,
+        17.23,
+        -50
+      ],
+      "radius": 1.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "comms-mast",
+      "pos": [
+        -24,
+        2.6,
+        86
+      ],
+      "radius": 1.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "camp",
+      "pos": [
+        -8,
+        2.32,
+        81
+      ],
+      "radius": 2.4,
+      "rotY": 0.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "camp",
+      "pos": [
+        14,
+        2.22,
+        83
+      ],
+      "radius": 2.4,
+      "rotY": -0.3,
+      "minTier": "T3"
+    },
+    {
+      "asset": "sled",
+      "pos": [
+        4,
+        2.32,
+        79
+      ],
+      "radius": 1.2,
+      "rotY": 1.2,
+      "minTier": "T4"
+    }
+  ],
   "t2": {
     "stillCamera": {
       "site-1": {
         "pos": [
-          -3,
+          23.8,
           1.6,
-          35
+          11
         ],
         "lookAt": [
-          -3,
+          19.2,
           1.2,
-          30
+          11
         ]
       },
       "site-2": {
         "pos": [
-          36,
-          1.6,
-          35
+          56.4,
+          6.6,
+          7
         ],
         "lookAt": [
-          36,
-          1.2,
-          30
+          61,
+          6.2,
+          7
         ]
       },
       "site-3": {
         "pos": [
-          55,
-          1.6,
-          -4
+          31,
+          10.6,
+          -27.6
         ],
         "lookAt": [
-          60,
-          1.2,
-          -4
+          31,
+          10.2,
+          -32.2
         ]
       },
       "site-4": {
         "pos": [
-          42,
-          1.6,
-          -41
+          0,
+          17,
+          -85.2
         ],
         "lookAt": [
-          42,
-          1.2,
-          -46
+          0,
+          16.6,
+          -89.8
         ]
       },
       "site-5": {
         "pos": [
-          6,
-          1.6,
-          -47
+          -16.2,
+          10,
+          -28
         ],
         "lookAt": [
-          6,
-          1.2,
-          -52
+          -11.6,
+          9.6,
+          -28
         ]
       },
       "site-6": {
         "pos": [
-          6,
-          1.6,
-          -64
+          -31.8,
+          10,
+          -25.8
         ],
         "lookAt": [
-          6,
-          1.2,
-          -59
+          -31.8,
+          9.6,
+          -30.4
         ]
       },
       "site-7": {
         "pos": [
-          -38,
-          1.6,
-          -39
+          -69.8,
+          11.6,
+          -34.2
         ],
         "lookAt": [
-          -38,
-          1.2,
-          -44
+          -69.8,
+          11.2,
+          -29.6
         ]
       },
       "site-8": {
         "pos": [
-          -57,
-          1.6,
-          -8
+          -45.4,
+          7.6,
+          3
         ],
         "lookAt": [
-          -62,
-          1.2,
-          -8
+          -40.8,
+          7.2,
+          3
         ]
       },
       "site-9": {
         "pos": [
-          -30,
+          -25.8,
           1.6,
-          12
+          10.3
         ],
         "lookAt": [
-          -25,
+          -30.4,
           1.2,
-          12
+          10.3
         ]
       },
       "site-10": {
         "pos": [
-          -48,
-          1.6,
-          23
+          -53,
+          3.6,
+          50.2
         ],
         "lookAt": [
-          -48,
-          1.2,
-          18
+          -53,
+          3.2,
+          54.8
         ]
       }
     }
