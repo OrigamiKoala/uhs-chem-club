@@ -668,3 +668,193 @@ piece, and any how-to note line with no clear strip (drop a note rather than cro
 Files created and changed; the stage list with each stage's one-line idea and the click; the planner values you checked and against what; the check results; what you know is weak or could
 not do; and the list of stages the integrator must view at `3D On` and play by hand (which fixtures are new, which gestures are unusual).
 
+
+---
+
+## Site rebuild (2026-11-18)
+
+The contract the rebuild of the walkable site is audited against (`docs/plans/world-distinction-plan.md`,
+sections 3, 4 and 6; `docs/world-rebuild-prompt.md`). It changes the site only: ground, layout, hosts, props,
+vista, effects and `verify:mirrowen`. No quest, stage, kit, bank entry, glossary entry, story line, site id,
+quest id or bench label changes. Branch `site/mirrowen`.
+
+### 1. The place
+
+**A working harbour in a cold morning: you walk the quays round a basin, cross the gates of a canal lock and a
+dry dock, climb gangways onto moored ships and go down inside them.** In the first ten seconds the player
+stands on the town terrace above the main quay and looks down over a railing: an ice-breaker lies along the
+quay below with its gangway out, a long mole runs north to a tanker, the basin is open water, and past the
+canal lock to the west the water is white with the Fifth's ice; the sea beyond the harbour is frozen.
+
+### 2. The signature
+
+| | Mirrowen |
+| :--- | :--- |
+| Landform | A harbour: square quay walls 2.6 m above the water round a basin, a mole, a dry dock sunk 7 m below the quay (4.4 m below the waterline) behind its gate, three hulls (an ice-breaker and a tanker moored, a freighter frozen into the canal), sea ice to the north |
+| Walk shape | A ring of right-angled quays joined by two gate walks over water (the canal lock gate, the dry-dock gate), with gangways up onto three decks and companionways down inside the hulls |
+| Bench housing | Aboard hulls (a deckhouse, a pump room, a hold, an evaporator flat), boathouses on piles over the basin (a thaw shed, a salt store), and a pump well at the dry dock's floor |
+| Light | The built sky kept: cold white morning haze, the sun low in the east-south-east. Indoors under the shared cover mask, lamps only |
+
+Checked against section 6: no other row has water at a fixed level below a built edge as its ground, and no
+other row puts benches inside ships. Lanternfall's walk also goes round water, but round a natural lake shore
+with spurs cut down into ice; this one is a rectangle of built quays with gangways up onto decks and two
+crossings over gates. Brinewire has one wall over water and a ramp down its face; here the quay walls are
+the edges of a basin the player walks round, and the drops are into a dock and into hulls. The row is built
+as written, except that the "lock gates" are two: the canal's lock gate and the dry dock's gate.
+
+### 3. Plan
+
+Plan axes as every world: x east, z south (north is -z). The walk stays inside |x|, |z| < 96.
+
+Levels: town terrace +5.0; quays 0.0; ice-breaker deck +1.2; tanker deck +1.0; freighter deck +0.4; salt store
+floor +0.6; thaw shed floor -0.8; open water -2.6; ice surface (canal and sea) -2.3; evaporator flat -2.4;
+freighter hold -3.6; tanker pump room -4.4; dry dock floor and pump well -7.0; sea bed -10.
+
+| Piece | Rectangle (x; z) | Floor | Closed by |
+| :--- | :--- | :--- | :--- |
+| Town terrace, pad at (66, 76) | 8 to 92; 44 to 94 | +5.0 | town walls S, E, W; a railing over the quay wall N |
+| Harbour stair (ramp down the quay wall) | -22 to 8; 44 to 52 | +5 to 0 along x | town wall S; railing N |
+| Main quay | -64 to 52; 22 to 44 | 0 | 5 m retaining wall S; quay kerb over the basin N and the outer harbour E |
+| Ice-breaker gangway | 16 to 20; 18 to 22 | 0 to +1.2 | railings |
+| Ice-breaker side deck | -14 to 32; 14 to 18 | +1.2 | bulwark N side of the gap; deckhouse and casings S |
+| Companionway well, companionway | 2 to 6, -12 to 2; 8 to 14 | +1.2, then +1.2 to -2.4 along x (roofed) | hull and casings |
+| Mole | 40 to 52; -62 to 22 | 0 | kerbs both sides |
+| Tanker gangway, deck | 52 to 56, 56 to 74; -12 to -8, -14 to -2 | 0 to +1.0, +1.0 | railings, bulwarks, the cargo trunk |
+| Tanker companionway | 62 to 68; -34 to -14 | +1.0 to -4.4 along z (roofed) | hull |
+| Mole head (the Undertow's ground) | 44 to 82; -96 to -62 | 0 | kerbs over the sea ice N and E, the pump house W |
+| Pump yard | 30 to 44; -78 to -62 | 0 | pump house S; railing over the dry dock W |
+| Dry-dock gate | 2 to 30; -66 to -62 | 0 | railing over the dock N, over the basin S |
+| Dock stair (cut down the dock's west wall) | 2 to 8; -96 to -66 | 0 to -7 along z | dock wall W; railing E |
+| Dry dock floor, a tug on keel blocks | 8 to 30; -96 to -66 | -7.0 | dock walls 7 m high, the gate, the dock head |
+| North quay | -72 to 2; -96 to -62 | 0 | kerb over the sea ice N, over the canal and basin S; warehouses W |
+| Freighter gangway, after deck | -62 to -58, -68 to -56; -62 to -58, -58 to -46 | 0 to +0.4, +0.4 | railings, bulwarks |
+| Freighter 'tween-deck slope | -80 to -68; -56 to -50 | +0.4 to -3.6 along x (roofed) | hull |
+| Canal lock gate | -46 to -42; -62 to -36 | 0 | railings over the frozen canal W and the basin E |
+| West shore | -72 to -40; -36 to 22 | 0 | warehouses W; kerb over the basin E and the canal N |
+| Thaw-shed pier, salt-store pier (on piles) | -40 to -34; -36 to -30, -16 to -10 | 0 to -0.8, 0 to +0.6 | railings |
+
+Closed high ground: the town bank south of z = 44 (5 m above the quay, entered only by the harbour stair) and
+the warehouse rows west of x = -72. Water and drops the player is kept out of: the basin (x -40 to 40, z -62 to
+22), the outer harbour east of the mole, the frozen canal (x < -46, z -62 to -36), the sea ice (z < -96), the
+dry dock from every side but its stair, and every deck edge.
+
+**Spawn** (24, +6.6, 50) on the terrace, looking north-west over the railing. **Routes** (bench order):
+1, down the harbour stair, east along the main quay, up the ice-breaker's gangway, west along the side deck
+to the deckhouse door; 2, back to the quay, north up the mole, up the tanker's gangway, down its
+companionway; 3, on up the mole to the pump yard, west over the dry-dock gate, down the dock stair, along the
+dock floor past the tug to the pump well's door; 4, back up the stair, west along the north quay, up the
+freighter's gangway, down the 'tween-deck slope into the hold; 5, back to the north quay, south over the
+canal lock gate, down the thaw-shed pier; 6, south along the west shore to the salt-store pier; 7, south to
+the main quay, up the ice-breaker's gangway again, down the companionway to the evaporator flat. **Boss**:
+the Undertow on the open mole head at (62, 0, -84), the player at (62, 1.6, -70), the frozen sea behind it.
+
+### 4. Section along the main route
+
+| From | To | Height |
+| :--- | :--- | :--- |
+| Spawn, terrace | foot of the harbour stair | +5.0 down to 0 |
+| Main quay | ice-breaker deckhouse (Bench 1) | 0 up to +1.2 |
+| Mole | tanker pump room (Bench 2) | 0, up to +1.0, down to -4.4 |
+| Dry-dock gate | pump well (Bench 3) | 0 down the stair to -7.0 |
+| North quay | freighter hold (Bench 4) | 0, up to +0.4, down to -3.6 |
+| Lock gate, west shore | thaw shed (Bench 5), salt store (Bench 6) | 0, down to -0.8; 0, up to +0.6 |
+| Main quay | evaporator flat (Bench 7) | 0, up to +1.2, down to -2.4 |
+| Mole head | the Undertow | 0 |
+
+Bench ground spans -7.0 to +1.2 m (8.2 m).
+
+### 5. The seven benches
+
+All rooms are 14 x 14 m with the plate 3.6 m from the back wall and the approach mark 4.6 m in front of it;
+every room has at least 5.2 m of headroom, its own pendant lamps from the world's three-light pool, and the
+cover mask. No room shares a shape, a material or a way in with another.
+
+1. **`q1-states`, Three States: the ice-breaker's deckhouse** (floor +1.2). The quest asks whether the
+   canal ice is the same substance as the water under it. The deckhouse is the one room in the harbour with
+   all three states of water in view: a long window band on its north wall looks over the open basin to the
+   white canal and the frozen sea, and the ship's own funnel steams above it. Closed on four sides (steel
+   walls, the window band N), a steel deck overhead. The player comes up the gangway onto the side deck and
+   enters by the door in the south wall; the plate stands with its back to the windows. Behind and beside
+   the plate: the chart table, the steering stand and wheel, the engine telegraph and the radar console.
+2. **`q2-grip`, The Grip Between: the tanker's pump room** (floor -4.4). The quest compares how hard
+   different liquids hold together; a tanker carries different liquids in separate tanks, and every one of
+   them passes through this room. Closed on four sides by tank bulkheads, the cargo deck overhead, entered
+   down a roofed companionway from the midship deck so the room is first seen from above, at the foot of
+   the slope. Behind the plate: three cargo pumps on their bedplates with their suction and discharge lines
+   rising up the bulkhead; to the sides, the stripping pump and the valve manifold.
+3. **`q3-boil`, Liquids and Vapour: the pump well of the dry dock** (floor -7.0). The quest asks how water
+   leaves without boiling and why it boils lower when the pressure is lower; the dock is emptied by pumps
+   that pull the water up by lowering the pressure at their suction, where cold water flashes to vapour.
+   A concrete chamber under the pump house on the dock's east side, closed on four sides, its door onto the
+   dock floor. The player comes over the dock gate, down the stair cut into the dock wall and past the tug
+   on its blocks. Behind the plate: two vertical pump casings with their suction pipes going down into the
+   sump, the vacuum priming tank, the culvert valve wheel.
+4. **`q4-solids`, Kinds of Solid: the freighter's hold** (floor -3.6). The quest asks whether the canal ice
+   is ordered like a crystal or disordered like glass. The freighter is frozen into the canal, its hold
+   stowed with mixed cargo (glass sheet in crates, salt in sacks, wax in cakes, metal ingots), and the ice
+   has pushed in through a split in the side plating. Closed on four sides (the hull, the bulkheads), the
+   hatch covers 5.4 m overhead; entered down a roofed slope from the after deck. Behind the plate: the
+   ice burst through the plating; beside it, the stows of cargo.
+5. **`q5-crossing`, The Crossing: the thaw shed** (floor -0.8). The quest follows ice taking heat without
+   warming while it melts. A timber boat shed on piles over the basin, where the harbour thaws iced boats
+   with steam: its east end opens over a slipway where a launch sits frozen on its cradle. Closed N, S and
+   W (timber walls, the door W), the east end open over the slip behind a railing, a pitched roof above.
+   Behind the plate: the vertical boiler, its steam header and the hose lances; to the right, the slip.
+6. **`q6-solution`, Taken Into Solution: the salt store** (floor +0.6). The quest measures what was
+   dissolved in the canal water. A closed store on piles where the harbour keeps the salt it dissolves to
+   make brine for de-icing: a raised loading floor, a hopper, a dissolving tank and a stirred mixing tank.
+   Closed on four sides (boarded walls on a timber frame), a hipped roof. Behind the plate: the dissolving
+   tank under the hopper and the measuring tank; beside it, sacks on pallets.
+7. **`q7-separate`, Pulling Apart: the ice-breaker's evaporator flat** (floor -2.4). The quest separates a
+   dissolved agent from water by boiling the water off. Every sea-going ship makes its fresh water this
+   way: sea water is boiled in an evaporator and the vapour is condensed clean. Below the ice-breaker's
+   forecastle, closed on four sides, entered at the foot of the companionway (the second time the player
+   boards this ship). Behind the plate: the evaporator shell, the condenser, the brine pump and the
+   distilled-water tank with its gauge glass.
+
+### 6. How it differs from each other world
+
+| World | What a player points at |
+| :--- | :--- |
+| Tallow | Tallow is a dead-flat salt pan with process buildings; here the ground is quay walls, water and ships |
+| Lanternfall | Lanternfall walks a natural lake shore on glacier ice; here the edges are cut stone and the benches are aboard ships |
+| Ligar | Ligar is a basalt quarry and a mine in hills; here there is no hill and no rock face, only built edges over water |
+| Bellows | Bellows is platforms over a cloud sea; here the floor is a harbour at sea level with water 2.6 m below it |
+| Ember Reach | Ember is a caldera wall stepped down to a lava lake with galleries in the rock; here it is quays round a basin |
+| Kettle | Kettle is one foundry building; here every room is a different structure: a ship, a shed, a dock |
+| Teeter | Teeter is a hillside of salt terraces; here the levels are a dock and the insides of hulls |
+| Verdigris | Verdigris is boardwalks over a reed swamp to a drowned fort; here it is stone quays and steel ships |
+| Brinewire | Brinewire is one long wall across a marsh with a 12 m drop; here the drops are a basin's edges and a dock |
+| Quicklight | Quicklight is a refinery's alley grid on lava flows; here there is no grid and no pipe rack overhead |
+| Lodestone | Lodestone is a slot canyon in iron rock; here everything is open sky over water |
+| Thornmere | Thornmere is pitch mounds in a tar lake with rooms in trees; here the water is open sea water and the rooms are ships |
+| Cinder Halo | Cinder Halo is craters with concrete cells; here the one sunk place is a dry dock with a ship in it |
+
+### 7. The far country
+
+North: the frozen sea to the horizon, pressure ridges in it, a grounded tabular iceberg and a ship beset far
+out. East: the outer breakwater running out into the sea ice with the harbour light at its end. South: the
+town climbing the hill behind the terrace, warehouse rows and the radio mast on the crest. West: the canal
+running away between the Fifth's walls of crystal ice, two ships listing in it, to low fells.
+
+### 8. Numbers to hold
+
+`world-shape.mjs`: bench ground -7.0 to +1.2 (8.2 m), housed at least 6 of 7 (every room is closed on at
+least three sides with a roof), no cloned coordinates, not one circle, not two columns; at most two plates in
+view from the spawn (target none). Perf at T4 inside 900k triangles and 566 draws; target under 400 draws.
+
+### 9. Kept, rebuilt, archived
+
+| File | Fate |
+| :--- | :--- |
+| `src/three/mirrowen/harbour-plan.js` | New: the pure plan (levels, volumes, rooms, height field, cover, rails, hulls) |
+| `src/three/mirrowen.js` | Rebuilt on the plan (Ember Reach's contract and order) |
+| `src/three/mirrowen/terrain.js` | Rebuilt: ground mesh with holes, water, shells (quay walls, dock, hulls, decks, sheds), vista |
+| `src/three/mirrowen/stations.js` | Rebuilt: seven hosts in their rooms; the bench builder and its dormant dressings are kept |
+| `src/three/mirrowen/host-plan.js` | Rebuilt: derived from the plan's rooms |
+| `src/three/mirrowen/plant.js` | Kept (lamp post, bollard, pad, ice wall, hull); unused builders stay for the vista |
+| `atmosphere.js`, `effects.js`, `kit.js`, `materials/mirrowen-textures.js` | Kept |
+| `tools/gen-mirrowen-layout.mjs` | Rebuilt on the plan; the old one is archived |
+| `tools/verify-mirrowen.mjs` | Rewritten on `world-shape-checks.mjs`; the old one is archived |
+| `src/learn/engine/boss-arena.js` | The Undertow's spot moves to the mole head |
+| Archive | `archive/2026-11-18/site-mirrowen/` (old terrain, stations, host plan, world, generator, verify script) |
