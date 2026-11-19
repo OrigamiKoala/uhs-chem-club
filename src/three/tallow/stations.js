@@ -167,8 +167,6 @@ export function buildSamplePoint(w, site) {
   const g = new THREE.Group();
   g.name = 'sample-point';
 
-  // The apron the work is done on: a skim of concrete, bedded.
-  k.box(g, [12.4, 0.12, 6.0], w.footingMat, [0, -0.06, -0.2]);
 
   const bench = w.buildBench({ kind: 'scope', plate: 'BN-01', skin: 'shelf' });
   g.add(bench.group);
@@ -219,15 +217,52 @@ export function buildSamplePoint(w, site) {
   for (let c = 0; c < 8; c++) k.box(g, [0.035, 0.34, 0.012], w.paperMat, [-1.45 + c * 0.4, 1.55 + (c % 3) * 0.08 - 0.08, -2.56], [0, 0, c % 2 ? 0.07 : -0.05]);
   k.tag(g, 'SP-01', { w: 0.5, h: 0.19 }, [0, 2.2, -2.56]);
 
-  // Work lamp on a mast at the right-hand front corner.
-  k.lampMast(g, 3.3, 1.3, { h: 3.6, arm: [-1.6, -0.2] });
+  // THE CRYSTALLISER behind the sampler, in the back corner of the evaporator hall: the last evaporator of the
+  // line, where the brine boils down far enough to drop its salt. A body on four legs high enough to discharge
+  // over the belt, a cone below it to the salt leg, the vapour main out of its head and away through the gable,
+  // the circulation loop down through its heater and back. Its salt leg drops into a screw conveyor that carries
+  // the salt across and spouts it onto the belt's tail (the belt's top is about 2.2 m up there). The lamps are
+  // the hall's (`halls.js`).
+  {
+    const cx = -3.4, cz = -4.6, R = 1.2, legTop = 4.6;
+    for (const [dx, dz] of [[-0.9, -0.9], [0.9, -0.9], [-0.9, 0.9], [0.9, 0.9]]) k.column(g, cx + dx, cz + dz, legTop, { h: 0.2, w: 0.16 });
+    for (const dz of [-0.9, 0.9]) k.beam(g, 2.0, w.darkSteelMat, [cx, legTop, cz + dz], 'x', { h: 0.2, w: 0.12 });
+    for (const dx of [-0.9, 0.9]) k.beam(g, 2.0, w.darkSteelMat, [cx + dx, legTop, cz], 'z', { h: 0.2, w: 0.12 });
+    k.cyl(g, [R, 0.24, 1.0, 24], w.plateMat, [cx, legTop + 0.5, cz], null, true);         // the cone
+    k.cyl(g, [R, R, 2.8, 24], w.plateMat, [cx, legTop + 1.0 + 1.4, cz], null, true);       // the body
+    k.cyl(g, [R * 0.82, R, 0.34, 24], w.plateMat, [cx, legTop + 3.97, cz], null, true);    // the dished head
+    for (const dy of [1.4, 2.6]) k.cyl(g, [R + 0.03, R + 0.03, 0.06, 24], w.darkSteelMat, [cx, legTop + dy, cz]);
+    k.cyl(g, [0.15, 0.15, 0.4, 12], w.darkSteelMat, [cx, legTop - 0.2, cz]);               // the salt leg
+    // The vapour main, up out of the head and out through the back gable.
+    const yV = legTop + 4.6;
+    k.pipe(g, [[cx, legTop + 4.14, cz], [cx, yV, cz], [cx, yV, -7.0]], 0.2, w.pipeMat);
+    // The heater beside it, and the circulation loop: out of the cone, down and across, up the heater, back in high.
+    const hx = -5.9, hz = -2.9;
+    k.cyl(g, [0.34, 0.34, 3.6, 16], w.plateMat, [hx, 2.9, hz], null, true);
+    for (const y of [1.1, 4.7]) k.cyl(g, [0.39, 0.39, 0.08, 16], w.darkSteelMat, [hx, y, hz]);
+    k.box(g, [0.9, 0.12, 0.9], w.footingMat, [hx, 0.06, hz]);
+    k.cyl(g, [0.12, 0.12, 1.0, 10], w.darkSteelMat, [hx, 0.6, hz]);
+    k.pipe(g, [[cx - 0.75, legTop + 0.35, cz + 0.5], [hx, legTop + 0.35, cz + 0.5], [hx, 1.12, hz - 0.0]], 0.11, w.pipeMat);
+    k.pipe(g, [[hx, 4.75, hz], [hx, legTop + 2.4, hz], [cx - R + 0.04, legTop + 2.4, cz + 0.55]], 0.11, w.pipeMat);
+    // The screw conveyor: a covered trough under the salt leg, its drive at the far end, its open end over the
+    // belt's loading hood (the hood's top is 3.7 m up and reaches 1.05 m to this side of the belt's line).
+    const yS = legTop - 0.62, x0 = cx - 0.5, x1 = -1.12;
+    k.box(g, [x1 - x0, 0.36, 0.4], w.plateMat, [(x0 + x1) / 2, yS, cz], null, true);
+    for (const x of [x0 + 0.2, (x0 + x1) / 2, x1 - 0.2]) k.box(g, [0.06, 0.42, 0.46], w.darkSteelMat, [x, yS, cz]);
+    k.box(g, [0.42, 0.34, 0.34], w.darkSteelMat, [x0 - 0.21, yS, cz]);
+    k.cyl(g, [0.13, 0.13, 0.3, 12], w.darkSteelMat, [x0 - 0.57, yS, cz], [0, 0, Math.PI / 2]);
+    k.box(g, [0.04, 0.4, 0.44], w.darkSteelMat, [x1 + 0.02, yS + 0.02, cz]);
+    // Two hanger rods carry its outboard end from the purlins.
+    for (const dz of [-0.17, 0.17]) k.strut(g, [x1 - 0.5, yS + 0.18, cz + dz], [x1 - 0.5, 10.0, cz + dz], 0.016, w.darkSteelMat, 6);
+  }
 
   const colliders = [
     { lx: -4.5, lz: -1.1, hw: 0.95, hd: 0.8 },
     { lx: -4.5, lz: 0.85, hw: 0.45, hd: 0.45 },
     { lx: 4.5, lz: -0.9, hw: 1.0, hd: 0.45 },
     { lx: 0, lz: -2.6, hw: 1.8, hd: 0.15 },
-    { lx: 3.3, lz: 1.3, r: 0.2 },
+    { lx: -3.4, lz: -4.6, hw: 1.25, hd: 1.25 },
+    { lx: -5.9, lz: -2.9, hw: 0.5, hd: 0.5 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
   // NO FIELD POINT. The belt scoop was retired: it carried the same atoms the bench already held, so it was pure
@@ -292,6 +327,7 @@ export function buildInstrumentRoom(w, site) {
   const colliders = [
     { lx: -4.3, lz: -0.2, r: 0.55 },
     { lx: 4.3, lz: -0.2, hw: 0.4, hd: 0.45 },
+    { lx: 0, lz: -2.7, hw: 1.1, hd: 0.12 },          // the gauge board on the back wall
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders };
@@ -319,27 +355,20 @@ export function buildControlHouse(w, site) {
     return m;
   };
 
-  // The apron the house stands on, and the veranda's floor.
-  k.box(g, [13.0, 0.12, 12.0], w.footingMat, [0, -0.06, -3.3]);
 
   const bench = w.buildBench({ kind: 'cards', plate: 'BN-03', skin: 'desk' });
   g.add(bench.group);
 
-  // THE BLOCKHOUSE: back and side walls, and the front wall pierced for the glass and the door.
-  const H = 3.6, zF = -2.6, zB = -8.4;
-  cwall([9.8, H, 0.3], [0, H / 2, zB]);
+  // THE RELAY ROOM at the back of the house: its side walls and its front, pierced for the glass and its door,
+  // up to the house's slab. The house's own walls, roof and door are the hall's (`hall-plan.js`, `halls.js`).
+  const H = 4.9, zF = -2.6, zB = -8.25;
   for (const sx of [-1, 1]) cwall([0.3, H, zF - zB], [sx * 4.9, H / 2, (zF + zB) / 2]);
   cwall([2.3, H, 0.3], [-3.75, H / 2, zF]);                  // solid, the record wall's
   cwall([5.2, 1.0, 0.3], [0, 0.5, zF]);                      // sill under the glass
-  cwall([5.2, 1.0, 0.3], [0, H - 0.5, zF]);                  // lintel band over it
+  cwall([5.2, H - 2.6, 0.3], [0, (H + 2.6) / 2, zF]);        // the band over it, to the slab
   cwall([0.7, H, 0.3], [2.95, H / 2, zF]);                   // pier before the door
-  cwall([1.0, 1.4, 0.3], [3.8, H - 0.7, zF]);                // over the door
+  cwall([1.0, H - 2.2, 0.3], [3.8, (H + 2.2) / 2, zF]);      // over the door, to the slab
   cwall([0.6, H, 0.3], [4.6, H / 2, zF]);                    // corner
-  // The roof slab with a parapet lip.
-  cwall([10.2, 0.3, 6.1], [0, H + 0.15, (zF + zB) / 2 - 0.05]);
-  for (const [sx, sz, lx, lz] of [[0, -1, 10.2, 0.14], [0, 1, 10.2, 0.14], [-1, 0, 0.14, 6.1], [1, 0, 0.14, 6.1]]) {
-    cwall([lx, 0.22, lz], [sx * 5.0, H + 0.41, (zF + zB) / 2 - 0.05 + sz * 2.97], false);
-  }
   // Four panes of dark glass in their mullions.
   for (let i = 0; i < 4; i++) {
     k.box(g, [1.15, 1.55, 0.03], w.glassMat, [-1.95 + i * 1.3, 1.78, zF + 0.04]);
@@ -360,35 +389,12 @@ export function buildControlHouse(w, site) {
     }
   }
 
-  // THE VERANDA: a header and rafters on two columns, sheet over them, a lamp under. Its front edge stands
-  // at the plate's own, so the air in front (where a leaned-in camera stands) is open to the sky.
-  const yR = 3.18;
-  const zV = 0.45;
-  const lenV = zV - zF;
-  for (const sx of [-1, 1]) k.column(g, sx * 4.6, zV, yR - 0.1, { h: 0.22, w: 0.18 });
-  k.beam(g, 10.2, w.darkSteelMat, [0, yR, zV], 'x', { h: 0.26, w: 0.14 }, true);
-  for (const rx of [-4.6, -1.5, 1.5, 4.6]) k.beam(g, lenV, w.darkSteelMat, [rx, yR, (zV + zF) / 2], 'z', { h: 0.22, w: 0.12 });
-  for (const sx of [-3.9, -1.3, 1.3, 3.9]) {
-    const sheet = new THREE.Mesh(w.own(corrugatedGeometry(2.6, lenV)), w.plateMat);
-    sheet.position.set(sx, yR + 0.14, (zV + zF) / 2);
-    sheet.castShadow = sheet.receiveShadow = w.t4;
-    g.add(sheet);
-  }
-  g.add(w.buildLuminaire(0, 3.0, -0.5));
-  k.strut(g, [0, yR - 0.06, -0.5], [0, 3.1, -0.5], 0.012, w.darkSteelMat, 6);
-
-  // ON THE ROOF: a condenser box and its fan, a vent cowl, a whip, and the way up.
+  // ON THE HOUSE'S SLAB: a condenser box and its fan, a vent cowl, a whip.
   k.box(g, [1.2, 0.7, 0.8], w.plateMat, [-1.5, H + 0.3 + 0.35, -6.5], null, true);
   k.cyl(g, [0.3, 0.3, 0.04, 18], w.darkSteelMat, [-1.5, H + 0.3 + 0.72, -6.5]);
   k.cyl(g, [0.22, 0.26, 0.9, 14], w.pipeMat, [1.6, H + 0.3 + 0.45, -6.8]);
   k.cyl(g, [0.34, 0.22, 0.16, 14], w.darkSteelMat, [1.6, H + 0.3 + 0.98, -6.8]);
   k.cyl(g, [0.012, 0.02, 3.0, 6], w.darkSteelMat, [4.4, H + 0.3 + 1.5, -7.6]);
-  for (let i = 0; i < 9; i++) {
-    const rung = new THREE.Mesh(w.own(new THREE.TorusGeometry(0.18, 0.018, 5, 10, Math.PI)), w.darkSteelMat);
-    rung.position.set(5.12, 0.5 + i * 0.36, -5.4);
-    rung.rotation.set(0, Math.PI / 2, -Math.PI / 2);
-    g.add(rung);
-  }
 
   // THE IMPULSE LINES: three small-bore pipes from the west wall toward the row, ending in blind flanges.
   for (const [py, pz, r] of [[1.0, -5.2, 0.045], [1.5, -5.6, 0.04], [2.1, -6.0, 0.05]]) {
@@ -399,9 +405,7 @@ export function buildControlHouse(w, site) {
   k.box(g, [0.04, 1.14, 0.46], w.darkSteelMat, [5.35, 0.6, -3.86], [0, 0.9, 0]);
 
   const colliders = [
-    { lx: 0, lz: (zF + zB) / 2, hw: 5.1, hd: 3.0 },
-    { lx: -4.6, lz: 0.45, r: 0.3 },
-    { lx: 4.6, lz: 0.45, r: 0.3 },
+    { lx: 0, lz: (zF + zB) / 2, hw: 5.1, hd: (zF - zB) / 2 + 0.15 },
     { lx: 5.3, lz: -4.2, hw: 0.3, hd: 0.25 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
@@ -437,7 +441,7 @@ export function buildTowerDeck(w, site, { towerBack = 8.5, towerRot = 0.647, tow
     k.box(g, [sx, 0.05, sz], w.darkSteelMat, p);
     for (let i = 0; i < Math.round(sx / 0.35); i++) k.box(g, [0.025, 0.03, sz], w.pipeMat, [p[0] - sx / 2 + 0.175 + i * 0.35, p[1] + 0.04, p[2]]);
   };
-  grate(7.0, 3.6, [0, 0.025, -3.9]);
+  grate(7.0, 2.3, [0, 0.025, -3.25]);          // to the house's back wall (z -4.4)
 
   // THE SAMPLE-COOLER SKID: a cooling coil in its jacket, three sample bombs on a rack, a panel.
   {
@@ -483,13 +487,11 @@ export function buildTowerDeck(w, site, { towerBack = 8.5, towerRot = 0.647, tow
     k.strut(g, [sx * 3.1, 1.02, -1.0], [sx * 3.1, 1.02, 0.9], 0.025, w.darkSteelMat);
     k.strut(g, [sx * 3.1, 0.55, -1.0], [sx * 3.1, 0.55, 0.9], 0.02, w.darkSteelMat);
   }
-  k.lampMast(g, 3.5, 1.5, { h: 3.6, arm: [-1.7, -0.3] });
   k.tag(g, 'SMP-04', { w: 0.5, h: 0.19 }, [1.85 - 0.4, 1.35, -3.7 + 0.08]);
 
   const colliders = [
     { lx: 0, lz: -towerBack, r: 3.4 },
     { lx: -0.4, lz: -3.7, hw: 2.3, hd: 0.65 },
-    { lx: 3.5, lz: 1.5, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
   // NO FIELD POINT. The cooler draw was retired: the sample it carried matched the reference already on the bench.
@@ -622,13 +624,12 @@ export function buildWeighHopper(w, site) {
     for (const rz of [-1.0, 0.9]) k.column(g, sx * 3.1, rz, 1.05, { h: 0.08, w: 0.06 });
     k.strut(g, [sx * 3.1, 1.02, -1.0], [sx * 3.1, 1.02, 0.9], 0.025, w.darkSteelMat);
   }
-  k.lampMast(g, 3.4, 1.5, { h: 3.6, arm: [-1.7, -0.3] });
+
 
   const colliders = [
     { lx: -HOPPER.shift, lz: z0 - 1.5, hw: 0.95, hd: 0.8 },
     { lx: -HOPPER.shift, lz: z0 + 1.05, hw: 1.4, hd: 0.3 },
     { lx: 2.3 - HOPPER.shift, lz: z0 + 0.9, r: 0.35 },
-    { lx: 3.4, lz: 1.5, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
   // NO FIELD POINT. The hopper draw was retired: it was the same chlorine as the sample already on the bench.
@@ -651,7 +652,6 @@ export function buildBaggingLine(w, site, { feedX = 9.7 } = {}) {
   g.name = 'bagging-line';
   const zL = -3.4;                                     // the line's centre line behind the bench
 
-  k.box(g, [14.0, 0.12, 6.0], w.footingMat, [2.0, -0.06, -3.0]);
 
   const bench = w.buildBench({ kind: 'assay', plate: 'BN-06', skin: 'shelf' });
   g.add(bench.group);
@@ -739,7 +739,6 @@ export function buildBaggingLine(w, site, { feedX = 9.7 } = {}) {
     k.box(g, [0.5, 0.5, 0.5], w.sackMat, [sx, 0.25, zL + 0.3]);
     k.cyl(g, [0.22, 0.22, 0.1, 16], w.darkSteelMat, [sx + 0.7, 0.3, zL + 0.2], [Math.PI / 2, 0, 0]);
   }
-  k.lampMast(g, -3.3, 1.4, { h: 3.6, arm: [1.6, -0.3] });
 
   const colliders = [
     { lx: 3.7, lz: zL, hw: 0.8, hd: 0.7 },
@@ -748,7 +747,6 @@ export function buildBaggingLine(w, site, { feedX = 9.7 } = {}) {
     { lx: 0, lz: zL, hw: 2.85, hd: 0.5 },
     { lx: -4.5, lz: zL, hw: 0.7, hd: 0.6 },
     { lx: -6.0, lz: zL + 0.3, hw: 0.3, hd: 0.3 },
-    { lx: -3.3, lz: 1.4, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
   // THE FIELD POINT: the filled sack on the platform scale, which has been counted into. It is a real piece of this host (the sack

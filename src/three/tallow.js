@@ -86,6 +86,9 @@ import {
   buildCommsMast, buildDebrisField, buildStakeMarker, mulberry32, SUPPORT_POINTS
 } from './tallow/plant.js';
 import { HOST_BUILDERS, HOPPER } from './tallow/stations.js';
+import { HALLS, hallFor, hallRect, hallColliders, hallCoverBoxes, pitCoverBox, routeTo as hallRoute } from './tallow/hall-plan.js';
+import { buildHall } from './tallow/halls.js';
+import { makeCover } from './lib/cover.js';
 import { buildHauler } from './tallow/hauler.js';
 import { buildTallowVista } from './tallow/vista.js';
 import { iBeamGeometry } from './tallow/kit.js';
@@ -120,6 +123,7 @@ export class TallowWorld {
 
     this.sub = this.data.sublevel;
     this.field = makeTallowField();
+    this.initHallFloors();
 
     this.initMetals();
     this.initLighting();
@@ -140,6 +144,63 @@ export class TallowWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.weatherTheWorld();
+    this.initCover();
+  }
+
+  /**
+   * THE BUILDINGS' FLOORS. Each of the plant's buildings (`tallow/hall-plan.js`) stands on a level slab whose top
+   * is the highest crust under it, so the floor inside is flat and nothing of the pan comes up through it. The
+   * slabs are part of the one height field: inside a building's walls the walk stands on its floor.
+   */
+  initHallFloors() {
+    this.hallFloors = new Map();
+    this.hallSlabs = [];
+    for (const h of HALLS) {
+      const r = hallRect(h);
+      let top = -Infinity;
+      for (let x = r.minX; x <= r.maxX + 1e-6; x += 0.5) {
+        for (let z = r.minZ; z <= r.maxZ + 1e-6; z += 0.5) top = Math.max(top, this.surfaceHeight(Math.min(x, r.maxX), Math.min(z, r.maxZ)));
+      }
+      const y = Math.round((top + 0.02) * 1000) / 1000;
+      this.hallFloors.set(h.site, y);
+      this.hallSlabs.push({ ...r, y, hall: h });
+    }
+    // The rooms of one building stand on one floor.
+    for (const s of this.hallSlabs) {
+      if (!s.hall.shed) continue;
+      const y = Math.max(...this.hallSlabs.filter(o => o.hall.shed === s.hall.shed).map(o => o.y));
+      s.y = y;
+      this.hallFloors.set(s.hall.site, y);
+    }
+  }
+
+  /** The floor of the building over (x, z), or null on the open pan. */
+  hallFloorAt(x, z) {
+    for (const s of this.hallSlabs) if (x >= s.minX && x <= s.maxX && z >= s.minZ && z <= s.maxZ) return s.y;
+    return null;
+  }
+
+  /**
+   * THE COVER MASK (`lib/cover.js`). Inside every building, and in the pit under its roof, the sun and most of the
+   * sky are taken out of every material, so a room is lit by its own sodium lamps and not by the glare, on a phone
+   * with no shadow map as much as anywhere. Baked once, after the air and the salt have patched the materials.
+   */
+  initCover() {
+    const sun = this.sunLight.position.clone().sub(this.sunLight.target.position).normalize();
+    const boxes = [pitCoverBox()];
+    for (const h of HALLS) boxes.push(...hallCoverBoxes(h, this.hallFloors.get(h.site)));
+    this.coverBoxes = boxes;
+    this.cover = makeCover({ sun, boxes });
+    this.cover.applyTo(this.scene);
+  }
+
+  /** The way on foot to a bench, door by door (`tallow/hall-plan.js` `routeTo`). */
+  routeTo(siteId, fromPos, toPos = null) {
+    const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.y, fromPos.z];
+    const site = this.data.sites.find(s => s.id === siteId || s.questId === siteId);
+    const to = toPos ? (Array.isArray(toPos) ? toPos : [toPos.x, toPos.y, toPos.z]) : site?.approachPos;
+    if (!to) return [[from[0], from[from.length - 1]]];
+    return hallRoute(from[0], from[from.length - 1], to[0], to[to.length - 1]);
   }
 
   /**
@@ -314,6 +375,8 @@ export class TallowWorld {
    * lab deck, so the sub-level is entered on foot and never by teleport.
    */
   getTerrainHeight(x, z) {
+    const floor = this.hallFloorAt(x, z);
+    if (floor !== null) return floor;
     if (this.inRoom(x, z)) return this.sub.floorY;
     if (this.inStair(x, z)) {
       const s = this.sub.stair;
@@ -1730,7 +1793,13 @@ export class TallowWorld {
 
       const host = build(this, site, opts);
       const g = host.group;
-      const y = site.pos[1] < -1 ? this.sub.floorY : this.surfaceHeight(site.pos[0], site.pos[2]);
+      // The building the bench stands in is part of its host: one object, the room and the machinery in it.
+      const hall = hallFor(site.id);
+      if (hall) {
+        buildHall(this, hall, g);
+        host.colliders.push(...hallColliders(hall));
+      }
+      const y = site.pos[1] < -1 ? this.sub.floorY : (hall ? this.hallFloors.get(site.id) : this.surfaceHeight(site.pos[0], site.pos[2]));
       g.position.set(site.pos[0], y, site.pos[2]);
       g.rotation.y = this.siteFacing(site);
       this.scene.add(g);
@@ -1909,6 +1978,22 @@ export class TallowWorld {
     // them to the world's), the room its columns (`initSublevel`).
     for (const c of this.hostColliders || []) this.colliders.push(c);
     for (const c of this.labColliders || []) this.colliders.push(c);
+
+    // ONE FLOOR. Nothing the player can walk under is lower than 2.4 m: the belt's tail (its underside is under
+    // 2.4 m for the six metres before the tail pulley, outside the evaporator hall and in it) and the pad's blast
+    // walls and windsock mast (the pad is walked on, so its standing parts are collided one by one).
+    {
+      const conv = this.data.landmarks.find(l => l.asset === 'conveyor');
+      if (conv) push(conv.pos[0] + 4.9, conv.pos[0] + 11.4, conv.pos[2] - 1.0, conv.pos[2] + 1.5);
+      const pad = this.scene.children.find(o => /^landing-pad/.test(o.name || ''));
+      if (pad) {
+        pad.updateMatrixWorld(true);
+        const gy = this.surfaceHeight(pad.position.x, pad.position.z);
+        const parts = [];
+        pad.traverse(o => { for (const b of o.userData?.partBoxes || []) parts.push(b.clone().applyMatrix4(o.matrixWorld)); });
+        for (const b of parts) if (b.max.y - gy > 0.45 && b.min.y - gy < 2.4) push(b.min.x, b.max.x, b.min.z, b.max.z);
+      }
+    }
 
     // The pit rim. Thin box colliders around the excavation, split so the stair
     // mouth is the only way down — which is what makes the descent a walk.

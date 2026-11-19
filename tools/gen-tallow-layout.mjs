@@ -18,9 +18,14 @@
  *   5  weigh hopper             under the conveyor's discharge chute
  *   6  sack-filling scale       on the bagging line beside it
  *
+ * THE BUILDINGS. Five of the benches stand inside the plant's own buildings (`src/three/tallow/hall-plan.js`,
+ * the one declaration of where each bench and each building is): the evaporator hall at the belt's tail, the
+ * control house, the tower base house, and the head house and bagging shed at the belt's head. Each building is
+ * a keep-out the size of its slab, and the ground outside each door is kept open.
+ *
  * THE EQUIPMENT IS PLACED BY HAND BELOW, THEN THE SCATTER IS SETTLED. Process
  * equipment and hosts are fixed: the line is a design, not something to relax.
- * Crates, heaps, debris, stakes and pans start where they are written and are pushed
+ * Heaps, debris, stakes and pans start where they are written and are pushed
  * apart until every footprint is clear, every one stands clear of the real extent
  * of every long structure (the belt, the racks, the hosts and their approach
  * lanes), of the sub-level and of the boss's ground. The script REFUSES to write
@@ -40,6 +45,7 @@ import { installDomShim } from './lib/dom-shim.mjs';
 // plant.js reaches the DOM through the shared texture kit; the shim is what the verifiers build the world behind.
 installDomShim({ tier: 'T4' });
 const { CONVEYOR } = await import('../src/three/tallow/plant.js');
+const { HALLS, SITE_FRAMES, PIT, hallRect, doorPoints } = await import('../src/three/tallow/hall-plan.js');
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outPath = join(root, 'src/three/world-data/tallow.json');
@@ -66,8 +72,8 @@ const LANE = { hw: 2.8, from: 0.65, to: 5.6 };
 const FLOOR_Y = -5.6;
 const SUB = {
   floorY: FLOOR_Y,
-  room: { minX: -22.0, maxX: 14.0, minZ: -46.0, maxZ: -31.0 },
-  stair: { minX: -6.6, maxX: -1.4, minZ: -31.0, maxZ: -22.0 },
+  room: { ...PIT.room },
+  stair: { ...PIT.stair },
   headPos: [-4.0, 0, -23.0],
   ceilingY: -0.85
 };
@@ -109,6 +115,17 @@ const sites = SITE_DEFS.map(d => {
     label: d.label, structure: d.structure, built: true
   };
 });
+
+// The benches stand where the hall plan says (it lays the buildings out round them).
+for (const s of sites) {
+  const fr = SITE_FRAMES[s.id];
+  if (!fr) continue;
+  const def = SITE_DEFS.find(d => d.id === s.id);
+  if (Math.abs(fr.pos[0] - s.pos[0]) > 0.011 || Math.abs(fr.pos[1] - s.pos[2]) > 0.011 || fr.f[0] !== def.f[0] || fr.f[1] !== def.f[1]) {
+    console.log(`FAIL ${s.id} stands at (${s.pos[0]}, ${s.pos[2]}) facing [${def.f}], but hall-plan.js puts it at (${fr.pos}) facing [${fr.f}]`);
+    process.exit(1);
+  }
+}
 
 /** A rectangle given in a bench's own frame (x right, z toward the player), as a world AABB. */
 function benchRect(def, x0, x1, z0, z1) {
@@ -184,10 +201,8 @@ for (const [x, z, r, s] of [
   [-54, -20, 10.8, 1.2], [62, 36, 9.0, 1.0], [46, -46, 9.9, 1.1], [-48, 44, 8.1, 0.9], [66, 4, 9.0, 1.0]
 ]) free('pan-rim', x, z, { scale: s, radius: r });
 
-// Crates: staged at the sample point, the bagging line and the yard's edges.
-for (const [x, z, rot] of [
-  [22, -8, 0.0], [24.8, 12, 0.5], [-24, 24, -0.3], [-3, 18, 0.2], [10, 16, -0.6], [-14, -6, 0.35], [-30, -2, 0.15], [28, 20, 0.8]
-]) free('crate-stack', x, z, { rotY: rot, radius: 1.75 });
+// No loose crates: the sample point and the bagging line are indoors now, and a stack standing on the open pan
+// belonged to no working (the eight that stood here are in the archived generator).
 
 // Heaps: harvested salt waiting for the belt, and the older piles.
 for (const [x, z, s] of [[28, 6, 1.3], [-36, 24, 1.0], [-30, 38, 1.15], [46, -14, 0.95]]) {
@@ -219,22 +234,24 @@ const keep = (name, r, { margin = 0.8, owner = null, lane = false, mayMeet = [] 
 // Racks: 4.7 m across (beams, ladder), the 26 m run.
 for (const l of L) if (l.asset === 'pipe-bridge') keep('pipe-bridge', { minX: l.pos[0] - 2.5, maxX: l.pos[0] + 2.6, minZ: l.pos[2] - 12.8, maxZ: l.pos[2] + 13.4 });
 
-// Hosts, in their own frame: the plate, and the machinery behind it. [x0, x1, z0, z1] each.
-const HOST_EXTENT = {
-  'site-1': [[-2.5, 2.5, -0.7, 0.7], [-6.0, 6.0, -2.6, -0.7]],
-  'site-3': [[-2.5, 2.5, -0.7, 1.6], [-6.4, 6.4, -9.0, -0.7]],
-  'site-5': [[-2.5, 2.5, -0.7, 0.7], [-2.0, 2.0, -7.0, -0.7]],
-  'site-6': [[-2.5, 2.5, -0.7, 0.7], [-6.2, 9.2, -6.4, -0.7]]
-};
-for (const [id, rects] of Object.entries(HOST_EXTENT)) {
-  const def = SITE_DEFS.find(d => d.id === id);
-  rects.forEach((r, i) => keep(`${id} host ${i}`, benchRect(def, ...r), { owner: id, mayMeet: id === 'site-5' ? ['conveyor'] : [] }));
+// The buildings, whole: every host's machinery is inside its building's walls. The belt runs through the
+// evaporator hall's west gable and the head house's east gable on purpose. The two halls of the bagging shed are
+// one building. Outside each door, 3 m of the pan is kept open to walk in by.
+for (const h of HALLS) {
+  const meet = ['site-1', 'site-5'].includes(h.site) ? ['conveyor'] : [];
+  const shed = HALLS.filter(o => o.shed && o.shed === h.shed && o !== h).map(o => o.site);
+  keep(`${h.id}`, hallRect(h), { owner: h.site, mayMeet: [...meet, ...shed] });
+  for (const d of doorPoints(h, 1.5)) {
+    const [ox, oz] = d.out;
+    const half = d.width / 2 + 0.6;
+    const along = Math.abs(d.out[0] - d.in[0]) < 0.01;      // the door faces along z
+    keep(`${h.id} door`, along ? { minX: ox - half, maxX: ox + half, minZ: oz - 1.5, maxZ: oz + 1.5 } : { minX: ox - 1.5, maxX: ox + 1.5, minZ: oz - half, maxZ: oz + half }, { margin: 0.3, owner: h.site, lane: true, mayMeet: [...meet, ...shed] });
+  }
 }
-// The tower with its guys: the guys reach 8.5 m out. The bench is in front of it.
+// The tower with its guys: the guys reach 8.5 m out, past the base house's back wall.
 {
   const t = L.find(l => l.asset === 'tower-deck');
   keep('tower-deck', { minX: t.pos[0] - 9.2, maxX: t.pos[0] + 9.2, minZ: t.pos[2] - 9.2, maxZ: sites[3].pos[2] - 0.65 }, { owner: 'site-4' });
-  keep('site-4 host plate', benchRect(SITE_DEFS[3], -2.5, 2.5, -0.65, 0.65), { owner: 'site-4' });
 }
 // Every approach lane: the plate's front edge out to where the camera stands, and a little beyond.
 for (const d of SITE_DEFS) {
@@ -400,6 +417,7 @@ if (fail) { console.log('refusing to write'); process.exit(1); }
 /* --------------------------------------------------------------- the ground marks */
 
 const approach = id => { const s = sites.find(x => x.id === id).approachPos; return [s[0], s[2]]; };
+const door = id => doorPoints(HALLS.find(h => h.site === id), 1.5)[0].out;
 const tracks = {
   _note: prev.tracks._note,
   ruts: [
@@ -409,13 +427,14 @@ const tracks = {
     [[-110, -72], [-60, -74], [-20, -75], [20, -75], [50, -72], [90, -66]],
     [[-60, -74], [-80, -90], [-140, -130], [-260, -210]]
   ],
+  // The trodden ways go door to door: a footway stops at a building's threshold, where the slab begins.
   paths: [
-    [SPAWN, [10, 24], approach('site-1')],
-    [approach('site-1'), [14, 10], approach('site-5')],
-    [approach('site-5'), approach('site-6')],
-    [approach('site-1'), [27, -4], approach('site-3')],
-    [approach('site-3'), [20, -16], SUB.headPos.filter((_, i) => i !== 1)],
-    [SUB.headPos.filter((_, i) => i !== 1), [10, -26], [24.5, -30], [24.5, -44], approach('site-4')]
+    [SPAWN, [14, 24], door('site-1')],
+    [door('site-1'), [27, -4], door('site-3')],
+    [door('site-3'), [20, -16], SUB.headPos.filter((_, i) => i !== 1)],
+    [SUB.headPos.filter((_, i) => i !== 1), [10, -26], [24.5, -30], [24.5, -40], door('site-4')],
+    [door('site-1'), [14, 12], [2, 13.8], door('site-5')],
+    [door('site-5'), [-4, 20], [-23.7, 20], door('site-6')]
   ]
 };
 // Start the walks from the spawn and the stair head rather than from the middle of anything.
