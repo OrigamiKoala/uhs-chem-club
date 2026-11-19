@@ -28,7 +28,7 @@ export default async function check(q1, { D, TABLE, near, same, holds, rig }) {
       near(r.x / (r.y * 1e-9) / 1e8, D.LIGHT_SPEED / 1e8, 0.05, 'unit02/q1-wave stage 3 (gap over time is the speed of light, x 10^8)');
     }
     holds(rows[0].x === rows[1].x && rows[0].y === rows[1].y, 'unit02/q1-wave stage 3: red and violet are not timed over the same gap in the same time');
-    same(q1.FIRST[e.fixtures.first.dials.n.value - 1], 'Same time', 'unit02/q1-wave stage 3 (the answer)');
+    same(q1.FIRST[e.fixtures.first.dials.n.value - 1], 'Neither is faster', 'unit02/q1-wave stage 3 (the answer)');
     same(q1.FIRST[start(2).fixtures.first.dials.n.value - 1], 'Not set', 'unit02/q1-wave stage 3 (the answer dial starts unset)');
     for (const m of start(2).fixtures.rail.props.marks) near(D.pulseNs(m.metres) * 1e-9 * D.LIGHT_SPEED, m.metres, 0.03, `unit02/q1-wave stage 3 (the pulse over ${m.metres} m)`);
     holds(TABLE.apply(start(2), { run: 'rail' }).last.ok === false, 'unit02/q1-wave stage 3: a pulse fires with no lamp and no detectors');
@@ -36,7 +36,7 @@ export default async function check(q1, { D, TABLE, near, same, holds, rig }) {
     holds(noLamp.last.ok === false && noLamp.recorder.rows.length === 0, 'unit02/q1-wave stage 3: a pulse fires with no lamp in the holder');
     // the answer cannot be given before both lamps have been timed, nor from timings over two different gaps
     const st = q1.STAGES[2];
-    const dial = { setDial: { fixture: 'first', dial: 'n', value: q1.FIRST.indexOf('Same time') + 1 } };
+    const dial = { setDial: { fixture: 'first', dial: 'n', value: q1.FIRST.indexOf('Neither is faster') + 1 } };
     const one = TABLE.runScript(start(2), [...q1.SOLUTIONS[2].slice(0, 4), dial], { strict: true });
     holds(st.check({ table: one }).ok === false, 'unit02/q1-wave stage 3: passes with one lamp timed');
     const twoGaps = TABLE.runScript(start(2), [...q1.SOLUTIONS[2].slice(0, 4), { place: { piece: 'd2', to: 'slot:rail.m2' } }, { place: { piece: 'violet', to: 'slot:rail.lamp' } }, { run: 'rail' }, dial], { strict: true });

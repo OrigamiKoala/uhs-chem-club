@@ -213,7 +213,6 @@ export const STAGES = [
     },
     reward: {
       log: 'Sample B: 3 protons, 3 neutrons, 3 electrons.',
-      model: { type: 'atoms', items: [{ p: 3, n: 4, label: 'Lithium-7' }, { p: 3, n: 3, label: 'Lithium-6' }], caption: 'Lithium-7 and lithium-6: 3 protons and 3 electrons each, 4 neutrons against 3. Not to scale.' },
       title: 'Isotope Notation',
       body: 'Atomic number 3 and mass number 6 mean three protons and three neutrons: lithium-6.'
     }
@@ -322,7 +321,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lose the Outer Shell',
-    prompt: 'Remove magnesium\'s valence electrons to form its ion. Magnesium forms an ion with a charge of +2.',
+    prompt: 'Remove magnesium\'s valence electrons to form its +2 ion.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -359,7 +358,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Magnesium outer shell gone at +2.',
-      model: { type: 'atom', p: 12, n: 12, charge: 2, caption: 'A magnesium ion with a charge of +2: 12 protons and 10 electrons, on shells of 2 and 8. Not to scale.' },
+      model: { type: 'mg-cation', caption: 'Magnesium 2+ has a full outer shell, so it is stable.' },
       title: 'Cations and Full Shells',
       body: 'Without its two valence electrons magnesium has a charge of +2 and a full shell outermost. A positive ion is a cation.'
     }

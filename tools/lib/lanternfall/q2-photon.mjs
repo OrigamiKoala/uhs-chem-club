@@ -5,33 +5,30 @@ export default async function check(q2, { D, near, same, holds, rig }) {
   const sweep = (i, metal, brightness = 3) => q2.STAGES[i].table.fixtures[0].props.settings.map(n => D.planPhotocell(metal, n, brightness));
   const wake = ['Cs', 'Na', 'Zn'].map(m => D.thresholdNm(m));
   holds(wake[0] > wake[1] && wake[1] > wake[2], 'unit02/q2-photon: the work functions do not order cesium < sodium < zinc');
-  // 1. the guess: three tokens and nothing else; the solution's guess is the true outcome
+  // 1. discovery stage: violet light knocks electrons off sodium
   {
-    const t = start(0);
-    same(t.prediction.tokens, ['many', 'few', 'none'], 'unit02/q2-photon stage 1 (the guesses)');
-    same(Object.keys(t.fixtures).length + Object.values(t.pieces).filter(p => !p.token).length, 0, 'unit02/q2-photon stage 1 (nothing else on the bench)');
-    const f = start(1).fixtures.cell;
-    holds(!D.planPhotocell('Na', f.props.settings[0], 5).freed, 'unit02/q2-photon stage 1: the brightest red frees electrons, so "none" is not what the bench will show');
-    same(end(0).prediction.token, 'none', 'unit02/q2-photon stage 1 (the guess the solution makes)');
+    const r = OPT.cellRead(end(0), 'cell');
+    holds(r.freed && r.metal === 'Na', 'unit02/q2-photon stage 1: violet light does not free electrons from sodium');
   }
-  // 2. red at full brightness frees nothing; the solution frees something, and it is neither the brightest nor the reddest setting
+  // 2. the guess: three tokens and nothing else; the solution's guess is the true outcome
   {
     const t = start(1);
-    const f = t.fixtures.cell;
-    holds(!D.planPhotocell('Na', f.props.settings[f.dials.colour.value - 1], f.dials.brightness.value).freed, 'unit02/q2-photon stage 2: the lamp already frees electrons where it starts');
-    const r = OPT.cellRead(end(1), 'cell');
-    holds(r.freed && r.metal === 'Na', 'unit02/q2-photon stage 2: the solution does not free electrons from sodium');
-    holds(r.brightness === 1 && r.nm < f.props.settings[0], 'unit02/q2-photon stage 2: the solution is not the lowest brightness at a bluer colour');
-    // any colour that removes electrons at a higher brightness is refused: the answer is which dial decides it
-    const bright = rig(q2).run(1, [q2.SOLUTIONS[1][0], q2.SOLUTIONS[1][1]]);
-    holds(OPT.cellRead(bright, 'cell').freed && q2.STAGES[1].check({ table: bright }).ok === false, 'unit02/q2-photon stage 2: passes at full brightness');
+    same(t.prediction.tokens, ['many', 'few', 'none'], 'unit02/q2-photon stage 2 (the guesses)');
+    same(Object.keys(t.fixtures).length + Object.values(t.pieces).filter(p => !p.token).length, 0, 'unit02/q2-photon stage 2 (nothing else on the bench)');
+    const f = start(2).fixtures.cell;
+    holds(!D.planPhotocell('Na', f.props.settings[0], 5).freed, 'unit02/q2-photon stage 2: the brightest red frees electrons, so "none" is not what the bench will show');
+    same(end(1).prediction.token, 'none', 'unit02/q2-photon stage 2 (the guess the solution makes)');
   }
-  // 3. exactly one first setting frees an electron, and the dial finds it
+  // 3. red at full brightness frees nothing; the solution frees something at lowest brightness
   {
-    const p = sweep(2, 'Na');
-    const first = p.findIndex(x => x.count > 0) + 1;
-    same(end(2).fixtures.cell.dials.colour.value, first, 'unit02/q2-photon stage 3 (the first freeing setting)');
-    holds(p.slice(0, first - 1).every(x => x.count === 0) && p.slice(first).every(x => x.count > 0), 'unit02/q2-photon stage 3: electrons do not leave at every setting from the threshold on');
+    const t = start(2);
+    const f = t.fixtures.cell;
+    holds(!D.planPhotocell('Na', f.props.settings[f.dials.colour.value - 1], f.dials.brightness.value).freed, 'unit02/q2-photon stage 3: the lamp already frees electrons where it starts');
+    const r = OPT.cellRead(end(2), 'cell');
+    holds(r.freed && r.metal === 'Na', 'unit02/q2-photon stage 3: the solution does not free electrons from sodium');
+    holds(r.brightness === 1 && r.nm < f.props.settings[0], 'unit02/q2-photon stage 3: the solution is not the lowest brightness at a bluer colour');
+    const bright = rig(q2).run(2, [q2.SOLUTIONS[2][0], q2.SOLUTIONS[2][1]]);
+    holds(OPT.cellRead(bright, 'cell').freed && q2.STAGES[2].check({ table: bright }).ok === false, 'unit02/q2-photon stage 3: passes at full brightness');
   }
   // 4. brightness sets the number and not the speed; the answer needs two recorded settings and the card that says so
   {

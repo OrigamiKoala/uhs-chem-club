@@ -26,7 +26,7 @@ import {
   readOf, rackOf, rackPull, rackFor, groundConfig, readRack, isLaddered, boxPieceId, configString, shortString, symbolOf
 } from '../../table/kits/shells.js';
 
-export const meta = { stageCount: 7 };
+export const meta = { stageCount: 9 };
 
 export const VOCABULARY = [
   { term: /\bconfigurations?\b/i, introducedAt: 3 },
@@ -100,8 +100,7 @@ export const STAGES = [
       reward: {
         log: 'Boron: two in 1s, two in 2s, one in 2p.',
         title: 'The Aufbau Principle',
-        body: 'Two electrons in 1s, two in 2s and one in 2p. Filling the subshells from the lowest energy up is called the aufbau principle.',
-        model: { type: 'rack', z: 5, stage: 1, caption: 'Boron (Z = 5): 1s fills, then 2s, and the fifth electron goes into 2p.' }
+        body: 'Two electrons in 1s, two in 2s and one in 2p. Filling the subshells from the lowest energy up is called the aufbau principle.'
       }
     };
   })(),
@@ -255,8 +254,7 @@ export const STAGES = [
         return {
           log: '4s lies below 3d.',
           title: 'Energy Order, Not Shell Order',
-          body: `${verdict}In potassium, 4s fills before 3d. Subshells fill in order of energy, not of shell number.`,
-          model: { type: 'rack', z: 19, stage: 4, caption: 'Potassium (Z = 19): 4s lies below 3d, so the nineteenth electron goes into 4s: [Ar] 4s¹.' }
+          body: `${verdict}In potassium, 4s fills before 3d. Subshells fill in order of energy, not of shell number.`
         };
       }
     };
@@ -327,7 +325,81 @@ export const STAGES = [
       reward: {
         log: 'Chloride has the same configuration as argon.',
         title: 'Configurations of Ions',
-        body: 'Chloride has 18 electrons: 1s² 2s² 2p⁶ 3s² 3p⁶, the same configuration as argon. For main-group ions, the configuration follows from the number of electrons.',
+        body: 'Chloride has 18 electrons: 1s² 2s² 2p⁶ 3s² 3p⁶, the same configuration as argon. For main-group ions, the configuration follows from the number of electrons.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 8 */
+  (() => {
+    const rack = shelf('rack', ROWS, SHELF_AT, { pre: AR_CORE, locked: true, verdict: false });
+    return {
+      title: 'Chromium\'s Exception',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Half-filled and completely filled d subshells have extra stability. Because 4s and 3d are very close in energy, chromium (Z = 24) promotes one 4s electron into 3d so every 3d orbital holds one unpaired electron.'
+      },
+      prompt: 'Arrange chromium\'s six electrons after argon ([Ar] 4s¹ 3d⁵) to show its ground-state exception.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...hands(86, 10, 16)],
+        fixtures: [rack.fixture]
+      }),
+      hints: [
+        'Argon\'s 18 electrons are already placed; chromium needs 6 more electrons across 4s and 3d.',
+        'Instead of 4s² 3d⁴, promote one electron from 4s to give a half-filled 3d⁵ subshell.',
+        'Put 1 electron in 4s and 1 electron in each of the five 3d orbitals (all parallel spin).'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = readOf(t, 'rack');
+        if (r.total <= 18) return { ok: false, notYet: true, msg: 'Place chromium\'s six remaining electrons.' };
+        if (r.total !== 24) return { ok: false, msg: `Chromium has 24 electrons total, and the diagram holds ${r.total}.` };
+        if (r.counts['4s'] === 2 && r.counts['3d'] === 4) return { ok: false, msg: '4s² 3d⁴ is the simple aufbau guess — promote one 4s electron to half-fill 3d⁵.' };
+        if (r.counts['4s'] === 1 && r.counts['3d'] === 5 && r.ruleHolds) return { ok: true };
+        return { ok: false, msg: 'Chromium\'s ground state is [Ar] 4s¹ 3d⁵ with all five 3d electrons unpaired and parallel.' };
+      },
+      reward: {
+        log: 'Chromium: [Ar] 4s¹ 3d⁵ (half-filled d subshell).',
+        title: 'Half-Filled Subshell Exception',
+        body: 'Chromium is [Ar] 4s¹ 3d⁵ rather than 4s² 3d⁴. A half-filled d subshell lowers electron-electron repulsion and is more stable.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 9 */
+  (() => {
+    const rack = shelf('rack', ROWS, SHELF_AT, { pre: AR_CORE, locked: true, verdict: false });
+    return {
+      title: 'Copper\'s Exception',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Copper (Z = 29) has eleven electrons after argon. Just like chromium, it promotes one 4s electron into 3d — this time to achieve a completely filled 3d¹⁰ subshell.'
+      },
+      prompt: 'Arrange copper\'s eleven electrons after argon ([Ar] 4s¹ 3d¹⁰) to show its ground-state exception.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...hands(86, 10, 16)],
+        fixtures: [rack.fixture]
+      }),
+      hints: [
+        'Argon\'s 18 electrons are placed; copper needs 11 more electrons across 4s and 3d.',
+        'Instead of 4s² 3d⁹, promote one electron from 4s to completely fill all five 3d orbitals.',
+        'Put 1 electron in 4s and 2 electrons (↑↓) in each of the five 3d orbitals.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = readOf(t, 'rack');
+        if (r.total <= 18) return { ok: false, notYet: true, msg: 'Place copper\'s eleven remaining electrons.' };
+        if (r.total !== 29) return { ok: false, msg: `Copper has 29 electrons total, and the diagram holds ${r.total}.` };
+        if (r.counts['4s'] === 2 && r.counts['3d'] === 9) return { ok: false, msg: '4s² 3d⁹ is the simple aufbau guess — promote one 4s electron to completely fill 3d¹⁰.' };
+        if (r.counts['4s'] === 1 && r.counts['3d'] === 10) return { ok: true };
+        return { ok: false, msg: 'Copper\'s ground state is [Ar] 4s¹ 3d¹⁰ with one electron in 4s and ten in 3d.' };
+      },
+      reward: {
+        log: 'Copper: [Ar] 4s¹ 3d¹⁰ (full d subshell).',
+        title: 'Full Subshell Exception',
+        body: 'Copper is [Ar] 4s¹ 3d¹⁰ rather than 4s² 3d⁹. Chromium and copper are the two classic exceptions to the simple aufbau order.',
         last: true
       }
     };
@@ -378,7 +450,9 @@ export const SOLUTIONS = [
   [{ predict: 's4' }],
   [up('4s', 0)],
   [...pair('4s', 0), up('3d', 0), { run: 'well' }],
-  [...pair('3s', 0), ...pair('3p', 0), ...pair('3p', 1), ...pair('3p', 2)]
+  [...pair('3s', 0), ...pair('3p', 0), ...pair('3p', 1), ...pair('3p', 2)],
+  [up('4s', 0), up('3d', 0), up('3d', 1), up('3d', 2), up('3d', 3), up('3d', 4)],
+  [up('4s', 0), ...pair('3d', 0), ...pair('3d', 1), ...pair('3d', 2), ...pair('3d', 3), ...pair('3d', 4)]
 ];
 
 export const MISSES = [
@@ -388,7 +462,9 @@ export const MISSES = [
   [],
   [up('3d', 0)],
   [up('4s', 0), ...pair('3d', 0)],
-  [...pair('3s', 0), ...pair('3p', 0), ...pair('3p', 1), up('3p', 2)]
+  [...pair('3s', 0), ...pair('3p', 0), ...pair('3p', 1), up('3p', 2)],
+  [...pair('4s', 0), up('3d', 0), up('3d', 1), up('3d', 2), up('3d', 3)],
+  [...pair('4s', 0), ...pair('3d', 0), ...pair('3d', 1), ...pair('3d', 2), ...pair('3d', 3), up('3d', 4)]
 ];
 
 function blankState() { return {}; }

@@ -679,14 +679,14 @@ function threeNumbers(ctx, w, h, t, clock = 0) {
   // Phase C: ions. Magnesium gives two electrons, one to each chlorine.
   const cA = between(t, 0.51, 0.77, 0.03);
   if (cA > 0) {
-    const give = ease(win(t, 0.56, 0.68));
+    const give = ease(win(t, 0.53, 0.72));
     const mg = { x: w * 0.19, y: cy };
     const cls = [{ x: w * 0.5, y: cy }, { x: w * 0.81, y: cy }];
     const s = h * 0.46;
-    const outerLeft = give > 0.75 ? 0 : give > 0.2 ? 1 : 2;
+    const outerLeft = give > 0.78 ? 0 : give > 0.18 ? 1 : 2;
     shellsAt(ctx, mg.x, mg.y, [s * 0.25, s * 0.4, s * 0.55], [2, 8, outerLeft], t, clock, { er: 6, a: cA });
     cls.forEach((c, i) => {
-      const got = give > 0.62 + i * 0.12 ? 1 : 0;
+      const got = give > 0.68 + i * 0.12 ? 1 : 0;
       shellsAt(ctx, c.x, c.y, [s * 0.25, s * 0.4, s * 0.55], [2, 8, 7 + got], t, clock, { er: 6, a: cA });
     });
     alpha(ctx, cA, () => {
@@ -698,16 +698,47 @@ function threeNumbers(ctx, w, h, t, clock = 0) {
       tag(ctx, 'chlorine', cls[0].x, h * 0.93, { size: 24 });
       tag(ctx, 'chlorine', cls[1].x, h * 0.93, { size: 24 });
     });
-    // Two electrons cross the gap, one to each chlorine.
+    // Two electrons cross the gap slowly and clearly, highlighted with a luminous arc trail.
     [0, 1].forEach(i => {
-      const p = ease(win(give, i * 0.12, 0.62 + i * 0.12));
+      const p = ease(win(give, i * 0.14, 0.68 + i * 0.14));
       if (p > 0 && p < 1) {
-        const ex = lerp(mg.x + s * 0.55, cls[i].x - s * 0.55, p);
-        const ey = cy - Math.sin(p * Math.PI) * (130 + i * 70);
-        ball(ctx, ex, ey, 10, 'electron', { rim: false });
+        const arcH = 165 + i * 75;
+        const x0 = mg.x + s * 0.55;
+        const x1 = cls[i].x - s * 0.55;
+        const ex = lerp(x0, x1, p);
+        const ey = cy - Math.sin(p * Math.PI) * arcH;
+        ctx.save();
+        ctx.strokeStyle = C.amber;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([8, 6]);
+        ctx.globalAlpha = cA * 0.75;
+        ctx.beginPath();
+        for (let step = 0; step <= 24; step++) {
+          const u = (step / 24) * p;
+          const tx = lerp(x0, x1, u);
+          const ty = cy - Math.sin(u * Math.PI) * arcH;
+          if (step === 0) ctx.moveTo(tx, ty); else ctx.lineTo(tx, ty);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Highlight halo around moving electron
+        ctx.globalAlpha = cA * 0.32;
+        ctx.fillStyle = C.amber;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = cA * 0.95;
+        ctx.strokeStyle = C.amber;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 19, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        ball(ctx, ex, ey, 14, 'electron', { rim: false });
+        text(ctx, 'e⁻', ex, ey - 28, { size: 20, color: C.amber, weight: 700, a: cA });
       }
     });
-    const done = ease(win(t, 0.66, 0.72));
+    const done = ease(win(t, 0.69, 0.74));
     tag(ctx, 'cation  +2', mg.x, h * 0.12, { size: 24, color: C.text, edge: C.amber, a: cA * done });
     tag(ctx, 'anion  -1', cls[0].x, h * 0.12, { size: 24, color: C.text, edge: C.amber, a: cA * done });
     tag(ctx, 'anion  -1', cls[1].x, h * 0.12, { size: 24, color: C.text, edge: C.amber, a: cA * done });
@@ -857,20 +888,17 @@ function balanceBins(ctx, w, h, t, clock = 0) {
     });
   }
 
-  // Phase D: three samples against the one pivot.
+  // Phase D: natural chlorine balances at 35.5 regardless of sample size.
   const dA = ease(win(t, 0.76, 0.82));
   if (dA > 0) {
-    const samples = [['A', 30, 10], ['B', 20, 20], ['C', 36, 4]];
+    const samples = [['12 atoms (9 + 3)', 9, 3], ['24 atoms (18 + 6)', 18, 6], ['40 atoms (30 + 10)', 30, 10]];
     samples.forEach(([name, n35, n37], i) => {
       const cx = w * (0.2 + i * 0.3);
       const half = w * 0.12;
-      const torque = n35 * 0.5 - n37 * 1.5;
-      const tilt = -Math.max(-0.2, Math.min(0.2, torque * 0.006));
       alpha(ctx, dA, () => {
         const cy = h * 0.54;
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(tilt);
         const bg = ctx.createLinearGradient(0, -6, 0, 6);
         bg.addColorStop(0, '#a59c8c'); bg.addColorStop(1, '#4a443d');
         ctx.fillStyle = bg;
@@ -888,16 +916,11 @@ function balanceBins(ctx, w, h, t, clock = 0) {
         ctx.closePath(); ctx.fill();
         ctx.fillStyle = '#6b625a';
         ctx.fillRect(cx - 54, cy + 96, 108, 10);
-        const ok = Math.abs(torque) < 0.01;
-        tag(ctx, `sample ${name}`, cx, h * 0.82, { size: 24 });
-        tag(ctx, ok ? 'level' : 'off the pivot', cx, h * 0.9, { size: 22, color: ok ? C.amber : C.dust, edge: ok ? C.amber : C.steel });
+        tag(ctx, name, cx, h * 0.82, { size: 22 });
+        tag(ctx, 'average 35.5', cx, h * 0.9, { size: 22, color: C.amber, edge: C.amber });
       });
     });
-    tag(ctx, 'sold as natural: one levels', w * 0.5, h * 0.12, { size: 26, a: dA, color: C.text });
-  }
-  const f = stamp(t, 0.9, 0.97);
-  if (f > 0) {
-    [1, 2].forEach(i => brackets(ctx, w * (0.2 + i * 0.3) - w * 0.14, h * 0.54 - 150, w * 0.28, 300, C.amber, f, 4));
+    tag(ctx, 'natural chlorine: 3 parts Cl-35 to 1 part Cl-37', w * 0.5, h * 0.12, { size: 26, a: dA, color: C.text });
   }
 }
 

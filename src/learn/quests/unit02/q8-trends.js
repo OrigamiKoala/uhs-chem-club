@@ -150,39 +150,50 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { feel: true } });
-    const WANT = { na: 'one', mg: 'two', be: 'two', b: 'three' };
+    const shieldRig = {
+      id: 'shield',
+      kind: 'shield',
+      label: 'Electron Shielding',
+      at: { x: 75, y: 31 },
+      size: { w: 122, h: 52 },
+      noRun: true,
+      dials: {
+        protons: { min: 3, max: 12, step: 1, value: 11, label: 'Nucleus protons (+Z)' },
+        inner: { min: 0, max: 10, step: 1, value: 0, label: 'Inner electrons shielding' }
+      },
+      props: { backdrop: true }
+    };
     return {
-      title: 'What the Outer Electron Feels',
+      title: 'Electron Shielding',
       briefing: {
         speaker: SPEAKER,
-        body: 'The nucleus attracts every electron in an atom. The electrons in the inner shells lie between the nucleus and the outermost electrons and cancel part of its charge: this is called shielding.'
+        body: 'Inner-shell electrons sit between the positive nucleus and the outer valence electron, blocking part of the nucleus\'s pull. This blocking is called shielding.'
       },
-      prompt: 'What charge does the outermost electron feel in sodium, magnesium, beryllium and boron?',
+      prompt: 'Sodium has a +11 nucleus and 10 inner electrons: dial in its shielding electrons to see what net pull its outer electron feels.',
       widget,
       table: trendsTable({
-        pieces: [seatedAtom('li', NAMES.Li, 'Li', sp, { plain: true }), ...row([['na', 'Na'], ['mg', 'Mg'], ['be', 'Be'], ['b', 'B']], { plain: true })],
-        fixtures: [sp.fixture],
-        zones: { slots: sp.slots, trays: [tray('one', 'Feels +1', { x: 86, y: 17 }, 40), tray('two', 'Feels +2', { x: 128, y: 17 }, 40), tray('three', 'Feels +3', { x: 128, y: 46 }, 40)] }
+        pieces: [],
+        fixtures: [shieldRig],
+        zones: {}
       }),
       hints: [
-        'The instrument holds a lithium atom: read its three lines, and turn the Electron dial to compare an inner electron.',
-        'Compare lithium\'s three lines with the two numbers printed on each card.',
-        'Work out how the instrument gets lithium\'s third line from its first two, then do the same for each card.'
+        'Use the "Inner electrons shielding" dial and watch the amber pull lines from the +11 nucleus.',
+        'Each inner electron blocks one unit of nuclear charge from reaching the outer electron.',
+        'Set Nucleus protons to +11 and Inner electrons shielding to 10 so the outer electron feels +1.'
       ],
       check(state) {
-        const t = state.table;
-        const ids = Object.keys(WANT);
-        if (!ids.every(id => where(t, id) in { one: 1, two: 1, three: 1 })) return { ok: false, notYet: true, msg: 'Put all four atoms in a tray.' };
-        const wrong = ids.find(id => where(t, id) !== WANT[id]);
-        if (!wrong) return { ok: true };
-        const item = itemOf(t.pieces[wrong]);
-        return { ok: false, msg: `${cap(name(t, wrong))} has a nucleus of +${item.z} and ${item.z - felt(item.sym)} inner electrons, and its tray does not agree with those two numbers.` };
+        const d = state.table.fixtures.shield.dials;
+        const z = Math.round(d.protons.value);
+        const s = Math.round(d.inner.value);
+        if (s === 0) return { ok: false, notYet: true, msg: 'Add inner shielding electrons with the dial and watch how the pull lines change.' };
+        if (z === 11 && s === 10) return { ok: true };
+        if (z !== 11) return { ok: false, msg: `Sodium has 11 protons (+11), not +${z}.` };
+        return { ok: false, msg: `Sodium has 10 inner electrons (2 in shell 1, 8 in shell 2), not ${s}.` };
       },
       reward: {
-        log: 'Charge felt = nucleus charge less the inner electrons.',
+        log: 'Effective nuclear charge = nucleus charge minus inner shielding electrons.',
         title: 'Effective Nuclear Charge',
-        body: 'Sodium\'s nucleus of +11 is shielded by 10 inner electrons, leaving about +1. The charge left over is the effective nuclear charge.'
+        body: 'Sodium\'s +11 nucleus is shielded by 10 inner electrons, so its outer electron feels a net pull of about +1. This net pull is the effective nuclear charge.'
       }
     };
   })(),
@@ -482,7 +493,7 @@ const onRail = ids => ids.map((id, i) => put(id, `rail:${i}`));
 
 export const SOLUTIONS = [
   [{ predict: 'li' }],
-  [put('na', 'tray:one'), put('mg', 'tray:two'), put('be', 'tray:two'), put('b', 'tray:three')],
+  [{ setDial: { fixture: 'shield', dial: 'protons', value: 11 } }, { setDial: { fixture: 'shield', dial: 'inner', value: 10 } }],
   [put('li', SPRING_SLOT), put('c', SPRING_SLOT), ...onRail(['c', 'b', 'be', 'li'])],
   [put('na', SPRING_SLOT), put('k', SPRING_SLOT), ...onRail(['li', 'na', 'k'])],
   [{ run: STRIP }, ...onRail(['na', 'c', 'f'])],
@@ -495,7 +506,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [],
-  [put('na', 'tray:one'), put('mg', 'tray:two'), put('be', 'tray:one'), put('b', 'tray:two')],
+  [{ setDial: { fixture: 'shield', dial: 'protons', value: 11 } }, { setDial: { fixture: 'shield', dial: 'inner', value: 4 } }],
   [...onRail(['li', 'be', 'b', 'c'])],
   [...onRail(['k', 'na', 'li'])],
   [{ run: STRIP }, ...onRail(['c', 'na', 'f'])],

@@ -43,6 +43,14 @@ const RUNG2_AFTER_MS = 45000;
 
 const CALC_ICON = '<svg class="lq-calc-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>';
 
+const SUP_MAP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁺': '+', '⁻': '−' };
+const SUB_MAP = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9' };
+function escSuper(s) {
+  return esc(s)
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+/g, m => `<sup>${m.replace(/./g, c => SUP_MAP[c] || c)}</sup>`)
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]+/g, m => `<sub>${m.replace(/./g, c => SUB_MAP[c] || c)}</sub>`);
+}
+
 /**
  * The key legend: what every control on this stage's plate actually DOES, in
  * one plain sentence each.
@@ -804,7 +812,7 @@ export class LearnFrame {
     // A stage that asks for a number (`stage.entry`) gets a field to type it in, ahead of the keys.
     const e = stage.entry;
     const entryHtml = e
-      ? `<label class="lq-entry"><span class="lq-entry-label">${esc(e.label)}</span><input class="form-input lq-entry-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="12" data-entry="${esc(e.id)}" aria-label="${esc(e.label)}"><span class="lq-entry-unit">${esc(e.unit || '')}</span></label>`
+      ? `<label class="lq-entry"><span class="lq-entry-label">${esc(e.label)}</span><input class="form-input lq-entry-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="12" data-entry="${esc(e.id)}" data-unit="${esc(e.unit || '')}" aria-label="${esc(e.label)}"><span class="lq-entry-unit">${escSuper(e.unit || '')}</span></label>`
       : '';
     this.el.actions.innerHTML = `
       ${entryHtml}
@@ -1170,7 +1178,7 @@ export class LearnFrame {
    */
   /** The steps the Tour gives for the table on this stage (`table/tour.js`), or null when the stage is not a table. */
   setTourSteps(steps, table = null, tabletop = null) {
-    this.tourSteps = steps && steps.length ? steps : null;
+    this.tourSteps = Array.isArray(steps) ? steps : null;
     this.tourTable = table;
     this.tourTabletop = tabletop;
   }
@@ -1292,8 +1300,8 @@ export class LearnFrame {
             <span class="eyebrow lit" id="lq-briefing-title">${esc(st.name)}</span>
             ${steps.length > 1 ? `<span class="tag live">${i + 1} / ${steps.length}</span>` : ''}
           </div>
-          <p class="lq-brief-text">${esc(clampSentences(st.desc, 4))}</p>
-          ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` : ''}
+          <p class="lq-brief-text">${escSuper(clampSentences(st.desc, 4))}</p>
+          ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${escSuper(l)}</li>`).join('')}</ol>` : ''}
           <div class="debrief-controls-left lq-modal-keys">
             ${steps.length > 1 ? `<button type="button" class="btn-secondary" data-tour="back" ${i === 0 ? 'disabled' : ''}>Back</button>` : ''}
             ${last ? '' : '<button type="button" class="btn-secondary" data-tour="skip">Skip</button>'}
@@ -1324,12 +1332,38 @@ export class LearnFrame {
     const t = this.tourTable;
     if (!tt || !t || !st) return null;
     if (st.fx && t.fixtures?.[st.fx] && tt.screenRectOf) {
-      return tt.screenRectOf(fixtureLayout(t.fixtures[st.fx]).box);
+      const f = t.fixtures[st.fx];
+      const box = { ...fixtureLayout(f).box };
+      const slotId = f.props?.slot;
+      const sl = slotId && t.zones?.slots?.[slotId];
+      if (sl) {
+        const sr = sl.r || 6;
+        box.x0 = Math.min(box.x0, sl.at.x - sr);
+        box.y0 = Math.min(box.y0, sl.at.y - sr);
+        box.x1 = Math.max(box.x1, sl.at.x + sr);
+        box.y1 = Math.max(box.y1, sl.at.y + sr);
+      }
+      return tt.screenRectOf(box);
+    }
+    if (st.drum && t.zones?.containers?.[st.drum] && tt.screenRectOf) {
+      const c = t.zones.containers[st.drum];
+      const r = c.r || 7;
+      return tt.screenRectOf({ x0: c.at.x - r, y0: c.at.y - r, x1: c.at.x + r, y1: c.at.y + r });
     }
     if (st.pc && t.pieces?.[st.pc] && tt.screenRectOf) {
       const p = t.pieces[st.pc];
-      const r = 4;
-      return tt.screenRectOf({ x0: p.at.x - r, y0: p.at.y - r, x1: p.at.x + r, y1: p.at.y + r });
+      const r = 4.5;
+      const box = { x0: p.at.x - r, y0: p.at.y - r, x1: p.at.x + r, y1: p.at.y + r };
+      if (p.kind === 'atom') {
+        const other = Object.values(t.pieces || {}).find(q => q.id !== p.id && !q.hidden && q.kind === 'atom');
+        if (other) {
+          box.x0 = Math.min(box.x0, other.at.x - r);
+          box.y0 = Math.min(box.y0, other.at.y - r);
+          box.x1 = Math.max(box.x1, other.at.x + r);
+          box.y1 = Math.max(box.y1, other.at.y + r);
+        }
+      }
+      return tt.screenRectOf(box);
     }
     if (st.tool) {
       const el = document.querySelector(`[data-tool="${st.tool}"]`);
@@ -1452,8 +1486,8 @@ export class LearnFrame {
           <span class="eyebrow lit" id="lq-tour-title">${esc(st.name)}</span>
           ${steps.length > 1 ? `<span class="tag live">${i + 1} / ${steps.length}</span>` : ''}
         </div>
-        <p class="lq-tour-text">${esc(st.desc)}</p>
-        ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` : ''}
+        <p class="lq-tour-text">${escSuper(st.desc)}</p>
+        ${st.lines?.length ? `<ol class="lq-brief-worked">${st.lines.map(l => `<li>${escSuper(l)}</li>`).join('')}</ol>` : ''}
         <div class="lq-tour-actions">
           ${i > 0 ? '<button type="button" class="btn-secondary" data-tour="back">Back</button>' : ''}
           ${last ? '' : '<button type="button" class="btn-secondary" data-tour="skip">Skip</button>'}
@@ -1472,7 +1506,7 @@ export class LearnFrame {
       positionCard(this.tourTargetRect(st));
       card.querySelector('[data-tour="next"], [data-tour="skip"]:last-of-type')?.focus();
 
-      if (!st.isBriefing && (st.fx || st.pc || st.tool || st.demo)) {
+      if (!st.isBriefing && (st.fx || st.pc || st.tool || st.demo || st.drum)) {
         const mine = i;
         import('../table/tour-demo.js')
           .then(m => m.playLiveTourDemo(this.tourTabletop, this.tourTable, st, updatePointer))

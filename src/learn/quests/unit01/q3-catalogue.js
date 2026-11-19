@@ -428,7 +428,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
-        ...chartCards({ skip: [] })
+        ...chartCards({ skip: [] }),
+        card('c19', { x: X(0), y: 48.5 }, { fixed: true })
       ],
       fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Radius (pm)', at: { x: 75, y: 8 }, size: { w: 66, h: 12 }, noRun: true, dials: { radius: { min: 0, max: 300, step: 1, value: 0, label: 'Estimated radius (pm)' } } }]
     }),

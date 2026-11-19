@@ -163,3 +163,8 @@ Make sure at the end of quest6 (electron configuration) there are stages coverin
 ![alt text](image-75.png) Remove the animation part of this explainer.
 
 ![alt text](image-76.png) Remove the animation part of this explainer.
+
+![alt text](image-77.png) Remove this tour.
+
+![alt text](image-78.png) This is a terrible way to introduce electron shielding - please delete this stage and replace it with a more interactive, visual way to introduce electron shielding.
+

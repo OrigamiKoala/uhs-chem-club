@@ -175,6 +175,8 @@ export const OPTICS_KIT = {
   piece3d,
   dress3d,
   slot3d: slotRole,
+  // Lift pieces seated in a socket/cradle above the 0.008 m socket base to prevent z-fighting.
+  restHeight: (p) => (p.zone && p.zone.startsWith('slot:') ? 0.009 : 0),
   deckStyle: () => 'instrument',
   printed: p => String(p.label),
   faceKey
@@ -291,7 +293,7 @@ export function spectrograph(id, label, at, { cell = false, ref = false, detecto
   const captions = [{ dx: 14, dy: dy + 9.8, text: 'SOCKET' }];
   let next = 14 + 13 + 2;
   if (cell) { slots.push(slot(`${id}.cell`, { x: x0 + next + 12, y: slotY }, { w: 24, h: 14 })); captions.push({ dx: next + 12, dy: dy + 9.8, text: 'CELL' }); next += 24 + 2; }
-  if (ref) { slots.push(slot(`${id}.ref`, { x: x0 + next + 13, y: slotY }, { w: 26, h: 14 })); captions.push({ dx: next + 13, dy: dy + 9.8, text: 'ALONGSIDE' }); }
+  if (ref) { slots.push(slot(`${id}.ref`, { x: x0 + next + 13, y: slotY }, { w: 26, h: 14 })); captions.push({ dx: next + 13, dy: dy + 9.8, text: 'REFERENCE' }); }
   return {
     fixture: {
       id, kind: 'band', label, at: { ...at }, size: sz, noRun: true, dials: {},
@@ -310,7 +312,7 @@ export function spectrograph(id, label, at, { cell = false, ref = false, detecto
  */
 export function photocell(id, label, at, { settings = null, start = 1, lamp: lampSlot = false, brightness = { start: 3 }, record = false, compact = false, size = null, plot = null, showHz = false } = {}) {
   const rows = (settings ? 1 : 0) + (typeof brightness === 'object' ? 1 : 0);
-  const tubeTop = compact ? 14 : rows >= 2 ? 23 : rows === 1 ? 17 : 12;
+  const tubeTop = compact ? 15 : rows >= 2 ? 23 : rows === 1 ? 18 : 12;
   const tubeH = 15;
   const meterH = compact ? 9 : 10;
   const sz = size || { w: 100, h: tubeTop + tubeH + 3 + meterH + 3 };

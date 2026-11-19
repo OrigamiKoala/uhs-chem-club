@@ -183,29 +183,39 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
   }
 
   const hasFixture = kind => Object.values(table.fixtures || {}).some(f => f.kind === kind);
+  const hasPiece = kind => Object.values(table.pieces || {}).some(p => !p.hidden && p.kind === kind);
+  const allPieces = Object.values(table.pieces || {}).filter(p => !p.props?.scratch && !p.hidden);
   const seen = new Set();
-  for (const p of Object.values(table.pieces || {})) {
-    if (p.props?.scratch || p.hidden) continue;
+  for (const p of allPieces) {
     let kind = p.kind;
     const own = PIECE[`${kit}:${kind}`];
     if (own) kind = `${kit}:${kind}`;
-    else if (kind === 'neutron' || kind === 'electron') kind = 'proton';
+    else if (kind === 'neutron') kind = 'proton';
+    else if (kind === 'electron') {
+      const hasElectronTray = Object.values(table.zones?.trays || {}).some(z => z.accepts?.includes('electron'));
+      kind = hasElectronTray ? 'electron' : 'proton';
+    }
     if (seen.has(kind)) continue;
     seen.add(kind);
     if (SKIP_PIECES.has(kind)) continue;
-    // Parts the instrument's own step already explains.
+    // Parts the instrument's own step already explains, or pieces that cannot be moved on this stage.
     if (kind === 'lens' && hasFixture('scope')) continue;
     if (kind === 'detector' && hasFixture('beam')) continue;
-    if (kind === 'dish' && (hasFixture('scope') || hasFixture('cutter'))) continue;
+    if (kind === 'dish' && (hasFixture('scope') || hasFixture('cutter') || hasPiece('cutter') || !hasPiece('lens'))) continue;
     if (kind === 'speck' && hasFixture('field')) continue;
     if (kind === 'sample' && (hasFixture('assay') || hasFixture('tester') || hasFixture('flask'))) continue;
-    if (kind === 'crate' && (hasFixture('balance') || hasFixture('scale'))) continue;
+    if (kind === 'crate') continue;
     if (kind === 'charge' && hasFixture('cup')) continue;
     if (kind === 'ptc' && hasFixture('cells')) continue;
+    if (kind === 'specimen' && allPieces.filter(q => q.kind === 'specimen').every(q => q.fixed)) continue;
     if (ligarSkip(table, p)) continue;
     // A marked particle is tapped, not carried.
     if (kind === 'proton' && p.props?.markable) {
       add('pc_marks', 'Marking particles', 'Tap a particle to mark or unmark it.', { pc: p.id });
+      continue;
+    }
+    if (kind === 'electron') {
+      add('pc_electron', 'Electrons', 'Drag an electron onto a shell ring.', { pc: p.id });
       continue;
     }
     const lig = ligarPiece(kind, kit, table);
@@ -215,8 +225,18 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     add(`pc_${kind.replace(':', '_')}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''), { pc: p.id });
   }
 
+  // On the photocell bench, introduce dragging a metal plate onto the holder before adjusting the photocell dials.
+  if (kit === 'optics') {
+    const cellIdx = steps.findIndex(s => s.flag === 'tour_optics_fx_cell');
+    const plateIdx = steps.findIndex(s => s.flag === 'tour_optics_pc_optics_plate');
+    if (cellIdx !== -1 && plateIdx > cellIdx) {
+      const [plateStep] = steps.splice(plateIdx, 1);
+      steps.splice(cellIdx, 0, plateStep);
+    }
+  }
+
   const drum = Object.values(table.zones?.containers || {}).find(z => z.id === 'drum');
-  if (drum) add('drum', drum.label || 'Drum', 'Drag from the drum onto the Pour pan.');
+  if (drum) add('drum', drum.label || 'Drum', 'Click the drum, then click the empty pan to transfer.', { drum: drum.id });
 
   for (const t of table.tools || []) {
     const entry = TOOL[t];

@@ -100,9 +100,9 @@ export function buildDoors(ship, hull) {
         box(frame, M.stripAmberMat, 0.018, 1.4, 0.006, j * (half + pw / 2), 1.0, s * (depth / 2 + 0.012));
       }
 
-      // Header: the stencilled plate naming what is on THIS side.
+      // Header: the stencilled plate naming the room beyond the doorway.
       const probe = 0.5;
-      const id = roomAt(d.pos[0] + d.through[0] * probe * s, d.pos[1] + d.through[1] * probe * s);
+      const id = roomAt(d.pos[0] - d.through[0] * probe * s, d.pos[1] - d.through[1] * probe * s);
       const name = id ? ROOMS[id].name : null;
       box(frame, M.gunmetalMat, Math.min(1.1, d.clear - 0.3), 0.15, 0.02, 0, DOOR_H + pw / 2, s * (depth / 2 + 0.01));
       if (name) {

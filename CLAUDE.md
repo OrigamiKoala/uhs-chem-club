@@ -18,7 +18,7 @@ Avalon is the UHS Chemistry Club's competition portal for middle- and high-schoo
 - `src/learn/` — Learn track (curriculum registry, quests, tabletop kits in `src/learn/table/kits/`, practice banks in `src/learn/bank/`).
 - `src/quest3d/` — Charge Gardens chamber (Quest 1 / competition campaign).
 - `src/three/` — Persistent WebGL stage (`src/three/stage.js`) and 3D worlds.
-- `src/screens/` & `src/ui/` — DOM screens, route views, and shared UI (`calculator.js`, `galaxy-map.js`).
+- `src/screens/` & `src/ui/` — DOM screens, route views, and shared UI (`calculator.js` with scientific-notation entry unit scaling, `galaxy-map.js`, `tallow-explainers.js` custom reward animations, `photoelectric-explainer.js`, `orbital-3d-viewer.js`).
 - `api/[...route].js` & `apps-script/` — Vercel serverless proxy and Google Sheets backend.
 
 ## Teaching Doctrine (Learn Track)

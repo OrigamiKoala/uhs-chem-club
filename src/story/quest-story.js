@@ -528,12 +528,12 @@ export const QUEST_STORY = {
   'unit01/q1-grain': {
     scene: 'grain-resolve',
     beats: [
-      { to: 0.22, say: 'Zoom in far enough and the grey powder stops being smooth. It is atoms of carbon and sodium, lying loose beside each other.' },
-      { to: 0.46, say: 'A substance made of one kind of atom is an element. Different atoms sitting together without joining make a mixture, and that is all this powder is.' },
-      { to: 0.70, say: 'Atoms that are joined make a molecule. The cutter splits a molecule into its atoms, but a single atom never splits.' },
-      { to: 0.90, say: 'Join atoms of different elements and you have a compound, a new substance. Loose atoms never become one, so anything new would have to be inside the atoms.' }
+      { to: 0.22, say: 'Zoom in far enough on a sample and it stops being smooth. Matter is made of tiny atoms.' },
+      { to: 0.46, say: 'A substance made of one kind of atom is an element. Different atoms sitting together without joining make a mixture.' },
+      { to: 0.70, say: 'Atoms that are joined make a molecule. The bonds in a molecule can break, but a single atom never splits.' },
+      { to: 0.90, say: 'Join atoms of different elements and you have a compound, a new substance with its own formula.' }
     ],
-    filed: 'Filed: the powder is ordinary and nothing in it is new.'
+    filed: 'Filed: elements, mixtures and compounds all come down to how atoms sit together.'
   },
   'unit01/q2-core': {
     scene: 'beam-foil',
@@ -571,9 +571,9 @@ export const QUEST_STORY = {
       { to: 0.24, say: 'A real sample of an element is a mixture of isotopes, in proportions that are fixed. Here, three chlorine atoms in four are chlorine-35.' },
       { to: 0.50, say: 'The listed mass is an average over that mixture, weighted by how common each isotope is, so it leans toward the common one.' },
       { to: 0.74, say: 'Any single atom has a whole-number mass, but an average rarely does. The decimal tells you how the mix sits: 35.5 is nearer 35 than 37.' },
-      { to: 0.90, say: 'Natural chlorine balances at 35.5, however much of it is weighed. Of the three samples sold as natural, only one did.' }
+      { to: 0.90, say: 'Natural chlorine always balances at 35.5, because three quarters of its atoms have mass 35 and one quarter have mass 37.' }
     ],
-    filed: 'Filed: two of the raiders\' samples had been tampered with.'
+    filed: 'Filed: the average atomic mass is weighted by how common each isotope is.'
   },
   'unit01/q6-weigh': {
     scene: 'scale-count',
@@ -924,7 +924,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.25, say: 'Light is a wave, and every wave has a wavelength and a frequency that trade against each other through one fixed speed, 3.00 × 10⁸ metres per second.' },
       { to: 0.5, say: 'What the eye calls colour is a thin slice of the electromagnetic spectrum. A radio mast, an oven and an X-ray tube sit on the same scale, at other wavelengths.' },
-      { to: 0.75, say: 'Red and violet cross the same gap in the same time. Next I want to know why a bright red lamp cannot knock an electron loose when a faint violet one can.' }
+      { to: 0.75, say: 'Red and violet cross the same gap in the same time: every colour of light travels at the same speed.' }
     ],
     filed: 'Filed: the beacons\' light can be told from any other wave by its wavelength alone.'
   },
@@ -961,7 +961,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.25, say: 'Numbers name every box: n for its shell, l for its shape and ml for its orientation.' },
       { to: 0.5, say: 'A box holds two electrons that point opposite ways, and no two electrons in an atom share all four numbers. From that one rule the capacity of every shell follows.' },
-      { to: 0.75, say: 'The rows of the periodic table are those shells counted out loud: two, eight, eighteen. Next I fill the boxes in the order an atom actually does.' }
+      { to: 0.75, say: 'Shell 1 holds 1 orbital (2 electrons), shell 2 holds 4 orbitals (8 electrons), and shell 3 holds 9 orbitals (18 electrons). Those capacities match the lengths of the rows on the periodic table.' }
     ],
     filed: 'Filed: the records board is sorted by address again, and no electron on it shares all four numbers with another.'
   },
@@ -1104,7 +1104,7 @@ export const storyFor = key => QUEST_STORY[key] || null;
 /** The session flag that records an animation as seen. It gates nothing: a quest ends on it every time. */
 export const storyFlag = key => `storyAnim:${key}`;
 
-/** The lines Vess says over a quest's scene, in order, each with the scene time its picture ends on: the beats, then the filed line. */
+/** The lines Vess says over a quest's scene, in order, each with the scene time its picture ends on. */
 export function storyLines(story) {
-  return [...story.beats.map(b => ({ say: b.say, to: b.to })), { say: story.filed, to: 1, filed: true }];
+  return story.beats.map((b, idx, arr) => ({ say: b.say, to: idx === arr.length - 1 ? 1 : b.to }));
 }

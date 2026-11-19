@@ -49,6 +49,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Predicting Formula Mass',
+    noTour: true,
+    initActions: [['c', 'h1'], ['c', 'h2'], ['c', 'h3'], ['c', 'h4']].map(j => ({ join: j })),
     briefing: {
       speaker: SPEAKER,
       body: 'The mass of one atom is measured in atomic mass units, u. The plate lists the mass of each kind of atom.'
@@ -60,8 +62,11 @@ export const STAGES = [
       bounds: { ...TABLE_BOUNDS },
       recorder: PARKED_RECORDER,
       pieces: [
-        { id: 'c', kind: 'atom', label: 'C', at: { x: 28, y: 36 }, props: { el: 'C' } },
-        ...[44, 58, 72, 86].map((x, i) => ({ id: `h${i + 1}`, kind: 'atom', label: 'H', at: { x, y: 36 }, props: { el: 'H' } }))
+        { id: 'c', kind: 'atom', label: 'C', at: { x: 58, y: 42 }, props: { el: 'C' } },
+        { id: 'h1', kind: 'atom', label: 'H', at: { x: 58, y: 30.5 }, props: { el: 'H' } },
+        { id: 'h2', kind: 'atom', label: 'H', at: { x: 58, y: 53.5 }, props: { el: 'H' } },
+        { id: 'h3', kind: 'atom', label: 'H', at: { x: 46.5, y: 42 }, props: { el: 'H' } },
+        { id: 'h4', kind: 'atom', label: 'H', at: { x: 69.5, y: 42 }, props: { el: 'H' } }
       ],
       fixtures: [
         { id: 'plate', kind: 'plate', label: 'Atomic masses', at: { x: 58, y: 16 }, size: { w: 48, h: 16 }, noRun: true, props: { lines: ['carbon (C) 12.0 u', 'hydrogen (H) 1.0 u'] } }

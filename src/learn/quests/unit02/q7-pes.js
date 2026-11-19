@@ -208,8 +208,7 @@ export const STAGES = [
       reward: {
         log: 'The peak heights add up to the number of electrons.',
         title: 'The Photoelectron Spectrum',
-        body: 'Peaks of 2, 2 and 4 electrons add up to 8. An atom with 8 electrons has 8 protons, so the specimen is oxygen.',
-        model: { type: 'rack', z: 8, caption: 'Oxygen\'s three peaks as three subshells: 2 electrons, 2 electrons and 4 electrons.' }
+        body: 'Peaks of 2, 2 and 4 electrons add up to 8. An atom with 8 electrons has 8 protons, so the specimen is oxygen.'
       }
     };
   })(),
@@ -281,8 +280,7 @@ export const STAGES = [
       reward: {
         log: 'Peak by peak, the spectrum is the configuration.',
         title: 'The Spectrum Is the Configuration',
-        body: 'Read from the highest binding energy to the lowest, the peak heights give the configuration subshell by subshell: 1s² 2s² 2p³, which is nitrogen.',
-        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s subshells, lowest at the bottom: 2, 2 and 3 electrons, the three 2p electrons each in an orbital of its own.' }
+        body: 'Read from the highest binding energy to the lowest, the peak heights give the configuration subshell by subshell: 1s² 2s² 2p³, which is nitrogen.'
       }
     };
   })(),

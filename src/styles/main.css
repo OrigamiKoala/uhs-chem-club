@@ -201,21 +201,7 @@ body::after {
 }
 
 .nav-btn.active {
-  color: var(--accent-amber);
-  background: rgba(15, 14, 18, 0.95);
-  border-color: var(--accent-amber);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 12px rgba(229, 155, 36, 0.2);
-}
-
-.nav-btn.active::after {
-  content: '';
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: -1px;
-  height: 2px;
-  background: var(--accent-amber);
-  box-shadow: 0 0 6px var(--accent-amber);
+  /* Keep clicked nav buttons visually unchanged */
 }
 
 /* Mobile menu trigger and sidebar — hidden on desktop */

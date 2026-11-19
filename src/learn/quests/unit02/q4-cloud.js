@@ -39,15 +39,15 @@ import {
   SLICE_HALF
 } from '../../table/kits/cloud.js';
 
-export const meta = { stageCount: 5 };
+export const meta = { stageCount: 6 };
 
 /** Specific phrases first, so "p orbital" is read as the phrase and not as a stray "orbital". */
 export const VOCABULARY = [
-  { term: /\bd orbitals?\b/i, introducedAt: 5 },
-  { term: /\bp orbitals?\b/i, introducedAt: 4 },
+  { term: /\bd orbitals?\b/i, introducedAt: 6 },
+  { term: /\bp orbitals?\b/i, introducedAt: 5 },
   { term: /\bs orbitals?\b/i, introducedAt: 2 },
-  { term: /\bnodes?\b/i, introducedAt: 4 },
-  { term: /\bstanding waves?\b/i, introducedAt: 3 },
+  { term: /\bnodes?\b/i, introducedAt: 5 },
+  { term: /\bstanding waves?\b/i, introducedAt: 4 },
   { term: /\borbitals?\b/i, introducedAt: 2 },
   { term: /\bprobabilit(?:y|ies)\b/i, introducedAt: 2 }
 ];
@@ -178,28 +178,72 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
+    const b = cloudPlate('b', 'SAMPLE B', { x: 40, y: 31 }, '2s', { extent: 10 });
+    return {
+      title: 'Particle and Wave',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Fire single shots to watch individual electron hits, then switch the exposure up to 500 to see the overall pattern that builds up.'
+      },
+      prompt: 'From single hits and the 500-shot pattern, how does an electron behave?',
+      widget,
+      table: cloudTable({
+        pieces: [
+          { id: 'both', kind: 'tile', label: 'Both particle & wave', at: { x: 96, y: 28 }, props: { choice: 'both' } },
+          { id: 'part', kind: 'tile', label: 'Only a particle', at: { x: 126, y: 28 }, props: { choice: 'part' } },
+          { id: 'wave', kind: 'tile', label: 'Only a wave', at: { x: 111, y: 48 }, props: { choice: 'wave' } }
+        ],
+        fixtures: [b.fixture],
+        zones: {
+          slots: [{ id: 'ans', label: 'Answer', at: { x: 111, y: 8 }, size: { w: 28, h: 10 }, accepts: ['tile'] }]
+        }
+      }),
+      hints: [
+        'Press "Measure" at 1 shot to see a single dot land, then turn Exposure to 500 and press "Measure" again.',
+        'Notice that each individual measurement is a single localized point, while hundreds of measurements form concentric wave-like rings.',
+        'Drag the card that captures both single-hit particle behaviour and many-hit wave behaviour into the Answer slot.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = plateRead(t, 'b');
+        if (r.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Take at least 500 measurements first so the overall ring pattern appears.' };
+        const held = Object.values(t.pieces).find(p => p.zone === 'slot:ans');
+        if (!held) return { ok: false, notYet: true, msg: 'Place one of the three cards in the Answer slot.' };
+        if (held.id === 'both') return { ok: true };
+        return { ok: false, msg: held.id === 'part' ? 'Each single hit is a point, yet hundreds of hits form wave-like rings with an empty gap between them.' : 'Hundreds of hits form a wave-like pattern, yet each single measurement lands as one discrete dot.' };
+      },
+      reward: {
+        log: 'Single hits are dots; many hits form wave-like rings.',
+        title: 'Wave-Particle Duality',
+        body: 'Each measurement finds the electron at one point like a particle, yet the pattern of many measurements spreads in rings like a wave. Electrons act as both particles and waves.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
     const track = ringTrack('track', { x: 37, y: 40 });
     const tiles = RING_STRINGS.map((pm, i) => ringTile(`s${pm}`, { x: 20 + i * 22, y: 9 }, pm));
     return {
       title: 'Waves That Fit',
       briefing: {
         speaker: SPEAKER,
-        body: 'An electron in an atom behaves as a wave, with wavelengths measured in picometres (pm, a trillionth of a metre). A wave running round a ring lasts only if, after each lap, its crests land on its own crests; otherwise crests land on troughs (the lows of the wave) and the wave cancels itself.'
+        body: 'Because an electron acts as a wave (measured in picometres, pm), a wave wrapping round a ring reinforces itself only when crests meet crests after each lap; otherwise crests meet troughs and it cancels out.'
       },
-      prompt: 'Which wavelengths make a wave that lasts on this ring?',
+      prompt: 'Which wavelengths grow stronger on this ring and which grow weaker?',
       widget,
       table: cloudTable({
         pieces: tiles,
         fixtures: [track.fixture],
         zones: {
           slots: track.slots,
-          trays: [tray('closes', 'Lasts', { x: 110, y: 31 }, { w: 66, h: 18 }, 20), tray('smears', 'Cancels itself', { x: 110, y: 55 }, { w: 66, h: 18 }, 20)]
+          trays: [tray('closes', 'Grows stronger', { x: 110, y: 31 }, { w: 66, h: 18 }, 20), tray('smears', 'Grows weaker', { x: 110, y: 55 }, { w: 66, h: 18 }, 20)]
         }
       }),
       hints: [
-        'Drag a wave onto the ring track and watch what its laps do.',
-        'Compare a wave whose laps all draw the same line with one whose laps spread into a band.',
-        'Work out how many wavelengths of each wave go round the track, and see what the waves that last have in common.'
+        'Drag a wave onto the ring track and watch whether the 3D wave grows taller or shrinks away.',
+        'Compare wavelengths that divide the track circumference into a whole number of waves with those that do not.',
+        'Waves that fit a whole number of times grow stronger; all others grow weaker and vanish.'
       ],
       check(state) {
         const t = state.table;
@@ -207,79 +251,94 @@ export const STAGES = [
         if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every wave in a tray.' };
         const wrong = RING_STRINGS.find(pm => where(t, `s${pm}`) !== (ringFits(pm, RING_CIRCUMFERENCE_PM).fits ? 'closes' : 'smears'));
         if (wrong === undefined) return { ok: true };
-        return { ok: false, msg: `The ${wrong} pm wave is in a tray that disagrees with how its laps meet on the track.` };
+        return { ok: false, msg: `The ${wrong} pm wave is in a tray that disagrees with what happens on the track.` };
       },
       reward: {
-        log: 'Only whole numbers of wavelengths last.',
+        log: 'Only whole numbers of wavelengths grow stronger.',
         title: 'Standing Wave',
-        body: 'Only a whole number of wavelengths fits the ring; any other wave cancels itself. A wave that lasts like this is a standing wave.',
+        body: 'Only a whole number of wavelengths fits the ring and reinforces into a standing wave; any other wavelength cancels itself out.',
         model: {
           type: 'standing-wave',
-          caption: 'A wave that does not fit: the second lap\'s crests land on the first lap\'s troughs and cancel. A wave that fits: crests land on crests, lap after lap.'
+          caption: 'A wave that does not fit cancels out; a whole number of wavelengths reinforces into a standing wave.'
         }
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 4 */
-  (() => {
-    const c = cloudPlate('c', 'SAMPLE C', { x: 36, y: 31 }, '2pz', { view: 'view', extent: 12 });
-    const v = viewFixture('view', { x: 104, y: 22 }, { slice: true });
-    return {
-      title: 'Two Lobes',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'Sample C holds another electron cloud. Measure dots, then turn the view with the joystick and switch on Slice to look through a thin slab.'
-      },
-      prompt: 'Where round the nucleus is this electron never found?',
-      widget,
-      table: cloudTable({ pieces: [], fixtures: [c.fixture, v] }),
-      hints: [
-        'Press "Measure" until the plate holds a few hundred dots, then turn the cloud with the joystick; the Slice switch keeps only a thin slab through the nucleus.',
-        'Compare the cloud from several sides, and notice where the dots gather and where there are none.',
-        'A slab through the nucleus that holds no dots is a place the electron is never found, so look for the view whose slice is empty.'
-      ],
-      check(state) {
-        const t = state.table;
-        const r = plateRead(t, 'c');
-        if (r.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Take more measurements first: a few dots do not show where none fall.' };
-        if (!r.slice) return { ok: false, msg: 'The slice is off, so every dot is showing.' };
-        if (r.shown.length <= EMPTY_SLICE * r.fired) return { ok: true };
-        return { ok: false, msg: `This slice through the nucleus still holds ${r.shown.length} dots, so the electron is found there.` };
-      },
-      reward: {
-        log: 'Two lobes, and a flat plane with nothing in it.',
-        title: 'p Orbital',
-        body: 'The cloud has two lobes with a flat plane between them where the electron is never found: a node. This two-lobed orbital is a p orbital.',
-        model: { type: 'orbital', orbital: '2pz', dots: 260, slice: true, caption: 'A p orbital: two lobes of dots with an empty plane, the node, between them.' }
       }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const orbitals = ['3pz', '3dxy', '3dz2', '3dx2y2', '3dyz'];
-    const cards = orbitals.map((o, i) => cloudCard(`k${'abcde'[i]}`, `SAMPLE ${'ABCDE'[i]}`, { x: 12 + i * 21, y: 11 }, o, { extent: 24 }));
-    const v = viewFixture('view', { x: 128, y: 15 });
+    const orbitals = ['1s', '2pz', '2s', '2px'];
+    const cards = orbitals.map((o, i) => cloudCard(`sp${i + 1}`, `CLOUD ${'ABCD'[i]}`, { x: 15 + i * 24, y: 12 }, o, { extent: 12 }));
+    const v = viewFixture('view', { x: 126, y: 15 });
     return {
-      title: 'Five Clouds',
-      prompt: 'What shape is each of the five orbitals?',
+      title: 's and p Orbitals',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Not every orbital is round. While s orbitals are spherical, p orbitals have two opposite lobes separated by a flat empty plane (a node) through the nucleus.'
+      },
+      prompt: 'Rotate each cloud with the joystick, then sort the spherical s orbitals and two-lobed p orbitals.',
       widget,
       table: cloudTable({
         pieces: cards,
         fixtures: [v],
         zones: {
           trays: [
-            tray('two', 'Two lobes', { x: 22, y: 43 }, { w: 38, h: 22 }),
-            tray('four', 'Four lobes', { x: 72, y: 43 }, { w: 57, h: 22 }),
-            tray('ring', 'Two lobes and a ring', { x: 123, y: 43 }, { w: 38, h: 22 })
+            tray('sorb', 's orbital (round)', { x: 40, y: 46 }, { w: 60, h: 20 }),
+            tray('porb', 'p orbital (two lobes)', { x: 110, y: 46 }, { w: 60, h: 20 })
+          ]
+        }
+      }),
+      hints: [
+        'Drag the joystick to turn all four clouds in 3D and check their shapes from multiple angles.',
+        'An s orbital looks round from every angle; a p orbital shows two separate lobes with a gap through the middle.',
+        'Sort the two round clouds into the s orbital tray and the two two-lobed clouds into the p orbital tray.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = ['sp1', 'sp2', 'sp3', 'sp4'];
+        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put all four clouds in a tray.' };
+        const want = { sp1: 'sorb', sp2: 'porb', sp3: 'sorb', sp4: 'porb' };
+        const wrong = ids.find(id => where(t, id) !== want[id]);
+        if (!wrong) return { ok: true };
+        return { ok: false, msg: `${t.pieces[wrong].label} has a different shape when rotated from the side.` };
+      },
+      reward: {
+        log: 'Spherical s orbitals separated from two-lobed p orbitals.',
+        title: 'p Orbitals and Nodes',
+        body: 'A p orbital has two lobes on opposite sides of the nucleus with a flat plane between them where the electron is never found: a node.',
+        model: { type: 'orbital', orbital: '2pz', dots: 260, slice: true, caption: 'A p orbital: two lobes with an empty nodal plane between them.' }
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 6 */
+  (() => {
+    const orbitals = ['3pz', '3dxy', '3dz2', '3dx2y2', '3dyz'];
+    const cards = orbitals.map((o, i) => cloudCard(`k${'abcde'[i]}`, `SAMPLE ${'ABCDE'[i]}`, { x: 12 + i * 21, y: 11 }, o, { extent: 24 }));
+    const v = viewFixture('view', { x: 128, y: 15 });
+    return {
+      title: 'd Orbitals',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Beyond s and p orbitals sit the five d orbitals: four of them have four lobes like a cloverleaf, and one has two lobes with a ring round its middle.'
+      },
+      prompt: 'Rotate the clouds to tell the p orbital apart from the four d orbitals by shape.',
+      widget,
+      table: cloudTable({
+        pieces: cards,
+        fixtures: [v],
+        zones: {
+          trays: [
+            tray('two', 'p orbital (two lobes)', { x: 22, y: 43 }, { w: 38, h: 22 }),
+            tray('four', 'd orbital (four lobes)', { x: 72, y: 43 }, { w: 57, h: 22 }),
+            tray('ring', 'd orbital (lobes + ring)', { x: 123, y: 43 }, { w: 38, h: 22 })
           ]
         }
       }),
       hints: [
         'Turn all five clouds with the joystick, then drag each one into a tray.',
-        'Compare each cloud with the two-lobed p orbital, and look for extra lobes or a ring.',
-        'One side can hide a lobe behind another, so decide from the view in which each cloud shows the most separate parts.'
+        'Compare each cloud with the two-lobed p orbital, and look for four lobes or a ring round the middle.',
+        'One side can hide a lobe behind another, so decide from the angle that shows the most separate parts.'
       ],
       check(state) {
         const t = state.table;
@@ -291,7 +350,7 @@ export const STAGES = [
         return { ok: false, msg: `${t.pieces[wrong].label} shows a different number of lobes from another side than its tray names.` };
       },
       reward: {
-        log: 'Four lobes, four lobes, and one with a ring.',
+        log: 'p orbital separated from four-lobed and ringed d orbitals.',
         title: 'd Orbitals',
         body: 'The two-lobed cloud is a p orbital. The other four—three with four lobes here, and one with two lobes and a ring round its middle—are d orbitals.',
         model: {
@@ -307,9 +366,10 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   2: ['Lay a film on the plate to count the dots inside it.'],
-  3: ['Try a wave on the track.'],
-  4: ['Move the joystick to view the cloud from another side.'],
-  5: ['Move the joystick to view the clouds from different sides, then drag each cloud into a tray.']
+  3: ['Try 1 shot, then 500 shots, and place your answer card.'],
+  4: ['Try a wave on the track.'],
+  5: ['Drag the joystick to rotate the clouds, then sort them.'],
+  6: ['Drag the joystick to rotate the clouds, then sort them.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -353,8 +413,9 @@ const goes = (id, tray) => [put(id, 'slot:track.tile'), put(id, `tray:${tray}`)]
 export const SOLUTIONS = [
   [{ predict: 'ball' }],
   [...fire('a'), put('f2', 'slot:a.film')],
+  [...fire('b'), put('both', 'slot:ans')],
   [].concat(...RING_STRINGS.map(pm => goes(`s${pm}`, ringFits(pm, RING_CIRCUMFERENCE_PM).fits ? 'closes' : 'smears'))),
-  [...fire('c'), dial('view', 'turn', 0), dial('view', 'tilt', 0), dial('view', 'slice', 1)],
+  [put('sp1', 'tray:sorb'), put('sp2', 'tray:porb'), put('sp3', 'tray:sorb'), put('sp4', 'tray:porb')],
   [put('ka', 'tray:two'), put('kb', 'tray:four'), put('kc', 'tray:ring'), put('kd', 'tray:four'), put('ke', 'tray:four')]
 ];
 
@@ -362,8 +423,9 @@ export const SOLUTIONS = [
 export const MISSES = [
   [],
   [...fire('a'), put('f1', 'slot:a.film')],
+  [...fire('b'), put('part', 'slot:ans')],
   [].concat(...RING_STRINGS.map(pm => goes(`s${pm}`, 'closes'))),
-  [...fire('c'), dial('view', 'slice', 1)],
+  [put('sp1', 'tray:porb'), put('sp2', 'tray:porb'), put('sp3', 'tray:sorb'), put('sp4', 'tray:porb')],
   [put('ka', 'tray:four'), put('kb', 'tray:four'), put('kc', 'tray:four'), put('kd', 'tray:two'), put('ke', 'tray:four')]
 ];
 

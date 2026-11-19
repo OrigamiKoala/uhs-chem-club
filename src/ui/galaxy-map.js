@@ -974,11 +974,6 @@ export function mountGalaxyMap(root, opts) {
         </div>
       </div>
       <aside class="galaxy-plate plate" aria-live="polite"></aside>
-      <ul class="galaxy-legend" aria-label="Chart key">
-        <li><i class="gx-key open"></i>Open</li>
-        <li><i class="gx-key done"></i>Finished</li>
-        <li><i class="gx-key sealed"></i>Sealed or uncharted</li>
-      </ul>
     </div>
   `;
 

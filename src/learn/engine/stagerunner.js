@@ -46,6 +46,14 @@ import { Tabletop, benchesAre3D } from './instruments.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
 
+function initStageTable(stage) {
+  let t = createTable(stage.table, stage.title);
+  if (Array.isArray(stage.initActions)) {
+    for (const act of stage.initActions) t = applyTable(t, act);
+  }
+  return t;
+}
+
 /** The blank answer state every widget builds into. */
 export function blankAnswer(stage) {
   const w = stage.widget || {};
@@ -61,7 +69,7 @@ export function blankAnswer(stage) {
       : [],
     picks: [],
     sample: null,
-    ...(w.type === 'table' ? { table: createTable(stage.table, stage.title) } : {})
+    ...(w.type === 'table' ? { table: initStageTable(stage) } : {})
   };
 }
 
@@ -507,7 +515,7 @@ export function createRunner(container, ctx, cfg) {
     history.push(holdBase || state.table);
     holdBase = null;
     lastDial = null;
-    return showTable(createTable(stage.table, stage.title));
+    return showTable(initStageTable(stage));
   }
 
   /** Dispatch one table action; returns the new `TableState`. */
@@ -596,7 +604,7 @@ export function createRunner(container, ctx, cfg) {
     }
     // The Tour explains each instrument and kind of piece on this stage's table.
     // A briefing teaches before the stage that needs it (at most two sentences, with an optional worked case as `worked` lines); it is the Tour's first step on any stage that has one.
-    frame.setTourSteps(tourSteps(state.table, stage.briefing?.body ? { intro: stage.briefing.body, speaker: stage.briefing.speaker || 'Vess', worked: stage.briefing.worked || null } : {}), state.table, tabletop);
+    frame.setTourSteps(stage.noTour ? [] : tourSteps(state.table, stage.briefing?.body ? { intro: stage.briefing.body, speaker: stage.briefing.speaker || 'Vess', worked: stage.briefing.worked || null } : {}), state.table, tabletop);
   }
 
   // Ctrl+Z (or Cmd+Z) is Undo on a table, wherever the focus is except a field being typed in.

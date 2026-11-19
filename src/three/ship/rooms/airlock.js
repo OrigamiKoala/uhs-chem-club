@@ -288,8 +288,8 @@ export function buildAirlockRoom(ship) {
   // Hinges on the aft jamb: the knuckles on the frame, the straps on the leaf.
   for (const y of [0.55, 1.9]) {
     cyl(H, M.gunmetalMat, 0.055, 0.28, -0.8, y, 0.42, 'y', 10);
-    box(L, M.gunmetalMat, 0.4, 0.1, 0.02, -0.6, y, 0.5);
-    L.add(boltLine([-0.74, y, 0.512], [-0.46, y, 0.512], 3, M.steelMat, { size: 0.011 }));
+    box(L, M.gunmetalMat, 0.4, 0.1, 0.02, -0.6, y, 0.514);
+    L.add(boltLine([-0.74, y, 0.526], [-0.46, y, 0.526], 3, M.steelMat, { size: 0.011 }));
   }
   // Two rams lift the leaf off its seat.
   for (const sx of [-1, 1]) {

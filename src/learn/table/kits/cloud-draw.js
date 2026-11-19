@@ -322,30 +322,26 @@ function paintPlate(ctx, f, state, b) {
 function paintView(ctx, f, state, b) {
   const F = frameOf(b);
   const v = viewRead(state, f.id);
-  const deg = n => `${Math.round(n * 30)}`;
   const slice = Boolean(f.dials?.slice);
 
-  // Fixture local coordinates
-  const lcx = slice ? 18 : 14;
+  // Enlarged joystick centered in the fixture (or left of the Slice toggle when present)
+  const lcx = slice ? 18 : f.size.w / 2;
   const lcy = f.size.h / 2;
-  const R = slice ? 12 : 9.5;
+  const R = slice ? 13 : 12.5;
 
   const cx = F.x(lcx);
   const cy = F.y(lcy);
   const r = F.len(R);
 
-  // 1. Header plaque
-  say(ctx, 'JOYSTICK', F.x(2.5), F.y(3.6), F.size(2.5, 7.0), { color: AMBER, weight: 700 });
-
-  // 2. Joystick socket (recessed dish)
+  // Joystick socket (recessed dish)
   ctx.save();
   // Bezel ring
   ctx.beginPath();
-  ctx.arc(cx, cy, r + F.len(1.2), 0, Math.PI * 2);
+  ctx.arc(cx, cy, r + F.len(1.4), 0, Math.PI * 2);
   ctx.fillStyle = '#22201d';
   ctx.fill();
   ctx.strokeStyle = STEEL;
-  ctx.lineWidth = Math.max(1, F.sc * 0.12);
+  ctx.lineWidth = Math.max(1.2, F.sc * 0.14);
   ctx.stroke();
 
   // Socket well
@@ -379,16 +375,16 @@ function paintView(ctx, f, state, b) {
     ctx.stroke();
   }
 
-  // 3. Puck / Joystick stick and head
+  // Enlarged Joystick stick and head
   const fx = (v.turn / 12) * 2 - 1;
   const fy = -(v.tilt / 3);
-  const px = F.x(lcx + fx * R * 0.75);
-  const py = F.y(lcy + fy * R * 0.75);
-  const pr = F.len(3.2);
+  const px = F.x(lcx + fx * R * 0.72);
+  const py = F.y(lcy + fy * R * 0.72);
+  const pr = F.len(4.6);
 
   // Shaft from center to knob
   ctx.strokeStyle = '#8c8376';
-  ctx.lineWidth = Math.max(2.5, F.sc * 0.35);
+  ctx.lineWidth = Math.max(3.2, F.sc * 0.45);
   ctx.beginPath();
   ctx.moveTo(cx, cy);
   ctx.lineTo(px, py);
@@ -397,7 +393,7 @@ function paintView(ctx, f, state, b) {
   // Knob shadow
   ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
   ctx.beginPath();
-  ctx.arc(px + F.len(0.6), py + F.len(0.8), pr, 0, Math.PI * 2);
+  ctx.arc(px + F.len(0.7), py + F.len(0.9), pr, 0, Math.PI * 2);
   ctx.fill();
 
   // Knob ball outer body
@@ -416,7 +412,7 @@ function paintView(ctx, f, state, b) {
 
   // Knob grip ring
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 0.9;
   ctx.beginPath();
   ctx.arc(px, py, pr * 0.58, 0, Math.PI * 2);
   ctx.stroke();
@@ -429,29 +425,20 @@ function paintView(ctx, f, state, b) {
 
   ctx.restore();
 
-  // 4. Right side readouts & controls
-  const rx = slice ? 33 : 25;
-  const rw = f.size.w - rx - 2.5;
-
-  well(ctx, F.x(rx), F.y(3.5), F.len(rw), F.len(12.5), { fill: WELL, stroke: RIM });
-  say(ctx, `TURN ${deg(v.turn)}°`, F.x(rx + rw / 2), F.y(7.2), F.size(2.3, 6.8), { align: 'center', color: PHOS, weight: 700 });
-  say(ctx, `TILT ${v.tilt >= 0 ? '+' : ''}${deg(v.tilt)}°`, F.x(rx + rw / 2), F.y(11.8), F.size(2.3, 6.8), { align: 'center', color: PHOS, weight: 700 });
-
   if (slice) {
+    const rx = 34;
+    const rw = f.size.w - rx - 2.5;
     const sliceActive = Boolean(v.slice);
-    well(ctx, F.x(rx), F.y(18), F.len(rw), F.len(8), {
+    well(ctx, F.x(rx), F.y(f.size.h / 2 - 4), F.len(rw), F.len(8), {
       fill: sliceActive ? '#1a2e1d' : WELL,
       stroke: sliceActive ? '#4ade80' : RIM
     });
-    say(ctx, sliceActive ? 'SLICE ON' : 'SLICE OFF', F.x(rx + rw / 2), F.y(22.8), F.size(2.3, 6.8), {
+    say(ctx, sliceActive ? 'SLICE ON' : 'SLICE OFF', F.x(rx + rw / 2), F.y(f.size.h / 2 + 0.4), F.size(2.3, 6.8), {
       align: 'center',
       color: sliceActive ? '#4ade80' : DIM,
       weight: 700
     });
   }
-
-  // 5. Instruction line at bottom
-  say(ctx, 'DRAG JOYSTICK OR IMAGE', F.x(f.size.w / 2), F.y(f.size.h - 1.8), F.size(2.0, 5.5), { align: 'center', color: DIM });
 }
 
 function paintTrack(ctx, f, state, b) {
@@ -468,7 +455,7 @@ function paintTrack(ctx, f, state, b) {
   ctx.fillStyle = STEEL;
   ctx.beginPath(); ctx.arc(cx, cy, Math.max(2.5, R * 0.05), 0, Math.PI * 2); ctx.fill();
   say(ctx, 'NUCLEUS', cx, cy + R * 0.28, F.size(2.2, 6), { align: 'center', color: DIM });
-  if (read.nm) strokeRingWave(ctx, cx, cy, R, read.nm, { lineWidth: Math.max(1.2, F.sc * 0.4) });
+  // Only the 3D standing wave is shown above the ring (no overlapping 2D wave on the mat).
   say(ctx, read.nm ? `WAVELENGTH ${read.nm} pm` : 'NO WAVE ON THE TRACK', F.x(2), F.y(5.6), F.size(2.6, 7), { color: read.nm ? PHOS : DIM, weight: 700 });
   say(ctx, `TRACK ${RING_CIRCUMFERENCE_PM.toFixed(0)} pm ROUND`, F.x(2), F.y(9.4), F.size(2.4, 7), { color: DIM });
 }

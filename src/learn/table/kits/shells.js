@@ -20,12 +20,13 @@
  * sample's pull (`MEASURED`), or, on the `rack` magnet, what the arrangement standing on the rack would do.
  */
 
+import { Group } from 'three';
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS } from './shells-draw.js';
 import { dress3d } from './shells-3d.js';
 import { buildPlateFrame } from '../../engine/lab-props.js';
 import {
-  arrowsOf, boxKey, boxPieceId, placeElectron, removeElectron, whyNoRoom, addressOfToken, placedTokens, MEASURED, rackPull, sameAddress,
+  arrowsOf, boxKey, boxPieceId, placeElectron, removeElectron, whyNoRoom, addressOfToken, placedTokens, MEASURED, rackPull, sameAddress, findRoom,
   fmtMl, rowOf, boxesOf, rackFor, groundConfig, readOf
 } from './shells-read.js';
 
@@ -65,6 +66,12 @@ function planJoin(a, b, state) {
     const addr = addressOfToken(a);
     const why = whyNoRoom(addr);
     if (why) return refuse(why);
+    if (a.props.strictBox) {
+      const target = findRoom(addr);
+      if (!target.exists || target.row !== row || target.idx !== idx) {
+        return refuse(`That card belongs in ${target.row} (ml ${target.ml > 0 ? '+' : ''}${target.ml}), not ${row}.`);
+      }
+    }
     if (placedTokens(state).some(t => sameAddress(t.address, addr))) {
       return refuse('Two electrons in one atom cannot share all four numbers, and one already stands at this address.');
     }
@@ -102,6 +109,12 @@ const rect = (r, kind, extra = {}) => ({ r, rect: RECTS[kind], ...extra });
  * An orbital box as the solid thing it is: a low slab with the box's picture on it (the ring on the target, the finder's light) (Lanternfall, 2026-10-23).
  */
 function piece3d(p, state, c) {
+  // Placed electron cards vanish from the table (replaced by small labels next to the arrows on the diagram).
+  if (p.kind === 'etok' && p.props?.placed) {
+    const empty = new Group();
+    empty.userData.height = 0.001;
+    return empty;
+  }
   if (p.kind !== 'box') return null;
   const g = buildPlateFrame(c, { face: c.face(), frame: false });
   g.userData.height = 0.01;
@@ -129,7 +142,7 @@ export const SHELLS_KIT = {
   piece3d,
   dress3d,
   deckStyle: () => 'instrument',
-  printed: p => (p.kind === 'box' ? '' : String(p.label)),
+  printed: p => (p.kind === 'box' || p.kind === 'etok' ? '' : String(p.label)),
   faceKey
 };
 

@@ -23,103 +23,123 @@ const css = rgb => (rgb ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})` : C.pale);
 
 const label = (ctx, w, h, str, color = C.dust) => text(ctx, str, w / 2, h * 0.93, { size: Math.max(11, h * 0.04), color });
 
-/* ---- q1-wave: two waves slide past a counter at one speed; the shorter wave puts more crests through it, and a pulse of each crosses the gap together ---- */
+/* ---- q1-wave: a single wave smoothly stretches from violet to red as wavelength and frequency trade off; then a pulse of each crosses the gap together ---- */
 function waveBeacon(ctx, w, h, t) {
   ground(ctx, w, h);
-  const x0 = w * 0.1;
-  const L = w * 0.8;
-  const draw = ease(win(t, 0.03, 0.2));
-  // Both waves slide right at the same speed; the counter stands at the far end and counts the crests that cross it.
-  const slide = L * 1.4 * win(t, 0.22, 0.6);
-  const xd = x0 + L * 0.92;
-  line(ctx, xd, h * 0.14, xd, h * 0.7, C.dim, 1, [4, 5]);
-  [[700, 0.3, 'red'], [400, 0.55, 'violet']].forEach(([nm, yy, name]) => {
-    const per = (nm / planTrace(nm).span) * L;
-    ctx.beginPath();
-    for (let i = 0; i <= 240; i++) {
-      const x = (i / 240) * L * draw;
-      const y = h * yy - Math.cos((2 * Math.PI * (x - slide)) / per) * h * 0.07;
-      if (i === 0) ctx.moveTo(x0 + x, y); else ctx.lineTo(x0 + x, y);
-    }
-    ctx.strokeStyle = css(wavelengthRgb(nm));
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // One wavelength, crest to crest.
-    const c0 = x0 + per * 0.5 + (slide % per);
-    if (draw > 0.9) {
-      const by = h * yy - h * 0.12;
-      line(ctx, c0, by, c0 + per, by, C.amber, 2);
-      line(ctx, c0, by - 5, c0, by + 5, C.amber, 2);
-      line(ctx, c0 + per, by - 5, c0 + per, by + 5, C.amber, 2);
-      text(ctx, 'wavelength', c0 + per / 2, by - 14, { size: Math.max(10, h * 0.034), color: C.amber });
-    }
-    const passed = Math.floor(Math.max(0, slide - L * 0.08) / per);
-    text(ctx, `${name}: ${passed} crests counted`, x0 - 4, h * yy + h * 0.15, { size: Math.max(11, h * 0.04), color: css(wavelengthRgb(nm)), align: 'left' });
-  });
-  // A pulse of each colour sets off together and arrives together: the speed does not depend on the colour.
-  const p = ease(win(t, 0.62, 0.95));
-  [h * 0.8, h * 0.86].forEach((y, i) => {
+  const x0 = w * 0.08;
+  const L = w * 0.84;
+  // Smoothly sweep wavelength between 400 nm (violet) and 700 nm (red)
+  const sweep = 0.5 - 0.5 * Math.cos(t * Math.PI * 2.2);
+  const nm = Math.round(400 + sweep * 300);
+  const f14 = (3.0e8 / (nm * 1e-9)) / 1e14;
+  const col = css(wavelengthRgb(nm));
+  const per = (nm / 1400) * L * 0.45;
+  const slide = t * L * 1.4;
+  const wy = h * 0.42;
+
+  // Axis line
+  line(ctx, x0, wy, x0 + L, wy, C.dim, 1, [4, 5]);
+  ctx.beginPath();
+  for (let i = 0; i <= 260; i++) {
+    const x = (i / 260) * L;
+    const y = wy - Math.sin((2 * Math.PI * (x - slide)) / per) * h * 0.14;
+    if (i === 0) ctx.moveTo(x0 + x, y); else ctx.lineTo(x0 + x, y);
+  }
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Wavelength bracket crest-to-crest
+  const c0 = x0 + L * 0.25;
+  const by = wy - h * 0.19;
+  line(ctx, c0, by, c0 + per, by, C.amber, 2);
+  line(ctx, c0, by - 6, c0, by + 6, C.amber, 2);
+  line(ctx, c0 + per, by - 6, c0 + per, by + 6, C.amber, 2);
+  text(ctx, `wavelength: ${nm} nm`, c0 + per / 2, by - 16, { size: Math.max(12, h * 0.038), color: C.amber, weight: 700 });
+  text(ctx, `frequency: ${f14.toFixed(1)} × 10¹⁴ /s`, x0 + L, wy - h * 0.25, { size: Math.max(12, h * 0.038), color: col, align: 'right', weight: 700 });
+
+  // A pulse of red and violet sets off together and arrives together
+  const p = ease(win(t, 0.58, 0.94));
+  [h * 0.76, h * 0.84].forEach((y, i) => {
     line(ctx, x0, y, x0 + L, y, C.dim, 1);
-    disc(ctx, x0 + L * p, y, 5, css(wavelengthRgb(i ? 400 : 700)));
+    disc(ctx, x0 + L * p, y, 6, css(wavelengthRgb(i ? 400 : 700)));
   });
-  if (p >= 1) text(ctx, 'same time', w / 2, h * 0.94, { size: Math.max(11, h * 0.04), color: C.amber });
+  if (p >= 0.95) text(ctx, 'same speed: 3.00 × 10⁸ m/s', w / 2, h * 0.93, { size: Math.max(12, h * 0.038), color: C.amber, weight: 700 });
 }
 
-/* ---- q2-photon: single packets reach a metal plate; a packet frees an electron only if its own energy clears the work function, and no pile of weaker ones does ---- */
+/* ---- q2-photon: three separated phases (one concept at a time): 1) photon vs work function, 2) red vs violet on metal, 3) leftover kinetic energy ---- */
 function photonPlate(ctx, w, h, t) {
   ground(ctx, w, h);
-  const plateX = 470;
   const WORK = 2.3;
-  const rows = [{ nm: 650, y: 190, n: 5 }, { nm: 400, y: 360, n: 3 }];
-  const run = win(t, 0.04, 0.8);
-  // The energy scale on the right: the plate's work function is a line, and each colour's packet energy is a tick against it.
-  const sx = 700; const sw = 160; const top = 110; const bot = 470;
-  const Y = e => bot - (e / 3.6) * (bot - top);
-  line(ctx, sx, top, sx, bot, C.steel, 2);
-  text(ctx, 'energy of one packet (eV)', sx - 10, top - 28, { size: 18, color: C.dim, align: 'left' });
-  line(ctx, sx - 12, Y(WORK), sx + sw, Y(WORK), C.amber, 2, [8, 6]);
-  text(ctx, `work function ${WORK}`, sx + sw, Y(WORK) - 14, { size: 18, color: C.amber, align: 'right' });
+  const plateX = w * 0.45;
+
+  if (t < 0.34) {
+    // Phase 1: Single photon energy vs work function bar
+    const p = ease(win(t, 0.03, 0.26));
+    const sx = w * 0.35; const sw = w * 0.3; const top = h * 0.18; const bot = h * 0.80;
+    const Y = e => bot - (e / 3.6) * (bot - top);
+    line(ctx, sx, top, sx, bot, C.steel, 2);
+    line(ctx, sx - 12, Y(WORK), sx + sw, Y(WORK), C.amber, 2, [8, 6]);
+    text(ctx, 'work function (2.3 eV)', sx + sw, Y(WORK) - 16, { size: 18, color: C.amber, align: 'right', weight: 700 });
+    const eRed = 1.9 * p;
+    const eVio = 3.1 * p;
+    ctx.fillStyle = css(wavelengthRgb(650));
+    ctx.fillRect(sx + 24, Y(eRed), 44, bot - Y(eRed));
+    text(ctx, 'red (1.9 eV)', sx + 46, bot + 22, { size: 16, color: css(wavelengthRgb(650)) });
+    ctx.fillStyle = css(wavelengthRgb(400));
+    ctx.fillRect(sx + 110, Y(eVio), 44, bot - Y(eVio));
+    text(ctx, 'violet (3.1 eV)', sx + 132, bot + 22, { size: 16, color: css(wavelengthRgb(400)) });
+    return;
+  }
+
+  if (t < 0.68) {
+    // Phase 2: Many red photons fail; a single violet photon frees an electron
+    const run = win(t, 0.36, 0.65);
+    ctx.fillStyle = C.iron;
+    ctx.fillRect(plateX - 7, h * 0.16, 14, h * 0.68);
+    ctx.strokeStyle = C.steel;
+    ctx.strokeRect(plateX - 6.5, h * 0.16 + 0.5, 13, h * 0.68 - 1);
+    text(ctx, 'sodium', plateX, h * 0.90, { size: 18, color: C.dim });
+    // Top: 5 red packets hit and bounce/fade — no electron leaves
+    const redY = h * 0.32;
+    const redCol = css(wavelengthRgb(650));
+    for (let i = 0; i < 5; i++) {
+      const at = clamp01(run * 6 - i);
+      const x = w * 0.1 + (plateX - 16 - w * 0.1) * at;
+      if (at < 1) disc(ctx, x, redY + (i - 2) * 14, 7, redCol);
+    }
+    text(ctx, 'many red photons: 0 electrons', plateX + 26, redY, { size: 18, color: C.dim, align: 'left' });
+    // Bottom: 1 violet packet hits -> electron flies out
+    const vioY = h * 0.64;
+    const vioCol = css(wavelengthRgb(400));
+    const atV = clamp01(run * 2.2);
+    if (atV < 1) {
+      disc(ctx, w * 0.1 + (plateX - 16 - w * 0.1) * atV, vioY, 8, vioCol);
+    } else {
+      const fly = clamp01((run * 2.2 - 1) / 1.1);
+      disc(ctx, plateX + 20 + fly * (w * 0.36), vioY, 7, '#ffffff');
+    }
+    text(ctx, '1 violet photon: electron freed', plateX + 26, vioY + 34, { size: 18, color: C.amber, align: 'left', weight: 700 });
+    return;
+  }
+
+  // Phase 3: Leftover energy becomes kinetic energy (KE = E_photon - W)
+  const p = ease(win(t, 0.70, 0.92));
+  const cx = w * 0.5;
+  const barW = w * 0.56;
+  const x0 = cx - barW / 2;
+  const y = h * 0.46;
+  const bh = 38;
+  const wFrac = WORK / 3.1;
   ctx.fillStyle = C.iron;
-  ctx.fillRect(plateX - 7, 100, 14, 380);
-  ctx.strokeStyle = C.steel;
-  ctx.strokeRect(plateX - 6.5, 100.5, 13, 379);
-  text(ctx, 'sodium', plateX, 500, { size: 18, color: C.dim });
-  rows.forEach(({ nm, y, n }) => {
-    const plan = planPhotocell('Na', nm, 3);
-    const colour = css(wavelengthRgb(nm));
-    const E = plan.photonEv;
-    // The packet's energy on the scale.
-    line(ctx, sx - 12, Y(E), sx + 40, Y(E), colour, 4);
-    text(ctx, `${E.toFixed(1)}`, sx + 52, Y(E), { size: 22, color: colour, align: 'left', weight: 700 });
-    if (plan.freed) {
-      line(ctx, sx + 24, Y(WORK), sx + 24, Y(E), C.text, 1.5);
-      text(ctx, `left over ${plan.ke.toFixed(1)}`, sx + 100, (Y(WORK) + Y(E)) / 2, { size: 16, color: C.text, align: 'left' });
-    }
-    let freed = 0;
-    for (let i = 0; i < n; i++) {
-      const at = clamp01(run * (n + 1.2) / 1.0 - i);
-      const x = 70 + (plateX - 12 - 70) * clamp01(at);
-      const py = y + (i - (n - 1) / 2) * 16;
-      if (at < 1) {
-        disc(ctx, x, py, 8, colour);
-        if (at > 0.02) text(ctx, E.toFixed(1), x, py - 16, { size: 13, color: colour });
-      } else if (plan.freed) {
-        // The packet is gone and an electron leaves the far side carrying what was left over.
-        freed++;
-        const d = clamp01((run * (n + 1.2) - i - 1) / 0.6);
-        disc(ctx, plateX + 20 + d * (60 + 70 * plan.ke), py, 5, C.text);
-      } else {
-        // Too little: the packet gives up nothing and is turned back.
-        const d = clamp01((run * (n + 1.2) - i - 1) / 0.6);
-        ctx.globalAlpha = 1 - d;
-        disc(ctx, plateX - 12 - d * 60, py, 8, colour);
-        ctx.globalAlpha = 1;
-      }
-    }
-    text(ctx, `${n} packets`, 70, y - 54, { size: 20, color: C.dust, align: 'left' });
-    if (run > 0.9) text(ctx, plan.freed ? `${n} electrons leave` : 'no electron leaves', plateX - 6, y + 56, { size: 20, color: plan.freed ? C.amber : C.dim, align: 'right', weight: 700 });
-    void freed;
-  });
+  ctx.fillRect(x0, y, barW * wFrac, bh);
+  ctx.strokeStyle = C.amber;
+  ctx.strokeRect(x0 + 0.5, y + 0.5, barW * wFrac - 1, bh - 1);
+  ctx.fillStyle = css(wavelengthRgb(400));
+  ctx.fillRect(x0 + barW * wFrac, y, barW * (1 - wFrac) * p, bh);
+  text(ctx, 'W = 2.3 eV (needed to escape)', x0 + (barW * wFrac) / 2, y + bh / 2, { size: 15, color: C.text });
+  if (p > 0.3) text(ctx, 'KE = 0.8 eV', x0 + barW * wFrac + (barW * (1 - wFrac)) / 2, y - 22, { size: 17, color: C.amber, weight: 700 });
+  text(ctx, 'KE_electron = E_photon − W', cx, h * 0.76, { size: 22, color: C.text, weight: 700 });
 }
 
 /* ---- q3-lines: an electron drops between two levels and gives out a packet of exactly that energy; the drops add up to a few exact lines, which identify the gas ---- */
@@ -186,17 +206,31 @@ function lineCompare(ctx, w, h, t) {
   if (slide <= 0.02) text(ctx, 'every line lands', w / 2, h * 0.9, { size: Math.max(11, h * 0.04), color: C.amber });
 }
 
-/* ---- q4-cloud: shots land one by one, and five hundred of them make a ball, with no ring through it ---- */
+/* ---- q4-cloud: show all three orbital shapes side-by-side: round s, two-lobed p, four-lobed d ---- */
 function cloudBall(ctx, w, h, t) {
   ground(ctx, w, h);
-  const pts = sampleOrbital('1s', 500, 1);
-  const n = Math.round(ease(win(t, 0.05, 0.8)) * pts.length);
-  const cx = w / 2;
-  const cy = h * 0.46;
-  const k = Math.min(w, h) * 0.075;
-  for (let i = 0; i < n; i++) disc(ctx, cx + pts[i].x * k, cy - pts[i].y * k, 1.8, C.amber);
-  if (t > 0.8) { ctx.setLineDash?.([6, 6]); ctx.beginPath(); ctx.arc(cx, cy, k * 3.2, 0, Math.PI * 2); ctx.strokeStyle = C.dim; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash?.([]); }
-  text(ctx, `${n} shots`, w / 2, h * 0.9, { size: Math.max(11, h * 0.04), color: n >= 500 ? C.amber : C.dust });
+  const cy = h * 0.48;
+  const r = Math.min(w * 0.12, h * 0.28);
+  const cols = [
+    { key: '1s', label: 's orbital (round)', cx: w * 0.20, scale: r * 0.34, showAt: 0.04 },
+    { key: '2pz', label: 'p orbital (two lobes)', cx: w * 0.50, scale: r * 0.22, showAt: 0.28 },
+    { key: '3dxy', label: 'd orbital (four lobes)', cx: w * 0.80, scale: r * 0.14, showAt: 0.52 }
+  ];
+  for (const c of cols) {
+    const p = ease(win(t, c.showAt, c.showAt + 0.24));
+    if (p <= 0) continue;
+    const pts = sampleOrbital(c.key, 320, 1);
+    const n = Math.round(p * pts.length);
+    // Faint nucleus dot
+    disc(ctx, c.cx, cy, 3, C.text);
+    for (let i = 0; i < n; i++) {
+      const pt = pts[i];
+      const px = c.cx + pt.x * c.scale;
+      const py = cy - (c.key === '2pz' ? pt.z : pt.y) * c.scale;
+      disc(ctx, px, py, 2.0, C.amber);
+    }
+    text(ctx, c.label, c.cx, h * 0.88, { size: Math.max(12, h * 0.036), color: p > 0.8 ? C.amber : C.dust, weight: 700 });
+  }
 }
 
 /* ---- q5-numbers: every electron has four numbers; the rack hands them out box by box, and a third electron with a full box's numbers has nowhere to go ---- */
@@ -218,8 +252,15 @@ function rackAddress(ctx, w, h, t) {
       const nn = Number(id[0]); const ll = id[1] === 's' ? 0 : 1; const ml = ll ? b - 1 : 0;
       if (here.includes('u')) list.push({ cx, y, up: true, n: nn, l: ll, ml, shown, at: (r * 3 + b + 1) / 9 });
       if (here.includes('d')) list.push({ cx, y, up: false, n: nn, l: ll, ml, shown, at: (r * 3 + b + 1) / 9 + 0.001 });
-      if (shown && here.includes('u')) { line(ctx, cx - w * 0.012, y + h * 0.04, cx - w * 0.012, y - h * 0.04, C.amber, 3); disc(ctx, cx - w * 0.012, y - h * 0.045, 4, C.amber); }
-      if (shown && here.includes('d')) { line(ctx, cx + w * 0.012, y - h * 0.04, cx + w * 0.012, y + h * 0.04, C.pale, 3); disc(ctx, cx + w * 0.012, y + h * 0.045, 4, C.pale); }
+      const drawArrow = (ax, yTop, yBot, up, col) => {
+        line(ctx, ax, yBot, ax, yTop, col, 2.6);
+        const tipY = up ? yTop : yBot;
+        const dir = up ? 1 : -1;
+        line(ctx, ax, tipY, ax - 6, tipY + dir * 9, col, 2.6);
+        line(ctx, ax, tipY, ax + 6, tipY + dir * 9, col, 2.6);
+      };
+      if (shown && here.includes('u')) drawArrow(cx - w * 0.014, y - h * 0.042, y + h * 0.042, true, C.amber);
+      if (shown && here.includes('d')) drawArrow(cx + w * 0.014, y - h * 0.042, y + h * 0.042, false, C.pale);
       if (ll) text(ctx, `ml ${ml > 0 ? '+' : ''}${ml}`, cx, y + h * 0.1, { size: Math.max(10, h * 0.032), color: C.dim });
     }
     text(ctx, id, w * 0.22, y, { size: Math.max(11, h * 0.04) });
@@ -234,15 +275,39 @@ function rackAddress(ctx, w, h, t) {
     ctx.strokeRect(ex - 14, cur.y - h * 0.075, 28, h * 0.15);
     text(ctx, `n ${cur.n}   l ${cur.l}   ml ${cur.ml >= 0 ? (cur.ml ? '+' : '') : ''}${cur.ml}   ms ${cur.up ? '+½' : '−½'}`, w / 2, h * 0.08, { size: Math.max(12, h * 0.05), color: C.amber, weight: 700 });
   }
-  // A ninth electron tries for the full 1s box: the same four numbers as one already there, so it is turned away.
-  const tryU = win(t, 0.68, 0.84);
-  if (tryU > 0) {
-    const tx = w / 2; const ty = h * 0.7;
-    const out = tryU < 0.5 ? ease(tryU / 0.5) : 1 - ease((tryU - 0.5) / 0.5);
-    disc(ctx, w * 0.86 + (tx + w * 0.07 - w * 0.86) * out, ty - h * 0.04, 6, C.amber);
-    if (tryU > 0.45) text(ctx, 'same four numbers: refused', w / 2, h * 0.08, { size: Math.max(12, h * 0.046), color: C.amber, weight: 700 });
+  // Beat 3 (t >= 0.66): clear animated breakdown of Shell 1 -> 2, Shell 2 -> 8, Shell 3 -> 18 electrons.
+  if (t >= 0.66) {
+    ground(ctx, w, h);
+    const p = win(t, 0.66, 0.96);
+    const shells = [
+      { n: 1, sub: '1s', boxes: 1, cap: 2, y: h * 0.28, at: 0.05 },
+      { n: 2, sub: '2s + 2p', boxes: 4, cap: 8, y: h * 0.52, at: 0.35 },
+      { n: 3, sub: '3s + 3p + 3d', boxes: 9, cap: 18, y: h * 0.76, at: 0.65 }
+    ];
+    shells.forEach((sh) => {
+      const a = ease(win(p, sh.at, sh.at + 0.25));
+      if (a <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = a;
+      text(ctx, `Shell ${sh.n} (${sh.sub})`, w * 0.14, sh.y, { size: Math.max(13, h * 0.036), color: C.text, align: 'left', weight: 700 });
+      const bw = Math.min(32, (w * 0.42) / 9 - 4);
+      for (let b = 0; b < sh.boxes; b++) {
+        const bx = w * 0.42 + b * (bw + 5);
+        ctx.strokeStyle = C.amber;
+        ctx.lineWidth = 1.6;
+        ctx.strokeRect(bx, sh.y - bw * 0.55, bw, bw * 1.1);
+        // Up and down arrows inside each box
+        const lx = bx + bw * 0.32;
+        const rx = bx + bw * 0.68;
+        line(ctx, lx, sh.y + bw * 0.35, lx, sh.y - bw * 0.35, C.amber, 1.8);
+        line(ctx, lx, sh.y - bw * 0.35, lx - 3, sh.y - bw * 0.15, C.amber, 1.8);
+        line(ctx, rx, sh.y - bw * 0.35, rx, sh.y + bw * 0.35, C.pale, 1.8);
+        line(ctx, rx, sh.y + bw * 0.35, rx + 3, sh.y + bw * 0.15, C.pale, 1.8);
+      }
+      text(ctx, `= ${sh.cap} e⁻`, w * 0.88, sh.y, { size: Math.max(14, h * 0.042), color: C.amber, align: 'left', weight: 700 });
+      ctx.restore();
+    });
   }
-  if (t > 0.88) text(ctx, 'two to a box, no more', w / 2, h * 0.93, { size: Math.max(11, h * 0.04), color: C.amber });
 }
 
 /* ---- q6-filling: the ladder fills from lowest energy up, demonstrating Aufbau, Hund's rule, and 4s below 3d ---- */

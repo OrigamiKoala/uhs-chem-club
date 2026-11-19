@@ -1300,7 +1300,8 @@ export class TallowWorld {
     segGeo.rotateY(Math.PI / 2);
     const sp = segGeo.attributes.position, suv = segGeo.attributes.uv;
     for (let i = 0; i < sp.count; i++) suv.setXY(i, (sp.getX(i) + sp.getZ(i)) / 3, sp.getY(i) / 3);
-    for (const a0 of [Math.PI * 0.25, Math.PI * 1.25]) {
+    // Keep the NW approach and boarding ladder completely clear; only place the back SE blast wall arc.
+    for (const a0 of [Math.PI * 0.25]) {
       for (let k = -2; k <= 2; k++) {
         const a = a0 + k * 0.215;
         const seg = new THREE.Mesh(segGeo, wallMat);

@@ -661,7 +661,6 @@ class DigitalCalculator {
   }
 
   useResult(btn) {
-    const val = formatResult(this.ans);
     let target = this.targetInput;
     if (!target || !target.isConnected) {
       target = document.querySelector('.lq-entry-input') ||
@@ -670,6 +669,26 @@ class DigitalCalculator {
     }
 
     if (target) {
+      let num = this.ans;
+      // If the entry has a scientific-notation unit multiplier (e.g. "× 10¹⁴" or "× 10⁻¹⁹ J"),
+      // scale an unscaled calculator result so "4.8e14" fills in as "4.8".
+      const unitEl = target.parentElement?.querySelector('.lq-entry-unit');
+      const unitRaw = target.dataset?.unit || unitEl?.textContent || '';
+      if (unitRaw && Number.isFinite(num) && num !== 0) {
+        const supMap = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '−': '-', '⁺': '+' };
+        const norm = unitRaw.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻−⁺]/g, c => supMap[c] || c);
+        const m = norm.match(/(?:×|x|\*)\s*10\^?\s*([+-]?\d+)/i);
+        if (m) {
+          const exp = parseInt(m[1], 10);
+          const scale = Math.pow(10, exp);
+          if (exp >= 3 && Math.abs(num) >= Math.pow(10, exp - 3)) {
+            num = num / scale;
+          } else if (exp <= -3 && Math.abs(num) <= Math.pow(10, exp + 3)) {
+            num = num / scale;
+          }
+        }
+      }
+      const val = formatResult(num);
       target.value = val;
       target.dispatchEvent(new Event('input', { bubbles: true }));
       target.dispatchEvent(new Event('change', { bubbles: true }));

@@ -136,7 +136,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const sp = spectrograph('sp', 'Band', { x: 56, y: 21 });
+    const sp = spectrograph('sp', 'Band', { x: 50, y: 20 }, { size: { w: 92, h: 38 } });
     return {
       title: 'Filament and Tubes',
       briefing: {
@@ -152,13 +152,13 @@ export const STAGES = [
       widget,
       table: opticsTable({
         pieces: [
-          filament('fil', 'Filament', { x: 111, y: 10 }),
-          gasTube('h', 'Hydrogen tube', { x: 138, y: 10 }, 'H'),
-          gasTube('he', 'Helium tube', { x: 111, y: 30 }, 'He'),
-          gasTube('na', 'Sodium tube', { x: 138, y: 30 }, 'Na')
+          filament('fil', 'Filament', { x: 112, y: 10 }),
+          gasTube('h', 'Hydrogen tube', { x: 136, y: 10 }, 'H'),
+          gasTube('he', 'Helium tube', { x: 112, y: 29 }, 'He'),
+          gasTube('na', 'Sodium tube', { x: 136, y: 29 }, 'Na')
         ],
         fixtures: [sp.fixture],
-        zones: { slots: sp.slots, trays: [tray('band', 'Continuous spectrum', 23, 55, 42, 25, 18), tray('lines', 'Line spectrum', 85, 55, 78, 25, 18)] }
+        zones: { slots: sp.slots, trays: [tray('band', 'Continuous spectrum', 23, 54, 42, 25, 16), tray('lines', 'Line spectrum', 85, 54, 78, 25, 16)] }
       }),
       hints: [
         'Drag each source into the socket and look at the band the prism makes.',
@@ -284,14 +284,14 @@ export const STAGES = [
         zones: { slots: sp.slots }
       }),
       hints: [
-        'Put the filament in the socket, the cool cell in the cell holder and a strip in the alongside slot.',
+        'Put the filament in the socket, the cool cell in the cell holder and a strip in the reference slot.',
         'Compare the dark lines in the band with the lines on each strip, position by position.',
         'A climb between two levels needs the same energy as the drop between them gives out, so think which wavelengths a cool gas can take in.'
       ],
       check(state) {
         const r = bandRead(state.table, 'sp');
         if (!r.src || r.src.kind !== 'filament' || !r.cell) return { ok: false, notYet: true, msg: 'Put the filament in the socket and the cool cell in front of it.' };
-        if (!r.ref) return { ok: false, notYet: true, msg: 'Slide an element\'s strip alongside the band.' };
+        if (!r.ref) return { ok: false, notYet: true, msg: 'Slide an element\'s strip into the reference slot.' };
         if (r.whole && r.refLines.length === r.seen.length) return { ok: true };
         return { ok: false, msg: `The ${r.ref.label} strip has lines where the band behind the cell is bright.` };
       },
@@ -299,6 +299,7 @@ export const STAGES = [
         log: 'Cool hydrogen takes out exactly what hot hydrogen gives.',
         title: 'Absorption Spectrum',
         body: 'The dark lines sit exactly where hydrogen\'s bright lines do: cool hydrogen takes in the same wavelengths that glowing hydrogen gives out. The wavelengths a cool gas takes in are its absorption spectrum.',
+        model: { type: 'absorption-ladder', caption: 'A photon whose energy matches a step lifts the electron up the ladder; photons of other colours pass right through.' },
         last: true
       }
     };
@@ -308,9 +309,9 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   2: ['Drag a source into the socket.'],
-  3: ['Put the tube in the socket, then slide an element\'s', 'strip into the alongside slot.'],
+  3: ['Put the tube in the socket, then slide an element\'s', 'strip into the reference slot.'],
   4: ['Drag the electron to another level.', 'Any light that leaves is written on the strip.'],
-  5: ['Put the filament in the socket and the cool cell in front of it,', 'then slide a strip into the alongside slot.']
+  5: ['Put the filament in the socket and the cool cell in front of it,', 'then slide a strip into the reference slot.']
 };
 applyNotes(STAGES, NOTES);
 

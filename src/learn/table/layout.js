@@ -115,9 +115,9 @@ export function sitePlate(entry) {
 /** The circular joystick socket geometry on a view fixture. */
 export function joystickGeometry(f) {
   const slice = Boolean(f.dials?.slice);
-  const cx = f.at.x - f.size.w / 2 + (slice ? 18 : 14);
+  const cx = slice ? (f.at.x - f.size.w / 2 + 18) : f.at.x;
   const cy = f.at.y;
-  const r = slice ? 12 : 9.5;
+  const r = slice ? 13 : 12.5;
   return { cx, cy, r, slice };
 }
 

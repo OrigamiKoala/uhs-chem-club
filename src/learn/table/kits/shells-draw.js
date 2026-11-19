@@ -11,7 +11,7 @@
 
 import { PLATE_COLORS } from '../../engine/plates.js';
 import {
-  arrowsOf, readOf, finderLight, addressOfFinder, magnetRead, wellRead, reachPm, rowOf, mlOf, fmtMl, groundConfig, LADDER, capacityOf, fmtMs, zOf, symbolOf
+  arrowsOf, readOf, finderLight, addressOfFinder, magnetRead, wellRead, reachPm, rowOf, mlOf, fmtMl, groundConfig, LADDER, capacityOf, fmtMs, zOf, symbolOf, findRoom, addressOfToken
 } from './shells-read.js';
 
 const AMBER = PLATE_COLORS.amber;
@@ -89,11 +89,17 @@ function paintBox(ctx, p, state, o) {
   const h = hh * 2 * o.sc;
   const here = arrowsOf(state, p);
   const lit = litBy(state, p);
-  ctx.fillStyle = lit ? '#2a2c1f' : INK;
+  ctx.fillStyle = lit ? 'rgba(229, 155, 36, 0.34)' : INK;
   ctx.fillRect(x0, y0, w, h);
   ctx.strokeStyle = lit ? AMBER : here ? STEEL : RIM;
-  ctx.lineWidth = lit ? 2.5 : 1.4;
+  ctx.lineWidth = lit ? Math.max(3, 0.55 * o.sc) : 1.4;
   ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, h - 1);
+  if (lit) {
+    // Crisp inner highlight frame so the selected orbital is unmistakable.
+    ctx.strokeStyle = '#fde68a';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(x0 + 3, y0 + 3, w - 6, h - 6);
+  }
   ctx.lineWidth = 1;
   if (p.props.target) {
     // The target box: drawn clearly inside the piece boundary so it is visible in both 2D and 3D.
@@ -159,15 +165,24 @@ function fitSize(label, box, share) {
 }
 
 function paintToken(ctx, p, state, o) {
+  // Once placed in the diagram, the big card vanishes (replaced by a small label next to the arrow).
+  if (p.props.placed) return;
   const { hw, hh } = RECTS.etok;
-  const box = slab(ctx, o, hw, hh, p.props.placed ? '#1d1a15' : '#2a2620');
-  say(ctx, p.label, o.x, o.y, fitSize(p.label, box, 0.4), { align: 'center', maxW: box.w - 4, weight: 700, color: p.props.placed ? DIM : PLATE_COLORS.text });
-  if (p.props.placed) {
-    ctx.strokeStyle = PHOS;
-    ctx.lineWidth = Math.max(1.4, o.sc * 0.4);
-    ctx.beginPath(); ctx.moveTo(box.x0 + 2, box.y0 + box.h - 2.5); ctx.lineTo(box.x0 + box.w - 2, box.y0 + box.h - 2.5); ctx.stroke();
-    ctx.lineWidth = 1;
-  }
+  const box = slab(ctx, o, hw, hh, '#23201b');
+  const a = p.props.address || { n: p.props.n, l: p.props.l, ml: p.props.ml, ms: p.props.ms };
+  // Left amber badge with card letter (e.g. "A")
+  const tag = String(p.label || '').split(':')[0].trim();
+  const badgeW = Math.max(14, box.w * 0.16);
+  ctx.fillStyle = 'rgba(229, 155, 36, 0.18)';
+  ctx.fillRect(box.x0 + 1, box.y0 + 1, badgeW, box.h - 2);
+  say(ctx, tag, box.x0 + 1 + badgeW / 2, o.y, Math.max(8, box.h * 0.36), { align: 'center', weight: 700, color: AMBER });
+  // Right clean quantum-number readout: n=2  l=1  ml=0  ↑
+  const bodyX = box.x0 + badgeW + (box.w - badgeW) / 2;
+  const spinTxt = a.ms > 0 ? '+½ ↑' : '−½ ↓';
+  const mlTxt = a.ml > 0 ? `+${a.ml}` : String(a.ml ?? 0);
+  const line1 = `n=${a.n}   l=${a.l}   ml=${mlTxt}`;
+  say(ctx, line1, bodyX, o.y - box.h * 0.17, Math.max(7, box.h * 0.25), { align: 'center', maxW: box.w - badgeW - 6, weight: 700, color: PLATE_COLORS.text });
+  say(ctx, `ms = ${spinTxt}`, bodyX, o.y + box.h * 0.22, Math.max(7, box.h * 0.24), { align: 'center', maxW: box.w - badgeW - 6, weight: 600, color: a.ms > 0 ? AMBER : '#7dd3fc' });
 }
 
 function paintCard(ctx, p, state, o) {
@@ -270,7 +285,72 @@ function paintShelf(ctx, f, state, b) {
   }
   if (f.props.finder) {
     const lit = finderLight(state, f.props.finder);
-    if (lit.none) say(ctx, 'NO ORBITAL HAS THIS ADDRESS', F.x(f.size.w / 2), F.y(5.6), sz, { align: 'center', color: AMBER, weight: 700, maxW: F.len(f.size.w - 4) });
+    // Place invalid-address notice along the bottom edge so it never overlaps TARGET above the top row.
+    if (lit.none) say(ctx, 'NO ORBITAL HAS THIS ADDRESS', F.x(f.size.w / 2), F.y(f.size.h - 2.8), sz, { align: 'center', color: AMBER, weight: 700, maxW: F.len(f.size.w - 4) });
+    // Corner 3D-style orbital preview: when p is selected, show all three p orbitals and highlight the active ml.
+    const addr = addressOfFinder(state, f.props.finder);
+    const pw = 22;
+    const ph = 15;
+    const px = f.size.w - pw - 2;
+    const py = f.size.h - ph - 5.2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(13, 12, 10, 0.88)';
+    ctx.fillRect(F.x(px), F.y(py), F.len(pw), F.len(ph));
+    ctx.strokeStyle = lit.none ? RIM : AMBER;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(F.x(px) + 0.5, F.y(py) + 0.5, F.len(pw) - 1, F.len(ph) - 1);
+    const drawOrbLobe = (cx, cy, r, ang, active) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(ang);
+      const col = active ? AMBER : 'rgba(148, 163, 184, 0.45)';
+      ctx.fillStyle = active ? 'rgba(229, 155, 36, 0.36)' : 'rgba(148, 163, 184, 0.14)';
+      ctx.strokeStyle = col;
+      ctx.lineWidth = active ? 1.6 : 1;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(s * r * 0.58, 0, r * 0.55, r * 0.30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    };
+    if (!lit.none && addr.l === 0) {
+      const cx = F.x(px + pw / 2);
+      const cy = F.y(py + ph * 0.46);
+      const rr = F.len(4.2);
+      const grad = ctx.createRadialGradient(cx - rr * 0.3, cy - rr * 0.3, rr * 0.1, cx, cy, rr);
+      grad.addColorStop(0, '#fde68a');
+      grad.addColorStop(0.5, 'rgba(229, 155, 36, 0.65)');
+      grad.addColorStop(1, 'rgba(229, 155, 36, 0.12)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 1.4; ctx.stroke();
+      say(ctx, `${addr.n}s (ml 0)`, F.x(px + pw / 2), F.y(py + ph - 2.2), F.size(1.8, 6), { align: 'center', color: AMBER, weight: 700 });
+    } else if (!lit.none && addr.l === 1) {
+      // Show all three p orbitals (ml = -1, 0, +1) and highlight whichever ml is active!
+      const pSet = [
+        { ml: -1, ang: 0, lbl: '−1' },
+        { ml: 0, ang: Math.PI / 2, lbl: '0' },
+        { ml: 1, ang: -Math.PI / 4, lbl: '+1' }
+      ];
+      pSet.forEach((po, idx) => {
+        const cx = F.x(px + 4.2 + idx * 6.8);
+        const cy = F.y(py + ph * 0.44);
+        const active = addr.ml === po.ml;
+        drawOrbLobe(cx, cy, F.len(2.9), po.ang, active);
+        say(ctx, po.lbl, cx, F.y(py + ph - 2.2), F.size(1.8, 6), { align: 'center', color: active ? AMBER : DIM, weight: active ? 700 : 500 });
+      });
+    } else if (!lit.none && addr.l === 2) {
+      const cx = F.x(px + pw / 2);
+      const cy = F.y(py + ph * 0.44);
+      drawOrbLobe(cx, cy, F.len(3.8), Math.PI / 4, true);
+      drawOrbLobe(cx, cy, F.len(3.8), -Math.PI / 4, true);
+      say(ctx, `${addr.n}d (ml ${fmtMl(addr.ml)})`, F.x(px + pw / 2), F.y(py + ph - 2.2), F.size(1.8, 6), { align: 'center', color: AMBER, weight: 700 });
+    } else {
+      say(ctx, 'NO ORBITAL', F.x(px + pw / 2), F.y(py + ph / 2), F.size(1.9, 6), { align: 'center', color: DIM });
+    }
+    ctx.restore();
   }
   if (!rows.length) return;
   // The energy arrow up the left edge.
@@ -308,6 +388,23 @@ function paintShelf(ctx, f, state, b) {
       for (let i = 0; i < 2 * row.l + 1; i++) {
         const bx = r.x0 + RECTS.box.hw + i * ((r.x1 - r.x0) / (2 * row.l + 1));
         say(ctx, `ml ${fmtMl(mlOf(r.id, i))}`, F.x(bx - x0), F.y(r.y - y0 - 5.4), F.size(1.9, 6), { align: 'center', color: DIM });
+      }
+    }
+    // Small quantum-number labels next to arrows for any placed electron cards in this row
+    const placedHere = Object.values(state.pieces).filter(p => p.kind === 'etok' && p.props?.placed && findRoom(addressOfToken(p))?.row === r.id);
+    if (placedHere.length) {
+      const byIdx = new Map();
+      for (const tok of placedHere) {
+        const rm = findRoom(addressOfToken(tok));
+        const list = byIdx.get(rm.idx) || [];
+        list.push(addressOfToken(tok));
+        byIdx.set(rm.idx, list);
+      }
+      const count = 2 * row.l + 1;
+      for (const [bIdx, list] of byIdx) {
+        const bx = r.x0 + RECTS.box.hw + bIdx * ((r.x1 - r.x0) / count);
+        const tagText = list.map(a => `${a.n},${a.l},${a.ml > 0 ? `+${a.ml}` : a.ml},${a.ms > 0 ? '↑' : '↓'}`).join('  ');
+        say(ctx, tagText, F.x(bx - x0), F.y(r.y - y0 + 5.6), F.size(1.75, 6), { align: 'center', color: PHOS, weight: 600 });
       }
     }
     if (f.props.reach) {

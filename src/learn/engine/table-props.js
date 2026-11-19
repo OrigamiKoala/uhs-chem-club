@@ -187,7 +187,10 @@ function meshOf(geo, mat, { cast = true, receive = true } = {}) {
 export function buildTray(w, d, { wallMat, liningMat, h = 0.016, wall = 0.012 } = {}) {
   const g = new THREE.Group();
   g.add(meshOf(wallGeometry(w, d, wall, h, 0.022), wallMat));
-  const floor = meshOf(roundedSlab(w - wall, d - wall, 0.0026, 0.016, 0.0006), liningMat, { cast: false });
+  const fw = Math.max(0.01, w - 2 * wall - 0.002);
+  const fd = Math.max(0.01, d - 2 * wall - 0.002);
+  const floor = meshOf(roundedSlab(fw, fd, 0.0024, Math.max(0.002, 0.014 - wall * 0.5), 0.0005), liningMat, { cast: false });
+  floor.position.y = 0.0005;
   g.add(floor);
   return g;
 }
@@ -196,7 +199,11 @@ export function buildTray(w, d, { wallMat, liningMat, h = 0.016, wall = 0.012 } 
 export function buildSlot(w, d, { wallMat, liningMat } = {}) {
   const g = new THREE.Group();
   g.add(meshOf(wallGeometry(w, d, 0.008, 0.009, 0.014, 0.0018), wallMat));
-  if (liningMat) g.add(meshOf(roundedSlab(w - 0.006, d - 0.006, 0.002, 0.01, 0.0005), liningMat, { cast: false }));
+  if (liningMat) {
+    const floor = meshOf(roundedSlab(Math.max(0.01, w - 0.018), Math.max(0.01, d - 0.018), 0.002, 0.006, 0.0004), liningMat, { cast: false });
+    floor.position.y = 0.0005;
+    g.add(floor);
+  }
   return g;
 }
 

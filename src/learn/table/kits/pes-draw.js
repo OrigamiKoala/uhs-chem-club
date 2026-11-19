@@ -155,14 +155,6 @@ function paintChamber(ctx, f, state, b) {
       for (let k = 0; k < pk.height; k++) ctx.strokeRect(X(strip.binX(bin)) - half, Y(strip.base - (k + 0.5) * strip.step) - half, half * 2, half * 2);
     }
   }
-  // What the strip shows, and why it is empty when it is.
-  let caption = 'NOTHING FIRED YET';
-  let colour = DIM;
-  if (read.fired) {
-    caption = read.electrons ? read.firedPiece.label : `${read.firedPiece.label}: NOTHING CAME OFF`;
-    colour = read.electrons ? PHOS : AMBER;
-  }
-  say(ctx, caption, X(strip.x0 + 1), Y(strip.top - 3.6), F.size(2.6, 7), { color: colour, weight: 700, maxW: strip.pitch * BINS * sc - 2 });
   if (model && !model.whole) say(ctx, model.protons || model.electrons ? 'THE BUILD IS NO WHOLE ATOM' : 'NOTHING BUILT YET', X(strip.x0 + strip.pitch * BINS - 1), Y(strip.top - 3.6), F.size(2.3, 6), { align: 'right', color: AMBER });
   // The specimen's own rings, beside its holder, when the stage gives them.
   if (f.props.rings) {

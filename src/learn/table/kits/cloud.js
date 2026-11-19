@@ -107,53 +107,80 @@ function dress3d(f, state, c) {
     waveGroup.position.set(centerPlate.x, c.ground + 0.004, centerPlate.z);
     group.add(waveGroup);
 
-    const N = 120;
+    const N = 160;
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array((N + 1) * 3);
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.LineBasicMaterial({ color: 0x78a142, linewidth: 2 });
+    const mat = new THREE.LineBasicMaterial({ color: 0x78a142, linewidth: 2.5, transparent: true, opacity: 1 });
     const line = new THREE.Line(geo, mat);
     line.visible = false;
     waveGroup.add(line);
 
+    const baseY = 0.022;
     let activeRead = null;
-    let phase = 0;
+    let lastNm = null;
+    let elapsed = 0;
+
+    const writeWave = (tSec, reduced) => {
+      if (!activeRead || !activeRead.nm) return;
+      const n = RING_CIRCUMFERENCE_PM / activeRead.nm;
+      const baseA = R_m * 0.30;
+      const lapDur = 1.25; // seconds per lap around the ring
+      const laps = reduced ? 2.5 : (tSec / lapDur);
+      const traceCount = laps < 1 ? Math.max(2, Math.floor(laps * N) + 1) : N + 1;
+      geo.setDrawRange(0, traceCount);
+
+      let ampScale = 0.65;
+      let alpha = 1.0;
+      if (laps >= 1) {
+        const extra = laps - 1;
+        if (activeRead.fits) {
+          // Reinforcing standing wave: grows a little taller on each lap up to 1.5x
+          ampScale = Math.min(1.5, 0.65 + extra * 0.28);
+          mat.color.set(0x4ade80);
+        } else {
+          // Cancelling wave: shrinks on each lap until it vanishes
+          const decay = Math.exp(-0.75 * extra);
+          ampScale = 0.65 * decay;
+          alpha = Math.max(0, Math.min(1, decay * 1.4));
+          mat.color.set(0xf59e0b);
+        }
+      } else {
+        mat.color.set(0x7dd3fc);
+      }
+      mat.opacity = alpha;
+      const osc = reduced ? 1 : (activeRead.fits ? Math.cos(tSec * 2.8) : 1);
+      const A_y = baseA * ampScale;
+
+      for (let i = 0; i <= N; i++) {
+        const th = (i / N) * Math.PI * 2;
+        const dy = A_y * Math.sin(n * th) * osc;
+        pos[i * 3] = R_m * Math.cos(th);
+        pos[i * 3 + 1] = Math.max(0.002, baseY + dy);
+        pos[i * 3 + 2] = R_m * Math.sin(th);
+      }
+      geo.attributes.position.needsUpdate = true;
+    };
 
     const sync = (fixture, st) => {
       activeRead = trackRead(st, fixture.id);
       if (!activeRead || !activeRead.nm) {
         line.visible = false;
+        lastNm = null;
         return;
       }
-      line.visible = true;
-      const n = RING_CIRCUMFERENCE_PM / activeRead.nm;
-      const A_m = R_m * 0.16;
-      mat.color.set(activeRead.fits ? 0x78a142 : 0xd99423);
-      for (let i = 0; i <= N; i++) {
-        const th = (i / N) * Math.PI * 2;
-        const dr = activeRead.fits ? A_m * Math.cos(n * th) : A_m * 0.3 * Math.cos(n * th);
-        pos[i * 3] = (R_m + dr) * Math.cos(th);
-        pos[i * 3 + 1] = 0.002;
-        pos[i * 3 + 2] = (R_m + dr) * Math.sin(th);
+      if (activeRead.nm !== lastNm) {
+        lastNm = activeRead.nm;
+        elapsed = 0;
       }
-      geo.attributes.position.needsUpdate = true;
+      line.visible = true;
+      writeWave(elapsed, false);
     };
 
     group.userData.tick = (delta, reduced) => {
-      if (!line.visible || reduced || !activeRead || !activeRead.nm) return;
-      phase += delta * 2.4;
-      const n = RING_CIRCUMFERENCE_PM / activeRead.nm;
-      const A_m = R_m * 0.16;
-      for (let i = 0; i <= N; i++) {
-        const th = (i / N) * Math.PI * 2;
-        const dr = activeRead.fits
-          ? A_m * Math.cos(n * th) * Math.cos(phase)
-          : A_m * 0.08 * Math.cos(n * th - phase); // non-integer smeared/cancelled
-        pos[i * 3] = (R_m + dr) * Math.cos(th);
-        pos[i * 3 + 1] = 0.002;
-        pos[i * 3 + 2] = (R_m + dr) * Math.sin(th);
-      }
-      geo.attributes.position.needsUpdate = true;
+      if (!line.visible || !activeRead || !activeRead.nm) return;
+      elapsed += delta;
+      writeWave(elapsed, reduced);
     };
 
     group.userData.sync = sync;

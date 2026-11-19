@@ -600,12 +600,6 @@ export function createClubHoloTexture() {
   ctx.moveTo(1006 - bLen, 558); ctx.lineTo(1006, 558); ctx.lineTo(1006, 558 - bLen);
   ctx.stroke();
 
-  // Eyebrow badge
-  ctx.font = 'bold 15px monospace';
-  ctx.fillStyle = '#d99423';
-  ctx.textAlign = 'center';
-  ctx.fillText('AVALON STATION · FLIGHT DECK DIRECTORY', 512, 50);
-
   // Top-right Close [X] badge
   ctx.font = 'bold 15px monospace';
   const closeText = TOUCH ? 'Close' : 'Close [X]';
@@ -1174,16 +1168,10 @@ export function createBlastDoorTexture(width = 512, height = 512) {
   }
 
   // Stenciled Door Markings
-  ctx.font = 'bold 16px monospace';
+  ctx.font = 'bold 20px monospace';
   ctx.fillStyle = '#d99423';
   ctx.textAlign = 'center';
-  ctx.fillText('AIRLOCK BAY 01', width / 2, 80);
-
-  ctx.font = '11px monospace';
-  ctx.fillStyle = '#8f8678';
-  ctx.fillText('DANGER: RAPID DECOMPRESSION RISK', width / 2, 102);
-
-  ctx.fillText('DO NOT CYCLE WITHOUT EVA GEAR', width / 2, height - 88);
+  ctx.fillText('AIRLOCK', width / 2, 84);
   ctx.textAlign = 'left';
 
   // Heavy reinforcement cross seams

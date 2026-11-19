@@ -169,13 +169,14 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
         const elecMesh = new THREE.Mesh(elecGeo, elecMat);
         g.add(elecMesh);
         const phase = (posIdx / electronsOnThisRing.length) * Math.PI * 2 + (ri * 0.6);
-        const speed = (2.2 / (1 + k * 0.28)) * (posIdx % 2 === 0 ? 1 : -1);
+        const speed = (0.55 / (1 + k * 0.28)) * (posIdx % 2 === 0 ? 1 : -1);
         electronTrackers.push({
           mesh: elecMesh,
           rad,
           quat: ringQuat,
           phase,
-          speed
+          speed,
+          outer: k === shells.length - 1
         });
       });
     }
@@ -184,8 +185,15 @@ export function buildAtom3D(r, p, kit, state, opts = {}) {
   let time = 0;
   const v = new THREE.Vector3();
   const updateElectrons = (t) => {
+    const bondedAngles = g.userData.bondedAngles;
+    let frozenUsed = 0;
     for (let i = 0; i < electronTrackers.length; i++) {
       const e = electronTrackers[i];
+      if (e.outer && bondedAngles?.length && frozenUsed < bondedAngles.length) {
+        const ang = bondedAngles[frozenUsed++];
+        e.mesh.position.set(e.rad * Math.cos(ang), cy, e.rad * Math.sin(ang));
+        continue;
+      }
       const theta = e.phase + e.speed * t;
       v.set(e.rad * Math.cos(theta), 0, e.rad * Math.sin(theta));
       v.applyQuaternion(e.quat);
@@ -583,7 +591,7 @@ export function buildSpecimen3D(r, p, kit, state, opts = {}) {
     g.add(ringMesh);
 
     const elecGeo = new THREE.SphereGeometry(Math.max(0.0016, baseR * 0.046), 10, 8);
-    const speed = (2.2 / (1 + ri * 0.28)) * (ri % 2 === 0 ? 1 : -1);
+    const speed = (0.55 / (1 + ri * 0.28)) * (ri % 2 === 0 ? 1 : -1);
 
     for (let j = 0; j < count; j++) {
       const elecMesh = new THREE.Mesh(elecGeo, elecMat);
@@ -595,17 +603,58 @@ export function buildSpecimen3D(r, p, kit, state, opts = {}) {
         rad,
         y: cy + 0.003 + ri * 0.0004,
         phase,
-        speed
+        speed,
+        outer: ri === rings.length - 1,
+        idx: j
       });
     }
   }
 
+  // Extra incoming electron mesh for "takes" animation in the partner tester (hidden unless active).
+  const outerRad = rings.length <= 1 ? (Rmin + Rmax) / 2 : Rmax;
+  const outerY = cy + 0.003 + Math.max(0, rings.length - 1) * 0.0004;
+  const incomingMat = own(new THREE.MeshStandardMaterial({
+    color: 0xfef08a, emissive: 0xd99423, roughness: 0.2, metalness: 0.2
+  }));
+  const incomingElec = new THREE.Mesh(new THREE.SphereGeometry(Math.max(0.002, baseR * 0.056), 10, 8), incomingMat);
+  incomingElec.visible = false;
+  g.add(incomingElec);
+
+  let curP = p;
   let time = 0;
+  let testClock = 0;
+  let lastTestedInSlot = false;
+  g.userData.sync = (np) => { curP = np; };
   g.userData.tick = (delta, still) => {
     if (still) return;
     time += delta;
+    const inTester = curP.zone === 'slot:tester' && Boolean(curP.props?.tested);
+    if (inTester && !lastTestedInSlot) testClock = 0;
+    lastTestedInSlot = inTester;
+    if (inTester) testClock += delta;
+
+    const mode = inTester ? curP.props.tested : null;
+    const flyP = Math.min(1, testClock / 1.1);
+    const easeOut = 1 - Math.pow(1 - flyP, 3);
+
+    incomingElec.visible = mode === 'takes';
+    if (mode === 'takes') {
+      const startR = baseR * 1.55;
+      const curR = startR + (outerRad - startR) * easeOut;
+      const ang = -Math.PI * 0.25 + (1 - easeOut) * 0.5;
+      incomingElec.position.set(curR * Math.cos(ang), outerY + (1 - easeOut) * baseR * 0.35, curR * Math.sin(ang));
+    }
+
     for (let i = 0; i < electronTrackers.length; i++) {
       const t = electronTrackers[i];
+      if (mode === 'gives' && t.outer && t.idx === 0) {
+        const curR = t.rad + (baseR * 1.55 - t.rad) * easeOut;
+        const ang = -Math.PI * 0.25;
+        t.mesh.position.set(curR * Math.cos(ang), t.y + easeOut * baseR * 0.35, curR * Math.sin(ang));
+        t.mesh.visible = flyP < 0.98;
+        continue;
+      }
+      t.mesh.visible = true;
       const theta = t.phase + t.speed * time;
       t.mesh.position.set(t.rad * Math.cos(theta), t.y, t.rad * Math.sin(theta));
     }

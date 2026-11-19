@@ -164,42 +164,11 @@ function createOrbitalMesh(THREE, def, scale = 1) {
   return group;
 }
 
-/** Mount interactive 5 d-orbitals 3D viewer. */
+/** Mount auto-cycling 5 d-orbitals 3D animation (no buttons, no text). */
 export function mountDOrbitals3D(view, wrap, config, still) {
-  let activeOrbital = D_ORBITALS_DEF[0];
-
-  // 1. Tab buttons bar
-  const bar = document.createElement('div');
-  bar.className = 'lq-orbital-bar';
-  bar.style.cssText = 'display:flex;gap:4px;padding:6px 8px;background:#14120f;border-bottom:1px solid #2e2a26;flex-wrap:wrap;align-items:center;';
-
-  const label = document.createElement('span');
-  label.textContent = 'ORBITAL:';
-  label.style.cssText = 'font-family:ui-monospace,monospace;font-size:10px;font-weight:bold;color:#8c8376;margin-right:2px;';
-  bar.appendChild(label);
-
-  const btns = [];
-  D_ORBITALS_DEF.forEach(o => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = o.label;
-    const isAct = o.id === activeOrbital.id;
-    btn.style.cssText = `font-family:ui-monospace,monospace;font-size:10px;padding:3px 7px;cursor:pointer;border:1px solid ${isAct ? '#d99423' : '#3e3933'};background:${isAct ? '#2a2214' : '#1a1815'};color:${isAct ? '#d99423' : '#a59c86'};border-radius:2px;`;
-    btn.addEventListener('click', () => {
-      activeOrbital = o;
-      btns.forEach(({ b, item }) => {
-        const act = item.id === activeOrbital.id;
-        b.style.borderColor = act ? '#d99423' : '#3e3933';
-        b.style.background = act ? '#2a2214' : '#1a1815';
-        b.style.color = act ? '#d99423' : '#a59c86';
-      });
-      updateScene();
-    });
-    bar.appendChild(btn);
-    btns.push({ b: btn, item: o });
-  });
-
-  wrap.insertBefore(bar, view);
+  const singleDefs = D_ORBITALS_DEF.filter(x => !x.all);
+  let activeIdx = 0;
+  let activeOrbital = singleDefs[0];
 
   let disposed = false;
   let raf = 0;
@@ -308,7 +277,15 @@ export function mountDOrbitals3D(view, wrap, config, still) {
     const t0 = performance.now();
     const animate = now => {
       if (disposed) return;
-      if (!still && !drag) ay += 0.007;
+      if (!still) {
+        const nextIdx = Math.floor(((now - t0) / 1000) / 2.6) % singleDefs.length;
+        if (nextIdx !== activeIdx) {
+          activeIdx = nextIdx;
+          activeOrbital = singleDefs[activeIdx];
+          updateScene();
+        }
+      }
+      if (!still && !drag) ay += 0.008;
       root.rotation.set(ax, ay, 0);
 
       // Gentle wave pulse on particles

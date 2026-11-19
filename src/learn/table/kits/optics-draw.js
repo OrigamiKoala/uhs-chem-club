@@ -30,13 +30,48 @@ const WELL = '#16140f';
 const rgbCss = (rgb, a = 1) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
 const colourOf = nm => { const rgb = wavelengthRgb(nm); return rgb ? rgbCss(rgb) : DUST; };
 
-/** Text that fits a width (the canvas squeezes it rather than letting it run over). */
+const SUP_MAP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁺': '+', '⁻': '−' };
+const HAS_SUP = /[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]/;
+
+/** Text that fits a width, rendering Unicode superscripts cleanly in a smaller raised font. */
 function say(ctx, text, x, y, size, o = {}) {
-  ctx.font = `${o.weight || 500} ${Math.max(6, size)}px "JetBrains Mono", "Quantico", monospace`;
-  ctx.textAlign = o.align || 'left';
+  const px = Math.max(6, size);
+  const wt = o.weight || 500;
+  const align = o.align || 'left';
   ctx.textBaseline = o.base || 'middle';
   ctx.fillStyle = o.color || PLATE_COLORS.text;
-  if (o.maxW) ctx.fillText(text, x, y, o.maxW); else ctx.fillText(text, x, y);
+  const str = String(text ?? '');
+  if (!HAS_SUP.test(str)) {
+    ctx.font = `${wt} ${px}px "JetBrains Mono", "Quantico", monospace`;
+    ctx.textAlign = align;
+    if (o.maxW) ctx.fillText(str, x, y, o.maxW); else ctx.fillText(str, x, y);
+    return;
+  }
+  const supPx = Math.max(5, Math.round(px * 0.68));
+  const segs = [];
+  const re = /([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+)|([^⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+)/g;
+  let m;
+  let totalW = 0;
+  while ((m = re.exec(str))) {
+    const isSup = Boolean(m[1]);
+    const txt = isSup ? m[1].replace(/./g, c => SUP_MAP[c] || c) : m[2];
+    ctx.font = `${wt} ${isSup ? supPx : px}px "JetBrains Mono", "Quantico", monospace`;
+    const w = ctx.measureText(txt).width;
+    segs.push({ txt, isSup, w });
+    totalW += w;
+  }
+  const scaleX = (o.maxW && totalW > o.maxW) ? o.maxW / totalW : 1;
+  ctx.save();
+  ctx.translate(x, y);
+  if (scaleX < 1) ctx.scale(scaleX, 1);
+  let curX = align === 'center' ? -totalW / 2 : align === 'right' ? -totalW : 0;
+  ctx.textAlign = 'left';
+  for (const s of segs) {
+    ctx.font = `${wt} ${s.isSup ? supPx : px}px "JetBrains Mono", "Quantico", monospace`;
+    ctx.fillText(s.txt, curX, s.isSup ? -px * 0.34 : 0);
+    curX += s.w;
+  }
+  ctx.restore();
 }
 
 /** A hairline-edged recessed well. */
@@ -399,12 +434,39 @@ function paintRuler(ctx, f, state, b) {
   ctx.fillStyle = 'rgba(184, 175, 160, 0.16)';
   ctx.fillRect(F.x(xOf(Math.log10(VISIBLE.min))), F.y(y - 5), F.len(xOf(Math.log10(VISIBLE.max)) - xOf(Math.log10(VISIBLE.min))), F.len(10));
   if (read) {
-    const x = xOf(Math.log10(read.nm));
+    const logVal = Math.log10(read.nm);
+    const x = xOf(logVal);
+    // Draw a wave across the upper display band whose drawn wavelength reflects the source's log-scale wavelength.
+    const waveY = y - 10;
+    const waveAmp = 3.2;
+    const frac = Math.max(0, Math.min(1, (logVal - LO) / (HI - LO)));
+    const lambdaU = 3.5 + frac * 22; // short tight wave for X-ray, long wave for Radio
+    ctx.strokeStyle = colourOf(read.nm);
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    const steps = 96;
+    for (let i = 0; i <= steps; i++) {
+      const wx = x0 + (i / steps) * rw;
+      const wy = waveY - Math.sin(((wx - x0) / lambdaU) * Math.PI * 2) * waveAmp;
+      if (i === 0) ctx.moveTo(F.x(wx), F.y(wy)); else ctx.lineTo(F.x(wx), F.y(wy));
+    }
+    ctx.stroke();
+    // Wavelength measurement bracket spanning one crest-to-crest cycle
+    const bx0 = x0 + lambdaU * 0.25;
+    const bx1 = Math.min(x0 + rw - 2, bx0 + lambdaU);
+    const by = waveY - waveAmp - 2.6;
+    ctx.strokeStyle = PHOS;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(F.x(bx0), F.y(by - 1.2)); ctx.lineTo(F.x(bx0), F.y(by + 1.2));
+    ctx.moveTo(F.x(bx0), F.y(by)); ctx.lineTo(F.x(bx1), F.y(by));
+    ctx.moveTo(F.x(bx1), F.y(by - 1.2)); ctx.lineTo(F.x(bx1), F.y(by + 1.2));
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    say(ctx, `λ = ${fmtLength(read.nm)}`, F.x((bx0 + bx1) / 2), F.y(by - 2.5), F.size(2.5, 7), { align: 'center', color: PHOS, weight: 700 });
+    // Marker on the log ruler
     ctx.fillStyle = PHOS;
-    ctx.fillRect(F.x(x) - 1.5, F.y(y - 12), 3, F.len(12));
-    say(ctx, fmtLength(read.nm), F.x(Math.min(x0 + rw - 1, Math.max(x0 + 1, x))), F.y(y - 15), F.size(3.2, 8), {
-      align: x > x0 + rw * 0.7 ? 'right' : x < x0 + rw * 0.3 ? 'left' : 'center', color: PHOS, weight: 700
-    });
+    ctx.fillRect(F.x(x) - 1.5, F.y(y - 4.5), 3, F.len(5));
   } else {
     say(ctx, 'NOTHING IN THE HOLDER', F.x(x0 + rw / 2), F.y(y - 9), F.size(2.6, 7), { align: 'center', color: DIM });
   }
@@ -522,7 +584,7 @@ function paintBand(ctx, f, state, b) {
     strip(bx - dw - 1.2, 'UV', read.uv);
     strip(bx + bw + 1.2, 'IR', read.ir);
   }
-  // The reference strip's lines, laid under the band, and the ones that fall on a line of the band.
+  // The reference strip's lines, laid under the band.
   if (f.props.ref) {
     const ry = by + bh + 7;
     ctx.fillStyle = 'rgba(217, 148, 35, 0.12)';
@@ -530,20 +592,14 @@ function paintBand(ctx, f, state, b) {
     ctx.strokeStyle = RIM;
     ctx.strokeRect(F.x(bx) + 0.5, F.y(ry) + 0.5, F.len(bw) - 1, F.len(5) - 1);
     for (const nm of read.refLines) {
-      const hit = read.matched.includes(nm);
-      ctx.strokeStyle = hit ? AMBER : STEEL;
-      ctx.lineWidth = hit ? 2 : 1.5;
+      ctx.strokeStyle = STEEL;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(F.x(xOf(nm)), F.y(ry));
       ctx.lineTo(F.x(xOf(nm)), F.y(ry + 5));
-      if (hit) {
-        ctx.moveTo(F.x(xOf(nm)), F.y(by));
-        ctx.lineTo(F.x(xOf(nm)), F.y(by + bh + 7));
-      }
       ctx.stroke();
       ctx.lineWidth = 1;
     }
-    say(ctx, read.ref ? `LINES ON THE STRIP THAT FALL ON THE BAND: ${read.matched.length} OF ${read.refLines.length}` : 'NO STRIP ALONGSIDE', F.x(bx), F.y(ry + 8.4), F.size(2.3, 6), { color: read.matched.length && read.whole ? AMBER : DIM, maxW: F.len(bw) });
   }
 }
 
@@ -592,7 +648,8 @@ function paintCellFixture(ctx, f, state, b) {
   // crosses to the collector at a drawn speed that follows the speed meter. Positions are a function of the clock alone.
   well(ctx, F.x(tx0), F.y(tubeY), F.len(tx1 - tx0), F.len(tubeH), { stroke: STEEL });
   const lampText = read.nm != null ? `LAMP ${fmtSig(read.nm)} nm${f.props.showHz && read.f14 != null ? `, ${read.f14.toFixed(2)} × 10¹⁴ /s` : ''}` : 'LAMP OFF';
-  say(ctx, lampText, F.x(2), F.y(tubeY - 2.4), F.size(2.3, 6), { color: read.nm != null ? colourOf(read.nm) : DIM, weight: 700 });
+  // Place lamp readout right-aligned over the tube clear of both the dial knob and the HOLDER label.
+  say(ctx, lampText, F.x(tx1 - 1), F.y(tubeY - 2.3), F.size(2.1, 6), { align: 'right', color: read.nm != null ? colourOf(read.nm) : DIM, weight: 700, maxW: F.len(tx1 - tx0 - 18) });
   ctx.fillStyle = '#2d2924';
   ctx.fillRect(F.x(tx1 - 4), F.y(tubeY + 2), F.len(2.4), F.len(tubeH - 4));
   if (read.nm != null) {
@@ -601,8 +658,8 @@ function paintCellFixture(ctx, f, state, b) {
     const from = f.props.lamp ? tx0 - 4 : 2;
     const hitX = read.plate ? plateX - 7 : tx1 - 4;
     const t = b.clock || 0;
-    const every = PHOTON_EVERY / read.brightness;
-    const flight = 0.9;
+    const every = PHOTON_EVERY / Math.max(1, read.brightness);
+    const flight = 0.75;
     const lanes = [-0.3, 0.15, -0.1, 0.3, 0];
     const newest = Math.floor(t / every);
     const rgb = wavelengthRgb(read.nm) || [184, 175, 160];
@@ -615,13 +672,13 @@ function paintCellFixture(ctx, f, state, b) {
         ctx.fillStyle = rgbCss(rgb, 0.95);
         ctx.fillRect(F.x(px - 1.3), F.y(lane) - Math.max(1, F.sc * 0.35), F.len(2.6), Math.max(2, F.sc * 0.7));
       } else if (read.plate && read.freed) {
-        // The electron that photon removed, crossing to the collector.
-        const v = (tx1 - plateX) * (0.25 + 0.11 * read.speed);
+        // Freed electrons flow out of the metal plate as bright white dots, faster as brightness/energy increases.
+        const v = (tx1 - plateX) * (0.28 + 0.10 * read.speed + 0.08 * (read.brightness - 1));
         const ex = plateX + 7.5 + (age - flight) * v;
         if (ex < tx1 - 4.5) {
-          ctx.fillStyle = DUST;
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(F.x(ex), F.y(lane), Math.max(1.4, F.sc * 0.6), 0, Math.PI * 2);
+          ctx.arc(F.x(ex), F.y(lane), Math.max(2.0, F.sc * 0.78), 0, Math.PI * 2);
           ctx.fill();
         }
       } else if (read.plate && age < flight + 0.25) {

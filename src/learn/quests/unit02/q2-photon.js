@@ -43,10 +43,10 @@ export const meta = { stageCount: 6 };
 
 /** The stage whose card confirms each term. "Photon" is defined in stage 3's briefing and "work function" in stage 5's. */
 export const VOCABULARY = [
-  { term: /\bphotoelectric\b/i, introducedAt: 2 },
+  { term: /\bphotoelectric\b/i, introducedAt: 1 },
   { term: /\bthreshold frequency\b/i, introducedAt: 3 },
   { term: /\bphotons?\b/i, introducedAt: 3 },
-  { term: /\bwork functions?\b/i, introducedAt: 5 }
+  { term: /\bwork functions?\b/i, introducedAt: 3 }
 ];
 
 /** Wavelength, frequency and the speed of light are plain words from q1-wave. */
@@ -99,13 +99,52 @@ const inSlot = (t, slot) => Object.values(t.pieces).find(p => p.zone === `slot:$
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
+  (() => {
+    const cell = photocell('cell', 'Photocell', { x: 52, y: 28 }, { lamp: true, brightness: 3 });
+    return {
+      title: 'Light on Metal',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Shining light on a metal plate can knock electrons right out of the surface. Place the sodium plate and the violet lamp in the photocell to watch what happens.'
+      },
+      prompt: 'Put the sodium plate and violet lamp in the photocell to see what light does to the metal.',
+      widget,
+      table: opticsTable({
+        pieces: [
+          metalPlate('na', 'Sodium', { x: 124, y: 20 }, 'Na'),
+          lamp('v', 'Violet lamp', { x: 124, y: 42 }, 400)
+        ],
+        fixtures: [cell.fixture],
+        zones: { slots: cell.slots }
+      }),
+      hints: [
+        'Drag the sodium plate into the holder and the violet lamp into the lamp slot.',
+        'Watch the tube and the collector cup once both are seated.',
+        'Wait for electrons to start leaving the sodium plate, then press Submit.'
+      ],
+      check(state) {
+        const r = cellRead(state.table, 'cell');
+        if (!r.plate) return { ok: false, notYet: true, msg: 'Put the sodium plate in the holder.' };
+        if (r.nm == null) return { ok: false, notYet: true, msg: 'Put the violet lamp in the lamp slot.' };
+        if (r.freed) return { ok: true };
+        return { ok: false, msg: 'No electrons are leaving the plate yet.' };
+      },
+      reward: {
+        log: 'Violet light knocked electrons off sodium.',
+        title: 'The Photoelectric Effect',
+        body: 'Light knocked electrons straight out of the sodium plate and into the collector. This release of electrons by light is the photoelectric effect.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 2 */
   {
     title: 'Bright Red on Sodium',
-    // A PREDICT STAGE: the photocell is not on the table yet. The briefing gives the wave picture to predict from.
+    // A PREDICT STAGE: now that the student has seen light knock electrons off sodium, predict what bright red light will do.
     predict: true,
     briefing: {
       speaker: SPEAKER,
-      body: 'Light can remove electrons from a metal: this is the photoelectric effect. If light were only a wave, a brighter lamp would deliver more energy, so a bright enough lamp of any colour should remove some.'
+      body: 'If light were only a wave, a brighter lamp would deliver more energy, so a bright enough lamp of any colour should knock electrons off sodium.'
     },
     prompt: 'A very bright red lamp shines on a sodium plate: how many electrons does it remove?',
     widget,
@@ -124,7 +163,7 @@ export const STAGES = [
     }),
     hints: [
       'Drag one of the three cards into the slot.',
-      'Think about what the briefing says a brighter lamp delivers, and whether red light should be any different.',
+      'Think about what a brighter lamp delivers if light were only a wave, and whether red light should differ.',
       'A prediction is not graded, so choose the one you think is most likely.'
     ],
     check(state) {
@@ -138,21 +177,21 @@ export const STAGES = [
     reward: {
       log: 'Prediction made.',
       title: 'Prediction',
-      body: 'Next, a photocell shines light of any colour and brightness on a sodium plate and counts the electrons that leave.'
+      body: 'Next, test both colour and brightness on sodium in the photocell.'
     }
   },
 
-  /* ---------------------------------------------------------------- 2 */
+  /* ---------------------------------------------------------------- 3 */
   (() => {
-    const cell = photocell('cell', 'Photocell', { x: 52, y: 31 }, { settings: SWEEP, start: 1, brightness: { start: 5 } });
+    const cell = photocell('cell', 'Photocell', { x: 52, y: 31 }, { settings: SWEEP, start: 1, brightness: { start: 5 }, showHz: true });
     return {
       title: 'Removing Electrons',
       // The guess comes back here.
       get prompt() {
         const guess = recall(QUEST_KEY);
         return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": which light removes electrons from the sodium plate even at the lowest brightness?`
-          : 'Which light removes electrons from the sodium plate even at the lowest brightness?';
+          ? `You predicted "${GUESS_LABEL[guess]}": which light removes electrons from sodium even at the lowest brightness?`
+          : 'Which light removes electrons from sodium even at the lowest brightness?';
       },
       widget,
       table: opticsTable({
@@ -162,8 +201,8 @@ export const STAGES = [
       }),
       hints: [
         'Put the sodium plate in the holder, then use the Colour dial and the Brightness dial.',
-        'Compare what one colour does at full brightness and at the lowest brightness, then do the same for another colour.',
-        'If brightness decided whether electrons leave, the brightest red light would remove the most: see whether it does.'
+        'Compare what red light does at full brightness with what violet light does at the lowest brightness.',
+        'Find a colour that frees electrons even when Brightness is set to 1.'
       ],
       check(state) {
         const r = cellRead(state.table, 'cell');
@@ -177,49 +216,11 @@ export const STAGES = [
         const guess = recall(QUEST_KEY);
         const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'none' ? 'Your prediction held. ' : 'The plate did not agree with your prediction. ';
         return {
-          log: 'Red at full brightness: none. Violet at the lowest brightness: electrons.',
-          title: 'The Photoelectric Effect',
-          body: `${verdict}The brightest red light removed no electrons, and light nearer violet removed some even at the lowest brightness. Colour decides it, not brightness, so the wave prediction fails.`,
-          model: { type: 'photons', metal: 'Na', nm: 400, brightness: 1, caption: 'Violet light removes an electron from sodium. Red light, however bright, removes none.' }
+          log: 'Red at full brightness: none. Violet at lowest brightness: electrons.',
+          title: 'Photons and Threshold Frequency',
+          body: `${verdict}Light arrives in energy packets called photons. Each metal has a minimum energy to free an electron (its work function) and a matching threshold frequency; below it, no brightness frees electrons.`,
+          model: { type: 'photons', metal: 'Na', nm: 400, brightness: 1, caption: 'Below the threshold frequency (red), no electrons leave at any brightness. Above it (UV/violet), photons free electrons.' }
         };
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 3 */
-  (() => {
-    const cell = photocell('cell', 'Photocell', { x: 52, y: 26 }, { settings: NEAR_SODIUM, start: 1, brightness: 3, showHz: true });
-    return {
-      title: 'The Lowest Frequency',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'Light delivers its energy in separate packets called photons: the photocell draws each one as a short bar. The higher the light\'s frequency, the more energy each photon carries.'
-      },
-      prompt: 'What is the lowest frequency of light that removes electrons from sodium?',
-      widget,
-      table: opticsTable({
-        pieces: [seatedPlate('na', 'Sodium', cell, 'Na')],
-        fixtures: [cell.fixture],
-        zones: { slots: cell.slots }
-      }),
-      hints: [
-        'Step the Colour dial one setting at a time; the lamp\'s frequency is printed beside its wavelength.',
-        'Notice what the photons do at the plate on each setting, and at which setting that changes.',
-        'One photon either carries enough energy to remove an electron or it does not, so look for the frequency where that changes.'
-      ],
-      check(state) {
-        const r = cellRead(state.table, 'cell');
-        const v = r.fixture.dials.colour.value;
-        const first = firstFreeing(r.fixture.props.settings, 'Na', 3);
-        if (v === first) return { ok: true };
-        if (v === 1) return { ok: false, notYet: true, msg: 'The lamp is where it started.' };
-        if (v < first) return { ok: false, msg: 'At this frequency photons reach the plate and no electron leaves.' };
-        return { ok: false, msg: 'Electrons leave at this frequency, and they also left at a lower one.' };
-      },
-      reward: {
-        log: 'Electrons leave at one frequency and not below it.',
-        title: 'Threshold Frequency',
-        body: 'Below this frequency each photon carries too little energy to remove an electron, however many arrive. The lowest frequency that removes any is the metal\'s threshold frequency.'
       }
     };
   })(),
@@ -333,11 +334,11 @@ export const STAGES = [
       title: 'Energy of the Electron',
       briefing: {
         speaker: SPEAKER,
-        body: 'A photon\'s energy is h × frequency, where h is a fixed number called Planck\'s constant. The fastest electron leaves with that energy less the work function: this is its kinetic energy, the energy of its motion, in joules (J).',
+        body: 'A photon\'s energy is E_photon = h × frequency (in joules, J). KE_electron = E_photon - W.',
         worked: [
-          `Light of ${WORKED.hz14.toFixed(1)} × 10¹⁴ each second on ${WORKED.metal} (work function ${WORKED.work.toFixed(1)} × 10⁻¹⁹ J)`,
-          `Photon: 6.6 × 10⁻³⁴ × ${WORKED.hz14.toFixed(1)} × 10¹⁴ = ${workedPhoton.toFixed(1)} × 10⁻¹⁹ J`,
-          `Electron: ${workedPhoton.toFixed(1)} − ${WORKED.work.toFixed(1)} = ${(Number(workedPhoton.toFixed(1)) - WORKED.work).toFixed(1)} × 10⁻¹⁹ J`
+          `Light of ${WORKED.hz14.toFixed(1)} × 10¹⁴ /s on ${WORKED.metal} (W = ${WORKED.work.toFixed(1)} × 10⁻¹⁹ J)`,
+          `E_photon = 6.6 × 10⁻³⁴ × ${WORKED.hz14.toFixed(1)} × 10¹⁴ = ${workedPhoton.toFixed(1)} × 10⁻¹⁹ J`,
+          `KE_electron = ${workedPhoton.toFixed(1)} − ${WORKED.work.toFixed(1)} = ${(Number(workedPhoton.toFixed(1)) - WORKED.work).toFixed(1)} × 10⁻¹⁹ J`
         ]
       },
       prompt: 'How much kinetic energy does the fastest electron leave the sodium plate with?',
@@ -416,9 +417,9 @@ const wakes = metal => firstFreeing(THREE_PLATES, metal, 3);
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
+  [put('na', 'slot:cell.holder'), put('v', 'slot:cell.lamp')],
   [{ predict: 'none' }],
   [put('na', 'slot:cell.holder'), colour(6), bright(1)],
-  [colour(5)],
   [{ run: 'cell' }, bright(4), { run: 'cell' }, put('more', 'slot:answer')],
   [
     put('cs', 'slot:cell.holder'), colour(wakes('Cs')), { run: 'cell' }, put('cs', 'rail:0'),
@@ -430,9 +431,9 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
+  [put('na', 'slot:cell.holder')],
   [],
   [put('na', 'slot:cell.holder'), colour(6), bright(5)],
-  [colour(7)],
   [{ run: 'cell' }, bright(4), { run: 'cell' }, put('both', 'slot:answer')],
   [put('cs', 'rail:2')],
   [{ type: { entry: 'ans', value: '5' } }]

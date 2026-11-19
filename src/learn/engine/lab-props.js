@@ -330,14 +330,15 @@ export function buildSlideStrip(c, { face }) {
   const { hw, hh, mats: m } = c;
   const g = new THREE.Group();
   const h = 0.007;
-  g.add(at(mesh(roundedSlab(hw * 1.98, hh * 1.98, h, 0.006, 0.0015), m.labSmoke), 0, 0, 0));
-  const pic = mesh(new THREE.PlaneGeometry(hw * 2 * 0.86, hh * 2 * 0.86), face, { cast: false });
+  // Keep the glass slide strictly between the two end clips so there is zero coplanar z-fighting.
+  g.add(at(mesh(roundedSlab(hw * 1.74, hh * 1.94, h, 0.004, 0.0012), m.labSmoke), 0, 0, 0));
+  const pic = mesh(new THREE.PlaneGeometry(hw * 1.66, hh * 1.76), face, { cast: false });
   pic.rotation.x = -Math.PI / 2;
-  pic.position.y = h + 0.0005;
+  pic.position.y = h + 0.0012;
   g.add(pic);
   for (const sx of [-1, 1]) {
-    const clip = mesh(roundedSlab(hw * 0.1, hh * 2.04, h + 0.006, 0.002, 0.001), m.labSteel);
-    clip.position.set(sx * (hw - hw * 0.07), 0, 0);
+    const clip = mesh(roundedSlab(hw * 0.11, hh * 2.02, h + 0.006, 0.002, 0.001), m.labSteel);
+    clip.position.set(sx * (hw * 0.935), 0, 0);
     g.add(clip);
   }
   return done(g, h + 0.006);

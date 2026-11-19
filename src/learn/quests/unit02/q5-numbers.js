@@ -43,8 +43,8 @@ import {
 export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bpauli\b/i, introducedAt: 4 },
-  { term: /\bspins?\b/i, introducedAt: 3 },
+  { term: /\bpauli\b/i, introducedAt: 2 },
+  { term: /\bspins?\b/i, introducedAt: 2 },
   { term: /\bmagnetic\b/i, introducedAt: 1 },
   { term: /\bangular momentum\b/i, introducedAt: 1 },
   { term: /\bprincipal\b/i, introducedAt: 1 }
@@ -80,9 +80,29 @@ export const CANDIDATES = {
 /** The box stage one rings: the right-hand box of the 2p row. */
 const TARGET = { row: '2p', idx: 2 };
 
-/** Candidate tokens in two columns of three (a token is wide). */
+/** Sorting stage 4 (Shell 2) and stage 5 (Shell 3) electron sets. */
+const SORT_SHELL2 = {
+  a: { n: 1, l: 0, ml: 0, ms: 0.5 },
+  b: { n: 2, l: 0, ml: 0, ms: -0.5 },
+  c: { n: 2, l: 1, ml: -1, ms: 0.5 },
+  d: { n: 2, l: 1, ml: 1, ms: -0.5 }
+};
+const SORT_SHELL3 = {
+  a: { n: 3, l: 0, ml: 0, ms: 0.5 },
+  b: { n: 3, l: 1, ml: 0, ms: -0.5 },
+  c: { n: 3, l: 2, ml: -2, ms: 0.5 },
+  d: { n: 3, l: 2, ml: 0, ms: 0.5 },
+  e: { n: 3, l: 2, ml: 2, ms: -0.5 }
+};
+const strictTokensOf = (sets, at) => Object.entries(sets).map(([k, a], i) => {
+  const tok = electronToken(`s${k}`, k.toUpperCase(), at(i), a);
+  tok.props.strictBox = true;
+  return tok;
+});
+
+/** Candidate tokens in two clean columns of three. */
 const tokensOf = (sets, at) => Object.entries(sets).map(([k, a], i) => electronToken(`t${k}`, k.toUpperCase(), at(i), a));
-const TWO_COLUMNS = i => ({ x: i < 3 ? 90 : 126, y: 10 + (i % 3) * 14 });
+const TWO_COLUMNS = i => ({ x: i < 3 ? 90 : 128, y: 7.5 + (i % 3) * 14.5 });
 
 /** Hands for a stage: Up, Down and Lift Out in a row. */
 const hands = (x, y, pitch = 18) => [hand('up', 'up', { x, y }), hand('down', 'down', { x: x + pitch, y }), hand('lift', 'lift', { x: x + 2 * pitch, y })];
@@ -125,107 +145,25 @@ export const STAGES = [
   })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'How Many in an Orbital',
-    // A PREDICT STAGE: the diagram is not on the table yet. The guess is made first, here, and comes back with the test.
-    predict: true,
-    prompt: 'How many electrons can one orbital hold?',
-    widget,
-    table: shellsTable({
-      pieces: [],
-      fixtures: [],
-      zones: {},
-      prediction: {
-        slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 30, h: 14 } },
-        tokens: [
-          { id: 'one', label: 'One', at: { x: 38, y: 48 }, r: 7 },
-          { id: 'two', label: 'Two', at: { x: 75, y: 48 }, r: 7 },
-          { id: 'any', label: 'Any number', at: { x: 112, y: 48 }, r: 8 }
-        ]
-      }
-    }),
-    hints: [
-      'Drag one of the three cards into the slot.',
-      'Think whether one region round a nucleus could go on taking electrons, which all repel one another.',
-      'A prediction is not graded, so choose the one you think is most likely.'
-    ],
-    check(state) {
-      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
-      return { ok: true };
-    },
-    onClear(state) {
-      const token = state.table.prediction?.token;
-      if (token) remember(QUEST_KEY, token);
-    },
-    reward: {
-      log: 'Prediction made.',
-      title: 'Prediction',
-      body: 'Next, electrons are added to one orbital until it takes no more.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 3 */
   (() => {
-    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 38, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
-    const count = marker('count', 'Electrons one orbital holds', { x: 112, y: 52 }, { min: 0, max: 6, step: 1, value: 0, size: { w: 36, h: 12 } });
-    return {
-      title: 'Orbital Capacity',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'An electron has a property called spin, which points one of two ways. The diagram draws an electron as an arrow, ↑ for one spin and ↓ for the other.'
-      },
-      get prompt() {
-        const guess = recall(QUEST_KEY);
-        return guess && GUESS_LABEL[guess]
-          ? `You predicted "${GUESS_LABEL[guess]}": how many electrons can one orbital hold?`
-          : 'How many electrons can one orbital hold?';
-      },
-      widget,
-      table: shellsTable({ pieces: [...rack.boxes, ...hands(92, 22)], fixtures: [rack.fixture, count] }),
-      hints: [
-        'Drag "Add ↑" or "Add ↓" onto one orbital to put an electron in it, and set the number dial to your answer.',
-        'Notice which electron an orbital refuses, and what the message says about the one already there.',
-        'Go on adding electrons of both spins to one orbital until every further one is refused, then count what it holds.'
-      ],
-      check(state) {
-        const t = state.table;
-        const marked = t.fixtures.count.dials.n.value;
-        const full = Object.values(t.pieces).some(p => p.kind === 'box' && arrowsOf(t, p).length === 2);
-        if (!full) return { ok: false, notYet: true, msg: 'Add electrons to one orbital until it takes no more.' };
-        if (marked === 0) return { ok: false, notYet: true, msg: 'Set the number dial to your answer.' };
-        if (marked === 2) return { ok: true };
-        return { ok: false, msg: `The fullest orbital on the diagram holds 2 electrons, and the dial reads ${marked}.` };
-      },
-      get reward() {
-        const guess = recall(QUEST_KEY);
-        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'two'
-          ? 'Your prediction held. '
-          : 'The orbital did not agree with your prediction. ';
-        return {
-          log: 'An orbital holds two electrons with opposite spins.',
-          title: 'Two Electrons, Opposite Spin',
-          body: `${verdict}An orbital holds two electrons at most, one of each spin. The two spins are written +½ (↑) and −½ (↓).`
-        };
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 4 */
-  (() => {
-    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 36, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
+    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 36, y: 32 }, { show: {} });
     return {
       title: 'The Pauli Principle',
-      prompt: 'Which card cannot join the diagram once the rest are placed?',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Each electron also has a spin quantum number, ms (+½ ↑ or −½ ↓). Every orbital holds at most two electrons of opposite spin, and no two electrons in an atom can share all four quantum numbers.'
+      },
+      prompt: 'Place each electron card into its matching orbital on the diagram, and put the duplicate card into Refused.',
       widget,
       table: shellsTable({
         pieces: [...rack.boxes, ...tokensOf(CANDIDATES, TWO_COLUMNS)],
         fixtures: [rack.fixture],
-        zones: { trays: [tray('no', 'Refused', { x: 108, y: 56 }, { w: 40, h: 14 })] }
+        zones: { trays: [tray('no', 'Refused', { x: 110, y: 57 }, { w: 44, h: 10 })] }
       }),
       hints: [
-        'Drag each electron card onto the diagram; it goes to the orbital its first three numbers name.',
+        'Drag each electron card onto the diagram; once placed, it turns into an arrow and label inside its orbital.',
         'Compare the four numbers on a refused card with those of the electrons already placed.',
-        'Two electrons may share an orbital, so look for what else the refused electron has in common with one already there.'
+        'Two electrons may share an orbital only with opposite spins (+½ and −½); put the duplicate card in Refused.'
       ],
       check(state) {
         const t = state.table;
@@ -233,22 +171,22 @@ export const STAGES = [
         const placed = ids.filter(id => t.pieces[id].props.placed && !inTray(t, id));
         const away = ids.filter(id => inTray(t, id));
         if (placed.length === 0 && away.length === 0) return { ok: false, notYet: true, msg: 'Place the electron cards on the diagram.' };
-        if (away.length !== 1) return { ok: false, notYet: true, msg: 'Put exactly one electron, the one the diagram will not take, in the tray.' };
+        if (away.length !== 1) return { ok: false, notYet: true, msg: 'Put exactly one electron, the one the diagram will not take, in the Refused tray.' };
         const out = addressOfToken(t.pieces[away[0]]);
         if (placed.length === ids.length - 1 && placed.some(id => sameAddress(addressOfToken(t.pieces[id]), out))) return { ok: true };
-        return { ok: false, msg: 'The electron in the tray has a free place on the diagram, or another card is still waiting to be placed.' };
+        return { ok: false, msg: 'The electron in Refused has a free place on the diagram, or another card is still waiting to be placed.' };
       },
       reward: {
         log: 'Two electrons cannot share the same address.',
         title: 'The Pauli Exclusion Principle',
-        body: 'A and C have the same four quantum numbers, so the atom holds only one of them. No two electrons in an atom share all four: this is the Pauli exclusion principle.'
+        body: 'A and C have the same four quantum numbers (including spin), so the atom holds only one of them. No two electrons in an atom share all four: this is the Pauli exclusion principle.'
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 3 */
   (() => {
-    const rack = shelf('rack', ['3s', '3p', '3d'], { x: 40, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
+    const rack = shelf('rack', ['3s', '3p', '3d'], { x: 40, y: 32 }, { show: {} });
     const count = marker('count', 'Electrons in the third shell', { x: 114, y: 48 }, { min: 0, max: 32, step: 2, value: 0, size: { w: 46, h: 12 } });
     return {
       title: 'Shell Capacity',
@@ -258,7 +196,7 @@ export const STAGES = [
       hints: [
         'The diagram shows every orbital of the third shell, and "Add ↑" and "Add ↓" fill them if you want to count.',
         'Count the orbitals across the 3s, 3p and 3d rows.',
-        'Remember how many electrons each orbital can hold.'
+        'Each orbital holds up to 2 electrons (one ↑ and one ↓).'
       ],
       check(state) {
         const t = state.table;
@@ -271,7 +209,71 @@ export const STAGES = [
       reward: {
         log: 'Nine orbitals, two electrons each.',
         title: 'Shell Capacity',
-        body: 'Nine orbitals with two electrons each: 18. The first shell has one orbital and holds 2; the second has four and holds 8.',
+        body: 'Nine orbitals with two electrons each: 18. The first shell has one orbital and holds 2; the second has four and holds 8.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 4 */
+  (() => {
+    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 36, y: 32 }, { show: {} });
+    const ids = Object.keys(SORT_SHELL2).map(k => `s${k}`);
+    return {
+      title: 'Sort Into Shell 1 and 2',
+      prompt: 'Place every electron card into the exact orbital box matching its quantum numbers.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...strictTokensOf(SORT_SHELL2, i => ({ x: 108, y: 11 + i * 14 }))],
+        fixtures: [rack.fixture]
+      }),
+      hints: [
+        'Use n for the shell (1 or 2), l for the subshell (0 = s, 1 = p), and ml (−1, 0, +1) for the box across the row.',
+        'Drop each card directly onto its matching orbital box.',
+        'Every card disappears into its box with its quantum numbers labeled beside the arrow once placed.'
+      ],
+      check(state) {
+        const t = state.table;
+        const placed = ids.filter(id => t.pieces[id].props.placed);
+        if (placed.length === 0) return { ok: false, notYet: true, msg: 'Drag each electron card onto its matching orbital box.' };
+        if (placed.length < ids.length) return { ok: false, msg: `${ids.length - placed.length} electron card${ids.length - placed.length === 1 ? ' is' : 's are'} still waiting to be placed.` };
+        return { ok: true };
+      },
+      reward: {
+        log: 'All four electrons sorted into shells 1 and 2.',
+        title: 'Reading Quantum Addresses',
+        body: 'Each (n, l, ml, ms) address maps directly to one specific orbital box and spin direction.'
+      }
+    };
+  })(),
+
+  /* ---------------------------------------------------------------- 5 */
+  (() => {
+    const rack = shelf('rack', ['3s', '3p', '3d'], { x: 40, y: 32 }, { show: {} });
+    const ids = Object.keys(SORT_SHELL3).map(k => `s${k}`);
+    return {
+      title: 'Sort Into Shell 3',
+      prompt: 'Sort all five electrons into their exact 3s, 3p, and 3d orbital boxes.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...strictTokensOf(SORT_SHELL3, i => ({ x: i < 3 ? 98 : 132, y: 12 + (i % 3) * 15 }))],
+        fixtures: [rack.fixture]
+      }),
+      hints: [
+        'In shell 3, l = 0 is 3s (1 box), l = 1 is 3p (3 boxes: ml = −1, 0, +1), and l = 2 is 3d (5 boxes: ml = −2 to +2).',
+        'Check ml from left (−l) to right (+l) along the row.',
+        'Drop each card directly onto the orbital box its n, l, and ml name.'
+      ],
+      check(state) {
+        const t = state.table;
+        const placed = ids.filter(id => t.pieces[id].props.placed);
+        if (placed.length === 0) return { ok: false, notYet: true, msg: 'Drag each electron card onto its matching 3s, 3p, or 3d orbital box.' };
+        if (placed.length < ids.length) return { ok: false, msg: `${ids.length - placed.length} electron card${ids.length - placed.length === 1 ? ' is' : 's are'} still waiting to be placed.` };
+        return { ok: true };
+      },
+      reward: {
+        log: 'All five shell-3 electrons sorted by quantum numbers.',
+        title: 'Quantum Addresses Mastered',
+        body: 'You can now place any electron directly into its s, p, or d orbital from its four quantum numbers.',
         last: true
       }
     };
@@ -281,8 +283,9 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Turn the n, l and ml dials:', 'the orbital they name lights up.'],
-  3: ['Drag "Add ↑" or "Add ↓" onto an orbital to put an electron in it.'],
-  4: ['Drag each electron card onto the diagram.']
+  2: ['Drag each electron card onto the diagram.'],
+  4: ['Drag each electron card onto its exact orbital box.'],
+  5: ['Drag each electron card onto its exact 3s, 3p, or 3d box.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -320,21 +323,23 @@ const onBox = (piece, row, idx) => put(piece, `piece:${boxPieceId('rack', row, i
 /** Each candidate dropped on the box its address names, in order. */
 const dropAll = () => Object.entries(CANDIDATES).map(([k, a]) => { const r = findRoom(a); return onBox(`t${k}`, r.row, r.idx); });
 
+const dropSet = (sets, prefix) => Object.entries(sets).map(([k, a]) => { const r = findRoom(a); return onBox(`${prefix}${k}`, r.row, r.idx); });
+
 export const SOLUTIONS = [
   [dial('addr', 'n', 2), dial('addr', 'l', 1), dial('addr', 'ml', 1)],
-  [{ predict: 'two' }],
-  [onBox('up', '1s', 0), onBox('down', '1s', 0), dial('count', 'n', 2)],
   [...dropAll(), put('tc', 'tray:no')],
-  [dial('count', 'n', 18)]
+  [dial('count', 'n', 18)],
+  dropSet(SORT_SHELL2, 's'),
+  dropSet(SORT_SHELL3, 's')
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [dial('addr', 'n', 2), dial('addr', 'l', 1), dial('addr', 'ml', -1)],
-  [],
-  [onBox('up', '1s', 0), onBox('down', '1s', 0), dial('count', 'n', 3)],
-  [...dropAll(), put('tb', 'tray:no')],
-  [onBox('up', '3s', 0), onBox('down', '3s', 0), dial('count', 'n', 8)]
+  [...dropAll(), put('td', 'tray:no')],
+  [dial('count', 'n', 10)],
+  [onBox('sa', '1s', 0)],
+  [onBox('sa', '3s', 0)]
 ];
 
 function blankState() { return {}; }

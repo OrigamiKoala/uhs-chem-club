@@ -632,6 +632,7 @@ export class Table3D extends BenchViewer3D {
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
       look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom, drag: this.drag, screens: Boolean(this.skin),
+      clock: this.liveClock || 0,
       // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
       sites: id => this.showsSite(id)
     });
@@ -1077,6 +1078,7 @@ export class Table3D extends BenchViewer3D {
         g.add(specMesh);
         g.userData.height = specMesh.userData.height;
         g.userData.tick = specMesh.userData.tick;
+        g.userData.sync = specMesh.userData.sync;
         this.heldRing(g, r);
         return g;
       }
@@ -1085,7 +1087,8 @@ export class Table3D extends BenchViewer3D {
         const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true, bg });
         const bodyCol = this.faceColour(canvas, N);
         const hasTag = Boolean(p.props?.deflect);
-        g.add(buildBall(r, mat, this.mine(new THREE.MeshStandardMaterial({
+        const visR = (p.kind === 'proton' || p.kind === 'neutron') ? r * 0.48 : r;
+        g.add(buildBall(visR, mat, this.mine(new THREE.MeshStandardMaterial({
           color: bodyCol,
           roughness: 0.42,
           metalness: 0.18
@@ -1219,11 +1222,13 @@ export class Table3D extends BenchViewer3D {
     this.joinRoot.name = 'tabletop-joins';
     this.table.add(this.joinRoot);
     this.joinRods = [];
-    // A world with gear of its own (`skin`) joins its pieces with a bright steel rod at the height of their centres; elsewhere a
-    // thin dark rod laid along the table.
+    // For the atom/mass kits, connect the centers of the 2D base plates with thick flat lines instead of elevated center cylinders.
+    const flatPlateBond = this.state.kit === 'atoms' || this.state.kit === 'mass';
     const gear = this.skin && this.kitMats.ligSteel;
-    const geo = new THREE.CylinderGeometry(gear ? 0.0072 : 0.009, gear ? 0.0072 : 0.009, 1, 10);
-    const rodMat = gear ? this.kitMats.ligSteel : this.mats.dark;
+    const geo = flatPlateBond
+      ? new THREE.BoxGeometry(0.011, 0.0024, 1)
+      : new THREE.CylinderGeometry(gear ? 0.0072 : 0.009, gear ? 0.0072 : 0.009, 1, 10);
+    const rodMat = flatPlateBond ? this.mats.amber || this.mats.dark : (gear ? this.kitMats.ligSteel : this.mats.dark);
     for (const key of Object.keys(this.state.links)) {
       const [a, b] = key.split('|');
       const pa = this.state.pieces[a];
@@ -1233,9 +1238,9 @@ export class Table3D extends BenchViewer3D {
       const n = kit.linkRods ? kit.linkRods(this.state.links[key], this.state) : 1;
       for (let i = 0; i < n; i++) {
         const rod = new THREE.Mesh(geo, rodMat);
-        rod.castShadow = true;
+        rod.castShadow = !flatPlateBond;
         this.joinRoot.add(rod);
-        this.joinRods.push({ rod, a, b, off: (i - (n - 1) / 2) * (gear ? 0.02 : 0.026) });
+        this.joinRods.push({ rod, a, b, flatPlateBond, off: (i - (n - 1) / 2) * (gear ? 0.02 : 0.026) });
       }
     }
     this.layJoins();
@@ -1244,17 +1249,32 @@ export class Table3D extends BenchViewer3D {
   layJoins() {
     const up = new THREE.Vector3(0, 1, 0);
     const dir = new THREE.Vector3();
-    for (const { rod, a, b, off } of this.joinRods || []) {
+    // Compute bonded neighbor angles for 3D atoms so shared outer electrons freeze between touching atoms.
+    const bondedMap = new Map();
+    for (const { rod, a, b, off, flatPlateBond } of this.joinRods || []) {
       const ea = this.entries.get(a)?.group;
       const eb = this.entries.get(b)?.group;
       if (!ea || !eb) { rod.visible = false; continue; }
       rod.visible = true;
       const A = ea.position;
       const B = eb.position;
-      const flat = Math.hypot(B.x - A.x, B.z - A.z);
-      // Parallel rods sit either side of the line between the two centres.
-      const nx = flat > 1e-6 ? -(B.z - A.z) / flat : 0;
-      const nz = flat > 1e-6 ? (B.x - A.x) / flat : 0;
+      const dx = B.x - A.x;
+      const dz = B.z - A.z;
+      const flat = Math.hypot(dx, dz);
+      if (flatPlateBond && flat > 1e-5) {
+        (bondedMap.get(a) || (bondedMap.set(a, []), bondedMap.get(a))).push(Math.atan2(dz, dx));
+        (bondedMap.get(b) || (bondedMap.set(b, []), bondedMap.get(b))).push(Math.atan2(-dz, -dx));
+      }
+      // Parallel lines/rods sit either side of the line between the two centres.
+      const nx = flat > 1e-6 ? -dz / flat : 0;
+      const nz = flat > 1e-6 ? dx / flat : 0;
+      if (flatPlateBond) {
+        rod.scale.set(1, 1, Math.max(0.001, flat));
+        rod.position.set((A.x + B.x) / 2 + nx * (off || 0), Math.max(A.y, B.y) + 0.0022, (A.z + B.z) / 2 + nz * (off || 0));
+        rod.quaternion.identity();
+        rod.rotation.set(0, Math.atan2(dx, dz), 0);
+        continue;
+      }
       const ja = ea.userData.joinY;
       const jb = eb.userData.joinY;
       if (ja != null && jb != null) {
@@ -1274,6 +1294,10 @@ export class Table3D extends BenchViewer3D {
       rod.rotation.set(0, 0, 0);
       rod.rotation.z = Math.PI / 2;
       rod.rotation.y = -Math.atan2(B.z - A.z, B.x - A.x);
+    }
+    for (const [id, ent] of this.entries) {
+      const atomG = ent.group.children.find(c => c.name === `atom-${id}`);
+      if (atomG) atomG.userData.bondedAngles = bondedMap.get(id) || null;
     }
   }
 
@@ -1402,7 +1426,16 @@ export class Table3D extends BenchViewer3D {
 
   update(delta) {
     super.update(delta);
-    if (this.groundStale) this.repaintGround();
+    this.liveClock = (this.liveClock || 0) + delta;
+    if (this.groundStale) {
+      this.repaintGround();
+    } else if (!this.reduced && this.state && getKit(this.state.kit)?.live?.(this.state)) {
+      this.liveAcc = (this.liveAcc || 0) + delta;
+      if (this.liveAcc >= 0.05) {
+        this.liveAcc = 0;
+        this.repaintGround();
+      }
+    }
     this.tickPieces(delta);
     for (const rec of this.fixtures?.values() || []) rec.dress?.userData?.tick?.(delta, this.reduced);
     for (const e of this.entries.values()) e.group?.userData?.tick?.(delta, this.reduced);

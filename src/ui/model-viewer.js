@@ -20,6 +20,7 @@ import { mountIonicRadius } from './ionic-radius-animator.js';
 import { mountBondOverlap } from './bond-overlap-animator.js';
 import { mountCuvetteExplainer } from './cuvette-explainer.js';
 import { mountPhotoelectricExplainer } from './photoelectric-explainer.js';
+import { mountRutherfordBeam, mountChargePlates, mountShellFill, mountMgCation, mountAbsorptionLadder } from './tallow-explainers.js';
 
 export { mountDebriefOrbitalViewer };
 
@@ -542,109 +543,20 @@ function drawLadder(ctx, w, h, ladder, progress, still) {
  * and dynamic visualization of Lap 1 (crest) vs Lap 2 (trough) destructive interference.
  */
 function mountStandingWave3D(view, wrap, config, still) {
-  const modes = config.modes || [
-    { id: '1.5', n: 1.5, label: '1.5λ (Cancels)', desc: 'Lap 1 (+1 crest) meets Lap 2 (-1 trough) at the exact same spot → 1 + (-1) = 0 (destructive cancellation)', fits: false },
-    { id: '1.33', n: 1.333, label: '1.33λ (Smears)', desc: 'Fractional laps shift phase continuously, smearing into zero standing amplitude over time', fits: false },
-    { id: '2', n: 2.0, label: '2.0λ (Fits)', desc: 'Laps land peak-to-peak in phase → reinforces into a resonant 2-wavelength standing wave', fits: true },
-    { id: '3', n: 3.0, label: '3.0λ (Fits)', desc: 'Whole number of 3 wavelengths reinforces into a permanent 6-node standing wave', fits: true }
+  // Wordless, buttonless auto-playing 3D animation alternating between a cancelling wave (1.5λ) and a fitting wave (3.0λ).
+  const modes = [
+    { id: '1.5', n: 1.5, fits: false },
+    { id: '3', n: 3.0, fits: true }
   ];
-
-  let currentMode = modes.find(m => m.id === config.defaultMode) || modes[0];
-  let viewMode = 'all'; // 'all', 'laps', 'net'
-
-  // 1. Controls bar
-  const bar = document.createElement('div');
-  bar.className = 'lq-sw-bar';
-  bar.style.cssText = 'display:flex;gap:4px;padding:6px 8px;background:#14120f;border-bottom:1px solid #2e2a26;flex-wrap:wrap;align-items:center;';
-
-  const label = document.createElement('span');
-  label.textContent = 'WAVE:';
-  label.style.cssText = 'font-family:ui-monospace,monospace;font-size:10px;font-weight:bold;color:#8c8376;margin-right:2px;';
-  bar.appendChild(label);
-
-  const modeButtons = [];
-  modes.forEach(m => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = m.label;
-    const isAct = m.id === currentMode.id;
-    btn.style.cssText = `font-family:ui-monospace,monospace;font-size:10px;padding:3px 7px;cursor:pointer;border:1px solid ${isAct ? '#d99423' : '#3e3933'};background:${isAct ? '#2a2214' : '#1a1815'};color:${isAct ? '#d99423' : '#a59c86'};border-radius:2px;`;
-    btn.addEventListener('click', () => {
-      currentMode = m;
-      modeButtons.forEach(({ b, mode }) => {
-        const act = mode.id === currentMode.id;
-        b.style.borderColor = act ? '#d99423' : '#3e3933';
-        b.style.background = act ? '#2a2214' : '#1a1815';
-        b.style.color = act ? '#d99423' : '#a59c86';
-      });
-      updateStatus();
-    });
-    bar.appendChild(btn);
-    modeButtons.push({ b: btn, mode: m });
-  });
-
-  // Layer toggle
-  const layerWrap = document.createElement('div');
-  layerWrap.style.cssText = 'margin-left:auto;display:flex;gap:3px;align-items:center;';
-  const layerLabel = document.createElement('span');
-  layerLabel.textContent = 'SHOW:';
-  layerLabel.style.cssText = 'font-family:ui-monospace,monospace;font-size:9px;color:#6b625a;margin-right:2px;';
-  layerWrap.appendChild(layerLabel);
-
-  const layerBtns = [
-    { id: 'all', label: 'All' },
-    { id: 'laps', label: 'Laps 1 & 2' },
-    { id: 'net', label: 'Net Sum' }
-  ].map(ly => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = ly.label;
-    const isAct = ly.id === viewMode;
-    btn.style.cssText = `font-family:ui-monospace,monospace;font-size:9px;padding:2px 5px;cursor:pointer;border:1px solid ${isAct ? '#8c8376' : '#2e2a26'};background:${isAct ? '#26221d' : '#14120f'};color:${isAct ? '#dcd6cc' : '#6b625a'};border-radius:2px;`;
-    btn.addEventListener('click', () => {
-      viewMode = ly.id;
-      layerBtns.forEach(({ b, id }) => {
-        const act = id === viewMode;
-        b.style.borderColor = act ? '#8c8376' : '#2e2a26';
-        b.style.background = act ? '#26221d' : '#14120f';
-        b.style.color = act ? '#dcd6cc' : '#6b625a';
-      });
-    });
-    layerWrap.appendChild(btn);
-    return { b: btn, id: ly.id };
-  });
-  bar.appendChild(layerWrap);
-
-  // Status banner with live explanation
-  const statusBar = document.createElement('div');
-  statusBar.className = 'lq-sw-status';
-  statusBar.style.cssText = 'padding:5px 10px;font-family:ui-monospace,monospace;font-size:11px;background:#0d0c0a;border-bottom:1px solid #24201c;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;';
-
-  const updateStatus = () => {
-    const badgeColor = currentMode.fits ? '#4ade80' : '#f59e0b';
-    const tag = currentMode.fits ? 'REINFORCES' : 'CANCELS OUT';
-    statusBar.innerHTML = `
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="display:inline-block;padding:1px 5px;background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}44;font-size:9px;font-weight:bold;border-radius:2px;">${tag}</span>
-      </div>
-      <div style="font-size:10px;display:flex;gap:8px;">
-        <span style="color:#34d399;font-weight:bold;">— Lap 1</span>
-        <span style="color:#fb923c;font-weight:bold;">— Lap 2</span>
-        <span style="color:#38bdf8;font-weight:bold;">— Net Wave</span>
-      </div>
-    `;
-  };
-  updateStatus();
-
-  wrap.insertBefore(statusBar, view);
-  wrap.insertBefore(bar, statusBar);
+  const MODE_DUR = 4.5;
+  let currentMode = modes[0];
+  const viewMode = 'all';
 
   let disposed = false;
   let raf = 0;
   let ro = null;
   let teardown = () => {};
 
-  // Drag tilt & turn
   let ay = 0.55;
   let ax = 0.45;
   let drag = null;
@@ -831,6 +743,7 @@ function mountStandingWave3D(view, wrap, config, still) {
       orbitGroup.rotation.set(ax, ay, 0);
 
       const t = (now - t0) / 1000;
+      currentMode = modes[still ? 1 : (Math.floor(t / MODE_DUR) % modes.length)];
       updateWaveBuffers(t);
 
       renderer.render(scene, camera);
@@ -1189,6 +1102,22 @@ export function mountModel(host, spec) {
   wrap.innerHTML = `<div class="lq-model-view"></div>${caption ? `<p class="lq-model-caption">${caption}</p>` : ''}`;
   host.appendChild(wrap);
   const view = wrap.querySelector('.lq-model-view');
+
+  // Tallow custom experiment & atom animations (rutherford-beam, charge-plates, shell-fill, mg-cation)
+  if (parts.customTallow) {
+    const s = parts.customTallow;
+    const stop = s.type === 'rutherford-beam' ? mountRutherfordBeam(view, still)
+      : s.type === 'charge-plates' ? mountChargePlates(view, still)
+      : s.type === 'shell-fill' ? mountShellFill(view, s, still)
+      : s.type === 'absorption-ladder' ? mountAbsorptionLadder(view, still)
+      : mountMgCation(view, still);
+    return {
+      dispose() {
+        try { stop?.(); } catch (err) { /* gone */ }
+        wrap.remove();
+      }
+    };
+  }
 
   // Photoelectric effect: 2D animated photon strike, electron emission, brightness & frequency physics
   if (parts.photons || spec.type === 'photons') {

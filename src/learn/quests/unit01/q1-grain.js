@@ -254,21 +254,21 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        // Sodium and magnesium are dressed alike on purpose: only the scale tells them apart.
+        // All six atoms are dressed alike on purpose: only the scale tells them apart.
         atomAt('a1', 'Na', 12, 10, { mask: true, tint: 'pale' }),
-        atomAt('a2', 'C', 26, 10, { mask: true }),
+        atomAt('a2', 'C', 26, 10, { mask: true, tint: 'pale' }),
         atomAt('a3', 'Mg', 40, 10, { mask: true, tint: 'pale' }),
         atomAt('a4', 'Mg', 12, 24, { mask: true, tint: 'pale' }),
         atomAt('a5', 'Na', 26, 24, { mask: true, tint: 'pale' }),
-        atomAt('a6', 'C', 40, 24, { mask: true })
+        atomAt('a6', 'C', 40, 24, { mask: true, tint: 'pale' })
       ],
       zones: {
         slots: [{ id: 'rd', label: 'Scale slot', at: { x: 66, y: 12 } }],
         trays: [
-          trayAt('t1', 'Tray 1', 17, 50, 26, 16),
-          trayAt('t2', 'Tray 2', 45, 50, 26, 16),
-          trayAt('t3', 'Tray 3', 73, 50, 26, 16),
-          trayAt('t4', 'Tray 4', 101, 50, 26, 16)
+          { ...trayAt('t1', 'Tray 1', 17, 50, 26, 16), view: 'mass-tag' },
+          { ...trayAt('t2', 'Tray 2', 45, 50, 26, 16), view: 'mass-tag' },
+          { ...trayAt('t3', 'Tray 3', 73, 50, 26, 16), view: 'mass-tag' },
+          { ...trayAt('t4', 'Tray 4', 101, 50, 26, 16), view: 'mass-tag' }
         ]
       },
       fixtures: [{ id: 'reader', kind: 'reader', label: 'Scale', at: { x: 98, y: 14 }, size: { w: 36, h: 14 }, noRun: true, props: { slot: 'rd' } }],
@@ -419,7 +419,7 @@ export const STAGES = [
       log: 'Sample A: H2O. Sample B: H2O2.',
       title: 'Compounds',
       body: 'H₂O and H₂O₂ are made of the same two elements in different counts, so they are different compounds.',
-      model: { type: 'molecule', name: 'peroxide', caption: 'H₂O₂: the same two elements as water, in a different formula.' }
+      model: { type: 'molecule-pair', items: ['water', 'peroxide'], caption: 'Left: water (H₂O). Right: hydrogen peroxide (H₂O₂) — the same two elements in a different formula.' }
     }
   },
 

@@ -142,6 +142,22 @@ export function gasParts(spec) {
 
 /** The parts of any model spec, side by side where it lists several atoms. */
 export function modelParts(spec) {
+  if (spec.type === 'rutherford-beam' || spec.type === 'charge-plates' || spec.type === 'shell-fill' || spec.type === 'mg-cation' || spec.type === 'absorption-ladder') {
+    return { spheres: [{ pos: [0, 0, 0], r: 0.4, color: '#e59b24', kind: 'core' }], bonds: [], rings: [], electrons: [], radius: 2, customTallow: spec };
+  }
+  if (spec.type === 'molecule-pair') {
+    const names = spec.items || [];
+    const gap = 3.2;
+    const all = { spheres: [], bonds: [], rings: [], electrons: [], radius: 0 };
+    names.forEach((name, i) => {
+      const x = (i - (names.length - 1) / 2) * gap;
+      const m = moleculeParts({ name });
+      m.spheres.forEach(s => all.spheres.push({ ...s, pos: [s.pos[0] + x, s.pos[1], s.pos[2]] }));
+      m.bonds.forEach(b => all.bonds.push({ ...b, a: [b.a[0] + x, b.a[1], b.a[2]], b: [b.b[0] + x, b.b[1], b.b[2]] }));
+      all.radius = Math.max(all.radius, Math.abs(x) + m.radius);
+    });
+    return all;
+  }
   if (spec.type === 'gas') return gasParts(spec);
   const ligar = ligarParts(spec);
   if (ligar) return ligar;
@@ -149,6 +165,19 @@ export function modelParts(spec) {
   if (ember) return ember;
   if (LANTERNFALL_MODELS[spec.type]) return LANTERNFALL_MODELS[spec.type](spec);
   if (spec.type === 'molecule') return moleculeParts(spec);
+  if (spec.type === 'molecules') {
+    const names = spec.items || [];
+    const gap = 3.2;
+    const all = { spheres: [], bonds: [], rings: [], electrons: [], radius: 0 };
+    names.forEach((name, i) => {
+      const x = (i - (names.length - 1) / 2) * gap;
+      const m = moleculeParts({ name });
+      m.spheres.forEach(s => all.spheres.push({ ...s, pos: [s.pos[0] + x, s.pos[1], s.pos[2]] }));
+      m.bonds.forEach(b => all.bonds.push({ ...b, a: [b.a[0] + x, b.a[1], b.a[2]], b: [b.b[0] + x, b.b[1], b.b[2]] }));
+      all.radius = Math.max(all.radius, Math.abs(x) + m.radius);
+    });
+    return all;
+  }
   if (spec.type === 'atoms') {
     const n = spec.items.length;
     const gap = 3.2;

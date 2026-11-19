@@ -167,16 +167,39 @@ export async function buildLiveDemo(table, step) {
   if (step.fx && table.fixtures?.[step.fx]) {
     const f = table.fixtures[step.fx];
     const lay = LAYOUT.fixtureLayout(f);
-    // Find a slot inside or near this fixture that is currently empty and can take a piece.
+    // Find slots inside or near this fixture that are currently empty and can take a piece.
     const slots = Object.values(table.zones?.slots || {}).filter(z => !z.occupant);
-    const nearSlot = slots.find(z => z.at.x >= lay.box.x0 - 10 && z.at.x <= lay.box.x1 + 10 && z.at.y >= lay.box.y0 - 10 && z.at.y <= lay.box.y1 + 10) || slots[0];
+    const linkedSlot = f.props?.slot ? slots.find(z => z.id === f.props.slot) : null;
+    const nearSlots = slots.filter(z => z.at.x >= lay.box.x0 - 10 && z.at.x <= lay.box.x1 + 10 && z.at.y >= lay.box.y0 - 10 && z.at.y <= lay.box.y1 + 10);
     const containers = Object.values(table.zones?.containers || {});
     const nearCont = containers.find(z => z.at.x >= lay.box.x0 - 12 && z.at.x <= lay.box.x1 + 12 && z.at.y >= lay.box.y0 - 12 && z.at.y <= lay.box.y1 + 12);
+    const bedId = typeof f.props?.bed === 'string' && f.props.bed.startsWith('tray:') ? f.props.bed.slice(5) : null;
+    const bedTray = bedId ? table.zones?.trays?.[bedId] : null;
 
-    if (nearSlot) {
-      const p = findDraggable(nearSlot.accepts);
+    if (f.kind === 'pulse' && nearSlots.length) {
+      // Pulse timer needs both a lamp and a detector placed before firing.
+      const used = new Set();
+      for (const sl of nearSlots) {
+        const p = Object.values(table.pieces || {}).find(q =>
+          !used.has(q.id) && !q.hidden && !q.fixed && !q.props?.scratch && (!sl.accepts || sl.accepts.includes(q.kind))
+        );
+        if (p) {
+          used.add(p.id);
+          steps.push({ at, drag: { piece: p.id, to: sl.at }, action: { place: { piece: p.id, to: `slot:${sl.id}` } } });
+          at += 1.25;
+        }
+      }
+    } else if (linkedSlot || nearSlots[0]) {
+      const sl = linkedSlot || nearSlots[0];
+      const p = findDraggable(sl.accepts);
       if (p) {
-        steps.push({ at, drag: { piece: p.id, to: nearSlot.at }, action: { place: { piece: p.id, to: `slot:${nearSlot.id}` } } });
+        steps.push({ at, drag: { piece: p.id, to: sl.at }, action: { place: { piece: p.id, to: `slot:${sl.id}` } } });
+        at += 1.3;
+      }
+    } else if (bedTray) {
+      const p = findDraggable(bedTray.accepts);
+      if (p) {
+        steps.push({ at, drag: { piece: p.id, to: bedTray.at }, action: { place: { piece: p.id, to: `tray:${bedTray.id}` } } });
         at += 1.3;
       }
     } else if (nearCont) {
@@ -193,8 +216,10 @@ export async function buildLiveDemo(table, step) {
     } else if (Object.keys(f.dials || {}).length) {
       const [dName, d] = Object.entries(f.dials)[0];
       const track = lay.dials.find(x => x.name === dName);
-      const mid = d.min + Math.round(((d.max - d.min) * 0.65) / (d.step || 1)) * (d.step || 1);
-      const val = mid === d.value ? d.max : Math.min(d.max, Math.max(d.min, mid));
+      // Avoid landing on power 4 (the answer to Tallow Q1 Stage 1) when demonstrating the scope dial.
+      const frac = f.kind === 'scope' ? 0.2 : 0.65;
+      const mid = d.min + Math.round(((d.max - d.min) * frac) / (d.step || 1)) * (d.step || 1);
+      const val = mid === d.value ? Math.min(d.max, d.min + (d.step || 1)) : Math.min(d.max, Math.max(d.min, mid));
       const action = { setDial: { fixture: f.id, dial: dName, value: val } };
       const spot = zoneSpot(table, kit, LAYOUT, action.setDial) || (track ? { x: track.x0 + ((val - d.min) / (d.max - d.min || 1)) * (track.x1 - track.x0), y: track.y } : { x: f.at.x, y: f.at.y });
       steps.push({ at, tap: spot, action });
@@ -206,9 +231,23 @@ export async function buildLiveDemo(table, step) {
         at += 1.5;
       }
     }
+  } else if (step.drum && table.zones?.containers?.[step.drum]) {
+    const drum = table.zones.containers[step.drum];
+    const targetPan = Object.values(table.zones?.containers || {}).find(z => z.id !== drum.id && !z.sealed);
+    const what = Object.keys(drum.contents || {})[0];
+    if (targetPan && what) {
+      const amt = Math.min(drum.contents[what] || 8, 8);
+      steps.push({ at, tap: { ...drum.at }, action: null });
+      at += 1.0;
+      steps.push({ at, tap: { ...targetPan.at }, action: { pour: { from: drum.id, to: targetPan.id, what, amount: amt } } });
+      at += 1.5;
+    }
   } else if (step.pc && table.pieces?.[step.pc]) {
     const p = table.pieces[step.pc];
-    if (p.props?.markable) {
+    if (p.kind === 'element') {
+      // Element cards are highlighted without a pointer animation.
+      return null;
+    } else if (p.props?.markable) {
       steps.push({ at, tap: { ...p.at }, action: { mark: p.id } });
       at += 1.4;
     } else if (p.kind === 'lens' || p.kind === 'cutter') {
@@ -226,8 +265,8 @@ export async function buildLiveDemo(table, step) {
       }
     } else {
       const slot = Object.values(table.zones?.slots || {}).find(z => !z.occupant && (!z.accepts || z.accepts.includes(p.kind)));
-      const cont = !slot && Object.values(table.zones?.containers || {})[0];
-      const tray = !slot && !cont && Object.values(table.zones?.trays || {})[0];
+      const cont = !slot && Object.values(table.zones?.containers || {}).find(z => `container:${z.id}` !== p.zone);
+      const tray = !slot && !cont && Object.values(table.zones?.trays || {}).find(z => `tray:${z.id}` !== p.zone && (!z.accepts || z.accepts.includes(p.kind)));
       const target = slot ? { to: `slot:${slot.id}`, pt: slot.at } : cont ? { to: `container:${cont.id}`, pt: cont.at } : tray ? { to: `tray:${tray.id}`, pt: tray.at } : null;
       if (target) {
         steps.push({ at, drag: { piece: p.id, to: target.pt }, action: { place: { piece: p.id, to: target.to } } });
@@ -264,7 +303,10 @@ export async function playLiveTourDemo(tabletop, table, step, onPointer) {
     while (cache.length <= n) {
       const prev = cache[cache.length - 1];
       let next = prev;
-      try { next = MODEL.apply(prev, d.steps[cache.length - 1].action); } catch { /* ignore invalid preview step */ }
+      const act = d.steps[cache.length - 1].action;
+      if (act) {
+        try { next = MODEL.apply(prev, act); } catch { /* ignore invalid preview step */ }
+      }
       cache.push(next);
     }
     return cache[n];

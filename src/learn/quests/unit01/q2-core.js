@@ -261,7 +261,7 @@ export const STAGES = [
         log: 'Per 40 particles: most through, 2 turned aside, 1 straight back.',
         title: 'The Nucleus',
         body: `${verdict}Nearly every particle went straight through a mostly empty atom, while the few that came back hit a small, heavy center: the nucleus.`,
-        model: { type: 'atom', p: 6, n: 6, caption: 'A carbon atom, not to scale: the real nucleus is far smaller than the space round it.' }
+        model: { type: 'rutherford-beam', caption: 'Most high-energy particles pass straight through the empty space; the few that hit the tiny dense nucleus bounce back.' }
       };
     }
   },
@@ -306,7 +306,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Three particles bent, three went straight.',
-      model: { type: 'atom', p: 3, n: 3, focus: 'nucleus', caption: 'The nucleus of a lithium atom: 3 protons (amber) and 3 neutrons (grey).' },
+      model: { type: 'charge-plates', caption: 'A positive proton curves toward the negative plate; an uncharged neutron flies straight through.' },
       title: 'Protons and Neutrons',
       body: 'The particles that bent toward the − plate are protons. The ones that went straight are neutrons.'
     }
@@ -406,7 +406,7 @@ export const STAGES = [
     },
     reward: {
       log: 'Sample D loaded 2 / 8 / 1.',
-      model: { type: 'atom', p: 11, n: 12, caption: 'A sodium atom: 11 electrons on shells of 2, 8 and 1. Not to scale.' },
+      model: { type: 'shell-fill', shells: [2, 8, 1], caption: 'A sodium atom: 11 electrons added in succession onto shells of 2, 8 and 1.' },
       title: 'Electron Shells',
       body: 'The first shell holds 2 and the next two hold 8 each, for the first 18 elements. A shell fills before the next begins, so 11 electrons sit 2, 8, 1.'
     }
@@ -417,17 +417,17 @@ export const STAGES = [
     title: 'The Outer Shell Decides',
     briefing: {
       speaker: SPEAKER,
-      body: 'Electrons in the outermost shell are valence electrons. Test the open samples and watch what each does with them.'
+      body: 'Electrons in the outermost shell are valence electrons. Test the samples in the partner test and watch what each does with its outer electrons.'
     },
-    prompt: 'What will each cased sample do in the partner test?',
+    prompt: 'What does each sample do in the partner test?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
         specimen('s1', 'SAMPLE A', 12, 12, { p: 3, n: 4, rings: [2, 1] }),
         specimen('s2', 'SAMPLE B', 32, 12, { p: 17, n: 18, rings: [2, 8, 7] }),
         specimen('s3', 'SAMPLE C', 52, 12, { p: 10, n: 10, rings: [2, 8] }),
-        specimen('s4', 'SAMPLE D', 72, 12, { p: 19, n: 20, rings: [2, 8, 8, 1], casing: true }),
-        specimen('s5', 'SAMPLE E', 92, 12, { p: 9, n: 10, rings: [2, 7], casing: true })
+        specimen('s4', 'SAMPLE D', 72, 12, { p: 19, n: 20, rings: [2, 8, 8, 1] }),
+        specimen('s5', 'SAMPLE E', 92, 12, { p: 9, n: 10, rings: [2, 7] })
       ],
       zones: {
         slots: [{ id: 'tester', label: 'Test slot', at: { x: 66, y: 53 } }],
@@ -440,9 +440,9 @@ export const STAGES = [
       fixtures: [{ id: 'tester', kind: 'tester', label: 'Partner test', runLabel: 'Run Test', at: { x: 96, y: 54 }, size: { w: 40, h: 16 }, props: { slot: 'tester' } }]
     }),
     hints: [
-      'Drop the open samples into the Partner test slot and press "Run Test".',
-      'Compare how many valence electrons each open sample has with what it does in the test.',
-      'Match each cased sample\'s outer shell to the open sample with the same number of valence electrons.'
+      'Drop each sample into the Partner test slot and press "Run Test".',
+      'Watch whether an electron leaves or joins the outer shell.',
+      'Sort Sample D and Sample E into the trays matching what happened in the test.'
     ],
     check(state) {
       const t = state.table;
@@ -450,17 +450,17 @@ export const STAGES = [
       const d = where('s4');
       const e = where('s5');
       if (!['gives', 'takes', 'inert'].includes(d) || !['gives', 'takes', 'inert'].includes(e)) {
-        return { ok: false, notYet: true, msg: 'Both cased samples need a tray.' };
+        return { ok: false, notYet: true, msg: 'Both Sample D and Sample E need a tray.' };
       }
       if (d === 'inert' || e === 'inert') {
-        return { ok: false, msg: 'A cased sample with an incomplete outer shell will not stay unchanged.' };
+        return { ok: false, msg: 'A sample with an incomplete outer shell will not stay unchanged.' };
       }
       if (d !== 'gives') return { ok: false, msg: 'Sample D has 1 valence electron, like Sample A.' };
       if (e !== 'takes') return { ok: false, msg: 'Sample E has 7 valence electrons, like Sample B.' };
       return { ok: true };
     },
     reward: {
-      log: 'Both cased samples sorted by valence electrons.',
+      log: 'Samples sorted by valence electrons.',
       title: 'Valence Electrons',
       body: 'An atom with one valence electron loses it, and one a single electron short of a full shell gains one. Either way it ends with a full outer shell, as a rule for these light elements.'
     }
@@ -511,7 +511,6 @@ export const STAGES = [
     },
     reward: {
       log: 'Samples B and E match Sample A. Samples C and D do not.',
-      model: { type: 'atoms', items: [{ p: 6, n: 6, label: 'Sample A' }, { p: 6, n: 7, label: 'Sample B' }], caption: 'Sample A and Sample B: the same 6 protons and 6 electrons, one more neutron in B. Not to scale.' },
       title: 'Atomic Number',
       last: true,
       body: 'The samples with Sample A\'s atomic number are the same element, even with more or fewer neutrons.'

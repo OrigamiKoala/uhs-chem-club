@@ -79,17 +79,17 @@ const rateOf = (t, id) => { const r = waveRead(t, id); return r && r.kind === 'l
 
 /** The five sources of stage 4: the camp's radio mast and oven, two spare lamps, the medic's X-ray tube. Wavelengths in nm. */
 const SOURCES = [
-  ['radio', 'Relay mast', 3e9, 'radiator'],
-  ['micro', 'Galley oven', 1.2e8, 'radiator'],
-  ['red', 'Red lamp', 700, 'lamp'],
-  ['violet', 'Violet lamp', 400, 'lamp'],
-  ['xray', 'Medic X-ray', 0.1, 'radiator']
+  ['radio', 'Radio', 3e9, 'radiator'],
+  ['micro', 'Microwave', 1.2e8, 'radiator'],
+  ['red', 'Red', 700, 'lamp'],
+  ['violet', 'Violet', 400, 'lamp'],
+  ['xray', 'X-ray', 0.1, 'radiator']
 ];
 /** Lowest frequency first: the longest wavelength first. */
 const BY_FREQUENCY = SOURCES.slice().sort((a, b) => b[2] - a[2]).map(s => s[0]);
 
-/** Stage 3's answer dial: which lamp's light crossed the gap in less time. It starts unset. */
-const FIRST = ['Not set', 'Red', 'Violet', 'Same time'];
+/** Stage 3's answer dial: which lamp's light crossed the gap faster. It starts unset. */
+const FIRST = ['Not set', 'Red is faster', 'Violet is faster', 'Neither is faster'];
 
 /** Each lamp's last timing on the recorder, by lamp: `{ red: {gap, ns}, violet: {gap, ns} }`. */
 function timings(t) {
@@ -219,7 +219,7 @@ export const STAGES = [
         ],
         fixtures: [rail.fixture, {
           id: 'first', kind: 'marker', label: 'Result', at: { x: 112, y: 52 }, size: { w: 36, h: 16 }, noRun: true,
-          dials: { n: { min: 1, max: FIRST.length, step: 1, value: 1, label: 'Less time taken by', labels: FIRST } }, props: {}
+          dials: { n: { min: 1, max: FIRST.length, step: 1, value: 1, label: 'Result', labels: FIRST } }, props: {}
         }],
         zones: { slots: rail.slots },
         recorder: { at: { x: 140, y: 52 }, size: { w: 18, h: 18 }, xLabel: 'Gap', xUnit: 'm', yLabel: 'Time', yUnit: 'ns' }
@@ -236,7 +236,7 @@ export const STAGES = [
         if (got.red.gap !== got.violet.gap) return { ok: false, notYet: true, msg: `The red lamp was timed over ${got.red.gap.toFixed(1)} m and the violet lamp over ${got.violet.gap.toFixed(1)} m: time both over one gap.` };
         const pick = FIRST[t.fixtures.first.dials.n.value - 1];
         if (pick === 'Not set') return { ok: false, notYet: true, msg: 'Set the dial to your answer.' };
-        if (pick === 'Same time') return { ok: true };
+        if (pick === 'Neither is faster') return { ok: true };
         return { ok: false, msg: `Over ${got.red.gap.toFixed(1)} m the timer read ${got.red.ns.toFixed(1)} ns for the red lamp and ${got.violet.ns.toFixed(1)} ns for the violet lamp.` };
       },
       get reward() {
@@ -393,7 +393,7 @@ const timeBoth = (m) => [put('d1', 'slot:rail.m0'), put('d2', `slot:rail.m${m}`)
 export const SOLUTIONS = [
   [put('lamp', 'slot:l.lamp'), colour('l', 6)],
   [{ predict: 'same' }],
-  [...timeBoth(3), answer('first', FIRST.indexOf('Same time') + 1)],
+  [...timeBoth(3), answer('first', FIRST.indexOf('Neither is faster') + 1)],
   [put('radio', 'rail:0'), put('micro', 'rail:1'), put('red', 'rail:2'), put('violet', 'rail:3'), put('xray', 'rail:4')],
   [typed('ans', '4.8')]
 ];
@@ -402,7 +402,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   [put('lamp', 'slot:l.lamp'), colour('l', 2)],
   [],
-  [...timeBoth(2), answer('first', FIRST.indexOf('Violet') + 1)],
+  [...timeBoth(2), answer('first', FIRST.indexOf('Violet is faster') + 1)],
   [put('violet', 'rail:0')],
   [typed('ans', '6.9')]
 ];

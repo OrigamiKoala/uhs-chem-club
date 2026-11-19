@@ -65,11 +65,8 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.6rem;">
           <div>
-            <div style="margin-bottom: 2px;">
-              <span class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.68rem; letter-spacing: 0.14em;">Campaign Briefing</span>
-            </div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-bright); margin: 0;">
-              ${esc(worldName)} · ${esc(worldTitle)}
+              ${esc(worldName)}
             </h2>
           </div>
           <div style="display: flex; align-items: center; gap: 0.6rem;">
@@ -80,11 +77,10 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         </div>
 
         <!-- Novelistic Story Card (Paragraph Form) -->
-        <div class="story-novel-box" id="story-box-interactive" role="button" tabindex="0" title="Click or press Space to advance">
+        <div class="story-novel-box" style="cursor: default;">
           <div>
             <div class="story-novel-header">
               <div class="story-novel-speaker">
-                <span style="display: inline-block; width: 6px; height: 6px; background: var(--accent-gold); border-radius: 50%; box-shadow: 0 0 6px var(--accent-gold);"></span>
                 ${esc(currentSpeaker)}
               </div>
               <div class="story-novel-step-badge">
@@ -104,9 +100,6 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
                   <span class="story-novel-dot ${i === currentIdx ? 'active' : ''}"></span>
                 `).join('')}
               </div>
-              <div class="story-novel-hint">
-                ${isLast ? 'TRANSMISSION COMPLETE' : 'CLICK OR PRESS SPACE TO ADVANCE ▶'}
-              </div>
             </div>
           </div>
         </div>
@@ -118,24 +111,20 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
               <button type="button" id="story-prev-btn" class="btn-secondary" style="padding: 7px 14px; font-size: 0.8rem;">
                 ◀ Back
               </button>
-            ` : `
-              <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">
-                HAULER AVALON // VESS DIRECT LINK
-              </div>
-            `}
+            ` : ''}
           </div>
 
           <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <button type="button" id="story-footer-skip-btn" class="btn-secondary" style="padding: 7px 12px; font-size: 0.8rem; color: var(--text-muted);" title="Skip Briefing">
-              Skip ⏭
+            <button type="button" id="story-footer-skip-btn" class="btn-secondary" style="padding: 7px 12px; font-size: 0.8rem; color: var(--text-muted);" title="Skip">
+              Skip
             </button>
             ${!isLast ? `
               <button type="button" id="story-next-btn" class="btn-primary" style="padding: 8px 18px; font-size: 0.85rem; letter-spacing: 0.08em;">
-                Continue ▶
+                Continue
               </button>
             ` : `
               <button type="button" id="story-modal-dismiss-btn" class="btn-primary" style="padding: 8px 20px; font-size: 0.85rem; letter-spacing: 0.08em; background: var(--accent-gold); color: #000; font-weight: 700;">
-                ${isPreLaunch ? `Take Off & Deploy to ${esc(worldName)} ▶` : 'Enter Sector ▶'}
+                ${isPreLaunch ? 'Take Off' : 'Enter Sector'}
               </button>
             `}
           </div>
@@ -193,10 +182,6 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     });
 
     modalEl.querySelector('#story-next-btn')?.addEventListener('click', () => {
-      advance();
-    });
-
-    modalEl.querySelector('#story-box-interactive')?.addEventListener('click', () => {
       advance();
     });
 

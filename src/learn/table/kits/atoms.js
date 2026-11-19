@@ -782,18 +782,36 @@ function paintAtom(ctx, p, state, o) {
   if (rd.lamp === 'over') lampMark(ctx, o.x - o.r * 0.65, o.y - o.r * 0.65, Math.max(8, o.r * 0.6));
 }
 
-/** An ion: its symbol on the element's own tint, and the charge it carries printed on its shoulder. */
+/** An ion: its symbol on the element's own tint, and the charge it carries in crisp superscript. */
 function paintIon(ctx, p, state, o) {
   const el = elementOf(p.props.el);
-  const tint = TINTS[p.props.tint || el.tint];
+  const tintKey = p.props.tint || el.tint;
+  const tint = TINTS[tintKey];
+  const ink = INK[tintKey];
   const q = p.props.charge || 0;
   disc(ctx, o.x, o.y, o.r, tint.fill, o.lit ? AMBER : tint.rim, o.lit ? 2 : 1);
-  plateText(ctx, el.sym, o.x - (q ? o.r * 0.12 : 0), o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.74 : 0.88))), weight: 700, align: 'center', base: 'middle', color: INK[p.props.tint || el.tint], maxW: o.r * (q ? 1.1 : 1.4) });
-  // The charge is always written with its size (2+, 1−), so a single charge is read as plainly as a double.
-  if (q) {
-    const qText = `${Math.abs(q)}${q > 0 ? '+' : '−'}`;
-    plateText(ctx, qText, o.x + o.r * 0.48, o.y - o.r * 0.46, { size: Math.max(7, Math.round(o.r * 0.44)), weight: 700, align: 'center', base: 'middle', color: AMBER, maxW: o.r * 0.6 });
+  if (!q) {
+    plateText(ctx, el.sym, o.x, o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.74 : 0.88))), weight: 700, align: 'center', base: 'middle', color: ink, maxW: o.r * 1.4 });
+    return;
   }
+  const qText = `${Math.abs(q)}${q > 0 ? '+' : '−'}`;
+  const symSize = Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.68 : 0.82)));
+  const supSize = Math.max(7, Math.round(o.r * 0.44));
+  ctx.save();
+  ctx.font = `700 ${symSize}px "Quantico", "JetBrains Mono", monospace`;
+  const symW = ctx.measureText(el.sym).width;
+  ctx.font = `700 ${supSize}px "Quantico", "JetBrains Mono", monospace`;
+  const supW = ctx.measureText(qText).width;
+  const totalW = symW + supW + o.r * 0.04;
+  const startX = o.x - totalW / 2;
+  ctx.fillStyle = ink;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  ctx.font = `700 ${symSize}px "Quantico", "JetBrains Mono", monospace`;
+  ctx.fillText(el.sym, startX, o.y + o.r * 0.08);
+  ctx.font = `700 ${supSize}px "Quantico", "JetBrains Mono", monospace`;
+  ctx.fillText(qText, startX + symW + o.r * 0.04, o.y - o.r * 0.24);
+  ctx.restore();
 }
 
 function paintParticle(ctx, p, state, o) {
@@ -836,38 +854,41 @@ function paintModel(ctx, p, state, o) {
   ctx.strokeStyle = o.lit ? AMBER : PLATE_COLORS.dust;
   ctx.lineWidth = o.lit ? 2 : 1;
   ctx.strokeRect(x0 + 0.5, y0 + 0.5, hw * 2 - 1, hh * 2 - 1);
-  const cx = o.x;
-  const cy = y0 + hh * 0.85;
-  const R = hh * 0.54;
-  const kind = p.props.model;
-  ctx.fillStyle = '#b8afa0';
-  ctx.strokeStyle = '#b8afa0';
-  if (kind === 'solid') {
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
-  } else if (kind === 'shell') {
-    ctx.lineWidth = Math.max(2, R * 0.24);
-    ctx.beginPath(); ctx.arc(cx, cy, R * 0.88, 0, Math.PI * 2); ctx.stroke();
-  } else if (kind === 'spread') {
-    // A soft ball with its + charge scattered evenly through it: a rim, and a regular grid of dots.
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
-    const dot = Math.max(1, R * 0.07);
-    for (let gx = -2; gx <= 2; gx++) {
-      for (let gy = -2; gy <= 2; gy++) {
-        const dx = gx * R * 0.4;
-        const dy = gy * R * 0.4;
-        if (Math.hypot(dx, dy) > R * 0.82) continue;
-        ctx.beginPath(); ctx.arc(cx + dx, cy + dy, dot, 0, Math.PI * 2); ctx.fill();
+  // In 3D mode (o.flat), the 3D model sits above the card — omit the redundant 2D diagram underneath.
+  if (!o.flat) {
+    const cx = o.x;
+    const cy = y0 + hh * 0.85;
+    const R = hh * 0.54;
+    const kind = p.props.model;
+    ctx.fillStyle = '#b8afa0';
+    ctx.strokeStyle = '#b8afa0';
+    if (kind === 'solid') {
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'shell') {
+      ctx.lineWidth = Math.max(2, R * 0.24);
+      ctx.beginPath(); ctx.arc(cx, cy, R * 0.88, 0, Math.PI * 2); ctx.stroke();
+    } else if (kind === 'spread') {
+      // A soft ball with its + charge scattered evenly through it: a rim, and a regular grid of dots.
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+      const dot = Math.max(1, R * 0.07);
+      for (let gx = -2; gx <= 2; gx++) {
+        for (let gy = -2; gy <= 2; gy++) {
+          const dx = gx * R * 0.4;
+          const dy = gy * R * 0.4;
+          if (Math.hypot(dx, dy) > R * 0.82) continue;
+          ctx.beginPath(); ctx.arc(cx + dx, cy + dy, dot, 0, Math.PI * 2); ctx.fill();
+        }
       }
+    } else {
+      ctx.lineWidth = Math.max(1, R * 0.07);
+      ctx.setLineDash?.([Math.max(2, R * 0.12), Math.max(2, R * 0.12)]);
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash?.([]);
+      ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.8, R * 0.14), 0, Math.PI * 2); ctx.fill();
     }
-  } else {
-    ctx.lineWidth = Math.max(1, R * 0.07);
-    ctx.setLineDash?.([Math.max(2, R * 0.12), Math.max(2, R * 0.12)]);
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
-    ctx.setLineDash?.([]);
-    ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.8, R * 0.14), 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 1;
   }
-  ctx.lineWidth = 1;
   plateText(ctx, p.label, o.x, y0 + hh * 1.68, { size: Math.max(7, Math.round(2.0 * o.sc)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: hw * 1.82 });
 }
 
@@ -933,68 +954,71 @@ function paintSpecimen(ctx, p, state, o) {
     }
     ctx.restore();
   } else {
-    const rings = p.props.rings || [];
-    const totalShells = Math.max(rings.length, p.props.maxRings || 1);
-    const rInner = Math.max(8, R * 0.24);
-    const rOuter = R * 1.05;
-    const trackWidth = (rOuter - rInner) / totalShells;
+    // In 3D mode (o.flat), the 3D specimen renders its own rings, electrons, and nucleus — omit the 2D grey dots/orbits underneath.
+    if (!o.flat) {
+      const rings = p.props.rings || [];
+      const totalShells = Math.max(rings.length, p.props.maxRings || 1);
+      const rInner = Math.max(8, R * 0.24);
+      const rOuter = R * 1.05;
+      const trackWidth = (rOuter - rInner) / totalShells;
 
-    // Concentric track bands separating the shells
-    for (let ri = 0; ri < totalShells; ri++) {
-      const bIn = rInner + ri * trackWidth;
-      const bOut = rInner + (ri + 1) * trackWidth;
-      ctx.fillStyle = ri % 2 === 0 ? 'rgba(0, 0, 0, 0.20)' : 'rgba(255, 255, 255, 0.025)';
-      ctx.beginPath();
-      ctx.arc(o.x, cy, bOut, 0, Math.PI * 2);
-      ctx.arc(o.x, cy, bIn, 0, Math.PI * 2, true);
-      ctx.fill();
-    }
-
-    // Shell orbit lines and electrons
-    const dotR = Math.max(1.8, Math.min(o.r * 0.046, trackWidth * 0.32));
-    for (let ri = 0; ri < totalShells; ri++) {
-      const bIn = rInner + ri * trackWidth;
-      const bOut = rInner + (ri + 1) * trackWidth;
-      const rr = (bIn + bOut) / 2;
-      const n = ri < rings.length ? rings[ri] : 0;
-      const isOccupied = n > 0;
-
-      if (isOccupied) {
-        const outerMiss = isRevealed(state) && ri === rings.length - 1 && p.zone?.startsWith('tray:') && state?.pieces?.ref;
-        ctx.strokeStyle = outerMiss ? AMBER : 'rgba(220, 214, 204, 0.72)';
-        ctx.lineWidth = Math.max(outerMiss ? 2.2 : 1.6, o.r * (outerMiss ? 0.024 : 0.013));
+      // Concentric track bands separating the shells
+      for (let ri = 0; ri < totalShells; ri++) {
+        const bIn = rInner + ri * trackWidth;
+        const bOut = rInner + (ri + 1) * trackWidth;
+        ctx.fillStyle = ri % 2 === 0 ? 'rgba(0, 0, 0, 0.20)' : 'rgba(255, 255, 255, 0.025)';
         ctx.beginPath();
-        ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.fillStyle = CORE_TINTS.light.fill;
-        for (let i = 0; i < n; i++) {
-          const a = -Math.PI / 2 + (i * 2 * Math.PI) / n + ri * 0.4;
-          const ex = o.x + Math.cos(a) * rr;
-          const ey = cy + Math.sin(a) * rr;
-          ctx.beginPath();
-          ctx.arc(ex, ey, dotR, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#1d1a16';
-          ctx.lineWidth = Math.max(1, o.r * 0.008);
-          ctx.stroke();
-        }
-      } else {
-        // Empty shell guide ring
-        ctx.strokeStyle = 'rgba(184, 175, 160, 0.35)';
-        ctx.lineWidth = Math.max(1.2, o.r * 0.009);
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        ctx.arc(o.x, cy, bOut, 0, Math.PI * 2);
+        ctx.arc(o.x, cy, bIn, 0, Math.PI * 2, true);
+        ctx.fill();
       }
-    }
 
-    const total = (p.props.p || 0) + (p.props.n || 0);
-    if (!p.props.counts && total) {
-      const nucR = Math.min(rInner * 0.88, Math.max(6, R * 0.042 * Math.sqrt(total)));
-      disc(ctx, o.x, cy, nucR, CORE_TINTS.marked.fill, CORE_TINTS.marked.rim, 1);
+      // Shell orbit lines and electrons
+      const dotR = Math.max(1.8, Math.min(o.r * 0.046, trackWidth * 0.32));
+      for (let ri = 0; ri < totalShells; ri++) {
+        const bIn = rInner + ri * trackWidth;
+        const bOut = rInner + (ri + 1) * trackWidth;
+        const rr = (bIn + bOut) / 2;
+        const n = ri < rings.length ? rings[ri] : 0;
+        const isOccupied = n > 0;
+
+        if (isOccupied) {
+          const outerMiss = isRevealed(state) && ri === rings.length - 1 && p.zone?.startsWith('tray:') && state?.pieces?.ref;
+          ctx.strokeStyle = outerMiss ? AMBER : 'rgba(220, 214, 204, 0.72)';
+          ctx.lineWidth = Math.max(outerMiss ? 2.2 : 1.6, o.r * (outerMiss ? 0.024 : 0.013));
+          ctx.beginPath();
+          ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = CORE_TINTS.light.fill;
+          for (let i = 0; i < n; i++) {
+            const a = -Math.PI / 2 + (i * 2 * Math.PI) / n + ri * 0.4;
+            const ex = o.x + Math.cos(a) * rr;
+            const ey = cy + Math.sin(a) * rr;
+            ctx.beginPath();
+            ctx.arc(ex, ey, dotR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#1d1a16';
+            ctx.lineWidth = Math.max(1, o.r * 0.008);
+            ctx.stroke();
+          }
+        } else {
+          // Empty shell guide ring
+          ctx.strokeStyle = 'rgba(184, 175, 160, 0.35)';
+          ctx.lineWidth = Math.max(1.2, o.r * 0.009);
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.arc(o.x, cy, rr, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      const total = (p.props.p || 0) + (p.props.n || 0);
+      if (!p.props.counts && total) {
+        const nucR = Math.min(rInner * 0.88, Math.max(6, R * 0.042 * Math.sqrt(total)));
+        disc(ctx, o.x, cy, nucR, CORE_TINTS.marked.fill, CORE_TINTS.marked.rim, 1);
+      }
     }
     if (p.props.counts) {
       // What is in the middle, printed neatly on a dark pill, cleanly separated from the rings
@@ -1037,7 +1061,7 @@ function paintSpecimen(ctx, p, state, o) {
 
     if (p.props.needle) {
       const q = (p.props.p || 0) - (p.props.rings || []).reduce((a, b) => a + b, 0);
-      const text = `needle ${q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`}`;
+      const text = `charge ${q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`}`;
       plateText(ctx, text, o.x, badgeY, {
         size: badgeSize,
         weight: 700,
@@ -1828,7 +1852,7 @@ function dress3d(f, state, c) {
 
 export const ATOMS_KIT = {
   id: ATOMS_KIT_ID,
-  joinGap: 1.28,
+  joinGap: 0.96,
   kinds: {
     atom: { r: R, split: true },
     proton: { r: R, nojoin: true },
@@ -1837,7 +1861,7 @@ export const ATOMS_KIT = {
     electron: { r: R / 2, nojoin: true },
     ion: { r: R, nojoin: true },
     nucleus: { r: 8, nojoin: true },
-    specimen: { r: 10, nojoin: true },
+    specimen: { r: 6.8, nojoin: true },
     detector: { r: R, nojoin: true },
     card: { r: R, nojoin: true },
     model: { r: 9, nojoin: true, rect: { hw: 11, hh: 8 } },
@@ -1867,6 +1891,33 @@ export const ATOMS_KIT = {
   printed,
   faceKey,
   paintFixture,
+  paintTray(ctx, t, state, b) {
+    if (t.view !== 'mass-tag') return;
+    const zoneKey = `tray:${t.id}`;
+    const atoms = Object.values(state.pieces).filter(p => !p.hidden && isAtom(p) && p.zone === zoneKey);
+    if (!atoms.length) return;
+    let first = atoms[0];
+    if (Array.isArray(state.history)) {
+      const presentIds = new Set(atoms.map(a => a.id));
+      for (const h of state.history) {
+        if (h?.place?.to === zoneKey && presentIds.has(h.place.piece)) {
+          first = state.pieces[h.place.piece];
+          break;
+        }
+      }
+    }
+    const el = elementOf(first.props.el);
+    const mass = SCOPE_KINDS[Object.keys(SCOPE_KINDS).find(k => symOfKind(k) === el.sym)]?.mass;
+    if (mass == null) return;
+    const label = Number(mass.toFixed(1)).toString();
+    plateText(ctx, label, b.X(b.r.x1 - 1.2), b.Y(b.r.y0 - 2.2), {
+      size: Math.max(10, Math.round(2.8 * b.sc)),
+      weight: 700,
+      align: 'right',
+      base: 'bottom',
+      color: AMBER
+    });
+  },
   paintLink,
   linkRods
 };

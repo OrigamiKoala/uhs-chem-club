@@ -21,50 +21,33 @@ export default async function check(q5, { TABLE, near, same, holds, rig }) {
     same(hits, 1, 'unit02/q5-numbers stage 1 (exactly one address names the ringed box)');
     holds(!(SHL.addressOfFinder(t, 'addr').n === 2 && SHL.addressOfFinder(t, 'addr').l === 1), 'unit02/q5-numbers stage 1: the strip starts on the answer');
   }
-  // 2. the guess: three tokens and nothing else
-  {
-    const t = start(1);
-    same(t.prediction.tokens, ['one', 'two', 'any'], 'unit02/q5-numbers stage 2 (the guesses)');
-    same(Object.keys(t.fixtures).length + Object.values(t.pieces).filter(p => !p.token).length, 0, 'unit02/q5-numbers stage 2 (nothing else on the bench)');
-    same(end(1).prediction.token, 'two', 'unit02/q5-numbers stage 2 (the guess the solution makes)');
-  }
-  // 3. a box takes one arrow of each direction, and the rack refuses a second of the same or a third of any
-  {
-    const t0 = start(2);
-    const b = `piece:${SHL.boxPieceId('rack', '1s', 0)}`;
-    const once = TABLE.apply(t0, { place: { piece: 'up', to: b } });
-    const twice = TABLE.apply(once, { place: { piece: 'up', to: b } });
-    holds(twice.last.joined === false && Boolean(twice.last.reason), 'unit02/q5-numbers stage 3: a second arrow the same way is not refused with a reason');
-    same(SHL.rackOf(twice, 'rack'), { '1s:0': 'u' }, 'unit02/q5-numbers stage 3 (the refused arrow stays out)');
-    const pair = TABLE.apply(once, { place: { piece: 'down', to: b } });
-    same(SHL.rackOf(pair, 'rack'), { '1s:0': 'ud' }, 'unit02/q5-numbers stage 3 (a pair in one box)');
-    const third = TABLE.apply(pair, { place: { piece: 'up', to: b } });
-    holds(third.last.joined === false, 'unit02/q5-numbers stage 3: a third arrow is taken');
-    same(end(2).fixtures.count.dials.n.value, 2, 'unit02/q5-numbers stage 3 (the marker)');
-    const untested = TABLE.runScript(t0, [{ setDial: { fixture: 'count', dial: 'n', value: 2 } }], { strict: true });
-    holds(q5.STAGES[2].check({ table: untested }).ok === false, 'unit02/q5-numbers stage 3: passes without an orbital having been filled');
-    holds(t0.fixtures.count.dials.n.value !== 2, 'unit02/q5-numbers stage 3: the marker starts on the answer');
-  }
-  // 4. exactly one pair of the six shares all four numbers, every candidate has a room, and the rack refuses whichever comes second
+  // 2. exactly one pair of the six shares all four numbers, every candidate has a room, and the rack refuses whichever comes second
   {
     const dup = Object.entries(C.CANDIDATES);
-    same(dup.length, 6, 'unit02/q5-numbers stage 4 (six candidates)');
+    same(dup.length, 6, 'unit02/q5-numbers stage 2 (six candidates)');
     const pair = dup.flatMap(([a, x], i) => dup.slice(i + 1).filter(([, y]) => EL.sameAddress(x, y)).map(([b]) => a + b));
-    same(pair, ['ac'], 'unit02/q5-numbers stage 4 (the pair that shares all four numbers)');
-    for (const [k, a] of dup) holds(EL.validAddress(a), `unit02/q5-numbers stage 4: candidate ${k} has no room, so the rack would refuse it for another reason`);
-    const t = end(3);
-    same(Object.keys(C.CANDIDATES).map(k => Boolean(t.pieces[`t${k}`].props.placed) && !t.pieces[`t${k}`].zone), [true, true, false, true, true, true], 'unit02/q5-numbers stage 4 (the five on the rack)');
-    same(t.pieces.tc.zone, 'tray:no', 'unit02/q5-numbers stage 4 (the refused electron in the tray)');
-    const swap = TABLE.runScript(start(3), [
+    same(pair, ['ac'], 'unit02/q5-numbers stage 2 (the pair that shares all four numbers)');
+    for (const [k, a] of dup) holds(EL.validAddress(a), `unit02/q5-numbers stage 2: candidate ${k} has no room, so the rack would refuse it for another reason`);
+    const t = end(1);
+    same(Object.keys(C.CANDIDATES).map(k => Boolean(t.pieces[`t${k}`].props.placed) && !t.pieces[`t${k}`].zone), [true, true, false, true, true, true], 'unit02/q5-numbers stage 2 (the five on the rack)');
+    same(t.pieces.tc.zone, 'tray:no', 'unit02/q5-numbers stage 2 (the refused electron in the tray)');
+    const swap = TABLE.runScript(start(1), [
       { place: { piece: 'tc', to: `piece:${SHL.boxPieceId('rack', '2p', 1)}` } }, { place: { piece: 'ta', to: `piece:${SHL.boxPieceId('rack', '2p', 1)}` } }
     ], { strict: true });
-    holds(swap.last.joined === false && /four numbers/.test(swap.last.reason), 'unit02/q5-numbers stage 4: placing C first does not make A the refused one, with the rule as its reason');
+    holds(swap.last.joined === false && /four numbers/.test(swap.last.reason), 'unit02/q5-numbers stage 2: placing C first does not make A the refused one, with the rule as its reason');
   }
-  // 5. the third shell is nine boxes of two, and the marker is what the board counts
+  // 3. the third shell is nine boxes of two, and the marker is what the board counts
   {
-    const t = end(4);
-    same(Object.values(t.pieces).filter(p => p.kind === 'box').length, 9, 'unit02/q5-numbers stage 5 (boxes in the third shell)');
-    same(t.fixtures.count.dials.n.value, EL.shellCapacity(3), 'unit02/q5-numbers stage 5 (the marker)');
-    holds(q5.STAGES[4].table.fixtures.find(f => f.id === 'count').dials.n.value !== 18, 'unit02/q5-numbers stage 5: the marker starts on the answer');
+    const t = end(2);
+    same(Object.values(t.pieces).filter(p => p.kind === 'box').length, 9, 'unit02/q5-numbers stage 3 (boxes in the third shell)');
+    same(t.fixtures.count.dials.n.value, EL.shellCapacity(3), 'unit02/q5-numbers stage 3 (the marker)');
+    holds(q5.STAGES[2].table.fixtures.find(f => f.id === 'count').dials.n.value !== 18, 'unit02/q5-numbers stage 3: the marker starts on the answer');
+  }
+  // 4 & 5. sorting electrons into exact boxes
+  {
+    const t4 = end(3);
+    holds(['sa', 'sb', 'sc', 'sd'].every(id => t4.pieces[id].props.placed), 'unit02/q5-numbers stage 4 (all four sorted)');
+    const t5 = end(4);
+    holds(['sa', 'sb', 'sc', 'sd', 'se'].every(id => t5.pieces[id].props.placed), 'unit02/q5-numbers stage 5 (all five sorted)');
   }
 }

@@ -26,88 +26,35 @@ const WORK_FUNCTIONS = {
 };
 
 export function mountPhotoelectricExplainer(view, wrap, spec, still) {
-  let metal = spec.metal || 'Na';
-  let nm = spec.nm || 400; // 400 nm = violet
-  let brightness = Math.max(1, Math.min(4, spec.brightness || 2));
+  const metal = spec.metal || 'Na';
   let disposed = false;
   let rafId = 0;
 
-  // Controls container
-  const controls = document.createElement('div');
-  controls.className = 'pe-controls';
-  controls.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#14120f;border-bottom:1px solid #2e2a26;font-family:ui-monospace,monospace;font-size:11px;';
+  // Auto-playing sequence (no buttons): Red low -> Red high -> UV low -> UV high
+  const PHASES = [
+    { nm: 700, brightness: 1, label: 'Red light · Low brightness' },
+    { nm: 700, brightness: 3, label: 'Red light · High brightness' },
+    { nm: 260, brightness: 1, label: 'UV light · Low brightness' },
+    { nm: 260, brightness: 3, label: 'UV light · High brightness' }
+  ];
+  const PHASE_DUR = 3.2;
 
-  controls.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="color:#8c8376;font-weight:700;">LIGHT:</span>
-        <button type="button" class="btn-secondary quest-btn-sm" data-pe-preset="red" style="padding:2px 7px;font-size:10px;">Red (700nm)</button>
-        <button type="button" class="btn-secondary quest-btn-sm" data-pe-preset="violet" style="padding:2px 7px;font-size:10px;background:#2a2214;border-color:#d99423;color:#d99423;">Violet (400nm)</button>
-        <button type="button" class="btn-secondary quest-btn-sm" data-pe-preset="uv" style="padding:2px 7px;font-size:10px;">UV (260nm)</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="color:#8c8376;font-weight:700;">BRIGHTNESS:</span>
-        <button type="button" class="btn-secondary quest-btn-sm" data-pe-bright="1" style="padding:2px 6px;font-size:10px;">Low</button>
-        <button type="button" class="btn-secondary quest-btn-sm" data-pe-bright="3" style="padding:2px 6px;font-size:10px;background:#2a2214;border-color:#d99423;color:#d99423;">High</button>
-      </div>
-    </div>
-  `;
-
-  // Canvas
   const canvas = document.createElement('canvas');
   canvas.style.cssText = 'width:100%;height:220px;display:block;background:#0d0c0a;';
   view.appendChild(canvas);
-  wrap.insertBefore(controls, view);
 
   const ctx = canvas.getContext('2d');
 
-  const updateButtons = () => {
-    controls.querySelectorAll('[data-pe-preset]').forEach(btn => {
-      const p = btn.dataset.pePreset;
-      const act = (p === 'red' && nm >= 600) || (p === 'violet' && nm >= 350 && nm < 550) || (p === 'uv' && nm < 350);
-      btn.style.background = act ? '#2a2214' : '#1a1815';
-      btn.style.borderColor = act ? '#d99423' : '#3e3933';
-      btn.style.color = act ? '#d99423' : '#a59c86';
-    });
-    controls.querySelectorAll('[data-pe-bright]').forEach(btn => {
-      const b = parseInt(btn.dataset.peBright, 10);
-      const act = (b === 1 && brightness <= 1) || (b === 3 && brightness >= 3);
-      btn.style.background = act ? '#2a2214' : '#1a1815';
-      btn.style.borderColor = act ? '#d99423' : '#3e3933';
-      btn.style.color = act ? '#d99423' : '#a59c86';
-    });
-  };
-
-  controls.addEventListener('click', e => {
-    const presetBtn = e.target.closest('[data-pe-preset]');
-    if (presetBtn) {
-      const mode = presetBtn.dataset.pePreset;
-      if (mode === 'red') nm = 700;
-      else if (mode === 'violet') nm = 400;
-      else if (mode === 'uv') nm = 260;
-      updateButtons();
-      return;
-    }
-    const brightBtn = e.target.closest('[data-pe-bright]');
-    if (brightBtn) {
-      brightness = parseInt(brightBtn.dataset.peBright, 10);
-      updateButtons();
-    }
-  });
-
-  // Physical calculation
-  // E_photon (eV) = 1240 / nm
-  const getPhysics = () => {
+  // Physical calculation: E_photon (eV) = 1240 / nm
+  const getPhysics = (nm) => {
     const ePhoton = 1240 / nm;
     const phi = WORK_FUNCTIONS[metal] || 2.36;
     const canFree = ePhoton >= phi;
     const ke = Math.max(0, ePhoton - phi);
-    // Speed roughly sqrt(ke)
     const speed = canFree ? Math.sqrt(ke / 1.5) : 0;
     return { ePhoton, phi, canFree, ke, speed };
   };
 
-  // Particles for continuous flow animation
   let animTime = 0;
 
   function render(time) {
@@ -119,10 +66,15 @@ export function mountPhotoelectricExplainer(view, wrap, spec, still) {
       canvas.height = h;
     }
 
+    const phaseIdx = still ? 2 : Math.floor((animTime / PHASE_DUR) % PHASES.length);
+    const phase = PHASES[phaseIdx];
+    const nm = phase.nm;
+    const brightness = phase.brightness;
+
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, w, h);
 
-    const phys = getPhysics();
+    const phys = getPhysics(nm);
     const colour = lightColour(nm);
 
     // Geometry coordinates
@@ -268,20 +220,27 @@ export function mountPhotoelectricExplainer(view, wrap, spec, still) {
       }
     }
 
+    // Phase banner at top-left
+    ctx.fillStyle = 'rgba(13, 12, 10, 0.78)';
+    ctx.fillRect(8, 6, 210, 18);
+    ctx.fillStyle = colour;
+    ctx.font = '700 11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(phase.label.toUpperCase(), 14, 15);
+
     if (!still) {
       animTime += 0.018;
       rafId = requestAnimationFrame(render);
     }
   }
 
-  updateButtons();
   rafId = requestAnimationFrame(render);
 
   return {
     dispose() {
       disposed = true;
       cancelAnimationFrame(rafId);
-      controls.remove();
       canvas.remove();
     }
   };

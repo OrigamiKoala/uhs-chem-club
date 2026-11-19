@@ -213,10 +213,85 @@ function paintGain(ctx, f, state, b) {
   say(ctx, `${r.last < 0 ? '\u2212' : ''}${Math.abs(r.last)} kJ/mol`, F.x(x), F.y(15.6), F.size(2.8, 7), { color: PHOS, weight: 700, maxW });
 }
 
+/** Interactive visual shielding diagram: nucleus +Z, inner shielding electrons S blocking pull lines, and outer electron feeling Z_eff = Z - S. */
+function paintShield(ctx, f, state, b) {
+  const F = frameOf(b);
+  const z = Math.round(f.dials.protons?.value ?? 11);
+  const s = Math.round(f.dials.inner?.value ?? 0);
+  const zeff = Math.max(0, z - s);
+  const w = f.size.w;
+  const h = f.size.h;
+  const topY = 18;
+  const midY = topY + (h - topY - 4) * 0.5;
+  const nucX = 18;
+  const innerX = 46;
+  const outerX = w - 24;
+
+  // Well background for visual diagram
+  ctx.fillStyle = '#12100d';
+  ctx.fillRect(F.x(2), F.y(topY), F.len(w - 4), F.len(h - topY - 2));
+  ctx.strokeStyle = RIM;
+  ctx.strokeRect(F.x(2) + 0.5, F.y(topY) + 0.5, F.len(w - 4) - 1, F.len(h - topY - 2) - 1);
+
+  // Pull lines from nucleus: S lines are blocked at the inner shell, Z_eff lines reach the outer electron!
+  const spread = Math.min(20, h - topY - 12);
+  for (let i = 0; i < z; i++) {
+    const frac = z === 1 ? 0 : (i / (z - 1)) - 0.5;
+    const ly = midY + frac * spread;
+    const blocked = i < s;
+    ctx.strokeStyle = blocked ? 'rgba(148, 163, 184, 0.35)' : AMBER;
+    ctx.lineWidth = blocked ? 1.2 : 1.8;
+    ctx.setLineDash?.(blocked ? [3, 3] : []);
+    ctx.beginPath();
+    ctx.moveTo(F.x(nucX + 6), F.y(midY));
+    ctx.lineTo(F.x(blocked ? innerX - 2 : outerX - 5), F.y(ly));
+    ctx.stroke();
+  }
+  ctx.setLineDash?.([]);
+
+  // Inner shielding electrons sitting between nucleus and outer electron
+  if (s > 0) {
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(F.x(nucX), F.y(midY), F.len(innerX - nucX), -0.55, 0.55);
+    ctx.stroke();
+    for (let i = 0; i < s; i++) {
+      const frac = s === 1 ? 0 : (i / (s - 1)) - 0.5;
+      const ey = midY + frac * spread;
+      ctx.fillStyle = '#7dd3fc';
+      ctx.beginPath();
+      ctx.arc(F.x(innerX), F.y(ey), Math.max(2.6, F.len(1.3)), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    say(ctx, `${s} INNER e⁻ SHIELDING`, F.x(innerX), F.y(h - 5), F.size(2.1, 6), { align: 'center', color: '#7dd3fc', weight: 700 });
+  } else {
+    say(ctx, 'NO INNER ELECTRONS YET', F.x(innerX), F.y(h - 5), F.size(2.1, 6), { align: 'center', color: DIM });
+  }
+
+  // Nucleus (+Z)
+  ctx.fillStyle = AMBER;
+  ctx.beginPath();
+  ctx.arc(F.x(nucX), F.y(midY), F.len(6.5), 0, Math.PI * 2);
+  ctx.fill();
+  say(ctx, `+${z}`, F.x(nucX), F.y(midY), F.size(3.2, 8), { align: 'center', color: '#12100d', weight: 700 });
+  say(ctx, 'NUCLEUS', F.x(nucX), F.y(h - 5), F.size(2.0, 6), { align: 'center', color: DIM });
+
+  // Outer valence electron with dynamic pull arrow pointing toward nucleus
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(F.x(outerX), F.y(midY), F.len(3.0), 0, Math.PI * 2);
+  ctx.fill();
+  say(ctx, 'e⁻', F.x(outerX), F.y(midY), F.size(2.2, 6), { align: 'center', color: '#12100d', weight: 700 });
+  say(ctx, `FEELS +${zeff}`, F.x(outerX), F.y(midY - 7.5), F.size(2.8, 7.5), { align: 'center', color: zeff > 0 ? PHOS : DIM, weight: 700 });
+  say(ctx, 'OUTER ELECTRON', F.x(outerX), F.y(h - 5), F.size(2.0, 6), { align: 'center', color: DIM });
+}
+
 export function paintFixture(ctx, f, state, b) {
   if (f.kind === 'spring') paintSpring(ctx, f, state, b);
   else if (f.kind === 'sizer') paintSizer(ctx, f, state, b);
   else if (f.kind === 'strip') paintStrip(ctx, f, state, b);
   else if (f.kind === 'gain') paintGain(ctx, f, state, b);
   else if (f.kind === 'levels') paintLevels(ctx, f, state, b);
+  else if (f.kind === 'shield') paintShield(ctx, f, state, b);
 }

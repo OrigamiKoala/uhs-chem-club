@@ -16,16 +16,11 @@ export default async function check(q8, { TABLE, same, holds, rig }) {
     holds(EL.RADIUS.Li > EL.RADIUS.C, 'unit02/q8-trends stage 1: lithium is not the bigger atom');
     same(end(0).prediction.token, 'li', 'unit02/q8-trends stage 1 (the guess the solution makes)');
   }
-  // 2. lithium alone is measured; every other card goes in the tray of its nuclear charge less its inner electrons
+  // 2. interactive visual shielding lab for Sodium (+11 nucleus, 10 inner electrons -> +1 effective pull)
   {
-    const t = start(1);
-    const li = TR.springRead(t, 'sp');
-    same([li.piece.id, li.z, li.between, li.zeff], ['li', 3, 2, 1], 'unit02/q8-trends stage 2 (the instrument reads lithium)');
-    holds(t.pieces.li.fixed, 'unit02/q8-trends stage 2: lithium can be taken out, so another atom can be read off the instrument');
     const e = end(1);
-    const trayOf = { 1: 'tray:one', 2: 'tray:two', 3: 'tray:three' };
-    for (const p of loose(e)) same(p.zone, trayOf[TR.feelsOf(p.props.sym)], `unit02/q8-trends stage 2 (${p.props.sym})`);
-    holds(new Set(loose(e).map(p => TR.feelsOf(p.props.sym))).size === 3, 'unit02/q8-trends stage 2: the cards do not cover three different charges');
+    same(e.fixtures.shield.dials.protons.value, 11, 'unit02/q8-trends stage 2 (sodium protons)');
+    same(e.fixtures.shield.dials.inner.value, 10, 'unit02/q8-trends stage 2 (sodium inner shielding electrons)');
   }
   // 3 and 4. size is never printed and never drawn: the cards are plain, the instrument shows charge only, the rail is the measured radii
   for (const [i, ids, what] of [[2, ['li', 'be', 'b', 'c'], 'across a period'], [3, ['li', 'na', 'k'], 'down a group']]) {

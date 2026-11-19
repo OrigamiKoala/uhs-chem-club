@@ -28,36 +28,32 @@ export default async function check(q4, { TABLE, near, same, holds, rig }) {
     // a plate builds and does not reshuffle: the first fifty of five hundred are the same fifty
     same(O.sampleOrbital('1s', 50, 1), CLD.pointsOf('1s', 1).slice(0, 50), 'unit02/q4-cloud stage 2 (the first fifty shots are the first fifty of five hundred)');
   }
-  // 3. the strings that close are the ones a whole number of whose wavelengths go round
+  // 3. wave-particle duality exploration stage
   {
     const t = end(2);
+    same(t.pieces.both.zone, 'slot:ans', 'unit02/q4-cloud stage 3 (both particle and wave selected)');
+  }
+  // 4. the strings that close are the ones a whole number of whose wavelengths go round
+  {
+    const t = end(3);
     for (const pm of q4.RING_STRINGS) {
       const fits = O.ringFits(pm, O.RING_CIRCUMFERENCE_PM).fits;
-      same(t.pieces[`s${pm}`].zone, fits ? 'tray:closes' : 'tray:smears', `unit02/q4-cloud stage 3 (the ${pm} pm string)`);
+      same(t.pieces[`s${pm}`].zone, fits ? 'tray:closes' : 'tray:smears', `unit02/q4-cloud stage 4 (the ${pm} pm string)`);
     }
-    same(q4.RING_STRINGS.filter(pm => O.ringFits(pm, O.RING_CIRCUMFERENCE_PM).fits), [332, 166, 111], 'unit02/q4-cloud stage 3 (the strings that close)');
-    const on = TABLE.apply(start(2), { place: { piece: 's332', to: 'slot:track.tile' } });
-    same(CLD.trackRead(on, 'track').fits, true, 'unit02/q4-cloud stage 3 (a string put on the track reads its own fit)');
+    same(q4.RING_STRINGS.filter(pm => O.ringFits(pm, O.RING_CIRCUMFERENCE_PM).fits), [332, 166, 111], 'unit02/q4-cloud stage 4 (the strings that close)');
+    const on = TABLE.apply(start(3), { place: { piece: 's332', to: 'slot:track.tile' } });
+    same(CLD.trackRead(on, 'track').fits, true, 'unit02/q4-cloud stage 4 (a string put on the track reads its own fit)');
   }
-  // 4. exactly the views along the node plane leave a slice empty; the slab is across the line of sight
-  {
-    const c = end(3);
-    const empty = [];
-    for (let turn = 0; turn <= 11; turn++) for (let tilt = -3; tilt <= 3; tilt++) {
-      let u = TABLE.apply(c, { setDial: { fixture: 'view', dial: 'turn', value: turn } });
-      u = TABLE.apply(u, { setDial: { fixture: 'view', dial: 'tilt', value: tilt } });
-      const r = CLD.plateRead(u, 'c');
-      if (r.shown.length <= q4.EMPTY_SLICE * r.fired) empty.push(`${turn}:${tilt}`);
-    }
-    same(empty, ['0:0', '6:0'], 'unit02/q4-cloud stage 4 (the views whose slice is empty)');
-    holds(CLD.plateRead(start(3), 'c').turn === 1 && CLD.plateRead(start(3), 'c').tilt === 1, 'unit02/q4-cloud stage 4: the view does not start oblique');
-    holds(O.nodeRadii('1s').length === 0, 'unit02/q4-cloud stage 4: the first cloud has a node');
-  }
-  // 5. every card is sorted by the shape `orbitals.js` names
+  // 5. sorting spherical s orbitals from two-lobed p orbitals
   {
     const t = end(4);
+    same([t.pieces.sp1.zone, t.pieces.sp2.zone, t.pieces.sp3.zone, t.pieces.sp4.zone], ['tray:sorb', 'tray:porb', 'tray:sorb', 'tray:porb'], 'unit02/q4-cloud stage 5 (s vs p orbitals sorted)');
+  }
+  // 6. every card is sorted by the shape `orbitals.js` names
+  {
+    const t = end(5);
     const binFor = { 'two lobes': 'two', 'four lobes': 'four', 'two lobes and a ring': 'ring' };
-    for (const id of ['ka', 'kb', 'kc', 'kd', 'ke']) same(t.pieces[id].zone, `tray:${binFor[O.shapeOf(t.pieces[id].props.orbital)]}`, `unit02/q4-cloud stage 5 (${t.pieces[id].label})`);
-    same(['ka', 'kb', 'kc', 'kd', 'ke'].map(id => O.shapeOf(t.pieces[id].props.orbital)), ['two lobes', 'four lobes', 'two lobes and a ring', 'four lobes', 'four lobes'], 'unit02/q4-cloud stage 5 (the shapes)');
+    for (const id of ['ka', 'kb', 'kc', 'kd', 'ke']) same(t.pieces[id].zone, `tray:${binFor[O.shapeOf(t.pieces[id].props.orbital)]}`, `unit02/q4-cloud stage 6 (${t.pieces[id].label})`);
+    same(['ka', 'kb', 'kc', 'kd', 'ke'].map(id => O.shapeOf(t.pieces[id].props.orbital)), ['two lobes', 'four lobes', 'two lobes and a ring', 'four lobes', 'four lobes'], 'unit02/q4-cloud stage 6 (the shapes)');
   }
 }
