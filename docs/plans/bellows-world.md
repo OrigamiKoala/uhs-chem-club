@@ -126,6 +126,8 @@ spent stage one's word on a nameplate before the card earned it.
 
 ## The world
 
+*Superseded on 2026-11-18 by "Site rebuild" at the end of this file; kept as the record of the first site.*
+
 A circular steel deck, radius 82 m, riding a sea of cloud in thin air. The Compressor stands at the
 middle (a 12 m footprint: plinth, ribbed block, four cylinder heads, a housing and crown, a piston
 rod that strokes, a flywheel that turns and an exhaust stack with a plume). Six benches stand on a
@@ -471,3 +473,141 @@ coordinates. At most two plates in view from the spawn (target none). Budget: at
   `bellows/decks.js` (decks, rails, rooms and structures), `bellows/vista.js`.
 - Archived to `archive/2026-11-18/site-bellows/`: the old `terrain.js`, `props.js`, `stations.js`,
   `host-plan.js`, the old generator and the old `verify-bellows.mjs`.
+
+### 10. Build record (2026-11-18)
+
+Built on `site/bellows` in six commits (spec; plan, decks and structures with placeholder hosts; Bench 3; the other
+five hosts in one commit; mains and the far country; the checks). Nothing was looked at in a browser: every claim
+below is a Node measurement.
+
+- **The plan** (`bellows/works-plan.js`, no THREE): 23 volumes on `lib/workings.js` (7 decks including the stage and the apron,
+  2 catwalks, 6 ramps, 2 passages, 6 rooms) with `outdoorDoors` and the opt-in `roof`. Rails are not
+  listed by hand: `withRails` walks every side of every open volume a quarter metre at a time, looks 0.6 m past it,
+  and makes any span with the drop behind it a `pass: false` rail (58 rails, 1,043 m in all). A side with a room
+  or a structure (`PLINTH`, `SPHERE.skirt`, the holder's drum, `COLDBOX`) behind it stays a wall. The height field
+  is a volume's floor or the cloud sea (`SEA`, -46 m).
+- **The fabric** (`bellows/decks.js`, `phys: 'ground'`, merged per material): the deck plate as one tread-plate
+  mesh coloured per vertex (bright on the lines walked between each deck's doorways, grime and kerb-dark elsewhere);
+  slabs, fascia channels and beam grids under the decks; stringers and Warren trusses under the catwalks and ramps;
+  four-chord lattice legs from every deck, structure and long span down into the cloud; railings with a lamp
+  standard every 12 m or so (each a pooled lamp mark); gas mains hung outside seven catwalks and ramps; the plinth
+  cast round the hall and its passage; the sphere on its square skirt; the drum with its door slot, stanchions,
+  ring girders, dome and the parked piston with its ribs, seal and stops; the cold box's casing to 44 m with its
+  stiffeners, ladder cage, vent and rimed lines; the gondola car with window bands and a bow, hung from the moored
+  bag; the cradle platform, curtain and arches under the hauled-down bag; both bags with their straps and valves,
+  and the moored bag's lines down to brackets outside the mooring deck's rail.
+- **The hosts** (`bellows/stations.js`): the six rooms of spec section 5, each with its machinery at the sides and
+  behind the plate, a pendant lamp over the plate and two more forward, and colliders under everything that stands
+  on the floor. The bench (`buildBwBench`) is the one from before. Bench 6 registers the `drawoff` field point
+  Quest 6 stage 4 fetches from (the valve on its stand at the plate's right).
+- **Kept** from the first Bellows: the sky, the cloud sea, the lights and environment (`atmosphere.js`), the
+  plumes and spindrift (`effects.js`), the Compressor, the pad and the cumulus heads (now in `plant.js`). The
+  Compressor stands on its plinth at (0, 2, -10) and is still the only mover (its rod and wheel).
+- **The far country** (`bellows/vista.js`, `phys: 'ambient'`): two other works north (decks on legs, a sphere, a
+  drum, a stack, bladders), six scoop pylons east, a cloud column south, a bladder train on a cable west.
+- **Checks**: `tools/verify-bellows.mjs` rewritten (the old one is archived); see section 11.
+- **Archived** to `archive/2026-11-18/site-bellows/` with a README: the old `terrain.js`, `props.js`,
+  `stations.js`, `host-plan.js`, `bellows.js`, `bellows.json`, generator and verifier.
+
+### 11. Measurements, before and after
+
+`node tools/world-shape.mjs bellows ligar`:
+
+| | ground under the benches | relief | housed | per bench |
+| :--- | :--- | ---: | :---: | :--- |
+| Before | 0.00 to 0.00 m | 0.00 m | 0/6 | -1 -0 -0 -2 -1 -0 |
+| After | -8.00 to 12.00 m | 58.00 m | 6/6 | R7 R7 R7 R7 R7 R8 |
+
+(The relief figure is the range of `getTerrainHeight` on straight lines from the spawn to each bench, so it
+counts the cloud sea at -46 m under the gaps between decks; the walk itself spans -8 to +12 m.)
+
+`node tools/perf-worlds.mjs bellows` at T4:
+
+| | build ms | objects | draws | k tris | materials | casters | lights |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
+| Before | 67 | 315 | 201 | 106 | 46 | 52 | Directional 1, Hemisphere 1, Point 3 |
+| After | 266 | 392 | 252 | 302 | 39 | 37 | Directional 1, Hemisphere 1, Point 3 |
+
+Inside the budget (566 draws, 900k triangles). `node tools/perf-bench-rest.mjs`: every unit04 stage comes to
+rest untouched (7, 6, 6, 5, 7, 4).
+
+`verify:bellows` (rewritten): 23 volumes, none overlapping; 22 doorways declared both ways, level and at least
+3.9 m wide; every ramp 1 in 4.5 or gentler; 58 rails, each with the cloud sea behind it (the lowest floor 38 m over it); no overlaps among 250 meshes;
+nothing buried; one emissive material; 107 lamps on 3 pooled lights; every room, both passages and the drum's
+foot under the cover mask; 6/6 housed; no plate in view from the spawn; flood fill of 25,167 cells with no ledge,
+every reachable cell inside a declared volume, reachable floor exactly -8 to +12 m; no body under 2.4 m over
+reachable floor; the guide routes through every room's door; the draw-off field point holds. A mutation check
+(the stage's west rail colliders removed in a scratch build) fails the flood fill with ledges and 127,700 stray
+cells, so the check bites.
+
+Other scripts on this branch: `verify:bench`, `verify:arena`, `verify:voyage`, `verify:table`, `verify:docs` and
+every other world's script (`tallow`, `lanternfall`, `ligar`, `ember`, `mirrowen`, `kettle`, `teeter`,
+`verdigris`, `brinewire`, `quicklight`, `lodestone`, `thornmere`, `cinderhalo`) pass. `verify:learn` fails one
+check, `unit01/q4-ledger stage 5: prompt must be exactly 1 sentence`; the same failure is printed on the parent
+branch `3d` (run in a separate worktree), so it is not this work's. No shared code was changed.
+
+The voyage lands on the pad at (6, 76) heading east, its ramp's foot at (-0.6, 64.8) on the stage, 2.9 m below the sill.
+
+### 12. Where the build parted from the spec
+
+- The rails are found by the plan (`withRails`), not declared per side: the spec listed rails in words only.
+- Host extents run to 6 m in front of the plate (not 3 m as on Mirrowen), because the forward pendant lamps hang
+  over the floor in front of the bench.
+- Bench 3's lamps hang from the piston's ribs, not from its landing stops.
+- The five hosts after Bench 3 went in one commit, not one each.
+- Phase 5 added no new mover: what moves is the Compressor's rod and wheel, the two plumes (the Compressor's stack
+  and the cold box's vent) and the spindrift, as before.
+- `verify-bellows.mjs` no longer holds "landmarks are T4 decoration" (there is one landmark, the pad; the check is
+  now "nothing on the walk is T4-only"), "18 lamp posts" (now 30 or more pooled lamps; the lamps stand on the
+  rails), "every landmark inside the rail of radius 82" (now "the pad is on the stage") or "the rail is a closed
+  ring" (now "every rail has the drop behind it" and "every reachable cell is in a volume"), nor the old tower-host
+  bay rule (no host stands against the tower; `verify:bench` measures every bay).
+
+### 13. What is still weak
+
+- Nobody has seen it. The bags are plain ellipsoids with straps; how they read at 40 m is unknown.
+- The cradle's curtain is drawn in 1 m panels whose tops step up to the bag's belly, not a draped edge.
+- The holder deck stops 0.8 m short of the drum's shell beside the door slot: a gap down to the cloud that cannot
+  be reached but can be seen.
+- The cover box over the drum's foot reaches 0.4 m past the holder deck's west edge, so that strip of deck is a
+  little dimmer.
+- The far country's rigs are boxes and spheres at 350 m; in the haze they may be too plain or too faint.
+- The sky residual per room (0.14 to 0.34) is a guess; the gondola's windows are the brightest room by design.
+- The moored bag's lines run down its west flank only.
+
+### 14. The owner's viewing list
+
+1. **The landing (the spawn, (-2, 60), facing north).** In view: the 12 m catwalk to the apron, the Compressor on
+   its plinth with the flywheel facing you, the long ramp climbing left to the sphere, the moored bag to the
+   right over its deck, the drum and the cold box standing taller behind; rails at every edge and cloud 46 m
+   below. No bench plate. Failed if a plate is visible, an edge has no rail, or the place reads as one floor.
+2. **The stage's west rail, facing west.** The ramp drops 5 m away to the bag lying on its cradle with its curtain
+   to the deck. Failed if the bag floats clear of the curtain or the curtain stops short of the bag.
+3. **Half way up `ramp-west` (-34, 30), facing west.** Drop on both sides, the sphere ahead over its square skirt,
+   the door in the skirt's east face. Failed if the ramp reads as a road on ground.
+4. **At Bench 1's plate, facing the door (east).** Plated walls with stiffeners on all sides, the catch deck's
+   radial beams and the drain nozzle overhead, the gauge board and relief valve behind; dark except the lamps.
+   Failed if the room is sunlit or reads as a shed.
+5. **In the passage through the plinth (10, -17), facing west.** The base hall opens ahead: the crankcase along
+   the back wall, three crosshead guides into the roof, the intercooler and receiver at the sides. Failed if the
+   hall is bright or the guides block the bench.
+6. **The lowest ground: the holder deck (-14, -55), facing west.** The drum fills the view, the door a slot
+   through its shell. Then at Bench 3's plate facing the door: the low partitions, the drum's wall curving
+   round above them, the ribbed piston 5.2 m overhead. Failed if the drum's inside is sunlit or the piston
+   reads as a flat ceiling.
+7. **The middle of `cw-north` (16, -40), facing north.** A 4 m catwalk with the drop both sides, the plinth's
+   back wall behind, the drum to the west and below. Failed if it feels enclosed.
+8. **On the mooring deck (50, 25), facing east.** The gondola moored alongside with nothing under it, the bag 4 m
+   above its roof on four struts, the lines down to brackets. Then at Bench 4's plate facing the door: window
+   bands on both sides looking out over the drop. Failed if the car seems to stand on the deck.
+9. **At Bench 5's plate, facing the door (south).** The bag's belly overhead, lowest over the middle of the room,
+   the curtain on all sides, the skin test frame behind the plate. Failed if the belly comes down into the
+   lean-in view or the curtain shows gaps.
+10. **The highest ground: the cold deck (56, -40), facing north.** The cold box's casing rising 32 m from the deck,
+    its door, the vent on top. Then at Bench 6's plate: the three rimed cores behind, the turbine to the left, the
+    draw-off valve to the right. Failed if the draw-off cannot be reached or the casing reads as a hut.
+11. **The boss's ground: the player's mark on the apron (0, 34), facing north.** An open apron 28 m wide, the
+    Compressor 12 m beyond on its plinth, nothing in between. Failed if anything stands in the way.
+12. **From the cold deck's north-east corner, turning round.** North: two other works under bladders; east: scoop
+    pylons out of the cloud; south: a cloud column; west: a bladder train on its cable. Failed if a quarter is
+    empty or any of it reads as a backdrop card.

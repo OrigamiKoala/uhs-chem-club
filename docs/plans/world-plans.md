@@ -52,7 +52,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 - **Reference:** `docs/plans/tallow-ligar-world.md`
 
 ### Unit 04: Bellows (Gases, Gas Laws, and Kinetic Molecular Theory)
-- **Setting:** An atmospheric compression plant with gas storage tanks, piston manifolds, and bleed valves.
+- **Setting:** A gas works hung in thin air over a sea of cloud: steel decks on lattice legs at seven heights round a sphere on its skirt, a piston gasholder, the Compressor's tower, a cold box and two bladders, joined by railed catwalks and ramps; the benches are inside those structures.
 - **Benches:** `q1-knocks` (pressure from particle collisions), `q2-laws` (Boyle, Charles, Avogadro relations), `q3-ideal` (PV = nRT), `q4-mixtures` (Dalton's law of partial pressures), `q5-kmt` (Maxwell-Boltzmann speed distributions), `q6-real` (van der Waals real gas deviations), and `boss-compressor`.
 - **Core Teaching Click:** Pressure is the rate of momentum transfer from particle impacts; gas particles are simulated with live physics.
 - **Reference:** `docs/plans/bellows-world.md`

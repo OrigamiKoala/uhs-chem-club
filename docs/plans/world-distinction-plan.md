@@ -165,7 +165,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 | Tallow | Dead-flat salt pan to a mirror horizon; one excavated pit | Along the process line, brine to bagged salt | Inside the plant's own buildings: evaporator hall, tower base, control house, bagging shed, the pit | White high-altitude glare, ice halo |
 | Lanternfall | A glacier tongue running down to a frozen lake; crevasse field, pressure ridges | Round the lake shore, with spurs cut down into the ice | Ice: a crevasse lab down a cut ramp, caves under pressure ridges, the dome, the crawler's cabin | Polar night, aurora |
 | **Ligar** (reference, unchanged) | Basalt plateau, trap-bench hills, a quarry cut | Hub at the quarry, adits into two hills | Mine chambers and quarry workings | Dusk, low amber sun |
-| Bellows | No ground: platforms at several levels round gasholders, over a cloud sea | Catwalks and ramps between platforms, open drop on both sides | Inside gasholder skirts, the compressor tower's base, a cold box; under moored bladders | High white sun, dark zenith |
+| Bellows (built 2026-11-18) | No ground: steel decks on lattice legs at seven heights (-8 to +12 m) round a sphere on its skirt, a piston holder, the Compressor's tower, a cold box and two bladders, over a cloud sea 38 m and more below | A hub (the apron) and five arms of 4 m catwalks and 1-in-5 ramps over the drop, railed on both sides | Inside the sphere's skirt, the tower's base hall, the meter house inside the piston holder under the parked piston, the gondola hung under the moored bladder, under the bladder hauled down onto its cradle (the bag is the roof), the cold box's foot | High white sun, dark zenith; indoors under a cover mask, lamps only |
 | Ember Reach | The inside wall of a caldera, stepping down toward a lava lake | A switchback road down the wall | Galleries cut into the caldera wall with one side open to the lake; the turbine hall | Ochre fume; the lake lights the rock from below |
 | Mirrowen (built 2026-11-18) | A harbour: quay walls 2.6 m above the water round a basin, a mole, a dry dock sunk 7 m (4.4 m below the waterline), an ice-breaker and a tanker moored and a freighter frozen into the canal, sea ice to the north | A ring of right-angled quays joined by two gate walks over water (the canal's lock gate, the dry dock's gate), gangways up onto three decks, companionways down inside the hulls | Aboard hulls (a deckhouse, a tanker's pump room, a hold, an evaporator flat), two boathouses on piles (a thaw shed, a salt store), a pump well off the dry dock's floor | Cold white morning haze; indoors under a cover mask, lamps only |
 | Kettle (built 2026-11-13) | One foundry building the size of the site, floors at five levels inside it; a slag tip and an ore stock outside | Up one crane aisle from the charge door to the cast house, bays opening off it, two ramps up and two down | The building itself: stores, scale bay, control cabin on a plinth, sump cellar, charge bank up a ramp, pickling bay, tapping pit, refining bay | Indoors under a cover mask: shafts through louvred bands high in the west walls and the charge door, one furnace source |
@@ -242,7 +242,7 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Quicklight | 2026-11-17 | 2026-11-17 | 2026-11-17 (6 of 6 housed) | 2026-11-17 | 2026-11-17 (`verify:quicklight` rewritten) | not yet |
 | Ember Reach | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:ember` rewritten) | not yet |
 | Mirrowen | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:mirrowen` rewritten) | not yet |
-| Bellows | | | | | | |
+| Bellows | 2026-11-18 | 2026-11-18 | 2026-11-18 (6 of 6 housed) | 2026-11-18 | 2026-11-18 (`verify:bellows` rewritten) | not yet |
 | Lanternfall | | | | | | |
 | Tallow | | | | | | |
 | Thornmere (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:thornmere`) | not yet |
@@ -250,6 +250,18 @@ No agent looks at the result in a browser. The run ends with a list of views for
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Bellows, 2026-11-18 (branch `site/bellows`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -8.00 to 12.00 m
+(20.0 m, six floor levels), relief 58.0 m (it counts the cloud sea under the gaps between decks), housed 6 of 6 (R7 R7 R7 R7 R7 R8), no cloned
+coordinates, no plate in view from the spawn. `perf-worlds.mjs`: 252 draws, 302k triangles (before: 201 and 106k). It uses the shared layers as
+they are: `lib/workings.js` (23 volumes: open decks, catwalks and ramps, roofed rooms and passages, `outdoorDoors`) and `lib/cover.js` (9 boxes,
+one of them the piston holder's whole foot, which is seen over the meter house's low partitions; no openings). New and world-local: the height
+field off every volume is the cloud sea, so every edge must be closed, and the rails are found rather than listed (`works-plan.js` `withRails`
+looks past every side of every open volume a quarter metre at a time and rails any span with the drop behind it); the flood fill's "every
+reachable cell is in a volume" is the check that holds it. Departures: none from the row; the walk is a hub with five arms, which no other row
+uses. For the next world: a round structure round a rectangular room leaves an unreachable ring between them that is seen from inside, so
+cover the whole structure, not only the room; a room hung in the air (the gondola) needs no legs and must have none. Spec, build record and the
+owner's viewing list: `docs/plans/bellows-world.md`, "Site rebuild (2026-11-18)".
 
 **Mirrowen, 2026-11-18 (branch `site/mirrowen`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground -7.00 to
 1.20 m (8.2 m, seven floor levels), relief 15.0 m, housed 7 of 7 (R7 R8 R7 R8 R6 R7 R8), no cloned coordinates, no plate in view from
