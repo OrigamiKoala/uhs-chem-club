@@ -572,3 +572,156 @@ needs rebuilding, rewiring every function back in.
   nothing buried, every bench reachable, no ledge in the walk.
 - No player-facing string changes.
 
+
+---
+
+## 5. Tallow site rebuild (2026-11-19)
+
+Branch `site/tallow`. Brief: Tallow's row in `docs/plans/world-distinction-plan.md` section 6, tier "rehouse only"
+(section 7): the ground, the sky and the plant stay; the hosts and what stands round them are rebuilt so the benches
+are inside the plant's own buildings. Before this run `world-shape.mjs` read Tallow `-2 R6 -3 -3 -1 -1` (1 of 6 housed).
+
+### 5.1 The place
+
+**In one sentence:** an abandoned salt refinery on a dead-flat pan, whose process line you walk from the landing pad
+and whose buildings you go into: the evaporator hall at the belt's tail, the head house and bagging shed at its head,
+the control house, the base house under a cracking tower, and the instrument room in the pit under the evaporators.
+
+**The first ten seconds:** from the pad the pan runs flat to a mirror horizon in every direction; in front stand the
+plant's sheds and the evaporator row, the belt running on its stand between two clad buildings, the towers behind.
+No bench is in sight: every plate is behind a wall.
+
+### 5.2 The signature
+
+| | Tallow |
+| :--- | :--- |
+| Landform | Dead-flat salt pan to a mirror horizon; one excavated pit (kept) |
+| Walk shape | Along the process line, outdoors between free-standing buildings 20 to 50 m apart: pad, belt tail, pit, control house, tower, belt head (kept) |
+| Bench housing | Inside the plant's own buildings, each a different construction: a tall clad portal-frame hall (evaporator hall), a block house with a slab roof (control house), a lean-to on a block plinth against a column's foot (tower base house), a tall gabled head house and the lower lean-to bagging shed off its side (one shed, two rooms), the roofed pit |
+| Light | White high-altitude glare, ice halo (kept); indoors under the cover mask, sodium lamps from the pool |
+
+Against the other rows: no other world is flat (every other landform has relief or no ground); no other walk is
+outdoors between buildings that stand apart on open ground. The nearest housing rows are Kettle (one building the size
+of the site, the walk inside it) and Quicklight (bunkers, a reactor's skirt and a control block packed under pipe racks
+on two lava flows): Tallow's buildings stand alone on the pan, the walk between them is in the open, and they are
+sheds of sheet and block, not bunkers or a foundry. The row is unchanged except that it names five places for six
+benches: the bagging shed holds two rooms (the head house, where the belt delivers, and the bagging shed beside it).
+
+### 5.3 The plan (world metres; +x east, -z north; the spawn looks north)
+
+- Extent of the walk: the pan inside the props' keep, about x -50 to 66, z -66 to 46. No high ground; the pan is
+  closed only at the pit's rim (kerb colliders, kept) and by the buildings' walls.
+- Levels: the pan at 0.0 to 0.15 m; building floors are level slabs at the highest crust under each (0.04 to 0.17 m);
+  the pit floor at -5.6 m, reached down the stair ramp (x -6.6 to -1.4, z -22 to -31).
+- Pad (34, 42); spawn (0, 1.6, 44) looking at (0, 1.6, 20). The Hopper's ground: (0, 30), radius 9, with the
+  corridor x -5 to 5, z 28 to 46 (kept, `BOSS_ARENA_SPOTS.hopper` unchanged).
+- The buildings (outer faces, world AABB):
+  - Evaporator hall (site-1): x 10.2 to 25.6, z -3.8 to 11.8; door in the east wall, z 1.8 to 6.2; the belt leaves
+    through a slot in the west wall, z 3.1 to 5.7.
+  - Head house (site-5): x -14.49 to -2.9, z 2.2 to 17.5; door in the east gable, z 11.8 to 15.8; the belt comes in
+    through a slot in the same gable. Its west wall is open at the back (z 2.4 to 7.0, up to 5 m) where the line runs
+    on into the bagging shed.
+  - Bagging shed (site-6): x -26.8 to -14.49, z 2.2 to 17.5; dock door in the south wall, x -25.7 to -21.7.
+  - Control house (site-3): x 29.0 to 43.0, z -26.6 to -10.4; door in the west wall, z -15.6 to -13.4.
+  - Tower base house (site-4): x 24.8 to 37.2, z -56.6 to -44.4; door in the south wall, x 26.2 to 29.2.
+  - The pit (site-2): kept as it is (room x -22 to 14, z -46 to -31, roof at -0.85 m).
+- Route, bench order: spawn (0, 44) south-east past the pad to the evaporator hall's east door (26, 4) and in to
+  Bench 1 (22, 4); out, north-west past the evaporator row's gap to the stair head (-4, -21), down to Bench 2
+  (-4, -4, -38); back up, east to the control house's west door (29, -14.5) and in to Bench 3 (36, -13); out, north
+  through the gap at x 21 to 26 in the evaporator row, to the base house's door (27.7, -44) and in to Bench 4
+  (31, -47); back south the length of the site to the head house's east door (-3, 13.8) and in to Bench 5
+  (-8.69, 14); through the bagging shed's dock door (-23.7, 17.5) and in to Bench 6 (-20.09, 14). The guide's route
+  goes through each door (`tallow/hall-plan.js` `routeTo`).
+
+### 5.4 The section
+
+Spawn 0.0 m, pan 0.0 to 0.15 m, evaporator hall floor 0.17 m, stair head 0.1 m, down the ramp (grade 1 in 1.6) to
+the pit floor -5.6 m, up again, control house floor 0.13 m, tower base house 0.09 m, head house and bagging shed
+0.14 m. Bench ground spans 5.8 m (the pit). The row's landform is flatness, so the levels are the buildings': room
+heights 4.9 m (control house) to 10.4 m (head house's ridge), and the pit 5.6 m down.
+
+### 5.5 The benches
+
+**Bench 1, q1-grain (Atoms; one kind or two; count the elements): the evaporator hall.** The first solid the plant
+makes is here: brine boils down in the crystalliser and the salt it drops lands on the belt's tail, where the sample
+point cuts a sample from the stream. A grain of what was dissolved is the right first thing to zoom into. The hall is
+a steel portal frame clad in profiled sheet, 15.2 by 15 m inside, eaves 8 m, ridge 9.6 m; closed on all four sides,
+roofed. The player comes round from the pad to its east door (4.4 m wide, the roller shutter rolled up) and sees the
+plate straight ahead under the crystalliser's body, the sampler to the left, the retained-sample rack to the right,
+the belt running out through the slot in the far wall. Behind and beside the plate: the crystalliser (a 2.5 m vessel
+on legs with its conical salt leg and a chute to the belt), its heater, the cross-cut sampler, the rack, the sampling
+log board. Lamps: three caged sodium luminaires hung from the tie beams.
+
+**Bench 2, q2-core (inside an atom): the instrument room in the pit.** Kept as built: an excavation 5.6 m down under
+the evaporator row, roofed, entered down a stair ramp; the beam column and the rack beside the plate. Added: the cover
+mask over the room, so it is lit by its four lamps and not by the sky.
+
+**Bench 3, q3-catalogue (the periodic table; periods; groups): the control house.** The house where the plant was
+read and recorded: its record wall of cards is the catalogue. A block house with a concrete slab roof, 13.6 by 15.8 m
+inside, 4.9 m to the slab; closed on all four sides. The player comes in by a door in its west wall and turns right
+to the desk; behind the plate is the glazed front of the relay room with the record wall of cards on its solid bay;
+windows in the east wall. Lamps: two luminaires on drop rods from the slab.
+
+**Bench 4, q4-ledger (isotopes and ions; three numbers off one atom): the tower base house.** A column separates by
+mass what goes into it, which is what the bench's instrument does to isotopes. A lean-to on a 1.2 m block plinth with
+profiled sheet above, built against the foot of the cracking tower: 12 by 11.8 m inside, the roof rising from 5.2 m at
+the door to 6.6 m at the tower; closed on all four sides. The player enters by the double door in the south wall and
+sees the plate in front of the sample-cooler skid, the draw-off line coming in through the back wall from the column.
+Lamps: two luminaires under the purlins.
+
+**Bench 5, q5-assay (sorted by mass; where the atoms balance; the weighted average): the head house.** The belt ends
+here: its head pulley throws the salt into the weigh hopper hung over the bench, which is where a mixture is weighed
+by parts. A tall gabled steel shed, 11.2 by 14.9 m inside, eaves 9.2 m, ridge 10.4 m; closed on the north, east and
+south, and on the west by the wall it shares with the bagging shed (open at its back only where the line runs
+through). The player follows the belt from the evaporator hall to its east gable, enters by the door beside the belt's
+slot and turns left to the plate under the hopper. Lamps: three luminaires, one under the belt head.
+
+**Bench 6, q6-weigh (formula mass; the scale; the mole): the bagging shed.** Where salt is counted into sacks by
+weight. A lean-to off the head house's west wall, 12.1 by 14.9 m inside, the roof falling from 7 m to 5.6 m; closed on
+all four sides. The player enters by the dock door in its south wall (the loadout and the hauler are outside it) and
+sees the plate in front of the line: the transfer belt from the hopper, the bucket elevator, the bagging bin over the
+platform scale, the roller conveyor to the pallet. Lamps: two luminaires. No two of these rooms share a construction,
+a size or a way in.
+
+### 5.6 How Tallow differs from each other world
+
+- Lanternfall: Tallow is dry and flat in glare; Lanternfall is ice, a lake and a glacier in polar night.
+- Ligar: Ligar is hills and a quarry cut with mine drifts at dusk; Tallow has no hill and no mine, only sheds on a flat.
+- Bellows: Bellows has no ground, decks over a cloud sea; Tallow's buildings stand on a pan to the horizon.
+- Ember Reach: Ember is a caldera wall stepping down to lava with a switchback road; Tallow has no slope at all.
+- Mirrowen: Mirrowen is quays, water and hulls; Tallow has no water you can see, only mirror flats on the crust.
+- Kettle: Kettle is one building you walk inside; Tallow is many buildings you walk between in the open.
+- Teeter: Teeter is a hillside of salt terraces and a stair; Tallow's salt is a flat pan with no terrace.
+- Verdigris: Verdigris is a drowned fort in reeds on a boardwalk; Tallow is dry, open, and walked on the crust.
+- Brinewire: Brinewire is a dam wall with a 12 m drop; Tallow has no wall but its sheds and no drop but the pit.
+- Quicklight: Quicklight is a refinery packed into alleys on lava under a storm; Tallow's plant stands spread out on a
+  flat in white glare, its buildings 20 to 50 m apart.
+- Lodestone: Lodestone is a slot canyon you walk down; Tallow is the open opposite, the horizon in every direction.
+- Thornmere: Thornmere is tar mounds and dead trees; Tallow has no tree, no mound.
+- Cinder Halo: Cinder Halo is craters under a ring; Tallow is a pan without a hollow but its one dug pit.
+
+### 5.7 The far country
+
+Kept (`tallow/vista.js`): the rock islands standing out of the pan, the far plant and the stranded machines, the
+ranges drawn in the sky, the pale world low in the north-east. The pan's mirror horizon is the landmark no other
+world has.
+
+### 5.8 The numbers held
+
+- `world-shape.mjs`: 6 of 6 housed (R4 or better; target R6+), bench ground span at least 5.7 m, no shared coordinates.
+- Plates in view from the spawn: at most two; target none.
+- `perf-worlds.mjs` at T4: at most 900k triangles and 566 draws (before: 789k and 328). The new halls are clad in a
+  coarse trapezoidal profile (four vertices a rib) to stay inside the triangle budget.
+
+### 5.9 Kept, rebuilt, archived
+
+- Kept: `tallow/atmosphere.js`, `terrain.js`, `surfaces.js`, `plant.js`, `hauler.js`, `vista.js`, `effects.js`,
+  `kit.js`; the pit (`initSublevel`); every site id, quest id, label, stage, `built` flag and bench position.
+- New: `tallow/hall-plan.js` (pure data: the buildings, doors, slots, floors, colliders, cover boxes, the route) and
+  `tallow/halls.js` (the buildings, built into each host).
+- Rebuilt: `tallow/stations.js` (hosts lose their outdoor aprons, masts and veranda; the control house becomes the
+  whole house; the tower deck is cut to fit its house; the crystalliser added), `tallow.js` (floors, cover mask,
+  routeTo, hall colliders), `tools/gen-tallow-layout.mjs` (halls as keep-outs; loose crate stacks removed),
+  `tools/verify-tallow.mjs` (shape checks added).
+- Archived to `archive/2026-11-19/site-tallow/`: the old `stations.js`, `gen-tallow-layout.mjs` and
+  `verify-tallow.mjs`.
