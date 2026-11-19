@@ -22,6 +22,9 @@
  *                 the salt that creeps up everything standing on the flat
  *   plant.js      the refinery: evaporators, columns, pipe racks, conveyor, loadout scale, mast
  *   stations.js   the six hosts: the machine each bench is built into
+ *   hall-plan.js  the plant's buildings the benches stand in, as data (no THREE): rooms, doors, slots, floors,
+ *                 colliders, the cover mask's boxes and the door-by-door route
+ *   halls.js      those buildings, built into each host (clad portal frames, a block house, a lean-to)
  *   hauler.js     the derelict ore hauler
  *   vista.js      what stands beyond the walk: rock islands, the far plant
  *   effects.js    the air moving: motes, grit streams, salt devils, plumes
@@ -32,18 +35,21 @@
  * the evaporator row, cracking towers, pipe bridges, the conveyor, the weigh hopper
  * and the bagging line, and the loadout scale beside the hauler. Six Unit 1 benches
  * are built INTO that line, one per written quest, each at the step of the process
- * its quest is about (`tallow/stations.js`; laid out by `tools/gen-tallow-layout.mjs`):
- *   site-1  Bench 1 — q1-grain. The raw-salt sample point at the conveyor's tail.
+ * its quest is about, and each INSIDE one of the plant's own buildings (`tallow/stations.js`,
+ * `tallow/hall-plan.js`; laid out by `tools/gen-tallow-layout.mjs`). The walk is out on the pan,
+ * between the buildings; every bench is through a door:
+ *   site-1  Bench 1 — q1-grain. The evaporator hall at the belt's tail: the crystalliser
+ *           drops its salt onto the belt, and the sample point cuts a sample from it.
  *   site-2  Bench 2 — q2-core. The instrument room under the evaporator row, down
  *           the stair that rises between the two vessels over it.
- *   site-3  Bench 3 — q3-catalogue. The process control house south of the row; its
- *           veranda holds the desk, its record wall the card index.
- *   site-4  Bench 4 — q4-ledger. A cracking tower's sampling deck: the column stands
- *           behind the bench, a draw-off line comes down to a sample-cooler skid.
- *   site-5  Bench 5 — q5-assay. The weigh hopper hung under the conveyor head's
- *           discharge, catch bins and a floor balance under its chute.
- *   site-6  Bench 6 — q6-weigh. The sack-filling scale on the bagging line, fed from
- *           the hopper's bins by a belt and a bucket elevator.
+ *   site-3  Bench 3 — q3-catalogue. The process control house south of the row, entered
+ *           from the west; the relay room's glass and the record wall behind the desk.
+ *   site-4  Bench 4 — q4-ledger. The base house at a cracking tower's foot: the draw-off
+ *           line comes in through its back wall to the sample-cooler skid.
+ *   site-5  Bench 5 — q5-assay. The head house where the belt ends: the weigh hopper hung
+ *           under the head's discharge, catch bins and a floor balance under its chute.
+ *   site-6  Bench 6 — q6-weigh. The bagging shed off the head house: the sack-filling
+ *           scale, fed from the hopper's bins by a belt and a bucket elevator.
  * All six carry their instruments as built objects (`BUILT_BENCHES`). A bench is part of
  * its host (one object), and the host keeps the bay (`bench-bay.js`) empty.
  *
@@ -56,6 +62,8 @@
  *
  * LIGHT: nothing here blooms. The only emissive surfaces in the whole scene are
  * sodium luminaires, the mast's obstruction lamp and one indicator per built site. That is the rule in CLAUDE.md §4.2.
+ * Inside every building and the pit the cover mask (`lib/cover.js`) takes the sun and most of the sky away, so a
+ * room is lit by its own luminaires, pooled into two lights.
  */
 
 import * as THREE from 'three';
@@ -194,13 +202,101 @@ export class TallowWorld {
     this.cover.applyTo(this.scene);
   }
 
-  /** The way on foot to a bench, door by door (`tallow/hall-plan.js` `routeTo`). */
+  /**
+   * The way on foot to a bench. The door-by-door waypoints come from `tallow/hall-plan.js` (`routeTo`): out of
+   * the building the walker is in, in by the door of the one the bench is in, down the stair for the pit. Each
+   * leg between them that a collider stands across (a building, the evaporator row, a tower) is walked round on
+   * a 1 m grid, so the guide's line never runs through a wall.
+   */
   routeTo(siteId, fromPos, toPos = null) {
     const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.y, fromPos.z];
     const site = this.data.sites.find(s => s.id === siteId || s.questId === siteId);
     const to = toPos ? (Array.isArray(toPos) ? toPos : [toPos.x, toPos.y, toPos.z]) : site?.approachPos;
     if (!to) return [[from[0], from[from.length - 1]]];
-    return hallRoute(from[0], from[from.length - 1], to[0], to[to.length - 1]);
+    const marks = hallRoute(from[0], from[from.length - 1], to[0], to[to.length - 1]);
+    const way = [marks[0]];
+    for (let i = 1; i < marks.length; i++) {
+      const leg = this.clearLine(marks[i - 1], marks[i]) ? [marks[i]] : (this.walkAround(marks[i - 1], marks[i]) || [marks[i]]);
+      way.push(...leg);
+    }
+    return way;
+  }
+
+  /** True when a walker of radius `r` goes straight from `a` to `b` without meeting a collider. */
+  clearLine(a, b, r = 0.35) {
+    const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const n = Math.max(1, Math.ceil(d / 0.25));
+    for (let k = 0; k <= n; k++) {
+      const x = a[0] + (b[0] - a[0]) * k / n, z = a[1] + (b[1] - a[1]) * k / n;
+      if (this.blockedAt(x, z, r)) return false;
+    }
+    return true;
+  }
+
+  blockedAt(x, z, r) {
+    for (const c of this.colliders) {
+      if (c.radius !== undefined) { if (Math.hypot(x - c.x, z - c.z) < c.radius + r) return true; }
+      else if (x > c.minX - r && x < c.maxX + r && z > c.minZ - r && z < c.maxZ + r) return true;
+    }
+    return false;
+  }
+
+  /** The grid the walk-round is planned on: 1 m cells over the site, each blocked if a collider is within 0.45 m. */
+  walkGrid() {
+    if (this._walkGrid) return this._walkGrid;
+    const B = 112, C = 1.0, N = Math.round(2 * B / C);
+    const blocked = new Uint8Array(N * N);
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) blocked[i * N + j] = this.blockedAt(-B + (i + 0.5) * C, -B + (j + 0.5) * C, 0.45) ? 1 : 0;
+    this._walkGrid = { B, C, N, blocked };
+    return this._walkGrid;
+  }
+
+  /** The way from `a` to `b` round whatever stands between, as waypoints after `a` (ending at `b`), or null. */
+  walkAround(a, b) {
+    const { B, C, N, blocked } = this.walkGrid();
+    const cell = p => [Math.min(N - 1, Math.max(0, Math.floor((p[0] + B) / C))), Math.min(N - 1, Math.max(0, Math.floor((p[1] + B) / C)))];
+    const nearestOpen = ([i, j]) => {
+      for (let r = 0; r < 6; r++) for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) {
+        const ni = i + di, nj = j + dj;
+        if (ni >= 0 && nj >= 0 && ni < N && nj < N && !blocked[ni * N + nj]) return [ni, nj];
+      }
+      return null;
+    };
+    const s = nearestOpen(cell(a)), t = nearestOpen(cell(b));
+    if (!s || !t) return null;
+    const goal = t[0] * N + t[1];
+    const g = new Float32Array(N * N).fill(Infinity), came = new Int32Array(N * N).fill(-1);
+    const heap = [];
+    const push = (k, f) => { heap.push([f, k]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+    const hfn = k => Math.hypot(Math.floor(k / N) - t[0], (k % N) - t[1]);
+    const start = s[0] * N + s[1];
+    g[start] = 0; push(start, hfn(start));
+    while (heap.length) {
+      const [, k] = pop();
+      if (k === goal) break;
+      const i = Math.floor(k / N), j = k % N;
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+        if (!di && !dj) continue;
+        const ni = i + di, nj = j + dj;
+        if (ni < 0 || nj < 0 || ni >= N || nj >= N || blocked[ni * N + nj]) continue;
+        if (di && dj && (blocked[(i + di) * N + j] || blocked[i * N + j + dj])) continue;   // no corner cutting
+        const nk = ni * N + nj, ng = g[k] + (di && dj ? Math.SQRT2 : 1);
+        if (ng < g[nk]) { g[nk] = ng; came[nk] = k; push(nk, ng + hfn(nk)); }
+      }
+    }
+    if (came[goal] === -1 && goal !== start) return null;
+    const cells = [];
+    for (let k = goal; k !== -1; k = came[k]) cells.push([-B + (Math.floor(k / N) + 0.5) * C, -B + ((k % N) + 0.5) * C]);
+    cells.reverse();
+    // Pull the string: keep a corner only where the straight way past it is blocked.
+    const out = [];
+    let from = a;
+    for (let i = 1; i < cells.length; i++) {
+      if (!this.clearLine(from, cells[i])) { out.push(cells[i - 1]); from = cells[i - 1]; }
+    }
+    out.push(b);
+    return out;
   }
 
   /**

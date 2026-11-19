@@ -18,6 +18,12 @@
  *  - T4-only landmarks are decoration: removing every one of them leaves every
  *    site reachable. That is the tier-fork rule from 3d-conversion-prompts.md §0.5.
  *  - No player-facing string carries withheld vocabulary or a chemistry term.
+ *  - THE SITE'S SHAPE (the rebuild of 2026-11-19, docs/plans/tallow-ligar-world.md section 5): every bench is
+ *    inside one of the plant's buildings (or the pit), housed R6 or better; bench ground spans 5.5 m or more; no
+ *    layout shared with another world, no ring, no columns, no plate in view from the spawn; one floor (no
+ *    ledge, nothing walkable above 0.5 m, nothing lower than 2.4 m to walk under); every room 11.2 by 11 m with
+ *    clear air over the plate; doors walked through and the guide's route in by them and through no wall;
+ *    every building under the cover mask with a pooled lamp over its plate; each host inside its building.
  */
 
 import { readFileSync } from 'node:fs';
@@ -518,6 +524,179 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   check(rl <= MAX_TRACK_LINES && pl <= MAX_TRACK_LINES,
     `${rl} rut and ${pl} path lines fit the ground shader's ${MAX_TRACK_LINES} boxes each`,
     `tracks overflow the ground shader: ${rl}/${MAX_TRACK_LINES} rut, ${pl}/${MAX_TRACK_LINES} path lines`);
+}
+
+/* ------------------------------------------------------------ the site's shape
+ *
+ * THE BENCHES ARE INSIDE THE PLANT (docs/plans/tallow-ligar-world.md section 5, the site rebuild of 2026-11-19).
+ * What the spec declares, measured on the built world through tools/lib/world-shape-checks.mjs and the one hall
+ * declaration (src/three/tallow/hall-plan.js):
+ *
+ *  - bench ground spans at least 5.5 m (the pit), every bench housed (R6 or better), no layout shared with
+ *    another world, not one circle, not two columns, no plate in view from the spawn;
+ *  - one floor: from the spawn the flood fill reaches every approach and every door, drops off no ledge, reaches
+ *    nothing above 0.5 m (no roof, no wall top), and walks under nothing lower than 2.4 m;
+ *  - every room is at least 11.2 by 11 m with 5 m over the plate's air, every door is a door (1.2 m or wider,
+ *    2.2 m or taller), and the guide's route to each bench goes in by its building's door;
+ *  - every building and the pit are under the cover mask, lit by their own lamps (a pooled lamp over each
+ *    plate, inside its room), the pool's light count is fixed, and no opaque material writes no depth;
+ *  - each host's machinery is inside its building (the tower over the base house, and the pipes and the belt
+ *    that run through a wall, excepted by name), and the floor under each plate and its lane is level.
+ */
+{
+  const THREE = await import('three');
+  const S = await import('./lib/world-shape-checks.mjs');
+  const P = await import('../src/three/tallow/hall-plan.js');
+  const { TallowWorld } = await import('../src/three/tallow.js');
+  const built = new TallowWorld(null);
+  built.scene.updateMatrixWorld(true);
+  // The same world unbaked, so a host's parts keep their names for the extent check.
+  const baked = TallowWorld.prototype.bakeStatics;
+  TallowWorld.prototype.bakeStatics = function () {};
+  let raw;
+  try { raw = new TallowWorld(null); } finally { TallowWorld.prototype.bakeStatics = baked; }
+  raw.scene.updateMatrixWorld(true);
+
+  // THE SHAPE.
+  {
+    const g = S.benchGround(built);
+    check(g.span >= 5.5, `bench ground spans ${g.span.toFixed(2)} m (${g.lo.toFixed(2)} to ${g.hi.toFixed(2)})`, `bench ground spans only ${g.span.toFixed(2)} m; the spec holds 5.5`);
+    const rows = S.housing(built, THREE);
+    const weak = rows.filter(r => !r.roof || r.closed < 6);
+    check(weak.length === 0, `every bench is housed: ${rows.map(r => r.code).join(' ')}`, `benches not housed R6 or better: ${weak.map(r => `${r.id} ${r.code}`).join(', ')}`);
+    const shared = S.sharedLayout(world);
+    check(shared.length === 0, 'no other world stands its benches on these coordinates', `the layout is shared with ${shared.join(', ')}`);
+    check(!S.oneCircle(world), 'the benches are not on one circle', 'every bench stands on one circle: the ring template');
+    check(!S.twoColumns(world), 'the benches are not in two columns or two rows', 'the benches stand on two lines: the road template');
+    const seen = S.platesInView(built, THREE, world.spawn.pos);
+    check(seen.length === 0, 'no plate is in view from the spawn', `plates in view from the spawn: ${seen.join(', ')}`);
+  }
+
+  // ONE FLOOR, AND THE WAY IN.
+  {
+    const f = S.flood(built, { bound: 110, cell: 0.5, radius: 0.25, step: 0.6 });
+    check(f.ledges.length === 0, `the flood fill from the spawn reaches ${f.reached} cells and drops off no ledge`, `the walk drops off a ledge: ${f.ledges.join('; ')}`);
+    const lost = world.sites.filter(s => !f.reachable(s.approachPos[0], s.approachPos[2], 0.6));
+    check(lost.length === 0, 'every approach mark is reachable on foot from the spawn', `approaches out of reach: ${lost.map(s => s.id).join(', ')}`);
+    const high = f.cells.filter(([, , h]) => h > 0.5);
+    check(high.length === 0, 'nothing above 0.5 m is walkable (no roof, no wall top, no hill)', `${high.length} walkable cells stand above 0.5 m, first at (${high[0]?.slice(0, 2).map(n => n.toFixed(1)).join(', ')})`);
+    const low = S.lowBodies(built, THREE, f.cells);
+    check(low.length === 0, 'nothing the player can walk under is lower than 2.4 m (one floor)', `low bodies over the walk: ${low.join('; ')}`);
+    for (const h of P.HALLS) {
+      for (const d of P.doorPoints(h)) {
+        check(f.reachable(d.out[0], d.out[1], 0.6) && f.reachable(d.in[0], d.in[1], 0.6), `${h.id}: its door is walked through (both sides reached)`, `${h.id}: the door at (${d.out.map(n => n.toFixed(1))}) is not walkable on both sides`);
+        check(d.width >= 1.2 && d.top >= 2.2, `${h.id}: the door is ${d.width.toFixed(1)} m wide and ${d.top.toFixed(1)} m high`, `${h.id}: the door is ${d.width.toFixed(1)} by ${d.top.toFixed(1)} m: too small to walk through`);
+      }
+      const site = world.sites.find(s => s.id === h.site);
+      const route = built.routeTo(site.id, world.spawn.pos);
+      const dp = P.doorPoints(h)[0];
+      const through = route.some(p => Math.hypot(p[0] - dp.in[0], p[1] - dp.in[1]) < 0.01) && route.some(p => Math.hypot(p[0] - dp.out[0], p[1] - dp.out[1]) < 0.01);
+      check(through, `${site.id}: the guide's route from the spawn goes in by the ${h.id}'s door`, `${site.id}: the guide's route does not pass the ${h.id}'s door`);
+      const crossing = route.findIndex((p, i) => i > 0 && !built.clearLine(route[i - 1], p, 0.2));
+      check(crossing === -1, `${site.id}: the guide's route (${route.length} points) runs through no wall or prop`, `${site.id}: the guide's route runs through a collider between (${route[crossing - 1]?.map(n => n.toFixed(1))}) and (${route[crossing]?.map(n => n.toFixed(1))})`);
+    }
+    const pit = world.sites.find(s => s.pos[1] < -1);
+    const pr = built.routeTo(pit.id, world.spawn.pos);
+    check(pr.length >= 4, `${pit.id}: the guide's route goes down the stair`, `${pit.id}: the guide's route does not use the stair`);
+    // Bench to bench in order, and the spawn to the pit: no leg of the guide's line runs through a collider.
+    const order = world.t1.siteOrder.map(id => world.sites.find(s => s.id === id));
+    const legs = [[world.spawn.pos, pit], ...order.slice(1).map((s, i) => [order[i].approachPos, s])];
+    const bad = [];
+    for (const [from, to] of legs) {
+      const r = built.routeTo(to.id, from);
+      if (r.some((p, i) => i > 0 && !built.clearLine(r[i - 1], p, 0.2))) bad.push(to.id);
+    }
+    check(bad.length === 0, `the guide walks bench to bench in order (${legs.length} legs) through no wall or prop`, `the guide's line runs through a collider on the way to ${bad.join(', ')}`);
+  }
+
+  // THE ROOMS.
+  {
+    for (const h of P.HALLS) {
+      const r = h.room, w = r.x1 - r.x0, d = r.z1 - r.z0;
+      check(Math.min(w, d) >= 11.0 && Math.max(w, d) >= 11.2, `${h.id}: the room is ${w.toFixed(1)} by ${d.toFixed(1)} m`, `${h.id}: the room is ${w.toFixed(1)} by ${d.toFixed(1)} m; the floor is 11.2 by 11`);
+      // The roof over the lean-in camera's air (|x| < 1.2, z 0.65 to 2.75), less 0.3 m of steel under a sheet roof.
+      const steel = h.roof.type === 'flat' ? 0 : 0.3;
+      let over = Infinity;
+      for (const lx of [-1.2, 0, 1.2]) for (const lz of [0.65, 1.7, 2.75]) over = Math.min(over, P.roofAt(h, lx, lz) - steel);
+      check(over >= 4.7, `${h.id}: ${over.toFixed(2)} m of clear air over the plate`, `${h.id}: only ${over.toFixed(2)} m over the plate; the lean-in camera reaches 4.6`);
+      check(r.x0 < -2.8 && r.x1 > 2.8 && r.z0 < -1.95 && r.z1 > 5.6, `${h.id}: the bay and its approach are inside the room`, `${h.id}: the room does not hold the bay and its approach`);
+    }
+  }
+
+  // UNDER COVER, LIT BY LAMPS.
+  {
+    const boxes = built.coverBoxes || [];
+    const inBox = (x, y, z) => boxes.some(b => x >= b.min[0] && x <= b.max[0] && y >= b.min[1] && y <= b.max[1] && z >= b.min[2] && z <= b.max[2]);
+    for (const site of world.sites) {
+      const a = built.benchAnchor(site.questId);
+      check(inBox(a.position[0], a.topY + 0.6, a.position[2]), `${site.id}: the plate is under the cover mask`, `${site.id}: the plate is not under the cover mask, so the sky lights it`);
+      const h = P.hallFor(site.id);
+      const room = h ? P.roomRect(h) : P.PIT.room;
+      const lamps = built.lamps.map(m => m.getWorldPosition(new THREE.Vector3())).filter(p =>
+        p.x > room.minX && p.x < room.maxX && p.z > room.minZ && p.z < room.maxZ && p.y > a.topY &&
+        Math.hypot(p.x - a.position[0], p.z - a.position[2]) < 8);
+      check(lamps.length >= 1, `${site.id}: ${lamps.length} pooled lamp(s) in its room within 8 m of the plate`, `${site.id}: no lamp in its room over the plate`);
+    }
+    let unpatched = 0, noDepth = 0;
+    const seen = new Set();
+    built.scene.traverse(o => {
+      if (!o.isMesh) return;
+      for (const m of [].concat(o.material)) {
+        if (!m || seen.has(m)) continue;
+        seen.add(m);
+        if ((m.isMeshStandardMaterial || m.isMeshLambertMaterial || m.isMeshPhongMaterial) && !m.userData.worldCover) unpatched++;
+        if (!m.transparent && m.depthWrite === false && !m.isShaderMaterial) noDepth++;
+      }
+    });
+    check(unpatched === 0, `every lit material carries the cover mask (${boxes.length} boxes)`, `${unpatched} lit materials have no cover mask`);
+    check(noDepth === 0, 'no opaque material sets depthWrite false', `${noDepth} opaque materials set depthWrite false`);
+    let points = 0;
+    built.scene.traverse(o => { if (o.isPointLight) points++; });
+    check(points === built.lampPool.lights.length && points <= 2, `${built.lamps.length} lamps are lit through ${points} pooled lights`, `the scene holds ${points} point lights, not the pool's ${built.lampPool.lights.length}`);
+    // Only lamps glow: the luminaires' diffusers and, before this rebuild, the mast's obstruction lamp. The
+    // buildings add no emissive surface.
+    const glow = new Set();
+    built.scene.traverse(o => {
+      if (!o.isMesh) return;
+      for (const m of [].concat(o.material)) {
+        if (!m?.emissive || !(m.emissiveIntensity > 0) || m.emissive.getHex() === 0 || m === built.lumMats?.diffuser) continue;
+        glow.add(m);
+      }
+    });
+    check(glow.size <= 1, `only lamps glow (the luminaires and ${glow.size} other lamp material)`, `${glow.size} emissive materials besides the luminaires`);
+  }
+
+  // THE HOSTS ARE INSIDE THEIR BUILDINGS, ON LEVEL FLOORS.
+  {
+    const THROUGH = /^(tower|draw-off)$/;
+    for (const h of P.HALLS) {
+      const marker = raw.siteMarkers.get(world.sites.find(s => s.id === h.site).questId);
+      const g = marker.group;
+      const shed = P.HALLS.filter(o => h.shed ? o.shed === h.shed : o === h).map(P.hallRect);
+      const box = shed.reduce((u, r) => ({ minX: Math.min(u.minX, r.minX), maxX: Math.max(u.maxX, r.maxX), minZ: Math.min(u.minZ, r.minZ), maxZ: Math.max(u.maxZ, r.maxZ) }), { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity });
+      const out = [];
+      const v = new THREE.Vector3();
+      g.traverse(o => {
+        if (!o.isMesh) return;
+        for (let n = o; n && n !== g; n = n.parent) if (THROUGH.test(n.name || '')) return;
+        const pos = o.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i += 7) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+          // The vapour main and the draw-off line leave through a wall by design: 0.6 m of pipe outside is allowed.
+          if (v.x < box.minX - 0.6 || v.x > box.maxX + 0.6 || v.z < box.minZ - 0.6 || v.z > box.maxZ + 0.6) { out.push(`${o.name || o.type} at (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); return; }
+        }
+      });
+      check(out.length === 0, `${h.site}: every piece of the host is inside the ${h.id}`, `${h.site}: host pieces outside the ${h.id}: ${out.slice(0, 4).join('; ')}`);
+    }
+    for (const site of world.sites) {
+      const a = built.benchAnchor(site.questId);
+      const c = Math.cos(a.rotationY), sn = Math.sin(a.rotationY);
+      const hs = [];
+      for (let lx = -2.8; lx <= 2.8; lx += 0.7) for (let lz = -1.95; lz <= 5.6; lz += 0.75) hs.push(built.getTerrainHeight(a.position[0] + lx * c + lz * sn, a.position[2] - lx * sn + lz * c));
+      const span = Math.max(...hs) - Math.min(...hs);
+      check(span < 0.02, `${site.id}: the floor under the plate and its lane is level (${(span * 100).toFixed(1)} cm)`, `${site.id}: the floor under the plate and its lane varies by ${(span * 100).toFixed(1)} cm`);
+    }
+  }
 }
 
 console.log('');

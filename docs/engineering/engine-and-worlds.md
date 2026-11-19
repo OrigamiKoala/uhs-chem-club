@@ -169,11 +169,13 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   never divides; counting by weight — the mole is *discovered*). Tallow is one process line walked from the
   pad inward (`tools/gen-tallow-layout.mjs`: brine pans, evaporator row, cracking towers, pipe bridges,
   the 22 m conveyor tail-east/head-west, weigh hopper and bagging line, loadout scale beside the hauler)
-  and each bench stands at its quest's step: 1 sample point at the conveyor tail, 2 instrument room under
-  the row (the sub-level: floor -5, roof -0.3, two evaporators stand on its roof on girders and columns
-  inside; stair between them, z -31…-22), 3 control house (veranda desk, record wall), 4 a cracking tower
-  with its sample-cooler skid (the tower is part of the host), 5 weigh hopper hung under the belt's
-  discharge (`CONVEYOR.outlet` in `plant.js`), 6 sack scale + bucket elevator. Hosts are `tallow/stations.js`
+  and each bench stands at its quest's step, inside one of the plant's buildings (site rebuild 2026-11-19, see
+  the **Tallow** entry below): 1 sample point at the conveyor tail in the evaporator hall, 2 instrument room under
+  the row (the sub-level: floor -5.6, roof -0.85, two evaporators stand on its roof on girders and columns
+  inside; stair between them, z -31…-22), 3 control house (desk in front of the relay room's glass and the record
+  wall), 4 a cracking tower with its sample-cooler skid in the tower's base house (the tower is part of the host),
+  5 weigh hopper hung under the belt's discharge (`CONVEYOR.outlet` in `plant.js`) in the head house, 6 sack scale
+  + bucket elevator in the bagging shed. Hosts are `tallow/stations.js`
   builders; `site.pos` is the bench centre, every facing is cardinal, a host's landmark carries `host:
   <siteId>` (a bench is inside its host's footprint; the data check exempts only that pair); the cased
   instrument is the one unsalted, less rough thing on the machine. `t1.siteDescriptions` is gone (nothing
@@ -293,6 +295,18 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `tools/lib/world-shape-checks.mjs`: bench ground span, housing, shared layouts, one circle, two columns, plates in view, the flood fill, and low bodies over walkable cells
   (single floor). `tools/world-shape.mjs` prints through it; a rebuilt world's `verify-<world>.mjs` calls it as checks. Traps: the cover test at a wall's own plane reads covered
   without `push`; a shaft needs a real hole in the roof or wall as well, or a desktop's shadow map closes it.
+- **Tallow** (`unit01`, `three/tallow.js` + `tallow/`, `tools/gen-tallow-layout.mjs`, `tools/verify-tallow.mjs`; site rehoused 2026-11-19, `docs/plans/tallow-ligar-world.md`
+  section 5): THE PLANT'S BUILDINGS ON A FLAT PAN. The ground, sky, plant and pit are as before; five benches moved indoors. `tallow/hall-plan.js` (pure data, no THREE; the
+  one declaration the world, the generator and the checks read) declares each building in its site's host frame (`room` inside faces, `roof` gable-x/gable-z/mono-x/mono-z/flat
+  with `low`/`high`, `doors`, `slots` (a belt's way through a wall, closed to the walk), `windows`, `lamps`, `kind` clad/block/plinth, `sky`, `shed` for rooms of one building) and
+  derives wall strips with sloped tops (`wallPieces`), colliders less doors (`hallColliders`), door points, cover boxes (a second, narrower box under a pitched roof so the roof's
+  underside is covered and its top stays lit) and the door-by-door route (`routeTo`; `tallow.js` walks each blocked leg round on a 1 m grid A*). `tallow/halls.js` builds a
+  building into its host's group (one object with the machinery): slab (`phys: 'ground'`), walls (sheet over a kerb or plinth with box ribs at 0.3 m, or blockwork), H columns,
+  rafters and purlins, corrugated roof at 0.2 m pitch, shutter boxes, luminaires on rods. Inside a building's slab `getTerrainHeight` is its floor (the highest crust under it +
+  2 cm; the head house and bagging shed share one). `makeCover` is applied after the salt and air patches (10 boxes). Traps met: the belt's tail hood stands 3.7 m high and
+  1 m to the side of the belt's line, so anything over the tail must clear it; raising a host 5 cm onto a slab pushed the weigh hopper's lamp into the belt head (the lamps moved
+  off the belt's line, which crosses the whole head house); a host that is baked loses its parts' names, so the extent check builds a second, unbaked world; the old pad, belt
+  tail and pit gauge board had low bodies over walkable ground that the single-floor check found, now collided.
 - **Bellows** (`unit04`, `three/bellows.js` + `bellows/`, `tools/gen-bellows-layout.mjs`, `tools/verify-bellows.mjs`; site rebuilt 2026-11-18, `docs/plans/bellows-world.md`
   "Site rebuild (2026-11-18)"): A GAS WORKS OVER THE CLOUD, NO GROUND. `bellows/works-plan.js` (pure data on `lib/workings.js`) declares the floor levels (`LEVEL`: stage and
   apron 0, sphere +8, tower hall -4, holder -8, mooring deck +4, cradle -5, cold deck +12), the structures (`PLINTH`, `SPHERE`, `HOLDER`, `COLDBOX`, `BAGS` with `bagBelly`),

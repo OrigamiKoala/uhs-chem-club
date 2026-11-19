@@ -1,11 +1,14 @@
 /**
  * stations.js — The six hosts: the pieces of the refinery a Learn bench is built into.
  *
- * A bench on Tallow is not a bench in a hut. It is a working point of the plant:
- * the sampling shelf at the foot of the conveyor, the control desk of the process
- * house, the inspection deck of a cracking tower, the weigh hopper under the belt's
- * discharge, the sack scale on the bagging line, and the instrument room under the
- * evaporators. Each builder here returns the machine AND its bench as ONE object,
+ * A bench on Tallow is not a bench in a hut. It is a working point of the plant,
+ * inside the plant's own building for it: the sampling shelf at the belt's tail under
+ * the crystalliser in the evaporator hall, the control desk in the control house, the
+ * sample deck in the tower's base house, the weigh hopper in the head house, the sack
+ * scale in the bagging shed, and the instrument room in the pit under the evaporators.
+ * The buildings are `halls.js`, laid out by `hall-plan.js`; `tallow.js` builds each into
+ * its host's group, so the room and the machinery are one object. The lamps are the
+ * buildings'. Each builder here returns the machine AND its bench as ONE object,
  * so the overlap rule (which exempts a body's own parts) lets the bench be bolted
  * to the thing it belongs to, and the bay contract (`bench-bay.js`) keeps the
  * volume the plate, the instrument, the screens and the camera need empty of it.
@@ -335,9 +338,9 @@ export function buildInstrumentRoom(w, site) {
 
 /* ======================================================================
    3. THE PROCESS CONTROL HOUSE (desk)
-   A poured block house south of the evaporator row. The control desk stands on its
-   veranda, the windows of the control room behind it; the card index is the wall of
-   record cards beside the glass.
+   A block house south of the evaporator row (its walls and slab are the hall's). The
+   control desk stands in the control room, the glazed front of the relay room behind
+   it; the card index is the wall of record cards beside the glass.
    ====================================================================== */
 
 export function buildControlHouse(w, site) {
@@ -413,11 +416,11 @@ export function buildControlHouse(w, site) {
 }
 
 /* ======================================================================
-   4. THE CRACKING TOWER'S SAMPLING DECK (deck)
+   4. THE CRACKING TOWER'S SAMPLING DECK, IN ITS BASE HOUSE (deck)
    A tower separates what goes in by weight, which is what a mass spectrometer
-   does to isotopes. The host IS the tower with its deck: the column stands behind
-   the bench, a draw-off line comes down it to a sample-cooler skid, and the bench
-   is the inspection deck beside the skid.
+   does to isotopes. The host IS the tower with its base house: the column stands
+   behind the house, a draw-off line comes down it and in through the back wall to
+   a sample-cooler skid, and the bench is the deck beside the skid.
    ====================================================================== */
 
 export function buildTowerDeck(w, site, { towerBack = 8.5, towerRot = 0.647, towerScale = 1.0 } = {}) {
@@ -470,15 +473,18 @@ export function buildTowerDeck(w, site, { towerBack = 8.5, towerRot = 0.647, tow
 
   // THE DRAW-OFF LINE: from a nozzle low on the stripping section, out, down, and along to the cooler.
   {
+    const dg = new THREE.Group();
+    dg.name = 'draw-off';             // it runs from the column outside in through the house's back wall
+    g.add(dg);
     const a = -0.45;
     const R = 1.3 * towerScale;
     const p0 = [Math.sin(a) * R, 3.9, -towerBack + Math.cos(a) * R];
     const out = [Math.sin(a) * (R + 0.7), 3.9, -towerBack + Math.cos(a) * (R + 0.7)];
-    k.pipe(g, [p0, out, [out[0], 0.9, out[2]], [-1.4, 0.9, -3.7], [-1.4, 1.6, -3.7]], 0.055, w.pipeMat);
+    k.pipe(dg, [p0, out, [out[0], 0.9, out[2]], [-1.4, 0.9, -3.7], [-1.4, 1.6, -3.7]], 0.055, w.pipeMat);
     // Two pipe sleepers to carry it, and a gate valve with its wheel.
-    for (const sz of [-6.1]) k.box(g, [0.3, 0.5, 0.3], w.footingMat, [out[0], 0.25 - 0.05, sz]);
-    k.cyl(g, [0.14, 0.14, 0.2, 12], w.darkSteelMat, [out[0], 0.9, -5.6]);
-    k.cyl(g, [0.12, 0.12, 0.03, 14], w.darkSteelMat, [out[0] + 0.0, 1.12, -5.6]);
+    for (const sz of [-6.1]) k.box(dg, [0.3, 0.5, 0.3], w.footingMat, [out[0], 0.25 - 0.05, sz]);
+    k.cyl(dg, [0.14, 0.14, 0.2, 12], w.darkSteelMat, [out[0], 0.9, -5.6]);
+    k.cyl(dg, [0.12, 0.12, 0.03, 14], w.darkSteelMat, [out[0] + 0.0, 1.12, -5.6]);
   }
 
   // Rails across the deck's open ends (outside the bench's reach), a lamp on a mast, the tag.
@@ -734,7 +740,7 @@ export function buildBaggingLine(w, site, { feedX = 9.7 } = {}) {
     k.box(g, [0.55, 0.2, 0.4], w.sackMat, [px - 1.05, 0.1, zL + 0.2], [0, 0.3, 0]);
   }
 
-  // A baling-wire reel and a rack of empty sacks on the left, and the lamp.
+  // A baling-wire reel and a rack of empty sacks on the left (the lamps are the shed's).
   for (const sx of [-6.0]) {
     k.box(g, [0.5, 0.5, 0.5], w.sackMat, [sx, 0.25, zL + 0.3]);
     k.cyl(g, [0.22, 0.22, 0.1, 16], w.darkSteelMat, [sx + 0.7, 0.3, zL + 0.2], [Math.PI / 2, 0, 0]);

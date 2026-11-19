@@ -618,7 +618,7 @@ benches: the bagging shed holds two rooms (the head house, where the belt delive
 - The buildings (outer faces, world AABB):
   - Evaporator hall (site-1): x 10.2 to 25.6, z -3.8 to 11.8; door in the east wall, z 1.8 to 6.2; the belt leaves
     through a slot in the west wall, z 3.1 to 5.7.
-  - Head house (site-5): x -14.49 to -2.9, z 2.2 to 17.5; door in the east gable, z 11.8 to 15.8; the belt comes in
+  - Head house (site-5): x -14.49 to -2.8, z 2.2 to 17.5; door in the east gable, z 11.8 to 15.8; the belt comes in
     through a slot in the same gable. Its west wall is open at the back (z 2.4 to 7.0, up to 5 m) where the line runs
     on into the bagging shed.
   - Bagging shed (site-6): x -26.8 to -14.49, z 2.2 to 17.5; dock door in the south wall, x -25.7 to -21.7.
@@ -645,12 +645,12 @@ heights 4.9 m (control house) to 10.4 m (head house's ridge), and the pit 5.6 m 
 **Bench 1, q1-grain (Atoms; one kind or two; count the elements): the evaporator hall.** The first solid the plant
 makes is here: brine boils down in the crystalliser and the salt it drops lands on the belt's tail, where the sample
 point cuts a sample from the stream. A grain of what was dissolved is the right first thing to zoom into. The hall is
-a steel portal frame clad in profiled sheet, 15.2 by 15 m inside, eaves 8 m, ridge 9.6 m; closed on all four sides,
+a steel portal frame clad in profiled sheet, 15.2 by 15 m inside, eaves 9.5 m, ridge 10.4 m; closed on all four sides,
 roofed. The player comes round from the pad to its east door (4.4 m wide, the roller shutter rolled up) and sees the
 plate straight ahead under the crystalliser's body, the sampler to the left, the retained-sample rack to the right,
-the belt running out through the slot in the far wall. Behind and beside the plate: the crystalliser (a 2.5 m vessel
-on legs with its conical salt leg and a chute to the belt), its heater, the cross-cut sampler, the rack, the sampling
-log board. Lamps: three caged sodium luminaires hung from the tie beams.
+the belt running out through the slot in the far wall. Behind and beside the plate: the crystalliser (a 2.4 m vessel
+on legs 4.6 m high with its conical salt leg over a screw conveyor that spouts onto the belt's tail hood), its heater
+and circulation loop, the vapour main out through the gable, the cross-cut sampler, the rack, the sampling log board. Lamps: three caged sodium luminaires hung from the tie beams.
 
 **Bench 2, q2-core (inside an atom): the instrument room in the pit.** Kept as built: an excavation 5.6 m down under
 the evaporator row, roofed, entered down a stair ramp; the beam column and the rack beside the plate. Added: the cover
@@ -671,7 +671,7 @@ Lamps: two luminaires under the purlins.
 
 **Bench 5, q5-assay (sorted by mass; where the atoms balance; the weighted average): the head house.** The belt ends
 here: its head pulley throws the salt into the weigh hopper hung over the bench, which is where a mixture is weighed
-by parts. A tall gabled steel shed, 11.2 by 14.9 m inside, eaves 9.2 m, ridge 10.4 m; closed on the north, east and
+by parts. A tall gabled steel shed, 11.3 by 14.9 m inside, eaves 9.2 m, ridge 10 m; closed on the north, east and
 south, and on the west by the wall it shares with the bagging shed (open at its back only where the line runs
 through). The player follows the belt from the evaporator hall to its east gable, enters by the door beside the belt's
 slot and turns left to the plate under the hopper. Lamps: three luminaires, one under the belt head.
@@ -725,3 +725,98 @@ world has.
   `tools/verify-tallow.mjs` (shape checks added).
 - Archived to `archive/2026-11-19/site-tallow/`: the old `stations.js`, `gen-tallow-layout.mjs` and
   `verify-tallow.mjs`.
+
+### 5.10 Build record (2026-11-19)
+
+**What was built.** `tallow/hall-plan.js` declares five buildings in their sites' host frames and derives everything
+else from them; `tallow/halls.js` builds each into its host's group (`tallow.js` `initHosts`), so a room and the
+machinery in it are one object for the overlap rule. The hosts lost their outdoor aprons and lamp masts; the control
+house's builder became the relay room inside the house (its veranda is gone, its walls rise to the house's slab);
+the tower deck's grate was cut to the house's back wall and its draw-off line is a named group that runs in through
+it; the evaporator hall gained the crystalliser, its heater and loop, a vapour main out through the gable and a
+screw conveyor to the belt's tail hood. Inside every building's slab the height field returns the building's floor
+(`initHallFloors`: the highest crust under the slab plus 2 cm; the head house and bagging shed share 0.138 m). The
+cover mask (`lib/cover.js` `makeCover`, 10 boxes: the pit and nine for the buildings, two under each pitched roof)
+is applied after the salt and air patches. 18 pooled lamps, two lights. `routeTo` gives the voyage's guide the door
+waypoints and walks each blocked leg round on a 1 m grid. The generator places nothing loose (the eight crate stacks
+are gone), keeps each building and 3 m outside each door clear, and draws the trodden paths door to door (16
+segments, the ground shader's limit).
+
+**Where it parted from the spec.** (1) The evaporator hall's eaves went from 8 to 9.5 m: the belt's tail is 2 m up
+and its tail hood 3.7 m, so the crystalliser had to stand higher to discharge over it. (2) The chute became a screw
+conveyor: a gravity chute over that distance would have been too shallow to run. Its open end stops over the tail
+hood's edge, because a body over the belt itself meets the hood. (3) The head house's east wall moved out 0.1 m to
+-2.8 so the room holds the 11.2 m minimum. (4) The head house's third lamp moved twice: under the belt head it stood
+in the belt, and the belt's line crosses the whole room at 5 to 8 m, so it hangs south of it. (5) Colliders were
+added that the old world lacked, found by the single-floor check: under the belt's tail for the last 6.5 m (its
+underside is below 2.4 m), round the pad's blast walls and windsock mast (from their part boxes), and on the pit's
+gauge board. (6) No tag was stencilled on the crystalliser: a new in-world string is a player-facing string.
+
+**Before and after.**
+
+| | Before | After |
+| :--- | :--- | :--- |
+| `world-shape.mjs` | -5.60 to 0.13 m, relief 5.75 m, housed 1/6 (`-2 R6 -3 -3 -1 -1`) | -5.60 to 0.17 m, relief 5.77 m, housed 6/6 (`R7 R6 R7 R7 R7 R7`) |
+| `perf-worlds.mjs tallow` (T4) | 328 draws, 789k triangles, 150 materials, 737 ms build | 317 draws, 798k triangles, 148 materials, 783 ms build |
+| `perf-worlds.mjs ligar` | 566 draws, 867k triangles | 566 draws, 867k triangles (unchanged) |
+| Plates in view from the spawn | not measured | none |
+| `perf-bench-rest.mjs` | | 687 of 692 deployed stages rest; all 46 of Tallow's do (the five that do not are other units' tables) |
+
+**Checks (2026-11-19, on `site/tallow`).** Green, each run as its own script: `verify:tallow` (132 checks before
+the route legs were added; every check of the archived script kept), `verify:bench`, `verify:arena`, `verify:voyage`,
+`verify:learn`, `verify:table`, `verify:docs`, and every other world's: `verify:lanternfall`, `verify:ligar`,
+`verify:bellows`, `verify:ember`, `verify:mirrowen`, `verify:kettle`, `verify:teeter`, `verify:verdigris`,
+`verify:brinewire`, `verify:quicklight`, `verify:lodestone`, `verify:thornmere`, `verify:cinderhalo`; also
+`verify:normals`, `verify:sync`, `verify:story`, `verify:flows`, `verify:geometry`. `node tools/glsl-check.mjs tallow`:
+9 patched programs compile with the cover mask on. `npm run build` succeeds (`dist/` outside `assets/` unchanged).
+`tools/bay-legacy.json` is untouched. Shared code (`lib/`, `bench-bay.js`, `voyage.js`, `boss-arena.js`) is unchanged.
+
+**Archived.** `archive/2026-11-19/site-tallow/`: the old `stations.js`, `gen-tallow-layout.mjs` and `verify-tallow.mjs`
+(each replaced in place), with a README.
+
+**Still weak.** The guide's walk-round ignores height (it plans on the flat grid, which is right on a pan and in the
+pit, where the rim's colliders leave the stair the only way down). The pan's crust inside a building is hidden under
+the slab but the terrain mesh still runs under it. The rooms of the bagging shed share their back third, where the
+line runs from one into the other; they are two rooms at the plate and one building behind it. The outdoor
+evaporator row and the crystalliser make two kinds of evaporator; the plant is now honest about it (pre-evaporators
+outside, the crystalliser indoors) but no sign says so, and none should. Nothing was seen in a browser.
+
+### 5.11 The owner's viewing list
+
+1. **The landing: the spawn (0, 44), facing north.** The pan flat to the horizon; ahead and to the left the long
+   south wall of the bagging shed and head house (the dock door at its west end), ahead and to the right the
+   evaporator hall's west gable with the belt running out of its slot up to the head house's east gable; the
+   evaporator row and the towers behind. *Fails if* any bench plate is in sight, or the belt passes through solid wall.
+2. **Outside the evaporator hall's east door, (27, 4), facing west: the first sight of Bench 1.** Through the 4.4 m
+   door, the plate straight ahead under the crystalliser's body, the sampler to its left, the sample rack to its right,
+   the belt leaving through the far wall. The inside is darker than the pan and lit by three hanging lamps. *Fails if*
+   the hall's inside is as bright as the pan outside, or anything stands in the doorway.
+3. **At Bench 1's plate, leaning in.** Behind the plate: the crystalliser's legs and cone, the screw trough over the
+   belt's tail, the heater to the left; the roof steel 9.5 m up. *Fails if* the lean-in view is a wall, the sky, or a
+   pipe across the plate.
+4. **At the stair head (-4, -21), looking down, then at Bench 2's plate: the lowest ground (-5.6 m).** The ramp
+   down into the instrument room under the evaporators; the room under its roof is lit by its lamps, not the sky.
+   *Fails if* the room is bright as day on a phone.
+5. **At the control house's west door (27.5, -14.5), facing east, then at Bench 3's plate.** A low block house under
+   a slab; inside, turn right to the desk; behind the plate the relay room's glass and the card wall; daylight only
+   through the east and south windows. *Fails if* the door is tight to walk through, or sun lies on the floor.
+6. **In the gap in the evaporator row, (24, -40), facing north: the tower base house.** The lean-to against the
+   cracking tower's foot, the column rising behind its roof, the guy wires coming down to either side of it. *Fails
+   if* a guy wire passes through the roof or a wall.
+7. **At Bench 4's plate, facing north.** The sample-cooler skid behind the plate, the draw-off line coming in
+   through the back wall from the column, the roof rising from 5.2 m at the door to 6.6 m at the back. *Fails if*
+   the room reads as a shed on its own rather than the foot of the tower.
+8. **Walking the belt from the evaporator hall to the head house's east door, (-1.3, 13.8).** The belt overhead,
+   rising from its slot in one building to its slot in the other at about 5 to 8 m; you walk under it only where it
+   is above 2.4 m. *Fails if* the belt clips either wall, or you can walk into its low tail.
+9. **At Bench 5's plate, facing north: the tallest room (ridge 10 m).** The weigh hopper hung under the belt's head,
+   the belt crossing the room high at the back, the bagging line running out of the room's back-left corner into the
+   next. *Fails if* a lamp or the hopper is drawn through the belt.
+10. **At the bagging shed's dock door, (-23.7, 19), facing north, then at Bench 6's plate.** A lower lean-to, its
+    roof falling to the west; the scale, the elevator and the pallet behind the plate; the loadout and the hauler
+    behind you. *Fails if* the shed's roof meets the head house's wall with a gap of sky, or the counted sack's stand
+    behind the plate cannot be walked to.
+11. **The boss's ground, (0, 30).** Open level pan between the shed and the spawn, the Hopper in view, nothing
+    standing on it. *Fails if* anything of the buildings or their door aprons is on that ground.
+12. **The highest ground.** There is none to climb: the pan, the floors (0.09 to 0.17 m) and the pad are one level,
+    by the row's design. *Fails if* a roof or wall top can be stood on.

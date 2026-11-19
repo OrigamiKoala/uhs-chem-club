@@ -162,7 +162,7 @@ Brinewire (a barrage across the marsh) and Verdigris (a drowned fort).
 
 | World | Landform | Walk shape | Bench housing | Light (kept from the built sky unless noted) |
 | :--- | :--- | :--- | :--- | :--- |
-| Tallow | Dead-flat salt pan to a mirror horizon; one excavated pit | Along the process line, brine to bagged salt | Inside the plant's own buildings: evaporator hall, tower base, control house, bagging shed, the pit | White high-altitude glare, ice halo |
+| Tallow (rehoused 2026-11-19) | Dead-flat salt pan to a mirror horizon; one excavated pit | Along the process line, brine to bagged salt, out on the pan between buildings that stand 20 to 50 m apart | Inside the plant's own buildings, each a different construction: the evaporator hall (a tall clad portal frame round a crystalliser at the belt's tail), the control house (blockwork under a slab), the tower base house (a lean-to on a block plinth at a column's foot), the head house and the bagging shed (one shed, two rooms, at the belt's head), the pit | White high-altitude glare, ice halo; indoors under a cover mask, lamps only |
 | Lanternfall (built 2026-11-18) | A glacier tongue (surface 14 to 16 m) ending in an ice cliff 16 m high on a frozen lake (0 m); an ablation valley between the ice and each lateral moraine; a crevasse field above the snout; pressure ridges of rafted lake ice along the shore; a nunatak through the west margin; an erratic on the west moraine | A loop round the lake: up the east ablation valley, over the glacier on a graded crossing, down the west valley; spurs cut down through the shore bank to two caves on the lake ice and down into a crevasse, and one up the crawler's tailgate | In the ice and the land: two caves under pressure ridges on the lake ice (a flume cave, an ice-hole cave), a vault in the ice-cored moraine under an aurora mast, a meltwater cave in the glacier's margin, the drilling crawler's hall, the records tent pitched in a crevasse and its annexe cut into the ice, a chamber in the nunatak under its tower, a room under the erratic, the dome | Polar night, aurora; indoors under a cover mask, lamps only |
 | **Ligar** (reference, unchanged) | Basalt plateau, trap-bench hills, a quarry cut | Hub at the quarry, adits into two hills | Mine chambers and quarry workings | Dusk, low amber sun |
 | Bellows (built 2026-11-18) | No ground: steel decks on lattice legs at seven heights (-8 to +12 m) round a sphere on its skirt, a piston holder, the Compressor's tower, a cold box and two bladders, over a cloud sea 38 m and more below | A hub (the apron) and five arms of 4 m catwalks and 1-in-5 ramps over the drop, railed on both sides | Inside the sphere's skirt, the tower's base hall, the meter house inside the piston holder under the parked piston, the gondola hung under the moored bladder, under the bladder hauled down onto its cradle (the bag is the roof), the cold box's foot | High white sun, dark zenith; indoors under a cover mask, lamps only |
@@ -244,12 +244,24 @@ No agent looks at the result in a browser. The run ends with a list of views for
 | Mirrowen | 2026-11-18 | 2026-11-18 | 2026-11-18 (7 of 7 housed) | 2026-11-18 | 2026-11-18 (`verify:mirrowen` rewritten) | not yet |
 | Bellows | 2026-11-18 | 2026-11-18 | 2026-11-18 (6 of 6 housed) | 2026-11-18 | 2026-11-18 (`verify:bellows` rewritten) | not yet |
 | Lanternfall | 2026-11-18 | 2026-11-18 | 2026-11-18 (10 of 10 housed) | 2026-11-18 | 2026-11-18 (`verify:lanternfall` rewritten) | not yet |
-| Tallow | | | | | | |
+| Tallow | 2026-11-19 | 2026-11-19 (kept; level floors) | 2026-11-19 (6 of 6 housed) | 2026-11-19 | 2026-11-19 (`verify:tallow` extended) | not yet |
 | Thornmere (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:thornmere`) | not yet |
 | Cinder Halo (new world) | 2026-11-14 | 2026-11-14 | 2026-11-14 (6 of 6 housed) | 2026-11-14 | 2026-11-14 (`verify:cinderhalo`) | not yet |
 
 Each run fills its row with a date, and appends below any place where the build parted from section 6
 and why.
+
+**Tallow, 2026-11-19 (branch `site/tallow`).** Rehoused as the row (updated above) says; the ground, sky, plant and pit are kept.
+`world-shape.mjs`: bench ground -5.60 to 0.17 m (5.8 m, the pit), relief 5.77 m, housed 6 of 6 (R7 R6 R7 R7 R7 R7; before `-2 R6 -3 -3 -1 -1`),
+no cloned coordinates, no plate in view from the spawn. `perf-worlds.mjs`: 317 draws, 798k triangles (before: 328 and 789k). It uses
+`lib/cover.js` as it is (10 boxes, no openings) and not `lib/workings.js`: the walk is the open pan and each room is one building with
+doors, so `tallow/hall-plan.js` declares buildings (rooms, roofs, doors, slots, windows, lamps) and derives the walls, colliders, cover
+boxes and door-by-door route itself; shared code is unchanged. Departures: the row named five places for six benches, so the bagging
+shed is two rooms (the head house where the belt delivers, and the bagging shed off its side); the evaporator hall's evaporator is a
+crystalliser built for it (the outdoor row stays the pre-evaporators); the loose crate stacks were removed. For the next world: a
+building on a pan that varies by centimetres needs a slab and a floor in the height field, or the crust comes up through it and every
+host moves; a belt or pipe through a wall wants its slot sized from the other object's part boxes, measured, not guessed. Spec, build
+record and the owner's viewing list: `docs/plans/tallow-ligar-world.md` section 5.
 
 **Lanternfall, 2026-11-18 (branch `site/lanternfall`).** Built as the row (updated above) says. `world-shape.mjs`: bench ground
 0.00 to 15.40 m (15.4 m, eight floor levels), relief 16.8 m, housed 10 of 10 (R7 R7 R6 R7 R7 R8 R7 R7 R7 R7), no cloned coordinates,

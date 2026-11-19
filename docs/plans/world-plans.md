@@ -34,7 +34,7 @@ comprising 85 quest modules, 75 benches, 10 bosses, and 552 tabletop stages. Eve
 ## 2. World Summaries & Engineering Contracts
 
 ### Unit 01: Tallow (Atoms, Elements, and the Mole)
-- **Setting:** Industrial salt flats and an automated conveyor/evaporator processing line. The player walks along a mineral refinement plant.
+- **Setting:** An abandoned salt refinery on a dead-flat pan. The player walks its process line out on the pan and goes into its buildings for the benches: the evaporator hall at the belt's tail, the instrument room in the pit under the evaporators, the control house, the base house under a cracking tower, and the head house and bagging shed at the belt's head (`docs/plans/tallow-ligar-world.md` section 5).
 - **Benches:** `q1-grain` (matter vs mixtures), `q2-core` (inside atoms, Thomson/Rutherford charges), `q3-catalogue` (periodic table organisation), `q4-ledger` (isotopes and mass spectrometer), `q5-assay` (atomic weight calculation), `q6-weigh` (discovery of the mole), and `boss-hopper`.
 - **Core Teaching Click:** The mole is *discovered by weighing*, not handed down as a magic number. A balance weighs; it never divides.
 - **Reference:** `docs/plans/tallow-ligar-world.md`
