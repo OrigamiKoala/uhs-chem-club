@@ -263,6 +263,7 @@ export function buildWorks(ctx, plan) {
 
   for (const v of plan.openVols) openFrame(B, plan, v);
   rails(B, plan, lamps);
+  mains(B, plan);
   plinth(B, plan);
   for (const v of plan.roofedVols) {
     if (v.kind === 'room') room(B, plan, v, lamps);
@@ -345,6 +346,44 @@ function openFrame(B, plan, v) {
     const s = (s0 + s1) / 2;
     const [x, z] = at(s, (t0 + t1) / 2);
     latticeLeg(B, x, z, y(s) - 1.82, Math.min(2.4, wid - 0.4));
+  }
+}
+
+/* ---------------------------------------------- the gas mains */
+
+/**
+ * The mains that carry gas between the structures, hung on brackets outside one side of each catwalk and
+ * ramp, below the walk: holder to tower, sphere to tower, tower to the mooring deck and on up to the cold box.
+ * `[volume, side]`: the side of the volume the main runs outside.
+ */
+const MAINS = [['ramp-west', 'minZ'], ['ramp-tower', 'maxX'], ['cw-north', 'maxX'], ['ramp-holder', 'minZ'], ['ramp-east', 'minZ'], ['ramp-cold', 'maxX'], ['cw-south', 'maxX']];
+
+function mains(B, plan) {
+  for (const [id, side] of MAINS) {
+    const v = plan.byId.get(id);
+    const r = v.rect;
+    const alongX = side === 'minZ' || side === 'maxZ';
+    const out = side === 'minZ' || side === 'minX' ? -1 : 1;
+    const t = r[side] + out * 0.75;
+    const s0 = alongX ? r.minX : r.minZ, s1 = alongX ? r.maxX : r.maxZ;
+    const at = s => (alongX ? [s, t] : [t, s]);
+    const y = s => { const [x, z] = alongX ? [Math.min(r.maxX - 1e-4, s), (r.minZ + r.maxZ) / 2] : [(r.minX + r.maxX) / 2, Math.min(r.maxZ - 1e-4, s)]; return floorOf(v, x, z) - 0.7; };
+    const n = Math.max(1, Math.round((s1 - s0) / 2));
+    for (let i = 0; i < n; i++) {
+      const a = s0 + (s1 - s0) * (i / n), b = s0 + (s1 - s0) * ((i + 1) / n);
+      const [xa, za] = at(a), [xb, zb] = at(b);
+      B.rod('steel', [xa, y(a), za], [xb, y(b), zb], 0.26, 12);
+    }
+    for (let s = s0 + 1; s < s1; s += 3) {
+      const [x, z] = at(s);
+      const [ix, iz] = alongX ? [x, r[side]] : [r[side], z];
+      B.beam('darkSteel', [ix, y(s) + 0.25, iz], [x, y(s) + 0.25, z], 0.1, 0.12);
+      B.beam('darkSteel', [x, y(s) + 0.25, z], [x, y(s) - 0.3, z], 0.08, 0.08);
+    }
+    for (const s of [s0 + 0.4, s1 - 0.4]) {
+      const [x, z] = at(s);
+      B.cyl('darkSteel', 0.4, 0.4, 0.12, 12, x, y(s), z, alongX ? 0 : Math.PI / 2, 0, alongX ? Math.PI / 2 : 0);
+    }
   }
 }
 
