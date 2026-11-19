@@ -68,7 +68,7 @@ export function getLore(id) {
   if (kind === 'world') {
     const ep = EPISODES[a];
     const i = Number(b);
-    const paras = ep && (ep.paragraphs?.length ? ep.paragraphs : [ep.arrival, ep.incident, ep.objective].filter(Boolean));
+    const paras = ep && (ep.paragraphs?.length ? ep.paragraphs : [ep.arrival, ep.objective].filter(Boolean));
     if (!ep || !paras || !paras[i]) return null;
     return {
       id, kind: 'briefing', act: ep.act, worldId: a, sort: [ACT_ORDER.indexOf(ep.act), worldOrder(a), i],
@@ -154,7 +154,7 @@ export function allLoreIds() {
   const ids = [];
   CAMPAIGN_STORY.forEach((_, i) => ids.push(`campaign:${i}`));
   for (const ep of Object.values(EPISODES)) {
-    const n = ep.paragraphs?.length ? ep.paragraphs.length : [ep.arrival, ep.incident, ep.objective].filter(Boolean).length;
+    const n = ep.paragraphs?.length ? ep.paragraphs.length : [ep.arrival, ep.objective].filter(Boolean).length;
     for (let i = 0; i < n; i++) ids.push(`world:${ep.worldId}:${i}`);
     if (ep.closing) ids.push(`world-end:${ep.worldId}`);
   }
@@ -171,7 +171,7 @@ export function allLoreIds() {
 export function worldBriefingIds(worldId) {
   const ep = EPISODES[worldId];
   if (!ep) return [];
-  const n = ep.paragraphs?.length ? ep.paragraphs.length : [ep.arrival, ep.incident, ep.objective].filter(Boolean).length;
+  const n = ep.paragraphs?.length ? ep.paragraphs.length : [ep.arrival, ep.objective].filter(Boolean).length;
   return Array.from({ length: n }, (_, i) => `world:${worldId}:${i}`);
 }
 

@@ -224,7 +224,7 @@ export async function checkBrinewireQ1({ ok, fail }) {
   holds(has(0.75, 'electrons given 6', 'electrons taken 6'), 'scene beat 3 does not end on 6 given and 6 taken');
   holds(has(0.93, 'Mn +2', 'charge 17 on the left, 17 on the right'), 'scene beat 4 does not end on Mn +2 and charge 17 each side');
   for (let t = 0; t <= 1.0001; t += 0.05) holds(paintScene(t).nan === 0, `the scene paints NaN at t = ${t.toFixed(2)}`);
-  holds(Math.abs(story.beats.at(-1).to - 0.94) < 1e-9 && /^Filed: /.test(story.filed), 'story ends at 0.94 with a Filed line');
+  holds(Math.abs(story.beats.at(-1).to - 0.94) < 1e-9 && typeof story.pin === 'string' && story.pin.length > 0, 'story ends at 0.94 with a Case Pin');
   ok('q1-halves story: every number Vess quotes is counted from the discs, species and charges drawn');
 
   /* ---- the bank ---- */

@@ -22,15 +22,15 @@ export const QUEST1_STORY = {
     sector: 'Sector 01 · Erebus',
     type: 'Reclamation & Grid Restoration',
     reward: '650 Guild XP',
-    brief: 'Restore power across twenty defense pylons sabotaged by the Fifth Guild before their strike fleet arrives.',
+    brief: 'Someone cut all 20 shield towers on Erebus and left a triangle mark nobody recognizes. Restore power across all twenty towers.',
     clueAwarded: 'clue_erebus_mark'
   },
 
   arrival: {
     cinematic: 'erebus_descent',
     lines: [
-      'Atmospheric entry sealed. Hold your harness.',
-      'The Charge Gardens lie dead ahead across the dune line.'
+      'Someone cut all 20 shield towers on Erebus and left a triangle mark nobody recognizes.',
+      'The Charge Gardens lie dead ahead across the dunes.'
     ]
   },
 
@@ -41,8 +41,8 @@ export const QUEST1_STORY = {
     subtitle: 'Sector 01 · Erebus',
     contractor: 'The Quad-Guild Reclamation Board',
     reward: '650 Guild XP',
-    message: 'The Fifth Guild raided Sector 01 and knocked down the Charge Gardens defense pylons to leave the sector defenseless. To reboot our defense shields before their strike fleet arrives, open each junction and bridge the red feed to the blue receiver.',
-    transmission: 'The Fifth Guild cut power across the defense grid. Bridge the red feed to the blue receiver in each junction to bring the pylon shields back online.'
+    message: 'Someone cut all 20 shield towers on Erebus and left a triangle mark nobody recognizes. Open each junction and bridge the red feed to the blue receiver to bring the shield back online.',
+    transmission: 'Someone cut all 20 shield towers on Erebus. Bridge the red feed to the blue receiver in each junction to bring them back online.'
   },
 
   // Stage 1 opening transmission per guild; neutral used for demo / unassigned
@@ -174,11 +174,11 @@ export const QUEST1_STORY = {
 
   clue: {
     id: 'clue_erebus_mark',
-    name: 'Unliveried Stencil',
+    name: 'Triangle Mark',
     sector: 'Erebus',
     stage: 20,
     finder: 'Pylon 20 Breaker Housing',
-    text: 'A delta stencil stamped inside the perimeter housing with no guild mark, weathered thirty years.'
+    text: 'Unknown triangle mark found on sabotaged shield tower.'
   },
 
   debrief: {
@@ -187,7 +187,7 @@ export const QUEST1_STORY = {
     speaker: 'Vess',
     badge: 'CONTRACT COMPLETE · SECTOR 01',
     subtitle: 'The Charge Gardens',
-    message: 'The entire field is singing in key — all twenty pylons are burning amber across the dunes. The contract is cleared and your mark is logged. Notice the stencil inside that last breaker box: no guild insignia on it anywhere.',
+    message: 'All twenty shield towers are back online. Inside Pylon 20 we found an unknown triangle mark—none of the Four Guilds use it, and it opens our Case Board.',
     sections: [
       {
         title: 'Contract Fulfilled',

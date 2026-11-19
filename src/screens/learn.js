@@ -15,6 +15,7 @@ import { WORLDS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, isQuestComplete, nextQuest, currentWorld, trackProgress } from '../learn/progress.js';
 import { practiceKey, bindPracticeKeys } from './learn-world.js';
 import { openCampaignStoryModal } from '../story/story-modal.js';
+import { getEpisode } from '../story/saga.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -41,6 +42,7 @@ export function renderLearn(container) {
         artAlt: '',
         title: 'Learn',
         actions: `
+          <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="text-decoration: none; margin-right: 0.4rem;">Case Board</a>
           <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Main Briefing" style="margin-right: 0.5rem;">Main Briefing</button>
           ${resumeQuest
             ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary" style="text-decoration: none;">Continue · ${esc(resume.world)}</a>`
@@ -67,6 +69,7 @@ export function renderLearn(container) {
                   <span class="tag ${tag.cls}">${tag.label}</span>
                 </div>
                 <p class="learn-world-line">${esc(w.line)}</p>
+                ${getEpisode(w.id)?.arrival ? `<p style="font-size: 0.78rem; line-height: 1.38; color: var(--accent-amber); margin: 0.25rem 0 0;">${esc(getEpisode(w.id).arrival)}</p>` : ''}
               </div>
 
               <div class="learn-world-meta">

@@ -162,6 +162,7 @@ export function renderLearnWorld(container, params = {}) {
             <span class="tag ${(STATUS_TAG[wStatus] || STATUS_TAG.charted).cls}">${(STATUS_TAG[wStatus] || STATUS_TAG.charted).label}</span>
           </div>
         </div>
+        ${getEpisode(world.id)?.arrival ? `<p style="font-size: 0.88rem; line-height: 1.45; color: var(--accent-amber); margin: 0 0 0.45rem;">${esc(getEpisode(world.id).arrival)}</p>` : ''}
         <p class="learn-brief-body">${esc(world.brief)}</p>
         <div class="learn-brief-foot">
           <div class="eyebrow learn-brief-count">
@@ -169,6 +170,7 @@ export function renderLearnWorld(container, params = {}) {
           </div>
           <div style="display: flex; gap: 0.4rem; align-items: center;">
             <button type="button" class="btn-secondary quest-btn-sm learn-briefing-trigger m-tap" id="learn-world-briefing-btn">Briefing</button>
+            <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="text-decoration: none;">Case Board</a>
             ${practiceKey(world)}
           </div>
         </div>
@@ -245,6 +247,7 @@ function renderWalkHud(container, world) {
 
         <div class="learn-walk-name">${esc(world.world)}</div>
         <p class="learn-walk-line">${esc(world.line)}</p>
+        ${ep?.arrival ? `<p class="learn-walk-mystery" style="font-size: 0.74rem; line-height: 1.35; color: var(--accent-amber); margin: 0.3rem 0 0.45rem;">${esc(ep.arrival)}</p>` : ''}
 
         <div class="learn-walk-prog">
           Quests: ${prog.questsComplete} of ${total} Cleared
@@ -258,6 +261,12 @@ function renderWalkHud(container, world) {
           <button type="button" class="btn-secondary quest-btn-sm learn-sites-trigger m-tap" id="learn-sites-trigger">
             Sites (${prog.questsComplete}/${total})
           </button>
+          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-walk-briefing-btn">
+            Briefing
+          </button>
+          <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="text-decoration: none;">
+            Case Board
+          </a>
           ${practiceKey(world)}
         </div>
       </div>
@@ -339,6 +348,9 @@ function renderWalkHud(container, world) {
 
   toggleBtn?.addEventListener('click', () => setCollapsed(true));
   expandBtn?.addEventListener('click', () => setCollapsed(false));
+  container.querySelector('#learn-walk-briefing-btn')?.addEventListener('click', () => {
+    openWorldStoryModal(world);
+  });
 
   // Wire up popup
   const scrim = container.querySelector('#learn-sites-popup-scrim');

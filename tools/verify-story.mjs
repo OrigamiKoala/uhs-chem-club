@@ -69,7 +69,7 @@ const worldIds = new Set(WORLDS.map(w => w.id));
 let totalActWorlds = 0;
 ACTS.forEach((act, i) => {
   if (act.order !== i + 1) fail(`act ${act.id} has order ${act.order}, expected ${i + 1}`);
-  if (!act.title || !act.summary) fail(`act ${act.id} missing title or summary`);
+  if (!act.title || !act.summary || !act.question || !act.answer) fail(`act ${act.id} missing title, summary, question, or answer`);
   for (const w of act.worlds) {
     if (!worldIds.has(w)) fail(`act ${act.id} references unknown world "${w}"`);
     totalActWorlds++;
@@ -250,11 +250,13 @@ ok('spine beat prerequisite unlock logic validated');
     });
     return make();
   };
+  const VALID_ROLES = new Set(['Direct Clue', 'Station Fix', 'Toolkit', 'Boss Payoff']);
   let played = 0;
   for (const [key, st] of Object.entries(QUEST_STORY)) {
     const q = quests.get(key);
     if (!q) { fail(`story animation "${key}" names no quest`); continue; }
     if (!SCENES[st.scene]) fail(`story animation "${key}" names scene "${st.scene}", which has no painter`);
+    if (!VALID_ROLES.has(st.role)) fail(`story animation "${key}" has invalid role "${st.role}"`);
     if (!Array.isArray(st.beats) || st.beats.length < 3 || st.beats.length > 5) fail(`story animation "${key}" needs 3 to 5 beats`);
     let prev = 0;
     for (const b of st.beats || []) {
@@ -265,7 +267,16 @@ ok('spine beat prerequisite unlock logic validated');
       if (sentenceCount(say) > 2) fail(`story animation "${key}" line is over 2 sentences: "${say}"`);
       if (/!/.test(say) || /\p{Extended_Pictographic}/u.test(say)) fail(`story animation "${key}" line carries "!" or an emoji: "${say}"`);
     }
-    if (typeof st.filed !== 'string' || !/^Filed: /.test(st.filed) || sentenceCount(st.filed) !== 1 || st.filed.trim().split(/\s+/).length > 24) fail(`story animation "${key}" needs one "Filed: ..." sentence of at most 24 words`);
+    if (st.role === 'Toolkit') {
+      if (st.pin) fail(`story animation "${key}" is a Toolkit quest and should omit pin`);
+    } else {
+      if (typeof st.pin !== 'string' || !st.pin.trim() || /^Filed:/i.test(st.pin) || sentenceCount(st.pin) < 1 || sentenceCount(st.pin) > 2 || st.pin.trim().split(/\s+/).length > 16) {
+        fail(`story animation "${key}" needs a short Case Pin (<= 16 words, no "Filed:" prefix): "${st.pin}"`);
+      }
+      if (/!/.test(st.pin || '') || /\p{Extended_Pictographic}/u.test(st.pin || '')) {
+        fail(`story animation "${key}" pin carries "!" or an emoji: "${st.pin}"`);
+      }
+    }
     // Every picture Vess speaks over must paint: the start, each line's last frame, and the end.
     for (const t of [0, ...storyLines(st).map(l => l.to), 0.5, 1]) {
       const ctx = stub();
@@ -286,7 +297,7 @@ ok('spine beat prerequisite unlock logic validated');
       for (let k = 0; k < qi; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) own.add(v.term.source);
       const later = [];
       for (let k = qi + 1; k < mods2.length; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) if (!own.has(v.term.source)) later.push(v.term);
-      for (const c of [...st.beats.map(b => b.say), st.filed]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
+      for (const c of [...st.beats.map(b => b.say), ...(st.pin ? [st.pin] : [])]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
     });
   }
   // Every built Tallow, Lanternfall, Ligar, Bellows and Ember Reach quest, bench or boss, has its one animation.
@@ -304,7 +315,7 @@ ok('spine beat prerequisite unlock logic validated');
   for (const q of WORLDS.find(w => w.id === 'unit13').quests) if (q.module && !QUEST_STORY[`unit13/${q.id}`]) fail(`unit13/${q.id} has no story animation`);
   // Cinder Halo too: every built quest of unit14 has its one animation.
   for (const q of WORLDS.find(w => w.id === 'unit14').quests) if (q.module && !QUEST_STORY[`unit14/${q.id}`]) fail(`unit14/${q.id} has no story animation`);
-  if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, 3 to 5 lines of Vess, a filed line, and every scene paints at every line`);
+  if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, valid role, 3 to 5 lines of Vess, short Case Pin on clue/fix/boss quests, and every scene paints at every line`);
 }
 
 if (failures > 0) {

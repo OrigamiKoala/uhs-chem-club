@@ -1,317 +1,144 @@
 /**
- * stage-story.js — the quiet lead line on a stage card, and only where it earns its place.
+ * stage-story.js — one crisp Stage 1 hook per bench.
  *
- * A stage card opens with the prompt. A line here sits above it, in italics, and says
- * what is at stake at the bench: who did what, who is waiting on the answer. It is
- * written only for a stage where that adds something the prompt does not. A line that
- * restates the task ("Three claims cannot all be true"), or names what the stage is
- * about to find, is not a story line and does not belong here: an earlier version wrote
- * one for every stage (270 of them) and most were exactly that.
+ * A stage card opens with the prompt. The hook sits above it in italics and names
+ * the concrete problem or mystery at the bench—zero unseen props, zero fancy jargon.
  *
  * Rules, held by `verify:learn`:
  *   - one sentence, at most 20 words, no emoji;
- *   - every built bench has at least one line (its opening stake), and no boss has any:
- *     a boss's nameplate and intent line are the whole per-stage story budget;
- *   - it never gives the route or the answer, and it uses only words already earned.
+ *   - Stage 1 only on built benches; no boss has any (a boss's nameplate and intent
+ *     line are its whole per-stage story budget);
+ *   - never gives the route or the answer, and uses only words already earned.
  *
- * Every world has one job (Tallow: take apart the raiders' salt guards and save the
- * refinery; Lanternfall: relight the beacon towers; Ligar: clear the rescue pass; Bellows:
- * let the pressure out of the fuel station; Kettle: halt the robot foundry).
- *
- * Indexed by quest id, then by STAGE NUMBER (1-based, as the player counts them).
- * A stage with no entry has no lead.
+ * Indexed by quest id, then by STAGE NUMBER (1-based).
  */
 export const STAGE_STORY = {
-  /* ---- Cinder Halo: what is the Fifth doing to the nucleus, and how is it powered? ---- */
-  'q1-still-warm': { 1: 'The Fifth\'s ore drums stay warm with no fire under them, and Vess wants to know why.' },
-  'q6-shortfall': { 1: 'The Core runs with no fuel line, and Vess wants to know what powers it.' },
-  'q5-half-gone': { 1: 'Vess wants to know how long the Fifth has been working this crater.' },
-  'q4-stability': { 1: 'The Fifth stores the nuclei it makes, and Vess wants to know which of them will keep.' },
-  'q3-equations': { 1: 'The Fifth\'s slag holds elements its ore never had, and Vess wants to know where they came from.' },
-  'q2-what-comes-off': { 1: 'Something leaks through the Fifth\'s drum walls, and Vess needs to know what will stop it.' },
-  /* ---- Thornmere: what is the Fifth's armour made of, and where can it be cut? ---- */
-  'q1-chains': { 1: 'The Fifth pumps black tar from under this swamp, and Vess wants to know what it is made of.' },
-  'q3-isomers': { 1: 'Two of the Fifth\'s drums carry the same formula, and only one of them feeds the plate works.' },
-  'q4-groups': { 1: 'One of the still\'s clear liquids is eating through its drum, and Vess wants to know which.' },
-  'q5-reactions': { 1: 'Vess needs to know how two of the still\'s liquids are joined into the links of the armour.' },
-  'q6-polymers': { 1: 'The fortress plates are one molecule repeated thousands of times, and Vess wants the place to cut it.' },
-  'q2-unsat': { 1: 'The Fifth heats the tar until part of it changes, and Vess wants to know into what.' },
-  /* ---- Lodestone: what is really in the Fifth's drums? ---- */
-  'q1-dblock': { 1: 'The Fifth\'s manifest calls every drum iron salt; read iron\'s own electrons first.' },
-  'q2-charges': { 1: 'The manifest gives each metal one charge; measure how many electrons these metals can lose.' },
-  'q3-complex': { 1: 'Drums went deep blue where ammonia was spilled on them; find out what happened.' },
-  'q4-shapes': { 1: 'Two drums list the same formula but behave differently; check how each one is put together.' },
-  'q5-colour': { 1: 'Colour is the only label left on most drums; find what a colour can tell you.' },
-  'q6-spin': { 1: 'The Coil pulls some drums toward it and leaves others; find what its magnet is sorting.' },
-  /* ---- Quicklight: why are the storm-belt cracking towers spiking? ---- */
-  'q1-watch': {
-    1: 'Two feed lines yield the same fuel, yet Vess found one tower overheating.'
-  },
-  'q2-law': {
-    1: 'Three feeds enter the manifold, yet only two change how fast the tank heats.'
-  },
-  'q3-time': {
-    1: 'Half the peroxide broke down in twenty seconds, and Vess wants to time the next halving.'
-  },
-  'q4-collide': {
-    1: 'Cold fuel sits quietly in the tank even though burning it releases heat.'
-  },
-  'q5-steps': {
-    1: 'The additive burns in two fast-or-slow steps, and only one controls the tower spike.'
-  },
-  'q6-shortcut': {
-    1: 'A trace of dust in the vent speeds the burn tenfold without ever running out.'
-  },
-  /* ---- Brinewire: the Fifth cut the marsh's power; what do its cells actually do? ---- */
-  'q5-load': {
-    1: 'The marsh cells fade over a day, and Vess wants to find out what a cell does as it runs.'
-  },
-  'q6-electrolysis': {
-    1: 'Someone is pushing current into the pools, and Vess wants to find what a pushed current does to the water.'
-  },
-  'q2-activity': {
-    1: 'Two bolts on one pylon rot at different speeds, and Vess wants to find which metal gives.'
-  },
-  'q1-halves': {
-    1: 'The Fifth says the pylons are rotting, and Vess wants to find out what moves when a metal rots.'
-  },
-  'q3-galvanic': {
-    1: 'Every marsh cell stopped when a bridge was cut, and Vess wants to find what keeps one running.'
-  },
-  'q4-potential': {
-    1: 'Every cell in the marsh reads a different voltage, and Vess wants to measure what sets the number.'
-  },
+  /* ---- Unit 01 — Tallow (Atoms): heavy metal showed up inside pure salt ---- */
+  'q1-grain': { 1: 'Test the mixed sample pulled from the raided salt bin.' },
+  'q2-core': { 1: 'Look inside the atom to see if anyone can turn salt into gold.' },
+  'q3-catalogue': { 1: 'Check the periodic table to see what actually belongs in salt.' },
+  'q4-ledger': { 1: 'Read the proton and neutron counts on this unlabeled salt tank.' },
+  'q5-assay': { 1: 'Weigh the salt sample\'s isotopes to check its atomic mass.' },
+  'q6-weigh': { 1: 'Weigh the raided salt drums to see how much was taken.' },
 
-  'q5-salts': {
-    1: 'The Fifth neutralised a tank and called it safe, and Vess wants to measure what was left.'
-  },
-  'q4-structure': {
-    1: 'The Fifth ranked its tanks by what they were made of, and Vess wants to test that ranking.'
-  },
-  /* ---- Verdigris: the Fifth calls the marsh water acid; what kind, and how much? ---- */
-  'q6-titrate': {
-    1: 'The Fifth reported the moment a tank was neutral, and Vess wants to watch an acid being used up.'
-  },
-  'q2-scale': {
-    1: 'The Fifth gives one number for the marsh, and Vess wants to know what it counts.'
-  },
-  'q1-handover': {
-    1: 'The Fifth calls the marsh water acid, and Vess wants to see what that word means for the water.'
-  },
-  'q8-capacity': {
-    1: 'The Fifth\'s sluice held, then failed, and Vess wants to find how much it could take.'
-  },
-  'q7-buffer': {
-    1: 'One of the Fifth\'s sluices took the acid and one did not, and Vess wants to see why.'
-  },
-  'q3-weak': {
-    1: 'Two of the Fifth\'s tanks hold the same amount of acid, and Vess wants to compare what they read.'
-  },
+  /* ---- Unit 02 — Lanternfall (Light and Electrons): lighthouses blacked out with invisible UV light ---- */
+  'q1-wave': { 1: 'Measure the wavelengths of the surviving lighthouse lamps.' },
+  'q2-photon': { 1: 'Find out why the lighthouse solar plates ignore red light.' },
+  'q3-lines': { 1: 'Identify the gas inside the sealed tube left at the tower.' },
+  'q4-cloud': { 1: 'Map where an atom\'s electrons actually live.' },
+  'q5-numbers': { 1: 'Learn the four-number address for every electron slot.' },
+  'q6-filling': { 1: 'Fill each atom\'s electron levels from lowest energy up.' },
+  'q7-pes': { 1: 'Identify the unlabeled powder from the tower using its spectrum.' },
+  'q8-trends': { 1: 'Pick the best metal to rebuild the damaged lighthouse plate.' },
+  'q9-absorb': { 1: 'Use light absorption to measure what is in the fouled coolant tank.' },
+  'q10-wavefunctions': { 1: 'Map the peaks and zero-nodes of an electron wave.' },
 
-  /* ---- Teeter: the Fifth calls a pan finished; is it? ---- */
-  'q1-both': {
-    1: 'The Fifth says this pan is finished once it stops changing, and Vess wants to see it run.'
-  },
-  'q2-k': {
-    1: 'Vess has three of the Fifth\'s pans that began differently, and wants to see where each ends.'
-  },
-  'q3-q': {
-    1: 'A pan is mixed to a recipe, and Vess wants to say which way it goes before it moves.'
-  },
-  'q4-properties': {
-    1: 'The Fifth reports one pan\'s K and says it covers three ways of writing the reaction.'
-  },
-  'q5-ice': {
-    1: 'The ledger gives a pan\'s start and K, and Vess needs what the pan holds when it settles.'
-  },
+  /* ---- Unit 03 — Ligar (Bonding): blast trapped miners and sliced basalt glass-smooth ---- */
+  'q1-joins': { 1: 'Test what kind of bonds hold the tunnel rubble together.' },
+  'q2-lattice': { 1: 'Find a mineral liner that resists heat without conducting electricity.' },
+  'q3-distance': { 1: 'Measure how much energy it takes to break strong bonds apart.' },
+  'q4-dots': { 1: 'Map the bonds of the unknown gases leaking in the tunnel.' },
+  'q5-resonance': { 1: 'Map the tunnel gases that share electrons across multiple bonds.' },
+  'q6-shape': { 1: 'Predict the 3D shape of each tunnel gas molecule.' },
+  'q7-polarity': { 1: 'Find out why some tunnel gases stick to the rescue gear.' },
+  'q8-hybrid': { 1: 'See how atom orbitals mix to form 3D bond shapes.' },
+  'q9-orbitals': { 1: 'Use a magnet to spot breathable oxygen in the tunnel air.' },
 
-  'q6-lean': {
-    1: 'The Fifth added a drop to a settled vessel, and Vess wants to see where the amounts go.'
-  },
+  /* ---- Unit 04 — Bellows (Gases): jammed fuel tanks and a cylinder hot for 12 days in freezing air ---- */
+  'q1-knocks': { 1: 'Check why pressure is spiking in the jammed fuel tanks.' },
+  'q2-laws': { 1: 'Test how freezing wind should change a sealed tank\'s pressure.' },
+  'q3-ideal': { 1: 'Calculate how much gas is trapped inside each sealed tank.' },
+  'q4-mixtures': { 1: 'Measure both gases after the Fifth pumped a second gas into the fuel line.' },
+  'q5-speed': { 1: 'Identify the gas leaking from the Fifth\'s damaged vent.' },
+  'q6-real': { 1: 'See what happens when the Fifth over-packs a tank past ideal limits.' },
 
-  'q8-free': {
-    1: 'The Fifth says some changes cannot happen, and Vess wants the number that says how far one goes.'
-  },
+  /* ---- Unit 05 — Ember Reach (Thermodynamics): volcano pipes drained straight underground ---- */
+  'q1-flow': { 1: 'Thaw the frozen shelter valve and track which way heat flows.' },
+  'q2-calorimetry': { 1: 'Pick the best cooling fluid, then identify the Fifth\'s unlabeled pipe metal.' },
+  'q3-enthalpy': { 1: 'Measure how much heat each rescue-skiff fuel releases per gram.' },
+  'q4-bonds': { 1: 'Calculate how much energy the Fifth\'s cracking coil spends breaking bonds.' },
+  'q5-hess': { 1: 'Calculate the sealed main shaft\'s heat using the open side pipes.' },
+  'q6-entropy': { 1: 'Watch how gas and heat naturally spread out when a valve opens.' },
+  'q7-gibbs': { 1: 'Find the temperature where the Fifth\'s heat-hungry process turns on.' },
 
-  'q7-dissolve': {
-    1: 'Salt on the dike dissolves and comes back, and Vess wants to know how much a pan can hold.'
-  },
+  /* ---- Unit 06 — Mirrowen (States of Matter): lab-made chemical froze the shipping canals ---- */
+  'q1-states': { 1: 'Check if the canal ice is still water or something new.' },
+  'q2-grip': { 1: 'Measure how strongly water molecules pull on each other.' },
+  'q3-boil': { 1: 'See why canal water evaporates even below its boiling point.' },
+  'q4-solids': { 1: 'Test if the canal ice is a crystal or a glass.' },
+  'q5-crossing': { 1: 'Find out how much heat it takes to melt the canal barrier.' },
+  'q6-solution': { 1: 'Measure how much of the Fifth\'s chemical is dissolved per liter.' },
+  'q7-separate': { 1: 'Separate the Fifth\'s chemical out of the canal water.' },
 
-  /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
-  'q1-grain': {
-    1: 'Raiders scattered grey powder across the refinery yard, and Vess needs to know if it is something new.',
-    4: 'The raiders\' salt husks shrug off the cutter, and Vess needs to know why.'
-  },
-  'q2-core': {
-    1: 'The canteen says the Fifth can turn salt into gold, and Vess wants to know how an atom is built.'
-  },
-  'q3-catalogue': {
-    1: 'Vess wants to know which elements belong on a salt flat, and which would be out of place.'
-  },
-  'q4-ledger': {
-    2: 'A sealed canister from the raid must be read without opening it.'
-  },
-  'q5-assay': {
-    1: 'A sample of the raiders\' salt has come off the pan, and Vess needs to know what is in it.'
-  },
-  'q6-weigh': {
-    1: 'The stores are sealed crates and drums, and Vess means to count them without opening one.',
-    4: 'A sealed drum waits on the dock with its papers lost.'
-  },
+  /* ---- Unit 07 — Kettle (Stoichiometry): foundry logs claim 50 tons of iron from 40 tons of ore ---- */
+  'q2-names': { 1: 'Decode the chemical labels on the Fifth\'s ore crates.' },
+  'q3-change': { 1: 'Test whether a chemical reaction can ever create extra mass.' },
+  'q4-balance': { 1: 'Balance the foundry\'s furnace equation so every atom counts.' },
+  'q5-ionic': { 1: 'Find which ions turned the foundry\'s waste pond cloudy.' },
+  'q6-stoich': { 1: 'Check if 40 tons of ore can really yield 50 tons of iron.' },
+  'q7-titrate': { 1: 'Measure the acid strength in the foundry\'s metal-cleaning tank.' },
+  'q8-kinds': { 1: 'Sort the foundry\'s furnace logs by reaction type.' },
+  'q9-hsab': { 1: 'Separate the mixed metals in the foundry\'s waste vat.' },
 
-  /* ---- Lanternfall: relight the beacon towers ---- */
-  'q1-wave': {
-    1: 'The Fifth dimmed the beacons, so every spare lamp must be measured.'
-  },
-  'q2-photon': {
-    1: 'The beacon plates have stopped answering the lamps, and Vess needs to know why.'
-  },
-  'q3-lines': {
-    3: 'The Fifth left sealed gas tubes among the beacons, and Vess must name what is in them.'
-  },
-  'q4-cloud': {
-    1: 'The beacon lamps are tuned to electrons, and Vess wants to know where one actually is.'
-  },
-  'q5-numbers': {
-    1: 'The Fifth scrambled the records tent\'s board, and every box on it must be found by its address.'
-  },
-  'q6-filling': {
-    1: 'The records tent\'s board holds every row in energy order, and Vess wants each atom filled from lowest energy up.'
-  },
-  'q8-trends': {
-    1: 'Vess has to sort the camp\'s metal stock by how big and how tightly held its atoms are.'
-  },
-  'q7-pes': {
-    3: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
-  },
-  'q9-absorb': {
-    5: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'
-  },
-  'q10-wavefunctions': {
-    1: 'Vess needs to map the wave crests and nodes where the beacon electrons hide.'
-  },
+  /* ---- Unit 08 — Teeter (Equilibrium): "abandoned" salt ponds still pumping out chemicals ---- */
+  'q1-both': { 1: 'Check if the Fifth\'s abandoned salt pond is actually still reacting.' },
+  'q2-k': { 1: 'Test three ponds with different starts to see where they settle.' },
+  'q3-q': { 1: 'Predict which way this fresh tank mixture will run.' },
+  'q4-properties': { 1: 'See how K changes when you flip or combine equations.' },
+  'q5-ice': { 1: 'Calculate how much product the Fifth\'s pond makes once settled.' },
+  'q6-lean': { 1: 'See how the Fifth\'s drain pump forces the pond to make more product.' },
+  'q7-dissolve': { 1: 'Find how much salt dissolves before it clogs the pond pipes.' },
+  'q8-free': { 1: 'Link free energy to K to see how far a reaction goes.' },
 
-  /* ---- Ligar: clear the rescue pass ---- */
-  'q1-joins': {
-    1: 'The Fifth\'s blast scattered rubble across the rescue tunnel, and Vess needs to know what holds it together.',
-    4: 'The breakers pack their charges by the recipe, so a wrong count wastes them.'
-  },
-  'q2-lattice': {
-    1: 'Some of the rubble is rock salt, and Vess wants to know if it is safe near the wiring.',
-    5: 'The trapped miners need a liner that holds at 900 degrees without shocking anyone.'
-  },
-  'q3-distance': {
-    2: 'The breaker charge has to carry at least the energy that pulls a seam gas apart.',
-    4: 'Three seam gases hold carbon atoms together, and Vess needs to know how close.'
-  },
-  'q4-dots': {
-    1: 'The blast filled the tunnel with unknown gases, and Vess must draw each one to know which is safe.',
-    3: 'A heavy gas pools at the tunnel floor where the miners kneel.'
-  },
-  'q5-resonance': {
-    1: 'The cutters will trust only the drawing that matches the measured gas.'
-  },
-  'q6-shape': {
-    1: 'The breakers cannot cut until they know what shape each tunnel gas takes.'
-  },
-  'q7-polarity': {
-    1: 'The Fifth left tunnel gases that cling to the rescue gear, and Vess must learn why.',
-    4: 'The wash water waits while the charged rod tests each stream.'
-  },
-  'q9-orbitals': {
-    2: 'The air the miners breathe is the next thing the magnet must test.'
-  },
+  /* ---- Unit 09 — Verdigris (Acids and Bases): ore-washing acid runoff eating through the radio fort ---- */
+  'q1-handover': { 1: 'Test what the marsh runoff is actually doing to the water.' },
+  'q2-scale': { 1: 'Measure how acidic each marsh tank really is on the pH scale.' },
+  'q3-weak': { 1: 'Find why one acid tank is far harsher than another with the same amount.' },
+  'q4-structure': { 1: 'See how a molecule\'s structure makes an acid strong or weak.' },
+  'q5-salts': { 1: 'Check if the neutralized waste tank water is actually safe.' },
+  'q6-titrate': { 1: 'Track the pH curve as you neutralize the marsh\'s worst tank.' },
+  'q7-buffer': { 1: 'Build a buffer mix that protects the fort\'s intake from acid spikes.' },
+  'q8-capacity': { 1: 'Test how much runoff the fort\'s buffer tank can absorb before failing.' },
 
-  /* ---- Bellows: let the pressure out of the fuel station ---- */
-  'q1-knocks': {
-    1: 'The Fifth jammed gas into the station\'s holders, and the needles will not come down.'
-  },
-  'q2-laws': {
-    1: 'Cold is settling on the deck, and Vess needs to know what it does to a gas.',
-    5: 'A sealed tank from the raiders\' cargo pod has been left out on the deck.'
-  },
-  'q3-ideal': {
-    3: 'Four of the holders are jammed, and Vess must know which hold more gas than the reference.'
-  },
-  'q4-mixtures': {
-    1: 'The Fifth fed a second gas into the fuel line, and Vess must see what each gas does.'
-  },
-  'q5-speed': {
-    1: 'A pinhole leak is bleeding gas out of the station, and Vess wants to know who loses it first.',
-    3: 'Something is leaking from the vent stack, and Vess needs to name it.'
-  },
-  'q6-real': {
-    1: 'The Fifth packed the station tanks tighter than any gas law was meant for.',
-    4: 'The liquefier at the cold box turns gases to liquid, and some turn far more easily than others.'
-  },
+  /* ---- Unit 10 — Brinewire (Electrochemistry): illegal power taps stripping copper from the marsh ---- */
+  'q1-halves': { 1: 'Find out what is moving inside the corroded power pylons.' },
+  'q2-activity': { 1: 'Find which of the two metals bolted to the pylon gives up electrons.' },
+  'q3-galvanic': { 1: 'Rebuild a working marsh battery after the Fifth cut the salt bridges.' },
+  'q4-potential': { 1: 'Measure which metal pair gives the highest voltage for the grid.' },
+  'q5-load': { 1: 'Track why the marsh\'s backup batteries lose voltage as they run.' },
+  'q6-electrolysis': { 1: 'See what the Fifth is making by forcing electric current into the pool.' },
 
-  /* ---- Ember Reach: trace the Fifth Guild's geothermal siphon ---- */
-  'q1-flow': {
-    2: 'A shelter\'s heating valve is frozen shut, and Vess has two ways to thaw it.',
-    4: 'The shelters\' emergency kits hold warmers, packs and tablets, and Vess is checking each one.'
-  },
-  'q2-calorimetry': {
-    1: 'The cooling jackets can hold water or iron, and Vess must choose before the main valves open.',
-    5: 'A fitting from the siphon line carries no stamp, and Vess wants its metal named.'
-  },
-  'q3-enthalpy': {
-    5: 'The ascent skiff can lift only so much fuel, so Vess must pick its tank with care.'
-  },
-  'q4-bonds': {
-    1: 'The Fifth\'s cracking coil pulls gas molecules apart over the vent, and Vess wants to know what that costs.'
-  },
-  'q5-hess': {
-    1: 'The direct vent shaft is sealed, so Vess must work out its heat from the routes that are open.'
-  },
-  'q6-entropy': {
-    1: 'A burst bypass valve scatters vent gas into an empty chamber, and Vess wants to know where it ends up.'
-  },
-  'q7-gibbs': {
-    1: 'The shelters\' cold packs chill the water they dissolve in, and Vess wants to know why they work at all.'
-  },
+  /* ---- Unit 11 — Quicklight (Kinetics): fuel towers overheating ten times too fast from mystery dust ---- */
+  'q1-watch': { 1: 'Time both fuel lines to see why one is overheating.' },
+  'q2-law': { 1: 'Test which of the three fuel feeds actually speeds up the tank.' },
+  'q3-time': { 1: 'Time how fast the spiked fuel breaks down by half.' },
+  'q4-collide': { 1: 'See why cold fuel sits safely until collisions clear the energy hill.' },
+  'q5-steps': { 1: 'Find which step of the fuel reaction controls the overheating spike.' },
+  'q6-shortcut': { 1: 'Test the vent dust that speeds up the burn without running out.' },
 
-  /* ---- Mirrowen: what is the canal ice, and why does it hold when the water beside it runs? ---- */
-  'q2-grip': {
-    1: 'Vess wants to know how hard molecules hold their neighbours, before she can say what holds the canal ice.'
-  },
-  'q1-states': {
-    1: 'Vess wants to know whether the canal ice is a different substance from the water under it.'
-  },
-  'q3-boil': {
-    1: 'Vess asks how the canal\'s water can leave when nothing on the shelf is hot enough to boil it.'
-  },
-  'q4-solids': { 1: 'The ice sheets shatter like glass, and Vess wants to know whether that is what they are.' },
-  'q5-crossing': { 1: 'Vess saw ice take in heat without warming, and wants to know where the heat went.' },
-  'q6-solution': { 1: 'Vess wants to know how much of the agent is in each litre of canal water.' },
-  'q7-separate': {
-    1: 'Vess wants whatever was added to the canal out of it again, without changing the water.'
-  },
+  /* ---- Unit 12 — Lodestone (Transition Metals): giant magnet sorting metal drums for Cinder Halo ---- */
+  'q1-dblock': { 1: 'Check iron\'s d-electrons before testing the Fifth\'s metal drums.' },
+  'q2-charges': { 1: 'Measure how many different charges these canyon metals can hold.' },
+  'q3-complex': { 1: 'Find out why spilled ammonia turned a metal drum deep blue.' },
+  'q4-shapes': { 1: 'Check the shapes of two drums that share a formula but act differently.' },
+  'q5-colour': { 1: 'Use each drum\'s color to identify what is inside with the labels gone.' },
+  'q6-spin': { 1: 'Find out why the sorting magnet grabs some drums and ignores others.' },
 
-  /* ---- Kettle: halt the robot foundry ---- */
-  'q5-ionic': {
-    1: 'The waste pond turned cloudy overnight, and Vess wants to know what changed in it.'
-  },
-  'q4-balance': {
-    1: 'The furnace equation board on the control-room wall has no coefficients, and Vess cannot tell whether it is balanced.'
-  },
-  'q2-names': {
-    1: 'The foundry\'s crates carry labels nobody can read.'
-  },
-  'q3-change': {
-    1: 'The forged ledger says metal came from nowhere, and Vess wants to know whether anything can.'
-  },
-  'q6-stoich': {
-    1: 'Vess has a ledger that claims fifty tons of iron from forty tons of ore.'
-  },
-  'q7-titrate': {
-    1: 'Nobody at the foundry knows how strong the acid in the pickling tank is.'
-  },
-  'q8-kinds': {
-    1: 'Vess finds a furnace log that lists reactions nobody has named.'
-  },
-  'q9-hsab': {
-    1: 'Vess finds a vat of mixed metal waste that must be separated before the river reaches it.'
-  }
+  /* ---- Unit 13 — Thornmere (Organic Chemistry): swamp outpost wrapped in plastic armor over lead ---- */
+  'q1-chains': { 1: 'Test the black swamp tar the Fifth pumps into their factory.' },
+  'q2-unsat': { 1: 'See what the Fifth\'s heater turns the swamp tar into.' },
+  'q3-isomers': { 1: 'Find the difference between two drums that share one formula.' },
+  'q4-groups': { 1: 'Identify the clear liquid eating through its storage drum.' },
+  'q5-reactions': { 1: 'See how the Fifth joins those two liquids into armor links.' },
+  'q6-polymers': { 1: 'Find the weak link in the fortress\'s plastic armor plates.' },
+
+  /* ---- Unit 14 — Cinder Halo (Nuclear Chemistry): ancient nuclear reactor running hot with no fuel line ---- */
+  'q1-still-warm': { 1: 'Find out why the Fifth\'s ore drums stay warm in freezing air.' },
+  'q2-what-comes-off': { 1: 'Find what blocks the rays leaking through the drum walls.' },
+  'q3-equations': { 1: 'Trace where the unexpected elements in the reactor slag came from.' },
+  'q4-stability': { 1: 'Check which of the Fifth\'s stored nuclei are stable and which decay.' },
+  'q5-half-gone': { 1: 'Use half-life decay to measure how long the Fifth has worked here.' },
+  'q6-shortfall': { 1: 'Find where the reactor\'s huge energy comes from with no fuel line.' }
 };
 
 /** The lead line for a stage (0-based index), or '' when the stage has none. */

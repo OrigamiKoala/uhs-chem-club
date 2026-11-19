@@ -24,19 +24,15 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     worldId,
     worldName: typeof worldOrId === 'object' ? worldOrId.world : worldId,
     act: 'act1',
-    arrival: 'Hostile Fifth Guild raiders detected in this sector.',
-    closing: 'Sector secured and raiders repelled.',
-    spoilFamily: 'Infiltration units',
-    paragraphs: [
-      'Recruit, listen up. We have hostile signals detected across this sector and the local power grid is flickering in the dark.',
-      'The raiders did not just retreat—they left behind automated defense machines to guard their trail and keep us away from the equipment.',
-      'We need to push through their defenses, fix the sabotaged stations, and secure the sector before enemy reinforcements arrive.'
-    ]
+    arrival: 'Fifth Guild activity detected in this sector.',
+    objective: 'Inspect the damaged stations and find what they left behind.',
+    closing: 'Sector secured.',
+    spoilFamily: 'Fifth Guild gear'
   };
 
   const paragraphs = (episode.paragraphs && episode.paragraphs.length > 0)
     ? episode.paragraphs
-    : [episode.arrival, episode.incident, episode.objective].filter(Boolean);
+    : [episode.arrival, episode.objective].filter(Boolean);
 
   const worldName = episode.worldName || (typeof worldOrId === 'object' ? worldOrId.world : worldId);
   const worldTitle = typeof worldOrId === 'object' ? worldOrId.title : 'Tactical Mission';

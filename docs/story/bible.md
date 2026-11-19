@@ -83,65 +83,87 @@ Like a chemical catalyst, they lower the activation barrier for revolt across th
 
 ---
 
-## 5. Narrative Structure: Four Acts
+## 5. Narrative Structure: Four Acts (The 4-Question Case Board)
+
+Instead of long text logs, the Case Board (`#/casefile`) stamps clues and quest Case Pins under four plain questions:
 
 ```
-Act I: THE CHARTER (Units 1–3: Tallow, Lanternfall, Ligar)
-  Routine surveys reveal mobile spoil and unliveried stencils.
-  Spine Beat 1: Guild Inquiry arrives; officers order silence.
+Act I: THE ALCHEMY RUMOR (Units 1–3: Tallow, Lanternfall, Ligar)
+  Question: Can the Fifth Guild really turn salt into heavy metal?
+  Clues: Triangle Mark (Erebus), Bismuth Chunk (Tallow), Ultraviolet Lens (Lanternfall), Glass-Cut Rock (Ligar).
+  Answer: No. Ordinary chemistry cannot turn one element into another—something else is going on.
 
-Act II: PRESSURE (Units 4–7: Bellows, Ember Reach, Mirrowen, Kettle)
-  The Fifth recruits active workers; Kettle's impossible ledger is seized.
-  Spine Beat 2: The Avalon's survey logs are leaking to the Fifth.
+Act II: IMPOSSIBLE HEAT AND METAL (Units 4–7: Bellows, Ember Reach, Mirrowen, Kettle)
+  Question: Where is the extra heat and extra metal coming from?
+  Clues: The Warm Tank (Bellows), Underground Heat Pipe (Ember Reach), Lab-Made Canal Chemical (Mirrowen), The 50-Ton Shipping Log (Kettle).
+  Answer: Not alchemy and not normal chemistry. Something inside the atom is making the heat.
 
-Act III: BALANCE (Units 8–11: Teeter, Verdigris, Brinewire, Quicklight)
-  Equilibrium fails; acid leaks spread; the name "The Catalyst" is uncovered.
-  Spine Beat 3: Corporate abandonment exposed; Vess confronts the crew.
+Act III: WHO IS THE FIFTH GUILD? (Units 8–11: Teeter, Verdigris, Brinewire, Quicklight)
+  Question: Who is behind the Fifth Guild?
+  Clues: Hidden Salt Plant (Teeter), Acid Ore Waste (Verdigris), Stolen Copper Bars (Brinewire), Vent Dust & Callsign "The Catalyst" (Quicklight).
+  Answer: They are the old crews the Four Guilds left behind, led by someone called The Catalyst.
 
-Act IV: THE CORE (Units 12–14: Lodestone, Thornmere, Cinder Halo)
-  Following thermal signatures to the transmutation works at Cinder Halo.
-  Spine Beat 4: The Finale — The Transmutation Core, the choice, the legacy.
+Act IV: WHAT ARE THEY BUILDING? (Units 12–14: Lodestone, Thornmere, Cinder Halo)
+  Question: What is the Fifth Guild building, and where is it?
+  Clues: Shipping Route Chip (Lodestone), Lead-Lined Armor Plate (Thornmere), The Control-Rod Log (Cinder Halo).
+  Answer: An old nuclear power plant on Cinder Halo. Splitting uranium atoms—not magic—explains every clue.
 ```
 
-### Episode Kit per World
-Every world acts as a self-contained investigative episode:
-1. **Arrival Transmission:** One laconic message from Vess over the speaker (max 2 sentences). Frames the breakdown without hinting at puzzle mechanics.
-2. **The Spoil:** A family of animated minerals born directly from that world's chemistry principles.
-3. **Bench Encounters:** Every stage framed as an analytical confrontation where measurement dictates victory.
-4. **Boss / Elite:** The world's conceptual synthesis; multi-phase checkpointed combat against a colossal rogue machine or mineral mass.
-5. **The Case File Clue:** A piece of physical evidence yielded upon boss defeat.
-6. **Closing Transmission:** Vess logs the sector status and files the findings.
+### Episode Kit per World (Low-Text Standard)
+Every world acts as a grounded, low-text investigative episode:
+1. **Arrival & Mission (2 lines max, no 3-paragraph walls):** One short sentence stating the concrete mystery on this world (`arrival`), plus one sentence stating what we are testing or fixing (`objective`).
+2. **Stage 1 Quest Hooks (`stage-story.js`):** One concrete sentence on Stage 1 only, using visible props and zero fancy jargon.
+3. **Four Honest Quest Roles (`quest-story.js`):** Every quest is tagged `Direct Clue`, `Station Fix`, `Toolkit`, or `Boss Payoff`. Foundational `Toolkit` benches never get contrived villain excuses and omit a Case Pin.
+4. **Case Pins (`quest-story.js`):** Short plain takeaways (≤16 words, no `"Filed:"` prefix) stamped to the Case Board on `Direct Clue`, `Station Fix`, and `Boss Payoff` quests.
+5. **World Boss & Case File Clue:** Combines the world's chemistry to shut down the Fifth's local rig and recover the world's main Case Board clue.
+6. **Closing Line:** One concise sentence logging the outcome.
 
 ---
 
-## 6. The Spoil: Living Chemistry
+## 6. The Spoil & Local Rigs
 
-Spoil is not magic. It is refined tailings and waste residues animated by electromagnetic leakage and radiological seepage from the Fifth's testing grounds.
+Bosses and encounters are grounded in each world's real chemistry—never cartoon robots or magic monsters:
+1. **Physical Obedience:** Every rig or specimen behaves strictly according to the chemical laws measured at the bench.
+2. **Dispersed, Never Slaughtered:** Foes settle, cool, dissolve, or power down. No gore, no cruelty, no blood.
+3. **Honest Lighting (SCOURED PLATE):** Cast-iron and industrial hardware lit by warm filament glows, sparks, and real emission spectra.
 
-### Rules of Spoil Combat
-1. **Physical Obedience:** Spoil behaves strictly according to the chemical laws measured at the bench. A mixture separates when agitated; a covalent network lattice resists thermal shear; a photoelectric shell releases charges only above threshold frequency.
-2. **Dispersed, Never Slaughtered:** Foes crumble into inert salt, drift into cold clouds, or freeze into dormant stone. There is no gore, no cruelty, and no blood.
-3. **Honest Lighting (SCOURED PLATE):** Monochromatic cast-iron bodies lit only by amber filament glows, spark discharges, and authentic elemental emission spectra. No glowing red evil eyes. No neon fantasy aura.
-
-### Spoil Roster
-- **Tallow (Unit 1):** *Salt Husks* — crystalline aggregates of pure elements, molecular compounds, and heterogeneous grit. Weak to mechanical cutting, physical sorting, and mass verification.
-- **Lanternfall (Unit 2):** *Lamp Moths & Frost Wraiths* — photoelectric shells and quantized gas clouds. Weak to precise electromagnetic frequencies and matching emission bands.
-- **Ligar (Unit 3):** *Basalt Wardens & Slag Crawlers* — bonded mineral armor. Weak to thermal shock, shear stress, and electrical conductivity testing based on lattice geometry.
-- **Bellows (Unit 4):** *Gas Bladders* — skinned bags of gas that sag, hold, swell and strain with the push inside them, and a rogue **Compressor** at the heart of the deck. Settled by reading the gauge, never by bursting them: a bladder strains at its seams and is dispersed, never popped.
-- **Kettle (Unit 7):** *Recipe Golems* — rigidly proportioned stoichiometric monoliths. Disrupted only by starving their limiting reagents.
+### World Rig & Boss Roster
+- **Tallow (Unit 1):** *The Hopper* — raided salt refinery where strange bismuth chunks turned up inside pure NaCl salt bins.
+- **Lanternfall (Unit 2):** *The Lantern-Eater* — blacked-out glacier lighthouses fitted with invisible-light ultraviolet optics.
+- **Ligar (Unit 3):** *Basalt Warden* — quarry blast rubble and solid volcanic rock sliced glass-smooth by extreme heat.
+- **Bellows (Unit 4):** *The Compressor* — jammed floating fuel tanks and a sealed cylinder that stayed hot for 12 days in freezing air.
+- **Ember Reach (Unit 5):** *The Crucible* — tapped volcano heat pipes draining megawatts of heat underground.
+- **Mirrowen (Unit 6):** *The Undertow* — shipping canals frozen by a lab-made chemical agent.
+- **Kettle (Unit 7):** *Recipe Golem* — hijacked iron foundry with shipping logs claiming 50 tons of iron from 40 tons of ore.
+- **Teeter (Unit 8):** *The Tipper* — "abandoned" salt ponds secretly running as a continuous chemical plant.
+- **Verdigris (Unit 9):** *The Leach* — heavy ore-washing acid runoff flooding the marsh around the radio fort.
+- **Brinewire (Unit 10):** *The Clamp* — illegal power taps draining the marsh grid and electroplating pure copper bars.
+- **Quicklight (Unit 11):** *The Flare* — fuel towers spiked with catalyst dust, revealing the leader's callsign: *The Catalyst*.
+- **Lodestone (Unit 12):** *The Coil* — giant electromagnetic sorting coil in the iron canyon shipping metal drums to Cinder Halo.
+- **Thornmere (Unit 13):** *The Carapace* — swamp outpost sealed in tough plastic armor lined with heavy lead radiation shielding.
+- **Cinder Halo (Unit 14):** *The Transmutation Core* — an ancient uranium fission reactor running hot with no fuel line.
 
 ---
 
-## 7. The Clues and The Case File
+## 7. The Clues and The Case Board
 
-The Case File is the investigative terminal in the *Avalon*'s comms bay (and `#/casefile` in the UI). Clues are **collected, never graded**. The game never insults the player with a multiple-choice quiz about what a clue means. The player examines the evidence, looks at the periodic table, and realizes the truth on their own.
+The Case Board (`#/casefile`) displays the 4 Act questions, the 15 recovered clues, and the short Case Pins earned from completed benches. Clues are **collected, never graded**.
 
-1. **Erebus (Contract 1):** *The Unliveried Stencil* — A maintenance plate bearing an unchartered delta mark instead of the four Imperial Guild insignias.
-2. **Tallow (Boss 1 - The Hopper):** *The Transmuted Slag* — A refined ingot from a sodium chloride salt pan containing traces of elemental bismuth that were never present in the geological basin.
-3. **Lanternfall (Boss 2 - The Lantern-Eater):** *The Ground Optical Lens* — A focusing prism ground for deep ultraviolet wavelengths that no standard guild lamp can emit.
-4. **Ligar (Elite 1 - Basalt Warden):** *The Arc-Sheared Basalt* — A quarry slab cut cleanly through molecular and ionic matrixes by thermal energy exceeding any known refinery torch.
-5. **Kettle (Elite 2 - Recipe Golem):** *The Over-Mass Ledger* — A logistics logbook documenting reaction products whose mass reliably exceeds the total mass of the reactants.
-6. **Bellows (Boss - The Compressor):** *The Warm Cylinder* — A sealed gas cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it. Gay-Lussac's law forbids a sealed gas to do that unless something inside it is giving off heat, and no chemical reaction does for twelve days. It points at Cinder Halo.
+1. **Erebus (Contract 1):** *Triangle Mark* — An unknown triangle mark stamped inside a sabotaged shield tower.
+2. **Tallow (Unit 1):** *Bismuth Chunk* — Heavy bismuth metal found inside pure salt; ordinary chemistry cannot make it.
+3. **Lanternfall (Unit 2):** *Ultraviolet Lens* — A lens ground for invisible UV light so Fifth ships can fly unseen in the dark.
+4. **Ligar (Unit 3):** *Glass-Cut Rock* — Solid basalt sliced glass-smooth by heat far beyond any normal torch.
+5. **Bellows (Unit 4):** *The Warm Tank* — A sealed gas cylinder that stayed hot for 12 days in freezing air.
+6. **Ember Reach (Unit 5):** *Underground Heat Pipe* — Megawatts of volcano heat routed below the ground.
+7. **Mirrowen (Unit 6):** *Lab-Made Canal Chemical* — A synthetic chemical poured into the canals, proving the Fifth runs chemical factories.
+8. **Kettle (Unit 7):** *The 50-Ton Shipping Log* — Forty tons of ore can make at most 28 tons of iron; 22 tons came from elsewhere.
+9. **Teeter (Unit 8):** *Hidden Salt Plant* — "Abandoned" ponds shifting equilibrium nonstop to pump out product.
+10. **Verdigris (Unit 9):** *Acid Ore Waste* — Industrial acid runoff matching heavy ore leaching.
+11. **Brinewire (Unit 10):** *Stolen Copper Bars* — Pure copper electroplated from the marsh to wire a massive facility.
+12. **Quicklight (Unit 11):** *Vent Dust & Callsign* — Unconsumed catalyst powder plus a message signed *The Catalyst*.
+13. **Lodestone (Unit 12):** *Shipping Route Chip* — Dispatch coordinates routing every sorted metal drum straight to Cinder Halo.
+14. **Thornmere (Unit 13):** *Lead-Lined Armor Plate* — Plastic armor hiding thick lead plates built to block nuclear radiation.
+15. **Cinder Halo (Unit 14):** *The Control-Rod Log* — Proves the Fifth restarted a uranium fission reactor—explaining every clue on the board.
 
 ---
 

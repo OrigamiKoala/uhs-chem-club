@@ -151,7 +151,7 @@ export async function checkBrinewireBoss({ ok, fail }) {
 
   /* ---- the story and the case file ---- */
   const qs = QUEST_STORY['unit10/boss-clamp'];
-  holds(Boolean(qs) && qs.scene === 'clamp-open' && qs.beats.length === 5 && /^Filed:/.test(qs.filed), 'the finale has five beats and a Filed line');
+  holds(Boolean(qs) && qs.scene === 'clamp-open' && qs.beats.length === 5 && typeof qs.pin === 'string' && qs.pin.length > 0, 'the finale has five beats and a Case Pin');
   holds(Boolean(CLUES.clue_brinewire_clamp) && EPISODES.unit10.bossId === 'boss-clamp' && EPISODES.unit10.clueId === 'clue_brinewire_clamp' && B.CLUE_ID === 'clue_brinewire_clamp' && B.DEBRIEF.clueAwarded === 'clue_brinewire_clamp', 'the clue is in the Case File and the episode names the boss');
   // The numbers in the beats are the planners'.
   const say = qs.beats.map(b => b.say).join(' ');

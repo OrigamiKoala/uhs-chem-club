@@ -102,12 +102,13 @@ export function playQuestStory(key) {
       pips.forEach((p, k) => { p.className = k < i ? 'done' : k === i ? 'on' : ''; });
       backBtn.disabled = i === 0;
       nextBtn.textContent = i === last ? 'Done' : 'Next';
-      overlay.classList.toggle('story-anim-filed', Boolean(line.filed));
+      const isPin = Boolean(line.pin || line.filed);
+      overlay.classList.toggle('story-anim-filed', isPin);
       if (!tx) {
-        tx = createTransmissionElement({ speaker: 'Vess', text: line.say, variant: 'hero', badge: line.filed ? 'Filed' : `${i + 1} / ${last + 1}` });
+        tx = createTransmissionElement({ speaker: 'Vess', text: line.say, variant: 'hero', badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}` });
         txHost.appendChild(tx.element);
       } else {
-        tx.update({ text: line.say, badge: line.filed ? 'Filed' : `${i + 1} / ${last + 1}` });
+        tx.update({ text: line.say, badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}` });
       }
       if (still) draw(now, 0);
     };

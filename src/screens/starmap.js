@@ -75,7 +75,7 @@ function tabRow(active) {
       </div>
       <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
         <a href="#/drills" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Drill Deck</a>
-        <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Notebook</a>
+        <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Case Board</a>
         <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Main Briefing" style="font-size: 0.72rem;">
           Main Briefing
         </button>
@@ -106,6 +106,7 @@ function learnPanel() {
             <div class="map-learn-body">
               <div class="map-learn-name">${esc(w.world)}</div>
               <p class="map-learn-line">${esc(w.line)}</p>
+              ${getEpisode(w.id)?.arrival ? `<p style="font-size: 0.76rem; line-height: 1.35; color: var(--accent-amber); margin: 0.2rem 0 0.35rem;">${esc(getEpisode(w.id).arrival)}</p>` : ""}
               <div class="eyebrow map-learn-count">
                 ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ""}
               </div>

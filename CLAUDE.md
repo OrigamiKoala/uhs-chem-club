@@ -10,7 +10,7 @@ Avalon is the UHS Chemistry Club's competition portal for middle- and high-schoo
 - `docs/plans/world-plans.md` — Consolidated world plans, CED maps, and tabletop kits (`docs/world-build-prompt.md`, `docs/world-rebuild-prompt.md`, `docs/plans/world-distinction-plan.md`).
 - `docs/teaching-pass/README.md` & `docs/teaching-pass/PROGRESS.md` — Teaching pass standard and status.
 - `.agents/skills/quest-builder/SKILL.md` — Side quest (Contract) builder skill; specs live in `docs/quests/`.
-- `docs/story/bible.md` & `docs/AP-coverage-audit.md` — Lore and AP Chemistry CED alignment.
+- `docs/story/bible.md`, `docs/story/fifth-guild-quest-plan.md`, & `docs/AP-coverage-audit.md` — Lore, low-text Fifth Guild quest integration plan, and AP Chemistry CED alignment.
 
 ## Codebase Map
 
@@ -18,7 +18,8 @@ Avalon is the UHS Chemistry Club's competition portal for middle- and high-schoo
 - `src/learn/` — Learn track (curriculum registry, quests, tabletop kits in `src/learn/table/kits/`, practice banks in `src/learn/bank/`).
 - `src/quest3d/` — Charge Gardens chamber (Quest 1 / competition campaign).
 - `src/three/` — Persistent WebGL stage (`src/three/stage.js`) and 3D worlds.
-- `src/screens/` & `src/ui/` — DOM screens, route views, and shared UI (`calculator.js` with scientific-notation entry unit scaling, `galaxy-map.js`, `tallow-explainers.js` custom reward animations, `photoelectric-explainer.js`, `orbital-3d-viewer.js`).
+- `src/story/` — Fifth Guild mystery data (`saga.js` with 4-Question Act definitions, 15 clues, low-text `EPISODES` without 3-paragraph walls; `quest-story.js` with `role` + `pin` Case Pins on non-`Toolkit` quests; `quest1.js`; `lore.js`; `story-modal.js`).
+- `src/screens/` & `src/ui/` — DOM screens (`casefile.js` unified 4-Question Case Board showing all seen clues, messages, briefings, and bench Case Pins in one place), route views, and shared UI (`calculator.js` with scientific-notation entry unit scaling, `galaxy-map.js`, `tallow-explainers.js` custom reward animations, `photoelectric-explainer.js`, `orbital-3d-viewer.js`).
 - `api/[...route].js` & `apps-script/` — Vercel serverless proxy and Google Sheets backend.
 
 ## Teaching Doctrine (Learn Track)
