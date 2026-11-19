@@ -300,3 +300,174 @@ counts a Bellows animation for every quest.
 **For the orchestrator.** World counts are now 6 benches + 1 boss = 7 quests, 33 stages (was 53); the whole registry is 44 quests, 38 benches,
 6 bosses, 310 stages (PRODUCT.md and `verify:docs` still say 330). `engine-and-worlds.md` describes the old Bellows gas kit and the three field points.
 `verify:docs` also reports "CLAUDE.md names assets-src/, which does not exist", which this branch did not cause.
+
+## Site rebuild (2026-11-18)
+
+Branch `site/bellows`. The brief is Bellows' row in `docs/plans/world-distinction-plan.md` section 6. This
+section is the spec the build is audited against, then (7.x below) the record of what was built.
+
+### 1. The place
+
+**In one sentence:** a gas works hung in thin air above a sea of cloud, its platforms set at seven heights
+round a sphere, a piston gasholder, the Compressor's tower, a liquefier's cold box and two moored gas
+bladders, and joined only by railed catwalks and ramps with nothing under them but the drop.
+
+**The first ten seconds:** the player stands on the landing stage, a steel platform with the cloud tops
+40 m below its rails. Ahead a 12 m catwalk crosses the drop to the apron at the foot of the Compressor's
+tower; to the left a long ramp climbs into the air toward the great sphere; to the right a bladder rides on
+its cables over its mooring platform, and behind the tower the drum of the piston holder and the cold box
+stand higher still. No bench is in view; every platform edge has a rail and a drop behind it.
+
+### 2. The signature
+
+| | Bellows |
+| :--- | :--- |
+| Landform | None: decks on lattice legs that go down into the cloud, at seven floor heights from -8 to +12 m, round six structures (a sphere on a skirt, a piston holder, the Compressor's tower, a cold box, two bladders) |
+| Walk shape | A hub and five arms of 4 m catwalks and 1-in-5 ramps over the drop, railed on both sides; every arm ends at a platform beside its structure |
+| Bench housing | Inside the sphere's skirt; the Compressor tower's base hall; inside the piston holder under the parked piston; the gondola under a moored bladder; under a bladder hauled down onto its cradle (the bag is the roof); the cold box's foot |
+| Light | The built sky kept: high white sun, dark zenith. Indoors under the cover mask, lamps only |
+
+Checked against every other row: no other row's landform is "no ground" (Mirrowen and Brinewire have
+water under built edges, Kettle a building on ground); Ember Reach is the only other switchback-free arm
+world and it walks down a rock wall; Quicklight walks alleys on ground; no other row houses benches in
+gas plant. The row is unchanged.
+
+### 3. The plan (x east, z south; north is -z; heights are floor levels)
+
+| Piece | Rect x, z (m) | Floor (m) | What it is |
+| :--- | :--- | :--- | :--- |
+| Landing stage `stage` | -20..24, 52..94 | 0 | The pad (6, 76) and the spawn (-2, 60), railed on all sides |
+| Catwalk `cw-south` | -3..3, 40..52 | 0 | Stage to apron |
+| Apron `apron` | -14..14, 8..40 | 0 | Open; the Compressor's ground (boss 0, 0, 20; player 0, 1.6, 34); the tower's plinth stands on its north side |
+| Ramp `ramp-west` | -54..-14, 28..32 | 0 to 8 | Up to the sphere, 1 in 5 |
+| Sphere gallery `sphere-deck` | -68..-54, 12..40 | 8 | Along the skirt's east face |
+| Bench 1 room `room-1` | -82..-68, 18..32 | 8 | Inside the sphere's skirt; door east |
+| Ramp `ramp-tower` | 14..18, -22..12 | 0 to -4 | Down along the tower's east flank, 1 in 5.5 |
+| Passage `tower-door` | 7..14, -20..-14 | -4 | Through the plinth wall |
+| Bench 2 room `room-2` | -7..7, -24..-10 | -4 | The tower's base hall; door east |
+| Catwalk `cw-north` | 14..18, -60..-22 | -4 | North past the tower |
+| Ramp `ramp-holder` | -6..14, -60..-56 | -4 to -8 | Down west, 1 in 5 |
+| Holder deck `holder-deck` | -22..-6, -66..-44 | -8 | Before the piston holder's door |
+| Passage `holder-door` | -27..-22, -58..-52 | -8 | Through the holder's shell |
+| Bench 3 room `room-3` | -41..-27, -62..-48 | -8 | The meter house inside the piston holder; door east |
+| Ramp `ramp-east` | 14..44, 24..28 | 0 to 4 | Up east to the mooring platform, 1 in 5 |
+| Mooring deck `moor-deck` | 44..58, 8..44 | 4 | Under the first bladder |
+| Bench 4 room `room-4` | 58..76, 19..31 | 4 | The bladder's gondola; door west |
+| Ramp `ramp-cold` | 48..52, -32..8 | 4 to 12 | Up north, 1 in 5 |
+| Cold deck `cold-deck` | 40..72, -56..-32 | 12 | Before the cold box |
+| Bench 6 room `room-6` | 50..64, -70..-56 | 12 | The cold box's foot; door south |
+| Ramp `ramp-cradle` | -60..-20, 78..82 | 0 to -5 | Down west off the stage, 1 in 5 |
+| Cradle landing `cradle-deck` | -74..-60, 76..86 | -5 | Before the cradle |
+| Bench 5 room `room-5` | -74..-60, 62..76 | -5 | Under the hauled-down bladder; door south |
+
+Closed high ground: there is no ground. Everything off a declared volume is the drop to the cloud sea at
+-46 m, closed by a railing on every deck edge that is not a doorway or a structure's wall. The player is
+kept off every roof, the tower's plinth, the skirt, the holder, the cold box and the gondola by the rooms'
+walls and the structures' own colliders.
+
+Route in bench order from the spawn: stage, `cw-south`, apron, `ramp-west` up 8 m, `sphere-deck`, Bench 1;
+back to the apron, `ramp-tower` down 4 m, `tower-door`, Bench 2; `cw-north`, `ramp-holder` down 4 m,
+`holder-deck`, `holder-door`, Bench 3; back over `cw-north`, `ramp-tower` and the apron, `ramp-east` up 4 m,
+`moor-deck`, Bench 4; back to the stage, `ramp-cradle` down 5 m, `cradle-deck`, Bench 5; then the apron,
+`ramp-east`, `moor-deck`, `ramp-cold` up 8 m, `cold-deck`, Bench 6. The boss is on the apron.
+
+### 4. The section (floor heights along the route, spawn to Bench 6)
+
+stage 0, catwalk 0, apron 0, ramp up to 8 (Bench 1 at 8), apron 0, ramp down to -4 (Bench 2 at -4), catwalk
+-4, ramp down to -8 (Bench 3 at -8), back up to 0, ramp up to 4 (Bench 4 at 4), stage 0, ramp down to -5
+(Bench 5 at -5), ramp up through 4 to 12 (Bench 6 at 12). Bench ground spans -8 to +12 m (20 m), the
+reachable walk the same, and the cloud sea lies at -46.
+
+### 5. The benches
+
+**Bench 1, Pressure and Temperature (`q1-knocks`), inside the sphere's skirt.** The quest shows that a gas's
+push on a wall is its particles' knocks, and that warming it makes them hit harder and more often. The bench
+stands in the plated skirt that carries a spherical holder: 11 m of stored gas pressing on its shell right
+over the player's head. Closed on all four sides by the skirt's plating (one 6 m door east), roofed by the
+catch deck under the sphere; 14 x 14 m, 5.2 m to the roof. Reached up the long west ramp; arriving, the
+player sees the skirt's plated wall with the sphere rising over it and the door open in it. Two pendant lamps
+from the roof; behind the plate the sphere's drain leg and its manifold of gauge lines down the skirt;
+beside it the relief valve stand and the skirt's columns.
+
+**Bench 2, The Gas Laws (`q2-laws`), the Compressor tower's base hall.** The quest relates pressure, volume and
+temperature two at a time. The base hall is where the Compressor squeezes gas: its four cylinders' feet,
+the crankcase and the intercooler stand in the room. Closed by the plinth's concrete on all sides (door east,
+through a 7 m passage), roofed by the plinth deck; 14 x 14 m, 5.2 m. Reached down the ramp on the tower's
+flank; the passage is dark and the hall opens at its end. Pendant lamps on the crane girder; behind the plate
+the crankcase and a cylinder's foot, beside it the intercooler's tube bundle and the receiver.
+
+**Bench 3, Ideal Gas Law (`q3-ideal`), the meter house inside the piston holder.** The quest puts amount,
+pressure, volume and temperature in one law. In a piston holder the piston's weight fixes the pressure and the
+gas under it lifts it, so the volume reads the amount: the player stands inside the drum under the parked
+piston. Closed by the meter house's plated partitions (2.6 m high, one door east), with the holder's shell
+round them and the piston's ribbed underside as the roof; 14 x 14 m, 5.2 m to the piston. Reached by the
+lowest catwalk; arriving, the drum fills the view and the door is a slot through its shell. Lamps hang
+from the piston's stops; behind the plate the gas inlet and the meter run, beside it the piston's guide
+rollers on the shell.
+
+**Bench 4, Partial Pressures (`q4-mixtures`), the gondola under a moored bladder.** The quest shows a mixture's
+pressure as the sum of its gases' parts. The gondola is where gases are blended into the bag's cells: its
+manifold, the cell valves and the sampling bottles stand in it. Closed on four sides by the car's walls
+(windows north and south, door west), roofed by its top with the bag 4 m above; 18 x 12 m, 5.2 m. Reached up
+the east ramp; arriving, the player sees the car standing on the deck with the bag over it on its cables.
+Pendant lamps from the car's frames; behind the plate the blending manifold and cell valves, beside it the
+gas bottles.
+
+**Bench 5, Speed and Escape (`q5-speed`), under the bladder hauled down onto its cradle.** The quest shows that
+lighter particles move faster and escape through a small hole sooner. A bladder brought down for its skin
+test: the light gas inside leaks out through the skin faster than air leaks in. The room is the space under
+its belly: the bag is the roof (5.5 m up in the middle, higher at the walls), and the heavy curtain hung
+from the bag to the deck on cradle hoops closes all four sides (door south); 14 x 14 m. Reached down the
+ramp off the landing stage's west side; arriving, the player sees the bag lying on its cradle with the
+curtain open at one bay. Lamps hang from the cradle hoops; behind the plate the leak-test manifold and a
+skin sample frame, beside it the inflation trunk.
+
+**Bench 6, Real Gases (`q6-real`), the foot of the cold box.** The quest shows where real gases stop behaving
+ideally: cold and crowded. The cold box is where gas is cooled until it liquefies. Closed by the box's
+insulated casing (door south), roofed by the box's floor; 14 x 14 m, 5.2 m. Reached up the highest ramp;
+arriving, the player sees the tall casing rising from the cold deck. Lamps on brackets from the casing
+frames; behind the plate the heat exchanger cores and the expansion turbine, beside it the draw-off valve
+(the `drawoff` field point Quest 6 stage 4 fetches from) and a dewar.
+
+No two rooms are alike: a square plated skirt, a concrete hall, a low-walled meter house inside a drum,
+a car with windows, a curtain under a bag, an insulated casing.
+
+### 6. How it differs from each other world
+
+- Tallow: Tallow stands on dead-flat salt to the horizon; Bellows has no ground at all, only rails and a drop.
+- Lanternfall: Lanternfall walks a lake shore on ice; Bellows walks catwalks in the air.
+- Ligar: Ligar's benches are down drifts in rock hills; Bellows' are inside steel structures over cloud.
+- Ember Reach: Ember Reach walks down a rock wall to a lava lake; Bellows climbs and drops on open ramps over cloud.
+- Mirrowen: Mirrowen's quays stand on water round a basin; Bellows' decks stand on legs in the air.
+- Kettle: Kettle is one building on the ground; Bellows is six structures with sky between them.
+- Teeter: Teeter is a hillside of salt pans; Bellows has no hill and no water.
+- Verdigris: Verdigris is boardwalks over a swamp; Bellows' catwalks are steel over a 40 m drop.
+- Brinewire: Brinewire is a concrete wall with a drop on one side; Bellows has a drop on every side.
+- Quicklight: Quicklight is alleys under pipe racks on lava flows; Bellows has no alleys, only open arms.
+- Lodestone: Lodestone is a canyon cut into rock; Bellows is all air.
+- Thornmere: Thornmere hops mounds in a tar lake; Bellows' platforms are steel joined by catwalks.
+- Cinder Halo: Cinder Halo goes down crater floors; Bellows rises and falls round gasholders.
+
+### 7. The far country
+
+Beyond the walk is cloud to the horizon (the built sea and its cumulus heads). North: two other rigs hung
+on bladders, a few hundred metres off, with their own sphere and stack. East: a line of scoop pylons
+standing out of the cloud tops. South: a towering cloud column. West: under the sun, a tethered bladder
+train strung between two masts. Under every deck: lattice legs going down into the cloud.
+
+### 8. The numbers held
+
+`world-shape.mjs`: bench ground -8 to +12 (span 20 m), 6 of 6 housed (R4 or better), no cloned
+coordinates. At most two plates in view from the spawn (target none). Budget: at most 900k triangles and
+566 draws at T4 (target under 400 draws).
+
+### 9. Kept, rebuilt, archived
+
+- Kept: `bellows/atmosphere.js` (sky, cloud sea, lights, environment), `bellows/effects.js` (plumes and
+  spindrift), the bench (`buildBwBench`) and `buildCompressorTower`, `buildLandingPad`,
+  `buildCloudHeads` from `props.js` (moved into the new kit).
+- Rebuilt: `bellows.js`, `bellows/host-plan.js`, `bellows/stations.js`, `tools/gen-bellows-layout.mjs`,
+  `world-data/bellows.json`, `tools/verify-bellows.mjs`; new `bellows/works-plan.js` (the plan, no THREE),
+  `bellows/decks.js` (decks, rails, rooms and structures), `bellows/vista.js`.
+- Archived to `archive/2026-11-18/site-bellows/`: the old `terrain.js`, `props.js`, `stations.js`,
+  `host-plan.js`, the old generator and the old `verify-bellows.mjs`.
