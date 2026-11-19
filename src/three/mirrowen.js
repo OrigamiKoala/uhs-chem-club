@@ -40,7 +40,7 @@ import {
 } from './mirrowen/atmosphere.js';
 import { makeHarbourPlan, WATER, TERRACE } from './mirrowen/harbour-plan.js';
 import { buildMirrowenTerrainGeometry, buildWaterGeometry, buildHarbourShells, buildHarbourVista } from './mirrowen/terrain.js';
-import { buildLampPost, buildBollard, buildLandingPad, buildIceWall } from './mirrowen/plant.js';
+import { buildLampPost, buildBollard, buildLandingPad, buildIceWall, buildShed, buildGantryCrane } from './mirrowen/plant.js';
 import { yawPoint } from './mirrowen/kit.js';
 import { HOST_BUILDERS } from './mirrowen/stations.js';
 import { createMirrowenEffects } from './mirrowen/effects.js';
@@ -306,6 +306,8 @@ export class MirrowenWorld {
         case 'bollard': node = buildBollard(ctx); break;
         case 'landing-pad': node = buildLandingPad(ctx, this.plan); break;
         case 'ice-wall': node = buildIceWall(ctx, lm, seed++); break;
+        case 'shed': node = buildShed(ctx); break;
+        case 'gantry-crane': node = buildGantryCrane(ctx); break;
         default: node = null;
       }
       if (!node) continue;

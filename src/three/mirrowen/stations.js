@@ -523,7 +523,7 @@ function buildHold(w) {
   colliders.push(
     { lx: 0, lz: -2.75, hw: 2.4, hd: 0.55 },
     { lx: -5.1, lz: 0.2, hw: 0.9, hd: 3.2 },
-    { lx: 5.9, lz: -0.1, hw: 0.9, hd: 3.1 }
+    { lx: 5.55, lz: -0.1, hw: 1.3, hd: 3.1 }
   );
   return done(h);
 }

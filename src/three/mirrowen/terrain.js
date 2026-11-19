@@ -583,6 +583,20 @@ function room(B, plan, v) {
       }
       // The slip: rails running down from the open end into the water.
       for (const z of [cz - 2.2, cz + 2.2]) B.beam('darkSteel', [r.maxX, y0 - 0.2, z], [r.maxX + 16, WATER - 1.8, z], 0.2, 0.3);
+      // The launch frozen on its cradle half way down the slip, ice crusted along its waterline.
+      {
+        const lx = r.maxX + 6.5, ly = y0 - 0.2 + (WATER - 1.8 - y0 + 0.2) * (6.5 / 16);
+        const tilt = Math.atan2(WATER - 1.8 - y0, 16);
+        B.box('timberDark', 4.8, 0.5, 3.6, lx, ly + 0.2, cz, 0, 0, tilt);
+        const shape = new THREE.Shape([[-3.6, -1.3], [2.6, -1.3], [3.8, 0], [2.6, 1.3], [-3.6, 1.3]].map(([a, b]) => new THREE.Vector2(a, b)));
+        const hullGeo = new THREE.ExtrudeGeometry(shape, { depth: 1.5, bevelEnabled: false });
+        hullGeo.rotateX(-Math.PI / 2);
+        hullGeo.rotateZ(tilt);
+        hullGeo.translate(lx, ly + 0.45, cz);
+        B.geo('shipRed', hullGeo);
+        B.box('shipWhite', 2.2, 1.2, 1.8, lx - 1.2, ly + 2.5, cz, 0, 0, tilt);
+        B.box('iceDeep', 7.2, 0.35, 2.9, lx + 0.1, ly + 1.95, cz, 0, 0, tilt);
+      }
       for (let x = r.maxX + 1; x < r.maxX + 16; x += 3) {
         const y = y0 - 0.2 + (WATER - 1.8 - y0 + 0.2) * ((x - r.maxX) / 16);
         B.cyl('timberDark', 0.18, 0.2, y - SEABED, 8, x, (y + SEABED) / 2, cz - 2.2);

@@ -62,7 +62,7 @@ const lampPosts = [
   // Terrace and the harbour stair.
   [20, 45.2], [40, 45.2], [-6, 50.8],
   // Main quay, along the basin's edge.
-  [-56, 23.2], [-38, 23.2], [-20, 23.2], [-2, 23.2], [12, 23.2], [28, 23.2],
+  [-56, 23.2], [-38, 23.2], [-20, 23.2], [-2, 23.2], [12, 23.2], [44, 23.2],
   // Mole.
   [41.2, 10], [41.2, -8], [41.2, -26], [41.2, -44], [50.8, -56],
   // Mole head (clear of the arena) and the pump yard.
@@ -74,8 +74,15 @@ const lampPosts = [
 ];
 for (const [x, z] of lampPosts) add('lamp-post', x, z, 0.45, { minTier: 'T3' });
 
+// The portal crane on its rails over the ice-breaker's berth; the walk passes between its legs.
+add('gantry-crane', 32, 26.5, 6.2, { rotY: 0, minTier: 'T3' });
+
+// Warehouse rows on the land behind the shore's wall and the town's south wall (off the walk).
+for (const z of [-84, -66, -24, -6, 12]) add('shed', -82, z, 6.0, { rotY: round(Math.PI / 2), minTier: 'T3' });
+for (const x of [22, 44, 66, 86]) add('shed', x, 104, 6.0, { rotY: 0, minTier: 'T3' });
+
 // Mooring bollards on the quay edge beside each ship.
-for (const x of [-12, 4, 24, 34]) add('bollard', x, 22.9, 0.42, { minTier: 'T3' });
+for (const x of [-12, 4, 24]) add('bollard', x, 22.9, 0.42, { minTier: 'T3' });
 for (const z of [-30, -18, 2]) add('bollard', 51.1, z, 0.42, { minTier: 'T3' });
 for (const x of [-68, -54]) add('bollard', x, -62.9, 0.42, { minTier: 'T3' });
 

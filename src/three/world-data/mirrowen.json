@@ -277,7 +277,7 @@
     {
       "asset": "lamp-post",
       "pos": [
-        28,
+        44,
         0,
         23.2
       ],
@@ -475,6 +475,116 @@
       "minTier": "T3"
     },
     {
+      "asset": "gantry-crane",
+      "pos": [
+        32,
+        0,
+        26.5
+      ],
+      "radius": 6.2,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -82,
+        0,
+        -84
+      ],
+      "radius": 6,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -82,
+        0,
+        -66
+      ],
+      "radius": 6,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -82,
+        0,
+        -24
+      ],
+      "radius": 6,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -82,
+        0,
+        -6
+      ],
+      "radius": 6,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -82,
+        0,
+        12
+      ],
+      "radius": 6,
+      "rotY": 1.57,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        22,
+        5,
+        104
+      ],
+      "radius": 6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        44,
+        5,
+        104
+      ],
+      "radius": 6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        66,
+        5,
+        104
+      ],
+      "radius": 6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        86,
+        5,
+        104
+      ],
+      "radius": 6,
+      "rotY": 0,
+      "minTier": "T3"
+    },
+    {
       "asset": "bollard",
       "pos": [
         -12,
@@ -498,16 +608,6 @@
       "asset": "bollard",
       "pos": [
         24,
-        0,
-        22.9
-      ],
-      "radius": 0.42,
-      "minTier": "T3"
-    },
-    {
-      "asset": "bollard",
-      "pos": [
-        34,
         0,
         22.9
       ],
