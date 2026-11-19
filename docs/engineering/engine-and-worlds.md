@@ -197,8 +197,9 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   kind, skin and plate. The Lantern-Eater's ground (`BOSS_ARENA_SPOTS['boss-eater']`, the yard's west end) is
   `glacier-plan.js` `ARENA`; `verify:lanternfall` holds the two together, every reachable cell inside the walk, nobody on
   the open lake, and every host's machinery inside its room. Traps met: a lift term `max(y, k * v)` whose mask is nought
-  clamps ground below 0 m up to 0; a rack bench at heading pi missed one drag in `q5-numbers` stage 5 (the table's pick,
-  unfixed), so Bench 5 faces west. Ligar `q1-joins` … `q9-orbitals` (Lewis
+  clamps ground below 0 m up to 0; a rack bench at heading pi missed one drag in `q5-numbers` stage 5, because `snap.js`
+  `pointFor` aimed at a point equidistant from two boxes and float drift from the turn broke the tie (fixed: a spoke must
+  win by `DROP_MARGIN`); Bench 5 still faces west. Ligar `q1-joins` … `q9-orbitals` (Lewis
   board has one rule: H and F share one pair; domain rig puts every angle behind a protractor; formula
   unit earned in `q2-lattice`). Ligar's benches are built INTO its workings (`ligar/stations.js`, nine hosts
   returning `{group, bench, benchLocal, colliders}`): 1 slab-dressing yard at the quarry's west face, 3 crusher

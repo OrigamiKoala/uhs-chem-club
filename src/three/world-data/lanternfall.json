@@ -135,14 +135,14 @@
       "stage": 5,
       "roomId": "room-5",
       "pos": [
-        -16,
+        -11.6,
         8.4,
-        -25.6
+        -28
       ],
       "approachPos": [
-        -16,
+        -16.2,
         10,
-        -30.2
+        -28
       ],
       "label": "Bench 5 - Quantum Numbers",
       "structure": "records-tent",
@@ -761,14 +761,14 @@
       },
       "site-5": {
         "pos": [
-          -16,
+          -16.2,
           10,
-          -30.2
+          -28
         ],
         "lookAt": [
-          -16,
+          -11.6,
           9.6,
-          -25.6
+          -28
         ]
       },
       "site-6": {

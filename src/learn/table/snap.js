@@ -44,6 +44,8 @@ export const CELL = 10;
 
 /** A piece is joined to a neighbour that its edge comes within this factor of touching. */
 export const JOIN_REACH = 1.4;
+/** How much nearer than the next piece (table units) a drop point `pointFor` picks beside a target must be to it. */
+const DROP_MARGIN = 0.5;
 /** A pointer within this factor of a piece's radius grabs it: generous, for fingers. */
 export const GRAB_REACH = 1.5;
 
@@ -340,6 +342,9 @@ export function pointFor(state, kit, to, id) {
         const list = joinCandidates(state, kit, id, p);
         if (list[0]?.id !== t.id) continue;
         const margin = list[1] ? list[1].dist - list[0].dist : Infinity;
+        // A spoke the target wins only by a tie (a point midway between two boxes) is no aim: the pointer's own rounding
+        // (the plate turned on the floor, projected and cast back) decides it. It must win by a real margin.
+        if (margin < DROP_MARGIN) continue;
         if (!best || margin > best.margin + 1e-9) best = { p, margin };
       }
     }

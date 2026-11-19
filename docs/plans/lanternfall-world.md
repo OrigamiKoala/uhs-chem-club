@@ -372,7 +372,9 @@ Everything in this record comes from Node measurements (`verify:lanternfall`, `t
 2. **Bench 5 faces west, across the tent, and the tent runs along the crevasse** (16 m), not across it. With the plate
    facing north (heading pi) `verify:bench` failed `q5-numbers` stage 5: dragging the solution through the pointer path
    missed one card (`differs in props`), at every position tried; facing west it passes. Nothing else changed, so this
-   is a near-miss in the table's pick at that heading, not the room. The way in from the crevasse ramp is now a door in
+   is a near-miss in the table's pick at that heading, not the room. (Since fixed: `snap.js` `pointFor` aimed the drag
+   exactly midway between boxes 3p.1 and 3s.0, so float drift from the turn picked the wrong one; a spoke must now win by
+   `DROP_MARGIN`. q5 passes at heading pi; the bench still faces west.) The way in from the crevasse ramp is now a door in
    the tent's side, framed through the canvas; the annexe (Bench 6) opens off the tent's far end.
 3. **Bench 9's plate stands 1.8 m north of the middle of its wall**, and both lake spurs are 4 m wide (spec: 6): from the
    spawn, Bench 9's plate was in view through its door. Now no plate is in view.
@@ -419,7 +421,7 @@ out of the live tree; the others were replaced in place.
   them; there is no body on the edge itself, so the stop is a bank's edge with nothing on it.
 - The erratic is a noise-shaped lump with a flat underside; the crawler's cab faces away from the crossing.
 - The terrain grid is 3 m in the core: the glacier and the moraines are smooth at the scale of a boot.
-- The q5 stage 5 near-miss at heading pi (departure 2) is in the tabletop's pointer path, not here; it is unfixed.
+- The q5 stage 5 near-miss at heading pi (departure 2) was `snap.js` `pointFor` aiming at a tie between two boxes; fixed.
 
 ### 11. The owner's viewing list
 
