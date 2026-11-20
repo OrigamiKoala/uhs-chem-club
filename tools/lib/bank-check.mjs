@@ -8,7 +8,7 @@
  * cannot be wrong.
  */
 
-import { BANKS } from '../../src/learn/bank.js';
+import { BANKS, DEEP_WORKED } from '../../src/learn/bank.js';
 
 const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 const SAFE_CALC = /^[0-9eE+\-*/().,\s^a-zA-Z]*$/;
@@ -52,7 +52,7 @@ function checkWorked(w, label, fail) {
   if (!w.id || !w.title) no('needs an id and a title');
   if (!w.setup || w.setup.length < 40) no('needs a setup that states the whole problem');
   if (!w.finish) no('needs a finish line');
-  if (!Array.isArray(w.steps) || w.steps.length < 4 || w.steps.length > 8) { no(`needs 4 to 8 steps (got ${w.steps?.length ?? 0})`); return bad; }
+  if (!Array.isArray(w.steps) || w.steps.length < 4 || w.steps.length > 10) { no(`needs 4 to 10 steps (got ${w.steps?.length ?? 0})`); return bad; }
   w.steps.forEach((s, i) => {
     const at = `step ${i + 1}`;
     if (!s.say || !s.hint || !s.explain) no(`${at}: needs say, hint and explain`);
@@ -121,4 +121,30 @@ export function checkBanks(worlds, { fail, ok }) {
     }
     if (!bad) ok(`${w.id}: question bank holds ${problems} problems and ${worked} worked problem(s), all answerable`);
   }
+
+  /* ---- AP Synthesis & Olympiad worked problems (`src/learn/bank/worked-deep.json`) ---- */
+  const worldIds = new Set(worlds.map(w => w.id));
+  const deepSeen = new Set();
+  let deepBad = 0;
+  let apCount = 0;
+  let olyCount = 0;
+  for (const wk of DEEP_WORKED || []) {
+    const label = `deep worked ${wk?.id || '(no id)'}`;
+    if (!wk.id || !/#w$/.test(wk.id)) { fail(`${label}: id must end in #w`); deepBad++; }
+    if (deepSeen.has(wk.id)) { fail(`${label}: duplicate id`); deepBad++; }
+    deepSeen.add(wk.id);
+    if (wk.tier !== 'ap' && wk.tier !== 'olympiad') { fail(`${label}: tier must be "ap" or "olympiad"`); deepBad++; }
+    else if (wk.tier === 'ap') apCount++;
+    else olyCount++;
+    if (wk.world !== 'cross' && !worldIds.has(wk.world)) { fail(`${label}: unknown world "${wk.world}"`); deepBad++; }
+    if (!Array.isArray(wk.worlds) || !wk.worlds.length || wk.worlds.some(id => !worldIds.has(id))) {
+      fail(`${label}: worlds must be a non-empty array of live world ids`); deepBad++;
+    }
+    if (wk.tier === 'olympiad' && wk.beyondAp !== true) { fail(`${label}: olympiad problem must set beyondAp: true`); deepBad++; }
+    if (EMOJI.test([wk.title, wk.setup, wk.strategy || '', wk.finish, wk.takeaway || ''].join(' '))) {
+      fail(`${label}: emoji in text`); deepBad++;
+    }
+    deepBad += checkWorked(wk, label, fail);
+  }
+  if (!deepBad) ok(`deep worked bank holds ${apCount} AP Synthesis and ${olyCount} Olympiad worked problems, all verified`);
 }

@@ -164,6 +164,17 @@ const all = await D.loadPool('all');
   benchWorlds === worlds.length ? ok(`every built bench in ${benchWorlds} worlds has its two problems in the pool`) : null;
   const ids = D.worldQuestionIds(worlds[0]);
   ids.some(id => /#b[12]$/.test(id)) && ids.some(id => /#\d+$/.test(id)) ? ok('the pool holds both bench problems and the end set') : fail('pool is missing bench or end ids');
+  const deep = B.deepWorked(worlds, 'all');
+  const apDeep = deep.filter(x => x.tier === 'ap');
+  const olyDeep = deep.filter(x => x.tier === 'olympiad');
+  apDeep.length >= 11 && olyDeep.length >= 11
+    ? ok(`deep worked bank exposes ${apDeep.length} AP Synthesis and ${olyDeep.length} Olympiad problems`)
+    : fail(`deep worked bank too small: ${apDeep.length} AP, ${olyDeep.length} Olympiad`);
+  const allStepsPlayable = deep.every(wk => wk.steps.every(st => {
+    const given = st.kind === 'choice' ? st.answer : String(st.answer);
+    return W.checkStep(st, given).ok && W.answerText(st).length > 0;
+  }));
+  allStepsPlayable ? ok('every AP Synthesis and Olympiad worked-problem step passes checkStep and formats via answerText') : fail('a deep worked-problem step failed checkStep/answerText');
 }
 
 /* ---- no XP rails ---- */

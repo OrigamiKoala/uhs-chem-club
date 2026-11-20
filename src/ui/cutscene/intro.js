@@ -7,7 +7,7 @@
  */
 
 import {
-  C, W, H, TAU, win, span, lerp, alpha, rng, sky, stars, hauler, vessWindow, frame, block, heatLines, person, fifthMark, held
+  C, W, H, TAU, win, span, lerp, alpha, rng, sky, stars, nebula, hauler, vessWindow, frame, block, heatLines, person, fifthMark, held
 } from './kit.js';
 
 const B1 = 6.4;
@@ -15,7 +15,8 @@ const B2 = 7.6;
 const B3 = 6.4;
 
 function space(ctx, T, clock) {
-  sky(ctx, [[0, '#060505'], [1, '#0e0d0b']]);
+  sky(ctx, [[0, '#040408'], [0.6, '#0a0a10'], [1, '#14110e']]);
+  nebula(ctx, 9, '130, 104, 120', 0.09, T * 12);
   stars(ctx, 5, 260, clock, H, T * 30);
 }
 
@@ -154,7 +155,7 @@ export function introScene(lines) {
         vessWindow(ctx, -220, -150, 440, 300, clock);
         ctx.restore();
       });
-      frame(ctx, 1 - win(T, 0, 0.8));
+      frame(ctx, 1 - win(T, 0, 0.8), clock);
       return;
     }
     if (T < t3) {
@@ -170,13 +171,13 @@ export function introScene(lines) {
       // A hooded figure walks across in front of them and stops.
       const fx = lerp(1400, 640, span(lt, 4.4, 6.6));
       alpha(ctx, win(lt, 4.4, 4.8), () => person(ctx, fx, 640, 1.25, { kind: 'hood', pose: lt < 6.5 ? 'walk' : 'stand', phase: lt * 6, f: -1, clock }));
-      frame(ctx, 1 - win(lt, 0, 0.4));
+      frame(ctx, 1 - win(lt, 0, 0.4), clock);
       return;
     }
     // 3. The rim on the star map.
     const lt = T - t3;
     starMap(ctx, lt, clock);
-    frame(ctx, 1 - win(lt, 0, 0.5));
+    frame(ctx, 1 - win(lt, 0, 0.5), clock);
   };
   return {
     id: 'intro',

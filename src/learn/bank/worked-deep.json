@@ -1,0 +1,1688 @@
+[
+  {
+    "id": "deep-u01-ap#w",
+    "world": "unit01",
+    "worlds": ["unit01"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Two-Carbonate Mixture by Mass Loss",
+    "setup": "A 2.00 g mixture of CaCO₃ (M = 100.09 g/mol) and MgCO₃ (M = 84.31 g/mol) is heated strongly until both decompose completely to metal oxides and CO₂(g) (M = 44.01 g/mol). The sample loses 0.940 g of mass. Find the mass percent of CaCO₃ in the original mixture.",
+    "strategy": "Bound the answer with pure-component limits before setting up simultaneous equations.",
+    "steps": [
+      {
+        "beat": "Limiting case",
+        "say": "If the 2.00 g sample were pure CaCO₃, what percent of its mass would escape as CO₂?",
+        "kind": "number",
+        "answer": 44.0,
+        "calc": "44.01 / 100.09 * 100",
+        "unit": "%",
+        "tol": 0.015,
+        "hint": "One mole of CaCO₃ (100.09 g) releases one mole of CO₂ (44.01 g).",
+        "explain": "44.01 / 100.09 × 100 = 43.97%, about 44.0% mass loss for pure CaCO₃."
+      },
+      {
+        "beat": "Limiting case",
+        "say": "If the sample were pure MgCO₃ instead, what percent of its mass would escape as CO₂?",
+        "kind": "number",
+        "answer": 52.2,
+        "calc": "44.01 / 84.31 * 100",
+        "unit": "%",
+        "tol": 0.015,
+        "hint": "One mole of MgCO₃ (84.31 g) also releases one mole of CO₂ (44.01 g).",
+        "explain": "44.01 / 84.31 × 100 = 52.20%. Lighter cation means a larger fraction of the mass is CO₂."
+      },
+      {
+        "beat": "Intuition",
+        "say": "The actual mass loss is 0.940 g out of 2.00 g (47.0%). Before solving, which carbonate makes up more of the mixture by mass?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "CaCO₃, because 47.0% is closer to 44.0% than to 52.2%" },
+          { "id": "b", "label": "MgCO₃, because 47.0% is closer to 52.2% than to 44.0%" },
+          { "id": "c", "label": "Equal masses of both, because 47.0% is the exact midpoint" },
+          { "id": "d", "label": "Cannot tell without knowing the temperature" }
+        ],
+        "answer": "a",
+        "hint": "Compare the gap from 47.0% to 44.0% against the gap from 47.0% to 52.2%.",
+        "explain": "47.0% sits 3.0 points above CaCO₃ (44.0%) and 5.2 points below MgCO₃ (52.2%), so CaCO₃ must be slightly over 60% by mass."
+      },
+      {
+        "beat": "Conservation",
+        "say": "How many total moles of CO₂ escaped? (This equals n(CaCO₃) + n(MgCO₃).)",
+        "kind": "number",
+        "answer": 0.02136,
+        "calc": "0.940 / 44.01",
+        "unit": "mol",
+        "tol": 0.015,
+        "hint": "Divide the lost mass of CO₂ by 44.01 g/mol.",
+        "explain": "0.940 g / 44.01 g/mol = 0.02136 mol CO₂, so n(CaCO₃) + n(MgCO₃) = 0.02136 mol."
+      },
+      {
+        "beat": "Setup",
+        "say": "Let x = n(CaCO₃), so n(MgCO₃) = 0.02136 − x. Using 100.09x + 84.31(0.02136 − x) = 2.00, what is x?",
+        "kind": "number",
+        "answer": 0.01262,
+        "calc": "(2.00 - 84.31 * (0.940 / 44.01)) / (100.09 - 84.31)",
+        "unit": "mol",
+        "tol": 0.02,
+        "hint": "Expand 84.31 × 0.02136 = 1.801 g, subtract from 2.00 g, and divide by (100.09 − 84.31) = 15.78 g/mol.",
+        "explain": "15.78x = 2.00 − 1.801 = 0.199 g, giving x = 0.01262 mol CaCO₃."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the mass percent of CaCO₃ in the 2.00 g mixture?",
+        "kind": "number",
+        "answer": 63.2,
+        "calc": "((2.00 - 84.31 * (0.940 / 44.01)) / (100.09 - 84.31)) * 100.09 / 2.00 * 100",
+        "unit": "%",
+        "tol": 0.02,
+        "hint": "Convert x to grams of CaCO₃ (× 100.09), divide by 2.00 g, and multiply by 100.",
+        "explain": "0.01262 mol × 100.09 g/mol = 1.263 g CaCO₃, which is 63.2% — matching our bound estimate."
+      }
+    ],
+    "finish": "Bounding a mixture between its two pure extremes predicts the answer before you write an equation and catches algebra slips instantly.",
+    "takeaway": "For any two-component mixture, compute the pure-A and pure-B endpoints first; the observed value's lever-arm position between them gives the composition."
+  },
+  {
+    "id": "deep-u02-ap#w",
+    "world": "unit02",
+    "worlds": ["unit02"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Photon Flux and Beer–Lambert Dilution",
+    "setup": "A 520 nm laser delivers 0.250 W (0.250 J/s) into a dye solution for 60.0 s. Separately, the stock dye is too concentrated to measure directly, so 5.00 mL is diluted to 25.00 mL; the diluted sample has absorbance A = 0.240 in a 1.00 cm cell (ε = 4.80 × 10⁴ M⁻¹·cm⁻¹). Find the moles of photons delivered and the stock dye concentration.",
+    "strategy": "Chain units from macroscopic power (J/s) down to one photon (hc/λ), and treat dilution as a pure scale factor on concentration.",
+    "steps": [
+      {
+        "beat": "Calculate",
+        "say": "How many joules of light energy enter the cell in 60.0 s?",
+        "kind": "number",
+        "answer": 15.0,
+        "calc": "0.250 * 60.0",
+        "unit": "J",
+        "tol": 0.01,
+        "hint": "Power in watts is joules per second: E_total = P × t.",
+        "explain": "0.250 J/s × 60.0 s = 15.0 J."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the energy of a single 520 nm photon? (h = 6.626 × 10⁻³⁴ J·s, c = 2.998 × 10⁸ m/s)",
+        "kind": "number",
+        "answer": 3.82e-19,
+        "calc": "6.626e-34 * 2.998e8 / 520e-9",
+        "unit": "J",
+        "tol": 0.015,
+        "hint": "Convert 520 nm to 520 × 10⁻⁹ m, then use E = hc / λ.",
+        "explain": "(6.626 × 10⁻³⁴ × 2.998 × 10⁸) / (520 × 10⁻⁹) = 3.82 × 10⁻¹⁹ J per photon."
+      },
+      {
+        "beat": "Calculate",
+        "say": "How many moles of photons hit the cell in 60.0 s? (N_A = 6.022 × 10²³ mol⁻¹)",
+        "kind": "number",
+        "answer": 6.52e-5,
+        "calc": "(0.250 * 60.0) / (6.626e-34 * 2.998e8 / 520e-9) / 6.022e23",
+        "unit": "mol",
+        "tol": 0.02,
+        "hint": "Divide total energy by energy per photon to get photon count, then divide by N_A.",
+        "explain": "15.0 J / (3.82 × 10⁻¹⁹ J) = 3.93 × 10¹⁹ photons; dividing by 6.022 × 10²³ gives 6.52 × 10⁻⁵ mol photons."
+      },
+      {
+        "beat": "Intuition",
+        "say": "Why must a very dark stock solution (A > 1.5) be diluted before measuring on a spectrophotometer?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Very little light reaches the detector, so stray light breaks linearity between A and c" },
+          { "id": "b", "label": "The molar absorptivity ε becomes zero at high concentration" },
+          { "id": "c", "label": "Dilution changes the wavelength of maximum absorption" },
+          { "id": "d", "label": "Beer's law only applies when A < 0.01" }
+        ],
+        "answer": "a",
+        "hint": "At A = 2, only 1% of incident light transmits; any small detector noise or stray light dominates.",
+        "explain": "At high absorbance almost no light reaches the detector, so tiny stray-light errors distort A; diluting brings A into the reliable ~0.1–1.0 window."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the concentration of the diluted dye solution from A = εbc?",
+        "kind": "number",
+        "answer": 5.0e-6,
+        "calc": "0.240 / (4.80e4 * 1.00)",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "Solve c = A / (εb) with A = 0.240, ε = 4.80 × 10⁴, b = 1.00.",
+        "explain": "c_dil = 0.240 / (4.80 × 10⁴ × 1.00) = 5.00 × 10⁻⁶ M."
+      },
+      {
+        "beat": "Conservation",
+        "say": "Since 5.00 mL of stock was diluted to 25.00 mL, what was the stock concentration?",
+        "kind": "number",
+        "answer": 2.5e-5,
+        "calc": "(0.240 / (4.80e4 * 1.00)) * (25.00 / 5.00)",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "Moles of dye are conserved: c_stock = c_dil × (25.00 / 5.00).",
+        "explain": "A 5-fold dilution means the stock is 5× more concentrated: 5 × 5.00 × 10⁻⁶ = 2.50 × 10⁻⁵ M."
+      }
+    ],
+    "finish": "Light energy bridges watts to moles through E = hc/λ and N_A, while Beer–Lambert readings scale straight back through the dilution factor.",
+    "takeaway": "Always check the measurement window (A around 0.1–1.0) and undo dilutions by multiplying by V_final / V_aliquot."
+  },
+  {
+    "id": "deep-u03-ap#w",
+    "world": "unit03",
+    "worlds": ["unit03"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Predicting Lattice Energy by Ratio Scaling",
+    "setup": "NaCl, CaS, and MgO all crystallize in the exact same rock-salt lattice. NaCl has lattice energy 787 kJ/mol and interionic distance d = 282 pm. CaS has d = 284 pm, and MgO has d = 210 pm. Estimate the lattice energies of CaS and MgO using Coulomb scaling U ∝ |q₁q₂| / d.",
+    "strategy": "Take ratios against a known compound with the same crystal geometry so all geometric constants cancel out.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Why does dividing U(MgO) by U(NaCl) eliminate the crystal-structure constant (Madelung constant)?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Both share the same rock-salt geometry, so the same constant sits in numerator and denominator" },
+          { "id": "b", "label": "The constant is always equal to 1" },
+          { "id": "c", "label": "Lattice energy does not depend on crystal geometry" },
+          { "id": "d", "label": "Charges cancel the geometry factor" }
+        ],
+        "answer": "a",
+        "hint": "When two crystals have the same arrangement of ions, their proportionality constant k is identical.",
+        "explain": "Because U = k|q₁q₂|/d with the same rock-salt constant k, taking a ratio cancels k cleanly."
+      },
+      {
+        "beat": "Setup",
+        "say": "What is the charge-product ratio |q₁q₂|(CaS) / |q₁q₂|(NaCl)?",
+        "kind": "number",
+        "answer": 4,
+        "calc": "(2 * 2) / (1 * 1)",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Ca²⁺ and S²⁻ have charges 2 and 2; Na⁺ and Cl⁻ have charges 1 and 1.",
+        "explain": "(2 × 2) / (1 × 1) = 4. Doubling both ion charges quadruples the electrostatic attraction."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Using U(CaS) ≈ U(NaCl) × 4 × (d_NaCl / d_CaS), estimate the lattice energy of CaS.",
+        "kind": "number",
+        "answer": 3126,
+        "calc": "787 * 4 * (282 / 284)",
+        "unit": "kJ/mol",
+        "tol": 0.015,
+        "hint": "Multiply 787 by 4 and by 282 / 284.",
+        "explain": "787 × 4 × (282 / 284) = 3126 kJ/mol (experimental value is ~3060 kJ/mol — within 2%!)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Now estimate the lattice energy of MgO (charges ±2, d = 210 pm) by scaling from NaCl.",
+        "kind": "number",
+        "answer": 4227,
+        "calc": "787 * 4 * (282 / 210)",
+        "unit": "kJ/mol",
+        "tol": 0.015,
+        "hint": "Multiply 787 by 4 (charge ratio) and by 282 / 210 (inverse distance ratio).",
+        "explain": "787 × 4 × (282 / 210) = 4227 kJ/mol (actual is ~3850 kJ/mol; short-range repulsion trims the pure point-charge estimate by ~9%)."
+      },
+      {
+        "beat": "Sanity check",
+        "say": "Between CaS and MgO, which factor accounts for MgO's higher melting point?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Smaller interionic distance d (210 pm vs 284 pm), since both have ±2 charges" },
+          { "id": "b", "label": "Higher ion charges in MgO than in CaS" },
+          { "id": "c", "label": "Larger molar mass of MgO" },
+          { "id": "d", "label": "Stronger dispersion forces in MgO" }
+        ],
+        "answer": "a",
+        "hint": "Both compounds are 2+/2−; only the ion separation changes.",
+        "explain": "With identical ±2 charges, Mg²⁺ and O²⁻ sit much closer (210 pm vs 284 pm), making MgO's lattice ~35% harder to break apart."
+      }
+    ],
+    "finish": "Ratio scaling turns a qualitative trend (higher charge, smaller radius) into a quantitative estimate without memorizing lattice constants.",
+    "takeaway": "Whenever a physical law has an unknown constant (U ∝ q₁q₂/d, PV = nRT, rate ∝ [A]^m), divide the target case by a reference case to cancel the constant."
+  },
+  {
+    "id": "deep-u04-ap#w",
+    "world": "unit04",
+    "worlds": ["unit04"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Two Bulbs and a Gas-to-Solid Reaction",
+    "setup": "Bulb A (2.00 L) holds NH₃(g) at 1.50 atm. Bulb B (3.00 L) holds HCl(g) at 0.800 atm. Both are at 298 K. A stopcock connecting them opens, and NH₃(g) + HCl(g) → NH₄Cl(s) runs to completion at 298 K. Find the final pressure in the connected bulbs.",
+    "strategy": "At constant T, PV is directly proportional to moles — do the entire stoichiometry in L·atm without ever touching R or T.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Why can we track moles of gas using the product PV (in L·atm) instead of computing n = PV/(RT)?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "RT is the same for every gas at 298 K, so PV is strictly proportional to n" },
+          { "id": "b", "label": "R equals 1 at 298 K" },
+          { "id": "c", "label": "Pressure is conserved when gases react" },
+          { "id": "d", "label": "Volume does not affect gas moles" }
+        ],
+        "answer": "a",
+        "hint": "Look at n = PV / (RT): if T never changes, RT is just a constant scaling factor.",
+        "explain": "Because RT is constant throughout, multiplying and dividing by RT would only cancel at the end."
+      },
+      {
+        "beat": "Setup",
+        "say": "Compute P·V for NH₃(g) in Bulb A.",
+        "kind": "number",
+        "answer": 3.0,
+        "calc": "1.50 * 2.00",
+        "unit": "L·atm",
+        "tol": 0.01,
+        "hint": "Multiply 1.50 atm by 2.00 L.",
+        "explain": "PV(NH₃) = 1.50 × 2.00 = 3.00 L·atm."
+      },
+      {
+        "beat": "Setup",
+        "say": "Compute P·V for HCl(g) in Bulb B.",
+        "kind": "number",
+        "answer": 2.4,
+        "calc": "0.800 * 3.00",
+        "unit": "L·atm",
+        "tol": 0.01,
+        "hint": "Multiply 0.800 atm by 3.00 L.",
+        "explain": "PV(HCl) = 0.800 × 3.00 = 2.40 L·atm."
+      },
+      {
+        "beat": "Intuition",
+        "say": "Which gas is left over after the 1:1 reaction to solid NH₄Cl finishes?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "NH₃(g), because 3.00 L·atm > 2.40 L·atm" },
+          { "id": "b", "label": "HCl(g), because Bulb B has the larger volume" },
+          { "id": "c", "label": "Neither, because both react completely" },
+          { "id": "d", "label": "NH₄Cl(g), because a new gas forms" }
+        ],
+        "answer": "a",
+        "hint": "Compare the mole proxies (PV): 3.00 L·atm of NH₃ vs 2.40 L·atm of HCl.",
+        "explain": "All 2.40 L·atm of HCl reacts with 2.40 L·atm of NH₃, leaving 0.60 L·atm of NH₃(g) and solid NH₄Cl (negligible volume)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "The remaining 0.60 L·atm of NH₃(g) fills both bulbs (total volume 5.00 L). What is the final pressure?",
+        "kind": "number",
+        "answer": 0.12,
+        "calc": "(1.50 * 2.00 - 0.800 * 3.00) / (2.00 + 3.00)",
+        "unit": "atm",
+        "tol": 0.015,
+        "hint": "Divide the leftover PV (0.60 L·atm) by the total volume (2.00 + 3.00 = 5.00 L).",
+        "explain": "P_final = 0.60 L·atm / 5.00 L = 0.120 atm."
+      }
+    ],
+    "finish": "Working in PV units at constant T cuts out two unnecessary conversions through RT and makes limiting-reactant gas problems effortless.",
+    "takeaway": "At constant temperature, PV is a direct currency for gas moles: add or subtract PV values, then divide by total volume."
+  },
+  {
+    "id": "deep-u05-ap#w",
+    "world": "unit05",
+    "worlds": ["unit05"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Calorimetry with Cup Heat Capacity and Excess Acid",
+    "setup": "50.0 mL of 1.20 M HCl and 50.0 mL of 0.800 M NaOH (both at 22.0 °C) are mixed in a calorimeter whose heat capacity is C_cal = 25.0 J/°C. The temperature rises to 27.1 °C. Assume solution density 1.00 g/mL and specific heat 4.184 J/(g·°C). Find ΔH_rxn in kJ per mole of H₂O formed.",
+    "strategy": "Account for every heat sink (both the full 100 g solution and the calorimeter body), then divide by moles of the limiting reactant only.",
+    "steps": [
+      {
+        "beat": "Conservation",
+        "say": "How many moles of H₂O actually form when 50.0 mL of 1.20 M HCl meets 50.0 mL of 0.800 M NaOH?",
+        "kind": "number",
+        "answer": 0.04,
+        "calc": "0.0500 * 0.800",
+        "unit": "mol",
+        "tol": 0.01,
+        "hint": "Compute moles of HCl (0.0600 mol) and NaOH (0.0400 mol); the smaller one limits water formed.",
+        "explain": "HCl is in excess (0.0600 mol), so NaOH limits the reaction to 0.0400 mol H₂O."
+      },
+      {
+        "beat": "Calculate",
+        "say": "How much heat is absorbed by the 100.0 g of aqueous solution as it warms from 22.0 °C to 27.1 °C?",
+        "kind": "number",
+        "answer": 2134,
+        "calc": "100.0 * 4.184 * (27.1 - 22.0)",
+        "unit": "J",
+        "tol": 0.015,
+        "hint": "Use q_soln = m × c × ΔT with m = 100.0 g and ΔT = 5.1 °C.",
+        "explain": "100.0 g × 4.184 J/(g·°C) × 5.1 °C = 2134 J."
+      },
+      {
+        "beat": "Calculate",
+        "say": "How much heat is absorbed by the calorimeter itself (C_cal = 25.0 J/°C)?",
+        "kind": "number",
+        "answer": 127.5,
+        "calc": "25.0 * (27.1 - 22.0)",
+        "unit": "J",
+        "tol": 0.015,
+        "hint": "Use q_cal = C_cal × ΔT.",
+        "explain": "25.0 J/°C × 5.1 °C = 127.5 J."
+      },
+      {
+        "beat": "Intuition",
+        "say": "If a student forgot C_cal, how would their calculated |ΔH_rxn| compare to the true value?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Too small in magnitude, because some heat released went into the cup uncounted" },
+          { "id": "b", "label": "Too large in magnitude, because C_cal subtracts from q_soln" },
+          { "id": "c", "label": "Unchanged, because the cup starts at 22.0 °C" },
+          { "id": "d", "label": "Wrong sign (positive instead of negative)" }
+        ],
+        "answer": "a",
+        "hint": "Total heat released equals q_soln + q_cal; dropping q_cal undercounts heat released.",
+        "explain": "Omitting C_cal misses the 127.5 J absorbed by the cup, underestimating |ΔH_rxn| by ~6%."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is ΔH_rxn in kJ per mole of H₂O formed? (Include the sign.)",
+        "kind": "number",
+        "answer": -56.5,
+        "calc": "-(100.0 * 4.184 * (27.1 - 22.0) + 25.0 * (27.1 - 22.0)) / 1000 / (0.0500 * 0.800)",
+        "unit": "kJ/mol",
+        "tol": 0.02,
+        "hint": "Add q_soln + q_cal, convert J to kJ, make negative (exothermic), and divide by 0.0400 mol.",
+        "explain": "q_rxn = −(2134 + 127.5) J = −2.261 kJ; dividing by 0.0400 mol gives −56.5 kJ/mol (right near the literature −55.8 kJ/mol)."
+      }
+    ],
+    "finish": "Every calorimetry error comes from missing a heat sink (the cup) or dividing by the wrong moles (the excess reagent).",
+    "takeaway": "Write q_rxn = −(q_solution + q_calorimeter) first, and always divide by moles of the limiting reactant."
+  },
+  {
+    "id": "deep-u06-ap#w",
+    "world": "unit06",
+    "worlds": ["unit06"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Ice in Warm Water — Boundary Test First",
+    "setup": "40.0 g of ice at 0.0 °C is dropped into 100.0 g of liquid water at 25.0 °C in an insulated cup. Given c(water) = 4.184 J/(g·°C) and ΔH_fus = 333.5 J/g, find the final temperature and the mass of ice left unmelted (if any).",
+    "strategy": "Never assume the final phase before checking the energy budget at the 0 °C phase boundary.",
+    "steps": [
+      {
+        "beat": "Limiting case",
+        "say": "What is the maximum heat the 100.0 g of 25.0 °C water can release by cooling all the way down to 0.0 °C?",
+        "kind": "number",
+        "answer": 10460,
+        "calc": "100.0 * 4.184 * 25.0",
+        "unit": "J",
+        "tol": 0.015,
+        "hint": "Use q = m c ΔT for cooling 100.0 g of water by 25.0 °C.",
+        "explain": "100.0 g × 4.184 J/(g·°C) × 25.0 °C = 10,460 J (10.46 kJ) available."
+      },
+      {
+        "beat": "Limiting case",
+        "say": "How much heat is required to melt all 40.0 g of ice at 0.0 °C?",
+        "kind": "number",
+        "answer": 13340,
+        "calc": "40.0 * 333.5",
+        "unit": "J",
+        "tol": 0.015,
+        "hint": "Multiply 40.0 g by ΔH_fus = 333.5 J/g.",
+        "explain": "40.0 g × 333.5 J/g = 13,340 J (13.34 kJ) needed to melt all the ice."
+      },
+      {
+        "beat": "Intuition",
+        "say": "Comparing 10,460 J available against 13,340 J needed, what is the final state of the cup?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "An ice-water mixture pinned at exactly 0.0 °C" },
+          { "id": "b", "label": "All liquid water above 0.0 °C" },
+          { "id": "c", "label": "All solid ice below 0.0 °C" },
+          { "id": "d", "label": "Liquid water at 12.5 °C" }
+        ],
+        "answer": "a",
+        "hint": "The warm water runs out of thermal energy at 0 °C before all the ice can melt.",
+        "explain": "Because 10.46 kJ < 13.34 kJ, melting stops partway through; ice and liquid coexist at 0.0 °C."
+      },
+      {
+        "beat": "Calculate",
+        "say": "How many grams of ice melt using the 10,460 J released by the warm water?",
+        "kind": "number",
+        "answer": 31.4,
+        "calc": "(100.0 * 4.184 * 25.0) / 333.5",
+        "unit": "g",
+        "tol": 0.015,
+        "hint": "Divide the available heat (10,460 J) by ΔH_fus (333.5 J/g).",
+        "explain": "10,460 J / 333.5 J/g = 31.36 g of ice melts."
+      },
+      {
+        "beat": "Conservation",
+        "say": "How many grams of solid ice remain floating at 0.0 °C?",
+        "kind": "number",
+        "answer": 8.64,
+        "calc": "40.0 - (100.0 * 4.184 * 25.0) / 333.5",
+        "unit": "g",
+        "tol": 0.02,
+        "hint": "Subtract the melted ice from the initial 40.0 g of ice.",
+        "explain": "40.0 g − 31.36 g = 8.64 g of ice remains at 0.0 °C (and 131.4 g of liquid water)."
+      }
+    ],
+    "finish": "Had you blindly assumed T_f > 0 °C, the algebra would have returned an unphysical negative temperature — checking the phase boundary first prevents the trap.",
+    "takeaway": "In any phase-change mixing problem, test the boundary energy (cool to 0 °C vs melt all ice) before writing a final-temperature equation."
+  },
+  {
+    "id": "deep-u07-ap#w",
+    "world": "unit07",
+    "worlds": ["unit07"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Back-Titration of an Antacid Tablet",
+    "setup": "A 0.600 g antacid tablet containing CaCO₃ (M = 100.09 g/mol) and inert binder is dissolved in 50.00 mL of 0.250 M HCl (excess), releasing CO₂. The leftover HCl requires 18.40 mL of 0.150 M NaOH to reach neutralization. Find the mass percent of CaCO₃ in the tablet.",
+    "strategy": "Treat H⁺ like money in an account: total H⁺ deposited = H⁺ spent on the tablet + H⁺ left over and titrated by NaOH.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Why use a back-titration here instead of titrating the CaCO₃ tablet directly with HCl?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "CaCO₃ is insoluble and reacts slowly, so excess HCl dissolves it cleanly and the leftover HCl is easy to titrate" },
+          { "id": "b", "label": "CaCO₃ does not react with HCl unless NaOH is present" },
+          { "id": "c", "label": "NaOH reacts directly with CaCO₃" },
+          { "id": "d", "label": "Back-titration avoids needing the molarity of HCl" }
+        ],
+        "answer": "a",
+        "hint": "Think about trying to spot a sharp endpoint while solid powder is still dissolving.",
+        "explain": "Solid CaCO₃ dissolves sluggishly near an endpoint; adding excess acid drives full dissolution, and titrating the leftover aqueous HCl gives a sharp endpoint."
+      },
+      {
+        "beat": "Conservation",
+        "say": "How many total moles of HCl were originally added to the tablet?",
+        "kind": "number",
+        "answer": 0.0125,
+        "calc": "0.05000 * 0.250",
+        "unit": "mol",
+        "tol": 0.01,
+        "hint": "Multiply 0.05000 L by 0.250 mol/L.",
+        "explain": "0.05000 L × 0.250 M = 0.01250 mol HCl added."
+      },
+      {
+        "beat": "Conservation",
+        "say": "How many moles of leftover HCl were neutralized by the 18.40 mL of 0.150 M NaOH?",
+        "kind": "number",
+        "answer": 0.00276,
+        "calc": "0.01840 * 0.150",
+        "unit": "mol",
+        "tol": 0.015,
+        "hint": "HCl and NaOH react 1:1, so n(HCl leftover) = n(NaOH).",
+        "explain": "0.01840 L × 0.150 M = 0.002760 mol leftover HCl."
+      },
+      {
+        "beat": "Conservation",
+        "say": "Therefore, how many moles of HCl reacted with the CaCO₃?",
+        "kind": "number",
+        "answer": 0.00974,
+        "calc": "0.05000 * 0.250 - 0.01840 * 0.150",
+        "unit": "mol",
+        "tol": 0.015,
+        "hint": "Subtract leftover HCl from total HCl added.",
+        "explain": "0.01250 − 0.00276 = 0.00974 mol HCl consumed by CaCO₃."
+      },
+      {
+        "beat": "Calculate",
+        "say": "From CaCO₃ + 2 HCl → CaCl₂ + H₂O + CO₂, how many moles of CaCO₃ were in the tablet?",
+        "kind": "number",
+        "answer": 0.00487,
+        "calc": "(0.05000 * 0.250 - 0.01840 * 0.150) / 2",
+        "unit": "mol",
+        "tol": 0.015,
+        "hint": "Each mole of CaCO₃ consumes 2 moles of HCl.",
+        "explain": "0.00974 / 2 = 0.00487 mol CaCO₃."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the mass percent of CaCO₃ in the 0.600 g tablet?",
+        "kind": "number",
+        "answer": 81.2,
+        "calc": "((0.05000 * 0.250 - 0.01840 * 0.150) / 2) * 100.09 / 0.600 * 100",
+        "unit": "%",
+        "tol": 0.02,
+        "hint": "Multiply moles of CaCO₃ by 100.09 g/mol, divide by 0.600 g, and multiply by 100.",
+        "explain": "0.00487 mol × 100.09 g/mol = 0.4874 g CaCO₃; 0.4874 / 0.600 × 100 = 81.2%."
+      }
+    ],
+    "finish": "Every back-titration is one subtraction of moles: total reagent added minus excess titrated equals reagent consumed by the unknown.",
+    "takeaway": "Draw a two-branch mole split for the excess reagent before converting anything to grams."
+  },
+  {
+    "id": "deep-u08-ap#w",
+    "world": "unit08",
+    "worlds": ["unit08"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Product-Side Equilibrium via Perfect Square",
+    "setup": "For H₂(g) + I₂(g) ⇌ 2 HI(g), K_c = 50.0 at 720 K. A rigid flask is charged with 0.500 M HI and no H₂ or I₂. Find [H₂] and [HI] at equilibrium.",
+    "strategy": "Spot algebraic symmetry (a perfect square) before expanding into a messy quadratic.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Starting from pure HI, which direction must the reaction shift, and why?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Left (toward H₂ and I₂), because Q is infinite while K_c = 50.0" },
+          { "id": "b", "label": "Right (toward HI), because K_c > 1" },
+          { "id": "c", "label": "No shift, because HI is already at 0.500 M" },
+          { "id": "d", "label": "Left only if pressure is lowered" }
+        ],
+        "answer": "a",
+        "hint": "With [H₂] = [I₂] = 0 in the denominator, Q = [HI]² / (0 × 0) → ∞ > K_c.",
+        "explain": "A reaction with any missing species always shifts to make that species; here Q > K_c drives decomposition of HI."
+      },
+      {
+        "beat": "Setup",
+        "say": "Let x = [H₂] formed at equilibrium. What are [I₂] and [HI] in terms of x?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "[I₂] = x and [HI] = 0.500 − 2x" },
+          { "id": "b", "label": "[I₂] = x and [HI] = 0.500 − x" },
+          { "id": "c", "label": "[I₂] = 2x and [HI] = 0.500 − 2x" },
+          { "id": "d", "label": "[I₂] = x and [HI] = 0.500 + 2x" }
+        ],
+        "answer": "a",
+        "hint": "Making 1 mol H₂ and 1 mol I₂ consumes 2 mol HI.",
+        "explain": "Stoichiometry 1 : 1 : 2 gives [H₂] = x, [I₂] = x, and [HI] = 0.500 − 2x."
+      },
+      {
+        "beat": "Intuition",
+        "say": "Substituting into K_c gives (0.500 − 2x)² / x² = 50.0. What is the cleanest first algebra move?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Take the positive square root of both sides: (0.500 − 2x) / x = √50.0" },
+          { "id": "b", "label": "Assume 2x is negligible compared to 0.500" },
+          { "id": "c", "label": "Expand into 46x² + 2x − 0.25 = 0 and use the quadratic formula" },
+          { "id": "d", "label": "Divide both sides by 0.500" }
+        ],
+        "answer": "a",
+        "hint": "Both numerator and denominator are already squared, and concentrations must be positive.",
+        "explain": "Taking the positive square root turns the problem into a one-line linear equation with zero approximation."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Solve (0.500 − 2x) / x = √50.0 for x (= [H₂] = [I₂]).",
+        "kind": "number",
+        "answer": 0.0551,
+        "calc": "0.500 / (Math.sqrt(50.0) + 2)",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "Rearrange to 0.500 = (√50.0 + 2)x = 9.071x.",
+        "explain": "x = 0.500 / (7.071 + 2) = 0.0551 M."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is [HI] at equilibrium?",
+        "kind": "number",
+        "answer": 0.39,
+        "calc": "0.500 - 2 * (0.500 / (Math.sqrt(50.0) + 2))",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "Compute 0.500 − 2x.",
+        "explain": "0.500 − 2(0.0551) = 0.390 M."
+      },
+      {
+        "beat": "Sanity check",
+        "say": "Check your work: what does [HI]² / ([H₂][I₂]) give with 0.390 M and 0.0551 M?",
+        "kind": "number",
+        "answer": 50.1,
+        "calc": "0.390 * 0.390 / (0.0551 * 0.0551)",
+        "unit": "",
+        "tol": 0.02,
+        "hint": "Compute 0.390² / 0.0551².",
+        "explain": "0.390² / 0.0551² = 50.1, confirming K_c = 50.0 within rounding."
+      }
+    ],
+    "finish": "Spotting the perfect square solves the equilibrium exactly in two lines, and plugging back into K_c proves the numbers cannot be wrong.",
+    "takeaway": "Look for perfect squares in ICE tables before expanding quadratics, and always substitute your final concentrations back into K as a 5-second proof."
+  },
+  {
+    "id": "deep-u09-ap#w",
+    "world": "unit09",
+    "worlds": ["unit09"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Weak Acid + Strong Base Across Three Regimes",
+    "setup": "40.0 mL of 0.200 M formic acid, HCOOH (K_a = 1.8 × 10⁻⁴, pK_a = 3.74), is titrated with 0.200 M NaOH. Find the pH after adding (a) 20.0 mL, (b) 40.0 mL, and (c) 45.0 mL of NaOH.",
+    "strategy": "Always react strong base with weak acid to completion in moles first, account for the new total volume, and then pick the matching equilibrium model.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "After 20.0 mL of 0.200 M NaOH is added to 40.0 mL of 0.200 M HCOOH, what is the pH without doing any log calculation?",
+        "kind": "number",
+        "answer": 3.74,
+        "calc": "3.74",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Half of the acid has been converted to conjugate base HCOO⁻, so [HCOO⁻] = [HCOOH].",
+        "explain": "At half-equivalence, [A⁻] = [HA], so log([A⁻]/[HA]) = 0 and pH = pK_a = 3.74 immediately."
+      },
+      {
+        "beat": "Intuition",
+        "say": "At 40.0 mL NaOH (equivalence), all HCOOH has become HCOO⁻. Why is the pH above 7?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "HCOO⁻ is a weak base that takes protons from water, producing OH⁻" },
+          { "id": "b", "label": "Na⁺ makes water basic" },
+          { "id": "c", "label": "Some NaOH is left unreacted at equivalence" },
+          { "id": "d", "label": "Formic acid has pK_a > 7" }
+        ],
+        "answer": "a",
+        "hint": "The only acid-base species left in the beaker at equivalence is the conjugate base HCOO⁻.",
+        "explain": "At equivalence, stoichiometric neutralization leaves a pure solution of the weak base HCOO⁻."
+      },
+      {
+        "beat": "Conservation",
+        "say": "At 40.0 mL NaOH, total volume is 80.0 mL. What is the formal concentration of HCOO⁻ before hydrolysis?",
+        "kind": "number",
+        "answer": 0.1,
+        "calc": "(0.0400 * 0.200) / 0.0800",
+        "unit": "M",
+        "tol": 0.01,
+        "hint": "Divide 0.00800 mol HCOO⁻ by the total volume 0.0800 L (don't forget dilution!).",
+        "explain": "Equal volumes of 0.200 M acid and 0.200 M base double the volume, halving concentration to 0.100 M."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Compute K_b for HCOO⁻ using K_w / K_a (K_w = 1.0 × 10⁻¹⁴, K_a = 1.8 × 10⁻⁴).",
+        "kind": "number",
+        "answer": 5.56e-11,
+        "calc": "1.0e-14 / 1.8e-4",
+        "unit": "",
+        "tol": 0.02,
+        "hint": "Divide 1.0 × 10⁻¹⁴ by 1.8 × 10⁻⁴.",
+        "explain": "K_b = 1.0 × 10⁻¹⁴ / 1.8 × 10⁻⁴ = 5.56 × 10⁻¹¹."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Find the pH at equivalence (40.0 mL NaOH) from [OH⁻] = √(K_b × 0.100).",
+        "kind": "number",
+        "answer": 8.37,
+        "calc": "14 + Math.log10(Math.sqrt(1.0e-14 / 1.8e-4 * 0.100))",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "[OH⁻] = √(5.56 × 10⁻¹²) = 2.36 × 10⁻⁶ M; pOH = 5.63; pH = 14 − pOH.",
+        "explain": "[OH⁻] = 2.36 × 10⁻⁶ M gives pOH = 5.63 and pH = 8.37."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Now at 45.0 mL NaOH (5.0 mL excess NaOH in 85.0 mL total), what is the pH?",
+        "kind": "number",
+        "answer": 12.07,
+        "calc": "14 + Math.log10((0.0050 * 0.200) / 0.0850)",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Excess OH⁻ = 0.00100 mol in 0.0850 L = 0.01176 M; it completely swamps HCOO⁻ hydrolysis.",
+        "explain": "[OH⁻] = 0.01176 M → pOH = 1.93 → pH = 12.07."
+      }
+    ],
+    "finish": "One titration spans three completely different chemical regimes — buffer, weak-base salt, and excess strong base — and mole stoichiometry tells you which one you are in.",
+    "takeaway": "For every acid-base mixture: (1) neutralize in moles, (2) divide by total volume, (3) let the strongest remaining species set the pH."
+  },
+  {
+    "id": "deep-u10-ap#w",
+    "world": "unit10",
+    "worlds": ["unit10"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Concentration Cell as a Ratio Meter",
+    "setup": "A galvanic cell has copper electrodes in both half-cells at 298 K: Cu(s) | Cu²⁺(0.0010 M) || Cu²⁺(1.0 M) | Cu(s). Find which direction electrons flow, the cell voltage, and the [Cu²⁺] ratio needed to generate 0.118 V.",
+    "strategy": "Use entropy / Le Chatelier to pick the anode before touching Nernst, and treat 0.0592/n as the voltage per decade of concentration ratio.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Both half-cells use Cu²⁺/Cu, so E°_cell = 0 V. Which half-cell must be the anode (oxidation) to drive the cell spontaneously?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "The 0.0010 M side, so Cu oxidizes to raise the low [Cu²⁺] while the 1.0 M side plates out" },
+          { "id": "b", "label": "The 1.0 M side, because higher concentration always oxidizes" },
+          { "id": "c", "label": "Neither, because E°_cell = 0 means no current can ever flow" },
+          { "id": "d", "label": "Either side at random" }
+        ],
+        "answer": "a",
+        "hint": "Spontaneous mixing always moves concentrations toward equality.",
+        "explain": "Equalizing concentrations requires raising [Cu²⁺] on the dilute side (oxidation, anode) and lowering it on the concentrated side (reduction, cathode)."
+      },
+      {
+        "beat": "Setup",
+        "say": "For Cu²⁺(conc) + Cu(s) → Cu²⁺(dil) + Cu(s), what is Q = [Cu²⁺]_dil / [Cu²⁺]_conc?",
+        "kind": "number",
+        "answer": 0.001,
+        "calc": "0.0010 / 1.0",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Divide the dilute (product) concentration by the concentrated (reactant) concentration.",
+        "explain": "Q = 0.0010 / 1.0 = 10⁻³, so log Q = −3."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Using E = E° − (0.0592 / n) log Q with n = 2 at 298 K, what is E_cell?",
+        "kind": "number",
+        "answer": 0.0888,
+        "calc": "0 - (0.0592 / 2) * Math.log10(0.0010 / 1.0)",
+        "unit": "V",
+        "tol": 0.015,
+        "hint": "Each factor of 10 in Q adds 0.0592 / 2 = 0.0296 V, and Q = 10⁻³ is three factors of 10.",
+        "explain": "E = 0 − (0.0296)(−3) = +0.0888 V."
+      },
+      {
+        "beat": "Intuition",
+        "say": "To boost E_cell from 0.0888 V to 0.1184 V (one more increment of 0.0296 V), what must happen to the ratio [Cu²⁺]_conc / [Cu²⁺]_dil?",
+        "kind": "number",
+        "answer": 10000,
+        "calc": "Math.pow(10, 0.1184 / (0.0592 / 2))",
+        "unit": "",
+        "tol": 0.02,
+        "hint": "0.1184 / 0.0296 = 4 decades, so the concentration ratio must be 10⁴.",
+        "explain": "Four increments of 0.0296 V require a 10⁴ (10,000 : 1) concentration ratio."
+      },
+      {
+        "beat": "Sanity check",
+        "say": "What happens to E_cell as the cell runs for a long time?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "E_cell drops to 0 V when both half-cells reach the same [Cu²⁺]" },
+          { "id": "b", "label": "E_cell stays at 0.0888 V until the copper electrode disappears" },
+          { "id": "c", "label": "E_cell reverses sign halfway through" },
+          { "id": "d", "label": "E_cell rises as [Cu²⁺]_dil increases" }
+        ],
+        "answer": "a",
+        "hint": "When [Cu²⁺]_dil = [Cu²⁺]_conc, Q = 1 and log Q = 0.",
+        "explain": "When both sides equalize, Q = 1, log Q = 0, and E_cell = 0 V — equilibrium."
+      }
+    ],
+    "finish": "Every factor of 10 in concentration ratio shifts a 298 K cell by 59.2/n mV — which is why voltage can measure tiny concentrations.",
+    "takeaway": "Think of the Nernst term (0.0592/n) log Q as 59.2/n millivolts per power of 10."
+  },
+  {
+    "id": "deep-u11-ap#w",
+    "world": "unit11",
+    "worlds": ["unit11"],
+    "tier": "ap",
+    "beyondAp": false,
+    "title": "Pre-Equilibrium Mechanism and Negative Apparent E_a",
+    "setup": "The reaction 2 NO(g) + O₂(g) → 2 NO₂(g) follows a two-step mechanism: Step 1 (fast equilibrium): 2 NO ⇌ N₂O₂ (K_1 = k_1 / k_{-1}, ΔH_1 = −25 kJ/mol). Step 2 (slow): N₂O₂ + O₂ → 2 NO₂ (rate constant k_2, E_{a,2} = +15 kJ/mol). Derive the rate law and explain why this reaction actually slows down when heated.",
+    "strategy": "Eliminate the reactive intermediate using the fast equilibrium, then see how K_1(T) and k_2(T) compete when temperature rises.",
+    "steps": [
+      {
+        "beat": "Setup",
+        "say": "Write the rate of the slow step (Step 2) in terms of the intermediate N₂O₂.",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Rate = k_2 [N₂O₂][O₂]" },
+          { "id": "b", "label": "Rate = k_1 [NO]²" },
+          { "id": "c", "label": "Rate = k_2 [NO₂]²" },
+          { "id": "d", "label": "Rate = k_2 [O₂]" }
+        ],
+        "answer": "a",
+        "hint": "Step 2 is an elementary bimolecular collision between N₂O₂ and O₂.",
+        "explain": "Elementary step rates use the step's reactants directly: Rate = k_2[N₂O₂][O₂]."
+      },
+      {
+        "beat": "Setup",
+        "say": "Using the fast equilibrium K_1 = [N₂O₂] / [NO]², substitute [N₂O₂] into the rate law. What is the overall rate law?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Rate = k_2 K_1 [NO]²[O₂]" },
+          { "id": "b", "label": "Rate = (k_2 / K_1) [NO]²[O₂]" },
+          { "id": "c", "label": "Rate = k_2 K_1 [NO][O₂]" },
+          { "id": "d", "label": "Rate = k_2 K_1 [NO]²" }
+        ],
+        "answer": "a",
+        "hint": "Solve K_1 = [N₂O₂] / [NO]² for [N₂O₂] = K_1[NO]².",
+        "explain": "Replacing [N₂O₂] with K_1[NO]² gives Rate = k_obs[NO]²[O₂], where k_obs = k_2 K_1."
+      },
+      {
+        "beat": "Intuition",
+        "say": "Step 1 is exothermic (ΔH_1 = −25 kJ/mol). When you raise the temperature, what happens to [N₂O₂] in Step 1?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "K_1 decreases (shifts left), so [N₂O₂] drops" },
+          { "id": "b", "label": "K_1 increases (shifts right), so [N₂O₂] rises" },
+          { "id": "c", "label": "K_1 stays constant because Step 1 is fast" },
+          { "id": "d", "label": "[N₂O₂] doubles every 10 °C" }
+        ],
+        "answer": "a",
+        "hint": "By Le Chatelier's principle, heating an exothermic equilibrium pushes it toward reactants.",
+        "explain": "Heating breaks apart the weakly bound N₂O₂ dimer, starving Step 2 of its reactant."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Because k_obs = K_1 k_2, the apparent activation energy is E_{a,obs} = ΔH_1 + E_{a,2}. Compute E_{a,obs}.",
+        "kind": "number",
+        "answer": -10,
+        "calc": "-25 + 15",
+        "unit": "kJ/mol",
+        "tol": 0.01,
+        "hint": "Add ΔH_1 (−25 kJ/mol) and E_{a,2} (+15 kJ/mol).",
+        "explain": "−25 + 15 = −10 kJ/mol. Losing N₂O₂ hurts the rate more than faster collisions in Step 2 help it."
+      },
+      {
+        "beat": "Sanity check",
+        "say": "Does a negative apparent E_{a,obs} mean an elementary collision has a negative barrier?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "No — each elementary step has E_a > 0, but k_obs combines k_2 with an exothermic pre-equilibrium K_1" },
+          { "id": "b", "label": "Yes — Step 2 has a negative activation energy" },
+          { "id": "c", "label": "Yes — all third-order reactions have negative barriers" },
+          { "id": "d", "label": "No — it means the reaction is endothermic overall" }
+        ],
+        "answer": "a",
+        "hint": "Both E_{a,1} and E_{a,2} are positive; only the composite sum ΔH_1 + E_{a,2} is negative.",
+        "explain": "No elementary step has E_a < 0; a negative observed E_a is a classic fingerprint of an exothermic pre-equilibrium."
+      }
+    ],
+    "finish": "Composite rate constants hide thermodynamics inside kinetics — whenever a reaction slows down upon heating, suspect an exothermic pre-equilibrium.",
+    "takeaway": "For a pre-equilibrium mechanism, k_obs = K_1 k_2 implies E_{a,obs} = ΔH_1 + E_{a,2}."
+  },
+  {
+    "id": "deep-u01-oly#w",
+    "world": "unit01",
+    "worlds": ["unit01"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Identifying a Metal from Hydrated Oxalate Decomposition",
+    "setup": "A 1.491 g sample of an unknown hydrated metal(III) oxalate, M₂(C₂O₄)₃·xH₂O, is gently heated to drive off all water, leaving 1.113 g of anhydrous M₂(C₂O₄)₃. Stronger heating decomposes the anhydrous salt completely to 0.357 g of metal oxide M₂O₃ (releasing 3 CO + 3 CO₂ per formula unit). Identify metal M and the hydration number x.",
+    "strategy": "Find the molar bridge that does NOT depend on the unknown metal M: the mass lost between M₂(C₂O₄)₃ and M₂O₃ is purely 3 CO + 3 CO₂.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "In M₂(C₂O₄)₃(s) → M₂O₃(s) + 3 CO(g) + 3 CO₂(g), why can we find the moles of salt BEFORE knowing what element M is?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "The mass lost (1.113 − 0.357 g) is entirely 3 CO + 3 CO₂, whose molar mass is known" },
+          { "id": "b", "label": "All trivalent metals have nearly the same atomic mass" },
+          { "id": "c", "label": "M₂O₃ always has molar mass 100 g/mol" },
+          { "id": "d", "label": "Water mass alone determines the metal" }
+        ],
+        "answer": "a",
+        "hint": "Every M atom stays in the solid, so the mass difference between the two solids depends only on C and O.",
+        "explain": "Because M stays in the crucible, the mass drop from 1.113 g to 0.357 g is purely 3 mol CO + 3 mol CO₂ per mole of salt."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the combined molar mass of 3 CO + 3 CO₂ lost per mole of M₂(C₂O₄)₃? (C = 12.01, O = 16.00)",
+        "kind": "number",
+        "answer": 216.06,
+        "calc": "3 * (12.01 + 16.00) + 3 * (12.01 + 32.00)",
+        "unit": "g/mol",
+        "tol": 0.01,
+        "hint": "CO = 28.01 g/mol and CO₂ = 44.01 g/mol; add 3 of each (or 6 C + 9 O).",
+        "explain": "3(28.01) + 3(44.01) = 216.06 g/mol lost per mole of M₂(C₂O₄)₃."
+      },
+      {
+        "beat": "Conservation",
+        "say": "How many moles of M₂(C₂O₄)₃ were in the sample?",
+        "kind": "number",
+        "answer": 0.0035,
+        "calc": "(1.113 - 0.357) / (3 * 28.01 + 3 * 44.01)",
+        "unit": "mol",
+        "tol": 0.015,
+        "hint": "Divide the mass lost (1.113 − 0.357 = 0.756 g) by 216.06 g/mol.",
+        "explain": "0.756 g / 216.06 g/mol = 0.00350 mol of M₂(C₂O₄)₃ (and also 0.00350 mol of M₂O₃)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Using the 0.357 g of M₂O₃, what is the molar mass of M₂O₃?",
+        "kind": "number",
+        "answer": 102.0,
+        "calc": "0.357 / ((1.113 - 0.357) / (3 * 28.01 + 3 * 44.01))",
+        "unit": "g/mol",
+        "tol": 0.015,
+        "hint": "Divide 0.357 g by 0.00350 mol.",
+        "explain": "0.357 g / 0.00350 mol = 102.0 g/mol."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Subtract 3 O (48.00 g/mol) and divide by 2 to find the atomic mass of M.",
+        "kind": "number",
+        "answer": 27.0,
+        "calc": "(0.357 / ((1.113 - 0.357) / (3 * 28.01 + 3 * 44.01)) - 48.00) / 2",
+        "unit": "g/mol",
+        "tol": 0.02,
+        "hint": "(102.0 − 48.00) / 2 gives the atomic mass of M.",
+        "explain": "(102.0 − 48.00) / 2 = 27.0 g/mol — aluminium (Al, 26.98 g/mol)!"
+      },
+      {
+        "beat": "Calculate",
+        "say": "From the water mass lost in the first heating (1.491 − 1.113 = 0.378 g, M(H₂O) = 18.02 g/mol), find the integer hydration number x.",
+        "kind": "number",
+        "answer": 6,
+        "calc": "((1.491 - 1.113) / 18.02) / ((1.113 - 0.357) / (3 * 28.01 + 3 * 44.01))",
+        "unit": "",
+        "tol": 0.02,
+        "hint": "Find moles of H₂O (0.378 / 18.02 = 0.0210 mol) and divide by moles of salt (0.00350 mol).",
+        "explain": "0.0210 / 0.00350 = 6.00, giving Al₂(C₂O₄)₃·6H₂O."
+      }
+    ],
+    "finish": "Thermal-gravimetric steps let you peel off known volatile fragments (H₂O, then CO + CO₂) to lock down moles before touching the unknown element.",
+    "takeaway": "When an element is unknown, look for a mass difference that contains ONLY known elements — that difference immediately gives you moles."
+  },
+  {
+    "id": "deep-u04-oly#w",
+    "world": "unit04",
+    "worlds": ["unit04"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Gas Dissociation Equilibrium from Pressure Excess",
+    "setup": "2.085 g of PCl₅ (M = 208.24 g/mol) is placed in an evacuated 1.00 L rigid vessel and heated to 500 K, where PCl₅(g) ⇌ PCl₃(g) + Cl₂(g). The equilibrium total pressure is 0.657 atm. Find the fraction of PCl₅ dissociated (α) and K_p at 500 K.",
+    "strategy": "Compare the measured pressure against the no-dissociation reference pressure P_0: every mole that dissociates adds 1 net mole of gas, so P_total = P_0(1 + α).",
+    "steps": [
+      {
+        "beat": "Limiting case",
+        "say": "What pressure P_0 would 2.085 g of PCl₅ exert in 1.00 L at 500 K if ZERO dissociation occurred? (R = 0.08206 L·atm/(mol·K))",
+        "kind": "number",
+        "answer": 0.4108,
+        "calc": "(2.085 / 208.24) * 0.08206 * 500 / 1.00",
+        "unit": "atm",
+        "tol": 0.015,
+        "hint": "First find n = 2.085 / 208.24 = 0.01001 mol, then P_0 = nRT / V.",
+        "explain": "n = 0.01001 mol; P_0 = 0.01001 × 0.08206 × 500 / 1.00 = 0.4108 atm."
+      },
+      {
+        "beat": "Intuition",
+        "say": "If a fraction α of PCl₅ dissociates into PCl₃ + Cl₂, how does P_total relate to P_0?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "P_total = P_0 (1 + α)" },
+          { "id": "b", "label": "P_total = P_0 (1 + 2α)" },
+          { "id": "c", "label": "P_total = P_0 (1 − α)" },
+          { "id": "d", "label": "P_total = P_0 (2α)" }
+        ],
+        "answer": "a",
+        "hint": "Start with P_0; lose αP_0 of PCl₅ and gain αP_0 of PCl₃ plus αP_0 of Cl₂.",
+        "explain": "P_total = P_0(1 − α) + αP_0 + αP_0 = P_0(1 + α). Total pressure ranges from P_0 (α = 0) to 2P_0 (α = 1)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "From P_total = 0.657 atm and P_0 = 0.4108 atm, find the fraction dissociated α.",
+        "kind": "number",
+        "answer": 0.599,
+        "calc": "0.657 / ((2.085 / 208.24) * 0.08206 * 500 / 1.00) - 1",
+        "unit": "",
+        "tol": 0.02,
+        "hint": "Solve α = (P_total / P_0) − 1.",
+        "explain": "α = (0.657 / 0.4108) − 1 = 0.599 (about 60% dissociated)."
+      },
+      {
+        "beat": "Setup",
+        "say": "What are the equilibrium partial pressures of PCl₃ (and Cl₂) and PCl₅?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "P(PCl₃) = P(Cl₂) = αP_0 = 0.246 atm; P(PCl₅) = (1 − α)P_0 = 0.165 atm" },
+          { "id": "b", "label": "P(PCl₃) = P(Cl₂) = 0.657 / 3 atm; P(PCl₅) = 0.657 / 3 atm" },
+          { "id": "c", "label": "P(PCl₃) = P(Cl₂) = 0.411 atm; P(PCl₅) = 0.246 atm" },
+          { "id": "d", "label": "P(PCl₃) = 0.246 atm; P(Cl₂) = 0.165 atm; P(PCl₅) = 0.246 atm" }
+        ],
+        "answer": "a",
+        "hint": "Check that P(PCl₅) + P(PCl₃) + P(Cl₂) = 0.165 + 0.246 + 0.246 = 0.657 atm.",
+        "explain": "Each partial pressure scales directly off P_0: αP_0 = 0.246 atm and (1 − α)P_0 = 0.165 atm."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Compute K_p = P(PCl₃)·P(Cl₂) / P(PCl₅) at 500 K.",
+        "kind": "number",
+        "answer": 0.368,
+        "calc": "Math.pow(0.657 - (2.085 / 208.24) * 0.08206 * 500, 2) / (2 * (2.085 / 208.24) * 0.08206 * 500 - 0.657)",
+        "unit": "",
+        "tol": 0.025,
+        "hint": "Compute (0.246)² / 0.165, or P_0 α² / (1 − α).",
+        "explain": "K_p = (0.246)² / 0.165 = 0.368."
+      }
+    ],
+    "finish": "Measuring a single total pressure against the undissociated baseline P_0 determines the entire equilibrium state of a gas reaction.",
+    "takeaway": "For A(g) ⇌ B(g) + C(g), remember P_total = P_0(1 + α) and K_p = P_0 α² / (1 − α)."
+  },
+  {
+    "id": "deep-u05-oly#w",
+    "world": "unit05",
+    "worlds": ["unit05"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Normal Boiling Point from Two Vapor Pressures",
+    "setup": "An unknown liquid has a vapor pressure of 100 mmHg at 300 K and 400 mmHg at 330 K. Estimate its enthalpy of vaporization ΔH_vap and predict its normal boiling point (where P_vap = 760 mmHg). (R = 8.314 J/(mol·K))",
+    "strategy": "Recognize vapor pressure as an equilibrium constant (K_p = P_vap), apply Clausius–Clapeyron, and bracket the boiling point qualitatively before computing.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Jumping from 100 to 400 mmHg (a factor of 4) took +30 K (300 → 330 K). To go from 400 to 760 mmHg (a factor of ~1.9), where should the normal boiling point fall?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Roughly 345–350 K (about half a 30 K step above 330 K)" },
+          { "id": "b", "label": "Above 380 K, because 360 mmHg is a bigger jump than 300 mmHg" },
+          { "id": "c", "label": "Below 330 K" },
+          { "id": "d", "label": "Exactly 360 K" }
+        ],
+        "answer": "a",
+        "hint": "Vapor pressure grows roughly exponentially with T: equal multiplicative factors (×2) take roughly equal temperature steps (~15 K).",
+        "explain": "Factor of 4 took 30 K, so a factor of 2 takes ~15 K; 400 → 760 is just under ×2, predicting ~345 K."
+      },
+      {
+        "beat": "Setup",
+        "say": "Compute ln(P₂ / P₁) = ln(400 / 100).",
+        "kind": "number",
+        "answer": 1.386,
+        "calc": "Math.log(400 / 100)",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Take the natural log of 4.",
+        "explain": "ln(4) = 1.386."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Using ln(P₂/P₁) = (ΔH_vap / R)(1/T₁ − 1/T₂), find ΔH_vap in kJ/mol.",
+        "kind": "number",
+        "answer": 38.0,
+        "calc": "Math.log(4) * 8.314 / (1/300 - 1/330) / 1000",
+        "unit": "kJ/mol",
+        "tol": 0.015,
+        "hint": "1/300 − 1/330 = 3.030 × 10⁻⁴ K⁻¹; multiply ln(4) by 8.314 and divide by 3.030 × 10⁻⁴, then divide by 1000.",
+        "explain": "ΔH_vap = 1.386 × 8.314 / 3.030 × 10⁻⁴ = 38,030 J/mol = 38.0 kJ/mol."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Now use P₃ = 760 mmHg and P₂ = 400 mmHg (T₂ = 330 K) to find 1/T_b = 1/330 − (R/ΔH_vap) ln(760/400), and solve for T_b.",
+        "kind": "number",
+        "answer": 346,
+        "calc": "1 / (1/330 - (8.314 / (Math.log(4) * 8.314 / (1/300 - 1/330))) * Math.log(760/400))",
+        "unit": "K",
+        "tol": 0.01,
+        "hint": "1/T_b = 0.003030 − (8.314 / 38030) × ln(1.9) = 0.002890 K⁻¹; invert to get T_b.",
+        "explain": "T_b = 1 / 0.002890 = 346 K (73 °C) — right inside our 345–350 K estimate!"
+      },
+      {
+        "beat": "Sanity check",
+        "say": "Compute Trouton's ratio ΔS_vap = ΔH_vap / T_b in J/(mol·K). Does it look like a normal non-H-bonding liquid (~85–90) or an H-bonded liquid (~105–110)?",
+        "kind": "number",
+        "answer": 110,
+        "calc": "(Math.log(4) * 8.314 / (1/300 - 1/330)) / (1 / (1/330 - (8.314 / (Math.log(4) * 8.314 / (1/300 - 1/330))) * Math.log(760/400)))",
+        "unit": "J/(mol·K)",
+        "tol": 0.02,
+        "hint": "Divide 38,030 J/mol by 346 K.",
+        "explain": "38,030 / 346 = 110 J/(mol·K), pointing to strong liquid-phase order such as hydrogen bonding (compare ethanol at 109 J/(mol·K))."
+      }
+    ],
+    "finish": "Exponential scaling lets you eyeball boiling points in seconds, and ΔH_vap / T_b even hints at the intermolecular forces inside the liquid.",
+    "takeaway": "Equal multiplicative jumps in vapor pressure correspond to roughly equal jumps in temperature; Clausius–Clapeyron is van 't Hoff for liquid ⇌ gas."
+  },
+  {
+    "id": "deep-u08-oly#w",
+    "world": "unit08",
+    "worlds": ["unit08"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Coupled Equilibria — Dissolving AgCl in Ammonia",
+    "setup": "AgCl(s) barely dissolves in pure water (K_sp = 1.8 × 10⁻¹⁰). However, Ag⁺ forms the complex ion [Ag(NH₃)₂]⁺ with K_f = 1.6 × 10⁷. Find the molar solubility of AgCl in 1.00 M NH₃(aq), and compare it to pure water.",
+    "strategy": "Add the two reactions to get K_net = K_sp × K_f, then notice the resulting equilibrium expression is a perfect square.",
+    "steps": [
+      {
+        "beat": "Limiting case",
+        "say": "First, what is the molar solubility of AgCl in pure water (from s² = K_sp = 1.8 × 10⁻¹⁰)?",
+        "kind": "number",
+        "answer": 1.34e-5,
+        "calc": "Math.sqrt(1.8e-10)",
+        "unit": "M",
+        "tol": 0.02,
+        "hint": "Take √(1.8 × 10⁻¹⁰).",
+        "explain": "s = √(1.8 × 10⁻¹⁰) = 1.34 × 10⁻⁵ M — barely dissolves."
+      },
+      {
+        "beat": "Setup",
+        "say": "Adding AgCl(s) ⇌ Ag⁺ + Cl⁻ (K_sp) and Ag⁺ + 2 NH₃ ⇌ [Ag(NH₃)₂]⁺ (K_f) gives AgCl(s) + 2 NH₃ ⇌ [Ag(NH₃)₂]⁺ + Cl⁻. What is K_net?",
+        "kind": "number",
+        "answer": 0.00288,
+        "calc": "1.8e-10 * 1.6e7",
+        "unit": "",
+        "tol": 0.015,
+        "hint": "When you add two reactions, multiply their equilibrium constants.",
+        "explain": "K_net = K_sp × K_f = (1.8 × 10⁻¹⁰)(1.6 × 10⁷) = 2.88 × 10⁻³."
+      },
+      {
+        "beat": "Intuition",
+        "say": "Because K_f = 1.6 × 10⁷ is huge, almost all dissolved silver sits as [Ag(NH₃)₂]⁺ rather than free Ag⁺. If s mol/L of AgCl dissolves in 1.00 M NH₃, what is K_net in terms of s?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "K_net = s² / (1.00 − 2s)²" },
+          { "id": "b", "label": "K_net = s² / (1.00 − s)²" },
+          { "id": "c", "label": "K_net = s / (1.00 − 2s)" },
+          { "id": "d", "label": "K_net = 4s³ / 1.00" }
+        ],
+        "answer": "a",
+        "hint": "Each mole of AgCl dissolved makes 1 mol [Ag(NH₃)₂]⁺ and 1 mol Cl⁻ while consuming 2 mol NH₃.",
+        "explain": "Both products equal s and leftover NH₃ is (1.00 − 2s), giving a clean perfect square s² / (1.00 − 2s)² = K_net."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Take the square root of both sides: s / (1.00 − 2s) = √(2.88 × 10⁻³). Solve for s.",
+        "kind": "number",
+        "answer": 0.0485,
+        "calc": "Math.sqrt(1.8e-10 * 1.6e7) / (1 + 2 * Math.sqrt(1.8e-10 * 1.6e7))",
+        "unit": "M",
+        "tol": 0.02,
+        "hint": "√(0.00288) = 0.05367; solve s = 0.05367(1 − 2s) → 1.1073s = 0.05367.",
+        "explain": "s = 0.05367 / 1.1073 = 0.0485 M — about 3,600 times more soluble than in pure water!"
+      },
+      {
+        "beat": "Sanity check",
+        "say": "Check our assumption: what is the free [Ag⁺] = K_sp / [Cl⁻] in this solution? (Should be tiny compared to s = 0.0485 M.)",
+        "kind": "number",
+        "answer": 3.71e-9,
+        "calc": "1.8e-10 / (Math.sqrt(1.8e-10 * 1.6e7) / (1 + 2 * Math.sqrt(1.8e-10 * 1.6e7)))",
+        "unit": "M",
+        "tol": 0.03,
+        "hint": "Divide K_sp (1.8 × 10⁻¹⁰) by [Cl⁻] = 0.0485 M.",
+        "explain": "[Ag⁺] = 3.7 × 10⁻⁹ M, less than 0.00001% of total dissolved silver — confirming our dominant-species assumption."
+      }
+    ],
+    "finish": "Coupling a weak solubility equilibrium with a strong complexation equilibrium multiplies K by 10⁷ and turns an insoluble precipitate soluble.",
+    "takeaway": "In coupled equilibria, combine reactions into one net K, identify the dominant species, and verify at the end that the neglected species is truly tiny."
+  },
+  {
+    "id": "deep-u09-oly#w",
+    "world": "unit09",
+    "worlds": ["unit09"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "pH of 1.0 × 10⁻⁸ M HCl — Charge Balance Rescue",
+    "setup": "A student prepares a very dilute strong acid solution: 1.0 × 10⁻⁸ M HCl in pure water at 25 °C (K_w = 1.0 × 10⁻¹⁴). Find the true pH of this solution.",
+    "strategy": "When a naive formula gives a physically impossible answer (basic HCl!), fall back to exact conservation laws: charge balance + K_w.",
+    "steps": [
+      {
+        "beat": "Sanity check",
+        "say": "If you blindly plug 1.0 × 10⁻⁸ M into pH = −log[HCl], you get pH = 8.0. Why is that impossible?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Adding an acid to neutral water (pH 7.0) cannot make the solution basic (pH > 7)" },
+          { "id": "b", "label": "HCl is a weak acid at low concentrations" },
+          { "id": "c", "label": "pH can never exceed 7" },
+          { "id": "d", "label": "Water stops autoionizing when HCl is added" }
+        ],
+        "answer": "a",
+        "hint": "Pure water already has 1.0 × 10⁻⁷ M H⁺, ten times more than the HCl you added.",
+        "explain": "At 10⁻⁸ M, water's own autoionization supplies most of the H⁺; the true pH must sit just barely below 7.00."
+      },
+      {
+        "beat": "Conservation",
+        "say": "Every aqueous solution is electrically neutral. Which equation states exact charge balance for HCl in water?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "[H⁺] = [Cl⁻] + [OH⁻]" },
+          { "id": "b", "label": "[H⁺] + [Cl⁻] = [OH⁻]" },
+          { "id": "c", "label": "[H⁺] = [Cl⁻] − [OH⁻]" },
+          { "id": "d", "label": "[H⁺][OH⁻] = [Cl⁻]" }
+        ],
+        "answer": "a",
+        "hint": "Sum of positive ion charges equals sum of negative ion charges.",
+        "explain": "Total positive charge [H⁺] must equal total negative charge [Cl⁻] + [OH⁻]."
+      },
+      {
+        "beat": "Setup",
+        "say": "Substitute [Cl⁻] = 1.0 × 10⁻⁸ M and [OH⁻] = K_w / [H⁺]. Multiplying by [H⁺] gives which quadratic?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "[H⁺]² − (1.0 × 10⁻⁸)[H⁺] − 1.0 × 10⁻¹⁴ = 0" },
+          { "id": "b", "label": "[H⁺]² + (1.0 × 10⁻⁸)[H⁺] − 1.0 × 10⁻¹⁴ = 0" },
+          { "id": "c", "label": "[H⁺]² − (1.0 × 10⁻⁸)[H⁺] + 1.0 × 10⁻¹⁴ = 0" },
+          { "id": "d", "label": "[H⁺]² = 1.0 × 10⁻¹⁴" }
+        ],
+        "answer": "a",
+        "hint": "Move both right-hand terms to the left side of [H⁺]² = (1.0 × 10⁻⁸)[H⁺] + 1.0 × 10⁻¹⁴.",
+        "explain": "[H⁺]² − 10⁻⁸[H⁺] − 10⁻¹⁴ = 0 has one positive root."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Solve the quadratic for [H⁺] using the positive root: (10⁻⁸ + √(10⁻¹⁶ + 4 × 10⁻¹⁴)) / 2.",
+        "kind": "number",
+        "answer": 1.051e-7,
+        "calc": "(1.0e-8 + Math.sqrt(1.0e-16 + 4.0e-14)) / 2",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "√(4.01 × 10⁻¹⁴) = 2.0025 × 10⁻⁷; add 0.10 × 10⁻⁷ and divide by 2.",
+        "explain": "[H⁺] = 1.051 × 10⁻⁷ M (notice water was slightly suppressed from 1.00 × 10⁻⁷ to 0.951 × 10⁻⁷ M by Le Chatelier)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the true pH of 1.0 × 10⁻⁸ M HCl?",
+        "kind": "number",
+        "answer": 6.98,
+        "calc": "-Math.log10((1.0e-8 + Math.sqrt(1.0e-16 + 4.0e-14)) / 2)",
+        "unit": "",
+        "tol": 0.005,
+        "hint": "Take −log₁₀(1.051 × 10⁻⁷).",
+        "explain": "pH = 6.98 — slightly acidic, exactly as physical intuition demanded!"
+      }
+    ],
+    "finish": "Charge balance never breaks down at any concentration — it seamlessly bridges strong-acid, neutral, and ultra-dilute regimes.",
+    "takeaway": "When an approximation violates a physical bound (like acid giving pH > 7), write exact charge balance + K_w."
+  },
+  {
+    "id": "deep-u10-oly#w",
+    "world": "unit10",
+    "worlds": ["unit10"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Latimer Diagram — Combining Half-Cell Potentials",
+    "setup": "Standard reduction potentials for iron are: Fe³⁺ + e⁻ → Fe²⁺ (E°₁ = +0.771 V) and Fe²⁺ + 2 e⁻ → Fe (E°₂ = −0.440 V). Find the standard reduction potential E°₃ for the 3-electron reduction Fe³⁺ + 3 e⁻ → Fe, and test whether Fe²⁺ disproportionates into Fe³⁺ and Fe.",
+    "strategy": "Potentials E° are intensive (J/C) and NEVER add directly; convert to extensive free energy (−nFE°), add, and divide by total electrons.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Why can you NOT simply add +0.771 V and −0.440 V to get E° for Fe³⁺ + 3 e⁻ → Fe?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Voltage is energy per mole of electrons (intensive); only ΔG° = −nFE° (extensive) adds" },
+          { "id": "b", "label": "Iron cannot have a +3 oxidation state in water" },
+          { "id": "c", "label": "Voltages must be multiplied instead of added" },
+          { "id": "d", "label": "The two steps have opposite signs" }
+        ],
+        "answer": "a",
+        "hint": "Step 1 transfers 1 electron while Step 2 transfers 2 electrons — they do not carry equal weight.",
+        "explain": "Because ΔG°₃ = ΔG°₁ + ΔG°₂, cancelling −F gives n₃E°₃ = n₁E°₁ + n₂E°₂: an electron-weighted average!"
+      },
+      {
+        "beat": "Calculate",
+        "say": "Compute n₁E°₁ + n₂E°₂ for the two steps (n₁ = 1, n₂ = 2).",
+        "kind": "number",
+        "answer": -0.109,
+        "calc": "1 * 0.771 + 2 * (-0.440)",
+        "unit": "V",
+        "tol": 0.02,
+        "hint": "Compute 1(0.771) + 2(−0.440).",
+        "explain": "0.771 − 0.880 = −0.109 V (in electron-volt equivalents)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Divide by total electrons n₃ = 3 to find E°₃ for Fe³⁺ + 3 e⁻ → Fe.",
+        "kind": "number",
+        "answer": -0.0363,
+        "calc": "(1 * 0.771 + 2 * (-0.440)) / 3",
+        "unit": "V",
+        "tol": 0.02,
+        "hint": "Divide −0.109 V by 3.",
+        "explain": "E°₃ = −0.109 / 3 = −0.0363 V (notice how different this is from the naive sum +0.331 V!)."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Now test disproportionation: 3 Fe²⁺ → 2 Fe³⁺ + Fe. Compute E°_cell = E°(reduction: Fe²⁺/Fe) − E°(oxidation: Fe³⁺/Fe²⁺).",
+        "kind": "number",
+        "answer": -1.211,
+        "calc": "-0.440 - 0.771",
+        "unit": "V",
+        "tol": 0.01,
+        "hint": "Cathode is Fe²⁺ → Fe (−0.440 V); anode is Fe²⁺ → Fe³⁺ (use reduction E° = +0.771 V).",
+        "explain": "E°_cell = −0.440 − (+0.771) = −1.211 V."
+      },
+      {
+        "beat": "Intuition",
+        "say": "What does E°_cell = −1.211 V tell you about Fe²⁺ in water, and what happens if you mix Fe³⁺ with solid Fe instead?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Fe²⁺ is stable against disproportionation; mixing Fe³⁺ + Fe spontaneously comproportionates to Fe²⁺" },
+          { "id": "b", "label": "Fe²⁺ spontaneously decomposes into Fe³⁺ and Fe metal" },
+          { "id": "c", "label": "Neither reaction can occur" },
+          { "id": "d", "label": "Fe³⁺ oxidizes water instead" }
+        ],
+        "answer": "a",
+        "hint": "A negative E°_cell for disproportionation means the reverse reaction (comproportionation) has E° = +1.211 V.",
+        "explain": "Whenever the potential to the right (−0.44 V) is lower than the potential to the left (+0.77 V) on a Latimer diagram, the middle oxidation state is thermodynamically stable."
+      }
+    ],
+    "finish": "Weighting potentials by electron count via ΔG° = −nFE° unlocks every Latimer diagram and lets you spot disproportionation at a glance.",
+    "takeaway": "For combined half-reactions, use E°_net = (n₁E°₁ + n₂E°₂) / (n₁ + n₂); an intermediate state disproportionates only if E°_right > E°_left."
+  },
+  {
+    "id": "deep-u11-oly#w",
+    "world": "unit11",
+    "worlds": ["unit11"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Parallel First-Order Decay and Branching Ratio",
+    "setup": "An unstable compound A decays simultaneously by two competing first-order pathways: A → B (k₁ = 0.030 s⁻¹) and A → C (k₂ = 0.010 s⁻¹). Starting with [A]₀ = 0.200 M and no B or C, find the effective half-life of A, [A] after 35.0 s, and the final [B] and [C] once all A is gone.",
+    "strategy": "Competing exit channels add their rate constants (k_eff = k₁ + k₂), and because both pathways share [A] at every instant, the product ratio is locked at k₁ / k₂ forever.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "With two exit channels open at once (k₁ = 0.030 s⁻¹, k₂ = 0.010 s⁻¹), how does the effective half-life of A compare to path 1 alone?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Shorter, because k_eff = k₁ + k₂ = 0.040 s⁻¹ drains A faster" },
+          { "id": "b", "label": "Longer, because the two paths interfere with each other" },
+          { "id": "c", "label": "Equal to the average of the two individual half-lives" },
+          { "id": "d", "label": "Controlled only by the slower path k₂" }
+        ],
+        "answer": "a",
+        "hint": "−d[A]/dt = k₁[A] + k₂[A] = (k₁ + k₂)[A]. Opening a second drain empties a tank faster.",
+        "explain": "Parallel rate constants add directly: k_eff = 0.030 + 0.010 = 0.040 s⁻¹, shortening the half-life."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the effective half-life t½ of A?",
+        "kind": "number",
+        "answer": 17.3,
+        "calc": "Math.log(2) / (0.030 + 0.010)",
+        "unit": "s",
+        "tol": 0.015,
+        "hint": "Use t½ = ln(2) / k_eff = 0.6931 / 0.040.",
+        "explain": "t½ = 0.6931 / 0.040 = 17.33 s."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is [A] after 35.0 s? (Notice 35.0 s is just over two half-lives — eyeball ~0.050 M first!)",
+        "kind": "number",
+        "answer": 0.0493,
+        "calc": "0.200 * Math.exp(-(0.030 + 0.010) * 35.0)",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "Use [A] = [A]₀ e^(−k_eff t) = 0.200 × e^(−0.040 × 35.0).",
+        "explain": "0.200 × e^(−1.40) = 0.0493 M — right beside our two-half-life estimate of 0.050 M."
+      },
+      {
+        "beat": "Intuition",
+        "say": "At any moment t, d[B]/dt = k₁[A] and d[C]/dt = k₂[A]. What fraction of consumed A turns into B?",
+        "kind": "number",
+        "answer": 0.75,
+        "calc": "0.030 / (0.030 + 0.010)",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Divide k₁ by (k₁ + k₂).",
+        "explain": "k₁ / (k₁ + k₂) = 0.030 / 0.040 = 0.75 (75% B, 25% C) at every instant — kinetic control."
+      },
+      {
+        "beat": "Conservation",
+        "say": "Once all 0.200 M of A has decayed, what is the final concentration of B?",
+        "kind": "number",
+        "answer": 0.15,
+        "calc": "0.200 * (0.030 / (0.030 + 0.010))",
+        "unit": "M",
+        "tol": 0.01,
+        "hint": "Multiply [A]₀ (0.200 M) by the branching fraction 0.75.",
+        "explain": "[B]_∞ = 0.75 × 0.200 = 0.150 M (and [C]_∞ = 0.050 M, conserving 0.200 M total)."
+      }
+    ],
+    "finish": "In parallel pathways, rates add and product yields split strictly in the ratio of rate constants — the foundation of kinetic selectivity.",
+    "takeaway": "For competing first-order paths: k_eff = k₁ + k₂ (faster decay), and [B]/[C] = k₁/k₂ at every time t."
+  },
+  {
+    "id": "deep-cross-ksp-cell#w",
+    "world": "cross",
+    "worlds": ["unit08", "unit10"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Measuring K_sp of AgI with a Voltmeter",
+    "setup": "A galvanic cell at 298 K pairs a standard silver cathode, Ag⁺(1.00 M) | Ag(s), with a silver wire dipped into saturated AgI(s) containing 0.100 M I⁻. The voltmeter reads E_cell = +0.888 V. Find [Ag⁺] in the anode and the K_sp of AgI.",
+    "strategy": "A voltmeter is a logarithmic ion sensor: convert E_cell directly into log[Ag⁺] via the concentration-cell Nernst equation, then multiply by [I⁻] to get K_sp.",
+    "steps": [
+      {
+        "beat": "Intuition",
+        "say": "Why can a voltmeter measure [Ag⁺] ≈ 10⁻¹⁵ M in saturated AgI when no balance or pipette could ever weigh that amount?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "E_cell depends on log[Ag⁺], so every 10× drop in [Ag⁺] adds a clear 0.0592 V" },
+          { "id": "b", "label": "E_cell is directly proportional to [Ag⁺]" },
+          { "id": "c", "label": "I⁻ ions carry the electrons through the wire" },
+          { "id": "d", "label": "AgI dissolves completely when connected to a voltmeter" }
+        ],
+        "answer": "a",
+        "hint": "Check the Nernst equation for a 1-electron concentration cell: E = −0.0592 log[Ag⁺]_anode.",
+        "explain": "Logarithmic scaling turns 15 orders of magnitude of concentration into an easy-to-read ~0.9 V signal."
+      },
+      {
+        "beat": "Setup",
+        "say": "Both electrodes are Ag(s) (E°_cell = 0, n = 1) and [Ag⁺]_cathode = 1.00 M. From E_cell = −0.0592 log([Ag⁺]_anode / 1.00), what is log₁₀([Ag⁺]_anode)?",
+        "kind": "number",
+        "answer": -15.0,
+        "calc": "-0.888 / 0.0592",
+        "unit": "",
+        "tol": 0.01,
+        "hint": "Divide −0.888 V by 0.0592 V.",
+        "explain": "log₁₀([Ag⁺]_anode) = −0.888 / 0.0592 = −15.0."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Therefore, what is [Ag⁺] in the saturated AgI / 0.100 M I⁻ half-cell?",
+        "kind": "number",
+        "answer": 1.0e-15,
+        "calc": "Math.pow(10, -0.888 / 0.0592)",
+        "unit": "M",
+        "tol": 0.03,
+        "hint": "Raise 10 to the power −15.0.",
+        "explain": "[Ag⁺]_anode = 10⁻¹⁵.⁰ = 1.0 × 10⁻¹⁵ M."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Multiply [Ag⁺] by [I⁻] = 0.100 M to find K_sp of AgI at 298 K.",
+        "kind": "number",
+        "answer": 1.0e-16,
+        "calc": "Math.pow(10, -0.888 / 0.0592) * 0.100",
+        "unit": "",
+        "tol": 0.03,
+        "hint": "K_sp = [Ag⁺][I⁻] = (1.0 × 10⁻¹⁵)(0.100).",
+        "explain": "K_sp(AgI) = 1.0 × 10⁻¹⁶ (literature value is 8.5 × 10⁻¹⁷ — right on the mark!)."
+      },
+      {
+        "beat": "Sanity check",
+        "say": "If you increased [I⁻] in the anode from 0.100 M to 1.00 M, how would E_cell change?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Rise by +0.0592 V (to 0.947 V), because common-ion I⁻ pushes [Ag⁺] down 10×" },
+          { "id": "b", "label": "Drop by 0.0592 V, because more ions reduce resistance" },
+          { "id": "c", "label": "Stay at 0.888 V, because solid AgI is still present" },
+          { "id": "d", "label": "Drop to 0 V" }
+        ],
+        "answer": "a",
+        "hint": "More I⁻ lowers [Ag⁺] by a factor of 10 via K_sp, widening the [Ag⁺] gap between half-cells.",
+        "explain": "10× higher [I⁻] forces 10× lower [Ag⁺], adding another +0.0592 V to E_cell."
+      }
+    ],
+    "finish": "Electrochemistry and solubility equilibria lock together through [Ag⁺]: a single voltage reading measures K_sp down to 10⁻¹⁶.",
+    "takeaway": "Whenever a problem pairs a precipitate with a galvanic cell, use Nernst to extract the trace ion concentration, then plug into K_sp."
+  },
+  {
+    "id": "deep-cross-thermo-eq#w",
+    "world": "cross",
+    "worlds": ["unit05", "unit08"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Thermodynamic Coupling in Copper Smelting",
+    "setup": "Extracting copper directly from Cu₂S(s) → 2 Cu(s) + S(s) is non-spontaneous (ΔG°₁ = +86.2 kJ/mol at 298 K). Burning sulfur, S(s) + O₂(g) → SO₂(g), has ΔG°₂ = −300.1 kJ/mol. Couple these reactions into Cu₂S(s) + O₂(g) → 2 Cu(s) + SO₂(g) to find ΔG°_net, log₁₀ K, and the minimum P(O₂) needed to stay spontaneous when P(SO₂) = 1.0 atm.",
+    "strategy": "Add ΔG° values to couple a favorable reaction to an unfavorable one, then use ΔG = ΔG° + RT ln Q = 0 to find the exact pressure threshold.",
+    "steps": [
+      {
+        "beat": "Calculate",
+        "say": "What is ΔG°_net for the coupled smelting reaction Cu₂S(s) + O₂(g) → 2 Cu(s) + SO₂(g)?",
+        "kind": "number",
+        "answer": -213.9,
+        "calc": "86.2 + (-300.1)",
+        "unit": "kJ/mol",
+        "tol": 0.01,
+        "hint": "Add ΔG°₁ and ΔG°₂; S(s) cancels between the two steps.",
+        "explain": "+86.2 + (−300.1) = −213.9 kJ/mol — strongly spontaneous."
+      },
+      {
+        "beat": "Intuition",
+        "say": "At 298 K, 2.303 RT = 5.708 kJ/mol per power of 10 in K. Roughly what power of 10 is K for ΔG° = −213.9 kJ/mol?",
+        "kind": "number",
+        "answer": 37.5,
+        "calc": "213.9 / (2.303 * 8.314 * 298 / 1000)",
+        "unit": "",
+        "tol": 0.02,
+        "hint": "Divide 213.9 kJ/mol by 5.708 kJ/mol to get log₁₀ K.",
+        "explain": "log₁₀ K = 213.9 / 5.708 = 37.5, so K ≈ 3 × 10³⁷!"
+      },
+      {
+        "beat": "Setup",
+        "say": "What is the reaction quotient Q for Cu₂S(s) + O₂(g) → 2 Cu(s) + SO₂(g)?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "Q = P(SO₂) / P(O₂)" },
+          { "id": "b", "label": "Q = P(O₂) / P(SO₂)" },
+          { "id": "c", "label": "Q = [Cu]² P(SO₂) / ([Cu₂S] P(O₂))" },
+          { "id": "d", "label": "Q = P(SO₂) · P(O₂)" }
+        ],
+        "answer": "a",
+        "hint": "Pure solids (Cu₂S, Cu) have activity 1 and drop out of Q.",
+        "explain": "Only the two gases enter Q: Q = P(SO₂) / P(O₂)."
+      },
+      {
+        "beat": "Limiting case",
+        "say": "The reaction stops being spontaneous when Q = K (so ΔG = 0). If P(SO₂) = 1.0 atm, what is the minimum P(O₂) = 1.0 / K?",
+        "kind": "number",
+        "answer": 3.2e-38,
+        "calc": "1.0 / Math.pow(10, 213.9 / (2.303 * 8.314 * 298 / 1000))",
+        "unit": "atm",
+        "tol": 0.15,
+        "hint": "1.0 / 10^37.5 = 10^−37.5 ≈ 3.2 × 10⁻³⁸ atm.",
+        "explain": "Even a single molecule of O₂ in a room exceeds 10⁻³⁸ atm — thermodynamically, smelting runs to completion."
+      },
+      {
+        "beat": "Sanity check",
+        "say": "If ΔG° is −213.9 kJ/mol at 298 K, why doesn't copper sulfide ore spontaneously turn into copper metal on a shelf at room temperature?",
+        "kind": "choice",
+        "options": [
+          { "id": "a", "label": "High activation energy (kinetics): the reaction is thermodynamically favored but immeasurably slow at 298 K" },
+          { "id": "b", "label": "Air does not contain enough O₂" },
+          { "id": "c", "label": "ΔG° is positive at room temperature" },
+          { "id": "d", "label": "Cu₂S cannot react with O₂ at any temperature" }
+        ],
+        "answer": "a",
+        "hint": "Distinguish thermodynamics (whether a reaction is favored) from kinetics (how fast it happens).",
+        "explain": "Thermodynamics says 'yes' (K ~ 10³⁷), but solid-state diffusion and bond breaking have a huge activation barrier — hence a furnace is needed for speed, not spontaneity."
+      }
+    ],
+    "finish": "Remembering 5.71 kJ/mol per decade of K at 298 K lets you jump instantaneously between free energy, equilibrium constants, and pressure thresholds.",
+    "takeaway": "At 298 K, every −5.71 kJ/mol of ΔG° multiplies K by 10 — and always separate thermodynamic favorability from kinetic speed."
+  },
+  {
+    "id": "deep-cross-gas-acid#w",
+    "world": "cross",
+    "worlds": ["unit04", "unit07", "unit09"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Identifying a Diprotic Acid by Titration and Gas Volume",
+    "setup": "A 0.450 g sample of an unknown solid diprotic acid, H₂A, is completely neutralized by 25.00 mL of 0.400 M NaOH. A second identical 0.450 g sample reacts with excess NaHCO₃(aq), releasing CO₂(g) into an evacuated 0.250 L rigid flask at 298 K. Find the molar mass of H₂A and the pressure of CO₂ produced.",
+    "strategy": "Use proton equivalents (H⁺) as the single conserved currency linking titration, molar mass, and gas pressure.",
+    "steps": [
+      {
+        "beat": "Conservation",
+        "say": "How many moles of H⁺ did the 0.450 g sample of H₂A supply to the 25.00 mL of 0.400 M NaOH?",
+        "kind": "number",
+        "answer": 0.01,
+        "calc": "0.02500 * 0.400",
+        "unit": "mol",
+        "tol": 0.01,
+        "hint": "Every mole of OH⁻ neutralizes one mole of H⁺.",
+        "explain": "0.02500 L × 0.400 M = 0.0100 mol H⁺."
+      },
+      {
+        "beat": "Conservation",
+        "say": "Because H₂A is diprotic (2 H⁺ per molecule), how many moles of H₂A are in 0.450 g?",
+        "kind": "number",
+        "answer": 0.005,
+        "calc": "0.02500 * 0.400 / 2",
+        "unit": "mol",
+        "tol": 0.01,
+        "hint": "Divide moles of H⁺ by 2.",
+        "explain": "0.0100 / 2 = 0.00500 mol H₂A."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the molar mass of the unknown diprotic acid H₂A?",
+        "kind": "number",
+        "answer": 90.0,
+        "calc": "0.450 / (0.02500 * 0.400 / 2)",
+        "unit": "g/mol",
+        "tol": 0.01,
+        "hint": "Divide 0.450 g by 0.00500 mol.",
+        "explain": "0.450 / 0.00500 = 90.0 g/mol — matching anhydrous oxalic acid, H₂C₂O₄ (90.03 g/mol)!"
+      },
+      {
+        "beat": "Intuition",
+        "say": "Each H⁺ reacts with HCO₃⁻ via H⁺ + HCO₃⁻ → H₂O + CO₂(g). How many moles of CO₂ form from the second 0.450 g sample?",
+        "kind": "number",
+        "answer": 0.01,
+        "calc": "0.02500 * 0.400",
+        "unit": "mol",
+        "tol": 0.01,
+        "hint": "One mole of H⁺ produces one mole of CO₂ — so you don't even need the molar mass to know n(CO₂)!",
+        "explain": "Both protons react with excess HCO₃⁻, so n(CO₂) = n(H⁺) = 0.0100 mol."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What pressure does 0.0100 mol CO₂ exert in 0.250 L at 298 K? (R = 0.08206 L·atm/(mol·K))",
+        "kind": "number",
+        "answer": 0.978,
+        "calc": "(0.02500 * 0.400) * 0.08206 * 298 / 0.250",
+        "unit": "atm",
+        "tol": 0.015,
+        "hint": "Use P = nRT / V with n = 0.0100 mol, T = 298 K, V = 0.250 L.",
+        "explain": "P = 0.0100 × 0.08206 × 298 / 0.250 = 0.978 atm (nearly 1 atm!)."
+      }
+    ],
+    "finish": "Tracking proton equivalents links titration volume directly to gas pressure and molar mass without extra detours.",
+    "takeaway": "In acid-base and carbonate problems, count moles of H⁺ directly — it is the invariant bridge across reactions."
+  },
+  {
+    "id": "deep-cross-redox-spec#w",
+    "world": "cross",
+    "worlds": ["unit02", "unit07", "unit10"],
+    "tier": "olympiad",
+    "beyondAp": true,
+    "title": "Manganese in Steel by Redox Oxidation and Absorbance",
+    "setup": "A 0.500 g steel alloy sample is dissolved in acid, converting all manganese to Mn²⁺. Periodate oxidizes all Mn²⁺ quantitatively to purple MnO₄⁻, and the solution is diluted to 250.0 mL. In a 1.00 cm cuvette at 525 nm (ε = 2400 M⁻¹·cm⁻¹), the absorbance is A = 0.432. Find the oxidation-state electron transfer and the mass percent of Mn (M = 54.94 g/mol) in the steel.",
+    "strategy": "Chain Mn atom conservation backward from light absorbance in the cuvette to the original steel alloy.",
+    "steps": [
+      {
+        "beat": "Setup",
+        "say": "How many electrons are lost per Mn atom when Mn²⁺ is oxidized to MnO₄⁻?",
+        "kind": "number",
+        "answer": 5,
+        "calc": "7 - 2",
+        "unit": "e⁻",
+        "tol": 0.01,
+        "hint": "In MnO₄⁻, four O atoms are −2 each (−8 total) and the ion charge is −1, so Mn is +7.",
+        "explain": "Mn goes from +2 to +7, losing 5 electrons per Mn atom."
+      },
+      {
+        "beat": "Calculate",
+        "say": "From A = εbc (A = 0.432, ε = 2400 M⁻¹·cm⁻¹, b = 1.00 cm), what is [MnO₄⁻] in the 250.0 mL flask?",
+        "kind": "number",
+        "answer": 0.00018,
+        "calc": "0.432 / (2400 * 1.00)",
+        "unit": "M",
+        "tol": 0.015,
+        "hint": "Divide A by εb: 0.432 / 2400.",
+        "explain": "[MnO₄⁻] = 0.432 / 2400 = 1.80 × 10⁻⁴ M."
+      },
+      {
+        "beat": "Conservation",
+        "say": "How many moles of Mn were in the 250.0 mL flask (and therefore in the 0.500 g steel sample)?",
+        "kind": "number",
+        "answer": 4.5e-5,
+        "calc": "(0.432 / 2400) * 0.2500",
+        "unit": "mol",
+        "tol": 0.015,
+        "hint": "Multiply [MnO₄⁻] by 0.2500 L; Mn is conserved 1:1 from alloy to Mn²⁺ to MnO₄⁻.",
+        "explain": "1.80 × 10⁻⁴ mol/L × 0.2500 L = 4.50 × 10⁻⁵ mol Mn."
+      },
+      {
+        "beat": "Calculate",
+        "say": "Convert 4.50 × 10⁻⁵ mol Mn (M = 54.94 g/mol) to milligrams of Mn.",
+        "kind": "number",
+        "answer": 2.47,
+        "calc": "(0.432 / 2400) * 0.2500 * 54.94 * 1000",
+        "unit": "mg",
+        "tol": 0.015,
+        "hint": "Multiply moles by 54.94 g/mol to get grams, then × 1000 for mg.",
+        "explain": "4.50 × 10⁻⁵ × 54.94 = 0.002472 g = 2.47 mg Mn."
+      },
+      {
+        "beat": "Calculate",
+        "say": "What is the mass percent of Mn in the 0.500 g (500 mg) steel sample?",
+        "kind": "number",
+        "answer": 0.494,
+        "calc": "((0.432 / 2400) * 0.2500 * 54.94) / 0.500 * 100",
+        "unit": "%",
+        "tol": 0.02,
+        "hint": "Divide 2.472 mg by 500 mg and multiply by 100.",
+        "explain": "2.472 / 500 × 100 = 0.494% Mn — typical for carbon steel (0.3–1.0% Mn)."
+      }
+    ],
+    "finish": "Turning a trace metal into a strongly absorbing species (MnO₄⁻) lets spectrophotometry measure sub-percent alloy composition accurately.",
+    "takeaway": "In multi-step analytical chains (dissolve → oxidize → dilute → measure A), trace the conserved atom (1 Mn → 1 Mn²⁺ → 1 MnO₄⁻) straight back to the sample."
+  }
+]

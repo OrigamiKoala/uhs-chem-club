@@ -54,8 +54,15 @@ import unit11 from './bank/unit11.json' with { type: 'json' };
 import unit12 from './bank/unit12.json' with { type: 'json' };
 import unit13 from './bank/unit13.json' with { type: 'json' };
 import unit14 from './bank/unit14.json' with { type: 'json' };
+import deepWorkedRaw from './bank/worked-deep.json' with { type: 'json' };
 
 export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, unit08, unit09, unit10, unit11, unit12, unit13, unit14 };
+export const DEEP_WORKED = deepWorkedRaw;
+
+const TIER_LABEL = {
+  ap: 'AP Synthesis',
+  olympiad: 'Olympiad'
+};
 
 const EMPTY = { world: null, end: [], bench: {} };
 
@@ -99,6 +106,27 @@ export function worldWorked(world) {
     .filter(q => q.status === 'live')
     .map(q => benchWorked(world, q.id))
     .filter(Boolean);
+}
+
+/** AP Synthesis and Olympiad worked problems (single-world and cross-unit). */
+export function deepWorked(worlds, scope = 'all') {
+  const byId = new Map((worlds || []).map(w => [w.id, w]));
+  return DEEP_WORKED
+    .filter(w => scope === 'all' || w.world === scope || (Array.isArray(w.worlds) && w.worlds.includes(scope)))
+    .map(w => {
+      const names = (w.worlds || []).map(id => byId.get(id)?.world || id);
+      const worldName = w.world === 'cross'
+        ? `Cross-Unit (${names.join(' + ')})`
+        : (byId.get(w.world)?.world || w.world);
+      return {
+        ...w,
+        worldId: w.world,
+        worldName,
+        questId: w.id,
+        questTitle: TIER_LABEL[w.tier] || 'Synthesis',
+        tierLabel: TIER_LABEL[w.tier] || 'Synthesis'
+      };
+    });
 }
 
 /** The questions asked together at the end of a world. */

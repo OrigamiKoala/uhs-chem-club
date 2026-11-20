@@ -10,8 +10,9 @@ const GY = 560;
 // ---------------------------------------------------------------- Brinewire: power taps on the salt pools
 
 const BRINE = {
-  sky: [[0, '#0e0f10'], [0.6, '#1c1e1e'], [1, '#2e302c']], far: '#181a1a', mid: '#202222', ground: ['#5a5650', '#1d1b18'],
-  gy: GY, seed: 111, stars: 70, farAmp: 14, midAmp: 8
+  sky: [[0, '#0a0c0e'], [0.45, '#1a1e22'], [0.8, '#4a4640'], [1, '#7a6a56']], far: '#181a1a', mid: '#202222', ground: ['#5a5650', '#1d1b18'],
+  gy: GY, seed: 111, stars: 70, farAmp: 14, midAmp: 8,
+  light: { x: 700, y: 420, color: '226, 196, 150', power: 0.75, sun: 40 }, clouds: 9, rays: 0.05
 };
 
 function pylon(ctx, x, gy) {
@@ -93,8 +94,9 @@ const brinewire = {
 // ---------------------------------------------------------------- Quicklight: dust in the vents, towers running hot
 
 const QUICK = {
-  sky: [[0, '#100e0c'], [0.6, '#221c16'], [1, '#3a2e22']], far: '#1a1612', mid: '#221d18', ground: ['#3a342e', '#14120f'],
-  gy: GY, seed: 121, stars: 40, farAmp: 30, midAmp: 14
+  sky: [[0, '#0e0c0a'], [0.45, '#2a2018'], [0.8, '#6a4a2a'], [1, '#9a6a3a']], far: '#1a1612', mid: '#221d18', ground: ['#3a342e', '#14120f'],
+  gy: GY, seed: 121, stars: 40, farAmp: 30, midAmp: 14,
+  light: { x: 350, y: 400, color: '236, 172, 100', power: 0.9, sun: 36 }, clouds: 9, rays: 0.055
 };
 
 function fuelTower(ctx, x, gy, heat, clock) {
@@ -152,8 +154,9 @@ const quicklight = {
 // ---------------------------------------------------------------- Lodestone: the sorting magnet and the drums
 
 const LODE = {
-  sky: [[0, '#140c0a'], [0.6, '#2e1a12'], [1, '#4a2a1a']], far: '#2a1610', mid: '#351c12', ground: ['#4a2c1e', '#1a100a'],
-  gy: GY, seed: 131, stars: 30, jag: 1.0, farAmp: 160, midAmp: 60
+  sky: [[0, '#120a08'], [0.4, '#341a10'], [0.75, '#7a3a1e'], [1, '#b2582a']], far: '#2a1610', mid: '#351c12', ground: ['#4a2c1e', '#1a100a'],
+  gy: GY, seed: 131, stars: 30, jag: 1.0, farAmp: 160, midAmp: 60,
+  light: { x: 640, y: 330, color: '244, 140, 76', power: 0.95, sun: 40 }, clouds: 7, rays: 0.06
 };
 
 function drum(ctx, x, gy, iron) {
@@ -221,8 +224,9 @@ const lodestone = {
 // ---------------------------------------------------------------- Thornmere: the outpost behind plastic armour
 
 const THORN = {
-  sky: [[0, '#0c0e0c'], [0.6, '#161a16'], [1, '#22281e']], far: '#141812', mid: '#1a2016', ground: ['#262c20', '#0e100c'],
-  gy: GY, seed: 141, stars: 20, farAmp: 30, midAmp: 20, haze: 'rgba(184, 190, 170, 0.14)'
+  sky: [[0, '#0a0c0a'], [0.45, '#181c18'], [0.8, '#323a30'], [1, '#4a5244']], far: '#141812', mid: '#1a2016', ground: ['#262c20', '#0e100c'],
+  gy: GY, seed: 141, stars: 20, farAmp: 30, midAmp: 20, haze: 'rgba(184, 190, 170, 0.14)',
+  light: { x: 300, y: 260, color: '214, 218, 196', power: 0.6, sun: 28 }, clouds: 12, rays: 0.06
 };
 
 function outpost(ctx, x, gy, plates) {
@@ -272,8 +276,9 @@ const thornmere = {
 // ---------------------------------------------------------------- Cinder Halo: the old reactor running hot
 
 const CINDER = {
-  sky: [[0, '#0a0908'], [0.6, '#1a1612'], [1, '#2e2620']], far: '#16130f', mid: '#1d1914', ground: ['#3a3631', '#100e0c'],
-  gy: GY, seed: 151, stars: 90, farAmp: 24, midAmp: 12
+  sky: [[0, '#060508'], [0.45, '#100e12'], [0.8, '#221c1a'], [1, '#3a2e26']], far: '#16130f', mid: '#1d1914', ground: ['#3a3631', '#100e0c'],
+  gy: GY, seed: 151, stars: 90, farAmp: 24, midAmp: 12,
+  light: { x: 1000, y: 140, color: '214, 196, 168', power: 0.45 }, clouds: 5, nebula: '150, 110, 96', rays: 0.02, moon: [1000, 140, 34, '#8f887b', '#15130f']
 };
 
 function reactor(ctx, x, gy, clock, hot = 1) {

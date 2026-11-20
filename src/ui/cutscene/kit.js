@@ -29,6 +29,31 @@ export const held = (T, a, b, f = 0.3) => win(T, a, a + f) * (1 - win(T, b - f, 
 /** Seeded random numbers, so a scene never shimmers. */
 export const rng = seed => mulberry32(seed >>> 0);
 
+/** An 'r, g, b' string, 'rgb(...)' or '#rrggbb' as [r, g, b]. */
+export function rgbOf(c) {
+  if (Array.isArray(c)) return c;
+  if (c[0] === '#') { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  return c.replace(/^[a-z]+\(|\)$/g, '').split(',').slice(0, 3).map(v => parseFloat(v));
+}
+/** Two colours mixed, `t` of the way from a to b, as 'rgb(...)'. */
+export function mix(a, b, t) {
+  const A = rgbOf(a);
+  const B = rgbOf(b);
+  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], clamp01(t)))).join(', ')})`;
+}
+/** A colour as 'rgba(...)' at alpha `a`. */
+export const rgba = (c, a) => `rgba(${rgbOf(c).map(Math.round).join(', ')}, ${clamp01(a)})`;
+
+/**
+ * The scene's key light: where it sits on screen, its colour ('r, g, b') and how strong it is (0..1). `scape` sets it for
+ * the frame; the figures, the lander and the closing grade in `frame` read it, so everything in a frame is lit from one
+ * place. `frame` puts it back to the default when the frame is done.
+ */
+const DEFAULT_LIGHT = { x: 300, y: 150, color: '214, 196, 168', power: 0.45 };
+let LIGHT = DEFAULT_LIGHT;
+export function setLight(L) { LIGHT = { ...DEFAULT_LIGHT, ...(L || {}) }; }
+export const keyLight = () => LIGHT;
+
 /** A vertical gradient sky. `stops` is a list of [offset, colour]. */
 export function sky(ctx, stops, h = H) {
   const g = ctx.createLinearGradient(0, 0, 0, h);
@@ -48,6 +73,129 @@ export function stars(ctx, seed, n = 140, clock = 0, maxY = H * 0.7, drift = 0) 
     ctx.fillStyle = `rgba(220, 214, 204, ${(0.18 + r() * 0.5) * tw})`;
     ctx.fillRect(x, y, s, s);
   }
+  // A few bright ones, each with a thin cross of light.
+  for (let i = 0; i < Math.round(n / 40); i++) {
+    const x = ((r() * W - drift) % W + W) % W;
+    const y = r() * maxY * 0.8;
+    const len = 4 + r() * 6;
+    const tw = 0.6 + 0.4 * Math.sin(clock * (0.5 + r()) + i * 2.1);
+    ctx.fillStyle = `rgba(236, 230, 216, ${0.75 * tw})`;
+    ctx.fillRect(x - 1, y - 1, 2.4, 2.4);
+    ctx.fillStyle = `rgba(236, 230, 216, ${0.22 * tw})`;
+    ctx.fillRect(x - len, y - 0.3, len * 2 + 0.4, 1);
+    ctx.fillRect(x - 0.3, y - len, 1, len * 2 + 0.4);
+  }
+}
+
+/** A faint band of dust and far stars across the sky, as soft overlapping clouds. */
+export function nebula(ctx, seed, color = '154, 120, 96', a = 0.07, drift = 0) {
+  const r = rng(seed);
+  const tilt = -0.35 + r() * 0.2;
+  for (let i = 0; i < 14; i++) {
+    const u = i / 13;
+    const x = ((u * (W + 400) - 200 - drift) % (W + 400) + W + 400) % (W + 400) - 200;
+    const y = H * 0.18 + (x - W / 2) * tilt + (r() - 0.5) * 80;
+    const rad = 90 + r() * 140;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+    g.addColorStop(0, `rgba(${color}, ${a * (0.5 + r() * 0.8)})`);
+    g.addColorStop(1, `rgba(${color}, 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+  }
+  // Dark lanes of dust across it.
+  ctx.fillStyle = 'rgba(4, 4, 6, 0.18)';
+  for (let i = 0; i < 6; i++) {
+    const x = r() * W;
+    const y = H * 0.18 + (x - W / 2) * tilt + (r() - 0.5) * 30;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 60 + r() * 120, 6 + r() * 10, Math.atan(tilt), 0, TAU);
+    ctx.fill();
+  }
+}
+
+/** The sky lit round the key light: a broad wash, brighter at the horizon under it. */
+export function skyGlow(ctx, gy) {
+  const L = LIGHT;
+  const R = 520 + L.power * 380;
+  const g = ctx.createRadialGradient(L.x, L.y, 0, L.x, L.y, R);
+  g.addColorStop(0, `rgba(${L.color}, ${0.34 * L.power})`);
+  g.addColorStop(0.25, `rgba(${L.color}, ${0.14 * L.power})`);
+  g.addColorStop(1, `rgba(${L.color}, 0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, gy);
+  // The horizon band: the thickest air, lit along its length.
+  const hb = ctx.createLinearGradient(0, gy - 260, 0, gy);
+  hb.addColorStop(0, `rgba(${L.color}, 0)`);
+  hb.addColorStop(1, `rgba(${L.color}, ${0.16 * L.power})`);
+  ctx.fillStyle = hb;
+  ctx.fillRect(0, gy - 260, W, 260);
+}
+
+/** A sun: a hard disc in a soft ring of lit air. */
+export function sunDisc(ctx, r = 34) {
+  const L = LIGHT;
+  const g = ctx.createRadialGradient(L.x, L.y, r * 0.8, L.x, L.y, r * 4);
+  g.addColorStop(0, `rgba(${L.color}, ${0.4 * L.power})`);
+  g.addColorStop(1, `rgba(${L.color}, 0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(L.x - r * 4, L.y - r * 4, r * 8, r * 8);
+  const d = ctx.createLinearGradient(L.x, L.y - r, L.x, L.y + r);
+  d.addColorStop(0, mix(L.color, '255, 250, 240', 0.75));
+  d.addColorStop(1, mix(L.color, '255, 250, 240', 0.3));
+  ctx.fillStyle = d;
+  ctx.beginPath();
+  ctx.arc(L.x, L.y, r, 0, TAU);
+  ctx.fill();
+}
+
+/** Shafts of light fanning down from the key light, turning slowly. */
+export function rays(ctx, gy, clock = 0, a = 0.05) {
+  const L = LIGHT;
+  const r = rng(Math.round(L.x * 7 + L.y));
+  // A light high in the sky throws its shafts down; one near the horizon throws them up into the air.
+  const up = L.y > gy - 260 ? -1 : 1;
+  ctx.save();
+  for (let i = 0; i < 9; i++) {
+    const base = up * Math.PI * (0.12 + 0.76 * (i + r() * 0.6) / 9);
+    const ang = base + Math.sin(clock * 0.07 + i * 1.7) * 0.025;
+    const wid = 0.018 + r() * 0.04;
+    const len = 1400;
+    const g = ctx.createLinearGradient(L.x, L.y, L.x + Math.cos(ang) * 700, L.y + Math.sin(ang) * 700);
+    g.addColorStop(0, `rgba(${L.color}, ${a * L.power * (0.6 + r() * 0.8)})`);
+    g.addColorStop(1, `rgba(${L.color}, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(L.x, L.y);
+    ctx.lineTo(L.x + Math.cos(ang - wid) * len, L.y + Math.sin(ang - wid) * len);
+    ctx.lineTo(L.x + Math.cos(ang + wid) * len, L.y + Math.sin(ang + wid) * len);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Long thin clouds, dark bellies with edges lit on the side toward the key light. */
+export function clouds(ctx, seed, n, camX, gy, clock = 0, body = '20, 18, 18') {
+  const L = LIGHT;
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    const y = 70 + r() * (gy - 260);
+    const len = 160 + r() * 360;
+    const th = 5 + r() * 12;
+    const x = ((r() * (W + 800) - camX * 0.06 - clock * (2 + r() * 4)) % (W + 800) + W + 800) % (W + 800) - 400;
+    const near = clamp01(1 - Math.hypot(x - L.x, y - L.y) / 900);
+    const below = y > L.y ? 1 : 0;
+    // The body, darker than the sky behind it.
+    ctx.fillStyle = `rgba(${body}, ${0.28 + r() * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, len / 2, th, 0, 0, TAU);
+    ctx.fill();
+    // The lit edge: the top when the light is above it, the bottom when below.
+    ctx.fillStyle = `rgba(${L.color}, ${(0.05 + near * 0.32) * L.power})`;
+    ctx.beginPath();
+    ctx.ellipse(x + (L.x - x) * 0.02, y + (below ? -th * 0.45 : th * 0.45), len / 2 * 0.85, th * 0.4, 0, 0, TAU);
+    ctx.fill();
+  }
 }
 
 /** A planet or moon low in the sky: a lit disc with a hard terminator. */
@@ -63,34 +211,136 @@ export function moon(ctx, x, y, r, lit = '#8f887b', dark = '#1d1b18') {
 }
 
 /**
- * A silhouette ridge across the frame, from a seeded sum of sines. `camX` scrolls it by `par` (0 = fixed, 1 = with the
- * ground). `jag` adds sharp peaks (rock, ice); 0 is rolling.
+ * A ridge across the frame, from a seeded sum of sines. `camX` scrolls it by `par` (0 = fixed, 1 = with the ground). `jag`
+ * adds sharp peaks (rock, ice); 0 is rolling. It is shaded top to bottom (`top` at the crest, `color` below), carries a few
+ * strata that follow its line, and its crest catches the key light (`rim`, 0..1), brightest under the light.
  */
-export function ridge(ctx, { y, amp, seed, color, camX = 0, par = 0.3, freq = 1, jag = 0, bottom = H }) {
+export function ridge(ctx, { y, amp, seed, color, camX = 0, par = 0.3, freq = 1, jag = 0, bottom = H, top = null, rim = 0, strata = 0 }) {
   const r = rng(seed);
   const ph = [r() * TAU, r() * TAU, r() * TAU, r() * TAU];
   const off = camX * par;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, bottom);
-  for (let x = 0; x <= W + 16; x += 16) {
+  const pts = [];
+  for (let x = -16; x <= W + 16; x += 12) {
     const u = (x + off) / W * freq;
-    let v = Math.sin(u * 2.1 + ph[0]) * 0.5 + Math.sin(u * 4.7 + ph[1]) * 0.28 + Math.sin(u * 9.3 + ph[2]) * 0.14;
+    let v = Math.sin(u * 2.1 + ph[0]) * 0.5 + Math.sin(u * 4.7 + ph[1]) * 0.28 + Math.sin(u * 9.3 + ph[2]) * 0.14
+      + Math.sin(u * 23 + ph[3]) * 0.035;
     if (jag) v += jag * (Math.abs(((u * 6 + ph[3]) % 2) - 1) - 0.5);
-    ctx.lineTo(x, y - v * amp);
+    pts.push([x, y - v * amp]);
   }
-  ctx.lineTo(W, bottom);
-  ctx.closePath();
+  const path = () => {
+    ctx.beginPath();
+    ctx.moveTo(-16, bottom);
+    for (const [x, yy] of pts) ctx.lineTo(x, yy);
+    ctx.lineTo(W + 16, bottom);
+    ctx.closePath();
+  };
+  if (top) {
+    const g = ctx.createLinearGradient(0, y - amp, 0, Math.min(bottom, y + amp * 0.6 + 60));
+    g.addColorStop(0, top);
+    g.addColorStop(1, color);
+    ctx.fillStyle = g;
+  } else ctx.fillStyle = color;
+  path();
   ctx.fill();
+  const L = LIGHT;
+  if (strata > 0) {
+    // Bands of rock that follow the ridge's own line, dark under a thin lit edge.
+    ctx.save();
+    path();
+    ctx.clip();
+    for (let k = 1; k <= 4; k++) {
+      const dy = k * (10 + amp * 0.18) + Math.sin(k * 2.3 + seed) * 4;
+      ctx.beginPath();
+      pts.forEach(([x, yy], i) => {
+        const wob = Math.sin((x + off) * 0.013 + k * 1.9) * 3;
+        if (i === 0) ctx.moveTo(x, yy + dy + wob); else ctx.lineTo(x, yy + dy + wob);
+      });
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.22 * strata})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(${L.color}, ${0.06 * strata * (1 - k * 0.15)})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (rim > 0) {
+    const g = ctx.createLinearGradient(L.x - 700, 0, L.x + 700, 0);
+    g.addColorStop(0, `rgba(${L.color}, ${0.08 * rim})`);
+    g.addColorStop(0.5, `rgba(${L.color}, ${0.6 * rim * L.power + 0.08 * rim})`);
+    g.addColorStop(1, `rgba(${L.color}, ${0.08 * rim})`);
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach(([x, yy], i) => { if (i === 0) ctx.moveTo(x, yy + 0.8); else ctx.lineTo(x, yy + 0.8); });
+    ctx.stroke();
+  }
 }
 
-/** Flat ground from `y` down, with a lit lip. */
-export function ground(ctx, y, top = '#26221e', bot = '#100e0c', lip = 'rgba(214, 196, 168, 0.12)') {
+/**
+ * Ground from `y` down, with a lit lip. Given a `camX`, it also carries texture that scrolls in depth: the light pooled on
+ * it under the key light, furrows that spread toward the viewer, and stones lit on the light's side.
+ */
+export function ground(ctx, y, top = '#26221e', bot = '#100e0c', lip = 'rgba(214, 196, 168, 0.12)', camX = null, seed = 1) {
   const g = ctx.createLinearGradient(0, y, 0, H);
   g.addColorStop(0, top);
   g.addColorStop(1, bot);
   ctx.fillStyle = g;
   ctx.fillRect(0, y, W, H - y);
+  if (camX != null) {
+    const L = LIGHT;
+    const span = H - y;
+    // Light lying along the ground under the key light.
+    const pool = ctx.createRadialGradient(L.x, y, 0, L.x, y, 700);
+    pool.addColorStop(0, `rgba(${L.color}, ${0.2 * L.power})`);
+    pool.addColorStop(1, `rgba(${L.color}, 0)`);
+    ctx.save();
+    ctx.translate(0, y);
+    ctx.scale(1, 0.22);
+    ctx.translate(0, -y);
+    ctx.fillStyle = pool;
+    ctx.fillRect(0, y, W, span / 0.22);
+    ctx.restore();
+    // Furrows, closer together near the horizon.
+    for (let k = 1; k < 9; k++) {
+      const d = (k / 9) ** 1.7;
+      const fy = y + d * span;
+      const par = 0.4 + d * 0.9;
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.1 + d * 0.12})`;
+      ctx.lineWidth = 1 + d * 1.5;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 32) {
+        const yy = fy + Math.sin((x + camX * par) * (0.008 - d * 0.004) + k * 1.3) * (1 + d * 4);
+        if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+    }
+    // Stones, scrolling faster the nearer they lie.
+    const r = rng(seed * 13 + 5);
+    for (let i = 0; i < 70; i++) {
+      const d = r() ** 1.4;
+      const par = 0.4 + d * 0.9;
+      const sx = ((r() * 3000 - camX * par) % 3000 + 3000) % 3000 - 200;
+      const sy = y + 4 + d * (span - 8);
+      const sz = 1.5 + d * 9 * (0.4 + r());
+      const tone = 0.35 + r() * 0.3;
+      if (sx < -20 || sx > W + 20) continue;
+      const side = L.x < sx ? -1 : 1;
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.35 + d * 0.15})`;
+      ctx.beginPath();
+      ctx.ellipse(sx - side * sz * 0.6, sy + sz * 0.15, sz * 1.3, sz * 0.32, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = mix(top, bot, tone);
+      ctx.beginPath();
+      ctx.ellipse(sx, sy - sz * 0.25, sz, sz * 0.55, 0, Math.PI, TAU);
+      ctx.fill();
+      ctx.fillStyle = `rgba(${L.color}, ${0.16 + 0.3 * L.power})`;
+      ctx.beginPath();
+      ctx.ellipse(sx + side * sz * 0.35, sy - sz * 0.55, sz * 0.45, sz * 0.15, 0, 0, TAU);
+      ctx.fill();
+    }
+  }
   ctx.fillStyle = lip;
   ctx.fillRect(0, y, W, 2);
 }
@@ -181,7 +431,17 @@ export function person(ctx, x, y, s, { kind = 'hand', pose = 'stand', phase = 0,
   const shin = Hh * 0.25;
   const legW = Hh * 0.075;
 
-  shadow(ctx, x, y, Hh * 0.2, 0.4);
+  // Which side the key light is on, and a shadow thrown away from it.
+  const L = LIGHT;
+  const ld = L.x < x ? -1 : 1;
+  const reach = clamp01(1 - (y - L.y) / 900);
+  shadow(ctx, x, y, Hh * 0.2, 0.42);
+  alpha(ctx, 0.35 * L.power, () => {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.beginPath();
+    ctx.ellipse(x - ld * Hh * (0.25 + reach * 0.3), y + 1, Hh * (0.28 + reach * 0.3), Hh * 0.035, 0, 0, TAU);
+    ctx.fill();
+  });
 
   // Legs: far leg first, darker.
   const swing = Math.sin(phase) * amp;
@@ -245,16 +505,21 @@ export function person(ctx, x, y, s, { kind = 'hand', pose = 'stand', phase = 0,
     const px = shX - f * Hh * 0.16;
     ctx.fillRect(Math.min(px, px + f * Hh * 0.08), shY + Hh * 0.02, Hh * 0.08, Hh * 0.2);
   }
-  drawBody(-1.5, -1.5, k.rim);
-  drawBody(0, 0, k.body);
+  // Rim light on the side toward the key light, then the body shaded across from lit to dark.
+  drawBody(ld * 1.8, -1.5, mix(k.rim, L.color, 0.55));
+  const bg = ctx.createLinearGradient(shX + ld * Hh * 0.12, 0, shX - ld * Hh * 0.12, 0);
+  bg.addColorStop(0, shade(k.body, 0.14));
+  bg.addColorStop(0.55, k.body);
+  bg.addColorStop(1, shade(k.body, -0.45));
+  drawBody(0, 0, bg);
 
   // Head.
   const hx = shX + Math.sin(lean) * Hh * 0.08 * f;
   const hy = shY - Hh * 0.09;
   const hr = Hh * 0.075;
   if (kind === 'hood' || kind === 'cloak') {
-    ctx.fillStyle = k.rim;
-    hoodPath(ctx, hx - 1.5, hy - 1.5, hr, f);
+    ctx.fillStyle = mix(k.rim, L.color, 0.4);
+    hoodPath(ctx, hx + ld * 1.5, hy - 1.5, hr, f);
     ctx.fill();
     ctx.fillStyle = k.head;
     hoodPath(ctx, hx, hy, hr, f);
@@ -265,11 +530,14 @@ export function person(ctx, x, y, s, { kind = 'hand', pose = 'stand', phase = 0,
     ctx.ellipse(hx + f * hr * 0.35, hy + hr * 0.15, hr * 0.42, hr * 0.62, 0, 0, TAU);
     ctx.fill();
   } else {
-    ctx.fillStyle = k.rim;
+    ctx.fillStyle = mix(k.rim, L.color, 0.55);
     ctx.beginPath();
-    ctx.arc(hx - 1.5, hy - 1.5, hr, 0, TAU);
+    ctx.arc(hx + ld * 1.5, hy - 1.5, hr, 0, TAU);
     ctx.fill();
-    ctx.fillStyle = k.head;
+    const hg = ctx.createRadialGradient(hx + ld * hr * 0.4, hy - hr * 0.4, hr * 0.1, hx, hy, hr * 1.1);
+    hg.addColorStop(0, shade(k.head, 0.22));
+    hg.addColorStop(1, shade(k.head, -0.4));
+    ctx.fillStyle = hg;
     ctx.beginPath();
     ctx.arc(hx, hy, hr, 0, TAU);
     ctx.fill();
@@ -278,6 +546,10 @@ export function person(ctx, x, y, s, { kind = 'hand', pose = 'stand', phase = 0,
       ctx.globalAlpha *= 0.75;
       ctx.fillRect(hx + (f > 0 ? hr * 0.05 : -hr * 0.95), hy - hr * 0.3, hr * 0.9, hr * 0.42);
       ctx.globalAlpha /= 0.75;
+      ctx.fillStyle = 'rgba(20, 22, 26, 0.55)';
+      ctx.fillRect(hx + (f > 0 ? hr * 0.05 : -hr * 0.95), hy - hr * 0.02, hr * 0.9, hr * 0.14);
+      ctx.fillStyle = `rgba(${L.color}, 0.8)`;
+      ctx.fillRect(hx + (f > 0 ? hr * 0.2 : -hr * 0.8), hy - hr * 0.24, hr * 0.35, hr * 0.08);
     } else {
       // A cap brim.
       ctx.fillStyle = shade(k.head, -0.35);
@@ -381,9 +653,29 @@ export function lander(ctx, x, y, s, { ramp = 0, thrust = 0, clock = 0 } = {}) {
   ctx.lineTo(x + L * 0.5, by);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = 'rgba(214, 196, 168, 0.25)';
+  ctx.strokeStyle = 'rgba(214, 196, 168, 0.18)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
+  // The key light along the roof and down the side that faces it; the belly in shadow.
+  const KL = LIGHT;
+  const ld = KL.x < x ? -1 : 1;
+  ctx.strokeStyle = `rgba(${KL.color}, ${0.35 + 0.45 * KL.power})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ld < 0) { ctx.moveTo(x - L * 0.5, by - 2); ctx.lineTo(x - L * 0.42, by - hh * 0.75); ctx.lineTo(x - L * 0.18, by - hh); ctx.lineTo(x + L * 0.3, by - hh); }
+  else { ctx.moveTo(x - L * 0.18, by - hh); ctx.lineTo(x + L * 0.3, by - hh); ctx.lineTo(x + L * 0.5, by - hh * 0.4); ctx.lineTo(x + L * 0.5, by - 2); }
+  ctx.stroke();
+  const belly = ctx.createLinearGradient(0, by - hh * 0.35, 0, by);
+  belly.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  belly.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+  ctx.fillStyle = belly;
+  ctx.fillRect(x - L * 0.5, by - hh * 0.35, L, hh * 0.35);
+  // Rivets along the panel lines.
+  ctx.fillStyle = 'rgba(214, 196, 168, 0.22)';
+  for (let i = 0; i < 9; i++) ctx.fillRect(x - L * 0.36 + i * L * 0.08, by - hh * 0.88, 2, 2);
+  for (let i = 0; i < 11; i++) ctx.fillRect(x - L * 0.44 + i * L * 0.085, by - hh * 0.18, 2, 2);
+  // A running lamp on the tail that blinks.
+  if (Math.sin(clock * 3.2) > 0.4) { ctx.fillStyle = C.amber; ctx.fillRect(x - L * 0.43, by - hh * 0.8, 4, 4); }
   // Seams and a cockpit slot.
   ctx.strokeStyle = 'rgba(0,0,0,0.45)';
   ctx.beginPath();
@@ -559,8 +851,65 @@ export function scan(ctx, fx, fy, tx, ty, tw, p, clock = 0) {
   ctx.fillRect(tx + sweep - tw * 0.18, ty - 1, tw * 0.36, 2);
 }
 
-/** The letterbox bars and an optional fade to black (0 = clear, 1 = black). */
-export function frame(ctx, fadeA = 0) {
+/** A tile of film grain, made once (null where there is no real canvas, as in `verify:story`). */
+let grainTile;
+function grain() {
+  if (grainTile !== undefined) return grainTile;
+  grainTile = null;
+  try {
+    const c = typeof document !== 'undefined' && document.createElement('canvas');
+    const g = c && c.getContext && c.getContext('2d');
+    if (!g) return null;
+    c.width = 192;
+    c.height = 192;
+    const img = g.createImageData(192, 192);
+    const r = rng(4242);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.round(128 + (r() - 0.5) * 120);
+      img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    grainTile = c;
+  } catch (err) { grainTile = null; }
+  return grainTile;
+}
+
+/**
+ * The closing grade over a finished frame: the key light washed through the air, the corners pulled into shadow, a fine
+ * film grain; then the letterbox bars and an optional fade to black (0 = clear, 1 = black). Puts the key light back to
+ * its default for the next frame.
+ */
+export function frame(ctx, fadeA = 0, clock = 0) {
+  const L = LIGHT;
+  ctx.save();
+  // Warm or cool the whole frame toward the key light, strongest near it.
+  ctx.globalCompositeOperation = 'soft-light';
+  const wash = ctx.createRadialGradient(L.x, L.y, 0, L.x, L.y, 1300);
+  wash.addColorStop(0, `rgba(${L.color}, ${0.5 * L.power})`);
+  wash.addColorStop(1, 'rgba(10, 10, 14, 0.35)');
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  // Vignette.
+  const v = ctx.createRadialGradient(W / 2, H * 0.48, H * 0.32, W / 2, H * 0.48, W * 0.72);
+  v.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  v.addColorStop(1, 'rgba(0, 0, 0, 0.62)');
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, W, H);
+  // Grain, shifted a little each tick.
+  const tile = grain();
+  if (tile) {
+    const pat = ctx.createPattern(tile, 'repeat');
+    if (pat) {
+      const k = Math.floor(clock * 18);
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = 0.09;
+      ctx.translate((k * 73) % 192, (k * 131) % 192);
+      ctx.fillStyle = pat;
+      ctx.fillRect(-192, -192, W + 384, H + 384);
+    }
+  }
+  ctx.restore();
   if (fadeA > 0.001) {
     ctx.fillStyle = `rgba(5, 4, 3, ${clamp01(fadeA)})`;
     ctx.fillRect(0, 0, W, H);
@@ -568,6 +917,7 @@ export function frame(ctx, fadeA = 0) {
   ctx.fillStyle = '#050403';
   ctx.fillRect(0, 0, W, H * BAR);
   ctx.fillRect(0, H * (1 - BAR), W, H * BAR);
+  LIGHT = DEFAULT_LIGHT;
 }
 
 /** A place name set low in the frame as a scene opens. */

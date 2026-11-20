@@ -13,6 +13,7 @@
 
 import { esc } from './layout.js';
 import { checkStep, answerText } from '../learn/worked.js';
+import { toggleCalculator } from './calculator.js';
 
 /**
  * @param {HTMLElement} host
@@ -29,9 +30,15 @@ export function mountWorked(host, problem, { onDone, onLeave } = {}) {
   const done = [];        // { step, shownAnswer }
   let disposed = false;
 
+  const eyebrowText = problem.tier === 'olympiad'
+    ? `Olympiad · Beyond AP${problem.worldName ? ` · ${problem.worldName}` : ''}`
+    : problem.tier === 'ap'
+      ? `AP Synthesis${problem.worldName ? ` · ${problem.worldName}` : ''}`
+      : 'Worked problem';
+
   const logHtml = () => done.map(d => `
     <li class="bp-done">
-      <span class="bp-done-q">${esc(d.step.say)}</span>
+      <span class="bp-done-q">${d.step.beat ? `<span class="bp-beat">${esc(d.step.beat)}</span> ` : ''}${esc(d.step.say)}</span>
       <span class="bp-done-a">${esc(answerText(d.step))}</span>
       <span class="bp-done-w">${esc(d.step.explain)}</span>
     </li>`).join('');
@@ -55,14 +62,18 @@ export function mountWorked(host, problem, { onDone, onLeave } = {}) {
       <div class="bp-worked">
         <div class="bp-head">
           <div>
-            <div class="eyebrow lit">Worked problem</div>
+            <div class="eyebrow lit">${esc(eyebrowText)}</div>
             <h2 class="section-title bp-title">${esc(problem.title)}</h2>
           </div>
-          <span class="tag live">Step ${i + 1} / ${steps.length}</span>
+          <div class="bp-head-right">
+            <button type="button" class="btn-secondary quest-btn-sm" data-calc>Calculator</button>
+            <span class="tag live">Step ${i + 1} / ${steps.length}</span>
+          </div>
         </div>
         <p class="bp-setup">${esc(problem.setup)}</p>
+        ${problem.strategy ? `<p class="bp-strategy"><span class="bp-strategy-label">Approach</span> ${esc(problem.strategy)}</p>` : ''}
         ${done.length ? `<ol class="bp-log">${logHtml()}</ol>` : ''}
-        <h3 class="bp-say">${esc(step.say)}</h3>
+        <h3 class="bp-say">${step.beat ? `<span class="bp-beat">${esc(step.beat)}</span> ` : ''}${esc(step.say)}</h3>
         ${input}
         <div class="lq-practice-feedback" role="status" aria-live="polite">
           ${answered
@@ -76,11 +87,12 @@ export function mountWorked(host, problem, { onDone, onLeave } = {}) {
         </div>
       </div>`;
 
+    const num = host.querySelector('#bp-num');
+    host.querySelector('[data-calc]')?.addEventListener('click', () => toggleCalculator({ targetInput: num || null }));
     host.querySelector('[data-leave]')?.addEventListener('click', () => onLeave?.());
     host.querySelector('[data-show]')?.addEventListener('click', () => reveal(true));
     host.querySelector('[data-next]')?.addEventListener('click', advance);
     host.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => attempt(b.dataset.pick)));
-    const num = host.querySelector('#bp-num');
     host.querySelector('#bp-check')?.addEventListener('click', () => attempt(num.value));
     num?.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(num.value); });
     (num || host.querySelector('[data-next]'))?.focus({ preventScroll: true });
@@ -111,12 +123,13 @@ export function mountWorked(host, problem, { onDone, onLeave } = {}) {
       <div class="bp-worked">
         <div class="bp-head">
           <div>
-            <div class="eyebrow lit">Worked problem</div>
+            <div class="eyebrow lit">${esc(eyebrowText)}</div>
             <h2 class="section-title bp-title">${esc(problem.title)}</h2>
           </div>
         </div>
         <ol class="bp-log">${logHtml()}</ol>
         <p class="lq-practice-summary">${esc(problem.finish)}</p>
+        ${problem.takeaway ? `<p class="bp-takeaway"><span class="bp-strategy-label">Pattern</span> ${esc(problem.takeaway)}</p>` : ''}
         <div class="lq-practice-keys"><button type="button" class="btn-primary" data-done>Done</button></div>
       </div>`;
     const b = host.querySelector('[data-done]');

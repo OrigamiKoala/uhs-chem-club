@@ -48,8 +48,8 @@ export function arrivalScene(spec, lines) {
   const paint = (ctx, T, clock) => {
     if (T < t2) {
       spec.incident(ctx, T, clock);
+      frame(ctx, 1 - win(T, 0, 0.6), clock);
       placeCard(ctx, spec.name, spec.sub || '', win(T, 0.4, 1.2) * (1 - win(T, 3.6, 4.4)));
-      frame(ctx, 1 - win(T, 0, 0.6));
       return;
     }
 
@@ -63,6 +63,19 @@ export function arrivalScene(spec, lines) {
     // The lander: comes down from above, burners lit, settles, lowers its ramp.
     const drop = 1 - span(lt, 0, 2.0);
     const ly = gy - drop * 520;
+    // The burners light the ground under the lander as it comes down.
+    const burn = lt < 2.3 ? (1 - win(lt, 1.8, 2.3)) * (1 - drop * 0.8) : 0;
+    if (burn > 0.01) {
+      const pool = ctx.createRadialGradient(sx(landerX), gy, 0, sx(landerX), gy, 360);
+      pool.addColorStop(0, `rgba(229, 155, 36, ${0.4 * burn})`);
+      pool.addColorStop(1, 'rgba(229, 155, 36, 0)');
+      ctx.save();
+      ctx.translate(0, gy);
+      ctx.scale(1, 0.25);
+      ctx.fillStyle = pool;
+      ctx.fillRect(sx(landerX) - 360, -360, 720, 720);
+      ctx.restore();
+    }
     lander(ctx, sx(landerX), ly, 1.6, { ramp: span(lt, 2.2, 2.9), thrust: lt < 2.3 ? 1 - win(lt, 1.8, 2.3) : 0, clock });
     if (lt < 2.4) {
       // Dust thrown up as it lands.
@@ -125,7 +138,7 @@ export function arrivalScene(spec, lines) {
 
     if (T >= t4) brackets(ctx, sx(ex), gy - 34, 120, 70, win(kt, 1.6, 2.6));
     spec.front?.(ctx, camX, T, clock);
-    frame(ctx, 1 - win(lt, 0, FADE));
+    frame(ctx, 1 - win(lt, 0, FADE), clock);
   };
 
   return {

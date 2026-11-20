@@ -21,7 +21,7 @@ import { stage } from '../three/stage.js';
 import { session } from '../session.js';
 import { pageHeader, statRow, esc } from '../ui/layout.js';
 import { getWorld } from '../learn/curriculum.js';
-import { worldWorked } from '../learn/bank.js';
+import { worldWorked, deepWorked } from '../learn/bank.js';
 import { mountWorked } from '../ui/worked-problem.js';
 import { soundscape } from '../audio/soundscape.js';
 import {
@@ -57,6 +57,7 @@ export function renderDrills(container, params = {}) {
   };
 
   let scope = params.worldId && getWorld(params.worldId) ? params.worldId : 'all';
+  let workedTier = 'all';
   let run = null;
   let disposed = false;
   let keyHandler = null;
@@ -198,6 +199,11 @@ export function renderDrills(container, params = {}) {
 
     container.querySelectorAll('[data-worked]').forEach(btn =>
       btn.addEventListener('click', () => openWorked(btn.dataset.worked)));
+    container.querySelectorAll('[data-worked-tier]').forEach(btn =>
+      btn.addEventListener('click', () => {
+        workedTier = btn.dataset.workedTier;
+        renderHome();
+      }));
     container.querySelector('#drill-scope')?.addEventListener('change', e => {
       scope = e.target.value;
       renderHome();
@@ -211,20 +217,47 @@ export function renderDrills(container, params = {}) {
   /* ---------------------------------------------------------------
      WORKED PROBLEMS
      --------------------------------------------------------------- */
+  function allWorkedRows() {
+    const worlds = drillWorlds();
+    const deep = deepWorked(worlds, 'all');
+    const bench = worlds.flatMap(w => worldWorked(w));
+    return [...deep, ...bench];
+  }
+
   function workedHtml(p) {
-    const rows = drillWorlds().flatMap(w => worldWorked(w));
-    if (!rows.length) return '';
+    const worlds = drillWorlds();
+    const deep = deepWorked(worlds, 'all');
+    const apRows = deep.filter(w => w.tier === 'ap');
+    const olyRows = deep.filter(w => w.tier === 'olympiad');
+    const benchRows = worlds.flatMap(w => worldWorked(w));
+    const allRows = [...apRows, ...olyRows, ...benchRows];
+    if (!allRows.length) return '';
+
+    const rows = workedTier === 'ap' ? apRows
+      : workedTier === 'olympiad' ? olyRows
+      : workedTier === 'bench' ? benchRows
+      : allRows;
+
+    const tabs = [
+      { id: 'all', label: `All (${allRows.length})` },
+      { id: 'ap', label: `AP Synthesis (${apRows.length})` },
+      { id: 'olympiad', label: `Olympiad (${olyRows.length})` },
+      { id: 'bench', label: `Bench (${benchRows.length})` }
+    ];
+
     return `
       <section class="plate drill-mastery" aria-labelledby="drill-worked-title">
         <div class="m-head drill-mastery-head">
           <h2 id="drill-worked-title" class="section-title">Worked Problems</h2>
-          <span class="eyebrow">Long problems taken one step at a time.</span>
+          <div class="drill-worked-filters" role="group" aria-label="Filter worked problems">
+            ${tabs.map(t => `<button type="button" class="btn-secondary quest-btn-sm drill-filter-btn${workedTier === t.id ? ' active' : ''}" data-worked-tier="${t.id}" aria-pressed="${workedTier === t.id}">${esc(t.label)}</button>`).join('')}
+          </div>
         </div>
         <div class="drill-mastery-list">
           ${rows.map(wk => `
             <div class="drill-world-row">
               <div class="drill-world-name">
-                <span class="eyebrow">${esc(wk.worldName)} · ${esc(wk.questTitle)}</span>
+                <span class="eyebrow">${esc(wk.worldName)} · ${esc(wk.questTitle)}${wk.beyondAp ? ' · Beyond AP' : ''}</span>
                 <strong>${esc(wk.title)}</strong>
               </div>
               <span class="tag ${p.q[wk.id]?.c ? 'live' : ''}">${p.q[wk.id]?.c ? 'Worked' : 'Not yet'}</span>
@@ -235,7 +268,7 @@ export function renderDrills(container, params = {}) {
   }
 
   function openWorked(id) {
-    const wk = drillWorlds().flatMap(w => worldWorked(w)).find(x => x.id === id);
+    const wk = allWorkedRows().find(x => x.id === id);
     if (!wk) return;
     stopRun();
     container.innerHTML = `<div class="screen-container m-screen m-drills"><section class="plate drill-run"><div id="drill-worked-host"></div></section></div>`;

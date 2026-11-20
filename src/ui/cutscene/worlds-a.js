@@ -4,7 +4,7 @@
  */
 
 import {
-  C, W, H, TAU, win, span, lerp, clamp01, alpha, rng, person, fifthMark, block, heatLines, shake, drift, shade, held
+  C, W, H, TAU, win, span, lerp, clamp01, alpha, rng, person, fifthMark, block, heatLines, shake, drift, shade, held, keyLight
 } from './kit.js';
 import { scape, at } from './scape.js';
 
@@ -13,17 +13,41 @@ const GY = 560;
 // ---------------------------------------------------------------- Erebus: twenty shield towers go dark
 
 const EREBUS = {
-  sky: [[0, '#08090c'], [0.7, '#14141a'], [1, '#1d1b18']], far: '#121318', mid: '#17171b', ground: ['#24221f', '#0e0d0b'],
-  gy: GY, seed: 11, stars: 180, jag: 0.4, moon: [1040, 150, 46, '#6b625a', '#15130f']
+  sky: [[0, '#05060a'], [0.45, '#0d0f16'], [0.8, '#1a1a22'], [1, '#2a2622']], far: '#121318', mid: '#17171b', ground: ['#24221f', '#0e0d0b'],
+  gy: GY, seed: 11, stars: 180, jag: 0.4, moon: [1040, 150, 46, '#6b625a', '#15130f'],
+  light: { x: 1040, y: 150, color: '196, 200, 212', power: 0.45 }, clouds: 6, nebula: '120, 104, 140', rays: 0.025
 };
 
 function tower(ctx, x, gy, s, lit, n) {
   const h = 230 * s;
-  ctx.fillStyle = '#2a2622';
+  const L = keyLight();
+  const ld = L.x < x ? -1 : 1;
+  const g = ctx.createLinearGradient(x + ld * 16 * s, 0, x - ld * 16 * s, 0);
+  g.addColorStop(0, '#4a453e');
+  g.addColorStop(0.45, '#2a2622');
+  g.addColorStop(1, '#100e0c');
+  ctx.fillStyle = g;
   ctx.beginPath();
   ctx.moveTo(x - 16 * s, gy); ctx.lineTo(x - 6 * s, gy - h); ctx.lineTo(x + 6 * s, gy - h); ctx.lineTo(x + 16 * s, gy);
   ctx.closePath();
   ctx.fill();
+  // The edge that faces the light.
+  ctx.strokeStyle = `rgba(${L.color}, ${0.25 + 0.4 * L.power})`;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x + ld * 16 * s, gy); ctx.lineTo(x + ld * 6 * s, gy - h);
+  ctx.stroke();
+  // The shield's amber light falling down the tower while it runs.
+  if (lit > 0.5) {
+    const sg = ctx.createLinearGradient(0, gy - h, 0, gy - h * 0.55);
+    sg.addColorStop(0, 'rgba(229, 155, 36, 0.35)');
+    sg.addColorStop(1, 'rgba(229, 155, 36, 0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.moveTo(x - 6 * s, gy - h); ctx.lineTo(x + 6 * s, gy - h); ctx.lineTo(x + 10.5 * s, gy - h * 0.55); ctx.lineTo(x - 10.5 * s, gy - h * 0.55);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.strokeStyle = '#3c3833';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -88,8 +112,9 @@ const erebus = {
 // ---------------------------------------------------------------- Tallow: heavy metal in the salt bins
 
 const TALLOW = {
-  sky: [[0, '#1a1511'], [0.6, '#3a2c20'], [1, '#5a4430']], far: '#2a2420', mid: '#3a332c', ground: ['#a69e90', '#4a453e'],
-  gy: GY, seed: 21, stars: 30, farAmp: 40, midAmp: 18, haze: 'rgba(214, 196, 168, 0.12)'
+  sky: [[0, '#1a1410'], [0.35, '#3a2a1e'], [0.7, '#7a5232'], [0.9, '#b07a44'], [1, '#c99a60']], far: '#2a2420', mid: '#3a332c', ground: ['#a69e90', '#4a453e'],
+  gy: GY, seed: 21, stars: 30, farAmp: 40, midAmp: 18, haze: 'rgba(214, 196, 168, 0.12)',
+  light: { x: 260, y: 400, color: '246, 196, 128', power: 1, sun: 38 }, clouds: 9, rays: 0.06
 };
 
 function refinery(ctx, x, gy, a = 1) {
@@ -157,7 +182,7 @@ const tallow = {
     saltBin(ctx, at(1180, camX), GY + 60, 13);
   },
   incident(ctx, t, clock) {
-    scape(ctx, 0, { ...TALLOW, sky: [[0, '#0a0908'], [1, '#1d1813']], stars: 120 }, clock);
+    scape(ctx, 0, { ...TALLOW, sky: [[0, '#06070a'], [0.6, '#12121a'], [1, '#2a2220']], stars: 120, nebula: '120, 104, 120', rays: 0.02, light: { x: 980, y: 130, color: '200, 200, 214', power: 0.4 }, moon: [980, 130, 30, '#8f887b', '#15130f'] }, clock);
     refinery(ctx, 140, GY - 6, 0.9);
     saltBin(ctx, 820, GY, 5, win(t, 2.6, 3.0), clock);
     // Two hooded figures carry a dark crate to the bin, tip it, and go.
@@ -197,8 +222,9 @@ const tallow = {
 // ---------------------------------------------------------------- Lanternfall: the lighthouses go dark
 
 const LANTERN = {
-  sky: [[0, '#07080b'], [0.7, '#12151a'], [1, '#22262c']], far: '#1a1e24', mid: '#262b32', ground: ['#5a6068', '#1a1d22'],
-  gy: GY, seed: 31, stars: 220, jag: 1.4, farAmp: 110, midAmp: 50
+  sky: [[0, '#04050a'], [0.5, '#0e1220'], [0.85, '#1e2432'], [1, '#2c3240']], far: '#1a1e24', mid: '#262b32', ground: ['#5a6068', '#1a1d22'],
+  gy: GY, seed: 31, stars: 220, jag: 1.4, farAmp: 110, midAmp: 50,
+  light: { x: 880, y: 120, color: '200, 206, 222', power: 0.5 }, clouds: 4, nebula: '110, 120, 150', rays: 0.02
 };
 
 function lighthouse(ctx, x, gy, s, beam, ang, clock) {
@@ -274,8 +300,9 @@ const lanternfall = {
 // ---------------------------------------------------------------- Ligar: the rescue tunnel caves in
 
 const LIGAR = {
-  sky: [[0, '#140f0c'], [0.6, '#2e2018'], [1, '#4a3020']], far: '#1a1512', mid: '#211b17', ground: ['#2e2924', '#100e0c'],
-  gy: GY, seed: 41, stars: 40, jag: 0.8, farAmp: 90, midAmp: 30, haze: 'rgba(154, 74, 46, 0.12)'
+  sky: [[0, '#120c0a'], [0.4, '#2e1a14'], [0.75, '#6a3420'], [1, '#a2522c']], far: '#1a1512', mid: '#211b17', ground: ['#2e2924', '#100e0c'],
+  gy: GY, seed: 41, stars: 40, jag: 0.8, farAmp: 90, midAmp: 30, haze: 'rgba(154, 74, 46, 0.12)',
+  light: { x: 980, y: 400, color: '236, 128, 72', power: 0.95, sun: 44 }, clouds: 10, rays: 0.05
 };
 
 /** A cliff of basalt columns with a tunnel mouth. `fill` 0..1 buries the mouth. */
@@ -370,8 +397,9 @@ const ligar = {
 // ---------------------------------------------------------------- Bellows: jammed tanks and one that stays hot
 
 const BELLOWS = {
-  sky: [[0, '#1a1d22'], [0.55, '#3a3e44'], [1, '#6a6e72']], far: '#4a4e54', mid: '#5a5e62', ground: ['#3c3833', '#15130f'],
-  gy: GY, seed: 51, stars: 0, farAmp: 24, midAmp: 14, haze: 'rgba(220, 226, 232, 0.18)'
+  sky: [[0, '#1e2228'], [0.5, '#4a4e56'], [0.85, '#7a7c80'], [1, '#8e8c88']], far: '#4a4e54', mid: '#5a5e62', ground: ['#3c3833', '#15130f'],
+  gy: GY, seed: 51, stars: 0, farAmp: 24, midAmp: 14, haze: 'rgba(220, 226, 232, 0.18)',
+  light: { x: 620, y: 170, color: '236, 234, 228', power: 0.65 }, clouds: 14, rays: 0.04
 };
 
 function fuelTank(ctx, x, gy, s, needle, wobble = 0, clock = 0) {

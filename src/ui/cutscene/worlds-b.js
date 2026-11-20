@@ -10,8 +10,9 @@ const GY = 560;
 // ---------------------------------------------------------------- Ember Reach: the volcano heat is drained away
 
 const EMBER = {
-  sky: [[0, '#120c0a'], [0.6, '#2a1610'], [1, '#3e2014']], far: '#1a120e', mid: '#221812', ground: ['#2a221c', '#0e0c0a'],
-  gy: GY, seed: 61, stars: 50, farAmp: 30, midAmp: 22, haze: 'rgba(154, 74, 46, 0.14)'
+  sky: [[0, '#0e0808'], [0.45, '#2a1410'], [0.8, '#5a2414'], [1, '#8a3618']], far: '#1a120e', mid: '#221812', ground: ['#2a221c', '#0e0c0a'],
+  gy: GY, seed: 61, stars: 50, farAmp: 30, midAmp: 22, haze: 'rgba(154, 74, 46, 0.14)',
+  light: { x: 1000, y: 540, color: '236, 110, 46', power: 1 }, clouds: 8, rays: 0.03
 };
 
 function volcano(ctx, x, gy, clock) {
@@ -101,8 +102,9 @@ const ember = {
 // ---------------------------------------------------------------- Mirrowen: the canals freeze round the boats
 
 const MIRR = {
-  sky: [[0, '#14161a'], [0.6, '#2a2e32'], [1, '#3e4246']], far: '#1e2226', mid: '#262a2e', ground: ['#4a453e', '#1d1b18'],
-  gy: GY, seed: 71, stars: 0, farAmp: 20, midAmp: 10
+  sky: [[0, '#121418'], [0.5, '#2c3036'], [0.85, '#4e5258'], [1, '#64666a']], far: '#1e2226', mid: '#262a2e', ground: ['#4a453e', '#1d1b18'],
+  gy: GY, seed: 71, stars: 0, farAmp: 20, midAmp: 10,
+  light: { x: 400, y: 180, color: '222, 222, 226', power: 0.6, sun: 26 }, clouds: 11, rays: 0.045
 };
 
 function town(ctx, x, gy) {
@@ -201,8 +203,9 @@ const mirrowen = {
 // ---------------------------------------------------------------- Kettle: more iron out than ore went in
 
 const KETTLE = {
-  sky: [[0, '#0e0c0a'], [0.6, '#1d1612'], [1, '#2e2018']], far: '#17120f', mid: '#1d1713', ground: ['#2e2924', '#100e0c'],
-  gy: GY, seed: 81, stars: 20, farAmp: 18, midAmp: 12
+  sky: [[0, '#0c0a0a'], [0.5, '#1e1612'], [0.85, '#3e2a1e'], [1, '#5a3a24']], far: '#17120f', mid: '#1d1713', ground: ['#2e2924', '#100e0c'],
+  gy: GY, seed: 81, stars: 20, farAmp: 18, midAmp: 12,
+  light: { x: 820, y: 440, color: '229, 160, 96', power: 0.75 }, clouds: 6, nebula: '140, 100, 80', rays: 0.03
 };
 
 function foundry(ctx, x, gy, clock) {
@@ -284,8 +287,9 @@ const kettle = {
 // ---------------------------------------------------------------- Teeter: dead ponds that are still pumping
 
 const TEETER = {
-  sky: [[0, '#16140f'], [0.6, '#2e2a22'], [1, '#4a443a']], far: '#2a2620', mid: '#34302a', ground: ['#8a8274', '#3a3631'],
-  gy: GY, seed: 91, stars: 0, farAmp: 16, midAmp: 8, haze: 'rgba(220, 214, 204, 0.12)'
+  sky: [[0, '#1a1814'], [0.45, '#3e382e'], [0.8, '#7a705e'], [1, '#a29682']], far: '#2a2620', mid: '#34302a', ground: ['#8a8274', '#3a3631'],
+  gy: GY, seed: 91, stars: 0, farAmp: 16, midAmp: 8, haze: 'rgba(220, 214, 204, 0.12)',
+  light: { x: 500, y: 190, color: '246, 230, 196', power: 0.85, sun: 32 }, clouds: 10, rays: 0.06
 };
 
 function pond(ctx, x, gy, w) {
@@ -347,8 +351,9 @@ const teeter = {
 // ---------------------------------------------------------------- Verdigris: acid runoff creeps toward the radio fort
 
 const VERD = {
-  sky: [[0, '#0e100c'], [0.6, '#1a1e16'], [1, '#2a2e22']], far: '#161a12', mid: '#1c2016', ground: ['#2e3424', '#10120c'],
-  gy: GY, seed: 101, stars: 60, farAmp: 18, midAmp: 12, haze: 'rgba(120, 161, 66, 0.08)'
+  sky: [[0, '#0a0c0a'], [0.45, '#1a1e16'], [0.8, '#3a3e24'], [1, '#5a5a30']], far: '#161a12', mid: '#1c2016', ground: ['#2e3424', '#10120c'],
+  gy: GY, seed: 101, stars: 60, farAmp: 18, midAmp: 12, haze: 'rgba(120, 161, 66, 0.08)',
+  light: { x: 900, y: 400, color: '200, 196, 120', power: 0.7, sun: 30 }, clouds: 8, rays: 0.04
 };
 
 function fort(ctx, x, gy, clock) {
