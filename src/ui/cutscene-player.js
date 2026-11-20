@@ -53,7 +53,7 @@ export function playCutscene(id, opts = {}) {
         </div>
         <div class="cutscene-sub" aria-live="polite">
           <span class="cutscene-speaker"></span>
-          <p class="cutscene-line"></p>
+          <p class="cutscene-line"><span class="cutscene-line-shown"></span><span class="cutscene-line-rest" aria-hidden="true"></span></p>
         </div>
         <div class="cutscene-keys">
           <span class="cutscene-pips" aria-hidden="true">${spoken.map(() => '<i></i>').join('')}</span>
@@ -66,7 +66,8 @@ export function playCutscene(id, opts = {}) {
     const canvas = overlay.querySelector('canvas');
     const ctx = canvas.getContext('2d');
     const speakerEl = overlay.querySelector('.cutscene-speaker');
-    const lineEl = overlay.querySelector('.cutscene-line');
+    const shownEl = overlay.querySelector('.cutscene-line-shown');
+    const restEl = overlay.querySelector('.cutscene-line-rest');
     const pips = [...overlay.querySelectorAll('.cutscene-pips i')];
     const backBtn = overlay.querySelector('[data-act="back"]');
     const nextBtn = overlay.querySelector('[data-act="next"]');
@@ -84,9 +85,17 @@ export function playCutscene(id, opts = {}) {
     let say = '';
     let sayStart = 0;
     let typed = true;
+    let shownChars = 0;
 
     const paint = clock => {
       try { scene.paint(ctx, T, clock); } catch (err) { /* a bad frame never stops the scene */ }
+    };
+
+    const renderLine = n => {
+      const k = Math.max(0, Math.min(say.length, n));
+      shownChars = k;
+      shownEl.textContent = say.slice(0, k);
+      restEl.textContent = say.slice(k);
     };
 
     const setLine = (text, speaker, now) => {
@@ -94,7 +103,7 @@ export function playCutscene(id, opts = {}) {
       sayStart = now;
       typed = !say || still;
       speakerEl.textContent = say ? (speaker || 'Vess') : '';
-      lineEl.textContent = typed ? say : '';
+      renderLine(typed ? say.length : 0);
       overlay.classList.toggle('cutscene-quiet', !say);
     };
 
@@ -127,7 +136,7 @@ export function playCutscene(id, opts = {}) {
 
     const next = () => {
       const now = performance.now();
-      if (!typed) { typed = true; lineEl.textContent = say; return; }
+      if (!typed) { typed = true; renderLine(say.length); return; }
       soundscape.playToggleClack?.();
       if (holding || beats[beat].say) {
         if (beat === lastBeat) { close('done'); return; }
@@ -181,7 +190,8 @@ export function playCutscene(id, opts = {}) {
       }
       if (!typed) {
         const n = Math.floor((now - sayStart) / CHAR_MS);
-        if (n >= say.length) { typed = true; lineEl.textContent = say; } else lineEl.textContent = say.slice(0, n);
+        if (n >= say.length) { typed = true; renderLine(say.length); }
+        else if (n !== shownChars) renderLine(n);
       }
       // 30 frames a second is plenty, and kindest to a phone.
       if (now - lastPaint >= 32) { lastPaint = now; paint((now - t0) / 1000); }

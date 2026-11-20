@@ -70,6 +70,7 @@ import {
 import { reorder, startArrangement } from './rail.js';
 import { emptyRecorder, append, lay } from './recorder.js';
 import { fileCard } from '../engine/catalogue.js';
+import { cardHalf } from './layout.js';
 
 export { clusterOf, itemsIn, zoneKey, parseTo, pointFor };
 
@@ -538,23 +539,53 @@ function checkTarget(s, t) {
   return 'no such place';
 }
 
+function pieceRect(kit, p, at) {
+  const k = kit.kinds?.[p.kind];
+  if (k?.rect) return { x0: at.x - k.rect.hw, x1: at.x + k.rect.hw, y0: at.y - k.rect.hh, y1: at.y + k.rect.hh };
+  const r = radiusOf(kit, p);
+  if (p.kind === 'card' || p.token) {
+    const half = cardHalf(p.label || '', r);
+    return { x0: at.x - half, x1: at.x + half, y0: at.y - r, y1: at.y + r };
+  }
+  return { x0: at.x - r, x1: at.x + r, y0: at.y - r, y1: at.y + r };
+}
+
+const rectsOverlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+
 /** Put a piece where a resolved target says. The one place a drop is carried out. */
 function drop(s, kit, id, t) {
   const p = s.pieces[id];
 
   if (t.kind === 'piece') return joinPieces(s, kit, id, t.id);
 
-  // A TOOL (a lens, laid on a sample) comes off what it lay on when it is picked up and put anywhere
-  // else; and a piece going into a zone leaves any tool lying on it behind.
-  if (isTool(kit, p)) unlinkAll(s, id);
-  else if (t.kind !== 'free') liftTools(s, kit, id);
+  if (t.kind === 'slot') {
+    const key = zoneKey('slot', t.id);
+    if (Object.values(s.pieces).some(o => o.zone === key && o.id !== id && o.fixed)) return fail('That holder is fixed in place.');
+  }
 
   if (t.kind === 'free') {
     const group = clusterOf(s, id);
-    moveGroup(s, group, id, clampTo(s, t.at, radiusOf(kit, p)));
+    const dest = clampTo(s, t.at, radiusOf(kit, p));
+    const dx = dest.x - p.at.x;
+    const dy = dest.y - p.at.y;
+    for (const g of group) {
+      const gp = s.pieces[g];
+      const box = pieceRect(kit, gp, { x: gp.at.x + dx, y: gp.at.y + dy });
+      for (const o of Object.values(s.pieces)) {
+        if (o.hidden || !o.fixed || o.id === g || !o.zone?.startsWith('slot:')) continue;
+        if (rectsOverlap(box, pieceRect(kit, o, o.at))) return fail('That holder is fixed in place.');
+      }
+    }
+    if (isTool(kit, p)) unlinkAll(s, id);
+    moveGroup(s, group, id, dest);
     group.forEach(g => leaveZone(s, g));
     return { placed: 'free' };
   }
+
+  // A TOOL (a lens, laid on a sample) comes off what it lay on when it is picked up and put anywhere
+  // else; and a piece going into a zone leaves any tool lying on it behind.
+  if (isTool(kit, p)) unlinkAll(s, id);
+  else liftTools(s, kit, id);
 
   if (t.kind === 'tray' || t.kind === 'container') {
     const key = zoneKey(t.kind, t.id);
@@ -566,7 +597,6 @@ function drop(s, kit, id, t) {
 
   if (t.kind === 'slot') {
     const key = zoneKey('slot', t.id);
-    if (Object.values(s.pieces).some(o => o.zone === key && o.id !== id && o.fixed)) return fail('That holder is fixed in place.');
     unlinkAll(s, id);
     leaveZone(s, id);
     if (s.zones.slots[t.id].row) return fileIntoRow(s, id, s.zones.slots[t.id]);

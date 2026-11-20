@@ -1425,10 +1425,17 @@
 
 .cutscene-line {
   margin: 0.3rem auto 0;
+  width: fit-content;
   max-width: 46rem;
+  text-align: left;
   font-size: 1.02rem;
   line-height: 1.45;
   color: var(--text-bright, #dcd6cc);
+}
+
+.cutscene-line-rest {
+  visibility: hidden;
+  user-select: none;
 }
 
 .cutscene-keys {

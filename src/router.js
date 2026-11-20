@@ -282,7 +282,6 @@ export class Router {
       openWorldStoryModal(worldId, {
         isPreLaunch: true,
         onLaunch: () => {
-          sessionStorage.setItem(`story_just_shown_${worldId}`, String(Date.now()));
           this._executeVoyage(target, raw);
         },
         onClose: () => {

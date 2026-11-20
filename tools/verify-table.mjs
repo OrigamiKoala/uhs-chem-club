@@ -588,6 +588,21 @@ try {
   if (noop.last.ok) fail('placing in a tray that does not exist took');
   if (JSON.stringify(MODEL.signature(noop)) !== JSON.stringify(MODEL.signature(t0))) fail('a refused action changed the table');
   if (MODEL.apply(t0, { bogus: 1 }).last.ok) fail('an unknown action took');
+  const fixedSpec = {
+    kit: 'trends',
+    bounds: { w: 150, h: 64 },
+    pieces: [
+      { id: 'li', kind: 'atom', label: 'LITHIUM', at: { x: 14.5, y: 17 }, zone: 'slot:st.atom', fixed: true, props: { sym: 'Li' } },
+      { id: 'c', kind: 'atom', label: 'CARBON', at: { x: 14, y: 53 }, props: { sym: 'C' } }
+    ],
+    zones: { slots: [{ id: 'st.atom', label: 'Atom', at: { x: 14.5, y: 17 }, size: { w: 20, h: 19 } }] }
+  };
+  const ft0 = MODEL.createTable(fixedSpec, 'fx');
+  const onSlot = MODEL.apply(ft0, { place: { piece: 'c', at: { x: 14.5, y: 17 } } });
+  const nearSlot = MODEL.apply(ft0, { place: { piece: 'c', at: { x: 25, y: 17 } } });
+  if (onSlot.last.ok || nearSlot.last.ok || nearSlot.pieces.c.at.x !== 14 || nearSlot.pieces.c.at.y !== 53) {
+    fail('a piece could be dropped on top of a fixed piece seated in a slot');
+  }
   const poured = MODEL.apply(t0, { pour: { from: 'A', to: 'B', what: 'water', amount: 99 } });
   if (poured.zones.containers.B.contents.water !== 6) fail('a pour is not clamped to what the jar holds');
   const unlike = MODEL.apply(t0, { join: ['b1', 'b3'] });
