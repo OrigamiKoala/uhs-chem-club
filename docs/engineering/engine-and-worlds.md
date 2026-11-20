@@ -451,6 +451,63 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   In-world terminals (Star Map, Standings, Inventory, …) take the glass edge to edge below the HUD on a
   phone in both portrait and landscape; they are never docked to one side.
 
+## Crews (NPCs) — every Learn world (2026-11-19)
+
+Plan and status: `docs/plans/npc-plan.md`. Every Learn world has six people walking their rounds: Tallow (`unit01`, the pilot) and the
+thirteen after it (`unit02`–`unit14`), 84 in all, each world with one side task.
+
+- **Bodies** are Microsoft Rocketbox avatars (MIT; notice in `public/models/npc/LICENSE-rocketbox.txt`), 28 listed in `src/npc/models.js`
+  (construction, fire, medical/lab, pilot, security, delivery, gardener and everyday clothes; `group: 'Adults'` for the everyday ones).
+  No body is used twice on one world; a world loads only its own six. `tools/npc/build-models.mjs --src <Rocketbox root> [--missing]`
+  converts them (needs Blender 4.4+ and Python with Pillow; the sources are not in the repo: a sparse checkout of the needed avatars
+  and clips lives in git-ignored `assets-src/rocketbox/`; `--missing` builds only bodies or clip files `public/models/npc` lacks and
+  merges the manifest): `prep_textures.py` turns each colour/normal/specular TGA set into glTF colour, normal and metal/rough maps
+  (roughness from specular; a part with only colour gets a flat normal and matt roughness; a colour shipped only as a variant, e.g.
+  `_color_blue`, is used as the colour), `build_glb.py` rebuilds the materials and exports `<id>.glb` (desktop: ~10k triangles, 2048
+  colour on body and head) and `<id>.lite.glb` (handset: decimated to half, 512 textures), and one clip file per skeleton
+  (`clips-m.glb`, `clips-f.glb`). The walks were captured moving: the build takes the travel off the root and writes each walk's ground
+  speed into `manifest.json`, and the runtime scales the clip to the walker's speed so feet do not slide. `slim-clips.mjs` keeps only bone
+  ROTATIONS (plus the root's position) as 16-bit quaternions, so a clip plays on any body of its skeleton without stretching limbs, and
+  drops Biped's `Nub` end-markers.
+- **Data** (pure, no THREE): `src/npc/tallow-crew.js` and `src/npc/crews/<world>.js` each declare `POSTS` (world `[x, z]` + a `look`
+  point), `CREW` (name, role, model, looping `schedule` of `{ post, act, for: [min, max] }`, `talk.default` line sets plus `afterBench` /
+  `afterClue` sets) and `TASKS` (one per world; `item.kind` is tarp, cloth, glove, paper, glass, metal or bolt). `src/npc/crews.js`
+  registers every world (`CREW_WORLDS`: key, world id, module, class, its crew, posts and tasks) and gives `walkFor(key, world)` (the walk
+  grid options) and `keepOffFor(world)` (the boss arena from `data.arena`: discs round the boss, the player's mark and between).
+  `src/npc/talk.js` picks a line set (unlocked sets first, then everyday ones, moving on each talk) and runs a task's ask → remind →
+  thanks; `src/npc/tasks.js` gathers every world's tasks for the lore notebook.
+- **Posts** for the thirteen later worlds were proposed by `tools/npc/pick-posts.mjs <world>` (reachable from the spawn, clear by 0.8 m,
+  7 m from every bench approach and every other post, off the arena; by landmarks first, then spread over ground within 24 m of a
+  bench or landmark; dealt into six rounds of three neighbouring posts, plus a task item spot) and pasted into the crew files.
+  `tools/npc/scout.mjs <world>` prints a world's walkable area, ground heights and landmark-side spots. Both are authoring aids;
+  `verify:npc` is the check.
+- **Simulation** (`src/npc/crew-sim.js`, pure): a 0.5 m walk grid closed by the world's colliders (bucketed on a 4 m lattice), every bench's
+  bay (`bench-bay.js` `bayBoxes`, less the lean air), the `keepOff` discs, ground outside the `floor` heights, and (with `maxStep`) ground
+  that changes more than 0.3 m across a cell, so terraced and hilly worlds are walked by their ramps and slopes. Tallow keeps the pilot's
+  settings (±72 m, one flat level, its pit closed); the others use ±96 m (the player's walk is held to ±100 m), a wide floor and the step
+  rule. A* per schedule leg, string-pulled, cached. Members stop for the player standing in the next 1.6 m of their way, give way to each
+  other by roster order, step aside after 2.5 s, and stop and turn to the player while talked to.
+- **Runtime**: every Learn world calls `attachCrew(this, '<key>')` (`three/npc/attach.js`) at the end of its constructor (3D On with a
+  renderer only; no crew in node checks or 3D Off), `this.crew?.update(delta, cameraPos)` first in `update`, and `this.crew?.dispose()`
+  in `dispose`. `three/npc/crew.js` (`Crew`) fills the walk grid 3 ms a frame (up to ~0.75 s of work on the busiest worlds, so it is
+  never one stall) and starts the crew when it is done; `three/npc/figures.js` loads and clones bodies (`SkeletonUtils.clone`), switches
+  alpha parts to alpha-test, and cross-fades clips. Bodies past 70 m are not drawn; past 30 m animation steps at 10 Hz; real shadows only
+  within 25 m (a blob decal otherwise, and always on a handset); a handset draws at most four. The crew group is part of the world
+  (`markWorldOwn`) so walking crews do not hold an open bench's shadow live. The cover mask is applied to each body as it arrives.
+- **Stage wiring** (`stage.js`): `aimedInteraction` adds `crew.aimTargets()` to the Learn world's targets (`[E] TALK TO <NAME>`, `[E] TAKE <ITEM>`);
+  `onInteract` advances the open talk card first; `worldColliders` appends the crew's moving discs (updated in place, so the player cannot walk
+  through a person); `syncCrew` switches the standing world's crew on and the rest off; `setArenaBench` hides the crew during a boss fight.
+- **Talk card and carry chip**: `src/ui/npc-card.js` (bottom card, name + role, one line per [E]/click/tap, Esc or walking 4 m away closes).
+- **Side tasks** (one per world, chemistry-free: a dropped thing the giver saw on the night the Fifth came): state in the synced flag
+  `npc_task_<id>` (`asked`, `carrying`, `done`); done files `crew:<id>` in the lore notebook (`story/lore.js`, kind `fieldnote`), which the
+  Case Board lists with the act's notes. No XP and nothing gated. 3D Off has no crew and no tasks.
+- **Checks**: `verify:npc` (`tools/verify-npc.mjs [world]`, starts first in `npm run verify`; loads glTF headlessly through
+  `tools/lib/npc-gltf.mjs`), per world: posts clear, reachable, off bays and the arena; every leg walks clear; ten simulated minutes with a
+  wandering player (no wall, bay, arena or person overlap, no ground steeper than the walk allows plus 0.15 m, no wait over 12 s, every stop
+  reached); line rules (≤25 words, no digits, banned narrative words); tasks and unlocks name that world's benches and real clues, no body
+  twice on a world. Across worlds: unique member ids, names and task ids, one task per world; no XP calls; every body 1.5–2.0 m, binding
+  every clip it plays with its ankles on the ground through a walk.
+
 ## Quest 1 — Charge Gardens of Erebus (20 stages, 650 XP; 715 with bonuses)
 
 Arrows from red giver to blue receiver; stages 1–7 one arrow, 8–10 three molecules, 11–20 two ordered

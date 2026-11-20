@@ -49,6 +49,7 @@ import { makeCover } from './lib/cover.js';
 import { yawPoint } from './ember/kit.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** Landmarks that are round, or turn themselves: their group is never turned. */
 const SELF_TURNED = new Set(['lamp-post', 'landing-pad']);
@@ -94,6 +95,8 @@ export class LodestoneWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/lodestone.js`).
+    this.crew = attachCrew(this, 'lodestone');
   }
 
   own(...objs) {
@@ -433,6 +436,7 @@ export class LodestoneWorld {
   /* ------------------------------------------------------------ frame */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     lsSkyUniforms.uLsTime.value = this.elapsed;
     if (cameraPos) {
@@ -447,6 +451,8 @@ export class LodestoneWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.envTarget?.dispose();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) { /* already freed */ }

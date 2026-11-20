@@ -49,6 +49,7 @@ import { createBellowsEffects } from './bellows/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** The amber filament every work lamp in the world burns. */
 const FILAMENT = 0xd99423;
@@ -95,6 +96,8 @@ export class BellowsWorld {
     this.buildColliders();
     this.collectMovers();
     this.enableAmbientOcclusion();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/bellows.js`).
+    this.crew = attachCrew(this, 'bellows');
   }
 
   /** Track a texture/geometry/material so dispose() can actually free it. */
@@ -446,6 +449,7 @@ export class BellowsWorld {
      ====================================================================== */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     bwSkyUniforms.uBwTime.value = this.elapsed;
     if (cameraPos) {
@@ -467,6 +471,8 @@ export class BellowsWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.effects?.dispose();
     this.envTarget?.dispose();
     for (const d of this.disposables) {

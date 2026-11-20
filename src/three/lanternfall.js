@@ -40,6 +40,7 @@ import { createLanternfallEffects } from './lanternfall/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** The amber filament every lantern in the world burns. A lamp is a lamp. */
 const FILAMENT = 0xd99423;
@@ -84,6 +85,8 @@ export class LanternfallWorld {
     this.bakeStatics();
     this.buildColliders();
     this.enableAmbientOcclusion();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/lanternfall.js`).
+    this.crew = attachCrew(this, 'lanternfall');
   }
 
   own(...objs) {
@@ -448,6 +451,7 @@ export class LanternfallWorld {
      ====================================================================== */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     lfSkyUniforms.uLfTime.value = this.elapsed;
     if (cameraPos) {
@@ -463,6 +467,8 @@ export class LanternfallWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.effects?.dispose();
     this.envTarget?.dispose();
     for (const d of this.disposables) {

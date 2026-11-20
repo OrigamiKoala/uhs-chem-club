@@ -50,6 +50,7 @@ import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './kettle/stations.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** Landmarks that are round, or turn themselves: their group is never turned. */
 const SELF_TURNED = new Set(['lamp-post']);
@@ -95,6 +96,8 @@ export class KettleWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/kettle.js`).
+    this.crew = attachCrew(this, 'kettle');
   }
 
   own(...objs) {
@@ -490,6 +493,7 @@ export class KettleWorld {
   /* ------------------------------------------------------------ frame */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     ktSkyUniforms.uKtTime.value = this.elapsed;
     if (cameraPos) {
@@ -507,6 +511,8 @@ export class KettleWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.envTarget?.dispose();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) { /* already freed */ }

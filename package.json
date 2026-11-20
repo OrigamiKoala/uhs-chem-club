@@ -47,7 +47,8 @@
     "verify:sync": "node tools/verify-sync.mjs",
     "verify:drills": "node tools/verify-drills.mjs",
     "verify:docs": "node tools/verify-docs.mjs",
-    "verify:galaxy": "node tools/verify-galaxy.mjs"
+    "verify:galaxy": "node tools/verify-galaxy.mjs",
+    "verify:npc": "node tools/verify-npc.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

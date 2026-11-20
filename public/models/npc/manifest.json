@@ -1,0 +1,191 @@
+{
+  "source": "Microsoft Rocketbox (MIT)",
+  "models": {
+    "crew-f101": {
+      "skeleton": "f",
+      "tris": 8662,
+      "liteTris": 4330
+    },
+    "crew-m111": {
+      "skeleton": "m",
+      "tris": 10260,
+      "liteTris": 5129
+    },
+    "crew-m102": {
+      "skeleton": "m",
+      "tris": 9376,
+      "liteTris": 4688
+    },
+    "crew-m104": {
+      "skeleton": "m",
+      "tris": 7848,
+      "liteTris": 3923
+    },
+    "crew-m107": {
+      "skeleton": "m",
+      "tris": 8058,
+      "liteTris": 4029
+    },
+    "watch-m171": {
+      "skeleton": "m",
+      "tris": 9515,
+      "liteTris": 4756
+    },
+    "crew-m101": {
+      "skeleton": "m",
+      "tris": 8152,
+      "liteTris": 4075
+    },
+    "crew-m103": {
+      "skeleton": "m",
+      "tris": 9988,
+      "liteTris": 4994
+    },
+    "crew-m108": {
+      "skeleton": "m",
+      "tris": 8474,
+      "liteTris": 4236
+    },
+    "fire-m138": {
+      "skeleton": "m",
+      "tris": 8551,
+      "liteTris": 4275
+    },
+    "fire-m134": {
+      "skeleton": "m",
+      "tris": 8645,
+      "liteTris": 4321
+    },
+    "yard-m106": {
+      "skeleton": "m",
+      "tris": 7470,
+      "liteTris": 3734
+    },
+    "hand-m112": {
+      "skeleton": "m",
+      "tris": 6800,
+      "liteTris": 3399
+    },
+    "hand-m110": {
+      "skeleton": "m",
+      "tris": 7108,
+      "liteTris": 3554
+    },
+    "lab-f152": {
+      "skeleton": "f",
+      "tris": 8328,
+      "liteTris": 4164
+    },
+    "lab-f153": {
+      "skeleton": "f",
+      "tris": 9264,
+      "liteTris": 4631
+    },
+    "medic-f154": {
+      "skeleton": "f",
+      "tris": 7536,
+      "liteTris": 3768
+    },
+    "lab-m154": {
+      "skeleton": "m",
+      "tris": 7514,
+      "liteTris": 3756
+    },
+    "lab-m162": {
+      "skeleton": "m",
+      "tris": 8240,
+      "liteTris": 4119
+    },
+    "pilot-f168": {
+      "skeleton": "f",
+      "tris": 8288,
+      "liteTris": 4144
+    },
+    "pilot-m167": {
+      "skeleton": "m",
+      "tris": 7816,
+      "liteTris": 3907
+    },
+    "town-f004": {
+      "skeleton": "f",
+      "tris": 9284,
+      "liteTris": 4641
+    },
+    "town-f009": {
+      "skeleton": "f",
+      "tris": 9032,
+      "liteTris": 4516
+    },
+    "town-f019": {
+      "skeleton": "f",
+      "tris": 8708,
+      "liteTris": 4354
+    },
+    "town-f017": {
+      "skeleton": "f",
+      "tris": 8724,
+      "liteTris": 4362
+    },
+    "town-f018": {
+      "skeleton": "f",
+      "tris": 9832,
+      "liteTris": 4916
+    },
+    "town-m009": {
+      "skeleton": "m",
+      "tris": 7836,
+      "liteTris": 3918
+    },
+    "town-m007": {
+      "skeleton": "m",
+      "tris": 6722,
+      "liteTris": 3361
+    }
+  },
+  "clips": {
+    "m": {
+      "walk": {
+        "seconds": 1.2,
+        "speed": 1.0117
+      },
+      "walkSlow": {
+        "seconds": 1.4667,
+        "speed": 0.821
+      },
+      "idle": {
+        "seconds": 11.6667
+      },
+      "idleShift": {
+        "seconds": 15.5
+      },
+      "look": {
+        "seconds": 4.6333
+      },
+      "talk": {
+        "seconds": 35.5667
+      }
+    },
+    "f": {
+      "walk": {
+        "seconds": 1.2,
+        "speed": 1.2138
+      },
+      "walkSlow": {
+        "seconds": 1.5,
+        "speed": 0.8873
+      },
+      "idle": {
+        "seconds": 15.5333
+      },
+      "idleShift": {
+        "seconds": 11.2333
+      },
+      "look": {
+        "seconds": 4.4667
+      },
+      "talk": {
+        "seconds": 27.3333
+      }
+    }
+  }
+}

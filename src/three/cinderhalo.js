@@ -27,6 +27,7 @@ import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './cinderhalo/stations.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 const FILAMENT = 0xe8a440;
 const SELF_TURNED = new Set(['lamp-post', 'landing-pad']);
@@ -68,6 +69,8 @@ export class CinderHaloWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/cinderhalo.js`).
+    this.crew = attachCrew(this, 'cinderhalo');
   }
 
   own(...objs) {
@@ -351,6 +354,7 @@ export class CinderHaloWorld {
   }
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     chSkyUniforms.uChTime.value = this.elapsed;
     for (const node of this.animated) node.userData.animate(this.elapsed);
@@ -367,6 +371,8 @@ export class CinderHaloWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.envTarget?.dispose();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) { /* already freed */ }

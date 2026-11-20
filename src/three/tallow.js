@@ -98,6 +98,7 @@ import { HALLS, hallFor, hallRect, hallColliders, hallCoverBoxes, pitCoverBox, r
 import { buildHall } from './tallow/halls.js';
 import { makeCover } from './lib/cover.js';
 import { buildHauler } from './tallow/hauler.js';
+import { attachCrew } from './npc/attach.js';
 import { buildTallowVista } from './tallow/vista.js';
 import { iBeamGeometry } from './tallow/kit.js';
 import { LampPool } from './lamp-pool.js';
@@ -153,6 +154,15 @@ export class TallowWorld {
     this.enableAmbientOcclusion();
     this.weatherTheWorld();
     this.initCover();
+    this.initCrew();
+  }
+
+  /**
+   * THE CREW (`npc/crew.js`, `src/npc/tallow-crew.js`): the refinery's people, walking their rounds between
+   * the buildings. 3D On with a renderer only; the bodies load after the world opens.
+   */
+  initCrew() {
+    this.crew = attachCrew(this, 'tallow');
   }
 
   /**
@@ -2154,6 +2164,7 @@ export class TallowWorld {
       }
       this.effects?.update(delta, this.elapsed, cameraPos);
       this.lampPool?.update(cameraPos);
+      this.crew?.update(delta, cameraPos);
     }
     this.vista?.update?.(delta, this.elapsed);
 
@@ -2167,6 +2178,8 @@ export class TallowWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.effects?.dispose();
     this.envTarget?.dispose();
     for (const d of this.disposables) {

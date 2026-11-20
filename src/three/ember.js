@@ -43,6 +43,7 @@ import { createEmberEffects } from './ember/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** The amber filament every work lamp in the world burns. */
 const FILAMENT = 0xd99423;
@@ -91,6 +92,8 @@ export class EmberReachWorld {
     this.buildColliders();
     this.collectMovers();
     this.enableAmbientOcclusion();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/ember.js`).
+    this.crew = attachCrew(this, 'ember');
   }
 
   own(...objs) {
@@ -549,6 +552,7 @@ export class EmberReachWorld {
      ====================================================================== */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     erSkyUniforms.uErTime.value = this.elapsed;
     if (cameraPos) {
@@ -583,6 +587,8 @@ export class EmberReachWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.effects?.dispose();
     this.envTarget?.dispose();
     for (const d of this.disposables) {

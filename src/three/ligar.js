@@ -101,6 +101,7 @@ import { makeMinePlan, hillDistance } from './ligar/mine-plan.js';
 import { buildMine } from './ligar/mine.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /* Deterministic layout noise: the quarry is the same quarry every visit. */
 function mulberry32(seed) {
@@ -179,6 +180,8 @@ export class LigarWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.weatherTheWorld();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/ligar.js`).
+    this.crew = attachCrew(this, 'ligar');
   }
 
   /**
@@ -2163,6 +2166,7 @@ export class LigarWorld {
 
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     ligarSkyUniforms.uLTime.value = this.elapsed;
     // While an instrument is open, whatever it has built since the last look gets the air: every frame at
@@ -2223,6 +2227,8 @@ export class LigarWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.effects?.dispose();
     this.vista?.dispose?.();
     this.envTarget?.dispose();

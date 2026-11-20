@@ -29,6 +29,7 @@ import { yawPoint } from './ember/kit.js';
 import { HOST_BUILDERS } from './thornmere/stations.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 const FILAMENT = 0xe8a440;
 const SELF_TURNED = new Set(['lamp-post', 'landing-pad']);
@@ -73,6 +74,8 @@ export class ThornmereWorld {
     this.bakeStatics();
     this.buildColliders();
     this.enableAmbientOcclusion();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/thornmere.js`).
+    this.crew = attachCrew(this, 'thornmere');
   }
 
   own(...objs) {
@@ -368,6 +371,7 @@ export class ThornmereWorld {
   }
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     tmSkyUniforms.uTmTime.value = this.elapsed;
     for (const node of this.animated) node.userData.animate(this.elapsed);
@@ -382,6 +386,8 @@ export class ThornmereWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.envTarget?.dispose();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) { /* already freed */ }

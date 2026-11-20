@@ -19,17 +19,20 @@
  *   erebus:pylon:<stage>    the transmission that opens a pylon
  *   erebus:milestone:<stage>
  *   erebus:debrief:<n>      a section of the contract debrief
+ *   crew:<taskId>           a crew member's side task, done (`src/npc/tasks.js`)
  */
 
 import { ACTS, CLUES, SPINE_BEATS, CAMPAIGN_STORY, EPISODES } from './saga.js';
 import { QUEST1_STORY } from './quest1.js';
+import { CREW_TASKS } from '../npc/tasks.js';
 
 export const LORE_KINDS = {
   briefing: 'Briefing',
   transmission: 'Transmission',
   evidence: 'Evidence',
   outcome: 'Outcome',
-  contract: 'Contract'
+  contract: 'Contract',
+  fieldnote: 'Field note'
 };
 
 /** Story order: the prologue, then the acts, then the Erebus contract's own log. */
@@ -109,6 +112,17 @@ export function getLore(id) {
     };
   }
 
+  if (kind === 'crew') {
+    const task = CREW_TASKS[a];
+    const ep = task && EPISODES[task.worldId];
+    if (!task || !ep) return null;
+    return {
+      id, kind: 'fieldnote', act: ep.act, worldId: task.worldId, sort: [ACT_ORDER.indexOf(ep.act), worldOrder(task.worldId), 40],
+      title: task.note.title, speaker: task.note.speaker, text: task.note.text,
+      source: `${ep.worldName} · crew`
+    };
+  }
+
   if (kind === 'erebus') {
     const base = [ACT_ORDER.indexOf('act1'), -1];
     if (a === 'contract') {
@@ -164,6 +178,7 @@ export function allLoreIds() {
   QUEST1_STORY.pylons.forEach((p, i) => { if (p.transmission) ids.push(`erebus:pylon:${i + 1}`); });
   Object.keys(QUEST1_STORY.milestones).forEach(m => ids.push(`erebus:milestone:${m}`));
   (QUEST1_STORY.debrief.sections || []).forEach((_, i) => ids.push(`erebus:debrief:${i}`));
+  Object.keys(CREW_TASKS).forEach(t => ids.push(`crew:${t}`));
   return ids;
 }
 

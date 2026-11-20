@@ -36,6 +36,7 @@ import { soundscape } from "../audio/soundscape.js";
 import { gameMode } from "../game-mode.js";
 import { worldUI } from "./world-ui.js";
 import { markWorldOwn, visitorsMoving } from "./shadow-pace.js";
+import { isLineCardOpen, advanceLineCard } from "../ui/npc-card.js";
 import { Voyage, DESTINATIONS } from "./voyage.js";
 import { api } from "../api.js";
 
@@ -352,6 +353,8 @@ class Stage {
     // [E] acts on what the player is LOOKING at, the same thing the prompt
     // names — both read `aimedInteraction`, so they cannot disagree.
     this.fpsControls.onInteract = () => {
+      // A crew member's lines are on screen: [E] reads on, and closes after the last.
+      if (isLineCardOpen()) { advanceLineCard(); return; }
       this.aimedInteraction()?.act?.();
     };
 
@@ -969,7 +972,8 @@ class Stage {
 
   /** A world's colliders, plus the ship's where it stands on that world. */
   worldColliders(world) {
-    const extra = this.voyage ? this.voyage.parkedColliders(world) : [];
+    // The crew's discs move with them (updated in place each frame), so the walk holds the player off a person.
+    const extra = [...(this.voyage ? this.voyage.parkedColliders(world) : []), ...(world?.crew?.discs || [])];
     return extra.length ? [...world.colliders, ...extra] : world.colliders;
   }
 
@@ -1150,6 +1154,19 @@ class Stage {
       w === this.bellowsWorld || w === this.emberWorld || w === this.mirrowenWorld || w === this.kettleWorld || w === this.teeterWorld || w === this.verdigrisWorld || w === this.brinewireWorld || w === this.quicklightWorld || w === this.lodestoneWorld || w === this.thornmereWorld || w === this.cinderhaloWorld);
   }
 
+  /**
+   * The crew of the world the player is standing on is switched on (it may be talked to, its carry chip
+   * shows); any other world's crew is off.
+   */
+  syncCrew() {
+    const here = (this.mode === "world" || (this.mode === "quest" && this.activeQuestViewer?.inWorld)) && this.activeWorld?.crew
+      ? this.activeWorld.crew : null;
+    if (here === this._activeCrew) return;
+    this._activeCrew?.setActive(false);
+    here?.setActive(true);
+    this._activeCrew = here;
+  }
+
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
   syncAimPrompt() {
     const hit = this.aimedInteraction();
@@ -1187,7 +1204,10 @@ class Stage {
     }
 
     if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
-      const hit = pickAimTarget(origin, dir, learnWorldAimTargets(this.activeWorld, origin.y));
+      const crew = this.activeWorld.crew;
+      const targets = crew ? [...learnWorldAimTargets(this.activeWorld, origin.y), ...crew.aimTargets(origin)] : learnWorldAimTargets(this.activeWorld, origin.y);
+      const hit = pickAimTarget(origin, dir, targets);
+      if (crew && (hit?.kind === "npc" || hit?.kind === "npc-item")) return crew.interaction(hit);
       if (hit?.kind === "site") {
         const site = hit.site;
         return {
@@ -1520,6 +1540,7 @@ class Stage {
     if (!questId || !spot || !this.isLearnWorld(world)) return null;
     this._arenaBench = buildArenaTable(world, { questId, spot });
     this._arenaWorld = world;
+    world.crew?.setHidden(true);
     // The walk was handed its colliders when the world was entered: hand it the table too.
     this.fpsControls?.setColliders(this.worldColliders(world));
     return this._arenaBench;
@@ -1532,6 +1553,7 @@ class Stage {
     try { this._arenaBench.dispose(); } catch (err) { console.error('Arena table dispose failed:', err); }
     this._arenaBench = null;
     this._arenaWorld = null;
+    world?.crew?.setHidden(false);
     if (world && this.activeWorld === world) this.fpsControls?.setColliders(this.worldColliders(world));
   }
 
@@ -1654,6 +1676,7 @@ class Stage {
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
     this.syncTouchControls(now);
+    this.syncCrew();
     this.paceResolution(delta, Boolean(
       this.activeWorld && (this.mode === "world" ||
         (this.mode === "quest" && this.activeQuestViewer?.inWorld))

@@ -47,6 +47,7 @@ import { createMirrowenEffects } from './mirrowen/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { makeCover } from './lib/cover.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** The amber filament every work lamp in the world burns. */
 const FILAMENT = 0xd99423;
@@ -94,6 +95,8 @@ export class MirrowenWorld {
     this.buildColliders();
     this.collectMovers();
     this.enableAmbientOcclusion();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/mirrowen.js`).
+    this.crew = attachCrew(this, 'mirrowen');
   }
 
   own(...objs) {
@@ -502,6 +505,7 @@ export class MirrowenWorld {
      ====================================================================== */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     mwSkyUniforms.uMwTime.value = this.elapsed;
     if (cameraPos) {
@@ -525,6 +529,8 @@ export class MirrowenWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.effects?.dispose();
     this.envTarget?.dispose();
     for (const d of this.disposables) {

@@ -26,7 +26,7 @@ for (const [name, cmd] of Object.entries(pkg.scripts)) {
 }
 
 // Start the slowest checks first so they overlap with the rest of the suite.
-const PRIORITY = new Map([['verify:bench', 0], ['verify:run', 1], ['verify:arena', 2], ['verify:table', 3], ['verify:thornmere', 4], ['verify:lodestone', 5], ['verify:voyage', 6], ['verify:learn', 7]]);
+const PRIORITY = new Map([['verify:npc', -1], ['verify:bench', 0], ['verify:run', 1], ['verify:arena', 2], ['verify:table', 3], ['verify:thornmere', 4], ['verify:lodestone', 5], ['verify:voyage', 6], ['verify:learn', 7]]);
 jobs.sort((a, b) => (PRIORITY.get(a.name) ?? 99) - (PRIORITY.get(b.name) ?? 99));
 
 function runCommand(cmd) {

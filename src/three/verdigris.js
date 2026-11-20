@@ -48,6 +48,7 @@ import { FILAMENT } from './kettle/kit.js';
 import { makeCover } from './lib/cover.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { attachCrew } from './npc/attach.js';
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
@@ -93,6 +94,8 @@ export class VerdigrisWorld {
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.initCover();
+    // The people who work here, walking their rounds (`npc/attach.js`, `src/npc/crews/verdigris.js`).
+    this.crew = attachCrew(this, 'verdigris');
   }
 
   own(...objs) {
@@ -454,6 +457,7 @@ export class VerdigrisWorld {
   /* ------------------------------------------------------------ frame */
 
   update(delta, cameraPos) {
+    this.crew?.update(delta, cameraPos);
     this.elapsed += delta;
     vdSkyUniforms.uVdTime.value = this.elapsed;
     if (cameraPos) {
@@ -471,6 +475,8 @@ export class VerdigrisWorld {
   }
 
   dispose() {
+    this.crew?.dispose();
+    this.crew = null;
     this.envTarget?.dispose();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) { /* already freed */ }
