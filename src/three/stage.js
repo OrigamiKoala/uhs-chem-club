@@ -1509,7 +1509,7 @@ class Stage {
       if (boarding) this.voyage.board(leftWorld);
       else {
         if (this.voyage.state === "ground") this.voyage.reset();
-        this.voyage.groundGuide?.hide();
+        this.voyage.setGroundWaypoint(null);
       }
     }
     if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
@@ -1560,6 +1560,7 @@ class Stage {
       dormant: anchor.dormant || null,
       // The world itself, for what it registered at the bench (its field points).
       object: world,
+      site: world.data?.sites?.find(s => s.questId === questId) || null,
       // A boss fight's table stands in the boss's arena (`arena-table.js`): the foe is across the ground, not on the plate.
       arena: Boolean(anchor.arena),
       fpsControls: this.fpsControls,
@@ -1746,6 +1747,7 @@ class Stage {
         this.activeWorld.benchMoving = visitorsMoving(this.activeWorld.scene, delta);
         this.activeWorld.update(delta, this.camera.position);
         this.activeWorld.mystery?.update(delta);
+        this.voyage?.updateGround(time);
       }
       // A chamber that brings its own room (the Charge Gardens) was lit for
       // the ship's exposure, whichever world it was opened on; a bench

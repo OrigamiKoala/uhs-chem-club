@@ -23,7 +23,10 @@
 import * as THREE from "three";
 
 const LEAD = 2.1;          // metres ahead of the player along the route
-const ARRIVE = 1.4;        // within this of the end, the chevron points at the target
+const ARRIVE = 1.4;        // within this of the end, the player has arrived
+const DEPART = 2.6;        // beyond this, a player who wandered off sees the chevron again
+const REROUTE_OFF = 4.0;   // metres off the current polyline before re-routing
+const REROUTE_COOLDOWN = 0.5;
 
 function chevronGeometry() {
   // A flat chevron in the x–y plane pointing along +x, then extruded thin.
@@ -67,6 +70,10 @@ export class GuideArrow {
     this.label = '';
     this.heightFn = null;
     this.hover = 1.15;
+    this.hideAtTarget = false;
+    this.atTarget = false;
+    this._firstUpdate = true;
+    this._lastReroute = -Infinity;
     this.scene = null;
     this.chip = null;
     this._dir = new THREE.Vector3();
@@ -78,7 +85,7 @@ export class GuideArrow {
    * the ground under a point (null aboard, where the deck is y = 0), and
    * `hover` how high above it the chevron hangs.
    */
-  show(scene, points, { label = '', heightFn = null, hover = 1.15, onArrive = null } = {}) {
+  show(scene, points, { label = '', heightFn = null, hover = 1.15, onArrive = null, hideAtTarget = false } = {}) {
     this.hide();
     this.scene = scene;
     this.route = points.map(p => Array.isArray(p) ? { x: p[0], z: p[1] } : { x: p.x, z: p.z });
@@ -86,12 +93,37 @@ export class GuideArrow {
     this.heightFn = heightFn;
     this.hover = hover;
     this.onArrive = onArrive;
+    this.hideAtTarget = Boolean(hideAtTarget);
     this.arrived = false;
+    this.atTarget = false;
+    this._firstUpdate = true;
+    this._lastReroute = -Infinity;
     scene.add(this.group);
     this.group.visible = true;
     this._ensureChip();
-    this.chip.querySelector('.voyage-guide-label').textContent = label;
-    this.chip.hidden = false;
+    if (this.chip) {
+      this.chip.querySelector('.voyage-guide-label').textContent = label;
+      this.chip.hidden = this.hideAtTarget;
+    }
+  }
+
+  /** Replace the polyline in place (e.g. after the player wandered off-route). */
+  setRoute(points, time = 0) {
+    if (!this.route || !points?.length) return;
+    this.route = points.map(p => Array.isArray(p) ? { x: p[0], z: p[1] } : { x: p.x, z: p.z });
+    this._lastReroute = time;
+  }
+
+  /** True when the player has wandered off the current polyline (or it was degenerate). */
+  needsReroute(camera, time = 0) {
+    if (!this.route || this.route.length < 2) return false;
+    if (time - this._lastReroute < REROUTE_COOLDOWN) return false;
+    const cp = camera.position;
+    const end = this.route[this.route.length - 1];
+    const left = Math.hypot(end.x - cp.x, end.z - cp.z);
+    if (left <= DEPART) return false;
+    const { total, offRoute } = this._progress(cp.x, cp.z);
+    return total < 0.5 || offRoute > REROUTE_OFF;
   }
 
   hide() {
@@ -99,6 +131,8 @@ export class GuideArrow {
     this.group.visible = false;
     this.route = null;
     this.scene = null;
+    this.hideAtTarget = false;
+    this.atTarget = false;
     if (this.chip) this.chip.hidden = true;
   }
 
@@ -137,7 +171,7 @@ export class GuideArrow {
       if (d < best) { best = d; bestS = s + Math.sqrt(L2) * t; }
       s += Math.sqrt(L2);
     }
-    return { s: bestS, total: s };
+    return { s: bestS, total: s, offRoute: best };
   }
 
   /** The point and heading at distance `s` along the route. */
@@ -178,9 +212,23 @@ export class GuideArrow {
     } else {
       p = this._at(Math.min(total, s + LEAD));
     }
+    if (this.hideAtTarget) {
+      if (this._firstUpdate) {
+        this._firstUpdate = false;
+        this.atTarget = left < DEPART;
+      } else if (!this.atTarget && left < ARRIVE) {
+        this.atTarget = true;
+      } else if (this.atTarget && left > DEPART) {
+        this.atTarget = false;
+        this.arrived = false;
+      }
+    } else {
+      this._firstUpdate = false;
+    }
+
     // Close enough to touch the target: the chevron would only be in the way
-    // of it. The plate on the glass still says where it is.
-    this.pivot.visible = left > 2.0;
+    // of it. With `hideAtTarget`, the plate tucks away too until the player wanders off.
+    this.pivot.visible = !(this.hideAtTarget && this.atTarget) && left > 2.0;
     const ground = this.heightFn ? this.heightFn(p.x, p.z) : 0;
     this.group.position.set(p.x, ground + this.hover + Math.sin(time * 2.2) * 0.05, p.z);
     this.group.rotation.y = Math.atan2(p.hx, p.hz);
@@ -189,6 +237,7 @@ export class GuideArrow {
     this.lampMat.color.setRGB(0.9 * k, 0.61 * k, 0.14 * k).convertSRGBToLinear();
 
     if (this.chip) {
+      this.chip.hidden = Boolean(this.hideAtTarget && this.atTarget);
       // Bearing of the chevron from where the player is facing.
       camera.getWorldDirection(this._fwd);
       const fwdYaw = Math.atan2(this._fwd.x, this._fwd.z);

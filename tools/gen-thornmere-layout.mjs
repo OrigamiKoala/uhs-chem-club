@@ -60,7 +60,7 @@ const out = {
   name: 'Thornmere',
   sky: 'thornmere-sky',
   ambience: { fogColor: 0x8f9087, fogNear: 60, fogFar: 420 },
-  spawn: [...SPAWN],
+  spawn: { pos: [...SPAWN], lookAt: [-16, 1.6, 28] },
   pad: { pos: [PAD[0], 0, PAD[1]], r: 10 },
   arena: { boss: [...ARENA.boss], player: [...ARENA.player] },
   mounds: Object.fromEntries(Object.entries(MOUNDS).map(([k, m]) => [k, { ...m, ground: round(height(m.x, m.z)) }])),

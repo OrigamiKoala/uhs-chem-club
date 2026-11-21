@@ -30,6 +30,20 @@ const STATUS_TAG = {
  * added per render would have to be torn down per navigation, and the world
  * screen has no dispose hook to do it in.
  */
+/**
+ * Open a bench on a walkable world, playing its in-world opening scene first when it has one
+ * (`three/mystery/director.js`). Shared by walking up with [E] and teleporting from the Sites list.
+ */
+function openSiteWithIntro(worldId, site) {
+  const open = () => {
+    if (window.location.hash.replace(/^#\/?/, '') === `learn/${worldId}`) {
+      window.location.hash = `#/learn/${worldId}/${site.questId}`;
+    }
+  };
+  const play = stage?.playIntro ? stage.playIntro(site, worldId) : Promise.resolve(false);
+  play.catch(() => false).then(open);
+}
+
 let siteListenerInstalled = false;
 function installSiteListener() {
   if (siteListenerInstalled) return;
@@ -45,10 +59,7 @@ function installSiteListener() {
     if (!canWalk(worldId)) return;
     // A charted site with no module opens nothing. The world does not pretend.
     if (site.built === false) return;
-    // A bench whose question has something to see opens on a scene in the world first (`three/mystery/director.js`).
-    const open = () => { if (window.location.hash.replace(/^#\/?/, '') === `learn/${worldId}`) window.location.hash = `#/learn/${worldId}/${site.questId}`; };
-    const play = stage?.playIntro ? stage.playIntro(site, worldId) : Promise.resolve(false);
-    play.catch(() => false).then(open);
+    openSiteWithIntro(worldId, site);
   });
 }
 
@@ -123,13 +134,11 @@ export function renderLearnWorld(container, params = {}) {
       const q = world.quests.find(x => x.id === questId);
       return q ? isQuestComplete(q) : false;
     });
-    if (flewIn || !fromQuest) {
-      const nq = nextQuest(world) || world.quests[0];
-      const targetSite = nq ? w3d.siteForQuest(nq.id) : null;
-      if (targetSite) {
-        const at = targetSite.approachPos || targetSite.pos;
-        stage.setWorldWaypoint({ x: at[0], z: at[2], label: targetSite.label });
-      }
+    const nq = nextQuest(world) || world.quests[0];
+    const targetSite = nq ? w3d.siteForQuest(nq.id) : null;
+    if (targetSite) {
+      const at = targetSite.approachPos || targetSite.pos;
+      stage.setWorldWaypoint({ x: at[0], z: at[2], label: targetSite.label, siteId: targetSite.id });
     }
     renderWalkHud(container, world);
     bindPracticeKeys(container);
@@ -316,7 +325,7 @@ function renderWalkHud(container, world) {
                   </span>
                   <span style="display: inline-flex; gap: 0.35rem; align-items: center;">
                     ${enterable
-                      ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
+                      ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" data-quest-id="${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
                       : `<span class="tag ${tag.cls}">${tag.label}</span>`}
                   </span>
                 </li>
@@ -354,6 +363,7 @@ function renderWalkHud(container, world) {
   const closeSitesBtn = container.querySelector('#close-sites-popup-btn');
 
   const openSitesPopup = () => {
+    if (stage.director?.active) return;
     if (scrim) {
       scrim.classList.remove('hidden');
       closeSitesBtn?.focus?.();
@@ -369,6 +379,26 @@ function renderWalkHud(container, world) {
 
   openSitesBtn?.addEventListener('click', openSitesPopup);
   closeSitesBtn?.addEventListener('click', closeSitesPopup);
+
+  // Teleporting to a bench from the Sites list still plays its opening scene first.
+  container.querySelectorAll('.learn-site-open').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const questId = link.dataset.questId;
+      if (!questId) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      const w3d = world3dFor(world.id);
+      const site = w3d?.siteForQuest(questId);
+      if (!site || site.built === false) return;
+      e.preventDefault();
+      if (stage.director?.active) return;
+      if (scrim) scrim.classList.add('hidden');
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      stage.setWorldWaypoint?.(null);
+      if (site.approachPos && site.pos) w3d.enter(stage, null, site.approachPos, site.pos);
+      else w3d.enter(stage, site.id);
+      openSiteWithIntro(world.id, site);
+    });
+  });
 
   scrim?.addEventListener('click', (e) => {
     if (e.target === scrim) closeSitesPopup();

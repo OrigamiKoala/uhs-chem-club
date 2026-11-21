@@ -495,6 +495,7 @@ export class Voyage {
 
     this.guide = new GuideArrow();
     this.groundGuide = new GuideArrow();
+    this._groundWp = null;
     this._planets = {};
     this._farGround = new Map();
     this._fogSaved = new Map();
@@ -728,6 +729,7 @@ export class Voyage {
     this.interiorVisible = true;
     this.guide.hide();
     this.groundGuide.hide();
+    this._groundWp = null;
     st.fpsControls?.releaseKeys?.();
     st.fpsControls?.hidePrompt?.();
     if (st.cameraRig) st.cameraRig.isTransitioning = false;
@@ -1351,7 +1353,12 @@ export class Voyage {
   setGroundWaypoint(wp) {
     const st = this.stage;
     const world = st.activeWorld;
-    if (!wp || !world) { this.groundGuide.hide(); return; }
+    if (!wp || !world) {
+      this._groundWp = null;
+      this.groundGuide.hide();
+      return;
+    }
+    this._groundWp = wp;
     const from = st.camera.position;
     // A world with workings answers with the way on foot (surface, portal, doorway by doorway);
     // every other world, and a waypoint with no site, is the straight line it always was.
@@ -1360,7 +1367,7 @@ export class Voyage {
       label: (wp.label || '').toUpperCase(),
       heightFn: (x, z) => world.getTerrainHeight(x, z),
       hover: 1.25,
-      onArrive: () => setTimeout(() => this.groundGuide.hide(), 1200)
+      hideAtTarget: true
     });
   }
 
@@ -1387,6 +1394,7 @@ export class Voyage {
     this._adoptHomeSky();
     this._releaseHomeSky();
     this.groundGuide.hide();
+    this._groundWp = null;
     this.guide.hide();
     this.dest = { ...this.parked, def: DESTINATIONS[this.parked.key], hash: DESTINATIONS[this.parked.key].hash, waypoint: null };
     // Just inside the hatch, facing into the ship.
@@ -1414,6 +1422,7 @@ export class Voyage {
     for (const p of Object.values(this._planets)) p.group.visible = false;
     this.guide.hide();
     this.groundGuide.hide();
+    this._groundWp = null;
     this.state = 'idle';
     this.phases = [];
     this.scripted = false;
@@ -1609,10 +1618,21 @@ export class Voyage {
 
   /** On the ground: keep the waypoint chevron ahead of the player. */
   updateGround(time) {
-    if (this.groundGuide.active && this.stage.mode === 'world') {
+    const onGround = !this.stage.director?.active && (
+      this.stage.mode === 'world' ||
+      (this.stage.mode === 'quest' && Boolean(this.stage.activeQuestViewer?.inWorld))
+    );
+    if (this.groundGuide.active && onGround) {
+      const world = this.stage.activeWorld;
+      const wp = this._groundWp;
+      if (wp && world && this.groundGuide.needsReroute(this.stage.camera, time)) {
+        const from = this.stage.camera.position;
+        const way = (wp.siteId && world.routeTo?.(wp.siteId, { x: from.x, z: from.z }, wp.to ? [wp.x, wp.z] : null))
+          || [[from.x, from.z], [wp.x, wp.z]];
+        this.groundGuide.setRoute(way, time);
+      }
       this.groundGuide.group.visible = true;
       this.groundGuide.update(this.stage.camera, time);
-      if (this.groundGuide.chip) this.groundGuide.chip.hidden = false;
     } else if (this.groundGuide.active) {
       this.groundGuide.group.visible = false;
       if (this.groundGuide.chip) this.groundGuide.chip.hidden = true;

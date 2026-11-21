@@ -358,6 +358,14 @@ export function renderQuest(container) {
     }
     retireConsole();
     stage.exitQuestScene();
+    if (isT4 && stage.worldScene) {
+      const targetIdx = (maxStageReached >= TOTAL_STAGES) ? 0 : Math.min(maxStageReached, TOTAL_STAGES - 1);
+      const site = stage.worldScene.data.sites[targetIdx];
+      if (site) {
+        const at = site.approachPos || site.pos;
+        stage.setWorldWaypoint({ x: at[0], z: at[2], label: site.label });
+      }
+    }
     renderErebusHUD();
   }
 

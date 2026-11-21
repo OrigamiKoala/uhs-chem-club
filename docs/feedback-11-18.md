@@ -1,5 +1,11 @@
 # Feedback from user audit 2026-11-18
 
+## Ship
+
+![alt text](image-95.png) Remove the text "Primary Objective" and "Click Holo table to disembark"
+
+## Lanternfall
+
 ![alt text](image-79.png) Switch stages 1 and 2 for this quest, since the predict stage should come right before you test it. Also, for this stage I would like to see an explainer animation where protons get added to an atom, and it shrinks.
 
 ![alt text](image-81.png) Remove the Lithium and the electron remover part entirely - it is useless. Just have me arrange the cards in the correct order.

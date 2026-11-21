@@ -142,6 +142,7 @@ export class Table3D extends BenchViewer3D {
     this.gestures = new TableGestures(this);
     // The world the bench stands in, for its field points (`three/field-points.js`).
     this.worldObject = opts.world?.object || null;
+    this.worldSite = opts.world?.site || null;
     if (opts.world?.dormant) opts.world.dormant.visible = false;
     this.keys = new TableKeys(opts.toolHost || this.host || document.body, a => this.onAction?.(a), {
       // Where the world has the point, the player walks to it; a key would only be a shortcut past it.
@@ -1475,9 +1476,22 @@ export class Table3D extends BenchViewer3D {
     return true;
   }
 
+  /** Ground waypoint back to this bench, used when the player breaks away and wanders off. */
+  _benchWaypoint() {
+    if (this.worldSite) {
+      const at = this.worldSite.approachPos || this.worldSite.pos;
+      if (at) return { x: at[0], z: at[2], label: this.worldSite.label, siteId: this.worldSite.id };
+    }
+    if (this.world?.position) {
+      return { x: this.world.position[0], z: this.world.position[2], label: 'BENCH' };
+    }
+    return null;
+  }
+
   /**
    * The chevron leads to the field point this table still sends the player to (the world has it, it
-   * is not yet fetched or carried), and stops when there is none.
+   * is not yet fetched or carried). When no field point is pending and the player has broken away
+   * from the bench, it leads back to the bench once they wander off.
    */
   syncGuide() {
     if (!this.worldObject || !this.state) return;
@@ -1487,11 +1501,19 @@ export class Table3D extends BenchViewer3D {
       const pt = fieldPointById(this.worldObject, id);
       if (pt) { want = pt; break; }
     }
-    const key = want ? want.id : null;
+    let key = null;
+    let wp = null;
+    if (want) {
+      key = `field:${want.id}`;
+      // `siteId` and `to` let a world with workings route the way (doorway by doorway) to the place to stand, not to the bench.
+      wp = { x: want.stand?.[0] ?? want.pos[0], z: want.stand?.[2] ?? want.pos[2], label: want.label, siteId: want.siteId, to: true };
+    } else if (!this.leaning && this.inWorld) {
+      wp = this._benchWaypoint();
+      if (wp) key = `bench:${wp.siteId || 'arena'}`;
+    }
     if (key === this.guided) return;
     this.guided = key;
-    // `siteId` and `to` let a world with workings route the way (doorway by doorway) to the place to stand, not to the bench.
-    guideTo(want ? { x: want.stand?.[0] ?? want.pos[0], z: want.stand?.[2] ?? want.pos[2], label: want.label, siteId: want.siteId, to: true } : null);
+    guideTo(wp);
   }
 
   /** Back at the bench: what was carried goes on the table (the reducer's `fetch`). */
@@ -1506,7 +1528,13 @@ export class Table3D extends BenchViewer3D {
   leanIn(opts = {}) {
     const pose = super.leanIn(opts);
     this.flushCarry();
+    this.syncGuide();
     return pose;
+  }
+
+  leaveLean(opts = {}) {
+    super.leaveLean(opts);
+    this.syncGuide();
   }
 
   /**
