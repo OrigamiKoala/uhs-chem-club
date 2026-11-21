@@ -728,7 +728,7 @@ export function overlapTrack(id, at, { type = 's', flip = false, opposite = fals
   return {
     id, kind: 'overlap', label, at, size, noRun: true,
     dials: {
-      gap: { min: 70, max: 310, step: 10, value: 310, label: 'Distance (pm)' },
+      gap: { min: 70, max: 310, step: 1, value: 310, label: 'Distance (pm)' },
       ...(flip ? { sign: { min: 0, max: 1, step: 1, value: 0, label: 'Signs', labels: ['Same', 'Opposite'] } } : {})
     },
     props: { type, ...(opposite ? { opposite: true } : {}) }

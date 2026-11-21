@@ -155,7 +155,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   steel rod between the middles of two solids. The mat runs the length of the bench and is lit a little from within (`emissive`, so a mine at dusk
   does not print black on black); the lean-in frames `usedRect` (`table/audit.js`: what is on the table plus room to work), not the whole mat.
   **The orbital kit's overlap track stands its combined orbital up in 3D** (`kits/mo-3d.js`, `dress3d`, 2026-11-20): two marching-cubes surfaces
-  per sign of `blendAt` (faint edge |ψ| 0.15, solid core 0.45; bone +, green −), p lobes up and down, sign markers in front of each lobe, drawn at
+  per sign of `blendAt` (faint edge |ψ| 0.15, solid core 0.45; bone +, green −), p lobes up and down, sign markers beside each lobe on the outer side, level with it, drawn at
   0.45 of the flat picture's scale so the Distance dial behind stays visible. It eases to a new distance and passes through zero as the Signs
   dial turns one orbital over, re-cut (`blendGrid`) at most 30 times a second and only while moving. At `3D On` the flat cloud is not painted
   (`b.bodies`), leaving the energy level; `3D Off` paints the flat cloud as before.

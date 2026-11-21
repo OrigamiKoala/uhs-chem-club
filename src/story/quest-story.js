@@ -340,7 +340,7 @@ export const QUEST_STORY = {
       { to: 0.74, say: 'Tin over lead was 2.6, matching this cell\'s K of 2.5. As Q rises toward K, the cell\'s voltage falls to 0 V.' },
       { to: 0.94, say: 'Zinc at 1.0 M with copper at 0.0010 M has Q = 1000 and reads 1.01 V. Copper at 0.010 M against 1.0 M has Q = 0.01 and reads 0.059 V.' }
     ],
-    pin: 'As batteries run, their ion concentrations shift toward balance, dropping the voltage.'
+    pin: 'As they run, their ion concentrations shift toward balance, and the voltage falls.'
   },
   'unit10/q6-electrolysis': {
     scene: 'electrolysis-push',
@@ -350,7 +350,7 @@ export const QUEST_STORY = {
       { to: 0.24, say: 'Pushed at 1.50 V against its own 1.10 V, the zinc-copper cell ran backwards and added 4.1 mg to the zinc strip. Electrolysis drives a cell in reverse.' },
       { to: 0.48, say: 'In molten sodium chloride, 6 sodium ions took 6 electrons at the cathode to form sodium, while chloride ions gave electrons at the anode to form chlorine.' },
       { to: 0.72, say: 'One ampere for 30 s passed 30 C and 2 A for 10 s passed 20 C, while 0.5 A for 100 s passed 50 C and plated the most silver.' },
-      { to: 0.94, say: '2.00 A for 1800 s passed 3600 C, or 0.0373 mol of electrons. At two electrons per copper atom, Faraday\'s law gives 1.19 g of copper.' }
+      { to: 0.94, say: '2.00 A for 1800 s passed 3600 C, or 0.0373 mol of electrons. At two electrons per copper atom, that makes 0.0187 mol, or 1.19 g of copper by Faraday\'s law.' }
     ],
     pin: 'The stolen electricity is plating pure copper out of the marsh pools.'
   },
@@ -424,7 +424,7 @@ export const QUEST_STORY = {
     beats: [
       { to: 0.26, say: 'Each tenfold dilution of hydrochloric acid raised the pH by 1: 1.00, 2.00, 3.00. Because pH is a log scale, one step is a factor of ten.' },
       { to: 0.52, say: 'On sodium hydroxide, pOH counts hydroxide the way pH counts hydronium. At 25 °C the two always add up to 14.00.' },
-      { to: 0.78, say: 'Diluted repeatedly, hydrochloric acid read 6.00, 6.79, 6.98, and 7.00. Water\'s own hydronium ions stop the pH from rising past 7.' },
+      { to: 0.78, say: 'Diluted repeatedly, hydrochloric acid read 6.00, 6.79, 6.98 and 7.00. Water\'s own hydronium ions stop the pH from rising past 7.' },
       { to: 0.94, say: 'Water at 50 °C reads 6.63 yet still holds equal H₃O⁺ and OH⁻. Neutral means equal amounts of both ions, which equals pH 7 only at 25 °C.' }
     ],
     pin: 'Each pH step is a tenfold change in acidity.'
@@ -434,7 +434,7 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'The runoff from the Fifth\'s plant is eating through the fort\'s pipes. What is it doing to the water it reaches?',
     beats: [
-      { to: 0.26, say: 'When HCl meets water, its hydrogen leaves as a proton and joins a water molecule, forming hydronium. A proton donor like HCl is a Brønsted-Lowry acid.' },
+      { to: 0.26, say: 'When HCl meets water, 8 of 8 hydrogens leave as protons and join water molecules to make hydronium. A proton donor like HCl is a Brønsted-Lowry acid.' },
       { to: 0.52, say: 'Ammonia has no OH group, yet it took a proton from water in 3 of 8 cells. A proton acceptor is a Brønsted-Lowry base.' },
       { to: 0.78, say: 'An acid and what it leaves behind differ by one proton, forming a conjugate pair. Water acts as both acid and base, so it is amphoteric.' },
       { to: 0.94, say: 'Even pure water forms a few ions, 1.0 × 10⁻⁷ mol/L of each. Multiplied together, they give Kw = 1.0 × 10⁻¹⁴ at 25 °C.' }
@@ -470,8 +470,8 @@ export const QUEST_STORY = {
     role: 'Direct Clue',
     mystery: 'Two waste tanks hold the same amount of acid, yet one eats through steel and the other barely stains it. Why?',
     beats: [
-      { to: 0.26, say: 'At the same concentration, 0.10 M, hydrochloric acid donated every proton while acetic acid donated only a few: pH 1.00 versus 2.88.' },
-      { to: 0.54, say: 'Diluting acetic acid causes a larger fraction of it to ionize: 3 of 200 units at 0.10 M, 8 at 0.010 M, and 25 at 0.0010 M.' },
+      { to: 0.26, say: 'At the same concentration, 0.10 M, hydrochloric acid donated every proton while acetic acid donated only a few: pH 1.00 against 2.88.' },
+      { to: 0.54, say: 'Diluting acetic acid causes a larger fraction of it to ionize: 3 of 200 units at 0.10 M, 8 at 0.010 M and 25 at 0.0010 M.' },
       { to: 0.76, say: 'H₃O⁺ times CH₃COO⁻ divided by CH₃COOH equals the same constant Ka in every flask, regardless of concentration.' },
       { to: 0.94, say: 'For any acid and its partner base, Ka times Kb equals 1.0 × 10⁻¹⁴, so a larger Ka always means a smaller Kb.' }
     ],

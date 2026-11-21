@@ -5,8 +5,8 @@
  * cloud floats over it instead. It is the same sum (`mo.js` `blendAt`, sampled on a grid by `blendGrid`) in three dimensions: the line between the nuclei runs
  * left to right, "above and below the line" is up and down, and the third direction runs toward the player. Two surfaces of equal
  * |ψ| are drawn for each sign: a faint outer one (the edge of the cloud) and a solid inner one (where the electron is most often
- * found), bone where the combined orbital is +, green where it is −, as the flat picture colours them. A sign marker floats in front
- * of each atom's lobe.
+ * found), bone where the combined orbital is +, green where it is −, as the flat picture colours them. A sign marker floats beside
+ * each atom's lobe, on the far side from the other atom and level with the lobe, so it lines up with that lobe from any angle.
  *
  * When the Distance dial moves, the cloud eases to the new distance; when the Signs dial turns one orbital over, its sign passes
  * smoothly through zero (`blendAt`'s `sign` goes from +1 to −1), so the player watches the shared cloud between the nuclei thin and
@@ -28,8 +28,8 @@ const HALF = Object.freeze({ x: 280, y: 210, z: 165 });
 const RES = 34;
 /** The two surfaces of each sign: |ψ| at the cloud's edge and at its dense core. */
 const LEVELS = Object.freeze([{ iso: 0.15, opacity: 0.32 }, { iso: 0.45, opacity: 0.9 }]);
-/** How far in front of a lobe its sign marker floats, and how long a marker's bar is (pm). */
-const MARK_Z = 135;
+/** How far out from its nucleus, along the line, a lobe's sign marker floats (clear of the faint surface), and a marker's bar length (pm). */
+const MARK_OUT = { s: 125, p: 150 };
 const MARK_LEN = 26;
 /** The lowest point of the cloud's box sits this far above the deck (pm), so nothing passes through the table. */
 const CLEAR = 8;
@@ -81,7 +81,7 @@ export function dressOverlap(f, state, c) {
     return n;
   });
 
-  // The sign markers: a bar (−) or a cross (+), turned to face the bench camera, in front of each lobe (one per atom for s, two for p).
+  // The sign markers: a bar (−) or a cross (+), turned to face the bench camera, beside each lobe (one per atom for s, two for p).
   const markMat = c.own(new THREE.MeshStandardMaterial({ color: hex(PLATE_COLORS.amber), roughness: 0.5, metalness: 0.1 }));
   const barGeo = new THREE.BoxGeometry(MARK_LEN * m, 5 * m, 3 * m);
   const type = f.props.type;
@@ -120,9 +120,10 @@ export function dressOverlap(f, state, c) {
     nuclei[1].position.set(gap / 2 * m, 0, 0);
     for (const mk of marks) {
       const sg = mk.up * (mk.atom === 0 ? 1 : sign);
-      const x = (mk.atom === 0 ? -gap / 2 : gap / 2) * m;
+      const side = mk.atom === 0 ? -1 : 1;
+      const x = side * (gap / 2 + MARK_OUT[type === 'p' ? 'p' : 's']) * m;
       // A p orbital's lobes stand above and below its nucleus; an s orbital's marker sits level with it.
-      mk.g.position.set(x, type === 'p' ? mk.up * 70 * m : 0, MARK_Z * m);
+      mk.g.position.set(x, type === 'p' ? mk.up * 70 * m : 0, 0);
       mk.upright.visible = sg > 0;
       const sz = Math.max(0.001, Math.abs(mk.atom === 0 ? 1 : sign));
       mk.g.scale.setScalar(sz);
