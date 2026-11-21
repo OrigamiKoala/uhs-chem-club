@@ -10,6 +10,7 @@ export const UNIT_13 = {
   world: 'Thornmere',
   place: 'Tar swamps',
   title: 'Organic Chemistry',
+  beyondAp: true,
   line: 'Carbon chains, double bonds, isomers, functional groups, reactions and polymers.',
   brief: 'Build carbon chains and rings, find where a molecule reacts by following its electron pairs, tell isomers apart, and take a polymer chain apart at its links.',
 

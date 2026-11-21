@@ -83,7 +83,20 @@ export function plateRead(state, id) {
   const view = turning ? viewRead(state, f.props.view) : { yaw: 0, pitch: 0, slice: Boolean(f.dials.slice && f.dials.slice.value >= 1), turn: 0, tilt: 0 };
   const plane = turning ? 'turn' : (f.props.plane || 'xy');
   const v = { yaw: view.yaw, pitch: view.pitch };
-  const all = projectDots(points, fired, plane, false, v);
+  // On radial-shell plates (`ring === 'band'`), project each 3D sample onto its true 3D radial distance r = sqrt(x²+y²+z²)
+  // along its (x, y) azimuth so spherical radial nodes (2s, 3s) appear as unmistakable empty rings matching the shell counter.
+  const maxR = (f.props.extent ?? 5) * 0.96;
+  const all = (f.props.ring === 'band' && !turning && !view.slice)
+    ? points.slice(0, fired).reduce((acc, p) => {
+        const r3 = Math.hypot(p.x, p.y, p.z);
+        if (r3 > maxR) return acc;
+        const r2 = Math.hypot(p.x, p.y);
+        const ux = r2 > 1e-6 ? p.x / r2 : 1;
+        const uy = r2 > 1e-6 ? p.y / r2 : 0;
+        acc.push({ a: ux * r3, b: uy * r3, c: p.z });
+        return acc;
+      }, [])
+    : projectDots(points, fired, plane, false, v);
   const shown = view.slice ? projectDots(points, fired, plane, true, v) : all;
   return { id, fixture: f, orbital, fired, points, plane, view: v, turn: view.turn, tilt: view.tilt, slice: view.slice, all, shown, total: all.length };
 }

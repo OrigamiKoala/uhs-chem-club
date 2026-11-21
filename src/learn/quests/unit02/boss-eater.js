@@ -173,7 +173,7 @@ export const STAGES = [
     return {
       id: 'phase3',
       title: 'Phase 3 · The Unpaired Electrons',
-      prompt: 'How many of oxygen\'s electrons sit unpaired (alone in an orbital)?',
+      prompt: 'How many electrons in oxygen (8 electrons) sit unpaired (alone in an orbital)?',
       widget,
       table: shellsTable({
         pieces: [...rack.boxes, hand('up', 'up', { x: 76, y: 12 }), hand('down', 'down', { x: 92, y: 12 }), hand('lift', 'lift', { x: 108, y: 12 })],

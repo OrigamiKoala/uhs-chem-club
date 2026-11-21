@@ -188,9 +188,11 @@ export function createTable(spec, seedKey = '') {
   // A slot may name a `row`: the slots that share one are a STRIP (a card dropped on a filled one pushes the row
   // along, `engine/catalogue.js` `fileCard`, the catalogue board's own rule).
   for (const t of z.slots || []) {
+    const defaultLabel = /^(answer|ans|pick|choice)$/i.test(t.id) ? 'Answer' : '';
     s.zones.slots[t.id] = {
-      id: t.id, label: t.label || '', at: { ...t.at }, size: { ...SIZES.slot, ...(t.size || {}) },
-      ...(t.row ? { row: t.row } : {})
+      id: t.id, label: t.label || defaultLabel, at: { ...t.at }, size: { ...SIZES.slot, ...(t.size || {}) },
+      ...(t.row ? { row: t.row } : {}),
+      ...(t.accepts ? { accepts: t.accepts.slice() } : {})
     };
   }
   for (const c of z.containers || []) {
@@ -559,6 +561,8 @@ function drop(s, kit, id, t) {
   if (t.kind === 'piece') return joinPieces(s, kit, id, t.id);
 
   if (t.kind === 'slot') {
+    const slot = s.zones.slots[t.id];
+    if (slot?.accepts && !slot.accepts.includes(p.kind)) return fail('That does not belong in this holder.');
     const key = zoneKey('slot', t.id);
     if (Object.values(s.pieces).some(o => o.zone === key && o.id !== id && o.fixed)) return fail('That holder is fixed in place.');
   }

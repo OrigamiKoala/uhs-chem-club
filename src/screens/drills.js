@@ -1,46 +1,56 @@
 /**
- * drills.js — the Drill Deck: every practice question in the Learn track, in one place.
+ * drills.js — the Practice / Drill Deck: every practice question in the Learn track.
  *
- * The questions live in the question bank (`learn/bank.js`); this screen
- * pools them into rounds and keeps the score. All the choosing and counting is
- * in `learn/drills.js` (pure, verified in Node); this file is only the table
- * the player sits at.
+ * Questions are drawn only from quests and worlds the player has finished.
+ * All choosing and counting lives in `learn/drills.js` (pure, verified in Node).
  *
- * Modes
- *   Daily Set    five questions, the same for everyone that day; finishing one in a week keeps the streak
- *   Quick Run    ten questions from every world or one, leaning toward what is shaky
- *   Timed Round  ninety seconds on the answer clock, three misses and it is over
- *   Weak Spots   what you have missed more often than you have got right
- *
- * Rewards are stars, a week streak, mastery tiers per world and commendations —
- * all cosmetic. A drill pays no XP and never reaches Standings, and nothing
- * here may call the XP rails (`verify:learn` scans for it).
+ * NO XP, EVER. Nothing here may call the XP rails (`verify:learn` scans for it).
  */
 
 import { stage } from '../three/stage.js';
 import { session } from '../session.js';
 import { pageHeader, statRow, esc } from '../ui/layout.js';
-import { getWorld } from '../learn/curriculum.js';
+import { getWorld, getQuest } from '../learn/curriculum.js';
+import { isQuestComplete, isWorldComplete } from '../learn/progress.js';
 import { worldWorked, deepWorked } from '../learn/bank.js';
 import { mountWorked } from '../ui/worked-problem.js';
+import { toggleCalculator, closeCalculator } from '../ui/calculator.js';
 import { soundscape } from '../audio/soundscape.js';
 import {
-  RUN_LENGTH, DAILY_LENGTH, SPRINT_SECONDS, SPRINT_LIVES, TIERS,
+  RUN_LENGTH, SPRINT_SECONDS, SPRINT_LIVES, TIERS,
   normalizePractice, drillWorlds, loadPool, worldMastery, overallMastery,
-  weekStreakOf, doneToday, weakIds, mulberry32, pickRun, pickDaily, pickWeak,
-  withShuffledOptions, shuffled, recordAnswer, recordRun, recordSprint, starsFor, localDay
+  weakIds, mulberry32, pickRun, pickWeak,
+  withShuffledOptions, shuffled, recordAnswer, recordRun, recordSprint
 } from '../learn/drills.js';
 
 const MODE_LABEL = {
-  daily: 'Daily Set',
   run: 'Quick Run',
-  sprint: 'Timed Round',
-  weak: 'Weak Spots'
+  sprint: 'Beat the clock',
+  weak: 'Review'
 };
 
 function stars(n, total = 3) {
   return Array.from({ length: total }, (_, i) =>
     `<span class="drill-star${i < n ? ' lit' : ''}" aria-hidden="true">★</span>`).join('');
+}
+
+/** True when the player has completed the quest (or whole world) that owns this problem. */
+function isProblemUnlocked(q) {
+  const world = getWorld(q.worldId);
+  if (!world) return false;
+  if (isWorldComplete(world)) return true;
+  if (q.questId) {
+    const quest = getQuest(q.worldId, q.questId);
+    if (quest) return isQuestComplete(quest);
+  }
+  return false;
+}
+
+/** True when at least one quest in `world` has been completed. */
+function hasFinishedInWorld(world) {
+  if (!world) return false;
+  if (isWorldComplete(world)) return true;
+  return (world.quests || []).some(q => q.status === 'live' && isQuestComplete(q));
 }
 
 // Each render takes a number; an older screen whose number is stale shuts itself down,
@@ -68,6 +78,7 @@ export function renderDrills(container, params = {}) {
     timer = null;
     if (keyHandler) window.removeEventListener('keydown', keyHandler);
     keyHandler = null;
+    closeCalculator();
   };
 
   // The router replaces `container.innerHTML` on navigation; clean up if our root vanishes.
@@ -89,12 +100,11 @@ export function renderDrills(container, params = {}) {
     run = null;
     const p = practice();
     const worlds = drillWorlds();
-    const streak = weekStreakOf(p.days);
+    const finishedWorlds = worlds.filter(hasFinishedInWorld);
+    if (scope !== 'all' && !finishedWorlds.some(w => w.id === scope)) scope = 'all';
     const overall = overallMastery(p);
     const starTotal = Object.values(p.stars).reduce((s, n) => s + n, 0);
     const weakCount = weakIds(p).length;
-    const daily = doneToday(p);
-    const scopeName = scope === 'all' ? 'every world' : getWorld(scope)?.world || scope;
 
     container.innerHTML = `
       <div class="screen-container m-screen m-drills">
@@ -102,7 +112,6 @@ export function renderDrills(container, params = {}) {
           art: '/art/starmap.jpg',
           title: 'Drill Deck',
           actions: statRow([
-            { label: 'Week Streak', value: String(streak), plain: true },
             { label: 'Mastered', value: `${overall.mastered} / ${overall.total}`, plain: true },
             { label: 'Stars', value: String(starTotal), plain: true }
           ])
@@ -111,52 +120,37 @@ export function renderDrills(container, params = {}) {
         ${notice ? `<p class="drill-notice" role="status">${esc(notice)}</p>` : ''}
 
         <div class="drill-modes">
-          <article class="plate drill-card" data-mode-card="daily">
-            <div class="eyebrow ${daily ? '' : 'lit'}">Today</div>
-            <h2 class="drill-card-title">Daily Set</h2>
-            <p class="drill-card-line">${DAILY_LENGTH} questions, the same for every crew member today.</p>
-            <div class="drill-card-foot">
-              <span class="tag ${daily ? 'live' : ''}">${daily ? 'Done today' : streak ? `Streak: ${streak} week${streak === 1 ? '' : 's'}` : 'Start a streak'}</span>
-              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="daily">${daily ? 'Again' : 'Start'}</button>
-            </div>
-          </article>
-
           <article class="plate drill-card" data-mode-card="run">
-            <div class="eyebrow">Practice</div>
             <h2 class="drill-card-title">Quick Run</h2>
             <p class="drill-card-line">${RUN_LENGTH} questions. Earn up to three stars.</p>
             <label class="drill-scope">
               <span class="eyebrow">Questions from</span>
               <select id="drill-scope" class="form-input">
-                <option value="all"${scope === 'all' ? ' selected' : ''}>Every world</option>
-                ${worlds.map(w => `<option value="${esc(w.id)}"${scope === w.id ? ' selected' : ''}>${esc(w.unit)} · ${esc(w.world)}</option>`).join('')}
+                <option value="all"${scope === 'all' ? ' selected' : ''}>Every finished world</option>
+                ${finishedWorlds.map(w => `<option value="${esc(w.id)}"${scope === w.id ? ' selected' : ''}>${esc(w.unit)} · ${esc(w.world)}</option>`).join('')}
               </select>
             </label>
             <div class="drill-card-foot">
               <span class="drill-stars" aria-label="Best: ${p.stars[scope] || 0} of 3 stars">${stars(p.stars[scope] || 0)}</span>
-              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="run">Start</button>
+              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="run"${finishedWorlds.length ? '' : ' disabled'}>Start</button>
             </div>
           </article>
 
           <article class="plate drill-card" data-mode-card="sprint">
-            <div class="eyebrow">Beat the clock</div>
-            <h2 class="drill-card-title">Timed Round</h2>
-            <p class="drill-card-line">${SPRINT_SECONDS} seconds on the answer clock. ${SPRINT_LIVES} misses ends it.</p>
+            <h2 class="drill-card-title">Beat the clock</h2>
+            <p class="drill-card-line">${SPRINT_SECONDS} seconds per question.</p>
             <div class="drill-card-foot">
               <span class="tag">Best: ${p.best.sprint || 0}</span>
-              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="sprint">Start</button>
+              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="sprint"${finishedWorlds.length ? '' : ' disabled'}>Start</button>
             </div>
           </article>
 
           <article class="plate drill-card" data-mode-card="weak">
-            <div class="eyebrow">Review</div>
-            <h2 class="drill-card-title">Weak Spots</h2>
-            <p class="drill-card-line">${weakCount
-              ? `${weakCount} question${weakCount === 1 ? '' : 's'} you have missed more than you have got right.`
-              : 'Nothing shaky yet. Missed questions collect here.'}</p>
+            <h2 class="drill-card-title">Review</h2>
+            <p class="drill-card-line">Review past mistakes</p>
             <div class="drill-card-foot">
               <span class="tag ${weakCount ? 'warn' : ''}">${weakCount} waiting</span>
-              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="weak"${weakCount ? '' : ' disabled'}>Start</button>
+              <button type="button" class="btn-primary quest-btn-sm m-tap" data-start="weak"${weakCount && finishedWorlds.length ? '' : ' disabled'}>Start</button>
             </div>
           </article>
         </div>
@@ -164,12 +158,12 @@ export function renderDrills(container, params = {}) {
         <section class="plate drill-mastery" aria-labelledby="drill-mastery-title">
           <div class="m-head drill-mastery-head">
             <h2 id="drill-mastery-title" class="section-title">Mastery</h2>
-            <span class="eyebrow">A question is mastered when you have got it right twice, and right more often than wrong.</span>
           </div>
           <div class="drill-mastery-list">
             ${worlds.map(w => {
               const m = worldMastery(w, p);
               const pct = Math.round(m.fraction * 100);
+              const unlocked = hasFinishedInWorld(w);
               return `
                 <div class="drill-world-row" data-world-row="${esc(w.id)}">
                   <div class="drill-world-name">
@@ -181,19 +175,13 @@ export function renderDrills(container, params = {}) {
                     ${TIERS.map(t => `<i class="drill-meter-tick" style="left:${t.min * 100}%" aria-hidden="true"></i>`).join('')}
                   </div>
                   <span class="drill-world-count">${m.mastered} / ${m.total}</span>
-                  <span class="tag drill-tier ${m.tier ? 'live' : ''}">${m.tier ? m.tier.label : 'Unranked'}</span>
-                  <button type="button" class="btn-secondary quest-btn-sm m-tap" data-drill-world="${esc(w.id)}">Drill</button>
+                  <button type="button" class="btn-secondary quest-btn-sm m-tap" data-drill-world="${esc(w.id)}"${unlocked ? '' : ' disabled'}>Drill</button>
                 </div>`;
             }).join('')}
           </div>
-          <p class="drill-fine">Drills pay no XP and never reach Standings. Stars, streaks and tiers are only for you.</p>
         </section>
 
         ${workedHtml(p)}
-
-        <div class="drill-foot">
-          <a href="#/learn" class="btn-secondary quest-btn-sm" style="text-decoration: none;">Learn Road</a>
-        </div>
       </div>
     `;
 
@@ -240,7 +228,7 @@ export function renderDrills(container, params = {}) {
 
     const tabs = [
       { id: 'all', label: `All (${allRows.length})` },
-      { id: 'ap', label: `AP Synthesis (${apRows.length})` },
+      { id: 'ap', label: `AP (${apRows.length})` },
       { id: 'olympiad', label: `Olympiad (${olyRows.length})` },
       { id: 'bench', label: `Bench (${benchRows.length})` }
     ];
@@ -255,12 +243,12 @@ export function renderDrills(container, params = {}) {
         </div>
         <div class="drill-mastery-list">
           ${rows.map(wk => `
-            <div class="drill-world-row">
+            <div class="drill-world-row drill-worked-row">
               <div class="drill-world-name">
                 <span class="eyebrow">${esc(wk.worldName)} · ${esc(wk.questTitle)}${wk.beyondAp ? ' · Beyond AP' : ''}</span>
                 <strong>${esc(wk.title)}</strong>
               </div>
-              <span class="tag ${p.q[wk.id]?.c ? 'live' : ''}">${p.q[wk.id]?.c ? 'Worked' : 'Not yet'}</span>
+              <span class="tag ${p.q[wk.id]?.c ? 'live' : ''}">${p.q[wk.id]?.c ? '100%' : '0%'}</span>
               <button type="button" class="btn-secondary quest-btn-sm m-tap" data-worked="${esc(wk.id)}">Open</button>
             </div>`).join('')}
         </div>
@@ -271,7 +259,7 @@ export function renderDrills(container, params = {}) {
     const wk = allWorkedRows().find(x => x.id === id);
     if (!wk) return;
     stopRun();
-    container.innerHTML = `<div class="screen-container m-screen m-drills"><section class="plate drill-run"><div id="drill-worked-host"></div></section></div>`;
+    container.innerHTML = `<div class="screen-container m-screen m-drills is-active"><section class="plate drill-run drill-run-full"><div id="drill-worked-host"></div></section></div>`;
     mountWorked(container.querySelector('#drill-worked-host'), wk, {
       onDone: () => {
         recordAnswer(practice(), wk.id, true);
@@ -287,20 +275,23 @@ export function renderDrills(container, params = {}) {
      --------------------------------------------------------------- */
   async function start(mode) {
     const p = practice();
-    container.innerHTML = `<div class="screen-container m-screen m-drills"><p class="drill-notice" role="status">Pulling questions…</p></div>`;
+    container.innerHTML = `<div class="screen-container m-screen m-drills is-active"><p class="drill-notice" role="status">Pulling questions…</p></div>`;
     let pool = [];
     try {
-      pool = await loadPool(mode === 'run' ? scope : 'all');
+      const raw = await loadPool(mode === 'run' ? scope : 'all');
+      pool = raw.filter(isProblemUnlocked);
     } catch (err) {
       console.error('Drill Deck could not load questions:', err);
     }
     if (guard()) return;
-    if (!pool.length) { renderHome('No questions could be loaded. Try again in a moment.'); return; }
+    if (!pool.length) {
+      renderHome('Finish a quest in Learn first to unlock practice questions from it.');
+      return;
+    }
 
     const rng = mulberry32((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
     let questions;
-    if (mode === 'daily') questions = pickDaily(pool, localDay());
-    else if (mode === 'weak') questions = pickWeak(pool, RUN_LENGTH, rng, p);
+    if (mode === 'weak') questions = pickWeak(pool, RUN_LENGTH, rng, p);
     else if (mode === 'sprint') questions = shuffled(pool, rng);
     else questions = pickRun(pool, RUN_LENGTH, rng, p);
 
@@ -309,7 +300,7 @@ export function renderDrills(container, params = {}) {
     run = {
       mode, scope: mode === 'run' ? scope : 'all', rng,
       questions: questions.map(q => withShuffledOptions(q, rng)),
-      i: 0, right: 0, answered: 0, combo: 0, bestCombo: 0,
+      i: 0, right: 0, answered: 0,
       lives: SPRINT_LIVES, timeLeft: SPRINT_SECONDS, picked: null, results: []
     };
     renderQuestion();
@@ -319,33 +310,38 @@ export function renderDrills(container, params = {}) {
      A QUESTION
      --------------------------------------------------------------- */
   function renderQuestion() {
-    stopRun();
+    clearInterval(timer);
+    timer = null;
+    if (keyHandler) window.removeEventListener('keydown', keyHandler);
+    keyHandler = null;
+
     const q = run.questions[run.i];
     run.picked = null;
     const sprint = run.mode === 'sprint';
+    if (sprint) run.timeLeft = SPRINT_SECONDS;
     const total = run.questions.length;
 
     container.innerHTML = `
-      <div class="screen-container m-screen m-drills">
-        <section class="plate drill-run" aria-labelledby="drill-q">
+      <div class="screen-container m-screen m-drills is-active">
+        <section class="plate drill-run drill-run-full" aria-labelledby="drill-q">
           <div class="drill-run-top">
             <div>
               <div class="eyebrow lit">${esc(MODE_LABEL[run.mode])}</div>
               <div class="drill-source">${esc(q.worldName)} · ${esc(q.questTitle)}</div>
             </div>
             <div class="drill-run-keys">
-              <span class="tag drill-combo${run.combo >= 3 ? ' hot' : ''}" id="drill-combo">Streak ${run.combo}</span>
+              <button type="button" class="btn-secondary quest-btn-sm m-tap" id="drill-calc-btn" title="Open scientific calculator" aria-label="Open scientific calculator">Calculator</button>
               <button type="button" class="btn-secondary quest-btn-sm m-tap" data-quit>${sprint ? 'End Round' : 'Leave'}</button>
             </div>
           </div>
 
           ${sprint ? `
-            <div class="drill-clock" aria-hidden="true"><span id="drill-clock-fill" style="width:${(run.timeLeft / SPRINT_SECONDS) * 100}%"></span></div>
+            <div class="drill-clock" aria-hidden="true"><span id="drill-clock-fill" style="width:100%"></span></div>
             <div class="drill-sprint-row">
               <span class="drill-lives" aria-label="${run.lives} misses left">
                 ${Array.from({ length: SPRINT_LIVES }, (_, i) => `<i class="drill-life${i < run.lives ? ' on' : ''}"></i>`).join('')}
               </span>
-              <span class="tag" id="drill-clock-text">${Math.ceil(run.timeLeft)}s</span>
+              <span class="tag" id="drill-clock-text">${SPRINT_SECONDS}s</span>
               <span class="tag">Correct: ${run.right}</span>
             </div>
           ` : `
@@ -358,25 +354,28 @@ export function renderDrills(container, params = {}) {
             </ol>
           `}
 
-          <h2 id="drill-q" class="drill-question">${esc(q.question)}</h2>
+          <div class="drill-stage-body">
+            <h2 id="drill-q" class="drill-question">${esc(q.question)}</h2>
 
-          <div class="drill-options" role="group" aria-label="Answers">
-            ${q.options.map((o, n) => `
-              <button type="button" class="choice-option drill-opt" data-opt="${esc(o.id)}">
-                <span class="drill-opt-key" aria-hidden="true">${n + 1}</span>${esc(o.label)}
-              </button>`).join('')}
+            <div class="drill-options" role="group" aria-label="Answers">
+              ${q.options.map((o, n) => `
+                <button type="button" class="choice-option drill-opt" data-opt="${esc(o.id)}">
+                  <span class="drill-opt-key" aria-hidden="true">${n + 1}</span>${esc(o.label)}
+                </button>`).join('')}
+            </div>
+
+            <div id="drill-feedback" class="drill-feedback" role="status" aria-live="polite"></div>
           </div>
 
-          <div id="drill-feedback" class="drill-feedback" role="status" aria-live="polite"></div>
-
           <div class="drill-run-foot">
-            <span class="eyebrow">${sprint ? 'The clock pauses while you read the answer.' : `Question ${run.i + 1} of ${total}`}</span>
+            <span class="eyebrow">${sprint ? '90 seconds per question.' : `Question ${run.i + 1} of ${total}`}</span>
             <button type="button" class="btn-primary" id="drill-next" disabled>Next</button>
           </div>
         </section>
       </div>
     `;
 
+    container.querySelector('#drill-calc-btn')?.addEventListener('click', () => toggleCalculator());
     container.querySelectorAll('.drill-opt').forEach(btn =>
       btn.addEventListener('click', () => answer(btn.dataset.opt)));
     container.querySelector('[data-quit]')?.addEventListener('click', () => {
@@ -398,7 +397,6 @@ export function renderDrills(container, params = {}) {
     window.addEventListener('keydown', keyHandler);
 
     if (sprint) {
-      // The answer clock runs only while a question is unanswered.
       let last = performance.now();
       timer = setInterval(() => {
         if (guard()) return;
@@ -423,8 +421,8 @@ export function renderDrills(container, params = {}) {
     const correct = optId === q.answer;
     run.answered++;
     run.results[run.i] = correct;
-    if (correct) { run.right++; run.combo++; run.bestCombo = Math.max(run.bestCombo, run.combo); }
-    else { run.combo = 0; if (run.mode === 'sprint') run.lives--; }
+    if (correct) { run.right++; }
+    else if (run.mode === 'sprint') { run.lives--; }
 
     recordAnswer(practice(), q.id, correct);
     session.savePractice();
@@ -434,8 +432,6 @@ export function renderDrills(container, params = {}) {
       else if (b.dataset.opt === optId) b.classList.add('incorrect');
       b.disabled = true;
     });
-    const combo = container.querySelector('#drill-combo');
-    if (combo) { combo.textContent = `Streak ${run.combo}`; combo.classList.toggle('hot', run.combo >= 3); }
     const fb = container.querySelector('#drill-feedback');
     if (fb) {
       fb.innerHTML = `
@@ -459,7 +455,6 @@ export function renderDrills(container, params = {}) {
       if (run.lives <= 0 || run.timeLeft <= 0) { finish(); return; }
       run.i++;
       if (run.i >= run.questions.length) {
-        // Pool exhausted: deal the same questions again in a new order.
         run.questions = shuffled(run.questions, run.rng).map(q => withShuffledOptions(q, run.rng));
         run.i = 0;
       }
@@ -493,33 +488,27 @@ export function renderDrills(container, params = {}) {
     } else {
       const scoped = r.mode === 'run' ? r.scope : null;
       const earned = recordRun(p, { scope: scoped, correct: r.right, total: r.questions.length });
-      // The Daily Set and Weak Spots have no per-world best, but they still earn stars to show.
       starRow = `<div class="drill-result-stars" aria-label="${earned} of 3 stars">${stars(earned)}</div>`;
       headline = `${r.right} of ${r.questions.length} correct`;
       const missed = r.answered - r.right;
       detail = missed
-        ? `${missed} missed — ${missed === 1 ? 'it' : 'they'} will come back in Weak Spots until you have them.`
+        ? `${missed} missed — ${missed === 1 ? 'it' : 'they'} will come back in Review until you have them.`
         : 'No misses.';
       if (r.mode === 'run' && earned >= 3) detail = 'A clean run. ' + detail;
     }
     session.savePractice();
     session.checkCommendations();
-    const streak = weekStreakOf(p.days);
 
     container.innerHTML = `
-      <div class="screen-container m-screen m-drills">
+      <div class="screen-container m-screen m-drills is-active">
         <section class="plate drill-result" aria-labelledby="drill-result-title">
           <div class="eyebrow lit">${esc(MODE_LABEL[r.mode])} · Complete</div>
           ${starRow}
           <h2 id="drill-result-title" class="drill-result-title">${esc(headline)}</h2>
           <p class="drill-result-line">${esc(detail)}</p>
-          <div class="drill-result-stats">
-            <span class="tag">Best streak in round: ${r.bestCombo}</span>
-            <span class="tag ${streak ? 'live' : ''}">Week streak: ${streak}</span>
-          </div>
           <div class="drill-result-keys">
             <button type="button" class="btn-primary" data-again>Again</button>
-            <button type="button" class="btn-secondary" data-weak${weakIds(p).length ? '' : ' disabled'}>Weak Spots</button>
+            <button type="button" class="btn-secondary" data-weak${weakIds(p).length ? '' : ' disabled'}>Review</button>
             <button type="button" class="btn-secondary" data-deck>Back to Deck</button>
           </div>
         </section>

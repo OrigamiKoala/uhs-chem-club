@@ -172,6 +172,7 @@ export function renderLearnWorld(container, params = {}) {
         <div class="m-head learn-brief-head">
           <span class="eyebrow lit">${esc(world.title)}</span>
           <div style="display: flex; gap: 0.4rem; align-items: center;">
+            ${world.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
             <span class="tag ${(STATUS_TAG[wStatus] || STATUS_TAG.charted).cls}">${(STATUS_TAG[wStatus] || STATUS_TAG.charted).label}</span>
           </div>
         </div>
@@ -202,7 +203,7 @@ export function renderLearnWorld(container, params = {}) {
                 <div class="m-head learn-quest-head">
                   <h2 class="learn-quest-title">${esc(q.title)}</h2>
                   <div style="display: flex; gap: 0.35rem; align-items: center;">
-                    ${q.optional ? '<span class="tag tag-dim">Deep Dive</span>' : ''}
+                    ${q.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
                     <span class="tag ${tag.cls}">${tag.label}</span>
                   </div>
                 </div>
@@ -254,7 +255,10 @@ function renderWalkHud(container, world) {
           </button>
         </div>
 
-        <div class="learn-walk-name">${esc(world.world)}</div>
+        <div class="learn-walk-name" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+          <span>${esc(world.world)}</span>
+          ${world.beyondAp ? '<span class="tag tag-dim" style="font-size: 0.58rem; padding: 1px 5px;">Beyond AP</span>' : ''}
+        </div>
         <p class="learn-walk-line">${esc(world.line)}</p>
         ${ep?.arrival ? `<p class="learn-walk-mystery" style="font-size: 0.74rem; line-height: 1.35; color: var(--accent-amber); margin: 0.3rem 0 0.45rem;">${esc(ep.arrival)}</p>` : ''}
 
@@ -289,7 +293,10 @@ function renderWalkHud(container, world) {
         <div class="in-world-terminal learn-sites-terminal" role="dialog" aria-modal="true" aria-labelledby="learn-sites-popup-title">
           <div class="terminal-header">
             <div>
-              <span class="eyebrow lit">${esc(world.unit.toUpperCase())}</span>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span class="eyebrow lit">${esc(world.unit.toUpperCase())}</span>
+                ${world.beyondAp ? '<span class="tag tag-dim" style="font-size: 0.58rem; padding: 1px 5px;">Beyond AP</span>' : ''}
+              </div>
               <h2 id="learn-sites-popup-title" class="section-title" style="font-size: 1.1rem; margin-top: 2px;">
                 ${esc(world.world.toUpperCase())} — EXPLORATION SITES
               </h2>
@@ -316,7 +323,7 @@ function renderWalkHud(container, world) {
                   <span class="learn-site-body">
                     <span class="learn-site-title" style="display: inline-flex; align-items: center; gap: 0.4rem;">
                       ${esc(q.title)}
-                      ${q.optional ? '<span class="tag tag-dim" style="font-size: 0.58rem; padding: 1px 5px;">Deep Dive</span>' : ''}
+                      ${q.beyondAp ? '<span class="tag tag-dim" style="font-size: 0.58rem; padding: 1px 5px;">Beyond AP</span>' : ''}
                     </span>
                     <span class="learn-site-line" style="font-size: 0.72rem; color: var(--text-secondary);">${esc(q.line)}</span>
                     <span class="eyebrow learn-site-meta">

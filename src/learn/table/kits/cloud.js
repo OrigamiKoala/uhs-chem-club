@@ -71,7 +71,7 @@ function pilesOf(state) {
     }
     out.push({
       id: f.id, at: { x: f.at.x, y: f.at.y }, cap: MAX_SHOTS, n: read.shown.length, slots, shown,
-      key: `${read.fired}|${read.turn}|${read.tilt}|${read.slice ? 1 : 0}|${read.orbital}`, r: Math.max(0.42, pic * 0.0135), colour: '#78a142'
+      key: `${read.fired}|${read.turn}|${read.tilt}|${read.slice ? 1 : 0}|${read.orbital}`, r: Math.max(0.36, pic * 0.012), colour: '#98d44e'
     });
   }
   return out;

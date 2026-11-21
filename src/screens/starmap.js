@@ -102,6 +102,7 @@ function learnPanel() {
             <div class="map-learn-code">
               <span class="eyebrow ${enterable ? "lit" : ""}">${esc(w.code)}</span>
               <span class="tag ${tag.cls}">${tag.label}</span>
+              ${w.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ""}
             </div>
             <div class="map-learn-body">
               <div class="map-learn-name">${esc(w.world)}</div>
@@ -171,11 +172,13 @@ function galaxyNodes(cleared, isComplete) {
       place: w.place,
       line: w.line,
       state: st,
+      beyondAp: Boolean(w.beyondAp),
       act: getEpisode(w.id)?.act || "act1",
       quests: w.quests.map(q => ({
         done: q.status === "live" && isQuestComplete(q),
         live: q.status === "live",
-        title: q.title
+        title: q.title,
+        beyondAp: Boolean(q.beyondAp)
       })),
       progressText: prog.liveTotal
         ? `${prog.questsComplete} / ${prog.liveTotal} benches complete`

@@ -1169,6 +1169,23 @@ export class Voyage {
 
   /* ----------------------------------------------------------- the ground */
 
+  /** Park and show the Avalon on `world`'s pad when entering or reloading a world directly (without a flight). */
+  ensureParkedOnWorld(key, world) {
+    if (!key || !world || !DESTINATIONS[key]) return;
+    if (this.parked && this.parked.world === world) {
+      if (this.exteriorModel) this.exteriorModel.group.visible = true;
+      if (this.state === 'idle') this.state = 'ground';
+      return;
+    }
+    if (this.parked && this.parked.world !== world) {
+      this._unpark(this.parked);
+    }
+    const landing = solveLanding(world, landingPrefsFor(world));
+    this._park({ key, world, landing });
+    if (this.exteriorModel) this.exteriorModel.group.visible = true;
+    this.state = 'ground';
+  }
+
   /** Stand the exterior model and the ship's colliders on `dest`'s world. */
   _park(dest) {
     const model = this._exteriorModel();

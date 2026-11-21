@@ -138,7 +138,7 @@ export const STAGES = [
       table: cuvetteTable({
         pieces: [cuvette('cu', 'TANK WATER', { x: 0, y: 0 }, { conc: COPPER, zone: BEAM }), ...chips],
         fixtures: [sp.fixture],
-        zones: { slots: [...sp.slots, { id: 'taken', label: 'Taken out', at: { x: 118, y: 24 }, size: { w: 11, h: 11 } }] }
+        zones: { slots: [...sp.slots, { id: 'taken', label: 'Taken out', accepts: ['chip'], at: { x: 118, y: 24 }, size: { w: 11, h: 11 } }] }
       }),
       hints: [
         'Put the cuvette (the clear cell holding the solution) in the holder and read the strip of light that gets through.',
@@ -241,8 +241,7 @@ export const STAGES = [
       reward: {
         log: 'Twice the concentration, twice the absorbance.',
         title: 'Concentration and Absorbance',
-        body: 'Twice the concentration gives twice the absorbance. Absorbance rises in step with concentration.',
-        model: { type: 'cuvette', solute: 'cuso4', conc: 0.008, nm: 630, caption: 'Doubling concentration doubles absorbing copper(II) ions in the beam path, doubling absorbance.' }
+        body: 'Twice the concentration gives twice the absorbance. Absorbance rises in step with concentration.'
       }
     };
   })(),
@@ -254,7 +253,21 @@ export const STAGES = [
       title: 'Calibration Line',
       briefing: {
         speaker: SPEAKER,
-        body: 'Standards are samples of known concentration, measured in mmol/L (millimoles per litre). Measure them to draw a calibration line, then read the sealed sample off it.'
+        body: 'Calibration means measuring samples whose concentrations you already know (called standards) so you can turn any absorbance reading into a concentration. Plot the standards, draw a calibration line with the Straightedge, then use that line to find the sealed sample\'s concentration.',
+        parts: [
+          {
+            title: 'What Calibration Means',
+            body: 'The spectrophotometer only measures how much light is absorbed — it cannot read concentration directly. To find an unknown sample\'s concentration, we first calibrate the instrument by measuring a few samples whose concentrations we already know (called standards).'
+          },
+          {
+            title: 'Drawing the Calibration Line',
+            body: 'Fill the three standards to different concentrations (in mmol/L) and press Record on each one to plot them on the graph. Then press Straightedge to draw a line of best fit through your points — its slope tells you how much absorbance rises for each 1 mmol/L.'
+          },
+          {
+            title: 'Finding the Unknown',
+            body: 'Measure the sealed sample to get its absorbance (A). Because the line goes through zero (A = slope × concentration), you can find the unknown concentration by dividing its absorbance by the slope — or by tracing across from its absorbance to the line and straight down to the concentration axis.'
+          }
+        ]
       },
       prompt: 'What is the concentration of the sealed sample?',
       widget,
@@ -284,7 +297,7 @@ export const STAGES = [
         log: 'Calibration line gave the unknown concentration.',
         title: 'Calibration Line',
         body: 'The standards make a straight line of absorbance against concentration. The sealed sample\'s absorbance sits on that line at its concentration.',
-        model: { type: 'cuvette', solute: 'cuso4', conc: SEALED_CONC, nm: 630, caption: 'Unknown sample: concentration is determined directly from its absorbance on the calibration line.' }
+        model: { type: 'cuvette', mode: 'beers', solute: 'cuso4', conc: SEALED_CONC, nm: 630 }
       }
     };
   })(),

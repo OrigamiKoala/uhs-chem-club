@@ -795,10 +795,14 @@ export class Table3D extends BenchViewer3D {
     const fixed = ax.range || null;
     const [xMin, xMax] = fixed ? [fixed.xMin, fixed.xMax] : range(xs);
     const [yMin, yMax] = fixed ? [fixed.yMin, fixed.yMax] : range(ys);
+    const ySpan = Math.abs(yMax - yMin);
+    const xSpan = Math.abs(xMax - xMin);
+    const autoYDigits = ax.yDigits != null ? ax.yDigits : (ySpan < 0.05 ? 3 : ySpan < 1.5 ? 2 : ySpan < 10 ? 1 : 0);
+    const autoXDigits = ax.xDigits != null ? ax.xDigits : (xSpan < 1.5 ? 2 : xSpan < 10 ? 1 : 0);
     sh.plot.setSpec({
       xMin, xMax, yMin, yMax,
       xLabel: ax.xLabel || '', yLabel: ax.yLabel || '', xUnit: ax.xUnit || '', yUnit: ax.yUnit || '',
-      xDigits: ax.xDigits || 0, yDigits: ax.yDigits || 0
+      xDigits: autoXDigits, yDigits: autoYDigits
     });
     sh.plot.points = rec.rows.map((r, i) => ({ x: r.x, y: r.y, active: i === rec.rows.length - 1 }));
     const line = lineOf(rec);
@@ -821,24 +825,24 @@ export class Table3D extends BenchViewer3D {
           ctx.stroke();
           ctx.restore();
 
-          // Display slope badge on the plot/straightedge
-          const slopeVal = Math.round(line.slope * 10) / 10;
-          const text = `Slope = ${slopeVal}`;
+          // Display slope & y-intercept badge on the plot/straightedge with smart precision
+          const fmt = v => Math.abs(v) < 1e-6 ? '0' : Math.abs(v) < 0.1 ? Number(v.toPrecision(3)) : Math.round(v * 100) / 100;
+          const text = `Slope = ${fmt(line.slope)}  |  b = ${fmt(line.intercept)}`;
           ctx.save();
-          ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
+          ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Menlo, monospace';
           ctx.textAlign = 'right';
           ctx.textBaseline = 'top';
           const tw = ctx.measureText(text).width;
-          const pad = 4;
+          const pad = 7;
           const bx = br.x - 8;
           const by = tl.y + 8;
-          ctx.fillStyle = 'rgba(16, 14, 11, 0.88)';
-          ctx.fillRect(bx - tw - pad * 2, by, tw + pad * 2, 20);
+          ctx.fillStyle = 'rgba(16, 14, 11, 0.92)';
+          ctx.fillRect(bx - tw - pad * 2, by, tw + pad * 2, 28);
           ctx.strokeStyle = '#e59b24';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(bx - tw - pad * 2, by, tw + pad * 2, 20);
-          ctx.fillStyle = '#e59b24';
-          ctx.fillText(text, bx - pad, by + 3);
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(bx - tw - pad * 2, by, tw + pad * 2, 28);
+          ctx.fillStyle = '#ffbe40';
+          ctx.fillText(text, bx - pad, by + 5);
           ctx.restore();
         }
       : null;

@@ -66,7 +66,10 @@ export function renderLearn(container) {
               <div class="learn-world-body">
                 <div class="m-head learn-world-head">
                   <h2 class="learn-world-name">${esc(w.world)}</h2>
-                  <span class="tag ${tag.cls}">${tag.label}</span>
+                  <div style="display: flex; gap: 0.35rem; align-items: center;">
+                    ${w.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
+                    <span class="tag ${tag.cls}">${tag.label}</span>
+                  </div>
                 </div>
                 <p class="learn-world-line">${esc(w.line)}</p>
                 ${getEpisode(w.id)?.arrival ? `<p style="font-size: 0.78rem; line-height: 1.38; color: var(--accent-amber); margin: 0.25rem 0 0;">${esc(getEpisode(w.id).arrival)}</p>` : ''}
@@ -77,7 +80,7 @@ export function renderLearn(container) {
                   ${w.quests.map(q => {
                     const built = q.status === 'live';
                     const done = built && isQuestComplete(q);
-                    return `<span class="learn-pip ${done ? 'done' : built ? 'built' : ''}" title="${esc(q.title)}${q.optional ? ' (Deep Dive)' : ''}"></span>`;
+                    return `<span class="learn-pip ${done ? 'done' : built ? 'built' : ''}" title="${esc(q.title)}${q.beyondAp ? ' (Beyond AP)' : ''}"></span>`;
                   }).join('')}
                 </div>
                 <div class="eyebrow learn-world-count">

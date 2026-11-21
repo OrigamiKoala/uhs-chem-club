@@ -1080,7 +1080,7 @@ function buildDome(w) {
     k.box(g, [0.7, 1.7, 1.6], M.caseDark, [ox + x, 0.85, z], [0, rot, 0], true);
   }
   h.colliders.push({ lx: 0, lz: rz, hw: 2.6, hd: 0.35 });
-  k.pendant(g, 0, 3.3, -0.6, 4.6);
+  k.pendant(g, 0, 2.55, -0.6, 4.6, { intensity: 16, distance: 14 });
   k.strut(g, [0, 4.6, -0.6], [0, Math.sqrt(R * R - (ox) ** 2 - (-0.6 - oz) ** 2) - 0.05, -0.6], 0.02, M.darkSteel);
   k.pendant(g, 0, 3.2, F.z1 - 1.5, d.top + 1.4, { intensity: 6, distance: 10 });
   k.strut(g, [0, d.top + 1.4, F.z1 - 1.5], [0, Math.sqrt(Math.max(0.1, R * R - (F.z1 - 1.5 - oz) ** 2)) - 0.05, F.z1 - 1.5], 0.02, M.darkSteel);

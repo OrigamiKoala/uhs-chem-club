@@ -16,7 +16,7 @@ const placeSentence = t => {
   const slot = Object.values(t.zones?.slots || {}).find(z => z.label);
   const guess = slot && /prediction/i.test(slot.label);
   if (slot) {
-    return ` Drag the card you choose into the "${slot.label}" slot.${guess ? ' It is only your guess: nothing is marked right or wrong, and the next part tests it.' : ' The card in that slot is your answer when you press Submit.'}`;
+    return ` Drag the card you choose into the "${slot.label}" slot.${guess ? ' It is only your guess: nothing is marked right or wrong, and the next part tests it.' : ''}`;
   }
   if (Object.keys(t.zones?.trays || {}).length) return ' Drag each one into the tray it belongs in.';
   if (t.zones?.rail) return ' Drag each one into its place along the strip.';

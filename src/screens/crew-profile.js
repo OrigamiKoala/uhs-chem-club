@@ -100,7 +100,6 @@ export async function renderCrewProfile(container, params = {}) {
         <div style="display: flex; justify-content: center; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
           <span class="eyebrow" style="color: var(--accent-amber);">${esc(profile.team_id ? profile.team_id.toUpperCase() : 'AVALON')} GUILD</span>
           ${profile.title ? `<span class="tag" style="background: var(--plate-200); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-family: var(--font-mono); font-size: 0.75rem;">${esc(profile.title)}</span>` : ''}
-          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">&bull; Watch Streak: ${watchStreak} ${watchStreak === 1 ? 'week' : 'weeks'}</span>
         </div>
 
         <div style="display: flex; justify-content: center; margin-top: 0.75rem;">

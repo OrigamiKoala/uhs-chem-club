@@ -296,12 +296,17 @@ export function buildLandingPad(ctx, field) {
   tex.colorSpace = THREE.SRGBColorSpace;
   ctx.own(tex);
 
-  const deckMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.72, metalness: 0.3 });
+  const deckMat = new THREE.MeshStandardMaterial({
+    map: tex, roughness: 0.72, metalness: 0.3,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+  });
   ctx.own(deckMat);
+  // Sit cleanly 4 cm above the raised terrain apron (`PAD_TOP`) so the snow never z-fights through the deck.
+  const deckTop = TOP + 0.04;
   const prof = [
-    new THREE.Vector2(R + 0.6, -0.3), new THREE.Vector2(R + 0.6, -0.04),
-    new THREE.Vector2(R + 0.05, TOP - 0.03), new THREE.Vector2(R - 0.02, TOP),
-    new THREE.Vector2(0, TOP)
+    new THREE.Vector2(R + 0.65, -0.3), new THREE.Vector2(R + 0.65, -0.02),
+    new THREE.Vector2(R + 0.08, deckTop - 0.03), new THREE.Vector2(R - 0.02, deckTop),
+    new THREE.Vector2(0, deckTop)
   ];
   const deckGeo = ctx.own(new THREE.LatheGeometry(prof, 8));
   deckGeo.rotateY(Math.PI / 8);
@@ -318,7 +323,7 @@ export function buildLandingPad(ctx, field) {
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
     const lamp = new THREE.Mesh(lampGeo, ctx.M.lantern);
-    lamp.position.set(Math.cos(a) * (R - 0.6), TOP + 0.005, Math.sin(a) * (R - 0.6));
+    lamp.position.set(Math.cos(a) * (R - 0.6), deckTop + 0.015, Math.sin(a) * (R - 0.6));
     lamp.rotation.y = -a;
     g.add(lamp);
   }

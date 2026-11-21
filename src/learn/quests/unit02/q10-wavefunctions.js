@@ -59,7 +59,7 @@ export const STAGES = [
       title: 'A Gap in the Cloud',
       briefing: {
         speaker: SPEAKER,
-        body: 'The dots show where the electron was found in many measurements. The ring counts the dots in a thin shell at the distance you set.'
+        body: 'The dots show where the electron was found in many measurements, and a place where the electron is never found is called a node. Sweep the counting ring outward to locate the empty ring.'
       },
       prompt: 'At what distance from the nucleus is the 2s electron never found?',
       widget,
@@ -92,7 +92,21 @@ export const STAGES = [
       title: 'The Wave Behind the Cloud',
       briefing: {
         speaker: SPEAKER,
-        body: 'The cloud comes from a wave called the wavefunction, ψ. Like a water wave it has crests, marked +, and troughs, marked −; these are not electric charges.'
+        body: 'The cloud comes from a standing wave called the wavefunction, ψ, whose + and − sides are wave peaks and valleys (not electric charges). Probe both sides to see where the electron is found.',
+        parts: [
+          {
+            title: 'What a Wave Is',
+            body: 'Picture a jump rope shaken up and down: it rises into high crests (marked +) and dips into low troughs (marked −), with still points in between where it crosses zero.'
+          },
+          {
+            title: 'Electrons as Standing Waves',
+            body: 'An electron around a nucleus behaves like a standing wave called a wavefunction (ψ). Its + and − labels only mean the up and down sides of the wave — they are NOT positive or negative electric charge.'
+          },
+          {
+            title: 'From Wave to Cloud',
+            body: 'Where the wave reaches far from zero — whether on the + side or the − side — the electron is found often. Where the wave crosses zero, the electron is never found: that is the node.'
+          }
+        ]
       },
       prompt: 'Is the electron found where its wavefunction is negative?',
       widget,
@@ -180,17 +194,18 @@ export const STAGES = [
       prompt: 'How many angular nodes does each orbital have?',
       widget,
       table: cloudTable({
+        bounds: { w: 150, h: 72 },
         pieces: [
-          cloudCard('c2s', '2s', { x: 78, y: 12 }, '2s', { extent: 8 }),
-          cloudCard('c2p', '2p', { x: 78, y: 32 }, '2px', { extent: 8 }),
-          cloudCard('c3d', '3d', { x: 78, y: 52 }, '3dxy', { extent: 14 })
+          cloudCard('c2s', '2s', { x: 77, y: 14 }, '2s', { extent: 8 }),
+          cloudCard('c2p', '2p', { x: 77, y: 37 }, '2px', { extent: 8 }),
+          cloudCard('c3d', '3d', { x: 77, y: 60 }, '3dxy', { extent: 14 })
         ],
         fixtures: [p.fixture],
         zones: {
           trays: [
-            tray('zero', 'No angular node', { x: 119, y: 12 }, { w: 50, h: 14 }),
-            tray('one', 'One', { x: 119, y: 32 }, { w: 50, h: 14 }),
-            tray('two', 'Two', { x: 119, y: 52 }, { w: 50, h: 14 })
+            tray('zero', 'No angular node', { x: 119, y: 14 }, { w: 46, h: 18.5 }),
+            tray('one', 'One', { x: 119, y: 37 }, { w: 46, h: 18.5 }),
+            tray('two', 'Two', { x: 119, y: 60 }, { w: 46, h: 18.5 })
           ]
         }
       }),
@@ -216,7 +231,11 @@ export const STAGES = [
       reward: {
         log: 's has 0 angular nodes, p has 1, d has 2.',
         title: 'Angular Nodes',
-        body: 's orbitals have none, p orbitals one and d orbitals two. The number of angular nodes is the quantum number l.'
+        body: 's orbitals have none, p orbitals one and d orbitals two. The number of angular nodes is the quantum number l.',
+        model: {
+          type: 'd-orbitals',
+          caption: 'Common 3D orbital surfaces: s (sphere, 0 angular nodes), p (two lobes, 1 nodal plane), and d (four lobes, 2 nodal planes).'
+        }
       }
     };
   })(),

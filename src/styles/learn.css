@@ -3926,7 +3926,7 @@ body.bench-deployed .modal-container.modal-fullscreen-practice .modal-card {
   margin-top: 0.3rem;
 }
 
-/* ---- Deep Dive tag ---- */
+/* ---- Beyond AP tag ---- */
 .tag.tag-dim {
   color: var(--text-muted);
   border-color: rgba(255, 255, 255, 0.14);
@@ -4399,7 +4399,7 @@ body.bench-leaning .boss-hud {
 .lq-tour-spotlight {
   position: fixed;
   border: 2px solid var(--amber, #e59b24);
-  box-shadow: 0 0 0 9999px rgba(10, 9, 8, 0.45);
+  box-shadow: 0 0 0 9999px rgba(10, 9, 8, 0.22);
   pointer-events: none;
   transition: left 140ms ease, top 140ms ease, width 140ms ease, height 140ms ease;
 }
@@ -4436,4 +4436,94 @@ body.bench-leaning .boss-hud {
   display: flex;
   justify-content: flex-end;
   gap: 0.45rem;
+}
+
+/* Glossary modal */
+.lq-glossary-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-durasteel, #38332c);
+}
+
+.lq-glossary-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.lq-glossary-count {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8f8678);
+}
+
+.lq-glossary-search-wrap {
+  margin: 0.75rem 0 0.6rem;
+}
+
+.lq-glossary-search {
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.lq-glossary {
+  margin: 0;
+  padding: 0;
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-right: 0.25rem;
+}
+
+.lq-glossary-entry {
+  display: grid;
+  grid-template-columns: minmax(145px, 34%) 1fr;
+  gap: 0.45rem 1rem;
+  align-items: baseline;
+  padding: 0.65rem 0.85rem;
+  background: var(--plate-100, #161512);
+  border: 1px solid var(--border-durasteel, #2e2a24);
+  border-left: 2px solid var(--border-durasteel, #3f3930);
+}
+
+.lq-glossary-entry[hidden] {
+  display: none;
+}
+
+.lq-glossary-entry.is-focus {
+  border-left-color: var(--accent-amber, #e59b24);
+  background: var(--plate-200, #1e1b16);
+}
+
+.lq-glossary-term {
+  margin: 0;
+  font-family: var(--font-display, var(--font-mono, monospace));
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
+  color: var(--accent-amber, #e59b24);
+}
+
+.lq-glossary-def {
+  margin: 0;
+  font-family: var(--font-main, sans-serif);
+  font-size: 0.9rem;
+  line-height: 1.48;
+  color: var(--text-bright, #ede7dc);
+}
+
+@media (max-width: 600px) {
+  .lq-glossary-entry {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
 }

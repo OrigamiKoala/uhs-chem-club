@@ -477,11 +477,6 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   ctx.lineWidth = 2;
   ctx.strokeRect(12, 12, 488, 232);
 
-  // Eyebrow
-  ctx.font = 'bold 13px monospace';
-  ctx.fillStyle = '#d99423';
-  ctx.fillText('PRIMARY OBJECTIVE · SECTOR 01', 24, 36);
-
   // Top-right Close [X] badge
   ctx.font = 'bold 11px monospace';
   const closeText = TOUCH ? 'Close' : 'Close [X]';
@@ -508,13 +503,13 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   // Title
   ctx.font = 'bold 22px sans-serif';
   ctx.fillStyle = '#e8e0d0';
-  ctx.fillText('EREBUS · THE CHARGE GARDENS', 24, 68);
+  ctx.fillText('EREBUS · THE CHARGE GARDENS', 24, 58);
 
   // Status & Pylon progress
   ctx.strokeStyle = '#2e2a26';
   ctx.beginPath();
-  ctx.moveTo(24, 88);
-  ctx.lineTo(488, 88);
+  ctx.moveTo(24, 80);
+  ctx.lineTo(488, 80);
   ctx.stroke();
 
   ctx.font = 'bold 15px monospace';
@@ -527,27 +522,15 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   for (let i = 0; i < total; i++) {
     const isLit = i < cleared;
     ctx.fillStyle = isLit ? '#6f8f3f' : '#2a2724';
-    ctx.fillRect(24 + i * step + 1, 126, step - 3, 10);
+    ctx.fillRect(24 + i * step + 1, 130, step - 3, 12);
   }
 
   // Transmission excerpt
   const msg = transmission || 'Pylons await connection. Check gauges before committing.';
-  ctx.font = 'italic 12px monospace';
+  ctx.font = 'italic 13px monospace';
   ctx.fillStyle = '#8f8678';
   const truncated = msg.length > 58 ? msg.slice(0, 56) + '…' : msg;
-  ctx.fillText(`VESS: "${truncated}"`, 24, 175);
-
-  // CTA
-  ctx.fillStyle = '#1f1d1a';
-  ctx.fillRect(24, 192, 464, 38);
-  ctx.strokeStyle = '#d99423';
-  ctx.strokeRect(24, 192, 464, 38);
-
-  ctx.font = 'bold 13px monospace';
-  ctx.fillStyle = '#d99423';
-  ctx.textAlign = 'center';
-  ctx.fillText(TOUCH ? '[E] AT HOLO-TABLE TO DISEMBARK' : '[E] / CLICK HOLO-TABLE TO DISEMBARK', 256, 216);
-  ctx.textAlign = 'left';
+  ctx.fillText(`VESS: "${truncated}"`, 24, 186);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 512, 256);

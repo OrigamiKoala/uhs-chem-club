@@ -263,8 +263,24 @@ export async function buildLiveDemo(table, step) {
         steps.push({ at, drag: { piece: p.id, to }, action: { place: { piece: p.id, to } } });
         at += 1.5;
       }
+    } else if (p.kind === 'dropper' || p.kind === 'rinse') {
+      // Show placing a cuvette into the spectrophotometer first, then using the dropper/rinse over a fillable cuvette.
+      const sp = Object.values(table.fixtures || {}).find(f => f.kind === 'spectro' && f.props?.slot);
+      const spSlot = sp && table.zones?.slots?.[sp.props.slot];
+      const cuvs = Object.values(table.pieces).filter(q => !q.hidden && q.kind === 'cuvette');
+      const fillable = cuvs.find(q => !q.props?.sealed && q.props?.conc == null) || cuvs[0];
+      if (spSlot && fillable && fillable.zone !== `slot:${spSlot.id}`) {
+        steps.push({ at, drag: { piece: fillable.id, to: spSlot.at }, action: { place: { piece: fillable.id, to: `slot:${spSlot.id}` } } });
+        at += 1.4;
+        steps.push({ at, drag: { piece: p.id, to: spSlot.at }, action: { join: [p.id, fillable.id] } });
+        at += 1.5;
+      } else if (fillable) {
+        steps.push({ at, drag: { piece: p.id, to: fillable.at }, action: { join: [p.id, fillable.id] } });
+        at += 1.5;
+      }
     } else {
-      const slot = Object.values(table.zones?.slots || {}).find(z => !z.occupant && (!z.accepts || z.accepts.includes(p.kind)));
+      const occupiedSlot = id => Object.values(table.pieces).some(q => !q.hidden && q.zone === `slot:${id}`);
+      const slot = Object.values(table.zones?.slots || {}).find(z => !occupiedSlot(z.id) && (!z.accepts || z.accepts.includes(p.kind)));
       const cont = !slot && Object.values(table.zones?.containers || {}).find(z => `container:${z.id}` !== p.zone);
       const tray = !slot && !cont && Object.values(table.zones?.trays || {}).find(z => `tray:${z.id}` !== p.zone && (!z.accepts || z.accepts.includes(p.kind)));
       const target = slot ? { to: `slot:${slot.id}`, pt: slot.at } : cont ? { to: `container:${cont.id}`, pt: cont.at } : tray ? { to: `tray:${tray.id}`, pt: tray.at } : null;

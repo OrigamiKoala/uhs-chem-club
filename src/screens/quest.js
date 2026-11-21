@@ -515,9 +515,6 @@ export function renderQuest(container) {
             <div class="stage-counter" aria-live="polite">
               STAGE <strong>${currentStageIdx + 1}</strong> / ${TOTAL_STAGES}
             </div>
-            <div class="clean-streak ${cleanStreak > 0 ? '' : 'hidden'}" id="clean-streak" title="Stages solved first try, without the solution hint">
-              ${cleanStreak} CLEAN
-            </div>
             <button type="button" id="next-stage-btn" class="btn-secondary quest-btn-sm" ${currentStageIdx >= navMaxIdx() ? 'disabled' : ''} title="Next stage" aria-label="Next stage">
               ▶
             </button>

@@ -19,7 +19,7 @@ import { buildCuvette, buildDropper, buildRinseBottle, CUVETTE_TOP } from '../..
 import { buildBeamThrough } from '../../engine/lab-props-lanternfall.js';
 import { wavelengthRgb } from '../../engine/lightdata.js';
 import {
-  seatedIn, spectroRead, concOf, MAX_DROPS, COPPER_SWEEP, PATHS, REGIONS
+  seatedIn, spectroRead, regionRead, concOf, MAX_DROPS, COPPER_SWEEP, PATHS, REGIONS
 } from './cuvette-read.js';
 
 export const CUVETTE_KIT_ID = 'cuvette';
@@ -63,7 +63,7 @@ const rect = (r, kind) => ({ r, rect: RECTS[kind], nojoin: true });
 function piece3d(p, state, c) {
   if (p.kind === 'cuvette') {
     const look = cuvetteLook(p);
-    const legend = c.paint(c.hw * 1.56, 0.04, (ctx, W, H) => paintLegend(ctx, p, W, H), { seed: `${p.id}|${p.label}|${p.props.drops || 0}|${p.props.read ?? ''}`, px: 384 });
+    const legend = c.paint(c.hw * 1.85, 0.064, (ctx, W, H) => paintLegend(ctx, p, W, H), { seed: `${p.id}|${p.label}|${p.props.drops || 0}|${p.props.read ?? ''}`, px: 512 });
     return buildCuvette(c, { level: look.level, tint: look.tint, legend });
   }
   if (p.kind === 'dropper') return buildDropper(c);
@@ -72,12 +72,120 @@ function piece3d(p, state, c) {
 }
 
 /**
+ * 3D animated HCl molecule for the "Light and a molecule" bench (`f.props.region`):
+ * Microwave spins the whole molecule end-over-end, Infrared stretches & bends the bond,
+ * and UV/visible lifts an electron from the inner shell ring up to an outer excited ring.
+ */
+function buildMolecule3d(f, state, c) {
+  const { THREE, scale: s, toPlate, box } = c;
+  const group = new THREE.Group();
+  const center = toPlate({ x: box.x0 + f.size.w * 0.56, y: box.y0 + f.size.h * 0.58 });
+  const pivot = new THREE.Group();
+  pivot.position.set(center.x, c.ground + 0.068, center.z);
+  group.add(pivot);
+
+  const ownMat = m => { if (m.userData) m.userData.tableOwned = true; return m; };
+  const clMat = ownMat(new THREE.MeshStandardMaterial({ color: 0x3ba87c, roughness: 0.35, metalness: 0.15 }));
+  const hMat = ownMat(new THREE.MeshStandardMaterial({ color: 0xe6e2d8, roughness: 0.35, metalness: 0.1 }));
+  const bondMat = ownMat(new THREE.MeshStandardMaterial({ color: 0x9aa4aa, roughness: 0.45, metalness: 0.4 }));
+  const ringInnerMat = ownMat(new THREE.MeshBasicMaterial({ color: 0x6f7b82, transparent: true, opacity: 0.55 }));
+  const ringOuterMat = ownMat(new THREE.MeshBasicMaterial({ color: 0xe59b24, transparent: true, opacity: 0.85 }));
+  const eMat = ownMat(new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xe59b24, emissiveIntensity: 1.6, roughness: 0.2 }));
+
+  const R = 3.2 * s;
+  const baseHalf = 5.4 * s;
+  const clMesh = new THREE.Mesh(new THREE.SphereGeometry(R * 1.35, 24, 18), clMat);
+  const hMesh = new THREE.Mesh(new THREE.SphereGeometry(R * 0.88, 20, 16), hMat);
+  const bondGeo = new THREE.CylinderGeometry(R * 0.24, R * 0.24, 1, 12);
+  bondGeo.rotateZ(Math.PI / 2);
+  const bondMesh = new THREE.Mesh(bondGeo, bondMat);
+
+  clMesh.position.set(baseHalf, 0, 0);
+  hMesh.position.set(-baseHalf, 0, 0);
+  bondMesh.scale.set(baseHalf * 2, 1, 1);
+
+  const molGroup = new THREE.Group();
+  molGroup.add(clMesh, hMesh, bondMesh);
+  pivot.add(molGroup);
+
+  // Orbital rings + electron (visible in UV/visible mode)
+  const orbGroup = new THREE.Group();
+  const rInner = R * 2.1;
+  const rOuter = R * 3.45;
+  const innerRing = new THREE.Mesh(new THREE.TorusGeometry(rInner, 0.0022, 8, 48), ringInnerMat);
+  const outerRing = new THREE.Mesh(new THREE.TorusGeometry(rOuter, 0.0026, 8, 48), ringOuterMat);
+  innerRing.rotation.x = Math.PI / 2;
+  outerRing.rotation.x = Math.PI / 2;
+  const electron = new THREE.Mesh(new THREE.SphereGeometry(R * 0.34, 14, 12), eMat);
+  orbGroup.add(innerRing, outerRing, electron);
+  orbGroup.position.set(baseHalf, 0, 0);
+  molGroup.add(orbGroup);
+
+  let mode = 'spins';
+  let t = 0;
+
+  const applyPose = () => {
+    orbGroup.visible = mode === 'jumps';
+    if (mode === 'spins') {
+      clMesh.position.set(baseHalf, 0, 0);
+      hMesh.position.set(-baseHalf, 0, 0);
+      bondMesh.position.set(0, 0, 0);
+      bondMesh.scale.set(baseHalf * 2, 1, 1);
+      bondMesh.rotation.set(0, 0, 0);
+      molGroup.rotation.set(0.32 * Math.sin(t * 1.4), t * 2.6, 0.22 * Math.cos(t * 1.1));
+    } else if (mode === 'vibrates') {
+      const stretch = Math.sin(t * 7.5);
+      const bend = Math.sin(t * 3.75) * 0.24 * baseHalf;
+      const half = baseHalf * (1 + 0.34 * stretch);
+      clMesh.position.set(half, bend * 0.35, 0);
+      hMesh.position.set(-half, -bend, 0);
+      const dx = clMesh.position.x - hMesh.position.x;
+      const dy = clMesh.position.y - hMesh.position.y;
+      bondMesh.position.set((clMesh.position.x + hMesh.position.x) / 2, (clMesh.position.y + hMesh.position.y) / 2, 0);
+      bondMesh.scale.set(Math.hypot(dx, dy), 1, 1);
+      bondMesh.rotation.set(0, 0, Math.atan2(dy, dx));
+      molGroup.rotation.set(0.28, 0.25 * Math.sin(t * 0.8), 0);
+    } else {
+      clMesh.position.set(baseHalf, 0, 0);
+      hMesh.position.set(-baseHalf, 0, 0);
+      bondMesh.position.set(0, 0, 0);
+      bondMesh.scale.set(baseHalf * 2, 1, 1);
+      bondMesh.rotation.set(0, 0, 0);
+      molGroup.rotation.set(0.45, 0.15, 0);
+      // Smoothly pulse between inner shell and outer excited shell
+      const cycle = (t * 0.55) % 1;
+      const jump = cycle < 0.2 ? cycle / 0.2 : cycle < 0.72 ? 1 : Math.max(0, 1 - (cycle - 0.72) / 0.2);
+      const er = rInner + (rOuter - rInner) * jump;
+      const ang = t * 4.2;
+      electron.position.set(Math.cos(ang) * er, 0, Math.sin(ang) * er);
+      ringOuterMat.opacity = 0.35 + 0.65 * jump;
+    }
+  };
+
+  const sync = (fx, st) => {
+    const r = regionRead(st, fx.id);
+    mode = r.motion === 'spins' ? 'spins' : r.motion === 'vibrates' ? 'vibrates' : 'jumps';
+    applyPose();
+  };
+  group.userData.sync = sync;
+  group.userData.tick = (dt, still) => {
+    if (still) return;
+    t += dt;
+    applyPose();
+  };
+  sync(f, state);
+  return group;
+}
+
+/**
  * A beam of light through the cuvette in the spectrophotometer's optical chamber: it enters from the lamp housing and
  * exits into the photodetector sensor at the chamber edge, attenuated according to transmittance (10^-A). It never
  * crosses into the digital display or control panel.
  */
 function dress3d(f, state, c) {
-  if (f.kind !== 'spectro' || f.props.region || f.props.strip || !f.props.slot) return null;
+  if (f.kind !== 'spectro') return null;
+  if (f.props.region) return buildMolecule3d(f, state, c);
+  if (f.props.strip || !f.props.slot) return null;
   const slot = state.zones.slots[f.props.slot];
   if (!slot) return null;
   const { THREE, scale: s, toPlate, box } = c;
@@ -111,12 +219,14 @@ function dress3d(f, state, c) {
   group.add(detBox);
 
   // 3. Digital LCD Screen Bezel Frame on right
+  const scrTop = f.props.tune ? 11.5 : 4.5;
+  const scrH = f.props.tune ? 17.5 : 21.5;
   const scrX = box.x0 + 26 + (f.size.w - 28.5) / 2;
-  const scrY = box.y0 + 4.5 + 21.5 / 2;
+  const scrY = box.y0 + scrTop + scrH / 2;
   const scrP = toPlate({ x: scrX, y: scrY });
   // A frame, not a slab: the readout is painted on the plate inside it and must stay in view.
   const bw = f.size.w - 28.5;
-  const bh = 21.5;
+  const bh = scrH;
   const edge = 0.5;
   const strip = (w, h, dx, dz) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w * s, 0.006, h * s), sensorMat);
@@ -243,8 +353,8 @@ export function spectro(id, at, {
         ...(region ? { molecule } : {}), hidden, readAt: 24
       }
     },
-    // The cuvette stands in a well as wide as its stand (18 units).
-    slots: region ? [] : [{ id: slotId, label: '', at: { x: x0 + 11, y: y0 + h - 12.5 }, size: { w: 20, h: 22 } }],
+    // The cuvette stands in a well as wide as its stand (18 units); only cuvettes fit in the beam holder.
+    slots: region ? [] : [{ id: slotId, label: '', accepts: ['cuvette'], at: { x: x0 + 11, y: y0 + h - 12.5 }, size: { w: 20, h: 22 } }],
     size,
     slotId
   };

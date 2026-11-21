@@ -243,7 +243,7 @@ export const STAGES = [
           ...BRIGHTER.map(([id, label], k) => card(id, label, { x: 62 + k * 36, y: 57 }))
         ],
         fixtures: [cell.fixture],
-        zones: { slots: [...cell.slots, { id: 'answer', label: '', at: { x: 22, y: 57 }, size: { w: 38, h: 12 } }] },
+        zones: { slots: [...cell.slots, { id: 'answer', label: 'Answer', at: { x: 22, y: 52 }, size: { w: 38, h: 11 } }] },
         recorder: { at: { x: 128, y: 25 }, size: { w: 38, h: 34 }, xLabel: 'Brightness', xUnit: '', yLabel: 'Electrons per second', yUnit: '' }
       }),
       hints: [

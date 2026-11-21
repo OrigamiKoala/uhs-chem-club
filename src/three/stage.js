@@ -1330,6 +1330,9 @@ class Stage {
     if (!world) return;
     if (this.renderer) this.renderer.toneMappingExposure = exposure;
 
+    // Keep the Avalon parked on the world's pad even on a direct URL load / page reload.
+    if (world.scene?.name) this.voyage?.ensureParkedOnWorld(world.scene.name, world);
+
     world.scene.add(this.camera);
 
     if (this._arrivalHold === world && !focusSiteId && !playerPos) {

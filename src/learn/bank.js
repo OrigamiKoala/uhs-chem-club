@@ -60,7 +60,7 @@ export const BANKS = { unit01, unit02, unit03, unit04, unit05, unit06, unit07, u
 export const DEEP_WORKED = deepWorkedRaw;
 
 const TIER_LABEL = {
-  ap: 'AP Synthesis',
+  ap: 'AP',
   olympiad: 'Olympiad'
 };
 

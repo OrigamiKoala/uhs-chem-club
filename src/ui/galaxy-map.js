@@ -1058,13 +1058,16 @@ export function mountGalaxyMap(root, opts) {
     plate.innerHTML = `
       <div class="galaxy-plate-head">
         <span class="eyebrow ${n.state === 'open' ? 'lit' : ''}">${escHtml(n.code)} · ${escHtml(n.place)}</span>
-        <span class="tag ${tag.cls}">${tag.label}</span>
+        <div style="display: flex; gap: 0.35rem; align-items: center;">
+          ${n.beyondAp ? '<span class="tag tag-dim">Beyond AP</span>' : ''}
+          <span class="tag ${tag.cls}">${tag.label}</span>
+        </div>
       </div>
       <h2 class="galaxy-plate-name">${escHtml(n.name)}</h2>
       <p class="galaxy-plate-line">${escHtml(n.line)}</p>
       ${moons.length ? `
         <div class="galaxy-plate-moons" aria-label="${escHtml(n.progressText || '')}">
-          ${moons.map(q => `<i class="gx-moon ${q.done ? 'done' : q.live ? 'live' : ''}" title="${escHtml(q.title || '')}"></i>`).join('')}
+          ${moons.map(q => `<i class="gx-moon ${q.done ? 'done' : q.live ? 'live' : ''}" title="${escHtml(q.title || '')}${q.beyondAp ? ' (Beyond AP)' : ''}"></i>`).join('')}
         </div>` : ''}
       <div class="eyebrow galaxy-plate-count">${escHtml(n.progressText || '')}</div>
       <div class="galaxy-plate-actions">

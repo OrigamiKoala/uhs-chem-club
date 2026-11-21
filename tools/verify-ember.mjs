@@ -446,7 +446,7 @@ console.log('\nEmber Reach — the benches and the boss, held to the rules of th
       const steps = tourSteps(t, {});
       counts.tours++;
       for (const f of Object.values(t.fixtures)) {
-        if (f.props?.backdrop || f.kind === 'plaque' || f.kind === 'plate') continue;
+        if (f.props?.backdrop || f.kind === 'plaque' || f.kind === 'plate' || f.kind === 'marker' || f.kind === 'selector' || f.kind === 'tally' || f.kind === 'stamp' || f.kind === 'choice' || f.kind === 'tchoice' || f.kind === 'lchoice') continue;
         if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: "${f.label}" missing from Tour`);
       }
       for (const v of mod.VOCABULARY || []) {

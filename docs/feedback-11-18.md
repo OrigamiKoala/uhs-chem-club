@@ -6,7 +6,22 @@
 
 ![alt text](image-104.png) In the navbar, remove "Standings" and "Crew". Add a button for the problems, labeled "Practice"
 
-![alt text](image-105.png) Remove the "Week Streak" label and number. Remove the concept of streaks from this game.
+![alt text](image-105.png) Remove the "Week Streak" label and number. Remove the concept of streaks from this game. Remove the Daily set. Remove the "Practice" on top of "Quick Run", as well as "Beat the clock" and "Review". Replace "Timed Round" with "Beat the clock", and switch the description to "90 seconds per question." "Weak Spots" should be "Review", and the description should be "Review past mistakes". In general, the questions should only be pulled from the quests/worlds I have finished.
+
+Next to Mastery, remove the line that says"A question is mastered when you have got it right twice..."
+
+Remove the line that says "Drills pay no XP and never..."
+
+Remove the unranked labels next to "Drill" for each world.
+
+Remove the "Learn Road" button at the bottom.
+
+Replace "Not yet" with "0%".
+
+Replace "AP Synthesis" name with just "AP".
+
+Also make sure on the Drill screen, the background is black (instead of a 3D world), and I have access to the calculator. Make the question card fill up the whole screen - make the text a lot bigger.
+
 
 ## Ship
 

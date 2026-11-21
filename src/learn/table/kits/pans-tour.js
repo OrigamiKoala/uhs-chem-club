@@ -27,8 +27,8 @@ const FIXTURES = {
 };
 
 const PIECES = {
-  arw: ['Reaction cards', 'Each card writes the reaction of a vessel with an arrow. Drag the card you choose into the slot under a vessel; the card in a slot is your answer when you press Submit.'],
-  dgm: ['Diagram cards', 'Each card draws a dish of orange and blue spheres, frozen. Drag the card you choose into the slot; it is your answer when you press Submit.']
+  arw: ['Reaction cards', 'Each card writes the reaction of a vessel with an arrow. Drag the card you choose into the slot under a vessel.'],
+  dgm: ['Diagram cards', 'Each card draws a dish of orange and blue spheres, frozen. Drag the card you choose into the slot.']
 };
 
 addTourText(FIXTURES, PIECES);

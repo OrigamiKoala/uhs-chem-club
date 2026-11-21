@@ -1540,16 +1540,38 @@ export class LearnFrame {
   showGlossary(focusId = null) {
     const g0 = glossaryFor(this.currentQuestId());
     if (!g0) return;
-    const g = focusId ? { ...g0, terms: [...g0.terms.filter(t => t.id === focusId), ...g0.terms.filter(t => t.id !== focusId)] } : g0;
+    const sorted = [...g0.terms].sort((a, b) => a.term.localeCompare(b.term));
+    const terms = focusId
+      ? [...sorted.filter(t => t.id === focusId), ...sorted.filter(t => t.id !== focusId)]
+      : sorted;
     showModal(`
-      <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="lq-glossary-title" class="section-title">Glossary</h2>
+      <div class="quest-modal-head lq-modal-head lq-glossary-head">
+        <div class="lq-glossary-title-wrap">
+          <h2 id="lq-glossary-title" class="section-title">Glossary</h2>
+          <span class="lq-glossary-count">${terms.length} terms</span>
+        </div>
         <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
       </div>
-      <dl class="lq-glossary">
-        ${g.terms.map(t => `<dt>${esc(t.term)}</dt><dd>${esc(t.gloss)}</dd>`).join('')}
+      <div class="lq-glossary-search-wrap">
+        <input type="search" id="lq-glossary-filter" class="form-input lq-glossary-search" placeholder="Filter terms..." aria-label="Filter glossary terms" autocomplete="off">
+      </div>
+      <dl class="lq-glossary" id="lq-glossary-list">
+        ${terms.map(t => `
+          <div class="lq-glossary-entry${focusId && t.id === focusId ? ' is-focus' : ''}" data-term-text="${esc((t.term + ' ' + t.gloss).toLowerCase())}">
+            <dt class="lq-glossary-term">${esc(t.term)}</dt>
+            <dd class="lq-glossary-def">${esc(t.gloss)}</dd>
+          </div>`).join('')}
       </dl>
     `, { labelledBy: 'lq-glossary-title' });
+    const filter = document.getElementById('lq-glossary-filter');
+    if (filter) {
+      filter.addEventListener('input', () => {
+        const q = filter.value.trim().toLowerCase();
+        document.querySelectorAll('#lq-glossary-list .lq-glossary-entry').forEach(row => {
+          row.hidden = Boolean(q) && !row.dataset.termText.includes(q);
+        });
+      });
+    }
     document.querySelectorAll('[data-lq-close]').forEach(btn => btn.addEventListener('click', () => closeModal()));
   }
 

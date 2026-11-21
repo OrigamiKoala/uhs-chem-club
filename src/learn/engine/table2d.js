@@ -213,8 +213,12 @@ export function drawTable(ctx, w, h, state, view = {}) {
   }
   for (const s of Object.values(state.zones.slots)) {
     const r = rectOf(s, SIZES.slot);
-    const fixed = Object.values(state.pieces).some(p => p.zone === `slot:${s.id}` && p.fixed);
+    const occupant = Object.values(state.pieces).find(p => p.zone === `slot:${s.id}` && !p.hidden);
+    const fixed = Boolean(occupant && occupant.fixed);
     outline(r, Boolean(holding) && !fixed);
+    if (!occupant && (/^(answer|ans|pick|choice)$/i.test(s.id) || /^answer$/i.test(s.label || ''))) {
+      words('Answer', r.x0 + r.w / 2, r.y0 + r.h / 2, { size: 2.3, align: 'center', base: 'middle', color: ink.dim });
+    }
     zoneWords('slot', s);
   }
   const rail = state.zones.rail;
@@ -433,9 +437,10 @@ function drawRecorder(ctx, state, X, Y, sc) {
     ctx.stroke();
     ctx.restore?.();
 
-    // Display slope badge on the plot/straightedge
-    const slopeVal = Math.round(line.slope * 10) / 10;
-    plateText(ctx, `Slope = ${slopeVal}`, X(r.x1) - 3, Y(r.y0) + 3, { size: Math.max(8, Math.round(3.2 * sc)), align: 'right', base: 'top', color: AMBER, weight: 700 });
+    // Display slope & y-intercept badge on the plot/straightedge with smart precision
+    const fmt = v => Math.abs(v) < 1e-6 ? '0' : Math.abs(v) < 0.1 ? Number(v.toPrecision(3)) : Math.round(v * 100) / 100;
+    const label = `Slope = ${fmt(line.slope)}  b = ${fmt(line.intercept)}`;
+    plateText(ctx, label, X(r.x1) - 3, Y(r.y0) + 3, { size: Math.max(9, Math.round(3.2 * sc)), align: 'right', base: 'top', color: AMBER, weight: 700 });
   }
   ctx.fillStyle = PLATE_COLORS.dust;
   for (const row of rec.rows) ctx.fillRect(px(row.x) - 1.5, py(row.y) - 1.5, 3, 3);

@@ -14,6 +14,7 @@ export const UNIT_14 = {
   world: 'Cinder Halo',
   place: 'Crater sea',
   title: 'Nuclear Chemistry',
+  beyondAp: true,
   line: 'Radioactivity, the three radiations, nuclear equations, stability, half-life, and the energy in a nucleus.',
   brief: 'Count radiation and find what stops it, balance nuclear equations, find which nuclei last, time a decay by its half-life, and weigh the energy that holds a nucleus together.',
 

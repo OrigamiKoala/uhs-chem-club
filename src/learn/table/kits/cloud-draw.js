@@ -112,14 +112,14 @@ export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view
     ctx.setLineDash([]);
     ctx.restore();
   }
-  const dot = Math.max(1.4, size * 0.014);
-  ctx.fillStyle = PHOS;
+  const dot = Math.max(1.8, size * 0.018);
+  ctx.fillStyle = '#98d44e';
   // The built table stands every dot up as a bead of its own (`cloud.js` `pilesOf`): the flat picture keeps the frame and the rings.
   for (const p of bodies ? [] : dots) {
     if (turning) {
       const near = Math.max(0, Math.min(1, (p.c / half + 1) / 2));
-      ctx.globalAlpha = 0.3 + 0.7 * near;
-      const d = dot * (0.75 + 0.6 * near);
+      ctx.globalAlpha = 0.52 + 0.48 * near;
+      const d = dot * (0.85 + 0.55 * near);
       ctx.fillRect(cx + p.a * k - d / 2, cy - p.b * k - d / 2, d, d);
     } else {
       ctx.fillRect(cx + p.a * k - dot / 2, cy - p.b * k - dot / 2, dot, dot);
@@ -180,12 +180,12 @@ function slab(ctx, o, hw, hh, tone = '#2a2620') {
 /** A cloud card: a small plate with the cloud on it, seen from the view the table shares. */
 function paintCloudCard(ctx, p, state, o) {
   const { hw, hh } = RECTS.cloud;
-  const box = slab(ctx, o, hw, hh);
-  const pic = Math.min(box.w - 6, box.h * 0.8);
+  const box = slab(ctx, o, hw, hh, '#282d26');
+  const pic = Math.min(box.w - 6, box.h * 0.78);
   const f = p.props.view ? viewRead(state, p.props.view) : { yaw: 0, pitch: 0, slice: false };
   const dots = cardDots(p, f);
   paintDots(ctx, box.x0 + (box.w - pic) / 2, box.y0 + 3, pic, p.props.extent ?? 12, dots, { turning: true, view: { yaw: f.yaw, pitch: f.pitch }, rings: false });
-  say(ctx, p.label, o.x, box.y0 + box.h - box.h * 0.07, Math.max(7, box.h * 0.1), { align: 'center', maxW: box.w - 2, weight: 700 });
+  say(ctx, p.label, o.x, box.y0 + box.h - box.h * 0.09, Math.max(8, box.h * 0.13), { align: 'center', color: '#f4efe6', maxW: box.w - 2, weight: 700 });
 }
 
 function cardDots(p, view) {

@@ -68,6 +68,7 @@ export const UNIT_04 = {
       arena: 'bench',
       stageCount: 7,
       status: 'live',
+      optional: true,
       module: () => import('../quests/unit04/q5-speed.js')
     },
     {

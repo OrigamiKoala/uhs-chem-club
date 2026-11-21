@@ -131,8 +131,8 @@ function paintCuvette(ctx, p, state, o) {
   const text = p.props.sealed
     ? (p.props.read != null ? `A = ${p.props.read.toFixed(3)}` : 'UNKNOWN')
     : `${(c * 1000).toFixed(1)} mmol/L`;
-  const col = p.props.sealed && p.props.read != null ? PHOS : (c > 0 ? AMBER : DUST);
-  say(ctx, text, o.x, box.y0 + box.h - 1.6 * o.sc, Math.max(6, 1.7 * o.sc), { align: 'center', color: col, weight: 600, maxW: box.w - 2 });
+  const col = p.props.sealed && p.props.read != null ? PHOS : (c > 0 ? '#ffbe40' : '#d8d2c6');
+  say(ctx, text, o.x, box.y0 + box.h - 1.8 * o.sc, Math.max(8, 2.35 * o.sc), { align: 'center', color: col, weight: 700, maxW: box.w - 2 });
 }
 
 function paintChip(ctx, p, state, o) {
@@ -168,13 +168,13 @@ export function cuvetteLook(p) {
 
 /** The words on a cuvette's foot: its name over its concentration (or absorbance once read). */
 export function paintLegend(ctx, p, W, H) {
-  say(ctx, p.label, W / 2, H * 0.32, H * 0.38, { align: 'center', weight: 700, maxW: W - 8 });
+  say(ctx, p.label, W / 2, H * 0.27, H * 0.36, { align: 'center', color: '#f2ece1', weight: 700, maxW: W - 6 });
   const c = concOf(p);
   const text = p.props.sealed
     ? (p.props.read != null ? `A = ${p.props.read.toFixed(3)}` : 'UNKNOWN')
     : `${(c * 1000).toFixed(1)} mmol/L`;
-  const col = p.props.sealed && p.props.read != null ? PHOS : (c > 0 ? AMBER : DUST);
-  say(ctx, text, W / 2, H * 0.74, H * 0.3, { align: 'center', color: col, weight: 600, maxW: W - 8 });
+  const col = p.props.sealed && p.props.read != null ? PHOS : (c > 0 ? '#ffbe40' : '#e6dfd3');
+  say(ctx, text, W / 2, H * 0.72, H * 0.44, { align: 'center', color: col, weight: 700, maxW: W - 6 });
 }
 
 const PAINTERS = { cuvette: paintCuvette, chip: paintChip, motion: paintMotion, reading: paintReading, dropper: paintTool, rinse: paintTool };
@@ -201,46 +201,52 @@ const frameOf = b => ({
   size: (k, min = 7) => Math.max(min, k * b.sc)
 });
 
-/** The molecule of the light dial: a diatomic, turning, stretching or with an electron moved up a level. */
+/** The molecule of the light dial: 3D animated in 3D On (`b.bodies`), animated 2D fallback in 3D Off. */
 function paintMolecule(ctx, f, state, b) {
   const F = frameOf(b);
+  if (b.bodies) {
+    say(ctx, f.props.molecule || 'HCl', F.x(f.size.w * 0.56), F.y(f.size.h - 2.6), F.size(2.6, 7), { align: 'center', color: DUST, weight: 700 });
+    return;
+  }
   const r = regionRead(state, f.id);
-  const cx = F.x(f.size.w * 0.62);
-  const cy = F.y(f.size.h * 0.62);
-  const R = F.len(2.6);
+  const t = b.clock || 0;
+  const cx = F.x(f.size.w * 0.56);
+  const cy = F.y(f.size.h * 0.60);
+  const R = F.len(2.8);
   const open = (x, y, rr, fill) => { ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = DUST; ctx.stroke(); };
   ctx.strokeStyle = STEEL;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 2;
   if (r.motion === 'spins') {
-    // The whole molecule turns end over end: a tilted pair and an arrow round it.
-    const a = -0.6, d = F.len(4.6);
+    const a = t * 2.4;
+    const d = F.len(4.8);
     ctx.beginPath(); ctx.moveTo(cx - Math.cos(a) * d, cy - Math.sin(a) * d); ctx.lineTo(cx + Math.cos(a) * d, cy + Math.sin(a) * d); ctx.stroke();
-    open(cx - Math.cos(a) * d, cy - Math.sin(a) * d, R, '#3a352e');
-    open(cx + Math.cos(a) * d, cy + Math.sin(a) * d, R * 1.25, '#2a2620');
-    ctx.strokeStyle = AMBER;
-    ctx.beginPath(); ctx.arc(cx, cy, d * 1.5, -2.4, 0.6); ctx.stroke();
+    open(cx - Math.cos(a) * d, cy - Math.sin(a) * d, R * 0.85, '#e6e2d8');
+    open(cx + Math.cos(a) * d, cy + Math.sin(a) * d, R * 1.3, '#3ba87c');
   } else if (r.motion === 'vibrates') {
-    // The bond stretches and shortens: two marks showing how far each atom goes.
-    const d = F.len(4.6);
+    const d = F.len(4.8 * (1 + 0.32 * Math.sin(t * 7.2)));
     ctx.beginPath(); ctx.moveTo(cx - d, cy); ctx.lineTo(cx + d, cy); ctx.stroke();
-    open(cx - d, cy, R, '#3a352e');
-    open(cx + d, cy, R * 1.25, '#2a2620');
-    ctx.strokeStyle = AMBER;
-    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * (d + R * 1.9), cy); ctx.lineTo(cx + s * (d + R * 3), cy); ctx.stroke(); }
+    open(cx - d, cy, R * 0.85, '#e6e2d8');
+    open(cx + d, cy, R * 1.3, '#3ba87c');
   } else {
-    // An electron moves up a level: two levels and one electron on the upper.
-    const d = F.len(4.6);
+    const d = F.len(4.8);
     ctx.beginPath(); ctx.moveTo(cx - d, cy); ctx.lineTo(cx + d, cy); ctx.stroke();
-    open(cx - d, cy + R * 0.2, R, '#3a352e');
-    open(cx + d, cy + R * 0.2, R * 1.25, '#2a2620');
+    open(cx - d, cy, R * 0.85, '#e6e2d8');
+    open(cx + d, cy, R * 1.3, '#3ba87c');
+    const rIn = R * 2.1, rOut = R * 3.4;
+    ctx.lineWidth = 1;
     ctx.strokeStyle = DIM;
-    ctx.beginPath(); ctx.arc(cx + d, cy + R * 0.2, R * 2.1, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + d, cy, rIn, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = AMBER;
-    ctx.beginPath(); ctx.arc(cx + d, cy + R * 0.2, R * 3.4, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = PHOS;
-    ctx.beginPath(); ctx.arc(cx + d + R * 3.4, cy + R * 0.2, Math.max(1.6, R * 0.35), 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + d, cy, rOut, 0, Math.PI * 2); ctx.stroke();
+    const cycle = (t * 0.55) % 1;
+    const jump = cycle < 0.2 ? cycle / 0.2 : cycle < 0.72 ? 1 : Math.max(0, 1 - (cycle - 0.72) / 0.2);
+    const er = rIn + (rOut - rIn) * jump;
+    const ang = t * 4.2;
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(cx + d + Math.cos(ang) * er, cy + Math.sin(ang) * er, Math.max(2, R * 0.36), 0, Math.PI * 2); ctx.fill();
   }
-  say(ctx, f.props.molecule || 'HCl', F.x(f.size.w * 0.62), F.y(f.size.h - 2.6), F.size(2.4, 6), { align: 'center', color: DIM });
+  ctx.lineWidth = 1;
+  say(ctx, f.props.molecule || 'HCl', F.x(f.size.w * 0.56), F.y(f.size.h - 2.6), F.size(2.6, 7), { align: 'center', color: DUST, weight: 700 });
 }
 
 /** The light that gets through the cuvette in the holder, 380 to 750 nm: white light with its missing colour dark. */
@@ -272,19 +278,22 @@ function paintSpectro(ctx, f, state, b) {
   if (f.props.strip) { paintStrip(ctx, f, state, b); return; }
   const r = spectroRead(state, f.id);
 
-  // Optical compartment (Left: x = 1 to 24)
+  // When the Wavelength dial sits across the top, push the optical well header & LCD screen cleanly below it.
+  const topY = f.props.tune ? 11.5 : 4.5;
+
+  // Optical compartment (Left: x = 1.5 to 24.5)
   const optX0 = F.x(1.5);
-  const optY0 = F.y(4.5);
+  const optY0 = F.y(topY);
   const optW = F.len(23);
-  const optH = F.len(f.size.h - 6);
+  const optH = F.len(f.size.h - topY - 1.5);
 
   ctx.fillStyle = '#111415';
   ctx.fillRect(optX0, optY0, optW, optH);
   ctx.strokeStyle = '#1f2527';
   ctx.strokeRect(Math.round(optX0) + 0.5, Math.round(optY0) + 0.5, Math.round(optW), Math.round(optH));
 
-  say(ctx, 'SOURCE', F.x(2.5), F.y(7.5), F.size(1.8, 6), { color: DUST, weight: 600 });
-  say(ctx, 'SENSOR', F.x(23.5), F.y(7.5), F.size(1.8, 6), { align: 'right', color: DUST, weight: 600 });
+  say(ctx, 'SOURCE', F.x(2.5), F.y(topY + 2.4), F.size(1.8, 6), { color: DUST, weight: 600 });
+  say(ctx, 'SENSOR', F.x(23.5), F.y(topY + 2.4), F.size(1.8, 6), { align: 'right', color: DUST, weight: 600 });
 
   // Light beam guide in optical compartment
   const beamY = F.y(f.size.h - 14.7);
@@ -297,11 +306,11 @@ function paintSpectro(ctx, f, state, b) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Digital Display Panel (Right: x = 26 to 72, y = 4.5 to 26)
+  // Digital Display Panel (Right: x = 26 to 72)
   const sx = 26;
-  const sy = 4.5;
+  const sy = topY;
   const sw = f.size.w - sx - 2.5;
-  const sh = 21.5;
+  const sh = f.props.tune ? 17.5 : 21.5;
 
   const scrX = F.x(sx);
   const scrY = F.y(sy);
@@ -313,24 +322,26 @@ function paintSpectro(ctx, f, state, b) {
   ctx.strokeStyle = '#1e282c';
   ctx.strokeRect(Math.round(scrX) + 0.5, Math.round(scrY) + 0.5, Math.round(scrW), Math.round(scrH));
 
-  // No screen header: the fixture's own name stands above the box, and a dial's name lands on this corner.
+  const row1 = sy + (f.props.tune ? 5.2 : 9.5);
+  const row2 = sy + (f.props.tune ? 10.0 : 14.2);
+  const row3 = sy + (f.props.tune ? 13.5 : 17.2);
 
   if (!r.piece) {
-    say(ctx, 'CELL EMPTY', F.x(sx + 2), F.y(sy + 9.5), F.size(3.0, 8), { color: DIM, weight: 700 });
-    say(ctx, `Wavelength ${r.nm} nm  |  Path 1.0 cm`, F.x(sx + 2), F.y(sy + 14.5), F.size(2.0, 6.5), { color: DUST });
-    say(ctx, 'Slide cuvette into beam to read', F.x(sx + 2), F.y(sy + 18.0), F.size(1.8, 6), { color: '#4d483f' });
+    say(ctx, 'CELL EMPTY', F.x(sx + 2), F.y(row1), F.size(3.0, 8), { color: DIM, weight: 700 });
+    say(ctx, `Wavelength ${r.nm} nm  |  Path 1.0 cm`, F.x(sx + 2), F.y(row2), F.size(2.0, 6.5), { color: DUST });
+    say(ctx, 'Slide cuvette into beam to read', F.x(sx + 2), F.y(row3 + 0.8), F.size(1.8, 6), { color: '#4d483f' });
     return;
   }
 
   // Active reading
-  say(ctx, `${f.props.word || 'ABSORBANCE'}  ${r.A.toFixed(3)}`, F.x(sx + 2), F.y(sy + 9.5), F.size(3.4, 9.5), { color: PHOS, weight: 700 });
+  say(ctx, `${f.props.word || 'ABSORBANCE'}  ${r.A.toFixed(3)}`, F.x(sx + 2), F.y(row1), F.size(3.3, 9.5), { color: PHOS, weight: 700 });
   const left = Math.pow(10, -r.A);
   const tPct = (left * 100).toFixed(1);
-  say(ctx, `T = ${tPct}%  |  ${r.nm} nm  |  ${r.path} cm`, F.x(sx + 2), F.y(sy + 14.2), F.size(2.1, 7), { color: DUST });
+  say(ctx, `T = ${tPct}%  |  ${r.nm} nm  |  ${r.path} cm`, F.x(sx + 2), F.y(row2), F.size(2.1, 7), { color: DUST });
 
   // Transmittance bar
   const barX = F.x(sx + 2);
-  const barY = F.y(sy + 17.2);
+  const barY = F.y(row3);
   const barW = F.len(sw - 4);
   const barH = F.len(2.0);
   ctx.strokeStyle = '#223035';

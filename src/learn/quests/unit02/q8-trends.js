@@ -31,7 +31,7 @@ import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  trendsTable, gainFixture, gainOf, atomCard, seatedAtom, springFixture, stripFixture, levelsFixture,
+  trendsTable, gainFixture, gainOf, atomCard, seatedAtom, springFixture, stripFixture, sizerFixture, electronPiece, levelsFixture,
   springRead, stripRead, pullOf, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell,
   RADIUS, ION_RADIUS, IONIZATION, zOf, nameOf
 } from '../../table/kits/trends.js';
@@ -40,7 +40,7 @@ export const meta = { stageCount: 9 };
 
 /** The stage whose card confirms each term; each is defined in a briefing before it is needed. */
 export const VOCABULARY = [
-  { term: /\beffective nuclear charge\b/i, introducedAt: 2 },
+  { term: /\beffective nuclear charge\b/i, introducedAt: 1 },
   { term: /\batomic radi(?:us|i)\b/i, introducedAt: 3 },
   { term: /\bionization energ(?:y|ies)\b/i, introducedAt: 5 },
   { term: /\bionic radi(?:us|i)\b/i, introducedAt: 7 },
@@ -85,7 +85,7 @@ const tray = (id, label, at, w) => ({ id, label, at, size: { w, h: 22 }, cell: 2
 
 /** Answer cards along the bottom right, and the slot one of them goes in. */
 const answers = list => list.map(([id, label], i) => ({ id, kind: 'card', label, at: { x: 72 + i * 32, y: ROW_Y }, r: 7, props: {} }));
-const answerSlot = { id: 'answer', label: '', at: { x: 128, y: 16 }, size: { w: 40, h: 13 } };
+const answerSlot = { id: 'answer', label: 'Answer', at: { x: 128, y: 16 }, size: { w: 40, h: 13 } };
 const answered = t => Object.values(t.pieces).find(p => p.zone === 'slot:answer') || null;
 
 /** A rail check: the cards in the order of `value`, lowest first; a miss names the first pair out of order by what the cards show. */
@@ -109,46 +109,6 @@ const shellCount = s => shellsOf(s).length;
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'Bigger Atoms',
-    // A PREDICT STAGE: no instrument yet. The guess is made first and comes back in stage 3, which tests it.
-    predict: true,
-    prompt: 'Carbon has six protons and six electrons, lithium has three of each: which atom is bigger?',
-    widget,
-    table: trendsTable({
-      pieces: [],
-      fixtures: [],
-      zones: {},
-      prediction: {
-        slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 34, h: 14 } },
-        tokens: [
-          { id: 'li', label: 'Lithium', at: { x: 38, y: 48 }, r: 7 },
-          { id: 'c', label: 'Carbon', at: { x: 75, y: 48 }, r: 7 },
-          { id: 'same', label: 'The same', at: { x: 112, y: 48 }, r: 7 }
-        ]
-      }
-    }),
-    hints: [
-      'Drag one of the three cards into the slot.',
-      'Think what carbon has more of, and what each of those things does to the size of the atom.',
-      'A prediction is not graded, so choose the one you think is most likely.'
-    ],
-    check(state) {
-      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
-      return { ok: true };
-    },
-    onClear(state) {
-      const token = state.table.prediction?.token;
-      if (token) remember(QUEST_KEY, token);
-    },
-    reward: {
-      log: 'Prediction made.',
-      title: 'Prediction',
-      body: 'Before testing it, find out what an atom\'s outermost electron is attracted by.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 2 */
   (() => {
     const shieldRig = {
       id: 'shield',
@@ -198,6 +158,46 @@ export const STAGES = [
     };
   })(),
 
+  /* ---------------------------------------------------------------- 2 */
+  {
+    title: 'Bigger Atoms',
+    // A PREDICT STAGE: right before stage 3, which tests it.
+    predict: true,
+    prompt: 'Carbon has six protons and six electrons, lithium has three of each: which atom is bigger?',
+    widget,
+    table: trendsTable({
+      pieces: [],
+      fixtures: [],
+      zones: {},
+      prediction: {
+        slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 34, h: 14 } },
+        tokens: [
+          { id: 'li', label: 'Lithium', at: { x: 38, y: 48 }, r: 7 },
+          { id: 'c', label: 'Carbon', at: { x: 75, y: 48 }, r: 7 },
+          { id: 'same', label: 'The same', at: { x: 112, y: 48 }, r: 7 }
+        ]
+      }
+    }),
+    hints: [
+      'Drag one of the three cards into the slot.',
+      'Think what carbon has more of, and what each of those things does to the size of the atom.',
+      'A prediction is not graded, so choose the one you think is most likely.'
+    ],
+    check(state) {
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
+      return { ok: true };
+    },
+    onClear(state) {
+      const token = state.table.prediction?.token;
+      if (token) remember(QUEST_KEY, token);
+    },
+    reward: {
+      log: 'Prediction made.',
+      title: 'Prediction',
+      body: 'Now test your prediction by putting the four atoms in order.'
+    }
+  },
+
   /* ---------------------------------------------------------------- 3 */
   (() => {
     const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { feel: true } });
@@ -235,7 +235,12 @@ export const STAGES = [
         return {
           log: 'Across a period: more charge felt, same shell, smaller atom.',
           title: 'Atomic Radius Across a Period',
-          body: `${verdict}Each step across adds a proton but no inner electrons, so the same shell is pulled closer. Atomic radius falls across a period: lithium 152 pm (picometres), carbon 77 pm.`
+          body: `${verdict}Each step across adds a proton but no inner electrons, so the same shell is pulled closer. Atomic radius falls across a period: lithium 152 pm (picometres), carbon 77 pm.`,
+          model: {
+            type: 'radii',
+            shrink: true,
+            items: [{ sym: 'Li', pm: 152 }, { sym: 'Be', pm: 112 }, { sym: 'B', pm: 85 }, { sym: 'C', pm: 77 }]
+          }
         };
       }
     };
@@ -277,7 +282,6 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const st = stripFixture(STRIP, { x: 27, y: 18 });
     const ids = ['na', 'c', 'f'];
     return {
       title: 'Removing an Electron',
@@ -288,18 +292,21 @@ export const STAGES = [
       prompt: 'What is the order of sodium, carbon and fluorine from the lowest ionization energy to the highest?',
       widget,
       table: trendsTable({
-        pieces: [seatedAtom('li', NAMES.Li, 'Li', st), ...row([['c', 'C'], ['f', 'F'], ['na', 'Na']])],
-        fixtures: [st.fixture],
-        zones: { slots: st.slots, rail: railAt('Lowest ionization energy', 'Highest ionization energy') }
+        pieces: [
+          atomCard('c', NAMES.C, 'C', { x: 42, y: 52 }),
+          atomCard('f', NAMES.F, 'F', { x: 75, y: 52 }),
+          atomCard('na', NAMES.Na, 'Na', { x: 108, y: 52 })
+        ],
+        fixtures: [],
+        zones: { rail: { id: 'rail', at: { x: 75, y: 24 }, size: { w: 112, h: 17 }, first: 'Lowest ionization energy', last: 'Highest ionization energy', items: [], labelLift: 1.6 } }
       }),
       hints: [
-        'Press "Remove Electron" to measure lithium\'s ionization energy; the cards are now drawn to scale.',
-        'Compare each card with lithium: the charge its outermost electron feels, and how far that electron is from the nucleus.',
+        'Drag the three cards onto the rail; the cards are drawn to scale.',
+        'Compare the charge each atom\'s outermost electron feels and how far that electron sits from the nucleus.',
         'An electron is attracted more strongly when it feels a larger charge and when it is closer to the nucleus.'
       ],
       check(state) {
         const t = state.table;
-        if (t.pieces.li.props.lastCost == null) return { ok: false, notYet: true, msg: 'Measure lithium\'s ionization energy first.' };
         return ranked(t, ids, s => IONIZATION[s], (p, q) => `${cap(name(t, p))} stands left of ${name(t, q)}, but its outermost electron feels +${felt(sym(t, p))} at ${RADIUS[sym(t, p)] ?? 99} pm against +${felt(sym(t, q))} at ${RADIUS[sym(t, q)] ?? 99} pm.`);
       },
       reward: {
@@ -346,7 +353,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const st = stripFixture(STRIP, { x: 27, y: 18 });
+    const sz = sizerFixture('sz', { x: 27, y: 18 }, { label: 'Size gauge' });
     return {
       title: 'Ions',
       briefing: {
@@ -356,27 +363,31 @@ export const STAGES = [
       prompt: 'A chlorine atom gains one electron to form a chloride ion: is the chloride ion larger or smaller than the atom?',
       widget,
       table: trendsTable({
-        pieces: [...row([['na', 'Na'], ['cl', 'Cl']]), ...answers([['larger', 'Larger'], ['same', 'The same size'], ['smaller', 'Smaller']])],
-        fixtures: [st.fixture],
-        zones: { slots: [...st.slots, answerSlot] }
+        pieces: [
+          atomCard('cl', NAMES.Cl, 'Cl', { x: 24, y: ROW_Y }),
+          electronPiece('addE', { x: 66, y: 18 }, 'Add Electron'),
+          ...answers([['larger', 'Larger'], ['same', 'The same size'], ['smaller', 'Smaller']])
+        ],
+        fixtures: [sz.fixture],
+        zones: { slots: [...sz.slots, answerSlot] }
       }),
       hints: [
-        'Remove an electron from the sodium atom and watch its card, then drag an answer card into the slot.',
-        'Notice which shell sodium\'s lost electron came from, and which shell chlorine\'s new electron would join.',
-        'Chlorine\'s nucleus stays the same while its outer shell gains an electron, and electrons repel one another.'
+        'Put Chlorine in the Size gauge to see its radius, then drag "Add Electron" onto Chlorine.',
+        'Compare the radius of the neutral chlorine atom with the chloride ion after adding an electron.',
+        'Chlorine\'s nucleus stays +17 while its outer shell gains an electron, and electrons repel one another.'
       ],
       check(state) {
         const t = state.table;
-        if ((t.pieces.na.props.charge || 0) < 1) return { ok: false, notYet: true, msg: 'Remove an electron from the sodium atom first.' };
+        if ((t.pieces.cl.props.charge || 0) >= 0) return { ok: false, notYet: true, msg: 'Drag "Add Electron" onto the chlorine atom first to form a chloride ion.' };
         const pick = answered(t);
-        if (!pick) return { ok: false, notYet: true, msg: 'Put an answer card in the slot.' };
+        if (!pick) return { ok: false, notYet: true, msg: 'Put an answer card in the Answer slot.' };
         if (pick.id === 'larger') return { ok: true };
         return { ok: false, msg: 'Chloride has 18 electrons round the same nucleus of +17 that held 17, and the added one is in the outer shell.' };
       },
       reward: {
         log: 'Positive ions are smaller than their atoms; negative ions are larger.',
         title: 'Ionic Radius',
-        body: 'Sodium lost its whole outer shell and shrank from 186 pm to 102 pm. Chloride\'s extra electron adds repulsion with no extra protons, so its ionic radius, 181 pm, is larger than the atom\'s 99 pm.'
+        body: 'Chloride\'s extra electron adds repulsion with no extra protons, so its ionic radius (181 pm) is larger than the neutral chlorine atom (99 pm).'
       }
     };
   })(),
@@ -492,26 +503,26 @@ const strip = id => [put(id, STRIP_SLOT), { run: STRIP }];
 const onRail = ids => ids.map((id, i) => put(id, `rail:${i}`));
 
 export const SOLUTIONS = [
-  [{ predict: 'li' }],
   [{ setDial: { fixture: 'shield', dial: 'protons', value: 11 } }, { setDial: { fixture: 'shield', dial: 'inner', value: 10 } }],
+  [{ predict: 'li' }],
   [put('li', SPRING_SLOT), put('c', SPRING_SLOT), ...onRail(['c', 'b', 'be', 'li'])],
   [put('na', SPRING_SLOT), put('k', SPRING_SLOT), ...onRail(['li', 'na', 'k'])],
-  [{ run: STRIP }, ...onRail(['na', 'c', 'f'])],
+  [...onRail(['na', 'c', 'f'])],
   [...strip('be'), ...strip('b'), put('p', 'slot:answer')],
-  [...strip('na'), put('larger', 'slot:answer')],
+  [{ join: ['addE', 'cl'] }, put('cl', 'slot:sz.atom'), put('larger', 'slot:answer')],
   [{ run: GAIN }, put('f', 'slot:most')],
   [put('f', SPRING_SLOT), ...onRail(['na', 'c', 'o', 'f'])]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [],
   [{ setDial: { fixture: 'shield', dial: 'protons', value: 11 } }, { setDial: { fixture: 'shield', dial: 'inner', value: 4 } }],
+  [],
   [...onRail(['li', 'be', 'b', 'c'])],
   [...onRail(['k', 'na', 'li'])],
-  [{ run: STRIP }, ...onRail(['c', 'na', 'f'])],
+  [...onRail(['c', 'na', 'f'])],
   [...strip('be'), ...strip('b'), put('z', 'slot:answer')],
-  [...strip('na'), put('smaller', 'slot:answer')],
+  [{ join: ['addE', 'cl'] }, put('smaller', 'slot:answer')],
   [{ run: GAIN }, put('n', 'slot:most')],
   [...onRail(['f', 'o', 'c', 'na'])]
 ];

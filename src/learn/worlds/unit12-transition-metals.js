@@ -10,6 +10,7 @@ export const UNIT_12 = {
   world: 'Lodestone',
   place: 'Iron canyons',
   title: 'Transition Metals',
+  beyondAp: true,
   line: 'd electrons, many charges, complex ions, their shapes, colour and magnetism.',
   brief: 'Read the d electrons of the fourth-row metals, the charges they take, the complex ions they form, and why those are coloured and some are pulled by a magnet.',
 

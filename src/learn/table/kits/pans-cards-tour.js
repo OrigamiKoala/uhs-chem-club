@@ -17,7 +17,7 @@ const FIXTURES = {
 
 const PIECES = {
   rxn: ['Reaction card', 'A card with a reaction written on it, and the K it was printed with. Pick it up and press "Flip" to write the reaction the other way round, or "Larger" to write every amount again, twice, three times and so on. The equation on the card changes to match what you did, and a card that has been changed does not print a new K.'],
-  ktile: ['K card', 'A card with a number on it. Drag it into the answer slot; the card in the slot when you press Submit is your answer.']
+  ktile: ['K card', 'A card with a number on it. Drag it into the answer slot.']
 };
 
 addTourText(FIXTURES, PIECES);

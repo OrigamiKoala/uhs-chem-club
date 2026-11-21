@@ -76,7 +76,7 @@ const PIECE = {
 
 /** Tool keys the table can carry on its foot dock. */
 const TOOL = {
-  straightedge: ['Straightedge', 'Press "Straightedge" to lay a line across the points.']
+  straightedge: ['Straightedge (Line of Best Fit)', 'Press "Straightedge" to draw a line of best fit through your plotted data points and read its slope and y-intercept.']
 };
 
 /**
@@ -108,10 +108,10 @@ Object.assign(FIXTURE, LANTERNFALL_TOUR.fixtures);
 Object.assign(PIECE, LANTERNFALL_TOUR.pieces);
 
 const hasTrays = t => Object.keys(t.zones?.trays || {}).some(id => !id.startsWith('scr-'));
-/** The slot a choice goes in, named as the table names it: whatever is in it when Submit is pressed is the answer. */
+/** The slot a choice goes in, named as the table names it. */
 const slotSentence = t => {
   const slot = Object.values(t.zones?.slots || {}).find(z => z.label);
-  return slot ? ` Drag the card you choose into the \"${slot.label}\" slot. The card in that slot is your answer when you press Submit.` : ' Drag the card you choose into the slot.';
+  return slot ? ` Drag the card you choose into the "${slot.label}" slot.` : ' Drag the card you choose into the slot.';
 };
 const hasNeedle = t => Object.values(t.fixtures || {}).some(f => f.kind === 'needle');
 const hasCounts = t => Object.values(t.pieces || {}).some(p => p.kind === 'specimen' && p.props?.counts);
@@ -142,8 +142,8 @@ function fixtureStep(f, kitId, table) {
   return { title: rawTitle || f.label, text };
 }
 
-// Fixtures that are pure answer-picking UI or static displays, not tools to explain.
-const SKIP_FIXTURES = new Set(['plaque', 'plate', 'tchoice', 'lchoice', 'choice']);
+// Fixtures that are pure answer-picking UI, answer-entry dials, or static displays, not tools to explain.
+const SKIP_FIXTURES = new Set(['plaque', 'plate', 'tchoice', 'lchoice', 'choice', 'marker', 'selector', 'tally', 'stamp']);
 
 // Pieces that are self-explanatory cards, statements, or inputs already covered by an instrument step.
 const SKIP_PIECES = new Set([
@@ -169,7 +169,15 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
   const add = (key, name, desc, extra = {}) => steps.push({ flag: `tour_${kit}_${key}`, name, desc, ...extra, ...(demoOf(key) ? { demo: demoOf(key) } : {}) });
 
   // `worked` is a worked case shown under the briefing: the steps of one calculation on a neighbouring case, one line each.
-  if (intro) steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, isBriefing: true, ...(worked?.length ? { lines: worked.slice() } : {}) });
+  if (Array.isArray(intro)) {
+    intro.forEach((part, idx) => {
+      const text = typeof part === 'string' ? part : part.body;
+      const title = typeof part === 'string' ? speaker : (part.title || speaker);
+      if (text) steps.push({ flag: `tour_bench_${kit}_${hash(text)}_${idx}`, name: title, desc: text, isBriefing: true, ...(idx === intro.length - 1 && worked?.length ? { lines: worked.slice() } : {}) });
+    });
+  } else if (intro) {
+    steps.push({ flag: `tour_bench_${kit}_${hash(intro)}`, name: speaker, desc: intro, isBriefing: true, ...(worked?.length ? { lines: worked.slice() } : {}) });
+  }
 
   // The instruments, in the order they stand on the plate (top to bottom, left to right). One step per fixture kind.
   const fixtures = Object.values(table.fixtures || {}).sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x);
@@ -204,6 +212,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
     if (kind === 'dish' && (hasFixture('scope') || hasFixture('cutter') || hasPiece('cutter') || !hasPiece('lens'))) continue;
     if (kind === 'speck' && hasFixture('field')) continue;
     if (kind === 'sample' && (hasFixture('assay') || hasFixture('tester') || hasFixture('flask'))) continue;
+    if (kind === 'cuvette:cuvette' && hasFixture('spectro')) continue;
     if (kind === 'crate') continue;
     if (kind === 'charge' && hasFixture('cup')) continue;
     if (kind === 'ptc' && hasFixture('cells')) continue;
@@ -240,7 +249,14 @@ export function tourSteps(table, { intro = '', speaker = 'Vess', worked = null }
 
   for (const t of table.tools || []) {
     const entry = TOOL[t];
-    add(`tool_${t}`, entry ? entry[0] : t, entry ? entry[1] : `Press ${quote(t)} to use it.`, { tool: t });
+    // Tools like Straightedge are introduced once globally on their very first use, not repeated per world.
+    steps.push({
+      flag: `tour_global_tool_${t}`,
+      name: entry ? entry[0] : t,
+      desc: entry ? entry[1] : `Press ${quote(t)} to use it.`,
+      tool: t,
+      ...(demoOf(`tool_${t}`) ? { demo: demoOf(`tool_${t}`) } : {})
+    });
   }
   return steps;
 }

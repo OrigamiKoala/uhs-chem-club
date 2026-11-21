@@ -91,6 +91,7 @@ export const UNIT_07 = {
       arena: 'bench',
       stageCount: 6,
       status: 'live',
+      optional: true,
       module: () => import('../quests/unit07/q9-hsab.js')
     },
     {

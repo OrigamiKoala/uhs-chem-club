@@ -86,7 +86,7 @@ const ROUTE_NAV = {
   '/contracts': 'starmap',
   '/quest': 'starmap',
   '/learn': 'learn',
-  '/drills': 'learn',
+  '/drills': 'drills',
   '/leaderboard': 'leaderboard',
   '/comms': 'leaderboard',
   '/casefile': 'bridge',
@@ -127,7 +127,7 @@ const ROUTES = {
  */
 const PARAM_ROUTES = [
   { pattern: ['crew', ':playerId'], render: renderCrewProfile, auth: false, nav: 'leaderboard', room: 'comms', backdrop: '/art/comms.jpg' },
-  { pattern: ['drills', ':worldId'], render: renderDrills, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/starmap.jpg' },
+  { pattern: ['drills', ':worldId'], render: renderDrills, auth: true, nav: 'drills', room: 'starmap', backdrop: '/art/starmap.jpg' },
   { pattern: ['learn', ':worldId'], render: renderLearnWorld, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/crucible.jpg' },
   { pattern: ['learn', ':worldId', ':questId'], render: renderLearnQuest, auth: true, nav: 'learn', room: 'quest', backdrop: '/art/crucible.jpg' }
 ];

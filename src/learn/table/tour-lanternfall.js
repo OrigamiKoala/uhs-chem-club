@@ -70,8 +70,8 @@ export const LANTERNFALL_TOUR = {
     'trends:electron': ['Add Electron', 'Drag onto an atom card to add one electron.'],
     'cuvette:cuvette': ['Cuvettes', 'Slide a cuvette into the optical beam to read it.'],
     'cuvette:chip': ['Colour chips', 'Place in the slot to identify absorbed light.'],
-    'cuvette:dropper': ['Cu²⁺ Stock', 'Lay on a cuvette to add 2.0 mmol/L solute.'],
-    'cuvette:rinse': ['Rinse', 'Lay on a cuvette to rinse it to 0.0 mmol/L.'],
+    'cuvette:dropper': ['Cu²⁺ Stock', 'Lay this over a cuvette to add 2.0 mmol/L solute.'],
+    'cuvette:rinse': ['Rinse', 'Lay this over a cuvette to rinse it to 0.0 mmol/L.'],
     'cloud:tile': ['Strings', 'Drag onto the ring track to test if it closes.'],
     'cloud:film': ['Films', 'Lay on the plate to count dots inside its outline.']
   }

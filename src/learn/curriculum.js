@@ -73,11 +73,13 @@ export const WORLDS = WORLD_MODULES
       key: `${w.id}/${q.id}`,
       stageCount: q.stageCount || 0,
       status: q.status || 'draft',
-      optional: Boolean(q.optional)
+      optional: Boolean(q.optional),
+      beyondAp: Boolean(q.beyondAp ?? q.optional)
     }));
     const liveQuestCount = quests.filter(q => q.status === 'live').length;
     return {
       ...w,
+      beyondAp: Boolean(w.beyondAp),
       quests,
       questCount: quests.length,
       liveQuestCount,
