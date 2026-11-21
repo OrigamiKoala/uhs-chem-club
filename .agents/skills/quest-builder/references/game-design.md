@@ -115,9 +115,9 @@ Check the design against each. The first six have all been built in this reposit
 | The answer is on the screen | A label, colour or readout states what to pick | The thing under study is found out by acting, not read off |
 | Passable without the idea | Brightest-to-brightest works on every stage | Each movement needs a stage where the earlier habit fails |
 | The lesson arrives after the fact | The play is abstract and the card carries the chemistry | The cause is visible while acting; the card only names it |
-| Nicknames that never resolve | "Givers" and "hungry targets" to the end, the real term never given | Every nickname is tied to its real name on a chemistry card and in the debrief |
-| Stiff, textbook copy | Prompts that read like a lab manual; no character, no humour | Erebus's voice: everyday nicknames (hungry target, helper, bystander), short lively sentences |
-| A figure of speech that teaches a wrong rule | The nickname implies behaviour the chemistry does not have | The playful word may colour the piece; the move it leads to must be the real one |
+| Wacky euphemisms or cutesy nicknames | Calling particles "bouncers", protons "sparks", or buffers "sponges" | Use clear plain language and real terms glossed simply on first use (Principle 1); never invent quirky stand-in words |
+| Stiff, textbook copy | Prompts that read like a lab manual; dense college jargon | Short, clear, direct sentences readable by a 12-year-old with no chemistry background |
+| Anthropomorphic motives | Saying molecules are "hungry", "happy", or "want" electrons | Describe physical cause: attraction, repulsion, crowding, balance, and energy |
 | Copy in three places | Stage text edited in one file and stale in two | One source, generated or imported everywhere else |
 | Worksheet with a theme | Type the number, press submit | No stage is arithmetic; quantities are compared by looking |
 | Colour as the only cue | Red and blue with no second signal | Double every cue with shape, size or motion |

@@ -4,13 +4,13 @@ Avalon is the UHS Chemistry Club's competition portal for middle- and high-schoo
 
 ## Key Docs
 
-- `PRODUCT.md` — Product truth, scope, audience, pitfall ledger, and full 12 teaching principles (wins any scope dispute).
+- `PRODUCT.md` — Product truth, scope, audience (including beginner-first side quests), pitfall ledger, and full 22 teaching principles (wins any scope dispute).
 - `DESIGN.md` & `src/styles/tokens.css` — Visual tokens and SCOURED PLATE design system.
 - `docs/engineering/engine-and-worlds.md` — Engine architecture, per-world notes, and layout details.
 - `docs/plans/world-plans.md` — Consolidated world plans, CED maps, and tabletop kits (`docs/world-build-prompt.md`, `docs/world-rebuild-prompt.md`, `docs/plans/world-distinction-plan.md`).
 - `docs/teaching-pass/README.md` & `docs/teaching-pass/PROGRESS.md` — Teaching pass standard and status.
 - `docs/plans/npc-plan.md` — Wandering, talkable NPC crews (Rocketbox models): six per Learn world, built on all 14.
-- `.agents/skills/quest-builder/SKILL.md` — Side quest (Contract) builder skill; specs live in `docs/quests/`.
+- `.agents/skills/quest-builder/SKILL.md` — Side quest (Contract) builder skill (beginner-friendly puzzle quests assuming no chemistry knowledge); specs and ideas live in `docs/quests/` (`docs/quests/side-quest-ideas.md`).
 - `docs/story/bible.md`, `docs/story/fifth-guild-quest-plan.md`, & `docs/AP-coverage-audit.md` — Lore, low-text Fifth Guild quest integration plan, and AP Chemistry CED alignment.
 
 ## Codebase Map

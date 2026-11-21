@@ -89,9 +89,7 @@ contract you audit yourself against in step 8. It holds:
    order).
 2. **The mechanic**: the verb, what the player sees, what counts as an answer, and the canonical answer
    payload (see `references/erebus-anatomy.md`, "Answers the server can grade").
-3. **The withheld vocabulary**: the list of real terms kept out of every prompt, hint, miss message and
-   transmission, and the plain words used in their place. Erebus's list is the `BANNED` array in
-   `tools/verify-stages.mjs`.
+3. **The vocabulary plan**: which real chemistry terms are introduced (with a plain one-clause gloss when first needed) and which advanced textbook jargon stays out of play (kept for the post-solve card or debrief only if helpful). Never invent wacky euphemisms, cutesy nicknames, or stand-in words for real terms.
 4. **The stage ladder**: one row per stage (see "What a stage is" below). Group the rows into three or
    four movements, each adding one new rule, and mark the stages that auto-show a briefing because a new
    rule starts there.
@@ -176,43 +174,25 @@ Every stage carries all of these. The per-quest verify script enforces each one,
 |---|---|---|
 | `title` | `Stage N — Two Or Three Words` | The words name the situation, never the answer. |
 | `shape` | A short kicker naming the kind of problem (`FIRST CONTACT`, `DISPLACEMENT`) | Lets a player see that this one is a new kind. |
-| `prompt` | One or two plain sentences saying what to achieve. No withheld word. | The player must know the goal before touching anything. |
+| `prompt` | One or two plain sentences saying what to achieve. No unglossed jargon or wacky euphemisms. | The player must know the goal before touching anything. |
 | `hints` | Exactly three, each a full sentence, all different. 1 **Nudge**: where to look. 2 **Narrow it down**: what to compare. 3 **Show the move**: the move itself. | Rung 1 is free, rung 2 opens after one miss or 45 s, rung 3 after two misses. Rung 3 gives the move on purpose: the quest pays XP, so a stuck player must never be locked out. Using it only resets the display-only CLEAN streak. Hints cost nothing. |
-| miss diagnosis | Each plausible mistake has a title and a one-sentence reason naming what the player did and what the scene shows (`BACKWARDS`, `TWO GIVERS`, `PATH BLOCKED`, `RIGHT MOVES, WRONG ORDER`). | "Not quite" teaches nothing. A miss is the best teaching moment the game has. |
+| miss diagnosis | Each plausible mistake has a title and a one-sentence reason naming what the player did and what the scene shows (`BACKWARDS`, `SAME CHARGE`, `PATH BLOCKED`, `RIGHT MOVES, WRONG ORDER`). | "Not quite" teaches nothing. A miss is the best teaching moment the game has. |
 | payoff | An animation in which the chemistry visibly happens because of the player's move, plus one plain sentence. It must always finish and hand control back. | This is the reward and the lesson at once. Physically honest: what moves is what would move. |
 | `concept` (optional, intro) | Shown before a stage that starts a new rule. Teaches the **controls and the visual code only**. | A card that explains the chemistry before the work is a lecture. Auto-show it only on the first stage of each movement. |
-| `chem` | Badge, title, body of at most three sentences, shown **only after the solve**. Real vocabulary is allowed here and nowhere earlier. | Do the thing, then meet the word for it. This is what turns puzzles into lessons. |
+| `chem` | Badge, title, body of at most three sentences, shown **only after the solve**. Names the formal concept or mechanism the student just carried out. | Do the thing, then connect it to the wider chemistry concept. |
 | `xp` | Flat integer. | See below. |
 
 One decision per stage. The screen holds what that decision needs and nothing else.
 
 ## Rules that make it playable by someone with no chemistry
 
-- **Plain words carry the play; real words arrive after the solve.** Keep the withheld list out of
-  prompts, hints, miss messages, the concept card and all story copy.
-- **Write in Erebus's voice: loose, lively, a little playful.** This is a game for someone who was
-  dragged here by a friend, not a textbook. Erebus calls its pieces givers and receivers, hungry
-  targets, a sleepy target that a helper wakes up, bystanders, a domino reaction, pieces that make
-  room and leave. Give the new quest's pieces the same kind of everyday nicknames and let them have
-  character ("this one is hungry for charge", "the big neighbours are in the way"). Short sentences,
-  an exclamation mark where a solve earns one. Read the `STAGE_COPY` and `diagnoseMiss` text in
-  `src/quest3d/evaluator.js` for the register and match it. This is deliberately looser than the Learn
-  track's rule against motives for atoms; that rule does not apply to side quests.
-- **A nickname always resolves.** Each one stands for one real thing, keeps one meaning for the whole
-  quest, and is tied to its real name on a chemistry card and again in the debrief ("the red part has
-  extra electrons, and the blue part is hungry for them"). A nickname that is never cashed in is a
-  code word.
-- **Nothing to read off, nothing to look up.** No formula, symbol, equation or periodic table is needed
-  to play. If the concept has symbols, the debrief shows them; the play does not depend on them.
+- **Plain, direct language—no wacky euphemisms or cutesy nicknames.** Write in short, clear, lively sentences that a 12-year-old with zero chemistry background understands on the first pass. Use the real term with a plain one-clause gloss when it is needed (e.g., *charge*, *molecule*, *proton*, *pressure*, *ion*, *chain*), and never invent goofy stand-in nicknames (no "bouncers", "sparks", "sponges", "hungry targets", "sleepy targets", or "givers/receivers" as quirky characters). Keep college-level jargon out of play; introduce formal terms on the post-solve chemistry card and debrief once the student has seen the idea happen.
+- **No anthropomorphic motives.** Do not say atoms or molecules "want", are "happy", or are "hungry". Describe what physically happens: attraction, repulsion, crowding, balance, and movement.
+- **Nothing to memorize, nothing to look up.** No formula, equation, or periodic table memorization is needed to play. If a stage uses chemical symbols or structures, the visual cues on screen carry the reasoning.
 - **No arithmetic beyond counting.** A quest whose stages are sums is a worksheet. If a stage ever asks for a
   number, it carries the game's Calc key (`src/ui/calculator.js`), but no stage should need one.
-- **The visual code is taught once and never changes.** Erebus: red gives, blue receives, brighter is
-  stronger. Every cue is doubled (colour plus shape, size or motion), because colour alone fails some
-  players.
-- **The voice is loose; the chemistry is not.** A figure of speech is fine; a wrong rule is not. What
-  the player learns to do (which piece goes where, what blocks what, what happens first) must be what
-  really happens, so nothing has to be un-taught later. Where the game simplifies, the debrief says so
-  in a clause.
+- **The visual code is taught once and never changes.** Erebus: red is negative/electron-rich, blue is positive/electron-poor, brighter is stronger. Every cue is doubled (colour plus shape, size or motion), because colour alone fails some players.
+- **Honest chemistry throughout.** What the player learns to do (which piece goes where, what blocks what, what happens first) must be what really happens, so nothing has to be un-taught later. Where the game simplifies, the debrief says so in a clause.
 - **Every drag has a two-tap twin**, the play area is `touch-action: none` with single-pointer drags, and
   the stage works at 375 px wide in landscape. Many players arrive on a phone.
 - **3D Off is the same quest.** With WebGL off, the same stage, the same answer payload and the same
