@@ -426,3 +426,5 @@ const verdigris = {
 
 export const WORLDS_B = { unit05: ember, unit06: mirrowen, unit07: kettle, unit08: teeter, unit09: verdigris };
 export { W, H, drift, fifthMark };
+/** Props and settings the story shots (`plots-b.js`) reuse. */
+export const PROPS_B = { EMBER, volcano, shelter, heatPipe, MIRR, town, canal, boat, KETTLE, foundry, ingots, counter, TEETER, pond, underground, VERD, fort, reeds };

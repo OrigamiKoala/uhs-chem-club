@@ -252,9 +252,12 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
 
 - **Every bench is part of its host and is checked from the lean-in view (§2.6).** Benches are built into their world's machinery, clear the bay envelope, and frame their active pieces inside the free glass at all supported aspects.
 - **Graphics:** `3D On` (T4, default) and `3D Off` (T1, DOM-only). A phone is not disqualified from T4
-  (`isT4Capable`); DPR capped 1.5 and no shadow map on handsets. **A measured tier is never written down,
+  (`isT4Capable`); DPR capped 1.5 everywhere (a Retina Mac too: with MSAA, 2x costs 1.8x the pixels for no
+  visible gain) and no shadow map on handsets. **A measured tier is never written down,
   only a chosen one** (`gfxTierPref`); the tier is decided once at page open. Resolution is paced on
-  planets only (`paceResolution`). Shaders compile when a world is built (`warmWorld`). Loop capped at 60 fps.
+  planets only (`paceResolution`: a window averaging under 53 fps steps down a quarter; a ratio found slow is
+  retried after 20 s, the wait doubling to 160 s each time it fails again, since every step reallocates the canvas).
+  Shaders compile and textures upload when a world is built (`warmWorld`), during the flight. Loop capped at 60 fps.
   The sun's shadow map is re-drawn only when its box moves, on a slow safety tick, or while an open bench is
   moving: `warmWorld` marks the scene's children as the world's own (`markWorldOwn`), and each frame at a bench
   `visitorsMoving` fingerprints everything else in the scene (the pose of each node over a visible shadow caster,
@@ -451,6 +454,32 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   In-world terminals (Star Map, Standings, Inventory, …) take the glass edge to edge below the HUD on a
   phone in both portrait and landscape; they are never docked to one side.
 
+## Quest questions, opening scenes and world troubles (2026-11-20)
+
+Plan and status: `docs/plans/mystery-walkup-plan.md`. Every non-Toolkit quest opens on a question (`quest-story.js` `mystery`) and its
+debrief's Case Pin answers it; the debrief (`ui/story-anim.js`) and the Case Board show the question above the pin.
+
+- **Asking.** 3D On, on foot, with an opening scene for that quest (`src/npc/intros/<world>.js` `INTROS`) and its crew loaded: `[E]` at the
+  bench plays the scene (`stage.playIntro` → `three/mystery/director.js`), then the bench opens and skips its question card
+  (`story/intro-shown.js`). Otherwise the bench opens on the question card (`ui/case-open.js`). Stage 1's lead line is the question
+  (`frame.js`), else its `stage-story.js` line.
+- **Scenes** are step lists (`place`, `look`, `go`, `follow`, `say`, `start`, `wait`, `vanish`) over named points from
+  `intros/spots.js` (`view`, `stand`, `stand2`, `meet`, `exit`, `trail`) and actors (`npc:<crew id>`, `cloak`; speakers also
+  `voice:<id>` and `vess`). Controls are off while one plays (the stage's learn-world branch hands the camera to `director.update`);
+  E/Space/Enter read the line card, Esc or SKIP ends it. A scripted crew member is skipped by `CrewSim.step` (`m.scripted`) and put
+  back on its schedule at the end; a walk-up comes from where the person is when within 30 m. Walks speed up so none runs over ~14 s;
+  the figure only runs 9 m before it is parked under the ground (never hidden, so nothing compiles when it appears).
+- **Problems in the world** (`three/mystery/site.js`, `world.mystery`): built by `attachCrew` (3D On with a renderer only) before the
+  crew's walk grid, so each prop's disc is a collider for crew and player; props are baked with `mergeStatic` (effect parts `noMerge`),
+  take the world's cover mask, and never add a light. A quest's symptom is on until its bench is cleared (a scene holds it `off` until
+  its `start` step, then `on`); the world's (`SYMPTOM`) until its boss is beaten, read from the session once a second. `lamps: 'sputter'`
+  drives every `LampPool` source out of step and the shared `M.lantern` glass with them; `'dim'` sags them together; both restore the
+  world's own intensities.
+- **Placing.** `node tools/npc/pick-spots.mjs [world ...]` places every prop 9–24 m of walking from its bench (crowded sites: 6–34 m,
+  tighter), clear of colliders, bays, posts, task items and other props; then rebuilds the grid with every prop as a wall and re-places
+  any scene whose walk got long. `verify:intros` re-checks the spots against the world as built, the data (real quests, the world's own
+  crew, lines ≤ 25 words), that no two worlds share a set of scene shapes, and plays every scene headless to its end.
+
 ## Crews (NPCs) — every Learn world (2026-11-19)
 
 Plan and status: `docs/plans/npc-plan.md`. Every Learn world has six people walking their rounds: Tallow (`unit01`, the pilot) and the
@@ -490,7 +519,10 @@ thirteen after it (`unit02`–`unit14`), 84 in all, each world with one side tas
 - **Runtime**: every Learn world calls `attachCrew(this, '<key>')` (`three/npc/attach.js`) at the end of its constructor (3D On with a
   renderer only; no crew in node checks or 3D Off), `this.crew?.update(delta, cameraPos)` first in `update`, and `this.crew?.dispose()`
   in `dispose`. `three/npc/crew.js` (`Crew`) fills the walk grid 3 ms a frame (up to ~0.75 s of work on the busiest worlds, so it is
-  never one stall) and starts the crew when it is done; `three/npc/figures.js` loads and clones bodies (`SkeletonUtils.clone`), switches
+  never one stall) and starts the crew when it is done. A body is shown only once warmed (`Crew.warm`): its materials compiled with
+  `compileAsync` and its textures sent up with `initTexture` about 2.2 Mpx a frame (a desktop body has 15 textures, two at 2048²;
+  uploading six bodies on one frame was the freeze on landing). The stage calls `warm()` on the voyage destination's crew every frame
+  of the flight, so grid and bodies are ready before the ramp opens; `three/npc/figures.js` loads and clones bodies (`SkeletonUtils.clone`), switches
   alpha parts to alpha-test, and cross-fades clips. Bodies past 70 m are not drawn; past 30 m animation steps at 10 Hz; real shadows only
   within 25 m (a blob decal otherwise, and always on a handset); a handset draws at most four. The crew group is part of the world
   (`markWorldOwn`) so walking crews do not hold an open bench's shadow live. The cover mask is applied to each body as it arrives.

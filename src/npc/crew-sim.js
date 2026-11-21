@@ -319,6 +319,8 @@ export class CrewSim {
   }
 
   step(m, dt, player) {
+    // A member in an opening scene (`three/mystery/director.js`) is moved by the scene, not by the schedule.
+    if (m.scripted) return;
     if (m.talking) {
       m.speed = 0;
       if (player) this.turn(m, angleTo(player.x - m.x, player.z - m.z), dt, 4);

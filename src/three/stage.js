@@ -37,6 +37,7 @@ import { gameMode } from "../game-mode.js";
 import { worldUI } from "./world-ui.js";
 import { markWorldOwn, visitorsMoving } from "./shadow-pace.js";
 import { isLineCardOpen, advanceLineCard } from "../ui/npc-card.js";
+import { Director } from "./mystery/director.js";
 import { Voyage, DESTINATIONS } from "./voyage.js";
 import { api } from "../api.js";
 
@@ -617,10 +618,12 @@ class Stage {
     this.renderer.setAnimationLoop(this.render.bind(this));
     // A phone's devicePixelRatio is commonly 3; rendering the walk at even 2x
     // there is four times the pixels of 1x for no visible gain on a 6-inch
-    // panel, and it is the difference between 60fps and 30.
+    // panel, and it is the difference between 60fps and 30. A Retina laptop is
+    // held to 1.5 for the same reason: with 4x MSAA on, 2x is 1.8 times the
+    // pixels of 1.5 for an edge the eye cannot tell apart at arm's length.
     const dpr = window.devicePixelRatio || 1;
     let maxDpr = 1;
-    if (tierAtLeast("T3", tier)) maxDpr = Math.min(dpr, isTouchPrimary() ? 1.5 : 2);
+    if (tierAtLeast("T3", tier)) maxDpr = Math.min(dpr, 1.5);
     this.baseDpr = maxDpr;
     this.worldDpr = maxDpr;
     this.worldDprCeil = maxDpr;
@@ -634,10 +637,13 @@ class Stage {
    * Ligar's basalt, its ground shader and its sun shadow above all — and a
    * frame that misses its vsync by a millisecond is a frame shown twice, which
    * is what makes a walk judder. So on a planet the pixel ratio is paced:
-   * a second of frames averaging slower than 45fps steps it down by a quarter,
-   * never below 1 on a high-density screen (0.8 on a 1x one), and a few
-   * seconds of frames with headroom step it back up — but not to a ratio found
-   * too slow until twenty seconds have passed without a slow second. The first
+   * a window of frames averaging slower than 53fps steps it down by a quarter
+   * (a walk at 50fps judders as surely as one at 40), never below 1 on a
+   * high-density screen (0.8 on a 1x one), and a few windows of frames with
+   * headroom step it back up — but not to a ratio found too slow until twenty
+   * seconds have passed without a slow window, and each time that ratio proves
+   * too slow again the wait doubles (to 160 s), because every change of ratio
+   * reallocates the canvas and is itself a hitch. The first
    * three seconds on a planet are not judged: that is textures uploading, not
    * the machine. One that holds 60fps never leaves full resolution; nothing
    * else about the world is reduced. Aboard ship it is always full resolution.
@@ -654,7 +660,7 @@ class Stage {
     // A stall (a tab coming back, a shader compiling) is not a frame rate.
     if (!(delta > 0) || delta > 0.25) return;
     const w = this.resWindow ||
-      (this.resWindow = { t: 0, n: 0, cool: 0, good: 0, age: 0, sinceSlow: 0 });
+      (this.resWindow = { t: 0, n: 0, cool: 0, good: 0, age: 0, sinceSlow: 0, retry: 20, regained: false });
     w.age += delta;
     if (w.age < 3) return;
     w.t += delta;
@@ -670,17 +676,21 @@ class Stage {
     const STEP = 0.25;
     const floor = base >= 1.5 ? 1 : Math.min(base, 0.8);
     const cur = this.worldDpr;
-    if (w.sinceSlow > 20 && this.worldDprCeil < base) {
+    if (w.sinceSlow > w.retry && this.worldDprCeil < base) {
       this.worldDprCeil = Math.min(base, this.worldDprCeil + STEP);
       w.sinceSlow = 0;
+      w.regained = true;
     }
-    if (mean > 1 / 45 && cur > floor) {
+    if (mean > 1 / 53 && cur > floor) {
+      // A regained ratio that is slow again waits twice as long next time.
+      if (w.regained) w.retry = Math.min(160, w.retry * 2);
+      w.regained = false;
       this.worldDprCeil = Math.max(floor, cur - STEP);
       this.setWorldDpr(Math.max(floor, cur - STEP));
       w.good = 0;
       w.cool = 1.5;
       w.sinceSlow = 0;
-    } else if (mean < 1 / 56 && cur < this.worldDprCeil) {
+    } else if (mean < 1 / 58 && cur < this.worldDprCeil) {
       if (++w.good >= 4) {
         this.setWorldDpr(Math.min(this.worldDprCeil, cur + STEP));
         w.good = 0;
@@ -889,6 +899,26 @@ class Stage {
     if (world?.scene) markWorldOwn(world.scene);
     if (world?.scene && r?.compileAsync) {
       r.compileAsync(world.scene, this.camera).catch(() => {});
+    }
+    // Compiling leaves textures to be sent to the GPU on the first frame they are drawn, which is the
+    // first frame on the ground. A world's own textures are small canvases; they go up now, in flight.
+    if (world?.scene && r?.initTexture) {
+      const seen = new Set();
+      world.scene.traverse((o) => {
+        const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+        for (const m of mats) {
+          for (const key in m) {
+            const t = m[key];
+            if (t && t.isTexture && !seen.has(t)) seen.add(t);
+          }
+          if (m.uniforms) for (const u of Object.values(m.uniforms)) if (u?.value?.isTexture) seen.add(u.value);
+        }
+      });
+      for (const t of seen) {
+        if (t.isRenderTargetTexture || t.isDepthTexture || t.isFramebufferTexture || t.isVideoTexture) continue;
+        if (!(t.image?.width > 0 || t.image?.data)) continue;
+        try { r.initTexture(t); } catch (e) { /* drawn later instead */ }
+      }
     }
     return world;
   }
@@ -1382,6 +1412,19 @@ class Stage {
     gameMode.lockLandscape();
   }
 
+  /**
+   * Play the opening scene for a bench on the world the player is standing on (`mystery/director.js`).
+   * Resolves true once the player is back at the bench, or false at once when this bench has no scene here
+   * (3D Off, no crew yet, or a question with nothing to see); the caller then opens the bench either way.
+   */
+  playIntro(site, worldId) {
+    const world = this.activeWorld;
+    if (this.mode !== "world" || !this.isLearnWorld(world) || !site?.questId) return Promise.resolve(false);
+    if (!this.director) this.director = new Director(this);
+    if (this.director.active || !this.director.canPlay(world, worldId, site.questId)) return Promise.resolve(false);
+    return this.director.play(world, site, worldId, site.questId).then(() => true);
+  }
+
   /** Light a Tallow site's indicator when its quest is finished. */
   setTallowSiteComplete(questId, complete) {
     if (this.tallowWorld) this.tallowWorld.setSiteComplete(questId, complete);
@@ -1702,6 +1745,7 @@ class Stage {
         // bench stands in the world is moving (shadow-pace.js).
         this.activeWorld.benchMoving = visitorsMoving(this.activeWorld.scene, delta);
         this.activeWorld.update(delta, this.camera.position);
+        this.activeWorld.mystery?.update(delta);
       }
       // A chamber that brings its own room (the Charge Gardens) was lit for
       // the ship's exposure, whichever world it was opened on; a bench
@@ -1714,12 +1758,17 @@ class Stage {
       return;
     } else if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
       const learnWorld = this.activeWorld;
-      if (this.fpsControls) {
+      // An opening scene (`mystery/director.js`) has the view: the walk is off, as on the voyage.
+      if (this.director?.active) {
+        if (this.fpsControls) { this.fpsControls.enabled = false; this.fpsControls.hidePrompt(); }
+        this.director.update(delta);
+      } else if (this.fpsControls) {
         this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
         this.syncAimPrompt();
       }
       learnWorld.update(delta, this.camera.position);
+      learnWorld.mystery?.update(delta);
       this.voyage?.updateGround(time);
       this.camera.updateMatrixWorld(true);
       this.renderer.render(learnWorld.scene, this.camera);
@@ -1744,6 +1793,9 @@ class Stage {
         this.fpsControls.enabled = canMove && !scripted;
       }
       if (voyage) voyage.update(delta, time);
+      // The destination's crew lays its walk grid and sends its bodies to the GPU while the ship flies down,
+      // not on the first frames after the ramp.
+      if (voyage?.dest?.world?.crew) voyage.dest.world.crew.warm();
 
       if (scripted) {
         this.fpsControls?.hidePrompt();

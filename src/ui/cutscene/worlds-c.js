@@ -336,3 +336,6 @@ const cinderhalo = {
 };
 
 export const WORLDS_C = { unit10: brinewire, unit11: quicklight, unit12: lodestone, unit13: thornmere, unit14: cinderhalo };
+
+/** Props and settings the story shots (`plots-c.js`) reuse. */
+export const PROPS_C = { BRINE, pylon, cable, sparks, copperBars, QUICK, fuelTower, LODE, drum, crane, THORN, outpost, CINDER, reactor };

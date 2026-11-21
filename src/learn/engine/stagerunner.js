@@ -45,6 +45,8 @@ import { getKit } from '../table/kits/index.js';
 import { Tabletop, benchesAre3D } from './instruments.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
+import { mysteryFor } from '../../story/quest-story.js';
+import { consumeIntro } from '../../story/intro-shown.js';
 
 function initStageTable(stage) {
   let t = createTable(stage.table, stage.title);
@@ -114,6 +116,8 @@ export function roundTo(x, step) {
  */
 export function createRunner(container, ctx, cfg) {
   const { STAGES } = cfg;
+  const questKey = ctx?.world?.id && ctx?.quest?.id ? `${ctx.world.id}/${ctx.quest.id}` : '';
+  let caseAsked = false;
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
@@ -191,7 +195,23 @@ export function createRunner(container, ctx, cfg) {
     syncTabletop(stage);
 
     // Stage briefings always trigger (including on replay); the generic tabletop Tour only auto-opens on first run.
-    if (stage.briefing || (stage.widget?.type === 'table' && !ctx.isComplete && cleared <= i)) frame.showBriefing();
+    const brief = () => {
+      if (frame.disposed || index !== i) return;
+      if (stage.briefing || (stage.widget?.type === 'table' && !ctx.isComplete && cleared <= i)) frame.showBriefing();
+    };
+    // A quest opens on its question (`story/quest-story.js` `mystery`), once each time it is opened at stage 1, before
+    // any briefing; the debrief answers it.
+    // A scene in the world that has just asked it (`three/mystery/director.js`) counts as asking.
+    const mystery = i === 0 && !caseAsked && questKey && !consumeIntro(questKey) ? mysteryFor(questKey) : '';
+    if (mystery && typeof document !== 'undefined' && !globalThis.__LQ_TEST__) {
+      caseAsked = true;
+      import('../../ui/case-open.js')
+        .then(m => m.showCaseOpen({ mystery, title: ctx.quest?.title || '' }))
+        .catch(() => null)
+        .then(brief);
+      return;
+    }
+    brief();
   }
 
   function next() {

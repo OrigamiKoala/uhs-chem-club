@@ -21,6 +21,7 @@
     "verify:ship": "node tools/verify-ship.mjs",
     "verify:progression": "node tools/verify-progression.mjs",
     "verify:story": "node tools/verify-story.mjs",
+    "verify:intros": "node tools/verify-intros.mjs",
     "verify": "node tools/verify-all.mjs",
     "verify:tallow": "node tools/verify-tallow.mjs",
     "verify:console": "node tools/verify-console.mjs",

@@ -8,6 +8,12 @@
  * walk through a person), and switches the crew on and off as the player arrives and leaves
  * (`setActive`), and hides it while a boss is fought on the world (`setHidden`).
  *
+ * WARMING. A body is never shown on the frame its shaders would compile or its textures upload: a desktop body
+ * carries fifteen textures (two at 2048²), and six of them arriving at once froze the first second on a world.
+ * Each body is compiled with `compileAsync` as it loads, and its textures go up to the GPU a few a frame
+ * (`warm`); it is shown once both are done. The stage calls `warm()` on the voyage's destination while the
+ * ship is still flying down, so the walk grid and the bodies are ready before the ramp opens.
+ *
  * COST. Bodies further than 70 m are not drawn; past 30 m their animation steps at 10 Hz. A body casts a
  * real shadow only within 25 m (and only where the renderer draws shadows at all); otherwise a soft blob
  * under the feet stands in. A handset draws at most the four nearest.
@@ -28,6 +34,11 @@ const SHADOW_NEAR = 25;
 const TALK_REACH = 2.6;
 const TALK_LEAVE = 4;
 const HANDSET_MAX = 4;
+/** Texture pixels sent to the GPU a frame while bodies warm (at least one texture a frame). */
+const UPLOAD_PX = 2.2e6;
+/** Textures already on the GPU: a model's clones share them. */
+const uploaded = new WeakSet();
+let warmCamera = null;
 
 let blobTexture = null;
 function blob() {
@@ -121,6 +132,8 @@ export class Crew {
     this.worldId = worldId;
     this.tasks = tasks || {};
     this.lite = isTouchPrimary();
+    this.renderer = renderer;
+    this.uploads = [];             // textures waiting to go to the GPU
     this.shadows = Boolean(renderer?.shadowMap?.enabled);
     this.group = new THREE.Group();
     this.group.name = 'crew';
@@ -168,10 +181,63 @@ export class Crew {
         this.group.add(fig.root);
         this.world.cover?.applyTo?.(fig.root);
         fig.play('idle', 0);
-        this.bodies.set(def.id, { fig, meshes, blob: shade, shadowOn: true, animAcc: 0 });
+        const body = { fig, meshes, blob: shade, shadowOn: true, animAcc: 0, ready: false, textures: [], compiled: !this.renderer };
+        this.queueTextures(body);
+        if (this.renderer?.compileAsync) {
+          warmCamera ||= new THREE.PerspectiveCamera();
+          this.renderer.compileAsync(fig.root, warmCamera, this.world.scene)
+            .catch(() => {})
+            .then(() => { body.compiled = true; });
+        } else {
+          body.compiled = true;
+        }
+        this.bodies.set(def.id, body);
       } catch (err) {
         console.error(`Crew body ${def.model} failed to load:`, err);
       }
+    }
+  }
+
+  /** Put a body's textures that are not on the GPU yet in the upload queue. */
+  queueTextures(body) {
+    if (!this.renderer?.initTexture) return;
+    const seen = new Set();
+    for (const mesh of body.meshes) {
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        for (const key in m) {
+          const t = m[key];
+          if (!t || !t.isTexture || seen.has(t) || uploaded.has(t)) continue;
+          seen.add(t);
+          body.textures.push(t);
+          if (!this.uploads.includes(t)) this.uploads.push(t);
+        }
+      }
+    }
+  }
+
+  /**
+   * Work that must be done before anyone is shown, a slice a frame: the walk grid, then texture uploads.
+   * Safe to call every frame; `update` calls it, and the stage calls it on the voyage's destination.
+   */
+  warm() {
+    if (this.disposed) return;
+    if (!this.sim) {
+      if (!this.grid.fill(3)) return;
+      this.sim = new CrewSim(this.grid, this.simArgs.crew, this.simArgs.posts, { seed: Math.floor(Math.random() * 1e6) });
+    }
+    let px = 0;
+    while (this.uploads.length && (px === 0 || px < UPLOAD_PX)) {
+      const t = this.uploads.shift();
+      if (uploaded.has(t)) continue;
+      const img = t.image;
+      if (!img || !(img.width > 0)) continue;   // not decoded: it uploads when first drawn
+      this.renderer.initTexture(t);
+      uploaded.add(t);
+      px += img.width * img.height;
+    }
+    for (const body of this.bodies.values()) {
+      if (body.ready || !body.compiled) continue;
+      body.ready = body.textures.every(t => uploaded.has(t) || !(t.image?.width > 0));
     }
   }
 
@@ -208,10 +274,8 @@ export class Crew {
 
   update(delta, cameraPos) {
     if (this.hidden || !cameraPos) return;
-    if (!this.sim) {
-      if (!this.grid.fill(3)) return;
-      this.sim = new CrewSim(this.grid, this.simArgs.crew, this.simArgs.posts, { seed: Math.floor(Math.random() * 1e6) });
-    }
+    this.warm();
+    if (!this.sim) return;
     const dt = Math.min(delta, 0.1);
     const player = { x: cameraPos.x, z: cameraPos.z };
     this.sim.update(dt, this.active ? player : null);
@@ -227,7 +291,7 @@ export class Crew {
       const body = this.bodies.get(m.id);
       if (!body) return;
       const { fig } = body;
-      const show = d < DRAW_FAR && (!this.lite || rank < HANDSET_MAX);
+      const show = body.ready && d < DRAW_FAR && (!this.lite || rank < HANDSET_MAX);
       fig.root.visible = show;
       if (!show) return;
       fig.root.position.set(m.x, this.world.getTerrainHeight(m.x, m.z), m.z);

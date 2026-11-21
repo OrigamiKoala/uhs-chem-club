@@ -65,7 +65,7 @@ export function renderCaseFile(container) {
         const st = QUEST_STORY[key];
         if (!st || !st.pin) continue;
         if (learnMap[key]?.completedAt) {
-          list.push({ key, world: w.world, title: q.title, pin: st.pin });
+          list.push({ key, world: w.world, title: q.title, pin: st.pin, ask: st.mystery || '' });
           totalPinsEarned++;
         }
       }
@@ -196,6 +196,7 @@ export function renderCaseFile(container) {
             <div style="display: flex; flex-direction: column; gap: 0.3rem;">
               ${actPins.map(p => `
                 <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-primary); padding: 0.3rem 0.55rem; background: var(--plate-100); border-left: 2px solid var(--accent-bronze);">
+                  ${p.ask ? `<div style="color: var(--text-muted); margin-bottom: 0.15rem;">${esc(p.ask)}</div>` : ''}
                   <span style="color: var(--accent-gold);">${esc(p.world)}:</span> ${esc(p.pin)}
                 </div>
               `).join('')}

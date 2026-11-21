@@ -28,6 +28,7 @@ import { mirrorBenchKeys } from './bench-keys.js';
 import { mirrorBenchReadings } from './bench-readings.js';
 import { Encounter } from './encounter.js';
 import { storyFor } from './stage-story.js';
+import { mysteryFor } from '../../story/quest-story.js';
 import { glossaryFor, needsFor } from '../glossary/index.js';
 import { getKit } from '../table/kits/index.js';
 import { fixtureLayout } from '../table/layout.js';
@@ -790,7 +791,9 @@ export class LearnFrame {
     // The rail shows where the player is; this is the one line that says it.
     this.el.count.textContent = `Stage ${stage.index + 1} of ${this.stageCount}`;
     this.el.title.textContent = stage.title;
-    const story = storyFor(this.currentQuestId(), stage.index);
+    // Stage 1 leads with the question the quest answers (`quest-story.js` `mystery`); a quest without one keeps its lead line.
+    const caseKey = this.opts.world?.id && this.opts.quest?.id ? `${this.opts.world.id}/${this.opts.quest.id}` : '';
+    const story = (stage.index === 0 && caseKey && mysteryFor(caseKey)) || storyFor(this.currentQuestId(), stage.index);
     this.el.prompt.innerHTML = `${story ? `<p class="lq-story">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
     // The objective again, over the bench, for a layout that stacks the deck
     // underneath it. Hidden from a screen reader: the deck's copy is the real one.

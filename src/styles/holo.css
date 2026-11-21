@@ -1332,6 +1332,26 @@
   border-left-width: 4px;
 }
 
+.story-anim-ask {
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-left: 2px solid var(--accent-bronze);
+  background: var(--plate-100);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.story-anim-ask.hidden { display: none; }
+
+.case-open-tx .transmission-card { min-height: 6rem; }
+
+.case-open-keys {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.8rem;
+}
+
 .story-anim-keys {
   display: flex;
   align-items: center;

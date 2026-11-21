@@ -269,7 +269,14 @@ ok('spine beat prerequisite unlock logic validated');
     }
     if (st.role === 'Toolkit') {
       if (st.pin) fail(`story animation "${key}" is a Toolkit quest and should omit pin`);
+      if (st.mystery) fail(`story animation "${key}" is a Toolkit quest and should omit mystery`);
     } else {
+      // The question the quest opens on, which the pin answers.
+      const m = String(st.mystery || '').trim();
+      if (!m || !m.endsWith('?') || sentenceCount(m) > 2 || m.split(/\s+/).length > 25) {
+        fail(`story animation "${key}" needs a mystery: at most 2 sentences and 25 words, ending on "?": "${m}"`);
+      }
+      if (/!/.test(m) || /\p{Extended_Pictographic}/u.test(m)) fail(`story animation "${key}" mystery carries "!" or an emoji: "${m}"`);
       if (typeof st.pin !== 'string' || !st.pin.trim() || /^Filed:/i.test(st.pin) || sentenceCount(st.pin) < 1 || sentenceCount(st.pin) > 2 || st.pin.trim().split(/\s+/).length > 16) {
         fail(`story animation "${key}" needs a short Case Pin (<= 16 words, no "Filed:" prefix): "${st.pin}"`);
       }
@@ -298,6 +305,13 @@ ok('spine beat prerequisite unlock logic validated');
       const later = [];
       for (let k = qi + 1; k < mods2.length; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) if (!own.has(v.term.source)) later.push(v.term);
       for (const c of [...st.beats.map(b => b.say), ...(st.pin ? [st.pin] : [])]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
+      // The mystery is read before the bench, so it may not use the quest's own new terms either.
+      if (st.mystery) {
+        const before = new Set();
+        for (let k = 0; k < qi; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) before.add(v.term.source);
+        const unearned = [...((m && m.VOCABULARY) || []).map(v => v.term).filter(t => !before.has(t.source)), ...later];
+        for (const t of unearned) if (t.test(st.mystery)) fail(`story animation "${w.id}/${q.id}" mystery uses a word the player has not met yet (${t}): "${st.mystery}"`);
+      }
     });
   }
   // Every built Tallow, Lanternfall, Ligar, Bellows and Ember Reach quest, bench or boss, has its one animation.
@@ -319,11 +333,19 @@ ok('spine beat prerequisite unlock logic validated');
 }
 
 // 10. Lore cutscenes: the campaign opening and every world's arrival. Each world with an episode has one; every line is the
-//     story's own; every frame paints, with no NaN, from the first to the last.
+//     story's own; every frame paints, with no NaN, from the first to the last, and makes no call a real canvas throws on
+//     (a negative arc, ellipse or gradient radius; a gradient stop outside 0..1).
 {
   const { cutsceneFor, cutsceneIds } = await import('../src/ui/cutscene/index.js');
+  const throwsOnCanvas = (k, a) => {
+    if (k === 'arc') return a[2] < 0;
+    if (k === 'ellipse') return a[2] < 0 || a[3] < 0;
+    if (k === 'createRadialGradient') return a[2] < 0 || a[5] < 0;
+    if (k === 'addColorStop') return !(a[0] >= 0 && a[0] <= 1);
+    return false;
+  };
   const stub = () => {
-    const calls = { n: 0, nan: 0 };
+    const calls = { n: 0, nan: 0, bad: null };
     const make = () => new Proxy(function () {}, {
       get: (_, k) => {
         if (k === 'calls') return calls;
@@ -331,6 +353,7 @@ ok('spine beat prerequisite unlock logic validated');
         return (...args) => {
           calls.n++;
           if (args.some(a => typeof a === 'number' && !Number.isFinite(a))) calls.nan++;
+          if (!calls.bad && throwsOnCanvas(String(k), args)) calls.bad = `${String(k)}(${args.map(a => (typeof a === 'number' ? +a.toFixed(2) : typeof a)).join(', ')})`;
           return /^create/.test(String(k)) ? make() : undefined;
         };
       },
@@ -352,11 +375,12 @@ ok('spine beat prerequisite unlock logic validated');
       if (sentenceCount(b.say) > 2) fail(`cutscene "${id}" line is over 2 sentences: "${b.say}"`);
       if (/!/.test(b.say) || /\p{Extended_Pictographic}/u.test(b.say)) fail(`cutscene "${id}" line carries "!" or an emoji: "${b.say}"`);
     }
-    for (let T = 0; T <= sc.duration + 1e-9; T += 0.25) {
+    for (let T = 0; T <= sc.duration + 1e-9; T += 0.1) {
       const ctx = stub();
-      try { sc.paint(ctx, T, 0); sc.paint(ctx, T, 9.7); } catch (err) { fail(`cutscene "${id}" throws at T=${T.toFixed(2)}: ${err.message}`); break; }
+      try { sc.paint(ctx, T, 0); sc.paint(ctx, T, T * 1.37 + 9.7); } catch (err) { fail(`cutscene "${id}" throws at T=${T.toFixed(2)}: ${err.message}`); break; }
       if (!ctx.calls.n) fail(`cutscene "${id}" paints nothing at T=${T.toFixed(2)}`);
       if (ctx.calls.nan) { fail(`cutscene "${id}" draws NaN at T=${T.toFixed(2)}`); break; }
+      if (ctx.calls.bad) { fail(`cutscene "${id}" makes a call a canvas throws on at T=${T.toFixed(2)}: ${ctx.calls.bad}`); break; }
       frames++;
     }
   }

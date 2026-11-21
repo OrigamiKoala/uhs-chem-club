@@ -45,7 +45,10 @@ function installSiteListener() {
     if (!canWalk(worldId)) return;
     // A charted site with no module opens nothing. The world does not pretend.
     if (site.built === false) return;
-    window.location.hash = `#/learn/${worldId}/${site.questId}`;
+    // A bench whose question has something to see opens on a scene in the world first (`three/mystery/director.js`).
+    const open = () => { if (window.location.hash.replace(/^#\/?/, '') === `learn/${worldId}`) window.location.hash = `#/learn/${worldId}/${site.questId}`; };
+    const play = stage?.playIntro ? stage.playIntro(site, worldId) : Promise.resolve(false);
+    play.catch(() => false).then(open);
   });
 }
 

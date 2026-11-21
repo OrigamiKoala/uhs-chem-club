@@ -47,6 +47,7 @@ export function playQuestStory(key) {
       <div class="story-anim-frame">
         <canvas class="story-anim-canvas" width="1280" height="720" aria-hidden="true"></canvas>
         <div class="story-anim-side">
+          <p class="story-anim-ask hidden"></p>
           <div class="story-anim-tx"></div>
           <div class="story-anim-keys lq-modal-keys">
             <span class="story-anim-pips" aria-hidden="true">${lines.map(() => '<i></i>').join('')}</span>
@@ -60,6 +61,7 @@ export function playQuestStory(key) {
     const canvas = overlay.querySelector('canvas');
     const ctx = canvas.getContext('2d');
     const txHost = overlay.querySelector('.story-anim-tx');
+    const askEl = overlay.querySelector('.story-anim-ask');
     const pips = [...overlay.querySelectorAll('.story-anim-pips i')];
     const backBtn = overlay.querySelector('[data-act="back"]');
     const nextBtn = overlay.querySelector('[data-act="next"]');
@@ -104,6 +106,9 @@ export function playQuestStory(key) {
       nextBtn.textContent = i === last ? 'Done' : 'Next';
       const isPin = Boolean(line.pin || line.filed);
       overlay.classList.toggle('story-anim-filed', isPin);
+      // The Case Pin answers the question the quest opened on, so the question is shown again above it.
+      askEl.textContent = isPin && line.ask ? line.ask : '';
+      askEl.classList.toggle('hidden', !(isPin && line.ask));
       if (!tx) {
         tx = createTransmissionElement({ speaker: 'Vess', text: line.say, variant: 'hero', badge: isPin ? 'Case Pin' : `${i + 1} / ${last + 1}` });
         txHost.appendChild(tx.element);

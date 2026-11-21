@@ -8,12 +8,18 @@
 
 import { CAMPAIGN_STORY, EPISODES } from '../../story/saga.js';
 import { arrivalScene } from './arrival.js';
+import { storyScene } from './story.js';
+import { PLOTS_A } from './plots-a.js';
+import { PLOTS_B } from './plots-b.js';
+import { PLOTS_C } from './plots-c.js';
 import { introScene } from './intro.js';
 import { WORLDS_A } from './worlds-a.js';
 import { WORLDS_B } from './worlds-b.js';
 import { WORLDS_C } from './worlds-c.js';
 
 const SPECS = { ...WORLDS_A, ...WORLDS_B, ...WORLDS_C };
+/** What happens after each world's opening incident: its own story, shot by shot (`plots-*.js`). */
+const PLOTS = { ...PLOTS_A, ...PLOTS_B, ...PLOTS_C };
 
 const built = new Map();
 
@@ -25,7 +31,11 @@ export function cutsceneFor(id) {
     scene = introScene(CAMPAIGN_STORY.map(s => s.text));
   } else if (SPECS[id] && EPISODES[id]) {
     const ep = EPISODES[id];
-    scene = arrivalScene(SPECS[id], [ep.arrival, ep.objective]);
+    const spec = SPECS[id];
+    const lines = [ep.arrival, ep.objective];
+    scene = PLOTS[id]
+      ? storyScene({ ...spec, shots: [{ dur: spec.incidentDur || 5.2, say: 'arrival', paint: spec.incident }, ...PLOTS[id]] }, lines)
+      : arrivalScene(spec, lines);
   }
   built.set(id, scene);
   return scene;

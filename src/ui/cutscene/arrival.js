@@ -1,5 +1,6 @@
 /**
- * cutscene/arrival.js — the shape every world's arrival cutscene shares.
+ * cutscene/arrival.js — the old shared shape of a world's arrival cutscene. Every world now tells its own story
+ * (`story.js` + `plots-*.js`); this stays only as the fallback for a world that has no plot.
  *
  * Four beats:
  *   1. What happened here: the world's own incident, drawn by the world (`incident`), with its name set low in the frame.

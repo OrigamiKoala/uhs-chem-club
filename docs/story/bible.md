@@ -111,7 +111,7 @@ Act IV: WHAT ARE THEY BUILDING? (Units 12–14: Lodestone, Thornmere, Cinder Hal
 
 ### Episode Kit per World (Low-Text Standard)
 Every world acts as a grounded, low-text investigative episode:
-1. **Arrival & Mission (2 lines max, no 3-paragraph walls):** One short sentence stating the concrete mystery on this world (`arrival`), plus one sentence stating what we are testing or fixing (`objective`). Both are said by Vess as subtitles over the world's arrival cutscene (`src/ui/cutscene/`): the incident is shown happening, a local meets the lander and leads the survey hand to what was left behind. Show the lore in the picture; the lines stay short.
+1. **Arrival & Mission (2 lines max, no 3-paragraph walls):** One short sentence stating the concrete mystery on this world (`arrival`), plus one sentence stating what we are testing or fixing (`objective`). Both are said by Vess as subtitles over the world's arrival cutscene (`src/ui/cutscene/`): the incident is shown happening, then the world's own short story plays out on arrival (each world's is different: a chase, a rescue, a blackout, a stakeout), ending on the clue. Show the lore in the picture; the lines stay short.
 2. **Stage 1 Quest Hooks (`stage-story.js`):** One concrete sentence on Stage 1 only, using visible props and zero fancy jargon.
 3. **Four Honest Quest Roles (`quest-story.js`):** Every quest is tagged `Direct Clue`, `Station Fix`, `Toolkit`, or `Boss Payoff`. Foundational `Toolkit` benches never get contrived villain excuses and omit a Case Pin.
 4. **Case Pins (`quest-story.js`):** Short plain takeaways (≤16 words, no `"Filed:"` prefix) stamped to the Case Board on `Direct Clue`, `Station Fix`, and `Boss Payoff` quests.

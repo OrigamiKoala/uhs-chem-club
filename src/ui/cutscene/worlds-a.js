@@ -477,3 +477,5 @@ const bellows = {
 
 export const WORLDS_A = { erebus, unit01: tallow, unit02: lanternfall, unit03: ligar, unit04: bellows };
 export { GY, shade, clamp01 };
+/** Props and settings the story shots (`plots-a.js`) reuse. */
+export const PROPS_A = { EREBUS, tower, shieldArc, TALLOW, refinery, saltBin, hopperCrystal, LANTERN, lighthouse, LIGAR, cliff, BELLOWS, fuelTank, warmCyl };
