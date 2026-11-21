@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['We have air pipes into the buried tunnel. The miners inside can breathe while we dig.'],
-        ['Nobody goes past the tape without a lamp, a partner and a reason.'],
-        ['The blast came at shift change. Whoever set it knew when the tunnel would be fullest.']
+        ['We ran air pipes into the collapsed mine tunnel so the trapped miners can breathe while we clear the rubble.'],
+        ['Nobody goes past the safety tape without a helmet lamp and a partner.'],
+        ['The Fifth Guild set off the blast right at shift change, when the tunnel was fullest.']
       ],
       afterClue: {
         clue_ligar_scorch: [
-          ['Rock cut that smooth, that fast. No torch on this world gets that hot.', 'Whatever they carry, I would not stand in front of it for anything.']
+          ['Solid volcanic rock sliced smooth like glass. No mining torch on Ligar gets anywhere near that hot.', 'Whatever heat source the Fifth Guild brought here is terrifying.']
         ]
       }
     }
@@ -62,7 +62,7 @@ export const CREW = Object.freeze([
     task: 'ligar-tag',
     talk: {
       default: [
-        ['Half my crew is still down there. I tap on the air pipe every hour, and they tap back.']
+        ['Half my mining crew is still trapped inside the tunnel. I tap on the air pipe every hour, and they tap back.']
       ]
     }
   },
@@ -75,13 +75,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Basalt is cooled lava. It cracks into columns as it shrinks, which is why the arches stand so straight.'],
-        ['I mark every crack with a stake. If a stake moves overnight, the rock above it is moving too.'],
-        ['The cut face at the tunnel mouth is smooth as a window. I have never measured anything like it.']
+        ['This quarry is cut into basalt, a hard volcanic rock that cooled into tall stone columns.'],
+        ['I put wooden stakes beside every crack in the rock. If a stake shifts overnight, that rock wall is unstable.'],
+        ['The rock wall at the tunnel mouth was sliced as smooth as window glass. Normal explosives leave jagged rock.']
       ],
       afterBench: {
         'q2-lattice': [
-          ['You saw how the stone holds together differently from the wire. That is why we blast one and draw the other.']
+          ['Now we know which lining material can survive extreme heat without carrying electricity down to the miners.']
         ]
       }
     }
@@ -95,9 +95,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['When the miners come up, they will be cold, thirsty and half blind from the dark. I am ready for all of it.'],
-        ['Rock dust is the real danger down there. Masks on, always, even when it looks clear.'],
-        ['Breathe slowly in a tight space. Panic burns through the air faster than work does.']
+        ['When we pull the miners out, they will be cold and dehydrated. I have blankets and water ready.'],
+        ['Fine rock dust in the tunnel air is dangerous to breathe, so our rescue crew wears masks constantly.'],
+        ['We monitor the air pipes carefully to make sure enough oxygen is still reaching the miners below.']
       ]
     }
   },
@@ -110,9 +110,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['My carts carry rubble out as fast as the crew can load it. Every load is a little closer to them.'],
-        ['Ligar ore goes out by the cartload. Good ore, too, until the Fifth shut the pass.'],
-        ['They say the blast lit the whole valley white for a moment. I was asleep. Sorry I missed it.']
+        ['My ore carts haul broken rubble away from the tunnel mouth so the diggers can move forward.'],
+        ['This quarry ships rich metal ore across the rim, or it did until the Fifth Guild collapsed our main pass.'],
+        ['People on the night watch said the blast lit up the whole valley bright white for a second.']
       ]
     }
   },
@@ -125,9 +125,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Nobody signed in at the gate that night. Whoever set the blast came over the hills, not down the road.'],
-        ['I check the tunnel props every round. Wood creaks before it gives. Steel does not warn you.'],
-        ['The hill wind howls through the arches after dark. You stop hearing it after a while.']
+        ['Nobody passed through the main gate that night. Whoever caused the collapse climbed over the back ridge.'],
+        ['I inspect the wooden support beams around the tunnel every shift so nothing caves in on the rescuers.'],
+        ['Strange gases have been leaking out of the cracked rock since the blast, so stay alert near the vents.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'ligar-miner',
     item: { label: 'Brass Tally Tag', kind: 'metal', pos: [-0.25, 22.75] },
     ask: [
-      'Every miner hangs a brass tag on the board going in, and takes it back coming out.',
-      'One tag is missing from the board. Someone dropped it by the spoil heap. Find it for me?'
+      'Every miner hangs a brass name tag on our board before entering the tunnel, and takes it off coming out.',
+      'One tag fell off near the big pile of quarry rubble. Could you find it so we know who is safe?'
     ],
     remind: [
-      'The spoil heap by the old columns. A small brass tag, stamped with a name.'
+      'Look by the big rubble pile near the tall stone columns. It is a small brass name tag.'
     ],
     thanks: [
-      'That is old Dunmore\'s tag. He walked out before the blast, so he is safe.',
-      'One less name to worry about. Thank you.'
+      'That is old Dunmore\'s tag. He made it out before the blast, so he is safe.',
+      'That is one less miner trapped down there. Thank you.'
     ],
     note: {
-      title: 'Ligar · Tally Board',
+      title: 'Ligar · Miner Check-In Board',
       speaker: 'Petra Vos',
-      text: 'A miner\'s brass tally tag, found by the spoil heap. Its owner walked out before the blast and is safe.'
+      text: 'A miner\'s brass name tag found near the rubble pile. Its owner walked out before the blast and is safe.'
     }
   }
 });

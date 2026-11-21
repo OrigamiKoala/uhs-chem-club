@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Every supply boat in Mirrowen is locked in the ice. Food, fuel, medicine, all of it, stuck in the canals.'],
-        ['The tide still rises and falls under the ice. You can hear it groan at night.'],
-        ['Mirrowen has never frozen in living memory. Not once. Not like this.']
+        ['Every supply boat in Mirrowen is trapped in solid ice, along with our food, fuel, and medicine.'],
+        ['The ocean tide still rises and falls under the frozen canals. You can hear the ice groaning at night.'],
+        ['Mirrowen\'s harbor has never frozen before in living memory. Something unnatural locked these canals up overnight.']
       ],
       afterClue: {
         clue_mirrowen_agent: [
-          ['Made in a factory, not in nature. Somebody built that chemical to shut our harbour.', 'That is a lot of trouble to stop a few boats.']
+          ['So that freezing chemical was made in a factory. Someone went to huge lengths just to shut down our harbor.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['My barge has been stuck in the same spot for days. I walk out every morning to check her.'],
-        ['The ice came in one night, from the inner canals outward. Water does not freeze from the middle like that.'],
-        ['Before the freeze, I could run the whole canal loop by lunch.']
+        ['My cargo boat has been frozen in the same spot for days. I walk out every morning to check the hull.'],
+        ['The canals froze from the middle outward in a single night. Normal winter ice never forms like that.'],
+        ['Before the Fifth Guild froze the harbor, I could deliver cargo across every canal before lunch.']
       ]
     }
   },
@@ -76,9 +76,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The gantry crane lifts cargo off the boats. With the boats locked in, I lift nothing.'],
-        ['From the crane cab you can see the whole shelf. The ice is clearer in some canals than others.'],
-        ['I have been oiling the crane every day so it is ready the moment the canals open.']
+        ['My dock crane unloads crates off the supply boats. With every boat stuck in ice, the crane sits idle.'],
+        ['From up in the crane cab, you can see that the ice looks cloudy in some canals and clear in others.'],
+        ['I keep the crane oiled every day so we can start unloading supplies the second the canals thaw.']
       ]
     }
   },
@@ -91,13 +91,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I cut channels with a saw. The ice closes them again overnight, faster than ordinary ice should.'],
-        ['The ice wall in the west canal is thick enough to stand on. Do not.'],
-        ['Ice saws dull fast on this stuff. I sharpen mine twice a shift.']
+        ['I try to saw open channels for the boats, yet the ice freezes right back over by morning.'],
+        ['That thick ice barrier in the west canal looks solid enough to walk on, though I would stay off it.'],
+        ['This ice is strangely hard and dulls my saw blades twice as fast as normal canal ice.']
       ],
       afterBench: {
         'q5-crossing': [
-          ['You watched the ice cross over, step by step. Now I know what my saw is fighting.']
+          ['Seeing how much heat it takes to melt this barrier explains why our saws barely make a dent.']
         ]
       }
     }
@@ -111,13 +111,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I test the canal water every week. This week, the samples did not behave like water at all.'],
-        ['I keep every sample labelled and cold. A mixed-up jar is worse than no jar.'],
-        ['Whatever was poured into the canals, there was a great deal of it. Tonnes, not buckets.']
+        ['I test the canal water every week. Since the freeze, the water samples have not behaved like pure water at all.'],
+        ['I label every water jar carefully so we can track where the mystery chemical is most concentrated.'],
+        ['Whoever dumped that chemical into the canals poured in tons of it, enough to fill whole cargo drums.']
       ],
       afterBench: {
         'q6-solution': [
-          ['You saw what happens when something is taken into water. My samples make more sense to me now.']
+          ['Measuring how much chemical dissolved in each liter of canal water makes my lab tests much clearer.']
         ]
       }
     }
@@ -132,7 +132,7 @@ export const CREW = Object.freeze([
     task: 'mirrowen-seal',
     talk: {
       default: [
-        ['I walk the docks all night. The night of the freeze, I heard drums rolling by the bollards.']
+        ['I patrol the docks every night. The evening the canals froze, I heard heavy metal drums rolling along the pier.']
       ]
     }
   }
@@ -146,20 +146,20 @@ export const TASKS = Object.freeze({
     giver: 'mirrowen-dockwatch',
     item: { label: 'Drum Seal', kind: 'bolt', pos: [-8.75, 25.75] },
     ask: [
-      'The drums I heard that night were tipped into the canal and dragged off empty.',
-      'One of them lost its seal by the bollards on the near quay. Bring it here.'
+      'The raiders dumped those drums into the canal and dragged the empties away in the dark.',
+      'One drum dropped its metal cap near the mooring posts on the near dock. Could you bring it to me?'
     ],
     remind: [
-      'By the bollards on the near quay. A metal drum seal, about the size of a fist.'
+      'Look by the mooring posts along the near dock for a fist-sized metal drum seal.'
     ],
     thanks: [
-      'Stamped with a batch number. Nothing on Mirrowen comes in drums like this.',
-      'This came from a factory somewhere far away.'
+      'It is stamped with an industrial batch number. Nobody on Mirrowen ships chemicals in drums like this.',
+      'The Fifth Guild must have a real chemical factory somewhere off-world.'
     ],
     note: {
       title: 'Mirrowen · Dock Watch Log',
       speaker: 'Bertil Moss',
-      text: 'A metal drum seal found by the quay bollards, stamped with a factory batch number. No business on Mirrowen uses drums like it.'
+      text: 'A metal drum seal found on the dock, stamped with a factory batch number. No local business uses drums like it.'
     }
   }
 });

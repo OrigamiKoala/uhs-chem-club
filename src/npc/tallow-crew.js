@@ -55,15 +55,15 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Night shift found the bins open and a heavy grey lump sitting in the salt.', 'Our salt is crushed, washed and dried. Nothing on that line makes metal.'],
-        ['Every sack leaves here at the same purity. The buyers test it, and so do we.'],
-        ['The raiders came in from the west pan, past the old hauler. Nobody heard the gate.']
+        ['Our night crew found the salt bins broken open and a heavy grey chunk sitting inside.', 'We only crush, wash, and dry salt here. Nothing in this plant makes metal.'],
+        ['Every sack of salt we ship is tested for purity. Until the Fifth Guild raid, every batch was clean.'],
+        ['The raiders snuck in from the west salt flat, right past the old cargo truck. Nobody heard the gate open.']
       ],
       afterBench: {
-        'q6-weigh': [['You weighed the drums. So the tonnage that left on the night shift was real, not a clerk\'s mistake.']]
+        'q6-weigh': [['Weighing the sealed drums proved it. Real salt went missing on the night shift, not a paperwork error.']]
       },
       afterClue: {
-        clue_tallow_slag: [['Bismuth, they told me. Not a speck of it in our salt before that night.', 'So someone carried it in. Now we find out who, and why.']]
+        clue_tallow_slag: [['So that grey chunk is bismuth. There was never a speck of bismuth in our salt before the raid.', 'Someone carried it in on purpose. Now we need to know why.']]
       }
     }
   },
@@ -77,12 +77,12 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The belt runs from the evaporator hall to the head house. The salt rides it wet and comes off dry.'],
-        ['Brine is salt water pumped up from under the pan. Boil the water off and small square crystals are left in the pans.'],
-        ['Someone stopped the belt that night. The fault log shows a hand on the cut-out, not a jam.']
+        ['This conveyor belt carries wet salt from the drying hall to the storage building.'],
+        ['We pump salty water up from under the flat, boil the water off, and collect the white salt crystals left behind.'],
+        ['Someone shut off the conveyor belt during the raid. The log shows someone pulled the emergency switch by hand.']
       ],
       afterClue: {
-        clue_tallow_slag: [['A lump of metal in a bin of salt. It would have wrecked my crusher if it had come down the belt.']]
+        clue_tallow_slag: [['A heavy lump of metal inside a salt bin would have wrecked my crusher if it had come down the belt.']]
       }
     }
   },
@@ -95,12 +95,12 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I run the assay: the test of what a sample really contains. Every batch gets one before it ships.'],
-        ['We cut the sample from the moving stream, never off the top of a heap. The top of a heap is never typical.'],
-        ['Our records go back forty years. Not one batch held metal until the night of the raid.']
+        ['I test every batch of salt to verify what is really inside before it ships out to other worlds.'],
+        ['We always scoop test samples from the moving belt so one dusty spot on top of a pile does not fool us.'],
+        ['Our lab records go back forty years. No batch ever had heavy metal in it until the Fifth Guild broke in.']
       ],
       afterBench: {
-        'q5-assay': [['Your numbers match ours. Whatever was dropped in that bin, the salt itself came out of the ground as it always has.']]
+        'q5-assay': [['Your test matches our records. The salt coming out of the ground is still completely normal.']]
       }
     }
   },
@@ -112,9 +112,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Half the pan says the Fifth turned our salt into gold. I have shovelled salt for twenty years. It stays salt.'],
-        ['The wind takes the dust off the heaps every afternoon. You get used to the taste.'],
-        ['They say the crate the raiders carried was too heavy for two people. Heavy as lead, one said.']
+        ['Half the crew thinks the Fifth Guild turned our salt into gold. I have shoveled salt for twenty years, and salt stays salt.'],
+        ['Watch the wind out here. Every afternoon it blows salt dust off the piles right into your face.'],
+        ['Witnesses saw the raiders hauling a crate that looked way too heavy for two people to carry.']
       ]
     }
   },
@@ -127,9 +127,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The evaporators run on steam. Lose the steam and the brine just sits there, cooling.'],
-        ['I keep the pumps going. The plant is old, but every part of it can be mended.'],
-        ['Someone cut the padlock on the loadout gate. A clean cut. Good tools, whoever they were.']
+        ['Our drying tanks run on steam. If the steam cuts out, the salt water just sits there cooling down.'],
+        ['I keep all the refinery pumps running. This plant is old, and every pipe needs constant repair.'],
+        ['Whoever raided us sliced the padlock on the shipping gate cleanly in half. They brought serious tools.']
       ]
     }
   },
@@ -142,7 +142,7 @@ export const CREW = Object.freeze([
     task: 'tallow-tarp',
     talk: {
       default: [
-        ['Quiet tonight. I keep looking west, toward the hauler.']
+        ['Quiet tonight, so I am keeping my eyes on the west flat near the old cargo truck.']
       ]
     }
   }

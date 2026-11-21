@@ -116,6 +116,9 @@ class SessionManager {
     // were met) and drill results. Both are synced; see applyRemoteState.
     this.notebook = [];
     this.practice = {};
+    this.commendations = [];
+    this.cleanStages = [];
+    this.loadout = {};
     // When a 'latest'-mode section (loadout, settings) was last changed here.
     this.stateMeta = { loadoutAt: 0, settingsAt: 0 };
     // sync.js sets this; the session never imports the network layer.
@@ -432,16 +435,17 @@ class SessionManager {
   }
 
   pinPlate(plateId) {
-    this.touchLoadout();
     if (!this.loadout) this.loadout = {};
     if (!Array.isArray(this.loadout.pinnedPlates)) this.loadout.pinnedPlates = [];
-    if (this.loadout.pinnedPlates.includes(plateId)) return;
+    if (this.loadout.pinnedPlates.includes(plateId)) return true;
     if (this.loadout.pinnedPlates.length >= 3) {
-      this.loadout.pinnedPlates.shift();
+      return false;
     }
+    this.touchLoadout();
     this.loadout.pinnedPlates.push(plateId);
     this.saveProgression();
     this.notify();
+    return true;
   }
 
   unpinPlate(plateId) {
@@ -496,6 +500,7 @@ class SessionManager {
       this.saveProgression();
       this.notify();
     }
+    return this.commendations;
   }
 
   recordProgress(questId, stageReached) {

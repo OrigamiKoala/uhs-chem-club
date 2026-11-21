@@ -21,6 +21,6 @@ export const INTROS = {
   },
   'q6-solution': {
     prop: { kind: 'drums', opts: { n: 2, color: 0x4a5560, band: 0x8c2a1e, tipped: true } },
-    steps: cloaked('On the quay, by those drums. The same hood.', 'It left them empty. Whatever was inside is in the canal now.')
+    steps: cloaked('Down on the dock by those drums, that same hooded raider again.', 'They emptied the drums straight into the canal.')
   }
 };

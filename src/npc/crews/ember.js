@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The shelters run on volcano heat piped up from below. When the pipes were tapped, the cold came in fast.'],
-        ['We doubled up families in the warmest shelters. Nobody slept alone that week.'],
-        ['Ember Reach was settled for the heat. Without it, this is just a cold mountain.']
+        ['Our colony shelters stay warm using heat piped up from the volcano below. When someone tapped the pipes, the shelters froze fast.'],
+        ['We moved families together into the warmest buildings so everyone stayed safe while the heat was down.'],
+        ['People only settled Ember Reach for the volcano heat. Without those pipes, this mountain is freezing.']
       ],
       afterClue: {
         clue_ember_siphon: [
-          ['A hidden rig, drinking our heat underground. All that warmth, and they used it to run machines.', 'We will not forget that.']
+          ['They built a hidden rig underground to steal our colony\'s volcano heat. That takes huge amounts of energy.']
         ]
       }
     }
@@ -61,13 +61,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The heat pipes are older than I am. I patch them, and they keep going.'],
-        ['Somebody spliced a second line into the main. Neat work, done fast, in the dark.'],
-        ['Steam pipes sing when the pressure is right. These have been quiet for days.']
+        ['These volcano heat pipes are older than I am, so I spend every day patching leaks to keep the shelters warm.'],
+        ['Someone cut into our main heat pipe and attached a side branch in the dark. It was fast, professional work.'],
+        ['Normally these steam pipes hum loudly with pressure. Since the Fifth Guild tapped them, they have gone dead quiet.']
       ],
       afterBench: {
         'q1-flow': [
-          ['You followed the heat from hot to cold. That is what my pipes do, all day, every day.']
+          ['Frost on the Fifth Guild\'s pipe proves it is pulling heat inward, straight out of our volcano line.']
         ]
       }
     }
@@ -81,9 +81,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The volcano breathes through these vents. I listen to it with instruments, and it has been quieter since the tap.'],
-        ['Yellow crust around a vent is sulfur. It forms where hot gas meets cold air.'],
-        ['The terraces here are old lava flows, one on top of the other, like the pages of a book.']
+        ['My sensors track the heat rising through these volcanic vents. The heat flow dropped sharply the night the pipe was tapped.'],
+        ['That bright yellow crust around the volcanic vents is sulfur, left behind when hot gas cools in the air.'],
+        ['These stepped rock ridges are ancient lava flows stacked on top of each other.']
       ]
     }
   },
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['My job is to get close to things that are too hot, and fix them before they get hotter.'],
-        ['The lava lobes still glow at night. Do not let that fool you into thinking they are soft.'],
-        ['Heat suits are heavy. Climbing the terraces in one is the hardest part of the job.']
+        ['My crew works right beside the hottest volcano vents to repair valves before they fail.'],
+        ['The dark lava pools still glow at night, so watch your step near the edges.'],
+        ['We wear heavy insulated suits out here because the rock vents can burn straight through normal boots.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Soup keeps people warm from the inside. I have made more soup this week than all last year.'],
-        ['I cook on a vent stove. Free heat, if you do not mind the smell of sulfur in your bread.'],
-        ['The children think the Fifth are ghosts in the pipes. I tell them ghosts do not need heat.']
+        ['With the shelter heaters struggling, I have been cooking hot soup nonstop for the whole colony.'],
+        ['Our kitchen stoves run straight off volcanic steam, which saves fuel even if everything smells faintly of sulfur.'],
+        ['The kids think ghosts stole our heat, though ghosts do not build heavy steel pipes into a volcano.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'ember-bolt',
     talk: {
       default: [
-        ['I keep the pumps by the wellheads. The night they tapped the line, the main pump nearly ran dry.']
+        ['I run the steam pumps at the volcano wells. The night the Fifth Guild tapped our line, the main pump nearly stalled.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'ember-pumps',
     item: { label: 'Sheared Pipe Bolt', kind: 'bolt', pos: [90.75, 70.75] },
     ask: [
-      'Whoever tapped the main line threw the old fittings aside in a hurry.',
-      'One bolt went over by the far wellhead. Find it and I will tell you how they did it.'
+      'Whoever tapped our main heat pipe tossed the old pipe bolts aside in a hurry.',
+      'One bolt landed near the far east steam well. Bring it to me so I can see how they cut it.'
     ],
     remind: [
-      'The wellhead at the east end of the field. A short steel bolt, cut clean.'
+      'Check near the steam well at the east end of the field for a short cut steel bolt.'
     ],
     thanks: [
-      'Cut with a tool, not melted. They opened our main line on purpose, with time to spare.',
-      'I will keep this for the warden.'
+      'This bolt was sliced cleanly with a heavy cutter. They opened our main heat pipe deliberately.',
+      'I will hand this over to the shelter warden.'
     ],
     note: {
       title: 'Ember Reach · Pump Keeper\'s Note',
       speaker: 'Silas Grey',
-      text: 'A pipe bolt cut clean by a tool near the east wellhead. The main heat line was opened on purpose.'
+      text: 'A steel pipe bolt cut cleanly with a tool near the east steam well, proving the main heat line was tapped on purpose.'
     }
   }
 });

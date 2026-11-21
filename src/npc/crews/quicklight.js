@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The fuel towers burn steady for a reason. When they burned too fast, we had minutes to react.'],
-        ['Every tower has a vent, a gauge and a man watching both. I am one of those men.'],
-        ['Lightning hits the towers every storm. They are built for that. They are not built for sabotage.']
+        ['Our fuel refinery towers are meant to burn at a slow, steady pace. When they spiked, we barely had minutes to cool them.'],
+        ['Each tower has an exhaust vent, a heat gauge, and an operator watching both around the clock.'],
+        ['These towers are built to survive lightning strikes during storms, though they were never built to survive sabotage.']
       ],
       afterClue: {
         clue_quicklight_flare: [
-          ['The Catalyst. So the Fifth have a leader, and the leader has a name.', 'I would like to know what else that name has signed.']
+          ['So the Fifth Guild\'s leader goes by The Catalyst. That means an experienced chemist is running this whole operation.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I clean the vents. Usually soot. This week it was a fine grey dust I had never seen.'],
-        ['Wear a mask in the vents. The dust gets into everything, even your teeth.'],
-        ['One vent was spotless inside, like someone had already been in there with a brush.']
+        ['I sweep black soot out of the fuel vents every week, yet this time I found a fine yellow-grey dust I never saw before.'],
+        ['Always wear a respirator near the vents so you do not breathe in that strange chemical dust.'],
+        ['One vent was wiped spotless right before the overheating started, like someone climbed inside to plant that powder.']
       ]
     }
   },
@@ -76,13 +76,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['From the control room I watch every tower at once. When the spikes came, every needle went red together.'],
-        ['We log the burn every minute. The logs are how we know something changed.'],
-        ['Ten times too fast, the readings said. I checked the instruments three times before I believed them.']
+        ['From the control room I monitor every fuel tower at once. When the spike hit, every heat needle shot straight into red.'],
+        ['We record how fast the fuel burns every minute, which is how we spotted the sudden jump immediately.'],
+        ['The fuel started burning ten times faster than normal. I checked our sensors three times before I believed it.']
       ],
       afterBench: {
         'q1-watch': [
-          ['You timed the burn yourself. The control room logs it the same way, minute by minute.']
+          ['Timing how fast the fuel burns on your bench matches our control room logs minute by minute.']
         ]
       }
     }
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The storm belt never really stops. I track which storms will reach the towers and when.'],
-        ['The night the vents were spiked, there was a storm. The perfect cover for climbing a tower unseen.'],
-        ['A good storm smells sharp before it arrives. You learn the smell out here.']
+        ['Storms roll across this refinery region almost nonstop, so my job is tracking when lightning will hit the towers.'],
+        ['A heavy storm hit the exact night someone spiked our vents, giving the Fifth Guild perfect cover to climb unseen.'],
+        ['If you smell sharp ozone in the rain, a lightning storm is right overhead.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I haul fuel from the towers to the depot. Since the spike, I have been hauling water to cool them instead.'],
-        ['The roads out here flood every storm. The tanker sits high for a reason.'],
-        ['Two trucks I did not recognise were parked by the depot the week before. Gone the next morning.']
+        ['Normally I drive fuel tankers from the towers to our storage yard. Since the spike, I have been hauling cooling water instead.'],
+        ['Storm water floods these roads fast, which is why our fuel trucks ride so high off the ground.'],
+        ['Two unmarked trucks parked near our storage yard a week before the sabotage, then vanished overnight.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'quicklight-casing',
     talk: {
       default: [
-        ['I sit in the radio shack and listen to the storms. Sometimes there are voices in them that should not be there.']
+        ['I monitor our radio shack through every storm, and lately I keep catching secret Fifth Guild broadcasts in the static.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'quicklight-radio',
     item: { label: 'Spent Flare Casing', kind: 'bolt', pos: [-4.25, 2.25] },
     ask: [
-      'The night the vents were spiked, someone fired a flare near the middle of the refinery. A signal.',
-      'The casing should still be lying where it landed. Bring it to me.'
+      'The night our vents were spiked, someone shot a signal flare right over the middle of the refinery.',
+      'Its empty metal tube should still be lying where it landed. Could you bring it to me?'
     ],
     remind: [
-      'Near the middle of the refinery yard. A blackened tube about the length of your hand.'
+      'Look near the middle of the refinery yard for a blackened metal flare tube.'
     ],
     thanks: [
-      'A signal flare, and not one of ours. Somebody was telling somebody the job was done.',
-      'I will listen harder tonight.'
+      'This is an off-world signal flare, nothing our refinery uses. Someone was signaling their crew that the sabotage was done.',
+      'I will keep listening to the radio tonight.'
     ],
     note: {
       title: 'Quicklight · Radio Clerk\'s Note',
       speaker: 'Caspar Lind',
-      text: 'A spent signal flare casing from the night the vents were spiked. It is not refinery issue: someone signalled that the job was done.'
+      text: 'A burned-out signal flare tube from the night the vents were spiked, showing someone signaled that the sabotage was done.'
     }
   }
 });

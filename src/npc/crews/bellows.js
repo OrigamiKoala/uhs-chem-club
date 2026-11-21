@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Every tank on this deck was jammed in one night. Valves wedged, gauges smashed, and nobody saw a thing.'],
-        ['We relieve the tanks one at a time, slowly. Rush it and the whole deck learns why.'],
-        ['The fuel feeds every town below the clouds. When the deck stops, they freeze.']
+        ['The Fifth Guild jammed every fuel tank on this cloud platform in one night, wedging valves shut and smashing gauges.'],
+        ['We have to vent these pressurized tanks slowly, one at a time, so none of them burst.'],
+        ['This fuel station heats every town below the clouds. If our tanks stay jammed, those towns freeze.']
       ],
       afterClue: {
         clue_bellows_warm: [
-          ['Twelve days in freezing air and that tank never cooled. Nothing we burn up here does that.', 'Whatever is inside, it is not our fuel.']
+          ['Twelve days in freezing air and that sealed cylinder never cooled down. Nothing we store up here behaves like that.', 'Whatever is inside it, it is definitely not our fuel.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Open a valve too fast and the pipe frosts white in seconds. I have the scars to prove it.'],
-        ['The jammed valves were wedged with the same steel shims. Someone came prepared.'],
-        ['A hiss means a leak. A whistle means a bad leak. Silence means run.']
+        ['If you open a high-pressure gas valve too fast, the pipe freezes solid in seconds.'],
+        ['Whoever jammed our valves wedged them shut with matching steel wedges. They came here ready for sabotage.'],
+        ['Listen closely around the pipes. A loud hiss means a gas leak, so clear the area right away.']
       ]
     }
   },
@@ -76,13 +76,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I read every gauge on the deck twice a shift. The readings tell me what each tank is doing before it does it.'],
-        ['Gauges lie when they are cold. You learn to tap the glass and wait.'],
-        ['The smashed gauges were the important ones. Whoever did this knew which to break.']
+        ['I check every pressure gauge twice a shift so we spot dangerous buildup before a tank bursts.'],
+        ['Cold air makes the old dials stick, so we tap the glass before writing down a reading.'],
+        ['The Fifth Guild smashed our most important pressure gauges on purpose so we could not see what they did.']
       ],
       afterBench: {
         'q3-ideal': [
-          ['You tied the whole tank together in one rule. I keep a copy of that on my clipboard now.']
+          ['Now we can calculate how much gas sits inside a sealed tank without risking opening a jammed valve.']
         ]
       }
     }
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The deck hangs on cables over nothing but cloud. You get used to the sway.'],
-        ['I check every cable at dawn. Ice on a cable doubles its load.'],
-        ['Look down through the grating if you like. I stopped looking years ago.']
+        ['This whole fuel station hangs from heavy steel cables high above the clouds. You get used to the swaying.'],
+        ['I inspect the suspension cables every morning because ice buildup adds dangerous extra weight.'],
+        ['Something hissed out of a damaged vent near the north tanks earlier, though nobody could see the gas.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['One spark near a venting tank and we lose the deck. I watch for sparks.'],
-        ['The sealed tank sits warm in the frost. Snow melts off it as fast as it lands.', 'I keep my distance.'],
-        ['My suit is rated for heat. Up here it is mostly cold that tries to kill you.']
+        ['One stray spark near a leaking fuel tank could ignite the whole platform, so I watch for sparks all shift.'],
+        ['The strange sealed cylinder the raiders left stays warm even in freezing wind. Snow melts right off it.', 'I keep my distance from that thing.'],
+        ['My fire suit protects me from flames, though up in these clouds the freezing wind is usually the bigger problem.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'bellows-tag',
     talk: {
       default: [
-        ['I fly the skiff between the deck and the towns below. Today I fly nothing until the tanks are safe.']
+        ['I fly fuel shuttles down to the towns below the clouds. Everything is grounded until the tanks are safe.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'bellows-courier',
     item: { label: 'Stamped Cylinder Tag', kind: 'metal', pos: [13.75, 91.25] },
     ask: [
-      'The night of the jamming I saw two hooded figures roll a sealed cylinder onto the deck.',
-      'A tag fell off it near the north edge. Bring it to me before the wind takes it.'
+      'The night the tanks were jammed, I saw two hooded raiders roll a strange sealed cylinder onto the platform.',
+      'A metal tag fell off it near the north landing pad. Could you grab it before the wind blows it away?'
     ],
     remind: [
-      'The north edge, near where the skiffs land. A small steel tag.'
+      'Check the north edge near where the shuttles land. It is a small steel tag.'
     ],
     thanks: [
-      'A triangle stamped in the steel. The same mark they left on Erebus.',
-      'So that cylinder came with them. It was never ours.'
+      'There is a triangle stamped right into the steel, just like the mark left on Erebus.',
+      'That proves the Fifth Guild brought that warm cylinder here themselves.'
     ],
     note: {
-      title: 'Bellows · Skiff Pilot\'s Report',
+      title: 'Bellows · Shuttle Pilot\'s Report',
       speaker: 'Lennart Voss',
-      text: 'A steel tag from the sealed cylinder, stamped with the Fifth\'s triangle mark. The cylinder was brought onto the deck by the raiders.'
+      text: 'A steel tag from the sealed cylinder, stamped with the Fifth Guild\'s triangle mark. The raiders brought the warm cylinder here themselves.'
     }
   }
 });

@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The marsh grid powers every town on the coast. The clamps the Fifth hung on it drain power day and night.'],
-        ['We built the grid on the salt pools because brine carries current well. Somebody else noticed that too.'],
-        ['I have lines down in four places and nobody to fix them. Everyone is busy chasing clamps.']
+        ['Our marsh power grid supplies electricity to every coastal town, and the Fifth Guild\'s illegal clamps are draining it nonstop.'],
+        ['We built our power lines across these salty pools because salt water carries electricity well. Now raiders are using that against us.'],
+        ['Four power lines are down right now because my whole crew is busy hunting down illegal power taps.']
       ],
       afterClue: {
         clue_brinewire_clamp: [
-          ['Tonnes of pure copper, pulled out of our pools. That is enough wire to build something enormous.', 'What are they building?']
+          ['Tons of pure copper pulled straight out of our pools. That is enough copper wire to power something huge.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Never touch a line until you have tested it, grounded it and tested it again.'],
-        ['The clamps bite right through the insulation into the wire. Neat, fast work.'],
-        ['Up a pole in a marsh wind, you learn to hold on with your knees.']
+        ['Always test a power line and shut off the breaker before touching it. Marsh water makes shocks twice as dangerous.'],
+        ['The Fifth Guild\'s clamps bite right through the rubber coating into the live copper wire. Whoever built them knew power grids.'],
+        ['We also found pylons rusting badly wherever two different metals were bolted together in the salty air.']
       ]
     }
   },
@@ -76,9 +76,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['My pools used to be blue-green. Now the edges are bare, like something stripped them.'],
-        ['Copper sulfate turns the brine blue. The Fifth\'s clamps are drinking the blue right out of it.'],
-        ['I rake the pool edges every morning. This week the rake comes up coated in bright copper.']
+        ['These marsh pools used to glow rich blue-green, and now they are turning pale and empty.'],
+        ['Dissolved copper gives the salt pools that bright blue color, so someone is pulling the copper right out of the water.'],
+        ['Whenever I pull a metal tool out of the pools this week, it comes up coated in shiny red copper.']
       ]
     }
   },
@@ -91,13 +91,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I maintain the marsh batteries. Each one is a row of tanks, and every tank is checked by hand.'],
-        ['The batteries hum when they are healthy. A silent one needs me.'],
-        ['The stolen current was not wasted. They used it for something, very deliberately.']
+        ['I keep the marsh\'s backup batteries running. Each battery is a row of chemical tanks I inspect by hand.'],
+        ['When the Fifth Guild cut our connecting salt bridges, every backup battery on the grid died at once.'],
+        ['They did not steal our electricity just to cause a blackout. They were powering something inside those pools.']
       ],
       afterBench: {
         'q3-galvanic': [
-          ['You built a cell that runs by itself. That is my whole job, done on a table.']
+          ['Building a working chemical battery on your bench shows exactly how our marsh power stations run.']
         ]
       }
     }
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I read the meters at every substation. The readings dropped the same night across the whole grid.'],
-        ['A meter does not lie, but it can be fooled. These were not fooled. They were bypassed.'],
-        ['I walk twenty kilometres of boardwalk a week. My boots are on their third soles.']
+        ['I check the power meters at every station across the marsh, and every reading plunged on the exact same night.'],
+        ['The raiders bypassed our meters completely by clamping cables straight onto the overhead lines.'],
+        ['Walking twenty kilometers of wooden boardwalk every week means I spot any new wire running into the pools.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'brinewire-jaw',
     talk: {
       default: [
-        ['I patrol the pools at night. Last week I chased off a clamp crew. They ran faster than I did.']
+        ['I patrol the wooden walkways at night. Last week I caught a Fifth Guild crew clamping the lines, though they outran me.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'brinewire-patrol',
     item: { label: 'Cut Clamp Jaw', kind: 'metal', pos: [-4.25, -1.75] },
     ask: [
-      'When the clamp crew ran, one of them hacked a clamp off the line and dropped half of it.',
-      'It landed somewhere near the middle boardwalks. Find it for me?'
+      'When that Fifth Guild crew bolted, one of them chopped their power clamp loose and dropped half of it.',
+      'It fell somewhere near the middle boardwalks. Could you grab it for me?'
     ],
     remind: [
-      'Near the middle boardwalks. A heavy steel jaw with teeth.'
+      'Check near the middle boardwalks for a heavy steel clamp jaw with teeth.'
     ],
     thanks: [
-      'Bright copper crusted in the teeth. They were pulling metal from the pools straight onto these.',
-      'I will hand it to the supervisor.'
+      'Look at the bright copper crusted right onto the steel teeth. They were using stolen power to plate copper from our pools.',
+      'I will hand this straight to the grid supervisor.'
     ],
     note: {
       title: 'Brinewire · Night Patrol Report',
       speaker: 'Ambrose Tull',
-      text: 'Half a power clamp cut loose by a fleeing crew, its teeth crusted with bright copper from the pools.'
+      text: 'Half a power clamp dropped by a fleeing Fifth Guild crew, with bright copper plated directly onto its steel teeth.'
     }
   }
 });

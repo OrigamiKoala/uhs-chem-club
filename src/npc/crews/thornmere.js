@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The thorn swamp hides its paths. Stay on the mounds and you stay dry, mostly.'],
-        ['The Fifth built their outpost on the only solid ground for miles. They chose well.'],
-        ['At night the outpost hums. Not voices. Machines.']
+        ['Stay on the dry earth mounds while crossing this swamp so you do not sink into the mud.'],
+        ['The Fifth Guild built their armored swamp outpost on the only solid patch of ground for miles.'],
+        ['At night you can hear heavy chemical machines humming loudly behind those plastic armor walls.']
       ],
       afterClue: {
         clue_thornmere_carapace: [
-          ['Lead under the plastic. You only build like that if you fear what is inside.', 'So what is inside?']
+          ['Heavy lead plates hidden underneath the plastic armor. You only shield a building with lead if something inside gives off radiation.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I cut reeds for thatch. The reeds by the outpost have gone grey and brittle.'],
-        ['A good reed bends. A dead one snaps. More of them snap every week.'],
-        ['Mind the thorns. They catch cloth and they do not let go.']
+        ['I harvest marsh reeds for roofing, and the reeds growing near the Fifth Guild outpost have turned grey and brittle.'],
+        ['Healthy marsh reeds bend easily in the wind, yet the plants near their drainage pipes snap right in half.'],
+        ['Watch out for the thick thorn bushes around the trails because they shred jackets fast.']
       ]
     }
   },
@@ -76,13 +76,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The outpost armour is plastic, but tough. I tried a blade on an offcut and the blade bent.'],
-        ['I test the swamp water for oils and gases. Thornmere has plenty of both.'],
-        ['Swamp gas bubbles up wherever you step. It burns, so no open flames near the mounds.']
+        ['The Fifth Guild\'s outpost armor is made of super-tough plastic. I tried slicing a scrap piece and bent my knife blade.'],
+        ['I test the swamp pools for natural oils and black tar, which the Fifth Guild hauls into their plant every night.'],
+        ['Flammable swamp gas bubbles up wherever you step, so keep open flames far away from the mud.']
       ],
       afterBench: {
         'q1-chains': [
-          ['You built carbon chains on the bench. The armour is made the same way, only much, much longer.']
+          ['Now that you tested the swamp tar\'s carbon chains, you can see what raw material they use to build that plastic armor.']
         ]
       }
     }
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I pull useful things out of the swamp. Old pumps, old pipe. The Fifth throw away good gear.'],
-        ['The armour plates are heavier than they look. I could barely lift a corner of one.'],
-        ['Whatever they are hiding, they have spent a fortune keeping it hidden.']
+        ['I salvage old pumps and steel pipes from the marsh, and the Fifth Guild dumps expensive gear right in the mud.'],
+        ['Those plastic armor panels are way too heavy to be plain plastic. I could barely lift one corner off the ground.'],
+        ['Whatever the Fifth Guild is hiding inside that outpost, they spent a fortune sealing it up.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I treat thorn cuts and swamp fever, mostly. Keep your cuts clean and covered.'],
-        ['Two of the salvage crew came back from the outpost fence feeling sick. No fever, no cut. Just sick.'],
-        ['Boil the water. Then boil it again. The swamp is not kind to stomachs.']
+        ['Usually I treat thorn scratches and swamp colds, so keep any cuts clean and bandaged out here.'],
+        ['Two salvagers came back from the Fifth Guild\'s fence feeling deeply sick even with zero fever or injury.'],
+        ['Always boil swamp water before drinking it, especially anywhere downstream of the Fifth Guild\'s plant.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'thornmere-thread',
     talk: {
       default: [
-        ['I watch the outpost from the high mound. Hooded figures go in. Fewer come out.']
+        ['I watch the Fifth Guild outpost from the high ridge, and hooded crews keep hauling heavy drums inside every night.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'thornmere-lookout',
     item: { label: 'Torn Cloak Thread', kind: 'cloth', pos: [31.75, -70.25] },
     ask: [
-      'Last night one of the hooded figures snagged a cloak on the thorns near the outpost gate.',
-      'Pull what is left off the thorns and bring it here. Stay off the gate\'s ground.'
+      'Last night one of the hooded Fifth Guild workers snagged their cloak on the thorns near the outpost gate.',
+      'Could you grab that torn cloth for me? Just stay clear of the gate itself.'
     ],
     remind: [
-      'The thorns near the outpost gate. A tuft of dark cloth.'
+      'Check the thorn bushes near the outpost gate for a snag of dark grey cloth.'
     ],
     thanks: [
-      'Dark grey, heavy weave. The watchman on Tallow described cloaks just like this.',
-      'Same people, every world.'
+      'Heavy dark grey fabric, the exact same cloak cloth the night watch on Tallow described.',
+      'It really is the same Fifth Guild crew operating across every world.'
     ],
     note: {
       title: 'Thornmere · Lookout\'s Find',
       speaker: 'Gideon Marsh',
-      text: 'Dark grey cloak cloth torn on the thorns by the outpost gate. It matches the cloaks the Tallow night watch described.'
+      text: 'Dark grey cloak cloth torn on the thorns near the outpost gate, matching the cloaks seen during the raid on Tallow.'
     }
   }
 });

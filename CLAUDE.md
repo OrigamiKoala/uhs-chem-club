@@ -16,7 +16,7 @@ Avalon is the UHS Chemistry Club's competition portal for middle- and high-schoo
 ## Codebase Map
 
 - `src/main.js` — App bootstrapper (stage, HUD, hash router).
-- `src/learn/` — Learn track (curriculum registry, quests, tabletop kits in `src/learn/table/kits/`, practice banks in `src/learn/bank/`).
+- `src/learn/` — Learn track (curriculum registry, quests, tabletop kits in `src/learn/table/kits/`, practice banks in `src/learn/bank/`). A kit's `dress3d` stands a fixture's picture up in space at 3D On (gas crowds `gas-3d.js`; Ligar's overlapping orbitals as live 3D surfaces `mo-3d.js`), and its flat painter then skips what the 3D shows (`b.bodies`).
 - `src/quest3d/` — Charge Gardens chamber (Quest 1 / competition campaign).
 - `src/three/` — Persistent WebGL stage (`src/three/stage.js`) and 3D worlds.
 - `src/npc/` & `src/three/npc/` — World crews (NPCs): pure data/sim/talk (`crews.js` registry, `tallow-crew.js` + `crews/<world>.js`, `crew-sim.js`, `talk.js`, `models.js`) and runtime (`attach.js` called by every Learn world, `crew.js`, `figures.js`); talk card `src/ui/npc-card.js`; models in `public/models/npc/` built by `tools/npc/build-models.mjs` (sources in git-ignored `assets-src/rocketbox/`); posts proposed by `tools/npc/pick-posts.mjs`; checked by `verify:npc`.

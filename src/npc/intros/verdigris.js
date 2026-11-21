@@ -18,7 +18,7 @@ export const INTROS = {
   },
   'q3-weak': {
     prop: { kind: 'tank', opts: { liquid: 0x9ab04a, level: 0.8 }, effects: [{ kind: 'drip', at: 'spout', color: 0xb0c860 }] },
-    steps: radio('voice:verdigris-intake', 'Intake here. Two waste tanks, same amount of acid in each by the papers.', 'This one ate through its drain cock in a day. The other barely stains.')
+    steps: radio('voice:verdigris-intake', 'Intake here. Both waste tanks list the same amount of acid on paper.', 'This one ate right through its drain valve in a day, while the other barely stains.')
   },
   'q7-buffer': {
     prop: { kind: 'tank', opts: { liquid: 0x8fb4c8, level: 0.45 }, effects: [{ kind: 'drip', at: 'spout', color: 0x9ab04a }] },

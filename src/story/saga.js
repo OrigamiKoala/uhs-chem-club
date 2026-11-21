@@ -16,34 +16,34 @@ export const ACTS = [
     order: 1,
     title: 'Act I: The Alchemy Rumor',
     question: 'Can the Fifth Guild really turn salt into heavy metal?',
-    answer: 'No. Ordinary chemistry cannot turn one element into another—something else is going on.',
+    answer: 'No. Ordinary chemistry cannot turn one element into another, so something else is going on.',
     worlds: ['unit01', 'unit02', 'unit03'],
-    summary: 'Strange metal showed up in pure salt, lighthouses went dark, and rock was sliced smooth like glass.'
+    summary: 'Heavy metal showed up inside pure salt, lighthouses went dark, and volcanic rock was sliced smooth like glass.'
   },
   {
     id: 'act2',
     order: 2,
     title: 'Act II: Impossible Heat and Metal',
     question: 'Where is the extra heat and extra metal coming from?',
-    answer: 'Not alchemy and not normal chemistry. Something inside the atom is making the heat.',
+    answer: 'Ordinary chemical reactions cannot make this much heat or extra metal. Something inside the atom itself is doing it.',
     worlds: ['unit04', 'unit05', 'unit06', 'unit07'],
-    summary: 'A sealed tank stayed hot for 12 days in freezing air, volcano heat vanished underground, and a foundry logged more iron than ore.'
+    summary: 'A sealed tank stayed hot for 12 days in freezing air, volcano heat vanished underground, and a foundry logged more iron than its ore could hold.'
   },
   {
     id: 'act3',
     order: 3,
     title: 'Act III: Who Is the Fifth Guild?',
     question: 'Who is behind the Fifth Guild?',
-    answer: 'They are the old crews the Four Guilds left behind, led by someone called The Catalyst.',
+    answer: 'They are the old outpost crews the Four Guilds abandoned thirty years ago, led by someone called The Catalyst.',
     worlds: ['unit08', 'unit09', 'unit10', 'unit11'],
-    summary: 'Hidden chemical ponds, acid runoff, stolen copper, and spiked fuel all point to a huge secret build—and the people running it.'
+    summary: 'Hidden chemical ponds, acid runoff, stolen copper, and spiked fuel all point to a huge secret project and the people running it.'
   },
   {
     id: 'act4',
     order: 4,
     title: 'Act IV: What Are They Building?',
     question: 'What is the Fifth Guild building, and where is it?',
-    answer: 'An old nuclear power plant on Cinder Halo. Splitting uranium atoms—not magic—explains every clue.',
+    answer: 'An old nuclear power plant on Cinder Halo. Splitting uranium atoms explains every clue.',
     worlds: ['unit12', 'unit13', 'unit14'],
     summary: 'Sorted metal ships to Cinder Halo, plastic armor hides lead shields, and an old nuclear reactor is running hot.'
   }
@@ -168,7 +168,7 @@ export const CLUES = {
     source: 'Cinder Halo · The Transmutation Core',
     name: 'The Control-Rod Log',
     summary: 'The logbook from an old nuclear reactor, showing all the safety rods pulled out.',
-    note: 'It was never magic or alchemy. They restarted a uranium nuclear reactor, which explains the heat, the lead armor, and the strange metals.'
+    note: 'They restarted an old uranium nuclear reactor. Splitting uranium atoms explains the heat, the lead armor, and the strange metals.'
   }
 };
 
@@ -180,7 +180,7 @@ export const SPINE_BEATS = [
     title: 'Heavy Metal in Pure Salt',
     prereq: { bosses: ['unit01/boss-hopper'] },
     speaker: 'Vess',
-    transmission: 'I tested the chunk from Tallow—it is bismuth, a heavy metal that does not belong in salt. Ordinary chemistry cannot turn salt into bismuth.',
+    transmission: 'I tested the chunk from Tallow, and it is bismuth, a heavy metal that does not belong in salt. Ordinary chemistry cannot turn salt into bismuth.',
     onScreen: 'Vess sets a heavy metal chunk on the table beside the star map.'
   },
   {
@@ -203,7 +203,7 @@ export const SPINE_BEATS = [
     title: 'The Impossible Shipping Log',
     prereq: { bosses: ['unit07/boss-golem'] },
     speaker: 'Vess',
-    transmission: 'Kettle\'s log claims 50 tons of iron came from 40 tons of ore. Chemistry never creates extra mass, so something else is going on.',
+    transmission: 'Kettle\'s log claims 50 tons of iron came from 40 tons of ore. Chemistry never creates extra mass, so that extra iron came from somewhere else.',
     onScreen: 'The captured shipping log glows amber on the ship screen.'
   },
   {
@@ -213,7 +213,7 @@ export const SPINE_BEATS = [
     title: 'Who They Really Are',
     prereq: { clues: ['clue_kettle_ledger'] },
     speaker: 'Vess',
-    transmission: 'Their leader goes by The Catalyst. They are the old outpost crews the Four Guilds left behind thirty years ago.',
+    transmission: 'Their leader goes by The Catalyst. They are the old outpost crews the Four Guilds abandoned thirty years ago.',
     onScreen: 'Old crew lists match the radio signals coming from the Fifth Guild.'
   },
   {
@@ -231,15 +231,15 @@ export const SPINE_BEATS = [
 export const CAMPAIGN_STORY = [
   {
     speaker: 'Vess',
-    text: 'Welcome aboard the Avalon. Someone calling themselves the Fifth Guild is hitting outposts across the rim, and nobody knows who they are or what they want.'
+    text: 'Welcome aboard the Avalon. A mysterious group calling themselves the Fifth Guild is hitting Four Guilds outposts across the rim, and nobody knows who they are or what they are building.'
   },
   {
     speaker: 'Vess',
-    text: 'Strange clues keep turning up: heavy metal inside pure salt, sealed tanks staying hot in freezing air, and factories logging more iron than rock. People whisper it is magic.'
+    text: 'Strange clues keep turning up: heavy metal inside pure salt, sealed tanks staying hot in freezing air, and factories logging more iron than their ore can hold. People whisper it is magic.'
   },
   {
     speaker: 'Vess',
-    text: 'There is no magic out here—only chemistry. Visit the worlds, test the clues with your own hands, and we will figure out who the Fifth Guild is and what they are building.'
+    text: 'Every one of those clues has a real chemistry explanation. Visit each world, test the evidence yourself, and we will find out who the Fifth Guild is and what they are up to.'
   }
 ];
 
@@ -261,59 +261,59 @@ export const EPISODES = {
     worldId: 'unit01',
     worldName: 'Tallow',
     act: 'act1',
-    arrival: 'Heavy metal showed up inside Tallow\'s pure salt—rumor says the Fifth turned salt into gold.',
+    arrival: 'Heavy metal showed up inside Tallow\'s pure salt, and rumors say the Fifth Guild turned salt into gold.',
     closing: 'The salt refinery is safe, and we pulled a heavy bismuth chunk out of the pure salt.',
     spoilFamily: 'Salt husks',
     bossId: 'boss-hopper',
     clueId: 'clue_tallow_slag',
     incident: 'Strange heavy metal chunks turned up inside Tallow\'s pure salt bins.',
     objective: 'Test the salt and look inside the atom to see if chemistry can really make heavy metal from salt.',
-    caseFileNote: 'Bismuth found in pure salt. Chemistry can\'t make it.'
+    caseFileNote: 'Bismuth found in pure salt. Ordinary chemistry cannot make it.'
   },
   unit02: {
     worldId: 'unit02',
     worldName: 'Lanternfall',
     act: 'act1',
-    arrival: 'The Fifth blacked out Lanternfall\'s lighthouse towers using light our sensors can\'t see.',
-    closing: 'The glacier lighthouses are back on, and we found an invisible-light UV lens.',
+    arrival: 'The Fifth Guild blacked out Lanternfall\'s lighthouse towers using light our sensors cannot see.',
+    closing: 'The glacier lighthouses are back on, and we found a lens made for invisible ultraviolet light.',
     spoilFamily: 'Lamp moths',
     bossId: 'boss-eater',
     clueId: 'clue_lantern_lens',
-    incident: 'The lighthouse towers went dark after the Fifth swapped in strange optics.',
+    incident: 'The lighthouse towers went dark after the Fifth Guild swapped out the lenses.',
     objective: 'Measure light and electrons to relight the towers and find how their ships fly in the dark.',
-    caseFileNote: 'UV lens found—Fifth ships fly blind in ultraviolet.'
+    caseFileNote: 'UV lens found. Fifth Guild ships fly unseen using ultraviolet light.'
   },
   unit03: {
     worldId: 'unit03',
     worldName: 'Ligar',
     act: 'act1',
-    arrival: 'A Fifth Guild blast trapped Ligar\'s miners—and sliced solid basalt glass-smooth.',
-    closing: 'The miners are out safe, and the glass-smooth rock proves the Fifth has extreme heat.',
+    arrival: 'A Fifth Guild blast trapped Ligar\'s miners and sliced solid volcanic rock smooth like glass.',
+    closing: 'The miners are out safe, and the glass-smooth rock proves the Fifth Guild has an extreme heat source.',
     spoilFamily: 'Basalt wardens',
     bossId: 'boss-warden',
     clueId: 'clue_ligar_scorch',
     incident: 'A blast buried the rescue tunnel and cut volcanic rock smooth like glass.',
     objective: 'Test how atoms bond in the rock and tunnel gases so we can clear the pass safely.',
-    caseFileNote: 'Basalt melted glass-smooth. The Fifth has extreme heat.'
+    caseFileNote: 'Volcanic rock melted glass-smooth. The Fifth Guild has an extreme heat source.'
   },
   unit04: {
     worldId: 'unit04',
     worldName: 'Bellows',
     act: 'act2',
-    arrival: 'The Fifth jammed Bellows\' fuel tanks—and left a sealed cylinder that stays hot in freezing air.',
+    arrival: 'The Fifth Guild jammed Bellows\' fuel tanks and left behind a sealed tank that stays hot in freezing air.',
     closing: 'The fuel tanks are safe, and the sealed tank stayed hot for 12 days in freezing air.',
     spoilFamily: 'Gas bladders',
     bossId: 'boss-compressor',
     clueId: 'clue_bellows_warm',
     incident: 'Pressure is spiking in the jammed tanks, and one sealed tank refuses to cool down.',
     objective: 'Use how gases behave to relieve the tanks and check why the sealed cylinder stays hot.',
-    caseFileNote: 'Sealed tank stayed hot 12 days in freezing air. Not chemical.'
+    caseFileNote: 'Sealed tank stayed hot 12 days in freezing air with no normal fuel.'
   },
   unit05: {
     worldId: 'unit05',
     worldName: 'Ember Reach',
     act: 'act2',
-    arrival: 'The Fifth tapped Ember Reach\'s volcano pipes, draining megawatts of heat straight underground.',
+    arrival: 'The Fifth Guild tapped Ember Reach\'s volcano pipes, draining huge amounts of heat straight underground.',
     closing: 'Shelter heat is back on, and we traced the stolen volcano heat to a hidden underground rig.',
     spoilFamily: 'Slag crucibles',
     bossId: 'boss-crucible',
@@ -326,85 +326,85 @@ export const EPISODES = {
     worldId: 'unit06',
     worldName: 'Mirrowen',
     act: 'act2',
-    arrival: 'A strange chemical froze Mirrowen\'s shipping canals solid—trapping every supply boat.',
+    arrival: 'A strange chemical froze Mirrowen\'s shipping canals solid and trapped every supply boat.',
     closing: 'The canals are open again, and lab tests show the freezing chemical was made in a factory.',
     spoilFamily: 'Brine crawlers',
     bossId: 'boss-undertow',
     clueId: 'clue_mirrowen_agent',
     incident: 'A mystery chemical froze the shipping canals and trapped the supply boats.',
-    objective: 'Test the ice, melt the barrier, and separate out the Fifth\'s chemical.',
-    caseFileNote: 'Canal chemical was lab-made—the Fifth has a factory.'
+    objective: 'Test the ice, melt the barrier, and separate out the Fifth Guild\'s chemical.',
+    caseFileNote: 'Canal chemical was lab-made. The Fifth Guild has a real factory.'
   },
   unit07: {
     worldId: 'unit07',
     worldName: 'Kettle',
     act: 'act2',
-    arrival: 'Kettle\'s foundry logs claim 50 tons of iron came from 40 tons of ore—which is impossible.',
+    arrival: 'Kettle\'s foundry logs claim 50 tons of iron came from 40 tons of ore, which is impossible.',
     closing: 'The hijacked foundry is shut down, and the math proves 22 tons of iron came from somewhere else.',
     spoilFamily: 'Recipe golems',
     bossId: 'boss-golem',
     clueId: 'clue_kettle_ledger',
     incident: 'The foundry logs claim more iron came out than the ore can possibly make.',
     objective: 'Check the recipes and mass balance to prove where the numbers break.',
-    caseFileNote: '50 tons from 40 tons is impossible. Extra metal was smuggled or transmuted.'
+    caseFileNote: '50 tons of iron from 40 tons of ore is impossible. Extra metal came from elsewhere.'
   },
   unit08: {
     worldId: 'unit08',
     worldName: 'Teeter',
     act: 'act3',
-    arrival: 'The Fifth\'s salt ponds on Teeter look dead, yet their chemical pumps are still pulling product.',
-    closing: 'The hidden pumps are stopped—those "abandoned" ponds were a secret chemical plant.',
+    arrival: 'The Fifth Guild\'s salt ponds on Teeter look dead on top, yet their pumps are still pulling product.',
+    closing: 'The hidden pumps are stopped. Those abandoned ponds were actually a secret chemical plant.',
     spoilFamily: 'Balance husks',
     bossId: 'boss-tipper',
     clueId: 'clue_teeter_pan',
-    incident: 'Ponds that look stopped are still quietly pumping out chemicals.',
-    objective: 'Test how the ponds settle and how the Fifth\'s drain pump keeps them running nonstop.',
+    incident: 'Ponds that look stopped are still pumping out chemicals.',
+    objective: 'Test how the ponds settle and how the Fifth Guild\'s drain pump keeps them running nonstop.',
     caseFileNote: 'Abandoned salt ponds are a hidden Fifth Guild chemical plant.'
   },
   unit09: {
     worldId: 'unit09',
     worldName: 'Verdigris',
     act: 'act3',
-    arrival: 'Toxic acid runoff from a Fifth Guild ore-washing plant is eating through Verdigris\'s radio fort.',
+    arrival: 'Strong acid runoff from a Fifth Guild ore-washing plant is eating through Verdigris\'s radio fort.',
     closing: 'The radio fort\'s water is safe, and the acid waste matches heavy ore processing.',
     spoilFamily: 'Acid leaches',
     bossId: 'boss-leach',
     clueId: 'clue_verdigris_leach',
     incident: 'Strong acid waste from ore washing is flooding the marsh around the radio fort.',
     objective: 'Measure the acid, neutralize the waste tanks, and protect the fort\'s water intake.',
-    caseFileNote: 'Acid waste matches heavy ore leaching—not normal mining.'
+    caseFileNote: 'Strong acid waste comes from washing heavy metal ore.'
   },
   unit10: {
     worldId: 'unit10',
     worldName: 'Brinewire',
     act: 'act3',
-    arrival: 'The Fifth clamped illegal power taps onto Brinewire\'s salt pools—draining the grid and stripping copper.',
-    closing: 'The power taps are off, and we caught the Fifth pulling tons of pure copper out of the marsh.',
+    arrival: 'The Fifth Guild clamped illegal power taps onto Brinewire\'s salt pools, draining the grid and stripping copper.',
+    closing: 'The power taps are off, and we caught the Fifth Guild pulling tons of pure copper out of the marsh.',
     spoilFamily: 'Power clamps',
     bossId: 'boss-clamp',
     clueId: 'clue_brinewire_clamp',
     incident: 'Illegal clamps are draining the marsh power grid and pulling pure copper from the pools.',
-    objective: 'Rebuild the marsh batteries and find out what the Fifth is making with the stolen current.',
-    caseFileNote: 'Fifth stole tons of plated copper—wiring something huge.'
+    objective: 'Rebuild the marsh batteries and find out what the Fifth Guild is making with the stolen current.',
+    caseFileNote: 'Fifth Guild stole tons of pure copper to wire something huge.'
   },
   unit11: {
     worldId: 'unit11',
     worldName: 'Quicklight',
     act: 'act3',
-    arrival: 'Fuel towers on Quicklight are overheating ten times too fast—someone spiked the vents with a mystery dust.',
+    arrival: 'Fuel towers on Quicklight are overheating ten times too fast after someone spiked the vents with a mystery dust.',
     closing: 'The fuel towers are cool, and an intercepted message names their leader: The Catalyst.',
     spoilFamily: 'Kinetic flares',
     bossId: 'boss-flare',
     clueId: 'clue_quicklight_flare',
     incident: 'A mystery dust in the fuel vents is making the towers overheat ten times too fast.',
     objective: 'Time the fuel burn, find what the dust is doing, and cool the towers down.',
-    caseFileNote: 'Their leader is "The Catalyst"—the crews the Guilds left behind.'
+    caseFileNote: 'Their leader is "The Catalyst," from the crews the Four Guilds left behind.'
   },
   unit12: {
     worldId: 'unit12',
     worldName: 'Lodestone',
     act: 'act4',
-    arrival: 'A massive Fifth Guild magnet in Lodestone\'s iron canyon is sorting metal drums—and shipping them somewhere.',
+    arrival: 'A huge Fifth Guild magnet in Lodestone\'s iron canyon is sorting metal drums and shipping them off-world.',
     closing: 'The sorting magnet is off, and its shipping chip points straight to Cinder Halo.',
     spoilFamily: 'Sorting coils',
     bossId: 'boss-coil',
@@ -417,27 +417,27 @@ export const EPISODES = {
     worldId: 'unit13',
     worldName: 'Thornmere',
     act: 'act4',
-    arrival: 'The Fifth\'s swamp outpost on Thornmere is wrapped in tough plastic armor—find out what\'s under it.',
-    closing: 'We cut through the plastic armor and found heavy lead plates underneath—built to block radiation.',
+    arrival: 'The Fifth Guild\'s swamp outpost on Thornmere is wrapped in tough plastic armor. Find out what is under it.',
+    closing: 'We cut through the plastic armor and found heavy lead plates underneath, built to block radiation.',
     spoilFamily: 'Armor plates',
     bossId: 'boss-carapace',
     clueId: 'clue_thornmere_carapace',
     incident: 'The swamp outpost is sealed behind tough plastic armor plates.',
     objective: 'Find how the plastic chains are built, cut their weak links, and see what they are hiding.',
-    caseFileNote: 'Armor is lined with lead—they are shielding against radiation.'
+    caseFileNote: 'Armor is lined with lead to block nuclear radiation.'
   },
   unit14: {
     worldId: 'unit14',
     worldName: 'Cinder Halo',
     act: 'act4',
-    arrival: 'We found the Fifth\'s base at Cinder Halo—an ancient nuclear reactor running hot with no fuel line.',
-    closing: 'The nuclear reactor is cooled and safe—it was never magic, it was splitting uranium atoms.',
+    arrival: 'We found the Fifth Guild\'s base at Cinder Halo: an old nuclear reactor running hot with no fuel line.',
+    closing: 'The nuclear reactor is cooled and safe. Splitting uranium atoms explains every clue.',
     spoilFamily: 'Reactor core',
     bossId: 'boss-core',
     clueId: 'clue_cinderhalo_core',
     incident: 'An old nuclear reactor at Cinder Halo is running hot with no fuel line.',
     objective: 'Measure the radiation, trace the splitting atoms, and lower the control rods to cool the core.',
-    caseFileNote: 'Case Solved: Not alchemy—nuclear fission. Reactor stabilized.'
+    caseFileNote: 'Case solved: nuclear fission, not alchemy. Reactor stabilized.'
   }
 };
 

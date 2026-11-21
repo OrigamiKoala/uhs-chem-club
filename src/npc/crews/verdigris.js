@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['This fort relays every message across the marsh. If the masts fall, three settlements go silent.'],
-        ['The acid is eating the mast footings. Green crust on copper, rust on steel.'],
-        ['At night I hear voices in the static. Mostly it is weather. Mostly.']
+        ['This radio fort relays messages across the entire marsh. If our antenna towers collapse, three towns lose contact.'],
+        ['Acid runoff from the Fifth Guild plant upstream is eating right through the copper and steel bases of our towers.'],
+        ['Late at night I pick up strange coded radio chatter in the static, coming from somewhere upstream.']
       ],
       afterClue: {
         clue_verdigris_leach: [
-          ['Waste from washing heavy ore. Nobody mines like that unless they are after something rare.', 'What are they digging for?']
+          ['That strong acid waste comes from washing heavy metal ore. Nobody sets up a plant like that unless they are mining something rare.']
         ]
       }
     }
@@ -61,13 +61,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Our drinking water comes through the marsh intake. If the runoff reaches it, we stop drinking.'],
-        ['I check the intake screens twice a day. The reeds near them have started to yellow.'],
-        ['Clean water looks the same as bad water. That is why we test, not look.']
+        ['Our fort pumps drinking water straight from the marsh. If the acid runoff reaches our intake pipe, we have no clean water.'],
+        ['I inspect the water intake twice a day, and the marsh reeds around it are already turning yellow from acid.'],
+        ['Clear water can still be dangerously acidic, so we test every sample with meters instead of trusting our eyes.']
       ],
       afterBench: {
         'q2-scale': [
-          ['You read the marsh on the scale. I will be watching that number at the intake every day.']
+          ['Now that we know how fast acidity jumps with each step on the scale, I will watch our water meter closely.']
         ]
       }
     }
@@ -81,9 +81,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Acid burns are slow. You do not feel them until it is too late. Rinse first, ask questions after.'],
-        ['I keep big jugs of clean water by every door. Splashes happen.'],
-        ['Two of the garrison got burns wading the marsh. Boots, please, always.']
+        ['Acid splashes can burn before you even feel them, so rinse skin with clean water right away if you get splashed.'],
+        ['I keep jugs of clean rinse water beside every door in the fort just in case someone tracks acid inside.'],
+        ['Two of our guards got chemical burns wading through the marsh this week, so keep your boots on dry boards.']
       ]
     }
   },
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I climb the masts to fix the cables. The view is good. The smell from the marsh is not.'],
-        ['Copper turns green out here. That green is called verdigris. The marsh is named for it.'],
-        ['The footings are steel in concrete. The acid gets into the cracks and works its way in.']
+        ['I climb the radio towers to tighten the support cables, and the acid fumes rising from the marsh are awful.'],
+        ['The green rust coating all the copper out here is called verdigris. That is how this marsh got its name.'],
+        ['Our tower bases are steel bolted into concrete, and the acid runoff seeps right into the cracks.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I know every dry path through this marsh. Fewer of them every week.'],
-        ['The fish went first. Then the frogs. The reeds are going now.'],
-        ['The ore plant upstream lights up at night. Nobody from the fort has been invited in.']
+        ['I know every safe dry trail across this marsh, though the rising acid water swallows more paths every week.'],
+        ['The fish and frogs vanished from these pools as soon as the Fifth Guild started dumping waste upstream.'],
+        ['Their ore-washing plant upstream runs bright lights all night, and nobody from our fort is allowed anywhere near it.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'verdigris-glove',
     talk: {
       default: [
-        ['I walk the fort wall at night. Something has been moving barrels along the old marsh road.']
+        ['I watch the fort wall at night, and crews have been hauling heavy chemical barrels along the marsh road.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'verdigris-sentry',
     item: { label: 'Eaten Work Glove', kind: 'glove', pos: [1.25, -4.75] },
     ask: [
-      'Last night a barrel rolled off a cart near the middle of the marsh road. The crew left something behind.',
-      'Bring it in. Carefully. Touch nothing inside it.'
+      'Last night a barrel fell off a cart on the middle marsh road, and the Fifth Guild crew dropped a work glove.',
+      'Could you bring it in carefully? Make sure you do not touch whatever leaked inside it.'
     ],
     remind: [
-      'Near the middle of the marsh, by the road. A work glove.'
+      'Look near the middle of the marsh beside the road for a dropped work glove.'
     ],
     thanks: [
-      'Rubber, eaten through at the fingertips. Whatever was in those barrels went straight through it.',
-      'The medic should see this.'
+      'Thick rubber, eaten straight through at the fingertips. Whatever acid was in those barrels is seriously harsh.',
+      'I will pass this straight to the fort medic.'
     ],
     note: {
       title: 'Verdigris · Sentry Report',
       speaker: 'Sigurd Vale',
-      text: 'A rubber work glove dropped by the barrel crew, eaten through at the fingertips by what they carried.'
+      text: 'A thick rubber work glove dropped by the barrel crew, eaten right through at the fingertips by strong acid.'
     }
   }
 });

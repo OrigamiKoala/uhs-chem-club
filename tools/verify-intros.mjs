@@ -211,7 +211,7 @@ ok(`${spotsChecked} props stand clear of walls, bays, posts and each other; ever
         director.update(1 / 30);
         world.mystery.update(1 / 30);
         if (isLineCardOpen() && frames % 20 === 0) advanceLineCard();
-        if (![camera.position.x, camera.position.y, camera.position.z].every(Number.isFinite)) nan = true;
+        if (![camera.position.x, camera.position.y, camera.position.z, camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w].every(Number.isFinite)) nan = true;
         frames++;
         await new Promise(r => setImmediate(r));
       }

@@ -1,10 +1,20 @@
 # Feedback from user audit 2026-11-18
 
+## UI
+
+![alt text](image-96.png) Please reformat the glossary so it looks like an actual glossary and is easy to use.
+
+![alt text](image-104.png) In the navbar, remove "Standings" and "Crew". Add a button for the problems, labeled "Practice"
+
+![alt text](image-105.png) Remove the "Week Streak" label and number. Remove the concept of streaks from this game.
+
 ## Ship
 
 ![alt text](image-95.png) Remove the text "Primary Objective" and "Click Holo table to disembark"
 
 ## Lanternfall
+
+![alt text](image-106.png) The textures on the supposed snow and ice don't look like snow/ice textures - they looked like cracked earth painted blue. Please make the textures actually reflect ice and snow.
 
 ![alt text](image-79.png) Switch stages 1 and 2 for this quest, since the predict stage should come right before you test it. Also, for this stage I would like to see an explainer animation where protons get added to an atom, and it shrinks.
 
@@ -33,6 +43,22 @@
 ![alt text](image-93.png) This explainer feels oddly similar to a previous one - please either make the explainer actually useful (for example, show visually that when the concentration increases, the absorbance increases), or remove the explainer entirely. This goes for all the learn worlds.
 
 ![alt text](image-94.png) Remove the weird 2D static representations of the molecule and replace it with 3D moving animations.
+
+![alt text](image-98.png) The node isn't obvious - I should be able to clearly see an empty ring (the node should be obvious visually). Also, I have no idea what a node is - "node" is introduced later. Introduce it here.
+
+![alt text](image-99.png) This explanation of the wavefunction is not intuitive for someone who has never heard of wavefunctions before and doesn't have a background in waves (physics) - I think an explanation of the wavefunction would require multiple parts.
+
+![alt text](image-100.png) Again, the nodes are not visually clear. Please fix that.
+
+![alt text](image-101.png) For these benches, it's too dark to see anything, and the cards don't fit inside the slots - please resize the slots so the cards fit nicely.
+
+At some point during this stage (maybe at the end) you should show the common visualizations of the orbital surfaces.
+
+![alt text](image-102.png) Make sure in this stage's question, you say "oxygen (8 electrons)".
+
+![alt text](image-103.png) The ship pad is z-fighting. Also when I reload the page on /#/learn/unit02, the ship vanishes.
+
+
 
 
 

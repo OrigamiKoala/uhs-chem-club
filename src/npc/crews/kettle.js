@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The furnaces never stopped while the Fifth held the works. They kept pouring iron day and night.'],
-        ['A furnace is a hungry thing. Feed it ore and fuel and air, and it gives you iron and slag.'],
-        ['My crew was locked out of our own foundry for a week. Somebody ran it without us.']
+        ['While the Fifth Guild held our iron foundry, they ran the furnaces nonstop day and night.'],
+        ['Our furnaces melt iron ore using fuel and hot air, separating pure liquid iron from leftover rock waste.'],
+        ['They locked my entire crew out of our own foundry for a whole week and ran the machines themselves.']
       ],
       afterClue: {
         clue_kettle_ledger: [
-          ['The numbers never added up because the iron never came from our ore.', 'So where did it come from? That is the real question.']
+          ['Our shipping numbers failed to add up because the extra iron never came from our ore.', 'Where did all that extra iron come from?']
         ]
       }
     }
@@ -61,13 +61,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Every load in and every load out crosses my scale. My numbers have always balanced. Until now.'],
-        ['A scale is only honest if someone checks it. I check mine every morning with a test weight.'],
-        ['The shipping log claims more iron left than ore came in. My scale never saw that iron arrive.']
+        ['Every load of ore coming in and iron going out crosses my scale, and my numbers always matched until the Fifth Guild arrived.'],
+        ['I test my scale with a standard iron weight every morning, so I know the scale itself is accurate.'],
+        ['The shipping log claims more iron left the foundry than ore ever came in, which makes zero sense.']
       ],
       afterBench: {
         'q6-stoich': [
-          ['You worked out what the ore can really make. I have been saying that for weeks.']
+          ['Your math proved how much iron our ore can actually produce. I knew that shipping log was impossible.']
         ]
       }
     }
@@ -81,9 +81,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The heat at the tap hole would cook you in a minute. That is why we wear suits like this.'],
-        ['Slag floats on top of the molten iron. We skim it off and it cools into grey glass.'],
-        ['The Fifth ran the furnaces hotter than we ever do. The bricks inside are scorched.']
+        ['The glowing spout where melted iron pours out is so hot we have to wear full heat suits near it.'],
+        ['Leftover melted rock, called slag, floats on top of the liquid iron so we can skim it off.'],
+        ['The Fifth Guild ran our furnaces way hotter than normal, scorching the firebricks right inside the walls.']
       ]
     }
   },
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I shovel ore into the charging carts. You know you are working when your arms stop hurting and go numb.'],
-        ['Ore is mostly rock. The iron is a part of it, never all of it.'],
-        ['Some of the carts that came in that week were not from our mine. Different colour dust.']
+        ['My job is shoveling raw iron ore into the carts that feed the furnaces.'],
+        ['Raw ore is mostly oxygen and rock mixed with iron, so you always get less iron out than the weight of ore put in.'],
+        ['During the takeover, some ore carts rolled in covered in strange dark dust from outside our mine.']
       ]
     }
   },
@@ -111,13 +111,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I test every batch of ore before it goes in the furnace. Batches from the same seam test the same.'],
-        ['A recipe in a foundry is like one in a kitchen. Get the amounts wrong and nothing comes out right.'],
-        ['I wrote my findings down twice and locked one copy away. After this, I will always do that.']
+        ['I test every batch of ore before it enters the furnace so we know exactly how much iron it holds.'],
+        ['Smelting iron works like a kitchen recipe: if you get the ingredient amounts wrong, the batch fails.'],
+        ['After the Fifth Guild altered our foundry records, I started locking a backup copy of my lab notes in a safe.']
       ],
       afterBench: {
         'q4-balance': [
-          ['You balanced the equations by counting atoms, the way a weighmaster counts loads.']
+          ['Counting atoms on both sides of the furnace recipe works just like checking the weighmaster\'s scale.']
         ]
       }
     }
@@ -132,7 +132,7 @@ export const CREW = Object.freeze([
     task: 'kettle-page',
     talk: {
       default: [
-        ['I kept the night log while the Fifth ran the works. They made me write what they said.']
+        ['I kept the night logbook while the Fifth Guild ran our foundry. They forced me to write down fake numbers.']
       ]
     }
   }
@@ -146,20 +146,20 @@ export const TASKS = Object.freeze({
     giver: 'kettle-clerk',
     item: { label: 'Torn Log Page', kind: 'paper', pos: [0.25, 4.75] },
     ask: [
-      'Before they took my log away, I tore out the page with the real tally and threw it out the window.',
-      'It should still be somewhere in the yard by the roads. Will you look?'
+      'Before they took my logbook, I tore out the page with the real iron weights and tossed it out the window.',
+      'It should still be lying out in the yard near the roads. Could you grab it for me?'
     ],
     remind: [
-      'Somewhere near the middle of the yard. A crumpled page with my handwriting.'
+      'Look near the middle of the foundry yard for a crumpled logbook page with my handwriting.'
     ],
     thanks: [
-      'My real tally. Then someone crossed it out and wrote a bigger number over the top.',
-      'The weighmaster needs to see this.'
+      'Here are my real weight numbers, with someone else\'s fake higher number scribbled right over the top.',
+      'I need to show this to the weighmaster immediately.'
     ],
     note: {
       title: 'Kettle · Night Clerk\'s Page',
       speaker: 'Felix Ambry',
-      text: 'A page torn from the foundry\'s night log. The real tally is crossed out and a bigger number written over it.'
+      text: 'A torn logbook page showing the foundry\'s real iron weights crossed out and replaced with a much larger fake number.'
     }
   }
 });

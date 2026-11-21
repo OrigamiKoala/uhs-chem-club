@@ -41,18 +41,18 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Every tower on this ice had its lamp lit the night the Fifth came. By morning, all of them were dark.'],
-        ['A lighthouse is only as good as its lens. Ours gather the lamp\'s light and throw it out across the ice.'],
-        ['Pilots read our towers by colour and by rhythm. Lose one and a ship can lose the whole channel.']
+        ['Every lighthouse on this glacier was lit the night the Fifth Guild arrived. By morning, every single tower was dark.'],
+        ['Our lighthouse lenses focus the lamp beams across the ice so cargo ships can find the landing channel.'],
+        ['Pilots tell our towers apart by their color and flash pattern. When one goes dark, ships can get lost fast.']
       ],
       afterBench: {
         'q2-photon': [
-          ['You worked the light through, packet by packet. I have tended these lamps for years and never thought of it that way.']
+          ['So light hits the solar plate one tiny packet at a time. That explains why our bright red lamps did nothing.']
         ]
       },
       afterClue: {
         clue_lantern_lens: [
-          ['A lens for light no eye can see. So their ships were never flying blind at all.', 'We were the ones in the dark.']
+          ['A lens made for invisible ultraviolet light. So Fifth Guild ships were flying right past us while our towers were dark.']
         ]
       }
     }
@@ -66,9 +66,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The lamps run hot. Glove up before you touch a housing, even after it has been shut off a while.'],
-        ['Someone swapped the optics in three towers without breaking a single seal. That takes practice.'],
-        ['When the aurora is strong the whole sky moves. Our lamps still have to read clearly through it.']
+        ['These lighthouse lamps stay scorching hot. Put on thick gloves before you touch any lamp case.'],
+        ['Someone swapped the lenses in three towers without breaking a single lock. Whoever did it knew our equipment well.'],
+        ['Even when the aurora lights up the whole sky, our tower beacons still have to stand out clearly.']
       ]
     }
   },
@@ -81,13 +81,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I grind every lens on this glacier by hand. The glass the Fifth left behind was not ground by anyone here.'],
-        ['A good lens takes weeks. Polish, check, polish again. One scratch and the beam scatters.'],
-        ['Glass is a strange material. Hard enough to scratch steel, yet it shatters if you drop it.']
+        ['I shape every lighthouse lens on this glacier by hand. The dark glass the Fifth Guild left behind came from somewhere else.'],
+        ['Making a clear lens takes weeks of careful polishing. Even one scratch scatters the beam.'],
+        ['I found weird dark glass splinters near the towers. Ordinary lighthouse glass is always clear.']
       ],
       afterBench: {
         'q9-absorb': [
-          ['You read what the glass takes out of the light. That is how I check a lens, too, by what goes missing.']
+          ['Measuring which colors get absorbed tells you what is inside. I check my glass lenses the same way.']
         ]
       }
     }
@@ -101,9 +101,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I run supplies between the camp and the towers. With the lamps out I steered by the stars for a week.'],
-        ['The night of the blackout, something passed overhead. No lights, no engine noise I knew.'],
-        ['Out on open ice the wind can turn you around in minutes. The towers are how we find home.']
+        ['I haul supplies between camp and the lighthouses. With the towers dark, I had to steer by the stars all week.'],
+        ['During the blackout, a ship flew right overhead with zero lights on. Somehow its pilot saw the ice just fine.'],
+        ['Blizzards can turn you around in minutes out here. Those lighthouse towers are how everyone gets home.']
       ]
     }
   },
@@ -117,7 +117,7 @@ export const CREW = Object.freeze([
     task: 'lanternfall-shard',
     talk: {
       default: [
-        ['I log every lamp and every ship from the signal hut. The log has a gap the night they came.']
+        ['I log every ship and tower light from the signal hut. Someone erased the log from the night the Fifth Guild came.']
       ]
     }
   },
@@ -130,9 +130,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Coffee freezes in the cup if you leave it out here. We drink fast.'],
-        ['Half the camp says the Fifth can see in the dark. The other half says they just know the ice.'],
-        ['I keep the sleds running and the stoves lit. Nobody notices until one of them stops.']
+        ['It gets so cold on this glacier that hot coffee freezes in your mug if you set it down.'],
+        ['Half the camp thinks the Fifth Guild can see in pitch darkness. Maybe they have special gear for it.'],
+        ['I keep the ice sleds running and the camp heaters lit so the lighthouse crew stays warm.']
       ]
     }
   }

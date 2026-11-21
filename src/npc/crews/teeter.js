@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['These ponds were left to dry years ago. Then someone started pumping them again, very quietly.'],
-        ['Each terrace drains into the one below. Water goes down, salt stays behind.'],
-        ['A pond can look still on top and still be busy underneath. These ones are.']
+        ['These terraced salt ponds were shut down years ago, yet someone secretly started pumping them again at night.'],
+        ['Each stepped pool drains down into the next one, leaving layers of salt crystals behind as water evaporates.'],
+        ['Even when a pond looks completely still on the surface, chemicals can still be reacting underneath.']
       ],
       afterClue: {
         clue_teeter_pan: [
-          ['A whole chemical plant, hidden in ponds everyone thought were dead.', 'Right under our noses. Clever, I will give them that.']
+          ['The Fifth Guild turned our abandoned salt ponds into a secret chemical factory right under our noses.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I rake the salt crust into rows to dry. The wind does half my work, the sun the other half.'],
-        ['Good salt crunches under the rake. Wet salt drags.'],
-        ['The old ponds on the low terrace grow fresh crust every night now. That is not natural.']
+        ['I rake dried salt crust into rows so the sun and wind can finish drying it out.'],
+        ['Dry salt crunches cleanly under the rake, while damp salt sticks in heavy clumps.'],
+        ['The supposedly dead ponds on the lower step keep growing fresh salt crust every single night.']
       ]
     }
   },
@@ -76,13 +76,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I dip a jar in each pond and check what is dissolved in it. The numbers change from terrace to terrace.'],
-        ['Brine stings any cut you have. Samplers learn to wear gloves the hard way.'],
-        ['Strangely, the ponds that look dead give the busiest samples of all.']
+        ['I scoop water samples from each pond to measure what is dissolved inside. Every stepped pool reads differently.'],
+        ['Salty pond water stings any small cut right away, so everyone out here wears thick gloves.'],
+        ['Weirdly, the ponds marked abandoned on our maps hold the most active chemical mixtures of all.']
       ],
       afterBench: {
         'q7-dissolve': [
-          ['You found how much a pond can hold before it settles out. That is the line I read every morning.']
+          ['Now we know how to make extra salt drop out of the water before it clogs up our pond pipes.']
         ]
       }
     }
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['Somebody has been running pumps out here at night. The bearings are warm by morning.'],
-        ['A pump that runs nonstop wears out in a season. These ones were new.'],
-        ['Follow the pipe and you find the pump. Follow the pump and you find who paid for it.']
+        ['Someone has been running hidden drain pumps out here every night. The motors are still warm every morning.'],
+        ['Old salt-flat pumps break down fast if you run them nonstop, yet whoever installed these brought brand-new gear.'],
+        ['Those pumps keep draining product out of the ponds so the chemical reaction never stops.']
       ]
     }
   },
@@ -111,13 +111,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I keep the terrace walls straight. A slumped wall dumps one pond into the next.'],
-        ['From the top terrace you can see every pond at once. Watch for the ones that never change colour.'],
-        ['The ramps between terraces were laid by hand, stone by stone. Watch your footing.']
+        ['I check the stone walls between ponds so a crumbling wall never dumps one chemical pool into the next.'],
+        ['From the top overlook you can see every pond at once. Notice how the active ones stay the exact same color.'],
+        ['The stone ramps connecting each stepped pond were built by hand, so watch your footing when they get slick.']
       ],
       afterBench: {
         'q6-lean': [
-          ['You pushed the ponds and watched them push back. My terraces do that whenever the weather changes.']
+          ['Seeing how a pond reacts when you disturb it explains why the Fifth Guild\'s drain pump keeps making salt.']
         ]
       }
     }
@@ -132,7 +132,7 @@ export const CREW = Object.freeze([
     task: 'teeter-filter',
     talk: {
       default: [
-        ['I raked these ponds for forty years. Now I just walk the terraces and complain about the young ones.']
+        ['I worked these salt ponds for forty years. Now I just walk the ledges and spot things the younger crew misses.']
       ]
     }
   }
@@ -146,20 +146,20 @@ export const TASKS = Object.freeze({
     giver: 'teeter-oldhand',
     item: { label: 'Clogged Pump Filter', kind: 'bolt', pos: [-3.75, -3.25] },
     ask: [
-      'A pump filter washed down from the low ponds last night. I saw it from the terrace.',
-      'Fetch it for me. My knees do not do ramps any more.'
+      'A metal pump filter washed down from the lower ponds last night, and I spotted it from the upper ledge.',
+      'Could you fetch it for me? My knees cannot handle the steep stone ramps anymore.'
     ],
     remind: [
-      'Down in the middle of the pans. A short pipe of mesh, crusted white.'
+      'Look down in the middle of the salt ponds for a short mesh pipe crusted white with salt.'
     ],
     thanks: [
-      'Caked solid with fresh crystal. A pump nobody runs does not clog like this.',
-      'Someone has been running it hard, every night.'
+      'It is packed solid with fresh crystals. An abandoned pump would never clog up like this.',
+      'Someone has been running these ponds hard every night.'
     ],
     note: {
       title: 'Teeter · Old Raker\'s Find',
       speaker: 'Ezra Pine',
-      text: 'A pump filter caked with fresh crystal, washed down from the low ponds. Someone has been running the pumps hard every night.'
+      text: 'A pump filter packed with fresh salt crystals from the lower ponds, proving someone has been running hidden pumps every night.'
     }
   }
 });

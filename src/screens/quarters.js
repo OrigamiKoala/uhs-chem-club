@@ -74,7 +74,7 @@ export function renderQuarters(container) {
 
   // Commendations grouped by road
   const roads = ['campaign', 'craft', 'learn', 'crew', 'season'];
-  const earnedCommendations = session.checkCommendations();
+  const earnedCommendations = session.checkCommendations() || session.commendations || [];
 
   container.innerHTML = `
     <div class="${isT4 ? 'in-world-terminal quarters-terminal m-screen m-quarters' : 'screen-container m-screen m-quarters'}" ${isT4 ? '' : 'style="max-width: 900px;"'}>
@@ -280,7 +280,7 @@ export function renderQuarters(container) {
     btn.addEventListener('click', () => {
       const plateId = btn.getAttribute('data-plate-id');
       if (!plateId) return;
-      if (session.loadout.pinnedPlates.includes(plateId)) {
+      if (pinnedPlates.includes(plateId)) {
         session.unpinPlate(plateId);
       } else {
         const ok = session.pinPlate(plateId);
@@ -304,7 +304,7 @@ export function renderQuarters(container) {
     const newLoadout = {
       nameplate: nameplateSelect.value,
       title: titleSelect.value,
-      pinnedPlates: session.loadout.pinnedPlates
+      pinnedPlates: pinnedPlates.slice()
     };
     session.setLoadout(newLoadout);
     try {

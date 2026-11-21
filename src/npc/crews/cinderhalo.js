@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['This reactor was shut down before I was born. Somebody woke it up and pulled every safety rod.'],
-        ['A reactor is safe when you respect it. The people who started this one respected nothing.'],
-        ['We take turns in the control gallery. Short shifts. Everybody wears a badge.']
+        ['This old nuclear reactor was shut down before I was born, until the Fifth Guild restarted it and pulled out every safety rod.'],
+        ['A nuclear reactor stays safe only when you follow strict controls, and whoever restarted this one ignored every rule.'],
+        ['Our safety crew takes short turns inside the control room, and everyone wears a radiation badge to track exposure.']
       ],
       afterClue: {
         clue_cinderhalo_core: [
-          ['Not magic. Not alchemy. Atoms splitting, the way they always could.', 'The Fifth just found the oldest reactor nobody was watching.']
+          ['It was uranium atoms splitting inside this reactor all along. The Fifth Guild simply restarted the oldest reactor nobody was watching.']
         ]
       }
     }
@@ -61,13 +61,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['My counter clicks faster near the core. The clicks tell me where not to stand.'],
-        ['Distance and shielding are my two best friends. Time is the third.'],
-        ['Every badge is read at the end of a shift. Nobody argues with the badge.']
+        ['My radiation counter clicks faster near the reactor core, warning me where invisible radiation is strongest.'],
+        ['Keeping your distance, using thick lead shields, and limiting your time near the core are what keep you safe.'],
+        ['We scan every worker\'s radiation badge after each shift so nobody gets exposed to too much radiation.']
       ],
       afterBench: {
         'q2-what-comes-off': [
-          ['You stopped the radiation with the right shields. That is what I do every day, by the book.']
+          ['Testing which shields stop each kind of radiation is the exact safety rule I use on every shift here.']
         ]
       }
     }
@@ -81,9 +81,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I ran this reactor when I was young. We shut it down properly, rods in, doors sealed.'],
-        ['The control room still smells the same. Old paper, warm metal.'],
-        ['I came back because nobody else alive knows where every valve is.']
+        ['I worked at this reactor when I was young. When we closed it, we lowered every safety rod and sealed the doors.'],
+        ['Stepping back into this control room brings it all back: old logbooks and warm steel panels.'],
+        ['I came out of retirement to help because nobody else alive remembers where every emergency valve sits.']
       ]
     }
   },
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['We keep the coolant pumps running and the crater fires out. Both jobs got harder this month.'],
-        ['The crater sea steams where the coolant outflow reaches it.'],
-        ['My suit stops heat. The monitor tells me what it does not stop.']
+        ['My crew keeps the reactor\'s cooling water pumps running so the core does not overheat.'],
+        ['Hot cooling water pouring out of the reactor makes the whole crater lake steam.'],
+        ['My heavy fire suit blocks heat, though I still rely on my radiation counter to warn me about invisible rays.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The Four Guilds sent me to see this end. Some of them will not like what I report.'],
-        ['The Fifth were crews the Guilds left behind. I wonder how many of them worked here once.'],
-        ['Every world we visited led here. Salt, light, rock, gas, all of it.']
+        ['The Four Guilds sent me here to witness how this ends, and some council leaders will hate my final report.'],
+        ['The Fifth Guild turned out to be the old outpost crews our Guilds abandoned decades ago. Some probably worked right here.'],
+        ['Every clue from every world led straight to this crater: the heavy metal, the heat, the copper, and the lead armor.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'cinderhalo-badge',
     talk: {
       default: [
-        ['I walk the crater rim and keep people away from the hot ground. Lately that is a full day\'s work.']
+        ['I patrol the crater rim to keep people away from radioactive ground, which has become a full-time job this month.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'cinderhalo-ranger',
     item: { label: 'Lost Dosimeter Badge', kind: 'metal', pos: [16.75, -26.75] },
     ask: [
-      'Someone dropped a dosimeter badge near the reactor building. The strap snapped, by the look of it.',
-      'Bring it back. Every badge is read, and this one was never handed in.'
+      'Someone dropped a radiation-tracking badge near the reactor building after its strap snapped.',
+      'Could you bring it back? Every worker\'s badge has to be scanned, and this one was never turned in.'
     ],
     remind: [
-      'Near the reactor building, on the open ground. A small badge on a broken strap.'
+      'Check the open ground near the reactor building for a small badge on a broken strap.'
     ],
     thanks: [
-      'No name, and not one of ours. Someone walked the core gallery without signing in.',
-      'The monitor will read it tonight.'
+      'There is no name on it, so it does not belong to our crew. A Fifth Guild worker walked right beside the core.',
+      'Our radiation monitor will scan it tonight.'
     ],
     note: {
       title: 'Cinder Halo · Ranger\'s Find',
       speaker: 'Aldo Penhale',
-      text: 'A dosimeter badge with no name, found near the reactor building. Someone walked the core gallery without signing in.'
+      text: 'An unlabeled radiation badge found near the reactor building, showing an unauthorized Fifth Guild worker entered the core area.'
     }
   }
 });

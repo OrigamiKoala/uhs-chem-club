@@ -28,6 +28,6 @@ export const INTROS = {
   },
   'q9-absorb': {
     prop: { kind: 'tank', opts: { liquid: 0x2f6fae, level: 0.5 }, effects: [{ kind: 'drip', at: 'spout', color: 0x3a7cc0 }] },
-    steps: happens('voice:lanternfall-keeper', 'Open the drain cock on the coolant tank. It should run clear.', { walk: true })
+    steps: happens('voice:lanternfall-keeper', 'Open the drain valve on the coolant tank. It should run clear.', { walk: true })
   }
 };

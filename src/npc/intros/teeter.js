@@ -14,11 +14,11 @@ export const SYMPTOM = {
 export const INTROS = {
   'q1-both': {
     prop: { kind: 'pond', opts: { r: 1.8, liquid: 0x8a8670 } },
-    steps: cloaked('By the pond marked dead. Somebody is taking a sample.', 'Nothing in there moves, and it still came here to check it.')
+    steps: cloaked('By the pond marked dead, someone is taking a water sample.', 'Nothing in there looks active, yet they still came out here to check it.')
   },
   'q6-lean': {
     prop: { kind: 'pump', effects: [{ kind: 'rock' }] },
-    steps: cloaked('At the pump. Watch the beam.', 'Every pond on the flats has stopped making salt. This one has not.', { start: true })
+    steps: cloaked('Look at that pump by the pond.', 'Every other pond on these flats has stopped making salt, yet this one keeps going.', { start: true })
   },
   'q7-dissolve': {
     prop: { kind: 'pipe', opts: { frost: true, len: 3.0, valve: false } },

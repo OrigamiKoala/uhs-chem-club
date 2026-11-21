@@ -149,12 +149,12 @@ export const STAGES = [
       fixtures: [overlapTrack('ov', TRACK_AT, { type: 's' }), chooser('ans', 'Most likely', ANSWER_AT, ['Between nuclei', 'Beyond nuclei', 'At one nucleus'])]
     }),
     hints: [
-      'Drag the "Distance" dial to bring the two hydrogen atoms together; the brighter the picture, the more likely the electron is there.',
-      'Compare the brightness between the two nuclei when the atoms are far apart and when they are close, and watch the amber energy mark labelled BOTH, which is the combined orbital.',
+      'Drag the "Distance" dial to bring the two hydrogen atoms together; the denser the cloud, the more likely the electron is there.',
+      'Compare the cloud between the two nuclei when the atoms are far apart and when they are close, and watch the amber energy mark labelled BOTH, which is the combined orbital.',
       'Two waves of the same sign add where they overlap, so ask where both atoms\' orbitals reach at once.'
     ],
     check(state) {
-      return trackCheck(state, { right: 1, wrong: 'The picture is fainter there than it is somewhere else: look for the brightest part of the combined orbital.' });
+      return trackCheck(state, { right: 1, wrong: 'The cloud is thinner there than it is somewhere else: look for the densest part of the combined orbital.' });
     },
     reward: {
       log: 'Like signs add between the nuclei.',
@@ -181,7 +181,7 @@ export const STAGES = [
       'A + wave and a − wave of equal size add up to nothing, so ask where the two orbitals are equally strong.'
     ],
     check(state) {
-      return trackCheck(state, { right: 1, needOpposite: true, wrong: 'The picture is not dark there: look for the place where the combined orbital has faded to nothing.' });
+      return trackCheck(state, { right: 1, needOpposite: true, wrong: 'The cloud is not empty there: look for the place where the combined orbital has faded to nothing.' });
     },
     reward: {
       log: 'Unlike signs cancel between the nuclei.',
@@ -203,12 +203,12 @@ export const STAGES = [
       fixtures: [overlapTrack('ov', TRACK_AT, { type: 'p' }), chooser('ans', 'Most likely', ANSWER_AT, ['On the line', 'Above and below', 'Beyond nuclei'])]
     }),
     hints: [
-      'Drag the "Distance" dial to bring the two atoms together; the dotted line runs through both nuclei.',
-      'Compare the brightness on the dotted line with the brightness above it and below it.',
+      'Drag the "Distance" dial to bring the two atoms together; the line runs through both nuclei.',
+      'Compare the cloud on the line with the cloud above it and below it.',
       'Each p orbital is zero at its own nucleus and all along the line, so ask where the two upper lobes, and the two lower, reach each other.'
     ],
     check(state) {
-      return trackCheck(state, { right: 2, wrong: 'The picture is fainter there than it is somewhere else: look for the brightest parts of the combined orbital.' });
+      return trackCheck(state, { right: 2, wrong: 'The cloud is thinner there than it is somewhere else: look for the densest parts of the combined orbital.' });
     },
     reward: {
       log: 'Side by side: above and below the line.',

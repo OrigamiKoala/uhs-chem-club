@@ -18,7 +18,7 @@ export const INTROS = {
   },
   'q3-galvanic': {
     prop: { kind: 'cells', opts: { n: 4 }, effects: [{ kind: 'dark', part: 'lamp' }] },
-    steps: happens('voice:brinewire-cells', 'There goes the last bank. They cut its salt bridges, and the wires are untouched.', { snap: true })
+    steps: happens('voice:brinewire-cells', 'There goes our last backup battery. They cut the salt bridges while leaving the wires untouched.', { snap: true })
   },
   'q6-electrolysis': {
     prop: { kind: 'clamp', effects: [{ kind: 'sparks', at: 'jaw' }] },

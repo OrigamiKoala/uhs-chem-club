@@ -226,9 +226,9 @@ export class Director {
     const sp = this.spot;
     if (name === 'player' || name === 'cam') return [this.camPos.x, this.camPos.z];
     if (name === 'spot') return sp.pos;
-    if (sp[name]) return sp[name];
+    if (name === 'trail') return sp.trail?.length ? sp.trail[Math.min(2, sp.trail.length - 1)] : sp.view;
+    if (Array.isArray(sp[name]) && typeof sp[name][0] === 'number') return sp[name];
     if (name === 'near') return this.nearPlayer();
-    if (name === 'trail' && sp.trail?.length) return sp.trail[Math.min(2, sp.trail.length - 1)];
     const a = this.actors.get(name);
     if (a) return this.xzOf(a);
     return sp.view;

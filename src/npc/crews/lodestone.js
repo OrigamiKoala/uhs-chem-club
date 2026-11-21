@@ -41,13 +41,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['The Fifth set up a magnet bigger than my house and started sorting our drums. Iron one way, the rest another.'],
-        ['This canyon has given iron for a hundred years. It has never been sorted by anyone but us.'],
-        ['Keep tools off your belt near the magnet. It will take them, and it does not give them back.']
+        ['The Fifth Guild set up a giant magnet right in our iron canyon to sort our metal drums and haul away specific ones.'],
+        ['This canyon has supplied iron and rare metals for a century, and nobody ever hijacked our sorting line before.'],
+        ['Keep metal tools off your belt near that giant magnet, because it rips wrenches right out of your hand.']
       ],
       afterClue: {
         clue_lodestone_coil: [
-          ['Every sorted drum shipped to one place. Cinder Halo.', 'That is where this ends, then.']
+          ['Every single sorted metal drum is being shipped straight to Cinder Halo. That must be where the Fifth Guild\'s main base is.']
         ]
       }
     }
@@ -61,9 +61,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I count every drum that leaves the canyon. Lately more leave than I count.'],
-        ['A drum of ore looks like any other drum until you lift it.'],
-        ['The drums the magnet sorted out were taken first. The ones it left were not touched.']
+        ['I count every metal drum leaving the canyon, and lately dozens of drums disappear every night without a record.'],
+        ['Every sealed ore drum looks identical on the outside until you test what metal is actually inside.'],
+        ['The Fifth Guild only loaded the drums that their huge magnet lifted, leaving all the other drums sitting untouched.']
       ]
     }
   },
@@ -76,13 +76,13 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I sort ore by testing it, not by guessing. Some of these metals look alike until you look closely.'],
-        ['Rock dust gets into every jar. I rinse my glassware three times before a test.'],
-        ['The Fifth only took drums of certain metals. They knew exactly what they were looking for.']
+        ['I test our canyon metals in the lab because several different transition metals look almost identical as raw powders.'],
+        ['Red iron dust blows into everything down here, so I wash every test flask three times before running a sample.'],
+        ['The Fifth Guild only stole very specific metals from our yard, which tells me they are building something specialized.']
       ],
       afterBench: {
         'q1-dblock': [
-          ['You assayed the drums the way I do. Now you know why I never trust a label.']
+          ['Testing the drums yourself shows why we never trust burned-off shipping labels down in this canyon.']
         ]
       }
     }
@@ -96,9 +96,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I rig the drums for lifting. With the magnet running, every chain in the canyon swings toward it.'],
-        ['The magnet hums all day. You feel it in your teeth.'],
-        ['Nobody walks the canyon floor alone. Rockfall comes without warning.']
+        ['I hook heavy drums onto our cranes, and whenever the Fifth Guild\'s magnet powers up, every steel chain swings toward it.'],
+        ['That giant sorting magnet hums so loud you can feel the vibration right through your boots.'],
+        ['Stay alert on the canyon floor, because loose rocks break off the cliff walls whenever the heavy trucks roll by.']
       ]
     }
   },
@@ -111,9 +111,9 @@ export const CREW = Object.freeze([
     ],
     talk: {
       default: [
-        ['I drive the ore haulers down to the landing pads. The road through the canyon is narrow and steep.'],
-        ['Haulers came and went at night, with no lights. They did not use our road.'],
-        ['I have driven this canyon for ten years. I have never seen it so busy and so quiet at once.']
+        ['I drive heavy ore trucks down to the cargo landing pads along the steep canyon road.'],
+        ['Unmarked cargo trucks rolled in and out at night with their headlights off, using a hidden side trail.'],
+        ['In ten years driving this canyon, I have never seen anyone haul away this much metal in secret.']
       ]
     }
   },
@@ -127,7 +127,7 @@ export const CREW = Object.freeze([
     task: 'lodestone-label',
     talk: {
       default: [
-        ['I guard the canyon gate. The drums that left at night never came past me.']
+        ['I guard the main canyon gate, yet none of the metal drums stolen at night ever passed my checkpoint.']
       ]
     }
   }
@@ -141,20 +141,20 @@ export const TASKS = Object.freeze({
     giver: 'lodestone-guard',
     item: { label: 'Torn Shipping Label', kind: 'paper', pos: [-4.75, -1.25] },
     ask: [
-      'A loader dropped something by the drum yard, near the middle of the canyon floor, and nobody went back for it.',
-      'Bring it to me. I mean to find out where those drums went.'
+      'A night crew dropped a shipping tag near the middle of the canyon floor while loading drums.',
+      'Could you bring it to me so I can figure out where all those stolen drums are going?'
     ],
     remind: [
-      'Near the middle of the canyon floor. A scrap of shipping label.'
+      'Look near the middle of the canyon floor for a torn scrap of shipping label.'
     ],
     thanks: [
-      'Half a shipping label. The destination is torn off, but the route code matches every night drum.',
-      'Someone has been planning this for a long time.'
+      'The planet name is torn off, yet the shipping code matches every single drum taken at night.',
+      'They have been shipping our metals to one secret destination for months.'
     ],
     note: {
       title: 'Lodestone · Gate Guard\'s Find',
       speaker: 'Pavel Oster',
-      text: 'Half a shipping label from a night drum. The destination is torn off; the route code matches every drum that left at night.'
+      text: 'Half a shipping label from a stolen drum. The destination is torn off, though the route code matches every night shipment.'
     }
   }
 });

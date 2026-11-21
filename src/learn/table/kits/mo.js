@@ -29,6 +29,7 @@ import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { rowsMO, readMO, fillMO, boxKeyMO, DIATOMICS } from '../../engine/mo.js';
 import { rectOf, SIZES } from '../snap.js';
 import { LIGAR_SKIN, buildEnamelTile, ligarDeck } from '../../engine/ligar-props.js';
+import { dressOverlap } from './mo-3d.js';
 
 export const MO_KIT_ID = 'mo';
 
@@ -398,21 +399,75 @@ function paintBondTest(ctx, f, state, b) {
    and where they differ a gap opens there. A level at the side shows the combined orbital's energy against the two
    separate atoms': it falls as like signs overlap and rises as unlike signs do. A pure painter of the dials.
    The shapes are a sketch (a hydrogen-like 1s, or a p orbital standing across the line), not a calculation of a molecule.
+   At `3D On` the cloud stands up in space over the plate instead (`mo-3d.js`, the same sum in three dimensions; the plate then
+   shows only the energy level); at `3D Off` it is painted flat here.
    ------------------------------------------------------------------ */
 
 const REACH = 53;                 // pm: how far a hydrogen 1s orbital reaches (the Bohr radius)
 export const OVERLAP_CLOSE = 110; // pm: the atoms count as brought together at or inside this distance
 const overlapOf = gap => Math.exp(-(gap - 70) / 90);
 
-/** One atom's orbital at a point (pm from its nucleus): a 1s cloud, or a p orbital whose two lobes stand above and below the line. */
-function orbitalAt(type, x, y) {
-  const r = Math.hypot(x, y);
+/**
+ * One atom's orbital at a point (pm from its nucleus): a 1s cloud, or a p orbital whose two lobes stand above and below the line.
+ * `x` runs along the line between the nuclei, `y` across it (+ is above the line: the top of the flat picture, up at `3D On`),
+ * `z` is the third direction (the flat picture is the slice z = 0). The upper lobe of a p orbital is the + one.
+ */
+function orbitalAt(type, x, y, z = 0) {
+  const r = Math.hypot(x, y, z);
   return type === 'p' ? 2.4 * (y / REACH) * Math.exp(-r / (REACH * 0.85)) : Math.exp(-r / REACH);
 }
 
+/**
+ * The combined orbital at a point (pm from the midpoint of the two nuclei) when the second atom's orbital is multiplied by
+ * `sign` (+1 like signs, −1 unlike; the 3D cloud passes through the values between while the Signs dial turns it over).
+ */
+export function blendAt(type, gap, sign, x, y, z = 0) {
+  return orbitalAt(type, x + gap / 2, y, z) + sign * orbitalAt(type, x - gap / 2, y, z);
+}
+
+/**
+ * `blendAt` over a grid (the 3D cloud's): `gx`, `gy`, `gz` are the grid's coordinates in pm, `out` takes the values with x
+ * varying fastest, then y, then z. The same sum as `blendAt`, with what each row shares worked out once.
+ */
+export function blendGrid(type, gap, sign, gx, gy, gz, out) {
+  const h = gap / 2;
+  const p = type === 'p';
+  const decay = p ? 1 / (REACH * 0.85) : 1 / REACH;
+  const nx = gx.length;
+  const dxA = new Float64Array(nx);
+  const dxB = new Float64Array(nx);
+  for (let i = 0; i < nx; i++) { dxA[i] = (gx[i] + h) ** 2; dxB[i] = (gx[i] - h) ** 2; }
+  let q = 0;
+  for (let k = 0; k < gz.length; k++) {
+    const z2 = gz[k] * gz[k];
+    for (let j = 0; j < gy.length; j++) {
+      const y = gy[j];
+      const w = y * y + z2;
+      const amp = p ? 2.4 * (y / REACH) : 1;
+      for (let i = 0; i < nx; i++, q++) {
+        out[q] = amp * (Math.exp(-Math.sqrt(dxA[i] + w) * decay) + sign * Math.exp(-Math.sqrt(dxB[i] + w) * decay));
+      }
+    }
+  }
+  return out;
+}
+
 /** The combined orbital at a point (pm from the midpoint of the two nuclei). */
-export function combinedAt(type, gap, opposite, x, y) {
-  return orbitalAt(type, x + gap / 2, y) + (opposite ? -1 : 1) * orbitalAt(type, x - gap / 2, y);
+export function combinedAt(type, gap, opposite, x, y, z = 0) {
+  return blendAt(type, gap, opposite ? -1 : 1, x, y, z);
+}
+
+/**
+ * Where an overlap track's picture stands in its box, in the box's own units (`sc` units to a table unit): the left 70%, under the
+ * dials. `k` is units to the picometre (the picture is 560 pm wide). The flat painter and the 3D cloud both read it.
+ */
+export function overlapFrame(f, box, sc = 1) {
+  const nDials = Object.keys(f.dials).length;
+  const x0 = box.x0 + 2 * sc;
+  const x1 = box.x0 + (box.x1 - box.x0) * 0.7;
+  const y0 = box.y0 + (9.6 + (nDials - 1) * 5 + 4.5) * sc;
+  const y1 = box.y1 - 2 * sc;
+  return { x0, x1, y0, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, k: (x1 - x0) / 560 };
 }
 
 /** What an overlap track shows: the distance, whether the signs differ, whether the atoms are together, and the level's shift (− is lower). */
@@ -427,22 +482,21 @@ function paintOverlap(ctx, f, state, b) {
   const r = overlapRead(state, f.id);
   const { sc } = b;
   const size = Math.max(7, 2.1 * sc);
-  const nDials = Object.keys(f.dials).length;
-  const top = b.y0 + (9.6 + (nDials - 1) * 5 + 4.5) * sc;
-  const px0 = b.x0 + 2 * sc;
-  const px1 = b.x0 + (b.x1 - b.x0) * 0.7;
-  const py0 = top;
-  const py1 = b.y1 - 2 * sc;
-  const cx = (px0 + px1) / 2;
-  const cy = (py0 + py1) / 2;
-  const k = (px1 - px0) / 560;            // the picture is 560 pm wide
+  const { x0: px0, x1: px1, y0: py0, y1: py1, cx, cy, k } = overlapFrame(f, b, sc);
   ctx.fillStyle = '#0d0c0a';
   ctx.fillRect(px0, py0, px1 - px0, py1 - py0);
+  // The built table stands the combined orbital up in space over this plate (`mo-3d.js`), so only the energy level is drawn here.
+  if (!b.bodies) paintOverlapCloud(ctx, r, { px0, px1, py0, py1, cx, cy, k, sc, size });
+  paintOverlapLevel(ctx, r, b, { px1, py0, py1, cy, sc, size });
+}
+
+/** The flat picture of the combined orbital (`3D Off`): its density cell by cell, the line, the nuclei and the signs. */
+function paintOverlapCloud(ctx, r, { px0, px1, py0, py1, cx, cy, k, sc, size }) {
   // The combined orbital's density, cell by cell: light where the sum is positive, green where it is negative.
   const cell = Math.max(3, Math.round((px1 - px0) / 60));
   for (let x = px0; x + cell <= px1 + 0.5; x += cell) {
     for (let y = py0; y + cell <= py1 + 0.5; y += cell) {
-      const psi = combinedAt(r.type, r.gap, r.opposite, (x + cell / 2 - cx) / k, (y + cell / 2 - cy) / k);
+      const psi = combinedAt(r.type, r.gap, r.opposite, (x + cell / 2 - cx) / k, -(y + cell / 2 - cy) / k);
       const dens = psi * psi;
       if (dens < 0.006) continue;
       ctx.globalAlpha = Math.min(0.92, dens * 1.5);
@@ -476,7 +530,10 @@ function paintOverlap(ctx, f, state, b) {
   });
   plateText(ctx, 'NUCLEUS', ax, py1 - size * 0.5, { size: size * 0.75, align: 'center', color: PLATE_COLORS.dim });
   plateText(ctx, 'NUCLEUS', bx, py1 - size * 0.5, { size: size * 0.75, align: 'center', color: PLATE_COLORS.dim });
-  // The energy of the combined orbital against the two separate atoms'.
+}
+
+/** The energy of the combined orbital against the two separate atoms', at the right of the box (both views). */
+function paintOverlapLevel(ctx, r, b, { px1, py0, py1, cy, sc, size }) {
   const lx0 = px1 + 3 * sc;
   const lx1 = b.x1 - 2 * sc;
   const lw = (lx1 - lx0) / 3;
@@ -574,6 +631,11 @@ function piece3d(p, state, c) {
   return p.kind === 'mocard' ? buildEnamelTile(c, { lip: true }) : null;
 }
 
+/** The overlap track's combined orbital stands up over its plate at `3D On` (`mo-3d.js`); the other fixtures are the flat picture. */
+function dress3d(f, state, c) {
+  return f.kind === 'overlap' ? dressOverlap(f, state, c) : null;
+}
+
 export const MO_KIT = {
   id: MO_KIT_ID,
   kinds: {
@@ -581,6 +643,7 @@ export const MO_KIT = {
   },
   run,
   piece3d,
+  dress3d,
   deck3d: ligarDeck,
   pourRefusal,
   pileOf,
